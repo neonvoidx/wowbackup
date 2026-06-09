@@ -696,7 +696,7 @@ CHATTYNATOR_CONFIG = {
 },
 }
 CHATTYNATOR_MESSAGE_LOG = {
-["cleanIndex"] = 4108,
+["cleanIndex"] = 4173,
 ["current"] = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
@@ -80092,6 +80092,1263 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["text"] = "Ethereal Warpweaver says: Your attire seems adequate. How may I assist you?",
 ["id"] = "s47_4108",
 ["timestamp"] = 1780680504,
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["name"] = "Uuna",
+},
+["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.501960813999176,
+["b"] = 0.250980406999588,
+},
+["text"] = "Uuna begins singing.",
+["timestamp"] = 1781023198,
+["id"] = "s47_4109",
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["name"] = "Uuna",
+},
+["event"] = "CHAT_MSG_SAY",
+["type"] = "SAY",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 1,
+},
+["text"] = "|Hplayer:Uuna:3:SAY:|h[Uuna]|h says: Tulip's sister, pure and humble! Seeks to... something...",
+["timestamp"] = 1781023198,
+["id"] = "s47_4110",
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["name"] = "Uuna",
+},
+["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.501960813999176,
+["b"] = 0.250980406999588,
+},
+["text"] = "Uuna mumbles.",
+["timestamp"] = 1781023198,
+["id"] = "s47_4111",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["event"] = "CHAT_MSG_CURRENCY",
+["type"] = "CURRENCY",
+},
+["color"] = {
+["b"] = -0,
+["g"] = 0.6666666865348816,
+["r"] = -0,
+},
+["text"] = "You receive currency: |cnIQ4:|T7658128:12|t|Hcurrency:3513:0|h[Nebulous Voidcore]|h|rx2",
+["id"] = "s47_4112",
+["timestamp"] = 1781023542,
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["name"] = "Silvermoon Guard",
+},
+["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
+},
+["color"] = {
+["b"] = 0.250980406999588,
+["g"] = 0.501960813999176,
+["r"] = 1,
+},
+["text"] = "The nearby guard glares at you and the void energy that you surround yourself with.",
+["id"] = "s47_4113",
+["timestamp"] = 1781023545,
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "ROGUE",
+["race"] = "BloodElf",
+["name"] = "Illforeal",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hplayer:Illforeal-Tichondrius|h[|cfffff468Illforeal|r]|h has earned the achievement |cffffff00|Hachievement:62498:Player-11-0E5E23AD:1:6:9:26:4294967295:4294967295:4294967295:4294967295|h[Void Assault: Eversong]|h|r!",
+["timestamp"] = 1781023675,
+["id"] = "s47_4114",
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "Scourge",
+["class"] = "WARLOCK",
+["name"] = "Hellavator",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["b"] = -0,
+["g"] = 0.6666666865348816,
+["r"] = -0,
+},
+["text"] = "You receive item: |cnIQ1:|T7548909:12|t|Hitem:241305::::::::90:265:::::::::|h[Silvermoon Health Potion |A:Professions-ChatIcon-Quality-12-Tier1:17:15::1|a]|h|rx102",
+["id"] = "s47_4115",
+["timestamp"] = 1781023848,
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "Scourge",
+["class"] = "WARLOCK",
+["name"] = "Hellavator",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["b"] = -0,
+["g"] = 0.6666666865348816,
+["r"] = -0,
+},
+["text"] = "You receive item: |cnIQ1:|T134757:12|t|Hitem:124640::::::::90:265:::::::::|h[Inky Black Potion]|h|rx20",
+["id"] = "s47_4116",
+["timestamp"] = 1781023849,
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "Scourge",
+["class"] = "WARLOCK",
+["name"] = "Hellavator",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["b"] = -0,
+["g"] = 0.6666666865348816,
+["r"] = -0,
+},
+["text"] = "You receive item: |cnIQ2:|T607854:12|t|Hitem:269586::::::::90:265:::::::::|h[Emergency Soul Link |A:Professions-ChatIcon-Quality-12-Tier2:17:15::1|a]|h|rx50",
+["id"] = "s47_4117",
+["timestamp"] = 1781023849,
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "Scourge",
+["class"] = "WARLOCK",
+["name"] = "Hellavator",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["b"] = -0,
+["g"] = 0.6666666865348816,
+["r"] = -0,
+},
+["text"] = "You receive item: |cnIQ2:|T7549207:12|t|Hitem:244639::::::::90:265:::::::::|h[Void-Touched Drums]|h|rx28",
+["id"] = "s47_4118",
+["timestamp"] = 1781023849,
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "Scourge",
+["class"] = "WARLOCK",
+["name"] = "Hellavator",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["b"] = -0,
+["g"] = 0.6666666865348816,
+["r"] = -0,
+},
+["text"] = "You receive item: |cnIQ1:|T464027:12|t|Hitem:241334::::::::90:265:::::::::|h[Vicious Thalassian Flask of Honor]|h|rx7",
+["id"] = "s47_4119",
+["timestamp"] = 1781023850,
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "Scourge",
+["class"] = "WARLOCK",
+["name"] = "Hellavator",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["b"] = -0,
+["g"] = 0.6666666865348816,
+["r"] = -0,
+},
+["text"] = "You receive item: |cnIQ1:|T7548909:12|t|Hitem:241304::::::::90:265:::::::::|h[Silvermoon Health Potion |A:Professions-ChatIcon-Quality-12-Tier2:17:15::1|a]|h|rx200",
+["id"] = "s47_4120",
+["timestamp"] = 1781023850,
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "Scourge",
+["class"] = "WARLOCK",
+["name"] = "Hellavator",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["b"] = -0,
+["g"] = 0.6666666865348816,
+["r"] = -0,
+},
+["text"] = "You receive item: |cnIQ3:|T1322720:12|t|Hitem:137642::::::::90:265:::::::::|h[Mark of Honor]|h|rx24",
+["id"] = "s47_4121",
+["timestamp"] = 1781023851,
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["name"] = "Uuna",
+},
+["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
+},
+["color"] = {
+["b"] = 0.250980406999588,
+["g"] = 0.501960813999176,
+["r"] = 1,
+},
+["text"] = "Uuna begins singing.",
+["id"] = "s47_4122",
+["timestamp"] = 1781024102,
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["name"] = "Uuna",
+},
+["event"] = "CHAT_MSG_SAY",
+["type"] = "SAY",
+},
+["color"] = {
+["b"] = 1,
+["g"] = 1,
+["r"] = 1,
+},
+["text"] = "|Hplayer:Uuna:192:SAY:|h[Uuna]|h says: Tulip's sister, pure and humble! Seeks to... something...",
+["id"] = "s47_4123",
+["timestamp"] = 1781024102,
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["name"] = "Uuna",
+},
+["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
+},
+["color"] = {
+["b"] = 0.250980406999588,
+["g"] = 0.501960813999176,
+["r"] = 1,
+},
+["text"] = "Uuna mumbles.",
+["id"] = "s47_4124",
+["timestamp"] = 1781024102,
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["event"] = "CHAT_MSG_SKILL",
+["type"] = "SKILL",
+},
+["color"] = {
+["r"] = 0.3333333432674408,
+["g"] = 0.3333333432674408,
+["b"] = 1,
+},
+["text"] = "You have gained the Midnight Engineering skill.",
+["timestamp"] = 1781026294,
+["id"] = "s47_4125",
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["event"] = "CHAT_MSG_SKILL",
+["type"] = "SKILL",
+},
+["color"] = {
+["r"] = 0.3333333432674408,
+["g"] = 0.3333333432674408,
+["b"] = 1,
+},
+["text"] = "You have gained the Midnight Fishing skill.",
+["timestamp"] = 1781026349,
+["id"] = "s47_4126",
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["name"] = "Solwin Brightstitch",
+},
+["event"] = "CHAT_MSG_MONSTER_SAY",
+["type"] = "MONSTER_SAY",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 0.6235294342041016,
+},
+["text"] = "Solwin Brightstitch says: Alas, if I had but one worthy customer...",
+["timestamp"] = 1781026426,
+["id"] = "s47_4127",
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["event"] = "CHAT_MSG_SKILL",
+["type"] = "SKILL",
+},
+["color"] = {
+["r"] = 0.3333333432674408,
+["g"] = 0.3333333432674408,
+["b"] = 1,
+},
+["text"] = "You have gained the Classic Alchemy skill.",
+["timestamp"] = 1781026433,
+["id"] = "s47_4128",
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["event"] = "CHAT_MSG_SKILL",
+["type"] = "SKILL",
+},
+["color"] = {
+["r"] = 0.3333333432674408,
+["g"] = 0.3333333432674408,
+["b"] = 1,
+},
+["text"] = "You have gained the Midnight Alchemy skill.",
+["timestamp"] = 1781026434,
+["id"] = "s47_4129",
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["name"] = "Silvermoon Guard",
+},
+["event"] = "CHAT_MSG_MONSTER_SAY",
+["type"] = "MONSTER_SAY",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 0.6235294342041016,
+},
+["text"] = "Silvermoon Guard says: Your demonic fiends will not save you, warlock.",
+["timestamp"] = 1781026514,
+["id"] = "s47_4130",
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "WARLOCK",
+["race"] = "Scourge",
+["name"] = "Hellavator",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "You receive item: |cnIQ1:|T5948061:12|t|Hitem:265039::::::::90:265:::::::::|h[Silvermoon Splendor]|h|r",
+["timestamp"] = 1781026558,
+["id"] = "s47_4131",
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "WARLOCK",
+["race"] = "Scourge",
+["name"] = "Hellavator",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "You receive item: |cnIQ4:|T7367702:12|t|Hitem:250043::::::::90:265::35:5:13337:12801:13440:6652:13574::::::|h[Abyssal Immolator's Grasps (Hands 272)]|h|r",
+["timestamp"] = 1781026558,
+["id"] = "s47_4132",
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "WARLOCK",
+["race"] = "Scourge",
+["name"] = "Hellavator",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "You receive item: |cnIQ4:|T4352494:12|t|Hitem:180653::::::::90:265::::5:17:559:18:10:19:162:20:9:21:10:::::|h[Mythic Keystone]|h|r",
+["timestamp"] = 1781026558,
+["id"] = "s47_4133",
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "PALADIN",
+["race"] = "Dwarf",
+["name"] = "Urbpal",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_ACHIEVEMENT",
+["type"] = "ACHIEVEMENT",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = -0,
+},
+["text"] = "|Hplayer:Urbpal-Tichondrius|h[|cfff48cbaUrbpal|r]|h has earned the achievement |cffffff00|Hachievement:42767:Player-11-0E98C8F2:1:6:9:26:4294967295:4294967295:4294967295:4294967295|h[Veteran of the Dawn]|h|r!",
+["timestamp"] = 1781026651,
+["id"] = "s47_4134",
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["name"] = "Silvermoon Guard",
+},
+["event"] = "CHAT_MSG_MONSTER_SAY",
+["type"] = "MONSTER_SAY",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 0.6235294342041016,
+},
+["text"] = "Silvermoon Guard says: Do not flaunt your demonic pets around us, warlock.",
+["timestamp"] = 1781026683,
+["id"] = "s47_4135",
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["name"] = "Ethereal Warpweaver",
+},
+["event"] = "CHAT_MSG_MONSTER_SAY",
+["type"] = "MONSTER_SAY",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 0.6235294342041016,
+},
+["text"] = "Ethereal Warpweaver says: Your attire seems adequate. How may I assist you?",
+["timestamp"] = 1781026717,
+["id"] = "s47_4136",
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "BloodElf",
+["class"] = "ROGUE",
+["name"] = "Illforeal",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_WHISPER_INFORM",
+["type"] = "WHISPER",
+},
+["color"] = {
+["b"] = 1,
+["g"] = 0.501960813999176,
+["r"] = 1,
+},
+["text"] = "To |Hplayer:Illforeal-Tichondrius:536:WHISPER:ILLFOREAL-TICHONDRIUS|h[|cfffff468Illforeal|r]|h: yo can i get ginvite pleas",
+["id"] = "s47_4137",
+["timestamp"] = 1781027178,
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "BloodElf",
+["class"] = "DEMONHUNTER",
+["name"] = "Weezydh",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_WHISPER_INFORM",
+["type"] = "WHISPER",
+},
+["color"] = {
+["b"] = 1,
+["g"] = 0.501960813999176,
+["r"] = 1,
+},
+["text"] = "To |Hplayer:Weezydh-Tichondrius:541:WHISPER:WEEZYDH-TICHONDRIUS|h[|cffa330c9Weezydh|r]|h: yo can you send ginvite please",
+["id"] = "s47_4138",
+["timestamp"] = 1781027341,
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "Scourge",
+["class"] = "MONK",
+["name"] = "Yamanobu",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_WHISPER_INFORM",
+["type"] = "WHISPER",
+},
+["color"] = {
+["b"] = 1,
+["g"] = 0.501960813999176,
+["r"] = 1,
+},
+["text"] = "To |Hplayer:Yamanobu-Tichondrius:543:WHISPER:YAMANOBU-TICHONDRIUS|h[|cff00ff98Yamanobu|r]|h: yo can you send ginvite please",
+["id"] = "s47_4139",
+["timestamp"] = 1781027357,
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "Orc",
+["class"] = "SHAMAN",
+["name"] = "Madlibs",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_WHISPER_INFORM",
+["type"] = "WHISPER",
+},
+["color"] = {
+["b"] = 1,
+["g"] = 0.501960813999176,
+["r"] = 1,
+},
+["text"] = "To |Hplayer:Madlibs-Tichondrius:544:WHISPER:MADLIBS-TICHONDRIUS|h[|cff0070ddMadlibs|r]|h: yo can you send ginvite please",
+["id"] = "s47_4140",
+["timestamp"] = 1781027366,
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "Scourge",
+["class"] = "MONK",
+["name"] = "Yamanobu",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_WHISPER",
+["type"] = "WHISPER",
+},
+["color"] = {
+["b"] = 1,
+["g"] = 0.501960813999176,
+["r"] = 1,
+},
+["text"] = "|Hplayer:Yamanobu-Tichondrius:545:WHISPER:YAMANOBU-TICHONDRIUS|h[|cff00ff98Yamanobu|r]|h whispers: who is this",
+["id"] = "s47_4141",
+["timestamp"] = 1781027371,
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "Scourge",
+["class"] = "MONK",
+["name"] = "Yamanobu",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_WHISPER_INFORM",
+["type"] = "WHISPER",
+},
+["color"] = {
+["b"] = 1,
+["g"] = 0.501960813999176,
+["r"] = 1,
+},
+["text"] = "To |Hplayer:Yamanobu-Tichondrius:546:WHISPER:YAMANOBU-TICHONDRIUS|h[|cff00ff98Yamanobu|r]|h: Stormclout",
+["id"] = "s47_4142",
+["timestamp"] = 1781027378,
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "Scourge",
+["class"] = "MONK",
+["name"] = "Yamanobu",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_WHISPER_INFORM",
+["type"] = "WHISPER",
+},
+["color"] = {
+["b"] = 1,
+["g"] = 0.501960813999176,
+["r"] = 1,
+},
+["text"] = "To |Hplayer:Yamanobu-Tichondrius:549:WHISPER:YAMANOBU-TICHONDRIUS|h[|cff00ff98Yamanobu|r]|h: ty",
+["id"] = "s47_4143",
+["timestamp"] = 1781027412,
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MONK",
+["race"] = "Scourge",
+["name"] = "Yamanobu",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Yamanobu-Tichondrius:551:GUILD:|h[|cff00ff98Yamanobu|r]|h: can anyone make |cnIQ4:|T7287095:12|t|Hitem:244572::::::::90:270::13:1:3524:5:40:4004:38:4:47:232875:49:245786:50:-2147480301:::::|h[Silvermoon Agent's Mantle |A:Professions-ChatIcon-Quality-Tier1:17:15::1|a (Shoulder 272)]|h|r r5",
+["timestamp"] = 1781027492,
+["id"] = "s47_4144",
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "PALADIN",
+["race"] = "BloodElf",
+["name"] = "Northernmist-BlackwaterRaiders",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Northernmist-BlackwaterRaiders:552:GUILD:|h[|cfff48cbaNorthernmist|r]|h: sorry i cant ",
+["timestamp"] = 1781027529,
+["id"] = "s47_4145",
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MONK",
+["race"] = "Scourge",
+["name"] = "Yamanobu",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Yamanobu-Tichondrius:553:GUILD:|h[|cff00ff98Yamanobu|r]|h: no worries",
+["timestamp"] = 1781027536,
+["id"] = "s47_4146",
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "PALADIN",
+["race"] = "BloodElf",
+["name"] = "Northernmist-BlackwaterRaiders",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Northernmist-BlackwaterRaiders:554:GUILD:|h[|cfff48cbaNorthernmist|r]|h: hope someone else can that be a Sweet bonus☻",
+["timestamp"] = 1781027563,
+["id"] = "s47_4147",
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MONK",
+["race"] = "Scourge",
+["name"] = "Yamanobu",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Yamanobu-Tichondrius:555:GUILD:|h[|cff00ff98Yamanobu|r]|h: i found someone on trade!",
+["timestamp"] = 1781027578,
+["id"] = "s47_4148",
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MONK",
+["race"] = "Scourge",
+["name"] = "Yamanobu",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Yamanobu-Tichondrius:556:GUILD:|h[|cff00ff98Yamanobu|r]|h: ty",
+["timestamp"] = 1781027580,
+["id"] = "s47_4149",
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["name"] = "Uuna",
+},
+["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.501960813999176,
+["b"] = 0.250980406999588,
+},
+["text"] = "Uuna begins singing.",
+["timestamp"] = 1781028113,
+["id"] = "s47_4150",
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["name"] = "Uuna",
+},
+["event"] = "CHAT_MSG_SAY",
+["type"] = "SAY",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 1,
+},
+["text"] = "|Hplayer:Uuna:638:SAY:|h[Uuna]|h says: Tulip's sister, pure and humble! Seeks to... something...",
+["timestamp"] = 1781028113,
+["id"] = "s47_4151",
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["name"] = "Uuna",
+},
+["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.501960813999176,
+["b"] = 0.250980406999588,
+},
+["text"] = "Uuna mumbles.",
+["timestamp"] = 1781028113,
+["id"] = "s47_4152",
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "Troll",
+["class"] = "PRIEST",
+["name"] = "Cosmicheals-Shu'halo",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
+},
+["color"] = {
+["b"] = 0.250980406999588,
+["g"] = 1,
+["r"] = 0.250980406999588,
+},
+["text"] = "|Hplayer:Cosmicheals-Shu'halo|h[|cffffffffCosmicheals-Shu'halo|r]|h has earned the achievement |cffffff00|Hachievement:61184:Player-47-06A10469:1:6:9:26:4294967295:4294967295:4294967295:4294967295|h[Challenger II: Midnight Season 1]|h|r!",
+["id"] = "s47_4153",
+["timestamp"] = 1781028725,
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "Troll",
+["class"] = "PRIEST",
+["name"] = "Cosmicheals-Shu'halo",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
+},
+["color"] = {
+["b"] = 0.250980406999588,
+["g"] = 1,
+["r"] = 0.250980406999588,
+},
+["text"] = "|Hplayer:Cosmicheals-Shu'halo|h[|cffffffffCosmicheals-Shu'halo|r]|h has earned the achievement |cffffff00|Hachievement:61490:Player-47-06A10469:1:6:9:26:4294967295:4294967295:4294967295:4294967295|h[Midnight Season 1: Champion of the Dawn]|h|r!",
+["id"] = "s47_4154",
+["timestamp"] = 1781028725,
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["name"] = "Uuna",
+},
+["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
+},
+["color"] = {
+["b"] = 0.250980406999588,
+["g"] = 0.501960813999176,
+["r"] = 1,
+},
+["text"] = "Uuna begins singing.",
+["id"] = "s47_4155",
+["timestamp"] = 1781028768,
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["name"] = "Uuna",
+},
+["event"] = "CHAT_MSG_SAY",
+["type"] = "SAY",
+},
+["color"] = {
+["b"] = 1,
+["g"] = 1,
+["r"] = 1,
+},
+["text"] = "|Hplayer:Uuna:777:SAY:|h[Uuna]|h says: Tulip's sister, pure and humble! Seeks to... something...",
+["id"] = "s47_4156",
+["timestamp"] = 1781028768,
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["name"] = "Uuna",
+},
+["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
+},
+["color"] = {
+["b"] = 0.250980406999588,
+["g"] = 0.501960813999176,
+["r"] = 1,
+},
+["text"] = "Uuna mumbles.",
+["id"] = "s47_4157",
+["timestamp"] = 1781028768,
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "BloodElf",
+["class"] = "PALADIN",
+["name"] = "Lawrencejame",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_YELL",
+["type"] = "YELL",
+},
+["color"] = {
+["b"] = 0.250980406999588,
+["g"] = 0.250980406999588,
+["r"] = 1,
+},
+["text"] = "|Hplayer:Lawrencejame-Tichondrius:979:YELL:|h[|cfff48cbaLawrencejame|r]|h yells: FREECAST ACTIVATED",
+["id"] = "s47_4158",
+["timestamp"] = 1781029249,
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "BloodElf",
+["class"] = "DEMONHUNTER",
+["name"] = "Weezydh",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
+},
+["color"] = {
+["b"] = 0.250980406999588,
+["g"] = 1,
+["r"] = 0.250980406999588,
+},
+["text"] = "|Hplayer:Weezydh-Tichondrius|h[|cffa330c9Weezydh|r]|h has earned the achievement |cffffff00|Hachievement:11162:Player-11-0E985DCE:1:6:9:26:4294967295:4294967295:4294967295:4294967295|h[Keystone Master]|h|r!",
+["id"] = "s47_4159",
+["timestamp"] = 1781029491,
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "BloodElf",
+["class"] = "DEMONHUNTER",
+["name"] = "Weezydh",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
+},
+["color"] = {
+["b"] = 0.250980406999588,
+["g"] = 1,
+["r"] = 0.250980406999588,
+},
+["text"] = "|Hplayer:Weezydh-Tichondrius|h[|cffa330c9Weezydh|r]|h has earned the achievement |cffffff00|Hachievement:61271:Player-11-0E985DCE:1:6:9:26:4294967295:4294967295:4294967295:4294967295|h[Keystone Hero: Pit of Saron]|h|r!",
+["id"] = "s47_4160",
+["timestamp"] = 1781029491,
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["name"] = "Uuna",
+},
+["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
+},
+["color"] = {
+["b"] = 0.250980406999588,
+["g"] = 0.501960813999176,
+["r"] = 1,
+},
+["text"] = "Uuna begins singing.",
+["id"] = "s47_4161",
+["timestamp"] = 1781029594,
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["name"] = "Uuna",
+},
+["event"] = "CHAT_MSG_SAY",
+["type"] = "SAY",
+},
+["color"] = {
+["b"] = 1,
+["g"] = 1,
+["r"] = 1,
+},
+["text"] = "|Hplayer:Uuna:989:SAY:|h[Uuna]|h says: Tulip's sister, pure and humble! Seeks to... something...",
+["id"] = "s47_4162",
+["timestamp"] = 1781029594,
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["name"] = "Uuna",
+},
+["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
+},
+["color"] = {
+["b"] = 0.250980406999588,
+["g"] = 0.501960813999176,
+["r"] = 1,
+},
+["text"] = "Uuna mumbles.",
+["id"] = "s47_4163",
+["timestamp"] = 1781029594,
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "Vulpera",
+["class"] = "HUNTER",
+["name"] = "Michaeljfox-Zuluhed",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
+},
+["color"] = {
+["b"] = 0.250980406999588,
+["g"] = 1,
+["r"] = 0.250980406999588,
+},
+["text"] = "|Hplayer:Michaeljfox-Zuluhed|h[|cffaad372Michaeljfox-Zuluhed|r]|h has earned the achievement |cffffff00|Hachievement:40607:Player-96-0C10A9E7:1:6:9:26:4294967295:4294967295:4294967295:4294967295|h[Wandering in the Ravine]|h|r!",
+["id"] = "s47_4164",
+["timestamp"] = 1781029633,
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "HUNTER",
+["race"] = "Vulpera",
+["name"] = "Michaeljfox-Zuluhed",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hplayer:Michaeljfox-Zuluhed|h[|cffaad372Michaeljfox-Zuluhed|r]|h has earned the achievement |cffffff00|Hachievement:40215:Player-96-0C10A9E7:1:6:9:26:4294967295:4294967295:4294967295:4294967295|h[Deephaul Ravine Shutout]|h|r!",
+["timestamp"] = 1781029915,
+["id"] = "s47_4165",
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "NightElf",
+["class"] = "ROGUE",
+["name"] = "Murky-Frostmane",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["b"] = 0.250980406999588,
+["g"] = 1,
+["r"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Murky-Frostmane:1000:GUILD:|h[|cfffff468Murky|r]|h: anyone got pit key",
+["id"] = "s47_4166",
+["timestamp"] = 1781030077,
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["name"] = "Uuna",
+},
+["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.501960813999176,
+["b"] = 0.250980406999588,
+},
+["text"] = "Uuna begins singing.",
+["timestamp"] = 1781030254,
+["id"] = "s47_4167",
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["name"] = "Uuna",
+},
+["event"] = "CHAT_MSG_SAY",
+["type"] = "SAY",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 1,
+},
+["text"] = "|Hplayer:Uuna:1008:SAY:|h[Uuna]|h says: Tulip's sister, pure and humble! Seeks to... something...",
+["timestamp"] = 1781030254,
+["id"] = "s47_4168",
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["name"] = "Uuna",
+},
+["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.501960813999176,
+["b"] = 0.250980406999588,
+},
+["text"] = "Uuna mumbles.",
+["timestamp"] = 1781030254,
+["id"] = "s47_4169",
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "Tauren",
+["class"] = "DEATHKNIGHT",
+["name"] = "Warstompgød",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
+},
+["color"] = {
+["b"] = 0.250980406999588,
+["g"] = 1,
+["r"] = 0.250980406999588,
+},
+["text"] = "|Hplayer:Warstompgød-Tichondrius|h[|cffc41e3aWarstompgød|r]|h has earned the achievement |cffffff00|Hachievement:40215:Player-11-09376951:1:6:9:26:4294967295:4294967295:4294967295:4294967295|h[Deephaul Ravine Shutout]|h|r!",
+["id"] = "s47_4170",
+["timestamp"] = 1781030780,
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["name"] = "Uuna",
+},
+["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.501960813999176,
+["b"] = 0.250980406999588,
+},
+["text"] = "Uuna begins singing.",
+["timestamp"] = 1781030852,
+["id"] = "s47_4171",
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["name"] = "Uuna",
+},
+["event"] = "CHAT_MSG_SAY",
+["type"] = "SAY",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 1,
+},
+["text"] = "|Hplayer:Uuna:1029:SAY:|h[Uuna]|h says: Tulip's sister, pure and humble! Seeks to... something...",
+["timestamp"] = 1781030852,
+["id"] = "s47_4172",
+},
+{
+["recordedBy"] = "Hellavator-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["name"] = "Uuna",
+},
+["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.501960813999176,
+["b"] = 0.250980406999588,
+},
+["text"] = "Uuna mumbles.",
+["timestamp"] = 1781030852,
+["id"] = "s47_4173",
 },
 },
 ["version"] = 1,

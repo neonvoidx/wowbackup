@@ -61,7 +61,10 @@ CooldownManagerCenteredDB = {
 },
 ["cooldownManager_normalizeUtilitySize"] = true,
 ["cooldownManager_keybindFontSize_Utility"] = 14,
+["cooldownManager_centerEssential_growFromDirection"] = "Disable",
+["trinketRacialTracker_stackAnchor"] = "TOP",
 ["cooldownManager_cooldownFontName"] = "1",
+["cooldownManager_stackAnchorBuffIcons_offsetX"] = 0,
 ["cooldownManager_squareIconsZoom_Utility"] = 0,
 ["cooldownManager_visibility_perViewer"] = {
 ["BuffIconCooldownViewer"] = {
@@ -77,12 +80,13 @@ CooldownManagerCenteredDB = {
 ["BuffBarCooldownViewer"] = {
 },
 },
-["trinketRacialTracker_stackAnchor"] = "TOP",
-["cooldownManager_stackAnchorBuffIcons_offsetY"] = 3,
 ["cooldownManager_cooldownFontFlags"] = {
 ["THICKOUTLINE"] = true,
 },
-["_bug_warning_displayed"] = 20260310,
+["cooldownManager_stackAnchorBuffIcons_offsetY"] = 3,
+["cooldownManager_stackAnchorBuffIcons_point"] = "TOP",
+["cooldownManager_showKeybinds_Utility"] = true,
+["cooldownManager_centerUtility_growFromDirection"] = "Disable",
 ["cooldownManager_stackFontName"] = "1",
 ["tracker"] = {
 ["wildcardSlotSettings"] = {
@@ -644,17 +648,17 @@ CooldownManagerCenteredDB = {
 ["state"] = "hidden",
 ["order"] = 48,
 },
-[241304] = {
+[40772] = {
 ["state"] = "hidden",
-["order"] = 22,
+["order"] = 102,
 },
 [250225] = {
 ["state"] = "hidden",
 ["order"] = 105,
 },
-[40772] = {
+[81413] = {
 ["state"] = "hidden",
-["order"] = 102,
+["order"] = 93,
 },
 [191393] = {
 ["state"] = "hidden",
@@ -672,9 +676,9 @@ CooldownManagerCenteredDB = {
 ["state"] = "hidden",
 ["order"] = 92,
 },
-[81413] = {
+[241304] = {
 ["state"] = "hidden",
-["order"] = 93,
+["order"] = 22,
 },
 [243733] = {
 ["state"] = "hidden",
@@ -763,7 +767,7 @@ CooldownManagerCenteredDB = {
 },
 ["showUnusable"] = false,
 },
-["cooldownManager_stackAnchorBuffIcons_point"] = "TOP",
+["_bug_warning_displayed"] = 20260310,
 ["cooldownManager_visibility_enabled_viewers"] = {
 ["BuffIconCooldownViewer"] = false,
 ["CMCTracker2"] = false,
@@ -796,10 +800,12 @@ CooldownManagerCenteredDB = {
 },
 [13750] = {
 },
+[115636] = {
+},
 [79684] = {
 ["alwaysGlow"] = true,
 },
-[115636] = {
+[264571] = {
 },
 [1253304] = {
 },
@@ -827,10 +833,10 @@ CooldownManagerCenteredDB = {
 },
 },
 },
-["cooldownManager_showKeybinds_Utility"] = true,
 ["cooldownManager_stackFontFlags"] = {
 ["THICKOUTLINE"] = true,
 },
+["cooldownManager_desaturate_under_aura"] = true,
 },
 },
 }

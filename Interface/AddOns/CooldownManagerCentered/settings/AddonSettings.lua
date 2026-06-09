@@ -2444,6 +2444,7 @@ local function AddonSettings_BuildCooldown(category, layout)
         ["SHOW_WITH_ENEMY_TARGET"] = "Show with Enemy Target",
         ["SHOW_WITH_TARGET"] = "Show with any Target",
         ["HIDE_WHEN_FLYING"] = "Hide when Flying",
+        ["HIDE_WHEN_NOT_FLYING"] = "Hide when not Flying",
         ["HIDE_WHEN_MOUNTED"] = "Hide when Mounted & Travel Form",
         ["HIDE_WHEN_RESTING"] = "Hide when Resting",
         ["HIDE_OUT_OF_COMBAT"] = "Hide out of Combat",
@@ -2456,6 +2457,7 @@ local function AddonSettings_BuildCooldown(category, layout)
         "SHOW_WITH_ENEMY_TARGET",
         "SHOW_WITH_TARGET",
         "HIDE_WHEN_FLYING",
+        "HIDE_WHEN_NOT_FLYING",
         "HIDE_WHEN_MOUNTED",
         "HIDE_WHEN_RESTING",
         "HIDE_OUT_OF_COMBAT",
@@ -2489,6 +2491,7 @@ local function AddonSettings_BuildCooldown(category, layout)
             customText = "No rules (always visible)",
             searchtags = VISIBILITY_RULE_SEARCHTAGS,
             defaultSelection = {},
+            height = 340,
             values = VISIBILITY_RULE_VALUES,
             order = VISIBILITY_RULE_ORDER,
             getSelection = function()
@@ -2506,6 +2509,7 @@ local function AddonSettings_BuildCooldown(category, layout)
                 local HIDE_RULES = {
                     HIDE_IN_VEHICLES = true,
                     HIDE_WHEN_FLYING = true,
+                    HIDE_WHEN_NOT_FLYING = true,
                     HIDE_WHEN_MOUNTED = true,
                     HIDE_WHEN_RESTING = true,
                     HIDE_OUT_OF_COMBAT = true,
@@ -2768,16 +2772,49 @@ function AddonSettings:InitializeSettings()
     ns.ProfileSettings:BuildSettings(ns.AddonSettings.SettingsLayout.rootCategory)
 end
 
+local function HideDefaultsButton()
+    if
+        SettingsPanel
+        and SettingsPanel.Container
+        and SettingsPanel.Container.SettingsList
+        and SettingsPanel.Container.SettingsList.Header
+        and SettingsPanel.Container.SettingsList.Header.DefaultsButton
+    then
+        SettingsPanel.Container.SettingsList.Header.DefaultsButton.__hidden_by = "CMC"
+        SettingsPanel.Container.SettingsList.Header.DefaultsButton:Hide()
+    end
+end
+local function ShowDefaultsButton()
+    if
+        SettingsPanel
+        and SettingsPanel.Container
+        and SettingsPanel.Container.SettingsList
+        and SettingsPanel.Container.SettingsList.Header
+        and SettingsPanel.Container.SettingsList.Header.DefaultsButton
+        and SettingsPanel.Container.SettingsList.Header.DefaultsButton.__hidden_by == "CMC"
+    then
+        SettingsPanel.Container.SettingsList.Header.DefaultsButton:Show()
+        SettingsPanel.Container.SettingsList.Header.DefaultsButton.__hidden_by = nil
+    end
+end
 EventRegistry:RegisterCallback("Settings.CategoryChanged", function(_, category)
-    if category == ns.AddonSettings.SettingsLayout.rootCategory then
-        if
-            SettingsPanel
-            and SettingsPanel.Container
-            and SettingsPanel.Container.SettingsList
-            and SettingsPanel.Container.SettingsList.Header
-            and SettingsPanel.Container.SettingsList.Header.DefaultsButton
-        then
-            SettingsPanel.Container.SettingsList.Header.DefaultsButton:Hide()
-        end
+    if
+        category == ns.AddonSettings.SettingsLayout.rootCategory
+        or category == ns.AddonSettings.SettingsLayout.profileCategory
+    then
+        HideDefaultsButton()
+    else
+        ShowDefaultsButton()
+    end
+end)
+
+SettingsPanel.SearchBox:HookScript("OnTextChanged", function()
+    if
+        SettingsPanel:GetCurrentCategory() == ns.AddonSettings.SettingsLayout.rootCategory
+        or SettingsPanel:GetCurrentCategory() == ns.AddonSettings.SettingsLayout.profileCategory
+    then
+        HideDefaultsButton()
+    else
+        ShowDefaultsButton()
     end
 end)

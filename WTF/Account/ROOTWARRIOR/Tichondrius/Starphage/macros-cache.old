@@ -91,6 +91,7 @@ VER 3 0100000000000041 " " "INV_Misc_QuestionMark"
 END
 VER 3 0100000000000044 " " "134400"
 #showtooltip Void Metamorphosis
+/use 14
 /use Potion of Recklessness
 /use Saltwater Potion
 /cast Void Metamorphosis

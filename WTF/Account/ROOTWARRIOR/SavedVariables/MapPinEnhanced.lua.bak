@@ -1,6 +1,6 @@
 
 MapPinEnhancedDB = {
-["trackerVisible"] = false,
+["trackerVisible"] = true,
 ["minimapIcon"] = {
 ["minimapPos"] = 163.5128158652648,
 ["hide"] = false,
@@ -10,7 +10,7 @@ MapPinEnhancedDB = {
 ["y"] = -28.43038749694824,
 ["x"] = 10.78205680847168,
 },
-["superTrackingOther"] = true,
+["superTrackingOther"] = false,
 ["sets"] = {
 ["set-ef3112b9-9423"] = {
 ["name"] = "Imported Set 2",
@@ -538,6 +538,15 @@ MapPinEnhancedDB = {
 ["autoVisibility"] = "both",
 },
 ["storedPins"] = {
+{
+["y"] = 0.6759999999999999,
+["mapID"] = 885,
+["title"] = "Radix",
+["setTracked"] = true,
+["color"] = "Yellow",
+["order"] = 1,
+["x"] = 0.726,
+},
 },
 ["version"] = 320,
 ["floatingPin"] = {

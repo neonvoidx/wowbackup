@@ -1,10 +1,10 @@
 
 muleyoProcGlowDB = {
 ["profileKeys"] = {
-["Hellavator - Tichondrius"] = "Default",
+["Neonvoid - Tichondrius"] = "Default",
 ["Auteist - Tichondrius"] = "Default",
 ["Stormclout - Tichondrius"] = "Default",
-["Mäñýfäçëð - Tichondrius"] = "Default",
+["Hellavator - Tichondrius"] = "Default",
 ["Choppiez - Tichondrius"] = "Default",
 ["Bigxthazug - Tichondrius"] = "Default",
 ["Strathmoan - Tichondrius"] = "Default",
@@ -13,10 +13,10 @@ muleyoProcGlowDB = {
 ["Korahron - Tichondrius"] = "Default",
 ["Reedingo - Tichondrius"] = "Default",
 ["Manyfaced - Tichondrius"] = "Default",
-["Praisesun - Tichondrius"] = "Default",
 ["Starstypeshi - Tichondrius"] = "Default",
 ["Gehyo - Tichondrius"] = "Default",
-["Neonvoid - Tichondrius"] = "Default",
+["Praisesun - Tichondrius"] = "Default",
+["Mäñýfäçëð - Tichondrius"] = "Default",
 },
 ["profiles"] = {
 ["Default"] = {
@@ -65,6 +65,56 @@ muleyoProcGlowDB = {
 ["glowCooldownManager"] = false,
 },
 },
+["WARLOCK"] = {
+["48181"] = {
+["useDefaultColor"] = true,
+["glowType"] = "Default",
+["color"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+["procSound"] = "None",
+["glowCooldownManager"] = false,
+},
+},
+["ROGUE"] = {
+["13750"] = {
+["useDefaultColor"] = true,
+["glowType"] = "Default",
+["color"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+["procSound"] = "None",
+["glowCooldownManager"] = false,
+},
+["271877"] = {
+["useDefaultColor"] = true,
+["glowType"] = "Default",
+["color"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+["procSound"] = "None",
+["glowCooldownManager"] = false,
+},
+},
+["MONK"] = {
+["113656"] = {
+["useDefaultColor"] = false,
+["glowType"] = "Default",
+["color"] = {
+["b"] = 0.6666666865348816,
+["g"] = 1,
+["r"] = 0.2117647230625153,
+},
+["procSound"] = "None",
+["glowCooldownManager"] = false,
+},
+},
 ["DEMONHUNTER"] = {
 ["1217605"] = {
 ["useDefaultColor"] = false,
@@ -95,43 +145,6 @@ muleyoProcGlowDB = {
 ["r"] = 0.6941176652908325,
 ["g"] = 0,
 ["b"] = 1,
-},
-["procSound"] = "None",
-["glowCooldownManager"] = false,
-},
-},
-["MONK"] = {
-["113656"] = {
-["useDefaultColor"] = false,
-["glowType"] = "Default",
-["color"] = {
-["b"] = 0.6666666865348816,
-["g"] = 1,
-["r"] = 0.2117647230625153,
-},
-["procSound"] = "None",
-["glowCooldownManager"] = false,
-},
-},
-["ROGUE"] = {
-["13750"] = {
-["useDefaultColor"] = true,
-["glowType"] = "Default",
-["color"] = {
-["r"] = 0,
-["g"] = 1,
-["b"] = 0,
-},
-["procSound"] = "None",
-["glowCooldownManager"] = false,
-},
-["271877"] = {
-["useDefaultColor"] = true,
-["glowType"] = "Default",
-["color"] = {
-["r"] = 0,
-["g"] = 1,
-["b"] = 0,
 },
 ["procSound"] = "None",
 ["glowCooldownManager"] = false,
@@ -186,6 +199,40 @@ muleyoProcGlowDB = {
 ["procSound"] = "None",
 ["useDefaultColor"] = true,
 ["showStacks"] = false,
+},
+},
+["WARLOCK"] = {
+["264571_27243"] = {
+["anchorSpellID"] = 27243,
+["glowType"] = "Default",
+["color"] = {
+["b"] = 0.09803922474384308,
+["g"] = 1,
+["r"] = 0,
+},
+["glowCooldownManager"] = false,
+["shouldShow"] = false,
+["glowIcon"] = false,
+["buffSpellID"] = 264571,
+["procSound"] = "None",
+["showStacks"] = false,
+["useDefaultColor"] = false,
+},
+["264571_198590"] = {
+["anchorSpellID"] = 198590,
+["glowType"] = "Default",
+["color"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0.01176470704376698,
+},
+["glowCooldownManager"] = false,
+["shouldShow"] = true,
+["glowIcon"] = false,
+["buffSpellID"] = 264571,
+["procSound"] = "None",
+["showStacks"] = false,
+["useDefaultColor"] = false,
 },
 },
 },

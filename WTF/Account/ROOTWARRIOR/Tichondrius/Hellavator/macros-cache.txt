@@ -4,6 +4,7 @@ VER 3 0100000000000021 " " "INV_MISC_QUESTIONMARK"
 END
 VER 3 0100000000000037 " " "136194"
 #showtooltip
+/use Goblin Weather Machine - Prototype 01-B
 /cast [group] Ritual of Souls
 /cast  [nogroup] Create Healthstone
 END
@@ -54,7 +55,8 @@ VER 3 010000000000004D " " "134400"
 END
 VER 3 0100000000000050 " " "134400"
 #showtooltip
-/cast [@cursor] Shadowfury
+/cast [known:Shadowfury,@cursor] Shadowfury
+/cast [known: Howl of Terror] Howl of Terror
 END
 VER 3 010000000000004F " " "134400"
 #showtooltip [known:howl of terror] howl of terror; [known: mortal coil] Mortal Coil

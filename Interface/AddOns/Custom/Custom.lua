@@ -110,8 +110,8 @@ local function OnEvent(self, event, ...)
 		SetCVar("NameplatePersonalShowInCombat", personalResource)
 		SetCVar("NameplatePersonalShowWithTarget", personalResource)
 
-		SetCVar("damageMeterEnabled", 1)
-		SetCVar("damageMeterResetOnNewInstance", 1)
+		SetCVar("damageMeterEnabled", 0)
+		SetCVar("damageMeterResetOnNewInstance", 0)
 
 		-- Assisted rotation highlight
 		SetCVar("assistedCombatHighlight", 0)

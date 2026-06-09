@@ -61,7 +61,9 @@ CooldownManagerCenteredDB = {
 },
 ["cooldownManager_normalizeUtilitySize"] = true,
 ["cooldownManager_keybindFontSize_Utility"] = 14,
+["cooldownManager_centerEssential_growFromDirection"] = "Disable",
 ["cooldownManager_cooldownFontName"] = "1",
+["cooldownManager_stackAnchorBuffIcons_offsetX"] = 0,
 ["cooldownManager_squareIconsZoom_Utility"] = 0,
 ["cooldownManager_visibility_perViewer"] = {
 ["BuffIconCooldownViewer"] = {
@@ -77,13 +79,15 @@ CooldownManagerCenteredDB = {
 ["CMCTracker2"] = {
 },
 },
-["trinketRacialTracker_stackAnchor"] = "TOP",
-["cooldownManager_stackAnchorBuffIcons_offsetY"] = 3,
 ["cooldownManager_cooldownFontFlags"] = {
 ["THICKOUTLINE"] = true,
 },
+["trinketRacialTracker_stackAnchor"] = "TOP",
+["cooldownManager_stackAnchorBuffIcons_offsetY"] = 3,
 ["cooldownManager_stackAnchorBuffIcons_point"] = "TOP",
 ["cooldownManager_stackFontName"] = "1",
+["cooldownManager_centerUtility_growFromDirection"] = "Disable",
+["cooldownManager_desaturate_under_aura"] = true,
 ["tracker"] = {
 ["wildcardSlotSettings"] = {
 ["trinket1"] = {
@@ -644,17 +648,17 @@ CooldownManagerCenteredDB = {
 ["state"] = "hidden",
 ["order"] = 48,
 },
-[81413] = {
+[241304] = {
 ["state"] = "hidden",
-["order"] = 93,
+["order"] = 22,
 },
 [250225] = {
 ["state"] = "hidden",
 ["order"] = 105,
 },
-[241304] = {
+[40772] = {
 ["state"] = "hidden",
-["order"] = 22,
+["order"] = 102,
 },
 [191393] = {
 ["state"] = "hidden",
@@ -672,9 +676,9 @@ CooldownManagerCenteredDB = {
 ["state"] = "hidden",
 ["order"] = 92,
 },
-[40772] = {
+[81413] = {
 ["state"] = "hidden",
-["order"] = 102,
+["order"] = 93,
 },
 [243733] = {
 ["state"] = "hidden",
@@ -796,10 +800,12 @@ CooldownManagerCenteredDB = {
 },
 [13750] = {
 },
+[1253304] = {
+},
 [79684] = {
 ["alwaysGlow"] = true,
 },
-[1253304] = {
+[264571] = {
 },
 [1241059] = {
 ["alwaysGlow"] = true,

@@ -202,7 +202,6 @@ ItemViewerFrame.__index = ItemViewerFrame
 
 function ItemViewerFrame:New(parent)
     local frame = CreateFrame("Frame", nil, parent)
-    frame:SetFrameStrata("MEDIUM")
     local obj = setmetatable({ frame = frame }, ItemViewerFrame)
     obj:Initialize()
     return obj

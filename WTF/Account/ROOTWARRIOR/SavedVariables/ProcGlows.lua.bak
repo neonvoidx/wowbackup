@@ -1,14 +1,14 @@
 
 muleyoProcGlowDB = {
 ["profileKeys"] = {
-["Mäñýfäçëð - Tichondrius"] = "Default",
+["Hellavator - Tichondrius"] = "Default",
 ["Auteist - Tichondrius"] = "Default",
+["Starstypeshi - Tichondrius"] = "Default",
+["Mäñýfäçëð - Tichondrius"] = "Default",
 ["Praisesun - Tichondrius"] = "Default",
-["Neonvoid - Tichondrius"] = "Default",
-["Gehyo - Tichondrius"] = "Default",
 ["Bigxthazug - Tichondrius"] = "Default",
 ["Strathmoan - Tichondrius"] = "Default",
-["Starstypeshi - Tichondrius"] = "Default",
+["Gehyo - Tichondrius"] = "Default",
 ["Starphage - Tichondrius"] = "Default",
 ["Manyfaced - Tichondrius"] = "Default",
 ["Reedingo - Tichondrius"] = "Default",
@@ -16,7 +16,7 @@ muleyoProcGlowDB = {
 ["Smaugchamp - Tichondrius"] = "Default",
 ["Choppiez - Tichondrius"] = "Default",
 ["Stormclout - Tichondrius"] = "Default",
-["Hellavator - Tichondrius"] = "Default",
+["Neonvoid - Tichondrius"] = "Default",
 },
 ["profiles"] = {
 ["Default"] = {
@@ -55,6 +55,19 @@ muleyoProcGlowDB = {
 },
 ["42650"] = {
 ["useDefaultColor"] = false,
+["glowType"] = "Default",
+["color"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+["procSound"] = "None",
+["glowCooldownManager"] = false,
+},
+},
+["WARLOCK"] = {
+["48181"] = {
+["useDefaultColor"] = true,
 ["glowType"] = "Default",
 ["color"] = {
 ["r"] = 0,
@@ -186,6 +199,40 @@ muleyoProcGlowDB = {
 ["procSound"] = "None",
 ["showStacks"] = false,
 ["useDefaultColor"] = true,
+},
+},
+["WARLOCK"] = {
+["264571_27243"] = {
+["anchorSpellID"] = 27243,
+["glowType"] = "Default",
+["color"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0.09803922474384308,
+},
+["glowCooldownManager"] = false,
+["shouldShow"] = false,
+["glowIcon"] = false,
+["buffSpellID"] = 264571,
+["procSound"] = "None",
+["useDefaultColor"] = false,
+["showStacks"] = false,
+},
+["264571_198590"] = {
+["anchorSpellID"] = 198590,
+["glowType"] = "Default",
+["color"] = {
+["r"] = 0.01176470704376698,
+["g"] = 1,
+["b"] = 0,
+},
+["glowCooldownManager"] = false,
+["shouldShow"] = true,
+["glowIcon"] = false,
+["buffSpellID"] = 264571,
+["procSound"] = "None",
+["useDefaultColor"] = false,
+["showStacks"] = false,
 },
 },
 },
