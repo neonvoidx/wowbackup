@@ -1,5 +1,5 @@
-## Interface: 120001, 120005, 120000
-## Version: v12.0.9
+## Interface: 120001, 120005, 120007
+## Version: v12.0.11
 ## Title: Capping
 ## Author: Funkeh
 ## Notes: Battleground timers and other PvP features.

@@ -5,22 +5,22 @@ KeystoneLootCharDB = {
 ["selectedTab"] = "dungeons",
 ["selectedRaidTab"] = 1307,
 },
+["version"] = 2,
 ["voidcore"] = {
 },
-["version"] = 2,
 ["filters"] = {
 ["dungeon"] = {
 ["track"] = "champion",
 ["rank"] = 1,
 },
 ["specId"] = 265,
-["slotIds"] = {
-},
+["classId"] = 9,
 ["raid"] = {
 ["difficulty"] = "normal",
 ["rank"] = 1,
 },
 ["slotId"] = 0,
-["classId"] = 9,
+["slotIds"] = {
+},
 },
 }

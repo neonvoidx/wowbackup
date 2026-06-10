@@ -101,10 +101,10 @@ local function OnEvent(self, event, ...)
 		SetCVar("UnitNameFriendlyPlayerName", 1) -- Show friendly player names always
 		SetCVar("UnitNamePlayerGuild", 1) -- Show guild
 		SetCVar("UnitNameOwn", 1) -- Show own name
-		SetCVar("UnitNamePlayerPVPTitle", 1) -- Show character title
+		SetCVar("UnitNamePlayerPVPTitle", 0) -- Show character title
 
 		-- Personal Resource Display
-		local personalResource = 1
+		local personalResource = 0
 		SetCVar("nameplateShowSelf", personalResource)
 		SetCVar("NameplatePersonalShowAlways", 0)
 		SetCVar("NameplatePersonalShowInCombat", personalResource)
@@ -135,6 +135,11 @@ local function OnEvent(self, event, ...)
 
 		-- Loot
 		SetCVar("autoLootDefault", 1)
+
+		-- Damage number size
+		SetCVar("WorldTextScale_v2", 1.3)
+		-- Name size
+		SetCVar("WorldTextMinSize", 12)
 
 		-- Secure ability toggle, prevents quick double presses
 		SetCVar("secureAbilityToggle", 1)

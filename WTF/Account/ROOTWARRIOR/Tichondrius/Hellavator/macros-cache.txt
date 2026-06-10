@@ -2,10 +2,10 @@ VER 3 0100000000000021 " " "INV_MISC_QUESTIONMARK"
 #showtooltip
 /cast [mod:shift,@focus,exists][] Command Demon
 END
-VER 3 0100000000000037 " " "136194"
-#showtooltip
+VER 3 0100000000000037 " " "134400"
+#showtooltip [group] Create Soulwell; [nogroup] Create Healthstone
 /use Goblin Weather Machine - Prototype 01-B
-/cast [group] Ritual of Souls
+/cast [group] Create Soulwell
 /cast  [nogroup] Create Healthstone
 END
 VER 3 010000000000003A " " "134400"
@@ -48,21 +48,10 @@ VER 3 010000000000004C " " "134400"
 #showtooltip
 /cast [@mouseover,harm,exists,nodead][] Havoc
 END
-VER 3 010000000000004D " " "134400"
-#showtooltip Summon Felhunter
-/cast  Fel Domination 
-/cast Summon Felhunter
-END
 VER 3 0100000000000050 " " "134400"
 #showtooltip
 /cast [known:Shadowfury,@cursor] Shadowfury
 /cast [known: Howl of Terror] Howl of Terror
-END
-VER 3 010000000000004F " " "134400"
-#showtooltip [known:howl of terror] howl of terror; [known: mortal coil] Mortal Coil
-/use Fire-Eater's Vial
-/cast  [known: mortal coil,mod:shift,@focus,exists][known:mortal coil] Mortal Coil
-/cast [known:howl of terror] howl of terror
 END
 VER 3 0100000000000052 " " "134400"
 #showtooltip Demonic Gateway
@@ -82,25 +71,10 @@ VER 3 0100000000000055 " " "134400"
 #showtooltip
 /cast [@cursor] Summon Infernal
 END
-VER 3 0100000000000058 " " "134400"
-#showtooltip Curse of Exhaustion
-/cast amplify curse
-/cast Curse of Exhaustion
-END
 VER 3 0100000000000056 " " "134400"
 #showtooltip Summon Felguard
 /cast  Fel Domination 
 /cast Summon Felguard
-END
-VER 3 0100000000000057 " " "134400"
-#showtooltip Curse of tongues
-/cast amplify curse
-/cast Curse of tongues
-END
-VER 3 0100000000000059 " " "134400"
-#showtooltip Curse of weakness
-/cast amplify curse
-/cast Curse of Weakness
 END
 VER 3 010000000000005A " " "134400"
 #showtooltip
@@ -109,6 +83,15 @@ END
 VER 3 010000000000005B " " "134400"
 #showtooltip
 /cast [mod:shift,@focus,exists,harm,nodead][] Devour Magic
+END
+VER 3 010000000000005D " " "134400"
+#showtooltip Demonic Circle: Teleport
+/cast soulburn
+/cast Demonic circle: teleport
+END
+VER 3 010000000000005E " " "134400"
+#showtooltip Mortal Coil
+/cast  [mod:shift,@focus,exists][] Mortal Coil
 END
 VER 3 010000000000002B "Pet Movement" "132152"
 #showtooltip

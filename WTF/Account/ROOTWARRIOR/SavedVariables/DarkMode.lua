@@ -15,10 +15,10 @@ DMTAB = {
 },
 ["POINTS"] = {
 ["DMSettings"] = {
-["AN"] = "CENTER",
-["PY"] = 116.6666030883789,
-["RE"] = "CENTER",
-["PX"] = -175.8336791992188,
+["AN"] = "LEFT",
+["PY"] = 128.3332366943359,
+["PX"] = 459.9996032714844,
+["RE"] = "LEFT",
 },
 },
 ["OPTIONS"] = {
@@ -31,21 +31,27 @@ DMTAB = {
 ["MMBTN"] = {
 ["ENABLED"] = false,
 },
+["ACTIONBARS"] = {
+},
 ["MASKBUFFSANDDEBUFFS"] = {
 ["ENABLED"] = true,
 },
 ["MASKMINIMAPBUTTONS"] = {
 ["ENABLED"] = true,
 },
-["ACTIONBARS"] = {
+["GRYPHONS"] = {
+["ENABLED"] = true,
 },
 ["THINBORDERS"] = {
 ["ENABLED"] = false,
 },
+["SHADOWACTIONBARS"] = {
+["ENABLED"] = true,
+},
 ["MASKBUFFSANDEBUFFS"] = {
 ["ENABLED"] = true,
 },
-["GRYPHONS"] = {
+["DESATURATE"] = {
 ["ENABLED"] = true,
 },
 ["MASKACTIONBUTTONS"] = {
@@ -57,18 +63,29 @@ DMTAB = {
 },
 ["CURRENTPROFILE"] = "DEFAULT",
 ["CUSTOMABC_g"] = 0,
-["CUSTOMABC_r"] = 1,
 ["CUSTOMABC_b"] = 0,
-["MMBTN"] = false,
-["CUSTOMABC_a"] = 1,
-["VALUES"] = {
-["COLORMODE"] = 5,
-["COLORMODEF"] = 5,
-["COLORMODEBAD"] = 5,
-["COLORMODEG"] = 5,
-["COLORMODEUF"] = 5,
-["COLORMODENP"] = 5,
-["COLORMODETT"] = 5,
-["COLORMODEAB"] = 5,
+["DarkMode"] = {
 },
+["MMBTN"] = false,
+["VALUES"] = {
+["COLORMODEABTNS"] = 5,
+["COLORMODEAB"] = 5,
+["COLORMODEBA"] = 5,
+["COLORMODEUF"] = 5,
+["COLORMODEAUNFRDRA"] = 5,
+["COLORMODENP"] = 5,
+["COLORMODEAUNFRHPA"] = 9,
+["COLORMODEF"] = 5,
+["COLORMODE"] = 5,
+["COLORMODEMI"] = 5,
+["COLORMODEBAD"] = 5,
+["COLORMODEAUNFRPORA"] = 9,
+["COLORMODEFA"] = 5,
+["COLORMODEG"] = 5,
+["COLORMODETT"] = 5,
+["COLORMODEUNFR"] = 5,
+},
+["CUSTOMABC_r"] = 1,
+["CUSTOMABC_a"] = 1,
+["minimapPos"] = 0,
 }

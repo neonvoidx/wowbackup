@@ -1,0 +1,77 @@
+
+AtlasLootDB = {
+["profileKeys"] = {
+["Hellavator - Tichondrius"] = "Default",
+},
+["profiles"] = {
+["Default"] = {
+["GUI"] = {
+["selected"] = {
+"AtlasLoot_Collections",
+"TIERSETS_BYCLASS",
+12,
+2,
+0,
+},
+},
+["Button"] = {
+["Item"] = {
+["ClickHandler"] = {
+["__defaults"] = {
+["LeftButton"] = {
+["Shift"] = "ChatLink",
+["Ctrl"] = "DressUp",
+["Alt"] = "SetFavourite",
+},
+["RightButton"] = {
+["Shift"] = "Azerite",
+},
+["types"] = {
+["ChatLink"] = true,
+["Azerite"] = true,
+["DressUp"] = true,
+["SetFavourite"] = true,
+},
+},
+["LeftButton"] = {
+["Shift"] = "ChatLink",
+["Ctrl"] = "DressUp",
+["Alt"] = "SetFavourite",
+},
+["RightButton"] = {
+["Shift"] = "Azerite",
+},
+["types"] = {
+["ChatLink"] = true,
+["Azerite"] = true,
+["DressUp"] = true,
+["SetFavourite"] = true,
+},
+},
+},
+["Set"] = {
+["ClickHandler"] = {
+["__defaults"] = {
+["LeftButton"] = {
+["Ctrl"] = "DressUp",
+["None"] = "OpenSet",
+},
+["types"] = {
+["DressUp"] = true,
+["OpenSet"] = true,
+},
+},
+["LeftButton"] = {
+["Ctrl"] = "DressUp",
+["None"] = "OpenSet",
+},
+["types"] = {
+["DressUp"] = true,
+["OpenSet"] = true,
+},
+},
+},
+},
+},
+},
+}

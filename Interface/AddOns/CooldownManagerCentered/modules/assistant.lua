@@ -363,6 +363,7 @@ eventFrame:SetScript("OnEvent", function(self, event, ...)
         or event == "PLAYER_SPECIALIZATION_CHANGED"
         or event == "UPDATE_SHAPESHIFT_FORM"
         or event == "TRAIT_CONFIG_UPDATED"
+        or event == "ACTIVE_PLAYER_SPECIALIZATION_CHANGED"
     then
         rotationSpellsCacheValid = false
         Assistant:PrepareRotationBorders()
@@ -425,6 +426,7 @@ function Assistant:Enable()
     eventFrame:RegisterEvent("PLAYER_TALENT_UPDATE")
     eventFrame:RegisterEvent("SPELLS_CHANGED")
     eventFrame:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
+    eventFrame:RegisterEvent("ACTIVE_PLAYER_SPECIALIZATION_CHANGED")
     eventFrame:RegisterEvent("TRAIT_CONFIG_UPDATED")
     eventFrame:RegisterEvent("UPDATE_SHAPESHIFT_FORM")
     eventFrame:RegisterEvent("EDIT_MODE_LAYOUTS_UPDATED")

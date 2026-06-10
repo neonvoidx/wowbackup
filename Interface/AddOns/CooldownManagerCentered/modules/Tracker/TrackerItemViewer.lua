@@ -638,21 +638,25 @@ function TrackerInstance:Create()
 
         if ns.db.profile.editMode[configKey].anchoredToTracker1 then
             local x, y
-            local spacing = ns.db.profile.editMode[configKey].anchoredToTracker1Spacing or DEFAULT_ICON_PADDING
+            local config = ns.db.profile.editMode[configKey]
+            local spacing = config.anchoredToTracker1Spacing or DEFAULT_ICON_PADDING
             if anchorPrimary == "LEFT" then
-                x = ns.db.profile.editMode[configKey].anchoredToTracker1Spacing
+                x = spacing
                 y = 0
             elseif anchorPrimary == "RIGHT" then
-                x = -ns.db.profile.editMode[configKey].anchoredToTracker1Spacing
+                x = -spacing
                 y = 0
             elseif anchorPrimary == "TOP" then
                 x = 0
-                y = -ns.db.profile.editMode[configKey].anchoredToTracker1Spacing
+                y = -spacing
             else
                 x = 0
-                y = ns.db.profile.editMode[configKey].anchoredToTracker1Spacing
+                y = spacing
             end
             frame:SetClampedToScreen(true)
+            if config.scale ~= nil then
+                frame:SetScale(config.scale)
+            end
             frame:ClearAllPoints()
             frame:SetPoint(anchorPrimary, _G["CMCTracker1"], OPPOSITE_ANCHOR[anchorPrimary], x, y)
             return
