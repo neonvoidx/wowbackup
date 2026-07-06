@@ -1,0 +1,210 @@
+
+PersonalResourceReskinDB = {
+["namespaces"] = {
+},
+["profileKeys"] = {
+["Stormclout - Tichondrius"] = "Default",
+["Starphage - Tichondrius"] = "Default",
+},
+["profiles"] = {
+["Default"] = {
+["powerBgTexture"] = "d1",
+["altTexture"] = "d1",
+["healthBgTexture"] = "d1",
+["prdGradientEnabled"] = {
+["DEMONHUNTER"] = false,
+},
+["frameWidth"] = 299,
+["absorbTexture"] = "d1",
+["texture"] = "d1",
+["altPowerBgTexture"] = "d1",
+["altPowerGradientEnabled"] = {
+["DEMONHUNTER"] = false,
+},
+},
+},
+}
+DevourTextDB = {
+["devourStrata"] = "HIGH",
+["devourFontSize"] = 20,
+["devourAnchorPoint"] = "CENTER",
+["devourFont"] = "Friz Quadrata TT",
+["devourLocked"] = false,
+}
+PlayerPowerTextDB = {
+["fontSize"] = 14,
+["visibleAlpha"] = 1,
+["snapToPRD"] = true,
+["hidden"] = false,
+["anchorToPlayerFrame"] = false,
+["locked"] = true,
+["fontChoice"] = "GameFontNormal",
+["fadeAlpha"] = 0.35,
+["offsetX"] = 0,
+["fontOutline"] = "OUTLINE",
+["fadeWhenFull"] = true,
+["offsetY"] = 0,
+["textFormat"] = "currentmax",
+["color"] = {
+1,
+1,
+1,
+},
+}
+PlayerHealthTextDB = {
+["fontSize"] = 14,
+["color"] = {
+1,
+1,
+1,
+},
+["showAbsorbs"] = false,
+["fontChoice"] = "GameFontNormal",
+["displayMode"] = "both",
+["offsetX"] = 0,
+["offsetY"] = 0,
+["visibleAlpha"] = 1,
+["fontFlags"] = "OUTLINE",
+}
+PRDHealthToggleDB = {
+["hidden"] = false,
+}
+AbsorbBarsBlizzard_Config = {
+["y"] = 0,
+["x"] = 0,
+["fgColor"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 1,
+},
+["opacity"] = 0.8,
+["texture"] = "Blizzard",
+}
+CustomEssenceBarDB = nil
+CustomHolyPowerBarDB = {
+["enabled"] = true,
+["orbWidth"] = 24,
+["hideOnMount"] = true,
+["anchorPosition"] = "BELOW",
+["y"] = -120,
+["x"] = 0,
+["orbHeight"] = 24,
+["anchorOffset"] = 10,
+["locked"] = false,
+["orbBgColor"] = {
+0,
+0,
+0,
+0.5,
+},
+["gradientColor1"] = {
+1,
+0.85,
+0.3,
+1,
+},
+["gradientColor2"] = {
+1,
+0.85,
+0.3,
+1,
+},
+}
+CustomDeathKnightRuneBarDB = nil
+CustomSoulShardBarDB = nil
+PRDRightClickMenuConfig = nil
+CustomDruidComboBarDB = nil
+CustomRogueComboBarDB = nil
+CustomMageArcaneOrbDB = {
+["arcaneOrbWidth"] = 24,
+["anchorPosition"] = "BELOW",
+["gradientColorEnd"] = {
+1,
+1,
+0,
+1,
+},
+["anchorTarget"] = "HEALTH",
+["gradientColorStart"] = {
+0,
+0,
+1,
+1,
+},
+["gradientColoringEnabled"] = false,
+["anchorOffset"] = 10,
+["arcaneOrbHeight"] = 24,
+["y"] = -120,
+["x"] = 0,
+["anchorToPRD"] = false,
+["debug"] = false,
+["locked"] = false,
+["arcaneOrbBgColor"] = {
+0,
+0,
+0,
+0.5,
+},
+["arcaneOrbFillColors"] = {
+{
+0.2,
+0.4,
+1,
+1,
+},
+{
+0.2,
+0.4,
+1,
+1,
+},
+{
+0.2,
+0.4,
+1,
+1,
+},
+{
+0.2,
+0.4,
+1,
+1,
+},
+},
+["enabled"] = true,
+}
+CustomWindwalkerMonkOrbBarDB = {
+["enabled"] = false,
+["orbWidth"] = 24,
+["anchorTarget"] = "HEALTH",
+["orbBgColor"] = {
+0,
+0,
+0,
+0.5,
+},
+["orbHeight"] = 24,
+["anchorOffset"] = 10,
+["y"] = -120,
+["x"] = 0,
+["gradientColor2"] = {
+0,
+1,
+0.8,
+1,
+},
+["anchorToPRD"] = false,
+["locked"] = false,
+["orbSpacing"] = 0,
+["gradientColor1"] = {
+0,
+0.8,
+0.6,
+1,
+},
+["anchorPosition"] = "BELOW",
+}
+CustomDruidComboBar = nil
+GuardianIronfurTrackerDB = {
+}
+CustomBrewmasterStaggerBarDB = nil

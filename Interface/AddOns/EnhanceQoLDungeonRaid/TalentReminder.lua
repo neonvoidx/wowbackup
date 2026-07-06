@@ -1,0 +1,732 @@
+local parentAddonName = "EnhanceQoL"
+local addonName, addon = ...
+
+if _G[parentAddonName] then
+	addon = _G[parentAddonName]
+else
+	error(parentAddonName .. " is not loaded")
+end
+
+addon.MythicPlus = addon.MythicPlus or {}
+addon.MythicPlus.functions = addon.MythicPlus.functions or {}
+addon.MythicPlus.variables = addon.MythicPlus.variables or {}
+
+local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL")
+local EditMode = addon.EditMode
+
+addon.MythicPlus.variables.knownLoadout = {}
+addon.MythicPlus.variables.specNames = {}
+addon.MythicPlus.variables.currentSpecID = PlayerUtil.GetCurrentSpecID()
+addon.MythicPlus.variables.seasonMapInfo = {}
+addon.MythicPlus.variables.seasonMapHash = {}
+addon.MythicPlus.variables.seasonMapLookup = {}
+
+local function addSeasonMapAlias(aliasList, aliasHash, value)
+	if value == nil then return end
+	if type(value) ~= "number" and type(value) ~= "string" then return end
+	if aliasHash[value] then return end
+	aliasHash[value] = true
+	table.insert(aliasList, value)
+end
+
+local function getLegacySeasonMapID(data, cId)
+	if not data or not data.mapID then return nil end
+	if type(data.mapID) == "table" then
+		local variant = data.mapID[cId]
+		if type(variant) == "table" then return variant.mapID .. "_" .. variant.zoneID end
+		return variant
+	end
+	return data.mapID
+end
+
+local function getSeasonZoneID(data, cId)
+	if not data then return nil end
+	if type(data.mapID) == "table" then
+		local variant = data.mapID[cId]
+		if type(variant) == "table" then return variant.zoneID end
+	end
+	return data.zoneID
+end
+
+local function createSeasonInfo()
+	addon.MythicPlus.variables.seasonMapInfo = {}
+	addon.MythicPlus.variables.seasonMapHash = {}
+	addon.MythicPlus.variables.seasonMapLookup = {}
+	local cModeIDs = C_ChallengeMode.GetMapTable()
+	local cModeIDLookup = {}
+	local liveMapIDCounts = {}
+	local pendingEntries = {}
+	local seenMapIDs = {}
+	for _, id in ipairs(cModeIDs) do
+		cModeIDLookup[id] = true
+	end
+
+	for _, section in pairs(addon.MythicPlus.variables.portalCompendium or {}) do
+		for spellID, data in pairs(section.spells) do
+			if data.cId then
+				for cId in pairs(data.cId) do
+					if cModeIDLookup[cId] then
+						local mapName, _, _, _, _, liveMapID = C_ChallengeMode.GetMapUIInfo(cId)
+						local legacyMapID = getLegacySeasonMapID(data, cId)
+						local zoneID = getSeasonZoneID(data, cId)
+						if type(liveMapID) == "number" then liveMapIDCounts[liveMapID] = (liveMapIDCounts[liveMapID] or 0) + 1 end
+						table.insert(pendingEntries, {
+							cId = cId,
+							legacyMapID = legacyMapID,
+							liveMapID = liveMapID,
+							name = mapName,
+							zoneID = zoneID,
+						})
+					end
+				end
+			end
+		end
+	end
+
+	for _, entry in ipairs(pendingEntries) do
+		local liveMapID = entry.liveMapID
+		local mapID = entry.legacyMapID
+
+		if type(liveMapID) == "number" then
+			mapID = liveMapID
+			if liveMapIDCounts[liveMapID] and liveMapIDCounts[liveMapID] > 1 then
+				if entry.zoneID then
+					mapID = liveMapID .. "_" .. entry.zoneID
+				elseif entry.legacyMapID ~= nil then
+					mapID = entry.legacyMapID
+				end
+			end
+		end
+
+		if mapID and not seenMapIDs[mapID] then
+			seenMapIDs[mapID] = true
+			local aliases = {}
+			local aliasHash = {}
+			addSeasonMapAlias(aliases, aliasHash, mapID)
+			addSeasonMapAlias(aliases, aliasHash, entry.legacyMapID)
+			if type(liveMapID) == "number" and liveMapIDCounts[liveMapID] == 1 then addSeasonMapAlias(aliases, aliasHash, liveMapID) end
+
+			local mapEntry = {
+				aliases = aliases,
+				cId = entry.cId,
+				id = mapID,
+				name = entry.name,
+			}
+
+			table.insert(addon.MythicPlus.variables.seasonMapInfo, mapEntry)
+			for _, alias in ipairs(aliases) do
+				addon.MythicPlus.variables.seasonMapHash[alias] = true
+				addon.MythicPlus.variables.seasonMapLookup[alias] = mapEntry
+			end
+		end
+	end
+	table.sort(addon.MythicPlus.variables.seasonMapInfo, function(a, b) return a.name < b.name end)
+end
+
+local function refreshTalentReminderSettings()
+	local refresh = addon.MythicPlus.functions.refreshTalentReminderSettings
+	if type(refresh) == "function" then refresh() end
+end
+
+local function getTalentReminderSetting(specSettings, mapID)
+	if type(specSettings) ~= "table" or mapID == nil then return nil, nil, mapID end
+	if specSettings[mapID] ~= nil then return specSettings[mapID], mapID, mapID end
+
+	local mapEntry = addon.MythicPlus.variables.seasonMapLookup and addon.MythicPlus.variables.seasonMapLookup[mapID]
+	if mapEntry and type(mapEntry.aliases) == "table" then
+		for _, alias in ipairs(mapEntry.aliases) do
+			if alias ~= mapID and specSettings[alias] ~= nil then return specSettings[alias], alias, mapEntry.id end
+		end
+		return nil, nil, mapEntry.id
+	end
+
+	return nil, nil, mapID
+end
+
+local function setTalentReminderSetting(specSettings, mapID, value)
+	if type(specSettings) ~= "table" or mapID == nil then return end
+
+	local mapEntry = addon.MythicPlus.variables.seasonMapLookup and addon.MythicPlus.variables.seasonMapLookup[mapID]
+	local canonicalID = mapEntry and mapEntry.id or mapID
+
+	if mapEntry and type(mapEntry.aliases) == "table" then
+		for _, alias in ipairs(mapEntry.aliases) do
+			if alias ~= canonicalID then specSettings[alias] = nil end
+		end
+	end
+
+	specSettings[canonicalID] = value
+end
+
+function addon.MythicPlus.functions.getAllLoadouts()
+	if #addon.MythicPlus.variables.seasonMapInfo == 0 then createSeasonInfo() end
+	addon.MythicPlus.variables.currentSpecID = PlayerUtil.GetCurrentSpecID()
+	addon.MythicPlus.variables.knownLoadout = {}
+	addon.MythicPlus.variables.specNames = {}
+	for i = 1, C_SpecializationInfo.GetNumSpecializationsForClassID(addon.variables.unitClassID) do
+		local specID, specName = GetSpecializationInfoForClassID(addon.variables.unitClassID, i)
+		addon.MythicPlus.variables.knownLoadout[specID] = {}
+		table.insert(addon.MythicPlus.variables.specNames, { text = specName, value = specID })
+		for _, v in pairs(C_ClassTalents.GetConfigIDsBySpecID(specID)) do
+			local info = C_Traits.GetConfigInfo(v)
+			if info then addon.MythicPlus.variables.knownLoadout[specID][info.ID] = info.name end
+		end
+		if TalentLoadoutEx then
+			if TalentLoadoutEx[addon.variables.unitClass] and TalentLoadoutEx[addon.variables.unitClass][i] then
+				for _, v in pairs(TalentLoadoutEx[addon.variables.unitClass][i]) do
+					if v.name then
+						local key = v.text and (v.text .. "_" .. v.name) or v.name
+						addon.MythicPlus.variables.knownLoadout[specID][key] = "TLE: " .. v.name
+					end
+				end
+			end
+		end
+		if #addon.MythicPlus.variables.knownLoadout[specID] then addon.MythicPlus.variables.knownLoadout[specID][0] = "" end
+	end
+end
+
+local function deleteFrame(element)
+	if element then
+		element:Hide()
+		element:SetScript("OnShow", nil)
+		element:SetScript("OnHide", nil)
+		element:SetParent(nil)
+		element = nil
+	end
+	if ChangeTalentUIPopup then ChangeTalentUIPopup = nil end
+end
+
+local function GetIndexForConfigID(configID)
+	local configIDs = C_ClassTalents.GetConfigIDsBySpecID(PlayerUtil.GetCurrentSpecID())
+	for i, id in ipairs(configIDs) do
+		if id == configID then return i end
+	end
+	return nil -- Falls nicht gefunden
+end
+
+local function GetConfigName(configID)
+	if configID then
+		if type(configID) == "number" then
+			local info = C_Traits.GetConfigInfo(configID)
+			if info then return info.name end
+		elseif
+			type(configID) == "string"
+			and addon.MythicPlus.variables.knownLoadout[addon.MythicPlus.variables.currentSpecID]
+			and addon.MythicPlus.variables.knownLoadout[addon.MythicPlus.variables.currentSpecID][configID]
+		then
+			return addon.MythicPlus.variables.knownLoadout[addon.MythicPlus.variables.currentSpecID][configID]
+		end
+	end
+	return UNKNOWN
+end
+
+local function showPopup(actTalent, requiredTalent)
+	local playedMusic = false
+	if ChangeTalentUIPopup and ChangeTalentUIPopup:IsShown() then
+		playedMusic = true
+		deleteFrame(ChangeTalentUIPopup)
+	end
+
+	local curName = GetConfigName(actTalent)
+	local newName = GetConfigName(requiredTalent)
+
+	local reloadFrame = CreateFrame("Frame", "ChangeTalentUIPopup", UIParent, "BasicFrameTemplateWithInset")
+	reloadFrame:SetSize(500, 200) -- Breite und Höhe
+	reloadFrame:SetPoint("TOP", UIParent, "TOP", 0, -200) -- Zentriert auf dem Bildschirm
+	reloadFrame:SetFrameStrata("DIALOG")
+
+	reloadFrame.title = reloadFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+	reloadFrame.title:SetPoint("TOP", reloadFrame, "TOP", 0, -6)
+	reloadFrame.title:SetText(L["WrongTalents"])
+
+	reloadFrame.curTalentHeadling = reloadFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
+	reloadFrame.curTalentHeadling:SetPoint("TOP", reloadFrame, "TOP", 0, -30)
+	reloadFrame.curTalentHeadling:SetText(L["ActualTalents"])
+
+	reloadFrame.curTalent = reloadFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	reloadFrame.curTalent:SetPoint("TOP", reloadFrame, "TOP", 0, addon.functions.getHeightOffset(reloadFrame.curTalentHeadling) - 5)
+	reloadFrame.curTalent:SetText("|cffff0000" .. curName .. "|r")
+
+	reloadFrame.reqTalentHeadling = reloadFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
+	reloadFrame.reqTalentHeadling:SetPoint("TOP", reloadFrame, "TOP", 0, addon.functions.getHeightOffset(reloadFrame.curTalent) - 15)
+	reloadFrame.reqTalentHeadling:SetText(L["RequiredTalents"])
+
+	reloadFrame.reqTalent = reloadFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	reloadFrame.reqTalent:SetPoint("TOP", reloadFrame, "TOP", 0, addon.functions.getHeightOffset(reloadFrame.reqTalentHeadling) - 5)
+	reloadFrame.reqTalent:SetText("|cff00ff00" .. newName .. "|r")
+
+	local reloadButton = CreateFrame("Button", nil, reloadFrame, "GameMenuButtonTemplate")
+	reloadButton:SetSize(120, 30)
+	reloadButton:SetPoint("BOTTOMLEFT", reloadFrame, "BOTTOMLEFT", 10, 10)
+	if type(requiredTalent) == "number" then
+		reloadButton:SetText(SWITCH)
+		reloadButton:SetScript("OnClick", function()
+			if InCombatLockdown() then return end
+			local talentIndex = GetIndexForConfigID(requiredTalent)
+			if talentIndex then ClassTalentHelper.SwitchToLoadoutByIndex(talentIndex) end
+			deleteFrame(ChangeTalentUIPopup)
+		end)
+	else
+		reloadFrame.reqTalent:SetText("|cff00ff00" .. newName .. "|r\n\n" .. L["useTalentLoadoutEx"])
+		reloadButton:SetText(L["OpenTalents"])
+		reloadButton:SetScript("OnClick", function()
+			if InCombatLockdown() then return end
+			PlayerSpellsMicroButton:Click()
+		end)
+	end
+
+	local cancelButton = CreateFrame("Button", nil, reloadFrame, "GameMenuButtonTemplate")
+	cancelButton:SetSize(120, 30)
+	cancelButton:SetPoint("BOTTOMRIGHT", reloadFrame, "BOTTOMRIGHT", -10, 10)
+	cancelButton:SetText(CLOSE)
+	cancelButton:SetScript("OnClick", function() deleteFrame(ChangeTalentUIPopup) end)
+
+	if addon.db["talentReminderSoundOnDifference"] and not playedMusic then
+		if addon.db["talentReminderUseCustomSound"] then
+			local key = addon.db["talentReminderCustomSoundFile"]
+			local soundTable = (addon.ChatIM and addon.ChatIM.availableSounds) or ((addon.functions and addon.functions.GetLSMMediaHash and addon.functions.GetLSMMediaHash("sound")) or {})
+			local file = key ~= "" and soundTable and soundTable[key]
+			if file then
+				PlaySoundFile(file, "Master")
+			else
+				PlaySound(11466, "Master")
+			end
+		else
+			PlaySound(11466, "Master")
+		end
+	end
+	reloadFrame:Show()
+	local maxHeight = addon.functions.getHeightOffset(reloadFrame.reqTalent) * -1
+
+	local minButton = reloadButton:GetWidth() + cancelButton:GetWidth() + 40
+	local maxWidth = max(
+		max(reloadFrame.curTalentHeadling:GetStringWidth(), reloadFrame.curTalent:GetStringWidth(), reloadFrame.reqTalentHeadling:GetStringWidth(), reloadFrame.reqTalent:GetStringWidth()),
+		minButton
+	)
+
+	reloadFrame:SetSize(maxWidth + 20, max(120, (maxHeight + 50)))
+end
+
+local function showWarning(info)
+	if ChangeTalentUIWarning and ChangeTalentUIWarning:IsShown() then deleteFrame(ChangeTalentUIWarning) end
+
+	local reloadFrame = CreateFrame("Frame", "ChangeTalentUIWarning", UIParent, "BasicFrameTemplateWithInset")
+	reloadFrame:SetSize(500, 200)
+	reloadFrame:SetPoint("TOP", UIParent, "TOP", 0, -200)
+	reloadFrame:SetFrameStrata("DIALOG")
+
+	reloadFrame.title = reloadFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+	reloadFrame.title:SetPoint("TOP", reloadFrame, "TOP", 0, -6)
+	reloadFrame.title:SetText(L["DeletedLoadout"])
+
+	reloadFrame.curTalentHeadling = reloadFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
+	reloadFrame.curTalentHeadling:SetPoint("TOP", reloadFrame, "TOP", 0, -30)
+	reloadFrame.curTalentHeadling:SetText(L["MissingTalentLoadout"])
+
+	reloadFrame.curTalent = reloadFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	reloadFrame.curTalent:SetPoint("TOP", reloadFrame, "TOP", 0, addon.functions.getHeightOffset(reloadFrame.curTalentHeadling) - 5)
+	reloadFrame.curTalent:SetText(info)
+
+	local cancelButton = CreateFrame("Button", nil, reloadFrame, "GameMenuButtonTemplate")
+	cancelButton:SetSize(120, 30)
+	cancelButton:SetPoint("BOTTOM", reloadFrame, "BOTTOM", -10, 10)
+	cancelButton:SetText(ACCEPT)
+	cancelButton:SetScript("OnClick", function()
+		addon.MythicPlus.functions.checkRemovedLoadout(true)
+		reloadFrame:Hide()
+		reloadFrame:SetScript("OnShow", nil)
+		reloadFrame:SetScript("OnHide", nil)
+		reloadFrame:SetParent(nil)
+		reloadFrame = nil
+		ChangeTalentUIWarning = nil
+	end)
+
+	reloadFrame:Show()
+	local maxHeight = addon.functions.getHeightOffset(reloadFrame.curTalent) * -1
+
+	local minButton = cancelButton:GetWidth() + 40
+	local maxWidth = max(max(reloadFrame.curTalentHeadling:GetStringWidth(), reloadFrame.curTalent:GetStringWidth()), minButton) + 50
+	reloadFrame:SetSize(maxWidth + 20, max(120, (maxHeight + 50)))
+end
+
+local frameLoad = CreateFrame("Frame")
+local activeBuildFrame = CreateFrame("Frame", "EQOLATF", UIParent)
+activeBuildFrame:SetSize(200, 20)
+activeBuildFrame:SetMovable(false)
+activeBuildFrame:EnableMouse(false)
+activeBuildFrame.text = activeBuildFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+activeBuildFrame.text:SetPoint("CENTER")
+
+local ACTIVE_BUILD_EDITMODE_ID = "talentReminderActiveBuild"
+local activeBuildEditModeRegistered = false
+local activeBuildRefreshInProgress = false
+local activeBuildApplyInProgress = false
+local activeBuildRegisterInProgress = false
+
+local function shouldShowActiveBuildText()
+	if not (addon.db["talentReminderEnabled"] and addon.db["talentReminderShowActiveBuild"]) then return false end
+	if EditMode and EditMode:IsInEditMode() then return true end
+
+	local allowed = addon.db["talentReminderActiveBuildShowOnly"]
+	if type(allowed) == "table" then
+		local hasAny = next(allowed) ~= nil
+		if hasAny then
+			local inInstance, instanceType = IsInInstance()
+			local isRaid = instanceType == "raid"
+			if not inInstance and allowed[1] then return true end
+			if inInstance and not isRaid and allowed[2] then return true end
+			if isRaid and allowed[3] then return true end
+			return false
+		end
+	end
+
+	return true
+end
+
+local function buildActiveBuildLayoutSnapshot(layoutName)
+	return {
+		point = addon.db["talentReminderActiveBuildPoint"] or "CENTER",
+		relativePoint = addon.db["talentReminderActiveBuildPoint"] or "CENTER",
+		x = addon.db["talentReminderActiveBuildX"] or 0,
+		y = addon.db["talentReminderActiveBuildY"] or 0,
+		size = addon.db["talentReminderActiveBuildSize"] or 14,
+	}
+end
+
+local function seedActiveBuildEditModeRecord(record)
+	if type(record) ~= "table" then return end
+	local snapshot = buildActiveBuildLayoutSnapshot()
+	record.point = snapshot.point or "CENTER"
+	record.relativePoint = snapshot.relativePoint or record.point
+	record.x = snapshot.x or 0
+	record.y = snapshot.y or 0
+	record.size = snapshot.size or 14
+end
+
+local function applyActiveBuildLayoutData(data)
+	local cfg = data or buildActiveBuildLayoutSnapshot()
+
+	local point = cfg.point or "CENTER"
+	local relativePoint = cfg.relativePoint or point
+	local x = cfg.x or 0
+	local y = cfg.y or 0
+	local size = cfg.size or addon.db["talentReminderActiveBuildSize"] or 14
+
+	addon.db["talentReminderActiveBuildPoint"] = point
+	addon.db["talentReminderActiveBuildX"] = x
+	addon.db["talentReminderActiveBuildY"] = y
+	addon.db["talentReminderActiveBuildSize"] = size
+
+	activeBuildFrame:ClearAllPoints()
+	activeBuildFrame:SetPoint(point, UIParent, relativePoint, x, y)
+	activeBuildFrame.text:SetFont(addon.variables.defaultFont, size, "OUTLINE")
+	local textWidth = activeBuildFrame.text:GetStringWidth() or 0
+	local textHeight = activeBuildFrame.text:GetStringHeight() or size
+	activeBuildFrame:SetSize(math.max(120, textWidth + 20), math.max(20, textHeight + 10))
+end
+
+local function refreshActiveBuildEditMode()
+	if not EditMode or activeBuildRefreshInProgress or activeBuildApplyInProgress then return end
+	activeBuildRefreshInProgress = true
+	EditMode:RefreshFrame(ACTIVE_BUILD_EDITMODE_ID)
+	activeBuildRefreshInProgress = false
+end
+
+local function registerActiveBuildEditMode()
+	if activeBuildEditModeRegistered or activeBuildRegisterInProgress or not EditMode then return end
+	activeBuildRegisterInProgress = true
+
+	local settingType = EditMode.lib and EditMode.lib.SettingType
+	local settings
+	if settingType then
+		settings = {}
+
+		settings[#settings + 1] = {
+			name = L["Text Size"],
+			kind = settingType.Slider,
+			default = addon.db["talentReminderActiveBuildSize"] or 14,
+			minValue = 6,
+			maxValue = 64,
+			valueStep = 1,
+			get = function() return addon.db["talentReminderActiveBuildSize"] or 14 end,
+			set = function(_, value)
+				addon.db["talentReminderActiveBuildSize"] = value
+				EditMode:SetValue(ACTIVE_BUILD_EDITMODE_ID, "size", value, nil, true)
+				addon.MythicPlus.functions.updateActiveTalentText()
+			end,
+			formatter = function(value) return tostring(math.floor((tonumber(value) or 0) + 0.5)) end,
+		}
+
+		settings[#settings + 1] = {
+			name = L["talentReminderShowActiveBuildDropdown"],
+			kind = settingType.Dropdown,
+			height = 160,
+			get = function() return CopyTable(addon.db["talentReminderActiveBuildShowOnly"] or {}) end,
+			set = function(_, value)
+				if type(value) == "table" then addon.db["talentReminderActiveBuildShowOnly"] = value end
+				addon.MythicPlus.functions.updateActiveTalentText()
+			end,
+			generator = function(_, root)
+				local function toggle(key)
+					if type(addon.db["talentReminderActiveBuildShowOnly"]) ~= "table" then addon.db["talentReminderActiveBuildShowOnly"] = {} end
+					addon.db["talentReminderActiveBuildShowOnly"][key] = not addon.db["talentReminderActiveBuildShowOnly"][key] or nil
+					addon.MythicPlus.functions.updateActiveTalentText()
+					refreshActiveBuildEditMode()
+				end
+				root:CreateCheckbox(
+					L["Outside"],
+					function() return addon.db["talentReminderActiveBuildShowOnly"] and addon.db["talentReminderActiveBuildShowOnly"][1] == true end,
+					function() toggle(1) end
+				)
+				root:CreateCheckbox(
+					L["talentReminderShowActiveBuildInstance"],
+					function() return addon.db["talentReminderActiveBuildShowOnly"] and addon.db["talentReminderActiveBuildShowOnly"][2] == true end,
+					function() toggle(2) end
+				)
+				root:CreateCheckbox(
+					L["Raid"],
+					function() return addon.db["talentReminderActiveBuildShowOnly"] and addon.db["talentReminderActiveBuildShowOnly"][3] == true end,
+					function() toggle(3) end
+				)
+			end,
+		}
+	end
+
+	activeBuildEditModeRegistered = true
+
+	EditMode:RegisterFrame(ACTIVE_BUILD_EDITMODE_ID, {
+		frame = activeBuildFrame,
+		title = L["talentReminderShowActiveBuild"],
+		layoutDefaults = buildActiveBuildLayoutSnapshot(),
+		legacyKeys = {
+			point = "talentReminderActiveBuildPoint",
+			relativePoint = "talentReminderActiveBuildPoint",
+			x = "talentReminderActiveBuildX",
+			y = "talentReminderActiveBuildY",
+			size = "talentReminderActiveBuildSize",
+		},
+		onApply = function(_, layoutName, data)
+			if not activeBuildFrame._eqolEditModeHydrated then
+				activeBuildFrame._eqolEditModeHydrated = true
+				local record = data or {}
+				seedActiveBuildEditModeRecord(record)
+				if EditMode and EditMode.SetFramePosition then
+					EditMode:SetFramePosition(ACTIVE_BUILD_EDITMODE_ID, record.point or "CENTER", record.x or 0, record.y or 0, layoutName)
+					return
+				end
+			end
+			activeBuildApplyInProgress = true
+			applyActiveBuildLayoutData(data)
+			addon.MythicPlus.functions.updateActiveTalentText()
+			activeBuildApplyInProgress = false
+		end,
+		onEnter = function() addon.MythicPlus.functions.updateActiveTalentText() end,
+		onExit = function() addon.MythicPlus.functions.updateActiveTalentText() end,
+		settings = settings,
+		isEnabled = function() return shouldShowActiveBuildText() end,
+		showOutsideEditMode = true,
+	})
+	activeBuildRegisterInProgress = false
+end
+
+local function updateActiveTalentText()
+	if EditMode and not activeBuildEditModeRegistered and not activeBuildRegisterInProgress then registerActiveBuildEditMode() end
+	if not shouldShowActiveBuildText() then
+		refreshActiveBuildEditMode()
+		RunNextFrame(function() activeBuildFrame:Hide() end)
+		return
+	end
+
+	local actTalent
+	if addon.MythicPlus.variables.currentSpecID then actTalent = C_ClassTalents.GetLastSelectedSavedConfigID(addon.MythicPlus.variables.currentSpecID) end
+	if actTalent then
+		local curName = GetConfigName(actTalent)
+		activeBuildFrame.text:SetText(string.format(L["TalentbuildLabel"], curName))
+	else
+		activeBuildFrame.text:SetText(string.format(L["TalentbuildLabel"], L["Unknown"]))
+	end
+	applyActiveBuildLayoutData()
+	activeBuildFrame:Show()
+	refreshActiveBuildEditMode()
+end
+
+addon.MythicPlus.functions.updateActiveTalentText = updateActiveTalentText
+
+local function checkLoadout(isReadycheck)
+	if nil == addon.MythicPlus.variables.currentSpecID then addon.MythicPlus.variables.currentSpecID = PlayerUtil.GetCurrentSpecID() end
+	if addon.db["talentReminderLoadOnReadyCheck"] and not isReadycheck then
+		deleteFrame(ChangeTalentUIPopup)
+		return
+	end
+	if
+		addon.db["talentReminderEnabled"]
+		and addon.db["talentReminderSettings"][addon.variables.unitPlayerGUID]
+		and addon.db["talentReminderSettings"][addon.variables.unitPlayerGUID][addon.MythicPlus.variables.currentSpecID]
+		and IsInInstance()
+	then
+		if #addon.MythicPlus.variables.seasonMapInfo == 0 then createSeasonInfo() end
+		local _, _, difficulty, _, _, _, _, mapID = GetInstanceInfo()
+		local specSettings = addon.db["talentReminderSettings"][addon.variables.unitPlayerGUID][addon.MythicPlus.variables.currentSpecID]
+
+		if difficulty == 23 and mapID then
+			if not addon.MythicPlus.variables.seasonMapHash[mapID] then
+				-- try combined MapID with zoneID
+				local zoneID = C_Map.GetBestMapForUnit("player")
+				if addon.MythicPlus.variables.seasonMapHash[mapID .. "_" .. zoneID] then mapID = mapID .. "_" .. zoneID end
+			end
+
+			if addon.MythicPlus.variables.seasonMapHash[mapID] then
+				local reqTalent = getTalentReminderSetting(specSettings, mapID)
+				if
+					reqTalent
+					and addon.MythicPlus.variables.knownLoadout
+					and addon.MythicPlus.variables.knownLoadout[addon.MythicPlus.variables.currentSpecID]
+					and addon.MythicPlus.variables.knownLoadout[addon.MythicPlus.variables.currentSpecID][reqTalent]
+				then
+					local actTalent = C_ClassTalents.GetLastSelectedSavedConfigID(addon.MythicPlus.variables.currentSpecID)
+					if type(reqTalent) == "number" and reqTalent > 0 then
+						if actTalent ~= reqTalent then
+							showPopup(actTalent, reqTalent)
+						else
+							deleteFrame(ChangeTalentUIPopup)
+						end
+					elseif type(reqTalent) == "string" and string.len(reqTalent) > 0 then
+						if C_Traits.GenerateImportString(C_ClassTalents.GetActiveConfigID()) ~= reqTalent:gsub("_.*$", "") then
+							showPopup(actTalent, reqTalent)
+						else
+							deleteFrame(ChangeTalentUIPopup)
+						end
+					else
+						deleteFrame(ChangeTalentUIPopup)
+					end
+				else
+					deleteFrame(ChangeTalentUIPopup)
+				end
+			else
+				deleteFrame(ChangeTalentUIPopup)
+			end
+		else
+			deleteFrame(ChangeTalentUIPopup)
+		end
+	elseif (ChangeTalentUIPopup and ChangeTalentUIPopup:IsVisible()) or (ChangeTalentUIWarning and ChangeTalentUIWarning:IsVisible()) then
+		deleteFrame(ChangeTalentUIPopup)
+	end
+	updateActiveTalentText()
+end
+
+function addon.MythicPlus.functions.checkLoadout() checkLoadout() end
+function addon.MythicPlus.functions.createSeasonInfo() createSeasonInfo() end
+function addon.MythicPlus.functions.GetTalentReminderSetting(specSettings, mapID) return getTalentReminderSetting(specSettings, mapID) end
+function addon.MythicPlus.functions.SetTalentReminderSetting(specSettings, mapID, value) setTalentReminderSetting(specSettings, mapID, value) end
+function addon.MythicPlus.functions.checkRemovedLoadout(clear)
+	local tRemoved = {}
+	for _, cbData in pairs(addon.MythicPlus.variables.seasonMapInfo) do
+		for i = 1, C_SpecializationInfo.GetNumSpecializationsForClassID(addon.variables.unitClassID) do
+			local specID, specName = GetSpecializationInfoForClassID(addon.variables.unitClassID, i)
+			if
+				addon.db["talentReminderSettings"]
+				and addon.db["talentReminderSettings"][addon.variables.unitPlayerGUID]
+				and addon.db["talentReminderSettings"][addon.variables.unitPlayerGUID][specID]
+			then
+				local specSettings = addon.db["talentReminderSettings"][addon.variables.unitPlayerGUID][specID]
+				local configuredLoadout = getTalentReminderSetting(specSettings, cbData.id)
+				if configuredLoadout and not addon.MythicPlus.variables.knownLoadout[specID][configuredLoadout] then
+					if clear then
+						setTalentReminderSetting(specSettings, cbData.id, nil)
+					else
+						table.insert(tRemoved, { spec = specName, dungeon = cbData.name })
+					end
+				end
+			end
+		end
+	end
+
+	if #tRemoved > 0 then
+		local specGroups = {}
+		for _, data in ipairs(tRemoved) do
+			if not specGroups[data.spec] then specGroups[data.spec] = {} end
+			table.insert(specGroups[data.spec], data.dungeon)
+		end
+
+		local fullMsg = {}
+		for spec, dungeons in pairs(specGroups) do
+			local list = spec .. ": " .. #dungeons .. " " .. DUNGEONS
+			table.insert(fullMsg, list)
+		end
+		if #fullMsg then showWarning(table.concat(fullMsg, "\n")) end
+	end
+end
+
+local firstLoad = true
+local eventHandlers = {
+	["TRAIT_CONFIG_CREATED"] = function()
+		addon.MythicPlus.functions.getAllLoadouts()
+		checkLoadout()
+		addon.MythicPlus.functions.checkRemovedLoadout()
+		updateActiveTalentText()
+		refreshTalentReminderSettings()
+	end,
+	["TRAIT_CONFIG_DELETED"] = function(arg1)
+		addon.MythicPlus.functions.getAllLoadouts()
+		checkLoadout()
+		addon.MythicPlus.functions.checkRemovedLoadout()
+		updateActiveTalentText()
+		refreshTalentReminderSettings()
+	end,
+	["TRAIT_CONFIG_UPDATED"] = function()
+		C_Timer.After(0.2, function()
+			addon.MythicPlus.functions.getAllLoadouts()
+			checkLoadout()
+			addon.MythicPlus.functions.checkRemovedLoadout()
+			updateActiveTalentText()
+			refreshTalentReminderSettings()
+		end)
+	end,
+	["READY_CHECK"] = function()
+		if addon.db["talentReminderLoadOnReadyCheck"] then checkLoadout(true) end
+		updateActiveTalentText()
+	end,
+	["ZONE_CHANGED"] = function()
+		if IsInInstance() then checkLoadout() end
+		updateActiveTalentText()
+	end,
+	["ZONE_CHANGED_NEW_AREA"] = function()
+		C_Timer.After(2, function()
+			if IsInInstance() then checkLoadout() end
+		end)
+		updateActiveTalentText()
+	end,
+	["PLAYER_ENTERING_WORLD"] = function()
+		if firstLoad then
+			firstLoad = false
+			C_Timer.After(1, function()
+				addon.MythicPlus.functions.getAllLoadouts()
+				addon.MythicPlus.functions.checkRemovedLoadout()
+				checkLoadout()
+				updateActiveTalentText()
+				refreshTalentReminderSettings()
+				frameLoad:UnregisterEvent("PLAYER_ENTERING_WORLD")
+			end)
+		end
+	end,
+}
+
+local function registerEvents(frame)
+	for event in pairs(eventHandlers) do
+		frame:RegisterEvent(event)
+	end
+end
+local function eventHandler(self, event, ...)
+	if addon.db["talentReminderEnabled"] then
+		if eventHandlers[event] then eventHandlers[event](...) end
+	end
+end
+
+function addon.MythicPlus.functions.InitTalentReminder()
+	if addon.MythicPlus.variables.talentReminderInitialized then return end
+	if not addon.db then return end
+	addon.MythicPlus.variables.talentReminderInitialized = true
+	registerEvents(frameLoad)
+	frameLoad:SetScript("OnEvent", eventHandler)
+	RunNextFrame(updateActiveTalentText)
+end

@@ -1402,8 +1402,9 @@ local function onInspect(arg1)
 	if nil == InspectFrame then return end
 	local unit = InspectFrame.unit
 	if nil == unit then return end
-
-	if UnitGUID(InspectFrame.unit) ~= arg1 then return end
+	if issecretvalue(unit) then return end
+	local unitGUID = UnitGUID(unit)
+	if not (issecretvalue(unitGUID) or issecretvalue(arg1)) and unitGUID ~= arg1 then return end
 
 	local pdElement = InspectPaperDollFrame
 	if not doneHook then
@@ -2300,6 +2301,15 @@ local function merchantHousingOwnedTextMatches(text)
 end
 
 local ITEM_CLASS_HOUSING = Enum and Enum.ItemClass and Enum.ItemClass.Housing or 20
+local merchantKnownStateCache = {}
+
+local function clearMerchantKnownStateCache()
+	if wipe then
+		wipe(merchantKnownStateCache)
+	else
+		merchantKnownStateCache = {}
+	end
+end
 
 local function merchantTooltipHasKnownState(tooltipData, isHousingItem)
 	if not tooltipData then return false end
@@ -2322,6 +2332,7 @@ local function merchantItemIsKnown(itemIndex)
 	if not C_TooltipInfo or (not C_TooltipInfo.GetMerchantItem and not C_TooltipInfo.GetHyperlink) then return false end
 
 	local itemLink = GetMerchantItemLink and GetMerchantItemLink(itemIndex) or nil
+	if itemLink and merchantKnownStateCache[itemLink] ~= nil then return merchantKnownStateCache[itemLink] end
 	local itemClassID = itemLink and C_Item and C_Item.GetItemInfoInstant and select(6, C_Item.GetItemInfoInstant(itemLink)) or nil
 	local isHousingItem = itemClassID == ITEM_CLASS_HOUSING
 	local tooltipData
@@ -2331,7 +2342,9 @@ local function merchantItemIsKnown(itemIndex)
 		if itemLink then tooltipData = C_TooltipInfo.GetHyperlink(itemLink) end
 	end
 
-	return merchantTooltipHasKnownState(tooltipData, isHousingItem)
+	local isKnown = merchantTooltipHasKnownState(tooltipData, isHousingItem)
+	if itemLink then merchantKnownStateCache[itemLink] = isKnown end
+	return isKnown
 end
 
 local petCollectedCache = {}
@@ -2791,6 +2804,12 @@ function addon.functions.initItemInventory()
 		hooksecurefunc(frame, "UpdateItems", addon.functions.updateBags)
 	end
 
+	local merchantKnownCacheFrame = CreateFrame("Frame")
+	merchantKnownCacheFrame:RegisterEvent("MERCHANT_SHOW")
+	merchantKnownCacheFrame:RegisterEvent("MERCHANT_CLOSED")
+	merchantKnownCacheFrame:RegisterEvent("BAG_UPDATE_DELAYED")
+	merchantKnownCacheFrame:SetScript("OnEvent", clearMerchantKnownStateCache)
+
 	hooksecurefunc("MerchantFrame_UpdateMerchantInfo", updateMerchantButtonInfo)
 	hooksecurefunc("MerchantFrame_UpdateBuybackInfo", updateBuybackButtonInfo)
 
@@ -2936,55 +2955,6 @@ local function gateNativeBagSetting(entry)
 	return entry
 end
 gateNativeBagSetting(expandable)
-
-if addon.Bags then
-	addon.Bags.integrated = true
-	local bagsSuiteExpandable = addon.SettingsLayout.suitesBagsSection
-	if not bagsSuiteExpandable then
-		bagsSuiteExpandable = addon.functions.SettingsCreateExpandableSection(cInventory, {
-			name = L["configCenterBags"] or "Bags",
-			configPageKey = "Bags",
-			description = L["bagsModuleEnableDesc"],
-			iconKey = "bags",
-			modernCategory = "suites",
-			modernOnly = true,
-			expanded = false,
-			colorizeTitle = false,
-		})
-		addon.SettingsLayout.suitesBagsSection = bagsSuiteExpandable
-	end
-
-	addon.functions.SettingsCreateCheckbox(cInventory, {
-		var = "enableBagsModule",
-		text = L["bagsModuleEnable"] or "Enable Bags module",
-		desc = L["bagsModuleEnableDesc"] or "Opt-in replacement for the default bag window. Disabling after it was enabled takes full effect after a UI reload.",
-		default = false,
-		parentSection = bagsSuiteExpandable,
-		get = function()
-			return addon.db and addon.db.enableBagsModule == true
-		end,
-		func = function(value)
-			addon.db = addon.db or {}
-			local wasEnabled = addon.db.enableBagsModule == true
-			local isEnabled = value == true
-			addon.db.enableBagsModule = isEnabled
-			if wasEnabled and not isEnabled then
-				addon.variables.requireReload = true
-				if addon.functions and addon.functions.checkReloadFrame then
-					addon.functions.checkReloadFrame()
-				end
-			end
-			if addon.Bags and addon.Bags.functions then
-				if isEnabled and addon.Bags.functions.Enable then
-					addon.Bags.functions.Enable()
-				elseif not isEnabled and addon.Bags.functions.Disable then
-					addon.Bags.functions.Disable()
-				end
-			end
-			refreshSettingsLayout()
-		end,
-		})
-	end
 
 assert(addon.SettingsLayout.gearUpgradeSection, "GearUpgrade section must be registered before durability warning settings")
 addon.functions.SettingsCreateCheckbox(cInventory, {
@@ -3446,7 +3416,13 @@ local eventHandlers = {
 
 local function registerEvents(frame)
 	for event in pairs(eventHandlers) do
-		frame:RegisterEvent(event)
+		if event == "ENCHANT_SPELL_COMPLETED" and not CharOpt("enchants") then
+			-- Registered dynamically when character enchant display is enabled.
+		elseif (event == "PLAYER_DEAD" or event == "PLAYER_UNGHOST" or event == "UPDATE_INVENTORY_DURABILITY") and not addon.db["showDurabilityOnCharframe"] then
+			-- Registered dynamically when character durability display is enabled.
+		else
+			frame:RegisterEvent(event)
+		end
 	end
 end
 
@@ -3458,6 +3434,24 @@ local frameLoad = CreateFrame("Frame")
 
 registerEvents(frameLoad)
 frameLoad:SetScript("OnEvent", eventHandler)
+
+function addon.functions.SyncItemInventoryEventRegistration()
+	if not frameLoad then return end
+	if CharOpt("enchants") then
+		frameLoad:RegisterEvent("ENCHANT_SPELL_COMPLETED")
+	else
+		frameLoad:UnregisterEvent("ENCHANT_SPELL_COMPLETED")
+	end
+	if addon.db["showDurabilityOnCharframe"] then
+		frameLoad:RegisterEvent("PLAYER_DEAD")
+		frameLoad:RegisterEvent("PLAYER_UNGHOST")
+		frameLoad:RegisterEvent("UPDATE_INVENTORY_DURABILITY")
+	else
+		frameLoad:UnregisterEvent("PLAYER_DEAD")
+		frameLoad:UnregisterEvent("PLAYER_UNGHOST")
+		frameLoad:UnregisterEvent("UPDATE_INVENTORY_DURABILITY")
+	end
+end
 
 -- If Blizzard_UIPanels_Game is already loaded, wire up immediately.
 if _G.PaperDollFrame then ensureCharFrameOnShowHook() end

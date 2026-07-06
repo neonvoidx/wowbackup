@@ -2,107 +2,44 @@
 local _, addon = ...
 
 addon.GeneratedChangelog = {
-	sourceTag = "11.0.4",
+	sourceTag = "11.6.0",
 	releases = {
 		{
-			tag = "11.0.4",
-			date = "2026-06-07",
+			tag = "11.6.0",
+			date = "2026-07-06",
 			sections = {
-				{
-					title = "Fixed",
-					items = {
-						"Craft Shopper: Removed the obsolete Missing only filter because the shopping list already contains only missing tracked-recipe reagents.",
-						"Settings Center: Fixed disabled dependency controls still counting as changed, and fixed page Defaults restoring some multi-select settings to UI fallback labels instead of their real default selection.",
-					},
-				},
-			},
-		},
-		{
-			tag = "11.0.3",
-			date = "2026-06-06",
-			sections = {
-				{
-					title = "Fixed",
-					items = {
-						"Bags: Fixed the crafted quality overlay feature using a custom overlay path instead of Blizzard's native item quality overlay, which could render profession quality icons too small or inconsistently; also fixed default-skin currency counts using the muted accent color instead of readable white text.",
-						"Craft Shopper: Fixed the missing Include Warband Bank option in the modern Settings Center, so Warband Bank reagents can be counted when calculating missing tracked-recipe materials.",
-						"Talent Reminder: Fixed loadout dropdown options in the modern Settings Center not refreshing after talent loadouts were created, deleted or updated during the same session.",
-						"Unit Frames / Healer Buff Placement: Fixed bar indicators hiding each other when multiple active healer-buff bars were placed on party or raid frames.",
-						"Nameplates: Fixed player-controlled nameplates being recolored by EQOL threat colors in PvP.",
-					},
-				},
-			},
-		},
-		{
-			tag = "11.0.2",
-			date = "2026-06-06",
-			sections = {
-				{
-					title = "Fixed",
-					items = {
-						"Tooltips: Fixed numeric Off/On dropdowns in the modern Settings Center storing labels instead of numeric values, and migrated affected tooltip, group finder and mouse trail settings back to numeric values.",
-					},
-				},
-			},
-		},
-		{
-			tag = "11.0.1",
-			date = "2026-06-06",
-			sections = {
-				{
-					title = "Fixed",
-					items = {
-						"Class Buff Reminder: Fixed missing expire timer.",
-						"Instance Difficulty: Restored the separate color picker rows for LFR, Normal, Heroic, Mythic, Mythic+ and Timewalking in the modern Settings Center.",
-						"Resource Bars / Shared Mode: Fixed non-Balance Druids being able to resolve Astral Power as the shared Main resource during shapeshift refreshes, and prevented driver-controlled bars from briefly flashing during rebuilds.",
-					},
-				},
-			},
-		},
-		{
-			tag = "11.0.0",
-			date = "2026-06-06",
-			sections = {
-				{
-					title = "Important",
-					items = {
-						"EnhanceQoL now uses a new modern Settings Center instead of the old Blizzard Settings tree, with dashboard, search, deep links, category pages, richer descriptions, version changelog display and modern controls for addon settings.",
-					},
-				},
 				{
 					title = "Added",
 					items = {
-						"Bags: Added a configurable Profession Quality overlay for crafted gear and profession items.",
-						"Cooldown Panels: Added a Blizzard alert texture picker for State textures with rendered previews, search, live preview selection and FileDataID display.",
-						"Damage Meter: Added optional segment linking and a per-window option to keep manually selected meter types after reloads.",
-						"Economy: Added guild-bank repair context selection for automatic guild-bank repairs.",
-						"Sound: Added a mute toggle for Blizzard's Raid Warning sound.",
-						"Unit Frames, Castbars and Resource Bars: Added configurable text anchors for cast names, cast durations, resource bar values and target-of-target name text.",
+						"Cooldown Panels: Added export support, action bar anchoring, per-entry specialization filters, hide-unavailable editor views, custom spell/item tracking, automatic racial durations, and a persistent switch between the modern editor and the classic editor with classic group management.",
+						"Resource Bars: Added customizable Reputation and Honor bars with Edit Mode positioning, styling controls, session rates, estimates, and Experience bar style copying.",
+						"Mythic+ Timer: Added profile export/import support and more List layout controls.",
+						"UI & Quality of Life: Added a focus-target visibility rule, a separate enemy nameplate threat-color toggle, a Damage Meter tooltip trigger option, and new Teleport Compendium hearthstone and portal data.",
 					},
 				},
 				{
-					title = "Removed",
+					title = "Changed",
 					items = {
-						"System / CVar: Removed the deprecated Persist CVar values option and its storage logic.",
+						"Modular Addons: Split major features into standalone Enhance QoL child addons while keeping shared settings, profiles, locales, and core integration in the main addon.",
+						"Settings: Moved module-specific Profile pages and feature settings into their owning child addons so disabled child addons no longer leave inactive settings pages behind.",
+						"Resource Bars: Simplified segmented resource layouts and improved separated segment rendering.",
+					},
+				},
+				{
+					title = "PTR 12.1 Only",
+					items = {
+						"Added compatibility handling for Blizzard's restricted aura data and AuraContainer-backed Unit Frame and Group Frame aura rendering.",
+						"Temporarily gates aura-dependent features on PTR 12.1 when Blizzard does not expose usable aura information, including custom default aura containers, aura-driven resource bars, Cooldown Manager aura entries, private aura handling, reminder checks, dungeon/raid aura trackers, and tooltip aura fallback helpers.",
 					},
 				},
 				{
 					title = "Fixed",
 					items = {
-						"Action Bars / Button Text: Fixed keybind anchor positions using the HotKey text box width instead of the actual text anchor point.",
-						"Bags: Fixed new characters without purchased character bank tabs being unable to switch to the integrated character bank purchase view.",
-						"Bags: Restored missing icons for the Bags settings side navigation.",
-						"Chat History: Fixed text selection and scrollbar interaction in the copy window.",
-						"Class Buff Reminder: Fixed phased or otherwise unreachable raid members keeping class-buff reminders active when they were missing a buff that could not be applied.",
-						"Cooldown Panels: Fixed bar value text for normal cooldown entries not updating reliably in combat when the bar used a native cooldown duration object.",
-						"Cooldown Panels: Fixed Paste Entry Style copying tracked aura identity fields instead of only applying the visual style.",
-						"Damage Meter: Fixed restricted combat-data tooltip refresh errors and several tooltip row rendering issues.",
-						"Mythic Plus / Dungeon Finder: Fixed current-season dungeon score hover handling for missing Group Finder map IDs.",
-						"Nameplates: Fixed EQOL threat colors depending on Blizzard's native threat health bar color option, allowing configured threat warning and lost colors to apply independently.",
-						"Tooltips: Fixed realm language flags falling back to locale text such as [frFR] inside instances.",
-						"Unit Frames: Fixed custom player, target, focus and pet portrait fields not being exposed on EQOL unit frames.",
-						"Unit Frames: Fixed the player absorb overlay sometimes staying at zero width after logging in with an active shield.",
-						"Unit Frames / Raid Frames: Fixed grouped raid header spans not being snapped to even pixels, which could cause player names to jitter during automatic raid resizing.",
+						"Cooldown Panels: Fixed editor drag-and-drop issues, duplicated panel positioning, synced cooldown entries disappearing or flickering, resource/usability checks for special spells, and several anchoring/update edge cases after the modular addon split.",
+						"Unit Frames and Group Frames: Fixed Party/Raid anchor resolution, class-colored Data Bar updates, Boss Frame detached power bar behavior, and player-frame border reloads.",
+						"Resource Bars: Fixed login anchoring, Edit Mode availability, segmented border/gradient rendering, threshold display, and custom Reputation/Experience interactions.",
+						"Settings and Child Addons: Fixed missing settings pages, child addon startup initialization, Vendor filter setup, Tooltip custom anchoring, Mover handle activation, and several split-related runtime paths.",
+						"Teleport Compendium and Dungeon & Raid: Fixed portal metadata, dungeon portal score labels, Bloodlust/BR anchoring, and Mythic+ Timer List layout behavior.",
 					},
 				},
 			},

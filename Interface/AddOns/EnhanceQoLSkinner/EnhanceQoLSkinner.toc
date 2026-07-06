@@ -1,0 +1,23 @@
+## Interface: 120007, 120100
+## Title: Enhance QoL Skinner
+## Author: R41Z0R
+## Version: 11.6.0
+## Notes: Character frame and Objective Tracker styling
+## Notes-deDE: Charakterfenster- und Objective-Tracker-Styling
+## Notes-esES: Estilo del marco de personaje y del seguimiento de objetivos
+## Notes-esMX: Estilo del marco de personaje y del seguimiento de objetivos
+## Notes-frFR: Style de la fenetre de personnage et du suivi des objectifs
+## Notes-itIT: Stile finestra personaggio e tracciatore obiettivi
+## Notes-koKR: 캐릭터 창 및 목표 추적기 스타일
+## Notes-ptBR: Estilo do quadro de personagem e do rastreador de objetivos
+## Notes-ruRU: Оформление окна персонажа и отслеживания задач
+## Notes-zhCN: 角色窗口和目标追踪样式
+## Notes-zhTW: 角色視窗與目標追蹤樣式
+## Dependencies: EnhanceQoL
+## IconTexture: Interface\AddOns\EnhanceQoL\Icons\Icon.tga
+## Retail: true
+## X-Compatible-With: retail
+## LoadOnDemand: 1
+## Globe-Main: EnhanceQoL
+
+Skinner.xml

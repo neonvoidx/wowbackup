@@ -1,0 +1,31 @@
+
+HandyNotes_DragonflightTreasuresDB = {
+["profileKeys"] = {
+["Stormclout - Mal'Ganis"] = "Stormclout - Mal'Ganis",
+["Neonvoid - Mal'Ganis"] = "Neonvoid - Mal'Ganis",
+["Kuttoklok - Mal'Ganis"] = "Kuttoklok - Mal'Ganis",
+["Kumire - Mal'Ganis"] = "Kumire - Mal'Ganis",
+["Burlytree - Mal'Ganis"] = "Burlytree - Mal'Ganis",
+["Thickshape - Mal'Ganis"] = "Thickshape - Mal'Ganis",
+["Hellavator - Mal'Ganis"] = "Hellavator - Mal'Ganis",
+["Fisthurr - Mal'Ganis"] = "Fisthurr - Mal'Ganis",
+},
+["profiles"] = {
+["Stormclout - Mal'Ganis"] = {
+},
+["Neonvoid - Mal'Ganis"] = {
+},
+["Kuttoklok - Mal'Ganis"] = {
+},
+["Kumire - Mal'Ganis"] = {
+},
+["Burlytree - Mal'Ganis"] = {
+},
+["Thickshape - Mal'Ganis"] = {
+},
+["Hellavator - Mal'Ganis"] = {
+},
+["Fisthurr - Mal'Ganis"] = {
+},
+},
+}

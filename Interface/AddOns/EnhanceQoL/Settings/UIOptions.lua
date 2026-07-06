@@ -37,6 +37,7 @@ local COOLDOWN_VIEWER_VISIBILITY_MODES = constants.COOLDOWN_VIEWER_VISIBILITY_MO
 		FLYING_ACTIVE = "FLYING_ACTIVE",
 		FLYING_INACTIVE = "FLYING_INACTIVE",
 		MOUSEOVER = "MOUSEOVER",
+		PLAYER_HAS_FOCUS = "PLAYER_HAS_FOCUS",
 		PLAYER_HAS_TARGET = "PLAYER_HAS_TARGET",
 		PLAYER_CASTING = "PLAYER_CASTING",
 		PLAYER_IN_GROUP = "PLAYER_IN_GROUP",
@@ -83,6 +84,7 @@ local DEFAULT_NAMEPLATE_FEATURE_KEYS = constants.DEFAULT_NAMEPLATE_FEATURE_KEYS
 		mobColorsInDungeons = "nameplateMobColorsInDungeons",
 		mobColorsOutsideDungeons = "nameplateMobColorsOutsideDungeons",
 		mobTankMode = "nameplateMobTankMode",
+		mobThreatColors = "nameplateMobThreatColors",
 	}
 
 local function getCachedLSMMedia(mediaType)
@@ -122,7 +124,7 @@ local function collectRuleOptions(kind)
 end
 
 local function isEQoLUnitEnabled(unit)
-	if not addon.Aura then return false end
+	if addon.functions and addon.functions.IsEQoLUnitFrameEnabled then return addon.functions.IsEQoLUnitFrameEnabled(unit) end
 	local db = addon.db and addon.db.ufFrames
 	if not db then return false end
 	if unit == "boss" then
@@ -772,6 +774,7 @@ local function createLabelControls(category, expandable)
 		desc = L["actionBarHotkeyFontOverrideDesc"],
 		func = function(value)
 			addon.db.actionBarHotkeyFontOverride = value and true or false
+			if ActionBarLabels and ActionBarLabels.EnsureRangeIndicatorHook then ActionBarLabels.EnsureRangeIndicatorHook() end
 			if ActionBarLabels and ActionBarLabels.RefreshAllHotkeyVisibility then ActionBarLabels.RefreshAllHotkeyVisibility() end
 			if ActionBarLabels and ActionBarLabels.RefreshAllHotkeyStyles then ActionBarLabels.RefreshAllHotkeyStyles() end
 		end,
@@ -1144,6 +1147,7 @@ local function createLabelControls(category, expandable)
 			else
 				addon.db.actionBarHiddenHotkeys[key] = nil
 			end
+			if ActionBarLabels and ActionBarLabels.EnsureRangeIndicatorHook then ActionBarLabels.EnsureRangeIndicatorHook() end
 			if ActionBarLabels and ActionBarLabels.RefreshAllHotkeyStyles then ActionBarLabels.RefreshAllHotkeyStyles() end
 		end,
 		desc = L["actionBarHideHotkeysDesc"],
@@ -1254,6 +1258,10 @@ local function createCooldownViewerDropdowns(category, expandable)
 		{ value = COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_IN_GROUP, text = L["In party/raid"] or "In party/raid" },
 		{ value = COOLDOWN_VIEWER_VISIBILITY_MODES.MOUSEOVER, text = L["cooldownManagerShowMouseover"] or "On mouseover" },
 		{
+			value = COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_HAS_FOCUS,
+			text = L["When I have a focus"] or "When I have a focus",
+		},
+		{
 			value = COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_HAS_TARGET,
 			text = L["When I have a target"] or "When I have a target",
 		},
@@ -1350,6 +1358,10 @@ local function createSpellActivationOverlayDropdown(category, expandable)
 		{ value = COOLDOWN_VIEWER_VISIBILITY_MODES.FLYING_ACTIVE, text = L["visibilityRule_flying"] or "While flying" },
 		{ value = COOLDOWN_VIEWER_VISIBILITY_MODES.FLYING_INACTIVE, text = L["VisibilityCondNotFlying"] or "Not flying" },
 		{ value = COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_CASTING, text = L["Player is casting"] or "Player is casting" },
+		{
+			value = COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_HAS_FOCUS,
+			text = L["When I have a focus"] or "When I have a focus",
+		},
 		{
 			value = COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_HAS_TARGET,
 			text = L["When I have a target"] or "When I have a target",
@@ -1537,76 +1549,8 @@ local function createFrameCategory()
 end
 
 function addon.functions.initUIOptions()
-	local defaults = (addon.GCDBar and addon.GCDBar.defaults) or {}
-	local xpDefaults = (addon.Aura and addon.Aura.ExperienceBar and addon.Aura.ExperienceBar.defaults) or {}
 	addon.functions.InitDBValue("hideEventToasts", false)
 	if addon.functions.ApplyEventToastVisibility then addon.functions.ApplyEventToastVisibility() end
-	addon.functions.InitDBValue("gcdBarEnabled", false)
-	addon.functions.InitDBValue("gcdBarWidth", defaults.width or 200)
-	addon.functions.InitDBValue("gcdBarHeight", defaults.height or 18)
-	addon.functions.InitDBValue("gcdBarTexture", defaults.texture or "DEFAULT")
-	addon.functions.InitDBValue("gcdBarColor", defaults.color or { r = 1, g = 0.82, b = 0.2, a = 1 })
-	addon.functions.InitDBValue("gcdBarSparkEnabled", defaults.sparkEnabled == true)
-	addon.functions.InitDBValue("gcdBarBackgroundEnabled", defaults.bgEnabled == true)
-	addon.functions.InitDBValue("gcdBarBackgroundTexture", defaults.bgTexture or "SOLID")
-	addon.functions.InitDBValue("gcdBarBackgroundColor", defaults.bgColor or { r = 0, g = 0, b = 0, a = 0 })
-	addon.functions.InitDBValue("gcdBarBorderEnabled", defaults.borderEnabled == true)
-	addon.functions.InitDBValue("gcdBarBorderTexture", defaults.borderTexture or "DEFAULT")
-	addon.functions.InitDBValue("gcdBarBorderColor", defaults.borderColor or { r = 0, g = 0, b = 0, a = 0.8 })
-	addon.functions.InitDBValue("gcdBarBorderSize", defaults.borderSize or 1)
-	addon.functions.InitDBValue("gcdBarBorderOffset", defaults.borderOffset or 0)
-	addon.functions.InitDBValue("gcdBarProgressMode", defaults.progressMode or "REMAINING")
-	addon.functions.InitDBValue("gcdBarFillDirection", defaults.fillDirection or "LEFT")
-	addon.functions.InitDBValue("gcdBarAnchorTarget", defaults.anchorRelativeFrame or defaults.anchorTarget or "UIParent")
-	addon.functions.InitDBValue("gcdBarAnchorPoint", defaults.anchorPoint or "CENTER")
-	addon.functions.InitDBValue("gcdBarAnchorRelativePoint", defaults.anchorRelativePoint or defaults.anchorPoint or "CENTER")
-	addon.functions.InitDBValue("gcdBarAnchorOffsetX", defaults.anchorOffsetX or 0)
-	addon.functions.InitDBValue("gcdBarAnchorOffsetY", defaults.anchorOffsetY or -120)
-	addon.functions.InitDBValue("gcdBarAnchorMatchWidth", defaults.anchorMatchRelativeWidth == true)
-	addon.functions.InitDBValue("gcdBarAnchorMatchWidthOffset", defaults.anchorMatchRelativeWidthOffset or 0)
-	addon.functions.InitDBValue("gcdBarHideInPetBattle", defaults.hideInPetBattle == true)
-
-	if addon.GCDBar and addon.GCDBar.OnSettingChanged then addon.GCDBar:OnSettingChanged(addon.db["gcdBarEnabled"]) end
-
-	addon.functions.InitDBValue("xpBarEnabled", false)
-	addon.functions.InitDBValue("xpBarWidth", xpDefaults.width or 260)
-	addon.functions.InitDBValue("xpBarHeight", xpDefaults.height or 16)
-	addon.functions.InitDBValue("xpBarTexture", xpDefaults.texture or "DEFAULT")
-	addon.functions.InitDBValue("xpBarColor", xpDefaults.color or { r = 0.20, g = 0.65, b = 0.95, a = 1 })
-	addon.functions.InitDBValue("xpBarRestedColor", xpDefaults.restedColor or { r = 0.20, g = 0.85, b = 1.00, a = 1 })
-	addon.functions.InitDBValue("xpBarRestedOverlay", xpDefaults.restedOverlayEnabled ~= false)
-	addon.functions.InitDBValue("xpBarBackgroundEnabled", xpDefaults.bgEnabled == true)
-	addon.functions.InitDBValue("xpBarBackgroundTexture", xpDefaults.bgTexture or "SOLID")
-	addon.functions.InitDBValue("xpBarBackgroundColor", xpDefaults.bgColor or { r = 0, g = 0, b = 0, a = 0.45 })
-	addon.functions.InitDBValue("xpBarBorderEnabled", xpDefaults.borderEnabled == true)
-	addon.functions.InitDBValue("xpBarBorderTexture", xpDefaults.borderTexture or "DEFAULT")
-	addon.functions.InitDBValue("xpBarBorderColor", xpDefaults.borderColor or { r = 0, g = 0, b = 0, a = 0.85 })
-	addon.functions.InitDBValue("xpBarBorderSize", xpDefaults.borderSize or 1)
-	addon.functions.InitDBValue("xpBarBorderOffset", xpDefaults.borderOffset or 0)
-	addon.functions.InitDBValue("xpBarFillDirection", xpDefaults.fillDirection or "LEFT")
-	addon.functions.InitDBValue("xpBarAnchorTarget", xpDefaults.anchorRelativeFrame or xpDefaults.anchorTarget or "UIParent")
-	addon.functions.InitDBValue("xpBarAnchorPoint", xpDefaults.anchorPoint or "CENTER")
-	addon.functions.InitDBValue("xpBarAnchorRelativePoint", xpDefaults.anchorRelativePoint or xpDefaults.anchorPoint or "CENTER")
-	addon.functions.InitDBValue("xpBarAnchorOffsetX", xpDefaults.anchorOffsetX or 0)
-	addon.functions.InitDBValue("xpBarAnchorOffsetY", xpDefaults.anchorOffsetY or -170)
-	addon.functions.InitDBValue("xpBarAnchorMatchWidth", xpDefaults.anchorMatchRelativeWidth == true)
-	addon.functions.InitDBValue("xpBarAnchorMatchWidthOffset", xpDefaults.anchorMatchRelativeWidthOffset or 0)
-	addon.functions.InitDBValue("xpBarShowText", xpDefaults.textEnabled ~= false)
-	addon.functions.InitDBValue("xpBarTextMode", xpDefaults.textMode or xpDefaults.textCenterMode or "CURMAXPERCENT")
-	addon.functions.InitDBValue("xpBarTextLeftMode", xpDefaults.textLeftMode or "LEVEL")
-	addon.functions.InitDBValue("xpBarTextCenterMode", xpDefaults.textCenterMode or xpDefaults.textMode or "CURMAXPERCENT")
-	addon.functions.InitDBValue("xpBarTextRightMode", xpDefaults.textRightMode or "PERCENT_RESTED")
-	addon.functions.InitDBValue("xpBarTextSize", xpDefaults.textSize or 11)
-	addon.functions.InitDBValue("xpBarTextFont", xpDefaults.textFont or (addon.functions.GetGlobalFontConfigKey and addon.functions.GetGlobalFontConfigKey() or "__EQOL_GLOBAL_FONT__"))
-	addon.functions.InitDBValue("xpBarTextOutline", addon.functions.GetGlobalFontStyleConfigKey and addon.functions.GetGlobalFontStyleConfigKey() or "__EQOL_GLOBAL_FONT_STYLE__")
-	addon.functions.InitDBValue("xpBarTextColor", xpDefaults.textColor or { r = 1, g = 1, b = 1, a = 1 })
-	addon.functions.InitDBValue("xpBarTextAbbreviateNumbers", xpDefaults.abbreviateNumbers == true)
-	addon.functions.InitDBValue("xpBarHideInPetBattle", xpDefaults.hideInPetBattle == true)
-	addon.functions.InitDBValue("xpBarHideBlizzardTracking", xpDefaults.hideBlizzardTracking ~= false)
-	if addon.db then addon.db["xpBarDebug"] = nil end
-	if addon.db then addon.db["xpBarDebugLast"] = nil end
-
-	if addon.Aura and addon.Aura.ExperienceBar and addon.Aura.ExperienceBar.OnSettingChanged then addon.Aura.ExperienceBar:OnSettingChanged(addon.db["xpBarEnabled"]) end
 	addon.functions.InitDBValue("totalAbsorbTrackerEnabled", false)
 	addon.functions.InitDBValue("totalAbsorbTrackerTextOnly", false)
 	addon.functions.InitDBValue("totalAbsorbTrackerRelativeFrame", "UIParent")
@@ -2177,7 +2121,7 @@ local function createNameplatesCategory()
 		parentSection = expandable,
 	})
 
-	local function createNameplateMobColorPicker(var, text)
+	local function createNameplateMobColorPicker(var, text, parentCheck, parentElement)
 		addon.functions.SettingsCreateColorPicker(category, {
 			var = var,
 			text = text,
@@ -2186,8 +2130,8 @@ local function createNameplatesCategory()
 				if addon.functions.RefreshDefaultNameplateMobColors then addon.functions.RefreshDefaultNameplateMobColors() end
 			end,
 			parent = true,
-			element = mobColorsToggle.element,
-			parentCheck = areMobColorsEnabled,
+			element = parentElement or mobColorsToggle.element,
+			parentCheck = parentCheck or areMobColorsEnabled,
 			colorizeLabel = false,
 			parentSection = expandable,
 		})
@@ -2229,8 +2173,26 @@ local function createNameplatesCategory()
 		parentSection = expandable,
 	})
 
-	createNameplateMobColorPicker(DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorThreatWarning, L["nameplateMobColorThreatWarning"] or "Threat warning color")
-	createNameplateMobColorPicker(DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorThreatLost, L["nameplateMobColorThreatLost"] or "Threat lost color")
+	local threatColorsToggle = addon.functions.SettingsCreateCheckbox(category, {
+		var = DEFAULT_NAMEPLATE_FEATURE_KEYS.mobThreatColors,
+		newTagID = DEFAULT_NAMEPLATE_FEATURE_KEYS.mobThreatColors,
+		text = L["nameplateMobThreatColors"] or "Threat colors",
+		desc = L["nameplateMobThreatColorsDesc"] or "Use EQOL threat warning and threat lost colors on default enemy nameplates. Turn this off to keep Blizzard's threat healthbar coloring.",
+		func = function(value)
+			addon.db[DEFAULT_NAMEPLATE_FEATURE_KEYS.mobThreatColors] = value and true or false
+			refreshNameplateMobColorScope()
+		end,
+		parent = true,
+		element = mobColorsToggle.element,
+		parentCheck = areMobColorsEnabled,
+		parentSection = expandable,
+	})
+	local function areThreatColorsEnabled()
+		return areMobColorsEnabled() and threatColorsToggle and threatColorsToggle.setting and threatColorsToggle.setting:GetValue() == true
+	end
+
+	createNameplateMobColorPicker(DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorThreatWarning, L["nameplateMobColorThreatWarning"] or "Threat warning color", areThreatColorsEnabled, threatColorsToggle.element)
+	createNameplateMobColorPicker(DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorThreatLost, L["nameplateMobColorThreatLost"] or "Threat lost color", areThreatColorsEnabled, threatColorsToggle.element)
 	createNameplateMobColorPicker(DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorTrivial, L["nameplateMobColorTrivial"] or "Trivial color")
 end
 
@@ -2283,30 +2245,13 @@ local function createCastbarCategory()
 		desc = L["gcdBarDesc"],
 		func = function(value)
 			addon.db["gcdBarEnabled"] = value and true or false
+			if not addon.GCDBar and addon.functions.LoadSubAddon then addon.functions.LoadSubAddon("EnhanceQoLResourceBars") end
 			if addon.GCDBar and addon.GCDBar.OnSettingChanged then addon.GCDBar:OnSettingChanged(addon.db["gcdBarEnabled"]) end
 		end,
 		parentSection = expandable,
 	})
 
 	addon.functions.SettingsCreateText(category, "|cffffd700" .. (L["gcdBarEditModeHint"] or "Configure size, texture, and color in Edit Mode.") .. "|r", {
-		parentSection = expandable,
-	})
-
-	addon.functions.SettingsCreateHeadline(category, L["ExperienceBar"] or "Experience Bar", {
-		parentSection = expandable,
-	})
-	local xpBarEnabled = addon.functions.SettingsCreateCheckbox(category, {
-		var = "xpBarEnabled",
-		text = L["xpBarEnabled"] or "Enable Experience bar",
-		desc = L["xpBarDesc"] or "Shows your experience as a customizable bar.",
-		func = function(value)
-			addon.db["xpBarEnabled"] = value and true or false
-			if addon.Aura and addon.Aura.ExperienceBar and addon.Aura.ExperienceBar.OnSettingChanged then addon.Aura.ExperienceBar:OnSettingChanged(addon.db["xpBarEnabled"]) end
-		end,
-		parentSection = expandable,
-	})
-
-	addon.functions.SettingsCreateText(category, "|cffffd700" .. (L["xpBarEditModeHint"] or "Configure anchor, style, and text in Edit Mode.") .. "|r", {
 		parentSection = expandable,
 	})
 
@@ -2496,33 +2441,11 @@ local function createCastbarCategory()
 		parentSection = expandable,
 	})
 
-	local function getCastbarConfig()
-		addon.db = addon.db or {}
-		addon.db.castbar = type(addon.db.castbar) == "table" and addon.db.castbar or {}
+	local function isCustomCastbarEnabled()
 		local castbar = addon.Aura and (addon.Aura.Castbar or addon.Aura.UFStandaloneCastbar)
-		local hasStandaloneModule = type(castbar) == "table" and type(castbar.GetConfig) == "function"
-		if not hasStandaloneModule then addon.db.castbar.enabled = false end
-		local cfg, defaults
-		if hasStandaloneModule then
-			cfg, defaults = castbar.GetConfig()
-		end
-		cfg = type(cfg) == "table" and cfg or addon.db.castbar
-		defaults = type(defaults) == "table" and defaults or {}
-		if hasStandaloneModule then
-			if cfg.enabled == nil then cfg.enabled = defaults.enabled == true end
-		else
-			cfg.enabled = false
-		end
-		return cfg
+		local cfg = castbar and castbar.GetConfig and castbar.GetConfig()
+		return type(cfg) == "table" and cfg.enabled == true
 	end
-
-	local function refreshCastbar()
-		local castbar = addon.Aura and (addon.Aura.Castbar or addon.Aura.UFStandaloneCastbar)
-		if castbar and castbar.Refresh then castbar.Refresh() end
-		if addon.functions and addon.functions.ApplyCastBarVisibility then addon.functions.ApplyCastBarVisibility() end
-	end
-
-	local function isCustomCastbarEnabled() return getCastbarConfig().enabled == true end
 
 	local function getCastbarOptions()
 		local options = {}
@@ -2539,43 +2462,6 @@ local function createCastbarCategory()
 		end
 		return addon.functions.RegisterConfigParentSection(parentCheck, expandable)
 	end
-
-	local function createStandaloneCastbarSuite()
-		local suiteCategory = addon.SettingsLayout.rootUI
-		local suiteExpandable = addon.SettingsLayout.suitesCastbarSection
-		if not suiteExpandable then
-			suiteExpandable = addon.functions.SettingsCreateExpandableSection(suiteCategory, {
-				name = L["Castbar"] or L["CastBars2"] or "Castbar",
-				description = L["configCenterPageDescEQoLCastbar"] or "Enable and configure the standalone EQoL player castbar. Size, position and style are handled in Edit Mode.",
-				expanded = false,
-				colorizeTitle = false,
-				newTagID = "EQoLCastbar",
-				configPageKey = "EQoLCastbar",
-				iconKey = "castbar",
-				modernCategory = "suites",
-				modernOnly = true,
-			})
-			addon.SettingsLayout.suitesCastbarSection = suiteExpandable
-		end
-
-		addon.functions.SettingsCreateCheckbox(suiteCategory, {
-			var = "useCustomPlayerCastbar",
-			text = L["useCustomPlayerCastbar"] or "Enable castbar",
-			desc = L["useCustomPlayerCastbarDesc"] or "Enable the EQoL castbar.",
-			get = function() return isCustomCastbarEnabled() end,
-			func = function(value)
-				local castCfg = getCastbarConfig()
-				castCfg.enabled = value and true or false
-				refreshCastbar()
-			end,
-			default = false,
-			parentSection = suiteExpandable,
-		})
-		addon.functions.SettingsCreateText(suiteCategory, "|cffffd700" .. (L["useCustomPlayerCastbarHint"] or "Configure size, position, and style in Edit Mode.") .. "|r", {
-			parentSection = suiteExpandable,
-		})
-	end
-	createStandaloneCastbarSuite()
 
 	addon.functions.SettingsCreateHeadline(category, L["CastBars2"], {
 		parentSection = expandable,
@@ -2609,9 +2495,9 @@ local function ensureBarsResourcesCategory()
 	local expandable = addon.SettingsLayout.uiBarsResourcesExpandable
 	if not expandable then
 		expandable = addon.functions.SettingsCreateExpandableSection(category, {
-			name = L["BarsAndResources"] or "XP & Absorb Bars",
+			name = L["BarsAndResources"] or "XP, Reputation & Absorb Bars",
 			description = L["configCenterPageDescBarsResources"]
-				or "Configure the XP and reputation bar plus the standalone absorb tracker.",
+				or "Configure the default XP and reputation bars plus the standalone absorb tracker.",
 			expanded = false,
 			colorizeTitle = false,
 			iconKey = "resource",

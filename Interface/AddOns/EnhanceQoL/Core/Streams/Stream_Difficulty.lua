@@ -82,7 +82,7 @@ local function getShortLabel(difficultyID)
 		return "NM"
 	elseif difficultyID == 2 or difficultyID == 5 or difficultyID == 6 or difficultyID == 15 or difficultyID == 205 or difficultyID == 230 then
 		return "HC"
-	elseif difficultyID == 16 or difficultyID == 23 then
+	elseif difficultyID == 16 or difficultyID == 23 or difficultyID == 233 then
 		return "M"
 	elseif difficultyID == 8 then
 		return "M+"

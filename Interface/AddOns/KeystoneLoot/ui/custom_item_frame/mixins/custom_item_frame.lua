@@ -1,12 +1,12 @@
-local AddonName, KeystoneLoot  = ...;
+local AddonName, KeystoneLoot    = ...;
 
-local DB                       = KeystoneLoot.DB;
-local Query                    = KeystoneLoot.Query;
+local DB                         = KeystoneLoot.DB;
+local Query                      = KeystoneLoot.Query;
 
-local ICON_SIZE                = 34;
-local ICON_SPACING             = 8;
-local ICON_TOP_OFFSET          = -90;
-local FRAME_BASE_HEIGHT        = 104;
+local ICON_SIZE                  = 34;
+local ICON_SPACING               = 8;
+local ICON_TOP_OFFSET            = -90;
+local FRAME_BASE_HEIGHT          = 104;
 
 KeystoneLootCustomItemFrameMixin = {};
 
@@ -20,7 +20,9 @@ function KeystoneLootCustomItemFrameMixin:Init()
         self:Refresh();
     end
 
+    DB:AddObserver("filters.specId", OnChanged);
     DB:AddObserver("filters.slotId", OnChanged);
+    DB:AddObserver("ui.selectedCharacterKey", OnChanged);
 
     self:Refresh();
 end

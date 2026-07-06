@@ -281,6 +281,22 @@ local function buildDrinkMacroSettings()
 	})
 
 	addon.functions.SettingsCreateCheckbox(cDrink, {
+		var = "healthStopCasting",
+		text = L["healthStopCasting"],
+		desc = L["healthStopCastingDesc"],
+		func = function(value)
+			addon.db.healthStopCasting = value and true or false
+			refreshHealthMacro()
+		end,
+		parentCheck = healthParentCheck,
+		parent = true,
+		element = healthEnable.element,
+		default = false,
+		type = Settings.VarType.Boolean,
+		parentSection = convenienceSection,
+	})
+
+	addon.functions.SettingsCreateCheckbox(cDrink, {
 		var = "healthUseCombatPotions",
 		text = L["Use Combat potions for health macro"],
 		desc = L["healthUseCombatPotionsDesc"],

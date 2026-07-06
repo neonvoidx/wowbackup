@@ -29,6 +29,7 @@ function addon.Health.functions.InitHealthMacro()
 	init("healthReset", "combat")
 	init("healthReorderByCooldown", true)
 	init("healthUseRecuperate", false)
+	init("healthStopCasting", false)
 	-- Allow using combat potions (from EnhanceQoLDrinkMacro/Health.lua entries tagged with isCombatPotion)
 	init("healthUseCombatPotions", false)
 	-- Custom spells support
@@ -541,6 +542,7 @@ local function buildMacro()
 	end
 	if #seqList >= 1 then
 		local parts = { "#showtooltip" }
+		if addon.db.healthStopCasting then table.insert(parts, "/stopcasting") end
 		if recuperateLine ~= "" then table.insert(parts, recuperateLine) end
 		local seqStr = table.concat(seqList, ", ")
 		if recuperateLine ~= "" then
@@ -552,10 +554,13 @@ local function buildMacro()
 		key = string.format("seq:%s|%s%s", table.concat(seqList, "|"), resetType, recuperateKey)
 	else
 		local parts = { "#showtooltip" }
+		if addon.db.healthStopCasting then table.insert(parts, "/stopcasting") end
 		if recuperateLine ~= "" then table.insert(parts, recuperateLine) end
 		macroBody = table.concat(parts, "\n")
 		key = "empty" .. recuperateKey
 	end
+
+	if addon.db.healthStopCasting then key = key .. "|stopcasting" end
 
 	if key ~= lastMacroKey then
 		-- Final safety check to avoid protected EditMacro during combat lockdown

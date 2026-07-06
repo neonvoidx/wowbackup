@@ -36,9 +36,11 @@ L["Export favorites of %s"] = "Exportar favoritos de %s";
 L["Import favorites for %s\nPaste import string here:"] = "Importar favoritos de %s\nCole a string de importação aqui:";
 L["Merge"] = "Mesclar";
 L["Overwrite"] = "Substituir";
+L["Merge keeps your existing favorites and only adds new items. Overwrite replaces all of them."] = "Mesclar mantém seus favoritos atuais e adiciona apenas itens novos. Substituir troca todos eles.";
 L["%d |4favorite:favorites; imported%s."] = "%d |4favorito:favoritos; importado%s.";
 L[" (overwritten)"] = " (substituído)";
 L["Import failed - %s"] = "Falha na importação - %s";
+L["All items are already in your favorites."] = "Todos os itens já estão nos seus favoritos.";
 L["Some specs were skipped - import string belongs to a different class."] = "Algumas especializações foram ignoradas - a string de importação pertence a outra classe.";
 L["Manage characters"] = "Gerenciar personagens";
 L["Hidden"] = "Oculto";
@@ -53,6 +55,10 @@ L["Shows a notification when another player loots an item you have marked as a f
 L["Whisper message..."] = "Mensagem sussurro...";
 L["Whisper message\n{item} will be replaced with the item link."] = "Mensagem sussurro\n{item} será substituído pelo link do item.";
 L["Multiple slot filtering"] = "Filtro de varios espacos";
+L["Auto Keystone response"] = "Resposta automática de chave";
+L["Enable party chat"] = "Ativar chat do grupo";
+L["Enable guild chat"] = "Ativar chat de guilda";
+L["Automatically responds with your current Mythic+ keystone when someone types \"!keys\" in the selected chat channels. Only works if other group members also have this addon."] = "Responde automaticamente com sua chave Mítica+ atual quando alguém digita \"!keys\" nos canais de chat selecionados. Funciona apenas se outros membros do grupo também tiverem este addon.";
 
 -- custom_item_icon.lua
 L["Custom Items"] = "Itens personalizados";
@@ -63,6 +69,7 @@ L["No favorites found"] = "Nenhum favorito encontrado";
 L["Invalid import string."] = "String de importação inválida.";
 L["No character selected."] = "Nenhum personagem selecionado.";
 L["No valid items found."] = "Nenhum item válido encontrado.";
+L["This import string requires a newer version of KeystoneLoot."] = "Esta string de importação requer uma versão mais recente do KeystoneLoot.";
 
 -- icon_button.lua / favorites.lua
 L["Set Favorite"] = "Definir favorito";
@@ -83,3 +90,10 @@ L["Favorite dropped!"] = "Favorito obtido!";
 
 -- whisper_button.lua
 L["Text can be modified in the settings."] = "O texto pode ser modificado nas configurações.";
+
+-- voidcore.lua
+L["Rescanning for bonus rolls..."] = "Reescaneando rolagens bônus...";
+L["Rescan bonus rolls"] = "Reescanear rolagens bônus";
+L["Checking for past bonus rolls (one time)..."] = "Procurando rolagens bônus anteriores (uma vez)...";
+L["%d past |4bonus roll:bonus rolls; detected."] = "%d |4rolagem bônus anterior detectada:rolagens bônus anteriores detectadas;.";
+L["No untracked bonus rolls found."] = "Nenhuma rolagem bônus não rastreada encontrada.";

@@ -1,0 +1,115 @@
+VER 3 0000000000000242 " " "INV_Misc_QuestionMark"
+#showtooltip
+/use 14
+END
+VER 3 0000000000000274 " " "134400"
+#showtooltip
+/use [@mouseover,noharm,exists,nodead][] Emergency Soul Link
+END
+VER 3 0000000000000240 " " "INV_Misc_QuestionMark"
+#showtooltip 13
+/use 13
+END
+VER 3 0000000000000275 " " "1385294"
+#plumber:drawer
+#/use item:259085
+#/use item:245880
+#/use item:241334
+#/use item:241325
+#/use item:241321
+#/use item:243733
+#/use item:132514
+#/use item:235704
+/click PLMR1
+END
+VER 3 0000000000000241 " " "2869702"
+#plumber:outfit
+/click PLMR_OUTFIT
+END
+VER 3 0000000000000248 " " "1345086"
+/stopcasting
+END
+VER 3 0000000000000243 " Clear" "1016706"
+/clearfocus
+END
+VER 3 0000000000000246 " MOUNT" "INV_Misc_QuestionMark"
+#showtooltip
+/cast [nomounted] !Zen Flight
+/click [flyable] MountJournalSummonRandomFavoriteButton
+END
+VER 3 0000000000000245 " MOUNT" "INV_Misc_QuestionMark"
+#showtooltip
+/click [nomod] MountJournalSummonRandomFavoriteButton
+/cast [mod:shift] Eternal Gladiator's Soul Eater
+/cast [mod:ctrl] Grand Expedition Yak
+END
+VER 3 0000000000000247 " PassiveFollow" "571320"
+/petfollow
+/petpassive
+END
+VER 3 0000000000000276 "1" "1380368"
+#FrameSort EnemyFrame1
+/cast [@none] Imprison
+END
+VER 3 0000000000000277 "2" "1380368"
+#FrameSort EnemyFrame2
+/cast [@none] Imprison
+END
+VER 3 0000000000000278 "2" "1305153"
+#FrameSort EnemyFrame2
+/cast [@none] Disrupt
+END
+VER 3 0000000000000279 "3" "1380368"
+#FrameSort EnemyFrame3
+/cast [@none] Imprison
+END
+VER 3 000000000000027A "3" "1305153"
+#FrameSort EnemyFrame3
+/cast [@none] Disrupt
+END
+VER 3 000000000000027B "blur" "1305150"
+/castsequence blur, 5
+END
+VER 3 000000000000024A "BOOGIE" "INV_Misc_QuestionMark"
+#showtooltip Blazing Shadowflame Cinder
+/use Blazing Shadowflame Cinder
+/use World Shrinker
+/use Shuffling Sands
+END
+VER 3 000000000000024B "BOW" "5927638"
+/bow
+END
+VER 3 0000000000000273 "EnhanceQoLBuffFoodMacro" "INV_Misc_QuestionMark"
+#showtooltip
+END
+VER 3 000000000000024D "EnhanceQoLFlaskMacro" "INV_Misc_QuestionMark"
+#showtooltip
+END
+VER 3 000000000000024E "EnhanceQoLHealthMacro" "INV_Misc_QuestionMark"
+#showtooltip
+/cast [nocombat] Recuperate
+/castsequence [combat] reset=combat item:241304
+END
+VER 3 000000000000024F "FOCUS" "132284"
+/focus [@mouseover,nodead,exists]; [@target,exists]
+END
+VER 3 000000000000027C "healer" "1305153"
+#FrameSort EnemyFrame1
+/cast [@none] Disrupt
+END
+VER 3 0000000000000250 "ItemOnWeap" "INV_Misc_QuestionMark"
+#showtooltip item:243733
+/use item:243733
+/use [button:2] 17; 16
+/click StaticPopup1Button1
+END
+VER 3 0000000000000249 "Plumber Housing Macro" "7252953"
+#plumber:home
+/click PLMR_HOME1
+END
+VER 3 0000000000000251 "Pull" "1713482"
+/pull 10
+END
+VER 3 0000000000000252 "Readycheck" "615342"
+/readycheck
+END

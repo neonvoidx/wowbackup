@@ -1,9 +1,9 @@
-## Interface: 120005,120007, 120005,120007
+## Interface: 120007,120100, 120007,120100
 ## Title: Talent Tree Tweaks
 ## Author: Numy
 ## IconTexture: Interface\Addons\TalentTreeTweaks\media\icon
 ## Notes: Various improvements and addition to the Dragonflight talent tree UI
-## Version: v1.13.26
+## Version: v1.13.28
 ## X-Curse-Project-ID: 678792
 ## X-Wago-ID: qKQxm86x
 ## SavedVariables: TalentTreeTweaksDB

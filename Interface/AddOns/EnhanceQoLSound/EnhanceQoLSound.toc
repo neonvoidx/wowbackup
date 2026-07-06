@@ -1,0 +1,23 @@
+## Interface: 120007, 120100
+## Title: Enhance QoL Sound
+## Author: R41Z0R
+## Version: 11.6.0
+## Notes: Sound muting and audio helpers
+## Notes-deDE: Sound-Stummschaltung und Audio-Helfer
+## Notes-esES: Silenciado de sonidos y ayudas de audio
+## Notes-esMX: Silenciado de sonidos y ayudas de audio
+## Notes-frFR: Mise en sourdine des sons et aides audio
+## Notes-itIT: Disattivazione suoni e assistenti audio
+## Notes-koKR: 소리 음소거 및 오디오 도우미
+## Notes-ptBR: Silenciamento de sons e auxiliares de audio
+## Notes-ruRU: Отключение звуков и помощники звука
+## Notes-zhCN: 声音静音和音频辅助
+## Notes-zhTW: 聲音靜音與音訊輔助
+## Dependencies: EnhanceQoL
+## IconTexture: Interface\AddOns\EnhanceQoL\Icons\Icon.tga
+## Retail: true
+## X-Compatible-With: retail
+## LoadOnDemand: 1
+## Globe-Main: EnhanceQoL
+
+Sound.xml

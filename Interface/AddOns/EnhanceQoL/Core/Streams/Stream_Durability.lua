@@ -144,25 +144,22 @@ local function resolveItemInfo(line)
 	if quality ~= nil then line.quality = quality end
 	if icon then line.icon = icon end
 end
-local function calculateDurability(stream)
+local function getDurabilitySummary(collectLines)
 	ensureDB()
-	-- Hide stream entirely for Timerunners (gear is indestructible)
 	if addon.functions and addon.functions.IsTimerunner and addon.functions.IsTimerunner() then
-		wipe(lines)
-		summary.totalPercent = 100
-		summary.critCount = 0
-		summary.items = 0
-		summary.current = 0
-		summary.max = 0
-		stream.snapshot.fontSize = db and db.fontSize or 13
-		stream.snapshot.text = nil
-		stream.snapshot.tooltip = nil
-		stream.snapshot.hidden = true
-		return
+		if collectLines then wipe(lines) end
+		return {
+			hidden = true,
+			totalPercent = 100,
+			critCount = 0,
+			items = 0,
+			current = 0,
+			max = 0,
+		}
 	end
-	stream.snapshot.hidden = nil
+
 	local maxDur, currentDura, critDura = 0, 0, 0
-	wipe(lines)
+	if collectLines then wipe(lines) end
 	local items = 0
 
 	for _, slot in ipairs(slotOrder) do
@@ -173,20 +170,22 @@ local function calculateDurability(stream)
 			maxDur = maxDur + max
 			currentDura = currentDura + cur
 			if fDur < 50 then critDura = critDura + 1 end
-			local link = GetInventoryItemLink("player", slot)
-			local itemID = GetInventoryItemID and GetInventoryItemID("player", slot) or nil
-			local itemName, quality, icon = getCachedItemInfo(itemID, link)
-			lines[#lines + 1] = {
-				slot = name,
-				name = itemName or name,
-				quality = quality,
-				itemID = itemID,
-				icon = icon,
-				link = link,
-				cur = cur,
-				max = max,
-				percent = fDur,
-			}
+			if collectLines then
+				local link = GetInventoryItemLink("player", slot)
+				local itemID = GetInventoryItemID and GetInventoryItemID("player", slot) or nil
+				local itemName, quality, icon = getCachedItemInfo(itemID, link)
+				lines[#lines + 1] = {
+					slot = name,
+					name = itemName or name,
+					quality = quality,
+					itemID = itemID,
+					icon = icon,
+					link = link,
+					cur = cur,
+					max = max,
+					percent = fDur,
+				}
+			end
 			items = items + 1
 		end
 	end
@@ -195,21 +194,41 @@ local function calculateDurability(stream)
 		maxDur, currentDura = 100, 100 -- 100% anzeigen, wenn nichts messbar ist
 	end
 
-	local durValue = (currentDura / maxDur) * 100
-	local color = getPercentColor(durValue)
+	return {
+		totalPercent = (currentDura / maxDur) * 100,
+		critCount = critDura,
+		items = items,
+		current = currentDura,
+		max = maxDur,
+	}
+end
+
+local function getPercentColorFromOptions(percent, options)
+	local rounded = floor((percent or 0) + 0.5)
+	if rounded > 80 then return colorToHex(options and options.highColor or db and db.highColor) end
+	if rounded > 50 then return colorToHex(options and options.midColor or db and db.midColor) end
+	return colorToHex(options and options.lowColor or db and db.lowColor)
+end
+
+local function buildDurabilityText(result, options)
+	options = options or {}
+	local durValue = result and result.totalPercent or 100
+	local color = getPercentColorFromOptions(durValue, options)
+	local fontSize = options.fontSize or db and db.fontSize or 13
 
 	local useTextColor = db and db.useTextColor and db.textColor
+	if options.useTextColor ~= nil then useTextColor = options.useTextColor and (options.textColor or db and db.textColor or true) end
 	local critDuraText = ""
-	local showCritical = db and db.showCritical ~= false
-	if showCritical and critDura > 0 then
+	local showCritical = options.showCritical
+	if showCritical == nil then showCritical = db and db.showCritical ~= false end
+	if showCritical and result and result.critCount and result.critCount > 0 then
 		if useTextColor then
-			critDuraText = ("%d %s < 50%%"):format(critDura, ITEMS)
+			critDuraText = ("%d %s < 50%%"):format(result.critCount, ITEMS)
 		else
-			critDuraText = ("|cff%s%d|r %s < 50%%"):format(getPercentColor(0), critDura, ITEMS)
+			critDuraText = ("|cff%s%d|r %s < 50%%"):format(getPercentColorFromOptions(0, options), result.critCount, ITEMS)
 		end
 	end
 
-	stream.snapshot.fontSize = db and db.fontSize or 13
 	local percentText
 	if useTextColor then
 		percentText = ("%.0f%%"):format(durValue)
@@ -218,15 +237,44 @@ local function calculateDurability(stream)
 	end
 	local text = percentText
 	if critDuraText ~= "" then text = text .. " " .. critDuraText end
-	if useTextColor then text = colorizeValue(text, db.textColor) end
-	if db.showIcon ~= false then text = ("|T136241:%d|t %s"):format(db and db.fontSize or 13, text) end
-	stream.snapshot.text = text
+	if type(useTextColor) == "table" then text = colorizeValue(text, useTextColor) end
+	local showIcon = options.showIcon
+	if showIcon == nil then showIcon = db.showIcon ~= false end
+	if showIcon then text = ("|T136241:%d|t %s"):format(fontSize, text) end
+	return text
+end
 
-	summary.totalPercent = durValue
-	summary.critCount = critDura
-	summary.items = items
-	summary.current = currentDura
-	summary.max = maxDur
+local function calculateDurability(stream)
+	ensureDB()
+	local result = getDurabilitySummary(true)
+	-- Hide stream entirely for Timerunners (gear is indestructible)
+	if result.hidden then
+		summary.totalPercent = result.totalPercent
+		summary.critCount = result.critCount
+		summary.items = result.items
+		summary.current = result.current
+		summary.max = result.max
+		stream.snapshot.fontSize = db and db.fontSize or 13
+		stream.snapshot.text = nil
+		stream.snapshot.tooltip = nil
+		stream.snapshot.hidden = true
+		return
+	end
+	stream.snapshot.hidden = nil
+	stream.snapshot.fontSize = db and db.fontSize or 13
+	stream.snapshot.text = buildDurabilityText(result)
+
+	summary.totalPercent = result.totalPercent
+	summary.critCount = result.critCount
+	summary.items = result.items
+	summary.current = result.current
+	summary.max = result.max
+end
+
+addon.functions.GetDurabilityStatsText = function(options)
+	local result = getDurabilitySummary(false)
+	if result.hidden then return nil, result end
+	return buildDurabilityText(result, options), result
 end
 
 local provider = {

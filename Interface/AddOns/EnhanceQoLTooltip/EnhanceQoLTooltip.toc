@@ -1,0 +1,23 @@
+## Interface: 120007, 120100
+## Title: Enhance QoL Tooltip
+## Author: R41Z0R
+## Version: 11.6.0
+## Notes: Tooltip IDs, visibility, realm and character details
+## Notes-deDE: Tooltip-IDs, Sichtbarkeit, Realm- und Charakterdetails
+## Notes-esES: ID de tooltips, visibilidad y detalles de reino y personaje
+## Notes-esMX: ID de tooltips, visibilidad y detalles de reino y personaje
+## Notes-frFR: ID d'infobulles, visibilite, royaume et details du personnage
+## Notes-itIT: ID tooltip, visibilita, reame e dettagli personaggio
+## Notes-koKR: 툴팁 ID, 표시 조건, 서버 및 캐릭터 정보
+## Notes-ptBR: IDs de dicas, visibilidade, reino e detalhes do personagem
+## Notes-ruRU: ID подсказок, видимость, сведения о мире и персонаже
+## Notes-zhCN: 鼠标提示ID、可见性、服务器和角色详情
+## Notes-zhTW: 滑鼠提示ID、可見性、伺服器與角色詳情
+## Dependencies: EnhanceQoL
+## IconTexture: Interface\AddOns\EnhanceQoL\Icons\Icon.tga
+## Retail: true
+## X-Compatible-With: retail
+## LoadOnDemand: 1
+## Globe-Main: EnhanceQoL
+
+Tooltip.xml

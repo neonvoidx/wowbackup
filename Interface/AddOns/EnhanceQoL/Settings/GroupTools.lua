@@ -162,6 +162,32 @@ if gameplayCategory then
 		parentSection = focusSection,
 	})
 	addon.functions.SettingsCreateCheckbox(gameplayCategory, {
+		var = DB.focusMarkerPreserveExisting,
+		text = L["groupToolsFocusMarkerPreserveExisting"] or "Do not override existing markers",
+		desc = L["groupToolsFocusMarkerPreserveExistingDesc"]
+			or "Uses /tm ~N so the macro only applies the marker when the unit does not already have one.",
+		get = function() return addon.db and addon.db[DB.focusMarkerPreserveExisting] == true end,
+		func = function(value) setFocusMarkerSetting("preserveExisting", value) end,
+		default = false,
+		parent = true,
+		element = parentElement,
+		parentCheck = isFocusMarkerEnabled,
+		parentSection = focusSection,
+	})
+	addon.functions.SettingsCreateCheckbox(gameplayCategory, {
+		var = DB.focusMarkerUseMouseover,
+		text = L["groupToolsFocusMarkerUseMouseover"] or "Use mouseover target",
+		desc = L["groupToolsFocusMarkerUseMouseoverDesc"]
+			or "When enabled, the macro prefers your hostile mouseover before falling back to your target. Disable to use your current target only.",
+		get = function() return not (addon.db and addon.db[DB.focusMarkerUseMouseover] == false) end,
+		func = function(value) setFocusMarkerSetting("useMouseover", value) end,
+		default = true,
+		parent = true,
+		element = parentElement,
+		parentCheck = isFocusMarkerEnabled,
+		parentSection = focusSection,
+	})
+	addon.functions.SettingsCreateCheckbox(gameplayCategory, {
 		var = DB.focusMarkerAnnounce,
 		text = L["groupToolsFocusMarkerAnnounce"] or "Announce on ready check",
 		desc = L["groupToolsFocusMarkerAnnounceDesc"],

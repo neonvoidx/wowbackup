@@ -9,38 +9,55 @@ local PROFILE_EXPORT_KIND = "EQOL_PROFILE"
 local BAGS_CATEGORIES_EXPORT_KIND = "EQOL_BAGS_CATEGORIES"
 local DAMAGE_METER_EXPORT_KIND = "EQOL_DAMAGE_METER"
 local HBP_EXPORT_KIND = "EQOL_HBP"
+local MYTHIC_PLUS_TIMER_EXPORT_KIND = "EQOL_MYTHIC_PLUS_TIMER"
 local IMPORT_PROTECTION_KEY = "importProtection"
 local IMPORT_PROTECTION = {
 	ACTION_BARS = "actionBars",
 	BAGS = "bags",
 	CASTBARS = "castbars",
+	CHAT_SOCIAL = "chatSocial",
+	CLASS_BUFF_REMINDER = "classBuffReminder",
 	COOLDOWN_PANELS = "cooldownPanels",
 	DAMAGE_METER = "damageMeter",
 	DATA_PANELS = "dataPanels",
 	DUNGEON_COMBAT = "dungeonCombat",
+	DUNGEON_RAID = "dungeonRaid",
 	HBP = "hbp",
 	INSTANCE_DIFFICULTY = "instanceDifficulty",
 	MOUSE_ACCESSIBILITY = "mouseAccessibility",
 	MOVER = "mover",
 	QUICK_ACCEPT = "quickAccept",
 	RESOURCE_BARS = "resourceBars",
+	SKINNER = "skinner",
+	SOUND = "sound",
+	TELEPORT_COMPENDIUM = "teleportCompendium",
+	TOOLTIP = "tooltip",
 	UNIT_FRAMES = "unitFrames",
+	VENDOR = "vendor",
 }
 local IMPORT_PROTECTION_DEFS = {
 	{ key = IMPORT_PROTECTION.ACTION_BARS, labelKey = "ProfileImportProtectionActionBars", fallback = "Action Bars" },
 	{ key = IMPORT_PROTECTION.BAGS, labelKey = "ProfileImportProtectionBags", fallback = "Bags" },
 	{ key = IMPORT_PROTECTION.CASTBARS, labelKey = "ProfileImportProtectionCastbars", fallback = "Castbars" },
+	{ key = IMPORT_PROTECTION.CHAT_SOCIAL, labelKey = "ProfileImportProtectionChatSocial", fallback = "Chat & Social" },
+	{ key = IMPORT_PROTECTION.CLASS_BUFF_REMINDER, labelKey = "ProfileImportProtectionClassBuffReminder", fallback = "Class Buff Reminder" },
 	{ key = IMPORT_PROTECTION.COOLDOWN_PANELS, labelKey = "ProfileImportProtectionCooldownPanels", fallback = "Cooldown Panels" },
 	{ key = IMPORT_PROTECTION.DAMAGE_METER, labelKey = "ProfileImportProtectionDamageMeter", fallback = "Damage Meter" },
 	{ key = IMPORT_PROTECTION.DATA_PANELS, labelKey = "ProfileImportProtectionDataPanels", fallback = "Data Panels" },
 	{ key = IMPORT_PROTECTION.DUNGEON_COMBAT, labelKey = "ProfileImportProtectionDungeonCombat", fallback = "Dungeon & Combat Tools" },
+	{ key = IMPORT_PROTECTION.DUNGEON_RAID, labelKey = "ProfileImportProtectionDungeonRaid", fallback = "Dungeon & Raid" },
 	{ key = IMPORT_PROTECTION.HBP, labelKey = "ProfileImportProtectionHBP", fallback = "Healer Buff Placement" },
 	{ key = IMPORT_PROTECTION.INSTANCE_DIFFICULTY, labelKey = "ProfileImportProtectionInstanceDifficulty", fallback = "Instance Difficulty" },
 	{ key = IMPORT_PROTECTION.MOUSE_ACCESSIBILITY, labelKey = "ProfileImportProtectionMouseAccessibility", fallback = "Mouse & Accessibility" },
 	{ key = IMPORT_PROTECTION.MOVER, labelKey = "ProfileImportProtectionMover", fallback = "Mover" },
 	{ key = IMPORT_PROTECTION.QUICK_ACCEPT, labelKey = "ProfileImportProtectionQuickAccept", fallback = "Quick Accept" },
 	{ key = IMPORT_PROTECTION.RESOURCE_BARS, labelKey = "ProfileImportProtectionResourceBars", fallback = "Resource Bars" },
+	{ key = IMPORT_PROTECTION.SKINNER, labelKey = "ProfileImportProtectionSkinner", fallback = "Skinner" },
+	{ key = IMPORT_PROTECTION.SOUND, labelKey = "ProfileImportProtectionSound", fallback = "Sound" },
+	{ key = IMPORT_PROTECTION.TELEPORT_COMPENDIUM, labelKey = "ProfileImportProtectionTeleportCompendium", fallback = "Teleport Compendium" },
+	{ key = IMPORT_PROTECTION.TOOLTIP, labelKey = "ProfileImportProtectionTooltip", fallback = "Tooltip" },
 	{ key = IMPORT_PROTECTION.UNIT_FRAMES, labelKey = "ProfileImportProtectionUnitFrames", fallback = "Unit Frames" },
+	{ key = IMPORT_PROTECTION.VENDOR, labelKey = "ProfileImportProtectionVendor", fallback = "Vendor" },
 }
 
 local profilesCategory = nil
@@ -59,9 +76,6 @@ local expandable = addon.functions.SettingsCreateExpandableSection(profilesCateg
 
 local importProtectionExpandable
 local fontExpandable
-local bagsCategoriesExpandable
-local damageMeterExpandable
-local hbpExpandable
 
 local profileOrderActive, profileOrderGlobal, profileOrderCopy, profileOrderDelete = {}, {}, {}, {}
 local globalFontOrder = {}
@@ -160,10 +174,12 @@ local SUPPORTED_FLAT_FONT_KEYS = {
 	actionBarHotkeyFontFace = true,
 	actionBarMacroFontFace = true,
 	combatTextFont = true,
+	honorBarTextFont = true,
 	ilvlFontFace = true,
 	mythicPlusBloodlustTrackerCooldownFontFace = true,
 	mythicPlusBRTrackerChargesFontFace = true,
 	mythicPlusBRTrackerCooldownFontFace = true,
+	repBarTextFont = true,
 	squareMinimapStatsFont = true,
 	totalAbsorbTrackerTextFont = true,
 	xpBarTextFont = true,
@@ -174,10 +190,12 @@ local SUPPORTED_FLAT_FONT_STYLE_KEYS = {
 	actionBarHotkeyFontOutline = true,
 	actionBarMacroFontOutline = true,
 	combatTextFontOutline = true,
+	honorBarTextOutline = true,
 	ilvlFontOutline = true,
 	mythicPlusBloodlustTrackerCooldownTextOutline = true,
 	mythicPlusBRTrackerChargesTextOutline = true,
 	mythicPlusBRTrackerCooldownTextOutline = true,
+	repBarTextOutline = true,
 	squareMinimapStatsOutline = true,
 	totalAbsorbTrackerTextOutline = true,
 	xpBarTextOutline = true,
@@ -402,6 +420,13 @@ local function createGlobalFontSettings(section)
 end
 
 -- Build a sorted dropdown list, optionally keeping an empty entry pinned to the top
+local function trimAddonProfileName(name)
+	if type(name) ~= "string" then return nil end
+	local trimmed = name:gsub("^%s+", ""):gsub("%s+$", "")
+	if trimmed == "" then return nil end
+	return trimmed
+end
+
 local function buildSortedProfileList(orderTarget, excludeFunc, includeEmpty)
 	local list = {}
 	local order = orderTarget or {}
@@ -414,7 +439,11 @@ local function buildSortedProfileList(orderTarget, excludeFunc, includeEmpty)
 
 	local entries = {}
 	for name in pairs(EnhanceQoLDB.profiles) do
-		if not excludeFunc or not excludeFunc(name) then table.insert(entries, name) end
+		local normalizedName = trimAddonProfileName(name)
+		if normalizedName and not entries[normalizedName] and (not excludeFunc or not excludeFunc(normalizedName)) then
+			entries[normalizedName] = true
+			table.insert(entries, normalizedName)
+		end
 	end
 
 	table.sort(entries, function(a, b)
@@ -431,12 +460,70 @@ local function buildSortedProfileList(orderTarget, excludeFunc, includeEmpty)
 end
 
 local function getActiveProfileName()
-	if not EnhanceQoLDB or not EnhanceQoLDB.profileKeys then return nil end
+	if not EnhanceQoLDB or type(EnhanceQoLDB.profileKeys) ~= "table" then return nil end
 	local guid = UnitGUID("player")
 	local profile = guid and EnhanceQoLDB.profileKeys[guid]
-	if profile and profile ~= "" then return profile end
-	if EnhanceQoLDB.profileGlobal and EnhanceQoLDB.profileGlobal ~= "" then return EnhanceQoLDB.profileGlobal end
+	if trimAddonProfileName(profile) and EnhanceQoLDB.profiles and type(EnhanceQoLDB.profiles[profile]) == "table" then return profile end
+	if trimAddonProfileName(EnhanceQoLDB.profileGlobal) and EnhanceQoLDB.profiles and type(EnhanceQoLDB.profiles[EnhanceQoLDB.profileGlobal]) == "table" then return EnhanceQoLDB.profileGlobal end
 	return nil
+end
+
+local function getValidProfileName(value)
+	local name = trimAddonProfileName(value)
+	if not name then return nil end
+	if type(EnhanceQoLDB) ~= "table" or type(EnhanceQoLDB.profiles) ~= "table" then return nil end
+	if type(EnhanceQoLDB.profiles[name]) ~= "table" then return nil end
+	return name
+end
+
+local function getFallbackProfileName()
+	return getValidProfileName(EnhanceQoLDB and EnhanceQoLDB.profileGlobal) or getValidProfileName("Default")
+end
+
+local function getSelectedActiveProfileName()
+	local guid = UnitGUID and UnitGUID("player")
+	local active = guid and type(EnhanceQoLDB) == "table" and type(EnhanceQoLDB.profileKeys) == "table" and EnhanceQoLDB.profileKeys[guid]
+	return getValidProfileName(active) or getFallbackProfileName() or "Default"
+end
+
+local function setActiveProfileName(value)
+	local name = getValidProfileName(value)
+	if not name then return false end
+	local guid = UnitGUID and UnitGUID("player")
+	if type(guid) ~= "string" or guid == "" then return false end
+	EnhanceQoLDB.profileKeys = type(EnhanceQoLDB.profileKeys) == "table" and EnhanceQoLDB.profileKeys or {}
+	EnhanceQoLDB.profileKeys[guid] = name
+	addon.variables.requireReload = true
+	addon.functions.checkReloadFrame()
+	return true
+end
+
+local function getSelectedGlobalProfileName()
+	return getValidProfileName(EnhanceQoLDB and EnhanceQoLDB.profileGlobal) or getValidProfileName("Default") or "Default"
+end
+
+local function setGlobalProfileName(value)
+	local name = getValidProfileName(value)
+	if not name then return false end
+	EnhanceQoLDB.profileGlobal = name
+	return true
+end
+
+local function isProfileInUse(profileName)
+	profileName = getValidProfileName(profileName)
+	if not profileName then return false end
+	if EnhanceQoLDB.profileGlobal == profileName then return true end
+	if type(EnhanceQoLDB.profileKeys) == "table" then
+		for _, assignedProfile in pairs(EnhanceQoLDB.profileKeys) do
+			if assignedProfile == profileName then return true end
+		end
+	end
+	return false
+end
+
+local function canDeleteProfile(profileName)
+	profileName = getValidProfileName(profileName)
+	return profileName ~= nil and not isProfileInUse(profileName)
 end
 
 local function getCurrentPlayerGUID()
@@ -790,6 +877,26 @@ local function isCastbarProfileKey(key)
 	return key == "castbar" or key == "castbarTarget"
 end
 
+local function isChatSocialProfileKey(key)
+	return profileKeyStartsWith(key, "chat")
+		or profileKeyStartsWith(key, "communityChat")
+		or profileKeyStartsWith(key, "friendsListDecor")
+		or profileKeyStartsWith(key, "ignore")
+		or profileKeyStartsWith(key, "mailbox")
+		or key == "blockDuelRequests"
+		or key == "blockPartyInvites"
+		or key == "blockPetBattleRequests"
+		or key == "enableChatHistory"
+		or key == "enableChatIM"
+		or key == "enableIgnore"
+		or key == "enableMailboxAddressBook"
+		or key == "WholeChatWindowClickable"
+end
+
+local function isClassBuffReminderProfileKey(key)
+	return profileKeyStartsWith(key, "classBuffReminder")
+end
+
 local function isCooldownPanelsProfileKey(key)
 	return key == "cooldownPanels" or profileKeyStartsWith(key, "cooldownPanels")
 end
@@ -806,11 +913,30 @@ local function isDungeonCombatProfileKey(key)
 	return profileKeyStartsWith(key, "mythicPlus")
 		or profileKeyStartsWith(key, "combatText")
 		or profileKeyStartsWith(key, "gcdBar")
+		or profileKeyStartsWith(key, "honorBar")
+		or profileKeyStartsWith(key, "repBar")
 		or profileKeyStartsWith(key, "xpBar")
 		or profileKeyStartsWith(key, "actionTracker")
 		or key == "focusInterruptTracker"
 		or key == "standalonePrivateAuras"
 		or key == "mythicPlusBossAlertsConfig"
+end
+
+local function isDungeonRaidProfileKey(key)
+	return profileKeyStartsWith(key, "mythicPlus")
+		or profileKeyStartsWith(key, "talentReminder")
+		or key == "autoInsertKeystone"
+		or key == "autoKeyStart"
+		or key == "closeBagsOnKeyInsert"
+		or key == "debugDungeonFilter"
+		or key == "dungeonScoreFrameData"
+		or key == "dungeonScoreFrameLocked"
+		or key == "enableKeystoneHelper"
+		or key == "groupfinderShowDungeonScoreFrame"
+		or key == "groupfinderShowPartyKeystone"
+		or key == "noChatOnPullTimer"
+		or key == "PullTimerType"
+		or key == "standalonePrivateAuras"
 end
 
 local function isInstanceDifficultyProfileKey(key)
@@ -844,14 +970,44 @@ end
 
 local function isResourceBarsProfileKey(key)
 	return key == "enableResourceFrame"
+		or profileKeyStartsWith(key, "gcdBar")
 		or key == "personalResourceBarSettings"
 		or key == "sharedResourceBarSettings"
 		or key == "globalResourceBarSettings"
+		or profileKeyStartsWith(key, "honorBar")
 		or profileKeyStartsWith(key, "resourceBars")
+		or profileKeyStartsWith(key, "repBar")
+		or profileKeyStartsWith(key, "xpBar")
+end
+
+local function isSkinnerProfileKey(key)
+	return profileKeyStartsWith(key, "skinner")
+		or profileKeyStartsWith(key, "questTracker")
+end
+
+local function isSoundProfileKey(key)
+	return profileKeyStartsWith(key, "sound")
+		or key == "keepAudioSynced"
+end
+
+local function isTeleportCompendiumProfileKey(key)
+	return profileKeyStartsWith(key, "portal")
+		or profileKeyStartsWith(key, "teleport")
+end
+
+local function isTooltipProfileKey(key)
+	return profileKeyStartsWith(key, "Tooltip")
 end
 
 local function isUnitFramesProfileKey(key)
 	return profileKeyStartsWith(key, "uf")
+end
+
+local function isVendorProfileKey(key)
+	return profileKeyStartsWith(key, "vendor")
+		or key == "enableExtendedMerchant"
+		or key == "sellAllJunk"
+		or key == "showUpgradeArrowOnBagItems"
 end
 
 local function removeHealerBuffPlacementFromGroupFrames(groupFrames)
@@ -909,15 +1065,23 @@ local function applyImportProtection(imported, current)
 	if isImportSectionProtected(IMPORT_PROTECTION.ACTION_BARS) then preserveProtectedKeys(imported, current, isActionBarProfileKey) end
 	if isImportSectionProtected(IMPORT_PROTECTION.BAGS) then preserveProtectedKeys(imported, current, isBagsProfileKey) end
 	if isImportSectionProtected(IMPORT_PROTECTION.CASTBARS) then preserveProtectedKeys(imported, current, isCastbarProfileKey) end
+	if isImportSectionProtected(IMPORT_PROTECTION.CHAT_SOCIAL) then preserveProtectedKeys(imported, current, isChatSocialProfileKey) end
+	if isImportSectionProtected(IMPORT_PROTECTION.CLASS_BUFF_REMINDER) then preserveProtectedKeys(imported, current, isClassBuffReminderProfileKey) end
 	if isImportSectionProtected(IMPORT_PROTECTION.COOLDOWN_PANELS) then preserveProtectedKeys(imported, current, isCooldownPanelsProfileKey) end
 	if isImportSectionProtected(IMPORT_PROTECTION.DAMAGE_METER) then preserveProtectedKeys(imported, current, isDamageMeterProfileKey) end
 	if isImportSectionProtected(IMPORT_PROTECTION.DATA_PANELS) then preserveProtectedKeys(imported, current, isDataPanelsProfileKey) end
 	if isImportSectionProtected(IMPORT_PROTECTION.DUNGEON_COMBAT) then preserveProtectedKeys(imported, current, isDungeonCombatProfileKey) end
+	if isImportSectionProtected(IMPORT_PROTECTION.DUNGEON_RAID) then preserveProtectedKeys(imported, current, isDungeonRaidProfileKey) end
 	if isImportSectionProtected(IMPORT_PROTECTION.INSTANCE_DIFFICULTY) then preserveProtectedKeys(imported, current, isInstanceDifficultyProfileKey) end
 	if isImportSectionProtected(IMPORT_PROTECTION.MOUSE_ACCESSIBILITY) then preserveProtectedKeys(imported, current, isMouseAccessibilityProfileKey) end
 	if isImportSectionProtected(IMPORT_PROTECTION.QUICK_ACCEPT) then preserveProtectedKeys(imported, current, isQuickAcceptProfileKey) end
 	if isImportSectionProtected(IMPORT_PROTECTION.RESOURCE_BARS) then preserveProtectedKeys(imported, current, isResourceBarsProfileKey) end
+	if isImportSectionProtected(IMPORT_PROTECTION.SKINNER) then preserveProtectedKeys(imported, current, isSkinnerProfileKey) end
+	if isImportSectionProtected(IMPORT_PROTECTION.SOUND) then preserveProtectedKeys(imported, current, isSoundProfileKey) end
+	if isImportSectionProtected(IMPORT_PROTECTION.TELEPORT_COMPENDIUM) then preserveProtectedKeys(imported, current, isTeleportCompendiumProfileKey) end
+	if isImportSectionProtected(IMPORT_PROTECTION.TOOLTIP) then preserveProtectedKeys(imported, current, isTooltipProfileKey) end
 	if isImportSectionProtected(IMPORT_PROTECTION.UNIT_FRAMES) then preserveProtectedKeys(imported, current, isUnitFramesProfileKey) end
+	if isImportSectionProtected(IMPORT_PROTECTION.VENDOR) then preserveProtectedKeys(imported, current, isVendorProfileKey) end
 	if isImportSectionProtected(IMPORT_PROTECTION.HBP) then copyHealerBuffPlacement(imported, current) end
 	return imported
 end
@@ -1046,6 +1210,41 @@ local function importDamageMeter(encoded)
 	local payload, reason = decodeExportPayload(encoded, DAMAGE_METER_EXPORT_KIND)
 	if not payload then return false, reason end
 	return applyImportedDamageMeterState(payload.data)
+end
+
+local function captureMythicPlusTimerState()
+	local profileName = getActiveProfileName()
+	local source = profileName and EnhanceQoLDB and EnhanceQoLDB.profiles and EnhanceQoLDB.profiles[profileName] or nil
+	local config = type(source) == "table" and source.mythicPlusTimer or nil
+	if type(config) ~= "table" then return nil end
+	local data = sanitizeProfileData(config)
+	return next(data) and { mythicPlusTimer = data } or nil
+end
+
+local function applyImportedMythicPlusTimerState(data)
+	if type(data) ~= "table" or type(data.mythicPlusTimer) ~= "table" then return false, "NO_DATA" end
+	local profileName = getActiveProfileName()
+	local target = profileName and EnhanceQoLDB and EnhanceQoLDB.profiles and EnhanceQoLDB.profiles[profileName] or nil
+	if type(target) ~= "table" then return false, "NO_ACTIVE" end
+	target.mythicPlusTimer = sanitizeProfileData(data.mythicPlusTimer)
+	if addon.db == target then
+		local timer = addon.MythicPlus and addon.MythicPlus.MythicPlusTimer
+		if timer then
+			if timer.UpdateEventState then timer:UpdateEventState() end
+			if timer.Refresh then timer:Refresh() end
+		end
+	end
+	return true
+end
+
+local function exportMythicPlusTimer()
+	return exportPayloadWithData(MYTHIC_PLUS_TIMER_EXPORT_KIND, captureMythicPlusTimerState(), 1)
+end
+
+local function importMythicPlusTimer(encoded)
+	local payload, reason = decodeExportPayload(encoded, MYTHIC_PLUS_TIMER_EXPORT_KIND)
+	if not payload then return false, reason end
+	return applyImportedMythicPlusTimerState(payload.data)
 end
 
 local function captureHBPState()
@@ -1322,18 +1521,28 @@ local function showImportCodeDialog(dialogKey, title, confirmText, importFunc, s
 	StaticPopup_Show(dialogKey)
 end
 
+addon.ProfileTools = addon.ProfileTools or {}
+addon.ProfileTools.ExportBagsCategories = exportBagsCategories
+addon.ProfileTools.ImportBagsCategories = importBagsCategories
+addon.ProfileTools.ExportDamageMeter = exportDamageMeter
+addon.ProfileTools.ImportDamageMeter = importDamageMeter
+addon.ProfileTools.ExportMythicPlusTimer = exportMythicPlusTimer
+addon.ProfileTools.ImportMythicPlusTimer = importMythicPlusTimer
+addon.ProfileTools.ExportHBP = exportHBP
+addon.ProfileTools.ImportHBP = importHBP
+addon.ProfileTools.ShowExportCodeDialog = showExportCodeDialog
+addon.ProfileTools.ShowImportCodeDialog = showImportCodeDialog
+addon.ProfileTools.DataExportErrorMessage = dataExportErrorMessage
+
 local data = {
 	listFunc = function() return buildSortedProfileList(profileOrderActive) end,
 	order = profileOrderActive,
 	text = L["Active profile"],
 	desc = L["ProfileActiveDesc"] or "Profile used by this character. This overrides the default profile.",
-	get = function() return EnhanceQoLDB.profileKeys[UnitGUID("player")] or EnhanceQoLDB.profileGlobal end,
-	set = function(value)
-		EnhanceQoLDB.profileKeys[UnitGUID("player")] = value
-		addon.variables.requireReload = true
-		addon.functions.checkReloadFrame()
-	end,
-	default = "",
+	get = getSelectedActiveProfileName,
+	set = setActiveProfileName,
+	default = "Default",
+	storage = false,
 	var = "profiledata",
 	parentSection = expandable,
 }
@@ -1346,9 +1555,10 @@ data = {
 	order = profileOrderGlobal,
 	text = L["Global profile"],
 	desc = L["ProfileDefaultDesc"] or "Profile used for new characters that do not have an active profile assigned yet.",
-	get = function() return EnhanceQoLDB.profileGlobal end,
-	set = function(value) EnhanceQoLDB.profileGlobal = value end,
-	default = "",
+	get = getSelectedGlobalProfileName,
+	set = setGlobalProfileName,
+	default = "Default",
+	storage = false,
 	var = "profilefirststart",
 	parentSection = expandable,
 }
@@ -1365,7 +1575,7 @@ addon.functions.SettingsCreateButton(profilesCategory, {
 
 data = {
 	listFunc = function()
-		local currentProfile = EnhanceQoLDB.profileKeys[UnitGUID("player")]
+		local currentProfile = getSelectedActiveProfileName()
 		return buildSortedProfileList(profileOrderCopy, function(name) return name == currentProfile end, true)
 	end,
 	order = profileOrderCopy,
@@ -1373,6 +1583,8 @@ data = {
 	get = function() return "" end,
 	set = function(value)
 		if value ~= "" then
+			local sourceProfile = getValidProfileName(value)
+			if not sourceProfile then return false end
 			StaticPopupDialogs["EQOL_COPY_PROFILE"] = StaticPopupDialogs["EQOL_COPY_PROFILE"]
 				or {
 					text = "",
@@ -1383,9 +1595,9 @@ data = {
 					hideOnEscape = true,
 					preferredIndex = 3,
 					OnAccept = function(self)
-						local source = self.data
-						if not source or source == "" then return end
-						local target = EnhanceQoLDB.profileKeys[UnitGUID("player")]
+						local source = getValidProfileName(self.data)
+						if not source then return end
+						local target = getSelectedActiveProfileName()
 						if not target then return end
 						local copied = sanitizeProfileData(EnhanceQoLDB.profiles[source])
 						normalizeProfileStorage(copied)
@@ -1394,10 +1606,13 @@ data = {
 					end,
 				}
 			StaticPopupDialogs["EQOL_COPY_PROFILE"].text = L["ProfileCopyDesc"]:format(value)
-			StaticPopup_Show("EQOL_COPY_PROFILE", nil, nil, value)
+			StaticPopup_Show("EQOL_COPY_PROFILE", nil, nil, sourceProfile)
+			return true
 		end
+		return false
 	end,
 	default = "",
+	storage = false,
 	var = "profilecopy",
 	parentSection = expandable,
 }
@@ -1406,15 +1621,15 @@ addon.functions.SettingsCreateDropdown(profilesCategory, data)
 
 data = {
 	listFunc = function()
-		local currentProfile = EnhanceQoLDB.profileKeys[UnitGUID("player")]
-		local globalProfile = EnhanceQoLDB.profileGlobal
-		return buildSortedProfileList(profileOrderDelete, function(name) return name == currentProfile or name == globalProfile end, true)
+		return buildSortedProfileList(profileOrderDelete, function(name) return not canDeleteProfile(name) end, true)
 	end,
 	order = profileOrderDelete,
 	text = L["Delete profile"],
 	get = function() return "" end,
 	set = function(value)
 		if value ~= "" then
+			local deleteProfile = getValidProfileName(value)
+			if not deleteProfile or not canDeleteProfile(deleteProfile) then return false end
 			StaticPopupDialogs["EQOL_DELETE_PROFILE"] = StaticPopupDialogs["EQOL_DELETE_PROFILE"]
 				or {
 					text = "",
@@ -1425,16 +1640,19 @@ data = {
 					hideOnEscape = true,
 					preferredIndex = 3,
 					OnAccept = function(self)
-						local profile = self.data
-						if profile and profile ~= "" then EnhanceQoLDB.profiles[profile] = nil end
+						local profile = getValidProfileName(self.data)
+						if canDeleteProfile(profile) then EnhanceQoLDB.profiles[profile] = nil end
 					end,
 				}
 			StaticPopupDialogs["EQOL_DELETE_PROFILE"].text = L["ProfileDeleteDesc"]:format(value)
-			StaticPopup_Show("EQOL_DELETE_PROFILE", nil, nil, value)
+			StaticPopup_Show("EQOL_DELETE_PROFILE", nil, nil, deleteProfile)
+			return true
 		end
+		return false
 	end,
 	desc = L["ProfileDeleteDesc2"],
 	default = "",
+	storage = false,
 	var = "profiledelete",
 	parentSection = expandable,
 }
@@ -1566,138 +1784,6 @@ fontExpandable = addon.functions.SettingsCreateExpandableSection(profilesCategor
 addon.functions.SettingsCreateHeadline(profilesCategory, L["Font"] or "Font", { parentSection = fontExpandable })
 createGlobalFontSettings(fontExpandable)
 
-bagsCategoriesExpandable = addon.functions.SettingsCreateExpandableSection(profilesCategory, {
-	name = L["Bags categories"] or "Bags categories",
-	configPageKey = "ProfilesBagsCategories",
-	description = L["configCenterPageCardDescBagsCategories"],
-	iconKey = "bagscategories",
-	expanded = false,
-	colorizeTitle = false,
-	newTagID = "ProfilesBagsCategories",
-	modernCategory = "profiles",
-	modernOnly = true,
-})
-
-if bagsCategoriesExpandable and bagsCategoriesExpandable.AddShownPredicate then
-	bagsCategoriesExpandable:AddShownPredicate(function()
-		return addon.db and addon.db.enableBagsModule == true
-	end)
-end
-
-addon.functions.SettingsCreateButton(profilesCategory, {
-	var = "bagsCategoriesExport",
-	text = L["Export Bags categories"] or "Export Bags categories",
-	func = function()
-		local code, reason = exportBagsCategories()
-		if not code then
-			print("|cff00ff98Enhance QoL|r: " .. tostring(dataExportErrorMessage(reason)))
-			return
-		end
-		showExportCodeDialog("EQOL_BAGS_CATEGORIES_EXPORT", L["Export Bags categories"] or "Export Bags categories", code)
-	end,
-	parentSection = bagsCategoriesExpandable,
-})
-
-addon.functions.SettingsCreateButton(profilesCategory, {
-	var = "bagsCategoriesImport",
-	text = L["Import Bags categories"] or "Import Bags categories",
-	func = function()
-		showImportCodeDialog(
-			"EQOL_BAGS_CATEGORIES_IMPORT",
-			L["Import Bags categories"] or "Import Bags categories",
-			L["BagsCategoriesImportConfirm"] or "Importing will overwrite your Bags categories.",
-			importBagsCategories,
-			L["BagsCategoriesImportSuccess"] or "Bags categories imported.",
-			false
-		)
-	end,
-	parentSection = bagsCategoriesExpandable,
-})
-
-damageMeterExpandable = addon.functions.SettingsCreateExpandableSection(profilesCategory, {
-	name = L["damageMeterTitle"] or "Damage Meter",
-	configPageKey = "ProfilesDamageMeter",
-	description = L["configCenterPageCardDescProfilesDamageMeter"],
-	iconAtlas = "icons_64x64_damage",
-	expanded = false,
-	colorizeTitle = false,
-	newTagID = "ProfilesDamageMeter",
-	modernCategory = "profiles",
-	modernOnly = true,
-})
-
-addon.functions.SettingsCreateButton(profilesCategory, {
-	var = "damageMeterExport",
-	text = string.format("%s %s", L["Export"] or "Export", L["damageMeterTitle"] or "Damage Meter"),
-	func = function()
-		local code, reason = exportDamageMeter()
-		if not code then
-			print("|cff00ff98Enhance QoL|r: " .. tostring(dataExportErrorMessage(reason)))
-			return
-		end
-		showExportCodeDialog("EQOL_DAMAGE_METER_EXPORT", string.format("%s %s", L["Export"] or "Export", L["damageMeterTitle"] or "Damage Meter"), code)
-	end,
-	parentSection = damageMeterExpandable,
-})
-
-addon.functions.SettingsCreateButton(profilesCategory, {
-	var = "damageMeterImport",
-	text = string.format("%s %s", L["Import"] or "Import", L["damageMeterTitle"] or "Damage Meter"),
-	func = function()
-		showImportCodeDialog(
-			"EQOL_DAMAGE_METER_IMPORT",
-			string.format("%s %s", L["Import"] or "Import", L["damageMeterTitle"] or "Damage Meter"),
-			L["damageMeterImportConfirm"] or "Importing will overwrite your Damage Meter settings in the active profile.",
-			importDamageMeter,
-			L["damageMeterImportSuccess"] or "Damage Meter settings imported.",
-			false
-		)
-	end,
-	parentSection = damageMeterExpandable,
-})
-
-hbpExpandable = addon.functions.SettingsCreateExpandableSection(profilesCategory, {
-	name = L["Healer Buff Placement"] or "Healer Buff Placement",
-	configPageKey = "ProfilesHBP",
-	description = L["configCenterPageCardDescProfilesHealerBuffPlacement"],
-	iconAtlas = "UI-LFG-RoleIcon-Healer",
-	expanded = false,
-	colorizeTitle = false,
-	newTagID = "ProfilesHBP",
-	modernCategory = "profiles",
-	modernOnly = true,
-})
-
-addon.functions.SettingsCreateButton(profilesCategory, {
-	var = "hbpExport",
-	text = L["Export Healer Buff Placement"] or "Export Healer Buff Placement",
-	func = function()
-		local code, reason = exportHBP()
-		if not code then
-			print("|cff00ff98Enhance QoL|r: " .. tostring(dataExportErrorMessage(reason)))
-			return
-		end
-		showExportCodeDialog("EQOL_HBP_EXPORT", L["Export Healer Buff Placement"] or "Export Healer Buff Placement", code)
-	end,
-	parentSection = hbpExpandable,
-})
-
-addon.functions.SettingsCreateButton(profilesCategory, {
-	var = "hbpImport",
-	text = L["Import Healer Buff Placement"] or "Import Healer Buff Placement",
-	func = function()
-		showImportCodeDialog(
-			"EQOL_HBP_IMPORT",
-			L["Import Healer Buff Placement"] or "Import Healer Buff Placement",
-			L["HBPImportConfirm"] or "Importing will overwrite your Healer Buff Placement settings.",
-			importHBP,
-			L["HBPImportSuccess"] or "Healer Buff Placement imported.",
-			false
-		)
-	end,
-	parentSection = hbpExpandable,
-})
-
 ----- REGION END
 function addon.functions.initProfile()
 	StaticPopupDialogs["EQOL_CREATE_PROFILE"] = StaticPopupDialogs["EQOL_CREATE_PROFILE"]
@@ -1719,8 +1805,9 @@ function addon.functions.initProfile()
 				end
 			end,
 			OnAccept = function(self)
-				local id = self:GetEditBox():GetText()
-				if id and id ~= "" then
+				local editBox = self.editBox or self.GetEditBox and self:GetEditBox()
+				local id = trimAddonProfileName(editBox and editBox:GetText())
+				if id then
 					if not EnhanceQoLDB.profiles[id] or type(EnhanceQoLDB.profiles[id]) ~= "table" then EnhanceQoLDB.profiles[id] = {} end
 				end
 			end,

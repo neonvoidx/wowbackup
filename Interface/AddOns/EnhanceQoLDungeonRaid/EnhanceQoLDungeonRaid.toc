@@ -1,0 +1,23 @@
+## Interface: 120007, 120100
+## Title: Enhance QoL Dungeon & Raid
+## Author: R41Z0R
+## Version: 11.6.0
+## Notes: Dungeon, raid, Mythic+ timer, tracker and group finder helpers
+## Notes-deDE: Dungeon-, Raid-, Mythic+-Timer-, Tracker- und Gruppensuche-Helfer
+## Notes-esES: Ayudas para mazmorras, bandas, temporizador de Míticas+, rastreador y buscador de grupos
+## Notes-esMX: Ayudas para calabozos, bandas, temporizador de Míticas+, rastreador y buscador de grupos
+## Notes-frFR: Outils pour donjons, raids, minuteur Mythique+, suivi et recherche de groupe
+## Notes-itIT: Aiuti per spedizioni, incursioni, timer Mitica+, tracker e ricerca gruppi
+## Notes-koKR: 던전, 공격대, 쐐기돌 타이머, 추적기 및 파티 찾기 도우미
+## Notes-ptBR: Auxilios para masmorras, raides, temporizador de Mítico+, rastreador e localizador de grupos
+## Notes-ruRU: Помощники для подземелий, рейдов, таймера Мифик+, отслеживания и поиска группы
+## Notes-zhCN: 地下城、团队、史诗钥石计时器、追踪和队伍查找辅助
+## Notes-zhTW: 地城、團隊、傳奇鑰石計時器、追蹤與隊伍搜尋輔助
+## Dependencies: EnhanceQoL
+## IconTexture: Interface\AddOns\EnhanceQoL\Icons\Icon.tga
+## Retail: true
+## X-Compatible-With: retail
+## LoadOnDemand: 1
+## Globe-Main: EnhanceQoL
+
+MythicPlus.xml

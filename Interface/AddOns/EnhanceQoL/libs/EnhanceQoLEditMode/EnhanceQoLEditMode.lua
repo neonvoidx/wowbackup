@@ -1775,9 +1775,41 @@ function Collapse:Set(frame, groupId, collapsed)
 	State.collapseFlags[frame][layout][groupId] = not not collapsed
 end
 
+function Collapse:Register(frame, groupId)
+	if not (frame and groupId) then return end
+	State.collapsibleIdsByFrame = State.collapsibleIdsByFrame or {}
+	local registry = State.collapsibleIdsByFrame[frame]
+	if not registry then
+		registry = { ids = {}, seen = {} }
+		State.collapsibleIdsByFrame[frame] = registry
+	end
+	if registry.seen[groupId] then return end
+	registry.seen[groupId] = true
+	registry.ids[#registry.ids + 1] = groupId
+end
+
+function Collapse:GetRegisteredIds(frame)
+	local registry = State.collapsibleIdsByFrame and State.collapsibleIdsByFrame[frame] or nil
+	return registry and registry.ids or nil
+end
+
 -- compatibility helpers for legacy internal calls
 function Internal:GetCollapseState(frame, groupId) return Collapse:Get(frame, groupId) end
 function Internal:SetCollapseState(frame, groupId, collapsed) return Collapse:Set(frame, groupId, collapsed) end
+function Internal:FocusSettingGroup(frame, targetGroupId)
+	if not (frame and targetGroupId) then return false end
+	local groupIds = Collapse:GetRegisteredIds(frame)
+	if type(groupIds) ~= "table" then return false end
+	local foundTarget = false
+	for _, groupId in ipairs(groupIds) do
+		if groupId == targetGroupId then foundTarget = true end
+	end
+	if not foundTarget then return false end
+	for _, groupId in ipairs(groupIds) do
+		Collapse:Set(frame, groupId, groupId ~= targetGroupId)
+	end
+	return true
+end
 
 -- Widget factory -------------------------------------------------------------------
 local Widgets = {}
@@ -2943,16 +2975,18 @@ local function buildCollapsible()
 			local selectionParent = selection and selection.parent
 			applyRowHeightOverride(self, selectionParent, "collapsible")
 			if not selectionParent and Internal.dialog then selectionParent = getDialogFrame(Internal.dialog) end
+			local groupId = data.id or data.name
+			if selectionParent then Collapse:Register(selectionParent, groupId) end
 
 			local collapsed = not not data.defaultCollapsed
 			local stored
-			if selectionParent then stored = Collapse:Get(selectionParent, data.id or data.name) end
+			if selectionParent then stored = Collapse:Get(selectionParent, groupId) end
 			if stored ~= nil then collapsed = not not stored end
 			if data.getCollapsed then
 				local ok, val = pcall(data.getCollapsed, lib.activeLayoutName, lib:GetActiveLayoutIndex())
 				if ok and val ~= nil then collapsed = not not val end
 			end
-			if selectionParent and stored == nil and data.defaultCollapsed ~= nil then Collapse:Set(selectionParent, data.id or data.name, collapsed) end
+			if selectionParent and stored == nil and data.defaultCollapsed ~= nil then Collapse:Set(selectionParent, groupId, collapsed) end
 
 			self.collapsed = collapsed
 			updateIcon(collapsed)
@@ -3951,11 +3985,18 @@ local function handleSelectionMouseDown(self)
 	selectSelection(self)
 end
 
+local function MouseIsOverCompat(region, topOffset, bottomOffset, leftOffset, rightOffset)
+	if not region then return false end
+	if _G.MouseIsOver then return _G.MouseIsOver(region, topOffset, bottomOffset, leftOffset, rightOffset) end
+	if region.IsMouseOver then return region:IsMouseOver(topOffset, bottomOffset, leftOffset, rightOffset) end
+	return false
+end
+
 -- hide overlap menu when clicking elsewhere (non-blocking)
 local function overlapGlobalMouseDown()
 	local menu = Internal.overlapMenu
 	if not (lib.isEditing and menu and menu:IsShown()) then return end
-	if MouseIsOver and MouseIsOver(menu, 4, 4, 4, 4) then return end
+	if MouseIsOverCompat(menu, 4, 4, 4, 4) then return end
 	local focus = GetMouseFoci and GetMouseFoci() or GetMouseFocus()
 	if focus and (focus == menu or (focus.IsDescendantOf and focus:IsDescendantOf(menu))) then return end
 	hideOverlapMenu()

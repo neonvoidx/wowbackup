@@ -1,0 +1,24 @@
+VER 3 0100000000000003 " " "INV_MISC_QUESTIONMARK"
+#showtooltip Raise Ally
+/cast [@mouseover,help][@target]Raise Ally
+END
+VER 3 0100000000000006 " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [target=mouseover,exists] Dark Command; Dark Command
+END
+VER 3 0100000000000009 " " "134400"
+#showtooltip
+/cast [@cursor] Death and Decay
+END
+VER 3 010000000000000C " " "INV_Misc_QuestionMark"
+#showtooltip
+/cast [mod:shift,@focus,exists,harm][] Leap
+END
+VER 3 010000000000000A " " "INV_Misc_QuestionMark"
+#showtooltip
+/cast [mod:shift, @focus,exists,harm][] Mind Freeze
+END
+VER 3 0100000000000008 " " "134400"
+#showtooltip 
+/cast [@cursor] Anti-Magic Zone
+END

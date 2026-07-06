@@ -1,0 +1,20 @@
+## Interface: 120007, 120005, 120001, 120000
+## Title: Overachiever2 - Tabs
+## Version: 0.9.39
+## Author: z3moon (Based on Tuhljin's Overachiever)
+## Notes: Add custom tabs (Watch, Search, etc.) to the Achievements window.
+## LoadOnDemand: 1
+## LoadWith: Blizzard_AchievementUI
+## Dependencies: Overachiever2
+## SavedVariables: Overachiever2_Tabs_Settings
+## SavedVariablesPerCharacter: Overachiever2_Tabs_CharVars
+## X-Child-Of: Overachiever2
+
+Localization.lua
+Tabs.lua
+ContextMenu.lua
+AchievementList.lua
+Search.lua
+SuggestionsEngine.lua
+Suggestions.lua
+Watch.lua

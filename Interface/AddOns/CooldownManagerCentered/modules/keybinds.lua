@@ -1,11 +1,8 @@
--- Keybinds
-
 local _, ns = ...
+local Affected = ns.API.Affected
 
 local Keybinds = {}
 ns.Keybinds = Keybinds
-
-local LSM = LibStub("LibSharedMedia-3.0", true)
 
 local CMC_KEYBIND_DEBUG = false
 local PrintDebug = function(...)
@@ -18,12 +15,33 @@ local isModuleEnabled = false
 local areHooksInitialized = false
 local spellIDToKeyBindCache = {}
 
+-- Memoized spell->keybind mapping. Building it scans every action-bar slot
+-- (GetActionInfo over ~120+ buttons), which is wasteful when the mapping hasn't
+-- changed. The mapping only changes when bindings or the bars themselves change,
+-- so we rebuild lazily on the relevant events and otherwise reuse the cached
+-- result across viewers and per-refresh RefreshLayout passes.
+local keybindMappingDirty = true
+local keybindMappingResult = nil
+
+-- Secondary actions "hidden" inside a macro body (e.g. a `/use` potion or a
+-- second `/cast` after the primary spell). The primary action of a macro is
+-- already captured via GetMacroSpell; this lets those extra spells/items inherit
+-- the macro's keybind, but only at LOWER priority than any direct assignment.
+-- Cached per macro name and keyed on the raw body so edits auto-invalidate
+-- (there is no dedicated "macro changed" event); the cache is also wiped wholesale
+-- on spec/talent/binding changes where name->spellID resolution can shift.
+local macroSecondaryCache = {}
+local EMPTY_ACTIONS = {}
+
 local viewersSettingKey = {
     EssentialCooldownViewer = "Essential",
     UtilityCooldownViewer = "Utility",
-    CMCTracker1 = "CMCTracker",
-    CMCTracker2 = "CMCTracker",
 }
+-- All custom trackers share one keybind settings scope ("CMCTracker"). Absent
+-- tracker frames are skipped by the apply/update helpers (_G lookup returns nil).
+for i = 1, (ns.CONSTANTS.MAX_TRACKERS or 10) do
+    viewersSettingKey["CMCTracker" .. i] = "CMCTracker"
+end
 
 local function IsKeybindEnabledForAnyViewer()
     if not ns.db or not ns.db.profile then
@@ -56,14 +74,22 @@ local function GetKeybindSettings(viewerSettingName)
     }
 end
 
+local formattedKeybindCache = {}
+
 local function GetFormattedKeybind(key)
     if not key or key == "" then
         return ""
     end
 
+    local cached = formattedKeybindCache[key]
+    if cached ~= nil then
+        return cached
+    end
+
     local bindingText = GetBindingText and GetBindingText(key, "KEY_", true)
     local displayKey = (bindingText and bindingText ~= "") and bindingText or key
     if displayKey:find("|", 1, true) then
+        formattedKeybindCache[key] = displayKey
         return displayKey
     end
 
@@ -115,6 +141,7 @@ local function GetFormattedKeybind(key)
     upperKey = upperKey:gsub("HOME", "Hom")
     upperKey = upperKey:gsub("END", "End")
 
+    formattedKeybindCache[key] = upperKey
     return upperKey
 end
 
@@ -164,13 +191,137 @@ local ButtonRowsPrefix = {
     },
 }
 
+local macroCommandSet = nil
+local MACRO_COMMAND_GLOBALS = {
+    "SLASH_CAST",
+    "SLASH_USE",
+    "SLASH_CASTSEQUENCE",
+    "SLASH_CASTRANDOM",
+    "SLASH_USERANDOM",
+}
+
+local function GetMacroCommandSet()
+    if macroCommandSet then
+        return macroCommandSet
+    end
+    macroCommandSet = {}
+    for _, base in ipairs(MACRO_COMMAND_GLOBALS) do
+        local i = 1
+        while true do
+            local verb = _G[base .. i]
+            if not verb then
+                break
+            end
+            macroCommandSet[verb:lower()] = true
+            i = i + 1
+        end
+    end
+    return macroCommandSet
+end
+
+local function ResolveTokenToSpellID(token)
+    if token == "" or tonumber(token) then
+        return nil
+    end
+
+    local explicitItemID = token:match("^item:(%d+)")
+    if explicitItemID then
+        local _, spellID = C_Item.GetItemSpell(tonumber(explicitItemID))
+        return spellID
+    end
+
+    local spellInfo = C_Spell and C_Spell.GetSpellInfo and C_Spell.GetSpellInfo(token)
+    if spellInfo and spellInfo.spellID then
+        return spellInfo.spellID
+    end
+
+    local itemID = C_Item.GetItemInfoInstant(token)
+    if itemID then
+        local _, spellID = C_Item.GetItemSpell(itemID)
+        if spellID then
+            return spellID
+        end
+    end
+
+    return nil
+end
+
+local INVENTORY_SLOT_MIN, INVENTORY_SLOT_MAX = 1, 19
+
+local function ParseMacroBody(body)
+    local commandSet = GetMacroCommandSet()
+    local seen, result = {}, {}
+
+    for line in body:gmatch("[^\r\n]+") do
+        local command, rest = line:match("^%s*(/%S+)%s*(.*)$")
+        if command and commandSet[command:lower()] then
+            -- Strip [conditional] blocks and castsequence reset=... clauses so
+            -- only the actual spell/item/slot arguments remain.
+            rest = rest:gsub("%b[]", " ")
+            rest = rest:gsub("[Rr][Ee][Ss][Ee][Tt]=%S+", " ")
+            for token in rest:gmatch("[^;,]+") do
+                token = token:gsub("^%s+", ""):gsub("%s+$", "")
+                token = token:gsub("^[!~]+", ""):gsub("^%s+", "")
+                local slot = tonumber(token)
+                if slot then
+                    if slot >= INVENTORY_SLOT_MIN and slot <= INVENTORY_SLOT_MAX then
+                        local key = "slot:" .. slot
+                        if not seen[key] then
+                            seen[key] = true
+                            result[#result + 1] = { slot = slot }
+                        end
+                    end
+                else
+                    local spellID = ResolveTokenToSpellID(token)
+                    if spellID then
+                        local key = "spell:" .. spellID
+                        if not seen[key] then
+                            seen[key] = true
+                            result[#result + 1] = { spellID = spellID }
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    return result
+end
+
+local function GetMacroSecondaryActions(macroName)
+    if not macroName or macroName == "" then
+        return EMPTY_ACTIONS
+    end
+
+    local _, _, body = GetMacroInfo(macroName)
+    if not body or body == "" then
+        return EMPTY_ACTIONS
+    end
+
+    local cached = macroSecondaryCache[macroName]
+    if cached and cached.body == body then
+        return cached.actions
+    end
+
+    local actions = ParseMacroBody(body)
+    macroSecondaryCache[macroName] = { body = body, actions = actions }
+    return actions
+end
+
 function Keybinds:GetActionsTableBySpellId(slotToKeybind)
     PrintDebug("Building Actions Table By Spell ID")
 
     local spellIdToKeyBind = {}
+    local macrosToParse = {}
 
     local function assignResultForSlot(slot, keyBind)
         local actionType, id, subType = GetActionInfo(slot)
+        if actionType == "macro" then
+            local macroName = GetActionText(slot)
+            if macroName and macroName ~= "" then
+                macrosToParse[#macrosToParse + 1] = { macroName = macroName, keyBind = keyBind }
+            end
+        end
         if not spellIdToKeyBind[id] then
             if (actionType == "macro" and subType == "spell") or (actionType == "spell") then
                 spellIdToKeyBind[id] = keyBind
@@ -197,7 +348,7 @@ function Keybinds:GetActionsTableBySpellId(slotToKeybind)
             end
         end
     end
-    if DominosActionButton1 then
+    if _G.DominosActionButton1 then
         for i = 1, 14 do
             local bar = ButtonRowsPrefix["dominos"][i]
 
@@ -219,7 +370,7 @@ function Keybinds:GetActionsTableBySpellId(slotToKeybind)
             end
         end
     end
-    if BT4Button1 then
+    if _G.BT4Button1 then
         for i = 1, 180 do
             local button = _G["BT4Button" .. i]
 
@@ -232,7 +383,7 @@ function Keybinds:GetActionsTableBySpellId(slotToKeybind)
             end
         end
     end
-    if ElvUI_Bar1Button1 then
+    if _G.ElvUI_Bar1Button1 then
         for i = 1, 15 do
             local bar = ButtonRowsPrefix["elvui"][i]
 
@@ -269,9 +420,33 @@ function Keybinds:GetActionsTableBySpellId(slotToKeybind)
             end
         end
     end
+
+    -- Lower-priority pass: spells/items hidden inside macro bodies only fill
+    -- spellIDs that no directly-bound action (or macro primary) already claimed.
+    for _, macro in ipairs(macrosToParse) do
+        local actions = GetMacroSecondaryActions(macro.macroName)
+        for _, action in ipairs(actions) do
+            local spellID = action.spellID
+            if not spellID and action.slot then
+                local itemID = GetInventoryItemID("player", action.slot)
+                if itemID then
+                    local _, slotSpellID = C_Item.GetItemSpell(itemID)
+                    spellID = slotSpellID
+                end
+            end
+            if spellID and not spellIdToKeyBind[spellID] then
+                spellIdToKeyBind[spellID] = macro.keyBind
+                local override = ns.SpellIDOverrides[spellID]
+                if override and not spellIdToKeyBind[override] then
+                    spellIdToKeyBind[override] = macro.keyBind
+                end
+            end
+        end
+    end
+
     return spellIdToKeyBind
 end
-_WTD = {}
+
 local function BuildSpellKeyBindMapping()
     local spellIDToKeyBind = Keybinds:GetActionsTableBySpellId()
 
@@ -290,10 +465,20 @@ local function BuildSpellKeyBindMapping()
             spellIDToKeyBindFormatted[spellID] = keyBind
         end
     end
-    _WTD.spellIdToKeyBind = spellIDToKeyBind
-    _WTD.spellIDToFormattedKeyBind = spellIDToKeyBindFormatted
+    -- _WTDebug.spellIdToKeyBind = spellIDToKeyBind
+    -- _WTDebug.spellIDToFormattedKeyBind = spellIDToKeyBindFormatted
     spellIDToKeyBindCache = spellIDToKeyBindFormatted
     return spellIDToKeyBindFormatted
+end
+
+-- Returns the spell->keybind mapping, rebuilding only when marked dirty.
+local function GetSpellKeyBindMapping()
+    if not keybindMappingDirty and keybindMappingResult then
+        return keybindMappingResult
+    end
+    keybindMappingResult = BuildSpellKeyBindMapping()
+    keybindMappingDirty = false
+    return keybindMappingResult
 end
 
 function Keybinds:FindKeyBindForSpell(spellID, spellToKeybind)
@@ -301,18 +486,15 @@ function Keybinds:FindKeyBindForSpell(spellID, spellToKeybind)
         return ""
     end
 
-    -- Direct match
     if spellToKeybind[spellID] then
         return spellToKeybind[spellID]
     end
 
-    -- Try override spell
     local overrideSpellID = C_Spell.GetOverrideSpell(spellID)
     if overrideSpellID and spellToKeybind[overrideSpellID] then
         return spellToKeybind[overrideSpellID]
     end
 
-    -- Try base spell
     local baseSpellID = C_Spell.GetBaseSpell(spellID)
     if baseSpellID and spellToKeybind[baseSpellID] then
         return spellToKeybind[baseSpellID]
@@ -322,22 +504,22 @@ function Keybinds:FindKeyBindForSpell(spellID, spellToKeybind)
 end
 
 local function GetOrCreateKeybindText(icon, viewerSettingName)
-    if icon.cmcKeybindText and icon.cmcKeybindText.text then
-        return icon.cmcKeybindText.text
+    if Affected(icon).keybindText and Affected(icon).keybindText.text then
+        return Affected(icon).keybindText.text
     end
 
     local settings = GetKeybindSettings(viewerSettingName)
-    icon.cmcKeybindText = CreateFrame("Frame", nil, icon, "BackdropTemplate")
-    icon.cmcKeybindText:SetFrameLevel(icon:GetFrameLevel() + 4)
-    local keybindText = icon.cmcKeybindText:CreateFontString(nil, "OVERLAY", "NumberFontNormalSmall")
+    Affected(icon).keybindText = CreateFrame("Frame", nil, icon, "BackdropTemplate")
+    Affected(icon).keybindText:SetFrameLevel(icon:GetFrameLevel() + 4)
+    local keybindText = Affected(icon).keybindText:CreateFontString(nil, "OVERLAY", "NumberFontNormalSmall")
     keybindText:SetPoint(settings.anchor, icon, settings.anchor, settings.offsetX, settings.offsetY)
     -- keybindText:SetTextColor(1, 1, 1, 1)
     keybindText:SetShadowColor(0, 0, 0, 1)
     keybindText:SetShadowOffset(1, -1)
     keybindText:SetDrawLayer("OVERLAY", 7)
 
-    icon.cmcKeybindText.text = keybindText
-    return icon.cmcKeybindText.text
+    Affected(icon).keybindText.text = keybindText
+    return Affected(icon).keybindText.text
 end
 
 local function GetKeybindFontName()
@@ -348,14 +530,14 @@ local function GetKeybindFontName()
 end
 
 local function ApplyKeybindTextSettings(icon, viewerSettingName)
-    if not icon.cmcKeybindText then
+    if not Affected(icon).keybindText then
         return
     end
 
     local settings = GetKeybindSettings(viewerSettingName)
     local keybindText = GetOrCreateKeybindText(icon, viewerSettingName)
 
-    icon.cmcKeybindText:Show()
+    Affected(icon).keybindText:Show()
     keybindText:ClearAllPoints()
     keybindText:SetPoint(settings.anchor, icon, settings.anchor, settings.offsetX, settings.offsetY)
     local fontName = GetKeybindFontName()
@@ -384,10 +566,10 @@ local function UpdateIconKeybind(icon, viewerSettingName, keybind)
 
     local enabledKey = "cooldownManager_showKeybinds_" .. viewerSettingName
     if not ns.db.profile[enabledKey] then
-        if icon.cmcKeybindText then
-            icon.cmcKeybindText:Hide()
-            if icon.cmcKeybindText.text then
-                icon.cmcKeybindText.text:Hide()
+        if Affected(icon).keybindText then
+            Affected(icon).keybindText:Hide()
+            if Affected(icon).keybindText.text then
+                Affected(icon).keybindText.text:Hide()
             end
         end
 
@@ -395,13 +577,13 @@ local function UpdateIconKeybind(icon, viewerSettingName, keybind)
     end
 
     local keybindText = GetOrCreateKeybindText(icon, viewerSettingName)
-    icon.cmcKeybindText:Show()
+    Affected(icon).keybindText:Show()
 
     keybindText:SetText(keybind)
     keybindText:Show()
     if not keybind or keybind == "" then
-        if icon.cmcKeybindText then
-            icon.cmcKeybindText:Hide()
+        if Affected(icon).keybindText then
+            Affected(icon).keybindText:Hide()
         end
     end
 end
@@ -419,9 +601,14 @@ local function UpdateViewerKeybinds(viewerName)
 
     PrintDebug("UpdateViewerKeybinds for", viewerName)
 
-    local spellToKeybind = BuildSpellKeyBindMapping()
+    local spellToKeybind = GetSpellKeyBindMapping()
 
-    local children = { viewerFrame:GetChildren() }
+    local children
+    if viewerFrame.GetItemFrames then
+        children = viewerFrame:GetItemFrames()
+    else
+        children = { viewerFrame:GetChildren() }
+    end
     for _, child in ipairs(children) do
         if child.Icon then
             local spellID = ExtractSpellIDFromChild(child)
@@ -458,9 +645,14 @@ function Keybinds:ApplyKeybindSettings(viewerName)
         return
     end
 
-    local children = { viewerFrame:GetChildren() }
+    local children
+    if viewerFrame.GetItemFrames then
+        children = viewerFrame:GetItemFrames()
+    else
+        children = { viewerFrame:GetChildren() }
+    end
     for _, child in ipairs(children) do
-        if child.cmcKeybindText then
+        if Affected(child).keybindText then
             ApplyKeybindTextSettings(child, settingName)
         end
     end
@@ -474,14 +666,17 @@ eventFrame:SetScript("OnEvent", function(self, event, ...)
     end
 
     PrintDebug("Event:", event)
+    keybindMappingDirty = true
     if
         event == "PLAYER_SPECIALIZATION_CHANGED"
         or event == "UPDATE_BINDINGS"
         or event == "ACTIONBAR_HIDEGRID"
         or event == "UPDATE_BONUS_ACTIONBAR"
         or event == "GAME_PAD_ACTIVE_CHANGED"
+        or event == "PLAYER_EQUIPMENT_CHANGED"
     then
         spellIDToKeyBindCache = {}
+        wipe(macroSecondaryCache)
     end
 
     C_Timer.After(0.1, function()
@@ -498,10 +693,15 @@ function Keybinds:Shutdown()
     for viewerName, _ in pairs(viewersSettingKey) do
         local viewerFrame = _G[viewerName]
         if viewerFrame then
-            local children = { viewerFrame:GetChildren() }
+            local children
+            if viewerFrame.GetItemFrames then
+                children = viewerFrame:GetItemFrames()
+            else
+                children = { viewerFrame:GetChildren() }
+            end
             for _, child in ipairs(children) do
-                if child.cmcKeybindText then
-                    child.cmcKeybindText:Hide()
+                if Affected(child).keybindText then
+                    Affected(child).keybindText:Hide()
                 end
             end
         end
@@ -515,6 +715,8 @@ function Keybinds:Enable()
     PrintDebug("Enabling module")
 
     isModuleEnabled = true
+    -- Binding events are ignored while disabled, so force a fresh mapping build.
+    keybindMappingDirty = true
 
     eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
     eventFrame:RegisterEvent("UPDATE_BONUS_ACTIONBAR")
@@ -526,9 +728,9 @@ function Keybinds:Enable()
     eventFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
     eventFrame:RegisterEvent("ACTIONBAR_HIDEGRID")
     eventFrame:RegisterEvent("ACTIONBAR_PAGE_CHANGED")
+    eventFrame:RegisterEvent("ACTIONBAR_SLOT_CHANGED")
     eventFrame:RegisterEvent("GAME_PAD_ACTIVE_CHANGED")
-
-    -- Hook into viewer layout refresh to update keybinds
+    eventFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
 
     if not areHooksInitialized then
         areHooksInitialized = true
@@ -560,7 +762,6 @@ end
 
 function Keybinds:Initialize()
     self:OnSettingChanged()
-    -- Cleanup old DB cache if present
     if ns.db and ns.db.profile then
         ns.db.profile.keybindCache = nil
     end

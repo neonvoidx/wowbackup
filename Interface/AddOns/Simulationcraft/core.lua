@@ -43,7 +43,7 @@ local OFFSET_GEM_ID_4 = 6
 local OFFSET_GEM_BASE = OFFSET_GEM_ID_1
 local OFFSET_SUFFIX_ID = 7
 -- local OFFSET_FLAGS = 11
--- local OFFSET_CONTEXT = 12
+local OFFSET_CONTEXT = 12
 local OFFSET_BONUS_ID = 13
 
 local OFFSET_GEM_BONUS_FROM_MODS = 2
@@ -51,11 +51,23 @@ local OFFSET_GEM_BONUS_FROM_MODS = 2
 -- Item Modifiers: https://warcraft.wiki.gg/wiki/ItemLink#Item_Modifiers
 
 local ITEM_MOD_TYPE_DROP_LEVEL = 9
--- 28 shows frequently but is currently unknown
+-- ContentTuningID: clamps the drop-level scaling to the tuning's level-squish range
+local ITEM_MOD_TYPE_CONTENT_TUNING = 28
 local ITEM_MOD_TYPE_CRAFT_STATS_1 = 29
 local ITEM_MOD_TYPE_CRAFT_STATS_2 = 30
+-- 12.1: catalyst items inherit secondary stats from the source item
+-- We think this might be the mechanism to do it - it makes sense if this encodes the source item ID.
+-- Adding prospectively to see when the functionality shows up on the PTR
+local ITEM_MOD_TYPE_REDIRECTED_BASE_STATS = 64
 
 local SUPPORTED_LOADOUT_SERIALIZATION_VERSION = 2
+
+-- Extra C_Traits systems (beyond class talents) to export.
+-- Each entry pairs the SimC option name with its trait system ID
+-- (the value passed to C_Traits.SetConfigIDBySystemID by the matching Blizzard UI).
+local TRAIT_SYSTEMS = {
+  { name = 'omnium_talents',         systemID = 48 }, -- 12.0.7 player power
+}
 
 local WeeklyRewards         = _G.C_WeeklyRewards
 
@@ -108,7 +120,13 @@ function Simulationcraft:OnInitialize()
         height = 400,
       },
     },
+    char = {
+      -- array of { season, spec, currency, source, context, keyLevel, itemId, ts } (one per won roll)
+      bonusRolls = {},
+    },
   });
+  -- expose the db on the shared addon table so bonusrolls.lua can reach it
+  Simulationcraft.db = OptionsDB
   LibDBIcon:Register("SimulationCraft", SimcLDB, OptionsDB.profile.minimap)
   Simulationcraft:UpdateMinimapButton()
   Simulationcraft:RegisterChatCommand('simc', 'HandleChatCommand')
@@ -123,7 +141,7 @@ function Simulationcraft:OnInitialize()
 end
 
 function Simulationcraft:OnEnable()
-
+  self:SetupBonusRolls()
 end
 
 function Simulationcraft:OnDisable()
@@ -190,6 +208,10 @@ local function GetItemSplit(itemLink)
 
   return itemSplit
 end
+-- expose the item-string parser and its context field offset so bonusrolls.lua can reuse the
+-- single parser instead of re-implementing it
+Simulationcraft.GetItemSplit = GetItemSplit
+Simulationcraft.OFFSET_CONTEXT = OFFSET_CONTEXT
 
 local function Trim(str)
   return string.match(str, '^%s*(.-)%s*$')
@@ -413,6 +435,28 @@ local function GetExportString(configID)
   return str
 end
 
+-- Build a slash-delimited list of purchased traits from any C_Traits config.
+-- Format: <optionName>=<entryID>:<rank>/<entryID>:<rank>/...
+local function GetTraitString(optionName, configID)
+  if not configID then return nil end
+
+  local configInfo = Traits.GetConfigInfo(configID)
+  if not configInfo or not configInfo.treeIDs then return nil end
+
+  local entries = {}
+  for _, treeID in ipairs(configInfo.treeIDs) do
+    for _, nodeID in ipairs(Traits.GetTreeNodes(treeID)) do
+      local node = Traits.GetNodeInfo(configID, nodeID)
+      if node and node.ranksPurchased and node.ranksPurchased > 0 and node.activeEntry then
+        entries[#entries + 1] = node.activeEntry.entryID .. ':' .. node.activeEntry.rank
+      end
+    end
+  end
+
+  if #entries == 0 then return nil end
+  return optionName .. '=' .. table.concat(entries, '/')
+end
+
 -- function that translates between the game's role values and ours
 local function TranslateRole(spec_id, str)
   local spec_role = Simulationcraft.RoleTable[spec_id]
@@ -537,8 +581,12 @@ local function GetItemStringFromItemLink(slotNum, itemLink, debugOutput)
     local pairValue = itemSplit[pairOffset + 1]
     if pairType == ITEM_MOD_TYPE_DROP_LEVEL then
       simcItemOptions[#simcItemOptions + 1] = 'drop_level=' .. pairValue
+    elseif pairType == ITEM_MOD_TYPE_CONTENT_TUNING then
+      simcItemOptions[#simcItemOptions + 1] = 'content_tuning=' .. pairValue
     elseif pairType == ITEM_MOD_TYPE_CRAFT_STATS_1 or pairType == ITEM_MOD_TYPE_CRAFT_STATS_2 then
       craftedStats[#craftedStats + 1] = pairValue
+    elseif pairType == ITEM_MOD_TYPE_REDIRECTED_BASE_STATS then
+      simcItemOptions[#simcItemOptions + 1] = 'redirected_base_stats=' .. pairValue
     end
   end
 
@@ -1143,6 +1191,21 @@ function Simulationcraft:GetSimcProfile(debugOutput, noBags, showMerchant, links
     simulationcraftProfile = simulationcraftProfile .. playerTalents .. '\n'
   end
 
+  if Traits and Traits.GetConfigIDBySystemID then
+    local firstTraitSystem = true
+    for _, system in ipairs(TRAIT_SYSTEMS) do
+      local configID = Traits.GetConfigIDBySystemID(system.systemID)
+      local traitStr = GetTraitString(system.name, configID)
+      if traitStr then
+        if firstTraitSystem then
+          simulationcraftProfile = simulationcraftProfile .. '\n'
+          firstTraitSystem = false
+        end
+        simulationcraftProfile = simulationcraftProfile .. traitStr .. '\n'
+      end
+    end
+  end
+
   simulationcraftProfile = simulationcraftProfile .. '\n'
 
   -- Method that gets gear information
@@ -1273,6 +1336,12 @@ function Simulationcraft:GetSimcProfile(debugOutput, noBags, showMerchant, links
   local upgradeAchievementsStr = Simulationcraft:GetItemUpgradeAchievements()
   simulationcraftProfile = simulationcraftProfile .. '#\n'
   simulationcraftProfile = simulationcraftProfile .. '# upgrade_achievements=' .. upgradeAchievementsStr .. '\n'
+
+  local bonusRollStr = Simulationcraft:GetBonusRollItems()
+  if bonusRollStr and bonusRollStr ~= '' then
+    simulationcraftProfile = simulationcraftProfile .. '#\n'
+    simulationcraftProfile = simulationcraftProfile .. '# bonus_roll_items=' .. bonusRollStr .. '\n'
+  end
 
   -- sanity checks - if there's anything that makes the output completely invalid, punt!
   if specId==nil then

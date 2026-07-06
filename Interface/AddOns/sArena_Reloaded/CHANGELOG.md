@@ -1,3 +1,48 @@
+# sArena Reloaded 2.5.7c
+## New
+- New "Only show CC Auras" setting (in Global -> Class Icon)
+## Tweak
+- Revert back to old method to hook Blizzard DR frames (opening Edit Mode) due to a few people reporting issues. The new method is still available as a setting in Global -> Diminishing Returns at the very bottom in the new "Debug" block. Please enable this if you want to help and report any issues. Thank you!
+
+# sArena Reloaded 2.5.7b
+## Tweak
+- Update Dissonance profile (www.twitch.tv/dissonancewow)
+
+# sArena Reloaded 2.5.7
+## New
+- Add an option to include Shadow Word: Death in the interrupt list for the interrupt castbar color setting (Layout -> Castbar). Only applied to healers, not Shadow.
+## Tweak
+- Remove wyvern sting dot spell id from aura list (as opposed to the actual cc) from TBC version.
+- Rework Midnight hook into DR frames so it no longer requires to open Edit Mode on login/reload. This will both avoid running into a Blizzard bug that causes the breath bar (swimming) to disappear after opening edit mode and also reduce taint risk in general. If you have addons that introduce taint however you are of course still at risk but less so (if you dont open edit mode manually anyway).
+- Remove white castbar flash at end of cast.
+
+# sArena Reloaded 2.5.6i
+## New
+- New JFarm profile (www.twitch.tv/jfarm_). Thank you for sharing.
+## Tweak
+- Only show first time sArena welcome screen when entering settings instead of automatically when first loading the addon on login.
+## Bugfix
+- Fix font drop shadow not showing on Health, Power and SpecName Text.
+
+# sArena Reloaded 2.5.6h
+## Tweak
+- Update TOC version number.
+
+# sArena Reloaded 2.5.6g
+## Tweak
+- WoW 12.0.7 comes with more bugs. Important aura filter is broken because of Blizzard and shows a bunch of trash auras. Temporarily disabled important auras until Blizzard fixes it.
+
+# sArena Reloaded 2.5.6f
+## Bugfix
+- Fix Hunter's Feign Death causing the Death Icon to be stuck visible for the rest of the game after the tweak in 2.5.6e and an oversight.
+
+# sArena Reloaded 2.5.6e
+## Tweak
+- Tweak Death Icon and death handling a little bit. Should now more consistently "stay dead" even though the arena unit releases/leaves arena.
+## Bugfix
+- TBC: Fix stale spec info between arena games resulting in wrong spec icons/text.
+- Fix stealth health ticker feature filling the hp bars of dead units if they left/released in arena.
+
 # sArena Reloaded 2.5.6d
 ## Bugfix
 - TBC: Fix typo causing a nil error and frames not to work for TBC.

@@ -1,7 +1,14 @@
 
 AtlasLootDB = {
 ["profileKeys"] = {
+["Starphage - Tichondrius"] = "Default",
+["Auteist - Tichondrius"] = "Default",
 ["Hellavator - Tichondrius"] = "Default",
+["Manyfaced - Tichondrius"] = "Default",
+["Smaugchamp - Tichondrius"] = "Default",
+["Bigxthazug - Tichondrius"] = "Default",
+["Stormclout - Tichondrius"] = "Default",
+["Neonvoid - Tichondrius"] = "Default",
 },
 ["profiles"] = {
 ["Default"] = {
@@ -9,7 +16,7 @@ AtlasLootDB = {
 ["selected"] = {
 "AtlasLoot_Collections",
 "TIERSETS_BYCLASS",
-12,
+nil,
 2,
 0,
 },

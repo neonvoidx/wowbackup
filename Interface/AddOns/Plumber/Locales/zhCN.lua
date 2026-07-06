@@ -47,6 +47,9 @@ L["Return To Module List"] = "返回模块列表";
 L["LootUI Addon Conflict"] = "此模块可能与以下功能类似的插件不兼容：";
 L["Work In Progress Tag"] = "[施工中]";
 L["Colon With Space"] = "：";
+L["Disabled Module Requires Reload Format"] = "你必须%s才能使改变生效。";	--We'll replace %s with a clickable "reload the UI"
+L["Reload The UI"] = "重载界面";
+L["Click To Reload UI"] = "左键单击以重载界面。";
 
 
 --Settings Category
@@ -884,6 +887,12 @@ L["ModuleDescription PreyQuestSuperTrack"] = "当你知晓狩猎目标的最终�
 --BlizzFixActionBarArt
 L["ModuleName BlizzFixActionBarArt"] = "动作条装饰修复";
 L["ModuleDescription BlizzFixActionBarArt"] = "修复被你隐藏的动作条装饰在隐藏/显示游戏界面或退出住宅编辑器后重现的问题。";
+
+
+--HouseList
+L["ModuleName Housing_HouseList"] = "房屋列表";
+L["ModuleDescription Housing_HouseList"] = "改进房屋列表界面：\n\n- 用图片展示房屋所属的阵营。\n\n- 如果玩家有两栋房子，直接显示两个“访问住宅”按钮。";
+L["View Houses In Combat Warning"] = "你无法在战斗中查看住宅。";
 
 
 --Generic

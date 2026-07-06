@@ -1,0 +1,134 @@
+
+Quartz3DB = {
+["namespaces"] = {
+["Swing"] = {
+},
+["Range"] = {
+},
+["Buff"] = {
+["profiles"] = {
+["Default"] = {
+["bufffont"] = "1",
+},
+},
+},
+["LibDualSpec-1.0"] = {
+},
+["Flight"] = {
+["profiles"] = {
+["Default"] = {
+["deplete"] = true,
+},
+},
+},
+["Pet"] = {
+["profiles"] = {
+["Default"] = {
+["hideblizz"] = false,
+["font"] = "1",
+["x"] = 1333.333251953125,
+},
+},
+},
+["Mirror"] = {
+["profiles"] = {
+["Default"] = {
+["mirrorfont"] = "1",
+},
+},
+},
+["Interrupt"] = {
+},
+["Player"] = {
+["profiles"] = {
+["Default"] = {
+["hideblizz"] = false,
+["point"] = "BOTTOM",
+["casttimecountup"] = false,
+["y"] = 216.8335723876953,
+["h"] = 20,
+["fontsize"] = 12,
+["x"] = -3.33343505859375,
+["w"] = 245,
+["font"] = "1",
+["texture"] = "Melli Dark",
+},
+},
+},
+["GCD"] = {
+},
+["Focus"] = {
+["profiles"] = {
+["Default"] = {
+["y"] = 191.0010375976563,
+["h"] = 15,
+["point"] = "BOTTOMRIGHT",
+["font"] = "1",
+["x"] = -662.5,
+["hideblizz"] = false,
+["w"] = 160,
+["texture"] = "Melli Dark",
+},
+},
+},
+["School"] = {
+},
+["Target"] = {
+["profiles"] = {
+["Default"] = {
+["hideblizz"] = false,
+["point"] = "BOTTOM",
+["w"] = 160,
+["y"] = 193.3336791992188,
+["h"] = 15,
+["font"] = "1",
+["texture"] = "Melli Dark",
+["x"] = 440.8341064453125,
+["iconposition"] = "left",
+},
+},
+},
+["EnemyCasts"] = {
+},
+["Latency"] = {
+},
+},
+["profileKeys"] = {
+["Månyfaced - Mal'Ganis"] = "Default",
+["Kumire - Mal'Ganis"] = "Default",
+["Auteist - Mal'Ganis"] = "Default",
+["Ofpuss - Mal'Ganis"] = "Default",
+["Smaugchamp - Mal'Ganis"] = "Default",
+["Choppiez - Mal'Ganis"] = "Default",
+["Thickshape - Mal'Ganis"] = "Default",
+["Kitedbro - Mal'Ganis"] = "Default",
+["Corsic - Mal'Ganis"] = "Default",
+["Neonvoid - Mal'Ganis"] = "Default",
+["Charizhard - Mal'Ganis"] = "Default",
+["Reedingo - Mal'Ganis"] = "Default",
+["Stormclout - Mal'Ganis"] = "Default",
+["Tampacks - Mal'Ganis"] = "Default",
+["Gehyo - Mal'Ganis"] = "Default",
+["Praisesun - Mal'Ganis"] = "Default",
+["Vansthalysia - Mal'Ganis"] = "Default",
+["Hellavator - Mal'Ganis"] = "Default",
+},
+["profiles"] = {
+["Default"] = {
+["modules"] = {
+["Tradeskill"] = false,
+["Buff"] = false,
+["Interrupt"] = false,
+["Pet"] = false,
+["Swing"] = false,
+["Timer"] = false,
+["GCD"] = false,
+["Focus"] = false,
+["Target"] = false,
+["Mirror"] = false,
+["Range"] = false,
+["Latency"] = false,
+},
+},
+},
+}

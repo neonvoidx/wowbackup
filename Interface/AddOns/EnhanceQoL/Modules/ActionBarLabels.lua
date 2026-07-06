@@ -1175,19 +1175,31 @@ function Labels.GetAdditionalHotkeyBarOptions()
 	}
 end
 
-hooksecurefunc("ActionButton_UpdateRangeIndicator", function(self, checksRange, inRange)
+function Labels.HasRangeIndicatorRuntimeFeatures()
 	local db = addon.db
+	if not db then return false end
 	local hiddenHotkeys = db and db.actionBarHiddenHotkeys
-	if not db or (not db.actionBarFullRangeColoring and not db.actionBarHotkeyFontOverride and (type(hiddenHotkeys) ~= "table" or not next(hiddenHotkeys))) then return end
-	if not self or not self.action then return end
-	self.EQOL_RangeOutOfRange = checksRange and inRange == false
-	if checksRange and inRange == false then
-		ShowRangeOverlay(self, true)
-	else
-		ShowRangeOverlay(self, false)
-	end
-	RefreshHotkeyColorOverride(self)
-end)
+	return db.actionBarFullRangeColoring == true or db.actionBarHotkeyFontOverride == true or (type(hiddenHotkeys) == "table" and next(hiddenHotkeys) ~= nil)
+end
+
+function Labels.EnsureRangeIndicatorHook()
+	if Labels._rangeIndicatorHooked then return end
+	if not Labels.HasRangeIndicatorRuntimeFeatures() then return end
+	hooksecurefunc("ActionButton_UpdateRangeIndicator", function(self, checksRange, inRange)
+		local db = addon.db
+		local hiddenHotkeys = db and db.actionBarHiddenHotkeys
+		if not db or (not db.actionBarFullRangeColoring and not db.actionBarHotkeyFontOverride and (type(hiddenHotkeys) ~= "table" or not next(hiddenHotkeys))) then return end
+		if not self or not self.action then return end
+		self.EQOL_RangeOutOfRange = checksRange and inRange == false
+		if checksRange and inRange == false then
+			ShowRangeOverlay(self, true)
+		else
+			ShowRangeOverlay(self, false)
+		end
+		RefreshHotkeyColorOverride(self)
+	end)
+	Labels._rangeIndicatorHooked = true
+end
 
 local function EnsureRangeUsableHook()
 	if Labels._rangeUsableHooked then return end
@@ -1234,6 +1246,7 @@ do
 	end
 
 	function Labels.UpdateRangeOverlayEvents()
+		if Labels.EnsureRangeIndicatorHook then Labels.EnsureRangeIndicatorHook() end
 		local frame = EnsureRangeFrame()
 		frame:UnregisterAllEvents()
 		if addon.db and addon.db.actionBarFullRangeColoring then

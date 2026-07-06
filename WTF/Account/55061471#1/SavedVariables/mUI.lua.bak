@@ -1,0 +1,917 @@
+
+mUIDB = {
+["profileKeys"] = {
+["Stormclout - Mal'Ganis"] = "Default",
+},
+["profiles"] = {
+["Default"] = {
+["map"] = {
+["buttons"] = false,
+},
+["misc"] = {
+["interrupt"] = false,
+["tabbinder"] = true,
+["achievements"] = true,
+},
+["general"] = {
+["font"] = "1",
+["automation"] = {
+["repair"] = "Guild",
+["invite"] = true,
+["cinematic"] = false,
+["duel"] = false,
+["talkinghead"] = false,
+["release"] = false,
+},
+["display"] = {
+["movementspeed"] = true,
+["iteminfo"] = false,
+["errormessages"] = false,
+},
+},
+["edit"] = {
+["Default"] = {
+["statsframe"] = {
+["y"] = 0,
+["x"] = 0,
+["point"] = "BOTTOMLEFT",
+},
+["queueicon"] = {
+["y"] = -164.1666259765625,
+["x"] = -166.668701171875,
+["point"] = "TOPRIGHT",
+},
+},
+["Default Heal"] = {
+["statsframe"] = {
+["y"] = 0,
+["x"] = 0,
+["point"] = "BOTTOMLEFT",
+},
+["queueicon"] = {
+["y"] = -164.1666259765625,
+["x"] = -166.668701171875,
+["point"] = "TOPRIGHT",
+},
+},
+},
+["castbars"] = {
+["focuspos"] = true,
+["targetpos"] = true,
+},
+["install"] = true,
+["reset"] = true,
+["chat"] = {
+["enabled"] = false,
+["settings"] = {
+["edit"] = {
+["font"] = {
+["size"] = 14,
+},
+},
+["chat"] = {
+["alpha"] = 0.2,
+},
+},
+},
+["nameplates"] = {
+["smartstacking"] = true,
+["colors"] = true,
+["smallerfriends"] = true,
+["npccolors"] = {
+[218002] = {
+["name"] = "Benk Buzzbee",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[208747] = {
+["name"] = "The Darkness",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[231496] = {
+["name"] = "Venture Co. Diver",
+["color"] = {
+["b"] = 1,
+["g"] = 0.55,
+["r"] = 0,
+},
+},
+[130635] = {
+["name"] = "Stonefury",
+["color"] = {
+["b"] = 1,
+["g"] = 0.55,
+["r"] = 0,
+},
+},
+[132056] = {
+["name"] = "Venture Co. Skyscorcher",
+["color"] = {
+["b"] = 1,
+["g"] = 0,
+["r"] = 0.65,
+},
+},
+[210812] = {
+["name"] = "Royal Wicklighter",
+["color"] = {
+["b"] = 1,
+["g"] = 0.55,
+["r"] = 0,
+},
+},
+[129802] = {
+["name"] = "Earthrager",
+["color"] = {
+["b"] = 1,
+["g"] = 0,
+["r"] = 0.65,
+},
+},
+[145185] = {
+["name"] = "Gnomercy 4.U.",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[207939] = {
+["name"] = "Baron Braunpyke",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[136470] = {
+["name"] = "Refreshment Vendor",
+["color"] = {
+["b"] = 1,
+["g"] = 0.55,
+["r"] = 0,
+},
+},
+[226402] = {
+["name"] = "Bront",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[218671] = {
+["name"] = "Venture Co. Pyromaniac",
+["color"] = {
+["b"] = 1,
+["g"] = 0.55,
+["r"] = 0,
+},
+},
+[134232] = {
+["name"] = "Hired Assassin",
+["color"] = {
+["b"] = 1,
+["g"] = 0.55,
+["r"] = 0,
+},
+},
+[129231] = {
+["name"] = "Rixxa Fluxflame",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[167538] = {
+["name"] = "Dokigg the Brutalizer",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[207940] = {
+["name"] = "Prioress Murrpray",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[231197] = {
+["name"] = "Bubbles",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[220815] = {
+["name"] = "Blazing Fiend",
+["color"] = {
+["b"] = 1,
+["g"] = 0.55,
+["r"] = 0,
+},
+},
+[239834] = {
+["name"] = "Taener Duelmal",
+["color"] = {
+["b"] = 1,
+["g"] = 0.55,
+["r"] = 0,
+},
+},
+[226404] = {
+["name"] = "Geezle Gigazap",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[129232] = {
+["name"] = "Mogul Razdunk",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[134012] = {
+["name"] = "Taskmaster Askari",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[214673] = {
+["name"] = "Flavor Scientist",
+["color"] = {
+["b"] = 1,
+["g"] = 0.55,
+["r"] = 0,
+},
+},
+[130661] = {
+["name"] = "Venture Co. Earthshaper",
+["color"] = {
+["b"] = 1,
+["g"] = 0.55,
+["r"] = 0,
+},
+},
+[217658] = {
+["name"] = "Sir Braunpyke",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[164461] = {
+["name"] = "Sathel the Accursed",
+["color"] = {
+["b"] = 1,
+["g"] = 0.55,
+["r"] = 0,
+},
+},
+[150396] = {
+["name"] = "Aerial Unit R-21/X",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[169875] = {
+["name"] = "Shackled Soul",
+["color"] = {
+["b"] = 1,
+["g"] = 0.55,
+["r"] = 0,
+},
+},
+[213008] = {
+["name"] = "Wriggling Darkspawn",
+["color"] = {
+["b"] = 1,
+["g"] = 0.55,
+["r"] = 0,
+},
+},
+[213913] = {
+["name"] = "Kobold Flametender",
+["color"] = {
+["b"] = 1,
+["g"] = 0.55,
+["r"] = 0,
+},
+},
+[209230] = {
+["name"] = "Kyrioss",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[174210] = {
+["name"] = "Blighted Sludge-Spewer",
+["color"] = {
+["b"] = 1,
+["g"] = 0.55,
+["r"] = 0,
+},
+},
+[210818] = {
+["name"] = "Lowly Moleherd",
+["color"] = {
+["b"] = 1,
+["g"] = 0.55,
+["r"] = 0,
+},
+},
+[207198] = {
+["name"] = "Cursed Thunderer",
+["color"] = {
+["b"] = 1,
+["g"] = 0.55,
+["r"] = 0,
+},
+},
+[229686] = {
+["name"] = "Venture Co. Surveyor",
+["color"] = {
+["b"] = 1,
+["g"] = 0.55,
+["r"] = 0,
+},
+},
+[167536] = {
+["name"] = "Harugia the Bloodthirsty",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[207199] = {
+["name"] = "Cursed Rooktender",
+["color"] = {
+["b"] = 1,
+["g"] = 0.55,
+["r"] = 0,
+},
+},
+[228424] = {
+["name"] = "Darkfuse Mechadrone",
+["color"] = {
+["b"] = 1,
+["g"] = 0.55,
+["r"] = 0,
+},
+},
+[160495] = {
+["name"] = "Maniacal Soulbinder",
+["color"] = {
+["b"] = 0.8,
+["g"] = 1,
+["r"] = 0,
+},
+},
+[212835] = {
+["name"] = "Risen Footman",
+["color"] = {
+["b"] = 0.8,
+["g"] = 1,
+["r"] = 0,
+},
+},
+[169893] = {
+["name"] = "Nefarious Darkspeaker",
+["color"] = {
+["b"] = 1,
+["g"] = 0.55,
+["r"] = 0,
+},
+},
+[206705] = {
+["name"] = "Arathi Footman",
+["color"] = {
+["b"] = 0.8,
+["g"] = 1,
+["r"] = 0,
+},
+},
+[214661] = {
+["name"] = "Goldie Baronbottom",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[207946] = {
+["name"] = "Captain Dailcry",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[214439] = {
+["name"] = "Corrupted Oracle",
+["color"] = {
+["b"] = 1,
+["g"] = 0.55,
+["r"] = 0,
+},
+},
+[210264] = {
+["name"] = "Bee Wrangler",
+["color"] = {
+["b"] = 1,
+["g"] = 0.55,
+["r"] = 0,
+},
+},
+[210153] = {
+["name"] = "Ol' Waxbeard",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[130488] = {
+["name"] = "Mech Jockey",
+["color"] = {
+["b"] = 1,
+["g"] = 0,
+["r"] = 0.65,
+},
+},
+[144246] = {
+["name"] = "K.U.-J.0.",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[144295] = {
+["name"] = "Mechagon Mechanic",
+["color"] = {
+["b"] = 1,
+["g"] = 0,
+["r"] = 0.65,
+},
+},
+[229069] = {
+["name"] = "Mechadrone Sniper",
+["color"] = {
+["b"] = 1,
+["g"] = 0.55,
+["r"] = 0,
+},
+},
+[222964] = {
+["name"] = "Flavor Scientist",
+["color"] = {
+["b"] = 1,
+["g"] = 0.55,
+["r"] = 0,
+},
+},
+[129214] = {
+["name"] = "Coin-Operated Crowd Pummeler",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[174197] = {
+["name"] = "Battlefield Ritualist",
+["color"] = {
+["b"] = 1,
+["g"] = 0.55,
+["r"] = 0,
+},
+},
+[220060] = {
+["name"] = "Taste Tester",
+["color"] = {
+["b"] = 1,
+["g"] = 0.55,
+["r"] = 0,
+},
+},
+[129227] = {
+["name"] = "Azerokk",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[169927] = {
+["name"] = "Putrid Butcher",
+["color"] = {
+["b"] = 1,
+["g"] = 0,
+["r"] = 0.65,
+},
+},
+[229252] = {
+["name"] = "Darkfuse Hyena",
+["color"] = {
+["b"] = 1,
+["g"] = 0.55,
+["r"] = 0,
+},
+},
+[231380] = {
+["name"] = "Undercrawler",
+["color"] = {
+["b"] = 1,
+["g"] = 0.55,
+["r"] = 0,
+},
+},
+[208456] = {
+["name"] = "Shuffling Horror",
+["color"] = {
+["b"] = 1,
+["g"] = 0.55,
+["r"] = 0,
+},
+},
+[163086] = {
+["name"] = "Rancid Gasbag",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[206710] = {
+["name"] = "Lightspawn",
+["color"] = {
+["b"] = 0.8,
+["g"] = 1,
+["r"] = 0,
+},
+},
+[206697] = {
+["name"] = "Devout Priest",
+["color"] = {
+["b"] = 1,
+["g"] = 0,
+["r"] = 0.65,
+},
+},
+[164451] = {
+["name"] = "Dessia the Decapitator",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[165946] = {
+["name"] = "Mordretha, the Endless Empress",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[221760] = {
+["name"] = "Risen Mage",
+["color"] = {
+["b"] = 1,
+["g"] = 0.55,
+["r"] = 0,
+},
+},
+[207205] = {
+["name"] = "Stormguard Gorren",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[220141] = {
+["name"] = "Royal Jelly Purveyor",
+["color"] = {
+["b"] = 1,
+["g"] = 0.55,
+["r"] = 0,
+},
+},
+[162744] = {
+["name"] = "Nekthara the Mangler",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[208743] = {
+["name"] = "Blazikon",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[151657] = {
+["name"] = "Bomb Tonk",
+["color"] = {
+["b"] = 1,
+["g"] = 0.55,
+["r"] = 0,
+},
+},
+[167533] = {
+["name"] = "Advent Nevermore",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[162309] = {
+["name"] = "Kul'tharok",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[167532] = {
+["name"] = "Heavin the Breaker",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[226403] = {
+["name"] = "Keeza Quickfuse",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[206696] = {
+["name"] = "Arathi Footman",
+["color"] = {
+["b"] = 0.8,
+["g"] = 1,
+["r"] = 0,
+},
+},
+[214697] = {
+["name"] = "Chef Chewie",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[231223] = {
+["name"] = "Disturbed Kelp",
+["color"] = {
+["b"] = 1,
+["g"] = 0.55,
+["r"] = 0,
+},
+},
+[144244] = {
+["name"] = "The Platinum Pummeler",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[170882] = {
+["name"] = "Bone Magus",
+["color"] = {
+["b"] = 1,
+["g"] = 0.55,
+["r"] = 0,
+},
+},
+[164463] = {
+["name"] = "Paceran the Virulent",
+["color"] = {
+["b"] = 1,
+["g"] = 0,
+["r"] = 0.65,
+},
+},
+[134005] = {
+["name"] = "Shalebiter",
+["color"] = {
+["b"] = 1,
+["g"] = 0.55,
+["r"] = 0,
+},
+},
+[141303] = {
+["name"] = "B.O.O.M.B.A.",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[133432] = {
+["name"] = "Venture Co. Alchemist",
+["color"] = {
+["b"] = 1,
+["g"] = 0.55,
+["r"] = 0,
+},
+},
+[212793] = {
+["name"] = "Void Ascendant",
+["color"] = {
+["b"] = 1,
+["g"] = 0.55,
+["r"] = 0,
+},
+},
+[208745] = {
+["name"] = "The Candle King",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[210267] = {
+["name"] = "I'pa",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[230748] = {
+["name"] = "Darkfuse Bloodwarper",
+["color"] = {
+["b"] = 1,
+["g"] = 0.55,
+["r"] = 0,
+},
+},
+[226398] = {
+["name"] = "Big M.O.M.M.A.",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[167534] = {
+["name"] = "Rek the Hardened",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[164506] = {
+["name"] = "Ancient Captain",
+["color"] = {
+["b"] = 0.8,
+["g"] = 1,
+["r"] = 0,
+},
+},
+[162329] = {
+["name"] = "Xav the Unfallen",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[206698] = {
+["name"] = "Fanatical Conjuror",
+["color"] = {
+["b"] = 1,
+["g"] = 0.55,
+["r"] = 0,
+},
+},
+[144248] = {
+["name"] = "Head Machinist Sparkflux",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[212826] = {
+["name"] = "Guard Captain Suleyman",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[231312] = {
+["name"] = "Venture Co. Electrician",
+["color"] = {
+["b"] = 1,
+["g"] = 0.55,
+["r"] = 0,
+},
+},
+[162317] = {
+["name"] = "Gorechop",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[144294] = {
+["name"] = "Mechagon Tinkerer",
+["color"] = {
+["b"] = 0.8,
+["g"] = 1,
+["r"] = 0,
+},
+},
+[144249] = {
+["name"] = "Omega Buster",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+[170234] = {
+["name"] = "Oppressive Banner",
+["color"] = {
+["b"] = 1,
+["g"] = 0,
+["r"] = 0.65,
+},
+},
+[167998] = {
+["name"] = "Portal Guardian",
+["color"] = {
+["b"] = 0,
+["g"] = 0.55,
+["r"] = 1,
+},
+},
+},
+},
+["unitframes"] = {
+["raidframes"] = {
+["darkmode"] = true,
+["health"] = true,
+["healthcolor"] = true,
+["names"] = true,
+},
+["hitindicator"] = true,
+["buffsdebuffs"] = {
+["debuffsize"] = 17,
+["buffsize"] = 17,
+["debuffcolors"] = true,
+},
+},
+["actionbars"] = {
+["hotkey"] = true,
+["mouseover"] = {
+["bagbuttons"] = "Hidden",
+},
+},
+["gui"] = {
+["scale"] = 1.230000019073486,
+},
+},
+},
+}

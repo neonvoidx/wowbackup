@@ -1,24 +1,3 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
-	<Script file="CooldownPanels_Helper.lua" />
-	<Script file="CooldownPanels_AnchorHelper.lua" />
-	<Script file="CooldownPanels_Stance.lua" />
-	<Script file="CooldownPanels_AutoDurations.lua" />
-	<Script file="CooldownPanels.lua" />
-	<Script file="CooldownPanels_CDMAuras.lua" />
-	<Script file="UF_Helper.lua" />
-	<Script file="StandalonePrivateAuras.lua" />
 	<Script file="FocusInterruptTracker.lua" />
-	<Script file="UF.lua" />
-	<Script file="UF_StandaloneCastbar.lua" />
-	<Include file="UF_GroupFrames.xml" />
-	<Script file="UF_GroupFrames_Helper.lua" />
-	<Script file="UF_GroupFrames_HealerBuffs.lua" />
-	<Script file="UF_GroupFrames.lua" />
-	<Script file="UF_GroupFrames_HealerBuffs_Editor.lua" />
-	<Script file="UF_GlobalAuraIgnore.lua" />
-	<Script file="ShamanMaelstromWeaponBar.lua" />
-	<Script file="Settings_Castbar.lua" />
-	<Script file="Settings_UF.lua" />
-	<Script file="CooldownPanels_Bars.lua" />
 </Ui>
-

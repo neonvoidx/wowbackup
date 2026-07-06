@@ -20,6 +20,70 @@ local ActionBarLabels = addon.ActionBarLabels
 
 addon.constants = addon.constants or {}
 
+local UNIT_FRAMES_ADDON_NAME = "EnhanceQoLUnitFrames"
+local CHAT_SOCIAL_ADDON_NAME = "EnhanceQoLChatSocial"
+
+function addon.functions.IsUnitFramesAddonLoaded()
+	if C_AddOns and C_AddOns.IsAddOnLoaded then return C_AddOns.IsAddOnLoaded(UNIT_FRAMES_ADDON_NAME) == true end
+	if IsAddOnLoaded then return IsAddOnLoaded(UNIT_FRAMES_ADDON_NAME) == true end
+	return addon.Aura and addon.Aura.UF ~= nil
+end
+
+function addon.functions.IsChatSocialAddonLoaded()
+	if C_AddOns and C_AddOns.IsAddOnLoaded then return C_AddOns.IsAddOnLoaded(CHAT_SOCIAL_ADDON_NAME) == true end
+	if IsAddOnLoaded then return IsAddOnLoaded(CHAT_SOCIAL_ADDON_NAME) == true end
+	return addon.ChatIM ~= nil or addon.Ignore ~= nil or addon.ChatIcons ~= nil
+end
+
+function addon.functions.IsAdvancedIgnoreEnabled()
+	if not addon.functions.IsChatSocialAddonLoaded() then return false end
+	return addon.db and addon.db.enableIgnore == true and addon.Ignore and addon.Ignore.CheckIgnore ~= nil
+end
+
+function addon.functions.IsEQoLUnitFrameEnabled(unit)
+	if type(unit) ~= "string" or unit == "" then return false end
+	if not addon.functions.IsUnitFramesAddonLoaded() then return false end
+
+	local uf = addon.Aura and addon.Aura.UF
+	if uf and uf.GetConfig then
+		local cfg = uf.GetConfig(unit)
+		if cfg and cfg.enabled == true then return true end
+	end
+
+	local frames = addon.db and addon.db.ufFrames
+	if not frames then return false end
+	if unit == "boss" then
+		local bossCfg = frames.boss
+		if bossCfg and bossCfg.enabled == true then return true end
+		for i = 1, 5 do
+			local cfg = frames["boss" .. i]
+			if cfg and cfg.enabled == true then return true end
+		end
+		return false
+	end
+	local cfg = frames[unit]
+	return cfg and cfg.enabled == true
+end
+
+function addon.functions.IsEQoLGroupFrameEnabled(kind)
+	if type(kind) ~= "string" or kind == "" then return false end
+	if not addon.functions.IsUnitFramesAddonLoaded() then return false end
+
+	local groupFrames = addon.Aura and addon.Aura.UF and addon.Aura.UF.GroupFrames
+	if groupFrames and groupFrames.GetConfig then
+		local cfg = groupFrames:GetConfig(kind)
+		if cfg and cfg.enabled == true then return true end
+	end
+
+	local groups = addon.db and addon.db.ufGroupFrames
+	local cfg = groups and groups[kind]
+	return cfg and cfg.enabled == true
+end
+
+function addon.functions.IsEQoLUnitOrGroupFrameEnabled(key)
+	return addon.functions.IsEQoLUnitFrameEnabled(key) or addon.functions.IsEQoLGroupFrameEnabled(key)
+end
+
 local function getPrivateDB() return addon.functions.GetPrivateDB and addon.functions.GetPrivateDB() or addon.privateDB or {} end
 
 local LFGListFrame = _G.LFGListFrame
@@ -33,6 +97,14 @@ local math = math
 local TooltipUtil = _G.TooltipUtil
 local GetTime = GetTime
 local GetActiveQuestID = _G.GetActiveQuestID
+
+local function MouseIsOver(region, topOffset, bottomOffset, leftOffset, rightOffset)
+	if not region then return false end
+	if _G.MouseIsOver then return _G.MouseIsOver(region, topOffset, bottomOffset, leftOffset, rightOffset) end
+	if region.IsMouseOver then return region:IsMouseOver(topOffset, bottomOffset, leftOffset, rightOffset) end
+	return false
+end
+addon.functions.MouseIsOver = MouseIsOver
 
 local AUTO_REPAIR_GUILD_BANK_CONTEXT_DEFAULTS = {
 	world = true,
@@ -88,6 +160,7 @@ local COOLDOWN_VIEWER_VISIBILITY_MODES = {
 	FLYING_ACTIVE = "FLYING_ACTIVE",
 	FLYING_INACTIVE = "FLYING_INACTIVE",
 	MOUSEOVER = "MOUSEOVER",
+	PLAYER_HAS_FOCUS = "PLAYER_HAS_FOCUS",
 	PLAYER_HAS_TARGET = "PLAYER_HAS_TARGET",
 	PLAYER_CASTING = "PLAYER_CASTING",
 	PLAYER_IN_GROUP = "PLAYER_IN_GROUP",
@@ -105,6 +178,7 @@ local SPELL_ACTIVATION_OVERLAY_VISIBILITY_KEYS = {
 	[COOLDOWN_VIEWER_VISIBILITY_MODES.FLYING_ACTIVE] = true,
 	[COOLDOWN_VIEWER_VISIBILITY_MODES.FLYING_INACTIVE] = true,
 	[COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_CASTING] = true,
+	[COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_HAS_FOCUS] = true,
 	[COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_HAS_TARGET] = true,
 }
 addon.constants.SPELL_ACTIVATION_OVERLAY_VISIBILITY_KEYS = SPELL_ACTIVATION_OVERLAY_VISIBILITY_KEYS
@@ -238,6 +312,7 @@ addon.functions.RefreshAllActionBarAnchors = RefreshAllActionBarAnchors
 local hookedATT = false -- need to hook ATT because of the way the minimap button is created
 
 hooksecurefunc("LFGListSearchEntry_OnClick", function(s, button)
+	if not addon.db.skipSignUpDialog then return end
 	if addon.functions.isRestrictedContent(true) then return end
 	local panel = LFGListFrame.SearchPanel
 	if button ~= "RightButton" and LFGListSearchPanelUtil_CanSelectResult(s.resultID) and panel.SignUpButton:IsEnabled() then
@@ -398,6 +473,14 @@ local visibilityRuleMetadata = {
 		appliesTo = { actionbar = true, frame = true },
 		unitRequirement = "player",
 		order = 37,
+	},
+	PLAYER_HAS_FOCUS = {
+		key = "PLAYER_HAS_FOCUS",
+		label = L["When I have a focus"] or "When I have a focus",
+		description = L["visibilityRule_playerHasFocus_desc"],
+		appliesTo = { actionbar = true, frame = true },
+		unitRequirement = "player",
+		order = 44,
 	},
 	PLAYER_HAS_TARGET = {
 		key = "PLAYER_HAS_TARGET",
@@ -721,6 +804,7 @@ local UpdateUnitFrameMouseover -- forward declaration
 
 local frameVisibilityContext = {
 	inCombat = false,
+	hasFocus = false,
 	hasTarget = false,
 	inGroup = false,
 	inParty = false,
@@ -784,9 +868,11 @@ local function UpdateFrameVisibilityContext()
 	end
 	frameVisibilityContext.inCombat = inCombat
 
+	local hasFocus = UnitExists and UnitExists("focus") and true or false
 	local hasTarget = UnitExists and UnitExists("target") and true or false
 	local inRaid = (IsInRaid and IsInRaid()) and true or false
 	local inGroup = (IsInGroup and IsInGroup()) and true or false
+	frameVisibilityContext.hasFocus = hasFocus
 	frameVisibilityContext.hasTarget = hasTarget
 	frameVisibilityContext.inGroup = inGroup
 	frameVisibilityContext.inParty = inGroup and not inRaid
@@ -876,6 +962,7 @@ local function BuildUnitFrameDriverExpression(config, opts)
 	if config.ALWAYS_OUT_OF_COMBAT then addClause(showClauses, showSeen, "nocombat") end
 	if config.SKYRIDING_ACTIVE then addSkyridingClauses(showClauses, showSeen) end
 	if config.FLYING_ACTIVE then addClause(showClauses, showSeen, "nodead,flying") end
+	if config.PLAYER_HAS_FOCUS then addClause(showClauses, showSeen, "@focus,exists") end
 	if config.PLAYER_HAS_TARGET then addClause(showClauses, showSeen, "@target,exists") end
 	if config.PLAYER_MOUNTED then addMountedClauses(showClauses, showSeen) end
 	if config.PLAYER_NOT_MOUNTED then addNotMountedClauses(showClauses, showSeen) end
@@ -988,6 +1075,7 @@ local function EnsureFrameVisibilityWatcher()
 	watcher:RegisterEvent("PLAYER_UNGHOST")
 	watcher:RegisterEvent("PLAYER_REGEN_DISABLED")
 	watcher:RegisterEvent("PLAYER_REGEN_ENABLED")
+	watcher:RegisterEvent("PLAYER_FOCUS_CHANGED")
 	watcher:RegisterEvent("PLAYER_TARGET_CHANGED")
 	watcher:RegisterEvent("PLAYER_FLAGS_CHANGED")
 	watcher:RegisterEvent("PLAYER_MOUNT_DISPLAY_CHANGED")
@@ -1058,6 +1146,7 @@ local function EvaluateFrameVisibility(state)
 		or cfg.ALWAYS_OUT_OF_COMBAT
 		or cfg.SKYRIDING_ACTIVE
 		or cfg.FLYING_ACTIVE
+		or cfg.PLAYER_HAS_FOCUS
 		or cfg.PLAYER_HAS_TARGET
 		or cfg.PLAYER_CASTING
 		or cfg.PLAYER_MOUNTED
@@ -1074,6 +1163,7 @@ local function EvaluateFrameVisibility(state)
 	if cfg.ALWAYS_OUT_OF_COMBAT and not context.inCombat then return true, "ALWAYS_OUT_OF_COMBAT" end
 	if cfg.SKYRIDING_ACTIVE and state.supportsPlayerMountedRule and context.isSkyriding then return true, "SKYRIDING_ACTIVE" end
 	if cfg.FLYING_ACTIVE and state.supportsPlayerMountedRule and context.isFlying then return true, "FLYING_ACTIVE" end
+	if cfg.PLAYER_HAS_FOCUS and state.supportsPlayerFocusRule and context.hasFocus then return true, "PLAYER_HAS_FOCUS" end
 	if cfg.PLAYER_HAS_TARGET and state.supportsPlayerTargetRule and context.hasTarget then return true, "PLAYER_HAS_TARGET" end
 	if cfg.PLAYER_CASTING and state.supportsPlayerCastingRule and context.isCasting then return true, "PLAYER_CASTING" end
 	if cfg.PLAYER_MOUNTED and state.supportsPlayerMountedRule and context.isMounted then return true, "PLAYER_MOUNTED" end
@@ -1093,6 +1183,7 @@ addon.functions.ShouldShowVisibilityConfig = function(config, opts)
 	local state = {
 		config = config,
 		isMouseOver = opts and opts.isMouseOver == true or false,
+		supportsPlayerFocusRule = not (opts and opts.supportsPlayerFocusRule == false),
 		supportsPlayerTargetRule = not (opts and opts.supportsPlayerTargetRule == false),
 		supportsPlayerCastingRule = not (opts and opts.supportsPlayerCastingRule == false),
 		supportsPlayerMountedRule = not (opts and opts.supportsPlayerMountedRule == false),
@@ -1456,6 +1547,7 @@ local function normalizeCooldownViewerConfigValue(val, acc)
 	if val == COOLDOWN_VIEWER_VISIBILITY_MODES.FLYING_ACTIVE then acc[COOLDOWN_VIEWER_VISIBILITY_MODES.FLYING_ACTIVE] = true end
 	if val == COOLDOWN_VIEWER_VISIBILITY_MODES.FLYING_INACTIVE then acc[COOLDOWN_VIEWER_VISIBILITY_MODES.FLYING_INACTIVE] = true end
 	if val == COOLDOWN_VIEWER_VISIBILITY_MODES.MOUSEOVER then acc[COOLDOWN_VIEWER_VISIBILITY_MODES.MOUSEOVER] = true end
+	if val == COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_HAS_FOCUS then acc[COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_HAS_FOCUS] = true end
 	if val == COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_HAS_TARGET then acc[COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_HAS_TARGET] = true end
 	if val == COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_CASTING then acc[COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_CASTING] = true end
 	if val == COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_IN_GROUP then acc[COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_IN_GROUP] = true end
@@ -1545,6 +1637,7 @@ local function computeCooldownViewerTargetAlpha(cfg, state)
 		end
 	end
 
+	local hasFocus = UnitExists and UnitExists("focus")
 	local hasTarget = UnitExists and UnitExists("target")
 	local isCasting = IsPlayerCasting()
 	local inGroup = IsInGroup and IsInGroup() and true or false
@@ -1559,6 +1652,7 @@ local function computeCooldownViewerTargetAlpha(cfg, state)
 		or cfg[COOLDOWN_VIEWER_VISIBILITY_MODES.SKYRIDING_ACTIVE]
 		or cfg[COOLDOWN_VIEWER_VISIBILITY_MODES.FLYING_ACTIVE]
 		or cfg[COOLDOWN_VIEWER_VISIBILITY_MODES.MOUSEOVER]
+		or cfg[COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_HAS_FOCUS]
 		or cfg[COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_HAS_TARGET]
 		or cfg[COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_CASTING]
 		or cfg[COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_IN_GROUP]
@@ -1574,6 +1668,7 @@ local function computeCooldownViewerTargetAlpha(cfg, state)
 	if cfg[COOLDOWN_VIEWER_VISIBILITY_MODES.SKYRIDING_ACTIVE] and isSkyriding then shouldShow = true end
 	if cfg[COOLDOWN_VIEWER_VISIBILITY_MODES.FLYING_ACTIVE] and isFlying then shouldShow = true end
 	if cfg[COOLDOWN_VIEWER_VISIBILITY_MODES.MOUSEOVER] and hovered then shouldShow = true end
+	if cfg[COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_HAS_FOCUS] and hasFocus then shouldShow = true end
 	if cfg[COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_HAS_TARGET] and hasTarget then shouldShow = true end
 	if cfg[COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_CASTING] and isCasting then shouldShow = true end
 	if cfg[COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_IN_GROUP] and inGroup then shouldShow = true end
@@ -1980,6 +2075,7 @@ local COOLDOWN_VIEWER_EVENTS = {
 	"PLAYER_REGEN_DISABLED",
 	"PLAYER_MOUNT_DISPLAY_CHANGED",
 	"UPDATE_SHAPESHIFT_FORM",
+	"PLAYER_FOCUS_CHANGED",
 	"PLAYER_TARGET_CHANGED",
 	"GROUP_ROSTER_UPDATE",
 	"UPDATE_BONUS_ACTIONBAR",
@@ -2128,6 +2224,7 @@ local function computeSpellActivationOverlayTargetAlpha(cfg, activeAlpha, hidden
 	local mounted = IsPlayerMountedOrInVehicleUI()
 	local isSkyriding = addon.variables and addon.variables.isPlayerSkyriding and true or false
 	local isFlying = IsPlayerFlying()
+	local hasFocus = UnitExists and UnitExists("focus") and true or false
 	local hasTarget = UnitExists and UnitExists("target") and true or false
 	local isCasting = IsPlayerCasting()
 
@@ -2139,6 +2236,7 @@ local function computeSpellActivationOverlayTargetAlpha(cfg, activeAlpha, hidden
 	if cfg[COOLDOWN_VIEWER_VISIBILITY_MODES.FLYING_ACTIVE] and isFlying then shouldShow = true end
 	if cfg[COOLDOWN_VIEWER_VISIBILITY_MODES.FLYING_INACTIVE] and not isFlying then shouldShow = true end
 	if cfg[COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_CASTING] and isCasting then shouldShow = true end
+	if cfg[COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_HAS_FOCUS] and hasFocus then shouldShow = true end
 	if cfg[COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_HAS_TARGET] and hasTarget then shouldShow = true end
 
 	if shouldShow then return activeAlpha end
@@ -2223,6 +2321,7 @@ EnsureSpellActivationOverlayWatcher = function()
 	EnsureSkyridingStateDriver()
 	local watcher = CreateFrame("Frame")
 	watcher:RegisterEvent("PLAYER_ENTERING_WORLD")
+	watcher:RegisterEvent("PLAYER_FOCUS_CHANGED")
 	watcher:RegisterEvent("PLAYER_TARGET_CHANGED")
 	watcher:RegisterEvent("PLAYER_MOUNT_DISPLAY_CHANGED")
 	watcher:RegisterEvent("UPDATE_SHAPESHIFT_FORM")
@@ -2336,6 +2435,7 @@ local function GetActionBarVisibilityConfig(variable, incoming, persistLegacy)
 				or source.PLAYER_CASTING == true
 				or source.PLAYER_MOUNTED == true
 				or source.PLAYER_NOT_MOUNTED == true
+				or source.PLAYER_HAS_FOCUS == true
 				or source.PLAYER_HAS_TARGET == true
 				or source.PLAYER_IN_GROUP == true
 				or source.ALWAYS_HIDDEN == true
@@ -2360,6 +2460,7 @@ local function GetActionBarVisibilityConfig(variable, incoming, persistLegacy)
 			PLAYER_CASTING = source.PLAYER_CASTING == true,
 			PLAYER_MOUNTED = source.PLAYER_MOUNTED == true,
 			PLAYER_NOT_MOUNTED = source.PLAYER_NOT_MOUNTED == true,
+			PLAYER_HAS_FOCUS = source.PLAYER_HAS_FOCUS == true,
 			PLAYER_HAS_TARGET = source.PLAYER_HAS_TARGET == true,
 			PLAYER_IN_GROUP = source.PLAYER_IN_GROUP == true,
 			ALWAYS_HIDDEN = source.ALWAYS_HIDDEN == true,
@@ -2376,6 +2477,7 @@ local function GetActionBarVisibilityConfig(variable, incoming, persistLegacy)
 			PLAYER_CASTING = false,
 			PLAYER_MOUNTED = false,
 			PLAYER_NOT_MOUNTED = false,
+			PLAYER_HAS_FOCUS = false,
 			PLAYER_HAS_TARGET = false,
 			PLAYER_IN_GROUP = false,
 			ALWAYS_HIDDEN = false,
@@ -2401,6 +2503,7 @@ local function GetActionBarVisibilityConfig(variable, incoming, persistLegacy)
 			or config.PLAYER_CASTING
 			or config.PLAYER_MOUNTED
 			or config.PLAYER_NOT_MOUNTED
+			or config.PLAYER_HAS_FOCUS
 			or config.PLAYER_HAS_TARGET
 			or config.PLAYER_IN_GROUP
 			or config.ALWAYS_HIDDEN
@@ -2424,6 +2527,7 @@ local function GetActionBarVisibilityConfig(variable, incoming, persistLegacy)
 			if config.PLAYER_CASTING then stored.PLAYER_CASTING = true end
 			if config.PLAYER_MOUNTED then stored.PLAYER_MOUNTED = true end
 			if config.PLAYER_NOT_MOUNTED then stored.PLAYER_NOT_MOUNTED = true end
+			if config.PLAYER_HAS_FOCUS then stored.PLAYER_HAS_FOCUS = true end
 			if config.PLAYER_HAS_TARGET then stored.PLAYER_HAS_TARGET = true end
 			if config.PLAYER_IN_GROUP then stored.PLAYER_IN_GROUP = true end
 			if config.ALWAYS_HIDDEN then stored.ALWAYS_HIDDEN = true end
@@ -2451,6 +2555,7 @@ local function GetActionBarVisibilityContext(combatOverride)
 
 	return {
 		inCombat = inCombat,
+		hasFocus = UnitExists and UnitExists("focus") and true or false,
 		hasTarget = UnitExists and UnitExists("target") and true or false,
 		inGroup = IsInGroup and IsInGroup() and true or false,
 		mounted = IsPlayerMounted(),
@@ -2471,6 +2576,7 @@ local function ActionBarShouldForceShowByConfig(config, context, combatOverride)
 	if config.PLAYER_CASTING and ctx.isCasting then return true end
 	if config.PLAYER_MOUNTED and ctx.mounted then return true end
 	if config.PLAYER_NOT_MOUNTED and not ctx.mounted then return true end
+	if config.PLAYER_HAS_FOCUS and ctx.hasFocus then return true end
 	if config.PLAYER_HAS_TARGET and ctx.hasTarget then return true end
 	if config.PLAYER_IN_GROUP and ctx.inGroup then return true end
 	return false
@@ -2564,6 +2670,7 @@ local function ApplyActionBarAlpha(bar, variable, config, combatOverride, skipFa
 		or cfg.PLAYER_CASTING
 		or cfg.PLAYER_MOUNTED
 		or cfg.PLAYER_NOT_MOUNTED
+		or cfg.PLAYER_HAS_FOCUS
 		or cfg.PLAYER_HAS_TARGET
 		or cfg.PLAYER_IN_GROUP
 
@@ -3002,6 +3109,7 @@ local function setActionBarVisibilityWatcherEnabled(watcher, enabled)
 	if enabled then
 		local flags = {
 			combat = false,
+			focus = false,
 			target = false,
 			group = false,
 			casting = false,
@@ -3014,6 +3122,7 @@ local function setActionBarVisibilityWatcherEnabled(watcher, enabled)
 				local cfg = info.var and GetActionBarVisibilityConfig(info.var)
 				if cfg then
 					if cfg.ALWAYS_IN_COMBAT or cfg.ALWAYS_OUT_OF_COMBAT then flags.combat = true end
+					if cfg.PLAYER_HAS_FOCUS then flags.focus = true end
 					if cfg.PLAYER_HAS_TARGET then flags.target = true end
 					if cfg.PLAYER_IN_GROUP then flags.group = true end
 					if cfg.PLAYER_CASTING then flags.casting = true end
@@ -3021,12 +3130,13 @@ local function setActionBarVisibilityWatcherEnabled(watcher, enabled)
 						flags.mountState = true
 					end
 					if cfg.SKYRIDING_ACTIVE or cfg.SKYRIDING_INACTIVE then flags.skyriding = true end
-					if flags.combat and flags.target and flags.group and flags.casting and flags.mountState and flags.skyriding then break end
+					if flags.combat and flags.focus and flags.target and flags.group and flags.casting and flags.mountState and flags.skyriding then break end
 				end
 			end
 		end
 		local signature = table.concat({
 			flags.combat and "1" or "0",
+			flags.focus and "1" or "0",
 			flags.target and "1" or "0",
 			flags.group and "1" or "0",
 			flags.casting and "1" or "0",
@@ -3049,6 +3159,7 @@ local function setActionBarVisibilityWatcherEnabled(watcher, enabled)
 			watcher:RegisterEvent("UPDATE_SHAPESHIFT_FORM")
 		end
 		if flags.group then watcher:RegisterEvent("GROUP_ROSTER_UPDATE") end
+		if flags.focus then watcher:RegisterEvent("PLAYER_FOCUS_CHANGED") end
 		if flags.target then watcher:RegisterEvent("PLAYER_TARGET_CHANGED") end
 		if flags.casting then
 			SafeRegisterUnitEvent(watcher, "UNIT_SPELLCAST_START", "player")
@@ -3177,6 +3288,7 @@ local function initActionBars()
 	local globalFontStyleKey = addon.functions.GetGlobalFontStyleConfigKey and addon.functions.GetGlobalFontStyleConfigKey() or "__EQOL_GLOBAL_FONT_STYLE__"
 	addon.functions.InitDBValue("globalFontFace", addon.variables.defaultFont)
 	addon.functions.InitDBValue("globalFontStyle", "OUTLINE")
+	if addon.DurationText and addon.DurationText.InitDB then addon.DurationText:InitDB() end
 	addon.functions.InitDBValue("actionBarAnchorEnabled", false)
 	addon.functions.InitDBValue("actionBarFadeStrength", 1)
 	addon.functions.InitDBValue("actionBarFullRangeColoring", false)
@@ -3430,8 +3542,10 @@ local function shouldAutoAcceptResurrection(offerer)
 end
 
 local function initMisc()
+	local globalFontKey = addon.functions.GetGlobalFontConfigKey and addon.functions.GetGlobalFontConfigKey() or addon.variables.defaultFont
+	local globalFontStyleKey = addon.functions.GetGlobalFontStyleConfigKey and addon.functions.GetGlobalFontStyleConfigKey() or "__EQOL_GLOBAL_FONT_STYLE__"
+
 	addon.functions.InitDBValue("confirmTimerRemovalTrade", false)
-	addon.functions.InitDBValue("confirmPatronOrderDialog", false)
 	addon.functions.InitDBValue("deleteItemFillDialog", false)
 	addon.functions.InitDBValue("confirmSocketReplace", false)
 	addon.functions.InitDBValue("confirmHighCostItem", false)
@@ -3464,18 +3578,14 @@ local function initMisc()
 	addon.functions.InitDBValue("autoHideBossBanner", false)
 	addon.functions.InitDBValue("autoQuickLoot", false)
 	addon.functions.InitDBValue("autoQuickLootWithShift", false)
-	addon.functions.InitDBValue("damageMeterEnabled", false)
-	addon.functions.InitDBValue("damageMeterAutomaticClear", "never")
-	addon.functions.InitDBValue("damageMeterAutomaticClearInstances", { party = true, raid = true })
-	addon.functions.InitDBValue("damageMeterUpdateRate", 0.1)
-	addon.functions.InitDBValue("damageMeterWindowCount", 1)
-	addon.functions.InitDBValue("damageMeterLinkSegments", false)
-	addon.functions.InitDBValue("damageMeterSyncSettings", false)
-	addon.functions.InitDBValue("damageMeterEditModeSample", true)
-	addon.functions.InitDBValue("damageMeterWindows", {})
 	addon.functions.InitDBValue("hideAzeriteToast", false)
 	addon.functions.InitDBValue("hiddenLandingPages", {})
 	addon.functions.InitDBValue("enableLandingPageMenu", false)
+	addon.functions.InitDBValue("landingPageButtonCustomPosition", false)
+	addon.functions.InitDBValue("landingPageButtonAnchor", "BOTTOMLEFT")
+	addon.functions.InitDBValue("landingPageButtonOffsetX", -16)
+	addon.functions.InitDBValue("landingPageButtonOffsetY", -16)
+	addon.functions.InitDBValue("landingPageButtonScale", 1)
 	addon.functions.InitDBValue("hideMinimapButton", false)
 	addon.functions.InitDBValue("hideZoneText", false)
 	addon.functions.InitDBValue("instantCatalystEnabled", false)
@@ -3533,9 +3643,6 @@ local function initMisc()
 						editBox:SetText(DELETE_ITEM_CONFIRM_STRING)
 						editBox:ClearFocus()
 						editBox:SetAutoFocus(false)
-					elseif addon.db["confirmPatronOrderDialog"] and self.data and type(self.data) == "table" and self.data.text == CRAFTING_ORDERS_OWN_REAGENTS_CONFIRMATION and self.GetButton then
-						local order = C_CraftingOrders.GetClaimedOrder()
-						if order and order.npcCustomerCreatureID and order.npcCustomerCreatureID > 0 then self:GetButton(1):Click() end
 					elseif addon.db["confirmTimerRemovalTrade"] and self.which == "CONFIRM_MERCHANT_TRADE_TIMER_REMOVAL" and self.GetButton then
 						self:GetButton(1):Click()
 					elseif addon.db["confirmSocketReplace"] and self.which == "CONFIRM_ACCEPT_SOCKETS" and self.numButtons > 0 and self.GetButton then
@@ -3608,11 +3715,49 @@ local function initMisc()
 	addon.functions.updateRaidToolsHook()
 	addon.variables = addon.variables or {}
 
-	local function applySquareLandingPageButtonAnchor(button)
-		if not button or not addon.db or not addon.db["enableSquareMinimap"] then return end
+	local function clampNumber(value, minValue, maxValue, fallback)
+		value = tonumber(value) or fallback
+		if value < minValue then return minValue end
+		if value > maxValue then return maxValue end
+		return value
+	end
+
+	local function normalizeLandingPageButtonAnchor(anchor)
+		if anchor == "TOPLEFT" or anchor == "TOP" or anchor == "TOPRIGHT" or anchor == "LEFT" or anchor == "CENTER" or anchor == "RIGHT" or anchor == "BOTTOMLEFT" or anchor == "BOTTOM" or anchor == "BOTTOMRIGHT" then return anchor end
+		return "BOTTOMLEFT"
+	end
+
+	local function resetLandingPageButtonPlacement(button)
+		button:SetScale(1)
+		if button.ResetLandingPageIconOffset then
+			button:ClearAllPoints()
+			button:ResetLandingPageIconOffset()
+		end
+	end
+
+	local function applyLandingPageButtonPlacement(button, resetDefault)
+		if not button or not addon.db then return end
+
+		if addon.db["landingPageButtonCustomPosition"] == true then
+			local anchor = normalizeLandingPageButtonAnchor(addon.db["landingPageButtonAnchor"])
+			local offsetX = tonumber(addon.db["landingPageButtonOffsetX"]) or -16
+			local offsetY = tonumber(addon.db["landingPageButtonOffsetY"]) or -16
+			local scale = clampNumber(addon.db["landingPageButtonScale"], 0.5, 2, 1)
+			button:ClearAllPoints()
+			button:SetPoint(anchor, Minimap, anchor, offsetX, offsetY)
+			button:SetScale(scale)
+			return
+		end
+
+		if not addon.db["enableSquareMinimap"] then
+			if resetDefault then resetLandingPageButtonPlacement(button) end
+			return
+		end
+
 		local reverse = addon.variables and addon.variables.landingPageReverse
 		local id = reverse and reverse[button.title]
 		button:ClearAllPoints()
+		button:SetScale(1)
 		if id == 20 then
 			button:SetPoint("BOTTOMLEFT", Minimap, "BOTTOMLEFT", -25, -25)
 		else
@@ -3624,11 +3769,21 @@ local function initMisc()
 		local button = _G.ExpansionLandingPageMinimapButton
 		if not button then return end
 
-		applySquareLandingPageButtonAnchor(button)
+		applyLandingPageButtonPlacement(button)
 
 		local reverse = addon.variables and addon.variables.landingPageReverse
 		local id = reverse and reverse[button.title]
 		if addon.db and addon.db["hiddenLandingPages"] and id and addon.db["hiddenLandingPages"][id] then button:Hide() end
+	end
+
+	function addon.functions.applyLandingPageButtonPlacement()
+		refreshLandingPageButtonFix()
+	end
+
+	function addon.functions.resetLandingPageButtonPlacement()
+		local button = _G.ExpansionLandingPageMinimapButton
+		if not button then return end
+		applyLandingPageButtonPlacement(button, true)
 	end
 
 	if ExpansionLandingPageMinimapButton and not addon.variables._eqolLandingPageButtonHooked then
@@ -3638,6 +3793,12 @@ local function initMisc()
 			if event ~= "COVENANT_CHOSEN" then return end
 			RunNextFrame(refreshLandingPageButtonFix)
 		end)
+		if ExpansionLandingPageMinimapButton.RefreshButton then
+			hooksecurefunc(ExpansionLandingPageMinimapButton, "RefreshButton", function() RunNextFrame(refreshLandingPageButtonFix) end)
+		end
+		if ExpansionLandingPageMinimapButton.UpdateIcon then
+			hooksecurefunc(ExpansionLandingPageMinimapButton, "UpdateIcon", function() RunNextFrame(refreshLandingPageButtonFix) end)
+		end
 		addon.variables._eqolLandingPageButtonHooked = true
 	end
 
@@ -3862,15 +4023,6 @@ local function initUnitFrame()
 		return castbarModule
 	end
 
-	local function guardStandaloneCastbarDisabledWhenUnavailable()
-		addon.db = addon.db or {}
-		addon.db.castbar = type(addon.db.castbar) == "table" and addon.db.castbar or {}
-		if getStandaloneCastbarModule() ~= nil then return false end
-		if addon.db.castbar.enabled ~= true then return false end
-		addon.db.castbar.enabled = false
-		return true
-	end
-
 	local function isCustomPlayerCastbarEnabled()
 		local standaloneEnabled = false
 		local castbarModule = getStandaloneCastbarModule()
@@ -3903,7 +4055,6 @@ local function initUnitFrame()
 	function addon.functions.ApplyCastBarVisibility()
 		if not addon.db then return end
 		if type(addon.db.hiddenCastBars) ~= "table" then addon.db.hiddenCastBars = {} end
-		guardStandaloneCastbarDisabledWhenUnavailable()
 		local hidePlayerForCustom = isCustomPlayerCastbarEnabled()
 		for key, getter in pairs(castBarFrames) do
 			local frame = getter and getter() or _G[key]
@@ -4009,344 +4160,6 @@ local function initBagsFrame()
 	-- end
 end
 
-local function initChatFrame()
-	-- Build learn/unlearn message patterns and filter once
-	if not addon.variables.learnUnlearnPatterns then
-		local patterns = {}
-		if ERR_LEARN_PASSIVE_S then table.insert(patterns, addon.functions.fmtToPattern(ERR_LEARN_PASSIVE_S)) end
-		if ERR_LEARN_SPELL_S then table.insert(patterns, addon.functions.fmtToPattern(ERR_LEARN_SPELL_S)) end
-		if ERR_LEARN_ABILITY_S then table.insert(patterns, addon.functions.fmtToPattern(ERR_LEARN_ABILITY_S)) end
-		if ERR_SPELL_UNLEARNED_S then table.insert(patterns, addon.functions.fmtToPattern(ERR_SPELL_UNLEARNED_S)) end
-		addon.variables.learnUnlearnPatterns = patterns
-	end
-
-	addon.functions.ChatLearnFilter = addon.functions.ChatLearnFilter
-		or function(_, _, msg)
-			if not msg then return false end
-			if issecretvalue and issecretvalue(msg) then return end
-			for _, pat in ipairs(addon.variables.learnUnlearnPatterns or {}) do
-				if msg:match(pat) then return true end
-			end
-			return false
-		end
-
-	addon.functions.ApplyChatLearnFilter = addon.functions.ApplyChatLearnFilter
-		or function(enabled)
-			if enabled then
-				ChatFrameUtil.AddMessageEventFilter("CHAT_MSG_SYSTEM", addon.functions.ChatLearnFilter)
-			else
-				ChatFrameUtil.RemoveMessageEventFilter("CHAT_MSG_SYSTEM", addon.functions.ChatLearnFilter)
-			end
-		end
-
-	addon.functions.ApplyChatFrameMaxLines = addon.functions.ApplyChatFrameMaxLines
-		or function()
-			local frame = DEFAULT_CHAT_FRAME or ChatFrame1
-			if not frame or not frame.SetMaxLines then return end
-			if addon.db and addon.db.chatFrameMaxLines2000 then
-				frame:SetMaxLines(2000)
-			else
-				frame:SetMaxLines(128)
-			end
-		end
-
-	local function getChatEditBox(chatFrame)
-		if not chatFrame then return nil end
-		if chatFrame.editBox then return chatFrame.editBox end
-		local name = chatFrame:GetName()
-		return name and _G[name .. "EditBox"]
-	end
-
-	local function forEachChatFrame(callback)
-		local maxFrames = math.max(Constants.ChatFrameConstants.MaxChatWindows or 0, 50)
-		for i = 1, maxFrames do
-			local frame = _G["ChatFrame" .. i]
-			if frame then callback(frame, getChatEditBox(frame)) end
-		end
-	end
-
-	local function refreshChatUnclampFrame()
-		if not (addon.functions and addon.functions.ApplyChatUnclampFrame) then return end
-		local pending = addon.variables and addon.variables.pendingChatUnclampFrame
-		if pending ~= nil then
-			addon.functions.ApplyChatUnclampFrame(pending)
-		elseif addon.db then
-			addon.functions.ApplyChatUnclampFrame(addon.db.chatUnclampFrame)
-		end
-	end
-
-	local function ensureChatFrameHooks()
-		addon.variables = addon.variables or {}
-		if addon.variables.chatFrameHooksInstalled then return end
-		addon.variables.chatFrameHooksInstalled = true
-
-		hooksecurefunc("FCF_OpenTemporaryWindow", function()
-			if addon.db and addon.db.chatUseArrowKeys and addon.functions.ApplyChatArrowKeys then addon.functions.ApplyChatArrowKeys(true) end
-			if addon.db and addon.db.chatEditBoxOnTop and addon.functions.ApplyChatEditBoxOnTop then addon.functions.ApplyChatEditBoxOnTop(true) end
-			refreshChatUnclampFrame()
-			if addon.db and addon.db.chatHideCombatLogTab and addon.functions.ApplyChatHideCombatLogTab then addon.functions.ApplyChatHideCombatLogTab(true) end
-			if addon.db and addon.functions.ApplyChatFrameFade then addon.functions.ApplyChatFrameFade() end
-		end)
-
-		hooksecurefunc("FCF_SetTabPosition", function()
-			if not (addon.db and addon.db.chatHideCombatLogTab) then return end
-			if ChatFrame1Tab and ChatFrame2Tab then ChatFrame2Tab:SetPoint("BOTTOMLEFT", ChatFrame1Tab, "BOTTOMRIGHT", 0, 0) end
-		end)
-
-		local frame = CreateFrame("Frame")
-		frame:RegisterEvent("UPDATE_CHAT_WINDOWS")
-		frame:RegisterEvent("PLAYER_REGEN_ENABLED")
-		frame:SetScript("OnEvent", function()
-			if addon.db and addon.db.chatUseArrowKeys and addon.functions.ApplyChatArrowKeys then addon.functions.ApplyChatArrowKeys(true) end
-			if addon.db and addon.db.chatEditBoxOnTop and addon.functions.ApplyChatEditBoxOnTop then addon.functions.ApplyChatEditBoxOnTop(true) end
-			refreshChatUnclampFrame()
-			if addon.db and addon.db.chatHideCombatLogTab and addon.functions.ApplyChatHideCombatLogTab then addon.functions.ApplyChatHideCombatLogTab(true) end
-			if addon.db and addon.functions.ApplyChatFrameFade then addon.functions.ApplyChatFrameFade() end
-		end)
-		addon.variables.chatFrameWatcher = frame
-	end
-
-	addon.functions.ApplyChatArrowKeys = addon.functions.ApplyChatArrowKeys
-		or function(enabled)
-			addon.variables = addon.variables or {}
-			addon.variables.chatArrowKeyModeCache = addon.variables.chatArrowKeyModeCache or {}
-			local cache = addon.variables.chatArrowKeyModeCache
-
-			forEachChatFrame(function(_, editBox)
-				if not (editBox and editBox.SetAltArrowKeyMode) then return end
-				if enabled then
-					if cache[editBox] == nil and editBox.GetAltArrowKeyMode then cache[editBox] = editBox:GetAltArrowKeyMode() end
-					editBox:SetAltArrowKeyMode(false)
-				else
-					if cache[editBox] ~= nil then
-						editBox:SetAltArrowKeyMode(cache[editBox])
-						cache[editBox] = nil
-					end
-				end
-			end)
-
-			ensureChatFrameHooks()
-		end
-
-	addon.functions.ApplyChatEditBoxOnTop = addon.functions.ApplyChatEditBoxOnTop
-		or function(enabled)
-			forEachChatFrame(function(frame, editBox)
-				if not (frame and editBox) then return end
-				if enabled then
-					editBox:ClearAllPoints()
-					editBox:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
-					editBox:SetWidth(frame:GetWidth())
-					if not frame.eqolEditBoxSizeHooked then
-						frame:HookScript("OnSizeChanged", function(self)
-							if addon.db and addon.db.chatEditBoxOnTop and self.editBox then self.editBox:SetWidth(self:GetWidth()) end
-						end)
-						frame.eqolEditBoxSizeHooked = true
-					end
-				end
-			end)
-
-			ensureChatFrameHooks()
-		end
-
-	local function storeChatClampState(frame)
-		addon.variables = addon.variables or {}
-		addon.variables.chatClampCache = addon.variables.chatClampCache or {}
-		local cache = addon.variables.chatClampCache
-		if cache[frame] then return end
-		local state = {
-			clamped = frame.IsClampedToScreen and frame:IsClampedToScreen() or nil,
-		}
-		if frame.GetClampRectInsets then state.insets = { frame:GetClampRectInsets() } end
-		cache[frame] = state
-	end
-
-	local function restoreChatClampState(frame)
-		addon.variables = addon.variables or {}
-		local cache = addon.variables.chatClampCache
-		local state = cache and cache[frame]
-		if not state then return end
-		if frame.SetClampedToScreen and state.clamped ~= nil then frame:SetClampedToScreen(state.clamped) end
-		if state.insets and frame.SetClampRectInsets then frame:SetClampRectInsets(state.insets[1], state.insets[2], state.insets[3], state.insets[4]) end
-		cache[frame] = nil
-	end
-
-	addon.functions.ApplyChatUnclampFrame = addon.functions.ApplyChatUnclampFrame
-		or function(enabled)
-			ensureChatFrameHooks()
-			addon.variables = addon.variables or {}
-			if InCombatLockdown and InCombatLockdown() then
-				-- Chat frames are protected in combat; replay the requested clamp state afterwards.
-				addon.variables.pendingChatUnclampFrame = enabled and true or false
-				return
-			end
-			addon.variables.pendingChatUnclampFrame = nil
-
-			forEachChatFrame(function(frame)
-				if not frame then return end
-				if enabled then
-					storeChatClampState(frame)
-					if frame.SetClampedToScreen then frame:SetClampedToScreen(false) end
-				else
-					restoreChatClampState(frame)
-				end
-			end)
-		end
-
-	addon.functions.ApplyChatFrameFade = addon.functions.ApplyChatFrameFade
-		or function()
-			if not addon.db then return end
-			local enabled = addon.db["chatFrameFadeEnabled"]
-			local timeVisible = addon.db["chatFrameFadeTimeVisible"]
-			local fadeDuration = addon.db["chatFrameFadeDuration"]
-			if enabled == nil or timeVisible == nil or fadeDuration == nil then return end
-
-			forEachChatFrame(function(frame)
-				if frame.SetFading then frame:SetFading(enabled) end
-				if frame.SetTimeVisible then frame:SetTimeVisible(timeVisible) end
-				if frame.SetFadeDuration then frame:SetFadeDuration(fadeDuration) end
-			end)
-
-			ensureChatFrameHooks()
-		end
-
-	local function hideCombatLogTab()
-		if not (ChatFrame2 and ChatFrame2Tab) then return end
-		addon.variables = addon.variables or {}
-		local state = addon.variables.chatCombatLogTabState or {}
-		if not state.saved then
-			state.name = ChatFrame2.name or (GetChatWindowInfo(2))
-			state.scale = ChatFrame2Tab:GetScale()
-			state.width = ChatFrame2Tab:GetWidth()
-			state.height = ChatFrame2Tab:GetHeight()
-			state.mouseEnabled = ChatFrame2Tab:IsMouseEnabled()
-			state.saved = true
-			addon.variables.chatCombatLogTabState = state
-		end
-		ChatFrame2Tab:EnableMouse(false)
-		ChatFrame2Tab:SetText(" ")
-		ChatFrame2Tab:SetScale(0.01)
-		ChatFrame2Tab:SetWidth(0.01)
-		ChatFrame2Tab:SetHeight(0.01)
-		addon.variables.chatCombatLogHidden = true
-	end
-
-	local function showCombatLogTab()
-		if not (ChatFrame2 and ChatFrame2Tab) then return end
-		addon.variables = addon.variables or {}
-		local state = addon.variables.chatCombatLogTabState or {}
-		local name = state.name or COMBAT_LOG
-		ChatFrame2Tab:SetScale(state.scale or 1)
-		if state.width then ChatFrame2Tab:SetWidth(state.width) end
-		if state.height then ChatFrame2Tab:SetHeight(state.height) end
-		ChatFrame2Tab:EnableMouse(state.mouseEnabled ~= false)
-		if FCF_SetWindowName then
-			FCF_SetWindowName(ChatFrame2, name, true)
-		else
-			ChatFrame2Tab:SetText(name)
-		end
-		if FCFDock_UpdateTabs and GENERAL_CHAT_DOCK then FCFDock_UpdateTabs(GENERAL_CHAT_DOCK, true) end
-		addon.variables.chatCombatLogHidden = nil
-	end
-
-	addon.functions.ApplyChatHideCombatLogTab = addon.functions.ApplyChatHideCombatLogTab
-		or function(enabled)
-			ensureChatFrameHooks()
-			if not (ChatFrame2 and ChatFrame2Tab) then return end
-			addon.variables = addon.variables or {}
-
-			if enabled then
-				if ChatFrame2.isDocked then
-					hideCombatLogTab()
-					addon.variables.chatCombatLogPending = nil
-				else
-					if addon.variables.chatCombatLogHidden then showCombatLogTab() end
-					if not addon.variables.chatCombatLogWarned then
-						local msg = L and L["chatHideCombatLogTabUndocked"] or "Combat log tab cannot be hidden while undocked."
-						if DEFAULT_CHAT_FRAME and DEFAULT_CHAT_FRAME.AddMessage then
-							DEFAULT_CHAT_FRAME:AddMessage(msg)
-						else
-							print(msg)
-						end
-						addon.variables.chatCombatLogWarned = true
-					end
-					addon.variables.chatCombatLogPending = true
-				end
-			else
-				if addon.variables.chatCombatLogHidden then showCombatLogTab() end
-				addon.variables.chatCombatLogPending = nil
-			end
-		end
-
-	if ChatFrame1 then
-		addon.functions.InitDBValue("chatFrameFadeEnabled", ChatFrame1:GetFading())
-		addon.functions.InitDBValue("chatFrameFadeTimeVisible", ChatFrame1:GetTimeVisible())
-		addon.functions.InitDBValue("chatFrameFadeDuration", ChatFrame1:GetFadeDuration())
-	else
-		addon.functions.InitDBValue("chatFrameFadeEnabled", true)
-		addon.functions.InitDBValue("chatFrameFadeTimeVisible", 120)
-		addon.functions.InitDBValue("chatFrameFadeDuration", 3)
-	end
-	if addon.functions.ApplyChatFrameFade then addon.functions.ApplyChatFrameFade() end
-
-	addon.functions.InitDBValue("chatFrameMaxLines2000", false)
-	addon.functions.InitDBValue("enableChatIM", false)
-	addon.functions.InitDBValue("enableChatIMFade", false)
-	addon.functions.InitDBValue("chatIMUseCustomSound", false)
-	addon.functions.InitDBValue("chatIMCustomSoundFile", "")
-	addon.functions.InitDBValue("chatIMMaxHistory", 250)
-	addon.functions.InitDBValue("enableChatHistory", false)
-	addon.functions.InitDBValue("chatChannelHistoryMaxLines", 500)
-	addon.functions.InitDBValue("chatChannelHistoryMaxViewLines", 1000)
-	addon.functions.InitDBValue("chatHistoryRestoreOnLogin", false)
-	addon.functions.InitDBValue("chatChannelHistoryFontSize", 12)
-	addon.functions.InitDBValue("chatChannelHistoryLootQualities", {
-		[0] = true,
-		[1] = true,
-		[2] = true,
-		[3] = true,
-		[4] = true,
-		[5] = true,
-		[6] = true,
-		[7] = true,
-		[8] = true,
-	})
-	addon.functions.InitDBValue("chatHistoryFrameStrata", "MEDIUM")
-	addon.functions.InitDBValue("chatHistoryFrameLevel", 600)
-	addon.functions.InitDBValue("chatHistoryButtonOffsetX", 0)
-	addon.functions.InitDBValue("chatHistoryButtonOffsetY", -10)
-	addon.functions.InitDBValue("chatHistoryShowButton", true)
-	addon.functions.InitDBValue("chatHistoryFramePos", nil)
-	addon.functions.InitDBValue("chatChannelFilters", {})
-	addon.functions.InitDBValue("chatChannelFiltersEnable", {})
-	addon.functions.InitDBValue("chatIMFrameData", {})
-	addon.functions.InitDBValue("chatIMHideInCombat", false)
-	addon.functions.InitDBValue("chatIMUseAnimation", true)
-	addon.functions.InitDBValue("chatShowLootCurrencyIcons", false)
-	addon.functions.InitDBValue("chatShowItemTooltipsOnHover", false)
-	addon.functions.InitDBValue("chatShowItemLevelInLinks", false)
-	addon.functions.InitDBValue("chatShowItemLevelLocation", false)
-	addon.functions.InitDBValue("chatHideLearnUnlearn", false)
-	addon.functions.InitDBValue("chatUseArrowKeys", false)
-	addon.functions.InitDBValue("chatEditBoxOnTop", false)
-	addon.functions.InitDBValue("chatUnclampFrame", false)
-	addon.functions.InitDBValue("chatHideCombatLogTab", false)
-	addon.functions.InitDBValue("chatBubbleFontOverride", false)
-	addon.functions.InitDBValue("chatBubbleFontSize", CHAT_BUBBLE_FONT.defaultSize)
-	addon.functions.ApplyChatBubbleFontSize(addon.db["chatBubbleFontSize"])
-	-- Apply learn/unlearn message filter based on saved setting
-	addon.functions.ApplyChatLearnFilter(addon.db["chatHideLearnUnlearn"])
-	if addon.ChatIcons and addon.ChatIcons.SetEnabled then addon.ChatIcons:SetEnabled(addon.db["chatShowLootCurrencyIcons"]) end
-	if addon.ChatIcons and addon.ChatIcons.SetItemTooltipOnHoverEnabled then addon.ChatIcons:SetItemTooltipOnHoverEnabled(addon.db["chatShowItemTooltipsOnHover"]) end
-	if addon.ChatIcons and addon.ChatIcons.SetItemLevelEnabled then addon.ChatIcons:SetItemLevelEnabled(addon.db["chatShowItemLevelInLinks"]) end
-
-	if addon.ChatIM and addon.ChatIM.SetEnabled then addon.ChatIM:SetEnabled(addon.db["enableChatIM"]) end
-	if addon.functions.ApplyChatFrameMaxLines then addon.functions.ApplyChatFrameMaxLines() end
-	if addon.functions.ApplyChatArrowKeys then addon.functions.ApplyChatArrowKeys(addon.db["chatUseArrowKeys"]) end
-	if addon.functions.ApplyChatEditBoxOnTop then addon.functions.ApplyChatEditBoxOnTop(addon.db["chatEditBoxOnTop"]) end
-	if addon.functions.ApplyChatUnclampFrame then addon.functions.ApplyChatUnclampFrame(addon.db["chatUnclampFrame"]) end
-	if addon.functions.ApplyChatHideCombatLogTab then addon.functions.ApplyChatHideCombatLogTab(addon.db["chatHideCombatLogTab"]) end
-end
-
 local function initMap()
 	addon.functions.InitDBValue("enableWayCommand", false)
 	if addon.db["enableWayCommand"] then addon.functions.registerWayCommand() end
@@ -4362,32 +4175,6 @@ local function initMap()
 	if addon.db["enableClickCastSlashCommand"] then addon.functions.registerClickCastSlashCommand() end
 	addon.functions.InitDBValue("enableReloadUISlashCommand", false)
 	if addon.db["enableReloadUISlashCommand"] then addon.functions.registerReloadUISlashCommand() end
-end
-
-local function initSocial()
-	addon.functions.InitDBValue("enableIgnore", false)
-	addon.functions.InitDBValue("ignoreAttachFriendsFrame", true)
-	addon.functions.InitDBValue("ignoreAnchorFriendsFrame", false)
-	addon.functions.InitDBValue("ignoreTooltipNote", false)
-	addon.functions.InitDBValue("ignoreTooltipMaxChars", 100)
-	addon.functions.InitDBValue("ignoreTooltipWordsPerLine", 5)
-	addon.functions.InitDBValue("ignoreFramePoint", "CENTER")
-	addon.functions.InitDBValue("ignoreFrameX", 0)
-	addon.functions.InitDBValue("ignoreFrameY", 0)
-	addon.functions.InitDBValue("blockDuelRequests", false)
-	addon.functions.InitDBValue("blockPetBattleRequests", false)
-	addon.functions.InitDBValue("blockPartyInvites", false)
-	addon.functions.InitDBValue("friendsListDecorEnabled", false)
-	addon.functions.InitDBValue("friendsListDecorShowLocation", true)
-	addon.functions.InitDBValue("friendsListDecorHideOwnRealm", true)
-	addon.functions.InitDBValue("friendsListDecorNameFontSize", 0)
-	addon.functions.InitDBValue("communityChatPrivacyEnabled", false)
-	addon.functions.InitDBValue("communityChatPrivacyMode", 1)
-	if addon.Ignore and addon.Ignore.SetEnabled then addon.Ignore:SetEnabled(addon.db["enableIgnore"]) end
-	if addon.Ignore and addon.Ignore.UpdateAnchor then addon.Ignore:UpdateAnchor() end
-	if addon.FriendsListDecor and addon.FriendsListDecor.SetEnabled then addon.FriendsListDecor:SetEnabled(addon.db["friendsListDecorEnabled"] == true) end
-	if addon.CommunityChatPrivacy and addon.CommunityChatPrivacy.SetMode then addon.CommunityChatPrivacy:SetMode(addon.db["communityChatPrivacyMode"]) end
-	if addon.CommunityChatPrivacy and addon.CommunityChatPrivacy.SetEnabled then addon.CommunityChatPrivacy:SetEnabled(addon.db["communityChatPrivacyEnabled"]) end
 end
 
 local initLootToast
@@ -4418,6 +4205,7 @@ local function initUI()
 	addon.functions.InitDBValue("minimapButtonBinColumns", DEFAULT_BUTTON_SINK_COLUMNS)
 	addon.functions.InitDBValue("minimapButtonBinHideBackground", false)
 	addon.functions.InitDBValue("minimapButtonBinHideBorder", false)
+	addon.functions.InitDBValue("hideMinimapButtonBinToggle", false)
 	addon.functions.InitDBValue("enableLootspecQuickswitch", false)
 	addon.functions.InitDBValue("lootspec_quickswitch", {})
 	addon.functions.InitDBValue("minimapSinkHoleData", {})
@@ -4481,6 +4269,16 @@ local function initUI()
 	addon.functions.InitDBValue("squareMinimapStatsLatencyColorMid", { r = 1, g = 0.65, b = 0, a = 1 })
 	addon.functions.InitDBValue("squareMinimapStatsLatencyColorHigh", { r = 1, g = 0, b = 0, a = 1 })
 	addon.functions.InitDBValue("squareMinimapStatsLatencyUpdateInterval", 1.0)
+	addon.functions.InitDBValue("squareMinimapStatsDurability", false)
+	addon.functions.InitDBValue("squareMinimapStatsDurabilityAnchor", "BOTTOM")
+	addon.functions.InitDBValue("squareMinimapStatsDurabilityOffsetX", 0)
+	addon.functions.InitDBValue("squareMinimapStatsDurabilityOffsetY", 3)
+	addon.functions.InitDBValue("squareMinimapStatsDurabilityFontSize", 12)
+	addon.functions.InitDBValue("squareMinimapStatsDurabilityColor", { r = 1, g = 1, b = 1, a = 1 })
+	addon.functions.InitDBValue("squareMinimapStatsDurabilityShowIcon", true)
+	addon.functions.InitDBValue("squareMinimapStatsDurabilityColorLow", { r = 1, g = 0, b = 0, a = 1 })
+	addon.functions.InitDBValue("squareMinimapStatsDurabilityColorMid", { r = 1, g = 1, b = 0, a = 1 })
+	addon.functions.InitDBValue("squareMinimapStatsDurabilityColorHigh", { r = 0, g = 1, b = 0, a = 1 })
 	addon.functions.InitDBValue("squareMinimapStatsLocation", true)
 	addon.functions.InitDBValue("squareMinimapStatsLocationAnchor", "TOP")
 	addon.functions.InitDBValue("squareMinimapStatsLocationOffsetX", 0)
@@ -4488,6 +4286,7 @@ local function initUI()
 	addon.functions.InitDBValue("squareMinimapStatsLocationFontSize", 12)
 	addon.functions.InitDBValue("squareMinimapStatsLocationColor", { r = 1, g = 1, b = 1, a = 1 })
 	addon.functions.InitDBValue("squareMinimapStatsLocationUseClassColor", false)
+	addon.functions.InitDBValue("squareMinimapStatsLocationShowZone", true)
 	addon.functions.InitDBValue("squareMinimapStatsLocationShowSubzone", false)
 	addon.functions.InitDBValue("squareMinimapStatsLocationSubzoneBelowZone", false)
 	addon.functions.InitDBValue("squareMinimapStatsLocationUseZoneColor", true)
@@ -4499,6 +4298,7 @@ local function initUI()
 	addon.functions.InitDBValue("squareMinimapStatsCoordinatesColor", { r = 1, g = 1, b = 1, a = 1 })
 	addon.functions.InitDBValue("squareMinimapStatsCoordinatesUseClassColor", false)
 	addon.functions.InitDBValue("squareMinimapStatsCoordinatesHideInInstance", true)
+	addon.functions.InitDBValue("squareMinimapStatsCoordinatesDecimals", 2)
 	addon.functions.InitDBValue("squareMinimapStatsCoordinatesUpdateInterval", 0.2)
 	addon.functions.InitDBValue("squareMinimapStatsTrackingButton", false)
 	addon.functions.InitDBValue("squareMinimapStatsTrackingButtonAnchor", "TOPRIGHT")
@@ -4514,11 +4314,13 @@ local function initUI()
 	addon.functions.InitDBValue("worldMapCoordinatesUpdateInterval", 0.1)
 	addon.functions.InitDBValue("worldMapCoordinatesHideCursor", true)
 	addon.functions.InitDBValue("hiddenMinimapElements", addon.db["hiddenMinimapElements"] or {})
+	-- TODO 12.1 cleanup: remove persistAuctionHouseFilter if native Auction House filter persistence covers this workaround.
 	addon.functions.InitDBValue("persistAuctionHouseFilter", false)
 	addon.functions.InitDBValue("alwaysUserCurExpAuctionHouse", false)
 	addon.functions.InitDBValue("alwaysUserCurExpCraftingOrders", false)
 	addon.functions.InitDBValue("enableExtendedMerchant", false)
 	addon.functions.InitDBValue("configCenterDensity", "comfortable")
+	addon.functions.InitDBValue("configCenterLocked", false)
 	addon.functions.InitDBValue("configCenterSize", { width = 1080, height = 700 })
 	addon.functions.InitDBValue("showInstanceDifficulty", false)
 	addon.functions.InitDBValue("instanceDifficultyAnchor", "CENTER")
@@ -5104,9 +4906,6 @@ local function initUI()
 		if addon.functions.ApplyMinimapElementVisibility then addon.functions.ApplyMinimapElementVisibility() end
 	end)
 
-	-- Apply merchant extension on load if enabled
-	if addon.db["enableExtendedMerchant"] and addon.Merchant and addon.Merchant.Enable then addon.Merchant:Enable() end
-
 	local eventFrame = CreateFrame("Frame")
 	eventFrame:SetScript("OnUpdate", function(self)
 		addon.functions.toggleMinimapButton(addon.db["hideMinimapButton"])
@@ -5535,6 +5334,7 @@ local function initUI()
 			local useMinimapToggle = isButtonSinkMinimapToggleEnabled()
 			local useDetachedToggle = isButtonSinkDetachedToggleEnabled()
 			local useLauncherToggle = useMinimapToggle or useDetachedToggle
+			local hideLauncherToggle = addon.db["hideMinimapButtonBinToggle"] == true and useLauncherToggle
 
 			firstStartButtonSink(0)
 			C_Timer.After(2, function()
@@ -5574,7 +5374,7 @@ local function initUI()
 			addon.functions.LayoutButtons()
 
 			-- create ButtonSink Button
-			if useMinimapToggle then
+			if useMinimapToggle and not hideLauncherToggle then
 				local iconData = {
 					type = "launcher",
 					icon = "Interface\\AddOns\\" .. addonName .. "\\Icons\\SinkHole.tga" or "Interface\\ICONS\\INV_Misc_QuestionMark", -- irgendein Icon
@@ -5606,8 +5406,10 @@ local function initUI()
 				LDB:NewDataObject(addonName .. "_ButtonSinkMap", iconData)
 				LDBIcon:Register(addonName .. "_ButtonSinkMap", iconData, addon.db["buttonsink"])
 				buttonBag:Hide()
-			elseif useDetachedToggle then
+			elseif useDetachedToggle and not hideLauncherToggle then
 				addon.variables.buttonSinkDetachedToggle = createDetachedButtonSinkToggle()
+				buttonBag:Hide()
+			elseif hideLauncherToggle then
 				buttonBag:Hide()
 			else
 				buttonBag:Show()
@@ -6129,41 +5931,18 @@ end
 
 local function initCharacter() addon.functions.initItemInventory() end
 
-local function OpenLegacySettingsRoot()
-	if not (Settings and Settings.OpenToCategory) then return end
-	if not (addon.SettingsLayout and addon.SettingsLayout.rootCategory) then return end
-
-	if InCombatLockdown and InCombatLockdown() then
-		addon.variables = addon.variables or {}
-		addon.variables.pendingSettingsOpen = true
-		return
-	end
-
-	addon.variables = addon.variables or {}
-	addon.variables.pendingSettingsOpen = nil
-	Settings.OpenToCategory(addon.SettingsLayout.rootCategory:GetID())
-end
-
-local OpenModernSettingsRoot
-
 local function OpenSettingsRoot()
-	OpenModernSettingsRoot()
+	if addon.functions and addon.functions.OpenConfigCenter then addon.functions.OpenConfigCenter() end
 end
 
-OpenModernSettingsRoot = function()
-	if addon.functions and addon.functions.OpenConfigCenter then
-		addon.functions.OpenConfigCenter()
-		return
-	end
-	OpenLegacySettingsRoot()
-end
-
-addon.functions.OpenLegacySettingsRoot = OpenLegacySettingsRoot
 addon.functions.OpenSettingsRoot = OpenSettingsRoot
-addon.functions.OpenModernSettingsRoot = OpenModernSettingsRoot
 
 function addon.functions.checkReloadFrame()
 	if addon.variables.requireReload == false then return end
+	local reloadReason = L["bReloadInterface"] or L["tReloadInterface"] or (_G.RELOADUI or "Reload UI")
+	local configApp = addon.ConfigApp
+	if configApp and configApp.MarkReloadPending then configApp:MarkReloadPending(reloadReason) end
+	if addon.variables.reloadPopupDismissed and configApp and configApp.IsReloadPending and configApp:IsReloadPending() then return end
 	if _G["ReloadUIPopup"] and _G["ReloadUIPopup"]:IsShown() then return end
 
 	if _G["ReloadUIPopup"] then
@@ -6195,7 +5974,9 @@ function addon.functions.checkReloadFrame()
 	cancelButton:SetText(CANCEL)
 	cancelButton:SetScript("OnClick", function()
 		reloadFrame:Hide()
-		addon.variables.requireReload = false -- disable the prompt on cancel
+		addon.variables.requireReload = false -- Keep the requirement visible through the config-center reload button.
+		addon.variables.reloadPopupDismissed = true
+		if configApp and configApp.MarkReloadPending then configApp:MarkReloadPending(reloadReason) end
 	end)
 
 	reloadFrame:Show()
@@ -6215,7 +5996,9 @@ local function CreateUI()
 			first = false
 			root:CreateTitle(L["SettingsLootHeaderToasts"])
 			root:CreateButton(L["SettingsLootAddInclude"], function() local dialog = StaticPopup_Show("EQOL_LOOT_INCLUDE_ADD") end)
-			root:CreateButton(OPTIONS, function() Settings.OpenToCategory(addon.SettingsLayout.vendorEconomyCalootCategorytegory:GetID(), L["enableLootToastFilter"]) end)
+			root:CreateButton(OPTIONS, function()
+				if addon.functions and addon.functions.OpenConfigCenter then addon.functions.OpenConfigCenter("general.loot", "enableLootToastFilter") end
+			end)
 		end
 
 		DoDevider()
@@ -6324,7 +6107,12 @@ local function CreateUI()
 
 		DoDevider()
 		root:CreateButton(L["CooldownPanelEditor"] or "Cooldown Panel Editor", function()
-			if addon.Aura and addon.Aura.CooldownPanels and addon.Aura.CooldownPanels.OpenEditor then addon.Aura.CooldownPanels:OpenEditor() end
+			local panels = addon.Aura and addon.Aura.CooldownPanels
+			if panels and panels.OpenPreferredEditor then
+				panels:OpenPreferredEditor()
+			elseif panels and panels.OpenBlizzardEditor then
+				panels:OpenBlizzardEditor()
+			end
 		end)
 	end
 
@@ -6365,7 +6153,7 @@ local ensureClassResourceHideHook
 
 local function updateClassResourceVisibility()
 	if not addon.db then return end
-	local ufActive = addon.db.ufFrames and addon.db.ufFrames.player and addon.db.ufFrames.player.enabled
+	local ufActive = addon.functions.IsEQoLUnitFrameEnabled and addon.functions.IsEQoLUnitFrameEnabled("player")
 	local _, classTag = UnitClass("player")
 	if not classTag then return end
 	if ensureClassResourceHideHook then ensureClassResourceHideHook() end
@@ -6405,7 +6193,7 @@ local classResourceHideConfig = {
 	WARLOCK = { frameName = "WarlockPowerFrame", hideKey = "warlock_HideSoulShardBar" },
 }
 
-local function isPlayerUFActive() return addon.db and addon.db.ufFrames and addon.db.ufFrames.player and addon.db.ufFrames.player.enabled end
+local function isPlayerUFActive() return addon.functions.IsEQoLUnitFrameEnabled and addon.functions.IsEQoLUnitFrameEnabled("player") end
 
 local function shouldHideClassResource(hideKey) return addon.db and addon.db[hideKey] and not isPlayerUFActive() end
 
@@ -6475,7 +6263,7 @@ local function setAllHooks()
 	end
 
 	local function FlagIgnoredApplicants(applicantIDs)
-		if hasApplicantRestrictions() or not addon.db.enableIgnore or not addon.Ignore or not addon.Ignore.CheckIgnore or isSecret(applicantIDs) then return end
+		if hasApplicantRestrictions() or not addon.functions.IsAdvancedIgnoreEnabled() or isSecret(applicantIDs) then return end
 		wipe(ignoredApplicants)
 		for _, applicantID in ipairs(applicantIDs) do
 			if not isSecret(applicantID) then
@@ -6536,11 +6324,11 @@ local function setAllHooks()
 	end
 
 	hooksecurefunc("LFGListApplicationViewer_UpdateApplicantMember", function(memberFrame, appID, memberIdx)
-		if addon.db.enableIgnore then ApplyIgnoreHighlight(memberFrame, appID) end
+		if addon.functions.IsAdvancedIgnoreEnabled() then ApplyIgnoreHighlight(memberFrame, appID) end
 	end)
 
 	hooksecurefunc("LFGListApplicationViewer_UpdateResults", function()
-		if hasApplicantRestrictions() or not addon.db.enableIgnore or addon.db.lfgSortByRio then return end
+		if hasApplicantRestrictions() or not addon.functions.IsAdvancedIgnoreEnabled() or addon.db.lfgSortByRio then return end
 		local applicants = C_LFGList.GetApplicants() or {}
 		FlagIgnoredApplicants(applicants)
 	end)
@@ -6548,7 +6336,7 @@ local function setAllHooks()
 	-- Highlight group listings where the leader is on the ignore list
 	local function ApplyIgnoreHighlightSearch(entry)
 		if hasApplicantRestrictions() then return end
-		if not addon.db.enableIgnore or not addon.Ignore or not addon.Ignore.CheckIgnore then return end
+		if not addon.functions.IsAdvancedIgnoreEnabled() then return end
 		if not entry or not entry.resultID or isSecret(entry.resultID) then return end
 
 		local info = C_LFGList.GetSearchResultInfo(entry.resultID)
@@ -6580,47 +6368,48 @@ local function setAllHooks()
 	addon.functions.initDataPanel()
 	addon.functions.initProfile()
 	addon.functions.initMapNav()
-	addon.functions.initChatFrame()
 	addon.functions.initUIOptions()
 	addon.functions.initActionTracker()
-	addon.functions.initClassBuffReminder()
 	if addon.GroupTools and addon.GroupTools.functions and addon.GroupTools.functions.InitDB then addon.GroupTools.functions.InitDB() end
 	initParty()
 	initActionBars()
 	initUI()
 	initUnitFrame()
-	initChatFrame()
 	initMap()
-	initSocial()
 	initLootToast()
 	initBagsFrame()
 
 	local LSM = LibStub("LibSharedMedia-3.0")
 	local lsmSoundDirty = false
 	local lsmFontDirty = false
-	local function refreshExperienceBarForMedia(mediaType, mediaKey)
-		local xpBar = addon.Aura and addon.Aura.ExperienceBar
-		if not (xpBar and xpBar.IsEnabled and xpBar:IsEnabled()) then return end
-		if not xpBar.frame then return end
+	local function refreshProgressBarForMedia(bar, mediaType, mediaKey)
+		if not (bar and bar.IsEnabled and bar:IsEnabled()) then return end
+		if not bar.frame then return end
 
 		local shouldRefresh = false
 		if mediaType == "statusbar" then
-			local textureKey = xpBar.GetTextureKey and xpBar:GetTextureKey() or nil
-			local bgTextureKey = xpBar.GetBackgroundTextureKey and xpBar:GetBackgroundTextureKey() or nil
+			local textureKey = bar.GetTextureKey and bar:GetTextureKey() or nil
+			local bgTextureKey = bar.GetBackgroundTextureKey and bar:GetBackgroundTextureKey() or nil
 			shouldRefresh = mediaKey == textureKey or mediaKey == bgTextureKey
 		elseif mediaType == "border" then
-			local borderKey = xpBar.GetBorderTextureKey and xpBar:GetBorderTextureKey() or nil
+			local borderKey = bar.GetBorderTextureKey and bar:GetBorderTextureKey() or nil
 			shouldRefresh = mediaKey == borderKey
 		elseif mediaType == "font" then
-			local fontKey = xpBar.GetTextFont and xpBar:GetTextFont() or nil
+			local fontKey = bar.GetTextFont and bar:GetTextFont() or nil
 			shouldRefresh = mediaKey == fontKey
 		end
 
 		if shouldRefresh then
-			if xpBar.ApplyAppearance then xpBar:ApplyAppearance() end
-			if xpBar.UpdateSoon then xpBar:UpdateSoon() end
+			if bar.ApplyAppearance then bar:ApplyAppearance() end
+			if bar.UpdateSoon then bar:UpdateSoon() end
 		end
 	end
+
+	local function refreshExperienceBarForMedia(mediaType, mediaKey) refreshProgressBarForMedia(addon.Aura and addon.Aura.ExperienceBar, mediaType, mediaKey) end
+
+	local function refreshReputationBarForMedia(mediaType, mediaKey) refreshProgressBarForMedia(addon.Aura and addon.Aura.ReputationBar, mediaType, mediaKey) end
+
+	local function refreshHonorBarForMedia(mediaType, mediaKey) refreshProgressBarForMedia(addon.Aura and addon.Aura.HonorBar, mediaType, mediaKey) end
 
 	local function refreshTotalAbsorbTrackerForMedia(mediaType, mediaKey)
 		local tracker = addon.Aura and addon.Aura.TotalAbsorbTracker
@@ -6663,6 +6452,28 @@ local function setAllHooks()
 		if reminder:GetBorderTextureKey() ~= mediaKey then return end
 		reminder:ApplyVisualSettings()
 		reminder:RequestUpdate(true)
+	end
+
+	local function refreshDefaultAuraContainersForMedia(mediaType, mediaKey)
+		if mediaType ~= "border" and mediaType ~= "font" then return end
+		if not (addon.DefaultAuraContainers and addon.DefaultAuraContainers.functions and addon.DefaultAuraContainers.functions.RefreshDefaultAuraIconSkin) then return end
+		if not addon.db then return end
+		if not (addon.db.skinnerDefaultBuffIconsEnabled == true or addon.db.skinnerDefaultDebuffIconsEnabled == true) then return end
+
+		local sync = addon.db.skinnerDefaultAuraSyncBuffDebuff ~= false
+		local function uses(prefix, suffix)
+			return addon.db[prefix .. suffix] == mediaKey
+		end
+
+		local shouldRefresh
+		if mediaType == "border" then
+			shouldRefresh = uses("skinnerDefaultAura", "BorderTexture") or (not sync and uses("skinnerDefaultDebuffAura", "BorderTexture"))
+		else
+			shouldRefresh = uses("skinnerDefaultAura", "DurationFontFace")
+				or uses("skinnerDefaultAura", "CountFontFace")
+				or (not sync and (uses("skinnerDefaultDebuffAura", "DurationFontFace") or uses("skinnerDefaultDebuffAura", "CountFontFace")))
+		end
+		if shouldRefresh then addon.DefaultAuraContainers.functions.RefreshDefaultAuraIconSkin() end
 	end
 
 	local function refreshSquareMinimapBorderForMedia(mediaType, mediaKey)
@@ -6712,6 +6523,16 @@ local function setAllHooks()
 				xpBar:ApplyAppearance()
 				if xpBar.UpdateSoon then xpBar:UpdateSoon() end
 			end
+			local repBar = addon.Aura.ReputationBar
+			if repBar and repBar.ApplyAppearance then
+				repBar:ApplyAppearance()
+				if repBar.UpdateSoon then repBar:UpdateSoon() end
+			end
+			local honorBar = addon.Aura.HonorBar
+			if honorBar and honorBar.ApplyAppearance then
+				honorBar:ApplyAppearance()
+				if honorBar.UpdateSoon then honorBar:UpdateSoon() end
+			end
 			local focusTracker = addon.Aura.FocusInterruptTracker
 			if focusTracker and focusTracker.Refresh then focusTracker:Refresh() end
 			local tracker = addon.Aura.TotalAbsorbTracker
@@ -6724,6 +6545,7 @@ local function setAllHooks()
 			if addon.Aura.UF and addon.Aura.UF.Refresh then addon.Aura.UF.Refresh() end
 			if addon.Aura.UF and addon.Aura.UF.GroupFrames and addon.Aura.UF.GroupFrames.RefreshTextStyles then addon.Aura.UF.GroupFrames:RefreshTextStyles() end
 		end
+		if addon.DefaultAuraContainers and addon.DefaultAuraContainers.functions and addon.DefaultAuraContainers.functions.RefreshDefaultAuraIconSkin then addon.DefaultAuraContainers.functions.RefreshDefaultAuraIconSkin() end
 		if addon.functions and addon.functions.applySquareMinimapStats then addon.functions.applySquareMinimapStats(true) end
 		if addon.MythicPlus and addon.MythicPlus.functions then
 			if addon.MythicPlus.functions.refreshBRMedia then addon.MythicPlus.functions.refreshBRMedia("font") end
@@ -6766,22 +6588,30 @@ local function setAllHooks()
 			if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.applyPotionBarTexture then addon.MythicPlus.functions.applyPotionBarTexture() end
 			if addon.Aura and addon.Aura.ResourceBars and addon.Aura.ResourceBars.RefreshTextureDropdown then addon.Aura.ResourceBars.RefreshTextureDropdown() end
 			refreshExperienceBarForMedia(mediaType, mediaKey)
+			refreshReputationBarForMedia(mediaType, mediaKey)
+			refreshHonorBarForMedia(mediaType, mediaKey)
 			refreshGCDBarForMedia(mediaType, mediaKey)
 			refreshCooldownPanelsForMedia(mediaType)
 		elseif mediaType == "border" then
 			if ActionBarLabels and ActionBarLabels.ResetBorderCache then ActionBarLabels.ResetBorderCache() end
 			refreshExperienceBarForMedia(mediaType, mediaKey)
+			refreshReputationBarForMedia(mediaType, mediaKey)
+			refreshHonorBarForMedia(mediaType, mediaKey)
 			refreshTotalAbsorbTrackerForMedia(mediaType, mediaKey)
 			refreshGCDBarForMedia(mediaType, mediaKey)
 			refreshActionTrackerForMedia(mediaType, mediaKey)
 			refreshBRTrackerForMedia(mediaType)
 			refreshClassBuffReminderForMedia(mediaType, mediaKey)
+			refreshDefaultAuraContainersForMedia(mediaType, mediaKey)
 			refreshSquareMinimapBorderForMedia(mediaType, mediaKey)
 			refreshCooldownPanelsForMedia(mediaType)
 			if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.refreshBloodlustMedia then addon.MythicPlus.functions.refreshBloodlustMedia(mediaType, mediaKey) end
 		elseif mediaType == "font" then
 			refreshExperienceBarForMedia(mediaType, mediaKey)
+			refreshReputationBarForMedia(mediaType, mediaKey)
+			refreshHonorBarForMedia(mediaType, mediaKey)
 			refreshTotalAbsorbTrackerForMedia(mediaType, mediaKey)
+			refreshDefaultAuraContainersForMedia(mediaType, mediaKey)
 			refreshBRTrackerForMedia(mediaType)
 			if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.refreshBloodlustMedia then addon.MythicPlus.functions.refreshBloodlustMedia(mediaType, mediaKey) end
 			queueGlobalFontRefresh()
@@ -6791,10 +6621,8 @@ local function setAllHooks()
 	-- Init modules
 	if addon.Aura and addon.Aura.functions then
 		if addon.Aura.functions.InitDB then addon.Aura.functions.InitDB() end
-		if addon.Aura.functions.InitResourceBars then addon.Aura.functions.InitResourceBars() end
-		if addon.Aura.functions.InitUnitFrames then addon.Aura.functions.InitUnitFrames() end
-		if addon.Aura.functions.InitStandalonePrivateAuras then addon.Aura.functions.InitStandalonePrivateAuras() end
 	end
+	if addon.DefaultAuraContainers and addon.DefaultAuraContainers.functions and addon.DefaultAuraContainers.functions.InitDB then addon.DefaultAuraContainers.functions.InitDB() end
 	if addon.Drinks and addon.Drinks.functions then
 		if addon.Drinks.functions.InitDrinkMacro then addon.Drinks.functions.InitDrinkMacro() end
 		if addon.Drinks.functions.InitFoodReminder then addon.Drinks.functions.InitFoodReminder() end
@@ -6807,21 +6635,12 @@ local function setAllHooks()
 		if addon.Mouse.functions.InitDB then addon.Mouse.functions.InitDB() end
 		if addon.Mouse.functions.InitState then addon.Mouse.functions.InitState() end
 	end
-	if addon.Mover and addon.Mover.functions then
-		if addon.Mover.functions.InitDB then addon.Mover.functions.InitDB() end
-		if addon.Mover.functions.InitRegistry then addon.Mover.functions.InitRegistry() end
-		if addon.Mover.functions.InitSettings then addon.Mover.functions.InitSettings() end
-	end
 	if addon.Skinner and addon.Skinner.functions then
 		if addon.Skinner.functions.InitDB then addon.Skinner.functions.InitDB() end
 	end
 	if addon.MythicPlus and addon.MythicPlus.functions then
 		if addon.MythicPlus.functions.InitDB then addon.MythicPlus.functions.InitDB() end
 		if addon.MythicPlus.functions.InitState then addon.MythicPlus.functions.InitState() end
-	end
-	if addon.Sounds and addon.Sounds.functions then
-		if addon.Sounds.functions.InitDB then addon.Sounds.functions.InitDB() end
-		if addon.Sounds.functions.InitState then addon.Sounds.functions.InitState() end
 	end
 	if addon.Tooltip and addon.Tooltip.functions then
 		if addon.Tooltip.functions.InitDB then addon.Tooltip.functions.InitDB() end
@@ -6832,6 +6651,7 @@ local function setAllHooks()
 		if addon.Vendor.functions.InitState then addon.Vendor.functions.InitState() end
 		if addon.Vendor.functions.InitSettings then addon.Vendor.functions.InitSettings() end
 	end
+	if addon.DamageMeter and addon.DamageMeter.InitDB then addon.DamageMeter:InitDB() end
 end
 
 addon.variables.gossipClicked = addon.variables.gossipClicked or {}
@@ -6912,6 +6732,14 @@ function loadMain()
 				local name, id = C_ChallengeMode.GetMapUIInfo(i)
 				if name then print(name, id) end
 			end
+		elseif msg == "cid" then
+			if not (C_ChallengeMode and C_ChallengeMode.GetMapTable and C_ChallengeMode.GetMapUIInfo) then return end
+			local ids = C_ChallengeMode.GetMapTable() or {}
+			table.sort(ids)
+			for _, challengeMapID in ipairs(ids) do
+				local name = C_ChallengeMode.GetMapUIInfo(challengeMapID)
+				if name then print(challengeMapID, name) end
+			end
 		elseif msg == "rq" then
 			if addon.Query and addon.Query.frame then addon.Query.frame:Show() end
 		elseif msg:match("^hbp") then
@@ -6986,13 +6814,18 @@ function addon.functions.AutoSyncWarbandGold()
 end
 
 local function loadSubAddon(name)
-	local subAddonName = name
+	if not name or name == "" then return false end
+	if C_AddOns.IsAddOnLoaded and C_AddOns.IsAddOnLoaded(name) then return true end
 
 	local loadable, reason = C_AddOns.IsAddOnLoadable(name)
-	if not loadable and reason == "DEMAND_LOADED" then
-		local loaded, value = C_AddOns.LoadAddOn(name)
+	if loadable or reason == "DEMAND_LOADED" then
+		local loaded = C_AddOns.LoadAddOn(name)
+		return loaded == true
 	end
+
+	return false, reason
 end
+addon.functions.LoadSubAddon = loadSubAddon
 
 local function applyCurrentExpansionCraftingOrdersFilter(remainingRetries)
 	if not addon.db["alwaysUserCurExpCraftingOrders"] then return end
@@ -7024,9 +6857,9 @@ local eventHandlers = {
 			addon.variables.unitSpecId = specId
 		end
 
-		if addon.db["enableBagsModule"] ~= true and (addon.db["showIlvlOnBagItems"] or addon.db["showUpgradeArrowOnBagItems"]) then
-			addon.functions.updateBags(ContainerFrameCombinedBags)
-			for _, frame in ipairs(ContainerFrameContainer.ContainerFrames) do
+			if addon.db["enableBagsModule"] ~= true and (addon.db["showIlvlOnBagItems"] or addon.db["showUpgradeArrowOnBagItems"]) then
+				addon.functions.updateBags(ContainerFrameCombinedBags)
+				for _, frame in ipairs(ContainerFrameContainer.ContainerFrames) do
 				addon.functions.updateBags(frame)
 			end
 			if _G.BankPanel and _G.BankPanel:IsShown() then addon.functions.updateBags(_G.BankPanel) end
@@ -7064,28 +6897,122 @@ local eventHandlers = {
 				}
 			end
 
+			local function trimProfileName(profileName)
+				if type(profileName) ~= "string" then return nil end
+				local trimmed = profileName:gsub("^%s+", ""):gsub("%s+$", "")
+				if trimmed == "" then return nil end
+				return trimmed
+			end
+
+			if type(EnhanceQoLDB.profiles) ~= "table" then EnhanceQoLDB.profiles = {} end
+			local renamedProfiles = nil
+			local function profileHasSavedData(profileData)
+				return type(profileData) == "table" and next(profileData) ~= nil
+			end
+			local function getUniqueProfileName(baseName)
+				baseName = trimProfileName(baseName) or "Recovered Profile"
+				if not profileHasSavedData(EnhanceQoLDB.profiles[baseName]) then return baseName end
+				local index = 2
+				local candidate = baseName .. " " .. index
+				while profileHasSavedData(EnhanceQoLDB.profiles[candidate]) do
+					index = index + 1
+					candidate = baseName .. " " .. index
+				end
+				return candidate
+			end
+			local function getProfileMigrationTarget(profileName, profileData, normalizedName)
+				if normalizedName then
+					if normalizedName == profileName then return profileName end
+					if not profileHasSavedData(EnhanceQoLDB.profiles[normalizedName]) then return normalizedName end
+					return getUniqueProfileName(normalizedName)
+				end
+				if type(profileData) ~= "table" then return nil end
+				if not profileHasSavedData(EnhanceQoLDB.profiles.Default) then return "Default" end
+				return getUniqueProfileName("Recovered Profile")
+			end
+			local function resolveProfileReference(profileName)
+				local normalizedName = renamedProfiles and renamedProfiles[profileName] or trimProfileName(profileName)
+				if normalizedName and type(EnhanceQoLDB.profiles[normalizedName]) == "table" then return normalizedName end
+				return nil
+			end
+			local function chooseFallbackProfile()
+				if type(EnhanceQoLDB.profiles.Default) == "table" then
+					if profileHasSavedData(EnhanceQoLDB.profiles.Default) then return "Default" end
+				else
+					EnhanceQoLDB.profiles.Default = {}
+				end
+
+				local foundProfile = nil
+				for profileName, profileData in pairs(EnhanceQoLDB.profiles) do
+					if profileName ~= "Default" and type(profileName) == "string" and profileName == trimProfileName(profileName) and profileHasSavedData(profileData) then
+						if foundProfile then return "Default" end
+						foundProfile = profileName
+					end
+				end
+				return foundProfile or "Default"
+			end
+			local profileNames = {}
+			for profileName in pairs(EnhanceQoLDB.profiles) do
+				profileNames[#profileNames + 1] = profileName
+			end
+			for i = 1, #profileNames do
+				local profileName = profileNames[i]
+				local profileData = EnhanceQoLDB.profiles[profileName]
+				local normalizedName = trimProfileName(profileName)
+				if type(profileData) ~= "table" and not normalizedName then
+					EnhanceQoLDB.profiles[profileName] = nil
+				elseif type(profileData) ~= "table" then
+					local targetName = getProfileMigrationTarget(profileName, {}, normalizedName)
+					EnhanceQoLDB.profiles[targetName] = {}
+					EnhanceQoLDB.profiles[profileName] = nil
+					renamedProfiles = renamedProfiles or {}
+					renamedProfiles[profileName] = targetName
+				else
+					local targetName = getProfileMigrationTarget(profileName, profileData, normalizedName)
+					if targetName and targetName ~= profileName then
+						EnhanceQoLDB.profiles[targetName] = profileData
+						EnhanceQoLDB.profiles[profileName] = nil
+						renamedProfiles = renamedProfiles or {}
+						renamedProfiles[profileName] = targetName
+					end
+				end
+			end
+			if not next(EnhanceQoLDB.profiles) then EnhanceQoLDB.profiles.Default = {} end
+
 			local defaultProfile = "Default"
 
-			if not EnhanceQoLDB.profileKeys then EnhanceQoLDB.profileKeys = {} end
+			if type(EnhanceQoLDB.profileKeys) ~= "table" then EnhanceQoLDB.profileKeys = {} end
+			for key, profileName in pairs(EnhanceQoLDB.profileKeys) do
+				local normalizedName = resolveProfileReference(profileName)
+				if type(key) == "string" and key ~= "" and normalizedName then
+					EnhanceQoLDB.profileKeys[key] = normalizedName
+				else
+					EnhanceQoLDB.profileKeys[key] = nil
+				end
+			end
 			local name, realm = UnitName("player"), GetRealmName()
 
 			-- check for global profile
-			if EnhanceQoLDB.profileGlobal then
-				defaultProfile = EnhanceQoLDB.profileGlobal
+			local globalProfile = resolveProfileReference(EnhanceQoLDB.profileGlobal) or chooseFallbackProfile()
+			if globalProfile and type(EnhanceQoLDB.profiles[globalProfile]) == "table" then
+				EnhanceQoLDB.profileGlobal = globalProfile
+				defaultProfile = globalProfile
 			else
 				EnhanceQoLDB.profileGlobal = defaultProfile
 			end
 
-			if EnhanceQoLDB.profileKeys[UnitGUID("player")] then
-				defaultProfile = EnhanceQoLDB.profileKeys[UnitGUID("player")]
-			elseif EnhanceQoLDB.profileKeys[name .. " - " .. realm] then
+			local playerGUID = UnitGUID("player")
+			local legacyProfileKey = name and realm and name .. " - " .. realm
+			if playerGUID and EnhanceQoLDB.profileKeys[playerGUID] and type(EnhanceQoLDB.profiles[EnhanceQoLDB.profileKeys[playerGUID]]) == "table" then
+				defaultProfile = EnhanceQoLDB.profileKeys[playerGUID]
+			elseif legacyProfileKey and EnhanceQoLDB.profileKeys[legacyProfileKey] and type(EnhanceQoLDB.profiles[EnhanceQoLDB.profileKeys[legacyProfileKey]]) == "table" then
 				-- Legacy AceDB transform to new model
-				EnhanceQoLDB.profileKeys[UnitGUID("player")] = EnhanceQoLDB.profileKeys[name .. " - " .. realm]
-				EnhanceQoLDB.profileKeys[name .. " - " .. realm] = nil
-				defaultProfile = EnhanceQoLDB.profileKeys[UnitGUID("player")]
+				if playerGUID then EnhanceQoLDB.profileKeys[playerGUID] = EnhanceQoLDB.profileKeys[legacyProfileKey] end
+				EnhanceQoLDB.profileKeys[legacyProfileKey] = nil
+				defaultProfile = playerGUID and EnhanceQoLDB.profileKeys[playerGUID] or EnhanceQoLDB.profileGlobal
 			else
 				defaultProfile = EnhanceQoLDB.profileGlobal
-				EnhanceQoLDB.profileKeys[UnitGUID("player")] = defaultProfile
+				if playerGUID then EnhanceQoLDB.profileKeys[playerGUID] = defaultProfile end
 			end
 
 			if not EnhanceQoLDB.profiles[defaultProfile] or type(EnhanceQoLDB.profiles[defaultProfile]) ~= "table" then EnhanceQoLDB.profiles[defaultProfile] = {} end
@@ -7113,9 +7040,24 @@ local eventHandlers = {
 			if addon.functions.MigratePrivateProfileData then addon.functions.MigratePrivateProfileData(addon.db) end
 			if addon.functions.CleanupPrivateProfileData then addon.functions.CleanupPrivateProfileData() end
 
+			loadSubAddon("EnhanceQoLTeleportCompendium")
+			loadSubAddon("EnhanceQoLDungeonRaid")
+			loadSubAddon("EnhanceQoLChatSocial")
+			loadSubAddon("EnhanceQoLSkinner")
+			loadSubAddon("EnhanceQoLDamageMeter")
 			loadMain()
 			EQOL.PersistSignUpNote()
+			if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.InitTeleportCompendium then addon.MythicPlus.functions.InitTeleportCompendium() end
 
+			loadSubAddon("EnhanceQoLResourceBars")
+			loadSubAddon("EnhanceQoLUnitFrames")
+			loadSubAddon("EnhanceQoLCooldownPanels")
+			loadSubAddon("EnhanceQoLBags")
+			loadSubAddon("EnhanceQoLVendor")
+			loadSubAddon("EnhanceQoLTooltip")
+			loadSubAddon("EnhanceQoLSound")
+			loadSubAddon("EnhanceQoLClassBuffReminder")
+			loadSubAddon("EnhanceQoLMover")
 			--[==[@debug@
 			loadSubAddon("EnhanceQoLQuery")
 			--@end-debug@]==]
@@ -7136,7 +7078,7 @@ local eventHandlers = {
 		if addon.functions.shouldAutoChooseQuest() then
 			local ignored = addon.db and addon.db["ignoredQuestNPC"]
 			local npcId = addon.functions.getIDFromGUID(UnitGUID("npc"))
-			if npcId and ignored and ignored[npcId] then return end
+			if npcId and type(ignored) == "table" and ignored[npcId] then return end
 
 			local options = C_GossipInfo.GetOptions()
 
@@ -7326,7 +7268,7 @@ local eventHandlers = {
 
 		addon.variables.screenHeight = GetScreenHeight()
 
-		if addon.db["enableMinimapButtonBin"] then addon.functions.toggleButtonSink() end
+		if addon.db["enableMinimapButtonBin"] and addon.functions.toggleButtonSink then addon.functions.toggleButtonSink() end
 		if addon.db["actionBarAnchorEnabled"] then RefreshAllActionBarAnchors() end
 		addon.variables.unitSpec = C_SpecializationInfo.GetSpecialization()
 		if addon.variables.unitSpec then
@@ -7335,8 +7277,6 @@ local eventHandlers = {
 			addon.variables.unitRole = GetSpecializationRole(addon.variables.unitSpec)
 			addon.variables.unitSpecId = specId
 		end
-		if addon.functions and addon.functions.initClassBuffReminder then addon.functions.initClassBuffReminder() end
-
 		if not addon.variables.maxLevel then addon.variables.maxLevel = GetMaxLevelForPlayerExpansion() end
 		addon.variables.isMaxLevel = {}
 		addon.variables.isMaxLevel[addon.variables.maxLevel] = true
@@ -7363,9 +7303,6 @@ local eventHandlers = {
 					end
 				end
 			end
-		end
-		if addon.Aura and addon.Aura.functions then
-			if addon.Aura.functions.InitCooldownPanels then addon.Aura.functions.InitCooldownPanels() end
 		end
 		if addon.MythicPlus and addon.MythicPlus.functions then
 			if addon.MythicPlus.functions.InitSettings then addon.MythicPlus.functions.InitSettings() end
@@ -7402,7 +7339,6 @@ local eventHandlers = {
 				addon.variables.pendingExtraActionArtwork = nil
 				if addon.functions.ApplyExtraActionArtworkSetting then addon.functions.ApplyExtraActionArtworkSetting() end
 			end
-			if addon.variables.pendingSettingsOpen then OpenSettingsRoot() end
 		end
 	end,
 	["QUEST_COMPLETE"] = function()
@@ -7421,7 +7357,7 @@ local eventHandlers = {
 			addon.variables.acceptQuestID[arg1] = nil
 			local ignored = addon.db and addon.db["ignoredQuestNPC"]
 			local npcId = addon.functions.getIDFromGUID(UnitGUID("npc"))
-			if npcId and ignored and ignored[npcId] then return end
+			if npcId and type(ignored) == "table" and ignored[npcId] then return end
 			if addon.db["ignoreDailyQuests"] and addon.functions.IsQuestRepeatableType(arg1) then return end
 			if addon.db["ignoreTrivialQuests"] and C_QuestLog.IsQuestTrivial(arg1) then return end
 			if addon.db["ignoreWarbandCompleted"] and C_QuestLog.IsQuestFlaggedCompletedOnAccount(arg1) then return end
@@ -7434,7 +7370,7 @@ local eventHandlers = {
 		if addon.functions.shouldAutoChooseQuest() then
 			local ignored = addon.db and addon.db["ignoredQuestNPC"]
 			local npcId = addon.functions.getIDFromGUID(UnitGUID("npc"))
-			if npcId and ignored and ignored[npcId] then return end
+			if npcId and type(ignored) == "table" and ignored[npcId] then return end
 
 			local id = GetQuestID()
 			if id then
@@ -7447,7 +7383,7 @@ local eventHandlers = {
 		if addon.functions.shouldAutoChooseQuest() then
 			local ignored = addon.db and addon.db["ignoredQuestNPC"]
 			local npcId = addon.functions.getIDFromGUID(UnitGUID("npc"))
-			if npcId and ignored and ignored[npcId] then return end
+			if npcId and type(ignored) == "table" and ignored[npcId] then return end
 			for i = 1, GetNumAvailableQuests() do
 				if addon.db["ignoreTrivialQuests"] and IsAvailableQuestTrivial(i) then
 				else
@@ -7463,7 +7399,10 @@ local eventHandlers = {
 		if addon.functions.shouldAutoChooseQuest() and IsQuestCompletable() then CompleteQuest() end
 	end,
 	["AUCTION_HOUSE_SHOW"] = function()
+		addon.variables.auctionHouseOpen = true
 		if addon.db["closeBagsOnAuctionHouse"] and not addon.functions.isRestrictedContent() then CloseAllBags() end
+		if addon.functions.RefreshAuctionHouseBagFade then addon.functions.RefreshAuctionHouseBagFade() end
+		-- TODO 12.1 cleanup: Blizzard persists Auction House filters natively; remove this restore hook after release verification.
 		if addon.db["persistAuctionHouseFilter"] then
 			if not AuctionHouseFrame.SearchBar.FilterButton.eqolHooked then
 				hooksecurefunc(AuctionHouseFrame.SearchBar.FilterButton, "Reset", function(self)
@@ -7492,6 +7431,9 @@ local eventHandlers = {
 		end
 	end,
 	["AUCTION_HOUSE_CLOSED"] = function()
+		addon.variables.auctionHouseOpen = false
+		if addon.functions.RefreshAuctionHouseBagFade then addon.functions.RefreshAuctionHouseBagFade() end
+		-- TODO 12.1 cleanup: remove this saved filter cache once native Auction House persistence is confirmed on release.
 		if not addon.db["persistAuctionHouseFilter"] then return end
 		if AuctionHouseFrame.SearchBar.FilterButton.ClearFiltersButton:IsShown() then
 			addon.variables.safedAuctionFilters = AuctionHouseFrame.SearchBar.FilterButton.filters

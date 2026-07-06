@@ -14,6 +14,7 @@ local LCG = LibStub and LibStub("LibCustomGlow-1.0", true)
 local ceil = math.ceil
 local floor = math.floor
 local max = math.max
+local min = math.min
 local pairs = pairs
 local issecretvalue = _G.issecretvalue
 local tonumber = tonumber
@@ -26,12 +27,18 @@ Glow.STYLE.MARCHING_ANTS = "MARCHING_ANTS"
 Glow.STYLE.FLASH = "FLASH"
 Glow.STYLE.BUTTON = "BUTTON"
 Glow.STYLE.PIXEL = "PIXEL"
+Glow.STYLE.PULSING = "PULSING"
 Glow.STYLE.SHINE = "SHINE"
 Glow.STYLE.PROC = "PROC"
 Glow.STYLE.AUTOCAST = Glow.STYLE.SHINE
 
 local BLIZZARD_GLOW_TEXTURE = [[Interface\SpellActivationOverlay\IconAlert]]
 local BLIZZARD_ANTS_TEXTURE = [[Interface\SpellActivationOverlay\IconAlertAnts]]
+local PIXEL_GLOW_TEXTURE = [[Interface\Buttons\WHITE8X8]]
+local HEXAGON_BORDER_TEXTURE = [[Interface\AddOns\EnhanceQoL\Assets\hexagon_1px.tga]]
+local DIAMOND_GLOW_TEXTURE = [[Interface\AddOns\EnhanceQoL\Assets\diamond_glow.tga]]
+local ROUND_STAR_GLOW_TEXTURE = [[Interface\AddOns\EnhanceQoL\Assets\round_star_border.tga]]
+local ROUND_PULSING_ATLAS = "ChallengeMode-KeystoneSlotFrameGlow"
 local MARCHING_ANTS_ATLAS = "VisualAlert_Ants_Flipbook"
 local FLASH_GLOW_ATLAS = "UI-CooldownManager-VisualAlert-Glow"
 local BLIZZ_CONTAINER_RATIO = 66 / 45
@@ -72,9 +79,52 @@ local function normalizeStyle(style)
 	if normalized == "FLASH" then return Glow.STYLE.FLASH end
 	if normalized == "BUTTON" then return Glow.STYLE.BUTTON end
 	if normalized == "PIXEL" then return Glow.STYLE.PIXEL end
+	if normalized == "PULSING" or normalized == "PULSE" then return Glow.STYLE.PULSING end
 	if normalized == "SHINE" or normalized == "AUTOCAST" or normalized == "AUTOCAST_SHINE" then return Glow.STYLE.SHINE end
 	if normalized == "PROC" or normalized == "PROC_GLOW" then return Glow.STYLE.PROC end
 	return Glow.STYLE.BLIZZARD
+end
+
+local function isHexagonShape(opts)
+	local shape = type(opts) == "table" and opts.shape or nil
+	if addon.IconShape and addon.IconShape.Normalize then
+		return addon.IconShape.Normalize(shape) == addon.IconShape.HEXAGON
+	end
+	return type(shape) == "string" and shape:upper() == "HEXAGON"
+end
+
+local function isRoundShape(opts)
+	local shape = type(opts) == "table" and opts.shape or nil
+	if addon.IconShape and addon.IconShape.Normalize then
+		return addon.IconShape.Normalize(shape) == addon.IconShape.ROUND
+	end
+	if type(shape) ~= "string" then return false end
+	shape = shape:upper()
+	return shape == "ROUND" or shape == "CIRCLE"
+end
+
+local function isRoundStarShape(opts)
+	local shape = type(opts) == "table" and opts.shape or nil
+	if addon.IconShape and addon.IconShape.Normalize then
+		return addon.IconShape.Normalize(shape) == addon.IconShape.ROUND_STAR
+	end
+	if type(shape) ~= "string" then return false end
+	shape = shape:upper()
+	return shape == "ROUND_STAR" or shape == "ROUNDSTAR" or shape == "ROUND-STAR"
+end
+
+local function isDiamondShape(opts)
+	local shape = type(opts) == "table" and opts.shape or nil
+	if addon.IconShape and addon.IconShape.Normalize then
+		return addon.IconShape.Normalize(shape) == addon.IconShape.DIAMOND
+	end
+	return type(shape) == "string" and shape:upper() == "DIAMOND"
+end
+
+local function setFullTexture(texture, path)
+	if not texture then return end
+	texture:SetTexture(path)
+	if texture.SetTexCoord then texture:SetTexCoord(0, 1, 0, 1) end
 end
 
 local function roundOffset(value)
@@ -93,6 +143,16 @@ local function normalizeScalar(opts, key, fallback)
 	local value = tonumber(opts[key])
 	if value == nil then return fallback end
 	return value
+end
+
+local function normalizeVisualScale(opts, fallback)
+	local explicitScale = normalizeScalar(opts, "scale", nil)
+	if explicitScale and explicitScale > 0 then return explicitScale end
+
+	local thickness = normalizeScalar(opts, "thickness", nil)
+	if thickness == nil then thickness = normalizeScalar(opts, "th", nil) end
+	if thickness == nil then return fallback or 1 end
+	return max(0.1, 1 + ((thickness - 2) * 0.1))
 end
 
 local function normalizePositiveNumber(value, fallback)
@@ -324,12 +384,20 @@ local function applyStateAlpha(state)
 	host:SetAlpha(tonumber(state.alphaValue) or 1)
 end
 
-local function anchorCooldownViewerAlert(frame, host, inset)
+local function anchorCooldownViewerAlertScaled(frame, host, inset, scale)
 	if not (frame and host) then return end
 	inset = roundOffset(inset)
+	scale = normalizePositiveNumber(scale, 1)
+	local width, height = getSafeFrameSize(host)
+	local left = 8 + inset
+	local right = 9 + inset
+	local top = 8 + inset
+	local bottom = 9 + inset
+	local scaledExtraX = ((width + left + right) * scale - (width + left + right)) / 2
+	local scaledExtraY = ((height + top + bottom) * scale - (height + top + bottom)) / 2
 	frame:ClearAllPoints()
-	frame:SetPoint("TOPLEFT", host, "TOPLEFT", -8 - inset, 8 + inset)
-	frame:SetPoint("BOTTOMRIGHT", host, "BOTTOMRIGHT", 9 + inset, -9 - inset)
+	frame:SetPoint("TOPLEFT", host, "TOPLEFT", -left - scaledExtraX, top + scaledExtraY)
+	frame:SetPoint("BOTTOMRIGHT", host, "BOTTOMRIGHT", right + scaledExtraX, -bottom - scaledExtraY)
 end
 
 local function ensureMarchingAntsOverlay(host)
@@ -399,10 +467,11 @@ end
 local function updateMarchingAntsOverlay(host, opts)
 	local overlay = ensureMarchingAntsOverlay(host)
 	local color = normalizeColor(type(opts) == "table" and opts.color or nil, { 1, 0.82, 0.2, 1 })
+	local scale = normalizeVisualScale(opts, 1)
 	overlay:SetParent(host)
 	overlay:SetFrameStrata(host:GetFrameStrata())
 	overlay:SetFrameLevel(max(0, (host:GetFrameLevel() or 0) + 3))
-	anchorCooldownViewerAlert(overlay, host, normalizeInset(opts))
+	anchorCooldownViewerAlertScaled(overlay, host, normalizeInset(opts), scale)
 	overlay.Texture:SetVertexColor(color[1], color[2], color[3], color[4])
 	resetMarchingAntsTexture(overlay)
 	return overlay
@@ -483,7 +552,7 @@ local function updateFlashOverlay(host, opts)
 	local overlay = ensureFlashOverlay(host)
 	local anchor = getGlowAnchorRegion(host)
 	local width, height = getSafeFrameSize(anchor)
-	local scale = normalizeScalar(opts, "scale", 1) or 1
+	local scale = normalizeVisualScale(opts, 1)
 	local inset = normalizeInset(opts)
 	local xOffset = normalizeScalar(opts, "xOffset", 0)
 	local yOffset = normalizeScalar(opts, "yOffset", 0)
@@ -526,6 +595,458 @@ end
 
 local function stopFlash(host)
 	local overlay = host and host._eqolFlashOverlay
+	if not overlay then return end
+	if overlay.Anim and overlay.Anim.IsPlaying and overlay.Anim:IsPlaying() then overlay.Anim:Stop() end
+	overlay:Hide()
+end
+
+local function ensurePixelTexture(overlay, index)
+	local texture = overlay and overlay.textures and overlay.textures[index]
+	if texture then return texture end
+	texture = overlay:CreateTexture(nil, "ARTWORK")
+	texture:SetTexture(PIXEL_GLOW_TEXTURE)
+	if texture.SetBlendMode then texture:SetBlendMode("ADD") end
+	overlay.textures[index] = texture
+	return texture
+end
+
+local function ensurePixelBorderTexture(overlay, index)
+	local texture = overlay and overlay.borderTextures and overlay.borderTextures[index]
+	if texture then return texture end
+	texture = overlay:CreateTexture(nil, "BACKGROUND")
+	texture:SetTexture(PIXEL_GLOW_TEXTURE)
+	if texture.SetBlendMode then texture:SetBlendMode("ADD") end
+	overlay.borderTextures[index] = texture
+	return texture
+end
+
+local function updatePixelBorder(overlay, enabled, thickness, color)
+	if not overlay then return end
+	if not enabled then
+		for i = 1, #(overlay.borderTextures or {}) do
+			overlay.borderTextures[i]:Hide()
+		end
+		return
+	end
+
+	local top = ensurePixelBorderTexture(overlay, 1)
+	local right = ensurePixelBorderTexture(overlay, 2)
+	local bottom = ensurePixelBorderTexture(overlay, 3)
+	local left = ensurePixelBorderTexture(overlay, 4)
+	local alpha = (color[4] or 1) * 0.25
+	for i = 1, 4 do
+		overlay.borderTextures[i]:SetVertexColor(color[1], color[2], color[3], alpha)
+	end
+
+	top:ClearAllPoints()
+	top:SetPoint("TOPLEFT", overlay, "TOPLEFT", 0, 0)
+	top:SetPoint("TOPRIGHT", overlay, "TOPRIGHT", 0, 0)
+	top:SetHeight(thickness)
+	top:Show()
+
+	right:ClearAllPoints()
+	right:SetPoint("TOPRIGHT", overlay, "TOPRIGHT", 0, 0)
+	right:SetPoint("BOTTOMRIGHT", overlay, "BOTTOMRIGHT", 0, 0)
+	right:SetWidth(thickness)
+	right:Show()
+
+	bottom:ClearAllPoints()
+	bottom:SetPoint("BOTTOMLEFT", overlay, "BOTTOMLEFT", 0, 0)
+	bottom:SetPoint("BOTTOMRIGHT", overlay, "BOTTOMRIGHT", 0, 0)
+	bottom:SetHeight(thickness)
+	bottom:Show()
+
+	left:ClearAllPoints()
+	left:SetPoint("TOPLEFT", overlay, "TOPLEFT", 0, 0)
+	left:SetPoint("BOTTOMLEFT", overlay, "BOTTOMLEFT", 0, 0)
+	left:SetWidth(thickness)
+	left:Show()
+end
+
+local function pixelSegmentAvailable(distance, width, height)
+	local perimeter = (width + height) * 2
+	if perimeter <= 0 then return 0 end
+	distance = distance % perimeter
+	if distance < width then return width - distance end
+	if distance < width + height then return width + height - distance end
+	if distance < (width * 2) + height then return (width * 2) + height - distance end
+	return perimeter - distance
+end
+
+local function drawPixelTexture(texture, overlay, distance, length, thickness, width, height, color)
+	if not (texture and overlay) or length <= 0 then
+		if texture then texture:Hide() end
+		return
+	end
+
+	local perimeter = (width + height) * 2
+	distance = distance % perimeter
+	length = max(1, length)
+	texture:ClearAllPoints()
+	texture:SetVertexColor(color[1], color[2], color[3], color[4])
+
+	if distance < width then
+		texture:SetPoint("TOPLEFT", overlay, "TOPLEFT", distance, 0)
+		texture:SetSize(length, thickness)
+	elseif distance < width + height then
+		texture:SetPoint("TOPRIGHT", overlay, "TOPRIGHT", 0, -(distance - width))
+		texture:SetSize(thickness, length)
+	elseif distance < (width * 2) + height then
+		texture:SetPoint("BOTTOMRIGHT", overlay, "BOTTOMRIGHT", -(distance - width - height), 0)
+		texture:SetSize(length, thickness)
+	else
+		texture:SetPoint("BOTTOMLEFT", overlay, "BOTTOMLEFT", 0, distance - (width * 2) - height)
+		texture:SetSize(thickness, length)
+	end
+	texture:Show()
+end
+
+local function pixelOverlayOnUpdate(self, elapsed)
+	local info = self and self.info
+	if not info then return end
+	self.timer = (self.timer or 0) + (elapsed / info.period)
+	if self.timer > 1 or self.timer < -1 then self.timer = self.timer % 1 end
+
+	local width, height = self:GetSize()
+	width = max(1, width or 0)
+	height = max(1, height or 0)
+	local perimeter = (width + height) * 2
+	if perimeter <= 0 then return end
+
+	for i = 1, info.count do
+		local distance = ((self.timer + (info.step * (i - 1))) % 1) * perimeter
+		local firstLength = min(info.length, pixelSegmentAvailable(distance, width, height))
+		local textureIndex = ((i - 1) * 2) + 1
+		drawPixelTexture(self.textures[textureIndex], self, distance, firstLength, info.thickness, width, height, info.color)
+		drawPixelTexture(self.textures[textureIndex + 1], self, distance + firstLength, info.length - firstLength, info.thickness, width, height, info.color)
+	end
+	for i = (info.count * 2) + 1, #self.textures do
+		self.textures[i]:Hide()
+	end
+end
+
+local function ensurePixelOverlay(host)
+	local overlay = host and host._eqolPixelOverlay
+	if overlay then return overlay end
+
+	overlay = CreateFrame("Frame", nil, host)
+	overlay:EnableMouse(false)
+	overlay:Hide()
+	overlay.textures = {}
+	overlay.borderTextures = {}
+	overlay:SetScript("OnUpdate", pixelOverlayOnUpdate)
+	host._eqolPixelOverlay = overlay
+	return overlay
+end
+
+local function updatePixelOverlay(host, opts)
+	local overlay = ensurePixelOverlay(host)
+	if not overlay then return nil end
+
+	local count = roundOffset(type(opts) == "table" and (opts.count or opts.N) or nil)
+	if count < 1 then count = 8 end
+	if count > 32 then count = 32 end
+	local thickness = roundOffset(type(opts) == "table" and (opts.thickness or opts.th) or nil)
+	if thickness < 1 then thickness = 2 end
+	local inset = normalizeInset(opts)
+	local xOffset = roundOffset(normalizeScalar(opts, "xOffset", 0))
+	local yOffset = roundOffset(normalizeScalar(opts, "yOffset", 0))
+	local frameLevel = roundOffset(normalizeScalar(opts, "frameLevel", 3))
+	local color = normalizeColor(type(opts) == "table" and opts.color or nil, { 1, 0.82, 0.2, 1 })
+	local frequency = normalizeScalar(opts, "frequency", 0.25)
+	local period = 4
+	if frequency and frequency ~= 0 then period = 1 / frequency end
+	local border = type(opts) == "table" and opts.border == true
+
+	overlay:SetParent(host)
+	overlay:SetFrameStrata(host:GetFrameStrata())
+	overlay:SetFrameLevel(max(0, (host:GetFrameLevel() or 0) + frameLevel))
+	overlay:ClearAllPoints()
+	overlay:SetPoint("TOPLEFT", host, "TOPLEFT", -inset + xOffset, inset + yOffset)
+	overlay:SetPoint("BOTTOMRIGHT", host, "BOTTOMRIGHT", inset + xOffset, -inset + yOffset)
+
+	local width, height = getSafeFrameSize(host)
+	width = max(1, width + (inset * 2))
+	height = max(1, height + (inset * 2))
+	local length = roundOffset(type(opts) == "table" and opts.length or nil)
+	if length < 1 then length = floor((width + height) * ((2 / count) - 0.1)) end
+	length = max(1, min(length, width, height))
+
+	for i = 1, count * 2 do
+		ensurePixelTexture(overlay, i)
+	end
+	updatePixelBorder(overlay, border, thickness, color)
+
+	overlay.info = overlay.info or {}
+	overlay.info.count = count
+	overlay.info.step = 1 / count
+	overlay.info.period = period
+	overlay.info.length = length
+	overlay.info.thickness = thickness
+	overlay.info.color = color
+	pixelOverlayOnUpdate(overlay, 0)
+	return overlay
+end
+
+local function startPixel(host, opts)
+	local overlay = updatePixelOverlay(host, opts)
+	if not overlay then return end
+	overlay:Show()
+end
+
+local function stopPixel(host)
+	local overlay = host and host._eqolPixelOverlay
+	if not overlay then return end
+	for i = 1, #(overlay.textures or {}) do
+		overlay.textures[i]:Hide()
+	end
+	for i = 1, #(overlay.borderTextures or {}) do
+		overlay.borderTextures[i]:Hide()
+	end
+	overlay:Hide()
+end
+
+local function ensurePulsingOverlay(host)
+	local overlay = host and host._eqolPulsingOverlay
+	if overlay then return overlay end
+
+	overlay = CreateFrame("Frame", nil, host)
+	overlay:EnableMouse(false)
+	overlay:Hide()
+	overlay.lines = {}
+	for i = 1, 4 do
+		local texture = overlay:CreateTexture(nil, "ARTWORK")
+		texture:SetTexture(PIXEL_GLOW_TEXTURE)
+		if texture.SetBlendMode then texture:SetBlendMode("ADD") end
+		overlay.lines[i] = texture
+	end
+	overlay.shapeTextures = {}
+	for i = 1, 3 do
+		local texture = overlay:CreateTexture(nil, "OVERLAY")
+		texture:SetTexture(HEXAGON_BORDER_TEXTURE)
+		if texture.SetBlendMode then texture:SetBlendMode("ADD") end
+		texture:Hide()
+		overlay.shapeTextures[i] = texture
+	end
+
+	local anim = overlay:CreateAnimationGroup()
+	anim:SetLooping("BOUNCE")
+	anim:SetToFinalAlpha(true)
+	overlay.Anim = anim
+
+	local alphaAnim = anim:CreateAnimation("Alpha")
+	alphaAnim:SetDuration(0.5)
+	alphaAnim:SetOrder(1)
+	alphaAnim:SetSmoothing("IN_OUT")
+	alphaAnim:SetFromAlpha(0.45)
+	alphaAnim:SetToAlpha(1)
+	overlay.AlphaAnim = alphaAnim
+
+	overlay:SetScript("OnShow", function(self)
+		if self.Anim and self.Anim.IsPlaying and not self.Anim:IsPlaying() then self.Anim:Play() end
+	end)
+	overlay:SetScript("OnHide", function(self)
+		if self.Anim and self.Anim.IsPlaying and self.Anim:IsPlaying() then self.Anim:Stop() end
+	end)
+
+	host._eqolPulsingOverlay = overlay
+	return overlay
+end
+
+local function updatePulsingOverlay(host, opts)
+	local overlay = ensurePulsingOverlay(host)
+	if not overlay then return nil end
+
+	local thickness = roundOffset(type(opts) == "table" and (opts.thickness or opts.th) or nil)
+	if thickness < 1 then thickness = 2 end
+	local inset = normalizeInset(opts)
+	local xOffset = roundOffset(normalizeScalar(opts, "xOffset", 0))
+	local yOffset = roundOffset(normalizeScalar(opts, "yOffset", 0))
+	local frameLevel = roundOffset(normalizeScalar(opts, "frameLevel", 3))
+	local color = normalizeColor(type(opts) == "table" and opts.color or nil, { 1, 0.82, 0.2, 1 })
+
+	overlay:SetParent(host)
+	overlay:SetFrameStrata(host:GetFrameStrata())
+	if isHexagonShape(opts) or isRoundShape(opts) or isRoundStarShape(opts) or isDiamondShape(opts) then frameLevel = max(frameLevel, 8) end
+	overlay:SetFrameLevel(max(0, (host:GetFrameLevel() or 0) + frameLevel))
+	overlay:ClearAllPoints()
+	overlay:SetPoint("TOPLEFT", host, "TOPLEFT", -inset + xOffset, inset + yOffset)
+	overlay:SetPoint("BOTTOMRIGHT", host, "BOTTOMRIGHT", inset + xOffset, -inset + yOffset)
+	overlay:SetAlpha(color[4])
+
+	if isHexagonShape(opts) then
+		for i = 1, 4 do
+			overlay.lines[i]:Hide()
+		end
+		local width, height = getSafeFrameSize(host)
+		width = max(1, width + (inset * 2))
+		height = max(1, height + (inset * 2))
+		local layers = overlay.shapeTextures or {}
+		local alphas = { 0.18, 0.35, 1 }
+		for i = 1, 3 do
+			local texture = layers[i]
+			if texture then
+				local grow = (3 - i) * max(1, thickness)
+				setFullTexture(texture, HEXAGON_BORDER_TEXTURE)
+				texture:ClearAllPoints()
+				texture:SetPoint("CENTER", overlay, "CENTER", 0, 0)
+				texture:SetSize(width + (grow * 2), height + (grow * 2))
+				texture:SetVertexColor(color[1], color[2], color[3], alphas[i])
+				texture:Show()
+			end
+		end
+		if overlay.AlphaAnim then
+			local frequency = normalizeScalar(opts, "frequency", 0.25) or 0.25
+			overlay.AlphaAnim:SetFromAlpha(color[4] * 0.35)
+			overlay.AlphaAnim:SetToAlpha(color[4])
+			overlay.AlphaAnim:SetDuration(max(0.05, frequency * 2))
+		end
+		return overlay
+	end
+
+	if isDiamondShape(opts) then
+		for i = 1, 4 do
+			overlay.lines[i]:Hide()
+		end
+		local width, height = getSafeFrameSize(host)
+		width = max(1, width + (inset * 2))
+		height = max(1, height + (inset * 2))
+		local layers = overlay.shapeTextures or {}
+		local alphas = { 0.18, 0.35, 1 }
+		for i = 1, 3 do
+			local texture = layers[i]
+			if texture then
+				local grow = (3 - i) * max(1, thickness)
+				setFullTexture(texture, DIAMOND_GLOW_TEXTURE)
+				texture:ClearAllPoints()
+				texture:SetPoint("CENTER", overlay, "CENTER", 0, 0)
+				texture:SetSize(width + (grow * 2), height + (grow * 2))
+				texture:SetVertexColor(color[1], color[2], color[3], alphas[i])
+				texture:Show()
+			end
+		end
+		if overlay.AlphaAnim then
+			local frequency = normalizeScalar(opts, "frequency", 0.25) or 0.25
+			overlay.AlphaAnim:SetFromAlpha(color[4] * 0.35)
+			overlay.AlphaAnim:SetToAlpha(color[4])
+			overlay.AlphaAnim:SetDuration(max(0.05, frequency * 2))
+		end
+		return overlay
+	end
+
+	if isRoundStarShape(opts) then
+		for i = 1, 4 do
+			overlay.lines[i]:Hide()
+		end
+		local width, height = getSafeFrameSize(host)
+		width = max(1, width + (inset * 2))
+		height = max(1, height + (inset * 2))
+		local layers = overlay.shapeTextures or {}
+		local alphas = { 0.18, 0.35, 1 }
+		for i = 1, 3 do
+			local texture = layers[i]
+			if texture then
+				local grow = (3 - i) * max(1, thickness)
+				setFullTexture(texture, ROUND_STAR_GLOW_TEXTURE)
+				texture:ClearAllPoints()
+				texture:SetPoint("CENTER", overlay, "CENTER", 0, 0)
+				texture:SetSize(width + (grow * 2), height + (grow * 2))
+				texture:SetVertexColor(color[1], color[2], color[3], alphas[i])
+				texture:Show()
+			end
+		end
+		if overlay.AlphaAnim then
+			local frequency = normalizeScalar(opts, "frequency", 0.25) or 0.25
+			overlay.AlphaAnim:SetFromAlpha(color[4] * 0.35)
+			overlay.AlphaAnim:SetToAlpha(color[4])
+			overlay.AlphaAnim:SetDuration(max(0.05, frequency * 2))
+		end
+		return overlay
+	end
+
+	if isRoundShape(opts) then
+		for i = 1, 4 do
+			overlay.lines[i]:Hide()
+		end
+		local width, height = getSafeFrameSize(host)
+		width = max(1, width + (inset * 2) + (thickness * 4))
+		height = max(1, height + (inset * 2) + (thickness * 4))
+		local layers = overlay.shapeTextures or {}
+		for i = 2, #layers do
+			layers[i]:Hide()
+		end
+		local texture = layers[1]
+		if texture then
+			texture:ClearAllPoints()
+			texture:SetPoint("CENTER", overlay, "CENTER", 0, 0)
+			texture:SetSize(width, height)
+			if texture.SetAtlas then
+				texture:SetAtlas(ROUND_PULSING_ATLAS, false)
+			else
+				texture:SetTexture(nil)
+			end
+			texture:SetVertexColor(color[1], color[2], color[3], 1)
+			texture:Show()
+		end
+		if overlay.AlphaAnim then
+			local frequency = normalizeScalar(opts, "frequency", 0.25) or 0.25
+			overlay.AlphaAnim:SetFromAlpha(color[4] * 0.35)
+			overlay.AlphaAnim:SetToAlpha(color[4])
+			overlay.AlphaAnim:SetDuration(max(0.05, frequency * 2))
+		end
+		return overlay
+	end
+
+	for i = 1, #(overlay.shapeTextures or {}) do
+		overlay.shapeTextures[i]:Hide()
+	end
+
+	local top, right, bottom, left = overlay.lines[1], overlay.lines[2], overlay.lines[3], overlay.lines[4]
+	top:ClearAllPoints()
+	top:SetPoint("TOPLEFT", overlay, "TOPLEFT", 0, 0)
+	top:SetPoint("TOPRIGHT", overlay, "TOPRIGHT", 0, 0)
+	top:SetHeight(thickness)
+
+	right:ClearAllPoints()
+	right:SetPoint("TOPRIGHT", overlay, "TOPRIGHT", 0, 0)
+	right:SetPoint("BOTTOMRIGHT", overlay, "BOTTOMRIGHT", 0, 0)
+	right:SetWidth(thickness)
+
+	bottom:ClearAllPoints()
+	bottom:SetPoint("BOTTOMLEFT", overlay, "BOTTOMLEFT", 0, 0)
+	bottom:SetPoint("BOTTOMRIGHT", overlay, "BOTTOMRIGHT", 0, 0)
+	bottom:SetHeight(thickness)
+
+	left:ClearAllPoints()
+	left:SetPoint("TOPLEFT", overlay, "TOPLEFT", 0, 0)
+	left:SetPoint("BOTTOMLEFT", overlay, "BOTTOMLEFT", 0, 0)
+	left:SetWidth(thickness)
+
+	for i = 1, 4 do
+		local line = overlay.lines[i]
+		line:SetTexture(PIXEL_GLOW_TEXTURE)
+		if line.SetTexCoord then line:SetTexCoord(0, 1, 0, 1) end
+		line:SetVertexColor(color[1], color[2], color[3], 1)
+		line:Show()
+	end
+	if overlay.AlphaAnim then
+		local frequency = normalizeScalar(opts, "frequency", 0.25) or 0.25
+		overlay.AlphaAnim:SetFromAlpha(color[4] * 0.45)
+		overlay.AlphaAnim:SetToAlpha(color[4])
+		overlay.AlphaAnim:SetDuration(max(0.05, frequency * 2))
+	end
+	return overlay
+end
+
+local function startPulsing(host, opts)
+	local overlay = updatePulsingOverlay(host, opts)
+	if not overlay then return end
+	overlay:Show()
+	if overlay.Anim and overlay.Anim.IsPlaying and not overlay.Anim:IsPlaying() then overlay.Anim:Play() end
+end
+
+local function stopPulsing(host)
+	local overlay = host and host._eqolPulsingOverlay
 	if not overlay then return end
 	if overlay.Anim and overlay.Anim.IsPlaying and overlay.Anim:IsPlaying() then overlay.Anim:Stop() end
 	overlay:Hide()
@@ -764,6 +1285,26 @@ local function stopBlizzard(host)
 	end
 end
 
+local function stopBackendImmediately(host)
+	if not host then return end
+	stopMarchingAnts(host)
+	stopFlash(host)
+	stopPixel(host)
+	stopPulsing(host)
+	local overlay = host._eqolBlizzardOverlay
+	if overlay then
+		if overlay.animIn and overlay.animIn:IsPlaying() then overlay.animIn:Stop() end
+		if overlay.animOut and overlay.animOut:IsPlaying() then overlay.animOut:Stop() end
+		resetBlizzardOverlayVisuals(overlay)
+		overlay:Hide()
+	end
+	if LCG then
+		if LCG.ButtonGlow_Stop then LCG.ButtonGlow_Stop(host) end
+		if LCG.AutoCastGlow_Stop then LCG.AutoCastGlow_Stop(host, "") end
+		if LCG.ProcGlow_Stop then LCG.ProcGlow_Stop(host, "") end
+	end
+end
+
 local BACKENDS = {
 	[Glow.STYLE.BLIZZARD] = {
 		start = function(host, opts) startBlizzard(host, opts) end,
@@ -806,30 +1347,24 @@ local BACKENDS = {
 	},
 	[Glow.STYLE.PIXEL] = {
 		start = function(host, opts)
-			if LCG and LCG.PixelGlow_Start then
-				LCG.PixelGlow_Start(
-					host,
-					type(opts) == "table" and opts.color or nil,
-					type(opts) == "table" and (opts.count or opts.N) or nil,
-					type(opts) == "table" and opts.frequency or nil,
-					type(opts) == "table" and opts.length or nil,
-					type(opts) == "table" and (opts.thickness or opts.th) or nil,
-					type(opts) == "table" and opts.xOffset or nil,
-					type(opts) == "table" and opts.yOffset or nil,
-					type(opts) == "table" and opts.border or nil,
-					"",
-					type(opts) == "table" and opts.frameLevel or nil
-				)
-			else
-				startBlizzard(host, opts)
-			end
+			startPixel(host, opts)
+		end,
+		refresh = function(host, opts)
+			updatePixelOverlay(host, opts)
 		end,
 		stop = function(host)
-			if LCG and LCG.PixelGlow_Stop then
-				LCG.PixelGlow_Stop(host, "")
-			else
-				stopBlizzard(host)
-			end
+			stopPixel(host)
+		end,
+	},
+	[Glow.STYLE.PULSING] = {
+		start = function(host, opts)
+			startPulsing(host, opts)
+		end,
+		refresh = function(host, opts)
+			updatePulsingOverlay(host, opts)
+		end,
+		stop = function(host)
+			stopPulsing(host)
 		end,
 	},
 	[Glow.STYLE.SHINE] = {
@@ -920,10 +1455,14 @@ end
 
 function Glow.Refresh(target, key, style, opts) return Glow.Start(target, key, style, opts) end
 
-function Glow.Stop(target, key)
+function Glow.Stop(target, key, immediate)
 	local state = getState(target, normalizeKey(key), false)
 	if not state then return end
-	stopBackend(state)
+	if immediate then
+		stopBackendImmediately(state.host)
+	else
+		stopBackend(state)
+	end
 	state.active = false
 	state.style = nil
 	state.alphaMode = nil

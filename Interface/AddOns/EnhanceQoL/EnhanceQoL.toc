@@ -1,7 +1,7 @@
-## Interface: 120005, 120007
+## Interface: 120007, 120100
 ## Title: Enhance QoL Core
 ## Author: R41Z0R
-## Version: 11.0.4
+## Version: 11.6.0
 ## IconTexture: Interface\AddOns\EnhanceQoL\Icons\Icon.tga
 ## Category: Quality of Life
 ## X-Category: Quality of Life
@@ -44,10 +44,13 @@ libs\EnhanceQoLEditMode\EnhanceQoLEditMode.lua
 Bindings\Slider.xml
 Sounds\sounds.lua
 General\functions.lua
+General\DurationText.lua
+General\IconShape.lua
 General\Glow.lua
 Core\EditModeLib.lua
 Core\EditMode.lua
 Core\SharedAnchors.lua
+Core\AuraCompat.lua
 Modules\ActionBarLabels.lua
 Core\Cleanup.lua
 EnhanceQoL.lua
@@ -62,37 +65,15 @@ Submodules\GemHelper.lua
 Submodules\ContainerActions.lua
 Submodules\MountActions.lua
 Submodules\ActionTracker.lua
-Submodules\ClassBuffReminder.lua
-Submodules\GCDBar.lua
 Submodules\CombatText.lua
-Submodules\DamageMeter.lua
 Submodules\GroupTools.lua
-Submodules\ChatIM\ChannelHistory.lua
-Submodules\ChatIM\UI.lua
-Submodules\ChatIM\Core.lua
-Submodules\TradeMailLog.xml
-Submodules\TradeMailLog.lua
 Submodules\LootToast.lua
-Submodules\ChatIcons.lua
-Submodules\CommunityChatPrivacy.lua
-Submodules\FriendsListDecor.lua
-Submodules\Ignore\Ignore.lua
-Submodules\Ignore\Ignore.xml
 Submodules\InstanceDifficulty.lua
 Submodules\DungeonJournalLootSpec.lua
-Submodules\Merchant.lua
 Submodules\HealthText.lua
-Submodules\Mailbox.lua
-Submodules\Mailbox.xml
 Modules\Aura\Init.lua
-Modules\Aura\ResourceBars.lua
-Modules\Aura\ResourceBarsHelpers.lua
-Modules\Aura\ExperienceBar.lua
 Modules\Aura\TotalAbsorbTracker.lua
-Modules\Skinner\Init.lua
-
-# Bags
-Modules\Bags\Bags.xml
+Modules\Aura\DefaultAuraContainers.lua
 
 Settings\SettingsUI.xml
 
@@ -101,21 +82,6 @@ Modules\Aura\Aura.xml
 
 # Mouse
 Modules\Mouse\Mouse.xml
-
-# Mover
-Modules\Mover\Mover.xml
-
-# Sound
-Modules\Sound\Sound.xml
-
-# Tooltip
-Modules\Tooltip\Tooltip.xml
-
-# MythicPlus
-Modules\MythicPlus\MythicPlus.xml
-
-# Vendor
-Modules\Vendor\Vendor.xml
 
 # Food
 Modules\Food\Food.xml

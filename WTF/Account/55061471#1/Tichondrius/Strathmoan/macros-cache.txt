@@ -1,0 +1,76 @@
+VER 3 0100000000000003 " " "INV_MISC_QUESTIONMARK"
+#showtooltip Raise Ally
+/cast [@mouseover,help][@target]Raise Ally
+END
+VER 3 0100000000000006 " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [target=mouseover,exists] Dark Command; Dark Command
+END
+VER 3 0100000000000009 " " "134400"
+#showtooltip
+/cast [@cursor] Death and Decay
+END
+VER 3 010000000000000C " " "INV_Misc_QuestionMark"
+#showtooltip
+/cast [mod:shift,@focus,exists,harm][] Leap
+END
+VER 3 010000000000000A " " "INV_Misc_QuestionMark"
+#showtooltip
+/cast [mod:shift, @focus,exists,harm][] Mind Freeze
+END
+VER 3 0100000000000008 " " "134400"
+#showtooltip 
+/cast [@cursor] Anti-Magic Zone
+/use Perpetual Purple Firework
+END
+VER 3 0100000000000011 " " "INV_Misc_QuestionMark"
+#showtooltip Asphyxiate
+/cast [mod:shift,@focus,exists,harm,nodead][] Asphyxiate
+END
+VER 3 0100000000000010 " " "INV_Misc_QuestionMark"
+#showtooltip Raise Dead
+/cast [nopet] Raise Dead
+/use Goblin Weather Machine - Prototype 01-B
+END
+VER 3 0100000000000013 " " "INV_ArfusPet."
+/petattack
+END
+VER 3 010000000000001D " " "134400"
+#showtooltip
+/cast [mod:shift,@focus,exists,harm][] Gnaw
+END
+VER 3 010000000000001B " " "134400"
+#showtooltip
+/cast [@mouseover,exists,noharm,nodead][@player] Anti-magic shell
+END
+VER 3 010000000000001C " " "134400"
+#showtooltip Lichborne
+/castsequence [@player] Lichborne, Death coil
+END
+VER 3 010000000000001F " " "134400"
+#showtooltip 
+/cast Death Charge
+/use Prismatic Bauble
+END
+VER 3 010000000000001E " " "134400"
+#showtooltip
+/cast Blinding Sleet
+/use Fire-Eater's Vial
+END
+VER 3 0100000000000020 " " "134400"
+#showtooltip
+/cast Soul Reaper
+/use Seafarer's Slidewhistle
+END
+VER 3 010000000000000D "  " "INV_Misc_QuestionMark"
+#showtooltip 
+/cast Army of the dead
+/use tempered potion
+/use 14
+/use saltwater potion
+/cast Dark Transformation
+END
+VER 3 010000000000000E "Focus" "134400"
+#showtooltip 
+/cast [@focus,exists,harm,nodead][] Death Grip
+END

@@ -71,7 +71,7 @@ sArena_ReloadedDB = {
 ["scale"] = 1.17,
 ["changeFont"] = true,
 ["frameFont"] = "1",
-["posX"] = 664.6,
+["fontOutline"] = "OUTLINE",
 ["textures"] = {
 ["castbarUninterruptibleTexture"] = "WglassDark",
 ["bgTexture"] = "d1",
@@ -79,18 +79,14 @@ sArena_ReloadedDB = {
 ["healStatusBarTexture"] = "d1",
 ["generalStatusBarTexture"] = "d1",
 },
-["posY"] = 151.2,
+["posY"] = 116.3,
+["posX"] = 636.9,
 ["trinket"] = {
 ["scale"] = 2,
 ["posY"] = 1,
 ["posX"] = 60,
 },
-["textSettings"] = {
-["drTextOffsetY"] = -15,
-["drTextAnchor"] = "CENTER",
-["drTextOffsetX"] = 0,
-["drTextSize"] = 1.12,
-},
+["replaceClassIcon"] = true,
 ["widgets"] = {
 ["focusIndicator"] = {
 ["enabled"] = true,
@@ -117,8 +113,13 @@ sArena_ReloadedDB = {
 ["iconScale"] = 1.06,
 ["width"] = 138,
 },
-["replaceClassIcon"] = true,
-["fontOutline"] = "OUTLINE",
+["showSpecManaText"] = false,
+["textSettings"] = {
+["drTextOffsetY"] = -15,
+["drTextAnchor"] = "CENTER",
+["drTextOffsetX"] = 0,
+["drTextSize"] = 1.12,
+},
 },
 ["BlizzRetail"] = {
 ["dr"] = {

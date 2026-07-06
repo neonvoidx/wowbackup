@@ -1,6 +1,6 @@
-## Interface: 120007, 120005
+## Interface: 120100, 120007
 ## Title: BattleGroundEnemiesFixed
-## Version: 12.0.5.12
+## Version: 12.0.7.2
 ## Author: RBGDEV
 ## Category: RBGDEV
 ## Notes: Credit to BattleGroundEnemies for the original code, author: Bullsei
@@ -35,6 +35,7 @@ Modules\Power.lua
 Modules\RaidTargetIcon.lua
 Modules\Role.lua
 Modules\SpecClassPriority.lua
+Modules\SpecName.lua
 Modules\TargetIndicatorNumeric.lua
 Modules\TargetIndicatorSymbolic.lua
 Modules\CombatIndicator.lua

@@ -1,0 +1,23 @@
+## Interface: 120007, 120100
+## Title: Enhance QoL Bags
+## Author: R41Z0R
+## Version: 11.6.0
+## Notes: Custom bag and bank interface
+## Notes-deDE: Eigene Taschen- und Bankoberflaeche
+## Notes-esES: Interfaz personalizada para bolsas y banco
+## Notes-esMX: Interfaz personalizada para bolsas y banco
+## Notes-frFR: Interface personnalisee pour sacs et banque
+## Notes-itIT: Interfaccia personalizzata per borse e banca
+## Notes-koKR: 가방과 은행 인터페이스를 사용자 지정합니다
+## Notes-ptBR: Interface personalizada de bolsas e banco
+## Notes-ruRU: Пользовательский интерфейс сумок и банка
+## Notes-zhCN: 自定义背包和银行界面
+## Notes-zhTW: 自訂背包與銀行介面
+## Dependencies: EnhanceQoL
+## IconTexture: Interface\AddOns\EnhanceQoL\Icons\Icon.tga
+## Retail: true
+## X-Compatible-With: retail
+## LoadOnDemand: 1
+## Globe-Main: EnhanceQoL
+
+Bags.xml

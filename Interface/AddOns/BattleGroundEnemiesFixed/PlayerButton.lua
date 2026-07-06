@@ -117,7 +117,6 @@ local function endDrag()
 end
 
 --Libs
-local LSM = LibStub("LibSharedMedia-3.0")
 local LRC = LibStub("LibRangeCheck-3.0")
 
 -- One baseline harm spell per class for C_Spell.IsSpellInRange.
@@ -548,19 +547,9 @@ function BattleGroundEnemies:CreatePlayerButton(mainframe, num)
       return
     end
 
-    local oldUnitID = self.unitID
     self.unitID = unitID
     self.TargetUnitID = targetUnitID
     self:UpdateRaidTargetIcon()
-
-    -- When an enemy's unitID changes, refresh bindings so the secure "unit"
-    -- attribute stays current. This enables @mouseover macros on enemy frames.
-    -- Skip if the token didn't actually change (avoids needless SetAttribute
-    -- churn during rapid scan cycles). Arena token changes already trigger
-    -- SetBindings via UpdateEnemyUnitID, so we only need this for non-arena paths.
-    if self.PlayerIsEnemy and oldUnitID ~= unitID and self.SetBindings then
-      self:SetBindings()
-    end
 
     -- Only call UpdateAll if unit actually exists (UpdateAll checks UnitExists anyway).
     -- skipSnapshot suppresses the UNIT_HEALTH/UNIT_POWER_FREQUENT snapshot
@@ -667,12 +656,6 @@ function BattleGroundEnemies:CreatePlayerButton(mainframe, num)
 
     self.UnitIDs.HasAllyUnitID = false
 
-    -- Clear the secure "unit" attribute so @mouseover no longer resolves
-    -- to a stale token. SetBindings handles combat-lockdown deferral.
-    if self.SetBindings then
-      self:SetBindings()
-    end
-
     self:DispatchEvent("UnitIdUpdate")
   end
 
@@ -739,8 +722,8 @@ function BattleGroundEnemies:CreatePlayerButton(mainframe, num)
     elseif unitIDs.Ally then
       unitIDs.HasAllyUnitID = true
       -- Direct token map — no PID matching.
-      local playerButton = BattleGroundEnemies.Allies:GetAllyButtonByUnitID(unitIDs.Ally)
-      if playerButton and playerButton == self then
+      local allyButton = BattleGroundEnemies.Allies:GetAllyButtonByUnitID(unitIDs.Ally)
+      if allyButton and allyButton == self then
         self:UpdateUnitID(unitIDs.Ally, unitIDs.Ally .. "target")
         unitIDs.HasAllyUnitID = true
       end
@@ -792,20 +775,29 @@ function BattleGroundEnemies:CreatePlayerButton(mainframe, num)
                   moduleFrameOnButton:SetScale(scale)
                   if relativeFrame:GetNumPoints() > 0 then
                     local effectiveScale = moduleFrameOnButton:GetEffectiveScale()
+                    -- When Spec Name is enabled it tucks under Name; nudge Name
+                    -- up so the Name + Spec Name pair stays centered on Name's
+                    -- anchor target (e.g. the Role icon). 0 when Spec Name is off.
+                    local offsetY = pointConfig.OffsetY or 0
+                    if moduleName == "Name" and BattleGroundEnemies.GetNameSpecNameYAdjust then
+                      offsetY = offsetY + BattleGroundEnemies:GetNameSpecNameYAdjust(self.playerCountConfig)
+                    end
                     moduleFrameOnButton:SetPoint(
                       pointConfig.Point,
                       relativeFrame,
                       pointConfig.RelativePoint,
                       (pointConfig.OffsetX or 0) / effectiveScale,
-                      (pointConfig.OffsetY or 0) / effectiveScale
+                      offsetY / effectiveScale
                     )
                   else
                     -- the module we are depending on hasn't been set yet
                     allModulesSet = false
                   end
+                -- luacheck: ignore 542
                 else
                   -- return print("error", relativeFrame, "for module", moduleName, "doesnt exist")
                 end
+              -- luacheck: ignore 542
               else
                 --do nothing, the point was probably deleted
               end
@@ -852,6 +844,10 @@ function BattleGroundEnemies:CreatePlayerButton(mainframe, num)
     self.healthBar:SetPoint("TOPLEFT", self, "TOPLEFT")
     self.healthBar:SetPoint("TOPRIGHT", self, "TOPRIGHT")
     self.healthBar:SetHeight(math.max(0.01, self:GetHeight() - powerHeight))
+    -- #4-S1: this is the sole place the healthBar width changes, so invalidate the
+    -- heal-prediction sub-bars' cached width — the next UpdateHealth re-SetWidth's
+    -- them to the new bar width.
+    self.healthBar.cachedBarWidth = nil
 
     -- Disabled Power frame is collapsed/repositioned, so anchor highlight to healthBar instead.
     local bottomAnchor = self.Power.Enabled and self.Power or self.healthBar
@@ -931,7 +927,13 @@ function BattleGroundEnemies:CreatePlayerButton(mainframe, num)
     end
 
     self:SetWidth(conf.BarWidth)
-    self:SetHeight(conf.BarHeight)
+    -- Grow the button by the spec-name text height when that module is enabled
+    -- (0 otherwise). The row spacing in mainframe:ButtonPositioning adds the same
+    -- amount, so taller buttons don't overlap.
+    local specNameExtra = BattleGroundEnemies.GetSpecNameReservedHeight
+        and BattleGroundEnemies:GetSpecNameReservedHeight(conf)
+        or 0
+    self:SetHeight(conf.BarHeight + specNameExtra)
 
     self:ApplyRangeIndicatorSettings()
 
@@ -975,23 +977,17 @@ function BattleGroundEnemies:CreatePlayerButton(mainframe, num)
       --use a table to track changes and compare them to GetAttribute
       --set baseline
 
-      -- For enemies: resolve the best unit token for the secure "unit"
-      -- attribute. Arena tokens take priority (they're always stable), then
-      -- fall back to self.unitID if it's a stable (non-dynamic) token like
-      -- "nameplateN" or "raidNtarget". This lets @mouseover macros work on
-      -- enemy frames whenever a stable unit ID is available.
-      local enemyUnitAttr = false
-      if self.PlayerIsEnemy then
-        local DYNAMIC_TOKENS = BattleGroundEnemies.DYNAMIC_TOKENS
-        if self.PlayerDetails.PlayerArenaUnitID then
-          enemyUnitAttr = self.PlayerDetails.PlayerArenaUnitID
-        elseif self.unitID and not (DYNAMIC_TOKENS and DYNAMIC_TOKENS[self.unitID]) then
-          enemyUnitAttr = self.unitID
-        end
-      end
-
+      -- Enemy click `unit`: arena/flag/orb carriers get their STABLE arenaN token
+      -- (PlayerArenaUnitID) for secure target/focus below; all OTHER enemies carry
+      -- no `unit` and click via the /targetexact <PlayerName> macrotext. This is the
+      -- original pre-208f4bb behaviour. 208f4bb had GENERALISED the token to also
+      -- cover nameplateN/raidNtarget, which churn / go stale in combat and tripped
+      -- WoW's secure-click UnitExists veto (SecureTemplates.lua) — that's what broke
+      -- click-target/focus mid-fight. Only the nameplate generalisation is reverted;
+      -- the stable-arena-token carrier path is restored unchanged (arenaN never
+      -- churns, UnitExists(arenaN) holds, so it was never the problem).
       local newAttributes = {
-        unit = not self.PlayerIsEnemy and self.unit or enemyUnitAttr,
+        unit = not self.PlayerIsEnemy and self.unit or false,
         type1 = false,
         type2 = false,
         type3 = false,
@@ -1005,10 +1001,11 @@ function BattleGroundEnemies:CreatePlayerButton(mainframe, num)
       end
 
       if self.PlayerIsEnemy then
-        if enemyUnitAttr then
-          -- Secure unit-action targeting via the unit token. Works in combat,
+        if self.PlayerDetails.PlayerArenaUnitID then --its a arena enemy / flag/orb carrier
+          -- Secure unit-action targeting via the arenaN token. Works in combat,
           -- no macrotext / no PlayerName needed (and PlayerName is secret
           -- post-12.0.5 anyway). Left-click targets, right-click focuses.
+          newAttributes.unit = self.PlayerDetails.PlayerArenaUnitID
           newAttributes.type1 = "target"
           newAttributes.type2 = "focus"
           setupUsualAttributes = false
@@ -1021,10 +1018,13 @@ function BattleGroundEnemies:CreatePlayerButton(mainframe, num)
       end
 
       if setupUsualAttributes then
-        -- Macrotext path needs a non-secret PlayerName (string-concat into
-        -- "/targetexact <name>" would taint on a secret). Skip the whole
-        -- macrotext build when the name is secret — clicks become no-ops
-        -- until a cleanse/cache path exists or the player gets an arena token.
+        -- /targetexact <PlayerName> click path. PlayerName is the scoreboard
+        -- name (PVPScoreInfo.name = NeverSecret) for BG enemies, so the concat
+        -- never taints; for arena it's the revealed name, or the "arenaN"
+        -- placeholder until ChangeName fires (a sub-second window where a click
+        -- is a no-op, then PlayerDetailsChanged -> SetBindings re-runs with the
+        -- real name). The macro is set once and survives combat — no per-token
+        -- rebind needed, which is the whole point.
         newAttributes.type1 = "macro" -- type1 = LEFT-Click
         newAttributes.type2 = "macro" -- type2 = Right-Click
         newAttributes.type3 = "macro" -- type3 = Middle-Click
@@ -1231,8 +1231,8 @@ function BattleGroundEnemies:CreatePlayerButton(mainframe, num)
     -- points at a different player after the user moved their cursor),
     -- the bar would read the wrong unit's health.
     -- Fall back to self.unitID ONLY when the event unitID isn't usable —
-    -- compound tokens like "arena2target" are rejected by UnitHealth in
-    -- 12.0+, and a non-existent unit would just return 0/nil.
+    -- compound tokens like "arena2target" return nil from UnitHealth in 12.0.7
+    -- (they errored pre-12.0.7), and a non-existent unit would just return 0/nil.
     local queryID = unitID
     if not queryID or not UnitExists(queryID) then
       queryID = self.unitID
@@ -1245,25 +1245,20 @@ function BattleGroundEnemies:CreatePlayerButton(mainframe, num)
       healthMissing = maxHealth - health
       healthPercent = maxHealth > 0 and (health / maxHealth) * 100 or 0
     elseif isAlly then
-      local ok, h = pcall(UnitHealth, queryID)
-      local ok2, hMissing = pcall(UnitHealthMissing, queryID)
-      local ok3, hMax = pcall(UnitHealthMax, queryID)
-      local ok4, hPct = pcall(UnitHealthPercent, queryID, true, CurveConstants.ScaleTo100)
-
-      health = (ok and h) or nil
-      healthMissing = (ok2 and hMissing) or nil
-      healthPercent = (ok4 and hPct) or nil
-      maxHealth = (ok3 and hMax) or nil
+      -- 12.0.7: these health APIs (UnitTokenPvPRestrictedForAddOns) no longer error
+      -- on compound/restricted tokens — they return nil/secret — so the old
+      -- pcall + `(ok and v) or nil` guarding is redundant (ok was always true). A
+      -- nil here is handled downstream by UpdateHealth's keep-prior guard
+      -- (HealthBar.lua), and secret values pass straight through to SetValue.
+      health = UnitHealth(queryID)
+      healthMissing = UnitHealthMissing(queryID)
+      maxHealth = UnitHealthMax(queryID)
+      healthPercent = UnitHealthPercent(queryID, true, CurveConstants.ScaleTo100)
     else
-      local ok, h = pcall(UnitHealth, queryID, true)
-      local ok2, hMissing = pcall(UnitHealthMissing, queryID, true)
-      local ok3, hMax = pcall(UnitHealthMax, queryID)
-      local ok4, hPct = pcall(UnitHealthPercent, queryID, true, CurveConstants.ScaleTo100)
-
-      health = (ok and h) or nil
-      healthMissing = (ok2 and hMissing) or nil
-      healthPercent = (ok4 and hPct) or nil
-      maxHealth = (ok3 and hMax) or nil
+      health = UnitHealth(queryID, true)
+      healthMissing = UnitHealthMissing(queryID, true)
+      maxHealth = UnitHealthMax(queryID)
+      healthPercent = UnitHealthPercent(queryID, true, CurveConstants.ScaleTo100)
     end
 
     self:UpdateHealth(queryID, health, healthMissing, healthPercent, maxHealth)
@@ -1441,7 +1436,7 @@ function BattleGroundEnemies:CreatePlayerButton(mainframe, num)
       end
 
       local inCombatLockdown = InCombatLockdown()
-      local checker, range = LRC[self.PlayerIsEnemy and "GetHarmMaxChecker" or "GetFriendMaxChecker"](
+      local checker, _ = LRC[self.PlayerIsEnemy and "GetHarmMaxChecker" or "GetFriendMaxChecker"](
         LRC,
         inCombatLockdown and self.config.RangeIndicator_Range_InCombat or self.config.RangeIndicator_Range_OutOfCombat,
         inCombatLockdown
@@ -1452,9 +1447,14 @@ function BattleGroundEnemies:CreatePlayerButton(mainframe, num)
         return
       end
 
-      local myClass = BattleGroundEnemies.UserButton
+      -- Prefer the cached self-button class (identical to before when BGE tracks
+      -- your team); fall back to the native player class so spell-based range
+      -- checks still work with friendly frames off (no UserButton then). Both are
+      -- the uppercase English class token (e.g. "MAGE"), so the fallback matches.
+      local myClass = (BattleGroundEnemies.UserButton
           and BattleGroundEnemies.UserButton.PlayerDetails
-          and BattleGroundEnemies.UserButton.PlayerDetails.PlayerClass
+          and BattleGroundEnemies.UserButton.PlayerDetails.PlayerClass)
+          or select(2, UnitClass("player"))
       local interactResult = checkInteractDist(unitID)
       local itemResult = isItemInRange(unitID)
       local spellResult = isSpellInRange(unitID, myClass)
@@ -1508,12 +1508,12 @@ function BattleGroundEnemies:CreatePlayerButton(mainframe, num)
     self:DispatchEvent("UpdatePower", queryID, powerToken)
   end
 
-  function playerButton:UpdateTargetedByEnemy(playerButton, targeted)
+  function playerButton:UpdateTargetedByEnemy(otherButton, targeted)
     local unitIDs = self.UnitIDs
-    unitIDs.TargetedByEnemy[playerButton] = targeted
+    unitIDs.TargetedByEnemy[otherButton] = targeted
     self:DispatchEvent("UpdateTargetIndicators")
 
-    if playerButton == BattleGroundEnemies.UserButton then
+    if otherButton == BattleGroundEnemies.UserButton then
       self:UpdateEnemyUnitID("Target", targeted and "target" or nil)
     end
 
@@ -1531,28 +1531,28 @@ function BattleGroundEnemies:CreatePlayerButton(mainframe, num)
   end
 
   -- returns true if the other button is a enemy from the point of view of the button. True if button is ally and other button is enemy, and vice versa
-  function playerButton:IsEnemyToMe(playerButton)
-    return self.PlayerIsEnemy ~= playerButton.PlayerIsEnemy
+  function playerButton:IsEnemyToMe(otherButton)
+    return self.PlayerIsEnemy ~= otherButton.PlayerIsEnemy
   end
 
-  function playerButton:IsNowTargeting(playerButton)
-    self.Target = playerButton
+  function playerButton:IsNowTargeting(otherButton)
+    self.Target = otherButton
 
-    if not self:IsEnemyToMe(playerButton) then
+    if not self:IsEnemyToMe(otherButton) then
       return
     end --we only care of the other player is of opposite faction
 
-    playerButton:UpdateTargetedByEnemy(self, true)
+    otherButton:UpdateTargetedByEnemy(self, true)
   end
 
-  function playerButton:IsNoLongerTarging(playerButton)
+  function playerButton:IsNoLongerTarging(otherButton)
     self.Target = nil
 
-    if not self:IsEnemyToMe(playerButton) then
+    if not self:IsEnemyToMe(otherButton) then
       return
     end --we only care of the other player is of opposite faction
 
-    playerButton:UpdateTargetedByEnemy(self, nil)
+    otherButton:UpdateTargetedByEnemy(self, nil)
   end
 
   function playerButton:UpdateTarget()
@@ -1666,38 +1666,38 @@ function BattleGroundEnemies:CreatePlayerButton(mainframe, num)
   end
 
   function playerButton:IsToTheLeftOfFrame(systemFrame)
-    local myLeft, myRight, myBottom, myTop = self:GetScaledSelectionSides()
-    local systemFrameLeft, systemFrameRight, systemFrameBottom, systemFrameTop = systemFrame:GetScaledSelectionSides()
+    local _, myRight, _, _ = self:GetScaledSelectionSides()
+    local systemFrameLeft, _, _, _ = systemFrame:GetScaledSelectionSides()
     return myRight < systemFrameLeft
   end
 
   function playerButton:IsToTheRightOfFrame(systemFrame)
-    local myLeft, myRight, myBottom, myTop = self:GetScaledSelectionSides()
-    local systemFrameLeft, systemFrameRight, systemFrameBottom, systemFrameTop = systemFrame:GetScaledSelectionSides()
+    local myLeft, _, _, _ = self:GetScaledSelectionSides()
+    local _, systemFrameRight, _, _ = systemFrame:GetScaledSelectionSides()
     return myLeft > systemFrameRight
   end
 
   function playerButton:IsAboveFrame(systemFrame)
-    local myLeft, myRight, myBottom, myTop = self:GetScaledSelectionSides()
-    local systemFrameLeft, systemFrameRight, systemFrameBottom, systemFrameTop = systemFrame:GetScaledSelectionSides()
+    local _, _, myBottom, _ = self:GetScaledSelectionSides()
+    local _, _, _, systemFrameTop = systemFrame:GetScaledSelectionSides()
     return myBottom > systemFrameTop
   end
 
   function playerButton:IsBelowFrame(systemFrame)
-    local myLeft, myRight, myBottom, myTop = self:GetScaledSelectionSides()
-    local systemFrameLeft, systemFrameRight, systemFrameBottom, systemFrameTop = systemFrame:GetScaledSelectionSides()
+    local _, _, _, myTop = self:GetScaledSelectionSides()
+    local _, _, systemFrameBottom, _ = systemFrame:GetScaledSelectionSides()
     return myTop < systemFrameBottom
   end
 
   function playerButton:IsVerticallyAlignedWithFrame(systemFrame)
-    local myLeft, myRight, myBottom, myTop = self:GetScaledSelectionSides()
-    local systemFrameLeft, systemFrameRight, systemFrameBottom, systemFrameTop = systemFrame:GetScaledSelectionSides()
+    local _, _, myBottom, myTop = self:GetScaledSelectionSides()
+    local _, _, systemFrameBottom, systemFrameTop = systemFrame:GetScaledSelectionSides()
     return (myTop >= systemFrameBottom) and (myBottom <= systemFrameTop)
   end
 
   function playerButton:IsHorizontallyAlignedWithFrame(systemFrame)
-    local myLeft, myRight, myBottom, myTop = self:GetScaledSelectionSides()
-    local systemFrameLeft, systemFrameRight, systemFrameBottom, systemFrameTop = systemFrame:GetScaledSelectionSides()
+    local myLeft, myRight, _, _ = self:GetScaledSelectionSides()
+    local systemFrameLeft, systemFrameRight, _, _ = systemFrame:GetScaledSelectionSides()
     return (myRight >= systemFrameLeft) and (myLeft <= systemFrameRight)
   end
 
@@ -1722,7 +1722,7 @@ function BattleGroundEnemies:CreatePlayerButton(mainframe, num)
   playerButton.ButtonModules = {}
   for moduleName, moduleFrame in pairs(BattleGroundEnemies.ButtonModules) do
     if moduleFrame.AttachToPlayerButton then
-      local moduleOnFrame = moduleFrame:AttachToPlayerButton(playerButton)
+      moduleFrame:AttachToPlayerButton(playerButton)
 
       playerButton[moduleName].GetConfig = function(self)
         self.config = playerButton.playerCountConfig.ButtonModules[moduleName]

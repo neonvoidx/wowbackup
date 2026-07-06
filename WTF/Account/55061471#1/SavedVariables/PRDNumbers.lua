@@ -1,0 +1,40 @@
+
+PRDNumbersDB = {
+["restedIndicator"] = false,
+["hideTargetFrame"] = false,
+["health"] = {
+["anchorValue"] = "RIGHT",
+["fontSize"] = 12,
+["showPercent"] = true,
+["font"] = "Fonts\\FRIZQT__.TTF",
+["anchorPercent"] = "LEFT",
+["showValue"] = true,
+},
+["enableContextMenu"] = true,
+["hidePlayerFrame"] = false,
+["alternatePower"] = {
+["anchorValue"] = "RIGHT",
+["fontSize"] = 12,
+["showPercent"] = true,
+["font"] = "Fonts\\FRIZQT__.TTF",
+["anchorPercent"] = "LEFT",
+["showValue"] = true,
+},
+["combatIndicator"] = false,
+["classResource"] = {
+["anchorValue"] = "RIGHT",
+["fontSize"] = 12,
+["showPercent"] = true,
+["font"] = "Fonts\\FRIZQT__.TTF",
+["anchorPercent"] = "LEFT",
+["showValue"] = true,
+},
+["power"] = {
+["anchorValue"] = "RIGHT",
+["fontSize"] = 12,
+["showPercent"] = true,
+["font"] = "Fonts\\FRIZQT__.TTF",
+["anchorPercent"] = "LEFT",
+["showValue"] = true,
+},
+}

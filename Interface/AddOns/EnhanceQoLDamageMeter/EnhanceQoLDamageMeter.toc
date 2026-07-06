@@ -1,0 +1,23 @@
+## Interface: 120007, 120100
+## Title: Enhance QoL Damage Meter
+## Author: R41Z0R
+## Version: 11.6.0
+## Notes: Damage Meter windows and Edit Mode integration
+## Notes-deDE: Damage-Meter-Fenster und Edit-Mode-Integration
+## Notes-esES: Ventanas del medidor de dano e integracion con el modo de edicion
+## Notes-esMX: Ventanas del medidor de dano e integracion con el modo de edicion
+## Notes-frFR: Fenetres de compteur de degats et integration au mode edition
+## Notes-itIT: Finestre del misuratore danni e integrazione modalita modifica
+## Notes-koKR: 데미지 미터 창 및 편집 모드 통합
+## Notes-ptBR: Janelas do medidor de dano e integracao com o modo de edicao
+## Notes-ruRU: Окна счетчика урона и интеграция с режимом редактирования
+## Notes-zhCN: 伤害统计窗口和编辑模式集成
+## Notes-zhTW: 傷害統計視窗與編輯模式整合
+## Dependencies: EnhanceQoL
+## IconTexture: Interface\AddOns\EnhanceQoL\Icons\Icon.tga
+## Retail: true
+## X-Compatible-With: retail
+## LoadOnDemand: 1
+## Globe-Main: EnhanceQoL
+
+DamageMeter.xml

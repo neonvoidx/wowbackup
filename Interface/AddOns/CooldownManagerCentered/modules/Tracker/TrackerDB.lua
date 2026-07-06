@@ -3,9 +3,6 @@ local _, ns = ...
 local TrackerDB = {}
 ns.TrackerDB = TrackerDB
 
-TrackerDB.DEFAULT_COOLDOWN_SWIPE_COLOR = { 0, 0, 0, 0.7 }
-TrackerDB.DEFAULT_AURA_SWIPE_COLOR = { 1, 0.95, 0.57, 0.7 }
-
 local function IsSupportedCustomActiveKind(kind)
     return kind == "spell" or kind == "item"
 end
@@ -22,26 +19,8 @@ local function NormalizeCustomActiveDuration(value)
 end
 
 TrackerDB.DefaultItems = {
-    241304, -- Silvermoon Healing Potion
-    241308, -- Light's Potential
-
     5512, -- Healthstone
     224464, -- Demonic Healthstone
-
-    -- Invigorating Healing Potion
-    244839,
-    244838,
-    244835,
-
-    -- Tempered Potion
-    212265, -- Tempered Potion (R3)
-    212264, -- Tempered Potion (R2)
-    212263, -- Tempered Potion (R1)
-
-    -- Fleeting Tempered Potion
-    212971,
-    212970,
-    212969,
 }
 
 TrackerDB.DefaultSpells = {
@@ -108,7 +87,12 @@ function TrackerDB.InitializeDB()
     db.itemSettings = db.itemSettings or {}
     db.spellItemSettings = db.spellItemSettings or {}
     db.wildcardSlotSettings = db.wildcardSlotSettings or {}
-    if db.showUnusable == nil then db.showUnusable = false end
+    if db.showUnusable == nil then
+        db.showUnusable = false
+    end
+    if db.showPassiveTrinkets == nil then
+        db.showPassiveTrinkets = true
+    end
     if not ns.db.profile._tracker_filled_with_defaults then
         for i, spellID in pairs(TrackerDB.DefaultSpells) do
             if not db.spellItemSettings[spellID] then
@@ -156,6 +140,7 @@ end
 
 function TrackerDB.GetItemSettings(itemID)
     local db = TrackerDB.GetDB()
+    db.itemSettings = db.itemSettings or {}
     return db.itemSettings[itemID]
 end
 
@@ -173,6 +158,7 @@ end
 
 function TrackerDB.EnsureItemSettings(itemID)
     local db = TrackerDB.GetDB()
+    db.itemSettings = db.itemSettings or {}
     if db.itemSettings[itemID] == nil then
         db.itemSettings[itemID] = {}
     end
@@ -214,6 +200,7 @@ end
 
 function TrackerDB.SetItemState(itemID, state)
     local db = TrackerDB.GetDB()
+    db.itemSettings = db.itemSettings or {}
     if state == nil then
         db.itemSettings[itemID] = nil
         return
@@ -226,6 +213,11 @@ end
 function TrackerDB.SetSpellItemState(spellID, state)
     local db = TrackerDB.GetDB()
     db.spellItemSettings = db.spellItemSettings or {}
+    -- owned.spells (in TrackerItemsData) is derived from the spellItemSettings keys,
+    -- so changing membership here must drop its cached ownership scan.
+    if ns.TrackerItemsData and ns.TrackerItemsData.InvalidateOwnedItemsCache then
+        ns.TrackerItemsData:InvalidateOwnedItemsCache()
+    end
     if state == nil then
         db.spellItemSettings[spellID] = nil
         return
@@ -255,6 +247,27 @@ end
 function TrackerDB.ToggleShowUnusable()
     local db = TrackerDB.GetDB()
     db.showUnusable = not TrackerDB.GetShowingUnusable()
+    if ns.TrackerAssignmentPanel and ns.TrackerAssignmentPanel.RefreshMiscPanel then
+        ns.TrackerAssignmentPanel:RefreshMiscPanel()
+    end
+end
+
+-- Passive (proc-only) trinkets have no on-use spell. Defaults to true; players who
+-- only want usable trinkets in the wildcard trinket slots can turn this off.
+function TrackerDB.GetShowingPassiveTrinkets()
+    local db = TrackerDB.GetDB()
+    return db.showPassiveTrinkets ~= false
+end
+
+function TrackerDB.ToggleShowPassiveTrinkets()
+    local db = TrackerDB.GetDB()
+    db.showPassiveTrinkets = not TrackerDB.GetShowingPassiveTrinkets()
+    if ns.TrackerItemsData and ns.TrackerItemsData.InvalidateOwnedItemsCache then
+        ns.TrackerItemsData:InvalidateOwnedItemsCache()
+    end
+    if ns.TrackerItemViewer and ns.TrackerItemViewer.RefreshItemViewerFrames then
+        ns.TrackerItemViewer:RefreshItemViewerFrames()
+    end
     if ns.TrackerAssignmentPanel and ns.TrackerAssignmentPanel.RefreshMiscPanel then
         ns.TrackerAssignmentPanel:RefreshMiscPanel()
     end
@@ -302,6 +315,78 @@ function TrackerDB.SetCustomActiveDuration(kind, id, value)
     end
 
     return true
+end
+
+function TrackerDB.GetUseRealAura(kind, id)
+    if not IsSupportedCustomActiveKind(kind) then
+        return false
+    end
+
+    local settings
+    if kind == "spell" then
+        settings = TrackerDB.GetSpellItemSettings(id)
+    elseif kind == "item" then
+        settings = TrackerDB.GetItemSettings(id)
+    end
+    return settings and settings.useRealAura == true or false
+end
+
+function TrackerDB.SetUseRealAura(kind, id, value)
+    if not IsSupportedCustomActiveKind(kind) then
+        return false
+    end
+
+    local settings
+    if kind == "spell" then
+        settings = TrackerDB.EnsureSpellItemSettings(id)
+    elseif kind == "item" then
+        settings = TrackerDB.EnsureItemSettings(id)
+    end
+    if not settings then
+        return false
+    end
+
+    settings.useRealAura = value and true or nil
+    return true
+end
+
+local function GetEntrySettings(kind, id)
+    if kind == "spell" then
+        return TrackerDB.GetSpellItemSettings(id)
+    elseif kind == "item" then
+        return TrackerDB.GetItemSettings(id)
+    end
+    return TrackerDB.GetWildcardSlotSettings(id)
+end
+
+local function EnsureEntrySettings(kind, id)
+    if kind == "spell" then
+        return TrackerDB.EnsureSpellItemSettings(id)
+    elseif kind == "item" then
+        return TrackerDB.EnsureItemSettings(id)
+    end
+    return TrackerDB.EnsureWildcardSlotSettings(id)
+end
+
+-- Per-entry glow flags: "glowWhenReady", "glowOnFullCharges".
+function TrackerDB.GetGlowFlag(kind, id, field)
+    local settings = GetEntrySettings(kind, id)
+    return settings and settings[field] == true or false
+end
+
+function TrackerDB.SetGlowFlag(kind, id, field, value)
+    if not value then
+        local settings = GetEntrySettings(kind, id)
+        if settings then
+            settings[field] = nil
+        end
+        return
+    end
+    EnsureEntrySettings(kind, id)[field] = true
+end
+
+function TrackerDB.ToggleGlowFlag(kind, id, field)
+    TrackerDB.SetGlowFlag(kind, id, field, not TrackerDB.GetGlowFlag(kind, id, field))
 end
 
 function TrackerDB.GetAlwaysShow(kind, id)

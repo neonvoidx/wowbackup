@@ -1,4 +1,7 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
-	<Script file="LibEQOLConfig.lua" />
-	<Script file="LibEQOLConfigUI.lua" />
+	<!-- LibSettingsDesigner
+	     License: https://raw.githubusercontent.com/R41z0r/LibSettingsDesigner/main/LICENSE.md
+	     Do not remove this notice from redistributed copies. -->
+	<Script file="LibSettingsDesignerConfig.lua" />
+	<Script file="LibSettingsDesignerUI.lua" />
 </Ui>

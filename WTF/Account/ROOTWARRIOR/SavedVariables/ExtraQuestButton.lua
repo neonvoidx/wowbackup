@@ -20,8 +20,8 @@ ExtraQuestButtonDB3 = {
 ["artworkStyle"] = "Default",
 ["trackingOnly"] = false,
 ["position"] = {
-["y"] = -276.665283203125,
-["x"] = -531.6630554199219,
+["y"] = -199.1643829345703,
+["x"] = 161.6705322265625,
 ["point"] = "CENTER",
 },
 ["scale"] = 1,
@@ -57,14 +57,14 @@ ExtraQuestButtonDB3 = {
 ["zoneOnly"] = false,
 ["noCooldownText"] = false,
 },
-["Centered"] = {
-["artworkAlpha"] = 1,
+["Default2"] = {
+["artworkAlpha"] = 0,
 ["noCooldownText"] = false,
 ["trackingOnly"] = false,
 ["position"] = {
-["y"] = 281.5003051757813,
-["x"] = -236.6659545898438,
-["point"] = "BOTTOM",
+["y"] = -108.3307800292969,
+["x"] = -237.4944458007813,
+["point"] = "CENTER",
 },
 ["artworkStyle"] = "Default",
 ["distanceYd"] = 1000,
@@ -84,6 +84,20 @@ ExtraQuestButtonDB3 = {
 ["zoneOnly"] = false,
 ["distanceYd"] = 1000,
 ["noCooldownText"] = false,
+},
+["Default Healer"] = {
+["artworkAlpha"] = 0,
+["noCooldownText"] = false,
+["trackingOnly"] = false,
+["position"] = {
+["y"] = -254.9975738525391,
+["x"] = 177.5040893554688,
+["point"] = "CENTER",
+},
+["artworkStyle"] = "Default",
+["distanceYd"] = 1000,
+["zoneOnly"] = false,
+["scale"] = 1,
 },
 },
 }

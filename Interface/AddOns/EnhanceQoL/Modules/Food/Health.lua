@@ -73,6 +73,8 @@ addon.Health.healthList = {
 	{ key = "DemonicHealthstone", id = DEMONIC_HEALTHSTONE_ITEM_ID, requiredLevel = 5, healFunc = function(maxHP) return GetStoneHeal(maxHP) end, type = "stone" },
 
 	-- Midnight
+	{ key = "ConcentratedSilvermoonHealthPotion", id = 271883, requiredLevel = 81, heal = 300898, type = "potion" },
+	{ key = "ConcentratedSilvermoonHealthPotion", id = 271884, requiredLevel = 81, heal = 241304, type = "potion" },
 	{ key = "RefreshingSerum", id = 241306, requiredLevel = 81, heal = 202377, type = "potion", isCombatPotion = true },
 	{ key = "RefreshingSerum", id = 241307, requiredLevel = 81, heal = 156095, type = "potion", isCombatPotion = true },
 	{ key = "PotentHealingPotion", id = 258138, requiredLevel = 81, heal = 175000, type = "potion" },

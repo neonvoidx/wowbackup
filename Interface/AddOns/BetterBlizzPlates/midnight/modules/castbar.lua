@@ -263,6 +263,7 @@ function BBP.CustomizeCastbar(frame, unitToken, event)
         castBar.Text:SetPoint("TOPLEFT", castBar, "TOPLEFT", -2, 0)
         castBar.Text:SetPoint("BOTTOMRIGHT", castBar, "BOTTOMRIGHT", 2, 0)
     end
+    castBar.Text:SetJustifyH(db.castBarTextJustify or "CENTER")
 
     if castBar.casting then
         _, _, _, _, _, _, _, notInterruptible = UnitCastingInfo(unitToken)
@@ -638,6 +639,39 @@ local bottomAnchors = {
     BOTTOMRIGHT = true,
 }
 
+local function GetCastbarTargetName(unit)
+    local name = UnitSpellTargetName(unit)
+    local class = UnitSpellTargetClass(unit)
+    return name, class
+end
+
+local function GetColoredTargetString(name, class)
+    if not name then return nil end
+    if class then
+        local color = C_ClassColor.GetClassColor(class)
+        if color then
+            return color:WrapTextInColorCode(name)
+        end
+    end
+    return name
+end
+
+function BBP.CastbarTargetText(castBar)
+    castBar:HookScript("OnEvent", function(self, event)
+        if not BetterBlizzPlatesDB.showNameplateTargetText or not BetterBlizzPlatesDB.castbarTargetTextInsideBar then return end
+        if not CastStartEvents[event] then return end
+        local spell = UnitCastingInfo(self.unit) or UnitChannelInfo(self.unit)
+        if not spell then return end
+
+        local name, class = GetCastbarTargetName(self.unit)
+        local coloredName = GetColoredTargetString(name, class)
+
+        if coloredName then
+            castBar.Text:SetText(spell .. ": " .. coloredName)
+        end
+    end)
+end
+
 function BBP.UpdateNameplateTargetText(frame, unit)
     if not unit then return end
     local db = BetterBlizzPlatesDB
@@ -646,6 +680,11 @@ function BBP.UpdateNameplateTargetText(frame, unit)
         frame.TargetText = BBP.OverlayFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         frame.TargetText:SetJustifyH("CENTER")
         frame.TargetText:SetIgnoreParentScale(true)
+    end
+
+    if db.castbarTargetTextInsideBar then
+        frame.TargetText:SetText("")
+        return
     end
 
     local isFriend = not UnitCanAttack("player", unit)
@@ -1031,8 +1070,6 @@ function BBP.CastbarOnEvent(frame, event)
         end
     end
 
-    
-
     if frame.hideCastbarOverride then
         frame.castBar:Hide()
         return
@@ -1066,7 +1103,7 @@ function BBP.CastbarOnEvent(frame, event)
             frame.castBar:SetFrameStrata("HIGH")
         end
 
-        BBP.CustomizeCastbar(frame, self.unit, event)
+        BBP.CustomizeCastbar(frame, frame.unit, event)
 
         if not BBP.UnitTargetCastbarUpdate then --forget why i do this, maybe remove this bit?
             BBP.UnitTargetCastbarUpdate = CreateFrame("Frame")
@@ -1075,12 +1112,12 @@ function BBP.CastbarOnEvent(frame, event)
                 if string.match(unit, "arena") or string.match(unit, "boss") then return end
                 local np, frame = BBP.GetSafeNameplate(unit)
                 if frame and not UnitIsPlayer(unit) then
-                    BBP.CustomizeCastbar(frame, unit)
+                    BBP.CustomizeCastbar(frame, frame.unit)
                 end
             end)
         end
 
-        if useCustomCastbarTexture and not useCustomCastbarTextureHooked then
+        if useCustomCastbarTexture then
             if not self.hooked then
                 hooksecurefunc(self, "SetStatusBarTexture", function(self, texture)
                     if self.changing or self:IsForbidden() then return end
@@ -1144,9 +1181,15 @@ function BBP.CastbarOnEvent(frame, event)
                     --     self.changing = false
                     -- end)
                 end
+
+                hooksecurefunc(frame.castBar, "PlayFinishAnim", function()
+                    if frame.castBar:IsForbidden() then return end
+                    local textureName = BetterBlizzPlatesDB.customCastbarTexture
+                    local texturePath = LSM:Fetch(LSM.MediaType.STATUSBAR, textureName)
+                    frame.castBar:SetStatusBarTexture(texturePath)
+                end)
                 self.hooked = true
             end
-            useCustomCastbarTextureHooked = true
         end
 
         if BetterBlizzPlatesDB.normalCastbarForEmpoweredCasts then
@@ -1264,6 +1307,7 @@ function BBP.HookCastbarOnEvent(frame)
             BBP.CastbarOnEvent(frame, event)
         end
     end)
+    BBP.CastbarTargetText(frame.castBar)
     BBP.CastbarOnEvent(frame)
     frame.hookedCastbarOnEvent = true
 end

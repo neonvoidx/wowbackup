@@ -250,33 +250,13 @@ function BattleGroundEnemies:ModuleFrameNeedsWidth(moduleFrame, config)
   return BattleGroundEnemies:FrameNeedsWidth(activePoints[1], activePoints[2])
 end
 
-local function canAddPoint(location, moduleFrame)
-  local activePoints = location.ActivePoints
-  if activePoints > 1 then
-    return false
-  end
-  if activePoints == 0 then
-    return true
-  end
-
-  --if only 1 point is set
-  if moduleFrame.flags.HasDynamicSize then
-    return false
-  end --Containers can only have 1 point
-  if moduleFrame.flags.Width == "Fixed" and moduleFrame.flags.Height == "Fixed" then
-    return false
-  end
-
-  return true
-end
-
 --user wants to anchor the module to the relative frame, check if the relative frame is already anchored to that module
 local function validateAnchor(playerType, moduleName, relativeFrame)
   local players = BattleGroundEnemies[playerType].Players
   if players then
-    local i = 0
+    -- intentional: all player frames share the same options, so inspect only the first
+    -- luacheck: ignore 512
     for playerName, playerButton in pairs(players) do
-      i = i + 0
       local anchor = playerButton:GetAnchor(relativeFrame)
       local isDependant = BattleGroundEnemies:IsFrameDependentOnFrame(anchor, playerButton[moduleName])
       if isDependant then
@@ -290,18 +270,14 @@ local function validateAnchor(playerType, moduleName, relativeFrame)
       end
       --we basically end the loop after just one player since all player frames are using same options
     end
-    if i == 0 then
-      BattleGroundEnemies:Information(
-        "There are currently no players for the selected option available. You can start the testmode to add some players. Otherwise your selected frame can't be validated and there might be frame looping issues, therefore your selected frame is not saved to avoid this issue."
-      )
-      return false
-    end
-  else
-    BattleGroundEnemies:Information(
-      "There are currently no players for the selected option available. You can start the testmode to add some players. Otherwise your selected frame can't be validated and there might be frame looping issues, therefore your selected frame is not saved to avoid this issue."
-    )
-    return false
   end
+  -- players is nil OR an empty table: nothing to validate against, so refuse to
+  -- save (avoids frame-looping issues). The loop above always returns on its
+  -- first iteration, so reaching here means there were no players to inspect.
+  BattleGroundEnemies:Information(
+    "There are currently no players for the selected option available. You can start the testmode to add some players. Otherwise your selected frame can't be validated and there might be frame looping issues, therefore your selected frame is not saved to avoid this issue."
+  )
+  return false
 end
 
 ---comment
@@ -639,10 +615,62 @@ local FontOutlines = {
   [""] = L.None,
   ["OUTLINE"] = L.Normal,
   ["THICKOUTLINE"] = L.Thick,
+  -- WoW's SetFont "flags" string accepts MONOCHROME on its own or combined with
+  -- an outline. Comma-separated, matching Blizzard's own "OUTLINE, THICK" style.
+  ["MONOCHROME"] = L.Monochrome,
+  ["OUTLINE, MONOCHROME"] = L.MonochromeOutline,
+  ["THICKOUTLINE, MONOCHROME"] = L.MonochromeThickOutline,
 }
 
-function Data.AddNormalTextSettings(location, defaults)
+-- Shared font-shadow controls (toggle + color + X/Y offset). Mirrors the global
+-- Text shadow block. `location` is the same table the surrounding group's
+-- get/set operate on, so the disabled closures read the live EnableShadow value.
+-- Returns the entries to be merged into a settings group's args, keyed so they
+-- slot in alongside the font controls.
+function Data.AddFontShadowSettings(location, order)
+  local function shadowDisabled()
+    return not location.EnableShadow
+  end
   return {
+    EnableShadow = {
+      type = "toggle",
+      name = L.FontShadow_Enabled,
+      desc = L.FontShadow_Enabled_Desc,
+      order = order,
+    },
+    ShadowColor = {
+      type = "color",
+      name = L.FontShadowColor,
+      desc = L.FontShadowColor_Desc,
+      disabled = shadowDisabled,
+      hasAlpha = true,
+      order = order + 1,
+    },
+    ShadowOffsetX = {
+      type = "range",
+      name = L.ShadowOffsetX,
+      desc = L.ShadowOffsetX_Desc,
+      min = -5,
+      max = 5,
+      step = 0.5,
+      disabled = shadowDisabled,
+      order = order + 2,
+    },
+    ShadowOffsetY = {
+      type = "range",
+      name = L.ShadowOffsetY,
+      desc = L.ShadowOffsetY_Desc,
+      min = -5,
+      max = 5,
+      step = 0.5,
+      disabled = shadowDisabled,
+      order = order + 3,
+    },
+  }
+end
+
+function Data.AddNormalTextSettings(location, defaults, withOutline, withShadow)
+  local args = {
     Reset = {
       type = "execute",
       name = SETTINGS_DEFAULTS,
@@ -676,10 +704,32 @@ function Data.AddNormalTextSettings(location, defaults)
       order = 4,
     },
   }
+  if withOutline then
+    args.FontOutline = {
+      type = "select",
+      name = L.Font_Outline,
+      desc = L.Font_Outline_Desc,
+      values = FontOutlines,
+      width = "normal",
+      order = 5,
+    }
+  end
+  if withShadow then
+    args.ShadowSpacer = Data.AddVerticalSpacing(6)
+    for k, v in pairs(Data.AddFontShadowSettings(location, 7)) do
+      args[k] = v
+    end
+  end
+  return args
 end
 
-function Data.AddCooldownSettings(location)
-  return {
+function Data.AddCooldownSettings(location, withOutline, withVerticalAlign, withShadow)
+  -- Order/layout mirrors Data.AddNormalTextSettings (the "Text" group) so the two
+  -- groups line up row-for-row: alignment row, then FontSize+FontOutline, then
+  -- the shadow block. There's no horizontal alignment for a countdown, so a
+  -- half-width spacer stands in for JustifyH and keeps JustifyV in the same
+  -- (right-hand) column it occupies in the Text group.
+  local args = {
     FontSize = {
       type = "range",
       name = L.FontSize,
@@ -688,44 +738,46 @@ function Data.AddCooldownSettings(location)
       max = 40,
       step = 1,
       width = "normal",
-      order = 3,
+      order = 4,
     },
   }
-end
-
---nice idea but it kinda sucks
-local function generateOverwritableOptions(location, options)
-  local newOptions = {}
-  for k, v in pairs(options) do
-    if v.type ~= "group" then
-      if v.name and v.name ~= " " then
-        local newK = "overWrite" .. k
-        newOptions[newK] = {
-          type = "group",
-          name = "",
-          desc = L.overwrite_desc,
-          inline = true,
-          order = v.order or 1,
-          args = {},
-        }
-        newOptions[newK].args[newK] = {
-          name = L.overwrite,
-          desc = L.overwrite_desc,
-          type = "toggle",
-          order = 1,
-        }
-        newOptions[newK].args[k] = v
-        newOptions[newK].args[k].order = 2
-        newOptions[newK].args[k].disabled = function()
-          return not location[newK]
-        end
-      end
-    else
-      newOptions[k] = v
-      newOptions[k].args = generateOverwritableOptions(location, v.args)
+  if withVerticalAlign then
+    args.JustifyV = {
+      type = "select",
+      name = L.JustifyV,
+      desc = L.JustifyV_Desc,
+      values = JustifyVValues,
+      order = 2,
+    }
+    -- Empty filler completing the alignment row (stands in for the absent
+    -- Horizontal alignment) so FontSize/FontOutline wrap to their own row like
+    -- the Text group. width "normal" matches a no-width select, so JustifyV +
+    -- filler fill the row exactly; AddHorizontalSpacing's "half" was only a
+    -- quarter-row and let FontSize slip up onto the alignment row.
+    args.AlignmentSpacer = {
+      type = "description",
+      name = " ",
+      width = "normal",
+      order = 3,
+    }
+  end
+  if withOutline then
+    args.FontOutline = {
+      type = "select",
+      name = L.Font_Outline,
+      desc = L.Font_Outline_Desc,
+      values = FontOutlines,
+      width = "normal",
+      order = 5,
+    }
+  end
+  if withShadow then
+    args.ShadowSpacer = Data.AddVerticalSpacing(6)
+    for k, v in pairs(Data.AddFontShadowSettings(location, 7)) do
+      args[k] = v
     end
   end
-  return newOptions
+  return args
 end
 
 function BattleGroundEnemies:GetModuleOptions(location, options)
@@ -2066,6 +2118,31 @@ function BattleGroundEnemies:SetupOptions()
                 hasAlpha = true,
                 order = 8,
               },
+              Fake2 = Data.AddVerticalSpacing(9),
+              ShadowOffsetX = {
+                type = "range",
+                name = L.ShadowOffsetX,
+                desc = L.ShadowOffsetX_Desc,
+                min = -5,
+                max = 5,
+                step = 0.5,
+                disabled = function()
+                  return not location.Text.EnableShadow
+                end,
+                order = 10,
+              },
+              ShadowOffsetY = {
+                type = "range",
+                name = L.ShadowOffsetY,
+                desc = L.ShadowOffsetY_Desc,
+                min = -5,
+                max = 5,
+                step = 0.5,
+                disabled = function()
+                  return not location.Text.EnableShadow
+                end,
+                order = 11,
+              },
             },
             order = 7,
           },
@@ -2220,5 +2297,39 @@ end
 
 SLASH_BattleGroundEnemies1, SLASH_BattleGroundEnemies2 = "/BattleGroundEnemies", "/bge"
 SlashCmdList["BattleGroundEnemies"] = function(msg)
+  local cmd = strtrim((msg or "")):lower()
+  if cmd == "debug" then
+    local g = BattleGroundEnemies.db.global
+    g.debugMode = not g.debugMode
+    print(
+      "|cff33ff99[BGE]|r debug logging "
+        .. (g.debugMode and "|cff33ff99ON|r — reproduce the issue, then screenshot chat" or "|cffff5555OFF|r")
+    )
+    return
+  elseif cmd == "debug on" then
+    BattleGroundEnemies.db.global.debugMode = true
+    print("|cff33ff99[BGE]|r debug logging |cff33ff99ON|r")
+    return
+  elseif cmd == "debug off" then
+    BattleGroundEnemies.db.global.debugMode = false
+    print("|cff33ff99[BGE]|r debug logging |cffff5555OFF|r")
+    return
+  elseif cmd == "debug dump" then
+    local log = BattleGroundEnemies.db.global.debugLog
+    if not log or #log == 0 then
+      print("|cff33ff99[BGE]|r debug log is empty")
+      return
+    end
+    local from = math.max(1, #log - 50)
+    print("|cff33ff99[BGE]|r debug log — " .. #log .. " entries (showing last " .. (#log - from + 1) .. "):")
+    for i = from, #log do
+      print(log[i])
+    end
+    return
+  elseif cmd == "debug clear" then
+    BattleGroundEnemies.db.global.debugLog = {}
+    print("|cff33ff99[BGE]|r debug log cleared")
+    return
+  end
   AceConfigDialog:Open("BattleGroundEnemiesFixed")
 end

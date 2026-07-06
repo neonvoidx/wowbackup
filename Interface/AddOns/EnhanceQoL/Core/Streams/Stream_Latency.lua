@@ -1,4 +1,4 @@
--- luacheck: globals EnhanceQoL GetFramerate GetNetStats MAINMENUBAR_FPS_LABEL MAINMENUBAR_LATENCY_LABEL NORMAL_FONT_COLOR
+-- luacheck: globals EnhanceQoL GetFramerate GetNetStats GetCVarBool UpdateAddOnCPUUsage GetAddOnCPUUsage UpdateAddOnMemoryUsage GetAddOnMemoryUsage MAINMENUBAR_FPS_LABEL NORMAL_FONT_COLOR C_AddOns C_CVar
 local addonName, addon = ...
 local L = addon.L
 
@@ -18,16 +18,25 @@ end
 local floor = math.floor
 local min = math.min
 local format = string.format
+local sort = table.sort
+local wipe = wipe
 local GetTime = GetTime
 local GetFramerate = GetFramerate
 local GetNetStats = GetNetStats
+local GetCVarBool = (C_CVar and C_CVar.GetCVarBool) or GetCVarBool
+local UpdateAddOnCPUUsage = UpdateAddOnCPUUsage
+local GetAddOnCPUUsage = GetAddOnCPUUsage
+local UpdateAddOnMemoryUsage = UpdateAddOnMemoryUsage
+local GetAddOnMemoryUsage = GetAddOnMemoryUsage
+local C_AddOns = C_AddOns
 
 -- Runtime state for smoothing and cadence
 local lastPingUpdate = 0
 local pingHome, pingWorld = nil, nil
 local emaFPS -- exponential moving average for FPS
 -- Change detection cache (declare early so callbacks see locals, not globals)
-local lastFps, lastHome, lastWorld, lastPingMode, lastDisplay
+local lastFps, lastHome, lastWorld, lastPingMode, lastDisplay, lastBaseHex
+local addonRows = {}
 
 -- Color helpers (hex without leading #)
 local function fpsColorHex(v)
@@ -65,6 +74,7 @@ local function ensureDB()
 
 	db.fontSize = db.fontSize or 14
 	db.displayMode = db.displayMode or "both"
+	if db.useTextColor == nil then db.useTextColor = false end
 	if not db.textColor then
 		local r, g, b = 1, 0.82, 0
 		if NORMAL_FONT_COLOR and NORMAL_FONT_COLOR.GetRGB then
@@ -85,6 +95,8 @@ local function ensureDB()
 	db.pingColorLow = db.pingColorLow or { r = 0, g = 1, b = 0 }
 	db.pingColorMid = db.pingColorMid or { r = 1, g = 0.65, b = 0 }
 	db.pingColorHigh = db.pingColorHigh or { r = 1, g = 0, b = 0 }
+	if db.showCpuTooltip == nil then db.showCpuTooltip = true end
+	db.cpuTooltipEntries = tonumber(db.cpuTooltipEntries) or 8
 end
 
 local function openSettings()
@@ -104,13 +116,153 @@ local function smoothFPS(current, interval, window)
 	return emaFPS
 end
 
--- (declared above)
+local function buildMinWidthText(displayMode)
+	if displayMode == "fps" then return "FPS 999" end
+	if displayMode == "ping" then
+		if db.pingMode == "split" then return "H 999 / W 999 ms" end
+		if db.pingMode == "split_vertical" then
+			return ((_G["HOME"] or "Home") .. ": 999 ms\n" .. (_G["WORLD"] or "World") .. ": 999 ms")
+		end
+		return "999 ms"
+	end
+	if db.pingMode == "split" then return "FPS 999 | H 999 / W 999 ms" end
+	if db.pingMode == "split_vertical" then
+		return ("FPS 999\n" .. (_G["HOME"] or "Home") .. ": 999 ms\n" .. (_G["WORLD"] or "World") .. ": 999 ms")
+	end
+	return "FPS 999 | 999 ms"
+end
+
+local function formatMemory(kb)
+	kb = tonumber(kb) or 0
+	if kb >= 1024 then return format("%.2f MB", kb / 1024) end
+	return format("%d KB", floor(kb + 0.5))
+end
+
+local function stripTextureAndColor(text)
+	text = tostring(text or "")
+	text = text:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+	text = text:gsub("|T.-|t", "")
+	return text
+end
+
+local function formatFPSLabel(fps)
+	local label = MAINMENUBAR_FPS_LABEL
+	if type(label) == "string" and label:find("%%", 1, true) then
+		local ok, text = pcall(format, label, fps)
+		if ok and text then return text end
+	end
+	return (L["latencyTooltipFPS"] or "Framerate") .. ": " .. tostring(fps)
+end
+
+local function addonSortMemory(a, b) return (a.mem or 0) > (b.mem or 0) end
+
+local function addColoredDoubleLine(tip, left, right, r, g, b)
+	tip:AddDoubleLine(left, right, 1, 1, 1, r or 0.84, g or 0.75, b or 0.65)
+end
+
+local function addAddonUsageTooltip(tip)
+	if not (db and db.showCpuTooltip) then return end
+	if not (C_AddOns and C_AddOns.GetNumAddOns and C_AddOns.GetAddOnInfo and C_AddOns.IsAddOnLoaded and UpdateAddOnMemoryUsage and GetAddOnMemoryUsage) then return end
+
+	local cpuProfiling = GetCVarBool and GetCVarBool("scriptProfile")
+	UpdateAddOnMemoryUsage()
+	if cpuProfiling and UpdateAddOnCPUUsage and GetAddOnCPUUsage then UpdateAddOnCPUUsage() end
+
+	wipe(addonRows)
+	local count = 0
+	local totalMem = 0
+	local totalCPU = 0
+	for i = 1, C_AddOns.GetNumAddOns() do
+		if C_AddOns.IsAddOnLoaded(i) then
+			local mem = GetAddOnMemoryUsage(i) or 0
+			local cpu = cpuProfiling and GetAddOnCPUUsage and (GetAddOnCPUUsage(i) or 0) or nil
+			totalMem = totalMem + mem
+			if cpu then totalCPU = totalCPU + cpu end
+			count = count + 1
+			local name, title = C_AddOns.GetAddOnInfo(i)
+			addonRows[count] = {
+				name = stripTextureAndColor(title or name or ("AddOn " .. i)),
+				mem = mem,
+				cpu = cpu,
+			}
+		end
+	end
+
+	tip:AddLine(" ")
+	addColoredDoubleLine(tip, L["latencyAddonMemory"] or "AddOn Memory", formatMemory(totalMem))
+	if cpuProfiling then
+		addColoredDoubleLine(tip, L["latencyCpuUsage"] or "AddOn CPU usage", format("%.1f ms", totalCPU))
+	end
+
+	sort(addonRows, addonSortMemory)
+	local limit = min(tonumber(db.cpuTooltipEntries) or 8, count)
+	if limit > 0 then
+		tip:AddLine(" ")
+		tip:AddLine(L["latencyAddonMemoryHeader"] or "Largest AddOns in memory")
+	end
+
+	for i = 1, limit do
+		local row = addonRows[i]
+		if row then
+			if cpuProfiling then
+				addColoredDoubleLine(tip, row.name, format("%s | %.1f ms", formatMemory(row.mem), row.cpu or 0))
+			else
+				addColoredDoubleLine(tip, row.name, formatMemory(row.mem))
+			end
+		end
+	end
+end
+
+local function showLatencyTooltip(btn)
+	ensureDB()
+	local tip = GameTooltip
+	if not tip then return end
+	tip:ClearLines()
+	if addon.DataPanel and addon.DataPanel.SetTooltipOwner then
+		addon.DataPanel.SetTooltipOwner(btn, tip)
+	else
+		tip:SetOwner(btn, "ANCHOR_TOPLEFT")
+	end
+
+	local fps = floor((GetFramerate() or 0) + 0.5)
+	local _, _, home, world = GetNetStats()
+	home = home or 0
+	world = world or 0
+	tip:AddLine(formatFPSLabel(fps), 1, 1, 1)
+	addColoredDoubleLine(tip, L["latencyTooltipHome"] or (_G["HOME"] or "Home"), format("%d ms", home), 0.84, 0.75, 0.65)
+	addColoredDoubleLine(tip, L["latencyTooltipWorld"] or (_G["WORLD"] or "World"), format("%d ms", world), 0.84, 0.75, 0.65)
+
+	addAddonUsageTooltip(tip)
+
+	local hint = getOptionsHint()
+	if hint then
+		tip:AddLine(" ")
+		tip:AddLine(hint)
+	end
+	tip:Show()
+end
+
+local function latencyTooltipOnUpdate(btn, elapsed)
+	if GameTooltip and GameTooltip.IsOwned and not GameTooltip:IsOwned(btn) then
+		btn.eqolLatencyTooltipElapsed = nil
+		if btn.SetScript then btn:SetScript("OnUpdate", nil) end
+		return
+	end
+	btn.eqolLatencyTooltipElapsed = (btn.eqolLatencyTooltipElapsed or 0) + (elapsed or 0)
+	if btn.eqolLatencyTooltipElapsed < 1 then return end
+	btn.eqolLatencyTooltipElapsed = 0
+	showLatencyTooltip(btn)
+end
 
 local function updateLatency(s)
 	s = s or stream
 	ensureDB()
-	local baseHex = colorToHex(db and db.textColor)
-	local function base(text) return format("|cff%s%s|r", baseHex, text or "") end
+	local baseHex = db and db.useTextColor and colorToHex(db.textColor) or nil
+	local function base(text)
+		text = text or ""
+		if baseHex then return format("|cff%s%s|r", baseHex, text) end
+		return text
+	end
 
 	local displayMode = db.displayMode or "both"
 	local showFps = displayMode ~= "ping"
@@ -122,7 +274,7 @@ local function updateLatency(s)
 	if s and desiredInterval and s.interval ~= desiredInterval then s.interval = desiredInterval end
 
 	local size = db.fontSize or 14
-	s.snapshot.tooltip = getOptionsHint()
+	s.snapshot.minWidthText = buildMinWidthText(displayMode)
 
 	local now = GetTime()
 
@@ -143,7 +295,9 @@ local function updateLatency(s)
 		end
 	end
 
-	local needsUpdate = displayMode ~= lastDisplay
+	s.snapshot.tooltip = nil
+
+	local needsUpdate = displayMode ~= lastDisplay or baseHex ~= lastBaseHex
 	if showFps and fpsValue ~= lastFps then needsUpdate = true end
 	if showPing and ((pingHome or 0) ~= (lastHome or -1) or (pingWorld or 0) ~= (lastWorld or -1) or db.pingMode ~= lastPingMode) then needsUpdate = true end
 
@@ -198,6 +352,7 @@ local function updateLatency(s)
 		lastHome = showPing and (pingHome or 0) or nil
 		lastWorld = showPing and (pingWorld or 0) or nil
 		lastPingMode = showPing and db.pingMode or nil
+		lastBaseHex = baseHex
 	end
 
 	-- Only touch fontSize if actually changed
@@ -205,6 +360,7 @@ local function updateLatency(s)
 		s.snapshot.fontSize = size
 		s.snapshot._fs = size
 	end
+	s.snapshot.skipPanelClassColor = db and db.useTextColor == true or nil
 end
 
 local provider = {
@@ -217,52 +373,12 @@ local provider = {
 		if btn == "RightButton" then openSettings() end
 	end,
 	OnMouseEnter = function(btn)
-		ensureDB()
-		local tip = GameTooltip
-		tip:ClearLines()
-		if addon.DataPanel and addon.DataPanel.SetTooltipOwner then
-			addon.DataPanel.SetTooltipOwner(btn, tip)
-		else
-			tip:SetOwner(btn, "ANCHOR_TOPLEFT")
-		end
-
-		local displayMode = db.displayMode or "both"
-		local showFps = displayMode ~= "ping"
-		local showPing = displayMode ~= "fps"
-
-		local lines = {}
-		if showFps then
-			local fps = floor((GetFramerate() or 0) + 0.5)
-			-- Build FPS line using the global format, coloring only the value
-			local fpsFmt = (MAINMENUBAR_FPS_LABEL or "Framerate: %.0f fps"):gsub("%%%.0f", "%%s")
-			lines[#lines + 1] = fpsFmt:format(format("|cff%s%.0f|r", fpsColorHex(fps), fps))
-		end
-
-		if showPing then
-			local _, _, home, world = GetNetStats()
-			home = home or 0
-			world = world or 0
-			-- Build Latency block using the global format, coloring each value
-			local latFmt = (MAINMENUBAR_LATENCY_LABEL or "Latency:\n%.0f ms (home)\n%.0f ms (world)")
-			latFmt = latFmt:gsub("%%%.0f", "%%s")
-			local latencyBlock = latFmt:format(format("|cff%s%.0f|r", pingColorHex(home), home), format("|cff%s%.0f|r", pingColorHex(world), world))
-			for line in latencyBlock:gmatch("[^\n]+") do
-				lines[#lines + 1] = line
-			end
-		end
-
-		if lines[1] then
-			tip:SetText(lines[1])
-			for i = 2, #lines do
-				tip:AddLine(lines[i])
-			end
-		end
-		local hint = getOptionsHint()
-		if hint then
-			tip:AddLine(" ")
-			tip:AddLine(hint)
-		end
-		tip:Show()
+		showLatencyTooltip(btn)
+		btn.eqolLatencyTooltipElapsed = 0
+		if btn.SetScript then btn:SetScript("OnUpdate", latencyTooltipOnUpdate) end
+	end,
+	OnMouseLeave = function(btn)
+		if btn and btn.SetScript then btn:SetScript("OnUpdate", nil) end
 	end,
 }
 

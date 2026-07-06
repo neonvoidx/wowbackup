@@ -1,0 +1,16 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+	<Script file="CooldownPanels_Helper.lua" />
+	<Script file="CooldownPanels_AnchorHelper.lua" />
+	<Script file="CooldownPanels_Stance.lua" />
+	<Script file="CooldownPanels_AutoDurations.lua" />
+	<Script file="CooldownPanels_SpellAutoDurations.lua" />
+	<Script file="CooldownPanels_ActiveProcTriggers.lua" />
+	<Script file="CooldownPanels.lua" />
+	<Script file="CooldownPanels_CDMAuras.lua" />
+	<Script file="CooldownPanels_BlizzardEditorConstants.lua" />
+	<Include file="CooldownPanels_BlizzardEditor.xml" />
+	<Script file="CooldownPanels_BlizzardEditor.lua" />
+	<Script file="Settings_CooldownPanels.lua" />
+	<Script file="CooldownPanels_Bars.lua" />
+	<Script file="Init.lua" />
+</Ui>

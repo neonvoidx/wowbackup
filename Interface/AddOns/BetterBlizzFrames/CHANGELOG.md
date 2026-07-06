@@ -1,3 +1,75 @@
+# BetterBlizzFrames 2.0.0
+## Midnight
+### New
+- Add buff/debuff max limit setting for Target/Focus in Buffs & Debuffs section.
+- Add Personal Resource Display settings. Legacy Style PRD that reverts the look back to how it was pre 12.0.7 (Misc) and re-texture settings (Font & Texture). These settings already exist in BBP but now also in BBF for people without BBP.
+### Tweak
+- Add a workaround fix to stop showing double names when HealthBarColor addon was also enabled.
+- Add a workaround fix for "Arena Names" for ToT frame names.
+- Fix "Stealth Indicator" texture for the no portrait settings.
+- Some minor tweaks for Classic Frames setting (gaps around bars)
+- Update Nahj profile (www.twitch.tv/nahj)
+- Update Dissonance profile (www.twitch.tv/dissonancewow)
+### Bugfix
+- Classic Frames: Fix statusbar text and level text not being positioned correctly on chinese client with Classic Frames setting on.
+- Fix potential lua error from entering/leaving arena while in combat with Minimap Hider setting on.
+- Fix purge texture recolor not working.
+## The Burning Crusade
+### Tweak
+- Remove Wyvern Sting DoT (not CC) spell ids from LoC CC list.
+
+# BetterBlizzFrames 1.9.9g
+## General
+### Tweak
+- Tweak party frame getter for party castbar position for Grid2
+## Midnight
+### Bugfix
+- Fix secret errors from TRP3 functions. By keyboardturner @ GitHub. Thank you for your contribution!
+
+# BetterBlizzFrames 1.9.9f
+## Midnight
+### Bugfix
+- Fix lua error from instant combo points setting after changes to PRD from Blizzard
+
+# BetterBlizzFrames 1.9.9e
+## Midnight
+### Bugfix
+- Even more fixes for font settings for 12.0.7
+
+# BetterBlizzFrames 1.9.9d
+## Midnight
+### Tweak
+- WoW 12.0.7 comes with more bugs. Important aura filter is broken because of Blizzard and shows a bunch of trash auras. Temporarily disabled important auras until Blizzard fixes it.
+
+# BetterBlizzFrames 1.9.9c
+## Midnight
+### Bugfix
+- More fixes for font settings for 12.0.7
+
+# BetterBlizzFrames 1.9.9b
+## Midnight
+### New
+- New JFarm profile (www.twitch.tv/jfarm_ & www.youtube.com/@Jfarm_). Thank you for sharing.
+### Bugfix
+- Fix lua error in unitframe font change setting
+
+# BetterBlizzFrames 1.9.9
+## Mists of Pandaria
+### New
+- Add Edit Mode transparency setting (Misc & in Edit Mode menu)
+- Add PartyFrame range alpha setting (General)
+- Add Improved AddonList setting (Misc)
+### Bugfix
+- Fix Target/FocusFrame background texture being too low on Minus mobs
+- Fix adding duration to smoke bomb aura for MoP.
+- Fix PlayerFrame elite texture being wrong size after MoP changes.
+## Midnight
+### Bugfix
+- Fix "Hide Player Resource/Power" hiding some classes resources despite ignore setting being enabled.
+## Classic Era
+### Bugfix
+- Fix Player Castbar not getting moved with settings after removing it for MoP & TBC.
+
 # BetterBlizzFrames 1.9.8e
 ## Mists of Pandaria
 ### Bugfix

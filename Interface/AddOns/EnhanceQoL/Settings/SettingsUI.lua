@@ -1,8 +1,9 @@
--- SettingsUI.lua (modern LibEQOLConfig based)
+-- SettingsUI.lua (modern LibSettingsDesigner based)
 local addonName, addon = ...
 local L = LibStub("AceLocale-3.0"):GetLocale(addonName)
-local ConfigLib = LibStub("LibEQOLConfig-1.0", true)
-local ConfigUILib = LibStub("LibEQOLConfigUI-1.0", true)
+local LibSettingsDesigner = addon.LibSettingsDesigner
+local ConfigLib = LibSettingsDesigner and LibSettingsDesigner.Config
+local ConfigUILib = LibSettingsDesigner and LibSettingsDesigner.UI
 
 -- Optional: Prefix für Settings-Variablen
 local prefix = "EQOL_"
@@ -52,6 +53,59 @@ local function newSettingsAsset(fileName)
 	return newSettingsAssetRoot .. fileName
 end
 
+local SETTINGS_THEME_COLORS = {
+	frameBg = { 0.015, 0.017, 0.020, 0.98 },
+	contentBg = { 0.034, 0.037, 0.043, 0.96 },
+	sidebarBg = { 0.028, 0.031, 0.037, 0.97 },
+	topbarBg = { 0.018, 0.019, 0.022, 0.98 },
+	panelBorder = { 0.38, 0.35, 0.28, 0.58 },
+	topbarBorder = { 0.38, 0.35, 0.28, 0.52 },
+
+	detailSectionBg = { 0.058, 0.061, 0.068, 0.94 },
+	detailColumnBg = { 0.048, 0.051, 0.058, 0.92 },
+	detailSectionHeaderBg = { 0.070, 0.068, 0.060, 0.92 },
+	detailSectionBorder = { 0.34, 0.31, 0.25, 0.46 },
+	detailColumnBorder = { 0.30, 0.28, 0.23, 0.40 },
+
+	cardBg = { 0.056, 0.059, 0.066, 0.94 },
+	cardBgHover = { 0.105, 0.090, 0.060, 0.98 },
+	cardBorder = { 0.34, 0.31, 0.25, 0.46 },
+	cardBorderHover = { 0.84, 0.64, 0.24, 0.90 },
+	dashboardCardBg = { 0.058, 0.062, 0.070, 0.94 },
+	dashboardCardBgHover = { 0.106, 0.092, 0.062, 0.98 },
+	dashboardCardBorder = { 0.34, 0.31, 0.25, 0.46 },
+
+	rowBg = { 0.062, 0.065, 0.073, 0.72 },
+	rowBorder = { 0.32, 0.30, 0.25, 0.42 },
+	rowHoverBg = { 0.110, 0.094, 0.064, 0.78 },
+	rowHoverBorder = { 0.78, 0.60, 0.26, 0.82 },
+	rowSeparator = { 0.34, 0.32, 0.27, 0.30 },
+	selectedBg = { 0.260, 0.195, 0.082, 0.92 },
+
+	buttonBg = { 0.080, 0.078, 0.070, 0.94 },
+	buttonBorder = { 0.50, 0.45, 0.34, 0.82 },
+	buttonHoverBg = { 0.155, 0.120, 0.062, 0.98 },
+	buttonHoverBorder = { 0.78, 0.60, 0.26, 0.82 },
+	buttonTopbarBg = { 0.080, 0.076, 0.066, 0.94 },
+	buttonTopbarBorder = { 0.50, 0.45, 0.34, 0.82 },
+	buttonTopbarHoverBg = { 0.158, 0.122, 0.062, 0.98 },
+	searchBg = { 0.034, 0.036, 0.041, 0.98 },
+	searchBorder = { 0.50, 0.45, 0.34, 0.82 },
+
+	disabledControlBg = { 0.032, 0.034, 0.038, 0.70 },
+	disabledControlBorder = { 0.24, 0.23, 0.21, 0.42 },
+	disabledRowBg = { 0.036, 0.038, 0.042, 0.40 },
+	disabledRowBorder = { 0.22, 0.21, 0.19, 0.32 },
+
+	textMain = { 0.95, 0.94, 0.90, 1 },
+	textMuted = { 0.80, 0.78, 0.72, 1 },
+	textSubtle = { 0.66, 0.64, 0.59, 1 },
+	textDisabled = { 0.52, 0.51, 0.47, 1 },
+	accent = { 1.00, 0.78, 0.28, 1 },
+	topbarAccent = { 0.95, 0.90, 0.78, 1 },
+	success = { 0.34, 0.78, 0.44, 1 },
+}
+
 local function getLocaleKeyForText(text)
 	if type(text) ~= "string" or text == "" then return nil end
 	for key, value in pairs(L) do
@@ -79,7 +133,9 @@ local pageIconKeysByStableID = {
 	CustomUnitFrames = "unitframes",
 	DataPanel = "data",
 	DamageMeter = "damagemeterprofile",
+	DefaultAuraContainers = "buff",
 	DialogsConfirmations = "dialogsconfirmations",
+	DurationText = "castbar",
 	DungeonsMythicPlus = "dungeons",
 	EconomyCraftingOrders = "crafting",
 	EQoLCastbar = "castbar",
@@ -140,8 +196,10 @@ local pageDescriptionKeysByStableID = {
 	CooldownPanels = "configCenterPageCardDescCooldownPanels",
 	CustomUnitFrames = "configCenterPageCardDescUnitFrames",
 	DataPanel = "configCenterPageCardDescDataPanels",
+	DefaultAuraContainers = "configCenterPageCardDescDefaultAuraContainers",
 	DeathResurrect = "configCenterPageCardDescDeath",
 	DialogsConfirmations = "configCenterPageCardDescDialogsConfirmations",
+	DurationText = "configCenterPageCardDescDurationText",
 	DungeonsMythicPlus = "configCenterPageCardDescDungeons",
 	EconomyCraftingOrders = "configCenterPageCardDescCraftingOrders",
 	EQoLCastbar = "configCenterPageCardDescEQoLCastbar",
@@ -350,8 +408,33 @@ local function ensureConfigApp()
 		pageDescriptionKeys = pageDescriptionKeysByStableID,
 		addonFolder = addonName,
 		assetRoot = "Interface\\AddOns\\EnhanceQoL\\libs\\LibSettingsDesigner\\Assets\\",
+		colors = SETTINGS_THEME_COLORS,
 		density = "compact",
 		showDensityButton = false,
+		subnav = {
+			enabled = true,
+		},
+		topbar = {
+			titleActions = {
+				{
+					id = "reload-ui",
+					label = _G.RELOADUI or "Reload UI",
+					tooltip = function(app)
+						return app:GetReloadPendingReason()
+							or L["bReloadInterface"]
+							or L["tReloadInterface"]
+							or (_G.RELOADUI or "Reload UI")
+					end,
+					visible = function(app)
+						return app:IsReloadPending()
+					end,
+					pulse = true,
+					onClick = function()
+						if _G.ReloadUI then _G.ReloadUI() end
+					end,
+				},
+			},
+		},
 		getSize = function()
 			local size = addon.db and addon.db.configCenterSize
 			if type(size) == "table" then
@@ -364,6 +447,13 @@ local function ensureConfigApp()
 				width = width,
 				height = height,
 			}
+		end,
+		getLocked = function()
+			return addon.db and addon.db.configCenterLocked == true
+		end,
+		setLocked = function(locked)
+			if not addon.db then return end
+			addon.db.configCenterLocked = locked == true
 		end,
 		categoryIconTextures = {
 			dashboard = newSettingsAsset("Cogwheel.tga"),
@@ -727,6 +817,7 @@ local function createModernOnlySetting(key, cbData)
 		return nil, false
 	end
 	local function writeValue(value)
+		if cbData and cbData.storage == false then return false end
 		if not (cbData and cbData.var) then return false end
 		addon.db = addon.db or {}
 		if cbData.subvar then
@@ -743,13 +834,15 @@ local function createModernOnlySetting(key, cbData)
 	end
 	local function setValue(value)
 		if cbData and type(cbData.func) == "function" then
-			local ok = pcall(cbData.func, value)
-			if ok and didPersist(value) then return end
+			local ok, handled = pcall(cbData.func, value)
+			if ok and (handled == true or cbData.storage == false or didPersist(value)) then return end
+			if ok and handled == false then return end
 			if ok and not (cbData.get or cbData.var) then return end
 			writeValue(value)
 		elseif cbData and type(cbData.set) == "function" then
-			local ok = pcall(cbData.set, value, value)
-			if ok and didPersist(value) then return end
+			local ok, handled = pcall(cbData.set, value, value)
+			if ok and (handled == true or cbData.storage == false or didPersist(value)) then return end
+			if ok and handled == false then return end
 			if ok and not (cbData.get or cbData.var) then return end
 			writeValue(value)
 		else
@@ -823,8 +916,9 @@ function addon.functions.OpenConfigCenter(pageID, focusControlID)
 	local app = ensureConfigApp()
 	if ConfigUILib and app then
 		addon.ConfigCenterFrame = ConfigUILib:Open(app, pageID, focusControlID)
-		return
+		return addon.ConfigCenterFrame ~= nil
 	end
+	return false
 end
 
 function addon.functions.HideConfigCenterUntilFrameHidden(externalFrame)
@@ -833,7 +927,7 @@ function addon.functions.HideConfigCenterUntilFrameHidden(externalFrame)
 	if not app then return end
 	local frame = ConfigUILib.GetFrame and ConfigUILib:GetFrame(app) or addon.ConfigCenterFrame
 	if not (frame and frame.IsShown and frame:IsShown()) then return end
-	local state = frame._LibEQOLConfigState
+	local state = frame._LibSettingsDesignerState
 	local restorePageID = state and state.view == "page" and state.selectedPageID or nil
 	frame:Hide()
 	externalFrame._eqolConfigCenterRestore = {

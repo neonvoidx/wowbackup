@@ -4,6 +4,7 @@ local DB = KeystoneLoot.DB;
 local Favorites = KeystoneLoot.Favorites;
 local Character = KeystoneLoot.Character;
 local L = KeystoneLoot.L;
+local Voidcore = KeystoneLoot.Voidcore;
 
 local HIGHLIGHTS = {
     { key = "settings.highlighting.crit",        label = ITEM_MOD_CRIT_RATING_SHORT },
@@ -35,9 +36,13 @@ local function HandleImportResult(success, result, skippedSpecs, overwrite)
     end
 
     if (success) then
-        local suffix = overwrite and L[" (overwritten)"] or "";
-        print(YELLOW_FONT_COLOR:WrapTextInColorCode(string.format(L["%d |4favorite:favorites; imported%s."], result, suffix)));
-        DB:Set("filters.slotId", -1);
+        if (result > 0) then
+            local suffix = overwrite and L[" (overwritten)"] or "";
+            print(YELLOW_FONT_COLOR:WrapTextInColorCode(string.format(L["%d |4favorite:favorites; imported%s."], result, suffix)));
+            DB:Set("filters.slotId", -1);
+        else
+            print(YELLOW_FONT_COLOR:WrapTextInColorCode(L["All items are already in your favorites."]));
+        end
     else
         print(YELLOW_FONT_COLOR:WrapTextInColorCode(string.format(L["Import failed - %s"], tostring(result))));
     end
@@ -89,7 +94,7 @@ StaticPopupDialogs.KEYSTONELOOT_EXPORT = {
 };
 
 StaticPopupDialogs.KEYSTONELOOT_IMPORT = {
-    text = L["Import favorites for %s\nPaste import string here:"],
+    text = L["Import favorites for %s\nPaste import string here:"] .. "\n\n" .. L["Merge keeps your existing favorites and only adds new items. Overwrite replaces all of them."],
     button1 = L["Merge"],
     button2 = L["Overwrite"],
     button3 = CANCEL,
@@ -200,6 +205,31 @@ function KeystoneLootSettingsDropdownMixin:Init()
             function() DB:Set("settings.wideMode", not DB:Get("settings.wideMode")); end
         );
 
+        local rescanButton = rootDescription:CreateButton(L["Rescan bonus rolls"], function()
+            Voidcore:CheckAll(true);
+        end);
+        rescanButton:SetEnabled(UnitLevel("player") == 90);
+
+        local responseButton = rootDescription:CreateButton(L["Auto Keystone response"]);
+        responseButton:SetTooltip(function(tooltip)
+            GameTooltip_AddNormalLine(tooltip, L["Automatically responds with your current Mythic+ keystone when someone types \"!keys\" in the selected chat channels. Only works if other group members also have this addon."], true);
+        end);
+
+        responseButton:CreateCheckbox(
+            L["Enable party chat"],
+            function() return DB:Get("settings.keyCommand.CHAT_MSG_PARTY"); end,
+            function()
+                local responseToggle = not DB:Get("settings.keyCommand.CHAT_MSG_PARTY");
+                DB:Set("settings.keyCommand.CHAT_MSG_PARTY", responseToggle);
+                DB:Set("settings.keyCommand.CHAT_MSG_PARTY_LEADER", responseToggle);
+            end
+        );
+
+        responseButton:CreateCheckbox(
+            L["Enable guild chat"],
+            function() return DB:Get("settings.keyCommand.CHAT_MSG_GUILD"); end,
+            function() DB:Set("settings.keyCommand.CHAT_MSG_GUILD", not DB:Get("settings.keyCommand.CHAT_MSG_GUILD")); end
+        );
 
         local manageButton = rootDescription:CreateButton(L["Manage characters"]);
         local extent = 20;

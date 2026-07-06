@@ -73,8 +73,8 @@ function app:CreateSettings()
 	app.LinkCopiedFrame:Hide()
 
 	local text = app.LinkCopiedFrame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-	text:SetPoint("CENTER", app.LinkCopiedFrame, "CENTER", 0, 0)
-	text:SetPoint("TOP", app.LinkCopiedFrame, "TOP", 0, 0)
+	text:SetPoint("CENTER", app.LinkCopiedFrame, "CENTER")
+	text:SetPoint("TOP", app.LinkCopiedFrame, "TOP")
 	text:SetJustifyH("CENTER")
 	text:SetText(app.IconReady .. " " .. L.SETTINGS_URL_COPIED)
 
@@ -149,21 +149,21 @@ function app:CreateSettings()
 		frame:SetWidth(500)
 		frame:Hide()
 
-		local close = CreateFrame("Button", "", frame, "UIPanelCloseButton")
+		local close = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
 		close:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 2, 2)
 		close:SetScript("OnClick", function()
 			frame:Hide()
 		end)
 
 		local string1 = frame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-		string1:SetPoint("CENTER", frame, "CENTER", 0, 0)
+		string1:SetPoint("CENTER", frame, "CENTER")
 		string1:SetPoint("TOP", frame, "TOP", 0, -10)
 		string1:SetJustifyH("CENTER")
 		string1:SetText(L.WHISPER_POPUP_CUSTOMIZE)
 
 		local editBox = CreateFrame("EditBox", nil, frame, "InputBoxTemplate")
 		editBox:SetSize(460, 20)
-		editBox:SetPoint("CENTER", frame, "CENTER", 0, 0)
+		editBox:SetPoint("CENTER", frame, "CENTER")
 		editBox:SetPoint("TOP", frame, "TOP", 0, -30)
 		editBox:SetAutoFocus(false)
 		editBox:SetText(TransmogLootHelper_Settings["message"])
@@ -182,7 +182,7 @@ function app:CreateSettings()
 		border:SetBackdropBorderColor(0.25, 0.78, 0.92)
 
 		local string2 = frame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-		string2:SetPoint("CENTER", frame, "CENTER", 0, 0)
+		string2:SetPoint("CENTER", frame, "CENTER")
 		string2:SetPoint("TOP", frame, "TOP", 0, -60)
 		string2:SetJustifyH("CENTER")
 		string2:SetText("")
@@ -236,6 +236,8 @@ function app:CreateSettings()
 		self.LeftText:SetTextToFit(data.leftText)
 		self.MiddleText:SetTextToFit(data.middleText)
 		self.RightText:SetTextToFit(data.rightText)
+
+		SettingsPanel.Container.SettingsList.Header.Title:SetText(CreateSimpleTextureMarkup(app.Icon, 16, 16) .. " " .. app.NameLong)
 	end
 
 	TransmogLootHelper_SettingsExpandMixin = CreateFromMixins(SettingsExpandableSectionMixin)
@@ -408,6 +410,9 @@ function app:CreateSettings()
 		if C_AddOns.IsAddOnLoaded("Baganator") then
 			Baganator.API.RequestItemButtonsRefresh()
 		end
+		if C_AddOns.IsAddOnLoaded("Bagforge") and Bagforge.API then
+			Bagforge.API:RequestItemButtonsRefresh()
+		end
 	end
 
 	function app:UpdatePreviewItems()
@@ -462,7 +467,7 @@ function app:CreateSettings()
 		{ value = 3, name = L.SETTINGS_ICONPOS_BR, description = L.SETTINGS_ICONPOS_OVERLAP0 },
 	}, function() app:UpdatePreviewItems() end)
 
-	dropdown("iconStyle", L.SETTINGS_ICON_STYLE .. app.IconNew, L.SETTINGS_ICON_STYLE_DESC, 1, {
+	dropdown("iconStyle", L.SETTINGS_ICON_STYLE, L.SETTINGS_ICON_STYLE_DESC, 1, {
 		{ value = 1, name = L.SETTINGS_ICON_STYLE1, description = L.SETTINGS_ICON_STYLE1_DESC },
 		{ value = 2, name = L.SETTINGS_ICON_STYLE2, description = L.SETTINGS_ICON_STYLE2_DESC },
 		{ value = 3, name = L.SETTINGS_ICON_STYLE3, description = L.SETTINGS_ICON_STYLE3_DESC },

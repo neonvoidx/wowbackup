@@ -373,11 +373,32 @@ local function getCurrentExpansionRaidInstanceCache()
 	local expansionLevel = getCurrentExpansionLevel()
 	if not expansionLevel then return nil end
 	if CURRENT_EXPANSION_RAID_INSTANCE_CACHE and CURRENT_EXPANSION_RAID_INSTANCE_CACHE.expansionLevel == expansionLevel then return CURRENT_EXPANSION_RAID_INSTANCE_CACHE end
-	if not (EJ_SelectTier and EJ_GetInstanceByIndex) then return nil end
+	if not (EJ_SelectTier and EJ_GetInstanceByIndex and EJ_GetNumTiers and EJ_GetTierInfo) then
+		local isLoaded = (C_AddOns and C_AddOns.IsAddOnLoaded) or _G.IsAddOnLoaded
+		local loadAddOn = (C_AddOns and C_AddOns.LoadAddOn) or _G.UIParentLoadAddOn or _G.LoadAddOn
+		if isLoaded and loadAddOn and not isLoaded("Blizzard_EncounterJournal") then pcall(loadAddOn, "Blizzard_EncounterJournal") end
+	end
+	if not (EJ_SelectTier and EJ_GetInstanceByIndex and EJ_GetNumTiers and EJ_GetTierInfo) then return nil end
 
 	local cache = { expansionLevel = expansionLevel, instances = {}, maps = {} }
 	local previousTier = EJ_GetCurrentTier and EJ_GetCurrentTier() or nil
-	EJ_SelectTier(expansionLevel + 1)
+	local selectedTier
+	local tierCount = EJ_GetNumTiers and EJ_GetNumTiers() or nil
+	if issecretvalue and issecretvalue(tierCount) then tierCount = nil end
+	if type(tierCount) == "number" and tierCount > 0 then
+		local expansionName = _G["EXPANSION_NAME" .. expansionLevel]
+		if issecretvalue and issecretvalue(expansionName) then expansionName = nil end
+		if type(expansionName) == "string" and EJ_GetTierInfo then
+			for i = 1, tierCount do
+				if EJ_GetTierInfo(i) == expansionName then
+					selectedTier = i
+					break
+				end
+			end
+		end
+	end
+	if not selectedTier then return nil end
+	EJ_SelectTier(selectedTier)
 
 	local index = 1
 	while true do
@@ -1114,6 +1135,7 @@ local function applyRingStyle(inCombat)
 	ringFrame._eqolAppliedRingAlphaMultiplier = nil
 	ringFrame.texture1:SetSize(size, size)
 	ringFrame.texture1:SetVertexColor(r, g, b, a)
+	if ringFrame.dot then ringFrame.dot:SetVertexColor(r, g, b, a) end
 	updateProgressIndicatorLayout(ringFrame, size)
 
 	if combatActive and db["mouseRingCombatOverlay"] then

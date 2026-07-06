@@ -1,0 +1,87 @@
+# ArenaDR Nameplates
+
+ArenaDR Nameplates is a World of Warcraft addon for Midnight (`12.0.0+`) that copies Blizzard arena diminishing return tracking onto enemy nameplates.
+
+It mirrors Blizzard's arena DR tray data into its own nameplate-safe frames during arena matches and adds cleaner timer text, optional DR state text, configurable colors, and flexible placement controls.
+
+It can also mirror the enemy trinket cooldown on the same nameplate mapping, using a separate settings page so the extra icon stays optional.
+
+## Features
+
+- Shows arena DR icons on enemy nameplates during arena matches.
+- Optionally shows the enemy trinket cooldown on enemy nameplates during arena matches.
+- Uses a modular nameplate adapter layer, with Blizzard, Platynator, Plater, Threat Plates, and ElvUI support.
+- Keeps timer text centered and readable on each icon, with an option to hide it.
+- Optionally shows one decimal place below a configurable 1-20 second threshold (5 seconds by default) using WoW's native cooldown API.
+- Can either follow nameplate scale changes or keep DR icons at a fixed visual size.
+- Supports optional DR state text overlays with separate normal and immune colors.
+- Supports None, Solid, and Classic DR border styles with separate normal and immune border colors.
+- Lets you hide or show Blizzard's immunity badge.
+- Keeps the trinket icon disabled by default and configurable through its own tab, including None, Solid, and Classic border styles.
+- Includes placement presets plus advanced anchor point controls.
+- Includes a preview mode for nearby enemy nameplates.
+- Exports and imports setup strings for sharing layout, timer, trinket, and border settings.
+- Includes a standalone options window plus a Blizzard Settings launcher page.
+
+## Requirements
+
+- World of Warcraft Midnight (`12.0.0+`)
+- Blizzard arena frames and enemy nameplates enabled
+
+## Installation
+
+1. Place the addon folder at `Interface\AddOns\ArenaDRNameplates`.
+2. Start the game or run `/reload`.
+3. Open the addon settings with `/arenadr` or `/arenadr config`.
+4. You can also open the launcher entry from `Options -> AddOns -> Arena DR Nameplates`, then click `Open options window`.
+
+## Usage
+
+The addon activates in arena and mirrors Blizzard's DR tray into its own nameplate frames when a matching arena unit can be resolved.
+
+If enabled, the addon also mirrors Blizzard's enemy trinket source frame onto the same resolved nameplate target, with independent size, opacity, border, and placement settings.
+
+If Platynator is loaded, the addon automatically anchors to Platynator's live health bar widget instead of Blizzard's hidden unit frame.
+If Plater is active, the addon anchors to Plater's custom health bar, and falls back to Plater's visible name text when the health bar is hidden.
+If Threat Plates is active for the plate, the addon uses Threat Plates' exported anchor helper so headline and healthbar modes both resolve correctly.
+If ElvUI nameplates are active, the addon anchors to ElvUI's `Health` status bar instead of the full ElvUI plate.
+
+Preview mode shows randomized sample DR trays on nearby hostile nameplates. Preview does not persist across reloads or zone changes and stops automatically during those transitions.
+
+## Slash Commands
+
+- `/arenadr` opens the standalone options window
+- `/arenadr config` opens the standalone options window
+- `/arenadr test`
+- `/arenadr reset`
+- `/arenadr scale <value>`
+- `/arenadr share` opens the Share tab
+- `/arenadr export` generates the current setup string
+- `/arenadr import <export string>` imports a shared setup
+
+## Settings Overview
+
+- `General`: preview, reset, icon display, nameplate scaling behavior, placement presets, advanced anchor controls
+- `Trinket`: optional enemy trinket icon, visibility mode, appearance, border, and placement
+- `Timers`: swipe toggle, edge highlight, timer text and decimal toggles, color, size, and offsets
+- `DR Text`: toggle, anchor, scale, offsets, normal color, immune color
+- `Borders`: border width, normal and immune colors, Blizzard immunity badge toggle
+- `Share`: export and import setup strings for sharing settings between players
+
+## Saved Variables
+
+- `ArenaDRNameplatesDB`
+
+## Addon Files
+
+- `Adapters/Registry.lua`: adapter registry and shared helper functions for nameplate integrations.
+- `Adapters/Blizzard.lua`: default Blizzard nameplate adapter.
+- `Adapters/Plater.lua`: Plater nameplate adapter.
+- `Adapters/Platynator.lua`: Platynator nameplate adapter.
+- `Adapters/ThreatPlates.lua`: Threat Plates nameplate adapter.
+- `Adapters/ElvUI.lua`: ElvUI nameplate adapter.
+- `ArenaNameplateHelper.lua`: maps `arena1-3` units to visible enemy nameplates and exposes anchor helpers/callbacks.
+- `Core.lua`: runtime behavior, live tray anchoring, preview mode, slash commands, and saved variable defaults.
+- `Settings.lua`: initializes the standalone options workflow after login.
+- `UI/StandaloneOptions.lua`: standalone options window, launcher entry, and option widgets.
+

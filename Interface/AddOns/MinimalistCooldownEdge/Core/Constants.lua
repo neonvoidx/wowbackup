@@ -1,0 +1,558 @@
+local addonName, addon = ...
+local addonPath = "Interface\\AddOns\\" .. addonName
+
+addon.Constants = addon.Constants or {}
+local C = addon.Constants
+
+C.Addon = {
+    Name = addonName,
+    AceName = "MinimalistCooldownEdge",
+    ShortName = "MiniCE",
+    SavedVariables = "MinimalistCooldownEdgeDB_v2",
+    CooldownManagerCenteredName = "CooldownManagerCentered",
+    HealerCCName = "HealerCC",
+    MiniCCName = "MiniCC",
+    DominosName = "Dominos",
+    DominosCastName = "Dominos_Cast",
+    DominosConfigName = "Dominos_Config",
+    Bartender4Name = "Bartender4",
+    SArenaName = "sArena_Reloaded",
+    TellMeWhenName = "TellMeWhen",
+    ShinyAurasName = "ShinyAuras",
+    MUIName = "mUI",
+    BetterBlizzFramesName = "BetterBlizzFrames",
+    VersionFallback = "Dev",
+    SlashCommands = { "mce", "minice", "minimalistcooldownedge" },
+}
+
+C.Assets = {
+    Root = addonPath,
+    Icon = addonPath .. "\\Assets\\Textures\\MinimalistCooldownEdge",
+}
+
+C.Categories = {
+    Actionbar = "actionbar",
+    Nameplate = "nameplate",
+    Unitframe = "unitframe",
+    PlayerAura = "playeraura",
+    CooldownManager = "cooldownmanager",
+    HealerCC = "healercc",
+    MiniCC = "minicc",
+    SArena = "sarena",
+    TellMeWhen = "tellmewhen",
+    PartyRaidRetired = "partyRaidRetired",
+}
+
+C.CooldownManagerViewers = {
+    Essential = "essential",
+    Utility = "utility",
+    BuffIcon = "bufficon",
+}
+
+C.PlayerAuraTypes = {
+    Buff = "buff",
+    Debuff = "debuff",
+    ExternalDefensiveBuffs = "externalDefensiveBuffs",
+}
+
+C.MiniCCFrameTypes = {
+    CC = "cc",
+    EnemyCD = "enemycd",
+    FriendlyCD = "friendlycd",
+    Nameplate = "nameplate",
+    Portrait = "portrait",
+    Overlay = "overlay",
+}
+
+C.SArenaFrameTypes = {
+    ClassIcon = "classicon",
+    DR = "dr",
+    Trinket = "trinket",
+    Racial = "racial",
+}
+
+C.Chat = {
+    Prefix = "|cff00ccffMiniCE|r",
+}
+
+C.Options = {
+    SliderDebounceDelay = 0.15,
+    FrameWidth = 900,
+    FrameHeight = 600,
+    TreeWidth = 210,
+    DefaultAbbrevThreshold = 90,
+    DefaultMillisecondsThreshold = 0,
+}
+
+C.Style = {
+    Fonts = {
+        GameDefault = "GAMEDEFAULT",
+        FrizQuadrata = "Fonts\\FRIZQT__.TTF",
+        FrizQuadrataCyrillic = "Fonts\\FRIZQT___CYR.TTF",
+        ArialNarrow = "Fonts\\ARIALN.TTF",
+        Morpheus = "Fonts\\MORPHEUS.TTF",
+        Skurri = "Fonts\\skurri.ttf",
+        TwoThousandTwo = "Fonts\\2002.TTF",
+        Expressway = addonPath .. "\\Assets\\Fonts\\expressway.ttf",
+        Bazooka = addonPath .. "\\Assets\\Fonts\\bazooka_regular.ttf",
+    },
+    FontStyles = {
+        None = "NONE",
+        Outline = "OUTLINE",
+        ThickOutline = "THICKOUTLINE",
+        Monochrome = "MONOCHROME",
+    },
+    Anchors = {
+        Center = "CENTER",
+        Top = "TOP",
+        Bottom = "BOTTOM",
+        Left = "LEFT",
+        Right = "RIGHT",
+        TopLeft = "TOPLEFT",
+        TopRight = "TOPRIGHT",
+        BottomLeft = "BOTTOMLEFT",
+        BottomRight = "BOTTOMRIGHT",
+    },
+    Layers = {
+        Overlay = "OVERLAY",
+    },
+}
+
+C.FontOptionsBase = {
+    [C.Style.Fonts.GameDefault] = "Game Default",
+    [C.Style.Fonts.FrizQuadrata] = "Friz Quadrata",
+    [C.Style.Fonts.FrizQuadrataCyrillic] = "Friz Quadrata (Cyrillic)",
+    [C.Style.Fonts.ArialNarrow] = "Arial Narrow",
+    [C.Style.Fonts.Morpheus] = "Morpheus",
+    [C.Style.Fonts.Skurri] = "Skurri",
+    [C.Style.Fonts.TwoThousandTwo] = "2002",
+    [C.Style.Fonts.Expressway] = "Expressway",
+    [C.Style.Fonts.Bazooka] = "Bazooka",
+}
+
+C.Colors = {
+    Highlight = { r = 1, g = 0.8, b = 0, a = 1 },
+    White = { r = 1, g = 1, b = 1, a = 1 },
+    Gray = { r = 0.67, g = 0.67, b = 0.67, a = 1 },
+    Danger = { r = 1, g = 0, b = 0, a = 1 },
+}
+
+C.Defaults = {
+    AllowThresholdColorsByCategory = {
+        [C.Categories.Actionbar] = true,
+        [C.Categories.Nameplate] = false,
+        [C.Categories.Unitframe] = true,
+        [C.Categories.PlayerAura] = false,
+        [C.Categories.CooldownManager] = false,
+        [C.Categories.HealerCC] = false,
+        [C.Categories.MiniCC] = false,
+        [C.Categories.SArena] = false,
+        [C.Categories.TellMeWhen] = false,
+    },
+    Category = {
+        Font = C.Style.Fonts.GameDefault,
+        FontSize = 18,
+        FontStyle = C.Style.FontStyles.Outline,
+        TextColor = C.Colors.Highlight,
+        TextAnchor = C.Style.Anchors.Center,
+        TextOffsetX = 0,
+        TextOffsetY = 0,
+        HideCountdownNumbers = false,
+        AuraCdTextOnlyMine = false,
+        DrawSwipe = true,
+        EdgeEnabled = true,
+        EdgeScale = 1.4,
+        StackEnabled = true,
+        HideStackText = false,
+        StackFont = C.Style.Fonts.GameDefault,
+        StackSize = 16,
+        StackStyle = C.Style.FontStyles.Outline,
+        StackColor = C.Colors.White,
+        StackAnchor = C.Style.Anchors.BottomRight,
+        StackOffsetX = -3,
+        StackOffsetY = 3,
+    },
+    Actionbar = {
+        HideChargeTimers = true,
+        ReverseSwipe = false,
+        SwipeAlpha = 80,
+    },
+    Nameplate = {
+        FontSize = 12,
+        StackSize = 8,
+        StackAnchor = C.Style.Anchors.BottomRight,
+        StackOffsetX = 0,
+        StackOffsetY = 0,
+    },
+    Unitframe = {
+        stackEnabled = false,
+        StackSize = 10,
+        StackAnchor = C.Style.Anchors.BottomRight,
+        StackOffsetX = 0,
+        StackOffsetY = 0,
+    },
+    PlayerAura = {
+        DisableFading = false,
+        ReverseSwipe = true,
+        SwipeAlpha = 80,
+        TimerInsideIcon = false,
+    },
+    CooldownManager = {
+        EssentialFontSize = 18,
+        UtilityFontSize = 18,
+        BuffIconFontSize = 18,
+        EssentialStackSize = 16,
+        UtilityStackSize = 16,
+        BuffIconStackSize = 16,
+        AuraColorEnabled = true,
+        AuraColor = C.Colors.Highlight,
+    },
+    MiniCC = {
+        CCFontSize = 18,
+        CCHideCountdownNumbers = false,
+        CCHideSwipe = false,
+        EnemyCDFontSize = 18,
+        EnemyCDHideCountdownNumbers = false,
+        EnemyCDHideSwipe = false,
+        FriendlyCDFontSize = 18,
+        FriendlyCDHideCountdownNumbers = false,
+        FriendlyCDHideSwipe = false,
+        NameplateFontSize = 12,
+        NameplateHideCountdownNumbers = false,
+        NameplateHideSwipe = false,
+        PortraitFontSize = 18,
+        PortraitHideCountdownNumbers = false,
+        PortraitHideSwipe = false,
+        OverlayFontSize = 18,
+        OverlayHideCountdownNumbers = false,
+        OverlayHideSwipe = false,
+        HealerWarningTextColor = { r = 1, g = 0.1, b = 0.1, a = 1 },
+    },
+    SArena = {
+        ClassIconFontSize = 18,
+        DRFontSize = 18,
+        TrinketRacialFontSize = 18,
+    },
+    TellMeWhen = {
+        FontSize = 18,
+    },
+    DurationTextColors = {
+        Enabled = false,
+        Offset = 0,
+        Thresholds = {
+            { threshold = 5, color = C.Colors.Danger },
+            { threshold = 60, color = C.Colors.Highlight },
+            { threshold = 300, color = C.Colors.White },
+        },
+        DefaultColor = C.Colors.Gray,
+    },
+}
+
+C.Urls = {
+    CurseForge = "https://www.curseforge.com/wow/addons/minice-cooldown-styler",
+    Developer = "https://www.curseforge.com/members/anahkas/projects",
+    MiniCC = "https://www.curseforge.com/wow/addons/minicc",
+    RaidFrameAuras = "https://www.curseforge.com/wow/addons/raid-party-frame-auras",
+    ArenaDRNameplates = "https://www.curseforge.com/wow/addons/arena-dr-nameplates",
+    TellMeWhen = "https://www.curseforge.com/wow/addons/tellmewhen",
+    SmartPvPTabTargeting = "https://www.curseforge.com/wow/addons/pvp-tab-targeting",
+}
+
+C.ImportExport = {
+    Prefix = "MCE1",
+    Base64Alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
+    ImportPattern = "^(%w+):([CN]):(.+)$",
+    CompressionMode = {
+        Compressed = "C",
+        None = "N",
+    },
+}
+
+C.ImportExport.Base64Lookup = {}
+for i = 1, #C.ImportExport.Base64Alphabet do
+    local character = C.ImportExport.Base64Alphabet:sub(i, i)
+    C.ImportExport.Base64Lookup[character] = i - 1
+end
+
+C.Classifier = {
+    ScanDepth = 10,
+    NameplateObjectType = "NamePlate",
+    MiniCCNamePrefix = "MiniCC_",
+    TellMeWhenNamePrefix = "TellMeWhen_",
+    IgnoreActionbarPattern = "Aura",
+    BlacklistNameContains = {
+        "Glider", "VuhDo",
+        "ElvUI", "ElvUF", "ElvNP", "elvnp", "Elv_", "ElvAB_", "Tukui",
+        "Gw2_","GW2", "Gw2", "GW2_", "Gw_", "GW_",
+        "ArenaDrNP_",
+        "FloatingChatFrame", "ChatFrame",
+
+        -- Blizzard UIs with cooldown widgets that MiniCE never styles
+        "SpellFlyoutButton",
+        "ContainerFrame",
+        "MailItem",
+        "SendMailAttachment",
+        "OpenMailAttachmentButton",
+        "OpenMailLetterButton",
+        "OpenMailMoneyButton",
+        "GuildBank",
+        "VoidStorage",
+        "ReagentBank",
+        "CompactPartyFrame",
+        "CompactRaidFrame",
+
+        -- Dominos
+        "Dominos",
+
+        -- Bartender4
+        "BT4", "Bartender4",
+
+        -- Explicit addon blacklists
+        "Platynator",
+        "Masque", "Masque_Caith",
+        "ShadowUF", "ShadowedUF", "SUF",
+        "Cell",
+        "AbilityTimeline",
+        "BattleGroundEnemies",
+        "MidnightDR", "MidnightDR_", "MDR_",
+        "NaowhQOL_",
+        "RaidFrameAuras",
+        "RFA_",
+        "TrGCD", "trgcd",
+
+        -- EllesmereUI family
+        "Ellesmere",
+        "EUI_",
+        "ERB_",
+        "EABR_",
+
+        -- Nameplate GCD Tracker
+        "NGCDT",
+    },
+    BlacklistParentNames = {
+        "Tukui", "Glider", "VuhDo",
+        "ElvUI", "ElvUF", "ElvNP",
+        "PVEFrame", "PVPQueueFrame",
+        "LFDQueueFrameRandomCooldownFrame",
+        "LossOfControlFrame",
+        "ContainerFrameCombinedBagsCooldown",
+        "HousingDashboardFrame", "TotemFrame",
+        "PlayerFrameBottomManagedFramesContainer",
+
+        -- Blizzard inventory / bank / mail roots
+        "ContainerFrame1",
+        "ContainerFrame2",
+        "ContainerFrame3",
+        "ContainerFrame4",
+        "ContainerFrame5",
+        "ContainerFrame6",
+        "ContainerFrameCombinedBags",
+        "BankFrame",
+        "BankPanel",
+        "ReagentBankFrame",
+        "GuildBankFrame",
+        "VoidStorageFrame",
+        "MailFrame",
+
+        -- Blizzard inspect paper doll slots
+        "InspectPaperDollFrame",
+        "InspectBackSlot",
+        "InspectChestSlot",
+        "InspectFeetSlot",
+        "InspectFinger0Slot",
+        "InspectFinger1Slot",
+        "InspectHandsSlot",
+        "InspectHeadSlot",
+        "InspectLegsSlot",
+        "InspectMainHandSlot",
+        "InspectNeckSlot",
+        "InspectSecondaryHandSlot",
+        "InspectShoulderSlot",
+        "InspectShirtSlot",
+        "InspectTabardSlot",
+        "InspectTrinket0Slot",
+        "InspectTrinket1Slot",
+        "InspectWaistSlot",
+        "InspectWristSlot",
+
+        -- Explicit addon roots / containers
+        "LibDBIcon10_Masque",
+        "SUFWrapperFrame",
+        "CellParent",
+        "CellMainFrame",
+        "CellAnchorFrame",
+        "CellMenuFrame",
+        "CellOptionsFrame",
+        "CellTooltip",
+        "AbilityTimelineBigIconFrame",
+        "AtSpellIconSettingsFrame",
+        "BattleGroundEnemies",
+        "BGEAllies",
+        "BGEEnemies",
+        "MidnightDR",
+        "MidnightDRFrame",
+        "NaowhQOL_Dragonriding",
+        "NaowhQOL_MovementAlert",
+        "TrGCDBLScroll",
+        "TrGCDItemBLScroll",
+        "TrGCDActiveProfileSelect",
+        "TrGCDframeConfirmDelete",
+
+        -- EllesmereUI containers / roots
+        "EllesmereUIFrame",
+        "EllesmereUnlockMode",
+        "EllesmereUIPartyModeFrame",
+        "EllesmereUICursorFrame",
+        "EUI_QuestTrackerFrame",
+        "EllesmereUIResourceBarsFrame",
+        "ERB_CastBarFrame",
+        "ERB_SecondaryFrame",
+        "EABR_Reminders",
+        "EABR_Anchor",
+        "EABR_CombatAnchor",
+        "EABR_CursorAnchor",
+        "EABR_TalentAnchor",
+        "EABR_BeaconAnchor",
+        "EllesmereUIUnitFrames_Player",
+        "EllesmereUIUnitFrames_Target",
+        "EllesmereUIUnitFrames_Focus",
+        "EllesmereUIUnitFrames_Pet",
+        "EllesmereUIUnitFrames_TargetTarget",
+        "EllesmereUIUnitFrames_FocusTarget",
+        "EllesmereUIUnitFrames_Boss1",
+        "EllesmereUIUnitFrames_Boss2",
+        "EllesmereUIUnitFrames_Boss3",
+        "EllesmereUIUnitFrames_Boss4",
+        "EllesmereUIUnitFrames_Boss5",
+        "EllesmereUIUnitFrames_Boss6",
+        "EllesmereUIUnitFrames_Boss7",
+        "EllesmereUIUnitFrames_Boss8",
+
+        "CharacterBackSlot",
+        "CharacterShirtSlot",
+        "CharacterMainHandSlot",
+        "CharacterLegsSlot",
+        "CharacterFinger0Slot",
+        "CharacterHeadSlot",
+        "CharacterFeetSlot",
+        "CharacterShoulderSlot",
+        "CharacterWristSlot",
+        "CharacterHandsSlot",
+        "CharacterTabardSlot",
+        "CharacterSecondaryHandSlot",
+        "CharacterFinger1Slot",
+        "CharacterWaistSlot",
+        "CharacterChestSlot",
+        "CharacterNeckSlot",
+        "CharacterTrinket1Slot",
+        "CharacterTrinket0Slot",
+    },
+    NameplatePatterns = { "nameplate", "plater", "kui", "threatplate" },
+    UnitFramePatterns = {
+        "PlayerFrame", "TargetFrame", "FocusFrame", "PetFrame",
+        "SUF", "CompactPartyFrame", "CompactRaidFrame",
+        "Grid", "Plexus", "Cell", "TPerl",
+    },
+    AuraButtonPatterns = { "BuffButton", "DebuffButton", "TempEnchant" },
+    ActionbarPatterns = { "Action", "MultiBar", "BT4", "Dominos" },
+    CooldownManagerViewerPatterns = {
+        Essential = "EssentialCooldownViewer",
+        Utility = "UtilityCooldownViewer",
+        BuffIcon = "BuffIconCooldownViewer",
+    },
+}
+
+C.Adapter = {
+    ActionBars = {
+        BlizzardFamilies = {
+            { prefix = "ActionButton", count = 12 },
+            { prefix = "MultiBarBottomLeftButton", count = 12 },
+            { prefix = "MultiBarBottomRightButton", count = 12 },
+            { prefix = "MultiBarRightButton", count = 12 },
+            { prefix = "MultiBarLeftButton", count = 12 },
+            { prefix = "MultiBar5Button", count = 12 },
+            { prefix = "MultiBar6Button", count = 12 },
+            { prefix = "MultiBar7Button", count = 12 },
+        },
+        ThirdPartyPrefixes = {},
+        ThirdPartyMaxIndex = 180,
+        CooldownKeys = { "cooldown", "Cooldown" },
+        ChargeCooldownKeys = { "chargeCooldown", "ChargeCooldown" },
+    },
+    Bartender4 = {
+        AddonName = "Bartender4",
+        ButtonPrefix = "BT4Button",
+        MaxButtonIndex = 180,
+    },
+    Dominos = {
+        ButtonPrefixes = {
+            "DominosActionButton",
+            "MultiBarRightActionButton",
+            "MultiBarLeftActionButton",
+            "MultiBarBottomRightActionButton",
+            "MultiBarBottomLeftActionButton",
+            "MultiBar5ActionButton",
+            "MultiBar6ActionButton",
+            "MultiBar7ActionButton",
+        },
+        MaxAncestorDepth = 4,
+    },
+    Nameplates = {
+        MaxAncestorDepth = 4,
+    },
+    UnitFrames = {
+        BlizzardRoots = { "PlayerFrame", "TargetFrame", "FocusFrame", "PetFrame" },
+        ThirdPartyPatterns = { "SUF", "TPerl" },
+        MaxAncestorDepth = 5,
+    },
+    CooldownManager = {
+        MaxAncestorDepth = 6,
+    },
+    HealerCC = {
+        ContainerDepth = 3,
+        FriendlyAnchorName = "HealerCCAnchor",
+        EnemyAnchorName = "HealerCCEnemyAnchor",
+        FriendlyContainerPattern = "^HealerCCIcon%d+Container$",
+        EnemyContainerPattern = "^HealerCCEnemyIcon%d+Container$",
+        FriendlyCooldownPattern = "^HealerCCIcon%d+Cooldown$",
+        EnemyCooldownPattern = "^HealerCCEnemyIcon%d+Cooldown$",
+    },
+    MiniCC = {
+        -- Hierarchy depth is fixed at 3 hops (Cooldown→Layer→Slot→Container)
+        -- and resolved directly; no depth constants are needed here.
+    },
+    SArena = {
+        MaxArenaOpponents = 5,
+        MaxAncestorDepth = 4,
+    },
+    TellMeWhen = {
+        DomainKeys = { "profile", "global" },
+        CooldownNameFragment = "IconModule_CooldownSweepCooldown",
+    },
+    ShinyAuras = {
+        RootFrameName = "ShinyAurasFrame",
+        MaxScanDepth = 4,
+    },
+}
+
+C.Styler = {
+    CooldownLifecycleEvents = {
+        OnShow = "OnShow",
+        OnHide = "OnHide",
+        OnDone = "OnCooldownDone",
+    },
+    CooldownMemberKeys = { "cooldown", "Cooldown", "chargeCooldown", "ChargeCooldown" },
+    MaxCooldownOwnerScanDepth = 10,
+    DefaultSwipeAlpha = 80,
+    AlphaPercentMin = 0,
+    AlphaPercentMax = 100,
+    NumericComparisonEpsilon = 0.001,
+    DurationCacheSweepThreshold = 10,
+    DurationColorTickerInterval = 0.5,
+    AuraRetryMinInterval = 0.25,
+    CooldownTextLayer = C.Style.Layers.Overlay,
+    CooldownTextSubLevel = 7,
+    ActionbarTextFrameLevelOffset = 1,
+    StackTextLayer = C.Style.Layers.Overlay,
+    StackTextSubLevel = 7,
+}

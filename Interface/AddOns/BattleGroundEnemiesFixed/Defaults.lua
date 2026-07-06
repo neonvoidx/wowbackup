@@ -9,7 +9,7 @@ local allieDefaults15man = {
   Position_X = 300,
   Position_Y = 600,
   BarWidth = 185,
-  BarHeight = 35,
+  BarHeight = 32,
   BarVerticalGrowdirection = "downwards",
   BarVerticalSpacing = 2,
   BarColumns = 1,
@@ -198,10 +198,10 @@ local allieDefaults15man = {
       UseButtonHeightAsWidth = true,
       UseButtonHeightAsHeight = true,
       Cooldown = {
-        FontSize = 12,
+        FontSize = 15,
       },
       Text = {
-        FontSize = 17,
+        FontSize = 15,
         JustifyH = "CENTER",
         JustifyV = "MIDDLE",
       },
@@ -222,7 +222,7 @@ local enemyDefault15man = {
   Position_X = 900,
   Position_Y = 600,
   BarWidth = 185,
-  BarHeight = 35,
+  BarHeight = 32,
   BarVerticalGrowdirection = "downwards",
   BarVerticalSpacing = 2,
   BarColumns = 1,
@@ -411,10 +411,10 @@ local enemyDefault15man = {
       UseButtonHeightAsWidth = true,
       UseButtonHeightAsHeight = true,
       Cooldown = {
-        FontSize = 12,
+        FontSize = 15,
       },
       Text = {
-        FontSize = 17,
+        FontSize = 15,
         JustifyH = "CENTER",
         JustifyV = "MIDDLE",
       },
@@ -474,6 +474,8 @@ Data.defaultSettings = {
       FontOutline = "",
       EnableShadow = true,
       ShadowColor = { 0, 0, 0, 0.8 },
+      ShadowOffsetX = 1,
+      ShadowOffsetY = -1,
     },
 
     RBG = {
@@ -706,10 +708,10 @@ Data.defaultSettings = {
               UseButtonHeightAsWidth = true,
               UseButtonHeightAsHeight = true,
               Cooldown = {
-                FontSize = 12,
+                FontSize = 15,
               },
               Text = {
-                FontSize = 17,
+                FontSize = 15,
                 JustifyH = "CENTER",
                 JustifyV = "MIDDLE",
               },
@@ -923,10 +925,10 @@ Data.defaultSettings = {
               UseButtonHeightAsWidth = true,
               UseButtonHeightAsHeight = true,
               Cooldown = {
-                FontSize = 12,
+                FontSize = 15,
               },
               Text = {
-                FontSize = 17,
+                FontSize = 15,
                 JustifyH = "CENTER",
                 JustifyV = "MIDDLE",
               },
@@ -1165,10 +1167,10 @@ Data.defaultSettings = {
               UseButtonHeightAsWidth = true,
               UseButtonHeightAsHeight = true,
               Cooldown = {
-                FontSize = 12,
+                FontSize = 15,
               },
               Text = {
-                FontSize = 17,
+                FontSize = 15,
                 JustifyH = "CENTER",
                 JustifyV = "MIDDLE",
               },
@@ -1380,10 +1382,10 @@ Data.defaultSettings = {
               UseButtonHeightAsWidth = true,
               UseButtonHeightAsHeight = true,
               Cooldown = {
-                FontSize = 12,
+                FontSize = 15,
               },
               Text = {
-                FontSize = 17,
+                FontSize = 15,
                 JustifyH = "CENTER",
                 JustifyV = "MIDDLE",
               },

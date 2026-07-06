@@ -1,13 +1,15 @@
 
 KeystoneLootCharDB = {
+["voidcore"] = {
+[193708] = true,
+},
 ["ui"] = {
 ["selectedCharacterKey"] = "Tichondrius-Stormclout-10",
 ["selectedTab"] = "dungeons",
 ["selectedRaidTab"] = 1307,
 },
-["version"] = 2,
-["voidcore"] = {
-},
+["voidcoreChecked"] = true,
+["version"] = 3,
 ["filters"] = {
 ["dungeon"] = {
 ["track"] = "champion",

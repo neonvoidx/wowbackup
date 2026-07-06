@@ -9,6 +9,10 @@ MyslotExports = {
 ["name"] = "DH",
 ["value"] = "# Myslot (https://myslot.net <- share your profile here)\r\n# Wow Version: 12.0.1\r\n# Addon Version: v5.25.2\r\n# Time: Sat Apr  4 14:19:45 2026\r\n# Player: Starphage\r\n# Class: Demon Hunter\r\n# Specialization: Devourer\r\n# Talents: CgcBG5bbocFKcv+yIq8fPd6ORBA2mxMzMzMzMGmBAAAAAAgxsNYGAAAAAAAAmxMMmZmZmZmZGzsYGjFtsxMzMzWLzMzAYYAIwMGMmB\r\n# Level: 90\r\n# \r\n# Feedback  farmer1992@gmail.com\r\n# --------------------\r\nKlYEFnblAqBwKnoJU3RhcnBoYWdl\r\n# --------------------\r\n# END OF MYSLOT",
 },
+{
+["name"] = "Default",
+["value"] = "",
+},
 },
 ["backups"] = {
 },

@@ -16,6 +16,8 @@ local LSM = LibStub("LibSharedMedia-3.0", true)
 local EditMode = addon.EditMode
 local SettingType = EditMode and EditMode.lib and EditMode.lib.SettingType
 
+_G["BINDING_NAME_CLICK EQOLFocusMarkerButton:LeftButton"] = L["groupToolsFocusMarker"] or "Focus marker macro"
+
 local UIParent = UIParent
 local math = math
 local pairs = pairs
@@ -108,6 +110,8 @@ local DB = {
 
 	focusMarkerEnabled = "groupToolsFocusMarkerEnabled",
 	focusMarker = "groupToolsFocusMarkerIcon",
+	focusMarkerPreserveExisting = "groupToolsFocusMarkerPreserveExisting",
+	focusMarkerUseMouseover = "groupToolsFocusMarkerUseMouseover",
 	focusMarkerAnnounce = "groupToolsFocusMarkerAnnounce",
 	focusMarkerMessage = "groupToolsFocusMarkerMessage",
 }
@@ -1000,7 +1004,7 @@ function FocusMarker:EnsureWatcherFrame()
 end
 
 function FocusMarker:UpdateWatcherEvents()
-	local enabled = self:IsEnabled()
+	local enabled = self:IsEnabled() or self.pendingMacroUpdate == true or self.pendingButtonUpdate == true
 	if not enabled and not self.watcherFrame then return end
 	local frame = self:EnsureWatcherFrame()
 	if enabled then
@@ -1043,12 +1047,61 @@ function FocusMarker:GetMacroName()
 	return "EQOLFocusMarker"
 end
 
+function FocusMarker:ShouldPreserveExistingMarker()
+	return addon.db and addon.db[DB.focusMarkerPreserveExisting] == true
+end
+
+function FocusMarker:ShouldUseMouseover()
+	return not (addon.db and addon.db[DB.focusMarkerUseMouseover] == false)
+end
+
+function FocusMarker:GetMarkerArgument()
+	local marker = tostring(self:GetMarker())
+	if self:ShouldPreserveExistingMarker() then marker = "~" .. marker end
+	return marker
+end
+
 function FocusMarker:GetMacroBody()
-	return ("/focus [@mouseover,harm,nodead][]\n/tm [@mouseover,harm,nodead][] %d"):format(self:GetMarker())
+	local marker = self:GetMarkerArgument()
+	if self:ShouldUseMouseover() then
+		return ("/focus [@mouseover,harm,nodead][]\n/tm [@mouseover,harm,nodead][] %s"):format(marker)
+	end
+	return ("/focus\n/tm %s"):format(marker)
+end
+
+function FocusMarker:EnsureButton()
+	local btn = _G.EQOLFocusMarkerButton
+	if not btn then btn = CreateFrame("Button", "EQOLFocusMarkerButton", UIParent, "SecureActionButtonTemplate") end
+	btn:RegisterForClicks("AnyDown")
+	btn:SetAttribute("type1", "macro")
+	btn:SetAttribute("type", "macro")
+	btn:SetAttribute("pressAndHoldAction", true)
+	self.button = btn
+	return btn
+end
+
+function FocusMarker:UpdateButton(showErrors)
+	if InCombatLockdown and InCombatLockdown() then
+		self.pendingButtonUpdate = true
+		if showErrors and UIErrorsFrame then UIErrorsFrame:AddMessage(locale("groupToolsFocusMarkerMacroCombat", "Focus marker macro updates after combat."), 1, 0, 0) end
+		return false
+	end
+
+	local btn = self:EnsureButton()
+	local body = self:IsEnabled() and self:GetMacroBody() or ""
+	btn:SetAttribute("type1", "macro")
+	btn:SetAttribute("type", "macro")
+	btn:SetAttribute("macrotext1", body)
+	btn:SetAttribute("macrotext", body)
+	self.pendingButtonUpdate = nil
+	return true
 end
 
 function FocusMarker:WriteMacro(showErrors)
-	if not self:IsEnabled() then return false end
+	if not self:IsEnabled() then
+		self.pendingMacroUpdate = nil
+		return false
+	end
 	if InCombatLockdown and InCombatLockdown() then
 		self.pendingMacroUpdate = true
 		if showErrors and UIErrorsFrame then UIErrorsFrame:AddMessage(locale("groupToolsFocusMarkerMacroCombat", "Focus marker macro updates after combat."), 1, 0, 0) end
@@ -1101,15 +1154,20 @@ function FocusMarker:OnEvent(_, event)
 	if event == "READY_CHECK" then
 		self:Announce()
 	elseif event == "PLAYER_REGEN_ENABLED" then
+		if self.pendingButtonUpdate then self:UpdateButton(false) end
 		if self.pendingMacroUpdate then self:WriteMacro(false) end
+		self:UpdateWatcherEvents()
 	else
+		self:UpdateButton(false)
 		self:WriteMacro(false)
 	end
 end
 
 function FocusMarker:OnSettingChanged(updateMacro)
+	self:UpdateButton(false)
 	self:UpdateWatcherEvents()
 	if updateMacro ~= false then self:WriteMacro(false) end
+	self:UpdateWatcherEvents()
 end
 
 local function applyHealerSetting(field, value)
@@ -1208,6 +1266,10 @@ local function applyFocusSetting(field, value)
 		local marker = tonumber(value) or 5
 		if marker < 1 or marker > 8 then marker = 5 end
 		setDB(DB.focusMarker, marker)
+	elseif field == "preserveExisting" then
+		setDB(DB.focusMarkerPreserveExisting, value == true)
+	elseif field == "useMouseover" then
+		setDB(DB.focusMarkerUseMouseover, value ~= false)
 	elseif field == "announce" then
 		setDB(DB.focusMarkerAnnounce, value == true)
 	elseif field == "message" then
@@ -1549,6 +1611,8 @@ function GroupTools.functions.InitDB()
 
 	initDBValue(DB.focusMarkerEnabled, false)
 	initDBValue(DB.focusMarker, 5)
+	initDBValue(DB.focusMarkerPreserveExisting, false)
+	initDBValue(DB.focusMarkerUseMouseover, true)
 	initDBValue(DB.focusMarkerAnnounce, true)
 	initDBValue(DB.focusMarkerMessage, "")
 end
@@ -1557,7 +1621,7 @@ function GroupTools.functions.InitState()
 	if HealerMana:IsEnabled() then HealerMana:OnSettingChanged() end
 	if DeathAlert:IsEnabled() then DeathAlert:OnSettingChanged() end
 	if NoTarget:IsEnabled() then NoTarget:OnSettingChanged() end
-	if FocusMarker:IsEnabled() then FocusMarker:OnSettingChanged(false) end
+	FocusMarker:OnSettingChanged(false)
 end
 
 function GroupTools.functions.SetFeatureEnabled(feature, enabled)

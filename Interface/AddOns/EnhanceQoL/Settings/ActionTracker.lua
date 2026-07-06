@@ -116,6 +116,7 @@ local ignorelist = {
 	[441426] = true, -- Exterminate cleave
 	[441437] = true, -- Arachnophobia
 	[456640] = true, -- Consuming Fire fake cast
+	[467455] = true, -- Fake action tracker cast
 	[455706] = true, -- Profession DNT
 	[455701] = true, -- Profession Engineering
 	[455773] = true, -- Profession DNT
@@ -171,6 +172,13 @@ function addon.functions.initActionTracker()
 	addon.functions.InitDBValue("actionTrackerDirection", defaults.direction or "RIGHT")
 	addon.functions.InitDBValue("actionTrackerFadeDuration", defaults.fadeDuration or 0)
 	addon.functions.InitDBValue("actionTrackerShowElapsed", defaults.showElapsed or false)
+	addon.functions.InitDBValue("actionTrackerShowGCDGaps", defaults.showGCDGaps or false)
+	if addon.db["actionTrackerShowInterruptedCasts"] == nil and addon.db["actionTrackerShowFailedCasts"] ~= nil then
+		addon.db["actionTrackerShowInterruptedCasts"] = addon.db["actionTrackerShowFailedCasts"] == true
+	end
+	addon.functions.InitDBValue("actionTrackerShowInterruptedCasts", defaults.showInterruptedCasts or false)
+	addon.functions.InitDBValue("actionTrackerIconShape", defaults.iconShape or "DEFAULT")
+	addon.functions.InitDBValue("actionTrackerIconZoom", defaults.iconZoom or 0)
 	addon.functions.InitDBValue("actionTrackerBorderEnabled", defaults.borderEnabled == true)
 	addon.functions.InitDBValue("actionTrackerBorderTexture", defaults.borderTexture or "DEFAULT")
 	addon.functions.InitDBValue("actionTrackerBorderColor", defaults.borderColor or { r = 1, g = 1, b = 1, a = 1 })

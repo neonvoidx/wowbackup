@@ -12,6 +12,10 @@ local BLINK_TICK = 1 / 30
 local HOLD_FRACTION = 0.1
 local MAX_HOLD = 0.12
 
+local function canReadAuraData()
+	return not addon.AuraCompat or addon.AuraCompat:CanReadAuraData()
+end
+
 local PET_SPECS = {
 	[252] = true, -- Unholy DK
 	[253] = true, -- Hunter: Beast Mastery
@@ -89,6 +93,7 @@ local function isWarlockSacrificePetReminderSuppressed()
 	if IsPlayerSpell and IsPlayerSpell(GRIMOIRE_OF_SACRIFICE_SPELL_ID) == true then return true end
 	if InCombatLockdown and InCombatLockdown() then return false end
 	if UnitAffectingCombat and UnitAffectingCombat("player") then return false end
+	if not canReadAuraData() then return false end
 	if C_UnitAuras and C_UnitAuras.GetPlayerAuraBySpellID and C_UnitAuras.GetPlayerAuraBySpellID(GRIMOIRE_OF_SACRIFICE_BUFF_ID) then return true end
 	if AuraUtil and AuraUtil.FindAuraBySpellID and AuraUtil.FindAuraBySpellID(GRIMOIRE_OF_SACRIFICE_BUFF_ID, "player", "HELPFUL") then return true end
 	return false

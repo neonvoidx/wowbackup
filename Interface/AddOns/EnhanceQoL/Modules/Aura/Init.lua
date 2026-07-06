@@ -14,49 +14,6 @@ function addon.Aura.functions.InitDB()
 	if not addon.db or not addon.functions or not addon.functions.InitDBValue then return end
 	local init = addon.functions.InitDBValue
 
-	-- resource bar defaults
-	init("enableResourceFrame", false)
-	init("resourceBarsHideOutOfCombat", false)
-	init("resourceBarsHideMounted", false)
-	init("resourceBarsHideVehicle", false)
-	init("resourceBarsHidePetBattle", false)
-	init("resourceBarsHideClientScene", true)
-	if addon.db.resourceBarsHidePetBattle == nil and addon.db.auraHideInPetBattle ~= nil then addon.db.resourceBarsHidePetBattle = addon.db.auraHideInPetBattle and true or false end
-
-	-- spec specific settings for personal resource bars
-	init("personalResourceBarSettings", {})
-
-	init("cooldownPanels", {
-		version = 1,
-		panels = {},
-		order = {},
-		selectedPanel = nil,
-		defaults = {
-			layout = {
-				iconSize = 36,
-				spacing = 2,
-				direction = "RIGHT",
-				wrapCount = 0,
-				wrapDirection = "DOWN",
-				strata = "MEDIUM",
-			},
-			entry = {
-				alwaysShow = true,
-				showCooldown = true,
-				showCooldownText = true,
-				showCharges = false,
-				showStacks = false,
-				glowReady = false,
-				glowDuration = 0,
-			},
-		},
-	})
-	init("cooldownPanelsEditorPoint", "CENTER")
-	init("cooldownPanelsEditorX", 0)
-	init("cooldownPanelsEditorY", 0)
-	addon.db["_cooldownPanelsDebugLog"] = nil
-	addon.db["debugCooldownPanelsSession"] = nil
-
 	init("standalonePrivateAuras", {
 		version = 1,
 		enabled = false,
@@ -126,6 +83,4 @@ function addon.Aura.functions.InitDB()
 		},
 		strata = "HIGH",
 	})
-
-	if addon.Aura and addon.Aura.CooldownPanels and addon.Aura.CooldownPanels.NormalizeAll then addon.Aura.CooldownPanels:NormalizeAll() end
 end

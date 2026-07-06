@@ -1,19 +1,22 @@
 
 KeystoneLootCharDB = {
+["voidcore"] = {
+},
 ["ui"] = {
 ["selectedCharacterKey"] = "Tichondrius-Manyfaced-4",
 ["selectedTab"] = "dungeons",
 ["selectedRaidTab"] = 1307,
 },
-["voidcore"] = {
-},
-["version"] = 2,
+["voidcoreChecked"] = true,
+["version"] = 3,
 ["filters"] = {
 ["dungeon"] = {
 ["track"] = "champion",
 ["rank"] = 1,
 },
-["specId"] = 0,
+["specId"] = 260,
+["slotIds"] = {
+},
 ["classId"] = 4,
 ["slotId"] = 0,
 ["raid"] = {

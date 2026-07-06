@@ -1,0 +1,31 @@
+## Interface: 120007, 120005, 120001, 120000
+## Title: Overachiever2
+## Version: 0.9.39
+## Author: z3moon (Based on Tuhljin's Overachiever)
+## Notes: Tools and tweaks to make Seeking achievements easier. (Modernized for 12.0.1)
+## SavedVariables: Overachiever2_Settings
+## SavedVariablesPerCharacter: Overachiever2_CharSettings
+
+# Core Files
+Init.lua
+Compat.lua
+Utils.lua
+Localization.lua
+DBNpc.lua
+DBItem.lua
+DBMeta.lua
+DBZone.lua
+Scanner.lua
+AchSearch.lua
+Options.lua
+SessionState.lua
+History.lua
+CopyURLDialog.lua
+Core.lua
+Tooltips.lua
+ChatLinkClick.lua
+ContextMenu.lua
+
+# Testing (can be removed in production)
+TEST_AchSearch.lua
+TEST_DBNpc.lua

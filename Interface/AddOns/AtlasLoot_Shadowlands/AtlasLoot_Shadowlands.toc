@@ -1,4 +1,4 @@
-## Interface: 120005
+## Interface: 120007
 
 ## Title: AtlasLoot |cFF0099FF[Shadowlands]|r
 ## Title-zhTW: AtlasLoot |cFF0099FF[暗影之境]|r
@@ -7,7 +7,7 @@
 ## Notes-zhTW: AtlasLoot 暗影之境資料片物品掉落資料庫
 
 ## Author: nanderson11, Arith
-## Version: v9.22.6
+## Version: v9.22.10
 ## Group: AtlasLoot
 ## IconTexture: Interface\Icons\INV_Box_01
 ## Dependencies: AtlasLoot

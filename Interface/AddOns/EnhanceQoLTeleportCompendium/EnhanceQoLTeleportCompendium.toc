@@ -1,0 +1,23 @@
+## Interface: 120007, 120100
+## Title: Enhance QoL Teleport Compendium
+## Author: R41Z0R
+## Version: 11.6.0
+## Notes: Teleport compendium, dungeon teleports, and random hearthstone helpers
+## Notes-deDE: Teleport-Kompendium, Dungeon-Teleporte und zufaellige Ruhestein-Helfer
+## Notes-esES: Compendio de teletransporte, teletransportes de mazmorra y piedra de hogar aleatoria
+## Notes-esMX: Compendio de teletransporte, teletransportes de calabozo y piedra de hogar aleatoria
+## Notes-frFR: Compendium de teleportation, teleportations de donjon et pierre de foyer aleatoire
+## Notes-itIT: Compendio teletrasporti, teletrasporti spedizione e Pietra del Ritorno casuale
+## Notes-koKR: 순간이동 도감, 던전 순간이동 및 무작위 귀환석 도우미
+## Notes-ptBR: Compendio de teleportes, teleportes de masmorra e Pedra de Regresso aleatoria
+## Notes-ruRU: Список телепортов, телепорты подземелий и случайный камень возвращения
+## Notes-zhCN: 传送大全、地下城传送和随机炉石辅助
+## Notes-zhTW: 傳送大全、地城傳送與隨機爐石輔助
+## Dependencies: EnhanceQoL
+## IconTexture: Interface\AddOns\EnhanceQoL\Icons\Icon.tga
+## Retail: true
+## X-Compatible-With: retail
+## LoadOnDemand: 1
+## Globe-Main: EnhanceQoL
+
+TeleportCompendium.xml

@@ -17,6 +17,20 @@ VER 3 0000000000000240 " " "INV_Misc_QuestionMark"
 #showtooltip 13
 /use 13
 END
+VER 3 0000000000000275 " " "1385294"
+#plumber:drawer
+#/use item:259085
+#/use item:245880
+#/use item:241334
+#/use item:241325
+#/use item:241321
+#/use item:243733
+#/use item:132514
+#/use item:235704
+/click PLMR1
+END
+VER 3 0000000000000276 " " "618976"
+END
 VER 3 0000000000000243 " Clear" "1016706"
 /clearfocus
 END
@@ -53,7 +67,6 @@ END
 VER 3 000000000000024E "EnhanceQoLHealthMacro" "INV_Misc_QuestionMark"
 #showtooltip
 /cast [nocombat] Recuperate
-/castsequence [combat] reset=combat item:224464, item:241304
 END
 VER 3 000000000000024F "FOCUS" "132284"
 /focus [@mouseover,nodead,exists]; [@target,exists]
@@ -66,7 +79,7 @@ VER 3 0000000000000250 "ItemOnWeap" "INV_Misc_QuestionMark"
 END
 VER 3 0000000000000249 "Plumber Housing Macro" "7252953"
 #plumber:home
-/click PLMR1
+/click PLMR2
 END
 VER 3 0000000000000251 "Pull" "1713482"
 /pull 10

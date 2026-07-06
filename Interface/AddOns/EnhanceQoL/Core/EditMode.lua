@@ -19,6 +19,11 @@ local POSITION_FIELDS = {
 	y = true,
 }
 
+local function snapToPixel(value, region)
+	if addon.PixelUtil and addon.PixelUtil.Snap then return addon.PixelUtil.Snap(value, region) end
+	return tonumber(value) or 0
+end
+
 local function usesStoredPosition(entry) return not (entry and entry.persistPosition == false) end
 
 local function getSelection(lib, frame)
@@ -430,6 +435,74 @@ function EditMode:SetFramePosition(id, point, x, y, layoutName, skipApply, relat
 	if not skipApply then self:ApplyLayout(id, layoutName) end
 end
 
+function EditMode:CalculateUIParentAnchor(frame, nudgeX, nudgeY)
+	if not (frame and frame.GetCenter and UIParent and UIParent.GetCenter) then return nil end
+	local centerX, centerY = UIParent:GetCenter()
+	local uiRight = UIParent.GetRight and UIParent:GetRight() or 0
+	local uiTop = UIParent.GetTop and UIParent:GetTop() or 0
+	local frameX, frameY = frame:GetCenter()
+	if not (frameX and frameY and centerX and centerY) then return nil end
+
+	local point = "BOTTOM"
+	local y
+	if frameY >= centerY then
+		point = "TOP"
+		y = -((uiTop or 0) - ((frame.GetTop and frame:GetTop()) or frameY))
+	else
+		y = (frame.GetBottom and frame:GetBottom()) or frameY
+	end
+
+	local x
+	if frameX >= ((uiRight or 0) * 2 / 3) then
+		point = point .. "RIGHT"
+		x = ((frame.GetRight and frame:GetRight()) or frameX) - (uiRight or 0)
+	elseif frameX <= ((uiRight or 0) / 3) then
+		point = point .. "LEFT"
+		x = (frame.GetLeft and frame:GetLeft()) or frameX
+	else
+		x = frameX - centerX
+	end
+
+	x = snapToPixel((x or 0) + (nudgeX or 0), UIParent)
+	y = snapToPixel((y or 0) + (nudgeY or 0), UIParent)
+	return point, point, x, y
+end
+
+function EditMode:NormalizePositionData(id, data, options)
+	local entry = type(id) == "table" and id or self.frames[id]
+	if not (entry and entry.frame and type(data) == "table") then return data end
+	options = type(options) == "table" and options or {}
+	local relativeTo = resolveRelativeFrame(entry)
+	if relativeTo ~= UIParent then return data end
+
+	local point = data.point or (entry.defaults and entry.defaults.point) or "CENTER"
+	local relativePoint = data.relativePoint or point
+	if options.preserveCenter ~= false and point == "CENTER" and relativePoint == "CENTER" then
+		data.point = "CENTER"
+		data.relativePoint = "CENTER"
+		data.x = snapToPixel(data.x or 0, UIParent)
+		data.y = snapToPixel(data.y or 0, UIParent)
+		return data
+	end
+
+	if options.quadrantAnchor ~= false then
+		local newPoint, newRelativePoint, x, y = self:CalculateUIParentAnchor(entry.frame)
+		if newPoint then
+			data.point = newPoint
+			data.relativePoint = newRelativePoint or newPoint
+			data.x = x
+			data.y = y
+			return data
+		end
+	end
+
+	data.point = point
+	data.relativePoint = relativePoint
+	data.x = snapToPixel(data.x or 0, UIParent)
+	data.y = snapToPixel(data.y or 0, UIParent)
+	return data
+end
+
 function EditMode:SetValue(id, field, value, layoutName, skipApply)
 	local data = self:EnsureLayoutData(id, layoutName)
 	if not data then return end
@@ -674,6 +747,8 @@ function EditMode:RegisterFrame(id, opts)
 		isEnabled = opts.isEnabled,
 		managePosition = opts.managePosition,
 		persistPosition = opts.persistPosition,
+		normalizePosition = opts.normalizePosition,
+		normalizePositionOptions = opts.normalizePositionOptions,
 		relativeTo = opts.relativeTo,
 		showOutsideEditMode = not not opts.showOutsideEditMode,
 		onApply = opts.onApply,
@@ -718,7 +793,12 @@ function EditMode:RegisterFrame(id, opts)
 				if currentPoint == point and currentRelativePoint then relativePoint = currentRelativePoint end
 			end
 			self:SetFramePosition(id, point, x, y, layoutName, true, relativePoint)
-			if opts.onPositionChanged then opts.onPositionChanged(frame, layoutName, self:EnsureLayoutData(id, layoutName)) end
+			local data = self:EnsureLayoutData(id, layoutName)
+			if entry.normalizePosition then
+				data = self:NormalizePositionData(entry, data, entry.normalizePositionOptions)
+				if usesStoredPosition(entry) and data then self:_writeStoredPosition(id, entry, data.point, data.relativePoint, data.x, data.y) end
+			end
+			if opts.onPositionChanged then opts.onPositionChanged(frame, layoutName, data) end
 			self:ApplyLayout(id, layoutName)
 		end, defaultPosition)
 

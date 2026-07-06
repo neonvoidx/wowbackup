@@ -1,22 +1,10 @@
-lightweight tag e6f9ced06f8f9c81f850163d91e0b17e5efce438 12.0.5-04
+lightweight tag b6989062dfd9077efd5b10b6c15c216c5b1a2b4a 12.1.0
 Author:	Dave Hendler <sollaires@gmail.com>
-Date:	Tue May 12 21:02:49 2026 -0700
+Date:	Sun Jul 5 19:22:46 2026 -0700
 
-commit e6f9ced06f8f9c81f850163d91e0b17e5efce438
+commit b6989062dfd9077efd5b10b6c15c216c5b1a2b4a
 Author: Dave Hendler <sollaires@gmail.com>
-Date:   Tue May 12 21:02:49 2026 -0700
+Date:   Sun Jul 5 19:22:46 2026 -0700
 
-    Bump version
-
-commit 56b539479ece25b8a782c5acdd262ed12fc8a77c
-Author: Dave Hendler <sollaires@gmail.com>
-Date:   Tue May 12 21:02:34 2026 -0700
-
-    Ensure pipes are un-doubled to match the checksum to what goes into the clipboard
-
-commit 559422dfe30b49d2464c37fc94645d0a1fab9d3e
-Author: Dave Hendler <sollaires@gmail.com>
-Date:   Tue May 12 20:33:30 2026 -0700
-
-    Bump version
+    Export all bonus rolls, release for 12.1.0
 

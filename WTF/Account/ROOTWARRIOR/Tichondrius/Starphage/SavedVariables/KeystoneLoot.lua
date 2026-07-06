@@ -1,19 +1,20 @@
 
 KeystoneLootCharDB = {
+["voidcore"] = {
+},
 ["ui"] = {
 ["selectedCharacterKey"] = "Tichondrius-Starphage-12",
 ["selectedTab"] = "dungeons",
 ["selectedRaidTab"] = 1307,
 },
-["voidcore"] = {
-},
-["version"] = 2,
+["voidcoreChecked"] = true,
+["version"] = 3,
 ["filters"] = {
 ["dungeon"] = {
 ["track"] = "hero",
 ["rank"] = 3,
 },
-["specId"] = 581,
+["specId"] = 1480,
 ["classId"] = 12,
 ["slotId"] = -1,
 ["raid"] = {

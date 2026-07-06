@@ -7,8 +7,140 @@ local _, addon = ...
 local L = addon.L;
 local changelogs = addon.ControlCenter.changelogs;
 
+changelogs[10903] = {
+	{
+		type = "date",
+		versionText = "1.9.3 c",
+		timestamp = 1783000000,
+	},
+
+	{
+		type = "p",
+		bullet = true,
+		text = "Teleport Home Macro: Fix an issue where the macro stopped working if your house data wasn't fully received during the initial login. Special thanks to foxlit for pointing out the issue.",
+	},
+
+	{
+		type = "p",
+		bullet = true,
+		text = "Expansion Summary UI: When the Plumber minimap button is enabled, WoW's minimap button for Omnium Folio should no longer appear after completing a related quest.",
+	},
+
+	{
+		type = "br",
+	},
+	{
+		type = "br",
+	},
+
+	{
+		type = "date",
+		versionText = "1.9.3 b",
+		timestamp = 1782700000,
+	},
+
+	{
+		type = "h1",
+		text = L["ModuleName Housing_HouseList"],
+		dbKey = "Housing_HouseList",
+	},
+
+	{
+		type = "Checkbox",
+		dbKey = "Housing_HouseList",
+	},
+
+	{
+		type = "p",
+		text = "Improve the House List UI.",
+	},
+
+	{
+		type = "p",
+		bullet = true,
+		text = "Indicate the house's faction with an image on the right.",
+	},
+
+	{
+		type = "p",
+		bullet = true,
+		text = "Show both Visit House buttons if the player has two houses.",
+	},
+
+	{
+		type = "img",
+		fileName = "Changelog_Housing_HouseList",
+		canvasWidth = 512,
+		canvasHeight = 256,
+		imageRight = 394,
+	},
+
+	{
+		type = "br",
+	},
+
+	{
+		type = "h1",
+		text = MISCELLANEOUS,
+	},
+
+	{
+		type = "p",
+		bullet = true,
+		text = "Plumber House List: Fixed an issue that prohibited you from clicking Copy Character Name if the View Houses button was also shown on the same context menu.",
+	},
+
+	{
+		type = "p",
+		bullet = true,
+		text = "Drawer Macro: Fixed an issue where the Summon Pet buttons didn't work if the text language was set to Spanish.",
+	},
+
+	{
+		type = "p",
+		bullet = true,
+		text = "Expansion Summary UI: If you have enabled the minimap button, it will display a notification when you have unclaimed Paragon reward chests.",
+	},
+
+	{
+		type = "p",
+		bullet = true,
+		text = "Expansion Summary UI: Added Field Accolade to the Resources List and Sporefall to the Raids Tab.",
+	},
+};
+
 
 changelogs[10902] = {
+	{
+		type = "date",
+		versionText = "1.9.2 f",
+		timestamp = 1781900000,
+	},
+
+	{
+		type = "p",
+		bullet = true,
+		text = "The Omnium Folio section in Plumber's Expansion Summary UI now stands out more when you have unselected traits.",
+	},
+
+	{
+		type = "p",
+		bullet = true,
+		text = "Reverted a recent change to the text outline rendering method due to compatibility issues.",
+	},
+	{
+		type = "p",
+		bullet = 2,
+		text = "Note: While the switch to Slug rendering provided sharper outlines, it caused rendering problems with certain fonts.",
+	},
+
+	{
+		type = "br",
+	},
+	{
+		type = "br",
+	},
+
 	{
 		type = "date",
 		versionText = "1.9.2 d-e",
@@ -132,12 +264,6 @@ changelogs[10902] = {
 		type = "p",
 		bullet = true,
 		text = "Expansion Summary UI: Added Nebulous Voidcore (bonus rolls) to the resource list.",
-	},
-
-	{
-		type = "p",
-		bullet = true,
-		text = "Text Outline: Implemented Slug text rendering for certain Plumber fonts, which improves legibility and sharpness when text is displayed at smaller scales.",
 	},
 
 	{

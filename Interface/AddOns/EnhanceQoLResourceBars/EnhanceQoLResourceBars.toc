@@ -1,0 +1,23 @@
+## Interface: 120007, 120100
+## Title: Enhance QoL Resource Bars
+## Author: R41Z0R
+## Version: 11.6.0
+## Notes: Custom health, power and class resource bars
+## Notes-deDE: Eigene Gesundheits-, Ressourcen- und Klassenleisten
+## Notes-esES: Barras personalizadas de salud, poder y recursos de clase
+## Notes-esMX: Barras personalizadas de salud, poder y recursos de clase
+## Notes-frFR: Barres personnalisees de sante, puissance et ressources de classe
+## Notes-itIT: Barre personalizzate per salute, potere e risorse di classe
+## Notes-koKR: 생명력, 자원 및 직업 자원 바를 사용자 지정합니다
+## Notes-ptBR: Barras personalizadas de vida, poder e recursos de classe
+## Notes-ruRU: Пользовательские полосы здоровья, ресурсов и классовых ресурсов
+## Notes-zhCN: 自定义生命值、能量和职业资源条
+## Notes-zhTW: 自訂生命值、能量與職業資源列
+## Dependencies: EnhanceQoL
+## IconTexture: Interface\AddOns\EnhanceQoL\Icons\Icon.tga
+## Retail: true
+## X-Compatible-With: retail
+## LoadOnDemand: 1
+## Globe-Main: EnhanceQoL
+
+ResourceBars.xml

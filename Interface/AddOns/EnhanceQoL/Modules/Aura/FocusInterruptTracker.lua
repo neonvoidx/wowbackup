@@ -100,6 +100,14 @@ local CLASS_INTERRUPT_SPELLS = {
 	WARRIOR = { 6552 },
 }
 
+local ALL_INTERRUPT_SPELLS = {}
+for _, spellList in pairs(CLASS_INTERRUPT_SPELLS) do
+	for i = 1, #spellList do
+		local spellId = tonumber(spellList[i])
+		if spellId then ALL_INTERRUPT_SPELLS[spellId] = true end
+	end
+end
+
 local AUTO_ANCHOR_OPTIONS = {
 	{
 		value = "AUTO",
@@ -343,6 +351,7 @@ local function getBorderOptions()
 end
 
 local function isEQOLFocusEnabled()
+	if addon.functions and addon.functions.IsEQoLUnitFrameEnabled then return addon.functions.IsEQoLUnitFrameEnabled("focus") end
 	local frames = addon.db and addon.db.ufFrames
 	local focus = frames and frames.focus
 	return focus and focus.enabled == true or false
@@ -472,6 +481,49 @@ function Tracker:BuildLayoutRecordFromProfile()
 	}
 end
 
+local function colorKey(color)
+	if type(color) ~= "table" then return "" end
+	return tostring(color[1] or color.r or "") .. ":" .. tostring(color[2] or color.g or "") .. ":" .. tostring(color[3] or color.b or "") .. ":" .. tostring(color[4] or color.a or "")
+end
+
+local function buildLayoutKey(cfg)
+	if type(cfg) ~= "table" then return "" end
+	local anchor = cfg.anchor or defaults.anchor
+	local background = cfg.background or defaults.background
+	local border = cfg.border or defaults.border
+	local fontVersion = addon.functions and addon.functions.GetGlobalFontStateVersion and addon.functions.GetGlobalFontStateVersion() or 0
+	return table.concat({
+		tostring(anchor.point),
+		tostring(anchor.relativePoint),
+		tostring(anchor.relativeFrame),
+		tostring(anchor.x),
+		tostring(anchor.y),
+		tostring(cfg.strata),
+		tostring(cfg.displayMode),
+		tostring(cfg.text),
+		tostring(cfg.textFont),
+		tostring(cfg.textSize),
+		tostring(cfg.textOutline),
+		colorKey(cfg.textColor),
+		tostring(cfg.iconSize),
+		tostring(cfg.customIcon),
+		tostring(background.enabled),
+		colorKey(background.color),
+		tostring(border.enabled),
+		tostring(border.texture),
+		tostring(border.size),
+		tostring(border.offset),
+		colorKey(border.color),
+		tostring(fontVersion),
+		tostring(state.interruptSpellId or ""),
+	}, "|")
+end
+
+function Tracker:InvalidateLayout()
+	state.layoutKey = nil
+	state.layoutDirty = true
+end
+
 local function seedEditModeRecordFromProfile(record)
 	if type(record) ~= "table" then return end
 	local source = Tracker:BuildLayoutRecordFromProfile()
@@ -588,9 +640,14 @@ local function buildInterruptCandidates(classTag, specId)
 	return copyValue(CLASS_INTERRUPT_SPELLS[classTag] or {})
 end
 
-function Tracker:ResolveInterruptSpell()
+function Tracker:RebuildInterruptSpellCache()
 	local classTag = select(2, UnitClass("player"))
-	if type(classTag) ~= "string" or classTag == "" then return nil end
+	if type(classTag) ~= "string" or classTag == "" then
+		state.interruptSpellCacheKey = nil
+		state.interruptSpellCacheDirty = false
+		state.interruptSpellId = nil
+		return nil
+	end
 
 	local specId
 	if GetSpecialization and GetSpecializationInfo then
@@ -598,18 +655,58 @@ function Tracker:ResolveInterruptSpell()
 		if specIndex then specId = GetSpecializationInfo(specIndex) end
 	end
 
+	local cacheKey = tostring(classTag) .. ":" .. tostring(specId or "")
 	local candidates = buildInterruptCandidates(classTag, specId)
 	for i = 1, #candidates do
 		local spellId = tonumber(candidates[i])
-		if spellId and IsSpellKnown(spellId, true) then return spellId end
+		if spellId and IsSpellKnown(spellId, true) then
+			state.interruptSpellCacheKey = cacheKey
+			state.interruptSpellCacheDirty = false
+			state.interruptSpellId = spellId
+			return spellId
+		end
 	end
 
+	state.interruptSpellCacheKey = cacheKey
+	state.interruptSpellCacheDirty = false
+	state.interruptSpellId = nil
 	return nil
 end
 
+function Tracker:ResolveInterruptSpell()
+	if state.interruptSpellCacheDirty == true or state.interruptSpellCacheKey == nil then return self:RebuildInterruptSpellCache() end
+	return state.interruptSpellId
+end
+
+function Tracker:InvalidateInterruptSpellCache()
+	state.interruptSpellCacheKey = nil
+	state.interruptSpellCacheDirty = true
+	state.interruptSpellId = nil
+	self:InvalidateLayout()
+end
+
+function Tracker:RefreshInterruptSpellCache()
+	self:InvalidateInterruptSpellCache()
+	return self:RebuildInterruptSpellCache()
+end
+
+function Tracker:IsInterruptSpell(spellId)
+	spellId = tonumber(spellId)
+	return spellId and ALL_INTERRUPT_SPELLS[spellId] == true or false
+end
+
 function Tracker:GetTrackedSpellCooldown()
-	local spellId = self:ResolveInterruptSpell()
+	local spellId = state.interruptSpellId
+	if state.interruptSpellCacheDirty == true or state.interruptSpellCacheKey == nil then spellId = self:RebuildInterruptSpellCache() end
 	if not spellId then return nil end
+	local cooldown = querySpellCooldown(spellId)
+	cooldown.spellId = spellId
+	return cooldown
+end
+
+function Tracker:GetInterruptSpellCooldown(spellId)
+	spellId = tonumber(spellId)
+	if not self:IsInterruptSpell(spellId) then return nil end
 	local cooldown = querySpellCooldown(spellId)
 	cooldown.spellId = spellId
 	return cooldown
@@ -622,6 +719,10 @@ function Tracker:IsTrackedSpellReady(cooldown)
 	return true
 end
 
+function Tracker:IsInterruptSpellReady(spellId)
+	return self:IsTrackedSpellReady(self:GetInterruptSpellCooldown(spellId))
+end
+
 function Tracker:HasHostileFocus()
 	if not UnitExists or UnitExists("focus") ~= true then return false end
 	if UnitCanAttack then return UnitCanAttack("player", "focus") == true end
@@ -629,10 +730,19 @@ function Tracker:HasHostileFocus()
 	return true
 end
 
-function Tracker:GetFocusInterruptibleCast()
-	if not self:HasHostileFocus() then return nil end
+function Tracker:HasHostileUnit(unit)
+	unit = unit or "focus"
+	if not UnitExists or UnitExists(unit) ~= true then return false end
+	if UnitCanAttack then return UnitCanAttack("player", unit) == true end
+	if UnitIsFriend then return UnitIsFriend("player", unit) ~= true end
+	return true
+end
 
-	local name, _, _, _, _, _, castId, notInterruptible, spellId = UnitCastingInfo("focus")
+function Tracker:GetUnitInterruptibleCast(unit)
+	unit = unit or "focus"
+	if not self:HasHostileUnit(unit) then return nil end
+
+	local name, _, _, _, _, _, castId, notInterruptible, spellId = UnitCastingInfo(unit)
 	if name then
 		return {
 			hasCast = true,
@@ -642,7 +752,7 @@ function Tracker:GetFocusInterruptibleCast()
 		}
 	end
 
-	name, _, _, _, _, _, notInterruptible, spellId = UnitChannelInfo("focus")
+	name, _, _, _, _, _, notInterruptible, spellId = UnitChannelInfo(unit)
 	if name then
 		return {
 			hasCast = true,
@@ -652,6 +762,14 @@ function Tracker:GetFocusInterruptibleCast()
 	end
 
 	return nil
+end
+
+function Tracker:GetFocusInterruptibleCast()
+	return self:GetUnitInterruptibleCast("focus")
+end
+
+function Tracker:GetTargetInterruptibleCast()
+	return self:GetUnitInterruptibleCast("target")
 end
 
 function Tracker:ResolveDisplayIcon(spellId)
@@ -821,6 +939,17 @@ function Tracker:ApplyLayoutData(data)
 		frame.bg:Hide()
 	end
 	frame.editBg:SetShown(state.previewing == true)
+	state.layoutKey = buildLayoutKey(cfg)
+	state.layoutDirty = false
+end
+
+function Tracker:EnsureLayoutApplied()
+	local frame = state.frame
+	if not frame then return end
+	local cfg = self:GetConfig()
+	local key = buildLayoutKey(cfg)
+	if state.layoutDirty ~= true and state.layoutKey == key then return end
+	self:ApplyLayoutData()
 end
 
 local function refreshEditModeFrame()
@@ -907,8 +1036,13 @@ function Tracker:Refresh()
 		return
 	end
 
+	if state.previewing ~= true and not self:HasHostileFocus() then
+		if state.frame then state.frame:Hide() end
+		return
+	end
+
 	local frame = self:EnsureFrame()
-	self:ApplyLayoutData(self:BuildLayoutRecordFromProfile())
+	self:EnsureLayoutApplied()
 
 	local cooldown = self:GetTrackedSpellCooldown()
 	local spellReady = self:IsTrackedSpellReady(cooldown)
@@ -960,7 +1094,7 @@ function Tracker:ShowEditModeHint(show)
 	end
 
 	local frame = self:EnsureFrame()
-	self:ApplyLayoutData(self:BuildLayoutRecordFromProfile())
+	self:EnsureLayoutApplied()
 	frame.editBg:SetShown(state.previewing == true)
 	if state.previewing then
 		frame:SetAlpha(1)
@@ -984,8 +1118,9 @@ function Tracker:EnsureEventFrame()
 		end
 
 		if event == "SPELL_UPDATE_COOLDOWN" then
+			if not Tracker:HasHostileFocus() then return end
 			local spellID, baseSpellID = ...
-			local trackedSpellID = Tracker:ResolveInterruptSpell()
+			local trackedSpellID = state.interruptSpellId
 			if not trackedSpellID then
 				Tracker:Refresh()
 				return
@@ -1000,6 +1135,7 @@ function Tracker:EnsureEventFrame()
 		if event == "ADDON_LOADED" then
 			local loadedAddon = ...
 			if not EXTERNAL_ANCHOR_ADDONS[loadedAddon] then return end
+			Tracker:InvalidateLayout()
 			Tracker:Refresh()
 			return
 		end
@@ -1007,6 +1143,7 @@ function Tracker:EnsureEventFrame()
 		if event == "PLAYER_SPECIALIZATION_CHANGED" or event == "UNIT_PET" then
 			local unit = ...
 			if unit ~= nil and unit ~= "player" then return end
+			Tracker:RefreshInterruptSpellCache()
 			Tracker:Refresh()
 			return
 		end
@@ -1014,6 +1151,7 @@ function Tracker:EnsureEventFrame()
 		if event == "SPELLS_CHANGED" or event == "PLAYER_FOCUS_CHANGED"
 			or event == "PLAYER_ENTERING_WORLD" or event == "PLAYER_TALENT_UPDATE" or event == "ACTIVE_PLAYER_SPECIALIZATION_CHANGED"
 			or event == "ACTIVE_TALENT_GROUP_CHANGED" or event == "TRAIT_CONFIG_UPDATED" then
+			if event ~= "PLAYER_FOCUS_CHANGED" then Tracker:RefreshInterruptSpellCache() end
 			Tracker:Refresh()
 			return
 		end
@@ -1034,7 +1172,7 @@ function Tracker:RegisterEvents()
 	frame:RegisterEvent("PLAYER_FOCUS_CHANGED")
 	frame:RegisterEvent("SPELL_UPDATE_COOLDOWN")
 	frame:RegisterEvent("SPELLS_CHANGED")
-	frame:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
+	frame:RegisterUnitEvent("PLAYER_SPECIALIZATION_CHANGED", "player")
 	frame:RegisterEvent("PLAYER_TALENT_UPDATE")
 	frame:RegisterEvent("ACTIVE_PLAYER_SPECIALIZATION_CHANGED")
 	frame:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
@@ -1472,6 +1610,8 @@ function Tracker:OnSettingChanged(enabled)
 
 	if cfg.enabled then
 		self:EnsureFrame()
+		self:InvalidateLayout()
+		self:RefreshInterruptSpellCache()
 		self:RegisterEditMode()
 		self:RegisterEvents()
 		self:Refresh()

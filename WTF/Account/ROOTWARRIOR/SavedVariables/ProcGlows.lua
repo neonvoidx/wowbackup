@@ -79,17 +79,6 @@ muleyoProcGlowDB = {
 },
 },
 ["ROGUE"] = {
-["13750"] = {
-["useDefaultColor"] = true,
-["glowType"] = "Default",
-["color"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-["procSound"] = "None",
-["glowCooldownManager"] = false,
-},
 ["271877"] = {
 ["useDefaultColor"] = true,
 ["glowType"] = "Default",

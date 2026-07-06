@@ -31,12 +31,16 @@ local function RegisterEnabledSounds()
 	end
 end
 
-local frame = CreateFrame("Frame")
-frame:RegisterEvent("PLAYER_LOGIN")
-frame:SetScript("OnEvent", function(self, event, name)
+if IsLoggedIn and IsLoggedIn() then
 	RegisterEnabledSounds()
-	self:UnregisterEvent("PLAYER_LOGIN")
-end)
+else
+	local frame = CreateFrame("Frame")
+	frame:RegisterEvent("PLAYER_LOGIN")
+	frame:SetScript("OnEvent", function(self)
+		RegisterEnabledSounds()
+		self:UnregisterEvent("PLAYER_LOGIN")
+	end)
+end
 
 function addon.SharedMedia.functions.UpdateSound(key, enabled)
 	addon.db.sharedMediaSounds[key] = enabled

@@ -57,7 +57,7 @@ local function buildParts(size)
 	addPing("/ping [@target] 6", Enum.PingSubjectType.AlertThreat, atlasIcon("Ping_Marker_Icon_Threat", size))
 
 	parts[#parts + 1] = {
-		text = textureIcon("Interface\\AddOns\\EnhanceQoL\\Modules\\MythicPlus\\Art\\coreRC.tga", size),
+		text = textureIcon("Interface\\AddOns\\EnhanceQoLDungeonRaid\\Art\\coreRC.tga", size),
 		secure = {
 			forwardRightClick = true,
 			attributes = {
@@ -68,7 +68,7 @@ local function buildParts(size)
 	}
 
 	parts[#parts + 1] = {
-		text = textureIcon("Interface\\AddOns\\EnhanceQoL\\Modules\\MythicPlus\\Art\\corePull.tga", size),
+		text = textureIcon("Interface\\AddOns\\EnhanceQoLDungeonRaid\\Art\\corePull.tga", size),
 		secure = {
 			forwardRightClick = true,
 			attributes = {

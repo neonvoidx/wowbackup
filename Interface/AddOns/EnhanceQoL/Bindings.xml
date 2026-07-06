@@ -29,6 +29,11 @@
              >
     </Binding>
 
+    <Binding name="CLICK EQOLFocusMarkerButton:LeftButton"
+             category="Enhance QoL"
+             >
+    </Binding>
+
     <Binding name="EQOL_TOGGLE_CHATHISTORY"
              category="Enhance QoL"
              >
@@ -48,8 +53,15 @@
     <Binding name="EQOL_TOGGLE_COOLDOWN_PANELS"
              category="Enhance QoL"
              >
-        if EnhanceQoL and EnhanceQoL.Aura and EnhanceQoL.Aura.CooldownPanels and EnhanceQoL.Aura.CooldownPanels.ToggleEditor then
-            EnhanceQoL.Aura.CooldownPanels:ToggleEditor()
+        if EnhanceQoL and EnhanceQoL.Aura and EnhanceQoL.Aura.CooldownPanels then
+            local panels = EnhanceQoL.Aura.CooldownPanels
+            if panels.TogglePreferredEditor then
+                panels:TogglePreferredEditor()
+            elseif panels.ToggleBlizzardEditor then
+                panels:ToggleBlizzardEditor()
+            elseif panels.ToggleEditor then
+                panels:ToggleEditor()
+            end
         end
     </Binding>
 

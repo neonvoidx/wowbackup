@@ -491,10 +491,10 @@ function app:ApplyItemOverlay(overlay, itemLink, itemLocation, containerInfo, ba
 						showOverlay("purple")
 					elseif app.Settings["iconNewSource"] and not api:IsSourceCollected(itemLink) then
 						showOverlay("yellow")
-					elseif app.Settings["iconNewCatalyst"] and ((tumInfo and tumInfo.catalystAppearanceMissing) or (attInfo and attInfo.filledCatalyst)) then
+					elseif app.Settings["iconNewCatalyst"] and ((tumInfo and tumInfo.catalystAppearanceMissing) or (attInfo and attInfo.filledCatalyst)) and (not tumInfo or app.Settings["iconNewSource"] or not tumInfo.catalystAppearanceLearnedFromOtherItem) then
 						overlay.texture:SetAtlas("CreationCatalyst-32x32")
 						showOverlay("yellow")
-					elseif app.Settings["iconNewUpgrade"] and ((tumInfo and tumInfo.upgradeAppearanceMissing) or (attInfo and attInfo.filledUpgrade)) then
+					elseif app.Settings["iconNewUpgrade"] and ((tumInfo and (tumInfo.upgradeAppearanceMissing or tumInfo.catalystUpgradeAppearanceMissing)) or (attInfo and attInfo.filledUpgrade)) and (not tumInfo or app.Settings["iconNewSource"] or ((tumInfo.upgradeAppearanceMissing and not tumInfo.upgradeAppearanceLearnedFromOtherItem) or (tumInfo.catalystUpgradeAppearanceMissing and not tumInfo.catalystUpgradeAppearanceLearnedFromOtherItem))) then
 						overlay.texture:SetAtlas("CovenantSanctum-Upgrade-Icon-Available")
 						showOverlay("yellow")
 					elseif app.Settings["iconLearned"] and not (classID == 15 and subclassID == 0) then
@@ -551,7 +551,7 @@ function app:ApplyItemOverlay(overlay, itemLink, itemLocation, containerInfo, ba
 			elseif app.Settings["iconNewMount"] and itemEquipLoc == "Mount" then
 				local _, isCollected = "", true
 				if itemID == 208216 then -- Quantum Courser
-					for mountID, _ in pairs(app.QuantumMount) do
+					for _, mountID in pairs(app.QuantumMount) do
 						local _, _, _, _, _, _, _, _, _, _, collected = C_MountJournal.GetMountInfoByID(mountID)
 						if not collected then
 							isCollected = false
@@ -1414,6 +1414,7 @@ function api:UpdateOverlay()
 				app:TradeskillOverlay()
 				app:AuctionHouseOverlay()
 				if C_AddOns.IsAddOnLoaded("Baganator") then Baganator.API.RequestItemButtonsRefresh() end
+				if C_AddOns.IsAddOnLoaded("Bagforge") and Bagforge.API then Bagforge.API:RequestItemButtonsRefresh() end
 
 				app.RefreshTimer = GetServerTime()
 			end

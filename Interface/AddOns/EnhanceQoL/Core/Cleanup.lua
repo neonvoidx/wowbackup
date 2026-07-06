@@ -44,6 +44,37 @@ local STAGGER_HIDDEN_COLOR_OVERRIDE_KEYS = {
 	"gradientDirection",
 }
 
+local RESOURCE_BAR_REMOVED_SEGMENT_SEPARATOR_KEYS = {
+	"showSeparator",
+	"separatorColor",
+	"separatorThickness",
+}
+
+local RESOURCE_BAR_SEGMENTED_POWER_TYPES = {
+	ARCANE_CHARGES = true,
+	CHI = true,
+	COMBO_POINTS = true,
+	EBON_MIGHT = true,
+	ESSENCE = true,
+	HOLY_POWER = true,
+	ICICLES = true,
+	MAELSTROM_WEAPON = true,
+	RUNES = true,
+	SOUL_FRAGMENTS_VENGEANCE = true,
+	SOUL_SHARDS = true,
+	TIP_OF_THE_SPEAR = true,
+	VOID_METAMORPHOSIS = true,
+}
+
+local RESOURCE_BAR_REMOVED_SEGMENT_THRESHOLD_LINE_KEYS = {
+	"showThresholds",
+	"useAbsoluteThresholds",
+	"thresholds",
+	"thresholdColor",
+	"thresholdThickness",
+	"thresholdCount",
+}
+
 local LEGACY_RESOURCE_BAR_EDIT_MODE_IDS = {
 	resourceBar_ARCANE_CHARGES = true,
 	resourceBar_CHI = true,
@@ -83,13 +114,19 @@ local LEGACY_PROFILE_KEYS = {
 	"talentReminderActiveBuildLocked",
 	"soundMutedSounds",
 	"unclampDamageMeter",
+	"confirmPatronOrderDialog",
 	"confirmReplaceEnchant",
 	"optionsFrameScale",
 	"showLeaderIconRaidFrame",
 	"unitFrameMaxNameLength",
 	"unitFrameTruncateNames",
+	"enhancedWaypoint",
+	"enhancedWaypointGlow",
+	"enhancedWaypointScale",
 }
 
+-- TODO 12.1 cleanup: when removing native-replaced PTR workarounds, add their stored keys here
+-- or to a dedicated cleanup helper. Expected keys: persistAuctionHouseFilter, groupfinderMoveResetButton.
 local MULTIDROPDOWN_SCRATCH_PROFILE_KEYS = {
 	"bagDisplayOptions",
 	"bagItemLevelTargets",
@@ -140,11 +177,27 @@ local MIGRATED_DATAPANEL_STREAM_OPTION_POSITION_KEYS = {
 	microbar = true,
 	mythickey = true,
 	pettracker = true,
+	playername = true,
 	realm = true,
 	stats = true,
 	talent = true,
 	time = true,
 	volume = true,
+}
+
+local REMOVED_DURATION_TEXT_PROFILE_KEYS = {
+	"abbreviation",
+	"approximationSeconds",
+	"bindingUpdateInterval",
+	"canRoundUpIntervals",
+	"canRoundUpLastUnit",
+	"convertToLower",
+	"countdownAbbrevThreshold",
+	"desiredUnitCount",
+	"formatStyle",
+	"maxInterval",
+	"minInterval",
+	"stripIntervalWhitespace",
 }
 
 local function cleanupListedProfileKeys(profile, keys)
@@ -225,6 +278,29 @@ local function cleanupStaggerHiddenColorOverrides(cfg)
 	end
 end
 
+local function cleanupResourceBarRemovedSegmentSeparatorKeys(cfg)
+	if type(cfg) ~= "table" then return end
+	for i = 1, #RESOURCE_BAR_REMOVED_SEGMENT_SEPARATOR_KEYS do
+		cfg[RESOURCE_BAR_REMOVED_SEGMENT_SEPARATOR_KEYS[i]] = nil
+	end
+end
+
+local function cleanupResourceBarRemovedSegmentThresholdLineKeys(cfg)
+	if type(cfg) ~= "table" then return end
+	for i = 1, #RESOURCE_BAR_REMOVED_SEGMENT_THRESHOLD_LINE_KEYS do
+		cfg[RESOURCE_BAR_REMOVED_SEGMENT_THRESHOLD_LINE_KEYS[i]] = nil
+	end
+end
+
+local function cleanupResourceBarConfigTree(root, treeKey)
+	if type(root) ~= "table" then return end
+	cleanupResourceBarRemovedSegmentSeparatorKeys(root)
+	if RESOURCE_BAR_SEGMENTED_POWER_TYPES[treeKey] or RESOURCE_BAR_SEGMENTED_POWER_TYPES[root._rbType] then cleanupResourceBarRemovedSegmentThresholdLineKeys(root) end
+	for key, value in pairs(root) do
+		if type(value) == "table" then cleanupResourceBarConfigTree(value, key) end
+	end
+end
+
 local function cleanupResourceBarProfile(profile)
 	if type(profile) ~= "table" then return end
 	profile.personalResourceBarAnchors = nil
@@ -238,6 +314,7 @@ local function cleanupResourceBarProfile(profile)
 
 	local personal = profile.personalResourceBarSettings
 	if type(personal) == "table" then
+		cleanupResourceBarConfigTree(personal)
 		for _, classCfg in pairs(personal) do
 			if type(classCfg) == "table" then
 				for _, specCfg in pairs(classCfg) do
@@ -248,10 +325,14 @@ local function cleanupResourceBarProfile(profile)
 	end
 
 	local global = profile.globalResourceBarSettings
-	if type(global) == "table" then cleanupStaggerHiddenColorOverrides(global.STAGGER) end
+	if type(global) == "table" then
+		cleanupResourceBarConfigTree(global)
+		cleanupStaggerHiddenColorOverrides(global.STAGGER)
+	end
 
 	local shared = profile.sharedResourceBarSettings
 	if type(shared) == "table" then
+		cleanupResourceBarConfigTree(shared)
 		for _, slotCfg in pairs(shared) do
 			local overrides = type(slotCfg) == "table" and slotCfg.powerTypeOverrides or nil
 			if type(overrides) == "table" then cleanupStaggerHiddenColorOverrides(overrides.STAGGER) end
@@ -300,6 +381,18 @@ local function cleanupCooldownPanelsStorageProfile(profile)
 	if type(root) ~= "table" then return end
 	local helper = addon.Aura and addon.Aura.CooldownPanels and addon.Aura.CooldownPanels.helper or nil
 	if type(helper) == "table" and type(helper.PruneRootForStorage) == "function" then helper.PruneRootForStorage(root) end
+end
+
+local function cleanupDurationTextStorageProfile(profile)
+	if type(profile) ~= "table" then return end
+	local root = profile.durationText
+	local profiles = type(root) == "table" and root.profiles or nil
+	if type(profiles) ~= "table" then return end
+	for _, durationProfile in pairs(profiles) do
+		if type(durationProfile) == "table" then
+			cleanupListedProfileKeys(durationProfile, REMOVED_DURATION_TEXT_PROFILE_KEYS)
+		end
+	end
 end
 
 function addon.functions.CleanupCombatMeterSettings()
@@ -402,10 +495,30 @@ function addon.functions.CleanupCooldownPanelsStorage()
 	if addon.db and addon.db ~= db then prune(addon.db) end
 end
 
+function addon.functions.CleanupDurationTextStorage()
+	local db = _G.EnhanceQoLDB
+	local seen = {}
+	local function cleanup(profile)
+		if type(profile) ~= "table" or seen[profile] then return end
+		seen[profile] = true
+		cleanupDurationTextStorageProfile(profile)
+	end
+	if type(db) == "table" then
+		cleanup(db)
+		if type(db.profiles) == "table" then
+			for _, profile in pairs(db.profiles) do
+				cleanup(profile)
+			end
+		end
+	end
+	if addon.db and addon.db ~= db then cleanup(addon.db) end
+end
+
 function addon.functions.CleanupOldStuff()
 	addon.functions.CleanupCombatMeterSettings()
 	addon.functions.CleanupBuffTrackerSettings()
 	addon.functions.CleanupDebugArtifacts()
+	addon.functions.CleanupDurationTextStorage()
 	addon.functions.CleanupLegacyProfileStorage()
 	addon.functions.CleanupResourceBarStorage()
 	addon.functions.CleanupTransientProfileCaches()

@@ -1,12 +1,14 @@
 local _, ns = ...
 
--- Initialize namespace and DB early
 ns.db = ns.db or {}
 ns.db.profile = ns.db.profile or {}
 local CooldownManager = {}
 ns.CooldownManager = CooldownManager
 
-CMC_DEBUG = false
+local CMC_DEBUG = false
+
+local CMC_DEBUG_VAR = {}
+
 local PrintDebug = function(...)
     if CMC_DEBUG then
         print("[CMC]", ...)
@@ -27,36 +29,39 @@ local viewers = {
     UtilityCooldownViewer = _G["UtilityCooldownViewer"],
 }
 
--- Defaults
-local fontSizeDefault = {
-    EssentialCooldownViewer = 14,
-    UtilityCooldownViewer = 12,
-    BuffIconCooldownViewer = 14,
-}
-local viewerSettingsMap = {
-    ["EssentialCooldownViewer"] = {
-        squareIconsEnabled = "cooldownManager_squareIcons_Essential",
-        squareIconsBorder = "cooldownManager_squareIconsBorder_Essential",
-        squareIconsBorderOverlap = "cooldownManager_squareIconsBorder_Essential_Overlap",
-    },
-    ["UtilityCooldownViewer"] = {
-        squareIconsEnabled = "cooldownManager_squareIcons_Utility",
-        squareIconsBorder = "cooldownManager_squareIconsBorder_Utility",
-        squareIconsBorderOverlap = "cooldownManager_squareIconsBorder_Utility_Overlap",
-    },
-    ["BuffIconCooldownViewer"] = {
-        squareIconsEnabled = "cooldownManager_squareIcons_BuffIcons",
-        squareIconsBorder = "cooldownManager_squareIconsBorder_BuffIcons",
-        squareIconsBorderOverlap = "cooldownManager_squareIconsBorder_BuffIcons_Overlap",
-    },
-}
+local castrate
+castrate = function(value, level)
+    level = level or 0
+    if level > 4 then
+        return "Too deep"
+    end
+    if type(value) == "table" then
+        local copy = {}
+        for k, v in pairs(value) do
+            copy[k] = castrate(v, level + 1)
+        end
+        return copy
+    elseif type(value) ~= "function" then
+        return value
+    end
+end
 
--- Map viewer names to setting key names for StyledIcons functions
-local viewerToSettingKey = {
-    ["EssentialCooldownViewer"] = "Essential",
-    ["UtilityCooldownViewer"] = "Utility",
-    ["BuffIconCooldownViewer"] = "BuffIcons",
-}
+function _G.debugCMCdata()
+    for k, v in pairs(viewers) do
+        print("Debugging viewer:", k, "->", v)
+        if v then
+            local children = v:GetItemFrames()
+            local castrated = castrate(children)
+            CMC_DEBUG_VAR[k] = {
+                frame = castrate(v),
+                childCount = #children,
+                children = castrated,
+                firstChild = castrated[1],
+                secondChild = castrated[2],
+            }
+        end
+    end
+end
 
 function LayoutEngine.CenteredRowXOffsets(count, itemWidth, padding, directionModifier, iconLimit)
     if not count or count <= 0 then
@@ -88,8 +93,6 @@ function LayoutEngine.CenteredColYOffsets(count, itemHeight, padding, directionM
 end
 
 function LayoutEngine.StartRowXOffsets(count, itemWidth, padding, directionModifier)
-    -- Why: Produce X offsets starting from the left edge.
-    -- When: Positioning icons aligned to start; supports reversed direction via modifier.
     if not count or count <= 0 then
         return {}
     end
@@ -102,8 +105,6 @@ function LayoutEngine.StartRowXOffsets(count, itemWidth, padding, directionModif
 end
 
 function LayoutEngine.EndRowXOffsets(count, itemWidth, padding, directionModifier)
-    -- Why: Produce X offsets starting from the right edge.
-    -- When: Positioning icons aligned to end; supports reversed direction via modifier.
     if not count or count <= 0 then
         return {}
     end
@@ -116,8 +117,6 @@ function LayoutEngine.EndRowXOffsets(count, itemWidth, padding, directionModifie
 end
 
 function LayoutEngine.StartColYOffsets(count, itemHeight, padding, directionModifier)
-    -- Why: Produce Y offsets starting from the top edge.
-    -- When: Positioning icons aligned to start; supports reversed direction via modifier.
     if not count or count <= 0 then
         return {}
     end
@@ -130,8 +129,6 @@ function LayoutEngine.StartColYOffsets(count, itemHeight, padding, directionModi
 end
 
 function LayoutEngine.EndColYOffsets(count, itemHeight, padding, directionModifier)
-    -- Why: Produce Y offsets starting from the bottom edge.
-    -- When: Positioning icons aligned to end; supports reversed direction via modifier.
     if not count or count <= 0 then
         return {}
     end
@@ -144,8 +141,6 @@ function LayoutEngine.EndColYOffsets(count, itemHeight, padding, directionModifi
 end
 
 function LayoutEngine.BuildRows(iconLimit, children)
-    -- Why: Group a flat list of icons into rows limited by `iconLimit`.
-    -- When: Before computing centered layout for Essential/Utility viewers.
     local rows = {}
     local limit = iconLimit or 0
     if limit <= 0 then
@@ -161,13 +156,11 @@ end
 
 -- ViewerAdapters: BuffIcon/BuffBar collection + hooks
 function ViewerAdapters.GetBuffIconFrames()
-    -- Why: Collect visible Buff Icon viewer children, hook change events, and apply stack visuals.
-    -- When: Before positioning buff icons and whenever aura events trigger layout updates.
     if not BuffIconCooldownViewer then
         return {}
     end
     local visible = {}
-    local children = { BuffIconCooldownViewer:GetChildren() }
+    local children = BuffIconCooldownViewer:GetItemFrames()
     local total = 0
     for _, child in ipairs(children) do
         if child and (child.icon or child.Icon) and child.layoutIndex ~= nil then
@@ -175,8 +168,8 @@ function ViewerAdapters.GetBuffIconFrames()
             if child:IsShown() then
                 visible[#visible + 1] = child
             end
-            if not child._wt_isHooked then
-                child._wt_isHooked = true
+            if not ns.API:GetIsAffected(child, "cooldownManagerHooked") then
+                ns.API:SetAffected(child, "cooldownManagerHooked")
                 hooksecurefunc(child, "OnActiveStateChanged", ViewerAdapters.UpdateBuffIcons)
                 hooksecurefunc(child, "OnUnitAuraAddedEvent", ViewerAdapters.UpdateBuffIcons)
                 hooksecurefunc(child, "OnUnitAuraRemovedEvent", ViewerAdapters.UpdateBuffIcons)
@@ -191,8 +184,6 @@ function ViewerAdapters.GetBuffIconFrames()
 end
 
 function ViewerAdapters.GetBuffBarFrames(includeInactive)
-    -- Why: Collect Buff Bar frames with resilience to API differences, optionally including inactive frames.
-    -- When: Before aligning bars vertically and whenever aura events trigger layout updates.
     if not BuffBarCooldownViewer then
         return {}
     end
@@ -219,8 +210,11 @@ function ViewerAdapters.GetBuffBarFrames(includeInactive)
         if includeInactive or (frame:IsShown() and frame:IsVisible()) then
             active[#active + 1] = frame
         end
-        if not frame._wt_isHooked and (frame.icon or frame.Icon or frame.bar or frame.Bar) then
-            frame._wt_isHooked = true
+        if
+            not ns.API:GetIsAffected(frame, "cooldownManagerHooked")
+            and (frame.icon or frame.Icon or frame.bar or frame.Bar)
+        then
+            ns.API:SetAffected(frame, "cooldownManagerHooked")
             hooksecurefunc(frame, "OnActiveStateChanged", ViewerAdapters.UpdateBuffBars)
             hooksecurefunc(frame, "OnUnitAuraAddedEvent", ViewerAdapters.UpdateBuffBars)
             hooksecurefunc(frame, "OnUnitAuraRemovedEvent", ViewerAdapters.UpdateBuffBars)
@@ -233,9 +227,6 @@ function ViewerAdapters.GetBuffBarFrames(includeInactive)
 end
 
 function ViewerAdapters.UpdateBuffIcons()
-    -- Why: Position Buff Icon viewer children based on isHorizontal, iconDirection, and alignment.
-    -- When: On aura events, settings changes, or explicit refresh calls when the feature is enabled.
-
     if
         not ns.Runtime:IsReady(BuffIconCooldownViewer)
         or ns.db.profile.cooldownManager_alignBuffIcons_growFromDirection == "Disable"
@@ -313,8 +304,6 @@ function ViewerAdapters.UpdateBuffIcons()
 end
 
 function ViewerAdapters.UpdateBuffBars()
-    -- Why: Align Buff Bar frames from chosen growth direction when enabled and changes detected.
-    -- When: On aura events, settings changes, or explicit refresh calls when the feature is enabled.
     if not ns.Runtime:IsReady(BuffBarCooldownViewer) then
         return
     end
@@ -328,14 +317,25 @@ function ViewerAdapters.UpdateBuffBars()
         return
     end
 
+    local growSetting = ns.db.profile.cooldownManager_alignBuffBars_growFromDirection
+
     if iconMode then
         local scale = BuffBarCooldownViewer.iconScale
-        BuffBarCooldownViewer:SetSize(35 * scale, 35 * scale)
+        if not InCombatLockdown() then
+            BuffBarCooldownViewer:SetSize(35 * scale, 35 * scale)
+        end
     else
-        BuffBarCooldownViewer:Layout()
+        if growSetting == "Disable" then
+            return
+        end
+
+        -- Layout() internally calls SetSize on the protected EditMode viewer,
+        -- which is blocked during combat lockdown. Guard like an explicit resize.
+        if not InCombatLockdown() then
+            BuffBarCooldownViewer:Layout()
+        end
     end
     local horizontalIcons = iconMode and ns.BuffBarIconMode.IsHorizontal()
-    local growSetting = ns.db.profile.cooldownManager_alignBuffBars_growFromDirection
 
     if horizontalIcons then
         local refBar = bars[1]
@@ -387,18 +387,15 @@ end
 local _dimCurve = nil
 local _dimCurveOpacity = nil
 
-local function GetDimCurve(toDimOpacity)
-    if _dimCurve and _dimCurveOpacity == toDimOpacity then
-        return _dimCurve
-    end
-    _dimCurve = C_CurveUtil.CreateCurve()
-    _dimCurve:AddPoint(0.0, toDimOpacity)
-    _dimCurve:AddPoint(0.0001, 1)
-    _dimCurveOpacity = toDimOpacity
-    return _dimCurve
-end
-
-local function GetDimCurveDH(toDimOpacity)
+local weirdSpellsWithoutGCD = {
+    -- info.spellID == 198793 or info.spellID == 195072 or info.spellID == 232893
+    [198793] = true, -- Vengeful Retreat
+    [195072] = true, -- Fel Rush
+    [232893] = true, -- Felblade
+    [102401] = true, -- Wild Charge
+    [106839] = true, -- Skull Bash
+}
+local function GetDimCurveWeirdSpells(toDimOpacity)
     if _dimCurve and _dimCurveOpacity == toDimOpacity then
         return _dimCurve
     end
@@ -417,10 +414,9 @@ function ViewerAdapters.UpdateUtilityDimming()
     end
     local toDim = ns.db.profile.cooldownManager_utility_dimWhenNotOnCD
     if not toDim then
-        -- Restore alphas if dimming was previously applied
-        if viewer._cmc_dimmed then
-            viewer._cmc_dimmed = false
-            local children = { viewer:GetChildren() }
+        if ns.API:GetIsAffected(viewer, "dimmed") then
+            ns.API:UnsetAffected(viewer, "dimmed")
+            local children = viewer:GetItemFrames()
             for _, child in ipairs(children) do
                 if child and child.Icon then
                     child:SetAlpha(1)
@@ -433,7 +429,7 @@ function ViewerAdapters.UpdateUtilityDimming()
 
     local toDimOpacity = ns.db.profile.cooldownManager_utility_dimOpacity or 0.3
 
-    local children = { viewer:GetChildren() }
+    local children = viewer:GetItemFrames()
     for _, child in ipairs(children) do
         if child and child:IsShown() and child.Icon then
             if shouldForceShow then
@@ -442,17 +438,19 @@ function ViewerAdapters.UpdateUtilityDimming()
                 if child.cooldownID then
                     local info = C_CooldownViewer.GetCooldownViewerCooldownInfo(child.cooldownID)
                     local spellID = info.overrideSpellID or info.spellID
-                    local spellCD = C_Spell.GetSpellCooldown(spellID)
-                    if not spellCD.isOnGCD then
+                    -- Item/spell-category icons (12.1.0) can have no spellID until
+                    -- triggered; treat as dimmed rather than querying spell state.
+                    local spellCD = spellID and C_Spell.GetSpellCooldown(spellID)
+                    if spellCD and not spellCD.isOnGCD then
                         local spellCharges = C_Spell.GetSpellCharges(spellID)
                         local hasCharges = spellCharges and spellCharges.maxCharges > 1
                         if hasCharges and spellCharges.isActive then
                             child:SetAlpha(1)
                         elseif spellCD.isActive then
-                            if info.spellID == 198793 or info.spellID == 195072 or info.spellID == 232893 then
+                            if weirdSpellsWithoutGCD[info.spellID] then
                                 local cd = C_Spell.GetSpellCooldownDuration(spellID)
 
-                                local curve = GetDimCurveDH(toDimOpacity)
+                                local curve = GetDimCurveWeirdSpells(toDimOpacity)
 
                                 local EvaluateDuration = cd:EvaluateRemainingDuration(curve)
                                 child:SetAlpha(EvaluateDuration)
@@ -469,17 +467,32 @@ function ViewerAdapters.UpdateUtilityDimming()
             end
         end
     end
-    viewer._cmc_dimmed = true
+    ns.API:SetAffected(viewer, "dimmed")
+end
+
+-- SPELL_UPDATE_COOLDOWN can fire many times per frame (every cooldown/charge
+-- change), and each UpdateUtilityDimming pass walks every utility child and
+-- allocates Blizzard cooldown/charge tables per child. Coalesce bursts into a
+-- single pass on the next frame so the work runs at most once per frame.
+local utilityDimmingPending = false
+local function RunUtilityDimming()
+    utilityDimmingPending = false
+    ViewerAdapters.UpdateUtilityDimming()
+end
+function ViewerAdapters.RequestUtilityDimming()
+    if utilityDimmingPending then
+        return
+    end
+    utilityDimmingPending = true
+    C_Timer.After(0.05, RunUtilityDimming)
 end
 
 function ViewerAdapters.CollectViewerChildren(viewer)
-    -- Why: Standardized filtered list of visible icon-like children sorted by layoutIndex.
-    -- When: Building rows/columns for Essential/Utility centered layouts.
     local viewerName = viewer:GetName()
 
     -- Direct insert by layoutIndex to avoid sorting
     local indexed = {}
-    local children = { viewer:GetChildren() }
+    local children = viewer:GetItemFrames()
     for _x, child in ipairs(children) do
         local li = child.layoutIndex
         if child and child:IsShown() and child.Icon and li then
@@ -504,7 +517,7 @@ local function PositionRowHorizontal(viewer, row, yOffset, w, padding, iconDirec
         local stillNeedToSet = true
 
         if icon.GetPoint then
-            local point, relativeTo, relativePoint, offsetX, offsetY = icon:GetPoint()
+            local point, _, relativePoint, offsetX, offsetY = icon:GetPoint()
             if offsetX ~= nil and offsetY ~= nil then
                 local xDiff = math.abs(x - offsetX)
                 local yDiff = math.abs(yOffset - offsetY)
@@ -534,7 +547,7 @@ local function PositionRowVertical(viewer, row, xOffset, h, padding, iconDirecti
         local stillNeedToSet = true
 
         if icon.GetPoint then
-            local point, relativeTo, relativePoint, offsetX, offsetY = icon:GetPoint()
+            local point, _, relativePoint, offsetX, offsetY = icon:GetPoint()
             if offsetX ~= nil and offsetY ~= nil then
                 local xDiff = math.abs(xOffset - offsetX)
                 local yDiff = math.abs(y - offsetY)
@@ -556,7 +569,6 @@ local function PositionRowVertical(viewer, row, xOffset, h, padding, iconDirecti
 end
 
 function ViewerAdapters.UpdateViewerSizeIfChanged(viewer)
-    local viewerName = viewer:GetName()
     local currentWidth = viewer:GetWidth()
     local currentHeight = viewer:GetHeight()
 
@@ -589,10 +601,14 @@ function ViewerAdapters.UpdateViewerSizeIfChanged(viewer)
     local targetWidth = (right - left)
     local targetHeight = (top - bottom)
 
-    if math.abs(currentWidth - targetWidth) >= 1 or math.abs(currentHeight - targetHeight) >= 1 then
+    if
+        math.floor(math.abs(currentWidth - targetWidth)) >= 2
+        or math.floor(math.abs(currentHeight - targetHeight)) >= 2
+    then
         viewer:SetWidth(targetWidth)
         viewer:SetHeight(targetHeight)
         viewer:SetSize(targetWidth, targetHeight)
+        return true
     end
 end
 
@@ -605,9 +621,7 @@ end
 
 function ViewerAdapters.UpdateUtility()
     ViewerAdapters.UpdateCDViewer(UtilityCooldownViewer, ns.db.profile.cooldownManager_centerUtility_growFromDirection)
-    C_Timer.After(0, function()
-        ViewerAdapters.UpdateUtilityDimming()
-    end)
+    ViewerAdapters.RequestUtilityDimming()
 end
 
 function ViewerAdapters.UpdateCDViewer(viewer, fromDirection)
@@ -626,13 +640,18 @@ function ViewerAdapters.UpdateCDViewer(viewer, fromDirection)
 
     local children = ViewerAdapters.CollectViewerChildren(viewer)
     if fromDirection == "Disable" then
-        if viewer._cmc_aligned and viewer.Layout then
-            viewer._cmc_aligned = false
-            -- if not InCombatLockdown() then
-            viewer:Layout()
-            -- end
+        if ns.API:GetIsAffected(viewer, "aligned") and viewer.Layout then
+            ns.API:UnsetAffected(viewer, "aligned")
+            -- Layout() internally calls SetSize on the protected EditMode viewer,
+            -- which is blocked during combat lockdown. Guard like an explicit resize.
+            if not InCombatLockdown() then
+                viewer:Layout()
+            end
         end
         ViewerAdapters.UpdateViewerSizeIfChanged(viewer)
+        C_Timer.After(0, function()
+            ViewerAdapters.UpdateViewerSizeIfChanged(viewer)
+        end)
         return
     end
     if #children == 0 then
@@ -673,9 +692,6 @@ function ViewerAdapters.UpdateCDViewer(viewer, fromDirection)
     end
     local maxIcons = math.min(iconLimit, #children)
 
-    -- Get subsequent row scaling factor for this viewer (only Essential and Utility support it)
-    local settingKey = viewerToSettingKey[viewerName]
-
     if isHorizontal then
         local rowOffsetModifier = fromDirection == "BOTTOM" and 1 or -1
         local iconDirectionModifier = iconDirection == "NORMAL" and 1 or -1
@@ -708,15 +724,11 @@ function ViewerAdapters.UpdateCDViewer(viewer, fromDirection)
             cumulativeOffset = cumulativeOffset + currentColWidth + padding
         end
     end
-    viewer._cmc_aligned = true
+    ns.API:SetAffected(viewer, "aligned")
     ViewerAdapters.UpdateViewerSizeIfChanged(viewer)
-end
-
-local function ShouldDebugRefreshLog()
-    if ns.db.profile.cooldownManager_debugRefreshLogs ~= nil then
-        return ns.db.profile.cooldownManager_debugRefreshLogs
-    end
-    return false
+    C_Timer.After(0, function()
+        ViewerAdapters.UpdateViewerSizeIfChanged(viewer)
+    end)
 end
 
 function CooldownManager.ForceRefresh(parts)
@@ -733,14 +745,20 @@ function CooldownManager.ForceRefresh(parts)
     if parts.utility then
         ViewerAdapters.UpdateUtility()
     end
+
+    -- debugCMCdata()
 end
 
 function CooldownManager.ForceRefreshAll()
     CooldownManager.ForceRefresh({ icons = true, bars = true, essential = true, utility = true })
 end
 
-function CooldownManager.UpdateUtilityDimming()
-    ViewerAdapters.UpdateUtilityDimming()
+function CooldownManager.UpdateUtilityDimming(force)
+    if force then
+        ViewerAdapters.UpdateUtilityDimming()
+        return
+    end
+    ViewerAdapters.RequestUtilityDimming(force)
 end
 
 function CooldownManager.RestoreUtilityAlpha()
@@ -748,20 +766,13 @@ function CooldownManager.RestoreUtilityAlpha()
     if not viewer then
         return
     end
-    local children = { viewer:GetChildren() }
+    local children = viewer:GetItemFrames()
     for _, child in ipairs(children) do
         if child and child.Icon then
             child:SetAlpha(1)
         end
     end
 end
-
-local viewerReasonPartsMap = {
-    EssentialCooldownViewer = { essential = true },
-    UtilityCooldownViewer = { utility = true },
-    BuffIconCooldownViewer = { icons = true },
-    BuffBarCooldownViewer = { bars = true },
-}
 
 function CooldownManager.Initialize()
     CooldownManager.ForceRefreshAll()

@@ -1,0 +1,23 @@
+## Interface: 120007, 120100
+## Title: Enhance QoL Class Buff Reminder
+## Author: R41Z0R
+## Version: 11.6.0
+## Notes: Track missing class buffs and consumables
+## Notes-deDE: Erinnert an fehlende Klassenbuffs und Verbrauchsgueter
+## Notes-esES: Rastrea beneficios de clase y consumibles faltantes
+## Notes-esMX: Rastrea beneficios de clase y consumibles faltantes
+## Notes-frFR: Suit les buffs de classe et consommables manquants
+## Notes-itIT: Tiene traccia dei benefici di classe e dei consumabili mancanti
+## Notes-koKR: 누락된 직업 강화 효과와 소모품을 추적합니다
+## Notes-ptBR: Rastreia buffs de classe e consumíveis ausentes
+## Notes-ruRU: Отслеживает отсутствующие классовые усиления и расходуемые предметы
+## Notes-zhCN: 追踪缺失的职业增益和消耗品
+## Notes-zhTW: 追蹤缺少的職業增益與消耗品
+## Dependencies: EnhanceQoL
+## IconTexture: Interface\AddOns\EnhanceQoL\Icons\Icon.tga
+## Retail: true
+## X-Compatible-With: retail
+## LoadOnDemand: 1
+## Globe-Main: EnhanceQoL
+
+ClassBuffReminder.xml

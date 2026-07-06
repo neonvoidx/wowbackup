@@ -173,7 +173,7 @@ do  --House Level / Info / Teleport
 	end
 
 	function DataProvider:LoadHouses()
-		self:RegisterEventCallback("PLAYER_HOUSE_LIST_UPDATED", self.OnHouseListUpdated, true);
+		self:RegisterEventCallback("PLAYER_HOUSE_LIST_UPDATED", self.OnHouseListUpdated);
 		C_Housing.GetPlayerOwnedHouses();   --Tigger PLAYER_HOUSE_LIST_UPDATED
 	end
 

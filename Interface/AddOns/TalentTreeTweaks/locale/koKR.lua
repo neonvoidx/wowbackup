@@ -43,6 +43,8 @@ L["Apply DRIVE Upgrades"] = "고.속.주.행 업그레이드 적용"
 --[[Translation missing --]]
 L["Are you sure you want to reset these settings to their default values? This cannot be undone."] = "Are you sure you want to reset these settings to their default values? This cannot be undone."
 L["Auto Ride Along"] = "자동 같이 타기"
+--[[Translation missing --]]
+L["Auto selected a choice node."] = "Auto selected a choice node."
 L["Auto Surge Choice"] = "쇄도 자동 선택"
 --[[Translation missing --]]
 L["Auto Talent Purchaser"] = "Auto Talent Purchaser"
@@ -54,13 +56,9 @@ L["Automatically pick Whirling Surge/Lightning Surge the first time you log in o
 --[[Translation missing --]]
 L["Automatically purchase %s talents when you have enough currency."] = "Automatically purchase %s talents when you have enough currency."
 --[[Translation missing --]]
-L["Automatically purchase Horrific Visions talents when you have enough currency."] = "Automatically purchase Horrific Visions talents when you have enough currency."
---[[Translation missing --]]
 L["Automatically purchases Skyriding and other generic talents when you have enough currency."] = "Automatically purchases Skyriding and other generic talents when you have enough currency."
 L["Automatically selects the DRIVE upgrades you want for all of your alts."] = "모든 대체 차량에 대해 원하는 고.속.주.행 업그레이드를 자동으로 선택합니다."
 L["Automatically set"] = "자동 설정"
---[[Translation missing --]]
-L["Automatically upgrade the final Limits Unbound talent when you have enough currency."] = "Automatically upgrade the final Limits Unbound talent when you have enough currency."
 L["Background Transparency"] = "배경 투명도"
 L["Basic Modules"] = "기본 모듈"
 L["blocked in combat"] = "전투 중 차단됨"
@@ -139,8 +137,6 @@ L["Inspect Diff"] = "차이점 검사"
 L["Inspect Talents"] = "특성 검사"
 L["Inspected Build"] = "검사된 빌드"
 L["Invert highlight"] = "강조 반전"
---[[Translation missing --]]
-L["Legion Remix: Limits Unbound"] = "Legion Remix: Limits Unbound"
 L["Link in chat"] = "채팅에 링크"
 L["Loading..."] = "로딩중..."
 L["Macros and certain addons that change loadouts, cause the dropdown to not update properly in some situations. This fixes that."] = "빌드를 변경하는 매크로와 특정 애드온은 일부 상황에서 드롭다운이 제대로 업데이트되지 않게 합니다. 이를 수정합니다."
@@ -149,12 +145,8 @@ L["Midnight introduced some changes that cause the custom castbar to throw error
 L["Mini Tree in Tooltips"] = "툴팁의 미니 트리"
 L["Misc Fixes"] = "기타 수정 사항"
 L["Mute chat spam while switching loadouts or specs."] = "빌드나 전문화를 전환하는 동안 채팅 스팸을 음소거합니다."
---[[Translation missing --]]
-L["Open Artifact Traits UI"] = "Open Artifact Traits UI"
 L["Open in Talent Tree Viewer"] = "특성 트리 뷰어에서 열기"
 L["Open loadout in default Inspect UI"] = "기본 검사 UI에서 빌드 열기"
---[[Translation missing --]]
-L["Open the Legion Remix Artifact traits UI to view and adjust talents."] = "Open the Legion Remix Artifact traits UI to view and adjust talents."
 --[[Translation missing --]]
 L["Open these settings in a separate window."] = "Open these settings in a separate window."
 L["Opens Blizzard's table inspect window."] = "Blizzard의 테이블 검사 창을 엽니다."
@@ -257,13 +249,7 @@ L["When enabled, the import button will be unlocked even if you have reached the
 L["You can toggle any of the following on/off to enable/disable the integration with that debug tool."] = "다음 중 하나를 켜거나 꺼서 디버그 도구와의 통합을 활성화/비활성화할 수 있습니다."
 L["You have a talent they don't"] = "나에게 없는 특성"
 --[[Translation missing --]]
-L["You have not unlocked Legion Remix artifact traits yet."] = "You have not unlocked Legion Remix artifact traits yet."
---[[Translation missing --]]
 L["You have not unlocked the %s system on this character yet."] = "You have not unlocked the %s system on this character yet."
---[[Translation missing --]]
-L["You have not unlocked the Horrific Visions system on this character yet."] = "You have not unlocked the Horrific Visions system on this character yet."
---[[Translation missing --]]
-L["You have not unlocked the Skyriding system on this character yet."] = "You have not unlocked the Skyriding system on this character yet."
 L["You have selected a different choice, or different number of points in a talent"] = "특성에서 다른 선택 사항이나 다른 포인트 수를 선택했습니다."
 L["You have the same talents"] = "당신도 동일한 특성을 가지고 있습니다."
 L["You have to reload your UI after disabling this module, for some of the change to take effect."] = "이 모듈을 비활성화한 후 UI를 다시 로드해야 일부 변경 사항을 적용할 수 있습니다."

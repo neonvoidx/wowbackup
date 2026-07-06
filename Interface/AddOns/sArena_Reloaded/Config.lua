@@ -826,8 +826,27 @@ function sArenaMixin:GetLayoutOptionsTable(layoutName)
                                         info.handler:RefreshTestModeCastbars()
                                     end,
                                 },
-                                interruptNotReady = {
+                                includeShadowWordDeath = {
                                     order = 2,
+                                    type = "toggle",
+                                    width = "full",
+                                    name = L["Castbar_IncludeShadowWordDeath"],
+                                    desc = L["Castbar_IncludeShadowWordDeath_Desc"],
+                                    hidden = function() return select(2, UnitClass("player")) ~= "PRIEST" end,
+                                    disabled = function(info)
+                                        local layout = info.handler.db.profile.layoutSettings[layoutName]
+                                        return not (layout.castBar.interruptStatusColorOn)
+                                    end,
+                                    get = function(info)
+                                        return info.handler.db.profile.includeShadowWordDeath or false
+                                    end,
+                                    set = function(info, val)
+                                        info.handler.db.profile.includeShadowWordDeath = val
+                                        info.handler:UpdateShadowWordDeathInterrupt()
+                                    end,
+                                },
+                                interruptNotReady = {
+                                    order = 3,
                                     type = "color",
                                     name = L["Castbar_InterruptNotReadyColor"],
                                     width = "full",
@@ -7489,6 +7508,18 @@ else
                                             info.handler:Test()
                                         end,
                                     },
+                                    onlyShowCCAuras = {
+                                        order = 2.5,
+                                        name = L["Option_OnlyShowCCAuras"],
+                                        type = "toggle",
+                                        width = "full",
+                                        disabled = function(info) return info.handler.db.profile.hideClassIcon or info.handler.db.profile.disableAurasOnClassIcon end,
+                                        get = function(info) return info.handler.db.profile.onlyShowCCAuras end,
+                                        set = function(info, val)
+                                            info.handler.db.profile.onlyShowCCAuras = val
+                                            info.handler:Test()
+                                        end,
+                                    },
                                     disableAurasOnClassIcon = {
                                         order = 3,
                                         name = L["Option_DisableAurasOnClassIcon"],
@@ -8386,6 +8417,28 @@ else
                                 name = isMidnight and L["DR_MidnightDisclaimer"] or "",
                                 fontSize = "medium",
                                 hidden = function() return not isMidnight end,
+                            },
+                            drDebug = {
+                                order = 5,
+                                name = L["Category_Debug"],
+                                type = "group",
+                                inline = true,
+                                hidden = function() return not isMidnight end,
+                                args = {
+                                    newMidnightDRHandling = {
+                                        order = 1,
+                                        name = L["Option_NewMidnightDRHandling"],
+                                        desc = L["Option_NewMidnightDRHandling_Desc"],
+                                        type = "toggle",
+                                        width = "full",
+                                        get = function(info) return info.handler.db.profile.newMidnightDRHandling end,
+                                        set = function(info, val)
+                                            info.handler.db.profile.newMidnightDRHandling = val
+                                            sArena_ReloadedDB.reOpenOptions = true
+                                            ReloadUI()
+                                        end,
+                                    },
+                                },
                             },
                         },
                     },

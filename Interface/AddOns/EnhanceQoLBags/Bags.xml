@@ -1,0 +1,59 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+	<Script file="Init.lua" />
+	<Script file="Skins.lua" />
+	<Script file="OverlayConfig.lua" />
+	<Script file="CategoryRules.lua" />
+	<Script file="Settings.lua" />
+	<Script file="Settings_Profiles.lua" />
+	<Script file="BankView.lua" />
+	<Script file="WarbandBank.lua" />
+
+	<ItemButton name="BagsItemButtonTemplate" inherits="ContainerFrameItemButtonTemplate" hidden="true" virtual="true">
+		<Layers>
+			<Layer level="ARTWORK" textureSubLevel="-1">
+				<Texture parentKey="ReagentTint" hidden="true">
+					<Color r="0.18" g="0.72" b="0.28" a="0.16" />
+					<Anchors>
+						<Anchor point="TOPLEFT" />
+						<Anchor point="BOTTOMRIGHT" />
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="OVERLAY" textureSubLevel="8">
+				<FontString parentKey="ItemLevelText" inherits="NumberFontNormalSmall">
+					<Anchors>
+						<Anchor point="TOPRIGHT" x="-2" y="-2" />
+					</Anchors>
+				</FontString>
+				<FontString parentKey="ItemUpgradeText" inherits="NumberFontNormalSmall">
+					<Anchors>
+						<Anchor point="TOPLEFT" x="2" y="-2" />
+					</Anchors>
+				</FontString>
+				<Texture parentKey="EquipmentSetIcon" hidden="true">
+					<Size x="14" y="14" />
+					<Anchors>
+						<Anchor point="BOTTOMLEFT" x="2" y="2" />
+					</Anchors>
+				</Texture>
+				<FontString parentKey="EquipmentSetText" inherits="NumberFontNormalSmall" hidden="true">
+					<Anchors>
+						<Anchor point="BOTTOMLEFT" x="2" y="2" />
+					</Anchors>
+				</FontString>
+				<FontString parentKey="BindStatusText" inherits="NumberFontNormalSmall">
+					<Anchors>
+						<Anchor point="BOTTOMRIGHT" x="-2" y="2" />
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Scripts>
+			<OnLoad inherit="prepend">
+				if BagsItemButton_OnLoad then BagsItemButton_OnLoad(self) end
+			</OnLoad>
+		</Scripts>
+	</ItemButton>
+
+	<Script file="BagsCore.lua" />
+</Ui>

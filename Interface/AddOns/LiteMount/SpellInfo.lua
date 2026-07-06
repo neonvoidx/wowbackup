@@ -11,6 +11,7 @@
 local _, LM = ...
 
 local C_Spell = LM.C_Spell or C_Spell
+local C_Secrets = C_Secrets
 
 local L = LM.L
 
@@ -295,9 +296,10 @@ do
     end
 end
 
-local issecretvalue = issecretvalue or function () return false end
-
 function LM.UnitAura(unit, aura, filter)
+    if C_Secrets.ShouldAurasBeSecret() then
+        return
+    end
     local i = 1
     while true do
         local auraInfo = C_UnitAuras.GetAuraDataByIndex(unit, i, filter)

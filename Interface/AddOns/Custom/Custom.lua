@@ -1,3 +1,239 @@
+local applyDarkMode = function()
+	-- CONFIGURE THESE
+	local darkModeColor = 0.1
+	local classicFrames = false
+
+	local desat = true
+	local vc = darkModeColor
+	local cf = classicFrames
+
+	local function applySettings(frame, desaturate, colorValue, hook)
+		if frame then
+			if desaturate ~= nil and frame.SetDesaturated then
+				frame:SetDesaturated(desaturate)
+			end
+			if frame.SetVertexColor then
+				frame:SetVertexColor(colorValue, colorValue, colorValue)
+				if hook then
+					if not frame.bbfHooked then
+						frame.bbfHooked = true
+						hooksecurefunc(frame, "SetVertexColor", function(self)
+							if self.changing or self:IsProtected() then
+								return
+							end
+							self.changing = true
+							self:SetDesaturated(desaturate)
+							self:SetVertexColor(colorValue, colorValue, colorValue)
+							self.changing = false
+						end)
+					end
+				end
+			end
+		end
+	end
+
+	if PlayerFrame.PlayerFrameContainer.PlayerElite then
+		PlayerFrame.PlayerFrameContainer.PlayerElite:SetVertexColor(darkModeColor, darkModeColor, darkModeColor)
+	end
+
+	local prdBars = {
+		PersonalResourceDisplayFrame.HealthBarsContainer.healthBar,
+		PersonalResourceDisplayFrame.PowerBar,
+		PersonalResourceDisplayFrame.AlternatePowerBar,
+	}
+
+	for _, frame in ipairs(prdBars) do
+		for _, region in ipairs({ frame:GetRegions() }) do
+			if region:GetObjectType() == "Texture" and region:GetAtlas() == "UI-HUD-CoolDownManager-Bar-BG" then
+				region:SetVertexColor(0.1, 0.1, 0.1)
+			end
+		end
+	end
+
+	-- Death Knight Runes
+	local runes = _G.RuneFrame
+	if runes then
+		for i = 1, 6 do
+			applySettings(runes["Rune" .. i].BG_Active, desat, vc)
+			applySettings(runes["Rune" .. i].BG_Inactive, desat, vc)
+		end
+	end
+
+	-- Death Knight Nameplate Runes
+	local dkNp = _G.DeathKnightResourceOverlayFrame
+	if dkNp and not dkNp:IsForbidden() then
+		for i = 1, 6 do
+			applySettings(dkNp["Rune" .. i].BG_Active, desat, vc)
+			applySettings(dkNp["Rune" .. i].BG_Inactive, desat, vc)
+		end
+	end
+
+	-- Warlock Soul Shards (player frame)
+	local soulShards = _G.WarlockPowerFrame
+	if soulShards then
+		for _, v in pairs({ soulShards:GetChildren() }) do
+			applySettings(v.Background, desat, vc + (cf and 0 or 0.2))
+		end
+	end
+
+	-- Warlock Soul Shards (nameplate)
+	local ssNp = _G.ClassNameplateBarWarlockFrame
+	if ssNp and not ssNp:IsForbidden() then
+		for _, v in pairs({ ssNp:GetChildren() }) do
+			applySettings(v.Background, desat, vc)
+		end
+	end
+
+	-- Druid Combo Points
+	local druidCp = _G.DruidComboPointBarFrame
+	if druidCp then
+		for _, v in pairs({ druidCp:GetChildren() }) do
+			applySettings(v.BG_Inactive, desat, vc + (cf and 0 or 0.2))
+			applySettings(v.BG_Active, desat, vc + (cf and -0.1 or 0.1))
+		end
+	end
+
+	-- Druid Combo Points (nameplate)
+	local druidNp = _G.ClassNameplateBarFeralDruidFrame
+	if druidNp and not druidNp:IsForbidden() then
+		local inactive = vc + (cf and 0 or 0.2)
+		local active = vc + (cf and -0.1 or 0.1)
+		for _, v in pairs({ druidNp:GetChildren() }) do
+			applySettings(v.BG_Inactive, desat, inactive)
+			applySettings(v.BG_Active, desat, active)
+		end
+	end
+
+	-- Mage Arcane Charges
+	local mage = _G.MageArcaneChargesFrame
+	if mage then
+		for _, v in pairs({ mage:GetChildren() }) do
+			applySettings(v.ArcaneBG, desat, vc + 0.15)
+		end
+	end
+
+	-- Mage Arcane Charges (nameplate)
+	local mageNp = _G.ClassNameplateBarMageFrame
+	if mageNp and not mageNp:IsForbidden() then
+		for _, v in pairs({ mageNp:GetChildren() }) do
+			applySettings(v.ArcaneBG, desat, vc + 0.15)
+		end
+	end
+
+	-- Monk Chi
+	local monk = _G.MonkHarmonyBarFrame
+	if monk then
+		for _, v in pairs({ monk:GetChildren() }) do
+			applySettings(v.Chi_BG, desat, vc + (cf and -0.10 or 0.10))
+			applySettings(v.Chi_BG_Active, desat, vc + (cf and -0.21 or 0))
+		end
+	end
+
+	-- Monk Chi (nameplate)
+	local monkNp = _G.ClassNameplateBarWindwalkerMonkFrame
+	if monkNp and not monkNp:IsForbidden() then
+		local chi = vc + (cf and -0.10 or 0.10)
+		local chiActive = vc + (cf and -0.21 or 0)
+		for _, v in pairs({ monkNp:GetChildren() }) do
+			applySettings(v.Chi_BG, desat, chi)
+			applySettings(v.Chi_BG_Active, desat, chiActive)
+		end
+	end
+
+	-- Rogue Combo Points
+	local rogue = _G.RogueComboPointBarFrame
+	if rogue then
+		for _, v in pairs({ rogue:GetChildren() }) do
+			applySettings(v.BGInactive, desat, vc + (cf and 0.15 or 0.45))
+			applySettings(v.BGActive, desat, vc + (cf and -0.1 or 0.20))
+		end
+	end
+
+	-- Rogue Combo Points (nameplate)
+	local rogueNp = _G.ClassNameplateBarRogueFrame
+	if rogueNp and not rogueNp:IsForbidden() then
+		local ri = vc + (cf and 0.15 or 0.45)
+		local ra = vc + (cf and -0.1 or 0.20)
+		for _, v in pairs({ rogueNp:GetChildren() }) do
+			applySettings(v.BGInactive, desat, ri)
+			applySettings(v.BGActive, desat, ra)
+		end
+	end
+
+	-- Paladin Holy Power (nameplate)
+	local palaNp = _G.ClassNameplateBarPaladinFrame
+	if palaNp and not palaNp:IsForbidden() then
+		applySettings(palaNp.Background, desat, vc)
+		applySettings(palaNp.ActiveTexture, desat, vc)
+	end
+
+	-- Evoker Essence (player frame)
+	local evoker = _G.EssencePlayerFrame
+	local ev1 = vc + (cf and -0.30 or 0.10)
+	local ev2 = vc + (cf and -0.20 or 0)
+	if evoker then
+		for _, v in pairs({ evoker:GetChildren() }) do
+			if v.EssenceFillDone and v.EssenceFillDone.CircBG then
+				applySettings(v.EssenceFillDone.CircBG, desat, ev1)
+			end
+			if v.EssenceFilling and v.EssenceFilling.EssenceBG then
+				applySettings(v.EssenceFilling.EssenceBG, desat, ev2)
+			end
+			if v.EssenceEmpty and v.EssenceEmpty.EssenceBG then
+				applySettings(v.EssenceEmpty.EssenceBG, desat, ev2)
+			end
+			if v.EssenceFillDone and v.EssenceFillDone.CircBGActive then
+				applySettings(v.EssenceFillDone.CircBGActive, desat, ev2)
+			end
+			if v.EssenceDepleting and v.EssenceDepleting.EssenceBG then
+				applySettings(v.EssenceDepleting.EssenceBG, desat, ev2)
+			end
+			if v.EssenceDepleting and v.EssenceDepleting.CircBGActive then
+				applySettings(v.EssenceDepleting.CircBGActive, desat, ev2)
+			end
+			if v.EssenceFillDone and v.EssenceFillDone.RimGlow then
+				applySettings(v.EssenceFillDone.RimGlow, desat, ev1)
+			end
+			if v.EssenceDepleting and v.EssenceDepleting.RimGlow then
+				applySettings(v.EssenceDepleting.RimGlow, desat, ev1)
+			end
+		end
+	end
+
+	-- Evoker Essence (nameplate)
+	local evokerNp = _G.ClassNameplateBarDracthyrFrame
+	if evokerNp and not evokerNp:IsForbidden() then
+		local e1 = vc + (cf and -0.30 or 0.10)
+		local e2 = vc + (cf and -0.20 or 0)
+		for _, v in pairs({ evokerNp:GetChildren() }) do
+			if v.EssenceFillDone and v.EssenceFillDone.CircBG then
+				applySettings(v.EssenceFillDone.CircBG, desat, e1)
+			end
+			if v.EssenceFilling and v.EssenceFilling.EssenceBG then
+				applySettings(v.EssenceFilling.EssenceBG, desat, e2)
+			end
+			if v.EssenceEmpty and v.EssenceEmpty.EssenceBG then
+				applySettings(v.EssenceEmpty.EssenceBG, desat, e2)
+			end
+			if v.EssenceFillDone and v.EssenceFillDone.CircBGActive then
+				applySettings(v.EssenceFillDone.CircBGActive, desat, e2)
+			end
+			if v.EssenceDepleting and v.EssenceDepleting.EssenceBG then
+				applySettings(v.EssenceDepleting.EssenceBG, desat, e2)
+			end
+			if v.EssenceDepleting and v.EssenceDepleting.CircBGActive then
+				applySettings(v.EssenceDepleting.CircBGActive, desat, e2)
+			end
+			if v.EssenceFillDone and v.EssenceFillDone.RimGlow then
+				applySettings(v.EssenceFillDone.RimGlow, desat, e1)
+			end
+			if v.EssenceDepleting and v.EssenceDepleting.RimGlow then
+				applySettings(v.EssenceDepleting.RimGlow, desat, e1)
+			end
+		end
+	end
+end
+
 -- #region Main Tweaks
 local function OnEvent(self, event, ...)
 	if event == "ADDON_LOADED" then
@@ -7,6 +243,7 @@ local function OnEvent(self, event, ...)
 		end
 	elseif event == "PLAYER_LOGIN" then
 	elseif event == "PLAYER_ENTERING_WORLD" then
+		applyDarkMode()
 		-- fix chat navigation
 		local editBox = ChatFrame1EditBox
 		if editBox and editBox.SetAltArrowKeyMode then
@@ -99,12 +336,12 @@ local function OnEvent(self, event, ...)
 		SetCVar("UnitNameEnemyPlayerName", 1)
 		SetCVar("UnitNameNPC", 1)
 		SetCVar("UnitNameFriendlyPlayerName", 1) -- Show friendly player names always
-		SetCVar("UnitNamePlayerGuild", 1) -- Show guild
+		SetCVar("UnitNamePlayerGuild", 0) -- Show guild
 		SetCVar("UnitNameOwn", 1) -- Show own name
 		SetCVar("UnitNamePlayerPVPTitle", 0) -- Show character title
 
 		-- Personal Resource Display
-		local personalResource = 0
+		local personalResource = 1
 		SetCVar("nameplateShowSelf", personalResource)
 		SetCVar("NameplatePersonalShowAlways", 0)
 		SetCVar("NameplatePersonalShowInCombat", personalResource)
@@ -137,9 +374,12 @@ local function OnEvent(self, event, ...)
 		SetCVar("autoLootDefault", 1)
 
 		-- Damage number size
-		SetCVar("WorldTextScale_v2", 1.3)
+		SetCVar("WorldTextScale_v2", 0.6)
 		-- Name size
 		SetCVar("WorldTextMinSize", 12)
+
+		-- Spell overlays HUD
+		SetCVar("spellActivationOverlayOpacity", 0)
 
 		-- Secure ability toggle, prevents quick double presses
 		SetCVar("secureAbilityToggle", 1)
@@ -186,7 +426,7 @@ local function OnEvent(self, event, ...)
 		--#endregion
 
 		-- Set edit mode profile to 1st custom profile by default
-		C_EditMode.SetActiveLayout(3) -- 3 is 1 for some reason, probably because blizzard 1/2 default and legacy profiles
+		-- C_EditMode.SetActiveLayout(3) -- 3 is 1 for some reason, probably because blizzard 1/2 default and legacy profiles
 	elseif event == "CHAT_MSG_CHANNEL" then
 		-- Chat Message event
 		local text, playerName, _, channelName = ...

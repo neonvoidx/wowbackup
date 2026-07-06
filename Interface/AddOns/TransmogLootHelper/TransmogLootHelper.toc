@@ -1,8 +1,9 @@
-## Interface: 120005
+## Interface: 120007
 ## Title: |cff3FC7EBTransmog Loot Helper|r
 ## Author: Slackluster
+## Notes: Adds icons to your items to show their collection status
 ## IconTexture: Interface\AddOns\TransmogLootHelper\assets\icon.png
-## Version: v12.0.5-03
+## Version: v12.0.7-03
 ## X-Curse-Project-ID: 1033752
 ## X-Wago-ID: EGPXOkG1
 
@@ -39,6 +40,7 @@ modules\LootTracker.lua
 modules\Tweaks.lua
 integrations\ArkInventory.lua
 integrations\Baganator.lua
+integrations\Bagforge.lua
 integrations\BetterBags.lua
 integrations\OneWoW_Bags.lua
 integrations\WorldQuestTab.lua

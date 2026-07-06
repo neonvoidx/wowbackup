@@ -1,11 +1,11 @@
-## Interface: 120005
+## Interface: 120007
 
 ## Title: AtlasLoot |cFF0099FF[Midnight]|r
 
 ## Notes: AtlasLoot loot tables from Midnight
 
 ## Author: nanderson11
-## Version: v9.22.6
+## Version: v9.22.10
 ## Group: AtlasLoot
 ## IconTexture: Interface\Icons\INV_Box_01
 ## Dependencies: AtlasLoot

@@ -10,6 +10,209 @@ local GetItemInfoFn = C_Item.GetItemInfo
 local GetBagItem = C_TooltipInfo.GetBagItem
 local IsEquippableItemFn = C_Item.IsEquippableItem
 addon.functions = addon.functions or {}
+addon.PixelUtil = addon.PixelUtil or {}
+
+local PixelUtil = addon.PixelUtil
+
+function PixelUtil.ApplyTexturePixelSnapping(texture, bias)
+	if not texture then return nil end
+	if texture.SetSnapToPixelGrid then texture:SetSnapToPixelGrid(false) end
+	if texture.SetTexelSnappingBias then texture:SetTexelSnappingBias(bias or 0) end
+	return texture
+end
+
+function PixelUtil.Round(value)
+	value = tonumber(value) or 0
+	if value >= 0 then return math.floor(value + 0.5) end
+	return math.ceil(value - 0.5)
+end
+
+function PixelUtil.GetPixelScale(region)
+	local scale
+	if region and region.GetEffectiveScale then
+		scale = region:GetEffectiveScale()
+	elseif UIParent and UIParent.GetEffectiveScale then
+		scale = UIParent:GetEffectiveScale()
+	elseif UIParent and UIParent.GetScale then
+		scale = UIParent:GetScale()
+	end
+	scale = tonumber(scale) or 1
+	if scale <= 0 then scale = 1 end
+
+	local _, physicalHeight
+	if GetPhysicalScreenSize then
+		_, physicalHeight = GetPhysicalScreenSize()
+	end
+	if (not physicalHeight or physicalHeight <= 0) and GetScreenHeight then
+		physicalHeight = GetScreenHeight()
+	end
+	physicalHeight = tonumber(physicalHeight) or 768
+	if physicalHeight <= 0 then physicalHeight = 768 end
+
+	local factor = 768 / physicalHeight
+	if factor <= 0 then factor = 1 end
+	return scale, factor
+end
+
+function PixelUtil.PixelsToUi(pixels, scale, factor)
+	scale = tonumber(scale) or 1
+	factor = tonumber(factor) or 1
+	if scale <= 0 then scale = 1 end
+	if factor <= 0 then factor = 1 end
+	return ((tonumber(pixels) or 0) * factor) / scale
+end
+
+function PixelUtil.UiToPixels(value, region, minPixels)
+	local scale, factor = PixelUtil.GetPixelScale(region)
+	local pixels = PixelUtil.Round(((tonumber(value) or 0) * scale) / factor)
+	minPixels = tonumber(minPixels)
+	if minPixels and minPixels > 0 then
+		if pixels > 0 and pixels < minPixels then pixels = minPixels end
+		if pixels < 0 and pixels > -minPixels then pixels = -minPixels end
+	end
+	return pixels, scale, factor
+end
+
+function PixelUtil.OnePixel(region)
+	local scale, factor = PixelUtil.GetPixelScale(region)
+	return PixelUtil.PixelsToUi(1, scale, factor)
+end
+
+function PixelUtil.SizeFromPixels(region, pixels, minPixels)
+	pixels = tonumber(pixels) or 0
+	minPixels = tonumber(minPixels) or 0
+	if pixels > 0 and pixels < minPixels then pixels = minPixels end
+	if pixels < 0 and pixels > -minPixels then pixels = -minPixels end
+	local scale, factor = PixelUtil.GetPixelScale(region)
+	return PixelUtil.PixelsToUi(PixelUtil.Round(pixels), scale, factor)
+end
+
+function PixelUtil.Snap(value, region)
+	value = tonumber(value) or 0
+	if value == 0 then return 0 end
+	local onePixel = PixelUtil.OnePixel(region)
+	if onePixel <= 0 then return value end
+	return PixelUtil.Round(value / onePixel) * onePixel
+end
+
+function PixelUtil.Scale(value, region)
+	value = tonumber(value) or 0
+	if value == 0 then return 0 end
+	local onePixel = PixelUtil.OnePixel(region)
+	if onePixel <= 0 then return value end
+	local pixels = value / onePixel
+	if value > 0 then
+		pixels = math.floor(pixels)
+	else
+		pixels = math.ceil(pixels)
+	end
+	return pixels * onePixel
+end
+
+function PixelUtil.Size(frame, width, height)
+	if not (frame and frame.SetSize) then return end
+	width = PixelUtil.Snap(width, frame)
+	height = height ~= nil and PixelUtil.Snap(height, frame) or width
+	frame:SetSize(width, height)
+end
+
+function PixelUtil.Width(frame, width)
+	if not (frame and frame.SetWidth) then return end
+	frame:SetWidth(PixelUtil.Snap(width, frame))
+end
+
+function PixelUtil.Height(frame, height)
+	if not (frame and frame.SetHeight) then return end
+	frame:SetHeight(PixelUtil.Snap(height, frame))
+end
+
+function PixelUtil.Point(frame, point, relativeTo, relativePoint, x, y)
+	if not (frame and frame.SetPoint) then return end
+	relativeTo = relativeTo or (frame.GetParent and frame:GetParent()) or UIParent
+	x = PixelUtil.Snap(x or 0, relativeTo)
+	y = PixelUtil.Snap(y or 0, relativeTo)
+	frame:SetPoint(point, relativeTo, relativePoint or point, x, y)
+end
+
+function PixelUtil.SetInside(region, anchor, xOffset, yOffset)
+	if not (region and region.ClearAllPoints and region.SetPoint) then return end
+	anchor = anchor or (region.GetParent and region:GetParent()) or UIParent
+	xOffset = PixelUtil.Snap(xOffset or 0, anchor)
+	yOffset = PixelUtil.Snap(yOffset or xOffset, anchor)
+	region:ClearAllPoints()
+	PixelUtil.ApplyTexturePixelSnapping(region, 0)
+	region:SetPoint("TOPLEFT", anchor, "TOPLEFT", xOffset, -yOffset)
+	region:SetPoint("BOTTOMRIGHT", anchor, "BOTTOMRIGHT", -xOffset, yOffset)
+end
+
+function PixelUtil.SetOutside(region, anchor, xOffset, yOffset)
+	if not (region and region.ClearAllPoints and region.SetPoint) then return end
+	anchor = anchor or (region.GetParent and region:GetParent()) or UIParent
+	xOffset = PixelUtil.Snap(xOffset or 0, anchor)
+	yOffset = PixelUtil.Snap(yOffset or xOffset, anchor)
+	region:ClearAllPoints()
+	PixelUtil.ApplyTexturePixelSnapping(region, 0)
+	region:SetPoint("TOPLEFT", anchor, "TOPLEFT", -xOffset, yOffset)
+	region:SetPoint("BOTTOMRIGHT", anchor, "BOTTOMRIGHT", xOffset, -yOffset)
+end
+
+function PixelUtil.SetInset(region, anchor, left, right, top, bottom)
+	if not (region and region.ClearAllPoints and region.SetPoint) then return end
+	anchor = anchor or (region.GetParent and region:GetParent()) or UIParent
+	left = PixelUtil.Snap(left or 0, anchor)
+	right = PixelUtil.Snap(right or 0, anchor)
+	top = PixelUtil.Snap(top or 0, anchor)
+	bottom = PixelUtil.Snap(bottom or 0, anchor)
+	region:ClearAllPoints()
+	PixelUtil.ApplyTexturePixelSnapping(region, 0)
+	region:SetPoint("TOPLEFT", anchor, "TOPLEFT", left, -top)
+	region:SetPoint("BOTTOMRIGHT", anchor, "BOTTOMRIGHT", -right, bottom)
+end
+
+function PixelUtil.ApplyStatusBarTexturePixelSnapping(bar, bias)
+	if not (bar and bar.GetStatusBarTexture) then return nil end
+	local texture = PixelUtil.ApplyTexturePixelSnapping(bar:GetStatusBarTexture(), bias)
+	if texture and texture.ClearAllPoints and texture.SetPoint then PixelUtil.SetInside(texture, bar, 0, 0) end
+	return texture
+end
+
+function PixelUtil.ApplySafeBorderTextureSnapping(frame, stateKey, bias)
+	local state = frame and frame[stateKey or "_eqolSafeBorder"]
+	if not state then return end
+	PixelUtil.ApplyTexturePixelSnapping(state.top, bias or 0)
+	PixelUtil.ApplyTexturePixelSnapping(state.bottom, bias or 0)
+	PixelUtil.ApplyTexturePixelSnapping(state.left, bias or 0)
+	PixelUtil.ApplyTexturePixelSnapping(state.right, bias or 0)
+	PixelUtil.ApplyTexturePixelSnapping(state.topLeft, bias or 0)
+	PixelUtil.ApplyTexturePixelSnapping(state.topRight, bias or 0)
+	PixelUtil.ApplyTexturePixelSnapping(state.bottomLeft, bias or 0)
+	PixelUtil.ApplyTexturePixelSnapping(state.bottomRight, bias or 0)
+end
+
+function PixelUtil.ResolveBorderContentInset(edgeSize, outset, alpha)
+	if issecretvalue and issecretvalue(alpha) then return 0 end
+	alpha = tonumber(alpha) or 0
+	if alpha <= 0 then return 0 end
+	edgeSize = tonumber(edgeSize) or 0
+	if edgeSize <= 0 then return 0 end
+	outset = tonumber(outset) or 0
+	if outset < 0 then outset = 0 end
+	local inset = edgeSize - outset
+	if inset <= 0 then return 0 end
+	return math.max(1, math.ceil(inset))
+end
+
+function PixelUtil.ResolveColorAlpha(color)
+	if type(color) ~= "table" then return 0 end
+	return color[4] or color.a or 0
+end
+
+function addon.functions.IsMinigameClientScene(sceneType)
+	if Enum and Enum.ClientSceneType and Enum.ClientSceneType.MinigameSceneType ~= nil then
+		return sceneType == Enum.ClientSceneType.MinigameSceneType
+	end
+	return sceneType == 1
+end
 
 local UnitHealth, UnitHealthMax = UnitHealth, UnitHealthMax
 local UnitPower, UnitPowerMax = UnitPower, UnitPowerMax
@@ -344,6 +547,148 @@ function addon.functions.GetLSMMediaDropdown(mediaType, includeEmptyOption, empt
 	return list, order
 end
 
+function addon.functions.SetSafeBorder(frame, enabled, textureKey, size, r, g, b, a, options)
+	if not frame then return false end
+	options = type(options) == "table" and options or EMPTY_TABLE
+	local stateKey = options.stateKey or "_eqolSafeBorder"
+	local state = frame[stateKey]
+	if not state then
+		state = {}
+		frame[stateKey] = state
+	end
+
+	if not enabled then
+		state.enabled = false
+		if state.top then state.top:Hide() end
+		if state.bottom then state.bottom:Hide() end
+		if state.left then state.left:Hide() end
+		if state.right then state.right:Hide() end
+		if state.topLeft then state.topLeft:Hide() end
+		if state.topRight then state.topRight:Hide() end
+		if state.bottomLeft then state.bottomLeft:Hide() end
+		if state.bottomRight then state.bottomRight:Hide() end
+		frame:Hide()
+		return true
+	end
+
+	local defaultTexture = options.defaultTexture or "Interface\\Buttons\\WHITE8x8"
+	local texture = textureKey
+	if type(texture) ~= "string" or texture == "" or texture == "DEFAULT" then
+		texture = defaultTexture
+	elseif options.mediaType then
+		local media = addon.functions.GetLSMMediaHash(options.mediaType)
+		if type(media) == "table" and type(media[texture]) == "string" and media[texture] ~= "" then texture = media[texture] end
+	end
+
+	if options.pixelPerfect == true then
+		size = PixelUtil.SizeFromPixels(frame, size, 1)
+	else
+		size = tonumber(size) or 1
+		if size < 1 then size = 1 end
+	end
+	local useSlices = options.useSlices
+	if useSlices == nil then useSlices = texture ~= defaultTexture end
+	local layer = options.drawLayer or "BORDER"
+
+	if not state.top then
+		state.top = frame:CreateTexture(nil, layer)
+		state.bottom = frame:CreateTexture(nil, layer)
+		state.left = frame:CreateTexture(nil, layer)
+		state.right = frame:CreateTexture(nil, layer)
+		state.topLeft = frame:CreateTexture(nil, layer)
+		state.topRight = frame:CreateTexture(nil, layer)
+		state.bottomLeft = frame:CreateTexture(nil, layer)
+		state.bottomRight = frame:CreateTexture(nil, layer)
+	end
+
+	if state.texture ~= texture or state.size ~= size or state.useSlices ~= useSlices or not state.top:GetTexture() then
+		state.texture = texture
+		state.size = size
+		state.useSlices = useSlices
+
+		state.top:SetTexture(texture)
+		state.bottom:SetTexture(texture)
+		state.left:SetTexture(texture)
+		state.right:SetTexture(texture)
+		state.topLeft:SetTexture(texture)
+		state.topRight:SetTexture(texture)
+		state.bottomLeft:SetTexture(texture)
+		state.bottomRight:SetTexture(texture)
+
+		if useSlices then
+			state.topLeft:SetTexCoord(0.5078125, 0.0625, 0.5078125, 0.9375, 0.6171875, 0.0625, 0.6171875, 0.9375)
+			state.topRight:SetTexCoord(0.6328125, 0.0625, 0.6328125, 0.9375, 0.7421875, 0.0625, 0.7421875, 0.9375)
+			state.bottomLeft:SetTexCoord(0.7578125, 0.0625, 0.7578125, 0.9375, 0.8671875, 0.0625, 0.8671875, 0.9375)
+			state.bottomRight:SetTexCoord(0.8828125, 0.0625, 0.8828125, 0.9375, 0.9921875, 0.0625, 0.9921875, 0.9375)
+			state.top:SetTexCoord(0.2578125, 0.9375, 0.3671875, 0.9375, 0.2578125, 0.0625, 0.3671875, 0.0625)
+			state.bottom:SetTexCoord(0.3828125, 0.9375, 0.4921875, 0.9375, 0.3828125, 0.0625, 0.4921875, 0.0625)
+			state.left:SetTexCoord(0.0078125, 0.0625, 0.0078125, 0.9375, 0.1171875, 0.0625, 0.1171875, 0.9375)
+			state.right:SetTexCoord(0.1328125, 0.0625, 0.1328125, 0.9375, 0.2421875, 0.0625, 0.2421875, 0.9375)
+		else
+			state.top:SetTexCoord(0, 1, 0, 1)
+			state.bottom:SetTexCoord(0, 1, 0, 1)
+			state.left:SetTexCoord(0, 1, 0, 1)
+			state.right:SetTexCoord(0, 1, 0, 1)
+			state.topLeft:SetTexCoord(0, 1, 0, 1)
+			state.topRight:SetTexCoord(0, 1, 0, 1)
+			state.bottomLeft:SetTexCoord(0, 1, 0, 1)
+			state.bottomRight:SetTexCoord(0, 1, 0, 1)
+		end
+		if options.pixelPerfect == true then PixelUtil.ApplySafeBorderTextureSnapping(frame, stateKey, options.texelSnappingBias or 0) end
+
+		state.topLeft:ClearAllPoints()
+		state.topLeft:SetPoint("TOPLEFT", frame, "TOPLEFT")
+		state.topLeft:SetSize(size, size)
+		state.topRight:ClearAllPoints()
+		state.topRight:SetPoint("TOPRIGHT", frame, "TOPRIGHT")
+		state.topRight:SetSize(size, size)
+		state.bottomLeft:ClearAllPoints()
+		state.bottomLeft:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT")
+		state.bottomLeft:SetSize(size, size)
+		state.bottomRight:ClearAllPoints()
+		state.bottomRight:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT")
+		state.bottomRight:SetSize(size, size)
+		state.top:ClearAllPoints()
+		state.top:SetPoint("TOPLEFT", state.topLeft, "TOPRIGHT")
+		state.top:SetPoint("TOPRIGHT", state.topRight, "TOPLEFT")
+		state.top:SetHeight(size)
+		state.bottom:ClearAllPoints()
+		state.bottom:SetPoint("BOTTOMLEFT", state.bottomLeft, "BOTTOMRIGHT")
+		state.bottom:SetPoint("BOTTOMRIGHT", state.bottomRight, "BOTTOMLEFT")
+		state.bottom:SetHeight(size)
+		state.left:ClearAllPoints()
+		state.left:SetPoint("TOPLEFT", state.topLeft, "BOTTOMLEFT")
+		state.left:SetPoint("BOTTOMLEFT", state.bottomLeft, "TOPLEFT")
+		state.left:SetWidth(size)
+		state.right:ClearAllPoints()
+		state.right:SetPoint("TOPRIGHT", state.topRight, "BOTTOMRIGHT")
+		state.right:SetPoint("BOTTOMRIGHT", state.bottomRight, "TOPRIGHT")
+		state.right:SetWidth(size)
+	end
+
+	state.top:SetVertexColor(r, g, b, a)
+	state.bottom:SetVertexColor(r, g, b, a)
+	state.left:SetVertexColor(r, g, b, a)
+	state.right:SetVertexColor(r, g, b, a)
+	state.topLeft:SetVertexColor(r, g, b, a)
+	state.topRight:SetVertexColor(r, g, b, a)
+	state.bottomLeft:SetVertexColor(r, g, b, a)
+	state.bottomRight:SetVertexColor(r, g, b, a)
+	if options.pixelPerfect == true then PixelUtil.ApplySafeBorderTextureSnapping(frame, stateKey, options.texelSnappingBias or 0) end
+
+	state.top:Show()
+	state.bottom:Show()
+	state.left:Show()
+	state.right:Show()
+	state.topLeft:Show()
+	state.topRight:Show()
+	state.bottomLeft:Show()
+	state.bottomRight:Show()
+	frame:Show()
+	state.enabled = true
+	return true
+end
+
 local function normalizeMediaValue(value)
 	if type(value) ~= "string" or value == "" then return nil end
 	return value
@@ -353,12 +698,45 @@ local function isMediaPath(value)
 	return type(value) == "string" and (value:find("\\", 1, true) or value:find("/", 1, true)) ~= nil
 end
 
-local function isKnownFontAsset(value)
-	if type(value) ~= "string" or value == "" then return false end
+local function getUIFileAssetAPI() return _G.C_UIFileAsset end
+
+local function hasFileAssetValue(value)
+	if type(value) == "number" then return value > 0 end
+	return type(value) == "string" and value ~= ""
+end
+
+local function isKnownFileAsset(value)
+	if not hasFileAssetValue(value) then return false end
 	local fileAssetAPI = _G.C_UIFileAsset
 	if not (fileAssetAPI and fileAssetAPI.IsKnownFile) then return true end
 	local ok, known = pcall(fileAssetAPI.IsKnownFile, value)
 	return ok and known == true
+end
+
+local function isLooseFileAsset(value)
+	if not hasFileAssetValue(value) then return false end
+	local fileAssetAPI = getUIFileAssetAPI()
+	if not (fileAssetAPI and fileAssetAPI.IsLooseFile) then return false end
+	local ok, isLoose = pcall(fileAssetAPI.IsLooseFile, value)
+	return ok and isLoose == true
+end
+
+local function getFileAssetID(value)
+	if not hasFileAssetValue(value) then return nil end
+	local fileAssetAPI = getUIFileAssetAPI()
+	if not (fileAssetAPI and fileAssetAPI.GetFileID) then return type(value) == "number" and value or nil end
+	local ok, fileID = pcall(fileAssetAPI.GetFileID, value)
+	if not ok then return nil end
+	fileID = tonumber(fileID)
+	if not fileID or fileID <= 0 then return nil end
+	if math.floor(fileID) ~= fileID then return nil end
+	return fileID
+end
+
+local function shouldUseFileAsset(value, requireKnown)
+	if not hasFileAssetValue(value) then return false end
+	if requireKnown == false then return true end
+	return isKnownFileAsset(value)
 end
 
 local function isGlobalFontConfigValue(value) return normalizeMediaValue(value) == GLOBAL_FONT_CONFIG_KEY end
@@ -379,7 +757,13 @@ end
 
 function addon.functions.IsGlobalFontConfigValue(value) return isGlobalFontConfigValue(value) end
 
-function addon.functions.IsKnownFontAsset(value) return isKnownFontAsset(value) end
+function addon.functions.IsKnownFileAsset(value) return isKnownFileAsset(value) end
+
+function addon.functions.IsLooseFileAsset(value) return isLooseFileAsset(value) end
+
+function addon.functions.GetFileAssetID(value) return getFileAssetID(value) end
+
+function addon.functions.IsKnownFontAsset(value) return isKnownFileAsset(value) end
 
 function addon.functions.GetLocaleDefaultFontFace() return (addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT end
 
@@ -429,7 +813,11 @@ function addon.functions.ResolveLSMMedia(mediaType, configured, fallback, allowP
 		if lsm.IsValid and lsm:IsValid(mediaKind, configuredValue) then
 			local fetched = lsm.Fetch and lsm:Fetch(mediaKind, configuredValue, true)
 			if type(fetched) == "string" and fetched ~= "" then
-				if mediaKind ~= "font" or isKnownFontAsset(fetched) then return fetched end
+				if mediaKind == "font" then
+					if isKnownFileAsset(fetched) then return fetched end
+				elseif not isMediaPath(fetched) or shouldUseFileAsset(fetched, true) then
+					return fetched
+				end
 			end
 			return fallbackValue
 		end
@@ -437,18 +825,26 @@ function addon.functions.ResolveLSMMedia(mediaType, configured, fallback, allowP
 			local hash = lsm:HashTable(mediaKind) or {}
 			local byName = hash[configuredValue]
 			if type(byName) == "string" and byName ~= "" then
-				if mediaKind ~= "font" or isKnownFontAsset(byName) then return byName end
+				if mediaKind == "font" then
+					if isKnownFileAsset(byName) then return byName end
+				elseif not isMediaPath(byName) or shouldUseFileAsset(byName, true) then
+					return byName
+				end
 				return fallbackValue
 			end
 			for _, path in pairs(hash) do
 				if path == configuredValue then
-					if mediaKind ~= "font" or isKnownFontAsset(configuredValue) then return configuredValue end
+					if mediaKind == "font" then
+						if isKnownFileAsset(configuredValue) then return configuredValue end
+					elseif not isMediaPath(configuredValue) or shouldUseFileAsset(configuredValue, true) then
+						return configuredValue
+					end
 					return fallbackValue
 				end
 			end
 		end
 	end
-	if allowPath ~= false and mediaKind ~= "font" and isMediaPath(configuredValue) then return configuredValue end
+	if allowPath ~= false and mediaKind ~= "font" and isMediaPath(configuredValue) and shouldUseFileAsset(configuredValue, true) then return configuredValue end
 	return fallbackValue
 end
 
@@ -567,7 +963,7 @@ end
 
 local function setFontStringFont(fontString, fontFace, size, flags)
 	if not (fontString and fontString.SetFont and fontFace) then return false end
-	if not isKnownFontAsset(fontFace) then return false end
+	if not isKnownFileAsset(fontFace) then return false end
 	local ok, applied = pcall(fontString.SetFont, fontString, fontFace, size, flags)
 	return ok and applied ~= false
 end
@@ -2270,6 +2666,9 @@ function addon.functions.catalystChecks()
 		addon.variables.catalystID = 3269
 	elseif mId == 17 then
 		addon.variables.catalystID = 3378
+	elseif mId == 18 then
+		-- Midnight Season 2 PTR
+		addon.variables.catalystID = 3465
 	end
 	addon.functions.createCatalystFrame()
 end

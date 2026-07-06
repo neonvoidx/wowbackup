@@ -1,0 +1,23 @@
+## Interface: 120007, 120100
+## Title: Enhance QoL Vendor
+## Author: R41Z0R
+## Version: 11.6.0
+## Notes: Vendor automation and shopping helpers
+## Notes-deDE: Haendler-Automatisierung und Einkaufshelfer
+## Notes-esES: Automatizacion de vendedores y ayudas de compra
+## Notes-esMX: Automatizacion de vendedores y ayudas de compra
+## Notes-frFR: Automatisation des marchands et aides d'achat
+## Notes-itIT: Automazione venditori e assistenti acquisti
+## Notes-koKR: 상인 자동화와 쇼핑 도우미
+## Notes-ptBR: Automacao de vendedores e auxilios de compra
+## Notes-ruRU: Автоматизация торговцев и помощники покупок
+## Notes-zhCN: 商人自动化和购物辅助
+## Notes-zhTW: 商人自動化與購物輔助
+## Dependencies: EnhanceQoL
+## IconTexture: Interface\AddOns\EnhanceQoL\Icons\Icon.tga
+## Retail: true
+## X-Compatible-With: retail
+## LoadOnDemand: 1
+## Globe-Main: EnhanceQoL
+
+Vendor.xml

@@ -12,6 +12,10 @@ local MountActions = addon.MountActions or {}
 addon.MountActions = MountActions
 local issecretvalue = _G.issecretvalue
 
+local function canReadAuraData()
+	return not addon.AuraCompat or addon.AuraCompat:CanReadAuraData()
+end
+
 local RANDOM_FAVORITE_SPELL_ID = 150544
 local GHOST_WOLF_SPELL_ID = 2645
 local SLOW_FALL_SPELL_ID = 130
@@ -125,7 +129,7 @@ end
 local function getMountedTargetSpellID()
 	if not UnitExists("target") then return nil end
 	if not C_MountJournal or not C_MountJournal.GetMountFromSpell then return nil end
-	if C_Secrets and C_Secrets.ShouldAurasBeSecret and C_Secrets.ShouldAurasBeSecret() then return nil end
+	if not canReadAuraData() then return nil end
 
 	if C_UnitAuras and C_UnitAuras.GetUnitAuras then
 		local auras = C_UnitAuras.GetUnitAuras("target", "HELPFUL")
@@ -188,6 +192,7 @@ local function shouldUseDracthyrVisageBeforeMount()
 	if not addon.db or addon.db.randomMountDracthyrVisageBeforeMount ~= true then return false end
 	local raceTag = (addon.variables and addon.variables.unitRace) or select(2, UnitRace("player"))
 	if raceTag ~= DRACTHYR_RACE_TAG then return false end
+	if not canReadAuraData() then return false end
 	if not (C_UnitAuras and C_UnitAuras.GetPlayerAuraBySpellID) then return false end
 	local aura = C_UnitAuras.GetPlayerAuraBySpellID(DRACTHYR_VISAGE_AURA_CHECK_SPELL_ID)
 	return aura == nil
@@ -326,6 +331,7 @@ function MountActions:BuildRandomMountCache(useAll)
 end
 
 function MountActions:GetRandomMountSpell()
+	self:RegisterRandomCacheEvents()
 	local useAll = self:IsRandomAllEnabled()
 	local cacheMode = useAll and "all" or "favorites"
 	if self.randomMountDirty or not self.randomMountCache or self.randomMountCacheMode ~= cacheMode then
@@ -495,14 +501,18 @@ end
 
 local function handleMountEvents() MountActions:MarkRandomCacheDirty() end
 
-local eventFrame = CreateFrame("Frame")
-eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
-eventFrame:RegisterEvent("MOUNT_JOURNAL_SEARCH_UPDATED")
-eventFrame:RegisterEvent("MOUNT_JOURNAL_USABILITY_CHANGED")
-eventFrame:RegisterEvent("COMPANION_LEARNED")
-eventFrame:RegisterEvent("COMPANION_UNLEARNED")
-eventFrame:RegisterEvent("COMPANION_UPDATE")
-eventFrame:SetScript("OnEvent", handleMountEvents)
+function MountActions:RegisterRandomCacheEvents()
+	if self.randomCacheEventFrame then return end
+	local eventFrame = CreateFrame("Frame")
+	eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+	eventFrame:RegisterEvent("MOUNT_JOURNAL_SEARCH_UPDATED")
+	eventFrame:RegisterEvent("MOUNT_JOURNAL_USABILITY_CHANGED")
+	eventFrame:RegisterEvent("COMPANION_LEARNED")
+	eventFrame:RegisterEvent("COMPANION_UNLEARNED")
+	eventFrame:RegisterEvent("COMPANION_UPDATE")
+	eventFrame:SetScript("OnEvent", handleMountEvents)
+	self.randomCacheEventFrame = eventFrame
+end
 
 local initFrame = CreateFrame("Frame")
 initFrame:RegisterEvent("PLAYER_LOGIN")

@@ -1,4 +1,4 @@
--- luacheck: globals EnhanceQoL GetBindLocation NORMAL_FONT_COLOR UNKNOWN C_Item GetItemInfoInstant GetItemIcon
+-- luacheck: globals EnhanceQoL GetBindLocation NORMAL_FONT_COLOR UNKNOWN C_Item
 local addonName, addon = ...
 local L = addon.L
 
@@ -61,6 +61,16 @@ local function getHearthstoneIcon()
 	return hearthstoneIcon
 end
 
+local function getRandomHearthstoneItemID()
+	local funcs = addon.MythicPlus and addon.MythicPlus.functions
+	if funcs and funcs.GetRandomHearthstoneItemID then
+		local itemID = funcs.GetRandomHearthstoneItemID(true)
+		if itemID then return itemID end
+	end
+	if C_Item and C_Item.GetItemCount and (C_Item.GetItemCount(HEARTHSTONE_ITEM_ID) or 0) > 0 then return HEARTHSTONE_ITEM_ID end
+	return nil
+end
+
 local function updateHearthstone(s)
 	s = s or stream
 	ensureDB()
@@ -71,7 +81,24 @@ local function updateHearthstone(s)
 	local text = colorize(location)
 	if not db.hideIcon then text = ("|T%d:%d:%d:0:0|t %s"):format(getHearthstoneIcon(), size, size, text) end
 
-	s.snapshot.text = text
+	local hearthstoneItemID = getRandomHearthstoneItemID()
+	local secureAttributes = {
+		type1 = "macro",
+		macrotext1 = hearthstoneItemID and ("/use item:" .. tostring(hearthstoneItemID)) or "",
+	}
+	local secureKey = hearthstoneItemID and ("item:" .. tostring(hearthstoneItemID)) or "none"
+
+	s.snapshot.text = nil
+	s.snapshot.parts = {
+		{
+			text = text,
+			secure = {
+				key = secureKey,
+				attributes = secureAttributes,
+				forwardRightClick = true,
+			},
+		},
+	}
 	s.snapshot.fontSize = size
 
 	local tooltip = (L["Hearthstone"] or "Hearthstone") .. ": " .. location

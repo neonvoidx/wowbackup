@@ -1,0 +1,18 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+	<Script file="ChatIM/ChannelHistory.lua" />
+	<Script file="ChatIM/UI.lua" />
+	<Script file="ChatIM/Core.lua" />
+	<Include file="TradeMailLog.xml" />
+	<Script file="TradeMailLog.lua" />
+	<Script file="ChatIcons.lua" />
+	<Script file="CommunityChatPrivacy.lua" />
+	<Script file="FriendsListDecor.lua" />
+	<Script file="Ignore/Ignore.lua" />
+	<Include file="Ignore/Ignore.xml" />
+	<Script file="Mailbox.lua" />
+	<Include file="Mailbox.xml" />
+	<Script file="Settings_ChatFrame.lua" />
+	<Script file="Settings_Social.lua" />
+	<Script file="Settings_Mailbox.lua" />
+	<Script file="Init.lua" />
+</Ui>

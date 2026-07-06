@@ -159,6 +159,7 @@ TalentTreeTweaksDB = {
 },
 ["horrificVisionsEnabled"] = true,
 ["overchargedTitanConsoleEnabled"] = true,
+["omniumFolioEnabled"] = true,
 ["rideAlong"] = 1,
 ["surge"] = 1,
 ["skyridingEnabled"] = true,

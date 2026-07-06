@@ -121,27 +121,6 @@ local combatIndicator = BattleGroundEnemies:NewButtonModule({
   attachSettingsToButton = false,
 })
 
-local states = {
-  Unknown = 0,
-  Combat = 1,
-  OutOfCombat = 2,
-}
-
-local stateStateToIcon = {
-  Unknown = {
-    Combat = false,
-    OutOfCombat = false,
-  },
-  Combat = {
-    Combat = true,
-    OutOfCombat = false,
-  },
-  OutOfCombat = {
-    Combat = false,
-    OutOfCombat = true,
-  },
-}
-
 local function getState(inCombat)
   if inCombat == nil then
     return 0
@@ -305,7 +284,15 @@ function combatIndicator:AttachToPlayerButton(playerButton)
       iconFrame.texture:SetTexture(self.config[iconFrame.type].Icon)
     end)
 
-    self:Update(nil, true)
+    -- Re-apply the icon textures/config, but DON'T re-derive combat state in test
+    -- mode: there's no live unit, so Update(nil,...) would read UnitAffectingCombat
+    -- (nil for fake players) and blank the simulated combat icon on every unrelated
+    -- settings change. Pass the current simulated state instead so it's preserved.
+    if BattleGroundEnemies:IsTestmodeActive() then
+      self:Update(self.currentState, true)
+    else
+      self:Update(nil, true)
+    end
 
     -- Ensure shared ticker is running with the configured period
     if self.config.UpdatePeriod then

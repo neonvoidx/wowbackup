@@ -1,0 +1,17 @@
+
+CooldownToGoDB = {
+["namespaces"] = {
+},
+["profileKeys"] = {
+["Starphage - Tichondrius"] = "Default",
+},
+["profiles"] = {
+["Default"] = {
+["gracePeriod"] = 0.2,
+["locked"] = true,
+["warnSound"] = false,
+["fadeTime"] = 1,
+["font"] = "1",
+},
+},
+}

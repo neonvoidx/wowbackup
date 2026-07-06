@@ -1,6 +1,7 @@
 ---@type string, Addon
 local _, addon = ...
 local wow = addon.WoW.Api
+local capabilities = addon.WoW.Capabilities
 local fsCompare = addon.Modules.Sorting.Comparer
 local fsConfig = addon.Configuration
 local fsProviders = addon.Providers
@@ -50,7 +51,27 @@ local function OnUpdateVisible(frame)
         return
     end
 
-    if not frame or not frame.unit or not frame:IsShown() then
+    -- never hide while edit mode is open: edit mode re-shows the player frame,
+    -- which re-fires CompactUnitFrame_UpdateVisible, which would hide it again,
+    -- producing an infinite show/hide loop that crashes the client.
+    -- the normal run cycle re-hides the player once edit mode exits.
+    if capabilities.HasEditMode() and wow.EditModeManagerFrame and wow.EditModeManagerFrame.editModeActive then
+        return
+    end
+
+    if not frame then
+        return
+    end
+
+    -- CompactUnitFrame_UpdateVisible is shared with nameplates, which can be
+    -- forbidden frames (e.g. ForbiddenNamePlate). Calling widget methods like
+    -- IsShown on a forbidden frame from insecure code errors with "bad self",
+    -- so skip them - HidePlayer only cares about party/raid frames anyway.
+    if frame:IsForbidden() then
+        return
+    end
+
+    if not frame.unit or not frame:IsShown() then
         return
     end
 
@@ -100,6 +121,11 @@ end
 function M:Run()
     if wow.InCombatLockdown() then
         fsLog:Error("Cannot run hide player module during combat.")
+        return
+    end
+
+    if capabilities.HasEditMode() and wow.EditModeManagerFrame and wow.EditModeManagerFrame.editModeActive then
+        fsLog:Debug("Not hiding player while edit mode active.")
         return
     end
 

@@ -19,6 +19,104 @@ local COOLDOWN_VIEWER_LABELS = {
 	BuffBarCooldownViewer = L["cooldownViewerBuffBar"] or "Buff Bar Cooldowns",
 	BuffIconCooldownViewer = L["cooldownViewerBuffIcon"] or "Buff Icon Cooldowns",
 }
+local ACTION_BAR_ANCHORS = {
+	{ key = "MainMenuBar", label = _G.BINDING_HEADER_ACTIONBAR or "Action Bar 1" },
+	{ key = "MainActionBar", label = _G.BINDING_HEADER_ACTIONBAR or "Action Bar 1" },
+	{ key = "MultiBarBottomLeft", label = _G.BINDING_HEADER_ACTIONBAR2 or "Action Bar 2" },
+	{ key = "MultiBarBottomRight", label = _G.BINDING_HEADER_ACTIONBAR3 or "Action Bar 3" },
+	{ key = "MultiBarRight", label = _G.BINDING_HEADER_ACTIONBAR4 or "Action Bar 4" },
+	{ key = "MultiBarLeft", label = _G.BINDING_HEADER_ACTIONBAR5 or "Action Bar 5" },
+	{ key = "MultiBar5", label = _G.BINDING_HEADER_ACTIONBAR6 or "Action Bar 6" },
+	{ key = "MultiBar6", label = _G.BINDING_HEADER_ACTIONBAR7 or "Action Bar 7" },
+	{ key = "MultiBar7", label = _G.BINDING_HEADER_ACTIONBAR8 or "Action Bar 8" },
+	{ key = "MultiBar8", label = _G.BINDING_HEADER_ACTIONBAR8 and (_G.BINDING_HEADER_ACTIONBAR8 .. " 2") or "Action Bar 9" },
+	{ key = "PetActionBar", label = _G.TUTORIAL_TITLE61_HUNTER or _G.PET or "Pet Action Bar" },
+	{ key = "StanceBar", label = _G.HUD_EDIT_MODE_STANCE_BAR_LABEL or "Stance Bar" },
+}
+local GENERIC_ANCHORS = {
+	EQOL_ANCHOR_PLAYER = {
+		labelKey = "UFPlayerFrame",
+		fallback = _G.HUD_EDIT_MODE_PLAYER_FRAME_LABEL or "Player Frame",
+		blizz = "PlayerFrame",
+		uf = "EQOLUFPlayerFrame",
+		ufKey = "player",
+	},
+	EQOL_ANCHOR_TARGET = {
+		labelKey = "UFTargetFrame",
+		fallback = _G.HUD_EDIT_MODE_TARGET_FRAME_LABEL or "Target Frame",
+		blizz = "TargetFrame",
+		uf = "EQOLUFTargetFrame",
+		ufKey = "target",
+	},
+	EQOL_ANCHOR_TARGETTARGET = {
+		labelKey = "UFToTFrame",
+		fallback = "Target of Target",
+		blizz = "TargetFrameToT",
+		uf = "EQOLUFToTFrame",
+		ufKey = "targettarget",
+	},
+	EQOL_ANCHOR_FOCUS = {
+		labelKey = "UFFocusFrame",
+		fallback = _G.HUD_EDIT_MODE_FOCUS_FRAME_LABEL or "Focus Frame",
+		blizz = "FocusFrame",
+		uf = "EQOLUFFocusFrame",
+		ufKey = "focus",
+	},
+	EQOL_ANCHOR_PET = {
+		labelKey = "UFPetFrame",
+		fallback = _G.HUD_EDIT_MODE_PET_FRAME_LABEL or "Pet Frame",
+		blizz = "PetFrame",
+		uf = "EQOLUFPetFrame",
+		ufKey = "pet",
+	},
+	EQOL_ANCHOR_PARTY = {
+		label = _G.PARTY or "Party",
+		blizz = "CompactPartyFrame",
+		uf = "EQOLUFPartyAnchor",
+		ufKey = "party",
+	},
+	EQOL_ANCHOR_RAID = {
+		label = _G.RAID or "Raid",
+		blizz = "CompactRaidFrameContainer",
+		uf = "EQOLUFRaidAnchor",
+		ufKey = "raid",
+	},
+	EQOL_ANCHOR_BOSS = {
+		labelKey = "UFBossFrame",
+		fallback = _G.HUD_EDIT_MODE_BOSS_FRAMES_LABEL or "Boss Frame",
+		blizz = "BossTargetFrameContainer",
+		uf = "EQOLUFBossContainer",
+		ufKey = "boss",
+	},
+}
+local GENERIC_ANCHOR_ORDER = {
+	"EQOL_ANCHOR_PLAYER",
+	"EQOL_ANCHOR_TARGET",
+	"EQOL_ANCHOR_TARGETTARGET",
+	"EQOL_ANCHOR_FOCUS",
+	"EQOL_ANCHOR_PET",
+	"EQOL_ANCHOR_PARTY",
+	"EQOL_ANCHOR_RAID",
+	"EQOL_ANCHOR_BOSS",
+}
+local GENERIC_ANCHOR_BY_FRAME = {
+	PlayerFrame = "EQOL_ANCHOR_PLAYER",
+	EQOLUFPlayerFrame = "EQOL_ANCHOR_PLAYER",
+	TargetFrame = "EQOL_ANCHOR_TARGET",
+	EQOLUFTargetFrame = "EQOL_ANCHOR_TARGET",
+	TargetFrameToT = "EQOL_ANCHOR_TARGETTARGET",
+	EQOLUFToTFrame = "EQOL_ANCHOR_TARGETTARGET",
+	FocusFrame = "EQOL_ANCHOR_FOCUS",
+	EQOLUFFocusFrame = "EQOL_ANCHOR_FOCUS",
+	PetFrame = "EQOL_ANCHOR_PET",
+	EQOLUFPetFrame = "EQOL_ANCHOR_PET",
+	CompactPartyFrame = "EQOL_ANCHOR_PARTY",
+	EQOLUFPartyAnchor = "EQOL_ANCHOR_PARTY",
+	CompactRaidFrameContainer = "EQOL_ANCHOR_RAID",
+	EQOLUFRaidAnchor = "EQOL_ANCHOR_RAID",
+	BossTargetFrameContainer = "EQOL_ANCHOR_BOSS",
+	EQOLUFBossContainer = "EQOL_ANCHOR_BOSS",
+}
 
 local RAW_ANCHOR_POINTS = {
 	"TOPLEFT",
@@ -72,6 +170,49 @@ local function addEntry(entries, valid, seen, key, label)
 	}
 end
 
+local function getLocaleValue(key, fallback)
+	if type(key) ~= "string" or key == "" then return fallback end
+	local value = L and L[key]
+	if type(value) == "string" and value ~= "" and value ~= key then return value end
+	return fallback
+end
+
+local function getGenericAnchorLabel(key)
+	local info = GENERIC_ANCHORS[key]
+	if not info then return nil end
+	return info.label or getLocaleValue(info.labelKey, info.fallback or key)
+end
+
+local function collectActionBarEntries()
+	local entries = {}
+	local seen = {}
+
+	local function add(key, label)
+		if type(key) ~= "string" or key == "" or seen[key] then return end
+		if not (_G and _G[key]) then return end
+		seen[key] = true
+		entries[#entries + 1] = {
+			key = key,
+			label = label or key,
+		}
+	end
+
+	local configured = addon.variables and addon.variables.actionBarNames
+	if type(configured) == "table" then
+		for i = 1, #configured do
+			local info = configured[i]
+			if info then add(info.name, info.text) end
+		end
+	end
+
+	for i = 1, #ACTION_BAR_ANCHORS do
+		local entry = ACTION_BAR_ANCHORS[i]
+		add(entry.key, entry.label)
+	end
+
+	return entries
+end
+
 function SharedAnchors:NormalizePoint(value, fallback)
 	local helper = getCooldownPanelHelper()
 	if helper and helper.NormalizeAnchor then return helper.NormalizeAnchor(value, fallback or "CENTER") end
@@ -86,9 +227,11 @@ function SharedAnchors:NormalizePoint(value, fallback)
 end
 
 function SharedAnchors:NormalizeRelativeFrame(value)
+	if type(value) ~= "string" or value == "" then return "UIParent" end
+	if GENERIC_ANCHORS[value] then return value end
+	if GENERIC_ANCHOR_BY_FRAME[value] then return GENERIC_ANCHOR_BY_FRAME[value] end
 	local helper = getCooldownPanelHelper()
 	if helper and helper.NormalizeRelativeFrameName then return helper.NormalizeRelativeFrameName(value) end
-	if type(value) ~= "string" or value == "" then return "UIParent" end
 	return value
 end
 
@@ -116,10 +259,17 @@ function SharedAnchors:GetTargetLabel(value)
 
 	local helper = getCooldownPanelHelper()
 	local generic = helper and helper.GENERIC_ANCHORS and helper.GENERIC_ANCHORS[target]
+	local genericLabel = getGenericAnchorLabel(target)
+	if genericLabel then return genericLabel end
 	if generic and generic.label then return generic.label end
 
 	local viewerLabel = COOLDOWN_VIEWER_LABELS[target]
 	if viewerLabel then return viewerLabel end
+
+	for i = 1, #ACTION_BAR_ANCHORS do
+		local entry = ACTION_BAR_ANCHORS[i]
+		if entry.key == target then return entry.label or target end
+	end
 
 	local panelId = frameNameToPanelId(target)
 	if panelId then
@@ -165,6 +315,17 @@ function SharedAnchors:GetEntries(currentTarget, opts)
 
 	if not seen.UIParent then addEntry(entries, valid, seen, "UIParent", "UIParent") end
 
+	for i = 1, #GENERIC_ANCHOR_ORDER do
+		local key = GENERIC_ANCHOR_ORDER[i]
+		addEntry(entries, valid, seen, key, self:GetTargetLabel(key))
+	end
+
+	local actionBars = collectActionBarEntries()
+	for i = 1, #actionBars do
+		local entry = actionBars[i]
+		addEntry(entries, valid, seen, entry.key, entry.label)
+	end
+
 	local extraEntries = opts.extraEntries
 	if type(extraEntries) == "table" then
 		for i = 1, #extraEntries do
@@ -190,10 +351,10 @@ function SharedAnchors:ResolveFrame(value)
 	if target == "UIParent" then return UIParent end
 
 	local helper = getCooldownPanelHelper()
-	local generic = helper and helper.GENERIC_ANCHORS and helper.GENERIC_ANCHORS[target]
+	local generic = GENERIC_ANCHORS[target] or (helper and helper.GENERIC_ANCHORS and helper.GENERIC_ANCHORS[target])
 	if generic then
-		local ufCfg = addon.db and addon.db.ufFrames
-		if ufCfg and generic.ufKey and ufCfg[generic.ufKey] and ufCfg[generic.ufKey].enabled then
+		local isEQoLFrameEnabled = addon.functions and addon.functions.IsEQoLUnitOrGroupFrameEnabled
+		if generic.ufKey and isEQoLFrameEnabled and isEQoLFrameEnabled(generic.ufKey) then
 			local ufFrame = _G[generic.uf]
 			if ufFrame then return ufFrame end
 		end
@@ -218,6 +379,16 @@ function SharedAnchors:ResolveFrame(value)
 	return UIParent
 end
 
+function SharedAnchors:IsPreferredFramePending(value)
+	local target = self:NormalizeRelativeFrame(value)
+	local helper = getCooldownPanelHelper()
+	local generic = GENERIC_ANCHORS[target] or (helper and helper.GENERIC_ANCHORS and helper.GENERIC_ANCHORS[target])
+	if not generic or not generic.ufKey or not generic.uf then return false end
+
+	local isEQoLFrameEnabled = addon.functions and addon.functions.IsEQoLUnitOrGroupFrameEnabled
+	return isEQoLFrameEnabled and isEQoLFrameEnabled(generic.ufKey) and _G[generic.uf] == nil or false
+end
+
 function SharedAnchors:IsUIParentTarget(value) return self:NormalizeRelativeFrame(value) == "UIParent" end
 
 function SharedAnchors:MaybeScheduleRefresh(target)
@@ -230,4 +401,8 @@ function SharedAnchors:GetAnchorPointOptions()
 	local helper = getCooldownPanelHelper()
 	if helper and helper.AnchorOptions then return helper.AnchorOptions end
 	return self.AnchorPointOptions
+end
+
+function SharedAnchors:GetActionBarEntries()
+	return collectActionBarEntries()
 end

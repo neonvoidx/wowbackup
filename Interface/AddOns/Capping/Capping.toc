@@ -1,5 +1,5 @@
-## Interface: 120001, 120005, 120007
-## Version: v12.0.11
+## Interface: 120100, 120005, 120007
+## Version: v12.0.13
 ## Title: Capping
 ## Author: Funkeh
 ## Notes: Battleground timers and other PvP features.
@@ -18,8 +18,8 @@
 ## X-Category: Battlegrounds/PvP
 ## X-Credits: TotalPackage
 ## X-Website: https://github.com/BigWigsMods/Capping
-## OptionalDeps: Ace3, LibSharedMedia-3.0, LibCandyBar-3.0, LibChatAnims, LibDDI-1.0
-## X-Embeds: Ace3, LibSharedMedia-3.0, LibCandyBar-3.0, LibChatAnims, LibDDI-1.0
+## OptionalDeps: Ace3, LibSharedMedia-3.0, LibCandyBar-3.0, LibDDI-1.0
+## X-Embeds: Ace3, LibSharedMedia-3.0, LibCandyBar-3.0, LibDDI-1.0
 ## X-License: All Rights Reserved: You are free to fork and modify on GitHub, please ask us about anything else.
 ## X-Curse-Project-ID: 20143
 ## X-WoWI-ID: 11177

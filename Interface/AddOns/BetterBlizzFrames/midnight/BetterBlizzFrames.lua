@@ -16,7 +16,6 @@ local defaultSettings = {
     version = addonVersion,
     updates = "empty",
     wasOnLoadingScreen = true,
-    enableBigDebuffs = true,
     -- General
     removeRealmNames = true,
     centerNames = false,
@@ -69,6 +68,9 @@ local defaultSettings = {
     cdManagerBlacklist = {},
     cdManagerPriorityList = {},
     kickPopupFontOutline = "OUTLINE",
+    prdSplitLines = true,
+    maxTargetFocusBuffs = 20,
+    maxTargetFocusDebuffs = 20,
 
     rpNames = true,
     rpNamesFirst = true,
@@ -2015,32 +2017,6 @@ end
 
 
 
-if not BBF.combatQueue then
-    BBF.combatQueue = {}
-end
-local combatCheck = CreateFrame("Frame")
-function BBF.RunAfterCombat(func)
-    if not InCombatLockdown() then
-        func()
-        return
-    end
-
-    table.insert(BBF.combatQueue, func)
-
-    if not combatCheck:IsEventRegistered("PLAYER_REGEN_ENABLED") then
-        combatCheck:RegisterEvent("PLAYER_REGEN_ENABLED")
-        combatCheck:SetScript("OnEvent", function(self, event)
-            if event == "PLAYER_REGEN_ENABLED" then
-                for _, queuedFunc in ipairs(BBF.combatQueue) do
-                    pcall(queuedFunc)
-                end
-                BBF.combatQueue = {}
-                self:UnregisterEvent(event)
-            end
-        end)
-    end
-end
-
 function BBF.ArenaOptimizer(disable, noPrint)
     local db = BetterBlizzFramesDB
     if not db.arenaOptimizer and not disable then return end
@@ -2721,6 +2697,8 @@ end
 function BBF.InstantComboPoints()
     if not BetterBlizzFramesDB.instantComboPoints then return end
     if BBF.InstantComboPointsActive then return end
+
+    local prdClassFrame = PersonalResourceDisplayFrame.classFrame
     -- Call the function for each frame
     local _, class = UnitClass("player")
 
@@ -5236,6 +5214,20 @@ First:SetScript("OnEvent", function(_, event, addonName)
             end
             BetterBlizzFramesDB.fontOutlineFix = true
         end
+        if not BetterBlizzFramesDB.fontSizeNumFix then
+            local sizeKeys = {
+                "unitFrameFontSize", "unitFrameValueFontSize",
+                "partyFrameFontSize", "partyFrameStatusFontSize",
+                "actionBarFontSize", "actionBarKeyFontSize", "actionBarChargeFontSize"
+            }
+            for _, key in ipairs(sizeKeys) do
+                local val = BetterBlizzFramesDB[key]
+                if type(val) == "string" then
+                    BetterBlizzFramesDB[key] = tonumber(val) or val
+                end
+            end
+            BetterBlizzFramesDB.fontSizeNumFix = true
+        end
         FetchAndSaveValuesOnFirstLogin()
         TurnTestModesOff()
         BBF.ChatFilterCaller()
@@ -5296,6 +5288,12 @@ First:SetScript("OnEvent", function(_, event, addonName)
                 AlternatePowerBar:SetParent(hiddenFrame)
             end
         end
+
+        C_Timer.After(0.95, function()
+            BBF.HidePersonalManabarFX()
+            BBF.TexturePRD()
+            BBF.LegacyPRDLook()
+        end)
 
         C_Timer.After(1, function()
             BBF.ActionBarCDNumberSize()
@@ -5561,10 +5559,11 @@ function BBF.CreateBigDebuffs()
             spellID, texture, auraInstanceID = IterateAuras("HELPFUL|EXTERNAL_DEFENSIVE", nil, unit, seen)
         end
 
-        -- Important buffs
-        if not spellID then
-            spellID, texture, auraInstanceID = IterateAuras("HELPFUL|IMPORTANT", C_Spell.IsSpellImportant, unit, seen)
-        end
+        -- -- Important buffs
+        -- if not spellID then
+        --     spellID, texture, auraInstanceID = IterateAuras("HELPFUL|IMPORTANT", C_Spell.IsSpellImportant, unit, seen)
+        -- end
+        -- - WoW 12.0.7 comes with more bugs. Important aura filter is broken because of Blizzard and shows a bunch of trash auras. Temporarily disabled important auras until Blizzard fixes it.
 
         if spellID then
             local durationObj = C_UnitAuras.GetAuraDuration(unit, auraInstanceID)

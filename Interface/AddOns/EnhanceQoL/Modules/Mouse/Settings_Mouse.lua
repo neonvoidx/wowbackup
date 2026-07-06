@@ -104,6 +104,7 @@ local data = {
 						dot:SetPoint("CENTER", addon.mousePointer, "CENTER", 0, 0)
 						addon.mousePointer.dot = dot
 					end
+					if not v and addon.Mouse.functions.refreshRingStyle then addon.Mouse.functions.refreshRingStyle() end
 				end,
 				parentCheck = function()
 					return addon.SettingsLayout.elements["mouseRingEnabled"]

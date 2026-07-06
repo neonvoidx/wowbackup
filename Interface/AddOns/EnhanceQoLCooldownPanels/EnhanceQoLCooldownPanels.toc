@@ -1,0 +1,23 @@
+## Interface: 120007, 120100
+## Title: Enhance QoL Cooldown Panels
+## Author: R41Z0R
+## Version: 11.6.0
+## Notes: Custom cooldown panels and tracked ability bars
+## Notes-deDE: Eigene Abklingzeit-Panels und Leisten fuer verfolgte Faehigkeiten
+## Notes-esES: Paneles de reutilizacion personalizados y barras de habilidades rastreadas
+## Notes-esMX: Paneles de reutilizacion personalizados y barras de habilidades rastreadas
+## Notes-frFR: Panneaux de temps de recharge personnalises et barres de techniques suivies
+## Notes-itIT: Pannelli di recupero personalizzati e barre delle abilita tracciate
+## Notes-koKR: 사용자 지정 재사용 대기시간 패널과 추적 능력 바
+## Notes-ptBR: Painéis de recarga personalizados e barras de habilidades rastreadas
+## Notes-ruRU: Пользовательские панели восстановления и полосы отслеживаемых способностей
+## Notes-zhCN: 自定义冷却面板和已追踪技能条
+## Notes-zhTW: 自訂冷卻面板與已追蹤技能列
+## Dependencies: EnhanceQoL
+## IconTexture: Interface\AddOns\EnhanceQoL\Icons\Icon.tga
+## Retail: true
+## X-Compatible-With: retail
+## LoadOnDemand: 1
+## Globe-Main: EnhanceQoL
+
+CooldownPanels.xml

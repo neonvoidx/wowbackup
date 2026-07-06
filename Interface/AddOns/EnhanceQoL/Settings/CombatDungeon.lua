@@ -155,6 +155,7 @@ addon.constants.DEFAULT_NAMEPLATE_FEATURE_KEYS = {
 	mobColorThreatWarning = NAMEPLATE_MOB_COLOR_THREAT_WARNING_DB_KEY,
 	mobColorTrivial = NAMEPLATE_MOB_COLOR_TRIVIAL_DB_KEY,
 	mobTankMode = NAMEPLATE_MOB_TANK_MODE_DB_KEY,
+	mobThreatColors = "nameplateMobThreatColors",
 }
 local DIFFICULTY_IDS = (_G.DifficultyUtil and _G.DifficultyUtil.ID) or {}
 local COMBAT_LOG_DIFFICULTY_GROUPS = {
@@ -179,7 +180,7 @@ local COMBAT_LOG_DIFFICULTY_GROUPS = {
 			},
 		},
 		{ key = "heroic", text = PLAYER_DIFFICULTY2, difficulties = { DIFFICULTY_IDS.Raid10Heroic or 5, DIFFICULTY_IDS.Raid25Heroic or 6, DIFFICULTY_IDS.PrimaryRaidHeroic or 15 } },
-		{ key = "mythic", text = PLAYER_DIFFICULTY6, difficulties = { DIFFICULTY_IDS.PrimaryRaidMythic or 16 } },
+		{ key = "mythic", text = PLAYER_DIFFICULTY6, difficulties = { DIFFICULTY_IDS.PrimaryRaidMythic or 16, 233 } },
 		{ key = "timewalking", text = PLAYER_DIFFICULTY_TIMEWALKER, difficulties = { DIFFICULTY_IDS.RaidTimewalker or 33 } },
 	},
 }
@@ -275,11 +276,32 @@ local function getCurrentExpansionRaidInstanceCache()
 	local expansionLevel = getCurrentExpansionLevel()
 	if not expansionLevel then return nil end
 	if CURRENT_EXPANSION_RAID_INSTANCE_CACHE and CURRENT_EXPANSION_RAID_INSTANCE_CACHE.expansionLevel == expansionLevel then return CURRENT_EXPANSION_RAID_INSTANCE_CACHE end
-	if not (EJ_SelectTier and EJ_GetInstanceByIndex) then return nil end
+	if not (EJ_SelectTier and EJ_GetInstanceByIndex and EJ_GetNumTiers and EJ_GetTierInfo) then
+		local isLoaded = (C_AddOns and C_AddOns.IsAddOnLoaded) or _G.IsAddOnLoaded
+		local loadAddOn = (C_AddOns and C_AddOns.LoadAddOn) or _G.UIParentLoadAddOn or _G.LoadAddOn
+		if isLoaded and loadAddOn and not isLoaded("Blizzard_EncounterJournal") then pcall(loadAddOn, "Blizzard_EncounterJournal") end
+	end
+	if not (EJ_SelectTier and EJ_GetInstanceByIndex and EJ_GetNumTiers and EJ_GetTierInfo) then return nil end
 
 	local cache = { expansionLevel = expansionLevel, instances = {}, maps = {} }
 	local previousTier = EJ_GetCurrentTier and EJ_GetCurrentTier() or nil
-	EJ_SelectTier(expansionLevel + 1)
+	local selectedTier
+	local tierCount = EJ_GetNumTiers and EJ_GetNumTiers() or nil
+	if issecretvalue and issecretvalue(tierCount) then tierCount = nil end
+	if type(tierCount) == "number" and tierCount > 0 then
+		local expansionName = _G["EXPANSION_NAME" .. expansionLevel]
+		if issecretvalue and issecretvalue(expansionName) then expansionName = nil end
+		if type(expansionName) == "string" and EJ_GetTierInfo then
+			for i = 1, tierCount do
+				if EJ_GetTierInfo(i) == expansionName then
+					selectedTier = i
+					break
+				end
+			end
+		end
+	end
+	if not selectedTier then return nil end
+	EJ_SelectTier(selectedTier)
 
 	local index = 1
 	while true do
@@ -1435,6 +1457,7 @@ local function getNameplateThreatStatus(unitFrame)
 end
 
 local function getNameplateThreatColor(unitFrame, threatStatus)
+	if not (addon.db and addon.db.nameplateMobThreatColors == true) then return nil end
 	if type(threatStatus) ~= "number" then threatStatus = getNameplateThreatStatus(unitFrame) end
 	if type(threatStatus) ~= "number" then return nil end
 	if threatStatus >= 3 then return getNameplateMobColor(NAMEPLATE_MOB_COLOR_THREAT_LOST_DB_KEY) end
@@ -1534,6 +1557,7 @@ local function applyNameplateMobColor(unitFrame)
 	local threatStatus = getNameplateThreatStatus(unitFrame)
 	local color = getNameplateTankModeColor(unitFrame, threatStatus)
 	if not color then color = getNameplateThreatColor(unitFrame, threatStatus) end
+	if not color and type(threatStatus) == "number" and not (addon.db and addon.db.nameplateMobThreatColors == true) then return end
 	if not color then color = computeNameplateMobColor(unit, unitFrame) end
 	if not color then return end
 
@@ -2020,7 +2044,7 @@ local function shouldUseTimeoutReleaseForCurrentContext()
 			break
 		end
 	end
-	if not hasSelection then return false end
+	if not hasSelection then return true end
 
 	local inInstance, instanceType = IsInInstance()
 	if not inInstance or instanceType == "none" then return selection["world"] and true or false end
@@ -2046,6 +2070,11 @@ end
 addon.functions.shouldUseTimeoutReleaseForCurrentContext = shouldUseTimeoutReleaseForCurrentContext
 
 local TIMEOUT_RELEASE_UPDATE_INTERVAL = 0.1
+
+local function isPlayerDeadOrGhost()
+	if UnitIsDeadOrGhost then return UnitIsDeadOrGhost("player") == true end
+	return (UnitIsDead and UnitIsDead("player")) or (UnitIsGhost and UnitIsGhost("player")) or false
+end
 
 local modifierCheckers = {
 	SHIFT = function() return IsShiftKeyDown() end,
@@ -2122,6 +2151,8 @@ end
 
 local lfgPoint, lfgRelativeTo, lfgRelativePoint, lfgXOfs, lfgYOfs
 
+-- TODO 12.1 cleanup: remove groupfinderMoveResetButton if Blizzard's default Group Finder layout no longer overlaps refresh/reset.
+-- Also add DB/profile cleanup for groupfinderMoveResetButton when removing this workaround.
 local function toggleLFGFilterPosition()
 	if LFGListFrame and LFGListFrame.SearchPanel and LFGListFrame.SearchPanel.FilterButton and LFGListFrame.SearchPanel.FilterButton.ResetButton then
 		if addon.db["groupfinderMoveResetButton"] then
@@ -2174,6 +2205,7 @@ function addon.functions.initDungeonFrame()
 	addon.functions.InitDBValue(NAMEPLATE_MOB_COLOR_THREAT_WARNING_DB_KEY, getNameplateMobColorDefault(NAMEPLATE_MOB_COLOR_THREAT_WARNING_DB_KEY))
 	addon.functions.InitDBValue(NAMEPLATE_MOB_COLOR_TRIVIAL_DB_KEY, getNameplateMobColorDefault(NAMEPLATE_MOB_COLOR_TRIVIAL_DB_KEY))
 	addon.functions.InitDBValue(NAMEPLATE_MOB_TANK_MODE_DB_KEY, false)
+	addon.functions.InitDBValue("nameplateMobThreatColors", true)
 	addon.functions.InitDBValue("timeoutReleaseDifficulties", {})
 	addon.functions.InitDBValue("autoCombatLog", false)
 	addon.functions.InitDBValue("combatLogDungeonDifficulties", {})
@@ -2597,65 +2629,6 @@ if cChar and sectionDungeon then
 		parentSection = sectionDungeon,
 	})
 
-	local damageMeterSection = addon.SettingsLayout.suitesDamageMeterSection
-	if not damageMeterSection then
-		damageMeterSection = addon.functions.SettingsCreateExpandableSection(cChar, {
-			name = L["damageMeterTitle"] or "Damage Meter",
-			configPageKey = "DamageMeter",
-			description = L["damageMeterEditModeHint"],
-			iconAtlas = "icons_64x64_damage",
-			modernCategory = "suites",
-			modernOnly = true,
-			expanded = false,
-			colorizeTitle = false,
-			newTagID = "damageMeterEnabled",
-		})
-		addon.SettingsLayout.suitesDamageMeterSection = damageMeterSection
-	end
-
-	local damageMeterEnable = addon.functions.SettingsCreateCheckbox(cChar, {
-		var = "damageMeterEnabled",
-		text = L["damageMeterEnabled"],
-		desc = L["damageMeterEditModeHint"],
-		func = function(value)
-			addon.db["damageMeterEnabled"] = value == true
-			if addon.DamageMeter and addon.DamageMeter.UpdateEventState then addon.DamageMeter:UpdateEventState() end
-		end,
-		parentSection = damageMeterSection,
-	})
-	local function isDamageMeterEnabled() return damageMeterEnable and damageMeterEnable.setting and damageMeterEnable.setting:GetValue() == true end
-	addon.functions.SettingsCreateSlider(cChar, {
-		var = "damageMeterUpdateRate",
-		text = L["damageMeterUpdateRate"],
-		desc = L["damageMeterUpdateRateDesc"],
-		min = 0.1,
-		max = 5,
-		step = 0.1,
-		default = 0.1,
-		get = function() return (addon.db and addon.db["damageMeterUpdateRate"]) or 0.1 end,
-		set = function(value)
-			addon.db["damageMeterUpdateRate"] = value
-			if addon.DamageMeter and addon.DamageMeter.ScheduleRefresh then addon.DamageMeter:ScheduleRefresh() end
-		end,
-		parent = true,
-		element = damageMeterEnable.element,
-		parentCheck = isDamageMeterEnabled,
-		parentSection = damageMeterSection,
-	})
-	addon.functions.SettingsCreateCheckbox(cChar, {
-		var = "damageMeterEditModeSample",
-		text = L["damageMeterEditModeSample"],
-		desc = L["damageMeterEditModeSampleDesc"],
-		func = function(value)
-			addon.db["damageMeterEditModeSample"] = value == true
-			if addon.DamageMeter and addon.DamageMeter.Refresh then addon.DamageMeter:Refresh() end
-		end,
-		parent = true,
-		element = damageMeterEnable.element,
-		parentCheck = isDamageMeterEnabled,
-		parentSection = damageMeterSection,
-	})
-
 	-- Objective Tracker
 	local objEnable = addon.functions.SettingsCreateCheckbox(cChar, {
 		var = "mythicPlusEnableObjectiveTracker",
@@ -2796,6 +2769,7 @@ data = {
 	{
 		text = L["groupfinderMoveResetButton"],
 		var = "groupfinderMoveResetButton",
+		-- TODO 12.1 cleanup: remove this setting after confirming Blizzard fixed the Group Finder refresh/reset overlap.
 		func = function(value)
 			addon.db["groupfinderMoveResetButton"] = value
 			toggleLFGFilterPosition()
@@ -2939,7 +2913,10 @@ addon.functions.SettingsCreateHeadline(cChar, L["ReleaseTimer"], { parentSection
 data = {
 	var = "timeoutRelease",
 	text = L["timeoutRelease"],
-	func = function(value) addon.db["timeoutRelease"] = value end,
+	func = function(value)
+		addon.db["timeoutRelease"] = value
+		if addon.functions.UpdateTimeoutReleaseEventRegistration then addon.functions.UpdateTimeoutReleaseEventRegistration() end
+	end,
 	parentSection = sectionDeathRes,
 }
 table.sort(data, function(a, b) return a.text < b.text end)
@@ -2997,7 +2974,7 @@ local timeoutReleaseGroups = {
 		parentCheck = function() return rData.setting and rData.setting:GetValue() == true end,
 		element = rData.element,
 		parent = true,
-		difficulties = { 16 },
+		difficulties = { 16, 233 },
 	},
 	{
 		var = "timeoutRelease_dungeonNormal",
@@ -3263,6 +3240,14 @@ function addon.functions.UpdateGroupFinderApplicantEventRegistration()
 	end
 end
 
+function addon.functions.UpdateTimeoutReleaseEventRegistration()
+	if not frameLoad then return end
+	if not frameLoad._eqolTimeoutReleaseEventRegistered then
+		frameLoad:RegisterEvent("MODIFIER_STATE_CHANGED")
+		frameLoad._eqolTimeoutReleaseEventRegistered = true
+	end
+end
+
 local eventHandlers = {
 
 	["LFG_LIST_APPLICANT_UPDATED"] = function()
@@ -3281,7 +3266,7 @@ local eventHandlers = {
 	end,
 	["MODIFIER_STATE_CHANGED"] = function(arg1, arg2)
 		if not addon.db["timeoutRelease"] then return end
-		if not UnitIsDead("player") then return end
+		if not isPlayerDeadOrGhost() then return end
 		local modifierKey = addon.functions.getTimeoutReleaseModifierKey()
 		if not (arg1 and arg1:match(modifierKey)) then return end
 
@@ -3307,7 +3292,10 @@ local eventHandlers = {
 
 local function registerEvents(frame)
 	for event in pairs(eventHandlers) do
-		if event ~= "LFG_LIST_APPLICANT_UPDATED" then frame:RegisterEvent(event) end
+		if event ~= "LFG_LIST_APPLICANT_UPDATED" then
+			frame:RegisterEvent(event)
+			if event == "MODIFIER_STATE_CHANGED" then frame._eqolTimeoutReleaseEventRegistered = true end
+		end
 	end
 end
 
@@ -3319,4 +3307,5 @@ frameLoad = CreateFrame("Frame")
 
 registerEvents(frameLoad)
 addon.functions.UpdateGroupFinderApplicantEventRegistration()
+addon.functions.UpdateTimeoutReleaseEventRegistration()
 frameLoad:SetScript("OnEvent", eventHandler)

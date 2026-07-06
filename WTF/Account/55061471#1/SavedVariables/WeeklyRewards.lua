@@ -1,0 +1,2370 @@
+
+WeeklyRewardsDB = {
+["profileKeys"] = {
+["Mäñýfäçëð - Mal'Ganis"] = "Default",
+["Ofpuss - Mal'Ganis"] = "Default",
+["Stormclout - Mal'Ganis"] = "Default",
+},
+["global"] = {
+["activeRewards"] = {
+{
+["description"] = "Weekly C.H.E.T.T. List",
+["id"] = "tww-chett",
+["minimumLevel"] = 80,
+["rollover"] = true,
+["items"] = {
+{
+["amount"] = 1,
+["currency"] = 3008,
+},
+{
+["item"] = 235053,
+["amount"] = 1,
+},
+},
+["name"] = "C.H.E.T.T.",
+["state"] = 0,
+["resetTime"] = 1744729198,
+["startTime"] = 1744673144,
+["group"] = "Undermine",
+["objectives"] = {
+{
+["items"] = {
+236682,
+235053,
+},
+["removeOnCompletion"] = true,
+["quest"] = 87296,
+["itemsMaxCount"] = {
+0,
+1,
+},
+},
+{
+["questPool"] = {
+86915,
+86917,
+86918,
+86919,
+86920,
+86923,
+86924,
+87302,
+87303,
+87304,
+87305,
+87306,
+87307,
+},
+["unlockItem"] = 235053,
+["quest"] = 0,
+["maxCompletion"] = 4,
+},
+},
+},
+{
+["description"] = "|T6215518:12|t |cffa335ee[Cyrce's Circlet]|r|n|nThe ring starts at Item Level 642 by completing |cffffff00[A Radiant Vault]|r.|n|n|T6215533:12|t |cffa335ee[Raw Singing Citrine]|r upgrades the ring to maximum Item Level 658.|nIt drops from all Siren Isle content.",
+["id"] = "tww-circlet",
+["minimumLevel"] = 80,
+["rollover"] = true,
+["items"] = {
+{
+["item"] = 229365,
+["amount"] = 1,
+},
+},
+["name"] = "Circlet",
+["state"] = 0,
+["resetTime"] = 1744729198,
+["startTime"] = 1744673144,
+["group"] = "Siren Isle",
+["objectives"] = {
+{
+["unlockQuest"] = 84724,
+["quest"] = 0,
+["progressType"] = 3,
+},
+},
+},
+{
+["description"] = "Weekly Delve Keys",
+["group"] = "Delve",
+["minimumLevel"] = 80,
+["items"] = {
+{
+["amount"] = 4,
+["currency"] = 3028,
+},
+},
+["name"] = "DelveKeys",
+["state"] = 0,
+["resetTime"] = 1744729198,
+["startTime"] = 1744673144,
+["id"] = "tww-dkeys",
+["objectives"] = {
+{
+["quest"] = 84736,
+["items"] = {
+224172,
+},
+},
+{
+["quest"] = 84737,
+["items"] = {
+224172,
+},
+},
+{
+["quest"] = 84738,
+["items"] = {
+224172,
+},
+},
+{
+["quest"] = 84739,
+["items"] = {
+224172,
+},
+},
+},
+},
+{
+["description"] = "Weekly Delver's Bounty Map",
+["group"] = "Delve",
+["minimumLevel"] = 80,
+["items"] = {
+{
+["item"] = 233071,
+["amount"] = 1,
+},
+},
+["name"] = "DelveMap",
+["state"] = 0,
+["resetTime"] = 1744729198,
+["startTime"] = 1744673144,
+["id"] = "tww-dmap",
+["objectives"] = {
+{
+["quest"] = 86371,
+["items"] = {
+233071,
+},
+},
+},
+},
+{
+["state"] = 0,
+["description"] = "Weekly Dungeon Quest",
+["resetTime"] = 1744729198,
+["name"] = "Dungeon",
+["id"] = "tww-lfd",
+["minimumLevel"] = 80,
+["startTime"] = 1744673256,
+["objectives"] = {
+{
+["quest"] = 83457,
+},
+},
+},
+{
+["description"] = "The Main Event",
+["group"] = "Undermine",
+["minimumLevel"] = 80,
+["state"] = 0,
+["name"] = "Gobfather",
+["resetTime"] = 1744729198,
+["startTime"] = 1744673144,
+["id"] = "tww-gobfather",
+["objectives"] = {
+{
+["quest"] = 85088,
+},
+},
+},
+{
+["description"] = "Great Valut Rewards that provides you with 1 piece of loot from a pool of up to 9 items. |n|nThe item level of rewards depends on your highest runs of the week.|nYou could select the |cffa335ee[Algari Token of Merit]|r instead of loots.",
+["id"] = "tww-vault",
+["minimumLevel"] = 80,
+["items"] = {
+{
+["name"] = "2 |cffa335ee[Algari Token of Meritz]|r for 1 Great Vault slot",
+["texture"] = 2744751,
+},
+{
+["name"] = "4 |cffa335ee[Algari Token of Meritz]|r for 2 Great Vault slots",
+["texture"] = 2744751,
+},
+{
+["name"] = "6 |cffa335ee[Algari Token of Meritz]|r for 3+ Great Vault slots",
+["texture"] = 2744751,
+},
+},
+["name"] = "GreatVault",
+["state"] = 0,
+["startTime"] = 1744673144,
+["resetTime"] = 1744729198,
+["objectives"] = {
+{
+["quest"] = 0,
+["progressType"] = 1,
+},
+},
+},
+{
+["description"] = "Siren Isle Invasion Quests|n|nEnemies cycle every week from a pool of three types:|n|cffffff00Vrykul|r, |cffffff00Naga|r, and |cffffff00Pirate|r.",
+["group"] = "Siren Isle",
+["minimumLevel"] = 80,
+["state"] = 0,
+["name"] = "Invasion",
+["resetTime"] = 1744729198,
+["startTime"] = 1744673144,
+["id"] = "tww-invasion",
+["objectives"] = {
+{
+["quest"] = 84252,
+["unlockQuest"] = 84850,
+},
+{
+["quest"] = 84430,
+["unlockQuest"] = 84850,
+},
+{
+["quest"] = 84627,
+["unlockQuest"] = 84850,
+},
+{
+["quest"] = 85051,
+["unlockQuest"] = 84850,
+},
+{
+["quest"] = 85589,
+["unlockQuest"] = 84850,
+},
+},
+},
+{
+["description"] = "Weekly Awakening the Machine Event",
+["group"] = "Weekly Cache",
+["minimumLevel"] = 70,
+["state"] = 0,
+["name"] = "Machine",
+["resetTime"] = 1744729198,
+["startTime"] = 1744673144,
+["id"] = "tww-atm",
+["objectives"] = {
+{
+["quest"] = 83333,
+},
+},
+},
+{
+["description"] = "Reduce, Reuse, Resell",
+["id"] = "tww-scrap",
+["minimumLevel"] = 80,
+["rollover"] = true,
+["state"] = 0,
+["name"] = "SCRAP",
+["resetTime"] = 1744729198,
+["startTime"] = 1744673144,
+["group"] = "Undermine",
+["objectives"] = {
+{
+["quest"] = 85879,
+},
+},
+},
+{
+["description"] = "Many Jobs, Handle It!",
+["id"] = "tww-snh",
+["minimumLevel"] = 80,
+["rollover"] = true,
+["state"] = 0,
+["name"] = "Shipping",
+["resetTime"] = 1744729198,
+["startTime"] = 1744673144,
+["group"] = "Undermine",
+["objectives"] = {
+{
+["quest"] = 85869,
+},
+},
+},
+{
+["description"] = "Weekly Azj-Kahet Pact Choice",
+["id"] = "tww-pact",
+["minimumLevel"] = 70,
+["rollover"] = true,
+["state"] = 0,
+["name"] = "Spider",
+["resetTime"] = 1744729198,
+["startTime"] = 1744673144,
+["group"] = "Weekly Cache",
+["objectives"] = {
+{
+["quest"] = 80592,
+["removeOnCompletion"] = true,
+},
+{
+["unlockQuest"] = {
+80544,
+80545,
+80546,
+},
+["quest"] = 80670,
+["questPool"] = {
+80670,
+80671,
+80672,
+},
+},
+},
+},
+{
+["description"] = "Urge to Surge",
+["id"] = "tww-surge",
+["minimumLevel"] = 80,
+["rollover"] = true,
+["state"] = 0,
+["name"] = "Surge",
+["resetTime"] = 1744729198,
+["startTime"] = 1744673144,
+["group"] = "Weekly Cache",
+["objectives"] = {
+{
+["quest"] = 86775,
+},
+},
+},
+{
+["description"] = "The Theater Troupe",
+["id"] = "tww-troupe",
+["minimumLevel"] = 80,
+["rollover"] = true,
+["state"] = 0,
+["name"] = "Troupe",
+["resetTime"] = 1744729198,
+["startTime"] = 1744673144,
+["group"] = "Weekly Cache",
+["objectives"] = {
+{
+["quest"] = 83240,
+},
+},
+},
+{
+["description"] = "Collect wax for Kobolds",
+["id"] = "tww-wax",
+["minimumLevel"] = 80,
+["rollover"] = true,
+["state"] = 0,
+["name"] = "Wax",
+["resetTime"] = 1744729198,
+["startTime"] = 1744673144,
+["group"] = "Weekly Cache",
+["objectives"] = {
+{
+["quest"] = 82946,
+},
+},
+},
+{
+["description"] = "Special Assignment: Security Detail",
+["group"] = "Weekly Cache",
+["minimumLevel"] = 80,
+["state"] = 0,
+["name"] = "SA:Underm",
+["resetTime"] = 1744729201,
+["startTime"] = 1744673144,
+["id"] = "tww-sa-um",
+["objectives"] = {
+{
+["quest"] = 85488,
+["unlockQuest"] = 85490,
+},
+},
+},
+{
+["description"] = "Special Assignment: Storm's a Brewin",
+["group"] = "Siren Isle",
+["minimumLevel"] = 80,
+["state"] = 0,
+["name"] = "SA:Storm",
+["resetTime"] = 1744729215,
+["startTime"] = 1744673144,
+["id"] = "tww-storm",
+["objectives"] = {
+{
+["quest"] = 85113,
+["unlockQuest"] = 84850,
+},
+},
+},
+{
+["description"] = "Special Assignment: Rise of the Colossals",
+["group"] = "Weekly Cache",
+["minimumLevel"] = 70,
+["state"] = 0,
+["name"] = "SA:#2",
+["resetTime"] = 1744729222,
+["startTime"] = 1744673147,
+["id"] = "tww-sa:82787",
+["objectives"] = {
+{
+["quest"] = 82787,
+["unlockQuest"] = 82157,
+},
+},
+},
+{
+["description"] = "Side Gig: It's Always Sunny Side Up",
+["group"] = "Undermine",
+["minimumLevel"] = 80,
+["state"] = 0,
+["name"] = "SideGig",
+["resetTime"] = 1744729222,
+["startTime"] = 1744673144,
+["id"] = "tww-gig",
+["objectives"] = {
+{
+["quest"] = 85554,
+},
+{
+["quest"] = 86177,
+},
+{
+["quest"] = 86179,
+},
+{
+["quest"] = 86180,
+},
+},
+},
+{
+["description"] = "Spreading the Light",
+["group"] = "Weekly Cache",
+["minimumLevel"] = 70,
+["state"] = 0,
+["name"] = "Light",
+["resetTime"] = 1744729240,
+["startTime"] = 1744673144,
+["id"] = "tww-light",
+["objectives"] = {
+{
+["quest"] = 76586,
+},
+},
+},
+{
+["state"] = 0,
+["resetTime"] = 1744729258,
+["description"] = "Weekly World Boss",
+["startTime"] = 1744673144,
+["id"] = "tww-worldboss",
+["minimumLevel"] = 80,
+["name"] = "WorldBoss",
+["objectives"] = {
+{
+["quest"] = 81624,
+},
+},
+},
+{
+["description"] = "Special Assignment: When the Deeps Stir",
+["group"] = "Weekly Cache",
+["minimumLevel"] = 70,
+["state"] = 0,
+["name"] = "SA:#1",
+["resetTime"] = 1745031622,
+["startTime"] = 1744673144,
+["id"] = "tww-sa:83229",
+["objectives"] = {
+{
+["quest"] = 83229,
+["unlockQuest"] = 82156,
+},
+},
+},
+{
+["description"] = "Archives Meta Quest",
+["id"] = "tww-archives",
+["minimumLevel"] = 70,
+["rollover"] = true,
+["state"] = 0,
+["name"] = "Archives",
+["resetTime"] = 1745334035,
+["startTime"] = 1744673144,
+["group"] = "Pinnacle Cache",
+["objectives"] = {
+{
+["unlockQuest"] = 82678,
+["quest"] = 82679,
+["unlockUntilReset"] = true,
+},
+},
+},
+{
+["description"] = "Delves Meta Quest",
+["group"] = "Pinnacle Cache",
+["minimumLevel"] = 70,
+["state"] = 0,
+["name"] = "Delves",
+["resetTime"] = 1745938798,
+["startTime"] = 1744673144,
+["id"] = "tww-delves",
+["objectives"] = {
+{
+["quest"] = 82706,
+},
+},
+},
+["excluded"] = {
+["tww-gig"] = true,
+["tww-circlet"] = true,
+["tww-pact"] = true,
+["tww-light"] = true,
+["tww-chett"] = true,
+["tww-snh"] = true,
+["tww-dkeys"] = true,
+["tww-gobfather"] = true,
+["tww-wax"] = true,
+["tww-scrap"] = true,
+["tww-troupe"] = true,
+["tww-invasion"] = true,
+["tww-dmap"] = true,
+["tww-sa:83229"] = true,
+["tww-surge"] = true,
+["tww-sa-um"] = true,
+["tww-sa:82787"] = true,
+["tww-storm"] = true,
+["tww-atm"] = true,
+},
+},
+["main"] = {
+["hiddenColumns"] = {
+["LastUpdate"] = true,
+["Level"] = true,
+["Faction"] = false,
+["Realm"] = true,
+},
+},
+["characters"] = {
+["Player-3684-0E499C17"] = {
+["GUID"] = "Player-3684-0E499C17",
+["progress"] = {
+["tww-gig"] = {
+["state"] = 1,
+["fulfilledObjectives"] = {
+},
+["name"] = "SideGig",
+["total"] = 4,
+["numObjectives"] = 4,
+["pendingObjectives"] = {
+{
+["quest"] = 85554,
+},
+{
+["quest"] = 86177,
+},
+{
+["quest"] = 86179,
+},
+{
+["quest"] = 86180,
+},
+},
+},
+["tww-circlet"] = {
+["fulfilledObjectives"] = {
+{
+["unlockQuest"] = 84724,
+["quest"] = 0,
+["progressType"] = 3,
+},
+},
+["claimedAt"] = 1744673291,
+["state"] = 0,
+["records"] = {
+{
+["fulfilled"] = 1,
+["text"] = "|T6215518:13:13:0:0|t|cffa335ee [Cyrce's Circlet]|r (658)",
+["required"] = 1,
+},
+},
+["numObjectives"] = 1,
+["name"] = "Circlet",
+["position"] = 6,
+["type"] = 3,
+["startedAt"] = 1744673286,
+["total"] = 6,
+["pendingObjectives"] = {
+},
+},
+["tww-archives"] = {
+["state"] = 0,
+["fulfilledObjectives"] = {
+{
+["unlockQuest"] = 82678,
+["quest"] = 82679,
+["unlockUntilReset"] = true,
+},
+},
+["name"] = "Archives",
+["claimedAt"] = 1744673286,
+["total"] = 1,
+["numObjectives"] = 1,
+["pendingObjectives"] = {
+},
+},
+["tww-pact"] = {
+["fulfilledObjectives"] = {
+},
+["state"] = 1,
+["name"] = "Spider",
+["position"] = 0,
+["records"] = {
+{
+["fulfilled"] = 0,
+["text"] = "0/1 Choose a Pact",
+["required"] = 1,
+},
+},
+["total"] = 1,
+["numObjectives"] = 1,
+["pendingObjectives"] = {
+{
+["quest"] = 80592,
+["removeOnCompletion"] = true,
+},
+},
+},
+["tww-light"] = {
+["fulfilledObjectives"] = {
+},
+["state"] = 1,
+["name"] = "Light",
+["position"] = 0,
+["records"] = {
+{
+["fulfilled"] = 0,
+["text"] = "0/4 Lesser Keyflames Activated",
+["required"] = 4,
+},
+},
+["total"] = 4,
+["numObjectives"] = 1,
+["pendingObjectives"] = {
+{
+["quest"] = 76586,
+},
+},
+},
+["tww-chett"] = {
+["fulfilledObjectives"] = {
+},
+["state"] = 1,
+["name"] = "C.H.E.T.T.",
+["position"] = 0,
+["records"] = {
+{
+["fulfilled"] = 0,
+["text"] = "|T134391:13:13:0:0|t|cff0070dd [C.H.E.T.T. List]|r",
+["required"] = 1,
+},
+{
+["fulfilled"] = 0,
+["text"] = "|T134391:13:13:0:0|t|cff0070dd [Completed C.H.E.T.T. List]|r",
+["required"] = 1,
+},
+},
+["total"] = 2,
+["numObjectives"] = 5,
+["pendingObjectives"] = {
+{
+["items"] = {
+236682,
+235053,
+},
+["removeOnCompletion"] = true,
+["quest"] = 87296,
+["itemsMaxCount"] = {
+0,
+1,
+},
+},
+},
+},
+["tww-snh"] = {
+["total"] = 11,
+["records"] = {
+{
+["fulfilled"] = 1,
+["text"] = "1/1 Sign a Cartel contract for the week",
+["required"] = 1,
+},
+{
+["fulfilled"] = 0,
+["text"] = "0/10 Shipping & Handling jobs completed",
+["required"] = 10,
+},
+},
+["startedAt"] = 1744673286,
+["numObjectives"] = 1,
+["position"] = 1,
+["state"] = 2,
+["fulfilledObjectives"] = {
+},
+["name"] = "Shipping",
+["pendingObjectives"] = {
+{
+["quest"] = 85869,
+},
+},
+},
+["tww-dkeys"] = {
+["fulfilledObjectives"] = {
+{
+["quest"] = 84736,
+["items"] = {
+224172,
+},
+},
+},
+["state"] = 2,
+["name"] = "DelveKeys",
+["position"] = 1,
+["total"] = 4,
+["numObjectives"] = 4,
+["startedAt"] = 1744673286,
+["pendingObjectives"] = {
+{
+["quest"] = 84737,
+["items"] = {
+224172,
+},
+},
+{
+["quest"] = 84738,
+["items"] = {
+224172,
+},
+},
+{
+["quest"] = 84739,
+["items"] = {
+224172,
+},
+},
+},
+},
+["tww-dmap"] = {
+["fulfilledObjectives"] = {
+},
+["state"] = 1,
+["name"] = "DelveMap",
+["position"] = 0,
+["records"] = {
+{
+["fulfilled"] = 0,
+["text"] = "|T1064187:13:13:0:0|t|cffa335ee [Delver's Bounty]|r",
+["required"] = 1,
+},
+},
+["total"] = 1,
+["numObjectives"] = 1,
+["pendingObjectives"] = {
+{
+["quest"] = 86371,
+["items"] = {
+233071,
+},
+},
+},
+},
+["tww-wax"] = {
+["fulfilledObjectives"] = {
+},
+["state"] = 1,
+["name"] = "Wax",
+["position"] = 0,
+["records"] = {
+{
+["fulfilled"] = 0,
+["text"] = "0/10 Odd Glob of Wax gathered",
+["required"] = 10,
+},
+},
+["total"] = 10,
+["numObjectives"] = 1,
+["pendingObjectives"] = {
+{
+["quest"] = 82946,
+},
+},
+},
+["tww-scrap"] = {
+["total"] = 4,
+["records"] = {
+{
+["fulfilled"] = 1,
+["text"] = "1/1 Sign a cartel contract for the week",
+["required"] = 1,
+},
+{
+["fulfilled"] = 0,
+["text"] = "0/3 S.C.R.A.P. jobs completed",
+["required"] = 3,
+},
+},
+["startedAt"] = 1744673286,
+["numObjectives"] = 1,
+["position"] = 1,
+["state"] = 2,
+["fulfilledObjectives"] = {
+},
+["name"] = "SCRAP",
+["pendingObjectives"] = {
+{
+["quest"] = 85879,
+},
+},
+},
+["tww-lfd"] = {
+["fulfilledObjectives"] = {
+},
+["state"] = 1,
+["name"] = "Dungeon",
+["position"] = 0,
+["records"] = {
+{
+["fulfilled"] = 0,
+["text"] = "0/1 Skardyn Corruption Purged",
+["required"] = 1,
+},
+},
+["total"] = 1,
+["numObjectives"] = 1,
+["pendingObjectives"] = {
+{
+["quest"] = 83457,
+},
+},
+},
+["tww-troupe"] = {
+["fulfilledObjectives"] = {
+},
+["state"] = 1,
+["name"] = "Troupe",
+["position"] = 0,
+["records"] = {
+{
+["fulfilled"] = 0,
+["text"] = "0/50 Audience Approval earned",
+["required"] = 50,
+},
+{
+["fulfilled"] = 0,
+["text"] = "0/1 Complete a Theater Troupe play",
+["required"] = 1,
+},
+},
+["total"] = 51,
+["numObjectives"] = 1,
+["pendingObjectives"] = {
+{
+["quest"] = 83240,
+},
+},
+},
+["tww-delves"] = {
+["state"] = 0,
+["fulfilledObjectives"] = {
+{
+["quest"] = 82706,
+},
+},
+["name"] = "Delves",
+["claimedAt"] = 1744673286,
+["total"] = 1,
+["numObjectives"] = 1,
+["pendingObjectives"] = {
+},
+},
+["tww-invasion"] = {
+["state"] = 1,
+["fulfilledObjectives"] = {
+},
+["name"] = "Invasion",
+["total"] = 5,
+["numObjectives"] = 5,
+["pendingObjectives"] = {
+{
+["quest"] = 84252,
+["unlockQuest"] = 84850,
+},
+{
+["quest"] = 84430,
+["unlockQuest"] = 84850,
+},
+{
+["quest"] = 84627,
+["unlockQuest"] = 84850,
+},
+{
+["quest"] = 85051,
+["unlockQuest"] = 84850,
+},
+{
+["quest"] = 85589,
+["unlockQuest"] = 84850,
+},
+},
+},
+["tww-sa:83229"] = {
+["fulfilledObjectives"] = {
+},
+["state"] = 1,
+["name"] = "SA:#1",
+["position"] = 0,
+["records"] = {
+{
+["fulfilled"] = 0,
+["text"] = "0/3 Complete 3 World Quests in the Ringing Deeps",
+["required"] = 3,
+},
+},
+["total"] = 3,
+["numObjectives"] = 1,
+["pendingObjectives"] = {
+{
+["quest"] = 83229,
+["unlockQuest"] = 82156,
+},
+},
+},
+["tww-worldboss"] = {
+["fulfilledObjectives"] = {
+},
+["state"] = 1,
+["name"] = "WorldBoss",
+["position"] = 0,
+["records"] = {
+{
+["fulfilled"] = 0,
+["text"] = "0/1 Orta slain",
+["required"] = 1,
+},
+},
+["total"] = 1,
+["numObjectives"] = 1,
+["pendingObjectives"] = {
+{
+["quest"] = 81624,
+},
+},
+},
+["tww-sa:82787"] = {
+["fulfilledObjectives"] = {
+},
+["state"] = 1,
+["name"] = "SA:#2",
+["position"] = 0,
+["records"] = {
+{
+["fulfilled"] = 0,
+["text"] = "0/3 Complete World Quests in Hallowfall",
+["required"] = 3,
+},
+},
+["total"] = 3,
+["numObjectives"] = 1,
+["pendingObjectives"] = {
+{
+["quest"] = 82787,
+["unlockQuest"] = 82157,
+},
+},
+},
+["tww-gobfather"] = {
+["fulfilledObjectives"] = {
+},
+["state"] = 1,
+["name"] = "Gobfather",
+["position"] = 0,
+["records"] = {
+{
+["fulfilled"] = 0,
+["text"] = "0/1 The Gobfather slain",
+["required"] = 1,
+},
+},
+["total"] = 1,
+["numObjectives"] = 1,
+["pendingObjectives"] = {
+{
+["quest"] = 85088,
+},
+},
+},
+["tww-surge"] = {
+["total"] = 2,
+["records"] = {
+{
+["fulfilled"] = 1,
+["text"] = "1/1 Sign a Cartel contract for the week",
+["required"] = 1,
+},
+{
+["fulfilled"] = 0,
+["text"] = "0/1 Participated in Surge Pricing",
+["required"] = 1,
+},
+},
+["startedAt"] = 1744673286,
+["numObjectives"] = 1,
+["position"] = 1,
+["state"] = 2,
+["fulfilledObjectives"] = {
+},
+["name"] = "Surge",
+["pendingObjectives"] = {
+{
+["quest"] = 86775,
+},
+},
+},
+["tww-sa-um"] = {
+["fulfilledObjectives"] = {
+},
+["state"] = 1,
+["name"] = "SA:Underm",
+["position"] = 0,
+["records"] = {
+{
+["fulfilled"] = 0,
+["text"] = "0/3 Complete World Quests in Undermine",
+["required"] = 3,
+},
+},
+["total"] = 3,
+["numObjectives"] = 1,
+["pendingObjectives"] = {
+{
+["quest"] = 85488,
+["unlockQuest"] = 85490,
+},
+},
+},
+["tww-vault"] = {
+["fulfilledObjectives"] = {
+},
+["records"] = {
+{
+["fulfilled"] = 0,
+["text"] = "0 / 2 Defeat 2 Liberation of Undermine |4Boss:Bosses",
+["required"] = 2,
+},
+{
+["fulfilled"] = 0,
+["text"] = "0 / 4 Defeat 4 Liberation of Undermine |4Boss:Bosses",
+["required"] = 4,
+},
+{
+["fulfilled"] = 0,
+["text"] = "0 / 6 Defeat 6 Liberation of Undermine |4Boss:Bosses",
+["required"] = 6,
+},
+{
+["fulfilled"] = 2,
+["text"] = "2 / 2 Complete 2 |4Delve:Delves; or |4World Activity:World Activities;",
+["required"] = 2,
+},
+{
+["fulfilled"] = 3,
+["text"] = "3 / 4 Complete 4 |4Delve:Delves; or |4World Activity:World Activities;",
+["required"] = 4,
+},
+{
+["fulfilled"] = 3,
+["text"] = "3 / 8 Complete 8 |4Delve:Delves; or |4World Activity:World Activities;",
+["required"] = 8,
+},
+{
+["fulfilled"] = 1,
+["text"] = "1 / 1 Complete 1 Heroic, Mythic, or Timewalking |4Dungeon:Dungeons",
+["required"] = 1,
+},
+{
+["fulfilled"] = 1,
+["text"] = "1 / 4 Complete 4 Heroic, Mythic, or Timewalking |4Dungeon:Dungeons",
+["required"] = 4,
+},
+{
+["fulfilled"] = 1,
+["text"] = "1 / 8 Complete 8 Heroic, Mythic, or Timewalking |4Dungeon:Dungeons",
+["required"] = 8,
+},
+},
+["state"] = 2,
+["numObjectives"] = 1,
+["startedAt"] = 1744673286,
+["position"] = 2,
+["type"] = 1,
+["name"] = "GreatVault",
+["total"] = 9,
+["pendingObjectives"] = {
+{
+["quest"] = 0,
+["progressType"] = 1,
+},
+},
+},
+["tww-storm"] = {
+["fulfilledObjectives"] = {
+},
+["state"] = 1,
+["name"] = "SA:Storm",
+["position"] = 0,
+["records"] = {
+{
+["fulfilled"] = 0,
+["text"] = "Complete activities and secure the Siren Isle (0%)",
+["required"] = 100,
+},
+},
+["total"] = 100,
+["numObjectives"] = 1,
+["pendingObjectives"] = {
+{
+["quest"] = 85113,
+["unlockQuest"] = 84850,
+},
+},
+},
+["tww-atm"] = {
+["fulfilledObjectives"] = {
+},
+["state"] = 1,
+["name"] = "Machine",
+["position"] = 0,
+["records"] = {
+{
+["fulfilled"] = 0,
+["text"] = "0/20 Waves cleared",
+["required"] = 20,
+},
+},
+["total"] = 20,
+["numObjectives"] = 1,
+["pendingObjectives"] = {
+{
+["quest"] = 83333,
+},
+},
+},
+},
+["realmName"] = "Mal'Ganis",
+["name"] = "Ofpuss",
+["factionName"] = "Alliance",
+["location"] = "Dornogal",
+["level"] = 80,
+["lastUpdate"] = 1744673348,
+["class"] = "DEMONHUNTER",
+},
+["Player-3684-0EA9FE55"] = {
+["GUID"] = "Player-3684-0EA9FE55",
+["progress"] = {
+["tww-gig"] = {
+["state"] = 1,
+["fulfilledObjectives"] = {
+},
+["name"] = "SideGig",
+["total"] = 4,
+["numObjectives"] = 4,
+["pendingObjectives"] = {
+{
+["quest"] = 85554,
+},
+{
+["quest"] = 86177,
+},
+{
+["quest"] = 86179,
+},
+{
+["quest"] = 86180,
+},
+},
+},
+["tww-circlet"] = {
+["fulfilledObjectives"] = {
+{
+["unlockQuest"] = 84724,
+["quest"] = 0,
+["progressType"] = 3,
+},
+},
+["claimedAt"] = 1744673154,
+["records"] = {
+{
+["fulfilled"] = 1,
+["text"] = "|T6215518:13:13:0:0|t|cffa335ee [Cyrce's Circlet]|r (658)",
+["required"] = 1,
+},
+},
+["state"] = 0,
+["name"] = "Circlet",
+["startedAt"] = 1744673149,
+["position"] = 6,
+["type"] = 3,
+["numObjectives"] = 1,
+["total"] = 6,
+["pendingObjectives"] = {
+},
+},
+["tww-archives"] = {
+["total"] = 100,
+["records"] = {
+{
+["fulfilled"] = 0,
+["text"] = "0/100 Titan Disc Fragment",
+["required"] = 100,
+},
+},
+["startedAt"] = 1744673149,
+["numObjectives"] = 1,
+["position"] = 0,
+["state"] = 2,
+["fulfilledObjectives"] = {
+},
+["name"] = "Archives",
+["pendingObjectives"] = {
+{
+["unlockQuest"] = 82678,
+["quest"] = 82679,
+["unlockUntilReset"] = true,
+},
+},
+},
+["tww-pact"] = {
+["fulfilledObjectives"] = {
+},
+["state"] = 1,
+["name"] = "Spider",
+["position"] = 0,
+["records"] = {
+{
+["fulfilled"] = 0,
+["text"] = "0/1 Choose a Pact",
+["required"] = 1,
+},
+},
+["total"] = 1,
+["numObjectives"] = 1,
+["pendingObjectives"] = {
+{
+["quest"] = 80592,
+["removeOnCompletion"] = true,
+},
+},
+},
+["tww-light"] = {
+["fulfilledObjectives"] = {
+},
+["state"] = 1,
+["name"] = "Light",
+["position"] = 0,
+["records"] = {
+{
+["fulfilled"] = 0,
+["text"] = "0/4 Lesser Keyflames Activated",
+["required"] = 4,
+},
+},
+["total"] = 4,
+["numObjectives"] = 1,
+["pendingObjectives"] = {
+{
+["quest"] = 76586,
+},
+},
+},
+["tww-chett"] = {
+["state"] = 2,
+["fulfilledObjectives"] = {
+},
+["name"] = "C.H.E.T.T.",
+["startedAt"] = 1744673149,
+["total"] = 4,
+["numObjectives"] = 4,
+["pendingObjectives"] = {
+{
+["quest"] = 86915,
+},
+{
+["quest"] = 86919,
+},
+{
+["quest"] = 86920,
+},
+{
+["quest"] = 86923,
+},
+{
+["quest"] = 87302,
+},
+{
+["quest"] = 87303,
+},
+{
+["quest"] = 87304,
+},
+{
+["quest"] = 87305,
+},
+},
+},
+["tww-snh"] = {
+["fulfilledObjectives"] = {
+},
+["state"] = 1,
+["name"] = "Shipping",
+["position"] = 0,
+["records"] = {
+},
+["total"] = 1,
+["numObjectives"] = 1,
+["pendingObjectives"] = {
+{
+["quest"] = 85869,
+},
+},
+},
+["tww-dkeys"] = {
+["state"] = 1,
+["fulfilledObjectives"] = {
+},
+["name"] = "DelveKeys",
+["total"] = 4,
+["numObjectives"] = 4,
+["pendingObjectives"] = {
+{
+["quest"] = 84736,
+["items"] = {
+224172,
+},
+},
+{
+["quest"] = 84737,
+["items"] = {
+224172,
+},
+},
+{
+["quest"] = 84738,
+["items"] = {
+224172,
+},
+},
+{
+["quest"] = 84739,
+["items"] = {
+224172,
+},
+},
+},
+},
+["tww-dmap"] = {
+["fulfilledObjectives"] = {
+},
+["state"] = 1,
+["name"] = "DelveMap",
+["position"] = 0,
+["records"] = {
+{
+["fulfilled"] = 0,
+["text"] = "|T1064187:13:13:0:0|t|cffa335ee [Delver's Bounty]|r",
+["required"] = 1,
+},
+},
+["total"] = 1,
+["numObjectives"] = 1,
+["pendingObjectives"] = {
+{
+["quest"] = 86371,
+["items"] = {
+233071,
+},
+},
+},
+},
+["tww-wax"] = {
+["fulfilledObjectives"] = {
+},
+["state"] = 1,
+["name"] = "Wax",
+["position"] = 0,
+["records"] = {
+{
+["fulfilled"] = 0,
+["text"] = "0/10 Odd Glob of Wax gathered",
+["required"] = 10,
+},
+},
+["total"] = 10,
+["numObjectives"] = 1,
+["pendingObjectives"] = {
+{
+["quest"] = 82946,
+},
+},
+},
+["tww-scrap"] = {
+["fulfilledObjectives"] = {
+},
+["state"] = 1,
+["name"] = "SCRAP",
+["position"] = 0,
+["records"] = {
+},
+["total"] = 1,
+["numObjectives"] = 1,
+["pendingObjectives"] = {
+{
+["quest"] = 85879,
+},
+},
+},
+["tww-troupe"] = {
+["fulfilledObjectives"] = {
+},
+["state"] = 1,
+["name"] = "Troupe",
+["position"] = 0,
+["records"] = {
+{
+["fulfilled"] = 0,
+["text"] = "0/50 Audience Approval earned",
+["required"] = 50,
+},
+{
+["fulfilled"] = 0,
+["text"] = "0/1 Complete a Theater Troupe play",
+["required"] = 1,
+},
+},
+["total"] = 51,
+["numObjectives"] = 1,
+["pendingObjectives"] = {
+{
+["quest"] = 83240,
+},
+},
+},
+["tww-sa:82787"] = {
+["fulfilledObjectives"] = {
+},
+["state"] = 1,
+["name"] = "SA:#2",
+["position"] = 0,
+["records"] = {
+{
+["fulfilled"] = 0,
+["text"] = "0/3 Complete World Quests in Hallowfall",
+["required"] = 3,
+},
+},
+["total"] = 3,
+["numObjectives"] = 1,
+["pendingObjectives"] = {
+{
+["quest"] = 82787,
+["unlockQuest"] = 82157,
+},
+},
+},
+["tww-invasion"] = {
+["fulfilledObjectives"] = {
+{
+["quest"] = 84252,
+["unlockQuest"] = 84850,
+},
+},
+["state"] = 2,
+["name"] = "Invasion",
+["position"] = 1,
+["total"] = 5,
+["numObjectives"] = 5,
+["startedAt"] = 1744673149,
+["pendingObjectives"] = {
+{
+["quest"] = 84430,
+["unlockQuest"] = 84850,
+},
+{
+["quest"] = 84627,
+["unlockQuest"] = 84850,
+},
+{
+["quest"] = 85051,
+["unlockQuest"] = 84850,
+},
+{
+["quest"] = 85589,
+["unlockQuest"] = 84850,
+},
+},
+},
+["tww-delves"] = {
+["total"] = 3,
+["records"] = {
+{
+["fulfilled"] = 0,
+["text"] = "0/3 Complete any delve in The War Within",
+["required"] = 3,
+},
+},
+["startedAt"] = 1744673149,
+["numObjectives"] = 1,
+["position"] = 0,
+["state"] = 2,
+["fulfilledObjectives"] = {
+},
+["name"] = "Delves",
+["pendingObjectives"] = {
+{
+["quest"] = 82706,
+},
+},
+},
+["tww-sa:83229"] = {
+["fulfilledObjectives"] = {
+},
+["state"] = 1,
+["name"] = "SA:#1",
+["position"] = 0,
+["records"] = {
+{
+["fulfilled"] = 0,
+["text"] = "0/3 Complete 3 World Quests in the Ringing Deeps",
+["required"] = 3,
+},
+},
+["total"] = 3,
+["numObjectives"] = 1,
+["pendingObjectives"] = {
+{
+["quest"] = 83229,
+["unlockQuest"] = 82156,
+},
+},
+},
+["tww-worldboss"] = {
+["fulfilledObjectives"] = {
+},
+["state"] = 1,
+["name"] = "WorldBoss",
+["position"] = 0,
+["records"] = {
+{
+["fulfilled"] = 0,
+["text"] = "0/1 Orta slain",
+["required"] = 1,
+},
+},
+["total"] = 1,
+["numObjectives"] = 1,
+["pendingObjectives"] = {
+{
+["quest"] = 81624,
+},
+},
+},
+["tww-gobfather"] = {
+["fulfilledObjectives"] = {
+},
+["state"] = 1,
+["name"] = "Gobfather",
+["position"] = 0,
+["records"] = {
+{
+["fulfilled"] = 0,
+["text"] = "0/1 The Gobfather slain",
+["required"] = 1,
+},
+},
+["total"] = 1,
+["numObjectives"] = 1,
+["pendingObjectives"] = {
+{
+["quest"] = 85088,
+},
+},
+},
+["tww-surge"] = {
+["fulfilledObjectives"] = {
+},
+["state"] = 1,
+["name"] = "Surge",
+["position"] = 0,
+["records"] = {
+},
+["total"] = 1,
+["numObjectives"] = 1,
+["pendingObjectives"] = {
+{
+["quest"] = 86775,
+},
+},
+},
+["tww-sa-um"] = {
+["fulfilledObjectives"] = {
+},
+["state"] = 1,
+["name"] = "SA:Underm",
+["position"] = 0,
+["records"] = {
+{
+["fulfilled"] = 0,
+["text"] = "0/3 Complete World Quests in Undermine",
+["required"] = 3,
+},
+},
+["total"] = 3,
+["numObjectives"] = 1,
+["pendingObjectives"] = {
+{
+["quest"] = 85488,
+["unlockQuest"] = 85490,
+},
+},
+},
+["tww-vault"] = {
+["fulfilledObjectives"] = {
+},
+["records"] = {
+{
+["fulfilled"] = 0,
+["text"] = "0 / 2 Defeat 2 Liberation of Undermine |4Boss:Bosses",
+["required"] = 2,
+},
+{
+["fulfilled"] = 0,
+["text"] = "0 / 4 Defeat 4 Liberation of Undermine |4Boss:Bosses",
+["required"] = 4,
+},
+{
+["fulfilled"] = 0,
+["text"] = "0 / 6 Defeat 6 Liberation of Undermine |4Boss:Bosses",
+["required"] = 6,
+},
+{
+["fulfilled"] = 0,
+["text"] = "0 / 2 Complete 2 |4Delve:Delves; or |4World Activity:World Activities;",
+["required"] = 2,
+},
+{
+["fulfilled"] = 0,
+["text"] = "0 / 4 Complete 4 |4Delve:Delves; or |4World Activity:World Activities;",
+["required"] = 4,
+},
+{
+["fulfilled"] = 0,
+["text"] = "0 / 8 Complete 8 |4Delve:Delves; or |4World Activity:World Activities;",
+["required"] = 8,
+},
+{
+["fulfilled"] = 1,
+["text"] = "1 / 1 Complete 1 Heroic, Mythic, or Timewalking |4Dungeon:Dungeons",
+["required"] = 1,
+},
+{
+["fulfilled"] = 1,
+["text"] = "1 / 4 Complete 4 Heroic, Mythic, or Timewalking |4Dungeon:Dungeons",
+["required"] = 4,
+},
+{
+["fulfilled"] = 1,
+["text"] = "1 / 8 Complete 8 Heroic, Mythic, or Timewalking |4Dungeon:Dungeons",
+["required"] = 8,
+},
+},
+["state"] = 2,
+["startedAt"] = 1744673149,
+["numObjectives"] = 1,
+["position"] = 1,
+["type"] = 1,
+["name"] = "GreatVault",
+["total"] = 9,
+["pendingObjectives"] = {
+{
+["quest"] = 0,
+["progressType"] = 1,
+},
+},
+},
+["tww-storm"] = {
+["fulfilledObjectives"] = {
+},
+["state"] = 1,
+["name"] = "SA:Storm",
+["position"] = 0,
+["records"] = {
+{
+["fulfilled"] = 0,
+["text"] = "Complete activities and secure the Siren Isle (0%)",
+["required"] = 100,
+},
+},
+["total"] = 100,
+["numObjectives"] = 1,
+["pendingObjectives"] = {
+{
+["quest"] = 85113,
+["unlockQuest"] = 84850,
+},
+},
+},
+["tww-atm"] = {
+["fulfilledObjectives"] = {
+},
+["state"] = 1,
+["name"] = "Machine",
+["position"] = 0,
+["records"] = {
+{
+["fulfilled"] = 0,
+["text"] = "0/20 Waves cleared",
+["required"] = 20,
+},
+},
+["total"] = 20,
+["numObjectives"] = 1,
+["pendingObjectives"] = {
+{
+["quest"] = 83333,
+},
+},
+},
+},
+["realmName"] = "Mal'Ganis",
+["name"] = "Stormclout",
+["location"] = "Dornogal",
+["factionName"] = "Horde",
+["level"] = 80,
+["lastUpdate"] = 1744673238,
+["class"] = "MONK",
+},
+["Player-3684-0EAABA4A"] = {
+["GUID"] = "Player-3684-0EAABA4A",
+["progress"] = {
+["tww-gig"] = {
+["state"] = 1,
+["fulfilledObjectives"] = {
+},
+["name"] = "SideGig",
+["total"] = 4,
+["numObjectives"] = 4,
+["pendingObjectives"] = {
+{
+["quest"] = 85554,
+},
+{
+["quest"] = 86177,
+},
+{
+["quest"] = 86179,
+},
+{
+["quest"] = 86180,
+},
+},
+},
+["tww-circlet"] = {
+["fulfilledObjectives"] = {
+{
+["unlockQuest"] = 84724,
+["quest"] = 0,
+["progressType"] = 3,
+},
+},
+["claimedAt"] = 1744673402,
+["state"] = 0,
+["records"] = {
+{
+["fulfilled"] = 1,
+["text"] = "|T6215518:13:13:0:0|t|cffa335ee [Cyrce's Circlet]|r (658)",
+["required"] = 1,
+},
+},
+["total"] = 6,
+["numObjectives"] = 1,
+["position"] = 6,
+["name"] = "Circlet",
+["type"] = 3,
+["startedAt"] = 1744673261,
+["pendingObjectives"] = {
+},
+},
+["tww-archives"] = {
+["state"] = 0,
+["fulfilledObjectives"] = {
+{
+["unlockQuest"] = 82678,
+["quest"] = 82679,
+["unlockUntilReset"] = true,
+},
+},
+["name"] = "Archives",
+["pendingObjectives"] = {
+},
+["numObjectives"] = 1,
+["total"] = 1,
+["claimedAt"] = 1744673261,
+},
+["tww-pact"] = {
+["total"] = 1,
+["records"] = {
+{
+["fulfilled"] = 0,
+["text"] = "0/1 Choose a Pact",
+["required"] = 1,
+},
+},
+["numObjectives"] = 1,
+["position"] = 0,
+["state"] = 1,
+["fulfilledObjectives"] = {
+},
+["name"] = "Spider",
+["pendingObjectives"] = {
+{
+["quest"] = 80592,
+["removeOnCompletion"] = true,
+},
+},
+},
+["tww-light"] = {
+["state"] = 0,
+["fulfilledObjectives"] = {
+{
+["quest"] = 76586,
+},
+},
+["name"] = "Light",
+["pendingObjectives"] = {
+},
+["numObjectives"] = 1,
+["total"] = 1,
+["claimedAt"] = 1744673261,
+},
+["tww-chett"] = {
+["total"] = 2,
+["records"] = {
+{
+["fulfilled"] = 0,
+["text"] = "|T134391:13:13:0:0|t|cff0070dd [C.H.E.T.T. List]|r",
+["required"] = 1,
+},
+{
+["fulfilled"] = 0,
+["text"] = "|T134391:13:13:0:0|t|cff0070dd [Completed C.H.E.T.T. List]|r",
+["required"] = 1,
+},
+},
+["numObjectives"] = 5,
+["position"] = 0,
+["state"] = 1,
+["fulfilledObjectives"] = {
+},
+["name"] = "C.H.E.T.T.",
+["pendingObjectives"] = {
+{
+["items"] = {
+236682,
+235053,
+},
+["removeOnCompletion"] = true,
+["quest"] = 87296,
+["itemsMaxCount"] = {
+0,
+1,
+},
+},
+},
+},
+["tww-snh"] = {
+["total"] = 11,
+["records"] = {
+{
+["fulfilled"] = 1,
+["text"] = "1/1 Sign a Cartel contract for the week",
+["required"] = 1,
+},
+{
+["fulfilled"] = 0,
+["text"] = "0/10 Shipping & Handling jobs completed",
+["required"] = 10,
+},
+},
+["numObjectives"] = 1,
+["startedAt"] = 1744673261,
+["position"] = 1,
+["name"] = "Shipping",
+["fulfilledObjectives"] = {
+},
+["state"] = 2,
+["pendingObjectives"] = {
+{
+["quest"] = 85869,
+},
+},
+},
+["tww-dkeys"] = {
+["total"] = 4,
+["state"] = 2,
+["numObjectives"] = 4,
+["position"] = 3,
+["fulfilledObjectives"] = {
+{
+["quest"] = 84736,
+["items"] = {
+224172,
+},
+},
+{
+["quest"] = 84738,
+["items"] = {
+224172,
+},
+},
+{
+["quest"] = 84737,
+["items"] = {
+224172,
+},
+},
+},
+["name"] = "DelveKeys",
+["startedAt"] = 1744673261,
+["pendingObjectives"] = {
+{
+["quest"] = 84739,
+["items"] = {
+224172,
+},
+},
+},
+},
+["tww-dmap"] = {
+["state"] = 0,
+["fulfilledObjectives"] = {
+{
+["quest"] = 86371,
+["items"] = {
+233071,
+},
+},
+},
+["name"] = "DelveMap",
+["pendingObjectives"] = {
+},
+["numObjectives"] = 1,
+["total"] = 1,
+["claimedAt"] = 1744673261,
+},
+["tww-wax"] = {
+["total"] = 10,
+["records"] = {
+{
+["fulfilled"] = 0,
+["text"] = "0/10 Odd Glob of Wax gathered",
+["required"] = 10,
+},
+},
+["numObjectives"] = 1,
+["position"] = 0,
+["state"] = 1,
+["fulfilledObjectives"] = {
+},
+["name"] = "Wax",
+["pendingObjectives"] = {
+{
+["quest"] = 82946,
+},
+},
+},
+["tww-scrap"] = {
+["total"] = 4,
+["records"] = {
+{
+["fulfilled"] = 1,
+["text"] = "1/1 Sign a cartel contract for the week",
+["required"] = 1,
+},
+{
+["fulfilled"] = 0,
+["text"] = "0/3 S.C.R.A.P. jobs completed",
+["required"] = 3,
+},
+},
+["numObjectives"] = 1,
+["startedAt"] = 1744673261,
+["position"] = 1,
+["name"] = "SCRAP",
+["fulfilledObjectives"] = {
+},
+["state"] = 2,
+["pendingObjectives"] = {
+{
+["quest"] = 85879,
+},
+},
+},
+["tww-lfd"] = {
+["total"] = 1,
+["records"] = {
+{
+["fulfilled"] = 0,
+["text"] = "0/1 Skardyn Corruption Purged",
+["required"] = 1,
+},
+},
+["numObjectives"] = 1,
+["startedAt"] = 1744673261,
+["position"] = 0,
+["name"] = "Dungeon",
+["fulfilledObjectives"] = {
+},
+["state"] = 2,
+["pendingObjectives"] = {
+{
+["quest"] = 83457,
+},
+},
+},
+["tww-troupe"] = {
+["state"] = 0,
+["fulfilledObjectives"] = {
+{
+["quest"] = 83240,
+},
+},
+["name"] = "Troupe",
+["pendingObjectives"] = {
+},
+["numObjectives"] = 1,
+["total"] = 1,
+["claimedAt"] = 1744673261,
+},
+["tww-invasion"] = {
+["state"] = 1,
+["fulfilledObjectives"] = {
+},
+["name"] = "Invasion",
+["total"] = 5,
+["numObjectives"] = 5,
+["pendingObjectives"] = {
+{
+["quest"] = 84252,
+["unlockQuest"] = 84850,
+},
+{
+["quest"] = 84430,
+["unlockQuest"] = 84850,
+},
+{
+["quest"] = 84627,
+["unlockQuest"] = 84850,
+},
+{
+["quest"] = 85051,
+["unlockQuest"] = 84850,
+},
+{
+["quest"] = 85589,
+["unlockQuest"] = 84850,
+},
+},
+},
+["tww-delves"] = {
+["state"] = 0,
+["fulfilledObjectives"] = {
+{
+["quest"] = 82706,
+},
+},
+["name"] = "Delves",
+["pendingObjectives"] = {
+},
+["numObjectives"] = 1,
+["total"] = 1,
+["claimedAt"] = 1744673261,
+},
+["tww-sa:83229"] = {
+["total"] = 3,
+["records"] = {
+{
+["fulfilled"] = 0,
+["text"] = "0/3 Complete 3 World Quests in the Ringing Deeps",
+["required"] = 3,
+},
+},
+["numObjectives"] = 1,
+["position"] = 0,
+["state"] = 1,
+["fulfilledObjectives"] = {
+},
+["name"] = "SA:#1",
+["pendingObjectives"] = {
+{
+["quest"] = 83229,
+["unlockQuest"] = 82156,
+},
+},
+},
+["tww-vault"] = {
+["fulfilledObjectives"] = {
+},
+["state"] = 2,
+["records"] = {
+{
+["fulfilled"] = 2,
+["text"] = "2 / 2 Defeat 2 Liberation of Undermine |4Boss:Bosses",
+["required"] = 2,
+},
+{
+["fulfilled"] = 4,
+["text"] = "4 / 4 Defeat 4 Liberation of Undermine |4Boss:Bosses",
+["required"] = 4,
+},
+{
+["fulfilled"] = 6,
+["text"] = "6 / 6 Defeat 6 Liberation of Undermine |4Boss:Bosses",
+["required"] = 6,
+},
+{
+["fulfilled"] = 2,
+["text"] = "2 / 2 Complete 2 |4Delve:Delves; or |4World Activity:World Activities;",
+["required"] = 2,
+},
+{
+["fulfilled"] = 4,
+["text"] = "4 / 4 Complete 4 |4Delve:Delves; or |4World Activity:World Activities;",
+["required"] = 4,
+},
+{
+["fulfilled"] = 5,
+["text"] = "5 / 8 Complete 8 |4Delve:Delves; or |4World Activity:World Activities;",
+["required"] = 8,
+},
+{
+["fulfilled"] = 1,
+["text"] = "1 / 1 Complete 1 Heroic, Mythic, or Timewalking |4Dungeon:Dungeons",
+["required"] = 1,
+},
+{
+["fulfilled"] = 1,
+["text"] = "1 / 4 Complete 4 Heroic, Mythic, or Timewalking |4Dungeon:Dungeons",
+["required"] = 4,
+},
+{
+["fulfilled"] = 1,
+["text"] = "1 / 8 Complete 8 Heroic, Mythic, or Timewalking |4Dungeon:Dungeons",
+["required"] = 8,
+},
+},
+["total"] = 9,
+["numObjectives"] = 1,
+["position"] = 6,
+["name"] = "GreatVault",
+["type"] = 1,
+["startedAt"] = 1744673261,
+["pendingObjectives"] = {
+{
+["quest"] = 0,
+["progressType"] = 1,
+},
+},
+},
+["tww-sa:82787"] = {
+["total"] = 3,
+["records"] = {
+{
+["fulfilled"] = 1,
+["text"] = "1/3 Complete World Quests in Hallowfall",
+["required"] = 3,
+},
+},
+["numObjectives"] = 1,
+["startedAt"] = 1744673261,
+["position"] = 1,
+["name"] = "SA:#2",
+["fulfilledObjectives"] = {
+},
+["state"] = 2,
+["pendingObjectives"] = {
+{
+["quest"] = 82787,
+["unlockQuest"] = 82157,
+},
+},
+},
+["tww-gobfather"] = {
+["total"] = 1,
+["records"] = {
+{
+["fulfilled"] = 0,
+["text"] = "0/1 The Gobfather slain",
+["required"] = 1,
+},
+},
+["numObjectives"] = 1,
+["position"] = 0,
+["state"] = 1,
+["fulfilledObjectives"] = {
+},
+["name"] = "Gobfather",
+["pendingObjectives"] = {
+{
+["quest"] = 85088,
+},
+},
+},
+["tww-surge"] = {
+["total"] = 2,
+["records"] = {
+{
+["fulfilled"] = 1,
+["text"] = "1/1 Sign a Cartel contract for the week",
+["required"] = 1,
+},
+{
+["fulfilled"] = 0,
+["text"] = "0/1 Participated in Surge Pricing",
+["required"] = 1,
+},
+},
+["numObjectives"] = 1,
+["startedAt"] = 1744673261,
+["position"] = 1,
+["name"] = "Surge",
+["fulfilledObjectives"] = {
+},
+["state"] = 2,
+["pendingObjectives"] = {
+{
+["quest"] = 86775,
+},
+},
+},
+["tww-sa-um"] = {
+["total"] = 3,
+["records"] = {
+{
+["fulfilled"] = 0,
+["text"] = "0/3 Complete World Quests in Undermine",
+["required"] = 3,
+},
+},
+["numObjectives"] = 1,
+["position"] = 0,
+["state"] = 1,
+["fulfilledObjectives"] = {
+},
+["name"] = "SA:Underm",
+["pendingObjectives"] = {
+{
+["quest"] = 85488,
+["unlockQuest"] = 85490,
+},
+},
+},
+["tww-worldboss"] = {
+["total"] = 1,
+["records"] = {
+{
+["fulfilled"] = 0,
+["text"] = "0/1 Orta slain",
+["required"] = 1,
+},
+},
+["numObjectives"] = 1,
+["position"] = 0,
+["state"] = 1,
+["fulfilledObjectives"] = {
+},
+["name"] = "WorldBoss",
+["pendingObjectives"] = {
+{
+["quest"] = 81624,
+},
+},
+},
+["tww-storm"] = {
+["total"] = 100,
+["records"] = {
+{
+["fulfilled"] = 0,
+["text"] = "Complete activities and secure the Siren Isle (0%)",
+["required"] = 100,
+},
+},
+["numObjectives"] = 1,
+["position"] = 0,
+["state"] = 1,
+["fulfilledObjectives"] = {
+},
+["name"] = "SA:Storm",
+["pendingObjectives"] = {
+{
+["quest"] = 85113,
+["unlockQuest"] = 84850,
+},
+},
+},
+["tww-atm"] = {
+["total"] = 20,
+["records"] = {
+{
+["fulfilled"] = 0,
+["text"] = "0/20 Waves cleared",
+["required"] = 20,
+},
+},
+["numObjectives"] = 1,
+["position"] = 0,
+["state"] = 1,
+["fulfilledObjectives"] = {
+},
+["name"] = "Machine",
+["pendingObjectives"] = {
+{
+["quest"] = 83333,
+},
+},
+},
+},
+["realmName"] = "Mal'Ganis",
+["name"] = "Mäñýfäçëð",
+["class"] = "ROGUE",
+["factionName"] = "Horde",
+["level"] = 80,
+["lastUpdate"] = 1744673407,
+["location"] = "Council's Treasury",
+},
+},
+["minimap"] = {
+["minimapPos"] = 202.7436631093408,
+["showInCompartment"] = true,
+},
+},
+}
+WeeklyRewardsArchive = {
+["stores"] = {
+["ReadOnly"] = {
+},
+["RawData"] = {
+},
+},
+["internalVersion"] = 1,
+}

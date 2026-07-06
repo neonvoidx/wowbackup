@@ -5,6 +5,26 @@ ns.API = API
 
 local LSM = LibStub("LibSharedMedia-3.0", true)
 
+function API.GradientText(text, r1, g1, b1, r2, g2, b2)
+    r1, g1, b1 = r1 or 0, g1 or 137, b1 or 69
+    r2, g2, b2 = r2 or 140, g2 or 205, b2 or 0
+
+    local n = #text
+    if n <= 1 then
+        return text
+    end
+
+    local out = {}
+    for i = 1, n do
+        local t = (i - 1) / (n - 1)
+        local r = math.min(255, math.floor(r1 + (r2 - r1) * t + 0.5))
+        local g = math.min(255, math.floor(g1 + (g2 - g1) * t + 0.5))
+        local b = math.min(255, math.floor(b1 + (b2 - b1) * t + 0.5))
+        out[i] = string.format("|cff%02x%02x%02x%s|r", r, g, b, text:sub(i, i))
+    end
+    return table.concat(out)
+end
+
 local SliceFrameMixin = {}
 
 function SliceFrameMixin:CreatePieces(n)
@@ -129,10 +149,75 @@ function API:CreateNineSliceFrame(parent, layoutName)
     return f
 end
 
+-- Per-frame "affected" markers. CMC tracks which features it has applied to a
+-- frame (icon, viewer, etc.) under a shared `frame._cmc_affected` table so it
+-- knows what to restore/refresh later. These helpers are the single way to
+-- read/write those markers.
+function API:GetIsAffected(frame, key)
+    return (frame and frame._cmc_affected and frame._cmc_affected[key]) or false
+end
+
+function API:SetAffected(frame, key, value)
+    if not frame then
+        return
+    end
+    if value == nil then
+        value = true
+    end
+    frame._cmc_affected = frame._cmc_affected or {}
+    frame._cmc_affected[key] = value
+end
+
+function API:UnsetAffected(frame, key)
+    if frame and frame._cmc_affected then
+        frame._cmc_affected[key] = nil
+    end
+end
+
+-- Returns the frame's `_cmc_affected` state table, creating it on first use.
+-- All per-frame CMC state -- both the boolean "affected" markers above and the
+-- object references CMC stashes on a frame (border, cooldown, masks, glow, the
+-- tracker entry fields, etc.) -- lives in this single table, so a managed frame
+-- carries one CMC field instead of dozens. Nil-safe: returns a throwaway table
+-- when frame is nil so callers never index nil.
+function API.Affected(frame)
+    if not frame then
+        return {}
+    end
+    local state = frame._cmc_affected
+    if not state then
+        state = {}
+        frame._cmc_affected = state
+    end
+    return state
+end
+
+-- Returns frame:GetSize(), or nil when either dimension is unusable: zero (not laid
+-- out yet) or a protected "secret" value. WoW 11.x can hand back tainted sizes for
+-- reparented frames and arithmetic on those errors; issecretvalue itself may be
+-- absent on older clients, so guard its existence. Callers should skip geometry math
+-- and keep their last good size when this returns nil.
+function API:GetSafeSize(frame)
+    if not frame then
+        return nil
+    end
+    local w, h = frame:GetSize()
+    if issecretvalue and (issecretvalue(w) or issecretvalue(h)) then
+        return nil
+    end
+    if not w or not h or w <= 0 or h <= 0 then
+        return nil
+    end
+    return w, h
+end
+
 function API:RefreshCooldownManager()
     C_Timer.After(0.01, function()
         ns.StyledIcons:RefreshAll()
         ns.CooldownManager.Initialize()
+        if ns.CooldownStyle then
+            ns.CooldownStyle:RefreshHooks()
+        end
     end)
 end
 
@@ -293,6 +378,9 @@ local function AddSpellToTracking(spellID, state)
     local target = state or ns.TrackerItemsData.ITEM_STATE_TRACKER1
     ns.TrackerItemsData:SetEntryState("spell", baseSpellID, target)
 
+    if ns.TrackerItemViewer and ns.TrackerItemViewer.ReconcileTrackerCount then
+        ns.TrackerItemViewer:ReconcileTrackerCount()
+    end
     if ns.TrackerAssignmentPanel and ns.TrackerAssignmentPanel.RefreshMiscPanel then
         ns.TrackerAssignmentPanel:RefreshMiscPanel()
     end
@@ -308,14 +396,19 @@ local function AddItemToTracking(itemID, state)
         return nil, "Cannot add item to tracking while in combat."
     end
 
-    local _spellName, spellId = C_Item.GetItemSpell(itemID)
-    if not spellId then
+    -- Passive proc trinkets have no on-use spell but are still trackable via proc
+    -- data, so allow anything ItemsData considers trackable. The passive-trinket
+    -- filter only gates wildcard slots, never items added by hand.
+    if not ns.TrackerItemsData:IsTrackableItem(itemID) then
         return nil, "Item is not usable."
     end
 
     local target = state or ns.TrackerItemsData.ITEM_STATE_TRACKER1
     ns.TrackerItemsData:SetEntryState("item", itemID, target)
 
+    if ns.TrackerItemViewer and ns.TrackerItemViewer.ReconcileTrackerCount then
+        ns.TrackerItemViewer:ReconcileTrackerCount()
+    end
     if ns.TrackerAssignmentPanel and ns.TrackerAssignmentPanel.RefreshMiscPanel then
         ns.TrackerAssignmentPanel:RefreshMiscPanel()
     end

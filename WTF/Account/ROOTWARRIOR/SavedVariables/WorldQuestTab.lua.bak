@@ -63,7 +63,7 @@ BWQDB = {
 },
 },
 ["global"] = {
-["versionCheck"] = 120011,
+["versionCheck"] = 120014,
 ["profiles"] = {
 [0] = {
 ["colors"] = {

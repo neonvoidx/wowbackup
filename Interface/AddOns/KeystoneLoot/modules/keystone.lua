@@ -136,10 +136,7 @@ function Keystone:GetLootReminderItemList(challengeModeId)
     end
 
     -- Resolve current loot spec
-    local lootSpecId = GetLootSpecialization();
-    if (lootSpecId == 0) then
-        lootSpecId = GetSpecializationInfo(GetSpecialization());
-    end
+    local lootSpecId = Character:GetLootSpecId()
 
     -- Subset check: remove specs whose item list is fully covered by another spec
     -- Never remove the loot spec, it is the baseline
@@ -316,6 +313,17 @@ function Keystone:GetRewards(keystoneLevel)
                         rank = vaultTrack.rank
                     }
                 };
+            end
+        end
+    end
+end
+
+function Keystone:GetKeystoneItemLink()
+    for bag = 0, NUM_BAG_SLOTS do
+        for slot = 1, C_Container.GetContainerNumSlots(bag) do
+            local link = C_Container.GetContainerItemLink(bag, slot);
+            if (link and string.find(link, "Hkeystone:", 1, true)) then
+                return link;
             end
         end
     end

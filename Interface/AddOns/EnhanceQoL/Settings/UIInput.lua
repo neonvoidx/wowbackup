@@ -1,4 +1,4 @@
--- luacheck: globals C_Timer C_MountJournal LE_MOUNT_JOURNAL_FILTER_COLLECTED LE_MOUNT_JOURNAL_FILTER_UNUSABLE C_PetJournal C_ToyBox C_ToyBoxInfo ToyBox CollectionsMicroButton MainMenuMicroButton_HideAlert CollectionsMicroButton_SetAlertShown MicroButtonPulseStop CreateFrame C_CVar UIParent SetCVar ReloadUI
+-- luacheck: globals C_Timer C_MountJournal LE_MOUNT_JOURNAL_FILTER_COLLECTED LE_MOUNT_JOURNAL_FILTER_UNUSABLE C_PetJournal C_ToyBox C_ToyBoxInfo ToyBox CollectionsMicroButton MainMenuMicroButton_HideAlert CollectionsMicroButton_SetAlertShown MicroButtonPulseStop CreateFrame C_CVar UIParent SetCVar ReloadUI GetPhysicalScreenSize GetScreenHeight
 
 local addonName, addon = ...
 
@@ -153,10 +153,10 @@ end
 local barsResourcesExpandable = addon.SettingsLayout.uiBarsResourcesExpandable
 if not barsResourcesExpandable then
 	barsResourcesExpandable = addon.functions.SettingsCreateExpandableSection(cUIInput, {
-		name = L["BarsAndResources"] or "XP & Absorb Bars",
+		name = L["BarsAndResources"] or "XP, Reputation & Absorb Bars",
 		configPageKey = "BarsAndResources",
 		description = L["configCenterPageDescBarsResources"]
-			or "Configure the XP and reputation bar plus the standalone absorb tracker.",
+			or "Configure the default XP and reputation bars plus the standalone absorb tracker.",
 		expanded = false,
 		colorizeTitle = false,
 		iconKey = "resource",
@@ -200,6 +200,16 @@ local function getCurrentUIScaleCVar()
 	return normalizeUIScaleValue(C_CVar.GetCVar("uiscale"), nil)
 end
 
+local function getAutoUIScaleValue()
+	local physicalHeight
+	if GetPhysicalScreenSize then
+		local _
+		_, physicalHeight = GetPhysicalScreenSize()
+	end
+	if not physicalHeight and GetScreenHeight then physicalHeight = GetScreenHeight() end
+	return physicalHeight and physicalHeight > 0 and normalizeUIScaleValue(768 / physicalHeight, UI_SCALE_CUSTOM_DEFAULT) or UI_SCALE_CUSTOM_DEFAULT
+end
+
 local function getSuggestedCustomUIScaleValue(seedValue)
 	if addon.db then
 		local storedValue = normalizeUIScaleValue(addon.db.uiScaleCustom, nil)
@@ -211,6 +221,7 @@ end
 local function getSelectedUIScaleValue()
 	local db = addon.db
 	if not db then return nil end
+	if db.uiScalePreset == "Auto" then return getAutoUIScaleValue() end
 	if db.uiScalePreset == "Custom" then return getSuggestedCustomUIScaleValue() end
 	return UI_SCALE_PRESETS[db.uiScalePreset]
 end
@@ -246,6 +257,7 @@ end
 addon.functions.applyUIScalePreset = applyUIScalePreset
 
 local function isEQoLPlayerFrameEnabled()
+	if addon.functions and addon.functions.IsEQoLUnitFrameEnabled then return addon.functions.IsEQoLUnitFrameEnabled("player") end
 	local uf = addon.Aura and addon.Aura.UF
 	if uf and uf.GetConfig then
 		local cfg = uf.GetConfig("player")
@@ -544,6 +556,7 @@ local interfaceExpandable = addon.functions.SettingsCreateExpandableSection(cUII
 
 local uiScaleOptions = {
 	NoScaling = L["uiScalePresetNone"] or "Use Blizzard Scaling",
+	Auto = L["uiScalePresetAuto"] or "Auto (768 / screen height)",
 	Custom = L["uiScalePresetCustom"] or _G.CUSTOM or "Custom",
 	Scale4K = "0.3556 (4K)",
 	Scale1080p = "0.7111 (1080p)",
@@ -552,7 +565,7 @@ local uiScaleOptions = {
 	Scale1080p125 = "0.8888 (1080p 125%)",
 }
 
-local uiScaleOrder = { "NoScaling", "Custom", "Scale4K", "Scale1440p", "Scale1440p125", "Scale1080p", "Scale1080p125" }
+local uiScaleOrder = { "NoScaling", "Auto", "Custom", "Scale4K", "Scale1440p", "Scale1440p125", "Scale1080p", "Scale1080p125" }
 
 local uiScaleDropdown = addon.functions.SettingsCreateDropdown(cUIInput, {
 	var = "uiScalePreset",

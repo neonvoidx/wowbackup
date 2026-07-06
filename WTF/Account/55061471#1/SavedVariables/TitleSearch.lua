@@ -1,0 +1,4 @@
+
+TitleSearchSettings = {
+["WindowIsLocked"] = true,
+}

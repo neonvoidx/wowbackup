@@ -1,0 +1,81 @@
+
+RaiderIO_Config = {
+["replayAlpha"] = 1,
+["enableKeystoneTooltips"] = true,
+["previouslyEnabledLogging"] = false,
+["profilePoint"] = {
+["y"] = 0,
+["x"] = -16.00000190734863,
+["point"] = "TOPLEFT",
+},
+["enableReplay"] = false,
+["enableLFGDropdown"] = true,
+["displayWeeklyGuildBest"] = true,
+["minimapIcon"] = {
+["minimapPos"] = 180,
+["lock"] = false,
+["hide"] = true,
+},
+["showMainsScore"] = true,
+["showRaidEncountersInProfile"] = true,
+["showAverageScore"] = true,
+["enableWhoMessages"] = true,
+["useEnglishAbbreviations"] = false,
+["replayPoint"] = {
+["y"] = 218.6665802001953,
+["x"] = -36.33292770385742,
+["point"] = "BOTTOMRIGHT",
+},
+["disableScoreColors"] = false,
+["showMainBestScore"] = true,
+["allowClientToControlCombatLog"] = true,
+["replayBackground"] = {
+["a"] = 0.5,
+["r"] = 0,
+["g"] = 0,
+["b"] = 0,
+},
+["enableCombatLogTracking"] = false,
+["showSimpleScoreColors"] = false,
+["dockReplay"] = false,
+["enableWhoTooltips"] = true,
+["replaySelection"] = "user_best_replay",
+["showWarbandScore"] = true,
+["hidePersonalRaiderIOProfile"] = false,
+["enableGuildTooltips"] = true,
+["enableLFGTooltips"] = true,
+["showRoleIcons"] = true,
+["enableFriendsTooltips"] = true,
+["enableLFGExportButton"] = true,
+["enableUnitTooltips"] = true,
+["positionProfileAuto"] = true,
+["inverseProfileModifier"] = false,
+["showDropDownCopyURL"] = true,
+["showRaiderIOProfile"] = true,
+["enableProfileModifier"] = true,
+["showScoreModifier"] = false,
+["enableClientEnhancements"] = true,
+["lockProfile"] = false,
+["showScoreInCombat"] = true,
+["mplusHeadlineMode"] = 0,
+["showClientGuildBest"] = true,
+}
+RaiderIO_LastCharacter = "us-Neonvoid-malganis"
+RaiderIO_MissingCharacters = {
+["us-Apii-ragnaros"] = true,
+["us-Azilos-illidan"] = true,
+["us-Vandallin-malganis"] = true,
+["us-Cowboysdoc-tanaris"] = true,
+["us-Uccisore-tichondrius"] = true,
+["us-Oñyx-malganis"] = true,
+["us-Senarion-tichondrius"] = true,
+["us-Grnpowerfist-malganis"] = true,
+["us-Windigg-malganis"] = true,
+}
+RaiderIO_MissingServers = {
+}
+RaiderIO_CachedRuns = nil
+RaiderIO_RWF = {
+}
+RaiderIO_CompletedReplays = {
+}

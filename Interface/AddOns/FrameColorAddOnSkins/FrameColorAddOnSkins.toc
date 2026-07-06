@@ -1,6 +1,6 @@
 ## X-Curse-Project-ID: 1220160
-## Interface: 120000
-## Version: 1.1.1
+## Interface: 120007
+## Version: 1.1.2
 ## Title: FrameColor AddOnSkins
 ## Author: Slothpala
 ## Dependencies: FrameColor

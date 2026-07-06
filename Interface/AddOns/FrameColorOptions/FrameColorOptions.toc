@@ -1,5 +1,5 @@
-## Interface: 120000, 120001, 120005
-## Version: 4.8.1
+## Interface: 120000, 120001, 120005, 120007
+## Version: 4.8.2
 ## Title: FrameColor Options
 ## Author: Slothpala
 ## LoadOnDemand: 1

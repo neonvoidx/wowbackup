@@ -38,6 +38,10 @@ local function refreshItemLevelDisplays()
 	end
 end
 
+local function syncItemInventoryEvents()
+	if addon.functions and addon.functions.SyncItemInventoryEventRegistration then addon.functions.SyncItemInventoryEventRegistration() end
+end
+
 local function isCharDisplaySelected(key)
 	ensureDisplayOptions()
 	local t = addon.db.charDisplayOptions
@@ -57,9 +61,11 @@ local function setCharDisplayOption(key, value)
 	local enabled = value and true or false
 	if key == "ilvl" or key == "tracks" or key == "gems" or key == "enchants" or key == "gemtip" then
 		addon.db.charDisplayOptions[key] = enabled
+		if key == "enchants" then syncItemInventoryEvents() end
 		addon.functions.setCharFrame()
 	elseif key == "durability" then
 		addon.db["showDurabilityOnCharframe"] = enabled
+		syncItemInventoryEvents()
 		addon.functions.calculateDurability()
 	elseif key == "catalyst" then
 		addon.db["showCatalystChargesOnCharframe"] = enabled
@@ -84,6 +90,7 @@ local function applyCharDisplaySelection(selection)
 	addon.db["showCatalystChargesOnCharframe"] = selection.catalyst == true
 	addon.db["movementSpeedStatEnabled"] = false
 	addon.db["characterStatsFormattingEnabled"] = false
+	syncItemInventoryEvents()
 	addon.functions.setCharFrame()
 	addon.functions.calculateDurability()
 	if addon.MovementSpeedStat and addon.MovementSpeedStat.Disable then addon.MovementSpeedStat.Disable() end

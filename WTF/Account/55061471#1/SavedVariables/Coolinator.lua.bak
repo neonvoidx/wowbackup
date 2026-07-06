@@ -1,0 +1,1644 @@
+
+COOLINATOR_CONFIG = {
+["CharacterSpecific"] = {
+},
+["Version"] = 1,
+["Profiles"] = {
+["DEFAULT"] = {
+["designs"] = {
+[0] = {
+["DEFAULT"] = {
+["layout"] = "standalone",
+["kind"] = "group",
+["version"] = 1,
+["entries"] = {
+{
+["layout"] = "vertical",
+["scale"] = 1,
+["alignment"] = "CENTER",
+["padding"] = 0.2,
+["anchor"] = {
+"BOTTOM",
+"UIParent",
+"BOTTOM",
+0,
+200,
+},
+["kind"] = "group",
+["alpha"] = 1,
+["entries"] = {
+{
+["layout"] = "horizontal",
+["direction"] = "right",
+["alignment"] = "CENTER",
+["padding"] = 0.1,
+["scale"] = 0.8,
+["kind"] = "group",
+["alpha"] = 1,
+["entries"] = {
+{
+["resource"] = {
+["spellID"] = 2983,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 195457,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 1966,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 1856,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 31224,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 5277,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 1766,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 5938,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 1776,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 408,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 2094,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 1833,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 207777,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 212182,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 185311,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 114018,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 57934,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 1725,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+},
+},
+{
+["layout"] = "horizontal",
+["direction"] = "right",
+["alignment"] = "CENTER",
+["padding"] = 0.1,
+["scale"] = 1.25,
+["kind"] = "group",
+["alpha"] = 1,
+["entries"] = {
+{
+["resource"] = {
+["spellID"] = 193315,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 185763,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 2098,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 315341,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 51690,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 13877,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 271877,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 269513,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 1214909,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 13750,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 381989,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 381623,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 1277933,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+},
+},
+{
+["layout"] = "horizontal",
+["direction"] = "right",
+["alignment"] = "CENTER",
+["padding"] = 0.1,
+["scale"] = 1,
+["kind"] = "group",
+["alpha"] = 1,
+["entries"] = {
+{
+["resource"] = {
+["spellID"] = 315341,
+["kind"] = "aura",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 256170,
+["kind"] = "aura",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 1265863,
+["kind"] = "aura",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 452923,
+["kind"] = "aura",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 452917,
+["kind"] = "aura",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 1248970,
+["kind"] = "aura",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 441146,
+["kind"] = "aura",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 441423,
+["kind"] = "aura",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+},
+},
+{
+["layout"] = "vertical",
+["alignment"] = "CENTER",
+["padding"] = 0.2,
+["scale"] = 1,
+["kind"] = "group",
+["alpha"] = 1,
+["entries"] = {
+{
+["direction"] = "right",
+["resource"] = {
+["spellID"] = 13877,
+["kind"] = "aura",
+},
+["scale"] = 1.5,
+["layout"] = "horizontal",
+["alpha"] = 1,
+["width"] = 1,
+["border"] = {
+["asset"] = "Cooli: Blizzard Midnight",
+["color"] = {
+["b"] = 1,
+["g"] = 1,
+["r"] = 1,
+},
+},
+["background"] = {
+["asset"] = "Cooli: Solid White",
+["color"] = {
+["a"] = 0.3,
+["b"] = 0.1294117647058824,
+["g"] = 1,
+["r"] = 0.5803921568627451,
+},
+},
+["height"] = 1,
+["kind"] = "bar",
+["icon"] = {
+["show"] = true,
+["position"] = "left",
+},
+["foreground"] = {
+["asset"] = "Cooli: Fade Bottom",
+["color"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+},
+},
+{
+["direction"] = "right",
+["resource"] = {
+["spellID"] = 1214909,
+["kind"] = "aura",
+},
+["scale"] = 1.5,
+["layout"] = "horizontal",
+["alpha"] = 1,
+["width"] = 1,
+["border"] = {
+["asset"] = "Cooli: Blizzard Midnight",
+["color"] = {
+["b"] = 1,
+["g"] = 1,
+["r"] = 1,
+},
+},
+["background"] = {
+["asset"] = "Cooli: Solid White",
+["color"] = {
+["a"] = 0.3,
+["b"] = 0.1294117647058824,
+["g"] = 1,
+["r"] = 0.5803921568627451,
+},
+},
+["height"] = 1,
+["kind"] = "bar",
+["icon"] = {
+["show"] = true,
+["position"] = "left",
+},
+["foreground"] = {
+["asset"] = "Cooli: Fade Bottom",
+["color"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+},
+},
+},
+},
+},
+},
+},
+},
+},
+[260] = {
+["Mine"] = {
+["kind"] = "group",
+["layout"] = "standalone",
+["version"] = 1,
+["entries"] = {
+{
+["layout"] = "vertical",
+["anchor"] = {
+"BOTTOM",
+"UIParent",
+"BOTTOM",
+0,
+200,
+},
+["alignment"] = "CENTER",
+["kind"] = "group",
+["scale"] = 1,
+["padding"] = 0.2,
+["alpha"] = 1,
+["entries"] = {
+{
+["padding"] = 0.1,
+["direction"] = "right",
+["alignment"] = "CENTER",
+["kind"] = "group",
+["scale"] = 0.8,
+["layout"] = "horizontal",
+["alpha"] = 1,
+["entries"] = {
+{
+["resource"] = {
+["kind"] = "ability",
+["spellID"] = 2983,
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["kind"] = "ability",
+["spellID"] = 195457,
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["kind"] = "ability",
+["spellID"] = 1966,
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["kind"] = "ability",
+["spellID"] = 1856,
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["kind"] = "ability",
+["spellID"] = 31224,
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["kind"] = "ability",
+["spellID"] = 5277,
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["kind"] = "ability",
+["spellID"] = 1766,
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["kind"] = "ability",
+["spellID"] = 5938,
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["kind"] = "ability",
+["spellID"] = 1776,
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["kind"] = "ability",
+["spellID"] = 408,
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["kind"] = "ability",
+["spellID"] = 2094,
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["kind"] = "ability",
+["spellID"] = 1833,
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["kind"] = "ability",
+["spellID"] = 207777,
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["kind"] = "ability",
+["spellID"] = 212182,
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["kind"] = "ability",
+["spellID"] = 185311,
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["kind"] = "ability",
+["spellID"] = 114018,
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["kind"] = "ability",
+["spellID"] = 57934,
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["kind"] = "ability",
+["spellID"] = 1725,
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+},
+},
+{
+["padding"] = 0.1,
+["direction"] = "right",
+["alignment"] = "CENTER",
+["kind"] = "group",
+["scale"] = 1.25,
+["layout"] = "horizontal",
+["alpha"] = 1,
+["entries"] = {
+{
+["resource"] = {
+["kind"] = "ability",
+["spellID"] = 193315,
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["kind"] = "ability",
+["spellID"] = 185763,
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["kind"] = "ability",
+["spellID"] = 2098,
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["kind"] = "ability",
+["spellID"] = 315341,
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["kind"] = "ability",
+["spellID"] = 51690,
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["kind"] = "ability",
+["spellID"] = 13877,
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["kind"] = "ability",
+["spellID"] = 271877,
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["kind"] = "ability",
+["spellID"] = 269513,
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["kind"] = "ability",
+["spellID"] = 1214909,
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["kind"] = "ability",
+["spellID"] = 13750,
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["kind"] = "ability",
+["spellID"] = 381989,
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["kind"] = "ability",
+["spellID"] = 381623,
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["kind"] = "ability",
+["spellID"] = 1277933,
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+},
+},
+{
+["padding"] = 0.1,
+["direction"] = "right",
+["alignment"] = "CENTER",
+["kind"] = "group",
+["scale"] = 1,
+["layout"] = "horizontal",
+["alpha"] = 1,
+["entries"] = {
+{
+["resource"] = {
+["kind"] = "aura",
+["spellID"] = 315341,
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["kind"] = "aura",
+["spellID"] = 256170,
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["kind"] = "aura",
+["spellID"] = 1265863,
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["kind"] = "aura",
+["spellID"] = 452923,
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["kind"] = "aura",
+["spellID"] = 452917,
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["kind"] = "aura",
+["spellID"] = 1248970,
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["kind"] = "aura",
+["spellID"] = 441146,
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["kind"] = "aura",
+["spellID"] = 441423,
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+},
+},
+{
+["layout"] = "vertical",
+["alignment"] = "CENTER",
+["kind"] = "group",
+["scale"] = 1,
+["padding"] = 0.2,
+["alpha"] = 1,
+["entries"] = {
+{
+["direction"] = "right",
+["resource"] = {
+["kind"] = "aura",
+["spellID"] = 13877,
+},
+["scale"] = 1.5,
+["layout"] = "horizontal",
+["alpha"] = 1,
+["width"] = 1,
+["foreground"] = {
+["asset"] = "Cooli: Fade Bottom",
+["color"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["kind"] = "bar",
+["height"] = 1,
+["background"] = {
+["asset"] = "Cooli: Solid White",
+["color"] = {
+["a"] = 0.3,
+["r"] = 0.5803921568627451,
+["g"] = 1,
+["b"] = 0.1294117647058824,
+},
+},
+["icon"] = {
+["show"] = true,
+["position"] = "left",
+},
+["border"] = {
+["asset"] = "Cooli: Blizzard Midnight",
+["color"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 1,
+},
+},
+},
+{
+["direction"] = "right",
+["resource"] = {
+["kind"] = "aura",
+["spellID"] = 1214909,
+},
+["scale"] = 1.5,
+["layout"] = "horizontal",
+["alpha"] = 1,
+["width"] = 1,
+["foreground"] = {
+["asset"] = "Cooli: Fade Bottom",
+["color"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["kind"] = "bar",
+["height"] = 1,
+["background"] = {
+["asset"] = "Cooli: Solid White",
+["color"] = {
+["a"] = 0.3,
+["r"] = 0.5803921568627451,
+["g"] = 1,
+["b"] = 0.1294117647058824,
+},
+},
+["icon"] = {
+["show"] = true,
+["position"] = "left",
+},
+["border"] = {
+["asset"] = "Cooli: Blizzard Midnight",
+["color"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 1,
+},
+},
+},
+},
+},
+},
+},
+},
+},
+["DEFAULT"] = {
+["layout"] = "standalone",
+["kind"] = "group",
+["version"] = 1,
+["entries"] = {
+{
+["layout"] = "vertical",
+["scale"] = 1,
+["alignment"] = "CENTER",
+["padding"] = 0.2,
+["anchor"] = {
+"BOTTOM",
+"UIParent",
+"BOTTOM",
+0,
+200,
+},
+["kind"] = "group",
+["alpha"] = 1,
+["entries"] = {
+{
+["layout"] = "horizontal",
+["direction"] = "right",
+["alignment"] = "CENTER",
+["padding"] = 0.1,
+["scale"] = 0.8,
+["kind"] = "group",
+["alpha"] = 1,
+["entries"] = {
+{
+["resource"] = {
+["spellID"] = 2983,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 195457,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 1966,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 1856,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 31224,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 5277,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 1766,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 5938,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 1776,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 408,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 2094,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 1833,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 207777,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 212182,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 185311,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 114018,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 57934,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 1725,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+},
+},
+{
+["layout"] = "horizontal",
+["direction"] = "right",
+["alignment"] = "CENTER",
+["padding"] = 0.1,
+["scale"] = 1.25,
+["kind"] = "group",
+["alpha"] = 1,
+["entries"] = {
+{
+["resource"] = {
+["spellID"] = 193315,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 185763,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 2098,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 315341,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 51690,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 13877,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 271877,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 269513,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 1214909,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 13750,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 381989,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 381623,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 1277933,
+["kind"] = "ability",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+},
+},
+{
+["layout"] = "horizontal",
+["direction"] = "right",
+["alignment"] = "CENTER",
+["padding"] = 0.1,
+["scale"] = 1,
+["kind"] = "group",
+["alpha"] = 1,
+["entries"] = {
+{
+["resource"] = {
+["spellID"] = 315341,
+["kind"] = "aura",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 256170,
+["kind"] = "aura",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 1265863,
+["kind"] = "aura",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 452923,
+["kind"] = "aura",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 452917,
+["kind"] = "aura",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 1248970,
+["kind"] = "aura",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 441146,
+["kind"] = "aura",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+{
+["resource"] = {
+["spellID"] = 441423,
+["kind"] = "aura",
+},
+["height"] = 1,
+["kind"] = "icon",
+["alpha"] = 1,
+["scale"] = 1,
+},
+},
+},
+{
+["layout"] = "vertical",
+["alignment"] = "CENTER",
+["padding"] = 0.2,
+["scale"] = 1,
+["kind"] = "group",
+["alpha"] = 1,
+["entries"] = {
+{
+["direction"] = "right",
+["resource"] = {
+["spellID"] = 13877,
+["kind"] = "aura",
+},
+["scale"] = 1.5,
+["layout"] = "horizontal",
+["alpha"] = 1,
+["width"] = 1,
+["border"] = {
+["asset"] = "Cooli: Blizzard Midnight",
+["color"] = {
+["b"] = 1,
+["g"] = 1,
+["r"] = 1,
+},
+},
+["background"] = {
+["asset"] = "Cooli: Solid White",
+["color"] = {
+["a"] = 0.3,
+["b"] = 0.1294117647058824,
+["g"] = 1,
+["r"] = 0.5803921568627451,
+},
+},
+["height"] = 1,
+["kind"] = "bar",
+["icon"] = {
+["show"] = true,
+["position"] = "left",
+},
+["foreground"] = {
+["asset"] = "Cooli: Fade Bottom",
+["color"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+},
+},
+{
+["direction"] = "right",
+["resource"] = {
+["spellID"] = 1214909,
+["kind"] = "aura",
+},
+["scale"] = 1.5,
+["layout"] = "horizontal",
+["alpha"] = 1,
+["width"] = 1,
+["border"] = {
+["asset"] = "Cooli: Blizzard Midnight",
+["color"] = {
+["b"] = 1,
+["g"] = 1,
+["r"] = 1,
+},
+},
+["background"] = {
+["asset"] = "Cooli: Solid White",
+["color"] = {
+["a"] = 0.3,
+["b"] = 0.1294117647058824,
+["g"] = 1,
+["r"] = 0.5803921568627451,
+},
+},
+["height"] = 1,
+["kind"] = "bar",
+["icon"] = {
+["show"] = true,
+["position"] = "left",
+},
+["foreground"] = {
+["asset"] = "Cooli: Fade Bottom",
+["color"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+},
+},
+},
+},
+},
+},
+},
+},
+},
+},
+["compress_layout"] = true,
+["design_assignments"] = {
+[260] = "Mine",
+},
+["current_skin"] = "blizzard",
+},
+},
+}

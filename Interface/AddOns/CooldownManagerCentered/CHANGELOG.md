@@ -1,6 +1,6 @@
-# Cooldown Manager Centered
+# Cooldown Manager Centered by Wildu
 
-## [v2.8.0](https://github.com/lemieszek/CooldownManagerCentered/tree/v2.8.0) (2026-06-10)
-[Full Changelog](https://github.com/lemieszek/CooldownManagerCentered/compare/v2.7.11...v2.8.0) 
+## [v3.2.7](https://github.com/lemieszek/CooldownManagerCentered/tree/v3.2.7) (2026-07-05)
+[Full Changelog](https://github.com/lemieszek/CooldownManagerCentered/compare/v3.2.6...v3.2.7) 
 
-- v2.8.0 auto profile switch  
+- v3.2.7  

@@ -60,15 +60,41 @@ function app:CreateWindowTooltip(text)
 	return frame
 end
 
-function app:ShowWindowTooltip(frame)
-	if GetScreenWidth()/2-app.Settings["windowPosition"].width/2-app.Window:GetLeft() >= 0 then
-		frame:ClearAllPoints()
-		frame:SetPoint("LEFT", app.Window, "RIGHT", 0, 0)
+function app:ShowWindowTooltip(text, hyperlink, secondary, position)
+	GameTooltip:ClearLines()
+	GameTooltip:Hide()
+	ShoppingTooltip1:ClearLines()
+	ShoppingTooltip1:Hide()
+	GameTooltip:SetOwner(app.Window, "ANCHOR_NONE")
+
+	if hyperlink then
+		GameTooltip:SetHyperlink(text)
 	else
-		frame:ClearAllPoints()
-		frame:SetPoint("RIGHT", app.Window, "LEFT", 0, 0)
+		GameTooltip:SetText(text)
 	end
-	frame:Show()
+
+	if position and position == "top" then
+		GameTooltip:SetPoint("BOTTOM", app.Window, "TOP")
+	elseif position and position == "bottom" then
+		GameTooltip:SetPoint("TOP", app.Window, "BOTTOM")
+	elseif (app.Tab and app.Tab.IsShown[0]) or GetScreenWidth()/2-app.Settings["windowPosition"].width/2-app.Window:GetLeft() >= 0 then
+		GameTooltip:SetPoint("LEFT", app.Window, "RIGHT")
+	else
+		GameTooltip:SetPoint("RIGHT", app.Window, "LEFT")
+	end
+	GameTooltip:Show()
+
+	if secondary then
+		ShoppingTooltip1:SetOwner(UIParent, "ANCHOR_NONE")
+		if GetScreenWidth()/2-app.Settings["windowPosition"].width/2-app.Window:GetLeft() >= 0 then
+			ShoppingTooltip1:SetPoint("TOPLEFT", GameTooltip, "BOTTOMLEFT")
+		else
+			ShoppingTooltip1:SetPoint("TOPRIGHT", GameTooltip, "BOTTOMRIGHT")
+		end
+		ShoppingTooltip1:SetText(secondary)
+		ShoppingTooltip1:SetScale(0.9)
+		ShoppingTooltip1:Show()
+	end
 end
 
 function app:MoveWindow()
@@ -78,6 +104,8 @@ function app:MoveWindow()
 		app.Window:StartMoving()
 		GameTooltip:ClearLines()
 		GameTooltip:Hide()
+		ShoppingTooltip1:ClearLines()
+		ShoppingTooltip1:Hide()
 	end
 end
 
@@ -125,23 +153,28 @@ function app:CreateWindow()
 		app.Window:StartSizing("BOTTOMRIGHT")
 		GameTooltip:ClearLines()
 		GameTooltip:Hide()
+		ShoppingTooltip1:ClearLines()
+		ShoppingTooltip1:Hide()
 	end)
 	corner:SetScript("OnMouseUp", function() app:SaveWindow() end)
 	app.Window.Corner = corner
 
-	local close = CreateFrame("Button", "", app.Window, "UIPanelCloseButton")
+	local close = CreateFrame("Button", nil, app.Window, "UIPanelCloseButton")
 	close:SetPoint("TOPRIGHT", app.Window, "TOPRIGHT", 2, 2)
 	close:SetScript("OnClick", function()
 		app.Window:Hide()
 	end)
 	close:SetScript("OnEnter", function()
-		app:ShowWindowTooltip(app.CloseButtonTooltip)
+		app:ShowWindowTooltip(L.WINDOW_BUTTON_CLOSE, nil, nil, "top")
 	end)
 	close:SetScript("OnLeave", function()
-		app.CloseButtonTooltip:Hide()
+		GameTooltip:ClearLines()
+		GameTooltip:Hide()
+		ShoppingTooltip1:ClearLines()
+		ShoppingTooltip1:Hide()
 	end)
 
-	app.LockButton = CreateFrame("Button", "", app.Window, "UIPanelCloseButton")
+	app.LockButton = CreateFrame("Button", nil, app.Window, "UIPanelCloseButton")
 	app.LockButton:SetPoint("TOPRIGHT", close, "TOPLEFT", -2, 0)
 	app.LockButton:SetNormalTexture("Interface\\AddOns\\TransmogLootHelper\\assets\\buttons.blp")
 	app.LockButton:GetNormalTexture():SetTexCoord(183/256, 219/256, 1/128, 39/128)
@@ -156,13 +189,16 @@ function app:CreateWindow()
 		app.UnlockButton:Show()
 	end)
 	app.LockButton:SetScript("OnEnter", function()
-		app:ShowWindowTooltip(app.LockButtonTooltip)
+		app:ShowWindowTooltip(L.WINDOW_BUTTON_LOCK, nil, nil, "top")
 	end)
 	app.LockButton:SetScript("OnLeave", function()
-		app.LockButtonTooltip:Hide()
+		GameTooltip:ClearLines()
+		GameTooltip:Hide()
+		ShoppingTooltip1:ClearLines()
+		ShoppingTooltip1:Hide()
 	end)
 
-	app.UnlockButton = CreateFrame("Button", "", app.Window, "UIPanelCloseButton")
+	app.UnlockButton = CreateFrame("Button", nil, app.Window, "UIPanelCloseButton")
 	app.UnlockButton:SetPoint("TOPRIGHT", close, "TOPLEFT", -2, 0)
 	app.UnlockButton:SetNormalTexture("Interface\\AddOns\\TransmogLootHelper\\assets\\buttons.blp")
 	app.UnlockButton:GetNormalTexture():SetTexCoord(148/256, 184/256, 1/128, 39/128)
@@ -177,10 +213,13 @@ function app:CreateWindow()
 		app.UnlockButton:Hide()
 	end)
 	app.UnlockButton:SetScript("OnEnter", function()
-		app:ShowWindowTooltip(app.UnlockButtonTooltip)
+		app:ShowWindowTooltip(L.WINDOW_BUTTON_UNLOCK, nil, nil, "top")
 	end)
 	app.UnlockButton:SetScript("OnLeave", function()
-		app.UnlockButtonTooltip:Hide()
+		GameTooltip:ClearLines()
+		GameTooltip:Hide()
+		ShoppingTooltip1:ClearLines()
+		ShoppingTooltip1:Hide()
 	end)
 
 	if app.Settings["windowLocked"] then
@@ -193,7 +232,7 @@ function app:CreateWindow()
 		app.UnlockButton:Hide()
 	end
 
-	app.SettingsButton = CreateFrame("Button", "", app.Window, "UIPanelCloseButton")
+	app.SettingsButton = CreateFrame("Button", nil, app.Window, "UIPanelCloseButton")
 	app.SettingsButton:SetPoint("TOPRIGHT", app.LockButton, "TOPLEFT", -2, 0)
 	app.SettingsButton:SetNormalTexture("Interface\\AddOns\\TransmogLootHelper\\assets\\buttons.blp")
 	app.SettingsButton:GetNormalTexture():SetTexCoord(112/256, 148/256, 1/128, 39/128)
@@ -205,13 +244,16 @@ function app:CreateWindow()
 		app:OpenSettings()
 	end)
 	app.SettingsButton:SetScript("OnEnter", function()
-		app:ShowWindowTooltip(app.SettingsButtonTooltip)
+		app:ShowWindowTooltip(L.WINDOW_BUTTON_SETTINGS, nil, nil, "top")
 	end)
 	app.SettingsButton:SetScript("OnLeave", function()
-		app.SettingsButtonTooltip:Hide()
+		GameTooltip:ClearLines()
+		GameTooltip:Hide()
+		ShoppingTooltip1:ClearLines()
+		ShoppingTooltip1:Hide()
 	end)
 
-	app.ClearButton = CreateFrame("Button", "", app.Window, "UIPanelCloseButton")
+	app.ClearButton = CreateFrame("Button", nil, app.Window, "UIPanelCloseButton")
 	app.ClearButton:SetPoint("TOPRIGHT", app.SettingsButton, "TOPLEFT", -2, 0)
 	app.ClearButton:SetNormalTexture("Interface\\AddOns\\TransmogLootHelper\\assets\\buttons.blp")
 	app.ClearButton:GetNormalTexture():SetTexCoord(1/256, 37/256, 1/128, 39/128)
@@ -239,13 +281,16 @@ function app:CreateWindow()
 		end
 	end)
 	app.ClearButton:SetScript("OnEnter", function()
-		app:ShowWindowTooltip(app.ClearButtonTooltip)
+		app:ShowWindowTooltip(L.WINDOW_BUTTON_CLEAR, nil, nil, "top")
 	end)
 	app.ClearButton:SetScript("OnLeave", function()
-		app.ClearButtonTooltip:Hide()
+		GameTooltip:ClearLines()
+		GameTooltip:Hide()
+		ShoppingTooltip1:ClearLines()
+		ShoppingTooltip1:Hide()
 	end)
 
-	app.SortButton = CreateFrame("Button", "", app.Window, "UIPanelCloseButton")
+	app.SortButton = CreateFrame("Button", nil, app.Window, "UIPanelCloseButton")
 	app.SortButton:SetPoint("TOPRIGHT", app.ClearButton, "TOPLEFT", -2, 0)
 	app.SortButton:SetNormalTexture("Interface\\AddOns\\TransmogLootHelper\\assets\\buttons.blp")
 	app.SortButton:GetNormalTexture():SetTexCoord(76/256, 112/256, 1/128, 39/128)
@@ -256,25 +301,25 @@ function app:CreateWindow()
 	app.SortButton:SetScript("OnClick", function()
 		if app.Settings["windowSort"] == 1 then
 			app.Settings["windowSort"] = 2
-			app.SortButtonTooltip1:Hide()
-			app:ShowWindowTooltip(app.SortButtonTooltip2)
+			app:ShowWindowTooltip(L.WINDOW_BUTTON_SORT2, nil, nil, "top")
 		elseif app.Settings["windowSort"] == 2 then
 			app.Settings["windowSort"] = 1
-			app.SortButtonTooltip2:Hide()
-			app:ShowWindowTooltip(app.SortButtonTooltip1)
+			app:ShowWindowTooltip(L.WINDOW_BUTTON_SORT1, nil, nil, "top")
 		end
 		app:UpdateWindow()
 	end)
 	app.SortButton:SetScript("OnEnter", function()
 		if app.Settings["windowSort"] == 1 then
-			app:ShowWindowTooltip(app.SortButtonTooltip1)
+			app:ShowWindowTooltip(L.WINDOW_BUTTON_SORT1, nil, nil, "top")
 		elseif app.Settings["windowSort"] == 2 then
-			app:ShowWindowTooltip(app.SortButtonTooltip2)
+			app:ShowWindowTooltip(L.WINDOW_BUTTON_SORT2, nil, nil, "top")
 		end
 	end)
 	app.SortButton:SetScript("OnLeave", function()
-		app.SortButtonTooltip1:Hide()
-		app.SortButtonTooltip2:Hide()
+		GameTooltip:ClearLines()
+		GameTooltip:Hide()
+		ShoppingTooltip1:ClearLines()
+		ShoppingTooltip1:Hide()
 	end)
 
 	local scrollFrame = CreateFrame("ScrollFrame", nil, app.Window, "ScrollFrameTemplate")
@@ -298,17 +343,6 @@ function app:CreateWindow()
 	scrollFrame:SetScript("OnVerticalScroll", function() scrollChild:SetPoint("BOTTOMRIGHT", scrollFrame) end)
 	app.Window.Child = scrollChild
 	app.Window.ScrollFrame = scrollFrame
-
-	app.LootHeaderTooltip = app:CreateWindowTooltip(L.WINDOW_HEADER_LOOT_DESC)
-	app.FilteredHeaderTooltip = app:CreateWindowTooltip(L.WINDOW_HEADER_FILTERED_DESC)
-	app.CloseButtonTooltip = app:CreateWindowTooltip(L.WINDOW_BUTTON_CLOSE)
-	app.LockButtonTooltip = app:CreateWindowTooltip(L.WINDOW_BUTTON_LOCK)
-	app.UnlockButtonTooltip = app:CreateWindowTooltip(L.WINDOW_BUTTON_UNLOCK)
-	app.SettingsButtonTooltip = app:CreateWindowTooltip(L.WINDOW_BUTTON_SETTINGS)
-	app.ClearButtonTooltip = app:CreateWindowTooltip(L.WINDOW_BUTTON_CLEAR)
-	app.SortButtonTooltip1 = app:CreateWindowTooltip(L.WINDOW_BUTTON_SORT1)
-	app.SortButtonTooltip2 = app:CreateWindowTooltip(L.WINDOW_BUTTON_SORT2)
-	app.CornerButtonTooltip = app:CreateWindowTooltip(L.WINDOW_BUTTON_CORNER)
 end
 
 function app:UpdateWindow()
@@ -350,12 +384,6 @@ function app:UpdateWindow()
 		app.Window.Weapons:SetHighlightAtlas("Options_List_Active", "ADD")
 		app.Window.Weapons:SetScript("OnDragStart", function() app:MoveWindow() end)
 		app.Window.Weapons:SetScript("OnDragStop", function() app:SaveWindow() end)
-		app.Window.Weapons:SetScript("OnEnter", function()
-			app:ShowWindowTooltip(app.LootHeaderTooltip)
-		end)
-		app.Window.Weapons:SetScript("OnLeave", function()
-			app.LootHeaderTooltip:Hide()
-		end)
 		app.Window.Weapons:SetScript("OnClick", function(self)
 			local children = {self:GetChildren()}
 
@@ -431,23 +459,14 @@ function app:UpdateWindow()
 			row:SetScript("OnDragStart", function() app:MoveWindow() end)
 			row:SetScript("OnDragStop", function() app:SaveWindow() end)
 			row:SetScript("OnEnter", function()
-				GameTooltip:ClearLines()
-
-				if GetScreenWidth()/2-app.Settings["windowPosition"].width/2-app.Window:GetLeft() >= 0 then
-					GameTooltip:SetOwner(app.Window, "ANCHOR_NONE")
-					GameTooltip:SetPoint("LEFT", app.Window, "RIGHT")
-				else
-					GameTooltip:SetOwner(app.Window, "ANCHOR_NONE")
-					GameTooltip:SetPoint("RIGHT", app.Window, "LEFT")
-				end
-				GameTooltip:SetHyperlink(lootInfo.item)
+				app:ShowWindowTooltip(lootInfo.item, true, L.WINDOW_HEADER_LOOT_DESC)
 
 				local emptyLine = false
 
 				if app.WeaponLoot[lootInfo.index].icon == app.IconMaybeReady then
 					GameTooltip:AddLine(" ")
 					emptyLine = true
-					GameTooltip:AddLine("|T"..app.IconMaybeReady..":0|t |c" .. lootInfo.color .. lootInfo.playerShort .. "|r " .. L.PLAYER_COLLECTED_APPEARANCE)
+					GameTooltip:AddLine(CreateSimpleTextureMarkup(app.IconMaybeReady) .. " |c" .. lootInfo.color .. lootInfo.playerShort .. "|r " .. L.PLAYER_COLLECTED_APPEARANCE)
 				end
 
 				local count = 0
@@ -468,12 +487,14 @@ function app:UpdateWindow()
 			row:SetScript("OnLeave", function()
 				GameTooltip:ClearLines()
 				GameTooltip:Hide()
+				ShoppingTooltip1:ClearLines()
+				ShoppingTooltip1:Hide()
 			end)
 			row:SetScript("OnClick", function(self, button)
 				if button == "LeftButton" then
 					if IsShiftKeyDown() then
 						ChatFrameUtil.InsertLink(lootInfo.item)
-					elseif IsAltKeyDown() then
+					elseif IsAltKeyDown() and not InCombatLockdown() then
 						if app.WeaponLoot[lootInfo.index].recentlyWhispered == 0 then
 							local msg = string.gsub(app.Settings["message"], "%%item", lootInfo.item)
 							C_ChatInfo.SendChatMessage(msg, "WHISPER", nil, lootInfo.player)
@@ -505,7 +526,7 @@ function app:UpdateWindow()
 			local icon1 = row:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 			icon1:SetPoint("LEFT", row)
 			icon1:SetScale(1.2)
-			icon1:SetText("|T"..(lootInfo.icon or "Interface\\Icons\\inv_misc_questionmark")..":0|t")
+			icon1:SetText(CreateSimpleTextureMarkup(lootInfo.icon or "Interface\\Icons\\inv_misc_questionmark"))
 
 			local text2 = row:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 			text2:SetPoint("CENTER", icon1)
@@ -552,12 +573,6 @@ function app:UpdateWindow()
 		app.Window.Armour:SetHighlightAtlas("Options_List_Active", "ADD")
 		app.Window.Armour:SetScript("OnDragStart", function() app:MoveWindow() end)
 		app.Window.Armour:SetScript("OnDragStop", function() app:SaveWindow() end)
-		app.Window.Armour:SetScript("OnEnter", function()
-			app:ShowWindowTooltip(app.LootHeaderTooltip)
-		end)
-		app.Window.Armour:SetScript("OnLeave", function()
-			app.LootHeaderTooltip:Hide()
-		end)
 		app.Window.Armour:SetScript("OnClick", function(self)
 			local children = {self:GetChildren()}
 
@@ -636,23 +651,14 @@ function app:UpdateWindow()
 			row:SetScript("OnDragStart", function() app:MoveWindow() end)
 			row:SetScript("OnDragStop", function() app:SaveWindow() end)
 			row:SetScript("OnEnter", function()
-				GameTooltip:ClearLines()
-
-				if GetScreenWidth()/2-app.Settings["windowPosition"].width/2-app.Window:GetLeft() >= 0 then
-					GameTooltip:SetOwner(app.Window, "ANCHOR_NONE")
-					GameTooltip:SetPoint("LEFT", app.Window, "RIGHT")
-				else
-					GameTooltip:SetOwner(app.Window, "ANCHOR_NONE")
-					GameTooltip:SetPoint("RIGHT", app.Window, "LEFT")
-				end
-				GameTooltip:SetHyperlink(lootInfo.item)
+				app:ShowWindowTooltip(lootInfo.item, true, L.WINDOW_HEADER_LOOT_DESC)
 
 				local emptyLine = false
 
 				if app.ArmourLoot[lootInfo.index].icon == app.IconMaybeReady then
 					GameTooltip:AddLine(" ")
 					emptyLine = true
-					GameTooltip:AddLine("|T"..app.IconMaybeReady..":0|t |c" .. lootInfo.color .. lootInfo.playerShort .. "|r " .. L.PLAYER_COLLECTED_APPEARANCE)
+					GameTooltip:AddLine(CreateSimpleTextureMarkup(app.IconMaybeReady) .. " |c" .. lootInfo.color .. lootInfo.playerShort .. "|r " .. L.PLAYER_COLLECTED_APPEARANCE)
 				end
 
 				local count = 0
@@ -673,6 +679,8 @@ function app:UpdateWindow()
 			row:SetScript("OnLeave", function()
 				GameTooltip:ClearLines()
 				GameTooltip:Hide()
+				ShoppingTooltip1:ClearLines()
+				ShoppingTooltip1:Hide()
 			end)
 			row:SetScript("OnClick", function(self, button)
 				if button == "LeftButton" then
@@ -710,7 +718,7 @@ function app:UpdateWindow()
 			local icon1 = row:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 			icon1:SetPoint("LEFT", row)
 			icon1:SetScale(1.2)
-			icon1:SetText("|T"..(lootInfo.icon or "Interface\\Icons\\inv_misc_questionmark")..":0|t")
+			icon1:SetText(CreateSimpleTextureMarkup(lootInfo.icon or "Interface\\Icons\\inv_misc_questionmark"))
 
 			local text2 = row:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 			text2:SetPoint("CENTER", icon1)
@@ -757,12 +765,6 @@ function app:UpdateWindow()
 		app.Window.Filtered:SetHighlightAtlas("Options_List_Active", "ADD")
 		app.Window.Filtered:SetScript("OnDragStart", function() app:MoveWindow() end)
 		app.Window.Filtered:SetScript("OnDragStop", function() app:SaveWindow() end)
-		app.Window.Filtered:SetScript("OnEnter", function()
-			app:ShowWindowTooltip(app.FilteredHeaderTooltip)
-		end)
-		app.Window.Filtered:SetScript("OnLeave", function()
-			app.FilteredHeaderTooltip:Hide()
-		end)
 		app.Window.Filtered:SetScript("OnClick", function(self)
 			local children = {self:GetChildren()}
 
@@ -843,21 +845,13 @@ function app:UpdateWindow()
 			row:SetScript("OnDragStart", function() app:MoveWindow() end)
 			row:SetScript("OnDragStop", function() app:SaveWindow() end)
 			row:SetScript("OnEnter", function()
-				GameTooltip:ClearLines()
-
-				if GetScreenWidth()/2-app.Settings["windowPosition"].width/2-app.Window:GetLeft() >= 0 then
-					GameTooltip:SetOwner(app.Window, "ANCHOR_NONE")
-					GameTooltip:SetPoint("LEFT", app.Window, "RIGHT")
-				else
-					GameTooltip:SetOwner(app.Window, "ANCHOR_NONE")
-					GameTooltip:SetPoint("RIGHT", app.Window, "LEFT")
-				end
-				GameTooltip:SetHyperlink(lootInfo.item)
-				GameTooltip:Show()
+				app:ShowWindowTooltip(lootInfo.item, true, L.WINDOW_HEADER_FILTERED_DESC)
 			end)
 			row:SetScript("OnLeave", function()
 				GameTooltip:ClearLines()
 				GameTooltip:Hide()
+				ShoppingTooltip1:ClearLines()
+				ShoppingTooltip1:Hide()
 			end)
 			row:SetScript("OnClick", function(self, button)
 				if button == "LeftButton" then
@@ -878,7 +872,7 @@ function app:UpdateWindow()
 			local icon1 = row:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 			icon1:SetPoint("LEFT", row)
 			icon1:SetScale(1.2)
-			icon1:SetText("|T"..(lootInfo.icon or "Interface\\Icons\\inv_misc_questionmark")..":0|t")
+			icon1:SetText(CreateSimpleTextureMarkup(lootInfo.icon or "Interface\\Icons\\inv_misc_questionmark"))
 
 			local text2 = row:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 			text2:SetPoint("CENTER", icon1)
@@ -955,10 +949,13 @@ function app:UpdateWindow()
 		app:SaveWindow()
 	end)
 	app.Window.Corner:SetScript("OnEnter", function()
-		app:ShowWindowTooltip(app.CornerButtonTooltip)
+		app:ShowWindowTooltip(L.WINDOW_BUTTON_CORNER, nil, nil, "bottom")
 	end)
 	app.Window.Corner:SetScript("OnLeave", function()
-		app.CornerButtonTooltip:Hide()
+		GameTooltip:ClearLines()
+		GameTooltip:Hide()
+		ShoppingTooltip1:ClearLines()
+		ShoppingTooltip1:Hide()
 	end)
 end
 
@@ -1042,7 +1039,7 @@ function app:RemoveLootedItem(itemID)
 end
 
 app.Event:Register("CHAT_MSG_LOOT", function(text, playerName, languageName, channelName, playerName2, specialFlags, zoneChannelID, channelIndex, channelBaseName, languageID, lineID, guid, bnSenderID, isMobile, isSubtitle, hideSenderInLetterbox, supressRaidIcons)
-	if not IsInGroup() then return end
+	--if not IsInGroup() then return end
 	if issecretvalue(text) then return end -- Without the option to declassify secrets later on, there is no alternative
 
 	local itemString = string.match(text, "(|cnIQ.-|h%[.-%]|h)")

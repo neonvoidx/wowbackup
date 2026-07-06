@@ -108,7 +108,7 @@ VER 3 010000000000003F "Outfit Collection" "2869702"
 #plumber:outfit
 /click PLMR_OUTFIT
 END
-VER 3 0100000000000046 "Teleport Home" "7252953"
+VER 3 0100000000000046 "Plumber Housing Macro" "7252953"
 #plumber:home
-/click PLMR_HOME1
+/click PLMR2
 END

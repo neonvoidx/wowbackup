@@ -30,7 +30,6 @@ addon.functions.SettingsCreateCheckbox(cGeneral, {
 })
 
 local function isDialogConfirmSelected(key)
-	if key == "patron" then return addon.db["confirmPatronOrderDialog"] == true end
 	if key == "trade" then return addon.db["confirmTimerRemovalTrade"] == true end
 	if key == "socket" then return addon.db["confirmSocketReplace"] == true end
 	if key == "token" then return addon.db["confirmPurchaseTokenItem"] == true end
@@ -40,9 +39,7 @@ end
 
 local function setDialogConfirmOption(key, value)
 	local enabled = value and true or false
-	if key == "patron" then
-		addon.db["confirmPatronOrderDialog"] = enabled
-	elseif key == "trade" then
+	if key == "trade" then
 		addon.db["confirmTimerRemovalTrade"] = enabled
 	elseif key == "socket" then
 		addon.db["confirmSocketReplace"] = enabled
@@ -55,7 +52,6 @@ end
 
 local function applyDialogConfirmSelection(selection)
 	selection = selection or {}
-	addon.db["confirmPatronOrderDialog"] = selection.patron == true
 	addon.db["confirmTimerRemovalTrade"] = selection.trade == true
 	addon.db["confirmSocketReplace"] = selection.socket == true
 	addon.db["confirmPurchaseTokenItem"] = selection.token == true
@@ -63,11 +59,6 @@ local function applyDialogConfirmSelection(selection)
 end
 
 local dialogAutoConfirmOptions = {
-	{
-		value = "patron",
-		text = (L["confirmPatronOrderDialog"]):format(PROFESSIONS_CRAFTER_ORDER_TAB_NPC),
-		tooltip = L["confirmPatronOrderDialogDesc"],
-	},
 	{
 		value = "trade",
 		text = L["confirmTimerRemovalTrade"],

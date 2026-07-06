@@ -1,0 +1,23 @@
+## Interface: 120007, 120100
+## Title: Enhance QoL Mover
+## Author: R41Z0R
+## Version: 11.6.0
+## Notes: Move Blizzard frames
+## Notes-deDE: Verschiebt Blizzard-Fenster
+## Notes-esES: Mueve marcos de Blizzard
+## Notes-esMX: Mueve marcos de Blizzard
+## Notes-frFR: Deplace les fenetres Blizzard
+## Notes-itIT: Sposta i frame di Blizzard
+## Notes-ptBR: Move quadros da Blizzard
+## Notes-ruRU: Перемещает окна Blizzard
+## Notes-koKR: 블리자드 프레임을 이동합니다
+## Notes-zhCN: 移动暴雪框体
+## Notes-zhTW: 移動暴雪框體
+## Dependencies: EnhanceQoL
+## IconTexture: Interface\AddOns\EnhanceQoL\Icons\Icon.tga
+## Retail: true
+## X-Compatible-With: retail
+## LoadOnDemand: 1
+## Globe-Main: EnhanceQoL
+
+Mover.xml

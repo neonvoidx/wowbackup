@@ -95,6 +95,12 @@ addon.BuffFoods.typeFoods = addon.BuffFoods.typeFoods
 			foodEntry("BloomingFeast", "bloomingFeast", 242273, 940, false),
 			foodEntry("FloraFrenzy", "floraFrenzy", 255848, 840, false),
 			foodEntry("ChampionsBento", "championsBento", 242274, 840, false),
+			foodEntry("HeartyVenomSpicedCutlets", "venomSpicedCutlets", 275259, 75, true),
+			foodEntry("HeartyPufferPlate", "pufferPlate", 275262, 75, true),
+			foodEntry("HeartySweetAndSourSkewers", "sweetAndSourSkewers", 275263, 75, true),
+			foodEntry("VenomSpicedCutlets", "venomSpicedCutlets", 275258, 65, false),
+			foodEntry("PufferPlate", "pufferPlate", 275260, 65, false),
+			foodEntry("SweetAndSourSkewers", "sweetAndSourSkewers", 275261, 65, false),
 		},
 		primary = {
 			foodEntry("HeartySilvermoonParade", "silvermoonParade", 266985, 1500, true),

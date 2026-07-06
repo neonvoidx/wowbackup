@@ -1,12 +1,13 @@
 local _, ns = ...
+local Affected = ns.API.Affected
 
 local StyledIcons = {}
 ns.StyledIcons = StyledIcons
 
 local isModuleStyledEnabled = false
-local areHooksInitialized = false
 
 local BASE_SQUARE_MASK = "Interface\\AddOns\\CooldownManagerCentered\\Media\\Art\\Square"
+local DEFAULT_MASK_TEXTURE = "Interface\\AddOns\\CooldownManagerCentered\\Media\\Art\\CooldownManager"
 
 local viewersSettingKey = {
     EssentialCooldownViewer = "Essential",
@@ -14,39 +15,31 @@ local viewersSettingKey = {
     BuffIconCooldownViewer = "BuffIcons",
 }
 
-local normalizedSizeConfig = {
-    Utility = { width = 50, height = 50 },
-}
-
-local originalSizesConfig = {
-    Essential = { width = 50, height = 50 },
-    Utility = { width = 30, height = 30 },
-    BuffIcons = { width = 40, height = 40 },
-}
-
-local function IsNormalizedSizeEnabled()
-    return ns.db.profile.cooldownManager_normalizeUtilitySize or false
-end
+-- Icon sizes (and their normalize / rectangular variants) live in ns.Sizes so glows
+-- and highlights size off the same known numbers; see core/sizes.lua.
+local GetViewerIconSize = ns.Sizes.GetViewerIconSize
+local IsNormalizedSizeEnabled = ns.Sizes.IsNormalizedSizeEnabled
 
 -- Returns TOPLEFT and BOTTOMRIGHT offsets for UI-HUD-CoolDownManager-IconOverlay
--- based on viewer type (and whether Utility is normalized).
+-- Blizzard_CooldownViewer/CooldownViewer.xml (per-template, keyed to the native frame
+-- size): Essential 50x50 -> (-9, 8); Utility 30x30 -> (-6, 5); BuffIcons 40x40 ->
+-- (-8, 7). Normalized Utility is resized to 50x50, so it reuses the Essential insets.
 -- Y offsets are scaled by height/width so the overlay stays proportional on squashed icons.
 local function GetOverlayAnchors(viewerSettingName, width, height)
     local ratio = (width and height and width > 0) and (height / width) or 1.0
     local tlx, tly, brx, bry
-    -- TODO fix - all of those are kinda off...
     if viewerSettingName == "Essential" then
-        tlx, tly, brx, bry = -8, 8, 8, -8
+        tlx, tly, brx, bry = -9, 8, 9, -8
     elseif viewerSettingName == "Utility" then
         if IsNormalizedSizeEnabled() then
-            tlx, tly, brx, bry = -8, 8, 8, -8
+            tlx, tly, brx, bry = -9, 8, 9, -8
         else
-            tlx, tly, brx, bry = -5, 5, 5, -5
+            tlx, tly, brx, bry = -6, 5, 6, -5
         end
     elseif viewerSettingName == "BuffIcons" then
-        tlx, tly, brx, bry = -6, 7, 6, -7
+        tlx, tly, brx, bry = -8, 7, 8, -7
     else
-        tlx, tly, brx, bry = -8, 8, 8, -8
+        tlx, tly, brx, bry = -9, 8, 9, -8
     end
     tly = tly * ratio
     bry = bry * ratio
@@ -80,41 +73,6 @@ end
 function StyledIcons:IsAnyStyledFeatureEnabled()
     return IsAnyStyledFeatureEnabled()
 end
-local function GetViewerIconSize(viewerSettingName)
-    local data = originalSizesConfig[viewerSettingName]
-    local isNormalizedUtility = viewerSettingName == "Utility" and ns.db.profile.cooldownManager_normalizeUtilitySize
-    if isNormalizedUtility then
-        data = normalizedSizeConfig[viewerSettingName]
-    end
-
-    if
-        viewerSettingName == "Essential"
-        and ns.db.profile.cooldownManager_experimental_enableRectangularIcons_essential
-    then
-        return data.width,
-            math.floor(
-                data.height
-                    * (ns.db.profile.cooldownManager_experimental_enableRectangularIcons_essential_percent or 0.8)
-            )
-    elseif
-        viewerSettingName == "Utility" and ns.db.profile.cooldownManager_experimental_enableRectangularIcons_utility
-    then
-        return data.width,
-            math.floor(
-                data.height * (ns.db.profile.cooldownManager_experimental_enableRectangularIcons_utility_percent or 0.8)
-            )
-    elseif
-        viewerSettingName == "BuffIcons"
-        and ns.db.profile.cooldownManager_experimental_enableRectangularIcons_buffIcons
-    then
-        return data.width,
-            math.floor(
-                data.height
-                    * (ns.db.profile.cooldownManager_experimental_enableRectangularIcons_buffIcons_percent or 0.8)
-            )
-    end
-    return data.width, data.height
-end
 
 local function ApplySquareStyle(button, viewerSettingName)
     local width, height = GetViewerIconSize(viewerSettingName)
@@ -134,7 +92,6 @@ local function ApplySquareStyle(button, viewerSettingName)
         button.Icon:SetPoint("TOPLEFT", button, "TOPLEFT", 0, 0)
         button.Icon:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 0, 0)
 
-        -- Calculate zoom-based texture coordinates
         local zoom = 0
         if ns.db and ns.db.profile then
             local zoomKey = "cooldownManager_squareIconsZoom_" .. viewerSettingName
@@ -155,14 +112,11 @@ local function ApplySquareStyle(button, viewerSettingName)
             end
         end
     end
-    for i = 1, select("#", button:GetChildren()) do
-        local texture = select(i, button:GetChildren())
-        if texture and texture.SetSwipeTexture then
-            texture:SetSwipeTexture(BASE_SQUARE_MASK)
-            texture:ClearAllPoints()
-            texture:SetPoint("TOPLEFT", button, "TOPLEFT", borderThickness, -borderThickness)
-            texture:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -borderThickness, borderThickness)
-        end
+    if button.Cooldown then
+        button.Cooldown:SetSwipeTexture(BASE_SQUARE_MASK)
+        button.Cooldown:ClearAllPoints()
+        button.Cooldown:SetPoint("TOPLEFT", button, "TOPLEFT", borderThickness, -borderThickness)
+        button.Cooldown:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -borderThickness, borderThickness)
     end
     for _, region in next, { button:GetRegions() } do
         if region:IsObjectType("Texture") then
@@ -179,27 +133,26 @@ local function ApplySquareStyle(button, viewerSettingName)
     end
     -- There should be one region left that isn't mapped
 
-    -- Create/update inset black border (overlays icon edges)
-    if not button.cmcBorder then
-        button.cmcBorder = CreateFrame("Frame", nil, button, "BackdropTemplate")
-        button.cmcBorder:SetFrameLevel(button:GetFrameLevel() + 1)
+    if not Affected(button).border then
+        Affected(button).border = CreateFrame("Frame", nil, button, "BackdropTemplate")
+        Affected(button).border:SetFrameLevel(button:GetFrameLevel() + 1)
     end
-    button.cmcBorder:ClearAllPoints()
-    button.cmcBorder:SetPoint("TOPLEFT", button, "TOPLEFT", 0, 0)
-    button.cmcBorder:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 0, 0)
+    Affected(button).border:ClearAllPoints()
+    Affected(button).border:SetPoint("TOPLEFT", button, "TOPLEFT", 0, 0)
+    Affected(button).border:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 0, 0)
     if borderThickness <= 0 then
-        button.cmcBorder:Hide()
-        button._cmcSquareStyled = true
+        Affected(button).border:Hide()
+        ns.API:SetAffected(button, "squareStyled")
         return
     end
-    button.cmcBorder:SetBackdrop({
+    Affected(button).border:SetBackdrop({
         edgeFile = "Interface\\Buttons\\WHITE8x8",
         edgeSize = borderThickness,
     })
-    button.cmcBorder:SetBackdropBorderColor(0, 0, 0, 1)
-    button.cmcBorder:Show()
+    Affected(button).border:SetBackdropBorderColor(0, 0, 0, 1)
+    Affected(button).border:Show()
 
-    button._cmcSquareStyled = true
+    ns.API:SetAffected(button, "squareStyled")
 end
 
 local function RestoreOriginalStyle(button, viewerSettingName)
@@ -208,7 +161,7 @@ local function RestoreOriginalStyle(button, viewerSettingName)
 
     if button.Icon then
         button.Icon:ClearAllPoints()
-        button.Icon:SetPoint("CENTER", button, "CENTER", 0, 0)
+        button.Icon:SetPoint("LEFT", button, "LEFT", 0, 0)
 
         button.Icon:SetSize(width, height)
         button.Icon:SetTexCoord(0, 1, 0, 1)
@@ -216,88 +169,82 @@ local function RestoreOriginalStyle(button, viewerSettingName)
 
     for _, region in next, { button:GetRegions() } do
         if region:IsObjectType("Texture") then
-            local texture = region:GetTexture()
             local atlas = region:GetAtlas()
 
             if region.__wt_set6707800 then
-                region:SetTexture(6707800)
+                region:SetAtlas("UI-HUD-CoolDownManager-Mask")
+                region.__wt_set6707800 = nil
             elseif atlas == "UI-HUD-CoolDownManager-IconOverlay" then
                 region:SetAlpha(1) -- 6704514
                 local tlx, tly, brx, bry = GetOverlayAnchors(viewerSettingName, width, height)
                 region:ClearAllPoints()
-                region:SetPoint("TOPLEFT", button, "TOPLEFT", tlx, tly)
-                region:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", brx, bry)
+                region:SetPoint("TOPLEFT", button.Icon, "TOPLEFT", tlx, tly)
+                region:SetPoint("BOTTOMRIGHT", button.Icon, "BOTTOMRIGHT", brx, bry)
             end
         end
     end
 
-    if not button._cmcSquareStyled then
-        return
+    if button.Cooldown then
+        button.Cooldown:SetSwipeTexture("Interface\\HUD\\UI-HUD-CoolDownManager-Icon-Swipe")
+        button.Cooldown:ClearAllPoints()
+        button.Cooldown:SetPoint("LEFT", button, "LEFT", 0, 0)
+        button.Cooldown:SetSize(width, height)
     end
 
-    for i = 1, select("#", button:GetChildren()) do
-        local child = select(i, button:GetChildren())
-        if child and child.SetSwipeTexture then
-            child:SetSwipeTexture(6707800)
-            child:ClearAllPoints()
-            child:SetPoint("CENTER", button, "CENTER", 0, 0)
-            child:SetSize(width, height)
-            break
-        end
+    if Affected(button).border then
+        Affected(button).border:Hide()
     end
 
-    if button.cmcBorder then
-        button.cmcBorder:Hide()
-    end
-
-    button._cmcSquareStyled = false
+    ns.API:UnsetAffected(button, "squareStyled")
 end
 local function ApplyNormalizedSizeToButton(button, viewerSettingName)
     local width, height = GetViewerIconSize(viewerSettingName)
     button:SetSize(width, height)
 
     for i = 1, select("#", button:GetRegions()) do
-        local texture = select(i, button:GetRegions())
-        if texture.GetAtlas and texture:GetAtlas() == "UI-HUD-CoolDownManager-IconOverlay" then
+        local region = select(i, button:GetRegions())
+        if region.GetAtlas and region:GetAtlas() == "UI-HUD-CoolDownManager-IconOverlay" then
             local tlx, tly, brx, bry = GetOverlayAnchors(viewerSettingName, width, height)
-            texture:ClearAllPoints()
-            texture:SetPoint("TOPLEFT", button, "TOPLEFT", tlx, tly)
-            texture:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", brx, bry)
+            region:ClearAllPoints()
+            region:SetPoint("TOPLEFT", button.Icon, "TOPLEFT", tlx, tly)
+            region:SetPoint("BOTTOMRIGHT", button.Icon, "BOTTOMRIGHT", brx, bry)
         end
     end
 
     if button.Icon then
         button.Icon:ClearAllPoints()
-        button.Icon:SetPoint("CENTER", button, "CENTER", 0, 0)
-        local settingName = viewersSettingKey[viewerSettingName]
+        button.Icon:SetPoint("LEFT", button, "LEFT", 0, 0)
 
-        local padding = button._cmcSquareStyled and 4 or 0
+        local padding = ns.API:GetIsAffected(button, "squareStyled") and 4 or 0
         button.Icon:SetSize(width - padding, height - padding)
     end
 end
 
 local function ApplySizeWithoutStyle(button, viewerSettingName)
-    if button._cmcSquareStyled then
-        RestoreOriginalStyle(button, viewerSettingName)
-    end
     local width, height = GetViewerIconSize(viewerSettingName)
+
     if abs(width - height) >= 1 then
-        -- only apply if not squared (so for rectangular icons)
-        button:SetSize(width, height)
+        RestoreOriginalStyle(button, viewerSettingName)
+        ns.API:SetAffected(button, "rectangularStyled")
+        return
+    end
+    if ns.API:GetIsAffected(button, "rectangularStyled") then
+        RestoreOriginalStyle(button, viewerSettingName)
+        ns.API:UnsetAffected(button, "rectangularStyled")
         return
     end
 end
 
--- Process all children of a viewer
 local function ProcessViewer(viewer, viewerSettingName, applySquareStyle)
     if not viewer or not IsAnyStyledFeatureEnabled() then
         return
     end
     local normalize = (viewerSettingName == "Utility")
 
-    local children = { viewer:GetChildren() }
+    local children = viewer:GetItemFrames()
     for _, child in ipairs(children) do
         if child.Icon then -- Only process icon-like children
+            ns.Sizes.TagViewerChild(child, viewerSettingName)
             if normalize then
                 ApplyNormalizedSizeToButton(child, viewerSettingName)
             end
@@ -307,8 +254,8 @@ local function ProcessViewer(viewer, viewerSettingName, applySquareStyle)
             else
                 ApplySizeWithoutStyle(child, viewerSettingName)
             end
-            if child.TriggerPandemicAlert and not child._wt_isStyleHooked then
-                child._wt_isStyleHooked = true
+            if child.TriggerPandemicAlert and not ns.API:GetIsAffected(child, "pandemicStyleHooked") then
+                ns.API:SetAffected(child, "pandemicStyleHooked")
                 hooksecurefunc(child, "TriggerPandemicAlert", function()
                     if child.PandemicIcon then
                         if applySquareStyle then
@@ -332,7 +279,6 @@ local function ProcessViewer(viewer, viewerSettingName, applySquareStyle)
                 if applySquareStyle then
                     -- TODO replace with libbuttonGlows
                     child.DebuffBorder:SetAlpha(0) -- hide the default border, since it doesn't scale well
-                    -- child.DebuffBorder:SetScale(1.76) -- magic numbers - TODO fix someday
                 else
                     child.DebuffBorder:SetAlpha(1)
                     child.DebuffBorder:SetScale(1.0)
@@ -341,15 +287,18 @@ local function ProcessViewer(viewer, viewerSettingName, applySquareStyle)
         end
     end
     -- Track per-viewer state so Initialize can compare desired vs current
-    viewer._cmc_styled_enabled = applySquareStyle
+    ns.API:SetAffected(viewer, "styledEnabled", applySquareStyle)
     if normalize then
-        viewer._cmc_styled_normalized = IsNormalizedSizeEnabled()
+        ns.API:SetAffected(viewer, "styledNormalized", IsNormalizedSizeEnabled())
     end
     local rectKeyMap = { Essential = "essential", Utility = "utility", BuffIcons = "buffIcons" }
     local rectSuffix = rectKeyMap[viewerSettingName]
-    viewer._cmc_styled_rectangular = rectSuffix
-            and (ns.db.profile["cooldownManager_experimental_enableRectangularIcons_" .. rectSuffix] or false)
-        or false
+    ns.API:SetAffected(
+        viewer,
+        "styledRectangular",
+        rectSuffix and (ns.db.profile["cooldownManager_experimental_enableRectangularIcons_" .. rectSuffix] or false)
+            or false
+    )
 end
 
 local function IsAnyStyledFeatureEnabledForViewer(viewerSettingName)
@@ -392,6 +341,9 @@ local function IsSquareIconsEnabled(viewerSettingName)
 end
 
 function StyledIcons:RefreshViewer(viewerName)
+    if ns.MasqueModule and ns.MasqueModule:IsActive() then
+        return
+    end
     local viewerFrame = _G[viewerName]
     if not viewerFrame then
         return
@@ -407,6 +359,9 @@ function StyledIcons:RefreshViewer(viewerName)
 end
 
 function StyledIcons:RefreshAll()
+    if ns.MasqueModule and ns.MasqueModule:IsActive() then
+        return
+    end
     for viewerName, settingName in pairs(viewersSettingKey) do
         local viewerFrame = _G[viewerName]
         if viewerFrame then
@@ -430,24 +385,30 @@ local function RestoreAllButtons()
     for viewerName, settingName in pairs(viewersSettingKey) do
         local viewerFrame = _G[viewerName]
         if viewerFrame then
-            local children = { viewerFrame:GetChildren() }
+            local children = viewerFrame:GetItemFrames()
             for _, button in ipairs(children) do
                 if button.Icon then
                     RestoreOriginalStyle(button, settingName)
                 end
             end
-            viewerFrame._cmc_styled_enabled = false
-            viewerFrame._cmc_styled_normalized = false
-            viewerFrame._cmc_styled_rectangular = false
+            ns.API:UnsetAffected(viewerFrame, "styledEnabled")
+            ns.API:UnsetAffected(viewerFrame, "styledNormalized")
+            ns.API:UnsetAffected(viewerFrame, "styledRectangular")
         end
     end
 end
 
 function StyledIcons:Initialize()
+    if ns.MasqueModule and ns.MasqueModule:IsActive() then
+        return
+    end
     self:OnSettingChanged()
 end
 
 function StyledIcons:OnSettingChanged()
+    if ns.MasqueModule and ns.MasqueModule:IsActive() then
+        return
+    end
     local anyEnabled = IsAnyStyledFeatureEnabled()
 
     if not anyEnabled then
@@ -470,20 +431,20 @@ function StyledIcons:OnSettingChanged()
             if IsAnyStyledFeatureEnabledForViewer(settingName) then
                 ProcessViewer(viewerFrame, settingName, IsSquareIconsEnabled(settingName))
             elseif
-                viewerFrame._cmc_styled_enabled
-                or viewerFrame._cmc_styled_normalized
-                or viewerFrame._cmc_styled_rectangular
+                ns.API:GetIsAffected(viewerFrame, "styledEnabled")
+                or ns.API:GetIsAffected(viewerFrame, "styledNormalized")
+                or ns.API:GetIsAffected(viewerFrame, "styledRectangular")
             then
                 -- This viewer had features active but they are all now disabled; restore it
-                local children = { viewerFrame:GetChildren() }
+                local children = viewerFrame:GetItemFrames()
                 for _, button in ipairs(children) do
                     if button.Icon then
                         RestoreOriginalStyle(button, settingName)
                     end
                 end
-                viewerFrame._cmc_styled_enabled = false
-                viewerFrame._cmc_styled_normalized = false
-                viewerFrame._cmc_styled_rectangular = false
+                ns.API:UnsetAffected(viewerFrame, "styledEnabled")
+                ns.API:UnsetAffected(viewerFrame, "styledNormalized")
+                ns.API:UnsetAffected(viewerFrame, "styledRectangular")
             end
         end
     end

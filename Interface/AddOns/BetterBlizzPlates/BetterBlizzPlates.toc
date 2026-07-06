@@ -1,8 +1,8 @@
-## Interface: 120005
+## Interface: 120007, 120005
 ## Title: Better|cff00c0ffBlizz|rPlates
 ## Notes: Default Blizzard Nameplates with more features added to them with easy settings.
 ## Author: Bodify
-## Version: v2.0.3h
+## Version: v2.0.6b
 ## SavedVariables: BetterBlizzPlatesDB, BBPCVarBackupsDB
 ## IconAtlas: gmchat-icon-blizz
 ## X-Curse-Project-ID: 913377
@@ -32,6 +32,8 @@ midnight\modules\auras.lua
 retail\modules\profiles.lua
 retail\modules\importConvert.lua
 midnight\modules\misc.lua
+midnight\modules\prd.lua
+midnight\modules\totem.lua
 
 retail\modules\druid\overcharges.lua
 midnight\modules\druid\overcharges.lua

@@ -1,7 +1,7 @@
 
 NarcissusDB_PC = {
 ["UseAlias"] = false,
-["PlayerAlias"] = "",
+["PlayerAlias"] = "Smaugchamp",
 ["ClassSetAcquired_MidnightS1"] = true,
 ["EquipmentSetDB"] = {
 },

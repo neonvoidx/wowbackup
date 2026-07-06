@@ -4,7 +4,7 @@ local _, ns = ...
 local WilduUICore = {}
 ns.WilduUICore = WilduUICore
 
-local LEM = LibStub("LibEQOLEditMode-1.0")
+local LEM = LibStub("WildForkLibEQOLEditMode-1.0")
 
 local HIDDEN_POSITION = { point = "TOP", x = 0, y = 500 }
 local DEFAULT_SCALE = 1
@@ -86,23 +86,20 @@ end
 ---@param defaultConfig? table Default position/settings table (applied to profile first)
 ---@return table config The configuration table with all properties resolved
 function WilduUICore.LoadFrameConfig(configKey, defaultConfig)
-    -- Ensure editMode database structure exists
     defaultConfig = defaultConfig or {}
     if not ns.Addon.db.profile.editMode then
         ns.Addon.db.profile.editMode = {}
     end
 
-    -- Initialize config entry if missing
     if not ns.Addon.db.profile.editMode[configKey] then
         ns.Addon.db.profile.editMode[configKey] = {}
     end
 
     local storedConfig = ns.Addon.db.profile.editMode[configKey]
 
-    -- Build result with three-tier fallback: stored → defaultConfig → DEFAULT_CONFIG
+    -- Three-tier fallback: stored → defaultConfig → DEFAULT_CONFIG
     local result = {}
 
-    -- Get all unique keys from all sources
     local allKeys = {}
     for key in pairs(FRAME_DEFAULT_CONFIG) do
         allKeys[key] = true
@@ -114,12 +111,11 @@ function WilduUICore.LoadFrameConfig(configKey, defaultConfig)
         allKeys[key] = true
     end
 
-    -- Apply fallback chain for each property
     for key in pairs(allKeys) do
         result[key] = ns.Addon.db.profile.editMode[configKey][key] or defaultConfig[key] or FRAME_DEFAULT_CONFIG[key]
     end
 
-    -- Update stored config to ensure missing properties are persisted
+    -- Persist any properties missing from the stored config
     for key, value in pairs(result) do
         if ns.Addon.db.profile.editMode[configKey][key] == nil then
             ns.Addon.db.profile.editMode[configKey][key] = value
@@ -135,6 +131,7 @@ end
 ---@param shouldHide boolean Whether to hide (move off-screen) the frame
 function WilduUICore.ApplyFramePosition(frame, configKey, shouldHide)
     local config = ns.Addon.db.profile.editMode[configKey]
+
     if shouldHide then
         frame:SetClampedToScreen(false)
     else
@@ -148,7 +145,9 @@ function WilduUICore.ApplyFramePosition(frame, configKey, shouldHide)
     else
         frame:SetPoint(config.point or "CENTER", UIParent, config.point or "CENTER", config.x or 0, config.y or 0)
     end
-
+    if not config then
+        return
+    end
     if config.scale ~= nil then
         frame:SetScale(config.scale)
     end
@@ -304,11 +303,23 @@ function WilduUICore.RegisterFrameWithLEM(frame, configKey, additionalSettings, 
 
     local defaultTable = ns.DEFAULT_SETTINGS.profile.editMode[configKey] or {}
     defaultTable.enableOverlayToggle = true
+    -- Custom trackers don't expose "Reset to Default" / "Reset Position" buttons.
+    defaultTable.showReset = false
+    defaultTable.showSettingsReset = false
     LEM:AddFrame(frame, onPositionChangedCallback or WilduUICore.CreateOnPositionChanged(configKey), defaultTable)
 
+    -- Frame-level Scale/Strata live in a collapsible "General" section so the
+    -- panel groups the same way the cooldown viewers' Edit Mode settings do.
+    local scaleSetting =
+        WilduUICore.CreateScaleSetting(configKey, FRAME_DEFAULT_CONFIG.scale, frame, onPositionChangedCallback)
+    local strataSetting = WilduUICore.CreateStrataSetting(configKey, FRAME_DEFAULT_CONFIG.strata, frame)
+    scaleSetting.parentId = "general"
+    strataSetting.parentId = "general"
+
     local settings = {
-        WilduUICore.CreateScaleSetting(configKey, FRAME_DEFAULT_CONFIG.scale, frame, onPositionChangedCallback),
-        WilduUICore.CreateStrataSetting(configKey, FRAME_DEFAULT_CONFIG.strata, frame),
+        { kind = LEM.SettingType.Collapsible, id = "general", name = "General", defaultCollapsed = true },
+        scaleSetting,
+        strataSetting,
     }
 
     for _, setting in ipairs(additionalSettings) do
@@ -328,13 +339,11 @@ function WilduUICore.CreateTickerUpdate(frame, interval, updateFn, checkForIsSho
         return
     end
 
-    -- Cancel previous ticker if it exists
     if frame._wt_ticker and frame._wt_ticker.Cancel then
         frame._wt_ticker:Cancel()
         frame._wt_ticker = nil
     end
 
-    -- Create new repeating ticker
     frame._wt_ticker = C_Timer.NewTicker(interval, function()
         if not checkForIsShown or frame:IsShown() then
             updateFn(frame)

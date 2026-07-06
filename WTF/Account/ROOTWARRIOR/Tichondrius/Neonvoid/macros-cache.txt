@@ -20,7 +20,8 @@ VER 3 0100000000000026 " " "134400"
 END
 VER 3 0100000000000028 " " "134400"
 #showtooltip Power Infusion
-/cast [@focus,exists,help,nodead] Power Infusion;[@mouseover,help,exists,nodead] Power Infusion;[] Power Infusion;
+#FS OD
+/cast [@none,exists,help,nodead] Power Infusion[] Power Infusion;
 END
 VER 3 010000000000002A " " "134400"
 #showtooltip
@@ -85,8 +86,9 @@ VER 3 0100000000000045 " " "134400"
 END
 VER 3 0100000000000046 " " "134400"
 #showtooltip
+#FrameSort EnemyHealer
 /cancelaura Dispersion
-/cast [mod:shift,@focus,exists,harm,nodead][] Silence
+/cast [mod:shift,@none,exists,harm,nodead][] Silence
 END
 VER 3 0100000000000047 " " "134400"
 #showtooltip Mind Control
@@ -104,7 +106,9 @@ VER 3 0100000000000049 " " "134400"
 END
 VER 3 010000000000004A " " "INV_Misc_QuestionMark"
 #showtooltip Voidform
-/cast [@focus,exists,help,nodead] Power Infusion;[@mouseover,help,exists,nodead] Power Infusion;[] Power Infusion;
+#FS OD
+/cast [@none,exists,help,nodead] Power Infusion;[@mouseover,help,exists,nodead] Power Infusion;[] Power Infusion;
+/use 14
 /cast Voidform
 END
 VER 3 010000000000004B " " "134400"

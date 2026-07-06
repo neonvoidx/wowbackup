@@ -1,6 +1,7 @@
 local addonName, addon = ...
 local L = LibStub("AceLocale-3.0"):GetLocale(addonName)
-local ConfigLib = LibStub("LibEQOLConfig-1.0", true)
+local LibSettingsDesigner = addon.LibSettingsDesigner
+local ConfigLib = LibSettingsDesigner and LibSettingsDesigner.Config
 
 local rootCategories = {
 	{ id = "UI", label = _G["INTERFACE_LABEL"] },

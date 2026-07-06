@@ -56,6 +56,8 @@ L["Are you sure you want to reset these settings to their default values? This c
 --[[Translation missing --]]
 L["Auto Ride Along"] = "Auto Ride Along"
 --[[Translation missing --]]
+L["Auto selected a choice node."] = "Auto selected a choice node."
+--[[Translation missing --]]
 L["Auto Surge Choice"] = "Auto Surge Choice"
 --[[Translation missing --]]
 L["Auto Talent Purchaser"] = "Auto Talent Purchaser"
@@ -68,15 +70,11 @@ L["Automatically pick Whirling Surge/Lightning Surge the first time you log in o
 --[[Translation missing --]]
 L["Automatically purchase %s talents when you have enough currency."] = "Automatically purchase %s talents when you have enough currency."
 --[[Translation missing --]]
-L["Automatically purchase Horrific Visions talents when you have enough currency."] = "Automatically purchase Horrific Visions talents when you have enough currency."
---[[Translation missing --]]
 L["Automatically purchases Skyriding and other generic talents when you have enough currency."] = "Automatically purchases Skyriding and other generic talents when you have enough currency."
 --[[Translation missing --]]
 L["Automatically selects the DRIVE upgrades you want for all of your alts."] = "Automatically selects the DRIVE upgrades you want for all of your alts."
 --[[Translation missing --]]
 L["Automatically set"] = "Automatically set"
---[[Translation missing --]]
-L["Automatically upgrade the final Limits Unbound talent when you have enough currency."] = "Automatically upgrade the final Limits Unbound talent when you have enough currency."
 L["Background Transparency"] = "Hintergrundtransparenz"
 --[[Translation missing --]]
 L["Basic Modules"] = "Basic Modules"
@@ -185,8 +183,6 @@ L["Inspect Talents"] = "Inspect Talents"
 L["Inspected Build"] = "Inspected Build"
 --[[Translation missing --]]
 L["Invert highlight"] = "Invert highlight"
---[[Translation missing --]]
-L["Legion Remix: Limits Unbound"] = "Legion Remix: Limits Unbound"
 L["Link in chat"] = "In Chat verlinken"
 --[[Translation missing --]]
 L["Loading..."] = "Loading..."
@@ -199,12 +195,8 @@ L["Misc Fixes"] = "Sonstige Fehlerbehebungen"
 --[[Translation missing --]]
 L["Mute chat spam while switching loadouts or specs."] = "Mute chat spam while switching loadouts or specs."
 --[[Translation missing --]]
-L["Open Artifact Traits UI"] = "Open Artifact Traits UI"
---[[Translation missing --]]
 L["Open in Talent Tree Viewer"] = "Open in Talent Tree Viewer"
 L["Open loadout in default Inspect UI"] = "Konfiguration im Talent UI öffnen"
---[[Translation missing --]]
-L["Open the Legion Remix Artifact traits UI to view and adjust talents."] = "Open the Legion Remix Artifact traits UI to view and adjust talents."
 --[[Translation missing --]]
 L["Open these settings in a separate window."] = "Open these settings in a separate window."
 --[[Translation missing --]]
@@ -347,13 +339,7 @@ L["When enabled, the import button will be unlocked even if you have reached the
 L["You can toggle any of the following on/off to enable/disable the integration with that debug tool."] = "Du kannst die folgenden Optionen ein- oder ausschalten, um die Integration mit dem jeweiligen Debug Tool zu aktivieren oder zu deaktivieren."
 L["You have a talent they don't"] = "Ein Talent, das du hast aber der andere nicht"
 --[[Translation missing --]]
-L["You have not unlocked Legion Remix artifact traits yet."] = "You have not unlocked Legion Remix artifact traits yet."
---[[Translation missing --]]
 L["You have not unlocked the %s system on this character yet."] = "You have not unlocked the %s system on this character yet."
---[[Translation missing --]]
-L["You have not unlocked the Horrific Visions system on this character yet."] = "You have not unlocked the Horrific Visions system on this character yet."
---[[Translation missing --]]
-L["You have not unlocked the Skyriding system on this character yet."] = "You have not unlocked the Skyriding system on this character yet."
 L["You have selected a different choice, or different number of points in a talent"] = "Du hast eine andere Wahl oder eine andere Anzahl von Punkten für das Talent gewählt"
 --[[Translation missing --]]
 L["You have the same talents"] = "You have the same talents"

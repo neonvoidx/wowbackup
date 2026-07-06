@@ -58,7 +58,7 @@ LS_TOASTS_GLOBAL_CONFIG = {
 ["font"] = {
 ["name"] = "1",
 },
-["version"] = 12000503,
+["version"] = 12000701,
 ["skin"] = "beautycase",
 ["anchors"] = {
 {

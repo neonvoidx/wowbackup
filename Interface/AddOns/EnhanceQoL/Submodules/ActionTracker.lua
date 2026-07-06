@@ -23,7 +23,13 @@ local TIME_LABEL_HEIGHT = TIME_LABEL_FONT_SIZE + TIME_LABEL_PADDING
 local BORDER_SIZE_MIN = 1
 local BORDER_SIZE_MAX = 24
 local BORDER_OFFSET_MIN = -20
-local BORDER_OFFSET_MAX = 20
+local BORDER_OFFSET_MAX = 100
+local GCD_SPELL_ID = 61304
+local GCD_FALLBACK = 1.5
+local GCD_MIN = 0.5
+local GCD_MAX = 2
+local GCD_GAP_THRESHOLD = 1.25
+local GCD_GAP_MAX_COUNT = 9
 local PREVIEW_INTERVAL = 1.35
 local PREVIEW_TEXTURE_FALLBACK = "Interface\\ICONS\\INV_Misc_QuestionMark"
 local PREVIEW_SPELL_IDS = {
@@ -42,6 +48,10 @@ ActionTracker.defaults = ActionTracker.defaults
 		direction = "RIGHT",
 		fadeDuration = 0,
 		showElapsed = false,
+		showGCDGaps = false,
+		showInterruptedCasts = false,
+		iconShape = "DEFAULT",
+		iconZoom = 0,
 		borderEnabled = false,
 		borderTexture = "DEFAULT",
 		borderSize = 1,
@@ -58,6 +68,10 @@ local DB_SPACING = "actionTrackerSpacing"
 local DB_DIRECTION = "actionTrackerDirection"
 local DB_FADE = "actionTrackerFadeDuration"
 local DB_SHOW_ELAPSED = "actionTrackerShowElapsed"
+local DB_SHOW_GCD_GAPS = "actionTrackerShowGCDGaps"
+local DB_SHOW_INTERRUPTED_CASTS = "actionTrackerShowInterruptedCasts"
+local DB_ICON_SHAPE = "actionTrackerIconShape"
+local DB_ICON_ZOOM = "actionTrackerIconZoom"
 local DB_BORDER_ENABLED = "actionTrackerBorderEnabled"
 local DB_BORDER_TEXTURE = "actionTrackerBorderTexture"
 local DB_BORDER_SIZE = "actionTrackerBorderSize"
@@ -135,13 +149,26 @@ end
 
 local function isLikelyFilePath(value) return type(value) == "string" and (value:find("\\", 1, true) or value:find("/", 1, true)) ~= nil end
 
-local function normalizeBorderTexture(value)
-	if type(value) ~= "string" or value == "" then return defaults.borderTexture or "DEFAULT" end
+local function normalizeIconShape(value, fallback)
+	if addon.IconShape and addon.IconShape.Normalize then return addon.IconShape.Normalize(value, fallback or defaults.iconShape or "DEFAULT") end
+	if type(value) == "string" and value ~= "" then return value end
+	return fallback or defaults.iconShape or "DEFAULT"
+end
+
+local function isBackdropBorderCompatible(shape)
+	if addon.IconShape and addon.IconShape.IsBackdropBorderCompatible then return addon.IconShape.IsBackdropBorderCompatible(shape) end
+	shape = normalizeIconShape(shape, "DEFAULT")
+	return shape == "DEFAULT" or shape == "SQUARE"
+end
+
+local function normalizeBorderTexture(value, fallback, shape)
+	if addon.IconShape and addon.IconShape.NormalizeBorder then return addon.IconShape.NormalizeBorder(value, fallback or defaults.borderTexture or "DEFAULT", shape or normalizeIconShape(nil), { allowNone = true }) end
+	if type(value) ~= "string" or value == "" then return fallback or defaults.borderTexture or "DEFAULT" end
 	return value
 end
 
 local function resolveBorderTexture(value)
-	local key = normalizeBorderTexture(value)
+	local key = normalizeBorderTexture(value, defaults.borderTexture, "DEFAULT")
 	if key == "DEFAULT" or key == "SOLID" then return "Interface\\Buttons\\WHITE8x8" end
 	if isLikelyFilePath(key) then return key end
 	local hash = getCachedMediaHash("border")
@@ -150,7 +177,18 @@ local function resolveBorderTexture(value)
 	return "Interface\\Buttons\\WHITE8x8"
 end
 
-local function getBorderOptions()
+local function getBorderOptions(shape)
+	if addon.IconShape and addon.IconShape.GetBorderOptions then
+		return addon.IconShape.GetBorderOptions(L, shape, {
+			defaultOptions = {
+				{ value = "DEFAULT", label = _G.DEFAULT or "Default" },
+				{ value = "SOLID", label = "Solid" },
+			},
+			includeNone = true,
+			noneLabel = _G.NONE or "None",
+		})
+	end
+
 	local options = {}
 	local seen = {}
 
@@ -182,6 +220,11 @@ local function getBorderOptions()
 	end
 
 	return options
+end
+
+local function refreshEditModeSettingValues()
+	if addon.EditModeLib and addon.EditModeLib.internal and addon.EditModeLib.internal.RefreshSettingValues then addon.EditModeLib.internal:RefreshSettingValues() end
+	if EditMode and EditMode.RefreshFrame then EditMode:RefreshFrame(EDITMODE_ID) end
 end
 
 local function getPreviewTexture(index)
@@ -222,8 +265,18 @@ function ActionTracker:GetFadeDuration()
 end
 
 function ActionTracker:GetShowElapsed() return getValue(DB_SHOW_ELAPSED, defaults.showElapsed) == true end
+function ActionTracker:GetShowGCDGaps() return getValue(DB_SHOW_GCD_GAPS, defaults.showGCDGaps) == true end
+function ActionTracker:GetShowInterruptedCasts() return getValue(DB_SHOW_INTERRUPTED_CASTS, defaults.showInterruptedCasts) == true end
+function ActionTracker:GetIconShape() return normalizeIconShape(getValue(DB_ICON_SHAPE, defaults.iconShape), defaults.iconShape or "DEFAULT") end
+function ActionTracker:GetIconZoom()
+	if addon.IconShape and addon.IconShape.NormalizeIconZoom then return addon.IconShape.NormalizeIconZoom(getValue(DB_ICON_ZOOM, defaults.iconZoom)) end
+	return clampNumber(getValue(DB_ICON_ZOOM, defaults.iconZoom), 0, 35, defaults.iconZoom or 0)
+end
 function ActionTracker:GetBorderEnabled() return getValue(DB_BORDER_ENABLED, defaults.borderEnabled) == true end
-function ActionTracker:GetBorderTextureKey() return normalizeBorderTexture(getValue(DB_BORDER_TEXTURE, defaults.borderTexture)) end
+function ActionTracker:GetBorderTextureKey()
+	local shape = self:GetIconShape()
+	return normalizeBorderTexture(getValue(DB_BORDER_TEXTURE, defaults.borderTexture), defaults.borderTexture or "DEFAULT", shape)
+end
 function ActionTracker:GetBorderSize() return clampNumber(getValue(DB_BORDER_SIZE, defaults.borderSize), BORDER_SIZE_MIN, BORDER_SIZE_MAX, defaults.borderSize) end
 function ActionTracker:GetBorderOffset() return clampNumber(getValue(DB_BORDER_OFFSET, defaults.borderOffset), BORDER_OFFSET_MIN, BORDER_OFFSET_MAX, defaults.borderOffset) end
 
@@ -253,6 +306,34 @@ local function formatElapsed(elapsed)
 	return string.format("%dm%02ds", minutes, seconds)
 end
 
+local function getCurrentGCDDuration()
+	if C_Spell and C_Spell.GetSpellCooldown then
+		local info = C_Spell.GetSpellCooldown(GCD_SPELL_ID)
+		local duration = tonumber(info and info.duration)
+		if duration and duration >= GCD_MIN and duration <= GCD_MAX then return duration end
+	end
+	return GCD_FALLBACK
+end
+
+local function getEntryTexture(entry)
+	if not entry then return nil end
+	if entry.kind == "gap" then return "Interface\\Buttons\\WHITE8x8" end
+	if entry.texture then return entry.texture end
+	if entry.spellID and C_Spell and C_Spell.GetSpellTexture then return C_Spell.GetSpellTexture(entry.spellID) end
+	return nil
+end
+
+local function getEntryLabel(entry)
+	if not entry then return nil end
+	if entry.kind == "gap" then return string.format("+%d\nGCD", entry.gcdCount or 1) end
+	if entry.kind == "interrupted" then return entry.wasKicked and "KICK" or "X" end
+	return nil
+end
+
+local function setTextureVertexColor(texture, r, g, b, a)
+	if texture and texture.SetVertexColor then texture:SetVertexColor(r, g, b, a) end
+end
+
 function ActionTracker:TrimEntries()
 	local maxIcons = self:GetMaxIcons()
 	while #self.entries > maxIcons do
@@ -264,7 +345,23 @@ local function applyIconSize(icon, size)
 	icon:SetSize(size, size)
 	if icon.texture then icon.texture:SetAllPoints(icon) end
 	if icon.cooldown then icon.cooldown:SetAllPoints(icon) end
+	if icon.markerText and icon.markerText.SetFont then
+		local font, _, flags = icon.markerText:GetFont()
+		if font then icon.markerText:SetFont(font, math.max(10, math.floor(size * 0.34)), flags) end
+	end
 	if icon.timeText and icon.timeText.SetWidth then icon.timeText:SetWidth(size + 8) end
+end
+
+local function applyIconShape(icon, shape)
+	if not (addon.IconShape and addon.IconShape.ApplyFrameShape) then return end
+	addon.IconShape.ApplyFrameShape(icon, shape, {
+		textures = { icon.texture },
+		cooldown = icon.cooldown,
+		maskKey = "_eqolActionTrackerMask",
+		textureMaskKey = "_eqolActionTrackerTextureMask",
+		textureTexCoordKey = "_eqolActionTrackerTexCoord",
+		iconZoom = ActionTracker:GetIconZoom(),
+	})
 end
 
 local function ensureIconBorder(icon)
@@ -312,6 +409,13 @@ function ActionTracker:EnsureFrame()
 		icon.cooldown = CreateFrame("Cooldown", nil, icon, "CooldownFrameTemplate")
 		icon.cooldown:SetAllPoints(icon)
 
+		icon.markerText = icon:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+		icon.markerText:SetPoint("CENTER")
+		icon.markerText:SetJustifyH("CENTER")
+		icon.markerText:SetJustifyV("MIDDLE")
+		icon.markerText:SetText("")
+		icon.markerText:Hide()
+
 		icon.timeText = icon:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 		icon.timeText:SetPoint("TOP", icon, "BOTTOM", 0, -TIME_LABEL_PADDING)
 		icon.timeText:SetJustifyH("CENTER")
@@ -323,9 +427,25 @@ function ActionTracker:EnsureFrame()
 		icon.timeText:Hide()
 
 		icon:SetScript("OnEnter", function(selfIcon)
+			local entry = selfIcon.entry
+			if entry and entry.kind == "gap" then
+				GameTooltip:SetOwner(selfIcon, "ANCHOR_RIGHT")
+				GameTooltip:SetText(L["actionTrackerGCDGap"] or "GCD gap")
+				GameTooltip:AddLine((L["actionTrackerGCDGapTooltip"] or "No tracked action for about %d GCDs (%s)."):format(entry.gcdCount or 1, formatElapsed(entry.elapsed or 0)), 1, 1, 1, true)
+				GameTooltip:Show()
+				return
+			end
+
 			if not selfIcon.spellID then return end
 			GameTooltip:SetOwner(selfIcon, "ANCHOR_RIGHT")
 			GameTooltip:SetSpellByID(selfIcon.spellID)
+			if entry and entry.kind == "interrupted" then
+				if entry.wasKicked then
+					GameTooltip:AddLine(L["actionTrackerKicked"] or "Kicked", 1, 0.2, 0.2, true)
+				else
+					GameTooltip:AddLine(L["actionTrackerInterrupted"] or "Interrupted", 1, 0.2, 0.2, true)
+				end
+			end
 			GameTooltip:Show()
 		end)
 		icon:SetScript("OnLeave", GameTooltip_Hide)
@@ -362,25 +482,42 @@ function ActionTracker:UpdateBorderVisuals()
 	local borderSize = self:GetBorderSize()
 	local borderOffset = self:GetBorderOffset()
 	local r, g, b, a = self:GetBorderColor()
+	local shape = self:GetIconShape()
+	local backdropBorder = isBackdropBorderCompatible(shape)
 
 	for i = 1, MAX_ICONS_LIMIT do
 		local icon = frame.icons[i]
 		local border = ensureIconBorder(icon)
-		if borderEnabled and icon:IsShown() then
-			border:SetBackdrop({
-				edgeFile = resolveBorderTexture(borderTexture),
-				edgeSize = borderSize,
-				insets = { left = 0, right = 0, top = 0, bottom = 0 },
-			})
-			border:SetBackdropBorderColor(r, g, b, a)
-			border:SetBackdropColor(0, 0, 0, 0)
-			border:ClearAllPoints()
-			border:SetPoint("TOPLEFT", icon, "TOPLEFT", -borderOffset, borderOffset)
-			border:SetPoint("BOTTOMRIGHT", icon, "BOTTOMRIGHT", borderOffset, -borderOffset)
-			border:Show()
+		local noBorder = addon.IconShape and addon.IconShape.IsNoBorder and addon.IconShape.IsNoBorder(borderTexture)
+		if borderEnabled and not noBorder and icon:IsShown() then
+			if addon.IconShape and addon.IconShape.HideBorderTextures then addon.IconShape.HideBorderTextures(icon) end
+			if backdropBorder then
+				border:SetBackdrop({
+					edgeFile = resolveBorderTexture(borderTexture),
+					edgeSize = borderSize,
+					insets = { left = 0, right = 0, top = 0, bottom = 0 },
+				})
+				border:SetBackdropBorderColor(r, g, b, a)
+				border:SetBackdropColor(0, 0, 0, 0)
+				border:ClearAllPoints()
+				border:SetPoint("TOPLEFT", icon, "TOPLEFT", -borderOffset, borderOffset)
+				border:SetPoint("BOTTOMRIGHT", icon, "BOTTOMRIGHT", borderOffset, -borderOffset)
+				border:Show()
+			else
+				border:SetBackdrop(nil)
+				border:Hide()
+				if addon.IconShape and addon.IconShape.ApplyBorder then
+					addon.IconShape.ApplyBorder(icon, borderTexture, shape, {
+						borderSize = borderSize,
+						borderOffset = borderOffset,
+						color = { r, g, b, a },
+					})
+				end
+			end
 		else
 			border:SetBackdrop(nil)
 			border:Hide()
+			if addon.IconShape and addon.IconShape.HideBorderTextures then addon.IconShape.HideBorderTextures(icon) end
 		end
 	end
 end
@@ -395,6 +532,7 @@ function ActionTracker:UpdateLayout()
 	local direction = self:GetDirection()
 	local showElapsed = self:GetShowElapsed()
 	local labelExtra = showElapsed and TIME_LABEL_HEIGHT or 0
+	local iconShape = self:GetIconShape()
 
 	if direction == "LEFT" or direction == "RIGHT" then
 		local total = (iconSize * maxIcons) + (spacing * (maxIcons - 1))
@@ -414,6 +552,9 @@ function ActionTracker:UpdateLayout()
 		local yOffset = (showElapsed and (direction == "LEFT" or direction == "RIGHT")) and (labelExtra / 2) or 0
 
 		applyIconSize(icon, iconSize)
+		icon._eqolVisualSize = iconSize
+		icon._eqolBaseSlotSize = iconSize
+		applyIconShape(icon, iconShape)
 		icon:ClearAllPoints()
 		if direction == "RIGHT" then
 			icon:SetPoint("LEFT", frame, "LEFT", offset, yOffset)
@@ -439,18 +580,46 @@ function ActionTracker:RefreshIcons()
 	local fade = self:GetFadeDuration()
 	local showElapsed = self:GetShowElapsed()
 	local previewActive = self.previewActive == true and #entries == 0
+	local iconShape = self:GetIconShape()
 
 	self:TrimEntries()
 
 	for i = 1, MAX_ICONS_LIMIT do
 		local icon = frame.icons[i]
+		applyIconShape(icon, iconShape)
 		local entry = i <= maxIcons and entries[i] or nil
 		if entry then
-			local texture = entry.texture or (entry.spellID and C_Spell.GetSpellTexture(entry.spellID))
+			local texture = getEntryTexture(entry)
 			icon.texture:SetTexture(texture)
+			if entry.kind == "gap" then
+				setTextureVertexColor(icon.texture, 0.18, 0.18, 0.18, 0.85)
+			elseif entry.kind == "interrupted" then
+				setTextureVertexColor(icon.texture, 0.45, 0.45, 0.45, 1)
+			else
+				setTextureVertexColor(icon.texture, 1, 1, 1, 1)
+			end
 			icon.spellID = entry.spellID
+			icon.entry = entry
 
-			if entry.cooldownDuration then
+			local markerText = getEntryLabel(entry)
+			if markerText and icon.markerText then
+				icon.markerText:SetText(markerText)
+				if entry.kind == "gap" then
+					icon.markerText:SetTextColor(1, 0.15, 0.15, 1)
+				elseif entry.kind == "interrupted" then
+					if entry.wasKicked then
+						icon.markerText:SetTextColor(1, 0.1, 0.1, 1)
+					else
+						icon.markerText:SetTextColor(1, 0.75, 0.15, 1)
+					end
+				end
+				icon.markerText:Show()
+			elseif icon.markerText then
+				icon.markerText:SetText("")
+				icon.markerText:Hide()
+			end
+
+			if entry.kind == "spell" and entry.cooldownDuration then
 				icon.cooldown:SetCooldownFromDurationObject(entry.cooldownDuration)
 				icon.cooldown:SetDrawEdge(false)
 				icon.cooldown:SetDrawBling(false)
@@ -461,8 +630,12 @@ function ActionTracker:RefreshIcons()
 
 			icon:SetAlpha(self:GetEntryAlpha(entry, now, fade))
 			if icon.timeText then
-				if showElapsed and i > 1 and entries[i - 1] then
-					local delta = (entry.time or now) - (entries[i - 1].time or now)
+				local previousEntry = entries[i - 1]
+				if showElapsed and entry.kind == "gap" then
+					icon.timeText:SetText(formatElapsed(entry.elapsed or 0))
+					icon.timeText:Show()
+				elseif showElapsed and i > 1 and previousEntry and not (entry.kind == "spell" and previousEntry.kind == "gap") then
+					local delta = (entry.time or now) - (previousEntry.time or now)
 					icon.timeText:SetText(formatElapsed(delta))
 					icon.timeText:Show()
 				else
@@ -473,9 +646,15 @@ function ActionTracker:RefreshIcons()
 			icon:Show()
 		elseif previewActive and i <= maxIcons then
 			icon.spellID = nil
+			icon.entry = nil
 			icon.texture:SetTexture(getPreviewTexture(i))
+			setTextureVertexColor(icon.texture, 1, 1, 1, 1)
 			icon.cooldown:Clear()
 			icon:SetAlpha(1)
+			if icon.markerText then
+				icon.markerText:SetText("")
+				icon.markerText:Hide()
+			end
 			if icon.timeText then
 				if showElapsed and i > 1 then
 					icon.timeText:SetText(formatElapsed(PREVIEW_INTERVAL))
@@ -488,9 +667,15 @@ function ActionTracker:RefreshIcons()
 			icon:Show()
 		else
 			icon.spellID = nil
+			icon.entry = nil
 			icon.texture:SetTexture(nil)
+			setTextureVertexColor(icon.texture, 1, 1, 1, 1)
 			icon.cooldown:Clear()
 			icon:SetAlpha(0)
+			if icon.markerText then
+				icon.markerText:SetText("")
+				icon.markerText:Hide()
+			end
 			if icon.timeText then
 				icon.timeText:SetText("")
 				icon.timeText:Hide()
@@ -569,8 +754,47 @@ end
 
 function ActionTracker:ClearEntries()
 	wipe(self.entries)
+	wipe(self.runtime)
 	self:StopFadeUpdate()
 	self:RefreshIcons()
+end
+
+function ActionTracker:AppendEntry(entry)
+	if type(entry) ~= "table" then return end
+	self.entries[#self.entries + 1] = entry
+	local maxIcons = self:GetMaxIcons()
+	while #self.entries > maxIcons do
+		table.remove(self.entries, 1)
+	end
+end
+
+function ActionTracker:AddGCDGapIfNeeded(now)
+	if not self:GetShowGCDGaps() then return end
+
+	local lastTime = self.runtime.lastTrackedActionTime
+	if not lastTime then return end
+
+	local gcd = tonumber(self.runtime.lastGCDDuration) or GCD_FALLBACK
+	if gcd < GCD_MIN or gcd > GCD_MAX then gcd = GCD_FALLBACK end
+
+	local elapsed = (now or GetTime()) - lastTime
+	if elapsed <= (gcd * GCD_GAP_THRESHOLD) then return end
+
+	local missed = math.floor(elapsed / gcd) - 1
+	if missed < 1 then missed = 1 end
+	if missed > GCD_GAP_MAX_COUNT then missed = GCD_GAP_MAX_COUNT end
+
+	self:AppendEntry({
+		kind = "gap",
+		time = now,
+		gcdCount = missed,
+		elapsed = elapsed,
+	})
+end
+
+function ActionTracker:UpdateTimelineAnchor(now)
+	self.runtime.lastTrackedActionTime = now or GetTime()
+	self.runtime.lastGCDDuration = getCurrentGCDDuration()
 end
 
 function ActionTracker:AddEntry(spellID)
@@ -582,20 +806,50 @@ function ActionTracker:AddEntry(spellID)
 	local texture = C_Spell.GetSpellTexture(spellID)
 	if not texture then return end
 
+	local now = GetTime()
+	self:AddGCDGapIfNeeded(now)
+
 	local entry = {
+		kind = "spell",
 		spellID = spellID,
 		texture = texture,
-		time = GetTime(),
+		time = now,
 	}
 
 	local duration = C_Spell.GetSpellCooldownDuration(spellID)
 	entry.cooldownDuration = duration
 
-	self.entries[#self.entries + 1] = entry
-	local maxIcons = self:GetMaxIcons()
-	while #self.entries > maxIcons do
-		table.remove(self.entries, 1)
+	self:AppendEntry(entry)
+	self:UpdateTimelineAnchor(now)
+
+	self:RefreshIcons()
+	self:UpdateFadeState(true)
+end
+
+function ActionTracker:AddInterruptedCast(spellID, castGUID, interruptedBy)
+	if not self:GetShowInterruptedCasts() then return end
+
+	local ignoreList = self.ignoreList
+	if spellID and ignoreList and ignoreList[spellID] then return end
+
+	if castGUID then
+		self.runtime.interruptedCastGUIDs = self.runtime.interruptedCastGUIDs or {}
+		if self.runtime.interruptedCastGUIDs[castGUID] then return end
+		self.runtime.interruptedCastGUIDs[castGUID] = true
 	end
+
+	local texture = spellID and C_Spell.GetSpellTexture(spellID) or nil
+	if not texture then texture = PREVIEW_TEXTURE_FALLBACK end
+
+	local now = GetTime()
+
+	self:AppendEntry({
+		kind = "interrupted",
+		spellID = spellID,
+		texture = texture,
+		time = now,
+		wasKicked = interruptedBy ~= nil,
+	})
 
 	self:RefreshIcons()
 	self:UpdateFadeState(true)
@@ -605,6 +859,18 @@ function ActionTracker:OnEvent(event, unit, arg2, arg3, arg4)
 	if event == "UNIT_SPELLCAST_SUCCEEDED" then
 		local spellID = arg3
 		self:AddEntry(spellID)
+	elseif event == "UNIT_SPELLCAST_INTERRUPTED" then
+		self:AddInterruptedCast(arg3, arg2, arg4)
+	end
+end
+
+function ActionTracker:UpdateOptionalEventRegistration()
+	if not self.eventsRegistered or not self.frame then return end
+
+	if self:GetShowInterruptedCasts() then
+		self.frame:RegisterUnitEvent("UNIT_SPELLCAST_INTERRUPTED", "player")
+	else
+		self.frame:UnregisterEvent("UNIT_SPELLCAST_INTERRUPTED")
 	end
 end
 
@@ -614,11 +880,13 @@ function ActionTracker:RegisterEvents()
 	frame:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
 	frame:SetScript("OnEvent", function(_, event, ...) ActionTracker:OnEvent(event, ...) end)
 	self.eventsRegistered = true
+	self:UpdateOptionalEventRegistration()
 end
 
 function ActionTracker:UnregisterEvents()
 	if not self.eventsRegistered or not self.frame then return end
 	self.frame:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED")
+	self.frame:UnregisterEvent("UNIT_SPELLCAST_INTERRUPTED")
 	self.frame:SetScript("OnEvent", nil)
 	self.eventsRegistered = false
 end
@@ -643,10 +911,18 @@ function ActionTracker:ApplyLayoutData(data)
 	local fade = tonumber(data.fade) or defaults.fadeDuration
 	if fade < 0 then fade = 0 end
 	local showElapsed = data.showElapsed == true
+	local showGCDGaps = data.showGCDGaps
+	if showGCDGaps == nil then showGCDGaps = self:GetShowGCDGaps() end
+	showGCDGaps = showGCDGaps == true
+	local showInterruptedCasts = data.showInterruptedCasts
+	if showInterruptedCasts == nil then showInterruptedCasts = self:GetShowInterruptedCasts() end
+	showInterruptedCasts = showInterruptedCasts == true
+	local iconShape = normalizeIconShape(data.iconShape or self:GetIconShape(), defaults.iconShape or "DEFAULT")
+	local iconZoom = addon.IconShape and addon.IconShape.NormalizeIconZoom and addon.IconShape.NormalizeIconZoom(data.iconZoom or self:GetIconZoom()) or clampNumber(data.iconZoom or self:GetIconZoom(), 0, 35, defaults.iconZoom or 0)
 	local borderEnabled = data.borderEnabled
 	if borderEnabled == nil then borderEnabled = self:GetBorderEnabled() end
 	borderEnabled = borderEnabled == true
-	local borderTexture = normalizeBorderTexture(data.borderTexture or self:GetBorderTextureKey())
+	local borderTexture = normalizeBorderTexture(data.borderTexture or self:GetBorderTextureKey(), defaults.borderTexture or "DEFAULT", iconShape)
 	local borderSize = clampNumber(data.borderSize ~= nil and data.borderSize or self:GetBorderSize(), BORDER_SIZE_MIN, BORDER_SIZE_MAX, defaults.borderSize)
 	local borderOffset = clampNumber(data.borderOffset ~= nil and data.borderOffset or self:GetBorderOffset(), BORDER_OFFSET_MIN, BORDER_OFFSET_MAX, defaults.borderOffset)
 	local borderR, borderG, borderB, borderA = normalizeColor(data.borderColor or getValue(DB_BORDER_COLOR, defaults.borderColor), defaults.borderColor)
@@ -657,6 +933,10 @@ function ActionTracker:ApplyLayoutData(data)
 	addon.db[DB_DIRECTION] = direction
 	addon.db[DB_FADE] = fade
 	addon.db[DB_SHOW_ELAPSED] = showElapsed
+	addon.db[DB_SHOW_GCD_GAPS] = showGCDGaps
+	addon.db[DB_SHOW_INTERRUPTED_CASTS] = showInterruptedCasts
+	addon.db[DB_ICON_SHAPE] = iconShape
+	addon.db[DB_ICON_ZOOM] = iconZoom
 	addon.db[DB_BORDER_ENABLED] = borderEnabled
 	addon.db[DB_BORDER_TEXTURE] = borderTexture
 	addon.db[DB_BORDER_SIZE] = borderSize
@@ -671,6 +951,7 @@ end
 
 local function applySetting(field, value)
 	if not addon.db then return end
+	local refreshSettings = false
 
 	if field == "maxIcons" then
 		local maxIcons = tonumber(value) or defaults.maxIcons
@@ -702,14 +983,34 @@ local function applySetting(field, value)
 		local showElapsed = value == true
 		addon.db[DB_SHOW_ELAPSED] = showElapsed
 		value = showElapsed
+	elseif field == "showGCDGaps" then
+		local showGCDGaps = value == true
+		addon.db[DB_SHOW_GCD_GAPS] = showGCDGaps
+		value = showGCDGaps
+	elseif field == "showInterruptedCasts" then
+		local showInterruptedCasts = value == true
+		addon.db[DB_SHOW_INTERRUPTED_CASTS] = showInterruptedCasts
+		value = showInterruptedCasts
+		ActionTracker:UpdateOptionalEventRegistration()
+	elseif field == "iconShape" then
+		local iconShape = normalizeIconShape(value, defaults.iconShape or "DEFAULT")
+		addon.db[DB_ICON_SHAPE] = iconShape
+		addon.db[DB_BORDER_TEXTURE] = normalizeBorderTexture(addon.db[DB_BORDER_TEXTURE], defaults.borderTexture or "DEFAULT", iconShape)
+		value = iconShape
+		refreshSettings = true
+	elseif field == "iconZoom" then
+		local iconZoom = addon.IconShape and addon.IconShape.NormalizeIconZoom and addon.IconShape.NormalizeIconZoom(value) or clampNumber(value, 0, 35, defaults.iconZoom or 0)
+		addon.db[DB_ICON_ZOOM] = iconZoom
+		value = iconZoom
 	elseif field == "borderEnabled" then
 		local borderEnabled = value == true
 		addon.db[DB_BORDER_ENABLED] = borderEnabled
 		value = borderEnabled
 	elseif field == "borderTexture" then
-		local borderTexture = normalizeBorderTexture(value)
+		local borderTexture = normalizeBorderTexture(value, defaults.borderTexture or "DEFAULT", ActionTracker:GetIconShape())
 		addon.db[DB_BORDER_TEXTURE] = borderTexture
 		value = borderTexture
+		refreshSettings = true
 	elseif field == "borderSize" then
 		local borderSize = clampNumber(value, BORDER_SIZE_MIN, BORDER_SIZE_MAX, defaults.borderSize)
 		addon.db[DB_BORDER_SIZE] = borderSize
@@ -729,6 +1030,7 @@ local function applySetting(field, value)
 	ActionTracker:UpdateLayout()
 	ActionTracker:RefreshIcons()
 	ActionTracker:UpdateFadeState(true)
+	if refreshSettings then refreshEditModeSettingValues() end
 end
 
 function ActionTracker:RegisterEditMode()
@@ -814,6 +1116,58 @@ function ActionTracker:RegisterEditMode()
 				set = function(_, value) applySetting("showElapsed", value) end,
 			},
 			{
+				name = L["actionTrackerShowGCDGaps"] or "Show GCD gaps",
+				kind = SettingType.Checkbox,
+				field = "showGCDGaps",
+				default = defaults.showGCDGaps,
+				get = function() return ActionTracker:GetShowGCDGaps() end,
+				set = function(_, value) applySetting("showGCDGaps", value) end,
+			},
+			{
+				name = L["actionTrackerShowInterruptedCasts"] or "Show interrupted casts",
+				kind = SettingType.Checkbox,
+				field = "showInterruptedCasts",
+				default = defaults.showInterruptedCasts,
+				get = function() return ActionTracker:GetShowInterruptedCasts() end,
+				set = function(_, value) applySetting("showInterruptedCasts", value) end,
+			},
+			{
+				name = L["settingsIconShapeLabel"] or "Icon shape",
+				kind = SettingType.Dropdown,
+				field = "iconShape",
+				height = 160,
+				default = defaults.iconShape or "DEFAULT",
+				get = function() return ActionTracker:GetIconShape() end,
+				set = function(_, value) applySetting("iconShape", value) end,
+				generator = function(_, root)
+						local options = addon.IconShape and addon.IconShape.GetOptions and addon.IconShape.GetOptions(L) or {
+							{ value = "DEFAULT", label = _G.DEFAULT or "Default" },
+							{ value = "SQUARE", label = "Square" },
+							{ value = "ROUND", label = "Round" },
+							{ value = "ROUND_STAR", label = L["settingsIconShapeRoundStar"] or "Round star" },
+							{ value = "HEXAGON", label = "Hexagon" },
+							{ value = "DIAMOND", label = "Diamond" },
+						}
+					for _, option in ipairs(options) do
+						local optionValue = option.value
+						local optionLabel = option.label
+						root:CreateRadio(optionLabel, function() return ActionTracker:GetIconShape() == optionValue end, function() applySetting("iconShape", optionValue) end)
+					end
+				end,
+			},
+			{
+				name = L["Icon zoom"] or "Icon zoom",
+				kind = SettingType.Slider,
+				field = "iconZoom",
+				minValue = 0,
+				maxValue = 35,
+				valueStep = 1,
+				default = defaults.iconZoom or 0,
+				get = function() return ActionTracker:GetIconZoom() end,
+				set = function(_, value) applySetting("iconZoom", value) end,
+				formatter = function(value) return tostring(math.floor((tonumber(value) or 0) + 0.5)) end,
+			},
+			{
 				name = EMBLEM_BORDER,
 				kind = SettingType.Collapsible,
 				id = "border",
@@ -837,8 +1191,10 @@ function ActionTracker:RegisterEditMode()
 				get = function() return ActionTracker:GetBorderTextureKey() end,
 				set = function(_, value) applySetting("borderTexture", value) end,
 				generator = function(_, root)
-					for _, option in ipairs(getBorderOptions()) do
-						root:CreateRadio(option.label, function() return ActionTracker:GetBorderTextureKey() == option.value end, function() applySetting("borderTexture", option.value) end)
+					for _, option in ipairs(getBorderOptions(ActionTracker:GetIconShape())) do
+						local optionValue = option.value
+						local optionLabel = option.label
+						root:CreateRadio(optionLabel, function() return ActionTracker:GetBorderTextureKey() == optionValue end, function() applySetting("borderTexture", optionValue) end)
 					end
 				end,
 				isEnabled = function() return ActionTracker:GetBorderEnabled() end,
@@ -896,6 +1252,10 @@ function ActionTracker:RegisterEditMode()
 		record.direction = self:GetDirection()
 		record.fade = self:GetFadeDuration()
 		record.showElapsed = self:GetShowElapsed()
+		record.showGCDGaps = self:GetShowGCDGaps()
+		record.showInterruptedCasts = self:GetShowInterruptedCasts()
+		record.iconShape = self:GetIconShape()
+		record.iconZoom = self:GetIconZoom()
 		record.borderEnabled = self:GetBorderEnabled()
 		record.borderTexture = self:GetBorderTextureKey()
 		do
@@ -920,6 +1280,10 @@ function ActionTracker:RegisterEditMode()
 			direction = self:GetDirection(),
 			fade = self:GetFadeDuration(),
 			showElapsed = self:GetShowElapsed(),
+			showGCDGaps = self:GetShowGCDGaps(),
+			showInterruptedCasts = self:GetShowInterruptedCasts(),
+			iconShape = self:GetIconShape(),
+			iconZoom = self:GetIconZoom(),
 			borderEnabled = self:GetBorderEnabled(),
 			borderTexture = self:GetBorderTextureKey(),
 			borderColor = (function()

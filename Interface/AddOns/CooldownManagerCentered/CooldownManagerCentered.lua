@@ -19,7 +19,6 @@ function addon:OnInitialize()
     self.db = LibStub("AceDB-3.0"):New("CooldownManagerCenteredDB", ns.DEFAULT_SETTINGS, true)
     ns.db = self.db
 
-    -- Register database callbacks for profile changes
     self.db.RegisterCallback(self, "OnProfileChanged", "RefreshConfig")
     self.db.RegisterCallback(self, "OnProfileCopied", "RefreshConfig")
     self.db.RegisterCallback(self, "OnProfileReset", "RefreshConfig")
@@ -69,6 +68,9 @@ SlashCmdList["CMC_COMMAND"] = function(msg)
 end
 
 function addon:RefreshConfig()
+    if ns.BuffBarIconMode then
+        ns.BuffBarIconMode.ClearGuards()
+    end
     if ns.StyledIcons then
         ns.StyledIcons:Initialize()
     end
@@ -100,6 +102,9 @@ function addon:RefreshConfig()
     end
     if ns.CooldownStyle then
         ns.CooldownStyle:Initialize()
+    end
+    if ns.MasqueModule then
+        ns.MasqueModule:Initialize()
     end
 
     if ns.ButtonPress then
@@ -234,6 +239,9 @@ function addon:OnEnable()
     if ns.CooldownStyle then
         ns.CooldownStyle:Initialize()
     end
+    if ns.MasqueModule then
+        ns.MasqueModule:Initialize()
+    end
     if ns.ButtonPress then
         ns.ButtonPress:Initialize()
     end
@@ -259,6 +267,25 @@ function addon:OnEnable()
         if C_AddOns.IsAddOnLoaded("ElvUI") then
             ns.ButtonPress:RegisterElvUICallbacks()
         end
+    end
+
+    local LSM = LibStub("LibSharedMedia-3.0", true)
+    if LSM and not self._lsmCallbackRegistered then
+        self._lsmCallbackRegistered = true
+        local refreshQueued = false
+        LSM.RegisterCallback(self, "LibSharedMedia_Registered", function(_, mediaType)
+            if mediaType ~= "font" then
+                return
+            end
+            if refreshQueued then
+                return
+            end
+            refreshQueued = true
+            C_Timer.After(1, function()
+                refreshQueued = false
+                addon:RefreshConfig()
+            end)
+        end)
     end
 
     AddonCompartmentFrame:RegisterAddon({

@@ -3,7 +3,7 @@ A World of Warcraft addon. Download locations: [CurseForge](https://www.cursefor
 
 [![](https://media.forgecdn.net/attachments/1439/398/buymeacoffee-png.png)](https://www.buymeacoffee.com/Slackluster)
 
-**Transmog Loot Helper** shows icons for unlearned transmog, mounts, pets, toys, recipes, decor, and more. These show on:
+**Transmog Loot Helper (TLH)** shows icons for unlearned transmog, mounts, pets, toys, recipes, decor, and more. These show on:
 - Bags and bank
 - (Black Market) Auction House
 - Mailbox
@@ -27,6 +27,7 @@ It also features a loot tracker, showing you transmog looted by your fellow part
 Currently supported addons:
 - ArkInventory
 - Baganator
+- Bagforge
 - BetterBags
 - World Quest Tab
 - World Quests List

@@ -1,0 +1,1773 @@
+-- luacheck: globals Enum
+local parentAddonName = "EnhanceQoL"
+local addonName, addon = ...
+
+if _G[parentAddonName] then
+	addon = _G[parentAddonName]
+else
+	error(parentAddonName .. " is not loaded")
+end
+
+addon.Aura = addon.Aura or {}
+addon.Aura.Castbar = addon.Aura.Castbar or addon.Aura.UFStandaloneCastbar or {}
+addon.Aura.UFStandaloneCastbar = addon.Aura.Castbar
+local Castbar = addon.Aura.Castbar
+local UFHelper = addon.Aura.UFHelper
+if not UFHelper then return end
+
+local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL")
+local After = C_Timer and C_Timer.After
+local issecretvalue = _G.issecretvalue
+local UNIT = "player"
+local EDITMODE_FRAME_ID = "EQOL_Castbar"
+local EDITMODE_SETTINGS_MAX_HEIGHT = 900
+local MIN_CASTBAR_WIDTH = 50
+local CASTBAR_CONFIG_VERSION = 2
+local DEFAULT_NOT_INTERRUPTIBLE_COLOR = { 204 / 255, 204 / 255, 204 / 255, 1 }
+local DEFAULT_INTERRUPT_FEEDBACK_COLOR = { 0.85, 0.12, 0.12, 1 }
+local RELATIVE_ANCHOR_FRAME_MAP = {
+	PlayerFrame = { uf = "EQOLUFPlayerFrame", blizz = "PlayerFrame", ufKey = "player" },
+	EQOLUFPlayerFrame = { uf = "EQOLUFPlayerFrame", blizz = "PlayerFrame", ufKey = "player" },
+	TargetFrame = { uf = "EQOLUFTargetFrame", blizz = "TargetFrame", ufKey = "target" },
+	EQOLUFTargetFrame = { uf = "EQOLUFTargetFrame", blizz = "TargetFrame", ufKey = "target" },
+	TargetFrameToT = { uf = "EQOLUFToTFrame", blizz = "TargetFrameToT", ufKey = "targettarget" },
+	EQOLUFToTFrame = { uf = "EQOLUFToTFrame", blizz = "TargetFrameToT", ufKey = "targettarget" },
+	FocusFrame = { uf = "EQOLUFFocusFrame", blizz = "FocusFrame", ufKey = "focus" },
+	EQOLUFFocusFrame = { uf = "EQOLUFFocusFrame", blizz = "FocusFrame", ufKey = "focus" },
+	PetFrame = { uf = "EQOLUFPetFrame", blizz = "PetFrame", ufKey = "pet" },
+	EQOLUFPetFrame = { uf = "EQOLUFPetFrame", blizz = "PetFrame", ufKey = "pet" },
+	BossTargetFrameContainer = { uf = "EQOLUFBossContainer", blizz = "BossTargetFrameContainer", ufKey = "boss" },
+	EQOLUFBossContainer = { uf = "EQOLUFBossContainer", blizz = "BossTargetFrameContainer", ufKey = "boss" },
+	EQOL_ANCHOR_PLAYER = { uf = "EQOLUFPlayerFrame", blizz = "PlayerFrame", ufKey = "player" },
+	EQOL_ANCHOR_TARGET = { uf = "EQOLUFTargetFrame", blizz = "TargetFrame", ufKey = "target" },
+	EQOL_ANCHOR_TARGETTARGET = { uf = "EQOLUFToTFrame", blizz = "TargetFrameToT", ufKey = "targettarget" },
+	EQOL_ANCHOR_FOCUS = { uf = "EQOLUFFocusFrame", blizz = "FocusFrame", ufKey = "focus" },
+	EQOL_ANCHOR_PET = { uf = "EQOLUFPetFrame", blizz = "PetFrame", ufKey = "pet" },
+	EQOL_ANCHOR_PARTY = { uf = "EQOLUFPartyAnchor", blizz = "CompactPartyFrame", ufKey = "party" },
+	CompactPartyFrame = { uf = "EQOLUFPartyAnchor", blizz = "CompactPartyFrame", ufKey = "party" },
+	EQOLUFPartyAnchor = { uf = "EQOLUFPartyAnchor", blizz = "CompactPartyFrame", ufKey = "party" },
+	EQOL_ANCHOR_RAID = { uf = "EQOLUFRaidAnchor", blizz = "CompactRaidFrameContainer", ufKey = "raid" },
+	CompactRaidFrameContainer = { uf = "EQOLUFRaidAnchor", blizz = "CompactRaidFrameContainer", ufKey = "raid" },
+	EQOLUFRaidAnchor = { uf = "EQOLUFRaidAnchor", blizz = "CompactRaidFrameContainer", ufKey = "raid" },
+	EQOL_ANCHOR_BOSS = { uf = "EQOLUFBossContainer", blizz = "BossTargetFrameContainer", ufKey = "boss" },
+}
+local VALID_ANCHOR_POINTS = {
+	TOPLEFT = true,
+	TOP = true,
+	TOPRIGHT = true,
+	LEFT = true,
+	CENTER = true,
+	RIGHT = true,
+	BOTTOMLEFT = true,
+	BOTTOM = true,
+	BOTTOMRIGHT = true,
+}
+local VALID_TEXT_ANCHORS = {
+	LEFT = true,
+	CENTER = true,
+	RIGHT = true,
+}
+local STRATA_ORDER = { "BACKGROUND", "LOW", "MEDIUM", "HIGH", "DIALOG", "FULLSCREEN", "FULLSCREEN_DIALOG", "TOOLTIP" }
+local STRATA_INDEX = {}
+for i = 1, #STRATA_ORDER do
+	STRATA_INDEX[STRATA_ORDER[i]] = i
+end
+
+local state = Castbar._state or {}
+Castbar._state = state
+local onUpdateActive = false
+local function isRuntimeActive() return Castbar._runtimeActive == true end
+
+local fallbackCastDefaults = {
+	enabled = false,
+	width = 220,
+	height = 16,
+	anchor = "BOTTOM",
+	offset = { x = 0, y = -4 },
+	backdrop = { enabled = true, color = { 0, 0, 0, 0.6 }, texture = "DEFAULT" },
+	border = {
+		enabled = false,
+		color = { 0, 0, 0, 0.8 },
+		texture = "DEFAULT",
+		edgeSize = 1,
+		offset = 1,
+	},
+	showName = true,
+	nameAnchor = "LEFT",
+	nameMaxChars = 0,
+	showCastTarget = false,
+	nameOffset = { x = 6, y = 0 },
+	showDuration = true,
+	durationFormat = "REMAINING",
+	durationAnchor = "RIGHT",
+	durationOffset = { x = -6, y = 0 },
+	font = nil,
+	fontSize = 12,
+	showIcon = true,
+	iconSize = 22,
+	iconOffset = { x = -4, y = 0 },
+	iconBorder = {
+		enabled = false,
+		color = { 0, 0, 0, 0.8 },
+		texture = "DEFAULT",
+		edgeSize = 1,
+		offset = 1,
+	},
+	texture = "DEFAULT",
+	reverseFill = false,
+	color = { 0.9, 0.7, 0.2, 1 },
+	useClassColor = false,
+	useGradient = false,
+	gradientStartColor = { 1, 1, 1, 1 },
+	gradientEndColor = { 1, 1, 1, 1 },
+	gradientDirection = "HORIZONTAL",
+	gradientMode = "CASTBAR",
+	notInterruptibleColor = DEFAULT_NOT_INTERRUPTIBLE_COLOR,
+	showInterruptFeedback = true,
+	showInterruptFeedbackGlow = true,
+	interruptFeedbackColor = DEFAULT_INTERRUPT_FEEDBACK_COLOR,
+}
+
+local function copyValue(value)
+	if type(value) ~= "table" then return value end
+	if addon.functions and addon.functions.copyTable then return addon.functions.copyTable(value) end
+	return CopyTable(value)
+end
+
+local function mergeDefaults(target, defaults)
+	for key, value in pairs(defaults or {}) do
+		if target[key] == nil then
+			target[key] = copyValue(value)
+		elseif type(target[key]) == "table" and type(value) == "table" then
+			mergeDefaults(target[key], value)
+		end
+	end
+end
+
+local function normalizeStrataToken(value)
+	if type(value) ~= "string" or value == "" then return nil end
+	local token = string.upper(value)
+	if STRATA_INDEX[token] then return token end
+	return nil
+end
+
+local function normalizeAnchorPoint(value, fallback)
+	local point = tostring(value or fallback or "CENTER"):upper()
+	if VALID_ANCHOR_POINTS[point] then return point end
+	return tostring(fallback or "CENTER"):upper()
+end
+
+local function normalizeTextAnchor(value, fallback)
+	local fallbackAnchor = tostring(fallback or "LEFT"):upper()
+	if not VALID_TEXT_ANCHORS[fallbackAnchor] then fallbackAnchor = "LEFT" end
+	local anchor = tostring(value or fallback or "LEFT"):upper()
+	if VALID_TEXT_ANCHORS[anchor] then return anchor end
+	return fallbackAnchor
+end
+
+local function getTextJustifyH(anchor)
+	anchor = normalizeTextAnchor(anchor, "CENTER")
+	if anchor == "LEFT" or anchor == "TOPLEFT" or anchor == "BOTTOMLEFT" then return "LEFT" end
+	if anchor == "RIGHT" or anchor == "TOPRIGHT" or anchor == "BOTTOMRIGHT" then return "RIGHT" end
+	return "CENTER"
+end
+
+local function legacyAnchorToPoints(anchorValue)
+	local anchor = type(anchorValue) == "string" and anchorValue:upper() or "BOTTOM"
+	if anchor == "TOP" then return "BOTTOM", "CENTER" end
+	if anchor == "BOTTOM" then return "TOP", "CENTER" end
+	return "CENTER", "CENTER"
+end
+
+local function ensureAnchorConfig(castCfg, castDefaults)
+	castCfg = castCfg or {}
+	castDefaults = castDefaults or fallbackCastDefaults
+	local anchorValue = castCfg.anchor
+	local defaultsAnchorValue = castDefaults.anchor
+	local legacyAnchor = (type(anchorValue) == "string" and anchorValue) or (type(defaultsAnchorValue) == "string" and defaultsAnchorValue) or "BOTTOM"
+	local fallbackPoint, fallbackRelativePoint = legacyAnchorToPoints(legacyAnchor)
+	local fallbackOffset = castCfg.offset or castDefaults.offset or { x = 0, y = -4 }
+	local fallbackX = tonumber(fallbackOffset and fallbackOffset.x) or 0
+	local fallbackY = tonumber(fallbackOffset and fallbackOffset.y) or 0
+
+	if type(anchorValue) ~= "table" then
+		anchorValue = {
+			point = fallbackPoint,
+			relativePoint = fallbackRelativePoint,
+			relativeFrame = "UIParent",
+			x = fallbackX,
+			y = fallbackY,
+		}
+		castCfg.anchor = anchorValue
+	end
+
+	anchorValue.point = normalizeAnchorPoint(anchorValue.point, fallbackPoint)
+	anchorValue.relativePoint = normalizeAnchorPoint(anchorValue.relativePoint, anchorValue.point or fallbackRelativePoint)
+	if anchorValue.x == nil then
+		anchorValue.x = fallbackX
+	else
+		anchorValue.x = tonumber(anchorValue.x) or fallbackX
+	end
+	if anchorValue.y == nil then
+		anchorValue.y = fallbackY
+	else
+		anchorValue.y = tonumber(anchorValue.y) or fallbackY
+	end
+	if type(anchorValue.relativeFrame) ~= "string" or anchorValue.relativeFrame == "" then anchorValue.relativeFrame = "UIParent" end
+	if (anchorValue.relativeFrame or "UIParent") == "UIParent" then anchorValue.matchRelativeWidth = nil end
+	return anchorValue
+end
+
+local function anchorUsesUIParent(castCfg, castDefaults)
+	local anchor = ensureAnchorConfig(castCfg, castDefaults)
+	return (anchor.relativeFrame or "UIParent") == "UIParent"
+end
+
+local function wantsRelativeFrameWidthMatch(anchor) return anchor and (anchor.relativeFrame or "UIParent") ~= "UIParent" and anchor.matchRelativeWidth == true end
+
+local function isMappedUFEnabled(ufKey)
+	if type(ufKey) ~= "string" or ufKey == "" then return false end
+	local ufCfg = addon.db and addon.db.ufFrames
+	local cfg = ufCfg and ufCfg[ufKey]
+	if cfg and cfg.enabled == true then return true end
+	local groupCfg = addon.db and addon.db.ufGroupFrames
+	local group = groupCfg and groupCfg[ufKey]
+	return group and group.enabled == true
+end
+
+local function resolveRelativeFrameByName(relativeName)
+	if not relativeName or relativeName == "" or relativeName == "UIParent" then return UIParent end
+	local mapped = RELATIVE_ANCHOR_FRAME_MAP[relativeName]
+	if mapped then
+		if mapped.ufKey and isMappedUFEnabled(mapped.ufKey) then
+			local ufFrame = _G[mapped.uf]
+			if ufFrame then return ufFrame end
+		end
+		local blizzFrame = _G[mapped.blizz]
+		if blizzFrame then return blizzFrame end
+	end
+	return _G[relativeName] or UIParent
+end
+
+local function getRelativeFrameHookTargets(relativeName)
+	local targets = {}
+	local seen = {}
+	local function add(name)
+		if type(name) ~= "string" or name == "" or seen[name] then return end
+		seen[name] = true
+		targets[#targets + 1] = name
+	end
+	local mapped = RELATIVE_ANCHOR_FRAME_MAP[relativeName]
+	if mapped then
+		add(mapped.blizz)
+		add(mapped.uf)
+	end
+	add(relativeName)
+	return targets
+end
+
+local function resolveRelativeFrame(anchor)
+	local relativeName = anchor and anchor.relativeFrame or "UIParent"
+	return resolveRelativeFrameByName(relativeName)
+end
+
+local function shouldShowCastIcon(castCfg, castDefaults)
+	local showIcon = castCfg and castCfg.showIcon
+	if showIcon == nil and castDefaults then showIcon = castDefaults.showIcon end
+	if showIcon == nil then showIcon = true end
+	return showIcon ~= false
+end
+
+local function getCastIconBorderConfig(castCfg, castDefaults)
+	local borderCfg = castCfg and castCfg.iconBorder
+	local borderDef = castDefaults and castDefaults.iconBorder
+	local enabled = type(borderCfg) == "table" and borderCfg.enabled
+	if enabled == nil and type(borderDef) == "table" then enabled = borderDef.enabled end
+	return enabled == true, borderCfg, borderDef
+end
+
+local function getCastIconBorderMetrics(borderCfg, borderDef)
+	local size = type(borderCfg) == "table" and tonumber(borderCfg.edgeSize) or nil
+	if size == nil and type(borderDef) == "table" then size = tonumber(borderDef.edgeSize) end
+	if size == nil then size = 1 end
+	if size < 1 then size = 1 end
+
+	local offset = type(borderCfg) == "table" and borderCfg.offset or nil
+	if offset == nil and type(borderDef) == "table" then offset = borderDef.offset end
+	if offset == nil then offset = size end
+	offset = math.max(0, tonumber(offset) or 0)
+
+	return size, offset
+end
+
+local function getCastIconBorderOutset(castCfg, castDefaults)
+	local enabled, borderCfg, borderDef = getCastIconBorderConfig(castCfg, castDefaults)
+	if not enabled then return 0 end
+	local size, offset = getCastIconBorderMetrics(borderCfg, borderDef)
+	return size + offset
+end
+
+local function getIconLayoutInfo(castCfg, castDefaults, barHeight)
+	local showIcon = shouldShowCastIcon(castCfg, castDefaults)
+	local iconSize = tonumber(castCfg.iconSize or castDefaults.iconSize or barHeight or 22) or 22
+	if iconSize < 1 then iconSize = 1 end
+	local iconOffset = castCfg.iconOffset or castDefaults.iconOffset or { x = -4, y = 0 }
+	local iconOffsetX
+	if type(iconOffset) == "table" then
+		iconOffsetX = tonumber(iconOffset.x) or -4
+	else
+		iconOffsetX = tonumber(iconOffset) or -4
+	end
+	return showIcon, iconSize, iconOffsetX
+end
+
+local function getIconHorizontalBounds(castCfg, castDefaults, barHeight)
+	local showIcon, iconSize, iconOffsetX = getIconLayoutInfo(castCfg, castDefaults, barHeight)
+	if not showIcon then return false, 0, 0, iconSize, iconOffsetX end
+	local borderOutset = getCastIconBorderOutset(castCfg, castDefaults)
+	return true, iconOffsetX - iconSize - borderOutset, iconOffsetX + borderOutset, iconSize, iconOffsetX
+end
+
+local function getIconOverlapWithBar(castCfg, castDefaults, barHeight, barWidth)
+	local showIcon, iconLeft, iconRight = getIconHorizontalBounds(castCfg, castDefaults, barHeight)
+	if not showIcon then return 0 end
+	local width = tonumber(barWidth) or 0
+	if width <= 0 then return 0 end
+	local overlap = math.min(width, iconRight) - math.max(0, iconLeft)
+	if overlap < 0 then overlap = 0 end
+	return overlap
+end
+
+local function getHorizontalAnchorFactor(point)
+	point = tostring(point or "CENTER"):upper()
+	if point:find("LEFT", 1, true) then return 0 end
+	if point:find("RIGHT", 1, true) then return 1 end
+	return 0.5
+end
+
+local function getBarHorizontalOutsets(castCfg, castDefaults)
+	local left = 0
+	local right = 0
+
+	local texKey = castCfg.texture
+	if texKey == nil then texKey = castDefaults.texture end
+	local useDefaultArt = not texKey or texKey == "" or texKey == "DEFAULT"
+	local backdrop = castCfg.backdrop
+	if backdrop == nil then backdrop = castDefaults.backdrop end
+	local backdropTexKey = type(backdrop) == "table" and backdrop.texture or nil
+	local useDefaultBackdropArt = useDefaultArt and (not backdropTexKey or backdropTexKey == "" or backdropTexKey == "DEFAULT")
+	if type(backdrop) == "table" and backdrop.enabled ~= false and useDefaultBackdropArt then
+		left = math.max(left, 1)
+		right = math.max(right, 1)
+	end
+
+	local border = castCfg.border
+	if border == nil then border = castDefaults.border end
+	if type(border) == "table" and border.enabled ~= false then
+		local offset = tonumber(border.offset)
+		if offset == nil then
+			local defBorder = castDefaults.border
+			offset = type(defBorder) == "table" and tonumber(defBorder.offset) or nil
+		end
+		offset = math.max(0, offset or 1)
+
+		local edgeSize = tonumber(border.edgeSize)
+		if edgeSize == nil then
+			local defBorder = castDefaults.border
+			edgeSize = type(defBorder) == "table" and tonumber(defBorder.edgeSize) or nil
+		end
+		edgeSize = math.max(0, edgeSize or 1)
+
+		local borderOutset = offset + edgeSize
+		left = math.max(left, borderOutset)
+		right = math.max(right, borderOutset)
+	end
+
+	return left, right
+end
+
+local function getVisualHorizontalBounds(castCfg, castDefaults, barHeight, barWidth)
+	local width = tonumber(barWidth) or 0
+	if width < 0 then width = 0 end
+	local barLeftOutset, barRightOutset = getBarHorizontalOutsets(castCfg, castDefaults)
+	local minX = -barLeftOutset
+	local maxX = width + barRightOutset
+	local showIcon, iconLeft, iconRight = getIconHorizontalBounds(castCfg, castDefaults, barHeight)
+	if showIcon then
+		if iconLeft < minX then minX = iconLeft end
+		if iconRight > maxX then maxX = iconRight end
+	end
+	return minX, maxX
+end
+
+local function getEffectiveScale(frame)
+	if frame and frame.GetEffectiveScale then
+		local scale = frame:GetEffectiveScale()
+		if type(scale) == "number" and scale > 0 then return scale end
+	end
+	return 1
+end
+
+local function computeBarWidthForAnchorMatch(targetWidth, castCfg, castDefaults, barHeight)
+	local desiredTotal = tonumber(targetWidth) or MIN_CASTBAR_WIDTH
+	if desiredTotal < MIN_CASTBAR_WIDTH then desiredTotal = MIN_CASTBAR_WIDTH end
+
+	local leftOutset, rightOutset = 0, 0
+	local minX = -leftOutset
+	local iconRight
+	local showIcon, iconLeft, resolvedIconRight = getIconHorizontalBounds(castCfg, castDefaults, barHeight)
+	if showIcon then
+		if iconLeft < minX then minX = iconLeft end
+		iconRight = resolvedIconRight
+	end
+
+	local barWidth = desiredTotal + minX - rightOutset
+	if iconRight and iconRight > (barWidth + rightOutset) then barWidth = iconRight - rightOutset end
+	if barWidth < MIN_CASTBAR_WIDTH then barWidth = MIN_CASTBAR_WIDTH end
+	return barWidth
+end
+
+local function computeAnchorMatchXAdjustment(castCfg, castDefaults, barHeight, barWidth, point)
+	local width = tonumber(barWidth) or 0
+	if width <= 0 then return 0 end
+	local leftOutset, rightOutset = 0, 0
+	local minX = -leftOutset
+	local maxX = width + rightOutset
+	local showIcon, iconLeft, iconRight = getIconHorizontalBounds(castCfg, castDefaults, barHeight)
+	if showIcon then
+		if iconLeft < minX then minX = iconLeft end
+		if iconRight > maxX then maxX = iconRight end
+	end
+	local visualWidth = maxX - minX
+	local anchorFactor = getHorizontalAnchorFactor(point)
+	-- Shift bar anchor so the configured anchor point targets the visual bounds,
+	-- not only the statusbar rectangle.
+	return -minX - anchorFactor * (visualWidth - width)
+end
+
+local relativeFrameWidthHooked = Castbar._relativeFrameWidthHooked or {}
+local pendingRelativeFrameHookRetry = Castbar._pendingRelativeFrameHookRetry or {}
+Castbar._relativeFrameWidthHooked = relativeFrameWidthHooked
+Castbar._pendingRelativeFrameHookRetry = pendingRelativeFrameHookRetry
+local relativeWidthSyncPending = false
+
+local function scheduleRelativeFrameWidthSync()
+	if not isRuntimeActive() then return end
+	if relativeWidthSyncPending then return end
+	if not After then
+		Castbar.Refresh()
+		return
+	end
+	relativeWidthSyncPending = true
+	After(0.15, function()
+		relativeWidthSyncPending = false
+		if not isRuntimeActive() then return end
+		Castbar.Refresh()
+	end)
+end
+
+local function onRelativeFrameGeometryChanged()
+	if not isRuntimeActive() then return end
+	scheduleRelativeFrameWidthSync()
+end
+
+local function ensureRelativeFrameHooks(frameName)
+	if not isRuntimeActive() then return end
+	if not frameName or frameName == "" or frameName == "UIParent" then return end
+	local foundFrame = false
+	for _, targetName in ipairs(getRelativeFrameHookTargets(frameName)) do
+		local frame = _G[targetName]
+		if frame then
+			foundFrame = true
+			if not relativeFrameWidthHooked[targetName] and frame.HookScript then
+				local okSize = pcall(frame.HookScript, frame, "OnSizeChanged", onRelativeFrameGeometryChanged)
+				local okShow = pcall(frame.HookScript, frame, "OnShow", onRelativeFrameGeometryChanged)
+				local okHide = pcall(frame.HookScript, frame, "OnHide", onRelativeFrameGeometryChanged)
+				if okSize or okShow or okHide then
+					relativeFrameWidthHooked[targetName] = true
+					scheduleRelativeFrameWidthSync()
+				end
+			end
+		end
+	end
+	if foundFrame then return end
+	if not foundFrame then
+		if After and not pendingRelativeFrameHookRetry[frameName] then
+			pendingRelativeFrameHookRetry[frameName] = true
+			After(1, function()
+				pendingRelativeFrameHookRetry[frameName] = nil
+				if not isRuntimeActive() then return end
+				ensureRelativeFrameHooks(frameName)
+			end)
+		end
+		return
+	end
+end
+
+local function resolveCastbarWidth(castCfg, castDefaults, barHeight)
+	local width = tonumber(castCfg.width or castDefaults.width or 220) or 220
+	if width < MIN_CASTBAR_WIDTH then width = MIN_CASTBAR_WIDTH end
+	local anchor = ensureAnchorConfig(castCfg, castDefaults)
+	if not wantsRelativeFrameWidthMatch(anchor) then return width end
+	ensureRelativeFrameHooks(anchor.relativeFrame)
+	local relFrame = resolveRelativeFrame(anchor)
+	if not relFrame or relFrame == UIParent or not relFrame.GetWidth then return width end
+	local relWidth = relFrame:GetWidth() or 0
+	if relWidth <= 0 then return width end
+	relWidth = math.max(MIN_CASTBAR_WIDTH, relWidth + (tonumber(anchor.matchRelativeWidthOffset) or 0))
+	local relScale = getEffectiveScale(relFrame)
+	local castScale = getEffectiveScale(state.castBar)
+	local visualWidth = relWidth * relScale
+	local targetWidth = visualWidth / castScale
+	return computeBarWidthForAnchorMatch(targetWidth, castCfg, castDefaults, barHeight)
+end
+
+local function getCastDefaults() return fallbackCastDefaults end
+
+local function ensureCastConfig()
+	addon.db = addon.db or {}
+	local castDefaults = getCastDefaults()
+	addon.db.castbar = type(addon.db.castbar) == "table" and addon.db.castbar or {}
+	local castCfg = addon.db.castbar
+
+	local version = tonumber(castCfg.__version) or 0
+	if version ~= CASTBAR_CONFIG_VERSION then
+		mergeDefaults(castCfg, castDefaults)
+		castCfg.__version = CASTBAR_CONFIG_VERSION
+	end
+
+	if addon.db.useCustomPlayerCastbar == true then
+		castCfg.enabled = true
+	elseif castCfg.enabled == nil then
+		castCfg.enabled = false
+	end
+	if castCfg.useClassColor == true and castCfg.useGradient == true then castCfg.useGradient = false end
+	local anchor = castCfg.anchor
+	if type(anchor) ~= "table" or anchor.point == nil or anchor.relativePoint == nil or anchor.x == nil or anchor.y == nil or type(anchor.relativeFrame) ~= "string" or anchor.relativeFrame == "" then
+		ensureAnchorConfig(castCfg, castDefaults)
+	end
+	return castCfg, castDefaults
+end
+
+local function isCastbarEnabled()
+	local castCfg = ensureCastConfig()
+	return castCfg.enabled == true
+end
+
+local function shouldShowSampleCast()
+	if not isCastbarEnabled() then return false end
+	local lib = addon.EditModeLib
+	return lib and lib.IsInEditMode and lib:IsInEditMode()
+end
+
+local function ensureCastBorderFrame()
+	if not state.castBar then return nil end
+	local border = state.castBorder
+	if not border then
+		border = CreateFrame("Frame", nil, state.castBar, "BackdropTemplate")
+		border:EnableMouse(false)
+		state.castBorder = border
+	end
+	border:SetFrameStrata(state.castBar:GetFrameStrata())
+	local baseLevel = state.castBar:GetFrameLevel() or 0
+	border:SetFrameLevel(baseLevel + 3)
+	return border
+end
+
+local function applyCastBorder(castCfg, castDefaults)
+	if not state.castBar then return end
+	local borderCfg = (castCfg and castCfg.border) or (castDefaults and castDefaults.border) or {}
+	if borderCfg.enabled == true then
+		local border = ensureCastBorderFrame()
+		if not border then return end
+		local size = tonumber(borderCfg.edgeSize) or 1
+		if size < 1 then size = 1 end
+		local offset = borderCfg.offset
+		if offset == nil then offset = size end
+		offset = math.max(0, tonumber(offset) or 0)
+		border:ClearAllPoints()
+		border:SetPoint("TOPLEFT", state.castBar, "TOPLEFT", -offset, offset)
+		border:SetPoint("BOTTOMRIGHT", state.castBar, "BOTTOMRIGHT", offset, -offset)
+		border:SetBackdrop({
+			bgFile = "Interface\\Buttons\\WHITE8x8",
+			edgeFile = UFHelper.resolveBorderTexture(borderCfg.texture),
+			edgeSize = size,
+			insets = { left = size, right = size, top = size, bottom = size },
+		})
+		border:SetBackdropColor(0, 0, 0, 0)
+		local color = borderCfg.color or { 0, 0, 0, 0.8 }
+		border:SetBackdropBorderColor(color[1] or 0, color[2] or 0, color[3] or 0, color[4] or 1)
+		border:Show()
+	else
+		local border = state.castBorder
+		if border then
+			border:SetBackdrop(nil)
+			border:Hide()
+		end
+	end
+end
+
+local function ensureCastIconBorderFrame()
+	if not state.castBar or not state.castIconHolder or not state.castIcon then return nil end
+	local border = state.castIconBorder
+	if not border then
+		border = CreateFrame("Frame", nil, state.castIconHolder, "BackdropTemplate")
+		border:EnableMouse(false)
+		state.castIconBorder = border
+	end
+	border:SetFrameStrata(state.castBar:GetFrameStrata())
+	local baseLevel = state.castBar:GetFrameLevel() or 0
+	border:SetFrameLevel(baseLevel + 4)
+	return border
+end
+
+local function applyCastIconBorder(castCfg, castDefaults)
+	local iconAnchor = state.castIconHolder or state.castIcon
+	if not iconAnchor then return end
+	local enabled, borderCfg, borderDef = getCastIconBorderConfig(castCfg, castDefaults)
+
+	if enabled and iconAnchor:IsShown() then
+		local border = ensureCastIconBorderFrame()
+		if not border then return end
+		local size, offset = getCastIconBorderMetrics(borderCfg, borderDef)
+		border:ClearAllPoints()
+		border:SetPoint("TOPLEFT", iconAnchor, "TOPLEFT", -offset, offset)
+		border:SetPoint("BOTTOMRIGHT", iconAnchor, "BOTTOMRIGHT", offset, -offset)
+		border:SetBackdrop({
+			bgFile = "Interface\\Buttons\\WHITE8x8",
+			edgeFile = UFHelper.resolveBorderTexture((type(borderCfg) == "table" and borderCfg.texture) or (type(borderDef) == "table" and borderDef.texture)),
+			edgeSize = size,
+			insets = { left = size, right = size, top = size, bottom = size },
+		})
+		border:SetBackdropColor(0, 0, 0, 0)
+		local color = (type(borderCfg) == "table" and borderCfg.color) or (type(borderDef) == "table" and borderDef.color) or { 0, 0, 0, 0.8 }
+		border:SetBackdropBorderColor(color[1] or 0, color[2] or 0, color[3] or 0, color[4] or 1)
+		border:Show()
+	else
+		local border = state.castIconBorder
+		if border then
+			border:SetBackdrop(nil)
+			border:Hide()
+		end
+	end
+end
+
+local function ensureFrame()
+	if state.castBar then return end
+	state.frame = CreateFrame("Frame", "EQOLPlayerCastFrame", UIParent)
+	state.frame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 0, 0)
+	state.frame:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", 0, 0)
+	state.frame:EnableMouse(false)
+	state.frame:SetMovable(false)
+	state.frame:Show()
+
+	state.castBar = CreateFrame("StatusBar", "EQOLPlayerCastBar", state.frame, "BackdropTemplate")
+	state.castBar:SetMovable(true)
+	state.castBar:SetClampedToScreen(true)
+	state.castBar:SetStatusBarDesaturated(true)
+	state.castBar:SetMinMaxValues(0, 1)
+	state.castBar:SetValue(0)
+	state.castBar:Hide()
+
+	state.castTextLayer = CreateFrame("Frame", nil, state.castBar)
+	state.castTextLayer:SetAllPoints(state.castBar)
+	state.castIconLayer = CreateFrame("Frame", nil, state.castBar)
+	state.castIconLayer:SetAllPoints(state.castBar)
+	state.castIconLayer:EnableMouse(false)
+	state.castIconHolder = CreateFrame("Frame", nil, state.castIconLayer)
+	state.castIconHolder:EnableMouse(false)
+	state.castIconHolder:Hide()
+
+	state.castName = state.castTextLayer:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+	state.castDuration = state.castTextLayer:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+	state.castIcon = state.castIconHolder:CreateTexture(nil, "ARTWORK")
+	state.castIcon:SetAllPoints(state.castIconHolder)
+	state.castIcon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+end
+
+local function roundNumber(value)
+	value = tonumber(value) or 0
+	if value >= 0 then return math.floor(value + 0.5) end
+	return math.ceil(value - 0.5)
+end
+
+local function updateAnchorFromFrame(frame, layoutData)
+	local castCfg, castDefaults = ensureCastConfig()
+	local anchor = ensureAnchorConfig(castCfg, castDefaults)
+	if (anchor.relativeFrame or "UIParent") ~= "UIParent" then return end
+
+	if type(layoutData) == "table" and layoutData.point then
+		anchor.point = normalizeAnchorPoint(layoutData.point, anchor.point or "CENTER")
+		anchor.relativePoint = normalizeAnchorPoint(layoutData.relativePoint or layoutData.point, anchor.point)
+		anchor.x = roundNumber(layoutData.x or 0)
+		anchor.y = roundNumber(layoutData.y or 0)
+		return
+	end
+
+	if not frame or not frame.GetPoint then return end
+	local point, _, relativePoint, x, y = frame:GetPoint(1)
+	anchor.point = normalizeAnchorPoint(point, anchor.point or "CENTER")
+	anchor.relativePoint = normalizeAnchorPoint(relativePoint or point, anchor.point)
+	anchor.x = roundNumber(x or 0)
+	anchor.y = roundNumber(y or 0)
+end
+
+local function tryRegisterEditModeSettings()
+	if Castbar._editModeSettingsApplied then return end
+	if not Castbar._editModeRegistered then return end
+	local settings = Castbar._editModeSettings
+	if type(settings) ~= "table" or #settings == 0 then return end
+	local editMode = addon.EditMode
+	if not (editMode and editMode.RegisterSettings) then return end
+	editMode:RegisterSettings(EDITMODE_FRAME_ID, settings)
+	Castbar._editModeSettingsApplied = true
+	if addon.EditModeLib and addon.EditModeLib.internal and addon.EditModeLib.internal.RefreshSettings then addon.EditModeLib.internal:RefreshSettings() end
+	if addon.EditModeLib and addon.EditModeLib.internal and addon.EditModeLib.internal.RefreshSettingValues then addon.EditModeLib.internal:RefreshSettingValues() end
+end
+
+local function ensureEditModeRegistration()
+	if Castbar._editModeRegistered then return end
+	local editMode = addon.EditMode
+	if not (editMode and editMode.RegisterFrame) then return end
+	ensureFrame()
+
+	local castCfg, castDefaults = ensureCastConfig()
+	local anchorCfg = ensureAnchorConfig(castCfg, castDefaults)
+	local width = castCfg.width or castDefaults.width or 220
+	local height = castCfg.height or castDefaults.height or 16
+
+	editMode:RegisterFrame(EDITMODE_FRAME_ID, {
+		frame = state.castBar,
+		title = L["Castbar"] or L["Castbar"] or "Castbar",
+		enableOverlayToggle = true,
+		allowDrag = function()
+			local cfg, defs = ensureCastConfig()
+			return isCastbarEnabled() and anchorUsesUIParent(cfg, defs)
+		end,
+		managePosition = false,
+		settingsMaxHeight = EDITMODE_SETTINGS_MAX_HEIGHT,
+		layoutDefaults = {
+			point = anchorCfg.point or "CENTER",
+			relativePoint = anchorCfg.relativePoint or anchorCfg.point or "CENTER",
+			x = anchorCfg.x or 0,
+			y = anchorCfg.y or 0,
+			width = width,
+			height = height,
+		},
+		onPositionChanged = function(frame, _, data)
+			updateAnchorFromFrame(frame, data)
+			Castbar.Refresh()
+		end,
+		normalizePosition = true,
+		onEnter = function() Castbar.Refresh() end,
+		onExit = function() Castbar.Refresh() end,
+		isEnabled = function() return isCastbarEnabled() end,
+		settings = Castbar._editModeSettings,
+		showOutsideEditMode = false,
+		showReset = false,
+	})
+
+	if addon.EditModeLib and addon.EditModeLib.SetFrameSettingsResetVisible then addon.EditModeLib:SetFrameSettingsResetVisible(state.castBar, false) end
+	Castbar._editModeRegistered = true
+	Castbar._editModeSettingsApplied = false
+	tryRegisterEditModeSettings()
+end
+
+local function disableEditModeRegistration()
+	if not Castbar._editModeRegistered then return end
+	local editMode = addon.EditMode
+	if editMode and editMode.UnregisterFrame then editMode:UnregisterFrame(EDITMODE_FRAME_ID, false) end
+	Castbar._editModeRegistered = nil
+	Castbar._editModeSettingsApplied = nil
+	if addon.EditModeLib and addon.EditModeLib.internal and addon.EditModeLib.internal.RefreshSettings then addon.EditModeLib.internal:RefreshSettings() end
+	if addon.EditModeLib and addon.EditModeLib.internal and addon.EditModeLib.internal.RefreshSettingValues then addon.EditModeLib.internal:RefreshSettingValues() end
+end
+
+function Castbar.SetEditModeSettings(settings)
+	Castbar._editModeSettings = type(settings) == "table" and settings or nil
+	Castbar._editModeSettingsApplied = false
+	tryRegisterEditModeSettings()
+end
+
+function Castbar.GetConfig()
+	local castCfg, castDefaults = ensureCastConfig()
+	return castCfg, castDefaults
+end
+
+function Castbar.GetDefaults() return copyValue(getCastDefaults() or fallbackCastDefaults) end
+
+local function normalizeGradientColor(value)
+	if type(value) == "table" then
+		if value.r ~= nil then return value.r or 1, value.g or 1, value.b or 1, value.a or 1 end
+		return value[1] or 1, value[2] or 1, value[3] or 1, value[4] or 1
+	end
+	return 1, 1, 1, 1
+end
+
+local function resolveCastbarGradientColors(castCfg, _baseR, _baseG, _baseB, _baseA)
+	local sr, sg, sb, sa = normalizeGradientColor(castCfg and castCfg.gradientStartColor)
+	local er, eg, eb, ea = normalizeGradientColor(castCfg and castCfg.gradientEndColor)
+	return sr, sg, sb, sa, er, eg, eb, ea
+end
+
+local function normalizeCastbarGradientMode(value)
+	if type(value) == "string" and value:upper() == "BAR_END" then return "BAR_END" end
+	return "CASTBAR"
+end
+
+local function isCastbarClassColorEnabled(castCfg, castDefaults)
+	local useClassColor = castCfg and castCfg.useClassColor
+	if useClassColor == nil and castDefaults then useClassColor = castDefaults.useClassColor end
+	return useClassColor == true
+end
+
+local function isCastbarGradientEnabled(castCfg, castDefaults)
+	local useGradient = castCfg and castCfg.useGradient
+	if useGradient == nil and castDefaults then useGradient = castDefaults.useGradient end
+	if useGradient ~= true then return false end
+	return not isCastbarClassColorEnabled(castCfg, castDefaults)
+end
+
+local function clamp01(value)
+	if value < 0 then return 0 end
+	if value > 1 then return 1 end
+	return value
+end
+
+local function resolveCastbarGradientProgress(bar, progressOverride)
+	local progress = tonumber(progressOverride)
+	if not progress and bar and bar.GetMinMaxValues and bar.GetValue then
+		local minValue, maxValue = bar:GetMinMaxValues()
+		local value = bar:GetValue()
+		if type(value) == "number" and type(minValue) == "number" and type(maxValue) == "number" then
+			local range = maxValue - minValue
+			if range > 0 then progress = (value - minValue) / range end
+		end
+	end
+	if type(progress) ~= "number" then return nil end
+	return clamp01(progress)
+end
+
+local function clearCastbarGradientState(bar)
+	if not bar then return end
+	bar._eqolGradientEnabled = nil
+	bar._eqolGradientTex = nil
+	bar._eqolGradDir = nil
+	bar._eqolGradSR = nil
+	bar._eqolGradSG = nil
+	bar._eqolGradSB = nil
+	bar._eqolGradSA = nil
+	bar._eqolGradER = nil
+	bar._eqolGradEG = nil
+	bar._eqolGradEB = nil
+	bar._eqolGradEA = nil
+end
+
+local function applyCastbarGradient(bar, castCfg, _baseR, _baseG, _baseB, _baseA, progressOverride)
+	if not bar or not isCastbarGradientEnabled(castCfg) then return false end
+	local tex = bar.GetStatusBarTexture and bar:GetStatusBarTexture()
+	if not tex or not tex.SetGradient then return false end
+	local sr, sg, sb, sa, er, eg, eb, ea = resolveCastbarGradientColors(castCfg, _baseR, _baseG, _baseB, _baseA)
+	if normalizeCastbarGradientMode(castCfg.gradientMode) == "BAR_END" then
+		local progress = resolveCastbarGradientProgress(bar, progressOverride)
+		if progress then
+			er = sr + (er - sr) * progress
+			eg = sg + (eg - sg) * progress
+			eb = sb + (eb - sb) * progress
+			ea = sa + (ea - sa) * progress
+		end
+	end
+	local direction = castCfg.gradientDirection or "HORIZONTAL"
+	if type(direction) == "string" then direction = direction:upper() end
+	if direction ~= "VERTICAL" then direction = "HORIZONTAL" end
+	if
+		bar._eqolGradientEnabled
+		and bar._eqolGradientTex == tex
+		and bar._eqolGradDir == direction
+		and bar._eqolGradSR == sr
+		and bar._eqolGradSG == sg
+		and bar._eqolGradSB == sb
+		and bar._eqolGradSA == sa
+		and bar._eqolGradER == er
+		and bar._eqolGradEG == eg
+		and bar._eqolGradEB == eb
+		and bar._eqolGradEA == ea
+	then
+		return true
+	end
+	tex:SetGradient(direction, CreateColor(sr, sg, sb, sa), CreateColor(er, eg, eb, ea))
+	bar._eqolGradientEnabled = true
+	bar._eqolGradientTex = tex
+	bar._eqolGradDir = direction
+	bar._eqolGradSR, bar._eqolGradSG, bar._eqolGradSB, bar._eqolGradSA = sr, sg, sb, sa
+	bar._eqolGradER, bar._eqolGradEG, bar._eqolGradEB, bar._eqolGradEA = er, eg, eb, ea
+	return true
+end
+
+local function setCastbarColorWithGradient(bar, castCfg, r, g, b, a, progressOverride)
+	if not bar then return end
+	local br, bg, bb, ba = r or 1, g or 1, b or 1, a or 1
+	local renderR, renderG, renderB, renderA = br, bg, bb, ba
+	if isCastbarGradientEnabled(castCfg) then
+		-- Keep the status bar neutral so the configured gradient colors render without a base tint.
+		renderR, renderG, renderB, renderA = 1, 1, 1, 1
+	end
+	local lastColor = bar._eqolLastColor
+	if
+		not lastColor
+		or lastColor[1] ~= renderR
+		or lastColor[2] ~= renderG
+		or lastColor[3] ~= renderB
+		or lastColor[4] ~= renderA
+	then
+		bar:SetStatusBarColor(renderR, renderG, renderB, renderA)
+	end
+	bar._eqolLastColor = bar._eqolLastColor or {}
+	bar._eqolLastColor[1], bar._eqolLastColor[2], bar._eqolLastColor[3], bar._eqolLastColor[4] =
+		renderR,
+		renderG,
+		renderB,
+		renderA
+	if isCastbarGradientEnabled(castCfg) then
+		if not applyCastbarGradient(bar, castCfg, br, bg, bb, ba, progressOverride) then clearCastbarGradientState(bar) end
+	elseif bar._eqolGradientEnabled then
+		clearCastbarGradientState(bar)
+	end
+end
+
+local function refreshCastbarGradient(bar, castCfg, r, g, b, a, progressOverride)
+	if not bar then return end
+	local br, bg, bb, ba = r, g, b, a
+	if br == nil then
+		if bar._eqolLastColor then
+			br, bg, bb, ba = bar._eqolLastColor[1], bar._eqolLastColor[2], bar._eqolLastColor[3], bar._eqolLastColor[4]
+		elseif bar.GetStatusBarColor then
+			br, bg, bb, ba = bar:GetStatusBarColor()
+		end
+	end
+	if isCastbarGradientEnabled(castCfg) then
+		if not applyCastbarGradient(bar, castCfg, br or 1, bg or 1, bb or 1, ba or 1, progressOverride) then clearCastbarGradientState(bar) end
+	elseif bar._eqolGradientEnabled then
+		clearCastbarGradientState(bar)
+	end
+end
+
+local function getClassColor(class)
+	if not class then return nil end
+	local fallback = (CUSTOM_CLASS_COLORS and CUSTOM_CLASS_COLORS[class]) or (RAID_CLASS_COLORS and RAID_CLASS_COLORS[class])
+	if fallback then return fallback.r or fallback[1], fallback.g or fallback[2], fallback.b or fallback[3], fallback.a or fallback[4] or 1 end
+	return nil
+end
+
+local function clearCastInterruptState()
+	if state.castInterruptAnim then state.castInterruptAnim:Stop() end
+	if state.castInterruptGlowAnim then state.castInterruptGlowAnim:Stop() end
+	if state.castInterruptGlow then state.castInterruptGlow:Hide() end
+	UFHelper.hideCastSpark(state)
+	if state.castBar then state.castBar:SetAlpha(1) end
+	state.castInterruptActive = nil
+	state.castInterruptToken = (state.castInterruptToken or 0) + 1
+end
+
+local function stopCast()
+	if not state.castBar then return end
+	clearCastInterruptState()
+	UFHelper.clearEmpowerStages(state)
+	UFHelper.hideCastSpark(state)
+	state.castBar:Hide()
+	if state.castName then state.castName:SetText("") end
+	if state.castDuration then state.castDuration:SetText("") end
+	if state.castIconHolder then state.castIconHolder:Hide() end
+	if state.castIcon then state.castIcon:Hide() end
+	state.castIconTexture = nil
+	state.castTarget = nil
+	state.castInfo = nil
+	state.castBarDuration = nil
+	if onUpdateActive then
+		state.castBar:SetScript("OnUpdate", nil)
+		onUpdateActive = false
+	end
+end
+
+local function applyCastLayout(castCfg, castDefaults)
+	ensureFrame()
+	castCfg = castCfg or {}
+	castDefaults = castDefaults or fallbackCastDefaults
+	local height = castCfg.height or castDefaults.height or 16
+	local width = resolveCastbarWidth(castCfg, castDefaults, height)
+	if width < MIN_CASTBAR_WIDTH then width = MIN_CASTBAR_WIDTH end
+	local defaultBackdropInset = ((tonumber(height) or 0) <= 20) and 0 or 1
+	state.castBar:SetSize(width, height)
+	local castStrata = normalizeStrataToken(castCfg.strata) or normalizeStrataToken(castDefaults.strata) or ((state.frame and state.frame.GetFrameStrata and state.frame:GetFrameStrata()) or "MEDIUM")
+	local castLevelOffset = tonumber(castCfg.frameLevelOffset)
+	if castLevelOffset == nil then castLevelOffset = tonumber(castDefaults.frameLevelOffset) end
+	if castLevelOffset == nil then castLevelOffset = 1 end
+	local baseFrameLevel = (state.frame and state.frame.GetFrameLevel and state.frame:GetFrameLevel()) or 0
+	local castFrameLevel = math.max(0, baseFrameLevel + castLevelOffset)
+	if state.castBar.GetFrameStrata and state.castBar.SetFrameStrata and state.castBar:GetFrameStrata() ~= castStrata then state.castBar:SetFrameStrata(castStrata) end
+	if state.castBar.GetFrameLevel and state.castBar.SetFrameLevel and state.castBar:GetFrameLevel() ~= castFrameLevel then state.castBar:SetFrameLevel(castFrameLevel) end
+	if state.castTextLayer then
+		if state.castTextLayer.GetFrameStrata and state.castTextLayer.SetFrameStrata and state.castTextLayer:GetFrameStrata() ~= castStrata then state.castTextLayer:SetFrameStrata(castStrata) end
+		if state.castTextLayer.GetFrameLevel and state.castTextLayer.SetFrameLevel then
+			local castTextLevel = castFrameLevel + 5
+			if state.castTextLayer:GetFrameLevel() ~= castTextLevel then state.castTextLayer:SetFrameLevel(castTextLevel) end
+		end
+	end
+	if state.castIconLayer then
+		if state.castIconLayer.GetFrameStrata and state.castIconLayer.SetFrameStrata and state.castIconLayer:GetFrameStrata() ~= castStrata then state.castIconLayer:SetFrameStrata(castStrata) end
+		if state.castIconLayer.GetFrameLevel and state.castIconLayer.SetFrameLevel then
+			local castIconLevel = castFrameLevel + 4
+			if state.castIconLayer:GetFrameLevel() ~= castIconLevel then state.castIconLayer:SetFrameLevel(castIconLevel) end
+		end
+	end
+	if state.castIconHolder then
+		if state.castIconHolder.GetFrameStrata and state.castIconHolder.SetFrameStrata and state.castIconHolder:GetFrameStrata() ~= castStrata then state.castIconHolder:SetFrameStrata(castStrata) end
+		if state.castIconHolder.GetFrameLevel and state.castIconHolder.SetFrameLevel then
+			local castIconLevel = ((state.castIconLayer and state.castIconLayer.GetFrameLevel and state.castIconLayer:GetFrameLevel()) or castFrameLevel + 4)
+			if state.castIconHolder:GetFrameLevel() ~= castIconLevel then state.castIconHolder:SetFrameLevel(castIconLevel) end
+		end
+	end
+
+	local anchor = ensureAnchorConfig(castCfg, castDefaults)
+	if (anchor.relativeFrame or "UIParent") ~= "UIParent" then ensureRelativeFrameHooks(anchor.relativeFrame) end
+	local relativeFrame = resolveRelativeFrame(anchor)
+	local point = anchor.point or "CENTER"
+	local relativePoint = anchor.relativePoint or point
+	local ox = anchor.x or 0
+	local oy = anchor.y or 0
+	if wantsRelativeFrameWidthMatch(anchor) then
+		local castScale = getEffectiveScale(state.castBar)
+		local relativeScale = getEffectiveScale(relativeFrame)
+		local xAdjust = computeAnchorMatchXAdjustment(castCfg, castDefaults, height, width, point)
+		ox = ox + (xAdjust * (castScale / relativeScale))
+	end
+	state.castBar:ClearAllPoints()
+	state.castBar:SetPoint(point, relativeFrame, relativePoint, ox, oy)
+
+	if state.castName then
+		local nameOff = castCfg.nameOffset or castDefaults.nameOffset or { x = 6, y = 0 }
+		local nameAnchor = normalizeTextAnchor(castCfg.nameAnchor, castDefaults.nameAnchor or "LEFT")
+		state.castName:ClearAllPoints()
+		state.castName:SetPoint(nameAnchor, state.castBar, nameAnchor, nameOff.x or 0, nameOff.y or 0)
+		state.castName:SetShown(castCfg.showName ~= false)
+		if state.castName.SetJustifyH then state.castName:SetJustifyH(getTextJustifyH(nameAnchor)) end
+	end
+	if state.castDuration then
+		local durOff = castCfg.durationOffset or castDefaults.durationOffset or { x = -6, y = 0 }
+		local durationAnchor = normalizeTextAnchor(castCfg.durationAnchor, castDefaults.durationAnchor or "RIGHT")
+		state.castDuration:ClearAllPoints()
+		state.castDuration:SetPoint(durationAnchor, state.castBar, durationAnchor, durOff.x or 0, durOff.y or 0)
+		state.castDuration:SetShown(castCfg.showDuration ~= false)
+		if state.castDuration.SetWordWrap then state.castDuration:SetWordWrap(false) end
+		if state.castDuration.SetJustifyH then state.castDuration:SetJustifyH(getTextJustifyH(durationAnchor)) end
+	end
+	local showIcon = shouldShowCastIcon(castCfg, castDefaults)
+	if state.castIconHolder then
+		local size = castCfg.iconSize or castDefaults.iconSize or height
+		local iconOff = castCfg.iconOffset or castDefaults.iconOffset or { x = -4, y = 0 }
+		if type(iconOff) ~= "table" then iconOff = { x = iconOff, y = 0 } end
+		state.castIconHolder:SetSize(size, size)
+		state.castIconHolder:ClearAllPoints()
+		state.castIconHolder:SetPoint("RIGHT", state.castBar, "LEFT", iconOff.x or -4, iconOff.y or 0)
+		state.castIconHolder:SetShown(showIcon)
+	end
+	if state.castIcon then
+		if not state.castIconHolder then
+			local size = castCfg.iconSize or castDefaults.iconSize or height
+			local iconOff = castCfg.iconOffset or castDefaults.iconOffset or { x = -4, y = 0 }
+			if type(iconOff) ~= "table" then iconOff = { x = iconOff, y = 0 } end
+			state.castIcon:SetSize(size, size)
+			state.castIcon:ClearAllPoints()
+			state.castIcon:SetPoint("RIGHT", state.castBar, "LEFT", iconOff.x or -4, iconOff.y or 0)
+		end
+		state.castIcon:SetShown(showIcon)
+	end
+
+	local texKey = castCfg.texture or castDefaults.texture or "DEFAULT"
+	local useDefaultArt = not texKey or texKey == "" or texKey == "DEFAULT"
+	local castTexture = UFHelper.resolveCastTexture(texKey)
+	state.castBar:SetStatusBarTexture(castTexture)
+	state.castUseDefaultArt = useDefaultArt
+
+	do -- Cast backdrop
+		local bd = castCfg.backdrop or castDefaults.backdrop or { enabled = true, color = { 0, 0, 0, 0.6 } }
+		local backdropTexKey = bd.texture
+		if backdropTexKey == nil or backdropTexKey == "" or backdropTexKey == "DEFAULT" then backdropTexKey = texKey end
+		local useDefaultBackdropArt = not backdropTexKey or backdropTexKey == "" or backdropTexKey == "DEFAULT"
+		local castBackdropTexture = UFHelper.resolveCastTexture(backdropTexKey)
+		if state.castBar.SetBackdrop then state.castBar:SetBackdrop(nil) end
+		local bg = state.castBar.backdropTexture
+		if bd.enabled == false then
+			if bg then bg:Hide() end
+		else
+			if not bg then
+				bg = state.castBar:CreateTexture(nil, "BACKGROUND")
+				state.castBar.backdropTexture = bg
+			end
+			local col = bd.color or { 0, 0, 0, 0.6 }
+			bg:ClearAllPoints()
+			if useDefaultBackdropArt and bg.SetAtlas then
+				bg:SetAtlas("ui-castingbar-background", false)
+				bg:SetPoint("TOPLEFT", state.castBar, "TOPLEFT", -defaultBackdropInset, defaultBackdropInset)
+				bg:SetPoint("BOTTOMRIGHT", state.castBar, "BOTTOMRIGHT", defaultBackdropInset, -defaultBackdropInset)
+			else
+				bg:SetTexture(castBackdropTexture)
+				bg:SetAllPoints(state.castBar)
+			end
+			bg:SetVertexColor(col[1] or 0, col[2] or 0, col[3] or 0, col[4] or 0.6)
+			bg:Show()
+		end
+	end
+	applyCastBorder(castCfg, castDefaults)
+	applyCastIconBorder(castCfg, castDefaults)
+
+	if state.castName then
+		local iconSpace = getIconOverlapWithBar(castCfg, castDefaults, height, width)
+		if iconSpace > 0 then iconSpace = iconSpace + 4 end
+		local durationSpace = (castCfg.showDuration ~= false) and 60 or 0
+		local available = (width or 0) - iconSpace - durationSpace - 6
+		if available < 0 then available = 0 end
+		local maxChars = castCfg.nameMaxChars
+		if maxChars == nil then maxChars = castDefaults.nameMaxChars end
+		maxChars = tonumber(maxChars) or 0
+		if maxChars > 0 and UFHelper.getNameLimitWidth then
+			local castFont = castCfg.font or castDefaults.font
+			local castFontSize = castCfg.fontSize or castDefaults.fontSize or 12
+			local castOutline = castCfg.fontOutline or castDefaults.fontOutline or "OUTLINE"
+			local maxWidth = UFHelper.getNameLimitWidth(castFont, castFontSize, castOutline, maxChars)
+			if maxWidth and maxWidth > 0 then available = maxWidth end
+		end
+		state.castName:SetWidth(available)
+		if state.castName.SetWordWrap then state.castName:SetWordWrap(false) end
+		if state.castName.SetMaxLines then state.castName:SetMaxLines(1) end
+		if state.castName.SetJustifyH then
+			local nameAnchor = normalizeTextAnchor(castCfg.nameAnchor, castDefaults.nameAnchor or "LEFT")
+			state.castName:SetJustifyH(getTextJustifyH(nameAnchor))
+		end
+	end
+	if state.castEmpower and state.castEmpower.stagePercents then UFHelper.layoutEmpowerStages(state) end
+end
+
+local function applyCastFont(castCfg, castDefaults)
+	local castFont = castCfg.font or castDefaults.font
+	local castFontSize = castCfg.fontSize or castDefaults.fontSize or 12
+	local castOutline = castCfg.fontOutline or castDefaults.fontOutline or "OUTLINE"
+	UFHelper.applyFont(state.castName, castFont, castFontSize, castOutline)
+	UFHelper.applyFont(state.castDuration, castFont, castFontSize, castOutline)
+	local castFontColor = castCfg.fontColor or castDefaults.fontColor
+	if castFontColor then
+		local r = castFontColor.r or castFontColor[1] or 1
+		local g = castFontColor.g or castFontColor[2] or 1
+		local b = castFontColor.b or castFontColor[3] or 1
+		local a = castFontColor.a or castFontColor[4] or 1
+		if state.castName then state.castName:SetTextColor(r, g, b, a) end
+		if state.castDuration then state.castDuration:SetTextColor(r, g, b, a) end
+	end
+end
+
+local function configureCastStatic(castCfg, castDefaults)
+	if not state.castBar or not state.castInfo then return end
+	local showInterruptFeedback = castCfg.showInterruptFeedback
+	if showInterruptFeedback == nil then showInterruptFeedback = castDefaults.showInterruptFeedback end
+	if showInterruptFeedback == nil then showInterruptFeedback = true end
+	state.castInterruptFeedbackEnabled = showInterruptFeedback ~= false
+
+	local showInterruptFeedbackGlow = castCfg.showInterruptFeedbackGlow
+	if showInterruptFeedbackGlow == nil then showInterruptFeedbackGlow = castDefaults.showInterruptFeedbackGlow end
+	if showInterruptFeedbackGlow == nil then showInterruptFeedbackGlow = true end
+	state.castInterruptFeedbackGlow = showInterruptFeedbackGlow ~= false
+
+	local interruptColor = castCfg.interruptFeedbackColor
+	if type(interruptColor) ~= "table" then interruptColor = castDefaults.interruptFeedbackColor end
+	local ir
+	local ig
+	local ib
+	local ia
+	if type(interruptColor) == "table" then
+		ir = interruptColor.r or interruptColor[1]
+		ig = interruptColor.g or interruptColor[2]
+		ib = interruptColor.b or interruptColor[3]
+		ia = interruptColor.a or interruptColor[4]
+	end
+	if ir == nil then ir = DEFAULT_INTERRUPT_FEEDBACK_COLOR[1] end
+	if ig == nil then ig = DEFAULT_INTERRUPT_FEEDBACK_COLOR[2] end
+	if ib == nil then ib = DEFAULT_INTERRUPT_FEEDBACK_COLOR[3] end
+	if ia == nil then ia = DEFAULT_INTERRUPT_FEEDBACK_COLOR[4] end
+	state.castInterruptFeedbackR = ir
+	state.castInterruptFeedbackG = ig
+	state.castInterruptFeedbackB = ib
+	state.castInterruptFeedbackA = ia
+
+	local isEmpoweredDefault = state.castInfo.isEmpowered and state.castUseDefaultArt == true
+	local clr = castCfg.color or castDefaults.color or { 0.9, 0.7, 0.2, 1 }
+	if isCastbarClassColorEnabled(castCfg, castDefaults) then
+		local class = select(2, UnitClass(UNIT))
+		local cr, cg, cb, ca = getClassColor(class)
+		if cr then clr = { cr, cg, cb, ca or 1 } end
+	end
+	if isEmpoweredDefault then
+		state.castBar:SetStatusBarDesaturated(false)
+		setCastbarColorWithGradient(state.castBar, nil, 0, 0, 0, 0)
+	else
+		state.castBar:SetStatusBarDesaturated(false)
+		setCastbarColorWithGradient(state.castBar, castCfg, clr[1] or 0.9, clr[2] or 0.7, clr[3] or 0.2, clr[4] or 1)
+	end
+	local duration = (state.castInfo.endTime or 0) - (state.castInfo.startTime or 0)
+	local maxValue = duration and duration > 0 and duration / 1000 or 1
+	state.castInfo.maxValue = maxValue
+	local reverseFill = castCfg.reverseFill
+	if reverseFill == nil then reverseFill = castDefaults.reverseFill == true end
+	if UFHelper.applyStatusBarReverseFill then UFHelper.applyStatusBarReverseFill(state.castBar, reverseFill == true) end
+	state.castBar:SetMinMaxValues(0, maxValue)
+	refreshCastbarGradient(state.castBar, isEmpoweredDefault and nil or castCfg)
+	if state.castName then
+		local showName = castCfg.showName ~= false
+		state.castName:SetShown(showName)
+		local nameText = showName and (state.castInfo.name or "") or ""
+		if showName and UFHelper.formatCastName then
+			local showTarget = castCfg.showCastTarget
+			if showTarget == nil then showTarget = castDefaults.showCastTarget end
+			nameText = UFHelper.formatCastName(nameText, state.castTarget, showTarget == true)
+		end
+		state.castName:SetText(nameText)
+	end
+	if state.castIcon then
+		local iconTexture = UFHelper.resolveCastIconTexture(state.castInfo.texture)
+		local showIcon = shouldShowCastIcon(castCfg, castDefaults)
+		if state.castIconHolder then state.castIconHolder:SetShown(showIcon) end
+		state.castIcon:SetShown(showIcon)
+		if showIcon then
+			state.castIcon:SetTexture(iconTexture)
+			state.castIconTexture = iconTexture
+		end
+	end
+	applyCastIconBorder(castCfg, castDefaults)
+	if state.castDuration then state.castDuration:SetShown(castCfg.showDuration ~= false) end
+	state.castBar:Show()
+end
+
+local function updateCastBar()
+	local castCfg, castDefaults = ensureCastConfig()
+	local info = state.castInfo
+	if not state.castBar or not info or castCfg.enabled == false then
+		stopCast()
+		return
+	end
+	if not info.startTime or not info.endTime then
+		stopCast()
+		return
+	end
+	if issecretvalue and (issecretvalue(info.startTime) or issecretvalue(info.endTime)) then
+		stopCast()
+		return
+	end
+
+	local nowMs = GetTime() * 1000
+	local startMs = info.startTime or 0
+	local endMs = info.endTime or 0
+	local duration = endMs - startMs
+	if not duration or duration <= 0 then
+		stopCast()
+		return
+	end
+
+	if nowMs >= endMs then
+		if shouldShowSampleCast() then
+			-- Keep a preview while in Edit Mode.
+			local sampleDuration = 2
+			state.castInfo = {
+				name = L["Sample Cast"] or "Sample Cast",
+				texture = 136243,
+				startTime = nowMs,
+				endTime = nowMs + sampleDuration * 1000,
+				notInterruptible = false,
+				isChannel = false,
+				maxValue = sampleDuration,
+			}
+			configureCastStatic(castCfg, castDefaults)
+		else
+			stopCast()
+		end
+		return
+	end
+
+	local elapsedMs
+	if info.isEmpowered then
+		elapsedMs = nowMs - startMs
+	else
+		elapsedMs = info.isChannel and (endMs - nowMs) or (nowMs - startMs)
+	end
+	if elapsedMs < 0 then elapsedMs = 0 end
+	local value = elapsedMs / 1000
+	state.castBar:SetValue(value)
+	if not (info.isEmpowered and state.castUseDefaultArt == true) and isCastbarGradientEnabled(castCfg, castDefaults) and normalizeCastbarGradientMode(castCfg.gradientMode) == "BAR_END" then
+		local maxValue = info.maxValue
+		local progress
+		if type(maxValue) == "number" and maxValue > 0 then progress = value / maxValue end
+		refreshCastbarGradient(state.castBar, castCfg, nil, nil, nil, nil, progress)
+	end
+
+	if info.isEmpowered then
+		local maxValue = info.maxValue
+		if not maxValue then
+			local _, maxVal = state.castBar:GetMinMaxValues()
+			maxValue = maxVal
+		end
+		if maxValue and maxValue > 0 and (not issecretvalue or (not issecretvalue(value) and not issecretvalue(maxValue))) then UFHelper.updateEmpowerStageFromProgress(state, value / maxValue) end
+		UFHelper.updateCastSpark(state, "empowered")
+	else
+		UFHelper.hideCastSpark(state)
+	end
+
+	if state.castDuration then
+		if castCfg.showDuration ~= false then
+			local durationFormat = castCfg.durationFormat or castDefaults.durationFormat or "REMAINING"
+			if durationFormat == "ELAPSED_TOTAL" then
+				local total = duration / 1000
+				local elapsed = (nowMs - startMs) / 1000
+				if elapsed < 0 then elapsed = 0 end
+				if elapsed > total then elapsed = total end
+				state.castDuration:SetText(("%.1f / %.1f"):format(elapsed, total))
+			elseif durationFormat == "REMAINING_TOTAL" then
+				local total = duration / 1000
+				local remaining = (endMs - nowMs) / 1000
+				if remaining < 0 then remaining = 0 end
+				state.castDuration:SetText(("%.1f / %.1f"):format(remaining, total))
+			else
+				local remaining = (endMs - nowMs) / 1000
+				if remaining < 0 then remaining = 0 end
+				state.castDuration:SetText(("%.1f"):format(remaining))
+			end
+			state.castDuration:Show()
+		else
+			state.castDuration:SetText("")
+			state.castDuration:Hide()
+		end
+	end
+end
+
+local function setSampleCast()
+	local castCfg, castDefaults = ensureCastConfig()
+	if castCfg.enabled == false then
+		stopCast()
+		return
+	end
+	applyCastLayout(castCfg, castDefaults)
+	applyCastFont(castCfg, castDefaults)
+	local nowMs = GetTime() * 1000
+	local sampleDuration = 2
+	state.castInfo = {
+		name = L["Sample Cast"] or "Sample Cast",
+		texture = 136243,
+		startTime = nowMs,
+		endTime = nowMs + sampleDuration * 1000,
+		notInterruptible = false,
+		isChannel = false,
+		maxValue = sampleDuration,
+	}
+	configureCastStatic(castCfg, castDefaults)
+	if not onUpdateActive then
+		state.castBar:SetScript("OnUpdate", updateCastBar)
+		onUpdateActive = true
+	end
+	updateCastBar()
+end
+
+local function shouldIgnoreCastFail(castGUID, spellId, castBarID)
+	if UnitChannelInfo then
+		local channelName = UnitChannelInfo(UNIT)
+		if channelName then return true end
+	end
+	local info = state.castInfo
+	if not info then return false end
+	if info.castBarID and castBarID and info.castBarID ~= castBarID then return true end
+	if info.castGUID and castGUID then
+		if not (issecretvalue and (issecretvalue(info.castGUID) or issecretvalue(castGUID))) and info.castGUID ~= castGUID then return true end
+	end
+	if info.spellId and spellId and info.castGUID then
+		if not (issecretvalue and (issecretvalue(info.spellId) or issecretvalue(spellId))) and info.spellId ~= spellId then return true end
+	end
+	return false
+end
+
+local function showCastInterrupt(event)
+	local castCfg, castDefaults = ensureCastConfig()
+	ensureFrame()
+	if not state.castBar or ((not state.castBar:IsShown()) and not state.castInfo) then return end
+
+	local showInterruptFeedback = state.castInterruptFeedbackEnabled
+	if showInterruptFeedback == nil then
+		showInterruptFeedback = castCfg.showInterruptFeedback
+		if showInterruptFeedback == nil then showInterruptFeedback = castDefaults.showInterruptFeedback end
+		if showInterruptFeedback == nil then showInterruptFeedback = true end
+		showInterruptFeedback = showInterruptFeedback ~= false
+		state.castInterruptFeedbackEnabled = showInterruptFeedback
+	end
+	if showInterruptFeedback == false then
+		stopCast()
+		if shouldShowSampleCast() then setSampleCast() end
+		return
+	end
+
+	clearCastInterruptState()
+	UFHelper.clearEmpowerStages(state)
+	state.castInterruptActive = true
+	local token = state.castInterruptToken or 0
+	if onUpdateActive then
+		state.castBar:SetScript("OnUpdate", nil)
+		onUpdateActive = false
+	end
+
+	applyCastLayout(castCfg, castDefaults)
+	applyCastFont(castCfg, castDefaults)
+
+	local texKey = castCfg.texture or castDefaults.texture or "DEFAULT"
+	local useDefault = not texKey or texKey == "" or texKey == "DEFAULT"
+	local interruptTex
+	if useDefault then
+		interruptTex = (UFHelper.resolveCastInterruptTexture and UFHelper.resolveCastInterruptTexture()) or UFHelper.resolveCastTexture(texKey)
+	else
+		interruptTex = UFHelper.resolveCastTexture(texKey)
+	end
+	if interruptTex then state.castBar:SetStatusBarTexture(interruptTex) end
+	if state.castBar.SetStatusBarDesaturated then state.castBar:SetStatusBarDesaturated(false) end
+	local ir = state.castInterruptFeedbackR
+	local ig = state.castInterruptFeedbackG
+	local ib = state.castInterruptFeedbackB
+	local ia = state.castInterruptFeedbackA
+	if ir == nil then
+		local interruptColor = castCfg.interruptFeedbackColor
+		if type(interruptColor) ~= "table" then interruptColor = castDefaults.interruptFeedbackColor end
+		if type(interruptColor) == "table" then
+			ir = interruptColor.r or interruptColor[1]
+			ig = interruptColor.g or interruptColor[2]
+			ib = interruptColor.b or interruptColor[3]
+			ia = interruptColor.a or interruptColor[4]
+		end
+		if ir == nil then ir = DEFAULT_INTERRUPT_FEEDBACK_COLOR[1] end
+		if ig == nil then ig = DEFAULT_INTERRUPT_FEEDBACK_COLOR[2] end
+		if ib == nil then ib = DEFAULT_INTERRUPT_FEEDBACK_COLOR[3] end
+		if ia == nil then ia = DEFAULT_INTERRUPT_FEEDBACK_COLOR[4] end
+		state.castInterruptFeedbackR = ir
+		state.castInterruptFeedbackG = ig
+		state.castInterruptFeedbackB = ib
+		state.castInterruptFeedbackA = ia
+	end
+	setCastbarColorWithGradient(state.castBar, nil, ir, ig, ib, ia)
+	state.castBar:SetMinMaxValues(0, 1)
+	state.castBar:SetValue(1)
+	if state.castDuration then
+		state.castDuration:SetText("")
+		state.castDuration:Hide()
+	end
+	if state.castName then
+		local label = (event == "UNIT_SPELLCAST_FAILED") and FAILED or INTERRUPTED
+		state.castName:SetText(label)
+		state.castName:SetShown(castCfg.showName ~= false)
+	end
+	if state.castIcon then
+		local iconTexture = UFHelper.resolveCastIconTexture((state.castInfo and state.castInfo.texture) or state.castIconTexture)
+		local showIcon = shouldShowCastIcon(castCfg, castDefaults)
+		if state.castIconHolder then state.castIconHolder:SetShown(showIcon) end
+		state.castIcon:SetShown(showIcon)
+		if showIcon then
+			state.castIcon:SetTexture(iconTexture)
+			state.castIconTexture = iconTexture
+		end
+	end
+	applyCastIconBorder(castCfg, castDefaults)
+
+	local showInterruptFeedbackGlow = state.castInterruptFeedbackGlow
+	if showInterruptFeedbackGlow == nil then
+		showInterruptFeedbackGlow = castCfg.showInterruptFeedbackGlow
+		if showInterruptFeedbackGlow == nil then showInterruptFeedbackGlow = castDefaults.showInterruptFeedbackGlow end
+		if showInterruptFeedbackGlow == nil then showInterruptFeedbackGlow = true end
+		showInterruptFeedbackGlow = showInterruptFeedbackGlow ~= false
+		state.castInterruptFeedbackGlow = showInterruptFeedbackGlow
+	end
+	if showInterruptFeedbackGlow ~= false then
+		local glowAlpha = (useDefault and 0.4 or 0.25) * (ia or 1)
+		if glowAlpha < 0 then
+			glowAlpha = 0
+		elseif glowAlpha > 1 then
+			glowAlpha = 1
+		end
+		if not state.castInterruptGlow then
+			state.castInterruptGlow = state.castBar:CreateTexture(nil, "OVERLAY")
+			if state.castInterruptGlow.SetAtlas then
+				state.castInterruptGlow:SetAtlas("cast_interrupt_outerglow", true)
+			else
+				state.castInterruptGlow:SetTexture("Interface\\CastingBar\\UI-CastingBar-Border")
+			end
+			if state.castInterruptGlow.SetBlendMode then state.castInterruptGlow:SetBlendMode("ADD") end
+			state.castInterruptGlow:SetPoint("CENTER", state.castBar, "CENTER", 0, 0)
+			state.castInterruptGlow:SetAlpha(0)
+		end
+		if state.castInterruptGlow.SetVertexColor then state.castInterruptGlow:SetVertexColor(ir, ig, ib, 1) end
+		do
+			local w, h = state.castBar:GetSize()
+			if w and h and w > 0 and h > 0 then
+				state.castInterruptGlow:SetSize(w + (h * 0.5), h * 2.2)
+				if state.castInterruptGlow.SetScale then state.castInterruptGlow:SetScale(1) end
+			elseif state.castInterruptGlow.SetScale then
+				state.castInterruptGlow:SetScale(0.5)
+			end
+		end
+		if not state.castInterruptGlowAnim then
+			state.castInterruptGlowAnim = state.castInterruptGlow:CreateAnimationGroup()
+			local fade = state.castInterruptGlowAnim:CreateAnimation("Alpha")
+			fade:SetFromAlpha(glowAlpha)
+			fade:SetToAlpha(0)
+			fade:SetDuration(1.0)
+			state.castInterruptGlowAnim.fade = fade
+			state.castInterruptGlowAnim:SetScript("OnFinished", function() state.castInterruptGlow:Hide() end)
+		elseif state.castInterruptGlowAnim.fade and state.castInterruptGlowAnim.fade.SetFromAlpha then
+			state.castInterruptGlowAnim.fade:SetFromAlpha(glowAlpha)
+		end
+		state.castInterruptGlow:SetAlpha(glowAlpha)
+		state.castInterruptGlow:Show()
+		state.castInterruptGlowAnim:Stop()
+		state.castInterruptGlowAnim:Play()
+	elseif state.castInterruptGlow then
+		if state.castInterruptGlowAnim then state.castInterruptGlowAnim:Stop() end
+		state.castInterruptGlow:Hide()
+	end
+
+	if not state.castInterruptAnim then
+		state.castInterruptAnim = state.castBar:CreateAnimationGroup()
+		local hold = state.castInterruptAnim:CreateAnimation("Alpha")
+		hold:SetOrder(1)
+		hold:SetFromAlpha(1)
+		hold:SetToAlpha(1)
+		hold:SetDuration(1.0)
+		state.castInterruptAnim.hold = hold
+		local fade = state.castInterruptAnim:CreateAnimation("Alpha")
+		fade:SetOrder(2)
+		fade:SetFromAlpha(1)
+		fade:SetToAlpha(0)
+		fade:SetDuration(0.3)
+		state.castInterruptAnim.fade = fade
+	end
+	state.castBar:SetAlpha(1)
+	state.castBar:Show()
+	state.castInterruptAnim:Stop()
+	state.castInterruptAnim:SetScript("OnFinished", function()
+		if state.castInterruptToken ~= token then return end
+		stopCast()
+		if shouldShowSampleCast() then setSampleCast() end
+	end)
+	state.castInterruptAnim:Play()
+end
+
+local function setCastInfoFromUnit()
+	local castCfg, castDefaults = ensureCastConfig()
+	if not isCastbarEnabled() then
+		stopCast()
+		return
+	end
+	clearCastInterruptState()
+	if castCfg.enabled == false then
+		stopCast()
+		return
+	end
+
+	local name, text, texture, startTimeMS, endTimeMS, _, notInterruptible, spellId, isEmpowered, numEmpowerStages, castBarID = UnitChannelInfo(UNIT)
+	local isChannel = true
+	local castGUID
+	if not name then
+		name, text, texture, startTimeMS, endTimeMS, _, castGUID, notInterruptible, spellId, castBarID = UnitCastingInfo(UNIT)
+		isChannel = false
+		isEmpowered = nil
+		numEmpowerStages = nil
+	end
+	if not name then
+		if shouldShowSampleCast() then
+			setSampleCast()
+		else
+			stopCast()
+		end
+		return
+	end
+
+	applyCastLayout(castCfg, castDefaults)
+	applyCastFont(castCfg, castDefaults)
+
+	local isEmpoweredCast = isChannel and (issecretvalue and not issecretvalue(isEmpowered)) and isEmpowered and numEmpowerStages and numEmpowerStages > 0
+	if isEmpoweredCast and startTimeMS and endTimeMS and (not issecretvalue or (not issecretvalue(startTimeMS) and not issecretvalue(endTimeMS))) then
+		local totalMs = UFHelper.getEmpoweredChannelDurationMilliseconds and UFHelper.getEmpoweredChannelDurationMilliseconds(UNIT)
+		if totalMs and totalMs > 0 and (not issecretvalue or not issecretvalue(totalMs)) then
+			endTimeMS = startTimeMS + totalMs
+		else
+			local hold = UFHelper.getEmpowerHoldMilliseconds and UFHelper.getEmpowerHoldMilliseconds(UNIT)
+			if hold and (not issecretvalue or not issecretvalue(hold)) then endTimeMS = endTimeMS + hold end
+		end
+	end
+
+	if issecretvalue and ((startTimeMS and issecretvalue(startTimeMS)) or (endTimeMS and issecretvalue(endTimeMS))) then
+		stopCast()
+		return
+	end
+	local duration = (endTimeMS or 0) - (startTimeMS or 0)
+	if not duration or duration <= 0 then
+		stopCast()
+		return
+	end
+
+	state.castInfo = {
+		name = text or name,
+		texture = UFHelper.resolveCastIconTexture(texture),
+		startTime = startTimeMS,
+		endTime = endTimeMS,
+		notInterruptible = notInterruptible,
+		isChannel = isChannel,
+		isEmpowered = isEmpowered,
+		numEmpowerStages = numEmpowerStages,
+		castGUID = castGUID,
+		castBarID = castBarID,
+		spellId = spellId,
+	}
+	configureCastStatic(castCfg, castDefaults)
+	if isEmpowered then
+		UFHelper.setupEmpowerStages(state, UNIT, numEmpowerStages)
+	else
+		UFHelper.clearEmpowerStages(state)
+	end
+	if not onUpdateActive then
+		state.castBar:SetScript("OnUpdate", updateCastBar)
+		onUpdateActive = true
+	end
+	updateCastBar()
+end
+
+function Castbar.Refresh()
+	ensureCastConfig()
+	if not isCastbarEnabled() then
+		Castbar._runtimeActive = false
+		local eventFrame = Castbar._eventFrame
+		if eventFrame and Castbar._eventsRegistered then
+			eventFrame:UnregisterAllEvents()
+			Castbar._eventsRegistered = nil
+		end
+		disableEditModeRegistration()
+		if state.castBar then stopCast() end
+		return
+	end
+
+	Castbar._runtimeActive = true
+	ensureFrame()
+	ensureEditModeRegistration()
+	tryRegisterEditModeSettings()
+	local eventFrame = Castbar._eventFrame
+	if not eventFrame then
+		eventFrame = CreateFrame("Frame")
+		Castbar._eventFrame = eventFrame
+	end
+	if eventFrame:GetScript("OnEvent") ~= Castbar._onEvent then eventFrame:SetScript("OnEvent", Castbar._onEvent) end
+	if not Castbar._eventsRegistered then
+		eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+		eventFrame:RegisterEvent("EDIT_MODE_LAYOUTS_UPDATED")
+		if eventFrame.RegisterUnitEvent then
+			eventFrame:RegisterUnitEvent("UNIT_SPELLCAST_SENT", UNIT)
+			eventFrame:RegisterUnitEvent("UNIT_SPELLCAST_START", UNIT)
+			eventFrame:RegisterUnitEvent("UNIT_SPELLCAST_STOP", UNIT)
+			eventFrame:RegisterUnitEvent("UNIT_SPELLCAST_FAILED", UNIT)
+			eventFrame:RegisterUnitEvent("UNIT_SPELLCAST_INTERRUPTED", UNIT)
+			eventFrame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_START", UNIT)
+			eventFrame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_STOP", UNIT)
+			eventFrame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_UPDATE", UNIT)
+			eventFrame:RegisterUnitEvent("UNIT_SPELLCAST_EMPOWER_START", UNIT)
+			eventFrame:RegisterUnitEvent("UNIT_SPELLCAST_EMPOWER_UPDATE", UNIT)
+			eventFrame:RegisterUnitEvent("UNIT_SPELLCAST_DELAYED", UNIT)
+			eventFrame:RegisterUnitEvent("UNIT_SPELLCAST_EMPOWER_STOP", UNIT)
+		else
+			eventFrame:RegisterEvent("UNIT_SPELLCAST_SENT")
+			eventFrame:RegisterEvent("UNIT_SPELLCAST_START")
+			eventFrame:RegisterEvent("UNIT_SPELLCAST_STOP")
+			eventFrame:RegisterEvent("UNIT_SPELLCAST_FAILED")
+			eventFrame:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED")
+			eventFrame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_START")
+			eventFrame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_STOP")
+			eventFrame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_UPDATE")
+			eventFrame:RegisterEvent("UNIT_SPELLCAST_EMPOWER_START")
+			eventFrame:RegisterEvent("UNIT_SPELLCAST_EMPOWER_UPDATE")
+			eventFrame:RegisterEvent("UNIT_SPELLCAST_DELAYED")
+			eventFrame:RegisterEvent("UNIT_SPELLCAST_EMPOWER_STOP")
+		end
+		Castbar._eventsRegistered = true
+	end
+	local editMode = addon.EditMode
+	if editMode and editMode.IsInEditMode and editMode:IsInEditMode() and editMode.RefreshFrame then editMode:RefreshFrame(EDITMODE_FRAME_ID) end
+	setCastInfoFromUnit()
+end
+
+Castbar._onEvent = function(_, event, unit, ...)
+	if not isRuntimeActive() then return end
+	if event == "PLAYER_ENTERING_WORLD" or event == "EDIT_MODE_LAYOUTS_UPDATED" then
+		Castbar.Refresh()
+		return
+	end
+
+	if unit ~= UNIT then return end
+	if not isCastbarEnabled() then
+		Castbar.Refresh()
+		return
+	end
+
+	if event == "UNIT_SPELLCAST_SENT" then
+		state.castTarget = ...
+	elseif
+		event == "UNIT_SPELLCAST_START"
+		or event == "UNIT_SPELLCAST_CHANNEL_START"
+		or event == "UNIT_SPELLCAST_CHANNEL_UPDATE"
+		or event == "UNIT_SPELLCAST_EMPOWER_START"
+		or event == "UNIT_SPELLCAST_EMPOWER_UPDATE"
+		or event == "UNIT_SPELLCAST_DELAYED"
+	then
+		if event == "UNIT_SPELLCAST_CHANNEL_UPDATE" or event == "UNIT_SPELLCAST_EMPOWER_UPDATE" or event == "UNIT_SPELLCAST_DELAYED" then
+			local _, _, castBarID = ...
+			if not state.castBar or not state.castBar:IsShown() then return end
+			if state.castInfo and state.castInfo.castBarID and castBarID and state.castInfo.castBarID ~= castBarID then return end
+		end
+		setCastInfoFromUnit()
+	elseif event == "UNIT_SPELLCAST_INTERRUPTED" or event == "UNIT_SPELLCAST_FAILED" then
+		local castGUID, spellId, castBarID
+		if event == "UNIT_SPELLCAST_INTERRUPTED" then
+			castGUID, spellId, _, castBarID = ...
+		else
+			castGUID, spellId, castBarID = ...
+		end
+		if not shouldIgnoreCastFail(castGUID, spellId, castBarID) then showCastInterrupt(event) end
+	elseif event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_CHANNEL_STOP" or event == "UNIT_SPELLCAST_EMPOWER_STOP" then
+		local castBarID
+		if event == "UNIT_SPELLCAST_CHANNEL_STOP" then
+			_, _, _, castBarID = ...
+		elseif event == "UNIT_SPELLCAST_EMPOWER_STOP" then
+			_, _, _, _, castBarID = ...
+		else
+			_, _, castBarID = ...
+		end
+		if not state.castInterruptActive then
+			if state.castInfo and state.castInfo.castBarID and castBarID and state.castInfo.castBarID ~= castBarID then return end
+			stopCast()
+			if shouldShowSampleCast() then setSampleCast() end
+		end
+	end
+end
+
+if IsLoggedIn and IsLoggedIn() then
+	if isCastbarEnabled() then Castbar.Refresh() end
+else
+	local startupFrame = Castbar._startupFrame
+	if not startupFrame then
+		startupFrame = CreateFrame("Frame")
+		Castbar._startupFrame = startupFrame
+		startupFrame:RegisterEvent("PLAYER_LOGIN")
+		startupFrame:SetScript("OnEvent", function(self, event)
+			if event ~= "PLAYER_LOGIN" then return end
+			self:UnregisterAllEvents()
+			self:SetScript("OnEvent", nil)
+			Castbar._startupFrame = nil
+			if isCastbarEnabled() then Castbar.Refresh() end
+		end)
+	end
+end

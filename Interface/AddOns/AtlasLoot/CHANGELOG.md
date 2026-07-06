@@ -1,5 +1,37 @@
 ﻿# Changelog
 
+## 9.22.10 - July 1, 2026
+### Added
+- Added Dragonflight Timewalking rewards
+- Added July Trading Post items to Collections
+- Added Darkspear Dash items
+- Added DF and SL Leatherworking recipes
+- Added DF and SL Tailoring recipes
+
+## 9.22.9 - June 23, 2026
+### Added
+- Added new Midsummer Fire Festival items
+
+## 9.22.8 - June 19, 2026
+### Added
+- Added Sporefall
+- Added 12.0.7 mounts, pets and toys to Collections
+- Added Timewalking difficulty to Dragonflight instances
+- Added two missing Dragonflight world bosses
+
+## 9.22.7 - June 16, 2026
+### Added
+- Added Timewalking difficulty to Vanilla instances
+- Added DF and SL Alchemy recipes
+- Added DF and SL Blacksmithing recipes
+- Added DF and SL Enchanting recipes
+- Added DF and SL Engineering recipes
+- Added DF and SL Inscription recipes
+- Added DF and SL Jewelcrafting recipes
+### Changed
+- Significant additions, fixes and changes to Vanilla instance loot
+- Updated TOC to 12.0.7
+
 ## 9.22.6 - June 1, 2026
 ### Added
 - Added June Trading Post items to Collections

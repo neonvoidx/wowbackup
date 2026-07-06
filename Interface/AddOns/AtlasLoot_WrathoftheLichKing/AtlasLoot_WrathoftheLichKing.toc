@@ -1,4 +1,4 @@
-## Interface: 120005
+## Interface: 120007
 
 ## Title: AtlasLoot |cFF0099FF[Wrath of the Lich King]|r
 ## Title-deDE: AtlasLoot |cFF0099FF[Wrath of the Lich King]|r
@@ -19,7 +19,7 @@
 ## Notes-zhTW: AtlasLoot 巫妖王之怒資料片物品掉落資料庫
 
 ## Author: nanderson11, Lag, Proteyer, Arith
-## Version: v9.22.6
+## Version: v9.22.10
 ## Group: AtlasLoot
 ## IconTexture: Interface\Icons\INV_Box_01
 ## Dependencies: AtlasLoot

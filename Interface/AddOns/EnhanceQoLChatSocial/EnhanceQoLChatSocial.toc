@@ -1,0 +1,23 @@
+## Interface: 120007, 120100
+## Title: Enhance QoL Chat & Social
+## Author: R41Z0R
+## Version: 11.6.0
+## Notes: Chat windows, chat history, instant messages, social privacy and ignore tools
+## Notes-deDE: Chatfenster, Chatverlauf, Instant Messenger, Privatsphaere und Ignorierwerkzeuge
+## Notes-esES: Ventanas de chat, historial, mensajes instantaneos, privacidad social e ignorados
+## Notes-esMX: Ventanas de chat, historial, mensajes instantaneos, privacidad social e ignorados
+## Notes-frFR: Fenetres de discussion, historique, messages instantanes, confidentialite sociale et ignores
+## Notes-itIT: Finestre chat, cronologia, messaggi istantanei, privacy sociale e strumenti ignora
+## Notes-koKR: 대화창, 대화 기록, 즉시 메시지, 소셜 개인정보 및 차단 도구
+## Notes-ptBR: Janelas de bate-papo, historico, mensagens instantaneas, privacidade social e ignorados
+## Notes-ruRU: Окна чата, история, мгновенные сообщения, приватность и инструменты игнора
+## Notes-zhCN: 聊天窗口、聊天记录、即时消息、社交隐私和屏蔽工具
+## Notes-zhTW: 聊天視窗、聊天記錄、即時訊息、社交隱私與封鎖工具
+## Dependencies: EnhanceQoL
+## IconTexture: Interface\AddOns\EnhanceQoL\Icons\Icon.tga
+## Retail: true
+## X-Compatible-With: retail
+## LoadOnDemand: 1
+## Globe-Main: EnhanceQoL
+
+ChatSocial.xml
