@@ -406,11 +406,23 @@ local function OnEvent(self, event, ...)
 			-- SetCVar("nameplateMinScale", 1)
 			-- SetCVar("nameplateMaxScale", 1)
 			-- SetCVar("nameplateGlobalScale", 1.1)
-			SetCVar("nameplateOverlapV", 0.9) -- Vertical overlap
+			SetCVar("nameplateOverlapV", 1.1) -- Vertical overlap
 			SetCVar("nameplateOverlapH", 0.8) -- Horizontal overlap
 			SetCVar("nameplateMaxAlpha", 1)
-			SetCVar("nameplateMinAlpha", 0.9)
+			SetCVar("nameplateMinAlpha", 0.6)
 			SetCVar("nameplateOccludedAlphaMult", 0.4)
+			SetCVar("nameplateSelectedScale", 1.1)
+			SetCVar("nameplateAuraScale", 1.2)
+			SetCVar("nameplateDebuffPadding", 6)
+			SetCVar("nameplateShowAll", 1)
+			SetCVar("nameplateShowCastBars", 1)
+			SetCVar("nameplateShowDebuffsOnFriendly", 1)
+			SetCVar("nameplateShowEnemies", 1)
+			SetCVar("nameplateShowEnemyGuardians", 1)
+			SetCVar("nameplateShowEnemyMinions", 1)
+			SetCVar("nameplateShowEnemyMinus", 0)
+			SetCVar("nameplateShowEnemyPets", 1)
+			SetCVar("nameplateShowEnemyTotems", 1)
 			-- Show friendly plates for arena
 			local isInInstance, instanceType = IsInInstance()
 			-- check if we are entering or leaving an arena/bg

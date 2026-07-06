@@ -3,12 +3,12 @@ AtlasLootDB = {
 ["profileKeys"] = {
 ["Starphage - Tichondrius"] = "Default",
 ["Auteist - Tichondrius"] = "Default",
-["Manyfaced - Tichondrius"] = "Default",
 ["Neonvoid - Tichondrius"] = "Default",
+["Hellavator - Tichondrius"] = "Default",
 ["Smaugchamp - Tichondrius"] = "Default",
 ["Bigxthazug - Tichondrius"] = "Default",
 ["Stormclout - Tichondrius"] = "Default",
-["Hellavator - Tichondrius"] = "Default",
+["Manyfaced - Tichondrius"] = "Default",
 },
 ["profiles"] = {
 ["Default"] = {
@@ -24,6 +24,20 @@ nil,
 ["Button"] = {
 ["Item"] = {
 ["ClickHandler"] = {
+["types"] = {
+["ChatLink"] = true,
+["SetFavourite"] = true,
+["DressUp"] = true,
+["Azerite"] = true,
+},
+["LeftButton"] = {
+["Shift"] = "ChatLink",
+["Ctrl"] = "DressUp",
+["Alt"] = "SetFavourite",
+},
+["RightButton"] = {
+["Shift"] = "Azerite",
+},
 ["__defaults"] = {
 ["LeftButton"] = {
 ["Shift"] = "ChatLink",
@@ -39,42 +53,28 @@ nil,
 ["DressUp"] = true,
 ["SetFavourite"] = true,
 },
-},
-["LeftButton"] = {
-["Shift"] = "ChatLink",
-["Ctrl"] = "DressUp",
-["Alt"] = "SetFavourite",
-},
-["RightButton"] = {
-["Shift"] = "Azerite",
-},
-["types"] = {
-["ChatLink"] = true,
-["Azerite"] = true,
-["DressUp"] = true,
-["SetFavourite"] = true,
 },
 },
 },
 ["Set"] = {
 ["ClickHandler"] = {
+["types"] = {
+["DressUp"] = true,
+["OpenSet"] = true,
+},
+["LeftButton"] = {
+["None"] = "OpenSet",
+["Ctrl"] = "DressUp",
+},
 ["__defaults"] = {
-["LeftButton"] = {
-["Ctrl"] = "DressUp",
-["None"] = "OpenSet",
-},
 ["types"] = {
 ["DressUp"] = true,
 ["OpenSet"] = true,
 },
-},
 ["LeftButton"] = {
-["Ctrl"] = "DressUp",
 ["None"] = "OpenSet",
+["Ctrl"] = "DressUp",
 },
-["types"] = {
-["DressUp"] = true,
-["OpenSet"] = true,
 },
 },
 },

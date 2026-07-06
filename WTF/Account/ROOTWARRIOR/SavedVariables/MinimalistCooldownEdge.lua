@@ -25,6 +25,7 @@ MinimalistCooldownEdgeDB_v2 = {
 },
 },
 ["durationTextColors"] = {
+["enabled"] = true,
 ["thresholds"] = {
 nil,
 {
@@ -34,7 +35,6 @@ nil,
 ["threshold"] = 60,
 },
 },
-["enabled"] = true,
 },
 },
 },
