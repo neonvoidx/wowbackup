@@ -15,7 +15,7 @@ KeystoneLootCharDB = {
 ["track"] = "champion",
 ["rank"] = 1,
 },
-["specId"] = 269,
+["specId"] = 0,
 ["classId"] = 10,
 ["slotId"] = -1,
 ["raid"] = {

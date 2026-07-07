@@ -3,18 +3,8 @@ PremadeGroupsFilterState = {
 ["c114f4"] = {
 ["enabled"] = true,
 },
-["c1f4"] = {
-["role"] = {
-["heals"] = {
-},
-["tanks"] = {
-},
-["dps"] = {
-},
-["members"] = {
-},
-["expression"] = "",
-},
+["c9f8"] = {
+["enabled"] = true,
 },
 ["c7f8"] = {
 ["role"] = {
@@ -62,7 +52,7 @@ PremadeGroupsFilterState = {
 ["expression"] = "",
 },
 },
-["c3f165"] = {
+["c1f4"] = {
 ["role"] = {
 ["heals"] = {
 },
@@ -111,14 +101,14 @@ PremadeGroupsFilterState = {
 ["act"] = false,
 },
 ["dungeon1"] = true,
-["dungeon8"] = true,
-["dungeon4"] = true,
+["dungeon3"] = true,
 ["heals"] = {
 ["max"] = "",
 ["min"] = "",
 ["act"] = false,
 },
-["dungeon3"] = true,
+["dungeon4"] = true,
+["dungeon8"] = true,
 },
 },
 ["c6f8"] = {
@@ -134,8 +124,18 @@ PremadeGroupsFilterState = {
 ["expression"] = "",
 },
 },
-["c114f5"] = {
-["enabled"] = true,
+["c6f4"] = {
+["role"] = {
+["heals"] = {
+},
+["tanks"] = {
+},
+["dps"] = {
+},
+["members"] = {
+},
+["expression"] = "",
+},
 },
 ["c121f4"] = {
 ["enabled"] = true,
@@ -156,7 +156,7 @@ PremadeGroupsFilterState = {
 ["min"] = "",
 ["act"] = false,
 },
-["members"] = {
+["defeated"] = {
 ["max"] = "",
 ["min"] = "",
 ["act"] = false,
@@ -166,7 +166,7 @@ PremadeGroupsFilterState = {
 ["min"] = "",
 ["act"] = false,
 },
-["defeated"] = {
+["members"] = {
 ["max"] = "",
 ["min"] = "",
 ["act"] = false,
@@ -177,25 +177,15 @@ PremadeGroupsFilterState = {
 ["c114f6"] = {
 ["enabled"] = true,
 },
-["c6f4"] = {
-["role"] = {
-["heals"] = {
-},
-["tanks"] = {
-},
-["dps"] = {
-},
-["members"] = {
-},
-["expression"] = "",
-},
+["c114f5"] = {
+["enabled"] = true,
 },
 ["c3f5"] = {
 ["enabled"] = true,
 ["raid"] = {
 ["difficulty"] = {
-["val"] = 2,
 ["act"] = true,
+["val"] = 2,
 },
 ["heals"] = {
 ["max"] = "3",
@@ -207,11 +197,7 @@ PremadeGroupsFilterState = {
 ["min"] = "0",
 ["act"] = true,
 },
-["members"] = {
-["max"] = "",
-["min"] = "",
-["act"] = false,
-},
+["matchingid"] = false,
 ["defeated"] = {
 ["max"] = "4",
 ["min"] = "3",
@@ -222,16 +208,30 @@ PremadeGroupsFilterState = {
 ["min"] = "",
 ["act"] = false,
 },
-["matchingid"] = false,
+["members"] = {
+["max"] = "",
+["min"] = "",
+["act"] = false,
+},
+["expression"] = "",
+},
+["mini"] = {
+["sorting"] = "",
 ["expression"] = "",
 },
 ["minimized"] = false,
-["mini"] = {
+},
+["c3f165"] = {
+["role"] = {
+["heals"] = {
+},
+["tanks"] = {
+},
+["dps"] = {
+},
+["members"] = {
+},
 ["expression"] = "",
-["sorting"] = "",
 },
-},
-["c9f8"] = {
-["enabled"] = true,
 },
 }

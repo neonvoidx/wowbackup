@@ -396,8 +396,7 @@ local function OnEvent(self, event, ...)
 		-- Just sets default nameplate stuff if not using a nameplate addon
 		local bbpLoaded, _ = C_AddOns.IsAddOnLoaded("BetterBlizzPlates")
 		local platynatorLoaded, _ = C_AddOns.IsAddOnLoaded("Platynator")
-		local platerLoaded, _ = C_AddOns.IsAddOnLoaded("Plater")
-		if not bbpLoaded and not platynatorLoaded and not platerLoaded then
+		if not bbpLoaded and not platynatorLoaded then
 			-- SetCVar("NamePlateHorizontalScale", 1) -- reduce horizontal scale
 			-- SetCVar("NamePlateVerticalScale", 3) -- reduce horizontal scale
 			-- SetCVar("nameplateLargerScale", 1)
@@ -426,12 +425,12 @@ local function OnEvent(self, event, ...)
 			-- Show friendly plates for arena
 			local isInInstance, instanceType = IsInInstance()
 			-- check if we are entering or leaving an arena/bg
-			if isInInstance and instanceType == "arena" then
+			if isInInstance and instanceType == "arena" or isInInstance and instanceType == "pvp" then
 				-- turn on
-				SetCVar("nameplateShowFriends", 1)
+				SetCVar("nameplateShowFriendlyPlayers", 1)
 			else
 				-- turn off
-				SetCVar("nameplateShowFriends", 0)
+				SetCVar("nameplateShowFriendlyPlayers", 0)
 			end
 		end
 		-- #endregion

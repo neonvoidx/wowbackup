@@ -155,32 +155,66 @@ function LayoutEngine.BuildRows(iconLimit, children)
 end
 
 -- ViewerAdapters: BuffIcon/BuffBar collection + hooks
-function ViewerAdapters.GetBuffIconFrames()
+--
+-- Partitions the buff icon frames by their custom-container assignment (BuffData).
+-- `baseVisible`/`baseTotal` are the icons that stay in the default row (base total
+-- counts hidden icons too, so the row can stay centered as buffs toggle); every
+-- assigned-and-active buff goes into `containerVisible[index]` (visible only, since
+-- containers grow from an anchor and size to fit). When the container feature is
+-- off this collapses to the previous behavior: everything is "base".
+function ViewerAdapters.CollectBuffIcons()
+    local baseVisible, baseTotal = {}, 0
+    local containerVisible, containerTotal = {}, {}
     if not BuffIconCooldownViewer then
-        return {}
+        return baseVisible, baseTotal, containerVisible, containerTotal
     end
-    local visible = {}
+    local buffsEnabled = ns.BuffData and ns.BuffData.IsEnabled()
     local children = BuffIconCooldownViewer:GetItemFrames()
-    local total = 0
     for _, child in ipairs(children) do
         if child and (child.icon or child.Icon) and child.layoutIndex ~= nil then
-            total = total + 1
-            if child:IsShown() then
-                visible[#visible + 1] = child
-            end
             if not ns.API:GetIsAffected(child, "cooldownManagerHooked") then
                 ns.API:SetAffected(child, "cooldownManagerHooked")
                 hooksecurefunc(child, "OnActiveStateChanged", ViewerAdapters.UpdateBuffIcons)
                 hooksecurefunc(child, "OnUnitAuraAddedEvent", ViewerAdapters.UpdateBuffIcons)
                 hooksecurefunc(child, "OnUnitAuraRemovedEvent", ViewerAdapters.UpdateBuffIcons)
             end
+
+            local containerIndex = nil
+            if buffsEnabled then
+                local cooldownID = child.cooldownID or (child.GetCooldownID and child:GetCooldownID())
+                containerIndex = cooldownID and ns.BuffData.GetContainerForCooldownID(cooldownID) or nil
+            end
+
+            if containerIndex then
+                -- Total counts assigned buffs whether or not they're currently active,
+                -- so the container keeps a stable footprint and centers its visible
+                -- icons instead of collapsing to just the shown ones.
+                containerTotal[containerIndex] = (containerTotal[containerIndex] or 0) + 1
+                local group = containerVisible[containerIndex]
+                if not group then
+                    group = {}
+                    containerVisible[containerIndex] = group
+                end
+                if child:IsShown() then
+                    group[#group + 1] = child
+                end
+            else
+                baseTotal = baseTotal + 1
+                if child:IsShown() then
+                    baseVisible[#baseVisible + 1] = child
+                end
+            end
         end
     end
 
-    table.sort(visible, function(a, b)
+    local function byLayoutIndex(a, b)
         return (a.layoutIndex or 0) < (b.layoutIndex or 0)
-    end)
-    return visible, total
+    end
+    table.sort(baseVisible, byLayoutIndex)
+    for _, group in pairs(containerVisible) do
+        table.sort(group, byLayoutIndex)
+    end
+    return baseVisible, baseTotal, containerVisible, containerTotal
 end
 
 function ViewerAdapters.GetBuffBarFrames(includeInactive)
@@ -226,15 +260,12 @@ function ViewerAdapters.GetBuffBarFrames(includeInactive)
     return active
 end
 
-function ViewerAdapters.UpdateBuffIcons()
-    if
-        not ns.Runtime:IsReady(BuffIconCooldownViewer)
-        or ns.db.profile.cooldownManager_alignBuffIcons_growFromDirection == "Disable"
-    then
-        return
-    end
-
-    local icons, total = ViewerAdapters.GetBuffIconFrames()
+-- Lays out the default-row buff icons into BuffIconCooldownViewer using CMC's
+-- centering. `total` (>= #icons) keeps the visible icons centered as if the hidden
+-- ones still occupied their slots. When the container feature forces a layout, a
+-- base alignment of "Disable" is treated as "CENTER" so the row stays compact after
+-- some icons have been pulled into containers.
+function ViewerAdapters.LayoutBaseBuffRow(icons, total, forceLayout)
     local count = #icons
     if count == 0 then
         return
@@ -243,6 +274,7 @@ function ViewerAdapters.UpdateBuffIcons()
     local refIcon = icons[1]
     local iconWidth = refIcon:GetWidth()
     local iconHeight = refIcon:GetHeight()
+    local iconScale = refIcon:GetScale()
     if not iconWidth or iconWidth == 0 or not iconHeight or iconHeight == 0 then
         return
     end
@@ -251,6 +283,9 @@ function ViewerAdapters.UpdateBuffIcons()
     local iconDirection = BuffIconCooldownViewer.iconDirection == 1 and "NORMAL" or "REVERSED"
 
     local alignment = ns.db.profile.cooldownManager_alignBuffIcons_growFromDirection or "CENTER"
+    if forceLayout and (alignment == "Disable" or alignment == nil) then
+        alignment = "CENTER"
+    end
     local padding = isHorizontal and BuffIconCooldownViewer.childXPadding or BuffIconCooldownViewer.childYPadding
 
     if isHorizontal then
@@ -266,7 +301,11 @@ function ViewerAdapters.UpdateBuffIcons()
             anchor = iconDirection == "NORMAL" and "TOPRIGHT" or "TOPLEFT"
             relativePoint = iconDirection == "NORMAL" and "TOPRIGHT" or "TOPLEFT"
         else -- CENTER
-            offsets = LayoutEngine.CenteredRowXOffsets(count, iconWidth, padding, iconDirectionModifier, total)
+            -- With containers active we pack the base group tight (limit == count)
+            -- and resize the viewer to fit it below, so it centers on its Edit Mode
+            -- anchor instead of being left-aligned inside a stale, wider viewer.
+            local limit = forceLayout and count or total
+            offsets = LayoutEngine.CenteredRowXOffsets(count, iconWidth, padding, iconDirectionModifier, limit)
             anchor = iconDirection == "NORMAL" and "TOPLEFT" or "TOPRIGHT"
             relativePoint = iconDirection == "NORMAL" and "TOPLEFT" or "TOPRIGHT"
         end
@@ -290,7 +329,8 @@ function ViewerAdapters.UpdateBuffIcons()
             anchor = iconDirection == "NORMAL" and "TOPLEFT" or "BOTTOMLEFT"
             relativePoint = iconDirection == "NORMAL" and "TOPLEFT" or "BOTTOMLEFT"
         else -- CENTER
-            offsets = LayoutEngine.CenteredColYOffsets(count, iconHeight, padding, iconDirectionModifier, total)
+            local limit = forceLayout and count or total
+            offsets = LayoutEngine.CenteredColYOffsets(count, iconHeight, padding, iconDirectionModifier, limit)
             anchor = iconDirection == "NORMAL" and "BOTTOMLEFT" or "TOPLEFT"
             relativePoint = iconDirection == "NORMAL" and "BOTTOMLEFT" or "TOPLEFT"
         end
@@ -301,15 +341,69 @@ function ViewerAdapters.UpdateBuffIcons()
             icon:SetPoint(anchor, BuffIconCooldownViewer, relativePoint, 0, y)
         end
     end
+
+    -- With containers active, some icons have been pulled out but Blizzard keeps the
+    -- viewer sized for all of them (and re-sizes it to full width on every combat
+    -- RefreshLayout/aura update). Shrink it to just the base group so the row stays
+    -- centered on its Edit Mode anchor. SetSize on these EditMode viewers is allowed in
+    -- combat (Essential/Utility do the same unguarded), so we re-assert it in combat too
+    -- rather than let the viewer snap back to its original size.
+    if forceLayout then
+        local targetWidth, targetHeight
+        if isHorizontal then
+            targetWidth = count * iconWidth + (count - 1) * padding
+            targetWidth = targetWidth * iconScale
+            targetHeight = iconHeight * iconScale
+        else
+            targetWidth = iconWidth * iconScale
+            targetHeight = count * iconHeight + (count - 1) * padding
+            targetHeight = targetHeight * iconScale
+        end
+        local currentWidth = BuffIconCooldownViewer:GetWidth() or 0
+        local currentHeight = BuffIconCooldownViewer:GetHeight() or 0
+        if math.abs(currentWidth - targetWidth) >= 2 or math.abs(currentHeight - targetHeight) >= 2 then
+            BuffIconCooldownViewer:SetSize(targetWidth, targetHeight)
+        end
+    end
+end
+
+function ViewerAdapters.UpdateBuffIcons()
+    if not ns.Runtime:IsReady(BuffIconCooldownViewer) then
+        return
+    end
+    local buffsEnabled = ns.BuffData and ns.BuffData.IsEnabled()
+    local baseDisabled = ns.db.profile.cooldownManager_alignBuffIcons_growFromDirection == "Disable"
+
+    -- Nothing to do when CMC is asked to leave the base row alone and the custom
+    -- container feature isn't pulling any icons out of it.
+    if baseDisabled and not buffsEnabled then
+        return
+    end
+
+    local baseVisible, baseTotal, containerVisible, containerTotal = ViewerAdapters.CollectBuffIcons()
+
+    -- Containers claim their icons out of the base row first. Each centers its visible
+    -- icons within a footprint sized to its total assigned buffs, so the group stays
+    -- put as individual buffs toggle; empty active containers keep a minimal box so
+    -- they stay selectable in Edit Mode.
+    if buffsEnabled and ns.BuffContainerViewer then
+        for i = 1, ns.BuffData.GetContainerCount() do
+            local container = ns.BuffContainerViewer:GetContainer(i)
+            if container and container.active then
+                container:LayoutIcons(containerVisible[i] or {}, containerTotal[i] or 0)
+            end
+        end
+    end
+
+    if #baseVisible > 0 then
+        ViewerAdapters.LayoutBaseBuffRow(baseVisible, baseTotal, buffsEnabled)
+    end
 end
 
 function ViewerAdapters.UpdateBuffBars()
     if not ns.Runtime:IsReady(BuffBarCooldownViewer) then
         return
     end
-    local iconMode = ns.BuffBarIconMode.IsEnabled()
-
-    ns.BuffBarIconMode.RefreshAll(ViewerAdapters.GetBuffBarFrames(true))
 
     local bars = ViewerAdapters.GetBuffBarFrames()
     local count = #bars
@@ -318,45 +412,6 @@ function ViewerAdapters.UpdateBuffBars()
     end
 
     local growSetting = ns.db.profile.cooldownManager_alignBuffBars_growFromDirection
-
-    if iconMode then
-        local scale = BuffBarCooldownViewer.iconScale
-        if not InCombatLockdown() then
-            BuffBarCooldownViewer:SetSize(35 * scale, 35 * scale)
-        end
-    else
-        if growSetting == "Disable" then
-            return
-        end
-
-        -- Layout() internally calls SetSize on the protected EditMode viewer,
-        -- which is blocked during combat lockdown. Guard like an explicit resize.
-        if not InCombatLockdown() then
-            BuffBarCooldownViewer:Layout()
-        end
-    end
-    local horizontalIcons = iconMode and ns.BuffBarIconMode.IsHorizontal()
-
-    if horizontalIcons then
-        local refBar = bars[1]
-        local barWidth = refBar and refBar:GetWidth()
-        local spacing = BuffBarCooldownViewer.childXPadding or BuffBarCooldownViewer.childYPadding or 0
-        if not barWidth or barWidth == 0 then
-            return
-        end
-
-        local totalWidth = (count * barWidth) + (math.max(count - 1, 0) * spacing)
-        local startX = -(totalWidth / 2) + (barWidth / 2)
-        local anchor = "BOTTOM"
-
-        for index, bar in ipairs(bars) do
-            local x = startX + ((index - 1) * (barWidth + spacing))
-            bar:ClearAllPoints()
-            bar:SetPoint(anchor, BuffBarCooldownViewer, anchor, x, 0)
-        end
-
-        return
-    end
 
     if growSetting == "Disable" then
         return
@@ -369,7 +424,7 @@ function ViewerAdapters.UpdateBuffBars()
         return
     end
 
-    local growFromBottom = (growSetting == "BOTTOM") or (growSetting == "ICONS_VERTICAL")
+    local growFromBottom = (growSetting == "BOTTOM")
 
     for index, bar in ipairs(bars) do
         local offsetIndex = index - 1

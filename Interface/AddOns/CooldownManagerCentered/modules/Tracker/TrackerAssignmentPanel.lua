@@ -226,31 +226,8 @@ StaticPopupDialogs["CMC_SET_CUSTOM_ACTIVE"] = {
     preferredIndex = 3,
 }
 
-local function IsTabButton(child)
-    if not child then
-        return false
-    end
-    if Affected(child).trackerIsTabButton then
-        return true
-    end
-    local name = child:GetName()
-    return name and name:find("Tab") ~= nil
-end
-
 function TrackerAssignmentPanel:HideMiscPanel(settingsFrame)
-    if Affected(settingsFrame).trackerMiscPanel then
-        Affected(settingsFrame).trackerMiscPanel:Hide()
-    end
-
-    local hidden = Affected(settingsFrame).trackerHiddenChildren
-    if hidden then
-        for _, child in ipairs(hidden) do
-            if child and not child:IsShown() then
-                child:Show()
-            end
-        end
-        Affected(settingsFrame).trackerHiddenChildren = nil
-    end
+    ns.SettingsTabs:DeactivateAll(settingsFrame)
 end
 
 -- Called when the custom tracker is turned off. If the Cooldown Settings window is
@@ -1455,23 +1432,16 @@ function TrackerAssignmentPanel:RefreshIcons()
     refreshCategory(Affected(miscPanel).hiddenCategory)
 end
 
+-- Delegates to the shared tab coordinator (ns.SettingsTabs) so this panel and the
+-- buff-container panel can never leak over each other or over native content.
 local function ShowMiscPanel(settingsFrame)
     local miscPanel = Affected(settingsFrame).trackerMiscPanel
     if not miscPanel then
         return
     end
-
-    local hidden = {}
-    for _, child in ipairs({ settingsFrame:GetChildren() }) do
-        if child:IsShown() and child ~= miscPanel and not IsTabButton(child) then
-            child:Hide()
-            table.insert(hidden, child)
-        end
-    end
-
-    Affected(settingsFrame).trackerHiddenChildren = hidden
-    TrackerAssignmentPanel:RefreshMiscPanel(settingsFrame)
-    miscPanel:Show()
+    ns.SettingsTabs:Activate(settingsFrame, miscPanel, function()
+        TrackerAssignmentPanel:RefreshMiscPanel(settingsFrame)
+    end)
 end
 
 function TrackerAssignmentPanel:EnsureMiscSettingsTab(settingsFrame)
@@ -1485,7 +1455,7 @@ function TrackerAssignmentPanel:EnsureMiscSettingsTab(settingsFrame)
     miscPanel.Inset.Bg:SetAtlas("character-panel-background", true)
     miscPanel.Inset.Bg:SetHorizTile(false)
     miscPanel.Inset.Bg:SetVertTile(false)
-    miscPanel.TitleContainer.TitleText:SetText("Cooldown Settings")
+    miscPanel.TitleContainer.TitleText:SetText(ns.API.GradientText("CMC") .. " Trackers")
 
     if miscPanel.CloseButton then
         miscPanel.CloseButton:SetScript("OnClick", function()
@@ -1614,14 +1584,23 @@ function TrackerAssignmentPanel:EnsureMiscSettingsTab(settingsFrame)
         end
     end)
 
-    local miscTab = CreateFrame("Button", "$parent.MiscTab", UIParent, "CooldownViewerSettingsTabTemplate")
+    local miscTab = CreateFrame("Button", nil, UIParent, "CooldownViewerSettingsTabTemplate")
+
+    -- Exposed so the custom-buff tab can anchor directly beneath this one.
+    Affected(settingsFrame).trackerMiscTab = miscTab
+    -- Coordinate with the shared tab manager so this and the buff panel are mutually
+    -- exclusive and never leak over each other or native content.
+    ns.SettingsTabs:RegisterPanel(settingsFrame, miscPanel, miscTab, "Tracker")
 
     Affected(miscTab).trackerIsTabButton = true
-    miscTab.tooltipText =
-        "|cff008945Cool|r|cff1e9a4e|r|cff3faa4fdownMa|r|cff5fb64anag|r|cff7ac243erCe|r|cff8ccd00ntered|r Trackers"
+    miscTab.tooltipText = ns.API.GradientText("CMC") .. " Trackers"
     miscTab.displayMode = "tracker"
-    miscTab.activeAtlas = "GreenCross"
-    miscTab.inactiveAtlas = "GreenCross"
+    miscTab.activeAtlas = "icon_cooldownmanager"
+    miscTab.inactiveAtlas = "icon_cooldownmanager"
+    miscTab.Icon:SetDesaturated(true)
+    miscTab.Icon:SetVertexColor(1, 1, 1, 1)
+    miscTab.Icon:SetGradient("VERTICAL", CreateColor(0, 0.41, 0.405), CreateColor(0.825, 0.93, 0))
+
     miscTab:SetChecked(false)
     if groupBuffsTab then
         miscTab:SetPoint("TOP", groupBuffsTab, "BOTTOM", 0, -3)

@@ -36,26 +36,6 @@ local function GetPointAndOffset(frame, growFromDirection)
         return nil
     end
 
-    if frame == BuffBarCooldownViewer then
-        if growFromDirection == "ICONS_VERTICAL" then
-            return {
-                point = "LEFT",
-                relativePoint = "BOTTOMLEFT",
-                x = frame:GetLeft(),
-                y = select(2, frame:GetCenter()),
-            }
-        elseif growFromDirection == "ICONS_HORIZONTAL" then
-            local x = frame:GetCenter()
-            local pX = UIParent:GetCenter()
-            return {
-                point = "BOTTOM",
-                relativePoint = "BOTTOM",
-                x = x - pX,
-                y = frame:GetBottom(),
-            }
-        end
-    end
-
     local y = nil
     point = nil
 
@@ -287,10 +267,61 @@ local function AddArrowsToTrinketRacialTracker()
     end
 end
 
+local function AddArrowsToBuffContainers()
+    if not (ns.BuffData and ns.BuffData.IsEnabled()) then
+        return
+    end
+    local count = ns.BuffData.GetContainerCount() or 0
+    for i = 1, count do
+        local viewerName = "CMCBuffContainer" .. i
+        if not arrowsForViewers[viewerName] and _G[viewerName] then
+            local arrowFrames = {
+                top = {
+                    frame = CreateFrame("Frame", nil, UIParent),
+                    anchor = "BOTTOM",
+                },
+                left = {
+                    frame = CreateFrame("Frame", nil, UIParent),
+                    anchor = "RIGHT",
+                },
+                right = {
+                    frame = CreateFrame("Frame", nil, UIParent),
+                    anchor = "LEFT",
+                },
+                bottom = {
+                    frame = CreateFrame("Frame", nil, UIParent),
+                    anchor = "TOP",
+                },
+            }
+            for name, info in pairs(arrowFrames) do
+                local frame = info.frame
+                frame:SetSize(10, 14)
+                frame:SetScale(1)
+                frame.background = frame:CreateTexture(nil, "BACKGROUND")
+                frame.background:ClearAllPoints()
+                frame.background:SetAllPoints()
+                frame.background:SetAtlas("bags-greenarrow", false)
+                frame.background:SetRotation(
+                    name == "left" and math.pi / 2
+                        or (name == "right" and -math.pi / 2 or (name == "bottom" and math.pi or 0))
+                )
+                frame:SetFrameStrata("HIGH")
+                frame:Hide()
+            end
+            arrowsForViewers[viewerName] = arrowFrames
+            table.insert(viewers, {
+                frame = _G[viewerName],
+                viewerName = viewerName,
+            })
+        end
+    end
+end
+
 local ticker = nil
 EventRegistry:RegisterCallback("EditMode.Enter", function()
     CreateHelpText()
     AddArrowsToTrinketRacialTracker()
+    AddArrowsToBuffContainers()
     if ticker then
         ticker:Cancel()
         ticker = nil

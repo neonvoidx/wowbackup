@@ -100,6 +100,11 @@ EventRegistry:RegisterCallback("CooldownViewerSettings.OnShow", function(arg1, s
         ns.TrackerAssignmentPanel:EnsureMiscSettingsTab(settingsFrame)
         ns.TrackerAssignmentPanel:RefreshMiscPanel(settingsFrame)
     end
+    -- After the tracker tab so the Buffs tab can anchor directly beneath it.
+    if ns.BuffAssignmentPanel then
+        ns.BuffAssignmentPanel:EnsureSettingsTab(settingsFrame)
+        ns.BuffAssignmentPanel:RefreshPanel(settingsFrame)
+    end
     if not Runtime:IsAllReady() then
         return
     end
@@ -313,6 +318,24 @@ end
 
 EventHandler.frame:SetScript("OnEvent", function(self, event, ...)
     EventHandler.events[event](self, event, ...)
+end)
+
+local buffLayoutHookBusy = false
+hooksecurefunc(BuffIconCooldownViewer, "Layout", function()
+    if buffLayoutHookBusy then
+        return
+    end
+    if not Runtime:IsReady(BuffIconCooldownViewer) then
+        return
+    end
+    if not (ns.BuffData and ns.BuffData.IsEnabled()) then
+        return
+    end
+    buffLayoutHookBusy = true
+    if ns.CooldownManager then
+        ns.CooldownManager.ForceRefresh({ icons = true })
+    end
+    buffLayoutHookBusy = false
 end)
 
 -- TODO check if non 12.1.0 we wouldn't have to hook RefreshData or just OnCooldownDataChanged

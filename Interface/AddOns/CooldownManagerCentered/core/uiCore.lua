@@ -138,12 +138,21 @@ function WilduUICore.ApplyFramePosition(frame, configKey, shouldHide)
         frame:SetClampedToScreen(true)
     end
 
-    frame:ClearAllPoints()
+    -- When the frame is anchored to another frame (see core/anchoring.lua), that anchor
+    -- governs its position instead of the stored UIParent point. Falls through to the
+    -- stored point if the target can't be resolved (or would form a cycle).
+    local anchored = false
+    if not shouldHide and ns.Anchoring then
+        anchored = ns.Anchoring:ApplyAnchor(frame, configKey)
+    end
 
-    if shouldHide then
-        frame:SetPoint(HIDDEN_POSITION.point, UIParent, HIDDEN_POSITION.point, HIDDEN_POSITION.x, HIDDEN_POSITION.y)
-    else
-        frame:SetPoint(config.point or "CENTER", UIParent, config.point or "CENTER", config.x or 0, config.y or 0)
+    if not anchored then
+        frame:ClearAllPoints()
+        if shouldHide then
+            frame:SetPoint(HIDDEN_POSITION.point, UIParent, HIDDEN_POSITION.point, HIDDEN_POSITION.x, HIDDEN_POSITION.y)
+        else
+            frame:SetPoint(config.point or "CENTER", UIParent, config.point or "CENTER", config.x or 0, config.y or 0)
+        end
     end
     if not config then
         return
@@ -297,7 +306,8 @@ end
 ---@param configKey string The database key
 ---@param additionalSettings? table[] Additional LEM settings appended after Scale and Strata
 ---@param onPositionChangedCallback? function Custom callback for position changes (overrides default)
-function WilduUICore.RegisterFrameWithLEM(frame, configKey, additionalSettings, onPositionChangedCallback)
+---@param skipGeneralSection? boolean Omit the Scale/Strata "General" section (for anchor-only frames whose scale/strata don't affect their content)
+function WilduUICore.RegisterFrameWithLEM(frame, configKey, additionalSettings, onPositionChangedCallback, skipGeneralSection)
     additionalSettings = additionalSettings or {}
     local config = WilduUICore.LoadFrameConfig(configKey)
 
@@ -308,19 +318,22 @@ function WilduUICore.RegisterFrameWithLEM(frame, configKey, additionalSettings, 
     defaultTable.showSettingsReset = false
     LEM:AddFrame(frame, onPositionChangedCallback or WilduUICore.CreateOnPositionChanged(configKey), defaultTable)
 
-    -- Frame-level Scale/Strata live in a collapsible "General" section so the
-    -- panel groups the same way the cooldown viewers' Edit Mode settings do.
-    local scaleSetting =
-        WilduUICore.CreateScaleSetting(configKey, FRAME_DEFAULT_CONFIG.scale, frame, onPositionChangedCallback)
-    local strataSetting = WilduUICore.CreateStrataSetting(configKey, FRAME_DEFAULT_CONFIG.strata, frame)
-    scaleSetting.parentId = "general"
-    strataSetting.parentId = "general"
+    local settings = {}
 
-    local settings = {
-        { kind = LEM.SettingType.Collapsible, id = "general", name = "General", defaultCollapsed = true },
-        scaleSetting,
-        strataSetting,
-    }
+    -- Frame-level Scale/Strata live in a collapsible "General" section so the panel
+    -- groups the same way the cooldown viewers' Edit Mode settings do. Anchor-only
+    -- frames (e.g. custom buff containers) omit it: they don't parent their content,
+    -- so scale/strata on the frame don't affect the anchored icons.
+    if not skipGeneralSection then
+        local scaleSetting =
+            WilduUICore.CreateScaleSetting(configKey, FRAME_DEFAULT_CONFIG.scale, frame, onPositionChangedCallback)
+        local strataSetting = WilduUICore.CreateStrataSetting(configKey, FRAME_DEFAULT_CONFIG.strata, frame)
+        scaleSetting.parentId = "general"
+        strataSetting.parentId = "general"
+        table.insert(settings, { kind = LEM.SettingType.Collapsible, id = "general", name = "General", defaultCollapsed = true })
+        table.insert(settings, scaleSetting)
+        table.insert(settings, strataSetting)
+    end
 
     for _, setting in ipairs(additionalSettings) do
         table.insert(settings, setting)

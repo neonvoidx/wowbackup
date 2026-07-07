@@ -201,6 +201,8 @@ ns.DEFAULT_SETTINGS = {
         editMode = {
             tracker1 = {},
             tracker2 = {},
+            buffContainer1 = {},
+            buffContainer2 = {},
         },
     },
 }

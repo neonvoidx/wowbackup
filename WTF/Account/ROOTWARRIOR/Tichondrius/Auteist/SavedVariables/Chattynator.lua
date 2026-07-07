@@ -23,4 +23,12 @@ CHATTYNATOR_COMMAND_HISTORY = {
 "/s /m",
 "/s /rl",
 "/s /m",
+"/s /sb",
+"/s /bbf",
+"/s /rl",
+"/s /wg",
+"/s /wg ",
+"/s /wg Auteist ",
+"/s /bbf",
+"/s /rl",
 }

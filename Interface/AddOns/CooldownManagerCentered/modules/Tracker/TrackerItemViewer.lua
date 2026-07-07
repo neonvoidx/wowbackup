@@ -731,8 +731,6 @@ function TrackerInstance:Create()
         iconSize = DEFAULT_ICON_SIZE,
         iconPadding = DEFAULT_ICON_PADDING,
         orientation = "Horizontal Right",
-        anchoredToTracker1 = false,
-        anchoredToTracker1Spacing = DEFAULT_ICON_PADDING,
     }
 
     WilduUICore.LoadFrameConfig(self.configKey, DEFAULT_CONFIG)
@@ -797,8 +795,6 @@ function TrackerInstance:Create()
 
     WilduUICore.RegisterEditModeCallbacks(self.anchor, self.configKey, function()
         return self.active
-    end, function()
-        return not ns.db.profile.editMode[self.configKey].anchoredToTracker1
     end)
 
     local configKey = self.configKey
@@ -813,39 +809,17 @@ function TrackerInstance:Create()
     }
 
     local function OnPositionChanged(frame, layoutName, _point, _x, _y)
+        -- Anchored to another frame: its anchor governs position, so ignore the drag /
+        -- centering math and re-snap to the target.
+        if ns.Anchoring and ns.Anchoring:HasTarget(configKey) then
+            WilduUICore.ApplyFramePosition(frame, configKey, false)
+            return
+        end
+
         local orientation = instance:GetOrientation()
         local anchorData = ORIENTATION_ANCHORS[orientation] or ORIENTATION_ANCHORS["Horizontal Right"]
         local anchorPrimary = (anchorData and anchorData.primary) or "RIGHT"
 
-        if ns.db.profile.editMode[configKey].anchoredToTracker1 then
-            local x, y
-            local config = ns.db.profile.editMode[configKey]
-            local spacing = config.anchoredToTracker1Spacing or DEFAULT_ICON_PADDING
-            if anchorPrimary == "LEFT" then
-                x = spacing
-                y = 0
-            elseif anchorPrimary == "RIGHT" then
-                x = -spacing
-                y = 0
-            elseif anchorPrimary == "TOP" then
-                x = 0
-                y = -spacing
-            else
-                x = 0
-                y = spacing
-            end
-            frame:SetClampedToScreen(true)
-            if config.scale ~= nil then
-                frame:SetScale(config.scale)
-            end
-            frame:ClearAllPoints()
-            -- Anchor to the previous tracker in the chain (tracker N anchors to N-1).
-            local prevFrame = _G["CMCTracker" .. ((instance.index or 2) - 1)]
-            if prevFrame then
-                frame:SetPoint(anchorPrimary, prevFrame, OPPOSITE_ANCHOR[anchorPrimary], x, y)
-            end
-            return
-        end
         local screenWidth, screenHeight = UIParent:GetSize()
         local frameWidth, frameHeight = frame:GetSize()
         local centerX, centerY = frame:GetCenter()
@@ -886,11 +860,6 @@ function TrackerInstance:Create()
 
         WilduUICore.ApplyFramePosition(frame, configKey, false)
     end
-
-    -- Expose the position handler so ReapplyPosition() can re-run the anchored-to-
-    -- previous-tracker chaining after a profile switch / re-init (Create is idempotent
-    -- and only applies position once).
-    self._onPositionChanged = OnPositionChanged
 
     local additionalSettings = {
         {
@@ -1017,45 +986,6 @@ function TrackerInstance:Create()
             end,
         },
     }
-
-    -- Anchor-to-previous-tracker chaining belongs to the Layout section. Added
-    -- here (right after the base layout settings) so it nests correctly.
-    if (self.index or 1) > 1 then
-        tinsert(additionalSettings, {
-            name = "Anchor to Tracker " .. ((self.index or 2) - 1),
-            parentId = "layout",
-            kind = LEM.SettingType.Checkbox,
-            default = false,
-            get = function()
-                return ns.db.profile.editMode[configKey].anchoredToTracker1 or false
-            end,
-            set = function(layoutName, value)
-                ns.db.profile.editMode[configKey].anchoredToTracker1 = value
-                OnPositionChanged(anchor, configKey)
-                instance:RefreshEntries()
-            end,
-        })
-        tinsert(additionalSettings, {
-            name = "Spacing",
-            parentId = "layout",
-            kind = LEM.SettingType.Slider,
-            default = DEFAULT_ICON_PADDING,
-            get = function()
-                return ns.db.profile.editMode[configKey].anchoredToTracker1Spacing or DEFAULT_ICON_PADDING
-            end,
-            set = function(layoutName, value)
-                ns.db.profile.editMode[configKey].anchoredToTracker1Spacing = value
-                OnPositionChanged(anchor, configKey)
-                instance:RefreshEntries()
-            end,
-            minValue = 0,
-            maxValue = 96,
-            valueStep = 1,
-            formatter = function(value)
-                return string.format("%d", value)
-            end,
-        })
-    end
 
     -- Icon styling & stack-number settings are owned by Masque when active, so
     -- they're only added to the panel when Masque skinning is off.
@@ -1565,6 +1495,19 @@ function TrackerInstance:Create()
         tinsert(additionalSettings, s)
     end
 
+    -- Anchor-to-another-frame section (other custom trackers, buff containers, unit
+    -- frames, native CDM viewers). Shared with the custom buff containers.
+    local anchorSettings = ns.Anchoring:BuildSettings(configKey, {
+        selfFrameName = self.frameName,
+        onChanged = function()
+            WilduUICore.ApplyFramePosition(anchor, configKey, false)
+            instance:RefreshEntries()
+        end,
+    })
+    for _, setting in ipairs(anchorSettings) do
+        tinsert(additionalSettings, setting)
+    end
+
     -- Visibility rules row (same control the cooldown viewers use), added last.
     if ns.EditModeViewerSettings and ns.EditModeViewerSettings.BuildVisibilitySetting then
         tinsert(additionalSettings, ns.EditModeViewerSettings:BuildVisibilitySetting(self.frameName))
@@ -1572,27 +1515,19 @@ function TrackerInstance:Create()
 
     WilduUICore.RegisterFrameWithLEM(self.anchor, self.configKey, additionalSettings, OnPositionChanged)
 
-    if ns.db.profile.editMode[configKey].anchoredToTracker1 then
-        OnPositionChanged(self.anchor, self.configKey)
-    end
     self:RefreshEntries()
 end
 
 -- Re-applies this tracker's saved position to its (already-created) frame. Create()
 -- applies the position exactly once and is idempotent, so a profile switch, a live
 -- tracker-count change, or a fresh login would otherwise leave the frame at the
--- previous position and silently drop the "anchor to previous tracker" chaining.
+-- previous position (and re-asserts an "Anchor To" target via ApplyFramePosition).
 -- Safe to call any time after Create(); does nothing before the frame exists.
 function TrackerInstance:ReapplyPosition()
     if not self.anchor then
         return
     end
-    local config = ns.db.profile.editMode[self.configKey]
-    if config and config.anchoredToTracker1 and self._onPositionChanged then
-        self._onPositionChanged(self.anchor, self.configKey)
-    else
-        WilduUICore.ApplyFramePosition(self.anchor, self.configKey, false)
-    end
+    WilduUICore.ApplyFramePosition(self.anchor, self.configKey, false)
 end
 
 -- Activates or deactivates a tracker. Deactivated trackers are hidden and removed
@@ -1766,6 +1701,48 @@ end
 function ItemViewer:RefreshStyling()
     for _, tracker in ipairs(trackers) do
         tracker:RefreshStyling()
+    end
+end
+
+-- Migrates the removed "Anchor to Tracker X" chaining onto the generic "Anchor To"
+-- system: a chained tracker N pinned its growth-primary point to the previous
+-- tracker's opposite point with a spacing offset, which maps 1:1 onto an anchor
+-- targeting CMCTracker(N-1). Runs on load and on every profile change (via _cleanup);
+-- clears the legacy keys either way so it's a one-shot per profile.
+function ItemViewer:MigrateChainAnchoring()
+    local editMode = ns.db and ns.db.profile and ns.db.profile.editMode
+    if not editMode then
+        return
+    end
+    for key, cfg in pairs(editMode) do
+        if type(key) == "string" and type(cfg) == "table" and cfg.anchoredToTracker1 ~= nil then
+            local index = tonumber(key:match("^tracker(%d+)$"))
+            if cfg.anchoredToTracker1 == true and index and index > 1 then
+                local anchorData = ORIENTATION_ANCHORS[cfg.orientation or "Horizontal Right"]
+                    or ORIENTATION_ANCHORS["Horizontal Right"]
+                local primary = anchorData.primary
+                local spacing = cfg.anchoredToTracker1Spacing or DEFAULT_ICON_PADDING
+                local x, y = 0, 0
+                if primary == "LEFT" then
+                    x = spacing
+                elseif primary == "RIGHT" then
+                    x = -spacing
+                elseif primary == "TOP" then
+                    y = -spacing
+                else -- BOTTOM / CENTER, matching the old chaining's else branch
+                    y = spacing
+                end
+                cfg.anchor = {
+                    to = "CMCTracker" .. (index - 1),
+                    point = primary,
+                    relativePoint = OPPOSITE_ANCHOR[primary],
+                    x = x,
+                    y = y,
+                }
+            end
+            cfg.anchoredToTracker1 = nil
+            cfg.anchoredToTracker1Spacing = nil
+        end
     end
 end
 

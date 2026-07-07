@@ -1168,28 +1168,6 @@ function CooldownStyle:Initialize()
         return
     end
 
-    -- Tain tain taint....
-
-    -- CooldownViewerSettings.GetCategoryTemplate = function(self, category)
-    --     if ns.BuffBarIconMode.IsEnabled() then
-    --         return "CooldownViewerSettingsCategoryTemplate"
-    --     end
-
-    --     if category:GetItemDisplayType() == "bar" then
-    --         return "CooldownViewerSettingsBarCategoryTemplate"
-    --     end
-
-    --     return "CooldownViewerSettingsCategoryTemplate"
-    -- end
-
-    -- local categories = CooldownViewerSettings.categoryObjects
-    -- categories[3].GetItemDisplayType = function()
-    --     if ns.BuffBarIconMode.IsEnabled() then
-    --         return "icon"
-    --     end
-    --     return "bar"
-    -- end
-
     Menu.ModifyMenu("MENU_COOLDOWN_SETTINGS_ITEM", function(owner, rootDescription, _contextData)
         local cdInfo = owner:GetCooldownInfo()
         local category = cdInfo.category

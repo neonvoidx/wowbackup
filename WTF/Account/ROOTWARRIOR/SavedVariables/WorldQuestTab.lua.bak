@@ -40,10 +40,10 @@ BWQDB = {
 ["Gehyo - Tichondrius"] = {
 ["activeProfile"] = 0,
 },
-["Choppiez - Tichondrius"] = {
+["Praisesun - Tichondrius"] = {
 ["activeProfile"] = 0,
 },
-["Smaugchamp - Tichondrius"] = {
+["Stormclout - Tichondrius"] = {
 ["activeProfile"] = 0,
 },
 ["Korahron - Tichondrius"] = {
@@ -52,10 +52,10 @@ BWQDB = {
 ["Neonvoid - Tichondrius"] = {
 ["activeProfile"] = 0,
 },
-["Stormclout - Tichondrius"] = {
+["Smaugchamp - Tichondrius"] = {
 ["activeProfile"] = 0,
 },
-["Praisesun - Tichondrius"] = {
+["Choppiez - Tichondrius"] = {
 ["activeProfile"] = 0,
 },
 ["Tainguk - Tichondrius"] = {
@@ -66,16 +66,16 @@ BWQDB = {
 ["versionCheck"] = 120014,
 ["profiles"] = {
 [0] = {
-["name"] = "Default",
 ["colors"] = {
 },
+["name"] = "Default",
 ["list"] = {
+},
+["general"] = {
 },
 ["pin"] = {
 },
 ["external"] = {
-},
-["general"] = {
 },
 ["filters"] = {
 },
@@ -96,12 +96,12 @@ BWQDB = {
 ["Strathmoan - Tichondrius"] = "Default",
 ["Reedingo - Mal'Ganis"] = "Default",
 ["Gehyo - Tichondrius"] = "Default",
-["Choppiez - Tichondrius"] = "Default",
-["Smaugchamp - Tichondrius"] = "Default",
+["Praisesun - Tichondrius"] = "Default",
+["Stormclout - Tichondrius"] = "Default",
 ["Korahron - Tichondrius"] = "Default",
 ["Neonvoid - Tichondrius"] = "Default",
-["Stormclout - Tichondrius"] = "Default",
-["Praisesun - Tichondrius"] = "Default",
+["Smaugchamp - Tichondrius"] = "Default",
+["Choppiez - Tichondrius"] = "Default",
 ["Tainguk - Tichondrius"] = "Default",
 },
 }

@@ -9,6 +9,6 @@ NewSettingsSeen = {
 ["DAMAGE_METER_LABEL"] = true,
 ["raidFramesDispelIndicatorOverlay"] = true,
 ["COMBAT_WARNINGS_LABEL"] = true,
-["enableConnectToPhotoSharing"] = true,
 ["raidFramesDispelIndicatorType"] = true,
+["enableConnectToPhotoSharing"] = true,
 }

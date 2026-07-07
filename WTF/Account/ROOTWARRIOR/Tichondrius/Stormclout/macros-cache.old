@@ -19,8 +19,8 @@ VER 3 010000000000006B " " "INV_Misc_QuestionMark"
 /petattack
 END
 VER 3 010000000000006C " " "INV_Misc_QuestionMark"
-#showtooltip
-/cast [@mouseover,help,exists][] Life Cocoon
+#showtooltip Life Cocoon
+/cast [@mouseover,help,exists] Life Cocoon
 END
 VER 3 010000000000006D " " "INV_Misc_QuestionMark"
 #showtooltip
@@ -29,7 +29,7 @@ END
 VER 3 010000000000006E " " "INV_Misc_QuestionMark"
 #showtooltip Paralysis
 #FrameSort EnemyHealer
-/cast [mod:shift,@none,exists,harm,nodead][] Paralysis
+/cast [mod:shift,@arena3,exists,harm,nodead][] Paralysis
 END
 VER 3 010000000000006F " " "INV_Misc_QuestionMark"
 #showtooltip

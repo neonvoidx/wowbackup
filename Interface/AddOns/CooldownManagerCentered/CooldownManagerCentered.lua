@@ -67,10 +67,10 @@ SlashCmdList["CMC_COMMAND"] = function(msg)
     print("/cmc track item {id} - Add an item to the custom tracked list")
 end
 
+local _cleanup
+
 function addon:RefreshConfig()
-    if ns.BuffBarIconMode then
-        ns.BuffBarIconMode.ClearGuards()
-    end
+    _cleanup()
     if ns.StyledIcons then
         ns.StyledIcons:Initialize()
     end
@@ -100,6 +100,14 @@ function addon:RefreshConfig()
             ns.TrackerItemViewer:HideAll()
         end
     end
+    if ns.BuffContainerViewer then
+        if ns.BuffData and ns.BuffData.IsEnabled() then
+            ns.BuffContainerViewer:Initialize()
+            ns.BuffContainerViewer:ShowAll()
+        else
+            ns.BuffContainerViewer:HideAll()
+        end
+    end
     if ns.CooldownStyle then
         ns.CooldownStyle:Initialize()
     end
@@ -126,7 +134,19 @@ function addon:OnProfileDeleted(event, db, profile)
     self:Print("Deleted profile: " .. profile)
 end
 
-local function _cleanup()
+_cleanup = function()
+    -- Bars-as-icons buff bar mode was removed; fold its two grow-direction values back
+    -- to the default so the dropdown isn't left on a now-missing entry.
+    local buffBarGrow = ns.db.profile.cooldownManager_alignBuffBars_growFromDirection
+    if buffBarGrow == "ICONS_VERTICAL" or buffBarGrow == "ICONS_HORIZONTAL" then
+        ns.db.profile.cooldownManager_alignBuffBars_growFromDirection = "BOTTOM"
+    end
+
+    -- "Anchor to Tracker X" chaining was replaced by the generic "Anchor To" system.
+    if ns.TrackerItemViewer and ns.TrackerItemViewer.MigrateChainAnchoring then
+        ns.TrackerItemViewer:MigrateChainAnchoring()
+    end
+
     ns.db.profile.cooldownManager_forceCenterX_BuffIcons = nil
     ns.db.profile.cooldownManager_forceCenterX_Essential = nil
     ns.db.profile.cooldownManager_forceCenterX_Utility = nil
@@ -234,6 +254,14 @@ function addon:OnEnable()
             ns.TrackerItemViewer:ShowAll()
         else
             ns.TrackerItemViewer:HideAll()
+        end
+    end
+    if ns.BuffContainerViewer then
+        if ns.BuffData and ns.BuffData.IsEnabled() then
+            ns.BuffContainerViewer:Initialize()
+            ns.BuffContainerViewer:ShowAll()
+        else
+            ns.BuffContainerViewer:HideAll()
         end
     end
     if ns.CooldownStyle then

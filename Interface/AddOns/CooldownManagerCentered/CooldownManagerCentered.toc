@@ -2,7 +2,7 @@
 ## Title: |cff008945Cool|r|cff1e9a4e|r|cff3faa4fdown Ma|r|cff5fb64anag|r|cff7ac243er Ce|r|cff8ccd00ntered|r by Wildu
 ## Notes: Cooldown Manager tweaks and styling
 ## Author: Wildu
-## Version: 3.2.7
+## Version: 3.3.0
 ## X-Wago-ID: b6mvbYKP
 ## SavedVariables: CooldownManagerCenteredDB
 ## OptionalDeps: Masque
@@ -29,7 +29,9 @@ core/api.lua
 core/sizes.lua
 core/scaling.lua
 core/spellIdOverrides.lua
+core/anchoring.lua
 core/uiCore.lua
+core/settingsTabs.lua
 
 # Settings System - Centralized Settings Management
 settings/ProfileSettings.lua
@@ -47,8 +49,11 @@ modules/Tracker/TrackerItemVisuals.lua
 modules/Tracker/TrackerItemViewer.lua
 modules/Tracker/TrackerAssignmentPanel.lua
 
+# Custom Buff Containers
+modules/Buffs/BuffData.lua
+modules/Buffs/BuffContainerViewer.lua
+modules/Buffs/BuffAssignmentPanel.lua
 
-modules/buffBarIconMode.lua
 modules/cooldownManager.lua
 modules/masque.lua
 modules/editModeHelp.lua

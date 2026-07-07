@@ -300,8 +300,6 @@ local function buildGrowDirection(list, cfg)
         values = {
             { value = "TOP", text = "Bars grow from |cff8ccd00Top|r" },
             { value = "BOTTOM", text = "Bars grow from |cff8ccd00Bottom|r" },
-            { value = "ICONS_VERTICAL", text = "Only |cfffff100Icons|r |cff8ccd00Vertical|r" },
-            { value = "ICONS_HORIZONTAL", text = "Only |cfffff100Icons|r |cff8ccd00Horizontal|r" },
             { value = "Disable", text = "|cffff2020Disable|r centering" },
         }
     else

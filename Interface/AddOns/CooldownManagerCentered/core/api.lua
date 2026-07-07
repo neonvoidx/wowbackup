@@ -6,8 +6,8 @@ ns.API = API
 local LSM = LibStub("LibSharedMedia-3.0", true)
 
 function API.GradientText(text, r1, g1, b1, r2, g2, b2)
-    r1, g1, b1 = r1 or 0, g1 or 137, b1 or 69
-    r2, g2, b2 = r2 or 140, g2 or 205, b2 or 0
+    r1, g1, b1 = r1 or 0, g1 or 137, b1 or 69 -- CreateColor(0, 0.54, 0.27)
+    r2, g2, b2 = r2 or 140, g2 or 205, b2 or 0 -- CreateColor(0.55, 0.8, 0)
 
     local n = #text
     if n <= 1 then
@@ -255,7 +255,7 @@ function API:ToggleEditMode()
     end
     local frame = _G.EditModeManagerFrame
     if not frame then
-        local loader = (C_AddOns and C_AddOns.LoadAddOn) or _G.UIParentLoadAddOn
+        local loader = (C_AddOns and C_AddOns.LoadAddOn) or _G.LoadAddOnWithErrorHandling or _G.UIParentLoadAddOn
         if loader then
             loader("Blizzard_EditMode")
             frame = _G.EditModeManagerFrame

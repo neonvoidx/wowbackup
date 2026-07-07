@@ -59,22 +59,15 @@ local function AddonSettings_BuildCooldown(category, layout)
             "Bottom",
             "Buff",
             "Bar",
-            "Icons",
             "Tracked",
-            "Square",
-            "Compact",
-            "Horizontal",
-            "Vertical",
         },
         default = "BOTTOM",
         values = {
             BOTTOM = "Bars grow from |cff8ccd00Bottom|r",
             TOP = "Bars grow from |cff8ccd00Top|r",
-            ICONS_VERTICAL = "Only |cfffff100Icons|r |cff8ccd00Vertical|r",
-            ICONS_HORIZONTAL = "Only |cfffff100Icons|r |cff8ccd00Horizontal|r",
             ["Disable"] = "|cffff2020Disable|r centering",
         },
-        order = { "TOP", "BOTTOM", "ICONS_VERTICAL", "ICONS_HORIZONTAL", "Disable" },
+        order = { "TOP", "BOTTOM", "Disable" },
         get = function()
             return ns.db.profile.cooldownManager_alignBuffBars_growFromDirection or "BOTTOM"
         end,
@@ -137,7 +130,7 @@ local function AddonSettings_BuildCooldown(category, layout)
     SettingsLib:CreateCheckbox(category, {
         prefix = "CMC_",
         key = "tracker_enabled",
-        name = "Enable Custom |cff8ccd00Tracker|r",
+        name = "Enable " .. ns.API.GradientText("Custom Trackers"),
         searchtags = { "Dynamic", "Alignment", "Position", "Layout", "Anchor", "Auto", "Center", "Adaptive" },
         default = true,
         get = function()
@@ -157,6 +150,38 @@ local function AddonSettings_BuildCooldown(category, layout)
                 if ns.TrackerAssignmentPanel then
                     ns.TrackerAssignmentPanel:OnTrackerDisabled()
                 end
+            end
+        end,
+    })
+
+    SettingsLib:CreateCheckbox(category, {
+        prefix = "CMC_",
+        key = "buff_containers_enabled",
+        name = "Enable  " .. ns.API.GradientText("Buff Containers"),
+        searchtags = { "Buff", "Container", "Aura", "Tracked", "Anchor", "Position", "Layout", "Split" },
+        default = false,
+        get = function()
+            return ns.BuffData and ns.BuffData.IsEnabled()
+        end,
+        set = function(value)
+            if not ns.BuffData then
+                return
+            end
+            ns.BuffData.SetEnabled(value)
+            if value then
+                if ns.BuffContainerViewer then
+                    ns.BuffContainerViewer:Initialize()
+                end
+            else
+                if ns.BuffContainerViewer then
+                    ns.BuffContainerViewer:HideAll()
+                end
+                if ns.BuffAssignmentPanel then
+                    ns.BuffAssignmentPanel:OnBuffContainersDisabled()
+                end
+            end
+            if ns.CooldownManager then
+                ns.CooldownManager.ForceRefresh({ icons = true })
             end
         end,
     })
