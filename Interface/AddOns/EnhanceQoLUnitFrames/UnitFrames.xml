@@ -7,6 +7,7 @@
 	<Include file="UF_GroupFrames.xml" />
 	<Script file="UF_GroupFrames_Helper.lua" />
 	<Script file="UF_GroupFrames_HealerBuffs.lua" />
+	<Script file="UF_GroupFrames_HealerBuffs_AuraContainers.lua" />
 	<Script file="UF_GroupFrames.lua" />
 	<Script file="UF_GroupFrames_HealerBuffs_Editor.lua" />
 	<Script file="UF_GlobalAuraIgnore.lua" />

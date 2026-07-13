@@ -379,7 +379,7 @@ local function OnEvent(self, event, ...)
 		SetCVar("WorldTextMinSize", 12)
 
 		-- Spell overlays HUD
-		SetCVar("spellActivationOverlayOpacity", 0)
+		SetCVar("spellActivationOverlayOpacity", 0.65)
 
 		-- Secure ability toggle, prevents quick double presses
 		SetCVar("secureAbilityToggle", 1)
@@ -411,7 +411,7 @@ local function OnEvent(self, event, ...)
 			SetCVar("nameplateMinAlpha", 0.6)
 			SetCVar("nameplateOccludedAlphaMult", 0.4)
 			SetCVar("nameplateSelectedScale", 1.1)
-			SetCVar("nameplateAuraScale", 1.2)
+			SetCVar("nameplateAuraScale", 1.4)
 			SetCVar("nameplateDebuffPadding", 6)
 			SetCVar("nameplateShowAll", 1)
 			SetCVar("nameplateShowCastBars", 1)

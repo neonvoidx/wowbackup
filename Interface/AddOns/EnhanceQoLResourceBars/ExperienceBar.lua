@@ -1483,7 +1483,8 @@ function ExperienceBar:UpdateXP()
 	self:ApplyCurrentFillColor(self._hasRested)
 	self:UpdateRestedOverlay(ctx)
 	self:UpdateTextFromContext(ctx)
-	frame:Show()
+	local rb = addon.Aura and addon.Aura.ResourceBars
+	if not rb or not rb.ShouldDeferShowToVisibilityDriver or not rb.ShouldDeferShowToVisibilityDriver(frame, self:GetVisibilityRuntimeConfig()) then frame:Show() end
 	self:ApplyVisibilityPreference(true)
 	self:ApplyBlizzardTrackingVisibility()
 end

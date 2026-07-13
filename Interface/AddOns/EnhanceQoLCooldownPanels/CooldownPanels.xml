@@ -12,5 +12,6 @@
 	<Script file="CooldownPanels_BlizzardEditor.lua" />
 	<Script file="Settings_CooldownPanels.lua" />
 	<Script file="CooldownPanels_Bars.lua" />
+	<Script file="CooldownPanels_AuraContainers.lua" />
 	<Script file="Init.lua" />
 </Ui>

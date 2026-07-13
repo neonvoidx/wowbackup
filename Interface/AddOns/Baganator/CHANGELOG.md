@@ -1,7 +1,6 @@
 # Baganator
 
-## [810](https://github.com/TheMouseNest/Baganator/tree/810) (2026-07-03)
-[Full Changelog](https://github.com/TheMouseNest/Baganator/compare/809...810) 
+## [812](https://github.com/TheMouseNest/Baganator/tree/812) (2026-07-08)
+[Full Changelog](https://github.com/TheMouseNest/Baganator/compare/811...812) 
 
-- Fix error when copying profile from retail containing warband tab selected  
-- Fix old import format for categories not importing  
+- Classic Anniversary: Update toc to 2.5.6  

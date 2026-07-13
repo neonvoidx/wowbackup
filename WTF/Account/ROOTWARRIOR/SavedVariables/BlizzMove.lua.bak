@@ -880,25 +880,7 @@ BlizzMoveDB = {
 },
 ["ProfessionsCustomerOrdersFrame.Form"] = {
 },
-["FriendsFrame"] = {
-["startPoints"] = {
-{
-["offX"] = 15.99999904632568,
-["offY"] = -116.0000457763672,
-["anchorPoint"] = "TOPLEFT",
-["relativePoint"] = "TOPLEFT",
-},
-},
-["dragged"] = true,
-["dragPoints"] = {
-{
-["anchorPoint"] = "TOPLEFT",
-["relativeFrame"] = "UIParent",
-["offY"] = -64.18258036229236,
-["offX"] = 295.6833163452866,
-["relativePoint"] = "TOPLEFT",
-},
-},
+["ContainerFrame1.TitleContainer"] = {
 },
 ["PVPMatchResults"] = {
 ["startPoints"] = {
@@ -924,7 +906,25 @@ BlizzMoveDB = {
 },
 ["HousingCornerstonePurchaseFrame"] = {
 },
-["ContainerFrame1.TitleContainer"] = {
+["QuickKeybindFrame"] = {
+["startPoints"] = {
+{
+["offX"] = 1208.333251953125,
+["offY"] = -325,
+["anchorPoint"] = "TOPLEFT",
+["relativePoint"] = "TOPLEFT",
+},
+},
+["dragged"] = true,
+["dragPoints"] = {
+{
+["anchorPoint"] = "CENTER",
+["relativeFrame"] = "UIParent",
+["offY"] = 150.0000915527344,
+["offX"] = -0.83331298828125,
+["relativePoint"] = "CENTER",
+},
+},
 },
 ["GossipFrame"] = {
 ["startPoints"] = {
@@ -1030,11 +1030,11 @@ BlizzMoveDB = {
 ["dragged"] = true,
 ["dragPoints"] = {
 {
-["anchorPoint"] = "TOP",
+["anchorPoint"] = "LEFT",
 ["relativeFrame"] = "BlizzMove_FakeUIParent",
-["offY"] = -54.79878146022384,
-["offX"] = -19.47524357165821,
-["relativePoint"] = "TOP",
+["offY"] = 31.89945983886719,
+["offX"] = 18.8552417755127,
+["relativePoint"] = "LEFT",
 },
 },
 },
@@ -1165,7 +1165,7 @@ BlizzMoveDB = {
 },
 ["GenericTraitFrame.ButtonsParent"] = {
 },
-["TabardFrame"] = {
+["Baganator_SingleViewBankViewFrameblizzard"] = {
 },
 ["ChatConfigFrame"] = {
 ["startPoints"] = {
@@ -1187,7 +1187,7 @@ BlizzMoveDB = {
 },
 },
 },
-["HousingDashboardFrame.HouseInfoContent.DashboardNoHousesFrame"] = {
+["TabardFrame"] = {
 },
 ["AuctionHouseFrame"] = {
 ["startPoints"] = {
@@ -1254,15 +1254,16 @@ BlizzMoveDB = {
 },
 },
 },
-["Baganator_SingleViewBankViewFrameblizzard"] = {
+["HousingDashboardFrame.HouseInfoContent.DashboardNoHousesFrame"] = {
 },
-["ScrappingMachineFrame"] = {
+["GarrisonRecruitSelectFrame"] = {
+},
+["BlackMarketFrame"] = {
 ["startPoints"] = {
 {
-["anchorPoint"] = "TOPLEFT",
-["relativeFrame"] = "UIParent",
-["offY"] = -116,
 ["offX"] = 15.99999904632568,
+["offY"] = -116.0000457763672,
+["anchorPoint"] = "TOPLEFT",
 ["relativePoint"] = "TOPLEFT",
 },
 },
@@ -1271,13 +1272,11 @@ BlizzMoveDB = {
 {
 ["anchorPoint"] = "TOPLEFT",
 ["relativeFrame"] = "UIParent",
-["offY"] = -116,
+["offY"] = -115.1666259765625,
 ["relativePoint"] = "TOPLEFT",
-["offX"] = 16.83333969116211,
+["offX"] = 15.99999904632568,
 },
 },
-},
-["GarrisonRecruitSelectFrame"] = {
 },
 ["RemixArtifactFrame.ButtonsParent"] = {
 },
@@ -1327,12 +1326,13 @@ BlizzMoveDB = {
 },
 ["CovenantMissionFrame.MissionTab.MissionPage.StartMissionFrame"] = {
 },
-["BlackMarketFrame"] = {
+["ScrappingMachineFrame"] = {
 ["startPoints"] = {
 {
-["offX"] = 15.99999904632568,
-["offY"] = -116.0000457763672,
 ["anchorPoint"] = "TOPLEFT",
+["relativeFrame"] = "UIParent",
+["offY"] = -116,
+["offX"] = 15.99999904632568,
 ["relativePoint"] = "TOPLEFT",
 },
 },
@@ -1341,9 +1341,9 @@ BlizzMoveDB = {
 {
 ["anchorPoint"] = "TOPLEFT",
 ["relativeFrame"] = "UIParent",
-["offY"] = -115.1666259765625,
+["offY"] = -116,
 ["relativePoint"] = "TOPLEFT",
-["offX"] = 15.99999904632568,
+["offX"] = 16.83333969116211,
 },
 },
 },
@@ -1383,9 +1383,9 @@ BlizzMoveDB = {
 {
 ["anchorPoint"] = "TOP",
 ["relativeFrame"] = "BlizzMove_FakeUIParent",
-["offY"] = -123.494447606965,
+["offY"] = -145.1605864943413,
 ["relativePoint"] = "TOP",
-["offX"] = 191.9486337339949,
+["offX"] = 191.9496255553386,
 },
 },
 },
@@ -1441,11 +1441,11 @@ BlizzMoveDB = {
 },
 ["TimeManagerFrame"] = {
 },
-["QuickKeybindFrame"] = {
+["FriendsFrame"] = {
 ["startPoints"] = {
 {
-["offX"] = 1208.333251953125,
-["offY"] = -325,
+["offX"] = 15.99999904632568,
+["offY"] = -116.0000457763672,
 ["anchorPoint"] = "TOPLEFT",
 ["relativePoint"] = "TOPLEFT",
 },
@@ -1453,11 +1453,11 @@ BlizzMoveDB = {
 ["dragged"] = true,
 ["dragPoints"] = {
 {
-["anchorPoint"] = "CENTER",
+["anchorPoint"] = "TOPLEFT",
 ["relativeFrame"] = "UIParent",
-["offY"] = 150.0000915527344,
-["offX"] = -0.83331298828125,
-["relativePoint"] = "CENTER",
+["offY"] = -64.18258036229236,
+["offX"] = 295.6833163452866,
+["relativePoint"] = "TOPLEFT",
 },
 },
 },

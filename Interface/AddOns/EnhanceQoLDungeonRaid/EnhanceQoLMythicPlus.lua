@@ -846,6 +846,15 @@ end
 
 local function syncBloodlustUnitAuraRegistration()
 	local enabled = addon and addon.db and addon.db["mythicPlusBloodlustTrackerEnabled"] == true
+	local nativeBackend = addon.MythicPlus and addon.MythicPlus.BloodlustAuraBackend
+	if nativeBackend and nativeBackend:IsSupported() then
+		if bloodlustUnitAuraRegistered then
+			frameLoad:UnregisterEvent("UNIT_AURA")
+			bloodlustUnitAuraRegistered = false
+		end
+		nativeBackend:Sync()
+		return
+	end
 
 	if enabled then
 		if bloodlustUnitAuraRegistered then return end
@@ -2126,6 +2135,8 @@ local function applyBloodlustAnchorPreviewIcon()
 	if not (bloodlustAnchor and bloodlustAnchor.previewIcon) then return end
 	bloodlustAnchor.previewIcon:SetTexture(getBloodlustConfiguredIcon())
 	applyTrackerIconShape(bloodlustAnchor, bloodlustAnchor.previewIcon, nil, getBloodlustIconShape(), addon.db and addon.db["mythicPlusBloodlustTrackerIconZoom"])
+	local nativeBackend = addon.MythicPlus and addon.MythicPlus.BloodlustAuraBackend
+	if nativeBackend and nativeBackend.RefreshStyle then nativeBackend:RefreshStyle() end
 end
 
 local function applyBloodlustBorderFrame(frame, target, enabled, textureKey, borderSize, borderOffset, borderColor)
@@ -2239,6 +2250,8 @@ local function applyBloodlustCooldownVisualSettings()
 		bloodlustAnchor.previewCooldownText:SetText(BLOODLUST_PREVIEW_COOLDOWN_TEXT)
 		bloodlustAnchor.previewCooldownText:Show()
 	end
+	local nativeBackend = addon.MythicPlus and addon.MythicPlus.BloodlustAuraBackend
+	if nativeBackend and nativeBackend.RefreshStyle then nativeBackend:RefreshStyle() end
 end
 
 local function refreshBloodlustMedia(mediaType)
@@ -2257,6 +2270,8 @@ local function stopBloodlustActiveGlow()
 end
 
 local function removeBloodlustFrame()
+	local nativeBackend = addon.MythicPlus and addon.MythicPlus.BloodlustAuraBackend
+	if nativeBackend and nativeBackend:IsSupported() then nativeBackend:Detach() end
 	if bloodlustButton then
 		bloodlustCooldownDeferredApplyPending = false
 		stopBloodlustActiveGlow()
@@ -2443,6 +2458,10 @@ local function ensureBloodlustAnchor()
 				if selected ~= "" and not soundTable[selected] then selected = "" end
 				if addon.db then addon.db[dbKey] = selected end
 				if preview and selected ~= "" and soundTable[selected] then PlaySoundFile(soundTable[selected], "Master") end
+				if dbKey == "mythicPlusBloodlustTrackerDebuffSoundFile" then
+					local nativeBackend = addon.MythicPlus and addon.MythicPlus.BloodlustAuraBackend
+					if nativeBackend and nativeBackend.SyncSounds then nativeBackend:SyncSounds() end
+				end
 				return current
 			end
 
@@ -2512,6 +2531,8 @@ local function ensureBloodlustAnchor()
 					get = function() return addon.db and addon.db["mythicPlusBloodlustTrackerShowActiveDuration"] == true end,
 					set = function(_, value)
 						if addon.db then addon.db["mythicPlusBloodlustTrackerShowActiveDuration"] = value == true end
+						local nativeBackend = addon.MythicPlus and addon.MythicPlus.BloodlustAuraBackend
+						if nativeBackend and nativeBackend.RefreshStyle then nativeBackend:RefreshStyle() end
 						if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.refreshBloodlustTracker then
 							addon.MythicPlus.functions.refreshBloodlustTracker(false)
 						end
@@ -3236,6 +3257,8 @@ local function ensureBloodlustAnchor()
 					get = function() return addon.db and addon.db["mythicPlusBloodlustTrackerSoundOnDebuffActive"] == true end,
 					set = function(_, value)
 						if addon.db then addon.db["mythicPlusBloodlustTrackerSoundOnDebuffActive"] = value == true end
+						local nativeBackend = addon.MythicPlus and addon.MythicPlus.BloodlustAuraBackend
+						if nativeBackend and nativeBackend.SyncSounds then nativeBackend:SyncSounds() end
 					end,
 				},
 				{
@@ -3245,6 +3268,8 @@ local function ensureBloodlustAnchor()
 					get = function() return addon.db and addon.db["mythicPlusBloodlustTrackerUseCustomDebuffSound"] == true end,
 					set = function(_, value)
 						if addon.db then addon.db["mythicPlusBloodlustTrackerUseCustomDebuffSound"] = value == true end
+						local nativeBackend = addon.MythicPlus and addon.MythicPlus.BloodlustAuraBackend
+						if nativeBackend and nativeBackend.SyncSounds then nativeBackend:SyncSounds() end
 					end,
 					isEnabled = function() return addon.db and addon.db["mythicPlusBloodlustTrackerSoundOnDebuffActive"] == true end,
 				},
@@ -3289,6 +3314,10 @@ local function ensureBloodlustAnchor()
 					set = function(_, value)
 						if addon.db then addon.db["mythicPlusBloodlustTrackerSoundOnDebuffFade"] = value == true end
 					end,
+					isEnabled = function()
+						local nativeBackend = addon.MythicPlus and addon.MythicPlus.BloodlustAuraBackend
+						return not (nativeBackend and nativeBackend:IsSupported())
+					end,
 				},
 				{
 					name = L["mythicPlusBloodlustTrackerUseCustomFadeSound"] or "Use custom sound for lockout fade",
@@ -3298,7 +3327,10 @@ local function ensureBloodlustAnchor()
 					set = function(_, value)
 						if addon.db then addon.db["mythicPlusBloodlustTrackerUseCustomFadeSound"] = value == true end
 					end,
-					isEnabled = function() return addon.db and addon.db["mythicPlusBloodlustTrackerSoundOnDebuffFade"] == true end,
+					isEnabled = function()
+						local nativeBackend = addon.MythicPlus and addon.MythicPlus.BloodlustAuraBackend
+						return not (nativeBackend and nativeBackend:IsSupported()) and addon.db and addon.db["mythicPlusBloodlustTrackerSoundOnDebuffFade"] == true
+					end,
 				},
 				{
 					name = L["mythicPlusBloodlustTrackerFadeSound"] or "Lockout fade sound",
@@ -3327,7 +3359,8 @@ local function ensureBloodlustAnchor()
 						end
 					end,
 					isEnabled = function()
-						return addon.db and addon.db["mythicPlusBloodlustTrackerSoundOnDebuffFade"] == true
+						local nativeBackend = addon.MythicPlus and addon.MythicPlus.BloodlustAuraBackend
+						return not (nativeBackend and nativeBackend:IsSupported()) and addon.db and addon.db["mythicPlusBloodlustTrackerSoundOnDebuffFade"] == true
 							and addon.db["mythicPlusBloodlustTrackerUseCustomFadeSound"] == true
 					end,
 				},
@@ -3339,6 +3372,10 @@ local function ensureBloodlustAnchor()
 					set = function(_, value)
 						if addon.db then addon.db["mythicPlusBloodlustTrackerReadySoundOnEncounterStart"] = value == true end
 					end,
+					isEnabled = function()
+						local nativeBackend = addon.MythicPlus and addon.MythicPlus.BloodlustAuraBackend
+						return not (nativeBackend and nativeBackend:IsSupported())
+					end,
 				},
 				{
 					name = L["mythicPlusBloodlustTrackerUseCustomReadySound"] or "Use custom sound for ready reminder",
@@ -3349,7 +3386,8 @@ local function ensureBloodlustAnchor()
 						if addon.db then addon.db["mythicPlusBloodlustTrackerUseCustomReadySound"] = value == true end
 					end,
 					isEnabled = function()
-						return addon.db and addon.db["mythicPlusBloodlustTrackerReadySoundOnEncounterStart"] == true
+						local nativeBackend = addon.MythicPlus and addon.MythicPlus.BloodlustAuraBackend
+						return not (nativeBackend and nativeBackend:IsSupported()) and addon.db and addon.db["mythicPlusBloodlustTrackerReadySoundOnEncounterStart"] == true
 					end,
 				},
 				{
@@ -3379,7 +3417,8 @@ local function ensureBloodlustAnchor()
 						end
 					end,
 					isEnabled = function()
-						return addon.db and addon.db["mythicPlusBloodlustTrackerUseCustomReadySound"] == true
+						local nativeBackend = addon.MythicPlus and addon.MythicPlus.BloodlustAuraBackend
+						return not (nativeBackend and nativeBackend:IsSupported()) and addon.db and addon.db["mythicPlusBloodlustTrackerUseCustomReadySound"] == true
 							and addon.db["mythicPlusBloodlustTrackerReadySoundOnEncounterStart"] == true
 					end,
 				},
@@ -3467,6 +3506,10 @@ local function shouldAllowBloodlustTrackerScope()
 end
 
 local function shouldShowBloodlustFrame()
+	local nativeBackend = addon.MythicPlus and addon.MythicPlus.BloodlustAuraBackend
+	if nativeBackend and nativeBackend:IsSupported() then
+		return addon.db["mythicPlusBloodlustTrackerEnabled"] == true and shouldAllowBloodlustTrackerScope()
+	end
 	return shouldShowBloodlustTracker() or (bloodlustStateActive and shouldAllowBloodlustTrackerScope())
 end
 
@@ -3551,6 +3594,13 @@ local function createBloodlustFrame()
 	end
 
 	applyBloodlustLayoutData(layout)
+	local nativeBackend = addon.MythicPlus and addon.MythicPlus.BloodlustAuraBackend
+	if nativeBackend and nativeBackend:IsSupported() then
+		if bloodlustButton and bloodlustButton.status then bloodlustButton.status:Hide() end
+		if bloodlustButton and bloodlustButton.cooldownFrame then bloodlustButton.cooldownFrame:SetAlpha(0) end
+		stopBloodlustActiveGlow()
+		nativeBackend:Attach(bloodlustButton)
+	end
 	if EditMode then EditMode:RefreshFrame(BLOODLUST_EDITMODE_ID) end
 end
 
@@ -3889,6 +3939,11 @@ local function applyBloodlustAuraToFrame(aura)
 end
 
 refreshBloodlustTracker = function(playReadySound)
+	local nativeBackend = addon.MythicPlus and addon.MythicPlus.BloodlustAuraBackend
+	if nativeBackend and nativeBackend:IsSupported() then
+		nativeBackend:Refresh(bloodlustButton)
+		return true
+	end
 	local aura, known = getActiveBloodlustAura()
 	if not known then return false end
 
@@ -4231,7 +4286,8 @@ local function eventHandler(self, event, arg1, arg2, arg3, arg4)
 		end
 	elseif event == "ADDON_RESTRICTION_STATE_CHANGED" then
 		if not addon.db["mythicPlusBloodlustTrackerEnabled"] then return end
-		if not addon.MythicPlus.functions.CanReadAuraData() then return end
+		local nativeBackend = addon.MythicPlus and addon.MythicPlus.BloodlustAuraBackend
+		if not (nativeBackend and nativeBackend:IsSupported()) and not addon.MythicPlus.functions.CanReadAuraData() then return end
 		refreshBloodlustTracker(false)
 		if shouldShowBloodlustFrame() then
 			if not bloodlustButton or not bloodlustButton.cooldownFrame then createBloodlustFrame() end

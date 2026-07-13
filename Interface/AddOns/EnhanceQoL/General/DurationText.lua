@@ -1028,9 +1028,8 @@ end
 function DurationText:GetAuraButtonDurationTextOptions(profileKey, options)
 	options = options or EMPTY_TABLE
 	local config = self:GetEffectiveConfig(profileKey)
-	local colorBreakpointCount = roundNumber(config.colorBreakpointCount, 0)
 	return {
-		formatter = options.formatter or (colorBreakpointCount > 0 and self:GetBindingFormatter(config) or self:GetSecondsFormatter(config)),
+		formatter = options.formatter or self:GetBindingFormatter(config),
 		expiredText = options.expiredText ~= nil and options.expiredText or config.expiredText,
 		zeroDurationText = options.zeroDurationText ~= nil and options.zeroDurationText or config.zeroDurationText,
 		timeModifier = options.timeModifier or (_G.Enum and _G.Enum.DurationTimeModifier and _G.Enum.DurationTimeModifier.RealTime or 0),

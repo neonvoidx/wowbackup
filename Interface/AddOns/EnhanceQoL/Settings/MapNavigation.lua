@@ -1,6 +1,7 @@
 local addonName, addon = ...
 
 local L = LibStub("AceLocale-3.0"):GetLocale(addonName)
+local minimapLabel = _G.MINIMAP_LABEL or _G.MINIMAP or "Minimap"
 local C_GameRules = _G.C_GameRules
 local getCVarOptionState = addon.functions.GetCVarOptionState or function() return false end
 local setCVarOptionState = addon.functions.SetCVarOptionState or function() end
@@ -18,6 +19,13 @@ local mapExpandable = addon.functions.SettingsCreateExpandableSection(cMapNav, {
 	iconKey = "map",
 	expanded = false,
 	colorizeTitle = false,
+})
+
+addon.functions.SettingsCreateHeadline(cMapNav, L["World Map"] or "World Map", {
+	parentSection = mapExpandable,
+	groupID = "world-map",
+	groupTitle = L["World Map"] or "World Map",
+	order = 10,
 })
 
 local function isSettingEnabled(varName)
@@ -196,7 +204,11 @@ local function normalizeSquareMinimapBorderTextureSelection(primary, secondary)
 	return "DEFAULT"
 end
 
-addon.functions.SettingsCreateHeadline(cMapNav, L["MapBasics"] or "Map Basics", { parentSection = mapExpandable })
+addon.functions.SettingsCreateSectionHeader(cMapNav, L["MapBasics"] or "Map Basics", {
+	parentSection = mapExpandable,
+	groupID = "world-map",
+	groupTitle = L["World Map"] or "World Map",
+})
 
 local data = {
 	{
@@ -213,6 +225,8 @@ local data = {
 		end,
 		default = false,
 		parentSection = mapExpandable,
+		groupID = "world-map",
+		groupTitle = L["World Map"] or "World Map",
 	},
 	{
 		var = "showWorldMapCoordinates",
@@ -228,6 +242,8 @@ local data = {
 		end,
 		default = false,
 		parentSection = mapExpandable,
+		groupID = "world-map",
+		groupTitle = L["World Map"] or "World Map",
 		children = {
 			{
 				var = "worldMapCoordinatesUpdateInterval",
@@ -276,7 +292,12 @@ local data = {
 table.sort(data, function(a, b) return a.text < b.text end)
 addon.functions.SettingsCreateCheckboxes(cMapNav, data)
 
-addon.functions.SettingsCreateHeadline(cMapNav, L["SquareMinimap"] or "Square Minimap", { parentSection = mapExpandable })
+addon.functions.SettingsCreateHeadline(cMapNav, minimapLabel, {
+	parentSection = mapExpandable,
+	groupID = "minimap",
+	groupTitle = minimapLabel,
+	order = 20,
+})
 
 data = {
 	{
@@ -291,6 +312,8 @@ data = {
 		end,
 		default = false,
 		parentSection = mapExpandable,
+		groupID = "minimap",
+		groupTitle = minimapLabel,
 		children = {
 			{
 				var = "enableSquareMinimapLayout",
@@ -475,8 +498,6 @@ data = {
 table.sort(data, function(a, b) return a.text < b.text end)
 addon.functions.SettingsCreateCheckboxes(cMapNav, data)
 
-addon.functions.SettingsCreateHeadline(cMapNav, L["SquareMinimapStats"] or "Square Minimap Stats", { parentSection = mapExpandable })
-
 data = {
 	{
 		var = "enableSquareMinimapStats",
@@ -491,6 +512,8 @@ data = {
 		parentCheck = isSquareMinimapEnabledSetting,
 		notify = "enableSquareMinimap",
 		parentSection = mapExpandable,
+		groupID = "minimap",
+		groupTitle = minimapLabel,
 		children = {
 			{
 				var = "squareMinimapStatsFont",
@@ -533,8 +556,8 @@ data = {
 				parentSection = mapExpandable,
 			},
 			{
-				text = "",
-				sType = "hint",
+				text = L["Time"] or "Time",
+				sType = "sectionheader",
 				parentSection = mapExpandable,
 			},
 			{
@@ -710,8 +733,8 @@ data = {
 				},
 			},
 			{
-				text = "",
-				sType = "hint",
+				text = L["squareMinimapStatsFPS"] or "FPS",
+				sType = "sectionheader",
 				parentSection = mapExpandable,
 			},
 			{
@@ -911,8 +934,8 @@ data = {
 				},
 			},
 			{
-				text = "",
-				sType = "hint",
+				text = L["Latency"] or "Latency",
+				sType = "sectionheader",
 				parentSection = mapExpandable,
 			},
 			{
@@ -1134,8 +1157,8 @@ data = {
 				},
 			},
 			{
-				text = "",
-				sType = "hint",
+				text = DURABILITY or L["Durability"] or "Durability",
+				sType = "sectionheader",
 				parentSection = mapExpandable,
 			},
 			{
@@ -1266,8 +1289,8 @@ data = {
 				},
 			},
 			{
-				text = "",
-				sType = "hint",
+				text = L["Location"] or "Location",
+				sType = "sectionheader",
 				parentSection = mapExpandable,
 			},
 			{
@@ -1446,8 +1469,8 @@ data = {
 				},
 			},
 			{
-				text = "",
-				sType = "hint",
+				text = L["Coordinates"] or "Coordinates",
+				sType = "sectionheader",
 				parentSection = mapExpandable,
 			},
 			{
@@ -1608,8 +1631,8 @@ data = {
 				},
 			},
 			{
-				text = "",
-				sType = "hint",
+				text = L["squareMinimapStatsTrackingButton"] or "Tracking Button",
+				sType = "sectionheader",
 				parentSection = mapExpandable,
 			},
 			{
@@ -1718,7 +1741,11 @@ data = {
 table.sort(data, function(a, b) return a.text < b.text end)
 addon.functions.SettingsCreateCheckboxes(cMapNav, data)
 
-addon.functions.SettingsCreateHeadline(cMapNav, L["MinimapButtonsAndCluster"] or "Minimap Buttons & Cluster", { parentSection = mapExpandable })
+addon.functions.SettingsCreateSectionHeader(cMapNav, L["MinimapButtonsAndCluster"] or "Minimap Buttons & Cluster", {
+	parentSection = mapExpandable,
+	groupID = "minimap",
+	groupTitle = minimapLabel,
+})
 
 data = {
 	{
@@ -1731,6 +1758,8 @@ data = {
 		end,
 		default = false,
 		parentSection = mapExpandable,
+		groupID = "minimap",
+		groupTitle = minimapLabel,
 	},
 	{
 		var = "unclampMinimapCluster",
@@ -1742,6 +1771,8 @@ data = {
 		end,
 		default = false,
 		parentSection = mapExpandable,
+		groupID = "minimap",
+		groupTitle = minimapLabel,
 	},
 	{
 		var = "enableMinimapClusterScale",
@@ -1753,6 +1784,8 @@ data = {
 		end,
 		default = false,
 		parentSection = mapExpandable,
+		groupID = "minimap",
+		groupTitle = minimapLabel,
 		children = {
 			{
 				var = "minimapClusterScale",
@@ -1787,6 +1820,8 @@ data = {
 		end,
 		default = false,
 		parentSection = mapExpandable,
+		groupID = "minimap",
+		groupTitle = minimapLabel,
 	},
 }
 
@@ -1797,6 +1832,8 @@ addon.functions.SettingsCreateMultiDropdown(cMapNav, {
 	var = "hiddenMinimapElements",
 	text = L["minimapHideElements"],
 	parentSection = mapExpandable,
+	groupID = "minimap",
+	groupTitle = minimapLabel,
 	options = {
 		{ value = "Tracking", text = L["minimapHideElements_Tracking"] },
 		{ value = "ZoneInfo", text = L["minimapHideElements_ZoneInfo"] },
@@ -1810,7 +1847,11 @@ addon.functions.SettingsCreateMultiDropdown(cMapNav, {
 	end,
 })
 
-addon.functions.SettingsCreateHeadline(cMapNav, L["LootspecAndLandingPage"] or "Lootspec & Landing Page", { parentSection = mapExpandable })
+addon.functions.SettingsCreateSectionHeader(cMapNav, L["LootspecAndLandingPage"] or "Lootspec & Landing Page", {
+	parentSection = mapExpandable,
+	groupID = "minimap",
+	groupTitle = minimapLabel,
+})
 
 data = {
 	{
@@ -1827,6 +1868,8 @@ data = {
 		end,
 		default = false,
 		parentSection = mapExpandable,
+		groupID = "minimap",
+		groupTitle = minimapLabel,
 	},
 	{
 		var = "enableLandingPageMenu",
@@ -1835,6 +1878,8 @@ data = {
 		func = function(key) addon.db["enableLandingPageMenu"] = key end,
 		default = false,
 		parentSection = mapExpandable,
+		groupID = "minimap",
+		groupTitle = minimapLabel,
 	},
 	{
 		var = "landingPageButtonCustomPosition",
@@ -1851,6 +1896,8 @@ data = {
 		default = false,
 		parent = true,
 		parentSection = mapExpandable,
+		groupID = "minimap",
+		groupTitle = minimapLabel,
 		children = {
 			{
 				var = "landingPageButtonAnchor",
@@ -1926,7 +1973,11 @@ data = {
 table.sort(data, function(a, b) return a.text < b.text end)
 addon.functions.SettingsCreateCheckboxes(cMapNav, data)
 
-addon.functions.SettingsCreateText(cMapNav, "|cff99e599" .. L["landingPageHide"] .. "|r", { parentSection = mapExpandable })
+addon.functions.SettingsCreateText(cMapNav, "|cff99e599" .. L["landingPageHide"] .. "|r", {
+	parentSection = mapExpandable,
+	groupID = "minimap",
+	groupTitle = minimapLabel,
+})
 
 local function resolveLandingPageId(value)
 	if type(value) == "number" then return value end
@@ -1981,6 +2032,8 @@ addon.functions.SettingsCreateMultiDropdown(cMapNav, {
 	var = "hiddenLandingPages",
 	text = HIDE,
 	parentSection = mapExpandable,
+	groupID = "minimap",
+	groupTitle = minimapLabel,
 	optionfunc = function()
 		local buttons = (addon.variables and addon.variables.landingPageType) or {}
 		local list = {}
@@ -1994,7 +2047,12 @@ addon.functions.SettingsCreateMultiDropdown(cMapNav, {
 	setSelectedFunc = setIgnoreStateLandingPage,
 })
 
-addon.functions.SettingsCreateHeadline(cMapNav, L["InstanceDifficultyIndicator"] or "Instance Difficulty Indicator", { parentSection = mapExpandable })
+addon.functions.SettingsCreateHeadline(cMapNav, L["InstanceDifficultyIndicator"] or "Instance Difficulty Indicator", {
+	parentSection = mapExpandable,
+	groupID = "instance-difficulty",
+	groupTitle = L["InstanceDifficultyIndicator"] or "Instance Difficulty Indicator",
+	order = 30,
+})
 
 data = {
 	{
@@ -2007,6 +2065,8 @@ data = {
 		end,
 		default = false,
 		parentSection = mapExpandable,
+		groupID = "instance-difficulty",
+		groupTitle = L["InstanceDifficultyIndicator"] or "Instance Difficulty Indicator",
 		children = {
 			{
 				var = "instanceDifficultyFontSize",
@@ -2248,7 +2308,12 @@ data = {
 table.sort(data, function(a, b) return a.text < b.text end)
 addon.functions.SettingsCreateCheckboxes(cMapNav, data)
 
-addon.functions.SettingsCreateHeadline(cMapNav, L["MinimapButtonBin"] or "Minimap Button Bin", { parentSection = mapExpandable })
+addon.functions.SettingsCreateHeadline(cMapNav, L["MinimapButtonBin"] or "Minimap Button Bin", {
+	parentSection = mapExpandable,
+	groupID = "button-sink",
+	groupTitle = L["MinimapButtonSinkGroup"] or L["MinimapButtonBin"] or "Button Sink",
+	order = 40,
+})
 local buttonSinkSection = mapExpandable
 
 local function isButtonSinkSettingEnabled(key)
@@ -2277,6 +2342,8 @@ data = {
 		end,
 		default = false,
 		parentSection = buttonSinkSection,
+		groupID = "button-sink",
+		groupTitle = L["MinimapButtonSinkGroup"] or L["MinimapButtonBin"] or "Button Sink",
 		children = {
 			{
 				var = "useMinimapButtonBinIcon",
@@ -2574,6 +2641,8 @@ addon.functions.SettingsCreateMultiDropdown(cMapNav, {
 	element = addon.SettingsLayout.elements["enableMinimapButtonBin"] and addon.SettingsLayout.elements["enableMinimapButtonBin"].element,
 	parentCheck = isMinimapButtonBinEnabled,
 	parentSection = buttonSinkSection,
+	groupID = "button-sink",
+	groupTitle = L["MinimapButtonSinkGroup"] or L["MinimapButtonBin"] or "Button Sink",
 	optionfunc = function()
 		local buttons = (addon.variables and addon.variables.bagButtonState) or {}
 		local list = {}

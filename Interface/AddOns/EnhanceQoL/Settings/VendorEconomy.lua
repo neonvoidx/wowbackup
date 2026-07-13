@@ -646,6 +646,7 @@ function addon.functions.settingsAddGold()
 	local goldExpandable = addon.functions.SettingsCreateExpandableSection(addon.SettingsLayout.rootGENERAL, {
 		name = L["GoldTracking"],
 		configPageKey = "GoldTracking",
+		modernCategory = "economy",
 		iconKey = "goldtracking",
 		modernOnly = true,
 		expanded = false,

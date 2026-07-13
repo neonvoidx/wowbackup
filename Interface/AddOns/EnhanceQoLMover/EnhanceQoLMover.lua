@@ -45,6 +45,7 @@ local function buildSettings()
 		expanded = false,
 		colorizeTitle = false,
 		newTagID = "Mover",
+		sortGroups = false,
 	})
 
 	local hintText = L["MoverResetHint"]
@@ -54,6 +55,8 @@ local function buildSettings()
 	addon.functions.SettingsCreateHeadline(cLayout, {
 		name = L["Global Settings"] or "General",
 		parentSection = expandable,
+		groupID = "settings",
+		order = 1,
 	})
 
 	local rootSettingKey = "moverEnabled"
@@ -83,19 +86,56 @@ local function buildSettings()
 		end
 	end
 
+	local displayGroups = {
+		activities = { id = "gameplay", label = _G["SETTING_GROUP_GAMEPLAY"] or "Gameplay", order = 40 },
+		bags = { id = "inventory-economy", label = L["moverSettingsInventoryEconomy"] or "Inventory & Economy", order = 50 },
+		character = { id = "character", label = CHARACTER, order = 20 },
+		housing = { id = "world", label = L["World"] or "World", order = 30 },
+		professions = { id = "inventory-economy", label = L["moverSettingsInventoryEconomy"] or "Inventory & Economy", order = 50 },
+		system = { id = "system", label = SETTING_GROUP_SYSTEM, order = 60 },
+		vendors = { id = "inventory-economy", label = L["moverSettingsInventoryEconomy"] or "Inventory & Economy", order = 50 },
+		world = { id = "world", label = L["World"] or "World", order = 30 },
+	}
+	local registeredDisplayGroups = {}
+	local displayGroupOrder = {
+		{ id = "character", label = CHARACTER, order = 20 },
+		{ id = "world", label = L["World"] or "World", order = 30 },
+		{ id = "gameplay", label = _G["SETTING_GROUP_GAMEPLAY"] or "Gameplay", order = 40 },
+		{ id = "inventory-economy", label = L["moverSettingsInventoryEconomy"] or "Inventory & Economy", order = 50 },
+		{ id = "system", label = SETTING_GROUP_SYSTEM, order = 60 },
+	}
+	for _, displayGroup in ipairs(displayGroupOrder) do
+		addon.functions.SettingsCreateHeadline(cLayout, {
+			name = displayGroup.label or displayGroup.id,
+			parentSection = expandable,
+			groupID = displayGroup.id,
+			order = displayGroup.order,
+			groupControlColumns = 1,
+		})
+		registeredDisplayGroups[displayGroup.id] = true
+	end
 	for _, group in ipairs(addon.Mover.functions.GetGroups()) do
 		local parentSection = expandable
 		local enableElement = rootElement
-		addon.functions.SettingsCreateHeadline(cLayout, {
-			name = group.label or group.id,
-			parentSection = parentSection,
-		})
+		local displayGroup = displayGroups[group.id] or { id = group.id, label = group.label or group.id, order = group.order or 500 }
+		if not registeredDisplayGroups[displayGroup.id] then
+			addon.functions.SettingsCreateHeadline(cLayout, {
+				name = displayGroup.label or displayGroup.id,
+				parentSection = parentSection,
+				groupID = displayGroup.id,
+				order = displayGroup.order,
+				groupControlColumns = 1,
+			})
+			registeredDisplayGroups[displayGroup.id] = true
+		end
 
 		for _, entry in ipairs(addon.Mover.functions.GetEntriesForGroup(group.id)) do
 			local e = entry
 			addon.functions.SettingsCreateCheckboxDropdown(cLayout, {
 				var = e.settingKey or e.id,
 				text = e.label or e.id,
+				groupID = displayGroup.id,
+				groupTitle = displayGroup.label or displayGroup.id,
 				default = e.defaultEnabled ~= false,
 				get = function() return addon.Mover.functions.IsFrameEnabled(e) end,
 				set = function(value)

@@ -89,6 +89,7 @@ ReputationBar.defaults = ReputationBar.defaults
 		abbreviateNumbers = false,
 		hideInPetBattle = false,
 		hideBlizzardTracking = true,
+		autoWatchGainedFaction = false,
 	}
 
 local defaults = ReputationBar.defaults
@@ -133,6 +134,7 @@ local DB_TEXT_COLOR = "repBarTextColor"
 local DB_TEXT_ABBREVIATE_NUMBERS = "repBarTextAbbreviateNumbers"
 local DB_HIDE_IN_PET_BATTLE = "repBarHideInPetBattle"
 local DB_HIDE_BLIZZARD_TRACKING = "repBarHideBlizzardTracking"
+local DB_AUTO_WATCH_GAINED_FACTION = "repBarAutoWatchGainedFaction"
 local DB_VISIBILITY = "repBarVisibility"
 local DB_VISIBILITY_EXPLICIT = "repBarVisibilityExplicit"
 local DB_PRESERVED_FACTION_ID = "repBarPreservedFactionID"
@@ -177,6 +179,8 @@ end
 local function shouldHideInPetBattleForRep() return getValue(DB_HIDE_IN_PET_BATTLE, defaults.hideInPetBattle) == true end
 
 local function isPetBattleActive() return C_PetBattles and C_PetBattles.IsInBattle and C_PetBattles.IsInBattle() == true end
+
+local rememberFactionID
 
 function ReputationBar:GetVisibilityRuntimeConfig()
 	local cfg = self._visibilityRuntimeConfig
@@ -597,6 +601,23 @@ local function findWatchedFactionData()
 	return nil
 end
 
+function ReputationBar:AutoWatchGainedReputation(factionID, updatedStanding)
+	local id = tonumber(factionID)
+	local standing = tonumber(updatedStanding)
+	if not id or id <= 0 or not standing then return end
+
+	self._eventStandingByFaction = self._eventStandingByFaction or {}
+	local previousStanding = self._eventStandingByFaction[id]
+	self._eventStandingByFaction[id] = standing
+
+	if not (addon.db and addon.db[DB_AUTO_WATCH_GAINED_FACTION] == true) then return end
+	if previousStanding and standing <= previousStanding then return end
+	if not (C_Reputation and C_Reputation.SetWatchedFactionByID) then return end
+
+	local ok = pcall(C_Reputation.SetWatchedFactionByID, id)
+	if ok then rememberFactionID(id) end
+end
+
 local function isWatchingHonorAsExperience()
 	local isWatching = _G and _G.IsWatchingHonorAsXP
 	if isWatching then return isWatching() == true end
@@ -604,7 +625,7 @@ local function isWatchingHonorAsExperience()
 	return false
 end
 
-local function rememberFactionID(factionID)
+rememberFactionID = function(factionID)
 	local id = tonumber(factionID)
 	if not id or id <= 0 then return end
 	ReputationBar.preservedFactionID = id
@@ -1445,7 +1466,8 @@ function ReputationBar:UpdateReputation()
 	frame:SetValue(fraction)
 	self:ApplyCurrentFillColor(ctx)
 	self:UpdateTextFromContext(ctx)
-	frame:Show()
+	local rb = addon.Aura and addon.Aura.ResourceBars
+	if not rb or not rb.ShouldDeferShowToVisibilityDriver or not rb.ShouldDeferShowToVisibilityDriver(frame, self:GetVisibilityRuntimeConfig()) then frame:Show() end
 	self:ApplyVisibilityPreference(true)
 	self:ApplyBlizzardTrackingVisibility()
 end
@@ -1485,12 +1507,16 @@ function ReputationBar:RegisterEvents()
 	local frame = self:EnsureEventFrame()
 	frame:RegisterEvent("PLAYER_LOGIN")
 	frame:RegisterEvent("PLAYER_ENTERING_WORLD")
+	frame:RegisterEvent("FACTION_STANDING_CHANGED")
 	frame:RegisterEvent("UPDATE_FACTION")
 	frame:RegisterEvent("PET_BATTLE_OPENING_START")
 	frame:RegisterEvent("PET_BATTLE_CLOSE")
 	frame:SetScript("OnEvent", function(_, event, ...)
 		if event == "PLAYER_LOGIN" or event == "PLAYER_ENTERING_WORLD" then
+			ReputationBar._eventStandingByFaction = {}
 			ReputationBar:UpdateSoon()
+		elseif event == "FACTION_STANDING_CHANGED" then
+			ReputationBar:AutoWatchGainedReputation(...)
 		end
 		ReputationBar:UpdateReputation()
 	end)
@@ -1501,6 +1527,7 @@ function ReputationBar:UnregisterEvents()
 	if not self.eventsRegistered or not self.eventFrame then return end
 	self.eventFrame:UnregisterEvent("PLAYER_LOGIN")
 	self.eventFrame:UnregisterEvent("PLAYER_ENTERING_WORLD")
+	self.eventFrame:UnregisterEvent("FACTION_STANDING_CHANGED")
 	self.eventFrame:UnregisterEvent("UPDATE_FACTION")
 	self.eventFrame:UnregisterEvent("PET_BATTLE_OPENING_START")
 	self.eventFrame:UnregisterEvent("PET_BATTLE_CLOSE")

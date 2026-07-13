@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd \"/Applications/World of Warcraft/_retail_/Interface/AddOns/HyperframePlus\" && echo \"=== variableKey values ===\" && grep -rhoE \"variableKey\\\\s*=\\\\s*[\\\\\"'][^\\\\\"']+[\\\\\"']\" . | sed -E \"s/variableKey\\\\s*=\\\\s*[\\\\\"']\\([^\\\\\"']+\\)[\\\\\"']/\\\\1/\" | sort -u && echo \"\" && echo \"=== globalSettings block \\(Core\\) ===\" && grep -nE \"globalSettings\" HyperframePlus_*.lua)",
+      "Read(//Applications/World of Warcraft/_retail_/Interface/AddOns/HyperframePlus/**)"
+    ]
+  }
+}

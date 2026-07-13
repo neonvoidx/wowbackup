@@ -324,6 +324,18 @@ function ResourceBars.ApplySegmentContentInset(segment, inset)
 	if not segment then return end
 	inset = tonumber(inset) or 0
 	if inset < 0 then inset = 0 end
+	local fill = segment.fill
+	local textureOwner = fill or segment
+	local tex = textureOwner.GetStatusBarTexture and textureOwner:GetStatusBarTexture() or nil
+	local bg = segment._rbSegmentBg
+	if
+		segment._rbSegmentContentInset == inset
+		and segment._rbSegmentContentFill == fill
+		and segment._rbSegmentContentTexture == tex
+		and segment._rbSegmentContentBg == bg
+	then
+		return
+	end
 
 	local function anchorRegion(region, target)
 		if not (region and region.ClearAllPoints and region.SetPoint) then return end
@@ -339,10 +351,7 @@ function ResourceBars.ApplySegmentContentInset(segment, inset)
 		end
 	end
 
-	local fill = segment.fill
 	if fill then anchorRegion(fill) end
-	local textureOwner = fill or segment
-	local tex = textureOwner.GetStatusBarTexture and textureOwner:GetStatusBarTexture() or nil
 	if tex then
 		ResourceBars.ApplyTexturePixelSnapping(tex, 0)
 		if fill then
@@ -357,11 +366,14 @@ function ResourceBars.ApplySegmentContentInset(segment, inset)
 			anchorRegion(tex, segment)
 		end
 	end
-	if segment._rbSegmentBg then
-		ResourceBars.ApplyTexturePixelSnapping(segment._rbSegmentBg, 0)
-		anchorRegion(segment._rbSegmentBg)
+	if bg then
+		ResourceBars.ApplyTexturePixelSnapping(bg, 0)
+		anchorRegion(bg)
 	end
 	segment._rbSegmentContentInset = inset
+	segment._rbSegmentContentFill = fill
+	segment._rbSegmentContentTexture = tex
+	segment._rbSegmentContentBg = bg
 end
 
 function ResourceBars.GetAnchorHelper()
@@ -586,6 +598,7 @@ local COSMETIC_BAR_KEYS = {
 	"staggerCriticalColor",
 	"useMaelstromFiveColor",
 	"useMaelstromTenStacks",
+	"visualSegments",
 	"useMaelstromCarryFill",
 	"maelstromFiveColor",
 	"maelstromMidStack",
@@ -662,6 +675,7 @@ ResourceBars.POWER_TYPE_STYLE_OVERRIDE_KEYS = {
 	"holyThreeColor",
 	"useMaelstromFiveColor",
 	"useMaelstromTenStacks",
+	"visualSegments",
 	"useMaelstromCarryFill",
 	"maelstromFiveColor",
 	"maelstromMidStack",
@@ -872,6 +886,7 @@ ResourceBars.PowerLabels = {
 	VOID_METAMORPHOSIS = (C_Spell.GetSpellName(RB.VOID_METAMORPHOSIS_SPELL_ID)) or "Void Metamorphosis",
 	EBON_MIGHT = (C_Spell.GetSpellName(RB.EBON_MIGHT_SPELL_ID)) or "Ebon Might",
 	TIP_OF_THE_SPEAR = (C_Spell.GetSpellName(RB.TIP_OF_THE_SPEAR_SPELL_ID)) or "Tip of the Spear",
+	WHIRLWIND = (C_Spell.GetSpellName(190411)) or "Whirlwind",
 	STAGGER = (_G and _G["STAGGER"]) or "Stagger",
 }
 
@@ -927,6 +942,19 @@ RB.AURA_POWER_CONFIG = {
 		defaultColor = { 0.85, 0.62, 0.25, 1 },
 		defaultTextStyle = "CURRENT",
 	},
+	WHIRLWIND = {
+		requiredSpellId = 12950, -- Improved Whirlwind
+		stateProvider = function()
+			local tracker = addon.Aura and addon.Aura.WhirlwindTracker
+			if tracker and tracker.GetCounts then return tracker:GetCounts() end
+			return 0, 4, 4
+		end,
+		requiresUnitAura = false,
+		maxStacks = 4,
+		visualSegments = 4,
+		defaultColor = { 0.78, 0.18, 0.18, 1 },
+		useMaxColorDefault = true,
+	},
 }
 
 local function registerAuraSpellLookup()
@@ -945,12 +973,44 @@ function ResourceBars.IsAuraPowerType(pType)
 	return isAuraPowerType(pType)
 end
 
+function ResourceBars.IsNativeAuraPowerClient()
+	return (tonumber((select(4, GetBuildInfo()))) or 0) >= 120100
+end
+
+function ResourceBars.GetNativeAuraPowerBackend()
+	local backend = ResourceBars.NativeAuraPowerBackend
+	if not (backend and backend.IsSupported and backend:IsSupported()) then return nil end
+	return backend
+end
+
 function ResourceBars.AreAuraPowerBarsDisabledForClient()
-	return addon.AuraCompat ~= nil
+	if not ResourceBars.IsNativeAuraPowerClient() then return false end
+	return ResourceBars.GetNativeAuraPowerBackend() == nil
 end
 
 function ResourceBars.IsAuraPowerBarTypeAvailable(pType)
-	return isAuraPowerType(pType) and not ResourceBars.AreAuraPowerBarsDisabledForClient()
+	local cfg = RB.AURA_POWER_CONFIG and RB.AURA_POWER_CONFIG[pType]
+	if not cfg then return false end
+	if cfg.requiredSpellId and not isSpellKnownSafe(cfg.requiredSpellId) then return false end
+	if cfg.stateProvider then return true end
+	-- Soul Fragments use the unrestricted spell-cast-count API, not aura data.
+	if cfg.spellCastCountId then return true end
+	if not ResourceBars.IsNativeAuraPowerClient() then return true end
+	local backend = ResourceBars.GetNativeAuraPowerBackend()
+	if not backend then return false end
+	return not backend.CanHandlePowerType or backend:CanHandlePowerType(pType) == true
+end
+
+function ResourceBars.GetAuraPowerConfig(pType)
+	return RB.AURA_POWER_CONFIG and RB.AURA_POWER_CONFIG[pType] or nil
+end
+
+function ResourceBars.GetAuraPowerConfigs()
+	return RB.AURA_POWER_CONFIG or {}
+end
+
+function ResourceBars.GetPowerBar(pType)
+	return powerbar and powerbar[pType] or nil
 end
 
 function ResourceBars.IsDurationPowerType(pType)
@@ -1000,7 +1060,7 @@ local function resetAuraTracking()
 end
 
 local function handleAuraEventInfo(eventInfo)
-	if ResourceBars.AreAuraPowerBarsDisabledForClient() then return nil end
+	if ResourceBars.IsNativeAuraPowerClient() then return nil end
 	if not eventInfo then return nil end
 	local changed = {}
 	for _, aura in ipairs(eventInfo.addedAuras or {}) do
@@ -1029,14 +1089,18 @@ local function handleAuraEventInfo(eventInfo)
 	return changed
 end
 local function getAuraPowerCounts(pType)
-	if ResourceBars.AreAuraPowerBarsDisabledForClient() then return 0, 0, 0 end
 	local cfg = RB.AURA_POWER_CONFIG[pType]
 	if not cfg then return 0, 0, 0 end
+	if cfg.stateProvider then return cfg.stateProvider() end
 	if cfg.spellCastCountId and C_Spell and C_Spell.GetSpellCastCount then
 		local current = C_Spell.GetSpellCastCount(cfg.spellCastCountId) or 0
 		local maxStacks = tonumber(cfg.maxStacks) or tonumber(cfg.visualSegments) or 0
 		return current or 0, maxStacks, tonumber(cfg.visualSegments) or maxStacks
 	end
+	-- 12.1 aura values are owned by the native AuraContainer backend. Never let
+	-- the legacy reader touch C_UnitAuras on that client, even if the backend is
+	-- temporarily unavailable.
+	if ResourceBars.IsNativeAuraPowerClient() then return 0, 0, 0 end
 	local state = ensureAuraPowerState(pType)
 	local auraData
 	if state.currentInstance and C_UnitAuras and C_UnitAuras.GetAuraDataByAuraInstanceID then
@@ -1092,7 +1156,7 @@ end
 
 function ResourceBars.UpdateAuraPowerState(eventInfo)
 	if not RB.AURA_POWER_CONFIG then return end
-	if ResourceBars.AreAuraPowerBarsDisabledForClient() then
+	if ResourceBars.IsNativeAuraPowerClient() then
 		resetAuraTracking()
 		return
 	end
@@ -1632,7 +1696,13 @@ local function ensureAuraPowerDefaults(pType, cfg)
 	if not cfg then return end
 	local def = RB.AURA_POWER_CONFIG[pType]
 	if cfg.separatedOffset == nil then cfg.separatedOffset = 0 end
-	if def and not cfg.visualSegments then cfg.visualSegments = def.visualSegments end
+	if def then
+		if pType == "MAELSTROM_WEAPON" then
+			if not cfg.visualSegments then cfg.visualSegments = def.visualSegments end
+		else
+			cfg.visualSegments = def.visualSegments
+		end
+	end
 	if def and def.defaultTextStyle and cfg.textStyle == nil then cfg.textStyle = def.defaultTextStyle end
 	if def and def.useMaxColorDefault and cfg.useMaxColor == nil then cfg.useMaxColor = true end
 	if cfg.useMaxColor and not cfg.maxColor then cfg.maxColor = CopyTable(RB.DEFAULT_MAX_COLOR) end
@@ -4465,7 +4535,7 @@ function ResourceBars.GetSharedSlotPossibleTypes(slot, classTag)
 
 	local function addType(pType)
 		if type(pType) ~= "string" or pType == "" or wanted[pType] then return end
-		if ResourceBars.AreAuraPowerBarsDisabledForClient and ResourceBars.AreAuraPowerBarsDisabledForClient() and isAuraPowerType(pType) then return end
+		if isAuraPowerType(pType) and not ResourceBars.IsAuraPowerBarTypeAvailable(pType) then return end
 		wanted[pType] = true
 	end
 
@@ -4627,7 +4697,7 @@ function ResourceBars.ResolveSharedSlotAssignments(specIndex)
 		order = { "HEALTH" },
 	}
 	local function isSharedAuraTypeAvailable(pType)
-		return not (ResourceBars.AreAuraPowerBarsDisabledForClient and ResourceBars.AreAuraPowerBarsDisabledForClient() and isAuraPowerType(pType))
+		return not isAuraPowerType(pType) or ResourceBars.IsAuraPowerBarTypeAvailable(pType)
 	end
 	local specInfo = getSpecInfo(spec)
 	if not specInfo then return cacheAndReturn(resolved) end
@@ -4722,7 +4792,7 @@ function ResourceBars.ResolveConfigSourceForBar(pType, specIndex)
 end
 
 function ResourceBars.IsResolvedBarTypeEnabled(pType, specIndex)
-	if ResourceBars.AreAuraPowerBarsDisabledForClient() and isAuraPowerType(pType) then return false end
+	if isAuraPowerType(pType) and not ResourceBars.IsAuraPowerBarTypeAvailable(pType) then return false end
 	local spec = tonumber(specIndex or addon.variables.unitSpec)
 	if ResourceBars.SpecUsesSharedMode(spec) then
 		local slot = ResourceBars.GetSharedSlotForResolvedBar(pType, spec)
@@ -5514,7 +5584,7 @@ powertypeClasses = {
 	},
 	WARRIOR = {
 		[1] = { MAIN = "RAGE" },
-		[2] = { MAIN = "RAGE" },
+		[2] = { MAIN = "RAGE", WHIRLWIND = true },
 		[3] = { MAIN = "RAGE" },
 	},
 }
@@ -5542,6 +5612,7 @@ classPowerTypes = {
 	"ARCANE_CHARGES",
 	"ICICLES",
 	"TIP_OF_THE_SPEAR",
+	"WHIRLWIND",
 	"MANA",
 }
 
@@ -5557,10 +5628,10 @@ ResourceBars.separatorEligible = {
 	COMBO_POINTS = true,
 	ICICLES = true,
 	TIP_OF_THE_SPEAR = true,
+	WHIRLWIND = true,
 	SOUL_FRAGMENTS_VENGEANCE = true,
 	VOID_METAMORPHOSIS = true,
 	MAELSTROM_WEAPON = true,
-	EBON_MIGHT = true,
 	RUNES = true,
 }
 
@@ -5574,7 +5645,9 @@ function ResourceBars.ApplySharedPowerTypeOverride(runtimeCfg, sourceCfg, pType)
 	if type(override) ~= "table" or override.enabled ~= true then return end
 	local slotTextDisabled = runtimeCfg and runtimeCfg.textStyle == "NONE"
 	for _, key in ipairs(ResourceBars.POWER_TYPE_STYLE_OVERRIDE_KEYS or {}) do
-		if override[key] ~= nil and not (slotTextDisabled and key == "textStyle") then runtimeCfg[key] = type(override[key]) == "table" and CopyTable(override[key]) or override[key] end
+		if override[key] ~= nil and not (slotTextDisabled and key == "textStyle") and (key ~= "visualSegments" or pType == "MAELSTROM_WEAPON") then
+			runtimeCfg[key] = type(override[key]) == "table" and CopyTable(override[key]) or override[key]
+		end
 	end
 end
 
@@ -5662,6 +5735,8 @@ function ResourceBars.AssignFrameRuntimeConfig(frame, cfg, pType, specIndex)
 	if not frame then return cfg end
 	frame._cfg = cfg
 	frame._rbCfgCacheToken = cfg and ResourceBars.GetFrameRuntimeConfigToken(pType, specIndex) or nil
+	local backend = ResourceBars.NativeAuraPowerBackend
+	if backend and backend.OnBarTypeAssigned then backend:OnBarTypeAssigned(frame, pType) end
 	return cfg
 end
 
@@ -5798,6 +5873,14 @@ end
 function updatePowerBar(type, runeSlot)
 	local bar = powerbar[type]
 	if not bar or not bar:IsShown() then return end
+	local nativeAuraCfg = RB.AURA_POWER_CONFIG and RB.AURA_POWER_CONFIG[type]
+	if nativeAuraCfg and not nativeAuraCfg.spellCastCountId and ResourceBars.IsNativeAuraPowerClient() then
+		local backend = ResourceBars.GetNativeAuraPowerBackend()
+		if backend and backend.UpdatePowerBar then backend:UpdatePowerBar(type, bar) end
+		-- The native backend owns these bars on 12.1. A missing/failed backend must
+		-- fail closed instead of falling through to secret C_UnitAuras reads.
+		return
+	end
 	-- Special handling for DK RUNES: six sub-bars that fill as cooldown progresses
 	if type == "RUNES" then
 		local cfg = ResourceBars.GetRuntimeBarConfig("RUNES", bar) or {}
@@ -6785,6 +6868,16 @@ function updatePowerBar(type, runeSlot)
 	end
 end
 
+function ResourceBars.RefreshAuraPowerBar(pType)
+	if not isAuraPowerType(pType) then return false end
+	local bar = powerbar[pType]
+	if not (bar and bar:IsShown()) then return false end
+	updatePowerBar(pType)
+	return true
+end
+
+ResourceBars.UpdatePowerBar = updatePowerBar
+
 function forceColorUpdate(pType)
 	if pType == "HEALTH" then
 		updateHealthBar("FORCE_COLOR")
@@ -6823,7 +6916,8 @@ getSeparatorSegmentCount = function(pType, cfg)
 		return POWER_ENUM and UnitPowerMax("player", POWER_ENUM.ESSENCE) or 0
 	elseif isAuraPowerType and isAuraPowerType(pType) then
 		local auraCfg = RB.AURA_POWER_CONFIG[pType] or {}
-		return (cfg and cfg.visualSegments) or auraCfg.visualSegments or auraCfg.maxStacks or 0
+		if pType == "MAELSTROM_WEAPON" then return (cfg and cfg.visualSegments) or auraCfg.visualSegments or auraCfg.maxStacks or 0 end
+		return auraCfg.visualSegments or auraCfg.maxStacks or 0
 	end
 	local enumId = POWER_ENUM[pType]
 	return enumId and UnitPowerMax("player", enumId) or 0
@@ -7662,15 +7756,18 @@ local function classUsesAuraPowers(class)
 
 	for _, specInfo in pairs(classTbl) do
 		if type(specInfo) == "table" then
-			for pType in pairs(RB.AURA_POWER_CONFIG or {}) do
-				if ResourceBars.IsAuraPowerBarTypeAvailable(pType) and (specInfo.MAIN == pType or specInfo[pType]) then return true end
+			for pType, cfg in pairs(RB.AURA_POWER_CONFIG or {}) do
+				if cfg.requiresUnitAura ~= false and ResourceBars.IsAuraPowerBarTypeAvailable(pType) and (specInfo.MAIN == pType or specInfo[pType]) then return true end
 			end
 		end
 	end
 	return false
 end
 
-local function classNeedsUnitAura(class) return classUsesAuraPowers(class) or class == "MONK" end
+local function classNeedsUnitAura(class)
+	if ResourceBars.IsNativeAuraPowerClient() then return false end
+	return classUsesAuraPowers(class)
+end
 
 if classNeedsUnitAura(addon.variables.unitClass) then table.insert(RB.EVENTS_TO_REGISTER, "UNIT_AURA") end
 local function isResourceFrameEnabled()
@@ -7684,6 +7781,8 @@ local function setPowerbars(opts)
 	ResourceBars._widthSyncRequested = false
 	if not isResourceFrameEnabled() then
 		if ResourceBars and ResourceBars.DisableResourceBars then ResourceBars.DisableResourceBars() end
+		if ResourceBars._staggerTicker then ResourceBars._staggerTicker:Cancel() end
+		ResourceBars._staggerTicker = nil
 		ResourceBars._reanchorRequested = nil
 		ResourceBars._widthSyncRequested = nil
 		if ResourceBars.EndRuntimeConfigBatch then ResourceBars.EndRuntimeConfigBatch() end
@@ -7734,7 +7833,7 @@ local function setPowerbars(opts)
 	if sharedMode then
 		local sharedMainCfg = ResourceBars.EnsureSharedSlotStore("MAIN")
 		local mainType = sharedAssignments and sharedAssignments.MAIN or nil
-		if ResourceBars.AreAuraPowerBarsDisabledForClient() and isAuraPowerType(mainType) then mainType = nil end
+		if isAuraPowerType(mainType) and not ResourceBars.IsAuraPowerBarTypeAvailable(mainType) then mainType = nil end
 		local enabledMain = mainType and sharedMainCfg and sharedMainCfg.enabled == true
 		if enabledMain then
 			activatePowerBar(mainType, healthEnabled and healthBar or nil, "MAIN")
@@ -7746,7 +7845,7 @@ local function setPowerbars(opts)
 
 		for _, slot in ipairs({ "SECONDARY", "TERTIARY" }) do
 			local pType = sharedAssignments and sharedAssignments[slot] or nil
-			if ResourceBars.AreAuraPowerBarsDisabledForClient() and isAuraPowerType(pType) then pType = nil end
+			if isAuraPowerType(pType) and not ResourceBars.IsAuraPowerBarTypeAvailable(pType) then pType = nil end
 			local slotCfg = ResourceBars.EnsureSharedSlotStore(slot)
 			local showBar = pType and slotCfg and slotCfg.enabled == true
 			if pType then
@@ -7763,7 +7862,7 @@ local function setPowerbars(opts)
 	else
 		if specInfo and specInfo.MAIN then
 			local mType = specInfo.MAIN
-			if ResourceBars.AreAuraPowerBarsDisabledForClient() and isAuraPowerType(mType) then mType = nil end
+			if isAuraPowerType(mType) and not ResourceBars.IsAuraPowerBarTypeAvailable(mType) then mType = nil end
 			local enabledMain = mType and specCfg and specCfg[mType] and specCfg[mType].enabled == true
 			if mType and enabledMain then
 				activatePowerBar(mType, (healthEnabled and healthBar or nil))
@@ -7776,7 +7875,7 @@ local function setPowerbars(opts)
 		for _, pType in ipairs(classPowerTypes) do
 			local showBar = false
 			local shouldShow = false
-			if not (ResourceBars.AreAuraPowerBarsDisabledForClient() and isAuraPowerType(pType)) and specCfg and specCfg[pType] and specCfg[pType].enabled == true then
+			if (not isAuraPowerType(pType) or ResourceBars.IsAuraPowerBarTypeAvailable(pType)) and specCfg and specCfg[pType] and specCfg[pType].enabled == true then
 				if mainPowerBar == pType then
 					shouldShow = true
 				elseif specInfo and specInfo[pType] then
@@ -7867,6 +7966,12 @@ local function setPowerbars(opts)
 	if ResourceBars.EndRuntimeConfigBatch then ResourceBars.EndRuntimeConfigBatch() end
 	ResourceBars._runtimeSpec = tonumber(addon.variables.unitSpec)
 	ResourceBars._runtimeSpecMode = sharedMode and "SHARED" or "SPEC"
+	if ResourceBars.RefreshStaggerTicker then ResourceBars.RefreshStaggerTicker() end
+	local whirlwindTracker = addon.Aura and addon.Aura.WhirlwindTracker
+	if whirlwindTracker and whirlwindTracker.SetActive then
+		local whirlwindBar = powerbar.WHIRLWIND
+		whirlwindTracker:SetActive(whirlwindBar and whirlwindBar._rbDesiredVisible == true)
+	end
 	return needsPostReanchor
 end
 addon.Aura.functions.setPowerBars = setPowerbars
@@ -8122,6 +8227,7 @@ function visibilityLogic:HasShowRules(config)
 		or config.PLAYER_HAS_FOCUS
 		or config.PLAYER_HAS_TARGET
 		or config.PLAYER_IN_GROUP
+		or config.SHOW_IN_INSTANCE
 end
 
 function visibilityLogic:ShouldShow(config, useAnd)
@@ -8141,6 +8247,7 @@ function visibilityLogic:ShouldShow(config, useAnd)
 	local casting = self:IsPlayerCasting()
 	local skyriding = self:IsPlayerSkyriding()
 	local flying = self:IsPlayerFlying()
+	local inInstance = IsInInstance and IsInInstance() == true
 
 	if useAnd then
 		local hasRule = false
@@ -8161,6 +8268,7 @@ function visibilityLogic:ShouldShow(config, useAnd)
 		if not requireRule(config.PLAYER_HAS_FOCUS, hasFocus) then return false end
 		if not requireRule(config.PLAYER_HAS_TARGET, hasTarget) then return false end
 		if not requireRule(config.PLAYER_IN_GROUP, inGroup) then return false end
+		if not requireRule(config.SHOW_IN_INSTANCE, inInstance) then return false end
 		if hasRule then return true end
 		return true
 	end
@@ -8184,13 +8292,14 @@ function visibilityLogic:ShouldShow(config, useAnd)
 	if config.PLAYER_HAS_FOCUS and hasFocus then return true end
 	if config.PLAYER_HAS_TARGET and hasTarget then return true end
 	if config.PLAYER_IN_GROUP and inGroup then return true end
+	if config.SHOW_IN_INSTANCE and inInstance then return true end
 	return false
 end
 
 function visibilityLogic:UsesManualRules(config, useAnd)
 	if not config then return false end
 	if useAnd == true then return true end
-	return config.PLAYER_CASTING == true or config.SKYRIDING_ACTIVE == true or config.SKYRIDING_INACTIVE == true or config.FLYING_ACTIVE == true or config.FLYING_INACTIVE == true
+	return config.PLAYER_CASTING == true or config.SKYRIDING_ACTIVE == true or config.SKYRIDING_INACTIVE == true or config.FLYING_ACTIVE == true or config.FLYING_INACTIVE == true or config.SHOW_IN_INSTANCE == true
 end
 
 function visibilityLogic:AppendUniqueClause(clauses, seen, condition, action)
@@ -8373,7 +8482,6 @@ end
 
 function ResourceBars.ShouldDeferShowToVisibilityDriver(frame, cfg)
 	if not frame or not cfg then return false end
-	if tostring(addon.variables and addon.variables.unitClass or "") ~= "DRUID" then return false end
 	if addon.EditMode and addon.EditMode.IsInEditMode and addon.EditMode:IsInEditMode() then return false end
 	local expr, usesManualVisibility = visibilityLogic:BuildDriver(cfg)
 	return expr ~= nil and usesManualVisibility ~= true
@@ -8428,6 +8536,10 @@ function visibilityLogic:EnsureWatcher()
 	visibilityDriverWatcher = CreateFrame("Frame")
 	visibilityDriverWatcher:RegisterEvent("PLAYER_REGEN_ENABLED")
 	visibilityDriverWatcher:RegisterEvent("PLAYER_MOUNT_DISPLAY_CHANGED")
+	visibilityDriverWatcher:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+	visibilityDriverWatcher:RegisterEvent("PLAYER_DIFFICULTY_CHANGED")
+	visibilityDriverWatcher:RegisterEvent("INSTANCE_GROUP_SIZE_CHANGED")
+	visibilityDriverWatcher:RegisterEvent("UPDATE_INSTANCE_INFO")
 	if visibilityDriverWatcher.RegisterUnitEvent then
 		visibilityDriverWatcher:RegisterUnitEvent("UNIT_ENTERED_VEHICLE", "player")
 		visibilityDriverWatcher:RegisterUnitEvent("UNIT_EXITED_VEHICLE", "player")
@@ -8461,6 +8573,8 @@ function visibilityLogic:EnsureWatcher()
 			local mounted = IsMounted and IsMounted() or false
 			if not ResourceBars._pendingVisibilityDriver and self._playerMounted == mounted then return end
 			self._playerMounted = mounted
+		elseif event == "ZONE_CHANGED_NEW_AREA" or event == "PLAYER_DIFFICULTY_CHANGED" or event == "INSTANCE_GROUP_SIZE_CHANGED" or event == "UPDATE_INSTANCE_INFO" then
+			-- Instance state is not expressible as a secure driver condition.
 		elseif event == "UNIT_ENTERED_VEHICLE" or event == "UNIT_EXITED_VEHICLE" then
 			if unit and unit ~= "player" then return end
 			local inVehicle = UnitInVehicle and UnitInVehicle("player") or false
@@ -8691,6 +8805,27 @@ local function updateStaggerBarIfShown()
 	if powerbar["STAGGER"] and powerbar["STAGGER"]:IsShown() then updatePowerBar("STAGGER") end
 end
 
+function ResourceBars.RefreshStaggerTicker()
+	local bar = addon.variables.unitClass == "MONK" and powerbar["STAGGER"] or nil
+	local shouldRun = bar and bar:IsShown() or false
+	if not shouldRun then
+		if ResourceBars._staggerTicker then ResourceBars._staggerTicker:Cancel() end
+		ResourceBars._staggerTicker = nil
+		return
+	end
+	if not bar._eqolStaggerTickerVisibilityHooked then
+		bar:HookScript("OnShow", function() ResourceBars.RefreshStaggerTicker() end)
+		bar:HookScript("OnHide", function() ResourceBars.RefreshStaggerTicker() end)
+		bar._eqolStaggerTickerVisibilityHooked = true
+	end
+	if not ResourceBars._staggerTicker and C_Timer and C_Timer.NewTicker then
+		-- Blizzard marks its Stagger bar for frequent OnUpdate refreshes. A
+		-- visibility-scoped 20 Hz ticker gives us the same reliable decay/purify
+		-- updates without retaining UNIT_AURA solely for this non-aura resource.
+		ResourceBars._staggerTicker = C_Timer.NewTicker(0.05, updateStaggerBarIfShown)
+	end
+end
+
 function ResourceBars.ResetPowerBarRuntimeCaches()
 	for pType, bar in pairs(powerbar or {}) do
 		if bar then
@@ -8757,6 +8892,10 @@ local function eventHandler(self, event, eventArg1, eventArg2)
 		or event == "PLAYER_REGEN_DISABLED"
 		or event == "PLAYER_REGEN_ENABLED"
 		or event == "PLAYER_MOUNT_DISPLAY_CHANGED"
+		or event == "ZONE_CHANGED_NEW_AREA"
+		or event == "PLAYER_DIFFICULTY_CHANGED"
+		or event == "INSTANCE_GROUP_SIZE_CHANGED"
+		or event == "UPDATE_INSTANCE_INFO"
 		or event == "PLAYER_CAN_GLIDE_CHANGED"
 		or event == "PLAYER_IS_GLIDING_CHANGED"
 	then
@@ -8815,7 +8954,7 @@ local function eventHandler(self, event, eventArg1, eventArg2)
 			finalizeShapeshiftLayout()
 		end
 	elseif event == "UNIT_AURA" and unit == "player" then
-		if ResourceBars.AreAuraPowerBarsDisabledForClient() then
+		if ResourceBars.IsNativeAuraPowerClient() then
 			resetAuraTracking()
 			updateStaggerBarIfShown()
 			return
@@ -8919,6 +9058,10 @@ function ResourceBars.EnableResourceBars()
 	frameAnchor:RegisterEvent("PLAYER_REGEN_DISABLED")
 	frameAnchor:RegisterEvent("PLAYER_REGEN_ENABLED")
 	frameAnchor:RegisterEvent("PLAYER_MOUNT_DISPLAY_CHANGED")
+	frameAnchor:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+	frameAnchor:RegisterEvent("PLAYER_DIFFICULTY_CHANGED")
+	frameAnchor:RegisterEvent("INSTANCE_GROUP_SIZE_CHANGED")
+	frameAnchor:RegisterEvent("UPDATE_INSTANCE_INFO")
 	frameAnchor:RegisterEvent("PLAYER_CAN_GLIDE_CHANGED")
 	frameAnchor:RegisterEvent("PLAYER_IS_GLIDING_CHANGED")
 	frameAnchor:RegisterEvent("PET_BATTLE_OPENING_START")
@@ -8965,6 +9108,8 @@ function ResourceBars.EnableResourceBars()
 end
 
 function ResourceBars.DisableResourceBars()
+	local whirlwindTracker = addon.Aura and addon.Aura.WhirlwindTracker
+	if whirlwindTracker and whirlwindTracker.SetActive then whirlwindTracker:SetActive(false) end
 	local function resetRuntimeFrame(frame)
 		if not frame then return end
 		applyVisibilityDriverToFrame(frame, nil)
@@ -9692,183 +9837,6 @@ ResourceBars.SpecNameByIndex = specNameByIndex
 ResourceBars.SaveGlobalProfile = saveGlobalProfile
 ResourceBars.ApplyGlobalProfile = applyGlobalProfile
 
-function ResourceBars.DebugBarState(pType)
-	pType = pType or "RUNES"
-	local bar = powerbar and powerbar[pType]
-	local cfg = getBarSettings(pType) or {}
-	local bd = cfg.backdrop or {}
-	local gap = ResourceBars.ResolveDiscreteSegmentGap and ResourceBars.ResolveDiscreteSegmentGap(cfg) or 0
-	local useSegmentBorders = true
-	local borderEnabled, borderTexture, borderEdgeSize, borderOutset, borderR, borderG, borderB, borderA
-	if ResourceBars.ResolveDiscreteSegmentBorderStyle then borderEnabled, borderTexture, borderEdgeSize, borderOutset, borderR, borderG, borderB, borderA = ResourceBars.ResolveDiscreteSegmentBorderStyle(cfg, useSegmentBorders) end
-	local segment = bar and pType == "RUNES" and bar.runes and bar.runes[1] or nil
-	if not segment and bar and bar._rbDiscreteSegments then segment = bar._rbDiscreteSegments[1] end
-	local fill = segment and segment.fill or segment
-	local parentTex = bar and bar.GetStatusBarTexture and bar:GetStatusBarTexture() or nil
-	local fillTex = fill and fill.GetStatusBarTexture and fill:GetStatusBarTexture() or nil
-	local gapMark = bar and bar.runeGapMarks and bar.runeGapMarks[1] or nil
-	local segmentBorder = segment and segment._rbSegmentBorder or nil
-	local segmentBorderSafeState = segmentBorder and segmentBorder._rbDiscreteSegmentSafeBorder or nil
-	local parentBorderFrame = bar and bar._rbBorder or nil
-	local parentBorderBackdrop = parentBorderFrame and parentBorderFrame.GetBackdrop and parentBorderFrame:GetBackdrop() or nil
-	local segmentBorderBackdrop = segmentBorder and segmentBorder.GetBackdrop and segmentBorder:GetBackdrop() or nil
-	local function rect(region)
-		if not (region and region.GetRect) then return nil end
-		local left, bottom, width, height = region:GetRect()
-		return { left = left, bottom = bottom, width = width, height = height }
-	end
-	local pixelScale, pixelFactor = ResourceBars.GetPixelScale(bar)
-	local onePixel = ResourceBars.Pixel.OnePixel(bar)
-	local function pixelRect(region)
-		if not (region and region.GetRect) or not onePixel or onePixel <= 0 then return nil end
-		local left, bottom, width, height = region:GetRect()
-		if not left then return nil end
-		return {
-			left = ResourceBars.RoundPixel(left / onePixel),
-			bottom = ResourceBars.RoundPixel(bottom / onePixel),
-			width = ResourceBars.RoundPixel(width / onePixel),
-			height = ResourceBars.RoundPixel(height / onePixel),
-		}
-	end
-	local borderState = bar and bar._rbBorder and bar._rbBorder._rbParentSafeBorder or nil
-	return {
-		type = pType,
-		class = addon.variables and addon.variables.unitClass,
-		spec = addon.variables and addon.variables.unitSpec,
-		barShown = bar and bar:IsShown() or false,
-		pixelScale = pixelScale,
-		pixelFactor = pixelFactor,
-		onePixel = onePixel,
-		barSize = bar and { bar:GetWidth(), bar:GetHeight() } or nil,
-		barRect = rect(bar),
-		barPixelRect = pixelRect(bar),
-		innerSize = bar and bar._rbInner and { bar._rbInner:GetWidth(), bar._rbInner:GetHeight() } or nil,
-		innerRect = rect(bar and bar._rbInner),
-		innerPixelRect = pixelRect(bar and bar._rbInner),
-		borderRect = rect(bar and bar._rbBorder),
-		borderPixelRect = pixelRect(bar and bar._rbBorder),
-		parentBorderShown = parentBorderFrame and parentBorderFrame:IsShown() or false,
-		parentBorderBackdropEdgeFile = parentBorderBackdrop and parentBorderBackdrop.edgeFile or nil,
-		parentBorderBackdropEdgeSize = parentBorderBackdrop and parentBorderBackdrop.edgeSize or nil,
-		parentSafeBorderEnabled = borderState and borderState.enabled or false,
-		parentSafeBorderSize = borderState and borderState.size or nil,
-		parentSafeBorderTexture = borderState and borderState.texture or nil,
-		borderTopRect = rect(borderState and borderState.top),
-		borderBottomRect = rect(borderState and borderState.bottom),
-		borderLeftRect = rect(borderState and borderState.left),
-		borderRightRect = rect(borderState and borderState.right),
-		borderTopPixelRect = pixelRect(borderState and borderState.top),
-		borderBottomPixelRect = pixelRect(borderState and borderState.bottom),
-		borderLeftPixelRect = pixelRect(borderState and borderState.left),
-		borderRightPixelRect = pixelRect(borderState and borderState.right),
-		parentTextureAlpha = parentTex and parentTex:GetAlpha() or nil,
-		segmentShown = segment and segment:IsShown() or false,
-		segmentSize = segment and { segment:GetWidth(), segment:GetHeight() } or nil,
-		segmentRect = rect(segment),
-		segmentPixelRect = pixelRect(segment),
-		segmentBorderShown = segmentBorder and segmentBorder:IsShown() or false,
-		segmentBorderRect = rect(segmentBorder),
-		segmentBorderPixelRect = pixelRect(segmentBorder),
-		segmentBorderBackdropEdgeFile = segmentBorderBackdrop and segmentBorderBackdrop.edgeFile or nil,
-		segmentBorderBackdropEdgeSize = segmentBorderBackdrop and segmentBorderBackdrop.edgeSize or nil,
-		segmentSafeBorderEnabled = segmentBorderSafeState and segmentBorderSafeState.enabled or false,
-		segmentSafeBorderSize = segmentBorderSafeState and segmentBorderSafeState.size or nil,
-		segmentSafeBorderTexture = segmentBorderSafeState and segmentBorderSafeState.texture or nil,
-		segmentSafeBorderTopRect = rect(segmentBorderSafeState and segmentBorderSafeState.top),
-		segmentSafeBorderTopPixelRect = pixelRect(segmentBorderSafeState and segmentBorderSafeState.top),
-		segmentSafeBorderLeftRect = rect(segmentBorderSafeState and segmentBorderSafeState.left),
-		segmentSafeBorderLeftPixelRect = pixelRect(segmentBorderSafeState and segmentBorderSafeState.left),
-		fillRect = rect(fill),
-		fillPixelRect = pixelRect(fill),
-		segmentBgRect = rect(segment and segment._rbSegmentBg),
-		segmentBgPixelRect = pixelRect(segment and segment._rbSegmentBg),
-		gapMarkRect = rect(gapMark),
-		segmentContentInset = segment and segment._rbSegmentContentInset or nil,
-		segmentTextureAlpha = fillTex and fillTex:GetAlpha() or nil,
-		separatedOffset = cfg.separatedOffset,
-		resolvedGap = gap,
-		useGradient = cfg.useGradient,
-		useSegmentBorders = useSegmentBorders,
-		backdropEnabled = bd.enabled,
-		backdropBorderTexture = bd.borderTexture,
-		backdropBorderColor = bd.borderColor,
-		backdropEdgeSize = bd.edgeSize,
-		backdropOutset = bd.outset,
-		backdropResolvedBorderOutset = max(0, tonumber(bd.outset) or 0),
-		borderEnabled = borderEnabled,
-		borderTexture = borderTexture,
-		borderEdgeSize = borderEdgeSize,
-		borderOutset = borderOutset,
-		borderColor = { borderR, borderG, borderB, borderA },
-		resolvedContentInset = ResourceBars.ResolveBorderContentInset(borderEdgeSize, borderOutset, borderA),
-	}
-end
-
-function ResourceBars.DebugBarStateText(pType)
-	local function serialize(value, indent)
-		indent = indent or 0
-		local valueType = type(value)
-		if valueType == "string" then return string.format("%q", value) end
-		if valueType == "number" or valueType == "boolean" or value == nil then return tostring(value) end
-		if valueType ~= "table" then return string.format("%q", tostring(value)) end
-
-		local keys = {}
-		for key in pairs(value) do
-			keys[#keys + 1] = key
-		end
-		tsort(keys, function(a, b) return tostring(a) < tostring(b) end)
-
-		local pad = string.rep(" ", indent)
-		local childPad = string.rep(" ", indent + 2)
-		local lines = { "{" }
-		for _, key in ipairs(keys) do
-			local keyText
-			if type(key) == "string" and key:match("^[%a_][%w_]*$") then
-				keyText = key
-			else
-				keyText = "[" .. serialize(key, 0) .. "]"
-			end
-			lines[#lines + 1] = childPad .. keyText .. " = " .. serialize(value[key], indent + 2) .. ","
-		end
-		lines[#lines + 1] = pad .. "}"
-		return table.concat(lines, "\n")
-	end
-
-	return serialize(ResourceBars.DebugBarState(pType or "RUNES"), 0)
-end
-
-function ResourceBars.ShowDebugBarStateCopy(pType)
-	local text = ResourceBars.DebugBarStateText(pType or "RUNES")
-	local popupKey = "EQOL_RESOURCEBARS_DEBUG_COPY"
-	StaticPopupDialogs[popupKey] = StaticPopupDialogs[popupKey]
-		or {
-			text = "ResourceBars debug state",
-			button1 = CLOSE,
-			hasEditBox = true,
-			editBoxWidth = 640,
-			maxLetters = 999999,
-			timeout = 0,
-			whileDead = true,
-			hideOnEscape = true,
-			preferredIndex = 3,
-			EditBoxOnEscapePressed = function(editBox) editBox:GetParent():Hide() end,
-		}
-	StaticPopupDialogs[popupKey].OnShow = function(self)
-		local editBox = self.editBox or (self.GetEditBox and self:GetEditBox())
-		if not editBox then return end
-		editBox:SetText(self.data or "")
-		editBox:HighlightText()
-		editBox:SetFocus()
-	end
-	StaticPopup_Show(popupKey, nil, nil, text)
-	return text
-end
-
-SLASH_EQOL_RESOURCEBARS_DEBUG_COPY1 = "/eqolrbdump"
-SlashCmdList.EQOL_RESOURCEBARS_DEBUG_COPY = function(msg)
-	local pType = type(msg) == "string" and msg:match("%S+") or nil
-	ResourceBars.ShowDebugBarStateCopy(pType or "RUNES")
-end
 
 addon.exportResourceProfile = function(profileName, scopeKey) return ResourceBars.ExportProfile(scopeKey, profileName) end
 addon.importResourceProfile = function(encoded, scopeKey) return ResourceBars.ImportProfile(encoded, scopeKey) end

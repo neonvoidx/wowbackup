@@ -320,27 +320,8 @@ EventHandler.frame:SetScript("OnEvent", function(self, event, ...)
     EventHandler.events[event](self, event, ...)
 end)
 
-local buffLayoutHookBusy = false
 hooksecurefunc(BuffIconCooldownViewer, "Layout", function()
-    if buffLayoutHookBusy then
-        return
-    end
-    if not Runtime:IsReady(BuffIconCooldownViewer) then
-        return
-    end
-    if not (ns.BuffData and ns.BuffData.IsEnabled()) then
-        return
-    end
-    buffLayoutHookBusy = true
-    if ns.CooldownManager then
-        ns.CooldownManager.ForceRefresh({ icons = true })
-    end
-    buffLayoutHookBusy = false
-end)
-
--- TODO check if non 12.1.0 we wouldn't have to hook RefreshData or just OnCooldownDataChanged
-hooksecurefunc(BuffIconCooldownViewer, "RefreshLayout", function()
-    if not Runtime:IsReady(BuffIconCooldownViewer) then
+    if not Runtime:IsReady(BuffIconCooldownViewer) or BuffIconCooldownViewer._cmc_Layout then
         return
     end
     if ns.StyledIcons then
@@ -354,16 +335,16 @@ hooksecurefunc(BuffIconCooldownViewer, "RefreshLayout", function()
         ns.CooldownManager.ForceRefresh({ icons = true })
     end
 end)
-hooksecurefunc(BuffBarCooldownViewer, "RefreshLayout", function()
-    if not Runtime:IsReady(BuffBarCooldownViewer) then
+hooksecurefunc(BuffBarCooldownViewer, "Layout", function()
+    if not Runtime:IsReady(BuffBarCooldownViewer) or BuffBarCooldownViewer._cmc_Layout then
         return
     end
     if ns.CooldownManager then
         ns.CooldownManager.ForceRefresh({ bars = true })
     end
 end)
-hooksecurefunc(EssentialCooldownViewer, "RefreshLayout", function()
-    if not Runtime:IsReady(EssentialCooldownViewer) then
+hooksecurefunc(EssentialCooldownViewer, "Layout", function()
+    if not Runtime:IsReady(EssentialCooldownViewer) or EssentialCooldownViewer._cmc_Layout then
         return
     end
     if ns.StyledIcons then
@@ -379,8 +360,8 @@ hooksecurefunc(EssentialCooldownViewer, "RefreshLayout", function()
         ns.CooldownManager.ForceRefresh({ essential = true })
     end
 end)
-hooksecurefunc(UtilityCooldownViewer, "RefreshLayout", function()
-    if not Runtime:IsReady(UtilityCooldownViewer) then
+hooksecurefunc(UtilityCooldownViewer, "Layout", function()
+    if not Runtime:IsReady(UtilityCooldownViewer) or UtilityCooldownViewer._cmc_Layout then
         return
     end
     if ns.StyledIcons then

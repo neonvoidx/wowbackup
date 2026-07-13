@@ -19,7 +19,11 @@ addon.Bags.variables.settingsState = settingsState
 addon.Bags.integrated = true
 
 local function refreshConfigCenterLayout()
-	if SettingsInbound and SettingsInbound.RepairDisplay then
+	local frame = addon.ConfigCenterFrame
+	local state = frame and frame._LibSettingsDesignerState
+	if frame and frame:IsShown() and state and state.RenderContent then
+		state:RenderContent()
+	elseif SettingsInbound and SettingsInbound.RepairDisplay then
 		SettingsInbound.RepairDisplay()
 	elseif SettingsPanel and SettingsPanel.RepairDisplay then
 		SettingsPanel:RepairDisplay()
@@ -30,19 +34,20 @@ local function registerConfigCenterSettings()
 	if addon.Bags.variables.configCenterSettingsBuilt then return end
 	if not (addon.functions and addon.functions.SettingsCreateExpandableSection and addon.functions.SettingsCreateCheckbox) then return end
 
-	local bagsSuiteExpandable = addon.SettingsLayout and addon.SettingsLayout.suitesBagsSection
-	if not bagsSuiteExpandable then
-		bagsSuiteExpandable = addon.functions.SettingsCreateExpandableSection(nil, {
+	local bagsActivationSection = addon.SettingsLayout and addon.SettingsLayout.bagsActivationSection
+	if not bagsActivationSection then
+		bagsActivationSection = addon.functions.SettingsCreateExpandableSection(nil, {
 			name = L["configCenterBags"] or "Bags",
-			configPageKey = "Bags",
+			configPageKey = "BagsModule",
 			description = L["bagsModuleEnableDesc"],
 			iconKey = "bags",
 			modernCategory = "suites",
 			modernOnly = true,
+			order = 30,
 			expanded = false,
 			colorizeTitle = false,
 		})
-		addon.SettingsLayout.suitesBagsSection = bagsSuiteExpandable
+		addon.SettingsLayout.bagsActivationSection = bagsActivationSection
 	end
 
 	addon.functions.SettingsCreateCheckbox(nil, {
@@ -50,7 +55,7 @@ local function registerConfigCenterSettings()
 		text = L["bagsModuleEnable"] or "Enable Bags module",
 		desc = L["bagsModuleEnableDesc"] or "Opt-in replacement for the default bag window. Disabling after it was enabled takes full effect after a UI reload.",
 		default = false,
-		parentSection = bagsSuiteExpandable,
+		parentSection = bagsActivationSection,
 		get = function()
 			return addon.db and addon.db.enableBagsModule == true
 		end,
@@ -144,8 +149,11 @@ local refreshCategoriesPage
 local refreshFooterPage
 local refreshTrackingPage
 local refreshOverlaysPage
+local refreshOverlayCard
+local updateOverlayCardLayout
 local updateScrollContainer
 local createScrollContainer
+local createCategoriesPage
 local refreshSettingsUI
 local updateCategoryModeCard
 local createCategoryModeOnboardingFrame
@@ -1738,11 +1746,23 @@ local function setAnchorOptionVisual(button, isSelected)
 	end
 end
 
-local function createAnchorOptionButton(parent, elementID, anchorID)
+local function refreshOverlayCardAfterControl(card)
+	if not card then
+		return
+	end
+
+	updateOverlayCardLayout(card)
+	if refreshOverlayCard then
+		refreshOverlayCard(card)
+	end
+end
+
+local function createAnchorOptionButton(parent, elementID, anchorID, ownerCard)
 	local anchorInfo = getAnchorInfo(anchorID)
 	local button = CreateFrame("Button", nil, parent)
 	button:SetSize(24, 24)
 	button.anchorID = anchorID
+	button.OwnerCard = ownerCard
 
 	local normal = button:CreateTexture(nil, "BACKGROUND")
 	normal:SetAllPoints()
@@ -1792,7 +1812,11 @@ local function createAnchorOptionButton(parent, elementID, anchorID)
 		if addon.SetOverlayElementAnchor then
 			addon.SetOverlayElementAnchor(elementID, self.anchorID)
 		end
-		addon.RefreshSettingsFrame()
+		for _, anchorButton in ipairs((self.OwnerCard and self.OwnerCard.AnchorButtons) or {}) do
+			setAnchorOptionVisual(anchorButton, anchorButton.anchorID == self.anchorID)
+		end
+		refreshOverlayCardAfterControl(self.OwnerCard)
+		addon.RefreshSettingsFrame("overlays")
 		requestBagRefresh(false, true)
 	end)
 
@@ -1800,7 +1824,7 @@ local function createAnchorOptionButton(parent, elementID, anchorID)
 	return button
 end
 
-local function refreshOverlayCard(card)
+refreshOverlayCard = function(card)
 	if not card or not card.Definition then
 		return
 	end
@@ -1883,10 +1907,10 @@ local function refreshOverlayCard(card)
 			colorMode,
 			L["settingsOverlayColorModeLabel"] or "Item level color"
 		))
-		setButtonEnabledState(card.ColorModeButton, isEnabled)
+		setButtonEnabledState(card.ColorModeButton, true)
 	end
 	if card.ColorModeLabel then
-		card.ColorModeLabel:SetAlpha(isEnabled and 1 or 0.45)
+		card.ColorModeLabel:SetAlpha(isEnabled and 1 or 0.75)
 	end
 	if card.DisplayModeButton then
 		local displayMode = addon.GetOverlayElementDisplayMode and addon.GetOverlayElementDisplayMode(card.Definition.id) or card.Definition.defaultDisplayMode or "icon"
@@ -1895,23 +1919,23 @@ local function refreshOverlayCard(card)
 			displayMode,
 			L["settingsOverlayDisplayModeLabel"] or "Display"
 		))
-		setButtonEnabledState(card.DisplayModeButton, isEnabled)
+		setButtonEnabledState(card.DisplayModeButton, true)
 	end
 	if card.DisplayModeLabel then
-		card.DisplayModeLabel:SetAlpha(isEnabled and 1 or 0.45)
+		card.DisplayModeLabel:SetAlpha(isEnabled and 1 or 0.75)
 	end
 	if card.ColorSwatch then
 		local customColor = addon.GetOverlayElementCustomColor and addon.GetOverlayElementCustomColor(card.Definition.id) or { 1, 1, 1 }
 		card.ColorSwatch:SetColorRGB(customColor[1] or 1, customColor[2] or 1, customColor[3] or 1)
 		card.ColorSwatch:SetShown((addon.GetOverlayElementColorMode and addon.GetOverlayElementColorMode(card.Definition.id) or "rarity") == "custom")
-		card.ColorSwatch:SetEnabled(isEnabled)
-		card.ColorSwatch:SetAlpha(isEnabled and 1 or 0.45)
+		card.ColorSwatch:SetEnabled(true)
+		card.ColorSwatch:SetAlpha(isEnabled and 1 or 0.75)
 	end
 
 	for _, button in ipairs(card.AnchorButtons or {}) do
 		setAnchorOptionVisual(button, button.anchorID == anchorID)
-		button:SetEnabled(isEnabled)
-		button:SetAlpha(isEnabled and 1 or 0.45)
+		button:SetEnabled(true)
+		button:SetAlpha(isEnabled and 1 or 0.75)
 	end
 
 	for _, button in ipairs(card.TrackButtons or {}) do
@@ -1922,7 +1946,7 @@ local function refreshOverlayCard(card)
 	end
 end
 
-local function updateOverlayCardLayout(card)
+updateOverlayCardLayout = function(card)
 	if not card then
 		return
 	end
@@ -1975,7 +1999,8 @@ local function createOverlayAnchorCard(parent, definition)
 			if addon.SetOverlayElementEnabled then
 				addon.SetOverlayElementEnabled(definition.id, value)
 			end
-			addon.RefreshSettingsFrame()
+			refreshOverlayCardAfterControl(card)
+			addon.RefreshSettingsFrame("overlays")
 			requestBagRefresh(false, true)
 		end
 	)
@@ -2003,6 +2028,7 @@ local function createOverlayAnchorCard(parent, definition)
 				addon.GetOverlayElementDisplayMode and addon.GetOverlayElementDisplayMode(definition.id) or definition.defaultDisplayMode,
 				function(value)
 					if addon.SetOverlayElementDisplayMode and addon.SetOverlayElementDisplayMode(definition.id, value) then
+						refreshOverlayCardAfterControl(card)
 						addon.RefreshSettingsFrame("overlays")
 						requestBagRefresh(false, true)
 					end
@@ -2033,6 +2059,7 @@ local function createOverlayAnchorCard(parent, definition)
 				addon.GetOverlayElementColorMode and addon.GetOverlayElementColorMode(definition.id) or definition.defaultColorMode,
 				function(value)
 					if addon.SetOverlayElementColorMode and addon.SetOverlayElementColorMode(definition.id, value) then
+						refreshOverlayCardAfterControl(card)
 						addon.RefreshSettingsFrame("overlays")
 						requestBagRefresh(false, true)
 					end
@@ -2048,6 +2075,7 @@ local function createOverlayAnchorCard(parent, definition)
 			local currentColor = addon.GetOverlayElementCustomColor and addon.GetOverlayElementCustomColor(definition.id) or definition.defaultCustomColor or { 1, 1, 1 }
 			openColorPicker(currentColor, function(r, g, b)
 				if addon.SetOverlayElementCustomColor and addon.SetOverlayElementCustomColor(definition.id, r, g, b) then
+					refreshOverlayCardAfterControl(card)
 					addon.RefreshSettingsFrame("overlays")
 					requestBagRefresh(false, true)
 				end
@@ -2085,7 +2113,7 @@ local function createOverlayAnchorCard(parent, definition)
 	card.AnchorGrid = anchorGrid
 
 	for index, anchorID in ipairs(addon.GetOverlayAnchorOrder and addon.GetOverlayAnchorOrder() or {}) do
-		local button = createAnchorOptionButton(anchorGrid, definition.id, anchorID)
+		local button = createAnchorOptionButton(anchorGrid, definition.id, anchorID, card)
 		local row = math.floor((index - 1) / 3)
 		local column = (index - 1) % 3
 		button:SetPoint("TOPLEFT", anchorGrid, "TOPLEFT", column * 30, -(row * 30))
@@ -2146,7 +2174,8 @@ local function createOverlayAnchorCard(parent, definition)
 				if addon.SetUpgradeTrackOverlayTrackEnabled then
 					addon.SetUpgradeTrackOverlayTrackEnabled(option.value, value)
 				end
-				addon.RefreshSettingsFrame()
+				refreshOverlayCardAfterControl(card)
+				addon.RefreshSettingsFrame("overlays")
 				requestBagRefresh(false, true)
 			end)
 			button.trackKey = option.value
@@ -2449,7 +2478,7 @@ setPageSelection = function(pageID)
 	end
 end
 
-local function createCategoriesPage(parent)
+createCategoriesPage = function(parent)
 	local page = CreateFrame("Frame", nil, parent)
 	page:SetAllPoints()
 	page.CategoryButtons = {}
@@ -4702,7 +4731,7 @@ refreshLayoutPage = function(page)
 		local maxColumns = addon.GetMaxColumns and addon.GetMaxColumns() or 10
 		page.MaxColumnsControl.Value:SetText(tostring(maxColumns))
 		page.MaxColumnsControl.DownButton:SetEnabled(maxColumns > 4)
-		page.MaxColumnsControl.UpButton:SetEnabled(maxColumns < 24)
+		page.MaxColumnsControl.UpButton:SetEnabled(maxColumns < 40)
 	end
 	if page.TextFontButton then
 		page.TextFontButton:SetText(getOptionLabel(addon.GetTextFontOptions and addon.GetTextFontOptions() or {}, appearance.font, L["settingsTextFontLabel"] or "Font"))
@@ -5883,6 +5912,525 @@ local function createSettingsFrame()
 	settingsState.frame = frame
 	return frame
 end
+
+local function registerModernBagsSettings()
+	if addon.Bags.variables.modernBagsSettingsBuilt then return end
+	local app = addon.ConfigApp
+	if not (app and app.RegisterCategory and app.RegisterPage and app.RegisterControl) then return end
+
+	local bagsSuiteExpandable = addon.SettingsLayout and addon.SettingsLayout.suitesBagsSection
+	local bagsPageID = bagsSuiteExpandable and app.legacySections and app.legacySections[bagsSuiteExpandable] or nil
+	if not bagsPageID then bagsPageID = "suites.bags" end
+	if not app:GetPage(bagsPageID) then return end
+
+	local function optionLabel(option)
+		if type(option) ~= "table" then return tostring(option or "") end
+		return (option.labelKey and L[option.labelKey]) or option.label or option.name or tostring(option.value or "")
+	end
+
+	local function optionList(getter)
+		local options = getter and getter() or {}
+		local list, order = {}, {}
+		for index, option in ipairs(options) do
+			local value = type(option) == "table" and option.value or option
+			if value ~= nil then
+				list[value] = optionLabel(option)
+				order[#order + 1] = value
+			end
+			local _ = index
+		end
+		return list, order
+	end
+
+	local function refreshBags(pageID)
+		if addon.RefreshSettingsFrame and settingsState.frame then
+			addon.RefreshSettingsFrame(pageID, true)
+		end
+	end
+
+	local function requestAndRefresh(pageID, rebuild, forceWhenHidden)
+		requestBagRefresh(rebuild, forceWhenHidden)
+		refreshBags(pageID)
+		refreshConfigCenterLayout()
+	end
+
+	local modernPageIDs = {}
+	for _, pageInfo in ipairs(PAGE_ORDER) do
+		modernPageIDs[pageInfo.id] = bagsPageID
+	end
+
+	local function registerGroup(pageID, id, title, order, options)
+		options = options or {}
+		app:RegisterGroup(pageID, {
+			id = id,
+			title = title,
+			order = order,
+			columns = options.columns,
+			columnGap = options.columnGap,
+		})
+	end
+
+	local function expandCustomControlParent(parent, topOffset)
+		if not (parent and parent.ClearAllPoints and parent.GetParent) then return end
+		local row = parent:GetParent()
+		if not row then return end
+		parent:ClearAllPoints()
+		parent:SetPoint("TOPLEFT", row, "TOPLEFT", 8, topOffset or -8)
+		parent:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -8, 8)
+	end
+
+	local function registerToggle(pageID, groupID, id, labelKey, descKey, getter, setter, options)
+		options = options or {}
+		app:RegisterControl(pageID, {
+			id = id,
+			type = "toggle",
+			label = L[labelKey] or labelKey or id,
+			description = descKey and L[descKey] or nil,
+			default = options.default,
+			groupID = groupID,
+			order = options.order,
+			getValue = getter,
+			setValue = function(value)
+				if setter then setter(value == true) end
+				if options.after then options.after(value == true) end
+			end,
+			isEnabled = options.isEnabled,
+			visibleWhen = options.visibleWhen,
+		})
+	end
+
+	local function registerSlider(pageID, groupID, id, labelKey, getter, setter, minValue, maxValue, step, options)
+		options = options or {}
+		app:RegisterControl(pageID, {
+			id = id,
+			type = "slider",
+			label = L[labelKey] or labelKey or id,
+			default = options.default,
+			groupID = groupID,
+			order = options.order,
+			min = minValue,
+			max = maxValue,
+			step = step or 1,
+			suffix = options.suffix,
+			getValue = getter,
+			setValue = function(value)
+				if setter then setter(value) end
+				if options.after then options.after(value) end
+			end,
+			isEnabled = options.isEnabled,
+			visibleWhen = options.visibleWhen,
+		})
+	end
+
+	local function registerDropdown(pageID, groupID, id, labelKey, descKey, getter, setter, optionsGetter, options)
+		options = options or {}
+		app:RegisterControl(pageID, {
+			id = id,
+			type = "dropdown",
+			label = L[labelKey] or labelKey or id,
+			description = descKey and L[descKey] or nil,
+			default = options.default,
+			groupID = groupID,
+			order = options.order,
+			getValue = getter,
+			setValue = function(value)
+				if setter then setter(value) end
+				if options.after then options.after(value) end
+			end,
+			optionfunc = function()
+				return optionList(optionsGetter)
+			end,
+			isEnabled = options.isEnabled,
+			visibleWhen = options.visibleWhen,
+		})
+	end
+
+	local function registerColor(pageID, groupID, id, labelKey, getter, setter, options)
+		options = options or {}
+		app:RegisterControl(pageID, {
+			id = id,
+			type = "colorpicker",
+			label = L[labelKey] or labelKey or id,
+			description = options.description,
+			groupID = groupID,
+			order = options.order,
+			hasOpacity = options.hasOpacity,
+			getColor = function()
+				local color = getter and getter() or options.default or { 1, 1, 1, 1 }
+				return color[1] or color.r or 1, color[2] or color.g or 1, color[3] or color.b or 1, color[4] or color.a or 1
+			end,
+			setColor = function(_, r, g, b, a)
+				if setter then setter(r, g, b, a) end
+				if options.after then options.after(r, g, b, a) end
+			end,
+			getDefaultColor = function()
+				local color = options.default or { 1, 1, 1, 1 }
+				return color[1] or color.r or 1, color[2] or color.g or 1, color[3] or color.b or 1, color[4] or color.a or 1
+			end,
+			isEnabled = options.isEnabled,
+			visibleWhen = options.visibleWhen,
+		})
+	end
+
+	local function registerButton(pageID, groupID, id, labelKey, buttonText, onClick, options)
+		options = options or {}
+		app:RegisterControl(pageID, {
+			id = id,
+			type = "button",
+			label = L[labelKey] or labelKey or id,
+			buttonText = buttonText,
+			groupID = groupID,
+			order = options.order,
+			onClick = onClick,
+		})
+	end
+
+	local function registerSectionHeader(pageID, groupID, id, label, order, visibleWhen)
+		app:RegisterControl(pageID, {
+			id = id,
+			type = "sectionheader",
+			label = label or id,
+			groupID = groupID,
+			order = order,
+			visibleWhen = visibleWhen,
+			height = 38,
+			trackCustomized = false,
+		})
+	end
+
+	local function settingsValue(key, fallback)
+		return function()
+			local settings = getSettings()
+			if settings[key] == nil then return fallback end
+			return settings[key]
+		end
+	end
+
+	local function setSettingsValue(key, pageID, rebuild, forceWhenHidden)
+		return function(value)
+			getSettings()[key] = value
+			requestAndRefresh(pageID, rebuild, forceWhenHidden)
+		end
+	end
+
+	local function categoryOptionsEnabled()
+		local settings = getSettings()
+		return settings.showCategories == true and not isOneBagModeEnabled()
+	end
+
+	local layoutPageID = modernPageIDs.layout
+	registerGroup(layoutPageID, "layout", L["settingsCategoryLayout"] or "Layout", 10, { columns = 2, columnGap = 14 })
+	registerSectionHeader(layoutPageID, "layout", "layoutModeHeader", L["settingsCategoryModeTitle"] or "Category mode", 1)
+	registerDropdown(layoutPageID, "layout", "activeCategoryMode", "settingsCategoryModeTitle", nil, getActiveCategoryMode, function(value)
+		if addon.SetActiveCategoryMode then addon.SetActiveCategoryMode(value) end
+	end, function()
+		return {
+			{ value = "basic", label = L["settingsCategoryModeBasic"] or "Basic" },
+			{ value = "advanced", label = L["settingsCategoryModeAdvanced"] or "Advanced" },
+		}
+	end, { default = "basic", order = 10, after = function() requestAndRefresh("layout", true, true) end })
+	registerButton(layoutPageID, "layout", "copyBasicToAdvanced", "settingsCategoryModeCopyBasic", L["settingsCategoryModeCopyBasic"] or "Copy Basic to Advanced", function()
+		if addon.CopyBasicCategoriesToAdvanced then addon.CopyBasicCategoriesToAdvanced() end
+		requestAndRefresh("layout", true, true)
+	end, { order = 20 })
+	registerSectionHeader(layoutPageID, "layout", "layoutItemsHeader", L["settingsBasicLayoutTitle"] or L["settingsCategoryLayout"] or "Layout", 100)
+	registerToggle(layoutPageID, "layout", "oneBagMode", "settingsOneBagMode", "settingsOneBagModeTooltip", function()
+		return addon.GetOneBagMode and addon.GetOneBagMode() or getSettings().oneBagMode == true
+	end, function(value)
+		if addon.SetOneBagMode then addon.SetOneBagMode(value) else getSettings().oneBagMode = value end
+	end, { default = false, order = 110, after = function() requestAndRefresh("layout", true, true) end })
+	registerToggle(layoutPageID, "layout", "oneBagFreeSlotsAtEnd", "settingsOneBagFreeSlotsAtEnd", "settingsOneBagFreeSlotsAtEndTooltip", function()
+		return addon.GetOneBagFreeSlotsAtEnd and addon.GetOneBagFreeSlotsAtEnd() or getSettings().oneBagFreeSlotsAtEnd == true
+	end, function(value)
+		if addon.SetOneBagFreeSlotsAtEnd then addon.SetOneBagFreeSlotsAtEnd(value) else getSettings().oneBagFreeSlotsAtEnd = value end
+	end, { default = false, order = 120, visibleWhen = isOneBagModeEnabled, after = function() requestAndRefresh("layout", true, true) end })
+	registerToggle(layoutPageID, "layout", "showCategories", "settingsShowCategories", "settingsShowCategoriesTooltip", settingsValue("showCategories", true), setSettingsValue("showCategories", "layout", true), { default = true, order = 130, isEnabled = function() return not isOneBagModeEnabled() end, visibleWhen = function() return not isBasicCategoryMode() and not isOneBagModeEnabled() end })
+	registerToggle(layoutPageID, "layout", "combineFreeSlots", "settingsCombineFreeSlots", "settingsCombineFreeSlotsTooltip", settingsValue("combineFreeSlots", true), setSettingsValue("combineFreeSlots", "layout", true), { default = true, order = 140, isEnabled = function() return not isOneBagModeEnabled() end, visibleWhen = function() return not isOneBagModeEnabled() end })
+	registerToggle(layoutPageID, "layout", "showFreeSlots", "settingsShowFreeSlots", "settingsShowFreeSlotsTooltip", function()
+		return addon.GetShowFreeSlots == nil or addon.GetShowFreeSlots()
+	end, function(value)
+		if addon.SetShowFreeSlots then addon.SetShowFreeSlots(value) else getSettings().showFreeSlots = value end
+	end, { default = true, order = 150, after = function() requestAndRefresh("layout", true) end })
+	registerToggle(layoutPageID, "layout", "combineUnstackableItems", "settingsCombineUnstackableItems", "settingsCombineUnstackableItemsTooltip", settingsValue("combineUnstackableItems", true), setSettingsValue("combineUnstackableItems", "layout", true), { default = true, order = 160, isEnabled = function() return not isOneBagModeEnabled() end, visibleWhen = function() return not isOneBagModeEnabled() end })
+	registerToggle(layoutPageID, "layout", "clearNewItemsOnHeaderClick", "settingsClearNewItemsOnHeaderClick", "settingsClearNewItemsOnHeaderClickTooltip", function()
+		return addon.GetClearNewItemsOnHeaderClick and addon.GetClearNewItemsOnHeaderClick() or false
+	end, function(value)
+		if addon.SetClearNewItemsOnHeaderClick then addon.SetClearNewItemsOnHeaderClick(value) else getSettings().clearNewItemsOnHeaderClick = value end
+	end, { default = false, order = 170, isEnabled = function() return not isOneBagModeEnabled() end, visibleWhen = function() return not isOneBagModeEnabled() end, after = function() requestAndRefresh("layout", true, true) end })
+	registerToggle(layoutPageID, "layout", "compactCategoryLayout", "settingsCompactCategoryLayout", "settingsCompactCategoryLayoutTooltip", function()
+		return addon.GetCompactCategoryLayout and addon.GetCompactCategoryLayout() or getSettings().compactCategoryLayout == true
+	end, function(value)
+		if addon.SetCompactCategoryLayout then addon.SetCompactCategoryLayout(value) else getSettings().compactCategoryLayout = value end
+	end, { default = true, order = 180, isEnabled = categoryOptionsEnabled, visibleWhen = function() return not isOneBagModeEnabled() end, after = function() requestAndRefresh("layout", true) end })
+	registerSlider(layoutPageID, "layout", "compactCategoryGap", "settingsCompactCategoryGapLabel", function()
+		return addon.GetCompactCategoryGap and addon.GetCompactCategoryGap() or 8
+	end, function(value)
+		if addon.SetCompactCategoryGap then addon.SetCompactCategoryGap(value) end
+	end, 0, 40, 1, { default = 8, order = 190, isEnabled = function() return categoryOptionsEnabled() and (addon.GetCompactCategoryLayout == nil or addon.GetCompactCategoryLayout()) end, visibleWhen = function() return not isOneBagModeEnabled() end, after = function() requestAndRefresh("layout", true) end })
+	registerToggle(layoutPageID, "layout", "categoryTreeView", "settingsCategoryTreeView", "settingsCategoryTreeViewTooltip", function()
+		return addon.GetCategoryTreeView and addon.GetCategoryTreeView() or false
+	end, function(value)
+		if addon.SetCategoryTreeView then addon.SetCategoryTreeView(value) else getSettings().categoryTreeView = value end
+	end, { default = false, order = 200, isEnabled = function() return not isOneBagModeEnabled() end, visibleWhen = function() return not isOneBagModeEnabled() end, after = function() requestAndRefresh("layout", true, true) end })
+	registerSlider(layoutPageID, "layout", "categoryTreeIndent", "settingsCategoryTreeIndentLabel", function()
+		return addon.GetCategoryTreeIndent and addon.GetCategoryTreeIndent() or 14
+	end, function(value)
+		if addon.SetCategoryTreeIndent then addon.SetCategoryTreeIndent(value) end
+	end, 0, 40, 1, { default = 14, order = 210, isEnabled = function() return not isOneBagModeEnabled() and (addon.GetCategoryTreeView and addon.GetCategoryTreeView()) end, visibleWhen = function() return not isOneBagModeEnabled() end, after = function() requestAndRefresh("layout", true, true) end })
+	registerToggle(layoutPageID, "layout", "showCloseButton", "settingsShowCloseButton", "settingsShowCloseButtonTooltip", function()
+		return addon.GetShowCloseButton == nil or addon.GetShowCloseButton()
+	end, function(value)
+		if addon.SetShowCloseButton then addon.SetShowCloseButton(value) else getSettings().showCloseButton = value end
+	end, { default = true, order = 220, after = function() requestAndRefresh("layout", true, true) end })
+	registerToggle(layoutPageID, "layout", "rememberLastBankTab", "settingsRememberLastBankTab", "settingsRememberLastBankTabTooltip", function()
+		return addon.GetRememberLastBankTab == nil or addon.GetRememberLastBankTab()
+	end, function(value)
+		if addon.SetRememberLastBankTab then addon.SetRememberLastBankTab(value) else getSettings().rememberLastBankTab = value end
+	end, { default = true, order = 230, after = function() requestAndRefresh("layout", true, true) end })
+	registerToggle(layoutPageID, "layout", "useIntegratedBank", "settingsUseIntegratedBank", "settingsUseIntegratedBankTooltip", function()
+		return addon.GetUseIntegratedBank == nil or addon.GetUseIntegratedBank()
+	end, function(value)
+		if addon.SetUseIntegratedBank then addon.SetUseIntegratedBank(value) else getSettings().useIntegratedBank = value end
+		if value and Bags.functions and Bags.functions.EnableBank then
+			Bags.functions.EnableBank()
+		elseif Bags.functions and Bags.functions.HideBankFrame then
+			Bags.functions.HideBankFrame()
+		end
+	end, { default = true, order = 240, after = function() requestAndRefresh("layout", true, true) end })
+	registerButton(layoutPageID, "layout", "resetPosition", "settingsResetPosition", L["settingsResetPosition"] or "Reset window position", function()
+		if Bags.functions and Bags.functions.ResetFramePosition then Bags.functions.ResetFramePosition() end
+	end, { order = 250 })
+
+	registerSectionHeader(layoutPageID, "layout", "layoutPaddingHeader", L["settingsPaddingTitle"] or "Padding", 300, function() return not isBasicCategoryMode() end)
+	registerSlider(layoutPageID, "layout", "outsideHeaderPadding", "settingsOutsideHeaderPaddingLabel", function() return addon.GetOutsideHeaderPadding and addon.GetOutsideHeaderPadding() or 0 end, addon.SetOutsideHeaderPadding, 0, 24, 1, { default = 0, order = 310, visibleWhen = function() return not isBasicCategoryMode() end, after = function() requestAndRefresh("layout", false) end })
+	registerSlider(layoutPageID, "layout", "outsideFooterPadding", "settingsOutsideFooterPaddingLabel", function() return addon.GetOutsideFooterPadding and addon.GetOutsideFooterPadding() or 10 end, addon.SetOutsideFooterPadding, 0, 24, 1, { default = 10, order = 320, visibleWhen = function() return not isBasicCategoryMode() end, after = function() requestAndRefresh("layout", false) end })
+	registerSlider(layoutPageID, "layout", "insideHorizontalPadding", "settingsInsideHorizontalPaddingLabel", function() return addon.GetInsideHorizontalPadding and addon.GetInsideHorizontalPadding() or 10 end, addon.SetInsideHorizontalPadding, 0, 24, 1, { default = 10, order = 330, visibleWhen = function() return not isBasicCategoryMode() end, after = function() requestAndRefresh("layout", false) end })
+	registerSlider(layoutPageID, "layout", "insideTopPadding", "settingsInsideTopPaddingLabel", function() return addon.GetInsideTopPadding and addon.GetInsideTopPadding() or 10 end, addon.SetInsideTopPadding, 0, 24, 1, { default = 10, order = 340, visibleWhen = function() return not isBasicCategoryMode() end, after = function() requestAndRefresh("layout", false) end })
+	registerSlider(layoutPageID, "layout", "insideBottomPadding", "settingsInsideBottomPaddingLabel", function() return addon.GetInsideBottomPadding and addon.GetInsideBottomPadding() or 0 end, addon.SetInsideBottomPadding, 0, 24, 1, { default = 0, order = 350, visibleWhen = function() return not isBasicCategoryMode() end, after = function() requestAndRefresh("layout", false) end })
+	registerSlider(layoutPageID, "layout", "itemScale", "settingsItemScaleLabel", function() return addon.GetItemScale and addon.GetItemScale() or 100 end, addon.SetItemScale, 80, 160, 5, { default = 100, suffix = "%", order = 360, after = function() requestAndRefresh("layout", true) end })
+	registerSlider(layoutPageID, "layout", "maxColumns", "settingsMaxColumnsLabel", function() return addon.GetMaxColumns and addon.GetMaxColumns() or 10 end, addon.SetMaxColumns, 4, 40, 1, { default = 10, order = 370, after = function() requestAndRefresh("layout", true) end })
+
+	registerSectionHeader(layoutPageID, "layout", "layoutLookHeader", L["settingsBasicLookTitle"] or "Look", 400)
+	registerDropdown(layoutPageID, "layout", "skinPreset", "settingsSkinPresetLabel", nil, function() return addon.GetSkinPreset and addon.GetSkinPreset() or "default" end, addon.SetSkinPreset, addon.GetSkinPresetOptions, { default = "default", order = 410, after = function() requestAndRefresh("layout", true) end })
+	registerDropdown(layoutPageID, "layout", "iconShape", "settingsIconShapeLabel", nil, function() return addon.GetIconShape and addon.GetIconShape() or "preset" end, addon.SetIconShape, addon.GetIconShapeOptions, { default = "default", order = 420, after = function() requestAndRefresh("layout", true) end })
+	registerDropdown(layoutPageID, "layout", "freeSlotDisplayMode", "settingsFreeSlotDisplayLabel", nil, function() return addon.GetFreeSlotDisplayMode and addon.GetFreeSlotDisplayMode() or "icons" end, addon.SetFreeSlotDisplayMode, addon.GetFreeSlotDisplayModeOptions, { default = "icons", order = 430, after = function() requestAndRefresh("layout", true) end })
+	registerColor(layoutPageID, "layout", "freeSlotNormalColor", "settingsFreeSlotNormalColor", function() return addon.GetFreeSlotColor and addon.GetFreeSlotColor("normal") or { 0.18, 0.12, 0.06 } end, function(r, g, b) if addon.SetFreeSlotColor then addon.SetFreeSlotColor("normal", r, g, b) end end, { default = { 0.18, 0.12, 0.06, 1 }, order = 440, isEnabled = function() return addon.GetFreeSlotDisplayMode and addon.GetFreeSlotDisplayMode() == "colors" end, after = function() requestAndRefresh("layout", true) end })
+	registerColor(layoutPageID, "layout", "freeSlotReagentColor", "settingsFreeSlotReagentColor", function() return addon.GetFreeSlotColor and addon.GetFreeSlotColor("reagent") or { 0.36, 0.27, 0.08 } end, function(r, g, b) if addon.SetFreeSlotColor then addon.SetFreeSlotColor("reagent", r, g, b) end end, { default = { 0.36, 0.27, 0.08, 1 }, order = 450, isEnabled = function() return addon.GetFreeSlotDisplayMode and addon.GetFreeSlotDisplayMode() == "colors" end, after = function() requestAndRefresh("layout", true) end })
+	registerDropdown(layoutPageID, "layout", "frameBackground", "settingsFrameBackgroundLabel", nil, function() return addon.GetFrameBackground and addon.GetFrameBackground() or "solid" end, addon.SetFrameBackground, addon.GetFrameBackgroundOptions, { default = "parchment", order = 460, after = function() requestAndRefresh("layout", true) end })
+	registerColor(layoutPageID, "layout", "frameBackgroundColor", "Background color", function() return addon.GetFrameBackgroundColor and addon.GetFrameBackgroundColor() or { 0.03, 0.03, 0.04 } end, addon.SetFrameBackgroundColor, { default = { 0.03, 0.03, 0.04, 1 }, order = 470, isEnabled = function() return addon.GetFrameBackground and addon.GetFrameBackground() == "solid" end, after = function() requestAndRefresh("layout", true) end })
+	registerSlider(layoutPageID, "layout", "frameBackgroundOpacity", "settingsFrameBackgroundOpacityLabel", function() return addon.GetFrameBackgroundOpacity and addon.GetFrameBackgroundOpacity() or 100 end, addon.SetFrameBackgroundOpacity, 0, 100, 5, { default = 100, suffix = "%", order = 480, after = function() requestAndRefresh("layout", true) end })
+	registerDropdown(layoutPageID, "layout", "frameBorderTexture", "settingsFrameBorderTextureLabel", nil, function() return addon.GetFrameBorderTexture and addon.GetFrameBorderTexture() or "__skin__" end, addon.SetFrameBorderTexture, addon.GetFrameBorderTextureOptions, { default = "__skin__", order = 490, after = function() requestAndRefresh("layout", true) end })
+	registerColor(layoutPageID, "layout", "frameBorderColor", "settingsFrameBorderColorLabel", function() return addon.GetFrameBorderColor and addon.GetFrameBorderColor() or { 0.35, 0.35, 0.42, 1 } end, addon.SetFrameBorderColor, { default = { 0.35, 0.35, 0.42, 1 }, order = 500, after = function() requestAndRefresh("layout", true) end })
+	registerSlider(layoutPageID, "layout", "frameBorderSize", "settingsFrameBorderSizeLabel", function() return addon.GetFrameBorderSize and addon.GetFrameBorderSize() or 1 end, addon.SetFrameBorderSize, 0, 64, 1, { default = 1, order = 510, after = function() requestAndRefresh("layout", true) end })
+	registerSlider(layoutPageID, "layout", "frameBorderOffset", "settingsFrameBorderOffsetLabel", function() return addon.GetFrameBorderOffset and addon.GetFrameBorderOffset() or 0 end, addon.SetFrameBorderOffset, -32, 32, 1, { default = 0, order = 520, after = function() requestAndRefresh("layout", true) end })
+
+	registerSectionHeader(layoutPageID, "layout", "layoutTextHeader", L["settingsTextAppearanceTitle"] or "Text appearance", 600)
+	registerDropdown(layoutPageID, "layout", "textFont", "settingsTextFontLabel", nil, function() local appearance = addon.GetTextAppearance and addon.GetTextAppearance() or {}; return appearance.font end, addon.SetTextAppearanceFont, addon.GetTextFontOptions, { order = 610, after = function() requestAndRefresh("layout", true) end })
+	registerSlider(layoutPageID, "layout", "textSize", "settingsTextSizeLabel", function() local appearance = addon.GetTextAppearance and addon.GetTextAppearance() or {}; return tonumber(appearance.size) or 15 end, addon.SetTextAppearanceSize, 8, 24, 1, { default = 15, order = 620, after = function() requestAndRefresh("layout", true) end })
+	registerSlider(layoutPageID, "layout", "textOverlaySize", "settingsTextOverlaySizeLabel", function() return addon.GetTextAppearanceOverlaySize and addon.GetTextAppearanceOverlaySize() or 15 end, addon.SetTextAppearanceOverlaySize, 8, 24, 1, { default = 15, order = 630, after = function() requestAndRefresh("layout", false) end })
+	registerDropdown(layoutPageID, "layout", "textOutline", "settingsTextOutlineLabel", nil, function() local appearance = addon.GetTextAppearance and addon.GetTextAppearance() or {}; return appearance.outline end, addon.SetTextAppearanceOutline, addon.GetTextOutlineOptions, { order = 640, after = function() requestAndRefresh("layout", true) end })
+	registerToggle(layoutPageID, "layout", "subcategoryFullLabels", "settingsSubcategoryFullLabels", "settingsSubcategoryFullLabelsTooltip", function() return addon.GetSubcategoryFullLabels and addon.GetSubcategoryFullLabels() or false end, addon.SetSubcategoryFullLabels, { default = true, order = 650, visibleWhen = function() return not isBasicCategoryMode() end, after = function() requestAndRefresh("layout", true) end })
+
+	registerSectionHeader(layoutPageID, "layout", "layoutTextStylesHeader", L["settingsTextStylesTitle"] or "Text styles", 700, function() return not isBasicCategoryMode() end)
+	local textElementLabelKeys = {
+		categoryHeader = "settingsTextElementCategoryHeader",
+		subcategoryHeader = "settingsTextElementSubcategoryHeader",
+		overlays = "settingsTextElementOverlays",
+		stackCount = "settingsTextElementStackCount",
+	}
+	for index, elementID in ipairs({ "categoryHeader", "subcategoryHeader", "overlays", "stackCount" }) do
+		local elementLabelKey = textElementLabelKeys[elementID] or "settingsTextElementSizeLabel"
+		local orderBase = 700 + (index * 100)
+		registerDropdown(layoutPageID, "layout", "textElementFont." .. elementID, "settingsTextElementFontLabel", nil, function()
+			local element = addon.GetTextElementAppearance and addon.GetTextElementAppearance(elementID) or {}
+			return element.font
+		end, function(value) if addon.SetTextElementFont then addon.SetTextElementFont(elementID, value) end end, addon.GetTextElementFontOptions, { order = orderBase + 10, visibleWhen = function() return not isBasicCategoryMode() end, after = function() requestAndRefresh("layout", true) end })
+		registerSlider(layoutPageID, "layout", "textElementSize." .. elementID, elementLabelKey, function()
+			local element = addon.GetTextElementAppearance and addon.GetTextElementAppearance(elementID) or {}
+			return tonumber(element.size) or 12
+		end, function(value) if addon.SetTextElementSize then addon.SetTextElementSize(elementID, value) end end, 8, 24, 1, { order = orderBase + 20, visibleWhen = function() return not isBasicCategoryMode() end, after = function() requestAndRefresh("layout", true) end })
+		if elementID == "stackCount" then
+			registerDropdown(layoutPageID, "layout", "stackCountAnchor", "settingsOverlayAnchorLabel", nil, function() return addon.GetStackCountAnchor and addon.GetStackCountAnchor() or "BOTTOMRIGHT" end, addon.SetStackCountAnchor, addon.GetStackCountAnchorOptions, { order = orderBase + 30, visibleWhen = function() return not isBasicCategoryMode() end, after = function() requestAndRefresh("layout", false, true) end })
+		else
+			registerDropdown(layoutPageID, "layout", "textElementCase." .. elementID, "settingsTextCaseLabel", nil, function()
+				local element = addon.GetTextElementAppearance and addon.GetTextElementAppearance(elementID) or {}
+				return element.case or "default"
+			end, function(value) if addon.SetTextElementCase then addon.SetTextElementCase(elementID, value) end end, addon.GetTextCaseOptions, { order = orderBase + 30, visibleWhen = function() return not isBasicCategoryMode() end, after = function() requestAndRefresh("layout", true) end })
+		end
+		registerDropdown(layoutPageID, "layout", "textElementOutline." .. elementID, "settingsTextElementOutlineLabel", nil, function()
+			local element = addon.GetTextElementAppearance and addon.GetTextElementAppearance(elementID) or {}
+			return element.outline
+		end, function(value) if addon.SetTextElementOutline then addon.SetTextElementOutline(elementID, value) end end, addon.GetTextElementOutlineOptions, { order = orderBase + 40, visibleWhen = function() return not isBasicCategoryMode() end, after = function() requestAndRefresh("layout", true) end })
+	end
+
+	local categoriesPageID = modernPageIDs.categories
+	registerGroup(categoriesPageID, "categories", L["settingsCategoriesLabel"] or "Categories", 25, { columns = 1 })
+	app:RegisterControl(categoriesPageID, {
+		id = "categoriesEditor",
+		type = "custom",
+		label = " ",
+		description = "",
+		groupID = "categories",
+		order = 10,
+		visibleWhen = function()
+			return isSettingsPageVisibleForMode("categories")
+		end,
+		getHeight = function(_, state)
+			return math.max(520, (state and state.frame and state.frame.Scroll and state.frame.Scroll:GetHeight() or 620) - 96)
+		end,
+		render = function(parent)
+			expandCustomControlParent(parent)
+			local page = createCategoriesPage(parent)
+			page:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
+			page:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
+			refreshCategoriesPage(page)
+			return page
+		end,
+		release = function(page)
+			if page and page.Hide then
+				page:Hide()
+				page:SetParent(nil)
+			end
+		end,
+	})
+
+	local overlaysPageID = modernPageIDs.overlays
+	registerGroup(overlaysPageID, "overlays", L["settingsCategoryOverlays"] or "Overlays", 10, { columns = 1 })
+	app:RegisterControl(overlaysPageID, {
+		id = "overlaysEditor",
+		type = "custom",
+		label = " ",
+		description = "",
+		groupID = "overlays",
+		order = 10,
+		getHeight = function()
+			return math.max(620, 54 + (#getOverlayElements() * 190))
+		end,
+		render = function(parent)
+			expandCustomControlParent(parent)
+			local page = CreateFrame("Frame", nil, parent)
+			page:SetAllPoints()
+			page.Content = page
+			page.Cards = {}
+
+			page.ShowCraftedQuality = createInlineCheckbox(
+				page,
+				L["settingsShowCraftedQuality"] or "Show crafted quality",
+				L["settingsShowCraftedQualityTooltip"] or "Shows Blizzard's crafted quality icon on crafted equipment when available.",
+				function(value)
+					if addon.SetShowCraftedQuality then
+						addon.SetShowCraftedQuality(value)
+					else
+						getSettings().showCraftedQuality = value == true
+					end
+					requestAndRefresh("overlays", false, true)
+				end
+			)
+			page.ShowCraftedQuality:SetPoint("TOPLEFT", page, "TOPLEFT", 4, 0)
+
+			local previousCard
+			for index, definition in ipairs(getOverlayElements()) do
+				local card = createOverlayAnchorCard(page, definition)
+				if index == 1 then
+					card:SetPoint("TOPLEFT", page.ShowCraftedQuality, "BOTTOMLEFT", -4, -12)
+				else
+					card:SetPoint("TOPLEFT", previousCard, "BOTTOMLEFT", 0, -12)
+				end
+				card:SetPoint("RIGHT", page, "RIGHT", -6, 0)
+				page.Cards[#page.Cards + 1] = card
+				previousCard = card
+			end
+
+			function page:Refresh()
+				if self.ShowCraftedQuality then
+					self.ShowCraftedQuality:SetChecked(addon.GetShowCraftedQuality and addon.GetShowCraftedQuality() or getSettings().showCraftedQuality == true)
+				end
+				for _, card in ipairs(self.Cards or {}) do
+					updateOverlayCardLayout(card)
+					refreshOverlayCard(card)
+				end
+			end
+			page:Refresh()
+			return page
+		end,
+		release = function(page)
+			if page and page.Hide then
+				page:Hide()
+				page:SetParent(nil)
+			end
+		end,
+	})
+
+	local footerPageID = modernPageIDs.footer
+	registerGroup(footerPageID, "footer", L["settingsCategoryFooter"] or "Footer", 10)
+	registerToggle(footerPageID, "footer", "showGold", "settingsShowGold", "settingsShowGoldTooltip", settingsValue("showGold", true), setSettingsValue("showGold", "footer", false), { default = true, order = 10 })
+	registerDropdown(footerPageID, "footer", "moneyFormat", "settingsMoneyFormatLabel", nil, function() return addon.GetMoneyFormat and addon.GetMoneyFormat() or "symbols" end, addon.SetMoneyFormat, addon.GetMoneyFormatOptions, { default = "symbols", order = 20, after = function() requestAndRefresh("footer", true) end })
+	registerToggle(footerPageID, "footer", "showCurrencies", "settingsShowCurrencies", "settingsShowCurrenciesTooltip", settingsValue("showCurrencies", true), setSettingsValue("showCurrencies", "footer", false), { default = true, order = 30 })
+	registerToggle(footerPageID, "footer", "showFooterSlotSummary", "settingsShowFooterSlotSummary", "settingsShowFooterSlotSummaryTooltip", settingsValue("showFooterSlotSummary", false), setSettingsValue("showFooterSlotSummary", "layout", false), { default = false, order = 40 })
+
+	local trackingPageID = modernPageIDs.tracking
+	registerGroup(trackingPageID, "tracking", L["settingsCategoryTracking"] or "Tracking", 10)
+	registerToggle(trackingPageID, "tracking", "showWatchedCurrencies", "settingsUseWatchedCurrencies", "settingsUseWatchedCurrenciesTooltip", settingsValue("showWatchedCurrencies", true), setSettingsValue("showWatchedCurrencies", "tracking", false), { default = true, order = 10 })
+	registerToggle(trackingPageID, "tracking", "showTrackedCurrencyCharacterBreakdown", "settingsShowTrackedCurrencyCharacterBreakdown", "settingsShowTrackedCurrencyCharacterBreakdownTooltip", function()
+		return addon.GetShowTrackedCurrencyCharacterBreakdown and addon.GetShowTrackedCurrencyCharacterBreakdown() or getSettings().showTrackedCurrencyCharacterBreakdown == true
+	end, function(value)
+		if addon.SetShowTrackedCurrencyCharacterBreakdown then addon.SetShowTrackedCurrencyCharacterBreakdown(value) else getSettings().showTrackedCurrencyCharacterBreakdown = value end
+		if value and addon.RequestTrackedCurrencyCharacterData then addon.RequestTrackedCurrencyCharacterData(true) end
+	end, { default = false, order = 20, after = function() requestAndRefresh("tracking", false) end })
+	local function trackedCurrencyTooltipOptionsEnabled()
+		return addon.GetShowTrackedCurrencyCharacterBreakdown and addon.GetShowTrackedCurrencyCharacterBreakdown() or getSettings().showTrackedCurrencyCharacterBreakdown == true
+	end
+	registerDropdown(trackingPageID, "tracking", "trackedCurrencyTooltipTotalPosition", "settingsTrackedCurrencyTooltipTotalPositionLabel", nil, function() return addon.GetTrackedCurrencyTooltipTotalPosition and addon.GetTrackedCurrencyTooltipTotalPosition() or "top" end, addon.SetTrackedCurrencyTooltipTotalPosition, addon.GetTrackedCurrencyTooltipTotalPositionOptions, { default = "top", order = 100, isEnabled = trackedCurrencyTooltipOptionsEnabled, after = function() requestAndRefresh("tracking", false) end })
+	registerDropdown(trackingPageID, "tracking", "trackedCurrencyTooltipNameColorMode", "settingsTrackedCurrencyTooltipNameColorLabel", nil, function() return addon.GetTrackedCurrencyTooltipNameColorMode and addon.GetTrackedCurrencyTooltipNameColorMode() or "default" end, addon.SetTrackedCurrencyTooltipNameColorMode, addon.GetTrackedCurrencyTooltipColorModeOptions, { default = "class", order = 110, isEnabled = trackedCurrencyTooltipOptionsEnabled, after = function() requestAndRefresh("tracking", false) end })
+	registerDropdown(trackingPageID, "tracking", "trackedCurrencyTooltipCountColorMode", "settingsTrackedCurrencyTooltipCountColorLabel", nil, function() return addon.GetTrackedCurrencyTooltipCountColorMode and addon.GetTrackedCurrencyTooltipCountColorMode() or "default" end, addon.SetTrackedCurrencyTooltipCountColorMode, addon.GetTrackedCurrencyTooltipColorModeOptions, { default = "default", order = 120, isEnabled = trackedCurrencyTooltipOptionsEnabled, after = function() requestAndRefresh("tracking", false) end })
+	app:RegisterControl(trackingPageID, {
+		id = "trackedCurrencyIDs",
+		type = "reorderlist",
+		label = L["settingsTrackedCurrencies"] or "Tracked currencies",
+		description = L["settingsTrackedCurrenciesHint"],
+		groupID = "tracking",
+		order = 200,
+		numeric = true,
+		addButtonText = ADD or "Add",
+		addPopupTitle = L["settingsTrackedCurrencyAddPlaceholder"] or "Currency ID",
+		addPopupText = L["settingsTrackedCurrencyAddPlaceholder"] or "Currency ID",
+		emptyText = L["settingsTrackedCurrenciesEmpty"] or "No tracked currencies yet.",
+		showEntryID = false,
+		getEntries = function()
+			local entries = {}
+			for index, entry in ipairs(addon.GetTrackedCurrencyEntries and addon.GetTrackedCurrencyEntries() or {}) do
+				entries[#entries + 1] = {
+					id = entry.currencyID,
+					text = string.format("%s (%d)", entry.name or ("ID " .. tostring(entry.currencyID)), entry.currencyID),
+					value = entry.currencyID,
+					order = index,
+				}
+			end
+			return entries
+		end,
+		addEntry = function(value)
+			local currencyID = tonumber(value)
+			if currencyID and addon.AddTrackedCurrencyID then addon.AddTrackedCurrencyID(currencyID) end
+			requestAndRefresh("tracking", false)
+		end,
+		removeEntry = function(entry)
+			local currencyID = type(entry) == "table" and (entry.value or entry.id) or entry
+			if addon.RemoveTrackedCurrencyID then addon.RemoveTrackedCurrencyID(currencyID) end
+			requestAndRefresh("tracking", false)
+		end,
+		moveEntry = function(fromIndex, targetIndex)
+			local delta = (tonumber(targetIndex) or 0) - (tonumber(fromIndex) or 0)
+			if delta ~= 0 and addon.MoveTrackedCurrencyIndex then
+				addon.MoveTrackedCurrencyIndex(fromIndex, delta)
+			end
+			requestAndRefresh("tracking", false)
+		end,
+	})
+
+	addon.Bags.variables.modernBagsSettingsBuilt = true
+end
+
+registerModernBagsSettings()
 
 function addon.RefreshSettingsFrame(pageID, refreshAll)
 	local frame = settingsState.frame

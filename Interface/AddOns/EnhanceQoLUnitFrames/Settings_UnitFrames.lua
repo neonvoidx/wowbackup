@@ -8,8 +8,6 @@ else
 end
 
 local L = LibStub("AceLocale-3.0"):GetLocale(parentAddonName)
-local getCVarOptionState = addon.functions.GetCVarOptionState or function() return false end
-local setCVarOptionState = addon.functions.SetCVarOptionState or function() end
 local CompactRaidFrameContainer = _G.CompactRaidFrameContainer
 
 local cUnitFrame = addon.SettingsLayout.rootUI
@@ -106,26 +104,13 @@ local data = {
 		parentSection = expandable,
 		isVisible = shouldShowPetFrameSettings,
 	},
-	{
-		var = "floatingCombatTextCombatDamage_v2",
-		text = L["floatingCombatTextCombatDamage_v2"],
-		get = function() return getCVarOptionState("floatingCombatTextCombatDamage_v2") end,
-		func = function(value) setCVarOptionState("floatingCombatTextCombatDamage_v2", value) end,
-		default = false,
-		parentSection = expandable,
-	},
-	{
-		var = "floatingCombatTextCombatHealing_v2",
-		text = L["floatingCombatTextCombatHealing_v2"],
-		get = function() return getCVarOptionState("floatingCombatTextCombatHealing_v2") end,
-		func = function(value) setCVarOptionState("floatingCombatTextCombatHealing_v2", value) end,
-		default = false,
-		parentSection = expandable,
-	},
 }
 addon.functions.SettingsCreateCheckboxes(cUnitFrame, data)
 
 local function shouldShowHealthTextSection() return shouldShowPlayerFrameSettings() or not isEQoLUnitEnabled("target") or shouldShowBossFrameSettings() end
+local function shouldShowLegacyFrameOptions()
+	return shouldShowPlayerFrameSettings() or shouldShowPartyFrameSettings() or shouldShowRaidFrameSettings()
+end
 
 addon.functions.SettingsCreateHeadline(cUnitFrame, L["Health Text"], {
 	parentSection = expandWith(shouldShowHealthTextSection),
@@ -196,6 +181,7 @@ addon.functions.SettingsCreateDropdown(cUnitFrame, {
 
 addon.functions.SettingsCreateHeadline(cUnitFrame, (L["UnitFrameUFExplain"]:format(_G.RAID or "RAID", _G.PARTY or "Party", _G.PLAYER or "Player")), {
 	parentSection = expandable,
+	hiddenWhen = function() return not shouldShowLegacyFrameOptions() end,
 })
 
 data = {

@@ -31,6 +31,23 @@ local EDITMODE_ID = "focusInterruptTracker"
 local DEFAULT_PREVIEW_TEXT = "INTERRUPT"
 local DEFAULT_PREVIEW_ICON = 132938
 local DEFAULT_SETTINGS_MAX_HEIGHT = 900
+local FOCUS_GLOW_KEY = "EQOL_FOCUS_INTERRUPT"
+
+local GLOW_STYLE_OPTIONS = {
+	{ value = "BLIZZARD", labelKey = "Blizzard", fallback = "Blizzard" },
+	{ value = "FLASH", labelKey = "Flash", fallback = "Flash" },
+	{ value = "MARCHING_ANTS", labelKey = "Marching ants", fallback = "Marching ants" },
+	{ value = "PIXEL", labelKey = "Pixel", fallback = "Pixel" },
+	{ value = "PULSING", labelKey = "Pulsing", fallback = "Pulsing" },
+}
+local GLOW_INSET_MIN = -100
+local GLOW_INSET_MAX = 100
+local GLOW_PIXEL_COUNT_MIN = 1
+local GLOW_PIXEL_COUNT_MAX = 32
+local GLOW_PIXEL_SPEED_MIN = 0.05
+local GLOW_PIXEL_SPEED_MAX = 2
+local GLOW_THICKNESS_MIN = 1
+local GLOW_THICKNESS_MAX = 10
 
 local Helper = addon.Aura and addon.Aura.CooldownPanels and addon.Aura.CooldownPanels.helper
 local Api = Helper and Helper.Api or {}
@@ -154,6 +171,16 @@ Tracker.defaults = Tracker.defaults
 		textColor = { 1, 0.15, 0.15, 1 },
 		iconSize = 28,
 		customIcon = nil,
+		glow = {
+			enabled = false,
+			style = "MARCHING_ANTS",
+			color = { 1, 0.15, 0.15, 1 },
+			inset = 0,
+			pixelBorder = false,
+			pixelCount = 8,
+			pixelSpeed = 0.25,
+			thickness = 2,
+		},
 		background = {
 			enabled = false,
 			color = { 0, 0, 0, 0.35 },
@@ -248,6 +275,21 @@ local function normalizeDisplayMode(value, fallback)
 	local fallbackMode = type(fallback) == "string" and string.upper(fallback) or "TEXT"
 	if DISPLAY_MODES[fallbackMode] then return fallbackMode end
 	return "TEXT"
+end
+
+local function normalizeGlowStyle(value, fallback, displayMode)
+	local normalized = type(value) == "string" and string.upper(value) or nil
+	if displayMode == "TEXT" and normalized ~= "PIXEL" and normalized ~= "PULSING" then normalized = nil end
+	for i = 1, #GLOW_STYLE_OPTIONS do
+		local option = GLOW_STYLE_OPTIONS[i]
+		if option.value == normalized and (displayMode ~= "TEXT" or option.value == "PIXEL" or option.value == "PULSING") then return normalized end
+	end
+	fallback = type(fallback) == "string" and string.upper(fallback) or "MARCHING_ANTS"
+	if displayMode == "TEXT" and fallback ~= "PIXEL" and fallback ~= "PULSING" then fallback = "PULSING" end
+	for i = 1, #GLOW_STYLE_OPTIONS do
+		if GLOW_STYLE_OPTIONS[i].value == fallback then return fallback end
+	end
+	return "MARCHING_ANTS"
 end
 
 local function normalizeStrata(value, fallback)
@@ -406,6 +448,16 @@ function Tracker:GetConfig()
 	cfg.textColor = normalizeColor(cfg.textColor, defaults.textColor)
 	cfg.iconSize = clampInt(cfg.iconSize, 8, 128, defaults.iconSize)
 	cfg.customIcon = normalizeCustomIcon(cfg.customIcon)
+	cfg.glow = type(cfg.glow) == "table" and cfg.glow or {}
+	mergeDefaults(cfg.glow, defaults.glow)
+	cfg.glow.enabled = cfg.glow.enabled == true
+	cfg.glow.style = normalizeGlowStyle(cfg.glow.style, defaults.glow.style, cfg.displayMode)
+	cfg.glow.color = normalizeColor(cfg.glow.color, defaults.glow.color)
+	cfg.glow.inset = clampInt(cfg.glow.inset, GLOW_INSET_MIN, GLOW_INSET_MAX, defaults.glow.inset)
+	cfg.glow.pixelBorder = cfg.glow.pixelBorder == true
+	cfg.glow.pixelCount = clampInt(cfg.glow.pixelCount, GLOW_PIXEL_COUNT_MIN, GLOW_PIXEL_COUNT_MAX, defaults.glow.pixelCount)
+	cfg.glow.pixelSpeed = clampNumber(cfg.glow.pixelSpeed, GLOW_PIXEL_SPEED_MIN, GLOW_PIXEL_SPEED_MAX, defaults.glow.pixelSpeed)
+	cfg.glow.thickness = clampInt(cfg.glow.thickness, GLOW_THICKNESS_MIN, GLOW_THICKNESS_MAX, defaults.glow.thickness)
 	cfg.background.enabled = cfg.background.enabled == true
 	cfg.background.color = normalizeColor(cfg.background.color, defaults.background.color)
 	cfg.sound.enabled = cfg.sound.enabled == true
@@ -470,6 +522,14 @@ function Tracker:BuildLayoutRecordFromProfile()
 		textColor = copyValue(cfg.textColor),
 		iconSize = cfg.iconSize,
 		customIcon = cfg.customIcon,
+		glowEnabled = cfg.glow.enabled,
+		glowStyle = cfg.glow.style,
+		glowColor = copyValue(cfg.glow.color),
+		glowInset = cfg.glow.inset,
+		glowPixelBorder = cfg.glow.pixelBorder,
+		glowPixelCount = cfg.glow.pixelCount,
+		glowPixelSpeed = cfg.glow.pixelSpeed,
+		glowThickness = cfg.glow.thickness,
 		backgroundEnabled = cfg.background.enabled,
 		backgroundColor = copyValue(cfg.background.color),
 		borderEnabled = cfg.border.enabled,
@@ -491,6 +551,7 @@ local function buildLayoutKey(cfg)
 	local anchor = cfg.anchor or defaults.anchor
 	local background = cfg.background or defaults.background
 	local border = cfg.border or defaults.border
+	local glow = cfg.glow or defaults.glow
 	local fontVersion = addon.functions and addon.functions.GetGlobalFontStateVersion and addon.functions.GetGlobalFontStateVersion() or 0
 	return table.concat({
 		tostring(anchor.point),
@@ -507,6 +568,14 @@ local function buildLayoutKey(cfg)
 		colorKey(cfg.textColor),
 		tostring(cfg.iconSize),
 		tostring(cfg.customIcon),
+		tostring(glow.enabled),
+		tostring(glow.style),
+		colorKey(glow.color),
+		tostring(glow.inset),
+		tostring(glow.pixelBorder),
+		tostring(glow.pixelCount),
+		tostring(glow.pixelSpeed),
+		tostring(glow.thickness),
 		tostring(background.enabled),
 		colorKey(background.color),
 		tostring(border.enabled),
@@ -851,6 +920,15 @@ function Tracker:ApplyLayoutData(data)
 
 	if record.iconSize ~= nil then cfg.iconSize = clampInt(record.iconSize, 8, 128, cfg.iconSize) end
 	if record.customIcon ~= nil then cfg.customIcon = normalizeCustomIcon(record.customIcon) end
+	if record.glowEnabled ~= nil then cfg.glow.enabled = record.glowEnabled == true end
+	if record.glowStyle ~= nil then cfg.glow.style = normalizeGlowStyle(record.glowStyle, cfg.glow.style, cfg.displayMode) end
+	if record.glowColor ~= nil then cfg.glow.color = normalizeColor(record.glowColor, cfg.glow.color) end
+	if record.glowInset ~= nil then cfg.glow.inset = clampInt(record.glowInset, GLOW_INSET_MIN, GLOW_INSET_MAX, cfg.glow.inset) end
+	if record.glowPixelBorder ~= nil then cfg.glow.pixelBorder = record.glowPixelBorder == true end
+	if record.glowPixelCount ~= nil then cfg.glow.pixelCount = clampInt(record.glowPixelCount, GLOW_PIXEL_COUNT_MIN, GLOW_PIXEL_COUNT_MAX, cfg.glow.pixelCount) end
+	if record.glowPixelSpeed ~= nil then cfg.glow.pixelSpeed = clampNumber(record.glowPixelSpeed, GLOW_PIXEL_SPEED_MIN, GLOW_PIXEL_SPEED_MAX, cfg.glow.pixelSpeed) end
+	if record.glowThickness ~= nil then cfg.glow.thickness = clampInt(record.glowThickness, GLOW_THICKNESS_MIN, GLOW_THICKNESS_MAX, cfg.glow.thickness) end
+	cfg.glow.style = normalizeGlowStyle(cfg.glow.style, cfg.glow.style, cfg.displayMode)
 
 	if record.backgroundEnabled ~= nil then cfg.background.enabled = record.backgroundEnabled == true end
 	if record.backgroundColor ~= nil then cfg.background.color = normalizeColor(record.backgroundColor, cfg.background.color) end
@@ -931,6 +1009,7 @@ function Tracker:ApplyLayoutData(data)
 	end
 
 	frame:SetSize(width, height)
+	if state.glowVisible then self:UpdateGlow(true) end
 	if cfg.background.enabled then
 		local bgColor = normalizeColor(cfg.background.color, defaults.background.color)
 		frame.bg:SetColorTexture(bgColor[1], bgColor[2], bgColor[3], bgColor[4])
@@ -941,6 +1020,48 @@ function Tracker:ApplyLayoutData(data)
 	frame.editBg:SetShown(state.previewing == true)
 	state.layoutKey = buildLayoutKey(cfg)
 	state.layoutDirty = false
+end
+
+function Tracker:UpdateGlow(visible)
+	local frame = state.frame
+	local cfg = self:GetConfig()
+	local glow = cfg and cfg.glow
+	if not (visible and frame and glow and glow.enabled and addon.Glow and addon.Glow.Start and addon.Glow.Stop) then
+		if frame and addon.Glow and addon.Glow.Stop then addon.Glow.Stop(frame, FOCUS_GLOW_KEY, true) end
+		state.glowVisible = false
+		state.glowStyle = nil
+		state.glowColorKey = nil
+		state.glowOptionsKey = nil
+		return
+	end
+
+	local currentColorKey = colorKey(glow.color)
+	local currentOptionsKey = table.concat({ tostring(glow.inset), tostring(glow.pixelBorder), tostring(glow.pixelCount), tostring(glow.pixelSpeed), tostring(glow.thickness) }, ":")
+	if state.glowVisible and state.glowStyle == glow.style and state.glowColorKey == currentColorKey and state.glowOptionsKey == currentOptionsKey and (not addon.Glow.IsActive or addon.Glow.IsActive(frame, FOCUS_GLOW_KEY)) then return end
+	addon.Glow.Start(frame, FOCUS_GLOW_KEY, glow.style, {
+		color = glow.color,
+		inset = glow.inset,
+		border = glow.pixelBorder,
+		count = glow.pixelCount,
+		frequency = glow.pixelSpeed,
+		thickness = glow.thickness,
+	})
+	state.glowVisible = true
+	state.glowStyle = glow.style
+	state.glowColorKey = currentColorKey
+	state.glowOptionsKey = currentOptionsKey
+end
+
+local function glowStyleUsesThickness(style)
+	return style == "PIXEL" or style == "PULSING" or style == "MARCHING_ANTS" or style == "FLASH"
+end
+
+local function isPixelGlowStyle()
+	return Tracker:GetConfig().glow.style == "PIXEL"
+end
+
+local function isGlowThicknessStyle()
+	return glowStyleUsesThickness(Tracker:GetConfig().glow.style)
 end
 
 function Tracker:EnsureLayoutApplied()
@@ -960,6 +1081,10 @@ local function refreshEditModeSettingValues()
 	if addon.EditModeLib and addon.EditModeLib.internal and addon.EditModeLib.internal.RefreshSettingValues then
 		addon.EditModeLib.internal:RefreshSettingValues()
 	end
+end
+
+local function syncEditModeValue(field, value)
+	if EditMode and EditMode.SetValue then EditMode:SetValue(EDITMODE_ID, field, value, nil, true) end
 end
 
 local function syncEditModeLayoutFromAnchor()
@@ -1030,6 +1155,7 @@ end
 function Tracker:Refresh()
 	if not self:IsEnabled() then
 		if state.frame then
+			self:UpdateGlow(false)
 			state.frame.editBg:Hide()
 			state.frame:Hide()
 		end
@@ -1037,7 +1163,10 @@ function Tracker:Refresh()
 	end
 
 	if state.previewing ~= true and not self:HasHostileFocus() then
-		if state.frame then state.frame:Hide() end
+		if state.frame then
+			self:UpdateGlow(false)
+			state.frame:Hide()
+		end
 		return
 	end
 
@@ -1049,17 +1178,20 @@ function Tracker:Refresh()
 
 	if state.previewing then
 		frame:SetAlpha(1)
+		self:UpdateGlow(true)
 		frame:Show()
 		return
 	end
 
 	if not spellReady then
+		self:UpdateGlow(false)
 		frame:Hide()
 		return
 	end
 
 	local focusCast = self:GetFocusInterruptibleCast()
 	if not focusCast then
+		self:UpdateGlow(false)
 		frame:Hide()
 		return
 	end
@@ -1067,6 +1199,7 @@ function Tracker:Refresh()
 
 	if self:GetConfig().displayMode == "ICON" then applyTexture(frame.icon, self:ResolveDisplayIcon(spellId)) end
 	applyNonInterruptibleAlpha(frame, focusCast.rawNotInterruptible)
+	self:UpdateGlow(true)
 	frame:Show()
 end
 
@@ -1098,6 +1231,7 @@ function Tracker:ShowEditModeHint(show)
 	frame.editBg:SetShown(state.previewing == true)
 	if state.previewing then
 		frame:SetAlpha(1)
+		self:UpdateGlow(true)
 		frame:Show()
 	else
 		self:Refresh()
@@ -1350,15 +1484,142 @@ function Tracker:RegisterEditMode()
 				parentId = "focusInterruptTrackerDisplay",
 				height = 120,
 				get = function() return Tracker:GetConfig().displayMode end,
-				set = function(_, value) Tracker:ApplyLayoutData({ displayMode = value }) end,
+				set = function(_, value)
+					Tracker:ApplyLayoutData({ displayMode = value })
+					syncEditModeValue("displayMode", Tracker:GetConfig().displayMode)
+					refreshEditModeFrame()
+				end,
 				generator = function(_, root)
 					root:CreateRadio(LOCALE_TEXT_LABEL, function() return Tracker:GetConfig().displayMode == "TEXT" end, function()
 						Tracker:ApplyLayoutData({ displayMode = "TEXT" })
+						syncEditModeValue("displayMode", "TEXT")
+						refreshEditModeFrame()
 					end)
 					root:CreateRadio(L["Icon"] or "Icon", function() return Tracker:GetConfig().displayMode == "ICON" end, function()
 						Tracker:ApplyLayoutData({ displayMode = "ICON" })
+						syncEditModeValue("displayMode", "ICON")
+						refreshEditModeFrame()
 					end)
 				end,
+			},
+			{
+				name = L["Glow effect"] or "Glow effect",
+				kind = SettingType.Collapsible,
+				id = "focusInterruptTrackerGlow",
+				defaultCollapsed = true,
+			},
+			{
+				name = L["Enable glow"] or "Enable glow",
+				kind = SettingType.Checkbox,
+				field = "glowEnabled",
+				parentId = "focusInterruptTrackerGlow",
+				get = function() return Tracker:GetConfig().glow.enabled end,
+				set = function(_, value) Tracker:ApplyLayoutData({ glowEnabled = value == true }) end,
+			},
+			{
+				name = L["Glow style"] or "Glow style",
+				kind = SettingType.Dropdown,
+				field = "glowStyle",
+				parentId = "focusInterruptTrackerGlow",
+				height = 180,
+				get = function() return Tracker:GetConfig().glow.style end,
+				set = function(_, value)
+					Tracker:ApplyLayoutData({ glowStyle = value })
+					syncEditModeValue("glowStyle", Tracker:GetConfig().glow.style)
+					refreshEditModeFrame()
+				end,
+				generator = function(_, root)
+					for i = 1, #GLOW_STYLE_OPTIONS do
+						local option = GLOW_STYLE_OPTIONS[i]
+						if Tracker:GetConfig().displayMode ~= "TEXT" or option.value == "PIXEL" or option.value == "PULSING" then
+							local label = L[option.labelKey] or option.fallback
+							root:CreateRadio(label, function() return Tracker:GetConfig().glow.style == option.value end, function()
+								Tracker:ApplyLayoutData({ glowStyle = option.value })
+								syncEditModeValue("glowStyle", Tracker:GetConfig().glow.style)
+								refreshEditModeFrame()
+							end)
+						end
+					end
+				end,
+				isEnabled = function() return Tracker:GetConfig().glow.enabled end,
+			},
+			{
+				name = L["Glow color"] or "Glow color",
+				kind = SettingType.Color,
+				field = "glowColor",
+				parentId = "focusInterruptTrackerGlow",
+				hasOpacity = true,
+				get = function()
+					local color = Tracker:GetConfig().glow.color
+					return { r = color[1], g = color[2], b = color[3], a = color[4] }
+				end,
+				set = function(_, value) Tracker:ApplyLayoutData({ glowColor = value }) end,
+				isEnabled = function() return Tracker:GetConfig().glow.enabled end,
+			},
+			{
+				name = L["Glow inset"] or "Glow inset",
+				kind = SettingType.Slider,
+				field = "glowInset",
+				parentId = "focusInterruptTrackerGlow",
+				minValue = GLOW_INSET_MIN,
+				maxValue = GLOW_INSET_MAX,
+				valueStep = 1,
+				allowInput = true,
+				get = function() return Tracker:GetConfig().glow.inset end,
+				set = function(_, value) Tracker:ApplyLayoutData({ glowInset = value }) end,
+				isEnabled = function() return Tracker:GetConfig().glow.enabled end,
+			},
+			{
+				name = L["CooldownPanelGlowThickness"] or "Glow thickness",
+				kind = SettingType.Slider,
+				field = "glowThickness",
+				parentId = "focusInterruptTrackerGlow",
+				minValue = GLOW_THICKNESS_MIN,
+				maxValue = GLOW_THICKNESS_MAX,
+				valueStep = 1,
+				allowInput = true,
+				get = function() return Tracker:GetConfig().glow.thickness end,
+				set = function(_, value) Tracker:ApplyLayoutData({ glowThickness = value }) end,
+				isEnabled = function() return Tracker:GetConfig().glow.enabled end,
+				isShown = isGlowThicknessStyle,
+			},
+			{
+				name = L["CooldownPanelPixelGlowLines"] or "Pixel glow lines",
+				kind = SettingType.Slider,
+				field = "glowPixelCount",
+				parentId = "focusInterruptTrackerGlow",
+				minValue = GLOW_PIXEL_COUNT_MIN,
+				maxValue = GLOW_PIXEL_COUNT_MAX,
+				valueStep = 1,
+				allowInput = true,
+				get = function() return Tracker:GetConfig().glow.pixelCount end,
+				set = function(_, value) Tracker:ApplyLayoutData({ glowPixelCount = value }) end,
+				isEnabled = function() return Tracker:GetConfig().glow.enabled end,
+				isShown = isPixelGlowStyle,
+			},
+			{
+				name = L["CooldownPanelPixelGlowSpeed"] or "Pixel glow speed",
+				kind = SettingType.Slider,
+				field = "glowPixelSpeed",
+				parentId = "focusInterruptTrackerGlow",
+				minValue = GLOW_PIXEL_SPEED_MIN,
+				maxValue = GLOW_PIXEL_SPEED_MAX,
+				valueStep = 0.05,
+				allowInput = true,
+				get = function() return Tracker:GetConfig().glow.pixelSpeed end,
+				set = function(_, value) Tracker:ApplyLayoutData({ glowPixelSpeed = value }) end,
+				isEnabled = function() return Tracker:GetConfig().glow.enabled end,
+				isShown = isPixelGlowStyle,
+			},
+			{
+				name = L["CooldownPanelPixelGlowBorder"] or "Pixel glow border",
+				kind = SettingType.Checkbox,
+				field = "glowPixelBorder",
+				parentId = "focusInterruptTrackerGlow",
+				get = function() return Tracker:GetConfig().glow.pixelBorder end,
+				set = function(_, value) Tracker:ApplyLayoutData({ glowPixelBorder = value == true }) end,
+				isEnabled = function() return Tracker:GetConfig().glow.enabled end,
+				isShown = isPixelGlowStyle,
 			},
 			{
 				name = LOCALE_TEXT_LABEL,
@@ -1618,6 +1879,7 @@ function Tracker:OnSettingChanged(enabled)
 	else
 		self:UnregisterEvents()
 		self:UnregisterEditMode()
+		self:UpdateGlow(false)
 		state.previewing = false
 		state.editModeHydrated = false
 		if state.frame then

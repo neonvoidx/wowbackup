@@ -528,7 +528,8 @@ local function createEditorHelpButton(frame)
 		GameTooltip:AddLine(L["CooldownPanelEditorHelpTitle"] or (HELP_LABEL or "Help"), 1, 0.82, 0)
 		GameTooltip:AddLine(L["CooldownPanelEditorHelpIntro"] or "", 1, 1, 1, true)
 		GameTooltip:AddLine(" ", 1, 1, 1, true)
-		GameTooltip:AddLine(L["CooldownPanelEditorHelpAuras"] or "", 1, 1, 1, true)
+		local auraHelpKey = CooldownPanels.AuraContainers and "CooldownPanelEditorHelpAuras121" or "CooldownPanelEditorHelpAuras"
+		GameTooltip:AddLine(L[auraHelpKey] or L["CooldownPanelEditorHelpAuras"] or "", 1, 1, 1, true)
 		GameTooltip:Show()
 	end)
 	helpButton:SetScript("OnLeave", function()
@@ -583,18 +584,12 @@ end
 
 local function showAdvancedPanelTooltip(owner)
 	local panel = owner and owner:GetParent() and getPanel(owner:GetParent().panelId) or nil
-	local syncSource = CooldownPanels.GetPanelCooldownManagerSyncSource and CooldownPanels:GetPanelCooldownManagerSyncSource(owner and owner:GetParent() and owner:GetParent().panelId) or nil
-	if not (isFixedLayoutPanel(panel) or syncSource) then return end
+	if not isFixedLayoutPanel(panel) then return end
 	GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")
 	GameTooltip:SetText(panel and panel.name or (L["CooldownPanelNewPanel"] or "New Panel"), 1, 0.82, 0)
 	if isFixedLayoutPanel(panel) then
 		GameTooltip:AddLine(getAdvancedPanelLabel(), 1, 0.82, 0, true)
 		GameTooltip:AddLine(L["CooldownPanelAdvancedEditTooltip"] or "Edit this panel through Panel Edit. Right-click the header and choose Edit.", 0.85, 0.85, 0.85, true)
-	end
-	if syncSource then
-		local sourceLabel = CooldownPanels.GetCooldownManagerSourceLabel and CooldownPanels:GetCooldownManagerSourceLabel(syncSource) or syncSource
-		GameTooltip:AddLine(L["CooldownPanelSynced"] or "Synced", 0.35, 0.75, 1, true)
-		GameTooltip:AddLine(string.format(L["CooldownPanelSyncCDMTooltip"] or "This panel automatically mirrors Blizzard Cooldown Manager %s whenever its data changes.", tostring(sourceLabel)), 0.85, 0.85, 0.85, true)
 	end
 	GameTooltip:Show()
 end
@@ -1177,15 +1172,6 @@ function Editor:CreateCategory(parent)
 	if category.advancedLabel.SetMaxLines then category.advancedLabel:SetMaxLines(1) end
 	if category.advancedLabel.SetWordWrap then category.advancedLabel:SetWordWrap(false) end
 	category.advancedLabel:Hide()
-	category.syncLabel = category.header:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-	category.syncLabel:SetPoint("CENTER", category.header, "CENTER", 0, 0)
-	category.syncLabel:SetWidth(70)
-	category.syncLabel:SetJustifyH("CENTER")
-	category.syncLabel:SetTextColor(0.35, 0.75, 1, 1)
-	category.syncLabel:SetText(L["CooldownPanelSynced"] or "Synced")
-	if category.syncLabel.SetMaxLines then category.syncLabel:SetMaxLines(1) end
-	if category.syncLabel.SetWordWrap then category.syncLabel:SetWordWrap(false) end
-	category.syncLabel:Hide()
 	category.disabledLabel = category.header:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 	category.disabledLabel:SetPoint("CENTER", category.header, "CENTER", 0, 0)
 	category.disabledLabel:SetWidth(130)
@@ -1260,20 +1246,12 @@ function Editor:LayoutCategory(category, panelId, panel, yOffset, filterText)
 		local showAdvancedLabel = not isDisabled and isFixedLayoutPanel(panel)
 		category.advancedLabel:SetText(getAdvancedPanelLabel())
 		category.advancedLabel:ClearAllPoints()
-		category.advancedLabel:SetPoint("CENTER", category.header, "CENTER", (showAdvancedLabel and CooldownPanels.GetPanelCooldownManagerSyncSource and CooldownPanels:GetPanelCooldownManagerSyncSource(panelId)) and -42 or 0, 0)
+		category.advancedLabel:SetPoint("CENTER", category.header, "CENTER", 0, 0)
 		if showAdvancedLabel then
 			category.advancedLabel:Show()
 		else
 			category.advancedLabel:Hide()
 		end
-	end
-	if category.syncLabel then
-		local showSyncLabel = not isDisabled and CooldownPanels.GetPanelCooldownManagerSyncSource and CooldownPanels:GetPanelCooldownManagerSyncSource(panelId) ~= nil
-		local showAdvancedLabel = not isDisabled and isFixedLayoutPanel(panel)
-		category.syncLabel:ClearAllPoints()
-		category.syncLabel:SetPoint("CENTER", category.header, "CENTER", showAdvancedLabel and 42 or 0, 0)
-		category.syncLabel:SetText(L["CooldownPanelSynced"] or "Synced")
-		category.syncLabel:SetShown(showSyncLabel)
 	end
 	if category.disabledLabel then category.disabledLabel:SetShown(isDisabled) end
 
@@ -1462,22 +1440,20 @@ function Editor:ShowPanelMenu(owner, panelId)
 				CooldownPanels:ShowImportCDMMenu(owner, panelId)
 			end)
 		end
-		local syncMenu = rootDescription:CreateButton(L["CooldownPanelSyncCDM"] or "Sync with Cooldown Manager")
-		syncMenu:CreateRadio(_G.OFF or "Off", function()
-			return not (CooldownPanels.GetPanelCooldownManagerSyncSource and CooldownPanels:GetPanelCooldownManagerSyncSource(panelId))
-		end, function()
-			if CooldownPanels.SetPanelCooldownManagerSyncSource then CooldownPanels:SetPanelCooldownManagerSyncSource(panelId, nil) end
-			Editor:RefreshPanel(panelId)
-		end)
-		local syncSources = { "ESSENTIAL", "UTILITY" }
-		if CooldownPanels.CDMAuras and CooldownPanels.CDMAuras.SyncEntries then syncSources[#syncSources + 1] = "BUFF_ICON" end
-		for _, sourceKind in ipairs(syncSources) do
-			syncMenu:CreateRadio(CooldownPanels.GetCooldownManagerSourceLabel and CooldownPanels:GetCooldownManagerSourceLabel(sourceKind) or sourceKind, function(value)
-				return CooldownPanels.GetPanelCooldownManagerSyncSource and CooldownPanels:GetPanelCooldownManagerSyncSource(panelId) == value
-			end, function(value)
-				if CooldownPanels.SetPanelCooldownManagerSyncSource then CooldownPanels:SetPanelCooldownManagerSyncSource(panelId, value) end
-				Editor:RefreshPanel(panelId)
-			end, sourceKind)
+		if CooldownPanels.GetPanelCooldownManagerSyncSource and CooldownPanels.SetPanelCooldownManagerSyncSource then
+			local syncMenu = rootDescription:CreateButton(L["CooldownPanelSyncCDM"] or "Sync with Cooldown Manager")
+			syncMenu:CreateRadio(_G.NONE or "None", function()
+				return CooldownPanels:GetPanelCooldownManagerSyncSource(panelId) == nil
+			end, function()
+				CooldownPanels:SetPanelCooldownManagerSyncSource(panelId, nil)
+			end)
+			for _, sourceKind in ipairs({ "ESSENTIAL", "UTILITY", "BUFF_ICON" }) do
+				syncMenu:CreateRadio(CooldownPanels:GetCooldownManagerSourceLabel(sourceKind), function(value)
+					return CooldownPanels:GetPanelCooldownManagerSyncSource(panelId) == value
+				end, function(value)
+					CooldownPanels:SetPanelCooldownManagerSyncSource(panelId, value)
+				end, sourceKind)
+			end
 		end
 		rootDescription:CreateButton(L["CooldownPanelExportPanel"] or "Export Panel", function()
 			if CooldownPanels.ShowExportPanelPopup then CooldownPanels:ShowExportPanelPopup(panelId) end

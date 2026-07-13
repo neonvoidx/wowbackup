@@ -50,6 +50,7 @@ ActionTracker.defaults = ActionTracker.defaults
 		showElapsed = false,
 		showGCDGaps = false,
 		showInterruptedCasts = false,
+		onlyInCombat = false,
 		iconShape = "DEFAULT",
 		iconZoom = 0,
 		borderEnabled = false,
@@ -70,6 +71,7 @@ local DB_FADE = "actionTrackerFadeDuration"
 local DB_SHOW_ELAPSED = "actionTrackerShowElapsed"
 local DB_SHOW_GCD_GAPS = "actionTrackerShowGCDGaps"
 local DB_SHOW_INTERRUPTED_CASTS = "actionTrackerShowInterruptedCasts"
+local DB_ONLY_IN_COMBAT = "actionTrackerOnlyInCombat"
 local DB_ICON_SHAPE = "actionTrackerIconShape"
 local DB_ICON_ZOOM = "actionTrackerIconZoom"
 local DB_BORDER_ENABLED = "actionTrackerBorderEnabled"
@@ -267,6 +269,8 @@ end
 function ActionTracker:GetShowElapsed() return getValue(DB_SHOW_ELAPSED, defaults.showElapsed) == true end
 function ActionTracker:GetShowGCDGaps() return getValue(DB_SHOW_GCD_GAPS, defaults.showGCDGaps) == true end
 function ActionTracker:GetShowInterruptedCasts() return getValue(DB_SHOW_INTERRUPTED_CASTS, defaults.showInterruptedCasts) == true end
+function ActionTracker:GetOnlyInCombat() return getValue(DB_ONLY_IN_COMBAT, defaults.onlyInCombat) == true end
+function ActionTracker:IsTrackingActive() return not self:GetOnlyInCombat() or (InCombatLockdown and InCombatLockdown() == true) end
 function ActionTracker:GetIconShape() return normalizeIconShape(getValue(DB_ICON_SHAPE, defaults.iconShape), defaults.iconShape or "DEFAULT") end
 function ActionTracker:GetIconZoom()
 	if addon.IconShape and addon.IconShape.NormalizeIconZoom then return addon.IconShape.NormalizeIconZoom(getValue(DB_ICON_ZOOM, defaults.iconZoom)) end
@@ -798,6 +802,7 @@ function ActionTracker:UpdateTimelineAnchor(now)
 end
 
 function ActionTracker:AddEntry(spellID)
+	if not self:IsTrackingActive() then return end
 	if not spellID then return end
 
 	local ignoreList = self.ignoreList
@@ -827,6 +832,7 @@ function ActionTracker:AddEntry(spellID)
 end
 
 function ActionTracker:AddInterruptedCast(spellID, castGUID, interruptedBy)
+	if not self:IsTrackingActive() then return end
 	if not self:GetShowInterruptedCasts() then return end
 
 	local ignoreList = self.ignoreList
@@ -856,7 +862,9 @@ function ActionTracker:AddInterruptedCast(spellID, castGUID, interruptedBy)
 end
 
 function ActionTracker:OnEvent(event, unit, arg2, arg3, arg4)
-	if event == "UNIT_SPELLCAST_SUCCEEDED" then
+	if event == "PLAYER_REGEN_DISABLED" or event == "PLAYER_REGEN_ENABLED" then
+		self:ClearEntries()
+	elseif event == "UNIT_SPELLCAST_SUCCEEDED" then
 		local spellID = arg3
 		self:AddEntry(spellID)
 	elseif event == "UNIT_SPELLCAST_INTERRUPTED" then
@@ -871,6 +879,14 @@ function ActionTracker:UpdateOptionalEventRegistration()
 		self.frame:RegisterUnitEvent("UNIT_SPELLCAST_INTERRUPTED", "player")
 	else
 		self.frame:UnregisterEvent("UNIT_SPELLCAST_INTERRUPTED")
+	end
+
+	if self:GetOnlyInCombat() then
+		self.frame:RegisterEvent("PLAYER_REGEN_DISABLED")
+		self.frame:RegisterEvent("PLAYER_REGEN_ENABLED")
+	else
+		self.frame:UnregisterEvent("PLAYER_REGEN_DISABLED")
+		self.frame:UnregisterEvent("PLAYER_REGEN_ENABLED")
 	end
 end
 
@@ -887,6 +903,8 @@ function ActionTracker:UnregisterEvents()
 	if not self.eventsRegistered or not self.frame then return end
 	self.frame:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED")
 	self.frame:UnregisterEvent("UNIT_SPELLCAST_INTERRUPTED")
+	self.frame:UnregisterEvent("PLAYER_REGEN_DISABLED")
+	self.frame:UnregisterEvent("PLAYER_REGEN_ENABLED")
 	self.frame:SetScript("OnEvent", nil)
 	self.eventsRegistered = false
 end
@@ -917,6 +935,9 @@ function ActionTracker:ApplyLayoutData(data)
 	local showInterruptedCasts = data.showInterruptedCasts
 	if showInterruptedCasts == nil then showInterruptedCasts = self:GetShowInterruptedCasts() end
 	showInterruptedCasts = showInterruptedCasts == true
+	local onlyInCombat = data.onlyInCombat
+	if onlyInCombat == nil then onlyInCombat = self:GetOnlyInCombat() end
+	onlyInCombat = onlyInCombat == true
 	local iconShape = normalizeIconShape(data.iconShape or self:GetIconShape(), defaults.iconShape or "DEFAULT")
 	local iconZoom = addon.IconShape and addon.IconShape.NormalizeIconZoom and addon.IconShape.NormalizeIconZoom(data.iconZoom or self:GetIconZoom()) or clampNumber(data.iconZoom or self:GetIconZoom(), 0, 35, defaults.iconZoom or 0)
 	local borderEnabled = data.borderEnabled
@@ -935,6 +956,7 @@ function ActionTracker:ApplyLayoutData(data)
 	addon.db[DB_SHOW_ELAPSED] = showElapsed
 	addon.db[DB_SHOW_GCD_GAPS] = showGCDGaps
 	addon.db[DB_SHOW_INTERRUPTED_CASTS] = showInterruptedCasts
+	addon.db[DB_ONLY_IN_COMBAT] = onlyInCombat
 	addon.db[DB_ICON_SHAPE] = iconShape
 	addon.db[DB_ICON_ZOOM] = iconZoom
 	addon.db[DB_BORDER_ENABLED] = borderEnabled
@@ -947,6 +969,8 @@ function ActionTracker:ApplyLayoutData(data)
 	self:UpdateLayout()
 	self:RefreshIcons()
 	self:UpdateFadeState(true)
+	self:UpdateOptionalEventRegistration()
+	if self:GetOnlyInCombat() and not self:IsTrackingActive() then self:ClearEntries() end
 end
 
 local function applySetting(field, value)
@@ -992,6 +1016,12 @@ local function applySetting(field, value)
 		addon.db[DB_SHOW_INTERRUPTED_CASTS] = showInterruptedCasts
 		value = showInterruptedCasts
 		ActionTracker:UpdateOptionalEventRegistration()
+	elseif field == "onlyInCombat" then
+		local onlyInCombat = value == true
+		addon.db[DB_ONLY_IN_COMBAT] = onlyInCombat
+		value = onlyInCombat
+		ActionTracker:UpdateOptionalEventRegistration()
+		if onlyInCombat and not ActionTracker:IsTrackingActive() then ActionTracker:ClearEntries() end
 	elseif field == "iconShape" then
 		local iconShape = normalizeIconShape(value, defaults.iconShape or "DEFAULT")
 		addon.db[DB_ICON_SHAPE] = iconShape
@@ -1114,6 +1144,14 @@ function ActionTracker:RegisterEditMode()
 				default = defaults.showElapsed,
 				get = function() return ActionTracker:GetShowElapsed() end,
 				set = function(_, value) applySetting("showElapsed", value) end,
+			},
+			{
+				name = L["actionTrackerOnlyInCombat"] or "Only track during combat",
+				kind = SettingType.Checkbox,
+				field = "onlyInCombat",
+				default = defaults.onlyInCombat,
+				get = function() return ActionTracker:GetOnlyInCombat() end,
+				set = function(_, value) applySetting("onlyInCombat", value) end,
 			},
 			{
 				name = L["actionTrackerShowGCDGaps"] or "Show GCD gaps",

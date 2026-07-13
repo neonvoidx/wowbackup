@@ -151,10 +151,10 @@ local function classHasSharedTertiary(classTag)
 		if type(specAssignments) == "table" and specAssignments.TERTIARY then
 			local pType = specAssignments.TERTIARY
 			local disabledAuraType = ResourceBars
-				and ResourceBars.AreAuraPowerBarsDisabledForClient
-				and ResourceBars.AreAuraPowerBarsDisabledForClient()
 				and ResourceBars.IsAuraPowerType
 				and ResourceBars.IsAuraPowerType(pType)
+				and ResourceBars.IsAuraPowerBarTypeAvailable
+				and not ResourceBars.IsAuraPowerBarTypeAvailable(pType)
 			if not disabledAuraType then
 				return true
 			end
@@ -966,10 +966,10 @@ registerEditModeBars = function()
 		end
 		local function isPowerTypeAvailableForSettings(pType)
 			if ResourceBars
-				and ResourceBars.AreAuraPowerBarsDisabledForClient
-				and ResourceBars.AreAuraPowerBarsDisabledForClient()
 				and ResourceBars.IsAuraPowerType
 				and ResourceBars.IsAuraPowerType(pType)
+				and ResourceBars.IsAuraPowerBarTypeAvailable
+				and not ResourceBars.IsAuraPowerBarTypeAvailable(pType)
 			then
 				return false
 			end
@@ -3348,6 +3348,42 @@ registerEditModeBars = function()
 					default = globalFontConfigKey(),
 				}
 
+				local outlineOptions = getFontStyleEntries()
+				settingsList[#settingsList + 1] = {
+					name = L["Outline"],
+					kind = settingType.Dropdown,
+					height = 180,
+					field = "fontOutline",
+					parentId = "textsettings",
+					generator = function(_, root)
+						for _, entry in ipairs(outlineOptions) do
+							root:CreateCheckbox(entry.label, function()
+								local c = curSpecCfg()
+								local cur = normalizeFontStyleChoice((c and c.fontOutline) or cfg.fontOutline, "OUTLINE")
+								return cur == entry.key
+							end, function()
+								local c = curSpecCfg()
+								if not c then return end
+								local cur = normalizeFontStyleChoice((c and c.fontOutline) or cfg.fontOutline, "OUTLINE")
+								if cur == entry.key then return end
+								c.fontOutline = normalizeFontStyleChoice(entry.key, "OUTLINE")
+								queueRefresh()
+							end)
+						end
+					end,
+					get = function()
+						local c = curSpecCfg()
+						return normalizeFontStyleChoice((c and c.fontOutline) or cfg.fontOutline, "OUTLINE")
+					end,
+					set = function(_, value)
+						local c = curSpecCfg()
+						if not c then return end
+						c.fontOutline = normalizeFontStyleChoice(value, "OUTLINE")
+						queueRefresh()
+					end,
+					default = "OUTLINE",
+				}
+
 				if barType ~= "HEALTH" and barType ~= "STAGGER" then
 					local function textThresholdColorModeAndCap()
 						if barType == "VOID_METAMORPHOSIS" then return "ABSOLUTE", ABSOLUTE_THRESHOLD_COLOR_VALUE_CAP_VOID_METAMORPHOSIS, 1 end
@@ -3555,42 +3591,6 @@ registerEditModeBars = function()
 						}
 					end
 				end
-
-				local outlineOptions = getFontStyleEntries()
-				settingsList[#settingsList + 1] = {
-					name = L["Outline"],
-					kind = settingType.Dropdown,
-					height = 180,
-					field = "fontOutline",
-					parentId = "textsettings",
-					generator = function(_, root)
-						for _, entry in ipairs(outlineOptions) do
-							root:CreateCheckbox(entry.label, function()
-								local c = curSpecCfg()
-								local cur = normalizeFontStyleChoice((c and c.fontOutline) or cfg.fontOutline, "OUTLINE")
-								return cur == entry.key
-							end, function()
-								local c = curSpecCfg()
-								if not c then return end
-								local cur = normalizeFontStyleChoice((c and c.fontOutline) or cfg.fontOutline, "OUTLINE")
-								if cur == entry.key then return end
-								c.fontOutline = normalizeFontStyleChoice(entry.key, "OUTLINE")
-								queueRefresh()
-							end)
-						end
-					end,
-					get = function()
-						local c = curSpecCfg()
-						return normalizeFontStyleChoice((c and c.fontOutline) or cfg.fontOutline, "OUTLINE")
-					end,
-					set = function(_, value)
-						local c = curSpecCfg()
-						if not c then return end
-						c.fontOutline = normalizeFontStyleChoice(value, "OUTLINE")
-						queueRefresh()
-					end,
-					default = "OUTLINE",
-				}
 			end
 
 			if not sharedSlot then
@@ -4532,6 +4532,26 @@ registerEditModeBars = function()
 				end
 
 				if barType == "MAELSTROM_WEAPON" or genericSharedPowerEditor then
+					if genericSharedPowerEditor then
+						settingsList[#settingsList + 1] = {
+							name = "Use 10-stack bar",
+							kind = settingType.Checkbox,
+							field = "powerTypeOverrideUseMaelstromTenStacks",
+							default = false,
+							parentId = powerColorParentId,
+							get = function() return readPowerConfigField("useMaelstromTenStacks", false) == true end,
+							set = function(_, value)
+								local c = currentPowerConfigTarget()
+								if not c then return end
+								c.useMaelstromTenStacks = value and true or false
+								c.visualSegments = c.useMaelstromTenStacks and MAELSTROM_WEAPON_MAX_STACKS or MAELSTROM_WEAPON_SEGMENTS
+								queueRefresh()
+							end,
+							isEnabled = isPowerOverrideEditorEnabled,
+							isShown = function() return currentEditorPowerType() == "MAELSTROM_WEAPON" end,
+						}
+					end
+
 					settingsList[#settingsList + 1] = {
 						name = "Use stack-threshold color",
 						kind = settingType.CheckboxColor,
@@ -5751,7 +5771,7 @@ local function ensureResourceBarsSuiteSection(cat)
 		expanded = false,
 		colorizeTitle = false,
 		iconKey = "resource",
-		modernCategory = "suites",
+		modernCategory = "interface",
 		modernOnly = true,
 	})
 	addon.SettingsLayout.suitesResourceBarsSection = expandable
@@ -5762,6 +5782,23 @@ local function createProgressBarSettings(cat, expandable)
 	if not cat or not expandable then return end
 	if addon.SettingsLayout._eqolProgressBarSettingsBuilt then return end
 	addon.SettingsLayout._eqolProgressBarSettingsBuilt = true
+
+	addon.functions.SettingsCreateHeadline(cat, C_Spell.GetSpellName(61304) or "GCD", {
+		parentSection = expandable,
+	})
+	addon.functions.SettingsCreateCheckbox(cat, {
+		var = "gcdBarEnabled",
+		text = L["gcdBarEnabled"] or "Enable GCD bar",
+		desc = L["gcdBarDesc"],
+		func = function(value)
+			addon.db["gcdBarEnabled"] = value and true or false
+			if addon.GCDBar and addon.GCDBar.OnSettingChanged then addon.GCDBar:OnSettingChanged(addon.db["gcdBarEnabled"]) end
+		end,
+		parentSection = expandable,
+	})
+	addon.functions.SettingsCreateText(cat, "|cffffd700" .. (L["gcdBarEditModeHint"] or "Configure size, texture, and color in Edit Mode.") .. "|r", {
+		parentSection = expandable,
+	})
 
 	addon.functions.SettingsCreateHeadline(cat, L["ExperienceBar"] or "Experience Bar", {
 		parentSection = expandable,
@@ -5792,6 +5829,17 @@ local function createProgressBarSettings(cat, expandable)
 		func = function(value)
 			addon.db["repBarEnabled"] = value and true or false
 			if addon.Aura and addon.Aura.ReputationBar and addon.Aura.ReputationBar.OnSettingChanged then addon.Aura.ReputationBar:OnSettingChanged(addon.db["repBarEnabled"]) end
+		end,
+		parentSection = expandable,
+	})
+	addon.functions.SettingsCreateCheckbox(cat, {
+		var = "repBarAutoWatchGainedFaction",
+		text = L["repBarAutoWatchGainedFaction"] or "Automatically watch gained reputation",
+		desc = L["repBarAutoWatchGainedFactionDesc"] or "When you gain reputation, switches the watched faction to the faction that just changed.",
+		newTagID = "repBarAutoWatchGainedFaction",
+		func = function(value)
+			addon.db["repBarAutoWatchGainedFaction"] = value and true or false
+			if value and addon.Aura and addon.Aura.ReputationBar and addon.Aura.ReputationBar.SnapshotReputations then addon.Aura.ReputationBar:SnapshotReputations() end
 		end,
 		parentSection = expandable,
 	})
@@ -6000,7 +6048,7 @@ local function buildSettings()
 
 	do
 		local app = addon.ConfigApp
-		local pageID = "suites.resourcebars"
+		local pageID = "gameplay.resourcebars"
 		if app and app.GetPage and app:GetPage(pageID) and app.RegisterControl then
 			app:RegisterControl(pageID, {
 				id = "resourceBarsSharedVisibilityMatrix",

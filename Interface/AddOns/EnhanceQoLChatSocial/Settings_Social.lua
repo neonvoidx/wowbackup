@@ -153,54 +153,6 @@ local privacyData = {
 			},
 		},
 	},
-	{
-		var = "autoAcceptGroupInvite",
-		text = L["autoAcceptGroupInvite"],
-		desc = L["autoAcceptGroupInviteDesc"],
-		type = "CheckBox",
-		func = function(value) addon.db["autoAcceptGroupInvite"] = value end,
-		children = {
-			{
-
-				var = "autoAcceptGroupInviteGuildOnly",
-				text = L["autoAcceptGroupInviteGuildOnly"],
-				desc = L["autoAcceptGroupInviteGuildOnlyDesc"],
-				func = function(v) addon.db["autoAcceptGroupInviteGuildOnly"] = v end,
-				parentCheck = function()
-					return addon.SettingsLayout.elements["autoAcceptGroupInvite"]
-						and addon.SettingsLayout.elements["autoAcceptGroupInvite"].setting
-						and addon.SettingsLayout.elements["autoAcceptGroupInvite"].setting:GetValue() == true
-				end,
-				parent = true,
-				default = false,
-				type = Settings.VarType.Boolean,
-				sType = "checkbox",
-			},
-			{
-
-				var = "autoAcceptGroupInviteFriendOnly",
-				text = L["Friends"],
-				desc = L["autoAcceptGroupInviteFriendOnlyDesc"],
-				func = function(v) addon.db["autoAcceptGroupInviteFriendOnly"] = v end,
-				parentCheck = function()
-					return addon.SettingsLayout.elements["autoAcceptGroupInvite"]
-						and addon.SettingsLayout.elements["autoAcceptGroupInvite"].setting
-						and addon.SettingsLayout.elements["autoAcceptGroupInvite"].setting:GetValue() == true
-				end,
-				parent = true,
-				default = false,
-				type = Settings.VarType.Boolean,
-				sType = "checkbox",
-			},
-		},
-	},
-	{
-		var = "autoAcceptSummon",
-		text = L["autoAcceptSummon"],
-		desc = L["autoAcceptSummonDesc"],
-		type = "CheckBox",
-		func = function(value) addon.db["autoAcceptSummon"] = value end,
-	},
 }
 
 applyParentSection(privacyData, privacyExpandable)
@@ -335,8 +287,67 @@ local friendsData = {
 	},
 }
 
+friendsData[#friendsData + 1] = {
+	var = "autoAcceptGroupInvite",
+	text = L["autoAcceptGroupInvite"],
+	desc = L["autoAcceptGroupInviteDesc"],
+	type = "CheckBox",
+	func = function(value) addon.db["autoAcceptGroupInvite"] = value end,
+	children = {
+		{
+			var = "autoAcceptGroupInviteGuildOnly",
+			text = L["autoAcceptGroupInviteGuildOnly"],
+			desc = L["autoAcceptGroupInviteGuildOnlyDesc"],
+			func = function(v) addon.db["autoAcceptGroupInviteGuildOnly"] = v end,
+			parentCheck = function()
+				return addon.SettingsLayout.elements["autoAcceptGroupInvite"]
+					and addon.SettingsLayout.elements["autoAcceptGroupInvite"].setting
+					and addon.SettingsLayout.elements["autoAcceptGroupInvite"].setting:GetValue() == true
+			end,
+			parent = true,
+			default = false,
+			type = Settings.VarType.Boolean,
+			sType = "checkbox",
+		},
+		{
+			var = "autoAcceptGroupInviteFriendOnly",
+			text = L["Friends"],
+			desc = L["autoAcceptGroupInviteFriendOnlyDesc"],
+			func = function(v) addon.db["autoAcceptGroupInviteFriendOnly"] = v end,
+			parentCheck = function()
+				return addon.SettingsLayout.elements["autoAcceptGroupInvite"]
+					and addon.SettingsLayout.elements["autoAcceptGroupInvite"].setting
+					and addon.SettingsLayout.elements["autoAcceptGroupInvite"].setting:GetValue() == true
+			end,
+			parent = true,
+			default = false,
+			type = Settings.VarType.Boolean,
+			sType = "checkbox",
+		},
+	},
+}
+
 applyParentSection(friendsData, friendsExpandable)
 addon.functions.SettingsCreateCheckboxes(cSocial, friendsData)
+
+local summonsExpandable = addon.functions.SettingsCreateExpandableSection(nil, {
+	name = L["autoAcceptSummon"],
+	configPageKey = "AutoAcceptSummons",
+	modernCategory = "gameplay",
+	modernOnly = true,
+	iconKey = "teleports",
+	expanded = false,
+	colorizeTitle = false,
+})
+
+addon.functions.SettingsCreateCheckbox(nil, {
+	var = "autoAcceptSummon",
+	text = L["autoAcceptSummon"],
+	desc = L["autoAcceptSummonDesc"],
+	type = "CheckBox",
+	func = function(value) addon.db["autoAcceptSummon"] = value end,
+	parentSection = summonsExpandable,
+})
 
 ----- REGION END
 

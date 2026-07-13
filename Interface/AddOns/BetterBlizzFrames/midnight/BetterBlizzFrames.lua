@@ -27,6 +27,7 @@ local defaultSettings = {
     darkModeVigor = true,
     hideGroupIndicator = false,
     hideFocusCombatGlow = false,
+    bigPlayerHealthbar = false,
     hideDragonFlying = true,
     targetToTScale = 1,
     focusToTScale = 1,
@@ -4681,23 +4682,23 @@ function BBF.FixStupidBlizzPTRShit()
         FocusFrame.bbfName:SetPoint(a,b,c,d,-2)
         BBF.ocdAdjusted = true
     end
-    local lvlYOffset = BetterBlizzFramesDB.symmetricPlayerFrame and -4 or -3
+    local lvlYOffset = BetterBlizzFramesDB.symmetricPlayerFrame and -4 or -4
     --TargetFrame.TargetFrameContent.TargetFrameContentMain.ReputationColor:SetHeight()
     TargetFrame.TargetFrameContent.TargetFrameContentMain.ReputationColor:SetHeight(20)
     local a, b, c, d, e = TargetFrame.TargetFrameContent.TargetFrameContentMain.LevelText:GetPoint()
-    TargetFrame.TargetFrameContent.TargetFrameContentMain.LevelText:SetPoint(a, b, c, d-1.5, lvlYOffset)
+    TargetFrame.TargetFrameContent.TargetFrameContentMain.LevelText:SetPoint(a, b, c, d+1.5, lvlYOffset)
 
     local a, b, c, d, e = FocusFrame.TargetFrameContent.TargetFrameContentMain.ReputationColor:GetPoint()
     FocusFrame.TargetFrameContent.TargetFrameContentMain.ReputationColor:SetPoint(a, b, c, d, -24)
     FocusFrame.TargetFrameContent.TargetFrameContentMain.ReputationColor:SetHeight(20)
     local a, b, c, d, e = FocusFrame.TargetFrameContent.TargetFrameContentMain.LevelText:GetPoint()
-    FocusFrame.TargetFrameContent.TargetFrameContentMain.LevelText:SetPoint(a, b, c, d-1.5, lvlYOffset)
+    FocusFrame.TargetFrameContent.TargetFrameContentMain.LevelText:SetPoint(a, b, c, d+1.5, lvlYOffset)
 
 
     -- HealthBarColorActive
     --if not BetterBlizzFramesDB.playerFrameOCDTextureBypass then
         local a, b, c, d, e = PlayerLevelText:GetPoint()
-        PlayerLevelText:SetPoint(a,b,c,d,-28)
+        PlayerLevelText:SetPoint(a,b,c,d,-28.5)
         -- PlayerFrame.PlayerFrameContent.PlayerFrameContentMain.HealthBarsContainer.HealthBarMask:SetHeight(33)
         -- PlayerFrame.PlayerFrameContent.PlayerFrameContentMain.ManaBarArea.ManaBar.ManaBarMask:SetPoint("TOPLEFT", PlayerFrame.PlayerFrameContent.PlayerFrameContentMain.ManaBarArea.ManaBar, "TOPLEFT", -2, 3)
         -- PlayerFrame.PlayerFrameContent.PlayerFrameContentMain.ManaBarArea.ManaBar.ManaBarMask:SetHeight(17)
@@ -5250,6 +5251,7 @@ First:SetScript("OnEvent", function(_, event, addonName)
         end)
         BBF.ClassicFrames()
         BBF.noPortraitModes()
+        BBF.UpdateBigPlayerHealthbar()
         BBF.PlayerElite(BetterBlizzFramesDB.playerEliteFrameMode)
         BBF.HidePlayerFrame()
         BBF.ReduceEditModeAlpha()

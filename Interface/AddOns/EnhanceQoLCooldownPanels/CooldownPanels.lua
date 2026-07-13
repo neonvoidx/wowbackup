@@ -2526,6 +2526,9 @@ function CooldownPanels:GetEntrySoundConfig(entry, requestedMode)
 	if mode == "ready" and entryType ~= "MACRO" and entryType ~= "STANCE" and entryType ~= "CDM_AURA" then
 		return mode, "soundReady", "soundReadyFile", L["CooldownPanelSoundReady"] or "Sound when ready"
 	end
+	if mode == "aura" and (entryType == "SPELL" or entryType == "CDM_AURA") then
+		return mode, "auraAppliedSound", "auraAppliedSoundFile", L["CooldownPanelSoundAuraApplied"] or "Sound when aura is applied"
+	end
 	return nil
 end
 
@@ -3823,6 +3826,11 @@ cdp.ENTRY.STYLE_CLIPBOARD = {
 		itemID = true,
 		slotID = true,
 		cooldownID = true,
+		cdmAuraOverlaySpellIDs = true,
+		cdmAuraOverlayTrackTarget = true,
+		cdmAuraOverlayTargetPlayerOnly = true,
+		auraUnit = true,
+		auraFilter = true,
 		buffName = true,
 		iconTextureID = true,
 		sourceType = true,
@@ -3852,6 +3860,7 @@ cdp.ENTRY.STYLE_CLIPBOARD = {
 		trackPassiveSpell = true,
 		trackUnknownSpell = true,
 		customCooldownDurationOnCooldownEnabled = true,
+		customCooldownDurationOnCooldownMultipleStacks = true,
 		readyGlowCheckPower = true,
 		checkPower = true,
 		checkPowerUseGlobal = true,
@@ -3984,6 +3993,7 @@ function cdp.ENTRY.IsStyleClipboardKeyAllowedForEntry(key, entry)
 		return entryType == "SPELL" or entryType == "ITEM" or entryType == "MACRO"
 	end
 	if key == "autoCooldownDurationEnabled" then return entryType == "SPELL" or entryType == "SLOT" or entryType == "MACRO" end
+	if key == "customCooldownDurationOnCooldownMultipleStacks" then return entryType == "SPELL" end
 	if key == "customCooldownDurationEnabled" or key == "customCooldownDurationOnCooldownEnabled" or key == "customCooldownDuration" then return entryType == "SPELL" or entryType == "ITEM" or entryType == "SLOT" or entryType == "MACRO" end
 	return true
 end
@@ -5569,7 +5579,7 @@ function CooldownPanels:AddEntry(panelId, entryType, idValue, overrides)
 	end
 	local entryId = Helper.GetNextNumericId(panel.entries)
 	local entry = Helper.CreateEntry(typeKey, entryValue, root.defaults)
-	if typeKey == "CDM_AURA" and not (entry and entry.cooldownID) then return nil end
+	if typeKey == "CDM_AURA" and not (entry and (entry.cooldownID or (CooldownPanels.AuraContainers and entry.spellID))) then return nil end
 	entry.id = entryId
 	if type(overrides) == "table" then
 		for key, value in pairs(overrides) do
@@ -6033,7 +6043,6 @@ function CooldownPanels:RebuildSpellIndex()
 	elseif cdmAuras and cdmAuras.UpdateEventRegistration then
 		cdmAuras:UpdateEventRegistration()
 	end
-	if self.HasCooldownManagerSyncPanels and self:HasCooldownManagerSyncPanels() then self:EnsureCooldownManagerSyncListener() end
 	if self.UpdateEventRegistration then self:UpdateEventRegistration() end
 	if self.CheckCDMAuraQuickSetup then self:CheckCDMAuraQuickSetup("RebuildSpellIndex") end
 	return index
@@ -7511,6 +7520,7 @@ function CooldownPanels:ApplyEntryStateTextureInput(entry, value)
 	local resolvedType, resolvedValue = Helper.ResolveTextureInput(input)
 	if not resolvedType then return false, string.format(L["CooldownPanelStateTextureInvalid"] or "Texture '%s' was not found. Use a valid atlas name or FileDataID.", input) end
 
+	local wasConfigured = self:HasConfiguredStateTexture(entry)
 	entry.stateTextureInput = input
 	entry.stateTextureType = resolvedType
 	if resolvedType == "ATLAS" then
@@ -7519,6 +7529,10 @@ function CooldownPanels:ApplyEntryStateTextureInput(entry, value)
 	else
 		entry.stateTextureFileID = resolvedValue
 		entry.stateTextureAtlas = nil
+	end
+	if not wasConfigured then
+		entry.stateTextureScale = 6
+		entry.stateTextureHeight = 1.4
 	end
 	return true, nil
 end
@@ -7555,7 +7569,6 @@ function CooldownPanels:ResolveEntryStateTexture(entry)
 			entry.stateTextureAtlas = nil
 		end
 	end
-
 	local scale = Helper.ClampNumber(entry.stateTextureScale, 0.1, 8, 1)
 	local width = Helper.ClampNumber(entry.stateTextureWidth, 0.1, 8, 1)
 	local height = Helper.ClampNumber(entry.stateTextureHeight, 0.1, 8, 1)
@@ -9456,15 +9469,69 @@ function CooldownPanels:SupportsEntryCDMAuraOverlay(entry, resolvedType)
 	local spellID = tonumber(entry.spellID)
 	local cdmAuras = self.CDMAuras
 	if not (spellID and cdmAuras and cdmAuras.SupportsSpellAuraOverlay) then return false end
-	local candidates, seen = {}, {}
-	candidates, seen = self:GetSpellAliasIDs(spellID, candidates, seen)
-	local effectiveSpellID, resolvedSpellID = self:ResolveTrackedSpellID(spellID)
-	if effectiveSpellID then candidates, seen = self:GetSpellAliasIDs(effectiveSpellID, candidates, seen) end
-	if resolvedSpellID then candidates, seen = self:GetSpellAliasIDs(resolvedSpellID, candidates, seen) end
+	local candidates = self:GetEntryAuraOverlaySpellIDs(entry, spellID)
 	for i = 1, #candidates do
 		if cdmAuras:SupportsSpellAuraOverlay(candidates[i]) then return true end
 	end
 	return false
+end
+
+function CooldownPanels:GetEntryAuraOverlaySpellIDs(entry, fallbackSpellID)
+	local configured = entry and entry.cdmAuraOverlaySpellIDs
+	local source = type(configured) == "table" and #configured > 0 and configured or { fallbackSpellID or entry and entry.spellID }
+	local candidates, seen = {}, {}
+	for i = 1, #source do
+		local spellID = tonumber(source[i])
+		if spellID and spellID > 0 then
+			candidates, seen = self:GetSpellAliasIDs(spellID, candidates, seen)
+			local effectiveSpellID, resolvedSpellID = self:ResolveTrackedSpellID(spellID)
+			if effectiveSpellID then candidates, seen = self:GetSpellAliasIDs(effectiveSpellID, candidates, seen) end
+			if resolvedSpellID then candidates, seen = self:GetSpellAliasIDs(resolvedSpellID, candidates, seen) end
+		end
+	end
+	return candidates, seen
+end
+
+function CooldownPanels:NormalizeEntryAuraOverlaySpellIDs(value)
+	local normalized, seen, invalid = {}, {}, {}
+	local function add(candidate)
+		if type(candidate) == "string" and not candidate:match("^%d+$") then
+			invalid[#invalid + 1] = candidate
+			return
+		end
+		local spellID = tonumber(candidate)
+		if not spellID or spellID <= 0 or spellID ~= math.floor(spellID) then
+			invalid[#invalid + 1] = tostring(candidate or "")
+			return
+		end
+		if seen[spellID] then return end
+		seen[spellID] = true
+		normalized[#normalized + 1] = spellID
+	end
+	if type(value) == "table" then
+		for _, candidate in ipairs(value) do add(candidate) end
+	elseif type(value) == "string" then
+		for candidate in value:gmatch("[^,%s;]+") do add(candidate) end
+	elseif value ~= nil then
+		add(value)
+	end
+	table.sort(normalized)
+	return normalized, invalid
+end
+
+function CooldownPanels:FormatEntryAuraOverlaySpellIDs(value)
+	local normalized = self:NormalizeEntryAuraOverlaySpellIDs(value)
+	local text = {}
+	for i = 1, #normalized do text[i] = tostring(normalized[i]) end
+	return table.concat(text, ", ")
+end
+
+function CooldownPanels:SetEntryAuraOverlaySpellIDs(entry, value)
+	if type(entry) ~= "table" then return false end
+	local normalized, invalid = self:NormalizeEntryAuraOverlaySpellIDs(value)
+	if #invalid > 0 then return false, invalid end
+	entry.cdmAuraOverlaySpellIDs = #normalized > 0 and normalized or nil
+	return true
 end
 
 function CooldownPanels:IsEntryCDMAuraOverlayEnabled(layout, entry, resolvedType)
@@ -9622,7 +9689,51 @@ function CooldownPanels:GetCustomCooldownDurationStore()
 	local runtime = self.runtime
 	runtime.customCooldownDurations = runtime.customCooldownDurations or {}
 	runtime.customCooldownDurationTimers = runtime.customCooldownDurationTimers or {}
+	runtime.customCooldownDurationStackTimers = runtime.customCooldownDurationStackTimers or {}
 	return runtime.customCooldownDurations, runtime.customCooldownDurationTimers
+end
+
+function CooldownPanels:ScheduleCustomCooldownStackCleanup(panelId, entryId)
+	local runtime = self.runtime
+	if not runtime then return end
+	local key = Helper.GetEntryKey(panelId, entryId)
+	runtime.customCooldownDurationStackTimers = runtime.customCooldownDurationStackTimers or {}
+	local timers = runtime.customCooldownDurationStackTimers
+	local oldTimer = timers[key]
+	if oldTimer and oldTimer.Cancel then oldTimer:Cancel() end
+	local store = runtime.customCooldownDurations
+	local record = store and store[key] or nil
+	if not record then
+		timers[key] = nil
+		return
+	end
+	local now = self:GetDurationNow()
+	local nextExpiration
+	for i = 1, #(record.stackExpirations or {}) do
+		local expiration = tonumber(record.stackExpirations[i])
+		if expiration and expiration > now and (not nextExpiration or expiration < nextExpiration) then nextExpiration = expiration end
+	end
+	if not nextExpiration then
+		timers[key] = nil
+		return
+	end
+	timers[key] = C_Timer and C_Timer.NewTimer and C_Timer.NewTimer(math.max(nextExpiration - now, 0.01), function()
+		local currentStore = CooldownPanels.runtime and CooldownPanels.runtime.customCooldownDurations
+		local current = currentStore and currentStore[key] or nil
+		if current then
+			CooldownPanels:CleanupActiveProcTriggerRecord(current)
+			if (tonumber(current.stackCount) or 0) <= 0 then
+				CooldownPanels:ClearEntryCustomCooldownDuration(panelId, entryId)
+			else
+				if CooldownPanels.RequestPanelRefresh then
+					CooldownPanels:RequestPanelRefresh(panelId)
+				elseif CooldownPanels:GetPanel(panelId) then
+					CooldownPanels:RefreshPanel(panelId)
+				end
+				CooldownPanels:ScheduleCustomCooldownStackCleanup(panelId, entryId)
+			end
+		end
+	end) or nil
 end
 
 function CooldownPanels:ClearEntryCustomCooldownDuration(panelId, entryId, suppressRefresh)
@@ -9632,11 +9743,15 @@ function CooldownPanels:ClearEntryCustomCooldownDuration(panelId, entryId, suppr
 	local key = Helper.GetEntryKey(panelId, entryId)
 	local store = self.runtime.customCooldownDurations
 	local timers = self.runtime.customCooldownDurationTimers
+	local stackTimers = self.runtime.customCooldownDurationStackTimers
 	local hadRecord = store and store[key] ~= nil
 	if store then store[key] = nil end
 	local timer = timers and timers[key] or nil
 	if timer and timer.Cancel then timer:Cancel() end
 	if timers then timers[key] = nil end
+	local stackTimer = stackTimers and stackTimers[key] or nil
+	if stackTimer and stackTimer.Cancel then stackTimer:Cancel() end
+	if stackTimers then stackTimers[key] = nil end
 	if hadRecord and not suppressRefresh then
 		if self.RequestPanelRefresh then
 			self:RequestPanelRefresh(panelId)
@@ -9652,6 +9767,7 @@ function CooldownPanels:ClearPanelCustomCooldownDurations(panelId)
 	if not (panelId and self.runtime) then return false end
 	local store = self.runtime.customCooldownDurations
 	local timers = self.runtime.customCooldownDurationTimers
+	local stackTimers = self.runtime.customCooldownDurationStackTimers
 	if not store then return false end
 	local prefix = tostring(panelId) .. ":"
 	local changed = false
@@ -9661,6 +9777,9 @@ function CooldownPanels:ClearPanelCustomCooldownDurations(panelId)
 			local timer = timers and timers[key] or nil
 			if timer and timer.Cancel then timer:Cancel() end
 			if timers then timers[key] = nil end
+			local stackTimer = stackTimers and stackTimers[key] or nil
+			if stackTimer and stackTimer.Cancel then stackTimer:Cancel() end
+			if stackTimers then stackTimers[key] = nil end
 			changed = true
 		end
 	end
@@ -9678,6 +9797,13 @@ function CooldownPanels:GetActiveEntryCustomCooldownDuration(panelId, entryId, e
 	local record = store and store[key] or nil
 	if not record then return nil end
 	local now = self:GetDurationNow()
+	if record.stackMode == true then
+		self:CleanupActiveProcTriggerRecord(record, now)
+		if (tonumber(record.stackCount) or 0) <= 0 then
+			self:ClearEntryCustomCooldownDuration(panelId, entryId, true)
+			return nil
+		end
+	end
 	local startTime = tonumber(record.startTime)
 	local endTime = tonumber(record.endTime)
 	local recordDuration = tonumber(record.duration) or duration
@@ -9699,6 +9825,7 @@ function CooldownPanels:GetActiveEntryCustomCooldownDuration(panelId, entryId, e
 		startTime = startTime,
 		duration = recordDuration,
 		endTime = endTime,
+		stackCount = tonumber(record.stackCount),
 		rate = 1,
 	}
 end
@@ -9720,6 +9847,28 @@ function CooldownPanels:StartEntryCustomCooldownDuration(panelId, entryId, entry
 	local key = Helper.GetEntryKey(panelId, entryId)
 	local oldTimer = timers[key]
 	if oldTimer and oldTimer.Cancel then oldTimer:Cancel() end
+	timers[key] = nil
+	if triggerMode == "cooldown" and entry.customCooldownDurationOnCooldownMultipleStacks == true then
+		local current = store[key]
+		if type(current) ~= "table" then
+			current = {
+				stackCount = 0,
+				stackExpirations = {},
+				stackMode = true,
+			}
+			store[key] = current
+		end
+		current.stackExpirations = current.stackExpirations or {}
+		current.stackExpirations[#current.stackExpirations + 1] = now + duration
+		current.durationObject = durationObject
+		current.startTime = now
+		current.duration = duration
+		current.endTime = now + duration
+		current.stackMode = true
+		self:CleanupActiveProcTriggerRecord(current, now)
+		self:ScheduleCustomCooldownStackCleanup(panelId, entryId)
+		return true
+	end
 	store[key] = {
 		durationObject = durationObject,
 		startTime = now,
@@ -10613,7 +10762,6 @@ function CooldownPanels:EntryPassesEditorRuntimeVisibility(entry)
 		if
 			Api.IsSpellKnown
 			and not (variantGroup and variantGroup.kind == "talentChoice")
-			and not (cdp.CDM and cdp.CDM.IsSyncedEntryKnown and cdp.CDM.IsSyncedEntryKnown(entry))
 			and not cdp.ENTRY.ShouldTrackUnknownSpell(entry)
 			and not Api.IsSpellKnown(spellId, true)
 		then
@@ -11299,6 +11447,29 @@ function cdp.ENTRY.ApplyIconShape(icon, layout)
 		})
 	end
 	cdp.ENTRY.ApplyIconTextureAspect(icon, layout)
+end
+
+function CooldownPanels:ApplyAuraOverlayIconStyle(button, layout, background)
+	if not button then return end
+	layout = layout or Helper.PANEL_LAYOUT_DEFAULTS
+	button.texture = button._eqolOverlayIcon
+	button.cooldown = button._eqolOverlayCooldown
+	cdp.ENTRY.ApplyIconShape(button, layout)
+
+	local shape = cdp.ENTRY.NormalizeIconShape(layout.iconShape, Helper.PANEL_LAYOUT_DEFAULTS.iconShape)
+	local borderTexture = normalizeIconBorderTexture(layout.iconBorderTexture, Helper.PANEL_LAYOUT_DEFAULTS.iconBorderTexture, shape)
+	if layout.iconBorderEnabled == true and shape == cdp.ICON_SHAPE.DEFAULT and cdp.ENTRY.IsBlizzardIconBorderTexture(borderTexture) then
+		cdp.ENTRY.ApplyBlizzardIconSkin(button)
+	end
+
+	if background then
+		background:ClearAllPoints()
+		background:SetAllPoints(button.texture or button)
+		local mask = button.blizzardIconMask or button._eqolIconShapeMask
+		if mask and addon.IconShape and addon.IconShape.ApplyTextureMask then
+			addon.IconShape.ApplyTextureMask(background, mask, "_eqolAuraOverlayBackgroundMask")
+		end
+	end
 end
 
 function cdp.ENTRY.ClearBlizzardIconSkin(icon)
@@ -12261,9 +12432,16 @@ function cdp.ENTRY.ShowAddByIDPopup(panelId, entryType)
 	panelId = normalizeId(panelId)
 	if not panelId then return false end
 	entryType = entryType and tostring(entryType):upper() or nil
-	if entryType ~= "SPELL" and entryType ~= "ITEM" then return false end
+	if entryType ~= "SPELL" and entryType ~= "ITEM" and entryType ~= "CDM_AURA" then return false end
 	cdp.ENTRY.EnsureAddByIDPopup()
-	local label = entryType == "ITEM" and (L["CooldownPanelAddItemID"] or "Add Item ID") or (L["CooldownPanelAddSpellID"] or "Add Spell ID")
+	local label
+	if entryType == "ITEM" then
+		label = L["CooldownPanelAddItemID"] or "Add Item ID"
+	elseif entryType == "CDM_AURA" then
+		label = L["CooldownPanelAddAuraSpellID"] or "Add Aura Spell ID"
+	else
+		label = L["CooldownPanelAddSpellID"] or "Add Spell ID"
+	end
 	StaticPopup_Show("EQOL_COOLDOWN_PANEL_ADD_BY_ID", label, nil, {
 		panelId = panelId,
 		entryType = entryType,
@@ -12286,6 +12464,11 @@ local function showSlotMenu(owner, panelId)
 		rootDescription:CreateButton(L["CooldownPanelAddSpellID"] or "Add Spell ID", function()
 			cdp.ENTRY.ShowAddByIDPopup(panelId, "SPELL")
 		end)
+		if CooldownPanels.AuraContainers then
+			rootDescription:CreateButton(L["CooldownPanelAddAuraSpellID"] or "Add Aura Spell ID", function()
+				cdp.ENTRY.ShowAddByIDPopup(panelId, "CDM_AURA")
+			end)
+		end
 		rootDescription:CreateButton(L["CooldownPanelAddItemID"] or "Add Item ID", function()
 			cdp.ENTRY.ShowAddByIDPopup(panelId, "ITEM")
 		end)
@@ -12452,57 +12635,9 @@ local function getCooldownManagerLayoutChildren(sourceKind)
 	return nil, sourceLabel, "SOURCE_NOT_FOUND"
 end
 
-cdp.CDM = cdp.CDM or {}
-cdp.CDM.LOGIN_SYNC_RETRY_DELAYS = cdp.CDM.LOGIN_SYNC_RETRY_DELAYS or { 0.2, 1, 2, 4, 8 }
-cdp.CDM.ENTRY_OVERRIDE_SKIP_KEYS = {
-	id = true,
-	type = true,
-	spellID = true,
-	itemID = true,
-	slotID = true,
-	cooldownID = true,
-	buffName = true,
-	sourceType = true,
-	sourceViewer = true,
-	cdmSyncManaged = true,
-	cdmSyncSource = true,
-	cdmSyncKey = true,
-	cdmSyncSpecKey = true,
-	cdmSyncCooldownID = true,
-}
+cdp.IMPORT = cdp.IMPORT or {}
 
-function cdp.CDM.IsSyncSource(sourceKind)
-	sourceKind = type(sourceKind) == "string" and sourceKind:upper() or nil
-	return sourceKind == "ESSENTIAL" or sourceKind == "UTILITY" or sourceKind == "BUFF_ICON"
-end
-
-function cdp.CDM.IsGraceSyncReason(reason)
-	if type(reason) ~= "string" then return false end
-	return reason:find("PLAYER_LOGIN", 1, true)
-		or reason:find("PLAYER_ENTERING_WORLD", 1, true)
-		or reason:find("COOLDOWN_VIEWER_DATA_LOADED", 1, true)
-		or reason:find("ADDON_LOADED:Blizzard_CooldownViewer", 1, true)
-		or reason:find("PLAYER_TALENT_UPDATE", 1, true)
-		or reason:find("ACTIVE_TALENT_GROUP_CHANGED", 1, true)
-		or reason:find("TRAIT_CONFIG_UPDATED", 1, true)
-		or reason:find("TRAIT_CONFIG_LIST_UPDATED", 1, true)
-end
-
-function cdp.CDM.IsSettingsFrameShown()
-	local settings = _G.CooldownViewerSettings
-	return settings and settings.IsShown and settings:IsShown() == true
-end
-
-function cdp.CDM.IsSyncedEntryKnown(entry)
-	if not (entry and entry.cdmSyncManaged == true and entry.cdmSyncCooldownID) then return false end
-	if not (C_CooldownViewer and C_CooldownViewer.GetCooldownViewerCooldownInfo) then return false end
-	local cooldownID = tonumber(entry.cdmSyncCooldownID)
-	if not cooldownID then return false end
-	local cooldownInfo = C_CooldownViewer.GetCooldownViewerCooldownInfo(cooldownID)
-	return cooldownInfo and cooldownInfo.isKnown == true or false
-end
-
-function cdp.CDM.GetSpellIdsFromAPI(sourceKind)
+function cdp.IMPORT.GetCooldownManagerSpellIdsFromAPI(sourceKind)
 	if not (C_CooldownViewer and C_CooldownViewer.GetCooldownViewerCategorySet and C_CooldownViewer.GetCooldownViewerCooldownInfo) then return nil end
 	local category
 	if sourceKind == "UTILITY" then
@@ -12523,8 +12658,9 @@ function cdp.CDM.GetSpellIdsFromAPI(sourceKind)
 	return spellIds
 end
 
-function cdp.CDM.GetSpellIdsFromSource(sourceKind)
-	sourceKind = cdp.CDM.IsSyncSource(sourceKind) and sourceKind:upper() or "ESSENTIAL"
+function cdp.IMPORT.GetCooldownManagerSpellIdsFromSource(sourceKind)
+	sourceKind = type(sourceKind) == "string" and sourceKind:upper() or "ESSENTIAL"
+	if sourceKind ~= "UTILITY" then sourceKind = "ESSENTIAL" end
 	local sourceLabel = getCooldownManagerSourceLabel(sourceKind)
 
 	local layoutChildren, fallbackLabel, sourceErr = getCooldownManagerLayoutChildren(sourceKind)
@@ -12552,89 +12688,16 @@ function cdp.CDM.GetSpellIdsFromSource(sourceKind)
 		if #spellIds > 0 then return spellIds, sourceLabel end
 	end
 
-	local spellIds = cdp.CDM.GetSpellIdsFromAPI(sourceKind)
+	local spellIds = cdp.IMPORT.GetCooldownManagerSpellIdsFromAPI(sourceKind)
 	if spellIds then return spellIds, sourceLabel end
 	return nil, sourceLabel, sourceErr or "SOURCE_NOT_FOUND"
-end
-
-function cdp.CDM.GetEntryOverrideSpecKey(specId)
-	specId = tonumber(specId) or queryPlayerSpecId()
-	return specId and tostring(specId) or "nospec"
-end
-
-function cdp.CDM.GetEntryOverrideBucket(panel, sourceKind, specKey)
-	if not (panel and cdp.CDM.IsSyncSource(sourceKind)) then return nil end
-	sourceKind = sourceKind:upper()
-	specKey = tostring(specKey or cdp.CDM.GetEntryOverrideSpecKey())
-	panel.cdmSyncEntryOverrides = panel.cdmSyncEntryOverrides or {}
-	panel.cdmSyncEntryOverrides[sourceKind] = panel.cdmSyncEntryOverrides[sourceKind] or {}
-	panel.cdmSyncEntryOverrides[sourceKind][specKey] = panel.cdmSyncEntryOverrides[sourceKind][specKey] or {}
-	return panel.cdmSyncEntryOverrides[sourceKind][specKey]
-end
-
-function cdp.CDM.SaveEntryOverride(panel, sourceKind, canonicalSpellID, entry, specKey)
-	local spellKey = canonicalSpellID and tostring(canonicalSpellID) or nil
-	if not (spellKey and entry and entry.type == "SPELL") then return false end
-	local bucket = cdp.CDM.GetEntryOverrideBucket(panel, sourceKind, specKey)
-	if not bucket then return false end
-	local override = {}
-	for key, value in pairs(entry) do
-		if type(key) == "string" and not cdp.CDM.ENTRY_OVERRIDE_SKIP_KEYS[key] and not key:match("^_") then
-			override[key] = Helper.CopyTableDeep(value)
-		end
-	end
-	bucket[spellKey] = next(override) and override or nil
-	return true
-end
-
-function cdp.CDM.SaveCurrentEntryOverrides(panel, sourceKind, specKey, wantedBySpellId)
-	if not (panel and type(panel.entries) == "table") then return false end
-	local changed = false
-	for _, entry in pairs(panel.entries) do
-		if entry and entry.type == "SPELL" and entry.spellID then
-			local canonicalSpellID = CooldownPanels:NormalizePersistentSpellID(entry.spellID, { allowTalentChoiceCanonical = true }) or tonumber(entry.spellID)
-			if canonicalSpellID and (not wantedBySpellId or wantedBySpellId[canonicalSpellID]) then
-				changed = cdp.CDM.SaveEntryOverride(panel, sourceKind, canonicalSpellID, entry, specKey) or changed
-			end
-		end
-	end
-	return changed
-end
-
-function cdp.CDM.ApplyEntryOverride(panel, sourceKind, canonicalSpellID, entry, specKey)
-	local spellKey = canonicalSpellID and tostring(canonicalSpellID) or nil
-	if not (spellKey and entry) then return false end
-	local overridesBySource = panel and panel.cdmSyncEntryOverrides
-	local bucket = overridesBySource and overridesBySource[sourceKind] and overridesBySource[sourceKind][tostring(specKey or cdp.CDM.GetEntryOverrideSpecKey())]
-	local override = bucket and bucket[spellKey]
-	if type(override) ~= "table" then return false end
-	for key, value in pairs(override) do
-		if type(key) == "string" and not cdp.CDM.ENTRY_OVERRIDE_SKIP_KEYS[key] and not key:match("^_") then
-			entry[key] = Helper.CopyTableDeep(value)
-		end
-	end
-	return true
-end
-
-function cdp.CDM.ResetEntryToSyncedDefault(entry, spellId, defaults)
-	if not (entry and spellId) then return false end
-	local resetEntry = Helper.CreateEntry("SPELL", spellId, defaults)
-	for key in pairs(entry) do
-		if type(key) == "string" and not cdp.CDM.ENTRY_OVERRIDE_SKIP_KEYS[key] and not key:match("^_") then entry[key] = nil end
-	end
-	for key, value in pairs(resetEntry) do
-		if type(key) == "string" and not cdp.CDM.ENTRY_OVERRIDE_SKIP_KEYS[key] and not key:match("^_") then
-			entry[key] = Helper.CopyTableDeep(value)
-		end
-	end
-	return true
 end
 
 local function importCooldownManagerSpells(panelId, sourceKind)
 	panelId = normalizeId(panelId)
 	local panel = CooldownPanels:GetPanel(panelId)
 	if not panel then return nil, "PANEL_NOT_FOUND" end
-	local spellIds, sourceLabel, sourceErr = cdp.CDM.GetSpellIdsFromSource(sourceKind)
+	local spellIds, sourceLabel, sourceErr = cdp.IMPORT.GetCooldownManagerSpellIdsFromSource(sourceKind)
 	if sourceErr then return nil, sourceErr, sourceLabel end
 	local root = ensureRoot()
 	if not root then return nil, "NO_DB" end
@@ -12699,7 +12762,6 @@ local function importCooldownManagerSpells(panelId, sourceKind)
 	return stats
 end
 
-cdp.IMPORT = cdp.IMPORT or {}
 cdp.IMPORT.ACTION_BAR_DEFINITIONS = cdp.IMPORT.ACTION_BAR_DEFINITIONS
 	or {
 		{ buttonPrefix = "ActionButton", label = _G.BINDING_HEADER_ACTIONBAR or "Action Bar 1", firstSlot = 1 },
@@ -12826,30 +12888,97 @@ function CooldownPanels:GetCooldownManagerSourceLabel(sourceKind)
 	return getCooldownManagerSourceLabel(sourceKind)
 end
 
+cdp.SYNC = cdp.SYNC or {}
+cdp.SYNC.SOURCES = cdp.SYNC.SOURCES or {
+	BUFF_ICON = true,
+	ESSENTIAL = true,
+	UTILITY = true,
+}
+
+function cdp.SYNC.NormalizeSource(sourceKind)
+	if type(sourceKind) ~= "string" then return nil end
+	sourceKind = sourceKind:upper()
+	return cdp.SYNC.SOURCES[sourceKind] and sourceKind or nil
+end
+
+function cdp.SYNC.GetOverrideBucket(panel, sourceKind)
+	panel.cdmSyncEntryOverrides = panel.cdmSyncEntryOverrides or {}
+	panel.cdmSyncEntryOverrides[sourceKind] = panel.cdmSyncEntryOverrides[sourceKind] or {}
+	return panel.cdmSyncEntryOverrides[sourceKind]
+end
+
+function cdp.SYNC.SaveEntryOverride(panel, sourceKind, entryKey, entry)
+	if not (panel and sourceKind and entryKey and entry) then return end
+	local copy = Helper.CopyTableDeep(entry)
+	copy.id = nil
+	copy.type = nil
+	copy.spellID = nil
+	copy.auraSpellID = nil
+	copy.cooldownID = nil
+	copy.cdmSyncManaged = nil
+	copy.cdmSyncSource = nil
+	copy.cdmSyncKey = nil
+	copy.cdmSyncSpecKey = nil
+	copy.cdmSyncCooldownID = nil
+	cdp.SYNC.GetOverrideBucket(panel, sourceKind)[tostring(entryKey)] = copy
+end
+
+function cdp.SYNC.ApplyEntryOverride(panel, sourceKind, entryKey, entry)
+	local overrides = panel and panel.cdmSyncEntryOverrides
+	local override = overrides and overrides[sourceKind] and overrides[sourceKind][tostring(entryKey)]
+	if type(override) ~= "table" then return false end
+	for key, value in pairs(override) do
+		entry[key] = Helper.CopyTableDeep(value)
+	end
+	return true
+end
+
+function CooldownPanels:SaveCooldownManagerSyncEntryOverride(panel, sourceKind, entryKey, entry)
+	return cdp.SYNC.SaveEntryOverride(panel, sourceKind, entryKey, entry)
+end
+
+function CooldownPanels:ApplyCooldownManagerSyncEntryOverride(panel, sourceKind, entryKey, entry)
+	return cdp.SYNC.ApplyEntryOverride(panel, sourceKind, entryKey, entry)
+end
+
 function CooldownPanels:GetPanelCooldownManagerSyncSource(panelId)
 	local panel = self:GetPanel(panelId)
-	local sourceKind = type(panel and panel.cdmSyncSource) == "string" and panel.cdmSyncSource:upper() or nil
-	return cdp.CDM.IsSyncSource(sourceKind) and sourceKind or nil
+	return cdp.SYNC.NormalizeSource(panel and panel.cdmSyncSource)
 end
 
 function CooldownPanels:HasCooldownManagerSyncPanels()
 	local root = ensureRoot()
 	if not (root and root.panels) then return false end
 	for _, panel in pairs(root.panels) do
-		local sourceKind = type(panel and panel.cdmSyncSource) == "string" and panel.cdmSyncSource:upper() or nil
-		if panel and panel.enabled ~= false and cdp.CDM.IsSyncSource(sourceKind) then return true end
+		if panel and panel.enabled ~= false and cdp.SYNC.NormalizeSource(panel.cdmSyncSource) then return true end
 	end
 	return false
+end
+
+function CooldownPanels:ClearPanelCooldownManagerSync(panel)
+	if not panel then return end
+	panel.cdmSyncSource = nil
+	for _, entry in pairs(panel.entries or {}) do
+		if entry and entry.cdmSyncManaged == true then
+			entry.cdmSyncManaged = nil
+			entry.cdmSyncSource = nil
+			entry.cdmSyncKey = nil
+			entry.cdmSyncSpecKey = nil
+			entry.cdmSyncCooldownID = nil
+		end
+	end
 end
 
 function CooldownPanels:SetPanelCooldownManagerSyncSource(panelId, sourceKind)
 	panelId = normalizeId(panelId)
 	local panel = self:GetPanel(panelId)
 	if not panel then return false end
-	sourceKind = cdp.CDM.IsSyncSource(sourceKind) and sourceKind:upper() or nil
-	if panel.cdmSyncSource == sourceKind then return false end
-	panel.cdmSyncSource = sourceKind
-	if sourceKind then
+	sourceKind = cdp.SYNC.NormalizeSource(sourceKind)
+	if cdp.SYNC.NormalizeSource(panel.cdmSyncSource) == sourceKind then return false end
+	if not sourceKind then
+		self:ClearPanelCooldownManagerSync(panel)
+	else
+		panel.cdmSyncSource = sourceKind
 		self:EnsureCooldownManagerSyncListener()
 		self:SyncPanelWithCooldownManager(panelId, sourceKind)
 	end
@@ -12859,7 +12988,7 @@ end
 
 function CooldownPanels:SyncPanelWithCooldownManager(panelId, sourceKind)
 	panelId = normalizeId(panelId)
-	sourceKind = cdp.CDM.IsSyncSource(sourceKind) and sourceKind:upper() or nil
+	sourceKind = cdp.SYNC.NormalizeSource(sourceKind)
 	local panel = panelId and self:GetPanel(panelId) or nil
 	if not (panel and sourceKind) then return nil, "PANEL_NOT_FOUND" end
 	if sourceKind == "BUFF_ICON" then
@@ -12867,21 +12996,21 @@ function CooldownPanels:SyncPanelWithCooldownManager(panelId, sourceKind)
 		if cdmAuras and cdmAuras.SyncEntries then return cdmAuras:SyncEntries(panelId, sourceKind) end
 		return nil, "SOURCE_NOT_FOUND", getCooldownManagerSourceLabel(sourceKind)
 	end
-	local spellIds, sourceLabel, sourceErr = cdp.CDM.GetSpellIdsFromSource(sourceKind)
+
+	local spellIds, sourceLabel, sourceErr = cdp.IMPORT.GetCooldownManagerSpellIdsFromSource(sourceKind)
 	if sourceErr then return nil, sourceErr, sourceLabel end
 	local root = ensureRoot()
 	if not root then return nil, "NO_DB", sourceLabel end
 	panel.entries = panel.entries or {}
 	panel.order = panel.order or {}
 
-	local wantedBySpellId = {}
-	local wantedOrder = {}
+	local wantedBySpellId, wantedOrder = {}, {}
 	local stats = { added = 0, removed = 0, updated = 0, invalid = 0, seen = 0, sourceLabel = sourceLabel }
 	for i = 1, #spellIds do
 		stats.seen = stats.seen + 1
-		local spellInfo = spellIds[i]
-		local spellId = tonumber(type(spellInfo) == "table" and spellInfo.spellID or spellInfo)
-		local cooldownID = type(spellInfo) == "table" and spellInfo.cooldownID or nil
+		local info = spellIds[i]
+		local spellId = tonumber(type(info) == "table" and info.spellID or info)
+		local cooldownID = type(info) == "table" and info.cooldownID or nil
 		local baseSpellId = spellId and (getBaseSpellId(spellId) or spellId) or nil
 		if not (baseSpellId and spellExistsSafe(baseSpellId)) then
 			stats.invalid = stats.invalid + 1
@@ -12895,82 +13024,54 @@ function CooldownPanels:SyncPanelWithCooldownManager(panelId, sourceKind)
 		end
 	end
 
-	local currentSpecKey = cdp.CDM.GetEntryOverrideSpecKey()
-	panel.cdmSyncActiveSpecBySource = panel.cdmSyncActiveSpecBySource or {}
-	local previousSpecKey = panel.cdmSyncActiveSpecBySource[sourceKind]
-	local specChanged = previousSpecKey and previousSpecKey ~= currentSpecKey
-	if specChanged then cdp.CDM.SaveCurrentEntryOverrides(panel, sourceKind, previousSpecKey) end
-	panel.cdmSyncActiveSpecBySource[sourceKind] = currentSpecKey
-
-	local existingBySpellId = {}
-	local otherOrder = {}
-	local runtime = self.runtime
+	local existingBySpellId, otherOrder = {}, {}
 	for _, entryId in ipairs(panel.order) do
 		local entry = panel.entries[entryId]
-		if entry and entry.type == "SPELL" and entry.spellID then
-			local canonicalSpellID = self:NormalizePersistentSpellID(entry.spellID, { allowTalentChoiceCanonical = true }) or tonumber(entry.spellID)
-			if canonicalSpellID then
-				existingBySpellId[canonicalSpellID] = entryId
-				if wantedBySpellId[canonicalSpellID] then
-					local syncInfo = wantedBySpellId[canonicalSpellID]
-					local entrySpecKey = entry.cdmSyncSpecKey or previousSpecKey
-					local entrySpecChanged = entrySpecKey and entrySpecKey ~= currentSpecKey
-					if entrySpecChanged then cdp.CDM.SaveEntryOverride(panel, sourceKind, canonicalSpellID, entry, entrySpecKey) end
-					entry.cdmSyncManaged = true
-					entry.cdmSyncSource = sourceKind
-					entry.cdmSyncKey = canonicalSpellID
-					entry.cdmSyncSpecKey = currentSpecKey
-					entry.cdmSyncCooldownID = syncInfo.cooldownID
-					if entrySpecChanged then
-						if cdp.CDM.ApplyEntryOverride(panel, sourceKind, canonicalSpellID, entry, currentSpecKey) then
-							stats.updated = stats.updated + 1
-						elseif cdp.CDM.ResetEntryToSyncedDefault(entry, syncInfo.spellID, root.defaults) then
-							stats.updated = stats.updated + 1
-						end
-					end
-				else
-					otherOrder[#otherOrder + 1] = entryId
-				end
-			end
-		elseif entry then
-			otherOrder[#otherOrder + 1] = entryId
+		local canonicalSpellID = entry and entry.type == "SPELL" and entry.spellID and (self:NormalizePersistentSpellID(entry.spellID, { allowTalentChoiceCanonical = true }) or tonumber(entry.spellID)) or nil
+		if canonicalSpellID and wantedBySpellId[canonicalSpellID] and not existingBySpellId[canonicalSpellID] then
+			existingBySpellId[canonicalSpellID] = entryId
+		else
+			if entry then otherOrder[#otherOrder + 1] = entryId end
 		end
 	end
+
 	for entryId, entry in pairs(panel.entries) do
-		if entry and entry.type == "SPELL" and entry.spellID then
-			local canonicalSpellID = self:NormalizePersistentSpellID(entry.spellID, { allowTalentChoiceCanonical = true }) or tonumber(entry.spellID)
-			if canonicalSpellID and not wantedBySpellId[canonicalSpellID] then
-				local syncManaged = entry.cdmSyncManaged == true and (entry.cdmSyncSource == nil or entry.cdmSyncSource == sourceKind)
-				if syncManaged then
-					local removalSpecKey = entry.cdmSyncSpecKey or previousSpecKey or currentSpecKey
-					cdp.CDM.SaveEntryOverride(panel, sourceKind, canonicalSpellID, entry, removalSpecKey)
-					panel.entries[entryId] = nil
-					if runtime and runtime.actionDisplayCounts then runtime.actionDisplayCounts[Helper.GetEntryKey(panelId, entryId)] = nil end
-					self:ClearEntryCustomCooldownDuration(panelId, entryId, true)
-					stats.removed = stats.removed + 1
-				end
+		if entry and entry.cdmSyncManaged == true then
+			local entrySource = cdp.SYNC.NormalizeSource(entry.cdmSyncSource)
+			local entryKey = entry.cdmSyncKey or entry.spellID
+			local canonicalSpellID = entry.type == "SPELL" and entry.spellID and (self:NormalizePersistentSpellID(entry.spellID, { allowTalentChoiceCanonical = true }) or tonumber(entry.spellID)) or nil
+			if entrySource ~= sourceKind or not (canonicalSpellID and wantedBySpellId[canonicalSpellID]) then
+				cdp.SYNC.SaveEntryOverride(panel, entrySource or sourceKind, entryKey, entry)
+				panel.entries[entryId] = nil
+				stats.removed = stats.removed + 1
 			end
 		end
 	end
+
 	for _, canonicalSpellID in ipairs(wantedOrder) do
-		if not existingBySpellId[canonicalSpellID] then
+		local entryId = existingBySpellId[canonicalSpellID]
+		local syncInfo = wantedBySpellId[canonicalSpellID]
+		local entry = entryId and panel.entries[entryId] or nil
+		local syncManaged = entry and entry.cdmSyncManaged == true or false
+		if not entry then
 			if self:GetFixedEntryAddError(panel, nil) then
 				stats.invalid = stats.invalid + 1
 			else
-				local syncInfo = wantedBySpellId[canonicalSpellID]
-				local entryId = Helper.GetNextNumericId(panel.entries)
-				local entry = Helper.CreateEntry("SPELL", syncInfo.spellID, root.defaults)
+				entryId = Helper.GetNextNumericId(panel.entries)
+				entry = Helper.CreateEntry("SPELL", syncInfo.spellID, root.defaults)
 				entry.id = entryId
-				entry.cdmSyncManaged = true
-				entry.cdmSyncSource = sourceKind
-				entry.cdmSyncKey = canonicalSpellID
-				entry.cdmSyncSpecKey = currentSpecKey
-				entry.cdmSyncCooldownID = syncInfo.cooldownID
-				cdp.CDM.ApplyEntryOverride(panel, sourceKind, canonicalSpellID, entry, currentSpecKey)
+				cdp.SYNC.ApplyEntryOverride(panel, sourceKind, canonicalSpellID, entry)
 				panel.entries[entryId] = entry
 				existingBySpellId[canonicalSpellID] = entryId
+				syncManaged = true
 				stats.added = stats.added + 1
 			end
+		end
+		if entry and syncManaged then
+			entry.cdmSyncManaged = true
+			entry.cdmSyncSource = sourceKind
+			entry.cdmSyncKey = canonicalSpellID
+			entry.cdmSyncCooldownID = syncInfo.cooldownID
 		end
 	end
 
@@ -12985,20 +13086,19 @@ function CooldownPanels:SyncPanelWithCooldownManager(panelId, sourceKind)
 	panel.order = nextOrder
 	Helper.SyncOrder(panel.order, panel.entries)
 	Helper.InvalidateFixedLayoutCache(panel)
-	if stats.added > 0 or stats.removed > 0 or stats.updated > 0 then self:RebuildSpellIndex() end
+	if stats.added > 0 or stats.removed > 0 then self:RebuildSpellIndex() end
 	self:RefreshPanel(panelId)
 	if self.BlizzardEditor and self.BlizzardEditor.RefreshPanel then self.BlizzardEditor:RefreshPanel(panelId) end
 	return stats
 end
 
-function CooldownPanels:SyncCooldownManagerPanels(reason)
+function CooldownPanels:SyncCooldownManagerPanels()
 	local root = ensureRoot()
 	if not (root and root.panels) then return false end
-	local synced = false
-	local sourceMissing = false
+	local synced, sourceMissing = false, false
 	for panelId, panel in pairs(root.panels) do
-		local sourceKind = type(panel and panel.cdmSyncSource) == "string" and panel.cdmSyncSource:upper() or nil
-		if cdp.CDM.IsSyncSource(sourceKind) then
+		local sourceKind = panel and cdp.SYNC.NormalizeSource(panel.cdmSyncSource)
+		if sourceKind then
 			local _, err = self:SyncPanelWithCooldownManager(panelId, sourceKind)
 			if err == "SOURCE_NOT_FOUND" then sourceMissing = true end
 			synced = true
@@ -13007,59 +13107,24 @@ function CooldownPanels:SyncCooldownManagerPanels(reason)
 	return synced, sourceMissing
 end
 
-function CooldownPanels:RequestCooldownManagerSync(reason, attempt, graceGeneration)
+function CooldownPanels:RequestCooldownManagerSync()
 	self.runtime = self.runtime or {}
-	local runtime = self.runtime
-	local useGrace = cdp.CDM.IsGraceSyncReason(reason)
-	attempt = tonumber(attempt) or 1
-	if runtime.cdmSyncPending then
-		runtime.cdmSyncRerunReason = reason or runtime.cdmSyncRerunReason or "CooldownManagerSyncQueued"
-		return
-	end
-	if useGrace then
-		if not graceGeneration then
-			runtime.cdmSyncGraceGeneration = (runtime.cdmSyncGraceGeneration or 0) + 1
-			graceGeneration = runtime.cdmSyncGraceGeneration
-		end
-	else
-		runtime.cdmSyncGraceGeneration = (runtime.cdmSyncGraceGeneration or 0) + 1
-	end
-	runtime.cdmSyncPending = true
-	local function run()
-		runtime.cdmSyncPending = nil
-		if useGrace and runtime.cdmSyncGraceGeneration ~= graceGeneration then return end
-		local _, sourceMissing = CooldownPanels:SyncCooldownManagerPanels(reason)
-		local retryDelays = cdp.CDM.LOGIN_SYNC_RETRY_DELAYS
-		if useGrace and sourceMissing and type(retryDelays) == "table" and attempt < #retryDelays then
-			CooldownPanels:RequestCooldownManagerSync(reason, attempt + 1, graceGeneration)
-		elseif runtime.cdmSyncRerunReason then
-			local rerunReason = runtime.cdmSyncRerunReason
-			runtime.cdmSyncRerunReason = nil
-			CooldownPanels:RequestCooldownManagerSync(rerunReason)
-		end
-	end
-	if C_Timer and C_Timer.After then
-		local retryDelays = cdp.CDM.LOGIN_SYNC_RETRY_DELAYS
-		local delay = (useGrace and type(retryDelays) == "table" and retryDelays[attempt]) or 0.2
-		C_Timer.After(delay, run)
-	else
-		run()
-	end
+	if self.runtime.cdmSyncPending then return end
+	self.runtime.cdmSyncPending = true
+	C_Timer.After(0.2, function()
+		if not CooldownPanels.runtime then return end
+		CooldownPanels.runtime.cdmSyncPending = nil
+		CooldownPanels:SyncCooldownManagerPanels()
+	end)
 end
 
 function CooldownPanels:EnsureCooldownManagerSyncListener()
 	self.runtime = self.runtime or {}
-	local runtime = self.runtime
-	if runtime.cdmSyncListenerRegistered then return end
-	if EventRegistry and EventRegistry.RegisterCallback then
-		local function onCooldownViewerSettingsChanged()
-			if not cdp.CDM.IsSettingsFrameShown() then return end
-			CooldownPanels:RequestCooldownManagerSync("CooldownViewerSettings.OnDataChanged")
-		end
-		EventRegistry:RegisterCallback("CooldownViewerSettings.OnDataChanged", onCooldownViewerSettingsChanged, self)
-		EventRegistry:RegisterCallback("CooldownViewerSettings.OnPendingChanges", onCooldownViewerSettingsChanged, self)
-		runtime.cdmSyncListenerRegistered = true
-	end
+	if self.runtime.cdmSyncListenerRegistered or not (EventRegistry and EventRegistry.RegisterCallback) then return end
+	local function requestSync() CooldownPanels:RequestCooldownManagerSync() end
+	EventRegistry:RegisterCallback("CooldownViewerSettings.OnDataChanged", requestSync, self)
+	EventRegistry:RegisterCallback("CooldownViewerSettings.OnPendingChanges", requestSync, self)
+	self.runtime.cdmSyncListenerRegistered = true
 end
 
 local function showImportCDMMenu(owner, panelId)
@@ -13499,6 +13564,13 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 		return CooldownPanels:GetLayoutEntryStandaloneEffectiveType(currentEntry)
 	end
 
+	local function allowsStandaloneEntryAuraSound(effectiveType)
+		local layout = getLayout()
+		local _, currentEntry = getEntry()
+		return effectiveType == "CDM_AURA"
+			or (effectiveType == "SPELL" and CooldownPanels:IsEntryCDMAuraOverlayEnabled(layout, currentEntry, effectiveType))
+	end
+
 	local refreshEntryDialogPending = false
 
 	local function isStandaloneDialogDragActive()
@@ -13829,6 +13901,7 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 		if normalized then currentEntry.autoCooldownDurationEnabled = false end
 		if normalized then currentEntry.cdmAuraOverlayEnabled = false end
 		if normalized then currentEntry.customCooldownDurationOnCooldownEnabled = false end
+		if normalized then currentEntry.customCooldownDurationOnCooldownMultipleStacks = false end
 		CooldownPanels:ClearEntryCustomCooldownDuration(panelId, entryId, true)
 		refreshEntryViews()
 	end
@@ -13845,6 +13918,18 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 		if normalized then currentEntry.autoCooldownDurationEnabled = false end
 		if normalized then currentEntry.cdmAuraOverlayEnabled = false end
 		if normalized then currentEntry.customCooldownDurationEnabled = false end
+		if not normalized then currentEntry.customCooldownDurationOnCooldownMultipleStacks = false end
+		CooldownPanels:ClearEntryCustomCooldownDuration(panelId, entryId, true)
+		refreshEntryViews()
+	end
+
+	local function setCustomCooldownDurationOnCooldownMultipleStacks(value)
+		local _, currentEntry = getEntry()
+		if not currentEntry then return end
+		local normalized = value == true
+		if normalized and (getEffectiveType() ~= "SPELL" or currentEntry.customCooldownDurationOnCooldownEnabled ~= true) then return end
+		if currentEntry.customCooldownDurationOnCooldownMultipleStacks == normalized then return end
+		currentEntry.customCooldownDurationOnCooldownMultipleStacks = normalized
 		CooldownPanels:ClearEntryCustomCooldownDuration(panelId, entryId, true)
 		refreshEntryViews()
 	end
@@ -13863,6 +13948,47 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 		end
 		CooldownPanels:ClearEntryCustomCooldownDuration(panelId, entryId, true)
 		CooldownPanels:RebuildSpellIndex()
+		refreshEntryViews()
+	end
+
+	local function setCDMAuraOverlaySpellIDs(_, value)
+		local _, currentEntry = getEntry()
+		if not currentEntry then return end
+		local previous = CooldownPanels:FormatEntryAuraOverlaySpellIDs(currentEntry.cdmAuraOverlaySpellIDs)
+		local updated = CooldownPanels:SetEntryAuraOverlaySpellIDs(currentEntry, value)
+		if not updated then
+			if UIErrorsFrame and UIErrorsFrame.AddMessage then UIErrorsFrame:AddMessage(L["CooldownPanelCDMAuraOverlaySpellIDsInvalid"] or "Enter positive Spell IDs separated by commas.", 1, 0.2, 0.2) end
+			refreshEntryViews()
+			return
+		end
+		if previous == CooldownPanels:FormatEntryAuraOverlaySpellIDs(currentEntry.cdmAuraOverlaySpellIDs) then return end
+		CooldownPanels:RebuildSpellIndex()
+		refreshEntryViews()
+	end
+
+	local function setTrackedAuraTarget(value)
+		local _, currentEntry = getEntry()
+		if not (currentEntry and getEffectiveType() == "CDM_AURA") then return end
+		local trackTarget = value == true
+		local nextUnit = trackTarget and "target" or "player"
+		local nextFilter
+		if trackTarget then
+			nextFilter = currentEntry.auraFilter == "HARMFUL" and "HARMFUL" or "HARMFUL|PLAYER"
+		else
+			nextFilter = "HELPFUL"
+		end
+		if currentEntry.auraUnit == nextUnit and currentEntry.auraFilter == nextFilter then return end
+		currentEntry.auraUnit = nextUnit
+		currentEntry.auraFilter = nextFilter
+		refreshEntryViews()
+	end
+
+	local function setTrackedAuraOnlyMine(value)
+		local _, currentEntry = getEntry()
+		if not (currentEntry and getEffectiveType() == "CDM_AURA" and currentEntry.auraUnit == "target") then return end
+		local nextFilter = value == true and "HARMFUL|PLAYER" or "HARMFUL"
+		if currentEntry.auraFilter == nextFilter then return end
+		currentEntry.auraFilter = nextFilter
 		refreshEntryViews()
 	end
 
@@ -13912,6 +14038,7 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 		currentEntry.autoCooldownDurationEnabled = normalized
 		if normalized then currentEntry.customCooldownDurationEnabled = false end
 		if normalized then currentEntry.customCooldownDurationOnCooldownEnabled = false end
+		if normalized then currentEntry.customCooldownDurationOnCooldownMultipleStacks = false end
 		if normalized then currentEntry.cdmAuraOverlayEnabled = false end
 		CooldownPanels:ClearEntryCustomCooldownDuration(panelId, entryId, true)
 		refreshEntryViews()
@@ -13930,6 +14057,10 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 			end
 			if currentEntry.customCooldownDurationOnCooldownEnabled ~= false then
 				currentEntry.customCooldownDurationOnCooldownEnabled = false
+				enabledChanged = true
+			end
+			if currentEntry.customCooldownDurationOnCooldownMultipleStacks ~= false then
+				currentEntry.customCooldownDurationOnCooldownMultipleStacks = false
 				enabledChanged = true
 			end
 		end
@@ -14089,6 +14220,18 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 		local _, currentEntry = getEntry()
 		if not currentEntry then return end
 		local _, _, soundField = CooldownPanels:GetEntrySoundConfig(currentEntry)
+		if not soundField then return end
+		local normalized = normalizeSoundName(soundName)
+		if normalizeSoundName(currentEntry[soundField]) == normalized then return end
+		currentEntry[soundField] = normalized
+		playSoundName(normalized)
+		refreshEntryViews()
+	end
+
+	local function setAuraAppliedSoundFile(soundName)
+		local _, currentEntry = getEntry()
+		if not currentEntry then return end
+		local _, _, soundField = CooldownPanels:GetEntrySoundConfig(currentEntry, "aura")
 		if not soundField then return end
 		local normalized = normalizeSoundName(soundName)
 		if normalizeSoundName(currentEntry[soundField]) == normalized then return end
@@ -14400,7 +14543,7 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 
 	local function shouldShowStandaloneDisplayGroup()
 		local effectiveType = getEffectiveType()
-		return effectiveType == "SPELL" or effectiveType == "ITEM" or effectiveType == "SLOT" or effectiveType == "STANCE"
+		return effectiveType == "SPELL" or effectiveType == "ITEM" or effectiveType == "SLOT" or effectiveType == "STANCE" or effectiveType == "CDM_AURA"
 	end
 
 	local function shouldShowStandaloneActivationGroup()
@@ -14565,6 +14708,33 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 				return currentEntry and currentEntry.trackUnknownSpell == true or false
 			end,
 			set = function(_, value) setEntryBoolean("trackUnknownSpell", value) end,
+		},
+		{
+			name = L["CooldownPanelCDMAuraOverlayTrackTarget"] or "Track aura on target",
+			tooltip = L["CooldownPanelCDMAuraOverlayTrackTargetTooltip"],
+			kind = SettingType.Checkbox,
+			parentId = "cooldownPanelStandaloneDisplay",
+			isShown = function() return getEffectiveType() == "CDM_AURA" end,
+			get = function()
+				local _, currentEntry = getEntry()
+				return currentEntry and currentEntry.auraUnit == "target" or false
+			end,
+			set = function(_, value) setTrackedAuraTarget(value) end,
+		},
+		{
+			name = L["CooldownPanelCDMAuraOverlayOnlyMyDebuffs"] or "Only my debuffs",
+			tooltip = L["CooldownPanelCDMAuraOverlayOnlyMyDebuffsTooltip"],
+			kind = SettingType.Checkbox,
+			parentId = "cooldownPanelStandaloneDisplay",
+			isShown = function()
+				local _, currentEntry = getEntry()
+				return getEffectiveType() == "CDM_AURA" and currentEntry and currentEntry.auraUnit == "target"
+			end,
+			get = function()
+				local _, currentEntry = getEntry()
+				return currentEntry and currentEntry.auraFilter ~= "HARMFUL" or false
+			end,
+			set = function(_, value) setTrackedAuraOnlyMine(value) end,
 		},
 		{
 			name = L["CooldownPanelRacialExclusions"] or "Excluded racials",
@@ -15225,6 +15395,69 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 			set = function(_, value) setCDMAuraOverlayEnabled(value) end,
 		},
 		{
+			name = L["CooldownPanelCDMAuraOverlayTrackTarget"] or "Track aura on target",
+			tooltip = L["CooldownPanelCDMAuraOverlayTrackTargetTooltip"],
+			kind = SettingType.Checkbox,
+			parentId = "cooldownPanelStandaloneActivation",
+			isShown = function()
+				local _, currentEntry = getEntry()
+				return CooldownPanels:SupportsEntryCDMAuraOverlay(currentEntry, getEffectiveType())
+			end,
+			disabled = function()
+				local layout = getLayout()
+				local _, currentEntry = getEntry()
+				return not (currentEntry and (currentEntry.cdmAuraOverlayEnabled == true or (layout and layout.cdmAuraOverlayEnabled == true)))
+			end,
+			get = function()
+				local _, currentEntry = getEntry()
+				return currentEntry and currentEntry.cdmAuraOverlayTrackTarget == true or false
+			end,
+			set = function(_, value) setEntryBoolean("cdmAuraOverlayTrackTarget", value) end,
+		},
+		{
+			name = L["CooldownPanelCDMAuraOverlayOnlyMyDebuffs"] or "Only my debuffs",
+			tooltip = L["CooldownPanelCDMAuraOverlayOnlyMyDebuffsTooltip"],
+			kind = SettingType.Checkbox,
+			parentId = "cooldownPanelStandaloneActivation",
+			isShown = function()
+				local _, currentEntry = getEntry()
+				return CooldownPanels:SupportsEntryCDMAuraOverlay(currentEntry, getEffectiveType()) and currentEntry and currentEntry.cdmAuraOverlayTrackTarget == true
+			end,
+			disabled = function()
+				local layout = getLayout()
+				local _, currentEntry = getEntry()
+				return not (currentEntry and (currentEntry.cdmAuraOverlayEnabled == true or (layout and layout.cdmAuraOverlayEnabled == true)))
+			end,
+			get = function()
+				local _, currentEntry = getEntry()
+				return currentEntry and currentEntry.cdmAuraOverlayTargetPlayerOnly ~= false or false
+			end,
+			set = function(_, value) setEntryBoolean("cdmAuraOverlayTargetPlayerOnly", value) end,
+		},
+		{
+			name = L["CooldownPanelCDMAuraOverlaySpellIDs"] or "Alternative aura Spell IDs",
+			tooltip = L["CooldownPanelCDMAuraOverlaySpellIDsTooltip"],
+			kind = SettingType.Input,
+			parentId = "cooldownPanelStandaloneActivation",
+			inputWidth = 220,
+			isShown = function()
+				local _, currentEntry = getEntry()
+				return CooldownPanels:SupportsEntryCDMAuraOverlay(currentEntry, getEffectiveType())
+			end,
+			disabled = function()
+				local layout = getLayout()
+				local _, currentEntry = getEntry()
+				return not (currentEntry and (currentEntry.cdmAuraOverlayEnabled == true or (layout and layout.cdmAuraOverlayEnabled == true)))
+			end,
+			get = function()
+				local _, currentEntry = getEntry()
+				return CooldownPanels:FormatEntryAuraOverlaySpellIDs(currentEntry and currentEntry.cdmAuraOverlaySpellIDs)
+			end,
+			set = setCDMAuraOverlaySpellIDs,
+			default = "",
+			maxChars = 255,
+		},
+		{
 			name = L["CooldownPanelAutoDuration"] or "Automatic duration on activation",
 			kind = SettingType.Checkbox,
 			parentId = "cooldownPanelStandaloneActivation",
@@ -15267,6 +15500,25 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 				return currentEntry and currentEntry.customCooldownDurationOnCooldownEnabled == true or false
 			end,
 			set = function(_, value) setCustomCooldownDurationOnCooldownEnabled(value) end,
+		},
+		{
+			name = L["CooldownPanelCustomDurationOnCooldownMultipleStacks"] or "Multiple single stacks",
+			tooltip = L["CooldownPanelCustomDurationOnCooldownMultipleStacksTooltip"],
+			kind = SettingType.Checkbox,
+			parentId = "cooldownPanelStandaloneActivation",
+			isShown = function()
+				local _, currentEntry = getEntry()
+				return getEffectiveType() == "SPELL" and CooldownPanels:SupportsEntryCustomCooldownDuration(currentEntry, getEffectiveType())
+			end,
+			disabled = function()
+				local _, currentEntry = getEntry()
+				return not (currentEntry and currentEntry.customCooldownDurationOnCooldownEnabled == true)
+			end,
+			get = function()
+				local _, currentEntry = getEntry()
+				return currentEntry and currentEntry.customCooldownDurationOnCooldownEnabled == true and currentEntry.customCooldownDurationOnCooldownMultipleStacks == true or false
+			end,
+			set = function(_, value) setCustomCooldownDurationOnCooldownMultipleStacks(value) end,
 		},
 		{
 			name = L["CooldownPanelCustomDurationSeconds"] or "Custom duration (sec)",
@@ -15450,27 +15702,27 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 				isShown = function() return getEffectiveType() ~= "STANCE" end,
 				get = function()
 					local _, currentEntry = getEntry()
-				return currentEntry and currentEntry.cooldownVisualsUseGlobal == false or false
-			end,
-			set = function(_, value) setCooldownVisualsOverrideEnabled(value) end,
-		},
-		{
-			name = L["CooldownPanelShowChargesCooldown"] or "Show charges cooldown",
-			tooltip = L["CooldownPanelShowChargesCooldownTooltip"],
-			kind = SettingType.Checkbox,
-			parentId = "cooldownPanelStandaloneCooldownSwipe",
-			isShown = function() return getEffectiveType() == "SPELL" end,
-			disabled = function()
-				local _, currentEntry = getEntry()
-				return not (currentEntry and currentEntry.cooldownVisualsUseGlobal == false)
-			end,
-			get = function()
-				local _, currentEntry = getEntry()
-				local value = CooldownPanels:ResolveEntryCooldownVisuals(getLayout(), currentEntry)
-				return value
-			end,
-			set = function(_, value) setEntryBoolean("showChargesCooldown", value) end,
-		},
+					return currentEntry and currentEntry.cooldownVisualsUseGlobal == false or false
+				end,
+				set = function(_, value) setCooldownVisualsOverrideEnabled(value) end,
+			},
+			{
+				name = L["CooldownPanelShowChargesCooldown"] or "Show charges cooldown",
+				tooltip = L["CooldownPanelShowChargesCooldownTooltip"],
+				kind = SettingType.Checkbox,
+				parentId = "cooldownPanelStandaloneCooldownSwipe",
+				isShown = function() return getEffectiveType() == "SPELL" end,
+				disabled = function()
+					local _, currentEntry = getEntry()
+					return not (currentEntry and currentEntry.cooldownVisualsUseGlobal == false)
+				end,
+				get = function()
+					local _, currentEntry = getEntry()
+					local value = CooldownPanels:ResolveEntryCooldownVisuals(getLayout(), currentEntry)
+					return value
+				end,
+				set = function(_, value) setEntryBoolean("showChargesCooldown", value) end,
+			},
 		{
 			name = L["CooldownPanelShowEdge"] or "Show edge",
 			tooltip = L["CooldownPanelShowEdgeTooltip"],
@@ -16587,7 +16839,10 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 			kind = SettingType.Collapsible,
 			id = "cooldownPanelStandaloneSound",
 			defaultCollapsed = true,
-			isShown = function() return allowsStandaloneEntryReadySound(getEffectiveType()) end,
+			isShown = function()
+				local effectiveType = getEffectiveType()
+				return allowsStandaloneEntryReadySound(effectiveType) or allowsStandaloneEntryAuraSound(effectiveType)
+			end,
 		},
 		{
 			name = L["CooldownPanelSoundReady"] or "Sound when ready",
@@ -16630,6 +16885,50 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 						local _, _, soundField = CooldownPanels:GetEntrySoundConfig(currentEntry)
 						return normalizeSoundName(currentEntry and soundField and currentEntry[soundField]) == soundName
 					end, function() setSoundReadyFile(soundName) end)
+				end
+			end,
+		},
+		{
+			name = L["CooldownPanelSoundAuraApplied"] or "Sound when aura is applied",
+			kind = SettingType.Checkbox,
+			parentId = "cooldownPanelStandaloneSound",
+			isShown = function() return allowsStandaloneEntryAuraSound(getEffectiveType()) end,
+			get = function()
+				local _, currentEntry = getEntry()
+				local _, enabledField = CooldownPanels:GetEntrySoundConfig(currentEntry, "aura")
+				return currentEntry and enabledField and currentEntry[enabledField] == true or false
+			end,
+			set = function(_, value)
+				local _, currentEntry = getEntry()
+				local _, enabledField = CooldownPanels:GetEntrySoundConfig(currentEntry, "aura")
+				if enabledField then setEntryBoolean(enabledField, value) end
+			end,
+		},
+		{
+			name = SOUND,
+			kind = SettingType.Dropdown,
+			parentId = "cooldownPanelStandaloneSound",
+			height = 260,
+			isShown = function() return allowsStandaloneEntryAuraSound(getEffectiveType()) end,
+			disabled = function()
+				local _, currentEntry = getEntry()
+				local _, enabledField = CooldownPanels:GetEntrySoundConfig(currentEntry, "aura")
+				return not (currentEntry and enabledField and currentEntry[enabledField] == true)
+			end,
+			get = function()
+				local _, currentEntry = getEntry()
+				local _, _, soundField = CooldownPanels:GetEntrySoundConfig(currentEntry, "aura")
+				return normalizeSoundName(currentEntry and soundField and currentEntry[soundField])
+			end,
+			set = function(_, value) setAuraAppliedSoundFile(value) end,
+			generator = function(_, root)
+				for _, soundName in ipairs(getSoundOptions()) do
+					local label = getSoundLabel(soundName)
+					root:CreateRadio(label, function()
+						local _, currentEntry = getEntry()
+						local _, _, soundField = CooldownPanels:GetEntrySoundConfig(currentEntry, "aura")
+						return normalizeSoundName(currentEntry and soundField and currentEntry[soundField]) == soundName
+					end, function() setAuraAppliedSoundFile(soundName) end)
 				end
 			end,
 		},
@@ -18062,8 +18361,16 @@ local function ensureEditor()
 	local cbTrackUnknownSpell = Helper.CreateCheck(rightContent, L["CooldownPanelTrackUnknownSpell"] or "Track unknown spell")
 	cbTrackUnknownSpell:SetPoint("TOPLEFT", cbTrackPassiveSpell, "BOTTOMLEFT", 0, -4)
 
+	local cbCDMAuraOverlayTrackTarget = Helper.CreateCheck(rightContent, L["CooldownPanelCDMAuraOverlayTrackTarget"] or "Track aura on target")
+	cbCDMAuraOverlayTrackTarget:SetPoint("TOPLEFT", cbTrackUnknownSpell, "BOTTOMLEFT", 0, -4)
+	cdp.ENTRY.AttachControlTooltip(cbCDMAuraOverlayTrackTarget, L["CooldownPanelCDMAuraOverlayTrackTargetTooltip"])
+
+	local cbCDMAuraOverlayOnlyMine = Helper.CreateCheck(rightContent, L["CooldownPanelCDMAuraOverlayOnlyMyDebuffs"] or "Only my debuffs")
+	cbCDMAuraOverlayOnlyMine:SetPoint("TOPLEFT", cbCDMAuraOverlayTrackTarget, "BOTTOMLEFT", 18, -4)
+	cdp.ENTRY.AttachControlTooltip(cbCDMAuraOverlayOnlyMine, L["CooldownPanelCDMAuraOverlayOnlyMyDebuffsTooltip"])
+
 	local racialExclusionsButton = Helper.CreateButton(rightContent, L["CooldownPanelRacialExclusions"] or "Excluded racials", 180, 20)
-	racialExclusionsButton:SetPoint("TOPLEFT", cbTrackUnknownSpell, "BOTTOMLEFT", 18, -4)
+	racialExclusionsButton:SetPoint("TOPLEFT", cbCDMAuraOverlayOnlyMine, "BOTTOMLEFT", 18, -4)
 
 	local cbAlwaysShow = Helper.CreateCheck(rightContent, L["Always show"] or "Always show")
 	cbAlwaysShow:SetPoint("TOPLEFT", racialExclusionsButton, "BOTTOMLEFT", -18, -4)
@@ -18092,8 +18399,18 @@ local function ensureEditor()
 	local cbCDMAuraOverlay = Helper.CreateCheck(rightContent, L["CooldownPanelCDMAuraOverlay"] or "Show aura overlay")
 	cbCDMAuraOverlay:SetPoint("TOPLEFT", cbShowWhenNoCooldown, "BOTTOMLEFT", 0, -4)
 
+	local auraOverlaySpellIDsControl = CreateFrame("Frame", nil, rightContent)
+	auraOverlaySpellIDsControl:SetSize(200, 42)
+	local auraOverlaySpellIDsLabel = Helper.CreateLabel(auraOverlaySpellIDsControl, L["CooldownPanelCDMAuraOverlaySpellIDs"] or "Alternative aura Spell IDs", 10, "OUTLINE")
+	auraOverlaySpellIDsLabel:SetPoint("TOPLEFT", auraOverlaySpellIDsControl, "TOPLEFT", 2, 0)
+	auraOverlaySpellIDsLabel:SetTextColor(0.9, 0.9, 0.9, 1)
+	local auraOverlaySpellIDsBox = Helper.CreateEditBox(auraOverlaySpellIDsControl, 180, 20)
+	auraOverlaySpellIDsBox:SetPoint("TOPLEFT", auraOverlaySpellIDsLabel, "BOTTOMLEFT", -2, -3)
+	cdp.ENTRY.AttachControlTooltip(auraOverlaySpellIDsControl, L["CooldownPanelCDMAuraOverlaySpellIDsTooltip"])
+	cdp.ENTRY.AttachControlTooltip(auraOverlaySpellIDsBox, L["CooldownPanelCDMAuraOverlaySpellIDsTooltip"])
+
 	local cbCDMAuraOverlayReverse = Helper.CreateCheck(rightContent, L["CooldownPanelCDMAuraOverlayReverse"] or "Reverse aura swipe")
-	cbCDMAuraOverlayReverse:SetPoint("TOPLEFT", cbCDMAuraOverlay, "BOTTOMLEFT", 0, -4)
+	cbCDMAuraOverlayReverse:SetPoint("TOPLEFT", auraOverlaySpellIDsControl, "BOTTOMLEFT", 0, -4)
 
 	local cbActivationOverlayReverse = Helper.CreateCheck(rightContent, L["CooldownPanelActivationOverlayReverse"] or "Reverse activation swipe")
 	cbActivationOverlayReverse:SetPoint("TOPLEFT", cbCDMAuraOverlayReverse, "BOTTOMLEFT", 0, -4)
@@ -18115,8 +18432,12 @@ local function ensureEditor()
 	cbCustomDurationOnCooldown:SetPoint("TOPLEFT", cbCustomDuration, "BOTTOMLEFT", 0, -4)
 	cdp.ENTRY.AttachControlTooltip(cbCustomDurationOnCooldown, L["CooldownPanelCustomDurationOnCooldownTooltip"])
 
+	local cbCustomDurationOnCooldownMultipleStacks = Helper.CreateCheck(rightContent, L["CooldownPanelCustomDurationOnCooldownMultipleStacks"] or "Multiple single stacks")
+	cbCustomDurationOnCooldownMultipleStacks:SetPoint("TOPLEFT", cbCustomDurationOnCooldown, "BOTTOMLEFT", 18, -4)
+	cdp.ENTRY.AttachControlTooltip(cbCustomDurationOnCooldownMultipleStacks, L["CooldownPanelCustomDurationOnCooldownMultipleStacksTooltip"])
+
 	local customDurationBox = Helper.CreateEditBox(rightContent, 70, 20)
-	customDurationBox:SetPoint("TOPLEFT", cbCustomDurationOnCooldown, "BOTTOMLEFT", 18, -4)
+	customDurationBox:SetPoint("TOPLEFT", cbCustomDurationOnCooldownMultipleStacks, "BOTTOMLEFT", 0, -4)
 	customDurationBox:SetNumeric(true)
 
 	local customDurationLabel = Helper.CreateLabel(rightContent, L["CooldownPanelCustomDurationSeconds"] or "Custom duration (sec)", 10, "OUTLINE")
@@ -18172,8 +18493,12 @@ local function ensureEditor()
 	local addItemButton = Helper.CreateButton(manualAddRow, _G.ITEM or "Item", 76, 20)
 	addItemButton:SetPoint("LEFT", addSpellButton, "RIGHT", 6, 0)
 
+	local addAuraButton = Helper.CreateButton(manualAddRow, L["CooldownPanelCDMAuraType"] or "Tracked Aura", 92, 20)
+	addAuraButton:SetPoint("LEFT", addItemButton, "RIGHT", 6, 0)
+	addAuraButton:SetShown(CooldownPanels.AuraContainers ~= nil)
+
 	local addIdBox = Helper.CreateEditBox(manualAddRow, 84, 20)
-	addIdBox:SetPoint("LEFT", addItemButton, "RIGHT", 10, 0)
+	addIdBox:SetPoint("LEFT", CooldownPanels.AuraContainers and addAuraButton or addItemButton, "RIGHT", 10, 0)
 	addIdBox:SetNumeric(true)
 
 	local previewFrame = CreateFrame("Frame", nil, middle, "BackdropTemplate")
@@ -18289,6 +18614,7 @@ local function ensureEditor()
 		addEntryType = "SPELL",
 		addSpellButton = addSpellButton,
 		addItemButton = addItemButton,
+		addAuraButton = addAuraButton,
 		addIdBox = addIdBox,
 		layoutEditButton = layoutEditButton,
 		slotButton = slotButton,
@@ -18312,6 +18638,8 @@ local function ensureEditor()
 			cbCooldownText = cbCooldownText,
 			cbTrackPassiveSpell = cbTrackPassiveSpell,
 			cbTrackUnknownSpell = cbTrackUnknownSpell,
+			cbCDMAuraOverlayTrackTarget = cbCDMAuraOverlayTrackTarget,
+			cbCDMAuraOverlayOnlyMine = cbCDMAuraOverlayOnlyMine,
 			racialExclusionsButton = racialExclusionsButton,
 			cbAlwaysShow = cbAlwaysShow,
 			cbCharges = cbCharges,
@@ -18322,6 +18650,8 @@ local function ensureEditor()
 			cbShowWhenEmpty = cbShowWhenEmpty,
 			cbShowWhenNoCooldown = cbShowWhenNoCooldown,
 			cbCDMAuraOverlay = cbCDMAuraOverlay,
+			auraOverlaySpellIDsControl = auraOverlaySpellIDsControl,
+			auraOverlaySpellIDsBox = auraOverlaySpellIDsBox,
 			cbCDMAuraOverlayReverse = cbCDMAuraOverlayReverse,
 			cbActivationOverlayReverse = cbActivationOverlayReverse,
 			cbActivationOverlayOnly = cbActivationOverlayOnly,
@@ -18329,6 +18659,7 @@ local function ensureEditor()
 			cbAutoDuration = cbAutoDuration,
 			cbCustomDuration = cbCustomDuration,
 			cbCustomDurationOnCooldown = cbCustomDurationOnCooldown,
+			cbCustomDurationOnCooldownMultipleStacks = cbCustomDurationOnCooldownMultipleStacks,
 			customDurationBox = customDurationBox,
 			customDurationLabel = customDurationLabel,
 			staticTextLabel = staticTextLabel,
@@ -18345,7 +18676,7 @@ local function ensureEditor()
 	local editor = runtime.editor
 
 	local function refreshAddEntryTypeButtons()
-		local entryType = editor.addEntryType == "ITEM" and "ITEM" or "SPELL"
+		local entryType = editor.addEntryType == "ITEM" and "ITEM" or (editor.addEntryType == "CDM_AURA" and "CDM_AURA" or "SPELL")
 		if editor.addSpellButton then
 			if entryType == "SPELL" then
 				editor.addSpellButton:LockHighlight()
@@ -18358,6 +18689,13 @@ local function ensureEditor()
 				editor.addItemButton:LockHighlight()
 			else
 				editor.addItemButton:UnlockHighlight()
+			end
+		end
+		if editor.addAuraButton then
+			if entryType == "CDM_AURA" then
+				editor.addAuraButton:LockHighlight()
+			else
+				editor.addAuraButton:UnlockHighlight()
 			end
 		end
 	end
@@ -18393,10 +18731,16 @@ local function ensureEditor()
 		if editor.addIdBox then editor.addIdBox:SetFocus() end
 	end)
 
+	addAuraButton:SetScript("OnClick", function()
+		editor.addEntryType = "CDM_AURA"
+		refreshAddEntryTypeButtons()
+		if editor.addIdBox then editor.addIdBox:SetFocus() end
+	end)
+
 	addIdBox:SetScript("OnEnterPressed", function(self)
 		local panelId = editor.selectedPanelId
 		local value = tonumber(self:GetText())
-		local entryType = editor.addEntryType == "ITEM" and "ITEM" or "SPELL"
+		local entryType = editor.addEntryType == "ITEM" and "ITEM" or (editor.addEntryType == "CDM_AURA" and "CDM_AURA" or "SPELL")
 		if panelId and value then CooldownPanels:AddEntrySafe(panelId, entryType, value) end
 		self:SetText("")
 		self:ClearFocus()
@@ -18461,7 +18805,7 @@ local function ensureEditor()
 			CooldownPanels:RefreshEditor()
 			return
 		end
-		if entry.type == "STANCE" or entry.type == "CDM_AURA" then
+		if entry.type == "STANCE" or (entry.type == "CDM_AURA" and not CooldownPanels.AuraContainers) then
 			self:ClearFocus()
 			CooldownPanels:RefreshEditor()
 			return
@@ -18482,6 +18826,14 @@ local function ensureEditor()
 				return
 			end
 			newValue = CooldownPanels:NormalizePersistentSpellID(value, { allowTalentChoiceCanonical = true }) or baseValue
+		elseif entry.type == "CDM_AURA" then
+			if not spellExistsSafe(value) then
+				showErrorMessage(L["CooldownPanelSpellInvalid"] or "Spell does not exist.")
+				self:ClearFocus()
+				CooldownPanels:RefreshEditor()
+				return
+			end
+			newValue = value
 		elseif entry.type == "ITEM" then
 			local canonicalItemID, wasHigherRank = CooldownPanels:GetCanonicalItemRankID(newValue)
 			if canonicalItemID then newValue = canonicalItemID end
@@ -18496,6 +18848,18 @@ local function ensureEditor()
 		end
 		if entry.type == "SPELL" then
 			entry.spellID = newValue
+		elseif entry.type == "CDM_AURA" then
+			entry.spellID = newValue
+			entry.auraSpellID = newValue
+			entry.auraBackend = "AURA_CONTAINER"
+			if entry.auraUnit == "target" then
+				entry.auraFilter = entry.auraFilter == "HARMFUL" and "HARMFUL" or "HARMFUL|PLAYER"
+			else
+				entry.auraUnit = "player"
+				entry.auraFilter = "HELPFUL"
+			end
+			entry.buffName = C_Spell and C_Spell.GetSpellName and C_Spell.GetSpellName(newValue) or entry.buffName
+			entry.iconTextureID = C_Spell and C_Spell.GetSpellTexture and C_Spell.GetSpellTexture(newValue) or entry.iconTextureID
 		elseif entry.type == "ITEM" then
 			entry.itemID = newValue
 			if enableHighestRank then entry.useHighestRank = true end
@@ -18538,6 +18902,38 @@ local function ensureEditor()
 	bindEntryToggle(cbCooldownText, "showCooldownText")
 	bindEntryToggle(cbTrackPassiveSpell, "trackPassiveSpell")
 	bindEntryToggle(cbTrackUnknownSpell, "trackUnknownSpell")
+	cbCDMAuraOverlayTrackTarget:SetScript("OnClick", function(self)
+		local panelId = editor.selectedPanelId
+		local entryId = editor.selectedEntryId
+		local panel = panelId and CooldownPanels:GetPanel(panelId)
+		local entry = panel and panel.entries and panel.entries[entryId]
+		if not entry then return end
+		local checked = self:GetChecked() and true or false
+		if entry.type == "CDM_AURA" then
+			entry.auraUnit = checked and "target" or "player"
+			entry.auraFilter = checked and (entry.auraFilter == "HARMFUL" and "HARMFUL" or "HARMFUL|PLAYER") or "HELPFUL"
+		else
+			entry.cdmAuraOverlayTrackTarget = checked
+		end
+		CooldownPanels:RefreshPanel(panelId)
+		CooldownPanels:RefreshEditor()
+	end)
+	cbCDMAuraOverlayOnlyMine:SetScript("OnClick", function(self)
+		local panelId = editor.selectedPanelId
+		local entryId = editor.selectedEntryId
+		local panel = panelId and CooldownPanels:GetPanel(panelId)
+		local entry = panel and panel.entries and panel.entries[entryId]
+		if not entry then return end
+		local checked = self:GetChecked() and true or false
+		if entry.type == "CDM_AURA" then
+			if entry.auraUnit ~= "target" then return end
+			entry.auraFilter = checked and "HARMFUL|PLAYER" or "HARMFUL"
+		else
+			entry.cdmAuraOverlayTargetPlayerOnly = checked
+		end
+		CooldownPanels:RefreshPanel(panelId)
+		CooldownPanels:RefreshEditor()
+	end)
 	cbAlwaysShow:SetScript("OnClick", function(self)
 		local panelId = editor.selectedPanelId
 		local entryId = editor.selectedEntryId
@@ -18581,6 +18977,7 @@ local function ensureEditor()
 			if enabled then
 				entry.customCooldownDurationEnabled = false
 				entry.customCooldownDurationOnCooldownEnabled = false
+				entry.customCooldownDurationOnCooldownMultipleStacks = false
 				entry.autoCooldownDurationEnabled = false
 			end
 		CooldownPanels:ClearEntryCustomCooldownDuration(panelId, entryId, true)
@@ -18588,6 +18985,45 @@ local function ensureEditor()
 		CooldownPanels:RefreshPanel(panelId)
 		CooldownPanels:RefreshEditor()
 	end)
+	local function commitAuraOverlaySpellIDs(box)
+		if box._eqolUpdating then return end
+		local panelId = editor.selectedPanelId
+		local entryId = editor.selectedEntryId
+		local panel = panelId and CooldownPanels:GetPanel(panelId)
+		local entry = panel and panel.entries and panel.entries[entryId]
+		if not entry then return end
+		local previous = CooldownPanels:FormatEntryAuraOverlaySpellIDs(entry.cdmAuraOverlaySpellIDs)
+		local updated = CooldownPanels:SetEntryAuraOverlaySpellIDs(entry, box:GetText() or "")
+		if not updated then
+			if UIErrorsFrame and UIErrorsFrame.AddMessage then UIErrorsFrame:AddMessage(L["CooldownPanelCDMAuraOverlaySpellIDsInvalid"] or "Enter positive Spell IDs separated by commas.", 1, 0.2, 0.2) end
+			box._eqolUpdating = true
+			box:SetText(previous)
+			box._eqolUpdating = nil
+			return
+		end
+		local current = CooldownPanels:FormatEntryAuraOverlaySpellIDs(entry.cdmAuraOverlaySpellIDs)
+		box._eqolUpdating = true
+		box:SetText(current)
+		box._eqolUpdating = nil
+		if current == previous then return end
+		CooldownPanels:RebuildSpellIndex()
+		CooldownPanels:RefreshPanel(panelId)
+		CooldownPanels:RefreshEditor()
+	end
+	auraOverlaySpellIDsBox:SetScript("OnEnterPressed", function(self)
+		commitAuraOverlaySpellIDs(self)
+		self:ClearFocus()
+	end)
+	auraOverlaySpellIDsBox:SetScript("OnEscapePressed", function(self)
+		local panelId = editor.selectedPanelId
+		local panel = panelId and CooldownPanels:GetPanel(panelId)
+		local entry = panel and panel.entries and panel.entries[editor.selectedEntryId]
+		self._eqolUpdating = true
+		self:SetText(CooldownPanels:FormatEntryAuraOverlaySpellIDs(entry and entry.cdmAuraOverlaySpellIDs))
+		self._eqolUpdating = nil
+		self:ClearFocus()
+	end)
+	auraOverlaySpellIDsBox:SetScript("OnEditFocusLost", function(self) commitAuraOverlaySpellIDs(self) end)
 	cbCDMAuraOverlayReverse:SetScript("OnClick", function(self)
 		local panelId = editor.selectedPanelId
 		local entryId = editor.selectedEntryId
@@ -18645,6 +19081,7 @@ local function ensureEditor()
 		entry.autoCooldownDurationEnabled = enabled
 		if enabled then entry.customCooldownDurationEnabled = false end
 		if enabled then entry.customCooldownDurationOnCooldownEnabled = false end
+		if enabled then entry.customCooldownDurationOnCooldownMultipleStacks = false end
 		if enabled then entry.cdmAuraOverlayEnabled = false end
 		CooldownPanels:ClearEntryCustomCooldownDuration(panelId, entryId, true)
 		CooldownPanels:RefreshPanel(panelId)
@@ -18662,6 +19099,7 @@ local function ensureEditor()
 		if enabled then entry.autoCooldownDurationEnabled = false end
 		if enabled then entry.cdmAuraOverlayEnabled = false end
 		if enabled then entry.customCooldownDurationOnCooldownEnabled = false end
+		if enabled then entry.customCooldownDurationOnCooldownMultipleStacks = false end
 		CooldownPanels:ClearEntryCustomCooldownDuration(panelId, entryId, true)
 		CooldownPanels:RefreshPanel(panelId)
 		CooldownPanels:RefreshEditor()
@@ -18682,6 +19120,23 @@ local function ensureEditor()
 		if enabled then entry.autoCooldownDurationEnabled = false end
 		if enabled then entry.cdmAuraOverlayEnabled = false end
 		if enabled then entry.customCooldownDurationEnabled = false end
+		if not enabled then entry.customCooldownDurationOnCooldownMultipleStacks = false end
+		CooldownPanels:ClearEntryCustomCooldownDuration(panelId, entryId, true)
+		CooldownPanels:RefreshPanel(panelId)
+		CooldownPanels:RefreshEditor()
+	end)
+	cbCustomDurationOnCooldownMultipleStacks:SetScript("OnClick", function(self)
+		local panelId = editor.selectedPanelId
+		local entryId = editor.selectedEntryId
+		local panel = panelId and CooldownPanels:GetPanel(panelId)
+		local entry = panel and panel.entries and panel.entries[entryId]
+		if not entry then return end
+		local enabled = self:GetChecked() == true
+		if enabled and (entry.type ~= "SPELL" or entry.customCooldownDurationOnCooldownEnabled ~= true) then
+			self:SetChecked(false)
+			return
+		end
+		entry.customCooldownDurationOnCooldownMultipleStacks = enabled
 		CooldownPanels:ClearEntryCustomCooldownDuration(panelId, entryId, true)
 		CooldownPanels:RefreshPanel(panelId)
 		CooldownPanels:RefreshEditor()
@@ -18742,6 +19197,7 @@ local function ensureEditor()
 			duration = 0
 			entry.customCooldownDurationEnabled = false
 			entry.customCooldownDurationOnCooldownEnabled = false
+			entry.customCooldownDurationOnCooldownMultipleStacks = false
 		end
 		entry.customCooldownDuration = duration
 		CooldownPanels:ClearEntryCustomCooldownDuration(panelId, entryId, true)
@@ -19336,7 +19792,6 @@ local function movePanelInOrder(root, panelId, targetPanelId)
 	end
 	if not fromIndex or not toIndex then return false end
 	table.remove(root.order, fromIndex)
-	if fromIndex < toIndex then toIndex = toIndex - 1 end
 	table.insert(root.order, toIndex, panelId)
 	markRootOrderDirty(root)
 	return true
@@ -19660,7 +20115,6 @@ local function moveEntryInOrder(panel, entryId, targetEntryId)
 	end
 	if not fromIndex or not toIndex then return false end
 	table.remove(panel.order, fromIndex)
-	if fromIndex < toIndex then toIndex = toIndex - 1 end
 	table.insert(panel.order, toIndex, entryId)
 	if Helper.UpdatePanelEntrySpecFilterState then Helper.UpdatePanelEntrySpecFilterState(panel) end
 	Helper.InvalidateFixedLayoutCache(panel)
@@ -20123,6 +20577,8 @@ local function layoutInspectorToggles(inspector, entry, panel)
 		hideToggle(inspector.cbCooldownText)
 		hideToggle(inspector.cbTrackPassiveSpell)
 		hideToggle(inspector.cbTrackUnknownSpell)
+		hideToggle(inspector.cbCDMAuraOverlayTrackTarget)
+		hideToggle(inspector.cbCDMAuraOverlayOnlyMine)
 		hideControl(inspector.racialExclusionsButton)
 		hideToggle(inspector.cbAlwaysShow)
 		hideToggle(inspector.cbCharges)
@@ -20133,6 +20589,7 @@ local function layoutInspectorToggles(inspector, entry, panel)
 		hideToggle(inspector.cbShowWhenEmpty)
 		hideToggle(inspector.cbShowWhenNoCooldown)
 		hideToggle(inspector.cbCDMAuraOverlay)
+		hideControl(inspector.auraOverlaySpellIDsControl)
 		hideToggle(inspector.cbCDMAuraOverlayReverse)
 		hideToggle(inspector.cbActivationOverlayReverse)
 		hideToggle(inspector.cbActivationOverlayOnly)
@@ -20189,6 +20646,8 @@ local function layoutInspectorToggles(inspector, entry, panel)
 	place(inspector.cbCooldownText, effectiveType ~= "STANCE", -2)
 	place(inspector.cbTrackPassiveSpell, effectiveType == "SPELL")
 	place(inspector.cbTrackUnknownSpell, effectiveType == "SPELL")
+	place(inspector.cbCDMAuraOverlayTrackTarget, effectiveType == "CDM_AURA", 18, -4)
+	place(inspector.cbCDMAuraOverlayOnlyMine, effectiveType == "CDM_AURA" and entry.auraUnit == "target", 36, -4)
 	if inspector.racialExclusionsButton then
 		inspector.racialExclusionsButton:SetText(CooldownPanels:GetRacialExclusionsButtonText(entry))
 	end
@@ -20254,6 +20713,7 @@ local function layoutInspectorToggles(inspector, entry, panel)
 	end
 	local showCustomDuration = CooldownPanels:SupportsEntryCustomCooldownDuration(entry, effectiveType)
 	local showCustomDurationOnCooldown = showCustomDuration and effectiveType == "SPELL"
+	local showCustomDurationOnCooldownMultipleStacks = showCustomDurationOnCooldown
 	local showCDMAuraOverlay = CooldownPanels:SupportsEntryCDMAuraOverlay(entry, effectiveType)
 	local showAutoDuration = CooldownPanels:SupportsEntryAutoCooldownDuration(entry, effectiveType)
 	local showActivationOverlayVisuals = showCustomDuration or showCDMAuraOverlay
@@ -20262,6 +20722,33 @@ local function layoutInspectorToggles(inspector, entry, panel)
 	local activationOverlayEnabled = entry.autoCooldownDurationEnabled == true or entry.customCooldownDurationEnabled == true or entry.customCooldownDurationOnCooldownEnabled == true
 	local anyActivationOverlayEnabled = cdmAuraOverlayEnabled or activationOverlayEnabled
 	place(inspector.cbCDMAuraOverlay, showCDMAuraOverlay)
+	if effectiveType ~= "CDM_AURA" then
+		place(inspector.cbCDMAuraOverlayTrackTarget, showCDMAuraOverlay, 18, -4)
+		place(inspector.cbCDMAuraOverlayOnlyMine, showCDMAuraOverlay and entry.cdmAuraOverlayTrackTarget == true, 36, -4)
+		if inspector.cbCDMAuraOverlayTrackTarget then
+			if cdmAuraOverlayEnabled then
+				inspector.cbCDMAuraOverlayTrackTarget:Enable()
+			else
+				inspector.cbCDMAuraOverlayTrackTarget:Disable()
+			end
+		end
+		if inspector.cbCDMAuraOverlayOnlyMine then
+			if cdmAuraOverlayEnabled then
+				inspector.cbCDMAuraOverlayOnlyMine:Enable()
+			else
+				inspector.cbCDMAuraOverlayOnlyMine:Disable()
+			end
+		end
+	end
+	place(inspector.auraOverlaySpellIDsControl, showCDMAuraOverlay, 0, -4)
+	if inspector.auraOverlaySpellIDsBox then
+		if cdmAuraOverlayEnabled then
+			inspector.auraOverlaySpellIDsBox:Enable()
+		else
+			inspector.auraOverlaySpellIDsBox:Disable()
+		end
+	end
+	if inspector.auraOverlaySpellIDsControl then inspector.auraOverlaySpellIDsControl:SetAlpha(cdmAuraOverlayEnabled and 1 or 0.5) end
 	place(inspector.cbCDMAuraOverlayReverse, showCDMAuraOverlay)
 	place(inspector.cbActivationOverlayReverse, showCustomDuration)
 	place(inspector.cbActivationOverlayOnly, showActivationOverlayVisuals)
@@ -20297,8 +20784,16 @@ local function layoutInspectorToggles(inspector, entry, panel)
 	place(inspector.cbAutoDuration, showAutoDuration)
 	place(inspector.cbCustomDuration, showCustomDuration)
 	place(inspector.cbCustomDurationOnCooldown, showCustomDurationOnCooldown)
+	place(inspector.cbCustomDurationOnCooldownMultipleStacks, showCustomDurationOnCooldownMultipleStacks, 18, -4)
+	if inspector.cbCustomDurationOnCooldownMultipleStacks then
+		if entry.customCooldownDurationOnCooldownEnabled == true then
+			inspector.cbCustomDurationOnCooldownMultipleStacks:Enable()
+		else
+			inspector.cbCustomDurationOnCooldownMultipleStacks:Disable()
+		end
+	end
 	if showCustomDuration and inspector.customDurationBox and inspector.customDurationLabel then
-		local durationAnchor = showCustomDurationOnCooldown and inspector.cbCustomDurationOnCooldown or inspector.cbCustomDuration
+		local durationAnchor = showCustomDurationOnCooldownMultipleStacks and inspector.cbCustomDurationOnCooldownMultipleStacks or (showCustomDurationOnCooldown and inspector.cbCustomDurationOnCooldown or inspector.cbCustomDuration)
 		inspector.customDurationBox:ClearAllPoints()
 		inspector.customDurationBox:SetPoint("TOPLEFT", durationAnchor, "BOTTOMLEFT", 18, -4)
 		inspector.customDurationBox:Show()
@@ -20429,7 +20924,7 @@ local function refreshInspector(editor, panel, entry)
 			local macro = CooldownPanels.ResolveMacroEntry(entry)
 			effectiveType = (macro and macro.kind) or "MACRO"
 		end
-		local showEntryIdBox = effectiveType ~= "STANCE" and effectiveType ~= "SLOT" and effectiveType ~= "CDM_AURA"
+		local showEntryIdBox = effectiveType ~= "STANCE" and effectiveType ~= "SLOT" and (effectiveType ~= "CDM_AURA" or CooldownPanels.AuraContainers ~= nil)
 		if inspector.entryId then
 			if showEntryIdBox then
 				inspector.entryId:Show()
@@ -20465,6 +20960,14 @@ local function refreshInspector(editor, panel, entry)
 		inspector.cbCooldownText:SetChecked(entry.showCooldownText ~= false)
 		if inspector.cbTrackPassiveSpell then inspector.cbTrackPassiveSpell:SetChecked(entry.trackPassiveSpell == true) end
 		if inspector.cbTrackUnknownSpell then inspector.cbTrackUnknownSpell:SetChecked(entry.trackUnknownSpell == true) end
+		if inspector.cbCDMAuraOverlayTrackTarget then
+			local trackTarget = effectiveType == "CDM_AURA" and entry.auraUnit == "target" or effectiveType ~= "CDM_AURA" and entry.cdmAuraOverlayTrackTarget == true
+			inspector.cbCDMAuraOverlayTrackTarget:SetChecked(trackTarget)
+		end
+		if inspector.cbCDMAuraOverlayOnlyMine then
+			local onlyMine = effectiveType == "CDM_AURA" and entry.auraFilter ~= "HARMFUL" or effectiveType ~= "CDM_AURA" and entry.cdmAuraOverlayTargetPlayerOnly ~= false
+			inspector.cbCDMAuraOverlayOnlyMine:SetChecked(onlyMine)
+		end
 		if inspector.racialExclusionsButton then inspector.racialExclusionsButton:SetText(CooldownPanels:GetRacialExclusionsButtonText(entry)) end
 		if effectiveType == "STANCE" then
 			inspector.cbAlwaysShow:SetChecked(entry.showWhenMissing == true)
@@ -20483,6 +20986,11 @@ local function refreshInspector(editor, panel, entry)
 		inspector.cbShowWhenEmpty:SetChecked(effectiveType == "ITEM" and entry.showWhenEmpty == true)
 		inspector.cbShowWhenNoCooldown:SetChecked(effectiveType == "SLOT" and entry.showWhenNoCooldown == true)
 		if inspector.cbCDMAuraOverlay then inspector.cbCDMAuraOverlay:SetChecked(entry.cdmAuraOverlayEnabled == true and CooldownPanels:SupportsEntryCDMAuraOverlay(entry, effectiveType)) end
+		if inspector.auraOverlaySpellIDsBox then
+			inspector.auraOverlaySpellIDsBox._eqolUpdating = true
+			inspector.auraOverlaySpellIDsBox:SetText(CooldownPanels:FormatEntryAuraOverlaySpellIDs(entry.cdmAuraOverlaySpellIDs))
+			inspector.auraOverlaySpellIDsBox._eqolUpdating = nil
+		end
 		if inspector.cbCDMAuraOverlayReverse then inspector.cbCDMAuraOverlayReverse:SetChecked(entry.cdmAuraOverlayReverse ~= false) end
 		if inspector.cbActivationOverlayReverse then inspector.cbActivationOverlayReverse:SetChecked(CooldownPanels:ResolveEntryActivationOverlayReverse(panel and panel.layout or nil, entry)) end
 		if inspector.cbActivationOverlayOnly then inspector.cbActivationOverlayOnly:SetChecked(CooldownPanels:ResolveEntryActivationOverlayOnly(panel and panel.layout or nil, entry)) end
@@ -20490,9 +20998,14 @@ local function refreshInspector(editor, panel, entry)
 		if inspector.cbAutoDuration then inspector.cbAutoDuration:SetChecked(entry.autoCooldownDurationEnabled == true and CooldownPanels:SupportsEntryAutoCooldownDuration(entry, effectiveType)) end
 		if inspector.cbCustomDuration then inspector.cbCustomDuration:SetChecked(entry.customCooldownDurationEnabled == true) end
 		if inspector.cbCustomDurationOnCooldown then inspector.cbCustomDurationOnCooldown:SetChecked(entry.customCooldownDurationOnCooldownEnabled == true) end
+		if inspector.cbCustomDurationOnCooldownMultipleStacks then inspector.cbCustomDurationOnCooldownMultipleStacks:SetChecked(entry.customCooldownDurationOnCooldownEnabled == true and entry.customCooldownDurationOnCooldownMultipleStacks == true) end
 		if inspector.customDurationBox then inspector.customDurationBox:SetText(tostring(math.floor((tonumber(entry.customCooldownDuration) or 0) + 0.5))) end
 		inspector.cbGlow:SetChecked(entry.type ~= "MACRO" and entry.glowReady and true or false)
-		if inspector.cbPandemicGlow then inspector.cbPandemicGlow:SetChecked(effectiveType == "CDM_AURA" and entry.pandemicGlow == true) end
+		inspector.cbGlow:SetEnabled(true)
+		if inspector.cbPandemicGlow then
+			inspector.cbPandemicGlow:SetChecked(effectiveType == "CDM_AURA" and entry.pandemicGlow == true)
+			inspector.cbPandemicGlow:SetEnabled(true)
+		end
 		do
 			local _, soundEnabledField, soundField = CooldownPanels:GetEntrySoundConfig(entry)
 			inspector.cbSound:SetChecked(soundEnabledField and entry[soundEnabledField] == true or false)
@@ -20529,6 +21042,11 @@ local function refreshInspector(editor, panel, entry)
 
 		if inspector.staticTextBox then inspector.staticTextBox:SetText("") end
 		if inspector.cbCDMAuraOverlay then inspector.cbCDMAuraOverlay:SetChecked(false) end
+		if inspector.auraOverlaySpellIDsBox then
+			inspector.auraOverlaySpellIDsBox._eqolUpdating = true
+			inspector.auraOverlaySpellIDsBox:SetText("")
+			inspector.auraOverlaySpellIDsBox._eqolUpdating = nil
+		end
 		if inspector.cbCDMAuraOverlayReverse then inspector.cbCDMAuraOverlayReverse:SetChecked(false) end
 		if inspector.cbActivationOverlayReverse then inspector.cbActivationOverlayReverse:SetChecked(false) end
 		if inspector.cbActivationOverlayOnly then inspector.cbActivationOverlayOnly:SetChecked(false) end
@@ -20539,6 +21057,8 @@ local function refreshInspector(editor, panel, entry)
 		if inspector.customDurationBox then inspector.customDurationBox:SetText("") end
 		if inspector.cbTrackPassiveSpell then inspector.cbTrackPassiveSpell:SetChecked(false) end
 		if inspector.cbTrackUnknownSpell then inspector.cbTrackUnknownSpell:SetChecked(false) end
+		if inspector.cbCDMAuraOverlayTrackTarget then inspector.cbCDMAuraOverlayTrackTarget:SetChecked(false) end
+		if inspector.cbCDMAuraOverlayOnlyMine then inspector.cbCDMAuraOverlayOnlyMine:SetChecked(false) end
 		if inspector.racialExclusionsButton then inspector.racialExclusionsButton:SetText(L["CooldownPanelRacialExclusions"] or "Excluded racials") end
 		if inspector.cbStaticTextDuringCD then inspector.cbStaticTextDuringCD:SetChecked(false) end
 
@@ -20624,6 +21144,13 @@ function CooldownPanels:RefreshEditor()
 			editor.addItemButton:Enable()
 		else
 			editor.addItemButton:Disable()
+		end
+	end
+	if editor.addAuraButton then
+		if panelActive then
+			editor.addAuraButton:Enable()
+		else
+			editor.addAuraButton:Disable()
 		end
 	end
 	if editor.addIdBox then
@@ -21858,7 +22385,7 @@ function CooldownPanels:UpdateRuntimeIcons(panelId)
 					CooldownPanels.ClearReadyGlowEntryState(panelId, entryId, true)
 				elseif spellPassive then
 					show = false
-				elseif Api.IsSpellKnown and not talentChoiceResolved and not cdp.CDM.IsSyncedEntryKnown(entry) and not cdp.ENTRY.ShouldTrackUnknownSpell(entry) and not Api.IsSpellKnown(spellId, true) then
+			elseif Api.IsSpellKnown and not talentChoiceResolved and not cdp.ENTRY.ShouldTrackUnknownSpell(entry) and not Api.IsSpellKnown(spellId, true) then
 					show = false
 				else
 					canTriggerReadyGlow = true
@@ -22011,6 +22538,10 @@ function CooldownPanels:UpdateRuntimeIcons(panelId)
 					end
 				end
 			end
+			-- Native AuraSlots own secret active visibility. Keep a stable host
+			-- allocated even when the underlying spell would otherwise be packed
+			-- out of a dynamic panel; never fake an active aura in Lua.
+			if spellAuraOverlayData and spellAuraOverlayData.nativeAuraSlot == true then show = true end
 			if layoutEditActive and panel.hideUnavailableEntriesInEditor ~= true then show = true end
 
 			if show then
@@ -22046,6 +22577,14 @@ function CooldownPanels:UpdateRuntimeIcons(panelId)
 						previewSound = entry[soundEnabledField] == true
 						soundName = normalizeSoundName(entry[soundField])
 						soundReady = resolvedType ~= "CDM_AURA" and previewSound
+					end
+					local auraSoundSupported = resolvedType == "CDM_AURA" or self:IsEntryCDMAuraOverlayEnabled(entryLayout, entry, resolvedType)
+					if auraSoundSupported and not previewSound then
+						local _, auraSoundEnabledField, auraSoundField = self:GetEntrySoundConfig(entry, "aura")
+						if auraSoundEnabledField and auraSoundField then
+							previewSound = entry[auraSoundEnabledField] == true
+							soundName = normalizeSoundName(entry[auraSoundField])
+						end
 					end
 				end
 				local entryCheckPower = resolvedType == "SPELL" and self:ResolveEntryCheckPower(entryLayout, entry)
@@ -23229,6 +23768,8 @@ function CooldownPanels:BuildVisibilityDriverSignature(layout)
 		weight = weight * 2
 		if source.PLAYER_IN_GROUP then signature = signature + weight end
 		weight = weight * 2
+		if source.SHOW_IN_INSTANCE then signature = signature + weight end
+		weight = weight * 2
 		if source.SKYRIDING_ACTIVE then signature = signature + weight end
 		weight = weight * 2
 		if source.SKYRIDING_INACTIVE then signature = signature + weight end
@@ -23534,7 +24075,6 @@ function CooldownPanels:PrepareStaticCDMAuraRuntimeEntry(panelId, entryId, entry
 
 	if not (panelId and entryId and entry and runtime and frame) then return fail("missingContext") end
 	if entry.type ~= "CDM_AURA" then return fail("notCDMAura") end
-	if self.AreCDMAurasDisabledForClient and self:AreCDMAurasDisabledForClient() then return fail("disabledForClient") end
 	if self:IsPanelLayoutEditActive(panelId) then return fail("layoutEdit") end
 	if runtime.initialized ~= true then return fail("notInitialized") end
 	local panel = self:GetPanel(panelId)
@@ -24137,6 +24677,8 @@ function CooldownPanels:RefreshAllPanels(forceAll)
 	end
 	self:EndRuntimeQueryBatch()
 	self:UpdateCursorAnchorState()
+	local unitFrames = addon and addon.Aura and addon.Aura.UF
+	if unitFrames and unitFrames.ReanchorFramesAttachedToCooldownPanels then unitFrames.ReanchorFramesAttachedToCooldownPanels(panelIds) end
 	local resourceBars = addon and addon.Aura and addon.Aura.ResourceBars
 	if resourceBars and resourceBars.ReanchorAll then
 		resourceBars.ReanchorAll()
@@ -24570,7 +25112,6 @@ function CooldownPanels:PrepareLayoutPanelStandaloneSettings(panelId)
 	local function chargesFontOptions() return Helper.GetFontOptions(chargesFontPath) end
 	local function hasStaticTextEntries() return panel and panel.entries and next(panel.entries) ~= nil end
 	local function hasCDMAuraEntries()
-		if CooldownPanels.AreCDMAurasDisabledForClient and CooldownPanels:AreCDMAurasDisabledForClient() then return false end
 		if not (panel and panel.entries) then return false end
 		for _, entry in pairs(panel.entries) do
 			if entry and entry.type == "CDM_AURA" then return true end
@@ -26523,7 +27064,7 @@ function CooldownPanels:PrepareLayoutPanelStandaloneSettings(panelId)
 					set = function(_, value) applyEditLayout(panelId, "showChargesCooldown", value) end,
 				},
 				{
-					name = L["CooldownPanelCDMAuraOverlayPanel"] or "Show aura overlay for supported spells",
+					name = L["CooldownPanelCDMAuraOverlayPanel"] or "Show aura overlay for spells",
 					tooltip = L["CooldownPanelCDMAuraOverlayTooltip"],
 					kind = SettingType.Checkbox,
 					field = "cdmAuraOverlayEnabled",
@@ -27370,7 +27911,7 @@ function cdp.ENTRY.GetVisibleSpellEntryRefreshBlockReason(panelId, entryId, mode
 	local spellPassive = not shouldTrackPassiveSpell(entry) and isSpellPassiveSafe(resolvedSpellId or baseSpellId, effectiveSpellId) or false
 	local talentChoiceResolved = variantGroup and variantGroup.kind == "talentChoice"
 	if spellPassive then return "passiveSpell" end
-	if Api.IsSpellKnown and not talentChoiceResolved and not cdp.CDM.IsSyncedEntryKnown(entry) and not cdp.ENTRY.ShouldTrackUnknownSpell(entry) and not Api.IsSpellKnown(spellId, true) then return "unknownSpell" end
+	if Api.IsSpellKnown and not talentChoiceResolved and not cdp.ENTRY.ShouldTrackUnknownSpell(entry) and not Api.IsSpellKnown(spellId, true) then return "unknownSpell" end
 	local icon = runtime.entryToIcon and runtime.entryToIcon[entryId] or nil
 	local data = icon and icon._eqolRuntimeData or nil
 	if not (icon and data and data.entryId == entryId and data.resolvedType == "SPELL") then return "missingIconData" end
@@ -28654,6 +29195,10 @@ CooldownPanels.UPDATE_FRAME_EVENTS = {
 	"TRAIT_CONFIG_LIST_UPDATED",
 	"PLAYER_EQUIPMENT_CHANGED",
 	"PLAYER_MOUNT_DISPLAY_CHANGED",
+	"ZONE_CHANGED_NEW_AREA",
+	"PLAYER_DIFFICULTY_CHANGED",
+	"INSTANCE_GROUP_SIZE_CHANGED",
+	"UPDATE_INSTANCE_INFO",
 	"UPDATE_SHAPESHIFT_FORM",
 	"PLAYER_CAN_GLIDE_CHANGED",
 	"PLAYER_IS_GLIDING_CHANGED",
@@ -28701,8 +29246,7 @@ local function hasConfiguredEnabledPanels()
 	local classSpecs = getPlayerClassSpecMap()
 	for _, panel in pairs(root.panels) do
 		if panel and panel.enabled ~= false and panelMatchesPlayerClass(panel, classSpecs) then
-			local syncSource = type(panel.cdmSyncSource) == "string" and panel.cdmSyncSource:upper() or nil
-			if panelHasRuntimeEntries(panel) or cdp.CDM.IsSyncSource(syncSource) then return true end
+			if panelHasRuntimeEntries(panel) then return true end
 		end
 	end
 	return false
@@ -29081,7 +29625,6 @@ end
 
 function CooldownPanels:UpdateEventRegistration()
 	local frame = self.runtime and self.runtime.updateFrame
-	if self.HasCooldownManagerSyncPanels and self:HasCooldownManagerSyncPanels() then self:EnsureCooldownManagerSyncListener() end
 	if not frame then return end
 	CooldownPanels.SetUpdateFrameEnabled(frame, getUpdateFrameRegistrationMode())
 end
@@ -29116,17 +29659,19 @@ function CooldownPanels.EnsureUpdateFrame()
 			local name = ...
 			local anchorHelper = CooldownPanels.AnchorHelper
 			if anchorHelper and anchorHelper.HandleAddonLoaded then anchorHelper:HandleAddonLoaded(name) end
+			if name == "Blizzard_CooldownViewer" and CooldownPanels:HasCooldownManagerSyncPanels() then
+				CooldownPanels:EnsureCooldownManagerSyncListener()
+				CooldownPanels:RequestCooldownManagerSync()
+			end
 			if type(name) == "string" and (name == "Dominos" or name == "Bartender4" or name == "ElvUI" or name:match("^Dominos_") or name:match("^Bartender4_")) then
 				if Keybinds.InvalidateButtonList then Keybinds.InvalidateButtonList() end
 				Keybinds.RequestRefresh("Event:ADDON_LOADED:" .. name)
 			end
-			if name == "Blizzard_CooldownViewer" then CooldownPanels:RequestCooldownManagerSync("Event:ADDON_LOADED:Blizzard_CooldownViewer") end
 			return
 		end
 		if event == "PLAYER_LOGIN" then
 			CooldownPanels.runtime = CooldownPanels.runtime or {}
 			CooldownPanels.runtime.cdmAuraQuickSetupLoginReady = true
-			CooldownPanels:EnsureCooldownManagerSyncListener()
 			local anchorHelper = CooldownPanels.AnchorHelper
 			if anchorHelper and anchorHelper.HandlePlayerLogin then anchorHelper:HandlePlayerLogin() end
 			CooldownPanels:InvalidateTalentChoiceSpellVariantGroups()
@@ -29135,13 +29680,15 @@ function CooldownPanels.EnsureUpdateFrame()
 			Keybinds.RequestRefresh("Event:PLAYER_LOGIN", false)
 			if CooldownPanels.refreshAssistedHighlightCVarState then CooldownPanels.refreshAssistedHighlightCVarState("Event:PLAYER_LOGIN", true) end
 			refreshPanelsForCharges()
-			CooldownPanels:RequestCooldownManagerSync("Event:PLAYER_LOGIN")
+			if CooldownPanels:HasCooldownManagerSyncPanels() then
+				CooldownPanels:EnsureCooldownManagerSyncListener()
+				CooldownPanels:RequestCooldownManagerSync()
+			end
 			scheduleSpecAwareRebuild(event, false)
 			return
 		end
 		if event == "COOLDOWN_VIEWER_DATA_LOADED" then
-			CooldownPanels:EnsureCooldownManagerSyncListener()
-			CooldownPanels:RequestCooldownManagerSync("Event:COOLDOWN_VIEWER_DATA_LOADED")
+			if CooldownPanels:HasCooldownManagerSyncPanels() then CooldownPanels:RequestCooldownManagerSync() end
 			return
 		end
 		if event == "CVAR_UPDATE" then
@@ -29330,7 +29877,7 @@ function CooldownPanels.EnsureUpdateFrame()
 			if unit and unit ~= "player" then return end
 			CooldownPanels:InvalidateTalentChoiceSpellVariantGroups()
 			CooldownPanels:InvalidateSpellQueryCaches()
-			CooldownPanels:RequestCooldownManagerSync("Event:" .. event)
+			if CooldownPanels:HasCooldownManagerSyncPanels() then CooldownPanels:RequestCooldownManagerSync() end
 			scheduleSpecAwareRebuild(event, true)
 			return
 		end
@@ -29338,7 +29885,7 @@ function CooldownPanels.EnsureUpdateFrame()
 			CooldownPanels:InvalidateTalentChoiceSpellVariantGroups()
 			CooldownPanels:InvalidateSpellQueryCaches()
 			if CooldownPanels.runtime then CooldownPanels.runtime.iconCache = nil end
-			CooldownPanels:RequestCooldownManagerSync("Event:" .. event)
+			if CooldownPanels:HasCooldownManagerSyncPanels() then CooldownPanels:RequestCooldownManagerSync() end
 			scheduleSpecAwareRebuild(event, true)
 			return
 		end
@@ -29411,7 +29958,6 @@ function CooldownPanels.EnsureUpdateFrame()
 			CooldownPanels:InvalidateTalentChoiceSpellVariantGroups()
 			CooldownPanels:InvalidateSpellQueryCaches()
 			updateItemCountCache()
-			CooldownPanels:RequestCooldownManagerSync("Event:PLAYER_ENTERING_WORLD")
 			scheduleSpecAwareRebuild(event)
 			return
 		end

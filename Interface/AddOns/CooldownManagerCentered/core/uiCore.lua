@@ -162,6 +162,7 @@ function WilduUICore.ApplyFramePosition(frame, configKey, shouldHide)
     end
     if frame.SetAlpha and config.alpha ~= nil then
         frame:SetAlpha(config.alpha)
+        ns.CMCVisibility:ReapplyViewer(frame:GetName())
     end
     if frame.SetFrameStrata then
         frame:SetFrameStrata(config.strata or DEFAULT_STRATA)
@@ -307,7 +308,13 @@ end
 ---@param additionalSettings? table[] Additional LEM settings appended after Scale and Strata
 ---@param onPositionChangedCallback? function Custom callback for position changes (overrides default)
 ---@param skipGeneralSection? boolean Omit the Scale/Strata "General" section (for anchor-only frames whose scale/strata don't affect their content)
-function WilduUICore.RegisterFrameWithLEM(frame, configKey, additionalSettings, onPositionChangedCallback, skipGeneralSection)
+function WilduUICore.RegisterFrameWithLEM(
+    frame,
+    configKey,
+    additionalSettings,
+    onPositionChangedCallback,
+    skipGeneralSection
+)
     additionalSettings = additionalSettings or {}
     local config = WilduUICore.LoadFrameConfig(configKey)
 
@@ -330,7 +337,10 @@ function WilduUICore.RegisterFrameWithLEM(frame, configKey, additionalSettings, 
         local strataSetting = WilduUICore.CreateStrataSetting(configKey, FRAME_DEFAULT_CONFIG.strata, frame)
         scaleSetting.parentId = "general"
         strataSetting.parentId = "general"
-        table.insert(settings, { kind = LEM.SettingType.Collapsible, id = "general", name = "General", defaultCollapsed = true })
+        table.insert(
+            settings,
+            { kind = LEM.SettingType.Collapsible, id = "general", name = "General", defaultCollapsed = true }
+        )
         table.insert(settings, scaleSetting)
         table.insert(settings, strataSetting)
     end

@@ -545,9 +545,27 @@ function BuffAssignmentPanel:EnsureSettingsTab(settingsFrame)
     searchBox:Hide()
     Affected(panel).buffSearchBox = searchBox
 
-    local tip = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    tip:SetPoint("BOTTOMLEFT", panel, "BOTTOMLEFT", 10, 10)
-    tip:SetText("|cfffff100Drag&Drop|r a buff, or right-click to move it")
+    local trackMoreButton = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
+    trackMoreButton:SetPoint("BOTTOMLEFT", panel, "BOTTOMLEFT", 10, 4)
+    trackMoreButton:SetHeight(22)
+    trackMoreButton:SetText("Add more 'Tracked Buffs' in Buffs tab")
+    trackMoreButton:SetWidth(trackMoreButton:GetFontString():GetStringWidth() + 30)
+    trackMoreButton:SetScript("OnClick", function()
+        settingsFrame:SetDisplayMode("auras")
+    end)
+    trackMoreButton:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText(
+            "Opens Blizzard's Buffs tab, where you can add more buffs\nto 'Tracked Buffs'\nfrom 'Not Displayed'.",
+            nil,
+            nil,
+            nil,
+            nil,
+            true
+        )
+        GameTooltip:Show()
+    end)
+    trackMoreButton:SetScript("OnLeave", GameTooltip_Hide)
 
     -- Pre-create the default section plus the full pool of container sections
     -- (template frames can't be destroyed); RefreshPanel shows only the active ones.

@@ -1,6 +1,7 @@
 
 SweepyBoopDB = {
 ["profileKeys"] = {
+["Manyfaced - Tichondrius"] = "Default",
 ["Auteist - Tichondrius"] = "Default",
 ["Stormclout - Tichondrius"] = "Default",
 ["Neonvoid - Tichondrius"] = "Default",
@@ -18,12 +19,12 @@ SweepyBoopDB = {
 ["lastModified"] = 3917.626,
 ["queueReminder"] = false,
 ["combatIndicator"] = false,
+["personalDROffsetY"] = -121,
 ["personalDRShowCleanStun"] = false,
 ["precognitionTrackerOffsetY"] = -17,
 ["personalDRSize"] = 31,
 ["personalDR"] = true,
 ["healerInCrowdControl"] = true,
-["personalDROffsetY"] = -121,
 ["precognitionTrackerSize"] = 60,
 },
 ["raidFrames"] = {

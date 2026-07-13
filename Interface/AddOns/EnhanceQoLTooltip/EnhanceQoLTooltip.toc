@@ -1,7 +1,7 @@
 ## Interface: 120007, 120100
 ## Title: Enhance QoL Tooltip
 ## Author: R41Z0R
-## Version: 11.6.0
+## Version: 11.7.3
 ## Notes: Tooltip IDs, visibility, realm and character details
 ## Notes-deDE: Tooltip-IDs, Sichtbarkeit, Realm- und Charakterdetails
 ## Notes-esES: ID de tooltips, visibilidad y detalles de reino y personaje

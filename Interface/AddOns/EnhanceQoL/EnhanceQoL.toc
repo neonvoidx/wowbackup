@@ -1,7 +1,7 @@
 ## Interface: 120007, 120100
 ## Title: Enhance QoL Core
 ## Author: R41Z0R
-## Version: 11.6.0
+## Version: 11.7.3
 ## IconTexture: Interface\AddOns\EnhanceQoL\Icons\Icon.tga
 ## Category: Quality of Life
 ## X-Category: Quality of Life
@@ -22,7 +22,7 @@
 ## Retail: true
 ## X-Compatible-With: retail
 ## X-WoWI-ID: 26888
-## OptionalDeps: MidnightSimpleUnitFrames, UnhaltedUnitFrames, ElvUI, EllesmereUI, EllesmereUIUnitFrames, EllesmereUICooldownManager, Baganator, DragonRider, FarmHud
+## OptionalDeps: Blizzard_AuraContainer, MidnightSimpleUnitFrames, UnhaltedUnitFrames, ElvUI, EllesmereUI, EllesmereUIUnitFrames, EllesmereUICooldownManager, Baganator, DragonRider, FarmHud
 
 libs\LibStub\LibStub.lua
 libs\AceLocale-3.0\AceLocale-3.0.xml

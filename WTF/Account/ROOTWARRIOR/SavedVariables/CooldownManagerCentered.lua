@@ -74,9 +74,9 @@ CooldownManagerCenteredDB = {
 },
 ["CMCTracker2"] = {
 },
-["CMCTracker1"] = {
-},
 ["UtilityCooldownViewer"] = {
+},
+["CMCTracker1"] = {
 },
 ["EssentialCooldownViewer"] = {
 },
@@ -277,9 +277,9 @@ CooldownManagerCenteredDB = {
 ["state"] = "tracker1",
 ["order"] = 18,
 },
-[312411] = {
-["state"] = "tracker1",
-["order"] = 13,
+[403216] = {
+["state"] = "hidden",
+["order"] = 82,
 },
 [59544] = {
 ["state"] = "tracker1",
@@ -289,9 +289,9 @@ CooldownManagerCenteredDB = {
 ["state"] = "tracker1",
 ["order"] = 32,
 },
-[403216] = {
-["state"] = "hidden",
-["order"] = 82,
+[312411] = {
+["state"] = "tracker1",
+["order"] = 13,
 },
 [69070] = {
 ["state"] = "tracker1",
@@ -653,17 +653,17 @@ CooldownManagerCenteredDB = {
 ["state"] = "hidden",
 ["order"] = 48,
 },
-[40772] = {
+[241304] = {
 ["state"] = "hidden",
-["order"] = 102,
+["order"] = 22,
 },
 [250225] = {
 ["state"] = "hidden",
 ["order"] = 105,
 },
-[81413] = {
+[40772] = {
 ["state"] = "hidden",
-["order"] = 93,
+["order"] = 102,
 },
 [191393] = {
 ["state"] = "hidden",
@@ -681,9 +681,9 @@ CooldownManagerCenteredDB = {
 ["state"] = "hidden",
 ["order"] = 92,
 },
-[241304] = {
+[81413] = {
 ["state"] = "hidden",
-["order"] = 22,
+["order"] = 93,
 },
 [243733] = {
 ["state"] = "hidden",
@@ -776,8 +776,8 @@ CooldownManagerCenteredDB = {
 ["cooldownManager_visibility_enabled_viewers"] = {
 ["BuffIconCooldownViewer"] = false,
 ["CMCTracker2"] = false,
-["CMCTracker1"] = false,
 ["UtilityCooldownViewer"] = false,
+["CMCTracker1"] = false,
 ["EssentialCooldownViewer"] = false,
 ["BuffBarCooldownViewer"] = false,
 },
@@ -806,9 +806,9 @@ CooldownManagerCenteredDB = {
 [365350] = {
 ["alwaysGlow"] = true,
 },
-[115636] = {
-},
 [13750] = {
+},
+[115636] = {
 },
 [1249625] = {
 ["alwaysGlow"] = true,
@@ -822,15 +822,17 @@ CooldownManagerCenteredDB = {
 [1250566] = {
 ["alwaysGlow"] = true,
 },
-[1253304] = {
+[1241059] = {
+["alwaysGlow"] = true,
 },
 [79684] = {
 ["alwaysGlow"] = true,
 },
 [264571] = {
 },
-[1241059] = {
+[443294] = {
 ["alwaysGlow"] = true,
+["alwaysShowCooldownEdge"] = true,
 },
 [122470] = {
 ["barColor"] = {
@@ -845,9 +847,7 @@ CooldownManagerCenteredDB = {
 [1240201] = {
 ["alwaysGlow"] = true,
 },
-[443294] = {
-["alwaysGlow"] = true,
-["alwaysShowCooldownEdge"] = true,
+[1253304] = {
 },
 [394110] = {
 ["alwaysGlow"] = true,

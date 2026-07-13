@@ -3947,17 +3947,10 @@ local function resolveCombatSpellDisplay(spell, config)
 	local spellName
 	local spellIcon
 	if spellID and C_Spell then
-		if C_Spell.GetSpellInfo then
-			local spellInfo = C_Spell.GetSpellInfo(spellID)
-			if type(spellInfo) == "table" then
-				spellName = spellInfo.name
-				spellIcon = spellInfo.iconID
-			end
-		end
-		if not spellName and C_Spell.GetSpellName then
+		if C_Spell.GetSpellName then
 			spellName = C_Spell.GetSpellName(spellID)
 		end
-		if not spellIcon and C_Spell.GetSpellTexture then
+		if C_Spell.GetSpellTexture then
 			spellIcon = C_Spell.GetSpellTexture(spellID)
 		end
 	end

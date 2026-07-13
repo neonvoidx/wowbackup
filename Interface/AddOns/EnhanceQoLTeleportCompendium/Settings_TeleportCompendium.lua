@@ -115,16 +115,6 @@ local function buildTeleportSettings()
 		parentSection = sectionTeleports,
 	})
 
-	-- Keybinding: World Map Teleport panel
-	if addon.functions.FindBindingIndex then
-		local bind = addon.functions.FindBindingIndex({ EQOL_TOGGLE_WORLDMAP_TELEPORT = true })
-		if bind and next(bind) then
-			addon.functions.SettingsCreateHeadline(cGameplay, L["teleportsWorldMapBinding"], { parentSection = sectionTeleports })
-			for _, idx in pairs(bind) do
-				addon.functions.SettingsCreateKeybind(cGameplay, idx, sectionTeleports)
-			end
-		end
-	end
 end
 
 function addon.MythicPlus.functions.InitTeleportCompendiumSettings()

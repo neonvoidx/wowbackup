@@ -5,8 +5,8 @@ local _, ns = ...
 -- that viewer; cooldownManager.lua partitions the visible ones by assignment and
 -- calls container:LayoutIcons(group, total) so each container re-anchors + centers its
 -- buffs within a footprint sized to its total assigned set. Each frame is CENTER
--- anchored. Only orientation / icon direction / icon padding are exposed — icon size
--- and opacity are inherited from Blizzard's base buff settings (see plan).
+-- anchored. Orientation, icon direction, padding, size, and alignment are configured
+-- independently for each container.
 local BuffContainerViewer = {}
 ns.BuffContainerViewer = BuffContainerViewer
 
@@ -15,6 +15,7 @@ local WilduUICore = ns.WilduUICore
 local LEM = LibStub("WildForkLibEQOLEditMode-1.0")
 
 local DEFAULT_ICON_PADDING = 2
+local DEFAULT_ICON_SIZE = 1
 local MIN_EMPTY_SIZE = 30
 
 -- Colored "Cooldown Manager Centered" gradient reused as the Edit Mode label prefix.
@@ -63,18 +64,35 @@ function ContainerInstance:GetIconPadding()
     return GetConfigValue(self.configKey, "iconPadding", DEFAULT_ICON_PADDING)
 end
 
+function ContainerInstance:GetIconSize()
+    return GetConfigValue(self.configKey, "iconSize", DEFAULT_ICON_SIZE)
+end
+
+function ContainerInstance:GetAlignment()
+    local alignment = GetConfigValue(self.configKey, "alignment", nil)
+    if alignment == nil then
+        alignment = ns.db.profile.cooldownManager_alignBuffIcons_growFromDirection
+    end
+    return alignment or "CENTER"
+end
+
 -- Anchors the given native buff icon frames into this container and sizes the
 -- container to fit them. The footprint is sized to `total` (all buffs assigned to the
--- container, active or not) and the currently-visible icons are centered within it, so
--- the group stays put as individual buffs toggle instead of jumping to just the shown
--- ones. When nothing is assigned the container keeps a minimal selectable box so it can
--- still be picked up in Edit Mode. Returns whether the container currently shows any buffs.
+-- container, active or not). Dynamic alignments position the visible group within that
+-- footprint; Disabled preserves every assigned buff's original slot. When nothing is
+-- assigned the container keeps a minimal selectable box so it can still be picked up
+-- in Edit Mode. Returns whether the container currently shows any buffs.
 function ContainerInstance:LayoutIcons(iconFrames, total)
     if not self.anchor then
         return false
     end
     local count = iconFrames and #iconFrames or 0
     total = math.max(total or count, count)
+
+    local iconScale = self:GetIconSize()
+    for _, icon in ipairs(iconFrames) do
+        icon:SetScale(iconScale)
+    end
 
     if total == 0 then
         self.anchor:SetSize(MIN_EMPTY_SIZE, MIN_EMPTY_SIZE)
@@ -99,37 +117,44 @@ function ContainerInstance:LayoutIcons(iconFrames, total)
     local padding = self:GetIconPadding()
     local orientation = self:GetOrientation()
     local reversed = self:GetIconDirection() == "Reversed"
-    -- The icon frames carry the viewer's iconScale as their own scale, so the unscaled
-    -- SetPoint offsets already resolve to the correct (scaled) spacing — same as the
-    -- base viewer's layout. Only the container frame (a scale-1 UIParent child) must
-    -- have iconScale folded into its size so it matches the icons' rendered extent.
-    local iconScale = (BuffIconCooldownViewer and BuffIconCooldownViewer.iconScale) or 1
+    local alignment = self:GetAlignment()
 
-    -- Inset that centers the `count` visible icons inside the `total`-slot footprint.
+    -- Offset the visible icons within the stable `total`-slot footprint. Disabled
+    -- preserves gaps left by inactive assigned buffs rather than packing the group.
     local missing = total - count
+    local function GetInset(step)
+        if alignment == "END" then
+            return missing * step
+        elseif alignment == "CENTER" then
+            return (missing / 2) * step
+        end
+        return 0
+    end
 
     if orientation == "Vertical" then
         local step = h + padding
-        local inset = (missing / 2) * step
+        local inset = GetInset(step)
         self.anchor:SetSize(w * iconScale, (total * h + (total - 1) * padding) * iconScale)
         for i, icon in ipairs(iconFrames) do
+            local position = alignment == "Disable" and (icon._cmcBuffContainerSlot or i) or i
             icon:ClearAllPoints()
             if reversed then
-                icon:SetPoint("BOTTOM", self.anchor, "BOTTOM", 0, inset + (i - 1) * step)
+                icon:SetPoint("BOTTOM", self.anchor, "BOTTOM", 0, inset + (position - 1) * step)
             else
-                icon:SetPoint("TOP", self.anchor, "TOP", 0, -(inset + (i - 1) * step))
+                icon:SetPoint("TOP", self.anchor, "TOP", 0, -(inset + (position - 1) * step))
             end
         end
     else
         local step = w + padding
-        local inset = (missing / 2) * step
+        local inset = GetInset(step)
         self.anchor:SetSize((total * w + (total - 1) * padding) * iconScale, h * iconScale)
         for i, icon in ipairs(iconFrames) do
+            local position = alignment == "Disable" and (icon._cmcBuffContainerSlot or i) or i
             icon:ClearAllPoints()
             if reversed then
-                icon:SetPoint("RIGHT", self.anchor, "RIGHT", -(inset + (i - 1) * step), 0)
+                icon:SetPoint("RIGHT", self.anchor, "RIGHT", -(inset + (position - 1) * step), 0)
             else
-                icon:SetPoint("LEFT", self.anchor, "LEFT", inset + (i - 1) * step, 0)
+                icon:SetPoint("LEFT", self.anchor, "LEFT", inset + (position - 1) * step, 0)
             end
         end
     end
@@ -151,6 +176,7 @@ function ContainerInstance:Create()
         orientation = "Horizontal",
         iconDirection = "Normal",
         iconPadding = DEFAULT_ICON_PADDING,
+        iconSize = DEFAULT_ICON_SIZE,
     }
     WilduUICore.LoadFrameConfig(self.configKey, DEFAULT_CONFIG)
 
@@ -205,6 +231,26 @@ function ContainerInstance:Create()
     local additionalSettings = {
         { kind = LEM.SettingType.Collapsible, id = "layout", name = "Layout", defaultCollapsed = false },
         {
+            name = "Alignment",
+            parentId = "layout",
+            kind = LEM.SettingType.Dropdown,
+            default = "Default",
+            get = function()
+                return GetConfigValue(configKey, "alignment", nil) or "Default"
+            end,
+            set = function(_layoutName, value)
+                ns.db.profile.editMode[configKey].alignment = value ~= "Default" and value or nil
+                RefreshLayout()
+            end,
+            values = {
+                { text = "Use |cff8ccd00Default|r", value = "Default" },
+                { text = "Grow from the |cff8ccd00Start|r", value = "START" },
+                { text = "Grow from |cff8ccd00Center|r", value = "CENTER" },
+                { text = "Grow from the |cff8ccd00End|r", value = "END" },
+                { text = "|cffff2020Disable|r centering", value = "Disable" },
+            },
+        },
+        {
             name = "Orientation",
             parentId = "layout",
             kind = LEM.SettingType.Dropdown,
@@ -239,6 +285,25 @@ function ContainerInstance:Create()
                 { text = "Normal" },
                 { text = "Reversed" },
             },
+        },
+        {
+            name = "Icon Size",
+            parentId = "layout",
+            kind = LEM.SettingType.Slider,
+            default = DEFAULT_ICON_SIZE,
+            get = function()
+                return instance:GetIconSize()
+            end,
+            set = function(_layoutName, value)
+                ns.db.profile.editMode[configKey].iconSize = value
+                RefreshLayout()
+            end,
+            minValue = 0.5,
+            maxValue = 2,
+            valueStep = 0.05,
+            formatter = function(value)
+                return string.format("%.0f%%", value * 100)
+            end,
         },
         {
             name = "Icon Padding",

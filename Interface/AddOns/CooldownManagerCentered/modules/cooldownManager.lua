@@ -165,6 +165,7 @@ end
 function ViewerAdapters.CollectBuffIcons()
     local baseVisible, baseTotal = {}, 0
     local containerVisible, containerTotal = {}, {}
+    local containerAssigned = {}
     if not BuffIconCooldownViewer then
         return baseVisible, baseTotal, containerVisible, containerTotal
     end
@@ -172,6 +173,7 @@ function ViewerAdapters.CollectBuffIcons()
     local children = BuffIconCooldownViewer:GetItemFrames()
     for _, child in ipairs(children) do
         if child and (child.icon or child.Icon) and child.layoutIndex ~= nil then
+            child._cmcBuffContainerSlot = nil
             if not ns.API:GetIsAffected(child, "cooldownManagerHooked") then
                 ns.API:SetAffected(child, "cooldownManagerHooked")
                 hooksecurefunc(child, "OnActiveStateChanged", ViewerAdapters.UpdateBuffIcons)
@@ -190,6 +192,12 @@ function ViewerAdapters.CollectBuffIcons()
                 -- so the container keeps a stable footprint and centers its visible
                 -- icons instead of collapsing to just the shown ones.
                 containerTotal[containerIndex] = (containerTotal[containerIndex] or 0) + 1
+                local assigned = containerAssigned[containerIndex]
+                if not assigned then
+                    assigned = {}
+                    containerAssigned[containerIndex] = assigned
+                end
+                assigned[#assigned + 1] = child
                 local group = containerVisible[containerIndex]
                 if not group then
                     group = {}
@@ -211,6 +219,12 @@ function ViewerAdapters.CollectBuffIcons()
         return (a.layoutIndex or 0) < (b.layoutIndex or 0)
     end
     table.sort(baseVisible, byLayoutIndex)
+    for _, assigned in pairs(containerAssigned) do
+        table.sort(assigned, byLayoutIndex)
+        for slot, child in ipairs(assigned) do
+            child._cmcBuffContainerSlot = slot
+        end
+    end
     for _, group in pairs(containerVisible) do
         table.sort(group, byLayoutIndex)
     end
@@ -287,6 +301,13 @@ function ViewerAdapters.LayoutBaseBuffRow(icons, total, forceLayout)
         alignment = "CENTER"
     end
     local padding = isHorizontal and BuffIconCooldownViewer.childXPadding or BuffIconCooldownViewer.childYPadding
+
+    -- Icons may have previously belonged to a custom container with its own size.
+    -- Restore the native viewer scale before placing them back in the base row.
+    iconScale = BuffIconCooldownViewer.iconScale or 1
+    for _, icon in ipairs(icons) do
+        icon:SetScale(iconScale)
+    end
 
     if isHorizontal then
         local offsets
@@ -449,6 +470,7 @@ local weirdSpellsWithoutGCD = {
     [232893] = true, -- Felblade
     [102401] = true, -- Wild Charge
     [106839] = true, -- Skull Bash
+    [358267] = true, -- Hover
 }
 local function GetDimCurveWeirdSpells(toDimOpacity)
     if _dimCurve and _dimCurveOpacity == toDimOpacity then
@@ -695,18 +717,6 @@ function ViewerAdapters.UpdateCDViewer(viewer, fromDirection)
 
     local children = ViewerAdapters.CollectViewerChildren(viewer)
     if fromDirection == "Disable" then
-        if ns.API:GetIsAffected(viewer, "aligned") and viewer.Layout then
-            ns.API:UnsetAffected(viewer, "aligned")
-            -- Layout() internally calls SetSize on the protected EditMode viewer,
-            -- which is blocked during combat lockdown. Guard like an explicit resize.
-            if not InCombatLockdown() then
-                viewer:Layout()
-            end
-        end
-        ViewerAdapters.UpdateViewerSizeIfChanged(viewer)
-        C_Timer.After(0, function()
-            ViewerAdapters.UpdateViewerSizeIfChanged(viewer)
-        end)
         return
     end
     if #children == 0 then
@@ -779,7 +789,6 @@ function ViewerAdapters.UpdateCDViewer(viewer, fromDirection)
             cumulativeOffset = cumulativeOffset + currentColWidth + padding
         end
     end
-    ns.API:SetAffected(viewer, "aligned")
     ViewerAdapters.UpdateViewerSizeIfChanged(viewer)
     C_Timer.After(0, function()
         ViewerAdapters.UpdateViewerSizeIfChanged(viewer)

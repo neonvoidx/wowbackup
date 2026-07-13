@@ -1,7 +1,6 @@
 # Talent Tree Tweaks
 
-## [v1.13.28](https://github.com/NumyAddon/TalentTreeTweaks/tree/v1.13.28) (2026-06-21)
-[Full Changelog](https://github.com/NumyAddon/TalentTreeTweaks/compare/v1.13.27...v1.13.28) [Previous Releases](https://github.com/NumyAddon/TalentTreeTweaks/releases)
+## [v1.13.29](https://github.com/NumyAddon/TalentTreeTweaks/tree/v1.13.29) (2026-07-08)
+[Full Changelog](https://github.com/NumyAddon/TalentTreeTweaks/compare/v1.13.28...v1.13.29) [Previous Releases](https://github.com/NumyAddon/TalentTreeTweaks/releases)
 
-- TOC Bump  
-- Initial changes for patch 12.1  
+- Check for new generic talent trees on level up (might fix #114 - Omnium Folio not auto-learning on level up)  

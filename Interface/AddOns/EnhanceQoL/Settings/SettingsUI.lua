@@ -21,6 +21,15 @@ addon.ConfigLastControlByPageID = addon.ConfigLastControlByPageID or {}
 addon.ConfigLastControlBySection = addon.ConfigLastControlBySection or {}
 addon.ConfigModernOnlySections = addon.ConfigModernOnlySections or {}
 addon.ConfigModernOnlySettings = true
+addon.ConfigProfileHubSections = addon.ConfigProfileHubSections or {}
+addon.ConfigSoundSharedMediaSections = addon.ConfigSoundSharedMediaSections or {}
+addon.ConfigSoundHubSections = addon.ConfigSoundHubSections or {}
+addon.ConfigEconomyHubSections = addon.ConfigEconomyHubSections or {}
+addon.ConfigSocialHubSections = addon.ConfigSocialHubSections or {}
+addon.ConfigGameplayHubSections = addon.ConfigGameplayHubSections or {}
+addon.ConfigGeneralHubSections = addon.ConfigGeneralHubSections or {}
+addon.ConfigInterfaceHubSections = addon.ConfigInterfaceHubSections or {}
+addon.ConfigSuiteHubSections = addon.ConfigSuiteHubSections or {}
 
 local rootCategoryMap = {
 	UI = "interface",
@@ -61,19 +70,23 @@ local SETTINGS_THEME_COLORS = {
 	panelBorder = { 0.38, 0.35, 0.28, 0.58 },
 	topbarBorder = { 0.38, 0.35, 0.28, 0.52 },
 
-	detailSectionBg = { 0.058, 0.061, 0.068, 0.94 },
+	detailSectionBg = { 0.180, 0.185, 0.200, 0.92 },
 	detailColumnBg = { 0.048, 0.051, 0.058, 0.92 },
 	detailSectionHeaderBg = { 0.070, 0.068, 0.060, 0.92 },
 	detailSectionBorder = { 0.34, 0.31, 0.25, 0.46 },
 	detailColumnBorder = { 0.30, 0.28, 0.23, 0.40 },
 
-	cardBg = { 0.056, 0.059, 0.066, 0.94 },
+	cardBg = { 0.190, 0.195, 0.210, 0.92 },
 	cardBgHover = { 0.105, 0.090, 0.060, 0.98 },
 	cardBorder = { 0.34, 0.31, 0.25, 0.46 },
 	cardBorderHover = { 0.84, 0.64, 0.24, 0.90 },
-	dashboardCardBg = { 0.058, 0.062, 0.070, 0.94 },
+	dashboardCardBg = { 0.205, 0.210, 0.225, 0.92 },
 	dashboardCardBgHover = { 0.106, 0.092, 0.062, 0.98 },
 	dashboardCardBorder = { 0.34, 0.31, 0.25, 0.46 },
+	searchResultBg = { 0.220, 0.225, 0.240, 0.96 },
+	searchResultBorder = { 0.48, 0.44, 0.34, 0.70 },
+	searchResultHoverBg = { 0.118, 0.105, 0.075, 0.98 },
+	searchResultHoverBorder = { 0.82, 0.63, 0.27, 0.86 },
 
 	rowBg = { 0.062, 0.065, 0.073, 0.72 },
 	rowBorder = { 0.32, 0.30, 0.25, 0.42 },
@@ -86,6 +99,14 @@ local SETTINGS_THEME_COLORS = {
 	buttonBorder = { 0.50, 0.45, 0.34, 0.82 },
 	buttonHoverBg = { 0.155, 0.120, 0.062, 0.98 },
 	buttonHoverBorder = { 0.78, 0.60, 0.26, 0.82 },
+	dropdownBg = { 0.030, 0.034, 0.040, 0.94 },
+	dropdownBorder = { 0.38, 0.42, 0.46, 0.72 },
+	dropdownHoverBg = { 0.075, 0.066, 0.046, 0.98 },
+	dropdownHoverBorder = { 0.88, 0.68, 0.28, 0.92 },
+	inputBg = { 0.026, 0.029, 0.034, 0.96 },
+	inputBorder = { 0.40, 0.43, 0.46, 0.72 },
+	inputFocusBg = { 0.045, 0.042, 0.034, 0.98 },
+	inputFocusBorder = { 0.88, 0.68, 0.28, 0.92 },
 	buttonTopbarBg = { 0.080, 0.076, 0.066, 0.94 },
 	buttonTopbarBorder = { 0.50, 0.45, 0.34, 0.82 },
 	buttonTopbarHoverBg = { 0.158, 0.122, 0.062, 0.98 },
@@ -104,6 +125,77 @@ local SETTINGS_THEME_COLORS = {
 	accent = { 1.00, 0.78, 0.28, 1 },
 	topbarAccent = { 0.95, 0.90, 0.78, 1 },
 	success = { 0.34, 0.78, 0.44, 1 },
+}
+
+local SETTINGS_THEME_TEXTURES = {
+	button = {
+		texture = "Interface\\AddOns\\EnhanceQoL\\libs\\LibSettingsDesigner\\Assets\\LibSettingsDesigner_Superellipse.tga",
+		inset = 1,
+		borderInset = 0,
+		capRatio = 0.5,
+		replaceBackdrop = true,
+		borderAlpha = 0,
+	},
+	dropdownControl = {
+		texture = "Interface\\AddOns\\EnhanceQoL\\libs\\LibSettingsDesigner\\Assets\\LibSettingsDesigner_Superellipse.tga",
+		inset = 2,
+		borderInset = 0,
+		capRatio = 0.5,
+		replaceBackdrop = true,
+		borderAlpha = 0,
+		fillLayer = "BORDER",
+		fillSubLevel = 1,
+		borderLayer = "BACKGROUND",
+		borderSubLevel = 0,
+	},
+	toggle = {
+		texture = "Interface\\AddOns\\EnhanceQoL\\libs\\LibSettingsDesigner\\Assets\\LibSettingsDesigner_Superellipse.tga",
+		inset = 1,
+		borderInset = 0,
+		capRatio = 0.5,
+		replaceBackdrop = true,
+		borderAlpha = 0,
+		fillLayer = "BORDER",
+		fillSubLevel = 1,
+		borderLayer = "BACKGROUND",
+		borderSubLevel = 0,
+	},
+	toggleKnob = {
+		texture = "Interface\\AddOns\\EnhanceQoL\\libs\\LibSettingsDesigner\\Assets\\LibSettingsDesigner_Superellipse.tga",
+		inset = 1,
+		borderInset = 0,
+		capRatio = 0.5,
+		replaceBackdrop = true,
+		borderAlpha = 0,
+		fillLayer = "BORDER",
+		fillSubLevel = 1,
+		borderLayer = "BACKGROUND",
+		borderSubLevel = 0,
+	},
+	inputControl = {
+		texture = "Interface\\AddOns\\EnhanceQoL\\libs\\LibSettingsDesigner\\Assets\\LibSettingsDesigner_Superellipse.tga",
+		inset = 2,
+		borderInset = 0,
+		capRatio = 0.5,
+		replaceBackdrop = true,
+		borderAlpha = 0,
+		fillLayer = "BORDER",
+		fillSubLevel = 1,
+		borderLayer = "BACKGROUND",
+		borderSubLevel = 0,
+	},
+	statusChip = {
+		texture = "Interface\\AddOns\\EnhanceQoL\\libs\\LibSettingsDesigner\\Assets\\LibSettingsDesigner_Superellipse.tga",
+		inset = 1,
+		borderInset = 0,
+		capRatio = 0.5,
+		replaceBackdrop = true,
+		borderAlpha = 0,
+		fillLayer = "BORDER",
+		fillSubLevel = 1,
+		borderLayer = "BACKGROUND",
+		borderSubLevel = 0,
+	},
 }
 
 local function getLocaleKeyForText(text)
@@ -145,6 +237,7 @@ local pageIconKeysByStableID = {
 	InstantMessenger = "instantmessenger",
 	Loot = "loot",
 	MacrosConsumables = "macros",
+	Markers = "markers",
 	Mailbox = "mailbox",
 	MapNavigation = "map",
 	MouseAccessibility = "mouseaccessibility",
@@ -159,6 +252,7 @@ local pageIconKeysByStableID = {
 	ProfilesGlobalFont = "settingspage",
 	ProfilesHBP = "healerbuffplacementprofile",
 	ProfilesImportProtection = "importexport",
+	ProfilesMythicPlusTimer = "dungeons",
 	ProfilesResourceBars = "resource",
 	Questing = "questing",
 	ResourceBars = "resource",
@@ -227,6 +321,7 @@ local pageDescriptionKeysByStableID = {
 	ProfilesGlobalFont = "configCenterPageCardDescProfilesGlobalFont",
 	ProfilesHBP = "configCenterPageCardDescProfilesHealerBuffPlacement",
 	ProfilesImportProtection = "configCenterPageCardDescProfilesImportProtection",
+	ProfilesMythicPlusTimer = "configCenterPageCardDescProfilesMythicPlusTimer",
 	ProfilesResourceBars = "configCenterPageCardDescProfilesResourceBars",
 	Questing = "configCenterPageCardDescQuesting",
 	ResourceBars = "configCenterPageCardDescBarsResources",
@@ -248,6 +343,250 @@ local pageDescriptionKeysByStableID = {
 	VendorsServices = "configCenterPageCardDescRepairOptions",
 	VisibilityFrames = "configCenterPageCardDescVisibilityFrames",
 }
+
+local profileHubPageID = "profiles.feature-profiles"
+local profileHubSectionOrderByStableID = {
+	ProfilesBagsCategories = 10,
+	ProfilesDamageMeter = 20,
+	ProfilesHBP = 30,
+	ProfilesMythicPlusTimer = 40,
+	ProfilesResourceBars = 50,
+	UFProfiles = 60,
+}
+
+local profileStandalonePageOrderByStableID = {
+	ProfilesAddOn = 10,
+	DurationText = 20,
+	ProfilesGlobalFont = 30,
+	ProfilesImportProtection = 40,
+}
+
+local soundSharedMediaPageID = "sound.shared-media"
+local soundSharedMediaSectionOrderByStableID = {
+	SharedMedia = 10,
+	SharedMediaDeepVoiceSounds = 20,
+}
+
+local soundAudioEventsPageID = "sound.audio-events"
+local soundAudioEventsSectionOrderByStableID = {
+	SoundAudioDevice = 10,
+	SoundExtra = 20,
+}
+
+local soundStandalonePageOrderByStableID = {
+	SoundMute = 30,
+}
+
+local economyAuctionCraftingPageID = "economy.auction-crafting"
+local economyAuctionCraftingSectionOrderByStableID = {
+	AuctionHouse = 10,
+	EconomyCraftingOrders = 20,
+}
+
+local economyMerchantRepairPageID = "economy.merchant-repair"
+local economyMerchantRepairSectionOrderByStableID = {
+	Merchant = 10,
+	VendorsServices = 20,
+}
+
+local economySellingListsPageID = "economy.selling-lists"
+local economySellingListsSectionOrderByStableID = {
+	VendorQuickActions = 10,
+	VendorDestroyQueue = 20,
+	VendorIncludeExclude = 30,
+	AutoSellRules = 40,
+}
+
+local economyStandalonePageOrderByStableID = {
+	Bank = 20,
+}
+
+local socialChatMessagesPageID = "social.chat-messages"
+local socialChatMessagesSectionOrderByStableID = {
+	ChatWindow = 10,
+	ChatHistory = 20,
+	ChatBubbles = 30,
+	InstantMessenger = 40,
+}
+
+local socialContactsPrivacyPageID = "social.contacts-privacy"
+local socialContactsPrivacySectionOrderByStableID = {
+	FriendsCommunities = 10,
+	PrivacyBlockingIgnore = 20,
+}
+
+local socialStandalonePageOrderByStableID = {
+	Mailbox = 30,
+}
+
+local gameplayEncounterToolsPageID = "gameplay.encounter-tools"
+local gameplayEncounterToolsSectionOrderByStableID = {
+	GroupToolsCombatAlerts = 10,
+	CombatLogging = 20,
+	DeathResurrect = 30,
+}
+
+local gameplayDungeonsMythicPlusPageID = "gameplay.dungeons-mythic-plus"
+local gameplayDungeonsMythicPlusSectionOrderByStableID = {
+	DungeonsMythicPlus = 10,
+	MythicPlusTimer = 20,
+	TalentReminder = 30,
+}
+
+local gameplayMarkersPageID = "gameplay.markers"
+local gameplayMarkersSectionOrderByStableID = {
+	GroupToolsFocusMarker = 10,
+	Markers = 20,
+}
+
+local gameplayTravelUtilityPageID = "gameplay.travel-utility"
+local gameplayTravelUtilitySectionOrderByStableID = {
+	MacrosConsumables = 10,
+	Teleports = 20,
+	AutoAcceptSummons = 30,
+}
+
+local gameplayStandalonePageOrderByStableID = {
+	DamageMeter = 10,
+	DungeonsMythicPlus = 20,
+	GroupFinder = 40,
+	Questing = 60,
+}
+
+local generalItemsRewardsPageID = "general.items-rewards"
+local generalItemsRewardsSectionOrderByStableID = {
+	ContainerActions = 10,
+	Loot = 20,
+	GearUpgrades = 30,
+}
+
+local generalUIBehaviorPageID = "general.ui-behavior"
+local generalUIBehaviorSectionOrderByStableID = {
+	DialogsConfirmations = 10,
+	MouseAccessibility = 20,
+	MouseCrosshair = 25,
+	PopupsAndUITweaks = 30,
+	UIUtilities = 40,
+}
+
+local interfaceActionBarsPageID = "interface.action-bars"
+local interfaceActionBarsSectionOrderByStableID = {
+	ActionBarsAndButtons = 10,
+	ActionTracker = 20,
+}
+
+local interfaceBarsCooldownsPageID = "interface.bars-cooldowns"
+local interfaceBarsCooldownsSectionOrderByStableID = {
+	CastbarsAndCooldowns = 10,
+	EQoLCastbar = 20,
+	CooldownPanels = 30,
+	BarsAndResources = 40,
+	ResourceBars = 50,
+}
+
+local interfaceFramesBuffsPageID = "interface.frames-buffs"
+local interfaceFramesBuffsSectionOrderByStableID = {
+	UnitFrames = 10,
+	VisibilityFrames = 20,
+	DefaultAuraContainers = 30,
+	ufStandalonePrivateAurasExpandable = 40,
+	ClassBuffReminder = 50,
+}
+
+local suiteUnitFramesPageID = "suites.customunitframes"
+local suiteStandalonePageOrder = 30
+local suiteUnitFramesSectionOrderByStableID = {
+	CustomUnitFrames = 10,
+}
+
+local interfacePanelsMapPageID = "interface.panels-map"
+local interfacePanelsMapSectionOrderByStableID = {
+	DataPanel = 10,
+	MapNavigation = 20,
+}
+
+local interfaceStandalonePageOrderByStableID = {
+	Mover = 50,
+	Nameplates = 60,
+	Skinner = 80,
+	Tooltip = 90,
+}
+
+local function isProfileHubStableID(stableID)
+	return stableID and profileHubSectionOrderByStableID[stableID] ~= nil
+end
+
+local function isSoundSharedMediaStableID(stableID)
+	return stableID and soundSharedMediaSectionOrderByStableID[stableID] ~= nil
+end
+
+local function isSoundAudioEventsStableID(stableID)
+	return stableID and soundAudioEventsSectionOrderByStableID[stableID] ~= nil
+end
+
+local function isEconomyAuctionCraftingStableID(stableID)
+	return stableID and economyAuctionCraftingSectionOrderByStableID[stableID] ~= nil
+end
+
+local function isEconomyMerchantRepairStableID(stableID)
+	return stableID and economyMerchantRepairSectionOrderByStableID[stableID] ~= nil
+end
+
+local function isEconomySellingListsStableID(stableID)
+	return stableID and economySellingListsSectionOrderByStableID[stableID] ~= nil
+end
+
+local function isSocialChatMessagesStableID(stableID)
+	return stableID and socialChatMessagesSectionOrderByStableID[stableID] ~= nil
+end
+
+local function isSocialContactsPrivacyStableID(stableID)
+	return stableID and socialContactsPrivacySectionOrderByStableID[stableID] ~= nil
+end
+
+local function isGameplayEncounterToolsStableID(stableID)
+	return stableID and gameplayEncounterToolsSectionOrderByStableID[stableID] ~= nil
+end
+
+local function isGameplayDungeonsMythicPlusStableID(stableID)
+	return stableID and gameplayDungeonsMythicPlusSectionOrderByStableID[stableID] ~= nil
+end
+
+local function isGameplayMarkersStableID(stableID)
+	return stableID and gameplayMarkersSectionOrderByStableID[stableID] ~= nil
+end
+
+local function isGameplayTravelUtilityStableID(stableID)
+	return stableID and gameplayTravelUtilitySectionOrderByStableID[stableID] ~= nil
+end
+
+local function isGeneralItemsRewardsStableID(stableID)
+	return stableID and generalItemsRewardsSectionOrderByStableID[stableID] ~= nil
+end
+
+local function isGeneralUIBehaviorStableID(stableID)
+	return stableID and generalUIBehaviorSectionOrderByStableID[stableID] ~= nil
+end
+
+local function isInterfaceActionBarsStableID(stableID)
+	return stableID and interfaceActionBarsSectionOrderByStableID[stableID] ~= nil
+end
+
+local function isInterfaceBarsCooldownsStableID(stableID)
+	return stableID and interfaceBarsCooldownsSectionOrderByStableID[stableID] ~= nil
+end
+
+local function isInterfaceFramesBuffsStableID(stableID)
+	return stableID and interfaceFramesBuffsSectionOrderByStableID[stableID] ~= nil
+end
+
+local function isInterfacePanelsMapStableID(stableID)
+	return stableID and interfacePanelsMapSectionOrderByStableID[stableID] ~= nil
+end
+
+local function isSuiteUnitFramesStableID(stableID)
+	return stableID and suiteUnitFramesSectionOrderByStableID[stableID] ~= nil
+end
 
 local function splitVersionBadge(version)
 	version = tostring(version or "")
@@ -409,10 +748,32 @@ local function ensureConfigApp()
 		addonFolder = addonName,
 		assetRoot = "Interface\\AddOns\\EnhanceQoL\\libs\\LibSettingsDesigner\\Assets\\",
 		colors = SETTINGS_THEME_COLORS,
+		textures = SETTINGS_THEME_TEXTURES,
+		dropdownStyle = "themed",
+		inputStyle = "themed",
+		backgroundTexture = "Interface\\AddOns\\EnhanceQoL\\Assets\\background_dark.tga",
+		backgroundAlpha = 0.9,
 		density = "compact",
 		showDensityButton = false,
+		sidePanel = false,
+		defaultControlColumns = 2,
+		settingRowStyle = "matrix",
 		subnav = {
 			enabled = true,
+		},
+		sidebar = {
+			featureNavigation = true,
+			search = true,
+			backgroundTexture = "Interface\\AddOns\\EnhanceQoL\\Assets\\background_gray.tga",
+			backgroundAlpha = 0.85,
+			rowHeight = 40,
+			pageRowHeight = 34,
+			sectionHeight = 24,
+			iconSize = 20,
+		},
+		content = {
+			backgroundTexture = "Interface\\AddOns\\EnhanceQoL\\Assets\\background_gray.tga",
+			backgroundAlpha = 0.85,
 		},
 		topbar = {
 			titleActions = {
@@ -667,14 +1028,14 @@ local function ensureConfigApp()
 		end,
 	})
 
-	app:RegisterCategory({ id = "interface", title = _G["INTERFACE_LABEL"] or "Interface", order = 100, iconAtlas = "hud-microbutton-character-up" })
-	app:RegisterCategory({ id = "general", title = _G["GENERAL"] or "General", order = 200, iconAtlas = "communities-icon-chat" })
-	app:RegisterCategory({ id = "gameplay", title = _G["SETTING_GROUP_GAMEPLAY"] or "Gameplay", order = 300, iconAtlas = "bags-button-autosort-up" })
-	app:RegisterCategory({ id = "social", title = _G["SOCIAL_LABEL"] or L["configCenterChatSocial"] or "Chat & Social", order = 400, iconAtlas = "socialqueuing-icon-group" })
-	app:RegisterCategory({ id = "economy", title = L["Economy"] or "Economy", order = 500, iconAtlas = "auctionhouse-icon-favorite" })
-	app:RegisterCategory({ id = "sound", title = _G["SOUND"] or "Sound", order = 600, iconAtlas = "poi-door-arrow-down" })
-	app:RegisterCategory({ id = "suites", title = L["configCenterSuites"] or "EQoL Suites", order = 700, iconAtlas = "communities-icon-notification" })
-	app:RegisterCategory({ id = "profiles", title = L["Profiles"] or "Profiles", order = 800, iconAtlas = "services-icon-warning" })
+	app:RegisterCategory({ id = "interface", title = _G["INTERFACE_LABEL"] or "Interface", order = 100, iconAtlas = "hud-microbutton-character-up", sidebarSection = "Interface" })
+	app:RegisterCategory({ id = "general", title = _G["GENERAL"] or "General", order = 200, iconAtlas = "communities-icon-chat", sidebarSection = _G["GENERAL"] or "General" })
+	app:RegisterCategory({ id = "gameplay", title = _G["SETTING_GROUP_GAMEPLAY"] or "Gameplay", order = 300, iconAtlas = "bags-button-autosort-up", sidebarSection = _G["SETTING_GROUP_GAMEPLAY"] or "Gameplay" })
+	app:RegisterCategory({ id = "social", title = _G["SOCIAL_LABEL"] or L["configCenterChatSocial"] or "Chat & Social", order = 400, iconAtlas = "socialqueuing-icon-group", sidebarSection = _G["SOCIAL_LABEL"] or L["configCenterChatSocial"] or "Chat & Social" })
+	app:RegisterCategory({ id = "economy", title = L["Economy"] or "Economy", order = 500, iconAtlas = "auctionhouse-icon-favorite", sidebarSection = L["Economy"] or "Economy" })
+	app:RegisterCategory({ id = "sound", title = _G["SOUND"] or "Sound", order = 600, iconAtlas = "poi-door-arrow-down", sidebarSection = _G["SOUND"] or "Sound" })
+	app:RegisterCategory({ id = "suites", title = L["configCenterSuites"] or "EQoL Suites", order = 700, iconAtlas = "communities-icon-notification", sidebarSection = L["configCenterSuites"] or "EQoL Suites" })
+	app:RegisterCategory({ id = "profiles", title = L["Profiles"] or "Profiles", order = 800, iconAtlas = "services-icon-warning", sidebarSection = L["Profiles"] or "Profiles" })
 	app:RegisterPage({
 		id = "help.quick-reference",
 		title = L["configCenterQuickReference"],
@@ -718,6 +1079,617 @@ local function ensureConfigApp()
 
 	addon.ConfigApp = app
 	return app
+end
+
+local function ensureProfileHubPage(app)
+	if not app then return nil end
+	app:RegisterPage({
+		id = profileHubPageID,
+		category = "profiles",
+		title = L["configCenterFeatureProfiles"] or "Feature Profiles",
+		iconKey = "profiles",
+		order = 40,
+		legacy = true,
+		groupSort = "title",
+	})
+	return profileHubPageID
+end
+
+local function registerProfileHubSection(app, section, cbData, stableID)
+	if not (app and section and stableID) then return nil end
+	local pageID = ensureProfileHubPage(app)
+	if not pageID then return nil end
+	local groupID = "profile-" .. ConfigLib:NormalizeID(stableID)
+	local groupTitle = cbData and (cbData.name or cbData.title or cbData.text) or stableID
+	app:RegisterGroup(pageID, {
+		id = groupID,
+		title = groupTitle,
+		order = profileHubSectionOrderByStableID[stableID] or (cbData and cbData.order) or 500,
+	})
+	app.legacySections[section] = pageID
+	addon.ConfigProfileHubSections[section] = true
+	addon.ConfigCurrentGroupBySection[section] = groupID
+	addon.ConfigGroupTitleBySection[section] = groupTitle
+	addon.ConfigGroupOrderByPageID[pageID] = addon.ConfigGroupOrderByPageID[pageID] or 0
+	return pageID
+end
+
+local function ensureSoundSharedMediaPage(app, title)
+	if not app then return nil end
+	local existingPage = app.GetPage and app:GetPage(soundSharedMediaPageID)
+	app:RegisterPage({
+		id = soundSharedMediaPageID,
+		category = "sound",
+		title = (existingPage and existingPage.title) or title or "Shared Media",
+		iconKey = "soundsettings",
+		order = 30,
+		legacy = true,
+		groupSort = "title",
+	})
+	return soundSharedMediaPageID
+end
+
+local function registerSoundSharedMediaSection(app, section, cbData, stableID)
+	if not (app and section and stableID) then return nil end
+	local pageID = ensureSoundSharedMediaPage(app, cbData and (cbData.name or cbData.title))
+	if not pageID then return nil end
+	local groupID = "sound-media-" .. ConfigLib:NormalizeID(stableID)
+	local groupTitle = cbData and (cbData.name or cbData.title or cbData.text) or stableID
+	app:RegisterGroup(pageID, {
+		id = groupID,
+		title = groupTitle,
+		order = soundSharedMediaSectionOrderByStableID[stableID] or (cbData and cbData.order) or 500,
+	})
+	app.legacySections[section] = pageID
+	addon.ConfigSoundSharedMediaSections[section] = true
+	addon.ConfigSoundHubSections[section] = true
+	addon.ConfigCurrentGroupBySection[section] = groupID
+	addon.ConfigGroupTitleBySection[section] = groupTitle
+	addon.ConfigGroupOrderByPageID[pageID] = addon.ConfigGroupOrderByPageID[pageID] or 0
+	return pageID
+end
+
+local function ensureSoundAudioEventsPage(app)
+	if not app then return nil end
+	app:RegisterPage({
+		id = soundAudioEventsPageID,
+		category = "sound",
+		title = L["soundAudioEventsSection"] or "Audio & Events",
+		iconKey = "soundsettings",
+		order = 10,
+		legacy = true,
+		groupSort = "title",
+	})
+	return soundAudioEventsPageID
+end
+
+local function registerSoundAudioEventsSection(app, section, cbData, stableID)
+	if not (app and section and stableID) then return nil end
+	local pageID = ensureSoundAudioEventsPage(app)
+	if not pageID then return nil end
+	local groupID = "sound-audio-events-" .. ConfigLib:NormalizeID(stableID)
+	local groupTitle = cbData and (cbData.name or cbData.title or cbData.text) or stableID
+	app:RegisterGroup(pageID, {
+		id = groupID,
+		title = groupTitle,
+		order = soundAudioEventsSectionOrderByStableID[stableID] or (cbData and cbData.order) or 500,
+	})
+	app.legacySections[section] = pageID
+	addon.ConfigSoundHubSections[section] = true
+	addon.ConfigCurrentGroupBySection[section] = groupID
+	addon.ConfigGroupTitleBySection[section] = groupTitle
+	addon.ConfigGroupOrderByPageID[pageID] = addon.ConfigGroupOrderByPageID[pageID] or 0
+	return pageID
+end
+
+local function stripVendorPrefix(title)
+	title = tostring(title or "")
+	title = title:gsub("^Vendor%s*%-%s*", "")
+	title = title:gsub("^Händler%s*–%s*", "")
+	title = title:gsub("^Händler%s*%-%s*", "")
+	title = title:gsub("^Vendedor%s*%-%s*", "")
+	title = title:gsub("^Marchand%s*–%s*", "")
+	title = title:gsub("^Marchand%s*%-%s*", "")
+	title = title:gsub("^Mercante%s*–%s*", "")
+	title = title:gsub("^Mercante%s*%-%s*", "")
+	title = title:gsub("^상인%s*%-%s*", "")
+	title = title:gsub("^Торговец%s*—%s*", "")
+	title = title:gsub("^Торговец%s*%-%s*", "")
+	title = title:gsub("^商人%s*%-%s*", "")
+	return title
+end
+
+local function getEconomyHubGroupTitle(stableID, cbData)
+	if stableID == "VendorQuickActions" or stableID == "AutoSellRules" or stableID == "VendorDestroyQueue" or stableID == "VendorIncludeExclude" then
+		return stripVendorPrefix(cbData and (cbData.name or cbData.title or cbData.text) or stableID)
+	end
+	return cbData and (cbData.name or cbData.title or cbData.text) or stableID
+end
+
+local function ensureEconomyHubPage(app, pageID, title, iconKey, order)
+	if not app then return nil end
+	app:RegisterPage({
+		id = pageID,
+		category = "economy",
+		title = title,
+		iconKey = iconKey,
+		order = order,
+		legacy = true,
+		groupSort = "title",
+	})
+	return pageID
+end
+
+local function registerEconomyHubSection(app, section, cbData, stableID, pageID, pageTitle, iconKey, pageOrder, sectionOrderByStableID, groupPrefix)
+	if not (app and section and stableID and pageID) then return nil end
+	local resolvedPageID = ensureEconomyHubPage(app, pageID, pageTitle, iconKey, pageOrder)
+	if not resolvedPageID then return nil end
+	local groupID = groupPrefix .. ConfigLib:NormalizeID(stableID)
+	local groupTitle = getEconomyHubGroupTitle(stableID, cbData)
+	app:RegisterGroup(resolvedPageID, {
+		id = groupID,
+		title = groupTitle,
+		order = sectionOrderByStableID[stableID] or (cbData and cbData.order) or 500,
+	})
+	app.legacySections[section] = resolvedPageID
+	addon.ConfigEconomyHubSections[section] = true
+	addon.ConfigCurrentGroupBySection[section] = groupID
+	addon.ConfigGroupTitleBySection[section] = groupTitle
+	addon.ConfigGroupOrderByPageID[resolvedPageID] = addon.ConfigGroupOrderByPageID[resolvedPageID] or 0
+	return resolvedPageID
+end
+
+local function registerEconomyAuctionCraftingSection(app, section, cbData, stableID)
+	return registerEconomyHubSection(
+		app,
+		section,
+		cbData,
+		stableID,
+		economyAuctionCraftingPageID,
+		L["vendorSettingsAuctionCrafting"] or "Auction & Crafting",
+		"auction",
+		10,
+		economyAuctionCraftingSectionOrderByStableID,
+		"economy-auction-crafting-"
+	)
+end
+
+local function registerEconomyMerchantRepairSection(app, section, cbData, stableID)
+	return registerEconomyHubSection(
+		app,
+		section,
+		cbData,
+		stableID,
+		economyMerchantRepairPageID,
+		L["vendorSettingsMerchantRepair"] or "Merchant & Repair",
+		"vendorsservices",
+		30,
+		economyMerchantRepairSectionOrderByStableID,
+		"economy-merchant-repair-"
+	)
+end
+
+local function registerEconomySellingListsSection(app, section, cbData, stableID)
+	return registerEconomyHubSection(
+		app,
+		section,
+		cbData,
+		stableID,
+		economySellingListsPageID,
+		L["vendorSettingsSellingLists"] or "Selling & Lists",
+		"autosell",
+		40,
+		economySellingListsSectionOrderByStableID,
+		"economy-selling-lists-"
+	)
+end
+
+local function ensureSocialHubPage(app, pageID, title, iconKey, order)
+	if not app then return nil end
+	app:RegisterPage({
+		id = pageID,
+		category = "social",
+		title = title,
+		iconKey = iconKey,
+		order = order,
+		legacy = true,
+		groupSort = "title",
+	})
+	return pageID
+end
+
+local function registerSocialHubSection(app, section, cbData, stableID, pageID, pageTitle, iconKey, pageOrder, sectionOrderByStableID, groupPrefix)
+	if not (app and section and stableID and pageID) then return nil end
+	local resolvedPageID = ensureSocialHubPage(app, pageID, pageTitle, iconKey, pageOrder)
+	if not resolvedPageID then return nil end
+	local groupID = groupPrefix .. ConfigLib:NormalizeID(stableID)
+	local groupTitle = cbData and (cbData.name or cbData.title or cbData.text) or stableID
+	app:RegisterGroup(resolvedPageID, {
+		id = groupID,
+		title = groupTitle,
+		order = sectionOrderByStableID[stableID] or (cbData and cbData.order) or 500,
+	})
+	app.legacySections[section] = resolvedPageID
+	addon.ConfigSocialHubSections[section] = true
+	addon.ConfigCurrentGroupBySection[section] = groupID
+	addon.ConfigGroupTitleBySection[section] = groupTitle
+	addon.ConfigGroupOrderByPageID[resolvedPageID] = addon.ConfigGroupOrderByPageID[resolvedPageID] or 0
+	return resolvedPageID
+end
+
+local function registerSocialChatMessagesSection(app, section, cbData, stableID)
+	return registerSocialHubSection(
+		app,
+		section,
+		cbData,
+		stableID,
+		socialChatMessagesPageID,
+		L["socialSettingsChatMessages"] or "Chat & Messages",
+		"chat",
+		10,
+		socialChatMessagesSectionOrderByStableID,
+		"social-chat-messages-"
+	)
+end
+
+local function registerSocialContactsPrivacySection(app, section, cbData, stableID)
+	return registerSocialHubSection(
+		app,
+		section,
+		cbData,
+		stableID,
+		socialContactsPrivacyPageID,
+		L["socialSettingsContactsPrivacy"] or "Contacts & Privacy",
+		"community",
+		20,
+		socialContactsPrivacySectionOrderByStableID,
+		"social-contacts-privacy-"
+	)
+end
+
+local function ensureGameplayHubPage(app, pageID, title, iconKey, order)
+	if not app then return nil end
+	app:RegisterPage({
+		id = pageID,
+		category = "gameplay",
+		title = title,
+		iconKey = iconKey,
+		order = order,
+		legacy = true,
+		groupSort = "title",
+	})
+	return pageID
+end
+
+local function registerGameplayHubSection(app, section, cbData, stableID, pageID, pageTitle, iconKey, pageOrder, sectionOrderByStableID, groupPrefix)
+	if not (app and section and stableID and pageID) then return nil end
+	local resolvedPageID = ensureGameplayHubPage(app, pageID, pageTitle, iconKey, pageOrder)
+	if not resolvedPageID then return nil end
+	local groupID = groupPrefix .. ConfigLib:NormalizeID(stableID)
+	local groupTitle = cbData and (cbData.name or cbData.title or cbData.text) or stableID
+	app:RegisterGroup(resolvedPageID, {
+		id = groupID,
+		title = groupTitle,
+		order = sectionOrderByStableID[stableID] or (cbData and cbData.order) or 500,
+	})
+	app.legacySections[section] = resolvedPageID
+	addon.ConfigGameplayHubSections[section] = true
+	addon.ConfigCurrentGroupBySection[section] = groupID
+	addon.ConfigGroupTitleBySection[section] = groupTitle
+	addon.ConfigGroupOrderByPageID[resolvedPageID] = addon.ConfigGroupOrderByPageID[resolvedPageID] or 0
+	return resolvedPageID
+end
+
+local function registerGameplayEncounterToolsSection(app, section, cbData, stableID)
+	return registerGameplayHubSection(
+		app,
+		section,
+		cbData,
+		stableID,
+		gameplayEncounterToolsPageID,
+		L["gameplaySettingsEncounterTools"] or "Encounter Tools",
+		"combat",
+		30,
+		gameplayEncounterToolsSectionOrderByStableID,
+		"gameplay-encounter-tools-"
+	)
+end
+
+local function registerGameplayDungeonsMythicPlusSection(app, section, cbData, stableID)
+	return registerGameplayHubSection(
+		app,
+		section,
+		cbData,
+		stableID,
+		gameplayDungeonsMythicPlusPageID,
+		L["DungeonsMythicPlus"] or "Dungeons & Mythic+",
+		"dungeons",
+		20,
+		gameplayDungeonsMythicPlusSectionOrderByStableID,
+		"gameplay-dungeons-mythic-plus-"
+	)
+end
+
+local function registerGameplayMarkersSection(app, section, cbData, stableID)
+	return registerGameplayHubSection(
+		app,
+		section,
+		cbData,
+		stableID,
+		gameplayMarkersPageID,
+		L["gameplaySettingsMarkers"] or "Markers",
+		"markers",
+		50,
+		gameplayMarkersSectionOrderByStableID,
+		"gameplay-markers-"
+	)
+end
+
+local function registerGameplayTravelUtilitySection(app, section, cbData, stableID)
+	return registerGameplayHubSection(
+		app,
+		section,
+		cbData,
+		stableID,
+		gameplayTravelUtilityPageID,
+		L["gameplaySettingsTravelUtility"] or "Travel & Utility",
+		"teleports",
+		90,
+		gameplayTravelUtilitySectionOrderByStableID,
+		"gameplay-travel-utility-"
+	)
+end
+
+local function ensureGeneralHubPage(app, pageID, title, iconKey, order)
+	if not app then return nil end
+	app:RegisterPage({
+		id = pageID,
+		category = "general",
+		title = title,
+		iconKey = iconKey,
+		order = order,
+		legacy = true,
+		groupSort = "title",
+	})
+	return pageID
+end
+
+local function registerGeneralHubSection(app, section, cbData, stableID, pageID, pageTitle, iconKey, pageOrder, sectionOrderByStableID, groupPrefix)
+	if not (app and section and stableID and pageID) then return nil end
+	local resolvedPageID = ensureGeneralHubPage(app, pageID, pageTitle, iconKey, pageOrder)
+	if not resolvedPageID then return nil end
+	local groupID = groupPrefix .. ConfigLib:NormalizeID(stableID)
+	local groupTitle = cbData and (cbData.name or cbData.title or cbData.text) or stableID
+	app:RegisterGroup(resolvedPageID, {
+		id = groupID,
+		title = groupTitle,
+		order = sectionOrderByStableID[stableID] or (cbData and cbData.order) or 500,
+	})
+	app.legacySections[section] = resolvedPageID
+	addon.ConfigGeneralHubSections[section] = true
+	addon.ConfigCurrentGroupBySection[section] = groupID
+	addon.ConfigGroupTitleBySection[section] = groupTitle
+	addon.ConfigGroupOrderByPageID[resolvedPageID] = addon.ConfigGroupOrderByPageID[resolvedPageID] or 0
+	return resolvedPageID
+end
+
+local function registerGeneralItemsRewardsSection(app, section, cbData, stableID)
+	return registerGeneralHubSection(
+		app,
+		section,
+		cbData,
+		stableID,
+		generalItemsRewardsPageID,
+		L["generalSettingsItemsRewards"] or "Items & Rewards",
+		"loot",
+		10,
+		generalItemsRewardsSectionOrderByStableID,
+		"general-items-rewards-"
+	)
+end
+
+local function registerGeneralUIBehaviorSection(app, section, cbData, stableID)
+	return registerGeneralHubSection(
+		app,
+		section,
+		cbData,
+		stableID,
+		generalUIBehaviorPageID,
+		L["generalSettingsUIBehavior"] or "UI Behavior",
+		"uiutilities",
+		20,
+		generalUIBehaviorSectionOrderByStableID,
+		"general-ui-behavior-"
+	)
+end
+
+local function ensureInterfaceHubPage(app, pageID, title, iconKey, order)
+	if not app then return nil end
+	app:RegisterPage({
+		id = pageID,
+		category = "interface",
+		title = title,
+		iconKey = iconKey,
+		order = order,
+		legacy = true,
+		groupSort = "title",
+	})
+	return pageID
+end
+
+local function registerInterfaceHubSection(app, section, cbData, stableID, pageID, pageTitle, iconKey, pageOrder, sectionOrderByStableID, groupPrefix)
+	if not (app and section and stableID and pageID) then return nil end
+	local resolvedPageID = ensureInterfaceHubPage(app, pageID, pageTitle, iconKey, pageOrder)
+	if not resolvedPageID then return nil end
+	local groupID = groupPrefix .. ConfigLib:NormalizeID(stableID)
+	local groupTitle = cbData and (cbData.name or cbData.title or cbData.text) or stableID
+	app:RegisterGroup(resolvedPageID, {
+		id = groupID,
+		title = groupTitle,
+		order = sectionOrderByStableID[stableID] or (cbData and cbData.order) or 500,
+	})
+	app.legacySections[section] = resolvedPageID
+	addon.ConfigInterfaceHubSections[section] = true
+	addon.ConfigCurrentGroupBySection[section] = groupID
+	addon.ConfigGroupTitleBySection[section] = groupTitle
+	addon.ConfigGroupOrderByPageID[resolvedPageID] = addon.ConfigGroupOrderByPageID[resolvedPageID] or 0
+	return resolvedPageID
+end
+
+local function registerInterfaceActionBarsSection(app, section, cbData, stableID)
+	return registerInterfaceHubSection(
+		app,
+		section,
+		cbData,
+		stableID,
+		interfaceActionBarsPageID,
+		L["interfaceSettingsActionBars"] or "Action Bars",
+		"actionbar",
+		10,
+		interfaceActionBarsSectionOrderByStableID,
+		"interface-action-bars-"
+	)
+end
+
+local function registerInterfaceBarsCooldownsSection(app, section, cbData, stableID)
+	if stableID == "EQoLCastbar" then
+		local mergedData = {}
+		for key, value in pairs(cbData or {}) do
+			mergedData[key] = value
+		end
+		mergedData.name = L["CastbarsAndCooldowns"] or "Castbars & Cooldowns"
+		return registerInterfaceHubSection(
+			app,
+			section,
+			mergedData,
+			"CastbarsAndCooldowns",
+			interfaceBarsCooldownsPageID,
+			L["interfaceSettingsBarsCooldowns"] or "Bars & Cooldowns",
+			"castbar",
+			20,
+			interfaceBarsCooldownsSectionOrderByStableID,
+			"interface-bars-cooldowns-"
+		)
+	end
+	return registerInterfaceHubSection(
+		app,
+		section,
+		cbData,
+		stableID,
+		interfaceBarsCooldownsPageID,
+		L["interfaceSettingsBarsCooldowns"] or "Bars & Cooldowns",
+		"castbar",
+		20,
+		interfaceBarsCooldownsSectionOrderByStableID,
+		"interface-bars-cooldowns-"
+	)
+end
+
+local function registerInterfaceFramesBuffsSection(app, section, cbData, stableID)
+	return registerInterfaceHubSection(
+		app,
+		section,
+		cbData,
+		stableID,
+		interfaceFramesBuffsPageID,
+		L["interfaceSettingsFramesBuffs"] or "Frames & Buffs",
+		"unitframes",
+		40,
+		interfaceFramesBuffsSectionOrderByStableID,
+		"interface-frames-buffs-"
+	)
+end
+
+local function registerInterfacePanelsMapSection(app, section, cbData, stableID)
+	return registerInterfaceHubSection(
+		app,
+		section,
+		cbData,
+		stableID,
+		interfacePanelsMapPageID,
+		L["interfaceSettingsPanelsMap"] or "Panels & Map",
+		"data",
+		70,
+		interfacePanelsMapSectionOrderByStableID,
+		"interface-panels-map-"
+	)
+end
+
+local function ensureSuiteHubPage(app, pageID, title, iconKey, order)
+	if not app then return nil end
+	app:RegisterPage({
+		id = pageID,
+		category = "suites",
+		title = title,
+		iconKey = iconKey,
+		order = order,
+		legacy = true,
+		newTagID = "CustomUnitFrames",
+		groupSort = "title",
+	})
+	return pageID
+end
+
+local function registerSuiteHubSection(app, section, cbData, stableID, pageID, pageTitle, iconKey, pageOrder, sectionOrderByStableID, groupPrefix)
+	if not (app and section and stableID and pageID) then return nil end
+	local resolvedPageID = ensureSuiteHubPage(app, pageID, pageTitle, iconKey, pageOrder)
+	if not resolvedPageID then return nil end
+	local groupID = groupPrefix .. ConfigLib:NormalizeID(stableID)
+	local groupTitle = cbData and (cbData.name or cbData.title or cbData.text) or stableID
+	app:RegisterGroup(resolvedPageID, {
+		id = groupID,
+		title = groupTitle,
+		order = sectionOrderByStableID[stableID] or (cbData and cbData.order) or 500,
+	})
+	app.legacySections[section] = resolvedPageID
+	addon.ConfigSuiteHubSections[section] = true
+	addon.ConfigCurrentGroupBySection[section] = groupID
+	addon.ConfigGroupTitleBySection[section] = groupTitle
+	addon.ConfigGroupOrderByPageID[resolvedPageID] = addon.ConfigGroupOrderByPageID[resolvedPageID] or 0
+	return resolvedPageID
+end
+
+local function registerSuiteUnitFramesSection(app, section, cbData, stableID)
+	return registerSuiteHubSection(
+		app,
+		section,
+		cbData,
+		stableID,
+		suiteUnitFramesPageID,
+		L["CustomUnitFrames"] or "EQoL Unit Frames",
+		"unitframes",
+		30,
+		suiteUnitFramesSectionOrderByStableID,
+		"suite-unitframes-"
+	)
+end
+
+local function registerSectionHeaderControl(app, section, pageID, headerText, data)
+	if not (app and section and pageID and headerText) then return nil end
+	addon.ConfigControlOrder = (addon.ConfigControlOrder or 0) + 1
+	local groupID = (data and (data.groupID or data.modernGroup)) or addon.ConfigCurrentGroupBySection[section]
+	local groupTitle = (data and (data.groupTitle or data.groupName)) or addon.ConfigGroupTitleBySection[section]
+	app:RegisterLegacyControl({
+		parentSection = section,
+		pageID = pageID,
+		id = (data and data.id) or ("sectionheader." .. tostring(pageID or "page") .. "." .. tostring(addon.ConfigControlOrder)),
+		type = "sectionheader",
+		label = headerText,
+		icon = data and data.icon,
+		iconAtlas = data and data.iconAtlas,
+		iconTexCoord = data and data.iconTexCoord,
+		textColor = data and data.textColor,
+		hidden = data and data.hidden,
+		visible = data and data.visible,
+		isVisible = data and data.isVisible,
+		visibleWhen = data and data.visibleWhen,
+		hiddenWhen = data and data.hiddenWhen,
+		order = data and data.order or addon.ConfigControlOrder,
+		groupID = groupID,
+		groupTitle = groupTitle,
+		trackCustomized = false,
+	})
+	return nil
 end
 
 local function resolveLegacyPageID(app, cbData, category)
@@ -1053,6 +2025,8 @@ local function registerLegacyControl(category, cbData, controlType, setting)
 		dropdownValueFormatter = cbData.dropdownValueFormatter,
 		dropdownValues = cbData.dropdownValues,
 		generator = cbData.generator,
+		render = cbData.render,
+		getHeight = cbData.getHeight,
 		numeric = cbData.numeric,
 		placeholder = cbData.placeholder,
 		placeholderText = cbData.placeholderText,
@@ -1158,6 +2132,8 @@ local function createChildSetting(cat, parentElement, parentData, childData)
 	childData.isVisible = childData.isVisible or parentData.isVisible
 	childData.visibleWhen = childData.visibleWhen or parentData.visibleWhen
 	childData.hiddenWhen = childData.hiddenWhen or parentData.hiddenWhen
+	childData.groupID = childData.groupID or parentData.groupID
+	childData.groupTitle = childData.groupTitle or parentData.groupTitle or parentData.groupName
 	local sType = childData.sType or childData.type
 	if sType == "dropdown" then
 		addon.functions.SettingsCreateDropdown(cat, childData)
@@ -1170,7 +2146,13 @@ local function createChildSetting(cat, parentElement, parentData, childData)
 	elseif sType == "slider" then
 		addon.functions.SettingsCreateSlider(cat, childData)
 	elseif sType == "hint" then
-		addon.functions.SettingsCreateText(cat, childData.text, { parentSection = childData.parentSection })
+		addon.functions.SettingsCreateText(cat, childData.text, {
+			parentSection = childData.parentSection,
+			groupID = childData.groupID,
+			groupTitle = childData.groupTitle,
+		})
+	elseif sType == "sectionheader" then
+		addon.functions.SettingsCreateSectionHeader(cat, childData.text, childData)
 	elseif sType == "colorpicker" then
 		addon.functions.SettingsCreateColorPicker(cat, childData)
 	elseif sType == "button" then
@@ -1190,7 +2172,7 @@ function addon.functions.SettingsCreateCheckbox(cat, cbData)
 	local element = rememberModernOnlyElement(cbData.var, setting)
 	registerLegacyControl(cat, cbData, "toggle", setting)
 	if cbData.children then
-		for _, v in pairs(cbData.children) do
+		for _, v in ipairs(cbData.children) do
 			createChildSetting(cat, element, cbData, v)
 		end
 	end
@@ -1247,6 +2229,13 @@ function addon.functions.SettingsCreateInput(cat, cbData)
 	local setting = createModernOnlySetting(cbData.var, cbData)
 	local element = rememberModernOnlyElement(cbData.var, setting)
 	registerLegacyControl(cat, cbData, "input", setting)
+	return element
+end
+
+function addon.functions.SettingsCreateCustom(cat, cbData)
+	local key = cbData.var or cbData.id or cbData.text or cbData.name
+	local element = rememberModernOnlyElement(key)
+	registerLegacyControl(cat, cbData, "custom", nil)
 	return element
 end
 
@@ -1417,6 +2406,18 @@ function addon.functions.SettingsCreateHeadline(cat, text, extra)
 	if app and data and data.parentSection then
 		local resolvedSection = resolveConfigSection(data.parentSection)
 		local pageID = app.legacySections and app.legacySections[resolvedSection]
+		if
+			(addon.ConfigProfileHubSections and addon.ConfigProfileHubSections[resolvedSection])
+			or (addon.ConfigGeneralHubSections and addon.ConfigGeneralHubSections[resolvedSection])
+			or (addon.ConfigInterfaceHubSections and addon.ConfigInterfaceHubSections[resolvedSection])
+			or (
+				addon.ConfigGameplayHubSections
+				and addon.ConfigGameplayHubSections[resolvedSection]
+				and pageID ~= gameplayTravelUtilityPageID
+			)
+		then
+			return registerSectionHeaderControl(app, resolvedSection, pageID, headerText, data)
+		end
 		if pageID and app:GetPage(pageID) then
 			addon.ConfigGroupOrderByPageID[pageID] = (addon.ConfigGroupOrderByPageID[pageID] or 0) + 10
 			local groupID = data.groupID or data.modernGroup or ConfigLib:NormalizeID(headerText or "settings")
@@ -1425,12 +2426,27 @@ function addon.functions.SettingsCreateHeadline(cat, text, extra)
 				id = groupID,
 				title = groupTitle,
 				order = data.order or addon.ConfigGroupOrderByPageID[pageID],
+				column = data.groupColumn or data.groupLayoutColumn,
+				columns = data.groupColumns or data.groupControlColumns,
+				columnGap = data.groupColumnGap or data.groupControlColumnGap,
 			})
 			addon.ConfigCurrentGroupByPageID[pageID] = groupID
 			addon.ConfigGroupTitleByPageID[pageID] = groupTitle
 			addon.ConfigCurrentGroupBySection[resolvedSection] = groupID
 			addon.ConfigGroupTitleBySection[resolvedSection] = groupTitle
 		end
+	end
+	return nil
+end
+
+function addon.functions.SettingsCreateSectionHeader(cat, text, extra)
+	local data = type(text) == "table" and text or extra
+	local headerText = type(text) == "table" and (text.name or text.text or text.label or text.title) or text
+	local app = ensureConfigApp()
+	if app and data and data.parentSection then
+		local resolvedSection = resolveConfigSection(data.parentSection)
+		local pageID = app.legacySections and app.legacySections[resolvedSection]
+		if pageID and app:GetPage(pageID) then return registerSectionHeaderControl(app, resolvedSection, pageID, headerText, data) end
 	end
 	return nil
 end
@@ -1525,30 +2541,82 @@ function addon.functions.SettingsCreateExpandableSection(cat, cbData)
 	local app = ensureConfigApp()
 	if app then
 		local pageKey = cbData.configPageKey or cbData.newTagID or getLocaleKeyForText(cbData.name)
-		local pageID = app:RegisterLegacySection(section, {
-			category = cat,
-			categoryID = cbData.categoryID or cbData.modernCategory,
-			title = cbData.name,
-			pageID = cbData.configPageID,
-			pageKey = pageKey,
-			order = cbData.order,
-			description = cbData.description or cbData.desc,
-			icon = cbData.icon,
-			iconAtlas = cbData.iconAtlas,
-			iconKey = cbData.iconKey or pageIconKeysByStableID[pageKey] or pageIconKeysByStableID[cbData.newTagID],
-			mainToggleID = cbData.mainToggleID,
-			newTagID = cbData.newTagID,
-			visible = cbData.visible,
-			isVisible = cbData.isVisible,
-			visibleWhen = cbData.visibleWhen,
-			hiddenWhen = cbData.hiddenWhen,
-		})
+		local pageID
+		if (cbData.modernCategory == "interface" or isInterfaceActionBarsStableID(pageKey) or isInterfaceActionBarsStableID(cbData.newTagID)) and isInterfaceActionBarsStableID(pageKey or cbData.newTagID) then
+			pageID = registerInterfaceActionBarsSection(app, section, cbData, pageKey or cbData.newTagID)
+		elseif (cbData.modernCategory == "interface" or isInterfaceBarsCooldownsStableID(pageKey) or isInterfaceBarsCooldownsStableID(cbData.newTagID)) and isInterfaceBarsCooldownsStableID(pageKey or cbData.newTagID) then
+			pageID = registerInterfaceBarsCooldownsSection(app, section, cbData, pageKey or cbData.newTagID)
+		elseif (cbData.modernCategory == "interface" or isInterfaceFramesBuffsStableID(pageKey) or isInterfaceFramesBuffsStableID(cbData.newTagID)) and isInterfaceFramesBuffsStableID(pageKey or cbData.newTagID) then
+			pageID = registerInterfaceFramesBuffsSection(app, section, cbData, pageKey or cbData.newTagID)
+		elseif (cbData.modernCategory == "interface" or isInterfacePanelsMapStableID(pageKey) or isInterfacePanelsMapStableID(cbData.newTagID)) and isInterfacePanelsMapStableID(pageKey or cbData.newTagID) then
+			pageID = registerInterfacePanelsMapSection(app, section, cbData, pageKey or cbData.newTagID)
+		elseif (cbData.modernCategory == "general" or isGeneralItemsRewardsStableID(pageKey) or isGeneralItemsRewardsStableID(cbData.newTagID)) and isGeneralItemsRewardsStableID(pageKey or cbData.newTagID) then
+			pageID = registerGeneralItemsRewardsSection(app, section, cbData, pageKey or cbData.newTagID)
+		elseif (cbData.modernCategory == "general" or isGeneralUIBehaviorStableID(pageKey) or isGeneralUIBehaviorStableID(cbData.newTagID)) and isGeneralUIBehaviorStableID(pageKey or cbData.newTagID) then
+			pageID = registerGeneralUIBehaviorSection(app, section, cbData, pageKey or cbData.newTagID)
+		elseif (cbData.modernCategory == "gameplay" or isGameplayDungeonsMythicPlusStableID(pageKey) or isGameplayDungeonsMythicPlusStableID(cbData.newTagID)) and isGameplayDungeonsMythicPlusStableID(pageKey or cbData.newTagID) then
+			pageID = registerGameplayDungeonsMythicPlusSection(app, section, cbData, pageKey or cbData.newTagID)
+		elseif (cbData.modernCategory == "gameplay" or isGameplayEncounterToolsStableID(pageKey) or isGameplayEncounterToolsStableID(cbData.newTagID)) and isGameplayEncounterToolsStableID(pageKey or cbData.newTagID) then
+			pageID = registerGameplayEncounterToolsSection(app, section, cbData, pageKey or cbData.newTagID)
+		elseif (cbData.modernCategory == "gameplay" or isGameplayMarkersStableID(pageKey) or isGameplayMarkersStableID(cbData.newTagID)) and isGameplayMarkersStableID(pageKey or cbData.newTagID) then
+			pageID = registerGameplayMarkersSection(app, section, cbData, pageKey or cbData.newTagID)
+		elseif (cbData.modernCategory == "gameplay" or isGameplayTravelUtilityStableID(pageKey) or isGameplayTravelUtilityStableID(cbData.newTagID)) and isGameplayTravelUtilityStableID(pageKey or cbData.newTagID) then
+			pageID = registerGameplayTravelUtilitySection(app, section, cbData, pageKey or cbData.newTagID)
+		elseif (cbData.modernCategory == "social" or isSocialChatMessagesStableID(pageKey) or isSocialChatMessagesStableID(cbData.newTagID)) and isSocialChatMessagesStableID(pageKey or cbData.newTagID) then
+			pageID = registerSocialChatMessagesSection(app, section, cbData, pageKey or cbData.newTagID)
+		elseif (cbData.modernCategory == "social" or isSocialContactsPrivacyStableID(pageKey) or isSocialContactsPrivacyStableID(cbData.newTagID)) and isSocialContactsPrivacyStableID(pageKey or cbData.newTagID) then
+			pageID = registerSocialContactsPrivacySection(app, section, cbData, pageKey or cbData.newTagID)
+		elseif (cbData.modernCategory == "economy" or isEconomyAuctionCraftingStableID(pageKey) or isEconomyAuctionCraftingStableID(cbData.newTagID)) and isEconomyAuctionCraftingStableID(pageKey or cbData.newTagID) then
+			pageID = registerEconomyAuctionCraftingSection(app, section, cbData, pageKey or cbData.newTagID)
+		elseif (cbData.modernCategory == "economy" or isEconomyMerchantRepairStableID(pageKey) or isEconomyMerchantRepairStableID(cbData.newTagID)) and isEconomyMerchantRepairStableID(pageKey or cbData.newTagID) then
+			pageID = registerEconomyMerchantRepairSection(app, section, cbData, pageKey or cbData.newTagID)
+		elseif (cbData.modernCategory == "economy" or isEconomySellingListsStableID(pageKey) or isEconomySellingListsStableID(cbData.newTagID)) and isEconomySellingListsStableID(pageKey or cbData.newTagID) then
+			pageID = registerEconomySellingListsSection(app, section, cbData, pageKey or cbData.newTagID)
+		elseif (cbData.modernCategory == "sound" or isSoundAudioEventsStableID(pageKey) or isSoundAudioEventsStableID(cbData.newTagID)) and isSoundAudioEventsStableID(pageKey or cbData.newTagID) then
+			pageID = registerSoundAudioEventsSection(app, section, cbData, pageKey or cbData.newTagID)
+		elseif (cbData.modernCategory == "sound" or isSoundSharedMediaStableID(pageKey) or isSoundSharedMediaStableID(cbData.newTagID)) and isSoundSharedMediaStableID(pageKey or cbData.newTagID) then
+			pageID = registerSoundSharedMediaSection(app, section, cbData, pageKey or cbData.newTagID)
+		elseif (cbData.modernCategory == "profiles" or isProfileHubStableID(pageKey) or isProfileHubStableID(cbData.newTagID)) and isProfileHubStableID(pageKey or cbData.newTagID) then
+			pageID = registerProfileHubSection(app, section, cbData, pageKey or cbData.newTagID)
+		elseif (cbData.modernCategory == "suites" or isSuiteUnitFramesStableID(pageKey) or isSuiteUnitFramesStableID(cbData.newTagID)) and isSuiteUnitFramesStableID(pageKey or cbData.newTagID) then
+			pageID = registerSuiteUnitFramesSection(app, section, cbData, pageKey or cbData.newTagID)
+		else
+			pageID = app:RegisterLegacySection(section, {
+				category = cat,
+				categoryID = cbData.categoryID or cbData.modernCategory,
+				title = cbData.name,
+				pageID = cbData.configPageID,
+				pageKey = pageKey,
+				order = cbData.order
+					or profileStandalonePageOrderByStableID[pageKey]
+					or soundStandalonePageOrderByStableID[pageKey]
+					or economyStandalonePageOrderByStableID[pageKey]
+					or socialStandalonePageOrderByStableID[pageKey]
+					or gameplayStandalonePageOrderByStableID[pageKey]
+					or interfaceStandalonePageOrderByStableID[pageKey]
+					or (cbData.modernCategory == "suites" and suiteStandalonePageOrder),
+				description = cbData.description or cbData.desc,
+				icon = cbData.icon,
+				iconAtlas = cbData.iconAtlas,
+				iconKey = cbData.iconKey or pageIconKeysByStableID[pageKey] or pageIconKeysByStableID[cbData.newTagID],
+				mainToggleID = cbData.mainToggleID,
+				newTagID = cbData.newTagID,
+				visible = cbData.visible,
+				isVisible = cbData.isVisible,
+				visibleWhen = cbData.visibleWhen,
+				hiddenWhen = cbData.hiddenWhen,
+				sortGroups = cbData.sortGroups,
+				sortPageGroups = cbData.sortPageGroups,
+			})
+		end
 		if pageID then
-			addon.ConfigCurrentGroupByPageID[pageID] = nil
-			addon.ConfigGroupTitleByPageID[pageID] = nil
+			if not ((addon.ConfigProfileHubSections and addon.ConfigProfileHubSections[section]) or (addon.ConfigSoundHubSections and addon.ConfigSoundHubSections[section]) or (addon.ConfigEconomyHubSections and addon.ConfigEconomyHubSections[section]) or (addon.ConfigSocialHubSections and addon.ConfigSocialHubSections[section]) or (addon.ConfigGameplayHubSections and addon.ConfigGameplayHubSections[section]) or (addon.ConfigGeneralHubSections and addon.ConfigGeneralHubSections[section]) or (addon.ConfigInterfaceHubSections and addon.ConfigInterfaceHubSections[section]) or (addon.ConfigSuiteHubSections and addon.ConfigSuiteHubSections[section])) then
+				addon.ConfigCurrentGroupByPageID[pageID] = nil
+				addon.ConfigGroupTitleByPageID[pageID] = nil
+				addon.ConfigCurrentGroupBySection[section] = nil
+				addon.ConfigGroupTitleBySection[section] = nil
+			end
 			addon.ConfigGroupOrderByPageID[pageID] = 0
-			addon.ConfigCurrentGroupBySection[section] = nil
-			addon.ConfigGroupTitleBySection[section] = nil
 		end
 	end
 	return section

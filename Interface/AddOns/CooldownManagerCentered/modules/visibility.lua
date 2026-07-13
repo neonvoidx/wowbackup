@@ -22,6 +22,11 @@ for i = 1, (ns.CONSTANTS.MAX_TRACKERS or 10) do
     table.insert(viewers, { viewerName = "CMCTracker" .. i, settingsKey = "tracker" .. i })
 end
 
+local viewersByName = {}
+for _, viewerData in ipairs(viewers) do
+    viewersByName[viewerData.viewerName] = viewerData
+end
+
 -- Rules that map directly to macro conditionals supported by RegisterAttributeDriver.
 -- SHOW_IN_INSTANCE has no macro conditional equivalent and is handled via events.
 local RULE_CONDITIONALS = {
@@ -217,17 +222,6 @@ local EventFrame = CreateFrame("Frame")
 EventFrame:SetScript("OnEvent", function(self, event, ...)
     if event == "PLAYER_ENTERING_WORLD" then
         inInstance = IsInInstance()
-        -- Re-evaluate shortly after login/reload. When the attribute drivers are first
-        -- registered, state behind some hide rules (vehicle UI, resting, combat) isn't
-        -- settled yet, so the initial parse can read "show" for a viewer that should be
-        -- hidden. These two passes also correct a hidden viewer that another addon's
-        -- profile re-application briefly reset to full alpha. See CMCVisibility:Recheck.
-        C_Timer.After(1, function()
-            CMCVisibility:Recheck()
-        end)
-        C_Timer.After(4, function()
-            CMCVisibility:Recheck()
-        end)
     elseif event == "CLIENT_SCENE_OPENED" then
         local sceneType = ...
         miniGameSceneActive = (sceneType == 1)
@@ -251,17 +245,9 @@ function CMCVisibility:UpdateAll()
     end
 end
 
--- Re-parses each viewer's driver conditional against current (now-settled) state and
--- re-applies alpha. Unlike UpdateAll, which trusts the cached driverState, this forces
--- a fresh SecureCmdOptionParse so a stale "show" captured at driver-registration time
--- (before vehicle/resting/combat state settled) gets corrected. SecureCmdOptionParse is
--- a query, not combat-restricted, so this is safe to run any time.
-function CMCVisibility:Recheck()
-    for _, viewerData in ipairs(viewers) do
-        local rules = GetViewerRules(viewerData.viewerName)
-        if HasAnyHideRule(rules) then
-            driverState[viewerData.viewerName] = SecureCmdOptionParse(BuildConditionalString(rules)) or "show"
-        end
+function CMCVisibility:ReapplyViewer(viewerName)
+    local viewerData = viewerName and viewersByName[viewerName]
+    if viewerData then
         ApplyViewerAlpha(viewerData)
     end
 end
@@ -292,11 +278,13 @@ function CMCVisibility:Initialize(forceViewers)
 
     inInstance = IsInInstance()
     EventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+    EventFrame:RegisterEvent("EDIT_MODE_LAYOUTS_UPDATED")
     EventFrame:RegisterEvent("PLAYER_FLAGS_CHANGED")
     EventFrame:RegisterEvent("PLAYER_MOUNT_DISPLAY_CHANGED")
     EventFrame:RegisterEvent("CLIENT_SCENE_OPENED")
     EventFrame:RegisterEvent("CLIENT_SCENE_CLOSED")
     EventFrame:RegisterEvent("UPDATE_SHAPESHIFT_FORM")
+    EventFrame:RegisterEvent("UPDATE_INSTANCE_INFO")
 end
 
 function CMCVisibility:DeInitialize()

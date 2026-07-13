@@ -138,6 +138,7 @@ local function initResourceBarsDB()
 	init("repBarTextAbbreviateNumbers", repDefaults.abbreviateNumbers == true)
 	init("repBarHideInPetBattle", repDefaults.hideInPetBattle == true)
 	init("repBarHideBlizzardTracking", repDefaults.hideBlizzardTracking ~= false)
+	init("repBarAutoWatchGainedFaction", repDefaults.autoWatchGainedFaction == true)
 
 	if addon.Aura and addon.Aura.ReputationBar and addon.Aura.ReputationBar.OnSettingChanged then addon.Aura.ReputationBar:OnSettingChanged(addon.db.repBarEnabled) end
 

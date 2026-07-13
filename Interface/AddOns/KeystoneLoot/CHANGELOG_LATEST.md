@@ -1,5 +1,3 @@
 ## Other Changes
-- Update README and localization references for the Catalyst
-
-## Refactor
-- Clean up whitespace and formatting in multiple files
+- Update locales
+- Add Rotmire to Voidcore Database

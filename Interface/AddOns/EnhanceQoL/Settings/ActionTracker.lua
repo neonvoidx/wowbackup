@@ -177,6 +177,7 @@ function addon.functions.initActionTracker()
 		addon.db["actionTrackerShowInterruptedCasts"] = addon.db["actionTrackerShowFailedCasts"] == true
 	end
 	addon.functions.InitDBValue("actionTrackerShowInterruptedCasts", defaults.showInterruptedCasts or false)
+	addon.functions.InitDBValue("actionTrackerOnlyInCombat", defaults.onlyInCombat or false)
 	addon.functions.InitDBValue("actionTrackerIconShape", defaults.iconShape or "DEFAULT")
 	addon.functions.InitDBValue("actionTrackerIconZoom", defaults.iconZoom or 0)
 	addon.functions.InitDBValue("actionTrackerBorderEnabled", defaults.borderEnabled == true)

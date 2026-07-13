@@ -5,7 +5,8 @@
 
 local isRetail = sArenaMixin.isRetail
 local isMidnight = sArenaMixin.isMidnight
-local isMoP = sArenaMixin.isMoP
+local isTBC = sArenaMixin.isTBC
+local useHardcodedTrinketDuration = sArenaMixin.useHardcodedTrinketDuration
 local LSM = LibStub("LibSharedMedia-3.0")
 
 function sArenaFrameMixin:GetFactionTrinketIcon()
@@ -64,7 +65,7 @@ end
 
 -- Helper function to check if we should force trinket display for humans in MoP
 function sArenaFrameMixin:ShouldForceHumanTrinket()
-    return not isRetail and self.race == "Human" and self.parent.db.profile.forceShowTrinketOnHuman
+    return not isRetail and not isTBC and self.race == "Human" and self.parent.db.profile.forceShowTrinketOnHuman
 end
 
 function sArenaFrameMixin:UpdateTrinketIcon(available)
@@ -110,7 +111,7 @@ function sArenaFrameMixin:GetArenaCCInfo()
     if isMidnight then
         local durationObj = C_PvP.GetArenaCrowdControlDuration(unit)
         return durationObj
-    elseif isMoP then
+    elseif useHardcodedTrinketDuration then
         local spellID, startTime, duration = self.Trinket.spellID, GetTime(), 120
         return spellID, startTime, duration
     else

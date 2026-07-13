@@ -1,4 +1,4 @@
--- luacheck: globals SendMailFrame_SendMail SendMailFrame_Reset
+-- luacheck: globals SendMailFrame_SendMail SendMailFrame_Reset EQOLMailboxFrameSearchBox EQOLMailboxFrame_OnMouseDown EQOLMailboxFrame_OnMouseUp
 local parentAddonName = "EnhanceQoL"
 local addonName, addon = ...
 if _G[parentAddonName] then
@@ -52,6 +52,10 @@ Mailbox.rememberHooksAttached = Mailbox.rememberHooksAttached or false
 Mailbox.rememberEventFrame = Mailbox.rememberEventFrame or nil
 
 local ROW_HEIGHT = 20
+local DEFAULT_POINT = "TOPLEFT"
+local DEFAULT_RELATIVE_POINT = "TOPRIGHT"
+local DEFAULT_X = 6
+local DEFAULT_Y = 0
 -- Effective content width equals 222 (see XML). Allocate columns conservatively to avoid clipping
 local widths = { 130, 92 } -- name, server (sum=222)
 
@@ -61,12 +65,102 @@ local function ensureDB()
 		addon.functions.InitDBValue("enableMailboxAddressBook", false)
 		addon.functions.InitDBValue("mailboxContacts", {})
 		addon.functions.InitDBValue("mailboxRememberLastRecipient", false)
+		addon.functions.InitDBValue("mailboxAddressBookLocked", true)
+		addon.functions.InitDBValue("mailboxAddressBookPoint", DEFAULT_POINT)
+		addon.functions.InitDBValue("mailboxAddressBookRelativePoint", DEFAULT_RELATIVE_POINT)
+		addon.functions.InitDBValue("mailboxAddressBookX", DEFAULT_X)
+		addon.functions.InitDBValue("mailboxAddressBookY", DEFAULT_Y)
 	else
 		addon.db.enableMailboxAddressBook = addon.db.enableMailboxAddressBook or false
 		addon.db.mailboxContacts = addon.db.mailboxContacts or {}
 		addon.db.mailboxRememberLastRecipient = addon.db.mailboxRememberLastRecipient or false
+		if addon.db.mailboxAddressBookLocked == nil then addon.db.mailboxAddressBookLocked = true end
+		addon.db.mailboxAddressBookPoint = addon.db.mailboxAddressBookPoint or DEFAULT_POINT
+		addon.db.mailboxAddressBookRelativePoint = addon.db.mailboxAddressBookRelativePoint or DEFAULT_RELATIVE_POINT
+		addon.db.mailboxAddressBookX = addon.db.mailboxAddressBookX or DEFAULT_X
+		addon.db.mailboxAddressBookY = addon.db.mailboxAddressBookY or DEFAULT_Y
 	end
 	normalizeMailboxContacts()
+end
+
+local function updateLockButton()
+	local frame = Mailbox.frame
+	local button = frame and frame.lockButton
+	if not button then return end
+	if addon.db and addon.db.mailboxAddressBookLocked then
+		button.icon:SetTexture("Interface\\Addons\\EnhanceQoL\\Icons\\ClosedLock.tga")
+	else
+		button.icon:SetTexture("Interface\\Addons\\EnhanceQoL\\Icons\\OpenLock.tga")
+	end
+end
+
+local function applyMailboxPosition()
+	local frame = Mailbox.frame
+	if not frame then return end
+	ensureDB()
+
+	frame:ClearAllPoints()
+	if addon.db.mailboxAddressBookLocked or not MailFrame then
+		frame:SetPoint(DEFAULT_POINT, MailFrame or UIParent, DEFAULT_RELATIVE_POINT, DEFAULT_X, DEFAULT_Y)
+		frame:SetMovable(false)
+	else
+		frame:SetPoint(
+			addon.db.mailboxAddressBookPoint or DEFAULT_POINT,
+			MailFrame,
+			addon.db.mailboxAddressBookRelativePoint or DEFAULT_RELATIVE_POINT,
+			addon.db.mailboxAddressBookX or DEFAULT_X,
+			addon.db.mailboxAddressBookY or DEFAULT_Y
+		)
+		frame:SetMovable(true)
+	end
+	updateLockButton()
+end
+
+local function saveMailboxPosition()
+	local frame = Mailbox.frame
+	if not (frame and addon.db and MailFrame) then return end
+	local left = frame:GetLeft()
+	local top = frame:GetTop()
+	local mailLeft = MailFrame:GetLeft()
+	local mailTop = MailFrame:GetTop()
+	if not (left and top and mailLeft and mailTop) then return end
+	addon.db.mailboxAddressBookPoint = "TOPLEFT"
+	addon.db.mailboxAddressBookRelativePoint = "TOPLEFT"
+	addon.db.mailboxAddressBookX = left - mailLeft
+	addon.db.mailboxAddressBookY = top - mailTop
+end
+
+function Mailbox:SetLocked(locked)
+	ensureDB()
+	addon.db.mailboxAddressBookLocked = locked and true or false
+	if not addon.db.mailboxAddressBookLocked then saveMailboxPosition() end
+	applyMailboxPosition()
+end
+
+function Mailbox:ToggleLocked()
+	ensureDB()
+	self:SetLocked(not addon.db.mailboxAddressBookLocked)
+end
+
+function Mailbox:StartMovingFrame(mouseButton)
+	if not (self.frame and addon.db) then return end
+	if mouseButton ~= "LeftButton" then return end
+	if not (IsShiftKeyDown and IsShiftKeyDown()) then return end
+	addon.db.mailboxAddressBookLocked = false
+	updateLockButton()
+	self.frame:SetMovable(true)
+	self.moving = true
+	self.frame:StartMoving()
+end
+
+function Mailbox:StopMovingFrame()
+	if not self.frame then return end
+	self.frame:StopMovingOrSizing()
+	if self.moving then
+		self.moving = false
+		saveMailboxPosition()
+		applyMailboxPosition()
+	end
 end
 
 local function getClassColor(class)
@@ -298,6 +392,7 @@ function Mailbox:UpdateVisibility()
 
 	local shouldShow = MailFrame:IsShown() and (SendMailFrame and SendMailFrame:IsShown())
 	if shouldShow then
+		applyMailboxPosition()
 		self.frame:Show()
 		-- Match MailFrame height to avoid awkward gaps
 		if MailFrame and self.frame then self.frame:SetHeight(MailFrame:GetHeight() or 430) end
@@ -554,6 +649,27 @@ function EQOLMailboxFrame_OnLoad(frame)
 	frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 	frame.title:SetPoint("TOP", frame, "TOP", 0, -6)
 	frame.title:SetText((L and L["MailboxWindowTitle"]) or "Address Book")
+
+	frame.lockButton = CreateFrame("Button", frame:GetName() .. "LockButton", frame)
+	frame.lockButton:SetSize(16, 16)
+	frame.lockButton:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -32, -6)
+	frame.lockButton.icon = frame.lockButton:CreateTexture(nil, "ARTWORK")
+	frame.lockButton.icon:SetAllPoints(frame.lockButton)
+	frame.lockButton:SetScript("OnClick", function()
+		if addon.Mailbox and addon.Mailbox.ToggleLocked then addon.Mailbox:ToggleLocked() end
+	end)
+	frame.lockButton:SetScript("OnEnter", function(self)
+		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+		if addon.db and addon.db.mailboxAddressBookLocked then
+			GameTooltip:SetText(L["frameUnlock"] or "Click to unlock this window. Hold Shift and drag to move; position is saved.")
+		else
+			GameTooltip:SetText(L["frameLock"] or "Click to lock this window to its default position.")
+		end
+		GameTooltip:Show()
+	end)
+	frame.lockButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+	updateLockButton()
+
 	frame.searchLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 	if Mailbox.searchBox then
 		frame.searchLabel:SetPoint("RIGHT", Mailbox.searchBox, "LEFT", -5, 0)
@@ -609,6 +725,7 @@ function EQOLMailboxFrame_OnLoad(frame)
 	BuildFiltered()
 	-- Ensure rows even if OnLoad sizing was 0
 	if not Mailbox.rows or #Mailbox.rows == 0 then RunNextFrame(mailboxEnsureRowsAndRefresh) end
+	applyMailboxPosition()
 	Mailbox:UpdateRows()
 	Mailbox:UpdateVisibility()
 end
@@ -617,8 +734,18 @@ end
 function EQOLMailboxFrame_OnShow(frame)
 	if not addon or not addon.Mailbox then return end
 	local mb = addon.Mailbox
+	applyMailboxPosition()
 	mb:EnsureRows()
 	mb:RefreshList(true)
+end
+
+function EQOLMailboxFrame_OnMouseDown(_, button)
+	if addon and addon.Mailbox and addon.Mailbox.StartMovingFrame then addon.Mailbox:StartMovingFrame(button) end
+	if EQOLMailboxFrameSearchBox then EQOLMailboxFrameSearchBox:ClearFocus() end
+end
+
+function EQOLMailboxFrame_OnMouseUp()
+	if addon and addon.Mailbox and addon.Mailbox.StopMovingFrame then addon.Mailbox:StopMovingFrame() end
 end
 
 -- Register a local login listener to add the player if enabled

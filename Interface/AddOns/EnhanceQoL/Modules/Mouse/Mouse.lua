@@ -29,6 +29,10 @@ local UnitChannelInfo = UnitChannelInfo
 local UnitExists = UnitExists
 local GetTime = GetTime
 local GetSpellCooldownInfo = (C_Spell and C_Spell.GetSpellCooldown) or GetSpellCooldown
+local EnableSpellRangeCheck = C_Spell and C_Spell.EnableSpellRangeCheck
+local IsSpellInRange = C_Spell and C_Spell.IsSpellInRange
+local GetSpecialization = C_SpecializationInfo and C_SpecializationInfo.GetSpecialization
+local GetSpecializationInfo = C_SpecializationInfo and C_SpecializationInfo.GetSpecializationInfo
 local issecretvalue = _G.issecretvalue
 local RING_FRAME_NAME = addonName .. "_MouseRingFrame"
 local CROSSHAIR_FRAME_NAME = addonName .. "_MouseCrosshairFrame"
@@ -98,6 +102,95 @@ local gcdStart = nil
 local gcdDuration = nil
 local gcdRate = nil
 local crosshairEditModeRegistered = false
+local crosshairRange = { spellID = nil, inRange = nil }
+local crosshairRangeSpecOptionsCache
+
+-- Dedicated range probes per specialization. These must remain real spells;
+-- the generic Attack spell (6603) is not a valid range probe for every class.
+local crosshairRangeSpellBySpec = {
+	[250] = 49998, -- Blood Death Knight: Death Strike
+	[251] = 49143, -- Frost Death Knight: Frost Strike
+	[252] = 49998, -- Unholy Death Knight: Death Strike
+	[577] = 162794, -- Havoc Demon Hunter: Chaos Strike
+	[581] = 228477, -- Vengeance Demon Hunter: Spirit Bomb
+	[1480] = 1245412, -- Devourer Demon Hunter
+	[102] = 5176, -- Balance Druid: Wrath
+	[103] = 22568, -- Feral Druid: Ferocious Bite
+	[104] = 33917, -- Guardian Druid
+	[105] = 8936, -- Restoration Druid: Regrowth
+	[1467] = 362969, -- Devastation Evoker: Azure Strike
+	[1468] = 361469, -- Preservation Evoker
+	[1473] = 395160, -- Augmentation Evoker
+	[253] = 217200, -- Beast Mastery Hunter
+	[254] = 19434, -- Marksmanship Hunter: Aimed Shot
+	[255] = 186270, -- Survival Hunter: Raptor Strike
+	[62] = 30451, -- Arcane Mage: Arcane Blast
+	[63] = 133, -- Fire Mage: Fireball
+	[64] = 116, -- Frost Mage: Frostbolt
+	[268] = 100780, -- Brewmaster Monk: Tiger Palm
+	[269] = 100780, -- Windwalker Monk: Tiger Palm
+	[270] = 116670, -- Mistweaver Monk: Vivify
+	[65] = 85673, -- Holy Paladin: Word of Glory
+	[66] = 275779, -- Protection Paladin
+	[70] = 383328, -- Retribution Paladin
+	[256] = 32379, -- Discipline Priest: Shadow Word: Death
+	[257] = 32379, -- Holy Priest: Shadow Word: Death
+	[258] = 32379, -- Shadow Priest: Shadow Word: Death
+	[259] = 703, -- Assassination Rogue
+	[260] = 1752, -- Outlaw Rogue: Sinister Strike
+	[261] = 196819, -- Subtlety Rogue
+	[262] = 188196, -- Elemental Shaman: Lightning Bolt
+	[263] = 17364, -- Enhancement Shaman: Stormstrike
+	[264] = 188196, -- Restoration Shaman: Lightning Bolt
+	[265] = 316099, -- Affliction Warlock
+	[266] = 264178, -- Demonology Warlock
+	[267] = 29722, -- Destruction Warlock
+	[71] = 12294, -- Arms Warrior: Mortal Strike
+	[72] = 23881, -- Fury Warrior: Bloodthirst
+	[73] = 23922, -- Protection Warrior: Shield Slam
+}
+local crosshairRangeSpecFallback = {
+	[250] = { classToken = "DEATHKNIGHT", label = "Death Knight - Blood", specName = "Blood" },
+	[251] = { classToken = "DEATHKNIGHT", label = "Death Knight - Frost", specName = "Frost" },
+	[252] = { classToken = "DEATHKNIGHT", label = "Death Knight - Unholy", specName = "Unholy" },
+	[577] = { classToken = "DEMONHUNTER", label = "Demon Hunter - Havoc", specName = "Havoc" },
+	[581] = { classToken = "DEMONHUNTER", label = "Demon Hunter - Vengeance", specName = "Vengeance" },
+	[1480] = { classToken = "DEMONHUNTER", label = "Demon Hunter - Devourer", specName = "Devourer" },
+	[102] = { classToken = "DRUID", label = "Druid - Balance", specName = "Balance" },
+	[103] = { classToken = "DRUID", label = "Druid - Feral", specName = "Feral" },
+	[104] = { classToken = "DRUID", label = "Druid - Guardian", specName = "Guardian" },
+	[105] = { classToken = "DRUID", label = "Druid - Restoration", specName = "Restoration" },
+	[1467] = { classToken = "EVOKER", label = "Evoker - Devastation", specName = "Devastation" },
+	[1468] = { classToken = "EVOKER", label = "Evoker - Preservation", specName = "Preservation" },
+	[1473] = { classToken = "EVOKER", label = "Evoker - Augmentation", specName = "Augmentation" },
+	[253] = { classToken = "HUNTER", label = "Hunter - Beast Mastery", specName = "Beast Mastery" },
+	[254] = { classToken = "HUNTER", label = "Hunter - Marksmanship", specName = "Marksmanship" },
+	[255] = { classToken = "HUNTER", label = "Hunter - Survival", specName = "Survival" },
+	[62] = { classToken = "MAGE", label = "Mage - Arcane", specName = "Arcane" },
+	[63] = { classToken = "MAGE", label = "Mage - Fire", specName = "Fire" },
+	[64] = { classToken = "MAGE", label = "Mage - Frost", specName = "Frost" },
+	[268] = { classToken = "MONK", label = "Monk - Brewmaster", specName = "Brewmaster" },
+	[269] = { classToken = "MONK", label = "Monk - Windwalker", specName = "Windwalker" },
+	[270] = { classToken = "MONK", label = "Monk - Mistweaver", specName = "Mistweaver" },
+	[65] = { classToken = "PALADIN", label = "Paladin - Holy", specName = "Holy" },
+	[66] = { classToken = "PALADIN", label = "Paladin - Protection", specName = "Protection" },
+	[70] = { classToken = "PALADIN", label = "Paladin - Retribution", specName = "Retribution" },
+	[256] = { classToken = "PRIEST", label = "Priest - Discipline", specName = "Discipline" },
+	[257] = { classToken = "PRIEST", label = "Priest - Holy", specName = "Holy" },
+	[258] = { classToken = "PRIEST", label = "Priest - Shadow", specName = "Shadow" },
+	[259] = { classToken = "ROGUE", label = "Rogue - Assassination", specName = "Assassination" },
+	[260] = { classToken = "ROGUE", label = "Rogue - Outlaw", specName = "Outlaw" },
+	[261] = { classToken = "ROGUE", label = "Rogue - Subtlety", specName = "Subtlety" },
+	[262] = { classToken = "SHAMAN", label = "Shaman - Elemental", specName = "Elemental" },
+	[263] = { classToken = "SHAMAN", label = "Shaman - Enhancement", specName = "Enhancement" },
+	[264] = { classToken = "SHAMAN", label = "Shaman - Restoration", specName = "Restoration" },
+	[265] = { classToken = "WARLOCK", label = "Warlock - Affliction", specName = "Affliction" },
+	[266] = { classToken = "WARLOCK", label = "Warlock - Demonology", specName = "Demonology" },
+	[267] = { classToken = "WARLOCK", label = "Warlock - Destruction", specName = "Destruction" },
+	[71] = { classToken = "WARRIOR", label = "Warrior - Arms", specName = "Arms" },
+	[72] = { classToken = "WARRIOR", label = "Warrior - Fury", specName = "Fury" },
+	[73] = { classToken = "WARRIOR", label = "Warrior - Protection", specName = "Protection" },
+}
 local lastRingCursorX = nil
 local lastRingCursorY = nil
 local lastRingCursorScale = nil
@@ -562,6 +655,101 @@ local function getCrosshairColor()
 	local c = addon.db["mouseCrosshairColor"]
 	if c then return c.r, c.g, c.b end
 	return 1, 1, 1
+end
+
+local function getCrosshairOutOfRangeColor()
+	local c = addon.db["mouseCrosshairOutOfRangeColor"]
+	if c then return c.r, c.g, c.b end
+	return 1, 0.2, 0.2
+end
+
+local function getCrosshairRangeSpecOptions()
+	if crosshairRangeSpecOptionsCache then return crosshairRangeSpecOptionsCache end
+	local options = {}
+	local seen = {}
+	local sex = _G.UnitSex and _G.UnitSex("player") or nil
+	local getSpecForClass = _G.GetSpecializationInfoForClassID
+	local getNumSpecs = C_SpecializationInfo and C_SpecializationInfo.GetNumSpecializationsForClassID
+	if _G.GetNumClasses and _G.GetClassInfo and getSpecForClass and getNumSpecs then
+		for classIndex = 1, _G.GetNumClasses() or 0 do
+			local className, classToken, classID = _G.GetClassInfo(classIndex)
+			for specIndex = 1, getNumSpecs(classID) or 0 do
+				local specID, specName, _, specIcon = getSpecForClass(classID, specIndex, sex)
+				if specID and crosshairRangeSpellBySpec[specID] then
+					local label = (className or classToken or "") .. " - " .. (specName or ("Spec " .. tostring(specID)))
+					options[#options + 1] = { value = specID, label = label, classToken = classToken, className = className, specName = specName, specIcon = specIcon }
+					seen[specID] = true
+				end
+			end
+		end
+	end
+	if _G.GetSpecializationInfoByID then
+		for specID in pairs(crosshairRangeSpellBySpec) do
+			if not seen[specID] then
+				local _, specName, _, specIcon, _, classToken, className = _G.GetSpecializationInfoByID(specID, sex)
+				local label = specName or ("Spec " .. tostring(specID))
+				if className or classToken then label = (className or classToken) .. " - " .. label end
+				options[#options + 1] = { value = specID, label = label, classToken = classToken, className = className, specName = specName, specIcon = specIcon }
+			end
+		end
+	end
+	for specID, fallback in pairs(crosshairRangeSpecFallback) do
+		if not seen[specID] and crosshairRangeSpellBySpec[specID] then
+			options[#options + 1] = {
+				value = specID,
+				label = fallback.label,
+				classToken = fallback.classToken,
+				className = fallback.label:match("^(.-) %- "),
+				specName = fallback.specName,
+				specIcon = _G.GetSpecializationInfoByID and select(4, _G.GetSpecializationInfoByID(specID, sex)) or nil,
+			}
+		end
+	end
+	table.sort(options, function(a, b) return tostring(a.label) < tostring(b.label) end)
+	if #options == 0 then return options end
+	crosshairRangeSpecOptionsCache = options
+	return options
+end
+
+local function getConfiguredCrosshairRangeSpell(specID)
+	local configured = addon.db and addon.db.mouseCrosshairRangeSpells
+	local value = configured and configured[specID]
+	if value == false then return nil, true end
+	value = tonumber(value)
+	if value and value > 0 then return math.floor(value), true end
+	return crosshairRangeSpellBySpec[specID], false
+end
+
+local function setConfiguredCrosshairRangeSpell(specID, value)
+	if not addon.db then return end
+	addon.db.mouseCrosshairRangeSpells = addon.db.mouseCrosshairRangeSpells or {}
+	if value == "DEFAULT" then
+		addon.db.mouseCrosshairRangeSpells[specID] = nil
+	elseif value == "NONE" then
+		addon.db.mouseCrosshairRangeSpells[specID] = false
+	else
+		value = tonumber(value)
+		addon.db.mouseCrosshairRangeSpells[specID] = value and value > 0 and math.floor(value) or nil
+	end
+	if not next(addon.db.mouseCrosshairRangeSpells) then addon.db.mouseCrosshairRangeSpells = nil end
+end
+
+addon.Mouse.functions.GetCrosshairRangeSpecOptions = getCrosshairRangeSpecOptions
+addon.Mouse.functions.GetCrosshairRangeSpellForSpec = getConfiguredCrosshairRangeSpell
+addon.Mouse.functions.SetCrosshairRangeSpellForSpec = function(specID, value)
+	specID = tonumber(specID)
+	if not specID then return false end
+	if value == nil or value == "" then value = "DEFAULT" end
+	if value ~= "DEFAULT" and value ~= "NONE" then
+		value = tonumber(value)
+		if not value or value <= 0 then return false end
+		value = math.floor(value)
+		local spellInfo = C_Spell and C_Spell.GetSpellInfo and C_Spell.GetSpellInfo(value)
+		local spellName = C_Spell and C_Spell.GetSpellName and C_Spell.GetSpellName(value)
+		if not spellInfo and (not spellName or spellName == "") then return false end
+	end
+	setConfiguredCrosshairRangeSpell(specID, value)
+	return true
 end
 
 local function clampNumber(value, minValue, maxValue, fallback)
@@ -1187,24 +1375,11 @@ local function ensureCrosshairFrame()
 		if frame.SetClampedToScreen then frame:SetClampedToScreen(true) end
 	end
 
-	if not frame.outerVertical then
-		local outerVertical = frame:CreateTexture(nil, "BACKGROUND", nil, -1)
-		outerVertical:SetPoint("CENTER", frame, "CENTER", 0, 0)
-		frame.outerVertical = outerVertical
-
-		local outerHorizontal = frame:CreateTexture(nil, "BACKGROUND", nil, -1)
-		outerHorizontal:SetPoint("CENTER", frame, "CENTER", 0, 0)
-		frame.outerHorizontal = outerHorizontal
-
-		local innerVertical = frame:CreateTexture(nil, "BACKGROUND", nil, 0)
-		innerVertical:SetPoint("CENTER", frame, "CENTER", 0, 0)
-		frame.innerVertical = innerVertical
-
-		local innerHorizontal = frame:CreateTexture(nil, "BACKGROUND", nil, 0)
-		innerHorizontal:SetPoint("CENTER", frame, "CENTER", 0, 0)
-		frame.innerHorizontal = innerHorizontal
+	if not frame.outerTop then
+		for _, key in ipairs({ "outerTop", "outerBottom", "outerLeft", "outerRight", "innerTop", "innerBottom", "innerLeft", "innerRight" }) do
+			frame[key] = frame:CreateTexture(nil, "BACKGROUND", nil, key:find("^inner") and 0 or -1)
+		end
 	end
-
 	addon.mouseCrosshair = frame
 	return frame
 end
@@ -1214,25 +1389,53 @@ local function applyCrosshairStyle(frame)
 	local db = addon.db
 	local thickness = clampNumber(db["mouseCrosshairThickness"], 1, 32, 4)
 	local length = clampNumber(db["mouseCrosshairLength"], 4, 256, 24)
+	local gap = clampNumber(db["mouseCrosshairGap"], 0, 128, 0)
 	local border = clampNumber(db["mouseCrosshairBorderSize"], 0, 64, 4)
 	local alpha = clampNumber(db["mouseCrosshairAlpha"], 0, 1, 1)
+	local segmentLength = math.max(0, (length - gap) * 0.5)
+	local centerOffset = gap * 0.5 + segmentLength * 0.5
 
 	frame:SetSize(length + thickness + border, length + thickness + border)
-	frame.innerVertical:SetSize(thickness, length)
-	frame.innerHorizontal:SetSize(length, thickness)
-	frame.outerVertical:SetSize(thickness + border, length + border)
-	frame.outerHorizontal:SetSize(length + border, thickness + border)
-
 	local r, g, b = getCrosshairColor()
-	frame.innerVertical:SetColorTexture(r, g, b, alpha)
-	frame.innerHorizontal:SetColorTexture(r, g, b, alpha)
-	frame.outerVertical:SetColorTexture(0, 0, 0, alpha)
-	frame.outerHorizontal:SetColorTexture(0, 0, 0, alpha)
+	if db["mouseCrosshairMeleeRange"] and crosshairRange.inRange == false then r, g, b = getCrosshairOutOfRangeColor() end
+	local inner = { frame.innerTop, frame.innerBottom, frame.innerLeft, frame.innerRight }
+	local outer = { frame.outerTop, frame.outerBottom, frame.outerLeft, frame.outerRight }
+	local offsets = { centerOffset, -centerOffset, -centerOffset, centerOffset }
+	for i = 1, 4 do
+		local vertical = i <= 2
+		local offset = offsets[i]
+		inner[i]:ClearAllPoints()
+		outer[i]:ClearAllPoints()
+		inner[i]:SetSize(vertical and thickness or segmentLength, vertical and segmentLength or thickness)
+		outer[i]:SetSize(vertical and thickness + border or segmentLength + border, vertical and segmentLength + border or thickness + border)
+		inner[i]:SetPoint("CENTER", frame, "CENTER", vertical and 0 or offset, vertical and offset or 0)
+		outer[i]:SetPoint("CENTER", frame, "CENTER", vertical and 0 or offset, vertical and offset or 0)
+		inner[i]:SetColorTexture(r, g, b, alpha)
+		outer[i]:SetColorTexture(0, 0, 0, alpha)
+		inner[i]:SetShown(segmentLength > 0)
+		outer[i]:SetShown(segmentLength > 0 and border > 0)
+	end
 end
 
 local refreshCrosshairStyle
 local refreshCrosshairVisibility
 local updateMouseEventRegistrations
+
+local function refreshCrosshairRangeCheck()
+	if crosshairRange.spellID and EnableSpellRangeCheck then EnableSpellRangeCheck(crosshairRange.spellID, false) end
+	crosshairRange.spellID, crosshairRange.specID, crosshairRange.inRange = nil, nil, nil
+	if not (addon.db and addon.db["mouseCrosshairEnabled"] == true and addon.db["mouseCrosshairMeleeRange"] == true and EnableSpellRangeCheck and IsSpellInRange) then return end
+	local specIndex = GetSpecialization and GetSpecialization()
+	local specID = specIndex and GetSpecializationInfo and GetSpecializationInfo(specIndex)
+	local spellID = specID and getConfiguredCrosshairRangeSpell(specID)
+	if not spellID then return end
+	crosshairRange.specID = specID
+	crosshairRange.spellID = spellID
+	EnableSpellRangeCheck(spellID, true)
+	crosshairRange.inRange = IsSpellInRange(spellID, "target")
+	if refreshCrosshairStyle then refreshCrosshairStyle() end
+end
+addon.Mouse.functions.refreshCrosshairRangeCheck = refreshCrosshairRangeCheck
 
 local function registerCrosshairWithEditMode(frame)
 	if crosshairEditModeRegistered then return end
@@ -1241,6 +1444,49 @@ local function registerCrosshairWithEditMode(frame)
 	if SettingType then
 		local visibilityRuleOptions = getCrosshairVisibilityRuleOptions()
 		settingsList = {
+			{
+				name = L["mouseCrosshairGap"] or "Crosshair center gap",
+				kind = SettingType.Slider,
+				parentId = "crosshairFrame",
+				allowInput = true,
+				minValue = 0,
+				maxValue = 128,
+				valueStep = 1,
+				default = 0,
+				get = function() return addon.db and addon.db["mouseCrosshairGap"] or 0 end,
+				set = function(_, value) if addon.db then addon.db["mouseCrosshairGap"] = value; refreshCrosshairStyle() end end,
+				formatter = function(value) return tostring(math.floor((tonumber(value) or 0) + 0.5)) end,
+			},
+			{
+				name = L["mouseCrosshairRangeIndicator"] or "Enable range indicator",
+				kind = SettingType.Checkbox,
+				parentId = "crosshairFrame",
+				default = false,
+				get = function() return addon.db and addon.db["mouseCrosshairMeleeRange"] == true end,
+				set = function(_, value)
+					if not addon.db then return end
+					addon.db["mouseCrosshairMeleeRange"] = value and true or false
+					if updateMouseEventRegistrations then updateMouseEventRegistrations() end
+					refreshCrosshairRangeCheck()
+					refreshCrosshairEditModeSettingsUI()
+				end,
+			},
+			{
+				name = L["mouseCrosshairOutOfRangeColor"] or "Out-of-range color",
+				kind = SettingType.Color,
+				parentId = "crosshairFrame",
+				hasOpacity = false,
+				get = function()
+					local color = (addon.db and addon.db["mouseCrosshairOutOfRangeColor"]) or { r = 1, g = 0.2, b = 0.2 }
+					return { r = color.r or 1, g = color.g or 0.2, b = color.b or 0.2, a = 1 }
+				end,
+				set = function(_, value)
+					if not addon.db then return end
+					addon.db["mouseCrosshairOutOfRangeColor"] = { r = value and value.r or 1, g = value and value.g or 0.2, b = value and value.b or 0.2, a = 1 }
+					refreshCrosshairStyle()
+				end,
+				isEnabled = function() return addon.db and addon.db["mouseCrosshairMeleeRange"] == true end,
+			},
 			{
 				name = L["Frame"] or "Frame",
 				kind = SettingType.Collapsible,
@@ -1442,6 +1688,7 @@ local function registerCrosshairWithEditMode(frame)
 		end,
 		showOutsideEditMode = true,
 		onApply = function(targetFrame) applyCrosshairStyle(targetFrame) end,
+		onPositionChanged = function() refreshCrosshairEditModeSettingsUI() end,
 		settings = settingsList,
 	})
 	crosshairEditModeRegistered = true
@@ -1681,6 +1928,7 @@ function addon.Mouse.functions.InitState()
 	if not db then return end
 	setRunnerCombatActive(UnitAffectingCombat and UnitAffectingCombat(PLAYER_UNIT))
 	syncRingProgressState()
+	refreshCrosshairRangeCheck()
 	refreshRingVisibility()
 	refreshCrosshairVisibility()
 	if db["mouseTrailEnabled"] then applyPreset(db["mouseTrailDensity"]) end
@@ -1775,6 +2023,14 @@ updateMouseEventRegistrations = function()
 		eventFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
 		eventFrame:RegisterEvent("PLAYER_MOUNT_DISPLAY_CHANGED")
 		eventFrame:RegisterEvent("UPDATE_SHAPESHIFT_FORM")
+		if db["mouseCrosshairMeleeRange"] == true then
+			eventFrame:RegisterEvent("SPELL_RANGE_CHECK_UPDATE")
+			eventFrame:RegisterEvent("SPELLS_CHANGED")
+			eventFrame:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
+			eventFrame:RegisterEvent("PLAYER_TALENT_UPDATE")
+			eventFrame:RegisterEvent("ACTIVE_PLAYER_SPECIALIZATION_CHANGED")
+			eventFrame:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
+		end
 	end
 
 	if ringEnabled or crosshairEnabled then
@@ -1820,7 +2076,23 @@ eventFrame:SetScript("OnEvent", function(_, event, unit, ...)
 		if crosshairEnabled then refreshCrosshairVisibility() end
 		return
 	end
-	if crosshairEnabled and crosshairContextRefreshEvents[event] then refreshCrosshairVisibility() end
+	if crosshairEnabled and event == "SPELL_RANGE_CHECK_UPDATE" then
+		if crosshairRange.spellID and tostring(unit) == tostring(crosshairRange.spellID) then
+			local isInRange, checksRange = ...
+			if checksRange then
+				crosshairRange.inRange = isInRange == true
+			else
+				crosshairRange.inRange = nil
+			end
+			if refreshCrosshairStyle then refreshCrosshairStyle() end
+		end
+	elseif crosshairEnabled and (event == "SPELLS_CHANGED" or event == "UPDATE_SHAPESHIFT_FORM" or event == "PLAYER_SPECIALIZATION_CHANGED" or event == "PLAYER_TALENT_UPDATE" or event == "ACTIVE_PLAYER_SPECIALIZATION_CHANGED" or event == "ACTIVE_TALENT_GROUP_CHANGED") then
+		refreshCrosshairRangeCheck()
+		refreshCrosshairVisibility()
+	elseif crosshairEnabled and crosshairContextRefreshEvents[event] then
+		if event == "PLAYER_TARGET_CHANGED" then refreshCrosshairRangeCheck() end
+		refreshCrosshairVisibility()
+	end
 	if ringEnabled and ringProgressEvents[event] then handleProgressEvent(event, unit, ...) end
 end)
 

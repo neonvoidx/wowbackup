@@ -548,19 +548,31 @@ local data = {
 }
 addon.functions.SettingsCreateCheckboxes(cMouse, data)
 
-addon.functions.SettingsCreateHeadline(cMouse, L["mouseCrosshair"], { parentSection = expandable })
+local crosshairExpandable = addon.functions.SettingsCreateExpandableSection(cMouse, {
+	name = L["mouseCrosshair"] or "Crosshair",
+	configPageKey = "MouseCrosshair",
+	modernCategory = "general",
+	iconKey = "uiutilities",
+	modernOnly = true,
+	expanded = false,
+	colorizeTitle = false,
+})
+
+addon.functions.SettingsCreateHeadline(cMouse, L["mouseCrosshair"], { parentSection = crosshairExpandable })
 data = {
 	{
 		var = "mouseCrosshairEnabled",
 		text = L["mouseCrosshairEnabled"],
 		desc = L["mouseCrosshairEnabledDesc"],
 		default = false,
+		newTagID = "mouseCrosshairEnabled",
 		func = function(v)
 			addon.db["mouseCrosshairEnabled"] = v and true or false
 			if addon.Mouse.functions.updateEventRegistrations then addon.Mouse.functions.updateEventRegistrations() end
+			if addon.Mouse.functions.refreshCrosshairRangeCheck then addon.Mouse.functions.refreshCrosshairRangeCheck() end
 			if addon.Mouse.functions.refreshCrosshairVisibility then addon.Mouse.functions.refreshCrosshairVisibility() end
 		end,
-		parentSection = expandable,
+		parentSection = crosshairExpandable,
 		children = {
 			{
 				text = "|cffffd700" .. L["mouseCrosshairEditModeHint"] .. "|r",
@@ -570,12 +582,138 @@ data = {
 						and addon.SettingsLayout.elements["mouseCrosshairEnabled"].setting
 						and addon.SettingsLayout.elements["mouseCrosshairEnabled"].setting:GetValue() == true
 				end,
-				parentSection = expandable,
+				parentSection = crosshairExpandable,
 			},
 		},
 	},
 }
 addon.functions.SettingsCreateCheckboxes(cMouse, data)
+
+addon.functions.SettingsCreateCheckboxes(cMouse, {
+	{
+		var = "mouseCrosshairMeleeRange",
+		text = L["mouseCrosshairRangeIndicator"],
+		default = false,
+		func = function(value)
+			addon.db["mouseCrosshairMeleeRange"] = value and true or false
+			if addon.Mouse.functions.updateEventRegistrations then addon.Mouse.functions.updateEventRegistrations() end
+			if addon.Mouse.functions.refreshCrosshairRangeCheck then addon.Mouse.functions.refreshCrosshairRangeCheck() end
+		end,
+		parentCheck = function()
+			return addon.SettingsLayout.elements["mouseCrosshairEnabled"]
+				and addon.SettingsLayout.elements["mouseCrosshairEnabled"].setting
+				and addon.SettingsLayout.elements["mouseCrosshairEnabled"].setting:GetValue() == true
+		end,
+		parent = true,
+		parentSection = crosshairExpandable,
+	},
+})
+
+addon.functions.SettingsCreateHeadline(cMouse, L["mouseCrosshairRangeSpells"] or "Range-check spells by specialization", { parentSection = crosshairExpandable })
+addon.functions.SettingsCreateCustom(cMouse, {
+	var = "mouseCrosshairRangeSpellTable",
+	text = L["mouseCrosshairRangeSpells"] or "Range-check spells by specialization",
+	desc = L["mouseCrosshairRangeSpellsDesc"] or "Spell ID used for the range check. The spell must exist in the game client.",
+	height = 900,
+	getHeight = function() return 900 end,
+	parentCheck = function() return addon.db and addon.db["mouseCrosshairEnabled"] == true end,
+	parentSection = crosshairExpandable,
+	render = function(parent)
+		local specOptions = addon.Mouse.functions.GetCrosshairRangeSpecOptions and addon.Mouse.functions.GetCrosshairRangeSpecOptions() or {}
+		local rowHeight, gap, columns = 30, 6, 2
+		local columnWidth = math.max(260, ((parent:GetWidth() or 600) - gap) / columns)
+		local classTexture = "Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Classes"
+		local function updateSpell(row, spellID)
+			spellID = tonumber(spellID)
+			local info = spellID and C_Spell and C_Spell.GetSpellInfo and C_Spell.GetSpellInfo(spellID)
+			local name = info and info.name or (spellID and C_Spell and C_Spell.GetSpellName and C_Spell.GetSpellName(spellID)) or ""
+			local texture = info and info.iconID or (spellID and C_Spell and C_Spell.GetSpellTexture and C_Spell.GetSpellTexture(spellID))
+			row.spellName:SetText(name ~= "" and name or "Unknown spell")
+			if texture then row.spellIcon:SetTexture(texture); row.spellIcon:Show() else row.spellIcon:Hide() end
+			row.spellHit.spellID = spellID and name ~= "" and spellID or nil
+		end
+		local groups = {}
+		for index = 1, #specOptions do
+			local spec = specOptions[index]
+			local group = groups[#groups]
+			if not group or group.classToken ~= spec.classToken then
+				group = { classToken = spec.classToken, specs = {} }
+				groups[#groups + 1] = group
+			end
+			group.specs[#group.specs + 1] = spec
+		end
+		local line = 0
+		for groupIndex = 1, #groups do
+			local group = groups[groupIndex]
+			for specIndex = 1, #group.specs do
+				local spec = group.specs[specIndex]
+				local column = (specIndex - 1) % columns
+				local rowLine = line + math.floor((specIndex - 1) / columns)
+			local row = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+			row:SetSize(columnWidth, rowHeight)
+			row:SetPoint("TOPLEFT", parent, "TOPLEFT", column * (columnWidth + gap), -rowLine * (rowHeight + gap))
+			row.bg = row:CreateTexture(nil, "BACKGROUND")
+			row.bg:SetAllPoints()
+			row.bg:SetColorTexture(0.08, 0.09, 0.1, 0.85)
+			row.classIcon = row:CreateTexture(nil, "ARTWORK")
+			row.classIcon:SetSize(20, 20)
+			row.classIcon:SetPoint("LEFT", 8, 0)
+			local coords = spec.classToken and CLASS_ICON_TCOORDS and CLASS_ICON_TCOORDS[spec.classToken]
+			if coords then row.classIcon:SetTexture(classTexture); row.classIcon:SetTexCoord(unpack(coords)) else row.classIcon:Hide() end
+			row.specIcon = row:CreateTexture(nil, "ARTWORK")
+			row.specIcon:SetSize(20, 20)
+			row.specIcon:SetPoint("LEFT", row.classIcon, "RIGHT", 3, 0)
+			if spec.specIcon then row.specIcon:SetTexture(spec.specIcon) else row.specIcon:Hide() end
+			row.label = row:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+			row.label:SetPoint("LEFT", row.specIcon, "RIGHT", 5, 0)
+			row.label:SetWidth(math.max(80, columnWidth * 0.30))
+			row.label:SetJustifyH("LEFT")
+			row.label:SetText(spec.specName or spec.label)
+			row.spellIcon = row:CreateTexture(nil, "ARTWORK")
+			row.spellIcon:SetSize(20, 20)
+			row.spellIcon:SetPoint("RIGHT", row, "RIGHT", -104, 0)
+			row.spellName = row:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+			row.spellName:SetPoint("RIGHT", row.spellIcon, "LEFT", -5, 0)
+			row.spellName:SetWidth(math.max(70, columnWidth * 0.22))
+			row.spellName:SetJustifyH("RIGHT")
+			row.spellHit = CreateFrame("Frame", nil, row)
+			row.spellHit:SetSize(112, 24)
+			row.spellHit:SetPoint("RIGHT", row, "RIGHT", -96, 0)
+			row.spellHit:EnableMouse(true)
+			row.spellHit:SetScript("OnEnter", function(self)
+				if not self.spellID then return end
+				GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+				GameTooltip:SetSpellByID(self.spellID)
+				GameTooltip:Show()
+			end)
+			row.spellHit:SetScript("OnLeave", function() GameTooltip:Hide() end)
+			row.input = CreateFrame("EditBox", nil, row, "InputBoxTemplate")
+			row.input:SetSize(82, 22)
+			row.input:SetPoint("RIGHT", row, "RIGHT", -8, 0)
+			row.input:SetNumeric(true)
+			row.input:SetAutoFocus(false)
+			row.input:SetJustifyH("CENTER")
+			local spellID = addon.Mouse.functions.GetCrosshairRangeSpellForSpec and addon.Mouse.functions.GetCrosshairRangeSpellForSpec(spec.value)
+			row.input:SetText(spellID and tostring(spellID) or "")
+			row.input:SetScript("OnEnterPressed", function(self)
+				local value = self:GetText()
+				local ok = addon.Mouse.functions.SetCrosshairRangeSpellForSpec and addon.Mouse.functions.SetCrosshairRangeSpellForSpec(spec.value, value)
+				if ok then
+					if addon.Mouse.functions.refreshCrosshairRangeCheck then addon.Mouse.functions.refreshCrosshairRangeCheck() end
+					updateSpell(row, tonumber(value))
+				else
+					local current = addon.Mouse.functions.GetCrosshairRangeSpellForSpec and addon.Mouse.functions.GetCrosshairRangeSpellForSpec(spec.value)
+					self:SetText(current and tostring(current) or "")
+				end
+				self:ClearFocus()
+			end)
+			row.input:SetScript("OnEscapePressed", function(self) self:SetText(spellID and tostring(spellID) or ""); self:ClearFocus() end)
+			updateSpell(row, spellID)
+			end
+			line = line + math.ceil(#group.specs / columns) + 1
+		end
+	end,
+})
 
 addon.functions.SettingsCreateHeadline(cMouse, L["mouseTrail"], { parentSection = expandable })
 

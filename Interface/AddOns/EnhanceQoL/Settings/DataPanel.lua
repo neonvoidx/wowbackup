@@ -4,6 +4,8 @@ local addonName, addon = ...
 local L = LibStub("AceLocale-3.0"):GetLocale(addonName)
 
 local cDataPanel = addon.SettingsLayout.rootUI
+local dataPanelGroupID = "interface-panels-map-datapanel"
+local dataPanelGroupTitle = L["DataPanel"]
 
 local expandable = addon.functions.SettingsCreateExpandableSection(cDataPanel, {
 	name = L["DataPanel"],
@@ -18,11 +20,17 @@ local expandable = addon.functions.SettingsCreateExpandableSection(cDataPanel, {
 addon.functions.SettingsCreateHeadline(cDataPanel, {
 	name = _G.SETTINGS or "Settings",
 	parentSection = expandable,
-	groupID = "settings",
+	groupID = dataPanelGroupID,
+	groupTitle = dataPanelGroupTitle,
 	order = 1,
 })
 
-addon.functions.SettingsCreateText(cDataPanel, L["DataPanelEditModeHint"], { parentSection = expandable, order = 1 })
+addon.functions.SettingsCreateText(cDataPanel, L["DataPanelEditModeHint"], {
+	parentSection = expandable,
+	groupID = dataPanelGroupID,
+	groupTitle = dataPanelGroupTitle,
+	order = 1,
+})
 
 local data = {
 	var = "Show options tooltip hint",
@@ -41,6 +49,8 @@ local data = {
 	end,
 	default = false,
 	parentSection = expandable,
+	groupID = dataPanelGroupID,
+	groupTitle = dataPanelGroupTitle,
 }
 
 addon.functions.SettingsCreateCheckbox(cDataPanel, data)
@@ -62,6 +72,8 @@ data = {
 	default = "",
 	var = "Context menu modifier",
 	parentSection = expandable,
+	groupID = dataPanelGroupID,
+	groupTitle = dataPanelGroupTitle,
 }
 
 addon.functions.SettingsCreateDropdown(cDataPanel, data)
@@ -74,6 +86,8 @@ data = {
 	order = 30,
 	func = function() StaticPopup_Show("EQOL_CREATE_DATAPANEL") end,
 	parentSection = expandable,
+	groupID = dataPanelGroupID,
+	groupTitle = dataPanelGroupTitle,
 }
 addon.functions.SettingsCreateButton(cDataPanel, data)
 
@@ -243,8 +257,12 @@ function datapanel.addStatsControls(controls, key, label, supportsMode, supports
 		return datapanel.isStatsEntryEnabled(key, supportsMode, supportsSecondaryPercent)
 	end
 	controls[#controls + 1] = {
+		type = "sectionheader",
+		text = label,
+	}
+	controls[#controls + 1] = {
 		key = key .. "_enabled",
-		text = ("%s - %s"):format(label, SHOW or "Show"),
+		text = SHOW or "Show",
 		default = true,
 		get = function() return datapanel.getStatsEntryValue(key, "enabled", true, supportsMode, supportsSecondaryPercent) == true end,
 		set = function(value) datapanel.setStatsEntryValue(key, "enabled", value, supportsMode, supportsSecondaryPercent) end,
@@ -254,7 +272,7 @@ function datapanel.addStatsControls(controls, key, label, supportsMode, supports
 		controls[#controls + 1] = {
 			type = "dropdown",
 			key = key .. "_mode",
-			text = ("%s - %s"):format(label, DISPLAY_MODE or "Display mode"),
+			text = DISPLAY_MODE or "Display mode",
 			list = datapanel.statDisplayLabels,
 			listOrder = datapanel.statDisplayOrder,
 			default = "percent",
@@ -266,7 +284,7 @@ function datapanel.addStatsControls(controls, key, label, supportsMode, supports
 	if supportsSecondaryPercent then
 		controls[#controls + 1] = {
 			key = key .. "_showSecondaryPercent",
-			text = ("%s - %s"):format(label, L["StatDisplayShowSecondaryPercent"] or "Show second percent value"),
+			text = L["StatDisplayShowSecondaryPercent"] or "Show second percent value",
 			default = true,
 			get = function() return datapanel.getStatsEntryValue(key, "showSecondaryPercent", true, supportsMode, supportsSecondaryPercent) == true end,
 			set = function(value) datapanel.setStatsEntryValue(key, "showSecondaryPercent", value, supportsMode, supportsSecondaryPercent) end,
@@ -276,7 +294,7 @@ function datapanel.addStatsControls(controls, key, label, supportsMode, supports
 	controls[#controls + 1] = {
 		type = "color",
 		key = key .. "_color",
-		text = ("%s - %s"):format(label, COLOR or "Color"),
+		text = COLOR or "Color",
 		default = function() return datapanel.getStatsDefaultColor(key) end,
 		getColor = function() return datapanel.getStatsEntryColor(key, supportsMode, supportsSecondaryPercent) end,
 		setColor = function(...) datapanel.setStatsEntryColor(key, supportsMode, supportsSecondaryPercent, ...) end,
@@ -655,7 +673,7 @@ function datapanel.createSlider(section, stream, control, order)
 		set = function(value) datapanel.setValue(updateID, stream.dbKey, stream.defaults, control.key, value, control.normalize) end,
 		parentSection = section,
 		groupID = stream.groupID,
-		groupTitle = stream.title,
+		groupTitle = dataPanelGroupTitle,
 		parentCheck = control.parentCheck,
 		isEnabled = control.isEnabled,
 		refreshOnChange = control.refreshOnChange,
@@ -674,7 +692,7 @@ function datapanel.createCheckbox(section, stream, control, order)
 		func = control.set or function(value) datapanel.setValue(updateID, stream.dbKey, stream.defaults, control.key, value and true or false, control.normalize) end,
 		parentSection = section,
 		groupID = stream.groupID,
-		groupTitle = stream.title,
+		groupTitle = dataPanelGroupTitle,
 		parentCheck = control.parentCheck,
 		isEnabled = control.isEnabled,
 		refreshOnChange = control.refreshOnChange,
@@ -695,7 +713,7 @@ function datapanel.createDropdown(section, stream, control, order)
 		set = control.set or function(value) datapanel.setValue(updateID, stream.dbKey, stream.defaults, control.key, value, control.normalize) end,
 		parentSection = section,
 		groupID = stream.groupID,
-		groupTitle = stream.title,
+		groupTitle = dataPanelGroupTitle,
 		parentCheck = control.parentCheck,
 		isEnabled = control.isEnabled,
 		refreshOnChange = control.refreshOnChange,
@@ -715,7 +733,7 @@ function datapanel.createInput(section, stream, control, order)
 		set = function(value) datapanel.setValue(updateID, stream.dbKey, stream.defaults, control.key, value or "", control.normalize) end,
 		parentSection = section,
 		groupID = stream.groupID,
-		groupTitle = stream.title,
+		groupTitle = dataPanelGroupTitle,
 		parentCheck = control.parentCheck,
 		isEnabled = control.isEnabled,
 		refreshOnChange = control.refreshOnChange,
@@ -744,7 +762,7 @@ function datapanel.createColor(section, stream, control, order)
 		hasOpacity = control.hasOpacity,
 		parentSection = section,
 		groupID = stream.groupID,
-		groupTitle = stream.title,
+		groupTitle = dataPanelGroupTitle,
 		parentCheck = control.parentCheck,
 		isEnabled = control.isEnabled,
 		refreshOnChange = control.refreshOnChange,
@@ -774,7 +792,7 @@ function datapanel.createReorderList(section, stream, control, order)
 		refreshOnChange = control.refreshOnChange,
 		parentSection = section,
 		groupID = stream.groupID,
-		groupTitle = stream.title,
+		groupTitle = dataPanelGroupTitle,
 		order = order,
 	})
 end
@@ -800,7 +818,7 @@ function datapanel.createMultiDropdown(section, stream, control, order)
 		refreshOnChange = control.refreshOnChange,
 		parentSection = section,
 		groupID = stream.groupID,
-		groupTitle = stream.title,
+		groupTitle = dataPanelGroupTitle,
 		parentCheck = control.parentCheck,
 		isEnabled = control.isEnabled,
 	})
@@ -817,6 +835,13 @@ function datapanel.createControl(section, stream, control, order)
 		return datapanel.createInput(section, stream, control, order)
 	elseif control.type == "color" then
 		return datapanel.createColor(section, stream, control, order)
+	elseif control.type == "sectionheader" then
+		return addon.functions.SettingsCreateSectionHeader(cDataPanel, control.text, {
+			parentSection = section,
+			groupID = stream.groupID,
+			groupTitle = dataPanelGroupTitle,
+			order = control.order or order,
+		})
 	elseif control.type == "reorderlist" then
 		return datapanel.createReorderList(section, stream, control, order)
 	else
@@ -825,14 +850,15 @@ function datapanel.createControl(section, stream, control, order)
 end
 
 function datapanel.createStreamSection(stream, order)
-	stream.groupID = "datapanel_stream_" .. (stream.groupKey or stream.dbKey)
-	addon.functions.SettingsCreateHeadline(cDataPanel, stream.title, {
+	stream.groupID = dataPanelGroupID
+	addon.functions.SettingsCreateSectionHeader(cDataPanel, stream.title, {
 		parentSection = expandable,
-		groupID = stream.groupID,
+		groupID = dataPanelGroupID,
+		groupTitle = dataPanelGroupTitle,
 		order = order,
 	})
 	for index, control in ipairs(stream.controls or {}) do
-		datapanel.createControl(expandable, stream, control, index * 10)
+		datapanel.createControl(expandable, stream, control, order + (index * 10))
 	end
 end
 
@@ -1185,7 +1211,7 @@ table.sort(datapanel.streams, function(left, right)
 end)
 
 for index, stream in ipairs(datapanel.streams) do
-	datapanel.createStreamSection(stream, 100 + index)
+	datapanel.createStreamSection(stream, 1000 + (index * 100))
 end
 ----- REGION END
 

@@ -205,14 +205,14 @@ local function showDeleteProfileDialog(profileKey)
 end
 
 local expandable = addon.functions.SettingsCreateExpandableSection(category, {
-	name = L["durationTextTitle"],
+	name = string.format("%s – %s", L["durationTextTitle"] or "Duration Text", L["Profiles"] or "Profiles"),
 	description = L["configCenterPageCardDescDurationText"],
 	expanded = false,
 	colorizeTitle = false,
 	newTagID = "DurationText",
 	configPageKey = "DurationText",
 	iconKey = "castbar",
-	modernCategory = "suites",
+	modernCategory = "profiles",
 	modernOnly = true,
 })
 addon.SettingsLayout.durationTextSection = expandable
@@ -277,7 +277,7 @@ addon.functions.SettingsCreateDropdown(category, {
 
 addon.functions.SettingsCreateText(category, L["durationTextIntro"], { parentSection = expandable, order = 20 })
 
-addon.functions.SettingsCreateHeadline(category, L["durationTextFormattingHeader"], { parentSection = expandable, order = 20 })
+addon.functions.SettingsCreateSectionHeader(category, L["durationTextFormattingHeader"], { parentSection = expandable, order = 20 })
 
 addon.functions.SettingsCreateSlider(category, {
 	var = "durationText",
@@ -294,7 +294,7 @@ addon.functions.SettingsCreateSlider(category, {
 	parentSection = expandable,
 })
 
-addon.functions.SettingsCreateHeadline(category, L["durationTextColorBreakpointHeader"], { parentSection = expandable, order = 30 })
+addon.functions.SettingsCreateSectionHeader(category, L["durationTextColorBreakpointHeader"], { parentSection = expandable, order = 30 })
 
 local breakpointCountElement = addon.functions.SettingsCreateSlider(category, {
 	var = "durationText",
@@ -356,7 +356,7 @@ for i = 1, DurationText:GetMaxColorBreakpoints() do
 	})
 end
 
-addon.functions.SettingsCreateHeadline(category, L["durationTextFallbackTextHeader"], { parentSection = expandable, order = 40 })
+addon.functions.SettingsCreateSectionHeader(category, L["durationTextFallbackTextHeader"], { parentSection = expandable, order = 40 })
 
 addon.functions.SettingsCreateInput(category, {
 	var = "durationText",

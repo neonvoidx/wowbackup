@@ -3896,8 +3896,8 @@ local function layoutFrame(layoutData, context)
 	local columnCount = math.floor((tonumber(addon.GetMaxColumns and addon.GetMaxColumns() or context and context.columnCount) or DEFAULT_COLUMN_COUNT) + 0.5)
 	if columnCount < 4 then
 		columnCount = 4
-	elseif columnCount > 24 then
-		columnCount = 24
+	elseif columnCount > 40 then
+		columnCount = 40
 	end
 	local settings = getSettings()
 	local currentHeaderCount = 0

@@ -54,7 +54,6 @@ local RESOURCE_BAR_SEGMENTED_POWER_TYPES = {
 	ARCANE_CHARGES = true,
 	CHI = true,
 	COMBO_POINTS = true,
-	EBON_MIGHT = true,
 	ESSENCE = true,
 	HOLY_POWER = true,
 	ICICLES = true,
@@ -64,6 +63,7 @@ local RESOURCE_BAR_SEGMENTED_POWER_TYPES = {
 	SOUL_SHARDS = true,
 	TIP_OF_THE_SPEAR = true,
 	VOID_METAMORPHOSIS = true,
+	WHIRLWIND = true,
 }
 
 local RESOURCE_BAR_REMOVED_SEGMENT_THRESHOLD_LINE_KEYS = {
@@ -124,6 +124,28 @@ local LEGACY_PROFILE_KEYS = {
 	"enhancedWaypointGlow",
 	"enhancedWaypointScale",
 }
+
+local NAMEPLATE_MOB_COLOR_SOURCE_KEYS = {
+	"nameplateMobColorBossEnabled",
+	"nameplateMobColorMinibossEnabled",
+	"nameplateMobColorCasterEnabled",
+	"nameplateMobColorMeleeEnabled",
+	"nameplateMobColorNeutralEnabled",
+	"nameplateMobColorTappedEnabled",
+	"nameplateMobColorTrivialEnabled",
+}
+
+local function migrateNameplateMobColorSources(profile)
+	if type(profile) ~= "table" then return end
+	for _, key in ipairs(NAMEPLATE_MOB_COLOR_SOURCE_KEYS) do
+		if profile[key] == nil then profile[key] = true end
+	end
+
+	local legacyThreatColors = profile.nameplateMobThreatColors
+	if profile.nameplateMobColorThreatWarningEnabled == nil then profile.nameplateMobColorThreatWarningEnabled = legacyThreatColors ~= false end
+	if profile.nameplateMobColorThreatLostEnabled == nil then profile.nameplateMobColorThreatLostEnabled = legacyThreatColors ~= false end
+	profile.nameplateMobThreatColors = nil
+end
 
 -- TODO 12.1 cleanup: when removing native-replaced PTR workarounds, add their stored keys here
 -- or to a dedicated cleanup helper. Expected keys: persistAuctionHouseFilter, groupfinderMoveResetButton.
@@ -295,10 +317,30 @@ end
 local function cleanupResourceBarConfigTree(root, treeKey)
 	if type(root) ~= "table" then return end
 	cleanupResourceBarRemovedSegmentSeparatorKeys(root)
+	if treeKey == "EBON_MIGHT" or root._rbType == "EBON_MIGHT" then root.separatedOffset = nil end
 	if RESOURCE_BAR_SEGMENTED_POWER_TYPES[treeKey] or RESOURCE_BAR_SEGMENTED_POWER_TYPES[root._rbType] then cleanupResourceBarRemovedSegmentThresholdLineKeys(root) end
 	for key, value in pairs(root) do
 		if type(value) == "table" then cleanupResourceBarConfigTree(value, key) end
 	end
+end
+
+local function migrateSharedMaelstromSegmentSettings(slotCfg)
+	if type(slotCfg) ~= "table" then return end
+	local legacyVisualSegments = tonumber(slotCfg.visualSegments)
+	local legacyTenStacks = slotCfg.useMaelstromTenStacks
+	if legacyVisualSegments ~= nil or legacyTenStacks ~= nil then
+		slotCfg.powerTypeOverrides = slotCfg.powerTypeOverrides or {}
+		local override = slotCfg.powerTypeOverrides.MAELSTROM_WEAPON
+		if type(override) ~= "table" then
+			override = {}
+			slotCfg.powerTypeOverrides.MAELSTROM_WEAPON = override
+		end
+		if override.useMaelstromTenStacks == nil then override.useMaelstromTenStacks = legacyTenStacks == true or legacyVisualSegments == 10 end
+		if override.visualSegments == nil then override.visualSegments = override.useMaelstromTenStacks and 10 or 5 end
+		override.enabled = true
+	end
+	slotCfg.useMaelstromTenStacks = nil
+	slotCfg.visualSegments = nil
 end
 
 local function cleanupResourceBarProfile(profile)
@@ -332,11 +374,12 @@ local function cleanupResourceBarProfile(profile)
 
 	local shared = profile.sharedResourceBarSettings
 	if type(shared) == "table" then
-		cleanupResourceBarConfigTree(shared)
 		for _, slotCfg in pairs(shared) do
+			migrateSharedMaelstromSegmentSettings(slotCfg)
 			local overrides = type(slotCfg) == "table" and slotCfg.powerTypeOverrides or nil
 			if type(overrides) == "table" then cleanupStaggerHiddenColorOverrides(overrides.STAGGER) end
 		end
+		cleanupResourceBarConfigTree(shared)
 	end
 end
 
@@ -379,6 +422,13 @@ local function cleanupCooldownPanelsStorageProfile(profile)
 	if type(profile) ~= "table" then return end
 	local root = profile.cooldownPanels
 	if type(root) ~= "table" then return end
+	if type(root.panels) == "table" then
+		for _, panel in pairs(root.panels) do
+			if type(panel) == "table" then
+				panel.cdmSyncActiveSpecBySource = nil
+			end
+		end
+	end
 	local helper = addon.Aura and addon.Aura.CooldownPanels and addon.Aura.CooldownPanels.helper or nil
 	if type(helper) == "table" and type(helper.PruneRootForStorage) == "function" then helper.PruneRootForStorage(root) end
 end
@@ -515,6 +565,14 @@ function addon.functions.CleanupDurationTextStorage()
 end
 
 function addon.functions.CleanupOldStuff()
+	local db = _G.EnhanceQoLDB
+	if type(db) == "table" and type(db.profiles) == "table" then
+		for _, profile in pairs(db.profiles) do
+			migrateNameplateMobColorSources(profile)
+		end
+	else
+		migrateNameplateMobColorSources(addon.db)
+	end
 	addon.functions.CleanupCombatMeterSettings()
 	addon.functions.CleanupBuffTrackerSettings()
 	addon.functions.CleanupDebugArtifacts()

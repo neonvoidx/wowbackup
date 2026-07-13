@@ -21,106 +21,12 @@ addon.MythicPlus.variables.seasonMapInfo = {}
 addon.MythicPlus.variables.seasonMapHash = {}
 addon.MythicPlus.variables.seasonMapLookup = {}
 
-local function addSeasonMapAlias(aliasList, aliasHash, value)
-	if value == nil then return end
-	if type(value) ~= "number" and type(value) ~= "string" then return end
-	if aliasHash[value] then return end
-	aliasHash[value] = true
-	table.insert(aliasList, value)
-end
-
-local function getLegacySeasonMapID(data, cId)
-	if not data or not data.mapID then return nil end
-	if type(data.mapID) == "table" then
-		local variant = data.mapID[cId]
-		if type(variant) == "table" then return variant.mapID .. "_" .. variant.zoneID end
-		return variant
-	end
-	return data.mapID
-end
-
-local function getSeasonZoneID(data, cId)
-	if not data then return nil end
-	if type(data.mapID) == "table" then
-		local variant = data.mapID[cId]
-		if type(variant) == "table" then return variant.zoneID end
-	end
-	return data.zoneID
-end
-
 local function createSeasonInfo()
-	addon.MythicPlus.variables.seasonMapInfo = {}
-	addon.MythicPlus.variables.seasonMapHash = {}
-	addon.MythicPlus.variables.seasonMapLookup = {}
-	local cModeIDs = C_ChallengeMode.GetMapTable()
-	local cModeIDLookup = {}
-	local liveMapIDCounts = {}
-	local pendingEntries = {}
-	local seenMapIDs = {}
-	for _, id in ipairs(cModeIDs) do
-		cModeIDLookup[id] = true
-	end
-
-	for _, section in pairs(addon.MythicPlus.variables.portalCompendium or {}) do
-		for spellID, data in pairs(section.spells) do
-			if data.cId then
-				for cId in pairs(data.cId) do
-					if cModeIDLookup[cId] then
-						local mapName, _, _, _, _, liveMapID = C_ChallengeMode.GetMapUIInfo(cId)
-						local legacyMapID = getLegacySeasonMapID(data, cId)
-						local zoneID = getSeasonZoneID(data, cId)
-						if type(liveMapID) == "number" then liveMapIDCounts[liveMapID] = (liveMapIDCounts[liveMapID] or 0) + 1 end
-						table.insert(pendingEntries, {
-							cId = cId,
-							legacyMapID = legacyMapID,
-							liveMapID = liveMapID,
-							name = mapName,
-							zoneID = zoneID,
-						})
-					end
-				end
-			end
-		end
-	end
-
-	for _, entry in ipairs(pendingEntries) do
-		local liveMapID = entry.liveMapID
-		local mapID = entry.legacyMapID
-
-		if type(liveMapID) == "number" then
-			mapID = liveMapID
-			if liveMapIDCounts[liveMapID] and liveMapIDCounts[liveMapID] > 1 then
-				if entry.zoneID then
-					mapID = liveMapID .. "_" .. entry.zoneID
-				elseif entry.legacyMapID ~= nil then
-					mapID = entry.legacyMapID
-				end
-			end
-		end
-
-		if mapID and not seenMapIDs[mapID] then
-			seenMapIDs[mapID] = true
-			local aliases = {}
-			local aliasHash = {}
-			addSeasonMapAlias(aliases, aliasHash, mapID)
-			addSeasonMapAlias(aliases, aliasHash, entry.legacyMapID)
-			if type(liveMapID) == "number" and liveMapIDCounts[liveMapID] == 1 then addSeasonMapAlias(aliases, aliasHash, liveMapID) end
-
-			local mapEntry = {
-				aliases = aliases,
-				cId = entry.cId,
-				id = mapID,
-				name = entry.name,
-			}
-
-			table.insert(addon.MythicPlus.variables.seasonMapInfo, mapEntry)
-			for _, alias in ipairs(aliases) do
-				addon.MythicPlus.variables.seasonMapHash[alias] = true
-				addon.MythicPlus.variables.seasonMapLookup[alias] = mapEntry
-			end
-		end
-	end
-	table.sort(addon.MythicPlus.variables.seasonMapInfo, function(a, b) return a.name < b.name end)
+	if not (addon.functions and addon.functions.BuildChallengeSeasonMapInfo) then return end
+	local info, hash, lookup = addon.functions.BuildChallengeSeasonMapInfo(addon.MythicPlus.variables.portalCompendium)
+	addon.MythicPlus.variables.seasonMapInfo = info
+	addon.MythicPlus.variables.seasonMapHash = hash
+	addon.MythicPlus.variables.seasonMapLookup = lookup
 end
 
 local function refreshTalentReminderSettings()

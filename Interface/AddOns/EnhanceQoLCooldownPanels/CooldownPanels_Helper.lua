@@ -319,6 +319,8 @@ Helper.ENTRY_DEFAULTS = {
 	cooldownGcdDrawBling = false,
 	cooldownGcdDrawSwipe = false,
 	cdmAuraOverlayEnabled = false,
+	cdmAuraOverlayTrackTarget = false,
+	cdmAuraOverlayTargetPlayerOnly = true,
 	cdmAuraOverlayColorUseGlobal = true,
 	cdmAuraOverlayReverse = true,
 	cdmAuraOverlayColor = Helper.ACTIVATION_OVERLAY_COLOR_DEFAULT,
@@ -347,6 +349,8 @@ Helper.ENTRY_DEFAULTS = {
 	procGlowUseGlobal = true,
 	glowUseGlobal = true,
 	glowDuration = 0,
+	auraAppliedSound = false,
+	auraAppliedSoundFile = "None",
 	soundReady = false,
 	soundReadyFile = "None",
 	staticText = "",
@@ -2278,6 +2282,8 @@ function Helper.NormalizeRoot(root)
 	root.defaults.entry.procGlowEnabled = Helper.ENTRY_DEFAULTS.procGlowEnabled
 	root.defaults.entry.procGlowUseGlobal = Helper.ENTRY_DEFAULTS.procGlowUseGlobal
 	root.defaults.entry.glowDuration = Helper.ENTRY_DEFAULTS.glowDuration
+	root.defaults.entry.auraAppliedSound = Helper.ENTRY_DEFAULTS.auraAppliedSound
+	root.defaults.entry.auraAppliedSoundFile = Helper.ENTRY_DEFAULTS.auraAppliedSoundFile
 	root.defaults.entry.soundReady = Helper.ENTRY_DEFAULTS.soundReady
 	root.defaults.entry.soundReadyFile = Helper.ENTRY_DEFAULTS.soundReadyFile
 	return root
@@ -2437,6 +2443,22 @@ function Helper.NormalizePanel(panel, defaults)
 	end
 end
 
+function Helper.NormalizeSpellIDList(values)
+	if type(values) ~= "table" then return nil end
+	local normalized, seen
+	for i = 1, #values do
+		local spellID = tonumber(values[i])
+		if spellID and spellID > 0 and spellID == math.floor(spellID) and not (seen and seen[spellID]) then
+			seen = seen or {}
+			seen[spellID] = true
+			normalized = normalized or {}
+			normalized[#normalized + 1] = spellID
+		end
+	end
+	if normalized then table.sort(normalized) end
+	return normalized
+end
+
 function Helper.NormalizeEntry(entry, defaults)
 	if type(entry) ~= "table" then return end
 	local hadShowCharges = entry.showCharges ~= nil
@@ -2474,6 +2496,9 @@ function Helper.NormalizeEntry(entry, defaults)
 	end
 	if entry.type == "ITEM" and entry.showItemCount == nil then entry.showItemCount = true end
 	if entry.type == "SPELL" then
+		entry.cdmAuraOverlaySpellIDs = Helper.NormalizeSpellIDList(entry.cdmAuraOverlaySpellIDs)
+		entry.cdmAuraOverlayTrackTarget = entry.cdmAuraOverlayTrackTarget == true
+		entry.cdmAuraOverlayTargetPlayerOnly = entry.cdmAuraOverlayTargetPlayerOnly ~= false
 		if not hadShowCharges then entry.showCharges = spellHasCharges(entry.spellID) end
 		if not hadShowStacks then entry.showStacks = false end
 		if hadShowCharges and not hadShowChargesUseGlobal then entry.showChargesUseGlobal = false end
@@ -2491,6 +2516,11 @@ function Helper.NormalizeEntry(entry, defaults)
 		entry.showWhenMissing = entry.showWhenMissing == true
 	elseif entry.type == "SLOT" then
 		if hadShowStacks and not hadShowStacksUseGlobal then entry.showStacksUseGlobal = false end
+	end
+	if entry.type ~= "SPELL" then
+		entry.cdmAuraOverlaySpellIDs = nil
+		entry.cdmAuraOverlayTrackTarget = nil
+		entry.cdmAuraOverlayTargetPlayerOnly = nil
 	end
 	entry.glowDuration = 0
 	local hasLegacySharedProcGlowVisual = entry.type == "SPELL" and (entry.glowStyle ~= nil or entry.glowInset ~= nil)
@@ -2619,6 +2649,10 @@ function Helper.NormalizeEntry(entry, defaults)
 			and entry.glowPixelCount == nil
 			and entry.glowPixelSpeed == nil
 			and entry.glowPixelThickness == nil
+	end
+	if type(entry.auraAppliedSound) ~= "boolean" then entry.auraAppliedSound = Helper.ENTRY_DEFAULTS.auraAppliedSound end
+	if (type(entry.auraAppliedSoundFile) ~= "string" and type(entry.auraAppliedSoundFile) ~= "number") or entry.auraAppliedSoundFile == "" then
+		entry.auraAppliedSoundFile = Helper.ENTRY_DEFAULTS.auraAppliedSoundFile
 	end
 	if type(entry.soundReady) ~= "boolean" then entry.soundReady = Helper.ENTRY_DEFAULTS.soundReady end
 	if type(entry.soundReadyFile) ~= "string" or entry.soundReadyFile == "" then entry.soundReadyFile = Helper.ENTRY_DEFAULTS.soundReadyFile end

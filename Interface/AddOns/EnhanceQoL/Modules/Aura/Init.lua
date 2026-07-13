@@ -59,6 +59,16 @@ function addon.Aura.functions.InitDB()
 		textColor = { 1, 0.15, 0.15, 1 },
 		iconSize = 28,
 		customIcon = nil,
+		glow = {
+			enabled = false,
+			style = "MARCHING_ANTS",
+			color = { 1, 0.15, 0.15, 1 },
+			inset = 0,
+			pixelBorder = false,
+			pixelCount = 8,
+			pixelSpeed = 0.25,
+			thickness = 2,
+		},
 		background = {
 			enabled = false,
 			color = { 0, 0, 0, 0.35 },

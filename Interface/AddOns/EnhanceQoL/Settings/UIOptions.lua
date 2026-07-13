@@ -41,6 +41,7 @@ local COOLDOWN_VIEWER_VISIBILITY_MODES = constants.COOLDOWN_VIEWER_VISIBILITY_MO
 		PLAYER_HAS_TARGET = "PLAYER_HAS_TARGET",
 		PLAYER_CASTING = "PLAYER_CASTING",
 		PLAYER_IN_GROUP = "PLAYER_IN_GROUP",
+		SHOW_IN_INSTANCE = "SHOW_IN_INSTANCE",
 		NONE = "NONE",
 		HIDE_WHILE_MOUNTED = "HIDE_WHILE_MOUNTED",
 	}
@@ -70,21 +71,31 @@ local DEFAULT_NAMEPLATE_FEATURE_KEYS = constants.DEFAULT_NAMEPLATE_FEATURE_KEYS
 		questMarkerSize = "nameplateQuestMarkerSize",
 		targetMarkers = "nameplateTargetMarkers",
 		targetMarkerAtlas = "nameplateTargetMarkerAtlas",
+		targetMarkerHideFriendly = "nameplateTargetMarkerHideFriendly",
 		targetMarkerSize = "nameplateTargetMarkerSize",
 		focusHealthbarTexture = "nameplateFocusHealthbarTexture",
 		mobColorBoss = "nameplateMobColorBoss",
+		mobColorBossEnabled = "nameplateMobColorBossEnabled",
 		mobColorMiniboss = "nameplateMobColorMiniboss",
+		mobColorMinibossEnabled = "nameplateMobColorMinibossEnabled",
 		mobColorCaster = "nameplateMobColorCaster",
+		mobColorCasterEnabled = "nameplateMobColorCasterEnabled",
 		mobColorMelee = "nameplateMobColorMelee",
+		mobColorMeleeEnabled = "nameplateMobColorMeleeEnabled",
 		mobColorNeutral = "nameplateMobColorNeutral",
+		mobColorNeutralEnabled = "nameplateMobColorNeutralEnabled",
+		mobColorTapped = "nameplateMobColorTapped",
+		mobColorTappedEnabled = "nameplateMobColorTappedEnabled",
 		mobColorTankMode = "nameplateMobColorTankMode",
 		mobColorThreatLost = "nameplateMobColorThreatLost",
+		mobColorThreatLostEnabled = "nameplateMobColorThreatLostEnabled",
 		mobColorThreatWarning = "nameplateMobColorThreatWarning",
+		mobColorThreatWarningEnabled = "nameplateMobColorThreatWarningEnabled",
 		mobColorTrivial = "nameplateMobColorTrivial",
+		mobColorTrivialEnabled = "nameplateMobColorTrivialEnabled",
 		mobColorsInDungeons = "nameplateMobColorsInDungeons",
 		mobColorsOutsideDungeons = "nameplateMobColorsOutsideDungeons",
 		mobTankMode = "nameplateMobTankMode",
-		mobThreatColors = "nameplateMobThreatColors",
 	}
 
 local function getCachedLSMMedia(mediaType)
@@ -1256,6 +1267,7 @@ local function createCooldownViewerDropdowns(category, expandable)
 		},
 		{ value = COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_CASTING, text = L["Player is casting"] or "Player is casting" },
 		{ value = COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_IN_GROUP, text = L["In party/raid"] or "In party/raid" },
+		{ value = COOLDOWN_VIEWER_VISIBILITY_MODES.SHOW_IN_INSTANCE, text = L["Show in instance"] or "Show in instance" },
 		{ value = COOLDOWN_VIEWER_VISIBILITY_MODES.MOUSEOVER, text = L["cooldownManagerShowMouseover"] or "On mouseover" },
 		{
 			value = COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_HAS_FOCUS,
@@ -1358,6 +1370,7 @@ local function createSpellActivationOverlayDropdown(category, expandable)
 		{ value = COOLDOWN_VIEWER_VISIBILITY_MODES.FLYING_ACTIVE, text = L["visibilityRule_flying"] or "While flying" },
 		{ value = COOLDOWN_VIEWER_VISIBILITY_MODES.FLYING_INACTIVE, text = L["VisibilityCondNotFlying"] or "Not flying" },
 		{ value = COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_CASTING, text = L["Player is casting"] or "Player is casting" },
+		{ value = COOLDOWN_VIEWER_VISIBILITY_MODES.SHOW_IN_INSTANCE, text = L["Show in instance"] or "Show in instance" },
 		{
 			value = COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_HAS_FOCUS,
 			text = L["When I have a focus"] or "When I have a focus",
@@ -1533,19 +1546,6 @@ local function createFrameCategory()
 		parentSection = expandable,
 	})
 
-	addon.functions.SettingsCreateHeadline(category, L["Event Toasts"] or "Event Toasts", {
-		parentSection = expandable,
-	})
-	addon.functions.SettingsCreateCheckbox(category, {
-		var = "hideEventToasts",
-		text = L["hideEventToasts"] or "Hide Event Toasts",
-		desc = L["hideEventToastsDesc"] or "Suppresses Blizzard event toasts such as scenario and activity banners.",
-		func = function(value)
-			addon.db["hideEventToasts"] = value and true or false
-			if addon.functions.ApplyEventToastVisibility then addon.functions.ApplyEventToastVisibility() end
-		end,
-		parentSection = expandable,
-	})
 end
 
 function addon.functions.initUIOptions()
@@ -1602,16 +1602,19 @@ local function createNameplatesCategory()
 		name = label,
 		description = L["configCenterPageDescNameplates"]
 			or "Adjust player names, nameplate text, markers, mob colors and dungeon-specific nameplate behavior.",
+		configPageID = "interface.nameplates",
+		configPageKey = "Nameplates",
 		expanded = false,
 		colorizeTitle = false,
 		newTagID = "Nameplates",
 		iconKey = "nameplate",
+		sortGroups = false,
 	})
 	addon.SettingsLayout.uiNameplatesExpandable = expandable
 
-	addon.functions.SettingsCreateHeadline(category, _G.SETTINGS or "Settings", {
+	addon.functions.SettingsCreateHeadline(category, L["Friendly"] or "Friendly", {
 		parentSection = expandable,
-		groupID = "settings",
+		groupID = "friendly",
 		order = 1,
 	})
 
@@ -1681,10 +1684,6 @@ local function createNameplatesCategory()
 		parentSection = expandable,
 	})
 
-	addon.functions.SettingsCreateHeadline(category, _G.STAT_CATEGORY_ENHANCEMENTS, {
-		parentSection = expandable,
-	})
-
 	addon.functions.SettingsCreateCheckbox(category, {
 		var = DEFAULT_NAMEPLATE_FEATURE_KEYS.auraClickthrough,
 		text = L["nameplateAuraClickthrough"] or "Make nameplate auras click-through",
@@ -1697,6 +1696,12 @@ local function createNameplatesCategory()
 			end
 		end,
 		parentSection = expandable,
+	})
+
+	addon.functions.SettingsCreateHeadline(category, L["Text"] or "Text", {
+		parentSection = expandable,
+		groupID = "text",
+		order = 20,
 	})
 
 	local nameplateTextToggle = addon.functions.SettingsCreateCheckbox(category, {
@@ -1832,6 +1837,12 @@ local function createNameplatesCategory()
 	}
 	local nameplateMarkerAnchorOrder = { "TOPLEFT", "TOP", "TOPRIGHT", "LEFT", "CENTER", "RIGHT", "BOTTOMLEFT", "BOTTOM", "BOTTOMRIGHT" }
 
+	addon.functions.SettingsCreateHeadline(category, L["Markers"] or "Markers", {
+		parentSection = expandable,
+		groupID = "markers",
+		order = 30,
+	})
+
 	local targetMarkersToggle = addon.functions.SettingsCreateCheckbox(category, {
 		var = DEFAULT_NAMEPLATE_FEATURE_KEYS.targetMarkers,
 		text = L["nameplateTargetMarkers"] or "Show target markers on default nameplates",
@@ -1844,19 +1855,51 @@ local function createNameplatesCategory()
 			end
 		end,
 		parentSection = expandable,
+		order = 10,
 	})
 
 	local function areTargetMarkersEnabled() return targetMarkersToggle and targetMarkersToggle.setting and targetMarkersToggle.setting:GetValue() == true end
+
+	addon.functions.SettingsCreateCheckbox(category, {
+		var = DEFAULT_NAMEPLATE_FEATURE_KEYS.targetMarkerHideFriendly,
+		text = L["nameplateTargetMarkerHideFriendly"] or "Hide target markers on friendly targets",
+		desc = L["nameplateTargetMarkerHideFriendlyDesc"],
+		newTagID = DEFAULT_NAMEPLATE_FEATURE_KEYS.targetMarkerHideFriendly,
+		func = function(value)
+			addon.db[DEFAULT_NAMEPLATE_FEATURE_KEYS.targetMarkerHideFriendly] = value and true or false
+			if addon.functions.RefreshDefaultNameplateTargetMarkers then addon.functions.RefreshDefaultNameplateTargetMarkers() end
+		end,
+		parent = true,
+		element = targetMarkersToggle.element,
+		parentCheck = areTargetMarkersEnabled,
+		parentSection = expandable,
+		order = 15,
+	})
 
 	local function formatTargetMarkerAtlasOption(atlas)
 		return ("|A:%s:18:18|a"):format(atlas)
 	end
 
 	local targetMarkerAtlasOptions = {
-		["shop-header-arrow-hover"] = formatTargetMarkerAtlasOption("shop-header-arrow-hover"),
+		["common-icon-forwardarrow"] = formatTargetMarkerAtlasOption("common-icon-forwardarrow"),
+		["CovenantSanctum-Renown-Arrow"] = formatTargetMarkerAtlasOption("CovenantSanctum-Renown-Arrow"),
+		["CovenantSanctum-Renown-DoubleArrow"] = formatTargetMarkerAtlasOption("CovenantSanctum-Renown-DoubleArrow"),
 		["CovenantSanctum-Renown-DoubleArrow-Hover"] = formatTargetMarkerAtlasOption("CovenantSanctum-Renown-DoubleArrow-Hover"),
+		["gearupdate-arrow-bullet-point"] = formatTargetMarkerAtlasOption("gearupdate-arrow-bullet-point"),
+		["pvptalents-selectedarrow"] = formatTargetMarkerAtlasOption("pvptalents-selectedarrow"),
+		["shop-header-arrow-hover"] = formatTargetMarkerAtlasOption("shop-header-arrow-hover"),
+		["wowlabs-spectatecycling-arrowright"] = formatTargetMarkerAtlasOption("wowlabs-spectatecycling-arrowright"),
 	}
-	local targetMarkerAtlasOrder = { "shop-header-arrow-hover", "CovenantSanctum-Renown-DoubleArrow-Hover" }
+	local targetMarkerAtlasOrder = {
+		"shop-header-arrow-hover",
+		"CovenantSanctum-Renown-DoubleArrow-Hover",
+		"common-icon-forwardarrow",
+		"CovenantSanctum-Renown-Arrow",
+		"CovenantSanctum-Renown-DoubleArrow",
+		"wowlabs-spectatecycling-arrowright",
+		"gearupdate-arrow-bullet-point",
+		"pvptalents-selectedarrow",
+	}
 		local function buildNameplateStatusbarDropdown()
 			local map = {
 				[addon.variables.nameplateFocusHealthbarDefaultTexture or "Interface\\TargetingFrame\\UI-StatusBar"] = "Blizzard Unit Frame",
@@ -1902,6 +1945,7 @@ local function createNameplatesCategory()
 		element = targetMarkersToggle.element,
 		parentCheck = areTargetMarkersEnabled,
 		parentSection = expandable,
+		order = 20,
 	})
 
 	addon.functions.SettingsCreateSlider(category, {
@@ -1921,6 +1965,7 @@ local function createNameplatesCategory()
 		element = targetMarkersToggle.element,
 		parentCheck = areTargetMarkersEnabled,
 		parentSection = expandable,
+		order = 30,
 	})
 
 	addon.functions.SettingsCreateScrollDropdown(category, {
@@ -1947,6 +1992,7 @@ local function createNameplatesCategory()
 			end
 		end,
 		parentSection = expandable,
+		order = 40,
 	})
 
 	local eliteMarkersToggle = addon.functions.SettingsCreateCheckbox(category, {
@@ -1961,6 +2007,7 @@ local function createNameplatesCategory()
 			end
 		end,
 		parentSection = expandable,
+		order = 50,
 	})
 
 	local function areEliteMarkersEnabled() return eliteMarkersToggle and eliteMarkersToggle.setting and eliteMarkersToggle.setting:GetValue() == true end
@@ -1990,6 +2037,7 @@ local function createNameplatesCategory()
 		element = eliteMarkersToggle.element,
 		parentCheck = areEliteMarkersEnabled,
 		parentSection = expandable,
+		order = 60,
 	})
 
 	addon.functions.SettingsCreateSlider(category, {
@@ -2009,6 +2057,13 @@ local function createNameplatesCategory()
 		element = eliteMarkersToggle.element,
 		parentCheck = areEliteMarkersEnabled,
 		parentSection = expandable,
+		order = 70,
+	})
+
+	addon.functions.SettingsCreateHeadline(category, L["Quest"] or "Quest", {
+		parentSection = expandable,
+		groupID = "quest",
+		order = 40,
 	})
 
 	local questMarkersToggle = addon.functions.SettingsCreateCheckbox(category, {
@@ -2073,6 +2128,12 @@ local function createNameplatesCategory()
 		parentSection = expandable,
 	})
 
+	addon.functions.SettingsCreateHeadline(category, L["Colors"] or "Colors", {
+		parentSection = expandable,
+		groupID = "colors",
+		order = 50,
+	})
+
 	local mobColorsToggle = addon.functions.SettingsCreateCheckbox(category, {
 		var = DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColors,
 		text = L["nameplateMobColors"] or "Color default nameplates",
@@ -2121,79 +2182,57 @@ local function createNameplatesCategory()
 		parentSection = expandable,
 	})
 
-	local function createNameplateMobColorPicker(var, text, parentCheck, parentElement)
-		addon.functions.SettingsCreateColorPicker(category, {
-			var = var,
+	local function createNameplateMobColorSourceToggle(enabledVar, colorVar, text, newTagID, desc)
+		addon.functions.SettingsCreateCheckbox(category, {
+			var = enabledVar,
+			newTagID = newTagID,
 			text = text,
-			modernDefault = function() return addon.dbDefaults and addon.dbDefaults[var] or nil end,
-			callback = function()
-				if addon.functions.RefreshDefaultNameplateMobColors then addon.functions.RefreshDefaultNameplateMobColors() end
+			desc = desc,
+			func = function(value)
+				addon.db[enabledVar] = value and true or false
+				refreshNameplateMobColorScope()
+			end,
+			getColor = function()
+				local color = addon.db[colorVar] or (addon.dbDefaults and addon.dbDefaults[colorVar]) or { r = 1, g = 1, b = 1, a = 1 }
+				return color.r or 1, color.g or 1, color.b or 1, color.a or 1
+			end,
+			setColor = function(_, r, g, b, a)
+				addon.db[colorVar] = { r = r, g = g, b = b, a = a }
+				refreshNameplateMobColorScope()
+			end,
+			getDefaultColor = function()
+				local color = addon.dbDefaults and addon.dbDefaults[colorVar]
+				return color and color.r or 1, color and color.g or 1, color and color.b or 1, color and color.a or 1
 			end,
 			parent = true,
-			element = parentElement or mobColorsToggle.element,
-			parentCheck = parentCheck or areMobColorsEnabled,
-			colorizeLabel = false,
+			element = mobColorsToggle.element,
+			parentCheck = areMobColorsEnabled,
 			parentSection = expandable,
 		})
 	end
 
-	createNameplateMobColorPicker(DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorBoss, L["nameplateMobColorBoss"] or "Boss color")
-	createNameplateMobColorPicker(DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorMiniboss, L["nameplateMobColorMiniboss"] or "Mini-boss color")
-	createNameplateMobColorPicker(DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorCaster, L["nameplateMobColorCaster"] or "Caster color")
-	createNameplateMobColorPicker(DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorMelee, L["nameplateMobColorMelee"] or "Melee color")
-	createNameplateMobColorPicker(DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorNeutral, L["nameplateMobColorNeutral"] or "Neutral color")
+	createNameplateMobColorSourceToggle(DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorBossEnabled, DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorBoss, L["nameplateMobColorBoss"] or "Boss color", DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorBossEnabled)
+	createNameplateMobColorSourceToggle(DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorMinibossEnabled, DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorMiniboss, L["nameplateMobColorMiniboss"] or "Mini-boss color", DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorMinibossEnabled)
+	createNameplateMobColorSourceToggle(DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorCasterEnabled, DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorCaster, L["nameplateMobColorCaster"] or "Caster color", DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorCasterEnabled)
+	createNameplateMobColorSourceToggle(DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorMeleeEnabled, DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorMelee, L["nameplateMobColorMelee"] or "Melee color", DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorMeleeEnabled)
+	createNameplateMobColorSourceToggle(DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorNeutralEnabled, DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorNeutral, L["nameplateMobColorNeutral"] or "Neutral color", DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorNeutralEnabled)
+	createNameplateMobColorSourceToggle(DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorTappedEnabled, DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorTapped, L["nameplateMobColorTapped"] or "Tapped color", DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorTappedEnabled)
+	createNameplateMobColorSourceToggle(DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorTrivialEnabled, DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorTrivial, L["nameplateMobColorTrivial"] or "Trivial color", DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorTrivialEnabled)
 
-	local tankModeToggle = addon.functions.SettingsCreateCheckbox(category, {
-		var = DEFAULT_NAMEPLATE_FEATURE_KEYS.mobTankMode,
-		text = L["nameplateMobTankMode"] or "Tank mode color",
-		desc = L["nameplateMobTankModeDesc"] or "When you are tanking, colors enemies currently in combat with you using a dedicated color instead of the normal mob coloring.",
-		func = function(value)
-			addon.db[DEFAULT_NAMEPLATE_FEATURE_KEYS.mobTankMode] = value and true or false
-			refreshNameplateMobColorScope()
-		end,
-		parent = true,
-		element = mobColorsToggle.element,
-		parentCheck = areMobColorsEnabled,
-		parentSection = expandable,
-	})
-	local function isTankModeColorEnabled()
-		return areMobColorsEnabled() and tankModeToggle and tankModeToggle.setting and tankModeToggle.setting:GetValue() == true
-	end
-	addon.functions.SettingsCreateColorPicker(category, {
-		var = DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorTankMode,
-		text = L["nameplateMobColorTankMode"] or "Tank mode color",
-		modernDefault = function() return addon.dbDefaults and addon.dbDefaults[DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorTankMode] or nil end,
-		callback = function()
-			if addon.functions.RefreshDefaultNameplateMobColors then addon.functions.RefreshDefaultNameplateMobColors() end
-		end,
-		parent = true,
-		element = tankModeToggle.element,
-		parentCheck = isTankModeColorEnabled,
-		colorizeLabel = false,
+	addon.functions.SettingsCreateSectionHeader(category, L["nameplateMobThreatColors"] or "Threat colors", {
 		parentSection = expandable,
 	})
 
-	local threatColorsToggle = addon.functions.SettingsCreateCheckbox(category, {
-		var = DEFAULT_NAMEPLATE_FEATURE_KEYS.mobThreatColors,
-		newTagID = DEFAULT_NAMEPLATE_FEATURE_KEYS.mobThreatColors,
-		text = L["nameplateMobThreatColors"] or "Threat colors",
-		desc = L["nameplateMobThreatColorsDesc"] or "Use EQOL threat warning and threat lost colors on default enemy nameplates. Turn this off to keep Blizzard's threat healthbar coloring.",
-		func = function(value)
-			addon.db[DEFAULT_NAMEPLATE_FEATURE_KEYS.mobThreatColors] = value and true or false
-			refreshNameplateMobColorScope()
-		end,
-		parent = true,
-		element = mobColorsToggle.element,
-		parentCheck = areMobColorsEnabled,
-		parentSection = expandable,
-	})
-	local function areThreatColorsEnabled()
-		return areMobColorsEnabled() and threatColorsToggle and threatColorsToggle.setting and threatColorsToggle.setting:GetValue() == true
-	end
+	createNameplateMobColorSourceToggle(
+		DEFAULT_NAMEPLATE_FEATURE_KEYS.mobTankMode,
+		DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorTankMode,
+		L["nameplateMobTankMode"] or "Tank mode color",
+		nil,
+		L["nameplateMobTankModeDesc"] or "When you are tanking, colors enemies currently in combat with you using a dedicated color instead of the normal mob coloring."
+	)
 
-	createNameplateMobColorPicker(DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorThreatWarning, L["nameplateMobColorThreatWarning"] or "Threat warning color", areThreatColorsEnabled, threatColorsToggle.element)
-	createNameplateMobColorPicker(DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorThreatLost, L["nameplateMobColorThreatLost"] or "Threat lost color", areThreatColorsEnabled, threatColorsToggle.element)
-	createNameplateMobColorPicker(DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorTrivial, L["nameplateMobColorTrivial"] or "Trivial color")
+	createNameplateMobColorSourceToggle(DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorThreatWarningEnabled, DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorThreatWarning, L["nameplateMobColorThreatWarning"] or "Threat warning color", DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorThreatWarningEnabled)
+	createNameplateMobColorSourceToggle(DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorThreatLostEnabled, DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorThreatLost, L["nameplateMobColorThreatLost"] or "Threat lost color", DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorThreatLostEnabled)
 end
 
 local function createTotalAbsorbTrackerSettings(category, expandable)
@@ -2235,25 +2274,6 @@ local function createCastbarCategory()
 		iconKey = "castbar",
 	})
 	addon.SettingsLayout.uiCastbarsExpandable = expandable
-
-	addon.functions.SettingsCreateHeadline(category, C_Spell.GetSpellName(61304) or "GCD", {
-		parentSection = expandable,
-	})
-	addon.functions.SettingsCreateCheckbox(category, {
-		var = "gcdBarEnabled",
-		text = L["gcdBarEnabled"] or "Enable GCD bar",
-		desc = L["gcdBarDesc"],
-		func = function(value)
-			addon.db["gcdBarEnabled"] = value and true or false
-			if not addon.GCDBar and addon.functions.LoadSubAddon then addon.functions.LoadSubAddon("EnhanceQoLResourceBars") end
-			if addon.GCDBar and addon.GCDBar.OnSettingChanged then addon.GCDBar:OnSettingChanged(addon.db["gcdBarEnabled"]) end
-		end,
-		parentSection = expandable,
-	})
-
-	addon.functions.SettingsCreateText(category, "|cffffd700" .. (L["gcdBarEditModeHint"] or "Configure size, texture, and color in Edit Mode.") .. "|r", {
-		parentSection = expandable,
-	})
 
 	addon.functions.SettingsCreateHeadline(category, L["FocusInterruptTracker"] or "Focus Interrupt Tracker", {
 		parentSection = expandable,
@@ -2332,8 +2352,12 @@ local function createCastbarCategory()
 		}
 	)
 
-	addon.functions.SettingsCreateHeadline(category, L["CombatText"] or "Combat text", {
+	local combatTextGroupID = "combat-indicators"
+	local combatTextGroupTitle = L["CombatText"] or "Combat text"
+	addon.functions.SettingsCreateHeadline(category, combatTextGroupTitle, {
 		parentSection = expandable,
+		groupID = combatTextGroupID,
+		groupTitle = combatTextGroupTitle,
 	})
 	local combatTextEnabled = addon.functions.SettingsCreateCheckbox(category, {
 		var = "combatTextEnabled",
@@ -2344,6 +2368,8 @@ local function createCastbarCategory()
 			if addon.CombatText and addon.CombatText.OnSettingChanged then addon.CombatText:OnSettingChanged(addon.db["combatTextEnabled"]) end
 		end,
 		parentSection = expandable,
+		groupID = combatTextGroupID,
+		groupTitle = combatTextGroupTitle,
 	})
 	local function isCombatTextEnabled()
 		return combatTextEnabled and combatTextEnabled.setting and combatTextEnabled.setting:GetValue() == true
@@ -2366,6 +2392,8 @@ local function createCastbarCategory()
 		element = combatTextEnabled and combatTextEnabled.element,
 		parentCheck = isCombatTextEnabled,
 		parentSection = expandable,
+		groupID = combatTextGroupID,
+		groupTitle = combatTextGroupTitle,
 	})
 	local combatAlwaysModeCombatOnly = addon.CombatText and addon.CombatText.ALWAYS_VISIBLE_MODE_COMBAT_ONLY or "COMBAT_ONLY"
 	local combatAlwaysModeStatus = addon.CombatText and addon.CombatText.ALWAYS_VISIBLE_MODE_STATUS or "STATUS"
@@ -2394,6 +2422,8 @@ local function createCastbarCategory()
 		element = combatAlwaysVisible and combatAlwaysVisible.element,
 		parentCheck = function() return isCombatTextEnabled() and combatAlwaysVisible and combatAlwaysVisible.setting and combatAlwaysVisible.setting:GetValue() == true end,
 		parentSection = expandable,
+		groupID = combatTextGroupID,
+		groupTitle = combatTextGroupTitle,
 	})
 	addon.functions.SettingsCreateInput(category, {
 		var = "combatTextEnterText",
@@ -2415,6 +2445,8 @@ local function createCastbarCategory()
 		element = combatTextEnabled and combatTextEnabled.element,
 		parentCheck = isCombatTextEnabled,
 		parentSection = expandable,
+		groupID = combatTextGroupID,
+		groupTitle = combatTextGroupTitle,
 	})
 	addon.functions.SettingsCreateInput(category, {
 		var = "combatTextLeaveText",
@@ -2436,9 +2468,40 @@ local function createCastbarCategory()
 		element = combatTextEnabled and combatTextEnabled.element,
 		parentCheck = isCombatTextEnabled,
 		parentSection = expandable,
+		groupID = combatTextGroupID,
+		groupTitle = combatTextGroupTitle,
+	})
+	addon.functions.SettingsCreateSectionHeader(category, _G.COMBAT_TEXT_LABEL or combatTextGroupTitle, {
+		parentSection = expandable,
+		groupID = combatTextGroupID,
+		groupTitle = combatTextGroupTitle,
+	})
+	addon.functions.SettingsCreateCheckboxes(category, {
+		{
+			var = "floatingCombatTextCombatDamage_v2",
+			text = L["floatingCombatTextCombatDamage_v2"],
+			get = function() return getCVarOptionState("floatingCombatTextCombatDamage_v2") end,
+			func = function(value) setCVarOptionState("floatingCombatTextCombatDamage_v2", value) end,
+			default = false,
+			parentSection = expandable,
+			groupID = combatTextGroupID,
+			groupTitle = combatTextGroupTitle,
+		},
+		{
+			var = "floatingCombatTextCombatHealing_v2",
+			text = L["floatingCombatTextCombatHealing_v2"],
+			get = function() return getCVarOptionState("floatingCombatTextCombatHealing_v2") end,
+			func = function(value) setCVarOptionState("floatingCombatTextCombatHealing_v2", value) end,
+			default = false,
+			parentSection = expandable,
+			groupID = combatTextGroupID,
+			groupTitle = combatTextGroupTitle,
+		},
 	})
 	addon.functions.SettingsCreateText(category, "|cffffd700" .. (L["combatTextEditModeHint"] or "Configure text size, font, color, and position in Edit Mode.") .. "|r", {
 		parentSection = expandable,
+		groupID = combatTextGroupID,
+		groupTitle = combatTextGroupTitle,
 	})
 
 	local function isCustomCastbarEnabled()

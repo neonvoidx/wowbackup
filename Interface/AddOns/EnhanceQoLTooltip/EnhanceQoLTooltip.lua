@@ -158,7 +158,7 @@ local function FormatDungeonRunLevel(run)
 	if run.finishedSuccess then
 		local timeLimit = select(3, C_ChallengeMode.GetMapUIInfo(run.challengeModeID))
 		if timeLimit and run.bestRunDurationMS then
-			local bestRunDuration = run.bestRunDurationMS / 1000
+			local bestRunDuration = math.floor(run.bestRunDurationMS / 1000)
 			if bestRunDuration <= timeLimit * 0.6 then
 				stars = "+++"
 			elseif bestRunDuration <= timeLimit * 0.8 then
@@ -560,6 +560,12 @@ local realmLocaleFlagAssets = {
 	zhTW = "flag_zhTW.tga",
 }
 
+local function GetRealmFlagFileName(info)
+	if type(info) ~= "table" then return nil end
+	if info.region == "US" and type(info.timezone) == "string" and safeFind(info.timezone, "Australia/", true) then return "flag_oce.tga" end
+	return realmLocaleFlagAssets[info.locale]
+end
+
 local function FormatRealmFlagTexture(fileName, variant)
 	if variant == "lfg" then
 		return ("|TInterface\\AddOns\\EnhanceQoL\\Assets\\%s:13:20:0:-1|t"):format(fileName)
@@ -570,13 +576,29 @@ end
 local function GetRealmFlagPlaceholder(info, allowTextures, variant)
 	if type(info) ~= "table" then return nil end
 	local locale = info.locale
-	if info.region == "US" and type(info.timezone) == "string" and safeFind(info.timezone, "Australia/", true) then
-		return allowTextures and FormatRealmFlagTexture("flag_oce.tga", variant) or "[enAU]"
-	end
-	local fileName = realmLocaleFlagAssets[info.locale]
+	local fileName = GetRealmFlagFileName(info)
 	if fileName and allowTextures then return FormatRealmFlagTexture(fileName, variant) end
+	if fileName == "flag_oce.tga" then return "[enAU]" end
 	if type(locale) == "string" and locale ~= "" then return "[" .. locale .. "]" end
 	return nil
+end
+
+local function SetLFGRealmFlagTexture(owner, name, fileName)
+	if not owner or not name then return end
+	local texture = owner.__EnhanceQoLRealmFlagTexture
+	if not fileName then
+		if texture then texture:Hide() end
+		return
+	end
+	if not texture then
+		texture = owner:CreateTexture(nil, "ARTWORK")
+		owner.__EnhanceQoLRealmFlagTexture = texture
+	end
+	texture:SetTexture("Interface\\AddOns\\EnhanceQoL\\Assets\\" .. fileName)
+	texture:SetSize(20, 13)
+	texture:ClearAllPoints()
+	texture:SetPoint("LEFT", name, "LEFT", 0, 0)
+	texture:Show()
 end
 
 local function IsRealmInfoFieldEnabled(field, legacyKey)
@@ -710,15 +732,17 @@ local function UpdateLFGSearchEntryRealmFlag(entry)
 	text = StripPreviousRealmFlagPrefix(entry, text)
 
 	local info = GetRealmInfoForLFGResult(entry.resultID)
-	local prefix = GetRealmFlagPlaceholder(info, not isTooltipRestricted(), "lfg")
-	if not prefix then
+	local fileName = not isTooltipRestricted() and GetRealmFlagFileName(info) or nil
+	if not fileName then
+		SetLFGRealmFlagTexture(entry, entry.Name, nil)
 		entry.__EnhanceQoLRealmFlagPrefix = nil
 		entry.Name:SetText(text)
 		return
 	end
 
-	entry.__EnhanceQoLRealmFlagPrefix = prefix
-	entry.Name:SetText(prefix .. " " .. (text or ""))
+	SetLFGRealmFlagTexture(entry, entry.Name, fileName)
+	entry.__EnhanceQoLRealmFlagPrefix = nil
+	entry.Name:SetText("      " .. (text or ""))
 end
 
 local function AddLFGSearchEntryRealmInfo(tooltip, resultID)
@@ -755,16 +779,17 @@ local function UpdateLFGApplicantMemberRealmFlag(memberFrame, appID, memberIdx)
 	text = StripPreviousRealmFlagPrefix(memberFrame, text)
 
 	local info = GetRealmInfoForLFGApplicant(appID, memberIdx)
-	local prefix = GetRealmFlagPlaceholder(info, not isTooltipRestricted(), "lfg")
-	if not prefix then
+	local fileName = not isTooltipRestricted() and GetRealmFlagFileName(info) or nil
+	if not fileName then
+		SetLFGRealmFlagTexture(memberFrame, memberFrame.Name, nil)
 		memberFrame.__EnhanceQoLRealmFlagPrefix = nil
 		memberFrame.Name:SetText(text)
 		return
 	end
 
-	local rest = text:match("^%s*(.*)$")
-	memberFrame.__EnhanceQoLRealmFlagPrefix = prefix
-	memberFrame.Name:SetText(prefix .. " " .. (rest or text or ""))
+	SetLFGRealmFlagTexture(memberFrame, memberFrame.Name, fileName)
+	memberFrame.__EnhanceQoLRealmFlagPrefix = nil
+	memberFrame.Name:SetText("      " .. (text or ""))
 end
 
 local function fmtNum(n)
@@ -1180,7 +1205,7 @@ local function checkAdditionalTooltip(tooltip)
 						if data.bestRunLevel > 0 then
 							r, g, b = 1, 1, 1
 
-							local bestRunDuration = data.bestRunDurationMS / 1000
+							local bestRunDuration = math.floor(data.bestRunDurationMS / 1000)
 							local timeForPlus3 = timeLimit * 0.6
 							local timeForPlus2 = timeLimit * 0.8
 							local timeForPlus1 = timeLimit

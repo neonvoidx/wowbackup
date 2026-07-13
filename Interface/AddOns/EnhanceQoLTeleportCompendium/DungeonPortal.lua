@@ -1379,7 +1379,7 @@ local function updateRioScoreFrame()
 				if data.bestRunLevel > 0 then
 					r, g, b = 1, 1, 1
 
-					local bestRunDuration = data.bestRunDurationMS / 1000
+					local bestRunDuration = math.floor(data.bestRunDurationMS / 1000)
 					local timeForPlus3 = timeLimit * 0.6
 					local timeForPlus2 = timeLimit * 0.8
 					local timeForPlus1 = timeLimit

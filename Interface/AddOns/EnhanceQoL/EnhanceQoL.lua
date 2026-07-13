@@ -164,6 +164,7 @@ local COOLDOWN_VIEWER_VISIBILITY_MODES = {
 	PLAYER_HAS_TARGET = "PLAYER_HAS_TARGET",
 	PLAYER_CASTING = "PLAYER_CASTING",
 	PLAYER_IN_GROUP = "PLAYER_IN_GROUP",
+	SHOW_IN_INSTANCE = "SHOW_IN_INSTANCE",
 	ALWAYS_HIDDEN = "ALWAYS_HIDDEN",
 }
 addon.constants.COOLDOWN_VIEWER_VISIBILITY_MODES = COOLDOWN_VIEWER_VISIBILITY_MODES
@@ -180,6 +181,7 @@ local SPELL_ACTIVATION_OVERLAY_VISIBILITY_KEYS = {
 	[COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_CASTING] = true,
 	[COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_HAS_FOCUS] = true,
 	[COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_HAS_TARGET] = true,
+	[COOLDOWN_VIEWER_VISIBILITY_MODES.SHOW_IN_INSTANCE] = true,
 }
 addon.constants.SPELL_ACTIVATION_OVERLAY_VISIBILITY_KEYS = SPELL_ACTIVATION_OVERLAY_VISIBILITY_KEYS
 
@@ -490,13 +492,21 @@ local visibilityRuleMetadata = {
 		unitRequirement = "player",
 		order = 45,
 	},
+	SHOW_IN_INSTANCE = {
+		key = "SHOW_IN_INSTANCE",
+		label = L["Show in instance"] or "Show in instance",
+		description = L["visibilityRule_showInInstance_desc"],
+		appliesTo = { actionbar = true, frame = true },
+		contextKey = "inInstance",
+		order = 46,
+	},
 	PLAYER_IN_GROUP = {
 		key = "PLAYER_IN_GROUP",
 		label = L["In party/raid"] or "In party/raid",
 		description = L["visibilityRule_inGroup_desc"],
 		appliesTo = { actionbar = true, frame = true },
 		unitRequirement = "player",
-		order = 46,
+		order = 47,
 	},
 	PLAYER_IN_PARTY = {
 		key = "PLAYER_IN_PARTY",
@@ -504,7 +514,7 @@ local visibilityRuleMetadata = {
 		description = L["visibilityRule_inParty_desc"],
 		appliesTo = { frame = true },
 		unitRequirement = "player",
-		order = 47,
+		order = 48,
 	},
 	PLAYER_IN_RAID = {
 		key = "PLAYER_IN_RAID",
@@ -512,7 +522,7 @@ local visibilityRuleMetadata = {
 		description = L["visibilityRule_inRaid_desc"],
 		appliesTo = { frame = true },
 		unitRequirement = "player",
-		order = 48,
+		order = 49,
 	},
 	ALWAYS_HIDE_IN_GROUP = {
 		key = "ALWAYS_HIDE_IN_GROUP",
@@ -521,7 +531,7 @@ local visibilityRuleMetadata = {
 			or "Hides the player frame whenever you are in a party or raid. While grouped, only this rule (and Mouseover, if enabled) is evaluated; other visibility rules are ignored.",
 		appliesTo = { frame = true },
 		unitRequirement = "player",
-		order = 49,
+		order = 50,
 	},
 	ALWAYS_HIDE_IN_PARTY = {
 		key = "ALWAYS_HIDE_IN_PARTY",
@@ -530,7 +540,7 @@ local visibilityRuleMetadata = {
 			or "Hide the player frame whenever you are in a party, but not in a raid. While in a party, only this rule (and Mouseover, if enabled) is evaluated; other visibility rules are ignored.",
 		appliesTo = { frame = true },
 		unitRequirement = "player",
-		order = 50,
+		order = 51,
 	},
 	ALWAYS_HIDE_IN_RAID = {
 		key = "ALWAYS_HIDE_IN_RAID",
@@ -539,7 +549,7 @@ local visibilityRuleMetadata = {
 			or "Hide the player frame whenever you are in a raid. While in a raid, only this rule (and Mouseover, if enabled) is evaluated; other visibility rules are ignored.",
 		appliesTo = { frame = true },
 		unitRequirement = "player",
-		order = 51,
+		order = 52,
 	},
 	SKYRIDING_ACTIVE = {
 		key = "SKYRIDING_ACTIVE",
@@ -813,6 +823,7 @@ local frameVisibilityContext = {
 	isSkyriding = false,
 	isCasting = false,
 	isMounted = false,
+	inInstance = false,
 }
 local frameVisibilityStates = {}
 local hookedUnitFrames = {}
@@ -882,6 +893,7 @@ local function UpdateFrameVisibilityContext()
 	frameVisibilityContext.isSkyriding = not deadOrGhost and addon.variables and addon.variables.isPlayerSkyriding and true or false
 	frameVisibilityContext.isCasting = IsPlayerCasting()
 	frameVisibilityContext.isMounted = IsPlayerMounted()
+	frameVisibilityContext.inInstance = IsInInstance and IsInInstance() and true or false
 end
 
 local function SafeRegisterUnitEvent(frame, event, ...)
@@ -896,6 +908,7 @@ addon.functions.VisibilityConfigUsesManualEvaluation = function(config, opts)
 	local allowCasting = not (opts and opts.allowCasting == false)
 	if allowMouseover and config.MOUSEOVER then return true end
 	if allowCasting and config.PLAYER_CASTING then return true end
+	if config.SHOW_IN_INSTANCE then return true end
 	return false
 end
 
@@ -1079,6 +1092,10 @@ local function EnsureFrameVisibilityWatcher()
 	watcher:RegisterEvent("PLAYER_TARGET_CHANGED")
 	watcher:RegisterEvent("PLAYER_FLAGS_CHANGED")
 	watcher:RegisterEvent("PLAYER_MOUNT_DISPLAY_CHANGED")
+	watcher:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+	watcher:RegisterEvent("PLAYER_DIFFICULTY_CHANGED")
+	watcher:RegisterEvent("INSTANCE_GROUP_SIZE_CHANGED")
+	watcher:RegisterEvent("UPDATE_INSTANCE_INFO")
 	watcher:RegisterEvent("UPDATE_SHAPESHIFT_FORM")
 	watcher:RegisterEvent("GROUP_ROSTER_UPDATE")
 	SafeRegisterUnitEvent(watcher, "UNIT_SPELLCAST_START", "player")
@@ -1154,11 +1171,13 @@ local function EvaluateFrameVisibility(state)
 		or cfg.PLAYER_IN_GROUP
 		or cfg.PLAYER_IN_PARTY
 		or cfg.PLAYER_IN_RAID
+		or cfg.SHOW_IN_INSTANCE
 	)
 			and true
 		or false
 	if not hasShowRule and HasFrameVisibilityInactiveHideRule(cfg) then return true, "HIDE_RULES_INACTIVE" end
 
+	if cfg.SHOW_IN_INSTANCE and context.inInstance then return true, "SHOW_IN_INSTANCE" end
 	if cfg.ALWAYS_IN_COMBAT and context.inCombat then return true, "ALWAYS_IN_COMBAT" end
 	if cfg.ALWAYS_OUT_OF_COMBAT and not context.inCombat then return true, "ALWAYS_OUT_OF_COMBAT" end
 	if cfg.SKYRIDING_ACTIVE and state.supportsPlayerMountedRule and context.isSkyriding then return true, "SKYRIDING_ACTIVE" end
@@ -1551,6 +1570,7 @@ local function normalizeCooldownViewerConfigValue(val, acc)
 	if val == COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_HAS_TARGET then acc[COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_HAS_TARGET] = true end
 	if val == COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_CASTING then acc[COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_CASTING] = true end
 	if val == COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_IN_GROUP then acc[COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_IN_GROUP] = true end
+	if val == COOLDOWN_VIEWER_VISIBILITY_MODES.SHOW_IN_INSTANCE then acc[COOLDOWN_VIEWER_VISIBILITY_MODES.SHOW_IN_INSTANCE] = true end
 	if val == COOLDOWN_VIEWER_VISIBILITY_MODES.ALWAYS_HIDDEN then acc[COOLDOWN_VIEWER_VISIBILITY_MODES.ALWAYS_HIDDEN] = true end
 	-- Legacy mapping: "hide while mounted" -> show while not mounted
 	if val == "HIDE_WHILE_MOUNTED" then acc[COOLDOWN_VIEWER_VISIBILITY_MODES.WHILE_NOT_MOUNTED] = true end
@@ -1641,6 +1661,7 @@ local function computeCooldownViewerTargetAlpha(cfg, state)
 	local hasTarget = UnitExists and UnitExists("target")
 	local isCasting = IsPlayerCasting()
 	local inGroup = IsInGroup and IsInGroup() and true or false
+	local inInstance = IsInInstance and IsInInstance() and true or false
 	local isSkyriding = addon.variables and addon.variables.isPlayerSkyriding
 	local isFlying = IsPlayerFlying()
 	local fadedAlpha = (addon.functions and addon.functions.GetCooldownViewerFadedAlpha and addon.functions.GetCooldownViewerFadedAlpha()) or 0
@@ -1656,6 +1677,7 @@ local function computeCooldownViewerTargetAlpha(cfg, state)
 		or cfg[COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_HAS_TARGET]
 		or cfg[COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_CASTING]
 		or cfg[COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_IN_GROUP]
+		or cfg[COOLDOWN_VIEWER_VISIBILITY_MODES.SHOW_IN_INSTANCE]
 
 	if hideSkyriding and isSkyriding then return fadedAlpha end
 	if hideFlying and isFlying then return fadedAlpha end
@@ -1672,6 +1694,7 @@ local function computeCooldownViewerTargetAlpha(cfg, state)
 	if cfg[COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_HAS_TARGET] and hasTarget then shouldShow = true end
 	if cfg[COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_CASTING] and isCasting then shouldShow = true end
 	if cfg[COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_IN_GROUP] and inGroup then shouldShow = true end
+	if cfg[COOLDOWN_VIEWER_VISIBILITY_MODES.SHOW_IN_INSTANCE] and inInstance then shouldShow = true end
 
 	if shouldShow then return 1 end
 	return fadedAlpha
@@ -2078,6 +2101,10 @@ local COOLDOWN_VIEWER_EVENTS = {
 	"PLAYER_FOCUS_CHANGED",
 	"PLAYER_TARGET_CHANGED",
 	"GROUP_ROSTER_UPDATE",
+	"ZONE_CHANGED_NEW_AREA",
+	"PLAYER_DIFFICULTY_CHANGED",
+	"INSTANCE_GROUP_SIZE_CHANGED",
+	"UPDATE_INSTANCE_INFO",
 	"UPDATE_BONUS_ACTIONBAR",
 	"UPDATE_VEHICLE_ACTIONBAR",
 	"UPDATE_OVERRIDE_ACTIONBAR",
@@ -2227,6 +2254,7 @@ local function computeSpellActivationOverlayTargetAlpha(cfg, activeAlpha, hidden
 	local hasFocus = UnitExists and UnitExists("focus") and true or false
 	local hasTarget = UnitExists and UnitExists("target") and true or false
 	local isCasting = IsPlayerCasting()
+	local inInstance = IsInInstance and IsInInstance() and true or false
 
 	local shouldShow = false
 	if cfg[COOLDOWN_VIEWER_VISIBILITY_MODES.WHILE_MOUNTED] and mounted then shouldShow = true end
@@ -2238,6 +2266,7 @@ local function computeSpellActivationOverlayTargetAlpha(cfg, activeAlpha, hidden
 	if cfg[COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_CASTING] and isCasting then shouldShow = true end
 	if cfg[COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_HAS_FOCUS] and hasFocus then shouldShow = true end
 	if cfg[COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_HAS_TARGET] and hasTarget then shouldShow = true end
+	if cfg[COOLDOWN_VIEWER_VISIBILITY_MODES.SHOW_IN_INSTANCE] and inInstance then shouldShow = true end
 
 	if shouldShow then return activeAlpha end
 	return hiddenAlpha
@@ -2324,6 +2353,10 @@ EnsureSpellActivationOverlayWatcher = function()
 	watcher:RegisterEvent("PLAYER_FOCUS_CHANGED")
 	watcher:RegisterEvent("PLAYER_TARGET_CHANGED")
 	watcher:RegisterEvent("PLAYER_MOUNT_DISPLAY_CHANGED")
+	watcher:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+	watcher:RegisterEvent("PLAYER_DIFFICULTY_CHANGED")
+	watcher:RegisterEvent("INSTANCE_GROUP_SIZE_CHANGED")
+	watcher:RegisterEvent("UPDATE_INSTANCE_INFO")
 	watcher:RegisterEvent("UPDATE_SHAPESHIFT_FORM")
 	watcher:RegisterEvent("UPDATE_BONUS_ACTIONBAR")
 	watcher:RegisterEvent("UPDATE_VEHICLE_ACTIONBAR")
@@ -2438,6 +2471,7 @@ local function GetActionBarVisibilityConfig(variable, incoming, persistLegacy)
 				or source.PLAYER_HAS_FOCUS == true
 				or source.PLAYER_HAS_TARGET == true
 				or source.PLAYER_IN_GROUP == true
+				or source.SHOW_IN_INSTANCE == true
 				or source.ALWAYS_HIDDEN == true
 			then
 				return source
@@ -2463,6 +2497,7 @@ local function GetActionBarVisibilityConfig(variable, incoming, persistLegacy)
 			PLAYER_HAS_FOCUS = source.PLAYER_HAS_FOCUS == true,
 			PLAYER_HAS_TARGET = source.PLAYER_HAS_TARGET == true,
 			PLAYER_IN_GROUP = source.PLAYER_IN_GROUP == true,
+			SHOW_IN_INSTANCE = source.SHOW_IN_INSTANCE == true,
 			ALWAYS_HIDDEN = source.ALWAYS_HIDDEN == true,
 		}
 	elseif source == true then
@@ -2480,6 +2515,7 @@ local function GetActionBarVisibilityConfig(variable, incoming, persistLegacy)
 			PLAYER_HAS_FOCUS = false,
 			PLAYER_HAS_TARGET = false,
 			PLAYER_IN_GROUP = false,
+			SHOW_IN_INSTANCE = false,
 			ALWAYS_HIDDEN = false,
 		}
 	elseif source == "hide" then
@@ -2506,6 +2542,7 @@ local function GetActionBarVisibilityConfig(variable, incoming, persistLegacy)
 			or config.PLAYER_HAS_FOCUS
 			or config.PLAYER_HAS_TARGET
 			or config.PLAYER_IN_GROUP
+			or config.SHOW_IN_INSTANCE
 			or config.ALWAYS_HIDDEN
 		)
 	then
@@ -2530,6 +2567,7 @@ local function GetActionBarVisibilityConfig(variable, incoming, persistLegacy)
 			if config.PLAYER_HAS_FOCUS then stored.PLAYER_HAS_FOCUS = true end
 			if config.PLAYER_HAS_TARGET then stored.PLAYER_HAS_TARGET = true end
 			if config.PLAYER_IN_GROUP then stored.PLAYER_IN_GROUP = true end
+			if config.SHOW_IN_INSTANCE then stored.SHOW_IN_INSTANCE = true end
 			if config.ALWAYS_HIDDEN then stored.ALWAYS_HIDDEN = true end
 			addon.db[variable] = stored
 		end
@@ -2561,6 +2599,7 @@ local function GetActionBarVisibilityContext(combatOverride)
 		mounted = IsPlayerMounted(),
 		isFlying = IsPlayerFlying(),
 		isCasting = IsPlayerCasting(),
+		inInstance = IsInInstance and IsInInstance() and true or false,
 		isSkyriding = not IsPlayerDeadOrGhost() and addon.variables and addon.variables.isPlayerSkyriding,
 	}
 end
@@ -2579,6 +2618,7 @@ local function ActionBarShouldForceShowByConfig(config, context, combatOverride)
 	if config.PLAYER_HAS_FOCUS and ctx.hasFocus then return true end
 	if config.PLAYER_HAS_TARGET and ctx.hasTarget then return true end
 	if config.PLAYER_IN_GROUP and ctx.inGroup then return true end
+	if config.SHOW_IN_INSTANCE and ctx.inInstance then return true end
 	return false
 end
 
@@ -2673,6 +2713,7 @@ local function ApplyActionBarAlpha(bar, variable, config, combatOverride, skipFa
 		or cfg.PLAYER_HAS_FOCUS
 		or cfg.PLAYER_HAS_TARGET
 		or cfg.PLAYER_IN_GROUP
+		or cfg.SHOW_IN_INSTANCE
 
 	if cfg.SKYRIDING_INACTIVE then
 		if ctx.isSkyriding then
@@ -3115,6 +3156,7 @@ local function setActionBarVisibilityWatcherEnabled(watcher, enabled)
 			casting = false,
 			mountState = false,
 			skyriding = false,
+			instance = false,
 		}
 		local list = addon.variables and addon.variables.actionBarNames
 		if list then
@@ -3126,11 +3168,12 @@ local function setActionBarVisibilityWatcherEnabled(watcher, enabled)
 					if cfg.PLAYER_HAS_TARGET then flags.target = true end
 					if cfg.PLAYER_IN_GROUP then flags.group = true end
 					if cfg.PLAYER_CASTING then flags.casting = true end
+					if cfg.SHOW_IN_INSTANCE then flags.instance = true end
 					if cfg.PLAYER_MOUNTED or cfg.PLAYER_NOT_MOUNTED or cfg.FLYING_ACTIVE or cfg.FLYING_INACTIVE or cfg.SKYRIDING_ACTIVE or cfg.SKYRIDING_INACTIVE then
 						flags.mountState = true
 					end
 					if cfg.SKYRIDING_ACTIVE or cfg.SKYRIDING_INACTIVE then flags.skyriding = true end
-					if flags.combat and flags.focus and flags.target and flags.group and flags.casting and flags.mountState and flags.skyriding then break end
+					if flags.combat and flags.focus and flags.target and flags.group and flags.casting and flags.mountState and flags.skyriding and flags.instance then break end
 				end
 			end
 		end
@@ -3142,6 +3185,7 @@ local function setActionBarVisibilityWatcherEnabled(watcher, enabled)
 			flags.casting and "1" or "0",
 			flags.mountState and "1" or "0",
 			flags.skyriding and "1" or "0",
+			flags.instance and "1" or "0",
 		}, ":")
 		if watcher._eqolEventsRegistered and watcher._eqolEventSignature == signature then return end
 		watcher._eqolWantsSkyriding = flags.skyriding == true
@@ -3161,6 +3205,12 @@ local function setActionBarVisibilityWatcherEnabled(watcher, enabled)
 		if flags.group then watcher:RegisterEvent("GROUP_ROSTER_UPDATE") end
 		if flags.focus then watcher:RegisterEvent("PLAYER_FOCUS_CHANGED") end
 		if flags.target then watcher:RegisterEvent("PLAYER_TARGET_CHANGED") end
+		if flags.instance then
+			watcher:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+			watcher:RegisterEvent("PLAYER_DIFFICULTY_CHANGED")
+			watcher:RegisterEvent("INSTANCE_GROUP_SIZE_CHANGED")
+			watcher:RegisterEvent("UPDATE_INSTANCE_INFO")
+		end
 		if flags.casting then
 			SafeRegisterUnitEvent(watcher, "UNIT_SPELLCAST_START", "player")
 			SafeRegisterUnitEvent(watcher, "UNIT_SPELLCAST_STOP", "player")
@@ -7050,6 +7100,9 @@ local eventHandlers = {
 			if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.InitTeleportCompendium then addon.MythicPlus.functions.InitTeleportCompendium() end
 
 			loadSubAddon("EnhanceQoLResourceBars")
+			-- PTR 12.1: Load Blizzard's AuraContainer implementation before the
+			-- Unit Frames and Cooldown Panels child-addon runtimes initialize.
+			if addon.AuraCompat and addon.AuraCompat.EnsureAuraContainerLoaded then addon.AuraCompat:EnsureAuraContainerLoaded() end
 			loadSubAddon("EnhanceQoLUnitFrames")
 			loadSubAddon("EnhanceQoLCooldownPanels")
 			loadSubAddon("EnhanceQoLBags")
@@ -7396,7 +7449,11 @@ local eventHandlers = {
 		end
 	end,
 	["QUEST_PROGRESS"] = function()
-		if addon.functions.shouldAutoChooseQuest() and IsQuestCompletable() then CompleteQuest() end
+		if addon.functions.shouldAutoChooseQuest() and IsQuestCompletable() then
+			if addon.db["ignoreGoldCostQuests"] and GetQuestMoneyToGet() > 0 then return end
+			if addon.db["ignoreCurrencyCostQuests"] and GetNumQuestCurrencies() > 0 then return end
+			CompleteQuest()
+		end
 	end,
 	["AUCTION_HOUSE_SHOW"] = function()
 		addon.variables.auctionHouseOpen = true

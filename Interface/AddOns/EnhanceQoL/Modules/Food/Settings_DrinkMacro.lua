@@ -43,6 +43,31 @@ local function refreshBuffFoodMacro()
 	end
 end
 
+local CLASS_ICON_TEXTURE = "Interface\\GLUES\\CHARACTERCREATE\\UI-CHARACTERCREATE-CLASSES"
+local ROLE_ICON_ATLAS = {
+	tank = "UI-LFG-RoleIcon-Tank-Micro-GroupFinder",
+	healer = "UI-LFG-RoleIcon-Healer-Micro-GroupFinder",
+	ranged = "UI-LFG-RoleIcon-DPS-Micro-GroupFinder",
+	melee = "UI-LFG-RoleIcon-DPS-Micro-GroupFinder",
+}
+
+local function getClassHeaderColor(classToken)
+	local colors = CUSTOM_CLASS_COLORS or RAID_CLASS_COLORS
+	local color = colors and classToken and colors[classToken] or nil
+	if not color then return nil end
+	return { color.r or 1, color.g or 1, color.b or 1, 1 }
+end
+
+local function createClassSectionHeader(category, section, className, classToken)
+	if not (addon.functions and addon.functions.SettingsCreateSectionHeader and category and section and className and className ~= "") then return end
+	addon.functions.SettingsCreateSectionHeader(category, className, {
+		parentSection = section,
+		icon = CLASS_ICON_TEXTURE,
+		iconTexCoord = classToken and CLASS_ICON_TCOORDS and CLASS_ICON_TCOORDS[classToken],
+		textColor = getClassHeaderColor(classToken),
+	})
+end
+
 local function buildDrinkMacroSettings()
 	local cDrink = addon.SettingsLayout.rootGAMEPLAY
 	if not cDrink then return end
@@ -62,8 +87,6 @@ local function buildDrinkMacroSettings()
 	end
 
 	addon.SettingsLayout.drinkMacroCategory = cDrink
-
-	addon.functions.SettingsCreateHeadline(cDrink, L["Drinks & Food"], { parentSection = convenienceSection })
 
 	addon.functions.SettingsCreateHeadline(cDrink, L["Drink Macro"], { parentSection = convenienceSection })
 
@@ -156,10 +179,14 @@ local function buildDrinkMacroSettings()
 	end
 	addon.functions.SettingsCreateCheckboxes(cDrink, drinkData)
 
-	addon.functions.SettingsCreateHeadline(cDrink, L["MageFoodReminderHeadline"] or "Mage food reminder for Healer", { parentSection = convenienceSection })
+	if addon.functions.SettingsCreateSectionHeader then
+		addon.functions.SettingsCreateSectionHeader(cDrink, L["MageFoodReminderHeadline"] or "Mage food reminder for Healer", { parentSection = convenienceSection })
+	else
+		addon.functions.SettingsCreateHeadline(cDrink, L["MageFoodReminderHeadline"] or "Mage food reminder for Healer", { parentSection = convenienceSection })
+	end
 	addon.functions.SettingsCreateCheckbox(cDrink, {
 		var = "mageFoodReminder",
-		text = L["mageFoodReminder"],
+		text = ENABLE or "Enable",
 		desc = L["mageFoodReminderDesc2"],
 		func = function(value)
 			addon.db.mageFoodReminder = value and true or false
@@ -605,6 +632,7 @@ local function buildDrinkMacroSettings()
 		addon.functions.SettingsCreateDropdown(cDrink, {
 			var = string.format("flaskPreferredRole_%s", roleKey),
 			text = roleLabel,
+			iconAtlas = ROLE_ICON_ATLAS[roleKey],
 			listFunc = flaskTypeListFunc,
 			order = flaskTypeOrder,
 			default = "none",
@@ -637,11 +665,9 @@ local function buildDrinkMacroSettings()
 	local lastSpecClassKey = nil
 	for _, specData in ipairs(specs) do
 		local specID = specData.id
-		local specName = specData.label or specData.name
+		local specName = specData.name or specData.label
 		local specClassKey = tostring(specData.classID or specData.className or specData.classToken or "player")
-		if lastSpecClassKey ~= nil and specClassKey ~= lastSpecClassKey then addon.functions.SettingsCreateText(cDrink, "", {
-			parentSection = convenienceSection,
-		}) end
+		if specClassKey ~= lastSpecClassKey then createClassSectionHeader(cDrink, convenienceSection, specData.className or specData.classToken or PLAYER, specData.classToken) end
 		lastSpecClassKey = specClassKey
 		addon.functions.SettingsCreateDropdown(cDrink, {
 			var = string.format("flaskPreferredSpec_%d", specID),
@@ -783,6 +809,7 @@ local function buildDrinkMacroSettings()
 		addon.functions.SettingsCreateDropdown(cDrink, {
 			var = string.format("buffFoodPreferredRole_%s", roleKey),
 			text = roleLabel,
+			iconAtlas = ROLE_ICON_ATLAS[roleKey],
 			listFunc = buffFoodTypeListFunc,
 			order = buffFoodTypeOrder,
 			default = "none",
@@ -815,11 +842,9 @@ local function buildDrinkMacroSettings()
 	local lastBuffFoodSpecClassKey = nil
 	for _, specData in ipairs(buffFoodSpecs) do
 		local specID = specData.id
-		local specName = specData.label or specData.name
+		local specName = specData.name or specData.label
 		local specClassKey = tostring(specData.classID or specData.className or specData.classToken or "player")
-		if lastBuffFoodSpecClassKey ~= nil and specClassKey ~= lastBuffFoodSpecClassKey then addon.functions.SettingsCreateText(cDrink, "", {
-			parentSection = convenienceSection,
-		}) end
+		if specClassKey ~= lastBuffFoodSpecClassKey then createClassSectionHeader(cDrink, convenienceSection, specData.className or specData.classToken or PLAYER, specData.classToken) end
 		lastBuffFoodSpecClassKey = specClassKey
 		addon.functions.SettingsCreateDropdown(cDrink, {
 			var = string.format("buffFoodPreferredSpec_%d", specID),

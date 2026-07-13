@@ -5,6 +5,7 @@
 	<Script file="ObjectiveTracker.lua" />
 	<Script file="MythicPlusTimer.lua" />
 	<Script file="EnhanceQoLMythicPlus.lua" />
+	<Script file="MythicPlus_BloodlustAuraContainers.lua" />
 	<Script file="Settings_Profiles.lua" />
 	<Script file="Settings_MythicPlus.lua" />
 </Ui>

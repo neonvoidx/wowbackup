@@ -673,6 +673,20 @@ data = {
 	},
 }
 addon.functions.SettingsCreateCheckboxes(cUIInput, data)
+
+addon.functions.SettingsCreateHeadline(cUIInput, L["Event Toasts"] or "Event Toasts", {
+	parentSection = interfaceExpandable,
+})
+addon.functions.SettingsCreateCheckbox(cUIInput, {
+	var = "hideEventToasts",
+	text = L["hideEventToasts"] or "Hide Event Toasts",
+	desc = L["hideEventToastsDesc"] or "Suppresses Blizzard event toasts such as scenario and activity banners.",
+	func = function(value)
+		addon.db["hideEventToasts"] = value and true or false
+		if addon.functions.ApplyEventToastVisibility then addon.functions.ApplyEventToastVisibility() end
+	end,
+	parentSection = interfaceExpandable,
+})
 ----- REGION END
 
 function addon.functions.initUIInput()

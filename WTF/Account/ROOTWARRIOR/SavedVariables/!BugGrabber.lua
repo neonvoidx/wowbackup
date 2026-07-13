@@ -1,7 +1,7 @@
 
 BugGrabberDB = {
-["session"] = 16,
 ["lastSanitation"] = 3,
+["session"] = 43,
 ["errors"] = {
 {
 ["message"] = "Interface/AddOns/Blizzard_SharedXML/Backdrop.lua:226: attempt to perform arithmetic on local 'width' (a secret number value, while execution tainted by 'FrameColor')",

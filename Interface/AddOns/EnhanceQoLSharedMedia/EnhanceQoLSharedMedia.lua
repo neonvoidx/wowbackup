@@ -223,6 +223,7 @@ addon.SharedMedia.sounds = {
 	{ key = "Ancestral Call", label = "EQOL: |cFF000000|rAncestral Call |T2021574:16|t", path = voiceoverPath .. "Ancestral Call.ogg" },
 	{ key = "Blood Fury", label = "EQOL: |cFF000000|rBlood Fury |T135726:16|t", path = voiceoverPath .. "Blood Fury.ogg" },
 	{ key = "Berserking", label = "EQOL: |cFF000000|rBerserking |T135727:16|t", path = voiceoverPath .. "Berserking.ogg" },
+	{ key = "Berserking Tazdingo", label = "EQOL: |cFF000000|rBerserking (Taz'dingo) |T135727:16|t", path = voiceoverPath .. "Berserking Tazdingo.ogg", newTagID = "sharedMediaSoundBerserkingTazdingo" },
 	{ key = "Regeneratin", label = "EQOL: |cFF000000|rRegeneratin |T1850550:16|t", path = voiceoverPath .. "Regeneratin.ogg" },
 	{ key = "Speed", label = "EQOL: Speed", path = voiceoverPath .. "Speed.ogg" },
 	{ key = "Arcane Torrent", label = "EQOL: |cFF000000|rArcane Torrent |T136222:16|t", path = voiceoverPath .. "Arcane Torrent.ogg" },

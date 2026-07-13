@@ -62,6 +62,8 @@ local function buildSettings()
 			expanded = false,
 			colorizeTitle = false,
 			modernOnly = true,
+			modernCategory = "gameplay",
+			sortGroups = false,
 		})
 		addon.SettingsLayout.gameplayTalentReminderSection = sectionTalent
 	end

@@ -130,6 +130,36 @@ local questingData = {
 				parent = true,
 			},
 			{
+				var = "ignoreGoldCostQuests",
+				text = L["ignoreGoldCostQuests"],
+				desc = L["ignoreGoldCostQuestsDesc"],
+				func = function(key) addon.db["ignoreGoldCostQuests"] = key end,
+				default = false,
+				newTagID = "ignoreGoldCostQuests",
+				sType = "checkbox",
+				parentCheck = function()
+					return addon.SettingsLayout.elements["autoChooseQuest"]
+						and addon.SettingsLayout.elements["autoChooseQuest"].setting
+						and addon.SettingsLayout.elements["autoChooseQuest"].setting:GetValue() == true
+				end,
+				parent = true,
+			},
+			{
+				var = "ignoreCurrencyCostQuests",
+				text = L["ignoreCurrencyCostQuests"],
+				desc = L["ignoreCurrencyCostQuestsDesc"],
+				func = function(key) addon.db["ignoreCurrencyCostQuests"] = key end,
+				default = false,
+				newTagID = "ignoreCurrencyCostQuests",
+				sType = "checkbox",
+				parentCheck = function()
+					return addon.SettingsLayout.elements["autoChooseQuest"]
+						and addon.SettingsLayout.elements["autoChooseQuest"].setting
+						and addon.SettingsLayout.elements["autoChooseQuest"].setting:GetValue() == true
+				end,
+				parent = true,
+			},
+			{
 				var = "ignoreWarbandCompleted",
 				text = L["ignoreWarbandCompleted"]:format(ACCOUNT_COMPLETED_QUEST_LABEL, QUESTS_LABEL),
 				desc = L["ignoreWarbandCompletedDesc"],
@@ -292,6 +322,8 @@ function addon.functions.initQuest()
 	addon.functions.InitDBValue("autoChooseQuestModifier", "NONE")
 	addon.functions.InitDBValue("ignoreTrivialQuests", false)
 	addon.functions.InitDBValue("ignoreDailyQuests", false)
+	addon.functions.InitDBValue("ignoreGoldCostQuests", false)
+	addon.functions.InitDBValue("ignoreCurrencyCostQuests", false)
 	addon.functions.InitDBValue("ignoreWarbandCompleted", false)
 	addon.functions.InitDBValue("questWowheadLink", false)
 	addon.functions.InitDBValue("ignoredQuestNPC", {})

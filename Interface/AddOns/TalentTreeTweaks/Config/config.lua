@@ -271,7 +271,7 @@ function Config:OpenSettingsExternal()
 
         tinsert(UISpecialFrames, panelName);
 
-        if BlizzMoveAPI then
+        if _G.BlizzMoveAPI then
             --- @type BlizzMoveAPI
             local BlizzMoveAPI = BlizzMoveAPI;
             BlizzMoveAPI:RegisterAddOnFrames({

@@ -117,3 +117,117 @@ function addon.functions.GetChallengeMapLabel(mapID, defaults)
 
 	return nil
 end
+
+local function addSeasonMapAlias(aliasList, aliasHash, value)
+	if value == nil then return end
+	if type(value) ~= "number" and type(value) ~= "string" then return end
+	if aliasHash[value] then return end
+	aliasHash[value] = true
+	table.insert(aliasList, value)
+end
+
+local function getLegacySeasonMapID(data, cId)
+	if not data or not data.mapID then return nil end
+	if type(data.mapID) == "table" then
+		local variant = data.mapID[cId]
+		if type(variant) == "table" then return variant.mapID .. "_" .. variant.zoneID end
+		return variant
+	end
+	return data.mapID
+end
+
+local function getSeasonZoneID(data, cId)
+	if not data then return nil end
+	if type(data.mapID) == "table" then
+		local variant = data.mapID[cId]
+		if type(variant) == "table" then return variant.zoneID end
+	end
+	return data.zoneID
+end
+
+function addon.functions.BuildChallengeSeasonMapInfo(portalCompendium)
+	local info = {}
+	local hash = {}
+	local lookup = {}
+	if not (C_ChallengeMode and C_ChallengeMode.GetMapTable and C_ChallengeMode.GetMapUIInfo) then return info, hash, lookup end
+
+	local cModeIDs = C_ChallengeMode.GetMapTable() or {}
+	local cModeIDLookup = {}
+	local liveMapIDCounts = {}
+	local pendingEntries = {}
+	local portalDataByCModeID = {}
+
+	for _, cId in ipairs(cModeIDs) do
+		cModeIDLookup[cId] = true
+		local mapName, _, _, _, _, liveMapID = C_ChallengeMode.GetMapUIInfo(cId)
+		if mapName then
+			if type(liveMapID) == "number" then liveMapIDCounts[liveMapID] = (liveMapIDCounts[liveMapID] or 0) + 1 end
+			table.insert(pendingEntries, {
+				cId = cId,
+				liveMapID = liveMapID,
+				name = mapName,
+			})
+		end
+	end
+
+	if type(portalCompendium) == "table" then
+		for _, section in pairs(portalCompendium) do
+			local spells = type(section) == "table" and section.spells or nil
+			if type(spells) == "table" then
+				for _, data in pairs(spells) do
+					if type(data) == "table" and type(data.cId) == "table" then
+						for cId in pairs(data.cId) do
+							if cModeIDLookup[cId] and not portalDataByCModeID[cId] then portalDataByCModeID[cId] = data end
+						end
+					end
+				end
+			end
+		end
+	end
+
+	local seenMapIDs = {}
+	for _, entry in ipairs(pendingEntries) do
+		local data = portalDataByCModeID[entry.cId]
+		local legacyMapID = getLegacySeasonMapID(data, entry.cId)
+		local zoneID = getSeasonZoneID(data, entry.cId)
+		local liveMapID = entry.liveMapID
+		local mapID = legacyMapID or liveMapID or entry.cId
+
+		if type(liveMapID) == "number" then
+			mapID = liveMapID
+			if liveMapIDCounts[liveMapID] and liveMapIDCounts[liveMapID] > 1 then
+				if zoneID then
+					mapID = liveMapID .. "_" .. zoneID
+				elseif legacyMapID ~= nil then
+					mapID = legacyMapID
+				end
+			end
+		end
+
+		if mapID and not seenMapIDs[mapID] then
+			seenMapIDs[mapID] = true
+			local aliases = {}
+			local aliasHash = {}
+			addSeasonMapAlias(aliases, aliasHash, mapID)
+			addSeasonMapAlias(aliases, aliasHash, legacyMapID)
+			if type(liveMapID) == "number" and (mapID == liveMapID or liveMapIDCounts[liveMapID] == 1) then addSeasonMapAlias(aliases, aliasHash, liveMapID) end
+			addSeasonMapAlias(aliases, aliasHash, entry.cId)
+
+			local mapEntry = {
+				aliases = aliases,
+				cId = entry.cId,
+				id = mapID,
+				name = entry.name,
+			}
+
+			table.insert(info, mapEntry)
+			for _, alias in ipairs(aliases) do
+				hash[alias] = true
+				lookup[alias] = mapEntry
+			end
+		end
+	end
+
+	table.sort(info, function(a, b) return a.name < b.name end)
+	return info, hash, lookup
+end

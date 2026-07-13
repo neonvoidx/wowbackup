@@ -16,7 +16,7 @@ if not damageMeterSection then
 		configPageKey = "DamageMeter",
 		description = L["damageMeterEditModeHint"],
 		iconAtlas = "icons_64x64_damage",
-		modernCategory = "suites",
+		modernCategory = "gameplay",
 		modernOnly = true,
 		expanded = false,
 		colorizeTitle = false,

@@ -858,8 +858,8 @@ local function getMaxColumns(settings)
 	local value = math.floor((tonumber(settings and settings.maxColumns) or Core.COLUMN_COUNT) + 0.5)
 	if value < 4 then
 		value = 4
-	elseif value > 24 then
-		value = 24
+	elseif value > 40 then
+		value = 40
 	end
 
 	return value

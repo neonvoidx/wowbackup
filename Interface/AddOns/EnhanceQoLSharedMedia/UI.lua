@@ -73,6 +73,7 @@ local function CreateSoundSection(title, varPrefix, sounds)
 		local entry = CreateCheckbox({
 			var = varPrefix .. "Sound_" .. SanitizeVar(sound.key),
 			text = sound.label,
+			newTagID = sound.newTagID,
 			get = function() return addon.db.sharedMediaSounds[sound.key] and true or false end,
 			func = function(value)
 				sound.bulkUpdate = bulkUpdate

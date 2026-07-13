@@ -1,5 +1,5 @@
 local parentAddonName = "EnhanceQoL"
-local addonName, addon = ...
+local addon = select(2, ...)
 if _G[parentAddonName] then
 	addon = _G[parentAddonName]
 else
@@ -47,8 +47,8 @@ function Ignore:SavePosition()
 	addon.db.ignoreFrameX = xOfs
 	addon.db.ignoreFrameY = yOfs
 end
--- will be replaced with the saved table once the addon is fully loaded
-Ignore.entries = Ignore.entries or {}
+EnhanceQoL_IgnoreDB = EnhanceQoL_IgnoreDB or {}
+Ignore.entries = EnhanceQoL_IgnoreDB
 Ignore.entryLookup = Ignore.entryLookup or {}
 Ignore.selectedIndex = nil
 Ignore.searchText = Ignore.searchText or ""
@@ -58,24 +58,6 @@ Ignore.enabled = Ignore.enabled or false
 Ignore.registeredFilters = Ignore.registeredFilters or {}
 Ignore.hooksInstalled = Ignore.hooksInstalled or false
 Ignore.friendsHookInstalled = Ignore.friendsHookInstalled or false
-
--- load the saved ignore database when the addon has fully loaded
-local loader = CreateFrame("Frame")
-loader:RegisterEvent("ADDON_LOADED")
-loader:SetScript("OnEvent", function(_, event, arg1)
-	if arg1 == parentAddonName then
-		EnhanceQoL_IgnoreDB = EnhanceQoL_IgnoreDB or {}
-		Ignore.entries = EnhanceQoL_IgnoreDB
-		Ignore:RebuildLookup()
-		if addon and addon.db then
-			Ignore.currentSort = addon.db.ignoreSortKey or "player"
-			Ignore.sortAsc = addon.db.ignoreSortAsc ~= false
-			Ignore.searchText = addon.db.ignoreSearchText or ""
-			if addon.db.enableIgnore ~= nil then Ignore:SetEnabled(addon.db.enableIgnore) end
-		end
-		loader:UnregisterEvent("ADDON_LOADED")
-	end
-end)
 
 local LOGIN_FRAME = CreateFrame("Frame")
 local CHAT_EVENTS = {
@@ -144,6 +126,8 @@ function Ignore:RebuildLookup()
 		if key then self.entryLookup[key] = entry end
 	end
 end
+
+Ignore:RebuildLookup()
 
 local IsIgnored = IsIgnored or C_FriendList.IsIgnored
 
@@ -222,8 +206,9 @@ local titles = {
 }
 local DOUBLE_CLICK_TIME = 0.5
 
-Ignore.currentSort = "player"
-Ignore.sortAsc = true
+Ignore.currentSort = addon.db.ignoreSortKey or "player"
+Ignore.sortAsc = addon.db.ignoreSortAsc ~= false
+Ignore.searchText = addon.db.ignoreSearchText or ""
 
 local NUM_ROWS = 14
 Ignore.rows = {}
@@ -1249,3 +1234,5 @@ function Ignore:InstallTooltipHook()
 	end)
 	Ignore.tooltipHookInstalled = true
 end
+
+if addon.db.enableIgnore ~= nil then Ignore:SetEnabled(addon.db.enableIgnore) end

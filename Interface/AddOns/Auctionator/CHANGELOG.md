@@ -1,6 +1,6 @@
 # Auctionator
 
-## [327](https://github.com/TheMouseNest/Auctionator/tree/327) (2026-06-16)
-[Full Changelog](https://github.com/TheMouseNest/Auctionator/compare/326...327) 
+## [330](https://github.com/TheMouseNest/Auctionator/tree/330) (2026-07-08)
+[Full Changelog](https://github.com/TheMouseNest/Auctionator/compare/329...330) 
 
-- [Fixes #1821] Bugfix for koKR  
+- Classic Anniversary: Fix tooltip on preview item on buy screen  

@@ -1,3 +1,29 @@
+# BetterBlizzFrames 2.0.0e
+## Midnight
+### New
+- Big Player Healthbar setting in Misc from a PR by Wildu. Thank you for your contribution! At the moment this only works for the "No Portrait" setting specifically. I plan to extend it to the No Portrait pixel and also default frames when I find the time.
+## The Burning Crusade
+### Bugfix
+- Fix OCD Tweaks setting
+
+# BetterBlizzFrames 2.0.0d
+## The Burning Crusade
+### Bugfix
+- Fix party frame alpha setting not sticking on reloads. (This needs a few more tweaks, for pet frames etc, need to look at blizz code)
+
+# BetterBlizzFrames 2.0.0c
+## The Burning Crusade
+### Bugfix
+- Fix some errors and do some early adjustments for the new TBC patch. Please report issues.
+
+# BetterBlizzFrames 2.0.0b
+## Midnight
+### Tweak
+- OCD Tweaks: Change the position of level text slightly for Player/Target/FocusFrame. Should hopefully be properly positioned for everyone now.
+## The Burning Crusade
+### Tweak
+- Add a fix for Blizzards sloppy code that positions FocusFrame healthbar center statusbar text wrong if the frame was small (Large Frame disabled in Edit Mode).
+
 # BetterBlizzFrames 2.0.0
 ## Midnight
 ### New

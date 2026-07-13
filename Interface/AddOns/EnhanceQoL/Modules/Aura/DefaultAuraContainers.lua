@@ -2082,7 +2082,7 @@ local function ensureDefaultAuraContainersSuiteSection(category)
 		configPageKey = "DefaultAuraContainers",
 		description = L["skinnerDefaultAuraIconsSectionDesc"],
 		iconKey = "buff",
-		modernCategory = "suites",
+		modernCategory = "interface",
 		modernOnly = true,
 		expanded = false,
 		colorizeTitle = false,

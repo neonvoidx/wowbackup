@@ -1,5 +1,7 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
+	<Script file="WhirlwindTracker.lua" />
 	<Script file="ResourceBars.lua" />
+	<Script file="ResourceBars_AuraContainers.lua" />
 	<Script file="ResourceBarsHelpers.lua" />
 	<Script file="GCDBar.lua" />
 	<Script file="ExperienceBar.lua" />

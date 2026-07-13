@@ -26,6 +26,47 @@ local SOUND_LABEL_ALIASES = {
 	whisper = { global = "WHISPER", fallback = "Whisper" },
 }
 
+local SOUND_MUTE_GROUPS = {
+	gameplay = {
+		label = _G.SETTING_GROUP_GAMEPLAY or _G.GAMEPLAY or "Gameplay",
+		order = 10,
+		keys = {
+			class = true,
+			dungeon = true,
+			mounts = true,
+			professions = true,
+			quest = true,
+			spells = true,
+			trinkets = true,
+		},
+	},
+	interface = {
+		label = _G.INTERFACE_LABEL or "Interface",
+		order = 20,
+		keys = {
+			auctionhouse = true,
+			general = true,
+			interface = true,
+			ping = true,
+		},
+	},
+	social = {
+		label = _G.SOCIAL_LABEL or "Social",
+		order = 30,
+		keys = {
+			chat = true,
+			emotes = true,
+		},
+	},
+	misc = {
+		label = _G.MISCELLANEOUS or "Miscellaneous",
+		order = 40,
+		keys = {
+			misc = true,
+		},
+	},
+}
+
 local function GetLocaleIfPresent(key)
 	if type(key) ~= "string" or key == "" then return nil end
 	return rawget(L, key)
@@ -137,14 +178,41 @@ local soundExpandable = addon.functions.SettingsCreateExpandableSection(soundCat
 	modernOnly = true,
 })
 
-local function CreateHeadline(text) addon.functions.SettingsCreateHeadline(soundCategory, text, { parentSection = soundExpandable }) end
+local activeSoundMuteGroup
+local function GetSoundMuteGroup(path)
+	local firstKey = path and path[1]
+	local leafKey = path and path[#path]
+	if leafKey and leafKey ~= firstKey then
+		for groupID, group in pairs(SOUND_MUTE_GROUPS) do
+			if group.keys[leafKey] then return groupID, group end
+		end
+	end
+	for groupID, group in pairs(SOUND_MUTE_GROUPS) do
+		if firstKey and group.keys[firstKey] then return groupID, group end
+	end
+	return "misc", SOUND_MUTE_GROUPS.misc
+end
+
+local function EnsureSoundMuteGroup(path)
+	local groupID, group = GetSoundMuteGroup(path)
+	if activeSoundMuteGroup == groupID then return end
+	activeSoundMuteGroup = groupID
+	addon.functions.SettingsCreateHeadline(soundCategory, group.label, {
+		parentSection = soundExpandable,
+		groupID = "sound-mute-" .. groupID,
+		order = group.order,
+	})
+end
+
+local function CreateSectionHeader(text, path)
+	EnsureSoundMuteGroup(path)
+	addon.functions.SettingsCreateSectionHeader(soundCategory, text, { parentSection = soundExpandable })
+end
 
 local function CreateCheckbox(data)
 	data.parentSection = soundExpandable
 	return addon.functions.SettingsCreateCheckbox(soundCategory, data)
 end
-
-CreateHeadline(L["soundMuteExplained"])
 
 local headlineCache = {}
 local function EnsureHeadlineForPath(path)
@@ -152,7 +220,7 @@ local function EnsureHeadlineForPath(path)
 	if headlineCache[key] then return end
 	headlineCache[key] = true
 	local label = GetLabel(path[#path])
-	CreateHeadline(label)
+	CreateSectionHeader(label, path)
 end
 
 local function SortKeys(keys)
@@ -167,6 +235,7 @@ local function AddSoundOptions(path, data)
 	if type(data) ~= "table" then return false end
 
 	if IsPureNumbersTable(data) then
+		EnsureSoundMuteGroup(path)
 		local varName = "sounds_" .. table.concat(path, "_")
 		local label = GetLabel(path[#path])
 		local soundList = data
@@ -271,7 +340,7 @@ for _, treeKey in ipairs(topKeys) do
 end
 
 local extraSoundExpandable = addon.functions.SettingsCreateExpandableSection(soundCategory, {
-	name = L["soundExtraSection"] or "Additional sounds",
+	name = L["soundEventSection"] or L["soundExtraSection"] or "Event sounds",
 	configPageKey = "SoundExtra",
 	iconKey = "sound",
 	expanded = false,

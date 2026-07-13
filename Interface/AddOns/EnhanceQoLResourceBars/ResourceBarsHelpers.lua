@@ -281,7 +281,6 @@ local function ensureStatusBarTexturePath(bar, texturePath)
 		if ResourceBars.ApplyTexturePixelSnapping then ResourceBars.ApplyTexturePixelSnapping(tex, 0) end
 		if tex.SetHorizTile then tex:SetHorizTile(false) end
 		if tex.SetVertTile then tex:SetVertTile(false) end
-		if tex.SetTexCoord then tex:SetTexCoord(0, 1, 0, 1) end
 	end
 	bar._rb_tex = texturePath
 	return true

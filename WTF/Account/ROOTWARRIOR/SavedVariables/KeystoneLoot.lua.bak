@@ -1,7 +1,6 @@
 
 KeystoneLootDB = {
 ["currentSeason"] = 16,
-["version"] = 9,
 ["settings"] = {
 ["keyCommand"] = {
 ["CHAT_MSG_PARTY"] = true,
@@ -17,14 +16,14 @@ KeystoneLootDB = {
 },
 ["hideOtherItems"] = false,
 ["keystoneTooltip"] = true,
-["wideMode"] = false,
+["favoriteTooltip"] = true,
 ["multiSlotFilter"] = false,
 ["highlighting"] = {
-["mastery"] = true,
-["crit"] = true,
 ["versatility"] = true,
-["haste"] = true,
 ["comboMode"] = false,
+["mastery"] = true,
+["haste"] = true,
+["crit"] = true,
 ["noStats"] = true,
 },
 ["lootReminder"] = {
@@ -32,8 +31,9 @@ KeystoneLootDB = {
 ["dropAlert"] = true,
 ["dungeons"] = true,
 },
-["favoriteTooltip"] = true,
+["wideMode"] = false,
 },
+["version"] = 9,
 ["favorites"] = {
 ["Tichondrius-Tampacks-6"] = {
 },
@@ -99,10 +99,19 @@ KeystoneLootDB = {
 [1480] = {
 },
 },
-[2795] = {
+["catalyst"] = {
 [1480] = {
-[249343] = {
-["icon"] = 7636702,
+[250036] = {
+["icon"] = 7388205,
+},
+[250035] = {
+["icon"] = 7388202,
+},
+[250031] = {
+["icon"] = 7388209,
+},
+[250033] = {
+["icon"] = 7388207,
 },
 },
 },
@@ -125,19 +134,10 @@ KeystoneLootDB = {
 [1480] = {
 },
 },
-["catalyst"] = {
+[2795] = {
 [1480] = {
-[250036] = {
-["icon"] = 7388205,
-},
-[250035] = {
-["icon"] = 7388202,
-},
-[250031] = {
-["icon"] = 7388209,
-},
-[250033] = {
-["icon"] = 7388207,
+[249343] = {
+["icon"] = 7636702,
 },
 },
 },
@@ -165,13 +165,10 @@ KeystoneLootDB = {
 },
 },
 },
-[161] = {
+[402] = {
 [252] = {
-[252420] = {
-["icon"] = 132873,
-},
-[258575] = {
-["icon"] = 1043737,
+[193706] = {
+["icon"] = 4295889,
 },
 },
 },
@@ -182,10 +179,13 @@ KeystoneLootDB = {
 },
 },
 },
-[402] = {
+[161] = {
 [252] = {
-[193706] = {
-["icon"] = 4295889,
+[252420] = {
+["icon"] = 132873,
+},
+[258575] = {
+["icon"] = 1043737,
 },
 },
 },
@@ -242,8 +242,11 @@ KeystoneLootDB = {
 },
 },
 },
-[2739] = {
+[2735] = {
 [269] = {
+[249321] = {
+["icon"] = 7445747,
+},
 },
 },
 [239] = {
@@ -275,11 +278,8 @@ KeystoneLootDB = {
 },
 },
 },
-[2735] = {
+[2739] = {
 [269] = {
-[249321] = {
-["icon"] = 7445747,
-},
 },
 },
 },

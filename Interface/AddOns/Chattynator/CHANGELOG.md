@@ -1,8 +1,6 @@
 # Chattynator
 
-## [214](https://github.com/TheMouseNest/Chattynator/tree/214) (2026-07-03)
-[Full Changelog](https://github.com/TheMouseNest/Chattynator/compare/213...214) 
+## [215](https://github.com/TheMouseNest/Chattynator/tree/215) (2026-07-08)
+[Full Changelog](https://github.com/TheMouseNest/Chattynator/compare/214...215) 
 
-- [Fixes #227] Fix broken message log when censored message processed  
-- Remove FCF\_OpenTemporaryWindow override  
-- PTR fixes  
+- Classic Anniversary: Update toc to 2.5.6  

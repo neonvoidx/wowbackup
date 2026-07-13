@@ -116,7 +116,7 @@ WeakAurasOptions: enabled
 WeakAurasTemplates: enabled
 BartrubySummonPet: enabled
 BetterBlizzFrames: enabled
-BetterBlizzPlates: enabled
+BetterBlizzPlates: disabled
 Conceal: enabled
 EditModeExpanded: enabled
 idTip: enabled
@@ -415,7 +415,7 @@ EnhanceQoL: enabled
 FreshDRs: enabled
 FrogskisCursorTrail: enabled
 FrogskisInstantCastBar: enabled
-MiniCC: disabled
+MiniCC: enabled
 EnhanceQoLSharedMedia: enabled
 BattleGroundEnemiesFixed: enabled
 Collectionator: enabled
@@ -486,3 +486,6 @@ EnhanceQoLTooltip: enabled
 EnhanceQoLUnitFrames: enabled
 EnhanceQoLVendor: enabled
 RdysDevTools: enabled
+MiniMarkers: enabled
+RaidLeaderMarker: enabled
+SweepyBoop: enabled

@@ -33,6 +33,7 @@ local UIDropDownMenu_EnableDropDown = _G.UIDropDownMenu_EnableDropDown
 local UIDropDownMenu_DisableDropDown = _G.UIDropDownMenu_DisableDropDown
 local UIDropDownMenu_Enable = _G.UIDropDownMenu_Enable
 local UIDropDownMenu_Disable = _G.UIDropDownMenu_Disable
+local UIDropDownMenu_AddSeparator = _G.UIDropDownMenu_AddSeparator
 local ToggleDropDownMenu = _G.ToggleDropDownMenu
 local CloseDropDownMenus = _G.CloseDropDownMenus
 local ColorPickerFrame = _G.ColorPickerFrame
@@ -1059,7 +1060,6 @@ local function moveIdInOrder(order, fromId, targetId)
 	end
 	if not fromIndex or not toIndex then return false end
 	table.remove(order, fromIndex)
-	if fromIndex < toIndex then toIndex = toIndex - 1 end
 	table.insert(order, toIndex, fromId)
 	return true
 end
@@ -1388,6 +1388,11 @@ function Editor:EnsureFrame()
 	previewLoop:SetChecked(Editor._previewLoopEnabled == true)
 	previewPanel.LoopCheck = previewLoop
 
+	local previewAll = createCheck(previewPanel, tr("UFGroupHealerBuffEditorPreviewAll", "Preview All"))
+	previewAll:SetPoint("LEFT", previewLoop.Text, "RIGHT", 6, 0)
+	previewAll:SetChecked(Editor._previewAllEnabled ~= false)
+	previewPanel.AllCheck = previewAll
+
 	local previewFrame = CreateFrame("Frame", nil, previewPanel, "BackdropTemplate")
 	previewFrame:SetPoint("TOPLEFT", previewTitle, "BOTTOMLEFT", 0, -8)
 	previewFrame:SetPoint("TOPRIGHT", previewPanel, "TOPRIGHT", -10, -30)
@@ -1559,6 +1564,7 @@ function Editor:EnsureFrame()
 	local groupControlParent = groupControlContent
 	local ruleControlParent = ruleControlContent
 	controls.PreviewLoop = previewPanel.LoopCheck
+	controls.PreviewAll = previewPanel.AllCheck
 
 	controls.GroupNameLabel = groupControlParent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	controls.GroupNameLabel:SetPoint("TOPLEFT", groupControlParent, "TOPLEFT", 0, 0)
@@ -1856,8 +1862,15 @@ function Editor:EnsureFrame()
 	controls.RuleExpirationPulseThresholdLabel:Hide()
 	controls.RuleExpirationPulseThreshold:Hide()
 	controls.RuleExpirationPulseThresholdValue:Hide()
+	controls.RuleExpirationPulseColorLabel = ruleControlParent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	controls.RuleExpirationPulseColorLabel:SetPoint("TOPLEFT", controls.RuleExpirationPulseThresholdLabel, "BOTTOMLEFT", -4, -14)
+	controls.RuleExpirationPulseColorLabel:SetText(tr("UFGroupHealerBuffEditorRuleExpirationPulseColor", "Pulse color"))
+	controls.RuleExpirationPulseColorButton = createColorSwatchButton(ruleControlParent, 24)
+	controls.RuleExpirationPulseColorButton:SetPoint("LEFT", controls.RuleExpirationPulseColorLabel, "RIGHT", 10, 0)
+	controls.RuleExpirationPulseColorLabel:Hide()
+	controls.RuleExpirationPulseColorButton:Hide()
 	controls.RuleExpirationPulseCountdownOnly = createCheck(ruleControlParent, tr("UFGroupHealerBuffEditorRuleExpirationPulseCountdownOnly", "Countdown only during pulse"))
-	controls.RuleExpirationPulseCountdownOnly:SetPoint("TOPLEFT", controls.RuleExpirationPulseThresholdLabel, "BOTTOMLEFT", -4, -14)
+	controls.RuleExpirationPulseCountdownOnly:SetPoint("TOPLEFT", controls.RuleExpirationPulseColorLabel, "BOTTOMLEFT", -4, -10)
 	controls.RuleExpirationPulseCountdownOnly:Hide()
 
 	controls.RuleAppliesParty = createCheck(ruleControlParent, tr("Party", "Party"))
@@ -1966,9 +1979,9 @@ function Editor:EnsureFrame()
 
 	local function createRuleForSelectedGroup(familyId)
 		local _, placement = Editor:GetContext()
-		if not placement then return end
+		if not placement then return nil, false end
 		local groupId = Editor.selectedGroupId
-		if not groupId then return end
+		if not groupId then return nil, false end
 
 		local function addRuleToGroupFamily(targetFamilyId)
 			if targetFamilyId == nil then return nil, false end
@@ -2015,7 +2028,7 @@ function Editor:EnsureFrame()
 		end
 		if type(familyId) == "table" then
 			addManyRulesForSelectedGroup(familyId)
-			return
+			return nil, false
 		end
 		local newId, created = addRuleToGroupFamily(familyId)
 		if newId then
@@ -2023,6 +2036,84 @@ function Editor:EnsureFrame()
 			Editor:RefreshAll()
 			if created then Editor:RefreshRuntimeNow() end
 		end
+		return newId, created
+	end
+
+	local customSpellPopupKey = "EQOL_HBP_CUSTOM_SPELL_ID"
+	local function normalizeCustomSpellFamilyId(value)
+		local spellId = tonumber(value)
+		if not spellId or spellId <= 0 or spellId ~= floor(spellId) then return nil, "INVALID" end
+
+		local spellName = C_Spell and C_Spell.GetSpellName and C_Spell.GetSpellName(spellId)
+		if type(spellName) ~= "string" or spellName == "" then return nil, "UNKNOWN" end
+
+		local familyId
+		if HB.NormalizeCustomSpellFamilyId then familyId = HB.NormalizeCustomSpellFamilyId(spellId) end
+		if familyId == nil and HB.GetFamilyFromSpell then familyId = HB.GetFamilyFromSpell(spellId) end
+		if familyId == nil then
+			local customFamilyId = "spell:" .. tostring(spellId)
+			local family = HB.ResolveFamily and HB.ResolveFamily(customFamilyId)
+			familyId = family and family.id or customFamilyId
+		end
+		return tostring(familyId), nil
+	end
+
+	local function showCustomSpellIdPopup(message, value)
+		if not StaticPopupDialogs or not StaticPopup_Show then return end
+		StaticPopupDialogs[customSpellPopupKey] = StaticPopupDialogs[customSpellPopupKey]
+			or {
+				text = tr("UFGroupHealerBuffEditorSpellIDPrompt", "Enter a Spell ID:"),
+				button1 = ACCEPT,
+				button2 = CANCEL,
+				hasEditBox = true,
+				maxLetters = 10,
+				timeout = 0,
+				whileDead = true,
+				hideOnEscape = true,
+				preferredIndex = 3,
+				OnShow = function(dialog, data)
+					local prompt = data and data.message or tr("UFGroupHealerBuffEditorSpellIDPrompt", "Enter a Spell ID:")
+					local text = dialog.Text or dialog.text
+					local editBox = dialog.EditBox or dialog.editBox or (dialog.GetEditBox and dialog:GetEditBox())
+					if text then text:SetText(prompt) end
+					if not editBox then return end
+					if editBox.SetNumeric then editBox:SetNumeric(true) end
+					editBox:SetText(data and data.value or "")
+					editBox:SetFocus()
+					editBox:HighlightText()
+				end,
+				OnAccept = function(dialog)
+					local editBox = dialog.EditBox or dialog.editBox or (dialog.GetEditBox and dialog:GetEditBox())
+					local input = editBox and editBox:GetText() or ""
+					local familyId, reason = normalizeCustomSpellFamilyId(input)
+					if not familyId then
+						local errorText = reason == "UNKNOWN" and tr("UFGroupHealerBuffEditorSpellIDUnknown", "No spell was found for this Spell ID.")
+							or tr("UFGroupHealerBuffEditorSpellIDInvalid", "Enter a valid Spell ID.")
+						C_Timer.After(0, function() showCustomSpellIdPopup(errorText, input) end)
+						return
+					end
+
+					local _, placement = Editor:GetContext()
+					local groupId = Editor.selectedGroupId
+					local existingRuleId = placement and groupId and findExistingRuleForGroupFamily(placement, groupId, familyId)
+					if existingRuleId then
+						Editor.selectedRuleId = existingRuleId
+						Editor:RefreshAll()
+						C_Timer.After(0, function()
+							showCustomSpellIdPopup(tr("UFGroupHealerBuffEditorSpellIDDuplicate", "This spell already has a rule in the selected indicator."), input)
+						end)
+						return
+					end
+					createRuleForSelectedGroup(familyId)
+				end,
+				EditBoxOnEnterPressed = function(editBox)
+					local dialog = editBox:GetParent()
+					local acceptButton = dialog and (dialog.button1 or (dialog.Buttons and dialog.Buttons[1]))
+					if acceptButton then acceptButton:Click() end
+				end,
+				EditBoxOnEscapePressed = function(editBox) editBox:GetParent():Hide() end,
+			}
+		StaticPopup_Show(customSpellPopupKey, nil, nil, { message = message, value = value })
 	end
 
 	local function deleteRuleById(ruleId)
@@ -2053,6 +2144,22 @@ function Editor:EnsureFrame()
 		local usedFamilyMap = buildUsedFamilyMapForGroup(placement, selectedGroupId, Editor._ruleMenuUsedFamilyMap)
 		Editor._ruleMenuUsedFamilyMap = usedFamilyMap
 		if level == 1 then
+			do
+				local info = UIDropDownMenu_CreateInfo()
+				info.text = tr("UFGroupHealerBuffEditorAddSpellID", "Add Spell ID...")
+				info.notCheckable = true
+				info.func = function() showCustomSpellIdPopup() end
+				UIDropDownMenu_AddButton(info, level)
+			end
+			if UIDropDownMenu_AddSeparator then
+				UIDropDownMenu_AddSeparator(level)
+			else
+				local separator = UIDropDownMenu_CreateInfo()
+				separator.text = " "
+				separator.disabled = true
+				separator.notCheckable = true
+				UIDropDownMenu_AddButton(separator, level)
+			end
 			local allAvailableFamilyIds = {}
 			for i = 1, #allFamilies do
 				local familyId = allFamilies[i] and allFamilies[i].value
@@ -2764,6 +2871,8 @@ function Editor:EnsureFrame()
 
 	if controls.PreviewLoop then controls.PreviewLoop:SetScript("OnClick", function(self) Editor:SetPreviewLoopEnabled(self:GetChecked() == true) end) end
 
+	if controls.PreviewAll then controls.PreviewAll:SetScript("OnClick", function(self) Editor:SetPreviewAllEnabled(self:GetChecked() == true) end) end
+
 	controls.RuleColorButton:SetScript("OnClick", function(_, mouseButton)
 		local group = groupFromSelection()
 		local rule = ruleFromSelection()
@@ -2954,6 +3063,25 @@ function Editor:EnsureFrame()
 		rule.expirationPulseCountdownOnly = self:GetChecked() == true
 		Editor:RefreshPreview()
 		Editor:RefreshRuntimeNow()
+	end)
+
+	controls.RuleExpirationPulseColorButton:SetScript("OnClick", function(_, mouseButton)
+		local rule = ruleFromSelection()
+		if not rule then return end
+		if mouseButton == "RightButton" then
+			rule.expirationPulseColor = { 1, 0.2, 0.2, 1 }
+			Editor:RefreshRuleControls()
+			Editor:RefreshPreview()
+			Editor:RefreshRuntimeNow()
+			return
+		end
+		local color = rule.expirationPulseColor or { 1, 0.2, 0.2, 1 }
+		showColorPicker(color, function(r, g, b, a)
+			rule.expirationPulseColor = { r, g, b, a }
+			Editor:RefreshRuleControls()
+			Editor:RefreshPreview()
+			Editor:RefreshRuntimeNow()
+		end)
 	end)
 
 	controls.RuleAppliesParty:SetScript("OnClick", function(self)
@@ -3200,8 +3328,12 @@ function Editor:RefreshRuleControls()
 	controls.RuleExpirationPulseThreshold:SetPoint("TOPLEFT", controls.RuleExpirationPulseThresholdLabel, "TOPRIGHT", 10, 8)
 	controls.RuleExpirationPulseThresholdValue:ClearAllPoints()
 	controls.RuleExpirationPulseThresholdValue:SetPoint("LEFT", controls.RuleExpirationPulseThreshold, "RIGHT", 12, 0)
+	controls.RuleExpirationPulseColorLabel:ClearAllPoints()
+	controls.RuleExpirationPulseColorLabel:SetPoint("TOPLEFT", controls.RuleExpirationPulseThresholdLabel, "BOTTOMLEFT", -4, -14)
+	controls.RuleExpirationPulseColorButton:ClearAllPoints()
+	controls.RuleExpirationPulseColorButton:SetPoint("LEFT", controls.RuleExpirationPulseColorLabel, "RIGHT", 10, 0)
 	controls.RuleExpirationPulseCountdownOnly:ClearAllPoints()
-	controls.RuleExpirationPulseCountdownOnly:SetPoint("TOPLEFT", controls.RuleExpirationPulseThresholdLabel, "BOTTOMLEFT", -4, -14)
+	controls.RuleExpirationPulseCountdownOnly:SetPoint("TOPLEFT", controls.RuleExpirationPulseColorLabel, "BOTTOMLEFT", -4, -10)
 	controls.RuleAppliesParty:ClearAllPoints()
 	if showExpirationPulse and rule and rule.expirationPulseEnabled == true then
 		controls.RuleAppliesParty:SetPoint("TOPLEFT", controls.RuleExpirationPulseCountdownOnly, "BOTTOMLEFT", 0, -6)
@@ -3287,6 +3419,7 @@ function Editor:RefreshRuleControls()
 	controls.RuleExpirationPulseThreshold:SetValue(pulseThreshold)
 	controls.RuleExpirationPulseThresholdValue:SetText(tostring(pulseThreshold))
 	controls.RuleExpirationPulseCountdownOnly:SetChecked(rule and rule.expirationPulseCountdownOnly == true)
+	setColorPreview(controls.RuleExpirationPulseColorButton, (rule and rule.expirationPulseColor) or { 1, 0.2, 0.2, 1 })
 	controls.RuleAppliesParty:SetChecked(rule and rule.appliesParty ~= false)
 	controls.RuleAppliesRaid:SetChecked(rule and rule.appliesRaid ~= false)
 	setControlEnabled(controls.RuleEnabled, rule ~= nil)
@@ -3300,6 +3433,9 @@ function Editor:RefreshRuleControls()
 	setControlVisible(controls.RuleExpirationPulseThresholdValue, showExpirationPulse and rule and rule.expirationPulseEnabled == true)
 	setControlEnabled(controls.RuleExpirationPulseThreshold, showExpirationPulse and rule and rule.expirationPulseEnabled == true)
 	setControlEnabled(controls.RuleExpirationPulseThresholdValue, showExpirationPulse and rule and rule.expirationPulseEnabled == true)
+	setControlVisible(controls.RuleExpirationPulseColorLabel, showExpirationPulse and rule and rule.expirationPulseEnabled == true)
+	setControlVisible(controls.RuleExpirationPulseColorButton, showExpirationPulse and rule and rule.expirationPulseEnabled == true)
+	setControlEnabled(controls.RuleExpirationPulseColorButton, showExpirationPulse and rule and rule.expirationPulseEnabled == true)
 	setControlVisible(controls.RuleExpirationPulseCountdownOnly, showExpirationPulse and rule and rule.expirationPulseEnabled == true)
 	setControlEnabled(controls.RuleExpirationPulseCountdownOnly, showExpirationPulse and rule and rule.expirationPulseEnabled == true)
 	setControlEnabled(controls.RuleAppliesParty, rule ~= nil)
@@ -3876,6 +4012,17 @@ function Editor:SetPreviewLoopEnabled(enabled)
 	self:RefreshPreview()
 end
 
+function Editor:SetPreviewAllEnabled(enabled)
+	enabled = enabled == true
+	if (self._previewAllEnabled ~= false) == enabled then return end
+	self._previewAllEnabled = enabled
+	local frame = self.frame
+	if frame and frame.Controls and frame.Controls.PreviewAll and frame.Controls.PreviewAll.GetChecked and frame.Controls.PreviewAll:GetChecked() ~= enabled then
+		frame.Controls.PreviewAll:SetChecked(enabled)
+	end
+	self:RefreshPreview()
+end
+
 function Editor:TickPreviewLoop()
 	if self._previewLoopEnabled ~= true then return end
 	local frame = self.frame
@@ -4056,7 +4203,7 @@ local function applyPreviewExpirationPulse(icon, group, rule, sampleIndex, now, 
 		border:SetPoint("TOPLEFT", icon, "TOPLEFT", -offset, offset)
 		border:SetPoint("BOTTOMRIGHT", icon, "BOTTOMRIGHT", offset, -offset)
 	end
-	local br, bg, bb, ba = resolveColor(useIndicatorBorder and group.indicatorBorderColor or rule.color or group.indicatorBorderColor or group.color)
+	local br, bg, bb, ba = resolveColor(rule.expirationPulseColor or { 1, 0.2, 0.2, 1 })
 	border:SetBackdropColor(0, 0, 0, 0)
 	border:SetBackdropBorderColor(br, bg, bb, max(ba or 1, 0.85) * (0.08 + (0.92 * pulse)))
 	border:Show()
@@ -4139,7 +4286,9 @@ function Editor:RefreshPreview()
 	local now = (GetTime and GetTime()) or 0
 	if loopEnabled and not self._previewLoopStart then self._previewLoopStart = now end
 	local loopOrigin = self._previewLoopStart or now
+	local previewAll = self._previewAllEnabled ~= false
 	if frame.Controls and frame.Controls.PreviewLoop then frame.Controls.PreviewLoop:SetChecked(loopEnabled) end
+	if frame.Controls and frame.Controls.PreviewAll then frame.Controls.PreviewAll:SetChecked(previewAll) end
 	local preview = frame.PreviewPanel and frame.PreviewPanel.Frame and frame.PreviewPanel.Frame.UnitFrame
 	if not preview then
 		self:UpdatePreviewLoopTicker()
@@ -4159,7 +4308,7 @@ function Editor:RefreshPreview()
 	for index = 1, #order do
 		local groupId = order[index]
 		local group = placement.groupsById and placement.groupsById[groupId]
-		if group then
+		if group and (previewAll or groupId == self.selectedGroupId) then
 			local style = tostring(group.style or "ICON"):upper()
 			local iconMode = tostring(group.iconMode or "ALL"):upper()
 			local anchorPoint = group.anchorPoint or "CENTER"
@@ -4379,3 +4528,42 @@ function Editor:Toggle(kind)
 end
 
 function Editor:IsShown() return self.frame and self.frame:IsShown() == true end
+
+local function isSlashCommandRegistered(command)
+	if addon.functions and addon.functions.IsSlashCommandRegistered then return addon.functions.IsSlashCommandRegistered(command) end
+	if not command then return false end
+	command = command:lower()
+	for key, value in pairs(_G) do
+		if type(key) == "string" and key:match("^SLASH_") and type(value) == "string" then
+			if value:lower() == command then return true end
+		end
+	end
+	return false
+end
+
+local function setSlashCommandAlias(slot, command)
+	if addon.functions and addon.functions.SetSlashCommandAlias then return addon.functions.SetSlashCommandAlias("EQOLHBP", slot, command) end
+	command = type(command) == "string" and command:lower() or nil
+	_G["SLASH_EQOLHBP" .. slot] = command
+	return command
+end
+
+local function registerHealerBuffPlacementSlashCommand()
+	if not SlashCmdList then return end
+	local command = "/hbp"
+	if isSlashCommandRegistered(command) then
+		local key = _G["SLASH_EQOLHBP1"]
+		local owned = SlashCmdList["EQOLHBP"] and type(key) == "string" and key:lower() == command
+		if not owned then return end
+	end
+	setSlashCommandAlias(1, command)
+	SlashCmdList["EQOLHBP"] = function(msg)
+		if InCombatLockdown and InCombatLockdown() then return end
+		local arg = tostring(msg or ""):lower():match("%S+") or ""
+		local kind = "raid"
+		if arg == "party" or arg == "p" then kind = "party" end
+		Editor:Toggle(kind)
+	end
+end
+
+registerHealerBuffPlacementSlashCommand()

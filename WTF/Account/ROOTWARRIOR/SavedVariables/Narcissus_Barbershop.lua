@@ -5,10 +5,9 @@ NarciBarberShopDB = {
 ["ToggleNotification"] = true,
 ["PlayerData"] = {
 ["0EA2971B"] = {
-["realmName"] = "Tichondrius",
+["classID"] = 12,
 ["playerName"] = "Ofpuss",
 ["realmID"] = "11",
-["classID"] = 12,
 ["SavedLooks"] = {
 ["chrModel202"] = {
 },
@@ -33,11 +32,12 @@ NarciBarberShopDB = {
 ["chrModel124"] = {
 },
 },
+["realmName"] = "Tichondrius",
 },
 ["0DFE6965"] = {
-["classID"] = 9,
-["playerName"] = "Hellavator",
 ["realmID"] = "3684",
+["playerName"] = "Hellavator",
+["realmName"] = "Mal'Ganis",
 ["SavedLooks"] = {
 ["chrModel198"] = {
 },
@@ -55,18 +55,22 @@ NarciBarberShopDB = {
 },
 ["chrModel176"] = {
 },
-["chrModel197"] = {
-},
-["chrModel184"] = {
+["chrModel180"] = {
 },
 ["chrModel182"] = {
 },
-["chrModel180"] = {
+["chrModel184"] = {
+},
+["chrModel197"] = {
 },
 },
-["realmName"] = "Mal'Ganis",
+["classID"] = 9,
 },
 ["0E93DBA7"] = {
+["realmName"] = "Mal'Ganis",
+["playerName"] = "Auteist",
+["realmID"] = "3684",
+["classID"] = 8,
 ["SavedLooks"] = {
 {
 ["male"] = {
@@ -146,15 +150,8 @@ NarciBarberShopDB = {
 ["chrModel124"] = {
 },
 },
-["playerName"] = "Auteist",
-["realmName"] = "Mal'Ganis",
-["classID"] = 8,
-["realmID"] = "3684",
 },
 ["0E8F0F8D"] = {
-["realmID"] = "3684",
-["playerName"] = "Auteist",
-["realmName"] = "Mal'Ganis",
 ["SavedLooks"] = {
 [7] = {
 ["male"] = {
@@ -202,18 +199,18 @@ NarciBarberShopDB = {
 },
 },
 },
+["playerName"] = "Auteist",
+["realmName"] = "Mal'Ganis",
 ["classID"] = 8,
+["realmID"] = "3684",
 },
 ["0E4DA0D5"] = {
-["realmID"] = "3684",
-["playerName"] = "Corsic",
-["realmName"] = "Mal'Ganis",
 ["SavedLooks"] = {
 ["chrModel202"] = {
 },
 ["chrModel123"] = {
 },
-["chrModel206"] = {
+["chrModel124"] = {
 },
 [4] = {
 ["male"] = {
@@ -221,18 +218,34 @@ NarciBarberShopDB = {
 ["female"] = {
 },
 },
-["chrModel124"] = {
+["chrModel206"] = {
 },
 ["chrModel186"] = {
 },
 },
+["playerName"] = "Corsic",
+["realmName"] = "Mal'Ganis",
 ["classID"] = 4,
+["realmID"] = "3684",
+},
+["0EA29727"] = {
+["classID"] = 5,
+["playerName"] = "Neonvoid",
+["realmID"] = "11",
+["SavedLooks"] = {
+[29] = {
+["male"] = {
+},
+["female"] = {
+},
+},
+},
+["realmName"] = "Tichondrius",
 },
 ["0E96CF12"] = {
-["realmName"] = "Mal'Ganis",
+["classID"] = 10,
 ["playerName"] = "Stormclout",
 ["realmID"] = "3684",
-["classID"] = 10,
 ["SavedLooks"] = {
 ["chrModel202"] = {
 },
@@ -245,12 +258,12 @@ NarciBarberShopDB = {
 },
 },
 },
+["realmName"] = "Mal'Ganis",
 },
 ["0E89C66F"] = {
-["realmName"] = "Mal'Ganis",
+["classID"] = 8,
 ["playerName"] = "Auteist",
 ["realmID"] = "3684",
-["classID"] = 8,
 ["SavedLooks"] = {
 [27] = {
 ["male"] = {
@@ -261,511 +274,12 @@ NarciBarberShopDB = {
 ["chrModel124"] = {
 },
 },
-},
-["0EB8C39F"] = {
-["SavedLooks"] = {
-[2] = {
-["male"] = {
-},
-["female"] = {
-{
-["name"] = "OrcFemale",
-["description"] = "Topknot Hair Style, Both Eyesight, Blade Scars, Plugs Earrings, Brutality Tattoo, Ghost War Paint",
-["data"] = {
-{
-25,
-9356,
-},
-{
-26,
-480,
-},
-{
-27,
-490,
-},
-{
-28,
-510,
-},
-{
-825,
-9295,
-},
-{
-6341,
-45098,
-},
-{
-830,
-9378,
-},
-{
-29,
-522,
-},
-{
-847,
-9491,
-},
-{
-841,
-9471,
-},
-{
-831,
-9384,
-},
-{
-832,
-9392,
-},
-{
-833,
-9389,
-},
-},
-["timeCreated"] = 1781278697,
-},
-},
-},
-},
-["playerName"] = "Stormclout",
-["realmName"] = "Tichondrius",
-["classID"] = 10,
-["realmID"] = "11",
-},
-["0EB43A45"] = {
-["realmID"] = "11",
-["playerName"] = "Tampacks",
-["realmName"] = "Tichondrius",
-["SavedLooks"] = {
-[32] = {
-["male"] = {
-},
-["female"] = {
-},
-},
-},
-["classID"] = 6,
-},
-["0E46172F"] = {
-["SavedLooks"] = {
-["chrModel202"] = {
-},
-["chrModel124"] = {
-},
-[29] = {
-["male"] = {
-},
-["female"] = {
-},
-},
-},
-["playerName"] = "Neonvoid",
 ["realmName"] = "Mal'Ganis",
-["classID"] = 5,
-["realmID"] = "3684",
-},
-["0EAABA4A"] = {
-["realmName"] = "Mal'Ganis",
-["playerName"] = "Mäñýfäçëð",
-["realmID"] = "3684",
-["classID"] = 4,
-["SavedLooks"] = {
-[5] = {
-["male"] = {
-},
-["female"] = {
-},
-},
-[36] = {
-["male"] = {
-{
-["name"] = "orc1",
-["description"] = "Unbound Hair Style, Iron Spikes Beard, Medium Sideburns, Both Eyesight, Plugs Earrings, Gold Root Tusks, Upright Hunched",
-["data"] = {
-{
-347,
-3384,
-},
-{
-412,
-3400,
-},
-{
-350,
-3404,
-},
-{
-351,
-3414,
-},
-{
-352,
-3422,
-},
-{
-882,
-9868,
-},
-{
-880,
-9847,
-},
-{
-6378,
-45246,
-},
-{
-884,
-9879,
-},
-{
-885,
-9882,
-},
-{
-883,
-9873,
-},
-{
-353,
-3427,
-},
-},
-["timeCreated"] = 1743529276,
-},
-},
-["female"] = {
-{
-["data"] = {
-{
-354,
-3428,
-},
-{
-413,
-3443,
-},
-{
-357,
-3452,
-},
-{
-358,
-3457,
-},
-{
-881,
-9856,
-},
-{
-6379,
-45250,
-},
-{
-414,
-9891,
-},
-{
-886,
-3470,
-},
-{
-887,
-9902,
-},
-},
-["name"] = "Female",
-["description"] = "Unbridled Hair Style, Both Eyesight, Plugs Earrings, Iron Ring Nose Ring",
-["timeCreated"] = 1743535274,
-},
-},
-},
-},
-},
-["0E99A050"] = {
-["classID"] = 10,
-["playerName"] = "Stormclout",
-["realmID"] = "3684",
-["SavedLooks"] = {
-{
-["male"] = {
-{
-["name"] = "Human",
-["description"] = "Round Face Shape, Foxtail Hair Style, Round Ears, Angled Eyebrows, Both Eyesight",
-["data"] = {
-{
-9,
-4978,
-},
-{
-10,
-15436,
-},
-{
-525,
-5058,
-},
-{
-11,
-59,
-},
-{
-12,
-32255,
-},
-{
-888,
-9906,
-},
-{
-13,
-76,
-},
-{
-889,
-9913,
-},
-{
-8789,
-56651,
-},
-{
-890,
-9920,
-},
-{
-463,
-4143,
-},
-{
-6338,
-45086,
-},
-},
-["timeCreated"] = 1742583755,
-},
-},
-["female"] = {
-{
-["name"] = "Human",
-["description"] = "Ox Horns Hair Style, New 49 Hair Color, Cut Eyebrows, Round Face Shape, Both Eyesight, Round Ears, Candy Makeup, Nose Piercings",
-["data"] = {
-{
-14,
-4970,
-},
-{
-15,
-15725,
-},
-{
-16,
-4985,
-},
-{
-17,
-32271,
-},
-{
-970,
-15694,
-},
-{
-526,
-5061,
-},
-{
-464,
-4167,
-},
-{
-6339,
-45090,
-},
-{
-8790,
-56653,
-},
-{
-516,
-4941,
-},
-{
-501,
-4757,
-},
-{
-510,
-4908,
-},
-},
-["timeCreated"] = 1742582994,
-},
-},
-},
-["chrModel129"] = {
-},
-["chrModel123"] = {
-},
-["chrModel126"] = {
-},
-["chrModel125"] = {
-},
-["chrModel124"] = {
-},
-[4] = {
-["male"] = {
-},
-["female"] = {
-},
-},
-},
-["realmName"] = "Mal'Ganis",
-},
-["0DFA4264"] = {
-["realmName"] = "Mal'Ganis",
-["playerName"] = "Charizhard",
-["realmID"] = "3684",
-["classID"] = 13,
-["SavedLooks"] = {
-[70] = {
-["male"] = {
-},
-["female"] = {
-},
-},
-["alternateForm"] = {
-["male"] = {
-},
-["female"] = {
-{
-["description"] = "Full Tail Hair Style, New 00 Hair Color, New 03 Hair Highlights, New 03 Eye Color, Both Eyesight, Grand Horns, New 08 Horn Color, Chains Horn Jewelry, Smolder Scale Pattern, New 01 Scale Color, Short Ears, Barbed Earrings, New 04 Jewelry Color, New 00 Underclothes Color",
-["data"] = {
-{
-1731,
-26482,
-},
-{
-1767,
-26945,
-},
-{
-1768,
-26957,
-},
-{
-1769,
-27189,
-},
-{
-1787,
-27441,
-},
-{
-1782,
-27148,
-},
-{
-1785,
-27399,
-},
-{
-1786,
-27263,
-},
-{
-1774,
-27059,
-},
-{
-1775,
-27181,
-},
-{
-1776,
-27074,
-},
-{
-1778,
-27132,
-},
-{
-1788,
-27452,
-},
-{
-1781,
-27144,
-},
-{
-1770,
-27006,
-},
-{
-1779,
-29862,
-},
-{
-1783,
-27169,
-},
-{
-1784,
-27171,
-},
-{
-1780,
-27140,
-},
-{
-1777,
-27188,
-},
-{
-1772,
-27017,
-},
-{
-1771,
-27007,
-},
-{
-1773,
-27037,
-},
-{
-1791,
-27616,
-},
-},
-["name"] = "Dracthyr",
-["timeCreated"] = 1727634915,
-},
-},
-},
-},
-},
-["0EA2971D"] = {
-["SavedLooks"] = {
-[2] = {
-["male"] = {
-},
-["female"] = {
-},
-},
-},
-["playerName"] = "Choppiez",
-["realmName"] = "Tichondrius",
-["classID"] = 1,
-["realmID"] = "11",
 },
 ["0E4F7B05"] = {
-["classID"] = 10,
-["playerName"] = "Stormclout",
 ["realmID"] = "3684",
+["playerName"] = "Stormclout",
+["realmName"] = "Mal'Ganis",
 ["SavedLooks"] = {
 [24] = {
 ["male"] = {
@@ -891,12 +405,602 @@ NarciBarberShopDB = {
 },
 },
 },
+["classID"] = 10,
+},
+["0EB43A45"] = {
+["SavedLooks"] = {
+[32] = {
+["male"] = {
+},
+["female"] = {
+},
+},
+},
+["playerName"] = "Tampacks",
+["realmName"] = "Tichondrius",
+["classID"] = 6,
+["realmID"] = "11",
+},
+["0E46172F"] = {
+["realmName"] = "Mal'Ganis",
+["playerName"] = "Neonvoid",
+["realmID"] = "3684",
+["classID"] = 5,
+["SavedLooks"] = {
+["chrModel202"] = {
+},
+["chrModel124"] = {
+},
+[29] = {
+["male"] = {
+},
+["female"] = {
+},
+},
+},
+},
+["0EAABA4A"] = {
+["classID"] = 4,
+["playerName"] = "Mäñýfäçëð",
+["realmID"] = "3684",
+["SavedLooks"] = {
+[5] = {
+["male"] = {
+},
+["female"] = {
+},
+},
+[36] = {
+["male"] = {
+{
+["name"] = "orc1",
+["description"] = "Unbound Hair Style, Iron Spikes Beard, Medium Sideburns, Both Eyesight, Plugs Earrings, Gold Root Tusks, Upright Hunched",
+["data"] = {
+{
+347,
+3384,
+},
+{
+412,
+3400,
+},
+{
+350,
+3404,
+},
+{
+351,
+3414,
+},
+{
+352,
+3422,
+},
+{
+882,
+9868,
+},
+{
+880,
+9847,
+},
+{
+6378,
+45246,
+},
+{
+884,
+9879,
+},
+{
+885,
+9882,
+},
+{
+883,
+9873,
+},
+{
+353,
+3427,
+},
+},
+["timeCreated"] = 1743529276,
+},
+},
+["female"] = {
+{
+["data"] = {
+{
+354,
+3428,
+},
+{
+413,
+3443,
+},
+{
+357,
+3452,
+},
+{
+358,
+3457,
+},
+{
+881,
+9856,
+},
+{
+6379,
+45250,
+},
+{
+414,
+9891,
+},
+{
+886,
+3470,
+},
+{
+887,
+9902,
+},
+},
+["name"] = "Female",
+["description"] = "Unbridled Hair Style, Both Eyesight, Plugs Earrings, Iron Ring Nose Ring",
+["timeCreated"] = 1743535274,
+},
+},
+},
+},
 ["realmName"] = "Mal'Ganis",
 },
-["0DE37DD9"] = {
-["classID"] = 2,
-["playerName"] = "Praisesun",
+["0E992E2F"] = {
+["classID"] = 10,
+["playerName"] = "Stormclout",
 ["realmID"] = "3684",
+["SavedLooks"] = {
+[24] = {
+["male"] = {
+{
+["name"] = "panda",
+["description"] = "Headband Hair Style, Strands Mustache, Temple Rope Beard, Thin Eyebrows, Both Eyesight",
+["data"] = {
+{
+383,
+2534,
+},
+{
+384,
+2562,
+},
+{
+385,
+8368,
+},
+{
+752,
+8393,
+},
+{
+386,
+2584,
+},
+{
+753,
+8397,
+},
+{
+747,
+8326,
+},
+{
+6362,
+45182,
+},
+},
+["timeCreated"] = 1730383512,
+},
+},
+["female"] = {
+{
+["name"] = "Panda",
+["description"] = "Bangs Hair Style, Both Eyesight, Nub Tail",
+["data"] = {
+{
+387,
+2626,
+},
+{
+388,
+2645,
+},
+{
+230,
+2654,
+},
+{
+231,
+2674,
+},
+{
+750,
+8359,
+},
+{
+6363,
+45186,
+},
+{
+232,
+2683,
+},
+{
+751,
+8363,
+},
+},
+["timeCreated"] = 1730383456,
+},
+},
+},
+},
+["realmName"] = "Mal'Ganis",
+},
+["0DFA4264"] = {
+["classID"] = 13,
+["playerName"] = "Charizhard",
+["realmID"] = "3684",
+["SavedLooks"] = {
+[70] = {
+["male"] = {
+},
+["female"] = {
+},
+},
+["alternateForm"] = {
+["male"] = {
+},
+["female"] = {
+{
+["description"] = "Full Tail Hair Style, New 00 Hair Color, New 03 Hair Highlights, New 03 Eye Color, Both Eyesight, Grand Horns, New 08 Horn Color, Chains Horn Jewelry, Smolder Scale Pattern, New 01 Scale Color, Short Ears, Barbed Earrings, New 04 Jewelry Color, New 00 Underclothes Color",
+["data"] = {
+{
+1731,
+26482,
+},
+{
+1767,
+26945,
+},
+{
+1768,
+26957,
+},
+{
+1769,
+27189,
+},
+{
+1787,
+27441,
+},
+{
+1782,
+27148,
+},
+{
+1785,
+27399,
+},
+{
+1786,
+27263,
+},
+{
+1774,
+27059,
+},
+{
+1775,
+27181,
+},
+{
+1776,
+27074,
+},
+{
+1778,
+27132,
+},
+{
+1788,
+27452,
+},
+{
+1781,
+27144,
+},
+{
+1770,
+27006,
+},
+{
+1779,
+29862,
+},
+{
+1783,
+27169,
+},
+{
+1784,
+27171,
+},
+{
+1780,
+27140,
+},
+{
+1777,
+27188,
+},
+{
+1772,
+27017,
+},
+{
+1771,
+27007,
+},
+{
+1773,
+27037,
+},
+{
+1791,
+27616,
+},
+},
+["name"] = "Dracthyr",
+["timeCreated"] = 1727634915,
+},
+},
+},
+},
+["realmName"] = "Mal'Ganis",
+},
+["0EA9FE55"] = {
+["realmName"] = "Mal'Ganis",
+["playerName"] = "Stormclout",
+["realmID"] = "3684",
+["classID"] = 10,
+["SavedLooks"] = {
+[8] = {
+["male"] = {
+{
+["data"] = {
+{
+90,
+8610,
+},
+{
+91,
+1316,
+},
+{
+92,
+1329,
+},
+{
+93,
+1342,
+},
+{
+94,
+1361,
+},
+{
+756,
+8440,
+},
+{
+6352,
+45142,
+},
+{
+767,
+8546,
+},
+{
+768,
+8576,
+},
+{
+764,
+8500,
+},
+{
+761,
+8481,
+},
+{
+769,
+8550,
+},
+{
+770,
+8582,
+},
+},
+["name"] = "Troll",
+["description"] = "Topknot Hair Style, Pierced Tusks, Both Eyesight, Skull Face Paint, Bone Earrings, Ring Piercing, Bones Body Paint",
+["timeCreated"] = 1742585698,
+},
+},
+["female"] = {
+},
+},
+["chrModel123"] = {
+},
+["chrModel206"] = {
+},
+},
+},
+["0EB8C39F"] = {
+["realmName"] = "Tichondrius",
+["playerName"] = "Stormclout",
+["realmID"] = "11",
+["classID"] = 10,
+["SavedLooks"] = {
+[2] = {
+["male"] = {
+{
+["name"] = "Male",
+["description"] = "Topknot Hair Style, Full Beard, Both Eyesight, Cut Scars, Bone Nose Ring, Natural Tusks, Brutality Tattoo, Bloodlust War Paint, Upright Upright",
+["data"] = {
+{
+19,
+9352,
+},
+{
+20,
+392,
+},
+{
+21,
+403,
+},
+{
+22,
+420,
+},
+{
+23,
+432,
+},
+{
+876,
+9816,
+},
+{
+824,
+15782,
+},
+{
+6340,
+45094,
+},
+{
+826,
+9361,
+},
+{
+877,
+9825,
+},
+{
+836,
+9428,
+},
+{
+875,
+9811,
+},
+{
+874,
+9804,
+},
+{
+827,
+9368,
+},
+{
+828,
+9370,
+},
+{
+829,
+9376,
+},
+{
+24,
+439,
+},
+},
+["timeCreated"] = 1783521265,
+},
+},
+["female"] = {
+{
+["data"] = {
+{
+25,
+9356,
+},
+{
+26,
+480,
+},
+{
+27,
+490,
+},
+{
+28,
+510,
+},
+{
+825,
+9295,
+},
+{
+6341,
+45098,
+},
+{
+830,
+9378,
+},
+{
+29,
+522,
+},
+{
+847,
+9491,
+},
+{
+841,
+9471,
+},
+{
+831,
+9382,
+},
+{
+832,
+9393,
+},
+{
+833,
+9389,
+},
+},
+["name"] = "New Look #1",
+["description"] = "Topknot Hair Style, Both Eyesight, Blade Scars, Plugs Earrings, Bloodlust War Paint",
+["timeCreated"] = 1783621059,
+},
+},
+},
+},
+},
+["0DE37DD9"] = {
+["realmID"] = "3684",
+["playerName"] = "Praisesun",
+["realmName"] = "Mal'Ganis",
 ["SavedLooks"] = {
 {
 ["male"] = {
@@ -960,12 +1064,12 @@ NarciBarberShopDB = {
 },
 },
 },
-["realmName"] = "Mal'Ganis",
+["classID"] = 2,
 },
 ["0E9643E1"] = {
-["classID"] = 8,
-["playerName"] = "Auteist",
 ["realmID"] = "3684",
+["playerName"] = "Auteist",
+["realmName"] = "Mal'Ganis",
 ["SavedLooks"] = {
 [5] = {
 ["male"] = {
@@ -1060,12 +1164,12 @@ NarciBarberShopDB = {
 },
 },
 },
-["realmName"] = "Mal'Ganis",
+["classID"] = 8,
 },
 ["0E947B93"] = {
-["classID"] = 13,
-["playerName"] = "Smaugchamp",
 ["realmID"] = "3684",
+["playerName"] = "Smaugchamp",
+["realmName"] = "Mal'Ganis",
 ["SavedLooks"] = {
 [52] = {
 ["male"] = {
@@ -1236,6 +1340,10 @@ NarciBarberShopDB = {
 },
 },
 },
+["chrModel202"] = {
+},
+["chrModel124"] = {
+},
 ["alternateForm"] = {
 ["male"] = {
 },
@@ -1345,17 +1453,13 @@ NarciBarberShopDB = {
 },
 },
 },
-["chrModel124"] = {
 },
-["chrModel202"] = {
-},
-},
-["realmName"] = "Mal'Ganis",
+["classID"] = 13,
 },
 ["0DD14B63"] = {
-["classID"] = 11,
-["playerName"] = "Thickshape",
 ["realmID"] = "3684",
+["playerName"] = "Thickshape",
+["realmName"] = "Mal'Ganis",
 ["SavedLooks"] = {
 ["chrModel191"] = {
 },
@@ -1365,7 +1469,7 @@ NarciBarberShopDB = {
 },
 ["chrModel194"] = {
 },
-["chrModel192"] = {
+["chrModel193"] = {
 },
 [4] = {
 ["male"] = {
@@ -1373,7 +1477,7 @@ NarciBarberShopDB = {
 ["female"] = {
 },
 },
-["chrModel193"] = {
+["chrModel192"] = {
 },
 [32] = {
 ["male"] = {
@@ -1382,12 +1486,9 @@ NarciBarberShopDB = {
 },
 },
 },
-["realmName"] = "Mal'Ganis",
+["classID"] = 11,
 },
 ["0E4A5E7C"] = {
-["realmID"] = "3684",
-["playerName"] = "Auteist",
-["realmName"] = "Mal'Ganis",
 ["SavedLooks"] = {
 {
 ["male"] = {
@@ -1396,45 +1497,227 @@ NarciBarberShopDB = {
 },
 },
 },
+["playerName"] = "Auteist",
+["realmName"] = "Mal'Ganis",
 ["classID"] = 8,
+["realmID"] = "3684",
 },
-["0EA49B09"] = {
-["realmName"] = "Tichondrius",
-["playerName"] = "Ofpusstwo",
-["realmID"] = "11",
-["classID"] = 12,
+["0EA2971C"] = {
 ["SavedLooks"] = {
-["chrModel202"] = {
+["chrModel198"] = {
 },
-["chrModel149"] = {
+["chrModel148"] = {
 },
+["chrModel183"] = {
+},
+["chrModel181"] = {
+},
+[5] = {
+["male"] = {
+},
+["female"] = {
+},
+},
+["chrModel176"] = {
+},
+["chrModel197"] = {
+},
+["chrModel184"] = {
+},
+["chrModel182"] = {
+},
+["chrModel180"] = {
+},
+},
+["playerName"] = "Hellavator",
+["realmName"] = "Tichondrius",
+["classID"] = 9,
+["realmID"] = "11",
+},
+["0EAD3EE3"] = {
+["classID"] = 10,
+["playerName"] = "Stormclout",
+["realmID"] = "3684",
+["SavedLooks"] = {
+{
+["male"] = {
+},
+["female"] = {
+{
+["name"] = "Main",
+["description"] = "Ox Horns Hair Style, New 47 Hair Color, Cut Eyebrows, Round Face Shape, Both Eyesight, Round Ears, Candy Makeup, Nose Piercings",
+["data"] = {
+{
+14,
+4971,
+},
+{
+15,
+15725,
+},
+{
+16,
+4985,
+},
+{
+17,
+32269,
+},
+{
+970,
+15694,
+},
+{
+526,
+5061,
+},
+{
+464,
+4167,
+},
+{
+6339,
+45090,
+},
+{
+8790,
+56653,
+},
+{
+516,
+4941,
+},
+{
+501,
+4757,
+},
+{
+510,
+4908,
+},
+},
+["timeCreated"] = 1756237199,
+},
+},
+},
+["chrModel123"] = {
+},
+["chrModel207"] = {
+},
+},
+["realmName"] = "Mal'Ganis",
+},
+["0EB45F08"] = {
+["realmID"] = "11",
+["playerName"] = "Stormclout",
+["realmName"] = "Tichondrius",
+["SavedLooks"] = {
+[24] = {
+["male"] = {
+{
+["data"] = {
+{
+383,
+2528,
+},
+{
+384,
+2553,
+},
+{
+385,
+8368,
+},
+{
+752,
+8390,
+},
+{
+386,
+2589,
+},
+{
+753,
+8394,
+},
+{
+747,
+8320,
+},
+{
+6362,
+45182,
+},
+},
+["name"] = "Male Panda",
+["description"] = "Headband Hair Style, Barbels Mustache, Temple Cord Beard, Both Eyesight",
+["timeCreated"] = 1773926657,
+},
+},
+["female"] = {
+{
+["data"] = {
+{
+387,
+2618,
+},
+{
+388,
+2648,
+},
+{
+230,
+2656,
+},
+{
+231,
+2670,
+},
+{
+750,
+8353,
+},
+{
+6363,
+45186,
+},
+{
+232,
+2683,
+},
+{
+751,
+8363,
+},
+},
+["name"] = "Female Panda",
+["description"] = "Braid Hair Style, Both Eyesight, Nub Tail",
+["timeCreated"] = 1773926540,
+},
+},
+},
+},
+["classID"] = 10,
+},
+["0EA380B9"] = {
+["realmName"] = "Tichondrius",
+["playerName"] = "Mäñýfäçëð",
+["realmID"] = "11",
+["classID"] = 4,
+["SavedLooks"] = {
 [4] = {
 ["male"] = {
 },
 ["female"] = {
 },
 },
-["chrModel206"] = {
-},
-["chrModel186"] = {
-},
-["chrModel129"] = {
-},
-["chrModel123"] = {
-},
-["chrModel126"] = {
-},
-["chrModel188"] = {
-},
-["chrModel125"] = {
-},
-["chrModel124"] = {
-},
-["chrModel207"] = {
-},
 },
 },
 ["0E499C17"] = {
+["realmName"] = "Mal'Ganis",
+["playerName"] = "Ofpuss",
+["realmID"] = "3684",
+["classID"] = 12,
 ["SavedLooks"] = {
 ["chrModel202"] = {
 },
@@ -1617,134 +1900,128 @@ NarciBarberShopDB = {
 ["chrModel206"] = {
 },
 },
-["playerName"] = "Ofpuss",
-["realmName"] = "Mal'Ganis",
-["classID"] = 12,
-["realmID"] = "3684",
 },
-["0EA380B9"] = {
+["0EA49B09"] = {
+["classID"] = 12,
+["playerName"] = "Ofpusstwo",
+["realmID"] = "11",
 ["SavedLooks"] = {
+["chrModel202"] = {
+},
+["chrModel149"] = {
+},
 [4] = {
 ["male"] = {
 },
 ["female"] = {
 },
 },
+["chrModel206"] = {
 },
-["playerName"] = "Mäñýfäçëð",
+["chrModel186"] = {
+},
+["chrModel129"] = {
+},
+["chrModel123"] = {
+},
+["chrModel126"] = {
+},
+["chrModel188"] = {
+},
+["chrModel125"] = {
+},
+["chrModel124"] = {
+},
+["chrModel207"] = {
+},
+},
 ["realmName"] = "Tichondrius",
-["classID"] = 4,
-["realmID"] = "11",
 },
-["0EB45F08"] = {
-["classID"] = 10,
-["playerName"] = "Stormclout",
+["0EA2971D"] = {
+["realmName"] = "Tichondrius",
+["playerName"] = "Choppiez",
 ["realmID"] = "11",
+["classID"] = 1,
 ["SavedLooks"] = {
-[24] = {
+[2] = {
 ["male"] = {
-{
-["data"] = {
-{
-383,
-2528,
-},
-{
-384,
-2553,
-},
-{
-385,
-8368,
-},
-{
-752,
-8390,
-},
-{
-386,
-2589,
-},
-{
-753,
-8394,
-},
-{
-747,
-8320,
-},
-{
-6362,
-45182,
-},
-},
-["name"] = "Male Panda",
-["description"] = "Headband Hair Style, Barbels Mustache, Temple Cord Beard, Both Eyesight",
-["timeCreated"] = 1773926657,
-},
 },
 ["female"] = {
-{
-["data"] = {
-{
-387,
-2618,
-},
-{
-388,
-2648,
-},
-{
-230,
-2656,
-},
-{
-231,
-2670,
-},
-{
-750,
-8353,
-},
-{
-6363,
-45186,
-},
-{
-232,
-2683,
-},
-{
-751,
-8363,
-},
-},
-["name"] = "Female Panda",
-["description"] = "Braid Hair Style, Both Eyesight, Nub Tail",
-["timeCreated"] = 1773926540,
 },
 },
 },
 },
-["realmName"] = "Tichondrius",
-},
-["0EAD3EE3"] = {
-["realmName"] = "Mal'Ganis",
-["playerName"] = "Stormclout",
+["0E99A050"] = {
 ["realmID"] = "3684",
-["classID"] = 10,
+["playerName"] = "Stormclout",
+["realmName"] = "Mal'Ganis",
 ["SavedLooks"] = {
 {
 ["male"] = {
+{
+["name"] = "Human",
+["description"] = "Round Face Shape, Foxtail Hair Style, Round Ears, Angled Eyebrows, Both Eyesight",
+["data"] = {
+{
+9,
+4978,
+},
+{
+10,
+15436,
+},
+{
+525,
+5058,
+},
+{
+11,
+59,
+},
+{
+12,
+32255,
+},
+{
+888,
+9906,
+},
+{
+13,
+76,
+},
+{
+889,
+9913,
+},
+{
+8789,
+56651,
+},
+{
+890,
+9920,
+},
+{
+463,
+4143,
+},
+{
+6338,
+45086,
+},
+},
+["timeCreated"] = 1742583755,
+},
 },
 ["female"] = {
 {
-["name"] = "Main",
-["description"] = "Ox Horns Hair Style, New 47 Hair Color, Cut Eyebrows, Round Face Shape, Both Eyesight, Round Ears, Candy Makeup, Nose Piercings",
+["name"] = "Human",
+["description"] = "Ox Horns Hair Style, New 49 Hair Color, Cut Eyebrows, Round Face Shape, Both Eyesight, Round Ears, Candy Makeup, Nose Piercings",
 ["data"] = {
 {
 14,
-4971,
+4970,
 },
 {
 15,
@@ -1756,7 +2033,7 @@ NarciBarberShopDB = {
 },
 {
 17,
-32269,
+32271,
 },
 {
 970,
@@ -1791,218 +2068,34 @@ NarciBarberShopDB = {
 4908,
 },
 },
-["timeCreated"] = 1756237199,
+["timeCreated"] = 1742582994,
 },
 },
 },
-["chrModel207"] = {
-},
-["chrModel123"] = {
-},
-},
-},
-["0EA2971C"] = {
-["realmID"] = "11",
-["playerName"] = "Hellavator",
-["realmName"] = "Tichondrius",
-["SavedLooks"] = {
-["chrModel198"] = {
-},
-["chrModel148"] = {
-},
-["chrModel183"] = {
-},
-["chrModel181"] = {
-},
-[5] = {
-["male"] = {
-},
-["female"] = {
-},
-},
-["chrModel176"] = {
-},
-["chrModel180"] = {
-},
-["chrModel182"] = {
-},
-["chrModel184"] = {
-},
-["chrModel197"] = {
-},
-},
-["classID"] = 9,
-},
-["0EA9FE55"] = {
-["SavedLooks"] = {
-[8] = {
-["male"] = {
-{
-["data"] = {
-{
-90,
-8610,
-},
-{
-91,
-1316,
-},
-{
-92,
-1329,
-},
-{
-93,
-1342,
-},
-{
-94,
-1361,
-},
-{
-756,
-8440,
-},
-{
-6352,
-45142,
-},
-{
-767,
-8546,
-},
-{
-768,
-8576,
-},
-{
-764,
-8500,
-},
-{
-761,
-8481,
-},
-{
-769,
-8550,
-},
-{
-770,
-8582,
-},
-},
-["name"] = "Troll",
-["description"] = "Topknot Hair Style, Pierced Tusks, Both Eyesight, Skull Face Paint, Bone Earrings, Ring Piercing, Bones Body Paint",
-["timeCreated"] = 1742585698,
-},
-},
-["female"] = {
-},
+["chrModel129"] = {
 },
 ["chrModel123"] = {
 },
-["chrModel206"] = {
+["chrModel126"] = {
 },
+["chrModel125"] = {
 },
-["playerName"] = "Stormclout",
-["realmName"] = "Mal'Ganis",
-["classID"] = 10,
-["realmID"] = "3684",
+["chrModel124"] = {
 },
-["0E992E2F"] = {
-["realmName"] = "Mal'Ganis",
-["playerName"] = "Stormclout",
-["realmID"] = "3684",
-["classID"] = 10,
-["SavedLooks"] = {
-[24] = {
+[4] = {
 ["male"] = {
-{
-["name"] = "panda",
-["description"] = "Headband Hair Style, Strands Mustache, Temple Rope Beard, Thin Eyebrows, Both Eyesight",
-["data"] = {
-{
-383,
-2534,
-},
-{
-384,
-2562,
-},
-{
-385,
-8368,
-},
-{
-752,
-8393,
-},
-{
-386,
-2584,
-},
-{
-753,
-8397,
-},
-{
-747,
-8326,
-},
-{
-6362,
-45182,
-},
-},
-["timeCreated"] = 1730383512,
-},
 },
 ["female"] = {
-{
-["name"] = "Panda",
-["description"] = "Bangs Hair Style, Both Eyesight, Nub Tail",
-["data"] = {
-{
-387,
-2626,
-},
-{
-388,
-2645,
-},
-{
-230,
-2654,
-},
-{
-231,
-2674,
-},
-{
-750,
-8359,
-},
-{
-6363,
-45186,
-},
-{
-232,
-2683,
-},
-{
-751,
-8363,
-},
-},
-["timeCreated"] = 1730383456,
 },
 },
 },
-},
+["classID"] = 10,
 },
 ["0E905234"] = {
+["realmName"] = "Mal'Ganis",
+["playerName"] = "Auteist",
+["realmID"] = "3684",
+["classID"] = 8,
 ["SavedLooks"] = {
 [5] = {
 ["male"] = {
@@ -2097,16 +2190,12 @@ NarciBarberShopDB = {
 },
 },
 },
-["playerName"] = "Auteist",
-["realmName"] = "Mal'Ganis",
-["classID"] = 8,
-["realmID"] = "3684",
 },
 },
 ["Hotkeys"] = {
-["RotateRight"] = "D",
+["ZoomIn"] = "W",
 ["RotateLeft"] = "A",
 ["ZoomOut"] = "S",
-["ZoomIn"] = "W",
+["RotateRight"] = "D",
 },
 }

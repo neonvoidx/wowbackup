@@ -1057,8 +1057,8 @@ local function clampMaxColumnsValue(value, defaultValue)
 	value = math.floor((tonumber(value) or defaultValue or 10) + 0.5)
 	if value < 4 then
 		value = 4
-	elseif value > 24 then
-		value = 24
+	elseif value > 40 then
+		value = 40
 	end
 
 	return value

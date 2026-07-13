@@ -254,9 +254,8 @@ local function buildSettings()
 		colorizeTitle = false,
 	})
 
-	addon.functions.SettingsCreateHeadline(cVendor, L["Behavior"] or "Behavior", {
-		parentSection = autoSellExpandable,
-		groupID = "autosell.behavior",
+	addon.functions.SettingsCreateSectionHeader(cVendor, L["Behavior"] or "Behavior", {
+		parentSection = quickActionsExpandable,
 		order = 10,
 	})
 	addon.functions.SettingsCreateCheckboxes(cVendor, {
@@ -264,14 +263,14 @@ local function buildSettings()
 			var = "vendorSwapAutoSellShift",
 			text = L["vendorSwapAutoSellShift"],
 			func = function(value) addon.db["vendorSwapAutoSellShift"] = value and true or false end,
-			parentSection = autoSellExpandable,
+			parentSection = quickActionsExpandable,
 		},
 		{
 			var = "vendorOnly12Items",
 			text = L["vendorOnly12Items"],
 			desc = L["vendorOnly12ItemsDesc"],
 			func = function(value) addon.db["vendorOnly12Items"] = value and true or false end,
-			parentSection = autoSellExpandable,
+			parentSection = quickActionsExpandable,
 		},
 	})
 
@@ -293,9 +292,8 @@ local function buildSettings()
 		local tabName = addon.Vendor.variables.tabNames[quality]
 		local colorHex = ITEM_QUALITY_COLORS[quality] and ITEM_QUALITY_COLORS[quality].hex or ""
 		local label = _G["ITEM_QUALITY" .. quality .. "_DESC"] or tabName
-		addon.functions.SettingsCreateHeadline(cVendor, string.format("%s%s|r", colorHex, label), {
+		addon.functions.SettingsCreateSectionHeader(cVendor, string.format("%s%s|r", colorHex, label), {
 			parentSection = autoSellExpandable,
-			groupID = "autosell." .. string.lower(info.key),
 		})
 
 		local enable = addon.functions.SettingsCreateCheckbox(cVendor, {
@@ -463,7 +461,7 @@ local function buildSettings()
 		colorizeTitle = false,
 	})
 
-	addon.functions.SettingsCreateHeadline(cVendor, L["Include"] or "Include", { parentSection = includeExcludeExpandable })
+	addon.functions.SettingsCreateSectionHeader(cVendor, L["Include"] or "Include", { parentSection = includeExcludeExpandable })
 	addon.functions.SettingsCreateButton(cVendor, {
 		var = "vendorIncludeAdd",
 		text = L["vendorIncludeAdd"],
@@ -494,7 +492,7 @@ local function buildSettings()
 		parentSection = includeExcludeExpandable,
 	})
 
-	addon.functions.SettingsCreateHeadline(cVendor, L["Exclude"] or "Exclude", { parentSection = includeExcludeExpandable })
+	addon.functions.SettingsCreateSectionHeader(cVendor, L["Exclude"] or "Exclude", { parentSection = includeExcludeExpandable })
 	addon.functions.SettingsCreateButton(cVendor, {
 		var = "vendorExcludeAdd",
 		text = L["vendorExcludeAdd"],

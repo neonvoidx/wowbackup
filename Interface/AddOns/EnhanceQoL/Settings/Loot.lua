@@ -277,7 +277,10 @@ end
 
 for i = 3, 5 do
 	local qualityLabel = "|c" .. ITEM_QUALITY_COLORS[i].color:GenerateHexColor() .. _G["ITEM_QUALITY" .. i .. "_DESC"] .. "|r"
-	addon.functions.SettingsCreateHeadline(cLoot, qualityLabel, { parentSection = expandable })
+	addon.functions.SettingsCreateSectionHeader(cLoot, qualityLabel, {
+		parentSection = expandable,
+		hiddenWhen = function() return not isLootToastFilterActive() end,
+	})
 
 	data = {
 		{
@@ -438,7 +441,10 @@ StaticPopupDialogs[includeDialogKey].EditBoxOnEnterPressed = function(editBox)
 	if parent and parent.button1 then parent.button1:Click() end
 end
 
-addon.functions.SettingsCreateHeadline(cLoot, L["Include"], { parentSection = expandable })
+addon.functions.SettingsCreateSectionHeader(cLoot, L["Include"], {
+	parentSection = expandable,
+	hiddenWhen = function() return not isLootToastFilterEnabled() end,
+})
 
 addon.functions.SettingsCreateButton(cLoot, {
 	var = "lootToastIncludeAdd",

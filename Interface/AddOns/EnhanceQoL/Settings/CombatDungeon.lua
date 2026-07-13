@@ -116,6 +116,7 @@ local NAMEPLATE_MOB_COLOR_DEFAULTS = {
 	[NAMEPLATE_MOB_COLOR_CASTER_DB_KEY] = { r = 0 / 255, g = 116 / 255, b = 188 / 255, a = 1 },
 	[NAMEPLATE_MOB_COLOR_MELEE_DB_KEY] = { r = 252 / 255, g = 252 / 255, b = 252 / 255, a = 1 },
 	[NAMEPLATE_MOB_COLOR_NEUTRAL_DB_KEY] = buildNameplateColorDefault(_G.FACTION_BAR_COLORS and _G.FACTION_BAR_COLORS[4], 1, 1, 0),
+	nameplateMobColorTapped = { r = 0.9, g = 0.9, b = 0.9, a = 1 },
 	[NAMEPLATE_MOB_COLOR_TANK_MODE_DB_KEY] = { r = 0.15, g = 0.85, b = 1, a = 1 },
 	[NAMEPLATE_MOB_COLOR_THREAT_LOST_DB_KEY] = buildNameplateColorDefault(_G.ORANGE_THREAT_COLOR, 1, 0.6, 0),
 	[NAMEPLATE_MOB_COLOR_THREAT_WARNING_DB_KEY] = buildNameplateColorDefault(_G.YELLOW_THREAT_COLOR, 1, 1, 0),
@@ -143,19 +144,29 @@ addon.constants.DEFAULT_NAMEPLATE_FEATURE_KEYS = {
 	questMarkerSize = NAMEPLATE_QUEST_MARKER_SIZE_DB_KEY,
 	targetMarkers = NAMEPLATE_TARGET_MARKERS_DB_KEY,
 	targetMarkerAtlas = NAMEPLATE_TARGET_MARKER_ATLAS_DB_KEY,
+	targetMarkerHideFriendly = "nameplateTargetMarkerHideFriendly",
 	targetMarkerSize = NAMEPLATE_TARGET_MARKER_SIZE_DB_KEY,
 	focusHealthbarTexture = NAMEPLATE_FOCUS_HEALTHBAR_TEXTURE_DB_KEY,
 	mobColorBoss = NAMEPLATE_MOB_COLOR_BOSS_DB_KEY,
+	mobColorBossEnabled = "nameplateMobColorBossEnabled",
 	mobColorMiniboss = NAMEPLATE_MOB_COLOR_MINIBOSS_DB_KEY,
+	mobColorMinibossEnabled = "nameplateMobColorMinibossEnabled",
 	mobColorCaster = NAMEPLATE_MOB_COLOR_CASTER_DB_KEY,
+	mobColorCasterEnabled = "nameplateMobColorCasterEnabled",
 	mobColorMelee = NAMEPLATE_MOB_COLOR_MELEE_DB_KEY,
+	mobColorMeleeEnabled = "nameplateMobColorMeleeEnabled",
 	mobColorNeutral = NAMEPLATE_MOB_COLOR_NEUTRAL_DB_KEY,
+	mobColorNeutralEnabled = "nameplateMobColorNeutralEnabled",
+	mobColorTapped = "nameplateMobColorTapped",
+	mobColorTappedEnabled = "nameplateMobColorTappedEnabled",
 	mobColorTankMode = NAMEPLATE_MOB_COLOR_TANK_MODE_DB_KEY,
 	mobColorThreatLost = NAMEPLATE_MOB_COLOR_THREAT_LOST_DB_KEY,
+	mobColorThreatLostEnabled = "nameplateMobColorThreatLostEnabled",
 	mobColorThreatWarning = NAMEPLATE_MOB_COLOR_THREAT_WARNING_DB_KEY,
+	mobColorThreatWarningEnabled = "nameplateMobColorThreatWarningEnabled",
 	mobColorTrivial = NAMEPLATE_MOB_COLOR_TRIVIAL_DB_KEY,
+	mobColorTrivialEnabled = "nameplateMobColorTrivialEnabled",
 	mobTankMode = NAMEPLATE_MOB_TANK_MODE_DB_KEY,
-	mobThreatColors = "nameplateMobThreatColors",
 }
 local DIFFICULTY_IDS = (_G.DifficultyUtil and _G.DifficultyUtil.ID) or {}
 local COMBAT_LOG_DIFFICULTY_GROUPS = {
@@ -1240,15 +1251,21 @@ local function hideAllNameplateEliteMarkers()
 end
 
 local TARGET_MARKER_DEFAULT_ATLAS = "shop-header-arrow-hover"
-local TARGET_MARKER_ATLASES = {
-	["shop-header-arrow-hover"] = true,
-	["CovenantSanctum-Renown-DoubleArrow-Hover"] = true,
+addon.variables.nameplateTargetMarkerAtlases = {
+	["common-icon-forwardarrow"] = "right",
+	["CovenantSanctum-Renown-Arrow"] = "left",
+	["CovenantSanctum-Renown-DoubleArrow"] = "left",
+	["CovenantSanctum-Renown-DoubleArrow-Hover"] = "left",
+	["gearupdate-arrow-bullet-point"] = "right",
+	["pvptalents-selectedarrow"] = "right",
+	["shop-header-arrow-hover"] = "left",
+	["wowlabs-spectatecycling-arrowright"] = "right",
 }
 local TARGET_MARKER_OFFSET = 2
 
 local function getNameplateTargetMarkerAtlas()
 	local atlas = addon.db and addon.db[NAMEPLATE_TARGET_MARKER_ATLAS_DB_KEY] or TARGET_MARKER_DEFAULT_ATLAS
-	if type(atlas) ~= "string" or not TARGET_MARKER_ATLASES[atlas] then atlas = TARGET_MARKER_DEFAULT_ATLAS end
+	if type(atlas) ~= "string" or not addon.variables.nameplateTargetMarkerAtlases[atlas] then atlas = TARGET_MARKER_DEFAULT_ATLAS end
 	return atlas
 end
 
@@ -1267,7 +1284,6 @@ local function getNameplateTargetMarkers(unitFrame)
 	local left = nameplateTargetLeftMarkersByUnitFrame[unitFrame]
 	if not left then
 		left = unitFrame:CreateTexture(nil, "OVERLAY")
-		if left.SetRotation then left:SetRotation(math.pi) end
 		left:Hide()
 		nameplateTargetLeftMarkersByUnitFrame[unitFrame] = left
 	end
@@ -1283,6 +1299,11 @@ local function getNameplateTargetMarkers(unitFrame)
 	local size = getNameplateTargetMarkerSize()
 	left:SetAtlas(atlas, true)
 	right:SetAtlas(atlas, true)
+	if left.SetRotation and right.SetRotation then
+		local atlasPointsRight = addon.variables.nameplateTargetMarkerAtlases[atlas] == "right"
+		left:SetRotation(atlasPointsRight and 0 or math.pi)
+		right:SetRotation(atlasPointsRight and math.pi or 0)
+	end
 	left:SetSize(size, size)
 	right:SetSize(size, size)
 	left:ClearAllPoints()
@@ -1302,6 +1323,7 @@ local function updateNameplateTargetMarkers(unitFrame, unit)
 	end
 
 	local isTarget = UnitIsUnit and UnitIsUnit(unit, "target") == true
+	if isTarget and addon.db and addon.db.nameplateTargetMarkerHideFriendly == true and UnitIsFriend and UnitIsFriend("player", unit) == true then isTarget = false end
 	left, right = getNameplateTargetMarkers(unitFrame)
 	if left then left:SetShown(isTarget) end
 	if right then right:SetShown(isTarget) end
@@ -1457,10 +1479,13 @@ local function getNameplateThreatStatus(unitFrame)
 end
 
 local function getNameplateThreatColor(unitFrame, threatStatus)
-	if not (addon.db and addon.db.nameplateMobThreatColors == true) then return nil end
 	if type(threatStatus) ~= "number" then threatStatus = getNameplateThreatStatus(unitFrame) end
 	if type(threatStatus) ~= "number" then return nil end
-	if threatStatus >= 3 then return getNameplateMobColor(NAMEPLATE_MOB_COLOR_THREAT_LOST_DB_KEY) end
+	if threatStatus >= 3 then
+		if not (addon.db and addon.db.nameplateMobColorThreatLostEnabled == true) then return nil end
+		return getNameplateMobColor(NAMEPLATE_MOB_COLOR_THREAT_LOST_DB_KEY)
+	end
+	if not (addon.db and addon.db.nameplateMobColorThreatWarningEnabled == true) then return nil end
 	return getNameplateMobColor(NAMEPLATE_MOB_COLOR_THREAT_WARNING_DB_KEY)
 end
 
@@ -1502,7 +1527,8 @@ local function computeNameplateMobColor(unit, unitFrame)
 	if isNeutralUnit(unit) then
 		-- Blizzard flips neutral nameplates to hostile once the player is on their threat list.
 		if isNameplateUnitOnThreatListWithPlayer(unitFrame) then return nil end
-		return getNameplateMobColor(NAMEPLATE_MOB_COLOR_NEUTRAL_DB_KEY, unit)
+		if addon.db and addon.db.nameplateMobColorNeutralEnabled == true then return getNameplateMobColor(NAMEPLATE_MOB_COLOR_NEUTRAL_DB_KEY, unit) end
+		return nil
 	end
 	if isPlayerControlledNameplateUnit(unit) then return nil end
 
@@ -1512,7 +1538,8 @@ local function computeNameplateMobColor(unit, unitFrame)
 	local classification = UnitClassification and UnitClassification(unit)
 	if isSecretValue(classification) then classification = nil end
 	if classification == "worldboss" then
-		return getNameplateMobColor(NAMEPLATE_MOB_COLOR_BOSS_DB_KEY)
+		if addon.db and addon.db.nameplateMobColorBossEnabled == true then return getNameplateMobColor(NAMEPLATE_MOB_COLOR_BOSS_DB_KEY) end
+		return nil
 	elseif classification == "elite" or classification == "rare" or classification == "rareelite" then
 		local mobLevel = getNameplateMobLevel(unit)
 
@@ -1528,19 +1555,33 @@ local function computeNameplateMobColor(unit, unitFrame)
 
 		if isMiniBoss or isLieutenant then
 			nameplateMobColorState.lieutenantLevel = mobLevel
-			return getNameplateMobColor(NAMEPLATE_MOB_COLOR_MINIBOSS_DB_KEY)
+			if addon.db and addon.db.nameplateMobColorMinibossEnabled == true then return getNameplateMobColor(NAMEPLATE_MOB_COLOR_MINIBOSS_DB_KEY) end
+			return nil
 		elseif isBoss then
-			return getNameplateMobColor(NAMEPLATE_MOB_COLOR_BOSS_DB_KEY)
+			if addon.db and addon.db.nameplateMobColorBossEnabled == true then return getNameplateMobColor(NAMEPLATE_MOB_COLOR_BOSS_DB_KEY) end
+			return nil
 		end
 
-		if nameplateMobColorState.isInstancedPve ~= true then return getNameplateMobColor(NAMEPLATE_MOB_COLOR_MINIBOSS_DB_KEY) end
-		if isManaUsingNameplateMob(unit) then return getNameplateMobColor(NAMEPLATE_MOB_COLOR_CASTER_DB_KEY) end
-		return getNameplateMobColor(NAMEPLATE_MOB_COLOR_MELEE_DB_KEY)
+		if nameplateMobColorState.isInstancedPve ~= true then
+			if addon.db and addon.db.nameplateMobColorMinibossEnabled == true then return getNameplateMobColor(NAMEPLATE_MOB_COLOR_MINIBOSS_DB_KEY) end
+			return nil
+		end
+		if isManaUsingNameplateMob(unit) then
+			if addon.db and addon.db.nameplateMobColorCasterEnabled == true then return getNameplateMobColor(NAMEPLATE_MOB_COLOR_CASTER_DB_KEY) end
+			return nil
+		end
+		if addon.db and addon.db.nameplateMobColorMeleeEnabled == true then return getNameplateMobColor(NAMEPLATE_MOB_COLOR_MELEE_DB_KEY) end
+		return nil
 	elseif classification == "normal" then
-		if isManaUsingNameplateMob(unit) then return getNameplateMobColor(NAMEPLATE_MOB_COLOR_CASTER_DB_KEY) end
-		return getNameplateMobColor(NAMEPLATE_MOB_COLOR_MELEE_DB_KEY)
+		if isManaUsingNameplateMob(unit) then
+			if addon.db and addon.db.nameplateMobColorCasterEnabled == true then return getNameplateMobColor(NAMEPLATE_MOB_COLOR_CASTER_DB_KEY) end
+			return nil
+		end
+		if addon.db and addon.db.nameplateMobColorMeleeEnabled == true then return getNameplateMobColor(NAMEPLATE_MOB_COLOR_MELEE_DB_KEY) end
+		return nil
 	elseif classification == "trivial" or classification == "minus" then
-		return getNameplateMobColor(NAMEPLATE_MOB_COLOR_TRIVIAL_DB_KEY)
+		if addon.db and addon.db.nameplateMobColorTrivialEnabled == true then return getNameplateMobColor(NAMEPLATE_MOB_COLOR_TRIVIAL_DB_KEY) end
+		return nil
 	end
 
 	return nil
@@ -1557,7 +1598,18 @@ local function applyNameplateMobColor(unitFrame)
 	local threatStatus = getNameplateThreatStatus(unitFrame)
 	local color = getNameplateTankModeColor(unitFrame, threatStatus)
 	if not color then color = getNameplateThreatColor(unitFrame, threatStatus) end
-	if not color and type(threatStatus) == "number" and not (addon.db and addon.db.nameplateMobThreatColors == true) then return end
+	if not color and type(threatStatus) == "number" then return end
+	if not color and UnitIsTapDenied then
+		local tapDenied = UnitIsTapDenied(unit)
+		if isSecretValue(tapDenied) then tapDenied = false end
+		if tapDenied then
+			if addon.db and addon.db.nameplateMobColorTappedEnabled == true then
+				color = getNameplateMobColor("nameplateMobColorTapped")
+			else
+				return
+			end
+		end
+	end
 	if not color then color = computeNameplateMobColor(unit, unitFrame) end
 	if not color then return end
 
@@ -2193,19 +2245,29 @@ function addon.functions.initDungeonFrame()
 	addon.functions.InitDBValue(NAMEPLATE_QUEST_MARKER_SIZE_DB_KEY, 18)
 	addon.functions.InitDBValue(NAMEPLATE_TARGET_MARKERS_DB_KEY, false)
 	addon.functions.InitDBValue(NAMEPLATE_TARGET_MARKER_ATLAS_DB_KEY, TARGET_MARKER_DEFAULT_ATLAS)
+	addon.functions.InitDBValue("nameplateTargetMarkerHideFriendly", false)
 	addon.functions.InitDBValue(NAMEPLATE_TARGET_MARKER_SIZE_DB_KEY, 18)
 	addon.functions.InitDBValue(NAMEPLATE_FOCUS_HEALTHBAR_TEXTURE_DB_KEY, "")
 	addon.functions.InitDBValue(NAMEPLATE_MOB_COLOR_BOSS_DB_KEY, getNameplateMobColorDefault(NAMEPLATE_MOB_COLOR_BOSS_DB_KEY))
+	addon.functions.InitDBValue("nameplateMobColorBossEnabled", true)
 	addon.functions.InitDBValue(NAMEPLATE_MOB_COLOR_MINIBOSS_DB_KEY, getNameplateMobColorDefault(NAMEPLATE_MOB_COLOR_MINIBOSS_DB_KEY))
+	addon.functions.InitDBValue("nameplateMobColorMinibossEnabled", true)
 	addon.functions.InitDBValue(NAMEPLATE_MOB_COLOR_CASTER_DB_KEY, getNameplateMobColorDefault(NAMEPLATE_MOB_COLOR_CASTER_DB_KEY))
+	addon.functions.InitDBValue("nameplateMobColorCasterEnabled", true)
 	addon.functions.InitDBValue(NAMEPLATE_MOB_COLOR_MELEE_DB_KEY, getNameplateMobColorDefault(NAMEPLATE_MOB_COLOR_MELEE_DB_KEY))
+	addon.functions.InitDBValue("nameplateMobColorMeleeEnabled", true)
 	addon.functions.InitDBValue(NAMEPLATE_MOB_COLOR_NEUTRAL_DB_KEY, getNameplateMobColorDefault(NAMEPLATE_MOB_COLOR_NEUTRAL_DB_KEY))
+	addon.functions.InitDBValue("nameplateMobColorNeutralEnabled", true)
+	addon.functions.InitDBValue("nameplateMobColorTapped", getNameplateMobColorDefault("nameplateMobColorTapped"))
+	addon.functions.InitDBValue("nameplateMobColorTappedEnabled", true)
 	addon.functions.InitDBValue(NAMEPLATE_MOB_COLOR_TANK_MODE_DB_KEY, getNameplateMobColorDefault(NAMEPLATE_MOB_COLOR_TANK_MODE_DB_KEY))
 	addon.functions.InitDBValue(NAMEPLATE_MOB_COLOR_THREAT_LOST_DB_KEY, getNameplateMobColorDefault(NAMEPLATE_MOB_COLOR_THREAT_LOST_DB_KEY))
+	addon.functions.InitDBValue("nameplateMobColorThreatLostEnabled", true)
 	addon.functions.InitDBValue(NAMEPLATE_MOB_COLOR_THREAT_WARNING_DB_KEY, getNameplateMobColorDefault(NAMEPLATE_MOB_COLOR_THREAT_WARNING_DB_KEY))
+	addon.functions.InitDBValue("nameplateMobColorThreatWarningEnabled", true)
 	addon.functions.InitDBValue(NAMEPLATE_MOB_COLOR_TRIVIAL_DB_KEY, getNameplateMobColorDefault(NAMEPLATE_MOB_COLOR_TRIVIAL_DB_KEY))
+	addon.functions.InitDBValue("nameplateMobColorTrivialEnabled", true)
 	addon.functions.InitDBValue(NAMEPLATE_MOB_TANK_MODE_DB_KEY, false)
-	addon.functions.InitDBValue("nameplateMobThreatColors", true)
 	addon.functions.InitDBValue("timeoutReleaseDifficulties", {})
 	addon.functions.InitDBValue("autoCombatLog", false)
 	addon.functions.InitDBValue("combatLogDungeonDifficulties", {})
@@ -2489,8 +2551,6 @@ function addon.functions.initDungeonFrame()
 		default = false,
 		parentSection = expandable,
 	})
-
-	addon.functions.SettingsCreateHeadline(addon.SettingsLayout.characterInspectCategory, C_CreatureInfo.GetClassInfo(11).className, { parentSection = expandable })
 
 	local data = {
 		{

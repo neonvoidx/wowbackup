@@ -2690,7 +2690,7 @@ local function appendSecondaryPowerSettings(list, unit, def, textureOpts, addDiv
 
 	local secondaryPowerHeightSetting = slider(
 		L["Power height"] or "Power height",
-		6,
+		1,
 		60,
 		1,
 		function() return getValue(unit, { "secondaryPowerHeight" }, def.secondaryPowerHeight or def.powerHeight or 16) end,
@@ -5648,7 +5648,7 @@ local function buildUnitSettings(unit)
 		refresh()
 	end, powerDef.reverseFill == true, "power", isPowerEnabled)
 
-	local powerHeightSetting = slider(L["Power height"] or "Power height", 6, 60, 1, function() return getValue(unit, { "powerHeight" }, def.powerHeight or 16) end, function(val)
+	local powerHeightSetting = slider(L["Power height"] or "Power height", 1, 60, 1, function() return getValue(unit, { "powerHeight" }, def.powerHeight or 16) end, function(val)
 		debounced(unit .. "_powerHeight", function()
 			setValue(unit, { "powerHeight" }, val or def.powerHeight or 16)
 			refresh()
@@ -9103,36 +9103,36 @@ local function registerEditModeFrames()
 	if addon.EditModeLib and addon.EditModeLib.internal and addon.EditModeLib.internal.RefreshSettingValues then addon.EditModeLib.internal:RefreshSettingValues() end
 end
 
-local function registerGlobalAuraIgnoreSettingsCenterPage()
+local function registerGlobalAuraIgnoreSettingsCenterControl(parentSection)
 	local app = addon.ConfigApp
 	local editor = UF and UF.GlobalAuraIgnore
 	if not (app and editor and editor.RenderSettingsCenterTable) then return end
-	app:RegisterPage({
-		id = "suites.unitframes-global-aura-ignore",
-		category = "suites",
-		title = L["UFGlobalAuraIgnoreMatrixTitle"] or L["UFGlobalAuraIgnoreEditorTitle"] or "Global Aura Ignore",
+	local pageID = parentSection and app.legacySections and app.legacySections[parentSection]
+	if not pageID then return end
+	local groupID = "unitframes-global-aura-ignore"
+	local title = L["UFGlobalAuraIgnoreMatrixTitle"] or L["UFGlobalAuraIgnoreEditorTitle"] or "Global Aura Ignore"
+	app:RegisterGroup(pageID, {
+		id = groupID,
+		title = title,
+		order = 30,
+	})
+	app:RegisterControl(pageID, {
+		id = "UFGlobalAuraIgnoreMatrix",
+		type = "custom",
+		label = title,
 		description = L["UFGlobalAuraIgnoreMatrixDesc"] or "Configure ignored auras for Player, Target, Focus, Group and Raid unit frames.",
-		iconKey = "unitframes",
-		order = 500,
+		groupID = groupID,
+		groupTitle = title,
+		order = 10,
 		newTagID = "UFGlobalAuraIgnoreMatrix",
-		layout = "custom",
-		searchEntries = editor.GetSettingsCenterSearchEntries and editor.GetSettingsCenterSearchEntries() or nil,
-		getSettingCount = function()
-			if editor.GetSettingsCenterSettingCount then return editor.GetSettingsCenterSettingCount() end
-			return 0
-		end,
-		getCustomizedCount = function()
-			if editor.GetSettingsCenterCustomizedCount then return editor.GetSettingsCenterCustomizedCount() end
-			return 0
-		end,
 		getHeight = function()
 			if editor.GetSettingsCenterTableHeight then return editor.GetSettingsCenterTableHeight() end
 			return 1200
 		end,
-		render = function(parent, appInstance, page, state, focusID)
+		render = function(parent, appInstance, control, state, focusID)
 			return editor.RenderSettingsCenterTable(parent, {
 				app = appInstance,
-				page = page,
+				page = control,
 				state = state,
 				focusID = focusID,
 			})
@@ -9179,6 +9179,9 @@ local function registerSettingsUI()
 		})
 		addon.SettingsLayout.suitesCastbarSection = castbarExpandable
 	end
+	addon.functions.SettingsCreateSectionHeader(cUF, ("EQoL %s"):format(L["Castbar"] or L["CastBars2"] or "Castbar"), {
+		parentSection = castbarExpandable,
+	})
 	addon.functions.SettingsCreateCheckbox(cUF, {
 		var = "useCustomPlayerCastbar",
 		text = L["useCustomPlayerCastbar"] or "Enable castbar",
@@ -9212,7 +9215,7 @@ local function registerSettingsUI()
 		})
 		addon.SettingsLayout.expEQoLUnitFrames = expandable
 	end
-	registerGlobalAuraIgnoreSettingsCenterPage()
+	registerGlobalAuraIgnoreSettingsCenterControl(expandable)
 
 	addon.SettingsLayout.ufPlusCategory = cUF
 	addon.functions.SettingsCreateText(cUF, "|cff99e599" .. L["UFPlusHint"] .. "|r", { parentSection = expandable })
@@ -9508,7 +9511,7 @@ local function registerSettingsUI()
 		parentSection = expandable,
 	})
 
-	local standalonePrivateAuraCategory = privateAurasSupported() and addon.SettingsLayout.rootGAMEPLAY or nil
+	local standalonePrivateAuraCategory = privateAurasSupported() and addon.SettingsLayout.rootUI or nil
 	local standalonePrivateAuraExpandable = addon.SettingsLayout.expUFStandalonePrivateAuras
 	if standalonePrivateAuraCategory and not standalonePrivateAuraExpandable then
 		standalonePrivateAuraExpandable = addon.functions.SettingsCreateExpandableSection(standalonePrivateAuraCategory, {
@@ -9518,7 +9521,7 @@ local function registerSettingsUI()
 			colorizeTitle = false,
 			newTagID = "ufStandalonePrivateAurasExpandable",
 			iconKey = "privateaura",
-			modernCategory = "gameplay",
+			modernCategory = "interface",
 			modernOnly = true,
 		})
 		addon.SettingsLayout.expUFStandalonePrivateAuras = standalonePrivateAuraExpandable

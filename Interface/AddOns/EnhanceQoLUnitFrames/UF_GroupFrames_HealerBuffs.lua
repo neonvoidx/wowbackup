@@ -244,7 +244,7 @@ local FAMILY_DATA = {
 	{ id = "druid_germination", classToken = "DRUID", spec = "Restoration", spellIds = { 155777 }, fallbackName = "Germination" },
 	{ id = "druid_symbiotic_blooms", classToken = "DRUID", spec = "Restoration", spellIds = { 439530 }, fallbackName = "Symbiotic Blooms" },
 	-- Priest
-	{ id = "priest_pw_shield", classToken = "PRIEST", specs = { "Discipline", "Holy" }, spellIds = { 17, 1300008 }, fallbackName = "Power Word: Shield" },
+	{ id = "priest_pw_shield", classToken = "PRIEST", specs = { "Discipline", "Holy" }, spellIds = { 1300008, 17 }, fallbackName = "Power Word: Shield" },
 	{ id = "priest_atonement", classToken = "PRIEST", spec = "Discipline", spellIds = { 194384 }, fallbackName = "Atonement" },
 	{ id = "priest_void_shield", classToken = "PRIEST", spec = "Discipline", spellIds = { 1253593, 1300009 }, fallbackName = "Void Shield" },
 	{ id = "priest_renew", classToken = "PRIEST", specs = { "Discipline", "Holy" }, spellIds = { 139 }, fallbackName = "Renew" },
@@ -287,6 +287,38 @@ end
 HB.FAMILY_BY_ID = FAMILY_BY_ID
 HB.FAMILY_ORDER = FAMILY_ORDER
 HB.SPELL_TO_FAMILY = SPELL_TO_FAMILY
+HB.CUSTOM_SPELL_FAMILY_PREFIX = "spell:"
+HB._configuredCustomSpellToFamily = HB._configuredCustomSpellToFamily or {}
+
+function HB.GetCustomSpellFamilyId(value)
+	local prefix = HB.CUSTOM_SPELL_FAMILY_PREFIX
+	if type(value) ~= "string" or value:sub(1, #prefix) ~= prefix then return nil, nil end
+	local spellId = tonumber(value:sub(#prefix + 1))
+	if not spellId or spellId <= 0 or spellId ~= floor(spellId) then return nil, nil end
+	return prefix .. tostring(spellId), spellId
+end
+
+function HB.CreateCustomSpellFamily(familyId, spellId)
+	return {
+		id = familyId,
+		spellIds = { spellId },
+		fallbackName = "Spell " .. tostring(spellId),
+		isCustomSpell = true,
+		customSpellId = spellId,
+	}
+end
+
+function HB.ResolveFamily(familyId, source)
+	if familyId == nil then return nil end
+	familyId = tostring(familyId)
+	local familiesById = source and source.familiesById
+	local family = (familiesById and familiesById[familyId]) or FAMILY_BY_ID[familyId]
+	if family then return family end
+	local canonicalId, spellId = HB.GetCustomSpellFamilyId(familyId)
+	if not canonicalId then return nil end
+	if familiesById and familiesById[canonicalId] then return familiesById[canonicalId] end
+	return HB.CreateCustomSpellFamily(canonicalId, spellId)
+end
 
 local PROVIDER_SPEC_IDS = {
 	DRUID = { Restoration = 105 },
@@ -356,8 +388,8 @@ local function familyMatchesPlayerSpec(family, classSpecMap, playerSpecId)
 	return true
 end
 
-local function canPlayerProvideFamily(familyId)
-	local family = familyId and FAMILY_BY_ID[tostring(familyId)] or nil
+local function canPlayerProvideFamily(familyId, source)
+	local family = HB.ResolveFamily(familyId, source)
 	if not family then return false end
 
 	local familyClass = family.classToken and tostring(family.classToken) or nil
@@ -414,9 +446,9 @@ local function getPlayerFamilyProvisionMap()
 	return map
 end
 
-local function canPlayerProvideFamilyCached(familyId)
-	local family = familyId and FAMILY_BY_ID[tostring(familyId)] or nil
-	if family == nil or family.classToken == nil then return canPlayerProvideFamily(familyId) end
+local function canPlayerProvideFamilyCached(familyId, source)
+	local family = HB.ResolveFamily(familyId, source)
+	if family == nil or family.classToken == nil then return canPlayerProvideFamily(familyId, source) end
 	local map = getPlayerFamilyProvisionMap()
 	if map == nil then return false end
 	return map[tostring(familyId)] == true
@@ -677,25 +709,59 @@ function HB.GetFamilyOptions(classFilter)
 	return list
 end
 
-function HB.GetFamilyById(id)
+function HB.GetFamilyById(id, source)
 	if id == nil then return nil end
-	local family = FAMILY_BY_ID[tostring(id)]
+	local family = HB.ResolveFamily(id, source)
 	if family then ensureFamilyPresentation(family) end
 	return family
 end
 
-function HB.GetFamilyFromSpell(spellId)
+function HB.GetFamilyFromSpell(spellId, source)
 	if spellId == nil then return nil end
 	if issecretvalue and issecretvalue(spellId) then return nil end
-	return SPELL_TO_FAMILY[tonumber(spellId)]
+	local spellToFamily = source and source.spellToFamily or SPELL_TO_FAMILY
+	spellId = tonumber(spellId)
+	local familyId = spellToFamily[spellId]
+	if familyId ~= nil then return familyId end
+	if source == nil then return HB._configuredCustomSpellToFamily[spellId] end
+	return nil
 end
 
-local function getFamilyDefaultScanAllCasters(familyId)
-	local family = familyId and FAMILY_BY_ID[tostring(familyId)] or nil
+local function getFamilyDefaultScanAllCasters(familyId, source)
+	local family = HB.ResolveFamily(familyId, source)
 	return family and family.scanAllCasters == true or false
 end
 
-function HB.GetFamilyScanAllCasters(familyId, source) return getFamilyDefaultScanAllCasters(familyId) end
+function HB.GetFamilyScanAllCasters(familyId, source) return getFamilyDefaultScanAllCasters(familyId, source) end
+
+function HB.GetRuleSpellIDs(rule, source)
+	local family = rule and HB.ResolveFamily(rule.spellFamilyId, source) or nil
+	if not (family and type(family.spellIds) == "table") then return nil end
+	local spellIds = {}
+	for i = 1, #family.spellIds do
+		local spellId = tonumber(family.spellIds[i])
+		if spellId and spellId > 0 and spellId == floor(spellId) then spellIds[#spellIds + 1] = spellId end
+	end
+	return spellIds
+end
+
+function HB.GetRuleAuraFilter(rule, source)
+	if not rule then return nil end
+	return HB.GetFamilyScanAllCasters(rule.spellFamilyId, source) and "HELPFUL" or "HELPFUL|PLAYER"
+end
+
+function HB.GetNativeSupportInfo(rule, source)
+	local spellIds = HB.GetRuleSpellIDs(rule, source)
+	local supported = rule ~= nil and rule.enabled ~= false and rule["not"] ~= true and spellIds ~= nil and #spellIds > 0
+	return {
+		supported = supported,
+		reason = supported and nil or (rule and rule["not"] == true and "negativeRule" or "invalidRule"),
+		filterString = spellIds and HB.GetRuleAuraFilter(rule, source) or nil,
+		spellIDs = spellIds,
+	}
+end
+
+HB.GetNativeRuleSupportInfo = HB.GetNativeSupportInfo
 
 function HB.MarkPlacementDirty(cfgOrPlacement)
 	if type(cfgOrPlacement) ~= "table" then return end
@@ -776,6 +842,7 @@ function HB.CreateDefaultRule(id, familyId, groupId)
 		desaturateMissing = false,
 		expirationPulseEnabled = false,
 		expirationPulseThreshold = 3,
+		expirationPulseColor = { 1, 0.2, 0.2, 1 },
 		expirationPulseCountdownOnly = false,
 		enabled = true,
 		appliesParty = true,
@@ -881,6 +948,8 @@ local function normalizeRule(rule, id)
 	rule.id = tostring(rule.id or id)
 	local familyId = rule.spellFamilyId or rule.familyId
 	if familyId ~= nil then familyId = tostring(familyId) end
+	local customFamilyId = familyId and HB.GetCustomSpellFamilyId(familyId) or nil
+	if customFamilyId then familyId = customFamilyId end
 	rule.spellFamilyId = familyId
 	rule.familyId = nil
 	rule.groupId = tostring(rule.groupId or "")
@@ -891,6 +960,7 @@ local function normalizeRule(rule, id)
 	rule.missingDesaturate = nil
 	rule.expirationPulseEnabled = rule.expirationPulseEnabled == true
 	rule.expirationPulseThreshold = roundInt(clamp(rule.expirationPulseThreshold, 1, 10, 3))
+	rule.expirationPulseColor = normalizeColor(rule.expirationPulseColor, { 1, 0.2, 0.2, 1 })
 	rule.expirationPulseCountdownOnly = rule.expirationPulseCountdownOnly == true
 	rule.durationColorSteps = normalizeDurationColorSteps(rule.durationColorSteps or rule.remainingColorSteps)
 	rule.remainingColorSteps = nil
@@ -933,6 +1003,10 @@ function HB.EnsureConfig(cfg)
 	if placement._eqolNormalized == true and placement._eqolDirty ~= true then
 		if placement.enabled == nil then placement.enabled = false end
 		if placement.version == nil then placement.version = 1 end
+		for _, rule in pairs(placement.rulesById or EMPTY) do
+			local customFamilyId, customSpellId = HB.GetCustomSpellFamilyId(rule and rule.spellFamilyId)
+			if customFamilyId then HB._configuredCustomSpellToFamily[customSpellId] = customFamilyId end
+		end
 		return placement
 	end
 	if placement.enabled == nil then placement.enabled = false end
@@ -954,7 +1028,11 @@ function HB.EnsureConfig(cfg)
 	local normalizedRules = {}
 	for key, rule in pairs(placement.rulesById) do
 		rule = normalizeRule(rule, key)
-		if rule and rule.spellFamilyId and FAMILY_BY_ID[rule.spellFamilyId] and normalizedGroups[rule.groupId] then normalizedRules[rule.id] = rule end
+		if rule and rule.spellFamilyId and HB.ResolveFamily(rule.spellFamilyId) and normalizedGroups[rule.groupId] then
+			normalizedRules[rule.id] = rule
+			local customFamilyId, customSpellId = HB.GetCustomSpellFamilyId(rule.spellFamilyId)
+			if customFamilyId then HB._configuredCustomSpellToFamily[customSpellId] = customFamilyId end
+		end
 	end
 	placement.rulesById = normalizedRules
 	placement.ruleOrder = normalizeOrder(placement.ruleOrder, normalizedRules)
@@ -1033,6 +1111,15 @@ local function compile(kind, cfg)
 	local cached = cachedByKind and cachedByKind[kind]
 	if cached and cached.generation == generation then return cached end
 
+	local familiesById = {}
+	local spellToFamily = {}
+	for familyId, family in pairs(FAMILY_BY_ID) do
+		familiesById[familyId] = family
+	end
+	for spellId, familyId in pairs(SPELL_TO_FAMILY) do
+		spellToFamily[spellId] = familyId
+	end
+
 	local compiled = {
 		kind = kind,
 		generation = generation,
@@ -1055,7 +1142,10 @@ local function compile(kind, cfg)
 			[STYLE_BORDER] = {},
 			[STYLE_TINT] = {},
 		},
-		spellToFamily = SPELL_TO_FAMILY,
+		familiesById = familiesById,
+		spellToFamily = spellToFamily,
+		positiveSpellIDs = {},
+		suppressedPositiveSpellIDs = {},
 		enabled = false,
 	}
 
@@ -1075,7 +1165,14 @@ local function compile(kind, cfg)
 		if rule and ruleAppliesToKind(rule, kind) then
 			local familyId = rule.spellFamilyId
 			local groupId = rule.groupId
-			if familyId and FAMILY_BY_ID[familyId] and groupId and compiled.groupsById[groupId] then
+			local family = HB.ResolveFamily(familyId, compiled)
+			if family and family.isCustomSpell == true and not compiled.familiesById[family.id] then
+				compiled.familiesById[family.id] = family
+				compiled.spellToFamily[family.customSpellId] = family.id
+				familyId = family.id
+				rule.spellFamilyId = familyId
+			end
+			if family and groupId and compiled.groupsById[groupId] then
 				rule._pseudoAuraInstanceId = rule._pseudoAuraInstanceId or buildRulePseudoAuraId(rule.id)
 				compiled.ruleById[ruleId] = rule
 				local byFamily = compiled.familyToRuleIds[familyId]
@@ -1092,8 +1189,17 @@ local function compile(kind, cfg)
 				end
 				byGroup[#byGroup + 1] = ruleId
 				if rule.enabled ~= false then
+					if rule["not"] ~= true then
+						for spellIndex = 1, #(family.spellIds or EMPTY) do
+							local spellId = tonumber(family.spellIds[spellIndex])
+							if spellId and spellId > 0 then
+								compiled.positiveSpellIDs[spellId] = true
+								compiled.suppressedPositiveSpellIDs[spellId] = true
+							end
+						end
+					end
 					compiled.enabledFamilies[familyId] = true
-					if HB.GetFamilyScanAllCasters(familyId) then
+					if HB.GetFamilyScanAllCasters(familyId, compiled) then
 						compiled.familyScanAllCastersById[familyId] = true
 						compiled.needsWideHelpfulScan = true
 					end
@@ -1649,9 +1755,9 @@ local function isNpcUnit(unit)
 	return isPlayer == false
 end
 
-local function shouldIgnoreFamilyForUnit(familyId, unit)
+local function shouldIgnoreFamilyForUnit(familyId, unit, source)
 	if familyId == nil then return false end
-	local family = FAMILY_BY_ID[tostring(familyId)]
+	local family = HB.ResolveFamily(familyId, source)
 	if not (family and family.ignoreForNpcUnits == true) then return false end
 	return isNpcUnit(unit)
 end
@@ -1662,8 +1768,8 @@ local function isAuraFromPlayer(unit, aura, familyId, compiled)
 	if issecretvalue and issecretvalue(isHelpful) then return false end
 	if isHelpful ~= true then return false end
 	local familyKey = familyId and tostring(familyId) or nil
-	local family = familyKey and FAMILY_BY_ID[familyKey] or nil
-	if family and family.classToken ~= nil and not canPlayerProvideFamilyCached(familyKey) then return false end
+	local family = familyKey and HB.ResolveFamily(familyKey, compiled) or nil
+	if family and family.classToken ~= nil and not canPlayerProvideFamilyCached(familyKey, compiled) then return false end
 	if familyKey and compiled and compiled.familyScanAllCastersById and compiled.familyScanAllCastersById[familyKey] == true then
 		return true
 	end
@@ -1679,7 +1785,7 @@ local function getFamilyForAura(compiled, aura, unit)
 	local familyId = compiled.spellToFamily[tonumber(spellId)]
 	if familyId == nil then return nil end
 	if compiled.enabledFamilies and compiled.enabledFamilies[familyId] ~= true then return nil end
-	if shouldIgnoreFamilyForUnit(familyId, unit) then return nil end
+	if shouldIgnoreFamilyForUnit(familyId, unit, compiled) then return nil end
 	if not isAuraFromPlayer(unit, aura, familyId, compiled) then return nil end
 	return familyId
 end
@@ -1818,10 +1924,10 @@ local function applyDeltaToFamilyState(state, compiled, cache, updateInfo, unit)
 	return changedFamilies
 end
 
-local function evaluateRuleActive(rule, familyCounts, unit)
+local function evaluateRuleActive(rule, familyCounts, unit, compiled)
 	if not rule or rule.enabled == false then return false end
-	if shouldIgnoreFamilyForUnit(rule.spellFamilyId, unit) then return false end
-	if rule["not"] and not canPlayerProvideFamilyCached(rule.spellFamilyId) then return false end
+	if shouldIgnoreFamilyForUnit(rule.spellFamilyId, unit, compiled) then return false end
+	if rule["not"] and not canPlayerProvideFamilyCached(rule.spellFamilyId, compiled) then return false end
 	local active = (familyCounts[rule.spellFamilyId] or 0) > 0
 	if rule["not"] then active = not active end
 	return active
@@ -1864,7 +1970,7 @@ local function evaluateAllRulesAndGroups(state, compiled, unit)
 	for i = 1, #compiled.ruleOrder do
 		local ruleId = compiled.ruleOrder[i]
 		local rule = compiled.ruleById[ruleId]
-		if rule then state.ruleActive[ruleId] = evaluateRuleActive(rule, state.familyCounts, unit) end
+		if rule then state.ruleActive[ruleId] = evaluateRuleActive(rule, state.familyCounts, unit, compiled) end
 	end
 	for i = 1, #compiled.groupOrder do
 		evaluateGroupActive(state, compiled, compiled.groupOrder[i])
@@ -1889,7 +1995,7 @@ local function evaluateDeltaRulesAndGroups(state, compiled, changedFamilies, uni
 	for ruleId in pairs(changedRules) do
 		local rule = compiled.ruleById[ruleId]
 		if rule then
-			local newActive = evaluateRuleActive(rule, state.familyCounts, unit)
+			local newActive = evaluateRuleActive(rule, state.familyCounts, unit, compiled)
 			if state.ruleActive[ruleId] ~= newActive then
 				state.ruleActive[ruleId] = newActive
 				changedGroups[rule.groupId] = true
@@ -2025,6 +2131,7 @@ local function getAuraStyleForGroup(state, cfg, group)
 	styleCache.countFontSize = countFontSize
 	styleCache.countFontOutline = ac.countFontOutline
 	styleCache.showDR = false
+	styleCache._eqolAuraButtonStyleKey = nil
 	styleCache._eqolStyleRevision = (styleCache._eqolStyleRevision or 0) + 1
 	return styleCache
 end
@@ -2280,7 +2387,7 @@ local function applyExpirationPulseBorder(btn, group, rule, pulseAlpha)
 		border._hbOffset = offset
 		setTwoPointsCached(border, "TOPLEFT", btn, "TOPLEFT", -offset, offset, "BOTTOMRIGHT", btn, "BOTTOMRIGHT", offset, -offset)
 	end
-	local br, bg, bb, ba = resolveColor(useIndicatorBorder and group.indicatorBorderColor or (rule and rule.color) or (group and group.indicatorBorderColor) or (group and group.color))
+	local br, bg, bb, ba = resolveColor((rule and rule.expirationPulseColor) or { 1, 0.2, 0.2, 1 })
 	border:SetBackdropColor(0, 0, 0, 0)
 	border:SetBackdropBorderColor(br, bg, bb, clamp(max(ba or 1, 0.85) * (0.08 + (0.92 * pulse)), 0, 1, 1) or 1)
 	border:Show()
@@ -2363,16 +2470,16 @@ local function applyExpirationPulse(btn, group, rule, aura)
 	refreshButtonTimedOnUpdate(btn)
 end
 
-local function getPlaceholderAura(state, ruleId, familyId)
+local function getPlaceholderAura(state, ruleId, familyId, compiled)
 	state.tempPlaceholderByRule = state.tempPlaceholderByRule or {}
 	local aura = state.tempPlaceholderByRule[ruleId]
 	if not aura then
 		aura = {}
 		state.tempPlaceholderByRule[ruleId] = aura
 	end
-	local family = FAMILY_BY_ID[familyId]
+	local family = HB.ResolveFamily(familyId, compiled)
 	local _, icon = ensureFamilyPresentation(family)
-	aura.auraInstanceID = (FAMILY_BY_ID[familyId] and FAMILY_BY_ID[familyId]._pseudoAuraInstanceId) or buildRulePseudoAuraId(ruleId)
+	aura.auraInstanceID = (family and family._pseudoAuraInstanceId) or buildRulePseudoAuraId(ruleId)
 	aura.icon = icon or 134400
 	aura.duration = 0
 	aura.expirationTime = nil
@@ -2718,7 +2825,7 @@ local function renderIconStyleForGroup(btn, st, state, compiled, cfg, group, cha
 		local rule = compiled.ruleById[ruleId]
 		local familyId = rule and rule.spellFamilyId
 		local aura = familyId and state.familyAura[familyId] or nil
-		if not aura then aura = getPlaceholderAura(state, ruleId, familyId) end
+			if not aura then aura = getPlaceholderAura(state, ruleId, familyId, compiled) end
 		local auraInstanceId = aura and aura.auraInstanceID
 		local button = buttons[index]
 		if not button then button = AuraUtil.ensureAuraButton(container, buttons, index, style) end
@@ -3300,7 +3407,7 @@ local function buildSampleState(state, compiled)
 					if familyId then
 						sampleFamilyCounts[familyId] = 1
 						sampleFamilyAuraInstance[familyId] = rule._pseudoAuraInstanceId
-						sampleFamilyAura[familyId] = getPlaceholderAura(state, ruleId, familyId)
+						sampleFamilyAura[familyId] = getPlaceholderAura(state, ruleId, familyId, compiled)
 					end
 					if not anyPicked then anyPicked = ruleId end
 					if isPriorityOnly then break end
@@ -3437,6 +3544,21 @@ end
 function HB.GetCompiled(kind, cfg)
 	if not cfg then return nil end
 	return compile(kind, cfg)
+end
+
+function HB.GetCompiledPositiveSpellIDs(compiled, suppressedOnly)
+	if not compiled then return nil end
+	local source = suppressedOnly == true and compiled.suppressedPositiveSpellIDs or compiled.positiveSpellIDs
+	if type(source) ~= "table" then return nil end
+	local spellIDs = {}
+	for spellId, enabled in pairs(source) do
+		if enabled == true then spellIDs[spellId] = true end
+	end
+	return spellIDs
+end
+
+function HB.GetManagedSuppressedSpellIDs(compiled)
+	return HB.GetCompiledPositiveSpellIDs(compiled, true)
 end
 
 function HB.CompiledNeedsWideHelpfulScan(compiled) return compiled and compiled.needsWideHelpfulScan == true or false end

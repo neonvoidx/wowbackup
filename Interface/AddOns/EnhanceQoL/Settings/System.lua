@@ -137,6 +137,8 @@ addon.functions.SettingsCreateCheckbox(cGeneral, {
 	parentSection = utilitiesExpandable,
 })
 
+addon.functions.SettingsCreateSectionHeader(cGeneral, L["rootSlashCommandsHeader"] or "Slash Commands", { parentSection = utilitiesExpandable })
+
 addon.functions.SettingsCreateCheckbox(cGeneral, {
 	var = "enableCooldownManagerSlashCommand",
 	text = L["enableCooldownManagerSlashCommand"],

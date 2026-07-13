@@ -962,6 +962,8 @@ local function isQuickAcceptProfileKey(key)
 		or key == "groupfinderSkipRoleSelect"
 		or key == "groupfinderSkipRoleSelectOption"
 		or key == "ignoreDailyQuests"
+		or key == "ignoreCurrencyCostQuests"
+		or key == "ignoreGoldCostQuests"
 		or key == "ignoreTrivialQuests"
 		or key == "ignoreWarbandCompleted"
 		or key == "persistSignUpNote"

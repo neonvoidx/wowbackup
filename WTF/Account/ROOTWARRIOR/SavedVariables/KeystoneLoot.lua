@@ -1,6 +1,7 @@
 
 KeystoneLootDB = {
 ["currentSeason"] = 16,
+["version"] = 9,
 ["settings"] = {
 ["keyCommand"] = {
 ["CHAT_MSG_PARTY"] = true,
@@ -16,14 +17,14 @@ KeystoneLootDB = {
 },
 ["hideOtherItems"] = false,
 ["keystoneTooltip"] = true,
-["favoriteTooltip"] = true,
 ["wideMode"] = false,
+["multiSlotFilter"] = false,
 ["highlighting"] = {
-["versatility"] = true,
-["comboMode"] = false,
 ["mastery"] = true,
-["haste"] = true,
 ["crit"] = true,
+["versatility"] = true,
+["haste"] = true,
+["comboMode"] = false,
 ["noStats"] = true,
 },
 ["lootReminder"] = {
@@ -31,9 +32,8 @@ KeystoneLootDB = {
 ["dropAlert"] = true,
 ["dungeons"] = true,
 },
-["multiSlotFilter"] = false,
+["favoriteTooltip"] = true,
 },
-["version"] = 9,
 ["favorites"] = {
 ["Tichondrius-Tampacks-6"] = {
 },
@@ -99,6 +99,32 @@ KeystoneLootDB = {
 [1480] = {
 },
 },
+[2795] = {
+[1480] = {
+[249343] = {
+["icon"] = 7636702,
+},
+},
+},
+[239] = {
+[1480] = {
+},
+},
+[2733] = {
+[1480] = {
+},
+},
+[2735] = {
+[1480] = {
+[249370] = {
+["icon"] = 7319580,
+},
+},
+},
+[2737] = {
+[1480] = {
+},
+},
 ["catalyst"] = {
 [1480] = {
 [250036] = {
@@ -113,32 +139,6 @@ KeystoneLootDB = {
 [250033] = {
 ["icon"] = 7388207,
 },
-},
-},
-[239] = {
-[1480] = {
-},
-},
-[2795] = {
-[1480] = {
-[249343] = {
-["icon"] = 7636702,
-},
-},
-},
-[2735] = {
-[1480] = {
-[249370] = {
-["icon"] = 7319580,
-},
-},
-},
-[2737] = {
-[1480] = {
-},
-},
-[2733] = {
-[1480] = {
 },
 },
 },
@@ -165,10 +165,13 @@ KeystoneLootDB = {
 },
 },
 },
-[402] = {
+[161] = {
 [252] = {
-[193706] = {
-["icon"] = 4295889,
+[252420] = {
+["icon"] = 132873,
+},
+[258575] = {
+["icon"] = 1043737,
 },
 },
 },
@@ -179,13 +182,10 @@ KeystoneLootDB = {
 },
 },
 },
-[161] = {
+[402] = {
 [252] = {
-[252420] = {
-["icon"] = 132873,
-},
-[258575] = {
-["icon"] = 1043737,
+[193706] = {
+["icon"] = 4295889,
 },
 },
 },
@@ -242,11 +242,8 @@ KeystoneLootDB = {
 },
 },
 },
-[2735] = {
+[2739] = {
 [269] = {
-[249321] = {
-["icon"] = 7445747,
-},
 },
 },
 [239] = {
@@ -278,8 +275,11 @@ KeystoneLootDB = {
 },
 },
 },
-[2739] = {
+[2735] = {
 [269] = {
+[249321] = {
+["icon"] = 7445747,
+},
 },
 },
 },
