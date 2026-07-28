@@ -19,7 +19,6 @@ local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL")
 -- honoring favorites and the main teleport options where reasonable.
 
 local f = CreateFrame("Frame")
-local DISPLAY_MODE = "EQOL_DungeonPortals"
 local ICON_ACTIVE = "Interface\\AddOns\\EnhanceQoLTeleportCompendium\\Art\\teleport_active.tga"
 local ICON_INACTIVE = "Interface\\AddOns\\EnhanceQoLTeleportCompendium\\Art\\teleport_inactive.tga"
 
@@ -268,7 +267,7 @@ local function ConfigureButtonTeleportAction(button, entry)
 					if equippedID ~= itemID then
 						queueReequipRestore(slot, equippedID, itemID, self.entry and self.entry.spellID)
 						self:SetAttribute("type1", "macro")
-						self:SetAttribute("macrotext1", "/equip item:" .. itemID)
+						self:SetAttribute("macrotext1", "/equipslot " .. slot .. " item:" .. itemID)
 					else
 						self:SetAttribute("type1", "macro")
 						self:SetAttribute("macrotext1", "/use item:" .. itemID)
@@ -343,8 +342,13 @@ local tabButton -- forward-declare for SafeSetVisible
 -- Safe visibility toggles (avoid Show/Hide taint during combat)
 local function SafeSetVisible(frame, visible)
 	if not frame then return end
-	-- Never directly Show/Hide the World Map content frame or its tab; rely on Blizzard
-	-- display mode system to toggle visibility. Use alpha + deferred apply to avoid taint.
+	if (frame == panel or frame == tabButton) and f.tabLib and not (InCombatLockdown and InCombatLockdown()) then
+		frame._eqolPendingVisible = nil
+		frame:SetAlpha(1)
+		frame:SetShown(visible and true or false)
+		return
+	end
+	-- During combat, defer protected visibility changes and mirror the requested state via alpha.
 	if frame == panel or frame == tabButton then
 		frame._eqolPendingVisible = visible and true or false
 		frame:SetAlpha(visible and 1 or 0)
@@ -413,13 +417,15 @@ end
 
 local function IsPanelSuppressed() return isRestrictedContent() end
 
-local function GetQuestMapDisplayMode()
-	if not QuestMapFrame then return nil end
-	if QuestMapFrame.GetDisplayMode then return QuestMapFrame:GetDisplayMode() end
-	return QuestMapFrame.displayMode
+local function IsTeleportDisplayModeActive()
+	return f.tabLib and tabButton and f.tabLib.activeDisplayMode == tabButton.displayMode
 end
 
-local function IsTeleportDisplayModeActive() return GetQuestMapDisplayMode() == DISPLAY_MODE end
+local function SetTeleportDisplayMode()
+	if not (f.tabLib and tabButton and tabButton.displayMode) then return false end
+	f.tabLib:SetDisplayMode(tabButton.displayMode)
+	return true
+end
 
 local function LeaveDisplayModeIfNeeded()
 	if not QuestMapFrame or not IsTeleportDisplayModeActive() then return end
@@ -614,7 +620,6 @@ local function EnsurePanel(parent)
 		end)
 		s._eqolSizeHook = true
 	end
-	panel.displayMode = DISPLAY_MODE
 	return panel
 end
 
@@ -960,111 +965,37 @@ end
 -- Tab creation -------------------------------------------------------------
 -- tabButton declared above for forward reference
 
--- Prefer anchoring below WorldQuestTab's custom tab if present
-local function GetPreferredTabAnchor()
-	local wqtTab = _G and _G["WQT_QuestMapTab"]
-	if wqtTab and wqtTab.GetObjectType and wqtTab:GetObjectType() then return wqtTab end
-	return QuestMapFrame and (QuestMapFrame.MapLegendTab or QuestMapFrame.QuestsTab or (QuestMapFrame.DetailsFrame and QuestMapFrame.DetailsFrame.BackFrame)) or nil
-end
+local function EnsureTab()
+	if tabButton then return tabButton end
+	f.tabLib = f.tabLib or LibStub("LibWorldMapTabs", true)
+	if not f.tabLib then return nil end
 
-local function EnsureTab(parent, anchorTo)
-	if tabButton and tabButton:GetParent() ~= parent then tabButton:SetParent(parent) end
-	-- If the tab already exists, still allow re-anchoring when a better anchor shows up later
-	if tabButton then
-		if anchorTo then
-			tabButton:ClearAllPoints()
-			tabButton:SetPoint("TOP", anchorTo, "BOTTOM", 0, -3)
-		end
-		return tabButton
+	tabButton = f.tabLib:CreateTab({
+		tooltipText = L["DungeonCompendium"] or "Dungeon Portals",
+		activeTexture = ICON_ACTIVE,
+		inactiveTexture = ICON_INACTIVE,
+	}, "EQOLWorldMapDungeonPortalsTab")
+
+	if tabButton.Icon then
+		tabButton.Icon:SetSize(20, 20)
+		tabButton.Icon:SetTexCoord(0.1, 0.9, 0.1, 0.9)
 	end
-
-	-- Use Blizzard QuestLog tab template for a perfect visual match
-	tabButton = CreateFrame("Button", "EQOLWorldMapDungeonPortalsTab", parent, "QuestLogTabButtonTemplate")
-	if anchorTo then
-		tabButton:SetPoint("TOP", anchorTo, "BOTTOM", 0, -3)
-	else
-		tabButton:SetPoint("TOPRIGHT", -6, -100)
-	end
-
-	-- Mirror hover/selected visuals via the template, but we'll supply our own icon
-	tabButton.activeAtlas = "questlog-tab-icon-maplegend"
-	tabButton.inactiveAtlas = "questlog-tab-icon-maplegend-inactive"
-	tabButton.tooltipText = (L["DungeonCompendium"] or "Dungeon Portals")
-	tabButton.displayMode = DISPLAY_MODE
-
-	-- Hide template's atlas-driven icon and add our persistent custom icon
-	if tabButton.Icon then tabButton.Icon:SetAlpha(0) end
-	local customIcon = tabButton:CreateTexture(nil, "ARTWORK")
-	customIcon:SetPoint("CENTER", -2, 0)
-	customIcon:SetSize(20, 20)
-	customIcon:SetTexture(ICON_INACTIVE)
-	customIcon:SetTexCoord(0.1, 0.9, 0.1, 0.9)
-	tabButton.CustomIcon = customIcon
-
-	-- helper to flip icon depending on selection
-	local function UpdateTabIconChecked(tb, checked)
-		if not tb or not tb.CustomIcon then return end
-		if checked then
-			tb.CustomIcon:SetTexture(ICON_ACTIVE)
-		else
-			tb.CustomIcon:SetTexture(ICON_INACTIVE)
-		end
-	end
-
-	-- Guard against Blizzard re-showing the template icon
-	if tabButton.Icon and not tabButton.Icon._eqolHook then
-		hooksecurefunc(tabButton.Icon, "Show", function(icon) icon:SetAlpha(0) end)
-		hooksecurefunc(tabButton.Icon, "SetAtlas", function(icon) icon:SetAlpha(0) end)
-		tabButton.Icon._eqolHook = true
-	end
-
-	-- make sure we're not selected by default
-	if tabButton.SetChecked then tabButton:SetChecked(false) end
 	if tabButton.SelectedTexture then tabButton.SelectedTexture:SetAlpha(1) end
 	SafeSetVisible(tabButton, true)
 
-	-- Keep custom icon clear on state changes
-	if not tabButton._eqolStateHooks then
-		hooksecurefunc(tabButton, "SetChecked", function(self, checked)
-			if self.CustomIcon then self.CustomIcon:SetDesaturated(false) end
-			UpdateTabIconChecked(self, checked)
-		end)
-		hooksecurefunc(tabButton, "Disable", function(self)
-			if self.CustomIcon then self.CustomIcon:SetDesaturated(true) end
-		end)
-		hooksecurefunc(tabButton, "Enable", function(self)
-			if self.CustomIcon then self.CustomIcon:SetDesaturated(false) end
-		end)
-		tabButton._eqolStateHooks = true
-	end
-
-	-- Initialize checked state and icon based on QuestMapFrame displayMode
-	local isActive = IsTeleportDisplayModeActive()
-	if tabButton.SetChecked then tabButton:SetChecked(isActive) end
-	-- Keep panel alpha in sync with current mode without Show/Hide
-	if panel then SafeSetVisible(panel, isActive and true or false) end
-
-	tabButton:SetScript("OnEnter", function(self)
-		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-		GameTooltip:SetText(self.tooltipText)
-		GameTooltip:Show()
+	hooksecurefunc(tabButton, "SetChecked", function(self)
+		if self.Icon then
+			self.Icon:SetSize(20, 20)
+			self.Icon:SetTexCoord(0.1, 0.9, 0.1, 0.9)
+		end
 	end)
-	tabButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
-
-	tabButton:SetScript("OnMouseUp", function(self, button, upInside)
+	tabButton:HookScript("OnMouseUp", function(_, button, upInside)
 		if button ~= "LeftButton" or not upInside then return end
-		if not panel then return end
 		if IsPanelSuppressed() then
 			ApplySuppressedPanelState()
 			return
 		end
-		if QuestMapFrame and QuestMapFrame.SetDisplayMode then
-			QuestMapFrame:SetDisplayMode(DISPLAY_MODE)
-		else
-			-- No safe fallback: avoid showing protected frames directly
-			-- Defer selection to the next OnShow if available
-			f._selectOnNextShow = true
-		end
+		QueuePanelRefresh({ delay = 0 })
 	end)
 
 	return tabButton
@@ -1121,88 +1052,11 @@ function f:TryInit()
 		QuestMapFrame.ContentsAnchor._eqolSizeHook = true
 	end
 
-	-- Anchor the tab under the preferred tab (WorldQuestTab if present)
-	local anchor = GetPreferredTabAnchor()
-	EnsureTab(parent, anchor)
-
-	-- If WorldQuestTab is enabled but its tab isn't created yet, try re-anchoring shortly after
-	if C_AddOns and C_AddOns.GetAddOnEnableState and pcall(C_AddOns.GetAddOnEnableState, "WorldQuestTab") and C_AddOns.GetAddOnEnableState("WorldQuestTab") == 2 then
-		RunNextFrame(function()
-			local wqt = _G and _G["WQT_QuestMapTab"]
-			if wqt then
-				EnsureTab(parent, wqt)
-				if QuestMapFrame and QuestMapFrame.ValidateTabs then QuestMapFrame:ValidateTabs() end
-			end
-		end)
-		C_Timer.After(0.2, function()
-			local wqt = _G and _G["WQT_QuestMapTab"]
-			if wqt then
-				EnsureTab(parent, wqt)
-				if QuestMapFrame and QuestMapFrame.ValidateTabs then QuestMapFrame:ValidateTabs() end
-			end
-		end)
-	end
-
-	-- Inject our panel into ContentFrames so SetDisplayMode can manage visibility
-	if QuestMapFrame.ContentFrames then
-		local exists = false
-		for _, frame in ipairs(QuestMapFrame.ContentFrames) do
-			if frame == panel then
-				exists = true
-				break
-			end
-		end
-		if not exists then table.insert(QuestMapFrame.ContentFrames, panel) end
-	end
-
-	-- Also register our tab as a managed tab for consistent checked state
-	if QuestMapFrame.TabButtons then
-		local present = false
-		for _, b in ipairs(QuestMapFrame.TabButtons) do
-			if b == tabButton then
-				present = true
-				break
-			end
-		end
-		if not present then table.insert(QuestMapFrame.TabButtons, tabButton) end
-	end
-
-	-- Ensure tabs layout is recalculated so our tab appears immediately
-	if QuestMapFrame and QuestMapFrame.ValidateTabs then QuestMapFrame:ValidateTabs() end
-
-	-- Track display mode changes to update our tab state and refresh content
-	if EventRegistry and not f._eqolDisplayEvent then
-		EventRegistry:RegisterCallback("QuestLog.SetDisplayMode", function(_, mode)
-			if mode == DISPLAY_MODE then
-				if IsPanelSuppressed() then
-					ApplySuppressedPanelState()
-					return
-				end
-				if tabButton and tabButton.SetChecked then tabButton:SetChecked(true) end
-				if panel then SafeSetVisible(panel, true) end
-				QueuePanelRefresh({ delay = 0 })
-			else
-				if tabButton and tabButton.SetChecked then tabButton:SetChecked(false) end
-				if panel then SafeSetVisible(panel, false) end
-			end
-		end, f)
-		f._eqolDisplayEvent = true
-	end
-
-	-- Also ensure visibility is synced when Blizzard flips display mode via the frame method
-	if QuestMapFrame and QuestMapFrame.SetDisplayMode and not QuestMapFrame._eqolSetDisplayHook then
-		hooksecurefunc(QuestMapFrame, "SetDisplayMode", function(_, mode)
-			if mode == DISPLAY_MODE then
-				if IsPanelSuppressed() then
-					ApplySuppressedPanelState()
-					return
-				end
-				if panel then SafeSetVisible(panel, true) end
-			else
-				if panel then SafeSetVisible(panel, false) end
-			end
-		end)
-		QuestMapFrame._eqolSetDisplayHook = true
+	local tab = EnsureTab()
+	if not tab then return end
+	if not tab._eqolContentLinked then
+		f.tabLib:LinkTabToContentFrame(tab, panel)
+		tab._eqolContentLinked = true
 	end
 
 	-- Proactively build content once; subsequent tab/display changes will refresh as needed
@@ -1318,10 +1172,7 @@ local function worldMapEventHandler(self, event, arg1, arg2, arg3)
 				if addon.db and addon.db["teleportsWorldMapEnabled"] then
 					f:TryInit()
 					if QuestMapFrame and QuestMapFrame.ValidateTabs then QuestMapFrame:ValidateTabs() end
-					if f._selectOnNextShow and QuestMapFrame and QuestMapFrame.SetDisplayMode and not IsPanelSuppressed() then
-						QuestMapFrame:SetDisplayMode(DISPLAY_MODE)
-						f._selectOnNextShow = nil
-					end
+					if f._selectOnNextShow and not IsPanelSuppressed() and SetTeleportDisplayMode() then f._selectOnNextShow = nil end
 					QueuePanelRefresh({ delay = 0, invalidate = true })
 				else
 					if panel then SafeSetVisible(panel, false) end
@@ -1331,16 +1182,6 @@ local function worldMapEventHandler(self, event, arg1, arg2, arg3)
 			WorldMapFrame._eqolTeleportHook = true
 		end
 		return
-	elseif event == "ADDON_LOADED" and arg1 == "WorldQuestTab" then
-		-- WorldQuestTab just loaded; if its map tab exists, re-anchor below it
-		if QuestMapFrame and WorldMapFrame then
-			local wqt = _G and _G["WQT_QuestMapTab"]
-			if wqt then
-				EnsureTab(QuestMapFrame, wqt)
-				if QuestMapFrame and QuestMapFrame.ValidateTabs then QuestMapFrame:ValidateTabs() end
-			end
-		end
-		-- Do not return here; allow further processing when map is shown
 	end
 
 	-- Only refresh when the map is actually visible; avoid work while hidden
@@ -1366,10 +1207,7 @@ function addon.MythicPlus.functions.InitWorldMapTeleportPanel()
 			if addon.db and addon.db["teleportsWorldMapEnabled"] then
 				f:TryInit()
 				if QuestMapFrame and QuestMapFrame.ValidateTabs then QuestMapFrame:ValidateTabs() end
-				if f._selectOnNextShow and QuestMapFrame and QuestMapFrame.SetDisplayMode and not IsPanelSuppressed() then
-					QuestMapFrame:SetDisplayMode(DISPLAY_MODE)
-					f._selectOnNextShow = nil
-				end
+				if f._selectOnNextShow and not IsPanelSuppressed() and SetTeleportDisplayMode() then f._selectOnNextShow = nil end
 				QueuePanelRefresh({ delay = 0, invalidate = true })
 			else
 				if panel then SafeSetVisible(panel, false) end
@@ -1396,10 +1234,7 @@ function addon.MythicPlus.functions.RefreshWorldMapTeleportPanel()
 				if addon.db and addon.db["teleportsWorldMapEnabled"] then
 					f:TryInit()
 					if QuestMapFrame and QuestMapFrame.ValidateTabs then QuestMapFrame:ValidateTabs() end
-					if f._selectOnNextShow and QuestMapFrame and QuestMapFrame.SetDisplayMode and not IsPanelSuppressed() then
-						QuestMapFrame:SetDisplayMode(DISPLAY_MODE)
-						f._selectOnNextShow = nil
-					end
+					if f._selectOnNextShow and not IsPanelSuppressed() and SetTeleportDisplayMode() then f._selectOnNextShow = nil end
 					QueuePanelRefresh({ delay = 0, invalidate = true })
 				else
 					if panel then SafeSetVisible(panel, false) end
@@ -1432,7 +1267,7 @@ function addon.MythicPlus.functions.RefreshWorldMapTeleportPanel()
 				return
 			end
 			if tabButton then SafeSetVisible(tabButton, true) end
-			if QuestMapFrame and QuestMapFrame.SetDisplayMode then QuestMapFrame:SetDisplayMode(DISPLAY_MODE) end
+			SetTeleportDisplayMode()
 			QueuePanelRefresh({ delay = 0, invalidate = true })
 		else
 			f._selectOnNextShow = true
@@ -1476,11 +1311,7 @@ function addon.MythicPlus.functions.OpenWorldMapTeleportPanel(force)
 		end
 	end
 
-	if QuestMapFrame and QuestMapFrame.SetDisplayMode then
-		QuestMapFrame:SetDisplayMode(DISPLAY_MODE)
-	elseif f then
-		f._selectOnNextShow = true
-	end
+	if not SetTeleportDisplayMode() then f._selectOnNextShow = true end
 
 	if QuestMapFrame and QuestMapFrame.ValidateTabs then QuestMapFrame:ValidateTabs() end
 	if f and f.RefreshPanel then QueuePanelRefresh({ delay = 0 }) end
