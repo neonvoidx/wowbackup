@@ -6170,6 +6170,10 @@ FrameSortDB = {
 ["LastSeen"] = 37551.34552990001,
 ["LastAttempt"] = 37551.06467840001,
 },
+["Player-3209-0C203E36"] = {
+["LastSeen"] = 1859.1295877,
+["SpecId"] = 70,
+},
 ["Player-11-0E746F64"] = {
 ["LastSeen"] = 47358.0155028,
 ["SpecId"] = 252,
@@ -6182,6 +6186,10 @@ FrameSortDB = {
 ["LastSeen"] = 43945.2175586,
 ["SpecId"] = 255,
 },
+["Player-73-0EE498B0"] = {
+["SpecId"] = 253,
+["LastSeen"] = 17382.4212107,
+},
 ["Player-11-0E681C38"] = {
 ["LastSeen"] = 7912.8918824,
 ["SpecId"] = 265,
@@ -6190,9 +6198,33 @@ FrameSortDB = {
 ["SpecId"] = 577,
 ["LastSeen"] = 30811.0436369,
 },
+["Player-3675-0AD5BC94"] = {
+["SpecId"] = 251,
+["LastSeen"] = 17283.1024908,
+["LastAttempt"] = 17282.9811086,
+},
+["Player-11-0E7414A3"] = {
+["SpecId"] = 64,
+["LastAttempt"] = 16130.6405379,
+["LastSeen"] = 16130.9406323,
+},
 ["Player-1185-0D28BEB1"] = {
 ["SpecId"] = 257,
 ["LastSeen"] = 18270.3334974,
+},
+["Player-60-0FF91370"] = {
+["SpecId"] = 71,
+["LastSeen"] = 3340.5997425,
+["LastAttempt"] = 3340.2806664,
+},
+["Player-11-0EBA17A8"] = {
+["SpecId"] = 264,
+["LastSeen"] = 2171.0766536,
+},
+["Player-1129-0AEB809F"] = {
+["SpecId"] = 260,
+["LastSeen"] = 245.3075871,
+["LastAttempt"] = 244.9689967,
 },
 ["Player-57-0D85FEA3"] = {
 ["SpecId"] = 259,
@@ -6203,48 +6235,6 @@ FrameSortDB = {
 ["SpecId"] = 65,
 ["LastSeen"] = 45106.4562315,
 ["LastAttempt"] = 45106.08469990001,
-},
-["Player-3209-0C203E36"] = {
-["LastSeen"] = 1859.1295877,
-["SpecId"] = 70,
-},
-["Player-5-0EA53F3E"] = {
-["SpecId"] = 252,
-["LastSeen"] = 34117.2473324,
-},
-["Player-3675-0AD5BC94"] = {
-["SpecId"] = 251,
-["LastSeen"] = 17283.1024908,
-["LastAttempt"] = 17282.9811086,
-},
-["Player-1427-09EFB82F"] = {
-["LastSeen"] = 2072.7552709,
-["SpecId"] = 256,
-},
-["Player-3675-0707C6FA"] = {
-["SpecId"] = 261,
-["LastSeen"] = 7254.947700700001,
-["LastAttempt"] = 5707.7593862,
-},
-["Player-11-0E98176B"] = {
-["LastSeen"] = 4748.5310933,
-["SpecId"] = 251,
-},
-["Player-11-0E353183"] = {
-["SpecId"] = 65,
-["LastSeen"] = 235.0855135,
-},
-["Player-3684-0DFECFC0"] = {
-["LastSeen"] = 57201.2573649,
-["SpecId"] = 1473,
-},
-["Player-11-0EBA17A8"] = {
-["SpecId"] = 264,
-["LastSeen"] = 2171.0766536,
-},
-["Player-3675-0AFA8A28"] = {
-["LastSeen"] = 17159.7568673,
-["SpecId"] = 70,
 },
 ["Player-3209-098EDE19"] = {
 ["LastSeen"] = 3188.0027401,
@@ -6263,6 +6253,48 @@ FrameSortDB = {
 ["LastSeen"] = 10681.57289,
 ["SpecId"] = 1473,
 },
+["Player-3675-0707C6FA"] = {
+["SpecId"] = 261,
+["LastSeen"] = 7254.947700700001,
+["LastAttempt"] = 5707.7593862,
+},
+["Player-11-0E98176B"] = {
+["LastSeen"] = 4748.5310933,
+["SpecId"] = 251,
+},
+["Player-11-0E597ADA"] = {
+["SpecId"] = 70,
+["LastSeen"] = 9270.1660745,
+},
+["Player-3684-0DFECFC0"] = {
+["LastSeen"] = 57201.2573649,
+["SpecId"] = 1473,
+},
+["Player-1136-083909FB"] = {
+["SpecId"] = 254,
+["LastSeen"] = 25777.4953547,
+},
+["Player-1428-0EE36AD5"] = {
+["SpecId"] = 256,
+["LastAttempt"] = 23651.2297415,
+["LastSeen"] = 23651.520618,
+},
+["Player-160-0C20D77E"] = {
+["SpecId"] = 1468,
+["LastSeen"] = 25517.7754219,
+},
+["Player-106-0E9EE3E9"] = {
+["LastSeen"] = 3057.8625314,
+["SpecId"] = 64,
+},
+["Player-11-0725E935"] = {
+["SpecId"] = 262,
+["LastSeen"] = 1873.3936909,
+},
+["Player-60-0F704D70"] = {
+["SpecId"] = 256,
+["LastSeen"] = 2339.3145768,
+},
 ["Player-3676-0E823586"] = {
 ["SpecId"] = 70,
 ["LastSeen"] = 18863.2478193,
@@ -6276,55 +6308,6 @@ FrameSortDB = {
 ["LastSeen"] = 21378.3755814,
 ["SpecId"] = 253,
 },
-["Player-11-0E597ADA"] = {
-["SpecId"] = 70,
-["LastSeen"] = 9270.1660745,
-},
-["Player-1136-083909FB"] = {
-["SpecId"] = 254,
-["LastSeen"] = 25777.4953547,
-},
-["Player-11-0E2A4386"] = {
-["SpecId"] = 266,
-["LastAttempt"] = 42182.972691,
-["LastSeen"] = 42182.5992991,
-},
-["Player-61-0EAE47E6"] = {
-["SpecId"] = 72,
-["LastAttempt"] = 9340.780961,
-["LastSeen"] = 9341.4023347,
-},
-["Player-11-0DC9DE34"] = {
-["SpecId"] = 268,
-["LastSeen"] = 24692.1405853,
-},
-["Player-106-0E9EE3E9"] = {
-["LastSeen"] = 3057.8625314,
-["SpecId"] = 64,
-},
-["Player-1427-0E9C8CFC"] = {
-["SpecId"] = 64,
-["LastAttempt"] = 55005.4441148,
-["LastSeen"] = 55005.67638780001,
-},
-["Player-60-0BE3D826"] = {
-["SpecId"] = 257,
-["LastSeen"] = 25742.1797821,
-["LastAttempt"] = 25741.8631188,
-},
-["Player-11-0725E935"] = {
-["SpecId"] = 262,
-["LastSeen"] = 1873.3936909,
-},
-["Player-11-0E685590"] = {
-["SpecId"] = 258,
-["LastSeen"] = 3593.0901471,
-["LastAttempt"] = 2314.1997061,
-},
-["Player-60-0F704D70"] = {
-["SpecId"] = 256,
-["LastSeen"] = 2339.3145768,
-},
 ["Player-3661-0994E369"] = {
 ["SpecId"] = 267,
 ["LastSeen"] = 2109.1751508,
@@ -6337,6 +6320,58 @@ FrameSortDB = {
 ["LastSeen"] = 7913.630828500001,
 ["SpecId"] = 264,
 },
+["Player-3675-076F887E"] = {
+["SpecId"] = 102,
+["LastSeen"] = 22225.9951755,
+["LastAttempt"] = 22225.6791902,
+},
+["Player-11-0DC9DE34"] = {
+["SpecId"] = 268,
+["LastSeen"] = 24692.1405853,
+},
+["Player-4-0E927E13"] = {
+["SpecId"] = 254,
+["LastSeen"] = 25517.7754797,
+},
+["Player-1427-0E9C8CFC"] = {
+["SpecId"] = 64,
+["LastAttempt"] = 55005.4441148,
+["LastSeen"] = 55005.67638780001,
+},
+["Player-60-0BE3D826"] = {
+["SpecId"] = 257,
+["LastSeen"] = 25742.1797821,
+["LastAttempt"] = 25741.8631188,
+},
+["Player-163-0BEE7E28"] = {
+["SpecId"] = 1468,
+["LastAttempt"] = 15129.0335359,
+["LastSeen"] = 15304.8739719,
+},
+["Player-11-0E685590"] = {
+["SpecId"] = 258,
+["LastSeen"] = 3593.0901471,
+["LastAttempt"] = 2314.1997061,
+},
+["Player-115-0B09E222"] = {
+["SpecId"] = 70,
+["LastAttempt"] = 7803.184865300001,
+["LastSeen"] = 7803.4754185,
+},
+["Player-4-073F8208"] = {
+["SpecId"] = 268,
+["LastSeen"] = 22064.4360091,
+["LastAttempt"] = 22064.0954257,
+},
+["Player-1185-0D6A7927"] = {
+["SpecId"] = 63,
+["LastSeen"] = 13973.5253415,
+},
+["Player-5-0EB800EF"] = {
+["SpecId"] = 261,
+["LastSeen"] = 2606.6331248,
+["LastAttempt"] = 2311.1618232,
+},
 ["Player-11-0EA380B9"] = {
 ["SpecId"] = 260,
 ["LastAttempt"] = 22211.0086424,
@@ -6346,19 +6381,19 @@ FrameSortDB = {
 ["SpecId"] = 64,
 ["LastSeen"] = 4297.6063752,
 },
-["Player-3675-076F887E"] = {
-["SpecId"] = 102,
-["LastSeen"] = 22225.9951755,
-["LastAttempt"] = 22225.6791902,
+["Player-60-0FF41B21"] = {
+["SpecId"] = 71,
+["LastSeen"] = 44888.6689974,
 },
 ["Player-1428-069E5798"] = {
 ["SpecId"] = 253,
 ["LastAttempt"] = 20794.0609147,
 ["LastSeen"] = 20794.3068902,
 },
-["Player-1185-0D6A7927"] = {
-["SpecId"] = 63,
-["LastSeen"] = 13973.5253415,
+["Player-60-0FDBF880"] = {
+["SpecId"] = 253,
+["LastAttempt"] = 22104.5319352,
+["LastSeen"] = 22104.8520221,
 },
 ["Player-3661-085D5B38"] = {
 ["SpecId"] = 270,
@@ -6367,62 +6402,6 @@ FrameSortDB = {
 ["Player-125-0AFE62F1"] = {
 ["SpecId"] = 253,
 ["LastSeen"] = 19698.9010081,
-},
-["Player-163-0BEE7E28"] = {
-["SpecId"] = 1468,
-["LastAttempt"] = 15129.0335359,
-["LastSeen"] = 15304.8739719,
-},
-["Player-115-0B09E222"] = {
-["SpecId"] = 70,
-["LastAttempt"] = 7803.184865300001,
-["LastSeen"] = 7803.4754185,
-},
-["Player-3684-0E6DDBD9"] = {
-["SpecId"] = 64,
-["LastSeen"] = 37550.91898420001,
-["LastAttempt"] = 37550.5278883,
-},
-["Player-4-073F8208"] = {
-["SpecId"] = 268,
-["LastSeen"] = 22064.4360091,
-["LastAttempt"] = 22064.0954257,
-},
-["Player-61-0FE4794D"] = {
-["SpecId"] = 70,
-["LastAttempt"] = 24034.8973886,
-["LastSeen"] = 24035.1524361,
-},
-["Player-11-0EB97DBD"] = {
-["SpecId"] = 252,
-["LastSeen"] = 10626.232757,
-},
-["Player-11-0EB375D0"] = {
-["SpecId"] = 105,
-["LastSeen"] = 37337.82744060001,
-},
-["Player-5-0EB800EF"] = {
-["SpecId"] = 261,
-["LastSeen"] = 2606.6331248,
-["LastAttempt"] = 2311.1618232,
-},
-["Player-11-0EA07A2E"] = {
-["LastSeen"] = 10578.6618054,
-["SpecId"] = 72,
-},
-["Player-3675-0AE3D7D8"] = {
-["SpecId"] = 64,
-["LastSeen"] = 41550.8250417,
-["LastAttempt"] = 41550.5278373,
-},
-["Player-57-0DF37A7B"] = {
-["SpecId"] = 265,
-["LastSeen"] = 37833.0564556,
-["LastAttempt"] = 37834.3699022,
-},
-["Player-76-0BFD4034"] = {
-["LastSeen"] = 12828.6295902,
-["SpecId"] = 259,
 },
 ["Player-3684-0E4D4F2F"] = {
 ["SpecId"] = 1480,
@@ -6433,51 +6412,56 @@ FrameSortDB = {
 ["LastSeen"] = 45693.8808881,
 ["SpecId"] = 63,
 },
-["Player-162-0BBF53AE"] = {
-["LastSeen"] = 3222.7483391,
-["SpecId"] = 266,
+["Player-3684-0E6DDBD9"] = {
+["SpecId"] = 64,
+["LastSeen"] = 37550.91898420001,
+["LastAttempt"] = 37550.5278883,
+},
+["Player-3675-0AE3D7D8"] = {
+["SpecId"] = 64,
+["LastSeen"] = 41550.8250417,
+["LastAttempt"] = 41550.5278373,
 },
 ["Player-1168-09F20EC1"] = {
 ["SpecId"] = 71,
 ["LastSeen"] = 51068.4726787,
 ["LastAttempt"] = 51068.35328410001,
 },
-["Player-115-0883B437"] = {
-["SpecId"] = 64,
-["LastAttempt"] = 29265.0632587,
-["LastSeen"] = 29263.4077331,
+["Player-11-0EB97DBD"] = {
+["SpecId"] = 252,
+["LastSeen"] = 10626.232757,
+},
+["Player-11-0EB375D0"] = {
+["SpecId"] = 105,
+["LastSeen"] = 37337.82744060001,
+},
+["Player-1070-0E2BC154"] = {
+["SpecId"] = 262,
+["LastAttempt"] = 7803.6885522,
+["LastSeen"] = 7803.9974265,
+},
+["Player-11-0EA07A2E"] = {
+["LastSeen"] = 10578.6618054,
+["SpecId"] = 72,
+},
+["Player-3725-0C516C6E"] = {
+["SpecId"] = 256,
+["LastAttempt"] = 13578.7130655,
+["LastSeen"] = 13579.1544107,
+},
+["Player-57-0DF37A7B"] = {
+["SpecId"] = 265,
+["LastSeen"] = 37833.0564556,
+["LastAttempt"] = 37834.3699022,
+},
+["Player-67-0F7C1CB7"] = {
+["SpecId"] = 1467,
+["LastAttempt"] = 21490.9320928,
+["LastSeen"] = 21491.479766,
 },
 ["Player-76-0BBD33D6"] = {
 ["LastSeen"] = 13140.6993502,
 ["SpecId"] = 65,
-},
-["Player-11-0EA42F2E"] = {
-["LastSeen"] = 5312.395708800001,
-["SpecId"] = 256,
-},
-["Player-11-08995E35"] = {
-["SpecId"] = 252,
-["LastSeen"] = 3936.8171103,
-},
-["Player-1425-0AA1F35D"] = {
-["LastSeen"] = 3456.3643823,
-["SpecId"] = 269,
-},
-["Player-3721-0C60E901"] = {
-["LastSeen"] = 3458.9618472,
-["SpecId"] = 252,
-},
-["Player-3675-0B077955"] = {
-["SpecId"] = 256,
-["LastSeen"] = 41776.7480226,
-},
-["Player-11-0B6858ED"] = {
-["LastSeen"] = 25944.3432551,
-["SpecId"] = 70,
-},
-["Player-104-0DA536AD"] = {
-["LastSeen"] = 46110.2885917,
-["SpecId"] = 1480,
 },
 ["Player-11-0EB23EEA"] = {
 ["SpecId"] = 265,
@@ -6493,56 +6477,110 @@ FrameSortDB = {
 ["LastSeen"] = 15914.1478321,
 ["LastAttempt"] = 15815.2217151,
 },
+["Player-115-0883B437"] = {
+["SpecId"] = 64,
+["LastAttempt"] = 29265.0632587,
+["LastSeen"] = 29263.4077331,
+},
 ["Player-127-0902C42D"] = {
 ["LastSeen"] = 3455.3692507,
 ["SpecId"] = 261,
 },
-["Player-3675-0AD16BB4"] = {
-["LastSeen"] = 45006.3159972,
+["Player-11-0EA42F2E"] = {
+["LastSeen"] = 5312.395708800001,
+["SpecId"] = 256,
+},
+["Player-11-08995E35"] = {
+["SpecId"] = 252,
+["LastSeen"] = 3936.8171103,
+},
+["Player-1425-0AA1F35D"] = {
+["LastSeen"] = 3456.3643823,
 ["SpecId"] = 269,
+},
+["Player-11-0B6858ED"] = {
+["LastSeen"] = 25944.3432551,
+["SpecId"] = 70,
+},
+["Player-3675-0B077955"] = {
+["SpecId"] = 256,
+["LastSeen"] = 41776.7480226,
+},
+["Player-11-0A4A9388"] = {
+["LastSeen"] = 15413.0977176,
+["SpecId"] = 267,
 },
 ["Player-120-0AFB1A23"] = {
 ["LastSeen"] = 23703.581244,
 ["SpecId"] = 254,
 },
+["Player-60-0FE00CE2"] = {
+["SpecId"] = 1480,
+["LastAttempt"] = 6243.1474686,
+["LastSeen"] = 6243.5258322,
+},
+["Player-69-0E145153"] = {
+["SpecId"] = 259,
+["LastSeen"] = 48634.63559960001,
+},
+["Player-1427-0DC326A0"] = {
+["LastSeen"] = 43037.6856729,
+["SpecId"] = 259,
+},
+["Player-3676-0ECEA6C3"] = {
+["SpecId"] = 251,
+["LastSeen"] = 18776.136852,
+["LastAttempt"] = 18775.7733946,
+},
+["Player-1168-08A235A6"] = {
+["SpecId"] = 261,
+["LastAttempt"] = 25203.5977851,
+["LastSeen"] = 25203.2647795,
+},
+["Player-121-09BCE899"] = {
+["SpecId"] = 266,
+["LastAttempt"] = 17250.9606843,
+["LastSeen"] = 17251.1471063,
+},
 ["Player-11-0E70BDA5"] = {
 ["SpecId"] = 71,
 ["LastSeen"] = 16849.6902476,
 },
-["Player-1168-09A7B015"] = {
-["SpecId"] = 72,
-["LastSeen"] = 15447.0713779,
-["LastAttempt"] = 15446.7384157,
+["Player-1151-09859B1F"] = {
+["SpecId"] = 64,
+["LastAttempt"] = 2912.2874158,
+["LastSeen"] = 3226.0433399,
 },
 ["Player-3684-0966F61A"] = {
 ["SpecId"] = 253,
 ["LastAttempt"] = 46448.8301941,
 ["LastSeen"] = 46449.16492620001,
 },
-["Player-69-0E145153"] = {
-["SpecId"] = 259,
-["LastSeen"] = 48634.63559960001,
+["Player-1168-0AEAF94E"] = {
+["SpecId"] = 265,
+["LastAttempt"] = 39322.3986193,
+["LastSeen"] = 39322.5683302,
 },
 ["Player-57-0CEB036E"] = {
 ["LastSeen"] = 17532.8813885,
 ["SpecId"] = 253,
 },
-["Player-1427-0DC326A0"] = {
-["LastSeen"] = 43037.6856729,
-["SpecId"] = 259,
+["Player-3207-0E0DA98E"] = {
+["SpecId"] = 257,
+["LastAttempt"] = 15485.284513,
+["LastSeen"] = 15485.6330238,
 },
-["Player-3675-079638A2"] = {
-["LastSeen"] = 12361.1197886,
-["SpecId"] = 65,
+["Player-76-0A5C448A"] = {
+["LastSeen"] = 26380.9876956,
+["SpecId"] = 1480,
 },
 ["Player-3725-0B5DFF68"] = {
 ["LastSeen"] = 14515.3153065,
 ["SpecId"] = 102,
 },
-["Player-1168-08A235A6"] = {
-["SpecId"] = 261,
-["LastAttempt"] = 25203.5977851,
-["LastSeen"] = 25203.2647795,
+["Player-61-0FF4B1F4"] = {
+["LastSeen"] = 26381.8982632,
+["SpecId"] = 253,
 },
 ["Player-77-0FDF5CFC"] = {
 ["LastSeen"] = 5692.1578312,
@@ -6558,60 +6596,17 @@ FrameSortDB = {
 ["LastAttempt"] = 50427.67722870001,
 ["LastSeen"] = 50428.0470578,
 },
-["Player-162-0C1EAC3F"] = {
-["SpecId"] = 577,
-["LastSeen"] = 41776.2765803,
-},
-["Player-61-0FF4B1F4"] = {
-["LastSeen"] = 26381.8982632,
-["SpecId"] = 253,
+["Player-76-0C1C678A"] = {
+["SpecId"] = 259,
+["LastSeen"] = 15483.104349,
 },
 ["Player-11-0DF280BB"] = {
 ["SpecId"] = 104,
 ["LastSeen"] = 7853.810522500001,
 },
-["Player-1168-0AEAF94E"] = {
-["SpecId"] = 265,
-["LastAttempt"] = 39322.3986193,
-["LastSeen"] = 39322.5683302,
-},
-["Player-76-0A5C448A"] = {
-["LastSeen"] = 26380.9876956,
-["SpecId"] = 1480,
-},
-["Player-1136-096C84FA"] = {
-["SpecId"] = 257,
-["LastSeen"] = 27319.8876143,
-["LastAttempt"] = 27319.6043866,
-},
-["Player-158-001DDEBB"] = {
-["LastSeen"] = 23644.4156354,
-["SpecId"] = 265,
-},
-["Player-3209-0C1B23D5"] = {
-["LastSeen"] = 43945.9764309,
-["SpecId"] = 265,
-},
-["Player-76-0C1C678A"] = {
-["SpecId"] = 259,
-["LastSeen"] = 15483.104349,
-},
-["Player-11-0EAD3F90"] = {
-["LastSeen"] = 14270.4139299,
-["SpecId"] = 72,
-},
-["Player-1168-092530AA"] = {
-["SpecId"] = 254,
-["LastSeen"] = 14919.4716487,
-["LastAttempt"] = 14919.306577,
-},
 ["Player-11-0EB33033"] = {
 ["SpecId"] = 105,
 ["LastSeen"] = 20620.4241327,
-},
-["Player-3209-0C12D1D0"] = {
-["LastSeen"] = 20079.3621575,
-["SpecId"] = 105,
 },
 ["Player-73-0FBA229F"] = {
 ["SpecId"] = 70,
@@ -6623,6 +6618,50 @@ FrameSortDB = {
 ["LastSeen"] = 6641.923863900001,
 ["LastAttempt"] = 6540.490087800001,
 },
+["Player-1136-096C84FA"] = {
+["SpecId"] = 257,
+["LastSeen"] = 27319.8876143,
+["LastAttempt"] = 27319.6043866,
+},
+["Player-158-001DDEBB"] = {
+["LastSeen"] = 23644.4156354,
+["SpecId"] = 265,
+},
+["Player-1168-092530AA"] = {
+["SpecId"] = 254,
+["LastSeen"] = 14919.4716487,
+["LastAttempt"] = 14919.306577,
+},
+["Player-3684-0E03047C"] = {
+["LastSeen"] = 14919.0122124,
+["SpecId"] = 267,
+},
+["Player-11-0EAD3F90"] = {
+["LastSeen"] = 14270.4139299,
+["SpecId"] = 72,
+},
+["Player-3208-08AC65EA"] = {
+["SpecId"] = 262,
+["LastSeen"] = 12366.5107715,
+["LastAttempt"] = 12366.1363786,
+},
+["Player-3676-0EE707EB"] = {
+["LastSeen"] = 16621.1262179,
+["SpecId"] = 103,
+},
+["Player-3209-0C12D1D0"] = {
+["LastSeen"] = 20079.3621575,
+["SpecId"] = 105,
+},
+["Player-9-0E962FE5"] = {
+["SpecId"] = 70,
+["LastSeen"] = 38042.81938,
+["LastAttempt"] = 37047.6777091,
+},
+["Player-5-0E7745E9"] = {
+["SpecId"] = 251,
+["LastSeen"] = 22939.3201331,
+},
 ["Player-11-0E9525A4"] = {
 ["LastSeen"] = 28297.4371808,
 ["SpecId"] = 270,
@@ -6631,49 +6670,9 @@ FrameSortDB = {
 ["SpecId"] = 256,
 ["LastSeen"] = 22988.6452221,
 },
-["Player-3675-0A610B3A"] = {
-["SpecId"] = 65,
-["LastSeen"] = 33719.63237070001,
-},
-["Player-3684-0E03047C"] = {
-["LastSeen"] = 14919.0122124,
-["SpecId"] = 267,
-},
-["Player-3208-08AC65EA"] = {
-["SpecId"] = 262,
-["LastSeen"] = 12366.5107715,
-["LastAttempt"] = 12366.1363786,
-},
-["Player-11-0E26D127"] = {
-["LastSeen"] = 11353.5706257,
-["SpecId"] = 265,
-},
-["Player-3675-07DF8660"] = {
-["LastSeen"] = 12361.8347841,
-["SpecId"] = 71,
-},
-["Player-1151-06FC41A6"] = {
-["SpecId"] = 261,
-["LastAttempt"] = 19296.81663,
-["LastSeen"] = 19297.1211143,
-},
-["Player-3209-0A4C6FF5"] = {
-["SpecId"] = 258,
-["LastSeen"] = 14918.5755679,
-},
-["Player-9-0E962FE5"] = {
-["SpecId"] = 70,
-["LastSeen"] = 38042.81938,
-["LastAttempt"] = 37047.6777091,
-},
 ["Player-11-0E525744"] = {
 ["LastSeen"] = 9984.4192323,
 ["SpecId"] = 64,
-},
-["Player-84-061698E3"] = {
-["SpecId"] = 266,
-["LastAttempt"] = 1002.6265203,
-["LastSeen"] = 3241.316301,
 },
 ["Player-60-0FDAF293"] = {
 ["SpecId"] = 258,
@@ -6683,28 +6682,22 @@ FrameSortDB = {
 ["LastSeen"] = 14919.01218,
 ["SpecId"] = 264,
 },
-["Player-57-0D6F4A56"] = {
-["SpecId"] = 259,
-["LastSeen"] = 20448.2474494,
+["Player-11-0E26D127"] = {
+["LastSeen"] = 11353.5706257,
+["SpecId"] = 265,
 },
-["Player-120-04FA1E6B"] = {
-["SpecId"] = 70,
-["LastAttempt"] = 42153.70851980001,
-["LastSeen"] = 42154.008609,
-},
-["Player-104-0EE5ACAC"] = {
-["SpecId"] = 71,
-["LastSeen"] = 3760.3483635,
-["LastAttempt"] = 2326.3220468,
-},
-["Player-3207-05567D09"] = {
-["SpecId"] = 254,
-["LastSeen"] = 2669.9387097,
-["LastAttempt"] = 2669.7677897,
+["Player-1151-06FC41A6"] = {
+["SpecId"] = 261,
+["LastAttempt"] = 19296.81663,
+["LastSeen"] = 19297.1211143,
 },
 ["Player-11-0AFC94D1"] = {
 ["LastSeen"] = 20468.1565587,
 ["SpecId"] = 261,
+},
+["Player-3209-0A4C6FF5"] = {
+["SpecId"] = 258,
+["LastSeen"] = 14918.5755679,
 },
 ["Player-1138-0978B29E"] = {
 ["SpecId"] = 65,
@@ -6716,6 +6709,49 @@ FrameSortDB = {
 ["LastAttempt"] = 23891.6992571,
 ["LastSeen"] = 23892.0638578,
 },
+["Player-84-061698E3"] = {
+["SpecId"] = 266,
+["LastAttempt"] = 1002.6265203,
+["LastSeen"] = 3241.316301,
+},
+["Player-11-0E9813EA"] = {
+["LastSeen"] = 12372.2018676,
+["SpecId"] = 70,
+},
+["Player-11-0E3052D2"] = {
+["LastSeen"] = 9551.7672363,
+["SpecId"] = 62,
+},
+["Player-104-0EE5ACAC"] = {
+["SpecId"] = 71,
+["LastSeen"] = 3760.3483635,
+["LastAttempt"] = 2326.3220468,
+},
+["Player-120-04FA1E6B"] = {
+["SpecId"] = 70,
+["LastAttempt"] = 42153.70851980001,
+["LastSeen"] = 42154.008609,
+},
+["Player-57-0D6F4A56"] = {
+["SpecId"] = 259,
+["LastSeen"] = 20448.2474494,
+},
+["Player-1168-0949E058"] = {
+["LastSeen"] = 14919.4720075,
+["SpecId"] = 65,
+},
+["Player-11-0E1B4C7B"] = {
+["LastSeen"] = 7373.631044000001,
+["SpecId"] = 259,
+},
+["Player-11-0EB44406"] = {
+["LastSeen"] = 45820.6479159,
+["SpecId"] = 270,
+},
+["Player-11-0E3087CB"] = {
+["LastSeen"] = 23984.1653883,
+["SpecId"] = 256,
+},
 ["Player-1171-0A4F1179"] = {
 ["SpecId"] = 254,
 ["LastSeen"] = 29291.7770799,
@@ -6726,60 +6762,10 @@ FrameSortDB = {
 ["LastSeen"] = 31408.6817438,
 ["LastAttempt"] = 31816.3593743,
 },
-["Player-11-0E9813EA"] = {
-["LastSeen"] = 12372.2018676,
-["SpecId"] = 70,
-},
-["Player-73-0AF2093E"] = {
-["LastSeen"] = 14919.0121438,
-["SpecId"] = 265,
-},
-["Player-3209-0978FAD5"] = {
-["SpecId"] = 252,
-["LastSeen"] = 48687.6194583,
-["LastAttempt"] = 48688.75888720001,
-},
-["Player-11-0EB7BFFD"] = {
-["LastSeen"] = 9884.3343139,
-["SpecId"] = 259,
-},
-["Player-11-0DC8A141"] = {
-["LastSeen"] = 43651.9375426,
-["SpecId"] = 264,
-},
-["Player-60-0FF4E03C"] = {
-["SpecId"] = 1467,
-["LastSeen"] = 12759.9401355,
-["LastAttempt"] = 12178.7885769,
-},
-["Player-5-0E731A99"] = {
-["SpecId"] = 258,
-["LastSeen"] = 23530.198652,
-},
-["Player-11-0E5E0584"] = {
-["SpecId"] = 270,
-["LastSeen"] = 15144.504132,
-},
-["Player-11-0EA5EB72"] = {
-["LastSeen"] = 45472.32468970001,
-["SpecId"] = 70,
-},
 ["Player-1427-098B1540"] = {
 ["SpecId"] = 64,
 ["LastAttempt"] = 13242.125479,
 ["LastSeen"] = 13242.4238138,
-},
-["Player-11-0E3087CB"] = {
-["LastSeen"] = 23984.1653883,
-["SpecId"] = 256,
-},
-["Player-60-0FE04F4E"] = {
-["LastSeen"] = 2165.5023858,
-["SpecId"] = 104,
-},
-["Player-11-0AD63CAC"] = {
-["SpecId"] = 73,
-["LastSeen"] = 36097.1939348,
 },
 ["Player-3676-0ED86B45"] = {
 ["SpecId"] = 64,
@@ -6790,26 +6776,80 @@ FrameSortDB = {
 ["LastSeen"] = 13377.3639281,
 ["SpecId"] = 250,
 },
+["Player-3209-0978FAD5"] = {
+["SpecId"] = 252,
+["LastSeen"] = 48687.6194583,
+["LastAttempt"] = 48688.75888720001,
+},
 ["Player-11-0E9F1530"] = {
 ["LastSeen"] = 9225.003857700001,
 ["SpecId"] = 256,
+},
+["Player-60-0FF4E03C"] = {
+["SpecId"] = 1467,
+["LastSeen"] = 12759.9401355,
+["LastAttempt"] = 12178.7885769,
+},
+["Player-11-0DC8A141"] = {
+["LastSeen"] = 43651.9375426,
+["SpecId"] = 264,
+},
+["Player-11-0E5E0584"] = {
+["SpecId"] = 270,
+["LastSeen"] = 15144.504132,
+},
+["Player-11-0EA5EB72"] = {
+["LastSeen"] = 45472.32468970001,
+["SpecId"] = 70,
 },
 ["Player-60-0FE39D27"] = {
 ["SpecId"] = 64,
 ["LastSeen"] = 39309.5683045,
 ["LastAttempt"] = 39309.2966909,
 },
+["Player-121-08A77C27"] = {
+["SpecId"] = 71,
+["LastSeen"] = 6371.7421095,
+["LastAttempt"] = 5669.3428105,
+},
+["Player-113-04C65A07"] = {
+["SpecId"] = 104,
+["LastSeen"] = 17107.8083359,
+},
+["Player-11-0AD63CAC"] = {
+["SpecId"] = 73,
+["LastSeen"] = 36097.1939348,
+},
+["Player-11-0E8AE17F"] = {
+["SpecId"] = 261,
+["LastSeen"] = 2166.4492702,
+["LastAttempt"] = 2166.189634,
+},
+["Player-11-0AD50D10"] = {
+["SpecId"] = 581,
+["LastSeen"] = 31354.786015,
+},
 ["Player-3684-0EDA7362"] = {
 ["SpecId"] = 64,
 ["LastSeen"] = 22717.5393976,
+},
+["Player-11-0E442B33"] = {
+["SpecId"] = 65,
+["LastSeen"] = 17178.0681763,
+["LastAttempt"] = 17177.7672726,
+},
+["Player-3675-0A77F50B"] = {
+["SpecId"] = 262,
+["LastSeen"] = 23015.4915673,
+["LastAttempt"] = 23015.1693709,
 },
 ["Player-76-0A293918"] = {
 ["LastSeen"] = 27207.6763539,
 ["SpecId"] = 264,
 },
-["Player-113-04C65A07"] = {
-["SpecId"] = 104,
-["LastSeen"] = 17107.8083359,
+["Player-3675-0A46A079"] = {
+["SpecId"] = 577,
+["LastSeen"] = 19698.901104,
 },
 ["Player-76-0BE7F432"] = {
 ["LastSeen"] = 2482.8274861,
@@ -6824,37 +6864,36 @@ FrameSortDB = {
 ["LastSeen"] = 31819.1065847,
 ["SpecId"] = 254,
 },
-["Player-11-0E8AE17F"] = {
-["SpecId"] = 261,
-["LastSeen"] = 2166.4492702,
-["LastAttempt"] = 2166.189634,
+["Player-11-0EAE8C3B"] = {
+["LastSeen"] = 9912.348627700001,
+["SpecId"] = 263,
 },
 ["Player-1129-0BE4E4FD"] = {
 ["SpecId"] = 258,
 ["LastSeen"] = 29288.6609197,
 ["LastAttempt"] = 29288.3625329,
 },
-["Player-11-0AD50D10"] = {
-["SpecId"] = 581,
-["LastSeen"] = 31354.786015,
+["Player-1070-0D0ACAAD"] = {
+["SpecId"] = 270,
+["LastSeen"] = 29605.3620767,
+["LastAttempt"] = 29605.0536179,
 },
-["Player-11-0EAE8C3B"] = {
-["LastSeen"] = 9912.348627700001,
-["SpecId"] = 263,
+["Player-11-0E91B81A"] = {
+["LastSeen"] = 22308.3175656,
+["SpecId"] = 268,
 },
-["Player-3675-0A77F50B"] = {
-["SpecId"] = 262,
-["LastSeen"] = 23015.4915673,
-["LastAttempt"] = 23015.1693709,
+["Player-11-0EB511C2"] = {
+["LastSeen"] = 4804.269512700001,
+["SpecId"] = 259,
 },
-["Player-11-0E442B33"] = {
-["SpecId"] = 65,
-["LastSeen"] = 17178.0681763,
-["LastAttempt"] = 17177.7672726,
+["Player-11-0E972F93"] = {
+["LastSeen"] = 11563.8059252,
+["SpecId"] = 266,
 },
-["Player-11-0E8A4DED"] = {
-["SpecId"] = 581,
-["LastSeen"] = 36045.26687460001,
+["Player-3684-0E074A22"] = {
+["SpecId"] = 268,
+["LastAttempt"] = 37472.5737306,
+["LastSeen"] = 37545.0013618,
 },
 ["Player-11-0EB5DF09"] = {
 ["SpecId"] = 250,
@@ -6874,18 +6913,18 @@ FrameSortDB = {
 ["LastSeen"] = 47088.8976886,
 ["SpecId"] = 262,
 },
-["Player-1136-098F8562"] = {
-["LastSeen"] = 8508.3880532,
-["SpecId"] = 252,
+["Player-11-0E40040B"] = {
+["LastSeen"] = 7016.9367147,
+["SpecId"] = 1473,
 },
-["Player-1168-0AE293E3"] = {
-["SpecId"] = 104,
-["LastAttempt"] = 49401.85172750001,
-["LastSeen"] = 49412.1481071,
+["Player-60-0EFB728B"] = {
+["SpecId"] = 258,
+["LastSeen"] = 10860.8130433,
 },
-["Player-11-0E91B81A"] = {
-["LastSeen"] = 22308.3175656,
-["SpecId"] = 268,
+["Player-57-0E098AB7"] = {
+["SpecId"] = 270,
+["LastAttempt"] = 29271.5601393,
+["LastSeen"] = 29271.8929807,
 },
 ["Player-64-08889BBD"] = {
 ["SpecId"] = 255,
@@ -6896,9 +6935,10 @@ FrameSortDB = {
 ["LastSeen"] = 21272.4741614,
 ["SpecId"] = 62,
 },
-["Player-11-0EB511C2"] = {
-["LastSeen"] = 4804.269512700001,
-["SpecId"] = 259,
+["Player-61-0FC5D8C8"] = {
+["SpecId"] = 71,
+["LastAttempt"] = 13249.665238,
+["LastSeen"] = 13250.0115188,
 },
 ["Player-60-0FDD4792"] = {
 ["SpecId"] = 1480,
@@ -6909,27 +6949,27 @@ FrameSortDB = {
 ["LastSeen"] = 4284.2771085,
 ["SpecId"] = 1480,
 },
-["Player-11-0E972F93"] = {
-["LastSeen"] = 11563.8059252,
-["SpecId"] = 266,
+["Player-11-0E9B0AAC"] = {
+["SpecId"] = 258,
+["LastSeen"] = 41696.31741220001,
 },
-["Player-3684-0E074A22"] = {
-["SpecId"] = 268,
-["LastAttempt"] = 37472.5737306,
-["LastSeen"] = 37545.0013618,
+["Player-11-0EA2237C"] = {
+["LastSeen"] = 23208.6803881,
+["SpecId"] = 70,
 },
-["Player-11-0E40040B"] = {
-["LastSeen"] = 7016.9367147,
-["SpecId"] = 1473,
+["Player-57-0E130B7C"] = {
+["SpecId"] = 252,
+["LastSeen"] = 16398.6693099,
 },
 ["Player-5-0E3FF155"] = {
 ["SpecId"] = 264,
 ["LastSeen"] = 2312.7773487,
 ["LastAttempt"] = 2312.4852759,
 },
-["Player-11-0EAFE689"] = {
-["LastSeen"] = 15088.4118239,
-["SpecId"] = 1473,
+["Player-77-0FED3CD5"] = {
+["SpecId"] = 1455,
+["LastSeen"] = 17844.6854177,
+["LastAttempt"] = 17844.3163143,
 },
 ["Player-127-0A61968E"] = {
 ["SpecId"] = 1468,
@@ -6957,10 +6997,9 @@ FrameSortDB = {
 ["LastSeen"] = 14528.4701698,
 ["SpecId"] = 265,
 },
-["Player-57-0E098AB7"] = {
-["SpecId"] = 270,
-["LastAttempt"] = 29271.5601393,
-["LastSeen"] = 29271.8929807,
+["Player-11-0E5A37D4"] = {
+["SpecId"] = 1480,
+["LastSeen"] = 11846.1457259,
 },
 ["Player-11-0E49B201"] = {
 ["LastSeen"] = 7640.409399900001,
@@ -6971,10 +7010,10 @@ FrameSortDB = {
 ["LastSeen"] = 47214.3677632,
 ["LastAttempt"] = 47214.5990584,
 },
-["Player-60-0E972D53"] = {
-["SpecId"] = 103,
-["LastAttempt"] = 50284.51377300001,
-["LastSeen"] = 51503.0751583,
+["Player-3725-0C5EDA4F"] = {
+["SpecId"] = 71,
+["LastAttempt"] = 20725.8927544,
+["LastSeen"] = 20726.3210162,
 },
 ["Player-53-0DFEBC29"] = {
 ["SpecId"] = 72,
@@ -6986,9 +7025,10 @@ FrameSortDB = {
 ["LastSeen"] = 2591.0513438,
 ["LastAttempt"] = 2590.7038696,
 },
-["Player-11-0E9B0AAC"] = {
-["SpecId"] = 258,
-["LastSeen"] = 41696.31741220001,
+["Player-3676-0E1A1E2F"] = {
+["SpecId"] = 65,
+["LastSeen"] = 17483.3608949,
+["LastAttempt"] = 13700.0416226,
 },
 ["Player-11-0E8F680B"] = {
 ["LastSeen"] = 15386.1732128,
@@ -7008,36 +7048,6 @@ FrameSortDB = {
 ["LastAttempt"] = 1676.3416496,
 ["LastSeen"] = 3300.5250754,
 },
-["Player-11-0EA2237C"] = {
-["LastSeen"] = 23208.6803881,
-["SpecId"] = 70,
-},
-["Player-57-0E130B7C"] = {
-["SpecId"] = 252,
-["LastSeen"] = 16398.6693099,
-},
-["Player-77-0FED3CD5"] = {
-["SpecId"] = 1455,
-["LastSeen"] = 17844.6854177,
-["LastAttempt"] = 17844.3163143,
-},
-["Player-11-0E5A37D4"] = {
-["SpecId"] = 1480,
-["LastSeen"] = 11846.1457259,
-},
-["Player-11-0E85B98B"] = {
-["LastSeen"] = 11384.3770036,
-["SpecId"] = 258,
-},
-["Player-11-0E131D41"] = {
-["SpecId"] = 262,
-["LastSeen"] = 10932.8655225,
-},
-["Player-11-0EB86D8A"] = {
-["SpecId"] = 72,
-["LastAttempt"] = 50273.593428,
-["LastSeen"] = 52264.38516480001,
-},
 ["Player-11-0EAC5650"] = {
 ["SpecId"] = 267,
 ["LastSeen"] = 17463.6613866,
@@ -7047,34 +7057,28 @@ FrameSortDB = {
 ["LastSeen"] = 2482.8281384,
 ["SpecId"] = 63,
 },
-["Player-11-0E9C9FB8"] = {
-["SpecId"] = 71,
-["LastSeen"] = 8755.9929637,
-},
 ["Player-3675-0B079DC3"] = {
 ["SpecId"] = 70,
 ["LastAttempt"] = 50315.8647285,
 ["LastSeen"] = 52033.15062820001,
-},
-["Player-60-0C9628D1"] = {
-["SpecId"] = 105,
-["LastSeen"] = 20132.1052485,
-["LastAttempt"] = 20131.6956724,
 },
 ["Player-3675-0A7CD1A0"] = {
 ["SpecId"] = 1467,
 ["LastSeen"] = 12539.8408157,
 ["LastAttempt"] = 11795.2371335,
 },
+["Player-11-0E85B98B"] = {
+["LastSeen"] = 11384.3770036,
+["SpecId"] = 258,
+},
+["Player-11-0E9C9FB8"] = {
+["SpecId"] = 71,
+["LastSeen"] = 8755.9929637,
+},
 ["Player-63-0F0ECD1A"] = {
 ["SpecId"] = 270,
 ["LastSeen"] = 30665.2216645,
 ["LastAttempt"] = 30643.9561655,
-},
-["Player-57-0DEEEC91"] = {
-["SpecId"] = 73,
-["LastAttempt"] = 24529.4384973,
-["LastSeen"] = 24529.7468886,
 },
 ["Player-11-0E5897C6"] = {
 ["SpecId"] = 261,
@@ -7084,57 +7088,94 @@ FrameSortDB = {
 ["LastSeen"] = 3401.8168844,
 ["SpecId"] = 261,
 },
-["Player-11-0EB5EC68"] = {
-["SpecId"] = 255,
-["LastSeen"] = 8605.5873429,
-},
-["Player-3676-0E17A024"] = {
-["SpecId"] = 65,
-["LastSeen"] = 22586.9546318,
-["LastAttempt"] = 22586.7861616,
-},
-["Player-1175-0D8CFDE0"] = {
-["LastSeen"] = 29576.1243317,
-["SpecId"] = 270,
-},
-["Player-11-0E8A38E4"] = {
-["SpecId"] = 73,
-["LastSeen"] = 33312.2712451,
+["Player-11-0AEA613D"] = {
+["SpecId"] = 266,
+["LastSeen"] = 1042.2849973,
 },
 ["Player-11-0EB4E291"] = {
 ["LastSeen"] = 12356.4726531,
 ["SpecId"] = 268,
 },
-["Player-3675-0AF51222"] = {
-["SpecId"] = 72,
-["LastAttempt"] = 18712.0515155,
-["LastSeen"] = 18712.4605037,
+["Player-60-0C9628D1"] = {
+["SpecId"] = 105,
+["LastSeen"] = 20132.1052485,
+["LastAttempt"] = 20131.6956724,
 },
-["Player-11-0E89F24E"] = {
-["LastSeen"] = 9767.6001736,
-["SpecId"] = 259,
+["Player-1185-0EA8A70F"] = {
+["SpecId"] = 252,
+["LastAttempt"] = 17299.1666349,
+["LastSeen"] = 17298.9794947,
 },
-["Player-3675-0AF8789A"] = {
+["Player-1175-0D8CFDE0"] = {
+["LastSeen"] = 29576.1243317,
 ["SpecId"] = 270,
-["LastSeen"] = 22560.9588524,
-["LastAttempt"] = 22560.5755213,
 },
-["Player-11-0EB68E03"] = {
-["SpecId"] = 71,
-["LastSeen"] = 37412.9352123,
+["Player-57-0DEEEC91"] = {
+["SpecId"] = 73,
+["LastAttempt"] = 24529.4384973,
+["LastSeen"] = 24529.7468886,
 },
 ["Player-84-0981540A"] = {
 ["SpecId"] = 70,
 ["LastAttempt"] = 16885.3175319,
 ["LastSeen"] = 17451.4155044,
 },
+["Player-11-0EB20C3F"] = {
+["SpecId"] = 250,
+["LastSeen"] = 20600.1156467,
+},
+["Player-3693-075FF652"] = {
+["SpecId"] = 70,
+["LastSeen"] = 5754.644896000001,
+["LastAttempt"] = 5706.247456800001,
+},
+["Player-3676-0E17A024"] = {
+["SpecId"] = 65,
+["LastSeen"] = 22586.9546318,
+["LastAttempt"] = 22586.7861616,
+},
+["Player-11-0EB23B00"] = {
+["LastSeen"] = 13956.4328591,
+["SpecId"] = 267,
+},
+["Player-11-0E8A38E4"] = {
+["SpecId"] = 73,
+["LastSeen"] = 33312.2712451,
+},
+["Player-11-0E466C99"] = {
+["SpecId"] = 252,
+["LastSeen"] = 851.2153461,
+},
+["Player-3675-0AF51222"] = {
+["SpecId"] = 72,
+["LastAttempt"] = 18712.0515155,
+["LastSeen"] = 18712.4605037,
+},
+["Player-11-0EB11881"] = {
+["LastSeen"] = 19224.4888507,
+["SpecId"] = 72,
+},
+["Player-3675-0AF8789A"] = {
+["SpecId"] = 270,
+["LastSeen"] = 22560.9588524,
+["LastAttempt"] = 22560.5755213,
+},
+["Player-11-0EACA44F"] = {
+["SpecId"] = 71,
+["LastSeen"] = 29000.2682752,
+["LastAttempt"] = 28999.9674242,
+},
+["Player-11-0DDE009B"] = {
+["SpecId"] = 71,
+["LastSeen"] = 40549.6497898,
+},
 ["Player-3683-0E136EC9"] = {
 ["SpecId"] = 577,
 ["LastSeen"] = 25697.1729588,
 },
-["Player-11-0EB20C3F"] = {
-["SpecId"] = 250,
-["LastSeen"] = 20600.1156467,
+["Player-11-0E89F24E"] = {
+["LastSeen"] = 9767.6001736,
+["SpecId"] = 259,
 },
 ["Player-3725-0C1E5367"] = {
 ["SpecId"] = 71,
@@ -7146,22 +7187,21 @@ FrameSortDB = {
 ["LastAttempt"] = 1199.5526208,
 ["LastSeen"] = 2286.5639089,
 },
-["Player-3693-075FF652"] = {
-["SpecId"] = 70,
-["LastSeen"] = 5754.644896000001,
-["LastAttempt"] = 5706.247456800001,
+["Player-11-0EB1E82C"] = {
+["LastSeen"] = 5911.5389547,
+["SpecId"] = 1468,
 },
-["Player-11-0E466C99"] = {
-["SpecId"] = 252,
-["LastSeen"] = 851.2153461,
-},
-["Player-11-0EB23B00"] = {
-["LastSeen"] = 13956.4328591,
-["SpecId"] = 267,
+["Player-11-0EB114C3"] = {
+["LastSeen"] = 3199.2709029,
+["SpecId"] = 62,
 },
 ["Player-1426-0DF42790"] = {
 ["LastSeen"] = 22928.3644542,
 ["SpecId"] = 269,
+},
+["Player-11-0E9D1508"] = {
+["SpecId"] = 70,
+["LastSeen"] = 10922.8979798,
 },
 ["Player-11-0EB6B96B"] = {
 ["SpecId"] = 265,
@@ -7171,9 +7211,10 @@ FrameSortDB = {
 ["SpecId"] = 266,
 ["LastSeen"] = 30862.6622638,
 },
-["Player-11-0EB11881"] = {
-["LastSeen"] = 19224.4888507,
-["SpecId"] = 72,
+["Player-1171-08433C3B"] = {
+["SpecId"] = 257,
+["LastAttempt"] = 23770.8308115,
+["LastSeen"] = 23905.8020117,
 },
 ["Player-11-0EB4689E"] = {
 ["SpecId"] = 64,
@@ -7191,18 +7232,18 @@ FrameSortDB = {
 ["LastSeen"] = 15888.3407221,
 ["SpecId"] = 103,
 },
-["Player-11-0EB1E82C"] = {
-["LastSeen"] = 5911.5389547,
-["SpecId"] = 1468,
+["Player-3676-0EDE3C11"] = {
+["LastSeen"] = 18623.6526356,
+["SpecId"] = 269,
 },
-["Player-1168-07E8792D"] = {
-["SpecId"] = 63,
-["LastAttempt"] = 31866.8857094,
-["LastSeen"] = 32075.3069416,
+["Player-3661-092FA280"] = {
+["SpecId"] = 270,
+["LastAttempt"] = 38697.44720700001,
+["LastSeen"] = 38698.6462521,
 },
-["Player-11-0E2AF44B"] = {
-["LastSeen"] = 9973.7454875,
-["SpecId"] = 65,
+["Player-77-0FD504E9"] = {
+["SpecId"] = 265,
+["LastSeen"] = 25721.3368223,
 },
 ["Player-1171-0A96AF02"] = {
 ["SpecId"] = 1467,
@@ -7218,59 +7259,56 @@ FrameSortDB = {
 ["SpecId"] = 1480,
 ["LastSeen"] = 19698.9007453,
 },
-["Player-77-0FD504E9"] = {
-["SpecId"] = 265,
-["LastSeen"] = 25721.3368223,
-},
-["Player-11-0EB114C3"] = {
-["LastSeen"] = 3199.2709029,
-["SpecId"] = 62,
-},
-["Player-11-0E9D61D5"] = {
+["Player-11-0E2AF44B"] = {
+["LastSeen"] = 9973.7454875,
 ["SpecId"] = 65,
-["LastSeen"] = 37199.1958364,
 },
-["Player-11-0EAB8377"] = {
-["LastSeen"] = 10863.8452385,
-["SpecId"] = 64,
-},
-["Player-11-0E9D1508"] = {
-["SpecId"] = 70,
-["LastSeen"] = 10922.8979798,
-},
-["Player-3684-0EE1710F"] = {
-["SpecId"] = 103,
-["LastSeen"] = 25802.3217616,
-},
-["Player-1171-08433C3B"] = {
-["SpecId"] = 257,
-["LastAttempt"] = 23770.8308115,
-["LastSeen"] = 23905.8020117,
-},
-["Player-3661-092FA280"] = {
-["SpecId"] = 270,
-["LastAttempt"] = 38697.44720700001,
-["LastSeen"] = 38698.6462521,
-},
-["Player-3683-0E213B83"] = {
-["SpecId"] = 264,
-["LastAttempt"] = 20767.3682496,
-["LastSeen"] = 20767.8423683,
-},
-["Player-1168-066EB14D"] = {
-["SpecId"] = 257,
-["LastAttempt"] = 17281.9566501,
-["LastSeen"] = 17282.4173038,
+["Player-11-0EB24BF5"] = {
+["SpecId"] = 252,
+["LastSeen"] = 30872.6983964,
 },
 ["Player-3723-0C2C231B"] = {
 ["SpecId"] = 64,
 ["LastSeen"] = 3721.943436,
 ["LastAttempt"] = 3404.3654477,
 },
+["Player-11-0EAB8377"] = {
+["LastSeen"] = 10863.8452385,
+["SpecId"] = 64,
+},
 ["Player-11-0E6C2810"] = {
 ["SpecId"] = 260,
 ["LastAttempt"] = 47800.2104772,
 ["LastSeen"] = 47800.5187051,
+},
+["Player-3684-0EE1710F"] = {
+["SpecId"] = 103,
+["LastSeen"] = 25802.3217616,
+},
+["Player-11-0E7DFE59"] = {
+["SpecId"] = 1480,
+["LastSeen"] = 49308.807278,
+},
+["Player-3675-0B019192"] = {
+["SpecId"] = 270,
+["LastSeen"] = 42295.7765835,
+},
+["Player-3676-0E472AFD"] = {
+["LastSeen"] = 19224.4887011,
+["SpecId"] = 1480,
+},
+["Player-11-0E7F2828"] = {
+["SpecId"] = 64,
+["LastSeen"] = 28938.8787402,
+},
+["Player-11-0B30CB28"] = {
+["SpecId"] = 269,
+["LastSeen"] = 16234.9929761,
+},
+["Player-1428-0E39F2CA"] = {
+["SpecId"] = 70,
+["LastSeen"] = 5492.249335500001,
+["LastAttempt"] = 5491.881236200001,
 },
 ["Player-11-0E9025CA"] = {
 ["SpecId"] = 257,
@@ -7293,30 +7331,32 @@ FrameSortDB = {
 ["LastSeen"] = 12582.5883338,
 ["LastAttempt"] = 11610.3121251,
 },
-["Player-11-0E7DFE59"] = {
-["SpecId"] = 1480,
-["LastSeen"] = 49308.807278,
+["Player-5-0B93B99B"] = {
+["SpecId"] = 64,
+["LastAttempt"] = 21238.0219128,
+["LastSeen"] = 21238.3088459,
 },
 ["Player-3723-0B053B19"] = {
 ["SpecId"] = 270,
 ["LastAttempt"] = 15486.6123392,
 ["LastSeen"] = 15486.9643402,
 },
-["Player-3675-0B019192"] = {
-["SpecId"] = 270,
-["LastSeen"] = 42295.7765835,
+["Player-11-0EB5F504"] = {
+["LastSeen"] = 14909.7761826,
+["SpecId"] = 264,
 },
-["Player-3676-0E472AFD"] = {
-["LastSeen"] = 19224.4887011,
-["SpecId"] = 1480,
+["Player-1136-0971AB19"] = {
+["SpecId"] = 254,
+["LastSeen"] = 3176.0288026,
+["LastAttempt"] = 3175.7459754,
 },
 ["Player-73-0FAAFD8E"] = {
 ["SpecId"] = 264,
 ["LastSeen"] = 47643.2788235,
 },
-["Player-11-0E7F2828"] = {
-["SpecId"] = 64,
-["LastSeen"] = 28938.8787402,
+["Player-11-0E76DCBD"] = {
+["SpecId"] = 70,
+["LastSeen"] = 4543.3434107,
 },
 ["Player-60-0F931FF1"] = {
 ["SpecId"] = 258,
@@ -7336,19 +7376,18 @@ FrameSortDB = {
 ["LastAttempt"] = 33722.1211858,
 ["LastSeen"] = 33722.45169,
 },
-["Player-1136-0971AB19"] = {
-["SpecId"] = 254,
-["LastSeen"] = 3176.0288026,
-["LastAttempt"] = 3175.7459754,
+["Player-11-0E476425"] = {
+["LastSeen"] = 34966.1594706,
+["SpecId"] = 264,
 },
-["Player-1185-0E579D85"] = {
-["SpecId"] = 252,
-["LastSeen"] = 42852.3737368,
+["Player-11-0E2913BC"] = {
+["SpecId"] = 256,
+["LastSeen"] = 9641.4287195,
 },
-["Player-5-0B93B99B"] = {
-["SpecId"] = 64,
-["LastAttempt"] = 21238.0219128,
-["LastSeen"] = 21238.3088459,
+["Player-60-0C92ACDC"] = {
+["SpecId"] = 103,
+["LastSeen"] = 7249.4216689,
+["LastAttempt"] = 5708.261593,
 },
 ["Player-1184-0B339488"] = {
 ["SpecId"] = 267,
@@ -7363,9 +7402,9 @@ FrameSortDB = {
 ["SpecId"] = 258,
 ["LastSeen"] = 42852.3742368,
 },
-["Player-60-0B7BCB2D"] = {
-["LastSeen"] = 14515.3152376,
-["SpecId"] = 73,
+["Player-11-0E42F7B2"] = {
+["SpecId"] = 263,
+["LastSeen"] = 44003.7004095,
 },
 ["Player-57-0DD6A2D9"] = {
 ["LastSeen"] = 21188.269323,
@@ -7375,51 +7414,9 @@ FrameSortDB = {
 ["SpecId"] = 62,
 ["LastSeen"] = 18286.7135805,
 },
-["Player-11-0EB5F504"] = {
-["LastSeen"] = 14909.7761826,
-["SpecId"] = 264,
-},
-["Player-11-0E42F7B2"] = {
-["SpecId"] = 263,
-["LastSeen"] = 44003.7004095,
-},
-["Player-11-0EA70B82"] = {
-["SpecId"] = 253,
-["LastSeen"] = 8552.454992500001,
-},
-["Player-57-0E1DF2A5"] = {
-["SpecId"] = 268,
-["LastSeen"] = 23033.0768495,
-["LastAttempt"] = 22589.3093142,
-},
-["Player-11-0E76DCBD"] = {
-["SpecId"] = 70,
-["LastSeen"] = 4543.3434107,
-},
-["Player-11-0E918F74"] = {
-["SpecId"] = 64,
-["LastSeen"] = 19698.9013662,
-},
-["Player-11-0B5B41D5"] = {
-["SpecId"] = 262,
-["LastSeen"] = 19698.9004902,
-},
 ["Player-11-0E15B858"] = {
 ["LastSeen"] = 10280.7929725,
 ["SpecId"] = 66,
-},
-["Player-11-0EB7C1AC"] = {
-["LastSeen"] = 11499.3422871,
-["SpecId"] = 256,
-},
-["Player-11-0E9C3793"] = {
-["LastSeen"] = 9976.623058700001,
-["SpecId"] = 269,
-},
-["Player-11-0E889055"] = {
-["SpecId"] = 64,
-["LastAttempt"] = 12908.5155582,
-["LastSeen"] = 12908.7449907,
 },
 ["Player-60-0F84D153"] = {
 ["SpecId"] = 256,
@@ -7430,18 +7427,62 @@ FrameSortDB = {
 ["LastAttempt"] = 14124.1891539,
 ["LastSeen"] = 16359.9867036,
 },
-["Player-11-0E06CC0C"] = {
-["LastSeen"] = 24060.4853225,
+["Player-57-0E1DF2A5"] = {
+["SpecId"] = 268,
+["LastSeen"] = 23033.0768495,
+["LastAttempt"] = 22589.3093142,
+},
+["Player-84-0AF3BA62"] = {
+["SpecId"] = 261,
+["LastSeen"] = 42852.3739426,
+},
+["Player-11-0E8FDAE0"] = {
+["LastSeen"] = 5777.175623200001,
 ["SpecId"] = 253,
+},
+["Player-11-0B5B41D5"] = {
+["SpecId"] = 262,
+["LastSeen"] = 19698.9004902,
+},
+["Player-3684-0E953A0B"] = {
+["SpecId"] = 252,
+["LastAttempt"] = 20959.1547253,
+["LastSeen"] = 22505.1049847,
+},
+["Player-11-0EB7C1AC"] = {
+["LastSeen"] = 11499.3422871,
+["SpecId"] = 256,
+},
+["Player-11-0E9C3793"] = {
+["LastSeen"] = 9976.623058700001,
+["SpecId"] = 269,
+},
+["Player-11-0AF2448B"] = {
+["SpecId"] = 64,
+["LastAttempt"] = 19700.4626087,
+["LastSeen"] = 19700.5839172,
+},
+["Player-11-0EB7A708"] = {
+["LastSeen"] = 29762.0055443,
+["SpecId"] = 70,
+},
+["Player-11-0AAD8EFA"] = {
+["LastSeen"] = 7418.054609600001,
+["SpecId"] = 581,
+},
+["Player-57-0DAC3B22"] = {
+["LastSeen"] = 13010.2886324,
+["SpecId"] = 256,
 },
 ["Player-60-0FED13D0"] = {
 ["SpecId"] = 64,
 ["LastSeen"] = 25728.4023661,
 ["LastAttempt"] = 25728.164579,
 },
-["Player-3678-0DE27D20"] = {
-["LastSeen"] = 19237.3281296,
-["SpecId"] = 64,
+["Player-1171-0A8E26BC"] = {
+["SpecId"] = 71,
+["LastAttempt"] = 2092.2638328,
+["LastSeen"] = 3644.7453638,
 },
 ["Player-11-0EB55038"] = {
 ["LastSeen"] = 22497.1239876,
@@ -7464,23 +7505,21 @@ FrameSortDB = {
 ["LastSeen"] = 33093.6682607,
 ["SpecId"] = 73,
 },
-["Player-1171-0A8E26BC"] = {
-["SpecId"] = 71,
-["LastAttempt"] = 2092.2638328,
-["LastSeen"] = 3644.7453638,
+["Player-11-0EA3F911"] = {
+["LastSeen"] = 10498.9667236,
+["SpecId"] = 72,
 },
-["Player-11-0EB7A708"] = {
-["LastSeen"] = 29762.0055443,
-["SpecId"] = 70,
+["Player-125-0767302E"] = {
+["SpecId"] = 261,
+["LastSeen"] = 21594.6177503,
 },
-["Player-3683-0E035871"] = {
-["SpecId"] = 269,
-["LastSeen"] = 31828.6267593,
-["LastAttempt"] = 31828.4459497,
+["Player-3684-0EA9EC5F"] = {
+["LastSeen"] = 19424.3016308,
+["SpecId"] = 73,
 },
-["Player-11-0AAD8EFA"] = {
-["LastSeen"] = 7418.054609600001,
-["SpecId"] = 581,
+["Player-104-0EA16ED3"] = {
+["SpecId"] = 1480,
+["LastSeen"] = 11497.9621367,
 },
 ["Player-120-06D30F1A"] = {
 ["SpecId"] = 72,
@@ -7495,25 +7534,27 @@ FrameSortDB = {
 ["SpecId"] = 64,
 ["LastSeen"] = 38289.2761234,
 },
-["Player-57-0DAC3B22"] = {
-["LastSeen"] = 13010.2886324,
-["SpecId"] = 256,
+["Player-115-02A293D4"] = {
+["SpecId"] = 70,
+["LastAttempt"] = 25713.0526763,
+["LastSeen"] = 25713.3471792,
 },
 ["Player-11-0EB13CBD"] = {
 ["LastSeen"] = 18596.4901795,
 ["SpecId"] = 253,
 },
-["Player-11-0E439FB3"] = {
-["SpecId"] = 266,
-["LastSeen"] = 38069.9332232,
+["Player-104-0EDCC12E"] = {
+["LastSeen"] = 23699.0809175,
+["SpecId"] = 577,
 },
 ["Player-1428-0928C168"] = {
 ["LastSeen"] = 3187.3930939,
 ["SpecId"] = 264,
 },
-["Player-11-0E85B9D5"] = {
-["SpecId"] = 268,
-["LastSeen"] = 37430.6808929,
+["Player-57-0DE5AF33"] = {
+["SpecId"] = 270,
+["LastSeen"] = 12572.6009746,
+["LastAttempt"] = 12130.2723162,
 },
 ["Player-53-0C633605"] = {
 ["SpecId"] = 577,
@@ -7546,22 +7587,18 @@ FrameSortDB = {
 ["LastSeen"] = 26381.922404,
 ["SpecId"] = 103,
 },
-["Player-11-0EA3F911"] = {
-["LastSeen"] = 10498.9667236,
-["SpecId"] = 72,
+["Player-5-0EB1B0D3"] = {
+["SpecId"] = 261,
+["LastSeen"] = 47691.9315031,
 },
-["Player-3684-0EA9EC5F"] = {
-["LastSeen"] = 19424.3016308,
-["SpecId"] = 73,
+["Player-76-0BDB217F"] = {
+["SpecId"] = 254,
+["LastSeen"] = 45425.91578520001,
+["LastAttempt"] = 45347.8477035,
 },
-["Player-104-0EA16ED3"] = {
-["SpecId"] = 1480,
-["LastSeen"] = 11497.9621367,
-},
-["Player-115-02A293D4"] = {
+["Player-1168-0935C3F0"] = {
 ["SpecId"] = 70,
-["LastAttempt"] = 25713.0526763,
-["LastSeen"] = 25713.3471792,
+["LastSeen"] = 10228.113855,
 },
 ["Player-11-0E9E2CC9"] = {
 ["LastSeen"] = 27855.4909744,
@@ -7571,35 +7608,40 @@ FrameSortDB = {
 ["SpecId"] = 72,
 ["LastSeen"] = 31162.885168,
 },
-["Player-3676-0A03D793"] = {
-["LastSeen"] = 14515.3150597,
-["SpecId"] = 1480,
-},
-["Player-11-0E91522C"] = {
-["LastSeen"] = 17477.6217519,
-["SpecId"] = 254,
+["Player-9-0DD7E7E8"] = {
+["SpecId"] = 252,
+["LastSeen"] = 16268.5868317,
+["LastAttempt"] = 15844.9848813,
 },
 ["Player-3675-09FF3229"] = {
 ["LastSeen"] = 2314.4234258,
 ["SpecId"] = 258,
 },
-["Player-1168-0935C3F0"] = {
-["SpecId"] = 70,
-["LastSeen"] = 10228.113855,
+["Player-11-0E91522C"] = {
+["LastSeen"] = 17477.6217519,
+["SpecId"] = 254,
 },
-["Player-73-0FF61E21"] = {
-["SpecId"] = 71,
-["LastAttempt"] = 22038.8630232,
-["LastSeen"] = 22025.5213142,
+["Player-9-0E29818F"] = {
+["SpecId"] = 263,
+["LastAttempt"] = 42446.5940053,
+["LastSeen"] = 42446.8905902,
+},
+["Player-11-0EB63708"] = {
+["LastSeen"] = 43616.3093353,
+["SpecId"] = 264,
+},
+["Player-11-0E9C4066"] = {
+["LastSeen"] = 2166.4495001,
+["SpecId"] = 70,
 },
 ["Player-63-0FE8DFA8"] = {
 ["SpecId"] = 1480,
 ["LastSeen"] = 34176.6868329,
 },
-["Player-9-0DD7E7E8"] = {
-["SpecId"] = 252,
-["LastSeen"] = 16268.5868317,
-["LastAttempt"] = 15844.9848813,
+["Player-1138-07B4F0E2"] = {
+["SpecId"] = 267,
+["LastAttempt"] = 13391.4929924,
+["LastSeen"] = 17467.5318165,
 },
 ["Player-11-0E60CC04"] = {
 ["SpecId"] = 265,
@@ -7610,27 +7652,27 @@ FrameSortDB = {
 ["SpecId"] = 261,
 ["LastSeen"] = 17078.1997808,
 },
-["Player-117-00418BF4"] = {
-["SpecId"] = 65,
-["LastSeen"] = 25725.7016311,
+["Player-11-0E899250"] = {
+["SpecId"] = 66,
+["LastSeen"] = 11107.4673113,
 },
-["Player-3723-0B06FEA8"] = {
-["SpecId"] = 256,
-["LastSeen"] = 4553.424098500001,
+["Player-86-05DAF98C"] = {
+["SpecId"] = 104,
+["LastSeen"] = 45300.0349424,
+["LastAttempt"] = 44872.6595276,
 },
 ["Player-64-06750E05"] = {
 ["SpecId"] = 270,
 ["LastAttempt"] = 42840.40886880001,
 ["LastSeen"] = 42840.7177718,
 },
-["Player-11-0EB63708"] = {
-["LastSeen"] = 43616.3093353,
-["SpecId"] = 264,
+["Player-1175-0FE20647"] = {
+["LastSeen"] = 14515.3152707,
+["SpecId"] = 65,
 },
-["Player-69-00676E71"] = {
-["SpecId"] = 260,
-["LastAttempt"] = 20846.1262521,
-["LastSeen"] = 20846.4819609,
+["Player-127-08850C24"] = {
+["SpecId"] = 70,
+["LastSeen"] = 30086.7571273,
 },
 ["Player-57-0E291D02"] = {
 ["SpecId"] = 267,
@@ -7641,14 +7683,15 @@ FrameSortDB = {
 ["LastSeen"] = 29697.7593592,
 ["LastAttempt"] = 29697.4402269,
 },
-["Player-11-0E9C4066"] = {
-["LastSeen"] = 2166.4495001,
-["SpecId"] = 70,
+["Player-3694-0A695ABD"] = {
+["SpecId"] = 255,
+["LastSeen"] = 28236.0065197,
+["LastAttempt"] = 28235.7197834,
 },
-["Player-1138-07B4F0E2"] = {
-["SpecId"] = 267,
-["LastAttempt"] = 13391.4929924,
-["LastSeen"] = 17467.5318165,
+["Player-57-0DDBF1F1"] = {
+["SpecId"] = 72,
+["LastSeen"] = 20160.7848906,
+["LastAttempt"] = 20156.3894649,
 },
 ["Player-11-0E942933"] = {
 ["LastSeen"] = 22781.4677083,
@@ -7658,17 +7701,17 @@ FrameSortDB = {
 ["SpecId"] = 253,
 ["LastSeen"] = 18082.0382388,
 },
-["Player-11-0DB60454"] = {
-["LastSeen"] = 24414.1423882,
-["SpecId"] = 65,
+["Player-11-0EB4CC31"] = {
+["LastSeen"] = 11927.0384605,
+["SpecId"] = 70,
 },
 ["Player-3694-06E51F40"] = {
 ["SpecId"] = 265,
 ["LastSeen"] = 42495.1235079,
 },
-["Player-11-0E899250"] = {
-["SpecId"] = 66,
-["LastSeen"] = 11107.4673113,
+["Player-11-0DB60454"] = {
+["LastSeen"] = 24414.1423882,
+["SpecId"] = 65,
 },
 ["Player-3694-0AE38EF7"] = {
 ["SpecId"] = 262,
@@ -7683,9 +7726,9 @@ FrameSortDB = {
 ["LastSeen"] = 3001.5232992,
 ["SpecId"] = 254,
 },
-["Player-1175-0FE20647"] = {
-["LastSeen"] = 14515.3152707,
-["SpecId"] = 65,
+["Player-11-0E4B0156"] = {
+["SpecId"] = 71,
+["LastSeen"] = 4549.8745049,
 },
 ["Player-11-0E87BC5C"] = {
 ["LastSeen"] = 15390.0828563,
@@ -7696,33 +7739,32 @@ FrameSortDB = {
 ["LastAttempt"] = 50298.14592530001,
 ["LastSeen"] = 50890.8270304,
 },
-["Player-127-08850C24"] = {
-["SpecId"] = 70,
-["LastSeen"] = 30086.7571273,
+["Player-11-0E02C153"] = {
+["SpecId"] = 64,
+["LastSeen"] = 30907.7935952,
 },
-["Player-3694-0A695ABD"] = {
-["SpecId"] = 255,
-["LastSeen"] = 28236.0065197,
-["LastAttempt"] = 28235.7197834,
+["Player-9-09EACF75"] = {
+["SpecId"] = 263,
+["LastAttempt"] = 31130.2929174,
+["LastSeen"] = 31159.4299782,
 },
 ["Player-3725-0C5E8C7E"] = {
 ["SpecId"] = 270,
 ["LastSeen"] = 22560.176195,
 ["LastAttempt"] = 22559.6440807,
 },
-["Player-57-0DDBF1F1"] = {
-["SpecId"] = 72,
-["LastSeen"] = 20160.7848906,
-["LastAttempt"] = 20156.3894649,
+["Player-11-0E445CF3"] = {
+["LastSeen"] = 10010.9633977,
+["SpecId"] = 1468,
 },
-["Player-11-0EB4CC31"] = {
-["LastSeen"] = 11927.0384605,
-["SpecId"] = 70,
+["Player-1136-09810E11"] = {
+["SpecId"] = 253,
+["LastAttempt"] = 30562.7573896,
+["LastSeen"] = 30563.0588046,
 },
-["Player-52-0CA8F5B1"] = {
-["SpecId"] = 254,
-["LastSeen"] = 33206.7427201,
-["LastAttempt"] = 32978.86792010001,
+["Player-11-0EB50EEA"] = {
+["LastSeen"] = 2135.4972623,
+["SpecId"] = 261,
 },
 ["Player-11-0DE8B074"] = {
 ["SpecId"] = 70,
@@ -7736,18 +7778,19 @@ FrameSortDB = {
 ["SpecId"] = 70,
 ["LastSeen"] = 13241.3026601,
 },
-["Player-11-0EB50EEA"] = {
-["LastSeen"] = 2135.4972623,
-["SpecId"] = 261,
+["Player-11-0EB2627B"] = {
+["SpecId"] = 1480,
+["LastAttempt"] = 54896.82282720001,
+["LastSeen"] = 54897.0877779,
 },
-["Player-11-0E02C153"] = {
-["SpecId"] = 64,
-["LastSeen"] = 30907.7935952,
+["Player-3684-0E214351"] = {
+["SpecId"] = 252,
+["LastSeen"] = 23238.6364771,
+["LastAttempt"] = 22573.2514186,
 },
-["Player-9-09EACF75"] = {
-["SpecId"] = 263,
-["LastAttempt"] = 31130.2929174,
-["LastSeen"] = 31159.4299782,
+["Player-11-0EB58E41"] = {
+["SpecId"] = 70,
+["LastSeen"] = 30808.7639655,
 },
 ["Player-11-0EAAD5F7"] = {
 ["SpecId"] = 252,
@@ -7758,29 +7801,32 @@ FrameSortDB = {
 ["LastSeen"] = 6347.2695634,
 ["LastAttempt"] = 5709.2760673,
 },
-["Player-11-0EB58E41"] = {
-["SpecId"] = 70,
-["LastSeen"] = 30808.7639655,
+["Player-57-0DFC1BD8"] = {
+["SpecId"] = 264,
+["LastAttempt"] = 16675.4974032,
+["LastSeen"] = 17475.2712222,
 },
-["Player-11-0E7B890C"] = {
-["LastSeen"] = 14947.4009889,
-["SpecId"] = 66,
+["Player-3725-0C476569"] = {
+["LastSeen"] = 14515.3151623,
+["SpecId"] = 253,
 },
 ["Player-11-0EB0B2EC"] = {
 ["SpecId"] = 253,
 ["LastSeen"] = 38204.230625,
 },
-["Player-76-0BF79209"] = {
-["SpecId"] = 72,
-["LastSeen"] = 52025.0449152,
+["Player-3725-0BE872D2"] = {
+["SpecId"] = 70,
+["LastSeen"] = 35962.9553371,
+["LastAttempt"] = 35962.4687892,
 },
 ["Player-3676-0EDE5A81"] = {
 ["SpecId"] = 72,
 ["LastSeen"] = 16103.3981303,
 },
-["Player-1425-0EE1E9CF"] = {
-["LastSeen"] = 14696.3584031,
-["SpecId"] = 266,
+["Player-1185-0E446959"] = {
+["SpecId"] = 251,
+["LastSeen"] = 17191.1781992,
+["LastAttempt"] = 17190.8336839,
 },
 ["Player-11-0EB83DEC"] = {
 ["LastSeen"] = 7242.213169500001,
@@ -7790,53 +7836,49 @@ FrameSortDB = {
 ["LastSeen"] = 9242.6774456,
 ["SpecId"] = 254,
 },
-["Player-3684-0E214351"] = {
-["SpecId"] = 252,
-["LastSeen"] = 23238.6364771,
-["LastAttempt"] = 22573.2514186,
+["Player-52-0E0824D5"] = {
+["SpecId"] = 64,
+["LastAttempt"] = 21212.9610399,
+["LastSeen"] = 21213.6206461,
 },
-["Player-11-0EB5251A"] = {
-["LastSeen"] = 13468.260759,
-["SpecId"] = 255,
+["Player-86-0A39C342"] = {
+["LastSeen"] = 19237.3284786,
+["SpecId"] = 256,
 },
 ["Player-76-0C1908A9"] = {
 ["SpecId"] = 270,
 ["LastSeen"] = 6837.266706500001,
 ["LastAttempt"] = 4974.8140449,
 },
-["Player-5-0E3B96F7"] = {
-["SpecId"] = 252,
-["LastSeen"] = 2313.9973131,
-["LastAttempt"] = 2313.7828818,
+["Player-11-0EB01C16"] = {
+["SpecId"] = 256,
+["LastAttempt"] = 18269.0812129,
+["LastSeen"] = 18269.6020245,
 },
-["Player-57-0DFC1BD8"] = {
-["SpecId"] = 264,
-["LastAttempt"] = 16675.4974032,
-["LastSeen"] = 17475.2712222,
+["Player-162-0B434D99"] = {
+["LastSeen"] = 35960.4102456,
+["SpecId"] = 70,
 },
 ["Player-3675-0AA966D7"] = {
 ["LastSeen"] = 15433.1162965,
 ["SpecId"] = 251,
 },
-["Player-3725-0BE872D2"] = {
-["SpecId"] = 70,
-["LastSeen"] = 35962.9553371,
-["LastAttempt"] = 35962.4687892,
+["Player-3675-0ADC37CF"] = {
+["SpecId"] = 1468,
+["LastSeen"] = 48002.9956461,
 },
 ["Player-60-0F86F076"] = {
 ["SpecId"] = 270,
 ["LastAttempt"] = 17283.4772372,
 ["LastSeen"] = 17284.50476,
 },
-["Player-52-0E0824D5"] = {
-["SpecId"] = 64,
-["LastAttempt"] = 21212.9610399,
-["LastSeen"] = 21213.6206461,
+["Player-11-05E7B633"] = {
+["SpecId"] = 72,
+["LastSeen"] = 37202.15942890001,
 },
-["Player-1185-0E446959"] = {
-["SpecId"] = 251,
-["LastSeen"] = 17191.1781992,
-["LastAttempt"] = 17190.8336839,
+["Player-5-0A9DAA02"] = {
+["LastSeen"] = 29576.1247091,
+["SpecId"] = 64,
 },
 ["Player-11-0E809676"] = {
 ["SpecId"] = 577,
@@ -7847,27 +7889,29 @@ FrameSortDB = {
 ["LastAttempt"] = 43001.0129633,
 ["LastSeen"] = 43001.2333728,
 },
-["Player-11-0EB01C16"] = {
-["SpecId"] = 256,
-["LastAttempt"] = 18269.0812129,
-["LastSeen"] = 18269.6020245,
+["Player-76-0B23C62C"] = {
+["SpecId"] = 264,
+["LastAttempt"] = 27360.5475959,
+["LastSeen"] = 27360.8407228,
 },
 ["Player-57-0E22388C"] = {
 ["SpecId"] = 256,
 ["LastSeen"] = 11415.7526914,
 ["LastAttempt"] = 11415.4063778,
 },
-["Player-86-0A39C342"] = {
-["LastSeen"] = 19237.3284786,
-["SpecId"] = 256,
+["Player-11-0E6EA27D"] = {
+["SpecId"] = 1480,
+["LastSeen"] = 19698.9009407,
 },
-["Player-162-0B434D99"] = {
-["LastSeen"] = 35960.4102456,
-["SpecId"] = 70,
+["Player-11-0EAC26DB"] = {
+["SpecId"] = 270,
+["LastSeen"] = 29303.9921054,
+["LastAttempt"] = 29303.608939,
 },
-["Player-3675-0ADC37CF"] = {
-["SpecId"] = 1468,
-["LastSeen"] = 48002.9956461,
+["Player-53-0C607748"] = {
+["SpecId"] = 577,
+["LastAttempt"] = 52242.00579990001,
+["LastSeen"] = 52373.1324496,
 },
 ["Player-1136-0914799B"] = {
 ["SpecId"] = 72,
@@ -7879,76 +7923,43 @@ FrameSortDB = {
 ["LastAttempt"] = 17350.1492553,
 ["LastSeen"] = 17350.4701597,
 },
-["Player-11-0E58A2A1"] = {
-["LastSeen"] = 11038.5059526,
-["SpecId"] = 253,
+["Player-11-0E9AD847"] = {
+["SpecId"] = 102,
+["LastSeen"] = 47696.31941410001,
 },
 ["Player-158-0BB57679"] = {
 ["SpecId"] = 266,
 ["LastSeen"] = 47136.8020552,
 },
-["Player-57-0D4D674A"] = {
+["Player-127-0AFC9AEA"] = {
 ["SpecId"] = 254,
-["LastSeen"] = 3632.4283514,
-["LastAttempt"] = 3632.0047574,
-},
-["Player-11-0E6EA27D"] = {
-["SpecId"] = 1480,
-["LastSeen"] = 19698.9009407,
-},
-["Player-11-0A932D71"] = {
-["LastSeen"] = 30744.1828583,
-["SpecId"] = 70,
-},
-["Player-76-0B23C62C"] = {
-["SpecId"] = 264,
-["LastAttempt"] = 27360.5475959,
-["LastSeen"] = 27360.8407228,
-},
-["Player-11-0EAC26DB"] = {
-["SpecId"] = 270,
-["LastSeen"] = 29303.9921054,
-["LastAttempt"] = 29303.608939,
-},
-["Player-11-0E78BDC6"] = {
-["SpecId"] = 263,
-["LastSeen"] = 10724.8364771,
-},
-["Player-53-0C607748"] = {
-["SpecId"] = 577,
-["LastAttempt"] = 52242.00579990001,
-["LastSeen"] = 52373.1324496,
-},
-["Player-11-0E9AD847"] = {
-["SpecId"] = 102,
-["LastSeen"] = 47696.31941410001,
-},
-["Player-76-0BBCF9B8"] = {
-["SpecId"] = 64,
-["LastSeen"] = 22574.1175963,
-["LastAttempt"] = 22573.7516838,
-},
-["Player-11-0E4ACAB0"] = {
-["SpecId"] = 64,
-["LastSeen"] = 29924.0099401,
-},
-["Player-3685-0ED91587"] = {
-["SpecId"] = 64,
-["LastSeen"] = 16000.9292434,
-["LastAttempt"] = 15847.0017768,
+["LastSeen"] = 2483.5394786,
+["LastAttempt"] = 2483.3285057,
 },
 ["Player-11-0BD1D46D"] = {
 ["SpecId"] = 70,
 ["LastSeen"] = 30836.8596994,
 },
-["Player-104-0EAB45C0"] = {
-["SpecId"] = 257,
-["LastSeen"] = 21553.2167849,
-["LastAttempt"] = 21378.9373199,
+["Player-11-0A932D71"] = {
+["LastSeen"] = 30744.1828583,
+["SpecId"] = 70,
 },
-["Player-11-0E6CC73B"] = {
-["LastSeen"] = 18152.4429333,
-["SpecId"] = 1480,
+["Player-11-0EB58766"] = {
+["SpecId"] = 268,
+["LastSeen"] = 9531.7964665,
+},
+["Player-1070-0E2933D9"] = {
+["SpecId"] = 71,
+["LastAttempt"] = 51493.0214542,
+["LastSeen"] = 52454.8391675,
+},
+["Player-11-0E78BDC6"] = {
+["SpecId"] = 263,
+["LastSeen"] = 10724.8364771,
+},
+["Player-11-0DC783F4"] = {
+["LastSeen"] = 43318.9245993,
+["SpecId"] = 261,
 },
 ["Player-11-0EB389B0"] = {
 ["SpecId"] = 254,
@@ -7960,14 +7971,46 @@ FrameSortDB = {
 ["LastSeen"] = 14888.7137693,
 ["LastAttempt"] = 14879.0169335,
 },
+["Player-11-0EB34182"] = {
+["SpecId"] = 66,
+["LastSeen"] = 40569.5858657,
+},
+["Player-3685-0ED91587"] = {
+["SpecId"] = 64,
+["LastSeen"] = 16000.9292434,
+["LastAttempt"] = 15847.0017768,
+},
 ["Player-3684-0E27B001"] = {
 ["SpecId"] = 70,
 ["LastSeen"] = 51759.1253889,
 ["LastAttempt"] = 51718.4954173,
 },
-["Player-11-0EB34182"] = {
-["SpecId"] = 66,
-["LastSeen"] = 40569.5858657,
+["Player-11-0E6CC73B"] = {
+["LastSeen"] = 18152.4429333,
+["SpecId"] = 1480,
+},
+["Player-1151-068D461F"] = {
+["SpecId"] = 70,
+["LastSeen"] = 37770.852301,
+["LastAttempt"] = 37770.640542,
+},
+["Player-11-0B682D4B"] = {
+["SpecId"] = 256,
+["LastSeen"] = 564.2391807,
+},
+["Player-3693-072C1590"] = {
+["LastSeen"] = 29528.1785044,
+["SpecId"] = 70,
+},
+["Player-1171-0906E396"] = {
+["SpecId"] = 73,
+["LastSeen"] = 29276.6102668,
+["LastAttempt"] = 29276.2351713,
+},
+["Player-1071-0964CDAA"] = {
+["SpecId"] = 577,
+["LastAttempt"] = 20532.1660195,
+["LastSeen"] = 20532.4093903,
 },
 ["Player-11-0E400E25"] = {
 ["SpecId"] = 1473,
@@ -7986,46 +8029,15 @@ FrameSortDB = {
 ["SpecId"] = 258,
 ["LastSeen"] = 10044.0240587,
 },
-["Player-11-0E39AF4F"] = {
-["LastSeen"] = 3666.3337724,
-["SpecId"] = 270,
+["Player-60-0FC85C43"] = {
+["SpecId"] = 105,
+["LastAttempt"] = 35391.1210453,
+["LastSeen"] = 35390.9409151,
 },
 ["Player-77-0F9AF48A"] = {
 ["SpecId"] = 64,
 ["LastAttempt"] = 20552.4497932,
 ["LastSeen"] = 20552.6871899,
-},
-["Player-5-0EA16E5B"] = {
-["LastSeen"] = 19224.4889515,
-["SpecId"] = 252,
-},
-["Player-11-0B682D4B"] = {
-["SpecId"] = 256,
-["LastSeen"] = 564.2391807,
-},
-["Player-1171-0906E396"] = {
-["SpecId"] = 73,
-["LastSeen"] = 29276.6102668,
-["LastAttempt"] = 29276.2351713,
-},
-["Player-3693-072C1590"] = {
-["LastSeen"] = 29528.1785044,
-["SpecId"] = 70,
-},
-["Player-1071-0964CDAA"] = {
-["SpecId"] = 577,
-["LastAttempt"] = 20532.1660195,
-["LastSeen"] = 20532.4093903,
-},
-["Player-11-0EA2B21A"] = {
-["SpecId"] = 63,
-["LastSeen"] = 53260.577419,
-["LastAttempt"] = 53260.2649506,
-},
-["Player-60-0FC85C43"] = {
-["SpecId"] = 105,
-["LastAttempt"] = 35391.1210453,
-["LastSeen"] = 35390.9409151,
 },
 ["Player-3725-0C580DF2"] = {
 ["SpecId"] = 105,
@@ -8036,6 +8048,36 @@ FrameSortDB = {
 ["SpecId"] = 1480,
 ["LastAttempt"] = 17164.1970357,
 ["LastSeen"] = 17164.5418667,
+},
+["Player-3725-0C17CFA8"] = {
+["LastSeen"] = 2165.5017707,
+["SpecId"] = 1467,
+},
+["Player-57-0E182C80"] = {
+["LastSeen"] = 2364.551469,
+["SpecId"] = 103,
+},
+["Player-11-0E556970"] = {
+["SpecId"] = 259,
+["LastAttempt"] = 3579.1148722,
+["LastSeen"] = 3579.3996211,
+},
+["Player-11-0EA2B21A"] = {
+["SpecId"] = 63,
+["LastSeen"] = 53260.577419,
+["LastAttempt"] = 53260.2649506,
+},
+["Player-11-0EB47EB1"] = {
+["LastSeen"] = 11419.4720914,
+["SpecId"] = 1467,
+},
+["Player-11-0E8F4083"] = {
+["SpecId"] = 262,
+["LastSeen"] = 10783.3443287,
+},
+["Player-3676-0E1EAEF0"] = {
+["LastSeen"] = 14515.3153417,
+["SpecId"] = 64,
 },
 ["Player-1185-0EA0AD57"] = {
 ["LastSeen"] = 11415.7529016,
@@ -8054,45 +8096,46 @@ FrameSortDB = {
 ["LastSeen"] = 46111.14051400001,
 ["SpecId"] = 102,
 },
-["Player-11-0EAF45C7"] = {
-["SpecId"] = 65,
-["LastSeen"] = 2038.0183195,
+["Player-11-0E7475E6"] = {
+["SpecId"] = 1480,
+["LastSeen"] = 19353.7895017,
 },
-["Player-3725-0C17CFA8"] = {
-["LastSeen"] = 2165.5017707,
-["SpecId"] = 1467,
+["Player-11-0EA18DDC"] = {
+["LastSeen"] = 22510.4934771,
+["SpecId"] = 70,
 },
-["Player-3675-0B07A8AC"] = {
-["SpecId"] = 102,
-["LastSeen"] = 11627.97298,
-["LastAttempt"] = 11627.6009823,
+["Player-3725-08E2CD68"] = {
+["SpecId"] = 264,
+["LastSeen"] = 29277.2483011,
+["LastAttempt"] = 29276.7453829,
 },
 ["Player-11-0E6091C2"] = {
 ["SpecId"] = 64,
 ["LastSeen"] = 27451.3529613,
 ["LastAttempt"] = 27451.0510865,
 },
+["Player-3675-0B07A8AC"] = {
+["SpecId"] = 102,
+["LastSeen"] = 11627.97298,
+["LastAttempt"] = 11627.6009823,
+},
 ["Player-1185-0D632889"] = {
 ["SpecId"] = 1480,
 ["LastSeen"] = 5981.4780859,
 ["LastAttempt"] = 4975.7756707,
 },
-["Player-11-0EB47EB1"] = {
-["LastSeen"] = 11419.4720914,
-["SpecId"] = 1467,
-},
 ["Player-3725-0C5E3EF8"] = {
 ["LastSeen"] = 14507.6481008,
 ["SpecId"] = 1480,
 },
-["Player-11-0E7475E6"] = {
-["SpecId"] = 1480,
-["LastSeen"] = 19353.7895017,
+["Player-1184-0B75E493"] = {
+["SpecId"] = 254,
+["LastAttempt"] = 17163.6960305,
+["LastSeen"] = 17164.0370947,
 },
-["Player-11-0DEC4718"] = {
-["SpecId"] = 270,
-["LastSeen"] = 20130.3683734,
-["LastAttempt"] = 20130.1941657,
+["Player-11-0E25C78F"] = {
+["LastSeen"] = 26243.2672803,
+["SpecId"] = 265,
 },
 ["Player-11-0EB7F475"] = {
 ["LastSeen"] = 1374.7268738,
@@ -8102,72 +8145,72 @@ FrameSortDB = {
 ["LastSeen"] = 14499.8146572,
 ["SpecId"] = 70,
 },
-["Player-3725-08E2CD68"] = {
-["SpecId"] = 264,
-["LastSeen"] = 29277.2483011,
-["LastAttempt"] = 29276.7453829,
-},
-["Player-11-0EA18DDC"] = {
-["LastSeen"] = 22510.4934771,
-["SpecId"] = 70,
+["Player-76-0C1F1272"] = {
+["SpecId"] = 259,
+["LastAttempt"] = 1003.6381717,
+["LastSeen"] = 3259.0557731,
 },
 ["Player-1168-0ADC559D"] = {
 ["SpecId"] = 251,
 ["LastAttempt"] = 39316.86193090001,
 ["LastSeen"] = 39316.9730952,
 },
-["Player-1184-0B75E493"] = {
-["SpecId"] = 254,
-["LastAttempt"] = 17163.6960305,
-["LastSeen"] = 17164.0370947,
+["Player-11-0E78D55C"] = {
+["SpecId"] = 253,
+["LastSeen"] = 29628.2149089,
+},
+["Player-11-0E75DE02"] = {
+["LastSeen"] = 21774.0986853,
+["SpecId"] = 72,
 },
 ["Player-121-003A878F"] = {
 ["SpecId"] = 260,
 ["LastSeen"] = 2361.2331401,
 ["LastAttempt"] = 2360.8878305,
 },
-["Player-11-0E8D6CEC"] = {
-["SpecId"] = 70,
-["LastSeen"] = 8628.761154,
+["Player-11-0A804068"] = {
+["SpecId"] = 251,
+["LastAttempt"] = 13010.1164636,
+["LastSeen"] = 12889.344548,
 },
-["Player-11-0E25C78F"] = {
-["LastSeen"] = 26243.2672803,
-["SpecId"] = 265,
+["Player-11-0B64F29C"] = {
+["SpecId"] = 266,
+["LastSeen"] = 38270.4740471,
 },
 ["Player-11-0EA2DC4E"] = {
 ["LastSeen"] = 25201.2290245,
 ["SpecId"] = 268,
 },
-["Player-76-0C1F1272"] = {
-["SpecId"] = 259,
-["LastAttempt"] = 1003.6381717,
-["LastSeen"] = 3259.0557731,
-},
-["Player-162-0BEFF19E"] = {
+["Player-11-0E822BAA"] = {
+["LastSeen"] = 2228.2551476,
 ["SpecId"] = 105,
-["LastSeen"] = 19698.9008958,
 },
-["Player-3678-0D61AF54"] = {
-["SpecId"] = 1467,
-["LastSeen"] = 41676.3779291,
+["Player-86-0AE63C73"] = {
+["SpecId"] = 254,
+["LastSeen"] = 37048.9552051,
+["LastAttempt"] = 37049.1894387,
 },
-["Player-11-0E75DE02"] = {
-["LastSeen"] = 21774.0986853,
-["SpecId"] = 72,
+["Player-11-0EB16CEB"] = {
+["SpecId"] = 269,
+["LastSeen"] = 12000.5371745,
 },
-["Player-11-0A804068"] = {
-["SpecId"] = 251,
-["LastAttempt"] = 13010.1164636,
-["LastSeen"] = 12889.344548,
+["Player-77-0CCF3A26"] = {
+["SpecId"] = 105,
+["LastSeen"] = 6825.2641811,
+["LastAttempt"] = 5671.356229100001,
+},
+["Player-11-0DCB6A6D"] = {
+["LastSeen"] = 4286.6457663,
+["SpecId"] = 262,
 },
 ["Player-60-0F868519"] = {
 ["SpecId"] = 71,
 ["LastSeen"] = 25729.9782847,
 ["LastAttempt"] = 25729.6764954,
 },
-["Player-11-0B64F29C"] = {
-["SpecId"] = 266,
-["LastSeen"] = 38270.4740471,
+["Player-11-0E782A9D"] = {
+["SpecId"] = 251,
+["LastSeen"] = 48286.3936475,
 },
 ["Player-73-0F662250"] = {
 ["SpecId"] = 254,
@@ -8179,36 +8222,34 @@ FrameSortDB = {
 ["LastSeen"] = 16140.0066574,
 ["LastAttempt"] = 16139.765851,
 },
-["Player-11-0E822BAA"] = {
-["LastSeen"] = 2228.2551476,
-["SpecId"] = 105,
+["Player-3678-0D61AF54"] = {
+["SpecId"] = 1467,
+["LastSeen"] = 41676.3779291,
 },
-["Player-11-0EB16CEB"] = {
-["SpecId"] = 269,
-["LastSeen"] = 12000.5371745,
-},
-["Player-86-0AE63C73"] = {
+["Player-11-0EA68AE8"] = {
+["LastSeen"] = 3396.2916579,
 ["SpecId"] = 254,
-["LastSeen"] = 37048.9552051,
-["LastAttempt"] = 37049.1894387,
+},
+["Player-11-0EB50BD8"] = {
+["SpecId"] = 577,
+["LastSeen"] = 17479.274657,
 },
 ["Player-11-0EAEDF3A"] = {
 ["LastSeen"] = 2165.5012173,
 ["SpecId"] = 256,
 },
-["Player-77-0CCF3A26"] = {
+["Player-160-0AB6D82C"] = {
+["LastSeen"] = 11415.7529897,
+["SpecId"] = 251,
+},
+["Player-11-0AFA76BA"] = {
+["SpecId"] = 256,
+["LastAttempt"] = 28460.6783665,
+["LastSeen"] = 29968.0587565,
+},
+["Player-11-0E310D31"] = {
 ["SpecId"] = 105,
-["LastSeen"] = 6825.2641811,
-["LastAttempt"] = 5671.356229100001,
-},
-["Player-11-0DCB6A6D"] = {
-["LastSeen"] = 4286.6457663,
-["SpecId"] = 262,
-},
-["Player-1428-0A98F67D"] = {
-["SpecId"] = 270,
-["LastSeen"] = 35968.6265705,
-["LastAttempt"] = 35968.2640069,
+["LastSeen"] = 31152.6702607,
 },
 ["Player-3675-0B09D39B"] = {
 ["SpecId"] = 256,
@@ -8219,56 +8260,23 @@ FrameSortDB = {
 ["SpecId"] = 577,
 ["LastSeen"] = 10015.9728641,
 },
-["Player-1138-091E1EFF"] = {
-["LastSeen"] = 21839.6140463,
-["SpecId"] = 260,
-},
-["Player-11-0E782A9D"] = {
-["SpecId"] = 251,
-["LastSeen"] = 48286.3936475,
-},
-["Player-11-0EB50BD8"] = {
-["SpecId"] = 577,
-["LastSeen"] = 17479.274657,
-},
-["Player-3678-0E2861F8"] = {
-["SpecId"] = 256,
-["LastSeen"] = 30552.8726416,
-},
-["Player-11-0E4F7624"] = {
-["SpecId"] = 261,
-["LastSeen"] = 42295.1801942,
-["LastAttempt"] = 42294.95333220001,
-},
-["Player-160-0AB6D82C"] = {
-["LastSeen"] = 11415.7529897,
-["SpecId"] = 251,
-},
-["Player-11-0DFA6C5D"] = {
-["LastSeen"] = 28474.12647,
-["SpecId"] = 269,
-},
-["Player-11-0EB21A80"] = {
-["LastSeen"] = 1301.9668547,
-["SpecId"] = 71,
+["Player-1428-0A98F67D"] = {
+["SpecId"] = 270,
+["LastSeen"] = 35968.6265705,
+["LastAttempt"] = 35968.2640069,
 },
 ["Player-1185-058FAD79"] = {
 ["LastSeen"] = 23643.7293829,
 ["SpecId"] = 63,
-},
-["Player-11-0E56B592"] = {
-["SpecId"] = 259,
-["LastSeen"] = 28879.7966015,
 },
 ["Player-3725-0C58534A"] = {
 ["SpecId"] = 265,
 ["LastAttempt"] = 13244.6683977,
 ["LastSeen"] = 13245.1971545,
 },
-["Player-11-0EB5C781"] = {
-["SpecId"] = 70,
-["LastSeen"] = 16924.1125497,
-["LastAttempt"] = 16923.8386579,
+["Player-3678-0E2861F8"] = {
+["SpecId"] = 256,
+["LastSeen"] = 30552.8726416,
 },
 ["Player-11-0EB6078F"] = {
 ["LastSeen"] = 12541.7198936,
@@ -8283,23 +8291,60 @@ FrameSortDB = {
 ["SpecId"] = 254,
 ["LastSeen"] = 17761.1695,
 },
-["Player-3684-0E0E36F5"] = {
+["Player-11-0DEF0A38"] = {
 ["SpecId"] = 270,
-["LastSeen"] = 22243.4003297,
+["LastSeen"] = 38733.5971451,
 },
-["Player-1138-09304758"] = {
-["SpecId"] = 258,
-["LastAttempt"] = 11301.0474641,
-["LastSeen"] = 11301.167187,
+["Player-1171-0ACA0F2B"] = {
+["SpecId"] = 270,
+["LastSeen"] = 16686.7035544,
+["LastAttempt"] = 16686.5517597,
+},
+["Player-11-0E56B592"] = {
+["SpecId"] = 259,
+["LastSeen"] = 28879.7966015,
+},
+["Player-11-0EB5D9F7"] = {
+["LastSeen"] = 21499.9437521,
+["SpecId"] = 64,
+},
+["Player-11-0EB5C781"] = {
+["SpecId"] = 70,
+["LastSeen"] = 16924.1125497,
+["LastAttempt"] = 16923.8386579,
+},
+["Player-11-0BDC718D"] = {
+["LastSeen"] = 27906.7793021,
+["SpecId"] = 70,
+},
+["Player-86-05E8651B"] = {
+["SpecId"] = 253,
+["LastAttempt"] = 23895.2102289,
+["LastSeen"] = 23895.5228434,
+},
+["Player-121-0AF4BA3B"] = {
+["SpecId"] = 270,
+["LastSeen"] = 24651.9887541,
 },
 ["Player-60-0FC1D5D8"] = {
 ["SpecId"] = 261,
 ["LastSeen"] = 2670.5650311,
 ["LastAttempt"] = 2670.2697085,
 },
-["Player-11-0EB5D9F7"] = {
-["LastSeen"] = 21499.9437521,
-["SpecId"] = 64,
+["Player-1138-09304758"] = {
+["SpecId"] = 258,
+["LastAttempt"] = 11301.0474641,
+["LastSeen"] = 11301.167187,
+},
+["Player-104-0C70DDF6"] = {
+["SpecId"] = 268,
+["LastSeen"] = 15846.8309366,
+["LastAttempt"] = 15846.5012387,
+},
+["Player-57-0DD54D20"] = {
+["SpecId"] = 66,
+["LastSeen"] = 48932.5511018,
+["LastAttempt"] = 48826.91626280001,
 },
 ["Player-120-07BB54A1"] = {
 ["SpecId"] = 261,
@@ -8310,54 +8355,28 @@ FrameSortDB = {
 ["SpecId"] = 577,
 ["LastSeen"] = 19658.3407424,
 },
-["Player-11-0BDC718D"] = {
-["LastSeen"] = 27906.7793021,
-["SpecId"] = 70,
-},
-["Player-1425-0E9FC72B"] = {
-["LastSeen"] = 31609.8580798,
-["SpecId"] = 65,
-},
 ["Player-11-0B1E3476"] = {
 ["SpecId"] = 70,
 ["LastSeen"] = 30570.0613659,
 ["LastAttempt"] = 30259.5069948,
 },
-["Player-11-0E968C15"] = {
-["LastSeen"] = 2326.4049417,
-["SpecId"] = 577,
-},
-["Player-60-0FE55A13"] = {
-["SpecId"] = 268,
-["LastSeen"] = 18701.7346756,
-},
-["Player-60-0FE9F03A"] = {
-["SpecId"] = 266,
-["LastAttempt"] = 21079.5691707,
-["LastSeen"] = 21080.5580668,
-},
-["Player-11-0EA827FD"] = {
-["LastSeen"] = 14846.4865969,
-["SpecId"] = 70,
-},
-["Player-77-0FDE973B"] = {
-["SpecId"] = 70,
-["LastSeen"] = 51328.18709460001,
+["Player-1425-0E9FC72B"] = {
+["LastSeen"] = 31609.8580798,
+["SpecId"] = 65,
 },
 ["Player-76-06B5250F"] = {
 ["SpecId"] = 253,
 ["LastAttempt"] = 42839.4090211,
 ["LastSeen"] = 42839.54747760001,
 },
-["Player-11-0E65DEA6"] = {
-["SpecId"] = 250,
-["LastAttempt"] = 17231.939939,
-["LastSeen"] = 17231.7722085,
-},
 ["Player-162-0BE64BAF"] = {
 ["SpecId"] = 64,
 ["LastSeen"] = 7221.904319,
 ["LastAttempt"] = 5335.609841400001,
+},
+["Player-60-0FE55A13"] = {
+["SpecId"] = 268,
+["LastSeen"] = 18701.7346756,
 },
 ["Player-11-0E4C7D88"] = {
 ["SpecId"] = 256,
@@ -8373,38 +8392,9 @@ FrameSortDB = {
 ["LastAttempt"] = 15948.4757086,
 ["LastSeen"] = 17427.3399726,
 },
-["Player-1129-0BF30413"] = {
-["SpecId"] = 258,
-["LastSeen"] = 245.8175895,
-["LastAttempt"] = 245.4704371,
-},
-["Player-1428-04993178"] = {
-["SpecId"] = 65,
-["LastAttempt"] = 19262.5795276,
-["LastSeen"] = 19266.3662433,
-},
-["Player-52-0E1DEAA4"] = {
-["SpecId"] = 105,
-["LastAttempt"] = 50298.65099,
-["LastSeen"] = 51992.82825770001,
-},
-["Player-11-0E86D905"] = {
-["SpecId"] = 263,
-["LastSeen"] = 4012.6516573,
-},
-["Player-77-0FB9D815"] = {
-["SpecId"] = 71,
-["LastAttempt"] = 47706.4173625,
-["LastSeen"] = 47706.76436430001,
-},
 ["Player-3725-0C14ADE1"] = {
 ["SpecId"] = 1467,
 ["LastSeen"] = 19697.9148436,
-},
-["Player-11-0EB32FBD"] = {
-["SpecId"] = 577,
-["LastAttempt"] = 17479.2767826,
-["LastSeen"] = 17479.6050482,
 },
 ["Player-11-0E1E4723"] = {
 ["SpecId"] = 258,
@@ -8419,6 +8409,61 @@ FrameSortDB = {
 ["LastAttempt"] = 1062.7874351,
 ["LastSeen"] = 3663.7690304,
 },
+["Player-1151-067EBC0E"] = {
+["SpecId"] = 256,
+["LastSeen"] = 28731.0110829,
+},
+["Player-11-0E0632F7"] = {
+["SpecId"] = 102,
+["LastSeen"] = 17499.1743429,
+["LastAttempt"] = 17499.0095074,
+},
+["Player-1129-0BF30413"] = {
+["SpecId"] = 258,
+["LastSeen"] = 245.8175895,
+["LastAttempt"] = 245.4704371,
+},
+["Player-77-0FB9D815"] = {
+["SpecId"] = 71,
+["LastAttempt"] = 47706.4173625,
+["LastSeen"] = 47706.76436430001,
+},
+["Player-52-0E1DEAA4"] = {
+["SpecId"] = 105,
+["LastAttempt"] = 50298.65099,
+["LastSeen"] = 51992.82825770001,
+},
+["Player-11-0E86D905"] = {
+["SpecId"] = 263,
+["LastSeen"] = 4012.6516573,
+},
+["Player-1428-04993178"] = {
+["SpecId"] = 65,
+["LastAttempt"] = 19262.5795276,
+["LastSeen"] = 19266.3662433,
+},
+["Player-11-0B05CCAC"] = {
+["SpecId"] = 72,
+["LastSeen"] = 9359.6242614,
+},
+["Player-11-0EB32FBD"] = {
+["SpecId"] = 577,
+["LastAttempt"] = 17479.2767826,
+["LastSeen"] = 17479.6050482,
+},
+["Player-3678-0E02119C"] = {
+["LastSeen"] = 14515.3150938,
+["SpecId"] = 252,
+},
+["Player-11-0EB60B1F"] = {
+["SpecId"] = 264,
+["LastSeen"] = 28647.3179039,
+},
+["Player-5-0AB94C60"] = {
+["SpecId"] = 252,
+["LastAttempt"] = 17282.4583793,
+["LastSeen"] = 17282.8385507,
+},
 ["Player-115-000F51F1"] = {
 ["SpecId"] = 260,
 ["LastSeen"] = 29289.2135799,
@@ -8428,10 +8473,10 @@ FrameSortDB = {
 ["LastSeen"] = 19224.4888073,
 ["SpecId"] = 262,
 },
-["Player-60-0FC1E02F"] = {
-["SpecId"] = 253,
-["LastSeen"] = 37551.82536610001,
-["LastAttempt"] = 37551.5800908,
+["Player-104-0DBA5656"] = {
+["SpecId"] = 65,
+["LastSeen"] = 15846.1716645,
+["LastAttempt"] = 15846.0042261,
 },
 ["Player-11-0EA66C0C"] = {
 ["LastSeen"] = 9809.577974400001,
@@ -8450,40 +8495,41 @@ FrameSortDB = {
 ["LastSeen"] = 14024.6628127,
 ["SpecId"] = 105,
 },
-["Player-1151-067EBC0E"] = {
-["SpecId"] = 256,
-["LastSeen"] = 28731.0110829,
+["Player-1168-0B0022B5"] = {
+["LastSeen"] = 37535.71225690001,
+["SpecId"] = 104,
 },
 ["Player-11-0EB82653"] = {
 ["SpecId"] = 254,
 ["LastSeen"] = 47240.1133228,
 ["LastAttempt"] = 47239.7343966,
 },
-["Player-11-0EA27249"] = {
-["LastSeen"] = 7037.670111500001,
-["SpecId"] = 268,
-},
 ["Player-60-0FE43B69"] = {
 ["SpecId"] = 269,
 ["LastAttempt"] = 31855.2703408,
 ["LastSeen"] = 31855.4963567,
 },
+["Player-11-0E440392"] = {
+["SpecId"] = 270,
+["LastSeen"] = 17760.8562089,
+},
 ["Player-1136-0992115B"] = {
 ["SpecId"] = 71,
 ["LastSeen"] = 30552.8729029,
 },
-["Player-11-0EB60B1F"] = {
+["Player-3683-0DA5DB9F"] = {
 ["SpecId"] = 264,
-["LastSeen"] = 28647.3179039,
+["LastSeen"] = 42167.1774767,
 },
 ["Player-1427-0E76F404"] = {
 ["SpecId"] = 256,
 ["LastSeen"] = 17048.1528714,
 ["LastAttempt"] = 16747.355183,
 },
-["Player-11-0B01998B"] = {
-["SpecId"] = 251,
-["LastSeen"] = 4571.682909,
+["Player-60-0FE66E0F"] = {
+["SpecId"] = 266,
+["LastSeen"] = 20131.0446669,
+["LastAttempt"] = 20130.6945548,
 },
 ["Player-86-0AF8BE98"] = {
 ["SpecId"] = 577,
@@ -8493,31 +8539,32 @@ FrameSortDB = {
 ["SpecId"] = 261,
 ["LastSeen"] = 34015.0603147,
 },
-["Player-5-0AB94C60"] = {
-["SpecId"] = 252,
-["LastAttempt"] = 17282.4583793,
-["LastSeen"] = 17282.8385507,
+["Player-11-0EB86505"] = {
+["SpecId"] = 1467,
+["LastSeen"] = 44711.4617612,
 },
 ["Player-5-0AD96298"] = {
 ["SpecId"] = 102,
 ["LastSeen"] = 16246.0101761,
 },
-["Player-1168-0B0022B5"] = {
-["LastSeen"] = 37535.71225690001,
-["SpecId"] = 104,
+["Player-1171-0B02C89F"] = {
+["SpecId"] = 65,
+["LastSeen"] = 3058.1836646,
+["LastAttempt"] = 1021.2953114,
 },
 ["Player-11-0EA3C142"] = {
 ["SpecId"] = 70,
 ["LastAttempt"] = 15470.2885176,
 ["LastSeen"] = 17459.4782593,
 },
-["Player-3684-0EBF39AA"] = {
-["SpecId"] = 64,
-["LastSeen"] = 19698.9012382,
+["Player-84-0989CDD1"] = {
+["SpecId"] = 102,
+["LastSeen"] = 31715.0207305,
+["LastAttempt"] = 31714.6923537,
 },
-["Player-3683-0DA5DB9F"] = {
-["SpecId"] = 264,
-["LastSeen"] = 42167.1774767,
+["Player-1428-0E2A227C"] = {
+["SpecId"] = 102,
+["LastSeen"] = 20530.680909,
 },
 ["Player-11-003B69E6"] = {
 ["LastSeen"] = 16226.0631368,
@@ -8532,73 +8579,25 @@ FrameSortDB = {
 ["LastAttempt"] = 54895.283389,
 ["LastSeen"] = 54895.5928623,
 },
-["Player-5-0E4AD2DC"] = {
-["SpecId"] = 256,
-["LastSeen"] = 17165.5107614,
-["LastAttempt"] = 17165.2049163,
+["Player-11-0EAC1299"] = {
+["SpecId"] = 259,
+["LastSeen"] = 22767.1116135,
 },
 ["Player-1428-033DBAEC"] = {
 ["SpecId"] = 72,
 ["LastSeen"] = 13253.6411421,
 },
-["Player-60-0FE66E0F"] = {
-["SpecId"] = 266,
-["LastSeen"] = 20131.0446669,
-["LastAttempt"] = 20130.6945548,
-},
-["Player-11-0EB86505"] = {
-["SpecId"] = 1467,
-["LastSeen"] = 44711.4617612,
-},
-["Player-1171-0B02C89F"] = {
-["SpecId"] = 65,
-["LastSeen"] = 3058.1836646,
-["LastAttempt"] = 1021.2953114,
-},
-["Player-57-0D84DCE7"] = {
+["Player-3684-0EB11A56"] = {
+["LastSeen"] = 23644.41556,
 ["SpecId"] = 252,
-["LastAttempt"] = 50316.88957270001,
-["LastSeen"] = 52353.2558433,
-},
-["Player-3693-0CEA22A0"] = {
-["SpecId"] = 102,
-["LastAttempt"] = 51557.2051451,
-["LastSeen"] = 52366.1461513,
-},
-["Player-3725-0A6C94B5"] = {
-["SpecId"] = 70,
-["LastSeen"] = 22939.3203005,
-},
-["Player-1428-0DB9E9D2"] = {
-["SpecId"] = 102,
-["LastSeen"] = 3570.4164379,
-["LastAttempt"] = 3570.0650772,
 },
 ["Player-5-0E7A2EA1"] = {
 ["LastSeen"] = 29576.1248979,
 ["SpecId"] = 259,
 },
-["Player-11-0EB6021E"] = {
-["LastSeen"] = 20275.8927943,
-["SpecId"] = 269,
-},
-["Player-3693-0CD3405E"] = {
-["SpecId"] = 63,
-["LastSeen"] = 29304.4357019,
-["LastAttempt"] = 29304.1165296,
-},
 ["Player-11-0E9CC706"] = {
 ["SpecId"] = 70,
 ["LastSeen"] = 22518.3106609,
-},
-["Player-1136-0969E28C"] = {
-["SpecId"] = 262,
-["LastAttempt"] = 25184.6958029,
-["LastSeen"] = 25184.0902816,
-},
-["Player-11-0E1E87EF"] = {
-["SpecId"] = 256,
-["LastSeen"] = 45078.7935089,
 },
 ["Player-11-0EA222B1"] = {
 ["SpecId"] = 64,
@@ -8609,32 +8608,77 @@ FrameSortDB = {
 ["LastSeen"] = 11559.9386757,
 ["SpecId"] = 258,
 },
-["Player-3725-0C49A49F"] = {
-["SpecId"] = 266,
-["LastSeen"] = 7762.8108897,
+["Player-11-0E303BEB"] = {
+["LastSeen"] = 2371.7818656,
+["SpecId"] = 63,
 },
-["Player-11-0E655E61"] = {
-["SpecId"] = 263,
-["LastSeen"] = 17350.4705331,
+["Player-11-0EAD9130"] = {
+["LastSeen"] = 4644.452012100001,
+["SpecId"] = 64,
 },
 ["Player-76-0BBF68BD"] = {
 ["SpecId"] = 102,
 ["LastSeen"] = 3629.0039476,
 ["LastAttempt"] = 2396.3228625,
 },
-["Player-11-0EB74D15"] = {
-["LastSeen"] = 4847.2011695,
-["SpecId"] = 71,
+["Player-11-0EB6021E"] = {
+["LastSeen"] = 20275.8927943,
+["SpecId"] = 269,
+},
+["Player-3726-0BE590D6"] = {
+["SpecId"] = 70,
+["LastSeen"] = 37550.3573072,
+["LastAttempt"] = 37550.025232,
+},
+["Player-1428-0ECA9A19"] = {
+["SpecId"] = 252,
+["LastSeen"] = 3772.074580900001,
+["LastAttempt"] = 3771.7211308,
+},
+["Player-11-0E1E87EF"] = {
+["SpecId"] = 256,
+["LastSeen"] = 45078.7935089,
+},
+["Player-1136-0969E28C"] = {
+["SpecId"] = 262,
+["LastAttempt"] = 25184.6958029,
+["LastSeen"] = 25184.0902816,
+},
+["Player-60-0FE642F6"] = {
+["SpecId"] = 261,
+["LastAttempt"] = 20049.0732895,
+["LastSeen"] = 20049.2689306,
+},
+["Player-76-0C1F23CE"] = {
+["SpecId"] = 577,
+["LastSeen"] = 52183.9551737,
+},
+["Player-3693-0CD3405E"] = {
+["SpecId"] = 63,
+["LastSeen"] = 29304.4357019,
+["LastAttempt"] = 29304.1165296,
+},
+["Player-61-0FE0008B"] = {
+["SpecId"] = 261,
+["LastSeen"] = 31363.9004729,
 },
 ["Player-11-0EB85D34"] = {
 ["SpecId"] = 103,
 ["LastSeen"] = 22939.9047252,
 ["LastAttempt"] = 22904.1273665,
 },
+["Player-11-0EB74D15"] = {
+["LastSeen"] = 4847.2011695,
+["SpecId"] = 71,
+},
 ["Player-11-0EB85EE3"] = {
 ["SpecId"] = 64,
 ["LastAttempt"] = 50285.01819720001,
 ["LastSeen"] = 52023.04018130001,
+},
+["Player-76-0C1D35A4"] = {
+["SpecId"] = 256,
+["LastSeen"] = 51943.2015983,
 },
 ["Player-3209-0BA712A1"] = {
 ["SpecId"] = 64,
@@ -8645,17 +8689,19 @@ FrameSortDB = {
 ["LastSeen"] = 5984.8514003,
 ["LastAttempt"] = 5668.8379731,
 },
+["Player-64-0FC3457B"] = {
+["SpecId"] = 257,
+["LastSeen"] = 31827.7423326,
+["LastAttempt"] = 31827.4436213,
+},
+["Player-121-0AE910E6"] = {
+["SpecId"] = 264,
+["LastSeen"] = 2655.3495393,
+["LastAttempt"] = 2655.1737648,
+},
 ["Player-57-0CEC5471"] = {
 ["SpecId"] = 265,
 ["LastSeen"] = 15483.1043114,
-},
-["Player-76-0C1F23CE"] = {
-["SpecId"] = 577,
-["LastSeen"] = 52183.9551737,
-},
-["Player-3676-0E7A29A4"] = {
-["SpecId"] = 70,
-["LastSeen"] = 51893.77359980001,
 },
 ["Player-58-0E1832CD"] = {
 ["SpecId"] = 264,
@@ -8671,19 +8717,18 @@ FrameSortDB = {
 ["LastSeen"] = 37757.5852753,
 ["LastAttempt"] = 37757.0547882,
 },
-["Player-121-0AE910E6"] = {
-["SpecId"] = 264,
-["LastSeen"] = 2655.3495393,
-["LastAttempt"] = 2655.1737648,
+["Player-3676-0E7A29A4"] = {
+["SpecId"] = 70,
+["LastSeen"] = 51893.77359980001,
 },
 ["Player-1168-06989C90"] = {
 ["SpecId"] = 72,
 ["LastAttempt"] = 24338.5871029,
 ["LastSeen"] = 24338.8579136,
 },
-["Player-61-0FE0008B"] = {
-["SpecId"] = 261,
-["LastSeen"] = 31363.9004729,
+["Player-3725-0C49A49F"] = {
+["SpecId"] = 266,
+["LastSeen"] = 7762.8108897,
 },
 ["Player-3684-0E03D1D8"] = {
 ["SpecId"] = 64,
@@ -8695,9 +8740,9 @@ FrameSortDB = {
 ["LastAttempt"] = 13257.2063263,
 ["LastSeen"] = 13257.5524009,
 },
-["Player-76-0C1D35A4"] = {
-["SpecId"] = 256,
-["LastSeen"] = 51943.2015983,
+["Player-11-0E655E61"] = {
+["SpecId"] = 263,
+["LastSeen"] = 17350.4705331,
 },
 ["Player-1185-0E8C72EB"] = {
 ["SpecId"] = 269,
@@ -8707,19 +8752,17 @@ FrameSortDB = {
 ["SpecId"] = 261,
 ["LastSeen"] = 23521.4518165,
 },
-["Player-64-0FC3457B"] = {
-["SpecId"] = 257,
-["LastSeen"] = 31827.7423326,
-["LastAttempt"] = 31827.4436213,
+["Player-11-0EA7B778"] = {
+["LastSeen"] = 4899.6004626,
+["SpecId"] = 64,
 },
 ["Player-84-0A7D44B2"] = {
 ["SpecId"] = 64,
 ["LastSeen"] = 20907.8329772,
 },
-["Player-60-0FE642F6"] = {
-["SpecId"] = 261,
-["LastAttempt"] = 20049.0732895,
-["LastSeen"] = 20049.2689306,
+["Player-1168-0A99376B"] = {
+["SpecId"] = 267,
+["LastSeen"] = 40840.4590143,
 },
 ["Player-3675-0AEFA696"] = {
 ["SpecId"] = 577,
@@ -8731,47 +8774,24 @@ FrameSortDB = {
 ["LastSeen"] = 27321.4391158,
 ["LastAttempt"] = 27321.2220321,
 },
-["Player-11-0EAD9130"] = {
-["LastSeen"] = 4644.452012100001,
-["SpecId"] = 64,
-},
-["Player-11-0EA7B778"] = {
-["LastSeen"] = 4899.6004626,
-["SpecId"] = 64,
-},
-["Player-1428-0ECA9A19"] = {
-["SpecId"] = 252,
-["LastSeen"] = 3772.074580900001,
-["LastAttempt"] = 3771.7211308,
-},
-["Player-1168-0A99376B"] = {
-["SpecId"] = 267,
-["LastSeen"] = 40840.4590143,
-},
-["Player-3726-0BE590D6"] = {
-["SpecId"] = 70,
-["LastSeen"] = 37550.3573072,
-["LastAttempt"] = 37550.025232,
-},
-["Player-11-0E303BEB"] = {
-["LastSeen"] = 2371.7818656,
-["SpecId"] = 63,
-},
-["Player-11-0DE8AD8C"] = {
-["SpecId"] = 62,
-["LastSeen"] = 41157.7105166,
-},
-["Player-3684-0EB11A56"] = {
-["LastSeen"] = 23644.41556,
-["SpecId"] = 252,
-},
-["Player-11-0E438B04"] = {
-["LastSeen"] = 38807.3583268,
-["SpecId"] = 105,
-},
-["Player-1428-0E2A227C"] = {
+["Player-1428-0DB9E9D2"] = {
 ["SpecId"] = 102,
-["LastSeen"] = 20530.680909,
+["LastSeen"] = 3570.4164379,
+["LastAttempt"] = 3570.0650772,
+},
+["Player-3725-0A6C94B5"] = {
+["SpecId"] = 70,
+["LastSeen"] = 22939.3203005,
+},
+["Player-3693-0CEA22A0"] = {
+["SpecId"] = 102,
+["LastAttempt"] = 51557.2051451,
+["LastSeen"] = 52366.1461513,
+},
+["Player-57-0D84DCE7"] = {
+["SpecId"] = 252,
+["LastAttempt"] = 50316.88957270001,
+["LastSeen"] = 52353.2558433,
 },
 ["Player-3725-0A2C9C1C"] = {
 ["SpecId"] = 103,
@@ -8782,9 +8802,35 @@ FrameSortDB = {
 ["LastSeen"] = 39326.1011874,
 ["SpecId"] = 70,
 },
-["Player-11-0EAC1299"] = {
-["SpecId"] = 259,
-["LastSeen"] = 22767.1116135,
+["Player-11-0DE8AD8C"] = {
+["SpecId"] = 62,
+["LastSeen"] = 41157.7105166,
+},
+["Player-5-0E4AD2DC"] = {
+["SpecId"] = 256,
+["LastSeen"] = 17165.5107614,
+["LastAttempt"] = 17165.2049163,
+},
+["Player-11-0E438B04"] = {
+["LastSeen"] = 38807.3583268,
+["SpecId"] = 105,
+},
+["Player-3684-0EBF39AA"] = {
+["SpecId"] = 64,
+["LastSeen"] = 19698.9012382,
+},
+["Player-77-0FCC8B53"] = {
+["SpecId"] = 72,
+["LastAttempt"] = 45650.5130741,
+["LastSeen"] = 45748.6388205,
+},
+["Player-11-0B01998B"] = {
+["SpecId"] = 251,
+["LastSeen"] = 4571.682909,
+},
+["Player-3678-0962E87D"] = {
+["LastSeen"] = 29576.1243817,
+["SpecId"] = 577,
 },
 ["Player-11-0E35470B"] = {
 ["SpecId"] = 1480,
@@ -8795,15 +8841,14 @@ FrameSortDB = {
 ["LastSeen"] = 9497.942625900001,
 ["SpecId"] = 266,
 },
-["Player-84-0989CDD1"] = {
-["SpecId"] = 102,
-["LastSeen"] = 31715.0207305,
-["LastAttempt"] = 31714.6923537,
+["Player-11-0EA27249"] = {
+["LastSeen"] = 7037.670111500001,
+["SpecId"] = 268,
 },
-["Player-77-0FCC8B53"] = {
-["SpecId"] = 72,
-["LastAttempt"] = 45650.5130741,
-["LastSeen"] = 45748.6388205,
+["Player-60-0FC1E02F"] = {
+["SpecId"] = 253,
+["LastSeen"] = 37551.82536610001,
+["LastAttempt"] = 37551.5800908,
 },
 ["Player-76-0A566962"] = {
 ["SpecId"] = 257,
@@ -8819,40 +8864,14 @@ FrameSortDB = {
 ["LastSeen"] = 3174.5633737,
 ["LastAttempt"] = 3174.4062213,
 },
-["Player-11-0E440392"] = {
-["SpecId"] = 270,
-["LastSeen"] = 17760.8562089,
+["Player-11-0EAA9BFB"] = {
+["LastSeen"] = 10977.5059757,
+["SpecId"] = 73,
 },
 ["Player-1185-0D6875B2"] = {
 ["SpecId"] = 261,
 ["LastAttempt"] = 19434.6378535,
 ["LastSeen"] = 19435.0299478,
-},
-["Player-104-0DBA5656"] = {
-["SpecId"] = 65,
-["LastSeen"] = 15846.1716645,
-["LastAttempt"] = 15846.0042261,
-},
-["Player-3678-0962E87D"] = {
-["LastSeen"] = 29576.1243817,
-["SpecId"] = 577,
-},
-["Player-60-0FBBE996"] = {
-["SpecId"] = 254,
-["LastSeen"] = 14016.6542632,
-},
-["Player-3678-0E02119C"] = {
-["LastSeen"] = 14515.3150938,
-["SpecId"] = 252,
-},
-["Player-11-0EAA9BFB"] = {
-["LastSeen"] = 10977.5059757,
-["SpecId"] = 73,
-},
-["Player-11-0E0632F7"] = {
-["SpecId"] = 102,
-["LastSeen"] = 17499.1743429,
-["LastAttempt"] = 17499.0095074,
 },
 ["Player-60-0FE56225"] = {
 ["SpecId"] = 105,
@@ -8864,9 +8883,9 @@ FrameSortDB = {
 ["LastAttempt"] = 20739.0893598,
 ["LastSeen"] = 20739.4273772,
 },
-["Player-11-0B05CCAC"] = {
-["SpecId"] = 72,
-["LastSeen"] = 9359.6242614,
+["Player-60-0FBBE996"] = {
+["SpecId"] = 254,
+["LastSeen"] = 14016.6542632,
 },
 ["Player-3208-0A40E3F6"] = {
 ["LastSeen"] = 29523.8441774,
@@ -8876,6 +8895,33 @@ FrameSortDB = {
 ["SpecId"] = 253,
 ["LastAttempt"] = 1620.5460925,
 ["LastSeen"] = 3062.2137104,
+},
+["Player-11-0E65DEA6"] = {
+["SpecId"] = 250,
+["LastAttempt"] = 17231.939939,
+["LastSeen"] = 17231.7722085,
+},
+["Player-77-0FDE973B"] = {
+["SpecId"] = 70,
+["LastSeen"] = 51328.18709460001,
+},
+["Player-11-0EA827FD"] = {
+["LastSeen"] = 14846.4865969,
+["SpecId"] = 70,
+},
+["Player-60-0FE9F03A"] = {
+["SpecId"] = 266,
+["LastAttempt"] = 21079.5691707,
+["LastSeen"] = 21080.5580668,
+},
+["Player-11-0EB56DE4"] = {
+["SpecId"] = 261,
+["LastAttempt"] = 21050.7958644,
+["LastSeen"] = 21051.5053734,
+},
+["Player-11-0E968C15"] = {
+["LastSeen"] = 2326.4049417,
+["SpecId"] = 577,
 },
 ["Player-3675-0AED515E"] = {
 ["SpecId"] = 252,
@@ -8900,42 +8946,13 @@ FrameSortDB = {
 ["LastSeen"] = 3174.2820325,
 ["SpecId"] = 65,
 },
-["Player-11-0EB56DE4"] = {
-["SpecId"] = 261,
-["LastAttempt"] = 21050.7958644,
-["LastSeen"] = 21051.5053734,
+["Player-3684-0E0E36F5"] = {
+["SpecId"] = 270,
+["LastSeen"] = 22243.4003297,
 },
 ["Player-11-0E9A30A0"] = {
 ["LastSeen"] = 13554.7440465,
 ["SpecId"] = 258,
-},
-["Player-121-0AF4BA3B"] = {
-["SpecId"] = 270,
-["LastSeen"] = 24651.9887541,
-},
-["Player-57-0DD54D20"] = {
-["SpecId"] = 66,
-["LastSeen"] = 48932.5511018,
-["LastAttempt"] = 48826.91626280001,
-},
-["Player-104-0C70DDF6"] = {
-["SpecId"] = 268,
-["LastSeen"] = 15846.8309366,
-["LastAttempt"] = 15846.5012387,
-},
-["Player-53-0E0B0AB2"] = {
-["SpecId"] = 64,
-["LastSeen"] = 50895.44218860001,
-},
-["Player-1171-0ACA0F2B"] = {
-["SpecId"] = 270,
-["LastSeen"] = 16686.7035544,
-["LastAttempt"] = 16686.5517597,
-},
-["Player-86-05E8651B"] = {
-["SpecId"] = 253,
-["LastAttempt"] = 23895.2102289,
-["LastSeen"] = 23895.5228434,
 },
 ["Player-11-0EB27D92"] = {
 ["SpecId"] = 266,
@@ -8950,22 +8967,48 @@ FrameSortDB = {
 ["LastAttempt"] = 19388.7023703,
 ["LastSeen"] = 19392.0728327,
 },
-["Player-11-0DEF0A38"] = {
-["SpecId"] = 270,
-["LastSeen"] = 38733.5971451,
+["Player-53-0E0B0AB2"] = {
+["SpecId"] = 64,
+["LastSeen"] = 50895.44218860001,
 },
-["Player-11-0E2CC16F"] = {
-["LastSeen"] = 46692.0718367,
-["SpecId"] = 267,
+["Player-11-0EB21A80"] = {
+["LastSeen"] = 1301.9668547,
+["SpecId"] = 71,
 },
-["Player-11-0E310D31"] = {
-["SpecId"] = 105,
-["LastSeen"] = 31152.6702607,
+["Player-11-0DFA6C5D"] = {
+["LastSeen"] = 28474.12647,
+["SpecId"] = 269,
 },
 ["Player-3676-0E7BC1DA"] = {
 ["SpecId"] = 251,
 ["LastAttempt"] = 40819.7032148,
 ["LastSeen"] = 40819.5050563,
+},
+["Player-11-0E4F7624"] = {
+["SpecId"] = 261,
+["LastSeen"] = 42295.1801942,
+["LastAttempt"] = 42294.95333220001,
+},
+["Player-3676-0E4B3079"] = {
+["SpecId"] = 1480,
+["LastAttempt"] = 24033.9766211,
+["LastSeen"] = 24034.8397275,
+},
+["Player-1138-091E1EFF"] = {
+["LastSeen"] = 21839.6140463,
+["SpecId"] = 260,
+},
+["Player-11-0E2CC16F"] = {
+["LastSeen"] = 46692.0718367,
+["SpecId"] = 267,
+},
+["Player-11-0E057F0E"] = {
+["LastSeen"] = 12376.540184,
+["SpecId"] = 265,
+},
+["Player-3678-0B04A911"] = {
+["LastSeen"] = 11811.2112837,
+["SpecId"] = 103,
 },
 ["Player-11-0EB5292C"] = {
 ["SpecId"] = 105,
@@ -8976,32 +9019,6 @@ FrameSortDB = {
 ["SpecId"] = 269,
 ["LastSeen"] = 29304.978199,
 ["LastAttempt"] = 29304.6275973,
-},
-["Player-3676-0E4B3079"] = {
-["SpecId"] = 1480,
-["LastAttempt"] = 24033.9766211,
-["LastSeen"] = 24034.8397275,
-},
-["Player-11-0AFA76BA"] = {
-["SpecId"] = 256,
-["LastAttempt"] = 28460.6783665,
-["LastSeen"] = 29968.0587565,
-},
-["Player-11-0E057F0E"] = {
-["LastSeen"] = 12376.540184,
-["SpecId"] = 265,
-},
-["Player-3678-0B04A911"] = {
-["LastSeen"] = 11811.2112837,
-["SpecId"] = 103,
-},
-["Player-3693-0EB309F9"] = {
-["SpecId"] = 64,
-["LastSeen"] = 47991.9128884,
-},
-["Player-11-0EA68AE8"] = {
-["LastSeen"] = 3396.2916579,
-["SpecId"] = 254,
 },
 ["Player-57-0E1E2BC5"] = {
 ["SpecId"] = 250,
@@ -9021,14 +9038,13 @@ FrameSortDB = {
 ["LastSeen"] = 18623.6524384,
 ["SpecId"] = 65,
 },
-["Player-76-0BFE2944"] = {
-["SpecId"] = 73,
-["LastSeen"] = 3653.474195,
-["LastAttempt"] = 3571.5790303,
+["Player-3693-0EB309F9"] = {
+["SpecId"] = 64,
+["LastSeen"] = 47991.9128884,
 },
-["Player-11-0E78D55C"] = {
-["SpecId"] = 253,
-["LastSeen"] = 29628.2149089,
+["Player-162-0BEFF19E"] = {
+["SpecId"] = 105,
+["LastSeen"] = 19698.9008958,
 },
 ["Player-86-002D7905"] = {
 ["SpecId"] = 265,
@@ -9040,6 +9056,33 @@ FrameSortDB = {
 ["LastSeen"] = 37834.13248730001,
 ["LastAttempt"] = 37833.8675395,
 },
+["Player-11-0E8D6CEC"] = {
+["SpecId"] = 70,
+["LastSeen"] = 8628.761154,
+},
+["Player-3675-0AD672C9"] = {
+["SpecId"] = 71,
+["LastAttempt"] = 23007.9767864,
+["LastSeen"] = 23008.36809,
+},
+["Player-76-0BFE2944"] = {
+["SpecId"] = 73,
+["LastSeen"] = 3653.474195,
+["LastAttempt"] = 3571.5790303,
+},
+["Player-11-0EB49B72"] = {
+["SpecId"] = 105,
+["LastSeen"] = 20710.5793161,
+},
+["Player-11-0E85CAC7"] = {
+["LastSeen"] = 4996.189584000001,
+["SpecId"] = 259,
+},
+["Player-11-0DEC4718"] = {
+["SpecId"] = 270,
+["LastSeen"] = 20130.3683734,
+["LastAttempt"] = 20130.1941657,
+},
 ["Player-1428-0908B06A"] = {
 ["SpecId"] = 269,
 ["LastAttempt"] = 18719.3254163,
@@ -9050,19 +9093,19 @@ FrameSortDB = {
 ["LastSeen"] = 3571.512598,
 ["LastAttempt"] = 3571.1027399,
 },
-["Player-3675-0AD672C9"] = {
-["SpecId"] = 71,
-["LastAttempt"] = 23007.9767864,
-["LastSeen"] = 23008.36809,
+["Player-3725-09B9D30D"] = {
+["SpecId"] = 103,
+["LastSeen"] = 2362.371787,
+["LastAttempt"] = 2361.9056762,
 },
 ["Player-11-09CF6301"] = {
 ["SpecId"] = 263,
 ["LastAttempt"] = 37617.95946960001,
 ["LastSeen"] = 37618.2706274,
 },
-["Player-11-0EB49B72"] = {
-["SpecId"] = 105,
-["LastSeen"] = 20710.5793161,
+["Player-11-0EAF45C7"] = {
+["SpecId"] = 65,
+["LastSeen"] = 2038.0183195,
 },
 ["Player-3685-0EDC028C"] = {
 ["SpecId"] = 64,
@@ -9092,59 +9135,32 @@ FrameSortDB = {
 ["LastAttempt"] = 50574.6822393,
 ["LastSeen"] = 50574.4067374,
 },
-["Player-11-0E85CAC7"] = {
-["LastSeen"] = 4996.189584000001,
-["SpecId"] = 259,
-},
-["Player-11-0E8F4083"] = {
-["SpecId"] = 262,
-["LastSeen"] = 10783.3443287,
-},
-["Player-3725-09B9D30D"] = {
-["SpecId"] = 103,
-["LastSeen"] = 2362.371787,
-["LastAttempt"] = 2361.9056762,
-},
-["Player-11-0E556970"] = {
-["SpecId"] = 259,
-["LastAttempt"] = 3579.1148722,
-["LastSeen"] = 3579.3996211,
-},
-["Player-57-0E182C80"] = {
-["LastSeen"] = 2364.551469,
-["SpecId"] = 103,
-},
-["Player-11-0E305240"] = {
-["SpecId"] = 259,
-["LastSeen"] = 23837.5123148,
-["LastAttempt"] = 23837.2289336,
-},
-["Player-3676-0E1EAEF0"] = {
-["LastSeen"] = 14515.3153417,
+["Player-11-0E4ACAB0"] = {
 ["SpecId"] = 64,
+["LastSeen"] = 29924.0099401,
 },
 ["Player-3661-083E889C"] = {
 ["SpecId"] = 577,
 ["LastSeen"] = 22574.6181897,
 ["LastAttempt"] = 22574.2515432,
 },
-["Player-11-0E034706"] = {
-["SpecId"] = 105,
-["LastSeen"] = 50165.3771668,
+["Player-5-0EA16E5B"] = {
+["LastSeen"] = 19224.4889515,
+["SpecId"] = 252,
 },
-["Player-1151-068D461F"] = {
-["SpecId"] = 70,
-["LastSeen"] = 37770.852301,
-["LastAttempt"] = 37770.640542,
-},
-["Player-3675-0AF8FD5C"] = {
-["SpecId"] = 1480,
-["LastSeen"] = 41776.7480794,
+["Player-11-0E39AF4F"] = {
+["LastSeen"] = 3666.3337724,
+["SpecId"] = 270,
 },
 ["Player-60-0FEBFA61"] = {
 ["SpecId"] = 265,
 ["LastAttempt"] = 20908.2697017,
 ["LastSeen"] = 20908.9380155,
+},
+["Player-11-0E305240"] = {
+["SpecId"] = 259,
+["LastSeen"] = 23837.5123148,
+["LastAttempt"] = 23837.2289336,
 },
 ["Player-11-0EB68277"] = {
 ["LastSeen"] = 2214.8478398,
@@ -9155,13 +9171,40 @@ FrameSortDB = {
 ["LastAttempt"] = 35304.2009936,
 ["LastSeen"] = 35304.4977365,
 },
+["Player-11-0E034706"] = {
+["SpecId"] = 105,
+["LastSeen"] = 50165.3771668,
+},
+["Player-104-0EAB45C0"] = {
+["SpecId"] = 257,
+["LastSeen"] = 21553.2167849,
+["LastAttempt"] = 21378.9373199,
+},
+["Player-3675-0AF8FD5C"] = {
+["SpecId"] = 1480,
+["LastSeen"] = 41776.7480794,
+},
+["Player-5-0B4DC5B7"] = {
+["SpecId"] = 70,
+["LastSeen"] = 33828.2375856,
+},
+["Player-76-0BBCF9B8"] = {
+["SpecId"] = 64,
+["LastSeen"] = 22574.1175963,
+["LastAttempt"] = 22573.7516838,
+},
+["Player-1185-0EB36ADE"] = {
+["SpecId"] = 270,
+["LastSeen"] = 43806.1679469,
+},
 ["Player-11-0E90469B"] = {
 ["SpecId"] = 262,
 ["LastSeen"] = 4030.4129626,
 },
-["Player-11-0DC783F4"] = {
-["LastSeen"] = 43318.9245993,
-["SpecId"] = 261,
+["Player-11-0BA3E09D"] = {
+["SpecId"] = 102,
+["LastAttempt"] = 47929.7135167,
+["LastSeen"] = 47929.9508298,
 },
 ["Player-11-0DC79084"] = {
 ["SpecId"] = 104,
@@ -9172,40 +9215,14 @@ FrameSortDB = {
 ["LastSeen"] = 2683.4295065,
 ["LastAttempt"] = 2682.9360705,
 },
-["Player-11-0EB58766"] = {
-["SpecId"] = 268,
-["LastSeen"] = 9531.7964665,
+["Player-57-0D4D674A"] = {
+["SpecId"] = 254,
+["LastSeen"] = 3632.4283514,
+["LastAttempt"] = 3632.0047574,
 },
-["Player-1185-0EB36ADE"] = {
-["SpecId"] = 270,
-["LastSeen"] = 43806.1679469,
-},
-["Player-1070-0E2933D9"] = {
-["SpecId"] = 71,
-["LastAttempt"] = 51493.0214542,
-["LastSeen"] = 52454.8391675,
-},
-["Player-11-0BA3E09D"] = {
-["SpecId"] = 102,
-["LastAttempt"] = 47929.7135167,
-["LastSeen"] = 47929.9508298,
-},
-["Player-11-0EB51908"] = {
-["LastSeen"] = 37575.8602741,
-["SpecId"] = 70,
-},
-["Player-5-0B4DC5B7"] = {
-["SpecId"] = 70,
-["LastSeen"] = 33828.2375856,
-},
-["Player-1428-0960C251"] = {
-["SpecId"] = 105,
-["LastSeen"] = 18077.3152821,
-["LastAttempt"] = 18076.9619573,
-},
-["Player-5-0A9DAA02"] = {
-["LastSeen"] = 29576.1247091,
-["SpecId"] = 64,
+["Player-11-0E58A2A1"] = {
+["LastSeen"] = 11038.5059526,
+["SpecId"] = 253,
 },
 ["Player-3693-0ED9E7DD"] = {
 ["SpecId"] = 268,
@@ -9216,27 +9233,52 @@ FrameSortDB = {
 ["SpecId"] = 66,
 ["LastSeen"] = 38221.5471532,
 },
+["Player-11-0EB51908"] = {
+["LastSeen"] = 37575.8602741,
+["SpecId"] = 70,
+},
+["Player-11-0E7B890C"] = {
+["LastSeen"] = 14947.4009889,
+["SpecId"] = 66,
+},
+["Player-1428-0960C251"] = {
+["SpecId"] = 105,
+["LastSeen"] = 18077.3152821,
+["LastAttempt"] = 18076.9619573,
+},
+["Player-11-0E39EE93"] = {
+["SpecId"] = 256,
+["LastSeen"] = 8187.201000100001,
+},
+["Player-11-0EB61221"] = {
+["LastSeen"] = 24042.089388,
+["SpecId"] = 258,
+},
+["Player-5-0E3B96F7"] = {
+["SpecId"] = 252,
+["LastSeen"] = 2313.9973131,
+["LastAttempt"] = 2313.7828818,
+},
 ["Player-11-0E8A0F8A"] = {
 ["SpecId"] = 103,
 ["LastSeen"] = 21594.6184038,
 },
-["Player-127-0AFC9AEA"] = {
-["SpecId"] = 254,
-["LastSeen"] = 2483.5394786,
-["LastAttempt"] = 2483.3285057,
+["Player-11-0EB5251A"] = {
+["LastSeen"] = 13468.260759,
+["SpecId"] = 255,
 },
 ["Player-1168-0B05E7AB"] = {
 ["SpecId"] = 257,
 ["LastSeen"] = 2590.5261376,
 ["LastAttempt"] = 2590.2003442,
 },
-["Player-11-05E7B633"] = {
-["SpecId"] = 72,
-["LastSeen"] = 37202.15942890001,
+["Player-1425-0EE1E9CF"] = {
+["LastSeen"] = 14696.3584031,
+["SpecId"] = 266,
 },
-["Player-11-0EB61221"] = {
-["LastSeen"] = 24042.089388,
-["SpecId"] = 258,
+["Player-76-0BF79209"] = {
+["SpecId"] = 72,
+["LastSeen"] = 52025.0449152,
 },
 ["Player-1171-0AF8A9C1"] = {
 ["SpecId"] = 577,
@@ -9248,32 +9290,6 @@ FrameSortDB = {
 ["LastAttempt"] = 24401.8317394,
 ["LastSeen"] = 24402.0696946,
 },
-["Player-3725-0C476569"] = {
-["LastSeen"] = 14515.3151623,
-["SpecId"] = 253,
-},
-["Player-11-0E39EE93"] = {
-["SpecId"] = 256,
-["LastSeen"] = 8187.201000100001,
-},
-["Player-11-0A31B065"] = {
-["SpecId"] = 270,
-["LastSeen"] = 47927.9787774,
-},
-["Player-11-0EB2627B"] = {
-["SpecId"] = 1480,
-["LastAttempt"] = 54896.82282720001,
-["LastSeen"] = 54897.0877779,
-},
-["Player-11-0E673870"] = {
-["SpecId"] = 261,
-["LastSeen"] = 18371.7121761,
-},
-["Player-1136-09810E11"] = {
-["SpecId"] = 253,
-["LastAttempt"] = 30562.7573896,
-["LastSeen"] = 30563.0588046,
-},
 ["Player-84-095EC5DA"] = {
 ["SpecId"] = 64,
 ["LastSeen"] = 16245.3733148,
@@ -9283,17 +9299,18 @@ FrameSortDB = {
 ["LastAttempt"] = 17429.6561129,
 ["LastSeen"] = 17411.2661474,
 },
-["Player-11-0EB3BA07"] = {
-["LastSeen"] = 21930.1944472,
-["SpecId"] = 259,
+["Player-11-0A31B065"] = {
+["SpecId"] = 270,
+["LastSeen"] = 47927.9787774,
 },
-["Player-11-0E4B0156"] = {
-["SpecId"] = 71,
-["LastSeen"] = 4549.8745049,
+["Player-52-0CA8F5B1"] = {
+["SpecId"] = 254,
+["LastSeen"] = 33206.7427201,
+["LastAttempt"] = 32978.86792010001,
 },
-["Player-11-0E445CF3"] = {
-["LastSeen"] = 10010.9633977,
-["SpecId"] = 1468,
+["Player-11-0E673870"] = {
+["SpecId"] = 261,
+["LastSeen"] = 18371.7121761,
 },
 ["Player-11-0E4ABD60"] = {
 ["LastSeen"] = 2456.8178553,
@@ -9309,6 +9326,32 @@ FrameSortDB = {
 ["LastSeen"] = 13592.6194667,
 ["LastAttempt"] = 13592.2186656,
 },
+["Player-11-0EB3BA07"] = {
+["LastSeen"] = 21930.1944472,
+["SpecId"] = 259,
+},
+["Player-69-00676E71"] = {
+["SpecId"] = 260,
+["LastAttempt"] = 20846.1262521,
+["LastSeen"] = 20846.4819609,
+},
+["Player-11-0E2003EF"] = {
+["SpecId"] = 253,
+["LastAttempt"] = 16937.4980414,
+["LastSeen"] = 16937.8564655,
+},
+["Player-3723-0B06FEA8"] = {
+["SpecId"] = 256,
+["LastSeen"] = 4553.424098500001,
+},
+["Player-11-0E414DEC"] = {
+["SpecId"] = 268,
+["LastSeen"] = 18405.086731,
+},
+["Player-11-0E8266AB"] = {
+["LastSeen"] = 3111.2766606,
+["SpecId"] = 253,
+},
 ["Player-114-05AFA914"] = {
 ["SpecId"] = 256,
 ["LastAttempt"] = 20607.3556763,
@@ -9322,18 +9365,19 @@ FrameSortDB = {
 ["SpecId"] = 253,
 ["LastSeen"] = 15129.941365,
 },
-["Player-11-0E2003EF"] = {
-["SpecId"] = 253,
-["LastAttempt"] = 16937.4980414,
-["LastSeen"] = 16937.8564655,
+["Player-117-00418BF4"] = {
+["SpecId"] = 65,
+["LastSeen"] = 25725.7016311,
 },
-["Player-11-0E414DEC"] = {
-["SpecId"] = 268,
-["LastSeen"] = 18405.086731,
+["Player-3661-09616071"] = {
+["SpecId"] = 270,
+["LastSeen"] = 22986.2603421,
+["LastAttempt"] = 22985.9705421,
 },
-["Player-11-0E8266AB"] = {
-["LastSeen"] = 3111.2766606,
-["SpecId"] = 253,
+["Player-73-0FF61E21"] = {
+["SpecId"] = 71,
+["LastAttempt"] = 22038.8630232,
+["LastSeen"] = 22025.5213142,
 },
 ["Player-3675-0AE519CD"] = {
 ["SpecId"] = 64,
@@ -9344,10 +9388,9 @@ FrameSortDB = {
 ["LastSeen"] = 14211.3366424,
 ["SpecId"] = 259,
 },
-["Player-86-05DAF98C"] = {
-["SpecId"] = 104,
-["LastSeen"] = 45300.0349424,
-["LastAttempt"] = 44872.6595276,
+["Player-3676-0A03D793"] = {
+["LastSeen"] = 14515.3150597,
+["SpecId"] = 1480,
 },
 ["Player-67-0920F2EA"] = {
 ["SpecId"] = 269,
@@ -9359,35 +9402,6 @@ FrameSortDB = {
 ["LastAttempt"] = 21426.4719236,
 ["LastSeen"] = 21426.7369504,
 },
-["Player-3661-09616071"] = {
-["SpecId"] = 270,
-["LastSeen"] = 22986.2603421,
-["LastAttempt"] = 22985.9705421,
-},
-["Player-9-0E29818F"] = {
-["SpecId"] = 263,
-["LastAttempt"] = 42446.5940053,
-["LastSeen"] = 42446.8905902,
-},
-["Player-3675-0A0DAB23"] = {
-["SpecId"] = 254,
-["LastAttempt"] = 18269.9524529,
-["LastSeen"] = 18270.3332599,
-},
-["Player-76-0BDB217F"] = {
-["SpecId"] = 254,
-["LastSeen"] = 45425.91578520001,
-["LastAttempt"] = 45347.8477035,
-},
-["Player-1427-058EE5D8"] = {
-["SpecId"] = 261,
-["LastSeen"] = 25469.2717656,
-},
-["Player-57-0DE5AF33"] = {
-["SpecId"] = 270,
-["LastSeen"] = 12572.6009746,
-["LastAttempt"] = 12130.2723162,
-},
 ["Player-11-0EAB0A29"] = {
 ["SpecId"] = 102,
 ["LastSeen"] = 33374.0638541,
@@ -9396,21 +9410,22 @@ FrameSortDB = {
 ["SpecId"] = 268,
 ["LastSeen"] = 12101.4249466,
 },
-["Player-5-0EB1B0D3"] = {
+["Player-3675-0A0DAB23"] = {
+["SpecId"] = 254,
+["LastAttempt"] = 18269.9524529,
+["LastSeen"] = 18270.3332599,
+},
+["Player-11-0E85B9D5"] = {
+["SpecId"] = 268,
+["LastSeen"] = 37430.6808929,
+},
+["Player-1427-058EE5D8"] = {
 ["SpecId"] = 261,
-["LastSeen"] = 47691.9315031,
+["LastSeen"] = 25469.2717656,
 },
-["Player-3684-0E9817E1"] = {
-["LastSeen"] = 43925.721746,
-["SpecId"] = 64,
-},
-["Player-11-0EA34DAA"] = {
-["LastSeen"] = 21900.5049952,
-["SpecId"] = 265,
-},
-["Player-125-0767302E"] = {
-["SpecId"] = 261,
-["LastSeen"] = 21594.6177503,
+["Player-11-0E439FB3"] = {
+["SpecId"] = 266,
+["LastSeen"] = 38069.9332232,
 },
 ["Player-57-0DD65F6B"] = {
 ["SpecId"] = 266,
@@ -9421,6 +9436,32 @@ FrameSortDB = {
 ["LastSeen"] = 29576.1244654,
 ["SpecId"] = 269,
 },
+["Player-3683-0E035871"] = {
+["SpecId"] = 269,
+["LastSeen"] = 31828.6267593,
+["LastAttempt"] = 31828.4459497,
+},
+["Player-3684-0E9817E1"] = {
+["LastSeen"] = 43925.721746,
+["SpecId"] = 64,
+},
+["Player-11-0EA34DAA"] = {
+["LastSeen"] = 21900.5049952,
+["SpecId"] = 265,
+},
+["Player-11-0EA29727"] = {
+["SpecId"] = 258,
+["LastAttempt"] = 17480.8919773,
+["LastSeen"] = 17481.1920073,
+},
+["Player-3678-0DE27D20"] = {
+["LastSeen"] = 19237.3281296,
+["SpecId"] = 64,
+},
+["Player-11-0E06CC0C"] = {
+["LastSeen"] = 24060.4853225,
+["SpecId"] = 253,
+},
 ["Player-162-0C1E0527"] = {
 ["SpecId"] = 104,
 ["LastSeen"] = 12755.8666165,
@@ -9430,27 +9471,27 @@ FrameSortDB = {
 ["SpecId"] = 252,
 ["LastSeen"] = 52029.0230482,
 },
-["Player-104-0EDCC12E"] = {
-["LastSeen"] = 23699.0809175,
-["SpecId"] = 577,
+["Player-11-0E889055"] = {
+["SpecId"] = 64,
+["LastAttempt"] = 12908.5155582,
+["LastSeen"] = 12908.7449907,
 },
 ["Player-11-0EB8C2B9"] = {
 ["LastSeen"] = 7285.7680305,
 ["SpecId"] = 269,
 },
-["Player-11-0E8FDAE0"] = {
-["LastSeen"] = 5777.175623200001,
+["Player-11-0EA70B82"] = {
 ["SpecId"] = 253,
+["LastSeen"] = 8552.454992500001,
 },
-["Player-11-0AF2448B"] = {
+["Player-11-0E918F74"] = {
 ["SpecId"] = 64,
-["LastAttempt"] = 19700.4626087,
-["LastSeen"] = 19700.5839172,
+["LastSeen"] = 19698.9013662,
 },
-["Player-3684-0E953A0B"] = {
-["SpecId"] = 252,
-["LastAttempt"] = 20959.1547253,
-["LastSeen"] = 22505.1049847,
+["Player-60-0FAA2470"] = {
+["SpecId"] = 105,
+["LastSeen"] = 31826.7623497,
+["LastAttempt"] = 31826.439327,
 },
 ["Player-76-0BFFBFE5"] = {
 ["SpecId"] = 266,
@@ -9462,9 +9503,9 @@ FrameSortDB = {
 ["LastSeen"] = 3581.2008597,
 ["LastAttempt"] = 2374.0541752,
 },
-["Player-84-0AF3BA62"] = {
-["SpecId"] = 261,
-["LastSeen"] = 42852.3739426,
+["Player-60-0B7BCB2D"] = {
+["LastSeen"] = 14515.3152376,
+["SpecId"] = 73,
 },
 ["Player-3675-0B097567"] = {
 ["SpecId"] = 252,
@@ -9476,14 +9517,14 @@ FrameSortDB = {
 ["LastSeen"] = 1791.868479,
 ["LastAttempt"] = 1686.4067786,
 },
-["Player-11-0E2913BC"] = {
-["SpecId"] = 256,
-["LastSeen"] = 9641.4287195,
+["Player-1428-0E188EBB"] = {
+["SpecId"] = 253,
+["LastAttempt"] = 32198.1095196,
+["LastSeen"] = 32198.7884557,
 },
-["Player-60-0C92ACDC"] = {
-["SpecId"] = 103,
-["LastSeen"] = 7249.4216689,
-["LastAttempt"] = 5708.261593,
+["Player-1185-0E579D85"] = {
+["SpecId"] = 252,
+["LastSeen"] = 42852.3737368,
 },
 ["Player-11-0E974218"] = {
 ["LastSeen"] = 28101.237256,
@@ -9494,33 +9535,10 @@ FrameSortDB = {
 ["LastAttempt"] = 45652.1237511,
 ["LastSeen"] = 45652.5421465,
 },
-["Player-60-0FAA2470"] = {
-["SpecId"] = 105,
-["LastSeen"] = 31826.7623497,
-["LastAttempt"] = 31826.439327,
-},
-["Player-11-0E476425"] = {
-["LastSeen"] = 34966.1594706,
-["SpecId"] = 264,
-},
-["Player-1428-0E188EBB"] = {
-["SpecId"] = 253,
-["LastAttempt"] = 32198.1095196,
-["LastSeen"] = 32198.7884557,
-},
-["Player-11-0B30CB28"] = {
-["SpecId"] = 269,
-["LastSeen"] = 16234.9929761,
-},
 ["Player-52-0D81F3CA"] = {
 ["SpecId"] = 1467,
 ["LastAttempt"] = 1310.7092245,
 ["LastSeen"] = 3294.5303384,
-},
-["Player-1428-0E39F2CA"] = {
-["SpecId"] = 70,
-["LastSeen"] = 5492.249335500001,
-["LastAttempt"] = 5491.881236200001,
 },
 ["Player-1136-05EBC0B1"] = {
 ["SpecId"] = 253,
@@ -9530,17 +9548,41 @@ FrameSortDB = {
 ["LastSeen"] = 26393.6777485,
 ["SpecId"] = 72,
 },
-["Player-11-0E75A9CC"] = {
-["LastSeen"] = 2567.8772937,
-["SpecId"] = 270,
+["Player-1168-066EB14D"] = {
+["SpecId"] = 257,
+["LastAttempt"] = 17281.9566501,
+["LastSeen"] = 17282.4173038,
 },
-["Player-11-0EB24BF5"] = {
-["SpecId"] = 252,
-["LastSeen"] = 30872.6983964,
+["Player-3683-0E213B83"] = {
+["SpecId"] = 264,
+["LastAttempt"] = 20767.3682496,
+["LastSeen"] = 20767.8423683,
 },
 ["Player-5-0BB3FEC3"] = {
 ["SpecId"] = 252,
 ["LastSeen"] = 10599.6440806,
+},
+["Player-11-0E9D61D5"] = {
+["SpecId"] = 65,
+["LastSeen"] = 37199.1958364,
+},
+["Player-1168-07E8792D"] = {
+["SpecId"] = 63,
+["LastAttempt"] = 31866.8857094,
+["LastSeen"] = 32075.3069416,
+},
+["Player-11-0E75A9CC"] = {
+["LastSeen"] = 2567.8772937,
+["SpecId"] = 270,
+},
+["Player-9-0B8DE3C1"] = {
+["SpecId"] = 258,
+["LastSeen"] = 42168.2331071,
+},
+["Player-11-0EB536C4"] = {
+["SpecId"] = 268,
+["LastAttempt"] = 14024.8200719,
+["LastSeen"] = 14882.5987633,
 },
 ["Player-1185-0B6252AA"] = {
 ["SpecId"] = 265,
@@ -9555,13 +9597,14 @@ FrameSortDB = {
 ["SpecId"] = 1480,
 ["LastSeen"] = 47691.2175923,
 },
-["Player-3676-0EDE3C11"] = {
-["LastSeen"] = 18623.6526356,
-["SpecId"] = 269,
+["Player-162-0B1D20BF"] = {
+["SpecId"] = 103,
+["LastSeen"] = 37562.6872374,
+["LastAttempt"] = 37562.2718431,
 },
-["Player-9-0B8DE3C1"] = {
-["SpecId"] = 258,
-["LastSeen"] = 42168.2331071,
+["Player-11-0EAF8C7A"] = {
+["LastSeen"] = 10746.2396162,
+["SpecId"] = 581,
 },
 ["Player-11-0EB7002C"] = {
 ["LastSeen"] = 1735.4608728,
@@ -9572,38 +9615,36 @@ FrameSortDB = {
 ["LastSeen"] = 9362.6951443,
 ["LastAttempt"] = 9362.578143100001,
 },
-["Player-11-0EB536C4"] = {
-["SpecId"] = 268,
-["LastAttempt"] = 14024.8200719,
-["LastSeen"] = 14882.5987633,
+["Player-11-0EB68E03"] = {
+["SpecId"] = 71,
+["LastSeen"] = 37412.9352123,
 },
-["Player-162-0B1D20BF"] = {
-["SpecId"] = 103,
-["LastSeen"] = 37562.6872374,
-["LastAttempt"] = 37562.2718431,
+["Player-1428-0E61FC38"] = {
+["SpecId"] = 65,
+["LastSeen"] = 20402.2219887,
+["LastAttempt"] = 20155.8886892,
 },
 ["Player-60-0F88E502"] = {
 ["SpecId"] = 268,
 ["LastAttempt"] = 55866.8469389,
 ["LastSeen"] = 55867.15284,
 },
-["Player-11-0EAF8C7A"] = {
-["LastSeen"] = 10746.2396162,
-["SpecId"] = 581,
+["Player-11-0E8E81BD"] = {
+["SpecId"] = 577,
+["LastSeen"] = 17511.4099255,
+["LastAttempt"] = 17511.657294,
 },
-["Player-11-0DDE009B"] = {
-["SpecId"] = 71,
-["LastSeen"] = 40549.6497898,
+["Player-3693-0E0BCD62"] = {
+["SpecId"] = 259,
+["LastSeen"] = 16246.0105057,
 },
-["Player-11-0EACA44F"] = {
-["SpecId"] = 71,
-["LastSeen"] = 29000.2682752,
-["LastAttempt"] = 28999.9674242,
+["Player-11-0EB5EC68"] = {
+["SpecId"] = 255,
+["LastSeen"] = 8605.5873429,
 },
-["Player-1428-0E61FC38"] = {
-["SpecId"] = 65,
-["LastSeen"] = 20402.2219887,
-["LastAttempt"] = 20155.8886892,
+["Player-11-0DDE0CD8"] = {
+["LastSeen"] = 20171.6474217,
+["SpecId"] = 258,
 },
 ["Player-11-0E9ED69F"] = {
 ["SpecId"] = 250,
@@ -9618,36 +9659,14 @@ FrameSortDB = {
 ["LastSeen"] = 891.6846202,
 ["SpecId"] = 70,
 },
-["Player-11-0E8E81BD"] = {
-["SpecId"] = 577,
-["LastSeen"] = 17511.4099255,
-["LastAttempt"] = 17511.657294,
+["Player-11-0EB86D8A"] = {
+["SpecId"] = 72,
+["LastAttempt"] = 50273.593428,
+["LastSeen"] = 52264.38516480001,
 },
-["Player-11-0DDE0CD8"] = {
-["LastSeen"] = 20171.6474217,
-["SpecId"] = 258,
-},
-["Player-1185-0EA8A70F"] = {
-["SpecId"] = 252,
-["LastAttempt"] = 17299.1666349,
-["LastSeen"] = 17298.9794947,
-},
-["Player-3693-0E0BCD62"] = {
-["SpecId"] = 259,
-["LastSeen"] = 16246.0105057,
-},
-["Player-3683-0D74CAC2"] = {
-["LastSeen"] = 29576.124591,
-["SpecId"] = 259,
-},
-["Player-96-056F6CBA"] = {
-["SpecId"] = 256,
-["LastAttempt"] = 21601.5003683,
-["LastSeen"] = 21601.637372,
-},
-["Player-11-0AEA613D"] = {
-["SpecId"] = 266,
-["LastSeen"] = 1042.2849973,
+["Player-11-0E131D41"] = {
+["SpecId"] = 262,
+["LastSeen"] = 10932.8655225,
 },
 ["Player-11-0EB2E5D9"] = {
 ["LastSeen"] = 32562.5861155,
@@ -9658,15 +9677,14 @@ FrameSortDB = {
 ["LastSeen"] = 3599.1990602,
 ["LastAttempt"] = 2937.7822114,
 },
-["Player-3723-0C585157"] = {
-["SpecId"] = 266,
-["LastSeen"] = 23665.0240981,
-["LastAttempt"] = 23661.4067581,
+["Player-3683-0D74CAC2"] = {
+["LastSeen"] = 29576.124591,
+["SpecId"] = 259,
 },
-["Player-3676-0E1A1E2F"] = {
-["SpecId"] = 65,
-["LastSeen"] = 17483.3608949,
-["LastAttempt"] = 13700.0416226,
+["Player-96-056F6CBA"] = {
+["SpecId"] = 256,
+["LastAttempt"] = 21601.5003683,
+["LastSeen"] = 21601.637372,
 },
 ["Player-11-0AD65AA1"] = {
 ["SpecId"] = 66,
@@ -9681,15 +9699,37 @@ FrameSortDB = {
 ["LastSeen"] = 13470.2577001,
 ["SpecId"] = 70,
 },
-["Player-3725-0C5EDA4F"] = {
-["SpecId"] = 71,
-["LastAttempt"] = 20725.8927544,
-["LastSeen"] = 20726.3210162,
+["Player-3723-0C585157"] = {
+["SpecId"] = 266,
+["LastSeen"] = 23665.0240981,
+["LastAttempt"] = 23661.4067581,
 },
 ["Player-1425-0EE4B379"] = {
 ["SpecId"] = 105,
 ["LastAttempt"] = 46970.37594680001,
 ["LastSeen"] = 46970.7308733,
+},
+["Player-60-0E972D53"] = {
+["SpecId"] = 103,
+["LastAttempt"] = 50284.51377300001,
+["LastSeen"] = 51503.0751583,
+},
+["Player-3676-0EC097A3"] = {
+["SpecId"] = 1480,
+["LastAttempt"] = 13402.9626815,
+["LastSeen"] = 17202.3941565,
+},
+["Player-73-0B692CB2"] = {
+["SpecId"] = 1480,
+["LastSeen"] = 1983.5544648,
+},
+["Player-11-0EAFE689"] = {
+["LastSeen"] = 15088.4118239,
+["SpecId"] = 1473,
+},
+["Player-11-0EB41D2E"] = {
+["LastSeen"] = 22016.9767366,
+["SpecId"] = 105,
 },
 ["Player-11-0EB919FB"] = {
 ["LastSeen"] = 3917.441438800001,
@@ -9699,31 +9739,31 @@ FrameSortDB = {
 ["SpecId"] = 104,
 ["LastSeen"] = 5305.7204774,
 },
-["Player-3676-0EC097A3"] = {
-["SpecId"] = 1480,
-["LastAttempt"] = 13402.9626815,
-["LastSeen"] = 17202.3941565,
-},
-["Player-11-0EB41D2E"] = {
-["LastSeen"] = 22016.9767366,
-["SpecId"] = 105,
-},
-["Player-61-0FC5D8C8"] = {
+["Player-5-0E7F3573"] = {
 ["SpecId"] = 71,
-["LastAttempt"] = 13249.665238,
-["LastSeen"] = 13250.0115188,
-},
-["Player-73-0B692CB2"] = {
-["SpecId"] = 1480,
-["LastSeen"] = 1983.5544648,
-},
-["Player-60-0EFB728B"] = {
-["SpecId"] = 258,
-["LastSeen"] = 10860.8130433,
+["LastAttempt"] = 14977.4496025,
+["LastSeen"] = 15023.5043606,
 },
 ["Player-61-0AAD01C9"] = {
 ["SpecId"] = 72,
 ["LastSeen"] = 54988.7162773,
+},
+["Player-1168-0AE293E3"] = {
+["SpecId"] = 104,
+["LastAttempt"] = 49401.85172750001,
+["LastSeen"] = 49412.1481071,
+},
+["Player-1136-098F8562"] = {
+["LastSeen"] = 8508.3880532,
+["SpecId"] = 252,
+},
+["Player-11-0E8A4DED"] = {
+["SpecId"] = 581,
+["LastSeen"] = 36045.26687460001,
+},
+["Player-63-018A51D2"] = {
+["SpecId"] = 64,
+["LastSeen"] = 20952.8551393,
 },
 ["Player-11-0EB3EA06"] = {
 ["SpecId"] = 1467,
@@ -9738,9 +9778,9 @@ FrameSortDB = {
 ["LastSeen"] = 25140.4855087,
 ["SpecId"] = 251,
 },
-["Player-63-018A51D2"] = {
+["Player-3693-07DE952A"] = {
+["LastSeen"] = 38807.3583814,
 ["SpecId"] = 64,
-["LastSeen"] = 20952.8551393,
 },
 ["Player-125-08A986C7"] = {
 ["SpecId"] = 261,
@@ -9750,24 +9790,6 @@ FrameSortDB = {
 ["Player-5-0E909FD7"] = {
 ["LastSeen"] = 2312.777573,
 ["SpecId"] = 270,
-},
-["Player-3675-0A46A079"] = {
-["SpecId"] = 577,
-["LastSeen"] = 19698.901104,
-},
-["Player-3693-07DE952A"] = {
-["LastSeen"] = 38807.3583814,
-["SpecId"] = 64,
-},
-["Player-1070-0D0ACAAD"] = {
-["SpecId"] = 270,
-["LastSeen"] = 29605.3620767,
-["LastAttempt"] = 29605.0536179,
-},
-["Player-5-0EACFD3C"] = {
-["SpecId"] = 577,
-["LastSeen"] = 2328.1727418,
-["LastAttempt"] = 2327.8347701,
 },
 ["Player-5-0EB77B29"] = {
 ["SpecId"] = 257,
@@ -9781,20 +9803,36 @@ FrameSortDB = {
 ["SpecId"] = 254,
 ["LastSeen"] = 39315.6225256,
 },
-["Player-121-08A77C27"] = {
-["SpecId"] = 71,
-["LastSeen"] = 6371.7421095,
-["LastAttempt"] = 5669.3428105,
+["Player-5-0EACFD3C"] = {
+["SpecId"] = 577,
+["LastSeen"] = 2328.1727418,
+["LastAttempt"] = 2327.8347701,
+},
+["Player-60-0FE04F4E"] = {
+["LastSeen"] = 2165.5023858,
+["SpecId"] = 104,
+},
+["Player-5-0E731A99"] = {
+["SpecId"] = 258,
+["LastSeen"] = 23530.198652,
+},
+["Player-11-0EB7BFFD"] = {
+["LastSeen"] = 9884.3343139,
+["SpecId"] = 259,
+},
+["Player-3693-0E47899A"] = {
+["SpecId"] = 1473,
+["LastSeen"] = 11642.1755154,
+["LastAttempt"] = 11641.8914536,
 },
 ["Player-1138-08EF10EF"] = {
 ["SpecId"] = 259,
 ["LastAttempt"] = 23273.7250015,
 ["LastSeen"] = 23274.0216464,
 },
-["Player-3693-0E47899A"] = {
-["SpecId"] = 1473,
-["LastSeen"] = 11642.1755154,
-["LastAttempt"] = 11641.8914536,
+["Player-73-0AF2093E"] = {
+["LastSeen"] = 14919.0121438,
+["SpecId"] = 265,
 },
 ["Player-11-0EA939E2"] = {
 ["SpecId"] = 254,
@@ -9813,30 +9851,14 @@ FrameSortDB = {
 ["LastSeen"] = 47133.1250546,
 ["SpecId"] = 1480,
 },
-["Player-11-0EB44406"] = {
-["LastSeen"] = 45820.6479159,
-["SpecId"] = 270,
-},
-["Player-11-0E1B4C7B"] = {
-["LastSeen"] = 7373.631044000001,
-["SpecId"] = 259,
-},
-["Player-1168-0949E058"] = {
-["LastSeen"] = 14919.4720075,
-["SpecId"] = 65,
-},
-["Player-11-0E3052D2"] = {
-["LastSeen"] = 9551.7672363,
-["SpecId"] = 62,
-},
 ["Player-11-0E78DE54"] = {
 ["LastSeen"] = 33058.40249150001,
 ["SpecId"] = 264,
 },
-["Player-11-0EA007B7"] = {
-["SpecId"] = 71,
-["LastAttempt"] = 3264.9886284,
-["LastSeen"] = 3265.3148624,
+["Player-3207-05567D09"] = {
+["SpecId"] = 254,
+["LastSeen"] = 2669.9387097,
+["LastAttempt"] = 2669.7677897,
 },
 ["Player-60-0FE68EDE"] = {
 ["LastSeen"] = 24525.7168409,
@@ -9849,6 +9871,24 @@ FrameSortDB = {
 ["Player-11-0E606D74"] = {
 ["SpecId"] = 252,
 ["LastSeen"] = 30843.5469681,
+},
+["Player-11-0EA007B7"] = {
+["SpecId"] = 71,
+["LastAttempt"] = 3264.9886284,
+["LastSeen"] = 3265.3148624,
+},
+["Player-3675-0A610B3A"] = {
+["SpecId"] = 65,
+["LastSeen"] = 33719.63237070001,
+},
+["Player-3675-07DF8660"] = {
+["LastSeen"] = 12361.8347841,
+["SpecId"] = 71,
+},
+["Player-3675-0AAF5E6B"] = {
+["SpecId"] = 257,
+["LastAttempt"] = 22942.4299001,
+["LastSeen"] = 22942.7652519,
 },
 ["Player-11-0E4BC43D"] = {
 ["LastSeen"] = 22490.1275741,
@@ -9863,24 +9903,6 @@ FrameSortDB = {
 ["SpecId"] = 102,
 ["LastSeen"] = 19758.0244121,
 },
-["Player-3675-0AAF5E6B"] = {
-["SpecId"] = 257,
-["LastAttempt"] = 22942.4299001,
-["LastSeen"] = 22942.7652519,
-},
-["Player-5-0E7745E9"] = {
-["SpecId"] = 251,
-["LastSeen"] = 22939.3201331,
-},
-["Player-1425-0EDDA7AF"] = {
-["SpecId"] = 256,
-["LastAttempt"] = 22552.1589594,
-["LastSeen"] = 22552.4773102,
-},
-["Player-3676-0EE707EB"] = {
-["LastSeen"] = 16621.1262179,
-["SpecId"] = 103,
-},
 ["Player-3725-0C51415C"] = {
 ["LastSeen"] = 7697.5615943,
 ["SpecId"] = 264,
@@ -9889,23 +9911,40 @@ FrameSortDB = {
 ["LastSeen"] = 14919.0121077,
 ["SpecId"] = 70,
 },
-["Player-1138-0980505E"] = {
-["SpecId"] = 253,
-["LastAttempt"] = 39311.3474051,
-["LastSeen"] = 39311.5783842,
+["Player-1425-0EDDA7AF"] = {
+["SpecId"] = 256,
+["LastAttempt"] = 22552.1589594,
+["LastSeen"] = 22552.4773102,
 },
 ["Player-1168-0ACB5855"] = {
 ["LastSeen"] = 14515.3149848,
 ["SpecId"] = 72,
 },
-["Player-11-0E137999"] = {
-["LastSeen"] = 14295.5594379,
-["SpecId"] = 70,
+["Player-3209-0C1B23D5"] = {
+["LastSeen"] = 43945.9764309,
+["SpecId"] = 265,
 },
 ["Player-11-0EB7F634"] = {
 ["SpecId"] = 103,
 ["LastAttempt"] = 45007.6556759,
 ["LastSeen"] = 45007.84725380001,
+},
+["Player-1138-0980505E"] = {
+["SpecId"] = 253,
+["LastAttempt"] = 39311.3474051,
+["LastSeen"] = 39311.5783842,
+},
+["Player-3675-079638A2"] = {
+["LastSeen"] = 12361.1197886,
+["SpecId"] = 65,
+},
+["Player-11-0E137999"] = {
+["LastSeen"] = 14295.5594379,
+["SpecId"] = 70,
+},
+["Player-162-0C1EAC3F"] = {
+["SpecId"] = 577,
+["LastSeen"] = 41776.2765803,
 },
 ["Player-11-0E621813"] = {
 ["SpecId"] = 263,
@@ -9925,57 +9964,53 @@ FrameSortDB = {
 ["LastSeen"] = 37771.46571590001,
 ["LastAttempt"] = 37771.1408248,
 },
-["Player-3207-0E0DA98E"] = {
-["SpecId"] = 257,
-["LastAttempt"] = 15485.284513,
-["LastSeen"] = 15485.6330238,
+["Player-1168-09A7B015"] = {
+["SpecId"] = 72,
+["LastSeen"] = 15447.0713779,
+["LastAttempt"] = 15446.7384157,
 },
 ["Player-1428-047F8D8D"] = {
 ["SpecId"] = 263,
 ["LastAttempt"] = 22225.17413,
 ["LastSeen"] = 22225.4863028,
 },
-["Player-1151-09859B1F"] = {
-["SpecId"] = 64,
-["LastAttempt"] = 2912.2874158,
-["LastSeen"] = 3226.0433399,
+["Player-3675-0AD16BB4"] = {
+["LastSeen"] = 45006.3159972,
+["SpecId"] = 269,
 },
-["Player-121-09BCE899"] = {
-["SpecId"] = 266,
-["LastAttempt"] = 17250.9606843,
-["LastSeen"] = 17251.1471063,
+["Player-11-0E83A069"] = {
+["SpecId"] = 577,
+["LastSeen"] = 18773.8169631,
 },
 ["Player-3661-0991FD28"] = {
 ["SpecId"] = 64,
 ["LastAttempt"] = 51107.0415033,
 ["LastSeen"] = 51931.1695143,
 },
-["Player-3676-0ECEA6C3"] = {
-["SpecId"] = 251,
-["LastSeen"] = 18776.136852,
-["LastAttempt"] = 18775.7733946,
+["Player-104-0C746A1C"] = {
+["SpecId"] = 260,
+["LastSeen"] = 47992.8129295,
 },
 ["Player-1185-0D6011E6"] = {
 ["SpecId"] = 254,
 ["LastAttempt"] = 1381.1017018,
 ["LastSeen"] = 1453.6740773,
 },
-["Player-11-0E83A069"] = {
-["SpecId"] = 577,
-["LastSeen"] = 18773.8169631,
-},
-["Player-60-0FE00CE2"] = {
-["SpecId"] = 1480,
-["LastAttempt"] = 6243.1474686,
-["LastSeen"] = 6243.5258322,
-},
-["Player-104-0C746A1C"] = {
-["SpecId"] = 260,
-["LastSeen"] = 47992.8129295,
-},
 ["Player-104-0C739F7A"] = {
 ["LastSeen"] = 13140.152434,
 ["SpecId"] = 105,
+},
+["Player-104-0DA536AD"] = {
+["LastSeen"] = 46110.2885917,
+["SpecId"] = 1480,
+},
+["Player-1427-0DDA73B5"] = {
+["SpecId"] = 267,
+["LastSeen"] = 51067.3306679,
+},
+["Player-3721-0C60E901"] = {
+["LastSeen"] = 3458.9618472,
+["SpecId"] = 252,
 },
 ["Player-11-0EB3B94A"] = {
 ["LastSeen"] = 5021.016979200001,
@@ -9985,9 +10020,9 @@ FrameSortDB = {
 ["LastSeen"] = 18617.7296477,
 ["SpecId"] = 265,
 },
-["Player-1427-0DDA73B5"] = {
-["SpecId"] = 267,
-["LastSeen"] = 51067.3306679,
+["Player-162-0BBF53AE"] = {
+["LastSeen"] = 3222.7483391,
+["SpecId"] = 266,
 },
 ["Player-1129-0B7D0055"] = {
 ["SpecId"] = 253,
@@ -9999,25 +10034,24 @@ FrameSortDB = {
 ["LastAttempt"] = 29264.5618358,
 ["LastSeen"] = 29264.9495044,
 },
-["Player-67-0F7C1CB7"] = {
-["SpecId"] = 1467,
-["LastAttempt"] = 21490.9320928,
-["LastSeen"] = 21491.479766,
+["Player-76-0BFD4034"] = {
+["LastSeen"] = 12828.6295902,
+["SpecId"] = 259,
 },
 ["Player-3676-0ED5B246"] = {
 ["SpecId"] = 1480,
 ["LastAttempt"] = 35183.7336966,
 ["LastSeen"] = 35285.9674558,
 },
-["Player-3725-0C516C6E"] = {
-["SpecId"] = 256,
-["LastAttempt"] = 13578.7130655,
-["LastSeen"] = 13579.1544107,
+["Player-11-0E6F65BA"] = {
+["SpecId"] = 64,
+["LastAttempt"] = 18048.6736271,
+["LastSeen"] = 18048.7929923,
 },
-["Player-1070-0E2BC154"] = {
-["SpecId"] = 262,
-["LastAttempt"] = 7803.6885522,
-["LastSeen"] = 7803.9974265,
+["Player-61-0FE4794D"] = {
+["SpecId"] = 70,
+["LastAttempt"] = 24034.8973886,
+["LastSeen"] = 24035.1524361,
 },
 ["Player-1175-0D07A98D"] = {
 ["SpecId"] = 105,
@@ -10038,54 +10072,55 @@ FrameSortDB = {
 ["LastSeen"] = 25717.2442302,
 ["LastAttempt"] = 25717.0236524,
 },
-["Player-60-0FDBF880"] = {
-["SpecId"] = 253,
-["LastAttempt"] = 22104.5319352,
-["LastSeen"] = 22104.8520221,
+["Player-11-0E63218D"] = {
+["SpecId"] = 70,
+["LastSeen"] = 25993.7674792,
 },
-["Player-60-0FF41B21"] = {
-["SpecId"] = 71,
-["LastSeen"] = 44888.6689974,
+["Player-60-0FF23816"] = {
+["LastSeen"] = 23509.1703772,
+["SpecId"] = 263,
 },
-["Player-11-0E6F65BA"] = {
-["SpecId"] = 64,
-["LastAttempt"] = 18048.6736271,
-["LastSeen"] = 18048.7929923,
+["Player-3209-0C128B37"] = {
+["SpecId"] = 577,
+["LastSeen"] = 25170.2666787,
 },
 ["Player-113-07E2C3D5"] = {
 ["SpecId"] = 270,
 ["LastSeen"] = 15859.916377,
 ["LastAttempt"] = 15859.603589,
 },
-["Player-11-0E63218D"] = {
-["SpecId"] = 70,
-["LastSeen"] = 25993.7674792,
+["Player-11-0E56C1BF"] = {
+["LastSeen"] = 2037.4043352,
+["SpecId"] = 261,
 },
 ["Player-3675-0A80831B"] = {
 ["SpecId"] = 258,
 ["LastAttempt"] = 29275.2190697,
 ["LastSeen"] = 29275.5951858,
 },
-["Player-3209-0C128B37"] = {
-["SpecId"] = 577,
-["LastSeen"] = 25170.2666787,
-},
-["Player-4-0E927E13"] = {
-["SpecId"] = 254,
-["LastSeen"] = 25517.7754797,
-},
-["Player-11-0E56C1BF"] = {
-["LastSeen"] = 2037.4043352,
-["SpecId"] = 261,
-},
-["Player-60-0FF23816"] = {
-["LastSeen"] = 23509.1703772,
-["SpecId"] = 263,
-},
 ["Player-3675-0B056618"] = {
 ["SpecId"] = 1480,
 ["LastAttempt"] = 52089.28371810001,
 ["LastSeen"] = 52370.2518438,
+},
+["Player-61-0EAE47E6"] = {
+["SpecId"] = 72,
+["LastAttempt"] = 9340.780961,
+["LastSeen"] = 9341.4023347,
+},
+["Player-11-0E2A4386"] = {
+["SpecId"] = 266,
+["LastAttempt"] = 42182.972691,
+["LastSeen"] = 42182.5992991,
+},
+["Player-11-0EA229EC"] = {
+["SpecId"] = 254,
+["LastSeen"] = 30215.0255956,
+},
+["Player-3675-0AE75DC1"] = {
+["SpecId"] = 70,
+["LastAttempt"] = 5117.6481443,
+["LastSeen"] = 5117.8719136,
 },
 ["Player-3684-0E77CA5D"] = {
 ["SpecId"] = 64,
@@ -10095,40 +10130,38 @@ FrameSortDB = {
 ["LastSeen"] = 29576.1242448,
 ["SpecId"] = 65,
 },
-["Player-11-0EA229EC"] = {
-["SpecId"] = 254,
-["LastSeen"] = 30215.0255956,
+["Player-11-0E353183"] = {
+["SpecId"] = 65,
+["LastSeen"] = 235.0855135,
 },
 ["Player-3661-091E66E5"] = {
 ["LastSeen"] = 4928.6664013,
 ["SpecId"] = 252,
 },
-["Player-160-0C20D77E"] = {
-["SpecId"] = 1468,
-["LastSeen"] = 25517.7754219,
+["Player-3675-0AFA8A28"] = {
+["LastSeen"] = 17159.7568673,
+["SpecId"] = 70,
 },
-["Player-1428-0EE36AD5"] = {
-["SpecId"] = 256,
-["LastAttempt"] = 23651.2297415,
-["LastSeen"] = 23651.520618,
+["Player-11-0EA31294"] = {
+["LastSeen"] = 11735.979228,
+["SpecId"] = 253,
 },
 ["Player-163-0AA31626"] = {
 ["SpecId"] = 265,
 ["LastSeen"] = 47136.8422589,
 },
-["Player-3675-0AE75DC1"] = {
-["SpecId"] = 70,
-["LastAttempt"] = 5117.6481443,
-["LastSeen"] = 5117.8719136,
+["Player-1427-09EFB82F"] = {
+["LastSeen"] = 2072.7552709,
+["SpecId"] = 256,
 },
 ["Player-1171-0A4FF980"] = {
 ["SpecId"] = 102,
 ["LastAttempt"] = 39328.4150899,
 ["LastSeen"] = 39328.7764818,
 },
-["Player-11-0EA31294"] = {
-["LastSeen"] = 11735.979228,
-["SpecId"] = 253,
+["Player-5-0EA53F3E"] = {
+["SpecId"] = 252,
+["LastSeen"] = 34117.2473324,
 },
 ["Player-11-0E8F92AF"] = {
 ["SpecId"] = 105,
@@ -10139,19 +10172,17 @@ FrameSortDB = {
 ["LastSeen"] = 16689.3711273,
 ["LastAttempt"] = 16689.074988,
 },
-["Player-1129-0AEB809F"] = {
-["SpecId"] = 260,
-["LastSeen"] = 245.3075871,
-["LastAttempt"] = 244.9689967,
+["Player-61-0E89EA11"] = {
+["SpecId"] = 256,
+["LastSeen"] = 17262.0628674,
 },
 ["Player-73-0FF316D7"] = {
 ["SpecId"] = 72,
 ["LastSeen"] = 15782.3507804,
 },
-["Player-60-0FF91370"] = {
+["Player-60-0DDF822B"] = {
 ["SpecId"] = 71,
-["LastSeen"] = 3340.5997425,
-["LastAttempt"] = 3340.2806664,
+["LastSeen"] = 17480.173309,
 },
 },
 }

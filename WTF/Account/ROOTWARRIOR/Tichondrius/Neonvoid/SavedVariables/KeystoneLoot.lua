@@ -14,14 +14,14 @@ KeystoneLootCharDB = {
 ["track"] = "champion",
 ["rank"] = 1,
 },
-["specId"] = 258,
-["slotIds"] = {
-},
+["specId"] = 0,
+["classId"] = 5,
 ["raid"] = {
 ["difficulty"] = "normal",
 ["rank"] = 1,
 },
 ["slotId"] = 10,
-["classId"] = 5,
+["slotIds"] = {
+},
 },
 }

@@ -61,10 +61,9 @@ CappingSettings = {
 ["width"] = 283,
 ["font"] = "1",
 ["position"] = {
-"TOP",
-"TOP",
--498.3352661132813,
--9.166633605957031,
+"TOPLEFT",
+"TOPLEFT",
+540.8311767578125,
 },
 ["barOnControl"] = "SAY",
 },

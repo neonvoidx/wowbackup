@@ -748,17 +748,17 @@ CooldownManagerCenteredDB = {
 ["state"] = "hidden",
 ["order"] = 48,
 },
-[81413] = {
+[241304] = {
 ["state"] = "hidden",
-["order"] = 93,
+["order"] = 22,
 },
 [250225] = {
 ["state"] = "hidden",
 ["order"] = 105,
 },
-[241304] = {
+[40772] = {
 ["state"] = "hidden",
-["order"] = 22,
+["order"] = 102,
 },
 [191393] = {
 ["state"] = "hidden",
@@ -776,9 +776,9 @@ CooldownManagerCenteredDB = {
 ["state"] = "hidden",
 ["order"] = 92,
 },
-[40772] = {
+[81413] = {
 ["state"] = "hidden",
-["order"] = 102,
+["order"] = 93,
 },
 [243733] = {
 ["state"] = "hidden",
@@ -966,12 +966,16 @@ CooldownManagerCenteredDB = {
 },
 [115636] = {
 },
-[1241059] = {
-["alwaysGlow"] = true,
+[1253304] = {
 },
 [13750] = {
 },
-[1253304] = {
+[15286] = {
+["barColor"] = {
+0.1019607931375504,
+0.2039215862751007,
+1,
+},
 },
 [443294] = {
 ["alwaysGlow"] = true,
@@ -984,12 +988,8 @@ CooldownManagerCenteredDB = {
 },
 [264571] = {
 },
-[15286] = {
-["barColor"] = {
-0.1019607931375504,
-0.2039215862751007,
-1,
-},
+[1241059] = {
+["alwaysGlow"] = true,
 },
 [122470] = {
 ["barColor"] = {

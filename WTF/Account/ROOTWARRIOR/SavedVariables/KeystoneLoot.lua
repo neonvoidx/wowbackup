@@ -11,7 +11,7 @@ KeystoneLootDB = {
 },
 ["minimap"] = {
 ["enabled"] = true,
-["minimapPos"] = 117.4630031377835,
+["minimapPos"] = 132.5321361082827,
 ["degrees"] = 195,
 },
 ["hideOtherItems"] = false,

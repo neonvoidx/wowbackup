@@ -13,7 +13,8 @@ SweepyBoopDB = {
 ["profiles"] = {
 ["Default"] = {
 ["nameplatesEnemy"] = {
-["lastModified"] = 10742.567,
+["arenaSpecIconVerticalOffset"] = -5,
+["lastModified"] = 15720.034,
 ["arenaSpecIconScale"] = 250,
 ["arenaSpecIconOthers"] = true,
 },
@@ -26,17 +27,17 @@ SweepyBoopDB = {
 ["rangeCheckerOffsetX"] = -85,
 ["combatIndicator"] = false,
 ["honorReminderThreshold"] = 14000,
+["hideBlizzArenaFrames"] = false,
 ["personalDROffsetY"] = -183,
 ["personalDRShowCleanStun"] = false,
 ["precognitionTrackerOffsetY"] = -17,
 ["personalDRSize"] = 35,
-["honorReminder"] = false,
 ["personalDR"] = true,
 ["healerInCrowdControl"] = true,
 ["personalDRTrackSilence"] = true,
+["honorReminder"] = false,
 ["personalDRTrackDisarm"] = true,
 ["personalDRTrackRoot"] = true,
-["hideBlizzArenaFrames"] = false,
 ["precognitionTrackerSize"] = 60,
 },
 ["raidFrames"] = {
@@ -56,6 +57,9 @@ SweepyBoopDB = {
 ["mouseCursor"] = {
 ["enabled"] = false,
 ["lastModified"] = 1868.053,
+},
+["minimap"] = {
+["minimapPos"] = 195.4647612203976,
 },
 },
 },

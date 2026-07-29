@@ -25,27 +25,27 @@ HandyNotesDB = {
 ["Praisesun - Mal'Ganis"] = "Praisesun - Mal'Ganis",
 ["Dernarplan - Mal'Ganis"] = "Dernarplan - Mal'Ganis",
 ["Thingreyline - Tichondrius"] = "Thingreyline - Tichondrius",
-["Gehyo - Mal'Ganis"] = "Gehyo - Mal'Ganis",
+["Thickshape - Mal'Ganis"] = "Thickshape - Mal'Ganis",
 ["Kumire - Mal'Ganis"] = "Kumire - Mal'Ganis",
 ["Stormclout - Tichondrius"] = "Stormclout - Tichondrius",
 ["Mäñýfäçëð - Tichondrius"] = "Mäñýfäçëð - Tichondrius",
 ["Reedingo - Tichondrius"] = "Reedingo - Tichondrius",
 ["Tampacks - Tichondrius"] = "Tampacks - Tichondrius",
-["Gehyo - Tichondrius"] = "Gehyo - Tichondrius",
+["Smaugchamp - Tichondrius"] = "Smaugchamp - Tichondrius",
 ["Auteist - Mal'Ganis"] = "Auteist - Mal'Ganis",
 ["Ofpuss - Mal'Ganis"] = "Ofpuss - Mal'Ganis",
-["Thickshape - Mal'Ganis"] = "Thickshape - Mal'Ganis",
+["Tampacks - Mal'Ganis"] = "Tampacks - Mal'Ganis",
 ["Smaugchamp - Mal'Ganis"] = "Smaugchamp - Mal'Ganis",
 ["Manyfaced - Tichondrius"] = "Manyfaced - Tichondrius",
-["Starstypeshi - Tichondrius"] = "Starstypeshi - Tichondrius",
-["Tampacks - Mal'Ganis"] = "Tampacks - Mal'Ganis",
+["Gehyo - Tichondrius"] = "Gehyo - Tichondrius",
+["Gehyo - Mal'Ganis"] = "Gehyo - Mal'Ganis",
 ["Kitedbro - Mal'Ganis"] = "Kitedbro - Mal'Ganis",
 ["Kuttoklok - Mal'Ganis"] = "Kuttoklok - Mal'Ganis",
 ["Mäñýfäçëð - Mal'Ganis"] = "Mäñýfäçëð - Mal'Ganis",
 ["Hellavator - Mal'Ganis"] = "Hellavator - Mal'Ganis",
 ["Charizhard - Mal'Ganis"] = "Charizhard - Mal'Ganis",
 ["Hellavator - Tichondrius"] = "Hellavator - Tichondrius",
-["Smaugchamp - Tichondrius"] = "Smaugchamp - Tichondrius",
+["Starstypeshi - Tichondrius"] = "Starstypeshi - Tichondrius",
 ["Choppiez - Mal'Ganis"] = "Choppiez - Mal'Ganis",
 ["Strathmoan - Tichondrius"] = "Strathmoan - Tichondrius",
 ["Reedingo - Mal'Ganis"] = "Reedingo - Mal'Ganis",
@@ -110,7 +110,7 @@ HandyNotesDB = {
 },
 ["Thingreyline - Tichondrius"] = {
 },
-["Gehyo - Mal'Ganis"] = {
+["Thickshape - Mal'Ganis"] = {
 },
 ["Kumire - Mal'Ganis"] = {
 },
@@ -122,21 +122,21 @@ HandyNotesDB = {
 },
 ["Tampacks - Tichondrius"] = {
 },
-["Gehyo - Tichondrius"] = {
+["Smaugchamp - Tichondrius"] = {
 },
 ["Auteist - Mal'Ganis"] = {
 },
 ["Ofpuss - Mal'Ganis"] = {
 },
-["Thickshape - Mal'Ganis"] = {
+["Tampacks - Mal'Ganis"] = {
 },
 ["Smaugchamp - Mal'Ganis"] = {
 },
 ["Manyfaced - Tichondrius"] = {
 },
-["Starstypeshi - Tichondrius"] = {
+["Gehyo - Tichondrius"] = {
 },
-["Tampacks - Mal'Ganis"] = {
+["Gehyo - Mal'Ganis"] = {
 },
 ["Kitedbro - Mal'Ganis"] = {
 },
@@ -150,7 +150,7 @@ HandyNotesDB = {
 },
 ["Hellavator - Tichondrius"] = {
 },
-["Smaugchamp - Tichondrius"] = {
+["Starstypeshi - Tichondrius"] = {
 },
 ["Choppiez - Mal'Ganis"] = {
 },
@@ -202,27 +202,27 @@ HandyNotes_HandyNotesDB = {
 ["Praisesun - Mal'Ganis"] = "Praisesun - Mal'Ganis",
 ["Dernarplan - Mal'Ganis"] = "Dernarplan - Mal'Ganis",
 ["Thingreyline - Tichondrius"] = "Thingreyline - Tichondrius",
-["Gehyo - Mal'Ganis"] = "Gehyo - Mal'Ganis",
+["Thickshape - Mal'Ganis"] = "Thickshape - Mal'Ganis",
 ["Kumire - Mal'Ganis"] = "Kumire - Mal'Ganis",
 ["Stormclout - Tichondrius"] = "Stormclout - Tichondrius",
 ["Mäñýfäçëð - Tichondrius"] = "Mäñýfäçëð - Tichondrius",
 ["Reedingo - Tichondrius"] = "Reedingo - Tichondrius",
 ["Tampacks - Tichondrius"] = "Tampacks - Tichondrius",
-["Gehyo - Tichondrius"] = "Gehyo - Tichondrius",
+["Smaugchamp - Tichondrius"] = "Smaugchamp - Tichondrius",
 ["Auteist - Mal'Ganis"] = "Auteist - Mal'Ganis",
 ["Ofpuss - Mal'Ganis"] = "Ofpuss - Mal'Ganis",
-["Thickshape - Mal'Ganis"] = "Thickshape - Mal'Ganis",
+["Tampacks - Mal'Ganis"] = "Tampacks - Mal'Ganis",
 ["Smaugchamp - Mal'Ganis"] = "Smaugchamp - Mal'Ganis",
 ["Manyfaced - Tichondrius"] = "Manyfaced - Tichondrius",
-["Starstypeshi - Tichondrius"] = "Starstypeshi - Tichondrius",
-["Tampacks - Mal'Ganis"] = "Tampacks - Mal'Ganis",
+["Gehyo - Tichondrius"] = "Gehyo - Tichondrius",
+["Gehyo - Mal'Ganis"] = "Gehyo - Mal'Ganis",
 ["Kitedbro - Mal'Ganis"] = "Kitedbro - Mal'Ganis",
 ["Kuttoklok - Mal'Ganis"] = "Kuttoklok - Mal'Ganis",
 ["Mäñýfäçëð - Mal'Ganis"] = "Mäñýfäçëð - Mal'Ganis",
 ["Hellavator - Mal'Ganis"] = "Hellavator - Mal'Ganis",
 ["Charizhard - Mal'Ganis"] = "Charizhard - Mal'Ganis",
 ["Hellavator - Tichondrius"] = "Hellavator - Tichondrius",
-["Smaugchamp - Tichondrius"] = "Smaugchamp - Tichondrius",
+["Starstypeshi - Tichondrius"] = "Starstypeshi - Tichondrius",
 ["Choppiez - Mal'Ganis"] = "Choppiez - Mal'Ganis",
 ["Strathmoan - Tichondrius"] = "Strathmoan - Tichondrius",
 ["Reedingo - Mal'Ganis"] = "Reedingo - Mal'Ganis",
@@ -284,7 +284,7 @@ HandyNotes_HandyNotesDB = {
 },
 ["Thingreyline - Tichondrius"] = {
 },
-["Gehyo - Mal'Ganis"] = {
+["Thickshape - Mal'Ganis"] = {
 },
 ["Kumire - Mal'Ganis"] = {
 },
@@ -296,21 +296,21 @@ HandyNotes_HandyNotesDB = {
 },
 ["Tampacks - Tichondrius"] = {
 },
-["Gehyo - Tichondrius"] = {
+["Smaugchamp - Tichondrius"] = {
 },
 ["Auteist - Mal'Ganis"] = {
 },
 ["Ofpuss - Mal'Ganis"] = {
 },
-["Thickshape - Mal'Ganis"] = {
+["Tampacks - Mal'Ganis"] = {
 },
 ["Smaugchamp - Mal'Ganis"] = {
 },
 ["Manyfaced - Tichondrius"] = {
 },
-["Starstypeshi - Tichondrius"] = {
+["Gehyo - Tichondrius"] = {
 },
-["Tampacks - Mal'Ganis"] = {
+["Gehyo - Mal'Ganis"] = {
 },
 ["Kitedbro - Mal'Ganis"] = {
 },
@@ -324,7 +324,7 @@ HandyNotes_HandyNotesDB = {
 },
 ["Hellavator - Tichondrius"] = {
 },
-["Smaugchamp - Tichondrius"] = {
+["Starstypeshi - Tichondrius"] = {
 },
 ["Choppiez - Mal'Ganis"] = {
 },

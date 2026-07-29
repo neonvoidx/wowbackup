@@ -9,7 +9,7 @@ local setPrdBySpec = function()
 		"Assassination", "Outlaw", "Subtlety", "Restoration", "Affliction", "Demonology",
 		"Destruction", "Arms", "Fury", "Protection", "Frost", "Unholy", "Devourer",
 		"Vengeance", "Feral", "Guardian", "Restoration", "Augmentation", "Preservation",
-		"Fire", "Frost",
+		"Fire", "Frost", "Shadow", "Windwalker"
 	}
 
 	local personalResource = 0
@@ -289,7 +289,6 @@ local function OnEvent(self, event, ...)
 		if unitTarget == "player" then
 			setPrdBySpec()
 		end
-		setPrdBySpec()
 	elseif event == "PLAYER_ENTERING_WORLD" then
 		applyDarkMode()
 		-- fix chat navigation
@@ -462,7 +461,7 @@ local function OnEvent(self, event, ...)
 			SetCVar("nameplateSelectedScale", 1.0)
 			SetCVar("nameplateMinAlpha", 0.7)
 			SetCVar("nameplateOccludedAlphaMult", 1.0)
-			SetCVar("nameplateAuraScale", 1.6)
+			SetCVar("nameplateAuraScale", 1.8)
 			SetCVar("nameplateDebuffPadding", 6)
 			SetCVar("nameplateShowAll", 1)
 			SetCVar("nameplateShowCastBars", 1)

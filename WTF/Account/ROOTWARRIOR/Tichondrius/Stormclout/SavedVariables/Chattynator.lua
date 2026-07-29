@@ -1,11 +1,6 @@
 
 CHATTYNATOR_CURRENT_PROFILE = "DEFAULT"
 CHATTYNATOR_COMMAND_HISTORY = {
-"/i you suck at mitigating dmg",
-"/i and playing boomkin",
-"/i simple as that",
-"/i you know what garrote does right",
-"/i lol",
 "/i checkpvp",
 "/i baby",
 "/i bet you never got past 2200",
@@ -202,4 +197,10 @@ CHATTYNATOR_COMMAND_HISTORY = {
 "/s /edit",
 "/s /rl",
 "/s /fstack",
+"/s /wa",
+"/s /rl",
+"/s /edit",
+"/s /sb",
+"/s /rl",
+"/s /edit",
 }
