@@ -11,13 +11,13 @@ KeystoneLootDB = {
 },
 ["minimap"] = {
 ["enabled"] = true,
-["minimapPos"] = 217.1349309867121,
+["minimapPos"] = 117.4630031377835,
 ["degrees"] = 195,
 },
 ["hideOtherItems"] = false,
 ["keystoneTooltip"] = true,
 ["favoriteTooltip"] = true,
-["wideMode"] = false,
+["multiSlotFilter"] = false,
 ["highlighting"] = {
 ["versatility"] = true,
 ["comboMode"] = false,
@@ -31,7 +31,7 @@ KeystoneLootDB = {
 ["dropAlert"] = true,
 ["dungeons"] = true,
 },
-["multiSlotFilter"] = false,
+["wideMode"] = false,
 },
 ["version"] = 9,
 ["favorites"] = {
@@ -119,11 +119,8 @@ KeystoneLootDB = {
 [1480] = {
 },
 },
-[2795] = {
+[2733] = {
 [1480] = {
-[249343] = {
-["icon"] = 7636702,
-},
 },
 },
 [2735] = {
@@ -137,8 +134,11 @@ KeystoneLootDB = {
 [1480] = {
 },
 },
-[2733] = {
+[2795] = {
 [1480] = {
+[249343] = {
+["icon"] = 7636702,
+},
 },
 },
 },

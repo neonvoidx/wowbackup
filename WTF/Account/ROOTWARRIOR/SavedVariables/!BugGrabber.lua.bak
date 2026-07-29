@@ -1,7 +1,7 @@
 
 BugGrabberDB = {
 ["lastSanitation"] = 3,
-["session"] = 24,
+["session"] = 34,
 ["errors"] = {
 {
 ["message"] = "attempted to iterate a table that cannot be accessed while tainted (execution tainted by 'CooldownManagerCentered')",

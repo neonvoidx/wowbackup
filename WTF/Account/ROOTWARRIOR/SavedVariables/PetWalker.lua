@@ -9,7 +9,7 @@ PetWalkerDB = {
 "BattlePet-0-0000227F0880",
 "BattlePet-0-0000228BDA93",
 },
-["remainingTimer"] = 432,
+["remainingTimer"] = 517,
 ["favsOnly_reset_by_pw"] = false,
 ["drSummoning"] = true,
 ["dbVersion"] = 3,

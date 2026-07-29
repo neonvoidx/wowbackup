@@ -92,10 +92,10 @@ CooldownManagerCenteredDB = {
 ["stackFontName"] = "1",
 ["cooldownFontSize"] = "NIL",
 ["orientation"] = "Horizontal Right",
-["cooldownTextOffsetY"] = 0,
+["iconZoom"] = 0.3,
 ["stackFontSize"] = 14,
 ["keybindFontName"] = "1",
-["iconZoom"] = 0.3,
+["cooldownTextOffsetY"] = 0,
 ["cooldownTextOffsetX"] = 0,
 ["stackOffsetY"] = 1,
 },
@@ -136,10 +136,10 @@ CooldownManagerCenteredDB = {
 ["cooldownFontSize"] = "NIL",
 ["strata"] = "MEDIUM",
 ["orientation"] = "Horizontal Right",
-["cooldownTextOffsetY"] = 0,
+["iconZoom"] = 0.3,
 ["stackFontSize"] = 14,
 ["keybindFontName"] = "1",
-["iconZoom"] = 0.3,
+["cooldownTextOffsetY"] = 0,
 ["cooldownTextOffsetX"] = 0,
 ["stackOffsetY"] = 1,
 },
@@ -166,9 +166,9 @@ CooldownManagerCenteredDB = {
 ["EssentialCooldownViewer"] = {
 ["SHOW_WITH_ENEMY_TARGET"] = true,
 },
-["CMCTracker1"] = {
-},
 ["UtilityCooldownViewer"] = {
+},
+["CMCTracker1"] = {
 },
 ["CMCTracker2"] = {
 },
@@ -408,9 +408,9 @@ CooldownManagerCenteredDB = {
 ["state"] = "tracker1",
 ["order"] = 32,
 },
-[312411] = {
-["state"] = "tracker1",
-["order"] = 13,
+[403216] = {
+["state"] = "hidden",
+["order"] = 82,
 },
 [69070] = {
 ["state"] = "tracker1",
@@ -496,9 +496,9 @@ CooldownManagerCenteredDB = {
 ["state"] = "hidden",
 ["order"] = 28,
 },
-[403216] = {
-["state"] = "hidden",
-["order"] = 82,
+[312411] = {
+["state"] = "tracker1",
+["order"] = 13,
 },
 [68992] = {
 ["state"] = "tracker1",
@@ -772,17 +772,17 @@ CooldownManagerCenteredDB = {
 ["state"] = "hidden",
 ["order"] = 48,
 },
-[81413] = {
+[241304] = {
 ["state"] = "hidden",
-["order"] = 93,
+["order"] = 22,
 },
 [250225] = {
 ["state"] = "hidden",
 ["order"] = 105,
 },
-[241304] = {
+[40772] = {
 ["state"] = "hidden",
-["order"] = 22,
+["order"] = 102,
 },
 [191393] = {
 ["state"] = "hidden",
@@ -800,9 +800,9 @@ CooldownManagerCenteredDB = {
 ["state"] = "hidden",
 ["order"] = 92,
 },
-[40772] = {
+[81413] = {
 ["state"] = "hidden",
-["order"] = 102,
+["order"] = 93,
 },
 [243733] = {
 ["state"] = "hidden",
@@ -895,12 +895,15 @@ CooldownManagerCenteredDB = {
 ["BuffIconCooldownViewer"] = false,
 ["BuffBarCooldownViewer"] = false,
 ["EssentialCooldownViewer"] = false,
-["CMCTracker1"] = false,
 ["UtilityCooldownViewer"] = false,
+["CMCTracker1"] = false,
 ["CMCTracker2"] = false,
 },
 ["cooldownStyleSettings"] = {
 ["spellSettings"] = {
+[81256] = {
+["alwaysGlow"] = true,
+},
 [586] = {
 ["barColor"] = {
 0.0941176563501358,
@@ -908,38 +911,21 @@ CooldownManagerCenteredDB = {
 1,
 },
 },
-[81256] = {
-["alwaysGlow"] = true,
-},
-[115203] = {
-["barColor"] = {
-1,
-0.501960813999176,
-0.250980406999588,
-},
+[325202] = {
 },
 [1240201] = {
 ["alwaysGlow"] = true,
 },
-[589] = {
+[1233448] = {
 },
-[17] = {
-["barColor"] = {
-1,
-0.9921569228172302,
-0.8352941870689392,
-},
+[49530] = {
 },
 [1242158] = {
 },
-[1233448] = {
+[589] = {
 },
-[47585] = {
-["barColor"] = {
-0.5215686559677124,
-0,
-1,
-},
+[394110] = {
+["alwaysGlow"] = true,
 },
 [438439] = {
 ["alwaysGlow"] = true,
@@ -950,10 +936,10 @@ CooldownManagerCenteredDB = {
 [1246968] = {
 ["alwaysGlow"] = true,
 },
-[394110] = {
+[137384] = {
 ["alwaysGlow"] = true,
 },
-[137384] = {
+[1250566] = {
 ["alwaysGlow"] = true,
 },
 [365350] = {
@@ -961,12 +947,16 @@ CooldownManagerCenteredDB = {
 },
 [13750] = {
 },
-[1241059] = {
-["alwaysGlow"] = true,
+[1253304] = {
 },
 [115636] = {
 },
-[1253304] = {
+[15286] = {
+["barColor"] = {
+0.1019607931375504,
+0.2039215862751007,
+1,
+},
 },
 [443294] = {
 ["alwaysGlow"] = true,
@@ -979,12 +969,8 @@ CooldownManagerCenteredDB = {
 },
 [264571] = {
 },
-[15286] = {
-["barColor"] = {
-0.1019607931375504,
-0.2039215862751007,
-1,
-},
+[1241059] = {
+["alwaysGlow"] = true,
 },
 [122470] = {
 ["barColor"] = {
@@ -996,8 +982,12 @@ CooldownManagerCenteredDB = {
 [1238488] = {
 ["alwaysGlow"] = true,
 },
-[1250566] = {
-["alwaysGlow"] = true,
+[47585] = {
+["barColor"] = {
+0.5215686559677124,
+0,
+1,
+},
 },
 [1249625] = {
 ["barColor"] = {
@@ -1008,11 +998,21 @@ CooldownManagerCenteredDB = {
 ["alwaysGlow"] = true,
 ["alwaysShowCooldownEdge"] = true,
 },
-[49530] = {
+[17] = {
+["barColor"] = {
+1,
+0.9921569228172302,
+0.8352941870689392,
+},
 },
 [13877] = {
 },
-[325202] = {
+[115203] = {
+["barColor"] = {
+1,
+0.501960813999176,
+0.250980406999588,
+},
 },
 },
 },

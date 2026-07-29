@@ -21,7 +21,7 @@ MinimalistCooldownEdgeDB_v2 = {
 ["playeraura"] = {
 ["enabled"] = true,
 ["buff"] = {
-["fontSize"] = 16,
+["fontSize"] = 10,
 ["font"] = "Interface\\Addons\\SharedMedia_MyMedia\\font\\1.ttf",
 },
 },

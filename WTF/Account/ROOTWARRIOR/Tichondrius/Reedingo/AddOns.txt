@@ -107,3 +107,4 @@ RaidLeaderMarker: enabled
 Shackled: enabled
 SweepyBoop: enabled
 WarGameHelper: enabled
+ArenaDRNameplates: enabled

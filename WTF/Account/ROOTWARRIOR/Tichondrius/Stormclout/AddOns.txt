@@ -116,7 +116,7 @@ WeakAurasOptions: enabled
 WeakAurasTemplates: enabled
 BartrubySummonPet: enabled
 BetterBlizzFrames: enabled
-BetterBlizzPlates: enabled
+BetterBlizzPlates: disabled
 Conceal: enabled
 EditModeExpanded: enabled
 idTip: enabled

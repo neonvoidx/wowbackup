@@ -306,6 +306,7 @@ local function OnEvent(self, event, ...)
 				Settings.GetSetting(p .. v):SetValue(true)
 			end
 		end
+
 		-- This event is fired anytime you see a load screen, i.e on login, on UI reload, on new area etc
 		-- #region Hide/Show UI elements
 		-- Hide micromenu
@@ -453,7 +454,7 @@ local function OnEvent(self, event, ...)
 			-- SetCVar("nameplateMinScale", 1)
 			-- SetCVar("nameplateMaxScale", 1)
 			-- SetCVar("nameplateGlobalScale", 1.1)
-			SetCVar("nameplateOverlapV", 1.5) -- Vertical overlap
+			SetCVar("nameplateOverlapV", 1.0) -- Vertical overlap
 			SetCVar("nameplateOverlapH", 0.8) -- Horizontal overlap
 			SetCVar("nameplateMaxAlpha", 1)
 			SetCVar("nameplateMaxScale", 1.0)

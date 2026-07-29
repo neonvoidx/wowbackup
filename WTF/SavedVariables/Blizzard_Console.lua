@@ -1,147 +1,8 @@
 
 Blizzard_Console_SavedVars = {
 ["version"] = 3,
+["height"] = 299.9998779296875,
 ["messageHistory"] = {
-{
-"Time set to 7/28/2026 (Tue) 8:46",
-0,
-},
-{
-"Time set to 7/28/2026 (Tue) 8:46",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"LimitedLuaResources: Reset Timer",
-0,
-},
-{
-"LimitedLuaResources: Reset All",
-0,
-},
-{
-"Time set to 7/28/2026 (Tue) 8:56",
-0,
-},
-{
-"Time set to 7/28/2026 (Tue) 8:56",
-0,
-},
-{
-"Time set to 7/28/2026 (Tue) 8:59",
-0,
-},
-{
-"Time set to 7/28/2026 (Tue) 8:59",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"LimitedLuaResources: Reset Timer",
-0,
-},
-{
-"LimitedLuaResources: Reset All",
-0,
-},
-{
-"Time set to 7/28/2026 (Tue) 9:04",
-0,
-},
-{
-"Time set to 7/28/2026 (Tue) 9:04",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"LimitedLuaResources: Reset Timer",
-0,
-},
-{
-"LimitedLuaResources: Reset All",
-0,
-},
-{
-"Time set to 7/28/2026 (Tue) 9:11",
-0,
-},
-{
-"Time set to 7/28/2026 (Tue) 9:11",
-0,
-},
-{
-"Time set to 7/28/2026 (Tue) 9:20",
-0,
-},
-{
-"Time set to 7/28/2026 (Tue) 9:20",
-0,
-},
-{
-"Time set to 7/28/2026 (Tue) 9:24",
-0,
-},
-{
-"Time set to 7/28/2026 (Tue) 9:24",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"LimitedLuaResources: Reset Timer",
-0,
-},
-{
-"LimitedLuaResources: Reset All",
-0,
-},
-{
-"Time set to 7/28/2026 (Tue) 9:25",
-0,
-},
-{
-"Time set to 7/28/2026 (Tue) 9:25",
-0,
-},
-{
-"Time set to 7/28/2026 (Tue) 9:25",
-0,
-},
-{
-"Time set to 7/28/2026 (Tue) 9:25",
-0,
-},
-{
-"Time set to 7/28/2026 (Tue) 9:26",
-0,
-},
-{
-"Time set to 7/28/2026 (Tue) 9:26",
-0,
-},
-{
-"Time set to 7/28/2026 (Tue) 9:33",
-0,
-},
-{
-"Time set to 7/28/2026 (Tue) 9:33",
-0,
-},
-{
-"Time set to 7/28/2026 (Tue) 9:37",
-0,
-},
 {
 "Time set to 7/28/2026 (Tue) 9:37",
 0,
@@ -4014,10 +3875,161 @@ Blizzard_Console_SavedVars = {
 "LimitedLuaResources: Reset All",
 0,
 },
+{
+"-------------------------------------------------- Previous Session --------------------------------------------------",
+0,
 },
-["height"] = 299.9998779296875,
-["fontHeight"] = 14,
+{
+"LimitedLuaResources: Reset Timer",
+0,
+},
+{
+"LimitedLuaResources: Reset All",
+0,
+},
+{
+"GameTimeSync: delta=0, differential=1, HoursAndMinutes=446",
+0,
+},
+{
+"-------------------------------------------------- Previous Session --------------------------------------------------",
+0,
+},
+{
+"LimitedLuaResources: Reset Timer",
+0,
+},
+{
+"LimitedLuaResources: Reset All",
+0,
+},
+{
+"-------------------------------------------------- Previous Session --------------------------------------------------",
+0,
+},
+{
+"LimitedLuaResources: Reset Timer",
+0,
+},
+{
+"LimitedLuaResources: Reset All",
+0,
+},
+{
+"-------------------------------------------------- Previous Session --------------------------------------------------",
+0,
+},
+{
+"LimitedLuaResources: Reset Timer",
+0,
+},
+{
+"LimitedLuaResources: Reset All",
+0,
+},
+{
+"-------------------------------------------------- Previous Session --------------------------------------------------",
+0,
+},
+{
+"LimitedLuaResources: Reset Timer",
+0,
+},
+{
+"LimitedLuaResources: Reset All",
+0,
+},
+{
+"-------------------------------------------------- Previous Session --------------------------------------------------",
+0,
+},
+{
+"LimitedLuaResources: Reset Timer",
+0,
+},
+{
+"LimitedLuaResources: Reset All",
+0,
+},
+{
+"-------------------------------------------------- Previous Session --------------------------------------------------",
+0,
+},
+{
+"LimitedLuaResources: Reset Timer",
+0,
+},
+{
+"LimitedLuaResources: Reset All",
+0,
+},
+{
+"-------------------------------------------------- Previous Session --------------------------------------------------",
+0,
+},
+{
+"LimitedLuaResources: Reset Timer",
+0,
+},
+{
+"LimitedLuaResources: Reset All",
+0,
+},
+{
+"-------------------------------------------------- Previous Session --------------------------------------------------",
+0,
+},
+{
+"LimitedLuaResources: Reset Timer",
+0,
+},
+{
+"LimitedLuaResources: Reset All",
+0,
+},
+{
+"-------------------------------------------------- Previous Session --------------------------------------------------",
+0,
+},
+{
+"LimitedLuaResources: Reset Timer",
+0,
+},
+{
+"LimitedLuaResources: Reset All",
+0,
+},
+{
+"KillConnection conn=\"0000000079803970\" state=\"(enum)7\"",
+0,
+},
+{
+"-------------------------------------------------- Previous Session --------------------------------------------------",
+0,
+},
+{
+"LimitedLuaResources: Reset Timer",
+0,
+},
+{
+"Resume()",
+0,
+},
+{
+"Screen invalid. Changing from=\"none\" to=\"charselect\"",
+0,
+},
+{
+"Switching to screen=\"CharacterSelect\" (from \"none\")",
+0,
+},
+{
+"From EnsureValidScreen",
+0,
+},
+},
 ["isShown"] = false,
+["fontHeight"] = 14,
 ["commandHistory"] = {
 },
 }

@@ -334,120 +334,114 @@ OPie_SavedData = {
 ["name"] = "PortalsAll: BattleForAzeroth",
 ["save"] = true,
 },
-["agonflight2"] = {
-{
-["id"] = 193753,
-["sliceToken"] = "ABueTza9dTd",
-},
-{
-"item",
-200613,
-["sliceToken"] = "ABueTza9dT3",
-},
-{
-"item",
-204481,
-["sliceToken"] = "ABueTza9dTs",
-},
-{
-"item",
-63353,
-["sliceToken"] = "ABueTza9dTa",
-},
-{
-"item",
-63207,
-["sliceToken"] = "ABueTza9dTp",
-},
-{
-"item",
-65274,
-["sliceToken"] = "ABueTza9dTo",
-},
-{
-["sliceToken"] = "ABueTza9dT2",
-["id"] = 393273,
-},
-{
-["id"] = 393279,
-["sliceToken"] = "ABueTza9dTi",
-},
-{
-["id"] = 410078,
-["sliceToken"] = "ABueTza9dTu",
-},
-{
-["id"] = 393276,
-["sliceToken"] = "ABueTza9dTy",
-},
-{
-["id"] = 393262,
-["sliceToken"] = "ABueTza9dTt",
-},
-{
-["id"] = 393256,
-["sliceToken"] = "ABueTza9dT1",
-},
-{
-["id"] = 393267,
-["sliceToken"] = "ABueTza9dTr",
-},
-{
-["id"] = 393283,
-["sliceToken"] = "ABueTza9dTe",
-},
-{
-["id"] = 424197,
-["sliceToken"] = "ABueTza9dTw",
-},
-["name"] = "PortalsAll: Dragonflight",
-["save"] = true,
-},
-["OfPandaria1"] = {
+["Toys"] = {
 {
 "toy",
-87215,
-["sliceToken"] = "ABueTza9dTwL",
-},
-{
-"item",
-103678,
-["sliceToken"] = "ABueTza9dTwK",
+206268,
+["sliceToken"] = "ABueQv8AL3n",
 },
 {
 "toy",
-95567,
-["sliceToken"] = "ABueTza9dTwJ",
+210467,
+["sliceToken"] = "ABueQv8AL3W",
 },
 {
-["id"] = 132627,
-["sliceToken"] = "ABueTza9dTwH",
+"toy",
+88375,
+["sliceToken"] = "ABueQv8AL3E",
 },
 {
-["id"] = 132626,
-["sliceToken"] = "ABueTza9dTw0",
+"toy",
+35227,
+["sliceToken"] = "ABueQv8AL37",
 },
 {
-["id"] = 126892,
-["sliceToken"] = "ABueTza9dTwG",
+"toy",
+52253,
+["sliceToken"] = "ABueQv8AL3R",
 },
 {
-"item",
-63353,
-["sliceToken"] = "ABueTza9dTwF",
+"toy",
+133998,
+["sliceToken"] = "ABueQv8AL3T",
 },
 {
-"item",
-63207,
-["sliceToken"] = "ABueTza9dTwD",
+"toy",
+225641,
+["sliceToken"] = "ABueQAyhHLw",
 },
 {
-"item",
-65274,
-["sliceToken"] = "ABueTza9dTwS",
+"toy",
+109183,
+["sliceToken"] = "ABueWwd2qZw",
 },
-["name"] = "PortalsAll: MistsOfPandaria",
+{
+"toy",
+198173,
+["sliceToken"] = "ABueWwk956w",
+},
+{
+"toy",
+228698,
+["sliceToken"] = "ABueW21mqJw",
+},
+{
+"toy",
+219387,
+["sliceToken"] = "ABueWpDHN=w",
+},
+{
+"toy",
+205418,
+["sliceToken"] = "ABueWdoLk3w",
+},
+{
+"toy",
+201435,
+["sliceToken"] = "ABueWdoLk3e",
+},
+{
+"toy",
+231064,
+["sliceToken"] = "ABueEgpzQ5w",
+},
+{
+"toy",
+226373,
+["sliceToken"] = "ABueEko7=gw",
+},
+{
+"macro",
+"BOOGIE",
+["sliceToken"] = "ABue7nfDsJw",
+},
+{
+"toy",
+244470,
+["sliceToken"] = "ABue7UW9E2w",
+},
+{
+"toy",
+234950,
+["sliceToken"] = "ABue7P7V=/w",
+},
+{
+"toy",
+264413,
+["sliceToken"] = "ABueTgezdMw",
+},
+["name"] = "Toys",
 ["save"] = true,
+},
+["lsMidnight"] = {
+{
+"toy",
+248485,
+["sliceToken"] = "ABueTrVxdUw",
+},
+["save"] = true,
+["limit"] = "Starphage-Tichondrius",
+["name"] = "Portals: Midnight",
 },
 ["sAllLegion"] = {
 {
@@ -797,114 +791,120 @@ OPie_SavedData = {
 ["name"] = "PortalsAll: Midnight",
 ["save"] = true,
 },
-["Toys"] = {
+["agonflight2"] = {
 {
-"toy",
-206268,
-["sliceToken"] = "ABueQv8AL3n",
+["id"] = 193753,
+["sliceToken"] = "ABueTza9dTd",
 },
 {
-"toy",
-210467,
-["sliceToken"] = "ABueQv8AL3W",
+"item",
+200613,
+["sliceToken"] = "ABueTza9dT3",
 },
 {
-"toy",
-88375,
-["sliceToken"] = "ABueQv8AL3E",
+"item",
+204481,
+["sliceToken"] = "ABueTza9dTs",
 },
 {
-"toy",
-35227,
-["sliceToken"] = "ABueQv8AL37",
+"item",
+63353,
+["sliceToken"] = "ABueTza9dTa",
 },
 {
-"toy",
-52253,
-["sliceToken"] = "ABueQv8AL3R",
+"item",
+63207,
+["sliceToken"] = "ABueTza9dTp",
 },
 {
-"toy",
-133998,
-["sliceToken"] = "ABueQv8AL3T",
+"item",
+65274,
+["sliceToken"] = "ABueTza9dTo",
 },
 {
-"toy",
-225641,
-["sliceToken"] = "ABueQAyhHLw",
+["sliceToken"] = "ABueTza9dT2",
+["id"] = 393273,
 },
 {
-"toy",
-109183,
-["sliceToken"] = "ABueWwd2qZw",
+["id"] = 393279,
+["sliceToken"] = "ABueTza9dTi",
 },
 {
-"toy",
-198173,
-["sliceToken"] = "ABueWwk956w",
+["id"] = 410078,
+["sliceToken"] = "ABueTza9dTu",
 },
 {
-"toy",
-228698,
-["sliceToken"] = "ABueW21mqJw",
+["id"] = 393276,
+["sliceToken"] = "ABueTza9dTy",
 },
 {
-"toy",
-219387,
-["sliceToken"] = "ABueWpDHN=w",
+["id"] = 393262,
+["sliceToken"] = "ABueTza9dTt",
 },
 {
-"toy",
-205418,
-["sliceToken"] = "ABueWdoLk3w",
+["id"] = 393256,
+["sliceToken"] = "ABueTza9dT1",
 },
 {
-"toy",
-201435,
-["sliceToken"] = "ABueWdoLk3e",
+["id"] = 393267,
+["sliceToken"] = "ABueTza9dTr",
 },
 {
-"toy",
-231064,
-["sliceToken"] = "ABueEgpzQ5w",
+["id"] = 393283,
+["sliceToken"] = "ABueTza9dTe",
 },
 {
-"toy",
-226373,
-["sliceToken"] = "ABueEko7=gw",
+["id"] = 424197,
+["sliceToken"] = "ABueTza9dTw",
 },
-{
-"macro",
-"BOOGIE",
-["sliceToken"] = "ABue7nfDsJw",
-},
-{
-"toy",
-244470,
-["sliceToken"] = "ABue7UW9E2w",
-},
-{
-"toy",
-234950,
-["sliceToken"] = "ABue7P7V=/w",
-},
-{
-"toy",
-264413,
-["sliceToken"] = "ABueTgezdMw",
-},
-["name"] = "Toys",
+["name"] = "PortalsAll: Dragonflight",
 ["save"] = true,
 },
-["lsMidnight"] = {
+["OfPandaria1"] = {
 {
 "toy",
-248485,
-["sliceToken"] = "ABueTrVxdUw",
+87215,
+["sliceToken"] = "ABueTza9dTwL",
 },
+{
+"item",
+103678,
+["sliceToken"] = "ABueTza9dTwK",
+},
+{
+"toy",
+95567,
+["sliceToken"] = "ABueTza9dTwJ",
+},
+{
+["id"] = 132627,
+["sliceToken"] = "ABueTza9dTwH",
+},
+{
+["id"] = 132626,
+["sliceToken"] = "ABueTza9dTw0",
+},
+{
+["id"] = 126892,
+["sliceToken"] = "ABueTza9dTwG",
+},
+{
+"item",
+63353,
+["sliceToken"] = "ABueTza9dTwF",
+},
+{
+"item",
+63207,
+["sliceToken"] = "ABueTza9dTwD",
+},
+{
+"item",
+65274,
+["sliceToken"] = "ABueTza9dTwS",
+},
+["name"] = "PortalsAll: MistsOfPandaria",
 ["save"] = true,
-["limit"] = "Starphage-Tichondrius",
-["name"] = "Portals: Midnight",
 },
 ["WarlockDemons"] = {
 {
@@ -1075,16 +1075,6 @@ OPie_SavedData = {
 "ring",
 "PortalsAll",
 ["sliceToken"] = "ABueTza9dTeE",
-},
-{
-"ring",
-"RaidSymbols",
-["sliceToken"] = "ABueTgezdMt",
-},
-{
-"ring",
-"WorldMarkers",
-["sliceToken"] = "ABueTgezdMy",
 },
 {
 "ring",
@@ -1410,6 +1400,93 @@ OPie_SavedData = {
 ["name"] = "PortalsAll",
 ["save"] = true,
 },
+["talsAllTWW"] = {
+{
+"toy",
+180290,
+["sliceToken"] = "ABueTza9dTwW",
+},
+{
+["id"] = 193753,
+["sliceToken"] = "ABueTza9dTwQ",
+},
+{
+"toy",
+110560,
+["sliceToken"] = "ABueTza9dTwm",
+},
+{
+["sliceToken"] = "ABueTza9dTwn",
+["id"] = 445417,
+},
+{
+["sliceToken"] = "ABueTza9dTw6",
+["id"] = 445440,
+},
+{
+["sliceToken"] = "ABueTza9dTwb",
+["id"] = 445414,
+},
+{
+["sliceToken"] = "ABueTza9dTwv",
+["id"] = 1216786,
+},
+{
+["sliceToken"] = "ABueTza9dTwc",
+["id"] = 445443,
+},
+{
+["sliceToken"] = "ABueTza9dTwx",
+["id"] = 445269,
+},
+{
+["id"] = 445444,
+["sliceToken"] = "ABueTza9dTw5",
+},
+{
+["sliceToken"] = "ABueTza9dTwz",
+["id"] = 445416,
+},
+{
+["sliceToken"] = "ABueTza9dTwl",
+["id"] = 445441,
+},
+{
+"toy",
+230850,
+["sliceToken"] = "ABueTza9dTwk",
+},
+{
+"toy",
+243056,
+["sliceToken"] = "ABueTza9dTwj",
+},
+{
+"item",
+234389,
+["sliceToken"] = "ABueTza9dTw4",
+},
+{
+"item",
+249699,
+["sliceToken"] = "ABueTza9dTwh",
+},
+{
+["id"] = 446540,
+["sliceToken"] = "ABueTza9dTe7",
+},
+{
+["id"] = 446534,
+["sliceToken"] = "ABueTza9dTeR",
+},
+{
+"toy",
+221966,
+["sliceToken"] = "ABueTza9dTeY",
+},
+["name"] = "PortalsAll: TWW",
+["save"] = true,
+},
 ["llKalimdor"] = {
 {
 ["id"] = 193753,
@@ -1545,93 +1622,6 @@ OPie_SavedData = {
 ["sliceToken"] = "ABueTza9dTm",
 },
 ["name"] = "PortalsAll: Kalimdor",
-["save"] = true,
-},
-["talsAllTWW"] = {
-{
-"toy",
-180290,
-["sliceToken"] = "ABueTza9dTwW",
-},
-{
-["id"] = 193753,
-["sliceToken"] = "ABueTza9dTwQ",
-},
-{
-"toy",
-110560,
-["sliceToken"] = "ABueTza9dTwm",
-},
-{
-["sliceToken"] = "ABueTza9dTwn",
-["id"] = 445417,
-},
-{
-["sliceToken"] = "ABueTza9dTw6",
-["id"] = 445440,
-},
-{
-["sliceToken"] = "ABueTza9dTwb",
-["id"] = 445414,
-},
-{
-["sliceToken"] = "ABueTza9dTwv",
-["id"] = 1216786,
-},
-{
-["sliceToken"] = "ABueTza9dTwc",
-["id"] = 445443,
-},
-{
-["sliceToken"] = "ABueTza9dTwx",
-["id"] = 445269,
-},
-{
-["id"] = 445444,
-["sliceToken"] = "ABueTza9dTw5",
-},
-{
-["sliceToken"] = "ABueTza9dTwz",
-["id"] = 445416,
-},
-{
-["sliceToken"] = "ABueTza9dTwl",
-["id"] = 445441,
-},
-{
-"toy",
-230850,
-["sliceToken"] = "ABueTza9dTwk",
-},
-{
-"toy",
-243056,
-["sliceToken"] = "ABueTza9dTwj",
-},
-{
-"item",
-234389,
-["sliceToken"] = "ABueTza9dTw4",
-},
-{
-"item",
-249699,
-["sliceToken"] = "ABueTza9dTwh",
-},
-{
-["id"] = 446540,
-["sliceToken"] = "ABueTza9dTe7",
-},
-{
-["id"] = 446534,
-["sliceToken"] = "ABueTza9dTeR",
-},
-{
-"toy",
-221966,
-["sliceToken"] = "ABueTza9dTeY",
-},
-["name"] = "PortalsAll: TWW",
 ["save"] = true,
 },
 },

@@ -5,7 +5,7 @@ Auctionator: enabled
 Baganator: enabled
 BattleGroundEnemies: enabled
 BetterBlizzFrames: enabled
-BetterBlizzPlates: enabled
+BetterBlizzPlates: disabled
 BigWigs: enabled
 BigWigs_Core: enabled
 BigWigs_KhazAlgar: enabled
@@ -207,3 +207,4 @@ RaidLeaderMarker: enabled
 Shackled: enabled
 SweepyBoop: enabled
 WarGameHelper: enabled
+ArenaDRNameplates: enabled

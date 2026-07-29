@@ -3,7 +3,7 @@ Baganator: enabled
 BattleGroundEnemiesFixed: enabled
 BetterFishing: enabled
 BetterBlizzFrames: enabled
-BetterBlizzPlates: enabled
+BetterBlizzPlates: disabled
 BtWLoadouts: enabled
 !BugGrabber: enabled
 BugSack: enabled
@@ -115,3 +115,4 @@ RaidLeaderMarker: enabled
 Shackled: enabled
 SweepyBoop: enabled
 WarGameHelper: enabled
+ArenaDRNameplates: enabled

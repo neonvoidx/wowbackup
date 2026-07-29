@@ -32,8 +32,8 @@ SweepyBoopDB = {
 ["healerInCrowdControl"] = true,
 ["personalDRTrackDisarm"] = true,
 ["personalDRTrackRoot"] = true,
-["hideBlizzArenaFrames"] = false,
 ["precognitionTrackerSize"] = 60,
+["hideBlizzArenaFrames"] = false,
 },
 ["raidFrames"] = {
 ["lastModified"] = 11863.827,

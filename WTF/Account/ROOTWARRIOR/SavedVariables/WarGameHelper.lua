@@ -287,6 +287,6 @@ WarGameHelperDB = {
 ["UseTarget"] = false,
 ["Map"] = 33,
 ["Mode"] = 1,
-["BNetPartyLeader1"] = "Zylos#1289",
 ["BNetPartyLeader2"] = "Peyo#1375",
+["BNetPartyLeader1"] = "Zylos#1289",
 }
