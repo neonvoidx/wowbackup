@@ -19,6 +19,7 @@ local EditMode = addon.EditMode
 local SettingType = EditMode and EditMode.lib and EditMode.lib.SettingType
 
 local EDITMODE_ID = "EQOL_MythicPlusTimer"
+Timer.dynamicAnchorId = "tracker:mythicPlusTimer"
 local DEFAULT_STATUSBAR = "Interface\\TargetingFrame\\UI-StatusBar"
 local DEFAULT_BORDER = "Interface\\Buttons\\WHITE8x8"
 local DEFAULT_FONT = "Fonts\\FRIZQT__.TTF"
@@ -1303,6 +1304,22 @@ function Timer:EnsureFrame()
 	return frame
 end
 
+function Timer:GetDynamicAnchorWinner()
+	return addon.DynamicAnchors and addon.DynamicAnchors:GetSimpleFrameWinner(self.dynamicAnchorId) or nil
+end
+
+function Timer:ApplyDynamicAnchor()
+	if not self.frame then return false end
+	local winner = self:GetDynamicAnchorWinner()
+	if not (winner and winner.frame) then return false end
+	local placement = winner.placement or {}
+	local point = placement.point or "CENTER"
+	local relativePoint = placement.relativePoint or point
+	self.frame:ClearAllPoints()
+	self.frame:SetPoint(point, winner.frame, relativePoint, tonumber(placement.x) or 0, tonumber(placement.y) or 0)
+	return true
+end
+
 function Timer:EnsureRow(index)
 	local frame = self:EnsureFrame()
 	if frame.rows[index] then return frame.rows[index] end
@@ -2269,7 +2286,7 @@ function Timer:RenderPanel(state, timeLeft, twoChest, threeChest)
 				state,
 				twoChest,
 				"REMAINING",
-				hideChestLabels and nil or "+2\n{}"
+				hideChestLabels and "{}" or "+2\n{}"
 			)
 		end
 		if elapsed <= threeChest then
@@ -2285,7 +2302,7 @@ function Timer:RenderPanel(state, timeLeft, twoChest, threeChest)
 				state,
 				threeChest,
 				"REMAINING",
-				hideChestLabels and nil or "+3\n{}"
+				hideChestLabels and "{}" or "+3\n{}"
 			)
 		end
 	end
@@ -3319,13 +3336,39 @@ end
 
 function Timer:RegisterEditMode()
 	if self.editModeRegistered or not (EditMode and EditMode.RegisterFrame and SettingType) then return end
+	local settings = self:BuildEditModeSettings()
+	if addon.DynamicAnchors then
+		table.insert(settings, 1, {
+			name = L["Anchor"] or "Anchor",
+			kind = SettingType.Collapsible,
+			id = "mythicPlusTimerAnchor",
+			defaultCollapsed = false,
+		})
+		addon.DynamicAnchors:AddEditModeAssignmentSettings(settings, SettingType, {
+			consumerId = self.dynamicAnchorId,
+			parentId = "mythicPlusTimerAnchor",
+			insertAfterId = "mythicPlusTimerAnchor",
+			refresh = function(rebuild)
+				if rebuild and EditMode and EditMode.RefreshFrame then
+					EditMode:RefreshFrame(EDITMODE_ID)
+					RunNextFrame(function() Timer:ApplyDynamicAnchor() end)
+				else
+					Timer:ApplyDynamicAnchor()
+				end
+			end,
+		})
+	end
 	EditMode:RegisterFrame(EDITMODE_ID, {
 		frame = self:EnsureFrame(),
 		title = L["mythicPlusTimerTitle"] or "Mythic+ Timer",
 		layoutDefaults = { point = "CENTER", relativePoint = "CENTER", x = 0, y = 160 },
-		onApply = function() Timer:Refresh() end,
+		onApply = function()
+			Timer:Refresh()
+			Timer:ApplyDynamicAnchor()
+		end,
 		onEnter = function()
 			Timer:Refresh()
+			if addon.DynamicAnchors and addon.DynamicAnchors:IsFrameAssignmentEnabled(Timer.dynamicAnchorId) then RunNextFrame(function() Timer:ApplyDynamicAnchor() end) end
 			Timer:ScheduleTick()
 			C_Timer.After(0, requestSettingsRefresh)
 			C_Timer.After(0.05, requestSettingsRefresh)
@@ -3334,12 +3377,16 @@ function Timer:RegisterEditMode()
 			C_Timer.After(0, function() Timer:Refresh() end)
 		end,
 		isEnabled = function() return Timer:IsEnabled() end,
-		settings = self:BuildEditModeSettings(),
+		settings = settings,
 		showOutsideEditMode = false,
 		showReset = true,
 		showSettingsReset = false,
 		enableOverlayToggle = true,
-		allowDrag = true,
+		relativeTo = function()
+			local winner = Timer:GetDynamicAnchorWinner()
+			return winner and winner.frame or UIParent
+		end,
+		allowDrag = function() return not (addon.DynamicAnchors and addon.DynamicAnchors:IsFrameAssignmentEnabled(Timer.dynamicAnchorId)) end,
 		collapseExclusive = true,
 		settingsMaxHeight = 700,
 	})
@@ -3397,6 +3444,19 @@ function Timer:Init()
 		Timer:Refresh()
 		Timer:ScheduleTick()
 	end)
+	if addon.DynamicAnchors then
+		addon.DynamicAnchors:RegisterSimpleFrame({
+			id = self.dynamicAnchorId,
+			owner = "EnhanceQoLDungeonRaid",
+			label = L["mythicPlusTimerTitle"] or "Mythic+ Timer",
+			menuGroup = "TRACKERS",
+			menuGroupLabel = L["Dynamic Anchor Group Trackers"],
+			menuGroupOrder = 400,
+			getFrame = function() return Timer.frame end,
+			isAvailable = function(timerFrame) return Timer:IsEnabled() and timerFrame ~= nil and timerFrame:IsShown() end,
+			apply = function() Timer:ApplyDynamicAnchor() end,
+		})
+	end
 	self:RegisterEditMode()
 	self:UpdateEventState()
 end

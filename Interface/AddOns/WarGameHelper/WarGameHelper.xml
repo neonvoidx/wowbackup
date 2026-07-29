@@ -1,0 +1,159 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
+..\FrameXML\UI.xsd">
+
+    <Button name="PartyLeaderButtonTemplate" virtual="true">
+        <Size x="260" y="48"/>
+        <Layers>
+            <Layer level="BACKGROUND">
+                <FontString inherits="GameFontNormal" parentKey="text"/>
+                <Texture name="$parentBackground" parentKey="background">
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="0" y="-1"/>
+                        <Anchor point="BOTTOMRIGHT" x="0" y="1"/>
+                    </Anchors>
+                    <Color r="0" g="0.694" b="0.941" a="0.050"/>
+                </Texture>
+            </Layer>
+            <Layer level="ARTWORK">
+                <Texture name="$parentStatus" file="Interface\FriendsFrame\StatusIcon-Offline" parentKey="status">
+                    <Size x="16" y="16"/>
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="4" y="-3"/>
+                    </Anchors>
+                </Texture>
+                <Texture name="$parentGameIcon" file="Interface\FriendsFrame\Battlenet-WoWicon" parentKey="gameIcon" hidden="true">
+                    <Size x="30" y="30"/>
+                    <Anchors>
+                        <Anchor point="TOPRIGHT" x="-4" y="-3"/>
+                    </Anchors>
+                </Texture>
+                <FontString name="$parentName" inherits="FriendsFont_Normal" text="UNAVAILABLE" justifyH="LEFT" parentKey="name">
+                    <Size x="226" y="12"/>
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="20" y="-4"/>
+                    </Anchors>
+                    <Color r="0.510" g="0.773" b="1" />
+                </FontString>
+                <FontString name="$parentCharName" inherits="FriendsFont_Normal" justifyH="LEFT" parentKey="charName">
+                    <Size x="226" y="12"/>
+                    <Anchors>
+                        <Anchor point="TOPLEFT" relativeTo="$parentName" relativePoint="BOTTOMLEFT" x="0" y="-3"/>
+                    </Anchors>
+                    <Color r="0.510" g="0.773" b="1" />
+                </FontString>
+                <FontString name="$parentInfo" inherits="FriendsFont_Small" justifyH="LEFT" parentKey="info">
+                    <Size x="260" y="10"/>
+                    <Anchors>
+                        <Anchor point="TOPLEFT" relativeTo="$parentCharName" relativePoint="BOTTOMLEFT" x="0" y="-3"/>
+                    </Anchors>
+                    <Color r="0.486" g="0.518" b="0.541" />
+                </FontString>
+            </Layer>
+        </Layers>
+    </Button>
+
+    <Frame name="PartyLeaderTemplate" virtual="true">
+        <Size x="260" y="88"/>
+        <Layers>
+            <Layer level="ARTWORK">
+                <FontString name="$parentTitle" inherits="GameFontNormal" text="PARTY_LEADER" parentKey="title">
+                    <Anchors>
+                        <Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="0"/>
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Frames>
+            <Button name="$parentInfo" inherits="PartyLeaderButtonTemplate" parentKey="info">
+                <Anchors>
+                    <Anchor point="CENTER" x="0" y="4"/>
+                </Anchors>
+            </Button>
+            <Button name="$parentUpdateButton" inherits="UIPanelButtonTemplate" text="UPDATE" parentKey="updateButton">
+                <Size x="112" y="22"/>
+                <Anchors>
+                    <Anchor point="BOTTOMLEFT"/>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON)
+                        WarGameHelper:UpdatePartyLeaderFrame(self:GetParent())
+                    </OnClick>
+                </Scripts>
+            </Button>
+        </Frames>
+    </Frame>
+
+    <Frame name="WarGameHelper" inherits="PortraitFrameTemplate" parent="UIParent" hidden="true" mixin="WarGameHelperMixin">
+        <Size x="580" y="200"/>
+        <Anchors>
+            <Anchor point="CENTER" x="0" y="50"/>
+        </Anchors>
+        <Frames>
+            <Frame name="$parentInset" inherits="InsetFrameTemplate" frameStrata="MEDIUM">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="5" y="-60"/>
+                    <Anchor point="BOTTOMRIGHT" x="-5" y="30"/>
+                </Anchors>
+            </Frame>
+            <Frame name="$parentPartyLeader1" inherits="PartyLeaderTemplate" parentKey="partyLeader1">
+                <Anchors>
+                    <Anchor point="LEFT" x="20" y="-14"/>
+                </Anchors>
+            </Frame>
+            <Frame name="$parentPartyLeader2" inherits="PartyLeaderTemplate" parentKey="partyLeader2">
+                <Anchors>
+                    <Anchor point="RIGHT" x="-20" y="-14"/>
+                </Anchors>
+            </Frame>
+            <CheckButton name="$parentTargetCheckButton" inherits="UICheckButtonTemplate" parentKey="targetCheckButton">
+                <Size x="24" y="24"/>
+                <Anchors>
+                    <Anchor point="BOTTOMLEFT" x="140" y="40"/>
+                </Anchors>
+                <Scripts>
+                    <OnClick function="WarGameHelperTargetCheckButton_OnClick"/>
+                    <OnLoad>
+                        self.Text:SetText(TARGET)
+                        self.Text:SetFontObject(GameFontHighlightSmall)
+                    </OnLoad>
+                </Scripts>
+            </CheckButton>
+            <Button name="$parentStartButton" inherits="UIPanelButtonTemplate" text="START_WARGAME">
+                <Size x="132" y="22"/>
+                <Anchors>
+                    <Anchor point="BOTTOMRIGHT" x="-6" y="5"/>
+                </Anchors>
+                <Scripts>
+                    <OnClick function="WarGameHelperStartButton_OnClick"/>
+                    <OnEnter function="WarGameHelperStartButton_OnEnter"/>
+                    <OnLeave function="GameTooltip_Hide"/>
+                </Scripts>
+            </Button>
+            <CheckButton name="$parentTournamentRulesCheckButton" inherits="UICheckButtonTemplate" parentKey="tournamentRulesCheckButton">
+                <Size x="24" y="24"/>
+                <Anchors>
+                    <Anchor point="BOTTOMLEFT" x="4" y="3"/>
+                </Anchors>
+                <Scripts>
+                    <OnClick function="WarGameHelperTournamentRulesCheckButton_OnClick"/>
+                    <OnLoad>
+                        self.Text:SetText(TOURNAMENT_RULES)
+                        self.Text:SetFontObject(GameFontHighlightSmall)
+                    </OnLoad>
+                    <OnEnter>
+                        GameTooltip:SetOwner(self, "ANCHOR_BOTTOMRIGHT")
+                        GameTooltip:SetText(TOURNAMENT_RULES_TOOLTIP, nil, nil, nil, nil, true)
+                    </OnEnter>
+                    <OnLeave function="GameTooltip_Hide"/>
+                </Scripts>
+            </CheckButton>
+        </Frames>
+        <Scripts>
+            <OnLoad method="OnLoad"/>
+            <OnEvent method="OnEvent"/>
+            <OnShow method="OnShow"/>
+            <OnHide method="OnHide"/>
+        </Scripts>
+    </Frame>
+</Ui>

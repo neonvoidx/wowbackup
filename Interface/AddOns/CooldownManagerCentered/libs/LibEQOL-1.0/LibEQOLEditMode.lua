@@ -1,4 +1,4 @@
-local MODULE_MAJOR, BASE_MAJOR, MINOR = "WildForkLibEQOLEditMode-1.0", "WildForkLibEQOL-1.0", 20000002
+local MODULE_MAJOR, BASE_MAJOR, MINOR = "WildForkLibEQOLEditMode-1.0", "WildForkLibEQOL-1.0", 20000004
 local LibStub = _G.LibStub
 assert(LibStub, MODULE_MAJOR .. " requires LibStub")
 local C_Timer = _G.C_Timer
@@ -87,6 +87,7 @@ local DEFAULT_SETTINGS_SPACING = 2
 local DEFAULT_SLIDER_HEIGHT = 32
 local COLOR_BUTTON_WIDTH = 22
 local DEFAULT_INPUT_MAX_WIDTH = 193
+local DEFAULT_INPUT_MIN_WIDTH = 80
 local DROPDOWN_COLOR_MAX_WIDTH = 200
 local DEFAULT_MANAGER_TOGGLE_MAX_HEIGHT = 220
 local DEFAULT_MANAGER_TOGGLE_ROW_HEIGHT = 32
@@ -252,6 +253,16 @@ local function UpdateScrollChildWidth(dialog)
 		return
 	end
 	UpdateScrollChildWidthFor(scroll, child)
+end
+
+local function ApplySettingsRowWidth(row, settings)
+	if not (row and row.SetWidth and settings) then
+		return
+	end
+	local width = settings._eqolLastWidth or settings:GetWidth() or 0
+	if width > 0 then
+		row:SetWidth(width)
+	end
 end
 
 -- Blizzard frames we also toggle via the manager eye (if they exist)
@@ -493,6 +504,7 @@ lib.SettingType.MultiDropdown = "MultiDropdown"
 lib.SettingType.Divider = "Divider"
 lib.SettingType.Collapsible = "Collapsible"
 lib.SettingType.Input = "Input"
+lib.SettingType.Button = "SettingButton"
 
 -- Debug toggle lives on internal; defaults to false
 Internal.debugEnabled = Internal.debugEnabled or false
@@ -3075,9 +3087,9 @@ local function buildInput()
 		local maxWidth = DEFAULT_INPUT_MAX_WIDTH
 		local totalWidth = self:GetWidth() or 0
 		if totalWidth > 0 then
-			local available = totalWidth - labelWidth - 6 - 2
-			if available < 1 then
-				available = 1
+			local available = totalWidth - labelWidth - 12 - 2
+			if available < DEFAULT_INPUT_MIN_WIDTH then
+				available = DEFAULT_INPUT_MIN_WIDTH
 			end
 			if available < maxWidth then
 				maxWidth = available
@@ -3432,12 +3444,29 @@ local function buildDivider()
 		local frame = CreateFrame("Frame", nil, UIParent)
 		frame.fixedHeight = 16
 		frame:SetSize(330, 16)
+		local label = frame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+		label:SetPoint("LEFT", 4, 0)
+		label:SetJustifyH("LEFT")
+		label:Hide()
+		frame.Label = label
+
 		local tex = frame:CreateTexture(nil, "ARTWORK")
 		tex:SetAllPoints()
 		tex:SetTexture([[Interface\FriendsFrame\UI-FriendsFrame-OnlineDivider]])
 		frame.Divider = tex
 		function frame:Setup(data, selection)
 			self.setting = data
+			self.Divider:ClearAllPoints()
+			if data.name and data.name ~= "" then
+				self.Label:SetText(data.name)
+				self.Label:Show()
+				self.Divider:SetPoint("LEFT", self.Label, "RIGHT", 8, 0)
+				self.Divider:SetPoint("RIGHT", self, "RIGHT", 0, 0)
+				self.Divider:SetHeight(16)
+			else
+				self.Label:Hide()
+				self.Divider:SetAllPoints()
+			end
 			local height = getRowHeightOverride(selection and selection.parent, "divider")
 			if height then
 				self.fixedHeight = height
@@ -3452,6 +3481,7 @@ local function buildDivider()
 		frame:Hide()
 		frame.layoutIndex = nil
 		frame.ignoreInLayout = nil
+		frame.Label:Hide()
 	end
 end
 
@@ -3577,6 +3607,93 @@ local function buildButton()
 	end, function(_, frame)
 		frame:Hide()
 		frame.layoutIndex = nil
+		frame.fixedWidth = nil
+		frame.ignoreInLayout = nil
+	end
+end
+
+-- A row of one or more in-list clickable buttons (same template the settings Reset button uses),
+-- split evenly across the row width so consumers can lay presets out in columns. A row takes a
+-- single button (data.name/data.func) or a list (data.buttons = { {name, func, tooltip}, ... }).
+local BUTTON_ROW_SPACING = 8
+
+local function layoutButtonRow(row)
+	local defs = row.defs
+	if not defs then
+		return
+	end
+	local n = #defs
+	local width = row:GetWidth() or 0
+	if n == 0 or width <= 0 then
+		return
+	end
+	local each = (width - BUTTON_ROW_SPACING * (n - 1)) / n
+	local height = row:GetHeight() or row.fixedHeight or 26
+	for i = 1, n do
+		local b = row.buttons[i]
+		b:ClearAllPoints()
+		b:SetPoint("TOPLEFT", row, "TOPLEFT", (each + BUTTON_ROW_SPACING) * (i - 1), 0)
+		b:SetSize(math.max(each, 1), height)
+	end
+end
+
+local function buildSettingButton()
+	return function()
+		local row = CreateFrame("Frame", nil, UIParent)
+		row.fixedHeight = 26
+		row:SetSize(330, 26)
+		row.buttons = {}
+		row:SetScript("OnSizeChanged", layoutButtonRow)
+
+		function row:Setup(data, selection)
+			self.setting = data
+			applyRowHeightOverride(self, selection and selection.parent, "button")
+			local defs = data.buttons or { data }
+			self.defs = defs
+			for i, def in ipairs(defs) do
+				local b = self.buttons[i]
+				if not b then
+					b = CreateFrame("Button", nil, self, "EditModeSystemSettingsDialogButtonTemplate")
+					self.buttons[i] = b
+				end
+				b:SetText(def.name or def.text or "")
+				local onClick = def.func or def.click or def.onClick
+				local function run()
+					if onClick then
+						onClick(lib.activeLayoutName, lib:GetActiveLayoutIndex())
+					end
+				end
+				if b.SetOnClickHandler then
+					b:SetOnClickHandler(run)
+				else
+					b:SetScript("OnClick", run)
+				end
+				Util:ApplyTooltip(b, b, def.tooltip)
+				b:Show()
+			end
+			for i = #defs + 1, #self.buttons do
+				self.buttons[i]:Hide()
+			end
+			layoutButtonRow(self)
+		end
+
+		function row:SetEnabled(enabled)
+			for _, b in ipairs(self.buttons) do
+				if enabled then
+					b:Enable()
+				else
+					b:Disable()
+				end
+			end
+		end
+
+		return row
+	end, function(_, frame)
+		frame:Hide()
+		frame.layoutIndex = nil
+		frame.ignoreInLayout = nil
+		frame.setting = nil
+		frame.defs = nil
 	end
 end
 
@@ -3592,6 +3709,7 @@ local builders = {
 	[lib.SettingType.DropdownColor] = buildDropdownColor,
 	[lib.SettingType.Divider] = buildDivider,
 	[lib.SettingType.Collapsible] = buildCollapsible,
+	[lib.SettingType.Button] = buildSettingButton,
 	button = buildButton,
 }
 
@@ -3701,6 +3819,124 @@ local function getDialogButtons(dialog)
 		return Internal:GetFrameButtons(frame)
 	end
 	return nil, 0
+end
+
+local function normalizeDialogButtonLayout(data)
+	local layout = type(data) == "table" and tostring(data.layout or ""):lower() or ""
+	if layout == "compact" or layout == "grid" or layout == "half" then
+		return "compact"
+	end
+	return "full"
+end
+
+local function setDialogButtonContainerVisible(container, visible)
+	if not container then
+		return
+	end
+	if visible then
+		container.ignoreInLayout = nil
+		container:Show()
+	else
+		container.ignoreInLayout = true
+		container:Hide()
+	end
+end
+
+local function getDialogButtonAreaWidth(dialog)
+	local width = dialog and dialog.Settings and dialog.Settings:GetWidth() or 0
+	if not width or width < 1 then
+		width = dialog and dialog.SettingsScroll and dialog.SettingsScroll:GetWidth() or 0
+	end
+	if not width or width < 1 then
+		width = 330
+	end
+	return width
+end
+
+local function getDialogButtonsReservedHeight(dialog)
+	local buttonsRoot = dialog and dialog.Buttons
+	if not (buttonsRoot and buttonsRoot.IsShown and buttonsRoot:IsShown()) then
+		return 0
+	end
+
+	if buttonsRoot.Layout then
+		buttonsRoot:Layout()
+	end
+
+	local height = tonumber(buttonsRoot:GetHeight()) or 0
+	if height <= 0 then
+		return 0
+	end
+
+	local spacingFromSettings = 12
+	return height + spacingFromSettings
+end
+
+local function applyDialogButtonWidths(dialog)
+	if not (dialog and dialog.Buttons) then
+		return
+	end
+
+	local width = getDialogButtonAreaWidth(dialog)
+	local buttonsRoot = dialog.Buttons
+	buttonsRoot:SetWidth(width)
+
+	local primary = buttonsRoot.Primary or buttonsRoot
+	local compact = buttonsRoot.Compact
+	local reset = buttonsRoot.Reset
+
+	if primary then
+		primary:SetWidth(width)
+		for _, child in ipairs({ primary:GetChildren() }) do
+			if child and child.SetWidth then
+				child.fixedWidth = width
+				child:SetWidth(width)
+			end
+		end
+		if primary.Layout then
+			primary:Layout()
+		end
+	end
+
+	if compact then
+		compact:SetWidth(width)
+		local columns = compact.stride or 2
+		if columns < 1 then
+			columns = 1
+		end
+		local spacing = tonumber(compact.childXPadding) or DEFAULT_SETTINGS_SPACING
+		local totalSpacing = spacing * math.max(0, columns - 1)
+		local columnWidth = math.floor((width - totalSpacing) / columns)
+		if columnWidth < 1 then
+			columnWidth = width
+		end
+		for _, child in ipairs({ compact:GetChildren() }) do
+			if child and child.SetWidth then
+				child.fixedWidth = columnWidth
+				child:SetWidth(columnWidth)
+			end
+		end
+		if compact.Layout then
+			compact:Layout()
+		end
+	end
+
+	if reset then
+		reset:SetWidth(width)
+		for _, child in ipairs({ reset:GetChildren() }) do
+			if child and child.SetWidth then
+				child.fixedWidth = width
+				child:SetWidth(width)
+			end
+		end
+		if reset.Layout then
+			reset:Layout()
+		end
+	end
+
+	if buttonsRoot.Layout then
+		buttonsRoot:Layout()
+	end
 end
 
 local function getDialogSettingsSpacing(dialog)
@@ -3920,6 +4156,7 @@ function Dialog:UpdateSettings()
 			if pool then
 				local setting = pool:Acquire(self.Settings)
 				setting.layoutIndex = index
+				ApplySettingsRowWidth(setting, self.Settings)
 				setting:Setup(data, self.selection)
 				local visible = evaluateVisibility(data, layoutName, layoutIndex)
 				if data.parentId and collapsedById[data.parentId] then
@@ -3963,15 +4200,33 @@ function Dialog:UpdateButtons()
 	if buttonPool then
 		buttonPool:ReleaseAll()
 	end
-	local anyVisible = false
 	local buttons, num = getDialogButtons(self)
+	local buttonsRoot = self.Buttons
+	local primaryContainer = buttonsRoot and (buttonsRoot.Primary or buttonsRoot) or nil
+	local compactContainer = buttonsRoot and buttonsRoot.Compact or nil
+	local resetContainer = buttonsRoot and buttonsRoot.Reset or primaryContainer
+	local primaryIndex = 0
+	local compactIndex = 0
+	local resetVisible = false
+	local anyVisible = false
 	if num > 0 then
 		for index, data in next, buttons do
-			local button = buttonPool and buttonPool:Acquire(self.Buttons)
+			local layout = normalizeDialogButtonLayout(data)
+			local targetContainer = primaryContainer
+			if layout == "compact" and compactContainer then
+				targetContainer = compactContainer
+			end
+			local button = buttonPool and targetContainer and buttonPool:Acquire(targetContainer)
 			if not button then
 				break
 			end
-			button.layoutIndex = index
+			if targetContainer == compactContainer then
+				compactIndex = compactIndex + 1
+				button.layoutIndex = compactIndex
+			else
+				primaryIndex = primaryIndex + 1
+				button.layoutIndex = primaryIndex
+			end
 			button:SetText(data.text)
 			if button.SetOnClickHandler then
 				button:SetOnClickHandler(data.click)
@@ -3984,14 +4239,19 @@ function Dialog:UpdateButtons()
 	end
 
 	local showReset = getDialogShowReset(self)
-	if showReset and buttonPool then
-		local resetPosition = buttonPool:Acquire(self.Buttons)
-		resetPosition.layoutIndex = num + 1
+	if showReset and buttonPool and resetContainer then
+		local resetPosition = buttonPool:Acquire(resetContainer)
+		resetPosition.layoutIndex = 1
 		resetPosition:SetText(HUD_EDIT_MODE_RESET_POSITION)
 		resetPosition:SetOnClickHandler(GenerateClosure(self.ResetPosition, self))
 		resetPosition:Show()
+		resetVisible = true
 		anyVisible = true
 	end
+
+	setDialogButtonContainerVisible(primaryContainer, primaryIndex > 0)
+	setDialogButtonContainerVisible(compactContainer, compactIndex > 0)
+	setDialogButtonContainerVisible(resetContainer, resetVisible)
 
 	if anyVisible then
 		setResetVisibility(self.Buttons, true)
@@ -4006,6 +4266,8 @@ function Dialog:UpdateButtons()
 			self.Settings.Divider:Hide()
 		end
 	end
+
+	applyDialogButtonWidths(self)
 end
 
 function Dialog:ResetSettings()
@@ -4164,6 +4426,7 @@ function Internal.CreateDialog()
 
 		local maxHeight = getDialogSettingsMaxHeight(self)
 
+		applyDialogButtonWidths(self)
 		if settings.Layout then
 			settings:Layout()
 		end
@@ -4171,6 +4434,14 @@ function Internal.CreateDialog()
 		local contentHeight = settings:GetHeight() or 1
 		local targetHeight = contentHeight
 		local needsScroll = false
+		local reservedBottomHeight = getDialogButtonsReservedHeight(self)
+
+		if maxHeight then
+			maxHeight = maxHeight - reservedBottomHeight
+			if maxHeight < 1 then
+				maxHeight = 1
+			end
+		end
 
 		if maxHeight and contentHeight > maxHeight then
 			targetHeight = maxHeight
@@ -4216,13 +4487,46 @@ function Internal.CreateDialog()
 
 	local dialogButtons = CreateFrame("Frame", nil, dialog, "VerticalLayoutFrame")
 	dialogButtons:SetPoint("TOP", dialogSettingsScroll, "BOTTOM", 0, -12)
+	dialogButtons:SetWidth(330)
 	dialogButtons.spacing = DEFAULT_SETTINGS_SPACING
+
+	local primaryButtons = CreateFrame("Frame", nil, dialogButtons, "VerticalLayoutFrame")
+	primaryButtons.layoutIndex = 1
+	primaryButtons.spacing = DEFAULT_SETTINGS_SPACING
+	primaryButtons:SetWidth(330)
+	primaryButtons.ignoreInLayout = true
+	primaryButtons:Hide()
+	dialogButtons.Primary = primaryButtons
+
+	local compactButtons = CreateFrame("Frame", nil, dialogButtons, "GridLayoutFrame")
+	compactButtons.layoutIndex = 2
+	compactButtons:SetWidth(330)
+	compactButtons.childXPadding = DEFAULT_SETTINGS_SPACING
+	compactButtons.childYPadding = DEFAULT_SETTINGS_SPACING
+	compactButtons.isHorizontal = true
+	compactButtons.stride = 2
+	compactButtons.layoutFramesGoingRight = true
+	compactButtons.layoutFramesGoingUp = false
+	compactButtons.alwaysUpdateLayout = true
+	compactButtons.ignoreInLayout = true
+	compactButtons:Hide()
+	dialogButtons.Compact = compactButtons
+
+	local resetButtons = CreateFrame("Frame", nil, dialogButtons, "VerticalLayoutFrame")
+	resetButtons.layoutIndex = 3
+	resetButtons.spacing = DEFAULT_SETTINGS_SPACING
+	resetButtons:SetWidth(330)
+	resetButtons.ignoreInLayout = true
+	resetButtons:Hide()
+	dialogButtons.Reset = resetButtons
+
 	dialog.Buttons = dialogButtons
 
 	if not dialog._eqolOriginalLayout then
 		dialog._eqolOriginalLayout = dialog.Layout
 		dialog.Layout = function(self, ...)
 			self:ApplySettingsScrollLimit()
+			applyDialogButtonWidths(self)
 			return self:_eqolOriginalLayout(...)
 		end
 	end
@@ -4897,6 +5201,18 @@ function lib:HideStandaloneSettingsDialog(frame)
 	return true
 end
 
+function lib:HideSettingsDialog(frame)
+	local dialog = Internal.dialog
+	if not (dialog and dialog:IsShown()) then
+		return false
+	end
+	if frame and getDialogFrame(dialog) ~= frame then
+		return false
+	end
+	dialog:Hide()
+	return true
+end
+
 function lib:IsStandaloneSettingsDialogShown(frame)
 	local dialog = Internal.dialog
 	if not (dialog and dialog:IsShown() and dialog.mode == "standalone") then
@@ -5384,6 +5700,7 @@ local function refreshSettingValuesForDialog(dialog, targets)
 			data = child.setting
 		end
 		if data and child.Setup and (not targets or targets[data]) then
+			ApplySettingsRowWidth(child, parent)
 			child:Setup(data, selection)
 			child.setting = data
 			if child.SetEnabled then

@@ -10,6 +10,93 @@ local BASE64_ALPHABET = C.ImportExport.Base64Alphabet
 local BASE64_LOOKUP = C.ImportExport.Base64Lookup
 local COMPRESSION_MODE = C.ImportExport.CompressionMode
 
+local MAX_IMPORT_STRING_LENGTH = 262144
+local MAX_DECODED_LENGTH = 196608
+local MAX_DECOMPRESSED_LENGTH = 524288
+local MAX_PROFILE_DEPTH = 8
+local MAX_PROFILE_ENTRIES = 2048
+local MAX_PROFILE_STRING_LENGTH = 4096
+
+local function IsFiniteNumber(value)
+    return value == value and value ~= math.huge and value ~= -math.huge
+end
+
+local function ValidateProfileBounds(value, depth, state, ancestors)
+    if depth > MAX_PROFILE_DEPTH or ancestors[value] then
+        return false
+    end
+
+    ancestors[value] = true
+
+    for key, child in pairs(value) do
+        state.entries = state.entries + 1
+        if state.entries > MAX_PROFILE_ENTRIES then
+            ancestors[value] = nil
+            return false
+        end
+
+        local keyType = type(key)
+        if (keyType ~= "string" and keyType ~= "number")
+           or (keyType == "string" and #key > MAX_PROFILE_STRING_LENGTH)
+           or (keyType == "number" and not IsFiniteNumber(key)) then
+            ancestors[value] = nil
+            return false
+        end
+
+        local childType = type(child)
+        if childType == "table" then
+            if not ValidateProfileBounds(child, depth + 1, state, ancestors) then
+                ancestors[value] = nil
+                return false
+            end
+        elseif childType == "string" then
+            if #child > MAX_PROFILE_STRING_LENGTH then
+                ancestors[value] = nil
+                return false
+            end
+        elseif childType == "number" then
+            if not IsFiniteNumber(child) then
+                ancestors[value] = nil
+                return false
+            end
+        elseif childType ~= "boolean" then
+            ancestors[value] = nil
+            return false
+        end
+    end
+
+    ancestors[value] = nil
+    return true
+end
+
+local function BuildValidatedConfig(defaultValue, importedValue)
+    local expectedType = type(defaultValue)
+    if type(importedValue) ~= expectedType then
+        return false
+    end
+
+    if expectedType ~= "table" then
+        if expectedType == "number" and not IsFiniteNumber(importedValue) then
+            return false
+        end
+        return true, importedValue
+    end
+
+    local result = CopyTable(defaultValue)
+    for key, defaultChild in pairs(defaultValue) do
+        local importedChild = importedValue[key]
+        if importedChild ~= nil then
+            local ok, validatedChild = BuildValidatedConfig(defaultChild, importedChild)
+            if not ok then
+                return false
+            end
+            result[key] = validatedChild
+        end
+    end
+
+    return true, result
+end
+
 local function Base64EncodeChunk(a, b, c)
     local n = a * 65536 + (b or 0) * 256 + (c or 0)
     local c1 = math.floor(n / 262144) % 64 + 1
@@ -163,16 +250,10 @@ local function DecompressPayload(mode, value)
     return nil
 end
 
-local function MergeTableDeep(destination, source)
+local function ReplaceTableContents(destination, source)
+    wipe(destination)
     for key, value in pairs(source) do
-        if type(value) == "table" then
-            if type(destination[key]) ~= "table" then
-                destination[key] = {}
-            end
-            MergeTableDeep(destination[key], value)
-        else
-            destination[key] = value
-        end
+        destination[key] = value
     end
 end
 
@@ -215,7 +296,12 @@ function MCE:ImportConfig(importString)
         return false, L["Paste an import string first."]
     end
 
-    local prefix, compressionMode, payload = strtrim(importString):match(C.ImportExport.ImportPattern)
+    if #importString > MAX_IMPORT_STRING_LENGTH then
+        return false, L["Import string is too large."]
+    end
+
+    local trimmedImportString = strtrim(importString)
+    local prefix, compressionMode, payload = trimmedImportString:match(C.ImportExport.ImportPattern)
     if prefix ~= EXPORT_PREFIX or not compressionMode or not payload then
         return false, L["Invalid import string format."]
     end
@@ -224,26 +310,62 @@ function MCE:ImportConfig(importString)
     if type(decoded) ~= "string" then
         return false, L["Failed to decode import string."]
     end
+    if #decoded > MAX_DECODED_LENGTH then
+        return false, L["Import string is too large."]
+    end
 
     local decompressed = DecompressPayload(compressionMode, decoded)
     if type(decompressed) ~= "string" then
         return false, L["Failed to decompress import string."]
     end
+    if #decompressed > MAX_DECOMPRESSED_LENGTH then
+        return false, L["Import string is too large."]
+    end
 
-    local ok, importedProfile = AceSerializer:Deserialize(decompressed)
-    if not ok or type(importedProfile) ~= "table" then
+    local deserializeCallOk, deserializeOk, importedProfile =
+        pcall(AceSerializer.Deserialize, AceSerializer, decompressed)
+    if not deserializeCallOk or not deserializeOk or type(importedProfile) ~= "table" then
         return false, L["Failed to deserialize import string."]
     end
 
-    self.suppressProfileCallbacks = true
-    self.db:ResetProfile()
-    wipe(self.db.profile)
-    MergeTableDeep(self.db.profile, CopyTable(self.defaults.profile))
-    MergeTableDeep(self.db.profile, importedProfile)
-    self.suppressProfileCallbacks = nil
+    if not ValidateProfileBounds(importedProfile, 1, { entries = 0 }, {}) then
+        return false, L["Import profile contains invalid data."]
+    end
 
-    self:UpgradeProfile()
-    self.profileImportBuffer = importString
+    local schemaOk, stagedProfile = BuildValidatedConfig(self.defaults.profile, importedProfile)
+    if not schemaOk then
+        return false, L["Import profile contains invalid data."]
+    end
+
+    local activeProfile = self.db and self.db.profile
+    if type(activeProfile) ~= "table" then
+        return false, L["No active profile available."]
+    end
+
+    local backupOk, profileBackup = pcall(CopyTable, activeProfile)
+    if not backupOk or type(profileBackup) ~= "table" then
+        return false, L["Failed to apply imported profile."]
+    end
+
+    local previousSuppressProfileCallbacks = self.suppressProfileCallbacks
+    self.suppressProfileCallbacks = true
+
+    local applied = pcall(function()
+        ReplaceTableContents(activeProfile, stagedProfile)
+        self:UpgradeProfile()
+    end)
+
+    if not applied then
+        pcall(function()
+            ReplaceTableContents(activeProfile, profileBackup)
+        end)
+        self.suppressProfileCallbacks = previousSuppressProfileCallbacks
+        return false, L["Failed to apply imported profile."]
+    end
+
+    self.suppressProfileCallbacks = previousSuppressProfileCallbacks
+
+    self.profileImportBuffer = trimmedImportString
     self.profileExportBuffer = ""
 
     self:ForceUpdateAll(true)

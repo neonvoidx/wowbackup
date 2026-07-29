@@ -612,11 +612,17 @@ function HealerMana:ShouldShowInCurrentInstance()
 end
 
 function HealerMana:IsHealer(unit)
-	return UnitExists(unit) and UnitIsConnected(unit) and UnitGroupRolesAssigned(unit) == "HEALER"
+	if not (UnitExists(unit) and UnitIsConnected(unit)) then return false end
+	local role = UnitGroupRolesAssigned(unit)
+	if _G.issecretvalue and _G.issecretvalue(role) then return false end
+	return role == "HEALER"
 end
 
 function HealerMana:IsTrackedUnit(unit)
-	return unit and isGroupUnit(unit) and self:IsHealer(unit)
+	if type(unit) ~= "string" then return false end
+	if _G.issecretvalue and _G.issecretvalue(unit) then return false end
+	local isRosterUnit = unit == "player" or unit:match("^party%d+$") ~= nil or unit:match("^raid%d+$") ~= nil
+	return isRosterUnit and self:IsHealer(unit)
 end
 
 function HealerMana:GetManaPercent(unit)

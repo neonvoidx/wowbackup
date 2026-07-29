@@ -914,9 +914,6 @@ local function buildTweaks(list, cfg)
             set = function(_, value)
                 db().cooldownManager_showHighlight_Essential = value
                 db().cooldownManager_showHighlight_Utility = value
-                if value then
-                    C_CVar.SetCVar("assistedCombatHighlight", "1")
-                end
                 if ns.Assistant then
                     ns.Assistant:OnSettingChanged("Essential")
                     ns.Assistant:OnSettingChanged("Utility")
@@ -1017,12 +1014,15 @@ function EMVS:BuildCooldownFontNameSetting(opts)
     opts = opts or {}
     return {
         kind = ST.Dropdown,
-        name = "Font",
+        name = opts.name or "Font",
         height = 220,
         parentId = opts.parentId,
         isShown = opts.isShown,
         values = fontNameArray(),
         get = function()
+            if opts.get then
+                return opts.get()
+            end
             local v = db().cooldownManager_cooldownFontName
             if not v or v == "NIL" then
                 return "NIL"
@@ -1030,10 +1030,14 @@ function EMVS:BuildCooldownFontNameSetting(opts)
             return v
         end,
         set = function(_, value)
+            if opts.set then
+                opts.set(value)
+                return
+            end
             db().cooldownManager_cooldownFontName = value
             refreshFont()
         end,
-        desc = "Font for ability cooldown numbers (shared across viewers & trackers).",
+        desc = opts.desc or "Font for ability cooldown numbers shared across native viewers.",
     }
 end
 
@@ -1041,15 +1045,22 @@ function EMVS:BuildCooldownFontFlagsSetting(opts)
     opts = opts or {}
     return {
         kind = ST.MultiDropdown,
-        name = "Font Flags",
+        name = opts.name or "Font Flags",
         customText = "No Flags",
         parentId = opts.parentId,
         isShown = opts.isShown,
         values = FONT_FLAG_ARRAY,
         get = function()
+            if opts.get then
+                return opts.get()
+            end
             return db().cooldownManager_cooldownFontFlags or {}
         end,
         set = function(_, value)
+            if opts.set then
+                opts.set(value)
+                return
+            end
             if value.OUTLINE or value.THICKOUTLINE or value.MONOCHROME or value.SLUG then
                 db().cooldownManager_cooldownFontFlags = value
             else

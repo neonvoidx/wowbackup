@@ -3,6 +3,7 @@ ns = ns or {}
 
 local Shared = ns.Shared
 local S = Shared.S
+local Performance = ns.Performance
 
 local isMidnight = select(4, GetBuildInfo()) >= 120000
 if not isMidnight then
@@ -31,14 +32,30 @@ local db
 local liveContainers = {}
 local sourceInfoByArenaID = {}
 local trinketMirrors = {}
-local refreshTicker
+local recoveryTicker
+local previewTicker
+local styleRevision = 1
+local styleSnapshot
+local pendingLiveLayouts = {}
+local resolvedArenaParents = {}
+local runtimeRefreshState = {
+    forceSourceResync = false,
+    recoveryTickCount = 0,
+}
 local testMode = false
 local testTrays = {}
 local testConfigsByKey = {}
 local testTrinketIcon
 local testModeStartedAt
 local helperCallbackOwner = {}
+local sharedMediaCallbackOwner = {}
 local parkingRoot
+local GetStyleSnapshot
+local UpdateRecoveryTicker
+local RefreshLiveRuntime
+local RefreshLiveRuntimeLight
+local RequestLiveRuntimeRefresh
+local CancelPendingRuntimeRefresh
 
 local function GetParkingRoot()
     if parkingRoot then
@@ -57,6 +74,10 @@ local function ParkFrameOffscreen(frame)
         return
     end
 
+    if frame.ArenaDRNameplatesParked then
+        return
+    end
+
     local root = GetParkingRoot()
     if frame:GetParent() ~= root then
         frame:SetParent(root)
@@ -64,6 +85,20 @@ local function ParkFrameOffscreen(frame)
 
     frame:ClearAllPoints()
     frame:SetPoint("CENTER", root, "CENTER", 0, 0)
+    frame.ArenaDRNameplatesParked = true
+    frame.ArenaDRNameplatesAnchorParent = nil
+    frame.ArenaDRNameplatesAnchorRelativeFrame = nil
+end
+
+local function InvalidateStyleSnapshot()
+    styleRevision = styleRevision + 1
+    styleSnapshot = nil
+end
+
+local function IgnoreParentAlpha(frame)
+    if frame and type(frame.SetIgnoreParentAlpha) == "function" then
+        frame:SetIgnoreParentAlpha(true)
+    end
 end
 
 local function GetHelper()
@@ -80,7 +115,7 @@ local NormalizeColorTable = Shared.NormalizeColorTable
 local ClampNumber = Shared.ClampNumber
 
 local function IsSecretValue(value)
-    if value == nil or type(issecretvalue_fn) ~= "function" then
+    if type(issecretvalue_fn) ~= "function" then
         return false
     end
 
@@ -169,23 +204,23 @@ local function GetTrinketVisibilityMode()
 end
 
 local function GetTrinketSize()
-    return ClampNumber(GetTrinketSettings().size, 12, 80, defaults.trinket.size)
+    return GetStyleSnapshot().trinketSize
 end
 
 local function GetTrinketOpacity()
-    return ClampNumber(GetTrinketSettings().opacity, 0.1, 1.0, defaults.trinket.opacity)
+    return GetStyleSnapshot().trinketOpacity
 end
 
 local function GetTrinketBorderStyle()
-    return Shared.NormalizeTrinketBorderStyle(GetTrinketSettings().borderStyle)
+    return GetStyleSnapshot().trinketBorderStyle
 end
 
 local function GetTrinketBorderWidth()
-    return ClampNumber(GetTrinketSettings().borderWidth, 1, 8, defaults.trinket.borderWidth)
+    return GetStyleSnapshot().trinketBorderWidth
 end
 
 local function GetTrinketBorderColorRGB()
-    local color = NormalizeColorTable(GetTrinketSettings().borderColor, defaults.trinket.borderColor)
+    local color = GetStyleSnapshot().trinketBorderColor
     return color[1], color[2], color[3]
 end
 
@@ -214,30 +249,17 @@ local function IsEnemyTarget()
 end
 
 local function GetTimerColorRGB()
-    if not db then
-        return 1, 1, 1
-    end
-
-    local color = NormalizeColorTable(db.timerTextColor, defaults.timerTextColor)
+    local color = GetStyleSnapshot().timerTextColor
     return color[1], color[2], color[3]
 end
 
 local function GetTimerTextScale()
-    if not db then
-        return defaults.timerTextScale
-    end
-
-    return ClampNumber(db.timerTextScale, 0.5, 3.0, defaults.timerTextScale)
+    return GetStyleSnapshot().timerTextScale
 end
 
 local function GetTimerTextOffsets()
-    if not db then
-        return defaults.timerTextOffsetX, defaults.timerTextOffsetY
-    end
-
-    return
-        ClampNumber(db.timerTextOffsetX, -50, 50, defaults.timerTextOffsetX),
-        ClampNumber(db.timerTextOffsetY, -50, 50, defaults.timerTextOffsetY)
+    local snapshot = GetStyleSnapshot()
+    return snapshot.timerTextOffsetX, snapshot.timerTextOffsetY
 end
 
 local function IsTimerTextEnabled()
@@ -348,41 +370,63 @@ local function ClearCooldownCompat(cooldown)
 end
 
 local function GetDRTextColorRGB(isImmune)
-    if not db then
-        return 1, 1, 1
-    end
-
-    local key = isImmune and "drTextImmuneColor" or "drTextColor"
-    local fallback = defaults[key]
-    local color = NormalizeColorTable(db[key], fallback)
+    local snapshot = GetStyleSnapshot()
+    local color = isImmune and snapshot.drTextImmuneColor or snapshot.drTextColor
     return color[1], color[2], color[3]
 end
 
 local function GetDRBorderColorRGB(isImmune)
-    if not db then
-        return 1, 1, 1
-    end
-
-    local key = isImmune and "drBorderImmuneColor" or "drBorderColor"
-    local fallback = defaults[key]
-    local color = NormalizeColorTable(db[key], fallback)
+    local snapshot = GetStyleSnapshot()
+    local color = isImmune and snapshot.drBorderImmuneColor or snapshot.drBorderColor
     return color[1], color[2], color[3]
 end
 
-local function GetDRBorderWidth()
-    if not db then
-        return defaults.drBorderWidth
+GetStyleSnapshot = function()
+    if styleSnapshot and styleSnapshot.revision == styleRevision then
+        return styleSnapshot
     end
 
-    return ClampNumber(db.drBorderWidth, 1, 8, defaults.drBorderWidth)
+    local settings = db or defaults
+    local trinketSettings = GetTrinketSettings()
+    local normalBorder = NormalizeColorTable(settings.drBorderColor, defaults.drBorderColor)
+    local immuneBorder = NormalizeColorTable(settings.drBorderImmuneColor, defaults.drBorderImmuneColor)
+
+    styleSnapshot = {
+        revision = styleRevision,
+        timerTextColor = NormalizeColorTable(settings.timerTextColor, defaults.timerTextColor),
+        timerTextScale = ClampNumber(settings.timerTextScale, 0.5, 3.0, defaults.timerTextScale),
+        timerTextOffsetX = ClampNumber(settings.timerTextOffsetX, -50, 50, defaults.timerTextOffsetX),
+        timerTextOffsetY = ClampNumber(settings.timerTextOffsetY, -50, 50, defaults.timerTextOffsetY),
+        drTextColor = NormalizeColorTable(settings.drTextColor, defaults.drTextColor),
+        drTextImmuneColor = NormalizeColorTable(settings.drTextImmuneColor, defaults.drTextImmuneColor),
+        drBorderColor = normalBorder,
+        drBorderImmuneColor = immuneBorder,
+        drBorderStyle = Shared.NormalizeDRBorderStyle(settings.drBorderStyle),
+        drBorderWidth = ClampNumber(settings.drBorderWidth, 1, 8, defaults.drBorderWidth),
+        normalBorderColorObject = CreateColor(normalBorder[1], normalBorder[2], normalBorder[3], 1),
+        immuneBorderColorObject = CreateColor(immuneBorder[1], immuneBorder[2], immuneBorder[3], 1),
+        trinketBorderColor = NormalizeColorTable(trinketSettings.borderColor, defaults.trinket.borderColor),
+        trinketSize = ClampNumber(trinketSettings.size, 12, 80, defaults.trinket.size),
+        trinketOpacity = ClampNumber(trinketSettings.opacity, 0.1, 1.0, defaults.trinket.opacity),
+        trinketBorderStyle = Shared.NormalizeTrinketBorderStyle(trinketSettings.borderStyle),
+        trinketBorderWidth = ClampNumber(trinketSettings.borderWidth, 1, 8, defaults.trinket.borderWidth),
+        textFont = settings.textFont,
+        anchorContext = {
+            anchorPreset = settings.anchorPreset or defaults.anchorPreset,
+            iconLayout = GetIconLayout(),
+            point = settings.point or defaults.point,
+            relativePoint = settings.relativePoint or defaults.relativePoint,
+        },
+    }
+    return styleSnapshot
+end
+
+local function GetDRBorderWidth()
+    return GetStyleSnapshot().drBorderWidth
 end
 
 local function GetDRBorderStyle()
-    if not db then
-        return defaults.drBorderStyle
-    end
-
-    return Shared.NormalizeDRBorderStyle(db.drBorderStyle)
+    return GetStyleSnapshot().drBorderStyle
 end
 
 local function FindCooldownText(frame)
@@ -496,9 +540,7 @@ local function ApplyTimerTextStyle(timerText, parent, fontSize)
     if timerText.SetJustifyV then
         timerText:SetJustifyV("MIDDLE")
     end
-    if timerText.SetFont then
-        timerText:SetFont(STANDARD_TEXT_FONT, actualFontSize, "OUTLINE")
-    end
+    Shared.ApplyTextFont(timerText, actualFontSize, "OUTLINE", GetStyleSnapshot().textFont)
 end
 
 local LIVE_DR_TIMER_DURATION = 16.1
@@ -543,6 +585,7 @@ local function StartLiveSlotCooldown(slot, durationSeconds)
     pcall(function()
         cooldown:SetCooldown(startedAt, trackedDuration)
     end)
+    slot.ArenaDRNameplatesLiveCooldownActive = true
 end
 
 local function EnsureVisualOverlay(frame)
@@ -719,10 +762,11 @@ local function ApplyDRBorderColor(frame, isImmune)
         return
     end
 
+    local snapshot = GetStyleSnapshot()
     local normalR, normalG, normalB = GetDRBorderColorRGB(false)
     local immuneR, immuneG, immuneB = GetDRBorderColorRGB(true)
-    local normalColor = CreateColor(normalR, normalG, normalB, 1)
-    local immuneColor = CreateColor(immuneR, immuneG, immuneB, 1)
+    local normalColor = snapshot.normalBorderColorObject
+    local immuneColor = snapshot.immuneBorderColorObject
 
     local function ApplyTextureColor(texture)
         if texture.SetVertexColorFromBoolean then
@@ -762,7 +806,7 @@ local function EnsureDRTextRegions(frame)
 
     if not frame.ArenaDRNameplatesDRText then
         local drText = overlay:CreateFontString(nil, "OVERLAY")
-        drText:SetFont(STANDARD_TEXT_FONT, 14, "OUTLINE")
+        Shared.ApplyTextFont(drText, 14, "OUTLINE", GetStyleSnapshot().textFont)
         drText:SetShadowOffset(1, -1)
         drText:SetShadowColor(0, 0, 0, 1)
         if drText.SetDrawLayer then
@@ -774,7 +818,7 @@ local function EnsureDRTextRegions(frame)
 
     if not frame.ArenaDRNameplatesDRTextImmune then
         local drTextImmune = overlay:CreateFontString(nil, "OVERLAY")
-        drTextImmune:SetFont(STANDARD_TEXT_FONT, 14, "OUTLINE")
+        Shared.ApplyTextFont(drTextImmune, 14, "OUTLINE", GetStyleSnapshot().textFont)
         drTextImmune:SetShadowOffset(1, -1)
         drTextImmune:SetShadowColor(0, 0, 0, 1)
         if drTextImmune.SetDrawLayer then
@@ -887,14 +931,14 @@ local function ApplyDRTextStyle(frame, baseFontSize, isImmuneOverride)
     local offsetY = tonumber(db.drTextOffsetY) or -4
     local scale = tonumber(db.drTextScale) or 1.0
 
-    drText:SetFont(STANDARD_TEXT_FONT, fontSize, "OUTLINE")
+    Shared.ApplyTextFont(drText, fontSize, "OUTLINE", GetStyleSnapshot().textFont)
     drText:SetText("½")
     drText:SetScale(scale)
     drText:ClearAllPoints()
     drText:SetPoint(anchor, overlay, anchor, offsetX, offsetY)
     drText:SetTextColor(GetDRTextColorRGB(false))
 
-    drTextImmune:SetFont(STANDARD_TEXT_FONT, fontSize, "OUTLINE")
+    Shared.ApplyTextFont(drTextImmune, fontSize, "OUTLINE", GetStyleSnapshot().textFont)
     drTextImmune:SetText("%")
     drTextImmune:SetScale(scale)
     drTextImmune:ClearAllPoints()
@@ -907,7 +951,7 @@ local function ApplyDRTextStyle(frame, baseFontSize, isImmuneOverride)
         SetDRTextAlpha(frame, 1, 0)
     end
 
-    if isImmuneOverride ~= nil then
+    if IsSecretValue(isImmuneOverride) or isImmuneOverride ~= nil then
         ApplyDRVisualStateFromImmune(frame, isImmuneOverride)
         return
     end
@@ -966,6 +1010,7 @@ local function GetLiveContainer(arenaID)
     frame:SetFrameStrata("HIGH")
     frame:SetFrameLevel(200)
     frame:EnableMouse(false)
+    IgnoreParentAlpha(frame)
     frame.slots = {}
     frame:Hide()
     liveContainers[arenaID] = frame
@@ -988,6 +1033,8 @@ local function EnsureLiveSlot(arenaID, slotIndex)
     slot.ArenaDRNameplatesLiveHasTexture = false
     slot.ArenaDRNameplatesLiveHasAtlas = false
     slot.ArenaDRNameplatesLiveIsImmune = false
+    slot.ArenaDRNameplatesLiveCooldownActive = false
+    slot.ArenaDRNameplatesStyleRevision = 0
     ResetLiveSlotSeverity(slot)
     container.slots[slotIndex] = slot
     return slot
@@ -995,13 +1042,13 @@ end
 
 local function EnsureSourceInfo(arenaID)
     local info = sourceInfoByArenaID[arenaID]
-    if info and info.tray then
-        return info
-    end
-
     local arenaFrame = _G["CompactArenaFrameMember" .. arenaID]
     local tray = arenaFrame and arenaFrame.SpellDiminishStatusTray
+    if info and info.tray == tray and tray then
+        return info
+    end
     if not tray then
+        sourceInfoByArenaID[arenaID] = nil
         return nil
     end
 
@@ -1009,14 +1056,16 @@ local function EnsureSourceInfo(arenaID)
         arenaID = arenaID,
         arenaFrame = arenaFrame,
         tray = tray,
+        children = info and info.children or {},
     }
 
     sourceInfoByArenaID[arenaID] = info
     return info
 end
 
-local function GetLiveSourceChildren(tray)
-    local children = {}
+local function GetLiveSourceChildren(tray, children)
+    children = children or {}
+    wipe(children)
     if not tray then
         return children
     end
@@ -1060,14 +1109,25 @@ local function GetPointOffset(point, width, height)
     return (width * factors[1]), (height * factors[2])
 end
 
+local function GetAdapterLayoutAnchor(parent)
+    local adapters = ns and ns.NameplateAdapters
+    if not adapters or type(adapters.ResolveLayoutAnchor) ~= "function" then
+        return nil
+    end
+
+    return adapters:ResolveLayoutAnchor(parent, GetStyleSnapshot().anchorContext)
+end
+
 local function GetEffectiveContainerAnchor(parent)
     local point = db and db.point or defaults.point
     local relativePoint = db and db.relativePoint or defaults.relativePoint
     local offsetX = tonumber(db and db.offsetX) or defaults.offsetX
     local offsetY = tonumber(db and db.offsetY) or defaults.offsetY
+    local iconLayout = GetIconLayout()
+    local relativeFrame = GetAdapterLayoutAnchor(parent)
 
-    if GetIconLayout() ~= "VERTICAL" then
-        return point, relativePoint, offsetX, offsetY
+    if iconLayout ~= "VERTICAL" then
+        return point, relativePoint, offsetX, offsetY, relativeFrame
     end
 
     local growth = GetEffectiveIconGrowth()
@@ -1077,7 +1137,7 @@ local function GetEffectiveContainerAnchor(parent)
     local oldX, oldY = GetPointOffset(point, baseSize, baseSize)
     local newX, newY = GetPointOffset(forcedPoint, baseSize, baseSize)
 
-    return forcedPoint, relativePoint, offsetX + (newX - oldX), offsetY + (newY - oldY)
+    return forcedPoint, relativePoint, offsetX + (newX - oldX), offsetY + (newY - oldY), relativeFrame
 end
 
 local function CalculateTrayLayout(iconCount, iconSize, spacing, iconLayout)
@@ -1132,10 +1192,12 @@ local function AnchorChildByGrowth(child, tray, iconLayout, growth, index, child
 end
 
 local function GetVisibleLiveSlots(container)
-    local visibleSlots = {}
+    local visibleSlots = container and container.visibleSlots or {}
+    wipe(visibleSlots)
     if not container or type(container.slots) ~= "table" then
         return visibleSlots
     end
+    container.visibleSlots = visibleSlots
 
     for _, slot in ipairs(container.slots) do
         if slot and slot:IsShown() then
@@ -1159,6 +1221,7 @@ local function ApplyLiveSlotStyle(slot)
     end
 
     ApplyLiveDRTextStyle(slot, 14)
+    slot.ArenaDRNameplatesStyleRevision = styleRevision
 end
 
 local function LayoutLiveContainer(arenaID)
@@ -1180,13 +1243,27 @@ local function LayoutLiveContainer(arenaID)
     local growth = GetEffectiveIconGrowth()
     local scaleValue = GetDRTrayScale(container:GetParent())
 
-    container:SetSize(layoutWidth, layoutHeight)
-    container:SetScale(scaleValue)
-    container:SetAlpha(tonumber(db and db.opacity) or 1.0)
+    local opacity = tonumber(db and db.opacity) or 1.0
+    if container.ArenaDRNameplatesLayoutWidth ~= layoutWidth
+        or container.ArenaDRNameplatesLayoutHeight ~= layoutHeight then
+        container:SetSize(layoutWidth, layoutHeight)
+        container.ArenaDRNameplatesLayoutWidth = layoutWidth
+        container.ArenaDRNameplatesLayoutHeight = layoutHeight
+    end
+    if container.ArenaDRNameplatesLayoutScale ~= scaleValue then
+        container:SetScale(scaleValue)
+        container.ArenaDRNameplatesLayoutScale = scaleValue
+    end
+    if container.ArenaDRNameplatesLayoutAlpha ~= opacity then
+        container:SetAlpha(opacity)
+        container.ArenaDRNameplatesLayoutAlpha = opacity
+    end
 
     for index, slot in ipairs(visibleSlots) do
-        slot:SetSize(LIVE_ICON_SIZE, LIVE_ICON_SIZE)
-        ApplyLiveSlotStyle(slot)
+        if slot.ArenaDRNameplatesStyleRevision ~= styleRevision then
+            slot:SetSize(LIVE_ICON_SIZE, LIVE_ICON_SIZE)
+            ApplyLiveSlotStyle(slot)
+        end
         AnchorChildByGrowth(slot, container, iconLayout, growth, index, childCount, iconPitch)
     end
 
@@ -1197,89 +1274,141 @@ local function LayoutLiveContainer(arenaID)
     return childCount
 end
 
+local function RequestLiveLayout(arenaID)
+    if pendingLiveLayouts[arenaID] then
+        return
+    end
+
+    pendingLiveLayouts[arenaID] = C_Timer.NewTimer(0, function()
+        pendingLiveLayouts[arenaID] = nil
+        local container = liveContainers[arenaID]
+        if container and LayoutLiveContainer(arenaID) > 0 then
+            container:Show()
+        end
+    end)
+end
+
 local function ClearLiveSlotCooldown(slot)
-    if not slot or not slot.Cooldown then
+    if not slot or not slot.Cooldown or not slot.ArenaDRNameplatesLiveCooldownActive then
         return
     end
 
     ClearCooldownCompat(slot.Cooldown)
+    slot.ArenaDRNameplatesLiveCooldownActive = false
 end
 
-local function UpdateLiveSlotVisibility(arenaID, slot)
+local function UpdateLiveSlotVisibility(arenaID, slot, deferLayout)
     if not slot then
-        return
+        return false
     end
 
     local hasVisual = slot.ArenaDRNameplatesLiveHasTexture == true
         or slot.ArenaDRNameplatesLiveHasAtlas == true
     local shouldShow = slot.ArenaDRNameplatesLiveSourceShown ~= false and hasVisual
 
+    local currentShown = SafeGetShownState(slot)
+    if currentShown == shouldShow then
+        return false
+    end
+
     slot:SetShown(shouldShow)
-    LayoutLiveContainer(arenaID)
+    if not deferLayout then
+        RequestLiveLayout(arenaID)
+    end
+    return true
 end
 
-local function SetLiveSlotTexture(arenaID, slot, texture)
+local function SetLiveSlotTexture(arenaID, slot, texture, deferLayout)
     if not slot or not slot.Icon or not slot.Icon.SetTexture then
-        return
+        return false
     end
 
-    if texture == nil then
-        slot.Icon:SetTexture(nil)
-        slot.ArenaDRNameplatesLiveHasTexture = false
-        UpdateLiveSlotVisibility(arenaID, slot)
-        return
+    local secret = IsSecretValue(texture)
+    if not secret and (texture == "" or texture == 0) then
+        texture = nil
     end
 
-    if not IsSecretValue(texture) and (texture == "" or texture == 0) then
-        slot.Icon:SetTexture(nil)
-        slot.ArenaDRNameplatesLiveHasTexture = false
-        UpdateLiveSlotVisibility(arenaID, slot)
-        return
+    local hasTexture = secret or texture ~= nil
+    local cachedTexture = slot.ArenaDRNameplatesLiveMirroredTexture
+    local unchanged = not secret
+        and not IsSecretValue(cachedTexture)
+        and cachedTexture == texture
+        and slot.ArenaDRNameplatesLiveHasTexture == hasTexture
+    if not unchanged then
+        slot.Icon:SetTexture(texture)
+        if secret then
+            slot.ArenaDRNameplatesLiveMirroredTexture = nil
+        else
+            slot.ArenaDRNameplatesLiveMirroredTexture = texture
+        end
+        if hasTexture and slot.Icon.SetTexCoord then
+            slot.Icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+        end
     end
-
-    if slot.Icon.SetTexCoord then
-        slot.Icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+    slot.ArenaDRNameplatesLiveHasTexture = hasTexture
+    if hasTexture then
+        slot.ArenaDRNameplatesLiveHasAtlas = false
+        slot.ArenaDRNameplatesLiveMirroredAtlas = nil
     end
-    slot.Icon:SetTexture(texture)
-    slot.ArenaDRNameplatesLiveHasTexture = true
-    slot.ArenaDRNameplatesLiveHasAtlas = false
-    UpdateLiveSlotVisibility(arenaID, slot)
+    return UpdateLiveSlotVisibility(arenaID, slot, deferLayout)
 end
 
-local function SetLiveSlotAtlas(arenaID, slot, atlas)
+local function SetLiveSlotAtlas(arenaID, slot, atlas, deferLayout)
     if not slot or not slot.Icon or not slot.Icon.SetAtlas then
-        return
+        return false
     end
 
-    if atlas == nil then
-        slot.ArenaDRNameplatesLiveHasAtlas = false
-        UpdateLiveSlotVisibility(arenaID, slot)
-        return
+    local secret = IsSecretValue(atlas)
+    if not secret and atlas == "" then
+        atlas = nil
     end
 
-    if not IsSecretValue(atlas) and atlas == "" then
-        slot.ArenaDRNameplatesLiveHasAtlas = false
-        UpdateLiveSlotVisibility(arenaID, slot)
-        return
+    local hasAtlas = secret or atlas ~= nil
+    local cachedAtlas = slot.ArenaDRNameplatesLiveMirroredAtlas
+    local unchanged = not secret
+        and not IsSecretValue(cachedAtlas)
+        and cachedAtlas == atlas
+        and slot.ArenaDRNameplatesLiveHasAtlas == hasAtlas
+    if hasAtlas and not unchanged then
+        slot.Icon:SetAtlas(atlas, true)
+        if secret then
+            slot.ArenaDRNameplatesLiveMirroredAtlas = nil
+        else
+            slot.ArenaDRNameplatesLiveMirroredAtlas = atlas
+        end
+        if slot.Icon.SetTexCoord then
+            slot.Icon:SetTexCoord(0, 1, 0, 1)
+        end
+    elseif not hasAtlas then
+        slot.ArenaDRNameplatesLiveMirroredAtlas = nil
     end
-
-    if slot.Icon.SetTexCoord then
-        slot.Icon:SetTexCoord(0, 1, 0, 1)
+    slot.ArenaDRNameplatesLiveHasAtlas = hasAtlas
+    if hasAtlas then
+        slot.ArenaDRNameplatesLiveHasTexture = false
+        slot.ArenaDRNameplatesLiveMirroredTexture = nil
     end
-    slot.Icon:SetAtlas(atlas, true)
-    slot.ArenaDRNameplatesLiveHasAtlas = true
-    slot.ArenaDRNameplatesLiveHasTexture = false
-    UpdateLiveSlotVisibility(arenaID, slot)
+    return UpdateLiveSlotVisibility(arenaID, slot, deferLayout)
 end
 
-local function SetLiveSlotImmunity(arenaID, slot, isShown)
+local function SetLiveSlotImmunity(_, slot, isShown)
     if not slot or not slot.ImmunityIndicator then
-        return
+        return false
+    end
+
+    local cachedIsImmune = slot.ArenaDRNameplatesLiveIsImmune
+    if not IsSecretValue(isShown)
+        and not IsSecretValue(cachedIsImmune)
+        and cachedIsImmune == isShown then
+        return false
     end
 
     slot.ArenaDRNameplatesLiveIsImmune = isShown
-    ApplyLiveSlotStyle(slot)
-    LayoutLiveContainer(arenaID)
+    if slot.ArenaDRNameplatesStyleRevision ~= styleRevision then
+        ApplyLiveSlotStyle(slot)
+    else
+        ApplyDRVisualStateFromImmune(slot, isShown)
+    end
+    return true
 end
 
 local function GetLiveAnchorParent(arenaID)
@@ -1290,12 +1419,20 @@ local function GetLiveAnchorParent(arenaID)
     return helper:GetAnchorParentByArenaID(arenaID)
 end
 
-local function HookLiveSourceItem(arenaID, slotIndex, sourceItem)
+local function HookLiveSourceItem(arenaID, slotIndex, sourceItem, forceSourceResync)
     if not sourceItem then
         return
     end
 
     local slot = EnsureLiveSlot(arenaID, slotIndex)
+    if not forceSourceResync
+        and slot.ArenaDRNameplatesLiveSourceItem == sourceItem
+        and slot.ArenaDRNameplatesLiveSourceReady == true then
+        return false
+    end
+
+    slot.ArenaDRNameplatesLiveSourceReady = false
+    slot.ArenaDRNameplatesLiveSourceItem = sourceItem
     sourceItem.ArenaDRNameplatesLiveMirrorArenaID = arenaID
     sourceItem.ArenaDRNameplatesLiveMirrorSlot = slot
 
@@ -1315,17 +1452,19 @@ local function HookLiveSourceItem(arenaID, slotIndex, sourceItem)
         end
     end
 
+    local mirroredAtlas = false
     if sourceIcon and sourceIcon.GetAtlas and slot.Icon.SetAtlas then
         local okAtlas, atlas = pcall(sourceIcon.GetAtlas, sourceIcon)
-        if okAtlas and atlas ~= nil then
-            SetLiveSlotAtlas(arenaID, slot, atlas)
+        if okAtlas and (IsSecretValue(atlas) or atlas ~= nil) then
+            SetLiveSlotAtlas(arenaID, slot, atlas, true)
+            mirroredAtlas = true
         end
     end
 
-    if sourceIcon and sourceIcon.GetTexture then
+    if not mirroredAtlas and sourceIcon and sourceIcon.GetTexture then
         local okTexture, texture = pcall(sourceIcon.GetTexture, sourceIcon)
-        if okTexture and texture ~= nil then
-            SetLiveSlotTexture(arenaID, slot, texture)
+        if okTexture and (IsSecretValue(texture) or texture ~= nil) then
+            SetLiveSlotTexture(arenaID, slot, texture, true)
         end
     end
 
@@ -1343,7 +1482,8 @@ local function HookLiveSourceItem(arenaID, slotIndex, sourceItem)
         hooksecurefunc(sourceItem, "Show", function()
             local hookedSlot = sourceItem.ArenaDRNameplatesLiveMirrorSlot
             local hookedArenaID = sourceItem.ArenaDRNameplatesLiveMirrorArenaID
-            if not hookedSlot or not hookedArenaID then
+            if not hookedSlot or not hookedArenaID
+                or hookedSlot.ArenaDRNameplatesLiveSourceItem ~= sourceItem then
                 return
             end
 
@@ -1355,7 +1495,8 @@ local function HookLiveSourceItem(arenaID, slotIndex, sourceItem)
         hooksecurefunc(sourceItem, "Hide", function()
             local hookedSlot = sourceItem.ArenaDRNameplatesLiveMirrorSlot
             local hookedArenaID = sourceItem.ArenaDRNameplatesLiveMirrorArenaID
-            if not hookedSlot or not hookedArenaID then
+            if not hookedSlot or not hookedArenaID
+                or hookedSlot.ArenaDRNameplatesLiveSourceItem ~= sourceItem then
                 return
             end
 
@@ -1374,7 +1515,9 @@ local function HookLiveSourceItem(arenaID, slotIndex, sourceItem)
             hooksecurefunc(sourceIcon, "SetTexture", function(_, texture)
                 local hookedSlot = sourceItem.ArenaDRNameplatesLiveMirrorSlot
                 local hookedArenaID = sourceItem.ArenaDRNameplatesLiveMirrorArenaID
-                if not hookedSlot or not hookedArenaID then
+                if not hookedSlot or not hookedArenaID
+                    or hookedSlot.ArenaDRNameplatesLiveSourceItem ~= sourceItem
+                    or sourceItem.ArenaDRNameplatesLiveIconHookTarget ~= sourceIcon then
                     return
                 end
 
@@ -1386,7 +1529,9 @@ local function HookLiveSourceItem(arenaID, slotIndex, sourceItem)
             hooksecurefunc(sourceIcon, "SetAtlas", function(_, atlas)
                 local hookedSlot = sourceItem.ArenaDRNameplatesLiveMirrorSlot
                 local hookedArenaID = sourceItem.ArenaDRNameplatesLiveMirrorArenaID
-                if not hookedSlot or not hookedArenaID then
+                if not hookedSlot or not hookedArenaID
+                    or hookedSlot.ArenaDRNameplatesLiveSourceItem ~= sourceItem
+                    or sourceItem.ArenaDRNameplatesLiveIconHookTarget ~= sourceIcon then
                     return
                 end
 
@@ -1402,7 +1547,9 @@ local function HookLiveSourceItem(arenaID, slotIndex, sourceItem)
             hooksecurefunc(sourceCooldown, "SetCooldown", function()
                 local hookedSlot = sourceItem.ArenaDRNameplatesLiveMirrorSlot
                 local hookedArenaID = sourceItem.ArenaDRNameplatesLiveMirrorArenaID
-                if not hookedSlot or not hookedArenaID or not hookedSlot.Cooldown then
+                if not hookedSlot or not hookedArenaID or not hookedSlot.Cooldown
+                    or hookedSlot.ArenaDRNameplatesLiveSourceItem ~= sourceItem
+                    or sourceItem.ArenaDRNameplatesLiveCooldownHookTarget ~= sourceCooldown then
                     return
                 end
 
@@ -1414,7 +1561,9 @@ local function HookLiveSourceItem(arenaID, slotIndex, sourceItem)
         sourceCooldown:HookScript("OnCooldownDone", function()
             local hookedSlot = sourceItem.ArenaDRNameplatesLiveMirrorSlot
             local hookedArenaID = sourceItem.ArenaDRNameplatesLiveMirrorArenaID
-            if not hookedSlot or not hookedArenaID then
+            if not hookedSlot or not hookedArenaID
+                or hookedSlot.ArenaDRNameplatesLiveSourceItem ~= sourceItem
+                or sourceItem.ArenaDRNameplatesLiveCooldownHookTarget ~= sourceCooldown then
                 return
             end
 
@@ -1425,7 +1574,9 @@ local function HookLiveSourceItem(arenaID, slotIndex, sourceItem)
         sourceCooldown:HookScript("OnHide", function()
             local hookedSlot = sourceItem.ArenaDRNameplatesLiveMirrorSlot
             local hookedArenaID = sourceItem.ArenaDRNameplatesLiveMirrorArenaID
-            if not hookedSlot or not hookedArenaID then
+            if not hookedSlot or not hookedArenaID
+                or hookedSlot.ArenaDRNameplatesLiveSourceItem ~= sourceItem
+                or sourceItem.ArenaDRNameplatesLiveCooldownHookTarget ~= sourceCooldown then
                 return
             end
 
@@ -1441,7 +1592,9 @@ local function HookLiveSourceItem(arenaID, slotIndex, sourceItem)
             hooksecurefunc(sourceIndicator, "SetShown", function(_, shown)
                 local hookedSlot = sourceItem.ArenaDRNameplatesLiveMirrorSlot
                 local hookedArenaID = sourceItem.ArenaDRNameplatesLiveMirrorArenaID
-                if not hookedSlot or not hookedArenaID then
+                if not hookedSlot or not hookedArenaID
+                    or hookedSlot.ArenaDRNameplatesLiveSourceItem ~= sourceItem
+                    or sourceItem.ArenaDRNameplatesLiveIndicatorHookTarget ~= sourceIndicator then
                     return
                 end
 
@@ -1453,13 +1606,56 @@ local function HookLiveSourceItem(arenaID, slotIndex, sourceItem)
         end
     end
 
-    UpdateLiveSlotVisibility(arenaID, slot)
+    slot.ArenaDRNameplatesLiveSourceReady = true
+    return UpdateLiveSlotVisibility(arenaID, slot, true)
 end
 
-local function AnchorLiveTray(arenaID)
+local function ReconcileLiveContainerAnchor(arenaID, parent, container)
+    if not parent or not container then
+        return false
+    end
+
+    local needsLayout = container.ArenaDRNameplatesStyleRevision ~= styleRevision
+    container.ArenaDRNameplatesRuntimeInactive = false
+    if container:GetParent() ~= parent then
+        container:SetParent(parent)
+        container.ArenaDRNameplatesParked = false
+        needsLayout = true
+    end
+    if container.ArenaDRNameplatesLayoutScale ~= GetDRTrayScale(parent) then
+        needsLayout = true
+    end
+
+    local point, relativePoint, offsetX, offsetY, relativeFrame = GetEffectiveContainerAnchor(parent)
+    relativeFrame = relativeFrame or parent
+    if container.ArenaDRNameplatesAnchorParent ~= parent
+        or container.ArenaDRNameplatesAnchorRelativeFrame ~= relativeFrame
+        or container.ArenaDRNameplatesAnchorPoint ~= point
+        or container.ArenaDRNameplatesAnchorRelativePoint ~= relativePoint
+        or container.ArenaDRNameplatesAnchorX ~= offsetX
+        or container.ArenaDRNameplatesAnchorY ~= offsetY then
+        container:ClearAllPoints()
+        container:SetPoint(point, relativeFrame, relativePoint, offsetX, offsetY)
+        container.ArenaDRNameplatesAnchorParent = parent
+        container.ArenaDRNameplatesAnchorRelativeFrame = relativeFrame
+        container.ArenaDRNameplatesAnchorPoint = point
+        container.ArenaDRNameplatesAnchorRelativePoint = relativePoint
+        container.ArenaDRNameplatesAnchorX = offsetX
+        container.ArenaDRNameplatesAnchorY = offsetY
+        needsLayout = true
+    end
+
+    return needsLayout
+end
+
+local function AnchorLiveTray(arenaID, parent, forceSourceResync)
     local info = EnsureSourceInfo(arenaID)
-    local parent = GetLiveAnchorParent(arenaID)
     local container = GetLiveContainer(arenaID)
+    local pendingLayout = pendingLiveLayouts[arenaID]
+    if pendingLayout then
+        pendingLayout:Cancel()
+        pendingLiveLayouts[arenaID] = nil
+    end
 
     if not info or not info.tray then
         container:Hide()
@@ -1471,21 +1667,17 @@ local function AnchorLiveTray(arenaID)
         return
     end
 
-    if container:GetParent() ~= parent then
-        container:SetParent(parent)
-    end
+    local needsLayout = ReconcileLiveContainerAnchor(arenaID, parent, container)
 
-    container:ClearAllPoints()
-    do
-        local point, relativePoint, offsetX, offsetY = GetEffectiveContainerAnchor(parent)
-        container:SetPoint(point, parent, relativePoint, offsetX, offsetY)
+    local sourceChildren = GetLiveSourceChildren(info.tray, info.children)
+    if info.childCount ~= #sourceChildren then
+        info.childCount = #sourceChildren
+        needsLayout = true
     end
-    container:SetFrameStrata("HIGH")
-    container:SetFrameLevel(200)
-
-    local sourceChildren = GetLiveSourceChildren(info.tray)
     for slotIndex, sourceItem in ipairs(sourceChildren) do
-        HookLiveSourceItem(arenaID, slotIndex, sourceItem)
+        if HookLiveSourceItem(arenaID, slotIndex, sourceItem, forceSourceResync) then
+            needsLayout = true
+        end
     end
 
     if type(container.slots) == "table" then
@@ -1493,36 +1685,65 @@ local function AnchorLiveTray(arenaID)
             local slot = container.slots[slotIndex]
             if slot then
                 slot.ArenaDRNameplatesLiveSourceShown = false
+                slot.ArenaDRNameplatesLiveSourceItem = nil
+                slot.ArenaDRNameplatesLiveSourceReady = false
                 ClearLiveSlotCooldown(slot)
                 SetLiveSlotImmunity(arenaID, slot, false)
-                UpdateLiveSlotVisibility(arenaID, slot)
+                if UpdateLiveSlotVisibility(arenaID, slot, true) then
+                    needsLayout = true
+                end
             end
         end
     end
 
-    if LayoutLiveContainer(arenaID) > 0 then
-        container:Show()
+    if needsLayout then
+        container.ArenaDRNameplatesStyleRevision = styleRevision
+        if LayoutLiveContainer(arenaID) > 0 then
+            container:Show()
+        end
     end
 end
 
 local function RestoreAllLiveTrays()
     for _, arenaID in ipairs(ARENA_IDS) do
+        local pendingLayout = pendingLiveLayouts[arenaID]
+        if pendingLayout then
+            pendingLayout:Cancel()
+            pendingLiveLayouts[arenaID] = nil
+        end
         local container = liveContainers[arenaID]
-        if container then
-            container:Hide()
+        if container and not container.ArenaDRNameplatesRuntimeInactive then
+            container.ArenaDRNameplatesRuntimeInactive = true
+            if type(container.slots) == "table" then
+                for _, slot in ipairs(container.slots) do
+                    if slot then
+                        slot.ArenaDRNameplatesLiveSourceItem = nil
+                    end
+                end
+            end
+            if SafeGetShownState(container) ~= false then
+                container:Hide()
+            end
         end
     end
 end
 
-local function RefreshLiveTrays()
-    if not db or not db.enabled or not IsInArena() then
+local function RefreshLiveTrays(parents, forceSourceResync, inArena)
+    local metricStartedAt = Performance and Performance.active and Performance:Begin()
+    if not db or not db.enabled or not inArena then
         RestoreAllLiveTrays()
+        if metricStartedAt then Performance:Finish("runtime.dr", metricStartedAt) end
         return
     end
 
     for _, arenaID in ipairs(ARENA_IDS) do
-        AnchorLiveTray(arenaID)
+        local parent = parents ~= nil and parents[arenaID] or nil
+        if parents == nil then
+            parent = GetLiveAnchorParent(arenaID)
+        end
+        AnchorLiveTray(arenaID, parent, forceSourceResync)
     end
+    if metricStartedAt then Performance:Finish("runtime.dr", metricStartedAt) end
 end
 
 local TRINKET_ALLIANCE_ICON = 133452
@@ -1532,8 +1753,11 @@ local function GetArenaMember(arenaID)
     return _G["CompactArenaFrameMember" .. tostring(arenaID)]
 end
 
-local function IsArenaMatchEngaged()
-    if not IsInArena() then
+local function IsArenaMatchEngaged(inArena)
+    if inArena == nil then
+        inArena = IsInArena()
+    end
+    if not inArena then
         return false
     end
 
@@ -1695,7 +1919,7 @@ local function CreateTrinketIconFrame(parent, explicitID)
 end
 
 local function ClearLiveTrinketMirrorCooldown(frame)
-    if not frame then
+    if not frame or not frame.hasActiveCooldown then
         return
     end
 
@@ -1703,19 +1927,31 @@ local function ClearLiveTrinketMirrorCooldown(frame)
     ClearCooldownCompat(frame.Cooldown)
 end
 
-local function UpdateLiveTrinketMirrorVisibility(frame)
+local function UpdateLiveTrinketMirrorVisibility(frame, inArena, matchEngaged, trinketEnabled)
     if not frame then
         return
     end
 
+    if inArena == nil then
+        inArena = IsInArena()
+    end
+    if matchEngaged == nil then
+        matchEngaged = IsArenaMatchEngaged(inArena)
+    end
+    if trinketEnabled == nil then
+        trinketEnabled = IsTrinketEnabled()
+    end
+
     local hasTexture = frame.hasSourceTexture == true or frame.hasFallbackTexture == true
-    local shouldShow = IsTrinketEnabled()
-        and IsInArena()
-        and IsArenaMatchEngaged()
+    local shouldShow = trinketEnabled
+        and inArena
+        and matchEngaged
         and hasTexture
         and (GetTrinketVisibilityMode() == "ALWAYS" or frame.hasActiveCooldown == true)
 
-    frame:SetShown(shouldShow)
+    if SafeGetShownState(frame) ~= shouldShow then
+        frame:SetShown(shouldShow)
+    end
 end
 
 local function ApplyLiveTrinketFallback(frame, arenaUnit)
@@ -1730,42 +1966,60 @@ local function ApplyLiveTrinketFallback(frame, arenaUnit)
     end
 
     local fallbackTexture = GetUnitTrinketFallbackTexture(arenaUnit)
+    if frame.ArenaDRNameplatesMirroredTexture == fallbackTexture
+        and frame.hasFallbackTexture == (fallbackTexture ~= nil) then
+        return
+    end
     if fallbackTexture then
         frame.Icon:SetTexture(fallbackTexture)
+        frame.ArenaDRNameplatesMirroredTexture = fallbackTexture
         frame.hasFallbackTexture = true
     else
         frame.Icon:SetTexture(nil)
+        frame.ArenaDRNameplatesMirroredTexture = nil
         frame.hasFallbackTexture = false
     end
 end
 
-local function SetLiveTrinketMirrorTexture(frame, texture)
+local function SetLiveTrinketMirrorTexture(frame, texture, inArena, matchEngaged, trinketEnabled)
     if not frame then
         return
     end
 
     if IsSecretValue(texture) then
         frame.Icon:SetTexture(texture)
+        frame.ArenaDRNameplatesMirroredTexture = nil
         frame.hasSourceTexture = true
         frame.hasFallbackTexture = false
-        UpdateLiveTrinketMirrorVisibility(frame)
+        UpdateLiveTrinketMirrorVisibility(frame, inArena, matchEngaged, trinketEnabled)
         return
     end
 
     if texture == nil or texture == "" or texture == 0 then
         frame.hasSourceTexture = false
         ApplyLiveTrinketFallback(frame, frame.fallbackUnit)
-        UpdateLiveTrinketMirrorVisibility(frame)
+        UpdateLiveTrinketMirrorVisibility(frame, inArena, matchEngaged, trinketEnabled)
         return
     end
 
-    frame.Icon:SetTexture(texture)
+    if frame.ArenaDRNameplatesMirroredTexture ~= texture then
+        frame.Icon:SetTexture(texture)
+        frame.ArenaDRNameplatesMirroredTexture = texture
+    end
     frame.hasSourceTexture = true
     frame.hasFallbackTexture = false
-    UpdateLiveTrinketMirrorVisibility(frame)
+    UpdateLiveTrinketMirrorVisibility(frame, inArena, matchEngaged, trinketEnabled)
 end
 
-local function ApplyLiveTrinketCooldown(frame, arenaUnit, startTime, duration)
+local function ApplyLiveTrinketCooldown(
+    frame,
+    arenaUnit,
+    startTime,
+    duration,
+    inArena,
+    matchEngaged,
+    trinketEnabled
+)
     if not frame or not frame.Cooldown then
         return
     end
@@ -1781,7 +2035,9 @@ local function ApplyLiveTrinketCooldown(frame, arenaUnit, startTime, duration)
         end
     end
 
-    if not usedDurationObject and startTime ~= nil and duration ~= nil then
+    local hasStartTime = IsSecretValue(startTime) or startTime ~= nil
+    local hasDuration = IsSecretValue(duration) or duration ~= nil
+    if not usedDurationObject and hasStartTime and hasDuration then
         pcall(function()
             frame.Cooldown:SetCooldown(startTime, duration)
         end)
@@ -1792,22 +2048,38 @@ local function ApplyLiveTrinketCooldown(frame, arenaUnit, startTime, duration)
     end
 
     frame.hasActiveCooldown = true
-    UpdateLiveTrinketMirrorVisibility(frame)
+    UpdateLiveTrinketMirrorVisibility(frame, inArena, matchEngaged, trinketEnabled)
 end
 
-local function HookLiveTrinketSource(arenaID, frame, sourceFrame)
+local function HookLiveTrinketSource(
+    arenaID,
+    frame,
+    sourceFrame,
+    forceSourceResync,
+    inArena,
+    matchEngaged,
+    trinketEnabled
+)
     if not frame or not sourceFrame then
         return
     end
 
     local arenaUnit = "arena" .. tostring(arenaID)
+    if not forceSourceResync
+        and frame.sourceFrame == sourceFrame
+        and frame.sourceReady == true then
+        return
+    end
+
+    frame.sourceReady = false
+    frame.sourceFrame = sourceFrame
     local sourceIcon = FindTextureRegion(sourceFrame)
     local sourceCooldown = FindCooldownFrame(sourceFrame)
 
     if sourceIcon and sourceIcon.GetTexture then
         local ok, texture = pcall(sourceIcon.GetTexture, sourceIcon)
         if ok then
-            SetLiveTrinketMirrorTexture(frame, texture)
+            SetLiveTrinketMirrorTexture(frame, texture, inArena, matchEngaged, trinketEnabled)
         end
     end
 
@@ -1816,6 +2088,9 @@ local function HookLiveTrinketSource(arenaID, frame, sourceFrame)
 
         if sourceIcon.SetTexture then
             hooksecurefunc(sourceIcon, "SetTexture", function(_, texture)
+                if frame.sourceFrame ~= sourceFrame or frame.sourceIconHookTarget ~= sourceIcon then
+                    return
+                end
                 SetLiveTrinketMirrorTexture(frame, texture)
             end)
         end
@@ -1826,13 +2101,20 @@ local function HookLiveTrinketSource(arenaID, frame, sourceFrame)
 
         if sourceCooldown.SetCooldown then
             hooksecurefunc(sourceCooldown, "SetCooldown", function(_, startTime, duration)
-                if not IsTrinketEnabled() or not IsInArena() or not IsArenaMatchEngaged() then
+                if frame.sourceFrame ~= sourceFrame or frame.sourceCooldownHookTarget ~= sourceCooldown then
+                    return
+                end
+                local currentlyInArena = IsInArena()
+                if not IsTrinketEnabled()
+                    or not currentlyInArena
+                    or not IsArenaMatchEngaged(currentlyInArena) then
                     ClearLiveTrinketMirrorCooldown(frame)
                     UpdateLiveTrinketMirrorVisibility(frame)
                     return
                 end
 
-                if duration == nil or (not IsSecretValue(duration) and duration <= 0) then
+                local durationIsSecret = IsSecretValue(duration)
+                if not durationIsSecret and (duration == nil or duration <= 0) then
                     ClearLiveTrinketMirrorCooldown(frame)
                     UpdateLiveTrinketMirrorVisibility(frame)
                     return
@@ -1843,10 +2125,14 @@ local function HookLiveTrinketSource(arenaID, frame, sourceFrame)
         end
 
         sourceCooldown:HookScript("OnCooldownDone", function()
+            if frame.sourceFrame ~= sourceFrame or frame.sourceCooldownHookTarget ~= sourceCooldown then
+                return
+            end
             ClearLiveTrinketMirrorCooldown(frame)
             UpdateLiveTrinketMirrorVisibility(frame)
         end)
     end
+    frame.sourceReady = true
 end
 
 local function ApplyTrinketFrameStyle(frame)
@@ -1869,6 +2155,7 @@ local function ApplyTrinketFrameStyle(frame)
     end
 
     EnsureTrinketBorder(frame)
+    frame.ArenaDRNameplatesStyleRevision = styleRevision
 end
 
 local function GetLiveTrinketMirror(arenaID)
@@ -1879,6 +2166,7 @@ local function GetLiveTrinketMirror(arenaID)
     local frame = CreateTrinketIconFrame(UIParent, "Live" .. tostring(arenaID))
     frame:SetFrameStrata("HIGH")
     frame:SetFrameLevel(220)
+    IgnoreParentAlpha(frame)
     frame:Hide()
     trinketMirrors[arenaID] = frame
     return frame
@@ -1890,10 +2178,18 @@ local function HideLiveTrinketMirror(arenaID)
         return
     end
 
+    frame.sourceFrame = nil
+    frame.sourceReady = false
+    if frame.ArenaDRNameplatesHiddenReset then
+        return
+    end
+
+    frame.ArenaDRNameplatesHiddenReset = true
     frame.hasSourceTexture = false
     frame.hasFallbackTexture = false
     ClearLiveTrinketMirrorCooldown(frame)
     frame.Icon:SetTexture(nil)
+    frame.ArenaDRNameplatesMirroredTexture = nil
     frame:Hide()
 end
 
@@ -1903,51 +2199,105 @@ local function HideAllLiveTrinketMirrors()
     end
 end
 
-local function UpdateLiveTrinketMirror(arenaID)
-    local parent = GetLiveAnchorParent(arenaID)
+local function UpdateLiveTrinketMirror(
+    arenaID,
+    parent,
+    forceSourceResync,
+    inArena,
+    matchEngaged,
+    trinketEnabled
+)
     if not parent then
-        ParkFrameOffscreen(GetLiveTrinketMirror(arenaID))
+        local existing = trinketMirrors[arenaID]
+        if existing then
+            ParkFrameOffscreen(existing)
+        end
         return
     end
 
     local frame = GetLiveTrinketMirror(arenaID)
+    frame.ArenaDRNameplatesHiddenReset = false
     if frame:GetParent() ~= parent then
         frame:SetParent(parent)
+        frame.ArenaDRNameplatesParked = false
     end
 
-    ApplyTrinketFrameStyle(frame)
+    if frame.ArenaDRNameplatesStyleRevision ~= styleRevision then
+        ApplyTrinketFrameStyle(frame)
+    end
 
-    frame:ClearAllPoints()
     do
         local point, relativePoint, offsetX, offsetY = GetEffectiveTrinketAnchor()
-        frame:SetPoint(point, parent, relativePoint, offsetX, offsetY)
+        if frame.ArenaDRNameplatesAnchorParent ~= parent
+            or frame.ArenaDRNameplatesAnchorPoint ~= point
+            or frame.ArenaDRNameplatesAnchorRelativePoint ~= relativePoint
+            or frame.ArenaDRNameplatesAnchorX ~= offsetX
+            or frame.ArenaDRNameplatesAnchorY ~= offsetY then
+            frame:ClearAllPoints()
+            frame:SetPoint(point, parent, relativePoint, offsetX, offsetY)
+            frame.ArenaDRNameplatesAnchorParent = parent
+            frame.ArenaDRNameplatesAnchorPoint = point
+            frame.ArenaDRNameplatesAnchorRelativePoint = relativePoint
+            frame.ArenaDRNameplatesAnchorX = offsetX
+            frame.ArenaDRNameplatesAnchorY = offsetY
+        end
     end
 
     ApplyLiveTrinketFallback(frame, "arena" .. tostring(arenaID))
 
     local sourceFrame = GetTrinketSourceFrame(arenaID)
     if sourceFrame then
-        HookLiveTrinketSource(arenaID, frame, sourceFrame)
+        HookLiveTrinketSource(
+            arenaID,
+            frame,
+            sourceFrame,
+            forceSourceResync,
+            inArena,
+            matchEngaged,
+            trinketEnabled
+        )
     else
+        frame.sourceFrame = nil
+        frame.sourceReady = false
         ClearLiveTrinketMirrorCooldown(frame)
     end
 
-    if not IsArenaMatchEngaged() then
+    if not matchEngaged then
         ClearLiveTrinketMirrorCooldown(frame)
     end
 
-    UpdateLiveTrinketMirrorVisibility(frame)
+    UpdateLiveTrinketMirrorVisibility(frame, inArena, matchEngaged, trinketEnabled)
 end
 
-local function RefreshLiveTrinketMirrors()
-    if not db or not db.enabled or not IsInArena() or not IsTrinketEnabled() then
+local function RefreshLiveTrinketMirrors(
+    parents,
+    forceSourceResync,
+    inArena,
+    matchEngaged,
+    trinketEnabled
+)
+    local metricStartedAt = Performance and Performance.active and Performance:Begin()
+    if not db or not db.enabled or not inArena or not trinketEnabled then
         HideAllLiveTrinketMirrors()
+        if metricStartedAt then Performance:Finish("runtime.trinket", metricStartedAt) end
         return
     end
 
     for _, arenaID in ipairs(ARENA_IDS) do
-        UpdateLiveTrinketMirror(arenaID)
+        local parent = parents ~= nil and parents[arenaID] or nil
+        if parents == nil then
+            parent = GetLiveAnchorParent(arenaID)
+        end
+        UpdateLiveTrinketMirror(
+            arenaID,
+            parent,
+            forceSourceResync,
+            inArena,
+            matchEngaged,
+            trinketEnabled
+        )
     end
+    if metricStartedAt then Performance:Finish("runtime.trinket", metricStartedAt) end
 end
 
 local function GetNameplateAnchorParentForTarget()
@@ -2035,6 +2385,7 @@ local function EnsureTestTray(previewKey)
     tray:SetSize(1, 1)
     tray:SetFrameStrata("HIGH")
     tray:SetFrameLevel(250)
+    IgnoreParentAlpha(tray)
     tray.previewIcons = {}
     tray.previewKey = previewKey
     tray:Hide()
@@ -2050,6 +2401,7 @@ local function EnsureTestTrinketIcon()
     testTrinketIcon = CreateTrinketIconFrame(UIParent, "Test")
     testTrinketIcon:SetFrameStrata("HIGH")
     testTrinketIcon:SetFrameLevel(260)
+    IgnoreParentAlpha(testTrinketIcon)
     testTrinketIcon:Hide()
     return testTrinketIcon
 end
@@ -2076,11 +2428,15 @@ local function CreatePreviewSpellSet()
     for index = 1, count do
         local source = pool[index]
         local duration = math.random(PREVIEW_MIN_DURATION, PREVIEW_MAX_DURATION)
+        local spellInfo = C_Spell.GetSpellInfo(source.spellID)
         spells[index] = {
             spellID = source.spellID,
             duration = duration,
             isImmune = source.isImmune == true,
             previewOffset = math.random(0, math.max(duration - 2, 0)),
+            iconTexture = spellInfo
+                and (spellInfo.iconID or spellInfo.originalIconID)
+                or "Interface\\Icons\\INV_Misc_QuestionMark",
         }
     end
 
@@ -2226,12 +2582,9 @@ local function ApplyTestTrayLayout(tray, parent, spells)
         icon:Show()
         icon:SetSize(LIVE_ICON_SIZE, LIVE_ICON_SIZE)
 
-        local spellInfo = C_Spell.GetSpellInfo(spellData.spellID)
-        if spellInfo then
-            icon.Icon:SetTexture(spellInfo.iconID or spellInfo.originalIconID)
-        else
-            icon.Icon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
-        end
+        icon.Icon:SetTexture(
+            spellData.iconTexture or "Interface\\Icons\\INV_Misc_QuestionMark"
+        )
 
         AnchorChildByGrowth(icon, tray, iconLayout, growth, index, iconCount, iconPitch)
         ApplyCooldownStyle(icon.Cooldown)
@@ -2283,20 +2636,25 @@ local function RefreshTestTrays()
             activeKeys[trayKey] = true
 
             local tray = EnsureTestTray(trayKey)
-            if tray:GetParent() ~= parent then
+            local parentChanged = tray:GetParent() ~= parent
+            if parentChanged then
                 tray:SetParent(parent)
             end
 
             local config = GetPreviewConfig(configKey)
-            ApplyTestTrayLayout(tray, parent, config.spells)
-
-            tray:ClearAllPoints()
-            do
-                local point, relativePoint, offsetX, offsetY = GetEffectiveContainerAnchor(parent)
-                tray:SetPoint(point, parent, relativePoint, offsetX, offsetY)
+            local needsLayout = parentChanged
+                or tray.previewConfig ~= config
+                or tray.ArenaDRNameplatesStyleRevision ~= styleRevision
+            if needsLayout then
+                ApplyTestTrayLayout(tray, parent, config.spells)
+                tray:ClearAllPoints()
+                local point, relativePoint, offsetX, offsetY, relativeFrame = GetEffectiveContainerAnchor(parent)
+                tray:SetPoint(point, relativeFrame or parent, relativePoint, offsetX, offsetY)
+                tray:SetFrameStrata("HIGH")
+                tray:SetFrameLevel(210)
+                tray.previewConfig = config
+                tray.ArenaDRNameplatesStyleRevision = styleRevision
             end
-            tray:SetFrameStrata("HIGH")
-            tray:SetFrameLevel(210)
             tray:Show()
         end
     end
@@ -2329,12 +2687,23 @@ local function RefreshTestTrinket()
         frame:SetParent(parent)
     end
 
-    ApplyTrinketFrameStyle(frame)
+    if frame.ArenaDRNameplatesStyleRevision ~= styleRevision then
+        ApplyTrinketFrameStyle(frame)
+    end
 
-    frame:ClearAllPoints()
-    do
-        local point, relativePoint, offsetX, offsetY = GetEffectiveTrinketAnchor()
+    local point, relativePoint, offsetX, offsetY = GetEffectiveTrinketAnchor()
+    if frame.ArenaDRNameplatesAnchorParent ~= parent
+        or frame.ArenaDRNameplatesAnchorPoint ~= point
+        or frame.ArenaDRNameplatesAnchorRelativePoint ~= relativePoint
+        or frame.ArenaDRNameplatesAnchorX ~= offsetX
+        or frame.ArenaDRNameplatesAnchorY ~= offsetY then
+        frame:ClearAllPoints()
         frame:SetPoint(point, parent, relativePoint, offsetX, offsetY)
+        frame.ArenaDRNameplatesAnchorParent = parent
+        frame.ArenaDRNameplatesAnchorPoint = point
+        frame.ArenaDRNameplatesAnchorRelativePoint = relativePoint
+        frame.ArenaDRNameplatesAnchorX = offsetX
+        frame.ArenaDRNameplatesAnchorY = offsetY
     end
 
     local texture = GetUnitTrinketFallbackTexture("target")
@@ -2343,7 +2712,8 @@ local function RefreshTestTrinket()
         frame.lastTexture = texture
     end
 
-    ApplyPreviewCooldown(frame, { duration = 30 })
+    frame.previewSpellData = frame.previewSpellData or { duration = 30 }
+    ApplyPreviewCooldown(frame, frame.previewSpellData)
     if frame.Cooldown and frame.Cooldown.SetReverse then
         frame.Cooldown:SetReverse(false)
     end
@@ -2351,6 +2721,99 @@ local function RefreshTestTrinket()
     frame:SetFrameStrata("HIGH")
     frame:SetFrameLevel(260)
     frame:Show()
+end
+
+runtimeRefreshState.RefreshPreview = function()
+    local metricStartedAt = Performance and Performance.active and Performance:Begin()
+    RefreshTestTrays()
+    RefreshTestTrinket()
+    if metricStartedAt then Performance:Finish("preview.reconcile", metricStartedAt) end
+end
+
+runtimeRefreshState.UpdatePreviewCooldowns = function()
+    for _, tray in pairs(testTrays) do
+        if tray and tray:IsShown() and tray.previewConfig then
+            local spells = tray.previewConfig.spells or {}
+            for index, spellData in ipairs(spells) do
+                local icon = tray.previewIcons and tray.previewIcons[index]
+                if icon and icon:IsShown() then
+                    ApplyPreviewCooldown(icon, spellData)
+                end
+            end
+        end
+    end
+
+    if testTrinketIcon and testTrinketIcon:IsShown() then
+        testTrinketIcon.previewSpellData = testTrinketIcon.previewSpellData or { duration = 30 }
+        ApplyPreviewCooldown(testTrinketIcon, testTrinketIcon.previewSpellData)
+    end
+end
+
+runtimeRefreshState.QueuePreviewRefresh = function()
+    if not testMode then
+        return
+    end
+
+    if runtimeRefreshState.pendingPreview then
+        if Performance and Performance.active then Performance:Count("preview.coalesced") end
+        return
+    end
+
+    runtimeRefreshState.pendingPreview = C_Timer.NewTimer(0, function()
+        runtimeRefreshState.pendingPreview = nil
+        if testMode then
+            runtimeRefreshState.RefreshPreview()
+        end
+    end)
+end
+
+runtimeRefreshState.SetPreviewEventsActive = function(active)
+    local frame = runtimeRefreshState.previewEventFrame
+    if active and not frame then
+        frame = CreateFrame("Frame", NextFrameName("Core", "PreviewEventFrame"))
+        frame:SetScript("OnEvent", function()
+            runtimeRefreshState.QueuePreviewRefresh()
+        end)
+        runtimeRefreshState.previewEventFrame = frame
+    end
+
+    if not frame or runtimeRefreshState.previewEventsActive == active then
+        return
+    end
+
+    runtimeRefreshState.previewEventsActive = active
+    if active then
+        frame:RegisterEvent("NAME_PLATE_UNIT_ADDED")
+        frame:RegisterEvent("FORBIDDEN_NAME_PLATE_UNIT_ADDED")
+        frame:RegisterEvent("NAME_PLATE_UNIT_REMOVED")
+        frame:RegisterEvent("FORBIDDEN_NAME_PLATE_UNIT_REMOVED")
+    else
+        frame:UnregisterEvent("NAME_PLATE_UNIT_ADDED")
+        frame:UnregisterEvent("FORBIDDEN_NAME_PLATE_UNIT_ADDED")
+        frame:UnregisterEvent("NAME_PLATE_UNIT_REMOVED")
+        frame:UnregisterEvent("FORBIDDEN_NAME_PLATE_UNIT_REMOVED")
+    end
+end
+
+local function StopPreviewTicker()
+    if previewTicker then
+        previewTicker:Cancel()
+        previewTicker = nil
+    end
+end
+
+local function StartPreviewTicker()
+    if previewTicker then
+        return
+    end
+
+    previewTicker = C_Timer.NewTicker(1, function()
+        if not testMode then
+            StopPreviewTicker()
+            return
+        end
+        runtimeRefreshState.UpdatePreviewCooldowns()
+    end)
 end
 
 local function StartTestMode()
@@ -2362,13 +2825,22 @@ local function StartTestMode()
     testModeStartedAt = GetTime()
     ClearPreviewConfigs()
     ResetPreviewTimerCache()
-    RefreshTestTrays()
+    runtimeRefreshState.SetPreviewEventsActive(true)
+    runtimeRefreshState.RefreshPreview()
+    StartPreviewTicker()
     NotifySettingsUIRefresh()
 end
 
 local function StopTestMode()
     local wasActive = testMode
     testMode = false
+    StopPreviewTicker()
+    runtimeRefreshState.SetPreviewEventsActive(false)
+    if runtimeRefreshState.pendingPreview
+        and type(runtimeRefreshState.pendingPreview.Cancel) == "function" then
+        runtimeRefreshState.pendingPreview:Cancel()
+    end
+    runtimeRefreshState.pendingPreview = nil
     testModeStartedAt = nil
     ResetPreviewTimerCache()
     ClearPreviewConfigs()
@@ -2394,11 +2866,19 @@ local function ToggleTestMode()
     end
 end
 
-local function RefreshAll()
-    RefreshLiveTrays()
-    RefreshLiveTrinketMirrors()
-    RefreshTestTrays()
-    RefreshTestTrinket()
+local function RefreshAll(forceSourceResync)
+    RefreshLiveRuntime(forceSourceResync == true)
+    if testMode then
+        runtimeRefreshState.RefreshPreview()
+    end
+end
+
+local function RefreshAllWithStyle()
+    InvalidateStyleSnapshot()
+    if UpdateRecoveryTicker then
+        UpdateRecoveryTicker()
+    end
+    RefreshAll(true)
 end
 
 local function ResetPosition()
@@ -2410,7 +2890,7 @@ local function ResetPosition()
     Shared.ResetBlizzardDRCVarsToDefaults()
 
     StopTestMode()
-    RefreshAll()
+    RefreshAllWithStyle()
 end
 
 local function ApplyAnchorPreset(preset)
@@ -2419,7 +2899,7 @@ local function ApplyAnchorPreset(preset)
     end
 
     Shared.ApplyAnchorPresetToTable(db, preset)
-    RefreshAll()
+    RefreshAllWithStyle()
 end
 
 local function SetAdvancedAnchor(point, relativePoint)
@@ -2430,20 +2910,63 @@ local function SetAdvancedAnchor(point, relativePoint)
     db.point = point or db.point or defaults.point
     db.relativePoint = relativePoint or db.relativePoint or defaults.relativePoint
     db.anchorPreset = "ADVANCED"
-    RefreshAll()
+    RefreshAllWithStyle()
 end
 
-local function StartRefreshTicker()
-    if refreshTicker then
+local function StopRecoveryTicker()
+    if recoveryTicker then
+        recoveryTicker:Cancel()
+        recoveryTicker = nil
+    end
+    runtimeRefreshState.recoveryTickCount = 0
+end
+
+UpdateRecoveryTicker = function()
+    local helper = GetHelper()
+    if helper and type(helper.UpdateArenaActivity) == "function" then
+        helper:UpdateArenaActivity()
+    end
+
+    if not db or not db.enabled or not IsInArena() then
+        StopRecoveryTicker()
         return
     end
 
-    refreshTicker = C_Timer.NewTicker(0.20, function()
-        RefreshLiveTrays()
-        RefreshLiveTrinketMirrors()
-        if testMode then
-            RefreshTestTrays()
-            RefreshTestTrinket()
+    if recoveryTicker then
+        return
+    end
+
+    recoveryTicker = C_Timer.NewTicker(1, function()
+        if not db or not db.enabled or not IsInArena() then
+            StopRecoveryTicker()
+            RequestLiveRuntimeRefresh(true)
+            return
+        end
+
+        local changed = false
+        local activeHelper = GetHelper()
+        local mappingValid = true
+        if activeHelper and type(activeHelper.ValidateMappings) == "function" then
+            mappingValid = activeHelper:ValidateMappings() == true
+        end
+        if not mappingValid
+            and activeHelper
+            and type(activeHelper.RefreshMappings) == "function" then
+            changed = activeHelper:RefreshMappings() == true
+        end
+
+        if changed then
+            runtimeRefreshState.recoveryTickCount = 0
+            return
+        end
+
+        runtimeRefreshState.recoveryTickCount = runtimeRefreshState.recoveryTickCount + 1
+        if runtimeRefreshState.recoveryTickCount >= 5 then
+            runtimeRefreshState.recoveryTickCount = 0
+            if Performance and Performance.active then Performance:Count("runtime.fullWatchdogs") end
+            RequestLiveRuntimeRefresh(true)
+        elseif not RefreshLiveRuntimeLight() then
+            RequestLiveRuntimeRefresh(true)
         end
     end)
 end
@@ -2456,9 +2979,12 @@ local function RegisterHelperCallback()
     end
 
     helper:RegisterCallback(helperCallbackOwner, function()
-        RefreshLiveTrays()
-        RefreshLiveTrinketMirrors()
+        RequestLiveRuntimeRefresh(false)
     end)
+
+    if type(helper.UpdateArenaActivity) == "function" then
+        helper:UpdateArenaActivity()
+    end
 
     if type(helper.QueueBurstRefresh) == "function" then
         helper:QueueBurstRefresh()
@@ -2498,6 +3024,202 @@ local function OpenSettings(pageKey)
     end
 end
 
+local function ResolveLiveArenaParents()
+    wipe(resolvedArenaParents)
+    for _, arenaID in ipairs(ARENA_IDS) do
+        resolvedArenaParents[arenaID] = GetLiveAnchorParent(arenaID)
+    end
+    return resolvedArenaParents
+end
+
+RefreshLiveRuntimeLight = function()
+    local metricStartedAt = Performance and Performance.active and Performance:Begin()
+    if not db or not db.enabled or not IsInArena() then
+        if metricStartedAt then Performance:Finish("runtime.light", metricStartedAt) end
+        return false
+    end
+
+    local helper = GetHelper()
+    local mappingIsComplete = helper
+        and type(helper.IsMappingComplete) == "function"
+        and helper:IsMappingComplete()
+
+    for _, arenaID in ipairs(ARENA_IDS) do
+        local parent = resolvedArenaParents[arenaID]
+        local container = liveContainers[arenaID]
+        local expectsParent = mappingIsComplete
+            and type(helper.GetArenaToken) == "function"
+            and helper:GetArenaToken(arenaID) ~= nil
+        if expectsParent and not parent then
+            if metricStartedAt then Performance:Finish("runtime.light", metricStartedAt) end
+            return false
+        end
+
+        if parent and not container then
+            if metricStartedAt then Performance:Finish("runtime.light", metricStartedAt) end
+            return false
+        end
+
+        if parent and container then
+            local needsLayout = ReconcileLiveContainerAnchor(arenaID, parent, container)
+            if needsLayout then
+                container.ArenaDRNameplatesStyleRevision = styleRevision
+                if LayoutLiveContainer(arenaID) > 0 then
+                    container:Show()
+                end
+            end
+        end
+    end
+
+    if metricStartedAt then Performance:Finish("runtime.light", metricStartedAt) end
+    return true
+end
+
+RefreshLiveRuntime = function(forceSourceResync)
+    local metricStartedAt = Performance and Performance.active and Performance:Begin()
+    local inArena = IsInArena()
+    if not db or not db.enabled or not inArena then
+        wipe(resolvedArenaParents)
+        RestoreAllLiveTrays()
+        HideAllLiveTrinketMirrors()
+        if metricStartedAt then Performance:Finish("runtime.full", metricStartedAt) end
+        return
+    end
+
+    local matchEngaged = IsArenaMatchEngaged(inArena)
+    local trinketEnabled = IsTrinketEnabled()
+    local parents = ResolveLiveArenaParents()
+    RefreshLiveTrays(parents, forceSourceResync == true, inArena)
+    RefreshLiveTrinketMirrors(
+        parents,
+        forceSourceResync == true,
+        inArena,
+        matchEngaged,
+        trinketEnabled
+    )
+    if metricStartedAt then Performance:Finish("runtime.full", metricStartedAt) end
+end
+
+CancelPendingRuntimeRefresh = function()
+    if runtimeRefreshState.pending
+        and type(runtimeRefreshState.pending.Cancel) == "function" then
+        runtimeRefreshState.pending:Cancel()
+    end
+    runtimeRefreshState.pending = nil
+    runtimeRefreshState.forceSourceResync = false
+end
+
+RequestLiveRuntimeRefresh = function(forceSourceResync)
+    runtimeRefreshState.forceSourceResync = runtimeRefreshState.forceSourceResync
+        or forceSourceResync == true
+
+    if runtimeRefreshState.pending then
+        if Performance and Performance.active then Performance:Count("runtime.coalesced") end
+        return
+    end
+
+    if Performance and Performance.active then Performance:Count("runtime.requests") end
+    runtimeRefreshState.pending = C_Timer.NewTimer(0, function()
+        runtimeRefreshState.pending = nil
+        local forceResync = runtimeRefreshState.forceSourceResync
+        runtimeRefreshState.forceSourceResync = false
+        RefreshLiveRuntime(forceResync)
+    end)
+end
+
+local function RegisterSharedMediaCallback()
+    if sharedMediaCallbackOwner.registered then
+        return
+    end
+
+    local sharedMedia = Shared.GetLibSharedMedia and Shared.GetLibSharedMedia()
+    if not sharedMedia or type(sharedMedia.RegisterCallback) ~= "function" then
+        return
+    end
+
+    sharedMedia.RegisterCallback(
+        sharedMediaCallbackOwner,
+        "LibSharedMedia_Registered",
+        function(_, mediaType, key)
+            if mediaType ~= "font" then
+                return
+            end
+
+            NotifySettingsUIRefresh()
+            if db and db.textFont == key then
+                RefreshAllWithStyle()
+            end
+        end
+    )
+    sharedMediaCallbackOwner.registered = true
+end
+
+runtimeRefreshState.performanceMetricOrder = {
+    "mapping.validate",
+    "mapping.full",
+    "runtime.light",
+    "runtime.full",
+    "runtime.dr",
+    "runtime.trinket",
+    "preview.reconcile",
+}
+
+runtimeRefreshState.performanceCounterOrder = {
+    "runtime.requests",
+    "runtime.coalesced",
+    "runtime.fullWatchdogs",
+    "mapping.coalesced",
+    "mapping.burstRetries",
+    "preview.coalesced",
+}
+
+runtimeRefreshState.PrintPerformanceReport = function(snapshot)
+    snapshot = type(snapshot) == "table" and snapshot or {}
+    print(string.format(S("MSG_PERF_REPORT_HEADER"), tonumber(snapshot.elapsed) or 0))
+
+    local metrics = type(snapshot.metrics) == "table" and snapshot.metrics or {}
+    for _, metric in ipairs(runtimeRefreshState.performanceMetricOrder) do
+        local stats = metrics[metric]
+        if type(stats) == "table" and (stats.calls or 0) > 0 then
+            local calls = stats.calls or 0
+            local total = stats.total or 0
+            print(string.format(
+                S("MSG_PERF_METRIC"),
+                metric,
+                calls,
+                total,
+                calls > 0 and total / calls or 0,
+                stats.maximum or 0
+            ))
+        end
+    end
+
+    local counters = type(snapshot.counters) == "table" and snapshot.counters or {}
+    for _, counter in ipairs(runtimeRefreshState.performanceCounterOrder) do
+        local value = counters[counter]
+        if type(value) == "number" and value > 0 then
+            print(string.format(S("MSG_PERF_COUNTER"), counter, value))
+        end
+    end
+end
+
+runtimeRefreshState.StartPerformanceSession = function()
+    if not Performance then
+        print(S("MSG_PERF_UNAVAILABLE"))
+        return
+    end
+
+    if Performance:IsActive() then
+        print(string.format(S("MSG_PERF_RUNNING"), math.ceil(Performance:GetRemaining())))
+        return
+    end
+
+    local started, duration = Performance:Start(60, runtimeRefreshState.PrintPerformanceReport)
+    if started then
+        print(string.format(S("MSG_PERF_STARTED"), duration))
+    end
+end
+
 local function SlashHandler(msg)
     local rawMsg = Trim(msg or "")
     local lowerMsg = string.lower(rawMsg)
@@ -2524,12 +3246,14 @@ local function SlashHandler(msg)
         local ok, reason = Shared.ImportSettings(importString)
         if ok then
             db = Shared.EnsureDB()
-            RefreshAll()
+            RefreshAllWithStyle()
             NotifySettingsUIRefresh()
             print(S("MSG_IMPORT_SUCCESS"))
         else
             print(S(Shared.GetImportErrorMessageKey(reason)))
         end
+    elseif lowerMsg == "perf" then
+        runtimeRefreshState.StartPerformanceSession()
     elseif lowerMsg == "test" then
         ToggleTestMode()
     elseif lowerMsg == "reset" then
@@ -2540,7 +3264,7 @@ local function SlashHandler(msg)
         if value and value >= 0.5 and value <= 3.0 then
             EnsureDB()
             db.scale = value
-            RefreshAll()
+            RefreshAllWithStyle()
             print(string.format(S("MSG_SCALE_SET_TO"), value))
         else
             print(S("ERR_INVALID_SCALE"))
@@ -2554,6 +3278,7 @@ local function SlashHandler(msg)
         print(S("MSG_COMMAND_SHARE"))
         print(S("MSG_COMMAND_EXPORT"))
         print(S("MSG_COMMAND_IMPORT"))
+        print(S("MSG_COMMAND_PERF"))
     end
 end
 
@@ -2563,6 +3288,7 @@ SlashCmdList["ArenaDRNameplates"] = SlashHandler
 
 local eventFrame = CreateFrame("Frame", NextFrameName("Core", "EventFrame"))
 eventFrame:RegisterEvent("PLAYER_LOGIN")
+eventFrame:RegisterEvent("ADDON_LOADED")
 eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 eventFrame:RegisterEvent("PLAYER_LEAVING_WORLD")
 eventFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
@@ -2575,34 +3301,52 @@ eventFrame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 eventFrame:SetScript("OnEvent", function(_, event)
     if event == "PLAYER_LOGIN" then
         EnsureDB()
+        local adapters = ns and ns.NameplateAdapters
+        if adapters and type(adapters.RefreshAvailability) == "function" then
+            adapters:RefreshAvailability()
+        end
+        RegisterSharedMediaCallback()
         RegisterHelperCallback()
-        StartRefreshTicker()
-        RefreshAll()
+        UpdateRecoveryTicker()
+        RefreshAllWithStyle()
+    elseif event == "ADDON_LOADED" then
+        local adapters = ns and ns.NameplateAdapters
+        if adapters and type(adapters.InvalidateAvailabilityCache) == "function" then
+            adapters:InvalidateAvailabilityCache()
+        end
     elseif event == "PLAYER_ENTERING_WORLD" then
         StopTestMode()
-        C_Timer.After(0.3, RefreshAll)
-    elseif (event == "PLAYER_LEAVING_WORLD"
-        or event == "ZONE_CHANGED"
-        or event == "ZONE_CHANGED_INDOORS"
-        or event == "ZONE_CHANGED_NEW_AREA") and testMode then
+        UpdateRecoveryTicker()
+        RequestLiveRuntimeRefresh(true)
+    elseif event == "PLAYER_LEAVING_WORLD" then
         StopTestMode()
+        StopRecoveryTicker()
+        CancelPendingRuntimeRefresh()
+        RestoreAllLiveTrays()
+        HideAllLiveTrinketMirrors()
+    elseif event == "ZONE_CHANGED"
+        or event == "ZONE_CHANGED_INDOORS"
+        or event == "ZONE_CHANGED_NEW_AREA" then
+        StopTestMode()
+        UpdateRecoveryTicker()
+        RequestLiveRuntimeRefresh(true)
     elseif event == "ARENA_OPPONENT_UPDATE"
         or event == "ARENA_COOLDOWNS_UPDATE"
         or event == "PVP_MATCH_STATE_CHANGED" then
-        RefreshAll()
+        UpdateRecoveryTicker()
+        RequestLiveRuntimeRefresh(event == "ARENA_COOLDOWNS_UPDATE")
     elseif event == "PLAYER_TARGET_CHANGED" and testMode then
-        RefreshTestTrays()
-        RefreshTestTrinket()
+        runtimeRefreshState.QueuePreviewRefresh()
     end
 end)
 
-_G.ArenaDRNameplates_UpdateScale = RefreshAll
-_G.ArenaDRNameplates_UpdateOpacity = RefreshAll
-_G.ArenaDRNameplates_UpdateIconGrowth = RefreshAll
-_G.ArenaDRNameplates_UpdateBorderWidth = RefreshAll
-_G.ArenaDRNameplates_UpdateTimerColor = RefreshAll
-_G.ArenaDRNameplates_UpdateTimerPosition = RefreshAll
-_G.ArenaDRNameplates_RefreshAll = RefreshAll
+_G.ArenaDRNameplates_UpdateScale = RefreshAllWithStyle
+_G.ArenaDRNameplates_UpdateOpacity = RefreshAllWithStyle
+_G.ArenaDRNameplates_UpdateIconGrowth = RefreshAllWithStyle
+_G.ArenaDRNameplates_UpdateBorderWidth = RefreshAllWithStyle
+_G.ArenaDRNameplates_UpdateTimerColor = RefreshAllWithStyle
+_G.ArenaDRNameplates_UpdateTimerPosition = RefreshAllWithStyle
+_G.ArenaDRNameplates_RefreshAll = RefreshAllWithStyle
 _G.ArenaDRNameplates_ToggleTestMode = ToggleTestMode
 _G.ArenaDRNameplates_IsTestModeActive = function()
     return testMode

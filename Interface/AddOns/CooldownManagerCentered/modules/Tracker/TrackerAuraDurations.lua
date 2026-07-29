@@ -245,9 +245,6 @@ local function PlainSpellID(value)
     return tonumber(value)
 end
 
--- Trinket procs surface as SPELL_UPDATE_COOLDOWN (payload: spellID, baseSpellID),
--- not as casts -- that's the trigger source EQoL uses. We also keep
--- UNIT_SPELLCAST_SUCCEEDED for trigger spells that are real casts.
 local triggerFrame = CreateFrame("Frame")
 triggerFrame:RegisterEvent("SPELL_UPDATE_COOLDOWN")
 triggerFrame:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")

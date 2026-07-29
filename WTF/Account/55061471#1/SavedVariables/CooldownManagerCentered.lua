@@ -14,38 +14,40 @@ CooldownManagerCenteredDB = {
 ["Bigxthazug - Tichondrius"] = "Default",
 ["Stormclout - Tichondrius"] = "Default",
 ["Reedingo - Mal'Ganis"] = "Default",
-["Strathmoan - Tichondrius"] = "Default",
-["Hellavator - Tichondrius"] = "Default",
+["Choppiez - Tichondrius"] = "Default",
+["Gehyo - Tichondrius"] = "Default",
 ["Smaugchamp - Tichondrius"] = "Default",
 ["Korahron - Tichondrius"] = "Default",
 ["Ofpuss - Tichondrius"] = "Default",
-["Gehyo - Tichondrius"] = "Default",
-["Choppiez - Tichondrius"] = "Default",
+["Hellavator - Tichondrius"] = "Default",
+["Strathmoan - Tichondrius"] = "Default",
 ["Tainguk - Tichondrius"] = "Default",
 },
 ["profiles"] = {
 ["Default"] = {
 ["cooldownManager_stackAnchorBuffIcons_enabled"] = true,
 ["cooldownManager_squareIconsZoom_BuffIcons"] = 0,
+["buffContainers"] = {
+["assignments"] = {
+},
+},
 ["cooldownManager_keybindFontName"] = "1",
-["cooldownManager_centerUtility_growFromDirection"] = "Disable",
 ["cooldownManager_squareIconsZoom_Essential"] = 0,
-["cooldownManager_centerEssential_growFromDirection"] = "Disable",
+["cooldownManager_squareIconsZoom_Utility"] = 0,
+["cooldownManager_centerUtility_growFromDirection"] = "Disable",
 ["_tracker_filled_with_defaults"] = true,
-["cooldownManager_keybindFontSize_Essential"] = 12,
-["cooldownManager_showKeybinds_Essential"] = true,
 ["cooldownManager_visibility_perViewer"] = {
 ["BuffIconCooldownViewer"] = {
 },
-["CMCTracker2"] = {
+["BuffBarCooldownViewer"] = {
+},
+["EssentialCooldownViewer"] = {
 },
 ["CMCTracker1"] = {
 },
 ["UtilityCooldownViewer"] = {
 },
-["EssentialCooldownViewer"] = {
-},
-["BuffBarCooldownViewer"] = {
+["CMCTracker2"] = {
 },
 },
 ["editMode"] = {
@@ -56,11 +58,11 @@ CooldownManagerCenteredDB = {
 ["alpha"] = 1,
 ["y"] = -392.7542965996082,
 ["anchoredToTracker1Spacing"] = 2,
-["iconPadding"] = 4,
+["x"] = 1456.952453613281,
 ["iconSize"] = 56,
 ["showGCD"] = false,
 ["orientation"] = "Horizontal Right",
-["x"] = 1456.952453613281,
+["iconPadding"] = 4,
 },
 ["tracker2"] = {
 ["strata"] = "MEDIUM",
@@ -70,23 +72,25 @@ CooldownManagerCenteredDB = {
 ["y"] = 503.5732180488293,
 ["anchoredToTracker1Spacing"] = 2,
 ["iconSize"] = 50,
-["iconPadding"] = 2,
-["orientation"] = "Horizontal Right",
 ["x"] = 4.763538360595703,
+["orientation"] = "Horizontal Right",
+["iconPadding"] = 2,
 },
 },
+["cooldownManager_keybindFontSize_Essential"] = 12,
+["cooldownManager_showKeybinds_Essential"] = true,
 ["cooldownManager_keybindFontSize_Utility"] = 14,
-["cooldownManager_squareIconsZoom_Utility"] = 0,
+["cooldownManager_centerEssential_growFromDirection"] = "Disable",
 ["cooldownManager_normalizeUtilitySize"] = true,
 ["trinketRacialTracker_stackAnchor"] = "TOP",
 ["cooldownManager_cooldownFontName"] = "1",
 ["cooldownManager_stackAnchorBuffIcons_offsetX"] = 0,
-["cooldownManager_stackAnchorBuffIcons_point"] = "TOP",
+["_bug_warning_displayed"] = 20260310,
 ["cooldownManager_cooldownFontFlags"] = {
 ["THICKOUTLINE"] = true,
 },
 ["cooldownManager_stackAnchorBuffIcons_offsetY"] = 3,
-["_bug_warning_displayed"] = 20260310,
+["cooldownManager_stackAnchorBuffIcons_point"] = "TOP",
 ["cooldownManager_showKeybinds_Utility"] = true,
 ["tracker"] = {
 ["wildcardSlotSettings"] = {
@@ -256,9 +260,9 @@ CooldownManagerCenteredDB = {
 ["state"] = "hidden",
 ["order"] = 80,
 },
-[384590] = {
+[423394] = {
 ["state"] = "hidden",
-["order"] = 81,
+["order"] = 34,
 },
 [369536] = {
 ["state"] = "hidden",
@@ -272,9 +276,9 @@ CooldownManagerCenteredDB = {
 ["state"] = "tracker1",
 ["order"] = 18,
 },
-[312411] = {
+[202719] = {
 ["state"] = "tracker1",
-["order"] = 13,
+["order"] = 10,
 },
 [59544] = {
 ["state"] = "tracker1",
@@ -284,17 +288,17 @@ CooldownManagerCenteredDB = {
 ["state"] = "tracker1",
 ["order"] = 32,
 },
-[403216] = {
-["state"] = "hidden",
-["order"] = 82,
+[312411] = {
+["state"] = "tracker1",
+["order"] = 13,
 },
 [69070] = {
 ["state"] = "tracker1",
 ["order"] = 44,
 },
-[251463] = {
-["state"] = "hidden",
-["order"] = 28,
+[28880] = {
+["state"] = "tracker1",
+["order"] = 26,
 },
 [50613] = {
 ["state"] = "tracker1",
@@ -304,25 +308,25 @@ CooldownManagerCenteredDB = {
 ["state"] = "hidden",
 ["order"] = 42,
 },
-[372608] = {
-["state"] = "hidden",
-["order"] = 33,
+[69179] = {
+["state"] = "tracker1",
+["order"] = 6,
 },
 [1225392] = {
 ["state"] = "hidden",
 ["order"] = 45,
 },
-[20589] = {
-["state"] = "tracker1",
-["order"] = 21,
+[107079] = {
+["state"] = "hidden",
+["order"] = 8,
 },
-[69041] = {
+[33702] = {
 ["state"] = "tracker1",
-["order"] = 43,
+["order"] = 17,
 },
-[260364] = {
-["state"] = "tracker1",
-["order"] = 2,
+[256948] = {
+["state"] = "hidden",
+["order"] = 15,
 },
 [287712] = {
 ["state"] = "tracker1",
@@ -348,41 +352,41 @@ CooldownManagerCenteredDB = {
 ["state"] = "hidden",
 ["order"] = 40,
 },
-[256948] = {
-["state"] = "hidden",
-["order"] = 15,
-},
-[33702] = {
+[260364] = {
 ["state"] = "tracker1",
-["order"] = 17,
+["order"] = 2,
 },
-[107079] = {
-["state"] = "hidden",
-["order"] = 8,
-},
-[69179] = {
+[69041] = {
 ["state"] = "tracker1",
-["order"] = 6,
+["order"] = 43,
+},
+[20589] = {
+["state"] = "tracker1",
+["order"] = 21,
+},
+[372608] = {
+["state"] = "hidden",
+["order"] = 33,
 },
 [312924] = {
 ["state"] = "tracker1",
 ["order"] = 37,
 },
-[28880] = {
-["state"] = "tracker1",
-["order"] = 26,
+[251463] = {
+["state"] = "hidden",
+["order"] = 28,
 },
-[202719] = {
-["state"] = "tracker1",
-["order"] = 10,
+[403216] = {
+["state"] = "hidden",
+["order"] = 82,
 },
 [68992] = {
 ["state"] = "tracker1",
 ["order"] = 19,
 },
-[423394] = {
+[384590] = {
 ["state"] = "hidden",
-["order"] = 34,
+["order"] = 81,
 },
 },
 ["itemSettings"] = {
@@ -432,8 +436,8 @@ CooldownManagerCenteredDB = {
 },
 [241325] = {
 ["order"] = 29,
-["state"] = "hidden",
 ["customActiveDuration"] = 3600,
+["state"] = "hidden",
 },
 [255327] = {
 ["state"] = "hidden",
@@ -449,8 +453,8 @@ CooldownManagerCenteredDB = {
 },
 [193701] = {
 ["order"] = 45,
-["state"] = "tracker1",
 ["customActiveDuration"] = 20,
+["state"] = "tracker1",
 },
 [138488] = {
 ["state"] = "tracker1",
@@ -532,29 +536,29 @@ CooldownManagerCenteredDB = {
 ["state"] = "hidden",
 ["order"] = 107,
 },
-[255326] = {
+[242275] = {
 ["state"] = "hidden",
-["order"] = 109,
+["order"] = 95,
 },
-[269586] = {
+[260531] = {
 ["state"] = "hidden",
-["order"] = 59,
+["order"] = 6,
 },
-[268679] = {
+[38233] = {
 ["state"] = "hidden",
-["order"] = 20,
+["order"] = 51,
 },
-[211880] = {
+[241327] = {
 ["state"] = "hidden",
-["order"] = 103,
+["order"] = 94,
 },
 [257683] = {
 ["state"] = "hidden",
 ["order"] = 66,
 },
-[81414] = {
+[191395] = {
 ["state"] = "hidden",
-["order"] = 75,
+["order"] = 3,
 },
 [71153] = {
 ["state"] = "hidden",
@@ -564,69 +568,69 @@ CooldownManagerCenteredDB = {
 ["state"] = "hidden",
 ["order"] = 74,
 },
-[253802] = {
+[248137] = {
 ["state"] = "hidden",
-["order"] = 18,
+["order"] = 52,
 },
-[221954] = {
+[109076] = {
 ["state"] = "hidden",
-["order"] = 101,
+["order"] = 21,
 },
-[212265] = {
-["state"] = "tracker1",
-["order"] = 51,
+[242274] = {
+["state"] = "hidden",
+["order"] = 63,
 },
 [49040] = {
 ["state"] = "hidden",
 ["order"] = 2,
 },
-[260260] = {
+[244639] = {
 ["state"] = "hidden",
-["order"] = 90,
+["order"] = 55,
 },
 [233062] = {
 ["state"] = "hidden",
 ["order"] = 104,
 },
-[242746] = {
-["state"] = "hidden",
-["order"] = 65,
-},
 [138479] = {
 ["state"] = "hidden",
 ["order"] = 88,
 },
-[241305] = {
+[242746] = {
 ["state"] = "hidden",
-["order"] = 36,
+["order"] = 65,
+},
+[259085] = {
+["state"] = "hidden",
+["order"] = 24,
 },
 [222735] = {
 ["state"] = "hidden",
 ["order"] = 89,
 },
-[241308] = {
-["state"] = "tracker1",
-["order"] = 41,
-},
-[212292] = {
+[138729] = {
 ["state"] = "hidden",
-["order"] = 77,
+["order"] = 9,
+},
+[244835] = {
+["state"] = "tracker1",
+["order"] = 38,
 },
 [81412] = {
 ["state"] = "hidden",
 ["order"] = 76,
 },
-[219905] = {
+[5512] = {
 ["state"] = "hidden",
-["order"] = 12,
+["order"] = 23,
 },
 [241334] = {
 ["state"] = "hidden",
 ["order"] = 14,
 },
-[255825] = {
+[212242] = {
 ["state"] = "hidden",
-["order"] = 16,
+["order"] = 78,
 },
 [86143] = {
 ["state"] = "hidden",
@@ -648,37 +652,37 @@ CooldownManagerCenteredDB = {
 ["state"] = "hidden",
 ["order"] = 48,
 },
-[40772] = {
+[81413] = {
 ["state"] = "hidden",
-["order"] = 102,
+["order"] = 93,
 },
 [250225] = {
 ["state"] = "hidden",
 ["order"] = 105,
 },
-[81413] = {
+[241304] = {
 ["state"] = "hidden",
-["order"] = 93,
+["order"] = 22,
 },
 [191393] = {
 ["state"] = "hidden",
 ["order"] = 60,
 },
-[244193] = {
-["state"] = "hidden",
-["order"] = 57,
-},
 [241145] = {
 ["state"] = "hidden",
 ["order"] = 56,
+},
+[244193] = {
+["state"] = "hidden",
+["order"] = 57,
 },
 [264882] = {
 ["state"] = "hidden",
 ["order"] = 92,
 },
-[241304] = {
+[40772] = {
 ["state"] = "hidden",
-["order"] = 22,
+["order"] = 102,
 },
 [243733] = {
 ["state"] = "hidden",
@@ -688,79 +692,79 @@ CooldownManagerCenteredDB = {
 ["state"] = "hidden",
 ["order"] = 79,
 },
-[212242] = {
+[255825] = {
 ["state"] = "hidden",
-["order"] = 78,
+["order"] = 16,
 },
-[5512] = {
+[219905] = {
 ["state"] = "hidden",
-["order"] = 23,
+["order"] = 12,
 },
-[244835] = {
+[212292] = {
+["state"] = "hidden",
+["order"] = 77,
+},
+[241308] = {
 ["state"] = "tracker1",
-["order"] = 38,
-},
-[138729] = {
-["state"] = "hidden",
-["order"] = 9,
+["order"] = 41,
 },
 [241289] = {
 ["order"] = 46,
-["state"] = "tracker1",
 ["customActiveDuration"] = 30,
+["state"] = "tracker1",
 },
-[259085] = {
+[241305] = {
 ["state"] = "hidden",
-["order"] = 24,
+["order"] = 36,
 },
 [241321] = {
 ["order"] = 69,
-["state"] = "hidden",
 ["customActiveDuration"] = 3600,
-},
-[244639] = {
 ["state"] = "hidden",
-["order"] = 55,
+},
+[260260] = {
+["state"] = "hidden",
+["order"] = 90,
 },
 [132514] = {
 ["state"] = "hidden",
 ["order"] = 106,
 },
-[242274] = {
-["state"] = "hidden",
-["order"] = 63,
+[212265] = {
+["state"] = "tracker1",
+["order"] = 51,
 },
-[109076] = {
+[221954] = {
 ["state"] = "hidden",
-["order"] = 21,
+["order"] = 101,
 },
-[248137] = {
+[253802] = {
 ["state"] = "hidden",
-["order"] = 52,
+["order"] = 18,
 },
 [212969] = {
 ["state"] = "tracker1",
 ["order"] = 23,
 },
-[191395] = {
+[81414] = {
 ["state"] = "hidden",
-["order"] = 3,
+["order"] = 75,
 },
-[241327] = {
+[211880] = {
 ["state"] = "hidden",
-["order"] = 94,
+["order"] = 103,
 },
-[38233] = {
+[268679] = {
 ["state"] = "hidden",
-["order"] = 51,
+["order"] = 20,
 },
-[260531] = {
+[269586] = {
 ["state"] = "hidden",
-["order"] = 6,
+["order"] = 59,
 },
-[242275] = {
+[255326] = {
 ["state"] = "hidden",
-["order"] = 95,
+["order"] = 109,
 },
 },
 ["itemViewerLayouts"] = {
@@ -770,11 +774,11 @@ CooldownManagerCenteredDB = {
 ["cooldownManager_stackFontName"] = "1",
 ["cooldownManager_visibility_enabled_viewers"] = {
 ["BuffIconCooldownViewer"] = false,
-["CMCTracker2"] = false,
+["BuffBarCooldownViewer"] = false,
+["EssentialCooldownViewer"] = false,
 ["CMCTracker1"] = false,
 ["UtilityCooldownViewer"] = false,
-["EssentialCooldownViewer"] = false,
-["BuffBarCooldownViewer"] = false,
+["CMCTracker2"] = false,
 },
 ["cooldownStyleSettings"] = {
 ["spellSettings"] = {
@@ -801,31 +805,37 @@ CooldownManagerCenteredDB = {
 [365350] = {
 ["alwaysGlow"] = true,
 },
+[115203] = {
+["barColor"] = {
+1,
+0.501960813999176,
+0.250980406999588,
+},
+},
 [115636] = {
 },
-[13750] = {
-},
 [1249625] = {
-["alwaysGlow"] = true,
 ["barColor"] = {
 0.2862745225429535,
 1,
 0.4941176772117615,
 },
+["alwaysGlow"] = true,
 ["alwaysShowCooldownEdge"] = true,
 },
-[1250566] = {
+[394110] = {
 ["alwaysGlow"] = true,
 },
-[1253304] = {
+[443294] = {
+["alwaysGlow"] = true,
+["alwaysShowCooldownEdge"] = true,
 },
 [79684] = {
 ["alwaysGlow"] = true,
 },
 [264571] = {
 },
-[1241059] = {
-["alwaysGlow"] = true,
+[1253304] = {
 },
 [122470] = {
 ["barColor"] = {
@@ -840,28 +850,22 @@ CooldownManagerCenteredDB = {
 [1240201] = {
 ["alwaysGlow"] = true,
 },
-[443294] = {
+[1241059] = {
 ["alwaysGlow"] = true,
-["alwaysShowCooldownEdge"] = true,
 },
-[394110] = {
+[1250566] = {
 ["alwaysGlow"] = true,
 },
 [13877] = {
 },
-[115203] = {
-["barColor"] = {
-1,
-0.501960813999176,
-0.250980406999588,
+[13750] = {
 },
 },
 },
-},
+["cooldownManager_desaturate_under_aura"] = true,
 ["cooldownManager_stackFontFlags"] = {
 ["THICKOUTLINE"] = true,
 },
-["cooldownManager_desaturate_under_aura"] = true,
 },
 },
 }

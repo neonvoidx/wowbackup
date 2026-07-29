@@ -31,4 +31,11 @@ CHATTYNATOR_COMMAND_HISTORY = {
 "/s /wg Auteist ",
 "/s /bbf",
 "/s /rl",
+"/s /arenadr",
+"/s /rl",
+"/s /eqol",
+"/s /bbp",
+"/s /arenadr",
+"/s /minicc",
+"/s /bbp",
 }

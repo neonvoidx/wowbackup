@@ -1,0 +1,48 @@
+## Interface: 120007
+## Title: Battleground Win Conditions
+## Version: 9.8.4
+## Author: RBGDEV
+## Notes: Real time win conditions for battlegrounds
+## IconTexture: Interface/AddOns/BattlegroundWinConditions/logo.tga
+## SavedVariables: BattlegroundWinConditionsDB
+## Category: RBGDEV
+## X-Category: Battlegrounds/PvP
+## X-License: All Rights Reserved
+## X-Website: https://www.curseforge.com/wow/addons/battleground-win-conditions
+## X-Curse-Project-ID: 932307
+## X-Wago-ID: 96E7paGg
+## X-WoWI-ID: 26660
+
+#@no-lib-strip@
+embeds.xml
+#@end-no-lib-strip@
+
+core/config.lua
+core/helpers.lua
+core/version.lua
+core/changelog.lua
+interface/anchor.lua
+interface/banner.lua
+interface/info.lua
+interface/score.lua
+interface/bases.lua
+interface/flags.lua
+interface/orbs.lua
+interface/stacks.lua
+core/interface.lua
+core/maps.lua
+predictions/bases.lua
+predictions/carts.lua
+predictions/flags.lua
+predictions/orbs.lua
+maps/ArathiBasin.lua
+maps/DeephaulRavine.lua
+maps/DeepwindGorge.lua
+maps/EyeoftheStorm.lua
+maps/SilvershardMines.lua
+maps/TempleofKotmogu.lua
+maps/TheBattleforGilneas.lua
+maps/TwinPeaks.lua
+maps/WarsongGulch.lua
+core/options.lua
+BattlegroundWinConditions.lua

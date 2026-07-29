@@ -19,6 +19,7 @@ local BORDER_LABEL = EMBLEM_BORDER
 local TEXT_LABEL = LOCALE_TEXT_LABEL
 
 local EDITMODE_ID = "repBar"
+local DYNAMIC_ANCHOR_ID = "bar:reputation"
 local ANCHOR_TARGET_UI = "UIParent"
 local ANCHOR_TARGET_PLAYER_CASTBAR = "PLAYER_CASTBAR"
 local EQOL_PLAYER_CASTBAR = "EQOLUFPlayerHealthCast"
@@ -147,6 +148,7 @@ local TEXT_SIZE_MIN = 8
 local TEXT_SIZE_MAX = 30
 local DEFAULT_SETTINGS_MAX_HEIGHT = 900
 local DEFAULT_SETTINGS_SCREEN_MARGIN = 200
+local MAX_REPUTATION_REACTION_ID = 8
 
 local function getCachedMediaNames(mediaType)
 	if addon.functions and addon.functions.GetLSMMediaNames then
@@ -601,18 +603,38 @@ local function findWatchedFactionData()
 	return nil
 end
 
-function ReputationBar:AutoWatchGainedReputation(factionID, updatedStanding)
+function ReputationBar:RefreshKnownFactionIDs()
+	if not (C_Reputation and C_Reputation.GetNumFactions and C_Reputation.GetFactionDataByIndex) then return nil end
+	local knownFactionIDs = self._knownFactionIDs
+	if not knownFactionIDs then
+		knownFactionIDs = {}
+		self._knownFactionIDs = knownFactionIDs
+	end
+
+	local count = tonumber(C_Reputation.GetNumFactions()) or 0
+	for index = 1, count do
+		local data = C_Reputation.GetFactionDataByIndex(index)
+		if data and data.factionID then knownFactionIDs[data.factionID] = true end
+	end
+	self._knownFactionCount = count
+	return knownFactionIDs
+end
+
+function ReputationBar:GetKnownFactionIDs()
+	if not (C_Reputation and C_Reputation.GetNumFactions) then return nil end
+	local count = tonumber(C_Reputation.GetNumFactions()) or 0
+	if not self._knownFactionIDs or self._knownFactionCount ~= count then return self:RefreshKnownFactionIDs() end
+	return self._knownFactionIDs
+end
+
+function ReputationBar:AutoWatchGainedReputation(factionID)
 	local id = tonumber(factionID)
-	local standing = tonumber(updatedStanding)
-	if not id or id <= 0 or not standing then return end
-
-	self._eventStandingByFaction = self._eventStandingByFaction or {}
-	local previousStanding = self._eventStandingByFaction[id]
-	self._eventStandingByFaction[id] = standing
-
+	if not id or id <= 0 then return end
 	if not (addon.db and addon.db[DB_AUTO_WATCH_GAINED_FACTION] == true) then return end
-	if previousStanding and standing <= previousStanding then return end
 	if not (C_Reputation and C_Reputation.SetWatchedFactionByID) then return end
+
+	local knownFactionIDs = self:GetKnownFactionIDs()
+	if not knownFactionIDs or not knownFactionIDs[id] then return end
 
 	local ok = pcall(C_Reputation.SetWatchedFactionByID, id)
 	if ok then rememberFactionID(id) end
@@ -642,31 +664,16 @@ local function getPreservedFactionData()
 	return nil
 end
 
-local function applyFactionData(data, name, standingID, minValue, maxValue, value, factionID)
-	if not data then return name, standingID, minValue, maxValue, value, factionID end
-	factionID = data.factionID or factionID
-	name = data.name or name
-	standingID = data.reaction or standingID
-	minValue = data.currentReactionThreshold or minValue
-	maxValue = data.nextReactionThreshold or maxValue
-	value = data.currentStanding or value
-	return name, standingID, minValue, maxValue, value, factionID
-end
-
 local function getWatchedFactionContext()
-	local name, standingID, minValue, maxValue, value, factionID
-	if GetWatchedFactionInfo then name, standingID, minValue, maxValue, value, factionID = GetWatchedFactionInfo() end
+	local data = findWatchedFactionData() or getPreservedFactionData()
+	if not data then return nil end
 
-	local data
-	if factionID and factionID ~= 0 then rememberFactionID(factionID) end
-	if not factionID or factionID == 0 or not name or name == "" then
-		data = findWatchedFactionData() or getPreservedFactionData()
-		if data then
-			name, standingID, minValue, maxValue, value, factionID = applyFactionData(data, name, standingID, minValue, maxValue, value, factionID)
-		end
-	end
-
-	if not name or name == "" then return nil end
+	local factionID = data.factionID
+	local name = data.name
+	local standingID = data.reaction
+	local minValue = data.currentReactionThreshold
+	local maxValue = data.nextReactionThreshold
+	local value = data.currentStanding
 	rememberFactionID(factionID)
 
 	local context = {
@@ -678,11 +685,14 @@ local function getWatchedFactionContext()
 		value = normalizeReputationValue(value),
 		standingText = standingLabel(standingID),
 		colorStandingID = standingID,
+		level = standingID,
+		maxLevel = MAX_REPUTATION_REACTION_ID,
 	}
 
 	if factionID and C_GossipInfo and C_GossipInfo.GetFriendshipReputation then
 		local friendship = C_GossipInfo.GetFriendshipReputation(factionID)
 		if friendship and friendship.friendshipFactionID and friendship.friendshipFactionID > 0 then
+			local ranks = C_GossipInfo.GetFriendshipReputationRanks and C_GossipInfo.GetFriendshipReputationRanks(factionID)
 			context.isFriendship = true
 			context.name = friendship.name or context.name
 			context.standingText = friendship.reaction or context.standingText
@@ -690,6 +700,8 @@ local function getWatchedFactionContext()
 			context.maxValue = normalizeReputationValue(friendship.nextThreshold)
 			context.value = normalizeReputationValue(friendship.standing)
 			context.colorStandingID = 5
+			context.level = ranks and ranks.currentLevel or nil
+			context.maxLevel = ranks and ranks.maxLevel or nil
 		end
 	end
 
@@ -706,20 +718,24 @@ local function getWatchedFactionContext()
 				context.standingText = string.format(label, major.renownLevel)
 			end
 			context.colorStandingID = 5
+			context.level = major.renownLevel
+			context.maxLevel = major.maxLevel
 		end
 	end
 
-	if factionID and C_Reputation and C_Reputation.IsFactionParagon and C_Reputation.IsFactionParagon(factionID) then
-		local isCurrentPlayer = not C_Reputation.IsFactionParagonForCurrentPlayer or C_Reputation.IsFactionParagonForCurrentPlayer(factionID)
-		if isCurrentPlayer and C_Reputation.GetFactionParagonInfo then
+	if factionID and C_Reputation and C_Reputation.IsFactionParagonForCurrentPlayer and C_Reputation.IsFactionParagonForCurrentPlayer(factionID) then
+		if C_Reputation.GetFactionParagonInfo then
 			local currentValue, threshold, _, hasRewardPending = C_Reputation.GetFactionParagonInfo(factionID)
 			threshold = normalizeReputationValue(threshold)
 			if threshold > 0 then
 				context.isParagon = true
+				context.level = nil
+				context.maxLevel = nil
 				context.minValue = 0
 				context.maxValue = threshold
 				context.value = normalizeReputationValue(currentValue) % threshold
 				context.hasRewardPending = hasRewardPending == true
+				if context.hasRewardPending then context.value = context.value + threshold end
 				context.standingText = context.hasRewardPending and (_G.PARAGON_REPUTATION_REWARD_AVAILABLE or _G.REWARD_AVAILABLE or context.standingText) or (_G.PARAGON or context.standingText)
 				context.colorStandingID = 5
 			end
@@ -728,6 +744,11 @@ local function getWatchedFactionContext()
 
 	local maximum = math.max(0, (context.maxValue or 0) - (context.minValue or 0))
 	local current = math.max(0, (context.value or 0) - (context.minValue or 0))
+	local isCapped = context.level and context.maxLevel and context.level >= context.maxLevel
+	if isCapped and maximum <= 0 then
+		maximum = 1
+		current = 1
+	end
 	if maximum > 0 and current > maximum then current = maximum end
 	if maximum <= 0 then return nil end
 
@@ -747,6 +768,7 @@ local function getWatchedFactionContext()
 		isFriendship = context.isFriendship,
 		isMajorFaction = context.isMajorFaction,
 		isParagon = context.isParagon,
+		isCapped = isCapped == true,
 		hasRewardPending = context.hasRewardPending,
 	}
 end
@@ -822,6 +844,7 @@ local function formatReputationText(mode, ctx, abbreviateNumbers)
 	if mode == "NONE" then return nil end
 	if mode == "FACTION" then return ctx.name end
 	if mode == "STANDING" then return ctx.standingText end
+	if ctx.isCapped and (mode == "CURMAX" or mode == "CURMAX_NEEDED" or mode == "PERCENT" or mode == "CURMAXPERCENT") then return nil end
 	if mode == "CURMAX" then return formatNumber(ctx.current, abbreviateNumbers) .. " / " .. formatNumber(ctx.max, abbreviateNumbers) end
 	if mode == "CURMAX_NEEDED" then
 		return string.format("%s / %s (%s)", formatNumber(ctx.current, abbreviateNumbers), formatNumber(ctx.max, abbreviateNumbers), formatNumber(ctx.remaining or 0, abbreviateNumbers))
@@ -987,6 +1010,22 @@ function ReputationBar:ResolveAnchorFrame()
 	return UIParent
 end
 
+function ReputationBar:GetDynamicAnchorWinner()
+	return addon.DynamicAnchors and addon.DynamicAnchors:GetSimpleFrameWinner(DYNAMIC_ANCHOR_ID) or nil
+end
+
+function ReputationBar:ApplyDynamicAnchor()
+	if not self.frame then return false end
+	local winner = self:GetDynamicAnchorWinner()
+	if not (winner and winner.frame) then return false end
+	local placement = winner.placement or {}
+	local point = placement.point or "CENTER"
+	local relativePoint = placement.relativePoint or point
+	self.frame:ClearAllPoints()
+	self.frame:SetPoint(point, winner.frame, relativePoint, tonumber(placement.x) or 0, tonumber(placement.y) or 0)
+	return true
+end
+
 function ReputationBar:ScheduleAnchorRefresh(target)
 	if not (C_Timer and C_Timer.NewTicker) then return end
 	local desired = normalizeAnchorRelativeFrame(target or self:GetAnchorRelativeFrame())
@@ -1036,6 +1075,10 @@ end
 
 function ReputationBar:RefreshAnchor()
 	if self._refreshingAnchor then return end
+	if addon.DynamicAnchors and addon.DynamicAnchors:IsFrameAssignmentEnabled(DYNAMIC_ANCHOR_ID) then
+		self:ApplyDynamicAnchor()
+		return
+	end
 	local target = self:GetAnchorRelativeFrame()
 	if self._anchorRefreshTicker and (target == ANCHOR_TARGET_UI or self._anchorRefreshTarget ~= target) then
 		self._anchorRefreshTicker:Cancel()
@@ -1123,6 +1166,13 @@ end
 
 function ReputationBar:GetResolvedWidth()
 	local width = self:GetWidth()
+	local winner = self:GetDynamicAnchorWinner()
+	if winner then
+		if not winner.matchRelativeWidth then return width end
+		local relativeWidth = winner.frame and winner.frame.GetWidth and tonumber(winner.frame:GetWidth()) or 0
+		if relativeWidth <= 0 then return width end
+		return math.max(BAR_SIZE_MIN, relativeWidth + (tonumber(winner.matchRelativeWidthOffset) or 0))
+	end
 	if not self:AnchorUsesMatchedWidth() then return width end
 	local relativeFrame = self:ResolveAnchorFrame()
 	if not (relativeFrame and relativeFrame.GetWidth) then return width end
@@ -1236,7 +1286,7 @@ end
 
 function ReputationBar:ApplySize()
 	if not self.frame then return end
-	self:EnsureWidthSyncHooks()
+	if not (addon.DynamicAnchors and addon.DynamicAnchors:IsFrameAssignmentEnabled(DYNAMIC_ANCHOR_ID)) then self:EnsureWidthSyncHooks() end
 	local width = self:GetResolvedWidth()
 	local height = self:GetHeight()
 	self.frame:SetSize(width, height)
@@ -1508,15 +1558,18 @@ function ReputationBar:RegisterEvents()
 	frame:RegisterEvent("PLAYER_LOGIN")
 	frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 	frame:RegisterEvent("FACTION_STANDING_CHANGED")
+	frame:RegisterEvent("MAJOR_FACTION_RENOWN_LEVEL_CHANGED")
 	frame:RegisterEvent("UPDATE_FACTION")
 	frame:RegisterEvent("PET_BATTLE_OPENING_START")
 	frame:RegisterEvent("PET_BATTLE_CLOSE")
 	frame:SetScript("OnEvent", function(_, event, ...)
 		if event == "PLAYER_LOGIN" or event == "PLAYER_ENTERING_WORLD" then
-			ReputationBar._eventStandingByFaction = {}
+			ReputationBar:RefreshKnownFactionIDs()
 			ReputationBar:UpdateSoon()
 		elseif event == "FACTION_STANDING_CHANGED" then
 			ReputationBar:AutoWatchGainedReputation(...)
+		elseif event == "MAJOR_FACTION_UNLOCKED" then
+			ReputationBar:RefreshKnownFactionIDs()
 		end
 		ReputationBar:UpdateReputation()
 	end)
@@ -1528,6 +1581,7 @@ function ReputationBar:UnregisterEvents()
 	self.eventFrame:UnregisterEvent("PLAYER_LOGIN")
 	self.eventFrame:UnregisterEvent("PLAYER_ENTERING_WORLD")
 	self.eventFrame:UnregisterEvent("FACTION_STANDING_CHANGED")
+	self.eventFrame:UnregisterEvent("MAJOR_FACTION_RENOWN_LEVEL_CHANGED")
 	self.eventFrame:UnregisterEvent("UPDATE_FACTION")
 	self.eventFrame:UnregisterEvent("PET_BATTLE_OPENING_START")
 	self.eventFrame:UnregisterEvent("PET_BATTLE_CLOSE")
@@ -2672,6 +2726,34 @@ function ReputationBar:RegisterEditMode(frame)
 				isEnabled = function() return ReputationBar:GetTextEnabled() end,
 			},
 		}
+		if addon.DynamicAnchors then
+			addon.DynamicAnchors:AddEditModeAssignmentSettings(settings, SettingType, {
+				consumerId = DYNAMIC_ANCHOR_ID,
+				parentId = "repBarAnchor",
+				insertAfterId = "repBarAnchor",
+				refresh = function(rebuild)
+					if rebuild and EditMode and EditMode.RefreshFrame then
+						EditMode:RefreshFrame(EDITMODE_ID)
+						RunNextFrame(function()
+							ReputationBar:ApplyDynamicAnchor()
+							ReputationBar:ApplySize()
+						end)
+					else
+						ReputationBar:ApplyDynamicAnchor()
+						ReputationBar:ApplySize()
+					end
+				end,
+				staticFields = {
+					anchorRelativeFrame = true,
+					anchorPoint = true,
+					anchorRelativePoint = true,
+					anchorOffsetX = true,
+					anchorOffsetY = true,
+					anchorMatchWidth = true,
+					anchorMatchWidthOffset = true,
+				},
+			})
+		end
 	end
 
 	local function seedEditModeRecordFromProfile(record)
@@ -2749,12 +2831,24 @@ function ReputationBar:RegisterEditMode(frame)
 			end
 			ReputationBar:ApplyLayoutData(data)
 		end,
-		onEnter = function() ReputationBar:ShowEditModeHint(true) end,
+		onEnter = function()
+			ReputationBar:ShowEditModeHint(true)
+			if addon.DynamicAnchors and addon.DynamicAnchors:IsFrameAssignmentEnabled(DYNAMIC_ANCHOR_ID) then
+				RunNextFrame(function()
+					if ReputationBar.previewing then ReputationBar:ApplyDynamicAnchor() end
+				end)
+			end
+		end,
 		onExit = function() ReputationBar:ShowEditModeHint(false) end,
 		isEnabled = function() return addon.db and addon.db[DB_ENABLED] == true end,
 		settings = settings,
-		relativeTo = function() return ReputationBar:ResolveAnchorFrame() end,
-		allowDrag = function() return ReputationBar:AnchorUsesUIParent() end,
+		relativeTo = function()
+			local winner = ReputationBar:GetDynamicAnchorWinner()
+			return winner and winner.frame or ReputationBar:ResolveAnchorFrame()
+		end,
+		allowDrag = function()
+			return not (addon.DynamicAnchors and addon.DynamicAnchors:IsFrameAssignmentEnabled(DYNAMIC_ANCHOR_ID)) and ReputationBar:AnchorUsesUIParent()
+		end,
 		settingsMaxHeight = DEFAULT_SETTINGS_MAX_HEIGHT,
 		showOutsideEditMode = false,
 		collapseExclusive = true,
@@ -2771,6 +2865,22 @@ end
 
 function ReputationBar:OnSettingChanged(enabled)
 	if enabled then
+		if addon.DynamicAnchors then
+			addon.DynamicAnchors:RegisterSimpleFrame({
+				id = DYNAMIC_ANCHOR_ID,
+				owner = "EnhanceQoLResourceBars",
+				label = L["ReputationBar"] or "Reputation Bar",
+				menuGroup = "RESOURCE_BARS",
+				menuGroupLabel = L["Resource Bars"],
+				menuGroupOrder = 200,
+				getFrame = function() return ReputationBar.frame end,
+				isAvailable = function(frame) return ReputationBar:IsEnabled() and frame ~= nil and frame:IsShown() end,
+				apply = function()
+					ReputationBar:ApplyDynamicAnchor()
+					ReputationBar:ApplySize()
+				end,
+			})
+		end
 		self:EnsureFrame()
 		self:RegisterEvents()
 		self:ApplyLayoutData(self:BuildLayoutRecordFromProfile())

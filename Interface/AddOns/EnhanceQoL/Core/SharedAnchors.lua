@@ -406,3 +406,12 @@ end
 function SharedAnchors:GetActionBarEntries()
 	return collectActionBarEntries()
 end
+
+function SharedAnchors:GetUnitFrameEntries()
+	local entries = {}
+	for i = 1, #GENERIC_ANCHOR_ORDER do
+		local key = GENERIC_ANCHOR_ORDER[i]
+		entries[#entries + 1] = { key = key, label = self:GetTargetLabel(key) }
+	end
+	return entries
+end

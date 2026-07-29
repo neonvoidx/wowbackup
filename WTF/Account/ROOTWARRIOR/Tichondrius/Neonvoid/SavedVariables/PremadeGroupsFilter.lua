@@ -5,6 +5,36 @@ PremadeGroupsFilterState = {
 },
 ["c4f8"] = {
 ["enabled"] = true,
+["arena"] = {
+["difficulty"] = {
+},
+["tanks"] = {
+["max"] = "",
+["min"] = "",
+["act"] = false,
+},
+["pvprating"] = {
+["max"] = "",
+["min"] = "",
+["act"] = false,
+},
+["heals"] = {
+["max"] = "",
+["min"] = "",
+["act"] = false,
+},
+["dps"] = {
+["max"] = "",
+["min"] = "",
+["act"] = false,
+},
+["members"] = {
+["max"] = "",
+["min"] = "",
+["act"] = false,
+},
+["expression"] = "",
+},
 },
 ["c2f4"] = {
 ["enabled"] = true,
@@ -13,7 +43,7 @@ PremadeGroupsFilterState = {
 ["enabled"] = true,
 },
 ["version"] = 8,
-["c3f5"] = {
+["c9f8"] = {
 ["enabled"] = true,
 },
 ["c114f6"] = {
@@ -25,7 +55,7 @@ PremadeGroupsFilterState = {
 ["c3f6"] = {
 ["enabled"] = true,
 },
-["c9f8"] = {
+["c3f5"] = {
 ["enabled"] = true,
 },
 }

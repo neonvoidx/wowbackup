@@ -1,7 +1,7 @@
 ## Interface: 120007, 120100
 ## Title: Enhance QoL Teleport Compendium
 ## Author: R41Z0R
-## Version: 11.7.3
+## Version: 11.9.1
 ## Notes: Teleport compendium, dungeon teleports, and random hearthstone helpers
 ## Notes-deDE: Teleport-Kompendium, Dungeon-Teleporte und zufaellige Ruhestein-Helfer
 ## Notes-esES: Compendio de teletransporte, teletransportes de mazmorra y piedra de hogar aleatoria

@@ -853,6 +853,10 @@ local function supportsBarMode(entry, mode)
 	return resolvedType == "SPELL" or resolvedType == "ITEM" or entry.type == "MACRO" or resolvedType == "CDM_AURA"
 end
 
+Bars.IsNativeAuraStackEntry = function(entry)
+	return addon.AuraCompat ~= nil and getEntryResolvedType(entry) == "CDM_AURA"
+end
+
 Bars.FocusStandaloneSection = function(panelId, entryId, targetGroupId)
 	if not (CooldownPanels and CooldownPanels.FocusLayoutEntryStandaloneSettingsGroup) then return false end
 	return CooldownPanels:FocusLayoutEntryStandaloneSettingsGroup(panelId, entryId, targetGroupId)
@@ -1097,10 +1101,7 @@ Bars.GetEntryChargeSegmentCountHint = function(entry, fallback)
 	local count = nil
 	if type(entry) == "table" then
 		local spellId = tonumber(entry.spellID)
-		if spellId and Api.GetOverrideSpell then
-			local overrideId = Api.GetOverrideSpell(spellId)
-			if type(overrideId) == "number" and overrideId > 0 then spellId = overrideId end
-		end
+		if spellId and Helper.GetEffectiveSpellId then spellId = Helper.GetEffectiveSpellId(spellId) or spellId end
 		local chargesInfo = spellId and CooldownPanels.GetCachedSpellChargesInfo and CooldownPanels:GetCachedSpellChargesInfo(spellId) or nil
 		count = safeNumber(chargesInfo and chargesInfo.maxCharges)
 	end
@@ -1677,7 +1678,7 @@ Bars.InvalidateChargeBarSpellCaches = function(spellId)
 	CooldownPanels:InvalidateSpellQueryCaches("duration", spellId)
 	CooldownPanels:InvalidateSpellQueryCaches("charges", spellId)
 	CooldownPanels:InvalidateSpellQueryCaches("chargeDuration", spellId)
-	local overrideSpellId = Api.GetOverrideSpell and safeNumber(Api.GetOverrideSpell(spellId)) or nil
+	local overrideSpellId = Helper.GetEffectiveSpellId and Helper.GetEffectiveSpellId(spellId) or nil
 	if overrideSpellId and overrideSpellId ~= spellId then
 		CooldownPanels:InvalidateSpellQueryCaches("info", overrideSpellId)
 		CooldownPanels:InvalidateSpellQueryCaches("duration", overrideSpellId)
@@ -2203,7 +2204,7 @@ Bars.ApplyValueDurationTextBinding = function(
 	if barFrame.value.SetWordWrap then barFrame.value:SetWordWrap(false) end
 	if barFrame.value.SetNonSpaceWrap then barFrame.value:SetNonSpaceWrap(false) end
 	if barFrame.value.SetMaxLines then barFrame.value:SetMaxLines(1) end
-	barFrame.value:SetWidth(pixelSnap(max(24, textWidth or 0), barFrame and barFrame.textOverlay or barFrame))
+	barFrame.value:SetWidth(0)
 	barFrame.value:ClearAllPoints()
 	barFrame.value:SetPoint(anchorPoint, anchorFrame, anchorRelativePoint, anchorOffsetX, anchorOffsetY)
 	barFrame.value:SetJustifyH(justifyH)
@@ -2616,11 +2617,7 @@ local function getResolvedSpellId(entry, macro)
 	if not spellId then return nil end
 	-- Match CooldownPanels runtime behavior: spell cooldown/charge APIs should use
 	-- the effective override spell, not the known-variant remap table.
-	if Api.GetOverrideSpell then
-		local overrideId = Api.GetOverrideSpell(spellId)
-		if type(overrideId) == "number" and overrideId > 0 then return overrideId end
-	end
-	return spellId
+	return Helper.GetEffectiveSpellId and Helper.GetEffectiveSpellId(spellId) or spellId
 end
 
 local function getResolvedItemId(entry, macro)
@@ -3200,7 +3197,9 @@ Bars.GetBarStaticState = function(entry, panel, mode, resolvedType, resolvedSpel
 	state.iconOffsetY = normalizeBarIconOffset(entry.barIconOffsetY, Bars.DEFAULTS.barIconOffsetY)
 	state.segmentedCharges = mode == Bars.BAR_MODE.CHARGES and getStoredBoolean(entry, "barChargesSegmented", Bars.DEFAULTS.barChargesSegmented)
 	state.chargesGap = normalizeBarChargesGap(entry.barChargesGap, Bars.DEFAULTS.barChargesGap)
-	state.segmentedStacks = mode == Bars.BAR_MODE.STACKS and getStoredBoolean(entry, "barStacksSegmented", Bars.DEFAULTS.barStacksSegmented)
+	state.segmentedStacks = mode == Bars.BAR_MODE.STACKS
+		and not Bars.IsNativeAuraStackEntry(entry)
+		and getStoredBoolean(entry, "barStacksSegmented", Bars.DEFAULTS.barStacksSegmented)
 	state.stackSeparatedOffset = normalizeBarChargesGap(entry.barStackSeparatedOffset, Bars.DEFAULTS.barStackSeparatedOffset)
 	state.stackDividerColor = Bars.GetCachedEntryColor(entry, "barStackDividerColor", Bars.DEFAULTS.barStackDividerColor)
 	state.stackDividerThickness = normalizeBarStackDividerThickness(entry.barStackDividerThickness, Bars.DEFAULTS.barStackDividerThickness)
@@ -3541,7 +3540,12 @@ buildBarState = function(panelId, entryId, entry, icon, preview, runtimeDataOver
 		elseif resolvedType == "CDM_AURA" then
 			runtimeData = reusableRuntimeData
 			if not runtimeData and CooldownPanels.CDMAuras and CooldownPanels.CDMAuras.BuildRuntimeData then
-				runtimeData = CooldownPanels.CDMAuras:BuildRuntimeData(panelId, entryId, entry, nil, nil)
+				local runtimeLayout, alwaysShowMode
+				if CooldownPanels.AuraContainers then
+					runtimeLayout = panelLayout
+					alwaysShowMode = CooldownPanels:ResolveEntryCDMAuraAlwaysShowMode(panelLayout, entry)
+				end
+				runtimeData = CooldownPanels.CDMAuras:BuildRuntimeData(panelId, entryId, entry, runtimeLayout, alwaysShowMode)
 			end
 			if runtimeData and (runtimeData.buffName or runtimeData.cdmAuraLabel) then
 				state.label = runtimeData.buffName or runtimeData.cdmAuraLabel
@@ -3611,7 +3615,12 @@ buildBarState = function(panelId, entryId, entry, icon, preview, runtimeDataOver
 		if resolvedType == "CDM_AURA" then
 			runtimeData = reusableRuntimeData
 			if not runtimeData and CooldownPanels.CDMAuras and CooldownPanels.CDMAuras.BuildRuntimeData then
-				runtimeData = CooldownPanels.CDMAuras:BuildRuntimeData(panelId, entryId, entry, nil, nil)
+				local runtimeLayout, alwaysShowMode
+				if CooldownPanels.AuraContainers then
+					runtimeLayout = panelLayout
+					alwaysShowMode = CooldownPanels:ResolveEntryCDMAuraAlwaysShowMode(panelLayout, entry)
+				end
+				runtimeData = CooldownPanels.CDMAuras:BuildRuntimeData(panelId, entryId, entry, runtimeLayout, alwaysShowMode)
 			end
 			if runtimeData and (runtimeData.buffName or runtimeData.cdmAuraLabel) then
 				state.label = runtimeData.buffName or runtimeData.cdmAuraLabel
@@ -5959,8 +5968,13 @@ local function appendBarStandaloneTextSettings(settings, ctx)
 			local currentEntry = getStandaloneBarContextEntry(ctx)
 			return normalizeBarMode(currentEntry and currentEntry.barMode, Bars.DEFAULTS.barMode) == Bars.BAR_MODE.STACKS
 		end,
+		disabled = function()
+			local currentEntry = getStandaloneBarContextEntry(ctx)
+			return Bars.IsNativeAuraStackEntry(currentEntry)
+		end,
 		get = function()
 			local currentEntry = getStandaloneBarContextEntry(ctx)
+			if Bars.IsNativeAuraStackEntry(currentEntry) then return false end
 			return getStoredBoolean(currentEntry, "barStacksSegmented", Bars.DEFAULTS.barStacksSegmented)
 		end,
 		set = function(_, value) setEntryBarBoolean(panelId, entryId, "barStacksSegmented", value) end,
@@ -5980,7 +5994,7 @@ local function appendBarStandaloneTextSettings(settings, ctx)
 		end,
 		disabled = function()
 			local currentEntry = getStandaloneBarContextEntry(ctx)
-			return not getStoredBoolean(currentEntry, "barStacksSegmented", Bars.DEFAULTS.barStacksSegmented)
+			return Bars.IsNativeAuraStackEntry(currentEntry) or not getStoredBoolean(currentEntry, "barStacksSegmented", Bars.DEFAULTS.barStacksSegmented)
 		end,
 		get = function()
 			local currentEntry = getStandaloneBarContextEntry(ctx)
@@ -6000,7 +6014,7 @@ local function appendBarStandaloneTextSettings(settings, ctx)
 		end,
 		disabled = function()
 			local currentEntry = getStandaloneBarContextEntry(ctx)
-			return not getStoredBoolean(currentEntry, "barStacksSegmented", Bars.DEFAULTS.barStacksSegmented)
+			return Bars.IsNativeAuraStackEntry(currentEntry) or not getStoredBoolean(currentEntry, "barStacksSegmented", Bars.DEFAULTS.barStacksSegmented)
 		end,
 		get = function()
 			local currentEntry = getStandaloneBarContextEntry(ctx)
@@ -6023,7 +6037,7 @@ local function appendBarStandaloneTextSettings(settings, ctx)
 		end,
 		disabled = function()
 			local currentEntry = getStandaloneBarContextEntry(ctx)
-			return not getStoredBoolean(currentEntry, "barStacksSegmented", Bars.DEFAULTS.barStacksSegmented)
+			return Bars.IsNativeAuraStackEntry(currentEntry) or not getStoredBoolean(currentEntry, "barStacksSegmented", Bars.DEFAULTS.barStacksSegmented)
 		end,
 		get = function()
 			local currentEntry = getStandaloneBarContextEntry(ctx)

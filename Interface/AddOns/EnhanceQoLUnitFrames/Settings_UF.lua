@@ -386,6 +386,12 @@ local function getMainPowerTokens()
 			end
 		end
 	end
+	if #list == 0 then
+		for _, token in ipairs({ "MANA", "RAGE", "FOCUS", "ENERGY", "RUNIC_POWER", "LUNAR_POWER", "INSANITY", "FURY", "PAIN", "VOID_METAMORPHOSIS" }) do
+			seen[token] = true
+			list[#list + 1] = token
+		end
+	end
 	table.sort(list, function(a, b) return tostring(getPowerLabel(a)) < tostring(getPowerLabel(b)) end)
 	mainPowerTokenCache = list
 	return list
@@ -457,19 +463,6 @@ local function setPowerOverride(token, r, g, b, a)
 	local overrides = (UFProfiles and UFProfiles.EnsureTableKey and UFProfiles.EnsureTableKey("ufPowerColorOverrides")) or addon.db.ufPowerColorOverrides or {}
 	addon.db.ufPowerColorOverrides = overrides
 	overrides[token] = { r or 1, g or 1, b or 1, a or 1 }
-end
-
-local function clearPowerOverride(token)
-	local overrides = addon.db and addon.db.ufPowerColorOverrides
-	if not overrides then return end
-	overrides[token] = nil
-	if not next(overrides) then
-		if UFProfiles and UFProfiles.SetRuntimeKey then
-			UFProfiles.SetRuntimeKey("ufPowerColorOverrides", {})
-		else
-			addon.db.ufPowerColorOverrides = {}
-		end
-	end
 end
 
 local function getDefaultNPCColor(key)
@@ -1445,7 +1438,12 @@ local function getEditModeAnchorValues(unit)
 	local point = type(anchor.point) == "string" and string.upper(anchor.point) or "CENTER"
 	local relativePoint = type(anchor.relativePoint) == "string" and string.upper(anchor.relativePoint) or point
 	local x = tonumber(anchor.x) or 0
-	local y = tonumber(anchor.y) or 0
+	local relativeName = anchor.relativeTo or anchor.relativeFrame
+	local ownerFrameName = UF.GetAnchorFrameName and UF.GetAnchorFrameName(unit) or nil
+	local relativeFrame = UF.ResolveRelativeAnchorFrame and UF.ResolveRelativeAnchorFrame(relativeName, ownerFrameName) or UIParent
+	local showStatus = unit ~= "boss" and UF.ShouldShowStatusLayout and UF.ShouldShowStatusLayout(cfg, unit, def)
+	local statusHeightDelta = unit ~= "boss" and UF.GetStatusHeightDelta and UF.GetStatusHeightDelta(showStatus) or 0
+	local y = UF.ResolvePhysicalUnitFrameAnchorY and UF.ResolvePhysicalUnitFrameAnchorY(point, relativePoint, anchor.y, relativeFrame, statusHeightDelta) or tonumber(anchor.y) or 0
 	return point, relativePoint, x, y
 end
 
@@ -2363,20 +2361,16 @@ local function calcLayout(unit, frame)
 	end
 	local secondaryPowerEnabled = unit == "player" and getValue(unit, { "secondaryPower", "enabled" }, secondaryDef.enabled == true) ~= false and secondaryToken ~= nil
 	local secondaryPowerDetached = secondaryPowerEnabled and secondaryCfg.detached == true
-	local statusDef = def.status or {}
-	local showName = getValue(unit, { "status", "enabled" }, statusDef.enabled ~= false) ~= false
-	local showLevel = getValue(unit, { "status", "levelEnabled" }, statusDef.levelEnabled ~= false) ~= false
-	local ciDef = statusDef.combatIndicator or {}
-	local showCombat = (unit == "player" or unit == "target" or unit == "focus") and getValue(unit, { "status", "combatIndicator", "enabled" }, ciDef.enabled ~= false) ~= false
-	local usDef = statusDef.unitStatus or {}
-	local showUnitStatus = getValue(unit, { "status", "unitStatus", "enabled" }, usDef.enabled == true) == true
-	local showStatus = showName or showLevel or showCombat or showUnitStatus
-	local statusHeight = showStatus and 16 or 0
+	local statusUnit = unit == "boss" and "boss1" or unit
+	local showStatus = UF.ShouldShowStatusLayout and UF.ShouldShowStatusLayout(cfg, statusUnit, def)
+	local statusHeight = UF.ResolveStatusHeight and UF.ResolveStatusHeight(cfg, def, showStatus) or 0
+	local statusHeightDelta = unit ~= "boss" and UF.GetStatusHeightDelta and UF.GetStatusHeightDelta(showStatus) or 0
 	local borderOffset = 0
 	if cfg.border and cfg.border.enabled then
 		borderOffset = cfg.border.offset
 		if borderOffset == nil then borderOffset = cfg.border.edgeSize or 1 end
 		borderOffset = math.max(0, borderOffset or 0)
+		if UF.ResolveBorderLayoutOffset then borderOffset = UF.ResolveBorderLayoutOffset(frame, borderOffset) end
 	end
 
 	local portraitDef = def.portrait or {}
@@ -2388,6 +2382,11 @@ local function calcLayout(unit, frame)
 	local healthHeight = cfg.healthHeight or def.healthHeight or 24
 	local powerHeight = powerEnabled and (cfg.powerHeight or def.powerHeight or 16) or 0
 	local secondaryPowerHeight = secondaryPowerEnabled and (cfg.secondaryPowerHeight or def.secondaryPowerHeight or cfg.powerHeight or def.powerHeight or 16) or 0
+	if UF.ResolvePixelLayoutSize then
+		healthHeight = UF.ResolvePixelLayoutSize(frame, healthHeight)
+		powerHeight = UF.ResolvePixelLayoutSize(frame, powerHeight)
+		secondaryPowerHeight = UF.ResolvePixelLayoutSize(frame, secondaryPowerHeight)
+	end
 	local stackHeight = healthHeight + (powerDetached and 0 or powerHeight) + (secondaryPowerDetached and 0 or secondaryPowerHeight)
 	local portraitInnerHeight = stackHeight
 	local portraitSize = portraitEnabled and math.max(1, portraitInnerHeight) or 0
@@ -2408,18 +2407,28 @@ local function calcLayout(unit, frame)
 				if not size or size <= 0 then size = borderCfg.edgeSize or 1 end
 				separatorEnabled = true
 				separatorSize = math.max(1, size or 1)
+				if UF.ResolvePixelLayoutSize then separatorSize = UF.ResolvePixelLayoutSize(frame, separatorSize) end
 			end
 		end
 	end
 
 	local portraitSpace = portraitEnabled and (portraitSize + (separatorEnabled and separatorSize or 0)) or 0
-	local width = (cfg.width or def.width or frame:GetWidth() or 200) + borderOffset * 2 + portraitSpace
+	local contentWidth = cfg.width or def.width or frame:GetWidth() or 200
+	if UF.ResolvePixelLayoutSize then contentWidth = UF.ResolvePixelLayoutSize(frame, contentWidth) end
+	local width = contentWidth + borderOffset * 2 + portraitSpace
+	if UF.ResolvePixelLayoutSize then width = UF.ResolvePixelLayoutSize(frame, width) end
+	local point = anchor.point or "CENTER"
+	local relativePoint = anchor.relativePoint or point
+	local relativeName = anchor.relativeTo or anchor.relativeFrame
+	local ownerFrameName = UF.GetAnchorFrameName and UF.GetAnchorFrameName(unit) or nil
+	local relativeFrame = UF.ResolveRelativeAnchorFrame and UF.ResolveRelativeAnchorFrame(relativeName, ownerFrameName) or UIParent
+	local physicalY = UF.ResolvePhysicalUnitFrameAnchorY and UF.ResolvePhysicalUnitFrameAnchorY(point, relativePoint, anchor.y, relativeFrame, statusHeightDelta) or anchor.y or 0
 	local height = statusHeight + stackHeight + borderOffset * 2
 	return {
-		point = anchor.point or "CENTER",
-		relativePoint = anchor.relativePoint or anchor.point or "CENTER",
+		point = point,
+		relativePoint = relativePoint,
 		x = anchor.x or 0,
-		y = anchor.y or 0,
+		y = physicalY,
 		width = width,
 		height = height,
 	}
@@ -5108,6 +5117,18 @@ local function buildUnitSettings(unit)
 		refresh()
 	end, healthDef.texture or "DEFAULT", "health")
 
+	local healthOrientation = radioDropdown(L["CooldownPanelBarOrientation"] or "Bar orientation", {
+		{ value = "HORIZONTAL", label = L["Horizontal"] or "Horizontal" },
+		{ value = "VERTICAL", label = L["Vertical"] or "Vertical" },
+	}, function()
+		return UFHelper.normalizeStatusBarOrientation(getValue(unit, { "health", "orientation" }, healthDef.orientation or "HORIZONTAL"))
+	end, function(val)
+		setValue(unit, { "health", "orientation" }, UFHelper.normalizeStatusBarOrientation(val))
+		refresh()
+	end, "HORIZONTAL", "health")
+	healthOrientation.newTagID = "ufHealthBarOrientation"
+	list[#list + 1] = healthOrientation
+
 	list[#list + 1] = checkbox(L["Reverse fill"] or "Reverse fill", function() return getValue(unit, { "health", "reverseFill" }, healthDef.reverseFill == true) == true end, function(val)
 		setValue(unit, { "health", "reverseFill" }, val and true or false)
 		refresh()
@@ -5199,11 +5220,6 @@ local function buildUnitSettings(unit)
 	if unit ~= "pet" then
 		if unit == "player" or unit == "target" or unit == "focus" then appendIncomingHealSettings(list, unit, healthDef, textureOpts, refresh, refreshSettingsUI) end
 
-		local function getOverlayHeightFallback()
-			local height = getValue(unit, { "healthHeight" }, def.healthHeight or 24)
-			if not height or height <= 0 then height = def.healthHeight or 24 end
-			return height
-		end
 		local function formatOverlayHeight(value)
 			if (tonumber(value) or 0) <= 0 then return L["Max"] or "Max" end
 			return tostring(math.floor((tonumber(value) or 0) + 0.5))
@@ -5239,7 +5255,7 @@ local function buildUnitSettings(unit)
 			},
 		})
 
-		list[#list + 1] = checkbox(
+		local absorbGlowSetting = checkbox(
 			L["Use absorb glow"] or "Use absorb glow",
 			function() return getValue(unit, { "health", "useAbsorbGlow" }, healthDef.useAbsorbGlow ~= false) ~= false end,
 			function(val)
@@ -5249,6 +5265,10 @@ local function buildUnitSettings(unit)
 			healthDef.useAbsorbGlow ~= false,
 			"absorb"
 		)
+		absorbGlowSetting.isShown = function()
+			return UFHelper.normalizeStatusBarOrientation(getValue(unit, { "health", "orientation" }, healthDef.orientation or "HORIZONTAL")) ~= "VERTICAL"
+		end
+		list[#list + 1] = absorbGlowSetting
 
 		list[#list + 1] = checkbox(
 			L["Reverse fill"] or "Reverse fill",
@@ -5273,11 +5293,10 @@ local function buildUnitSettings(unit)
 			function() return getValue(unit, { "health", "absorbReverseFill" }, healthDef.absorbReverseFill == true) == true end
 		)
 
-		list[#list + 1] = slider(L["Absorb overlay height"] or "Absorb overlay height", 0, 80, 1, function()
-			local fallback = getOverlayHeightFallback()
+		list[#list + 1] = slider(L["Absorb overlay height"] or "Absorb overlay height", 0, 800, 1, function()
 			local val = getValue(unit, { "health", "absorbOverlayHeight" }, healthDef.absorbOverlayHeight)
 			if not val or val <= 0 then return 0 end
-			return math.min(val, fallback)
+			return math.min(val, 800)
 		end, function(val)
 			val = tonumber(val) or 0
 			setValue(unit, { "health", "absorbOverlayHeight" }, val > 0 and val or nil)
@@ -5350,11 +5369,10 @@ local function buildUnitSettings(unit)
 			"healAbsorb"
 		)
 
-		list[#list + 1] = slider(L["Heal absorb overlay height"] or "Heal absorb overlay height", 0, 80, 1, function()
-			local fallback = getOverlayHeightFallback()
+		list[#list + 1] = slider(L["Heal absorb overlay height"] or "Heal absorb overlay height", 0, 800, 1, function()
 			local val = getValue(unit, { "health", "healAbsorbOverlayHeight" }, healthDef.healAbsorbOverlayHeight)
 			if not val or val <= 0 then return 0 end
-			return math.min(val, fallback)
+			return math.min(val, 800)
 		end, function(val)
 			val = tonumber(val) or 0
 			setValue(unit, { "health", "healAbsorbOverlayHeight" }, val > 0 and val or nil)
@@ -5647,6 +5665,19 @@ local function buildUnitSettings(unit)
 		setValue(unit, { "power", "reverseFill" }, val and true or false)
 		refresh()
 	end, powerDef.reverseFill == true, "power", isPowerEnabled)
+
+	local powerOrientation = radioDropdown(L["CooldownPanelBarOrientation"] or "Bar orientation", {
+		{ value = "HORIZONTAL", label = L["Horizontal"] or "Horizontal" },
+		{ value = "VERTICAL", label = L["Vertical"] or "Vertical" },
+	}, function()
+		return UFHelper.normalizeStatusBarOrientation(getValue(unit, { "power", "orientation" }, powerDef.orientation or "HORIZONTAL"))
+	end, function(val)
+		setValue(unit, { "power", "orientation" }, UFHelper.normalizeStatusBarOrientation(val))
+		refresh()
+	end, "HORIZONTAL", "power")
+	powerOrientation.newTagID = "ufPowerBarOrientation"
+	powerOrientation.isEnabled = isPowerEnabled
+	list[#list + 1] = powerOrientation
 
 	local powerHeightSetting = slider(L["Power height"] or "Power height", 1, 60, 1, function() return getValue(unit, { "powerHeight" }, def.powerHeight or 16) end, function(val)
 		debounced(unit .. "_powerHeight", function()
@@ -5979,51 +6010,6 @@ local function buildUnitSettings(unit)
 	list[#list].isEnabled = function() return isPowerEnabled() and getValue(unit, { "power", "backdrop", "enabled" }, (powerDef.backdrop and powerDef.backdrop.enabled) ~= false) ~= false end
 
 	if addon.Aura and addon.Aura.AppendUFSecondaryPowerSettings then addon.Aura.AppendUFSecondaryPowerSettings(list, unit, def, textureOpts, addDivider, refresh, refreshSelf) end
-
-	local mainPowerTokens = {}
-	do
-		local provider = addon.Aura and addon.Aura.GetUFMainPowerTokens
-		if type(provider) == "function" then mainPowerTokens = provider() or {} end
-	end
-	if #mainPowerTokens > 0 then
-		list[#list + 1] = { name = L["UFMainPowerColors"] or "Main power colors", kind = UF.ui.settingType.Collapsible, id = "mainPowerColors", defaultCollapsed = true }
-		for _, token in ipairs(mainPowerTokens) do
-			local label = token
-			do
-				local labelProvider = addon.Aura and addon.Aura.GetUFPowerLabel
-				if type(labelProvider) == "function" then label = labelProvider(token) end
-			end
-			local dr, dg, db, da = getDefaultPowerColor(token)
-			local defaultColor = { dr, dg, db, da }
-			list[#list + 1] = checkboxColor({
-				name = label,
-				parentId = "mainPowerColors",
-				defaultChecked = false,
-				isChecked = function() return getPowerOverride(token) ~= nil end,
-				onChecked = function(val)
-					debounced("uf_powercolor_toggle_" .. token, function()
-						if val then
-							setPowerOverride(token, dr, dg, db, da)
-						else
-							clearPowerOverride(token)
-						end
-						if UF and UF.Refresh then UF.Refresh() end
-						refreshSettingsUI()
-					end)
-				end,
-				getColor = function() return toRGBA(getPowerOverride(token) or defaultColor, defaultColor) end,
-				onColor = function(color)
-					debounced("uf_powercolor_pick_" .. token, function()
-						local shouldRefreshSettings = getPowerOverride(token) == nil
-						setPowerOverride(token, color.r, color.g, color.b, color.a)
-						if UF and UF.Refresh then UF.Refresh() end
-						if shouldRefreshSettings then refreshSettingsUI() end
-					end)
-				end,
-				colorDefault = { r = dr, g = dg, b = db, a = da },
-			})
-		end
-	end
 
 	local showNPCColors = unit == "target" or unit == "targettarget" or unit == "focus" or isBoss
 	if showNPCColors then
@@ -8782,7 +8768,6 @@ local function buildUnitSettings(unit)
 		"totemFrame",
 		"cast",
 		"combatFeedback",
-		"mainPowerColors",
 		"npcColors",
 	}
 
@@ -9023,6 +9008,11 @@ local function registerUnitFrame(unit, info)
 		local newY = data.y or 0
 		cfg.anchor.relativeTo = cfg.anchor.relativeTo or cfg.anchor.relativeFrame or "UIParent"
 		cfg.anchor.relativeFrame = cfg.anchor.relativeTo
+		local def = defaultsFor(unit)
+		local showStatus = unit ~= "boss" and UF.ShouldShowStatusLayout and UF.ShouldShowStatusLayout(cfg, unit, def)
+		local statusHeightDelta = unit ~= "boss" and UF.GetStatusHeightDelta and UF.GetStatusHeightDelta(showStatus) or 0
+		local relativeFrame = UF.ResolveRelativeAnchorFrame and UF.ResolveRelativeAnchorFrame(cfg.anchor.relativeTo, info.frameName) or UIParent
+		if UF.ResolveStoredUnitFrameAnchorY then newY = UF.ResolveStoredUnitFrameAnchorY(newPoint, newRelativePoint, newY, relativeFrame, statusHeightDelta) end
 		if oldPoint == newPoint and oldRelativePoint == newRelativePoint and oldX == newX and oldY == newY then return end
 		cfg.anchor.point = newPoint
 		cfg.anchor.relativePoint = newRelativePoint
@@ -9510,6 +9500,53 @@ local function registerSettingsUI()
 		end,
 		parentSection = expandable,
 	})
+
+	local powerEntries = {}
+	for _, token in ipairs(getMainPowerTokens()) do
+		powerEntries[#powerEntries + 1] = { key = token, label = getPowerLabel(token) }
+	end
+	if #powerEntries > 0 then
+		addon.functions.SettingsCreateHeadline(cUF, L["UFMainPowerColors"] or "Main power colors", { parentSection = expandable })
+		addon.functions.SettingsCreateCheckbox(cUF, {
+			var = "ufUseCustomPowerColors",
+			text = L["ufUseCustomPowerColors"] or "Use custom power colors for unit frames",
+			desc = L["ufUseCustomPowerColorsDesc"] or "Overrides main power colors used by Enhance QoL unit frames.",
+			default = false,
+			func = function(value)
+				if UFProfiles and UFProfiles.SetUseCustomPowerColors then
+					UFProfiles.SetUseCustomPowerColors(value and true or false)
+				else
+					addon.db.ufUseCustomPowerColors = value and true or false
+				end
+				if Settings and Settings.NotifyUpdate then Settings.NotifyUpdate("EQOL_ufUseCustomPowerColors") end
+				if addon.Aura and addon.Aura.UF and addon.Aura.UF.Refresh then addon.Aura.UF.Refresh() end
+			end,
+			parentSection = expandable,
+			newTagID = "ufUseCustomPowerColors",
+		})
+		local powerColorParent = addon.SettingsLayout.elements["ufUseCustomPowerColors"] and addon.SettingsLayout.elements["ufUseCustomPowerColors"].element
+		addon.functions.SettingsCreateColorOverrides(cUF, {
+			var = "ufPowerColorOverrides",
+			text = L["UFMainPowerColors"] or "Main power colors",
+			entries = powerEntries,
+			getColor = function(key)
+				local color = getPowerOverride(key)
+				if color then return color.r or color[1] or 1, color.g or color[2] or 1, color.b or color[3] or 1, color.a or color[4] or 1 end
+				return getDefaultPowerColor(key)
+			end,
+			setColor = function(key, r, g, b, a)
+				setPowerOverride(key, r, g, b, a)
+				if addon.Aura and addon.Aura.UF and addon.Aura.UF.Refresh then addon.Aura.UF.Refresh() end
+			end,
+			getDefaultColor = function(key) return getDefaultPowerColor(key) end,
+			parent = powerColorParent,
+			parentCheck = function()
+				local entry = addon.SettingsLayout.elements["ufUseCustomPowerColors"]
+				return entry and entry.setting and entry.setting:GetValue() == true
+			end,
+			parentSection = expandable,
+		})
+	end
 
 	local standalonePrivateAuraCategory = privateAurasSupported() and addon.SettingsLayout.rootUI or nil
 	local standalonePrivateAuraExpandable = addon.SettingsLayout.expUFStandalonePrivateAuras

@@ -4,6 +4,8 @@ ns = ns or {}
 local Shared = ns.Shared or {}
 ns.Shared = Shared
 
+local BLIZZARD_DEFAULT_FONT = "__BLIZZARD_DEFAULT__"
+
 local defaults = {
     enabled = true,
     scale = 1.0,
@@ -13,6 +15,7 @@ local defaults = {
     iconGrowth = "RIGHT",
     iconVerticalGrowth = "UP",
     iconPadding = 2,
+    textFont = BLIZZARD_DEFAULT_FONT,
     timerTextColor = { 1, 1, 1 },
     timerTextScale = 1.0,
     timerTextOffsetX = 0,
@@ -144,6 +147,7 @@ Shared.validDRBorderStyles = validDRBorderStyles
 Shared.validTrinketVisibilityModes = validTrinketVisibilityModes
 Shared.validTrinketBorderStyles = validTrinketBorderStyles
 Shared.blizzardDRCVars = blizzardDRCVars
+Shared.BLIZZARD_DEFAULT_FONT = BLIZZARD_DEFAULT_FONT
 Shared.EXPORT_PREFIX = "ArenaDRNameplates:1:"
 
 function Shared.S(key)
@@ -298,6 +302,180 @@ function Shared.NormalizeTrinketVisibility(value)
         return value
     end
     return defaults.trinket.visibility
+end
+
+local function GetLibSharedMedia()
+    if type(LibStub) ~= "table" or type(LibStub.GetLibrary) ~= "function" then
+        return nil
+    end
+
+    local ok, sharedMedia = pcall(LibStub.GetLibrary, LibStub, "LibSharedMedia-3.0", true)
+    if ok and type(sharedMedia) == "table" then
+        return sharedMedia
+    end
+end
+
+Shared.GetLibSharedMedia = GetLibSharedMedia
+
+local function GetBlizzardDefaultFontPath()
+    if type(STANDARD_TEXT_FONT) == "string" and STANDARD_TEXT_FONT ~= "" then
+        return STANDARD_TEXT_FONT
+    end
+
+    if GameFontNormal and type(GameFontNormal.GetFont) == "function" then
+        local ok, path = pcall(GameFontNormal.GetFont, GameFontNormal)
+        if ok and type(path) == "string" and path ~= "" then
+            return path
+        end
+    end
+
+    return [[Fonts\FRIZQT__.TTF]]
+end
+
+Shared.GetBlizzardDefaultFontPath = GetBlizzardDefaultFontPath
+
+local function NormalizeFontPath(path)
+    if type(path) ~= "string" or path == "" then
+        return nil
+    end
+
+    return string.lower(path:gsub("/", "\\"))
+end
+
+Shared.NormalizeFontPath = NormalizeFontPath
+
+local function GetSharedMediaFontTable()
+    local sharedMedia = GetLibSharedMedia()
+    if not sharedMedia or type(sharedMedia.HashTable) ~= "function" then
+        return nil
+    end
+
+    local ok, fonts = pcall(sharedMedia.HashTable, sharedMedia, "font")
+    if ok and type(fonts) == "table" then
+        return fonts
+    end
+end
+
+function Shared.ResolveTextFontPath(fontKey)
+    local fallbackPath = GetBlizzardDefaultFontPath()
+    if fontKey == nil or fontKey == "" or fontKey == BLIZZARD_DEFAULT_FONT then
+        return fallbackPath, true
+    end
+
+    local fonts = GetSharedMediaFontTable()
+    local path = fonts and fonts[fontKey]
+    if type(path) == "string" and path ~= "" then
+        return path, true
+    end
+
+    return fallbackPath, false
+end
+
+function Shared.GetTextFontOptions()
+    local fallbackPath = GetBlizzardDefaultFontPath()
+    local fallbackNormalizedPath = NormalizeFontPath(fallbackPath)
+    local options = {
+        {
+            value = BLIZZARD_DEFAULT_FONT,
+            text = Shared.S("UI_TEXT_FONT_BLIZZARD_DEFAULT"),
+            path = fallbackPath,
+            normalizedPath = fallbackNormalizedPath,
+        },
+    }
+    local seenPaths = {}
+    if fallbackNormalizedPath then
+        seenPaths[fallbackNormalizedPath] = true
+    end
+
+    local fonts = GetSharedMediaFontTable()
+    if not fonts then
+        return options
+    end
+
+    local keys = {}
+    for key, path in pairs(fonts) do
+        if type(key) == "string" and key ~= "" and type(path) == "string" and path ~= "" then
+            keys[#keys + 1] = key
+        end
+    end
+    table.sort(keys)
+
+    for _, key in ipairs(keys) do
+        local path = fonts[key]
+        local normalizedPath = NormalizeFontPath(path)
+        if normalizedPath and not seenPaths[normalizedPath] then
+            seenPaths[normalizedPath] = true
+            options[#options + 1] = {
+                value = key,
+                text = key,
+                path = path,
+                normalizedPath = normalizedPath,
+            }
+        end
+    end
+
+    return options
+end
+function Shared.GetTextFontDropdownValue(fontKey)
+    if fontKey == nil or fontKey == "" or fontKey == BLIZZARD_DEFAULT_FONT then
+        return BLIZZARD_DEFAULT_FONT, true
+    end
+
+    local path, available = Shared.ResolveTextFontPath(fontKey)
+    if not available then
+        return BLIZZARD_DEFAULT_FONT, false
+    end
+
+    local normalizedPath = NormalizeFontPath(path)
+    for _, option in ipairs(Shared.GetTextFontOptions()) do
+        if option.normalizedPath == normalizedPath then
+            return option.value, true
+        end
+    end
+
+    return BLIZZARD_DEFAULT_FONT, false
+end
+
+function Shared.GetTextFontDisplayText(fontKey)
+    local dropdownValue, available = Shared.GetTextFontDropdownValue(fontKey)
+    if not available then
+        return Shared.S("UI_TEXT_FONT_UNAVAILABLE")
+    end
+
+    for _, option in ipairs(Shared.GetTextFontOptions()) do
+        if option.value == dropdownValue then
+            return option.text
+        end
+    end
+
+    return Shared.S("UI_TEXT_FONT_BLIZZARD_DEFAULT")
+end
+
+function Shared.ApplyTextFont(fontString, fontSize, flags, fontKey)
+    if not fontString or type(fontString.SetFont) ~= "function" then
+        return false
+    end
+
+    if fontKey == nil then
+        local currentDB = rawget(_G, "ArenaDRNameplatesDB")
+        fontKey = type(currentDB) == "table" and currentDB.textFont or defaults.textFont
+    end
+
+    local path = Shared.ResolveTextFontPath(fontKey)
+    local ok, applied = pcall(fontString.SetFont, fontString, path, fontSize, flags)
+    if ok and applied ~= false then
+        return true
+    end
+
+    local fallbackPath = GetBlizzardDefaultFontPath()
+    if path ~= fallbackPath then
+        ok, applied = pcall(fontString.SetFont, fontString, fallbackPath, fontSize, flags)
+        if ok and applied ~= false then
+            return true
+        end
+    end
+
+    return false
 end
 
 function Shared.NormalizeTrinketBorderStyle(value)
@@ -458,6 +636,7 @@ local exportDBFields = {
     { key = "iconGrowth", path = { "iconGrowth" }, kind = "string", valid = validIconGrowth },
     { key = "iconVerticalGrowth", path = { "iconVerticalGrowth" }, kind = "string", valid = validVerticalIconGrowth },
     { key = "iconPadding", path = { "iconPadding" }, kind = "number" },
+    { key = "textFont", path = { "textFont" }, kind = "string" },
     { key = "anchorPreset", path = { "anchorPreset" }, kind = "string", valid = validAnchorPresets },
     { key = "point", path = { "point" }, kind = "string", valid = validBasicAnchorPoints },
     { key = "relativePoint", path = { "relativePoint" }, kind = "string", valid = validBasicAnchorPoints },
@@ -845,6 +1024,9 @@ function Shared.EnsureDB()
     end
     if type(db.opacity) ~= "number" then
         db.opacity = defaults.opacity
+    end
+    if type(db.textFont) ~= "string" or db.textFont == "" then
+        db.textFont = defaults.textFont
     end
     if type(db.timerTextScale) ~= "number" then
         db.timerTextScale = defaults.timerTextScale

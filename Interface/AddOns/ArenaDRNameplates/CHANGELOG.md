@@ -2,6 +2,31 @@
 
 All notable changes to this project should be documented in this file.
 
+## 1.4.7 - Arena Stuttering Improvements
+- Reduced periodic addon work during arena matches.
+- Reduced nameplate remapping during target, focus, and mouseover changes.
+- Improved recovery when arena nameplate tokens change.
+- Reduced preview-mode processing on visible enemy nameplates.
+- Added `/arenadr perf` for a 60-second performance report.
+
+## 1.4.6 - Arena Performance Improvements
+- Reduced background processing for arena nameplate updates.
+- Reduced addon work while outside arenas.
+- The options window now loads when first opened.
+- Fixed an error when DR immunity ended.
+
+## 1.4.5 - BetterBlizzPlates Compatibility
+- Added BetterBlizzPlates nameplate support.
+- DR and trinket icons now retain their configured opacity when nameplate transparency changes.
+- Horizontal Below DR trays now move beneath visible BetterBlizzPlates castbars.
+
+## 1.4.4 - EllesmereUI Nameplates Support
+- Added EllesmereUI Nameplates support.
+
+## 1.4.3 - Shared Text Font Selection
+- Added one text font selector for DR countdowns, trinket countdowns, and DR state text.
+- Added Blizzard and LibSharedMedia font choices with duplicate font files removed.
+
 ## 1.4.2 - Setup Sharing
 - Added setup export and import strings.
 - Added a Share tab to the standalone options window.

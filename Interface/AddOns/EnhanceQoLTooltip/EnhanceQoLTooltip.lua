@@ -97,10 +97,20 @@ local function SafeUnitIsUnit(unit, otherUnit)
 end
 
 local function SafeUnitName(unit)
-	if IsUnitIdentitySecret(unit) or not UnitName then return nil end
+	if not unit or isSecret(unit) or not UnitName then return nil end
 	local name, realm = UnitName(unit)
 	if isSecret(name) or isSecret(realm) then return nil end
 	return name, realm
+end
+
+local function IsSimpleGuildInfoUnitToken(unit)
+	if type(unit) ~= "string" or unit == "" or isSecret(unit) then return false end
+	if unit == "player" or unit == "target" or unit == "focus" or unit == "mouseover" then return true end
+	return unit:match("^party%d+$") ~= nil
+		or unit:match("^raid%d+$") ~= nil
+		or unit:match("^arena%d+$") ~= nil
+		or unit:match("^boss%d+$") ~= nil
+		or unit:match("^nameplate%d+$") ~= nil
 end
 
 local function GetUnitTokenFromTooltip(tt)
@@ -344,9 +354,10 @@ fInspect:SetScript("OnEvent", function(_, ev, arg1, arg2)
 			ilvl = C_PaperDollInfo.GetInspectItemLevel(unit)
 			if ilvl then ilvl = tonumber(string.format("%.1f", ilvl)) end
 		end
-		local specID = GetInspectSpecialization and GetInspectSpecialization(unit)
+		local getInspectSpecialization = (C_SpecializationInfo and C_SpecializationInfo.GetInspectSpecialization) or GetInspectSpecialization
+		local specID = getInspectSpecialization and getInspectSpecialization(unit)
 		local specName
-		if specID and specID > 0 then
+		if not isSecret(specID) and specID and specID > 0 then
 			local _, name = GetSpecializationInfoByID(specID)
 			specName = name
 		end
@@ -490,6 +501,7 @@ end
 local function ColorTargetOfTargetName(unit, text)
 	if not text then return nil end
 	if not (addon.db and addon.db["TooltipTargetOfTargetColorMode"] == "UNIT") then return ColorText(text) end
+	if IsUnitIdentitySecret(unit) then return ColorText(text) end
 	if SafeUnitIsUnit(unit, "player") then return ColorTextRGB(text, 0, 1, 0.6) end
 	if UnitIsPlayer and UnitIsPlayer(unit) then
 		local _, class = UnitClass(unit)
@@ -997,6 +1009,7 @@ local fModifierTooltipRefresh = CreateFrame("Frame")
 fModifierTooltipRefresh:SetScript("OnEvent", function(_, _, key)
 	if key ~= "LSHIFT" and key ~= "RSHIFT" and key ~= "LCTRL" and key ~= "RCTRL" and key ~= "LALT" and key ~= "RALT" then return end
 	RefreshVisibleTooltipForModifier()
+	if addon.functions.RefreshNativeAuraTooltipPolicy then addon.functions.RefreshNativeAuraTooltipPolicy() end
 	if addon.db and addon.db["TooltipIDRequireModifier"] and addon.Tooltip and addon.Tooltip.functions and addon.Tooltip.functions.UpdateQuestIDInQuestLog then
 		addon.Tooltip.functions.UpdateQuestIDInQuestLog()
 	end
@@ -1050,6 +1063,7 @@ local function checkAdditionalTooltip(tooltip)
 	if not IsTooltipMutable(tooltip) then return end
 	if not ShouldRunAdditionalTooltip() then return end
 	local unit = ResolveTooltipUnit(tooltip)
+	if unit and IsUnitIdentitySecret(unit) then return end
 	local function challengeLabel(mapId)
 		if addon.Tooltip and addon.Tooltip.variables and addon.Tooltip.variables.challengeMapID then
 			local name = addon.Tooltip.variables.challengeMapID[mapId]
@@ -1069,7 +1083,7 @@ local function checkAdditionalTooltip(tooltip)
 	end
 	if addon.db["TooltipShowClassColor"] and unit and UnitIsPlayer(unit) then
 		local classDisplayName, class, classID = UnitClass(unit)
-		if classDisplayName then
+		if classDisplayName and not isSecret(classDisplayName) and not isSecret(class) and not isSecret(classID) then
 			local r, g, b = GetClassColor(class)
 			local nameLine = _G[tooltip:GetName() .. "TextLeft1"]
 			if nameLine then nameLine:SetTextColor(r, g, b) end
@@ -1083,7 +1097,7 @@ local function checkAdditionalTooltip(tooltip)
 			end
 		end
 	end
-	if unit and UnitIsPlayer(unit) then
+	if unit and UnitIsPlayer(unit) and IsSimpleGuildInfoUnitToken(unit) then
 		local guildName, guildRank = GetGuildInfo(unit)
 		if addon.db["TooltipHideFaction"] or addon.db["TooltipHidePVP"] then
 			local ttName = tooltip:GetName()
@@ -1887,6 +1901,7 @@ function addon.Tooltip.functions.InitState()
 	if ShouldInstallTooltipHooks() then registerTooltipHooks() end
 	if addon.Tooltip.functions.UpdateModifierTooltipRefreshEventRegistration then addon.Tooltip.functions.UpdateModifierTooltipRefreshEventRegistration() end
 	UpdateInspectEventRegistration()
+	if addon.functions.RefreshNativeAuraTooltipPolicy then addon.functions.RefreshNativeAuraTooltipPolicy() end
 end
 
 if addon.Tooltip.functions.InitDB then addon.Tooltip.functions.InitDB() end

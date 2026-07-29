@@ -10,8 +10,9 @@ It can also mirror the enemy trinket cooldown on the same nameplate mapping, usi
 
 - Shows arena DR icons on enemy nameplates during arena matches.
 - Optionally shows the enemy trinket cooldown on enemy nameplates during arena matches.
-- Uses a modular nameplate adapter layer, with Blizzard, Platynator, Plater, Threat Plates, and ElvUI support.
+- Uses a modular nameplate adapter layer, with Blizzard, BetterBlizzPlates, Platynator, Plater, Threat Plates, ElvUI, and EllesmereUI Nameplates support.
 - Keeps timer text centered and readable on each icon, with an option to hide it.
+- Offers one deduplicated Blizzard and LibSharedMedia font selector for DR timers, trinket timers, and DR state text.
 - Optionally shows one decimal place below a configurable 1-20 second threshold (5 seconds by default) using WoW's native cooldown API.
 - Can either follow nameplate scale changes or keep DR icons at a fixed visual size.
 - Supports optional DR state text overlays with separate normal and immune colors.
@@ -45,6 +46,8 @@ If Platynator is loaded, the addon automatically anchors to Platynator's live he
 If Plater is active, the addon anchors to Plater's custom health bar, and falls back to Plater's visible name text when the health bar is hidden.
 If Threat Plates is active for the plate, the addon uses Threat Plates' exported anchor helper so headline and healthbar modes both resolve correctly.
 If ElvUI nameplates are active, the addon anchors to ElvUI's `Health` status bar instead of the full ElvUI plate.
+If EllesmereUI Nameplates is active, the addon anchors to its custom `health` status bar instead of the hidden Blizzard frame.
+If BetterBlizzPlates is active, the addon keeps its native Blizzard anchor and moves a horizontal Below tray beneath BBP's visible castbar to avoid overlap.
 
 Preview mode shows randomized sample DR trays on nearby hostile nameplates. Preview does not persist across reloads or zone changes and stops automatically during those transitions.
 
@@ -58,10 +61,13 @@ Preview mode shows randomized sample DR trays on nearby hostile nameplates. Prev
 - `/arenadr share` opens the Share tab
 - `/arenadr export` generates the current setup string
 - `/arenadr import <export string>` imports a shared setup
+- `/arenadr perf` records addon performance for 60 seconds and prints an aggregated report
+
+The performance report lists calls, total time, average time, and maximum time for mapping, runtime reconciliation, trinket, and preview paths. Running `/arenadr perf` again while a capture is active shows the remaining time without restarting it.
 
 ## Settings Overview
 
-- `General`: preview, reset, icon display, nameplate scaling behavior, placement presets, advanced anchor controls
+- `General`: preview, reset, shared text font, icon display, nameplate scaling behavior, placement presets, advanced anchor controls
 - `Trinket`: optional enemy trinket icon, visibility mode, appearance, border, and placement
 - `Timers`: swipe toggle, edge highlight, timer text and decimal toggles, color, size, and offsets
 - `DR Text`: toggle, anchor, scale, offsets, normal color, immune color
@@ -76,11 +82,14 @@ Preview mode shows randomized sample DR trays on nearby hostile nameplates. Prev
 
 - `Adapters/Registry.lua`: adapter registry and shared helper functions for nameplate integrations.
 - `Adapters/Blizzard.lua`: default Blizzard nameplate adapter.
+- `Adapters/BetterBlizzPlates.lua`: BetterBlizzPlates native-frame and castbar-aware layout adapter.
 - `Adapters/Plater.lua`: Plater nameplate adapter.
 - `Adapters/Platynator.lua`: Platynator nameplate adapter.
 - `Adapters/ThreatPlates.lua`: Threat Plates nameplate adapter.
 - `Adapters/ElvUI.lua`: ElvUI nameplate adapter.
+- `Adapters/EllesmereUI.lua`: EllesmereUI Nameplates adapter.
 - `ArenaNameplateHelper.lua`: maps `arena1-3` units to visible enemy nameplates and exposes anchor helpers/callbacks.
+- `Performance.lua`: opt-in, session-scoped performance aggregation used by `/arenadr perf`.
 - `Core.lua`: runtime behavior, live tray anchoring, preview mode, slash commands, and saved variable defaults.
 - `Settings.lua`: initializes the standalone options workflow after login.
 - `UI/StandaloneOptions.lua`: standalone options window, launcher entry, and option widgets.

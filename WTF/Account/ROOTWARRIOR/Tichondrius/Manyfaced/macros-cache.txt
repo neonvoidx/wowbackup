@@ -91,6 +91,10 @@ VER 3 010000000000001C "Poisons" "136242"
 /use [nostealth] Goblin Weather Machine - Prototype 01-B
 /castsequence  reset=2 Atrophic Poison, Instant Poison
 END
+VER 3 010000000000004A "œ" "134400"
+#showtooltip Cheap Shot
+/cast [@focus,exists,harm,nodead] Cheap shot
+END
 VER 3 010000000000002C "œ" "134400"
 #showtooltip Shadow Blades
 /cast shadow dance
@@ -101,8 +105,4 @@ END
 VER 3 0100000000000045 "œ" "134400"
 #showtooltip Kidney Shot
 /cast [target=focus] Kidney Shot
-END
-VER 3 010000000000004A "œ" "134400"
-#showtooltip Cheap Shot
-/cast [@focus,exists,harm,nodead] Cheap shot
 END

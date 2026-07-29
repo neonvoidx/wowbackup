@@ -21,6 +21,8 @@ local CONTROL_OFFSET = 254
 local CHECKBOX_LABEL_WIDTH = ROW_WIDTH - 32
 local DEFAULT_PAGE_CONTENT_HEIGHT = 640
 local TITLEBAR_HEIGHT = 36
+local MODERN_DROPDOWN_WIDTH = 228
+local MODERN_DROPDOWN_ENTRY_HEIGHT = 20
 
 local COLOR_ACCENT = { r = 0.04, g = 0.76, b = 1.0 }
 local COLOR_HEADER = { r = 0.25, g = 0.45, b = 0.65 }
@@ -44,7 +46,10 @@ SettingsUI.refreshables = {}
 SettingsUI.pages = {}
 SettingsUI.pageButtons = {}
 SettingsUI.initialized = false
+SettingsUI.windowInitialized = false
 SettingsUI.isRefreshing = false
+SettingsUI.refreshAllPending = false
+SettingsUI.refreshControlsPending = false
 SettingsUI.selectedPage = "general"
 
 local controls = SettingsUI.controls
@@ -167,9 +172,17 @@ function SettingsUI.EnsureDB()
 end
 
 function SettingsUI.RefreshAll()
-    if _G.ArenaDRNameplates_RefreshAll then
-        _G.ArenaDRNameplates_RefreshAll()
+    if SettingsUI.refreshAllPending then
+        return
     end
+
+    SettingsUI.refreshAllPending = true
+    C_Timer.After(0, function()
+        SettingsUI.refreshAllPending = false
+        if _G.ArenaDRNameplates_RefreshAll then
+            _G.ArenaDRNameplates_RefreshAll()
+        end
+    end)
 end
 
 function SettingsUI.ApplyAnchorPreset(preset)
@@ -712,7 +725,7 @@ local function GetDropdownSelectedText(options, value)
     end
 end
 
-local function CreateDropdownRow(parent, labelText, optionsProvider, getter, setter)
+local function CreateDropdownRow(parent, labelText, optionsProvider, getter, setter, selectedTextProvider)
     local row = CreateFrame("Frame", NextFrameName("Settings", "DropdownRow"), parent)
     row:SetSize(ROW_WIDTH, 56)
 
@@ -725,24 +738,38 @@ local function CreateDropdownRow(parent, labelText, optionsProvider, getter, set
     if MenuUtil and MenuUtil.CreateRadioMenu then
         local dropdown = CreateFrame("DropdownButton", NextFrameName("Settings", "Dropdown"), row, "WowStyle1DropdownTemplate")
         dropdown:SetPoint("TOPLEFT", row.Label, "BOTTOMLEFT", -2, -8)
-        dropdown:SetWidth(228)
+        dropdown:SetWidth(MODERN_DROPDOWN_WIDTH)
         dropdown:SetHeight(28)
         dropdown:SetupMenu(function(_, rootDescription)
+            -- In restricted content, compositor attachment rectangles can be
+            -- secret. Give every entry an explicit size so Blizzard_Menu does
+            -- not need to perform arithmetic on those rectangles.
+            if rootDescription.SetMinimumWidth then
+                rootDescription:SetMinimumWidth(MODERN_DROPDOWN_WIDTH)
+            end
+
             for _, entry in ipairs(optionsProvider()) do
                 local optionText = entry.text
                 local optionValue = entry.value
-                rootDescription:CreateRadio(optionText, function(selectedValue)
+                local optionDescription = rootDescription:CreateRadio(optionText, function(selectedValue)
                     return selectedValue == getter()
                 end, function()
                     setter(optionValue)
                     SettingsUI.RefreshControls()
                 end, optionValue)
+
+                if optionDescription and optionDescription.AddInitializer then
+                    optionDescription:AddInitializer(function()
+                        return MODERN_DROPDOWN_WIDTH, MODERN_DROPDOWN_ENTRY_HEIGHT
+                    end)
+                end
             end
         end)
 
         row.Refresh = function()
             local value = getter()
-            local text = GetDropdownSelectedText(optionsProvider(), value)
+            local text = selectedTextProvider and selectedTextProvider(value)
+                or GetDropdownSelectedText(optionsProvider(), value)
             if dropdown.OverrideText then
                 dropdown:OverrideText(text or tostring(value or ""))
             elseif dropdown.Update then
@@ -790,7 +817,9 @@ local function CreateDropdownRow(parent, labelText, optionsProvider, getter, set
     row.Refresh = function()
         local value = getter()
         UIDropDownMenu_SetSelectedValue(dropdown, value)
-        UIDropDownMenu_SetText(dropdown, GetDropdownSelectedText(optionsProvider(), value) or tostring(value or ""))
+        local text = selectedTextProvider and selectedTextProvider(value)
+            or GetDropdownSelectedText(optionsProvider(), value)
+        UIDropDownMenu_SetText(dropdown, text or tostring(value or ""))
     end
 
     row.SetEnabled = function(self, enabled)
@@ -983,6 +1012,10 @@ local function GetAnchorPresetOptions()
     }
 end
 
+local function GetTextFontOptions()
+    return Shared.GetTextFontOptions()
+end
+
 local function GetBasicAnchorOptions()
     return {
         { value = "TOP", text = S("UI_TOP") },
@@ -1112,7 +1145,7 @@ local function CreateBlizzardDRCard(parent)
 end
 
 local function CreateGeneralPage(parent)
-    local page = CreatePage(parent, 1020)
+    local page = CreatePage(parent, 1190)
     local content = page.content
 
     local _, description = CreatePageHeader(content, S("UI_MAIN_HEADER"), S("UI_MAIN_SUBHEADER"))
@@ -1132,8 +1165,37 @@ local function CreateGeneralPage(parent)
     local blizzardDRCard = CreateBlizzardDRCard(content)
     blizzardDRCard:SetPoint("TOPLEFT", description, "BOTTOMLEFT", 0, -16)
 
+    local textAppearanceCard = CreateCard(
+        content,
+        S("UI_TEXT_APPEARANCE_TITLE"),
+        S("UI_TEXT_APPEARANCE_HELP"),
+        150
+    )
+    AnchorBelow(textAppearanceCard, blizzardDRCard, 14)
+
+    controls.textFontRow = CreateDropdownRow(
+        textAppearanceCard,
+        S("UI_TEXT_FONT"),
+        GetTextFontOptions,
+        function()
+            local db = SettingsUI.EnsureDB()
+            return Shared.GetTextFontDropdownValue(db.textFont)
+        end,
+        function(value)
+            local db = SettingsUI.EnsureDB()
+            db.textFont = value
+            SettingsUI.RefreshAll()
+        end,
+        function()
+            local db = SettingsUI.EnsureDB()
+            return Shared.GetTextFontDisplayText(db.textFont)
+        end
+    )
+    controls.textFontRow:SetPoint("TOPLEFT", textAppearanceCard.Divider, "BOTTOMLEFT", 0, -14)
+    AttachRowTooltip(controls.textFontRow, S("UI_TEXT_FONT_HELP"))
+
     local displayCard = CreateCard(content, S("UI_DR_ICONS_TITLE"), S("UI_DR_ICONS_HELP"), 286)
-    AnchorBelow(displayCard, blizzardDRCard, 14)
+    AnchorBelow(displayCard, textAppearanceCard, 14)
 
     controls.scaleRow = CreateSliderRow(
         displayCard,
@@ -2114,7 +2176,7 @@ function SettingsUI.RefreshLayouts()
     end
 end
 
-function SettingsUI.RefreshControls()
+local function RefreshControlsNow()
     if SettingsUI.isRefreshing then
         return
     end
@@ -2265,6 +2327,18 @@ function SettingsUI.RefreshControls()
     SettingsUI.isRefreshing = false
 end
 
+function SettingsUI.RefreshControls()
+    if SettingsUI.refreshControlsPending then
+        return
+    end
+
+    SettingsUI.refreshControlsPending = true
+    C_Timer.After(0, function()
+        SettingsUI.refreshControlsPending = false
+        RefreshControlsNow()
+    end)
+end
+
 function SettingsUI.SelectPage(pageKey)
     if not SettingsUI.pages or not next(SettingsUI.pages) then
         return
@@ -2296,6 +2370,11 @@ function SettingsUI.SelectPage(pageKey)
 end
 
 function SettingsUI.InitializeStandaloneWindow()
+    if SettingsUI.windowInitialized then
+        return
+    end
+
+    SettingsUI.windowInitialized = true
     local frame = CreateFrame("Frame", WINDOW_NAME, UIParent, "BackdropTemplate")
     frame:SetSize(WINDOW_WIDTH, WINDOW_HEIGHT)
     frame:SetPoint("CENTER", UIParent, "CENTER", 0, 6)
@@ -2482,6 +2561,10 @@ function SettingsUI.InitializeStandaloneWindow()
 end
 
 function SettingsUI.InitializeSettingsLauncher()
+    if SettingsUI.settingsPanel then
+        return
+    end
+
     local panel = CreateFrame("Frame")
     panel.name = addonName
 
@@ -2560,10 +2643,7 @@ function SettingsUI.Initialize()
     SettingsUI.initialized = true
     SettingsUI.EnsureDB()
 
-    SettingsUI.InitializeStandaloneWindow()
     SettingsUI.InitializeSettingsLauncher()
-    SettingsUI.SelectPage("general")
-    SettingsUI.RefreshControls()
 
     _G.ArenaDRNameplates_OpenSettingsWindow = function(pageKey)
         SettingsUI.OpenPanel(pageKey)
@@ -2582,10 +2662,25 @@ function SettingsUI.Initialize()
     end
 end
 
+function SettingsUI.EnsureStandaloneWindow()
+    if not SettingsUI.initialized then
+        SettingsUI.Initialize()
+    end
+    if SettingsUI.windowInitialized then
+        return
+    end
+
+    SettingsUI.InitializeStandaloneWindow()
+    SettingsUI.SelectPage(SettingsUI.selectedPage or "general")
+    SettingsUI.RefreshControls()
+end
+
 function SettingsUI.OpenPanel(pageKey)
     if not SettingsUI.initialized then
         SettingsUI.Initialize()
     end
+
+    SettingsUI.EnsureStandaloneWindow()
 
     if pageKey and SettingsUI.pages[pageKey] then
         SettingsUI.selectedPage = pageKey
@@ -2605,6 +2700,8 @@ function SettingsUI.TogglePanel(pageKey)
     if not SettingsUI.initialized then
         SettingsUI.Initialize()
     end
+
+    SettingsUI.EnsureStandaloneWindow()
 
     if SettingsUI.window and SettingsUI.window:IsShown() then
         SettingsUI.window:Hide()

@@ -14,8 +14,6 @@ local eventFrame = CreateFrame("Frame", SettingsUI.NextFrameName("Settings", "Ev
 eventFrame:RegisterEvent("PLAYER_LOGIN")
 eventFrame:SetScript("OnEvent", function(_, event)
     if event == "PLAYER_LOGIN" then
-        C_Timer.After(0.5, function()
-            SettingsUI.Initialize()
-        end)
+        SettingsUI.Initialize()
     end
 end)

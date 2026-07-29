@@ -28,6 +28,8 @@ Glow.STYLE.FLASH = "FLASH"
 Glow.STYLE.BUTTON = "BUTTON"
 Glow.STYLE.PIXEL = "PIXEL"
 Glow.STYLE.PULSING = "PULSING"
+Glow.STYLE.SOLID = "SOLID"
+Glow.STYLE.TINT_BORDER = "TINT_BORDER"
 Glow.STYLE.SHINE = "SHINE"
 Glow.STYLE.PROC = "PROC"
 Glow.STYLE.AUTOCAST = Glow.STYLE.SHINE
@@ -80,6 +82,8 @@ local function normalizeStyle(style)
 	if normalized == "BUTTON" then return Glow.STYLE.BUTTON end
 	if normalized == "PIXEL" then return Glow.STYLE.PIXEL end
 	if normalized == "PULSING" or normalized == "PULSE" then return Glow.STYLE.PULSING end
+	if normalized == "SOLID" or normalized == "SOLID_BORDER" then return Glow.STYLE.SOLID end
+	if normalized == "TINT_BORDER" or normalized == "BORDER_TINT" then return Glow.STYLE.TINT_BORDER end
 	if normalized == "SHINE" or normalized == "AUTOCAST" or normalized == "AUTOCAST_SHINE" then return Glow.STYLE.SHINE end
 	if normalized == "PROC" or normalized == "PROC_GLOW" then return Glow.STYLE.PROC end
 	return Glow.STYLE.BLIZZARD
@@ -806,6 +810,88 @@ local function stopPixel(host)
 	overlay:Hide()
 end
 
+local function ensureSolidOverlay(host)
+	local overlay = host and host._eqolSolidOverlay
+	if overlay then return overlay end
+
+	overlay = CreateFrame("Frame", nil, host)
+	overlay:EnableMouse(false)
+	overlay:Hide()
+	overlay.lines = {}
+	for i = 1, 4 do
+		local texture = overlay:CreateTexture(nil, "OVERLAY")
+		texture:SetTexture(PIXEL_GLOW_TEXTURE)
+		overlay.lines[i] = texture
+	end
+	host._eqolSolidOverlay = overlay
+	return overlay
+end
+
+local function updateSolidOverlay(host, opts)
+	local overlay = ensureSolidOverlay(host)
+	if not overlay then return nil end
+
+	local thickness = roundOffset(type(opts) == "table" and (opts.thickness or opts.th) or nil)
+	if thickness < 1 then thickness = 2 end
+	local inset = normalizeInset(opts)
+	local xOffset = roundOffset(normalizeScalar(opts, "xOffset", 0))
+	local yOffset = roundOffset(normalizeScalar(opts, "yOffset", 0))
+	local frameLevel = roundOffset(normalizeScalar(opts, "frameLevel", 3))
+	local color = normalizeColor(type(opts) == "table" and opts.color or nil, { 1, 0.82, 0.2, 1 })
+
+	overlay:SetParent(host)
+	overlay:SetFrameStrata(host:GetFrameStrata())
+	overlay:SetFrameLevel(max(0, (host:GetFrameLevel() or 0) + frameLevel))
+	overlay:ClearAllPoints()
+	overlay:SetPoint("TOPLEFT", host, "TOPLEFT", -inset + xOffset, inset + yOffset)
+	overlay:SetPoint("BOTTOMRIGHT", host, "BOTTOMRIGHT", inset + xOffset, -inset + yOffset)
+	overlay:SetAlpha(color[4])
+
+	local top, bottom, left, right = overlay.lines[1], overlay.lines[2], overlay.lines[3], overlay.lines[4]
+	for i = 1, 4 do
+		overlay.lines[i]:SetVertexColor(color[1], color[2], color[3], 1)
+	end
+	top:ClearAllPoints()
+	top:SetPoint("TOPLEFT", overlay, "TOPLEFT")
+	top:SetPoint("TOPRIGHT", overlay, "TOPRIGHT")
+	top:SetHeight(thickness)
+	bottom:ClearAllPoints()
+	bottom:SetPoint("BOTTOMLEFT", overlay, "BOTTOMLEFT")
+	bottom:SetPoint("BOTTOMRIGHT", overlay, "BOTTOMRIGHT")
+	bottom:SetHeight(thickness)
+	left:ClearAllPoints()
+	left:SetPoint("TOPLEFT", overlay, "TOPLEFT", 0, -thickness)
+	left:SetPoint("BOTTOMLEFT", overlay, "BOTTOMLEFT", 0, thickness)
+	left:SetWidth(thickness)
+	right:ClearAllPoints()
+	right:SetPoint("TOPRIGHT", overlay, "TOPRIGHT", 0, -thickness)
+	right:SetPoint("BOTTOMRIGHT", overlay, "BOTTOMRIGHT", 0, thickness)
+	right:SetWidth(thickness)
+	return overlay
+end
+
+local function startSolid(host, opts)
+	local overlay = updateSolidOverlay(host, opts)
+	if overlay then overlay:Show() end
+end
+
+local function stopSolid(host)
+	local overlay = host and host._eqolSolidOverlay
+	if overlay then overlay:Hide() end
+end
+
+local function updateTintBorder(host, opts)
+	local target = host and host._eqolGlowTarget
+	local adapter = target and target._eqolGlowBorderTintAdapter
+	if type(adapter) == "function" then adapter(target, host, opts, true) end
+end
+
+local function stopTintBorder(host)
+	local target = host and host._eqolGlowTarget
+	local adapter = target and target._eqolGlowBorderTintAdapter
+	if type(adapter) == "function" then adapter(target, host, nil, false) end
+end
+
 local function ensurePulsingOverlay(host)
 	local overlay = host and host._eqolPulsingOverlay
 	if overlay then return overlay end
@@ -1120,7 +1206,8 @@ end
 
 local function blizzardOverlayOnUpdate(self, elapsed)
 	if not (self and self.ants and self.ants:IsShown()) then return end
-	if AnimateTexCoords then AnimateTexCoords(self.ants, 256, 256, 48, 48, 22, elapsed, self.throttle or 0.01) end
+	local animateTexCoords = _G.TextureUtil and _G.TextureUtil.AnimateTexCoords or _G.AnimateTexCoords
+	if animateTexCoords then animateTexCoords(self.ants, 256, 256, 48, 48, 22, elapsed, self.throttle or 0.01) end
 end
 
 local function blizzardAnimInOnPlay(group)
@@ -1291,6 +1378,8 @@ local function stopBackendImmediately(host)
 	stopFlash(host)
 	stopPixel(host)
 	stopPulsing(host)
+	stopSolid(host)
+	stopTintBorder(host)
 	local overlay = host._eqolBlizzardOverlay
 	if overlay then
 		if overlay.animIn and overlay.animIn:IsPlaying() then overlay.animIn:Stop() end
@@ -1366,6 +1455,16 @@ local BACKENDS = {
 		stop = function(host)
 			stopPulsing(host)
 		end,
+	},
+	[Glow.STYLE.SOLID] = {
+		start = function(host, opts) startSolid(host, opts) end,
+		refresh = function(host, opts) updateSolidOverlay(host, opts) end,
+		stop = function(host) stopSolid(host) end,
+	},
+	[Glow.STYLE.TINT_BORDER] = {
+		start = function(host, opts) updateTintBorder(host, opts) end,
+		refresh = function(host, opts) updateTintBorder(host, opts) end,
+		stop = function(host) stopTintBorder(host) end,
 	},
 	[Glow.STYLE.SHINE] = {
 		start = function(host, opts)

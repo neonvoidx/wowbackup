@@ -19,6 +19,7 @@ local BORDER_LABEL = EMBLEM_BORDER
 local TEXT_LABEL = LOCALE_TEXT_LABEL
 
 local EDITMODE_ID = "honorBar"
+local DYNAMIC_ANCHOR_ID = "bar:honor"
 local ANCHOR_TARGET_UI = "UIParent"
 local ANCHOR_TARGET_PLAYER_CASTBAR = "PLAYER_CASTBAR"
 local EQOL_PLAYER_CASTBAR = "EQOLUFPlayerHealthCast"
@@ -854,6 +855,22 @@ function HonorBar:ResolveAnchorFrame()
 	return UIParent
 end
 
+function HonorBar:GetDynamicAnchorWinner()
+	return addon.DynamicAnchors and addon.DynamicAnchors:GetSimpleFrameWinner(DYNAMIC_ANCHOR_ID) or nil
+end
+
+function HonorBar:ApplyDynamicAnchor()
+	if not self.frame then return false end
+	local winner = self:GetDynamicAnchorWinner()
+	if not (winner and winner.frame) then return false end
+	local placement = winner.placement or {}
+	local point = placement.point or "CENTER"
+	local relativePoint = placement.relativePoint or point
+	self.frame:ClearAllPoints()
+	self.frame:SetPoint(point, winner.frame, relativePoint, tonumber(placement.x) or 0, tonumber(placement.y) or 0)
+	return true
+end
+
 function HonorBar:ScheduleAnchorRefresh(target)
 	if not (C_Timer and C_Timer.NewTicker) then return end
 	local desired = normalizeAnchorRelativeFrame(target or self:GetAnchorRelativeFrame())
@@ -903,6 +920,10 @@ end
 
 function HonorBar:RefreshAnchor()
 	if self._refreshingAnchor then return end
+	if addon.DynamicAnchors and addon.DynamicAnchors:IsFrameAssignmentEnabled(DYNAMIC_ANCHOR_ID) then
+		self:ApplyDynamicAnchor()
+		return
+	end
 	local target = self:GetAnchorRelativeFrame()
 	if self._anchorRefreshTicker and (target == ANCHOR_TARGET_UI or self._anchorRefreshTarget ~= target) then
 		self._anchorRefreshTicker:Cancel()
@@ -990,6 +1011,13 @@ end
 
 function HonorBar:GetResolvedWidth()
 	local width = self:GetWidth()
+	local winner = self:GetDynamicAnchorWinner()
+	if winner then
+		if not winner.matchRelativeWidth then return width end
+		local relativeWidth = winner.frame and winner.frame.GetWidth and tonumber(winner.frame:GetWidth()) or 0
+		if relativeWidth <= 0 then return width end
+		return math.max(BAR_SIZE_MIN, relativeWidth + (tonumber(winner.matchRelativeWidthOffset) or 0))
+	end
 	if not self:AnchorUsesMatchedWidth() then return width end
 	local relativeFrame = self:ResolveAnchorFrame()
 	if not (relativeFrame and relativeFrame.GetWidth) then return width end
@@ -1102,7 +1130,7 @@ end
 
 function HonorBar:ApplySize()
 	if not self.frame then return end
-	self:EnsureWidthSyncHooks()
+	if not (addon.DynamicAnchors and addon.DynamicAnchors:IsFrameAssignmentEnabled(DYNAMIC_ANCHOR_ID)) then self:EnsureWidthSyncHooks() end
 	local width = self:GetResolvedWidth()
 	local height = self:GetHeight()
 	self.frame:SetSize(width, height)
@@ -2544,6 +2572,34 @@ function HonorBar:RegisterEditMode(frame)
 				isEnabled = function() return HonorBar:GetTextEnabled() end,
 			},
 		}
+		if addon.DynamicAnchors then
+			addon.DynamicAnchors:AddEditModeAssignmentSettings(settings, SettingType, {
+				consumerId = DYNAMIC_ANCHOR_ID,
+				parentId = "honorBarAnchor",
+				insertAfterId = "honorBarAnchor",
+				refresh = function(rebuild)
+					if rebuild and EditMode and EditMode.RefreshFrame then
+						EditMode:RefreshFrame(EDITMODE_ID)
+						RunNextFrame(function()
+							HonorBar:ApplyDynamicAnchor()
+							HonorBar:ApplySize()
+						end)
+					else
+						HonorBar:ApplyDynamicAnchor()
+						HonorBar:ApplySize()
+					end
+				end,
+				staticFields = {
+					anchorRelativeFrame = true,
+					anchorPoint = true,
+					anchorRelativePoint = true,
+					anchorOffsetX = true,
+					anchorOffsetY = true,
+					anchorMatchWidth = true,
+					anchorMatchWidthOffset = true,
+				},
+			})
+		end
 	end
 
 	local function seedEditModeRecordFromProfile(record)
@@ -2621,12 +2677,24 @@ function HonorBar:RegisterEditMode(frame)
 			end
 			HonorBar:ApplyLayoutData(data)
 		end,
-		onEnter = function() HonorBar:ShowEditModeHint(true) end,
+		onEnter = function()
+			HonorBar:ShowEditModeHint(true)
+			if addon.DynamicAnchors and addon.DynamicAnchors:IsFrameAssignmentEnabled(DYNAMIC_ANCHOR_ID) then
+				RunNextFrame(function()
+					if HonorBar.previewing then HonorBar:ApplyDynamicAnchor() end
+				end)
+			end
+		end,
 		onExit = function() HonorBar:ShowEditModeHint(false) end,
 		isEnabled = function() return addon.db and addon.db[DB_ENABLED] == true end,
 		settings = settings,
-		relativeTo = function() return HonorBar:ResolveAnchorFrame() end,
-		allowDrag = function() return HonorBar:AnchorUsesUIParent() end,
+		relativeTo = function()
+			local winner = HonorBar:GetDynamicAnchorWinner()
+			return winner and winner.frame or HonorBar:ResolveAnchorFrame()
+		end,
+		allowDrag = function()
+			return not (addon.DynamicAnchors and addon.DynamicAnchors:IsFrameAssignmentEnabled(DYNAMIC_ANCHOR_ID)) and HonorBar:AnchorUsesUIParent()
+		end,
 		settingsMaxHeight = DEFAULT_SETTINGS_MAX_HEIGHT,
 		showOutsideEditMode = false,
 		collapseExclusive = true,
@@ -2643,6 +2711,22 @@ end
 
 function HonorBar:OnSettingChanged(enabled)
 	if enabled then
+		if addon.DynamicAnchors then
+			addon.DynamicAnchors:RegisterSimpleFrame({
+				id = DYNAMIC_ANCHOR_ID,
+				owner = "EnhanceQoLResourceBars",
+				label = L["HonorBar"] or "Honor Bar",
+				menuGroup = "RESOURCE_BARS",
+				menuGroupLabel = L["Resource Bars"],
+				menuGroupOrder = 200,
+				getFrame = function() return HonorBar.frame end,
+				isAvailable = function(frame) return HonorBar:IsEnabled() and frame ~= nil and frame:IsShown() end,
+				apply = function()
+					HonorBar:ApplyDynamicAnchor()
+					HonorBar:ApplySize()
+				end,
+			})
+		end
 		self:EnsureFrame()
 		self:RegisterEvents()
 		self:ApplyLayoutData(self:BuildLayoutRecordFromProfile())

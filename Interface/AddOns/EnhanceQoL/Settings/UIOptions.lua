@@ -1136,6 +1136,7 @@ local function createLabelControls(category, expandable)
 	addon.functions.SettingsCreateColorPicker(category, {
 		var = "actionBarFullRangeColor",
 		text = L["rangeOverlayColor"],
+		hasOpacity = true,
 		callback = function()
 			if ActionBarLabels and ActionBarLabels.RefreshAllRangeOverlays then ActionBarLabels.RefreshAllRangeOverlays() end
 		end,

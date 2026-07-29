@@ -1,7 +1,7 @@
 ## Interface: 120007, 120100
 ## Title: Enhance QoL Dungeon & Raid
 ## Author: R41Z0R
-## Version: 11.7.3
+## Version: 11.9.1
 ## Notes: Dungeon, raid, Mythic+ timer, tracker and group finder helpers
 ## Notes-deDE: Dungeon-, Raid-, Mythic+-Timer-, Tracker- und Gruppensuche-Helfer
 ## Notes-esES: Ayudas para mazmorras, bandas, temporizador de Míticas+, rastreador y buscador de grupos

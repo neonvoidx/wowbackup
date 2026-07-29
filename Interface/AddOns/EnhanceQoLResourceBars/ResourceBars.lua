@@ -308,6 +308,35 @@ function ResourceBars.ApplyStatusBarTexturePixelSnapping(bar, bias)
 	return addon.PixelUtil and addon.PixelUtil.ApplyStatusBarTexturePixelSnapping(bar, bias) or nil
 end
 
+function ResourceBars.AlignHostToPixelGrid(frame)
+	if not (frame and frame.GetNumPoints and frame.GetLeft and frame.GetBottom) then return false end
+	local pixelUtil = addon.PixelUtil
+	if not (pixelUtil and pixelUtil.Snap) then return false end
+	local left, bottom = frame:GetLeft(), frame:GetBottom()
+	if left == nil or bottom == nil then return false end
+	if issecretvalue and (issecretvalue(left) or issecretvalue(bottom)) then return false end
+	local offsetX = pixelUtil.Snap(left, frame) - left
+	local offsetY = pixelUtil.Snap(bottom, frame) - bottom
+	local epsilon = ((pixelUtil.OnePixel and pixelUtil.OnePixel(frame)) or 1) * 0.001
+	if abs(offsetX) < epsilon then offsetX = 0 end
+	if abs(offsetY) < epsilon then offsetY = 0 end
+	if offsetX == 0 and offsetY == 0 then return false end
+
+	local points = {}
+	for index = 1, frame:GetNumPoints() do
+		local point, relativeTo, relativePoint, x, y = frame:GetPoint(index)
+		if issecretvalue and (issecretvalue(x) or issecretvalue(y)) then return false end
+		points[#points + 1] = { point, relativeTo, relativePoint, x or 0, y or 0 }
+	end
+	if #points == 0 then return false end
+
+	frame:ClearAllPoints()
+	for _, pointData in ipairs(points) do
+		frame:SetPoint(pointData[1], pointData[2], pointData[3], pointData[4] + offsetX, pointData[5] + offsetY)
+	end
+	return true
+end
+
 function ResourceBars.ApplySafeBorderTextureSnapping(frame, stateKey, bias)
 	if addon.PixelUtil and addon.PixelUtil.ApplySafeBorderTextureSnapping then addon.PixelUtil.ApplySafeBorderTextureSnapping(frame, stateKey, bias) end
 end
@@ -1954,7 +1983,7 @@ function ResourceBars.GetSharedSlotFromFrameName(frameName) return ResourceBars.
 
 function ResourceBars.GetSharedSlotLiveFrame(slot)
 	slot = tostring(slot or ""):upper()
-	if slot == "HEALTH" then return healthBar or _G.EQOLHealthBar or _G[ResourceBars.GetSharedSlotFrameName and ResourceBars.GetSharedSlotFrameName(slot)] end
+	if slot == "HEALTH" then return healthBar or _G.EQOLHealthBar end
 	local frameName = ResourceBars.GetSharedSlotFrameName and ResourceBars.GetSharedSlotFrameName(slot)
 	if not frameName then return nil end
 	ResourceBars._sharedSlotFrames = ResourceBars._sharedSlotFrames or {}
@@ -1981,6 +2010,7 @@ function ResourceBars.BindSharedSlotRuntimeFrame(slot, pType, frame)
 	if previousType and previousType ~= pType and sharedFrame and powerbar[previousType] == sharedFrame then powerbar[previousType] = nil end
 	ResourceBars._sharedSlotResolvedTypes[slot] = pType
 	if sharedFrame and type(pType) == "string" and pType ~= "" then powerbar[pType] = sharedFrame end
+	if ResourceBars.NotifySharedSlotDynamicAnchorChanged then ResourceBars.NotifySharedSlotDynamicAnchorChanged(slot, "SHARED_SLOT_BOUND") end
 end
 
 function ResourceBars.ClearSharedSlotRuntimeFrame(slot, hideFrame)
@@ -2002,6 +2032,7 @@ function ResourceBars.ClearSharedSlotRuntimeFrame(slot, hideFrame)
 		if ResourceBars.ApplyRuntimeForceHiddenAlphaToFrame then ResourceBars.ApplyRuntimeForceHiddenAlphaToFrame(sharedFrame, true) end
 		sharedFrame:Hide()
 	end
+	if ResourceBars.NotifySharedSlotDynamicAnchorChanged then ResourceBars.NotifySharedSlotDynamicAnchorChanged(slot, "SHARED_SLOT_CLEARED") end
 end
 
 function ResourceBars.GetSpecMode(specIndex)
@@ -2074,6 +2105,10 @@ local function getSpecInfo(specIndex)
 	local class = addon.variables.unitClass
 	local spec = specIndex or addon.variables.unitSpec
 	if not class or not spec then return nil end
+	if ResourceBars.GetInitialSpecInfo then
+		local initialInfo = ResourceBars.GetInitialSpecInfo(spec)
+		if initialInfo then return initialInfo end
+	end
 	return powertypeClasses[class] and powertypeClasses[class][spec]
 end
 
@@ -2418,7 +2453,7 @@ ensureSpecCfg = function(specIndex)
 	-- Auto-populate from global when enabled and spec has no explicit enables yet
 	local function maybeAutoEnableRuntime()
 		if ResourceBars.SpecUsesSharedMode(spec) then return end
-		local specInfo = powertypeClasses[class] and powertypeClasses[class][spec]
+		local specInfo = getSpecInfo(spec)
 		if not specInfo then return end
 		local selection = autoEnableSelection()
 			if not selection or not (selection.HEALTH or selection.MAIN or selection.SECONDARY or selection.TERTIARY) then return end
@@ -3325,6 +3360,36 @@ local POWER_ENUM = {
 	PAIN = (EnumPowerType and EnumPowerType.Pain) or 18,
 	ESSENCE = (EnumPowerType and EnumPowerType.Essence) or 19,
 }
+
+function ResourceBars.GetInitialSpecInfo(specIndex)
+	if type(_G.IsPlayerInitialSpec) ~= "function" or not _G.IsPlayerInitialSpec() then return nil end
+	local activeSpec = C_SpecializationInfo and C_SpecializationInfo.GetSpecialization and C_SpecializationInfo.GetSpecialization()
+	if tonumber(specIndex) ~= tonumber(activeSpec) then return nil end
+
+	local class = addon.variables and addon.variables.unitClass
+	if not class or not (powertypeClasses and powertypeClasses[class]) then return nil end
+
+	local mainPowerID, mainPowerType = UnitPowerType("player")
+	if type(mainPowerType) ~= "string" or mainPowerType == "" then
+		for pType, powerID in pairs(POWER_ENUM) do
+			if powerID == mainPowerID then
+				mainPowerType = pType
+				break
+			end
+		end
+	end
+	if type(mainPowerType) ~= "string" or not ResourceBars.IsBarTypeSupportedForClass(mainPowerType, class, nil) then return nil end
+
+	local info = { MAIN = mainPowerType }
+	for _, pType in ipairs(classPowerTypes or {}) do
+		local powerID = POWER_ENUM[pType]
+		if pType ~= mainPowerType and powerID and ResourceBars.IsBarTypeSupportedForClass(pType, class, nil) then
+			local maxPower = UnitPowerMax("player", powerID)
+			if (not issecretvalue or not issecretvalue(maxPower)) and maxPower > 0 then info[pType] = true end
+		end
+	end
+	return info
+end
 
 function ResourceBars.HideSegmentChildren(segments, clearCooldownText)
 	if not segments then return end
@@ -5258,7 +5323,13 @@ end
 function ResourceBars.EnsureSharedSlotProxyFrame(slot)
 	slot = tostring(slot or ""):upper()
 	if slot == "HEALTH" then
-		if healthBar then return healthBar end
+		local frame = healthBar or _G.EQOLHealthBar
+		local obsoleteProxy = _G.EQOLSharedHealthBar
+		if obsoleteProxy and obsoleteProxy ~= frame then
+			obsoleteProxy._rbDesiredVisible = false
+			obsoleteProxy:Hide()
+		end
+		return frame
 	end
 	local frameName = ResourceBars.GetSharedSlotFrameName and ResourceBars.GetSharedSlotFrameName(slot)
 	if not frameName then return nil end
@@ -5286,6 +5357,65 @@ function ResourceBars.EnsureSharedSlotProxyFrame(slot)
 		frame._rbSharedSlot = slot
 	end
 	return frame
+end
+
+function ResourceBars.GetSharedSlotDynamicAnchorId(slot)
+	slot = tostring(slot or ""):upper()
+	if not ResourceBars.SHARED_SLOT_FRAME_NAME[slot] then return nil end
+	return "resourceBarSlot:" .. string.lower(slot)
+end
+
+function ResourceBars.IsSharedSlotDynamicAnchorEnabled(slot)
+	if not (ResourceBars.SpecUsesSharedMode and ResourceBars.SpecUsesSharedMode(addon.variables and addon.variables.unitSpec)) then return false end
+	local dynamicAnchors = addon.DynamicAnchors
+	local consumerId = ResourceBars.GetSharedSlotDynamicAnchorId(slot)
+	return consumerId and dynamicAnchors and dynamicAnchors.IsFrameAssignmentEnabled and dynamicAnchors:IsFrameAssignmentEnabled(consumerId) or false
+end
+
+function ResourceBars.NotifySharedSlotDynamicAnchorChanged(slot, reason)
+	local dynamicAnchors = addon.DynamicAnchors
+	local consumerId = ResourceBars.GetSharedSlotDynamicAnchorId(slot)
+	if not (consumerId and dynamicAnchors) then return end
+	if dynamicAnchors.QueueConsumer then dynamicAnchors:QueueConsumer(consumerId, reason or "SHARED_SLOT_CHANGED") end
+	if dynamicAnchors.NotifyTargetChanged then dynamicAnchors:NotifyTargetChanged(consumerId, reason or "SHARED_SLOT_CHANGED", consumerId) end
+end
+
+function ResourceBars.ApplySharedSlotDynamicAnchor(slot)
+	slot = tostring(slot or ""):upper()
+	if not ResourceBars.IsSharedSlotDynamicAnchorEnabled(slot) then return false end
+	local frame = ResourceBars.GetSharedSlotLiveFrame(slot)
+	local consumerId = ResourceBars.GetSharedSlotDynamicAnchorId(slot)
+	local dynamicAnchors = addon.DynamicAnchors
+	local winner = consumerId and dynamicAnchors and dynamicAnchors.GetSimpleFrameWinner and dynamicAnchors:GetSimpleFrameWinner(consumerId)
+	if not (frame and winner and winner.frame and winner.placement) then return false end
+
+	local cfg = ResourceBars.EnsureSharedSlotStore(slot) or {}
+	local widthDefault = slot == "HEALTH" and RB.DEFAULT_HEALTH_WIDTH or RB.DEFAULT_POWER_WIDTH
+	local heightDefault = slot == "HEALTH" and RB.DEFAULT_HEALTH_HEIGHT or RB.DEFAULT_POWER_HEIGHT
+	local width = cfg.width or widthDefault
+	local height = cfg.height or heightDefault
+	if winner.matchRelativeWidth == true and winner.frame ~= UIParent and winner.frame.GetWidth then
+		width = max(RB.MIN_RESOURCE_BAR_WIDTH, (winner.frame:GetWidth() or width) + (tonumber(winner.matchRelativeWidthOffset) or 0))
+	end
+	ResourceBars.Pixel.Size(frame, width, height)
+
+	local placement = winner.placement
+	frame:ClearAllPoints()
+	local anchored = pcall(
+		ResourceBars.Pixel.Point,
+		frame,
+		placement.point or "TOPLEFT",
+		winner.frame,
+		placement.relativePoint or placement.point or "TOPLEFT",
+		placement.x or 0,
+		placement.y or 0
+	)
+	if not anchored then
+		frame:ClearAllPoints()
+		ResourceBars.Pixel.Point(frame, "CENTER", UIParent, "CENTER", 0, 0)
+	end
+	ResourceBars.AlignHostToPixelGrid(frame)
+	return true
 end
 
 function ResourceBars.SyncSharedSlotProxyFrame(slot, specIndex)
@@ -5322,12 +5452,17 @@ function ResourceBars.SyncSharedSlotProxyFrame(slot, specIndex)
 		frame:Hide()
 		return frame
 	end
+	if ResourceBars.ApplySharedSlotDynamicAnchor(slot) then
+		if not ResourceBars.ShouldDeferShowToVisibilityDriver or not ResourceBars.ShouldDeferShowToVisibilityDriver(frame, cfg) then frame:Show() end
+		return frame
+	end
 
 	frame:ClearAllPoints()
 	if liveFrame and liveFrame ~= frame and liveFrame.GetNumPoints and liveFrame:GetNumPoints() > 0 then
 		local point, relativeTo, relativePoint, x, y = liveFrame:GetPoint(1)
 		ResourceBars.Pixel.Point(frame, point or "TOPLEFT", relativeTo or UIParent, relativePoint or point or "TOPLEFT", x or 0, y or 0)
 		ResourceBars.Pixel.Size(frame, liveFrame:GetWidth() or cfg.width or widthDefault, liveFrame:GetHeight() or cfg.height or heightDefault)
+		ResourceBars.AlignHostToPixelGrid(frame)
 		if not ResourceBars.ShouldDeferShowToVisibilityDriver or not ResourceBars.ShouldDeferShowToVisibilityDriver(frame, cfg) then frame:Show() end
 		return frame
 	end
@@ -5367,6 +5502,7 @@ function ResourceBars.SyncSharedSlotProxyFrame(slot, specIndex)
 	end
 	ResourceBars.Pixel.Size(frame, width, height)
 	ResourceBars.Pixel.Point(frame, anchor.point or "TOPLEFT", relative or UIParent, anchor.relativePoint or anchor.point or "TOPLEFT", anchor.x or 0, anchor.y or 0)
+	ResourceBars.AlignHostToPixelGrid(frame)
 	if not ResourceBars.ShouldDeferShowToVisibilityDriver or not ResourceBars.ShouldDeferShowToVisibilityDriver(frame, cfg) then frame:Show() end
 	return frame
 end
@@ -5427,6 +5563,8 @@ function createHealthBar()
 		if ResourceBars.ApplyStatusBarTexturePixelSnapping then ResourceBars.ApplyStatusBarTexturePixelSnapping(healthBar, 0) end
 	end
 	healthBar:SetClampedToScreen(true)
+	local dynamicApplied = ResourceBars.ApplySharedSlotDynamicAnchor and ResourceBars.ApplySharedSlotDynamicAnchor("HEALTH")
+	if not dynamicApplied then
 	local anchor = getAnchor("HEALTH", addon.variables.unitSpec)
 	local rel, looped = resolveAnchor(anchor, "HEALTH")
 	-- If we had to fallback due to a loop, recenter on UIParent using TOPLEFT/TOPLEFT
@@ -5458,6 +5596,8 @@ function createHealthBar()
 	end
 	healthBar:ClearAllPoints()
 	ResourceBars.Pixel.Point(healthBar, anchor.point or "TOPLEFT", rel, anchor.relativePoint or anchor.point or "TOPLEFT", anchor.x or 0, anchor.y or 0)
+	ResourceBars.AlignHostToPixelGrid(healthBar)
+	end
 	local settings = getBarSettings("HEALTH")
 	healthBar._cfg = settings
 	applyBarFrameLayers(healthBar, settings)
@@ -5759,12 +5899,15 @@ end
 local function syncBarWidthWithAnchor(pType)
 	local frame = (pType == "HEALTH") and healthBar or powerbar[pType]
 	if not frame then return false end
+	local sharedSlot = pType == "HEALTH" and "HEALTH" or frame._rbSharedSlot
+	if sharedSlot and ResourceBars.IsSharedSlotDynamicAnchorEnabled and ResourceBars.IsSharedSlotDynamicAnchorEnabled(sharedSlot) then return false end
 	local anchor = getAnchor(pType, addon.variables.unitSpec)
 	local baseWidth = max(1, getConfiguredBarWidth(pType, frame) or 0)
 	if not wantsRelativeFrameWidthMatch(anchor) then
 		local current = frame:GetWidth() or 0
 		if abs(current - baseWidth) < 0.5 then return false end
 		ResourceBars.Pixel.Width(frame, baseWidth)
+		ResourceBars.AlignHostToPixelGrid(frame)
 		return true
 	end
 	local relativeFrameName = anchor.relativeFrame
@@ -5774,6 +5917,7 @@ local function syncBarWidthWithAnchor(pType)
 		local current = frame:GetWidth() or 0
 		if abs(current - baseWidth) < 0.5 then return false end
 		ResourceBars.Pixel.Width(frame, baseWidth)
+		ResourceBars.AlignHostToPixelGrid(frame)
 		return true
 	end
 	local relWidth = relFrame:GetWidth() or 0
@@ -5782,6 +5926,7 @@ local function syncBarWidthWithAnchor(pType)
 	local current = frame:GetWidth() or 0
 	if abs(current - desired) < 0.5 then return false end
 	ResourceBars.Pixel.Width(frame, desired)
+	ResourceBars.AlignHostToPixelGrid(frame)
 	return true
 end
 
@@ -7573,10 +7718,21 @@ local function createPowerBar(type, anchor, sharedSlot)
 	local stackSpacing = RB.DEFAULT_STACK_SPACING
 
 	-- Anchor handling: during spec/trait refresh we suppress inter-bar anchoring
+	local dynamicEnabled = sharedSlot and ResourceBars.IsSharedSlotDynamicAnchorEnabled and ResourceBars.IsSharedSlotDynamicAnchorEnabled(sharedSlot)
+	if dynamicEnabled then
+		if ResourceBars._suspendAnchors then
+			bar:ClearAllPoints()
+			ResourceBars.Pixel.Point(bar, "TOPLEFT", UIParent, "TOPLEFT", 0, 0)
+			ResourceBars.AlignHostToPixelGrid(bar)
+		else
+			ResourceBars.ApplySharedSlotDynamicAnchor(sharedSlot)
+		end
+	else
 	local a = getAnchor(type, addon.variables.unitSpec)
 	if ResourceBars._suspendAnchors then
 		bar:ClearAllPoints()
 		ResourceBars.Pixel.Point(bar, "TOPLEFT", UIParent, "TOPLEFT", a.x or 0, a.y or 0)
+		ResourceBars.AlignHostToPixelGrid(bar)
 	else
 		if a.point then
 			if
@@ -7603,6 +7759,7 @@ local function createPowerBar(type, anchor, sharedSlot)
 			end
 			bar:ClearAllPoints()
 			ResourceBars.Pixel.Point(bar, a.point, rel or UIParent, a.relativePoint or a.point, a.x or 0, a.y or 0)
+			ResourceBars.AlignHostToPixelGrid(bar)
 		elseif anchor then
 			-- Default stack below provided anchor and persist default anchor in DB
 			bar:ClearAllPoints()
@@ -7616,6 +7773,7 @@ local function createPowerBar(type, anchor, sharedSlot)
 			a.autoSpacing = true
 			if a.matchRelativeWidth == nil then a.matchRelativeWidth = true end
 			ResourceBars.RequestStructuralLayoutRefresh(true)
+			ResourceBars.AlignHostToPixelGrid(bar)
 		else
 			-- No anchor in DB and no previous anchor in code path; default: center on UIParent
 			bar:ClearAllPoints()
@@ -7630,7 +7788,9 @@ local function createPowerBar(type, anchor, sharedSlot)
 			a.x = cx
 			a.y = cy
 			ResourceBars.RequestStructuralLayoutRefresh(true)
+			ResourceBars.AlignHostToPixelGrid(bar)
 		end
+	end
 	end
 
 	-- Visuals and text
@@ -7972,6 +8132,7 @@ local function setPowerbars(opts)
 		local whirlwindBar = powerbar.WHIRLWIND
 		whirlwindTracker:SetActive(whirlwindBar and whirlwindBar._rbDesiredVisible == true)
 	end
+	if addon.DynamicAnchors and addon.DynamicAnchors.NotifyOwnerChanged then addon.DynamicAnchors:NotifyOwnerChanged("EnhanceQoLResourceBars", "RESOURCE_BARS_UPDATED") end
 	return needsPostReanchor
 end
 addon.Aura.functions.setPowerBars = setPowerbars
@@ -8771,9 +8932,19 @@ end
 -- Coalesce spec/trait refreshes to avoid duplicate work or timing races
 local function scheduleSpecRefresh()
 	if frameAnchor and frameAnchor._specRefreshScheduled then return end
+	if InCombatLockdown and InCombatLockdown() then
+		ResourceBars._pendingSpecRefresh = true
+		return
+	end
+	ResourceBars._pendingSpecRefresh = nil
 	if frameAnchor then frameAnchor._specRefreshScheduled = true end
 	After(0.2, function()
 		if frameAnchor then frameAnchor._specRefreshScheduled = false end
+		if InCombatLockdown and InCombatLockdown() then
+			ResourceBars._pendingSpecRefresh = true
+			return
+		end
+		ResourceBars._pendingSpecRefresh = nil
 		local previousMode = ResourceBars._runtimeSpecMode
 		ResourceBars.SyncRuntimeSpecContext()
 		local currentSpec = tonumber(addon.variables.unitSpec)
@@ -8872,6 +9043,12 @@ local function eventHandler(self, event, eventArg1, eventArg2)
 		ResourceBars.SyncRuntimeSpecContext()
 		scheduleSpecRefresh()
 		if scheduleRelativeFrameWidthSync then scheduleRelativeFrameWidthSync() end
+	elseif event == "PLAYER_LEVEL_CHANGED" then
+		if type(_G.IsPlayerInitialSpec) == "function" and _G.IsPlayerInitialSpec() then
+			local needsPostReanchor = setPowerbars() == true
+			if needsPostReanchor and ResourceBars.ReanchorAll then ResourceBars.ReanchorAll() end
+		end
+		return
 	elseif event == "PLAYER_DEAD" or event == "PLAYER_ALIVE" or event == "PLAYER_UNGHOST" then
 		ResourceBars.RefreshBarsAfterPlayerStateChange(event)
 		if After and event ~= "PLAYER_DEAD" then After(0.20, function()
@@ -8899,6 +9076,15 @@ local function eventHandler(self, event, eventArg1, eventArg2)
 		or event == "PLAYER_CAN_GLIDE_CHANGED"
 		or event == "PLAYER_IS_GLIDING_CHANGED"
 	then
+		if event == "PLAYER_REGEN_ENABLED" then
+			if ResourceBars._pendingSpecRefresh then
+				ResourceBars._pendingSpecRefresh = nil
+				ResourceBars._pendingReanchorAll = nil
+				scheduleSpecRefresh()
+			elseif ResourceBars._pendingReanchorAll then
+				ResourceBars.ReanchorAll()
+			end
+		end
 		ResourceBars.ApplyVisibilityPreference(event)
 		return
 	elseif
@@ -9042,6 +9228,7 @@ function ResourceBars.EnableResourceBars()
 		end
 	end
 	frameAnchor:RegisterEvent("PLAYER_ENTERING_WORLD")
+	frameAnchor:RegisterEvent("PLAYER_LEVEL_CHANGED")
 	frameAnchor:RegisterEvent("PLAYER_DEAD")
 	frameAnchor:RegisterEvent("PLAYER_ALIVE")
 	frameAnchor:RegisterEvent("PLAYER_UNGHOST")
@@ -9274,7 +9461,9 @@ function ResourceBars.DetachAnchorsFrom(disabledType, specIndex)
 
 	for token, cfg in pairs(configRoot) do
 		local pType = ResourceBars.ResolveConfigTokenToBarType(token, spec)
-		if pType and pType ~= disabledType and cfg.anchor and (cfg.anchor.relativeFrame == targetName or ResourceBars.RelativeFrameMatchesName(cfg.anchor.relativeFrame, targetActualName)) then
+		local dynamicSlot = ResourceBars.GetSharedSlotFrameName and ResourceBars.GetSharedSlotFrameName(token) and token or nil
+		local dynamicEnabled = dynamicSlot and ResourceBars.IsSharedSlotDynamicAnchorEnabled and ResourceBars.IsSharedSlotDynamicAnchorEnabled(dynamicSlot)
+		if not dynamicEnabled and pType and pType ~= disabledType and cfg.anchor and (cfg.anchor.relativeFrame == targetName or ResourceBars.RelativeFrameMatchesName(cfg.anchor.relativeFrame, targetActualName)) then
 			local depFrame = (pType == "HEALTH") and healthBar or powerbar[pType]
 			local upstream = _G[upstreamName]
 			if upstreamName ~= "UIParent" and upstream then
@@ -9307,7 +9496,10 @@ end
 function ResourceBars.SetHealthBarSize(w, h)
 	local width = max(RB.MIN_RESOURCE_BAR_WIDTH, w or RB.DEFAULT_HEALTH_WIDTH)
 	local height = h or RB.DEFAULT_HEALTH_HEIGHT
-	if healthBar then ResourceBars.Pixel.Size(healthBar, width, height) end
+	if healthBar then
+		ResourceBars.Pixel.Size(healthBar, width, height)
+		ResourceBars.AlignHostToPixelGrid(healthBar)
+	end
 	if ResourceBars and ResourceBars.SyncRelativeFrameWidths then ResourceBars.SyncRelativeFrameWidths() end
 end
 
@@ -9325,6 +9517,7 @@ function ResourceBars.SetPowerBarSize(w, h, pType)
 	if pType then
 		if powerbar[pType] then
 			ResourceBars.Pixel.Size(powerbar[pType], w, h)
+			ResourceBars.AlignHostToPixelGrid(powerbar[pType])
 			changed[getFrameName(pType)] = true
 			changed[ResourceBars.GetStoredFrameNameForBarType(pType, spec)] = true
 		end
@@ -9333,6 +9526,7 @@ function ResourceBars.SetPowerBarSize(w, h, pType)
 		local height = h or RB.DEFAULT_POWER_HEIGHT
 		for t, bar in pairs(powerbar) do
 			ResourceBars.Pixel.Size(bar, width, height)
+			ResourceBars.AlignHostToPixelGrid(bar)
 			changed[getFrameName(t)] = true
 			changed[ResourceBars.GetStoredFrameNameForBarType(t, spec)] = true
 		end
@@ -9347,12 +9541,13 @@ function ResourceBars.SetPowerBarSize(w, h, pType)
 				local anchor = cfg.anchor
 				if anchor and changed[anchor.relativeFrame] then
 					local frame = bType == "HEALTH" and healthBar or powerbar[bType]
-						if frame then
-							local rel = ResourceBars.ResolveRelativeFrameByName(anchor.relativeFrame)
-							-- Ensure we don't accumulate multiple points to stale relatives
-							frame:ClearAllPoints()
-							ResourceBars.Pixel.Point(frame, anchor.point or "CENTER", rel, anchor.relativePoint or anchor.point or "CENTER", anchor.x or 0, anchor.y or 0)
-						end
+					if frame then
+						local rel = ResourceBars.ResolveRelativeFrameByName(anchor.relativeFrame)
+						-- Ensure we don't accumulate multiple points to stale relatives
+						frame:ClearAllPoints()
+						ResourceBars.Pixel.Point(frame, anchor.point or "CENTER", rel, anchor.relativePoint or anchor.point or "CENTER", anchor.x or 0, anchor.y or 0)
+						ResourceBars.AlignHostToPixelGrid(frame)
+					end
 				end
 			end
 		end
@@ -9376,7 +9571,8 @@ function ResourceBars.ReanchorDependentsOf(frameName)
 				if frame then
 					local rel = ResourceBars.ResolveRelativeFrameByName(anch.relativeFrame)
 					frame:ClearAllPoints()
-						ResourceBars.Pixel.Point(frame, anch.point or "TOPLEFT", rel, anch.relativePoint or anch.point or "TOPLEFT", anch.x or 0, anch.y or 0)
+					ResourceBars.Pixel.Point(frame, anch.point or "TOPLEFT", rel, anch.relativePoint or anch.point or "TOPLEFT", anch.x or 0, anch.y or 0)
+					ResourceBars.AlignHostToPixelGrid(frame)
 				end
 			end
 		end
@@ -9408,6 +9604,8 @@ function ResourceBars.Refresh()
 	setPowerbars()
 	-- Re-apply anchors so option changes take effect immediately
 	if healthBar then
+		local dynamicApplied = ResourceBars.ApplySharedSlotDynamicAnchor and ResourceBars.ApplySharedSlotDynamicAnchor("HEALTH")
+		if not dynamicApplied then
 		local a = getAnchor("HEALTH", addon.variables.unitSpec)
 		if (a.relativeFrame or "UIParent") == "UIParent" then
 			a.point = a.point or "TOPLEFT"
@@ -9444,9 +9642,14 @@ function ResourceBars.Refresh()
 		if healthBar.absorbBar then ResourceBars.SyncAbsorbBarAppearance(healthBar, hCfg2, true) end
 		healthBar:ClearAllPoints()
 		ResourceBars.Pixel.Point(healthBar, a.point or "TOPLEFT", rel, a.relativePoint or a.point or "TOPLEFT", a.x or 0, a.y or 0)
+		ResourceBars.AlignHostToPixelGrid(healthBar)
+		end
 	end
 	for pType, bar in pairs(powerbar) do
 		if bar then
+			local cfg = ResourceBars.GetFrameRuntimeConfig(pType, bar)
+			local dynamicApplied = bar._rbSharedSlot and ResourceBars.ApplySharedSlotDynamicAnchor and ResourceBars.ApplySharedSlotDynamicAnchor(bar._rbSharedSlot)
+			if not dynamicApplied then
 			local a = getAnchor(pType, addon.variables.unitSpec)
 			if (a.relativeFrame or "UIParent") == "UIParent" then
 				a.point = a.point or "TOPLEFT"
@@ -9483,11 +9686,12 @@ function ResourceBars.Refresh()
 			end
 			bar:ClearAllPoints()
 			ResourceBars.Pixel.Point(bar, a.point or "TOPLEFT", rel, a.relativePoint or a.point or "TOPLEFT", a.x or 0, a.y or 0)
+			ResourceBars.AlignHostToPixelGrid(bar)
 			-- Update movability based on anchor target (only movable when relative to UIParent)
 			local isUI = (a.relativeFrame or "UIParent") == "UIParent"
-			local cfg = ResourceBars.GetFrameRuntimeConfig(pType, bar)
 			bar:SetMovable(isUI)
 			bar:EnableMouse(shouldEnableBarMouse(cfg))
+			end
 
 			local defaultStyle = (pType == "MANA" or pType == "STAGGER") and "PERCENT" or "CURMAX"
 			bar._style = (cfg and cfg.textStyle) or defaultStyle
@@ -9644,11 +9848,16 @@ end
 
 -- Re-anchor pass only: reapplies anchor points without rebuilding bars
 function ResourceBars.ReanchorAll()
+	if InCombatLockdown and InCombatLockdown() then
+		ResourceBars._pendingReanchorAll = true
+		return
+	end
 	if ResourceBars._reanchoring then return end
+	ResourceBars._pendingReanchorAll = nil
 	if ResourceBars.BeginRuntimeConfigBatch then ResourceBars.BeginRuntimeConfigBatch() end
 	ResourceBars._reanchoring = true
 	-- Health first
-	if healthBar then
+	if healthBar and not (ResourceBars.IsSharedSlotDynamicAnchorEnabled and ResourceBars.IsSharedSlotDynamicAnchorEnabled("HEALTH")) then
 		local a = getAnchor("HEALTH", addon.variables.unitSpec)
 		if (a.relativeFrame or "UIParent") == "UIParent" then
 			a.point = a.point or "TOPLEFT"
@@ -9677,13 +9886,25 @@ function ResourceBars.ReanchorAll()
 		end
 		healthBar:ClearAllPoints()
 		ResourceBars.Pixel.Point(healthBar, a.point or "TOPLEFT", rel, a.relativePoint or a.point or "TOPLEFT", a.x or 0, a.y or 0)
+		ResourceBars.AlignHostToPixelGrid(healthBar)
 	end
 
 	-- Then power bars: anchor in a safe order (parents first), break cycles if detected
 	local spec = addon.variables.unitSpec
 	local types = {}
+	local includedTypes = {}
 	for pType, bar in pairs(powerbar) do
-		if bar then tinsert(types, pType) end
+		if bar then
+			local slotMatches = true
+			if ResourceBars.SpecUsesSharedMode(spec) and bar._rbSharedSlot then slotMatches = ResourceBars.GetSharedSlotForResolvedBar(pType, spec) == bar._rbSharedSlot end
+			if slotMatches and bar._rbSharedSlot and ResourceBars.IsSharedSlotDynamicAnchorEnabled then
+				slotMatches = not ResourceBars.IsSharedSlotDynamicAnchorEnabled(bar._rbSharedSlot)
+			end
+			if slotMatches then
+				tinsert(types, pType)
+				includedTypes[pType] = true
+			end
+		end
 	end
 
 	-- Build a graph of bar -> bar it anchors to (only EQOL bars)
@@ -9693,7 +9914,7 @@ function ResourceBars.ReanchorAll()
 		local a = getAnchor(pType, spec)
 		anchors[pType] = a
 		local relType = frameNameToBarType(a and a.relativeFrame)
-		if relType and powerbar[relType] then
+		if relType and includedTypes[relType] and powerbar[relType] then
 			edges[pType] = relType
 		else
 			edges[pType] = nil
@@ -9772,6 +9993,7 @@ function ResourceBars.ReanchorAll()
 			end
 			bar:ClearAllPoints()
 			ResourceBars.Pixel.Point(bar, a.point or "TOPLEFT", rel, a.relativePoint or a.point or "TOPLEFT", a.x or 0, a.y or 0)
+			ResourceBars.AlignHostToPixelGrid(bar)
 			local isUI = (a.relativeFrame or "UIParent") == "UIParent"
 			bar:SetMovable(isUI)
 			local cfg = getBarSettings(pType)
@@ -9837,6 +10059,89 @@ ResourceBars.SpecNameByIndex = specNameByIndex
 ResourceBars.SaveGlobalProfile = saveGlobalProfile
 ResourceBars.ApplyGlobalProfile = applyGlobalProfile
 
+function ResourceBars:RegisterDynamicAnchorTargets()
+	local dynamicAnchors = addon.DynamicAnchors
+	if not (dynamicAnchors and dynamicAnchors.RegisterTarget) then return end
+	local function usesSharedMode()
+		return ResourceBars.SpecUsesSharedMode and ResourceBars.SpecUsesSharedMode(addon.variables and addon.variables.unitSpec) == true
+	end
+	local slotLabels = {
+		HEALTH = L["ResourceBarsHealth"] or HEALTH or "Health",
+		MAIN = L["ResourceBarsMain"] or "Main",
+		SECONDARY = L["ResourceBarsSecondary"] or "Secondary",
+		TERTIARY = L["ResourceBarsTertiary"] or "Tertiary",
+	}
+	for _, slot in ipairs({ "HEALTH", "MAIN", "SECONDARY", "TERTIARY" }) do
+		local targetSlot = slot
+		local targetId = ResourceBars.GetSharedSlotDynamicAnchorId(targetSlot)
+		dynamicAnchors:RegisterTarget({
+			id = targetId,
+			owner = "EnhanceQoLResourceBars",
+			consumerId = targetId,
+			label = slotLabels[targetSlot],
+			menuGroup = "RESOURCE_BARS",
+			menuGroupLabel = L["Resource Bars"],
+			menuGroupOrder = 200,
+			selectable = usesSharedMode,
+			resolve = function()
+				if not usesSharedMode() then return nil, { available = false, reason = "NOT_SHARED_MODE" } end
+				local resolvedType = targetSlot == "HEALTH" and "HEALTH" or (ResourceBars.GetResolvedBarTypeForSharedSlot and ResourceBars.GetResolvedBarTypeForSharedSlot(targetSlot))
+				if not resolvedType then return nil, { available = false, reason = "SLOT_UNASSIGNED" } end
+				local frame = ResourceBars.GetSharedSlotLiveFrame and ResourceBars.GetSharedSlotLiveFrame(targetSlot)
+				if not frame then return nil, { available = false, reason = "FRAME_NOT_CREATED" } end
+				if dynamicAnchors.EnsureSimpleTargetHooks then dynamicAnchors:EnsureSimpleTargetHooks(targetId, frame) end
+				if frame._rbDesiredVisible ~= true then return nil, { available = false, reason = "DESIRED_HIDDEN" } end
+				return frame, { available = true, sharedSlot = targetSlot, powerType = resolvedType }
+			end,
+		})
+		dynamicAnchors:RegisterConsumer({
+			id = targetId,
+			owner = "EnhanceQoLResourceBars",
+			label = slotLabels[targetSlot],
+			ensureRule = function() return dynamicAnchors:GetFrameAssignment(targetId, true) end,
+			getRule = function()
+				local assignment = dynamicAnchors:GetFrameAssignment(targetId, false)
+				if assignment then dynamicAnchors:EnsureAssignmentProfile(assignment, slotLabels[targetSlot]) end
+				return assignment
+			end,
+			apply = function()
+				if dynamicAnchors:IsFrameAssignmentEnabled(targetId) then ResourceBars.ApplySharedSlotDynamicAnchor(targetSlot) end
+			end,
+		})
+	end
+	for _, pType in ipairs(classPowerTypes or {}) do
+		local targetType = pType
+		dynamicAnchors:RegisterTarget({
+			id = "resourceBar:" .. string.lower(targetType),
+			owner = "EnhanceQoLResourceBars",
+			menuGroup = "RESOURCE_BARS",
+			menuGroupLabel = L["Resource Bars"],
+			menuGroupOrder = 200,
+			selectable = function() return not usesSharedMode() end,
+			getLabel = function()
+				return (ResourceBars.PowerLabels and ResourceBars.PowerLabels[targetType]) or _G["POWER_TYPE_" .. targetType] or _G[targetType] or targetType
+			end,
+			resolve = function()
+				if not (addon.functions and addon.functions.IsAddOnLoaded and addon.functions.IsAddOnLoaded("EnhanceQoLResourceBars")) and not (C_AddOns and C_AddOns.IsAddOnLoaded and C_AddOns.IsAddOnLoaded("EnhanceQoLResourceBars")) then
+					return nil, { available = false, reason = "OWNER_NOT_LOADED" }
+				end
+				if addon.db and addon.db.enableResourceFrame == false then return nil, { available = false, reason = "CONFIG_DISABLED" } end
+				if not ResourceBars.IsRuntimeBarTypeSupported(targetType, addon.variables and addon.variables.unitSpec) then return nil, { available = false, reason = "SPEC_INELIGIBLE" } end
+				if isAuraPowerType(targetType) and not ResourceBars.IsAuraPowerBarTypeAvailable(targetType) then return nil, { available = false, reason = "POWER_UNAVAILABLE" } end
+				local frame = ResourceBars.GetPowerBar(targetType)
+				if not frame then return nil, { available = false, reason = "FRAME_NOT_CREATED" } end
+				if frame._rbDesiredVisible ~= true then return nil, { available = false, reason = "DESIRED_HIDDEN" } end
+				return frame, {
+					available = true,
+					desiredVisible = true,
+					shown = frame.IsShown and frame:IsShown() or false,
+					powerType = targetType,
+				}
+			end,
+		})
+	end
+end
+
 
 addon.exportResourceProfile = function(profileName, scopeKey) return ResourceBars.ExportProfile(scopeKey, profileName) end
 addon.importResourceProfile = function(encoded, scopeKey) return ResourceBars.ImportProfile(encoded, scopeKey) end
@@ -9849,6 +10154,7 @@ function ResourceBars.LoadEnabledResourceBars()
 end
 
 function addon.Aura.functions.InitResourceBars()
+	ResourceBars:RegisterDynamicAnchorTargets()
 	if not addon.db["enableResourceFrame"] then return end
 	if IsLoggedIn and IsLoggedIn() then
 		ResourceBars.LoadEnabledResourceBars()

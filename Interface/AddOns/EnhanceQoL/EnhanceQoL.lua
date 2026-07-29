@@ -3342,7 +3342,8 @@ local function initActionBars()
 	addon.functions.InitDBValue("actionBarAnchorEnabled", false)
 	addon.functions.InitDBValue("actionBarFadeStrength", 1)
 	addon.functions.InitDBValue("actionBarFullRangeColoring", false)
-	addon.functions.InitDBValue("actionBarFullRangeColor", { r = 1, g = 0.1, b = 0.1 })
+	addon.functions.InitDBValue("actionBarFullRangeColor", { r = 1, g = 0.1, b = 0.1, a = 0.45 })
+	if type(addon.db.actionBarFullRangeColor) == "table" and addon.db.actionBarFullRangeColor.a == nil then addon.db.actionBarFullRangeColor.a = 0.45 end
 	addon.functions.InitDBValue("actionBarHideBorders", false)
 	addon.functions.InitDBValue("actionBarHideBordersAuto", false)
 	addon.functions.InitDBValue("actionBarBorderStyle", "DEFAULT")
@@ -3956,6 +3957,7 @@ local function initUnitFrame()
 	addon.functions.InitDBValue("unitFrameScaleEnabled", false)
 	addon.functions.InitDBValue("unitFrameScale", addon.variables.unitFrameScale)
 	addon.functions.InitDBValue("ufUseCustomClassColors", false)
+	addon.functions.InitDBValue("ufUseCustomPowerColors", false)
 	addon.functions.InitDBValue("ufClassColors", {})
 	addon.functions.InitDBValue("hiddenCastBars", addon.db["hiddenCastBars"] or {})
 	addon.functions.InitDBValue("cooldownViewerVisibility", addon.db["cooldownViewerVisibility"] or {})
@@ -5890,6 +5892,7 @@ local function initUI()
 
 		container:SetSize(finalWidth, finalHeight)
 		lootSpec:SetSize(finalWidth + 20, finalHeight + 20)
+		lootSpec:SetClampedToScreen(true)
 
 		local iconData = {
 			type = "launcher",
@@ -6432,6 +6435,7 @@ local function setAllHooks()
 	local LSM = LibStub("LibSharedMedia-3.0")
 	local lsmSoundDirty = false
 	local lsmFontDirty = false
+	local lsmStatusbarDirty = false
 	local function refreshProgressBarForMedia(bar, mediaType, mediaKey)
 		if not (bar and bar.IsEnabled and bar:IsEnabled()) then return end
 		if not bar.frame then return end
@@ -6488,6 +6492,12 @@ local function setAllHooks()
 		local tracker = addon.ActionTracker
 		if not (tracker and tracker.OnMediaRegistered) then return end
 		tracker:OnMediaRegistered(mediaType, mediaKey)
+	end
+
+	local function refreshContainerActionsForMedia(mediaType, mediaKey)
+		local containerActions = addon.ContainerActions
+		if not (containerActions and containerActions.OnMediaRegistered) then return end
+		containerActions:OnMediaRegistered(mediaType, mediaKey)
 	end
 
 	local function refreshBRTrackerForMedia(mediaType)
@@ -6554,6 +6564,7 @@ local function setAllHooks()
 		if addon.functions and addon.functions.refreshItemLevelDisplays then addon.functions.refreshItemLevelDisplays() end
 		if addon.functions and addon.functions.refreshCharacterFrameElementFonts then addon.functions.refreshCharacterFrameElementFonts() end
 		if addon.functions and addon.functions.RefreshDefaultNameplateTextStyle then addon.functions.RefreshDefaultNameplateTextStyle() end
+		if addon.functions and addon.functions.RefreshQuestTrackerTextStyle then addon.functions.RefreshQuestTrackerTextStyle(true) end
 		if addon.CombatText then
 			if addon.CombatText.ApplyStyle then addon.CombatText:ApplyStyle() end
 			if addon.CombatText.UpdateFrameSize then addon.CombatText:UpdateFrameSize() end
@@ -6620,6 +6631,33 @@ local function setAllHooks()
 		end
 	end
 
+	local function refreshResourceBarsForRegisteredStatusbars()
+		lsmStatusbarDirty = false
+		local resourceBars = addon.Aura and addon.Aura.ResourceBars
+		if resourceBars then
+			if resourceBars.MarkTextureListDirty then resourceBars.MarkTextureListDirty() end
+			if resourceBars.RefreshTextureDropdown then resourceBars.RefreshTextureDropdown() end
+			if resourceBars.Refresh then resourceBars.Refresh() end
+			local internal = addon.EditModeLib and addon.EditModeLib.internal
+			if internal and internal.RequestRefreshSettings then
+				internal:RequestRefreshSettings()
+			elseif internal and internal.RefreshSettings then
+				internal:RefreshSettings()
+			end
+		end
+	end
+
+	local function queueResourceBarStatusbarRefresh()
+		if lsmStatusbarDirty then return end
+		lsmStatusbarDirty = true
+		local trigger = C_Timer and C_Timer.After
+		if trigger then
+			trigger(0.2, refreshResourceBarsForRegisteredStatusbars)
+		else
+			refreshResourceBarsForRegisteredStatusbars()
+		end
+	end
+
 	LSM:RegisterCallback("LibSharedMedia_Registered", function(event, mediaType, ...)
 		local mediaKey = ...
 		if addon.functions and addon.functions.InvalidateLSMMediaCache and mediaType then addon.functions.InvalidateLSMMediaCache(mediaType) end
@@ -6633,10 +6671,9 @@ local function setAllHooks()
 			end
 		elseif mediaType == "statusbar" then
 			-- When new statusbar textures are registered, refresh any UI using them
-			if addon.Aura and addon.Aura.ResourceBars and addon.Aura.ResourceBars.MarkTextureListDirty then addon.Aura.ResourceBars.MarkTextureListDirty() end
+			queueResourceBarStatusbarRefresh()
 			if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.RefreshPotionTextureDropdown then addon.MythicPlus.functions.RefreshPotionTextureDropdown() end
 			if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.applyPotionBarTexture then addon.MythicPlus.functions.applyPotionBarTexture() end
-			if addon.Aura and addon.Aura.ResourceBars and addon.Aura.ResourceBars.RefreshTextureDropdown then addon.Aura.ResourceBars.RefreshTextureDropdown() end
 			refreshExperienceBarForMedia(mediaType, mediaKey)
 			refreshReputationBarForMedia(mediaType, mediaKey)
 			refreshHonorBarForMedia(mediaType, mediaKey)
@@ -6650,6 +6687,7 @@ local function setAllHooks()
 			refreshTotalAbsorbTrackerForMedia(mediaType, mediaKey)
 			refreshGCDBarForMedia(mediaType, mediaKey)
 			refreshActionTrackerForMedia(mediaType, mediaKey)
+			refreshContainerActionsForMedia(mediaType, mediaKey)
 			refreshBRTrackerForMedia(mediaType)
 			refreshClassBuffReminderForMedia(mediaType, mediaKey)
 			refreshDefaultAuraContainersForMedia(mediaType, mediaKey)
@@ -6732,6 +6770,41 @@ function addon.functions.selectGossipOption(optionInfo)
 		return true
 	end
 	return false
+end
+
+function addon.functions.isQuestAutomationIgnoredNPC()
+	local ignored = addon.db and addon.db["ignoredQuestNPC"]
+	local npcId = addon.functions.getIDFromGUID(UnitGUID("npc"))
+	return npcId and type(ignored) == "table" and ignored[npcId] ~= nil
+end
+
+function addon.functions.shouldSkipAutoAcceptQuest(questID)
+	if not questID or not addon.db then return true end
+	if addon.db["ignoreDailyQuests"] and addon.functions.IsQuestRepeatableType(questID) then return true end
+	if addon.db["ignoreTrivialQuests"] and C_QuestLog.IsQuestTrivial(questID) then return true end
+	if addon.db["ignoreWarbandCompleted"] and C_QuestLog.IsQuestFlaggedCompletedOnAccount(questID) then return true end
+	return false
+end
+
+function addon.functions.autoAcceptQuestDataRequired()
+	return addon.db and (addon.db["ignoreDailyQuests"] or addon.db["ignoreTrivialQuests"] or addon.db["ignoreWarbandCompleted"])
+end
+
+function addon.functions.isQuestDataReady(questID)
+	if not questID then return false end
+	local questLevel = C_QuestLog.GetQuestDifficultyLevel(questID)
+	return questLevel ~= nil and questLevel ~= 0
+end
+
+function addon.functions.tryAutoAcceptQuest(questID)
+	if not questID or not addon.functions.shouldAutoChooseQuest() then return false end
+	if GetQuestID() ~= questID then return false end
+	if addon.functions.isQuestAutomationIgnoredNPC() then return false end
+	if addon.functions.shouldSkipAutoAcceptQuest(questID) then return false end
+
+	AcceptQuest()
+	if QuestFrame:IsShown() then QuestFrame:Hide() end
+	return true
 end
 
 function loadMain()
@@ -7129,22 +7202,23 @@ local eventHandlers = {
 	end,
 	["GOSSIP_SHOW"] = function()
 		if addon.functions.shouldAutoChooseQuest() then
-			local ignored = addon.db and addon.db["ignoredQuestNPC"]
-			local npcId = addon.functions.getIDFromGUID(UnitGUID("npc"))
-			if npcId and type(ignored) == "table" and ignored[npcId] then return end
+			if addon.functions.isQuestAutomationIgnoredNPC() then return end
 
 			local options = C_GossipInfo.GetOptions()
-
 			local aQuests = C_GossipInfo.GetAvailableQuests()
+			local activeQuests = C_GossipInfo.GetActiveQuests()
 
-			if C_GossipInfo.GetNumActiveQuests() > 0 then
-				for i, quest in pairs(C_GossipInfo.GetActiveQuests()) do
-					if quest.isComplete then C_GossipInfo.SelectActiveQuest(quest.questID) end
+			if activeQuests then
+				for _, quest in ipairs(activeQuests) do
+					if quest.isComplete then
+						C_GossipInfo.SelectActiveQuest(quest.questID)
+						return
+					end
 				end
 			end
 
 			if #aQuests > 0 then
-				for i, quest in pairs(aQuests) do
+				for _, quest in ipairs(aQuests) do
 					if addon.db["ignoreTrivialQuests"] and quest.isTrivial then
 					-- ignore trivial
 					elseif addon.db["ignoreDailyQuests"] and (quest.frequency > 0) then
@@ -7153,25 +7227,38 @@ local eventHandlers = {
 						-- ignore warband completed
 					else
 						C_GossipInfo.SelectAvailableQuest(quest.questID)
+						return
 					end
 				end
-			else
-				if options and #options > 0 then
-					if #options > 1 then
-						for _, v in pairs(options) do
-							if v.gossipOptionID and addon.db["autogossipID"][v.gossipOptionID] then addon.functions.selectGossipOption(v) end
-							if v.flags == 1 and (v.orderIndex or v.gossipOptionID) then
-								addon.functions.selectGossipOption(v)
-								return
-							end
-						end
-					elseif #options == 1 then
-						local onlyOption = options[1]
-						local clickKey = onlyOption and (onlyOption.gossipOptionID or onlyOption.orderIndex)
-						if onlyOption and clickKey and not addon.variables.gossipClicked[clickKey] then
-							addon.variables.gossipClicked[clickKey] = true
-							addon.functions.selectGossipOption(onlyOption)
-						end
+			end
+
+			if options and #options > 0 then
+				for _, optionInfo in ipairs(options) do
+					if optionInfo.gossipOptionID and addon.db["autogossipID"][optionInfo.gossipOptionID] then
+						addon.functions.selectGossipOption(optionInfo)
+						return
+					end
+				end
+
+				local questOption
+				local questOptionCount = 0
+				for _, optionInfo in ipairs(options) do
+					if _G.FlagsUtil.IsSet(optionInfo.flags, Enum.GossipOptionRecFlags.QuestLabelPrepend) then
+						questOption = optionInfo
+						questOptionCount = questOptionCount + 1
+					end
+				end
+				if questOptionCount == 1 then
+					addon.functions.selectGossipOption(questOption)
+					return
+				end
+
+				if #options == 1 then
+					local onlyOption = options[1]
+					local clickKey = onlyOption and (onlyOption.gossipOptionID or onlyOption.orderIndex)
+					if onlyOption and clickKey and not addon.variables.gossipClicked[clickKey] then
+						addon.variables.gossipClicked[clickKey] = true
+						addon.functions.selectGossipOption(onlyOption)
 					end
 				end
 			end
@@ -7405,46 +7492,43 @@ local eventHandlers = {
 			end
 		end
 	end,
-	["QUEST_DATA_LOAD_RESULT"] = function(arg1)
-		if arg1 and addon.variables.acceptQuestID[arg1] and addon.db["autoChooseQuest"] then
-			addon.variables.acceptQuestID[arg1] = nil
-			local ignored = addon.db and addon.db["ignoredQuestNPC"]
-			local npcId = addon.functions.getIDFromGUID(UnitGUID("npc"))
-			if npcId and type(ignored) == "table" and ignored[npcId] then return end
-			if addon.db["ignoreDailyQuests"] and addon.functions.IsQuestRepeatableType(arg1) then return end
-			if addon.db["ignoreTrivialQuests"] and C_QuestLog.IsQuestTrivial(arg1) then return end
-			if addon.db["ignoreWarbandCompleted"] and C_QuestLog.IsQuestFlaggedCompletedOnAccount(arg1) then return end
-
-			AcceptQuest()
-			if QuestFrame:IsShown() then QuestFrame:Hide() end -- Sometimes the frame is still stuck - hide it forcefully than
-		end
+	["QUEST_DATA_LOAD_RESULT"] = function(questID, success)
+		if not questID or not addon.variables.acceptQuestID[questID] then return end
+		addon.variables.acceptQuestID[questID] = nil
+		if success == false then return end
+		addon.functions.tryAutoAcceptQuest(questID)
 	end,
 	["QUEST_DETAIL"] = function()
 		if addon.functions.shouldAutoChooseQuest() then
-			local ignored = addon.db and addon.db["ignoredQuestNPC"]
-			local npcId = addon.functions.getIDFromGUID(UnitGUID("npc"))
-			if npcId and type(ignored) == "table" and ignored[npcId] then return end
+			if addon.functions.isQuestAutomationIgnoredNPC() then return end
 
 			local id = GetQuestID()
-			if id then
-				addon.variables.acceptQuestID[id] = true
-				C_QuestLog.RequestLoadQuestByID(id)
+			if id and id > 0 then
+				if addon.functions.autoAcceptQuestDataRequired() and not addon.functions.isQuestDataReady(id) then
+					if not addon.variables.acceptQuestID[id] then
+						addon.variables.acceptQuestID[id] = true
+						C_QuestLog.RequestLoadQuestByID(id)
+					end
+					return
+				end
+				addon.functions.tryAutoAcceptQuest(id)
 			end
 		end
 	end,
 	["QUEST_GREETING"] = function()
 		if addon.functions.shouldAutoChooseQuest() then
-			local ignored = addon.db and addon.db["ignoredQuestNPC"]
-			local npcId = addon.functions.getIDFromGUID(UnitGUID("npc"))
-			if npcId and type(ignored) == "table" and ignored[npcId] then return end
-			for i = 1, GetNumAvailableQuests() do
-				if addon.db["ignoreTrivialQuests"] and IsAvailableQuestTrivial(i) then
-				else
-					SelectAvailableQuest(i)
+			if addon.functions.isQuestAutomationIgnoredNPC() then return end
+			for i = 1, GetNumActiveQuests() do
+				if select(2, GetActiveTitle(i)) then
+					SelectActiveQuest(i)
+					return
 				end
 			end
-			for i = 1, GetNumActiveQuests() do
-				if select(2, GetActiveTitle(i)) then SelectActiveQuest(i) end
+			for i = 1, GetNumAvailableQuests() do
+				if not (addon.db["ignoreTrivialQuests"] and IsAvailableQuestTrivial(i)) then
+					SelectAvailableQuest(i)
+					return
+				end
 			end
 		end
 	end,

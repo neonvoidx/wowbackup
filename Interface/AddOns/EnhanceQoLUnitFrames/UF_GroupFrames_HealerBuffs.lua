@@ -815,7 +815,8 @@ function HB.CreateDefaultGroup(id)
 		inset = 0,
 		borderSize = 2,
 		borderStrata = nil,
-		borderFrameLevelOffset = 4,
+		borderFrameLevelModel = 2,
+		borderFrameLevelOffset = 16,
 		indicatorBorderEnabled = false,
 		indicatorBorderTexture = "DEFAULT",
 		indicatorBorderSize = 1,
@@ -886,7 +887,16 @@ local function normalizeGroup(group, id)
 	group.inset = roundInt(clamp(group.inset, 0, 60, 0))
 	group.borderSize = roundInt(clamp(group.borderSize, 1, 24, 2))
 	group.borderStrata = normalizeFrameStrataToken(group.borderStrata)
-	group.borderFrameLevelOffset = roundInt(clamp(group.borderFrameLevelOffset, -20, 1000, 4))
+	local storedBorderFrameLevelModel = rawget(group, "borderFrameLevelModel")
+	local storedBorderFrameLevelOffset = tonumber(rawget(group, "borderFrameLevelOffset"))
+	if storedBorderFrameLevelModel == 2 then
+		group.borderFrameLevelOffset = roundInt(clamp(storedBorderFrameLevelOffset, -20, 1000, 16))
+	elseif storedBorderFrameLevelOffset ~= nil then
+		group.borderFrameLevelOffset = roundInt(clamp(storedBorderFrameLevelOffset, -20, 1000, 4) + 12)
+	else
+		group.borderFrameLevelOffset = 16
+	end
+	group.borderFrameLevelModel = 2
 	local indicatorBorderEnabled = group.indicatorBorderEnabled
 	if indicatorBorderEnabled == nil then indicatorBorderEnabled = group.iconBorderEnabled end
 	group.indicatorBorderEnabled = indicatorBorderEnabled == true
@@ -1560,13 +1570,13 @@ local function ensureVisualLayers(btn, st, forceLayout)
 	st.healerBuffBar:Hide()
 
 	if not st.healerBuffBorder then
-		st.healerBuffBorder = CreateFrame("Frame", nil, root, "BackdropTemplate")
+		st.healerBuffBorder = CreateFrame("Frame", nil, parent, "BackdropTemplate")
 		st.healerBuffBorder:EnableMouse(false)
 		st.healerBuffBorder:Hide()
 	end
-	setFrameParentCached(st.healerBuffBorder, root)
-	if st.healerBuffBorder.SetFrameStrata and root.GetFrameStrata then setFrameStrataCached(st.healerBuffBorder, root:GetFrameStrata()) end
-	if st.healerBuffBorder.SetFrameLevel and root.GetFrameLevel then setFrameLevelCached(st.healerBuffBorder, (root:GetFrameLevel() or 0) + 4) end
+	setFrameParentCached(st.healerBuffBorder, parent)
+	if st.healerBuffBorder.SetFrameStrata and parent.GetFrameStrata then setFrameStrataCached(st.healerBuffBorder, parent:GetFrameStrata()) end
+	if st.healerBuffBorder.SetFrameLevel and parent.GetFrameLevel then setFrameLevelCached(st.healerBuffBorder, (parent:GetFrameLevel() or 0) + 16) end
 
 	if layoutChanged then st._hbHealerBuffLayoutRevision = (st._hbHealerBuffLayoutRevision or 0) + 1 end
 
@@ -3116,13 +3126,14 @@ local function renderBorder(st, group, colorRule, colorAura)
 		return
 	end
 	local root = st.healerBuffRoot
-	if root then
+	local layerBase = st.barGroup or (root and root.GetParent and root:GetParent()) or root
+	if root and layerBase then
 		local targetStrata = normalizeFrameStrataToken(group.borderStrata)
-		if not targetStrata and root.GetFrameStrata then targetStrata = root:GetFrameStrata() end
+		if not targetStrata and layerBase.GetFrameStrata then targetStrata = layerBase:GetFrameStrata() end
 		if targetStrata then setFrameStrataCached(border, targetStrata) end
-		if root.GetFrameLevel then
-			local levelOffset = roundInt(clamp(group.borderFrameLevelOffset, -20, 1000, 4))
-			setFrameLevelCached(border, (root:GetFrameLevel() or 0) + levelOffset)
+		if layerBase.GetFrameLevel then
+			local levelOffset = roundInt(clamp(group.borderFrameLevelOffset, -20, 1000, 16))
+			setFrameLevelCached(border, (layerBase:GetFrameLevel() or 0) + levelOffset)
 		end
 	end
 	local inset = group.inset or 0

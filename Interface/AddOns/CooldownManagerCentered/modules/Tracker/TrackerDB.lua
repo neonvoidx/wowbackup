@@ -18,6 +18,20 @@ local function NormalizeCustomActiveDuration(value)
     return numeric
 end
 
+local function NormalizeAuraSpellID(value)
+    local numeric = tonumber(value)
+    if not numeric or numeric < 0 or numeric ~= math.floor(numeric) then
+        return nil
+    end
+    return numeric
+end
+
+local function InvalidateItemCastCache(kind)
+    if kind == "item" and ns.TrackerItemVisuals and ns.TrackerItemVisuals.InvalidateItemCastCache then
+        ns.TrackerItemVisuals:InvalidateItemCastCache()
+    end
+end
+
 TrackerDB.DefaultItems = {
     5512, -- Healthstone
     224464, -- Demonic Healthstone
@@ -203,11 +217,13 @@ function TrackerDB.SetItemState(itemID, state)
     db.itemSettings = db.itemSettings or {}
     if state == nil then
         db.itemSettings[itemID] = nil
+        InvalidateItemCastCache("item")
         return
     end
 
     local settings = TrackerDB.EnsureItemSettings(itemID)
     settings.state = state
+    InvalidateItemCastCache("item")
 end
 
 function TrackerDB.SetSpellItemState(spellID, state)
@@ -232,11 +248,13 @@ function TrackerDB.SetWildcardSlotState(slotID, state)
     db.wildcardSlotSettings = db.wildcardSlotSettings or {}
     if state == nil then
         db.wildcardSlotSettings[slotID] = nil
+        InvalidateItemCastCache("item")
         return
     end
 
     local settings = TrackerDB.EnsureWildcardSlotSettings(slotID)
     settings.state = state
+    InvalidateItemCastCache("item")
 end
 
 function TrackerDB.GetShowingUnusable()
@@ -247,8 +265,8 @@ end
 function TrackerDB.ToggleShowUnusable()
     local db = TrackerDB.GetDB()
     db.showUnusable = not TrackerDB.GetShowingUnusable()
-    if ns.TrackerAssignmentPanel and ns.TrackerAssignmentPanel.RefreshMiscPanel then
-        ns.TrackerAssignmentPanel:RefreshMiscPanel()
+    if ns.TrackerAssignmentPanel and ns.TrackerAssignmentPanel.RefreshTrackerPanel then
+        ns.TrackerAssignmentPanel:RefreshTrackerPanel()
     end
 end
 
@@ -268,8 +286,8 @@ function TrackerDB.ToggleShowPassiveTrinkets()
     if ns.TrackerItemViewer and ns.TrackerItemViewer.RefreshItemViewerFrames then
         ns.TrackerItemViewer:RefreshItemViewerFrames()
     end
-    if ns.TrackerAssignmentPanel and ns.TrackerAssignmentPanel.RefreshMiscPanel then
-        ns.TrackerAssignmentPanel:RefreshMiscPanel()
+    if ns.TrackerAssignmentPanel and ns.TrackerAssignmentPanel.RefreshTrackerPanel then
+        ns.TrackerAssignmentPanel:RefreshTrackerPanel()
     end
 end
 
@@ -314,12 +332,14 @@ function TrackerDB.SetCustomActiveDuration(kind, id, value)
         settings.customActiveDuration = normalized
     end
 
+    InvalidateItemCastCache(kind)
+
     return true
 end
 
-function TrackerDB.GetUseRealAura(kind, id)
+function TrackerDB.GetAuraSpellID(kind, id)
     if not IsSupportedCustomActiveKind(kind) then
-        return false
+        return nil
     end
 
     local settings
@@ -328,11 +348,17 @@ function TrackerDB.GetUseRealAura(kind, id)
     elseif kind == "item" then
         settings = TrackerDB.GetItemSettings(id)
     end
-    return settings and settings.useRealAura == true or false
+    local auraSpellID = settings and NormalizeAuraSpellID(settings.auraSpellID)
+    return auraSpellID and auraSpellID > 0 and auraSpellID or nil
 end
 
-function TrackerDB.SetUseRealAura(kind, id, value)
+function TrackerDB.SetAuraSpellID(kind, id, value)
     if not IsSupportedCustomActiveKind(kind) then
+        return false
+    end
+
+    local normalized = NormalizeAuraSpellID(value)
+    if normalized == nil then
         return false
     end
 
@@ -346,7 +372,10 @@ function TrackerDB.SetUseRealAura(kind, id, value)
         return false
     end
 
-    settings.useRealAura = value and true or nil
+    settings.auraSpellID = normalized > 0 and normalized or nil
+    -- Removed prototype flag from pre-AuraContainer builds.
+    settings.useRealAura = nil
+    InvalidateItemCastCache(kind)
     return true
 end
 
@@ -368,7 +397,7 @@ local function EnsureEntrySettings(kind, id)
     return TrackerDB.EnsureWildcardSlotSettings(id)
 end
 
--- Per-entry glow flags: "glowWhenReady", "glowOnFullCharges".
+-- Per-entry glow flags: ready, full charges, aura active, and assisted suggestion.
 function TrackerDB.GetGlowFlag(kind, id, field)
     local settings = GetEntrySettings(kind, id)
     return settings and settings[field] == true or false
@@ -387,6 +416,29 @@ end
 
 function TrackerDB.ToggleGlowFlag(kind, id, field)
     TrackerDB.SetGlowFlag(kind, id, field, not TrackerDB.GetGlowFlag(kind, id, field))
+end
+
+function TrackerDB.GetEntryColor(kind, id, field)
+    local settings = GetEntrySettings(kind, id)
+    local color = settings and settings[field]
+    if type(color) == "table" and color[1] ~= nil and color[2] ~= nil and color[3] ~= nil then
+        return color
+    end
+    return nil
+end
+
+function TrackerDB.SetEntryColor(kind, id, field, r, g, b)
+    if r == nil then
+        local settings = GetEntrySettings(kind, id)
+        if settings then
+            settings[field] = nil
+        end
+        return
+    end
+    local settings = EnsureEntrySettings(kind, id)
+    if settings then
+        settings[field] = { r, g, b }
+    end
 end
 
 function TrackerDB.GetAlwaysShow(kind, id)
@@ -414,4 +466,69 @@ function TrackerDB.SetAlwaysShow(kind, id, value)
         return
     end
     settings.alwaysShow = value == true or nil
+end
+
+-- Blizzard proc glows are enabled by default for every tracked spell. Persist only
+-- the opt-out so existing profiles gain the feature without a migration.
+function TrackerDB.GetProcGlowEnabled(spellID)
+    local settings = TrackerDB.GetSpellItemSettings(spellID)
+    return not settings or settings.procGlow ~= false
+end
+
+function TrackerDB.SetProcGlowEnabled(spellID, value)
+    local settings = TrackerDB.EnsureSpellItemSettings(spellID)
+    if settings then
+        if value == false then
+            settings.procGlow = false
+        else
+            settings.procGlow = nil
+        end
+    end
+end
+
+function TrackerDB.IsHiddenForSpec(kind, id, specID)
+    if not specID then
+        return false
+    end
+    local settings = GetEntrySettings(kind, id)
+    return settings and type(settings.hiddenForSpecs) == "table" and settings.hiddenForSpecs[specID] == true or false
+end
+
+function TrackerDB.SetHiddenForSpec(kind, id, specID, value)
+    if not specID then
+        return
+    end
+    local settings = EnsureEntrySettings(kind, id)
+    if not settings then
+        return
+    end
+    if value then
+        settings.hiddenForSpecs = settings.hiddenForSpecs or {}
+        settings.hiddenForSpecs[specID] = true
+    elseif type(settings.hiddenForSpecs) == "table" then
+        settings.hiddenForSpecs[specID] = nil
+        if not next(settings.hiddenForSpecs) then
+            settings.hiddenForSpecs = nil
+        end
+    end
+end
+
+function TrackerDB.ClearHiddenForSpecs(kind, id)
+    local settings = GetEntrySettings(kind, id)
+    if settings then
+        settings.hiddenForSpecs = nil
+    end
+end
+
+function TrackerDB.GetCurrentSpecID()
+    local specIndex = C_SpecializationInfo.GetSpecialization()
+    if not specIndex then
+        return nil
+    end
+    local specID = C_SpecializationInfo.GetSpecializationInfo(specIndex)
+    return specID and specID > 0 and specID or nil
+end
+
+function TrackerDB.IsHiddenForCurrentSpec(kind, id)
+    return TrackerDB.IsHiddenForSpec(kind, id, TrackerDB.GetCurrentSpecID())
 end

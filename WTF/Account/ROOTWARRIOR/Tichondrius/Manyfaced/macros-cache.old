@@ -46,7 +46,7 @@ END
 VER 3 0100000000000049 " " "134400"
 #showtooltip
 #FrameSort Frame2
-/cast [@none, exists, help, nodead][@mouseover,exists,noharm,nodead][] Tricks of the Trade
+/cast [@player, exists, help, nodead][@mouseover,exists,noharm,nodead][] Tricks of the Trade
 END
 VER 3 0100000000000043 " " "134400"
 #showtooltip Shadowstep
@@ -91,6 +91,10 @@ VER 3 010000000000001C "Poisons" "136242"
 /use [nostealth] Goblin Weather Machine - Prototype 01-B
 /castsequence  reset=2 Atrophic Poison, Instant Poison
 END
+VER 3 0100000000000045 "œ" "134400"
+#showtooltip Kidney Shot
+/cast [target=focus] Kidney Shot
+END
 VER 3 010000000000004A "œ" "134400"
 #showtooltip Cheap Shot
 /cast [@focus,exists,harm,nodead] Cheap shot
@@ -101,8 +105,4 @@ VER 3 010000000000002C "œ" "134400"
 /cast shadow blades
 /use 14
 /use saltwater potion
-END
-VER 3 0100000000000045 "œ" "134400"
-#showtooltip Kidney Shot
-/cast [target=focus] Kidney Shot
 END

@@ -75,10 +75,16 @@ function Runtime:ShowAll()
 end
 
 EventRegistry:RegisterCallback("CooldownViewerSettings.OnDataChanged", function()
+    if ns.BuffData then
+        ns.BuffData.InvalidateScan()
+    end
     if not Runtime:IsAllReady() then
         return
     end
     C_Timer.After(0, function()
+        if ns.BuffData then
+            ns.BuffData.ScanTrackedBuffs(true)
+        end
         if ns.StyledIcons then
             ns.StyledIcons:RefreshAll()
         end
@@ -93,17 +99,15 @@ EventRegistry:RegisterCallback("CooldownViewerSettings.OnDataChanged", function(
         end
     end)
 end)
-EventRegistry:RegisterCallback("CooldownViewerSettings.OnShow", function(arg1, settingsFrame)
+EventRegistry:RegisterCallback("CooldownViewerSettings.OnShow", function(arg1)
     Runtime.hasSettingsOpened = true
     UpdateRuntime()
     if ns.TrackerAssignmentPanel then
-        ns.TrackerAssignmentPanel:EnsureMiscSettingsTab(settingsFrame)
-        ns.TrackerAssignmentPanel:RefreshMiscPanel(settingsFrame)
+        ns.TrackerAssignmentPanel:EnsureTrackerPanel()
     end
     -- After the tracker tab so the Buffs tab can anchor directly beneath it.
     if ns.BuffAssignmentPanel then
-        ns.BuffAssignmentPanel:EnsureSettingsTab(settingsFrame)
-        ns.BuffAssignmentPanel:RefreshPanel(settingsFrame)
+        ns.BuffAssignmentPanel:EnsureSettingsTab()
     end
     if not Runtime:IsAllReady() then
         return
@@ -283,6 +287,31 @@ EventHandler.events["PLAYER_REGEN_DISABLED"] = function(self, event, ...)
     if ns.CooldownManager then
         ns.CooldownManager.ForceRefreshAll()
     end
+    if ns.CooldownStyle then
+        ns.CooldownStyle.HideSettingsItemIndicators()
+    end
+    C_Timer.After(0.1, function()
+        if InCombatLockdown() and ns.SettingsTabs then
+            ns.SettingsTabs:SetTabsShown(false)
+            ns.SettingsTabs:DeactivateAll()
+        end
+    end)
+end
+
+EventHandler.events["PLAYER_REGEN_ENABLED"] = function(self, event, ...)
+    if ns.CooldownStyle then
+        ns.CooldownStyle.RefreshSettingsItemIndicators()
+    end
+    C_Timer.After(0.1, function()
+        if
+            not InCombatLockdown()
+            and CooldownViewerSettings
+            and CooldownViewerSettings:IsShown()
+            and ns.SettingsTabs
+        then
+            ns.SettingsTabs:SetTabsShown(true)
+        end
+    end)
 end
 
 EventHandler.events["SPELL_UPDATE_COOLDOWN"] = function(self, event, spellId)
@@ -294,15 +323,16 @@ EventHandler.events["SPELL_UPDATE_COOLDOWN"] = function(self, event, spellId)
         ns.CooldownManager.UpdateUtilityDimming()
     end
 end
--- C_Timer.NewTicker(1, function()
---     if not Runtime:IsAllReady() then
---         return
---     end
 
---     if ns.CooldownManager then
---         ns.CooldownManager.UpdateUtilityDimming()
---     end
--- end)
+EventHandler.events["SPELL_UPDATE_CHARGES"] = function(self, event, spellId)
+    if not Runtime:IsAllReady() then
+        return
+    end
+
+    if ns.CooldownManager then
+        ns.CooldownManager.UpdateUtilityDimming()
+    end
+end
 
 EventHandler.events["CLIENT_SCENE_OPENED"] = function(self, event, ...)
     local sceneType = ...

@@ -2,17 +2,24 @@
 ## Title: ArenaDR Nameplates
 ## Notes: Arena DR tracker for nameplates with timers and test mode (Midnight 12.0.0+)
 ## Author: Anahkas
-## Version: 1.4.2
+## Version: 1.4.7
 ## Category: PvP
 ## SavedVariables: ArenaDRNameplatesDB
 ## IconTexture: Interface\Icons\Ability_Rogue_KidneyShot
 ## X-Category: PvP
+## X-Embeds: LibSharedMedia-3.0
 
+Libs\LibStub\LibStub.lua
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
+Libs\LibSharedMedia-3.0\LibSharedMedia-3.0.lua
+Performance.lua
 Adapters\Registry.lua
 Adapters\Plater.lua
 Adapters\Platynator.lua
 Adapters\ThreatPlates.lua
 Adapters\ElvUI.lua
+Adapters\EllesmereUI.lua
+Adapters\BetterBlizzPlates.lua
 Adapters\Blizzard.lua
 ArenaNameplateHelper.lua
 Shared.lua

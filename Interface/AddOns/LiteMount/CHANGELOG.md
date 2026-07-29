@@ -1,7 +1,9 @@
 # LiteMount
 
-## [12.0.7-3](https://github.com/xod-wow/LiteMount/tree/12.0.7-3) (2026-07-03)
-[Full Changelog](https://github.com/xod-wow/LiteMount/compare/12.0.7-2...12.0.7-3) [Previous Releases](https://github.com/xod-wow/LiteMount/releases)
+## [12.0.7-4](https://github.com/xod-wow/LiteMount/tree/12.0.7-4) (2026-07-23)
+[Full Changelog](https://github.com/xod-wow/LiteMount/compare/12.0.7-3...12.0.7-4) [Previous Releases](https://github.com/xod-wow/LiteMount/releases)
 
-- Even more hacks for Blizzard secret aura insanity  
-    Fixes #462  
+- More 12.1 mount models  
+- Move UIFilter into core, it's not really part of the UI  
+- Notes about abusing SecureActionButton  
+- Add Sunflare Driftmoth to auto model  

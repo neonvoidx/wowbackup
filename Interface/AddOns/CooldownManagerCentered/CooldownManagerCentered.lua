@@ -146,6 +146,9 @@ _cleanup = function()
     if ns.TrackerItemViewer and ns.TrackerItemViewer.MigrateChainAnchoring then
         ns.TrackerItemViewer:MigrateChainAnchoring()
     end
+    if ns.TrackerItemViewer and ns.TrackerItemViewer.MigrateSharedTrackerStyling then
+        ns.TrackerItemViewer:MigrateSharedTrackerStyling()
+    end
 
     ns.db.profile.cooldownManager_forceCenterX_BuffIcons = nil
     ns.db.profile.cooldownManager_forceCenterX_Essential = nil

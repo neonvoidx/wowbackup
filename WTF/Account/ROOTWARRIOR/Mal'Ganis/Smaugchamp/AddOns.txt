@@ -23,7 +23,7 @@ Auctionator: enabled
 Baganator: enabled
 BattleGroundEnemiesFixed: enabled
 BetterBlizzFrames: enabled
-BetterBlizzPlates: enabled
+BetterBlizzPlates: disabled
 BetterUpgradeTooltip: enabled
 BtWLoadouts: enabled
 !BugGrabber: enabled

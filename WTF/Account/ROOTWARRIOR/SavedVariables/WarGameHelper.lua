@@ -104,6 +104,12 @@ WarGameHelperDB = {
 ["value"] = "classic",
 },
 {
+["id"] = 1141,
+["pvpType"] = 3,
+["name"] = "Slayer's Rise",
+["value"] = "slayer's",
+},
+{
 ["id"] = 809,
 ["pvpType"] = 4,
 ["name"] = "Nagrand Arena",
@@ -194,6 +200,12 @@ WarGameHelperDB = {
 ["value"] = "nokhudon",
 },
 {
+["id"] = 1117,
+["pvpType"] = 4,
+["name"] = "Cage of Carnage",
+["value"] = "carnage",
+},
+{
 ["id"] = 6,
 ["pvpType"] = 4,
 ["name"] = "All Arenas",
@@ -275,6 +287,6 @@ WarGameHelperDB = {
 ["UseTarget"] = false,
 ["Map"] = 33,
 ["Mode"] = 1,
-["BNetPartyLeader2"] = "Peyo#1375",
 ["BNetPartyLeader1"] = "Zylos#1289",
+["BNetPartyLeader2"] = "Peyo#1375",
 }

@@ -12,6 +12,42 @@ addon.general = {}
 addon.general.variables = {}
 -- addon.L = {} -- Language
 addon.general.variables.autoOpen = {
+	[219191] = { chunk = 15, minStack = 15, checkRequirements = true }, -- Hastily Scrawled Notes (15 per use)
+	[246751] = true, -- Midnight Season 1 Champion Crest
+	[246752] = true, -- Midnight Season 1 Hero Crest
+	[246753] = true, -- Midnight Season 1 Mythic Crest
+	[246754] = true, -- Midnight Season 1 Veteran Crest
+	[246755] = true, -- Midnight Season 1 Champion Crest
+	[246756] = true, -- Midnight Season 1 Hero Crest
+	[263976] = true, -- Midnight Season 1 Adventurer Crest
+	[263977] = true, -- Midnight Season 1 Veteran Crest
+	[268650] = { chunk = 5, minStack = 5 }, -- Midnight Season 1 Crest conversion (5 per use)
+	[200285] = { checkRequirements = true }, -- Dragonscale Expedition Insignia (50 rep)
+	[200287] = { checkRequirements = true }, -- Iskaara Tuskarr Insignia (50 rep)
+	[200288] = { checkRequirements = true }, -- Maruuk Centaur Insignia (50 rep)
+	[200289] = { checkRequirements = true }, -- Valdrakken Accord Insignia (50 rep)
+	[200452] = { checkRequirements = true }, -- Dragonscale Expedition Insignia (250 rep)
+	[200453] = { checkRequirements = true }, -- Iskaara Tuskarr Insignia (250 rep)
+	[200454] = { checkRequirements = true }, -- Maruuk Centaur Insignia (250 rep)
+	[200455] = { checkRequirements = true }, -- Valdrakken Accord Insignia (250 rep)
+	[201921] = { checkRequirements = true }, -- Dragonscale Expedition Insignia (500 rep)
+	[201922] = { checkRequirements = true }, -- Iskaara Tuskarr Insignia (500 rep)
+	[201923] = { checkRequirements = true }, -- Maruuk Centaur Insignia (500 rep)
+	[201924] = { checkRequirements = true }, -- Valdrakken Accord Insignia (500 rep)
+	[202091] = { checkRequirements = true }, -- Dragonscale Expedition Insignia (2,500 rep)
+	[202092] = { checkRequirements = true }, -- Iskaara Tuskarr Insignia (2,500 rep)
+	[202093] = { checkRequirements = true }, -- Valdrakken Accord Insignia (2,500 rep)
+	[202094] = { checkRequirements = true }, -- Maruuk Centaur Insignia (2,500 rep)
+	[205365] = { checkRequirements = true }, -- Loamm Niffen Insignia (50 rep)
+	[205342] = { checkRequirements = true }, -- Loamm Niffen Insignia (250 rep)
+	[205985] = { checkRequirements = true }, -- Loamm Niffen Insignia (500 rep)
+	[210422] = { checkRequirements = true }, -- Loamm Niffen Insignia (2,500 rep)
+	[210419] = { checkRequirements = true }, -- Dream Wardens Insignia (50 rep)
+	[210420] = { checkRequirements = true }, -- Dream Wardens Insignia (250 rep)
+	[210421] = { checkRequirements = true }, -- Dream Wardens Insignia (500 rep)
+	[211416] = { checkRequirements = true }, -- Dream Wardens Insignia (1,000 rep)
+	[211417] = { checkRequirements = true }, -- Dream Wardens Insignia (1,000 rep)
+	[210423] = { checkRequirements = true }, -- Dream Wardens Insignia (2,500 rep)
 	[249783] = true, -- Nightfallen insignia (2k rep)
 	[249780] = true, -- Army of the Light Champion's Insignia (2k Rep)
 	[249787] = true, -- Court of Farondis Champion's Insignia (2k Rep)
@@ -35,6 +71,7 @@ addon.general.variables.autoOpen = {
 local AceLocale = LibStub("AceLocale-3.0")
 addon.L = AceLocale:GetLocale(addonName)
 _G["BINDING_NAME_EQOL_TOGGLE_FRIENDLY_NPCS"] = _G.UNIT_NAMEPLATES_SHOW_FRIENDLY_NPCS
+_G["BINDING_NAME_EQOL_TOGGLE_DAMAGE_METER_PAUSE"] = addon.L["damageMeterPauseKeybind"] or "Pause or resume Damage Meter"
 addon.elements = {}
 addon.itemBagFilters = {}
 addon.itemBagFiltersQuality = {}

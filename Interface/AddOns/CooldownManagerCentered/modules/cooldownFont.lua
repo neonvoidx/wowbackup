@@ -12,6 +12,16 @@ local viewersSettingKey = {
     BuffIconCooldownViewer = "BuffIcons",
 }
 
+local function RefreshCustomAuraStyles(viewerName)
+    if
+        (viewerName == nil or viewerName == "BuffIconCooldownViewer")
+        and ns.CustomAuraProvider
+        and ns.CustomAuraProvider.RefreshStyles
+    then
+        ns.CustomAuraProvider:RefreshStyles()
+    end
+end
+
 ns.Stacks.defaultEssentialStackFont = ns.CONSTANTS.DEFAULT_NUMBER_FONT -- Essential Stacks
 ns.Stacks.defaultUtilityAndBuffStackFont = { NumberFontNormalSmall:GetFont() } -- Utility Stacks and BuffIcon Stacks
 
@@ -143,7 +153,7 @@ local function ProcessCooldownFontViewer(viewerName)
     if not viewer or not ns.Runtime:IsReady(viewerName) then
         return
     end
-    local children = viewer:GetItemFrames()
+    local children = ns.API:GetViewerItemFrames(viewer)
     for _, child in ipairs(children) do
         if child.Icon and child.Cooldown then
             SetIconCooldownFont(child, viewerName)
@@ -154,12 +164,14 @@ end
 
 function CooldownFont:RefreshViewer(viewerName)
     ProcessCooldownFontViewer(viewerName)
+    RefreshCustomAuraStyles(viewerName)
 end
 
 function CooldownFont:RefreshAll()
     for viewerName in pairs(viewersSettingKey) do
         ProcessCooldownFontViewer(viewerName)
     end
+    RefreshCustomAuraStyles()
 end
 
 function CooldownFont:Initialize()
@@ -228,16 +240,21 @@ local function ApplyStackFont(fontString, size, viewerName)
     fontString:SetFont(fontPath, size, ns.API:GetFontFlags(fontFlags))
 end
 
+local function GetStackFontString(frame)
+    return frame and frame.Applications and frame.Applications.Applications
+        or frame and frame.ChargeCount and frame.ChargeCount.Current
+        or frame and frame.count
+end
+
 function Stacks:RestoreStackPositions(viewerName)
     local viewer = _G[viewerName]
     if not viewer then
         return
     end
-    local children = viewer:GetItemFrames()
+    local children = ns.API:GetViewerItemFrames(viewer)
     local stackPoint, stackX, stackY = GetViewerStackDefaults(viewerName)
     for _, child in ipairs(children) do
-        local fs = child and child.Applications and child.Applications.Applications
-            or child.ChargeCount and child.ChargeCount.Current
+        local fs = GetStackFontString(child)
         if fs and ns.API:GetIsAffected(child, "stack") then
             fs:ClearAllPoints()
             fs:SetPoint(stackPoint, child, stackPoint, stackX, stackY)
@@ -250,6 +267,7 @@ function Stacks:RestoreStackPositions(viewerName)
 end
 
 function Stacks:ApplyStackFonts(viewerName)
+    RefreshCustomAuraStyles(viewerName)
     local viewer = _G[viewerName]
     if not viewer then
         return
@@ -259,10 +277,9 @@ function Stacks:ApplyStackFonts(viewerName)
         self:RestoreStackPositions(viewerName)
         return
     end
-    local children = viewer:GetItemFrames()
+    local children = ns.API:GetViewerItemFrames(viewer)
     for _, child in ipairs(children) do
-        local fs = child and child.Applications and child.Applications.Applications
-            or child.ChargeCount and child.ChargeCount.Current
+        local fs = GetStackFontString(child)
 
         if child.Applications and child.Applications.SetFrameLevel then
             child.Applications:SetFrameLevel(20)

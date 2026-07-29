@@ -1668,7 +1668,8 @@ local function registerSectionHeaderControl(app, section, pageID, headerText, da
 	if not (app and section and pageID and headerText) then return nil end
 	addon.ConfigControlOrder = (addon.ConfigControlOrder or 0) + 1
 	local groupID = (data and (data.groupID or data.modernGroup)) or addon.ConfigCurrentGroupBySection[section]
-	local groupTitle = (data and (data.groupTitle or data.groupName)) or addon.ConfigGroupTitleBySection[section]
+	local existingGroup = groupID and app:GetPage(pageID).groupsByID[groupID]
+	local groupTitle = (data and (data.groupTitle or data.groupName)) or (existingGroup and existingGroup.title) or addon.ConfigGroupTitleBySection[section]
 	app:RegisterLegacyControl({
 		parentSection = section,
 		pageID = pageID,
@@ -1858,7 +1859,8 @@ local function getLegacyControlGroup(app, category, cbData)
 	if not pageID or not app:GetPage(pageID) then return nil, nil, pageID end
 	if cbData.groupID or cbData.modernGroup then
 		local groupID = cbData.groupID or cbData.modernGroup
-		local groupTitle = cbData.groupTitle or cbData.groupName or groupID
+		local existingGroup = app:GetPage(pageID).groupsByID[groupID]
+		local groupTitle = cbData.groupTitle or cbData.groupName or (existingGroup and existingGroup.title) or groupID
 		app:RegisterGroup(pageID, {
 			id = groupID,
 			title = groupTitle,

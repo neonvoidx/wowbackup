@@ -241,7 +241,7 @@ local function ProcessViewer(viewer, viewerSettingName, applySquareStyle)
     end
     local normalize = (viewerSettingName == "Utility")
 
-    local children = viewer:GetItemFrames()
+    local children = ns.API:GetViewerItemFrames(viewer)
     for _, child in ipairs(children) do
         if child.Icon then -- Only process icon-like children
             ns.Sizes.TagViewerChild(child, viewerSettingName)
@@ -385,7 +385,7 @@ local function RestoreAllButtons()
     for viewerName, settingName in pairs(viewersSettingKey) do
         local viewerFrame = _G[viewerName]
         if viewerFrame then
-            local children = viewerFrame:GetItemFrames()
+            local children = ns.API:GetViewerItemFrames(viewerFrame)
             for _, button in ipairs(children) do
                 if button.Icon then
                     RestoreOriginalStyle(button, settingName)
@@ -436,7 +436,7 @@ function StyledIcons:OnSettingChanged()
                 or ns.API:GetIsAffected(viewerFrame, "styledRectangular")
             then
                 -- This viewer had features active but they are all now disabled; restore it
-                local children = viewerFrame:GetItemFrames()
+                local children = ns.API:GetViewerItemFrames(viewerFrame)
                 for _, button in ipairs(children) do
                     if button.Icon then
                         RestoreOriginalStyle(button, settingName)

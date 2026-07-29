@@ -6,15 +6,28 @@ ns.CooldownStyle = CooldownStyle
 local MENU_TITLE = "|cff008945C|r|cff1e9a4eo|r|cff3faa4fol|r|cff5fb64ado|r|cff7ac243wn|r |cff8ccd00Manager Centered|r"
 local GCD_SPELL_ID = 61304
 
+local FIX_BLIZZARD_CLEARED_COOLDOWNS = {
+    [325153] = true, -- Exploding Keg
+    [207684] = true, -- Sigil of Misery
+    [204596] = true, -- Sigil of Flame
+    [202137] = true, -- Sigil of Silence
+    [49028] = true, -- Dancing Rune Weapon
+}
+
 local DEFAULT_ALWAYS_SHOW_COOLDOWN_EDGE = false
 local DEFAULT_SHOW_AURAS = true
 local DEFAULT_DISABLE_PROCS_GLOW = false
 local DEFAULT_REVERSE_AURA_SWIPE = false
 local DEFAULT_GLOW_WHEN_READY = false
 local DEFAULT_GLOW_ON_FULL_CHARGES = false
+local DEFAULT_GLOW_WHEN_AURA_ACTIVE = false
+local DEFAULT_GLOW_WHEN_SUGGESTED = false
 local DEFAULT_ALWAYS_GLOW = false
 local DEFAULT_NEVER_DESATURATE = false
 local DEFAULT_BAR_COLOR = { 1, 0.5, 0.25 }
+local DEFAULT_ENTRY_GLOW_COLOR = { 0.95, 0.95, 0.32, 1 }
+local SQUARE_SWIPE_TEXTURE = "Interface\\AddOns\\CooldownManagerCentered\\Media\\Art\\Square"
+local NATIVE_SWIPE_TEXTURE = "Interface\\HUD\\UI-HUD-CoolDownManager-Icon-Swipe"
 
 local LCG = LibStub("WilduCustomGlow-1.0")
 local GLOW_STYLE_DEFAULT = "DEFAULT"
@@ -22,10 +35,6 @@ local GLOW_STYLE_PROC = "PROC"
 local GLOW_STYLE_AUTOCAST = "AUTOCAST"
 local GLOW_STYLE_PIXEL = "PIXEL"
 local GLOW_STYLE_ANTS = "ANTS"
-
-local isZeroCurve = C_CurveUtil.CreateCurve()
-isZeroCurve:AddPoint(0, 1)
-isZeroCurve:AddPoint(0.001, 0)
 
 local function GetMostOverrideSpellIDFromCooldownInfo(cooldownInfo)
     if not cooldownInfo then
@@ -86,6 +95,19 @@ end
 -- categories. Negative keys are CMC's legacy hidden-variant pseudo-categories.
 local COOLDOWN_LIKE_CATEGORY = { [-1] = true, [0] = true, [1] = true, [5] = true, [7] = true }
 local TRACKED_LIKE_CATEGORY = { [-2] = true, [2] = true, [6] = true, [8] = true }
+local BAR_LIKE_CATEGORY = { [3] = true }
+local ALWAYS_SATURATED_CATEGORY_SETTING = {
+    [0] = { key = "cooldownManager_alwaysSaturated_Essential", label = "Essential" },
+    [1] = { key = "cooldownManager_alwaysSaturated_Utility", label = "Utility" },
+}
+
+local function GetAlwaysSaturatedCategorySetting(category)
+    local setting = ALWAYS_SATURATED_CATEGORY_SETTING[category]
+    if not setting then
+        return false
+    end
+    return ns.db.profile[setting.key] == true
+end
 
 local function ResolveGlowStyle(defaultStyle)
     local style = ns.db.profile.cooldownManager_experimental_glow_style or GLOW_STYLE_DEFAULT
@@ -115,6 +137,44 @@ local function GetConfiguredGlowColor()
         ns.db.profile.cooldownManager_experimental_glow_color_b or 0.32,
         ns.db.profile.cooldownManager_experimental_glow_color_a or 1,
     }
+end
+
+local function GetStoredStyleSettings(styleKey)
+    local db = ns.db and ns.db.profile and ns.db.profile.cooldownStyleSettings
+    return styleKey and db and db.spellSettings and db.spellSettings[styleKey] or nil
+end
+
+local function GetStoredRGB(settings, field)
+    local color = settings and settings[field]
+    if type(color) == "table" and color[1] ~= nil and color[2] ~= nil and color[3] ~= nil then
+        return color
+    end
+    return nil
+end
+
+local function GetNativeEntryColor(cdmFrame, cooldownField, trackedField)
+    local cooldownInfo = cdmFrame and cdmFrame.GetCooldownInfo and cdmFrame:GetCooldownInfo()
+    if not cooldownInfo then
+        return nil
+    end
+    if COOLDOWN_LIKE_CATEGORY[cooldownInfo.category] then
+        local settings = GetStoredStyleSettings(GetStyleKeyFromCooldownInfo(cooldownInfo, false))
+        return GetStoredRGB(settings, cooldownField)
+    elseif TRACKED_LIKE_CATEGORY[cooldownInfo.category] then
+        local settings = GetStoredStyleSettings(GetStyleKeyFromCooldownInfo(cooldownInfo, true))
+        return GetStoredRGB(settings, trackedField)
+    end
+    return nil
+end
+
+local function GetPerEntryGlowColor(cdmFrame)
+    local affected = cdmFrame and Affected(cdmFrame)
+    local kind = affected and (affected.resolvedTrackerEntryKind or affected.trackerEntryKind)
+    local id = affected and (affected.resolvedTrackerEntryId or affected.trackerEntryId)
+    if kind and id and ns.TrackerDB and ns.TrackerDB.GetEntryColor then
+        return ns.TrackerDB.GetEntryColor(kind, id, "glowColor")
+    end
+    return GetNativeEntryColor(cdmFrame, "cooldownGlowColor", "trackedGlowColor")
 end
 
 local function GetConfiguredGlowFrequency()
@@ -253,19 +313,20 @@ end
 
 local function CollectGlowParams(cdmFrame, defaultStyle)
     local masque = ns.MasqueModule
+    local styleSource = Affected(cdmFrame).glowStyleSource or cdmFrame
     return {
         style = ResolveGlowStyle(defaultStyle),
-        color = GetConfiguredGlowColor(),
+        color = GetPerEntryGlowColor(styleSource) or GetConfiguredGlowColor(),
         frequency = GetConfiguredGlowFrequency(),
         speedFactor = GetGlowSpeedFactor(),
         density = GetConfiguredGlowDensity(),
         antsLayers = GetAntsGlowLayers(),
         autoCastScale = GetAutoCastGlowScale(),
         pixelSize = GetPixelGlowSize(),
-        shape = (cdmFrame and masque and masque:GetShape(cdmFrame)),
-        vertices = masque and masque:GetShapeVertices(cdmFrame),
-        acStyle = masque and masque:GetAssistedCombatStyle(cdmFrame),
-        shapedTexture = masque and masque:GetSpellAlertTextures(cdmFrame),
+        shape = (styleSource and masque and masque:GetShape(styleSource)),
+        vertices = masque and masque:GetShapeVertices(styleSource),
+        acStyle = masque and masque:GetAssistedCombatStyle(styleSource),
+        shapedTexture = masque and masque:GetSpellAlertTextures(styleSource),
     }
 end
 
@@ -369,7 +430,19 @@ local function BuildGlowSignature(params)
             )
         end
     else
-        base = string.format("%s:%.3f", style, params.frequency)
+        if color then
+            base = string.format(
+                "%s:%.3f:%.3f:%.3f:%.3f:%.3f",
+                style,
+                color[1] or 0,
+                color[2] or 0,
+                color[3] or 0,
+                color[4] or 1,
+                params.frequency
+            )
+        else
+            base = string.format("%s:%.3f", style, params.frequency)
+        end
     end
     return base .. "|" .. (params.shape or "")
 end
@@ -377,14 +450,15 @@ end
 local HealGlowOnResize
 
 local function GetGlowHostSize(cdmFrame)
+    local sizeSource = Affected(cdmFrame).glowStyleSource or cdmFrame
     -- Trackers stamp their icon size; viewers resolve through Sizes.
-    local stamped = Affected(cdmFrame).glowIconSizeW
+    local stamped = Affected(sizeSource).glowIconSizeW
     if stamped then
-        return stamped, Affected(cdmFrame).glowIconSizeH or stamped
+        return stamped, Affected(sizeSource).glowIconSizeH or stamped
     end
-    local width, height = ns.Sizes.GetIconSize(cdmFrame)
+    local width, height = ns.Sizes.GetIconSize(sizeSource)
     if not width then
-        width, height = cdmFrame:GetSize()
+        width, height = sizeSource:GetSize()
     end
     return width, height
 end
@@ -393,7 +467,7 @@ local function GetGlowHost(cdmFrame)
     local host = Affected(cdmFrame).glowHost
     if not host then
         host = CreateFrame("Frame", nil, cdmFrame)
-        host:SetAllPoints(cdmFrame.Icon)
+        host:SetAllPoints(cdmFrame.Icon or cdmFrame)
         Affected(cdmFrame).glowHost = host
 
         host:HookScript("OnSizeChanged", function(self)
@@ -483,15 +557,48 @@ local function ClearButtonGlow(cdmFrame)
 end
 
 -- Public glow controls for frames outside the cooldown viewers (trackers).
+local function HideNativeFrameProcGlow(frame)
+    if not frame or not Affected(frame).nativeProcGlow then
+        return
+    end
+    if ActionButtonSpellAlertManager then
+        ActionButtonSpellAlertManager:HideAlert(frame)
+    end
+    Affected(frame).nativeProcGlow = nil
+end
+
 function CooldownStyle:ShowFrameGlow(frame, alpha)
+    HideNativeFrameProcGlow(frame)
     return SetButtonGlowVisible(frame, alpha)
 end
 
 function CooldownStyle:HideFrameGlow(frame)
+    HideNativeFrameProcGlow(frame)
     ClearButtonGlow(frame)
 end
 
-local function ComputeConfiguredGlowAlpha(cdmFrame, cooldownInfo)
+function CooldownStyle:ShowFrameProcGlow(frame)
+    if not frame then
+        return
+    end
+
+    local glowStyle = ns.db.profile.cooldownManager_experimental_glow_style
+    local usesCustomGlow = (glowStyle and glowStyle ~= GLOW_STYLE_DEFAULT) or GetPerEntryGlowColor(frame) ~= nil
+    if usesCustomGlow or not ActionButtonSpellAlertManager then
+        HideNativeFrameProcGlow(frame)
+        return SetButtonGlowVisible(frame)
+    end
+
+    ClearButtonGlow(frame)
+    ActionButtonSpellAlertManager:ShowAlert(frame)
+    Affected(frame).nativeProcGlow = true
+    if frame.SpellActivationAlert then
+        frame.SpellActivationAlert:SetSize(frame:GetWidth() * 1.4, frame:GetHeight() * 1.4)
+    end
+    return frame.SpellActivationAlert
+end
+
+local function ComputeConfiguredGlowAlpha(cdmFrame, cooldownInfo, styleKey)
     if cooldownInfo == nil then
         return false
     end
@@ -499,7 +606,21 @@ local function ComputeConfiguredGlowAlpha(cdmFrame, cooldownInfo)
     if COOLDOWN_LIKE_CATEGORY[cooldownInfo.category] then
         local hideForAura = ns.db.profile.cooldownManager_hide_glow_on_active_aura and cdmFrame.wasSetFromAura
         local spellID = GetMostOverrideSpellIDFromCooldownInfo(cooldownInfo)
-        local styleKey = GetStyleKeyFromCooldownInfo(cooldownInfo, false)
+        styleKey = styleKey or GetStyleKeyFromCooldownInfo(cooldownInfo, false)
+        local glowWhenAuraActive = CooldownStyle.GetGlowWhenAuraActive(styleKey)
+        local glowWhenSuggested = CooldownStyle.GetGlowWhenSuggested(styleKey)
+        local glowOnFullCharges = CooldownStyle.GetGlowOnFullCharges(styleKey)
+        local glowWhenReady = CooldownStyle.GetGlowWhenReady(styleKey)
+
+        if
+            not hideForAura
+            and not glowWhenAuraActive
+            and not glowWhenSuggested
+            and not glowOnFullCharges
+            and not glowWhenReady
+        then
+            return false
+        end
 
         -- Item/spell-category icons (12.1.0: potions, healthstones, equip-slot
         -- trinkets) carry no live spellID until triggered, so their cooldown/
@@ -508,26 +629,33 @@ local function ComputeConfiguredGlowAlpha(cdmFrame, cooldownInfo)
             return false
         end
 
-        local spellCharges = C_Spell.GetSpellCharges(spellID)
-        local hasCharges = spellCharges and spellCharges.maxCharges > 1
+        if glowWhenAuraActive and cdmFrame.wasSetFromAura then
+            return true, 1
+        end
+        if glowWhenSuggested and ns.Assistant and ns.Assistant:IsSpellSuggested(spellID) then
+            return true, 1
+        end
         if hideForAura then
             return true, 0
         end
-        local glowOnFullCharges = CooldownStyle.GetGlowOnFullCharges(styleKey)
+        local chargeInfo = glowOnFullCharges and C_Spell.GetSpellCharges(spellID) or nil
+        local hasCharges = chargeInfo and chargeInfo.maxCharges > 1
         if hasCharges and glowOnFullCharges then
-            return true, C_Spell.GetSpellChargeDuration(spellID):EvaluateRemainingDuration(isZeroCurve)
+            return true, chargeInfo.isActive and 0 or 1
         end
 
-        if CooldownStyle.GetGlowWhenReady(styleKey) or glowOnFullCharges then
-            local _, notEnoughPower = C_Spell.IsSpellUsable(spellID)
+        if glowWhenReady or glowOnFullCharges then
+            local isUsable, notEnoughPower = C_Spell.IsSpellUsable(spellID)
             if notEnoughPower then
                 return true, 0
             end
+            if not isUsable then
+                return true, 0
+            end
             local cooldown = C_Spell.GetSpellCooldown(spellID)
-            if cooldown.isOnGCD then
+            if cooldown.isOnGCD or not cooldown.isActive then
                 return true, 1
             end
-            return true, C_Spell.GetSpellCooldownDuration(spellID):EvaluateRemainingDuration(isZeroCurve)
         end
     end
 
@@ -541,20 +669,58 @@ local function ComputeConfiguredGlowAlpha(cdmFrame, cooldownInfo)
     return false
 end
 
-local function UpdateButtonGlowState(cdmFrame)
-    local cooldownInfo = cdmFrame:GetCooldownInfo()
-    local wantsGlow, configuredAlpha = ComputeConfiguredGlowAlpha(cdmFrame, cooldownInfo)
+local function UpdateButtonGlowState(cdmFrame, cooldownInfo, styleKey)
+    cooldownInfo = cooldownInfo or cdmFrame:GetCooldownInfo()
+    styleKey = styleKey or GetStyleKeyFromCooldownInfo(cooldownInfo, false)
+    local wantsGlow, configuredAlpha = ComputeConfiguredGlowAlpha(cdmFrame, cooldownInfo, styleKey)
+    local affected = Affected(cdmFrame)
+    local disableProcs = styleKey and CooldownStyle.GetDisableProcsGlow(styleKey)
+    local glowStyle = ns.db.profile.cooldownManager_experimental_glow_style
+    local usesCustomProc = affected.procShown
+        and not disableProcs
+        and ((glowStyle and glowStyle ~= GLOW_STYLE_DEFAULT) or GetPerEntryGlowColor(cdmFrame) ~= nil)
+    affected.procActive = usesCustomProc or nil
+    if cdmFrame.SpellActivationAlert then
+        cdmFrame.SpellActivationAlert:SetAlpha((affected.procShown and (disableProcs or usesCustomProc)) and 0 or 1)
+    end
 
-    local styleKey = GetStyleKeyFromCooldownInfo(cooldownInfo, false)
-    local procForcing = Affected(cdmFrame).procActive and styleKey and not CooldownStyle.GetDisableProcsGlow(styleKey)
-
-    if procForcing then
+    if usesCustomProc then
         SetButtonGlowVisible(cdmFrame)
     elseif wantsGlow then
         SetButtonGlowVisible(cdmFrame, configuredAlpha)
     else
         ClearButtonGlow(cdmFrame)
     end
+end
+
+local QueueGlowUpdate
+
+local function GetNativeStackFontString(cdmFrame)
+    return cdmFrame and cdmFrame.Applications and cdmFrame.Applications.Applications
+        or cdmFrame and cdmFrame.ChargeCount and cdmFrame.ChargeCount.Current
+end
+
+local function ApplyFontStringEntryColor(fontString, color)
+    if not fontString then
+        return
+    end
+    local affected = Affected(fontString)
+    if color then
+        if not affected.entryColorOriginal then
+            affected.entryColorOriginal = { fontString:GetTextColor() }
+        end
+        fontString:SetTextColor(color[1], color[2], color[3], 1)
+    elseif affected.entryColorOriginal then
+        fontString:SetTextColor(unpack(affected.entryColorOriginal))
+        affected.entryColorOriginal = nil
+    end
+end
+
+local function ApplyNativeStackColor(cdmFrame)
+    ApplyFontStringEntryColor(
+        GetNativeStackFontString(cdmFrame),
+        GetNativeEntryColor(cdmFrame, "cooldownStackColor", "trackedStackColor")
+    )
 end
 
 -- Reused scratch table for the style context. Both callers (ApplyCooldownSettings,
@@ -586,6 +752,7 @@ local function BuildStyleContext(cdmFrame)
     local ctx = styleContext
     ctx.spellID = spellID
     ctx.styleKey = styleKey
+    ctx.category = cooldownInfo.category
     ctx.cooldown = cooldown
     ctx.hasCharges = spellCharges and spellCharges.maxCharges > 1
     ctx.isActualCooldown = cooldown and cooldown.isActive and not cooldown.isOnGCD and true or false
@@ -695,7 +862,21 @@ local function ApplyIconDisplay(cdmFrame, ctx)
         return
     end
 
-    if CooldownStyle.GetNeverDesaturate(ctx.styleKey) then
+    if CooldownStyle.GetNeverDesaturate(ctx.styleKey, ctx.category) and ctx.isActualCooldown then
+        -- -- note: test for partial decaturation - needs to take usable state into account to not desaturate charging abilities
+        -- local usable, notEnoughResources = C_Spell.IsSpellUsable(ctx.spellID)
+        -- local notusable, enoughResources = not usable, not notEnoughResources
+        -- if notusable and enoughResources then
+        --     C_Timer.After(0.5, function()
+        --         local ctx = BuildStyleContext(cdmFrame)
+        --         if not ctx then
+        --             return
+        --         end
+        --         ApplyIconDisplay(cdmFrame, ctx)
+        --     end)
+        -- else
+        -- icon:SetDesaturation(0.7)
+        -- end
         icon:SetDesaturation(0)
     elseif ctx.auraHidden and ctx.isActualCooldown then
         icon:SetDesaturation(1)
@@ -709,6 +890,47 @@ local function ApplyCooldownSettings(cdmFrame)
     end
     ApplyCooldownDisplay(cdmFrame, ctx)
     ApplyIconDisplay(cdmFrame, ctx)
+end
+
+-- Blizzard sometimes clears these cooldown widgets while the spell is still on CD - Restore only that premature Clear;
+local function RestoreBlizzardClearedCooldown(cdmFrame)
+    local cooldownInfo = cdmFrame.GetCooldownInfo and cdmFrame:GetCooldownInfo() or nil
+    local baseSpellID = GetBaseSpellIDFromCooldownInfo(cooldownInfo)
+    local spellID = GetMostOverrideSpellIDFromCooldownInfo(cooldownInfo)
+    if not spellID or not (FIX_BLIZZARD_CLEARED_COOLDOWNS[baseSpellID] or FIX_BLIZZARD_CLEARED_COOLDOWNS[spellID]) then
+        return
+    end
+
+    local cooldownFrame = cdmFrame.Cooldown
+    local affected = Affected(cooldownFrame)
+    if affected.restoringBlizzardCooldown then
+        return
+    end
+
+    local duration
+    local cooldown = C_Spell.GetSpellCooldown(spellID)
+    if cooldown and cooldown.isActive and not cooldown.isOnGCD then
+        duration = C_Spell.GetSpellCooldownDuration(spellID, true)
+    else
+        local charges = C_Spell.GetSpellCharges(spellID)
+        if charges and charges.maxCharges > 1 and charges.isActive and not charges.isOnGCD then
+            duration = C_Spell.GetSpellChargeDuration(spellID)
+        end
+    end
+    if not duration then
+        return
+    end
+
+    affected.restoringBlizzardCooldown = true
+    cooldownFrame:SetCooldownFromDurationObject(duration)
+    affected.restoringBlizzardCooldown = nil
+    ApplyCooldownSettings(cdmFrame)
+    C_Timer.After(0, function()
+        local styleKey = GetStyleKeyFromCooldownInfo(cooldownInfo, false)
+        if not CooldownStyle.GetNeverDesaturate(styleKey, cooldownInfo.category) then
+            cdmFrame.Icon:SetDesaturation(1)
+        end
+    end)
 end
 
 -- Icon-only pass for when Blizzard re-desaturates the icon.
@@ -764,8 +986,36 @@ local function HookCooldownFrame(cdmFrame)
     end
 
     UpdateButtonGlowState(cdmFrame)
+    ApplyNativeStackColor(cdmFrame)
     ApplyCooldownSettings(cdmFrame)
     ApplyCooldownFlashHidden(cdmFrame)
+
+    local cooldownInfo = cdmFrame.GetCooldownInfo and cdmFrame:GetCooldownInfo() or nil
+    local styleKey = GetStyleKeyFromCooldownInfo(cooldownInfo, false)
+    local hasNativeAura = cooldownInfo and (cooldownInfo.hasAura or cooldownInfo.selfAura)
+    local auraSpellID = styleKey and not hasNativeAura and CooldownStyle.GetAuraSpellID(styleKey) or nil
+    if ns.AuraTracking then
+        local activeColor = ns.CONSTANTS.DEFAULT_ACTIVE_SWIPE_COLOR
+        local activeR, activeG, activeB, activeA = activeColor.r, activeColor.g, activeColor.b, activeColor.a
+        if ns.db.profile.cooldownManager_customSwipeColor_enabled then
+            activeR = ns.db.profile.cooldownManager_customActiveColor_r or activeR
+            activeG = ns.db.profile.cooldownManager_customActiveColor_g or activeG
+            activeB = ns.db.profile.cooldownManager_customActiveColor_b or activeB
+            activeA = ns.db.profile.cooldownManager_customActiveColor_a or activeA
+        end
+        ns.AuraTracking:Attach(cdmFrame, auraSpellID, {
+            anchor = cdmFrame.Cooldown,
+            reverse = CooldownStyle.GetReverseAuraSwipe(styleKey),
+            r = activeR,
+            g = activeG,
+            b = activeB,
+            a = activeA,
+            swipeTexture = ns.API:GetIsAffected(cdmFrame, "squareStyled") and SQUARE_SWIPE_TEXTURE
+                or NATIVE_SWIPE_TEXTURE,
+            stackColor = GetNativeEntryColor(cdmFrame, "cooldownStackColor", "trackedStackColor"),
+            glowWhenActive = CooldownStyle.GetGlowWhenAuraActive(styleKey),
+        })
+    end
 
     if ns.API:GetIsAffected(cdmFrame, "cooldownStyleHooked") then
         return
@@ -775,18 +1025,19 @@ local function HookCooldownFrame(cdmFrame)
 
     hooksecurefunc(cdmFrame.Cooldown, "SetCooldown", function(self)
         local cdmFrame = self:GetParent()
-        UpdateButtonGlowState(cdmFrame)
+        QueueGlowUpdate(cdmFrame)
         ApplyCooldownSettings(cdmFrame)
     end)
 
     hooksecurefunc(cdmFrame.Cooldown, "Clear", function(self)
         local cdmFrame = self:GetParent()
-        UpdateButtonGlowState(cdmFrame)
+        RestoreBlizzardClearedCooldown(cdmFrame)
+        QueueGlowUpdate(cdmFrame)
     end)
 
     hooksecurefunc(cdmFrame.Icon, "SetSize", function(self)
         local cdmFrame = self:GetParent()
-        UpdateButtonGlowState(cdmFrame)
+        QueueGlowUpdate(cdmFrame)
     end)
     hooksecurefunc(cdmFrame.Icon, "SetDesaturated", function(self)
         local cdmFrame = self:GetParent()
@@ -794,10 +1045,15 @@ local function HookCooldownFrame(cdmFrame)
         -- Only the aura case needs a glow recalc here; SetDesaturated fires far too
         -- often otherwise (and its arg is a secret value we can't branch on).
         if cdmFrame.wasSetFromAura then
-            UpdateButtonGlowState(cdmFrame)
+            QueueGlowUpdate(cdmFrame)
         end
         ApplyIconSettings(cdmFrame)
     end)
+    if cdmFrame.RefreshData then
+        hooksecurefunc(cdmFrame, "RefreshData", function(self)
+            QueueGlowUpdate(self)
+        end)
+    end
 end
 
 local function HookBuffIconFrame(cdmFrame)
@@ -817,6 +1073,7 @@ local function HookBuffIconFrame(cdmFrame)
             end
         end
     end
+    ApplyNativeStackColor(cdmFrame)
 
     if ns.API:GetIsAffected(cdmFrame, "cooldownStyleHooked") then
         return
@@ -832,7 +1089,7 @@ local function HookBuffIconFrame(cdmFrame)
         end
 
         local styleKey = GetStyleKeyFromCooldownInfo(cooldownInfo, true)
-        cdmFrame.Cooldown:SetDrawEdge(CooldownStyle.GetAlwaysShowCooldownEdge(styleKey))
+        cdmFrame.Cooldown:SetDrawEdge(CooldownStyle.GetTrackedAlwaysShowCooldownEdge(styleKey))
         if TRACKED_LIKE_CATEGORY[cooldownInfo.category] then
             if CooldownStyle.GetAlwaysGlow(styleKey) then
                 SetButtonGlowVisible(cdmFrame)
@@ -911,9 +1168,7 @@ end
 
 local settingsSwatchPool
 
--- Color a swatch should show: the active override, or the fixed default fill
--- while in "Default" mode.
-local function GetBarSwatchColor(bar, spellID)
+local function GetBarSwatchColor(spellID)
     local r, g, b = ResolveBarColor(spellID)
     if r then
         return r, g, b
@@ -927,7 +1182,7 @@ local function OpenBarColorPicker(spellID, swatch, bar)
 
     local function refresh()
         if swatch then
-            swatch:SetColorRGB(GetBarSwatchColor(bar, spellID))
+            swatch:SetColorRGB(GetBarSwatchColor(spellID))
         end
         if bar then
             ApplyBarColorToBar(bar, spellID)
@@ -935,7 +1190,7 @@ local function OpenBarColorPicker(spellID, swatch, bar)
         RefreshBuffBarColors()
     end
 
-    local r, g, b = GetBarSwatchColor(bar, spellID)
+    local r, g, b = GetBarSwatchColor(spellID)
     ColorPickerFrame:SetupColorPickerAndShow({
         r = r,
         g = g,
@@ -963,18 +1218,19 @@ local function ConfigureBarColorSwatch(item, spellID, bar)
         swatch = settingsSwatchPool:Acquire()
         swatch:SetParent(item)
         swatch:ClearAllPoints()
-        swatch:SetPoint("LEFT", item, "RIGHT", 4, 0)
+        swatch:SetPoint("LEFT", bar, "RIGHT", 4, 0)
         swatch:SetSize(18, 18)
+        swatch:SetFrameStrata("DIALOG")
         swatch:RegisterForClicks("LeftButtonUp", "RightButtonUp")
         Affected(item).barColorSwatch = swatch
     end
 
-    swatch:SetColorRGB(GetBarSwatchColor(bar, spellID))
+    swatch:SetColorRGB(GetBarSwatchColor(spellID))
     swatch:SetScript("OnClick", function(_, button)
         if button == "RightButton" then
             CooldownStyle.ClearBarColor(spellID)
             ApplyBarColorToBar(bar, spellID)
-            swatch:SetColorRGB(GetBarSwatchColor(bar, spellID))
+            swatch:SetColorRGB(GetBarSwatchColor(spellID))
             RefreshBuffBarColors()
         else
             OpenBarColorPicker(spellID, swatch, bar)
@@ -1026,6 +1282,137 @@ local function InstallBarColorSettingsHook()
     hooksecurefunc(CooldownViewerSettingsBarCategoryMixin, "RefreshLayout", RefreshBarColorSwatches)
 end
 
+local settingsOverrideIndicators = setmetatable({}, { __mode = "k" })
+local settingsOverrideIndicatorHooked = false
+
+local function HasCooldownOverrides(settings)
+    return type(settings) == "table"
+            and (settings.alwaysShowCooldownEdge == true or settings.showAuras == false or settings.reverseAuraSwipe == true or settings.disableProcsGlow == true or settings.glowWhenReady == true or settings.glowOnFullCharges == true or settings.glowWhenAuraActive == true or settings.glowWhenSuggested == true or GetStoredRGB(
+                settings,
+                "cooldownGlowColor"
+            ) ~= nil or GetStoredRGB(settings, "cooldownStackColor") ~= nil or settings.neverDesaturate == true or (tonumber(
+                settings.auraSpellID
+            ) or 0) > 0)
+        or false
+end
+
+local function HasTrackedBuffOverrides(settings)
+    return type(settings) == "table"
+            and (settings.trackedAlwaysShowCooldownEdge == true or settings.alwaysGlow == true or GetStoredRGB(
+                settings,
+                "trackedGlowColor"
+            ) ~= nil or GetStoredRGB(settings, "trackedStackColor") ~= nil)
+        or false
+end
+
+local function HasCooldownInfoOverrides(cooldownInfo)
+    if not cooldownInfo then
+        return false
+    end
+    local category = cooldownInfo.category
+    if COOLDOWN_LIKE_CATEGORY[category] then
+        return HasCooldownOverrides(GetStoredStyleSettings(GetStyleKeyFromCooldownInfo(cooldownInfo, false)))
+    elseif TRACKED_LIKE_CATEGORY[category] then
+        return HasTrackedBuffOverrides(GetStoredStyleSettings(GetStyleKeyFromCooldownInfo(cooldownInfo, true)))
+    end
+    return false
+end
+
+local function GetOrCreateSettingsOverrideIndicator(item)
+    local indicator = Affected(item).settingsOverrideIndicator
+    if indicator then
+        return indicator
+    end
+
+    indicator = CreateFrame("Frame", nil, item)
+    indicator:SetHeight(14)
+    indicator:SetFrameLevel(item:GetFrameLevel() + 20)
+    indicator:EnableMouse(false)
+
+    local background = indicator:CreateTexture(nil, "BACKGROUND")
+    background:SetAllPoints(indicator)
+    background:SetColorTexture(0, 0, 0, 0.7)
+
+    local eye = indicator:CreateTexture(nil, "ARTWORK")
+    eye:SetSize(16, 16)
+    eye:SetPoint("CENTER")
+    eye:SetAtlas("common-icon-visual")
+    eye:SetGradient("VERTICAL", CreateColor(0, 0.41, 0.405), CreateColor(0.825, 0.93, 0))
+
+    indicator.Background = background
+    indicator.Eye = eye
+    Affected(item).settingsOverrideIndicator = indicator
+    settingsOverrideIndicators[item] = true
+    return indicator
+end
+
+local function RefreshSettingsOverrideIndicator(item)
+    if InCombatLockdown() then
+        return
+    end
+    if not item or not item.Icon then
+        return
+    end
+
+    local cooldownInfo = item.GetCooldownInfo and item:GetCooldownInfo() or nil
+    local cooldownID = Affected(item).settingsOverrideCooldownID
+    if not cooldownInfo and cooldownID then
+        cooldownInfo = C_CooldownViewer.GetCooldownViewerCooldownInfo(cooldownID)
+    end
+    local indicator = GetOrCreateSettingsOverrideIndicator(item)
+    indicator:ClearAllPoints()
+    indicator:SetPoint("TOPLEFT", item.Icon, "TOPLEFT", 0, -2)
+    indicator:SetPoint("TOPRIGHT", item.Icon, "TOPRIGHT", 0, -2)
+    indicator:SetFrameLevel(item:GetFrameLevel() + 20)
+    indicator:SetShown(HasCooldownInfoOverrides(cooldownInfo))
+end
+
+local function RefreshSettingsOverrideIndicators()
+    if InCombatLockdown() then
+        return
+    end
+    for item in pairs(settingsOverrideIndicators) do
+        RefreshSettingsOverrideIndicator(item)
+    end
+end
+
+function CooldownStyle.RefreshSettingsItemIndicators()
+    RefreshSettingsOverrideIndicators()
+end
+
+function CooldownStyle.RefreshSettingsItemIndicator(item, cooldownID)
+    Affected(item).settingsOverrideCooldownID = cooldownID
+    RefreshSettingsOverrideIndicator(item)
+end
+
+function CooldownStyle.HideSettingsItemIndicator(item)
+    Affected(item).settingsOverrideCooldownID = nil
+    local indicator = Affected(item).settingsOverrideIndicator
+    if indicator then
+        indicator:Hide()
+    end
+end
+
+function CooldownStyle.HideSettingsItemIndicators()
+    for item in pairs(settingsOverrideIndicators) do
+        local indicator = Affected(item).settingsOverrideIndicator
+        if indicator then
+            indicator:Hide()
+        end
+    end
+end
+
+local function InstallSettingsOverrideIndicatorHook()
+    if settingsOverrideIndicatorHooked then
+        return
+    end
+    if type(CooldownViewerSettingsItemMixin) ~= "table" or not CooldownViewerSettingsItemMixin.RefreshData then
+        return
+    end
+    settingsOverrideIndicatorHooked = true
+    hooksecurefunc(CooldownViewerSettingsItemMixin, "RefreshData", RefreshSettingsOverrideIndicator)
+end
+
 local function RefreshChildFramesHook()
     local essentialViewer = _G["EssentialCooldownViewer"]
     if essentialViewer then
@@ -1055,6 +1442,16 @@ local function RefreshChildFramesHook()
     end
 
     RefreshBuffBarColors()
+    RefreshSettingsOverrideIndicators()
+end
+
+function CooldownStyle.GetTrackedStyleKey(cooldownID)
+    local cooldownInfo = cooldownID and C_CooldownViewer.GetCooldownViewerCooldownInfo(cooldownID)
+    return GetStyleKeyFromCooldownInfo(cooldownInfo, true)
+end
+
+function CooldownStyle.RefreshCooldownFrames()
+    RefreshChildFramesHook()
 end
 
 local viewers = {
@@ -1063,6 +1460,115 @@ local viewers = {
     ["EssentialCooldownViewer"] = EssentialCooldownViewer,
     ["UtilityCooldownViewer"] = UtilityCooldownViewer,
 }
+
+local GLOW_UPDATE_DELAY = 0.05
+local pendingGlowFrames = setmetatable({}, { __mode = "k" })
+local glowUpdateScheduled = false
+local allGlowsPending = false
+local usabilityGlowsPending = false
+local assistantGlowsPending = false
+
+local function RefreshAllGlowsNow()
+    for name in pairs(viewers) do
+        local viewer = _G[name]
+        if viewer then
+            for _, cdmFrame in ipairs(ns.API:GetViewerItemFrames(viewer)) do
+                if cdmFrame.GetCooldownInfo and ns.API:GetIsAffected(cdmFrame, "cooldownStyleHooked") then
+                    UpdateButtonGlowState(cdmFrame)
+                end
+            end
+        end
+    end
+end
+
+local function RefreshSelectiveGlowsNow(reason, updated)
+    for name in pairs(viewers) do
+        local viewer = _G[name]
+        if viewer then
+            for _, cdmFrame in ipairs(ns.API:GetViewerItemFrames(viewer)) do
+                if
+                    not updated[cdmFrame]
+                    and cdmFrame.GetCooldownInfo
+                    and ns.API:GetIsAffected(cdmFrame, "cooldownStyleHooked")
+                then
+                    local cooldownInfo = cdmFrame:GetCooldownInfo()
+                    local styleKey = GetStyleKeyFromCooldownInfo(cooldownInfo, false)
+                    local matches = reason == "usability"
+                            and COOLDOWN_LIKE_CATEGORY[cooldownInfo and cooldownInfo.category]
+                            and (CooldownStyle.GetGlowWhenReady(styleKey) or CooldownStyle.GetGlowOnFullCharges(
+                                styleKey
+                            ))
+                        or reason == "assistant" and CooldownStyle.GetGlowWhenSuggested(styleKey)
+                    if matches then
+                        updated[cdmFrame] = true
+                        UpdateButtonGlowState(cdmFrame, cooldownInfo, styleKey)
+                    end
+                end
+            end
+        end
+    end
+end
+
+local function FlushGlowUpdates()
+    glowUpdateScheduled = false
+    local refreshAll = allGlowsPending
+    local refreshUsability = usabilityGlowsPending
+    local refreshAssistant = assistantGlowsPending
+    local pending = pendingGlowFrames
+    allGlowsPending = false
+    usabilityGlowsPending = false
+    assistantGlowsPending = false
+    pendingGlowFrames = setmetatable({}, { __mode = "k" })
+
+    if refreshAll then
+        RefreshAllGlowsNow()
+        return
+    end
+    local updated = setmetatable({}, { __mode = "k" })
+    for cdmFrame in pairs(pending) do
+        if cdmFrame.GetCooldownInfo and ns.API:GetIsAffected(cdmFrame, "cooldownStyleHooked") then
+            updated[cdmFrame] = true
+            UpdateButtonGlowState(cdmFrame)
+        end
+    end
+    if refreshUsability then
+        RefreshSelectiveGlowsNow("usability", updated)
+    end
+    if refreshAssistant then
+        RefreshSelectiveGlowsNow("assistant", updated)
+    end
+end
+
+local function ScheduleGlowUpdateFlush()
+    if glowUpdateScheduled then
+        return
+    end
+    glowUpdateScheduled = true
+    C_Timer.After(GLOW_UPDATE_DELAY, FlushGlowUpdates)
+end
+
+QueueGlowUpdate = function(cdmFrame)
+    if not cdmFrame then
+        return
+    end
+    pendingGlowFrames[cdmFrame] = true
+    ScheduleGlowUpdateFlush()
+end
+
+local function QueueAllGlowUpdates()
+    allGlowsPending = true
+    ScheduleGlowUpdateFlush()
+end
+
+local function QueueUsabilityGlowUpdates()
+    usabilityGlowsPending = true
+    ScheduleGlowUpdateFlush()
+end
+
+local function QueueAssistantGlowUpdates()
+    assistantGlowsPending = true
+    ScheduleGlowUpdateFlush()
+end
 
 local function GetCooldownViewerChild(frame)
     if not frame or not frame.GetParent then
@@ -1105,24 +1611,24 @@ local function HookActionButtonSpellAlertManager()
             return
         end
 
-        local disableProcs = CooldownStyle.GetDisableProcsGlow(styleKey)
-        local glowStyle = ns.db.profile.cooldownManager_experimental_glow_style
-        local customStyle = glowStyle and glowStyle ~= "DEFAULT"
-
-        if activeGlowTarget.SpellActivationAlert then
-            activeGlowTarget.SpellActivationAlert:SetAlpha((disableProcs or customStyle) and 0 or 1)
+        local affected = Affected(activeGlowTarget)
+        if affected.procShown then
+            return
         end
-
-        Affected(activeGlowTarget).procActive = (customStyle and not disableProcs) or nil
+        affected.procShown = true
         UpdateButtonGlowState(activeGlowTarget)
     end)
 
     hooksecurefunc(ActionButtonSpellAlertManager, "HideAlert", function(_, frame)
         local activeGlowTarget = GetCooldownViewerChild(frame)
-        if not activeGlowTarget or not Affected(activeGlowTarget).procActive then
+        if not activeGlowTarget then
             return
         end
-        Affected(activeGlowTarget).procActive = nil
+        local affected = Affected(activeGlowTarget)
+        if not affected.procShown then
+            return
+        end
+        affected.procShown = nil
         UpdateButtonGlowState(activeGlowTarget)
     end)
     ns.API:SetAffected(ActionButtonSpellAlertManager, "spellAlertHooked")
@@ -1131,19 +1637,19 @@ end
 function CooldownStyle:RefreshHooks()
     RefreshChildFramesHook()
     InstallBarColorSettingsHook()
+    InstallSettingsOverrideIndicatorHook()
 end
 
 function CooldownStyle:RefreshAllGlows()
-    for name in pairs(viewers) do
-        local viewer = _G[name]
-        if viewer then
-            for _, cdmFrame in ipairs(viewer:GetItemFrames()) do
-                if cdmFrame.GetCooldownInfo and ns.API:GetIsAffected(cdmFrame, "cooldownStyleHooked") then
-                    UpdateButtonGlowState(cdmFrame)
-                end
-            end
-        end
-    end
+    QueueAllGlowUpdates()
+end
+
+function CooldownStyle:RefreshUsabilityGlows()
+    QueueUsabilityGlowUpdates()
+end
+
+function CooldownStyle:RefreshSuggestedGlows()
+    QueueAssistantGlowUpdates()
 end
 
 local glowUsabilityFrame
@@ -1154,22 +1660,240 @@ local function HookGlowUsabilityEvents()
     glowUsabilityFrame = CreateFrame("Frame")
     glowUsabilityFrame:RegisterEvent("SPELL_UPDATE_USABLE")
     glowUsabilityFrame:SetScript("OnEvent", function()
-        CooldownStyle:RefreshAllGlows()
+        CooldownStyle:RefreshUsabilityGlows()
     end)
 end
 
 local isMenuModified = false
+
+function CooldownStyle.OpenEntryColorPicker(getColor, setColor, refresh, fallbackColor)
+    local current = getColor and getColor() or nil
+    local original = current and { current[1], current[2], current[3] } or nil
+    local initial = current or fallbackColor or { 1, 1, 1 }
+    local function applyRefresh()
+        if refresh then
+            refresh()
+        end
+    end
+    ColorPickerFrame:SetupColorPickerAndShow({
+        r = initial[1] or 1,
+        g = initial[2] or 1,
+        b = initial[3] or 1,
+        hasOpacity = false,
+        swatchFunc = function()
+            local r, g, b = ColorPickerFrame:GetColorRGB()
+            setColor(r, g, b)
+            applyRefresh()
+        end,
+        cancelFunc = function()
+            if original then
+                setColor(original[1], original[2], original[3])
+            else
+                setColor()
+            end
+            applyRefresh()
+        end,
+    })
+end
+
+local function SetStyleEntryColor(styleKey, field, r, g, b)
+    if not styleKey then
+        return
+    end
+    if r == nil then
+        local settings = GetStoredStyleSettings(styleKey)
+        if settings then
+            settings[field] = nil
+        end
+        return
+    end
+    CooldownStyle.EnsureSpellSettings(styleKey)[field] = { r, g, b }
+end
+
+function CooldownStyle.GetStyleEntryColor(styleKey, field)
+    return GetStoredRGB(GetStoredStyleSettings(styleKey), field)
+end
+
+function CooldownStyle.SetStyleEntryColor(styleKey, field, r, g, b)
+    SetStyleEntryColor(styleKey, field, r, g, b)
+end
+
+function CooldownStyle.GetInheritedGlowColor()
+    return GetConfiguredGlowColor() or DEFAULT_ENTRY_GLOW_COLOR
+end
+
+function CooldownStyle.AddMenuColorPreview(description, getColor, fallbackColor)
+    description:AddInitializer(function(button)
+        local color = getColor() or fallbackColor
+        local border = button:AttachTexture()
+        border:SetSize(16, 16)
+        border:SetPoint("LEFT")
+        border:SetColorTexture(0.05, 0.05, 0.05, 1)
+        border:SetDrawLayer("ARTWORK", 1)
+
+        local swatch = button:AttachTexture()
+        swatch:SetSize(12, 12)
+        swatch:SetPoint("CENTER", border, "CENTER")
+        swatch:SetColorTexture(color[1] or 1, color[2] or 1, color[3] or 1, 1)
+        swatch:SetDrawLayer("ARTWORK", 2)
+
+        button.fontString:ClearAllPoints()
+        button.fontString:SetPoint("LEFT", border, "RIGHT", 7, 0)
+    end)
+end
+
+function CooldownStyle.AddMenuColorButton(menuDescription, label, getColor, setColor, refresh, fallbackColor)
+    local button = menuDescription:CreateButton(label, function(_, menuInputData)
+        if menuInputData and menuInputData.buttonName == "RightButton" then
+            setColor()
+            if refresh then
+                refresh()
+            end
+            return MenuResponse.Refresh
+        end
+        CooldownStyle.OpenEntryColorPicker(getColor, setColor, refresh, fallbackColor)
+    end)
+    button:AddInitializer(function(frame)
+        frame:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+    end)
+    button:AddResetter(function(frame)
+        frame:RegisterForClicks("LeftButtonUp")
+    end)
+    CooldownStyle.AddMenuColorPreview(button, getColor, fallbackColor)
+end
+
+function CooldownStyle.AddEntryColorMenu(rootDescription, styleKey, glowField, stackField, refresh)
+    if not styleKey then
+        return
+    end
+    local function RefreshEntryColors()
+        if refresh then
+            refresh()
+        else
+            RefreshChildFramesHook()
+            RefreshSettingsOverrideIndicators()
+        end
+    end
+    local function AddColor(field, label, fallbackColor)
+        local function getColor()
+            return GetStoredRGB(GetStoredStyleSettings(styleKey), field)
+        end
+        local function setColor(r, g, b)
+            SetStyleEntryColor(styleKey, field, r, g, b)
+        end
+        CooldownStyle.AddMenuColorButton(rootDescription, label, getColor, setColor, RefreshEntryColors, fallbackColor)
+    end
+
+    AddColor(glowField, "Set Glow Color", CooldownStyle.GetInheritedGlowColor())
+    AddColor(stackField, "Set Number Color", { 1, 1, 1 })
+end
+
+local function ParseAuraSpellIDInput(text)
+    local value = tonumber(strtrim(text or ""))
+    if not value or value < 0 or value ~= math.floor(value) then
+        return nil
+    end
+    return value
+end
+
+local function SetAuraPopupAcceptEnabled(dialog, enabled)
+    local acceptButton = dialog and _G[dialog:GetName() .. "Button1"]
+    if acceptButton and acceptButton.SetEnabled then
+        acceptButton:SetEnabled(enabled == true)
+    end
+end
+
+local function ValidateAuraPopup(dialog)
+    local editBox = dialog and (dialog.editBox or (dialog.GetEditBox and dialog:GetEditBox()))
+    local value = editBox and ParseAuraSpellIDInput(editBox:GetText()) or nil
+    SetAuraPopupAcceptEnabled(dialog, value ~= nil)
+    return value
+end
+
+StaticPopupDialogs["CMC_SET_COOLDOWN_AURA"] = {
+    text = "Set Aura Spell ID. Enter 0 to clear.\nCurrent value: 0",
+    button1 = _G.ACCEPT,
+    button2 = _G.CANCEL,
+    hasEditBox = true,
+    maxLetters = 10,
+    autoCompleteParams = nil,
+    OnShow = function(self)
+        local data = self.data
+        local styleKey = type(data) == "table" and data.styleKey or data
+        if styleKey == nil then
+            self:Hide()
+            return
+        end
+        local configuredValue = CooldownStyle.GetAuraSpellID(styleKey)
+        local suggestedValue = type(data) == "table" and tonumber(data.defaultAuraSpellID) or nil
+        if not suggestedValue or suggestedValue <= 0 or suggestedValue ~= math.floor(suggestedValue) then
+            suggestedValue = nil
+        end
+        local editValue = configuredValue or suggestedValue or 0
+        local textWidget = self.text or _G[self:GetName() .. "Text"]
+        if textWidget then
+            local valueLabel = configuredValue and ("Current value: " .. configuredValue)
+                or suggestedValue and ("Suggested value: " .. suggestedValue)
+                or "Current value: 0"
+            textWidget:SetText("Set Aura Spell ID. Enter 0 to clear.\n" .. valueLabel)
+        end
+        local editBox = self.editBox or (self.GetEditBox and self:GetEditBox())
+        if editBox then
+            editBox:SetText(tostring(editValue))
+            editBox:HighlightText()
+            editBox:SetFocus()
+        end
+        ValidateAuraPopup(self)
+    end,
+    OnAccept = function(self)
+        local value = ValidateAuraPopup(self)
+        local data = self.data
+        local styleKey = type(data) == "table" and data.styleKey or data
+        if styleKey == nil or value == nil then
+            ns.Addon:Print("Aura Spell ID must be a non-negative whole number.")
+            return
+        end
+        CooldownStyle.SetAuraSpellID(styleKey, value)
+        CooldownStyle:RefreshHooks()
+    end,
+    EditBoxOnTextChanged = function(self)
+        ValidateAuraPopup(self:GetParent())
+    end,
+    EditBoxOnEnterPressed = function(self)
+        local popup = self:GetParent()
+        if ValidateAuraPopup(popup) ~= nil then
+            StaticPopup_OnClick(popup, 1)
+        else
+            ns.Addon:Print("Aura Spell ID must be a non-negative whole number.")
+        end
+    end,
+    EditBoxOnEscapePressed = function(self)
+        self:GetParent():Hide()
+    end,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3,
+}
+
 function CooldownStyle:Initialize()
     RefreshChildFramesHook()
     HookActionButtonSpellAlertManager()
     HookGlowUsabilityEvents()
     InstallBarColorSettingsHook()
+    InstallSettingsOverrideIndicatorHook()
     if isMenuModified then
         return
     end
 
     Menu.ModifyMenu("MENU_COOLDOWN_SETTINGS_ITEM", function(owner, rootDescription, _contextData)
+        if InCombatLockdown() or not owner.GetCooldownInfo then
+            return
+        end
         local cdInfo = owner:GetCooldownInfo()
+        if not cdInfo then
+            return
+        end
         local category = cdInfo.category
         -- Settings key: base spellID (first tab) / most-specific override spellID
         -- (second tab) for normal cooldowns; the slot's stable cooldownID for
@@ -1180,21 +1904,11 @@ function CooldownStyle:Initialize()
         rootDescription:CreateDivider()
         rootDescription:CreateTitle(MENU_TITLE)
 
-        if COOLDOWN_LIKE_CATEGORY[category] then
-            rootDescription:CreateCheckbox("Always Show Cooldown Edge", function()
-                return CooldownStyle.GetAlwaysShowCooldownEdge(baseKey)
-            end, function()
-                CooldownStyle.ToggleAlwaysShowCooldownEdge(baseKey)
-                RefreshChildFramesHook()
-            end)
-        end
-        if TRACKED_LIKE_CATEGORY[category] then
-            rootDescription:CreateCheckbox("Always Show Cooldown Edge", function()
-                return CooldownStyle.GetAlwaysShowCooldownEdge(overrideKey)
-            end, function()
-                CooldownStyle.ToggleAlwaysShowCooldownEdge(overrideKey)
-                RefreshChildFramesHook()
-            end)
+        local cooldownMenu
+        local glowColorMenu
+        if COOLDOWN_LIKE_CATEGORY[category] or TRACKED_LIKE_CATEGORY[category] then
+            cooldownMenu = rootDescription:CreateButton("Cooldown")
+            glowColorMenu = rootDescription:CreateButton("Glow & Color")
         end
 
         --[[ category: 
@@ -1207,9 +1921,10 @@ function CooldownStyle:Initialize()
         2 TrackedBuff, 
         3 TrackedBar.
         ]]
+        local customAuraSpellID = CooldownStyle.GetAuraSpellID(baseKey)
         if cdInfo.hasAura or cdInfo.selfAura then
             if COOLDOWN_LIKE_CATEGORY[category] then
-                rootDescription:CreateCheckbox("Hide Aura", function()
+                cooldownMenu:CreateCheckbox("Hide Aura", function()
                     return not CooldownStyle.GetShowAuras(baseKey)
                 end, function()
                     CooldownStyle.ToggleShowAuras(baseKey)
@@ -1218,7 +1933,24 @@ function CooldownStyle:Initialize()
             end
 
             if COOLDOWN_LIKE_CATEGORY[category] then
-                rootDescription:CreateCheckbox("Reverse Aura Swipe", function()
+                cooldownMenu:CreateCheckbox("Reversed Aura Swipe", function()
+                    return CooldownStyle.GetReverseAuraSwipe(baseKey)
+                end, function()
+                    CooldownStyle.ToggleReverseAuraSwipe(baseKey)
+                    RefreshChildFramesHook()
+                end)
+            end
+        elseif COOLDOWN_LIKE_CATEGORY[category] and ns.AuraTracking and ns.AuraTracking:IsSupported() then
+            local label = customAuraSpellID and ("Set Aura (id: " .. customAuraSpellID .. ")") or "Set Aura"
+            cooldownMenu:CreateButton(label, function()
+                StaticPopup_Show("CMC_SET_COOLDOWN_AURA", nil, nil, {
+                    styleKey = baseKey,
+                    defaultAuraSpellID = GetBaseSpellIDFromCooldownInfo(cdInfo),
+                })
+            end)
+
+            if customAuraSpellID then
+                cooldownMenu:CreateCheckbox("Reversed Aura Swipe", function()
                     return CooldownStyle.GetReverseAuraSwipe(baseKey)
                 end, function()
                     CooldownStyle.ToggleReverseAuraSwipe(baseKey)
@@ -1228,53 +1960,141 @@ function CooldownStyle:Initialize()
         end
 
         if COOLDOWN_LIKE_CATEGORY[category] then
-            rootDescription:CreateCheckbox("Disable Proc Glow", function()
-                return CooldownStyle.GetDisableProcsGlow(baseKey)
+            local categorySetting = ALWAYS_SATURATED_CATEGORY_SETTING[category]
+            if not GetAlwaysSaturatedCategorySetting(category) then
+                cooldownMenu:CreateCheckbox("Always Saturated", function()
+                    return CooldownStyle.GetNeverDesaturate(baseKey, category)
+                end, function()
+                    CooldownStyle.ToggleNeverDesaturate(baseKey)
+                    RefreshChildFramesHook()
+                end)
+            end
+
+            if categorySetting then
+                cooldownMenu:CreateCheckbox("Always Saturated (All " .. categorySetting.label .. ")", function()
+                    return GetAlwaysSaturatedCategorySetting(category)
+                end, function()
+                    ns.db.profile[categorySetting.key] = not GetAlwaysSaturatedCategorySetting(category)
+                    RefreshChildFramesHook()
+                end)
+            end
+
+            cooldownMenu:CreateCheckbox("Forced Cooldown Edge", function()
+                return CooldownStyle.GetAlwaysShowCooldownEdge(baseKey)
             end, function()
-                CooldownStyle.ToggleDisableProcsGlow(baseKey)
-                -- RefreshChildFramesHook()
+                CooldownStyle.ToggleAlwaysShowCooldownEdge(baseKey)
+                RefreshChildFramesHook()
             end)
 
-            rootDescription:CreateCheckbox("Glow when ready", function()
+            glowColorMenu:CreateCheckbox("Proc Glow", function()
+                return not CooldownStyle.GetDisableProcsGlow(baseKey)
+            end, function()
+                CooldownStyle.ToggleDisableProcsGlow(baseKey)
+                RefreshSettingsOverrideIndicators()
+            end)
+
+            glowColorMenu:CreateCheckbox("Glow when Ready", function()
                 return CooldownStyle.GetGlowWhenReady(baseKey)
             end, function()
                 CooldownStyle.ToggleGlowWhenReady(baseKey)
                 RefreshChildFramesHook()
             end)
+            if cdInfo.hasAura or cdInfo.selfAura or customAuraSpellID then
+                glowColorMenu:CreateCheckbox("Glow when Aura Active", function()
+                    return CooldownStyle.GetGlowWhenAuraActive(baseKey)
+                end, function()
+                    CooldownStyle.ToggleGlowWhenAuraActive(baseKey)
+                    RefreshChildFramesHook()
+                end)
+            end
+            if GetMostOverrideSpellIDFromCooldownInfo(cdInfo) then
+                glowColorMenu:CreateCheckbox("Glow when Suggested", function()
+                    return CooldownStyle.GetGlowWhenSuggested(baseKey)
+                end, function()
+                    CooldownStyle.ToggleGlowWhenSuggested(baseKey)
+                    if ns.Assistant then
+                        ns.Assistant:RefreshSuggestionTracking()
+                    end
+                    RefreshChildFramesHook()
+                end)
+            end
             if cdInfo.charges then
-                rootDescription:CreateCheckbox("Glow when full charges", function()
+                glowColorMenu:CreateCheckbox("Glow when full charges", function()
                     return CooldownStyle.GetGlowOnFullCharges(baseKey)
                 end, function()
                     CooldownStyle.ToggleGlowOnFullCharges(baseKey)
                     RefreshChildFramesHook()
                 end)
             end
-
-            rootDescription:CreateCheckbox("Never Desaturate", function()
-                return CooldownStyle.GetNeverDesaturate(baseKey)
-            end, function()
-                CooldownStyle.ToggleNeverDesaturate(baseKey)
-                RefreshChildFramesHook()
-            end)
         end
 
         if TRACKED_LIKE_CATEGORY[category] then
-            rootDescription:CreateCheckbox("Always glow", function()
+            cooldownMenu:CreateCheckbox("Forced Cooldown Edge", function()
+                return CooldownStyle.GetTrackedAlwaysShowCooldownEdge(overrideKey)
+            end, function()
+                CooldownStyle.ToggleTrackedAlwaysShowCooldownEdge(overrideKey)
+                RefreshChildFramesHook()
+            end)
+
+            glowColorMenu:CreateCheckbox("Always Glow", function()
                 return CooldownStyle.GetAlwaysGlow(overrideKey)
             end, function()
                 CooldownStyle.ToggleAlwaysGlow(overrideKey)
                 RefreshChildFramesHook()
+                RefreshSettingsOverrideIndicators()
             end)
+        end
+
+        if COOLDOWN_LIKE_CATEGORY[category] then
+            CooldownStyle.AddEntryColorMenu(glowColorMenu, baseKey, "cooldownGlowColor", "cooldownStackColor")
+        elseif TRACKED_LIKE_CATEGORY[category] then
+            CooldownStyle.AddEntryColorMenu(glowColorMenu, overrideKey, "trackedGlowColor", "trackedStackColor")
         end
 
         rootDescription:CreateButton("Reset to Defaults", function()
             local db = CooldownStyle.GetDB()
+            local styleKey
             if COOLDOWN_LIKE_CATEGORY[category] then
-                db.spellSettings[baseKey] = nil
-            else
-                db.spellSettings[overrideKey] = nil
+                styleKey = baseKey
+                local settings = db.spellSettings[styleKey]
+                if settings then
+                    settings.alwaysShowCooldownEdge = nil
+                    settings.showAuras = nil
+                    settings.reverseAuraSwipe = nil
+                    settings.disableProcsGlow = nil
+                    settings.glowWhenReady = nil
+                    settings.glowOnFullCharges = nil
+                    settings.glowWhenAuraActive = nil
+                    settings.glowWhenSuggested = nil
+                    settings.cooldownGlowColor = nil
+                    settings.cooldownStackColor = nil
+                    settings.neverDesaturate = nil
+                    settings.auraSpellID = nil
+                end
+            elseif TRACKED_LIKE_CATEGORY[category] then
+                styleKey = overrideKey
+                local settings = db.spellSettings[styleKey]
+                if settings then
+                    settings.trackedAlwaysShowCooldownEdge = nil
+                    settings.alwaysGlow = nil
+                    settings.trackedGlowColor = nil
+                    settings.trackedStackColor = nil
+                end
+            elseif BAR_LIKE_CATEGORY[category] then
+                styleKey = overrideKey
+                local settings = db.spellSettings[styleKey]
+                if settings then
+                    settings.barColor = nil
+                end
+            end
+            if styleKey and db.spellSettings[styleKey] and next(db.spellSettings[styleKey]) == nil then
+                db.spellSettings[styleKey] = nil
             end
             RefreshChildFramesHook()
+            RefreshSettingsOverrideIndicators()
+            if ns.Assistant then
+                ns.Assistant:RefreshSuggestionTracking()
+            end
         end)
     end)
     isMenuModified = true
@@ -1289,6 +2109,34 @@ function CooldownStyle.GetSpellSettings(spellID)
         return nil
     end
     return db.spellSettings[spellID]
+end
+
+function CooldownStyle.GetAuraSpellID(spellID)
+    local settings = CooldownStyle.GetSpellSettings(spellID)
+    local auraSpellID = settings and tonumber(settings.auraSpellID) or nil
+    if auraSpellID and auraSpellID > 0 and auraSpellID == math.floor(auraSpellID) then
+        return auraSpellID
+    end
+    return nil
+end
+
+function CooldownStyle.SetAuraSpellID(spellID, auraSpellID)
+    if spellID == nil then
+        return false
+    end
+    auraSpellID = tonumber(auraSpellID)
+    if not auraSpellID or auraSpellID < 0 or auraSpellID ~= math.floor(auraSpellID) then
+        return false
+    end
+    if auraSpellID == 0 then
+        local settings = CooldownStyle.GetSpellSettings(spellID)
+        if settings then
+            settings.auraSpellID = nil
+        end
+    else
+        CooldownStyle.EnsureSpellSettings(spellID).auraSpellID = auraSpellID
+    end
+    return true
 end
 
 function CooldownStyle.EnsureSpellSettings(spellID)
@@ -1329,6 +2177,26 @@ end
 function CooldownStyle.ToggleAlwaysShowCooldownEdge(spellID)
     local current = CooldownStyle.GetAlwaysShowCooldownEdge(spellID)
     CooldownStyle.SetAlwaysShowCooldownEdge(spellID, not current)
+end
+
+function CooldownStyle.GetTrackedAlwaysShowCooldownEdge(spellID)
+    local settings = CooldownStyle.GetSpellSettings(spellID)
+    return settings and settings.trackedAlwaysShowCooldownEdge == true or false
+end
+
+function CooldownStyle.SetTrackedAlwaysShowCooldownEdge(spellID, value)
+    local settings = CooldownStyle.GetSpellSettings(spellID)
+    if not value then
+        if settings then
+            settings.trackedAlwaysShowCooldownEdge = nil
+        end
+        return
+    end
+    CooldownStyle.EnsureSpellSettings(spellID).trackedAlwaysShowCooldownEdge = true
+end
+
+function CooldownStyle.ToggleTrackedAlwaysShowCooldownEdge(spellID)
+    CooldownStyle.SetTrackedAlwaysShowCooldownEdge(spellID, not CooldownStyle.GetTrackedAlwaysShowCooldownEdge(spellID))
 end
 
 function CooldownStyle.GetShowAuras(spellID)
@@ -1464,6 +2332,54 @@ function CooldownStyle.ToggleGlowOnFullCharges(spellID)
     CooldownStyle.SetGlowOnFullCharges(spellID, not current)
 end
 
+function CooldownStyle.GetGlowWhenAuraActive(spellID)
+    local settings = CooldownStyle.GetSpellSettings(spellID)
+    if settings and settings.glowWhenAuraActive ~= nil then
+        return settings.glowWhenAuraActive
+    end
+    return DEFAULT_GLOW_WHEN_AURA_ACTIVE
+end
+
+function CooldownStyle.SetGlowWhenAuraActive(spellID, value)
+    if value == DEFAULT_GLOW_WHEN_AURA_ACTIVE then
+        local settings = CooldownStyle.GetSpellSettings(spellID)
+        if settings ~= nil then
+            settings.glowWhenAuraActive = nil
+        end
+        return
+    end
+
+    CooldownStyle.EnsureSpellSettings(spellID).glowWhenAuraActive = value
+end
+
+function CooldownStyle.ToggleGlowWhenAuraActive(spellID)
+    CooldownStyle.SetGlowWhenAuraActive(spellID, not CooldownStyle.GetGlowWhenAuraActive(spellID))
+end
+
+function CooldownStyle.GetGlowWhenSuggested(spellID)
+    local settings = CooldownStyle.GetSpellSettings(spellID)
+    if settings and settings.glowWhenSuggested ~= nil then
+        return settings.glowWhenSuggested
+    end
+    return DEFAULT_GLOW_WHEN_SUGGESTED
+end
+
+function CooldownStyle.SetGlowWhenSuggested(spellID, value)
+    if value == DEFAULT_GLOW_WHEN_SUGGESTED then
+        local settings = CooldownStyle.GetSpellSettings(spellID)
+        if settings ~= nil then
+            settings.glowWhenSuggested = nil
+        end
+        return
+    end
+
+    CooldownStyle.EnsureSpellSettings(spellID).glowWhenSuggested = value
+end
+
+function CooldownStyle.ToggleGlowWhenSuggested(spellID)
+    CooldownStyle.SetGlowWhenSuggested(spellID, not CooldownStyle.GetGlowWhenSuggested(spellID))
+end
+
 function CooldownStyle.GetAlwaysGlow(spellID)
     local settings = CooldownStyle.GetSpellSettings(spellID)
     if settings and settings.alwaysGlow ~= nil then
@@ -1504,7 +2420,10 @@ function CooldownStyle.ClearBarColor(spellID)
     end
 end
 
-function CooldownStyle.GetNeverDesaturate(spellID)
+function CooldownStyle.GetNeverDesaturate(spellID, category)
+    if GetAlwaysSaturatedCategorySetting(category) then
+        return true
+    end
     local settings = CooldownStyle.GetSpellSettings(spellID)
     if settings and settings.neverDesaturate ~= nil then
         return settings.neverDesaturate

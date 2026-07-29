@@ -34,6 +34,13 @@ local state = {
 }
 local driver
 
+local function createSlotHost()
+	local host = CreateFrame("Frame", nil, UIParent)
+	host:SetSize(1, 1)
+	host:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", -64, -64)
+	return host
+end
+
 local function buildSpellFilter()
 	local filter = {}
 	for i = 1, #BLOODLUST_BUFF_IDS do filter[BLOODLUST_BUFF_IDS[i]] = true end
@@ -59,7 +66,13 @@ local function createInitializer()
 	local fontColor = addon.db and addon.db["mythicPlusBloodlustTrackerCooldownTextColor"] or { 1, 1, 1, 1 }
 	local fontOffsetX = tonumber(addon.db and addon.db["mythicPlusBloodlustTrackerCooldownTextOffsetX"]) or 0
 	local fontOffsetY = tonumber(addon.db and addon.db["mythicPlusBloodlustTrackerCooldownTextOffsetY"]) or 0
+	local durationTextOptions = addon.functions and addon.functions.GetAuraButtonDurationTextOptions
+		and addon.functions.GetAuraButtonDurationTextOptions(addon.db and addon.db["mythicPlusBloodlustTrackerDurationTextProfile"])
+		or nil
 	return function(button)
+		button:EnableMouse(false)
+		if button.SetMouseClickEnabled then button:SetMouseClickEnabled(false) end
+		if button.SetMouseMotionEnabled then button:SetMouseMotionEnabled(false) end
 		local background = button:CreateTexture(nil, "BACKGROUND")
 		background:SetAllPoints(button)
 		background:SetColorTexture(0, 0, 0, 1)
@@ -95,7 +108,7 @@ local function createInitializer()
 			end
 			durationText:SetTextColor(fontColor.r or fontColor[1] or 1, fontColor.g or fontColor[2] or 1, fontColor.b or fontColor[3] or 1, fontColor.a or fontColor[4] or 1)
 			if addon.functions and addon.functions.ApplyFontStyleShadow then addon.functions.ApplyFontStyleShadow(durationText, fontOutline, "OUTLINE") end
-			button:SetDurationText(durationText)
+			button:SetDurationText(durationText, durationTextOptions)
 		end
 
 		if MythicPlus.functions.ApplyTrackerIconShape then
@@ -123,6 +136,8 @@ local function getStyleSignature()
 		tostring(db["mythicPlusBloodlustTrackerCooldownTextOutline"] or ""),
 		tostring(db["mythicPlusBloodlustTrackerCooldownTextOffsetX"] or ""),
 		tostring(db["mythicPlusBloodlustTrackerCooldownTextOffsetY"] or ""),
+		tostring(db["mythicPlusBloodlustTrackerDurationTextProfile"] or ""),
+		tostring(addon.DurationText and addon.DurationText.version or 0),
 		tostring(type(db["mythicPlusBloodlustTrackerCooldownTextColor"]) == "table" and (db["mythicPlusBloodlustTrackerCooldownTextColor"].r or db["mythicPlusBloodlustTrackerCooldownTextColor"][1]) or ""),
 		tostring(type(db["mythicPlusBloodlustTrackerCooldownTextColor"]) == "table" and (db["mythicPlusBloodlustTrackerCooldownTextColor"].g or db["mythicPlusBloodlustTrackerCooldownTextColor"][2]) or ""),
 		tostring(type(db["mythicPlusBloodlustTrackerCooldownTextColor"]) == "table" and (db["mythicPlusBloodlustTrackerCooldownTextColor"].b or db["mythicPlusBloodlustTrackerCooldownTextColor"][3]) or ""),
@@ -137,16 +152,38 @@ local function discardContainer()
 	end
 	state.container = nil
 	state.slot = nil
+	state.slotHost = nil
 	state.host = nil
 	state.styleSignature = nil
 end
 
+local function canChangeAuraSoundRegistrations()
+	if InCombatLockdown and InCombatLockdown() then return false end
+	if C_Secrets and C_Secrets.ShouldAurasBeSecret and C_Secrets.ShouldAurasBeSecret() then return false end
+	return true
+end
+
+local function requestSoundRegistrationRetry()
+	if not driver then return end
+	driver:RegisterEvent("PLAYER_REGEN_ENABLED")
+	driver:RegisterEvent("ENCOUNTER_END")
+	driver:RegisterEvent("PLAYER_ENTERING_WORLD")
+	driver:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+end
+
 local function clearSoundRegistrations()
-	if C_UnitAuras and C_UnitAuras.RemoveAuraAppliedSound then
-		for i = 1, #state.soundRegistrationIDs do C_UnitAuras.RemoveAuraAppliedSound(state.soundRegistrationIDs[i]) end
+	if #state.soundRegistrationIDs > 0 and not canChangeAuraSoundRegistrations() then
+		state.pendingSoundClear = true
+		requestSoundRegistrationRetry()
+		return false
+	end
+	if C_UnitAuras and C_UnitAuras.RemoveAuraSound then
+		for i = 1, #state.soundRegistrationIDs do C_UnitAuras.RemoveAuraSound(state.soundRegistrationIDs[i]) end
 	end
 	state.soundRegistrationIDs = {}
 	state.soundSignature = nil
+	state.pendingSoundClear = nil
+	return true
 end
 
 local function resolveAppliedSound()
@@ -171,10 +208,19 @@ function Backend:SyncSounds()
 	local inAllowedScope = not onlyInInstances or IsInInstance()
 	local identity = soundFileName or soundFileID
 	local signature = inAllowedScope and identity and ((soundFileName and "file:" or "id:") .. tostring(identity)) or ""
-	if state.soundSignature == signature then return end
-	clearSoundRegistrations()
+	if state.soundSignature == signature and not state.pendingSoundClear then
+		state.pendingSoundSync = nil
+		return
+	end
+	if not canChangeAuraSoundRegistrations() then
+		state.pendingSoundSync = true
+		requestSoundRegistrationRetry()
+		return
+	end
+	state.pendingSoundSync = nil
+	if not clearSoundRegistrations() then return end
 	state.soundSignature = signature
-	if not (identity and inAllowedScope and C_UnitAuras and C_UnitAuras.AddAuraAppliedSound) then return end
+	if not (identity and inAllowedScope and C_UnitAuras and C_UnitAuras.AddAuraSound) then return end
 	for i = 1, #BLOODLUST_BUFF_IDS do
 		local info = {
 			unitToken = "player",
@@ -182,7 +228,9 @@ function Backend:SyncSounds()
 			outputChannel = "Master",
 		}
 		if soundFileName then info.soundFileName = soundFileName else info.soundFileID = soundFileID end
-		local registrationID = C_UnitAuras.AddAuraAppliedSound(info)
+		-- This tracks the Bloodlust buff itself. Removed would mean that the
+		-- short buff expired, not that the longer Bloodlust lockout is ready.
+		local registrationID = C_UnitAuras.AddAuraSound(Enum.UnitAuraSoundTrigger.Added, info)
 		if registrationID then state.soundRegistrationIDs[#state.soundRegistrationIDs + 1] = registrationID end
 	end
 end
@@ -190,17 +238,15 @@ end
 function Backend:Ensure()
 	local styleSignature = getStyleSignature()
 	if state.container and state.styleSignature == styleSignature then return true end
-	if InCombatLockdown and InCombatLockdown() then
-		if driver then driver:RegisterEvent("PLAYER_REGEN_ENABLED") end
-		return false
-	end
 	if state.container then discardContainer() end
 	local container = AuraCompat:CreateAuraContainer(UIParent)
 	if not container then return false end
+	local slotHost = createSlotHost()
 	container:SetAllPoints(UIParent)
 	container:SetAlpha(0)
 	container:SetUnit("player")
 	local slot = AuraCompat:RegisterAuraSlot(container, SLOT_KEY, FILTER_STRING, {
+		anchorFrame = slotHost,
 		candidateFilters = { includeSpellIDs = buildSpellFilter() },
 		initializeFrame = createInitializer(),
 	})
@@ -210,9 +256,8 @@ function Backend:Ensure()
 	end
 	state.container = container
 	state.slot = slot
+	state.slotHost = slotHost
 	state.styleSignature = styleSignature
-	slot:ClearAllPoints()
-	slot:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", -64, -64)
 	AuraCompat:RefreshAuraContainer(container, "player")
 	return true
 end
@@ -220,17 +265,13 @@ end
 function Backend:RefreshStyle()
 	if not self:IsSupported() then return end
 	local host = state.host or state.pendingHost
-	if state.container and state.styleSignature ~= getStyleSignature() and not (InCombatLockdown and InCombatLockdown()) then discardContainer() end
+	if state.container and state.styleSignature ~= getStyleSignature() then discardContainer() end
 	if host then self:Attach(host) else self:Ensure() end
 end
 
 function Backend:Attach(host)
 	state.pendingHost = host
 	if not host or not self:Ensure() then return false end
-	if InCombatLockdown and InCombatLockdown() then
-		if driver then driver:RegisterEvent("PLAYER_REGEN_ENABLED") end
-		return false
-	end
 	if state.container:GetParent() ~= host then
 		state.container:SetParent(host)
 		state.container:ClearAllPoints()
@@ -240,8 +281,8 @@ function Backend:Attach(host)
 	-- Keep the native aura above the legacy host cooldown/text, but below the
 	-- existing configured border at host + 5.
 	state.container:SetFrameLevel(math.min(65535, (host:GetFrameLevel() or 0) + 2))
-	state.slot:ClearAllPoints()
-	state.slot:SetAllPoints(host)
+	state.slotHost:ClearAllPoints()
+	state.slotHost:SetAllPoints(host)
 	state.host = host
 	state.container:SetAlpha(1)
 	AuraCompat:RefreshAuraContainer(state.container, "player")
@@ -252,9 +293,9 @@ end
 function Backend:Detach()
 	state.pendingHost = nil
 	state.host = nil
-	if not state.slot then return end
-	state.slot:ClearAllPoints()
-	state.slot:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", -64, -64)
+	if not state.slotHost then return end
+	state.slotHost:ClearAllPoints()
+	state.slotHost:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", -64, -64)
 	if state.container then
 		state.container:SetAlpha(0)
 		AuraCompat:DisableAuraContainer(state.container)
@@ -280,9 +321,14 @@ end
 
 driver = CreateFrame("Frame")
 driver:SetScript("OnEvent", function(self)
-	Backend:Ensure()
-	if state.pendingHost then Backend:Attach(state.pendingHost) end
-	self:UnregisterEvent("PLAYER_REGEN_ENABLED")
+	if not canChangeAuraSoundRegistrations() then return end
+	if state.pendingSoundClear then clearSoundRegistrations() end
+	if state.pendingSoundSync then Backend:SyncSounds() end
+	if addon.db and addon.db["mythicPlusBloodlustTrackerEnabled"] == true then
+		Backend:Ensure()
+		if state.pendingHost then Backend:Attach(state.pendingHost) end
+	end
+	self:UnregisterAllEvents()
 end)
 
 Backend:Ensure()

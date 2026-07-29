@@ -1,9 +1,8 @@
--- luacheck: globals BackdropTemplate CreateFrame UIParent MinimapCluster InCombatLockdown RegisterAttributeDriver GameTooltip C_UnitAuras CooldownFrame_Set GetTime GetInventoryItemTexture GetInventoryItemID GetInventoryItemLink GetInventorySlotInfo GetWeaponEnchantInfo C_Item C_DurationUtil C_CurveUtil Enum DEBUFF_TYPE_MAGIC_COLOR DEBUFF_TYPE_CURSE_COLOR DEBUFF_TYPE_DISEASE_COLOR DEBUFF_TYPE_POISON_COLOR DEBUFF_TYPE_BLEED_COLOR DEBUFF_TYPE_NONE_COLOR GetFrameHandleFrame
+-- luacheck: globals BackdropTemplate CreateFrame UIParent MinimapCluster InCombatLockdown RegisterAttributeDriver GameTooltip C_UnitAuras CooldownFrame_Set GetTime GetInventoryItemTexture GetInventoryItemID GetInventoryItemLink GetInventorySlotInfo GetWeaponEnchantInfo C_Item C_DurationUtil C_CurveUtil Enum AnchorUtil AuraContainerItemEnchantmentSlot AuraContainerItemEnchantmentSortMethod AuraContainerSortMethod AuraContainerSortDirection CustomAuraContainerItemEnchantmentPlacement DEBUFF_TYPE_MAGIC_COLOR DEBUFF_TYPE_CURSE_COLOR DEBUFF_TYPE_DISEASE_COLOR DEBUFF_TYPE_POISON_COLOR DEBUFF_TYPE_BLEED_COLOR DEBUFF_TYPE_NONE_COLOR GetFrameHandleFrame
 local parentAddonName = "EnhanceQoL"
 local addonName, addon = ...
 local _, _, _, interfaceVersion = GetBuildInfo()
-
-if (tonumber(interfaceVersion) or 0) >= 120100 then return end
+local useNativeAuraContainers = (tonumber(interfaceVersion) or 0) >= 120100
 
 if _G[parentAddonName] then
 	addon = _G[parentAddonName]
@@ -148,6 +147,7 @@ local GLOBAL_STYLE_KEY = "__EQOL_GLOBAL_FONT_STYLE__"
 local refreshDefaultAuraIconSkin
 local getDefaultAuraStyleConfig
 local isNoAuraBorder
+local configureDefaultNativeAuraContainer
 
 local function normalizeDefaultAuraDurationTextProfile(value)
 	local durationText = addon.DurationText
@@ -1370,6 +1370,12 @@ local function attachDefaultAuraHeaderToAnchor(header, anchor)
 	if not (header and anchor) then return end
 	if header:GetParent() ~= anchor then header:SetParent(anchor) end
 	header:ClearAllPoints()
+	if header.eqolNativeAuraContainer then
+		header:SetAllPoints(anchor)
+		header:SetFrameStrata(anchor:GetFrameStrata())
+		header:SetFrameLevel((anchor:GetFrameLevel() or 1) + 1)
+		return
+	end
 	local kind = header.eqolDefaultAuraKind or "buff"
 	local _, _, _, startPoint = getDefaultAuraGrowthLayout(kind)
 	header:SetPoint(startPoint, anchor, startPoint, 0, 0)
@@ -1492,6 +1498,7 @@ end
 
 local function hideBlizzardAuraFrame(frame)
 	if not (frame and frame.Hide) then return end
+	if InCombatLockdown and InCombatLockdown() and frame.IsProtected and frame:IsProtected() then return end
 	frame.eqolDefaultAuraHiddenByDefaultAuraContainers = true
 	frame:Hide()
 end
@@ -1609,6 +1616,13 @@ local function applyDefaultAuraEditModeSetting(kind, field, value)
 		setDefaultAuraDBValue(kind, "CountOffset", offset)
 	elseif field == "sync" then
 		addon.db["skinnerDefaultAuraSyncBuffDebuff"] = value == true
+	end
+	-- Runtime-created PTR7 AuraButtons become access constrained after
+	-- initializeFrame returns, and registered children can no longer be
+	-- re-parented. Layout and ordering live on the container and can update
+	-- immediately; visual relationships are rebuilt by a reload.
+	if useNativeAuraContainers and field ~= "size" and field ~= "horizontalSpacing" and field ~= "verticalSpacing" and field ~= "perRow" and field ~= "maxRows" and field ~= "growth" and field ~= "frameStrata" and field ~= "frameLevel" and field ~= "sortMethod" and field ~= "sortDirection" then
+		markDefaultAuraReloadRequired()
 	end
 	refreshDefaultAuraIconSkin()
 end
@@ -1862,6 +1876,7 @@ local function registerDefaultAuraHeaderEditMode(kind, header, anchor)
 		attachDefaultAuraHeaderToAnchor(header, anchor)
 		return true
 	end
+	if InCombatLockdown and InCombatLockdown() then return false end
 
 	attachDefaultAuraHeaderToAnchor(header, anchor)
 
@@ -1875,13 +1890,21 @@ local function registerDefaultAuraHeaderEditMode(kind, header, anchor)
 		end,
 		onApply = function()
 			attachDefaultAuraHeaderToAnchor(header, anchor)
-			applyDefaultAuraHeaderButtonStyles(header, true)
-			updateDefaultAuraHeaderButtons(header)
+			if header.eqolNativeAuraContainer then
+				configureDefaultNativeAuraContainer(kind, header, anchor)
+			else
+				applyDefaultAuraHeaderButtonStyles(header, true)
+				updateDefaultAuraHeaderButtons(header)
+			end
 		end,
 		onPositionChanged = function()
 			attachDefaultAuraHeaderToAnchor(header, anchor)
-			applyDefaultAuraHeaderButtonStyles(header, true)
-			updateDefaultAuraHeaderButtons(header)
+			if header.eqolNativeAuraContainer then
+				configureDefaultNativeAuraContainer(kind, header, anchor)
+			else
+				applyDefaultAuraHeaderButtonStyles(header, true)
+				updateDefaultAuraHeaderButtons(header)
+			end
 		end,
 		settings = createDefaultAuraEditModeSettings(kind),
 		settingsMaxHeight = 700,
@@ -1892,21 +1915,26 @@ local function registerDefaultAuraHeaderEditMode(kind, header, anchor)
 
 	if EditMode.RegisterButtons then
 		local otherKind = isBuff and "debuff" or "buff"
-		EditMode:RegisterButtons(id, {
-			{
+		local buttons = {}
+		-- PTR5's Edit Mode aura provider populates broad HELPFUL/HARMFUL
+		-- AuraGroups directly. Keep manual samples only for the legacy header.
+		if not useNativeAuraContainers then
+			buttons[#buttons + 1] = {
 				text = L["Toggle sample auras"] or "Toggle sample auras",
 				layout = "compact",
 				click = function() toggleDefaultAuraSamples(kind) end,
-			},
-			{
+			}
+		end
+		buttons[#buttons + 1] = {
 				text = isBuff and (L["Copy settings to debuffs"] or "Copy settings to debuffs") or (L["Copy settings to buffs"] or "Copy settings to buffs"),
 				layout = "compact",
 				click = function()
 					copyDefaultAuraConfig(kind, otherKind)
+					if useNativeAuraContainers then markDefaultAuraReloadRequired() end
 					refreshDefaultAuraIconSkin()
 				end,
-			},
-		})
+			}
+		EditMode:RegisterButtons(id, buttons)
 	end
 
 	DAC.variables[flag] = true
@@ -1926,7 +1954,272 @@ local function ensureDefaultAuraContainerHooks()
 	if _G.DebuffFrame and _G.DebuffFrame.HookScript then _G.DebuffFrame:HookScript("OnShow", updateBlizzardAuraFrameVisibility) end
 end
 
+local function getNativeAuraSortOptions(kind)
+	local method = normalizeDefaultAuraSortMethod(getDefaultAuraDBValue(kind, "SortMethod"))
+	local direction = normalizeDefaultAuraSortDirection(getDefaultAuraDBValue(kind, "SortDirection"))
+	local nativeMethod = AuraContainerSortMethod and AuraContainerSortMethod.Default or 0
+	if method == "TIME" and AuraContainerSortMethod then
+		nativeMethod = AuraContainerSortMethod.Expiration
+	elseif method == "NAME" and AuraContainerSortMethod then
+		nativeMethod = AuraContainerSortMethod.Name
+	elseif method == "INDEX" and AuraContainerSortMethod and AuraContainerSortMethod.AuraInstanceIDOnly then
+		nativeMethod = AuraContainerSortMethod.AuraInstanceIDOnly
+	end
+	local nativeDirection = AuraContainerSortDirection and AuraContainerSortDirection.Normal or 0
+	if direction == "-" and AuraContainerSortDirection then nativeDirection = AuraContainerSortDirection.Reverse end
+	return nativeMethod, nativeDirection
+end
+
+local function initializeDefaultNativeAuraButton(button, kind)
+	local config = getDefaultAuraStyleConfig(kind)
+	button.eqolDefaultAuraKind = kind
+	button:SetSize(config.size, config.size)
+	button:SetCancelAuraButtons(kind == "buff" and "RightButtonUp" or nil)
+	button:EnableMouse(true)
+	if button.SetMouseClickEnabled then button:SetMouseClickEnabled(kind == "buff") end
+	if button.SetMouseMotionEnabled then button:SetMouseMotionEnabled(true) end
+	if addon.AuraCompat and addon.AuraCompat.RegisterAuraButtonTooltipPolicy then
+		addon.AuraCompat:RegisterAuraButtonTooltipPolicy(button, false, true)
+	end
+
+	local icon = button:CreateTexture(nil, "ARTWORK")
+	icon:SetAllPoints(button)
+	button:SetIcon(icon)
+
+	local cooldown = CreateFrame("Cooldown", nil, button, "CooldownFrameTemplate")
+	cooldown:SetAllPoints(button)
+	cooldown:SetDrawSwipe(config.drawSwipe)
+	cooldown:SetDrawEdge(config.drawEdge)
+	cooldown:SetReverse(config.cooldownReverse)
+	cooldown:SetHideCountdownNumbers(true)
+	if cooldown.SetUseAuraDisplayTime then cooldown:SetUseAuraDisplayTime(true) end
+	button:SetDurationCooldown(cooldown)
+
+	if not config.hideCountdownNumbers then
+		local duration = button:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+		setAuraFontStringStyle(duration, "Duration", DEFAULT_AURA_DURATION_COLOR, kind)
+		positionAuraFontString(duration, button, "Duration", "BOTTOM", 0, -1, kind)
+		local options = addon.functions and addon.functions.GetAuraButtonDurationTextOptions
+			and addon.functions.GetAuraButtonDurationTextOptions(config.durationTextProfile)
+			or nil
+		button:SetDurationText(duration, options)
+	end
+
+	if config.countEnabled then
+		local count = button:CreateFontString(nil, "OVERLAY", "NumberFontNormal")
+		setAuraFontStringStyle(count, "Count", DEFAULT_AURA_COUNT_COLOR, kind)
+		positionAuraFontString(count, button, "Count", "TOPRIGHT", -1, -1, kind)
+		button:SetApplicationCount(count)
+	end
+
+	if addon.IconShape and addon.IconShape.ApplyFrameShape then
+		addon.IconShape.ApplyFrameShape(button, config.shape, {
+			textures = { icon },
+			cooldown = cooldown,
+			iconZoom = config.zoom,
+			textureMaskKey = "_eqolDefaultAuraIconMask",
+			textureTexCoordKey = "_eqolDefaultAuraIconTexCoord",
+			maskKey = "_eqolDefaultAuraMask",
+		})
+	elseif icon.SetTexCoord then
+		icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+	end
+	applyDefaultAuraIconDarkMode(button, config)
+
+	-- DispelTypeTexture is a dispel-color binding. Applying it to helpful auras
+	-- colors their no-dispel fallback as a red debuff border and bypasses the
+	-- configured EnhanceQoL border. Helpful auras keep the normal style path.
+	if config.kind == "debuff" and (config.useDebuffTypeBorderColor or config.useOriginalBorderColor) then
+		local registeredDispelTexture = false
+		local function registerDispelTexture(texture)
+			if not texture then return end
+			button:AddDispelTypeTexture(texture, {
+				style = Enum.CustomAuraButtonDispelTypeTextureStyle.PreserveAsset,
+				showWhenHarmful = true,
+				showWhenHelpful = false,
+				showWithoutDispelType = true,
+				customDispelColorCurve = config.useDebuffTypeBorderColor and ensureDefaultAuraDispelColorCurve() or nil,
+			})
+			registeredDispelTexture = true
+		end
+
+		-- PTR7 supports multiple dispel textures, so the selected multi-part
+		-- border can now retain its configured shape instead of falling back to
+		-- one rectangular Blizzard overlay.
+		if config.hasCustomBorder then
+			local initialColor = config.color or { 1, 1, 1, 1 }
+			if isBackdropAuraBorderCompatible(config.shape) then
+				if applyDefaultAuraBackdropBorder(button, icon, config.borderKey, initialColor, config) then
+					local borderState = button.eqolDefaultAuraBackdropBorder and button.eqolDefaultAuraBackdropBorder._eqolDefaultAuraSafeBorder
+					if borderState then
+						for _, key in ipairs({ "top", "bottom", "left", "right", "topLeft", "topRight", "bottomLeft", "bottomRight" }) do
+							registerDispelTexture(borderState[key])
+						end
+					end
+				end
+			elseif applyDefaultAuraShapeBorder(button, icon, config.borderKey, config.shape, initialColor, config) then
+				for _, texture in ipairs(button._eqolDefaultAuraShapeBorderTextures or {}) do registerDispelTexture(texture) end
+			end
+		end
+
+		if not registeredDispelTexture then
+			local border = button:CreateTexture(nil, "OVERLAY", nil, 6)
+			border:SetTexture("Interface\\Buttons\\UI-Debuff-Overlays")
+			local offset = tonumber(config.borderOffset) or 0
+			border:SetPoint("TOPLEFT", icon, "TOPLEFT", -offset, offset)
+			border:SetPoint("BOTTOMRIGHT", icon, "BOTTOMRIGHT", offset, -offset)
+			border:SetTexCoord(0.296875, 0.5703125, 0, 0.515625)
+			registerDispelTexture(border)
+		end
+	elseif config.hasCustomBorder then
+		local color = resolveDefaultAuraBorderColorFromConfig(button, config)
+		if isBackdropAuraBorderCompatible(config.shape) then
+			applyDefaultAuraBackdropBorder(button, icon, config.borderKey, color, config)
+		else
+			applyDefaultAuraShapeBorder(button, icon, config.borderKey, config.shape, color, config)
+		end
+	end
+end
+
+local function getNativeAuraLayout(kind)
+	local size = getDefaultAuraIconSize(nil, kind)
+	local spacingX = getDefaultAuraHorizontalSpacing(nil, kind)
+	local spacingY = getDefaultAuraVerticalSpacing(nil, kind)
+	local perRow = getDefaultAuraIconsPerRow(nil, kind)
+	local maxRows = getDefaultAuraMaxRows(nil, kind)
+	local _, _, primaryHorizontal, startPoint = getDefaultAuraGrowthLayout(kind)
+	local horizontal = startPoint:find("RIGHT", 1, true) and AnchorUtil.FlowDirection.Left or AnchorUtil.FlowDirection.Right
+	local vertical = startPoint:find("BOTTOM", 1, true) and AnchorUtil.FlowDirection.Up or AnchorUtil.FlowDirection.Down
+	local elementSpacing = primaryHorizontal and spacingX or spacingY
+	local lineSpacing = primaryHorizontal and spacingY or spacingX
+	local maximumLineCount = primaryHorizontal and perRow or maxRows
+	return {
+		axis = primaryHorizontal and AnchorUtil.FlowLayoutAxis.Horizontal or AnchorUtil.FlowLayoutAxis.Vertical,
+		anchorPoint = startPoint,
+		horizontalGrowthDirection = horizontal,
+		verticalGrowthDirection = vertical,
+		maximumLineSize = maximumLineCount * size + (maximumLineCount - 1) * elementSpacing,
+		group = {
+			elementSpacing = elementSpacing,
+			lineSpacing = lineSpacing,
+			groupSpacing = 0,
+			groupLineSpacing = lineSpacing,
+			forceNewLine = false,
+			elementWidth = size,
+			elementHeight = size,
+			layoutIndex = 1,
+		},
+	}
+end
+
+configureDefaultNativeAuraContainer = function(kind, container, anchor)
+	local AuraCompat = addon.AuraCompat
+	if not (AuraCompat and container and anchor) then return false end
+	local layout = getNativeAuraLayout(kind)
+	local perRow = getDefaultAuraIconsPerRow(nil, kind)
+	local maxRows = getDefaultAuraMaxRows(nil, kind)
+	local sortMethod, sortDirection = getNativeAuraSortOptions(kind)
+	anchor:SetFrameStrata(normalizeDefaultAuraFrameStrata(getDefaultAuraDBValue(kind, "FrameStrata")))
+	anchor:SetFrameLevel(getDefaultAuraFrameLevel(nil, kind))
+	container:SetFrameStrata(anchor:GetFrameStrata())
+	container:SetFrameLevel((anchor:GetFrameLevel() or 1) + 1)
+	container:ClearAllPoints()
+	container:SetAllPoints(anchor)
+	if not AuraCompat:ConfigureAuraContainerLayout(container, layout) then return false end
+	if not AuraCompat:RegisterAuraGroup(container, "default", kind == "debuff" and "HARMFUL" or "HELPFUL", {
+		maxFrameCount = perRow * maxRows,
+		initializeFrame = function(button) initializeDefaultNativeAuraButton(button, kind) end,
+		sortMethod = sortMethod,
+		sortDirection = sortDirection,
+		layout = layout.group,
+	}) then
+		return false
+	end
+
+	if kind == "buff" and getDefaultAuraDBValue(kind, "IncludeWeapons") == true and AuraContainerItemEnchantmentSlot then
+		local init = function(button) initializeDefaultNativeAuraButton(button, kind) end
+		AuraCompat:RegisterItemEnchantment(container, AuraContainerItemEnchantmentSlot.MainHand, { initializeFrame = init, cancelAuraButtons = "RightButtonUp" })
+		AuraCompat:RegisterItemEnchantment(container, AuraContainerItemEnchantmentSlot.OffHand, { initializeFrame = init, cancelAuraButtons = "RightButtonUp" })
+		AuraCompat:RegisterItemEnchantment(container, AuraContainerItemEnchantmentSlot.Ranged, { initializeFrame = init, cancelAuraButtons = "RightButtonUp" })
+		AuraCompat:ConfigureItemEnchantmentLayout(container, {
+			placement = CustomAuraContainerItemEnchantmentPlacement.BeforeAuraGroups,
+			elementSpacing = layout.group.elementSpacing,
+			lineSpacing = layout.group.lineSpacing,
+			groupSpacing = 0,
+			groupLineSpacing = layout.group.lineSpacing,
+			forceNewLine = false,
+			elementWidth = getDefaultAuraIconSize(nil, kind),
+			elementHeight = getDefaultAuraIconSize(nil, kind),
+			layoutIndex = 0,
+		})
+		AuraCompat:SetItemEnchantmentSortMethod(container, AuraContainerItemEnchantmentSortMethod.Slot, sortDirection)
+	end
+	return AuraCompat:RefreshAuraContainer(container, "player")
+end
+
+local function createDefaultNativeAuraContainer(kind, anchor)
+	local AuraCompat = addon.AuraCompat
+	if not (AuraCompat and AuraCompat.CreateAuraContainer) then return nil end
+	local name = kind == "buff" and "EnhanceQoLCustomBuffFrame" or "EnhanceQoLCustomDebuffFrame"
+	local container = AuraCompat:CreateAuraContainer(anchor, name)
+	if not container then return nil end
+	container.eqolDefaultAuraKind = kind
+	container.eqolNativeAuraContainer = true
+	if container.SetRolesets then container:SetRolesets("buffs") end
+	return container
+end
+
+local function refreshDefaultNativeAuraContainers()
+	ensureDefaultAuraContainerHooks()
+	for _, kind in ipairs({ "buff", "debuff" }) do
+		local isBuff = kind == "buff"
+		local enabled = addon.db and addon.db[isBuff and "skinnerDefaultBuffIconsEnabled" or "skinnerDefaultDebuffIconsEnabled"] == true
+		local anchorKey = isBuff and "defaultBuffAnchor" or "defaultDebuffAnchor"
+		local containerKey = isBuff and "defaultBuffHeader" or "defaultDebuffHeader"
+		if enabled then
+			local anchor = ensureDefaultAuraAnchor(kind)
+			local container = DAC.variables[containerKey] or createDefaultNativeAuraContainer(kind, anchor)
+			DAC.variables[containerKey] = container
+			if container and configureDefaultNativeAuraContainer(kind, container, anchor) then
+				-- Blizzard owns the 12.1 Edit Mode aura provider. Never hide the
+				-- native container behind the legacy manually-created sample frames.
+				anchor.eqolDefaultAuraSamplesEnabled = nil
+				hideDefaultAuraSamples(kind)
+				if not registerDefaultAuraHeaderEditMode(kind, container, anchor) then
+					anchor:ClearAllPoints()
+					if isBuff then
+						anchor:SetPoint("TOPRIGHT", MinimapCluster or UIParent, "TOPLEFT", -8, -8)
+					else
+						anchor:SetPoint("TOPRIGHT", DAC.variables.defaultBuffAnchor or MinimapCluster or UIParent, "BOTTOMRIGHT", 0, -20)
+					end
+				end
+				anchor:Show()
+				container:Show()
+			end
+		else
+			if DAC.variables[anchorKey] then DAC.variables[anchorKey]:Hide() end
+			if DAC.variables[containerKey] then addon.AuraCompat:DisableAuraContainer(DAC.variables[containerKey]) end
+		end
+	end
+	updateBlizzardAuraFrameVisibility()
+end
+
 function DAC.functions.RefreshDefaultAuraIconSkin()
+	if useNativeAuraContainers then
+		local inCombat = InCombatLockdown and InCombatLockdown()
+		invalidateDefaultAuraStyleCache()
+		refreshDefaultNativeAuraContainers()
+		-- Protected Blizzard-frame visibility and first-time Edit Mode
+		-- registration still wait for combat to end; native AuraContainer
+		-- creation and configuration no longer need to.
+		if inCombat then
+			DAC.variables.pendingDefaultAuraCombat = true
+			local watcher = ensureDefaultAuraWatcher()
+			watcher:RegisterEvent("PLAYER_REGEN_ENABLED")
+		end
+		return
+	end
+
 	if InCombatLockdown and InCombatLockdown() then
 		DAC.variables.pendingDefaultAuraCombat = true
 		local watcher = ensureDefaultAuraWatcher()

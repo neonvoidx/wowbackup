@@ -116,7 +116,7 @@ WeakAurasOptions: enabled
 WeakAurasTemplates: enabled
 BartrubySummonPet: enabled
 BetterBlizzFrames: enabled
-BetterBlizzPlates: disabled
+BetterBlizzPlates: enabled
 Conceal: enabled
 EditModeExpanded: enabled
 idTip: enabled
@@ -489,3 +489,6 @@ RdysDevTools: enabled
 MiniMarkers: enabled
 RaidLeaderMarker: enabled
 SweepyBoop: enabled
+BattlegroundWinConditions: enabled
+ConsoleVariableManager: enabled
+Shackled: enabled

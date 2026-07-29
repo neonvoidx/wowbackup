@@ -7,6 +7,35 @@ local SettingsLib = LibStub("WildForkLibEQOLSettingsMode-1.0")
 
 ProfileSettings._pendingExportString = nil
 ProfileSettings._pendingImportString = nil
+ProfileSettings._copyDialog = nil
+
+local COPY_SECTIONS = {
+    {
+        key = "general",
+        name = "General addon settings",
+        desc = "Appearance, fonts, visibility, behavior, and other viewer settings.",
+    },
+    {
+        key = "editMode",
+        name = "Edit Mode layout",
+        desc = "Positions, sizes, anchors, spacing, and frame-specific layout settings.",
+    },
+    {
+        key = "trackers",
+        name = "Custom trackers",
+        desc = "Tracker enable state, tracked items and spells, ordering, and tracker count.",
+    },
+    {
+        key = "buffs",
+        name = "Buff containers",
+        desc = "Container enable state, assignments, ordering, and custom auras.",
+    },
+    {
+        key = "spellStyles",
+        name = "Per-spell styles",
+        desc = "Individual spell and item appearance overrides.",
+    },
+}
 
 local playerClassName, playerClassId = UnitClassBase("player")
 
@@ -87,23 +116,6 @@ StaticPopupDialogs["CMC_CONFIRM_DELETE_PROFILE"] = {
     preferredIndex = 3,
 }
 
-StaticPopupDialogs["CMC_CONFIRM_COPY_PROFILE"] = {
-    text = "Are you sure you want to copy the profile:\n\n|cff00ff00%s|r\n\nto the current profile?\n\nThis will overwrite your current profile settings.",
-    button1 = "Copy",
-    button2 = "Cancel",
-    OnAccept = function(self, profileName)
-        if profileName and ns.ProfileAPI:CopyProfile(profileName) then
-            ns.Addon:Print("Copied profile: " .. profileName .. " to current profile.")
-        else
-            ns.Addon:Print("Failed to copy profile.")
-        end
-    end,
-    timeout = 0,
-    whileDead = true,
-    hideOnEscape = true,
-    preferredIndex = 3,
-}
-
 StaticPopupDialogs["CMC_EXPORT_PROFILE"] = {
     text = "Copy this export string (Ctrl+C):\n\nProfile: |cff00ff00%s|r",
     button1 = "Close",
@@ -124,6 +136,125 @@ StaticPopupDialogs["CMC_EXPORT_PROFILE"] = {
     hideOnEscape = true,
     preferredIndex = 3,
 }
+
+local function CreateCopyProfileDialog()
+    local dialog = CreateFrame("Frame", "CMCCopyProfileDialog", UIParent, "BasicFrameTemplateWithInset")
+    dialog:SetSize(500, 390)
+    dialog:SetPoint("CENTER")
+    dialog:SetFrameStrata("DIALOG")
+    dialog:SetClampedToScreen(true)
+    dialog:EnableMouse(true)
+    dialog:Hide()
+    dialog.TitleText:SetText("Copy Profile Settings")
+
+    local intro = dialog:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+    intro:SetPoint("TOPLEFT", 24, -42)
+    intro:SetPoint("TOPRIGHT", -24, -42)
+    intro:SetJustifyH("LEFT")
+    intro:SetText("Choose which settings to copy from:")
+
+    local profileName = dialog:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
+    profileName:SetPoint("TOPLEFT", intro, "BOTTOMLEFT", 0, -7)
+    profileName:SetPoint("TOPRIGHT", intro, "BOTTOMRIGHT", 0, -7)
+    profileName:SetJustifyH("LEFT")
+    dialog.ProfileName = profileName
+
+    local controls = {}
+    local previous
+    for _, section in ipairs(COPY_SECTIONS) do
+        local check = CreateFrame("CheckButton", nil, dialog, "UICheckButtonTemplate")
+        check:SetSize(26, 26)
+        if previous then
+            check:SetPoint("TOPLEFT", previous, "BOTTOMLEFT", 0, -28)
+        else
+            check:SetPoint("TOPLEFT", profileName, "BOTTOMLEFT", -4, -17)
+        end
+
+        local label = dialog:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+        label:SetPoint("LEFT", check, "RIGHT", 3, 1)
+        label:SetText(section.name)
+
+        local desc = dialog:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+        desc:SetPoint("TOPLEFT", label, "BOTTOMLEFT", 0, -3)
+        desc:SetPoint("RIGHT", dialog, "RIGHT", -28, 0)
+        desc:SetJustifyH("LEFT")
+        desc:SetText(section.desc)
+
+        check:SetScript("OnClick", function()
+            dialog.CopyButton:SetEnabled(ProfileSettings:HasCopySelection())
+        end)
+        controls[section.key] = check
+        previous = check
+    end
+    dialog.Controls = controls
+
+    local copyButton = CreateFrame("Button", nil, dialog, "UIPanelButtonTemplate")
+    copyButton:SetSize(110, 24)
+    copyButton:SetPoint("BOTTOMRIGHT", dialog, "BOTTOM", -5, 14)
+    copyButton:SetText("Copy selected")
+    dialog.CopyButton = copyButton
+
+    local cancelButton = CreateFrame("Button", nil, dialog, "UIPanelButtonTemplate")
+    cancelButton:SetSize(110, 24)
+    cancelButton:SetPoint("BOTTOMLEFT", dialog, "BOTTOM", 5, 14)
+    cancelButton:SetText("Cancel")
+    cancelButton:SetScript("OnClick", function()
+        dialog:Hide()
+    end)
+
+    copyButton:SetScript("OnClick", function()
+        if InCombatLockdown() then
+            ns.Addon:Print("Cannot copy profile settings while in combat.")
+            return
+        end
+
+        local selected = {}
+        for _, section in ipairs(COPY_SECTIONS) do
+            selected[section.key] = controls[section.key]:GetChecked() == true
+        end
+
+        local sourceProfile = tostring(dialog.SourceProfile or "")
+        if sourceProfile ~= "" and ns.ProfileAPI:CopyProfile(sourceProfile, selected) then
+            ns.Addon:Print("Copied selected settings from profile: " .. sourceProfile .. ".")
+            dialog:Hide()
+        else
+            ns.Addon:Print("Failed to copy profile settings.")
+        end
+    end)
+
+    dialog:SetScript("OnHide", function()
+        dialog.SourceProfile = nil
+    end)
+
+    tinsert(UISpecialFrames, dialog:GetName())
+    return dialog
+end
+
+function ProfileSettings:HasCopySelection()
+    local dialog = self._copyDialog
+    if not dialog then
+        return false
+    end
+    for _, section in ipairs(COPY_SECTIONS) do
+        if dialog.Controls[section.key]:GetChecked() then
+            return true
+        end
+    end
+    return false
+end
+
+function ProfileSettings:ShowCopyDialog(sourceProfile)
+    local dialog = self._copyDialog or CreateCopyProfileDialog()
+    self._copyDialog = dialog
+    dialog.SourceProfile = sourceProfile
+    dialog.ProfileName:SetText("|cff00ff00" .. sourceProfile .. "|r")
+    for _, section in ipairs(COPY_SECTIONS) do
+        dialog.Controls[section.key]:SetChecked(true)
+    end
+    dialog.CopyButton:SetEnabled(true)
+    dialog:Show()
+    dialog:Raise()
+end
 
 StaticPopupDialogs["CMC_IMPORT_PROFILE_STRING"] = {
     text = "Paste the profile export string below:",
@@ -364,10 +495,10 @@ function ProfileSettings:BuildSettings(parentCategory)
                 return
             end
             if value and value ~= "" then
-                StaticPopup_Show("CMC_CONFIRM_COPY_PROFILE", value, nil, value)
+                ProfileSettings:ShowCopyDialog(value)
             end
         end,
-        desc = "Select a profile to copy (cannot copy active profile).",
+        desc = "Select a profile, then choose which groups of settings to copy.",
     })
 
     SettingsLib:CreateHeader(profileCategory, {

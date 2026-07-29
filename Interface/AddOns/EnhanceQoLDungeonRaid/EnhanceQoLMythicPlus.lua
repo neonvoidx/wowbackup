@@ -969,6 +969,15 @@ local function applyBRLayoutData(data)
 
 	local resolvedAnchorFrame = resolveTrackerAnchorFrame(relativeFrame)
 	maybeScheduleTrackerAnchorRefresh(relativeFrame)
+	local dynamicWinner = addon.DynamicAnchors and addon.DynamicAnchors:GetSimpleFrameWinner("tracker:mythicPlusBattleRes")
+	if dynamicWinner and dynamicWinner.frame then
+		local placement = dynamicWinner.placement or {}
+		point = placement.point or "CENTER"
+		relativePoint = placement.relativePoint or point
+		x = tonumber(placement.x) or 0
+		y = tonumber(placement.y) or 0
+		resolvedAnchorFrame = dynamicWinner.frame
+	end
 
 	if brAnchor then
 		brAnchor:SetSize(size, size)
@@ -1040,6 +1049,19 @@ local function ensureBRAnchor()
 		brAnchor.label:SetPoint("CENTER")
 		brAnchor.label:SetText(L["mythicPlusBRTrackerAnchor"])
 		brAnchor.label:SetAlpha(0)
+	end
+	if addon.DynamicAnchors then
+		addon.DynamicAnchors:RegisterSimpleFrame({
+			id = "tracker:mythicPlusBattleRes",
+			owner = "EnhanceQoLDungeonRaid",
+			label = L["mythicPlusBRTrackerAnchor"] or "Battle Resurrection Tracker",
+			menuGroup = "TRACKERS",
+			menuGroupLabel = L["Dynamic Anchor Group Trackers"],
+			menuGroupOrder = 400,
+			getFrame = function() return brAnchor end,
+			isAvailable = function(frame) return addon.db and addon.db["mythicPlusBRTrackerEnabled"] == true and frame ~= nil and frame:IsShown() end,
+			apply = function() applyBRLayoutData() end,
+		})
 	end
 
 	if EditMode and not brEditModeRegistered then
@@ -1798,6 +1820,22 @@ local function ensureBRAnchor()
 					isEnabled = function() return addon.db and addon.db["mythicPlusBRTrackerChargesEnabled"] ~= false end,
 				},
 			}
+			if addon.DynamicAnchors then
+				addon.DynamicAnchors:AddEditModeAssignmentSettings(settings, settingType, {
+					consumerId = "tracker:mythicPlusBattleRes",
+					parentId = "mythicPlusBRTrackerAnchor",
+					insertAfterId = "mythicPlusBRTrackerAnchor",
+					refresh = function(rebuild)
+						if rebuild and EditMode and EditMode.RefreshFrame then
+							EditMode:RefreshFrame(BR_EDITMODE_ID)
+							C_Timer.After(0, function() applyBRLayoutData() end)
+						else
+							applyBRLayoutData()
+						end
+					end,
+					staticFields = { anchorTarget = true, point = true, relativePoint = true, x = true, y = true },
+				})
+			end
 		end
 
 		EditMode:RegisterFrame(BR_EDITMODE_ID, {
@@ -1837,8 +1875,14 @@ local function ensureBRAnchor()
 			end,
 			settings = settings,
 			settingsMaxHeight = 700,
-			relativeTo = function() return resolveTrackerAnchorFrame(addon.db and addon.db["mythicPlusBRTrackerRelativeFrame"]) end,
-			allowDrag = function() return trackerAnchorUsesUIParent(addon.db and addon.db["mythicPlusBRTrackerRelativeFrame"]) end,
+			relativeTo = function()
+				local winner = addon.DynamicAnchors and addon.DynamicAnchors:GetSimpleFrameWinner("tracker:mythicPlusBattleRes")
+				return winner and winner.frame or resolveTrackerAnchorFrame(addon.db and addon.db["mythicPlusBRTrackerRelativeFrame"])
+			end,
+			allowDrag = function()
+				return not (addon.DynamicAnchors and addon.DynamicAnchors:IsFrameAssignmentEnabled("tracker:mythicPlusBattleRes"))
+					and trackerAnchorUsesUIParent(addon.db and addon.db["mythicPlusBRTrackerRelativeFrame"])
+			end,
 			managePosition = false,
 			persistPosition = false,
 		})
@@ -2367,6 +2411,15 @@ local function applyBloodlustLayoutData(data)
 
 	local resolvedAnchorFrame = resolveTrackerAnchorFrame(relativeFrame)
 	maybeScheduleTrackerAnchorRefresh(relativeFrame)
+	local dynamicWinner = addon.DynamicAnchors and addon.DynamicAnchors:GetSimpleFrameWinner("tracker:mythicPlusBloodlust")
+	if dynamicWinner and dynamicWinner.frame then
+		local placement = dynamicWinner.placement or {}
+		point = placement.point or "CENTER"
+		relativePoint = placement.relativePoint or point
+		x = tonumber(placement.x) or 0
+		y = tonumber(placement.y) or 0
+		resolvedAnchorFrame = dynamicWinner.frame
+	end
 
 	if bloodlustAnchor then
 		bloodlustAnchor:SetSize(size, size)
@@ -2433,6 +2486,19 @@ local function ensureBloodlustAnchor()
 		bloodlustAnchor.label:SetPoint("CENTER")
 		bloodlustAnchor.label:SetText(L["mythicPlusBloodlustTrackerAnchor"] or "Bloodlust Tracker Anchor")
 		bloodlustAnchor.label:SetAlpha(0)
+	end
+	if addon.DynamicAnchors then
+		addon.DynamicAnchors:RegisterSimpleFrame({
+			id = "tracker:mythicPlusBloodlust",
+			owner = "EnhanceQoLDungeonRaid",
+			label = L["mythicPlusBloodlustTrackerAnchor"] or "Bloodlust Tracker",
+			menuGroup = "TRACKERS",
+			menuGroupLabel = L["Dynamic Anchor Group Trackers"],
+			menuGroupOrder = 400,
+			getFrame = function() return bloodlustAnchor end,
+			isAvailable = function(frame) return addon.db and addon.db["mythicPlusBloodlustTrackerEnabled"] == true and frame ~= nil and frame:IsShown() end,
+			apply = function() applyBloodlustLayoutData() end,
+		})
 	end
 
 	if EditMode and not bloodlustEditModeRegistered then
@@ -3423,6 +3489,22 @@ local function ensureBloodlustAnchor()
 					end,
 				},
 			}
+			if addon.DynamicAnchors then
+				addon.DynamicAnchors:AddEditModeAssignmentSettings(settings, settingType, {
+					consumerId = "tracker:mythicPlusBloodlust",
+					parentId = "mythicPlusBloodlustTrackerAnchor",
+					insertAfterId = "mythicPlusBloodlustTrackerAnchor",
+					refresh = function(rebuild)
+						if rebuild and EditMode and EditMode.RefreshFrame then
+							EditMode:RefreshFrame(BLOODLUST_EDITMODE_ID)
+							C_Timer.After(0, function() applyBloodlustLayoutData() end)
+						else
+							applyBloodlustLayoutData()
+						end
+					end,
+					staticFields = { anchorTarget = true, point = true, relativePoint = true, x = true, y = true },
+				})
+			end
 		end
 
 		EditMode:RegisterFrame(BLOODLUST_EDITMODE_ID, {
@@ -3474,8 +3556,14 @@ local function ensureBloodlustAnchor()
 			onExit = function()
 				if addon.MythicPlus.functions.StopBloodlustGlowSample then addon.MythicPlus.functions.StopBloodlustGlowSample() end
 			end,
-			relativeTo = function() return resolveTrackerAnchorFrame(addon.db and addon.db["mythicPlusBloodlustTrackerRelativeFrame"]) end,
-			allowDrag = function() return trackerAnchorUsesUIParent(addon.db and addon.db["mythicPlusBloodlustTrackerRelativeFrame"]) end,
+			relativeTo = function()
+				local winner = addon.DynamicAnchors and addon.DynamicAnchors:GetSimpleFrameWinner("tracker:mythicPlusBloodlust")
+				return winner and winner.frame or resolveTrackerAnchorFrame(addon.db and addon.db["mythicPlusBloodlustTrackerRelativeFrame"])
+			end,
+			allowDrag = function()
+				return not (addon.DynamicAnchors and addon.DynamicAnchors:IsFrameAssignmentEnabled("tracker:mythicPlusBloodlust"))
+					and trackerAnchorUsesUIParent(addon.db and addon.db["mythicPlusBloodlustTrackerRelativeFrame"])
+			end,
 			managePosition = false,
 			persistPosition = false,
 		})

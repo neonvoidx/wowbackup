@@ -31,6 +31,7 @@ local BORDER_COLOR_LABEL = EMBLEM_BORDER_COLOR
 local TEXT_LABEL = LOCALE_TEXT_LABEL
 
 local EDITMODE_ID = "totalAbsorbTracker"
+Tracker.dynamicAnchorId = "tracker:totalAbsorb"
 local DEFAULT_SETTINGS_MAX_HEIGHT = 900
 local PREVIEW_AMOUNT = 123456
 local ANCHOR_POINTS = {
@@ -288,6 +289,22 @@ function Tracker:ResolveAnchorFrame() return resolveRelativeFrame(self:GetRelati
 
 function Tracker:AnchorUsesUIParent() return anchorUsesUIParent(self:GetRelativeFrame()) end
 
+function Tracker:GetDynamicAnchorWinner()
+	return addon.DynamicAnchors and addon.DynamicAnchors:GetSimpleFrameWinner(self.dynamicAnchorId) or nil
+end
+
+function Tracker:ApplyDynamicAnchor()
+	if not frame then return false end
+	local winner = self:GetDynamicAnchorWinner()
+	if not (winner and winner.frame) then return false end
+	local placement = winner.placement or {}
+	local point = placement.point or "CENTER"
+	local relativePoint = placement.relativePoint or point
+	frame:ClearAllPoints()
+	frame:SetPoint(point, winner.frame, relativePoint, tonumber(placement.x) or 0, tonumber(placement.y) or 0)
+	return true
+end
+
 function Tracker:GetTextOnly() return getDBValue(DB_TEXT_ONLY, defaults.textOnly) == true end
 
 function Tracker:GetAbbreviateNumbers() return getDBValue(DB_ABBREVIATE, defaults.abbreviateNumbers) == true end
@@ -453,8 +470,10 @@ function Tracker:ApplyLayoutData(data)
 
 	if not frame then return end
 
-	frame:ClearAllPoints()
-	frame:SetPoint(point, self:ResolveAnchorFrame(), relativePoint or point, x or 0, y or 0)
+	if not self:ApplyDynamicAnchor() then
+		frame:ClearAllPoints()
+		frame:SetPoint(point, self:ResolveAnchorFrame(), relativePoint or point, x or 0, y or 0)
+	end
 
 	frame.icon:ClearAllPoints()
 	frame.icon:SetPoint("CENTER", frame, "CENTER", iconOffsetX or 0, iconOffsetY or 0)
@@ -1024,6 +1043,22 @@ function Tracker:RegisterEditMode()
 				set = function(_, value) Tracker:ApplyLayoutData({ textOffsetY = value }) end,
 			},
 		}
+		if addon.DynamicAnchors then
+			addon.DynamicAnchors:AddEditModeAssignmentSettings(settings, SettingType, {
+				consumerId = self.dynamicAnchorId,
+				parentId = "totalAbsorbTrackerAnchor",
+				insertAfterId = "totalAbsorbTrackerAnchor",
+				refresh = function(rebuild)
+					if rebuild and EditMode and EditMode.RefreshFrame then
+						EditMode:RefreshFrame(EDITMODE_ID)
+						RunNextFrame(function() Tracker:ApplyDynamicAnchor() end)
+					else
+						Tracker:ApplyDynamicAnchor()
+					end
+				end,
+				staticFields = { anchorTarget = true, point = true, relativePoint = true, x = true, y = true },
+			})
+		end
 	end
 
 	EditMode:RegisterFrame(EDITMODE_ID, {
@@ -1040,12 +1075,20 @@ function Tracker:RegisterEditMode()
 			end
 			self:ApplyLayoutData(data)
 		end,
-		onEnter = function() self:ShowEditModeHint(true) end,
+		onEnter = function()
+			self:ShowEditModeHint(true)
+			if addon.DynamicAnchors and addon.DynamicAnchors:IsFrameAssignmentEnabled(Tracker.dynamicAnchorId) then RunNextFrame(function() Tracker:ApplyDynamicAnchor() end) end
+		end,
 		onExit = function() self:ShowEditModeHint(false) end,
 		isEnabled = function() return self:IsEnabled() end,
 		settings = settings,
-		relativeTo = function() return Tracker:ResolveAnchorFrame() end,
-		allowDrag = function() return Tracker:AnchorUsesUIParent() end,
+		relativeTo = function()
+			local winner = Tracker:GetDynamicAnchorWinner()
+			return winner and winner.frame or Tracker:ResolveAnchorFrame()
+		end,
+		allowDrag = function()
+			return not (addon.DynamicAnchors and addon.DynamicAnchors:IsFrameAssignmentEnabled(Tracker.dynamicAnchorId)) and Tracker:AnchorUsesUIParent()
+		end,
 		managePosition = false,
 		persistPosition = false,
 		settingsMaxHeight = DEFAULT_SETTINGS_MAX_HEIGHT,
@@ -1061,6 +1104,19 @@ end
 
 function Tracker:OnSettingChanged(enabled)
 	if enabled then
+		if addon.DynamicAnchors then
+			addon.DynamicAnchors:RegisterSimpleFrame({
+				id = self.dynamicAnchorId,
+				owner = addonName,
+				label = L["TotalAbsorbTracker"] or "Total Absorb Tracker",
+				menuGroup = "TRACKERS",
+				menuGroupLabel = L["Dynamic Anchor Group Trackers"],
+				menuGroupOrder = 400,
+				getFrame = function() return frame end,
+				isAvailable = function(trackerFrame) return Tracker:IsEnabled() and trackerFrame ~= nil and trackerFrame:IsShown() end,
+				apply = function() Tracker:ApplyDynamicAnchor() end,
+			})
+		end
 		self:EnsureFrame()
 		self:RegisterEditMode()
 		self:RegisterEvents()

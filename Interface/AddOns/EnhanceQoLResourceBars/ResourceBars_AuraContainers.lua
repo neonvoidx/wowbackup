@@ -18,7 +18,6 @@ local Backend = {}
 ResourceBars.NativeAuraPowerBackend = Backend
 
 local CreateFrame = CreateFrame
-local InCombatLockdown = InCombatLockdown
 local UIParent = UIParent
 local LSM = LibStub("LibSharedMedia-3.0", true)
 local FILTER_STRING = "HELPFUL"
@@ -28,6 +27,13 @@ local precreateDriver
 local resolveTexture
 local resolveColor
 local applyFont
+
+local function createSlotHost()
+	local host = CreateFrame("Frame", nil, UIParent)
+	host:SetSize(1, 1)
+	host:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", -64, -64)
+	return host
+end
 
 local function getAuraConfig(pType)
 	if ResourceBars.GetAuraPowerConfig then return ResourceBars.GetAuraPowerConfig(pType) end
@@ -77,7 +83,13 @@ local function createInitializer(pType, cfg)
 	}
 	local reverseFill = cfg and cfg.reverseFill == true
 	local displayMax = getDisplayMax(cfg, definition)
+	local durationTextOptions = addon.functions and addon.functions.GetAuraButtonDurationTextOptions
+		and addon.functions.GetAuraButtonDurationTextOptions(cfg and cfg.durationTextProfile)
+		or nil
 	return function(button)
+		button:EnableMouse(false)
+		if button.SetMouseClickEnabled then button:SetMouseClickEnabled(false) end
+		if button.SetMouseMotionEnabled then button:SetMouseMotionEnabled(false) end
 		local fill = CreateFrame("StatusBar", nil, button)
 		fill:SetAllPoints(button)
 		fill:SetFrameLevel((button:GetFrameLevel() or 0) + 1)
@@ -98,23 +110,21 @@ local function createInitializer(pType, cfg)
 				durationText:SetPoint("CENTER", textOverlay, "CENTER", 0, 0)
 				durationText:SetDrawLayer("OVERLAY", 7)
 				applyFont(durationText, fontConfig)
-				button:SetDurationText(durationText)
+				button:SetDurationText(durationText, durationTextOptions)
 				button._eqolAuraPowerDurationText = durationText
 			end
 		else
-			-- PTR4 has no application-count-to-StatusBar binding. The full fill is
-			-- deliberately presence based; Blizzard still writes the secret stack
-			-- count directly to this FontString.
-			fill:SetMinMaxValues(0, displayMax)
-			fill:SetValue(displayMax)
+			-- PTR6 applies the secret application count directly to this StatusBar.
+			-- Keep the configured visual maximum public (for example Maelstrom
+			-- Weapon's 5/10 mode) and never inspect or derive from applications.
+			button:SetApplicationBar(fill, { maxApplications = displayMax })
 			if showText then
 				local applicationCount = textOverlay:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 				applicationCount:SetPoint("CENTER", textOverlay, "CENTER", 0, 0)
 				applicationCount:SetDrawLayer("OVERLAY", 7)
 				applyFont(applicationCount, fontConfig)
-				-- PTR4 application counts are secret in restricted encounters.
-				-- NumericFormatter:FormatNumber rejects secret input, while Blizzard's
-				-- built-in no-formatter path wraps the resulting text safely.
+				-- Application counts can be secret in restricted encounters. Let the
+				-- native button write the value without exposing it to addon Lua.
 				button:SetApplicationCount(applicationCount)
 				button._eqolAuraPowerApplicationCount = applicationCount
 			end
@@ -177,13 +187,17 @@ local function getStyleSignature(pType, cfg)
 	local definition = getAuraConfig(pType) or {}
 	local texture = resolveTexture(cfg)
 	local r, g, b, a = resolveColor(pType, cfg, definition)
+	local displayMax = getDisplayMax(cfg, definition)
 	local fontColor = cfg and cfg.fontColor
 	local offset = cfg and cfg.textOffset
 	return table.concat({
 		texture,
 		tostring(r), tostring(g), tostring(b), tostring(a),
+		tostring(displayMax),
 		cfg and cfg.reverseFill == true and "1" or "0",
 		tostring(cfg and cfg.textStyle or ""),
+		tostring(cfg and cfg.durationTextProfile or ""),
+		tostring(addon.DurationText and addon.DurationText.version or 0),
 		tostring(cfg and cfg.fontFace or ""),
 		tostring(cfg and cfg.fontSize or ""),
 		tostring(cfg and cfg.fontOutline or ""),
@@ -197,9 +211,9 @@ local function getStyleSignature(pType, cfg)
 end
 
 local function moveSlotOffscreen(state)
-	if not (state and state.slot) then return end
-	state.slot:ClearAllPoints()
-	state.slot:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", -64, -64)
+	if not (state and state.slotHost) then return end
+	state.slotHost:ClearAllPoints()
+	state.slotHost:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", -64, -64)
 	state.bar = nil
 end
 
@@ -217,7 +231,7 @@ function Backend:EnsureState(pType, runtimeCfg)
 	runtimeCfg = runtimeCfg or (ResourceBars.GetRuntimeBarConfig and ResourceBars.GetRuntimeBarConfig(pType)) or {}
 	local styleSignature = getStyleSignature(pType, runtimeCfg)
 	if existing and existing.styleSignature == styleSignature then return existing end
-	if not self:CanHandlePowerType(pType) or (InCombatLockdown and InCombatLockdown()) then return nil end
+	if not self:CanHandlePowerType(pType) then return nil end
 	if existing then
 		moveSlotOffscreen(existing)
 		existing.container:SetAlpha(0)
@@ -228,10 +242,12 @@ function Backend:EnsureState(pType, runtimeCfg)
 	local includeSpellIDs = buildSpellFilter(cfg)
 	local container = AuraCompat:CreateAuraContainer(UIParent)
 	if not container then return nil end
+	local slotHost = createSlotHost()
 	container:SetAllPoints(UIParent)
 	container:SetAlpha(0)
 	container:SetUnit("player")
 	local slot = AuraCompat:RegisterAuraSlot(container, "resourceAura", FILTER_STRING, {
+		anchorFrame = slotHost,
 		candidateFilters = { includeSpellIDs = includeSpellIDs },
 		initializeFrame = createInitializer(pType, runtimeCfg),
 	})
@@ -244,6 +260,7 @@ function Backend:EnsureState(pType, runtimeCfg)
 		pType = pType,
 		container = container,
 		slot = slot,
+		slotHost = slotHost,
 		styleSignature = styleSignature,
 	}
 	states[pType] = state
@@ -283,11 +300,6 @@ function Backend:AttachBar(pType, bar)
 	local state = self:EnsureState(pType, runtimeCfg)
 	if not state then return false end
 	if state.container:GetParent() ~= bar then
-		if InCombatLockdown and InCombatLockdown() then
-			pendingBars[pType] = bar
-			if precreateDriver then precreateDriver:RegisterEvent("PLAYER_REGEN_ENABLED") end
-			return false
-		end
 		state.container:SetParent(bar)
 		state.container:ClearAllPoints()
 		state.container:SetAllPoints(bar)
@@ -295,7 +307,7 @@ function Backend:AttachBar(pType, bar)
 
 	if state.bar ~= bar then
 		moveSlotOffscreen(state)
-		state.slot:SetAllPoints(bar)
+		state.slotHost:SetAllPoints(bar)
 		state.bar = bar
 	end
 	pendingBars[pType] = nil
@@ -394,7 +406,6 @@ function Backend:Disable()
 end
 
 function Backend:Precreate()
-	if InCombatLockdown and InCombatLockdown() then return false end
 	local configs = ResourceBars.GetAuraPowerConfigs and ResourceBars.GetAuraPowerConfigs() or {}
 	for pType, cfg in pairs(configs) do
 		if cfg.spellCastCountId == nil then self:EnsureState(pType) end

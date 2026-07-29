@@ -36,7 +36,215 @@ local GLOBAL_SETTINGS_JUST_DEFAULTS = {
     -- ["autoSwitchProfile" .. playerClassId .. "Spec" .. i] = "ProfileName", -- ex. autoSwitchProfile1SPec1 = "ProfileName",
 }
 
+---@class CMCAnchorConfig
+---@field to string?
+---@field point string?
+---@field relativePoint string?
+---@field x number?
+---@field y number?
+
+-- Edit Mode entries are populated lazily by WilduUICore/AceDB. Tracker-only and
+-- buff-container-only fields intentionally share one type because callers address
+-- these configs through dynamic keys such as "tracker" .. index.
+---@class CMCEditModeFrameConfig
+---@field point string?
+---@field x number?
+---@field y number?
+---@field scale number?
+---@field alpha number?
+---@field strata string?
+---@field lockHorizontal boolean?
+---@field anchor CMCAnchorConfig?
+---@field orientation string?
+---@field iconDirection string?
+---@field alignment string?
+---@field iconPadding number?
+---@field iconSize number?
+---@field showGCD boolean?
+---@field showStacks boolean?
+---@field rangeIndicator boolean?
+---@field requireResource boolean?
+---@field squareIcons boolean?
+---@field borderThickness number?
+---@field iconZoom number?
+---@field rectangularIcons boolean?
+---@field rectangularIconsPercent number?
+---@field stackAnchor string?
+---@field stackFontName string?
+---@field stackFontFlags table<string, boolean>?
+---@field stackFontSize number?
+---@field stackOffsetX number?
+---@field stackOffsetY number?
+---@field cooldownFontEnabled boolean?
+---@field cooldownFontName string?
+---@field cooldownFontFlags table<string, boolean>?
+---@field cooldownFontSize number|string?
+---@field cooldownTextOffsetX number?
+---@field cooldownTextOffsetY number?
+---@field showKeybinds boolean?
+---@field keybindAnchor string?
+---@field keybindFontName string?
+---@field keybindFontFlags table<string, boolean>?
+---@field keybindFontSize number?
+---@field keybindOffsetX number?
+---@field keybindOffsetY number?
+
+---@class CMCEditModeConfig
+---@field [string] CMCEditModeFrameConfig Dynamic custom trackers and buff containers.
+---@field tracker1 CMCEditModeFrameConfig
+---@field tracker2 CMCEditModeFrameConfig
+---@field buffContainer1 CMCEditModeFrameConfig
+---@field buffContainer2 CMCEditModeFrameConfig
+
+---@class CMCTrackerEntryConfig
+---@field state string?
+---@field order number?
+---@field alwaysShow boolean?
+---@field hiddenForSpecs table<number, boolean>?
+---@field procGlow boolean? False disables the Blizzard proc glow; nil/true enables it.
+---@field glowWhenReady boolean?
+---@field glowOnFullCharges boolean?
+---@field glowColor number[]?
+---@field stackColor number[]?
+---@field auraSpellID number?
+---@field customActiveDuration number?
+---@field useRealAura boolean?
+
+---@class CMCTrackerConfig
+---@field itemSettings table<number, CMCTrackerEntryConfig>?
+---@field spellItemSettings table<number, CMCTrackerEntryConfig>?
+---@field wildcardSlotSettings table<string, CMCTrackerEntryConfig>?
+---@field itemViewerLayouts table?
+---@field showUnusable boolean?
+---@field showPassiveTrinkets boolean?
+
+---@class CMCProfile
+---@field [string] any Imported profiles and legacy migrations may contain additional keys.
+---@field cooldownManager_alignBuffIcons_growFromDirection string
+---@field cooldownManager_alignBuffBars_growFromDirection string
+---@field cooldownManager_centerEssential_growFromDirection string
+---@field cooldownManager_centerUtility_growFromDirection string
+---@field cooldownManager_utility_dimWhenNotOnCD boolean
+---@field cooldownManager_utility_dimOpacity number
+---@field cooldownManager_cooldownFontName string
+---@field cooldownManager_cooldownFontFlags table<string, boolean>
+---@field cooldownManager_cooldownFontSizeEssential_enabled boolean
+---@field cooldownManager_cooldownFontSizeEssential number|string
+---@field cooldownManager_cooldownFontSizeUtility_enabled boolean
+---@field cooldownManager_cooldownFontSizeUtility number|string
+---@field cooldownManager_cooldownFontSizeBuffIcons_enabled boolean
+---@field cooldownManager_cooldownFontSizeBuffIcons number|string
+---@field cooldownManager_cooldownFontSizeTracker_enabled boolean
+---@field cooldownManager_cooldownFontSizeTracker number|string
+---@field cooldownManager_cooldownTextEssential_offsetX number
+---@field cooldownManager_cooldownTextEssential_offsetY number
+---@field cooldownManager_cooldownTextUtility_offsetX number
+---@field cooldownManager_cooldownTextUtility_offsetY number
+---@field cooldownManager_cooldownTextBuffIcons_offsetX number
+---@field cooldownManager_cooldownTextBuffIcons_offsetY number
+---@field cooldownManager_cooldownTextTracker_offsetX number
+---@field cooldownManager_cooldownTextTracker_offsetY number
+---@field cooldownManager_stackFontName string
+---@field cooldownManager_stackFontFlags table<string, boolean>
+---@field cooldownManager_stackFontSizeEssential number?
+---@field cooldownManager_stackFontSizeUtility number?
+---@field cooldownManager_stackFontSizeBuffIcons number?
+---@field cooldownManager_stackAnchorEssential_enabled boolean
+---@field cooldownManager_stackAnchorEssential_point string
+---@field cooldownManager_stackAnchorEssential_offsetX number
+---@field cooldownManager_stackAnchorEssential_offsetY number
+---@field cooldownManager_stackAnchorUtility_enabled boolean
+---@field cooldownManager_stackAnchorUtility_point string
+---@field cooldownManager_stackAnchorUtility_offsetX number
+---@field cooldownManager_stackAnchorUtility_offsetY number
+---@field cooldownManager_stackAnchorBuffIcons_enabled boolean
+---@field cooldownManager_stackAnchorBuffIcons_point string
+---@field cooldownManager_stackAnchorBuffIcons_offsetX number
+---@field cooldownManager_stackAnchorBuffIcons_offsetY number
+---@field cooldownManager_squareIcons_Essential boolean
+---@field cooldownManager_squareIconsBorder_Essential number
+---@field cooldownManager_squareIconsBorder_Essential_Overlap boolean
+---@field cooldownManager_squareIconsZoom_Essential number
+---@field cooldownManager_squareIcons_Utility boolean
+---@field cooldownManager_squareIconsBorder_Utility number
+---@field cooldownManager_squareIconsBorder_Utility_Overlap boolean
+---@field cooldownManager_squareIconsZoom_Utility number
+---@field cooldownManager_squareIcons_BuffIcons boolean
+---@field cooldownManager_squareIconsBorder_BuffIcons number
+---@field cooldownManager_squareIconsBorder_BuffIcons_Overlap boolean
+---@field cooldownManager_squareIconsZoom_BuffIcons number
+---@field cooldownManager_keybindFontName string
+---@field cooldownManager_keybindFontFlags table<string, boolean>
+---@field cooldownManager_showKeybinds_Essential boolean
+---@field cooldownManager_keybindAnchor_Essential string
+---@field cooldownManager_keybindFontSize_Essential number
+---@field cooldownManager_keybindOffsetX_Essential number
+---@field cooldownManager_keybindOffsetY_Essential number
+---@field cooldownManager_showKeybinds_Utility boolean
+---@field cooldownManager_keybindAnchor_Utility string
+---@field cooldownManager_keybindFontSize_Utility number
+---@field cooldownManager_keybindOffsetX_Utility number
+---@field cooldownManager_keybindOffsetY_Utility number
+---@field cooldownManager_showKeybinds_CMCTracker boolean
+---@field cooldownManager_keybindAnchor_CMCTracker string
+---@field cooldownManager_keybindFontSize_CMCTracker number
+---@field cooldownManager_keybindOffsetX_CMCTracker number
+---@field cooldownManager_keybindOffsetY_CMCTracker number
+---@field cooldownManager_limitUtilitySizeToEssential boolean
+---@field cooldownManager_showHighlight_Essential boolean
+---@field cooldownManager_showHighlight_Utility boolean
+---@field cooldownManager_buttonPress boolean
+---@field cooldownManager_buttonPress_texture string
+---@field cooldownManager_hideRangeCheck boolean
+---@field cooldownManager_alwaysSaturated_Essential boolean
+---@field cooldownManager_alwaysSaturated_Utility boolean
+---@field cooldownManager_normalizeUtilitySize boolean
+---@field cooldownManager_visibility_perViewer table?
+---@field cooldownManager_hideCooldownFlash boolean
+---@field cooldownManager_customSwipeColor_enabled boolean
+---@field cooldownManager_customActiveColor_r number
+---@field cooldownManager_customActiveColor_g number
+---@field cooldownManager_customActiveColor_b number
+---@field cooldownManager_customActiveColor_a number
+---@field cooldownManager_customCDSwipeColor_r number
+---@field cooldownManager_customCDSwipeColor_g number
+---@field cooldownManager_customCDSwipeColor_b number
+---@field cooldownManager_customCDSwipeColor_a number
+---@field cooldownManager_desaturate_under_aura boolean
+---@field cooldownManager_hide_gcd boolean
+---@field cooldownManager_experimental_glow_style string
+---@field cooldownManager_experimental_glow_custom_color boolean
+---@field cooldownManager_experimental_glow_color_r number
+---@field cooldownManager_experimental_glow_color_g number
+---@field cooldownManager_experimental_glow_color_b number
+---@field cooldownManager_experimental_glow_color_a number
+---@field cooldownManager_hide_glow_on_active_aura boolean
+---@field cooldownManager_experimental_enableRectangularIcons_essential boolean
+---@field cooldownManager_experimental_enableRectangularIcons_essential_percent number
+---@field cooldownManager_experimental_enableRectangularIcons_utility boolean
+---@field cooldownManager_experimental_enableRectangularIcons_utility_percent number
+---@field cooldownManager_experimental_enableRectangularIcons_buffIcons boolean
+---@field cooldownManager_experimental_enableRectangularIcons_buffIcons_percent number
+---@field trinketRacialTracker_squareIcons boolean
+---@field trinketRacialTracker_borderThickness number
+---@field trinketRacialTracker_iconZoom number
+---@field trinketRacialTracker_rectangularIcons boolean
+---@field trinketRacialTracker_rectangularIcons_percent number
+---@field trinketRacialTracker_stackAnchor string
+---@field trinketRacialTracker_stackFontSize number
+---@field trinketRacialTracker_stackOffsetX number
+---@field trinketRacialTracker_stackOffsetY number
+---@field tracker_enabled boolean
+---@field tracker CMCTrackerConfig
+---@field tracker_count number
+---@field cooldownStyleSettings table
+---@field editMode CMCEditModeConfig
+
+---@class CMCDB: db
+---@field profile CMCProfile
+
 -- Default Settings
+---@type { profile: CMCProfile }
 ns.DEFAULT_SETTINGS = {
     profile = {
         cooldownManager_alignBuffIcons_growFromDirection = "CENTER",
@@ -45,7 +253,7 @@ ns.DEFAULT_SETTINGS = {
         cooldownManager_centerUtility_growFromDirection = "TOP",
 
         cooldownManager_utility_dimWhenNotOnCD = false,
-        cooldownManager_utility_dimOpacity = 0.3,
+        cooldownManager_utility_dimOpacity = 0,
 
         cooldownManager_cooldownFontName = "NIL",
         cooldownManager_cooldownFontFlags = { OUTLINE = true },
@@ -58,8 +266,8 @@ ns.DEFAULT_SETTINGS = {
         cooldownManager_cooldownFontSizeTracker_enabled = false,
         cooldownManager_cooldownFontSizeTracker = "NIL",
 
-        -- Cooldown (countdown) text position offsets. Separate per viewer,
-        -- shared single pair for all custom trackers.
+        -- Cooldown text offsets for native viewers plus legacy tracker values
+        -- retained only as the source for per-tracker style migration.
         cooldownManager_cooldownTextEssential_offsetX = 0,
         cooldownManager_cooldownTextEssential_offsetY = 0,
         cooldownManager_cooldownTextUtility_offsetX = 0,
@@ -141,6 +349,10 @@ ns.DEFAULT_SETTINGS = {
         -- Disable Blizzard's out-of-range dimming on Essential/Utility icons.
         cooldownManager_hideRangeCheck = false,
 
+        -- Keep every cooldown icon in the selected viewer category saturated.
+        cooldownManager_alwaysSaturated_Essential = false,
+        cooldownManager_alwaysSaturated_Utility = false,
+
         -- Icon Size Normalization
         cooldownManager_normalizeUtilitySize = false,
 
@@ -179,7 +391,7 @@ ns.DEFAULT_SETTINGS = {
         cooldownManager_experimental_enableRectangularIcons_buffIcons = false,
         cooldownManager_experimental_enableRectangularIcons_buffIcons_percent = 0.8,
 
-        -- used for new tracker as well - legacy name
+        -- Legacy shared tracker style retained only for one-time migration.
         trinketRacialTracker_squareIcons = false,
         trinketRacialTracker_borderThickness = 1,
         trinketRacialTracker_iconZoom = 0.3,

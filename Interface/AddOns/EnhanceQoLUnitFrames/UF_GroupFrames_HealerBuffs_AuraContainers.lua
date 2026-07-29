@@ -78,9 +78,31 @@ local function getVisualSignature(group, rule, config)
 	}
 	for i = 1, #fields do values[#values + 1] = tostring(group[fields[i]]) end
 	local auraConfig = config and config.auras and config.auras.buff or EMPTY
-	for _, field in ipairs({ "showTooltip", "showCooldown", "showCooldownText", "showStacks", "cooldownAnchor", "cooldownFont", "cooldownFontSize", "cooldownFontOutline", "durationTextProfile", "countAnchor", "countFont", "countFontSize", "countFontOutline" }) do
+	for _, field in ipairs({
+		"showTooltip",
+		"tooltipAnchor",
+		"hideTooltipInCombat",
+		"showCooldown",
+		"showCooldownText",
+		"showStacks",
+		"cooldownAnchor",
+		"cooldownFont",
+		"cooldownFontSize",
+		"cooldownFontOutline",
+		"durationTextProfile",
+		"countAnchor",
+		"countFont",
+		"countFontSize",
+		"countFontOutline",
+	}) do
 		values[#values + 1] = tostring(auraConfig[field])
 	end
+	local tooltipOffset = auraConfig.tooltipOffset
+	values[#values + 1] = tostring(tooltipOffset and tooltipOffset.x)
+	values[#values + 1] = tostring(tooltipOffset and tooltipOffset.y)
+	values[#values + 1] = tostring(
+		AuraUtil and AuraUtil.ShouldHideNativeAuraTooltipInCombat and AuraUtil.ShouldHideNativeAuraTooltipInCombat(auraConfig)
+	)
 	local color = type(rule and rule.color) == "table" and rule.color or group.color
 	local colorKeys = { "r", "g", "b", "a" }
 	for i = 1, 4 do values[#values + 1] = tostring(type(color) == "table" and (color[i] or color[colorKeys[i]]) or nil) end
@@ -172,6 +194,9 @@ local function getIconStyle(config, group)
 		size = group.size,
 		iconZoom = group.iconZoom,
 		showTooltip = auraConfig.showTooltip == true,
+		tooltipAnchor = auraConfig.tooltipAnchor,
+		tooltipOffset = auraConfig.tooltipOffset,
+		hideTooltipInCombat = auraConfig.hideTooltipInCombat == true,
 		showCooldown = auraConfig.showCooldown ~= false,
 		showCooldownSwipe = group.showCooldownSwipe ~= false,
 		showCooldownEdge = group.showCooldownEdge ~= false,
@@ -316,11 +341,12 @@ local function layoutSlot(frame, root, group, index, priority)
 	end
 	frame:SetSize(width or 1, height or 1)
 	frame:SetPoint(ownPoint, root, anchor, x, y)
-	if root.GetFrameStrata then frame:SetFrameStrata(group.barStrata or group.borderStrata or root:GetFrameStrata()) end
-	if root.GetFrameLevel then
+	local layerBase = style == "BORDER" and root.GetParent and root:GetParent() or root
+	if layerBase and layerBase.GetFrameStrata then frame:SetFrameStrata(group.barStrata or group.borderStrata or layerBase:GetFrameStrata()) end
+	if layerBase and layerBase.GetFrameLevel then
 		local offset = style == "BAR" and (tonumber(group.barFrameLevelOffset) or 3)
-			or style == "BORDER" and (tonumber(group.borderFrameLevelOffset) or 4) or 30
-		frame:SetFrameLevel(max(0, (root:GetFrameLevel() or 0) + offset + (priority or 0)))
+			or style == "BORDER" and (tonumber(group.borderFrameLevelOffset) or 16) or 30
+		frame:SetFrameLevel(max(0, (layerBase:GetFrameLevel() or 0) + offset + (priority or 0)))
 	end
 end
 
@@ -349,7 +375,7 @@ end
 local function getIconGroupLayout(group)
 	local size = max(1, tonumber(group.size) or 16)
 	local spacing = max(0, tonumber(group.spacing) or 0)
-	return { elementSpacingX = spacing, elementSpacingY = spacing, elementWidth = size, elementHeight = size }
+	return { elementSpacing = spacing, lineSpacing = spacing, elementWidth = size, elementHeight = size, layoutIndex = 1 }
 end
 
 local function getIconGroupFlow(group)
@@ -359,18 +385,19 @@ local function getIconGroupFlow(group)
 	local horizontal = primaryHorizontal and primary or secondary
 	local vertical = primaryHorizontal and secondary or primary
 	local flow = AnchorUtil and AnchorUtil.FlowDirection
-	if not flow then return nil end
+	local flowAxes = AnchorUtil and AnchorUtil.FlowLayoutAxis
+	if not (flow and flowAxes) then return nil end
 	local perRow = max(1, floor(tonumber(group.perRow) or 1))
-	if not primaryHorizontal then perRow = max(1, math.ceil(max(1, tonumber(group.max) or 1) / perRow)) end
 	local size = max(1, tonumber(group.size) or 16)
 	local spacing = max(0, tonumber(group.spacing) or 0)
 	local anchor = tostring(group.anchorPoint or "CENTER"):upper()
 	local ownPoint = group.anchorOutside == true and (OPPOSITE[anchor] or anchor) or anchor
 	return {
+		axis = primaryHorizontal and flowAxes.Horizontal or flowAxes.Vertical,
 		anchorPoint = ownPoint,
 		horizontalGrowthDirection = horizontal == "LEFT" and flow.Left or flow.Right,
 		verticalGrowthDirection = vertical == "UP" and flow.Up or flow.Down,
-		rowWidth = (perRow * size) + (max(0, perRow - 1) * spacing),
+		maximumLineSize = (perRow * size) + (max(0, perRow - 1) * spacing),
 	}
 end
 
@@ -401,7 +428,6 @@ local function applyIconAllGroup(managed, root, unit, config, groupID, group, fi
 	if maxCount < 1 or not hasSpellIDs(includeSpellIDs) then return false end
 	local generationSignature = getVisualSignature(group, nil, config) .. "\030" .. getFilterSignature(filterString, includeSpellIDs)
 	if not entry then
-		if InCombatLockdown and InCombatLockdown() then return nil, "combat" end
 		entry = { generation = 0, container = addon.AuraCompat:CreateAuraContainer(root) }
 		if not entry.container then return false end
 		entry.container:SetEnabled(false)
@@ -413,7 +439,6 @@ local function applyIconAllGroup(managed, root, unit, config, groupID, group, fi
 		entry.container:SetUnit(unit)
 	end
 	if entry.generationSignature ~= generationSignature then
-		if InCombatLockdown and InCombatLockdown() then return nil, "combat" end
 		if entry.groupKey then addon.AuraCompat:UpdateAuraGroup(entry.container, entry.groupKey, { maxFrameCount = 0 }) end
 		entry.generation = entry.generation + 1
 		entry.groupKey = "hbp-icons:" .. tostring(groupID) .. ":" .. tostring(entry.generation)
@@ -458,18 +483,13 @@ function HB.PrecreateManagedAuraContainer(button)
 	local managed, state = getState(button)
 	if not (managed and state) then return nil end
 	if managed.container then return managed.container end
-	if InCombatLockdown and InCombatLockdown() then
-		managed.pending = true
-		HB._managedAuraContainerPending = true
-		return nil
-	end
 	local parent = state.healerBuffRoot or state.barGroup or button
 	managed.container = addon.AuraCompat:CreateAuraContainer(parent)
 	if not managed.container then return nil end
 	managed.container:SetAllPoints(parent)
 	managed.container:SetEnabled(false)
 	managed.container:Hide()
-	if not (InCombatLockdown and InCombatLockdown()) and not managed.preparing then
+	if not managed.preparing then
 		managed.preparing = true
 		HB.ApplyManagedAuraContainer(button, true)
 		managed.preparing = nil
@@ -529,13 +549,7 @@ function HB.ApplyManagedAuraContainer(button, prepareOnly)
 			if not compactFilter or not hasSpellIDs(compactSpellIDs) then compactIcons = false end
 		end
 		if compactIcons then
-			local applied, reason = applyIconAllGroup(managed, root, unit, config, groupID, group, compactFilter, compactSpellIDs, prepareOnly)
-			if reason == "combat" then
-				managed.pending = true
-				HB._managedAuraContainerPending = true
-				HB.HideManagedAuraContainer(button)
-				return false
-			end
+			local applied = applyIconAllGroup(managed, root, unit, config, groupID, group, compactFilter, compactSpellIDs, prepareOnly)
 			if applied then activeIconGroups[groupID] = true end
 		else
 			local used = 0
@@ -556,29 +570,21 @@ function HB.ApplyManagedAuraContainer(button, prepareOnly)
 					local filterSignature = getFilterSignature(filterString, includeSpellIDs)
 					local slotState = managed.ruleSlots[baseSlotKey]
 					if slotState and slotState.visualSignature ~= visualSignature then
-						if InCombatLockdown and InCombatLockdown() then
-							managed.pending = true
-							HB._managedAuraContainerPending = true
-							HB.HideManagedAuraContainer(button)
-							return false
-						end
 						addon.AuraCompat:UpdateAuraSlot(container, slotState.slotKey, { candidateFilters = EMPTY_SPELL_FILTER })
 						managed.activeKeys[slotState.slotKey] = nil
 						dirty = true
 						slotState = nil
 					end
 					if not slotState then
-						if InCombatLockdown and InCombatLockdown() then
-							managed.pending = true
-							HB._managedAuraContainerPending = true
-							HB.HideManagedAuraContainer(button)
-							return false
-						end
 						local generation = (managed.slotGeneration or 0) + 1
 						managed.slotGeneration = generation
 						local slotKey = baseSlotKey .. ":" .. tostring(generation)
 						local initialGroup, initialRule = group, rule
+						local slotHost = CreateFrame("Frame", nil, container, "DisableUntrustedLayoutScriptsTemplate")
+						slotHost:SetSize(1, 1)
+						slotHost:SetPoint("TOPLEFT", container, "BOTTOMLEFT", -64, -64)
 						local slot = addon.AuraCompat:RegisterAuraSlot(container, slotKey, filterString, {
+							anchorFrame = slotHost,
 							candidateFilters = { includeSpellIDs = includeSpellIDs },
 							initializeFrame = function(frame)
 								ensureCommonRegions(frame)
@@ -589,6 +595,7 @@ function HB.ApplyManagedAuraContainer(button, prepareOnly)
 						slotState = slot and {
 							slotKey = slotKey,
 							frame = slot,
+							host = slotHost,
 							visualSignature = visualSignature,
 							filterSignature = filterSignature,
 						} or nil
@@ -605,7 +612,7 @@ function HB.ApplyManagedAuraContainer(button, prepareOnly)
 						local priority = #ruleIDs - ruleIndex
 						local layoutSignature = getLayoutSignature(group, root, positionIndex, priority)
 						if slotState.layoutSignature ~= layoutSignature then
-							layoutSlot(slotState.frame, root, group, positionIndex, priority)
+							layoutSlot(slotState.host, root, group, positionIndex, priority)
 							slotState.layoutSignature = layoutSignature
 						end
 						managed.activeKeys[slotState.slotKey] = true

@@ -411,11 +411,42 @@ local function cleanupMigratedDataPanelStreamOptionPositions(profile)
 	end
 end
 
+local function migrateGroupFrameHighlightLayer(highlight, aboveBorderLevel)
+	if type(highlight) ~= "table" then return end
+	local layer = rawget(highlight, "layer")
+	if layer == nil then return end
+	if rawget(highlight, "frameLevelOffset") == nil then
+		highlight.frameLevelOffset = tostring(layer):upper() == "BEHIND_BORDER" and 2 or aboveBorderLevel
+	end
+	highlight.layer = nil
+end
+
+local function cleanupGroupFrameHighlightLayersInConfig(groupFrames)
+	if type(groupFrames) ~= "table" then return end
+	for _, config in pairs(groupFrames) do
+		if type(config) == "table" then
+			migrateGroupFrameHighlightLayer(config.highlightAggro, 6)
+			migrateGroupFrameHighlightLayer(config.highlightTarget, 5)
+		end
+	end
+end
+
+local function cleanupGroupFrameHighlightLayers(profile)
+	if type(profile) ~= "table" then return end
+	cleanupGroupFrameHighlightLayersInConfig(profile.ufGroupFrames)
+	if type(profile.ufProfiles) == "table" then
+		for _, ufProfile in pairs(profile.ufProfiles) do
+			if type(ufProfile) == "table" then cleanupGroupFrameHighlightLayersInConfig(ufProfile.ufGroupFrames) end
+		end
+	end
+end
+
 local function cleanupLegacyProfileKeys(profile)
 	cleanupListedProfileKeys(profile, LEGACY_PROFILE_KEYS)
 	cleanupListedProfileKeys(profile, MULTIDROPDOWN_SCRATCH_PROFILE_KEYS)
 	cleanupRemovedCVarPersistenceKeys(profile)
 	cleanupMigratedDataPanelStreamOptionPositions(profile)
+	cleanupGroupFrameHighlightLayers(profile)
 end
 
 local function cleanupCooldownPanelsStorageProfile(profile)
@@ -426,11 +457,44 @@ local function cleanupCooldownPanelsStorageProfile(profile)
 		for _, panel in pairs(root.panels) do
 			if type(panel) == "table" then
 				panel.cdmSyncActiveSpecBySource = nil
+				if type(panel.dynamicAnchor) == "table" and type(panel.dynamicAnchor.profileId) == "string" then
+					panel.dynamicAnchor = { enabled = panel.dynamicAnchor.enabled == true, profileId = panel.dynamicAnchor.profileId }
+				end
 			end
 		end
 	end
 	local helper = addon.Aura and addon.Aura.CooldownPanels and addon.Aura.CooldownPanels.helper or nil
 	if type(helper) == "table" and type(helper.PruneRootForStorage) == "function" then helper.PruneRootForStorage(root) end
+end
+
+local function cleanupDynamicAnchorProfiles(profile)
+	if type(profile) ~= "table" or type(profile.dynamicAnchorProfiles) ~= "table" then return end
+	if not (addon.DynamicAnchors and addon.DynamicAnchors.NormalizeRule) then return end
+	for profileId, dynamicProfile in pairs(profile.dynamicAnchorProfiles) do
+		if type(profileId) ~= "string" or type(dynamicProfile) ~= "table" then
+			profile.dynamicAnchorProfiles[profileId] = nil
+		else
+			local name = dynamicProfile.name
+			local normalized = addon.DynamicAnchors:NormalizeRule(dynamicProfile)
+			normalized.name = type(name) == "string" and name ~= "" and name or profileId
+			profile.dynamicAnchorProfiles[profileId] = normalized
+		end
+	end
+end
+
+local function cleanupDynamicAnchorAssignments(profile)
+	if type(profile) ~= "table" then return end
+	profile._resourceBarSelfAnchorTrace = nil
+	if type(profile.dynamicAnchorAssignments) ~= "table" then return end
+	for consumerId, assignment in pairs(profile.dynamicAnchorAssignments) do
+		if type(consumerId) ~= "string" or type(assignment) ~= "table" then
+			profile.dynamicAnchorAssignments[consumerId] = nil
+		else
+			assignment.enabled = assignment.enabled == true
+			assignment.profileId = type(assignment.profileId) == "string" and assignment.profileId or nil
+			for key in pairs(assignment) do if key ~= "enabled" and key ~= "profileId" then assignment[key] = nil end end
+		end
+	end
 end
 
 local function cleanupDurationTextStorageProfile(profile)
@@ -533,6 +597,8 @@ function addon.functions.CleanupCooldownPanelsStorage()
 		if type(profile) ~= "table" or seen[profile] then return end
 		seen[profile] = true
 		cleanupCooldownPanelsStorageProfile(profile)
+		cleanupDynamicAnchorProfiles(profile)
+		cleanupDynamicAnchorAssignments(profile)
 	end
 	if type(db) == "table" then
 		prune(db)
@@ -564,6 +630,24 @@ function addon.functions.CleanupDurationTextStorage()
 	if addon.db and addon.db ~= db then cleanup(addon.db) end
 end
 
+function addon.functions.CleanupContainerActionStorage()
+	if not (addon.ContainerActions and addon.ContainerActions.MigrateProfileData) then return end
+	local db = _G.EnhanceQoLDB
+	local seen = {}
+	local function cleanup(profile)
+		if type(profile) ~= "table" or seen[profile] then return end
+		seen[profile] = true
+		addon.ContainerActions:MigrateProfileData(profile)
+	end
+	if type(db) == "table" then
+		cleanup(db)
+		if type(db.profiles) == "table" then
+			for _, profile in pairs(db.profiles) do cleanup(profile) end
+		end
+	end
+	if addon.db and addon.db ~= db then cleanup(addon.db) end
+end
+
 function addon.functions.CleanupOldStuff()
 	local db = _G.EnhanceQoLDB
 	if type(db) == "table" and type(db.profiles) == "table" then
@@ -575,6 +659,7 @@ function addon.functions.CleanupOldStuff()
 	end
 	addon.functions.CleanupCombatMeterSettings()
 	addon.functions.CleanupBuffTrackerSettings()
+	addon.functions.CleanupContainerActionStorage()
 	addon.functions.CleanupDebugArtifacts()
 	addon.functions.CleanupDurationTextStorage()
 	addon.functions.CleanupLegacyProfileStorage()

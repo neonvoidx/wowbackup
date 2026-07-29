@@ -1,24 +1,27 @@
 
 KeystoneLootCharDB = {
+["voidcore"] = {
+},
 ["ui"] = {
 ["selectedCharacterKey"] = "Tichondrius-Bigxthazug-1",
 ["selectedTab"] = "dungeons",
 ["selectedRaidTab"] = 1307,
 },
-["voidcore"] = {
-},
-["version"] = 2,
+["voidcoreChecked"] = true,
+["version"] = 3,
 ["filters"] = {
 ["dungeon"] = {
 ["track"] = "champion",
 ["rank"] = 1,
 },
-["specId"] = 71,
-["classId"] = 1,
-["slotId"] = 0,
+["specId"] = 0,
+["slotIds"] = {
+},
 ["raid"] = {
 ["difficulty"] = "normal",
 ["rank"] = 1,
 },
+["slotId"] = 0,
+["classId"] = 1,
 },
 }

@@ -15,6 +15,7 @@ local EditMode = addon.EditMode
 local SettingType = EditMode and EditMode.lib and EditMode.lib.SettingType
 
 local EDITMODE_ID = "actionTracker"
+ActionTracker.dynamicAnchorId = "tracker:action"
 local MAX_ICONS_LIMIT = 10
 local FADE_TICK = 0.05
 local TIME_LABEL_FONT_SIZE = 11
@@ -475,6 +476,22 @@ function ActionTracker:ShowEditModeHint(show)
 		self.frame.label:Hide()
 	end
 	self:RefreshIcons()
+end
+
+function ActionTracker:GetDynamicAnchorWinner()
+	return addon.DynamicAnchors and addon.DynamicAnchors:GetSimpleFrameWinner(self.dynamicAnchorId) or nil
+end
+
+function ActionTracker:ApplyDynamicAnchor()
+	if not self.frame then return false end
+	local winner = self:GetDynamicAnchorWinner()
+	if not (winner and winner.frame) then return false end
+	local placement = winner.placement or {}
+	local point = placement.point or "CENTER"
+	local relativePoint = placement.relativePoint or point
+	self.frame:ClearAllPoints()
+	self.frame:SetPoint(point, winner.frame, relativePoint, tonumber(placement.x) or 0, tonumber(placement.y) or 0)
+	return true
 end
 
 function ActionTracker:UpdateBorderVisuals()
@@ -1077,6 +1094,12 @@ function ActionTracker:RegisterEditMode()
 	if SettingType then
 		settings = {
 			{
+				name = L["Anchor"] or "Anchor",
+				kind = SettingType.Collapsible,
+				id = "actionTrackerAnchor",
+				defaultCollapsed = false,
+			},
+			{
 				name = L["actionTrackerMaxIcons"] or "Max icons",
 				kind = SettingType.Slider,
 				field = "maxIcons",
@@ -1280,6 +1303,21 @@ function ActionTracker:RegisterEditMode()
 				isEnabled = function() return ActionTracker:GetBorderEnabled() end,
 			},
 		}
+		if addon.DynamicAnchors then
+			addon.DynamicAnchors:AddEditModeAssignmentSettings(settings, SettingType, {
+				consumerId = self.dynamicAnchorId,
+				parentId = "actionTrackerAnchor",
+				insertAfterId = "actionTrackerAnchor",
+				refresh = function(rebuild)
+					if rebuild and EditMode and EditMode.RefreshFrame then
+						EditMode:RefreshFrame(EDITMODE_ID)
+						RunNextFrame(function() ActionTracker:ApplyDynamicAnchor() end)
+					else
+						ActionTracker:ApplyDynamicAnchor()
+					end
+				end,
+			})
+		end
 	end
 
 	local function seedEditModeRecordFromProfile(record)
@@ -1340,11 +1378,20 @@ function ActionTracker:RegisterEditMode()
 				return
 			end
 			ActionTracker:ApplyLayoutData(data)
+			ActionTracker:ApplyDynamicAnchor()
 		end,
-		onEnter = function() ActionTracker:ShowEditModeHint(true) end,
+		onEnter = function()
+			ActionTracker:ShowEditModeHint(true)
+			if addon.DynamicAnchors and addon.DynamicAnchors:IsFrameAssignmentEnabled(ActionTracker.dynamicAnchorId) then RunNextFrame(function() ActionTracker:ApplyDynamicAnchor() end) end
+		end,
 		onExit = function() ActionTracker:ShowEditModeHint(false) end,
 		isEnabled = function() return addon.db and addon.db[DB_ENABLED] end,
 		settings = settings,
+		relativeTo = function()
+			local winner = ActionTracker:GetDynamicAnchorWinner()
+			return winner and winner.frame or UIParent
+		end,
+		allowDrag = function() return not (addon.DynamicAnchors and addon.DynamicAnchors:IsFrameAssignmentEnabled(ActionTracker.dynamicAnchorId)) end,
 		showOutsideEditMode = true,
 	})
 
@@ -1353,6 +1400,19 @@ end
 
 function ActionTracker:OnSettingChanged(enabled)
 	if enabled then
+		if addon.DynamicAnchors then
+			addon.DynamicAnchors:RegisterSimpleFrame({
+				id = self.dynamicAnchorId,
+				owner = addonName,
+				label = L["ActionTracker"] or "Action Tracker",
+				menuGroup = "TRACKERS",
+				menuGroupLabel = L["Dynamic Anchor Group Trackers"],
+				menuGroupOrder = 400,
+				getFrame = function() return ActionTracker.frame end,
+				isAvailable = function(trackerFrame) return addon.db and addon.db[DB_ENABLED] == true and trackerFrame ~= nil and trackerFrame:IsShown() end,
+				apply = function() ActionTracker:ApplyDynamicAnchor() end,
+			})
+		end
 		self:EnsureFrame()
 		self:RegisterEditMode()
 		self:RegisterEvents()

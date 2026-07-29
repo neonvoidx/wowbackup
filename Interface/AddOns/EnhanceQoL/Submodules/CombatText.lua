@@ -17,6 +17,7 @@ local LSM = LibStub("LibSharedMedia-3.0", true)
 local SharedAnchors = addon.SharedAnchors
 
 local EDITMODE_ID = "combatText"
+local DYNAMIC_ANCHOR_ID = "tracker:combatText"
 local PREVIEW_PADDING_X = 20
 local PREVIEW_PADDING_Y = 10
 
@@ -390,8 +391,13 @@ function CombatText:ApplyAnchorPosition(data)
 	end
 
 	if self.frame.SetClampedToScreen then self.frame:SetClampedToScreen(true) end
+	local winner = addon.DynamicAnchors and addon.DynamicAnchors:GetSimpleFrameWinner(DYNAMIC_ANCHOR_ID)
+	if winner and winner.frame then
+		local placement = winner.placement or {}
+		point, relativePoint, x, y = placement.point or "CENTER", placement.relativePoint or placement.point or "CENTER", placement.x or 0, placement.y or 0
+	end
 	self.frame:ClearAllPoints()
-	self.frame:SetPoint(point, self:ResolveAnchorFrame(), relativePoint, tonumber(x) or 0, tonumber(y) or 0)
+	self.frame:SetPoint(point, winner and winner.frame or self:ResolveAnchorFrame(), relativePoint, tonumber(x) or 0, tonumber(y) or 0)
 end
 
 function CombatText:EnsureFrame()
@@ -927,6 +933,7 @@ function CombatText:RegisterEditMode()
 				set = function(_, value) applySetting("leaveColor", value) end,
 			},
 		}
+		if addon.DynamicAnchors then addon.DynamicAnchors:AddEditModeAssignmentSettings(settings, SettingType, { consumerId = DYNAMIC_ANCHOR_ID, insertAt = 1, refresh = function(rebuild) CombatText:ApplyAnchorPosition() if rebuild and EditMode and EditMode.RefreshFrame then EditMode:RefreshFrame(EDITMODE_ID) end end, staticFields = { anchorTarget = true, point = true, relativePoint = true, x = true, y = true } }) end
 	end
 
 	EditMode:RegisterFrame(EDITMODE_ID, {
@@ -948,8 +955,8 @@ function CombatText:RegisterEditMode()
 		onExit = function() CombatText:ShowEditModeHint(false) end,
 		isEnabled = function() return addon.db and addon.db[DB_ENABLED] end,
 		settings = settings,
-		relativeTo = function() return CombatText:ResolveAnchorFrame() end,
-		allowDrag = function() return CombatText:AnchorUsesUIParent() end,
+		relativeTo = function() local winner = addon.DynamicAnchors and addon.DynamicAnchors:GetSimpleFrameWinner(DYNAMIC_ANCHOR_ID) return winner and winner.frame or CombatText:ResolveAnchorFrame() end,
+		allowDrag = function() return not (addon.DynamicAnchors and addon.DynamicAnchors:IsFrameAssignmentEnabled(DYNAMIC_ANCHOR_ID)) and CombatText:AnchorUsesUIParent() end,
 		managePosition = false,
 		showOutsideEditMode = false,
 		showReset = false,
@@ -971,6 +978,7 @@ function CombatText:OnSettingChanged(enabled)
 
 	if enabled then
 		self:EnsureFrame()
+		if addon.DynamicAnchors then addon.DynamicAnchors:RegisterSimpleFrame({ id = DYNAMIC_ANCHOR_ID, owner = addonName, label = L["CombatText"] or "Combat text", menuGroup = "TRACKERS", menuGroupLabel = L["Dynamic Anchor Group Trackers"], menuGroupOrder = 400, getFrame = function() return CombatText.frame end, isAvailable = function(frame) return addon.db and addon.db[DB_ENABLED] == true and frame ~= nil and frame:IsShown() end, apply = function() CombatText:ApplyAnchorPosition() end }) end
 		self:RegisterEditMode()
 		self:RegisterEvents()
 		self:ApplyStyle()

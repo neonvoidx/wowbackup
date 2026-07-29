@@ -1,11 +1,14 @@
 
 KeystoneLootCharDB = {
+["version"] = 3,
 ["ui"] = {
 ["selectedCharacterKey"] = "Tichondrius-Praisesun-2",
 ["selectedTab"] = "dungeons",
 ["selectedRaidTab"] = 1307,
 },
-["version"] = 1,
+["voidcoreChecked"] = false,
+["voidcore"] = {
+},
 ["filters"] = {
 ["dungeon"] = {
 ["track"] = "champion",
@@ -13,10 +16,12 @@ KeystoneLootCharDB = {
 },
 ["specId"] = 66,
 ["classId"] = 2,
-["slotId"] = 0,
 ["raid"] = {
 ["difficulty"] = "normal",
 ["rank"] = 1,
+},
+["slotId"] = 0,
+["slotIds"] = {
 },
 },
 }

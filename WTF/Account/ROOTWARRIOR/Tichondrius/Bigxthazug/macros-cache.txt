@@ -31,7 +31,8 @@ VER 3 01000000000000D8 " " "134400"
 END
 VER 3 01000000000000D9 " " "132938"
 #showtooltip
-/cast Pummel
+#FS EnemyHealer
+/cast [mod:shift, @none][] Pummel
 END
 VER 3 01000000000000DA " " "132333"
 #showtooltip
@@ -60,4 +61,10 @@ END
 VER 3 01000000000000E9 " " "134400"
 #showtooltip
 /cast [@cursor] Champion's Spear
+END
+VER 3 01000000000000EA " " "134400"
+#showtooltip
+/cast Colossus Smash
+/cast Avatar
+/use 14
 END

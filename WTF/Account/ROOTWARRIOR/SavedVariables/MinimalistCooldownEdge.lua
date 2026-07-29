@@ -1,17 +1,36 @@
 
 MinimalistCooldownEdgeDB_v2 = {
 ["profileKeys"] = {
-["Starphage - Tichondrius"] = "Default",
 ["Auteist - Tichondrius"] = "Default",
-["Manyfaced - Tichondrius"] = "Default",
-["Smaugchamp - Tichondrius"] = "Default",
+["Neonvoid - Tichondrius"] = "Default",
 ["Bigxthazug - Tichondrius"] = "Default",
 ["Stormclout - Tichondrius"] = "Default",
-["Neonvoid - Tichondrius"] = "Default",
+["Starphage - Tichondrius"] = "Default",
+["Smaugchamp - Mal'Ganis"] = "Default",
+["Manyfaced - Tichondrius"] = "Default",
+["Smaugchamp - Tichondrius"] = "Default",
+["Praisesun - Tichondrius"] = "Default",
 },
 ["profiles"] = {
 ["Default"] = {
 ["categories"] = {
+["nameplate"] = {
+["enabled"] = true,
+["font"] = "Interface\\Addons\\SharedMedia_MyMedia\\font\\1.ttf",
+},
+["playeraura"] = {
+["enabled"] = true,
+["buff"] = {
+["fontSize"] = 16,
+["font"] = "Interface\\Addons\\SharedMedia_MyMedia\\font\\1.ttf",
+},
+},
+["unitframe"] = {
+["fontSize"] = 8,
+["stackFont"] = "Interface\\Addons\\SharedMedia_MyMedia\\font\\1.ttf",
+["enabled"] = true,
+["font"] = "Interface\\Addons\\SharedMedia_MyMedia\\font\\1.ttf",
+},
 ["minicc"] = {
 ["enabled"] = true,
 ["font"] = "Interface\\Addons\\SharedMedia_MyMedia\\font\\1.ttf",
@@ -23,9 +42,12 @@ MinimalistCooldownEdgeDB_v2 = {
 ["enabled"] = true,
 ["font"] = "Interface\\Addons\\SharedMedia_MyMedia\\font\\1.ttf",
 },
+["sarena"] = {
+["font"] = "Interface\\Addons\\SharedMedia_MyMedia\\font\\1.ttf",
+["enabled"] = true,
+},
 },
 ["durationTextColors"] = {
-["enabled"] = true,
 ["thresholds"] = {
 nil,
 {
@@ -35,6 +57,7 @@ nil,
 ["threshold"] = 60,
 },
 },
+["enabled"] = true,
 },
 },
 },

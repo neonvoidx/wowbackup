@@ -54,7 +54,7 @@ function RangeCheck:RefreshViewer(viewerName)
         return
     end
     local isEnabled = IsEnabled()
-    for _, child in ipairs(viewer:GetItemFrames()) do
+    for _, child in ipairs(ns.API:GetViewerItemFrames(viewer)) do
         if isEnabled and not ns.API:GetIsAffected(child, "rangeCheckHooked") and child.RefreshIconColor then
             ns.API:SetAffected(child, "rangeCheckHooked")
             hooksecurefunc(child, "RefreshIconColor", function()

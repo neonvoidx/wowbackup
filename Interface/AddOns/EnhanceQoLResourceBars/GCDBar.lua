@@ -16,6 +16,7 @@ local SettingType = EditMode and EditMode.lib and EditMode.lib.SettingType
 local LSM = LibStub("LibSharedMedia-3.0", true)
 
 local EDITMODE_ID = "gcdBar"
+GCDBar.dynamicAnchorId = "bar:gcd"
 local GCD_SPELL_ID = 61304
 local ANCHOR_TARGET_UI = "UIParent"
 local ANCHOR_TARGET_PLAYER_CASTBAR = "PLAYER_CASTBAR"
@@ -396,6 +397,22 @@ function GCDBar:ResolveAnchorFrame()
 	return UIParent
 end
 
+function GCDBar:GetDynamicAnchorWinner()
+	return addon.DynamicAnchors and addon.DynamicAnchors:GetSimpleFrameWinner(self.dynamicAnchorId) or nil
+end
+
+function GCDBar:ApplyDynamicAnchor()
+	if not self.frame then return false end
+	local winner = self:GetDynamicAnchorWinner()
+	if not (winner and winner.frame) then return false end
+	local placement = winner.placement or {}
+	local point = placement.point or "CENTER"
+	local relativePoint = placement.relativePoint or point
+	self.frame:ClearAllPoints()
+	addon.PixelUtil.Point(self.frame, point, winner.frame, relativePoint, tonumber(placement.x) or 0, tonumber(placement.y) or 0)
+	return true
+end
+
 local function cancelAnchorRefreshTicker()
 	if GCDBar._anchorRefreshTicker then GCDBar._anchorRefreshTicker:Cancel() end
 	GCDBar._anchorRefreshTicker = nil
@@ -449,6 +466,10 @@ end
 
 function GCDBar:RefreshAnchor()
 	if self._refreshingAnchor then return end
+	if addon.DynamicAnchors and addon.DynamicAnchors:IsFrameAssignmentEnabled(self.dynamicAnchorId) then
+		self:ApplyDynamicAnchor()
+		return
+	end
 	local target = self:GetAnchorRelativeFrame()
 	if self._anchorRefreshTicker and (target == ANCHOR_TARGET_UI or self._anchorRefreshTarget ~= target) then cancelAnchorRefreshTicker() end
 	self._refreshingAnchor = true
@@ -543,6 +564,13 @@ end
 
 function GCDBar:GetResolvedWidth()
 	local width = self:GetWidth()
+	local winner = self:GetDynamicAnchorWinner()
+	if winner then
+		if not winner.matchRelativeWidth then return width end
+		local relativeWidth = winner.frame and winner.frame.GetWidth and tonumber(winner.frame:GetWidth()) or 0
+		if relativeWidth <= 0 then return width end
+		return math.max(BAR_WIDTH_MIN, relativeWidth + (tonumber(winner.matchRelativeWidthOffset) or 0))
+	end
 	if not self:AnchorUsesMatchedWidth() then return width end
 	local relativeFrame = self:ResolveAnchorFrame()
 	if not (relativeFrame and relativeFrame.GetWidth) then return width end
@@ -601,7 +629,7 @@ function GCDBar:UpdateSpark(value)
 		end
 	end
 	spark:ClearAllPoints()
-	spark:SetPoint("CENTER", self.frame, "TOPLEFT", x, -y)
+	addon.PixelUtil.Point(spark, "CENTER", self.frame, "TOPLEFT", x, -y)
 	spark:Show()
 end
 
@@ -619,6 +647,7 @@ function GCDBar:ApplySparkAppearance()
 			return
 		end
 	end
+	addon.PixelUtil.ApplyTexturePixelSnapping(spark, 0)
 	spark:SetBlendMode("ADD")
 	spark:SetAlpha(1)
 	self:UpdateSpark()
@@ -636,6 +665,7 @@ function GCDBar:ApplyAppearance()
 	if not self.frame then return end
 	local texture = resolveTexture(self:GetTextureKey())
 	self.frame:SetStatusBarTexture(texture)
+	addon.PixelUtil.ApplyStatusBarTexturePixelSnapping(self.frame, 0)
 	local r, g, b, a = self:GetColor()
 	self.frame:SetStatusBarColor(r, g, b, a or 1)
 	local fillDirection = self:GetFillDirection()
@@ -646,6 +676,7 @@ function GCDBar:ApplyAppearance()
 		if self:GetBackgroundEnabled() then
 			local bgTex = resolveTexture(self:GetBackgroundTextureKey())
 			self.frame.bg:SetTexture(bgTex)
+			addon.PixelUtil.ApplyTexturePixelSnapping(self.frame.bg, 0)
 			local br, bg, bb, ba = self:GetBackgroundColor()
 			local alpha = (ba == nil) and 1 or ba
 			self.frame.bg:SetVertexColor(br or 0, bg or 0, bb or 0, alpha)
@@ -658,24 +689,20 @@ function GCDBar:ApplyAppearance()
 
 	if self.frame.border then
 		if not self:GetBorderEnabled() then
-			self.frame.border:SetBackdrop(nil)
-			self.frame.border:Hide()
+			addon.functions.SetSafeBorder(self.frame.border, false, nil, nil, nil, nil, nil, nil, { stateKey = "_gcdSafeBorder" })
 		else
 			local size = self:GetBorderSize()
 			local offset = self:GetBorderOffset()
 			local borderTex = resolveBorderTexture(self:GetBorderTextureKey())
-			self.frame.border:SetBackdrop({
-				edgeFile = borderTex,
-				edgeSize = size,
-				insets = { left = 0, right = 0, top = 0, bottom = 0 },
-			})
 			local br, bg, bb, ba = self:GetBorderColor()
-			self.frame.border:SetBackdropBorderColor(br or 0, bg or 0, bb or 0, ba or 1)
-			self.frame.border:SetBackdropColor(0, 0, 0, 0)
-			self.frame.border:ClearAllPoints()
-			self.frame.border:SetPoint("TOPLEFT", self.frame, "TOPLEFT", -offset, offset)
-			self.frame.border:SetPoint("BOTTOMRIGHT", self.frame, "BOTTOMRIGHT", offset, -offset)
-			self.frame.border:Show()
+			addon.PixelUtil.SetOutside(self.frame.border, self.frame, offset, offset)
+			addon.functions.SetSafeBorder(self.frame.border, true, borderTex, size, br or 0, bg or 0, bb or 0, ba or 1, {
+				stateKey = "_gcdSafeBorder",
+				defaultTexture = "Interface\\Buttons\\WHITE8x8",
+				mediaType = "border",
+				drawLayer = "OVERLAY",
+				pixelPerfect = true,
+			})
 		end
 	end
 
@@ -711,14 +738,13 @@ end
 
 function GCDBar:ApplySize()
 	if not self.frame then return end
-	self:EnsureWidthSyncHooks()
+	if not (addon.DynamicAnchors and addon.DynamicAnchors:IsFrameAssignmentEnabled(self.dynamicAnchorId)) then self:EnsureWidthSyncHooks() end
 	local width = self:GetResolvedWidth()
 	local height = self:GetHeight()
-	self.frame:SetSize(width, height)
+	addon.PixelUtil.Size(self.frame, width, height)
 	self:ApplyStrata()
-	if self.frame.bg then self.frame.bg:SetAllPoints(self.frame) end
-	if self.frame.editBg then self.frame.editBg:SetAllPoints(self.frame) end
-	if self.frame.border then self.frame.border:SetAllPoints(self.frame) end
+	if self.frame.bg then addon.PixelUtil.SetInside(self.frame.bg, self.frame, 0, 0) end
+	if self.frame.editBg then addon.PixelUtil.SetInside(self.frame.editBg, self.frame, 0, 0) end
 	self:UpdateSpark()
 end
 
@@ -731,11 +757,11 @@ function GCDBar:EnsureFrame()
 	bar:Hide()
 
 	local bg = bar:CreateTexture(nil, "BACKGROUND")
-	bg:SetAllPoints(bar)
+	addon.PixelUtil.SetInside(bg, bar, 0, 0)
 	bar.bg = bg
 
 	local editBg = bar:CreateTexture(nil, "BORDER")
-	editBg:SetAllPoints(bar)
+	addon.PixelUtil.SetInside(editBg, bar, 0, 0)
 	editBg:SetColorTexture(0.1, 0.6, 0.6, 0.2)
 	editBg:Hide()
 	bar.editBg = editBg
@@ -745,14 +771,14 @@ function GCDBar:EnsureFrame()
 	spark:Hide()
 	bar.spark = spark
 
-	local border = CreateFrame("Frame", nil, bar, "BackdropTemplate")
-	border:SetAllPoints(bar)
+	local border = CreateFrame("Frame", nil, bar)
+	addon.PixelUtil.SetInside(border, bar, 0, 0)
 	border:SetFrameLevel((bar:GetFrameLevel() or 0) + 2)
 	border:Hide()
 	bar.border = border
 
 	local label = bar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-	label:SetPoint("CENTER")
+	addon.PixelUtil.Point(label, "CENTER", bar, "CENTER", 0, 0)
 	label:SetText(L["GCDBar"] or "GCD Bar")
 	label:Hide()
 	bar.label = label
@@ -854,6 +880,16 @@ function GCDBar:UpdateGCD()
 end
 
 function GCDBar:OnEvent(event, spellID, baseSpellID)
+	if event == "PLAYER_LOGIN" or event == "UI_SCALE_CHANGED" or event == "DISPLAY_SIZE_CHANGED" then
+		RunNextFrame(function()
+			if not (addon.db and addon.db[DB_ENABLED] and GCDBar.frame) then return end
+			GCDBar:RefreshAnchor()
+			GCDBar:ApplySize()
+			GCDBar:ApplyAppearance()
+			GCDBar:UpdateGCD()
+		end)
+		return
+	end
 	if event ~= "SPELL_UPDATE_COOLDOWN" and event ~= "PET_BATTLE_OPENING_START" and event ~= "PET_BATTLE_CLOSE" then return end
 	self:UpdateGCD()
 end
@@ -864,6 +900,9 @@ function GCDBar:RegisterEvents()
 	frame:RegisterEvent("SPELL_UPDATE_COOLDOWN")
 	frame:RegisterEvent("PET_BATTLE_OPENING_START")
 	frame:RegisterEvent("PET_BATTLE_CLOSE")
+	frame:RegisterEvent("PLAYER_LOGIN")
+	frame:RegisterEvent("UI_SCALE_CHANGED")
+	frame:RegisterEvent("DISPLAY_SIZE_CHANGED")
 	frame:SetScript("OnEvent", onGCDBarEvent)
 	self.eventsRegistered = true
 end
@@ -873,6 +912,9 @@ function GCDBar:UnregisterEvents()
 	self.frame:UnregisterEvent("SPELL_UPDATE_COOLDOWN")
 	self.frame:UnregisterEvent("PET_BATTLE_OPENING_START")
 	self.frame:UnregisterEvent("PET_BATTLE_CLOSE")
+	self.frame:UnregisterEvent("PLAYER_LOGIN")
+	self.frame:UnregisterEvent("UI_SCALE_CHANGED")
+	self.frame:UnregisterEvent("DISPLAY_SIZE_CHANGED")
 	self.frame:SetScript("OnEvent", nil)
 	self.eventsRegistered = false
 end
@@ -1451,6 +1493,33 @@ function GCDBar:RegisterEditMode()
 				end,
 			},
 		}
+		if addon.DynamicAnchors then
+			addon.DynamicAnchors:AddEditModeAssignmentSettings(settings, SettingType, {
+				consumerId = self.dynamicAnchorId,
+				insertAt = 1,
+				refresh = function(rebuild)
+					if rebuild and EditMode and EditMode.RefreshFrame then
+						EditMode:RefreshFrame(EDITMODE_ID)
+						RunNextFrame(function()
+							GCDBar:ApplyDynamicAnchor()
+							GCDBar:ApplySize()
+						end)
+					else
+						GCDBar:ApplyDynamicAnchor()
+						GCDBar:ApplySize()
+					end
+				end,
+				staticFields = {
+					anchorRelativeFrame = true,
+					anchorPoint = true,
+					anchorRelativePoint = true,
+					anchorOffsetX = true,
+					anchorOffsetY = true,
+					anchorMatchWidth = true,
+					anchorMatchWidthOffset = true,
+				},
+			})
+		end
 	end
 
 	local function seedEditModeRecordFromProfile(record)
@@ -1539,12 +1608,24 @@ function GCDBar:RegisterEditMode()
 			end
 			GCDBar:ApplyLayoutData(data)
 		end,
-		onEnter = function() GCDBar:ShowEditModeHint(true) end,
+		onEnter = function()
+			GCDBar:ShowEditModeHint(true)
+			if addon.DynamicAnchors and addon.DynamicAnchors:IsFrameAssignmentEnabled(GCDBar.dynamicAnchorId) then
+				RunNextFrame(function()
+					if GCDBar.previewing then GCDBar:ApplyDynamicAnchor() end
+				end)
+			end
+		end,
 		onExit = function() GCDBar:ShowEditModeHint(false) end,
 		isEnabled = function() return addon.db and addon.db[DB_ENABLED] end,
 		settings = settings,
-		relativeTo = function() return GCDBar:ResolveAnchorFrame() end,
-		allowDrag = function() return GCDBar:AnchorUsesUIParent() end,
+		relativeTo = function()
+			local winner = GCDBar:GetDynamicAnchorWinner()
+			return winner and winner.frame or GCDBar:ResolveAnchorFrame()
+		end,
+		allowDrag = function()
+			return not (addon.DynamicAnchors and addon.DynamicAnchors:IsFrameAssignmentEnabled(GCDBar.dynamicAnchorId)) and GCDBar:AnchorUsesUIParent()
+		end,
 		showOutsideEditMode = false,
 		showReset = false,
 		showSettingsReset = false,
@@ -1556,6 +1637,22 @@ end
 
 function GCDBar:OnSettingChanged(enabled)
 	if enabled then
+		if addon.DynamicAnchors then
+			addon.DynamicAnchors:RegisterSimpleFrame({
+				id = self.dynamicAnchorId,
+				owner = "EnhanceQoLResourceBars",
+				label = L["GCDBar"] or "GCD Bar",
+				menuGroup = "RESOURCE_BARS",
+				menuGroupLabel = L["Resource Bars"],
+				menuGroupOrder = 200,
+				getFrame = function() return GCDBar.frame end,
+				isAvailable = function(bar) return addon.db and addon.db[DB_ENABLED] == true and bar ~= nil and bar:IsShown() end,
+				apply = function()
+					GCDBar:ApplyDynamicAnchor()
+					GCDBar:ApplySize()
+				end,
+			})
+		end
 		self:EnsureFrame()
 		self:RegisterEditMode()
 		self:RegisterEvents()

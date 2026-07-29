@@ -772,14 +772,26 @@ local function createNumericBreakpoint(threshold, decimalThreshold, rounding, co
 			rounding = rounding.down,
 		}
 	end
+	local divisor
+	local format
+	if threshold >= 86400 then
+		divisor = 86400
+		format = _G.DAY_ONELETTER_ABBR or "%dd"
+	elseif threshold >= 3600 then
+		divisor = 3600
+		format = _G.HOUR_ONELETTER_ABBR or "%dh"
+	else
+		divisor = 60
+		format = _G.MINUTE_ONELETTER_ABBR or "%dm"
+	end
+	format = format:gsub("%s+", "")
 	return {
 		threshold = threshold,
 		step = 1,
 		rounding = rounding.down,
-		format = formatWithColor("%d:%02d", color),
+		format = formatWithColor(format, color),
 		components = {
-			{ div = 60, step = 1, rounding = rounding.down },
-			{ mod = 60, step = 1, rounding = rounding.down },
+			{ div = divisor, step = 1, rounding = rounding.down },
 		},
 	}
 end
@@ -804,9 +816,10 @@ function DurationText:CreateSecondsFormatter(config)
 end
 
 function DurationText:CreateBindingFormatter(config)
+	config = config or self:GetGlobalConfig()
+	local colorBands = collectColorBands(config)
 	local api = getNumericRuleFormatterAPI()
 	if not api then return self:CreateSecondsFormatter(config) end
-	config = config or self:GetGlobalConfig()
 	local formatter = api.CreateNumericRuleFormatter()
 	if formatter.ClearBreakpoints then formatter:ClearBreakpoints() end
 	local decimalThreshold = tonumber(config.millisecondsThreshold) or self.defaults.millisecondsThreshold
@@ -814,11 +827,12 @@ function DurationText:CreateBindingFormatter(config)
 		down = self:GetRoundingValue("DOWN") or 2,
 	}
 	rounding.nearest = self:GetRoundingValue("NEAREST") or rounding.down
-	local colorBands = collectColorBands(config)
 	local thresholds = {}
 	addUniqueThreshold(thresholds, 0)
 	if decimalThreshold and decimalThreshold > 0 then addUniqueThreshold(thresholds, decimalThreshold) end
 	addUniqueThreshold(thresholds, 60)
+	addUniqueThreshold(thresholds, 3600)
+	addUniqueThreshold(thresholds, 86400)
 	if colorBands then
 		local previous = 0
 		for i = 1, #colorBands do
@@ -1013,8 +1027,8 @@ function DurationText:ApplyToCooldownFrame(cooldownFrame, config, options)
 	options = options or EMPTY_TABLE
 	config = self:GetEffectiveConfig(config)
 	if cooldownFrame.SetCountdownFormatter then
-		local colorBreakpointCount = roundNumber(config.colorBreakpointCount, 0)
-		cooldownFrame:SetCountdownFormatter(colorBreakpointCount > 0 and self:GetBindingFormatter(config) or nil)
+		local colorBands = collectColorBands(config)
+		cooldownFrame:SetCountdownFormatter(colorBands and self:GetBindingFormatter(config) or nil)
 	end
 	local millisecondsThreshold = tonumber(config.millisecondsThreshold) or 0
 	if cooldownFrame.SetCountdownMillisecondsThreshold then cooldownFrame:SetCountdownMillisecondsThreshold(millisecondsThreshold) end
@@ -1028,13 +1042,60 @@ end
 function DurationText:GetAuraButtonDurationTextOptions(profileKey, options)
 	options = options or EMPTY_TABLE
 	local config = self:GetEffectiveConfig(profileKey)
-	return {
-		formatter = options.formatter or self:GetBindingFormatter(config),
-		expiredText = options.expiredText ~= nil and options.expiredText or config.expiredText,
-		zeroDurationText = options.zeroDurationText ~= nil and options.zeroDurationText or config.zeroDurationText,
-		timeModifier = options.timeModifier or (_G.Enum and _G.Enum.DurationTimeModifier and _G.Enum.DurationTimeModifier.RealTime or 0),
-		updateInterval = options.updateInterval or BINDING_UPDATE_INTERVAL,
-	}
+	local result = {}
+
+	-- PTR7 copies a fully configured binding before associating it with the
+	-- AuraButton. Keep fallback text and update behavior in that binding; the
+	-- former flat SetDurationText options are no longer accepted.
+	local binding = options.binding
+	if not binding then
+		local durationUtil = getDurationTextBindingAPI()
+		if durationUtil then
+			binding = durationUtil.CreateDurationTextBinding()
+			if binding and binding.SetToDefaults then binding:SetToDefaults() end
+			if binding and binding.SetTimeModifier then
+				binding:SetTimeModifier(options.timeModifier or (_G.Enum and _G.Enum.DurationTimeModifier and _G.Enum.DurationTimeModifier.RealTime or 0))
+			end
+			if binding and binding.SetUpdateInterval then binding:SetUpdateInterval(options.updateInterval or BINDING_UPDATE_INTERVAL) end
+			if binding and binding.SetZeroDurationText then binding:SetZeroDurationText(options.zeroDurationText ~= nil and options.zeroDurationText or config.zeroDurationText) end
+			if binding and binding.SetExpiredText then binding:SetExpiredText(options.expiredText ~= nil and options.expiredText or config.expiredText) end
+		end
+	end
+	if binding then result.binding = binding end
+
+	local textFormat = options.textFormat
+	if type(textFormat) == "table" then
+		if textFormat.formatString ~= nil and textFormat.components ~= nil then
+			result.textFormat = {
+				formatString = textFormat.formatString,
+				components = textFormat.components,
+			}
+		end
+	elseif textFormat ~= nil and options.components ~= nil then
+		result.textFormat = {
+			formatString = textFormat,
+			components = options.components,
+		}
+	end
+	if not result.textFormat then
+		local formatter = options.textFormatter or options.formatter
+		if formatter == nil and options.binding == nil then formatter = self:GetBindingFormatter(config) end
+		if formatter then result.textFormatter = formatter end
+	end
+
+	if type(options.textColor) == "table" and options.textColor.curve and options.textColor.property ~= nil then
+		result.textColor = {
+			curve = options.textColor.curve,
+			property = options.textColor.property,
+		}
+	elseif options.textColorCurve then
+		result.textColor = {
+			curve = options.textColorCurve,
+			property = options.textColorProperty or self:GetDurationTextBindingProperty("RemainingDuration"),
+		}
+	end
+
+	return result
 end
 
 function addon.functions.IsDurationTextBindingSupported() return DurationText:IsDurationTextBindingSupported() end

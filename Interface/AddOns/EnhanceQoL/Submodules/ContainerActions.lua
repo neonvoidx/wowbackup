@@ -15,14 +15,39 @@ local L = LibStub("AceLocale-3.0"):GetLocale(parentAddonName)
 local EditMode = addon.EditMode
 local EDITMODE_ID = "containerActionsButton"
 
-local BUTTON_SIZE = 48
 local PREVIEW_ICON = "Interface\\Icons\\INV_Misc_Bag_10"
 local DEFAULT_ANCHOR = { point = "CENTER", relativePoint = "CENTER", x = 0, y = -200 }
-local DEFAULT_ICON_TEXCOORD = { 0.08, 0.92, 0.08, 0.92 }
-local FULL_ICON_TEXCOORD = { 0, 1, 0, 1 }
+local CONTAINER_GLOW_KEY = "EQOL_CONTAINER_ACTION"
 local PERMANENT_ITEM_BLACKLIST = {
 	[240175] = true, -- Crystallized Ethereal Voidsplinter
 }
+
+ContainerActions.defaults = ContainerActions.defaults
+	or {
+		buttonSize = 48,
+		iconZoom = 8,
+		borderEnabled = true,
+		borderTexture = "DEFAULT",
+		borderSize = 2,
+		borderOffset = 0,
+		borderColor = { r = 1, g = 0.82, b = 0, a = 1 },
+		glowEnabled = false,
+		glowStyle = "BLIZZARD",
+		glowColor = { r = 1, g = 0.82, b = 0.2, a = 1 },
+		glowInset = 0,
+		glowThickness = 2,
+	}
+
+ContainerActions.GLOW_STYLE_OPTIONS = ContainerActions.GLOW_STYLE_OPTIONS
+	or {
+		{ value = "BLIZZARD", labelKey = "Blizzard", fallback = "Blizzard" },
+		{ value = "FLASH", labelKey = "Flash", fallback = "Flash" },
+		{ value = "MARCHING_ANTS", labelKey = "Marching ants", fallback = "Marching ants" },
+		{ value = "PIXEL", labelKey = "Pixel", fallback = "Pixel" },
+		{ value = "PULSING", labelKey = "Pulsing", fallback = "Pulsing" },
+	}
+
+local defaults = ContainerActions.defaults
 
 local ITEM_CLASS = Enum and Enum.ItemClass
 local MISC_SUBCLASS = Enum and Enum.ItemMiscellaneousSubclass
@@ -109,11 +134,6 @@ local function SetButtonIconTexture(button, texture)
 	end
 end
 
-local function SetButtonIconTexCoord(button, ...)
-	local icon = GetButtonIcon(button)
-	if icon and icon.SetTexCoord then icon:SetTexCoord(...) end
-end
-
 local function SetTextureVisibility(texture, visible)
 	if not texture then return end
 	if visible then
@@ -125,57 +145,162 @@ local function SetTextureVisibility(texture, visible)
 	end
 end
 
-function ContainerActions:GetButtonBorderEnabled()
-	if not addon.db then return true end
-	return addon.db.containerActionButtonShowBorder ~= false
+local function ClampNumber(value, minValue, maxValue, fallback)
+	value = tonumber(value)
+	if value == nil then value = fallback end
+	value = tonumber(value) or 0
+	if minValue and value < minValue then value = minValue end
+	if maxValue and value > maxValue then value = maxValue end
+	return value
 end
 
-function ContainerActions:GetButtonIconCropEnabled()
-	if not addon.db then return true end
-	return addon.db.containerActionButtonCropIcon ~= false
+local function NormalizeColor(value, fallback)
+	value = type(value) == "table" and value or fallback
+	fallback = fallback or { r = 1, g = 1, b = 1, a = 1 }
+	return {
+		r = ClampNumber(value.r or value[1], 0, 1, fallback.r or fallback[1] or 1),
+		g = ClampNumber(value.g or value[2], 0, 1, fallback.g or fallback[2] or 1),
+		b = ClampNumber(value.b or value[3], 0, 1, fallback.b or fallback[3] or 1),
+		a = ClampNumber(value.a or value[4], 0, 1, fallback.a or fallback[4] or 1),
+	}
+end
+
+function ContainerActions:GetButtonSize() return ClampNumber(addon.db and addon.db.containerActionButtonSize, 24, 128, defaults.buttonSize) end
+
+function ContainerActions:GetIconZoom()
+	if addon.IconShape and addon.IconShape.NormalizeIconZoom then return addon.IconShape.NormalizeIconZoom(addon.db and addon.db.containerActionIconZoom, defaults.iconZoom) end
+	return ClampNumber(addon.db and addon.db.containerActionIconZoom, 0, 35, defaults.iconZoom)
+end
+
+function ContainerActions:GetButtonBorderEnabled() return not addon.db or addon.db.containerActionBorderEnabled ~= false end
+function ContainerActions:GetBorderTexture() return (addon.db and addon.db.containerActionBorderTexture) or defaults.borderTexture end
+function ContainerActions:GetBorderSize() return ClampNumber(addon.db and addon.db.containerActionBorderSize, 1, 32, defaults.borderSize) end
+function ContainerActions:GetBorderOffset() return ClampNumber(addon.db and addon.db.containerActionBorderOffset, -20, 20, defaults.borderOffset) end
+function ContainerActions:GetBorderColor() return NormalizeColor(addon.db and addon.db.containerActionBorderColor, defaults.borderColor) end
+function ContainerActions:GetGlowEnabled() return addon.db and addon.db.containerActionGlowEnabled == true or false end
+function ContainerActions:GetGlowInset() return ClampNumber(addon.db and addon.db.containerActionGlowInset, -20, 20, defaults.glowInset) end
+function ContainerActions:GetGlowThickness() return ClampNumber(addon.db and addon.db.containerActionGlowThickness, 1, 10, defaults.glowThickness) end
+function ContainerActions:GetGlowColor() return NormalizeColor(addon.db and addon.db.containerActionGlowColor, defaults.glowColor) end
+
+function ContainerActions:GetGlowStyle()
+	local value = type(addon.db and addon.db.containerActionGlowStyle) == "string" and addon.db.containerActionGlowStyle:upper() or defaults.glowStyle
+	for _, option in ipairs(self.GLOW_STYLE_OPTIONS) do
+		if option.value == value then return value end
+	end
+	return defaults.glowStyle
+end
+
+function ContainerActions:GetBorderOptions()
+	local options = { { value = "DEFAULT", label = _G.DEFAULT or "Default" } }
+	local mediaOptions = addon.functions and addon.functions.GetLSMMediaOptions and addon.functions.GetLSMMediaOptions("border") or {}
+	for i = 1, #mediaOptions do options[#options + 1] = { value = mediaOptions[i].value, label = mediaOptions[i].label } end
+	return options
+end
+
+function ContainerActions:ResolveBorderTexture()
+	local key = self:GetBorderTexture()
+	if type(key) == "string" and key ~= "" and key ~= "DEFAULT" then
+		local media = addon.functions and addon.functions.GetLSMMediaHash and addon.functions.GetLSMMediaHash("border") or {}
+		if type(media[key]) == "string" and media[key] ~= "" then return media[key] end
+	end
+	return "Interface\\Buttons\\WHITE8x8"
+end
+
+function ContainerActions:EnsureButtonBorder()
+	if self.buttonBorder then return self.buttonBorder end
+	if not self.button then return nil end
+	local border = CreateFrame("Frame", nil, self.button, "BackdropTemplate")
+	border:SetFrameStrata(self.button:GetFrameStrata())
+	border:SetFrameLevel((self.button:GetFrameLevel() or 0) + 5)
+	border:EnableMouse(false)
+	self.buttonBorder = border
+	return border
+end
+
+function ContainerActions:SetAppearanceValue(key, value)
+	if not addon.db then return end
+	addon.db[key] = value
+	self:OnAppearanceSettingChanged()
 end
 
 function ContainerActions:ApplyButtonAppearance()
 	local button = self.button
 	if not button then return end
+	if InCombat() then
+		self.pendingAppearance = true
+		return
+	end
+	self.pendingAppearance = nil
 
-	local showBorder = self:GetButtonBorderEnabled()
-	local cropIcon = self:GetButtonIconCropEnabled()
+	local size = self:GetButtonSize()
+	button:SetSize(size, size)
+	button._eqolVisualSize = size
+	button._eqolBaseSlotSize = size
+	if self.anchor then self.anchor:SetSize(size + 12, size + 12) end
+
+	local icon = GetButtonIcon(button)
+	if icon then
+		if button.IconMask and icon.RemoveMaskTexture then icon:RemoveMaskTexture(button.IconMask) end
+		icon:ClearAllPoints()
+		icon:SetAllPoints(button)
+		if addon.IconShape and addon.IconShape.ApplyTextureZoom then
+			addon.IconShape.ApplyTextureZoom(icon, self:GetIconZoom(), "_eqolContainerActionIconTexCoord", 0)
+		else
+			local inset = self:GetIconZoom() / 100
+			icon:SetTexCoord(inset, 1 - inset, inset, 1 - inset)
+		end
+	end
 
 	local normal = button.NormalTexture
 	if not normal and button.GetName then
 		local name = button:GetName()
 		if name and _G then normal = _G[name .. "NormalTexture"] end
 	end
-	if normal then
-		if showBorder then
-			normal:Show()
-		else
-			normal:Hide()
-		end
+	SetTextureVisibility(normal, false)
+	SetTextureVisibility(button.IconMask, false)
+	SetTextureVisibility(button.SlotBackground, false)
+	SetTextureVisibility(button.FloatingBG, false)
+	SetTextureVisibility(button.Border, false)
+	SetTextureVisibility(button.IconBorder, false)
+	SetTextureVisibility(button.SlotArt, false)
+	SetTextureVisibility(button.Flash, false)
+	SetTextureVisibility(button.NewActionTexture, false)
+	SetTextureVisibility(button.SpellHighlightTexture, false)
+	SetTextureVisibility(button.GetCheckedTexture and button:GetCheckedTexture() or button.CheckedTexture, false)
+
+	local border = self:EnsureButtonBorder()
+	if border and self:GetButtonBorderEnabled() then
+		local borderSize = self:GetBorderSize()
+		local offset = self:GetBorderOffset()
+		local color = self:GetBorderColor()
+		border:SetBackdrop({
+			edgeFile = self:ResolveBorderTexture(),
+			edgeSize = borderSize,
+			insets = { left = 0, right = 0, top = 0, bottom = 0 },
+		})
+		border:SetBackdropColor(0, 0, 0, 0)
+		border:SetBackdropBorderColor(color.r, color.g, color.b, color.a)
+		border:ClearAllPoints()
+		border:SetPoint("TOPLEFT", button, "TOPLEFT", -offset, offset)
+		border:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", offset, -offset)
+		border:Show()
+	elseif border then
+		border:SetBackdrop(nil)
+		border:Hide()
 	end
 
-	if button.FloatingBG then
-		if showBorder then
-			button.FloatingBG:Show()
+	if addon.Glow and addon.Glow.Start and addon.Glow.Stop then
+		if self:GetGlowEnabled() and (button.entry or self:IsEditModePreviewActive()) then
+			local color = self:GetGlowColor()
+			addon.Glow.Start(button, CONTAINER_GLOW_KEY, self:GetGlowStyle(), {
+				color = { color.r, color.g, color.b, color.a },
+				inset = self:GetGlowInset(),
+				thickness = self:GetGlowThickness(),
+			})
 		else
-			button.FloatingBG:Hide()
+			addon.Glow.Stop(button, CONTAINER_GLOW_KEY, true)
 		end
 	end
-
-	local pushed = button.GetPushedTexture and button:GetPushedTexture() or button.PushedTexture
-	local highlight = button.GetHighlightTexture and button:GetHighlightTexture() or button.HighlightTexture
-	local checked = button.GetCheckedTexture and button:GetCheckedTexture() or button.CheckedTexture
-
-	SetTextureVisibility(pushed, showBorder)
-	SetTextureVisibility(highlight, showBorder)
-	SetTextureVisibility(checked, showBorder)
-	SetTextureVisibility(button.Border, showBorder)
-	SetTextureVisibility(button.IconBorder, showBorder)
-	SetTextureVisibility(button.SlotArt, showBorder)
-
-	local coords = cropIcon and DEFAULT_ICON_TEXCOORD or FULL_ICON_TEXCOORD
-	SetButtonIconTexCoord(button, coords[1], coords[2], coords[3], coords[4])
 end
 
 function ContainerActions:IsEditModePreviewActive()
@@ -188,9 +313,9 @@ function ContainerActions:UpdateEditModePreviewState()
 
 	local button = self.button
 	if not button then return end
+	self:ApplyButtonAppearance()
 
 	if self.editModePreviewActive then
-		self:ApplyButtonAppearance()
 		if not button.entry then
 			SetButtonIconTexture(button, PREVIEW_ICON)
 			if button.Count then button.Count:SetText("") end
@@ -221,22 +346,17 @@ function ContainerActions:RequestEditModeRefresh()
 end
 
 function ContainerActions:OnAppearanceSettingChanged()
+	if InCombat() then
+		self.pendingAppearance = true
+	else
+		self:ApplyButtonAppearance()
+	end
+end
+
+function ContainerActions:OnMediaRegistered(mediaType, mediaKey)
+	if mediaType ~= "border" or type(mediaKey) ~= "string" or mediaKey == "" then return end
+	if self:GetBorderTexture() ~= mediaKey then return end
 	self:ApplyButtonAppearance()
-	self:RequestEditModeRefresh()
-end
-
-function ContainerActions:SetButtonBorderEnabled(enabled)
-	local value = enabled and true or false
-	if addon.db and addon.db.containerActionButtonShowBorder == value then return end
-	if addon.db then addon.db.containerActionButtonShowBorder = value end
-	self:OnAppearanceSettingChanged()
-end
-
-function ContainerActions:SetButtonIconCropEnabled(enabled)
-	local value = enabled and true or false
-	if addon.db and addon.db.containerActionButtonCropIcon == value then return end
-	if addon.db then addon.db.containerActionButtonCropIcon = value end
-	self:OnAppearanceSettingChanged()
 end
 
 local AREA_BLOCKS = {
@@ -338,8 +458,21 @@ local function migrateLegacyAreaBlockStore(profile)
 	profile.containerActionLayouts = nil
 end
 
+local function migrateLegacyAppearanceSettings(profile)
+	if type(profile) ~= "table" then return end
+	if profile.containerActionBorderEnabled == nil and profile.containerActionButtonShowBorder ~= nil then
+		profile.containerActionBorderEnabled = profile.containerActionButtonShowBorder ~= false
+	end
+	if profile.containerActionIconZoom == nil and profile.containerActionButtonCropIcon ~= nil then
+		profile.containerActionIconZoom = profile.containerActionButtonCropIcon ~= false and defaults.iconZoom or 0
+	end
+	profile.containerActionButtonShowBorder = nil
+	profile.containerActionButtonCropIcon = nil
+end
+
 function ContainerActions:MigrateProfileData(profile)
 	migrateLegacyAreaBlockStore(profile)
+	migrateLegacyAppearanceSettings(profile)
 end
 
 function ContainerActions:GetLayoutAreaBlocks(layoutName)
@@ -385,7 +518,8 @@ function ContainerActions:EnsureAnchor()
 	if self.anchor then return self.anchor end
 
 	local anchor = CreateFrame("Frame", "EnhanceQoLContainerActionAnchor", UIParent, "BackdropTemplate")
-	anchor:SetSize(BUTTON_SIZE + 12, BUTTON_SIZE + 12)
+	local buttonSize = self:GetButtonSize()
+	anchor:SetSize(buttonSize + 12, buttonSize + 12)
 	anchor:SetFrameStrata("MEDIUM")
 	anchor:SetClampedToScreen(true)
 	anchor:EnableMouse(false)
@@ -402,31 +536,188 @@ function ContainerActions:EnsureAnchor()
 	anchor:Hide()
 
 	local label = anchor:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-	label:SetPoint("CENTER", 0, 0)
+	label:SetPoint("BOTTOM", anchor, "TOP", 0, 4)
 	label:SetText(L["containerActionsAnchorLabel"] or "Container Button")
 
 	self.anchor = anchor
 	self.anchorLabel = label
 
 	if EditMode and EditMode.IsAvailable and EditMode:IsAvailable() and not self.anchorRegistered then
-		local defaults = BuildAnchorLayoutSnapshot()
+		local layoutDefaults = BuildAnchorLayoutSnapshot()
 		local settings
 		local settingType = EditMode.lib and EditMode.lib.SettingType
 		if settingType then
 			settings = {
 				{
-					name = L["Show button border"] or "Show button border",
-					kind = settingType.Checkbox,
-					default = true,
-					get = function() return ContainerActions:GetButtonBorderEnabled() end,
-					set = function(_, value) ContainerActions:SetButtonBorderEnabled(value) end,
+					name = L["Icon size"] or "Icon size",
+					kind = settingType.Slider,
+					field = "buttonSize",
+					minValue = 24,
+					maxValue = 128,
+					valueStep = 1,
+					allowInput = true,
+					default = defaults.buttonSize,
+					get = function() return ContainerActions:GetButtonSize() end,
+					set = function(_, value) ContainerActions:SetAppearanceValue("containerActionButtonSize", ClampNumber(value, 24, 128, defaults.buttonSize)) end,
+					formatter = function(value) return tostring(math.floor((tonumber(value) or defaults.buttonSize) + 0.5)) end,
 				},
 				{
-					name = L["containerActionsCropIcon"] or "Crop icon to Blizzard style",
+					name = L["Icon zoom"] or "Icon zoom",
+					kind = settingType.Slider,
+					field = "iconZoom",
+					minValue = 0,
+					maxValue = 35,
+					valueStep = 1,
+					allowInput = true,
+					default = defaults.iconZoom,
+					get = function() return ContainerActions:GetIconZoom() end,
+					set = function(_, value) ContainerActions:SetAppearanceValue("containerActionIconZoom", ClampNumber(value, 0, 35, defaults.iconZoom)) end,
+					formatter = function(value) return tostring(math.floor((tonumber(value) or defaults.iconZoom) + 0.5)) end,
+				},
+				{
+					name = EMBLEM_BORDER,
+					kind = settingType.Collapsible,
+					id = "containerActionBorder",
+					defaultCollapsed = true,
+				},
+				{
+					name = L["Use border"] or "Use border",
 					kind = settingType.Checkbox,
-					default = true,
-					get = function() return ContainerActions:GetButtonIconCropEnabled() end,
-					set = function(_, value) ContainerActions:SetButtonIconCropEnabled(value) end,
+					field = "borderEnabled",
+					parentId = "containerActionBorder",
+					default = defaults.borderEnabled,
+					get = function() return ContainerActions:GetButtonBorderEnabled() end,
+					set = function(_, value) ContainerActions:SetAppearanceValue("containerActionBorderEnabled", value == true) end,
+				},
+				{
+					name = L["Border texture"] or "Border texture",
+					kind = settingType.Dropdown,
+					field = "borderTexture",
+					parentId = "containerActionBorder",
+					height = 220,
+					get = function() return ContainerActions:GetBorderTexture() end,
+					set = function(_, value) ContainerActions:SetAppearanceValue("containerActionBorderTexture", value) end,
+					generator = function(_, root)
+						for _, option in ipairs(ContainerActions:GetBorderOptions()) do
+							local optionValue = option.value
+							root:CreateRadio(option.label, function() return ContainerActions:GetBorderTexture() == optionValue end, function()
+								ContainerActions:SetAppearanceValue("containerActionBorderTexture", optionValue)
+							end)
+						end
+					end,
+					isEnabled = function() return ContainerActions:GetButtonBorderEnabled() end,
+				},
+				{
+					name = L["Border size"] or "Border size",
+					kind = settingType.Slider,
+					field = "borderSize",
+					parentId = "containerActionBorder",
+					minValue = 1,
+					maxValue = 32,
+					valueStep = 1,
+					allowInput = true,
+					default = defaults.borderSize,
+					get = function() return ContainerActions:GetBorderSize() end,
+					set = function(_, value) ContainerActions:SetAppearanceValue("containerActionBorderSize", ClampNumber(value, 1, 32, defaults.borderSize)) end,
+					isEnabled = function() return ContainerActions:GetButtonBorderEnabled() end,
+				},
+				{
+					name = L["Border offset"] or "Border offset",
+					kind = settingType.Slider,
+					field = "borderOffset",
+					parentId = "containerActionBorder",
+					minValue = -20,
+					maxValue = 20,
+					valueStep = 1,
+					allowInput = true,
+					default = defaults.borderOffset,
+					get = function() return ContainerActions:GetBorderOffset() end,
+					set = function(_, value) ContainerActions:SetAppearanceValue("containerActionBorderOffset", ClampNumber(value, -20, 20, defaults.borderOffset)) end,
+					isEnabled = function() return ContainerActions:GetButtonBorderEnabled() end,
+				},
+				{
+					name = EMBLEM_BORDER_COLOR,
+					kind = settingType.Color,
+					field = "borderColor",
+					parentId = "containerActionBorder",
+					hasOpacity = true,
+					default = defaults.borderColor,
+					get = function() return ContainerActions:GetBorderColor() end,
+					set = function(_, value) ContainerActions:SetAppearanceValue("containerActionBorderColor", NormalizeColor(value, defaults.borderColor)) end,
+					isEnabled = function() return ContainerActions:GetButtonBorderEnabled() end,
+				},
+				{
+					name = L["Glow effect"] or "Glow effect",
+					kind = settingType.Collapsible,
+					id = "containerActionGlow",
+					defaultCollapsed = true,
+				},
+				{
+					name = L["Enable glow"] or "Enable glow",
+					kind = settingType.Checkbox,
+					field = "glowEnabled",
+					parentId = "containerActionGlow",
+					default = defaults.glowEnabled,
+					get = function() return ContainerActions:GetGlowEnabled() end,
+					set = function(_, value) ContainerActions:SetAppearanceValue("containerActionGlowEnabled", value == true) end,
+				},
+				{
+					name = L["Glow style"] or "Glow style",
+					kind = settingType.Dropdown,
+					field = "glowStyle",
+					parentId = "containerActionGlow",
+					height = 180,
+					get = function() return ContainerActions:GetGlowStyle() end,
+					set = function(_, value) ContainerActions:SetAppearanceValue("containerActionGlowStyle", value) end,
+					generator = function(_, root)
+						for _, option in ipairs(ContainerActions.GLOW_STYLE_OPTIONS) do
+							local optionValue = option.value
+							local optionLabel = L[option.labelKey] or option.fallback
+							root:CreateRadio(optionLabel, function() return ContainerActions:GetGlowStyle() == optionValue end, function()
+								ContainerActions:SetAppearanceValue("containerActionGlowStyle", optionValue)
+							end)
+						end
+					end,
+					isEnabled = function() return ContainerActions:GetGlowEnabled() end,
+				},
+				{
+					name = L["Glow color"] or "Glow color",
+					kind = settingType.Color,
+					field = "glowColor",
+					parentId = "containerActionGlow",
+					hasOpacity = true,
+					default = defaults.glowColor,
+					get = function() return ContainerActions:GetGlowColor() end,
+					set = function(_, value) ContainerActions:SetAppearanceValue("containerActionGlowColor", NormalizeColor(value, defaults.glowColor)) end,
+					isEnabled = function() return ContainerActions:GetGlowEnabled() end,
+				},
+				{
+					name = L["Glow inset"] or "Glow inset",
+					kind = settingType.Slider,
+					field = "glowInset",
+					parentId = "containerActionGlow",
+					minValue = -20,
+					maxValue = 20,
+					valueStep = 1,
+					allowInput = true,
+					default = defaults.glowInset,
+					get = function() return ContainerActions:GetGlowInset() end,
+					set = function(_, value) ContainerActions:SetAppearanceValue("containerActionGlowInset", ClampNumber(value, -20, 20, defaults.glowInset)) end,
+					isEnabled = function() return ContainerActions:GetGlowEnabled() end,
+				},
+				{
+					name = L["CooldownPanelGlowThickness"] or "Glow thickness",
+					kind = settingType.Slider,
+					field = "glowThickness",
+					parentId = "containerActionGlow",
+					minValue = 1,
+					maxValue = 10,
+					valueStep = 1,
+					allowInput = true,
+					default = defaults.glowThickness,
+					get = function() return ContainerActions:GetGlowThickness() end,
+					set = function(_, value) ContainerActions:SetAppearanceValue("containerActionGlowThickness", ClampNumber(value, 1, 10, defaults.glowThickness)) end,
+					isEnabled = function() return ContainerActions:GetGlowEnabled() end,
 				},
 				{
 					name = L["containerActionsAreaHeader"],
@@ -454,7 +745,7 @@ function ContainerActions:EnsureAnchor()
 		EditMode:RegisterFrame(EDITMODE_ID, {
 			frame = anchor,
 			title = L["containerActionsAnchorLabel"] or "Container Button",
-			layoutDefaults = defaults,
+			layoutDefaults = layoutDefaults,
 			isEnabled = function() return ContainerActions:IsEnabled() end,
 			onApply = function(_, layoutName, data)
 				if not ContainerActions._eqolEditModeHydrated then
@@ -508,12 +799,27 @@ function ContainerActions:EnsureButton()
 	if self.button then return self.button end
 
 	local button = CreateFrame("Button", "EnhanceQoLContainerActionButton", UIParent, "ActionButtonTemplate,SecureActionButtonTemplate")
-	button:SetSize(BUTTON_SIZE, BUTTON_SIZE)
+	local size = self:GetButtonSize()
+	button:SetSize(size, size)
 	button:RegisterForClicks("LeftButtonUp", "LeftButtonDown")
 	button:SetAttribute("pressAndHoldAction", false) -- verhindert Wiederholen beim Halten
 	button:SetAttribute("*type*", nil)
 	if button.HotKey then button.HotKey:SetText("") end
 	if button.Name then button.Name:Hide() end
+	local icon = GetButtonIcon(button)
+	if icon and icon.SetTexCoord then icon:SetTexCoord(0, 1, 0, 1) end
+	button:SetHighlightTexture("Interface\\Buttons\\WHITE8x8", "ADD")
+	local highlight = button:GetHighlightTexture()
+	if highlight then
+		highlight:SetAllPoints(button)
+		highlight:SetVertexColor(1, 1, 1, 0.18)
+	end
+	button:SetPushedTexture("Interface\\Buttons\\WHITE8x8")
+	local pushed = button:GetPushedTexture()
+	if pushed then
+		pushed:SetAllPoints(button)
+		pushed:SetVertexColor(0, 0, 0, 0.28)
+	end
 	button:SetPoint("CENTER", self:EnsureAnchor(), "CENTER")
 	button:Hide()
 
@@ -619,6 +925,7 @@ end
 function ContainerActions:OnCombatStart() end
 
 function ContainerActions:OnCombatEnd()
+	if self.pendingAppearance then self:ApplyButtonAppearance() end
 	if self.pendingAnchorLayout then
 		local pending = self.pendingAnchorLayout
 		self.pendingAnchorLayout = nil
@@ -1202,7 +1509,25 @@ function ContainerActions:IsTooltipOpenable(bag, slot, info)
 	return false
 end
 
-function ContainerActions:IsCollectibleMount(info)
+function ContainerActions:HasUnmetUsageRequirement(bag, slot)
+	if not GetBagItemTooltip then return false end
+	local tooltip = GetBagItemTooltip(bag, slot)
+	if not tooltip or not tooltip.lines then return false end
+	local lineTypes = Enum and Enum.TooltipDataLineType
+	local usageRequirementType = lineTypes and lineTypes.UsageRequirement or 43
+	for _, line in ipairs(tooltip.lines) do
+		if line and line.type == usageRequirementType then
+			local color = line.leftColor
+			local r = color and (color.r or color[1])
+			local g = color and (color.g or color[2])
+			local b = color and (color.b or color[3])
+			if r and g and b and r >= 0.9 and g <= 0.25 and b <= 0.25 then return true end
+		end
+	end
+	return false
+end
+
+function ContainerActions:IsCollectibleMount(info, bag, slot)
 	if not info or not info.itemID then return false end
 	if not C_MountJournal or not C_MountJournal.GetMountFromItem then return false end
 
@@ -1241,8 +1566,16 @@ function ContainerActions:IsCollectibleMount(info)
 		hasMount = isCollected == true
 	end
 
-	if hasMount then return false end
+	if hasMount or self:HasUnmetUsageRequirement(bag, slot) then return false end
 	return true, mountID
+end
+
+function ContainerActions:IsCosmeticItem(info)
+	if not addon.db or addon.db.containerActionIncludeCosmeticItems ~= true then return false end
+	if not info or not info.itemID or not C_Item or not C_Item.IsCosmeticItem then return false end
+	local itemRef = info.hyperlink or info.itemID
+	local ok, isCosmetic = pcall(C_Item.IsCosmeticItem, itemRef)
+	return ok and isCosmetic == true
 end
 
 function ContainerActions:BuildEntry(bag, slot, info, overrides)
@@ -1260,11 +1593,23 @@ function ContainerActions:BuildEntry(bag, slot, info, overrides)
 	}
 end
 
+function ContainerActions:HasChunkItemConfig()
+	local source = addon.general and addon.general.variables and addon.general.variables.autoOpen or {}
+	for _, config in pairs(source) do
+		if type(config) == "table" then return true end
+	end
+	return false
+end
+
 function ContainerActions:ScanBags(bags)
 	self:Init()
+	-- Chunked items must be evaluated across the entire carried inventory. A partial
+	-- dirty-bag scan could otherwise retain a stale queue entry for the same item.
+	if type(bags) == "table" and self:HasChunkItemConfig() then bags = nil end
 	self._tooltipScanBudget = (addon.db and addon.db.containerActionTooltipBudget) or 4
 	local scanOpenables = (addon.db and addon.db.containerActionScanOpenables) ~= false
 	local safeItems, secureItems = self._safe, self._secure
+	local handledChunkItems = {}
 	if #safeItems > 0 then wipe(safeItems) end
 	if #secureItems > 0 then wipe(secureItems) end
 	if not self:IsEnabled() then return safeItems, secureItems end
@@ -1279,24 +1624,37 @@ function ContainerActions:ScanBags(bags)
 					if isBlacklisted then
 						self:RememberItemInfo(info.itemID, nil, info, nil, true)
 					elseif autoConfig then
-						self:RememberItemInfo(info.itemID, autoConfig, info, nil, true)
-						if self:IsItemEnabled(info.itemID) then
-							if type(autoConfig) == "table" then
+						if type(autoConfig) == "table" then
+							if not handledChunkItems[info.itemID] then
+								handledChunkItems[info.itemID] = true
+								self:RememberItemInfo(info.itemID, autoConfig, info, nil, true)
 								local chunk = autoConfig.chunk or autoConfig.stackSize or autoConfig.minStack or 1
 								local minStack = autoConfig.minStack or chunk
-								local stack = info.stackCount or 1
-								local uses = 0
-								if stack >= (minStack or 1) and chunk and chunk > 0 then uses = math.floor(stack / chunk) end
-								if uses > 0 then table.insert(secureItems, self:BuildEntry(bag, slot, info, { count = uses, chunk = chunk, meta = autoConfig })) end
+								local total = C_Item.GetItemCount(info.itemID, false, false, false, false)
+								local uses = chunk and chunk > 0 and math.floor(total / chunk) or 0
+								local meetsRequirements = true
+								if total >= (minStack or 1) and uses > 0 and autoConfig.checkRequirements == true then
+									meetsRequirements = not self:HasUnmetUsageRequirement(bag, slot)
+								end
+								if self:IsItemEnabled(info.itemID) and meetsRequirements and total >= (minStack or 1) and uses > 0 then
+									table.insert(secureItems, self:BuildEntry(bag, slot, info, {
+										count = uses,
+										chunk = chunk,
+										meta = autoConfig,
+									}))
+								end
+								end
 							else
-								table.insert(secureItems, self:BuildEntry(bag, slot, info))
+								self:RememberItemInfo(info.itemID, autoConfig, info, nil, true)
+								if self:IsItemEnabled(info.itemID) then table.insert(secureItems, self:BuildEntry(bag, slot, info)) end
 							end
-						end
 					else
-						local isCollectibleMount, mountID = self:IsCollectibleMount(info)
+						local isCollectibleMount, mountID = self:IsCollectibleMount(info, bag, slot)
 						if isCollectibleMount then
 							local overrides = { meta = { type = "mount", mountID = mountID } }
 							table.insert(secureItems, self:BuildEntry(bag, slot, info, overrides))
+						elseif self:IsCosmeticItem(info) and not self:HasUnmetUsageRequirement(bag, slot) then
+							table.insert(secureItems, self:BuildEntry(bag, slot, info, { meta = { type = "cosmetic" } }))
 						elseif scanOpenables and self:IsTooltipOpenable(bag, slot, info) then
 							safeItems[#safeItems + 1] = { bag = bag, slot = slot }
 						else

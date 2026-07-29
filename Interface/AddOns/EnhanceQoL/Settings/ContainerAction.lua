@@ -102,6 +102,25 @@ local data = {
 
 addon.functions.SettingsCreateText(cContainer, L["containerActionsFeatureDesc2"], { parentSection = expandable })
 addon.functions.SettingsCreateCheckbox(cContainer, data)
+
+data = {
+	var = "containerActionIncludeCosmeticItems",
+	text = L["containerActionsIncludeCosmeticItems"],
+	desc = L["containerActionsIncludeCosmeticItemsDesc"],
+	newTagID = "containerActionIncludeCosmeticItems",
+	func = function(value)
+		addon.db.containerActionIncludeCosmeticItems = value and true or false
+		if addon.functions and addon.functions.checkForContainer then addon.functions.checkForContainer() end
+	end,
+	parent = true,
+	parentCheck = function()
+		return addon.SettingsLayout.elements["automaticallyOpenContainer"].setting and addon.SettingsLayout.elements["automaticallyOpenContainer"].setting:GetValue() == true
+	end,
+	element = addon.SettingsLayout.elements["automaticallyOpenContainer"].element,
+	parentSection = expandable,
+}
+addon.functions.SettingsCreateCheckbox(cContainer, data)
+
 addon.functions.SettingsCreateText(cContainer, (L["containerActionsConfigCenterNote"] or L["containerActionsEditModeHint"]) .. "\n\n" .. "|cff99e599" .. L["containerActionsBlacklistHint"] .. "|r", { parentSection = expandable })
 
 data = {
@@ -197,12 +216,25 @@ local eventHandlers = {
 }
 
 function addon.functions.initContainerAction()
+	local defaults = addon.ContainerActions and addon.ContainerActions.defaults or {}
+	if addon.ContainerActions and addon.ContainerActions.MigrateProfileData then addon.ContainerActions:MigrateProfileData(addon.db) end
 	addon.functions.InitDBValue("automaticallyOpenContainer", false)
 	addon.functions.InitDBValue("containerActionAnchor", { point = "CENTER", relativePoint = "CENTER", x = 0, y = -200 })
 	addon.functions.InitDBValue("containerAutoOpenDisabled", {})
 	addon.functions.InitDBValue("containerActionAreaBlocks", {})
-	addon.functions.InitDBValue("containerActionButtonShowBorder", true)
-	addon.functions.InitDBValue("containerActionButtonCropIcon", true)
+	addon.functions.InitDBValue("containerActionButtonSize", defaults.buttonSize or 48)
+	addon.functions.InitDBValue("containerActionIconZoom", defaults.iconZoom or 8)
+	addon.functions.InitDBValue("containerActionBorderEnabled", defaults.borderEnabled ~= false)
+	addon.functions.InitDBValue("containerActionBorderTexture", defaults.borderTexture or "DEFAULT")
+	addon.functions.InitDBValue("containerActionBorderSize", defaults.borderSize or 2)
+	addon.functions.InitDBValue("containerActionBorderOffset", defaults.borderOffset or 0)
+	addon.functions.InitDBValue("containerActionBorderColor", defaults.borderColor or { r = 1, g = 0.82, b = 0, a = 1 })
+	addon.functions.InitDBValue("containerActionGlowEnabled", defaults.glowEnabled == true)
+	addon.functions.InitDBValue("containerActionGlowStyle", defaults.glowStyle or "BLIZZARD")
+	addon.functions.InitDBValue("containerActionGlowColor", defaults.glowColor or { r = 1, g = 0.82, b = 0.2, a = 1 })
+	addon.functions.InitDBValue("containerActionGlowInset", defaults.glowInset or 0)
+	addon.functions.InitDBValue("containerActionGlowThickness", defaults.glowThickness or 2)
+	addon.functions.InitDBValue("containerActionIncludeCosmeticItems", false)
 
 	if addon.ContainerActions and addon.ContainerActions.Init then
 		addon.ContainerActions:Init()

@@ -8,6 +8,7 @@ NewSettingsSeen = {
 ["chatBubblesRaid"] = true,
 ["DAMAGE_METER_LABEL"] = true,
 ["raidFramesDispelIndicatorOverlay"] = true,
+["assistedCombatReduceHighlights"] = true,
 ["COMBAT_WARNINGS_LABEL"] = true,
 ["raidFramesDispelIndicatorType"] = true,
 ["enableConnectToPhotoSharing"] = true,

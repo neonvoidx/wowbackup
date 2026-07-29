@@ -22,6 +22,7 @@ local VALID_STRATA = {
     "TOOLTIP",
 }
 
+---@type CMCEditModeFrameConfig
 local FRAME_DEFAULT_CONFIG = {
     point = "CENTER",
     x = 0,
@@ -83,8 +84,8 @@ end
 
 ---Ensure and load frame configuration with comprehensive fallback chain
 ---@param configKey string The database key in editMode (e.g., "rangeCheck", "mountIcon")
----@param defaultConfig? table Default position/settings table (applied to profile first)
----@return table config The configuration table with all properties resolved
+---@param defaultConfig? CMCEditModeFrameConfig Default position/settings table (applied to profile first)
+---@return CMCEditModeFrameConfig config The configuration table with all properties resolved
 function WilduUICore.LoadFrameConfig(configKey, defaultConfig)
     defaultConfig = defaultConfig or {}
     if not ns.Addon.db.profile.editMode then
@@ -98,6 +99,7 @@ function WilduUICore.LoadFrameConfig(configKey, defaultConfig)
     local storedConfig = ns.Addon.db.profile.editMode[configKey]
 
     -- Three-tier fallback: stored → defaultConfig → DEFAULT_CONFIG
+    ---@type CMCEditModeFrameConfig
     local result = {}
 
     local allKeys = {}
@@ -130,7 +132,10 @@ end
 ---@param configKey string The database key
 ---@param shouldHide boolean Whether to hide (move off-screen) the frame
 function WilduUICore.ApplyFramePosition(frame, configKey, shouldHide)
-    local config = ns.Addon.db.profile.editMode[configKey]
+    local profile = ns.Addon.db.profile
+    profile.editMode = profile.editMode or {}
+    profile.editMode[configKey] = profile.editMode[configKey] or {}
+    local config = profile.editMode[configKey]
 
     if shouldHide then
         frame:SetClampedToScreen(false)
@@ -153,9 +158,6 @@ function WilduUICore.ApplyFramePosition(frame, configKey, shouldHide)
         else
             frame:SetPoint(config.point or "CENTER", UIParent, config.point or "CENTER", config.x or 0, config.y or 0)
         end
-    end
-    if not config then
-        return
     end
     if config.scale ~= nil then
         frame:SetScale(config.scale)

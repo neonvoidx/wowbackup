@@ -301,6 +301,55 @@ function CastbarSettings.BuildStandaloneCastbarSettings(ctx)
 	list[#list + 1] = castFrameLevelOffset
 
 	list[#list + 1] = { name = L["Anchor"] or "Anchor", kind = settingType.Collapsible, id = section.anchor, defaultCollapsed = true }
+	local function getDynamicAssignment(create)
+		if type(castCfg.dynamicAnchor) ~= "table" and create then castCfg.dynamicAnchor = { enabled = false } end
+		return castCfg.dynamicAnchor
+	end
+	local function usesDynamicAnchor()
+		local assignment = getDynamicAssignment(false)
+		return assignment and assignment.enabled == true or false
+	end
+	local dynamicAnchorEnabled = checkbox(L["Enable Dynamic Anchoring"], usesDynamicAnchor, function(value)
+		local assignment = getDynamicAssignment(true)
+		assignment.enabled = value == true
+		if assignment.enabled and not assignment.profileId and addon.DynamicAnchors then
+			local options = addon.DynamicAnchors:GetProfileOptions()
+			assignment.profileId = options[1] and options[1].value or nil
+		end
+		refreshCastbar()
+		refreshSettingsUI()
+	end, false, section.anchor, isCastEnabled)
+	dynamicAnchorEnabled.isShown = function() return true end
+	list[#list + 1] = dynamicAnchorEnabled
+	list[#list + 1] = {
+		name = L["Dynamic Anchor Profile"],
+		kind = settingType.Dropdown,
+		field = "dynamicAnchorProfile",
+		parentId = section.anchor,
+		height = 180,
+		get = function()
+			local assignment = getDynamicAssignment(false)
+			return assignment and assignment.profileId or nil
+		end,
+		set = function(_, value)
+			local assignment = getDynamicAssignment(true)
+			assignment.profileId = value
+			refreshCastbar()
+		end,
+		generator = function(_, root)
+			for _, option in ipairs(addon.DynamicAnchors and addon.DynamicAnchors:GetProfileOptions() or {}) do
+				root:CreateRadio(option.label, function()
+					local assignment = getDynamicAssignment(false)
+					return assignment and assignment.profileId == option.value
+				end, function()
+					local assignment = getDynamicAssignment(true)
+					assignment.profileId = option.value
+					refreshCastbar()
+				end)
+			end
+		end,
+		isShown = usesDynamicAnchor,
+	}
 
 	local castRelativeFrame = radioDropdown("Relative frame", relativeFrameEntries, function()
 		local anchor = ensureCastAnchor()
@@ -329,6 +378,7 @@ function CastbarSettings.BuildStandaloneCastbarSettings(ctx)
 		refreshSettingsUI()
 	end, "UIParent", section.anchor)
 	castRelativeFrame.isEnabled = isCastEnabled
+	castRelativeFrame.isShown = function() return not usesDynamicAnchor() end
 	list[#list + 1] = castRelativeFrame
 
 	local castAnchorPoint = radioDropdown("Anchor point", anchorPointOptions, function()
@@ -340,6 +390,7 @@ function CastbarSettings.BuildStandaloneCastbarSettings(ctx)
 		refreshCastbar()
 	end, "CENTER", section.anchor)
 	castAnchorPoint.isEnabled = isCastEnabled
+	castAnchorPoint.isShown = function() return not usesDynamicAnchor() end
 	list[#list + 1] = castAnchorPoint
 
 	local castAnchorRelativePoint = radioDropdown("Anchor target point", anchorPointOptions, function()
@@ -351,6 +402,7 @@ function CastbarSettings.BuildStandaloneCastbarSettings(ctx)
 		refreshCastbar()
 	end, "CENTER", section.anchor)
 	castAnchorRelativePoint.isEnabled = isCastEnabled
+	castAnchorRelativePoint.isShown = function() return not usesDynamicAnchor() end
 	list[#list + 1] = castAnchorRelativePoint
 
 	local castOffsetX = slider(L["Offset X"] or "Offset X", -OFFSET_RANGE, OFFSET_RANGE, 1, function()
@@ -362,6 +414,7 @@ function CastbarSettings.BuildStandaloneCastbarSettings(ctx)
 		refreshCastbar()
 	end, 0, section.anchor, true)
 	castOffsetX.isEnabled = isCastEnabled
+	castOffsetX.isShown = function() return not usesDynamicAnchor() end
 	list[#list + 1] = castOffsetX
 
 	local castOffsetY = slider(L["Offset Y"] or "Offset Y", -OFFSET_RANGE, OFFSET_RANGE, 1, function()
@@ -373,9 +426,10 @@ function CastbarSettings.BuildStandaloneCastbarSettings(ctx)
 		refreshCastbar()
 	end, 0, section.anchor, true)
 	castOffsetY.isEnabled = isCastEnabled
+	castOffsetY.isShown = function() return not usesDynamicAnchor() end
 	list[#list + 1] = castOffsetY
 
-	list[#list + 1] = checkbox("Match width of anchor", function()
+	local castMatchWidth = checkbox("Match width of anchor", function()
 		local anchor = ensureCastAnchor()
 		return (anchor.relativeFrame or "UIParent") ~= "UIParent" and anchor.matchRelativeWidth == true
 	end, function(val)
@@ -388,6 +442,8 @@ function CastbarSettings.BuildStandaloneCastbarSettings(ctx)
 		refreshCastbar()
 		refreshSettingsUI()
 	end, false, section.anchor, function() return isCastEnabled() and not anchorUsesUIParent() end)
+	castMatchWidth.isShown = function() return not usesDynamicAnchor() end
+	list[#list + 1] = castMatchWidth
 
 	local castMatchWidthOffset = slider(L["Offset"] or "Offset", -200, 200, 1, function()
 		local anchor = ensureCastAnchor()
@@ -402,6 +458,7 @@ function CastbarSettings.BuildStandaloneCastbarSettings(ctx)
 		local anchor = ensureCastAnchor()
 		return isCastEnabled() and not anchorUsesUIParent() and anchor.matchRelativeWidth == true
 	end
+	castMatchWidthOffset.isShown = function() return not usesDynamicAnchor() end
 	list[#list + 1] = castMatchWidthOffset
 
 	list[#list + 1] = { name = L["Icon"] or "Icon", kind = settingType.Collapsible, id = section.icon, defaultCollapsed = true }

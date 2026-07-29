@@ -3646,7 +3646,7 @@ function Editor:RefreshGroupControls()
 		controls.BorderSize:SetValue(group.borderSize or 2)
 		controls.BorderSizeValue:SetText(tostring(group.borderSize or 2))
 		group.borderStrata = normalizeFrameStrataToken(group.borderStrata)
-		local borderFrameLevel = roundInt(tonumber(group.borderFrameLevelOffset) or 4)
+		local borderFrameLevel = roundInt(tonumber(group.borderFrameLevelOffset) or 16)
 		if borderFrameLevel < -20 then borderFrameLevel = -20 end
 		if borderFrameLevel > 1000 then borderFrameLevel = 1000 end
 		group.borderFrameLevelOffset = borderFrameLevel

@@ -2,4 +2,15 @@
 CHATTYNATOR_CURRENT_PROFILE = "DEFAULT"
 CHATTYNATOR_COMMAND_HISTORY = {
 "/s /m",
+"/s /cdm",
+"/s /rl",
+"/s /m",
+"/s /sb",
+"/s /sarena",
+"/s /sb",
+"/s /rl",
+"/s /edit",
+"/s /rl",
+"/s /edit",
+"/s /bbf",
 }

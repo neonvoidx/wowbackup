@@ -32,7 +32,7 @@ end
 local RULE_CONDITIONALS = {
     SHOW_IN_COMBAT = "[combat] show",
     ALWAYS_HIDE_WHEN_FLYING = "[flying] hide",
-    HIDE_IN_VEHICLES = "[unithasvehicleui] hide;[overridebar] hide;[possessbar] hide",
+    HIDE_IN_VEHICLES = "[petbattle] hide;[unithasvehicleui] hide;[overridebar] hide;[possessbar] hide",
     SHOW_WITH_TARGET = "[@target,exists] show",
     SHOW_WITH_ENEMY_TARGET = "[@target,exists,harm] show",
     HIDE_WHEN_FLYING = "[flying] hide",

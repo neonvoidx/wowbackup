@@ -6,11 +6,12 @@ END
 VER 3 01000000000000D4 " " "134400"
 #showtooltip 
 /cancelaura Bladestorm
-/cast [@mouseover,help,nodead]Intervene;[@mouseover,harm,nodead][]Charge
+/cast [@mouseover,help,nodead]Intervene; []Charge
 END
 VER 3 01000000000000D5 " " "613535"
 #showtooltip Storm Bolt
-/cast [mod:shift, @focus][] Storm Bolt
+#FrameSort EnemyHealer
+/cast [mod:shift, @none][] Storm Bolt
 END
 VER 3 01000000000000D6 " " "236171"
 #showtooltip
@@ -56,7 +57,7 @@ VER 3 01000000000000E6 " " "134400"
 #showtooltip
 /cast [@player] Ravager
 END
-VER 3 01000000000000E7 " " "134400"
+VER 3 01000000000000E9 " " "134400"
 #showtooltip
-/cast [stance:2]!Defensive Stance;!Berserker stance
+/cast [@cursor] Champion's Spear
 END

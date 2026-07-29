@@ -763,6 +763,10 @@ local function RefreshDurationAfterAuraUpdate(button)
 end
 
 local function EnforceUnfadedAlpha(button, alpha)
+    if addon.IsSecretValue(alpha) or not addon.CanAccessAllValues(alpha) then
+        return
+    end
+
     if alphaOverrideGuards[button] or alpha == 1 or not managedButtons[button] then
         return
     end

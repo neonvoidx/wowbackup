@@ -10,7 +10,7 @@ MapPinEnhancedDB = {
 ["y"] = -28.43038749694824,
 ["x"] = 10.78205680847168,
 },
-["superTrackingOther"] = true,
+["superTrackingOther"] = false,
 ["sets"] = {
 ["set-ef3112b9-9423"] = {
 ["name"] = "Imported Set 2",

@@ -1,8 +1,0 @@
-<Bindings>
-  <Binding name="OA2_KB_HISTORY_BACK" header="OVERACHIEVER2" category="Overachiever2">
-    Overachiever2.HistoryGoBack()
-  </Binding>
-  <Binding name="OA2_KB_HISTORY_FORWARD" category="Overachiever2">
-    Overachiever2.HistoryGoForward()
-  </Binding>
-</Bindings>

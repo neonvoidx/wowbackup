@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.1.6 - Profile Import Validation
+- Added validation and size limits for imported profile settings.
+- Added secret/access guards
+- ACE3 Lib Update
+
 ## 4.1.5 - Enhance Player Aura functionality
 - Updated interface support to Retail 12.0.7 only.
 - Reduced Player Aura styling work during active aura updates.

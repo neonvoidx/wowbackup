@@ -5,6 +5,10 @@ local Registry = {}
 ns.NameplateAdapters = Registry
 
 Registry.adapters = {}
+Registry.adaptersByID = {}
+Registry.layoutAdapters = {}
+Registry.availabilityCache = {}
+Registry.plateAdapterCache = setmetatable({}, { __mode = "k" })
 
 local function isSecretValue(value)
     if type(issecretvalue) ~= "function" then
@@ -58,7 +62,7 @@ local function safeBooleanCall(func, defaultValue, ...)
     end
 
     local ok, result = pcall(func, ...)
-    if not ok then
+    if not ok or isSecretValue(result) then
         return defaultValue
     end
 
@@ -70,11 +74,33 @@ local function isAdapterAvailable(adapter)
         return false
     end
 
-    if type(adapter.IsAvailable) ~= "function" then
-        return true
+    local cached = Registry.availabilityCache[adapter]
+    if cached ~= nil then
+        return cached
     end
 
-    return safeBooleanCall(adapter.IsAvailable, false, adapter)
+    local available = type(adapter.IsAvailable) ~= "function"
+        or safeBooleanCall(adapter.IsAvailable, false, adapter)
+    Registry.availabilityCache[adapter] = available
+    return available
+end
+
+local function getAdapterFromHint(hint)
+    if type(hint) == "table" then
+        return hint
+    end
+    if type(hint) == "string" then
+        return Registry.adaptersByID[hint]
+    end
+    return nil
+end
+
+local function adapterMatchesPlate(adapter, plate, token)
+    if not adapter or not isAdapterAvailable(adapter) then
+        return false
+    end
+
+    return safeBooleanCall(adapter.MatchesPlate, true, adapter, plate, token)
 end
 
 local function getTokenFromUnitFrame(frame)
@@ -150,20 +176,41 @@ function Registry:RegisterAdapter(adapter)
 
     adapter.priority = tonumber(adapter.priority) or 0
     table.insert(self.adapters, adapter)
+    self.adaptersByID[adapter.id] = adapter
+    if type(adapter.GetLayoutAnchor) == "function" then
+        table.insert(self.layoutAdapters, adapter)
+    end
     table.sort(self.adapters, function(a, b)
         if a.priority == b.priority then
             return a.id < b.id
         end
         return a.priority > b.priority
     end)
+    table.sort(self.layoutAdapters, function(a, b)
+        if a.priority == b.priority then
+            return a.id < b.id
+        end
+        return a.priority > b.priority
+    end)
+    self:InvalidateAvailabilityCache()
 end
 
 function Registry:ResolveTokenForPlate(plate)
+    local cachedAdapter = self.plateAdapterCache[plate]
+    if cachedAdapter and isAdapterAvailable(cachedAdapter) then
+        local token = isNameplateToken(safeCall(cachedAdapter.GetTokenFromPlate, cachedAdapter, plate))
+        if token then
+            return token, cachedAdapter.id, cachedAdapter
+        end
+        self.plateAdapterCache[plate] = nil
+    end
+
     for _, adapter in ipairs(self.adapters) do
-        if isAdapterAvailable(adapter) then
+        if adapter ~= cachedAdapter and isAdapterAvailable(adapter) then
             local token = isNameplateToken(safeCall(adapter.GetTokenFromPlate, adapter, plate))
             if token then
-                return token, adapter.id
+                self.plateAdapterCache[plate] = adapter
+                return token, adapter.id, adapter
             end
         end
     end
@@ -171,22 +218,58 @@ function Registry:ResolveTokenForPlate(plate)
     return nil, nil
 end
 
-function Registry:ResolveAnchorParent(plate, token)
+function Registry:ResolveAnchorParent(plate, token, adapterHint)
     token = isNameplateToken(token)
+    local preferredAdapter = getAdapterFromHint(adapterHint) or self.plateAdapterCache[plate]
+
+    if adapterMatchesPlate(preferredAdapter, plate, token) then
+        local parent = safeCall(preferredAdapter.GetAnchorParent, preferredAdapter, plate, token)
+        if isFrame(parent) then
+            self.plateAdapterCache[plate] = preferredAdapter
+            return parent, preferredAdapter.id, preferredAdapter
+        end
+    end
 
     for _, adapter in ipairs(self.adapters) do
-        if isAdapterAvailable(adapter) then
-            local matches = safeBooleanCall(adapter.MatchesPlate, true, adapter, plate, token)
-            if matches then
-                local parent = safeCall(adapter.GetAnchorParent, adapter, plate, token)
-                if isFrame(parent) then
-                    return parent, adapter.id
-                end
+        if adapter ~= preferredAdapter and adapterMatchesPlate(adapter, plate, token) then
+            local parent = safeCall(adapter.GetAnchorParent, adapter, plate, token)
+            if isFrame(parent) then
+                self.plateAdapterCache[plate] = adapter
+                return parent, adapter.id, adapter
             end
         end
     end
 
     return nil, nil
+end
+
+function Registry:ResolveLayoutAnchor(parent, context)
+    if not isFrame(parent) or type(context) ~= "table" then
+        return nil, nil
+    end
+
+    for _, adapter in ipairs(self.layoutAdapters) do
+        if isAdapterAvailable(adapter) then
+            local relativeFrame = safeCall(adapter.GetLayoutAnchor, adapter, parent, context)
+            if isFrame(relativeFrame) then
+                return relativeFrame, adapter.id
+            end
+        end
+    end
+
+    return nil, nil
+end
+
+function Registry:InvalidateAvailabilityCache()
+    self.availabilityCache = {}
+    self.plateAdapterCache = setmetatable({}, { __mode = "k" })
+end
+
+function Registry:RefreshAvailability()
+    self:InvalidateAvailabilityCache()
+    for _, adapter in ipairs(self.adapters) do
+        isAdapterAvailable(adapter)
+    end
 end
 
 function Registry:IsAddOnLoaded(...)

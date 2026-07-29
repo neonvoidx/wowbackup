@@ -1,12 +1,6 @@
 
 CHATTYNATOR_CURRENT_PROFILE = "DEFAULT"
 CHATTYNATOR_COMMAND_HISTORY = {
-"/i careful driz",
-"/i subb",
-"/i i believe in you",
-"/i well you tried",
-"/i you delayed his cap",
-"/i i can leave farm if you want",
 "/i but ya",
 "/i can someone spin to farm and ill help quarry take",
 "/i someone get farm",
@@ -202,4 +196,11 @@ CHATTYNATOR_COMMAND_HISTORY = {
 "/s /edit",
 "/s /wowlua",
 "/s /rl",
+"/s /litemount",
+"/s /edit",
+"/s /rl",
+"/s /bbp",
+"/s /cvm",
+"/s /rl",
+"/s /m",
 }

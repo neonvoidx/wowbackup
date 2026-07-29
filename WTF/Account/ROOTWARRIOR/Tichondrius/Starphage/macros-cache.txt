@@ -18,7 +18,8 @@ VER 3 010000000000001E " " "INV_MISC_QUESTIONMARK"
 END
 VER 3 010000000000001C " " "INV_MISC_QUESTIONMARK"
 #showtooltip
-/cast [mod:shift,@focus,exists,harm,nodead][] Disrupt
+#FrameSort EnemyHealer
+/cast [mod:shift,@none,exists,harm,nodead][] Disrupt
 /use Goblin Weather Machine - Prototype 01-B
 END
 VER 3 010000000000001D " " "INV_MISC_QUESTIONMARK"
@@ -42,7 +43,8 @@ VER 3 0100000000000027 " " "134400"
 END
 VER 3 010000000000001B " " "1380368"
 #showtooltip
-/cast [mod:shift,@focus,exists,harm,nodead][] Imprison
+#FrameSort EnemyHealer
+/cast [mod:shift,@none,exists,harm,nodead][] Imprison
 END
 VER 3 010000000000002C " " "134400"
 #showtooltip
@@ -78,37 +80,4 @@ END
 VER 3 010000000000003D " " "134400"
 #showtooltip Vengeful Retreat
 /castsequence reset=1 Vengeful Retreat, Glide
-END
-VER 3 0100000000000043 " " "828455"
-/cast [target=focus] Consume Magic
-END
-VER 3 0100000000000040 " " "7554162"
-/cast [target=focus] disrupt
-END
-VER 3 0100000000000041 " " "INV_Misc_QuestionMark"
-#showtooltip disrupt
-/cast immolation aura
-END
-VER 3 0100000000000044 " " "134400"
-#showtooltip Void Metamorphosis
-/use 14
-/use Potion of Recklessness
-/use Saltwater Potion
-/cast Void Metamorphosis
-END
-VER 3 0100000000000045 " " "134400"
-#showtooltip Darkness
-/say Darkness down
-/cast Darkness
-END
-VER 3 010000000000003C " STOP" "1345086"
-/stopcasting
-END
-VER 3 010000000000003F "Outfit Collection" "2869702"
-#plumber:outfit
-/click PLMR_OUTFIT
-END
-VER 3 0100000000000046 "Plumber Housing Macro" "7252953"
-#plumber:home
-/click PLMR3
 END

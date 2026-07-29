@@ -223,6 +223,8 @@ function IconShape.ApplyBorder(owner, borderKey, shape, opts)
 	local pointFrame = opts.pointFrame or owner
 	local color = opts.color or { 1, 1, 1, 1 }
 	local layerCount = info.thicknessMode == "layers" and math.min(math.floor(borderSize + 0.5), 24) or 1
+	local resolvedBorderOffset = borderOffset
+	if opts.pixelPerfect == true and addon.PixelUtil and addon.PixelUtil.Snap then resolvedBorderOffset = addon.PixelUtil.Snap(borderOffset, pointFrame) end
 
 	for i = 1, layerCount do
 		local texture = IconShape.EnsureBorderTexture(owner, i, opts)
@@ -236,9 +238,13 @@ function IconShape.ApplyBorder(owner, borderKey, shape, opts)
 				texture:Hide()
 			end
 			local layerX, layerY = IconShape.GetBorderLayerOffset(i)
+			if opts.pixelPerfect == true and addon.PixelUtil and addon.PixelUtil.SizeFromPixels then
+				layerX = addon.PixelUtil.SizeFromPixels(pointFrame, layerX)
+				layerY = addon.PixelUtil.SizeFromPixels(pointFrame, layerY)
+			end
 			texture:ClearAllPoints()
-			texture:SetPoint("TOPLEFT", pointFrame, "TOPLEFT", -borderOffset + layerX, borderOffset - layerY)
-			texture:SetPoint("BOTTOMRIGHT", pointFrame, "BOTTOMRIGHT", borderOffset + layerX, -borderOffset - layerY)
+			texture:SetPoint("TOPLEFT", pointFrame, "TOPLEFT", -resolvedBorderOffset + layerX, resolvedBorderOffset - layerY)
+			texture:SetPoint("BOTTOMRIGHT", pointFrame, "BOTTOMRIGHT", resolvedBorderOffset + layerX, -resolvedBorderOffset - layerY)
 			if info.tint == true then
 				texture:SetVertexColor(color[1] or 1, color[2] or 1, color[3] or 1, color[4] or 1)
 			else

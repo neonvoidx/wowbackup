@@ -1293,6 +1293,10 @@ registerEditModeBars = function()
 			local a = ensureAnchorTable()
 			return not a or (a.relativeFrame or "UIParent") == "UIParent"
 		end
+		local dynamicAnchorConsumerId = sharedSlot and ResourceBars and ResourceBars.GetSharedSlotDynamicAnchorId and ResourceBars.GetSharedSlotDynamicAnchorId(sharedSlot)
+		local function usesDynamicAnchor()
+			return dynamicAnchorConsumerId and ResourceBars and ResourceBars.IsSharedSlotDynamicAnchorEnabled and ResourceBars.IsSharedSlotDynamicAnchorEnabled(sharedSlot) or false
+		end
 		local function notify(msg)
 			if not msg or msg == "" then return end
 			print("|cff00ff98Enhance QoL|r: " .. tostring(msg))
@@ -1338,7 +1342,12 @@ registerEditModeBars = function()
 			buttons[#buttons + 1] = {
 				text = L["ResourceBarsSharedVisibilityMatrix"] or "Shared resource visibility",
 				click = function()
-					if addon.functions and addon.functions.OpenConfigCenter then addon.functions.OpenConfigCenter("suites.resourcebars", "resourceBarsSharedVisibilityMatrix") end
+					if addon.functions and addon.functions.OpenConfigCenter then
+						local section = addon.SettingsLayout and addon.SettingsLayout.suitesResourceBarsSection
+						local app = addon.ConfigApp
+						local pageID = app and app.legacySections and section and app.legacySections[section]
+						addon.functions.OpenConfigCenter(pageID or "interface.bars-cooldowns", "resourceBarsSharedVisibilityMatrix")
+					end
 				end,
 			}
 		end
@@ -5523,11 +5532,47 @@ registerEditModeBars = function()
 			end
 		end
 
+		if settingsList and dynamicAnchorConsumerId and addon.DynamicAnchors then
+			local dynamicAnchorInsertAt
+			for index, setting in ipairs(settingsList) do
+				if setting.field == "anchorRelativeFrame" then
+					dynamicAnchorInsertAt = index
+					break
+				end
+			end
+			addon.DynamicAnchors:AddEditModeAssignmentSettings(settingsList, settingType, {
+				consumerId = dynamicAnchorConsumerId,
+				parentId = "frame",
+				insertAt = dynamicAnchorInsertAt,
+				refresh = function(rebuild)
+					local function applyAnchor()
+						if ResourceBars.ReanchorAll then ResourceBars.ReanchorAll() end
+						if ResourceBars.SyncSharedSlotProxyFrame then ResourceBars.SyncSharedSlotProxyFrame(sharedSlot, registeredSpec) end
+					end
+					if rebuild and EditMode and EditMode.RefreshFrame then
+						EditMode:RefreshFrame(frameId)
+						RunNextFrame(applyAnchor)
+					else
+						applyAnchor()
+					end
+				end,
+				staticFields = {
+					anchorRelativeFrame = true,
+					anchorPoint = true,
+					anchorRelativePoint = true,
+					matchRelativeWidth = true,
+					matchRelativeWidthOffset = true,
+					anchorOffsetX = true,
+					anchorOffsetY = true,
+				},
+			})
+		end
+
 		EditMode:RegisterFrame(frameId, {
 			frame = frame,
 			title = titleLabel,
 			enableOverlayToggle = true,
-			allowDrag = function() return anchorUsesUIParent() end,
+			allowDrag = function() return not usesDynamicAnchor() and anchorUsesUIParent() end,
 			managePosition = false,
 			persistPosition = false,
 			normalizePosition = true,
@@ -5570,7 +5615,7 @@ registerEditModeBars = function()
 					data.width = bcfg.width or data.width or widthDefault or frame:GetWidth() or 200
 					data.height = bcfg.height or data.height or heightDefault or frame:GetHeight() or 20
 				end
-				if data.point then
+				if data.point and not usesDynamicAnchor() then
 					local relFrame = bcfg.anchor.relativeFrame or "UIParent"
 					-- Nur UIParent-Anker von Edit Mode übernehmen; externe Anker behalten ihre Werte
 					if relFrame == "UIParent" then
@@ -6046,40 +6091,6 @@ local function buildSettings()
 		hiddenWhen = sharedModeHidden,
 	})
 
-	do
-		local app = addon.ConfigApp
-		local pageID = "gameplay.resourcebars"
-		if app and app.GetPage and app:GetPage(pageID) and app.RegisterControl then
-			app:RegisterControl(pageID, {
-				id = "resourceBarsSharedVisibilityMatrix",
-				type = "custom",
-				label = L["ResourceBarsSharedVisibilityMatrix"] or "Shared resource visibility",
-				description = L["ResourceBarsSharedVisibilityMatrixDesc"]
-					or "Choose which shared Main, Secondary and Tertiary resource slots are visible per class and specialization.",
-				rowHeight = 260,
-				getHeight = function()
-					local rows = (ResourceBars and ResourceBars.BuildSharedVisibilityRows and ResourceBars.BuildSharedVisibilityRows()) or {}
-					return 92 + (#rows * 26)
-				end,
-				render = function(parent)
-					return renderSharedVisibilityMatrix(parent)
-				end,
-				hiddenWhen = sharedModeHidden,
-				parentCheck = sharedModeParentCheck,
-				keywords = {
-					"Shared Resource Bars",
-					"Resource Bars",
-					"Main",
-					"Secondary",
-					"Tertiary",
-					"Druid",
-				},
-				order = 118,
-				newTagID = "ResourceBarsSharedVisibilityMatrix",
-			})
-		end
-	end
-
 	addon.functions.SettingsCreateButton(cat, {
 		var = "resourceBarsSharedAllClasses",
 		text = L["ResourceBarsEnableSharedAllClasses"] or "Enable Shared for all classes",
@@ -6179,6 +6190,42 @@ local function buildSettings()
 			entry.desc = entry.desc or L["ResourceBarsSpecSelectionDesc"] or "Choose which resource bars are enabled for this specialization."
 			entry.hiddenWhen = entry.hiddenWhen or specModeHidden
 			addon.functions.SettingsCreateMultiDropdown(cat, entry)
+		end
+	end
+
+	do
+		local app = addon.ConfigApp
+		local pageID = app and app.legacySections and app.legacySections[expandable]
+		local groupID = addon.ConfigCurrentGroupBySection and addon.ConfigCurrentGroupBySection[expandable]
+		if pageID and groupID and app.GetPage and app:GetPage(pageID) and app.RegisterControl then
+			app:RegisterControl(pageID, {
+				id = "resourceBarsSharedVisibilityMatrix",
+				type = "custom",
+				label = L["ResourceBarsSharedVisibilityMatrix"] or "Shared resource visibility",
+				description = L["ResourceBarsSharedVisibilityMatrixDesc"]
+					or "Choose which shared Main, Secondary and Tertiary resource slots are visible per class and specialization.",
+				groupID = groupID,
+				groupTitle = (addon.ConfigGroupTitleBySection and addon.ConfigGroupTitleBySection[expandable]) or L["Resource Bars"] or "Resource Bars",
+				getHeight = function()
+					local rows = (ResourceBars and ResourceBars.BuildSharedVisibilityRows and ResourceBars.BuildSharedVisibilityRows()) or {}
+					return 134 + (#rows * 26)
+				end,
+				render = function(parent)
+					return renderSharedVisibilityMatrix(parent)
+				end,
+				hiddenWhen = sharedModeHidden,
+				parentCheck = sharedModeParentCheck,
+				keywords = {
+					"Shared Resource Bars",
+					"Resource Bars",
+					"Main",
+					"Secondary",
+					"Tertiary",
+					"Druid",
+				},
+				order = (addon.ConfigControlOrder or 0) + 1,
+				newTagID = "ResourceBarsSharedVisibilityMatrix",
+			})
 		end
 	end
 

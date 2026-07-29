@@ -44,6 +44,8 @@ local function pointValues()
 end
 
 -- Ensures and returns the anchor sub-table for a frame's config.
+---@param configKey string
+---@return CMCAnchorConfig?
 local function EnsureConfig(configKey)
     local editMode = ns.db.profile.editMode
     local frameCfg = editMode and editMode[configKey]

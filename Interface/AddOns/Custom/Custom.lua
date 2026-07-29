@@ -1,3 +1,31 @@
+local setPrdBySpec = function()
+	-- Check spec and enable PRD based on spec
+	-- Personal Resource Display
+	local currentSpecID = C_SpecializationInfo.GetSpecialization()
+	local _, name = C_SpecializationInfo.GetSpecializationInfo(currentSpecID)
+
+	local specsToShow = {
+		"Blood", "Havoc", "Devastation", "Arcane", "Brewmaster", "Holy", "Discipline",
+		"Assassination", "Outlaw", "Subtlety", "Restoration", "Affliction", "Demonology",
+		"Destruction", "Arms", "Fury", "Protection", "Frost", "Unholy", "Devourer",
+		"Vengeance", "Feral", "Guardian", "Restoration", "Augmentation", "Preservation",
+		"Fire", "Frost",
+	}
+
+	local personalResource = 0
+	for _, specName in ipairs(specsToShow) do
+		if name == specName then
+			personalResource = 1
+			break
+		end
+	end
+
+	SetCVar("nameplateShowSelf", personalResource)
+	SetCVar("NameplatePersonalShowAlways", 0)
+	SetCVar("NameplatePersonalShowInCombat", personalResource)
+	SetCVar("NameplatePersonalShowWithTarget", personalResource)
+end
+
 local applyDarkMode = function()
 	-- CONFIGURE THESE
 	local darkModeColor = 0.1
@@ -7,6 +35,20 @@ local applyDarkMode = function()
 	local vc = darkModeColor
 	local cf = classicFrames
 
+	-- Dark mode all the buff bars for CDM
+	local function DarkModeBuffBars()
+		if not BuffBarCooldownViewer then
+			return
+		end
+
+		local r, g, b = darkModeColor, darkModeColor, darkModeColor
+
+		hooksecurefunc(BuffBarCooldownViewer, "OnAcquireItemFrame", function(self, itemFrame)
+			itemFrame.Bar.BarBG:SetVertexColor(r, g, b)
+		end)
+	end
+
+	DarkModeBuffBars()
 	local function applySettings(frame, desaturate, colorValue, hook)
 		if frame then
 			if desaturate ~= nil and frame.SetDesaturated then
@@ -242,6 +284,12 @@ local function OnEvent(self, event, ...)
 			print("Custom tweaks loaded...")
 		end
 	elseif event == "PLAYER_LOGIN" then
+	elseif event == "PLAYER_SPECIALIZATION_CHANGED" then
+		local unitTarget = ...
+		if unitTarget == "player" then
+			setPrdBySpec()
+		end
+		setPrdBySpec()
 	elseif event == "PLAYER_ENTERING_WORLD" then
 		applyDarkMode()
 		-- fix chat navigation
@@ -287,6 +335,9 @@ local function OnEvent(self, event, ...)
 		-- MainMenuBarBackpackButton:Hide()
 		-- BagsBar:Hide()
 		-- #endregion
+
+		-- Set PRD display by spec
+		setPrdBySpec()
 
 		-- #region CVARs
 		-- Player silhouette behind objects
@@ -339,13 +390,12 @@ local function OnEvent(self, event, ...)
 		SetCVar("UnitNamePlayerGuild", 0) -- Show guild
 		SetCVar("UnitNameOwn", 1) -- Show own name
 		SetCVar("UnitNamePlayerPVPTitle", 0) -- Show character title
+		-- Name size
+		SetCVar("WorldTextMinSize", 12)
 
-		-- Personal Resource Display
-		local personalResource = 1
-		SetCVar("nameplateShowSelf", personalResource)
-		SetCVar("NameplatePersonalShowAlways", 0)
-		SetCVar("NameplatePersonalShowInCombat", personalResource)
-		SetCVar("NameplatePersonalShowWithTarget", personalResource)
+		-- Battlepets and critters
+		SetCVar("UnitNameNonCombatCreatureName", 0) -- Show character title
+
 
 		SetCVar("damageMeterEnabled", 0)
 		SetCVar("damageMeterResetOnNewInstance", 0)
@@ -375,11 +425,9 @@ local function OnEvent(self, event, ...)
 
 		-- Damage number size
 		SetCVar("WorldTextScale_v2", 0.6)
-		-- Name size
-		SetCVar("WorldTextMinSize", 12)
 
 		-- Spell overlays HUD
-		SetCVar("spellActivationOverlayOpacity", 0.65)
+		SetCVar("spellActivationOverlayOpacity", 0)
 
 		-- Secure ability toggle, prevents quick double presses
 		SetCVar("secureAbilityToggle", 1)
@@ -405,13 +453,15 @@ local function OnEvent(self, event, ...)
 			-- SetCVar("nameplateMinScale", 1)
 			-- SetCVar("nameplateMaxScale", 1)
 			-- SetCVar("nameplateGlobalScale", 1.1)
-			SetCVar("nameplateOverlapV", 1.1) -- Vertical overlap
+			SetCVar("nameplateOverlapV", 1.5) -- Vertical overlap
 			SetCVar("nameplateOverlapH", 0.8) -- Horizontal overlap
 			SetCVar("nameplateMaxAlpha", 1)
-			SetCVar("nameplateMinAlpha", 0.6)
-			SetCVar("nameplateOccludedAlphaMult", 0.4)
-			SetCVar("nameplateSelectedScale", 1.1)
-			SetCVar("nameplateAuraScale", 1.4)
+			SetCVar("nameplateMaxScale", 1.0)
+			SetCVar("nameplateMinScale", 0.8)
+			SetCVar("nameplateSelectedScale", 1.0)
+			SetCVar("nameplateMinAlpha", 0.7)
+			SetCVar("nameplateOccludedAlphaMult", 1.0)
+			SetCVar("nameplateAuraScale", 1.6)
 			SetCVar("nameplateDebuffPadding", 6)
 			SetCVar("nameplateShowAll", 1)
 			SetCVar("nameplateShowCastBars", 1)
@@ -419,9 +469,11 @@ local function OnEvent(self, event, ...)
 			SetCVar("nameplateShowEnemies", 1)
 			SetCVar("nameplateShowEnemyGuardians", 1)
 			SetCVar("nameplateShowEnemyMinions", 1)
-			SetCVar("nameplateShowEnemyMinus", 0)
+			SetCVar("nameplateShowEnemyMinus", 1)
+			SetCVar("nameplateSimplifiedScale", 0.5)
 			SetCVar("nameplateShowEnemyPets", 1)
 			SetCVar("nameplateShowEnemyTotems", 1)
+			SetCVar("nameplateStyle", 3) -- 3 = clean health style
 			-- Show friendly plates for arena
 			local isInInstance, instanceType = IsInInstance()
 			-- check if we are entering or leaving an arena/bg
@@ -465,6 +517,7 @@ local f = CreateFrame("Frame")
 f:RegisterEvent("ADDON_LOADED") -- Addon loaded event
 f:RegisterEvent("PLAYER_ENTERING_WORLD") -- Event for when player enters the world, reloads U logins etc
 f:RegisterEvent("GROUP_JOINED")
+f:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
 f:RegisterEvent("PLAYER_LOGIN") -- Event for when player logs in
 f:RegisterEvent("UPDATE_BINDINGS") -- Event for when keybindings are updated
 -- f:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED") -- Event for when player specialization changes

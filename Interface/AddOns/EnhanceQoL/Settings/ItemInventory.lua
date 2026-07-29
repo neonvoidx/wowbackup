@@ -955,8 +955,6 @@ local function applyCharIlvlPosition(element, slot)
 		local side = addon.variables.itemSlotSide and addon.variables.itemSlotSide[slot] or 0
 		if side == 1 then
 			element.ilvlBackground:SetPoint("TOPRIGHT", element, "TOPLEFT", -5, -1)
-		elseif side == 2 then
-			element.ilvlBackground:SetPoint("BOTTOM", element, "TOPLEFT", -1, 5)
 		else
 			element.ilvlBackground:SetPoint("TOPLEFT", element, "TOPRIGHT", 5, -1)
 		end
@@ -1008,8 +1006,6 @@ local function positionGemFrame(element, slot, gemIndex, outsideWithIlvl)
 	if outsideWithIlvl and element.ilvlBackground then
 		if side == 1 then
 			gemFrame:SetPoint("TOPRIGHT", element.ilvlBackground, "TOPLEFT", -2 - (gemIndex - 1) * 16, 0)
-		elseif side == 2 then
-			gemFrame:SetPoint("BOTTOM", element.ilvlBackground, "TOP", 0, 3 + (gemIndex - 1) * 16)
 		else
 			gemFrame:SetPoint("TOPLEFT", element.ilvlBackground, "TOPRIGHT", 2 + (gemIndex - 1) * 16, 0)
 		end

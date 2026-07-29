@@ -2,7 +2,7 @@ AdvancedInterfaceOptions: enabled
 Alignment_Grids: enabled
 Auctionator: enabled
 AutoCombatLogger: enabled
-Baganator: enabled
+Baganator: disabled
 BattleGroundEnemies: enabled
 BetterBlizzFrames: enabled
 BetterBlizzPlates: enabled
@@ -117,7 +117,7 @@ Blizzard_ObjectiveTracker: enabled
 Blizzard_CompactRaidFrames: enabled
 OPie_Classic: disabled
 Blizzard_CombatText: enabled
-Chattynator: enabled
+Chattynator: disabled
 ExtraQuestButton: enabled
 FrameColorAddOnSkins: enabled
 HealthBarColor: enabled
@@ -232,3 +232,7 @@ Overachiever2: enabled
 Overachiever2_Tabs: enabled
 RaidLeaderMarker: enabled
 SweepyBoop: enabled
+TweaksUI_Cooldowns: enabled
+BattlegroundWinConditions: enabled
+Shackled: enabled
+WarGameHelper: enabled

@@ -2,7 +2,6 @@
 MiniPressReleaseCharDB = {
 ["MouseEnabled"] = false,
 ["Version"] = 1,
-["ExclusionsEnabled"] = true,
 ["Exclusions"] = {
 ["`"] = true,
 [";"] = true,
@@ -10,6 +9,7 @@ MiniPressReleaseCharDB = {
 ["SHIFT-2"] = true,
 ["SHIFT-`"] = true,
 },
+["ExclusionsEnabled"] = true,
 ["KeyboardEnabled"] = true,
 ["InclusionsEnabled"] = false,
 ["Inclusions"] = {

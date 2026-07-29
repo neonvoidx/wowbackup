@@ -22,6 +22,15 @@ local SettingType = EditMode and EditMode.lib and EditMode.lib.SettingType
 local DamageMeter = {}
 addon.DamageMeter = DamageMeter
 
+DamageMeter.HEALTH_CONSUMABLE_SPELL_IDS = {
+	[6262] = true, -- Healthstone
+	[307192] = true, -- Spiritual Healing Potion
+	[1234768] = true, -- Cosmic/Silvermoon Healing Potion
+	[1262857] = true, -- Potent Healing Potion
+}
+DamageMeter.RESIZE_LOCK_TEXTURE = "Interface\\AddOns\\EnhanceQoL\\Icons\\ClosedLock.tga"
+DamageMeter.RESIZE_UNLOCK_TEXTURE = "Interface\\AddOns\\EnhanceQoL\\Icons\\OpenLock.tga"
+
 function DamageMeter:InitDB()
 	if self.dbInitialized then return end
 	if not addon.db or not addon.functions or not addon.functions.InitDBValue then return end
@@ -31,8 +40,12 @@ function DamageMeter:InitDB()
 	init("damageMeterAutomaticClear", "never")
 	init("damageMeterAutomaticClearInstances", { party = true, raid = true })
 	init("damageMeterUpdateRate", 0.1)
+	init("damageMeterManualVisibility", "auto")
 	init("damageMeterWindowCount", 1)
 	init("damageMeterLinkSegments", false)
+	init("damageMeterResizeLocked", true)
+	init("damageMeterResizeOutsideEditMode", false)
+	init("damageMeterMoveOutsideEditMode", false)
 	init("damageMeterSyncSettings", false)
 	init("damageMeterEditModeSample", true)
 	init("damageMeterWindows", {})
@@ -82,6 +95,15 @@ local AUTO_CLEAR_DELAY_SECONDS = 2
 local DERIVED_TARGET_SCAN_LIMIT = 80
 -- Keep Blizzard's localized abbreviation breakpoints, with one extra floor so sub-1000 DPS values do not show long decimals.
 local FALLBACK_SHORT_NUMBER_ABBREV_BREAKPOINTS = {
+	{ breakpoint = 10000000000, abbreviation = "B", significandDivisor = 1000000000, fractionDivisor = 1, abbreviationIsGlobal = false },
+	{ breakpoint = 1000000000, abbreviation = "B", significandDivisor = 100000000, fractionDivisor = 10, abbreviationIsGlobal = false },
+	{ breakpoint = 10000000, abbreviation = "M", significandDivisor = 10000, fractionDivisor = 100, abbreviationIsGlobal = false },
+	{ breakpoint = 1000000, abbreviation = "M", significandDivisor = 10000, fractionDivisor = 100, abbreviationIsGlobal = false },
+	{ breakpoint = 10000, abbreviation = "K", significandDivisor = 1000, fractionDivisor = 1, abbreviationIsGlobal = false },
+	{ breakpoint = 1000, abbreviation = "K", significandDivisor = 100, fractionDivisor = 10, abbreviationIsGlobal = false },
+	{ breakpoint = 1, abbreviation = "", significandDivisor = 1, fractionDivisor = 1, abbreviationIsGlobal = false },
+}
+DamageMeter.COMPACT_NUMBER_ABBREV_BREAKPOINTS = {
 	{ breakpoint = 10000000000, abbreviation = "B", significandDivisor = 1000000000, fractionDivisor = 1, abbreviationIsGlobal = false },
 	{ breakpoint = 1000000000, abbreviation = "B", significandDivisor = 100000000, fractionDivisor = 10, abbreviationIsGlobal = false },
 	{ breakpoint = 10000000, abbreviation = "M", significandDivisor = 10000, fractionDivisor = 100, abbreviationIsGlobal = false },
@@ -686,6 +708,11 @@ local function visibilityUsesMouseover(visibility)
 	return config and config.MOUSEOVER == true
 end
 
+function DamageMeter:NormalizeManualVisibility(value)
+	if value == "shown" or value == "hidden" then return value end
+	return "auto"
+end
+
 local DAMAGE_METER_TYPES = {
 	{ key = "Absorbs", global = "DAMAGE_METER_TYPE_ABSORBS", enum = "Absorbs" },
 	{ key = "AvoidableDamageTaken", global = "DAMAGE_METER_TYPE_AVOIDABLE_DAMAGE_TAKEN", enum = "AvoidableDamageTaken" },
@@ -695,6 +722,7 @@ local DAMAGE_METER_TYPES = {
 	{ key = "Dispels", global = "DAMAGE_METER_TYPE_DISPELS", enum = "Dispels" },
 	{ key = "Dps", global = "DAMAGE_METER_TYPE_DPS", enum = "Dps" },
 	{ key = "EnemyDamageTaken", global = "DAMAGE_METER_TYPE_ENEMY_DAMAGE_TAKEN", enum = "EnemyDamageTaken" },
+	{ key = "HealthstonesPotions", locale = "damageMeterHealthstonesPotions" },
 	{ key = "HealingDone", global = "DAMAGE_METER_TYPE_HEALING_DONE", enum = "HealingDone" },
 	{ key = "Hps", global = "DAMAGE_METER_TYPE_HPS", enum = "Hps" },
 	{ key = "Interrupts", global = "DAMAGE_METER_TYPE_INTERRUPTS", enum = "Interrupts" },
@@ -710,6 +738,7 @@ local DAMAGE_METER_TYPE_ICONS = {
 	Dispels = "Interface\\Icons\\Spell_Holy_DispelMagic",
 	Dps = "Interface\\Icons\\INV_Sword_04",
 	EnemyDamageTaken = "Interface\\Icons\\Ability_DualWield",
+	HealthstonesPotions = 538745,
 	HealingDone = "Interface\\Icons\\Spell_Holy_HolyBolt",
 	Hps = "Interface\\Icons\\Spell_Holy_HolyBolt",
 	Interrupts = "Interface\\Icons\\Ability_Kick",
@@ -725,7 +754,7 @@ end
 
 local function getDamageMeterTypeLabel(key)
 	local info = getDamageMeterTypeInfo(key)
-	return _G[info.global] or info.key
+	return (info.locale and L[info.locale]) or (info.global and _G[info.global]) or info.key
 end
 
 local function getDamageMeterTypeIcon(key)
@@ -880,13 +909,22 @@ local function getShortNumberAbbrevOptions()
 	return shortNumberAbbrevOptions
 end
 
-local function formatShort(value)
+function DamageMeter:GetCompactNumberAbbrevOptions()
+	if not DamageMeter.compactNumberAbbrevOptions then
+		local breakpoints = DamageMeter.COMPACT_NUMBER_ABBREV_BREAKPOINTS
+		DamageMeter.compactNumberAbbrevOptions = { breakpointData = breakpoints }
+		if CreateAbbreviateConfig then DamageMeter.compactNumberAbbrevOptions.config = CreateAbbreviateConfig(breakpoints) end
+	end
+	return DamageMeter.compactNumberAbbrevOptions
+end
+
+local function formatShort(value, compact)
 	if value == nil then return "0" end
 	if not isSecret(value) then
 		local numeric = tonumber(value) or 0
 		if numeric < 1000 then return tostring(math.floor(numeric + 0.5)) end
 	end
-	if AbbreviateNumbers then return AbbreviateNumbers(value, getShortNumberAbbrevOptions()) end
+	if AbbreviateNumbers then return AbbreviateNumbers(value, compact and DamageMeter:GetCompactNumberAbbrevOptions() or getShortNumberAbbrevOptions()) end
 	if isSecret(value) then
 		if AbbreviateLargeNumbers then return AbbreviateLargeNumbers(value) end
 		return ""
@@ -901,7 +939,7 @@ end
 
 local function formatNumber(value, mode)
 	if mode == "none" then return formatFull(value) end
-	return formatShort(value)
+	return formatShort(value, mode == "compact")
 end
 
 local function formatDuration(seconds, mode)
@@ -1608,7 +1646,7 @@ local function getRowValueLayout(config)
 end
 
 local function getUpdateRate()
-	return clampNumber(db().damageMeterUpdateRate, 0.1, 5, 0.1)
+	return clampNumber(db().damageMeterUpdateRate, 0.01, 5, 0.1)
 end
 
 local function normalizeAutoClearMode(value)
@@ -1998,10 +2036,96 @@ function DamageMeter:UsePreviewData()
 	return self:IsInEditMode() and db().damageMeterEditModeSample ~= false
 end
 
+function DamageMeter:GetManualVisibility()
+	return self:NormalizeManualVisibility(db().damageMeterManualVisibility)
+end
+
+function DamageMeter:IsPaused()
+	return self.paused == true
+end
+
+function DamageMeter:UpdateBrokerState()
+	local broker = self.dataBrokerObject
+	if not broker then return end
+	local mode = self:GetManualVisibility()
+	if mode == "shown" then
+		broker.text = L["damageMeterManualShown"] or "Shown"
+	elseif mode == "hidden" then
+		broker.text = L["damageMeterManualHidden"] or "Hidden"
+	else
+		broker.text = L["damageMeterManualAuto"] or "Automatic"
+	end
+end
+
+function DamageMeter:ApplyManualVisibilityState()
+	for index = 1, MAX_WINDOWS do
+		local frame = self.windows and self.windows[index]
+		if frame then
+			local shown = self:ShouldShow(index)
+			frame:SetShown(shown)
+			if shown then self:UpdateWindowAlpha(index) end
+			if frame.pauseIndicator then frame.pauseIndicator:SetShown(shown and self:IsPaused()) end
+		end
+	end
+end
+
+function DamageMeter:SetManualVisibility(mode)
+	mode = self:NormalizeManualVisibility(mode)
+	db().damageMeterManualVisibility = mode
+	self:UpdateBrokerState()
+	self:Refresh()
+end
+
+function DamageMeter:ToggleManualVisibility()
+	local mode = self:GetManualVisibility()
+	if mode == "shown" then
+		self:SetManualVisibility("hidden")
+	elseif mode == "hidden" then
+		self:SetManualVisibility("shown")
+	else
+		local anyShown = false
+		for index = 1, getWindowCount() do
+			local frame = self.windows and self.windows[index]
+			if frame and frame:IsShown() then
+				anyShown = true
+				break
+			end
+		end
+		self:SetManualVisibility(anyShown and "hidden" or "shown")
+	end
+end
+
+function DamageMeter:UpdatePauseIndicators()
+	for index = 1, MAX_WINDOWS do
+		local frame = self.windows and self.windows[index]
+		if frame and frame.pauseIndicator then
+			local showPause = self:IsPaused() and frame:IsShown()
+			setShownIfChanged(frame.pauseIndicator, showPause)
+			if frame.header then setShownIfChanged(frame.header, not showPause and self:GetConfig(index).showHeader == true) end
+		end
+	end
+end
+
+function DamageMeter:SetPaused(paused)
+	paused = paused == true
+	if self.paused == paused then return end
+	if paused then self:Refresh() end
+	self.paused = paused
+	self:UpdatePauseIndicators()
+	if not paused then self:Refresh() end
+end
+
+function DamageMeter:TogglePaused()
+	self:SetPaused(not self:IsPaused())
+end
+
 function DamageMeter:ShouldShow(index)
 	if not self:IsWindowEnabled(index) then return false end
 	if self:IsInEditMode() then return true end
 	if not self:IsAvailable() then return false end
+	local manualVisibility = self:GetManualVisibility()
+	if manualVisibility == "hidden" then return false end
+	if manualVisibility == "shown" then return true end
 	local visibility = self:GetConfig(index).visibility
 	return visibilityMatchesContext(visibility, false) or visibilityUsesMouseover(visibility) == true or self:GetWindowAlpha(index) > 0
 end
@@ -2009,6 +2133,9 @@ end
 function DamageMeter:GetWindowAlpha(index)
 	local config = self:GetConfig(index)
 	if self:IsInEditMode() then return 1 end
+	local manualVisibility = self:GetManualVisibility()
+	if manualVisibility == "hidden" then return 0 end
+	if manualVisibility == "shown" then return 1 end
 	if not normalizeVisibilityConfig(config.visibility) then return 1 end
 	local frame = self.windows and self.windows[index]
 	if visibilityMatchesContext(config.visibility, false) then return 1 end
@@ -2033,6 +2160,7 @@ function DamageMeter:SetWindowHover(index, hovered)
 	end
 	frame._damageMeterMouseOver = hovered == true
 	self:UpdateWindowAlpha(index)
+	self:UpdateResizeControls(index)
 end
 
 function DamageMeter:ClearWindowRows(frame)
@@ -2085,8 +2213,13 @@ function DamageMeter:BuildWindowRefreshState(index, shared)
 	if visible and not shared.editMode then
 		visible = shared.available == true
 		if visible then
-			local fadeAlpha = clampNumber(config.visibilityFadeAlpha, 0, 1, DEFAULT_WINDOW.visibilityFadeAlpha)
-			visible = visibilityMatchesContext(config.visibility, false) or usesMouseoverVisibility == true or fadeAlpha > 0
+			local manualVisibility = self:GetManualVisibility()
+			if manualVisibility == "hidden" then
+				visible = false
+			elseif manualVisibility ~= "shown" then
+				local fadeAlpha = clampNumber(config.visibilityFadeAlpha, 0, 1, DEFAULT_WINDOW.visibilityFadeAlpha)
+				visible = visibilityMatchesContext(config.visibility, false) or usesMouseoverVisibility == true or fadeAlpha > 0
+			end
 		end
 	end
 	state.available = shared.available
@@ -2106,11 +2239,450 @@ function DamageMeter:BuildWindowRefreshState(index, shared)
 	return state
 end
 
+function DamageMeter:InvalidateCompletedSessionSnapshots(reason)
+	self.completedSessionSnapshots = nil
+	self.completedSessionSnapshotFailures = nil
+	self.completedHealthOverallCache = nil
+	self.completedSessionSnapshotGeneration = (self.completedSessionSnapshotGeneration or 0) + 1
+	self.completedSessionSnapshotNeedsRetry = nil
+	self.completedSessionSnapshotScheduleToken = (self.completedSessionSnapshotScheduleToken or 0) + 1
+	self.completedSessionSnapshotPending = nil
+	self.completedSessionCacheDiagnostics = self.completedSessionCacheDiagnostics or {}
+	self.completedSessionCacheDiagnostics.resetReason = reason or "reset"
+end
+
+function DamageMeter:GetCompletedSessionSnapshot(sessionID, damageMeterType)
+	local sessionCache = self.completedSessionSnapshots and self.completedSessionSnapshots[sessionID]
+	return sessionCache and sessionCache[damageMeterType] or nil
+end
+
+function DamageMeter:GetCompletedSessionSnapshotFailure(sessionID, damageMeterType)
+	local sessionFailures = self.completedSessionSnapshotFailures and self.completedSessionSnapshotFailures[sessionID]
+	return sessionFailures and sessionFailures[damageMeterType] or nil
+end
+
+function DamageMeter:SetCompletedSessionSnapshotFailure(sessionID, damageMeterType, reason)
+	if not sessionID or not damageMeterType then return end
+	self.completedSessionSnapshotFailures = self.completedSessionSnapshotFailures or {}
+	self.completedSessionSnapshotFailures[sessionID] = self.completedSessionSnapshotFailures[sessionID] or {}
+	self.completedSessionSnapshotFailures[sessionID][damageMeterType] = reason or "snapshot-incomplete"
+end
+
+function DamageMeter:ClearCompletedSessionSnapshotFailure(sessionID, damageMeterType)
+	local sessionFailures = self.completedSessionSnapshotFailures and self.completedSessionSnapshotFailures[sessionID]
+	if not sessionFailures then return end
+	sessionFailures[damageMeterType] = nil
+	if next(sessionFailures) == nil then self.completedSessionSnapshotFailures[sessionID] = nil end
+end
+
+function DamageMeter:SetCompletedSessionCacheDiagnostic(kind, result, sessionID, damageMeterType, reason)
+	self.completedSessionCacheDiagnostics = self.completedSessionCacheDiagnostics or {}
+	self.completedSessionCacheDiagnostics[kind] = {
+		damageMeterType = damageMeterType,
+		reason = reason,
+		result = result,
+		sessionID = sessionID,
+	}
+end
+
+function DamageMeter:CopySafeDamageMeterValue(value, seen)
+	if isSecret(value) then return nil, true end
+	if type(value) ~= "table" then return value, false end
+	seen = seen or {}
+	local existing = seen[value]
+	if existing then return existing, false end
+	local snapshot = {}
+	seen[value] = snapshot
+	for key, child in pairs(value) do
+		local safeKey, keyRestricted = self:CopySafeDamageMeterValue(key, seen)
+		if keyRestricted then return nil, true end
+		local safeChild, childRestricted = self:CopySafeDamageMeterValue(child, seen)
+		if childRestricted then return nil, true end
+		snapshot[safeKey] = safeChild
+	end
+	return snapshot, false
+end
+
+function DamageMeter:CombatSessionContainsSecrets(session)
+	if isSecret(session) then return true end
+	if session == nil or type(session) ~= "table" then return false end
+	if isSecret(session.combatSources) or isSecret(session.durationSeconds) or isSecret(session.maxAmount) or isSecret(session.totalAmount) then return true end
+	local sources = type(session.combatSources) == "table" and session.combatSources or {}
+	for _, source in ipairs(sources) do
+		if isSecret(source) or type(source) ~= "table"
+			or isSecret(source.name) or isSecret(source.sourceGUID) or isSecret(source.sourceCreatureID)
+			or isSecret(source.totalAmount) or isSecret(source.amountPerSecond) then
+			return true
+		end
+	end
+	return false
+end
+
+function DamageMeter:BuildHealthConsumablesFromHealingSnapshot(healingSnapshot, completedSnapshot)
+	if type(healingSnapshot) ~= "table" then return nil end
+	local durationSeconds = safeNumber(healingSnapshot.durationSeconds) or 0
+	local healthSession = {
+		_eqolCompletedSnapshot = completedSnapshot == true,
+		_eqolDamageMeterType = "HealthstonesPotions",
+		_eqolSessionID = healingSnapshot._eqolSessionID,
+		combatSources = {},
+		durationSeconds = durationSeconds,
+		maxAmount = 0,
+		totalAmount = 0,
+	}
+	for _, source in ipairs(type(healingSnapshot.combatSources) == "table" and healingSnapshot.combatSources or {}) do
+		local details = source._eqolTooltipDetails
+		local consumableTotal = 0
+		local consumableMax = 0
+		local consumableSpells = {}
+		for _, spell in ipairs(type(details) == "table" and type(details.combatSpells) == "table" and details.combatSpells or {}) do
+			local spellID = safeNumber(spell.spellID)
+			local amount = safeNumber(spell.totalAmount)
+			if spellID and amount and self.HEALTH_CONSUMABLE_SPELL_IDS[spellID] then
+				consumableTotal = consumableTotal + amount
+				if amount > consumableMax then consumableMax = amount end
+				local consumableSpell = self:CopySafeDamageMeterValue(spell)
+				consumableSpell.amountPerSecond = safeNumber(spell.amountPerSecond) or (durationSeconds > 0 and (amount / durationSeconds) or 0)
+				consumableSpell.spellID = spellID
+				consumableSpell.totalAmount = amount
+				consumableSpells[#consumableSpells + 1] = consumableSpell
+			end
+		end
+		if consumableTotal > 0 then
+			local healthDetails = {
+				_eqolCompletedSnapshot = completedSnapshot == true,
+				combatSpells = consumableSpells,
+				maxAmount = consumableMax,
+				totalAmount = consumableTotal,
+			}
+			local healthSource = self:CopySafeDamageMeterValue(source)
+			healthSource._eqolCompletedSnapshot = completedSnapshot == true
+			healthSource._eqolDamageMeterType = "HealthstonesPotions"
+			healthSource._eqolSessionID = healingSnapshot._eqolSessionID
+			healthSource._eqolTooltipDetails = healthDetails
+			healthSource.amountPerSecond = durationSeconds > 0 and (consumableTotal / durationSeconds) or 0
+			healthSource.healthConsumableDetails = healthDetails
+			healthSource.totalAmount = consumableTotal
+			healthSession.combatSources[#healthSession.combatSources + 1] = healthSource
+			healthSession.totalAmount = healthSession.totalAmount + consumableTotal
+			if consumableTotal > healthSession.maxAmount then healthSession.maxAmount = consumableTotal end
+		end
+	end
+	table.sort(healthSession.combatSources, function(left, right) return left.totalAmount > right.totalAmount end)
+	return healthSession
+end
+
+function DamageMeter:StoreCompletedSessionSnapshot(sessionID, damageMeterType, snapshot)
+	if not sessionID or not damageMeterType or type(snapshot) ~= "table" then return nil end
+	self.completedSessionSnapshots = self.completedSessionSnapshots or {}
+	self.completedSessionSnapshots[sessionID] = self.completedSessionSnapshots[sessionID] or {}
+	local sessionCache = self.completedSessionSnapshots[sessionID]
+	if sessionCache[damageMeterType] ~= nil then return sessionCache[damageMeterType] end
+	snapshot._eqolCompletedSnapshot = true
+	snapshot._eqolDamageMeterType = damageMeterType
+	snapshot._eqolSessionID = sessionID
+	for _, source in ipairs(type(snapshot.combatSources) == "table" and snapshot.combatSources or {}) do
+		source._eqolCompletedSnapshot = true
+		source._eqolDamageMeterType = damageMeterType
+		source._eqolSessionID = sessionID
+		if type(source._eqolTooltipDetails) == "table" then source._eqolTooltipDetails._eqolCompletedSnapshot = true end
+	end
+	sessionCache[damageMeterType] = snapshot
+	self.completedSessionSnapshotGeneration = (self.completedSessionSnapshotGeneration or 0) + 1
+	self.completedHealthOverallCache = nil
+	self:ClearCompletedSessionSnapshotFailure(sessionID, damageMeterType)
+	if damageMeterType == "HealingDone" then
+		local healthSnapshot = self:BuildHealthConsumablesFromHealingSnapshot(snapshot, true)
+		if healthSnapshot then self:StoreCompletedSessionSnapshot(sessionID, "HealthstonesPotions", healthSnapshot) end
+	elseif damageMeterType == "EnemyDamageTaken" or damageMeterType == "DamageDone" or damageMeterType == "Dps" then
+		self:AttachCompletedDerivedTargets(sessionID)
+	end
+	return snapshot
+end
+
+function DamageMeter:BuildCompletedHealthConsumablesOverall()
+	local generation = self.completedSessionSnapshotGeneration or 0
+	local cached = self.completedHealthOverallCache
+	if cached and cached.generation == generation then return cached.session end
+	local aggregate = {
+		_eqolCompletedSnapshot = true,
+		_eqolDamageMeterType = "HealthstonesPotions",
+		combatSources = {},
+		durationSeconds = 0,
+		maxAmount = 0,
+		totalAmount = 0,
+	}
+	local sourcesByKey = {}
+	local foundSnapshot = false
+	for _, sessionCache in pairs(self.completedSessionSnapshots or {}) do
+		local session = type(sessionCache) == "table" and sessionCache.HealthstonesPotions or nil
+		if type(session) == "table" then
+			foundSnapshot = true
+			aggregate.durationSeconds = aggregate.durationSeconds + (safeNumber(session.durationSeconds) or 0)
+			for _, source in ipairs(type(session.combatSources) == "table" and session.combatSources or {}) do
+				local sourceKey = source.sourceGUID
+				if sourceKey == nil then
+					sourceKey = table.concat({ source.name or "", source.classFilename or "", source.isLocalPlayer == true and "1" or "0" }, "\001")
+				end
+				local aggregateSource = sourcesByKey[sourceKey]
+				if not aggregateSource then
+					aggregateSource = self:CopySafeDamageMeterValue(source)
+					aggregateSource._eqolCompletedSnapshot = true
+					aggregateSource._eqolDamageMeterType = "HealthstonesPotions"
+					aggregateSource._healthConsumableSpellsByKey = {}
+					aggregateSource.amountPerSecond = 0
+					aggregateSource.totalAmount = 0
+					aggregateSource.healthConsumableDetails = {
+						_eqolCompletedSnapshot = true,
+						combatSpells = {},
+						maxAmount = 0,
+						totalAmount = 0,
+					}
+					aggregateSource._eqolTooltipDetails = aggregateSource.healthConsumableDetails
+					sourcesByKey[sourceKey] = aggregateSource
+					aggregate.combatSources[#aggregate.combatSources + 1] = aggregateSource
+				end
+				local sourceAmount = safeNumber(source.totalAmount) or 0
+				aggregateSource.totalAmount = aggregateSource.totalAmount + sourceAmount
+				aggregateSource.healthConsumableDetails.totalAmount = aggregateSource.totalAmount
+				local details = source.healthConsumableDetails or source._eqolTooltipDetails
+				for _, spell in ipairs(type(details) == "table" and type(details.combatSpells) == "table" and details.combatSpells or {}) do
+					local spellID = safeNumber(spell.spellID)
+					local spellTarget = type(spell.combatSpellDetails) == "table" and spell.combatSpellDetails.unitName or ""
+					local spellKey = table.concat({ tostring(spellID or 0), spell.creatureName or "", spellTarget or "" }, "\001")
+					local aggregateSpell = aggregateSource._healthConsumableSpellsByKey[spellKey]
+					if not aggregateSpell then
+						aggregateSpell = self:CopySafeDamageMeterValue(spell)
+						aggregateSpell.amountPerSecond = 0
+						aggregateSpell.totalAmount = 0
+						if type(aggregateSpell.combatSpellDetails) == "table" then aggregateSpell.combatSpellDetails.amount = 0 end
+						aggregateSource._healthConsumableSpellsByKey[spellKey] = aggregateSpell
+						aggregateSource.healthConsumableDetails.combatSpells[#aggregateSource.healthConsumableDetails.combatSpells + 1] = aggregateSpell
+					end
+					aggregateSpell.totalAmount = aggregateSpell.totalAmount + (safeNumber(spell.totalAmount) or 0)
+					if type(aggregateSpell.combatSpellDetails) == "table" and type(spell.combatSpellDetails) == "table" then
+						aggregateSpell.combatSpellDetails.amount = (safeNumber(aggregateSpell.combatSpellDetails.amount) or 0) + (safeNumber(spell.combatSpellDetails.amount) or 0)
+					end
+				end
+			end
+		end
+	end
+	if not foundSnapshot then return nil end
+	for _, source in ipairs(aggregate.combatSources) do
+		source.amountPerSecond = aggregate.durationSeconds > 0 and (source.totalAmount / aggregate.durationSeconds) or 0
+		source._healthConsumableSpellsByKey = nil
+		for _, spell in ipairs(source.healthConsumableDetails.combatSpells) do
+			spell.amountPerSecond = aggregate.durationSeconds > 0 and (spell.totalAmount / aggregate.durationSeconds) or 0
+			if spell.totalAmount > source.healthConsumableDetails.maxAmount then source.healthConsumableDetails.maxAmount = spell.totalAmount end
+		end
+		aggregate.totalAmount = aggregate.totalAmount + source.totalAmount
+		if source.totalAmount > aggregate.maxAmount then aggregate.maxAmount = source.totalAmount end
+	end
+	table.sort(aggregate.combatSources, function(left, right) return left.totalAmount > right.totalAmount end)
+	self.completedHealthOverallCache = { generation = generation, session = aggregate }
+	return aggregate
+end
+
+function DamageMeter:GetCompletedHealthConsumablesSession(state)
+	if state.sessionID then
+		local snapshot = self:GetCompletedSessionSnapshot(state.sessionID, "HealthstonesPotions")
+		local reason = snapshot and "complete-segment-snapshot" or self:GetCompletedSessionSnapshotFailure(state.sessionID, "HealingDone") or "no-complete-health-snapshot"
+		self:SetCompletedSessionCacheDiagnostic("health", snapshot and "hit" or "miss", state.sessionID, "HealthstonesPotions", reason)
+		return snapshot
+	end
+	if state.sessionType == "overall" then
+		local snapshot = self:BuildCompletedHealthConsumablesOverall()
+		self:SetCompletedSessionCacheDiagnostic("health", snapshot and "hit" or "miss", nil, "HealthstonesPotions", snapshot and "aggregated-complete-segments" or "no-complete-health-snapshots")
+		return snapshot
+	end
+	local latestSessionID
+	local latestSnapshot
+	for sessionID, sessionCache in pairs(self.completedSessionSnapshots or {}) do
+		local snapshot = type(sessionCache) == "table" and sessionCache.HealthstonesPotions or nil
+		if type(snapshot) == "table" and (latestSessionID == nil or sessionID > latestSessionID) then
+			latestSessionID = sessionID
+			latestSnapshot = snapshot
+		end
+	end
+	self:SetCompletedSessionCacheDiagnostic("health", latestSnapshot and "hit" or "miss", latestSessionID, "HealthstonesPotions", latestSnapshot and "latest-complete-segment" or "no-complete-health-snapshots")
+	return latestSnapshot
+end
+
+function DamageMeter:GetNativeHealingSessionForState(state, healingType)
+	if state.sessionID and C_DamageMeter.GetCombatSessionFromID then
+		return C_DamageMeter.GetCombatSessionFromID(state.sessionID, healingType)
+	end
+	if state.sessionEnum and C_DamageMeter.GetCombatSessionFromType then
+		return C_DamageMeter.GetCombatSessionFromType(state.sessionEnum, healingType)
+	end
+	return nil
+end
+
+function DamageMeter:BuildNativeHealthConsumablesSession(state)
+	if not C_DamageMeter or not Enum or not Enum.DamageMeterType then return nil, false end
+	local healingType = Enum.DamageMeterType.HealingDone
+	if healingType == nil then return nil, false end
+	local nativeSession = self:GetNativeHealingSessionForState(state, healingType)
+	if isSecret(nativeSession) then return nil, true end
+	if type(nativeSession) ~= "table" then return nil, false end
+	local healingSnapshot, restricted = self:CopySafeDamageMeterValue(nativeSession)
+	if restricted then return nil, true end
+	if type(healingSnapshot) ~= "table" or type(healingSnapshot.combatSources) ~= "table" or type(nativeSession.combatSources) ~= "table" then return nil, false end
+	healingSnapshot._eqolCompletedSnapshot = state.sessionID ~= nil
+	healingSnapshot._eqolDamageMeterType = "HealingDone"
+	healingSnapshot._eqolSessionID = state.sessionID
+	healingSnapshot.durationSeconds = safeNumber(healingSnapshot.durationSeconds) or safeNumber(state.temporary and state.temporary.sessionDurationSeconds) or 0
+	healingSnapshot.maxAmount = safeNumber(healingSnapshot.maxAmount) or 0
+	healingSnapshot.totalAmount = safeNumber(healingSnapshot.totalAmount) or 0
+	for sourceIndex, nativeSource in ipairs(nativeSession.combatSources) do
+		local sourceSnapshot = healingSnapshot.combatSources[sourceIndex]
+		if type(sourceSnapshot) ~= "table" then return nil, false end
+		sourceSnapshot._eqolCompletedSnapshot = state.sessionID ~= nil
+		sourceSnapshot._eqolDamageMeterType = "HealingDone"
+		sourceSnapshot._eqolSessionID = state.sessionID
+		local nativeDetails = self:QueryNativeSourceDetails(state.index or 1, nativeSource, healingType, state.sessionID)
+		local detailsSnapshot, detailsRestricted = self:CopyTooltipDetails(nativeDetails)
+		if not detailsSnapshot then return nil, detailsRestricted == true end
+		detailsSnapshot._eqolCompletedSnapshot = state.sessionID ~= nil
+		sourceSnapshot._eqolTooltipDetails = detailsSnapshot
+	end
+	local healthSession = self:BuildHealthConsumablesFromHealingSnapshot(healingSnapshot, state.sessionID ~= nil)
+	if healthSession and state.sessionID then self:StoreCompletedSessionSnapshot(state.sessionID, "HealthstonesPotions", healthSession) end
+	return healthSession, false
+end
+
+function DamageMeter:BuildHealthConsumablesSession(state)
+	local inCombat = UnitAffectingCombat and UnitAffectingCombat("player") == true
+	if inCombat then return self:GetCompletedHealthConsumablesSession(state) end
+	local nativeSession, restricted = self:BuildNativeHealthConsumablesSession(state)
+	if nativeSession then
+		self:SetCompletedSessionCacheDiagnostic("health", "hit", state.sessionID, "HealthstonesPotions", "native-healing-data")
+		return nativeSession
+	end
+	if restricted then return self:GetCompletedHealthConsumablesSession(state) end
+	self:SetCompletedSessionCacheDiagnostic("health", "miss", state.sessionID, "HealthstonesPotions", "native-healing-data-unavailable")
+	return nil
+end
+
+function DamageMeter:SnapshotCompletedSessionType(sessionID, damageMeterType, damageMeterEnum, availableSession)
+	if not sessionID or not damageMeterType or damageMeterEnum == nil then return false, "invalid-snapshot-request" end
+	if UnitAffectingCombat and UnitAffectingCombat("player") == true then return false, "in-combat" end
+	local existing = self:GetCompletedSessionSnapshot(sessionID, damageMeterType)
+	if existing then return true end
+	if not C_DamageMeter or not C_DamageMeter.GetCombatSessionFromID then return false, "session-api-unavailable" end
+	local nativeSession = C_DamageMeter.GetCombatSessionFromID(sessionID, damageMeterEnum)
+	if isSecret(nativeSession) then return false, "session-secret" end
+	if type(nativeSession) ~= "table" then return false, "session-unavailable" end
+	local snapshot, restricted = self:CopySafeDamageMeterValue(nativeSession)
+	if restricted then return false, "session-fields-secret" end
+	if type(snapshot) ~= "table" or type(snapshot.combatSources) ~= "table" or type(nativeSession.combatSources) ~= "table" then return false, "session-sources-unavailable" end
+	snapshot._eqolCompletedSnapshot = true
+	snapshot._eqolDamageMeterType = damageMeterType
+	snapshot._eqolSessionID = sessionID
+	snapshot.durationSeconds = safeNumber(snapshot.durationSeconds) or safeNumber(availableSession and availableSession.durationSeconds) or 0
+	snapshot.maxAmount = safeNumber(snapshot.maxAmount) or 0
+	snapshot.totalAmount = safeNumber(snapshot.totalAmount) or 0
+	for sourceIndex, nativeSource in ipairs(nativeSession.combatSources) do
+		local sourceSnapshot = snapshot.combatSources[sourceIndex]
+		if type(sourceSnapshot) ~= "table" then return false, "source-copy-failed" end
+		sourceSnapshot._eqolCompletedSnapshot = true
+		sourceSnapshot._eqolDamageMeterType = damageMeterType
+		sourceSnapshot._eqolSessionID = sessionID
+		if damageMeterType ~= "Deaths" then
+			local nativeDetails = self:QueryCompletedSessionSourceDetails(sessionID, damageMeterType, damageMeterEnum, nativeSource)
+			local detailsSnapshot, detailsRestricted = self:CopyTooltipDetails(nativeDetails)
+			if not detailsSnapshot then return false, detailsRestricted and "source-details-secret" or "source-details-unavailable" end
+			local sourceAmount = safeNumber(sourceSnapshot.totalAmount) or 0
+			if sourceAmount > 0 and #detailsSnapshot.combatSpells == 0 then return false, "source-details-empty" end
+			detailsSnapshot._eqolCompletedSnapshot = true
+			sourceSnapshot._eqolTooltipDetails = detailsSnapshot
+		end
+	end
+	self:StoreCompletedSessionSnapshot(sessionID, damageMeterType, snapshot)
+	return true
+end
+
+function DamageMeter:SnapshotCompletedSessionUpdate(damageMeterEnum, sessionID)
+	if isSecret(damageMeterEnum) then return false end
+	sessionID = safeNumber(sessionID)
+	if not sessionID or sessionID <= 0 then return false end
+	if UnitAffectingCombat and UnitAffectingCombat("player") == true then return false end
+	local damageMeterType
+	for _, typeInfo in ipairs(DAMAGE_METER_TYPES) do
+		if typeInfo.enum and getDamageMeterTypeValue(typeInfo.key) == damageMeterEnum then
+			damageMeterType = typeInfo.key
+			break
+		end
+	end
+	if not damageMeterType then return false end
+	local success, reason = self:SnapshotCompletedSessionType(sessionID, damageMeterType, damageMeterEnum)
+	if success then
+		self:ClearCompletedSessionSnapshotFailure(sessionID, damageMeterType)
+	else
+		self:SetCompletedSessionSnapshotFailure(sessionID, damageMeterType, reason)
+		self.completedSessionSnapshotNeedsRetry = true
+	end
+	return success
+end
+
+function DamageMeter:SnapshotAvailableCompletedSessions()
+	if UnitAffectingCombat and UnitAffectingCombat("player") == true then return false end
+	if not C_DamageMeter or not C_DamageMeter.GetCombatSessionFromID or not C_DamageMeter.GetCombatSessionSourceFromID then return false end
+	local availableSessions = self:GetAvailableCombatSessions()
+	local changedGeneration = self.completedSessionSnapshotGeneration or 0
+	for _, availableSession in ipairs(availableSessions) do
+		local sessionID = safeNumber(availableSession and availableSession.sessionID)
+		if sessionID then
+			for _, typeInfo in ipairs(DAMAGE_METER_TYPES) do
+				local damageMeterEnum = typeInfo.enum and getDamageMeterTypeValue(typeInfo.key) or nil
+				if damageMeterEnum ~= nil and not self:GetCompletedSessionSnapshot(sessionID, typeInfo.key) then
+					local success, reason = self:SnapshotCompletedSessionType(sessionID, typeInfo.key, damageMeterEnum, availableSession)
+					if success then
+						self:ClearCompletedSessionSnapshotFailure(sessionID, typeInfo.key)
+					else
+						self:SetCompletedSessionSnapshotFailure(sessionID, typeInfo.key, reason)
+						self.completedSessionSnapshotNeedsRetry = true
+					end
+				end
+			end
+		end
+	end
+	return (self.completedSessionSnapshotGeneration or 0) ~= changedGeneration
+end
+
+function DamageMeter:ScheduleCompletedSessionSnapshot(attempt)
+	if self.completedSessionSnapshotPending or not self:IsEnabled() then return end
+	if UnitAffectingCombat and UnitAffectingCombat("player") == true then return end
+	attempt = attempt or 1
+	local scheduleToken = (self.completedSessionSnapshotScheduleToken or 0) + 1
+	self.completedSessionSnapshotScheduleToken = scheduleToken
+	self.completedSessionSnapshotPending = true
+	C_Timer.After(attempt == 1 and 0.1 or 0.3, function()
+		if scheduleToken ~= DamageMeter.completedSessionSnapshotScheduleToken then return end
+		DamageMeter.completedSessionSnapshotPending = nil
+		if UnitAffectingCombat and UnitAffectingCombat("player") == true then return end
+		DamageMeter.completedSessionSnapshotNeedsRetry = nil
+		local changed = DamageMeter:SnapshotAvailableCompletedSessions()
+		if changed then DamageMeter:Refresh() end
+		if (DamageMeter.completedSessionSnapshotNeedsRetry or attempt < 3) and attempt < 40 then
+			DamageMeter:ScheduleCompletedSessionSnapshot(attempt + 1)
+		end
+	end)
+end
+
 function DamageMeter:GetSessionForState(state, sessionCache)
 	if state.preview then return PREVIEW_SESSION end
 	if state.damageMeterType == "Threat" then return self:BuildThreatSession(state) end
+	if state.damageMeterType == "HealthstonesPotions" then return self:BuildHealthConsumablesSession(state) end
+	if state.sessionID and UnitAffectingCombat and UnitAffectingCombat("player") == true then
+		local snapshot = self:GetCompletedSessionSnapshot(state.sessionID, state.damageMeterType)
+		local reason = snapshot and "complete-session-snapshot" or self:GetCompletedSessionSnapshotFailure(state.sessionID, state.damageMeterType) or "no-complete-session-snapshot"
+		self:SetCompletedSessionCacheDiagnostic("session", snapshot and "hit" or "miss", state.sessionID, state.damageMeterType, reason)
+		return snapshot
+	end
 	if not state.available or state.damageMeterEnum == nil then return nil end
 	if state.sessionID and C_DamageMeter.GetCombatSessionFromID then
+		local session
 		if sessionCache then
 			sessionCache.byID = sessionCache.byID or {}
 			local typeCache = sessionCache.byID[state.damageMeterEnum]
@@ -2119,12 +2691,21 @@ function DamageMeter:GetSessionForState(state, sessionCache)
 				sessionCache.byID[state.damageMeterEnum] = typeCache
 			end
 			local cached = typeCache[state.sessionID]
-			if cached ~= nil then return cached ~= false and cached or nil end
-			local session = C_DamageMeter.GetCombatSessionFromID(state.sessionID, state.damageMeterEnum)
-			typeCache[state.sessionID] = session or false
-			return session
+			if cached ~= nil then
+				session = cached ~= false and cached or nil
+			else
+				session = C_DamageMeter.GetCombatSessionFromID(state.sessionID, state.damageMeterEnum)
+				typeCache[state.sessionID] = isSecret(session) and false or (session or false)
+			end
+		else
+			session = C_DamageMeter.GetCombatSessionFromID(state.sessionID, state.damageMeterEnum)
 		end
-		return C_DamageMeter.GetCombatSessionFromID(state.sessionID, state.damageMeterEnum)
+		if self:CombatSessionContainsSecrets(session) then
+			local snapshot = self:GetCompletedSessionSnapshot(state.sessionID, state.damageMeterType)
+			self:SetCompletedSessionCacheDiagnostic("session", snapshot and "hit" or "miss", state.sessionID, state.damageMeterType, snapshot and "native-session-secret-used-snapshot" or "native-session-secret-no-snapshot")
+			return snapshot
+		end
+		return session
 	end
 	if not state.sessionEnum or not C_DamageMeter.GetCombatSessionFromType then return nil end
 	if sessionCache then
@@ -2137,7 +2718,7 @@ function DamageMeter:GetSessionForState(state, sessionCache)
 		local cached = typeCache[state.sessionEnum]
 		if cached ~= nil then return cached ~= false and cached or nil end
 		local session = C_DamageMeter.GetCombatSessionFromType(state.sessionEnum, state.damageMeterEnum)
-		typeCache[state.sessionEnum] = session or false
+		typeCache[state.sessionEnum] = isSecret(session) and false or (session or false)
 		return session
 	end
 	return C_DamageMeter.GetCombatSessionFromType(state.sessionEnum, state.damageMeterEnum)
@@ -2393,77 +2974,154 @@ end
 function DamageMeter:GetUnitTokenGUID(unitToken)
 	if not unitToken or not UnitGUID then return nil end
 	local guid = UnitGUID(unitToken)
-	if guid and not isSecret(guid) then return guid end
+	if isSecret(guid) then return nil end
+	if guid then return guid end
 	return nil
 end
 
 function DamageMeter:HasSourceSpellDetails(details)
-	return type(details) == "table" and type(details.combatSpells) == "table" and #details.combatSpells > 0
+	if isSecret(details) then return false end
+	if details == nil or type(details) ~= "table" then return false end
+	local combatSpells = details.combatSpells
+	return not isSecret(combatSpells) and type(combatSpells) == "table" and #combatSpells > 0
 end
 
 local getTooltipColumnVisibility
 local resolveTooltipUnitName
 local damageMeterNamesMatch
 
-function DamageMeter:GetSourceDetails(index, source)
-	if self:UsePreviewData() then return PREVIEW_SOURCE_DETAILS end
-	if not source or not self:IsAvailable() then return nil end
-	local damageMeterType = getDamageMeterTypeValue(self:GetEffectiveDamageMeterType(index))
-	if damageMeterType == nil then return nil end
-	local sessionID = self:GetEffectiveSessionID(index)
+function DamageMeter:CopyTooltipDetails(details)
+	local snapshot, restricted = self:CopySafeDamageMeterValue(details)
+	if restricted then return nil, true end
+	if type(snapshot) ~= "table" or type(snapshot.combatSpells) ~= "table" then return nil, false end
+	return snapshot, false
+end
+
+function DamageMeter:QueryNativeSourceDetails(index, source, damageMeterType, sessionID)
+	if not source then return nil end
 	local rawSourceGUID = source.sourceGUID
 	local rawSourceCreatureID = source.sourceCreatureID
 	local sourceGUID = not isSecret(rawSourceGUID) and rawSourceGUID or nil
 	local sourceCreatureID = not isSecret(rawSourceCreatureID) and rawSourceCreatureID or nil
-	local isLocalPlayer = source.isLocalPlayer == true
+	local isLocalPlayer = not isSecret(source.isLocalPlayer) and source.isLocalPlayer == true
 	local isRestrictedSource = isSecret(source.name) or isSecret(rawSourceGUID) or isSecret(rawSourceCreatureID)
 	local partyUnitToken = isRestrictedSource and not isLocalPlayer and self:CanUsePartyClassFallback(index) and self:GetUniquePartyUnitTokenForClass(source.classFilename) or nil
 	if sourceGUID == nil and sourceCreatureID == nil and not isLocalPlayer and not partyUnitToken then return nil end
 	if sessionID and C_DamageMeter.GetCombatSessionSourceFromID then
-		local emptyLocalDetails
+		local fallbackDetails
 		local details = C_DamageMeter.GetCombatSessionSourceFromID(sessionID, damageMeterType, sourceGUID, sourceCreatureID)
 		if not isLocalPlayer or self:HasSourceSpellDetails(details) then return details end
-		emptyLocalDetails = details
+		if not isSecret(details) and type(details) == "table" then fallbackDetails = details end
 		if isLocalPlayer then
 			local playerGUID = self:GetUnitTokenGUID("player")
 			if playerGUID then
 				details = C_DamageMeter.GetCombatSessionSourceFromID(sessionID, damageMeterType, playerGUID, nil)
-				return details
+				if self:HasSourceSpellDetails(details) then return details end
+				if not fallbackDetails and not isSecret(details) and type(details) == "table" then fallbackDetails = details end
 			end
 			details = C_DamageMeter.GetCombatSessionSourceFromID(sessionID, damageMeterType, nil, nil)
 			if self:HasSourceSpellDetails(details) then return details end
+			if not fallbackDetails and not isSecret(details) and type(details) == "table" then fallbackDetails = details end
 		end
 		local partyGUID = self:GetUnitTokenGUID(partyUnitToken)
 		if partyGUID then
 			details = C_DamageMeter.GetCombatSessionSourceFromID(sessionID, damageMeterType, partyGUID, nil)
-			return details
+			if isSecret(details) then return details end
+			if details ~= nil then return details end
 		end
-		if emptyLocalDetails then return emptyLocalDetails end
-		return nil
+		return fallbackDetails
 	end
 	local sessionType = SESSION_TYPES[self:GetEffectiveSessionType(index)] or SESSION_TYPES.current
 	if sessionType and C_DamageMeter.GetCombatSessionSourceFromType then
-		local emptyLocalDetails
+		local fallbackDetails
 		local details = C_DamageMeter.GetCombatSessionSourceFromType(sessionType, damageMeterType, sourceGUID, sourceCreatureID)
 		if not isLocalPlayer or self:HasSourceSpellDetails(details) then return details end
-		emptyLocalDetails = details
+		if not isSecret(details) and type(details) == "table" then fallbackDetails = details end
 		if isLocalPlayer then
 			local playerGUID = self:GetUnitTokenGUID("player")
 			if playerGUID then
 				details = C_DamageMeter.GetCombatSessionSourceFromType(sessionType, damageMeterType, playerGUID, nil)
-				return details
+				if self:HasSourceSpellDetails(details) then return details end
+				if not fallbackDetails and not isSecret(details) and type(details) == "table" then fallbackDetails = details end
 			end
 			details = C_DamageMeter.GetCombatSessionSourceFromType(sessionType, damageMeterType, nil, nil)
 			if self:HasSourceSpellDetails(details) then return details end
+			if not fallbackDetails and not isSecret(details) and type(details) == "table" then fallbackDetails = details end
 		end
 		local partyGUID = self:GetUnitTokenGUID(partyUnitToken)
 		if partyGUID then
 			details = C_DamageMeter.GetCombatSessionSourceFromType(sessionType, damageMeterType, partyGUID, nil)
-			return details
+			if isSecret(details) then return details end
+			if details ~= nil then return details end
 		end
-		if emptyLocalDetails then return emptyLocalDetails end
+		return fallbackDetails
 	end
 	return nil
+end
+
+function DamageMeter:QueryCompletedSessionSourceDetails(sessionID, damageMeterType, damageMeterEnum, source)
+	if not sessionID or damageMeterEnum == nil or not source or not C_DamageMeter or not C_DamageMeter.GetCombatSessionSourceFromID then return nil end
+	local rawSourceGUID = source.sourceGUID
+	local rawSourceCreatureID = source.sourceCreatureID
+	if isSecret(rawSourceGUID) or isSecret(rawSourceCreatureID) then return nil end
+	local sourceGUID = rawSourceGUID
+	local sourceCreatureID = rawSourceCreatureID
+	local details
+	if damageMeterType == "EnemyDamageTaken" and sourceCreatureID ~= nil then
+		details = C_DamageMeter.GetCombatSessionSourceFromID(sessionID, damageMeterEnum, nil, sourceCreatureID)
+		if self:HasSourceSpellDetails(details) then return details end
+	end
+	if sourceGUID ~= nil or sourceCreatureID ~= nil then
+		details = C_DamageMeter.GetCombatSessionSourceFromID(sessionID, damageMeterEnum, sourceGUID, sourceCreatureID)
+		if self:HasSourceSpellDetails(details) then return details end
+	end
+	if damageMeterType == "EnemyDamageTaken" and sourceGUID ~= nil then
+		local guidDetails = C_DamageMeter.GetCombatSessionSourceFromID(sessionID, damageMeterEnum, sourceGUID, nil)
+		if self:HasSourceSpellDetails(guidDetails) then return guidDetails end
+		if not isSecret(details) and details == nil then details = guidDetails end
+	end
+	if not isSecret(source.isLocalPlayer) and source.isLocalPlayer == true then
+		local playerGUID = self:GetUnitTokenGUID("player")
+		if playerGUID then
+			local playerDetails = C_DamageMeter.GetCombatSessionSourceFromID(sessionID, damageMeterEnum, playerGUID, nil)
+			if self:HasSourceSpellDetails(playerDetails) then return playerDetails end
+			if not isSecret(details) and details == nil then details = playerDetails end
+		end
+		local localDetails = C_DamageMeter.GetCombatSessionSourceFromID(sessionID, damageMeterEnum, nil, nil)
+		if self:HasSourceSpellDetails(localDetails) then return localDetails end
+		if not isSecret(details) and details == nil then details = localDetails end
+	end
+	return details
+end
+
+function DamageMeter:GetSourceDetails(index, source)
+	if self:UsePreviewData() then return PREVIEW_SOURCE_DETAILS end
+	if not source then return nil end
+	local damageMeterTypeKey = self:GetEffectiveDamageMeterType(index)
+	local attachedDetails = source._eqolTooltipDetails or (damageMeterTypeKey == "HealthstonesPotions" and source.healthConsumableDetails)
+	if type(attachedDetails) == "table" then
+		self:SetCompletedSessionCacheDiagnostic("tooltip", "hit", source._eqolSessionID or self:GetEffectiveSessionID(index), damageMeterTypeKey, "details-attached-to-source")
+		return attachedDetails
+	end
+	if damageMeterTypeKey == "HealthstonesPotions" then
+		self:SetCompletedSessionCacheDiagnostic("tooltip", "miss", source._eqolSessionID or self:GetEffectiveSessionID(index), damageMeterTypeKey, "health-source-has-no-details")
+		return nil
+	end
+	local damageMeterType = getDamageMeterTypeValue(damageMeterTypeKey)
+	if damageMeterType == nil then return nil end
+	local sessionID = self:GetEffectiveSessionID(index)
+	local details = self:QueryNativeSourceDetails(index, source, damageMeterType, sessionID)
+	local safeDetails, restricted = self:CopyTooltipDetails(details)
+	if restricted then
+		self:SetCompletedSessionCacheDiagnostic("tooltip", "miss", sessionID, damageMeterTypeKey, "native-details-contain-secret-values")
+		return nil
+	end
+	if not safeDetails then
+		self:SetCompletedSessionCacheDiagnostic("tooltip", "miss", sessionID, damageMeterTypeKey, "native-details-unavailable")
+		return nil
+	end
+	self:SetCompletedSessionCacheDiagnostic("tooltip", "hit", sessionID, damageMeterTypeKey, "native-details-safe")
+	return safeDetails
 end
 
 function DamageMeter:InvalidateDerivedTargetCache(liveSessionsOnly)
@@ -2554,13 +3212,13 @@ function DamageMeter:GetEnemyDamageTakenSourceDetails(index, enemySource)
 end
 
 function DamageMeter:AddDerivedTargetEntry(cache, actorName, targetKey, targetName, amount, dps, classFilename)
-	if actorName == nil or targetKey == nil or isSecret(actorName) or isSecret(targetKey) or not amount then return end
+	if isSecret(actorName) or isSecret(targetKey) or actorName == nil or targetKey == nil or not amount then return end
 	actorName = tostring(actorName)
 	targetKey = tostring(targetKey)
 	if actorName == "" or targetKey == "" then return end
-	if targetName == nil then
+	if isSecret(targetName) or targetName == nil then
 		targetName = targetKey
-	elseif not isSecret(targetName) then
+	else
 		targetName = tostring(targetName)
 		if targetName == "" then targetName = targetKey end
 	end
@@ -2579,13 +3237,66 @@ function DamageMeter:AddDerivedTargetEntry(cache, actorName, targetKey, targetNa
 	if not target then
 		target = { key = targetKey, name = targetName, atlas = TOOLTIP_TARGET_ATLAS, amount = 0, dps = 0, classFilename = classFilename }
 		actorTargets[targetKey] = target
-	elseif target.name == nil or (not isSecret(target.name) and target.name == target.key) then
+	elseif not isSecret(target.name) and (target.name == nil or target.name == target.key) then
 		target.name = targetName
 	end
 	if target.classFilename == nil then target.classFilename = classFilename end
 	target.amount = target.amount + amount
 	target.dps = target.dps + (dps or 0)
 	return true
+end
+
+
+function DamageMeter:FindCompletedDerivedTargets(cache, sourceName)
+	if type(cache) ~= "table" or type(cache.byActor) ~= "table" or isSecret(sourceName) or sourceName == nil then return nil end
+	local actorTargets = cache.byActor[sourceName]
+	if not actorTargets and Ambiguate then
+		local shortName = Ambiguate(sourceName, "short")
+		if shortName and shortName ~= "" then actorTargets = cache.byActor[shortName] end
+	end
+	if not actorTargets then
+		for actorName, targets in pairs(cache.byActor) do
+			if damageMeterNamesMatch(actorName, sourceName) then
+				actorTargets = targets
+				break
+			end
+		end
+	end
+	return actorTargets
+end
+
+function DamageMeter:AttachCompletedDerivedTargets(sessionID)
+	local enemySession = self:GetCompletedSessionSnapshot(sessionID, "EnemyDamageTaken")
+	if type(enemySession) ~= "table" then return end
+	local cache = { byActor = {} }
+	local addedAny = false
+	local scanCount = 0
+	for _, enemySource in ipairs(type(enemySession.combatSources) == "table" and enemySession.combatSources or {}) do
+		scanCount = scanCount + 1
+		if scanCount > DERIVED_TARGET_SCAN_LIMIT then break end
+		local targetName = enemySource.name
+		local targetKey = enemySource.sourceCreatureID or targetName
+		local details = enemySource._eqolTooltipDetails
+		if targetKey ~= nil and type(details) == "table" and type(details.combatSpells) == "table" then
+			for _, spell in ipairs(details.combatSpells) do
+				local spellDetails = spell.combatSpellDetails
+				local amount = safeNumber(spell.totalAmount)
+				if type(spellDetails) == "table" and amount then
+					if self:AddDerivedTargetEntry(cache, spellDetails.unitName, targetKey, targetName, amount, safeNumber(spell.amountPerSecond), spellDetails.unitClassFilename) then
+						addedAny = true
+					end
+				end
+			end
+		end
+	end
+	for _, damageMeterType in ipairs({ "DamageDone", "Dps" }) do
+		local session = self:GetCompletedSessionSnapshot(sessionID, damageMeterType)
+		if type(session) == "table" and type(session.combatSources) == "table" then
+			for _, source in ipairs(session.combatSources) do
+				source._eqolDerivedTargets = addedAny and self:FindCompletedDerivedTargets(cache, source.name) or nil
+			end
+		end
+	end
 end
 
 function DamageMeter:BuildDerivedTargetSessionCache(index)
@@ -2642,7 +3353,9 @@ function DamageMeter:BuildDerivedTargetSessionCache(index)
 end
 
 function DamageMeter:GetDerivedTargetsForSource(index, source)
-	if not source or source.name == nil or isSecret(source.name) then return nil end
+	if not source then return nil end
+	if type(source._eqolDerivedTargets) == "table" then return source._eqolDerivedTargets end
+	if isSecret(source.name) or source.name == nil then return nil end
 	local cache = self:BuildDerivedTargetSessionCache(index)
 	if not cache or type(cache.byActor) ~= "table" then return nil end
 	local actorTargets = cache.byActor[tostring(source.name)]
@@ -2663,8 +3376,10 @@ end
 
 function DamageMeter:BuildDerivedTargetRows(index, source, config, damageMeterType)
 	if damageMeterType ~= "DamageDone" and damageMeterType ~= "Dps" then return nil end
-	if not source or isSecret(source.name) then return nil end
-	local cacheKey = self:GetDerivedTargetCacheKey(index, source, config, damageMeterType)
+	if not source then return nil end
+	local hasAttachedTargets = type(source._eqolDerivedTargets) == "table"
+	if not hasAttachedTargets and (isSecret(source.name) or source.name == nil) then return nil end
+	local cacheKey = not hasAttachedTargets and self:GetDerivedTargetCacheKey(index, source, config, damageMeterType) or nil
 	if cacheKey then
 		self.derivedTargetCache = self.derivedTargetCache or {}
 		local cached = self.derivedTargetCache[cacheKey]
@@ -3374,13 +4089,13 @@ function DamageMeter:ShowTooltip(owner, text)
 	GameTooltip:Show()
 end
 
-function DamageMeter:CreateContextMenuIconButton(frame, label, tooltipText, onClick)
+function DamageMeter:CreateContextMenuIconButton(frame, label, tooltipText, onClick, texture)
 	local button = CreateFrame("Button", nil, frame)
 	button:SetSize(18, 18)
 	button:SetScript("OnClick", onClick)
 	button:SetScript("OnEnter", function(owner)
 		button.bg:SetColorTexture(0.18, 0.18, 0.18, 0.95)
-		self:ShowTooltip(owner, tooltipText)
+		self:ShowTooltip(owner, type(tooltipText) == "function" and tooltipText() or tooltipText)
 	end)
 	button:SetScript("OnLeave", function()
 		button.bg:SetColorTexture(0.07, 0.07, 0.07, 0.85)
@@ -3393,6 +4108,13 @@ function DamageMeter:CreateContextMenuIconButton(frame, label, tooltipText, onCl
 	button.text:SetAllPoints()
 	button.text:SetJustifyH("CENTER")
 	button.text:SetText(label)
+	if texture then
+		button.icon = button:CreateTexture(nil, "ARTWORK")
+		button.icon:SetPoint("CENTER")
+		button.icon:SetSize(16, 16)
+		button.icon:SetTexture(texture)
+		button.text:Hide()
+	end
 	return button
 end
 
@@ -3544,6 +4266,11 @@ function DamageMeter:EnsureContextMenu()
 		self:HideContextMenu()
 		self:ClearTemporarySelection(index)
 	end)
+	frame.resizeLockButton = self:CreateContextMenuIconButton(frame, "", function() return self:GetResizeLockActionText() end, function(owner)
+		self:SetResizeLocked(not self:IsResizeLocked())
+		self:RefreshContextMenu(frame.owner or frame, frame.index or 1, true)
+		self:ShowTooltip(owner, self:GetResizeLockActionText())
+	end, self.RESIZE_LOCK_TEXTURE)
 	frame:SetScript("OnHide", function()
 		if GameTooltip then GameTooltip:Hide() end
 		if frame.clickCatcher then frame.clickCatcher:Hide() end
@@ -3662,9 +4389,10 @@ function DamageMeter:RefreshContextMenu(owner, index, keepAnchor)
 
 	local pad = CONTEXT_MENU_PADDING
 	local y = -pad
+	local resizeOutsideEditMode = self:IsOutsideEditModeControlsEnabled()
 	frame.title:ClearAllPoints()
 	frame.title:SetPoint("TOPLEFT", pad, y)
-	frame.title:SetPoint("TOPRIGHT", -84, y)
+	frame.title:SetPoint("TOPRIGHT", resizeOutsideEditMode and -106 or -84, y)
 	frame.title:SetHeight(18)
 	frame.clearButton:ClearAllPoints()
 	frame.clearButton:SetPoint("TOPRIGHT", -pad, y + 1)
@@ -3672,6 +4400,10 @@ function DamageMeter:RefreshContextMenu(owner, index, keepAnchor)
 	frame.historyButton:SetPoint("RIGHT", frame.clearButton, "LEFT", -4, 0)
 	frame.resetButton:ClearAllPoints()
 	frame.resetButton:SetPoint("RIGHT", frame.historyButton, "LEFT", -4, 0)
+	frame.resizeLockButton:ClearAllPoints()
+	frame.resizeLockButton:SetPoint("RIGHT", frame.resetButton, "LEFT", -4, 0)
+	frame.resizeLockButton:SetShown(resizeOutsideEditMode)
+	if resizeOutsideEditMode then self:UpdateResizeLockIcon(frame.resizeLockButton.icon) end
 	y = y - 24
 
 	local buttonIndex = 1
@@ -3988,7 +4720,7 @@ getTooltipColumnVisibility = function(config, damageMeterType)
 end
 
 function DamageMeter:GetTooltipRateColumnLabel(damageMeterType)
-	if damageMeterType == "HealingDone" or damageMeterType == "Hps" then
+	if damageMeterType == "HealingDone" or damageMeterType == "Hps" or damageMeterType == "HealthstonesPotions" then
 		return getDamageMeterTypeLabel("Hps") or "HPS"
 	end
 	return L["damageMeterTooltipDPS"] or "DPS"
@@ -4115,7 +4847,10 @@ function DamageMeter:BuildTooltipRows(details, config, damageMeterType, derivedT
 		details = { combatSpells = {} }
 	end
 	local showAmount, showDPS, showPercent = getTooltipColumnVisibility(config, damageMeterType)
-	local showTargets = config.tooltipShowTargets ~= false and not (UnitAffectingCombat and UnitAffectingCombat("player"))
+	local inCombat = UnitAffectingCombat and UnitAffectingCombat("player") == true
+	local hasCompletedDetails = type(details) == "table" and details._eqolCompletedSnapshot == true
+	local hasCompletedDerivedTargets = type(derivedTargetRows) == "table" and #derivedTargetRows > 0
+	local showTargets = config.tooltipShowTargets ~= false and (not inCombat or hasCompletedDetails or hasCompletedDerivedTargets)
 	local spellLimit = clampNumber(config.tooltipMaxLines, 4, 30, DEFAULT_WINDOW.tooltipMaxLines)
 	local totalAmount = safeNumber(details.totalAmount)
 	local showSpellSection = damageMeterType ~= "EnemyDamageTaken" and #details.combatSpells > 0
@@ -4497,7 +5232,19 @@ function DamageMeter:CreateRow(window, index, forceRankColumn)
 	local row = CreateFrame("Button", nil, window.rowsContainer)
 	row.windowIndex = window.index
 	row:RegisterForClicks("AnyUp")
+	row:SetScript("OnMouseDown", function(_, button)
+		if button == "LeftButton" and IsAltKeyDown and IsAltKeyDown() and DamageMeter:StartWindowMove(window.index) then
+			window._damageMeterMoveSuppressClick = true
+		end
+	end)
+	row:SetScript("OnMouseUp", function(_, button)
+		if button == "LeftButton" and window._damageMeterMoving == true then
+			DamageMeter:StopWindowMove(window.index)
+			C_Timer.After(0, function() window._damageMeterMoveSuppressClick = nil end)
+		end
+	end)
 	row:SetScript("OnClick", function(owner, button)
+		if button == "LeftButton" and window._damageMeterMoveSuppressClick == true then return end
 		if button == "RightButton" then
 			DamageMeter:OpenContextMenu(owner, window.index)
 		elseif button == "LeftButton" then
@@ -4624,6 +5371,192 @@ function DamageMeter:CreateRow(window, index, forceRankColumn)
 	return row
 end
 
+function DamageMeter:CommitWindowResize(index, targetWidth, targetHeight)
+	local config = self:GetConfig(index)
+	local width = clampNumber(targetWidth, 100, 700, DEFAULT_WINDOW.width)
+	local height = math.max(60, tonumber(targetHeight) or 60)
+	local showHeader = config.showHeader == true
+	local showStatus = config.showStatus ~= false
+	local headerPosition = normalizeHeaderPosition(config.headerPosition)
+	local titleFontSize = clampNumber(config.titleFontSize, 8, 28, DEFAULT_WINDOW.titleFontSize)
+	local statusFontSize = clampNumber(config.statusFontSize, 8, 24, DEFAULT_WINDOW.statusFontSize)
+	local headerButtonSize = clampNumber(config.headerButtonSize, 10, 32, DEFAULT_WINDOW.headerButtonSize)
+	local showHeaderButtons = showHeader and config.showHeaderButtons ~= false and normalizeDamageMeterTypeKey(self:GetEffectiveDamageMeterType(index)) ~= "Threat"
+	local headerHeight = showHeader and math.max(24, titleFontSize + 12, showHeaderButtons and (headerButtonSize + 8) or 0) or 0
+	local statusHeight = showStatus and math.max(16, statusFontSize + 6) or 0
+	local topInset = headerPosition == "TOP" and (headerHeight > 0 and headerHeight or 4) or 4
+	local bottomInset = 4 + (showStatus and (statusHeight + 2) or 0) + (headerPosition == "BOTTOM" and headerHeight or 0)
+	local _, _, spacing = getRowMetrics(config)
+	local effectiveRowHeight = getEffectiveRowHeight(config)
+	local viewportPadding = self:GetRowViewportPadding(config)
+	local rowPitch = math.max(1, effectiveRowHeight + spacing)
+	local availableHeight = math.max(1, height - topInset - bottomInset)
+	local rows = clampNumber(math.floor(((availableHeight + spacing - (viewportPadding * 2)) / rowPitch) + 0.0001), 1, 30, DEFAULT_WINDOW.visibleRows)
+	local viewportHeight = math.max(1, (rows * effectiveRowHeight) + (math.max(0, rows - 1) * spacing) + (viewportPadding * 2))
+	local heightOffset = clampNumber(math.floor((height - viewportHeight - topInset - bottomInset) + 0.5), 0, 300, DEFAULT_WINDOW.heightOffset)
+	local rowKey = config.raidRowsEnabled == true and IsInRaid() and "raidVisibleRows" or "visibleRows"
+	local updates = { width = width, [rowKey] = rows, heightOffset = heightOffset }
+	for key, value in pairs(updates) do config[key] = value end
+	if db().damageMeterSyncSettings == true then
+		local windows = self:GetWindowsDB()
+		for windowIndex = 1, MAX_WINDOWS do
+			if windowIndex ~= index then
+				for key, value in pairs(updates) do
+					if not SYNC_EXCLUDED_KEYS[key] then windows[windowIndex][key] = value end
+				end
+				self:MarkWindowStyleDirty(windowIndex)
+			end
+		end
+	end
+	self:MarkWindowStyleDirty(index)
+	self:Refresh()
+	if addon.EditModeLib and addon.EditModeLib.internal and addon.EditModeLib.internal.RequestRefreshSettings then addon.EditModeLib.internal:RequestRefreshSettings() end
+end
+
+function DamageMeter:PreviewSyncedWindowResize(sourceIndex, width, height)
+	if db().damageMeterSyncSettings ~= true or self.syncResizePreviewActive == true then return end
+	self.syncResizePreviewActive = true
+	for index = 1, getWindowCount() do
+		if index ~= sourceIndex then
+			local frame = self:EnsureWindow(index)
+			frame:SetSize(width, height)
+		end
+	end
+	self.syncResizePreviewActive = nil
+end
+
+function DamageMeter:IsResizeLocked()
+	return db().damageMeterResizeLocked ~= false
+end
+
+function DamageMeter:IsResizeOutsideEditModeEnabled()
+	return db().damageMeterResizeOutsideEditMode == true
+end
+
+function DamageMeter:IsMoveOutsideEditModeEnabled()
+	return db().damageMeterMoveOutsideEditMode == true
+end
+
+function DamageMeter:IsOutsideEditModeControlsEnabled()
+	return self:IsResizeOutsideEditModeEnabled() or self:IsMoveOutsideEditModeEnabled()
+end
+
+function DamageMeter:GetResizeLockActionText()
+	if self:IsMoveOutsideEditModeEnabled() then
+		if self:IsResizeLocked() then return L["damageMeterUnlockWindow"] or "Unlock window" end
+		return L["damageMeterLockWindow"] or "Lock window"
+	end
+	if self:IsResizeLocked() then return L["damageMeterUnlockResize"] or "Unlock resizing" end
+	return L["damageMeterLockResize"] or "Lock resizing"
+end
+
+function DamageMeter:UpdateResizeLockIcon(icon)
+	if not icon then return end
+	icon:SetTexture(self:IsResizeLocked() and self.RESIZE_LOCK_TEXTURE or self.RESIZE_UNLOCK_TEXTURE)
+	icon:SetVertexColor(1, 1, 1, 1)
+end
+
+function DamageMeter:UpdateResizeControls(index)
+	local frame = self.windows and self.windows[index]
+	if not frame then return end
+	local resizeEnabled = self:IsResizeOutsideEditModeEnabled()
+	local moveEnabled = self:IsMoveOutsideEditModeEnabled()
+	local enabled = resizeEnabled or moveEnabled
+	local locked = self:IsResizeLocked()
+	local outsideEditMode = not self:IsInEditMode()
+	local hovered = frame._damageMeterMouseOver == true and (not frame.IsMouseOver or frame:IsMouseOver())
+	local showControls = enabled and outsideEditMode and (hovered or frame._damageMeterResizing == true or frame._damageMeterMoving == true)
+	frame:SetResizable(resizeEnabled and outsideEditMode and not locked)
+	frame:SetMovable(moveEnabled and outsideEditMode and not locked)
+	if frame.resizeLockButton then
+		frame.resizeLockButton:ClearAllPoints()
+		frame.resizeLockButton:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", not locked and resizeEnabled and -18 or 0, 0)
+		frame.resizeLockButton:SetShown(showControls)
+		self:UpdateResizeLockIcon(frame.resizeLockButton.icon)
+	end
+	if frame.resizeButton then frame.resizeButton:SetShown(showControls and resizeEnabled and not locked) end
+	if frame.moveHandle then
+		local config = self:GetConfig(index)
+		frame.moveHandle:SetShown(moveEnabled and outsideEditMode and not locked and config.showHeader == true)
+	end
+end
+
+function DamageMeter:SetResizeOutsideEditModeEnabled(enabled)
+	enabled = enabled == true
+	if self:IsResizeOutsideEditModeEnabled() == enabled then return end
+	db().damageMeterResizeOutsideEditMode = enabled
+	for index = 1, MAX_WINDOWS do
+		local frame = self.windows and self.windows[index]
+		if not enabled and frame and frame._damageMeterResizing == true then self:StopWindowResize(index) end
+		self:UpdateResizeControls(index)
+	end
+end
+
+function DamageMeter:SetMoveOutsideEditModeEnabled(enabled)
+	enabled = enabled == true
+	if self:IsMoveOutsideEditModeEnabled() == enabled then return end
+	db().damageMeterMoveOutsideEditMode = enabled
+	for index = 1, MAX_WINDOWS do
+		local frame = self.windows and self.windows[index]
+		if not enabled and frame and frame._damageMeterMoving == true then self:StopWindowMove(index) end
+		self:UpdateResizeControls(index)
+	end
+end
+
+function DamageMeter:SetResizeLocked(locked)
+	locked = locked == true
+	if self:IsResizeLocked() == locked then return end
+	db().damageMeterResizeLocked = locked
+	for index = 1, MAX_WINDOWS do
+		local frame = self.windows and self.windows[index]
+		if frame and frame._damageMeterResizing == true then self:StopWindowResize(index) end
+		if frame and frame._damageMeterMoving == true then self:StopWindowMove(index) end
+		self:UpdateResizeControls(index)
+	end
+end
+
+function DamageMeter:StartWindowMove(index)
+	if not self:IsMoveOutsideEditModeEnabled() or self:IsInEditMode() or self:IsResizeLocked() then return end
+	local frame = self:EnsureWindow(index)
+	if frame._damageMeterResizing == true or frame._damageMeterMoving == true then return end
+	local config = self:GetConfig(index)
+	if index > 1 and clampNumber(config.anchorToWindow, 0, index - 1, 0) > 0 then
+		config.anchorToWindow = 0
+		frame._damageMeterAnchored = false
+	end
+	frame._damageMeterMoving = true
+	frame:StartMoving()
+	self:UpdateResizeControls(index)
+	return true
+end
+
+function DamageMeter:StopWindowMove(index)
+	local frame = self.windows and self.windows[index]
+	if not frame or frame._damageMeterMoving ~= true then return end
+	frame._damageMeterMoving = nil
+	frame:StopMovingOrSizing()
+	if EditMode and EditMode.CalculateUIParentAnchor and EditMode.SetFramePosition then
+		local point, relativePoint, x, y = EditMode:CalculateUIParentAnchor(frame)
+		if point then EditMode:SetFramePosition(host.editModePrefix .. index, point, x, y, nil, false, relativePoint) end
+	end
+	self:UpdateResizeControls(index)
+end
+
+function DamageMeter:StartWindowResize(index)
+	if not self:IsResizeOutsideEditModeEnabled() or self:IsInEditMode() or self:IsResizeLocked() then return end
+	local frame = self:EnsureWindow(index)
+	frame._damageMeterResizing = true
+	frame:StartSizing("BOTTOMRIGHT")
+end
+
+function DamageMeter:StopWindowResize(index)
+	local frame = self.windows and self.windows[index]
+	if not frame or frame._damageMeterResizing ~= true then return end
+	frame._damageMeterResizing = nil
+	frame:StopMovingOrSizing()
+	self:CommitWindowResize(index, frame:GetWidth(), frame:GetHeight())
+end
+
 function DamageMeter:EnsureWindow(index)
 	self.windows = self.windows or {}
 	local window = self.windows[index]
@@ -4632,9 +5565,19 @@ function DamageMeter:EnsureWindow(index)
 	local frame = CreateFrame("Frame", host.framePrefix .. "Frame" .. index, UIParent, "BackdropTemplate")
 	frame:SetFrameStrata("MEDIUM")
 	if frame.SetClampedToScreen then frame:SetClampedToScreen(true) end
+	frame:SetMovable(false)
+	frame:SetResizable(false)
+	if frame.SetResizeBounds then frame:SetResizeBounds(100, 60, 700, 2000) end
 	frame:EnableMouse(true)
+	frame:SetScript("OnMouseDown", function(_, button)
+		if button == "LeftButton" and IsAltKeyDown and IsAltKeyDown() then DamageMeter:StartWindowMove(index) end
+	end)
 	frame:SetScript("OnMouseUp", function(owner, button)
-		if button == "RightButton" then
+		if button == "LeftButton" and owner._damageMeterMoving == true then
+			DamageMeter:StopWindowMove(index)
+		elseif button == "LeftButton" and owner._damageMeterResizing == true then
+			DamageMeter:StopWindowResize(index)
+		elseif button == "RightButton" then
 			DamageMeter:OpenContextMenu(owner, index)
 		end
 	end)
@@ -4644,8 +5587,64 @@ function DamageMeter:EnsureWindow(index)
 	frame:SetScript("OnLeave", function()
 		DamageMeter:SetWindowHover(index, false)
 	end)
+	frame:SetScript("OnSizeChanged", function(owner, width, height)
+		if owner._damageMeterResizing == true then DamageMeter:PreviewSyncedWindowResize(index, width, height) end
+	end)
 	frame:Hide()
 	frame.index = index
+	frame.pauseIndicator = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	frame.pauseIndicator:SetPoint("TOP", frame, "TOP", 0, -5)
+	frame.pauseIndicator:SetText(L["damageMeterPaused"] or "Paused")
+	frame.pauseIndicator:SetTextColor(1, 0.82, 0.2, 1)
+	frame.pauseIndicator:SetShadowOffset(1, -1)
+	frame.pauseIndicator:SetDrawLayer("OVERLAY", 7)
+	frame.pauseIndicator:Hide()
+	frame.resizeButton = CreateFrame("Button", nil, frame)
+	frame.resizeButton:SetSize(16, 16)
+	frame.resizeButton:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
+	frame.resizeButton:SetFrameLevel(frame:GetFrameLevel() + 20)
+	frame.resizeButton:RegisterForClicks("LeftButtonDown", "LeftButtonUp")
+	frame.resizeButton:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
+	frame.resizeButton:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
+	frame.resizeButton:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
+	frame.resizeButton:SetScript("OnMouseDown", function(_, button)
+		if button == "LeftButton" then DamageMeter:StartWindowResize(index) end
+	end)
+	frame.resizeButton:SetScript("OnEnter", function(owner)
+		DamageMeter:SetWindowHover(index, true)
+		DamageMeter:ShowTooltip(owner, L["damageMeterResizeWindow"] or "Resize window")
+	end)
+	frame.resizeButton:SetScript("OnLeave", function()
+		if GameTooltip then GameTooltip:Hide() end
+		DamageMeter:SetWindowHover(index, false)
+	end)
+	frame.resizeButton:SetScript("OnMouseUp", function(_, button)
+		if button == "LeftButton" then DamageMeter:StopWindowResize(index) end
+	end)
+	frame.resizeButton:Hide()
+	frame.resizeLockButton = CreateFrame("Button", nil, frame)
+	frame.resizeLockButton:SetSize(18, 18)
+	frame.resizeLockButton:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
+	frame.resizeLockButton:SetFrameLevel(frame:GetFrameLevel() + 21)
+	frame.resizeLockButton:RegisterForClicks("LeftButtonUp")
+	frame.resizeLockButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+	frame.resizeLockButton.icon = frame.resizeLockButton:CreateTexture(nil, "ARTWORK")
+	frame.resizeLockButton.icon:SetPoint("CENTER")
+	frame.resizeLockButton.icon:SetSize(16, 16)
+	frame.resizeLockButton.icon:SetTexture(DamageMeter.RESIZE_LOCK_TEXTURE)
+	frame.resizeLockButton:SetScript("OnClick", function(owner)
+		DamageMeter:SetResizeLocked(not DamageMeter:IsResizeLocked())
+		DamageMeter:ShowTooltip(owner, DamageMeter:GetResizeLockActionText())
+	end)
+	frame.resizeLockButton:SetScript("OnEnter", function(owner)
+		DamageMeter:SetWindowHover(index, true)
+		DamageMeter:ShowTooltip(owner, DamageMeter:GetResizeLockActionText())
+	end)
+	frame.resizeLockButton:SetScript("OnLeave", function()
+		if GameTooltip then GameTooltip:Hide() end
+		DamageMeter:SetWindowHover(index, false)
+	end)
+	frame.resizeLockButton:Hide()
 
 	local windowBackground = frame:CreateTexture(nil, "BACKGROUND")
 	windowBackground:Hide()
@@ -4663,6 +5662,8 @@ function DamageMeter:EnsureWindow(index)
 	local headerBackground = frame:CreateTexture(nil, "ARTWORK")
 	headerBackground:Hide()
 	frame.headerBackground = headerBackground
+	frame.pauseIndicator:ClearAllPoints()
+	frame.pauseIndicator:SetPoint("CENTER", headerBackground, "CENTER")
 
 	local header = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	header:SetPoint("TOPLEFT", 8, -7)
@@ -4673,6 +5674,29 @@ function DamageMeter:EnsureWindow(index)
 	if header.SetNonSpaceWrap then header:SetNonSpaceWrap(false) end
 	if header.SetMaxLines then header:SetMaxLines(1) end
 	frame.header = header
+	local moveHandle = CreateFrame("Button", nil, frame)
+	moveHandle:RegisterForClicks("LeftButtonDown", "LeftButtonUp", "RightButtonUp")
+	moveHandle:SetFrameLevel(frame:GetFrameLevel() + 5)
+	moveHandle:SetScript("OnMouseDown", function(_, button)
+		if button == "LeftButton" then DamageMeter:StartWindowMove(index) end
+	end)
+	moveHandle:SetScript("OnMouseUp", function(owner, button)
+		if button == "LeftButton" then
+			DamageMeter:StopWindowMove(index)
+		elseif button == "RightButton" then
+			DamageMeter:OpenContextMenu(owner, index)
+		end
+	end)
+	moveHandle:SetScript("OnEnter", function(owner)
+		DamageMeter:SetWindowHover(index, true)
+		DamageMeter:ShowTooltip(owner, L["damageMeterMoveWindow"] or "Drag to move window")
+	end)
+	moveHandle:SetScript("OnLeave", function()
+		if GameTooltip then GameTooltip:Hide() end
+		DamageMeter:SetWindowHover(index, false)
+	end)
+	moveHandle:Hide()
+	frame.moveHandle = moveHandle
 
 	local headerButtons = CreateFrame("Frame", nil, frame)
 	headerButtons:SetSize(36, 16)
@@ -4702,8 +5726,13 @@ function DamageMeter:EnsureWindow(index)
 	rowsViewport:SetPoint("TOPLEFT", 4, -28)
 	rowsViewport:SetPoint("BOTTOMRIGHT", -4, 22)
 	rowsViewport:EnableMouse(true)
+	rowsViewport:SetScript("OnMouseDown", function(_, button)
+		if button == "LeftButton" and IsAltKeyDown and IsAltKeyDown() then DamageMeter:StartWindowMove(index) end
+	end)
 	rowsViewport:SetScript("OnMouseUp", function(owner, button)
-		if button == "RightButton" then
+		if button == "LeftButton" and frame._damageMeterMoving == true then
+			DamageMeter:StopWindowMove(index)
+		elseif button == "RightButton" then
 			DamageMeter:OpenContextMenu(owner, index)
 		end
 	end)
@@ -4733,8 +5762,13 @@ function DamageMeter:EnsureWindow(index)
 
 	local rowsContainer = CreateFrame("Frame", nil, rowsViewport)
 	rowsContainer:EnableMouse(true)
+	rowsContainer:SetScript("OnMouseDown", function(_, button)
+		if button == "LeftButton" and IsAltKeyDown and IsAltKeyDown() then DamageMeter:StartWindowMove(index) end
+	end)
 	rowsContainer:SetScript("OnMouseUp", function(owner, button)
-		if button == "RightButton" then
+		if button == "LeftButton" and frame._damageMeterMoving == true then
+			DamageMeter:StopWindowMove(index)
+		elseif button == "RightButton" then
 			DamageMeter:OpenContextMenu(owner, index)
 		end
 	end)
@@ -4902,6 +5936,7 @@ function DamageMeter:ApplyWindowStyle(index, contentRows, forceRankColumn)
 	frame.status:EnableMouseWheel(showStatus and config.showFooterQuickSwitch ~= false)
 	frame.header:SetHeight(math.max(1, math.min(headerHeight, titleFontSize + 6)))
 	frame.header:ClearAllPoints()
+	frame.moveHandle:ClearAllPoints()
 	frame.headerBackground:ClearAllPoints()
 	frame.windowBackground:ClearAllPoints()
 	frame.contentBackground:ClearAllPoints()
@@ -4913,6 +5948,8 @@ function DamageMeter:ApplyWindowStyle(index, contentRows, forceRankColumn)
 		frame.headerBackground:SetPoint("TOPRIGHT", frame, "BOTTOMRIGHT", -4 + headerBackgroundOffsetX + headerBackgroundSizeOffsetX, 4 + bottomOffset + headerHeight + headerBackgroundOffsetY + headerBackgroundSizeOffsetY)
 		frame.header:SetPoint("BOTTOMLEFT", 8 + headerTextOffsetX, 7 + bottomOffset + headerTextOffsetY)
 		frame.header:SetPoint("BOTTOMRIGHT", -headerButtonTextInset + headerTextOffsetX, 7 + bottomOffset + headerTextOffsetY)
+		frame.moveHandle:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 4, 4 + bottomOffset)
+		frame.moveHandle:SetPoint("TOPRIGHT", frame, "BOTTOMRIGHT", -headerButtonTextInset, 4 + bottomOffset + headerHeight)
 		frame.headerButtons:SetPoint("BOTTOMRIGHT", -8 + headerButtonOffsetX, 7 + bottomOffset + headerButtonOffsetY)
 		frame.status:SetPoint("BOTTOMLEFT", 4, 4 + bottomOffset + headerHeight)
 		frame.status:SetPoint("BOTTOMRIGHT", -4, 4 + bottomOffset + headerHeight)
@@ -4921,6 +5958,8 @@ function DamageMeter:ApplyWindowStyle(index, contentRows, forceRankColumn)
 		frame.headerBackground:SetPoint("BOTTOMRIGHT", frame, "TOPRIGHT", -4 + headerBackgroundOffsetX + headerBackgroundSizeOffsetX, -(topOffset + headerHeight) + headerBackgroundOffsetY - headerBackgroundSizeOffsetY)
 		frame.header:SetPoint("TOPLEFT", 8 + headerTextOffsetX, -(7 + topOffset) + headerTextOffsetY)
 		frame.header:SetPoint("TOPRIGHT", -headerButtonTextInset + headerTextOffsetX, -(7 + topOffset) + headerTextOffsetY)
+		frame.moveHandle:SetPoint("TOPLEFT", frame, "TOPLEFT", 4, -(topOffset + 4))
+		frame.moveHandle:SetPoint("BOTTOMRIGHT", frame, "TOPRIGHT", -headerButtonTextInset, -(topOffset + 4 + headerHeight))
 		frame.headerButtons:SetPoint("TOPRIGHT", -8 + headerButtonOffsetX, -(7 + topOffset) + headerButtonOffsetY)
 		frame.status:SetPoint("BOTTOMLEFT", 4, 4 + bottomOffset)
 		frame.status:SetPoint("BOTTOMRIGHT", -4, 4 + bottomOffset)
@@ -5387,6 +6426,16 @@ end
 function DamageMeter:RefreshWindow(index, shared, sessionCache)
 	local state = self:BuildWindowRefreshState(index, shared)
 	local frame = self:EnsureWindow(index)
+	self:UpdateResizeControls(index)
+	if self:IsPaused() then
+		local shouldShow = state.editMode or state.visible
+		if shouldShow then self:ApplyWindowStyle(index, frame.contentRows or getEffectiveVisibleRows(state.config), frame._damageMeterWindowStyleForceRankColumn) end
+		frame:SetShown(shouldShow)
+		if shouldShow then self:UpdateWindowAlpha(index) end
+		if frame.header then setShownIfChanged(frame.header, false) end
+		if frame.pauseIndicator then setShownIfChanged(frame.pauseIndicator, shouldShow) end
+		return
+	end
 	if not state.editMode and self.pinnedTooltipIndex == index and self.pinnedTooltipOwner and (not self.pinnedTooltipOwner:IsShown() or self.pinnedTooltipOwner.sourceData == nil) then
 		self:ClearPinnedTooltip(index)
 	end
@@ -5542,10 +6591,18 @@ function DamageMeter:RefreshWindow(index, shared, sessionCache)
 	frame.empty:SetShown(shown == 0 and config.showNoData ~= false)
 	frame:SetShown(true)
 	self:UpdateWindowAlpha(index)
+	if frame.pauseIndicator then frame.pauseIndicator:SetShown(self:IsPaused()) end
 	self:UpdatePreviewTooltip(index)
 end
 
 function DamageMeter:Refresh()
+	if self:IsPaused() then
+		local shared = self:BuildRefreshSharedState()
+		for index = 1, MAX_WINDOWS do
+			self:RefreshWindow(index, shared)
+		end
+		return
+	end
 	local shared = self:BuildRefreshSharedState()
 	local sessionCache = self.refreshSessionCache
 	if not sessionCache then
@@ -5713,6 +6770,7 @@ function DamageMeter:UpdateEventState()
 	end
 	if enabled and self:IsAvailable() then
 		self:RegisterLiveEvents()
+		self:ScheduleCompletedSessionSnapshot()
 	else
 		self:UnregisterLiveEvents()
 	end
@@ -5898,6 +6956,7 @@ function DamageMeter:ResetData()
 	if C_DamageMeter and C_DamageMeter.ResetAllCombatSessions then
 		C_DamageMeter.ResetAllCombatSessions()
 	end
+	self:InvalidateCompletedSessionSnapshots("damage-meter-reset")
 	self.temporarySelections = {}
 	self:InvalidateLiveEventWatch()
 	self:ScheduleRefresh()
@@ -6050,10 +7109,11 @@ local function sliderSetting(name, getter, setter, minValue, maxValue, step, par
 	}
 end
 
-local function checkboxSetting(name, getter, setter, parentId, isEnabled, tooltip, isShown)
+local function checkboxSetting(name, getter, setter, parentId, isEnabled, tooltip, isShown, newTagID)
 	return {
 		name = name,
 		kind = SettingType.Checkbox,
+		newTagID = newTagID,
 		parentId = parentId,
 		isEnabled = isEnabled,
 		isShown = isShown,
@@ -6358,6 +7418,16 @@ function DamageMeter:BuildWindowSettings(index)
 			if sourceIndex then self:PromptCopySettings(sourceIndex, index) end
 		end, function() return buildWindowCopyOptions(index) end, settingsId, 160, function() return getWindowCount() > 1 and db().damageMeterSyncSettings ~= true end),
 		{ name = L["Behavior"] or "Behavior", kind = SettingType.Collapsible, id = behaviorId, defaultCollapsed = true },
+		sliderSetting(L["damageMeterGlobalUpdateInterval"] or "Global update interval", function() return getUpdateRate() end, function(value)
+			db().damageMeterUpdateRate = clampNumber(value, 0.01, 5, 0.1)
+			self:ScheduleRefresh()
+		end, 0.01, 5, 0.01, behaviorId, nil, nil, formatAlphaSliderValue),
+		checkboxSetting(L["damageMeterResizeOutsideEditMode"] or "Allow resizing outside Edit Mode", function() return self:IsResizeOutsideEditModeEnabled() end, function(value)
+			self:SetResizeOutsideEditModeEnabled(value)
+		end, behaviorId, nil, L["damageMeterResizeOutsideEditModeDesc"] or "Shows resize and lock controls on mouseover outside Edit Mode.", nil, "damageMeterResizeOutsideEditMode"),
+		checkboxSetting(L["damageMeterMoveOutsideEditMode"] or "Allow moving outside Edit Mode", function() return self:IsMoveOutsideEditModeEnabled() end, function(value)
+			self:SetMoveOutsideEditModeEnabled(value)
+		end, behaviorId, nil, L["damageMeterMoveOutsideEditModeDesc"] or "Allows dragging the header, or Alt-dragging the window, outside Edit Mode.", nil, "damageMeterMoveOutsideEditMode"),
 		checkboxSetting(L["damageMeterAlwaysShowPlayer"] or "Always show player", function() return cfg().alwaysShowPlayer == true end, function(value) self:SetConfigValue(index, "alwaysShowPlayer", value) end, behaviorId),
 		checkboxSetting(L["damageMeterLinkSegments"] or "Link segments", function() return db().damageMeterLinkSegments == true end, function(value)
 			db().damageMeterLinkSegments = value == true
@@ -6704,8 +7774,12 @@ function DamageMeter:BuildWindowSettings(index)
 		dividerSetting(valuesId),
 		dropdownSetting(L["damageMeterValueMode"] or "Value display", function() return normalizeValueMode(cfg().valueMode) end, function(value) self:SetConfigValue(index, "valueMode", normalizeValueMode(value)) end, buildValueModeOptions(), valuesId, 160),
 		dividerSetting(valuesId),
-		dropdownSetting(L["damageMeterAbbreviation"] or "Number format", function() return cfg().abbreviation end, function(value) self:SetConfigValue(index, "abbreviation", value == "none" and "none" or "short") end, {
+		dropdownSetting(L["damageMeterAbbreviation"] or "Number format", function() return cfg().abbreviation end, function(value)
+			if value ~= "none" and value ~= "compact" then value = "short" end
+			self:SetConfigValue(index, "abbreviation", value)
+		end, {
 			{ value = "short", label = L["damageMeterAbbreviationShort"] or "Abbreviated" },
+			{ value = "compact", label = L["damageMeterAbbreviationCompact"] or "Compact (K/M/B)" },
 			{ value = "none", label = L["damageMeterAbbreviationFull"] or "Full numbers" },
 		}, valuesId, 100),
 		dropdownSetting(L["damageMeterValueFormat"] or "Value format", function() return cfg().valueFormat end, function(value)
@@ -6870,6 +7944,55 @@ function DamageMeter:BuildWindowButtons(index)
 	return buttons
 end
 
+function DamageMeter:BuildDataBrokerMenu(rootDescription)
+	rootDescription:CreateTitle(L["damageMeterTitle"] or "Damage Meter")
+	rootDescription:CreateRadio(L["damageMeterManualAuto"] or "Automatic", function() return self:GetManualVisibility() == "auto" end, function() self:SetManualVisibility("auto") end)
+	rootDescription:CreateRadio(L["damageMeterManualShown"] or "Shown", function() return self:GetManualVisibility() == "shown" end, function() self:SetManualVisibility("shown") end)
+	rootDescription:CreateRadio(L["damageMeterManualHidden"] or "Hidden", function() return self:GetManualVisibility() == "hidden" end, function() self:SetManualVisibility("hidden") end)
+	rootDescription:CreateDivider()
+	rootDescription:CreateButton(L["damageMeterResetData"] or "Reset data", function() self:PromptResetData() end)
+	rootDescription:CreateDivider()
+	for index = 1, getWindowCount() do
+		local windowIndex = index
+		local windowMenu = rootDescription:CreateButton(string.format("%s %d", L["damageMeterTitle"] or "Damage Meter", windowIndex))
+		windowMenu:CreateButton(L["damageMeterReport"] or "Report", function() self:OpenReportDialog(windowIndex) end)
+		local sessionMenu = windowMenu:CreateButton(L["damageMeterSession"] or "Session")
+		self:BuildSessionMenu(windowIndex, sessionMenu)
+	end
+end
+
+function DamageMeter:RegisterDataBroker()
+	if self.dataBrokerObject then return end
+	local ldb = LibStub("LibDataBroker-1.1", true)
+	if not ldb or not ldb.NewDataObject then return end
+	local objectName = "EnhanceQoL_DamageMeter"
+	local existing = ldb.GetDataObjectByName and ldb:GetDataObjectByName(objectName) or nil
+	if existing then
+		self.dataBrokerObject = existing
+		self:UpdateBrokerState()
+		return
+	end
+	self.dataBrokerObject = ldb:NewDataObject(objectName, {
+		type = "launcher",
+		label = L["damageMeterTitle"] or "Damage Meter",
+		text = L["damageMeterManualAuto"] or "Automatic",
+		icon = "Interface\\AddOns\\EnhanceQoL\\Icons\\Icon.tga",
+		OnClick = function(owner, button)
+			if button == "LeftButton" then
+				DamageMeter:ToggleManualVisibility()
+			elseif button == "RightButton" and MenuUtil and MenuUtil.CreateContextMenu then
+				MenuUtil.CreateContextMenu(owner, function(_, rootDescription) DamageMeter:BuildDataBrokerMenu(rootDescription) end)
+			end
+		end,
+		OnTooltipShow = function(tooltip)
+			tooltip:AddLine(L["damageMeterTitle"] or "Damage Meter")
+			tooltip:AddLine(L["damageMeterBrokerLeftClick"] or "Left-click: Show or hide all windows", 1, 1, 1)
+			tooltip:AddLine(L["damageMeterBrokerRightClick"] or "Right-click: Open quick menu", 1, 1, 1)
+		end,
+	})
+	self:UpdateBrokerState()
+end
+
 function DamageMeter:RegisterEditMode()
 	if self.editModeRegistered or not (EditMode and EditMode.RegisterFrame and SettingType) then return end
 	for index = 1, MAX_WINDOWS do
@@ -6879,7 +8002,10 @@ function DamageMeter:RegisterEditMode()
 			layoutDefaults = { point = "CENTER", relativePoint = "CENTER", x = 300, y = -120 - ((index - 1) * 30) },
 			onApply = function() DamageMeter:RefreshWindow(index) end,
 			onEnter = function() DamageMeter:RefreshWindow(index) end,
-			onExit = function() C_Timer.After(0, function() DamageMeter:RefreshWindow(index) end) end,
+			onExit = function()
+				DamageMeter:StopWindowResize(index)
+				C_Timer.After(0, function() DamageMeter:RefreshWindow(index) end)
+			end,
 			isEnabled = function() return DamageMeter:ShouldShow(index) end,
 			settings = self:BuildWindowSettings(index),
 			buttons = self:BuildWindowButtons(index),
@@ -6902,17 +8028,21 @@ function DamageMeter:Init()
 		self:EnsureWindow(index)
 	end
 	self:RegisterEditMode()
+	self:RegisterDataBroker()
 	self.eventFrame = CreateFrame("Frame")
 	self.partyClassGeneration = 0
 	self.currentPartyClassGeneration = 0
-	self.eventFrame:SetScript("OnEvent", function(_, event, damageMeterType, sessionID)
-		if event == "GROUP_ROSTER_UPDATE" or event == "PLAYER_ENTERING_WORLD" then
+	self.eventFrame:SetScript("OnEvent", function(_, event, arg1, arg2)
+		if event == "GROUP_ROSTER_UPDATE" then
 			self:InvalidatePartyClassFallback()
 			self:InvalidateDerivedTargetCache(true)
-			if event == "PLAYER_ENTERING_WORLD" then
-				self:CheckAutomaticClear()
-				self:ClearMythicPlusOverallLocksOutsideDungeon()
-			end
+		elseif event == "PLAYER_ENTERING_WORLD" then
+			self:InvalidatePartyClassFallback()
+			self:InvalidateDerivedTargetCache(true)
+			if arg1 == true or arg2 == true then self:InvalidateCompletedSessionSnapshots("world-rebuild") end
+			self:CheckAutomaticClear()
+			self:ClearMythicPlusOverallLocksOutsideDungeon()
+			self:ScheduleCompletedSessionSnapshot()
 		elseif event == "PLAYER_ROLES_ASSIGNED" or event == "PLAYER_SPECIALIZATION_CHANGED" or event == "ACTIVE_PLAYER_SPECIALIZATION_CHANGED" then
 			self:InvalidateLiveEventWatch()
 		elseif event == "PLAYER_REGEN_DISABLED" then
@@ -6921,12 +8051,15 @@ function DamageMeter:Init()
 			self:InvalidateDerivedTargetCache(true)
 		elseif event == "PLAYER_REGEN_ENABLED" then
 			self:RefreshReportRestrictionState()
+			self:SnapshotAvailableCompletedSessions()
+			self:ScheduleCompletedSessionSnapshot()
 		elseif event == "DAMAGE_METER_RESET" then
 			self:InvalidatePartyClassFallback()
 			self:MarkPartyClassFallbackCurrent()
 			self:InvalidateDerivedTargetCache()
+			self:InvalidateCompletedSessionSnapshots("damage-meter-reset")
 		elseif event == "ADDON_RESTRICTION_STATE_CHANGED" then
-			self:RefreshReportRestrictionState(damageMeterType, sessionID)
+			self:RefreshReportRestrictionState(arg1, arg2)
 		elseif event == "CHALLENGE_MODE_COMPLETED" then
 			self:LockCurrentWindowsToMythicPlusOverall()
 		elseif event == "CHALLENGE_MODE_START" or event == "CHALLENGE_MODE_RESET" then
@@ -6934,16 +8067,19 @@ function DamageMeter:Init()
 		end
 		if event == "DAMAGE_METER_COMBAT_SESSION_UPDATED" then
 			self:InvalidateDerivedTargetCache(true)
-			self:RefreshFromLiveEvent(damageMeterType, sessionID)
+			self:SnapshotCompletedSessionUpdate(arg1, arg2)
+			self:ScheduleCompletedSessionSnapshot()
+			self:RefreshFromLiveEvent(arg1, arg2)
 		elseif event == "DAMAGE_METER_CURRENT_SESSION_UPDATED" then
 			self:InvalidateDerivedTargetCache(true)
 			self:RefreshFromLiveEvent()
 		elseif event == "UNIT_THREAT_LIST_UPDATE" or event == "UNIT_THREAT_SITUATION_UPDATE" or event == "UNIT_TARGET" or event == "PLAYER_TARGET_CHANGED" then
 			self:ScheduleThreatRefresh()
 		elseif event == "ADDON_RESTRICTION_STATE_CHANGED" then
+			self:ScheduleCompletedSessionSnapshot()
 			self:ScheduleContextRefresh()
 		elseif event == "ENCOUNTER_START" then
-			self:CheckEncounterStartAutomaticClear(damageMeterType)
+			self:CheckEncounterStartAutomaticClear(arg1)
 			self:ScheduleContextRefresh()
 		elseif event == "ZONE_CHANGED_NEW_AREA" then
 			self:CheckAutomaticClear()
@@ -6954,6 +8090,7 @@ function DamageMeter:Init()
 		end
 	end)
 	self:UpdateEventState()
+	self:ScheduleCompletedSessionSnapshot()
 end
 
 local loader = CreateFrame("Frame")

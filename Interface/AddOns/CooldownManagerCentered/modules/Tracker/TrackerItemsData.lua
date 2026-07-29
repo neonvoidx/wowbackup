@@ -79,7 +79,20 @@ local WILDCARD_SLOT_INVENTORY_SLOTS = {
     [WILDCARD_SLOT_TRINKET2] = INVSLOT_TRINKET2,
 }
 
-local generalSpellBookCache = nil
+local spellBookCache = nil
+local spellBookBaseBySpellID = nil
+local normalizedSpellSettings = nil
+local normalizedSpellBookCache = nil
+local SPELLBOOK_EVENTS = {
+    ACTIVE_TALENT_GROUP_CHANGED = true,
+    PET_BAR_UPDATE = true,
+    PLAYER_SPECIALIZATION_CHANGED = true,
+    PLAYER_TALENT_UPDATE = true,
+    SPELLS_CHANGED = true,
+    SPELL_UPDATE_ICON = true,
+    TRAIT_CONFIG_UPDATED = true,
+    UNIT_PET = true,
+}
 
 -- Whether an itemID is trackable (has an on-use spell or proc data) is static for
 -- a given item, so memoize it instead of calling C_Item.GetItemSpell on every scan.
@@ -125,73 +138,127 @@ local function EntriesEqual(a, b)
     return a and b and a.kind == b.kind and a.id == b.id
 end
 
-local function AddSpellIDFromSpellBook(ids, spellID)
-    if not spellID or spellID == AUTO_ATTACK_SPELL_ID then
+local function AddSpellIDFromSpellBook(ids, baseBySpellID, actionSpellID, overrideSpellID)
+    if not actionSpellID or actionSpellID == AUTO_ATTACK_SPELL_ID then
         return
     end
-    local isPassive = (C_Spell and C_Spell.IsSpellPassive and C_Spell.IsSpellPassive(spellID))
-        or (IsPassiveSpell and IsPassiveSpell(spellID))
-        or false
-    if not isPassive then
-        ids[spellID] = true
+    if not C_Spell.IsSpellPassive(overrideSpellID or actionSpellID) then
+        -- SpellBookItemInfo.actionID is the stable base spell while spellID is the
+        -- current override. GetBaseSpell is not reversible for every override
+        -- chain, so remember the spellbook relationship explicitly.
+        local baseSpellID = C_Spell.GetBaseSpell(actionSpellID) or actionSpellID
+        ids[baseSpellID] = true
+        baseBySpellID[actionSpellID] = baseSpellID
+        baseBySpellID[baseSpellID] = baseSpellID
+        if overrideSpellID then
+            baseBySpellID[overrideSpellID] = baseSpellID
+        end
+
+        local currentOverrideSpellID = C_Spell.GetOverrideSpell(baseSpellID)
+        if currentOverrideSpellID then
+            baseBySpellID[currentOverrideSpellID] = baseSpellID
+        end
     end
 end
 
-local function GetSpellIDsFromGeneralSpellBook()
-    if generalSpellBookCache then
-        return generalSpellBookCache
+local function GetSpellIDsFromSpellBook()
+    if spellBookCache then
+        return spellBookCache
     end
 
     local ids = {}
-    if not C_SpellBook or not C_SpellBook.GetSpellBookSkillLineInfo or not C_SpellBook.GetSpellBookItemInfo then
-        return ids
-    end
+    local baseBySpellID = {}
+    local spellBank = Enum.SpellBookSpellBank.Player
+    local spellItemType = Enum.SpellBookItemType
+    local currentSpecID = GetSpecializationInfo(GetSpecialization())
 
-    local spellBank = Enum and Enum.SpellBookSpellBank and Enum.SpellBookSpellBank.Player or nil
-    local spellItemType = Enum and Enum.SpellBookItemType or nil
-    if not spellBank or not spellItemType then
-        return ids
-    end
+    for skillLineIndex = 1, C_SpellBook.GetNumSpellBookSkillLines() do
+        local skillLineInfo = C_SpellBook.GetSpellBookSkillLineInfo(skillLineIndex)
+        if skillLineInfo then
+            local offset = skillLineInfo.itemIndexOffset or 0
+            local numSlots = skillLineInfo.numSpellBookItems or 0
+            for spellBookIndex = offset + 1, offset + numSlots do
+                local itemInfo = C_SpellBook.GetSpellBookItemInfo(spellBookIndex, spellBank)
+                if itemInfo then
+                    local itemType = itemInfo.itemType
+                    local isOffSpec = C_SpellBook.IsSpellBookItemOffSpec(spellBookIndex, spellBank)
 
-    local skillLineInfo = C_SpellBook.GetSpellBookSkillLineInfo(1)
-    if not skillLineInfo then
-        return ids
-    end
-
-    local offset = skillLineInfo.itemIndexOffset or 0
-    local numSlots = skillLineInfo.numSpellBookItems or 0
-    for spellBookIndex = offset + 1, offset + numSlots do
-        local itemInfo = C_SpellBook.GetSpellBookItemInfo(spellBookIndex, spellBank)
-        if itemInfo then
-            local spellID = itemInfo.spellID or itemInfo.actionID
-            local itemType = itemInfo.itemType
-
-            if itemType == spellItemType.Spell or itemType == spellItemType.FutureSpell then
-                AddSpellIDFromSpellBook(ids, spellID)
-            elseif
-                itemType == spellItemType.Flyout
-                and spellID
-                and not IGNORED_FLYOUT_IDS[spellID]
-                and GetFlyoutInfo
-                and GetFlyoutSlotInfo
-            then
-                local _, _, flyoutNumSlots = GetFlyoutInfo(spellID)
-                for flyoutSlot = 1, flyoutNumSlots or 0 do
-                    local flyoutSpellID, _, isKnown = GetFlyoutSlotInfo(spellID, flyoutSlot)
-                    if isKnown then
-                        AddSpellIDFromSpellBook(ids, flyoutSpellID)
+                    if itemType == spellItemType.Spell and not isOffSpec then
+                        AddSpellIDFromSpellBook(ids, baseBySpellID, itemInfo.actionID, itemInfo.spellID)
+                    elseif
+                        itemType == spellItemType.Flyout
+                        and not isOffSpec
+                        and itemInfo.actionID
+                        and not IGNORED_FLYOUT_IDS[itemInfo.actionID]
+                    then
+                        local _, _, flyoutNumSlots = GetFlyoutInfo(itemInfo.actionID)
+                        for flyoutSlot = 1, flyoutNumSlots or 0 do
+                            local flyoutSpellID, overrideSpellID, isKnown, _, slotSpecID =
+                                GetFlyoutSlotInfo(itemInfo.actionID, flyoutSlot)
+                            local isCurrentSpec = not slotSpecID or slotSpecID == 0 or slotSpecID == currentSpecID
+                            if isKnown and isCurrentSpec then
+                                AddSpellIDFromSpellBook(ids, baseBySpellID, flyoutSpellID, overrideSpellID)
+                            end
+                        end
                     end
                 end
             end
         end
     end
 
-    generalSpellBookCache = ids
+    local petSpellBank = Enum.SpellBookSpellBank.Pet
+    local numPetSpells = C_SpellBook.HasPetSpells() or 0
+    for spellBookIndex = 1, numPetSpells do
+        local itemInfo = C_SpellBook.GetSpellBookItemInfo(spellBookIndex, petSpellBank)
+        if itemInfo and itemInfo.spellID then
+            -- PetAction.actionID is a pet-action index, not a spell ID. Pet spells
+            -- use a stable base spell in actionID just like player spell entries.
+            local actionSpellID = itemInfo.itemType == spellItemType.Spell and itemInfo.actionID or itemInfo.spellID
+            AddSpellIDFromSpellBook(ids, baseBySpellID, actionSpellID, itemInfo.spellID)
+        end
+    end
+
+    spellBookCache = ids
+    spellBookBaseBySpellID = baseBySpellID
     return ids
 end
 
 function ItemsData:InvalidateSpellBookCache()
-    generalSpellBookCache = nil
+    spellBookCache = nil
+    spellBookBaseBySpellID = nil
+end
+
+function ItemsData:GetCanonicalSpellID(spellID)
+    local numericSpellID = tonumber(spellID)
+    if not numericSpellID then
+        return nil
+    end
+
+    GetSpellIDsFromSpellBook()
+    local mappedBaseSpellID = spellBookBaseBySpellID and spellBookBaseBySpellID[numericSpellID]
+    if mappedBaseSpellID then
+        return mappedBaseSpellID
+    end
+
+    -- The live override can advance beyond the pair returned by GetBaseSpell
+    -- (Consume -> Devour is one example). Match it forward from stable spellbook
+    -- action IDs before falling back to GetBaseSpell on the input.
+    for baseSpellID in pairs(spellBookCache or {}) do
+        if C_Spell.GetOverrideSpell(baseSpellID) == numericSpellID then
+            spellBookBaseBySpellID[numericSpellID] = baseSpellID
+            return baseSpellID
+        end
+    end
+
+    return C_Spell.GetBaseSpell(numericSpellID) or numericSpellID
+end
+
+function ItemsData:GetDisplaySpellID(spellID)
+    local baseSpellID = self:GetCanonicalSpellID(spellID)
+    if not baseSpellID then
+        return nil
+    end
+    return C_Spell.GetOverrideSpell(baseSpellID) or baseSpellID
 end
 
 function ItemsData:GetItemNameByID(itemID)
@@ -207,11 +274,12 @@ function ItemsData:GetEntryName(kind, id)
         return WILDCARD_SLOT_DISPLAY_NAMES[id] or tostring(id)
     end
     if kind == "spell" then
+        local displaySpellID = self:GetDisplaySpellID(id) or id
         if C_Spell and C_Spell.GetSpellName then
-            return C_Spell.GetSpellName(id)
+            return C_Spell.GetSpellName(displaySpellID)
         end
         if GetSpellInfo then
-            local name = GetSpellInfo(id)
+            local name = GetSpellInfo(displaySpellID)
             return name
         end
         return nil
@@ -345,7 +413,10 @@ function ItemsData:SetEntryState(kind, id, state)
         return
     end
     if kind == "spell" then
-        DB.SetSpellItemState(id, state)
+        local baseSpellID = self:GetCanonicalSpellID(id)
+        if baseSpellID then
+            DB.SetSpellItemState(baseSpellID, state)
+        end
     else
         DB.SetItemState(id, state)
     end
@@ -421,14 +492,8 @@ local function DoScanOwnedItems()
         end
     end
 
-    do
-        local db = DB.GetDB()
-        for spellID in pairs(db.spellItemSettings or {}) do
-            local override = C_Spell.GetOverrideSpell(spellID)
-            if not C_Spell.IsSpellPassive(override) and C_SpellBook.IsSpellInSpellBook(spellID) then
-                owned.spells[spellID] = true
-            end
-        end
+    for spellID in pairs(GetSpellIDsFromSpellBook()) do
+        owned.spells[spellID] = true
     end
 
     owned.wildcardSlots[WILDCARD_SLOT_TRINKET1] = true
@@ -453,11 +518,10 @@ function ItemsData:InvalidateOwnedItemsCache()
 end
 
 function ItemsData:ScanOwnedItemsForMiscPanel()
-    -- Build fresh: this path overwrites owned.spells, which would corrupt the
-    -- shared cached table returned by ScanOwnedItems.
     local owned = DoScanOwnedItems()
-    owned.spells = {}
-    for spellID in pairs(GetSpellIDsFromGeneralSpellBook()) do
+    -- Runtime ownership only needs configured spells. The assignment panel must
+    -- also seed every active-spec spell so new entries appear in Not Displayed.
+    for spellID in pairs(GetSpellIDsFromSpellBook()) do
         owned.spells[spellID] = true
     end
     return owned
@@ -474,17 +538,71 @@ for _, event in ipairs({
     "TRAIT_CONFIG_UPDATED",
     "PLAYER_TALENT_UPDATE",
     "SPELLS_CHANGED",
+    "SPELL_UPDATE_ICON",
+    "PET_BAR_UPDATE",
+    "UNIT_PET",
 }) do
     ownedItemsEventFrame:RegisterEvent(event)
 end
-ownedItemsEventFrame:SetScript("OnEvent", function(_, event)
+ownedItemsEventFrame:SetScript("OnEvent", function(_, event, unit)
+    if event == "UNIT_PET" and unit ~= "player" then
+        return
+    end
     ownedItemsCache = nil
+    if SPELLBOOK_EVENTS[event] then
+        spellBookCache = nil
+        spellBookBaseBySpellID = nil
+    end
     if event == "PLAYER_ENTERING_WORLD" then
         wipe(trackableItemCache)
     end
+    if event == "SPELL_UPDATE_ICON" or event == "PET_BAR_UPDATE" or event == "UNIT_PET" then
+        C_Timer.After(0.05, function()
+            local panel = _G.CMCCooldownViewerSettingsTrackerPanel
+            if panel and panel:IsShown() and ns.TrackerAssignmentPanel then
+                ns.TrackerAssignmentPanel:RefreshTrackerPanel()
+            end
+        end)
+    end
 end)
 
+function ItemsData:NormalizeStoredSpellIDs()
+    GetSpellIDsFromSpellBook()
+    local db = DB.GetDB()
+    local settingsBySpellID = db.spellItemSettings or {}
+    if normalizedSpellSettings == settingsBySpellID and normalizedSpellBookCache == spellBookCache then
+        return
+    end
+
+    local migrations = {}
+    for spellID, settings in pairs(settingsBySpellID) do
+        local baseSpellID = self:GetCanonicalSpellID(spellID)
+        if baseSpellID and baseSpellID ~= spellID then
+            migrations[#migrations + 1] = { spellID, baseSpellID, settings }
+        end
+    end
+
+    for _, migration in ipairs(migrations) do
+        local spellID, baseSpellID, settings = unpack(migration)
+        local baseSettings = settingsBySpellID[baseSpellID]
+        if not baseSettings then
+            settingsBySpellID[baseSpellID] = settings
+        else
+            for key, value in pairs(settings) do
+                if baseSettings[key] == nil or (key == "state" and baseSettings.state == ITEM_STATE_HIDDEN) then
+                    baseSettings[key] = value
+                end
+            end
+        end
+        settingsBySpellID[spellID] = nil
+    end
+
+    normalizedSpellSettings = settingsBySpellID
+    normalizedSpellBookCache = spellBookCache
+end
+
 function ItemsData:EnsureTrackedItems(owned)
+    self:NormalizeStoredSpellIDs()
     local ownedItems = owned and owned.items or {}
     local ownedSpells = owned and owned.spells or {}
     local ownedWildcardSlots = owned and owned.wildcardSlots or {}
@@ -601,7 +719,11 @@ function ItemsData:GetTrackerEntries(index, owned)
     local addedItemIDs = {} -- prevent duplicate entries when a wildcard item is also explicitly tracked
 
     for itemID, settings in pairs(db.itemSettings or {}) do
-        if settings.state == state and (ownedItems[itemID] or settings.alwaysShow) then
+        if
+            settings.state == state
+            and not DB.IsHiddenForCurrentSpec("item", itemID)
+            and (ownedItems[itemID] or settings.alwaysShow)
+        then
             local e = MakeEntry("item", itemID)
             addedItemIDs[itemID] = true
             table.insert(entries, e)
@@ -609,7 +731,11 @@ function ItemsData:GetTrackerEntries(index, owned)
     end
 
     for spellID, settings in pairs(db.spellItemSettings or {}) do
-        if settings.state == state and (ownedSpells[spellID] or settings.alwaysShow) then
+        if
+            settings.state == state
+            and not DB.IsHiddenForCurrentSpec("spell", spellID)
+            and (ownedSpells[spellID] or settings.alwaysShow)
+        then
             local e = MakeEntry("spell", spellID)
             table.insert(entries, e)
         end
@@ -620,6 +746,7 @@ function ItemsData:GetTrackerEntries(index, owned)
     for slotID, settings in pairs(db.wildcardSlotSettings or {}) do
         if
             settings.state == state
+            and not DB.IsHiddenForCurrentSpec(ENTRY_KIND_WILDCARD_SLOTS, slotID)
             and (ownedWildcardSlots[slotID] or settings.alwaysShow)
             and IsTrackableWildcardSlot(slotID)
         then
@@ -676,4 +803,8 @@ end
 
 function ItemsData:IsTrackableItem(itemID)
     return IsTrackableItem(itemID)
+end
+
+function ItemsData:IsTrackableWildcardSlot(slotID)
+    return IsTrackableWildcardSlot(slotID)
 end

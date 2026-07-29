@@ -146,6 +146,8 @@ Core.EQUIP_LOCATION_COMPARISON_SLOTS = {
 local state = Bags.variables.state or {}
 Bags.variables.state = state
 state.buttons = state.buttons or {}
+state.itemButtonsByBag = state.itemButtonsByBag or {}
+state.itemButtonParentsByBag = state.itemButtonParentsByBag or {}
 state.slotMappings = state.slotMappings or {}
 state.sectionHeaders = state.sectionHeaders or {}
 state.groupSpacers = state.groupSpacers or {}
@@ -3107,7 +3109,6 @@ local function createMainFrame()
 	state.frame = frame
 	state.scrollFrame = scrollFrame
 	state.content = content
-	state.buttonPool = CreateFramePool("ItemButton", content, "BagsItemButtonTemplate")
 	applyFramePadding(getSettings())
 
 	if not applySavedFramePosition(frame) then
@@ -5548,43 +5549,163 @@ local function buildLayoutData()
 	return layoutData
 end
 
-local function ensureButtonCapacity(requiredCount)
-	if requiredCount <= #state.buttons then
-		return true
+function Core.GetManagedBagSlotCounts()
+	local slotCounts = {}
+
+	for bagID = Core.BACKPACK_ID, Core.LAST_CHARACTER_BAG_ID do
+		slotCounts[bagID] = C_Container.GetContainerNumSlots(bagID) or 0
+	end
+
+	for _, context in ipairs(getVisibleFlatBankContexts()) do
+		for _, bagID in ipairs(context.bagIDs or {}) do
+			local slotCount = C_Container.GetContainerNumSlots(bagID) or 0
+			if slotCount > (slotCounts[bagID] or 0) then
+				slotCounts[bagID] = slotCount
+			end
+		end
+	end
+
+	return slotCounts
+end
+
+function Core.HasMissingStableItemButtons(slotCounts)
+	for bagID, slotCount in pairs(slotCounts or {}) do
+		local bagButtons = state.itemButtonsByBag[bagID]
+		for slotID = 1, slotCount do
+			if not (bagButtons and bagButtons[slotID]) then
+				return true
+			end
+		end
+	end
+	return false
+end
+
+function Core.InitializeStableItemButton(button)
+	button:EnableMouseWheel(true)
+	button:SetScript("OnMouseWheel", function(_, delta)
+		handleScrollWheel(delta)
+	end)
+	button.GetItemContextMatchResult = getCustomItemContextMatchResult
+	if button.ItemLevelText then
+		button.ItemLevelText:SetText("")
+		button.ItemLevelText:Hide()
+	end
+	if button.ItemUpgradeText then
+		button.ItemUpgradeText:SetText("")
+		button.ItemUpgradeText:Hide()
+	end
+	if button.EquipmentSetIcon then
+		button.EquipmentSetIcon:Hide()
+	end
+	if button.EquipmentSetText then
+		button.EquipmentSetText:SetText("")
+		button.EquipmentSetText:Hide()
+	end
+	if button.BindStatusText then
+		button.BindStatusText:SetText("")
+		button.BindStatusText:Hide()
+	end
+	if not button.ItemSlotBackground then
+		button.ItemSlotBackground = button:CreateTexture(nil, "BACKGROUND", "ItemSlotBackgroundCombinedBagsTemplate", -6)
+		button.ItemSlotBackground:SetAllPoints(button)
+	end
+	button.ItemSlotBackground:Show()
+	if applyItemButtonSkinIfNeeded then
+		applyItemButtonSkinIfNeeded(button, nil, true)
+	end
+	button:Hide()
+end
+
+function Core.GetOrCreateStableItemButton(bagID, slotID)
+	local bagButtons = state.itemButtonsByBag[bagID]
+	if not bagButtons then
+		bagButtons = {}
+		state.itemButtonsByBag[bagID] = bagButtons
+	end
+
+	local button = bagButtons[slotID]
+	if button then
+		return button
 	end
 	if InCombatLockdown and InCombatLockdown() then
+		return nil
+	end
+
+	local bagParent = state.itemButtonParentsByBag[bagID]
+	if not bagParent then
+		bagParent = CreateFrame("Frame", nil, state.content)
+		bagParent:SetID(bagID)
+		bagParent:SetAllPoints(state.content)
+		function bagParent:IsCombinedBagContainer()
+			return true
+		end
+		state.itemButtonParentsByBag[bagID] = bagParent
+	end
+
+	button = CreateFrame("ItemButton", nil, bagParent, "BagsItemButtonTemplate")
+	button:SetID(slotID)
+	Core.InitializeStableItemButton(button)
+	bagButtons[slotID] = button
+	return button
+end
+
+function Core.PreallocateManagedItemButtons()
+	local slotCounts = Core.GetManagedBagSlotCounts()
+	if not Core.HasMissingStableItemButtons(slotCounts) then
+		state.pendingButtonPreallocation = false
+		return true
+	end
+
+	-- Prepare each known slot identity outside combat so combat rebuilds only
+	-- arrange existing buttons. Unexpected missing capacity is deferred until combat ends.
+	if InCombatLockdown and InCombatLockdown() then
+		state.pendingButtonPreallocation = true
 		state.pendingRebuild = true
 		return false
 	end
 
-	for index = #state.buttons + 1, requiredCount do
-		local button = state.buttonPool:Acquire()
-		button:SetParent(state.content)
-		button:EnableMouseWheel(true)
-		button:SetScript("OnMouseWheel", function(_, delta)
-			handleScrollWheel(delta)
-		end)
-		button.GetItemContextMatchResult = getCustomItemContextMatchResult
-		if button.ItemLevelText then
-			button.ItemLevelText:SetText("")
-			button.ItemLevelText:Hide()
+	for bagID, slotCount in pairs(slotCounts) do
+		for slotID = 1, slotCount do
+			Core.GetOrCreateStableItemButton(bagID, slotID)
 		end
-		if button.ItemUpgradeText then
-			button.ItemUpgradeText:SetText("")
-			button.ItemUpgradeText:Hide()
+	end
+
+	state.pendingButtonPreallocation = false
+	return true
+end
+
+function Core.AssignStableButtonsToLayout(layoutData)
+	local previousButtonCount = #state.buttons
+
+	for index = 1, layoutData.requiredButtonCount do
+		local mapping = state.slotMappings[index]
+		local bagButtons = mapping and state.itemButtonsByBag[mapping.bagID]
+		if not (bagButtons and bagButtons[mapping.slotID]) then
+			state.pendingButtonPreallocation = true
+			state.pendingRebuild = true
+			return false
 		end
-		if button.EquipmentSetIcon then
-			button.EquipmentSetIcon:Hide()
-		end
-		if button.EquipmentSetText then
-			button.EquipmentSetText:SetText("")
-			button.EquipmentSetText:Hide()
-		end
-		if button.BindStatusText then
-			button.BindStatusText:SetText("")
-			button.BindStatusText:Hide()
-		end
+	end
+
+	state.layoutGeneration = (state.layoutGeneration or 0) + 1
+	local layoutGeneration = state.layoutGeneration
+	for index = 1, layoutData.requiredButtonCount do
+		local mapping = state.slotMappings[index]
+		local button = state.itemButtonsByBag[mapping.bagID][mapping.slotID]
 		state.buttons[index] = button
+		button._bagsLayoutGeneration = layoutGeneration
+	end
+
+	for index = layoutData.requiredButtonCount + 1, previousButtonCount do
+		state.buttons[index] = nil
+	end
+
+	for _, bagButtons in pairs(state.itemButtonsByBag) do
+		for _, button in pairs(bagButtons) do
+			if button._bagsLayoutGeneration ~= layoutGeneration then
+				button:Hide()
+			end
+		end
 	end
 
 	return true
@@ -6333,12 +6454,11 @@ local function layoutFrame(layoutData)
 end
 
 local function rebuildLayout()
-	if InCombatLockdown and InCombatLockdown() then
-		state.pendingRebuild = true
-		return false
-	end
 	if not state.frame then
 		createMainFrame()
+	end
+	if not Core.PreallocateManagedItemButtons() then
+		return false
 	end
 
 	state.awaitingRuleItemData = false
@@ -6349,7 +6469,7 @@ local function rebuildLayout()
 	end
 	local layoutData = buildLayoutData()
 	state.searchMatchedSections = layoutData.searchMatchedSections
-	if not ensureButtonCapacity(layoutData.requiredButtonCount) then
+	if not Core.AssignStableButtonsToLayout(layoutData) then
 		return false
 	end
 
@@ -6364,11 +6484,6 @@ local function rebuildLayout()
 	for index = 1, layoutData.requiredButtonCount do
 		local mapping = state.slotMappings[index]
 		local button = state.buttons[index]
-		if button._bagsBagID ~= mapping.bagID or button._bagsSlotID ~= mapping.slotID then
-			button:Initialize(mapping.bagID, mapping.slotID)
-			button._bagsBagID = mapping.bagID
-			button._bagsSlotID = mapping.slotID
-		end
 		updateButtonData(button, mapping, overlayRuntime, textAppearance, fontSignature, tooltipOwner, forceDynamicUpdate, stackCountLayoutSignature)
 		mapping.itemInfo = nil
 		mapping.questInfo = nil
@@ -6449,6 +6564,44 @@ local function refreshButtons()
 	return true
 end
 
+function Core.RefreshVisibleButtonCooldowns()
+	local tooltipOwner = GameTooltip and GameTooltip.GetOwner and GameTooltip:GetOwner() or nil
+	for bagID, bagButtons in pairs(state.itemButtonsByBag) do
+		for slotID, button in pairs(bagButtons) do
+			if button:IsShown() then
+				local hasItem = C_Container.HasContainerItem(bagID, slotID)
+				button:UpdateCooldown(hasItem)
+				if addon.RefreshItemButtonCooldownMask then
+					addon.RefreshItemButtonCooldownMask(button)
+				end
+				if button._bagsRenderUnusableRecipe and Bags.functions.ApplyRecipeUsabilityVisual then
+					Bags.functions.ApplyRecipeUsabilityVisual(button, true)
+				end
+				if button._bagsRenderAuctionHouseFaded then
+					state.applyAuctionHouseItemFade(button, button._bagsRenderTexture, true)
+				end
+				if tooltipOwner then
+					button:CheckUpdateTooltip(tooltipOwner)
+				end
+			end
+		end
+	end
+end
+
+function Core.ScheduleButtonCooldownRefresh()
+	if state.cooldownRefreshScheduled then
+		return
+	end
+
+	state.cooldownRefreshScheduled = true
+	RunNextFrame(function()
+		state.cooldownRefreshScheduled = false
+		if state.initialized then
+			Core.RefreshVisibleButtonCooldowns()
+		end
+	end)
+end
+
 function Bags.functions.RefreshSearchState()
 	if not state.frame or not state.frame:IsShown() then
 		return
@@ -6515,6 +6668,7 @@ local function processUpdate()
 	setActiveBagEventRegistration(shouldBeVisible)
 	if openingFrame then
 		state.footerDirty = true
+		state.forceDynamicRefresh = true
 		if clearAcknowledgedOpenSessionNewItems() then
 			state.pendingRebuild = true
 		end
@@ -6738,9 +6892,18 @@ function Bags.functions.EnableMain()
 	if state.initialized or not (addon.Bags and addon.Bags.IsEnabled and addon.Bags.IsEnabled()) then
 		return
 	end
+	if InCombatLockdown and InCombatLockdown() then
+		state.pendingEnableMain = true
+		return
+	end
 
 	state.manualVisible = not not getSettings().manualVisible
 	createMainFrame()
+	if not Core.PreallocateManagedItemButtons() then
+		state.pendingEnableMain = true
+		return
+	end
+	state.pendingEnableMain = false
 	detachDefaultBagFrames()
 	installVisibilityHooks()
 	installTokenWatcherHooks()
@@ -6941,6 +7104,14 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
 		return
 	end
 
+	if event == "PLAYER_REGEN_ENABLED" and state.pendingEnableMain then
+		if addon.Bags and addon.Bags.IsEnabled and addon.Bags.IsEnabled() then
+			Bags.functions.EnableMain()
+		else
+			state.pendingEnableMain = false
+		end
+	end
+
 	if not state.initialized or not (addon.Bags and addon.Bags.IsEnabled and addon.Bags.IsEnabled()) then
 		return
 	end
@@ -7003,10 +7174,9 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
 		state.footerDirty = true
 		refreshVisibleFooterCurrencyTooltip()
 		scheduleUpdate(true, false)
-	elseif event == "ITEM_LOCK_CHANGED" or event == "BAG_UPDATE_COOLDOWN" then
-		if event == "BAG_UPDATE_COOLDOWN" then
-			state.forceDynamicRefresh = true
-		end
+	elseif event == "ITEM_LOCK_CHANGED" then
 		scheduleUpdate(true, false)
+	elseif event == "BAG_UPDATE_COOLDOWN" then
+		Core.ScheduleButtonCooldownRefresh()
 	end
 end)

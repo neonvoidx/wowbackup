@@ -77,7 +77,7 @@ addon.MythicPlus.variables.portalCompendium = {
 			[1286812] = { text = "AOF", cId = { [588] = true }, mapID = 2509, locID = 2509, x = 0.4713, y = 0.6793, zoneID = 2588 }, -- Altar of Fangs
 			[1271425] = { text = "ABUN", isItem = true, itemID = 252607, icon = 1362642, locID = 2437, x = 0.31263855520737, y = 0.26260265863074, zoneID = 2437 }, -- Abundont Beacon
 			[1278093] = { text = "ABUN", isItem = true, itemID = 266370, icon = 236521, locID = 2437, x = 0.31263855520737, y = 0.26260265863074, zoneID = 2437 }, -- Dundun's Abundant Travel Method
-			[1299515] = { text = "LV", isItem = true, itemID = 276371 }, -- Lightveil Recall Beacon
+			[1299515] = { text = "LV", isToy = true, toyID = 276371, isHearthstone = true, map = { [2599] = true, [2600] = true } }, -- Lightveil Recall Beacon
 			[1259190] = { text = "SMC", isClassTP = "MAGE", locID = 2393, x = 0.5279, y = 0.6556, zoneID = 2393 }, -- Teleport: Silvermoon City
 			[1259194] = { text = "SMC", isMagePortal = true, locID = 2393, x = 0.5279, y = 0.6556, zoneID = 2393 }, -- Portal: Silvermoon City
 			[1255801] = { text = "ARC", isToy = true, toyID = 253629, isHearthstone = true, icon = 7322718, locID = 2541, x = 0.50215210538362, y = 0.755379994799, zoneID = 2541 }, -- Personal Key to the Arcantina

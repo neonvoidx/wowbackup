@@ -149,12 +149,13 @@ function API:CreateNineSliceFrame(parent, layoutName)
     return f
 end
 
--- Per-frame "affected" markers. CMC tracks which features it has applied to a
--- frame (icon, viewer, etc.) under a shared `frame._cmc_affected` table so it
--- knows what to restore/refresh later. These helpers are the single way to
--- read/write those markers.
+-- Per-frame CMC state lives outside Blizzard-owned frames. Weak keys let pooled
+-- frames disappear normally without adding addon fields to protected UI objects.
+local affectedByFrame = setmetatable({}, { __mode = "k" })
+
 function API:GetIsAffected(frame, key)
-    return (frame and frame._cmc_affected and frame._cmc_affected[key]) or false
+    local state = frame and affectedByFrame[frame]
+    return (state and state[key]) or false
 end
 
 function API:SetAffected(frame, key, value)
@@ -164,30 +165,52 @@ function API:SetAffected(frame, key, value)
     if value == nil then
         value = true
     end
-    frame._cmc_affected = frame._cmc_affected or {}
-    frame._cmc_affected[key] = value
+    local state = affectedByFrame[frame]
+    if not state then
+        state = {}
+        affectedByFrame[frame] = state
+    end
+    state[key] = value
 end
 
 function API:UnsetAffected(frame, key)
-    if frame and frame._cmc_affected then
-        frame._cmc_affected[key] = nil
+    local state = frame and affectedByFrame[frame]
+    if state then
+        state[key] = nil
     end
 end
 
--- Returns the frame's `_cmc_affected` state table, creating it on first use.
--- All per-frame CMC state -- both the boolean "affected" markers above and the
--- object references CMC stashes on a frame (border, cooldown, masks, glow, the
--- tracker entry fields, etc.) -- lives in this single table, so a managed frame
--- carries one CMC field instead of dozens. Nil-safe: returns a throwaway table
--- when frame is nil so callers never index nil.
+-- Returns the frames CMC should treat as belonging to a Blizzard viewer. The
+-- Essential mirror keeps its custom icons parented to a private event host, so
+-- Blizzard never sees them as layout children; CMC integrations opt into them
+-- through this helper instead.
+function API:GetViewerItemFrames(viewer)
+    if not viewer or not viewer.GetItemFrames then
+        return {}
+    end
+
+    local frames = viewer:GetItemFrames()
+    if viewer == _G.EssentialCooldownViewer
+        and ns.EssentialCustomTracker
+        and ns.EssentialCustomTracker.GetItemFrames
+    then
+        for _, frame in ipairs(ns.EssentialCustomTracker:GetItemFrames()) do
+            frames[#frames + 1] = frame
+        end
+    end
+    return frames
+end
+
+-- Returns the side-table state for a frame, creating it on first use. Nil-safe:
+-- callers that probe an absent frame still receive a throwaway table.
 function API.Affected(frame)
     if not frame then
         return {}
     end
-    local state = frame._cmc_affected
+    local state = affectedByFrame[frame]
     if not state then
         state = {}
-        frame._cmc_affected = state
+        affectedByFrame[frame] = state
     end
     return state
 end
@@ -381,8 +404,8 @@ local function AddSpellToTracking(spellID, state)
     if ns.TrackerItemViewer and ns.TrackerItemViewer.ReconcileTrackerCount then
         ns.TrackerItemViewer:ReconcileTrackerCount()
     end
-    if ns.TrackerAssignmentPanel and ns.TrackerAssignmentPanel.RefreshMiscPanel then
-        ns.TrackerAssignmentPanel:RefreshMiscPanel()
+    if ns.TrackerAssignmentPanel and ns.TrackerAssignmentPanel.RefreshTrackerPanel then
+        ns.TrackerAssignmentPanel:RefreshTrackerPanel()
     end
     if ns.TrackerItemViewer and ns.TrackerItemViewer.RefreshItemViewerFrames then
         ns.TrackerItemViewer:RefreshItemViewerFrames()
@@ -409,8 +432,8 @@ local function AddItemToTracking(itemID, state)
     if ns.TrackerItemViewer and ns.TrackerItemViewer.ReconcileTrackerCount then
         ns.TrackerItemViewer:ReconcileTrackerCount()
     end
-    if ns.TrackerAssignmentPanel and ns.TrackerAssignmentPanel.RefreshMiscPanel then
-        ns.TrackerAssignmentPanel:RefreshMiscPanel()
+    if ns.TrackerAssignmentPanel and ns.TrackerAssignmentPanel.RefreshTrackerPanel then
+        ns.TrackerAssignmentPanel:RefreshTrackerPanel()
     end
     if ns.TrackerItemViewer and ns.TrackerItemViewer.RefreshItemViewerFrames then
         ns.TrackerItemViewer:RefreshItemViewerFrames()

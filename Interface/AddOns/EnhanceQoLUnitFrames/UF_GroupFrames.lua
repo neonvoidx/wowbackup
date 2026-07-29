@@ -70,8 +70,14 @@ local GROUP_DEBUFF_FILTER_ALL = "ALL"
 local GROUP_DEBUFF_FILTER_CROWD_CONTROL = "CROWD_CONTROL"
 local GROUP_DEBUFF_FILTER_RAID = "RAID"
 local GROUP_DEBUFF_FILTER_RAID_IN_COMBAT = "RAID_IN_COMBAT"
+GF.GROUP_DEBUFF_FILTER_IMPORTANT = "IMPORTANT"
+GF.GROUP_DEBUFF_FILTER_RAID_PLAYER_DISPELLABLE = "RAID_PLAYER_DISPELLABLE"
+GF.GROUP_DEBUFF_FILTERS_121 = tonumber((select(4, GetBuildInfo()))) >= 120100
 GF.BLIZZARD_DISPEL_MODE_BY_ME = "BY_ME"
 GF.BLIZZARD_DISPEL_MODE_ALL = "ALL"
+GF.DISPEL_FILTER_MODE_ANY = "ANY"
+GF.DISPEL_FILTER_MODE_GROUP = "GROUP"
+GF.DISPEL_FILTER_MODE_MY = "MY"
 GF.BLIZZARD_AURA_ORGANIZATION_LEGACY = "LEGACY"
 GF.BLIZZARD_AURA_ORGANIZATION_TOP_BOTTOM = "BUFFS_TOP_DEBUFFS_BOTTOM"
 GF.BLIZZARD_AURA_ORGANIZATION_RIGHT_LEFT = "BUFFS_RIGHT_DEBUFFS_LEFT"
@@ -80,8 +86,17 @@ local groupDebuffFilterOptions = {
 	{ value = GROUP_DEBUFF_FILTER_RAID, label = L["UFGroupDebuffFilterRaid"] or "Raid debuffs" },
 	{ value = GROUP_DEBUFF_FILTER_RAID_IN_COMBAT, label = L["UFGroupDebuffFilterRaidInCombat"] or "Raid in combat" },
 	{ value = GROUP_DEBUFF_FILTER_CROWD_CONTROL, label = L["UFGroupDebuffFilterCrowdControl"] or "Crowd control" },
-	{ value = "DISPEL", label = L["UFGroupDebuffFilterDispel"] or "Dispellable" },
 }
+if GF.GROUP_DEBUFF_FILTERS_121 then
+	groupDebuffFilterOptions[#groupDebuffFilterOptions + 1] = { value = GF.GROUP_DEBUFF_FILTER_IMPORTANT, label = L["UFGroupDebuffFilterImportant"] or "Important" }
+	groupDebuffFilterOptions[#groupDebuffFilterOptions + 1] = {
+		value = GF.GROUP_DEBUFF_FILTER_RAID_PLAYER_DISPELLABLE,
+		label = L["UFGroupDebuffFilterRaidPlayerDispellable"] or "Dispellable by group",
+	}
+	groupDebuffFilterOptions[#groupDebuffFilterOptions + 1] = { value = "DISPEL", label = L["UFDispelFilterAny"] or "Any dispel" }
+else
+	groupDebuffFilterOptions[#groupDebuffFilterOptions + 1] = { value = "DISPEL", label = L["UFGroupDebuffFilterDispel"] or "Dispellable" }
+end
 GF.groupBuffFilterOptions = {
 	{ value = "RAID_IN_COMBAT", label = L["UFGroupBuffFilterRaidInCombat"] or "Healer buffs" },
 	{ value = "RAID", label = L["UFGroupBuffFilterRaid"] or "Helpful effects" },
@@ -90,6 +105,11 @@ GF.groupBuffFilterOptions = {
 GF.blizzardDispelIndicatorModeOptions = {
 	{ value = GF.BLIZZARD_DISPEL_MODE_BY_ME, label = L["UFAuraRendererBlizzardDispelModeByMe"] or "Dispellable by me", text = L["UFAuraRendererBlizzardDispelModeByMe"] or "Dispellable by me" },
 	{ value = GF.BLIZZARD_DISPEL_MODE_ALL, label = L["UFAuraRendererBlizzardDispelModeAll"] or "All", text = L["UFAuraRendererBlizzardDispelModeAll"] or "All" },
+}
+GF.dispelFilterModeOptions = {
+	{ value = GF.DISPEL_FILTER_MODE_ANY, label = L["UFDispelFilterAny"] or "Any dispel", text = L["UFDispelFilterAny"] or "Any dispel" },
+	{ value = GF.DISPEL_FILTER_MODE_GROUP, label = L["UFDispelFilterGroup"] or "Dispellable by group", text = L["UFDispelFilterGroup"] or "Dispellable by group" },
+	{ value = GF.DISPEL_FILTER_MODE_MY, label = L["UFDispelFilterMine"] or "Dispellable by me", text = L["UFDispelFilterMine"] or "Dispellable by me" },
 }
 
 GF.blizzardAuraOrganizationOptions = {
@@ -236,6 +256,7 @@ local max = math.max
 local min = math.min
 local floor = math.floor
 local hooksecurefunc = hooksecurefunc
+local DEFAULTS
 function GF.ClampFrameLevel(level)
 	level = tonumber(level) or 0
 	level = floor(level + (level >= 0 and 0.5 or -0.5))
@@ -285,6 +306,35 @@ function GF.SyncFrameLayerAbove(child, parent, offset, strata)
 	if child.SetFrameStrata and targetStrata and child:GetFrameStrata() ~= targetStrata then child:SetFrameStrata(targetStrata) end
 	if child.SetFrameLevel and parent.GetFrameLevel then
 		local targetLevel = GF.ClampFrameLevel((parent:GetFrameLevel() or 0) + (offset or 1))
+		if child:GetFrameLevel() ~= targetLevel then child:SetFrameLevel(targetLevel) end
+	end
+end
+
+GF.UNIFIED_FRAME_LAYER_MODEL = 2
+
+function GF.ResolveUnifiedFrameLevelOffset(config, defaults, legacyParentOffset, fallback)
+	config = config or EMPTY
+	defaults = defaults or EMPTY
+	legacyParentOffset = tonumber(legacyParentOffset) or 0
+	fallback = tonumber(fallback) or 0
+
+	local value = tonumber(rawget(config, "frameLevelOffset"))
+	if rawget(config, "frameLevelModel") == GF.UNIFIED_FRAME_LAYER_MODEL then return clampNumber(value, -20, 1000, fallback) end
+	if value ~= nil then return clampNumber(value + legacyParentOffset, -20, 1000, fallback) end
+
+	value = tonumber(defaults.frameLevelOffset)
+	if defaults.frameLevelModel == GF.UNIFIED_FRAME_LAYER_MODEL then return clampNumber(value, -20, 1000, fallback) end
+	if value ~= nil then return clampNumber(value + legacyParentOffset, -20, 1000, fallback) end
+	return fallback
+end
+
+function GF.SyncUnifiedFrameLayer(child, baseFrame, offset, strata)
+	if not (child and baseFrame) then return end
+	local targetStrata = GF.NormalizeFrameStrataToken(strata)
+	if not targetStrata and baseFrame.GetFrameStrata then targetStrata = baseFrame:GetFrameStrata() end
+	if child.SetFrameStrata and targetStrata and child:GetFrameStrata() ~= targetStrata then child:SetFrameStrata(targetStrata) end
+	if child.SetFrameLevel and baseFrame.GetFrameLevel then
+		local targetLevel = GF.ClampFrameLevel((baseFrame:GetFrameLevel() or 0) + (offset or 0))
 		if child:GetFrameLevel() ~= targetLevel then child:SetFrameLevel(targetLevel) end
 	end
 end
@@ -554,6 +604,12 @@ local function getGroupDebuffMatchFilter(typeCfg)
 	if GFH.SelectionContains(selection, GROUP_DEBUFF_FILTER_RAID) and AURA_FILTERS.harmfulRaid then filters[#filters + 1] = AURA_FILTERS.harmfulRaid end
 	if GFH.SelectionContains(selection, GROUP_DEBUFF_FILTER_RAID_IN_COMBAT) and AURA_FILTERS.harmfulRaidInCombat then filters[#filters + 1] = AURA_FILTERS.harmfulRaidInCombat end
 	if GFH.SelectionContains(selection, GROUP_DEBUFF_FILTER_CROWD_CONTROL) and AURA_FILTERS.harmfulCrowdControl then filters[#filters + 1] = AURA_FILTERS.harmfulCrowdControl end
+	if GF.GROUP_DEBUFF_FILTERS_121 and GFH.SelectionContains(selection, GF.GROUP_DEBUFF_FILTER_IMPORTANT) and AURA_FILTERS.harmfulImportant then
+		filters[#filters + 1] = AURA_FILTERS.harmfulImportant
+	end
+	if GF.GROUP_DEBUFF_FILTERS_121 and GFH.SelectionContains(selection, GF.GROUP_DEBUFF_FILTER_RAID_PLAYER_DISPELLABLE) and AURA_FILTERS.raidPlayerDispellable then
+		filters[#filters + 1] = AURA_FILTERS.raidPlayerDispellable
+	end
 	if GFH.SelectionContains(selection, "DISPEL") and AURA_FILTERS.dispellable then filters[#filters + 1] = AURA_FILTERS.dispellable end
 	if #filters == 0 then return nil end
 	return filters
@@ -916,12 +972,10 @@ local function buildHighlightConfig(cfg, def, key)
 	local offset = hcfg.offset
 	if offset == nil then offset = hdef.offset end
 	offset = tonumber(offset) or 0
-	local layer = tostring(hcfg.layer or hdef.layer or "ABOVE_BORDER"):upper()
-	if layer ~= "BEHIND_BORDER" then layer = "ABOVE_BORDER" end
 	local strata = GF.NormalizeFrameStrataToken(hcfg.strata)
 	if strata == nil then strata = GF.NormalizeFrameStrataToken(hdef.strata) end
-	local frameLevelOffset = hcfg.frameLevelOffset
-	if frameLevelOffset == nil then frameLevelOffset = hdef.frameLevelOffset end
+	local frameLevelOffset = rawget(hcfg, "frameLevelOffset")
+	if frameLevelOffset == nil then frameLevelOffset = rawget(hdef, "frameLevelOffset") end
 	frameLevelOffset = tonumber(frameLevelOffset)
 	local mode = hcfg.mode
 	if mode == nil then mode = hdef.mode end
@@ -933,12 +987,18 @@ local function buildHighlightConfig(cfg, def, key)
 		size = size,
 		color = color,
 		offset = offset,
-		layer = layer,
 		strata = strata,
 		frameLevelOffset = frameLevelOffset,
 		mode = mode,
 		sample = sample == true,
 	}
+end
+
+function GF.GetHighlightDefaultFrameLevelOffset(key, layer)
+	if tostring(layer or "ABOVE_BORDER"):upper() == "BEHIND_BORDER" then return 2 end
+	if key == "target" or key == "highlightTarget" then return 5 end
+	if key == "aggro" or key == "highlightAggro" then return 6 end
+	return 4
 end
 
 local function applyHighlightStyle(st, cfg, key)
@@ -958,32 +1018,11 @@ local function applyHighlightStyle(st, cfg, key)
 	if frame.SetFrameStrata and targetStrata and frame:GetFrameStrata() ~= targetStrata then frame:SetFrameStrata(targetStrata) end
 	if frame.SetFrameLevel and st.barGroup and st.barGroup.GetFrameLevel then
 		local baseLevel = st.barGroup:GetFrameLevel() or 0
-		local layer = tostring(cfg.layer or "ABOVE_BORDER"):upper()
-		local levelOffset
-		if layer == "BEHIND_BORDER" then
-			levelOffset = 2
-		else
-			levelOffset = 4
-		end
-		local hasExplicitFrameLevel = cfg.frameLevelOffset ~= nil
-		if hasExplicitFrameLevel then levelOffset = cfg.frameLevelOffset end
+		local levelOffset = cfg.frameLevelOffset
+		if levelOffset == nil then levelOffset = GF.GetHighlightDefaultFrameLevelOffset(key) end
 		levelOffset = clampNumber(levelOffset, -20, 1000, 4)
 		levelOffset = floor(levelOffset + (levelOffset >= 0 and 0.5 or -0.5))
-		if key == "aggro" then levelOffset = levelOffset + 1 end
 		local targetLevel = GF.ClampFrameLevel(baseLevel + levelOffset)
-		local border = st.barGroup._ufBorder
-		if
-			not hasExplicitFrameLevel
-			and layer ~= "BEHIND_BORDER"
-			and border
-			and border.GetFrameLevel
-			and border.GetFrameStrata
-			and frame.GetFrameStrata
-			and border:GetFrameStrata() == frame:GetFrameStrata()
-		then
-			local borderLevel = border:GetFrameLevel()
-			if borderLevel and targetLevel <= borderLevel then targetLevel = GF.ClampFrameLevel(borderLevel + 1) end
-		end
 		frame:SetFrameLevel(targetLevel)
 	end
 	local size = cfg.size or 1
@@ -1015,6 +1054,9 @@ local function applyBarBackdrop(bar, cfg, options)
 	options = options or {}
 	local bd = cfg.backdrop or {}
 	local clampToFill = options.clampToFill == true
+	local reverseFill = options.reverseFill == true
+	local orientation = UFHelper.normalizeStatusBarOrientation(options.orientation)
+	local axis = UFHelper.GetHealthAxis(orientation, reverseFill)
 	local enabled = bd.enabled ~= false
 	local col = bd.color or { 0, 0, 0, 0.6 }
 	local r = col[1] or 0
@@ -1032,13 +1074,14 @@ local function applyBarBackdrop(bar, cfg, options)
 	if not backdropTexture or backdropTexture == "" then backdropTexture = "Interface\\Buttons\\WHITE8x8" end
 
 	if not enabled then
-		if bar._eqolBackdropEnabled == false and bar._eqolBackdropClampToFill == clampToFill then return end
+		if bar._eqolBackdropEnabled == false and bar._eqolBackdropClampToFill == clampToFill and bar._eqolBackdropOrientation == orientation then return end
 		if bar.SetBackdrop then bar:SetBackdrop(nil) end
 		if bar._eqolBackdropTexture then bar._eqolBackdropTexture:Hide() end
 		bar._eqolBackdropEnabled = false
 		bar._eqolBackdropR, bar._eqolBackdropG, bar._eqolBackdropB, bar._eqolBackdropA = nil, nil, nil, nil
 		bar._eqolBackdropConfigured = nil
 		bar._eqolBackdropClampToFill = clampToFill
+		bar._eqolBackdropOrientation = orientation
 		bar._eqolBackdropStatusTex = nil
 		bar._eqolBackdropTexturePath = nil
 		return
@@ -1051,6 +1094,8 @@ local function applyBarBackdrop(bar, cfg, options)
 		and bar._eqolBackdropB == b
 		and bar._eqolBackdropA == a
 		and bar._eqolBackdropClampToFill == clampToFill
+		and bar._eqolBackdropReverseFill == reverseFill
+		and bar._eqolBackdropOrientation == orientation
 		and bar._eqolBackdropStatusTex == currentStatusTex
 		and bar._eqolBackdropTexturePath == backdropTexture
 	then
@@ -1064,16 +1109,7 @@ local function applyBarBackdrop(bar, cfg, options)
 			tex = (Pixel and Pixel.CreateTexture and Pixel.CreateTexture(bar, nil, "BACKGROUND")) or bar:CreateTexture(nil, "BACKGROUND")
 			bar._eqolBackdropTexture = tex
 		end
-		local htex = bar.GetStatusBarTexture and bar:GetStatusBarTexture()
-		tex:ClearAllPoints()
-		if htex then
-			tex:SetPoint("TOPLEFT", htex, "TOPRIGHT", 0, 0)
-			tex:SetPoint("BOTTOMLEFT", htex, "BOTTOMRIGHT", 0, 0)
-			tex:SetPoint("TOPRIGHT", bar, "TOPRIGHT", 0, 0)
-			tex:SetPoint("BOTTOMRIGHT", bar, "BOTTOMRIGHT", 0, 0)
-		else
-			tex:SetAllPoints(bar)
-		end
+		UFHelper.LayoutMissingHealthTexture(bar, tex, axis)
 		if Pixel and Pixel.SetTexture then
 			Pixel.SetTexture(tex, backdropTexture)
 		else
@@ -1098,56 +1134,11 @@ local function applyBarBackdrop(bar, cfg, options)
 	bar._eqolBackdropEnabled = true
 	bar._eqolBackdropConfigured = true
 	bar._eqolBackdropClampToFill = clampToFill
+	bar._eqolBackdropReverseFill = reverseFill
+	bar._eqolBackdropOrientation = orientation
 	bar._eqolBackdropStatusTex = currentStatusTex
 	bar._eqolBackdropTexturePath = backdropTexture
 	bar._eqolBackdropR, bar._eqolBackdropG, bar._eqolBackdropB, bar._eqolBackdropA = r, g, b, a
-end
-
-function GF._applyOverlayHeight(bar, anchor, height, maxHeight, anchorTop)
-	if not bar or not anchor then return end
-	bar:ClearAllPoints()
-	local desired = tonumber(height)
-	if not desired or desired <= 0 then
-		bar:SetAllPoints(anchor)
-		return
-	end
-	local limit = tonumber(maxHeight)
-	if not limit or limit <= 0 then limit = anchor.GetHeight and anchor:GetHeight() or 0 end
-	if limit and limit > 0 and desired > limit then desired = limit end
-	if anchorTop then
-		bar:SetPoint("TOPLEFT", anchor, "TOPLEFT", 0, 0)
-		bar:SetPoint("TOPRIGHT", anchor, "TOPRIGHT", 0, 0)
-	else
-		bar:SetPoint("BOTTOMLEFT", anchor, "BOTTOMLEFT", 0, 0)
-		bar:SetPoint("BOTTOMRIGHT", anchor, "BOTTOMRIGHT", 0, 0)
-	end
-	if Pixel and Pixel.SetHeight then
-		Pixel.SetHeight(bar, desired)
-	else
-		bar:SetHeight(desired)
-	end
-end
-
-function GF._ensureOverlayClipFrame(anchor, key)
-	if not anchor then return nil end
-	key = key or "_eqolOverlayClip"
-	local clip = anchor[key]
-	if not clip then
-		clip = CreateFrame("Frame", nil, anchor)
-		clip:SetClipsChildren(true)
-		anchor[key] = clip
-	end
-	clip:ClearAllPoints()
-	clip:SetAllPoints(anchor)
-	if clip.SetFrameStrata and anchor.GetFrameStrata then
-		local anchorStrata = anchor:GetFrameStrata()
-		if anchorStrata and clip:GetFrameStrata() ~= anchorStrata then clip:SetFrameStrata(anchorStrata) end
-	end
-	if clip.SetFrameLevel and anchor.GetFrameLevel then
-		local desiredLevel = (anchor:GetFrameLevel() or 0) + 1
-		if clip:GetFrameLevel() ~= desiredLevel then clip:SetFrameLevel(desiredLevel) end
-	end
-	return clip
 end
 
 function GF._computeOverlayHeightFallback(frameHeight, powerHeight)
@@ -1163,10 +1154,8 @@ end
 
 function GF._resolveOverlayHeightSetting(value, fallback)
 	local v = tonumber(value)
-	if not v then return fallback end
-	if v <= 0 then return 0 end
-	if v >= fallback then return 0 end
-	return v
+	if not v or v <= 0 then return 0 end
+	return min(v, 800)
 end
 
 function GF._resolveRuntimeOverlayHeightSetting(value, configuredFallback, runtimeHeight)
@@ -1528,17 +1517,23 @@ end
 
 function GF.SyncDispelTintLayer(st)
 	if not (st and st.dispelTint) then return end
-	local anchor = st.barGroup or st.health or st.frame
+	local anchor = GF.GetDispelVisualRoot(st, st.frame)
 	if not anchor then return end
 	local cfg = st.frame and st.frame._eqolCfg or nil
 	local dispelCfg = cfg and cfg.status and cfg.status.dispelTint or EMPTY
-	local parent = st.statusIconLayer or st.layoutAnchor or anchor
+	local parent = anchor
 	if st.dispelTint.GetParent and st.dispelTint:GetParent() ~= parent then st.dispelTint:SetParent(parent) end
 	st.dispelTint:ClearAllPoints()
 	st.dispelTint:SetAllPoints(anchor)
-	local levelOffset = tonumber(dispelCfg.frameLevelOffset)
-	if levelOffset == nil then levelOffset = 1 end
-	GF.SyncFrameLayerAbove(st.dispelTint, st.statusIconLayer or st.healthTextLayer or st.powerTextLayer or anchor, levelOffset, dispelCfg.strata)
+	local kind = st.frame and st.frame._eqolGroupKind or "party"
+	local defDispel = DEFAULTS[kind] and DEFAULTS[kind].status and DEFAULTS[kind].status.dispelTint or EMPTY
+	local levelOffset = GF.ResolveUnifiedFrameLevelOffset(dispelCfg, defDispel, 12, 20)
+	GF.SyncUnifiedFrameLayer(st.dispelTint, anchor, levelOffset, dispelCfg.strata or defDispel.strata)
+end
+
+function GF.GetDispelVisualRoot(st, fallback)
+	if AuraUtil and AuraUtil.ShouldUseManagedDispelBorder and AuraUtil.ShouldUseManagedDispelBorder() and st and st.health then return st.health end
+	return st and (st.barGroup or st.health or st.frame) or fallback
 end
 
 local function syncTextFrameLevels(st)
@@ -2430,6 +2425,26 @@ function GF.ResolveDispelGlowTarget(self, st, glowOverOverlay)
 	return host, 8
 end
 
+function GF.ResolveDispelGlowLayer(dcfg, defDispel)
+	dcfg = dcfg or EMPTY
+	defDispel = defDispel or EMPTY
+	local explicitModel = rawget(dcfg, "glowFrameLevelModel") == GF.UNIFIED_FRAME_LAYER_MODEL
+	local explicitLevel = tonumber(rawget(dcfg, "glowFrameLevelOffset"))
+	local explicitStrata = GF.NormalizeFrameStrataToken(rawget(dcfg, "glowStrata"))
+	if explicitModel or explicitLevel ~= nil or explicitStrata ~= nil then
+		local level = clampNumber(explicitLevel, -20, 1000, tonumber(defDispel.glowFrameLevelOffset) or 21)
+		return level, explicitStrata or GF.NormalizeFrameStrataToken(defDispel.glowStrata), false
+	end
+	if rawget(dcfg, "glowOverOverlay") == true then return nil, nil, true end
+	return clampNumber(tonumber(defDispel.glowFrameLevelOffset), -20, 1000, 21), GF.NormalizeFrameStrataToken(defDispel.glowStrata), false
+end
+
+function GF.GetDispelGlowLayerLevelForSettings(dcfg, defDispel)
+	local level, _, legacyOverOverlay = GF.ResolveDispelGlowLayer(dcfg, defDispel)
+	if legacyOverOverlay then return 30 end
+	return level or 21
+end
+
 local function resolveDispelIndicatorEnabled(cfg, kind)
 	local sc = cfg and cfg.status or {}
 	local dt = sc.dispelTint or {}
@@ -2694,7 +2709,7 @@ function GF.CreateDataBarDefaults()
 	}
 end
 
-local DEFAULTS = {
+DEFAULTS = {
 	party = {
 		auras = {
 			buff = {
@@ -2933,7 +2948,8 @@ local DEFAULTS = {
 					barThickness = 6,
 					borderSize = 2,
 					borderStrata = nil,
-					borderFrameLevelOffset = 4,
+					borderFrameLevelModel = 2,
+					borderFrameLevelOffset = 16,
 					color = {
 						1,
 						0.82,
@@ -3162,11 +3178,12 @@ local DEFAULTS = {
 				1,
 			},
 			enabled = true,
-			layer = "ABOVE_BORDER",
+			frameLevelOffset = 6,
 			mode = "ALL",
 			offset = 6,
 			sample = false,
 			size = 29,
+			strata = nil,
 			texture = "Blizzard Tooltip",
 		},
 		highlightHover = {
@@ -3177,6 +3194,7 @@ local DEFAULTS = {
 				0.9,
 			},
 			enabled = true,
+			frameLevelOffset = 4,
 			offset = 0,
 			size = 2,
 			strata = nil,
@@ -3190,9 +3208,10 @@ local DEFAULTS = {
 				1,
 			},
 			enabled = false,
-			layer = "ABOVE_BORDER",
+			frameLevelOffset = 5,
 			offset = 0,
 			size = 2,
+			strata = nil,
 			texture = "DEFAULT",
 		},
 		partyCenterOutward = false,
@@ -3352,6 +3371,8 @@ local DEFAULTS = {
 			dispelTint = {
 				alpha = 1,
 				enabled = true,
+				frameLevelModel = 2,
+				frameLevelOffset = 20,
 				fillAlpha = 0.199999988079071,
 				fillColor = {
 					0,
@@ -3370,9 +3391,12 @@ local DEFAULTS = {
 				glowEffect = "PIXEL",
 				glowEnabled = true,
 				glowFrequency = 0.25,
+				glowFrameLevelModel = 2,
+				glowFrameLevelOffset = 21,
 				glowInset = 33,
 				glowLines = 8,
 				glowOverOverlay = false,
+				glowStrata = nil,
 				glowThickness = 3,
 				glowX = 0,
 				glowY = 0,
@@ -3762,7 +3786,8 @@ local DEFAULTS = {
 					barThickness = 6,
 					borderSize = 2,
 					borderStrata = nil,
-					borderFrameLevelOffset = 4,
+					borderFrameLevelModel = 2,
+					borderFrameLevelOffset = 16,
 					color = {
 						1,
 						0.82,
@@ -3987,11 +4012,12 @@ local DEFAULTS = {
 				1,
 			},
 			enabled = false,
-			layer = "ABOVE_BORDER",
+			frameLevelOffset = 6,
 			mode = "ALL",
 			offset = 0,
 			sample = false,
 			size = 2,
+			strata = nil,
 			texture = "DEFAULT",
 		},
 		highlightHover = {
@@ -4002,6 +4028,7 @@ local DEFAULTS = {
 				0.9,
 			},
 			enabled = false,
+			frameLevelOffset = 4,
 			offset = 0,
 			size = 2,
 			strata = nil,
@@ -4015,9 +4042,10 @@ local DEFAULTS = {
 				1,
 			},
 			enabled = false,
-			layer = "ABOVE_BORDER",
+			frameLevelOffset = 5,
 			offset = 0,
 			size = 2,
+			strata = nil,
 			texture = "DEFAULT",
 		},
 		maxColumns = 4,
@@ -4142,6 +4170,8 @@ local DEFAULTS = {
 			dispelTint = {
 				alpha = 0.25,
 				enabled = false,
+				frameLevelModel = 2,
+				frameLevelOffset = 20,
 				fillAlpha = 0.2,
 				fillColor = {
 					0,
@@ -4160,8 +4190,11 @@ local DEFAULTS = {
 				glowEffect = "PIXEL",
 				glowEnabled = false,
 				glowFrequency = 0.25,
+				glowFrameLevelModel = 2,
+				glowFrameLevelOffset = 21,
 				glowLines = 8,
 				glowOverOverlay = false,
+				glowStrata = nil,
 				glowThickness = 3,
 				glowX = 0,
 				glowY = 0,
@@ -4639,11 +4672,12 @@ local DEFAULTS = {
 				1,
 			},
 			enabled = false,
-			layer = "ABOVE_BORDER",
+			frameLevelOffset = 6,
 			mode = "ALL",
 			offset = 0,
 			sample = false,
 			size = 2,
+			strata = nil,
 			texture = "DEFAULT",
 		},
 		highlightHover = {
@@ -4654,6 +4688,7 @@ local DEFAULTS = {
 				0.9,
 			},
 			enabled = false,
+			frameLevelOffset = 4,
 			offset = 0,
 			size = 2,
 			strata = nil,
@@ -4667,9 +4702,10 @@ local DEFAULTS = {
 				1,
 			},
 			enabled = false,
-			layer = "ABOVE_BORDER",
+			frameLevelOffset = 5,
 			offset = 0,
 			size = 2,
+			strata = nil,
 			texture = "DEFAULT",
 		},
 		maxColumns = 1,
@@ -4794,6 +4830,8 @@ local DEFAULTS = {
 			dispelTint = {
 				alpha = 0.25,
 				enabled = true,
+				frameLevelModel = 2,
+				frameLevelOffset = 20,
 				fillAlpha = 0.2,
 				fillColor = {
 					0,
@@ -4812,8 +4850,11 @@ local DEFAULTS = {
 				glowEffect = "PIXEL",
 				glowEnabled = false,
 				glowFrequency = 0.25,
+				glowFrameLevelModel = 2,
+				glowFrameLevelOffset = 21,
 				glowLines = 8,
 				glowOverOverlay = false,
+				glowStrata = nil,
 				glowThickness = 3,
 				glowX = 0,
 				glowY = 0,
@@ -5289,11 +5330,12 @@ local DEFAULTS = {
 				1,
 			},
 			enabled = false,
-			layer = "ABOVE_BORDER",
+			frameLevelOffset = 6,
 			mode = "ALL",
 			offset = 0,
 			sample = false,
 			size = 2,
+			strata = nil,
 			texture = "DEFAULT",
 		},
 		highlightHover = {
@@ -5304,6 +5346,7 @@ local DEFAULTS = {
 				0.9,
 			},
 			enabled = false,
+			frameLevelOffset = 4,
 			offset = 0,
 			size = 2,
 			strata = nil,
@@ -5317,9 +5360,10 @@ local DEFAULTS = {
 				1,
 			},
 			enabled = false,
-			layer = "ABOVE_BORDER",
+			frameLevelOffset = 5,
 			offset = 0,
 			size = 2,
+			strata = nil,
 			texture = "DEFAULT",
 		},
 		maxColumns = 1,
@@ -5444,6 +5488,8 @@ local DEFAULTS = {
 			dispelTint = {
 				alpha = 0.25,
 				enabled = true,
+				frameLevelModel = 2,
+				frameLevelOffset = 20,
 				fillAlpha = 0.2,
 				fillColor = {
 					0,
@@ -5462,8 +5508,11 @@ local DEFAULTS = {
 				glowEffect = "PIXEL",
 				glowEnabled = false,
 				glowFrequency = 0.25,
+				glowFrameLevelModel = 2,
+				glowFrameLevelOffset = 21,
 				glowLines = 8,
 				glowOverOverlay = false,
+				glowStrata = nil,
 				glowThickness = 3,
 				glowX = 0,
 				glowY = 0,
@@ -6430,6 +6479,9 @@ function GF.ApplyHealthBackdrop(button, deadOrGhost)
 	if healthBackdropClampToFill == nil then healthBackdropClampToFill = defBd.clampToFill end
 	if healthBackdropClampToFill == nil then healthBackdropClampToFill = false end
 	local healthTexKey = getEffectiveBarTexture(cfg, hc)
+	local reverseHealth = hc.reverseFill
+	if reverseHealth == nil then reverseHealth = defH.reverseFill == true end
+	local orientation = hc.orientation or defH.orientation
 	local deadColorEnabled = bd.deadColorEnabled
 	if deadColorEnabled == nil then deadColorEnabled = defBd.deadColorEnabled end
 	if deadOrGhost == true and deadColorEnabled == true then
@@ -6442,10 +6494,10 @@ function GF.ApplyHealthBackdrop(button, deadOrGhost)
 		end
 		effectiveBackdrop.enabled = true
 		effectiveBackdrop.color = bd.deadColor or defBd.deadColor or { 0.35, 0.05, 0.05, 0.85 }
-		applyBarBackdrop(st.health, { texture = hc.texture, backdrop = effectiveBackdrop }, { clampToFill = healthBackdropClampToFill == true, textureKey = healthTexKey })
+		applyBarBackdrop(st.health, { texture = hc.texture, backdrop = effectiveBackdrop }, { clampToFill = healthBackdropClampToFill == true, reverseFill = reverseHealth, orientation = orientation, textureKey = healthTexKey })
 		return
 	end
-	applyBarBackdrop(st.health, hc, { clampToFill = healthBackdropClampToFill == true, textureKey = healthTexKey })
+	applyBarBackdrop(st.health, hc, { clampToFill = healthBackdropClampToFill == true, reverseFill = reverseHealth, orientation = orientation, textureKey = healthTexKey })
 end
 
 local function isTooltipModifierPressed(modifier)
@@ -7065,7 +7117,7 @@ function GF:BuildButton(self)
 			local s = getState(btn)
 			hideDispelTint(s)
 			if AuraUtil and AuraUtil.HideManagedDispelBorder then AuraUtil.HideManagedDispelBorder(s) end
-			GF.StopDispelGlow((s and s.barGroup) or btn, nil, s)
+			GF.StopDispelGlow(GF.GetDispelVisualRoot(s, btn), nil, s)
 		end)
 	end
 
@@ -7076,7 +7128,6 @@ function GF:BuildButton(self)
 
 	if UF.GroupFramesHealerBuffs and UF.GroupFramesHealerBuffs.BuildButton then UF.GroupFramesHealerBuffs.BuildButton(self) end
 	if UF.GroupFramesHealerBuffs and UF.GroupFramesHealerBuffs.PrecreateManagedAuraContainer then UF.GroupFramesHealerBuffs.PrecreateManagedAuraContainer(self) end
-	if AuraUtil and AuraUtil.PrecreateManagedDispelBorder then AuraUtil.PrecreateManagedDispelBorder(st, st.barGroup or self) end
 	GF:LayoutAuras(self)
 	hookTextFrameLevels(st)
 	GF:LayoutButton(self)
@@ -7099,6 +7150,15 @@ function GF:LayoutButton(self)
 	local powerTexKey = getEffectiveBarTexture(cfg, pcfg)
 	local dataBarTexKey = dbc.texture or defDB.texture or "SOLID"
 	local contentScale = GF.GetDynamicContentScale(self, cfg)
+	local healthOrientation = UFHelper.normalizeStatusBarOrientation(hc.orientation or defH.orientation)
+	local reverseHealth = hc.reverseFill
+	if reverseHealth == nil then reverseHealth = defH.reverseFill == true end
+	local healthAxis = UFHelper.GetHealthAxis(healthOrientation, reverseHealth)
+	local powerOrientation = UFHelper.normalizeStatusBarOrientation(pcfg.orientation or (def.power and def.power.orientation))
+	UFHelper.applyStatusBarOrientation(st.health, healthOrientation)
+	UFHelper.applyStatusBarReverseFill(st.health, reverseHealth)
+	UFHelper.applyStatusBarOrientation(st.tempMaxHealthLoss, healthOrientation)
+	UFHelper.applyStatusBarOrientation(st.power, powerOrientation)
 
 	local scale = GFH.GetEffectiveScale(self)
 	if not scale or scale <= 0 then scale = (UIParent and UIParent.GetEffectiveScale and UIParent:GetEffectiveScale()) or 1 end
@@ -7508,9 +7568,10 @@ function GF:LayoutButton(self)
 	if st.tempMaxHealthLoss then
 		st.tempMaxHealthLoss:SetStatusBarTexture("UI-HUD-UnitFrame-Target-PortraitOn-Bar-TempHPLoss")
 		if st.tempMaxHealthLoss.SetStatusBarDesaturated then st.tempMaxHealthLoss:SetStatusBarDesaturated(false) end
-		local reverseHealth = hc.reverseFill
-		if reverseHealth == nil then reverseHealth = defH.reverseFill == true end
-		if UFHelper and UFHelper.applyStatusBarReverseFill then UFHelper.applyStatusBarReverseFill(st.tempMaxHealthLoss, not reverseHealth) end
+		UFHelper.LayoutTemporaryMaxHealthLoss(st.health, st.health, st.tempMaxHealthLoss, {
+			axis = healthAxis,
+			reserveHealthSpace = false,
+		})
 		st.tempMaxHealthLoss:SetMinMaxValues(0, 1)
 		if tempMaxHealthLossEnabled then
 			st.tempMaxHealthLoss:Show()
@@ -7532,16 +7593,15 @@ function GF:LayoutButton(self)
 		end
 	end
 
-	local healthHeight = max(1, (tonumber(h) or 0) - (tonumber(healthBottomOffset) or 0))
-	local configuredOverlayFallback = GF._computeOverlayHeightFallback((cfg.height ~= nil and cfg.height) or def.height, (cfg.powerHeight ~= nil and cfg.powerHeight) or def.powerHeight)
-	local resolvedAbsorbHeight = GF._resolveRuntimeOverlayHeightSetting(hc.absorbOverlayHeight ~= nil and hc.absorbOverlayHeight or defH.absorbOverlayHeight, configuredOverlayFallback, healthHeight)
-	local resolvedHealAbsorbHeight =
-		GF._resolveRuntimeOverlayHeightSetting(hc.healAbsorbOverlayHeight ~= nil and hc.healAbsorbOverlayHeight or defH.healAbsorbOverlayHeight, configuredOverlayFallback, healthHeight)
+	local resolvedAbsorbHeight = hc.absorbOverlayHeight
+	if resolvedAbsorbHeight == nil then resolvedAbsorbHeight = defH.absorbOverlayHeight end
+	local resolvedHealAbsorbHeight = hc.healAbsorbOverlayHeight
+	if resolvedHealAbsorbHeight == nil then resolvedHealAbsorbHeight = defH.healAbsorbOverlayHeight end
 	local absorbAnchorTop = hc.absorbOverlayAnchorTop
 	if absorbAnchorTop == nil then absorbAnchorTop = defH.absorbOverlayAnchorTop == true end
 	local healAbsorbAnchorTop = hc.healAbsorbOverlayAnchorTop
 	if healAbsorbAnchorTop == nil then healAbsorbAnchorTop = defH.healAbsorbOverlayAnchorTop == true end
-	local overlayClip = GF._ensureOverlayClipFrame(st.health, "_eqolDirectOverlayClip")
+	local overlayRegions = UFHelper.LayoutHealthOverlayRegions(st.health, healthAxis)
 	if st.incomingHeal then
 		local incomingHealTextureKey = hc.incomingHealTexture or healthTexKey
 		if st.incomingHeal.SetStatusBarTexture and UFHelper and UFHelper.resolveTexture then
@@ -7556,20 +7616,12 @@ function GF:LayoutButton(self)
 			end
 		end
 		if st.incomingHeal.SetStatusBarDesaturated then st.incomingHeal:SetStatusBarDesaturated(false) end
-		local reverseHealth = hc.reverseFill
-		if reverseHealth == nil then reverseHealth = defH.reverseFill == true end
-		if UFHelper and UFHelper.setupAbsorbClampReverseAware then
-			UFHelper.setupAbsorbClampReverseAware(st.health, st.incomingHeal)
-		elseif UFHelper and UFHelper.setupAbsorbClamp then
-			UFHelper.setupAbsorbClamp(st.health, st.incomingHeal)
-			if UFHelper.applyStatusBarReverseFill then UFHelper.applyStatusBarReverseFill(st.incomingHeal, reverseHealth) end
-		end
-		if overlayClip and st.incomingHeal.GetParent and st.incomingHeal:GetParent() ~= overlayClip then st.incomingHeal:SetParent(overlayClip) end
-		if UFHelper and UFHelper.applyAbsorbClampLayout then
-			UFHelper.applyAbsorbClampLayout(st.incomingHeal, st.health, healthHeight, healthHeight, reverseHealth)
-		else
-			GF._applyOverlayHeight(st.incomingHeal, st.health, healthHeight, healthHeight)
-		end
+		UFHelper.LayoutHealthOverlayBar(st.health, st.incomingHeal, {
+			axis = healthAxis,
+			regions = overlayRegions,
+			role = "MISSING_FROM_CURRENT",
+			direction = "HEALTH_FORWARD",
+		})
 		stabilizeStatusBarTexture(st.incomingHeal)
 		setFrameLevelAbove(st.incomingHeal, st.health, 1)
 	end
@@ -7589,9 +7641,6 @@ function GF:LayoutButton(self)
 		local absorbDontOverflow = hc.absorbDontOverflowHealthBar
 		if absorbDontOverflow == nil then absorbDontOverflow = defH.absorbDontOverflowHealthBar == true end
 		absorbDontOverflow = absorbDontOverflow == true and reverseAbsorb == true
-		local reverseHealth = hc.reverseFill
-		if reverseHealth == nil then reverseHealth = defH.reverseFill == true end
-		if UFHelper and UFHelper.applyStatusBarReverseFill then UFHelper.applyStatusBarReverseFill(st.absorb, reverseAbsorb) end
 		if reverseAbsorb then
 			st.absorb2 = st.absorb2 or CreateFrame("StatusBar", nil, st.health, "BackdropTemplate")
 			if st.absorb2.SetStatusBarDesaturated then st.absorb2:SetStatusBarDesaturated(false) end
@@ -7600,10 +7649,15 @@ function GF:LayoutButton(self)
 			st.absorb2:Hide()
 		end
 		stabilizeStatusBarTexture(st.absorb)
-		local absorbClip = overlayClip
-		if absorbClip and st.absorb.GetParent and st.absorb:GetParent() ~= absorbClip then st.absorb:SetParent(absorbClip) end
 		local absorbHeight = resolvedAbsorbHeight
-		GF._applyOverlayHeight(st.absorb, absorbClip or st.health, absorbHeight, healthHeight, absorbAnchorTop == true)
+		UFHelper.LayoutDamageAbsorb(st.health, st.absorb, st.absorb2, {
+			axis = healthAxis,
+			regions = overlayRegions,
+			reverseAbsorb = reverseAbsorb,
+			dontOverflow = absorbDontOverflow,
+			thickness = absorbHeight,
+			crossAlign = absorbAnchorTop and "MAX" or "MIN",
+		})
 		setFrameLevelAbove(st.absorb, st.health, 1)
 		if reverseAbsorb and st.absorb2 then
 			if st.absorb2.SetStatusBarTexture and UFHelper and UFHelper.resolveTexture then
@@ -7615,35 +7669,13 @@ function GF:LayoutButton(self)
 				if UFHelper.configureSpecialTexture then UFHelper.configureSpecialTexture(st.absorb2, "HEALTH", absorbTextureKey, hc) end
 			end
 			if st.absorb2.SetStatusBarDesaturated then st.absorb2:SetStatusBarDesaturated(false) end
-			if st.absorb2.SetOrientation then st.absorb2:SetOrientation("HORIZONTAL") end
-			if UFHelper and UFHelper.applyAbsorbClampLayout then
-				if reverseHealth then
-					if UFHelper.setupAbsorbClampReverseAware then UFHelper.setupAbsorbClampReverseAware(st.health, st.absorb2) end
-				else
-					if UFHelper.setupAbsorbClamp then UFHelper.setupAbsorbClamp(st.health, st.absorb2) end
-					if not absorbDontOverflow and UFHelper.setupAbsorbOverShift then UFHelper.setupAbsorbOverShift(st.health, st.absorb, absorbHeight, healthHeight, absorbAnchorTop == true) end
-				end
-				if overlayClip and st.absorb2.GetParent and st.absorb2:GetParent() ~= overlayClip then st.absorb2:SetParent(overlayClip) end
-				UFHelper.applyAbsorbClampLayout(st.absorb2, st.health, absorbHeight, healthHeight, reverseHealth, absorbAnchorTop == true)
-				syncTextFrameLevels(st)
-			end
+			syncTextFrameLevels(st)
 			stabilizeStatusBarTexture(st.absorb2)
 			setFrameLevelAbove(st.absorb2, st.health, 1)
-			st.absorb2:SetMinMaxValues(0, 1)
-			GF.SetStatusBarValue(st.absorb2, 0, false, true)
-			st.absorb2:Hide()
 		end
 		if st.overAbsorbGlow then
-			st.overAbsorbGlow:ClearAllPoints()
-			local glowParent = overlayClip or st.health
-			if glowParent and st.overAbsorbGlow.GetParent and st.overAbsorbGlow:GetParent() ~= glowParent then st.overAbsorbGlow:SetParent(glowParent) end
-			if reverseHealth then
-				st.overAbsorbGlow:SetPoint("TOPRIGHT", st.health, "TOPLEFT", 7, 0)
-				st.overAbsorbGlow:SetPoint("BOTTOMRIGHT", st.health, "BOTTOMLEFT", 7, 0)
-			else
-				st.overAbsorbGlow:SetPoint("TOPLEFT", st.health, "TOPRIGHT", -7, 0)
-				st.overAbsorbGlow:SetPoint("BOTTOMLEFT", st.health, "BOTTOMRIGHT", -7, 0)
-			end
+			if st.overAbsorbGlow.GetParent and st.overAbsorbGlow:GetParent() ~= st.health then st.overAbsorbGlow:SetParent(st.health) end
+			UFHelper.LayoutHealthEndGlow(st.health, st.overAbsorbGlow, healthAxis, 7)
 			st.overAbsorbGlow:Hide()
 		end
 	end
@@ -7661,12 +7693,16 @@ function GF:LayoutButton(self)
 		if st.healAbsorb.SetStatusBarDesaturated then st.healAbsorb:SetStatusBarDesaturated(false) end
 		local reverseHealAbsorb = hc.healAbsorbReverseFill
 		if reverseHealAbsorb == nil then reverseHealAbsorb = defH.healAbsorbReverseFill == true end
-		if UFHelper and UFHelper.applyStatusBarReverseFill then UFHelper.applyStatusBarReverseFill(st.healAbsorb, reverseHealAbsorb) end
 		stabilizeStatusBarTexture(st.healAbsorb)
-		local healAbsorbClip = overlayClip
-		if healAbsorbClip and st.healAbsorb.GetParent and st.healAbsorb:GetParent() ~= healAbsorbClip then st.healAbsorb:SetParent(healAbsorbClip) end
 		local healAbsorbHeight = resolvedHealAbsorbHeight
-		GF._applyOverlayHeight(st.healAbsorb, healAbsorbClip or st.health, healAbsorbHeight, healthHeight, healAbsorbAnchorTop == true)
+		UFHelper.LayoutHealthOverlayBar(st.health, st.healAbsorb, {
+			axis = healthAxis,
+			regions = overlayRegions,
+			role = "FULL",
+			statusReverse = reverseHealAbsorb,
+			thickness = healAbsorbHeight,
+			crossAlign = healAbsorbAnchorTop and "MAX" or "MIN",
+		})
 		setFrameLevelAbove(st.healAbsorb, st.incomingHeal or st.absorb or st.health, 1)
 	end
 
@@ -8114,6 +8150,9 @@ function GF:LayoutButton(self)
 	if UF.GroupFramesHealerBuffs and UF.GroupFramesHealerBuffs.LayoutButton then UF.GroupFramesHealerBuffs.LayoutButton(self) end
 	GF:UpdateHighlightState(self)
 	GF:UpdatePrivateAuras(self)
+	if AuraUtil and AuraUtil.PrecreateManagedDispelBorder then
+		AuraUtil.PrecreateManagedDispelBorder(st, GF.GetDispelVisualRoot(st, self), (cfg.status or {}).dispelTint, (def.status or {}).dispelTint)
+	end
 end
 
 local GROW_DIRS = { "UP", "DOWN", "LEFT", "RIGHT" }
@@ -9212,7 +9251,6 @@ local AURA_TYPE_META = {
 
 function GF.PrecreateManagedAuraLaneContainers(self)
 	if not self or (tonumber((select(4, GetBuildInfo()))) or 0) < 120100 then return end
-	if InCombatLockdown and InCombatLockdown() then return end
 	local lanes = self._eqolManagedAuraLaneContainers
 	if not lanes then
 		lanes = {}
@@ -9328,30 +9366,27 @@ function GF.GetManagedAuraFlowLayout(layout)
 	local horizontalDirection = primaryHorizontal and layout.primary or layout.secondary
 	local verticalDirection = primaryHorizontal and layout.secondary or layout.primary
 	local flowPerRow = layout.perRow or 1
-	if not primaryHorizontal then
-		-- PTR4's managed layout always fills horizontally before wrapping. For
-		-- vertical-first profiles, transpose the grid while preserving its
-		-- configured footprint as closely as the native flow API permits.
-		flowPerRow = math.ceil((layout.maxCount or flowPerRow) / flowPerRow)
-	end
 	if flowPerRow < 1 then flowPerRow = 1 end
 
 	local flowDirections = AnchorUtil and AnchorUtil.FlowDirection
-	if not flowDirections then return nil end
+	local flowAxes = AnchorUtil and AnchorUtil.FlowLayoutAxis
+	if not (flowDirections and flowAxes) then return nil end
 	return {
+		axis = primaryHorizontal and flowAxes.Horizontal or flowAxes.Vertical,
 		anchorPoint = GF.GetAuraGridBasePoint(layout.primary, layout.secondary),
 		horizontalGrowthDirection = horizontalDirection == "LEFT" and flowDirections.Left or flowDirections.Right,
 		verticalGrowthDirection = verticalDirection == "UP" and flowDirections.Up or flowDirections.Down,
-		rowWidth = flowPerRow * layout.size + max(0, flowPerRow - 1) * layout.spacing,
+		maximumLineSize = flowPerRow * layout.size + max(0, flowPerRow - 1) * layout.spacing,
 	}
 end
 
-function GF.GetManagedAuraGroupLayout(layout)
+function GF.GetManagedAuraGroupLayout(layout, layoutIndex)
 	return {
-		elementSpacingX = layout.spacing,
-		elementSpacingY = layout.spacing,
+		elementSpacing = layout.spacing,
+		lineSpacing = layout.spacing,
 		elementWidth = layout.size,
 		elementHeight = layout.size,
+		layoutIndex = layoutIndex,
 	}
 end
 
@@ -9384,8 +9419,8 @@ function GF:EnsureManagedAuraLane(self, kindKey, unit, filter, style, layout, is
 			unit = unit,
 		}
 		if lane.container.SetUnit then lane.container:SetUnit(unit) end
-		local groupLayout = GF.GetManagedAuraGroupLayout(layout)
 		for i = 1, #filters do
+			local groupLayout = GF.GetManagedAuraGroupLayout(layout, i)
 			local groupKey = kindKey .. ":" .. tostring(generation) .. ":" .. tostring(i)
 			local groupMax = GF.GetManagedAuraGroupMaxFrameCount(maxCount, i, #filters)
 			local registered = addon.AuraCompat:RegisterAuraGroup(lane.container, groupKey, filters[i].filterString, {
@@ -9432,9 +9467,9 @@ function GF:LayoutManagedAuraLane(self, kindKey, lane, style, layout)
 		if lane.container.SetFrameStrata and base.GetFrameStrata then lane.container:SetFrameStrata(base:GetFrameStrata()) end
 		if lane.container.SetFrameLevel and base.GetFrameLevel then lane.container:SetFrameLevel(GF.ClampFrameLevel((base:GetFrameLevel() or 0) + 10)) end
 	end
-	local groupLayout = GF.GetManagedAuraGroupLayout(layout)
 	for i = 1, #(lane.groups or EMPTY) do
 		local group = lane.groups[i]
+		local groupLayout = GF.GetManagedAuraGroupLayout(layout, i)
 		local groupMax = GF.GetManagedAuraGroupMaxFrameCount(layout.maxCount or lane.max, i, #lane.groups)
 		if not addon.AuraCompat:UpdateAuraGroup(lane.container, group.key, { maxFrameCount = groupMax, layout = groupLayout }) then return false end
 		group.max = groupMax
@@ -9686,7 +9721,9 @@ function GF:LayoutAuras(self)
 			style.padding = spacing
 			style.showTooltip = GF.ResolveAuraTooltipEnabled(groupKind, kindKey, typeCfg)
 			style.tooltipUseEditMode = st._tooltipUseEditMode == true
-			style.tooltipAnchor = "ANCHOR_RIGHT"
+			style.tooltipAnchor = typeCfg.tooltipAnchor or "ANCHOR_RIGHT"
+			style.tooltipOffset = GF.ScaleOffset(typeCfg.tooltipOffset, contentScale)
+			style.hideTooltipInCombat = typeCfg.hideTooltipInCombat == true
 			style.showCooldown = typeCfg.showCooldown ~= false
 			style.blizzardDispelBorder = typeCfg.showDispelIcon == true
 			style.borderColor = typeCfg.borderColor
@@ -9925,6 +9962,24 @@ function GF.GetDispelTintBlizzardDispelIndicatorOption(cfg, def)
 		return (Enum and Enum.RaidDispelDisplayType and Enum.RaidDispelDisplayType.DispellableByMe) or 1
 	end
 	return (Enum and Enum.RaidDispelDisplayType and Enum.RaidDispelDisplayType.DisplayAll) or 2
+end
+
+function GF.NormalizeDispelFilterMode(value)
+	if value == nil then return nil end
+	local token = tostring(value):upper()
+	if token == GF.DISPEL_FILTER_MODE_ANY or token == GF.BLIZZARD_DISPEL_MODE_ALL then return GF.DISPEL_FILTER_MODE_ANY end
+	if token == GF.DISPEL_FILTER_MODE_GROUP or token == "RAID_PLAYER_DISPELLABLE" then return GF.DISPEL_FILTER_MODE_GROUP end
+	if token == GF.DISPEL_FILTER_MODE_MY or token == GF.BLIZZARD_DISPEL_MODE_BY_ME or token == "BYME" then return GF.DISPEL_FILTER_MODE_MY end
+	return nil
+end
+
+function GF.GetDispelFilterMode(cfg, def)
+	local dcfg = cfg and cfg.status and cfg.status.dispelTint
+	local mode = GF.NormalizeDispelFilterMode(dcfg and (dcfg.filterMode or dcfg.blizzardDispelIndicatorMode))
+	if mode then return mode end
+	local defDispel = def and def.status and def.status.dispelTint
+	mode = GF.NormalizeDispelFilterMode(defDispel and (defDispel.filterMode or defDispel.blizzardDispelIndicatorMode))
+	return mode or GF.DISPEL_FILTER_MODE_MY
 end
 
 function GF.ResolveBlizzardPrivateAuraDispelsEnabled(cfg, def)
@@ -10408,7 +10463,7 @@ function GF:UpdateAuras(self, updateInfo)
 			hideAuraButtons(st.debuffButtons, 1)
 			hideAuraButtons(st.externalButtons, 1)
 			st._auraSampleActive = nil
-			GF:UpdateDispelTint(self, nil, nil)
+			GF:UpdateDispelTint(self, nil, nil, true)
 			if st._healerBuffPlacementActive and UF.GroupFramesHealerBuffs and UF.GroupFramesHealerBuffs.ClearButton then UF.GroupFramesHealerBuffs.ClearButton(self) end
 			st._healerBuffPlacementActive = nil
 			return
@@ -11440,15 +11495,25 @@ function GF:UpdateDispelTint(self, cache, dispelFilter, allowSample, requiredFla
 	local scfg = cfg and cfg.status or {}
 	local dcfg = scfg.dispelTint or {}
 	local defDispel = (DEFAULTS[kind] and DEFAULTS[kind].status and DEFAULTS[kind].status.dispelTint) or {}
-	if AuraUtil and AuraUtil.ShouldUseManagedDispelBorder and AuraUtil.ShouldUseManagedDispelBorder() then
+	local managedDispel = AuraUtil and AuraUtil.ShouldUseManagedDispelBorder and AuraUtil.ShouldUseManagedDispelBorder()
+	local visualRoot = GF.GetDispelVisualRoot(st, self)
+	if managedDispel and not allowSample then
 		hideDispelTint(st)
-		GF.StopDispelGlow(st.barGroup or self, nil, st)
-		AuraUtil.ApplyManagedDispelBorder(st, st.barGroup or self, getUnit(self), dcfg, defDispel)
+		GF.StopDispelGlow(visualRoot, nil, st)
+		AuraUtil.ApplyManagedDispelBorder(st, visualRoot, getUnit(self), dcfg, defDispel)
 		return
+	end
+	if managedDispel then
+		AuraUtil.HideManagedDispelBorder(st)
+		if not st.dispelTint then
+			st.dispelTint = UFHelper.CreateDispelOverlay(visualRoot)
+			st.dispelTint:SetAllPoints(visualRoot)
+		end
+		GF.SyncDispelTintLayer(st)
 	end
 	if not allowSample and not GF.CanReadAuraData() then
 		hideDispelTint(st)
-		GF.StopDispelGlow(st.barGroup or self, nil, st)
+		GF.StopDispelGlow(visualRoot, nil, st)
 		GF:UpdatePrivateAuraDispelContainerVisibility(self)
 		return
 	end
@@ -11463,7 +11528,7 @@ function GF:UpdateDispelTint(self, cache, dispelFilter, allowSample, requiredFla
 	if glowEnabled == nil then glowEnabled = defDispel.glowEnabled == true end
 	if not overlayEnabled and not glowEnabled then
 		hideDispelTint(st)
-		GF.StopDispelGlow(st.barGroup or self, nil, st)
+		GF.StopDispelGlow(visualRoot, nil, st)
 		GF:UpdatePrivateAuraDispelContainerVisibility(self)
 		return
 	end
@@ -11472,7 +11537,7 @@ function GF:UpdateDispelTint(self, cache, dispelFilter, allowSample, requiredFla
 		if showSample == nil then showSample = defDispel.showSample == true end
 		if not showSample then
 			hideDispelTint(st)
-			GF.StopDispelGlow(st.barGroup or self, nil, st)
+			GF.StopDispelGlow(visualRoot, nil, st)
 			GF:UpdatePrivateAuraDispelContainerVisibility(self)
 			return
 		end
@@ -11563,7 +11628,7 @@ function GF:UpdateDispelTint(self, cache, dispelFilter, allowSample, requiredFla
 	if glowEnabled then
 		GF:UpdateDispelGlow(self, r, g, b)
 	else
-		GF.StopDispelGlow(st.barGroup or self, nil, st)
+		GF.StopDispelGlow(GF.GetDispelVisualRoot(st, self), nil, st)
 	end
 	GF:UpdatePrivateAuraDispelContainerVisibility(self)
 end
@@ -11579,11 +11644,11 @@ function GF:UpdateDispelGlow(self, r, g, b)
 	local glowEnabled = dcfg.glowEnabled
 	if glowEnabled == nil then glowEnabled = defDispel.glowEnabled == true end
 	if not glowEnabled then
-		GF.StopDispelGlow(st.barGroup or self, nil, st)
+		GF.StopDispelGlow(GF.GetDispelVisualRoot(st, self), nil, st)
 		return
 	end
 	if not (r and g and b) then
-		GF.StopDispelGlow(st.barGroup or self, nil, st)
+		GF.StopDispelGlow(GF.GetDispelVisualRoot(st, self), nil, st)
 		return
 	end
 
@@ -11599,7 +11664,6 @@ function GF:UpdateDispelGlow(self, r, g, b)
 	local xoff = clampNumber(dcfg.glowX or defDispel.glowX or 0, -10, 10, 0)
 	local yoff = clampNumber(dcfg.glowY or defDispel.glowY or 0, -10, 10, 0)
 	local effect = dcfg.glowEffect or defDispel.glowEffect or "PIXEL"
-	local glowOverOverlay = (dcfg.glowOverOverlay ~= nil) and (dcfg.glowOverOverlay == true) or (defDispel.glowOverOverlay == true)
 	if effect ~= "PIXEL" and effect ~= "SHINE" and effect ~= "BLIZZARD" then effect = "PIXEL" end
 	local scale = thickness / 3
 	if scale < 0.5 then
@@ -11608,7 +11672,13 @@ function GF:UpdateDispelGlow(self, r, g, b)
 		scale = 4
 	end
 
-	local target, glowFrameLevel = GF.ResolveDispelGlowTarget(self, st, glowOverOverlay)
+	local glowFrameLevel, glowStrata, legacyOverOverlay = GF.ResolveDispelGlowLayer(dcfg, defDispel)
+	local target
+	if legacyOverOverlay then
+		target, glowFrameLevel = GF.ResolveDispelGlowTarget(self, st, true)
+	else
+		target = GF.GetDispelVisualRoot(st, self)
+	end
 	local usingGlow = addon.Glow and addon.Glow.Start and addon.Glow.Stop
 	local canPixel = LCG and LCG.PixelGlow_Start
 	local canShine = LCG and LCG.AutoCastGlow_Start
@@ -11634,7 +11704,8 @@ function GF:UpdateDispelGlow(self, r, g, b)
 			thickness = thickness,
 			xOffset = xoff,
 			yOffset = yoff,
-			hostFrameLevelOffset = glowFrameLevel,
+			strata = glowStrata,
+			hostFrameLevelOffset = legacyOverOverlay and glowFrameLevel or 0,
 			frameLevel = glowFrameLevel,
 		})
 	elseif appliedEffect == "SHINE" and canShine then
@@ -11942,35 +12013,20 @@ function GF:UpdateHealthValue(self, unit, st)
 		local glowAbsorbValue = totalAbs ~= nil and totalAbs or abs
 		local glowAbsorbSecret = issecretvalue and issecretvalue(glowAbsorbValue)
 		if sampleAbsorb then
-			local useSample = false
-			if absSecret then
-				useSample = true
-			else
-				absValue = tonumber(abs) or 0
-				if absValue <= 0 then useSample = true end
-			end
-			if useSample then
-				absValue = (sampleMax or 1) * 0.6
-				glowAbsorbValue = absValue
-				absSecret = false
-				glowAbsorbSecret = false
-			end
+			absValue = (sampleMax or 1) * 0.6
+			glowAbsorbValue = absValue
+			absSecret = false
+			glowAbsorbSecret = false
 		else
 			if not absSecret then absValue = tonumber(abs) or 0 end
 			if not glowAbsorbSecret then glowAbsorbValue = tonumber(glowAbsorbValue) or 0 end
-		end
-		if absorbDontOverflow and not absSecret and not curSecret then
-			local missingHealth = (tonumber(maxForValue) or 0) - (tonumber(cur) or 0)
-			if missingHealth < 0 then missingHealth = 0 end
-			if (absValue or 0) > missingHealth then absValue = missingHealth end
 		end
 		local absorbMax = (sampleAbsorb and sampleMax) or maxForValue or 1
 		st.absorb:SetMinMaxValues(0, absorbMax)
 		GF.SetStatusBarValue(st.absorb, absValue or 0, false, true)
 		if reverseAbsorb and st.absorb2 then
-			local _, maxHealth = st.health:GetMinMaxValues()
-			if maxHealth == nil then maxHealth = absorbMax end
-			st.absorb2:SetMinMaxValues(0, maxHealth or 1)
+			local secondaryMax = sampleAbsorb and absorbMax or maxForValue
+			st.absorb2:SetMinMaxValues(0, secondaryMax)
 			GF.SetStatusBarValue(st.absorb2, absValue or 0, false, true)
 		end
 		if reverseAbsorb and st.absorb2 then
@@ -12007,7 +12063,8 @@ function GF:UpdateHealthValue(self, unit, st)
 		if st.overAbsorbGlow then
 			local useAbsorbGlow = hc.useAbsorbGlow
 			if useAbsorbGlow == nil then useAbsorbGlow = defH.useAbsorbGlow == true end
-			if useAbsorbGlow then
+			local verticalHealth = UFHelper.normalizeStatusBarOrientation(hc.orientation or defH.orientation) == "VERTICAL"
+			if useAbsorbGlow and not verticalHealth then
 				st.overAbsorbGlow:SetAlpha(glowAbsorbValue or 0)
 				st.overAbsorbGlow:Show()
 			else
@@ -12612,7 +12669,7 @@ function GF:UnitButton_ClearUnit(self)
 	if st then
 		GFH.CancelReadyCheckIconTimer(st)
 		hideDispelTint(st)
-		GF.StopDispelGlow(st.barGroup or self, nil, st)
+		GF.StopDispelGlow(GF.GetDispelVisualRoot(st, self), nil, st)
 		st._guid = nil
 		st._unitToken = nil
 		st._class = nil
@@ -12770,6 +12827,7 @@ function GF.UnitButton_OnAttributeChanged(self, name, value)
 		GF:UpdateAll(self)
 		return
 	end
+	if self.unit == value then return end
 	GF:UnitButton_EvaluateUnit(self, false)
 end
 
@@ -13989,6 +14047,32 @@ local function forEachChild(header, fn)
 	end
 end
 
+function GF.SetSecureHeaderUnitWatchesEnabled(header, enabled)
+	if not header or (InCombatLockdown and InCombatLockdown()) then return end
+	enabled = enabled == true
+
+	forEachChild(header, function(child)
+		if not child then return end
+		local registered = (_G.UnitWatchRegistered and _G.UnitWatchRegistered(child)) or child._eqolGroupUnitWatchRegistered == true
+		if enabled then
+			if not registered and _G.RegisterUnitWatch then
+				local ok = pcall(_G.RegisterUnitWatch, child)
+				if ok then child._eqolGroupUnitWatchRegistered = true end
+			else
+				child._eqolGroupUnitWatchRegistered = registered and true or nil
+			end
+			return
+		end
+
+		if registered and _G.UnregisterUnitWatch then pcall(_G.UnregisterUnitWatch, child) end
+		child._eqolGroupUnitWatchRegistered = nil
+		if child.GetAttribute and child.SetAttribute and child:GetAttribute("statehidden") ~= true then child:SetAttribute("statehidden", true) end
+		if child.Hide then child:Hide() end
+	end)
+
+	header._eqolUnitWatchesEnabled = enabled
+end
+
 local function syncHeaderChild(child, kind, cfg, frameW, frameH, fitScale, options)
 	if not (child and cfg) then return end
 	local skipUnchangedUnitUpdate = options and options.skipUnchangedUnitUpdate == true
@@ -14070,6 +14154,33 @@ local function refreshAllAuras()
 				if btn then GF:UpdateAuras(btn) end
 			end
 		end
+	end
+end
+
+function GF:QueueEditModeAuraRefresh()
+	if GF._editModeAuraRefreshQueued then return end
+	GF._editModeAuraRefreshQueued = true
+	RunNextFrame(function()
+		GF._editModeAuraRefreshQueued = nil
+		if isEditModeActive() then refreshAllAuras() end
+	end)
+end
+
+function GF:RefreshHealthForKind(kind)
+	local function refreshChild(child)
+		if child and child._eqolGroupKind == kind then GF:UpdateHealth(child) end
+	end
+	for _, header in pairs(GF.headers or {}) do
+		forEachChild(header, refreshChild)
+	end
+	if GF._raidGroupHeaders then
+		for _, header in ipairs(GF._raidGroupHeaders) do
+			if header then forEachChild(header, refreshChild) end
+		end
+	end
+	local previewFrames = GF._previewFrames and GF._previewFrames[kind]
+	for _, child in ipairs(previewFrames or EMPTY) do
+		refreshChild(child)
 	end
 end
 
@@ -14801,11 +14912,12 @@ function GF.UpdateHeaderChildLayoutKey(header, key)
 	return true
 end
 
-local function applyRaidGroupHeaders(cfg, layout, groupSpecs, forceShow, forceHide, maxGroups, options)
+local function applyRaidGroupHeaders(cfg, layout, groupSpecs, forceShow, forceHide, maxGroups, options, unitWatchesEnabled)
 	local headers = GF:EnsureRaidGroupHeaders()
 	local anchor = GF.anchors and GF.anchors.raid
 	if not (headers and anchor) then return end
 	local skipChildSync = options and options.skipChildSync == true
+	unitWatchesEnabled = unitWatchesEnabled == true
 	groupSpecs = groupSpecs or {}
 	local maxIndex = floor((tonumber(maxGroups) or #groupSpecs) + 0.5)
 	if maxIndex < 0 then maxIndex = 0 end
@@ -14977,16 +15089,17 @@ local function applyRaidGroupHeaders(cfg, layout, groupSpecs, forceShow, forceHi
 					if proxy.SetFrameLevel and header.GetFrameLevel then proxy:SetFrameLevel(GF.ClampFrameLevel((header:GetFrameLevel() or 1) + 20)) end
 					proxy:Show()
 				end
-				GF.PrecreateSecureHeaderChildren(header, layout.unitsPerColumn or 5, false)
+				if unitWatchesEnabled then GF.PrecreateSecureHeaderChildren(header, layout.unitsPerColumn or 5, false) end
 			else
 				setAttr("groupFilter", tostring(i))
 				setAttr("roleFilter", nil)
 				setAttr("strictFiltering", false)
 				setAttr("sortMethod", "INDEX")
 				setAttr("nameList", nil)
-				GF.PrecreateSecureHeaderChildren(header, layout.unitsPerColumn or 5, false)
+				if unitWatchesEnabled then GF.PrecreateSecureHeaderChildren(header, layout.unitsPerColumn or 5, false) end
 			end
-			forEachChild(header, GF.PrecreateManagedAuraLaneContainers)
+			if unitWatchesEnabled then forEachChild(header, GF.PrecreateManagedAuraLaneContainers) end
+			GF.SetSecureHeaderUnitWatchesEnabled(header, unitWatchesEnabled)
 
 			applyVisibility(header, "raid", cfg)
 
@@ -15347,6 +15460,15 @@ function GF:ApplyHeaderAttributes(kind, options)
 		if kind == "party" then GF.HideGroupBorder("party") end
 	end
 
+	local forceHide = header._eqolForceHide
+	local forceShow = header._eqolForceShow
+	local unitWatchesEnabled = cfg.enabled == true or forceShow == true
+	if kind == "raid" then
+		unitWatchesEnabled = unitWatchesEnabled and not useGroupHeaders
+	elseif isSplitRoleKind(kind) then
+		unitWatchesEnabled = unitWatchesEnabled and raidFramesEnabled and splitRoleViewerAllowed
+	end
+
 	local precreateFrames
 	if kind == "party" then
 		precreateFrames = 5
@@ -15355,13 +15477,12 @@ function GF:ApplyHeaderAttributes(kind, options)
 	elseif isSplitRoleKind(kind) then
 		precreateFrames = (raidMaxColumns or header:GetAttribute("maxColumns") or 1) * (raidUnitsPerColumn or header:GetAttribute("unitsPerColumn") or 1)
 	end
-	if precreateFrames then
+	if precreateFrames and unitWatchesEnabled then
 		GF.PrecreateSecureHeaderChildren(header, precreateFrames, false)
 		forEachChild(header, GF.PrecreateManagedAuraLaneContainers)
 	end
+	GF.SetSecureHeaderUnitWatchesEnabled(header, unitWatchesEnabled)
 
-	local forceHide = header._eqolForceHide
-	local forceShow = header._eqolForceShow
 	if kind == "raid" then
 		header._eqolSpecialHide = useGroupHeaders == true
 	elseif isSplitRoleKind(kind) then
@@ -15505,7 +15626,7 @@ function GF:ApplyHeaderAttributes(kind, options)
 				buttonTemplate = unitButtonTemplate,
 			}
 
-			applyRaidGroupHeaders(cfg, layout, groupSpecs, forceShow, forceHide, runtimeGroupCount, options)
+			applyRaidGroupHeaders(cfg, layout, groupSpecs, forceShow, forceHide, runtimeGroupCount, options, cfg.enabled == true or forceShow == true)
 		elseif GF._raidGroupHeaders then
 			local layout = {
 				scale = scale,
@@ -15526,7 +15647,7 @@ function GF:ApplyHeaderAttributes(kind, options)
 				groupGrowth = cfg.groupGrowth,
 				initConfigFunction = initConfigFunction,
 			}
-			applyRaidGroupHeaders(cfg, layout, nil, forceShow, forceHide, 0, options)
+			applyRaidGroupHeaders(cfg, layout, nil, forceShow, forceHide, 0, options, false)
 		end
 	end
 	if GF._previewActive and GF._previewActive[kind] then GF:UpdatePreviewLayout(kind) end
@@ -15639,6 +15760,7 @@ function GF:DisableFeature()
 
 	if GF.headers then
 		for _, header in pairs(GF.headers) do
+			GF.SetSecureHeaderUnitWatchesEnabled(header, false)
 			if UnregisterStateDriver then UnregisterStateDriver(header, "visibility") end
 			if RegisterStateDriver then RegisterStateDriver(header, "visibility", "hide") end
 			if header.Hide then header:Hide() end
@@ -16324,7 +16446,10 @@ function GF._buildGroupCopySectionOptions(source, targetKind)
 	end
 	local targetSet = GF._buildGroupCopySectionSetForGroupKind(targetKind)
 	for _, sectionId in ipairs(GF._groupCopySectionOrder) do
-		if sourceSet[sectionId] and targetSet[sectionId] then options[#options + 1] = { value = sectionId, label = GF._groupCopySectionLabels[sectionId] or sectionId } end
+		local supported = sectionId ~= "privateAuras" or not (UF.PrivateAurasDisabledForClient and UF.PrivateAurasDisabledForClient())
+		if supported and sourceSet[sectionId] and targetSet[sectionId] then
+			options[#options + 1] = { value = sectionId, label = GF._groupCopySectionLabels[sectionId] or sectionId }
+		end
 	end
 	return options
 end
@@ -17613,10 +17738,6 @@ local function buildEditModeSettings(kind, editModeId)
 		{ value = "SHIFT", label = SHIFT_KEY_TEXT },
 		{ value = "CTRL", label = CTRL_KEY_TEXT },
 	}
-	local targetHighlightLayerOptions = {
-		{ value = "ABOVE_BORDER", label = L["UFTargetHighlightLayerAboveBorder"] or "Above border" },
-		{ value = "BEHIND_BORDER", label = L["UFTargetHighlightLayerBehindBorder"] or "Behind border" },
-	}
 	local function getTooltipModeValue()
 		local cfg = getCfg(kind)
 		local tc = cfg and cfg.tooltip or {}
@@ -18021,30 +18142,6 @@ local function buildEditModeSettings(kind, editModeId)
 		local enabled = hcfg.enabled
 		if enabled == nil then enabled = def.enabled end
 		return enabled == true
-	end
-	local function getTargetHighlightLayerValue()
-		local hcfg, def = getHighlightCfg("highlightTarget")
-		local layer = tostring(hcfg.layer or def.layer or "ABOVE_BORDER"):upper()
-		if layer ~= "BEHIND_BORDER" then layer = "ABOVE_BORDER" end
-		return layer
-	end
-	local function getTargetHighlightLayerLabel()
-		local layer = getTargetHighlightLayerValue()
-		for _, option in ipairs(targetHighlightLayerOptions) do
-			if option.value == layer then return option.label end
-		end
-		return layer
-	end
-	local function targetHighlightLayerGenerator()
-		return function(_, root, data)
-			for _, option in ipairs(targetHighlightLayerOptions) do
-				root:CreateRadio(option.label, function() return data.get and data.get() == option.value end, function()
-					if data.set then data.set(nil, option.value) end
-					data.customDefaultText = option.label
-					if addon.EditModeLib and addon.EditModeLib.internal and addon.EditModeLib.internal.RequestRefreshSettings then addon.EditModeLib.internal:RequestRefreshSettings() end
-				end)
-			end
-		end
 	end
 	local function auraGrowthGenerator()
 		return function(_, root, data)
@@ -19728,37 +19825,58 @@ local function buildEditModeSettings(kind, editModeId)
 			isEnabled = function() return isHighlightEnabled("highlightAggro") end,
 		},
 		{
-			name = L["UFTargetHighlightLayer"] or "Layer",
+			name = L["Frame strata"] or "Frame strata",
 			kind = SettingType.Dropdown,
-			field = "aggroHighlightLayer",
+			field = "aggroHighlightStrata",
 			parentId = "aggroHighlight",
-			default = (DEFAULTS[kind] and DEFAULTS[kind].highlightAggro and DEFAULTS[kind].highlightAggro.layer) or "ABOVE_BORDER",
-			customDefaultText = (function()
-				local hcfg, def = getHighlightCfg("highlightAggro")
-				local layer = tostring(hcfg.layer or def.layer or "ABOVE_BORDER"):upper()
-				if layer ~= "BEHIND_BORDER" then layer = "ABOVE_BORDER" end
-				for _, option in ipairs(targetHighlightLayerOptions) do
-					if option.value == layer then return option.label end
-				end
-				return layer
-			end)(),
+			newTagID = "ufGroupAggroHighlightStrata",
 			get = function()
 				local hcfg, def = getHighlightCfg("highlightAggro")
-				local layer = tostring(hcfg.layer or def.layer or "ABOVE_BORDER"):upper()
-				if layer ~= "BEHIND_BORDER" then layer = "ABOVE_BORDER" end
-				return layer
+				return GF.NormalizeFrameStrataToken(hcfg.strata) or GF.NormalizeFrameStrataToken(def.strata) or ""
 			end,
 			set = function(_, value)
 				local cfg = getCfg(kind)
 				if not cfg then return end
 				cfg.highlightAggro = cfg.highlightAggro or {}
-				local layer = tostring(value or "ABOVE_BORDER"):upper()
-				if layer ~= "BEHIND_BORDER" then layer = "ABOVE_BORDER" end
-				cfg.highlightAggro.layer = layer
-				if EditMode and EditMode.SetValue then EditMode:SetValue(editModeId, "aggroHighlightLayer", cfg.highlightAggro.layer, nil, true) end
+				cfg.highlightAggro.strata = GF.NormalizeFrameStrataToken(value)
+				if EditMode and EditMode.SetValue then EditMode:SetValue(editModeId, "aggroHighlightStrata", cfg.highlightAggro.strata or "", nil, true) end
 				GF:ApplyHeaderAttributes(kind)
 			end,
-			generator = targetHighlightLayerGenerator(),
+			getValueText = function()
+				local hcfg, def = getHighlightCfg("highlightAggro")
+				return GF.DropdownOptionLabel(GF._FRAME_STRATA_OPTIONS_WITH_DEFAULT, GF.NormalizeFrameStrataToken(hcfg.strata) or GF.NormalizeFrameStrataToken(def.strata) or "", DEFAULT or "Default")
+			end,
+			generator = GF.DropdownRadioGenerator(GF._FRAME_STRATA_OPTIONS_WITH_DEFAULT),
+			isEnabled = function() return isHighlightEnabled("highlightAggro") end,
+		},
+		{
+			name = L["UFFrameLevel"] or "Frame level",
+			kind = SettingType.Slider,
+			allowInput = true,
+			field = "aggroHighlightFrameLevelOffset",
+			parentId = "aggroHighlight",
+			newTagID = "ufGroupAggroHighlightFrameLevel",
+			minValue = -20,
+			maxValue = 1000,
+			valueStep = 1,
+			get = function()
+				local hcfg, def = getHighlightCfg("highlightAggro")
+				local value = hcfg.frameLevelOffset
+				if value == nil then value = def.frameLevelOffset end
+				if value == nil then value = 6 end
+				value = clampNumber(value, -20, 1000, 6)
+				return floor(value + (value >= 0 and 0.5 or -0.5))
+			end,
+			set = function(_, value)
+				local cfg = getCfg(kind)
+				if not cfg then return end
+				cfg.highlightAggro = cfg.highlightAggro or {}
+				local levelOffset = clampNumber(value, -20, 1000, 6)
+				levelOffset = floor(levelOffset + (levelOffset >= 0 and 0.5 or -0.5))
+				cfg.highlightAggro.frameLevelOffset = levelOffset
+				if EditMode and EditMode.SetValue then EditMode:SetValue(editModeId, "aggroHighlightFrameLevelOffset", levelOffset, nil, true) end
+				GF:ApplyHeaderAttributes(kind)
+			end,
 			isEnabled = function() return isHighlightEnabled("highlightAggro") end,
 		},
 		{
@@ -19890,24 +20008,58 @@ local function buildEditModeSettings(kind, editModeId)
 			isEnabled = function() return isHighlightEnabled("highlightTarget") end,
 		},
 		{
-			name = L["UFTargetHighlightLayer"] or "Layer",
+			name = L["Frame strata"] or "Frame strata",
 			kind = SettingType.Dropdown,
-			field = "targetHighlightLayer",
+			field = "targetHighlightStrata",
 			parentId = "targetHighlight",
-			default = (DEFAULTS[kind] and DEFAULTS[kind].highlightTarget and DEFAULTS[kind].highlightTarget.layer) or "ABOVE_BORDER",
-			customDefaultText = getTargetHighlightLayerLabel(),
-			get = function() return getTargetHighlightLayerValue() end,
+			newTagID = "ufGroupTargetHighlightStrata",
+			get = function()
+				local hcfg, def = getHighlightCfg("highlightTarget")
+				return GF.NormalizeFrameStrataToken(hcfg.strata) or GF.NormalizeFrameStrataToken(def.strata) or ""
+			end,
 			set = function(_, value)
 				local cfg = getCfg(kind)
 				if not cfg then return end
 				cfg.highlightTarget = cfg.highlightTarget or {}
-				local layer = tostring(value or "ABOVE_BORDER"):upper()
-				if layer ~= "BEHIND_BORDER" then layer = "ABOVE_BORDER" end
-				cfg.highlightTarget.layer = layer
-				if EditMode and EditMode.SetValue then EditMode:SetValue(editModeId, "targetHighlightLayer", cfg.highlightTarget.layer, nil, true) end
+				cfg.highlightTarget.strata = GF.NormalizeFrameStrataToken(value)
+				if EditMode and EditMode.SetValue then EditMode:SetValue(editModeId, "targetHighlightStrata", cfg.highlightTarget.strata or "", nil, true) end
 				GF:ApplyHeaderAttributes(kind)
 			end,
-			generator = targetHighlightLayerGenerator(),
+			getValueText = function()
+				local hcfg, def = getHighlightCfg("highlightTarget")
+				return GF.DropdownOptionLabel(GF._FRAME_STRATA_OPTIONS_WITH_DEFAULT, GF.NormalizeFrameStrataToken(hcfg.strata) or GF.NormalizeFrameStrataToken(def.strata) or "", DEFAULT or "Default")
+			end,
+			generator = GF.DropdownRadioGenerator(GF._FRAME_STRATA_OPTIONS_WITH_DEFAULT),
+			isEnabled = function() return isHighlightEnabled("highlightTarget") end,
+		},
+		{
+			name = L["UFFrameLevel"] or "Frame level",
+			kind = SettingType.Slider,
+			allowInput = true,
+			field = "targetHighlightFrameLevelOffset",
+			parentId = "targetHighlight",
+			newTagID = "ufGroupTargetHighlightFrameLevel",
+			minValue = -20,
+			maxValue = 1000,
+			valueStep = 1,
+			get = function()
+				local hcfg, def = getHighlightCfg("highlightTarget")
+				local value = hcfg.frameLevelOffset
+				if value == nil then value = def.frameLevelOffset end
+				if value == nil then value = 5 end
+				value = clampNumber(value, -20, 1000, 5)
+				return floor(value + (value >= 0 and 0.5 or -0.5))
+			end,
+			set = function(_, value)
+				local cfg = getCfg(kind)
+				if not cfg then return end
+				cfg.highlightTarget = cfg.highlightTarget or {}
+				local levelOffset = clampNumber(value, -20, 1000, 5)
+				levelOffset = floor(levelOffset + (levelOffset >= 0 and 0.5 or -0.5))
+				cfg.highlightTarget.frameLevelOffset = levelOffset
+				if EditMode and EditMode.SetValue then EditMode:SetValue(editModeId, "targetHighlightFrameLevelOffset", levelOffset, nil, true) end
+				GF:ApplyHeaderAttributes(kind)
+			end,
 			isEnabled = function() return isHighlightEnabled("highlightTarget") end,
 		},
 		{
@@ -21809,6 +21961,44 @@ local function buildEditModeSettings(kind, editModeId)
 			defaultCollapsed = true,
 		},
 		{
+			name = L["CooldownPanelBarOrientation"] or "Bar orientation",
+			kind = SettingType.Dropdown,
+			field = "healthOrientation",
+			parentId = "health",
+			newTagID = "ufHealthBarOrientation",
+			height = 120,
+			get = function()
+				local cfg = getCfg(kind)
+				return UFHelper.normalizeStatusBarOrientation(cfg and cfg.health and cfg.health.orientation)
+			end,
+			set = function(_, value)
+				local cfg = getCfg(kind)
+				if not cfg then return end
+				cfg.health = cfg.health or {}
+				cfg.health.orientation = UFHelper.normalizeStatusBarOrientation(value)
+				if EditMode and EditMode.SetValue then EditMode:SetValue(editModeId, "healthOrientation", cfg.health.orientation, nil, true) end
+				GF:ApplyHeaderAttributes(kind)
+			end,
+			generator = function(_, root)
+				for _, option in ipairs({
+					{ value = "HORIZONTAL", label = L["Horizontal"] or "Horizontal" },
+					{ value = "VERTICAL", label = L["Vertical"] or "Vertical" },
+				}) do
+					root:CreateRadio(option.label, function()
+						local cfg = getCfg(kind)
+						return UFHelper.normalizeStatusBarOrientation(cfg and cfg.health and cfg.health.orientation) == option.value
+					end, function()
+						local cfg = getCfg(kind)
+						if not cfg then return end
+						cfg.health = cfg.health or {}
+						cfg.health.orientation = option.value
+						if EditMode and EditMode.SetValue then EditMode:SetValue(editModeId, "healthOrientation", option.value, nil, true) end
+						GF:ApplyHeaderAttributes(kind)
+					end)
+				end
+			end,
+		},
+		{
 			name = L["Use class color (players)"] or "Use class color (players)",
 			kind = SettingType.Checkbox,
 			field = "healthClassColor",
@@ -22771,6 +22961,7 @@ local function buildEditModeSettings(kind, editModeId)
 				cfg.health.showSampleIncomingHeal = value and true or false
 				if EditMode and EditMode.SetValue then EditMode:SetValue(editModeId, "incomingHealSample", cfg.health.showSampleIncomingHeal, nil, true) end
 				GF:ApplyHeaderAttributes(kind)
+				GF:RefreshHealthForKind(kind)
 			end,
 			isEnabled = function()
 				local cfg = getCfg(kind)
@@ -22888,6 +23079,7 @@ local function buildEditModeSettings(kind, editModeId)
 				cfg.health.showSampleAbsorb = value and true or false
 				if EditMode and EditMode.SetValue then EditMode:SetValue(editModeId, "absorbSample", cfg.health.showSampleAbsorb, nil, true) end
 				GF:ApplyHeaderAttributes(kind)
+				GF:RefreshHealthForKind(kind)
 			end,
 			isEnabled = function()
 				local cfg = getCfg(kind)
@@ -23009,7 +23201,7 @@ local function buildEditModeSettings(kind, editModeId)
 			field = "absorbOverlayHeight",
 			parentId = "absorb",
 			minValue = 0,
-			maxValue = 300,
+			maxValue = 800,
 			valueStep = 1,
 			formatter = GF.FormatOverlayHeight,
 			default = 0,
@@ -23029,7 +23221,7 @@ local function buildEditModeSettings(kind, editModeId)
 				cfg.health = cfg.health or {}
 				local def = DEFAULTS[kind] or {}
 				local fallback = GF._computeOverlayHeightFallback((cfg and cfg.height) or def.height, (cfg and cfg.powerHeight) or def.powerHeight)
-				local v = clampNumber(value, 0, 300, 0)
+				local v = clampNumber(value, 0, 800, 0)
 				if not v or v <= 0 then v = 0 end
 				v = GF._resolveOverlayHeightSetting(v, fallback)
 				cfg.health.absorbOverlayHeight = v
@@ -23149,6 +23341,12 @@ local function buildEditModeSettings(kind, editModeId)
 				local hc = cfg and cfg.health or {}
 				return hc.absorbEnabled ~= false
 			end,
+			isShown = function()
+				local cfg = getCfg(kind)
+				local hc = cfg and cfg.health or {}
+				local defH = (DEFAULTS[kind] and DEFAULTS[kind].health) or {}
+				return UFHelper.normalizeStatusBarOrientation(hc.orientation or defH.orientation) ~= "VERTICAL"
+			end,
 		},
 		{
 			name = L["Heal absorb"] or "Heal absorb",
@@ -23192,6 +23390,7 @@ local function buildEditModeSettings(kind, editModeId)
 				cfg.health.showSampleHealAbsorb = value and true or false
 				if EditMode and EditMode.SetValue then EditMode:SetValue(editModeId, "healAbsorbSample", cfg.health.showSampleHealAbsorb, nil, true) end
 				GF:ApplyHeaderAttributes(kind)
+				GF:RefreshHealthForKind(kind)
 			end,
 			isEnabled = function()
 				local cfg = getCfg(kind)
@@ -23313,7 +23512,7 @@ local function buildEditModeSettings(kind, editModeId)
 			field = "healAbsorbOverlayHeight",
 			parentId = "healabsorb",
 			minValue = 0,
-			maxValue = 300,
+			maxValue = 800,
 			valueStep = 1,
 			formatter = GF.FormatOverlayHeight,
 			default = 0,
@@ -23333,7 +23532,7 @@ local function buildEditModeSettings(kind, editModeId)
 				cfg.health = cfg.health or {}
 				local def = DEFAULTS[kind] or {}
 				local fallback = GF._computeOverlayHeightFallback((cfg and cfg.height) or def.height, (cfg and cfg.powerHeight) or def.powerHeight)
-				local v = clampNumber(value, 0, 300, 0)
+				local v = clampNumber(value, 0, 800, 0)
 				if not v or v <= 0 then v = 0 end
 				v = GF._resolveOverlayHeightSetting(v, fallback)
 				cfg.health.healAbsorbOverlayHeight = v
@@ -24662,7 +24861,31 @@ local function buildEditModeSettings(kind, editModeId)
 			name = "",
 			kind = SettingType.Divider,
 			parentId = "dispeltint",
-			isShown = function() return not GF.IsBlizzardAuraRenderTypeEnabled(getCfg(kind), DEFAULTS[kind] or EMPTY, "dispels") end,
+			isShown = function()
+				return not addon.AuraCompat and not GF.IsBlizzardAuraRenderTypeEnabled(getCfg(kind), DEFAULTS[kind] or EMPTY, "dispels")
+			end,
+		},
+		{
+			name = L["UFDispelFilterMode"] or "Dispel filter",
+			kind = SettingType.Dropdown,
+			field = "dispelTintFilterMode",
+			newTagID = "ufGroupDispelFilterMode",
+			parentId = "dispeltint",
+			values = GF.dispelFilterModeOptions,
+			customDefaultText = GF.DropdownOptionLabel(GF.dispelFilterModeOptions, GF.GetDispelFilterMode(getCfg(kind), DEFAULTS[kind] or EMPTY), L["UFDispelFilterMine"] or "Dispellable by me"),
+			get = function() return GF.GetDispelFilterMode(getCfg(kind), DEFAULTS[kind] or EMPTY) end,
+			set = function(_, value)
+				local cfg = getCfg(kind)
+				if not cfg then return end
+				cfg.status = cfg.status or {}
+				cfg.status.dispelTint = cfg.status.dispelTint or {}
+				cfg.status.dispelTint.filterMode = GF.NormalizeDispelFilterMode(value) or GF.DISPEL_FILTER_MODE_MY
+				if EditMode and EditMode.SetValue then EditMode:SetValue(editModeId, "dispelTintFilterMode", cfg.status.dispelTint.filterMode, nil, true) end
+				GF:ApplyHeaderAttributes(kind)
+				GF:RefreshDispelTint()
+			end,
+			generator = GF.DropdownRadioGenerator(GF.dispelFilterModeOptions),
+			isShown = function() return addon.AuraCompat ~= nil end,
 		},
 		{
 			name = (L["Blizzard"] or "Blizzard") .. " " .. (L["UFAuraRendererBlizzardDispelOverlay"] or "Dispel overlay"),
@@ -24682,7 +24905,9 @@ local function buildEditModeSettings(kind, editModeId)
 				GF:ApplyHeaderAttributes(kind)
 				GF:RefreshDispelTint()
 			end,
-			isShown = function() return not GF.IsBlizzardAuraRenderTypeEnabled(getCfg(kind), DEFAULTS[kind] or EMPTY, "dispels") end,
+			isShown = function()
+				return not addon.AuraCompat and not GF.IsBlizzardAuraRenderTypeEnabled(getCfg(kind), DEFAULTS[kind] or EMPTY, "dispels")
+			end,
 		},
 		{
 			name = L["UFAuraRendererBlizzardDispelMode"] or "Dispel indicator mode",
@@ -24705,13 +24930,17 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 			generator = GF.DropdownRadioGenerator(GF.blizzardDispelIndicatorModeOptions),
 			isEnabled = function() return GF.ResolveBlizzardPrivateAuraDispelsEnabled(getCfg(kind), DEFAULTS[kind] or EMPTY) end,
-			isShown = function() return not GF.IsBlizzardAuraRenderTypeEnabled(getCfg(kind), DEFAULTS[kind] or EMPTY, "dispels") end,
+			isShown = function()
+				return not addon.AuraCompat and not GF.IsBlizzardAuraRenderTypeEnabled(getCfg(kind), DEFAULTS[kind] or EMPTY, "dispels")
+			end,
 		},
 		{
 			name = "",
 			kind = SettingType.Divider,
 			parentId = "dispeltint",
-			isShown = function() return not GF.IsBlizzardAuraRenderTypeEnabled(getCfg(kind), DEFAULTS[kind] or EMPTY, "dispels") end,
+			isShown = function()
+				return not addon.AuraCompat and not GF.IsBlizzardAuraRenderTypeEnabled(getCfg(kind), DEFAULTS[kind] or EMPTY, "dispels")
+			end,
 		},
 		{
 			name = L["Background color change"] or "Background color change",
@@ -24780,8 +25009,8 @@ local function buildEditModeSettings(kind, editModeId)
 				local cfg = getCfg(kind)
 				local sc = cfg and cfg.status or {}
 				local dt = sc.dispelTint or {}
-				local value = dt.frameLevelOffset
-				if value == nil then value = 1 end
+				local def = (DEFAULTS[kind] and DEFAULTS[kind].status and DEFAULTS[kind].status.dispelTint) or {}
+				local value = GF.ResolveUnifiedFrameLevelOffset(dt, def, 12, 20)
 				value = clampNumber(value, -20, 1000, 1)
 				return floor(value + (value >= 0 and 0.5 or -0.5))
 			end,
@@ -24790,8 +25019,9 @@ local function buildEditModeSettings(kind, editModeId)
 				if not cfg then return end
 				cfg.status = cfg.status or {}
 				cfg.status.dispelTint = cfg.status.dispelTint or {}
-				local levelOffset = clampNumber(value, -20, 1000, cfg.status.dispelTint.frameLevelOffset or 1)
+				local levelOffset = clampNumber(value, -20, 1000, 20)
 				levelOffset = floor(levelOffset + (levelOffset >= 0 and 0.5 or -0.5))
+				cfg.status.dispelTint.frameLevelModel = GF.UNIFIED_FRAME_LAYER_MODEL
 				cfg.status.dispelTint.frameLevelOffset = levelOffset
 				if EditMode and EditMode.SetValue then EditMode:SetValue(editModeId, "dispelTintFrameLevelOffset", cfg.status.dispelTint.frameLevelOffset, nil, true) end
 				GF:ApplyHeaderAttributes(kind)
@@ -24975,25 +25205,80 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = L["UFDispelGlowOverOverlay"] or "Glow over overlay",
-			kind = SettingType.Checkbox,
-			field = "dispelTintGlowOverOverlay",
+			name = L["UFDispelGlowStrata"] or "Dispel glow strata",
+			kind = SettingType.Dropdown,
+			field = "dispelTintGlowStrata",
 			parentId = "dispeltint",
+			newTagID = "ufGroupDispelGlowStrata",
 			get = function()
 				local cfg = getCfg(kind)
 				local sc = cfg and cfg.status or {}
 				local dt = sc.dispelTint or {}
 				local def = (DEFAULTS[kind] and DEFAULTS[kind].status and DEFAULTS[kind].status.dispelTint) or {}
-				if dt.glowOverOverlay == nil then return def.glowOverOverlay == true end
-				return dt.glowOverOverlay == true
+				local _, strata = GF.ResolveDispelGlowLayer(dt, def)
+				return strata or ""
 			end,
 			set = function(_, value)
 				local cfg = getCfg(kind)
 				if not cfg then return end
 				cfg.status = cfg.status or {}
 				cfg.status.dispelTint = cfg.status.dispelTint or {}
-				cfg.status.dispelTint.glowOverOverlay = value and true or false
-				if EditMode and EditMode.SetValue then EditMode:SetValue(editModeId, "dispelTintGlowOverOverlay", cfg.status.dispelTint.glowOverOverlay, nil, true) end
+				local dt = cfg.status.dispelTint
+				local def = (DEFAULTS[kind] and DEFAULTS[kind].status and DEFAULTS[kind].status.dispelTint) or {}
+				if rawget(dt, "glowFrameLevelModel") ~= GF.UNIFIED_FRAME_LAYER_MODEL then dt.glowFrameLevelOffset = GF.GetDispelGlowLayerLevelForSettings(dt, def) end
+				dt.glowFrameLevelModel = GF.UNIFIED_FRAME_LAYER_MODEL
+				dt.glowStrata = GF.NormalizeFrameStrataToken(value)
+				if EditMode and EditMode.SetValue then EditMode:SetValue(editModeId, "dispelTintGlowStrata", dt.glowStrata or "", nil, true) end
+				GF:ApplyHeaderAttributes(kind)
+				GF:RefreshDispelTint()
+			end,
+			getValueText = function()
+				local cfg = getCfg(kind)
+				local sc = cfg and cfg.status or {}
+				local dt = sc.dispelTint or {}
+				local def = (DEFAULTS[kind] and DEFAULTS[kind].status and DEFAULTS[kind].status.dispelTint) or {}
+				local _, strata = GF.ResolveDispelGlowLayer(dt, def)
+				return GF.DropdownOptionLabel(GF._FRAME_STRATA_OPTIONS_WITH_DEFAULT, strata or "", DEFAULT or "Default")
+			end,
+			generator = GF.DropdownRadioGenerator(GF._FRAME_STRATA_OPTIONS_WITH_DEFAULT),
+			isEnabled = function()
+				local cfg = getCfg(kind)
+				local sc = cfg and cfg.status or {}
+				local dt = sc.dispelTint or {}
+				local def = (DEFAULTS[kind] and DEFAULTS[kind].status and DEFAULTS[kind].status.dispelTint) or {}
+				local glowEnabled = dt.glowEnabled
+				if glowEnabled == nil then glowEnabled = def.glowEnabled == true end
+				return glowEnabled == true
+			end,
+		},
+		{
+			name = L["UFDispelGlowFrameLevel"] or "Dispel glow level",
+			kind = SettingType.Slider,
+			allowInput = true,
+			field = "dispelTintGlowFrameLevelOffset",
+			parentId = "dispeltint",
+			newTagID = "ufGroupDispelGlowFrameLevel",
+			minValue = -20,
+			maxValue = 1000,
+			valueStep = 1,
+			get = function()
+				local cfg = getCfg(kind)
+				local sc = cfg and cfg.status or {}
+				local dt = sc.dispelTint or {}
+				local def = (DEFAULTS[kind] and DEFAULTS[kind].status and DEFAULTS[kind].status.dispelTint) or {}
+				return GF.GetDispelGlowLayerLevelForSettings(dt, def)
+			end,
+			set = function(_, value)
+				local cfg = getCfg(kind)
+				if not cfg then return end
+				cfg.status = cfg.status or {}
+				cfg.status.dispelTint = cfg.status.dispelTint or {}
+				local dt = cfg.status.dispelTint
+				local levelOffset = clampNumber(value, -20, 1000, 21)
+				levelOffset = floor(levelOffset + (levelOffset >= 0 and 0.5 or -0.5))
+				dt.glowFrameLevelModel = GF.UNIFIED_FRAME_LAYER_MODEL
+				dt.glowFrameLevelOffset = levelOffset
+				if EditMode and EditMode.SetValue then EditMode:SetValue(editModeId, "dispelTintGlowFrameLevelOffset", levelOffset, nil, true) end
 				GF:ApplyHeaderAttributes(kind)
 				GF:RefreshDispelTint()
 			end,
@@ -25004,10 +25289,7 @@ local function buildEditModeSettings(kind, editModeId)
 				local def = (DEFAULTS[kind] and DEFAULTS[kind].status and DEFAULTS[kind].status.dispelTint) or {}
 				local glowEnabled = dt.glowEnabled
 				if glowEnabled == nil then glowEnabled = def.glowEnabled == true end
-				if glowEnabled ~= true then return false end
-				local overlayEnabled = dt.enabled
-				if overlayEnabled == nil then overlayEnabled = def.enabled ~= false end
-				return overlayEnabled == true or GF.ResolveBlizzardPrivateAuraDispelsEnabled(cfg, DEFAULTS[kind] or EMPTY)
+				return glowEnabled == true
 			end,
 		},
 		{
@@ -27105,6 +27387,45 @@ local function buildEditModeSettings(kind, editModeId)
 			isEnabled = function() return isPowerTextEnabled("textRight") end,
 		},
 		{
+			name = L["CooldownPanelBarOrientation"] or "Bar orientation",
+			kind = SettingType.Dropdown,
+			field = "powerOrientation",
+			parentId = "power",
+			newTagID = "ufPowerBarOrientation",
+			height = 120,
+			get = function()
+				local cfg = getCfg(kind)
+				local pcfg = cfg and cfg.power or {}
+				return UFHelper.normalizeStatusBarOrientation(pcfg.orientation)
+			end,
+			set = function(_, value)
+				local cfg = getCfg(kind)
+				if not cfg then return end
+				cfg.power = cfg.power or {}
+				cfg.power.orientation = UFHelper.normalizeStatusBarOrientation(value)
+				if EditMode and EditMode.SetValue then EditMode:SetValue(editModeId, "powerOrientation", cfg.power.orientation, nil, true) end
+				GF:ApplyHeaderAttributes(kind)
+			end,
+			generator = function(_, root)
+				for _, option in ipairs({
+					{ value = "HORIZONTAL", label = L["Horizontal"] or "Horizontal" },
+					{ value = "VERTICAL", label = L["Vertical"] or "Vertical" },
+				}) do
+					root:CreateRadio(option.label, function()
+						local cfg = getCfg(kind)
+						return UFHelper.normalizeStatusBarOrientation(cfg and cfg.power and cfg.power.orientation) == option.value
+					end, function()
+						local cfg = getCfg(kind)
+						if not cfg then return end
+						cfg.power = cfg.power or {}
+						cfg.power.orientation = option.value
+						if EditMode and EditMode.SetValue then EditMode:SetValue(editModeId, "powerOrientation", option.value, nil, true) end
+						GF:ApplyHeaderAttributes(kind)
+					end)
+				end
+			end,
+		},
+		{
 			name = L["Bar Texture"] or "Bar Texture",
 			kind = SettingType.Dropdown,
 			field = "powerTexture",
@@ -28086,7 +28407,7 @@ local function buildEditModeSettings(kind, editModeId)
 			name = L["UFGroupDebuffFilter"] or "Debuff filters",
 			kind = SettingType.MultiDropdown,
 			field = "debuffFilters",
-			height = 140,
+			height = 190,
 			values = groupDebuffFilterOptions,
 			parentId = "debuffs",
 			isSelected = function(_, value)
@@ -31197,6 +31518,12 @@ local function buildEditModeSettings(kind, editModeId)
 
 	settings = GF.ReorderGroupEditModeSettings(settings)
 	GF.ApplyBlizzardAuraSettingVisibility(settings, kind)
+	if UF.PrivateAurasDisabledForClient and UF.PrivateAurasDisabledForClient() then
+		for i = #settings, 1, -1 do
+			local setting = settings[i]
+			if setting and (setting.id == "privateAuras" or setting.parentId == "privateAuras") then table.remove(settings, i) end
+		end
+	end
 	return settings
 end
 
@@ -31428,6 +31755,8 @@ local function applyEditModeData(kind, data)
 		or data.aggroHighlightSample ~= nil
 		or data.aggroHighlightTexture ~= nil
 		or data.aggroHighlightLayer ~= nil
+		or data.aggroHighlightStrata ~= nil
+		or data.aggroHighlightFrameLevelOffset ~= nil
 		or data.aggroHighlightSize ~= nil
 		or data.aggroHighlightOffset ~= nil
 	then
@@ -31439,10 +31768,15 @@ local function applyEditModeData(kind, data)
 	if data.aggroHighlightSample ~= nil then cfg.highlightAggro.sample = data.aggroHighlightSample and true or false end
 	if data.aggroHighlightTexture ~= nil then cfg.highlightAggro.texture = data.aggroHighlightTexture end
 	if data.aggroHighlightLayer ~= nil then
-		local layer = tostring(data.aggroHighlightLayer or cfg.highlightAggro.layer or "ABOVE_BORDER"):upper()
-		if layer ~= "BEHIND_BORDER" then layer = "ABOVE_BORDER" end
-		cfg.highlightAggro.layer = layer
+		if data.aggroHighlightFrameLevelOffset == nil then cfg.highlightAggro.frameLevelOffset = GF.GetHighlightDefaultFrameLevelOffset("aggro", data.aggroHighlightLayer) end
+		cfg.highlightAggro.layer = nil
 	end
+	if data.aggroHighlightStrata ~= nil then cfg.highlightAggro.strata = GF.NormalizeFrameStrataToken(data.aggroHighlightStrata) end
+	if data.aggroHighlightFrameLevelOffset ~= nil then
+		local levelOffset = clampNumber(data.aggroHighlightFrameLevelOffset, -20, 1000, 6)
+		cfg.highlightAggro.frameLevelOffset = floor(levelOffset + (levelOffset >= 0 and 0.5 or -0.5))
+	end
+	if cfg.highlightAggro then cfg.highlightAggro.layer = nil end
 	if data.aggroHighlightSize ~= nil then cfg.highlightAggro.size = clampNumber(data.aggroHighlightSize, 1, 64, cfg.highlightAggro.size or 2) end
 	if data.aggroHighlightOffset ~= nil then cfg.highlightAggro.offset = clampNumber(data.aggroHighlightOffset, -64, 64, cfg.highlightAggro.offset or 0) end
 	if
@@ -31450,6 +31784,8 @@ local function applyEditModeData(kind, data)
 		or data.targetHighlightColor ~= nil
 		or data.targetHighlightTexture ~= nil
 		or data.targetHighlightLayer ~= nil
+		or data.targetHighlightStrata ~= nil
+		or data.targetHighlightFrameLevelOffset ~= nil
 		or data.targetHighlightSize ~= nil
 		or data.targetHighlightOffset ~= nil
 	then
@@ -31459,10 +31795,15 @@ local function applyEditModeData(kind, data)
 	if data.targetHighlightColor ~= nil then cfg.highlightTarget.color = data.targetHighlightColor end
 	if data.targetHighlightTexture ~= nil then cfg.highlightTarget.texture = data.targetHighlightTexture end
 	if data.targetHighlightLayer ~= nil then
-		local layer = tostring(data.targetHighlightLayer or cfg.highlightTarget.layer or "ABOVE_BORDER"):upper()
-		if layer ~= "BEHIND_BORDER" then layer = "ABOVE_BORDER" end
-		cfg.highlightTarget.layer = layer
+		if data.targetHighlightFrameLevelOffset == nil then cfg.highlightTarget.frameLevelOffset = GF.GetHighlightDefaultFrameLevelOffset("target", data.targetHighlightLayer) end
+		cfg.highlightTarget.layer = nil
 	end
+	if data.targetHighlightStrata ~= nil then cfg.highlightTarget.strata = GF.NormalizeFrameStrataToken(data.targetHighlightStrata) end
+	if data.targetHighlightFrameLevelOffset ~= nil then
+		local levelOffset = clampNumber(data.targetHighlightFrameLevelOffset, -20, 1000, 5)
+		cfg.highlightTarget.frameLevelOffset = floor(levelOffset + (levelOffset >= 0 and 0.5 or -0.5))
+	end
+	if cfg.highlightTarget then cfg.highlightTarget.layer = nil end
 	if data.targetHighlightSize ~= nil then cfg.highlightTarget.size = clampNumber(data.targetHighlightSize, 1, 64, cfg.highlightTarget.size or 2) end
 	if data.targetHighlightOffset ~= nil then cfg.highlightTarget.offset = clampNumber(data.targetHighlightOffset, -64, 64, cfg.highlightTarget.offset or 0) end
 	if data.showName ~= nil then
@@ -31593,6 +31934,10 @@ local function applyEditModeData(kind, data)
 		cfg.health = cfg.health or {}
 		cfg.health.texture = data.healthTexture
 	end
+	if data.healthOrientation ~= nil then
+		cfg.health = cfg.health or {}
+		cfg.health.orientation = UFHelper.normalizeStatusBarOrientation(data.healthOrientation)
+	end
 	if data.healthSmoothFill ~= nil then
 		cfg.health = cfg.health or {}
 		cfg.health.smoothFill = data.healthSmoothFill and true or false
@@ -31684,7 +32029,7 @@ local function applyEditModeData(kind, data)
 	if data.absorbOverlayHeight ~= nil then
 		cfg.health = cfg.health or {}
 		local fallback = GF._computeOverlayHeightFallback(cfg.height, cfg.powerHeight)
-		cfg.health.absorbOverlayHeight = GF._resolveOverlayHeightSetting(clampNumber(data.absorbOverlayHeight, 0, 300, 0), fallback)
+		cfg.health.absorbOverlayHeight = GF._resolveOverlayHeightSetting(clampNumber(data.absorbOverlayHeight, 0, 800, 0), fallback)
 	end
 	if data.absorbOverlayAnchorTop ~= nil then
 		cfg.health = cfg.health or {}
@@ -31729,7 +32074,7 @@ local function applyEditModeData(kind, data)
 	if data.healAbsorbOverlayHeight ~= nil then
 		cfg.health = cfg.health or {}
 		local fallback = GF._computeOverlayHeightFallback(cfg.height, cfg.powerHeight)
-		cfg.health.healAbsorbOverlayHeight = GF._resolveOverlayHeightSetting(clampNumber(data.healAbsorbOverlayHeight, 0, 300, 0), fallback)
+		cfg.health.healAbsorbOverlayHeight = GF._resolveOverlayHeightSetting(clampNumber(data.healAbsorbOverlayHeight, 0, 800, 0), fallback)
 	end
 	if data.healAbsorbOverlayAnchorTop ~= nil then
 		cfg.health = cfg.health or {}
@@ -31784,15 +32129,20 @@ local function applyEditModeData(kind, data)
 		or data.dispelTintEnabled ~= nil
 		or data.dispelTintBlizzardPrivateAuraDispels ~= nil
 		or data.dispelTintBlizzardDispelMode ~= nil
+		or data.dispelTintFilterMode ~= nil
 		or data.dispelTintAlpha ~= nil
 		or data.dispelTintFillEnabled ~= nil
 		or data.dispelTintFillAlpha ~= nil
 		or data.dispelTintFillColor ~= nil
 		or data.dispelTintStrata ~= nil
+		or data.dispelTintFrameLevelModel ~= nil
 		or data.dispelTintFrameLevelOffset ~= nil
 		or data.dispelTintSample ~= nil
 		or data.dispelTintGlowEnabled ~= nil
 		or data.dispelTintGlowOverOverlay ~= nil
+		or data.dispelTintGlowStrata ~= nil
+		or data.dispelTintGlowFrameLevelModel ~= nil
+		or data.dispelTintGlowFrameLevelOffset ~= nil
 		or data.dispelTintGlowColorMode ~= nil
 		or data.dispelTintGlowColor ~= nil
 		or data.dispelTintGlowEffect ~= nil
@@ -31947,15 +32297,20 @@ local function applyEditModeData(kind, data)
 		data.dispelTintEnabled ~= nil
 		or data.dispelTintBlizzardPrivateAuraDispels ~= nil
 		or data.dispelTintBlizzardDispelMode ~= nil
+		or data.dispelTintFilterMode ~= nil
 		or data.dispelTintAlpha ~= nil
 		or data.dispelTintFillEnabled ~= nil
 		or data.dispelTintFillAlpha ~= nil
 		or data.dispelTintFillColor ~= nil
 		or data.dispelTintStrata ~= nil
+		or data.dispelTintFrameLevelModel ~= nil
 		or data.dispelTintFrameLevelOffset ~= nil
 		or data.dispelTintSample ~= nil
 		or data.dispelTintGlowEnabled ~= nil
 		or data.dispelTintGlowOverOverlay ~= nil
+		or data.dispelTintGlowStrata ~= nil
+		or data.dispelTintGlowFrameLevelModel ~= nil
+		or data.dispelTintGlowFrameLevelOffset ~= nil
 		or data.dispelTintGlowColorMode ~= nil
 		or data.dispelTintGlowColor ~= nil
 		or data.dispelTintGlowEffect ~= nil
@@ -31969,19 +32324,29 @@ local function applyEditModeData(kind, data)
 		if data.dispelTintEnabled ~= nil then cfg.status.dispelTint.enabled = data.dispelTintEnabled and true or false end
 		if data.dispelTintBlizzardPrivateAuraDispels ~= nil then cfg.status.dispelTint.blizzardPrivateAuraDispels = data.dispelTintBlizzardPrivateAuraDispels and true or false end
 		if data.dispelTintBlizzardDispelMode ~= nil then cfg.status.dispelTint.blizzardDispelIndicatorMode = GF.NormalizeBlizzardDispelIndicatorMode(data.dispelTintBlizzardDispelMode) or GF.BLIZZARD_DISPEL_MODE_ALL end
+		if data.dispelTintFilterMode ~= nil then cfg.status.dispelTint.filterMode = GF.NormalizeDispelFilterMode(data.dispelTintFilterMode) or GF.DISPEL_FILTER_MODE_MY end
 		if data.dispelTintAlpha ~= nil then cfg.status.dispelTint.alpha = clampNumber(data.dispelTintAlpha, 0, 1, cfg.status.dispelTint.alpha or 0.25) end
 		if data.dispelTintFillEnabled ~= nil then cfg.status.dispelTint.fillEnabled = data.dispelTintFillEnabled and true or false end
 		if data.dispelTintFillAlpha ~= nil then cfg.status.dispelTint.fillAlpha = clampNumber(data.dispelTintFillAlpha, 0, 1, cfg.status.dispelTint.fillAlpha or 0.2) end
 		if data.dispelTintFillColor ~= nil then cfg.status.dispelTint.fillColor = data.dispelTintFillColor end
 		if data.dispelTintStrata ~= nil then cfg.status.dispelTint.strata = GF.NormalizeFrameStrataToken(data.dispelTintStrata) end
 		if data.dispelTintFrameLevelOffset ~= nil then
-			local levelOffset = clampNumber(data.dispelTintFrameLevelOffset, -20, 1000, cfg.status.dispelTint.frameLevelOffset or 1)
+			local levelOffset = clampNumber(data.dispelTintFrameLevelOffset, -20, 1000, 20)
+			if data.dispelTintFrameLevelModel ~= GF.UNIFIED_FRAME_LAYER_MODEL then levelOffset = levelOffset + 12 end
 			levelOffset = floor(levelOffset + (levelOffset >= 0 and 0.5 or -0.5))
+			cfg.status.dispelTint.frameLevelModel = GF.UNIFIED_FRAME_LAYER_MODEL
 			cfg.status.dispelTint.frameLevelOffset = levelOffset
 		end
 		if data.dispelTintSample ~= nil then cfg.status.dispelTint.showSample = data.dispelTintSample and true or false end
 		if data.dispelTintGlowEnabled ~= nil then cfg.status.dispelTint.glowEnabled = data.dispelTintGlowEnabled and true or false end
 		if data.dispelTintGlowOverOverlay ~= nil then cfg.status.dispelTint.glowOverOverlay = data.dispelTintGlowOverOverlay and true or false end
+		if data.dispelTintGlowStrata ~= nil then cfg.status.dispelTint.glowStrata = GF.NormalizeFrameStrataToken(data.dispelTintGlowStrata) end
+		if data.dispelTintGlowFrameLevelOffset ~= nil then
+			local levelOffset = clampNumber(data.dispelTintGlowFrameLevelOffset, -20, 1000, 21)
+			levelOffset = floor(levelOffset + (levelOffset >= 0 and 0.5 or -0.5))
+			cfg.status.dispelTint.glowFrameLevelModel = GF.UNIFIED_FRAME_LAYER_MODEL
+			cfg.status.dispelTint.glowFrameLevelOffset = levelOffset
+		end
 		if data.dispelTintGlowColorMode ~= nil then cfg.status.dispelTint.glowColorMode = data.dispelTintGlowColorMode end
 		if data.dispelTintGlowColor ~= nil then cfg.status.dispelTint.glowColor = data.dispelTintGlowColor end
 		if data.dispelTintGlowEffect ~= nil then cfg.status.dispelTint.glowEffect = data.dispelTintGlowEffect end
@@ -32206,6 +32571,10 @@ local function applyEditModeData(kind, data)
 	if data.powerTexture ~= nil then
 		cfg.power = cfg.power or {}
 		cfg.power.texture = data.powerTexture
+	end
+	if data.powerOrientation ~= nil then
+		cfg.power = cfg.power or {}
+		cfg.power.orientation = UFHelper.normalizeStatusBarOrientation(data.powerOrientation)
 	end
 	if data.powerSmoothFill ~= nil then
 		cfg.power = cfg.power or {}
@@ -32752,21 +33121,19 @@ function GF:EnsureEditMode()
 				aggroHighlightSample = (cfg.highlightAggro and cfg.highlightAggro.sample) == true
 					or ((cfg.highlightAggro == nil or cfg.highlightAggro.sample == nil) and (def.highlightAggro and def.highlightAggro.sample == true)),
 				aggroHighlightTexture = (cfg.highlightAggro and cfg.highlightAggro.texture) or (def.highlightAggro and def.highlightAggro.texture) or "DEFAULT",
-				aggroHighlightLayer = (function()
-					local layer = tostring((cfg.highlightAggro and cfg.highlightAggro.layer) or (def.highlightAggro and def.highlightAggro.layer) or "ABOVE_BORDER"):upper()
-					if layer ~= "BEHIND_BORDER" then layer = "ABOVE_BORDER" end
-					return layer
-				end)(),
+				aggroHighlightStrata = GF.NormalizeFrameStrataToken((cfg.highlightAggro and cfg.highlightAggro.strata) or (def.highlightAggro and def.highlightAggro.strata)) or "",
+				aggroHighlightFrameLevelOffset = (cfg.highlightAggro and cfg.highlightAggro.frameLevelOffset)
+					or (def.highlightAggro and def.highlightAggro.frameLevelOffset)
+					or 6,
 				aggroHighlightSize = (cfg.highlightAggro and cfg.highlightAggro.size) or (def.highlightAggro and def.highlightAggro.size) or 2,
 				aggroHighlightOffset = (cfg.highlightAggro and cfg.highlightAggro.offset) or (def.highlightAggro and def.highlightAggro.offset) or 0,
 				targetHighlightEnabled = (cfg.highlightTarget and cfg.highlightTarget.enabled) == true,
 				targetHighlightColor = (cfg.highlightTarget and cfg.highlightTarget.color) or (def.highlightTarget and def.highlightTarget.color) or { 1, 1, 0, 1 },
 				targetHighlightTexture = (cfg.highlightTarget and cfg.highlightTarget.texture) or (def.highlightTarget and def.highlightTarget.texture) or "DEFAULT",
-				targetHighlightLayer = (function()
-					local layer = tostring((cfg.highlightTarget and cfg.highlightTarget.layer) or (def.highlightTarget and def.highlightTarget.layer) or "ABOVE_BORDER"):upper()
-					if layer ~= "BEHIND_BORDER" then layer = "ABOVE_BORDER" end
-					return layer
-				end)(),
+				targetHighlightStrata = GF.NormalizeFrameStrataToken((cfg.highlightTarget and cfg.highlightTarget.strata) or (def.highlightTarget and def.highlightTarget.strata)) or "",
+				targetHighlightFrameLevelOffset = (cfg.highlightTarget and cfg.highlightTarget.frameLevelOffset)
+					or (def.highlightTarget and def.highlightTarget.frameLevelOffset)
+					or 5,
 				targetHighlightSize = (cfg.highlightTarget and cfg.highlightTarget.size) or (def.highlightTarget and def.highlightTarget.size) or 2,
 				targetHighlightOffset = (cfg.highlightTarget and cfg.highlightTarget.offset) or (def.highlightTarget and def.highlightTarget.offset) or 0,
 				tooltipMode = tcfg.mode or defTooltip.mode or "OFF",
@@ -32835,6 +33202,7 @@ function GF:EnsureEditMode()
 				healthFont = hc.font or defH.font or nil,
 				healthFontOutline = hc.fontOutline or defH.fontOutline or "OUTLINE",
 				healthTexture = hc.texture or defH.texture or "DEFAULT",
+				healthOrientation = UFHelper.normalizeStatusBarOrientation(hc.orientation or defH.orientation),
 				healthSmoothFill = (hc.smoothFill ~= nil) and (hc.smoothFill == true) or (defH.smoothFill == true),
 				healthTempMaxHealthLoss = (hc.tempMaxHealthLossEnabled ~= nil) and (hc.tempMaxHealthLossEnabled ~= false) or ((hc.tempMaxHealthLossEnabled == nil) and (defH.tempMaxHealthLossEnabled ~= false)),
 				healthBackdropEnabled = (hcBackdrop.enabled ~= nil) and (hcBackdrop.enabled ~= false) or (defHBackdrop.enabled ~= false),
@@ -32985,19 +33353,27 @@ function GF:EnsureEditMode()
 					or ((sc.dispelTint == nil or sc.dispelTint.enabled == nil) and defDispel.enabled ~= false),
 				dispelTintBlizzardPrivateAuraDispels = GF.ResolveBlizzardPrivateAuraDispelsEnabled(cfg, def),
 				dispelTintBlizzardDispelMode = GF.GetDispelTintBlizzardDispelIndicatorMode(cfg, def),
+				dispelTintFilterMode = GF.GetDispelFilterMode(cfg, def),
 				dispelTintAlpha = (sc.dispelTint and sc.dispelTint.alpha) or defDispel.alpha or 0.25,
 				dispelTintFillEnabled = (sc.dispelTint and sc.dispelTint.fillEnabled ~= nil) and (sc.dispelTint.fillEnabled == true)
 					or ((sc.dispelTint == nil or sc.dispelTint.fillEnabled == nil) and defDispel.fillEnabled ~= false),
 				dispelTintFillAlpha = (sc.dispelTint and sc.dispelTint.fillAlpha) or defDispel.fillAlpha or 0.2,
 				dispelTintFillColor = (sc.dispelTint and sc.dispelTint.fillColor) or defDispel.fillColor or { 0, 0, 0, 1 },
 				dispelTintStrata = GF.NormalizeFrameStrataToken(sc.dispelTint and sc.dispelTint.strata) or "",
-				dispelTintFrameLevelOffset = (sc.dispelTint and sc.dispelTint.frameLevelOffset) or 1,
+				dispelTintFrameLevelModel = GF.UNIFIED_FRAME_LAYER_MODEL,
+				dispelTintFrameLevelOffset = GF.ResolveUnifiedFrameLevelOffset(sc.dispelTint, defDispel, 12, 20),
 				dispelTintSample = (sc.dispelTint and sc.dispelTint.showSample ~= nil) and (sc.dispelTint.showSample == true)
 					or ((sc.dispelTint == nil or sc.dispelTint.showSample == nil) and defDispel.showSample == true),
 				dispelTintGlowEnabled = (sc.dispelTint and sc.dispelTint.glowEnabled ~= nil) and (sc.dispelTint.glowEnabled == true)
 					or ((sc.dispelTint == nil or sc.dispelTint.glowEnabled == nil) and defDispel.glowEnabled == true),
 				dispelTintGlowOverOverlay = (sc.dispelTint and sc.dispelTint.glowOverOverlay ~= nil) and (sc.dispelTint.glowOverOverlay == true)
 					or ((sc.dispelTint == nil or sc.dispelTint.glowOverOverlay == nil) and defDispel.glowOverOverlay == true),
+				dispelTintGlowStrata = (function()
+					local _, strata = GF.ResolveDispelGlowLayer(sc.dispelTint, defDispel)
+					return strata or ""
+				end)(),
+				dispelTintGlowFrameLevelModel = GF.UNIFIED_FRAME_LAYER_MODEL,
+				dispelTintGlowFrameLevelOffset = GF.GetDispelGlowLayerLevelForSettings(sc.dispelTint, defDispel),
 				dispelTintGlowColorMode = (sc.dispelTint and sc.dispelTint.glowColorMode) or defDispel.glowColorMode or "DISPEL",
 				dispelTintGlowColor = (sc.dispelTint and sc.dispelTint.glowColor) or defDispel.glowColor or { 1, 1, 1, 1 },
 				dispelTintGlowEffect = (sc.dispelTint and sc.dispelTint.glowEffect) or defDispel.glowEffect or "PIXEL",
@@ -33107,6 +33483,7 @@ function GF:EnsureEditMode()
 				powerFont = pcfg.font or defP.font or nil,
 				powerFontOutline = pcfg.fontOutline or defP.fontOutline or "OUTLINE",
 				powerTexture = pcfg.texture or defP.texture or "DEFAULT",
+				powerOrientation = UFHelper.normalizeStatusBarOrientation(pcfg.orientation or defP.orientation),
 				powerSmoothFill = (pcfg.smoothFill ~= nil) and (pcfg.smoothFill == true) or (defP.smoothFill == true),
 				powerBackdropEnabled = (pcfgBackdrop.enabled ~= nil) and (pcfgBackdrop.enabled ~= false) or (defPBackdrop.enabled ~= false),
 				powerBackdropColor = pcfgBackdrop.color or defPBackdrop.color or { 0, 0, 0, 0.6 },
@@ -33404,6 +33781,7 @@ function GF:OnEnterEditMode(kind)
 		header._eqolForceShow = true
 	end
 	GF:ApplyHeaderAttributes(kind)
+	GF:QueueEditModeAuraRefresh()
 end
 
 function GF:OnExitEditMode(kind)
@@ -33690,6 +34068,11 @@ do
 			GF:RunPostEnterWorldRefreshPass()
 			GF:SchedulePostEnterWorldRefresh()
 		elseif event == "PLAYER_REGEN_ENABLED" then
+			local refreshDeferredAuraContainers = not GF._auraContainerDeferredLoadHandled
+				and addon.AuraCompat
+				and addon.AuraCompat._auraContainerLoadDeferred
+				and addon.AuraCompat:HasAuraContainerSupport()
+			if refreshDeferredAuraContainers then GF._auraContainerDeferredLoadHandled = true end
 			local refreshManagedHealerBuffs = UF.GroupFramesHealerBuffs and UF.GroupFramesHealerBuffs.ConsumeManagedAuraContainerPending
 				and UF.GroupFramesHealerBuffs.ConsumeManagedAuraContainerPending()
 			if GF._pendingDisable then
@@ -33703,7 +34086,7 @@ do
 				local appliedSort = GF:ApplyPendingSortKinds()
 				if not applied and not appliedSort then GF.FullRefresh() end
 			end
-			if refreshManagedHealerBuffs then refreshAllAuras() end
+			if refreshManagedHealerBuffs or refreshDeferredAuraContainers then refreshAllAuras() end
 		elseif event == "CLIENT_SCENE_OPENED" then
 			local sceneType = ...
 			GF._clientSceneActive = addon.functions and addon.functions.IsMinigameClientScene and addon.functions.IsMinigameClientScene(sceneType) or false

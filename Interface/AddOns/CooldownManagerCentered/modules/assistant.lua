@@ -54,16 +54,68 @@ local flipbookConfig = {
 local rotationSpellsCache = {}
 local rotationSpellsCacheValid = false
 local currentSuggestedSpellID = nil
+local suggestionPollFrame = CreateFrame("Frame")
+local suggestionPollElapsed = 0
 
 local iconSpellCache = {}
+
+local function IsPerEntrySuggestedGlowEnabled()
+    local styleDB = ns.db
+        and ns.db.profile
+        and ns.db.profile.cooldownStyleSettings
+        and ns.db.profile.cooldownStyleSettings.spellSettings
+    if styleDB then
+        for _, settings in pairs(styleDB) do
+            if type(settings) == "table" and settings.glowWhenSuggested == true then
+                return true
+            end
+        end
+    end
+
+    local trackerDB = ns.db and ns.db.profile and ns.db.profile.tracker
+    local spellSettings = trackerDB and trackerDB.spellItemSettings
+    if spellSettings then
+        for _, settings in pairs(spellSettings) do
+            if type(settings) == "table" and settings.glowWhenSuggested == true then
+                return true
+            end
+        end
+    end
+    return false
+end
+
+local function GetSuggestedSpellID()
+    if not C_AssistedCombat or not C_AssistedCombat.GetNextCastSpell then
+        return nil
+    end
+    -- false deliberately decouples CMC from visible action buttons and from
+    -- Blizzard's assistedCombatHighlight CVar.
+    return C_AssistedCombat.GetNextCastSpell(false)
+end
+
+function Assistant:IsSpellSuggested(spellID)
+    if not spellID or not currentSuggestedSpellID then
+        return false
+    end
+    if spellID == currentSuggestedSpellID then
+        return true
+    end
+
+    local spellBase = C_Spell.GetBaseSpell(spellID) or spellID
+    local suggestedBase = C_Spell.GetBaseSpell(currentSuggestedSpellID) or currentSuggestedSpellID
+    return spellBase == suggestedBase
+end
 
 local function ExtractSpellIDFromIcon(icon)
     if icon.cooldownID then
         local info = C_CooldownViewer.GetCooldownViewerCooldownInfo(icon.cooldownID)
         return info.spellID, info.overrideSpellID
     end
-    -- icon.spellID / icon:GetSpellID() are secret values here, so cooldownID is the
-    -- only usable source.
+    -- CMC's injected Essential icons own a normal addon spellID; Blizzard viewer
+    -- spell IDs remain secret and continue to resolve only through cooldownID.
+    if Affected(icon).essentialCustom and icon.spellID and not issecretvalue(icon.spellID) then
+        return icon.spellID, C_Spell.GetOverrideSpell(icon.spellID)
+    end
     return nil
 end
 
@@ -115,7 +167,7 @@ local function BuildIconSpellCacheForViewer(viewerName)
         UpdateRotationSpellsCache()
     end
 
-    local children = viewerFrame:GetItemFrames()
+    local children = ns.API:GetViewerItemFrames(viewerFrame)
     for _, child in ipairs(children) do
         if child.Icon then
             ns.Sizes.TagViewerChild(child, settingName)
@@ -277,8 +329,8 @@ local function UpdateIconHighlight(child, viewerSettingName)
         return
     end
 
-    local isSuggested = currentSuggestedSpellID
-        and (iconSpellID == currentSuggestedSpellID or (overrideSpellID and overrideSpellID == currentSuggestedSpellID))
+    local isSuggested = Assistant:IsSpellSuggested(iconSpellID)
+        or (overrideSpellID and Assistant:IsSpellSuggested(overrideSpellID))
 
     local width, height = ns.Sizes.GetViewerIconSize(viewerSettingName)
     local flipbook = GetOrCreateFlipbookHighlight(child, width, height)
@@ -311,7 +363,7 @@ function Assistant:UpdateViewerHighlights(viewerName)
     local isEnabled = ns.db and ns.db.profile and ns.db.profile[enabledKey] or false
     ns.API:SetAffected(viewerFrame, "assistant", isEnabled)
 
-    local children = viewerFrame:GetItemFrames()
+    local children = ns.API:GetViewerItemFrames(viewerFrame)
     for _, child in ipairs(children) do
         if child.Icon then -- Only process icon-like children
             UpdateIconHighlight(child, settingName)
@@ -320,11 +372,64 @@ function Assistant:UpdateViewerHighlights(viewerName)
 end
 
 function Assistant:UpdateAllHighlights()
-    currentSuggestedSpellID = C_AssistedCombat.GetNextCastSpell()
+    currentSuggestedSpellID = GetSuggestedSpellID()
 
     for viewerName, _ in pairs(viewersSettingKey) do
         self:UpdateViewerHighlights(viewerName)
     end
+end
+
+local function RefreshSuggestedGlowConsumers()
+    if isModuleAssistantEnabled then
+        for viewerName in pairs(viewersSettingKey) do
+            Assistant:UpdateViewerHighlights(viewerName)
+        end
+    end
+    if ns.CooldownStyle then
+        ns.CooldownStyle:RefreshSuggestedGlows()
+    end
+    if ns.TrackerItemViewer then
+        ns.TrackerItemViewer:RefreshSuggestedGlows()
+    end
+end
+
+local function PollSuggestedSpell()
+    local nextSuggestedSpellID = GetSuggestedSpellID()
+    if nextSuggestedSpellID == currentSuggestedSpellID then
+        return
+    end
+    currentSuggestedSpellID = nextSuggestedSpellID
+    RefreshSuggestedGlowConsumers()
+end
+
+suggestionPollFrame:SetScript("OnUpdate", nil)
+local suggestionPollUpdateRate = 0.1
+
+local function RefreshSuggestionPollUpdateRate()
+    local updateRate = tonumber(C_CVar.GetCVar("assistedCombatIconUpdateRate")) or 0.1
+    suggestionPollUpdateRate = math.max(0.05, math.min(updateRate, 1))
+end
+
+function Assistant:RefreshSuggestionTracking()
+    local shouldPoll = isModuleAssistantEnabled or IsPerEntrySuggestedGlowEnabled()
+    suggestionPollElapsed = 0
+    if not shouldPoll then
+        suggestionPollFrame:SetScript("OnUpdate", nil)
+        currentSuggestedSpellID = nil
+        return
+    end
+
+    RefreshSuggestionPollUpdateRate()
+    PollSuggestedSpell()
+    suggestionPollFrame:SetScript("OnUpdate", function(_, elapsed)
+        suggestionPollElapsed = suggestionPollElapsed + elapsed
+        if suggestionPollElapsed < suggestionPollUpdateRate then
+            return
+        end
+        suggestionPollElapsed = 0
+        RefreshSuggestionPollUpdateRate()
+        PollSuggestedSpell()
+    end)
 end
 
 -- Pre-create flipbook highlights for all in-rotation icons.
@@ -338,7 +443,7 @@ function Assistant:PrepareRotationBorders()
             if ns.db and ns.db.profile then
                 local enabledKey = "cooldownManager_showHighlight_" .. settingName
                 if ns.db.profile[enabledKey] then
-                    local children = viewerFrame:GetItemFrames()
+                    local children = ns.API:GetViewerItemFrames(viewerFrame)
                     for _, child in ipairs(children) do
                         if child.Icon and ns.API:GetIsAffected(child, "inRotation") then
                             local width, height = ns.Sizes.GetViewerIconSize(settingName)
@@ -413,7 +518,7 @@ function Assistant:Shutdown()
         local viewerFrame = _G[viewerName]
         if viewerFrame then
             ns.API:UnsetAffected(viewerFrame, "assistant")
-            local children = viewerFrame:GetItemFrames()
+            local children = ns.API:GetViewerItemFrames(viewerFrame)
             for _, child in ipairs(children) do
                 HideHighlights(child)
             end
@@ -422,9 +527,6 @@ function Assistant:Shutdown()
 end
 
 function Assistant:Enable()
-    if C_CVar.GetCVar("assistedCombatHighlight") ~= "1" then
-        C_CVar.SetCVar("assistedCombatHighlight", "1")
-    end
     if isModuleAssistantEnabled then
         return
     end
@@ -465,16 +567,19 @@ function Assistant:Enable()
     UpdateRotationSpellsCache()
     self:PrepareRotationBorders()
     self:UpdateAllHighlights()
+    self:RefreshSuggestionTracking()
 end
 
 function Assistant:Disable()
     PrintDebug("Disabling module")
 
     self:Shutdown()
+    self:RefreshSuggestionTracking()
 end
 
 function Assistant:Initialize()
     self:OnSettingChanged()
+    self:RefreshSuggestionTracking()
     ns.db.profile.assistantCache = nil
 end
 
@@ -499,4 +604,5 @@ function Assistant:OnSettingChanged(viewerSettingName)
         self:PrepareRotationBorders()
         self:UpdateAllHighlights()
     end
+    self:RefreshSuggestionTracking()
 end

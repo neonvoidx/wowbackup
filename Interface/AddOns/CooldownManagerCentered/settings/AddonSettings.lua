@@ -12,6 +12,46 @@ ns.AddonSettings.SettingsLayout = {}
 local SettingsLib = LibStub("WildForkLibEQOLSettingsMode-1.0")
 local LSM = LibStub("LibSharedMedia-3.0", true)
 
+local PROJECT_PAGE_URL = "https://www.curseforge.com/wow/addons/cooldown-manager-centered"
+local COPY_TEXT_DIALOG = "CMC_COPY_SUPPORT_TEXT"
+local DONATION_LINKS = {
+    { label = "Ko-fi", value = "https://ko-fi.com/wildu" },
+    { label = "Buy Me a Coffee", value = "https://buymeacoffee.com/wildu" },
+    { label = "Patreon", value = "https://www.patreon.com/join/wildu" },
+}
+local GOLD_RECIPIENTS = {
+    alliance = {
+        "Wildu-Silvermoon",
+        "Wilduu-BurningLegion",
+    },
+    horde = {
+        "Wilduu-TarrenMill",
+        "Wildudh-Kazzak",
+    },
+}
+
+local function ShowCopyText(value)
+    if not StaticPopupDialogs[COPY_TEXT_DIALOG] then
+        StaticPopupDialogs[COPY_TEXT_DIALOG] = {
+            text = "Press Ctrl+C to copy.",
+            button1 = CLOSE,
+            OnShow = function(dialog, data)
+                local editBox = dialog.GetEditBox and dialog:GetEditBox() or dialog.editBox
+                editBox:SetText(data)
+                editBox:HighlightText()
+            end,
+            hasEditBox = true,
+            editBoxWidth = 320,
+            timeout = 0,
+            whileDead = true,
+            hideOnEscape = true,
+            preferredIndex = 3,
+        }
+    end
+
+    StaticPopup_Show(COPY_TEXT_DIALOG, nil, nil, value)
+end
+
 local function AddonSettings_BuildCooldown(category, layout)
     -- When Masque skins the icons, its skin owns all icon styling, glow and font
     -- options, so the affected sections below are omitted from the panel.
@@ -561,121 +601,6 @@ local function AddonSettings_BuildCooldown(category, layout)
             end,
             desc = "Set base Utility Cooldown Icons |cffff0000base|r size as Essential Cooldowns Icons\nIt helps to have a more uniform look when both viewers are used together.",
         })
-
-        SettingsLib:CreateText(category, {
-            name = "",
-            parentSection = squareIconsSection,
-        })
-        SettingsLib:CreateHeader(category, {
-            parentSection = squareIconsSection,
-            name = "Tracker Icons",
-        })
-
-        SettingsLib:CreateCheckbox(category, {
-            parentSection = squareIconsSection,
-            prefix = "CMC_",
-            key = "trinketRacialTracker_squareIcons",
-            name = "Square Icons",
-            searchtags = { "Trinket", "Racial", "Tracker", "Square", "Icons", "Style" },
-            default = false,
-            get = function()
-                return ns.db.profile.trinketRacialTracker_squareIcons
-            end,
-            set = function(value)
-                ns.db.profile.trinketRacialTracker_squareIcons = value
-                if ns.TrackerItemViewer then
-                    ns.TrackerItemViewer:RefreshStyling()
-                end
-            end,
-            desc = "Apply square icon styling to the Trinket, Potion & Racial Tracker. When disabled, the default cooldown manager mask (texture 6707800) is used.",
-        })
-
-        SettingsLib:CreateSlider(category, {
-            parentSection = squareIconsSection,
-            prefix = "CMC_",
-            key = "trinketRacialTracker_borderThickness",
-            name = "Border Thickness",
-            searchtags = { "Trinket", "Racial", "Tracker", "Border", "Thickness", "Width" },
-            default = 1,
-            min = 0,
-            max = 6,
-            step = 1,
-            formatter = function(value)
-                return string.format("%.0fpx", value)
-            end,
-            get = function()
-                return ns.db.profile.trinketRacialTracker_borderThickness or 1
-            end,
-            set = function(value)
-                ns.db.profile.trinketRacialTracker_borderThickness = value
-                if ns.TrackerItemViewer then
-                    ns.TrackerItemViewer:RefreshStyling()
-                end
-            end,
-            desc = "Border thickness for tracker icons (space between icon edge and texture).",
-        })
-
-        SettingsLib:CreateSlider(category, {
-            parentSection = squareIconsSection,
-            prefix = "CMC_",
-            key = "trinketRacialTracker_iconZoom",
-            name = "Icon Zoom",
-            searchtags = { "Trinket", "Racial", "Tracker", "Zoom", "Scale", "Crop" },
-            default = 0.3,
-            min = 0,
-            max = 0.5,
-            step = 0.01,
-            formatter = function(value)
-                return string.format("%.2f", value)
-            end,
-            get = function()
-                return ns.db.profile.trinketRacialTracker_iconZoom or 0.3
-            end,
-            set = function(value)
-                ns.db.profile.trinketRacialTracker_iconZoom = value
-                if ns.TrackerItemViewer then
-                    ns.TrackerItemViewer:RefreshStyling()
-                end
-            end,
-            desc = "Zoom level for tracker icons (0 = no zoom, 0.5 = maximum zoom).",
-        })
-
-        SettingsLib:CreateCheckboxSlider(category, {
-            parentSection = squareIconsSection,
-            prefix = "CMC_",
-            key = "trinketRacialTracker_rectangularIcons",
-            name = "Rectangular Icons",
-            searchtags = { "Trinket", "Racial", "Tracker", "Rectangular", "Icons", "Aspect", "Ratio", "Height" },
-            default = false,
-            get = function()
-                return ns.db.profile.trinketRacialTracker_rectangularIcons
-            end,
-            set = function(value)
-                ns.db.profile.trinketRacialTracker_rectangularIcons = value
-                if ns.TrackerItemViewer then
-                    ns.TrackerItemViewer:RefreshItemViewerFrames()
-                end
-            end,
-            desc = "Enable rectangular icons for all Custom Trackers.\nCan be combined with Square Icons styling.",
-            sliderKey = "trinketRacialTracker_rectangularIcons_percent",
-            sliderName = "Height to Width Ratio",
-            sliderMin = 0.3,
-            sliderMax = 0.9,
-            sliderStep = 0.01,
-            sliderDefault = 0.8,
-            sliderGet = function()
-                return ns.db.profile.trinketRacialTracker_rectangularIcons_percent or 0.8
-            end,
-            sliderSet = function(value)
-                ns.db.profile.trinketRacialTracker_rectangularIcons_percent = math.floor(value * 100 + 0.5) / 100
-                if ns.TrackerItemViewer then
-                    ns.TrackerItemViewer:RefreshItemViewerFrames()
-                end
-            end,
-            sliderFormatter = function(value)
-                return string.format("%.0f%%", value * 100)
-            end,
-        })
     end -- not masqueStylingActive (icon styling section only)
 
     local cooldownSection = SettingsLib:CreateExpandableSection(category, {
@@ -822,9 +747,6 @@ local function AddonSettings_BuildCooldown(category, layout)
         set = function(value)
             ns.db.profile.cooldownManager_cooldownFontName = value
             ns.CooldownFont:RefreshAll()
-            if ns.TrackerItemViewer then
-                ns.TrackerItemViewer:RefreshStyling()
-            end
         end,
         desc = "Select the font for ability cooldown numbers. Uses SharedMedia fonts if available.",
         generator = function(dropdown, rootDescription)
@@ -852,9 +774,6 @@ local function AddonSettings_BuildCooldown(category, layout)
             end, function()
                 ns.db.profile.cooldownManager_cooldownFontName = "NIL"
                 ns.CooldownFont:RefreshAll()
-                if ns.TrackerItemViewer then
-                    ns.TrackerItemViewer:RefreshStyling()
-                end
                 dropdown:SetText("Default font")
             end)
 
@@ -866,9 +785,6 @@ local function AddonSettings_BuildCooldown(category, layout)
                 end, function()
                     ns.db.profile.cooldownManager_cooldownFontName = fontName
                     ns.CooldownFont:RefreshAll()
-                    if ns.TrackerItemViewer then
-                        ns.TrackerItemViewer:RefreshStyling()
-                    end
                     dropdown:SetText(fontName)
                 end)
 
@@ -916,9 +832,6 @@ local function AddonSettings_BuildCooldown(category, layout)
                 ns.db.profile.cooldownManager_cooldownFontFlags = { OUTLINE = false }
             end
             ns.CooldownFont:RefreshAll()
-            if ns.TrackerItemViewer then
-                ns.TrackerItemViewer:RefreshStyling()
-            end
         end,
         desc = "Select font flags for ability cooldown numbers.",
     })
@@ -989,8 +902,8 @@ local function AddonSettings_BuildCooldown(category, layout)
         })
     end
 
-    -- Countdown text X/Y position offset sliders (separate per viewer, one
-    -- shared pair for trackers). refreshFn re-applies the affected viewer(s).
+    -- Countdown text X/Y position offset sliders for native viewers.
+    -- refreshFn re-applies the affected viewer(s).
     local function CreateCooldownTextOffsetSliders(parentSection, xKey, yKey, refreshFn)
         local function makeSlider(key, name)
             SettingsLib:CreateSlider(category, {
@@ -1021,12 +934,6 @@ local function AddonSettings_BuildCooldown(category, layout)
     local function RefreshCooldownFontAll()
         ns.CooldownFont:RefreshAll()
     end
-    local function RefreshCooldownFontTracker()
-        if ns.TrackerItemViewer then
-            ns.TrackerItemViewer:RefreshStyling()
-        end
-    end
-
     CreateCooldownFontSizeDropdown(
         cooldownSection,
         "cooldownManager_cooldownFontSizeEssential",
@@ -1125,43 +1032,6 @@ local function AddonSettings_BuildCooldown(category, layout)
         "cooldownManager_cooldownTextBuffIcons_offsetX",
         "cooldownManager_cooldownTextBuffIcons_offsetY",
         RefreshCooldownFontAll
-    )
-    CreateCooldownFontSizeDropdown(
-        cooldownSection,
-        "cooldownManager_cooldownFontSizeTracker",
-        "Change on Tracker",
-        function()
-            return ns.db.profile.cooldownManager_cooldownFontSizeTracker ~= nil
-                    and tostring(ns.db.profile.cooldownManager_cooldownFontSizeTracker)
-                or "NIL"
-        end,
-        function(value)
-            if value == "NIL" then
-                ns.db.profile.cooldownManager_cooldownFontSizeTracker = "NIL"
-            else
-                local n = tonumber(value)
-                ns.db.profile.cooldownManager_cooldownFontSizeTracker = n
-            end
-            if ns.TrackerItemViewer then
-                ns.TrackerItemViewer:RefreshStyling()
-            end
-        end,
-        "cooldownManager_cooldownFontSizeTracker_enabled",
-        function()
-            return ns.db.profile.cooldownManager_cooldownFontSizeTracker_enabled
-        end,
-        function(value)
-            ns.db.profile.cooldownManager_cooldownFontSizeTracker_enabled = value
-            if ns.TrackerItemViewer then
-                ns.TrackerItemViewer:RefreshStyling()
-            end
-        end
-    )
-    CreateCooldownTextOffsetSliders(
-        cooldownSection,
-        "cooldownManager_cooldownTextTracker_offsetX",
-        "cooldownManager_cooldownTextTracker_offsetY",
-        RefreshCooldownFontTracker
     )
     local customProcSection = SettingsLib:CreateExpandableSection(category, {
         name = "Custom |cfffff100Glow|r Styles",
@@ -1449,9 +1319,6 @@ local function AddonSettings_BuildCooldown(category, layout)
         set = function(value)
             ns.db.profile.cooldownManager_stackFontName = value
             ns.Stacks:RefreshAll()
-            if ns.TrackerItemViewer then
-                ns.TrackerItemViewer:RefreshStyling()
-            end
         end,
         desc = "Select the font for ability charge/count numbers. Uses SharedMedia fonts if available.",
         generator = function(dropdown, rootDescription)
@@ -1481,9 +1348,6 @@ local function AddonSettings_BuildCooldown(category, layout)
                 dropdown:SetText("Default font")
 
                 ns.Stacks:RefreshAll()
-                if ns.TrackerItemViewer then
-                    ns.TrackerItemViewer:RefreshStyling()
-                end
             end)
 
             for index, fontName in ipairs(sortedFonts) do
@@ -1496,9 +1360,6 @@ local function AddonSettings_BuildCooldown(category, layout)
                     dropdown:SetText(fontName)
 
                     ns.Stacks:RefreshAll()
-                    if ns.TrackerItemViewer then
-                        ns.TrackerItemViewer:RefreshStyling()
-                    end
                 end)
 
                 button:AddInitializer(function(self)
@@ -1546,9 +1407,6 @@ local function AddonSettings_BuildCooldown(category, layout)
             end
 
             ns.Stacks:RefreshAll()
-            if ns.TrackerItemViewer then
-                ns.TrackerItemViewer:RefreshStyling()
-            end
         end,
         desc = "Select font flags for ability charge/count numbers.",
     })
@@ -1889,135 +1747,6 @@ local function AddonSettings_BuildCooldown(category, layout)
         end,
     })
 
-    SettingsLib:CreateHeader(category, {
-        parentSection = stackNumberSection,
-        name = "Charges/Count on Tracker",
-    })
-
-    local trackerAnchorPointValues = {
-        TOPLEFT = "Top Left",
-        TOP = "Top",
-        TOPRIGHT = "Top Right",
-        LEFT = "Left",
-        CENTER = "Center",
-        RIGHT = "Right",
-        BOTTOMLEFT = "Bottom Left",
-        BOTTOM = "Bottom",
-        BOTTOMRIGHT = "Bottom Right",
-    }
-    local trackerAnchorPointOrder = {
-        "TOPLEFT",
-        "TOP",
-        "TOPRIGHT",
-        "LEFT",
-        "CENTER",
-        "RIGHT",
-        "BOTTOMLEFT",
-        "BOTTOM",
-        "BOTTOMRIGHT",
-    }
-
-    SettingsLib:CreateDropdown(category, {
-        parentSection = stackNumberSection,
-        prefix = "CMC_",
-        key = "trinketRacialTracker_stackAnchor",
-        name = "Anchor",
-        searchtags = { "Trinket", "Racial", "Tracker", "Stack", "Anchor", "Position", "Count", "Charge" },
-        default = "BOTTOMRIGHT",
-        values = trackerAnchorPointValues,
-        order = trackerAnchorPointOrder,
-        get = function()
-            return ns.db.profile.trinketRacialTracker_stackAnchor or "BOTTOMRIGHT"
-        end,
-        set = function(value)
-            ns.db.profile.trinketRacialTracker_stackAnchor = value
-            if ns.TrackerItemViewer then
-                ns.TrackerItemViewer:RefreshStyling()
-            end
-        end,
-        desc = "Anchor point for charge/count number position on tracker icons.",
-    })
-
-    SettingsLib:CreateSlider(category, {
-        parentSection = stackNumberSection,
-        prefix = "CMC_",
-        key = "trinketRacialTracker_stackFontSize",
-        name = "Font Size",
-        searchtags = { "Trinket", "Racial", "Tracker", "Stack", "Font", "Size", "Count", "Charge" },
-        default = 14,
-        min = 8,
-        max = 32,
-        step = 1,
-        formatter = function(value)
-            return string.format("%.0f", value)
-        end,
-        get = function()
-            return ns.db.profile.trinketRacialTracker_stackFontSize or 14
-        end,
-        set = function(value)
-            ns.db.profile.trinketRacialTracker_stackFontSize = value
-            if ns.TrackerItemViewer then
-                ns.TrackerItemViewer:RefreshStyling()
-            end
-        end,
-        desc = "Font size for charge/count numbers on tracker icons.",
-    })
-
-    SettingsLib:CreateSlider(category, {
-        parentSection = stackNumberSection,
-        prefix = "CMC_",
-        key = "trinketRacialTracker_stackOffsetX",
-        name = "X Offset",
-        searchtags = { "Trinket", "Racial", "Tracker", "Stack", "Offset", "X", "Horizontal" },
-        default = -1,
-        min = -40,
-        max = 40,
-        step = 1,
-        formatter = function(value)
-            return string.format("%.0f", value)
-        end,
-        get = function()
-            return ns.db.profile.trinketRacialTracker_stackOffsetX or -1
-        end,
-        set = function(value)
-            ns.db.profile.trinketRacialTracker_stackOffsetX = value
-            if ns.TrackerItemViewer then
-                ns.TrackerItemViewer:RefreshStyling()
-            end
-        end,
-        desc = "Horizontal offset for charge/count number position.",
-    })
-
-    SettingsLib:CreateSlider(category, {
-        parentSection = stackNumberSection,
-        prefix = "CMC_",
-        key = "trinketRacialTracker_stackOffsetY",
-        name = "Y Offset",
-        searchtags = { "Trinket", "Racial", "Tracker", "Stack", "Offset", "Y", "Vertical" },
-        default = 1,
-        min = -40,
-        max = 40,
-        step = 1,
-        formatter = function(value)
-            return string.format("%.0f", value)
-        end,
-        get = function()
-            return ns.db.profile.trinketRacialTracker_stackOffsetY or 1
-        end,
-        set = function(value)
-            ns.db.profile.trinketRacialTracker_stackOffsetY = value
-            if ns.TrackerItemViewer then
-                ns.TrackerItemViewer:RefreshStyling()
-            end
-        end,
-        desc = "Vertical offset for charge/count number position.",
-    })
-
-    SettingsLib:CreateText(category, {
-        parentSection = stackNumberSection,
-        name = "Note: Charge/Count font name and flags are taken from the global Charges/Count Font settings.",
-    })
-
     local keybindsSection = SettingsLib:CreateExpandableSection(category, {
         name = "|cffeeeeeeKeybind|r Text Display",
         expanded = false,
@@ -2132,9 +1861,6 @@ local function AddonSettings_BuildCooldown(category, layout)
                 ns.db.profile.cooldownManager_keybindFontFlags = { OUTLINE = false }
             end
             ns.Keybinds:OnSettingChanged()
-            if ns.TrackerItemViewer then
-                ns.TrackerItemViewer:RefreshStyling()
-            end
         end,
         desc = "Select font flags for ability keybind text.",
     })
@@ -2415,126 +2141,6 @@ local function AddonSettings_BuildCooldown(category, layout)
         end,
     })
 
-    SettingsLib:CreateText(category, {
-        name = "",
-        parentSection = keybindsSection,
-    })
-
-    SettingsLib:CreateCheckboxDropdown(category, {
-        parentSection = keybindsSection,
-        prefix = "CMC_",
-        key = "cooldownManager_showKeybinds_CMCTracker",
-        dropdownKey = "cooldownManager_keybindAnchor_CMCTracker",
-        name = "CMC Tracker: Enable & Anchor",
-        searchtags = { "Keybind", "Hotkey", "Binding", "Key", "Shortcut", "CMC Tracker", "Show", "Display", "Anchor" },
-        default = false,
-        dropdownDefault = "TOPRIGHT",
-        get = function()
-            return ns.db.profile.cooldownManager_showKeybinds_CMCTracker
-        end,
-        set = function(value)
-            ns.db.profile.cooldownManager_showKeybinds_CMCTracker = value
-            if ns.Keybinds then
-                ns.Keybinds:OnSettingChanged("CMCTracker")
-            end
-        end,
-        dropdownGet = function()
-            return ns.db.profile.cooldownManager_keybindAnchor_CMCTracker or "TOPRIGHT"
-        end,
-        dropdownSet = function(value)
-            ns.db.profile.cooldownManager_keybindAnchor_CMCTracker = value
-            if ns.Keybinds then
-                for i = 1, (ns.CONSTANTS.MAX_TRACKERS or 10) do
-                    ns.Keybinds:ApplyKeybindSettings("CMCTracker" .. i)
-                end
-            end
-        end,
-        dropdownValues = {
-            TOPLEFT = "Top Left",
-            TOP = "Top",
-            TOPRIGHT = "Top Right",
-            LEFT = "Left",
-            CENTER = "Center",
-            RIGHT = "Right",
-            BOTTOMLEFT = "Bottom Left",
-            BOTTOM = "Bottom",
-            BOTTOMRIGHT = "Bottom Right",
-        },
-        dropdownOrder = {
-            "TOPLEFT",
-            "TOP",
-            "TOPRIGHT",
-            "LEFT",
-            "CENTER",
-            "RIGHT",
-            "BOTTOMLEFT",
-            "BOTTOM",
-            "BOTTOMRIGHT",
-        },
-        desc = "Enable keybind text on CMC Tracker and select anchor position.",
-    })
-
-    CreateKeybindFontSizeDropdown(keybindsSection, "cooldownManager_keybindFontSize_CMCTracker", "Font Size", function()
-        return tostring(ns.db.profile.cooldownManager_keybindFontSize_CMCTracker or 10)
-    end, function(value)
-        local n = tonumber(value)
-        ns.db.profile.cooldownManager_keybindFontSize_CMCTracker = n and math.floor(n + 0.5) or 14
-        if ns.Keybinds then
-            for i = 1, (ns.CONSTANTS.MAX_TRACKERS or 10) do
-                ns.Keybinds:ApplyKeybindSettings("CMCTracker" .. i)
-            end
-        end
-    end)
-    SettingsLib:CreateSlider(category, {
-        parentSection = keybindsSection,
-        prefix = "CMC_",
-        key = "cooldownManager_keybindOffsetX_CMCTracker",
-        name = "X Offset",
-        default = -3,
-        min = -40,
-        max = 40,
-        step = 1,
-        formatter = function(value)
-            return string.format("%.0f", value)
-        end,
-        get = function()
-            return ns.db.profile.cooldownManager_keybindOffsetX_CMCTracker or -3
-        end,
-        set = function(value)
-            local v = math.floor((value or 0) + 0.5)
-            ns.db.profile.cooldownManager_keybindOffsetX_CMCTracker = v
-            if ns.Keybinds then
-                for i = 1, (ns.CONSTANTS.MAX_TRACKERS or 10) do
-                    ns.Keybinds:ApplyKeybindSettings("CMCTracker" .. i)
-                end
-            end
-        end,
-    })
-    SettingsLib:CreateSlider(category, {
-        parentSection = keybindsSection,
-        prefix = "CMC_",
-        key = "cooldownManager_keybindOffsetY_CMCTracker",
-        name = "Y Offset",
-        default = -3,
-        min = -40,
-        max = 40,
-        step = 1,
-        formatter = function(value)
-            return string.format("%.0f", value)
-        end,
-        get = function()
-            return ns.db.profile.cooldownManager_keybindOffsetY_CMCTracker or -3
-        end,
-        set = function(value)
-            local v = math.floor((value or 0) + 0.5)
-            ns.db.profile.cooldownManager_keybindOffsetY_CMCTracker = v
-            if ns.Keybinds then
-                for i = 1, (ns.CONSTANTS.MAX_TRACKERS or 10) do
-                    ns.Keybinds:ApplyKeybindSettings("CMCTracker" .. i)
-                end
-            end
-        end,
-    })
     local visibilitySection = SettingsLib:CreateExpandableSection(category, {
         name = "|cffeeeeeeShow Hide|r Visibility",
         expanded = false,
@@ -2728,9 +2334,6 @@ local function AddonSettings_BuildCooldown(category, layout)
         set = function(value)
             ns.db.profile.cooldownManager_showHighlight_Essential = value
             ns.db.profile.cooldownManager_showHighlight_Utility = value
-            if value then
-                C_CVar.SetCVar("assistedCombatHighlight", "1")
-            end
             if ns.Assistant then
                 ns.Assistant:OnSettingChanged("Essential")
                 ns.Assistant:OnSettingChanged("Utility")
@@ -2872,7 +2475,7 @@ local function AddonSettings_BuildCooldown(category, layout)
     SettingsLib:CreateCheckboxSlider(category, {
         prefix = "CMC_",
         key = "cooldownManager_utility_dimWhenNotOnCD",
-        name = "Dim Utility when not on CD",
+        name = "Hide Utility when not on CD",
         searchtags = { "Dim", "Opacity", "Faded", "Transparent", "Utility", "Cooldown", "Hide", "Icons" },
         default = false,
         get = function()
@@ -2885,9 +2488,9 @@ local function AddonSettings_BuildCooldown(category, layout)
                 ns.CooldownManager.RestoreUtilityAlpha()
             end
         end,
-        desc = "Dim Utility Cooldown icons when they are not on cooldown.",
+        desc = "Hide or Dim Utility Cooldown icons when they are not on cooldown. It will layout the icons as if they where not there if opacity is left at 0",
         sliderKey = "cooldownManager_utility_dimOpacity",
-        sliderName = "Dim Opacity",
+        sliderName = "Hide Opacity",
         sliderMin = 0,
         sliderMax = 0.9,
         sliderStep = 0.05,
@@ -2903,11 +2506,66 @@ local function AddonSettings_BuildCooldown(category, layout)
             return string.format("%.0f%%", value * 100)
         end,
     })
+end
 
-    local version = C_AddOns.GetAddOnMetadata("CooldownManagerCentered", "version")
-    SettingsLib:CreateText(category, {
-        name = "|cffccccccAddon version: " .. version .. "|r",
+local function AddonSettings_BuildSupport()
+    local supportCategory =
+        Settings.RegisterVerticalLayoutSubcategory(ns.AddonSettings.SettingsLayout.rootCategory, "Support")
+    ns.AddonSettings.SettingsLayout.supportCategory = supportCategory
+    local version = C_AddOns.GetAddOnMetadata("CooldownManagerCentered", "Version") or UNKNOWN
+
+    SettingsLib:CreateButton(supportCategory, {
+        label = "CurseForge",
+        text = "Copy project page link",
+        func = function()
+            ShowCopyText(PROJECT_PAGE_URL)
+        end,
+        desc = "Copies the CooldownManagerCentered CurseForge project page link.",
     })
+    SettingsLib:CreateText(supportCategory, { name = "|cffccccccCurrent version: " .. version .. "|r" })
+
+    SettingsLib:CreateHeader(supportCategory, { name = "Support Development" })
+    SettingsLib:CreateText(supportCategory, {
+        name = "If you enjoy using CooldownManagerCentered, you can support its continued development.",
+    })
+    for _, donation in ipairs(DONATION_LINKS) do
+        local label, value = donation.label, donation.value
+        SettingsLib:CreateButton(supportCategory, {
+            label = label,
+            text = "Copy donation link",
+            func = function()
+                ShowCopyText(value)
+            end,
+        })
+    end
+
+    if GetCurrentRegionName() == "EU" then
+        SettingsLib:CreateText(supportCategory, {
+            name = "You can also support development with in-game gold on those EU realms.",
+        })
+        SettingsLib:CreateText(supportCategory, { name = "|cff3399ffAlliance|r" })
+        for _, characterName in ipairs(GOLD_RECIPIENTS.alliance) do
+            local recipient = characterName
+            SettingsLib:CreateButton(supportCategory, {
+                label = recipient,
+                text = "Copy character name",
+                func = function()
+                    ShowCopyText(recipient)
+                end,
+            })
+        end
+        SettingsLib:CreateText(supportCategory, { name = "|cffff4d4dHorde|r" })
+        for _, characterName in ipairs(GOLD_RECIPIENTS.horde) do
+            local recipient = characterName
+            SettingsLib:CreateButton(supportCategory, {
+                label = recipient,
+                text = "Copy character name",
+                func = function()
+                    ShowCopyText(recipient)
+                end,
+            })
+        end
+    end
 end
 
 -- Initialize the settings UI (called from main addon after DB is ready)
@@ -2933,6 +2591,7 @@ function AddonSettings:InitializeSettings()
     )
 
     ns.ProfileSettings:BuildSettings(ns.AddonSettings.SettingsLayout.rootCategory)
+    AddonSettings_BuildSupport()
 end
 
 local function HideDefaultsButton()
@@ -2964,6 +2623,7 @@ EventRegistry:RegisterCallback("Settings.CategoryChanged", function(_, category)
     if
         category == ns.AddonSettings.SettingsLayout.rootCategory
         or category == ns.AddonSettings.SettingsLayout.profileCategory
+        or category == ns.AddonSettings.SettingsLayout.supportCategory
     then
         HideDefaultsButton()
     else
@@ -2975,6 +2635,7 @@ SettingsPanel.SearchBox:HookScript("OnTextChanged", function()
     if
         SettingsPanel:GetCurrentCategory() == ns.AddonSettings.SettingsLayout.rootCategory
         or SettingsPanel:GetCurrentCategory() == ns.AddonSettings.SettingsLayout.profileCategory
+        or SettingsPanel:GetCurrentCategory() == ns.AddonSettings.SettingsLayout.supportCategory
     then
         HideDefaultsButton()
     else

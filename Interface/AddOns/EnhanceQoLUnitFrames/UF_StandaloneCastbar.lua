@@ -522,6 +522,31 @@ local function resolveCastbarWidth(castCfg, castDefaults, barHeight)
 	return computeBarWidthForAnchorMatch(targetWidth, castCfg, castDefaults, barHeight)
 end
 
+local dynamicWidthHookedFrames = Castbar._dynamicWidthHookedFrames or setmetatable({}, { __mode = "k" })
+Castbar._dynamicWidthHookedFrames = dynamicWidthHookedFrames
+
+local function ensureDynamicRelativeFrameHooks(frame)
+	if not frame or frame == UIParent or dynamicWidthHookedFrames[frame] or not frame.HookScript then return end
+	local okSize = pcall(frame.HookScript, frame, "OnSizeChanged", onRelativeFrameGeometryChanged)
+	local okShow = pcall(frame.HookScript, frame, "OnShow", onRelativeFrameGeometryChanged)
+	local okHide = pcall(frame.HookScript, frame, "OnHide", onRelativeFrameGeometryChanged)
+	if okSize or okShow or okHide then dynamicWidthHookedFrames[frame] = true end
+end
+
+local function resolveDynamicCastbarWidth(castCfg, castDefaults, barHeight, winner, fallbackWidth)
+	if not (winner and winner.matchRelativeWidth == true) then return fallbackWidth end
+	local relativeFrame = winner.frame
+	if not relativeFrame or relativeFrame == UIParent or not relativeFrame.GetWidth then return fallbackWidth end
+	ensureDynamicRelativeFrameHooks(relativeFrame)
+	local relativeWidth = relativeFrame:GetWidth() or 0
+	if relativeWidth <= 0 then return fallbackWidth end
+	relativeWidth = math.max(MIN_CASTBAR_WIDTH, relativeWidth + (tonumber(winner.matchRelativeWidthOffset) or 0))
+	local relativeScale = getEffectiveScale(relativeFrame)
+	local castScale = getEffectiveScale(state.castBar)
+	local targetWidth = (relativeWidth * relativeScale) / castScale
+	return computeBarWidthForAnchorMatch(targetWidth, castCfg, castDefaults, barHeight)
+end
+
 local function getCastDefaults() return fallbackCastDefaults end
 
 local function ensureCastConfig()
@@ -683,6 +708,45 @@ local function ensureFrame()
 	state.castIcon = state.castIconHolder:CreateTexture(nil, "ARTWORK")
 	state.castIcon:SetAllPoints(state.castIconHolder)
 	state.castIcon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+end
+
+function Castbar.RegisterDynamicAnchor()
+	if Castbar._dynamicAnchorRegistered then return end
+	local dynamicAnchors = addon.DynamicAnchors
+	if not (dynamicAnchors and dynamicAnchors.RegisterConsumer) then return end
+	local consumerId = "castbar:player"
+	dynamicAnchors:RegisterTarget({
+		id = consumerId,
+		owner = "EnhanceQoLUnitFrames",
+		consumerId = consumerId,
+		label = L["Castbar"],
+		resolve = function()
+			if isCastbarEnabled() then
+				ensureFrame()
+				return state.castBar, { available = state.castBar ~= nil, source = "CUSTOM" }
+			end
+			local frame = _G.PlayerCastingBarFrame
+			return frame, { available = frame ~= nil, reason = frame and nil or "FRAME_NOT_CREATED", source = "PLAYER" }
+		end,
+	})
+	dynamicAnchors:RegisterConsumer({
+		id = consumerId,
+		owner = "EnhanceQoLUnitFrames",
+		label = L["Player Castbar"],
+		ensureRule = function()
+			local cfg = ensureCastConfig()
+			if not cfg then return nil end
+			cfg.dynamicAnchor = type(cfg.dynamicAnchor) == "table" and cfg.dynamicAnchor or { enabled = false }
+			return cfg.dynamicAnchor
+		end,
+		getRule = function()
+			local cfg = ensureCastConfig()
+			if cfg and type(cfg.dynamicAnchor) == "table" then dynamicAnchors:EnsureAssignmentProfile(cfg.dynamicAnchor, L["Player Castbar"]) end
+			return cfg and cfg.dynamicAnchor or nil
+		end,
+		apply = function() Castbar.Refresh() end,
+	})
+	Castbar._dynamicAnchorRegistered = true
 end
 
 local function roundNumber(value)
@@ -994,7 +1058,11 @@ local function applyCastLayout(castCfg, castDefaults)
 	castCfg = castCfg or {}
 	castDefaults = castDefaults or fallbackCastDefaults
 	local height = castCfg.height or castDefaults.height or 16
-	local width = resolveCastbarWidth(castCfg, castDefaults, height)
+	local dynamicResult
+	if castCfg.dynamicAnchor and castCfg.dynamicAnchor.enabled == true and addon.DynamicAnchors then dynamicResult = addon.DynamicAnchors:ResolveConsumer("castbar:player", { mode = "LIVE" }) end
+	local dynamicWinner = dynamicResult and dynamicResult.winner
+	local width = dynamicWinner and (tonumber(castCfg.width or castDefaults.width or 220) or 220) or resolveCastbarWidth(castCfg, castDefaults, height)
+	width = resolveDynamicCastbarWidth(castCfg, castDefaults, height, dynamicWinner, width)
 	if width < MIN_CASTBAR_WIDTH then width = MIN_CASTBAR_WIDTH end
 	local defaultBackdropInset = ((tonumber(height) or 0) <= 20) and 0 or 1
 	state.castBar:SetSize(width, height)
@@ -1029,13 +1097,14 @@ local function applyCastLayout(castCfg, castDefaults)
 	end
 
 	local anchor = ensureAnchorConfig(castCfg, castDefaults)
-	if (anchor.relativeFrame or "UIParent") ~= "UIParent" then ensureRelativeFrameHooks(anchor.relativeFrame) end
-	local relativeFrame = resolveRelativeFrame(anchor)
-	local point = anchor.point or "CENTER"
-	local relativePoint = anchor.relativePoint or point
-	local ox = anchor.x or 0
-	local oy = anchor.y or 0
-	if wantsRelativeFrameWidthMatch(anchor) then
+	if not dynamicWinner and (anchor.relativeFrame or "UIParent") ~= "UIParent" then ensureRelativeFrameHooks(anchor.relativeFrame) end
+	local relativeFrame = dynamicWinner and dynamicWinner.frame or resolveRelativeFrame(anchor)
+	local placement = dynamicWinner and dynamicWinner.placement or anchor
+	local point = placement.point or "CENTER"
+	local relativePoint = placement.relativePoint or point
+	local ox = placement.x or 0
+	local oy = placement.y or 0
+	if (dynamicWinner and dynamicWinner.matchRelativeWidth == true) or (not dynamicWinner and wantsRelativeFrameWidthMatch(anchor)) then
 		local castScale = getEffectiveScale(state.castBar)
 		local relativeScale = getEffectiveScale(relativeFrame)
 		local xAdjust = computeAnchorMatchXAdjustment(castCfg, castDefaults, height, width, point)
@@ -1641,6 +1710,7 @@ end
 
 function Castbar.Refresh()
 	ensureCastConfig()
+	Castbar.RegisterDynamicAnchor()
 	if not isCastbarEnabled() then
 		Castbar._runtimeActive = false
 		local eventFrame = Castbar._eventFrame
@@ -1753,6 +1823,8 @@ Castbar._onEvent = function(_, event, unit, ...)
 		end
 	end
 end
+
+Castbar.RegisterDynamicAnchor()
 
 if IsLoggedIn and IsLoggedIn() then
 	if isCastbarEnabled() then Castbar.Refresh() end

@@ -90,7 +90,10 @@ local data = {
 	list = { [1] = L["TooltipOFF"], [2] = L["TooltipON"] },
 	text = L["TooltipBuffHideType"],
 	get = function() return addon.db.TooltipBuffHideType or 1 end,
-	set = function(key) addon.db.TooltipBuffHideType = key end,
+	set = function(key)
+		addon.db.TooltipBuffHideType = key
+		if addon.functions.RefreshNativeAuraTooltipPolicy then addon.functions.RefreshNativeAuraTooltipPolicy() end
+	end,
 	default = 1,
 	var = "TooltipBuffHideType",
 	type = Settings.VarType.Number,
@@ -104,7 +107,10 @@ data = {
 	{
 		var = "TooltipBuffHideInCombat",
 		text = L["TooltipHideInCombat"],
-		func = function(v) addon.db["TooltipBuffHideInCombat"] = v end,
+		func = function(v)
+			addon.db["TooltipBuffHideInCombat"] = v
+			if addon.functions.RefreshNativeAuraTooltipPolicy then addon.functions.RefreshNativeAuraTooltipPolicy() end
+		end,
 		default = false,
 		type = Settings.VarType.Boolean,
 		parent = true,
@@ -121,7 +127,10 @@ data = {
 	{
 		var = "TooltipBuffHideInDungeon",
 		text = L["TooltipHideInDungeon"],
-		func = function(v) addon.db["TooltipBuffHideInDungeon"] = v end,
+		func = function(v)
+			addon.db["TooltipBuffHideInDungeon"] = v
+			if addon.functions.RefreshNativeAuraTooltipPolicy then addon.functions.RefreshNativeAuraTooltipPolicy() end
+		end,
 		default = false,
 		type = Settings.VarType.Boolean,
 		parent = true,
@@ -896,7 +905,10 @@ addon.functions.SettingsCreateSectionHeader(cTooltip, GENERAL, {
 addon.functions.SettingsCreateCheckbox(cTooltip, {
 	var = "TooltipHideOverrideEnabled",
 	text = L["TooltipHideOverride"],
-	func = function(value) addon.db["TooltipHideOverrideEnabled"] = value and true or false end,
+	func = function(value)
+		addon.db["TooltipHideOverrideEnabled"] = value and true or false
+		if addon.Tooltip and addon.Tooltip.functions and addon.Tooltip.functions.InitState then addon.Tooltip.functions.InitState() end
+	end,
 	default = false,
 	parentSection = expandable,
 	groupID = tooltipGroupGeneral,
@@ -915,7 +927,10 @@ addon.functions.SettingsCreateDropdown(cTooltip, {
 	list = overrideModifierList,
 	order = overrideModifierListOrder,
 	get = function() return addon.db["TooltipHideOverrideModifier"] or "CTRL" end,
-	set = function(value) addon.db["TooltipHideOverrideModifier"] = value end,
+	set = function(value)
+		addon.db["TooltipHideOverrideModifier"] = value
+		if addon.Tooltip and addon.Tooltip.functions and addon.Tooltip.functions.InitState then addon.Tooltip.functions.InitState() end
+	end,
 	default = "CTRL",
 	parent = true,
 	element = addon.SettingsLayout.elements["TooltipHideOverrideEnabled"] and addon.SettingsLayout.elements["TooltipHideOverrideEnabled"].element,

@@ -13,7 +13,6 @@ end
 
 local isModuleEnabled = false
 local areHooksInitialized = false
-local spellIDToKeyBindCache = {}
 
 -- Memoized spell->keybind mapping. Building it scans every action-bar slot
 -- (GetActionInfo over ~120+ buttons), which is wasteful when the mapping hasn't
@@ -22,6 +21,25 @@ local spellIDToKeyBindCache = {}
 -- result across viewers and per-refresh RefreshLayout passes.
 local keybindMappingDirty = true
 local keybindMappingResult = nil
+local keybindMappingGeneration = 0
+local viewerMappingGeneration = {}
+local cooldownIDToSpellID = {}
+local KEYBIND_UPDATE_DELAY = 0.05
+local keybindUpdateScheduled = false
+local keybindSettingsUpdatePending = false
+local MAPPING_INVALIDATION_EVENTS = {
+    PLAYER_ENTERING_WORLD = true,
+    UPDATE_BONUS_ACTIONBAR = true,
+    UPDATE_BINDINGS = true,
+    PLAYER_TALENT_UPDATE = true,
+    PLAYER_SPECIALIZATION_CHANGED = true,
+    TRAIT_CONFIG_UPDATED = true,
+    ACTIONBAR_HIDEGRID = true,
+    ACTIONBAR_PAGE_CHANGED = true,
+    ACTIONBAR_SLOT_CHANGED = true,
+    GAME_PAD_ACTIVE_CHANGED = true,
+    PLAYER_EQUIPMENT_CHANGED = true,
+}
 
 -- Secondary actions "hidden" inside a macro body (e.g. a `/use` potion or a
 -- second `/cast` after the primary spell). The primary action of a macro is
@@ -37,10 +55,24 @@ local viewersSettingKey = {
     EssentialCooldownViewer = "Essential",
     UtilityCooldownViewer = "Utility",
 }
--- All custom trackers share one keybind settings scope ("CMCTracker"). Absent
--- tracker frames are skipped by the apply/update helpers (_G lookup returns nil).
+-- Custom trackers use their frame name as the settings scope, backed by the
+-- corresponding editMode.trackerN table. Absent frames are skipped by helpers.
 for i = 1, (ns.CONSTANTS.MAX_TRACKERS or 10) do
-    viewersSettingKey["CMCTracker" .. i] = "CMCTracker"
+    viewersSettingKey["CMCTracker" .. i] = "CMCTracker" .. i
+end
+
+local function GetTrackerConfig(viewerSettingName)
+    local index = type(viewerSettingName) == "string" and viewerSettingName:match("^CMCTracker(%d+)$")
+    local editMode = ns.db and ns.db.profile and ns.db.profile.editMode
+    return index and editMode and editMode["tracker" .. index] or nil
+end
+
+local function IsKeybindEnabled(viewerSettingName)
+    local trackerConfig = GetTrackerConfig(viewerSettingName)
+    if trackerConfig then
+        return trackerConfig.showKeybinds == true
+    end
+    return ns.db.profile["cooldownManager_showKeybinds_" .. viewerSettingName] == true
 end
 
 local function IsKeybindEnabledForAnyViewer()
@@ -48,8 +80,7 @@ local function IsKeybindEnabledForAnyViewer()
         return false
     end
     for _, viewerSettingName in pairs(viewersSettingKey) do
-        local enabledKey = "cooldownManager_showKeybinds_" .. viewerSettingName
-        if ns.db.profile[enabledKey] then
+        if IsKeybindEnabled(viewerSettingName) then
             return true
         end
     end
@@ -65,6 +96,15 @@ local function GetKeybindSettings(viewerSettingName)
     }
     if not ns.db or not ns.db.profile then
         return defaults
+    end
+    local trackerConfig = GetTrackerConfig(viewerSettingName)
+    if trackerConfig then
+        return {
+            anchor = trackerConfig.keybindAnchor or "TOPRIGHT",
+            fontSize = trackerConfig.keybindFontSize or 10,
+            offsetX = trackerConfig.keybindOffsetX or -3,
+            offsetY = trackerConfig.keybindOffsetY or -3,
+        }
     end
     return {
         anchor = ns.db.profile["cooldownManager_keybindAnchor_" .. viewerSettingName] or defaults.anchor,
@@ -460,25 +500,37 @@ local function BuildSpellKeyBindMapping()
             end
         end
     end
-    for spellID, keyBind in pairs(spellIDToKeyBindCache) do
-        if not spellIDToKeyBindFormatted[spellID] then
-            spellIDToKeyBindFormatted[spellID] = keyBind
-        end
-    end
     -- _WTDebug.spellIdToKeyBind = spellIDToKeyBind
     -- _WTDebug.spellIDToFormattedKeyBind = spellIDToKeyBindFormatted
-    spellIDToKeyBindCache = spellIDToKeyBindFormatted
     return spellIDToKeyBindFormatted
+end
+
+local function AreKeybindMappingsEqual(a, b)
+    for spellID, keybind in pairs(a) do
+        if b[spellID] ~= keybind then
+            return false
+        end
+    end
+    for spellID, keybind in pairs(b) do
+        if a[spellID] ~= keybind then
+            return false
+        end
+    end
+    return true
 end
 
 -- Returns the spell->keybind mapping, rebuilding only when marked dirty.
 local function GetSpellKeyBindMapping()
     if not keybindMappingDirty and keybindMappingResult then
-        return keybindMappingResult
+        return keybindMappingResult, keybindMappingGeneration
     end
-    keybindMappingResult = BuildSpellKeyBindMapping()
+    local rebuilt = BuildSpellKeyBindMapping()
+    if not keybindMappingResult or not AreKeybindMappingsEqual(keybindMappingResult, rebuilt) then
+        keybindMappingResult = rebuilt
+        keybindMappingGeneration = keybindMappingGeneration + 1
+    end
     keybindMappingDirty = false
-    return keybindMappingResult
+    return keybindMappingResult, keybindMappingGeneration
 end
 
 function Keybinds:FindKeyBindForSpell(spellID, spellToKeybind)
@@ -522,7 +574,11 @@ local function GetOrCreateKeybindText(icon, viewerSettingName)
     return Affected(icon).keybindText.text
 end
 
-local function GetKeybindFontName()
+local function GetKeybindFontName(viewerSettingName)
+    local trackerConfig = GetTrackerConfig(viewerSettingName)
+    if trackerConfig and trackerConfig.keybindFontName then
+        return trackerConfig.keybindFontName
+    end
     if ns.db and ns.db.profile and ns.db.profile.cooldownManager_keybindFontName then
         return ns.db.profile.cooldownManager_keybindFontName
     end
@@ -537,21 +593,25 @@ local function ApplyKeybindTextSettings(icon, viewerSettingName)
     local settings = GetKeybindSettings(viewerSettingName)
     local keybindText = GetOrCreateKeybindText(icon, viewerSettingName)
 
-    Affected(icon).keybindText:Show()
     keybindText:ClearAllPoints()
     keybindText:SetPoint(settings.anchor, icon, settings.anchor, settings.offsetX, settings.offsetY)
-    local fontName = GetKeybindFontName()
+    local fontName = GetKeybindFontName(viewerSettingName)
     local fontPath = ns.API:GetFontPath(fontName) or ns.CONSTANTS.DEFAULT_FONT[1]
-    local fontFlags = ns.db.profile.cooldownManager_keybindFontFlags
+    local trackerConfig = GetTrackerConfig(viewerSettingName)
+    local fontFlags = trackerConfig and trackerConfig.keybindFontFlags or ns.db.profile.cooldownManager_keybindFontFlags
     keybindText:SetFont(fontPath, settings.fontSize, ns.API:GetFontFlags(fontFlags))
 end
 
 local function ExtractSpellIDFromChild(child)
     if child.cooldownID then
-        local info = C_CooldownViewer.GetCooldownViewerCooldownInfo(child.cooldownID)
-        if info then
-            return info.spellID
+        local cachedSpellID = cooldownIDToSpellID[child.cooldownID]
+        if cachedSpellID ~= nil then
+            return cachedSpellID ~= false and cachedSpellID or nil
         end
+        local info = C_CooldownViewer.GetCooldownViewerCooldownInfo(child.cooldownID)
+        local spellID = info and info.spellID or false
+        cooldownIDToSpellID[child.cooldownID] = spellID
+        return spellID ~= false and spellID or nil
     end
     if child.spellID then
         return child.spellID
@@ -559,36 +619,54 @@ local function ExtractSpellIDFromChild(child)
     return nil
 end
 
-local function UpdateIconKeybind(icon, viewerSettingName, keybind)
+local function UpdateIconKeybind(icon, viewerSettingName, spellID, keybind)
     if not icon then
         return
     end
 
-    local enabledKey = "cooldownManager_showKeybinds_" .. viewerSettingName
-    if not ns.db.profile[enabledKey] then
-        if Affected(icon).keybindText then
-            Affected(icon).keybindText:Hide()
-            if Affected(icon).keybindText.text then
-                Affected(icon).keybindText.text:Hide()
+    local affected = Affected(icon)
+    local enabled = IsKeybindEnabled(viewerSettingName)
+    keybind = keybind or ""
+    if not enabled then
+        if affected.keybindEnabled == false then
+            return
+        end
+        affected.keybindEnabled = false
+        affected.keybindSpellID = spellID
+        affected.keybindValue = keybind
+        if affected.keybindText then
+            affected.keybindText:Hide()
+            if affected.keybindText.text then
+                affected.keybindText.text:Hide()
             end
         end
 
         return
     end
 
-    local keybindText = GetOrCreateKeybindText(icon, viewerSettingName)
-    Affected(icon).keybindText:Show()
+    if
+        affected.keybindEnabled == true
+        and affected.keybindSpellID == spellID
+        and affected.keybindValue == keybind
+    then
+        return
+    end
+    affected.keybindEnabled = true
+    affected.keybindSpellID = spellID
+    affected.keybindValue = keybind
 
+    local keybindText = GetOrCreateKeybindText(icon, viewerSettingName)
     keybindText:SetText(keybind)
-    keybindText:Show()
-    if not keybind or keybind == "" then
-        if Affected(icon).keybindText then
-            Affected(icon).keybindText:Hide()
-        end
+    if keybind == "" then
+        affected.keybindText:Hide()
+        keybindText:Hide()
+    else
+        affected.keybindText:Show()
+        keybindText:Show()
     end
 end
 
-local function UpdateViewerKeybinds(viewerName)
+local function UpdateViewerKeybinds(viewerName, applySettings, force)
     local viewerFrame = _G[viewerName]
     if not viewerFrame then
         return
@@ -601,11 +679,14 @@ local function UpdateViewerKeybinds(viewerName)
 
     PrintDebug("UpdateViewerKeybinds for", viewerName)
 
-    local spellToKeybind = GetSpellKeyBindMapping()
+    local spellToKeybind, generation = GetSpellKeyBindMapping()
+    if not force and not applySettings and viewerMappingGeneration[viewerName] == generation then
+        return
+    end
 
     local children
     if viewerFrame.GetItemFrames then
-        children = viewerFrame:GetItemFrames()
+        children = ns.API:GetViewerItemFrames(viewerFrame)
     else
         children = { viewerFrame:GetChildren() }
     end
@@ -618,20 +699,41 @@ local function UpdateViewerKeybinds(viewerName)
                 keybind = Keybinds:FindKeyBindForSpell(spellID, spellToKeybind)
             end
 
-            UpdateIconKeybind(child, settingName, keybind)
+            UpdateIconKeybind(child, settingName, spellID, keybind)
+        end
+        if applySettings and Affected(child).keybindText then
+            ApplyKeybindTextSettings(child, settingName)
         end
     end
+    viewerMappingGeneration[viewerName] = generation
 end
 
 function Keybinds:UpdateViewerKeybinds(viewerName)
-    UpdateViewerKeybinds(viewerName)
+    UpdateViewerKeybinds(viewerName, false, true)
 end
 
-function Keybinds:UpdateAllKeybinds()
+function Keybinds:UpdateAllKeybinds(applySettings)
     for viewerName, _ in pairs(viewersSettingKey) do
-        UpdateViewerKeybinds(viewerName)
-        self:ApplyKeybindSettings(viewerName)
+        UpdateViewerKeybinds(viewerName, applySettings, true)
     end
+end
+
+local function QueueUpdateAllKeybinds(applySettings)
+    keybindSettingsUpdatePending = keybindSettingsUpdatePending or applySettings == true
+    if keybindUpdateScheduled then
+        return
+    end
+    keybindUpdateScheduled = true
+    C_Timer.After(KEYBIND_UPDATE_DELAY, function()
+        keybindUpdateScheduled = false
+        local updateSettings = keybindSettingsUpdatePending
+        keybindSettingsUpdatePending = false
+        if isModuleEnabled then
+            for viewerName in pairs(viewersSettingKey) do
+                UpdateViewerKeybinds(viewerName, updateSettings, false)
+            end
+        end
+    end)
 end
 
 function Keybinds:ApplyKeybindSettings(viewerName)
@@ -647,7 +749,7 @@ function Keybinds:ApplyKeybindSettings(viewerName)
 
     local children
     if viewerFrame.GetItemFrames then
-        children = viewerFrame:GetItemFrames()
+        children = ns.API:GetViewerItemFrames(viewerFrame)
     else
         children = { viewerFrame:GetChildren() }
     end
@@ -666,7 +768,10 @@ eventFrame:SetScript("OnEvent", function(self, event, ...)
     end
 
     PrintDebug("Event:", event)
-    keybindMappingDirty = true
+    if MAPPING_INVALIDATION_EVENTS[event] then
+        keybindMappingDirty = true
+        wipe(cooldownIDToSpellID)
+    end
     if
         event == "PLAYER_SPECIALIZATION_CHANGED"
         or event == "UPDATE_BINDINGS"
@@ -675,13 +780,10 @@ eventFrame:SetScript("OnEvent", function(self, event, ...)
         or event == "GAME_PAD_ACTIVE_CHANGED"
         or event == "PLAYER_EQUIPMENT_CHANGED"
     then
-        spellIDToKeyBindCache = {}
         wipe(macroSecondaryCache)
     end
 
-    C_Timer.After(0.1, function()
-        Keybinds:UpdateAllKeybinds()
-    end)
+    QueueUpdateAllKeybinds(false)
 end)
 
 function Keybinds:Shutdown()
@@ -695,7 +797,7 @@ function Keybinds:Shutdown()
         if viewerFrame then
             local children
             if viewerFrame.GetItemFrames then
-                children = viewerFrame:GetItemFrames()
+                children = ns.API:GetViewerItemFrames(viewerFrame)
             else
                 children = { viewerFrame:GetChildren() }
             end
@@ -703,6 +805,9 @@ function Keybinds:Shutdown()
                 if Affected(child).keybindText then
                     Affected(child).keybindText:Hide()
                 end
+                Affected(child).keybindEnabled = nil
+                Affected(child).keybindSpellID = nil
+                Affected(child).keybindValue = nil
             end
         end
     end
@@ -724,8 +829,6 @@ function Keybinds:Enable()
     eventFrame:RegisterEvent("PLAYER_TALENT_UPDATE")
     eventFrame:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
     eventFrame:RegisterEvent("TRAIT_CONFIG_UPDATED")
-    eventFrame:RegisterEvent("EDIT_MODE_LAYOUTS_UPDATED")
-    eventFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
     eventFrame:RegisterEvent("ACTIONBAR_HIDEGRID")
     eventFrame:RegisterEvent("ACTIONBAR_PAGE_CHANGED")
     eventFrame:RegisterEvent("ACTIONBAR_SLOT_CHANGED")
@@ -743,13 +846,14 @@ function Keybinds:Enable()
                         return
                     end
                     PrintDebug("RefreshLayout called for viewer:", viewerName)
-                    UpdateViewerKeybinds(viewerName)
+                    wipe(cooldownIDToSpellID)
+                    UpdateViewerKeybinds(viewerName, false, true)
                 end)
             end
         end
     end
 
-    self:UpdateAllKeybinds()
+    self:UpdateAllKeybinds(true)
 end
 
 function Keybinds:Disable()
@@ -779,8 +883,7 @@ function Keybinds:OnSettingChanged(viewerSettingName)
     -- Module remains enabled; update every viewer matching the changed setting (or all if unspecified)
     for viewerName, settingName in pairs(viewersSettingKey) do
         if not viewerSettingName or settingName == viewerSettingName then
-            UpdateViewerKeybinds(viewerName)
-            self:ApplyKeybindSettings(viewerName)
+            UpdateViewerKeybinds(viewerName, true, true)
         end
     end
 end

@@ -22,6 +22,10 @@ addon.variables = addon.variables or {}
 addon.variables.ufSampleAbsorb = addon.variables.ufSampleAbsorb or {}
 addon.variables.ufSampleHealAbsorb = addon.variables.ufSampleHealAbsorb or {}
 UF._editModeSample = UF._editModeSample or {}
+-- Keep the legacy status row as a visual coordinate space without retaining it
+-- in the secure unit button's clickable height.
+UF.STATUS_LAYOUT_HEIGHT = 16
+UF.STATUS_PHYSICAL_HEIGHT = 0.001
 
 function UF.GetEditModeSampleKey(unit)
 	if type(unit) ~= "string" then return nil end
@@ -128,28 +132,6 @@ function UF.SetStatusBarValue(bar, value, smooth, forceImmediate)
 	else
 		bar:SetValue(value)
 	end
-end
-
-function UF.EnsureOverlayClipFrame(anchor, key)
-	if not anchor then return nil end
-	key = key or "_eqolOverlayClip"
-	local clip = anchor[key]
-	if not clip then
-		clip = CreateFrame("Frame", nil, anchor)
-		clip:SetClipsChildren(true)
-		anchor[key] = clip
-	end
-	clip:ClearAllPoints()
-	clip:SetAllPoints(anchor)
-	if clip.SetFrameStrata and anchor.GetFrameStrata then
-		local anchorStrata = anchor:GetFrameStrata()
-		if anchorStrata and clip:GetFrameStrata() ~= anchorStrata then clip:SetFrameStrata(anchorStrata) end
-	end
-	if clip.SetFrameLevel and anchor.GetFrameLevel then
-		local desiredLevel = (anchor:GetFrameLevel() or 0) + 1
-		if clip:GetFrameLevel() ~= desiredLevel then clip:SetFrameLevel(desiredLevel) end
-	end
-	return clip
 end
 
 function UF.StabilizeStatusBarTexture(bar)
@@ -698,6 +680,7 @@ UFProfileManager.RUNTIME_KEYS = UFProfileManager.RUNTIME_KEYS or {
 	"ufFrames",
 	"ufGroupFrames",
 	"ufUseCustomClassColors",
+	"ufUseCustomPowerColors",
 	"ufClassColors",
 	"ufPowerColorOverrides",
 	"ufNPCColorOverrides",
@@ -736,7 +719,7 @@ end
 function UFProfileManager._getCurrentSpecID()
 	if C_ClassTalents and C_ClassTalents.GetActiveConfigID and C_ClassTalents.GetConfigIDsBySpecID then
 		local activeConfigID = C_ClassTalents.GetActiveConfigID()
-		local classID = UnitClass and select(3, UnitClass("player")) or nil
+		local classID = UnitClass and select(3, UnitClass("player"))
 		if issecretvalue and issecretvalue(classID) then classID = nil end
 		if type(activeConfigID) == "number" and activeConfigID > 0 and type(classID) == "number" and classID > 0 and GetNumSpecializationsForClassID and GetSpecializationInfoForClassID then
 			local numSpecs = GetNumSpecializationsForClassID(classID)
@@ -766,7 +749,7 @@ function UFProfileManager._getCurrentSpecID()
 end
 
 function UFProfileManager._getCurrentClassSpecIDs()
-	local classID = UnitClass and select(3, UnitClass("player")) or nil
+	local classID = UnitClass and select(3, UnitClass("player"))
 	if issecretvalue and issecretvalue(classID) then classID = nil end
 	local specIDs
 	if type(classID) == "number" and classID > 0 and GetNumSpecializationsForClassID and GetSpecializationInfoForClassID then
@@ -881,6 +864,7 @@ function UFProfileManager._ensureUFProfilePayload(profile)
 	profile.ufFrames = type(profile.ufFrames) == "table" and profile.ufFrames or {}
 	profile.ufGroupFrames = type(profile.ufGroupFrames) == "table" and profile.ufGroupFrames or {}
 	profile.ufUseCustomClassColors = profile.ufUseCustomClassColors == true
+	profile.ufUseCustomPowerColors = profile.ufUseCustomPowerColors == true
 	profile.ufClassColors = type(profile.ufClassColors) == "table" and profile.ufClassColors or {}
 	profile.ufPowerColorOverrides = type(profile.ufPowerColorOverrides) == "table" and profile.ufPowerColorOverrides or {}
 	profile.ufNPCColorOverrides = type(profile.ufNPCColorOverrides) == "table" and profile.ufNPCColorOverrides or {}
@@ -892,6 +876,7 @@ function UFProfileManager._buildLegacyUFProfile()
 		ufFrames = UFProfileManager._copyProfileValue(addon.db and addon.db.ufFrames) or {},
 		ufGroupFrames = UFProfileManager._copyProfileValue(addon.db and addon.db.ufGroupFrames) or {},
 		ufUseCustomClassColors = addon.db and addon.db.ufUseCustomClassColors == true,
+		ufUseCustomPowerColors = addon.db and addon.db.ufUseCustomPowerColors == true,
 		ufClassColors = UFProfileManager._copyProfileValue(addon.db and addon.db.ufClassColors) or {},
 		ufPowerColorOverrides = UFProfileManager._copyProfileValue(addon.db and addon.db.ufPowerColorOverrides) or {},
 		ufNPCColorOverrides = UFProfileManager._copyProfileValue(addon.db and addon.db.ufNPCColorOverrides) or {},
@@ -920,6 +905,7 @@ function UFProfileManager._isUFProfilePayloadNormalized(profile)
 		and type(profile.ufFrames) == "table"
 		and type(profile.ufGroupFrames) == "table"
 		and (profile.ufUseCustomClassColors == true or profile.ufUseCustomClassColors == false)
+		and (profile.ufUseCustomPowerColors == true or profile.ufUseCustomPowerColors == false)
 		and type(profile.ufClassColors) == "table"
 		and type(profile.ufPowerColorOverrides) == "table"
 		and type(profile.ufNPCColorOverrides) == "table"
@@ -1069,7 +1055,7 @@ function UFProfileManager._runtimeMatchesUFProfile(profile)
 	for _, key in ipairs(UFProfileManager.RUNTIME_KEYS) do
 		local runtimeValue = addon.db[key]
 		local profileValue = profile[key]
-		if key == "ufUseCustomClassColors" then
+		if key == "ufUseCustomClassColors" or key == "ufUseCustomPowerColors" then
 			if (runtimeValue == true) ~= (profileValue == true) then return false end
 		elseif not UFProfileManager._deepValueEquals(runtimeValue, profileValue) then
 			return false
@@ -1102,58 +1088,26 @@ function UFProfileManager._resolveUFActiveProfileName(profiles)
 	local guid = UFProfileManager._getCurrentPlayerGUID()
 	if not guid then
 		local runtimeMatch = UFProfileManager._findRuntimeMatchingUFProfileName(profiles, globalName)
-		if runtimeMatch then return runtimeMatch, false end
-		return globalName, true
+		return runtimeMatch or globalName
 	end
 
 	local activeName = UFProfileManager._trimProfileName(addon.db.ufProfileKeys and addon.db.ufProfileKeys[guid])
-	if activeName and profiles[activeName] then return activeName, false end
+	if activeName and profiles[activeName] then return activeName end
 
 	local specMapped = UFProfileManager._resolveUFSpecMappedProfileName(profiles, guid)
 	if specMapped then
 		addon.db.ufProfileKeys[guid] = specMapped
-		return specMapped, false
+		return specMapped
 	end
 
 	local runtimeMatch = UFProfileManager._findRuntimeMatchingUFProfileName(profiles, globalName)
 	if runtimeMatch then
 		addon.db.ufProfileKeys[guid] = runtimeMatch
-		return runtimeMatch, false
+		return runtimeMatch
 	end
 
 	addon.db.ufProfileKeys[guid] = globalName
-	return globalName, true
-end
-
-function UFProfileManager._seedProfileFromRuntime(profileName)
-	if type(addon.db) ~= "table" then return false end
-	local profiles = addon.db.ufProfiles
-	if type(profiles) ~= "table" then return false end
-	local profile = profiles[profileName]
-	if type(profile) ~= "table" then return false end
-	if UFProfileManager._isUFProfileBound(profileName) then return false end
-
-	local seeded = false
-	for _, key in ipairs(UFProfileManager.RUNTIME_KEYS) do
-		local runtimeValue = addon.db[key]
-		if key == "ufUseCustomClassColors" then
-			profile[key] = runtimeValue == true
-			seeded = true
-		elseif type(runtimeValue) == "table" then
-			profile[key] = UFProfileManager._copyProfileValue(runtimeValue) or {}
-			seeded = true
-		elseif runtimeValue ~= nil then
-			profile[key] = runtimeValue
-			seeded = true
-		end
-	end
-
-	if not seeded then return false end
-	profiles[profileName] = UFProfileManager._ensureUFProfilePayload(profile)
-	UFProfileManager._markUFProfilesDirty()
-	UFProfileManager.Debug("seed runtime into UF profile %s (first guid mapping)", tostring(profileName))
-	UFProfileManager.Trace("SEED_RUNTIME", profileName)
-	return true
+	return globalName
 end
 
 function UFProfileManager._bindUFProfileToRuntime(profileName)
@@ -1165,7 +1119,7 @@ function UFProfileManager._bindUFProfileToRuntime(profileName)
 	profiles[profileName] = profile
 	for _, key in ipairs(UFProfileManager.RUNTIME_KEYS) do
 		local value = profile[key]
-		if key == "ufUseCustomClassColors" then
+		if key == "ufUseCustomClassColors" or key == "ufUseCustomPowerColors" then
 			addon.db[key] = value == true
 		else
 			addon.db[key] = value
@@ -1192,6 +1146,7 @@ function UFProfileManager._isUFProfileBound(profileName)
 	if addon.db.ufPowerColorOverrides ~= profile.ufPowerColorOverrides then return false end
 	if addon.db.ufNPCColorOverrides ~= profile.ufNPCColorOverrides then return false end
 	if (addon.db.ufUseCustomClassColors == true) ~= (profile.ufUseCustomClassColors == true) then return false end
+	if (addon.db.ufUseCustomPowerColors == true) ~= (profile.ufUseCustomPowerColors == true) then return false end
 	return true
 end
 
@@ -1278,9 +1233,8 @@ function UFProfileManager.Initialize()
 	if type(profiles) ~= "table" then return false, "NO_DB" end
 	UFProfileManager._ensureUFProfileTablesDeduped(profiles)
 	UFProfileManager._cleanUFProfileReferences(profiles)
-	local activeName, shouldSeedFromRuntime = UFProfileManager._resolveUFActiveProfileName(profiles)
+	local activeName = UFProfileManager._resolveUFActiveProfileName(profiles)
 	if not activeName or not profiles[activeName] then return false, "NO_PROFILE" end
-	if shouldSeedFromRuntime then UFProfileManager._seedProfileFromRuntime(activeName) end
 	local guid = UFProfileManager._getCurrentPlayerGUID()
 	local keyProfile = guid and addon.db.ufProfileKeys and addon.db.ufProfileKeys[guid] or nil
 	UFProfileManager.Debug("initialize guid=%s key=%s global=%s resolved=%s", tostring(guid), tostring(keyProfile), tostring(addon.db.ufProfileGlobal), tostring(activeName))
@@ -1389,6 +1343,14 @@ function UFProfileManager.SetUseCustomClassColors(value)
 	local profile = UFProfileManager.GetActiveProfile()
 	if profile then profile.ufUseCustomClassColors = value end
 	addon.db.ufUseCustomClassColors = value
+	return true
+end
+
+function UFProfileManager.SetUseCustomPowerColors(value)
+	value = value == true
+	local profile = UFProfileManager.GetActiveProfile()
+	if profile then profile.ufUseCustomPowerColors = value end
+	addon.db.ufUseCustomPowerColors = value
 	return true
 end
 
@@ -2631,8 +2593,11 @@ function UF.ReanchorFramesAttachedToCooldownPanels(panelIds)
 		local relativeName = anchor and (anchor.relativeTo or anchor.relativeFrame)
 		if cfg and cfg.enabled and st and st.frame and targets[relativeName] then
 			local rel = resolveRelativeAnchorFrame(relativeName, st.frame:GetName())
+			local anchorPoint = anchor.point or "CENTER"
+			local relativePoint = anchor.relativePoint or anchorPoint
+			local anchorY = UF.ResolvePhysicalUnitFrameAnchorY(anchorPoint, relativePoint, anchor.y, rel, st.frame._eqolUFStatusHeightDelta)
 			st.frame:ClearAllPoints()
-			st.frame:SetPoint(anchor.point or "CENTER", rel or UIParent, anchor.relativePoint or anchor.point or "CENTER", anchor.x or 0, anchor.y or 0)
+			st.frame:SetPoint(anchorPoint, rel or UIParent, relativePoint, anchor.x or 0, anchorY)
 		end
 	end
 end
@@ -3022,9 +2987,10 @@ local function applyRaidIconLayout(unit, cfg)
 	local ox = (rcfg.offset and rcfg.offset.x) or offsetDef.x or 0
 	local oy = (rcfg.offset and rcfg.offset.y) or offsetDef.y or -2
 	local centerOffset = (st and st._portraitCenterOffset) or 0
+	local statusOffsetY = UF.GetStatusVisualOffsetY and UF.GetStatusVisualOffsetY("TOP", st.status and st.status:GetHeight(), st._statusLayoutHeight) or 0
 	st.raidIcon:ClearAllPoints()
 	st.raidIcon:SetSize(size, size)
-	st.raidIcon:SetPoint("TOP", st.frame, "TOP", (ox or 0) + centerOffset, oy)
+	st.raidIcon:SetPoint("TOP", st.frame, "TOP", (ox or 0) + centerOffset, oy + statusOffsetY)
 	if not enabled then st.raidIcon:Hide() end
 end
 
@@ -3407,7 +3373,7 @@ ClassResourceUtil.ApplyLayout = function(cfg)
 				classResourceManagedFrames[frame] = true
 				frame.ignoreFramePositionManager = true
 				frame:ClearAllPoints()
-				frame:SetPoint(anchor, st.frame, anchor, offsetX, offsetY)
+				frame:SetPoint(anchor, st.frame, anchor, offsetX, offsetY + UF.GetVirtualUnitFramePointOffsetY(st.frame, anchor))
 				frame:SetParent(st.frame)
 				if frame.SetScale then frame:SetScale(scale) end
 				if frame.SetFrameStrata and st.frame.GetFrameStrata then frame:SetFrameStrata(resourceStrata or st.frame:GetFrameStrata()) end
@@ -3618,17 +3584,18 @@ TotemFrameUtil.ApplyLayout = function(cfg)
 	if anchor then
 		local info = TotemFrameUtil._originalLayout
 		local selfPoint = (info and info.points and info.points[1] and info.points[1].point) or anchor
-		frame:SetPoint(selfPoint, st.frame, anchor, offsetX, offsetY)
+		frame:SetPoint(selfPoint, st.frame, anchor, offsetX, offsetY + UF.GetVirtualUnitFramePointOffsetY(st.frame, anchor))
 	else
 		local info = TotemFrameUtil._originalLayout
 		if info and info.points and #info.points > 0 then
 			for _, pt in ipairs(info.points) do
 				local rel = pt.relativeTo
 				if rel == info.parent or rel == _G.PlayerFrame then rel = st.frame end
-				frame:SetPoint(pt.point, rel, pt.relativePoint, pt.x or 0, pt.y or 0)
+				local pointOffsetY = rel == st.frame and UF.GetVirtualUnitFramePointOffsetY(st.frame, pt.relativePoint or pt.point) or 0
+				frame:SetPoint(pt.point, rel, pt.relativePoint, pt.x or 0, (pt.y or 0) + pointOffsetY)
 			end
 		else
-			frame:SetPoint("TOPRIGHT", st.frame, "BOTTOMRIGHT", offsetX, offsetY)
+			frame:SetPoint("TOPRIGHT", st.frame, "BOTTOMRIGHT", offsetX, offsetY + UF.GetVirtualUnitFramePointOffsetY(st.frame, "BOTTOMRIGHT"))
 		end
 	end
 	frame:SetParent(st.frame)
@@ -3684,12 +3651,19 @@ function UF.SyncEditModeLayoutAnchors(units)
 			local cfg = ensureDB(unit)
 			local anchor = cfg and cfg.anchor
 			if anchor then
+				local def = defaultsFor(unit)
+				local showStatus = unit ~= "boss" and UF.ShouldShowStatusLayout and UF.ShouldShowStatusLayout(cfg, unit, def)
+				local statusHeightDelta = unit ~= "boss" and UF.GetStatusHeightDelta and UF.GetStatusHeightDelta(showStatus) or 0
+				local relativeName = anchor.relativeTo or anchor.relativeFrame
+				local rel = resolveRelativeAnchorFrame(relativeName, RelativeAnchor.GetFrameNameForKey(unit))
+				local point = anchor.point or "CENTER"
+				local relativePoint = anchor.relativePoint or point
 				local data = editMode:EnsureLayoutData(frameId)
 				if type(data) == "table" then
-					data.point = anchor.point or data.point or "CENTER"
-					data.relativePoint = anchor.relativePoint or anchor.point or data.relativePoint or data.point
+					data.point = point
+					data.relativePoint = relativePoint
 					data.x = anchor.x or 0
-					data.y = anchor.y or 0
+					data.y = UF.ResolvePhysicalUnitFrameAnchorY(point, relativePoint, anchor.y, rel, statusHeightDelta)
 				end
 			end
 		end
@@ -3874,13 +3848,16 @@ local function anchorBossContainer(cfg)
 	cfg = cfg or ensureDB("boss")
 	local def = defaultsFor("boss")
 	local anchor = (cfg and cfg.anchor) or (def and def.anchor) or { point = "CENTER", relativeTo = "UIParent", relativePoint = "CENTER", x = 0, y = 0 }
+	local point = anchor.point or "CENTER"
+	local relativePoint = anchor.relativePoint or point
+	local relativeFrame = resolveRelativeAnchorFrame(anchor.relativeTo or anchor.relativeFrame, RelativeAnchor.bossFrameName)
 	bossContainer:ClearAllPoints()
 	bossContainer:SetPoint(
-		anchor.point or "CENTER",
-		resolveRelativeAnchorFrame(anchor.relativeTo or anchor.relativeFrame, RelativeAnchor.bossFrameName),
-		anchor.relativePoint or anchor.point or "CENTER",
+		point,
+		relativeFrame,
+		relativePoint,
 		anchor.x or 0,
-		anchor.y or 0
+		UF.ResolvePhysicalUnitFrameAnchorY(point, relativePoint, anchor.y, relativeFrame, 0)
 	)
 end
 
@@ -4401,18 +4378,34 @@ function AuraUtil.ApplyIconShapeBorder(btn, ac, r, g, b, a)
 	})
 end
 
+function AuraUtil.ShouldHideNativeAuraTooltipInCombat(style)
+	local explicitHideInCombat = type(style) == "table" and style.hideTooltipInCombat == true
+	if addon.AuraCompat and addon.AuraCompat.ShouldHideAuraButtonTooltipInCombat then
+		return addon.AuraCompat:ShouldHideAuraButtonTooltipInCombat(explicitHideInCombat)
+	end
+	return explicitHideInCombat
+end
+
 function AuraUtil.getAuraButtonStyleKey(ac)
 	if type(ac) ~= "table" then return "" end
 	local fontVersion = addon.functions and addon.functions.GetGlobalFontStateVersion and addon.functions.GetGlobalFontStateVersion() or 0
-	if ac._eqolAuraButtonStyleFontVersion == fontVersion and ac._eqolAuraButtonStyleKey then return ac._eqolAuraButtonStyleKey end
+	local hideTooltipInCombat = AuraUtil.ShouldHideNativeAuraTooltipInCombat(ac)
+	if ac._eqolAuraButtonStyleFontVersion == fontVersion and ac._eqolAuraButtonStyleHideTooltipInCombat == hideTooltipInCombat and ac._eqolAuraButtonStyleKey then
+		return ac._eqolAuraButtonStyleKey
+	end
 	local countOffset = ac.countOffset
 	local cooldownOffset = ac.cooldownOffset
 	local drOffset = ac.drOffset
+	local tooltipOffset = ac.tooltipOffset
 	local borderColor = ac.borderColor
 	local key = table.concat({
 		tostring(fontVersion),
 		tostring(ac.size),
 		tostring(ac.showTooltip),
+		tostring(ac.tooltipAnchor),
+		tostring(tooltipOffset and tooltipOffset.x),
+		tostring(tooltipOffset and tooltipOffset.y),
+		tostring(hideTooltipInCombat),
 		tostring(ac.showCooldown),
 		tostring(ac.showCooldownText),
 		tostring(ac.showCooldownEdge),
@@ -4456,6 +4449,7 @@ function AuraUtil.getAuraButtonStyleKey(ac)
 		tostring(ac.drColor),
 	}, "\031")
 	ac._eqolAuraButtonStyleFontVersion = fontVersion
+	ac._eqolAuraButtonStyleHideTooltipInCombat = hideTooltipInCombat
 	ac._eqolAuraButtonStyleKey = key
 	return key
 end
@@ -5175,8 +5169,6 @@ function AuraUtil.PrepareNativeAuraButton(button, style, isDebuff)
 	if style.showCooldownText ~= false then
 		if not button.durationText then
 			button.durationText = (button.nativeForeground or button):CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-		elseif button.nativeForeground and button.durationText:GetParent() ~= button.nativeForeground then
-			button.durationText:SetParent(button.nativeForeground)
 		end
 		button.durationText:ClearAllPoints()
 		button.durationText:SetDrawLayer("OVERLAY", 3)
@@ -5193,8 +5185,6 @@ function AuraUtil.PrepareNativeAuraButton(button, style, isDebuff)
 	if style.showStacks ~= false then
 		if not button.count then
 			button.count = (button.nativeForeground or button):CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-		elseif button.nativeForeground and button.count:GetParent() ~= button.nativeForeground then
-			button.count:SetParent(button.nativeForeground)
 		end
 		button.count:ClearAllPoints()
 		button.count:SetDrawLayer("OVERLAY", 4)
@@ -5207,43 +5197,58 @@ function AuraUtil.PrepareNativeAuraButton(button, style, isDebuff)
 		if button.count then button.count:Hide() end
 	end
 
-	if style.blizzardDispelBorder == true then
+	AuraUtil.CallNativeAuraMethod(button, "ClearDispelTypeTextures")
+	local dispelTextureStyles = Enum and Enum.CustomAuraButtonDispelTypeTextureStyle
+	if style.blizzardDispelBorder == true and dispelTextureStyles then
 		if not button.auraBorder then
 			button.auraBorder = button:CreateTexture(nil, "OVERLAY")
 			button.auraBorder:SetAllPoints(button)
 		end
 		button.auraBorder:Show()
-		AuraUtil.CallNativeAuraMethod(button, "SetAuraBorder", button.auraBorder, {
-			showIcon = false,
+		AuraUtil.CallNativeAuraMethod(button, "AddDispelTypeTexture", button.auraBorder, {
+			style = dispelTextureStyles.Border,
 			showWhenHarmful = true,
 			showWhenHelpful = false,
 		})
 	else
-		AuraUtil.CallNativeAuraMethod(button, "ClearAuraBorder")
 		if button.auraBorder then button.auraBorder:Hide() end
 	end
 
 	if isDebuff and style.blizzardDispelBorder == true then
 		if not button.auraSymbol then
 			button.auraSymbol = (button.nativeForeground or button):CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-		elseif button.nativeForeground and button.auraSymbol:GetParent() ~= button.nativeForeground then
-			button.auraSymbol:SetParent(button.nativeForeground)
 		end
 		button.auraSymbol:ClearAllPoints()
 		button.auraSymbol:SetDrawLayer("OVERLAY", 5)
 		button.auraSymbol:SetPoint("BOTTOMRIGHT", button.nativeForeground or button, "BOTTOMRIGHT", -1, 1)
 		if UFHelper and UFHelper.applyFont then UFHelper.applyFont(button.auraSymbol, style.countFont, math.min(style.countFontSize or 14, 14), style.countFontOutline) end
 		button.auraSymbol:Show()
-		AuraUtil.CallNativeAuraMethod(button, "SetAuraSymbol", button.auraSymbol, {
+		AuraUtil.CallNativeAuraMethod(button, "SetDispelTypeText", button.auraSymbol, {
 			showWhenHarmful = true,
 			showWhenHelpful = false,
 		})
 	else
-		AuraUtil.CallNativeAuraMethod(button, "ClearAuraSymbol")
+		AuraUtil.CallNativeAuraMethod(button, "ClearDispelTypeText")
 		if button.auraSymbol then button.auraSymbol:Hide() end
 	end
 
-	AuraUtil.CallNativeAuraMethod(button, "SetMouseMotionEnabled", style.showTooltip ~= false)
+	local showTooltip = style.showTooltip ~= false
+	AuraUtil.CallNativeAuraMethod(button, "EnableMouse", showTooltip)
+	AuraUtil.CallNativeAuraMethod(button, "SetMouseClickEnabled", false)
+	AuraUtil.CallNativeAuraMethod(button, "SetMouseMotionEnabled", showTooltip)
+	local tooltipOffset = style.tooltipOffset
+	AuraUtil.CallNativeAuraMethod(
+		button,
+		"SetTooltipAnchorPoint",
+		style.tooltipAnchor or "ANCHOR_BOTTOMRIGHT",
+		(tooltipOffset and tooltipOffset.x) or 0,
+		(tooltipOffset and tooltipOffset.y) or 0
+	)
+	if addon.AuraCompat and addon.AuraCompat.RegisterAuraButtonTooltipPolicy then
+		addon.AuraCompat:RegisterAuraButtonTooltipPolicy(button, style.hideTooltipInCombat == true, showTooltip)
+	else
+		AuraUtil.CallNativeAuraMethod(button, "SetHideTooltipInCombat", AuraUtil.ShouldHideNativeAuraTooltipInCombat(style))
+	end
 	AuraUtil.ApplyIconShape(button, style.iconShape, style.iconZoom)
 	AuraUtil.PrepareNativeAuraStyleBorder(button, style, isDebuff)
 	return true
@@ -5326,8 +5331,6 @@ function AuraUtil.PrepareNativeAuraStyleBorder(button, style, isDebuff)
 		if not button.nativeStyleBorderFrame then
 			button.nativeStyleBorderFrame = CreateFrame("Frame", nil, edgeParent)
 			button.nativeStyleBorderFrame:EnableMouse(false)
-		elseif button.nativeStyleBorderFrame.GetParent and button.nativeStyleBorderFrame:GetParent() ~= edgeParent and button.nativeStyleBorderFrame.SetParent then
-			button.nativeStyleBorderFrame:SetParent(edgeParent)
 		end
 		if button.nativeStyleBorderFrame.SetFrameStrata and edgeParent.GetFrameStrata then button.nativeStyleBorderFrame:SetFrameStrata(edgeParent:GetFrameStrata()) end
 		if button.nativeStyleBorderFrame.SetFrameLevel and edgeParent.GetFrameLevel then button.nativeStyleBorderFrame:SetFrameLevel(edgeParent:GetFrameLevel() + 1) end
@@ -5410,10 +5413,11 @@ function AuraUtil.EnsureNativeAuraLane(st, key, unit, style, filterString, isDeb
 		candidateFilters = candidateFilters,
 		initializeFrame = function(button) AuraUtil.PrepareNativeAuraButton(button, initializedStyle, initializedIsDebuff) end,
 		layout = {
-			elementSpacingX = tonumber(style and style.padding) or 0,
-			elementSpacingY = tonumber(style and style.padding) or 0,
+			elementSpacing = tonumber(style and style.padding) or 0,
+			lineSpacing = tonumber(style and style.padding) or 0,
 			elementWidth = tonumber(style and style.size) or 24,
 			elementHeight = tonumber(style and style.size) or 24,
+			layoutIndex = 1,
 		},
 	})
 	if not registered then
@@ -5435,24 +5439,25 @@ function AuraUtil.GetNativeAuraFlowLayout(st, style, width)
 	if horizontal ~= "LEFT" and horizontal ~= "RIGHT" then horizontal = "RIGHT" end
 	if vertical ~= "UP" and vertical ~= "DOWN" then vertical = "DOWN" end
 
-	-- PTR4 flow layout always fills horizontal rows. Vertical-primary choices are
-	-- therefore transposed while preserving both configured growth directions.
 	local perRow = UF._auraLayout.calcPerRow(st, style, width, primary)
 	local size = tonumber(style.size) or 24
 	local spacing = tonumber(style.padding) or 0
-	local rowWidth = math.max(size, (perRow * size) + (math.max(perRow - 1, 0) * spacing))
+	local maximumLineSize = math.max(size, (perRow * size) + (math.max(perRow - 1, 0) * spacing))
 	local horizontalPoint = horizontal == "RIGHT" and "LEFT" or "RIGHT"
 	local verticalPoint = vertical == "UP" and "BOTTOM" or "TOP"
+	local flowAxes = AnchorUtil and AnchorUtil.FlowLayoutAxis
+	if not flowAxes then return nil end
 	return {
 		anchor = anchor,
 		primary = primary,
 		secondary = secondary,
 		horizontal = horizontal,
 		vertical = vertical,
+		axis = (primary == "UP" or primary == "DOWN") and flowAxes.Vertical or flowAxes.Horizontal,
 		anchorPoint = verticalPoint .. horizontalPoint,
 		horizontalGrowthDirection = horizontal == "RIGHT" and 1 or -1,
 		verticalGrowthDirection = vertical == "UP" and 1 or -1,
-		rowWidth = rowWidth,
+		maximumLineSize = maximumLineSize,
 		perRow = perRow,
 		size = size,
 		spacing = spacing,
@@ -5491,21 +5496,24 @@ end
 function AuraUtil.LayoutNativeAuraLane(st, lane, style, width)
 	if not (st and lane and lane.container and style) then return false end
 	local flow = AuraUtil.GetNativeAuraFlowLayout(st, style, width)
+	if not flow then return false end
 	AuraUtil.PositionNativeAuraLane(st, lane.container, style, flow)
 	addon.AuraCompat:ConfigureAuraContainerLayout(lane.container, {
+		axis = flow.axis,
 		anchorPoint = flow.anchorPoint,
 		horizontalGrowthDirection = flow.horizontalGrowthDirection,
 		verticalGrowthDirection = flow.verticalGrowthDirection,
-		rowWidth = flow.rowWidth,
+		maximumLineSize = flow.maximumLineSize,
 	})
 	addon.AuraCompat:UpdateAuraGroup(lane.container, lane.groupKey, {
 		maxFrameCount = lane.max,
 		candidateFilters = lane.candidateFilters,
 		layout = {
-			elementSpacingX = flow.spacing,
-			elementSpacingY = flow.spacing,
+			elementSpacing = flow.spacing,
+			lineSpacing = flow.spacing,
 			elementWidth = flow.size,
 			elementHeight = flow.size,
+			layoutIndex = 1,
 		},
 	})
 	AuraUtil.syncAuraContainerLayer(lane.container, st.frame)
@@ -6501,24 +6509,369 @@ function AuraUtil.ShouldUseManagedDispelBorder()
 	return addon.AuraCompat and addon.AuraCompat.ShouldUseAuraContainer and addon.AuraCompat:ShouldUseAuraContainer() == true or false
 end
 
+function AuraUtil.SetManagedDispelSlotFilterStrings(managed, filterString)
+	if not (managed and managed.container and filterString) then return end
+	if managed.backgroundSlotKey then addon.AuraCompat:UpdateAuraSlot(managed.container, managed.backgroundSlotKey, { filterString = filterString }) end
+	for _, slotKey in pairs(managed.overlaySlotKeys or {}) do
+		addon.AuraCompat:UpdateAuraSlot(managed.container, slotKey, { filterString = filterString })
+	end
+end
+
 function AuraUtil.HideManagedDispelBorder(st)
 	local managed = st and st.managedDispelBorder
 	if not managed then return end
 	managed.enabled = nil
 	if managed.container then
 		if managed.container.SetEnabled then managed.container:SetEnabled(false) end
+		AuraUtil.SetManagedDispelSlotFilterStrings(managed, "HELPFUL|HARMFUL")
+		managed.filtersReset = true
 		managed.container:Hide()
 	end
 end
 
-function AuraUtil.PrecreateManagedDispelBorder(st, root)
+AuraUtil.ManagedDispelTypes = AuraUtil.ManagedDispelTypes
+	or {
+		{ key = "Magic", colorName = "Magic" },
+		{ key = "Curse", colorName = "Curse" },
+		{ key = "Disease", colorName = "Disease" },
+		{ key = "Poison", colorName = "Poison" },
+	}
+
+function AuraUtil.GetManagedDispelRootSize(root)
+	local width = root and root.GetWidth and root:GetWidth() or nil
+	local height = root and root.GetHeight and root:GetHeight() or nil
+	if type(width) ~= "number" or width < 1 or type(height) ~= "number" or height < 1 then return nil, nil end
+	return width, height
+end
+
+function AuraUtil.GetManagedDispelGlowSignature(dcfg, defDispel, width, height)
+	dcfg = dcfg or {}
+	defDispel = defDispel or {}
+	local color = dcfg.glowColor or defDispel.glowColor or {}
+	local fillColor = dcfg.fillColor or defDispel.fillColor or {}
+	return table.concat({
+		tostring(dcfg.alpha or defDispel.alpha or 0.25),
+		tostring(dcfg.enabled == nil and defDispel.enabled ~= false or dcfg.enabled == true),
+		tostring(dcfg.glowEnabled == nil and defDispel.glowEnabled == true or dcfg.glowEnabled == true),
+		tostring(dcfg.fillEnabled == nil and defDispel.fillEnabled ~= false or dcfg.fillEnabled == true),
+		tostring(dcfg.fillAlpha or defDispel.fillAlpha or 0.2),
+		tostring(fillColor[1] or fillColor.r or 0),
+		tostring(fillColor[2] or fillColor.g or 0),
+		tostring(fillColor[3] or fillColor.b or 0),
+		tostring(fillColor[4] or fillColor.a or 1),
+		tostring(dcfg.strata or defDispel.strata or ""),
+		tostring(dcfg.frameLevelModel or defDispel.frameLevelModel or ""),
+		tostring(dcfg.frameLevelOffset or defDispel.frameLevelOffset or ""),
+		tostring(dcfg.glowColorMode or defDispel.glowColorMode or "DISPEL"),
+		tostring(color[1] or color.r or 1),
+		tostring(color[2] or color.g or 1),
+		tostring(color[3] or color.b or 1),
+		tostring(color[4] or color.a or 1),
+		tostring(dcfg.glowEffect or defDispel.glowEffect or "PIXEL"),
+		tostring(dcfg.glowFrequency or defDispel.glowFrequency or 0.25),
+		tostring(dcfg.glowLines or defDispel.glowLines or 8),
+		tostring(dcfg.glowThickness or defDispel.glowThickness or 3),
+		tostring(dcfg.glowX or defDispel.glowX or 0),
+		tostring(dcfg.glowY or defDispel.glowY or 0),
+		tostring(dcfg.glowStrata or defDispel.glowStrata or ""),
+		tostring(dcfg.glowFrameLevelOffset or defDispel.glowFrameLevelOffset or ""),
+		tostring(width or ""),
+		tostring(height or ""),
+	}, "\031")
+end
+
+function AuraUtil.GetManagedDispelFilterString(dcfg, defDispel)
+	dcfg = dcfg or {}
+	defDispel = defDispel or {}
+	local mode = tostring(dcfg.filterMode or defDispel.filterMode or dcfg.blizzardDispelIndicatorMode or defDispel.blizzardDispelIndicatorMode or "MY"):upper()
+	if mode == "ALL" or mode == "ANY" then return "HARMFUL|INCLUDE_NAME_PLATE_ONLY|DISPELLABLE" end
+	if mode == "GROUP" or mode == "RAID_PLAYER_DISPELLABLE" then return "HARMFUL|INCLUDE_NAME_PLATE_ONLY|RAID_PLAYER_DISPELLABLE" end
+	return "HARMFUL|INCLUDE_NAME_PLATE_ONLY|RAID"
+end
+
+function AuraUtil.GetManagedDispelGlowOptions(colorName, dcfg, defDispel)
+	dcfg = dcfg or {}
+	defDispel = defDispel or {}
+	local colorMode = dcfg.glowColorMode or defDispel.glowColorMode or "DISPEL"
+	local r, g, b = UFHelper.getDebuffColorFromName(colorName)
+	if colorMode == "CUSTOM" then
+		r, g, b = unpackColor(dcfg.glowColor or defDispel.glowColor, 1, 1, 1, 1)
+	end
+	local thickness = UFHelper.ClampNumber(dcfg.glowThickness or defDispel.glowThickness or 3, 1, 10, 3)
+	local explicitGlowLevel = tonumber(rawget(dcfg, "glowFrameLevelOffset"))
+	local explicitGlowStrata = rawget(dcfg, "glowStrata")
+	local glowLevel
+	if rawget(dcfg, "glowFrameLevelModel") == 2 or explicitGlowLevel ~= nil or explicitGlowStrata ~= nil then
+		glowLevel = UFHelper.ClampNumber(explicitGlowLevel, -20, 1000, tonumber(defDispel.glowFrameLevelOffset) or 21)
+	elseif rawget(dcfg, "glowOverOverlay") == true then
+		glowLevel = 30
+	else
+		glowLevel = UFHelper.ClampNumber(defDispel.glowFrameLevelOffset, -20, 1000, 21)
+	end
+	return {
+		color = { r or 1, g or 1, b or 1, 1 },
+		count = UFHelper.ClampNumber(dcfg.glowLines or defDispel.glowLines or 8, 1, 20, 8),
+		frequency = UFHelper.ClampNumber(dcfg.glowFrequency or defDispel.glowFrequency or 0.25, -1.5, 1.5, 0.25),
+		scale = math.max(0.5, math.min(4, thickness / 3)),
+		thickness = thickness,
+		xOffset = UFHelper.ClampNumber(dcfg.glowX or defDispel.glowX or 0, -10, 10, 0),
+		yOffset = UFHelper.ClampNumber(dcfg.glowY or defDispel.glowY or 0, -10, 10, 0),
+		strata = dcfg.glowStrata or defDispel.glowStrata,
+		frameLevelOffset = glowLevel,
+	}
+end
+
+function AuraUtil.GetManagedDispelTintLayer(dcfg, defDispel)
+	dcfg = dcfg or {}
+	defDispel = defDispel or {}
+	local level = tonumber(rawget(dcfg, "frameLevelOffset"))
+	if rawget(dcfg, "frameLevelModel") == 2 then
+		level = UFHelper.ClampNumber(level, -20, 1000, 20)
+	elseif level ~= nil then
+		level = UFHelper.ClampNumber(level + 12, -20, 1000, 20)
+	else
+		level = tonumber(defDispel.frameLevelOffset)
+		if defDispel.frameLevelModel == 2 then
+			level = UFHelper.ClampNumber(level, -20, 1000, 20)
+		elseif level ~= nil then
+			level = UFHelper.ClampNumber(level + 12, -20, 1000, 20)
+		else
+			level = 20
+		end
+	end
+	return level, dcfg.strata or defDispel.strata
+end
+
+function AuraUtil.LayoutManagedDispelHost(host, root, strata, level)
+	if not (host and root) then return false end
+	host:ClearAllPoints()
+	host:SetAllPoints(root)
+	if type(strata) == "string" and strata ~= "" then
+		host:SetFrameStrata(strata)
+	elseif root.GetFrameStrata then
+		host:SetFrameStrata(root:GetFrameStrata())
+	end
+	if root.GetFrameLevel then host:SetFrameLevel((root:GetFrameLevel() or 0) + (tonumber(level) or 0)) end
+	host:Show()
+	return true
+end
+
+function AuraUtil.SyncManagedDispelButtonLayer(button, host)
+	if not (button and host) then return false end
+	if button.CanBeAccessedInContext and button:CanBeAccessedInContext() ~= true then return false end
+	if host.GetFrameStrata then button:SetFrameStrata(host:GetFrameStrata()) end
+	if host.GetFrameLevel then button:SetFrameLevel((host:GetFrameLevel() or 0) + 1) end
+	return true
+end
+
+function AuraUtil.PrepareManagedDispelSensorButton(button)
+	if not button then return false end
+	button:EnableMouse(false)
+	if button.SetMouseClickEnabled then button:SetMouseClickEnabled(false) end
+	if button.SetMouseMotionEnabled then button:SetMouseMotionEnabled(false) end
+	AuraUtil.CallNativeAuraMethod(button, "SetCancelAuraButtons", nil)
+	AuraUtil.CallNativeAuraMethod(button, "ClearIcon")
+	AuraUtil.CallNativeAuraMethod(button, "ClearDurationCooldown")
+	AuraUtil.CallNativeAuraMethod(button, "ClearDurationText")
+	AuraUtil.CallNativeAuraMethod(button, "ClearDurationBar")
+	AuraUtil.CallNativeAuraMethod(button, "ClearApplicationCount")
+	AuraUtil.CallNativeAuraMethod(button, "ClearDispelTypeText")
+	AuraUtil.CallNativeAuraMethod(button, "ClearDispelTypeTextures")
+	return true
+end
+
+function AuraUtil.ConfigureManagedDispelBackground(button, dcfg, defDispel)
+	if not button then return false end
+	if button.CanBeAccessedInContext and button:CanBeAccessedInContext() ~= true then return false end
+	dcfg = dcfg or {}
+	defDispel = defDispel or {}
+
+	if not button._eqolDispelBackground then
+		button._eqolDispelBackground = button:CreateTexture(nil, "BACKGROUND")
+		button._eqolDispelBackground:SetAllPoints(button)
+	end
+	local fillColor = dcfg.fillColor or defDispel.fillColor or { 0, 0, 0, 1 }
+	local fr, fg, fb, fa = unpackColor(fillColor, 0, 0, 0, 1)
+	local fillEnabled = dcfg.fillEnabled
+	if fillEnabled == nil then fillEnabled = defDispel.fillEnabled ~= false end
+	local fillAlpha = dcfg.fillAlpha
+	if fillAlpha == nil then fillAlpha = defDispel.fillAlpha or 0.2 end
+	button._eqolDispelBackground:SetColorTexture(fr, fg, fb, fa or 1)
+	button._eqolDispelBackground:SetAlpha(fillEnabled and fillAlpha or 0)
+	button._eqolDispelBackground:Show()
+	return true
+end
+
+function AuraUtil.ConfigureManagedDispelOverlay(button, colorName, dcfg, defDispel)
+	if not button then return false end
+	if button.CanBeAccessedInContext and button:CanBeAccessedInContext() ~= true then return false end
+	dcfg = dcfg or {}
+	defDispel = defDispel or {}
+	if not button._eqolDispelOverlay then
+		button._eqolDispelOverlay = UFHelper.CreateDispelOverlay(button)
+		button._eqolDispelOverlay:SetAllPoints(button)
+		button._eqolDispelOverlay.Background:Hide()
+	end
+	local r, g, b = UFHelper.getDebuffColorFromName(colorName)
+	local alpha = dcfg.alpha
+	if alpha == nil then alpha = defDispel.alpha or 0.25 end
+	button._eqolDispelOverlay.Gradient:SetVertexColor(r or 1, g or 1, b or 1, alpha)
+	button._eqolDispelOverlay.Border:SetVertexColor(r or 1, g or 1, b or 1, alpha)
+	button._eqolDispelOverlay:Show()
+	return true
+end
+
+function AuraUtil.GetManagedDispelChildGlowOptions(button, root, colorName, dcfg, defDispel)
+	local options = AuraUtil.GetManagedDispelGlowOptions(colorName, dcfg, defDispel)
+	if not options.strata and button and button.GetFrameStrata then options.strata = button:GetFrameStrata() end
+	options.width, options.height = AuraUtil.GetManagedDispelRootSize(root)
+	return options
+end
+
+function AuraUtil.InitializeManagedDispelGlow(button, root, colorName, dcfg, defDispel)
+	if not (button and root) then return nil end
+	AuraUtil.PrepareManagedDispelSensorButton(button)
+	if addon.AuraCompat and addon.AuraCompat.CreateRestrictedAuraGlow then
+		return addon.AuraCompat:CreateRestrictedAuraGlow(button, root, AuraUtil.GetManagedDispelChildGlowOptions(button, root, colorName, dcfg, defDispel))
+	end
+	return nil
+end
+
+function AuraUtil.DisableManagedDispelGeneration(managed)
+	if not (managed and managed.container) then return end
+	if managed.backgroundSlotKey then
+		addon.AuraCompat:UpdateAuraSlot(managed.container, managed.backgroundSlotKey, { candidateFilters = { includeDispelTypes = {} } })
+	end
+	for _, slotKey in pairs(managed.overlaySlotKeys or {}) do
+		addon.AuraCompat:UpdateAuraSlot(managed.container, slotKey, { candidateFilters = { includeDispelTypes = {} } })
+	end
+end
+
+function AuraUtil.LayoutManagedDispelHosts(managed, root, dcfg, defDispel)
+	if not (managed and root) then return end
+	local tintLevel, tintStrata = AuraUtil.GetManagedDispelTintLayer(dcfg, defDispel)
+	AuraUtil.LayoutManagedDispelHost(managed.container, root, tintStrata, tintLevel)
+	AuraUtil.LayoutManagedDispelHost(managed.backgroundHost, root, tintStrata, tintLevel)
+	AuraUtil.SyncManagedDispelButtonLayer(managed.backgroundButton, managed.backgroundHost)
+	for i = 1, #AuraUtil.ManagedDispelTypes do
+		local dispelType = AuraUtil.ManagedDispelTypes[i]
+		local overlayHost = managed.overlayHostsByType and managed.overlayHostsByType[dispelType.key]
+		AuraUtil.LayoutManagedDispelHost(overlayHost, root, tintStrata, tintLevel + i)
+		AuraUtil.SyncManagedDispelButtonLayer(managed.overlayButtonsByType and managed.overlayButtonsByType[dispelType.key], overlayHost)
+	end
+end
+
+function AuraUtil.CreateManagedDispelGeneration(managed, root, filterString, dcfg, defDispel)
+	if not (managed and managed.container and root) then return false end
+	dcfg = dcfg or {}
+	defDispel = defDispel or {}
+	managed.generation = (managed.generation or 0) + 1
+	local generation = managed.generation
+	local overlayEnabled = dcfg.enabled
+	if overlayEnabled == nil then overlayEnabled = defDispel.enabled ~= false end
+	local glowEnabled = dcfg.glowEnabled
+	if glowEnabled == nil then glowEnabled = defDispel.glowEnabled == true end
+	managed.backgroundSlotKey = "eqol-dispel-background:" .. tostring(generation)
+	managed.backgroundHost = CreateFrame("Frame", nil, managed.container)
+	managed.backgroundHost:EnableMouse(false)
+	local tintLevel, tintStrata = AuraUtil.GetManagedDispelTintLayer(dcfg, defDispel)
+	AuraUtil.LayoutManagedDispelHost(managed.backgroundHost, root, tintStrata, tintLevel)
+	managed.slot = addon.AuraCompat:RegisterAuraSlot(managed.container, managed.backgroundSlotKey, filterString, {
+		anchorFrame = managed.backgroundHost,
+		candidateFilters = { includeDispelTypes = {} },
+		initializeFrame = function(button)
+			AuraUtil.PrepareManagedDispelSensorButton(button)
+			managed.backgroundButton = button
+			AuraUtil.SyncManagedDispelButtonLayer(button, managed.backgroundHost)
+			AuraUtil.ConfigureManagedDispelBackground(button, dcfg, defDispel)
+		end,
+	})
+	managed.overlaySlotKeys = {}
+	managed.overlayButtonsByType = {}
+	managed.overlayHostsByType = {}
+	managed.glowsByType = {}
+	for i = 1, #AuraUtil.ManagedDispelTypes do
+		local dispelType = AuraUtil.ManagedDispelTypes[i]
+		local dispelTypeKey = dispelType.key
+		local dispelColorName = dispelType.colorName
+		local overlaySlotKey = "eqol-dispel-overlay-" .. dispelTypeKey .. ":" .. tostring(generation)
+		local overlayHost = CreateFrame("Frame", nil, managed.container)
+		overlayHost:EnableMouse(false)
+		managed.overlayHostsByType[dispelTypeKey] = overlayHost
+		AuraUtil.LayoutManagedDispelHost(overlayHost, root, tintStrata, tintLevel + i)
+		local overlayRegistered = addon.AuraCompat:RegisterAuraSlot(managed.container, overlaySlotKey, filterString, {
+			anchorFrame = overlayHost,
+			candidateFilters = { includeDispelTypes = {} },
+			initializeFrame = function(button)
+				AuraUtil.PrepareManagedDispelSensorButton(button)
+				managed.overlayButtonsByType[dispelTypeKey] = button
+				AuraUtil.SyncManagedDispelButtonLayer(button, overlayHost)
+				AuraUtil.ConfigureManagedDispelOverlay(button, dispelColorName, dcfg, defDispel)
+				if not overlayEnabled and button._eqolDispelOverlay then button._eqolDispelOverlay:Hide() end
+				if glowEnabled then managed.glowsByType[dispelTypeKey] = AuraUtil.InitializeManagedDispelGlow(button, root, dispelColorName, dcfg, defDispel) end
+			end,
+		})
+		if overlayRegistered then managed.overlaySlotKeys[dispelTypeKey] = overlaySlotKey end
+	end
+	managed.borderEnabled = nil
+	managed.glowEnabled = nil
+	AuraUtil.LayoutManagedDispelHosts(managed, root, dcfg, defDispel)
+	return managed.slot ~= nil
+end
+
+function AuraUtil.QueueManagedDispelGeometryRefresh(st, root, dcfg, defDispel)
+	local managed = st and st.managedDispelBorder
+	if not (managed and C_Timer and C_Timer.NewTimer) then return false end
+	if managed.geometryRefreshTimer and managed.geometryRefreshTimer.Cancel then managed.geometryRefreshTimer:Cancel() end
+	managed.geometryRefreshTimer = C_Timer.NewTimer(0.25, function()
+		managed.geometryRefreshTimer = nil
+		if st.managedDispelBorder ~= managed then return end
+		local unit = managed.unit
+		local shouldReapply = managed.enabled == true and unit ~= nil
+		local refreshed = AuraUtil.PrecreateManagedDispelBorder(st, root, dcfg, defDispel, true)
+		if refreshed and shouldReapply then AuraUtil.ApplyManagedDispelBorder(st, root, unit, dcfg, defDispel, true) end
+	end)
+	return true
+end
+
+function AuraUtil.PrecreateManagedDispelBorder(st, root, dcfg, defDispel, forceGeometryRefresh)
 	if not (st and root and AuraUtil.ShouldUseManagedDispelBorder() and addon.AuraCompat.CreateAuraContainer and addon.AuraCompat.RegisterAuraSlot) then return nil end
 	local managed = st.managedDispelBorder
-	if managed and managed.container and managed.slot then return managed end
-	if InCombatLockdown and InCombatLockdown() then return nil end
+	local rootWidth, rootHeight = AuraUtil.GetManagedDispelRootSize(root)
+	if not (rootWidth and rootHeight) then return managed and managed.slot and managed or nil end
+	local settingsSignature = AuraUtil.GetManagedDispelGlowSignature(dcfg, defDispel)
+	local signature = AuraUtil.GetManagedDispelGlowSignature(dcfg, defDispel, rootWidth, rootHeight)
+	local filterString = AuraUtil.GetManagedDispelFilterString(dcfg, defDispel)
+	if managed and managed.container and managed.slot then
+		if managed.signature ~= signature then
+			if not forceGeometryRefresh and managed.settingsSignature == settingsSignature and AuraUtil.QueueManagedDispelGeometryRefresh(st, root, dcfg, defDispel) then
+				return managed
+			end
+			if managed.geometryRefreshTimer and managed.geometryRefreshTimer.Cancel then
+				managed.geometryRefreshTimer:Cancel()
+				managed.geometryRefreshTimer = nil
+			end
+			AuraUtil.DisableManagedDispelGeneration(managed)
+			if not AuraUtil.CreateManagedDispelGeneration(managed, root, filterString, dcfg, defDispel) then return nil end
+			managed.signature = signature
+			managed.settingsSignature = settingsSignature
+			managed.filterString = filterString
+			managed.filtersReset = nil
+			return managed
+		end
+		if managed.filterString ~= filterString or managed.filtersReset then
+			AuraUtil.SetManagedDispelSlotFilterStrings(managed, filterString)
+			managed.filterString = filterString
+			managed.filtersReset = nil
+		end
+		return managed
+	end
 
 	managed = managed or {}
 	st.managedDispelBorder = managed
+	managed.signature = signature
+	managed.settingsSignature = settingsSignature
+	managed.filterString = filterString
 	managed.root = root
 	managed.container = managed.container or addon.AuraCompat:CreateAuraContainer(root)
 	if not managed.container then return nil end
@@ -6526,29 +6879,7 @@ function AuraUtil.PrecreateManagedDispelBorder(st, root)
 	managed.container:SetAllPoints(root)
 	managed.container:SetEnabled(false)
 	managed.container:Hide()
-
-	if not managed.slot then
-		local borderRoot = root
-		managed.slot = addon.AuraCompat:RegisterAuraSlot(managed.container, "eqol-dispel-border", "HARMFUL|INCLUDE_NAME_PLATE_ONLY|RAID_PLAYER_DISPELLABLE", {
-			initializeFrame = function(button)
-				button:EnableMouse(false)
-				button:ClearAllPoints()
-				button:SetAllPoints(borderRoot)
-				if borderRoot.GetFrameStrata then button:SetFrameStrata(borderRoot:GetFrameStrata()) end
-				if borderRoot.GetFrameLevel then button:SetFrameLevel((borderRoot:GetFrameLevel() or 0) + 20) end
-				button.auraBorder = button:CreateTexture(nil, "OVERLAY")
-				button.auraBorder:SetAllPoints(button)
-				button.auraBorder:SetTexture("Interface\\Buttons\\UI-Debuff-Overlays")
-				button.auraBorder:SetTexCoord(0.296875, 0.5703125, 0, 0.515625)
-				AuraUtil.CallNativeAuraMethod(button, "SetAuraBorder", button.auraBorder, {
-					showIcon = false,
-					showWhenHarmful = true,
-					showWhenHelpful = false,
-					style = _G.AuraButtonBorderStyle and _G.AuraButtonBorderStyle.Color,
-				})
-			end,
-		})
-	end
+	if not AuraUtil.CreateManagedDispelGeneration(managed, root, filterString, dcfg, defDispel) then return nil end
 	return managed.slot and managed or nil
 end
 
@@ -6569,8 +6900,24 @@ function AuraUtil.ApplyManagedDispelBorder(st, root, unit, dcfg, defDispel, forc
 		return true
 	end
 
-	local managed = AuraUtil.PrecreateManagedDispelBorder(st, root)
+	local managed = AuraUtil.PrecreateManagedDispelBorder(st, root, dcfg, defDispel)
 	if not (managed and unit) then return false end
+	if managed.filtersReset then
+		AuraUtil.SetManagedDispelSlotFilterStrings(managed, managed.filterString or AuraUtil.GetManagedDispelFilterString(dcfg, defDispel))
+		managed.filtersReset = nil
+	end
+	if managed.borderEnabled ~= enabled or managed.glowEnabled ~= glowEnabled then
+		addon.AuraCompat:UpdateAuraSlot(managed.container, managed.backgroundSlotKey, {
+			candidateFilters = enabled and {} or { includeDispelTypes = {} },
+		})
+		for dispelType, slotKey in pairs(managed.overlaySlotKeys or {}) do
+			addon.AuraCompat:UpdateAuraSlot(managed.container, slotKey, {
+				candidateFilters = (enabled or glowEnabled) and { includeDispelTypes = { [dispelType] = true } } or { includeDispelTypes = {} },
+			})
+		end
+		managed.borderEnabled = enabled
+		managed.glowEnabled = glowEnabled
+	end
 	local unitChanged = managed.unit ~= unit
 	if unitChanged then
 		managed.unit = unit
@@ -6637,7 +6984,7 @@ function AuraUtil.UpdateSingleDispelIndicator(unit, allowSample, forceRefresh)
 		AuraUtil.HideSingleDispelIndicator(unit, true)
 		local cfg = st.cfg or defaultsFor(unit) or {}
 		local def = st.def or defaultsFor(unit) or {}
-		AuraUtil.ApplyManagedDispelBorder(st, st.health or st.frame, unit, cfg.status and cfg.status.dispelTint, def.status and def.status.dispelTint, forceRefresh)
+		AuraUtil.ApplyManagedDispelBorder(st, st.healthContainer or st.health or st.frame, unit, cfg.status and cfg.status.dispelTint, def.status and def.status.dispelTint, forceRefresh)
 		return
 	end
 
@@ -6898,6 +7245,48 @@ UF._isFrameBorderEnabled = UF._isFrameBorderEnabled
 		return enabled == true
 	end
 
+function UF.ResolveBorderLayoutOffset(region, offset)
+	offset = max(0, tonumber(offset) or 0)
+	if offset == 0 then return 0 end
+	local pixelUtil = addon.PixelUtil
+	if pixelUtil and pixelUtil.SizeFromPixels then return pixelUtil.SizeFromPixels(region, offset, 1) end
+	return offset
+end
+
+function UF.ResolvePixelLayoutSize(region, size)
+	size = max(0, tonumber(size) or 0)
+	if size == 0 then return 0 end
+	local pixelUtil = addon.PixelUtil
+	if pixelUtil and pixelUtil.Snap then return pixelUtil.Snap(size, region) end
+	return size
+end
+
+function UF.AlignBorderHostToPixelGrid(frame)
+	if not (frame and frame.GetNumPoints and frame.GetLeft and frame.GetBottom) then return end
+	local pixelUtil = addon.PixelUtil
+	if not (pixelUtil and pixelUtil.Snap) then return end
+	local left, bottom = frame:GetLeft(), frame:GetBottom()
+	if left == nil or bottom == nil then return end
+	local offsetX = pixelUtil.Snap(left, frame) - left
+	local offsetY = pixelUtil.Snap(bottom, frame) - bottom
+	local epsilon = ((pixelUtil.OnePixel and pixelUtil.OnePixel(frame)) or 1) * 0.001
+	if math.abs(offsetX) < epsilon then offsetX = 0 end
+	if math.abs(offsetY) < epsilon then offsetY = 0 end
+	if offsetX == 0 and offsetY == 0 then return end
+
+	local points = {}
+	for index = 1, frame:GetNumPoints() do
+		local point, relativeTo, relativePoint, x, y = frame:GetPoint(index)
+		points[index] = { point, relativeTo, relativePoint, x or 0, y or 0 }
+	end
+	if #points == 0 then return end
+
+	frame:ClearAllPoints()
+	for _, pointData in ipairs(points) do
+		frame:SetPoint(pointData[1], pointData[2], pointData[3], pointData[4] + offsetX, pointData[5] + offsetY)
+	end
+end
+
 local function setBackdrop(frame, borderCfg, borderDef, fallbackEnabled)
 	if not frame then return end
 	if frame.SetBackdrop and not frame._ufBackdropCleared then
@@ -6988,15 +7377,18 @@ local function applyBarBackdrop(bar, cfg, overrideR, overrideG, overrideB, overr
 	local backdropTexture = UFHelper.resolveTexture(backdropTextureKey)
 	local clampToFill = options.clampToFill == true
 	local reverseFill = options.reverseFill == true
+	local orientation = UFHelper.normalizeStatusBarOrientation(options.orientation)
+	local axis = UFHelper.GetHealthAxis(orientation, reverseFill)
 	local cache = bar._ufBackdropCache
 	if bd.enabled == false then
-		if cache and cache.enabled == false and cache.clampToFill == clampToFill and cache.reverseFill == reverseFill then return end
+		if cache and cache.enabled == false and cache.clampToFill == clampToFill and cache.reverseFill == reverseFill and cache.orientation == orientation then return end
 		if bar.SetBackdrop then bar:SetBackdrop(nil) end
 		if bar._ufBackdropTexture then bar._ufBackdropTexture:Hide() end
 		cache = cache or {}
 		cache.enabled = false
 		cache.clampToFill = clampToFill
 		cache.reverseFill = reverseFill
+		cache.orientation = orientation
 		cache.statusTex = nil
 		cache.texture = nil
 		bar._ufBackdropCache = cache
@@ -7022,6 +7414,7 @@ local function applyBarBackdrop(bar, cfg, overrideR, overrideG, overrideB, overr
 		or cache.colorA ~= colorA
 		or cache.clampToFill ~= clampToFill
 		or cache.reverseFill ~= reverseFill
+		or cache.orientation ~= orientation
 		or cache.statusTex ~= currentStatusTex
 		or cache.texture ~= backdropTexture
 	if not styleChanged then return end
@@ -7032,23 +7425,7 @@ local function applyBarBackdrop(bar, cfg, overrideR, overrideG, overrideB, overr
 			tex = bar:CreateTexture(nil, "BACKGROUND")
 			bar._ufBackdropTexture = tex
 		end
-		local htex = bar.GetStatusBarTexture and bar:GetStatusBarTexture()
-		tex:ClearAllPoints()
-		if htex then
-			if reverseFill then
-				tex:SetPoint("TOPLEFT", bar, "TOPLEFT", 0, 0)
-				tex:SetPoint("BOTTOMLEFT", bar, "BOTTOMLEFT", 0, 0)
-				tex:SetPoint("TOPRIGHT", htex, "TOPLEFT", 0, 0)
-				tex:SetPoint("BOTTOMRIGHT", htex, "BOTTOMLEFT", 0, 0)
-			else
-				tex:SetPoint("TOPLEFT", htex, "TOPRIGHT", 0, 0)
-				tex:SetPoint("BOTTOMLEFT", htex, "BOTTOMRIGHT", 0, 0)
-				tex:SetPoint("TOPRIGHT", bar, "TOPRIGHT", 0, 0)
-				tex:SetPoint("BOTTOMRIGHT", bar, "BOTTOMRIGHT", 0, 0)
-			end
-		else
-			tex:SetAllPoints(bar)
-		end
+		UFHelper.LayoutMissingHealthTexture(bar, tex, axis)
 		tex:SetTexture(backdropTexture)
 		if tex.SetHorizTile then tex:SetHorizTile(false) end
 		if tex.SetVertTile then tex:SetVertTile(false) end
@@ -7071,6 +7448,7 @@ local function applyBarBackdrop(bar, cfg, overrideR, overrideG, overrideB, overr
 	cache.colorA = colorA
 	cache.clampToFill = clampToFill
 	cache.reverseFill = reverseFill
+	cache.orientation = orientation
 	cache.statusTex = currentStatusTex
 	cache.texture = backdropTexture
 	bar._ufBackdropCache = cache
@@ -7228,27 +7606,6 @@ function UF._applyCastIconBorder(st, ccfg, defc)
 	end
 end
 
-local function applyOverlayHeight(bar, anchor, height, maxHeight, anchorTop)
-	if not bar or not anchor then return end
-	bar:ClearAllPoints()
-	local desired = tonumber(height)
-	if not desired or desired <= 0 then
-		bar:SetAllPoints(anchor)
-		return
-	end
-	local limit = tonumber(maxHeight)
-	if not limit or limit <= 0 then limit = anchor.GetHeight and anchor:GetHeight() or 0 end
-	if limit and limit > 0 and desired > limit then desired = limit end
-	if anchorTop then
-		bar:SetPoint("TOPLEFT", anchor, "TOPLEFT", 0, 0)
-		bar:SetPoint("TOPRIGHT", anchor, "TOPRIGHT", 0, 0)
-	else
-		bar:SetPoint("BOTTOMLEFT", anchor, "BOTTOMLEFT", 0, 0)
-		bar:SetPoint("BOTTOMRIGHT", anchor, "BOTTOMRIGHT", 0, 0)
-	end
-	bar:SetHeight(desired)
-end
-
 local function ensureHealPredictionCalculator(st)
 	if not st or st._healPredictionCalcUnsupported then return nil end
 	if st._healPredictionCalc then return st._healPredictionCalc end
@@ -7305,33 +7662,25 @@ function UF.CacheHealthTextAbsorbAmount(st, unit, maxv, fallbackAbsorb, calc)
 		maxForValue = (maxv and maxv > 0) and maxv or 1
 	end
 
-	local hasVisibleAbsorb = amount and (not issecretvalue or not issecretvalue(amount)) and amount > 0
-	if shouldShowSampleAbsorb(unit) and not hasVisibleAbsorb and (not issecretvalue or not issecretvalue(maxForValue)) then amount = (maxForValue or 1) * 0.6 end
+	if shouldShowSampleAbsorb(unit) and (not issecretvalue or not issecretvalue(maxForValue)) then amount = (maxForValue or 1) * 0.6 end
 
 	if st then st._healthTextAbsorbAmount = amount end
 	return amount
 end
 
-local function applyIncomingHealBar(st, hc, healthHeight, reverseHealth, interpolation)
+local function applyIncomingHealBar(st, hc, healthAxis, regions, interpolation)
 	if not (st and st.health and st.incomingHeal) then return end
 	local incomingHealTextureKey = hc.incomingHealTexture or hc.texture
-	local overlayClip = UF.EnsureOverlayClipFrame and UF.EnsureOverlayClipFrame(st.health, "_eqolDirectOverlayClip")
 	st.incomingHeal:SetStatusBarTexture(UFHelper.resolveTexture(incomingHealTextureKey))
 	if st.incomingHeal.SetStatusBarDesaturated then st.incomingHeal:SetStatusBarDesaturated(false) end
 	UFHelper.configureSpecialTexture(st.incomingHeal, "HEALTH", incomingHealTextureKey, hc)
 	UF.StabilizeStatusBarTexture(st.incomingHeal)
-	if UFHelper and UFHelper.setupAbsorbClampReverseAware then
-		UFHelper.setupAbsorbClampReverseAware(st.health, st.incomingHeal)
-	elseif UFHelper and UFHelper.setupAbsorbClamp then
-		UFHelper.setupAbsorbClamp(st.health, st.incomingHeal)
-		if UFHelper.applyStatusBarReverseFill then UFHelper.applyStatusBarReverseFill(st.incomingHeal, reverseHealth) end
-	end
-	if overlayClip and st.incomingHeal.GetParent and st.incomingHeal:GetParent() ~= overlayClip then st.incomingHeal:SetParent(overlayClip) end
-	if UFHelper and UFHelper.applyAbsorbClampLayout then
-		UFHelper.applyAbsorbClampLayout(st.incomingHeal, st.health, healthHeight, healthHeight, reverseHealth)
-	else
-		applyOverlayHeight(st.incomingHeal, st.health, healthHeight, healthHeight)
-	end
+	UFHelper.LayoutHealthOverlayBar(st.health, st.incomingHeal, {
+		axis = healthAxis,
+		regions = regions,
+		role = "MISSING_FROM_CURRENT",
+		direction = "HEALTH_FORWARD",
+	})
 	setFrameLevelAbove(st.incomingHeal, st.health, 1)
 	st.incomingHeal:SetMinMaxValues(0, 1)
 	UF.SetStatusBarValue(st.incomingHeal, 0, false, true)
@@ -7652,6 +8001,7 @@ local function applyCastLayout(cfg, unit)
 end
 
 local function getClassColor(class)
+	if issecretvalue and issecretvalue(class) then return nil end
 	if not class then return nil end
 	if addon.db and addon.db.ufUseCustomClassColors then
 		local overrides = addon.db.ufClassColors
@@ -7701,6 +8051,7 @@ function UF.ApplyHealthBackdrop(st, unit, hc, defH, reverseHealth)
 	end
 	options.clampToFill = healthBackdropClampToFill == true
 	options.reverseFill = reverseHealth == true
+	options.orientation = hc.orientation or defH.orientation
 	applyBarBackdrop(st.health, hc, healthBackdropR, healthBackdropG, healthBackdropB, healthBackdropA, options)
 end
 
@@ -8672,7 +9023,10 @@ function UF.DataBar.GetText(mode, unit, cfg, def, cur, maxv, percentVal)
 	local dcfg = (cfg and cfg.dataBar) or {}
 	local ddef = (def and def.dataBar) or {}
 	if mode == "NAME" then
-		return (UnitName and UnitName(unit)) or UF.DataBar.GetFallbackName(unit)
+		if not UnitName then return UF.DataBar.GetFallbackName(unit) end
+		local name = UnitName(unit)
+		if issecretvalue and issecretvalue(name) then return name end
+		return name or UF.DataBar.GetFallbackName(unit)
 	end
 	if mode == "LEVEL" then return (UFHelper and UFHelper.getUnitLevelText and UFHelper.getUnitLevelText(unit, nil, UF.ShouldHideClassificationText(cfg, unit))) or "" end
 	local delimiter, delimiter2, delimiter3 = UFHelper.getTextDelimiter(dcfg, ddef), UFHelper.getTextDelimiterSecondary(dcfg, ddef), UFHelper.getTextDelimiterTertiary(dcfg, ddef)
@@ -8815,7 +9169,7 @@ local function updateHealth(cfg, unit, deferAuxiliaryUpdates)
 			local loss = GetUnitTotalModifiedMaxHealthPercent(unit) or 0
 			st.tempMaxHealthLoss:SetMinMaxValues(0, 1)
 			st.tempMaxHealthLoss:SetValue(loss, interpolation)
-			if st.tempMaxHealthLoss.SetAlpha then st.tempMaxHealthLoss:SetAlpha(loss > 0 and 1 or 0) end
+			if st.tempMaxHealthLoss.SetAlpha then st.tempMaxHealthLoss:SetAlpha(1) end
 			st.tempMaxHealthLoss:Show()
 		else
 			st.tempMaxHealthLoss:SetValue(0, interpolation)
@@ -8852,8 +9206,24 @@ local function updateHealth(cfg, unit, deferAuxiliaryUpdates)
 		local healthRightMode = hc.textRight or defH.textRight or "CURMAX"
 		needsHealthAbsorbText = UF.HealthTextUsesAbsorbMode(healthLeftMode, healthCenterMode, healthRightMode)
 	end
+	local reverseAbsorb = hc.absorbReverseFill
+	if reverseAbsorb == nil then reverseAbsorb = defH.absorbReverseFill == true end
+	local absorbDontOverflow = hc.absorbDontOverflowHealthBar
+	if absorbDontOverflow == nil then absorbDontOverflow = defH.absorbDontOverflowHealthBar == true end
+	absorbDontOverflow = absorbDontOverflow == true and reverseAbsorb == true
 	local healPredictionCalc
-	if hc.incomingHealEnabled == true or needsHealthAbsorbText then healPredictionCalc = UF.RefreshHealPredictionCalculator(st, unit) end
+	if hc.incomingHealEnabled == true or needsHealthAbsorbText or (allowAbsorb and st.absorb) then
+		healPredictionCalc = ensureHealPredictionCalculator(st)
+		if healPredictionCalc and healPredictionCalc.SetDamageAbsorbClampMode and Enum and Enum.UnitDamageAbsorbClampMode then
+			local modes = Enum.UnitDamageAbsorbClampMode
+			local mode = absorbDontOverflow and modes.MissingHealthWithoutIncomingHeals or modes.MaximumHealth
+			if mode ~= nil and st._lastDamageAbsorbClampMode ~= mode then
+				st._lastDamageAbsorbClampMode = mode
+				healPredictionCalc:SetDamageAbsorbClampMode(mode)
+			end
+		end
+		if healPredictionCalc and UnitGetDetailedHealPrediction then UnitGetDetailedHealPrediction(unit, "player", healPredictionCalc) end
+	end
 
 	st.health:SetStatusBarColor(finalR or 0, finalG or 0.8, finalB or 0, finalA or 1)
 	updateIncomingHeal(st, unit, hc, defH, cur, maxv, interpolation, healPredictionCalc)
@@ -8869,7 +9239,14 @@ local function updateHealth(cfg, unit, deferAuxiliaryUpdates)
 		st._healthTextAbsorbAmount = nil
 	end
 	if allowAbsorb and st.absorb then
-		local abs = st._absorbAmount
+		local abs
+		if absorbDontOverflow and healPredictionCalc and healPredictionCalc.GetDamageAbsorbs then
+			abs = healPredictionCalc:GetDamageAbsorbs()
+		elseif healPredictionCalc and healPredictionCalc.GetTotalDamageAbsorbs then
+			abs = healPredictionCalc:GetTotalDamageAbsorbs()
+		else
+			abs = st._absorbAmount
+		end
 		if abs == nil then
 			abs = UnitGetTotalAbsorbs and UnitGetTotalAbsorbs(unit) or 0
 			st._absorbAmount = abs
@@ -8881,35 +9258,12 @@ local function updateHealth(cfg, unit, deferAuxiliaryUpdates)
 			maxForValue = (maxv and maxv > 0) and maxv or 1
 		end
 		st.absorb:SetMinMaxValues(0, maxForValue or 1)
-		local hasVisibleAbsorb = abs and (not issecretvalue or not issecretvalue(abs)) and abs > 0
-		if shouldShowSampleAbsorb(unit) and not hasVisibleAbsorb and (not issecretvalue or not issecretvalue(maxForValue)) then abs = (maxForValue or 1) * 0.6 end
+		if shouldShowSampleAbsorb(unit) and (not issecretvalue or not issecretvalue(maxForValue)) then abs = (maxForValue or 1) * 0.6 end
 		st.absorb:SetValue(abs or 0, interpolation)
-		local reverseAbsorb = hc.absorbReverseFill
-		if reverseAbsorb == nil then reverseAbsorb = defH.absorbReverseFill == true end
-		local absorbDontOverflow = hc.absorbDontOverflowHealthBar
-		if absorbDontOverflow == nil then absorbDontOverflow = defH.absorbDontOverflowHealthBar == true end
-		local absorb2Value = abs or 0
 		local absorbValueForGlow = abs
-		if reverseAbsorb and absorbDontOverflow then
-			local canClampAbsorb = true
-			if issecretvalue then canClampAbsorb = not (issecretvalue(absorb2Value) or issecretvalue(maxForValue) or issecretvalue(cur)) end
-			if canClampAbsorb then
-				local currentHealth = tonumber(cur) or 0
-				local maxHealth = tonumber(maxForValue) or 0
-				local missingHealth = maxHealth - currentHealth
-				if missingHealth < 0 then missingHealth = 0 end
-				local numericAbsorb = tonumber(absorb2Value) or 0
-				if numericAbsorb > missingHealth then numericAbsorb = missingHealth end
-				if numericAbsorb < 0 then numericAbsorb = 0 end
-				absorb2Value = numericAbsorb
-				absorbValueForGlow = numericAbsorb
-			end
-		end
 		if reverseAbsorb and st.absorb2 then
-			local _, maxHealth = st.health:GetMinMaxValues()
-			if maxHealth == nil then maxHealth = maxForValue end
-			st.absorb2:SetMinMaxValues(0, maxHealth or 1)
-			st.absorb2:SetValue(absorb2Value or 0, interpolation)
+			st.absorb2:SetMinMaxValues(0, maxForValue or 1)
+			st.absorb2:SetValue(abs or 0, interpolation)
 		end
 		if reverseAbsorb and st.absorb2 then
 			st.absorb2:Show()
@@ -8936,7 +9290,8 @@ local function updateHealth(cfg, unit, deferAuxiliaryUpdates)
 		if st.overAbsorbGlow then
 			local glowAbsorb = absorbValueForGlow
 			if glowAbsorb == nil then glowAbsorb = abs end
-			if hc.useAbsorbGlow ~= false then
+			local verticalHealth = UFHelper.normalizeStatusBarOrientation(hc.orientation or defH.orientation) == "VERTICAL"
+			if hc.useAbsorbGlow ~= false and not verticalHealth then
 				st.overAbsorbGlow:SetAlpha(glowAbsorb or 0)
 				st.overAbsorbGlow:Show()
 			else
@@ -9205,7 +9560,6 @@ function UF.syncAbsorbFrameLevels(st)
 	end
 	apply(health.absorbClip, overlayClipLevel)
 	apply(health._healthFillClip, overlayClipLevel)
-	apply(health._eqolDirectOverlayClip, overlayClipLevel)
 	apply(st.tempMaxHealthLoss, tempLossLevel)
 	apply(st.absorb, absorbLevel)
 	apply(st.absorb2, absorbLevel)
@@ -9406,8 +9760,10 @@ local function getUnitSubGroup(unit)
 	if not IsInRaid then return nil end
 	if not IsInRaid() then return nil end
 	local idx = UnitInRaid and UnitInRaid(unit or UNIT.PLAYER)
+	if issecretvalue and issecretvalue(idx) then return nil end
 	if not idx then return nil end
 	local _, _, subgroup = GetRaidRosterInfo(idx)
+	if issecretvalue and issecretvalue(subgroup) then return nil end
 	return subgroup
 end
 
@@ -9541,7 +9897,76 @@ end
 
 function UF.ResolveStatusHeight(cfg, def, showStatus)
 	if not showStatus then return 0 end
-	return 16
+	return UF.STATUS_PHYSICAL_HEIGHT
+end
+
+function UF.ResolveStatusLayoutHeight(showStatus)
+	if not showStatus then return 0 end
+	return UF.STATUS_LAYOUT_HEIGHT
+end
+
+function UF.GetStatusVisualOffsetY(anchor, physicalHeight, layoutHeight)
+	local delta = (tonumber(layoutHeight) or UF.STATUS_LAYOUT_HEIGHT) - (tonumber(physicalHeight) or UF.STATUS_PHYSICAL_HEIGHT)
+	if delta <= 0 then return 0 end
+	local point = type(anchor) == "string" and string.upper(anchor) or "CENTER"
+	if string.find(point, "BOTTOM", 1, true) then return 0 end
+	if string.find(point, "TOP", 1, true) then return delta end
+	return delta / 2
+end
+
+function UF.GetStatusHeightDelta(showStatus)
+	return UF.ResolveStatusLayoutHeight(showStatus) - UF.ResolveStatusHeight(nil, nil, showStatus)
+end
+
+function UF.GetAnchorVerticalFactor(point)
+	point = type(point) == "string" and string.upper(point) or "CENTER"
+	if string.find(point, "BOTTOM", 1, true) then return 0 end
+	if string.find(point, "TOP", 1, true) then return 1 end
+	return 0.5
+end
+
+function UF.GetUnitFrameStatusHeightDelta(frame)
+	local unit = frame and frame._eqolUFUnit
+	if unit then
+		local cfg = ensureDB(unit)
+		local def = defaultsFor(unit)
+		return UF.GetStatusHeightDelta(UF.ShouldShowStatusLayout(cfg, unit, def))
+	end
+	return tonumber(frame and frame._eqolUFStatusHeightDelta) or 0
+end
+
+function UF.ResolvePhysicalUnitFrameAnchorY(point, relativePoint, storedY, relativeFrame, statusHeightDelta)
+	local ownShift = -UF.GetAnchorVerticalFactor(point) * (tonumber(statusHeightDelta) or 0)
+	local relativeDelta = UF.GetUnitFrameStatusHeightDelta(relativeFrame)
+	local relativeShift = -UF.GetAnchorVerticalFactor(relativePoint or point) * relativeDelta
+	return (tonumber(storedY) or 0) + ownShift - relativeShift
+end
+
+function UF.ResolveStoredUnitFrameAnchorY(point, relativePoint, physicalY, relativeFrame, statusHeightDelta)
+	local ownShift = -UF.GetAnchorVerticalFactor(point) * (tonumber(statusHeightDelta) or 0)
+	local relativeDelta = UF.GetUnitFrameStatusHeightDelta(relativeFrame)
+	local relativeShift = -UF.GetAnchorVerticalFactor(relativePoint or point) * relativeDelta
+	return (tonumber(physicalY) or 0) - ownShift + relativeShift
+end
+
+function UF.GetVirtualUnitFramePointOffsetY(frame, point)
+	local delta = UF.GetUnitFrameStatusHeightDelta(frame)
+	return UF.GetAnchorVerticalFactor(point) * delta
+end
+
+function UF.ShouldShowStatusLayout(cfg, unit, def)
+	cfg = cfg or {}
+	def = def or defaultsFor(unit) or {}
+	local scfg = cfg.status or {}
+	local defStatus = def.status or {}
+	local ciCfg = scfg.combatIndicator or defStatus.combatIndicator or {}
+	local usCfg = scfg.unitStatus or defStatus.unitStatus or {}
+	local ttCfg = scfg.targetTargetName or defStatus.targetTargetName or {}
+	return scfg.enabled ~= false
+		or shouldShowLevel(scfg, unit)
+		or usCfg.enabled == true
+		or (UF.SupportsCombatIndicator(unit) and ciCfg.enabled ~= false)
+		or (unit == UNIT.TARGET and (ttCfg.enabled == true or scfg.showTargetTargetName == true))
 end
 
 function UF.ShouldHideClassificationText(cfg, unit)
@@ -9558,21 +9983,20 @@ local function updateStatus(cfg, unit)
 	local scfg = cfg.status or {}
 	local def = defaultsFor(unit)
 	local defStatus = def.status or {}
-	local ciCfg = scfg.combatIndicator or defStatus.combatIndicator or {}
 	local usDef = defStatus.unitStatus or {}
 	local usCfg = scfg.unitStatus or usDef or {}
 	local showName = scfg.enabled ~= false
 	local showLevel = shouldShowLevel(scfg, unit)
-	local showUnitStatus = usCfg.enabled == true
-	local showCombatIndicator = UF.SupportsCombatIndicator(unit) and ciCfg.enabled ~= false
 	local ttDef = defStatus.targetTargetName or {}
 	local ttCfg = scfg.targetTargetName or ttDef
 	local showTargetTargetName = unit == UNIT.TARGET and (ttCfg.enabled == true or scfg.showTargetTargetName == true)
-	local showStatus = showName or showLevel or showUnitStatus or showCombatIndicator or showTargetTargetName
+	local showStatus = UF.ShouldShowStatusLayout(cfg, unit, def)
 	local leaderCfg = cfg.leaderIcon or (def and def.leaderIcon) or {}
 	local showLeaderIndicator = (unit == UNIT.PLAYER or unit == UNIT.TARGET or unit == UNIT.FOCUS) and leaderCfg.enabled == true
 	local showStatusFrame = showStatus or showLeaderIndicator
 	local statusHeight = UF.ResolveStatusHeight(cfg, def, showStatus)
+	local statusLayoutHeight = UF.ResolveStatusLayoutHeight(showStatus)
+	st._statusLayoutHeight = statusLayoutHeight
 	if statusHeight <= 0 then statusHeight = 0.001 end
 	st.status:SetHeight(statusHeight)
 	st.status:SetShown(showStatusFrame)
@@ -9582,8 +10006,9 @@ local function updateStatus(cfg, unit)
 	if st.nameText then
 		UFHelper.applyFont(st.nameText, scfg.font, nameFontSize, scfg.fontOutline)
 		local nameAnchor = scfg.nameAnchor or "LEFT"
+		local nameOffset = scfg.nameOffset or {}
 		st.nameText:ClearAllPoints()
-		st.nameText:SetPoint(nameAnchor, st.status, nameAnchor, (scfg.nameOffset and scfg.nameOffset.x) or 0, (scfg.nameOffset and scfg.nameOffset.y) or 0)
+		st.nameText:SetPoint(nameAnchor, st.status, nameAnchor, nameOffset.x or 0, (nameOffset.y or 0) + UF.GetStatusVisualOffsetY(nameAnchor, statusHeight, statusLayoutHeight))
 		if st.nameText.SetJustifyH then st.nameText:SetJustifyH(nameAnchor) end
 		st.nameText:SetShown(showName)
 		local maxChars = scfg.nameMaxChars
@@ -9606,15 +10031,18 @@ local function updateStatus(cfg, unit)
 	if st.targetTargetText then
 		UFHelper.applyFont(st.targetTargetText, scfg.font, ttCfg.fontSize or nameFontSize, scfg.fontOutline)
 		local ttAnchor = ttCfg.anchor or "RIGHT"
+		local ttOffset = ttCfg.offset or {}
 		st.targetTargetText:ClearAllPoints()
-		st.targetTargetText:SetPoint(ttAnchor, st.status, ttAnchor, (ttCfg.offset and ttCfg.offset.x) or 0, (ttCfg.offset and ttCfg.offset.y) or 0)
+		st.targetTargetText:SetPoint(ttAnchor, st.status, ttAnchor, ttOffset.x or 0, (ttOffset.y or 0) + UF.GetStatusVisualOffsetY(ttAnchor, statusHeight, statusLayoutHeight))
 		if st.targetTargetText.SetJustifyH then st.targetTargetText:SetJustifyH(ttAnchor) end
 		st.targetTargetText:SetShown(showTargetTargetName)
 	end
 	if st.levelText then
 		UFHelper.applyFont(st.levelText, scfg.font, levelFontSize, scfg.fontOutline)
+		local levelAnchor = scfg.levelAnchor or "RIGHT"
+		local levelOffset = scfg.levelOffset or {}
 		st.levelText:ClearAllPoints()
-		st.levelText:SetPoint(scfg.levelAnchor or "RIGHT", st.status, scfg.levelAnchor or "RIGHT", (scfg.levelOffset and scfg.levelOffset.x) or 0, (scfg.levelOffset and scfg.levelOffset.y) or 0)
+		st.levelText:SetPoint(levelAnchor, st.status, levelAnchor, levelOffset.x or 0, (levelOffset.y or 0) + UF.GetStatusVisualOffsetY(levelAnchor, statusHeight, statusLayoutHeight))
 		st.levelText:SetShown(showStatus and showLevel)
 	end
 	if st.unitStatusText then
@@ -9624,7 +10052,7 @@ local function updateStatus(cfg, unit)
 		UFHelper.applyFont(st.unitStatusText, unitStatusFont, unitStatusFontSize, unitStatusFontOutline)
 		local off = usCfg.offset or usDef.offset or {}
 		st.unitStatusText:ClearAllPoints()
-		st.unitStatusText:SetPoint("CENTER", st.status, "CENTER", off.x or 0, off.y or 0)
+		st.unitStatusText:SetPoint("CENTER", st.status, "CENTER", off.x or 0, (off.y or 0) + UF.GetStatusVisualOffsetY("CENTER", statusHeight, statusLayoutHeight))
 		if st.unitStatusText.SetJustifyH then st.unitStatusText:SetJustifyH("CENTER") end
 		if st.unitStatusText.SetWordWrap then st.unitStatusText:SetWordWrap(false) end
 		if st.unitStatusText.SetMaxLines then st.unitStatusText:SetMaxLines(1) end
@@ -9636,7 +10064,7 @@ local function updateStatus(cfg, unit)
 		local groupOff = usCfg.groupOffset or usDef.groupOffset or {}
 		UFHelper.applyFont(st.unitGroupText, groupFont, groupFontSize, groupFontOutline)
 		st.unitGroupText:ClearAllPoints()
-		st.unitGroupText:SetPoint("CENTER", st.status, "CENTER", groupOff.x or 0, groupOff.y or 0)
+		st.unitGroupText:SetPoint("CENTER", st.status, "CENTER", groupOff.x or 0, (groupOff.y or 0) + UF.GetStatusVisualOffsetY("CENTER", statusHeight, statusLayoutHeight))
 		if st.unitGroupText.SetJustifyH then st.unitGroupText:SetJustifyH("CENTER") end
 		if st.unitGroupText.SetWordWrap then st.unitGroupText:SetWordWrap(false) end
 		if st.unitGroupText.SetMaxLines then st.unitGroupText:SetMaxLines(1) end
@@ -9676,7 +10104,13 @@ local function updateCombatIndicator(cfg, unit)
 	end
 	st.combatIcon:SetSize(ccfg.size or 18, ccfg.size or 18)
 	st.combatIcon:ClearAllPoints()
-	st.combatIcon:SetPoint("TOP", st.status, "TOP", (ccfg.offset and ccfg.offset.x) or -8, (ccfg.offset and ccfg.offset.y) or 0)
+	st.combatIcon:SetPoint(
+		"TOP",
+		st.status,
+		"TOP",
+		(ccfg.offset and ccfg.offset.x) or -8,
+		((ccfg.offset and ccfg.offset.y) or 0) + UF.GetStatusVisualOffsetY("TOP", st.status:GetHeight(), st._statusLayoutHeight)
+	)
 	local inEditMode = addon.EditModeLib and addon.EditModeLib.IsInEditMode and addon.EditModeLib:IsInEditMode()
 	if inEditMode or (UnitExists and UnitExists(unit) and UnitAffectingCombat and UnitAffectingCombat(unit)) then
 		st.combatIcon:Show()
@@ -9773,6 +10207,7 @@ function UF.ApplyPortraitTexture(texture, unit, mode)
 	if not texture then return false end
 	if mode == "CLASS_ICON" and UnitIsPlayer and UnitIsPlayer(unit) then
 		local classFile = select(2, UnitClass(unit))
+		if issecretvalue and issecretvalue(classFile) then classFile = nil end
 		local coords = classFile and CLASS_ICON_TCOORDS and CLASS_ICON_TCOORDS[classFile]
 		if coords then
 			texture:SetTexture(CLASS_ICON_TEXTURE)
@@ -9828,6 +10263,7 @@ local function applyPortraitSeparator(cfg, unit, st, portraitEnabled)
 		st.portraitSeparator:Hide()
 		return
 	end
+	separatorSize = UF.ResolvePixelLayoutSize(st.portraitHolder, separatorSize)
 	local color = separatorColor or { 0, 0, 0, 0.8 }
 	st.portraitSeparator:SetTexture(UFHelper.resolveSeparatorTexture(separatorTexture))
 	st.portraitSeparator:SetVertexColor(color[1] or 0, color[2] or 0, color[3] or 0, color[4] or 1)
@@ -9885,16 +10321,7 @@ local function layoutFrame(cfg, unit)
 	local st = states[unit]
 	if not st or not st.frame then return end
 	local def = defaultsFor(unit)
-	local scfg = cfg.status or {}
-	local defStatus = def.status or {}
-	local ciCfg = scfg.combatIndicator or defStatus.combatIndicator or {}
-	local usDef = defStatus.unitStatus or {}
-	local usCfg = scfg.unitStatus or usDef or {}
-	local showName = scfg.enabled ~= false
-	local showLevel = shouldShowLevel(scfg, unit)
-	local showUnitStatus = usCfg.enabled == true
-	local showCombatIndicator = UF.SupportsCombatIndicator(unit) and ciCfg.enabled ~= false
-	local showStatus = showName or showLevel or showUnitStatus or showCombatIndicator
+	local showStatus = UF.ShouldShowStatusLayout(cfg, unit, def)
 	local pcfg = cfg.power or {}
 	local hcfg = cfg.health or {}
 	local hdef = def.health or {}
@@ -9914,11 +10341,24 @@ local function layoutFrame(cfg, unit)
 	local powerDetached = powerEnabled and pcfg.detached == true
 	local secondaryPowerEnabled = unit == UNIT.PLAYER and st.secondaryPower and secondaryCfg.enabled ~= false and secondaryPowerToken ~= nil
 	local secondaryPowerDetached = secondaryPowerEnabled and secondaryCfg.detached == true
-	local width = max(MIN_WIDTH, cfg.width or def.width)
+	local width = UF.ResolvePixelLayoutSize(st.barGroup or st.frame, max(MIN_WIDTH, cfg.width or def.width))
 	local statusHeight = UF.ResolveStatusHeight(cfg, def, showStatus)
-	local healthHeight = cfg.healthHeight or def.healthHeight
-	local powerHeight = powerEnabled and (cfg.powerHeight or def.powerHeight) or 0
-	local secondaryPowerHeight = secondaryPowerEnabled and (cfg.secondaryPowerHeight or def.secondaryPowerHeight or cfg.powerHeight or def.powerHeight) or 0
+	local statusLayoutHeight = UF.ResolveStatusLayoutHeight(showStatus)
+	local statusHeightDelta = statusLayoutHeight - statusHeight
+	st._statusLayoutHeight = statusLayoutHeight
+	st.frame._eqolUFStatusHeightDelta = statusHeightDelta
+	local healthHeight = UF.ResolvePixelLayoutSize(st.barGroup or st.frame, cfg.healthHeight or def.healthHeight)
+	local powerHeight = powerEnabled and UF.ResolvePixelLayoutSize(st.barGroup or st.frame, cfg.powerHeight or def.powerHeight) or 0
+	local secondaryPowerHeight = secondaryPowerEnabled
+			and UF.ResolvePixelLayoutSize(st.barGroup or st.frame, cfg.secondaryPowerHeight or def.secondaryPowerHeight or cfg.powerHeight or def.powerHeight)
+		or 0
+	local healthOrientation = UFHelper.normalizeStatusBarOrientation(hcfg.orientation or hdef.orientation)
+	local powerOrientation = UFHelper.normalizeStatusBarOrientation(pcfg.orientation or powerDef.orientation)
+	local secondaryPowerOrientation = UFHelper.normalizeStatusBarOrientation(secondaryCfg.orientation or secondaryDef.orientation)
+	UFHelper.applyStatusBarOrientation(st.health, healthOrientation)
+	UFHelper.applyStatusBarOrientation(st.tempMaxHealthLoss, healthOrientation)
+	UFHelper.applyStatusBarOrientation(st.power, powerOrientation)
+	UFHelper.applyStatusBarOrientation(st.secondaryPower, secondaryPowerOrientation)
 	local stackHeight = healthHeight + (powerDetached and 0 or powerHeight) + (secondaryPowerDetached and 0 or secondaryPowerHeight)
 	local dataBarEnabled = UF.DataBar.IsEnabled(cfg, def)
 	local dataBarCfg = cfg.dataBar or {}
@@ -9938,7 +10378,7 @@ local function layoutFrame(cfg, unit)
 	if borderEnabled then
 		borderOffset = borderCfg.offset
 		if borderOffset == nil then borderOffset = borderCfg.edgeSize or borderDef.edgeSize or 1 end
-		borderOffset = max(0, borderOffset or 0)
+		borderOffset = UF.ResolveBorderLayoutOffset(st.barGroup or st.frame, borderOffset)
 	end
 	local detachedPowerBorder = powerDetached and powerEnabled and borderCfg.detachedPower == true
 	local detachedPowerOffset = 0
@@ -9946,7 +10386,7 @@ local function layoutFrame(cfg, unit)
 		detachedPowerOffset = borderCfg.detachedPowerOffset
 		if detachedPowerOffset == nil then detachedPowerOffset = borderCfg.offset end
 		if detachedPowerOffset == nil then detachedPowerOffset = borderCfg.edgeSize or borderDef.edgeSize or 1 end
-		detachedPowerOffset = max(0, detachedPowerOffset or 0)
+		detachedPowerOffset = UF.ResolveBorderLayoutOffset(st.powerGroup or st.power, detachedPowerOffset)
 	end
 	local detachedSecondaryPowerBorder = secondaryPowerDetached and secondaryPowerEnabled and borderCfg.detachedSecondaryPower == true
 	local detachedSecondaryPowerOffset = 0
@@ -9954,12 +10394,13 @@ local function layoutFrame(cfg, unit)
 		detachedSecondaryPowerOffset = borderCfg.detachedSecondaryPowerOffset
 		if detachedSecondaryPowerOffset == nil then detachedSecondaryPowerOffset = borderCfg.offset end
 		if detachedSecondaryPowerOffset == nil then detachedSecondaryPowerOffset = borderCfg.edgeSize or borderDef.edgeSize or 1 end
-		detachedSecondaryPowerOffset = max(0, detachedSecondaryPowerOffset or 0)
+		detachedSecondaryPowerOffset = UF.ResolveBorderLayoutOffset(st.secondaryPowerGroup or st.secondaryPower, detachedSecondaryPowerOffset)
 	end
 	local portraitEnabled, portraitSide, portraitSquareBackground = getPortraitConfig(cfg, unit)
 	local portraitInnerHeight = stackHeight
 	local portraitSize = portraitEnabled and max(1, portraitInnerHeight) or 0
 	local separatorEnabled, separatorSize = getPortraitSeparatorConfig(cfg, unit, portraitEnabled)
+	if separatorEnabled then separatorSize = UF.ResolvePixelLayoutSize(st.barGroup or st.frame, separatorSize) end
 	local separatorSpace = separatorEnabled and separatorSize or 0
 	local portraitSpace = portraitEnabled and (portraitSize + separatorSpace) or 0
 	local barAreaOffsetLeft = (portraitEnabled and portraitSide == "LEFT") and portraitSpace or 0
@@ -9970,7 +10411,7 @@ local function layoutFrame(cfg, unit)
 	local statusOffsetRight = -barAreaOffsetRight
 	st._portraitSpace = portraitSpace
 	st._portraitCenterOffset = barCenterOffset
-	local frameWidth = width + borderOffset * 2 + portraitSpace
+	local frameWidth = UF.ResolvePixelLayoutSize(st.frame, width + borderOffset * 2 + portraitSpace)
 	st.frame:SetWidth(frameWidth)
 	local frameStrata = normalizeStrataToken(cfg.strata) or normalizeStrataToken(def.strata) or "LOW"
 	if st.frame.GetFrameStrata and st.frame:GetFrameStrata() ~= frameStrata then st.frame:SetFrameStrata(frameStrata) end
@@ -10009,13 +10450,15 @@ local function layoutFrame(cfg, unit)
 	local detachedGrowFromCenter = powerDetached and pcfg.detachedGrowFromCenter == true
 	local detachedMatchHealthWidth = powerDetached and pcfg.detachedMatchHealthWidth == true
 	local powerWidth = width
-	if powerDetached and not detachedMatchHealthWidth and pcfg.width and pcfg.width > 0 then powerWidth = pcfg.width end
+	if powerDetached and not detachedMatchHealthWidth and pcfg.width and pcfg.width > 0 then powerWidth = UF.ResolvePixelLayoutSize(st.powerGroup or st.power, pcfg.width) end
 	st.power:SetSize(powerWidth, powerHeight)
 	st.power:SetShown(powerEnabled)
 	local secondaryDetachedGrowFromCenter = secondaryPowerDetached and secondaryCfg.detachedGrowFromCenter == true
 	local secondaryDetachedMatchHealthWidth = secondaryPowerDetached and secondaryCfg.detachedMatchHealthWidth == true
 	local secondaryPowerWidth = width
-	if secondaryPowerDetached and not secondaryDetachedMatchHealthWidth and secondaryCfg.width and secondaryCfg.width > 0 then secondaryPowerWidth = secondaryCfg.width end
+	if secondaryPowerDetached and not secondaryDetachedMatchHealthWidth and secondaryCfg.width and secondaryCfg.width > 0 then
+		secondaryPowerWidth = UF.ResolvePixelLayoutSize(st.secondaryPowerGroup or st.secondaryPower, secondaryCfg.width)
+	end
 	if st.secondaryPower then
 		st.secondaryPower:SetSize(secondaryPowerWidth, secondaryPowerHeight)
 		st.secondaryPower:SetShown(secondaryPowerEnabled)
@@ -10038,8 +10481,11 @@ local function layoutFrame(cfg, unit)
 		if st.frame:GetNumPoints() == 0 then st.frame:SetPoint("TOPLEFT", container, "TOPLEFT", 0, 0) end
 	else
 		local rel = resolveRelativeAnchorFrame(anchor and (anchor.relativeTo or anchor.relativeFrame), st.frame and st.frame:GetName())
+		local anchorPoint = anchor.point or "CENTER"
+		local relativePoint = anchor.relativePoint or anchorPoint
+		local anchorY = UF.ResolvePhysicalUnitFrameAnchorY(anchorPoint, relativePoint, anchor.y, rel, statusHeightDelta)
 		st.frame:ClearAllPoints()
-		st.frame:SetPoint(anchor.point or "CENTER", rel or UIParent, anchor.relativePoint or anchor.point or "CENTER", anchor.x or 0, anchor.y or 0)
+		st.frame:SetPoint(anchorPoint, rel or UIParent, relativePoint, anchor.x or 0, anchorY)
 		if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.ReapplyTrackerAnchorsForTarget and st.frame.GetName then
 			addon.MythicPlus.functions.ReapplyTrackerAnchorsForTarget(st.frame:GetName())
 		end
@@ -10048,9 +10494,11 @@ local function layoutFrame(cfg, unit)
 	local y = 0
 	if st.dataBar then
 		if dataBarEnabled then
+			local dataBarAnchorY = -(statusHeight + stackHeight + borderOffset * 2 + dataBarGap)
+			if dataBarPosition == "ABOVE" then dataBarAnchorY = statusHeightDelta end
 			st.dataBar:SetHeight(dataBarHeight)
-			st.dataBar:SetPoint("TOPLEFT", st.frame, "TOPLEFT", 0, dataBarPosition == "ABOVE" and 0 or -(statusHeight + stackHeight + borderOffset * 2 + dataBarGap))
-			st.dataBar:SetPoint("TOPRIGHT", st.frame, "TOPRIGHT", 0, dataBarPosition == "ABOVE" and 0 or -(statusHeight + stackHeight + borderOffset * 2 + dataBarGap))
+			st.dataBar:SetPoint("TOPLEFT", st.frame, "TOPLEFT", 0, dataBarAnchorY)
+			st.dataBar:SetPoint("TOPRIGHT", st.frame, "TOPRIGHT", 0, dataBarAnchorY)
 			st.dataBar:Show()
 			if dataBarPosition == "ABOVE" then y = -dataBarOuterHeight end
 		else
@@ -10067,9 +10515,9 @@ local function layoutFrame(cfg, unit)
 		st.status:SetPoint("TOPRIGHT", st.frame, "TOPRIGHT", statusOffsetRight, contentTopY)
 	end
 	-- Bars container sits below status; border applied here, not on status
-	local barsHeight = stackHeight + borderOffset * 2
+	local barsHeight = UF.ResolvePixelLayoutSize(st.barGroup or st.frame, stackHeight + borderOffset * 2)
 	if st.barGroup then
-		st.barGroup:SetWidth(width + borderOffset * 2 + portraitSpace)
+		st.barGroup:SetWidth(frameWidth)
 		st.barGroup:SetHeight(barsHeight)
 		st.barGroup:SetPoint("TOPLEFT", st.frame, "TOPLEFT", 0, y)
 		st.barGroup:SetPoint("TOPRIGHT", st.frame, "TOPRIGHT", 0, y)
@@ -10095,17 +10543,10 @@ local function layoutFrame(cfg, unit)
 	if showTempLoss and st.tempMaxHealthLoss and st.tempMaxHealthLoss.GetStatusBarTexture then
 		local reverseHealth = hcfg.reverseFill
 		if reverseHealth == nil then reverseHealth = hdef.reverseFill == true end
-		if reverseHealth then
-			st.health:SetPoint("TOPLEFT", st.tempMaxHealthLoss:GetStatusBarTexture(), "TOPRIGHT")
-			st.health:SetPoint("BOTTOMLEFT", st.tempMaxHealthLoss:GetStatusBarTexture(), "BOTTOMRIGHT")
-			st.health:SetPoint("TOPRIGHT", healthSlot, "TOPRIGHT")
-			st.health:SetPoint("BOTTOMRIGHT", healthSlot, "BOTTOMRIGHT")
-		else
-			st.health:SetPoint("TOPLEFT", healthSlot, "TOPLEFT")
-			st.health:SetPoint("BOTTOMLEFT", healthSlot, "BOTTOMLEFT")
-			st.health:SetPoint("TOPRIGHT", st.tempMaxHealthLoss:GetStatusBarTexture(), "TOPLEFT")
-			st.health:SetPoint("BOTTOMRIGHT", st.tempMaxHealthLoss:GetStatusBarTexture(), "BOTTOMLEFT")
-		end
+		UFHelper.LayoutTemporaryMaxHealthLoss(healthSlot, st.health, st.tempMaxHealthLoss, {
+			axis = UFHelper.GetHealthAxis(healthOrientation, reverseHealth),
+			reserveHealthSpace = true,
+		})
 	else
 		st.health:SetAllPoints(healthSlot)
 	end
@@ -10117,7 +10558,10 @@ local function layoutFrame(cfg, unit)
 		if detachedPowerBorder and st.powerGroup then
 			if st.power.GetParent and st.power:GetParent() ~= st.powerGroup then st.power:SetParent(st.powerGroup) end
 			st.powerGroup:Show()
-			st.powerGroup:SetSize(powerWidth + detachedPowerOffset * 2, powerHeight + detachedPowerOffset * 2)
+			st.powerGroup:SetSize(
+				UF.ResolvePixelLayoutSize(st.powerGroup, powerWidth + detachedPowerOffset * 2),
+				UF.ResolvePixelLayoutSize(st.powerGroup, powerHeight + detachedPowerOffset * 2)
+			)
 			if detachedGrowFromCenter then
 				st.powerGroup:SetPoint("TOP", healthSlot, "BOTTOM", centerOx, oy + detachedPowerOffset)
 				st.power:SetPoint("TOP", st.powerGroup, "TOP", 0, -detachedPowerOffset)
@@ -10149,7 +10593,10 @@ local function layoutFrame(cfg, unit)
 			if detachedSecondaryPowerBorder and st.secondaryPowerGroup then
 				if st.secondaryPower.GetParent and st.secondaryPower:GetParent() ~= st.secondaryPowerGroup then st.secondaryPower:SetParent(st.secondaryPowerGroup) end
 				st.secondaryPowerGroup:Show()
-				st.secondaryPowerGroup:SetSize(secondaryPowerWidth + detachedSecondaryPowerOffset * 2, secondaryPowerHeight + detachedSecondaryPowerOffset * 2)
+				st.secondaryPowerGroup:SetSize(
+					UF.ResolvePixelLayoutSize(st.secondaryPowerGroup, secondaryPowerWidth + detachedSecondaryPowerOffset * 2),
+					UF.ResolvePixelLayoutSize(st.secondaryPowerGroup, secondaryPowerHeight + detachedSecondaryPowerOffset * 2)
+				)
 				if secondaryDetachedGrowFromCenter then
 					st.secondaryPowerGroup:SetPoint("TOP", healthSlot, "BOTTOM", secondaryCenterOx, soy + detachedSecondaryPowerOffset)
 					st.secondaryPower:SetPoint("TOP", st.secondaryPowerGroup, "TOP", 0, -detachedSecondaryPowerOffset)
@@ -10275,6 +10722,9 @@ local function layoutFrame(cfg, unit)
 
 	local totalHeight = statusHeight + barsHeight + dataBarOuterHeight
 	st.frame:SetHeight(totalHeight)
+	if borderEnabled then UF.AlignBorderHostToPixelGrid(st.barGroup) end
+	if detachedPowerBorder then UF.AlignBorderHostToPixelGrid(st.powerGroup) end
+	if detachedSecondaryPowerBorder then UF.AlignBorderHostToPixelGrid(st.secondaryPowerGroup) end
 	if st.raidIcon then
 		st.raidIcon:ClearAllPoints()
 		st.raidIcon:SetPoint("TOP", st.barGroup or st.frame, "TOP", barCenterOffset or 0, -2)
@@ -10373,6 +10823,11 @@ local function layoutFrame(cfg, unit)
 			AuraUtil.ApplyNativeAuraContainers(unit, st, cfg, def, false)
 		end
 	end
+	if unit == UNIT.PLAYER or unit == UNIT.TARGET or unit == UNIT.FOCUS then
+		local dispelCfg = cfg.status and cfg.status.dispelTint
+		local dispelDef = def.status and def.status.dispelTint
+		AuraUtil.PrecreateManagedDispelBorder(st, st.healthContainer or st.health or st.frame, dispelCfg, dispelDef)
+	end
 	syncTextFrameLevels(st)
 end
 
@@ -10397,6 +10852,7 @@ local function ensureFrames(unit)
 	local usePingReceiver = tonumber((select(4, GetBuildInfo()))) >= 120100
 	local template = usePingReceiver and "BackdropTemplate,SecureUnitButtonTemplate" or "BackdropTemplate,SecureUnitButtonTemplate,PingableUnitFrameTemplate"
 	st.frame = _G[info.frameName] or CreateFrame("Button", info.frameName, parent, template)
+	st.frame._eqolUFUnit = unit
 	if usePingReceiver and (unit == UNIT.TARGET or unit == UNIT.FOCUS or isBossUnit(unit)) then AuraUtil.PrecreateNativeAuraContainers(st) end
 	_G.ClickCastFrames = _G.ClickCastFrames or {}
 	_G.ClickCastFrames[st.frame] = true
@@ -10450,6 +10906,9 @@ local function ensureFrames(unit)
 	if info.dropdown then st.frame.menu = info.dropdown end
 	st.frame:SetClampedToScreen(true)
 	st.status = _G[info.statusName] or CreateFrame("Frame", info.statusName, st.frame)
+	st.status:EnableMouse(false)
+	if st.status.SetMouseClickEnabled then st.status:SetMouseClickEnabled(false) end
+	if st.status.SetMouseMotionEnabled then st.status:SetMouseMotionEnabled(false) end
 	st.barGroup = st.barGroup or CreateFrame("Frame", nil, st.frame, "BackdropTemplate")
 	st.healthContainer = st.healthContainer or CreateFrame("Frame", nil, st.barGroup, "BackdropTemplate")
 	st.health = _G[info.healthName] or CreateFrame("StatusBar", info.healthName, st.barGroup, "BackdropTemplate")
@@ -10576,16 +11035,18 @@ local function ensureFrames(unit)
 	end
 	st.statusTextLayer = st.statusTextLayer or CreateFrame("Frame", nil, st.status)
 	st.statusTextLayer:SetAllPoints(st.status)
+	st.statusTextLayer:EnableMouse(false)
 	st.nameTextLayer = st.nameTextLayer or CreateFrame("Frame", nil, st.status)
 	st.nameTextLayer:SetAllPoints(st.status)
+	st.nameTextLayer:EnableMouse(false)
 	st.levelTextLayer = st.levelTextLayer or CreateFrame("Frame", nil, st.status)
 	st.levelTextLayer:SetAllPoints(st.status)
+	st.levelTextLayer:EnableMouse(false)
 	if (unit == UNIT.PLAYER or unit == UNIT.TARGET or unit == UNIT.FOCUS) and not st.dispelTint and not AuraUtil.ShouldUseManagedDispelBorder() then
 		st.dispelTint = UFHelper.CreateDispelOverlay(st.healthTextLayer or st.health)
 		st.dispelTint:SetAllPoints(st.health)
 		st.dispelTint:Hide()
 	end
-	if unit == UNIT.PLAYER or unit == UNIT.TARGET or unit == UNIT.FOCUS then AuraUtil.PrecreateManagedDispelBorder(st, st.health or st.frame) end
 	if not AuraUtil.PrivateAurasDisabledForClient() and not st.privateAuras then
 		st.privateAuras = CreateFrame("Frame", nil, st.frame)
 		st.privateAuras:EnableMouse(false)
@@ -10679,8 +11140,9 @@ local function applyBars(cfg, unit)
 		powerEnum, powerToken = getMainPower(unit)
 		if unit == UNIT.PLAYER and UFHelper and UFHelper.IsPrimaryPowerAllowed then powerEnabled = UFHelper.IsPrimaryPowerAllowed(pcfg, defP, powerToken, powerEnum, unit) ~= false end
 	end
-	local healthHeight = cfg.healthHeight or def.healthHeight or (st.health.GetHeight and st.health:GetHeight()) or 0
-	local healthLayoutWidth = max(MIN_WIDTH, cfg.width or def.width or (st.health.GetWidth and st.health:GetWidth()) or 0)
+	local healthOrientation = UFHelper.normalizeStatusBarOrientation(hc.orientation or defH.orientation)
+	UFHelper.applyStatusBarOrientation(st.health, healthOrientation)
+	UFHelper.applyStatusBarOrientation(st.tempMaxHealthLoss, healthOrientation)
 	st.health:SetStatusBarTexture(UFHelper.resolveTexture(hc.texture))
 	if st.health.SetStatusBarDesaturated then st.health:SetStatusBarDesaturated(UF.ShouldDesaturateHealthTexture(hc)) end
 	UFHelper.configureSpecialTexture(st.health, "HEALTH", hc.texture, hc)
@@ -10688,6 +11150,8 @@ local function applyBars(cfg, unit)
 	local reverseHealth = hc.reverseFill
 	if reverseHealth == nil then reverseHealth = defH.reverseFill == true end
 	UFHelper.applyStatusBarReverseFill(st.health, reverseHealth)
+	local healthAxis = UFHelper.GetHealthAxis(healthOrientation, reverseHealth)
+	local overlayRegions = UFHelper.LayoutHealthOverlayRegions(st.health, healthAxis)
 	if st.tempMaxHealthLoss then
 		st.tempMaxHealthLoss:SetStatusBarTexture("UI-HUD-UnitFrame-Target-PortraitOn-Bar-TempHPLoss")
 		if st.tempMaxHealthLoss.SetStatusBarDesaturated then st.tempMaxHealthLoss:SetStatusBarDesaturated(false) end
@@ -10698,8 +11162,9 @@ local function applyBars(cfg, unit)
 		st.tempMaxHealthLoss:SetShown(hc.tempMaxHealthLossEnabled ~= false)
 	end
 	UF.ApplyHealthBackdrop(st, unit, hc, defH, reverseHealth)
-	if allowAbsorb and st.incomingHeal then applyIncomingHealBar(st, hc, healthHeight, reverseHealth, interpolation) end
+	if allowAbsorb and st.incomingHeal then applyIncomingHealBar(st, hc, healthAxis, overlayRegions, interpolation) end
 	if powerEnabled then
+		UFHelper.applyStatusBarOrientation(st.power, pcfg.orientation or defP.orientation)
 		st.power:SetStatusBarTexture(UFHelper.resolveTexture(pcfg.texture))
 		if not powerEnum then
 			powerEnum, powerToken = getMainPower(unit)
@@ -10725,6 +11190,7 @@ local function applyBars(cfg, unit)
 		end
 		local secondaryEnabled = unit == UNIT.PLAYER and secondaryCfg.enabled ~= false and secondaryToken ~= nil
 		if secondaryEnabled then
+			UFHelper.applyStatusBarOrientation(st.secondaryPower, secondaryCfg.orientation or defSP.orientation)
 			st.secondaryPower:SetStatusBarTexture(UFHelper.resolveTexture(secondaryCfg.texture))
 			local secEnum, secResolved = nil, secondaryToken
 			if UFHelper and UFHelper.GetPowerValuesForToken then
@@ -10751,7 +11217,6 @@ local function applyBars(cfg, unit)
 		end
 	end
 	if allowAbsorb and st.absorb then
-		local overlayClip = UF.EnsureOverlayClipFrame and UF.EnsureOverlayClipFrame(st.health, "_eqolDirectOverlayClip")
 		local absorbTextureKey = hc.absorbTexture or hc.texture
 		st.absorb:SetStatusBarTexture(UFHelper.resolveTexture(absorbTextureKey))
 		if st.absorb.SetStatusBarDesaturated then st.absorb:SetStatusBarDesaturated(false) end
@@ -10761,7 +11226,6 @@ local function applyBars(cfg, unit)
 		if reverseAbsorb == nil then reverseAbsorb = defH.absorbReverseFill == true end
 		local absorbDontOverflow = hc.absorbDontOverflowHealthBar
 		if absorbDontOverflow == nil then absorbDontOverflow = defH.absorbDontOverflowHealthBar == true end
-		UFHelper.applyStatusBarReverseFill(st.absorb, reverseAbsorb)
 		if reverseAbsorb then
 			st.absorb2 = st.absorb2 or CreateFrame("StatusBar", info.healthName .. "Absorb2", st.health, "BackdropTemplate")
 			if st.absorb2.SetStatusBarDesaturated then st.absorb2:SetStatusBarDesaturated(false) end
@@ -10769,48 +11233,30 @@ local function applyBars(cfg, unit)
 		elseif st.absorb2 then
 			st.absorb2:Hide()
 		end
-		if overlayClip and st.absorb.GetParent and st.absorb:GetParent() ~= overlayClip then st.absorb:SetParent(overlayClip) end
 		local absorbHeight = hc.absorbOverlayHeight
 		if absorbHeight == nil then absorbHeight = defH.absorbOverlayHeight end
 		local absorbAnchorTop = hc.absorbOverlayAnchorTop
 		if absorbAnchorTop == nil then absorbAnchorTop = defH.absorbOverlayAnchorTop == true end
-		applyOverlayHeight(st.absorb, overlayClip or st.health, absorbHeight, healthHeight, absorbAnchorTop == true)
+		UFHelper.LayoutDamageAbsorb(st.health, st.absorb, st.absorb2, {
+			axis = healthAxis,
+			regions = overlayRegions,
+			reverseAbsorb = reverseAbsorb,
+			dontOverflow = absorbDontOverflow,
+			thickness = absorbHeight,
+			crossAlign = absorbAnchorTop and "MAX" or "MIN",
+		})
 		if reverseAbsorb and st.absorb2 then
 			st.absorb2:SetStatusBarTexture(UFHelper.resolveTexture(absorbTextureKey))
 			if st.absorb2.SetStatusBarDesaturated then st.absorb2:SetStatusBarDesaturated(false) end
 			UFHelper.configureSpecialTexture(st.absorb2, "HEALTH", absorbTextureKey, hc)
 			UF.StabilizeStatusBarTexture(st.absorb2)
-			if st.absorb2.SetOrientation then st.absorb2:SetOrientation("HORIZONTAL") end
-			if UFHelper and UFHelper.applyAbsorbClampLayout then
-				if reverseHealth then
-					if UFHelper.setupAbsorbClampReverseAware then UFHelper.setupAbsorbClampReverseAware(st.health, st.absorb2) end
-				else
-					if UFHelper.setupAbsorbClamp then UFHelper.setupAbsorbClamp(st.health, st.absorb2) end
-					if not absorbDontOverflow and UFHelper.setupAbsorbOverShift then UFHelper.setupAbsorbOverShift(st.health, st.absorb, absorbHeight, healthHeight, absorbAnchorTop == true) end
-				end
-				if overlayClip and st.absorb2.GetParent and st.absorb2:GetParent() ~= overlayClip then st.absorb2:SetParent(overlayClip) end
-				UFHelper.applyAbsorbClampLayout(st.absorb2, st.health, absorbHeight, healthHeight, reverseHealth, absorbAnchorTop == true, healthLayoutWidth)
-				syncTextFrameLevels(st)
-			end
+			syncTextFrameLevels(st)
 			setFrameLevelAbove(st.absorb2, st.health, 1)
-			st.absorb2:SetMinMaxValues(0, 1)
-			st.absorb2:SetValue(0, interpolation)
-			st.absorb2:Hide()
 		end
 		setFrameLevelAbove(st.absorb, st.health, 1)
-		st.absorb:SetMinMaxValues(0, 1)
-		st.absorb:SetValue(0, interpolation)
 		if st.overAbsorbGlow then
-			st.overAbsorbGlow:ClearAllPoints()
-			local glowParent = overlayClip or st.health
-			if glowParent and st.overAbsorbGlow.GetParent and st.overAbsorbGlow:GetParent() ~= glowParent then st.overAbsorbGlow:SetParent(glowParent) end
-			if reverseHealth then
-				st.overAbsorbGlow:SetPoint("TOPRIGHT", st.health, "TOPLEFT", 7, 0)
-				st.overAbsorbGlow:SetPoint("BOTTOMRIGHT", st.health, "BOTTOMLEFT", 7, 0)
-			else
-				st.overAbsorbGlow:SetPoint("TOPLEFT", st.health, "TOPRIGHT", -7, 0)
-				st.overAbsorbGlow:SetPoint("BOTTOMLEFT", st.health, "BOTTOMRIGHT", -7, 0)
-			end
+			if st.overAbsorbGlow.GetParent and st.overAbsorbGlow:GetParent() ~= st.health then st.overAbsorbGlow:SetParent(st.health) end
+			UFHelper.LayoutHealthEndGlow(st.health, st.overAbsorbGlow, healthAxis, 7)
 		end
 		if st.overAbsorbGlow then st.overAbsorbGlow:Hide() end
 	elseif st.overAbsorbGlow then
@@ -10818,7 +11264,6 @@ local function applyBars(cfg, unit)
 	end
 	if st.incomingHeal then setFrameLevelAbove(st.incomingHeal, st.absorb2 or st.absorb or st.health, 1) end
 	if allowAbsorb and st.healAbsorb then
-		local overlayClip = UF.EnsureOverlayClipFrame and UF.EnsureOverlayClipFrame(st.health, "_eqolDirectOverlayClip")
 		local healAbsorbTextureKey = hc.healAbsorbTexture or hc.texture
 		st.healAbsorb:SetStatusBarTexture(UFHelper.resolveTexture(healAbsorbTextureKey))
 		if st.healAbsorb.SetStatusBarDesaturated then st.healAbsorb:SetStatusBarDesaturated(false) end
@@ -10826,13 +11271,18 @@ local function applyBars(cfg, unit)
 		UF.StabilizeStatusBarTexture(st.healAbsorb)
 		local reverseHealAbsorb = hc.healAbsorbReverseFill
 		if reverseHealAbsorb == nil then reverseHealAbsorb = defH.healAbsorbReverseFill == true end
-		UFHelper.applyStatusBarReverseFill(st.healAbsorb, reverseHealAbsorb)
-		if overlayClip and st.healAbsorb.GetParent and st.healAbsorb:GetParent() ~= overlayClip then st.healAbsorb:SetParent(overlayClip) end
 		local healAbsorbHeight = hc.healAbsorbOverlayHeight
 		if healAbsorbHeight == nil then healAbsorbHeight = defH.healAbsorbOverlayHeight end
 		local healAbsorbAnchorTop = hc.healAbsorbOverlayAnchorTop
 		if healAbsorbAnchorTop == nil then healAbsorbAnchorTop = defH.healAbsorbOverlayAnchorTop == true end
-		applyOverlayHeight(st.healAbsorb, overlayClip or st.health, healAbsorbHeight, healthHeight, healAbsorbAnchorTop == true)
+		UFHelper.LayoutHealthOverlayBar(st.health, st.healAbsorb, {
+			axis = healthAxis,
+			regions = overlayRegions,
+			role = "FULL",
+			statusReverse = reverseHealAbsorb,
+			thickness = healAbsorbHeight,
+			crossAlign = healAbsorbAnchorTop and "MAX" or "MIN",
+		})
 		local anchorBar = st.incomingHeal or st.absorb2 or st.absorb or st.health
 		setFrameLevelAbove(st.healAbsorb, anchorBar, 1)
 		st.healAbsorb:SetMinMaxValues(0, 1)
@@ -10966,7 +11416,12 @@ local function updateNameAndLevel(cfg, unit, levelOverride, deferTextUpdate)
 	local def = st.def or defaultsFor(unit) or {}
 	if st.nameText then
 		local nr, ng, nb, na = UF.ResolveNameTextColor(unit, st)
-		st.nameText:SetText(UnitName(unit) or "")
+		local name = UnitName(unit)
+		if issecretvalue and issecretvalue(name) then
+			st.nameText:SetText(name)
+		else
+			st.nameText:SetText(name or "")
+		end
 		if st._nameColorR ~= nr or st._nameColorG ~= ng or st._nameColorB ~= nb or st._nameColorA ~= na then
 			st.nameText:SetTextColor(nr, ng, nb, na)
 			st._nameColorR, st._nameColorG, st._nameColorB, st._nameColorA = nr, ng, nb, na
@@ -10974,9 +11429,19 @@ local function updateNameAndLevel(cfg, unit, levelOverride, deferTextUpdate)
 	end
 	if st.targetTargetText then
 		if st._targetTargetNameEnabled == true and UnitExists and UnitExists(UNIT.TARGET_TARGET) then
-			local nr, ng, nb, na = UF.ResolveNameTextColor(UNIT.TARGET_TARGET, st)
+			local nr, ng, nb, na
+			if UnitIsPlayer and UnitIsPlayer(UNIT.TARGET_TARGET) then
+				local class = select(2, UnitClass(UNIT.TARGET_TARGET))
+				nr, ng, nb, na = getClassColor(class)
+			end
+			if not nr then nr, ng, nb, na = UF.ResolveNameTextColor(UNIT.TARGET_TARGET, st) end
 			st.targetTargetText:SetTextColor(nr, ng, nb, na)
-			st.targetTargetText:SetText((UnitName and UnitName(UNIT.TARGET_TARGET)) or "")
+			local name = UnitName and UnitName(UNIT.TARGET_TARGET)
+			if issecretvalue and issecretvalue(name) then
+				st.targetTargetText:SetText(name)
+			else
+				st.targetTargetText:SetText(name or "")
+			end
 		else
 			st.targetTargetText:SetText("")
 		end
@@ -11482,42 +11947,45 @@ local function layoutBossFrames(cfg)
 	local shown = 0
 	local maxWidth = 0
 	local totalWidth = 0
+	local totalHeight = 0
 	local maxHeight = 0
-	local frameHeight = 0
 	local horizontal = growth == "LEFT" or growth == "RIGHT"
 	local bossCount = UF.GetBossFrameCount(cfg)
 	for i = 1, bossCount do
 		local unit = "boss" .. i
 		local st = states[unit]
 		if st and st.frame then
+			local statusHeightDelta = tonumber(st.frame._eqolUFStatusHeightDelta) or 0
 			st.frame:ClearAllPoints()
 			if not last then
 				if growth == "LEFT" then
-					st.frame:SetPoint("TOPRIGHT", bossContainer, "TOPRIGHT", 0, 0)
+					st.frame:SetPoint("TOPRIGHT", bossContainer, "TOPRIGHT", 0, -statusHeightDelta)
 				elseif growth == "UP" then
 					st.frame:SetPoint("BOTTOMLEFT", bossContainer, "BOTTOMLEFT", 0, 0)
 				else
-					st.frame:SetPoint("TOPLEFT", bossContainer, "TOPLEFT", 0, 0)
+					st.frame:SetPoint("TOPLEFT", bossContainer, "TOPLEFT", 0, -statusHeightDelta)
 				end
 			else
+				local lastStatusHeightDelta = tonumber(last.frame and last.frame._eqolUFStatusHeightDelta) or 0
 				if growth == "RIGHT" then
-					st.frame:SetPoint("TOPLEFT", last.frame, "TOPRIGHT", spacing, 0)
+					st.frame:SetPoint("TOPLEFT", last.frame, "TOPRIGHT", spacing, lastStatusHeightDelta - statusHeightDelta)
 				elseif growth == "LEFT" then
-					st.frame:SetPoint("TOPRIGHT", last.frame, "TOPLEFT", -spacing, 0)
+					st.frame:SetPoint("TOPRIGHT", last.frame, "TOPLEFT", -spacing, lastStatusHeightDelta - statusHeightDelta)
 				elseif growth == "UP" then
-					st.frame:SetPoint("BOTTOMLEFT", last.frame, "TOPLEFT", 0, spacing)
+					st.frame:SetPoint("BOTTOMLEFT", last.frame, "TOPLEFT", 0, spacing + lastStatusHeightDelta)
 				else
-					st.frame:SetPoint("TOPLEFT", last.frame, "BOTTOMLEFT", 0, -spacing)
+					st.frame:SetPoint("TOPLEFT", last.frame, "BOTTOMLEFT", 0, -(spacing + statusHeightDelta))
 				end
 			end
 			last = st
 			shown = shown + 1
 			local width = st.frame:GetWidth() or 0
 			local height = st.frame:GetHeight() or 0
+			local visualHeight = height + statusHeightDelta
 			maxWidth = math.max(maxWidth, width)
 			totalWidth = totalWidth + width
-			maxHeight = math.max(maxHeight, height)
-			frameHeight = height or frameHeight
+			totalHeight = totalHeight + visualHeight
+			maxHeight = math.max(maxHeight, visualHeight)
 		end
 	end
 	if shown > 0 then
@@ -11527,8 +11995,8 @@ local function layoutBossFrames(cfg)
 			bossContainer:SetWidth(totalWidth)
 			bossContainer:SetHeight(maxHeight)
 		else
-			local totalHeight = frameHeight * shown + spacing * (shown - 1)
-			if totalHeight < frameHeight then totalHeight = frameHeight end
+			totalHeight = totalHeight + spacing * (shown - 1)
+			if totalHeight < maxHeight then totalHeight = maxHeight end
 			bossContainer:SetHeight(totalHeight)
 			bossContainer:SetWidth(maxWidth)
 		end
@@ -11586,6 +12054,38 @@ applyBossEditSample = function(idx, cfg)
 
 	st.health:SetMinMaxValues(0, sampleHealthMax)
 	st.health:SetValue(sampleHealthCur, interpolation)
+	local healthOrientation = UFHelper.normalizeStatusBarOrientation(hc.orientation or defH.orientation)
+	local reverseHealth = hc.reverseFill
+	if reverseHealth == nil then reverseHealth = defH.reverseFill == true end
+	local healthAxis = UFHelper.GetHealthAxis(healthOrientation, reverseHealth)
+	local overlayRegions = UFHelper.LayoutHealthOverlayRegions(st.health, healthAxis)
+	if hc.absorbEnabled ~= false and st.absorb then
+		local reverseAbsorb = hc.absorbReverseFill
+		if reverseAbsorb == nil then reverseAbsorb = defH.absorbReverseFill == true end
+		local dontOverflow = hc.absorbDontOverflowHealthBar
+		if dontOverflow == nil then dontOverflow = defH.absorbDontOverflowHealthBar == true end
+		dontOverflow = dontOverflow == true and reverseAbsorb == true
+		local thickness = hc.absorbOverlayHeight
+		if thickness == nil then thickness = defH.absorbOverlayHeight end
+		local alignMax = hc.absorbOverlayAnchorTop
+		if alignMax == nil then alignMax = defH.absorbOverlayAnchorTop == true end
+		UFHelper.LayoutDamageAbsorb(st.health, st.absorb, st.absorb2, {
+			axis = healthAxis,
+			regions = overlayRegions,
+			reverseAbsorb = reverseAbsorb,
+			dontOverflow = dontOverflow,
+			thickness = thickness,
+			crossAlign = alignMax and "MAX" or "MIN",
+		})
+		st.absorb:SetMinMaxValues(0, sampleHealthMax)
+		st.absorb:SetValue(sampleHealthAbsorb, interpolation)
+		if reverseAbsorb and st.absorb2 then
+			st.absorb2:SetMinMaxValues(0, sampleHealthMax)
+			st.absorb2:SetValue(sampleHealthAbsorb, interpolation)
+			st.absorb2:Show()
+		end
+		st.absorb:SetShown(not dontOverflow)
+	end
 	local baseR, baseG, baseB, baseA = UF.resolveHealthBaseColor(unit, hc, defH)
 	local sampleR, sampleG, sampleB, sampleA = baseR, baseG, baseB, baseA
 	st.health:SetStatusBarColor(sampleR or 0, sampleG or 0.8, sampleB or 0, sampleA or 1)
@@ -13035,6 +13535,10 @@ onEvent = function(self, event, unit, ...)
 		updateCombatIndicator(playerCfg, UNIT.PLAYER)
 		if UFHelper and UFHelper.updateAllHighlights then UFHelper.updateAllHighlights(states, UNIT, UF.GetBossFrameCount()) end
 		if event == "PLAYER_REGEN_ENABLED" then
+			if not UF._auraContainerDeferredLoadHandled and addon.AuraCompat and addon.AuraCompat._auraContainerLoadDeferred and addon.AuraCompat:HasAuraContainerSupport() then
+				UF._auraContainerDeferredLoadHandled = true
+				UF.Refresh()
+			end
 			if bossLayoutDirty then layoutBossFrames() end
 			if bossHidePending then hideBossFrames(true) end
 			if bossShowPending or bossInitPending then updateBossFrames(true) end

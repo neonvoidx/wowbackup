@@ -34,16 +34,16 @@ END
 VER 3 0000000000000243 " Clear" "1016706"
 /clearfocus
 END
+VER 3 0000000000000246 " MOUNT" "INV_Misc_QuestionMark"
+#showtooltip
+/cast [nomounted] !Zen Flight
+/click [flyable] MountJournalSummonRandomFavoriteButton
+END
 VER 3 0000000000000245 " MOUNT" "INV_Misc_QuestionMark"
 #showtooltip
 /click [nomod] MountJournalSummonRandomFavoriteButton
 /cast [mod:shift] Eternal Gladiator's Soul Eater
 /cast [mod:ctrl] Grand Expedition Yak
-END
-VER 3 0000000000000246 " MOUNT" "INV_Misc_QuestionMark"
-#showtooltip
-/cast [nomounted] !Zen Flight
-/click [flyable] MountJournalSummonRandomFavoriteButton
 END
 VER 3 0000000000000247 " PassiveFollow" "571320"
 /petfollow
@@ -60,6 +60,11 @@ VER 3 000000000000024B "BOW" "5927638"
 END
 VER 3 0000000000000273 "EnhanceQoLBuffFoodMacro" "INV_Misc_QuestionMark"
 #showtooltip
+END
+VER 3 0000000000000277 "EnhanceQoLDrinkMacro" "INV_Misc_QuestionMark"
+#showtooltip
+/castsequence reset=combat Recuperate
+/cast Recuperate
 END
 VER 3 000000000000024D "EnhanceQoLFlaskMacro" "INV_Misc_QuestionMark"
 #showtooltip

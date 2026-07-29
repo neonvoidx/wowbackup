@@ -1,6 +1,6 @@
 # Cooldown Manager Centered by Wildu
 
-## [v3.3.3](https://github.com/lemieszek/CooldownManagerCentered/tree/v3.3.3) (2026-07-11)
-[Full Changelog](https://github.com/lemieszek/CooldownManagerCentered/compare/v3.3.2...v3.3.3) 
+## [v4.3.1](https://github.com/lemieszek/CooldownManagerCentered/tree/v4.3.1) (2026-07-29)
+[Full Changelog](https://github.com/lemieszek/CooldownManagerCentered/compare/v4.3.0...v4.3.1) 
 
-- v3.3.3  
+- v4.3.1  

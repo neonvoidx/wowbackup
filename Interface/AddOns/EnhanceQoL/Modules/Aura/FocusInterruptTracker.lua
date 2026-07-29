@@ -28,6 +28,7 @@ local issecretvalue = _G.issecretvalue
 
 local DB_KEY = "focusInterruptTracker"
 local EDITMODE_ID = "focusInterruptTracker"
+Tracker.dynamicAnchorId = "tracker:focusInterrupt"
 local DEFAULT_PREVIEW_TEXT = "INTERRUPT"
 local DEFAULT_PREVIEW_ICON = 132938
 local DEFAULT_SETTINGS_MAX_HEIGHT = 900
@@ -49,12 +50,26 @@ local GLOW_PIXEL_SPEED_MAX = 2
 local GLOW_THICKNESS_MIN = 1
 local GLOW_THICKNESS_MAX = 10
 
-local Helper = addon.Aura and addon.Aura.CooldownPanels and addon.Aura.CooldownPanels.helper
-local Api = Helper and Helper.Api or {}
-local GetSpellCooldownInfo = Api.GetSpellCooldownInfo or (C_Spell and C_Spell.GetSpellCooldown) or _G.GetSpellCooldown
-local IsSpellKnown = Api.IsSpellKnown or function(spellId)
-	if _G.IsPlayerSpell then return _G.IsPlayerSpell(spellId) end
-	return spellId ~= nil
+local GetSpellCooldownInfo = (C_Spell and C_Spell.GetSpellCooldown) or _G.GetSpellCooldown
+
+local function IsSpellKnown(spellId, includeOverrides)
+	if not spellId then return false end
+	if C_SpellBook then
+		local spellBank = Enum and Enum.SpellBookSpellBank
+		local playerBank = (spellBank and spellBank.Player) or 0
+		local petBank = (spellBank and spellBank.Pet) or 1
+		if C_SpellBook.IsSpellKnownOrInSpellBook then
+			if C_SpellBook.IsSpellKnownOrInSpellBook(spellId, playerBank, includeOverrides) then return true end
+			if C_SpellBook.IsSpellKnownOrInSpellBook(spellId, petBank, includeOverrides) then return true end
+			return false
+		end
+		if C_SpellBook.IsSpellInSpellBook then
+			if C_SpellBook.IsSpellInSpellBook(spellId, playerBank, includeOverrides) then return true end
+			if C_SpellBook.IsSpellInSpellBook(spellId, petBank, includeOverrides) then return true end
+			return false
+		end
+	end
+	return false
 end
 
 local ANCHOR_POINTS = {
@@ -113,7 +128,7 @@ local CLASS_INTERRUPT_SPELLS = {
 	PRIEST = { 15487 },
 	ROGUE = { 1766 },
 	SHAMAN = { 57994 },
-	WARLOCK = { 132409, 119914, 19647 },
+	WARLOCK = { 132409, 119910, 119914, 19647 },
 	WARRIOR = { 6552 },
 }
 
@@ -504,6 +519,23 @@ end
 
 function Tracker:AnchorUsesUIParent()
 	return self:ResolveAnchorTarget() == "UIParent"
+end
+
+function Tracker:GetDynamicAnchorWinner()
+	return addon.DynamicAnchors and addon.DynamicAnchors:GetSimpleFrameWinner(self.dynamicAnchorId) or nil
+end
+
+function Tracker:ApplyDynamicAnchor()
+	local frame = state.frame
+	if not frame then return false end
+	local winner = self:GetDynamicAnchorWinner()
+	if not (winner and winner.frame) then return false end
+	local placement = winner.placement or {}
+	local point = placement.point or "CENTER"
+	local relativePoint = placement.relativePoint or point
+	frame:ClearAllPoints()
+	frame:SetPoint(point, winner.frame, relativePoint, tonumber(placement.x) or 0, tonumber(placement.y) or 0)
+	return true
 end
 
 function Tracker:BuildLayoutRecordFromProfile()
@@ -944,10 +976,11 @@ function Tracker:ApplyLayoutData(data)
 	local frame = state.frame
 	if not frame then return end
 
-	local resolvedAnchor = self:ResolveAnchorFrame()
 	frame:SetFrameStrata(cfg.strata)
-	frame:ClearAllPoints()
-	frame:SetPoint(cfg.anchor.point, resolvedAnchor, cfg.anchor.relativePoint, cfg.anchor.x, cfg.anchor.y)
+	if not self:ApplyDynamicAnchor() then
+		frame:ClearAllPoints()
+		frame:SetPoint(cfg.anchor.point, self:ResolveAnchorFrame(), cfg.anchor.relativePoint, cfg.anchor.x, cfg.anchor.y)
+	end
 
 	frame.border:SetFrameStrata(frame:GetFrameStrata())
 	frame.border:SetFrameLevel((frame:GetFrameLevel() or 0) + 5)
@@ -1819,6 +1852,22 @@ function Tracker:RegisterEditMode()
 				isShown = function() return Tracker:GetConfig().displayMode == "ICON" end,
 			},
 		}
+		if addon.DynamicAnchors then
+			addon.DynamicAnchors:AddEditModeAssignmentSettings(settings, SettingType, {
+				consumerId = self.dynamicAnchorId,
+				parentId = "focusInterruptTrackerAnchor",
+				insertAfterId = "focusInterruptTrackerAnchor",
+				refresh = function(rebuild)
+					if rebuild and EditMode and EditMode.RefreshFrame then
+						EditMode:RefreshFrame(EDITMODE_ID)
+						RunNextFrame(function() Tracker:ApplyDynamicAnchor() end)
+					else
+						Tracker:ApplyDynamicAnchor()
+					end
+				end,
+				staticFields = { anchorTarget = true, point = true, relativePoint = true, x = true, y = true },
+			})
+		end
 	end
 
 	EditMode:RegisterFrame(EDITMODE_ID, {
@@ -1846,12 +1895,20 @@ function Tracker:RegisterEditMode()
 			syncEditModeLayoutFromAnchor()
 			refreshEditModeSettingValues()
 		end,
-		onEnter = function() Tracker:ShowEditModeHint(true) end,
+		onEnter = function()
+			Tracker:ShowEditModeHint(true)
+			if addon.DynamicAnchors and addon.DynamicAnchors:IsFrameAssignmentEnabled(Tracker.dynamicAnchorId) then RunNextFrame(function() Tracker:ApplyDynamicAnchor() end) end
+		end,
 		onExit = function() Tracker:ShowEditModeHint(false) end,
 		isEnabled = function() return Tracker:IsEnabled() end,
 		settings = settings,
-		relativeTo = function() return Tracker:ResolveAnchorFrame() end,
-		allowDrag = function() return Tracker:AnchorUsesUIParent() end,
+		relativeTo = function()
+			local winner = Tracker:GetDynamicAnchorWinner()
+			return winner and winner.frame or Tracker:ResolveAnchorFrame()
+		end,
+		allowDrag = function()
+			return not (addon.DynamicAnchors and addon.DynamicAnchors:IsFrameAssignmentEnabled(Tracker.dynamicAnchorId)) and Tracker:AnchorUsesUIParent()
+		end,
 		managePosition = false,
 		persistPosition = false,
 		settingsMaxHeight = DEFAULT_SETTINGS_MAX_HEIGHT,
@@ -1870,6 +1927,19 @@ function Tracker:OnSettingChanged(enabled)
 	cfg.enabled = enabled == true
 
 	if cfg.enabled then
+		if addon.DynamicAnchors then
+			addon.DynamicAnchors:RegisterSimpleFrame({
+				id = self.dynamicAnchorId,
+				owner = addonName,
+				label = L["FocusInterruptTracker"] or "Focus Interrupt Tracker",
+				menuGroup = "TRACKERS",
+				menuGroupLabel = L["Dynamic Anchor Group Trackers"],
+				menuGroupOrder = 400,
+				getFrame = function() return state.frame end,
+				isAvailable = function(trackerFrame) return Tracker:IsEnabled() and trackerFrame ~= nil and trackerFrame:IsShown() end,
+				apply = function() Tracker:ApplyDynamicAnchor() end,
+			})
+		end
 		self:EnsureFrame()
 		self:InvalidateLayout()
 		self:RefreshInterruptSpellCache()

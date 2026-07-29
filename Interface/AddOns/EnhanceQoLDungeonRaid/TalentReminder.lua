@@ -264,6 +264,7 @@ activeBuildFrame.text = activeBuildFrame:CreateFontString(nil, "OVERLAY", "GameF
 activeBuildFrame.text:SetPoint("CENTER")
 
 local ACTIVE_BUILD_EDITMODE_ID = "talentReminderActiveBuild"
+addon.MythicPlus.talentReminderDynamicAnchorId = "tracker:activeTalentBuild"
 local activeBuildEditModeRegistered = false
 local activeBuildRefreshInProgress = false
 local activeBuildApplyInProgress = false
@@ -309,6 +310,18 @@ local function seedActiveBuildEditModeRecord(record)
 	record.size = snapshot.size or 14
 end
 
+addon.MythicPlus.functions.applyActiveBuildDynamicAnchor = function()
+	local dynamicAnchors = addon.DynamicAnchors
+	local winner = dynamicAnchors and dynamicAnchors:GetSimpleFrameWinner(addon.MythicPlus.talentReminderDynamicAnchorId) or nil
+	if not (winner and winner.frame) then return false end
+	local placement = winner.placement or {}
+	local point = placement.point or "CENTER"
+	local relativePoint = placement.relativePoint or point
+	activeBuildFrame:ClearAllPoints()
+	activeBuildFrame:SetPoint(point, winner.frame, relativePoint, tonumber(placement.x) or 0, tonumber(placement.y) or 0)
+	return true
+end
+
 local function applyActiveBuildLayoutData(data)
 	local cfg = data or buildActiveBuildLayoutSnapshot()
 
@@ -323,8 +336,10 @@ local function applyActiveBuildLayoutData(data)
 	addon.db["talentReminderActiveBuildY"] = y
 	addon.db["talentReminderActiveBuildSize"] = size
 
-	activeBuildFrame:ClearAllPoints()
-	activeBuildFrame:SetPoint(point, UIParent, relativePoint, x, y)
+	if not addon.MythicPlus.functions.applyActiveBuildDynamicAnchor() then
+		activeBuildFrame:ClearAllPoints()
+		activeBuildFrame:SetPoint(point, UIParent, relativePoint, x, y)
+	end
 	activeBuildFrame.text:SetFont(addon.variables.defaultFont, size, "OUTLINE")
 	local textWidth = activeBuildFrame.text:GetStringWidth() or 0
 	local textHeight = activeBuildFrame.text:GetStringHeight() or size
@@ -396,9 +411,44 @@ local function registerActiveBuildEditMode()
 				)
 			end,
 		}
+
+		if addon.DynamicAnchors then
+			table.insert(settings, 1, {
+				name = L["Anchor"] or "Anchor",
+				kind = settingType.Collapsible,
+				id = "talentReminderActiveBuildAnchor",
+				defaultCollapsed = false,
+			})
+			addon.DynamicAnchors:AddEditModeAssignmentSettings(settings, settingType, {
+				consumerId = addon.MythicPlus.talentReminderDynamicAnchorId,
+				parentId = "talentReminderActiveBuildAnchor",
+				insertAfterId = "talentReminderActiveBuildAnchor",
+				refresh = function(rebuild)
+					if rebuild and EditMode and EditMode.RefreshFrame then
+						EditMode:RefreshFrame(ACTIVE_BUILD_EDITMODE_ID)
+						RunNextFrame(addon.MythicPlus.functions.applyActiveBuildDynamicAnchor)
+					else
+						addon.MythicPlus.functions.applyActiveBuildDynamicAnchor()
+					end
+				end,
+			})
+		end
 	end
 
 	activeBuildEditModeRegistered = true
+	if addon.DynamicAnchors then
+		addon.DynamicAnchors:RegisterSimpleFrame({
+			id = addon.MythicPlus.talentReminderDynamicAnchorId,
+			owner = "EnhanceQoLDungeonRaid",
+			label = L["talentReminderShowActiveBuild"] or "Active Talent Build",
+			menuGroup = "TRACKERS",
+			menuGroupLabel = L["Dynamic Anchor Group Trackers"],
+			menuGroupOrder = 400,
+			getFrame = function() return activeBuildFrame end,
+			isAvailable = function(reminderFrame) return shouldShowActiveBuildText() and reminderFrame ~= nil and reminderFrame:IsShown() end,
+			apply = addon.MythicPlus.functions.applyActiveBuildDynamicAnchor,
+		})
+	end
 
 	EditMode:RegisterFrame(ACTIVE_BUILD_EDITMODE_ID, {
 		frame = activeBuildFrame,
@@ -426,10 +476,22 @@ local function registerActiveBuildEditMode()
 			addon.MythicPlus.functions.updateActiveTalentText()
 			activeBuildApplyInProgress = false
 		end,
-		onEnter = function() addon.MythicPlus.functions.updateActiveTalentText() end,
+		onEnter = function()
+			addon.MythicPlus.functions.updateActiveTalentText()
+			if addon.DynamicAnchors and addon.DynamicAnchors:IsFrameAssignmentEnabled(addon.MythicPlus.talentReminderDynamicAnchorId) then
+				RunNextFrame(addon.MythicPlus.functions.applyActiveBuildDynamicAnchor)
+			end
+		end,
 		onExit = function() addon.MythicPlus.functions.updateActiveTalentText() end,
 		settings = settings,
 		isEnabled = function() return shouldShowActiveBuildText() end,
+		relativeTo = function()
+			local winner = addon.DynamicAnchors and addon.DynamicAnchors:GetSimpleFrameWinner(addon.MythicPlus.talentReminderDynamicAnchorId) or nil
+			return winner and winner.frame or UIParent
+		end,
+		allowDrag = function()
+			return not (addon.DynamicAnchors and addon.DynamicAnchors:IsFrameAssignmentEnabled(addon.MythicPlus.talentReminderDynamicAnchorId))
+		end,
 		showOutsideEditMode = true,
 	})
 	activeBuildRegisterInProgress = false

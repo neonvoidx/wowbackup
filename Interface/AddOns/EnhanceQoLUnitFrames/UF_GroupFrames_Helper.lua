@@ -237,14 +237,14 @@ H.RANGED_DPS_CLASSES = {
 local UnitSex = UnitSex
 local GetNumClasses = GetNumClasses
 local GetClassInfo = GetClassInfo
+local C_SpecializationInfo = C_SpecializationInfo
 local GetSpecializationInfoFn = C_SpecializationInfo and C_SpecializationInfo.GetSpecializationInfo
 local GetNumSpecializations = GetNumSpecializations
 local GetSpecializationInfoForClassID = GetSpecializationInfoForClassID
 local GetNumSpecializationsForClassIDFn = C_SpecializationInfo and C_SpecializationInfo.GetNumSpecializationsForClassID
-local GetInspectSpecialization = GetInspectSpecialization
+local GetInspectSpecialization = (C_SpecializationInfo and C_SpecializationInfo.GetInspectSpecialization) or GetInspectSpecialization
 local NotifyInspect = NotifyInspect
 local ClearInspectPlayer = ClearInspectPlayer
-local C_SpecializationInfo = C_SpecializationInfo
 local C_CreatureInfo = C_CreatureInfo
 local abs = math.abs
 local floor = math.floor
@@ -2035,13 +2035,19 @@ function H.SyncAurasEnabled(cfg)
 	ac.enabled = enabled
 end
 
+local _, _, _, auraFilterInterfaceVersion = GetBuildInfo()
+local dispellableFilter = (tonumber(auraFilterInterfaceVersion) or 0) >= 120100 and "HARMFUL|INCLUDE_NAME_PLATE_ONLY|DISPELLABLE"
+	or "HARMFUL|INCLUDE_NAME_PLATE_ONLY|RAID_PLAYER_DISPELLABLE"
+
 H.AuraFilters = {
 	helpful = "HELPFUL|INCLUDE_NAME_PLATE_ONLY|RAID_IN_COMBAT|PLAYER",
 	harmful = "HARMFUL|INCLUDE_NAME_PLATE_ONLY",
 	harmfulCrowdControl = "HARMFUL|INCLUDE_NAME_PLATE_ONLY|CROWD_CONTROL",
+	harmfulImportant = "HARMFUL|INCLUDE_NAME_PLATE_ONLY|IMPORTANT",
 	harmfulRaid = "HARMFUL|INCLUDE_NAME_PLATE_ONLY|RAID",
 	harmfulRaidInCombat = "HARMFUL|INCLUDE_NAME_PLATE_ONLY|RAID_IN_COMBAT",
-	dispellable = "HARMFUL|INCLUDE_NAME_PLATE_ONLY|RAID_PLAYER_DISPELLABLE",
+	dispellable = dispellableFilter,
+	raidPlayerDispellable = "HARMFUL|INCLUDE_NAME_PLATE_ONLY|RAID_PLAYER_DISPELLABLE",
 	bigDefensive = "HELPFUL|BIG_DEFENSIVE",
 }
 

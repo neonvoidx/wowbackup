@@ -9,11 +9,43 @@ local LEM = LibStub("WildForkLibEQOLEditMode-1.0")
 local ItemViewer = ns.TrackerItemViewer or {}
 ns.TrackerItemViewer = ItemViewer
 
-local UPDATE_THROTTLE_DELAY = 0.02
+local UPDATE_THROTTLE_DELAY = 0.05
 local DEFAULT_ICON_SIZE = 50
 local DEFAULT_ICON_PADDING = 2
+local TRACKER_FRAME_DEFAULT_CONFIG = {
+    alpha = 1,
+    point = "CENTER",
+    x = 0,
+    y = 200,
+    scale = 1,
+    strata = "MEDIUM",
+    iconSize = DEFAULT_ICON_SIZE,
+    iconPadding = DEFAULT_ICON_PADDING,
+    orientation = "Horizontal Right",
+}
 local BASE_SQUARE_MASK = "Interface\\AddOns\\CooldownManagerCentered\\Media\\Art\\Square"
 local DEFAULT_MASK_TEXTURE = "Interface\\AddOns\\CooldownManagerCentered\\Media\\Art\\CooldownManager"
+
+-- Cooldown events arrive in bursts and are delivered to every active tracker.
+-- Collect affected tracker instances and refresh them all from one delayed
+-- callback instead of running several full icon passes in the same frame.
+local pendingCooldownTrackers = {}
+local cooldownUpdateScheduled = false
+
+local function FlushPendingCooldownUpdates()
+    cooldownUpdateScheduled = false
+    local pending = pendingCooldownTrackers
+    pendingCooldownTrackers = {}
+
+    if not ns.db.profile.tracker_enabled then
+        return
+    end
+    for tracker in pairs(pending) do
+        for _, ivf in ipairs(tracker.iconFrames) do
+            ivf:UpdateCooldown()
+        end
+    end
+end
 
 -- Events that drive a tracker's refreshes. Registered on the anchor while the
 -- tracker is active and fully unregistered when it (or the whole custom tracker
@@ -21,9 +53,11 @@ local DEFAULT_MASK_TEXTURE = "Interface\\AddOns\\CooldownManagerCentered\\Media\
 -- re-shows itself — letting us toggle the feature live without a reload.
 local TRACKER_EVENTS = {
     "PLAYER_ENTERING_WORLD",
+    "BAG_UPDATE_COOLDOWN",
     "SPELL_UPDATE_COOLDOWN",
     "SPELL_UPDATE_CHARGES",
-    "SPELL_UPDATE_USABLE",
+    "SPELL_ACTIVATION_OVERLAY_GLOW_SHOW",
+    "SPELL_ACTIVATION_OVERLAY_GLOW_HIDE",
     "PLAYER_EQUIPMENT_CHANGED",
     "BAG_UPDATE_DELAYED",
     "TRAIT_CONFIG_UPDATED",
@@ -72,20 +106,22 @@ local function GetTrackerCount()
     return count
 end
 
--- Runs callback(frameName) for every active tracker frame (for shared settings).
-local function ForEachActiveTrackerFrameName(callback)
-    for i = 1, GetTrackerCount() do
-        callback("CMCTracker" .. i)
+local function GetTrackerStyleValue(configKey, key, default)
+    local editMode = ns.db and ns.db.profile and ns.db.profile.editMode
+    local config = editMode and editMode[configKey]
+    if config and config[key] ~= nil then
+        return config[key]
     end
+    return default
 end
 
-local function GetIconHeight(iconSize)
+local function GetIconHeight(iconSize, configKey)
     -- Masque skins square (1:1) icons; ignore the rectangular ratio entirely.
     if ns.MasqueModule and ns.MasqueModule:IsActive() then
         return iconSize
     end
-    if ns.db and ns.db.profile and ns.db.profile.trinketRacialTracker_rectangularIcons then
-        local percent = (ns.db and ns.db.profile and ns.db.profile.trinketRacialTracker_rectangularIcons_percent) or 0.8
+    if GetTrackerStyleValue(configKey, "rectangularIcons", false) then
+        local percent = GetTrackerStyleValue(configKey, "rectangularIconsPercent", 0.8)
         return math.floor(iconSize * percent)
     end
     return iconSize
@@ -105,7 +141,8 @@ local function ApplyCooldownFontToFrame(frame)
         fontString.defaults = { fp, fsz, ffl or "" }
     end
 
-    local enabled = ns.db.profile.cooldownManager_cooldownFontSizeTracker_enabled
+    local configKey = frame.trackerConfigKey
+    local enabled = GetTrackerStyleValue(configKey, "cooldownFontEnabled", false)
 
     -- Override off: restore the default font + centered position and stop
     -- overriding anything.
@@ -125,7 +162,7 @@ local function ApplyCooldownFontToFrame(frame)
     fontString:SetAlpha(1)
     ns.API:SetAffected(frame, "cooldownfont")
 
-    local size = ns.db.profile.cooldownManager_cooldownFontSizeTracker
+    local size = GetTrackerStyleValue(configKey, "cooldownFontSize", "NIL")
     local numericSize = tonumber(size)
     if numericSize == 0 then
         fontString:SetFontHeight(0)
@@ -135,16 +172,15 @@ local function ApplyCooldownFontToFrame(frame)
         else
             numericSize = numericSize or 16
         end
-        local fontName = ns.db.profile.cooldownManager_cooldownFontName
+        local fontName = GetTrackerStyleValue(configKey, "cooldownFontName", "NIL")
         local fontPath = ns.API:GetFontPath(fontName) or fontString.defaults[1] or ns.CONSTANTS.DEFAULT_FONT[1]
-        local fontFlagTable = ns.db.profile.cooldownManager_cooldownFontFlags
+        local fontFlagTable = GetTrackerStyleValue(configKey, "cooldownFontFlags", { OUTLINE = true })
         fontString:SetFont(fontPath, numericSize, ns.API:GetFontFlags(fontFlagTable))
     end
 
-    -- Shared countdown text position offset for all custom trackers. 0/0 keeps
-    -- the default centered position.
-    local ox = ns.db.profile.cooldownManager_cooldownTextTracker_offsetX or 0
-    local oy = ns.db.profile.cooldownManager_cooldownTextTracker_offsetY or 0
+    -- This tracker's countdown text offset. 0/0 keeps the default centered position.
+    local ox = GetTrackerStyleValue(configKey, "cooldownTextOffsetX", 0)
+    local oy = GetTrackerStyleValue(configKey, "cooldownTextOffsetY", 0)
     if ox ~= 0 or oy ~= 0 then
         fontString:ClearAllPoints()
         fontString:SetPoint("CENTER", frame.Cooldown, "CENTER", ox, oy)
@@ -157,8 +193,9 @@ local function ApplyCooldownFontToFrame(frame)
 end
 
 local function ApplySquareStyle(frame)
-    local borderThickness = (ns.db and ns.db.profile and ns.db.profile.trinketRacialTracker_borderThickness) or 1
-    local zoom = (ns.db and ns.db.profile and ns.db.profile.trinketRacialTracker_iconZoom) or 0.3
+    local configKey = frame.trackerConfigKey
+    local borderThickness = GetTrackerStyleValue(configKey, "borderThickness", 1)
+    local zoom = GetTrackerStyleValue(configKey, "iconZoom", 0.3)
     local crop = zoom * 0.5
 
     if frame.Icon and frame.Icon.SetTexCoord then
@@ -252,7 +289,7 @@ local function ApplyStyleToFrame(frame)
         return
     end
 
-    local isSquare = ns.db.profile.trinketRacialTracker_squareIcons or false
+    local isSquare = GetTrackerStyleValue(frame.trackerConfigKey, "squareIcons", false)
 
     if isSquare then
         ApplySquareStyle(frame)
@@ -274,14 +311,15 @@ local function ApplyStackFontToFrame(frame)
     if ns.MasqueModule and ns.MasqueModule:IsActive() then
         return
     end
-    local fontName = ns.db.profile.cooldownManager_stackFontName
+    local configKey = frame.trackerConfigKey
+    local fontName = GetTrackerStyleValue(configKey, "stackFontName", "NIL")
     local fontPath = ns.API:GetFontPath(fontName) or ns.CONSTANTS.DEFAULT_NUMBER_FONT[1]
-    local fontFlagTable = ns.db.profile.cooldownManager_stackFontFlags or {}
+    local fontFlagTable = GetTrackerStyleValue(configKey, "stackFontFlags", { OUTLINE = true })
     local fontFlagStr = ns.API:GetFontFlags(fontFlagTable)
-    local fontSize = (ns.db and ns.db.profile and ns.db.profile.trinketRacialTracker_stackFontSize) or 14
-    local anchor = (ns.db and ns.db.profile and ns.db.profile.trinketRacialTracker_stackAnchor) or "BOTTOMRIGHT"
-    local offsetX = (ns.db and ns.db.profile and ns.db.profile.trinketRacialTracker_stackOffsetX) or -1
-    local offsetY = (ns.db and ns.db.profile and ns.db.profile.trinketRacialTracker_stackOffsetY) or 1
+    local fontSize = GetTrackerStyleValue(configKey, "stackFontSize", 14)
+    local anchor = GetTrackerStyleValue(configKey, "stackAnchor", "BOTTOMRIGHT")
+    local offsetX = GetTrackerStyleValue(configKey, "stackOffsetX", -1)
+    local offsetY = GetTrackerStyleValue(configKey, "stackOffsetY", 1)
 
     if frame.count then
         frame.count:SetFont(fontPath, fontSize, fontFlagStr)
@@ -302,8 +340,10 @@ end
 local ItemViewerFrame = {}
 ItemViewerFrame.__index = ItemViewerFrame
 
-function ItemViewerFrame:New(parent)
+function ItemViewerFrame:New(parent, skipTrackerStyle, trackerConfigKey)
     local frame = CreateFrame("Frame", nil, parent)
+    frame.skipTrackerStyle = skipTrackerStyle == true
+    frame.trackerConfigKey = trackerConfigKey
     local obj = setmetatable({ frame = frame }, ItemViewerFrame)
     obj:Initialize()
     return obj
@@ -312,6 +352,25 @@ end
 function ItemViewerFrame:Initialize()
     local frame = self.frame
     frame.showGCD = false
+    frame:SetMouseClickEnabled(false)
+    frame:SetScript("OnEnter", function(owner)
+        local tooltip = GetAppropriateTooltip()
+        GameTooltip_SetDefaultAnchor(tooltip, owner)
+        if owner.itemID then
+            tooltip:SetItemByID(owner.itemID)
+        elseif owner.spellID then
+            tooltip:SetSpellByID(owner.spellID)
+        else
+            return
+        end
+        tooltip:Show()
+    end)
+    frame:SetScript("OnLeave", function(owner)
+        local tooltip = GetAppropriateTooltip()
+        if tooltip:IsOwned(owner) then
+            tooltip:Hide()
+        end
+    end)
     if not frame.Icon then
         frame.Icon = frame:CreateTexture(nil, "ARTWORK")
         frame.Icon:SetAllPoints()
@@ -333,6 +392,10 @@ function ItemViewerFrame:Initialize()
         frame.Cooldown:SetSwipeTexture(DEFAULT_MASK_TEXTURE)
         frame.Cooldown:SetHideCountdownNumbers(false)
         frame.Cooldown:HookScript("OnCooldownDone", function()
+            -- The callback can run just before the item API reaches exactly zero.
+            -- Clear stale cooldown desaturation first; the refresh below restores
+            -- it when the item is genuinely still unavailable (for example, zero count).
+            frame.Icon:SetDesaturated(false)
             ItemVisuals:UpdateEntryCooldown(frame, Affected(frame).trackerEntryKind, Affected(frame).trackerEntryId)
         end)
     end
@@ -356,10 +419,24 @@ function ItemViewerFrame:Initialize()
         count:SetShadowColor(0, 0, 0, 1)
         frame.count = count
     end
-    ApplyStyleToFrame(frame)
-    ApplyStackFontToFrame(frame)
-    ApplyCooldownFontToFrame(frame)
+    if not frame.skipTrackerStyle then
+        ApplyStyleToFrame(frame)
+        ApplyStackFontToFrame(frame)
+        ApplyCooldownFontToFrame(frame)
+    end
     frame:Hide()
+end
+
+function ItemViewerFrame:SetTooltipsShown(shown)
+    local frame = self.frame
+    frame:SetMouseClickEnabled(false)
+    frame:SetMouseMotionEnabled(shown == true)
+    if not shown then
+        local tooltip = GetAppropriateTooltip()
+        if tooltip:IsOwned(frame) then
+            tooltip:Hide()
+        end
+    end
 end
 
 function ItemViewerFrame:Show()
@@ -380,9 +457,15 @@ function ItemViewerFrame:UpdateEntry(entry)
     frame.spellID = nil
     frame.itemID = nil
     if not entry then
+        ItemVisuals:ApplyEntryStackColor(frame)
         Affected(frame).trackerEntryKind = nil
         Affected(frame).trackerEntryId = nil
+        Affected(frame).resolvedTrackerEntryKind = nil
+        Affected(frame).resolvedTrackerEntryId = nil
         ns.CooldownStyle:HideFrameGlow(frame)
+        if ns.AuraTracking then
+            ns.AuraTracking:Detach(frame)
+        end
         frame:Hide()
         return
     end
@@ -406,13 +489,15 @@ function ItemViewerFrame:UpdateEntry(entry)
             end
         end
     elseif entry.kind == "spell" then
-        frame.spellID = entry.id
+        frame.spellID = ItemsData:GetDisplaySpellID(entry.id) or entry.id
     end
     ItemVisuals:ApplyEntryIcon(frame, entry.kind, entry.id)
     ItemVisuals:UpdateEntryCooldown(frame, entry.kind, entry.id)
-    ApplyStyleToFrame(frame)
-    ApplyStackFontToFrame(frame)
-    ApplyCooldownFontToFrame(frame)
+    if not frame.skipTrackerStyle then
+        ApplyStyleToFrame(frame)
+        ApplyStackFontToFrame(frame)
+        ApplyCooldownFontToFrame(frame)
+    end
 
     frame:Show()
 end
@@ -447,6 +532,7 @@ function TrackerInstance:New(configKey, frameName, getEntriesFn)
         editModeName = GetTrackerDisplayName(configKey),
         getEntriesFn = getEntriesFn,
         active = false,
+        hasVisibleEntries = false,
         anchor = nil,
         iconFrames = {},
         lastUpdateTimes = {},
@@ -481,6 +567,14 @@ function TrackerInstance:GetRequireResource()
     return GetConfigValue(self.configKey, "requireResource", false)
 end
 
+function TrackerInstance:GetShowTooltips()
+    local config = ns.db and ns.db.profile and ns.db.profile.editMode and ns.db.profile.editMode[self.configKey]
+    if config and config.showTooltips ~= nil then
+        return config.showTooltips and true or false
+    end
+    return false
+end
+
 function TrackerInstance:GetShowStacks()
     -- Stacks/charge numbers are shown by default; only an explicit false hides them.
     if ns.db and ns.db.profile and ns.db.profile.editMode and ns.db.profile.editMode[self.configKey] then
@@ -494,7 +588,7 @@ end
 
 function TrackerInstance:UpdateIconPosition(frame, visibleIndex)
     local iconSize = self:GetIconSize()
-    local iconHeight = GetIconHeight(iconSize)
+    local iconHeight = GetIconHeight(iconSize, self.configKey)
     local padding = self:GetIconPadding()
     local orientation = self:GetOrientation()
     local anchorData = ORIENTATION_ANCHORS[orientation] or ORIENTATION_ANCHORS["Horizontal Right"]
@@ -516,28 +610,47 @@ function TrackerInstance:UpdateCooldown(spellId, baseSpellId) -- todo ItemID in 
         return
     end
 
-    for _, ivf in ipairs(self.iconFrames) do
-        if self.trackedSpellIds and (self.trackedSpellIds[spellId] or self.trackedSpellIds[baseSpellId]) then
-            ivf:UpdateCooldown()
+    local updated = {}
+    local function UpdateMatching(spellID)
+        local frames = spellID and self.trackedSpellFrames and self.trackedSpellFrames[spellID]
+        if not frames then
+            return
         end
+        for _, ivf in ipairs(frames) do
+            if not updated[ivf] then
+                updated[ivf] = true
+                ivf:UpdateCooldown()
+            end
+        end
+    end
+    UpdateMatching(spellId)
+    UpdateMatching(baseSpellId)
+end
+
+function TrackerInstance:UpdateItemCooldown(itemID)
+    if not ns.db.profile.tracker_enabled or not itemID then
+        return
+    end
+    local frames = self.trackedItemFrames and self.trackedItemFrames[itemID]
+    if not frames then
+        return
+    end
+    for _, ivf in ipairs(frames) do
+        ivf:UpdateCooldown()
     end
 end
 
-function TrackerInstance:UpdateCooldowns()
+function TrackerInstance:UpdateCooldowns(_force)
     if not ns.db.profile.tracker_enabled then
         return
     end
-    if
-        self.lastUpdateTimes.UpdateCooldownsThrottle
-        and (GetTime() - self.lastUpdateTimes.UpdateCooldownsThrottle) < UPDATE_THROTTLE_DELAY
-    then
+
+    pendingCooldownTrackers[self] = true
+    if cooldownUpdateScheduled then
         return
     end
-
-    self.lastUpdateTimes.UpdateCooldownsThrottle = GetTime()
-    for _, ivf in ipairs(self.iconFrames) do
-        ivf:UpdateCooldown()
-    end
+    cooldownUpdateScheduled = true
+    C_Timer.After(UPDATE_THROTTLE_DELAY, FlushPendingCooldownUpdates)
 end
 
 function TrackerInstance:ApplyStabilityGuard(newEntries)
@@ -619,19 +732,32 @@ function TrackerInstance:DoRefreshEntries()
     local entries = self:ApplyStabilityGuard(rawEntries)
 
     local iconSize = self:GetIconSize()
-    local iconHeight = GetIconHeight(iconSize)
+    local iconHeight = GetIconHeight(iconSize, self.configKey)
     local padding = self:GetIconPadding()
     local orientation = self:GetOrientation()
     local showGCD = self:GetShowGCD()
     local showStacks = self:GetShowStacks()
     local rangeIndicator = self:GetRangeIndicator()
     local requireResource = self:GetRequireResource()
+    local showTooltips = self:GetShowTooltips()
     local count = #entries
+    local hadVisibleEntries = self.hasVisibleEntries
+    self.hasVisibleEntries = count > 0
 
     local trackedSpellIds = {}
+    local trackedSpellFrames = {}
+    local trackedItemFrames = {}
+    local function TrackSpellFrame(spellID, ivf)
+        if not spellID then
+            return
+        end
+        trackedSpellIds[spellID] = true
+        trackedSpellFrames[spellID] = trackedSpellFrames[spellID] or {}
+        trackedSpellFrames[spellID][#trackedSpellFrames[spellID] + 1] = ivf
+    end
     for i = 1, count do
         if not self.iconFrames[i] then
-            self.iconFrames[i] = ItemViewerFrame:New(self.anchor)
+            self.iconFrames[i] = ItemViewerFrame:New(self.anchor, false, self.configKey)
         end
         local ivf = self.iconFrames[i]
         SizeItemFrame(ivf.frame, iconSize, iconHeight)
@@ -639,6 +765,7 @@ function TrackerInstance:DoRefreshEntries()
         ivf.frame.showStacks = showStacks
         ivf.frame.rangeIndicator = rangeIndicator
         ivf.frame.requireResource = requireResource
+        ivf:SetTooltipsShown(showTooltips)
         -- Hiding the count fontstring persists across SetText, so the stack/charge
         -- number stays hidden even as cooldown updates re-write its text.
         if ivf.frame.count then
@@ -648,11 +775,21 @@ function TrackerInstance:DoRefreshEntries()
         ivf:UpdateEntry(entries[i])
 
         if ivf.frame.spellID then
-            trackedSpellIds[ivf.frame.spellID] = true
+            TrackSpellFrame(ivf.frame.spellID, ivf)
+            local baseSpellID = C_Spell.GetBaseSpell(ivf.frame.spellID) or ivf.frame.spellID
+            if baseSpellID ~= ivf.frame.spellID then
+                TrackSpellFrame(baseSpellID, ivf)
+            end
+        end
+        if ivf.frame.itemID then
+            trackedItemFrames[ivf.frame.itemID] = trackedItemFrames[ivf.frame.itemID] or {}
+            trackedItemFrames[ivf.frame.itemID][#trackedItemFrames[ivf.frame.itemID] + 1] = ivf
         end
         self:UpdateIconPosition(ivf.frame, i)
     end
     self.trackedSpellIds = trackedSpellIds
+    self.trackedSpellFrames = trackedSpellFrames
+    self.trackedItemFrames = trackedItemFrames
 
     for i = count + 1, #self.iconFrames do
         self.iconFrames[i]:UpdateEntry(nil)
@@ -669,10 +806,22 @@ function TrackerInstance:DoRefreshEntries()
         self.anchor:SetSize(iconSize, totalHeightSize)
     end
 
-    -- A deactivated (trimmed) tracker must never re-show, even if stale item state
-    -- somehow still maps to it; only active trackers with content (or forced in edit
-    -- mode) are shown.
-    self.anchor:SetShown(self.active and (count > 0 or Affected(self.anchor).trackerForceShow))
+    local shouldShow = self.active and self.hasVisibleEntries
+    if LEM.SetFrameOverlayToggleEnabled then
+        LEM:SetFrameOverlayToggleEnabled(self.anchor, shouldShow)
+    end
+
+    -- Edit Mode moves unavailable frames off-screen. Restore the saved position when
+    -- this tracker gains visible content again, and do not let its exit callback hide
+    -- a tracker which became available while Edit Mode was open.
+    if shouldShow and not hadVisibleEntries then
+        self.anchor._wt_hideOnEditModeExit = nil
+        WilduUICore.ApplyFramePosition(self.anchor, self.configKey, false)
+    end
+
+    -- Empty means no currently visible/usable entries, not merely no assignments.
+    -- Keep those trackers out of Edit Mode as well so they cannot be moved by mistake.
+    self.anchor:SetShown(shouldShow)
     ns.Keybinds:UpdateAllKeybinds()
 
     ItemViewer:RebuildUsabilityWanted()
@@ -684,13 +833,21 @@ function TrackerInstance:RefreshStyling()
             ApplyStyleToFrame(ivf.frame)
             ApplyStackFontToFrame(ivf.frame)
             ApplyCooldownFontToFrame(ivf.frame)
+            ivf:UpdateCooldown()
         end
+    end
+end
+
+function TrackerInstance:RefreshTooltips()
+    local shown = self:GetShowTooltips()
+    for _, ivf in ipairs(self.iconFrames) do
+        ivf:SetTooltipsShown(shown)
     end
 end
 
 function TrackerInstance:UpdateIconLayout()
     local iconSize = self:GetIconSize()
-    local iconHeight = GetIconHeight(iconSize)
+    local iconHeight = GetIconHeight(iconSize, self.configKey)
     for _, ivf in ipairs(self.iconFrames) do
         SizeItemFrame(ivf.frame, iconSize, iconHeight)
     end
@@ -721,19 +878,7 @@ function TrackerInstance:Create()
         return
     end
 
-    local DEFAULT_CONFIG = {
-        alpha = 1,
-        point = "CENTER",
-        x = 0,
-        y = 200,
-        scale = 1,
-        strata = "MEDIUM",
-        iconSize = DEFAULT_ICON_SIZE,
-        iconPadding = DEFAULT_ICON_PADDING,
-        orientation = "Horizontal Right",
-    }
-
-    WilduUICore.LoadFrameConfig(self.configKey, DEFAULT_CONFIG)
+    WilduUICore.LoadFrameConfig(self.configKey, TRACKER_FRAME_DEFAULT_CONFIG)
     local iconSize = self:GetIconSize()
 
     self.anchor = CreateFrame("Frame", self.frameName, UIParent, "BackdropTemplate")
@@ -745,7 +890,7 @@ function TrackerInstance:Create()
 
     self:RegisterTrackerEvents()
 
-    self.anchor:SetScript("OnEvent", function(_, event, arg1, arg2)
+    self.anchor:SetScript("OnEvent", function(_, event, arg1, arg2, _arg3, _arg4, arg5)
         if event == "PLAYER_ENTERING_WORLD" then
             self:ReapplyPosition()
             self:RefreshEntries()
@@ -762,15 +907,20 @@ function TrackerInstance:Create()
                 self:UpdateCooldowns()
             elseif arg1 or arg2 then
                 self:UpdateCooldown(arg1, arg2)
+            elseif arg5 then
+                self:UpdateItemCooldown(arg5)
             else
                 self:UpdateCooldowns()
             end
         elseif event == "SPELL_UPDATE_CHARGES" then
             self:UpdateCooldowns()
-        elseif event == "SPELL_UPDATE_USABLE" then
-            self:UpdateCooldowns()
+        elseif event == "SPELL_ACTIVATION_OVERLAY_GLOW_SHOW" or event == "SPELL_ACTIVATION_OVERLAY_GLOW_HIDE" then
+            self:UpdateCooldown(arg1, C_Spell.GetBaseSpell(arg1) or arg1)
         elseif event == "PLAYER_EQUIPMENT_CHANGED" then
             if arg1 == 13 or arg1 == 14 then
+                if ItemVisuals and ItemVisuals.InvalidateItemCastCache then
+                    ItemVisuals:InvalidateItemCastCache()
+                end
                 C_Timer.After(0.3, function()
                     self:RefreshEntries()
                 end)
@@ -787,14 +937,20 @@ function TrackerInstance:Create()
                 self:RefreshEntries()
             end)
         elseif event == "SPELL_UPDATE_ICON" then
-            self:UpdateCooldown(arg1)
+            if ItemsData and ItemsData.InvalidateSpellBookCache then
+                ItemsData:InvalidateSpellBookCache()
+                ItemsData:InvalidateOwnedItemsCache()
+            end
+            C_Timer.After(0.05, function()
+                self:RefreshEntries()
+            end)
         end
     end)
 
     WilduUICore.ApplyFramePosition(self.anchor, self.configKey, false)
 
     WilduUICore.RegisterEditModeCallbacks(self.anchor, self.configKey, function()
-        return self.active
+        return self.active and self.hasVisibleEntries
     end)
 
     local configKey = self.configKey
@@ -861,16 +1017,24 @@ function TrackerInstance:Create()
         WilduUICore.ApplyFramePosition(frame, configKey, false)
     end
 
+    local scaleSetting =
+        WilduUICore.CreateScaleSetting(configKey, TRACKER_FRAME_DEFAULT_CONFIG.scale, anchor, OnPositionChanged)
+    local strataSetting = WilduUICore.CreateStrataSetting(configKey, TRACKER_FRAME_DEFAULT_CONFIG.strata, anchor)
+    scaleSetting.parentId = "general"
+    strataSetting.parentId = "general"
+
     local additionalSettings = {
         {
             kind = LEM.SettingType.Collapsible,
-            id = "layout",
-            name = "Layout",
+            id = "general",
+            name = "General",
             defaultCollapsed = false,
         },
+        scaleSetting,
+        strataSetting,
         {
             name = "Icon Size",
-            parentId = "layout",
+            parentId = "general",
             kind = LEM.SettingType.Slider,
             default = DEFAULT_ICON_SIZE,
             get = function()
@@ -889,7 +1053,7 @@ function TrackerInstance:Create()
         },
         {
             name = "Icon Padding",
-            parentId = "layout",
+            parentId = "general",
             kind = LEM.SettingType.Slider,
             default = DEFAULT_ICON_PADDING,
             get = function()
@@ -908,11 +1072,11 @@ function TrackerInstance:Create()
         },
         {
             name = "Orientation",
-            parentId = "layout",
+            parentId = "general",
             kind = LEM.SettingType.Dropdown,
-            default = DEFAULT_CONFIG.orientation,
+            default = TRACKER_FRAME_DEFAULT_CONFIG.orientation,
             get = function()
-                return ns.db.profile.editMode[configKey].orientation or DEFAULT_CONFIG.orientation
+                return ns.db.profile.editMode[configKey].orientation or TRACKER_FRAME_DEFAULT_CONFIG.orientation
             end,
             set = function(layoutName, value)
                 ns.db.profile.editMode[configKey].orientation = value
@@ -929,11 +1093,11 @@ function TrackerInstance:Create()
         },
         {
             name = "Alpha",
-            parentId = "layout",
+            parentId = "general",
             kind = LEM.SettingType.Slider,
-            default = DEFAULT_CONFIG.alpha,
+            default = TRACKER_FRAME_DEFAULT_CONFIG.alpha,
             get = function()
-                return ns.db.profile.editMode[configKey].alpha or DEFAULT_CONFIG.alpha
+                return ns.db.profile.editMode[configKey].alpha or TRACKER_FRAME_DEFAULT_CONFIG.alpha
             end,
             set = function(layoutName, value)
                 ns.db.profile.editMode[configKey].alpha = value
@@ -948,7 +1112,7 @@ function TrackerInstance:Create()
         },
         {
             name = "Show GCD",
-            parentId = "layout",
+            parentId = "general",
             kind = LEM.SettingType.Checkbox,
             default = false,
             get = function()
@@ -961,7 +1125,7 @@ function TrackerInstance:Create()
         },
         {
             name = "Range Check",
-            parentId = "layout",
+            parentId = "general",
             kind = LEM.SettingType.Checkbox,
             default = false,
             get = function()
@@ -974,7 +1138,7 @@ function TrackerInstance:Create()
         },
         {
             name = "Usable Check",
-            parentId = "layout",
+            parentId = "general",
             kind = LEM.SettingType.Checkbox,
             default = false,
             get = function()
@@ -983,6 +1147,19 @@ function TrackerInstance:Create()
             set = function(layoutName, value)
                 ns.db.profile.editMode[configKey].requireResource = value
                 instance:RefreshEntries()
+            end,
+        },
+        {
+            name = "Show Tooltips",
+            parentId = "general",
+            kind = LEM.SettingType.Checkbox,
+            default = false,
+            get = function()
+                return instance:GetShowTooltips()
+            end,
+            set = function(layoutName, value)
+                ns.db.profile.editMode[configKey].showTooltips = value and true or false
+                instance:RefreshTooltips()
             end,
         },
     }
@@ -1003,13 +1180,11 @@ function TrackerInstance:Create()
                 kind = LEM.SettingType.Checkbox,
                 default = false,
                 get = function()
-                    return ns.db.profile.trinketRacialTracker_squareIcons or false
+                    return ns.db.profile.editMode[configKey].squareIcons or false
                 end,
                 set = function(layoutName, value)
-                    ns.db.profile.trinketRacialTracker_squareIcons = value
-                    if ns.TrackerItemViewer then
-                        ns.TrackerItemViewer:RefreshStyling()
-                    end
+                    ns.db.profile.editMode[configKey].squareIcons = value and true or false
+                    instance:RefreshStyling()
                 end,
             },
             {
@@ -1018,13 +1193,11 @@ function TrackerInstance:Create()
                 kind = LEM.SettingType.Slider,
                 default = 1,
                 get = function()
-                    return ns.db.profile.trinketRacialTracker_borderThickness or 1
+                    return GetTrackerStyleValue(configKey, "borderThickness", 1)
                 end,
                 set = function(layoutName, value)
-                    ns.db.profile.trinketRacialTracker_borderThickness = value
-                    if ns.TrackerItemViewer then
-                        ns.TrackerItemViewer:RefreshStyling()
-                    end
+                    ns.db.profile.editMode[configKey].borderThickness = value
+                    instance:RefreshStyling()
                 end,
                 minValue = 0,
                 maxValue = 6,
@@ -1039,13 +1212,11 @@ function TrackerInstance:Create()
                 kind = LEM.SettingType.Slider,
                 default = 0.3,
                 get = function()
-                    return ns.db.profile.trinketRacialTracker_iconZoom or 0.3
+                    return GetTrackerStyleValue(configKey, "iconZoom", 0.3)
                 end,
                 set = function(layoutName, value)
-                    ns.db.profile.trinketRacialTracker_iconZoom = value
-                    if ns.TrackerItemViewer then
-                        ns.TrackerItemViewer:RefreshStyling()
-                    end
+                    ns.db.profile.editMode[configKey].iconZoom = value
+                    instance:RefreshStyling()
                 end,
                 minValue = 0,
                 maxValue = 0.5,
@@ -1060,13 +1231,11 @@ function TrackerInstance:Create()
                 kind = LEM.SettingType.Checkbox,
                 default = false,
                 get = function()
-                    return ns.db.profile.trinketRacialTracker_rectangularIcons or false
+                    return ns.db.profile.editMode[configKey].rectangularIcons or false
                 end,
                 set = function(layoutName, value)
-                    ns.db.profile.trinketRacialTracker_rectangularIcons = value
-                    if ns.TrackerItemViewer then
-                        ns.TrackerItemViewer:RefreshItemViewerFrames()
-                    end
+                    ns.db.profile.editMode[configKey].rectangularIcons = value and true or false
+                    instance:UpdateIconLayout()
                 end,
             },
             {
@@ -1075,13 +1244,11 @@ function TrackerInstance:Create()
                 kind = LEM.SettingType.Slider,
                 default = 0.8,
                 get = function()
-                    return ns.db.profile.trinketRacialTracker_rectangularIcons_percent or 0.8
+                    return GetTrackerStyleValue(configKey, "rectangularIconsPercent", 0.8)
                 end,
                 set = function(layoutName, value)
-                    ns.db.profile.trinketRacialTracker_rectangularIcons_percent = math.floor(value * 100 + 0.5) / 100
-                    if ns.TrackerItemViewer then
-                        ns.TrackerItemViewer:RefreshItemViewerFrames()
-                    end
+                    ns.db.profile.editMode[configKey].rectangularIconsPercent = math.floor(value * 100 + 0.5) / 100
+                    instance:UpdateIconLayout()
                 end,
                 minValue = 0.3,
                 maxValue = 1,
@@ -1100,7 +1267,7 @@ function TrackerInstance:Create()
     -- flags, size and text offset only apply while it's on — see
     -- ApplyCooldownFontToFrame, which restores defaults when off).
     local function cooldownNumberEnabled()
-        return ns.db.profile.cooldownManager_cooldownFontSizeTracker_enabled and true or false
+        return GetTrackerStyleValue(configKey, "cooldownFontEnabled", false) and true or false
     end
 
     -- Stack numbers are shown by default (per tracker); the remaining stack
@@ -1137,6 +1304,29 @@ function TrackerInstance:Create()
                 instance:RefreshEntries()
             end,
         },
+        ns.EditModeViewerSettings:BuildCooldownFontNameSetting({
+            parentId = "stacks",
+            isShown = stacksEnabled,
+            get = function()
+                return GetTrackerStyleValue(configKey, "stackFontName", "NIL")
+            end,
+            set = function(value)
+                ns.db.profile.editMode[configKey].stackFontName = value
+                instance:RefreshStyling()
+            end,
+            desc = "Font for this custom tracker's charge and count numbers.",
+        }),
+        ns.EditModeViewerSettings:BuildCooldownFontFlagsSetting({
+            parentId = "stacks",
+            isShown = stacksEnabled,
+            get = function()
+                return GetTrackerStyleValue(configKey, "stackFontFlags", { OUTLINE = true })
+            end,
+            set = function(value)
+                ns.db.profile.editMode[configKey].stackFontFlags = value
+                instance:RefreshStyling()
+            end,
+        }),
         {
             name = "Anchor",
             parentId = "stacks",
@@ -1144,13 +1334,11 @@ function TrackerInstance:Create()
             default = "BOTTOMRIGHT",
             isShown = stacksEnabled,
             get = function()
-                return ns.db.profile.trinketRacialTracker_stackAnchor or "BOTTOMRIGHT"
+                return GetTrackerStyleValue(configKey, "stackAnchor", "BOTTOMRIGHT")
             end,
             set = function(layoutName, value)
-                ns.db.profile.trinketRacialTracker_stackAnchor = value
-                if ns.TrackerItemViewer then
-                    ns.TrackerItemViewer:RefreshStyling()
-                end
+                ns.db.profile.editMode[configKey].stackAnchor = value
+                instance:RefreshStyling()
             end,
             values = {
                 { text = "Top Left", value = "TOPLEFT" },
@@ -1171,13 +1359,11 @@ function TrackerInstance:Create()
             default = 14,
             isShown = stacksEnabled,
             get = function()
-                return ns.db.profile.trinketRacialTracker_stackFontSize or 14
+                return GetTrackerStyleValue(configKey, "stackFontSize", 14)
             end,
             set = function(layoutName, value)
-                ns.db.profile.trinketRacialTracker_stackFontSize = value
-                if ns.TrackerItemViewer then
-                    ns.TrackerItemViewer:RefreshStyling()
-                end
+                ns.db.profile.editMode[configKey].stackFontSize = value
+                instance:RefreshStyling()
             end,
             minValue = 8,
             maxValue = 32,
@@ -1193,13 +1379,11 @@ function TrackerInstance:Create()
             default = -1,
             isShown = stacksEnabled,
             get = function()
-                return ns.db.profile.trinketRacialTracker_stackOffsetX or -1
+                return GetTrackerStyleValue(configKey, "stackOffsetX", -1)
             end,
             set = function(layoutName, value)
-                ns.db.profile.trinketRacialTracker_stackOffsetX = value
-                if ns.TrackerItemViewer then
-                    ns.TrackerItemViewer:RefreshStyling()
-                end
+                ns.db.profile.editMode[configKey].stackOffsetX = value
+                instance:RefreshStyling()
             end,
             minValue = -40,
             maxValue = 40,
@@ -1215,13 +1399,11 @@ function TrackerInstance:Create()
             default = 1,
             isShown = stacksEnabled,
             get = function()
-                return ns.db.profile.trinketRacialTracker_stackOffsetY or 1
+                return GetTrackerStyleValue(configKey, "stackOffsetY", 1)
             end,
             set = function(layoutName, value)
-                ns.db.profile.trinketRacialTracker_stackOffsetY = value
-                if ns.TrackerItemViewer then
-                    ns.TrackerItemViewer:RefreshStyling()
-                end
+                ns.db.profile.editMode[configKey].stackOffsetY = value
+                instance:RefreshStyling()
             end,
             minValue = -40,
             maxValue = 40,
@@ -1242,22 +1424,35 @@ function TrackerInstance:Create()
             kind = LEM.SettingType.Checkbox,
             default = false,
             get = function()
-                return ns.db.profile.cooldownManager_cooldownFontSizeTracker_enabled
+                return GetTrackerStyleValue(configKey, "cooldownFontEnabled", false)
             end,
             set = function(layoutName, value)
-                ns.db.profile.cooldownManager_cooldownFontSizeTracker_enabled = value
-                if ns.TrackerItemViewer then
-                    ns.TrackerItemViewer:RefreshStyling()
-                end
+                ns.db.profile.editMode[configKey].cooldownFontEnabled = value and true or false
+                instance:RefreshStyling()
             end,
         },
         ns.EditModeViewerSettings:BuildCooldownFontNameSetting({
             parentId = "cdfont",
             isShown = cooldownNumberEnabled,
+            get = function()
+                return GetTrackerStyleValue(configKey, "cooldownFontName", "NIL")
+            end,
+            set = function(value)
+                ns.db.profile.editMode[configKey].cooldownFontName = value
+                instance:RefreshStyling()
+            end,
+            desc = "Font for this custom tracker's cooldown numbers.",
         }),
         ns.EditModeViewerSettings:BuildCooldownFontFlagsSetting({
             parentId = "cdfont",
             isShown = cooldownNumberEnabled,
+            get = function()
+                return GetTrackerStyleValue(configKey, "cooldownFontFlags", { OUTLINE = true })
+            end,
+            set = function(value)
+                ns.db.profile.editMode[configKey].cooldownFontFlags = value
+                instance:RefreshStyling()
+            end,
         }),
         {
             name = "Number Size",
@@ -1266,20 +1461,16 @@ function TrackerInstance:Create()
             default = "NIL",
             isShown = cooldownNumberEnabled,
             get = function()
-                return ns.db.profile.cooldownManager_cooldownFontSizeTracker ~= nil
-                        and tostring(ns.db.profile.cooldownManager_cooldownFontSizeTracker)
-                    or "NIL"
+                return tostring(GetTrackerStyleValue(configKey, "cooldownFontSize", "NIL"))
             end,
             set = function(layoutName, value)
                 if value == "NIL" then
-                    ns.db.profile.cooldownManager_cooldownFontSizeTracker = "NIL"
+                    ns.db.profile.editMode[configKey].cooldownFontSize = "NIL"
                 else
                     local n = tonumber(value)
-                    ns.db.profile.cooldownManager_cooldownFontSizeTracker = n
+                    ns.db.profile.editMode[configKey].cooldownFontSize = n
                 end
-                if ns.TrackerItemViewer then
-                    ns.TrackerItemViewer:RefreshStyling()
-                end
+                instance:RefreshStyling()
             end,
             values = {
                 { text = "Default", value = "NIL" },
@@ -1308,13 +1499,11 @@ function TrackerInstance:Create()
             default = 0,
             isShown = cooldownNumberEnabled,
             get = function()
-                return ns.db.profile.cooldownManager_cooldownTextTracker_offsetX or 0
+                return GetTrackerStyleValue(configKey, "cooldownTextOffsetX", 0)
             end,
             set = function(layoutName, value)
-                ns.db.profile.cooldownManager_cooldownTextTracker_offsetX = math.floor((value or 0) + 0.5)
-                if ns.TrackerItemViewer then
-                    ns.TrackerItemViewer:RefreshStyling()
-                end
+                ns.db.profile.editMode[configKey].cooldownTextOffsetX = math.floor((value or 0) + 0.5)
+                instance:RefreshStyling()
             end,
             minValue = -40,
             maxValue = 40,
@@ -1330,13 +1519,11 @@ function TrackerInstance:Create()
             default = 0,
             isShown = cooldownNumberEnabled,
             get = function()
-                return ns.db.profile.cooldownManager_cooldownTextTracker_offsetY or 0
+                return GetTrackerStyleValue(configKey, "cooldownTextOffsetY", 0)
             end,
             set = function(layoutName, value)
-                ns.db.profile.cooldownManager_cooldownTextTracker_offsetY = math.floor((value or 0) + 0.5)
-                if ns.TrackerItemViewer then
-                    ns.TrackerItemViewer:RefreshStyling()
-                end
+                ns.db.profile.editMode[configKey].cooldownTextOffsetY = math.floor((value or 0) + 0.5)
+                instance:RefreshStyling()
             end,
             minValue = -40,
             maxValue = 40,
@@ -1357,34 +1544,61 @@ function TrackerInstance:Create()
             kind = LEM.SettingType.Checkbox,
             default = false,
             get = function()
-                return ns.db.profile.cooldownManager_showKeybinds_CMCTracker
+                return GetTrackerStyleValue(configKey, "showKeybinds", false)
             end,
             set = function(layoutName, value)
-                ns.db.profile.cooldownManager_showKeybinds_CMCTracker = value
+                ns.db.profile.editMode[configKey].showKeybinds = value and true or false
                 if ns.Keybinds then
-                    ForEachActiveTrackerFrameName(function(name)
-                        ns.Keybinds:OnSettingChanged(name)
-                    end)
+                    ns.Keybinds:OnSettingChanged(instance.frameName)
                 end
             end,
         },
+        ns.EditModeViewerSettings:BuildCooldownFontNameSetting({
+            parentId = "keybinds",
+            isShown = function()
+                return GetTrackerStyleValue(configKey, "showKeybinds", false) and true or false
+            end,
+            get = function()
+                return GetTrackerStyleValue(configKey, "keybindFontName", "NIL")
+            end,
+            set = function(value)
+                ns.db.profile.editMode[configKey].keybindFontName = value
+                if ns.Keybinds then
+                    ns.Keybinds:ApplyKeybindSettings(instance.frameName)
+                end
+            end,
+            desc = "Font for this custom tracker's keybind text.",
+        }),
+        ns.EditModeViewerSettings:BuildCooldownFontFlagsSetting({
+            parentId = "keybinds",
+            isShown = function()
+                return GetTrackerStyleValue(configKey, "showKeybinds", false) and true or false
+            end,
+            get = function()
+                return GetTrackerStyleValue(configKey, "keybindFontFlags", { OUTLINE = true })
+            end,
+            set = function(value)
+                ns.db.profile.editMode[configKey].keybindFontFlags = value
+                if ns.Keybinds then
+                    ns.Keybinds:ApplyKeybindSettings(instance.frameName)
+                end
+            end,
+        }),
         {
             name = "Keybind Anchor",
             parentId = "keybinds",
             kind = LEM.SettingType.Dropdown,
             default = "TOPRIGHT",
             isShown = function()
-                return ns.db.profile.cooldownManager_showKeybinds_CMCTracker and true or false
+                return GetTrackerStyleValue(configKey, "showKeybinds", false) and true or false
             end,
             get = function()
-                return ns.db.profile.cooldownManager_keybindAnchor_CMCTracker or "TOPRIGHT"
+                return GetTrackerStyleValue(configKey, "keybindAnchor", "TOPRIGHT")
             end,
             set = function(layoutName, value)
-                ns.db.profile.cooldownManager_keybindAnchor_CMCTracker = value
+                ns.db.profile.editMode[configKey].keybindAnchor = value
                 if ns.Keybinds then
-                    ForEachActiveTrackerFrameName(function(name)
-                        ns.Keybinds:ApplyKeybindSettings(name)
-                    end)
+                    ns.Keybinds:ApplyKeybindSettings(instance.frameName)
                 end
             end,
             values = {
@@ -1405,18 +1619,16 @@ function TrackerInstance:Create()
             kind = LEM.SettingType.Dropdown,
             default = "10",
             isShown = function()
-                return ns.db.profile.cooldownManager_showKeybinds_CMCTracker and true or false
+                return GetTrackerStyleValue(configKey, "showKeybinds", false) and true or false
             end,
             get = function()
-                return tostring(ns.db.profile.cooldownManager_keybindFontSize_CMCTracker or 10)
+                return tostring(GetTrackerStyleValue(configKey, "keybindFontSize", 10))
             end,
             set = function(layoutName, value)
                 local n = tonumber(value)
-                ns.db.profile.cooldownManager_keybindFontSize_CMCTracker = n and math.floor(n + 0.5) or 14
+                ns.db.profile.editMode[configKey].keybindFontSize = n and math.floor(n + 0.5) or 14
                 if ns.Keybinds then
-                    ForEachActiveTrackerFrameName(function(name)
-                        ns.Keybinds:ApplyKeybindSettings(name)
-                    end)
+                    ns.Keybinds:ApplyKeybindSettings(instance.frameName)
                 end
             end,
             values = {
@@ -1442,18 +1654,16 @@ function TrackerInstance:Create()
             kind = LEM.SettingType.Slider,
             default = -3,
             isShown = function()
-                return ns.db.profile.cooldownManager_showKeybinds_CMCTracker and true or false
+                return GetTrackerStyleValue(configKey, "showKeybinds", false) and true or false
             end,
             get = function()
-                return ns.db.profile.cooldownManager_keybindOffsetX_CMCTracker or -3
+                return GetTrackerStyleValue(configKey, "keybindOffsetX", -3)
             end,
             set = function(layoutName, value)
                 local v = math.floor((value or 0) + 0.5)
-                ns.db.profile.cooldownManager_keybindOffsetX_CMCTracker = v
+                ns.db.profile.editMode[configKey].keybindOffsetX = v
                 if ns.Keybinds then
-                    ForEachActiveTrackerFrameName(function(name)
-                        ns.Keybinds:ApplyKeybindSettings(name)
-                    end)
+                    ns.Keybinds:ApplyKeybindSettings(instance.frameName)
                 end
             end,
             minValue = -40,
@@ -1469,18 +1679,16 @@ function TrackerInstance:Create()
             kind = LEM.SettingType.Slider,
             default = -3,
             isShown = function()
-                return ns.db.profile.cooldownManager_showKeybinds_CMCTracker and true or false
+                return GetTrackerStyleValue(configKey, "showKeybinds", false) and true or false
             end,
             get = function()
-                return ns.db.profile.cooldownManager_keybindOffsetY_CMCTracker or -3
+                return GetTrackerStyleValue(configKey, "keybindOffsetY", -3)
             end,
             set = function(layoutName, value)
                 local v = math.floor((value or 0) + 0.5)
-                ns.db.profile.cooldownManager_keybindOffsetY_CMCTracker = v
+                ns.db.profile.editMode[configKey].keybindOffsetY = v
                 if ns.Keybinds then
-                    ForEachActiveTrackerFrameName(function(name)
-                        ns.Keybinds:ApplyKeybindSettings(name)
-                    end)
+                    ns.Keybinds:ApplyKeybindSettings(instance.frameName)
                 end
             end,
             minValue = -40,
@@ -1513,7 +1721,7 @@ function TrackerInstance:Create()
         tinsert(additionalSettings, ns.EditModeViewerSettings:BuildVisibilitySetting(self.frameName))
     end
 
-    WilduUICore.RegisterFrameWithLEM(self.anchor, self.configKey, additionalSettings, OnPositionChanged)
+    WilduUICore.RegisterFrameWithLEM(self.anchor, self.configKey, additionalSettings, OnPositionChanged, true)
 
     self:RefreshEntries()
 end
@@ -1527,6 +1735,7 @@ function TrackerInstance:ReapplyPosition()
     if not self.anchor then
         return
     end
+    WilduUICore.LoadFrameConfig(self.configKey, TRACKER_FRAME_DEFAULT_CONFIG)
     WilduUICore.ApplyFramePosition(self.anchor, self.configKey, false)
 end
 
@@ -1539,11 +1748,11 @@ function TrackerInstance:SetActive(active)
         return
     end
     if LEM.SetFrameOverlayToggleEnabled then
-        LEM:SetFrameOverlayToggleEnabled(self.anchor, active)
+        LEM:SetFrameOverlayToggleEnabled(self.anchor, active and self.hasVisibleEntries)
     end
     if active then
         self:RegisterTrackerEvents()
-        self.anchor:Show()
+        self.anchor:SetShown(self.hasVisibleEntries)
         self:RefreshEntries()
     else
         self:UnregisterTrackerEvents()
@@ -1598,6 +1807,12 @@ function ItemViewer:EnsureTrackers()
     end
 end
 
+-- Reuse the tracker icon implementation for integrations that need cooldown
+-- data/event behavior but deliberately do not own an Edit Mode frame.
+function ItemViewer:CreateStandaloneFrame(parent)
+    return ItemViewerFrame:New(parent, true)
+end
+
 -- Wires up visibility drivers and keybind text for the current tracker set after
 -- the count changes at runtime, so a freshly added tracker works without a reload.
 local function RefreshTrackerIntegrations()
@@ -1648,6 +1863,17 @@ function ItemViewer:RefreshItemViewerFrames()
     end
 end
 
+function ItemViewer:RefreshProcGlows()
+    for _, tracker in ipairs(trackers) do
+        if tracker.active then
+            tracker:UpdateCooldowns(true)
+        end
+    end
+    if ns.EssentialCustomTracker and ns.EssentialCustomTracker.RefreshCooldowns then
+        ns.EssentialCustomTracker:RefreshCooldowns()
+    end
+end
+
 -- Scratch sets reused across rebuilds; UpdateWanted reads but never retains them,
 -- so we avoid allocating two tables on every (combat-frequent) refresh.
 local usabilityRangeScratch = {}
@@ -1673,6 +1899,12 @@ function ItemViewer:RebuildUsabilityWanted()
             end
         end
     end
+    if ns.EssentialCustomTracker and ns.EssentialCustomTracker.GetTrackedSpellIDs then
+        for spellID in pairs(ns.EssentialCustomTracker:GetTrackedSpellIDs()) do
+            rangeSet[spellID] = true
+            powerSet[spellID] = true
+        end
+    end
     ns.TrackerUsability:UpdateWanted(rangeSet, powerSet)
 end
 
@@ -1681,8 +1913,25 @@ function ItemViewer:RefreshUsabilityTints()
         for _, ivf in ipairs(tracker.iconFrames) do
             if ivf.frame:IsShown() then
                 ItemVisuals:ApplyUsabilityTint(ivf.frame)
+                ItemVisuals:RefreshEntryUsabilityGlow(ivf.frame)
             end
         end
+    end
+    if ns.EssentialCustomTracker and ns.EssentialCustomTracker.RefreshUsabilityTints then
+        ns.EssentialCustomTracker:RefreshUsabilityTints()
+    end
+end
+
+function ItemViewer:RefreshSuggestedGlows()
+    for _, tracker in ipairs(trackers) do
+        for _, ivf in ipairs(tracker.iconFrames) do
+            if ivf.frame:IsShown() then
+                ItemVisuals:RefreshEntrySuggestedGlow(ivf.frame)
+            end
+        end
+    end
+    if ns.EssentialCustomTracker and ns.EssentialCustomTracker.RefreshSuggestedGlows then
+        ns.EssentialCustomTracker:RefreshSuggestedGlows()
     end
 end
 
@@ -1702,6 +1951,67 @@ function ItemViewer:RefreshStyling()
     for _, tracker in ipairs(trackers) do
         tracker:RefreshStyling()
     end
+end
+
+-- One-time per-profile migration. The legacy profile-level values intentionally
+-- remain in place as a rollback fallback, but custom trackers no longer read them.
+local TRACKER_STYLE_MIGRATION_VERSION = 1
+
+function ItemViewer:MigrateSharedTrackerStyling()
+    local profile = ns.db and ns.db.profile
+    if
+        not profile
+        or (tonumber(profile._trackerStylePerTrackerMigrationVersion) or 0) >= TRACKER_STYLE_MIGRATION_VERSION
+    then
+        return
+    end
+
+    profile.editMode = profile.editMode or {}
+    local count = GetTrackerCount()
+    local values = {
+        squareIcons = profile.trinketRacialTracker_squareIcons == true,
+        borderThickness = profile.trinketRacialTracker_borderThickness or 1,
+        iconZoom = profile.trinketRacialTracker_iconZoom or 0.3,
+        rectangularIcons = profile.trinketRacialTracker_rectangularIcons == true,
+        rectangularIconsPercent = profile.trinketRacialTracker_rectangularIcons_percent or 0.8,
+        stackAnchor = profile.trinketRacialTracker_stackAnchor or "BOTTOMRIGHT",
+        stackFontName = profile.cooldownManager_stackFontName or "NIL",
+        stackFontFlags = profile.cooldownManager_stackFontFlags or { OUTLINE = true },
+        stackFontSize = profile.trinketRacialTracker_stackFontSize or 14,
+        stackOffsetX = profile.trinketRacialTracker_stackOffsetX or -1,
+        stackOffsetY = profile.trinketRacialTracker_stackOffsetY or 1,
+        cooldownFontEnabled = profile.cooldownManager_cooldownFontSizeTracker_enabled == true,
+        cooldownFontName = profile.cooldownManager_cooldownFontName or "NIL",
+        cooldownFontFlags = profile.cooldownManager_cooldownFontFlags or { OUTLINE = true },
+        cooldownFontSize = profile.cooldownManager_cooldownFontSizeTracker or "NIL",
+        cooldownTextOffsetX = profile.cooldownManager_cooldownTextTracker_offsetX or 0,
+        cooldownTextOffsetY = profile.cooldownManager_cooldownTextTracker_offsetY or 0,
+        showKeybinds = profile.cooldownManager_showKeybinds_CMCTracker == true,
+        keybindFontName = profile.cooldownManager_keybindFontName or "NIL",
+        keybindFontFlags = profile.cooldownManager_keybindFontFlags or { OUTLINE = true },
+        keybindAnchor = profile.cooldownManager_keybindAnchor_CMCTracker or "TOPRIGHT",
+        keybindFontSize = profile.cooldownManager_keybindFontSize_CMCTracker or 10,
+        keybindOffsetX = profile.cooldownManager_keybindOffsetX_CMCTracker or -3,
+        keybindOffsetY = profile.cooldownManager_keybindOffsetY_CMCTracker or -3,
+    }
+    for index = 1, (ns.CONSTANTS.MAX_TRACKERS or 10) do
+        local configKey = "tracker" .. index
+        if index <= count or type(profile.editMode[configKey]) == "table" then
+            local config = profile.editMode[configKey] or {}
+            profile.editMode[configKey] = config
+            for key, value in pairs(values) do
+                if config[key] == nil then
+                    if type(value) == "table" then
+                        config[key] = CopyTable(value)
+                    else
+                        config[key] = value
+                    end
+                end
+            end
+        end
+    end
+    profile._trackerStylePerTrackerMigrated = true
+    profile._trackerStylePerTrackerMigrationVersion = TRACKER_STYLE_MIGRATION_VERSION
 end
 
 -- Migrates the removed "Anchor to Tracker X" chaining onto the generic "Anchor To"
@@ -1751,7 +2061,11 @@ function ItemViewer:Initialize()
         return
     end
 
+    self:MigrateSharedTrackerStyling()
     ns.TrackerDB.InitializeDB()
+    if ItemVisuals and ItemVisuals.InvalidateItemCastCache then
+        ItemVisuals:InvalidateItemCastCache()
+    end
 
     if not spellCastEventFrame then
         spellCastEventFrame = CreateFrame("Frame")
@@ -1794,9 +2108,15 @@ function ItemViewer:HideAll()
         tracker:SetActive(false)
     end
     ns.TrackerUsability:UpdateWanted({}, {})
+    if ns.EssentialCustomTracker then
+        ns.EssentialCustomTracker:Hide()
+    end
 end
 
 function ItemViewer:ShowAll()
+    if ns.EssentialCustomTracker then
+        ns.EssentialCustomTracker:Initialize()
+    end
     for _, tracker in ipairs(trackers) do
         if tracker.anchor and tracker.active then
             tracker:RefreshEntries()

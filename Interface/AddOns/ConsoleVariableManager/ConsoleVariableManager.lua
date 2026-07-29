@@ -86,6 +86,24 @@
         end
     end
 
+-- Developer Console --
+-----------------------
+    function Addon:OpenDeveloperConsole()
+        -- Blizzard_Console only captures output from the moment it is loaded,
+        -- so it must be loaded/shown before the command executes.
+        if not DeveloperConsole then
+            local loadAddOn = (C_AddOns and C_AddOns.LoadAddOn) or LoadAddOn
+            if loadAddOn then
+                pcall(loadAddOn, "Blizzard_Console")
+            end
+        end
+        if DeveloperConsole then
+            DeveloperConsole:Toggle(true)
+            return true
+        end
+        return false
+    end
+
 -- Dump CVars --
 ----------------
     function Addon:DumpCVars()
@@ -115,24 +133,16 @@
         end
     end
 
--- HyperframePlus Managed CVars --
-----------------------------------
-    function Addon:GetHyperframePlusCVars()
-        local hfp = HyperframePlusAddon
-        if type(hfp) ~= "table" then return nil end
+-- Hyperframe Managed CVars --
+------------------------------
+    function Addon:GetHyperframeCVars()
+        -- Hyperframe keeps its tables in a private namespace; its SavedVariables
+        -- backup (HF_BACKUP.Baseline) holds every CVar the addon manages.
+        if type(HF_BACKUP) ~= "table" or type(HF_BACKUP.Baseline) ~= "table" then return nil end
 
         local set = {}
-        if type(hfp.cvarsToReset) == "table" then
-            for _, name in ipairs(hfp.cvarsToReset) do
-                if type(name) == "string" then set[name:lower()] = true end
-            end
-        end
-        for _, tbl in ipairs({ hfp.globalSettings, hfp.optimizedLogoutSettings, hfp.managedGraphicsSettings }) do
-            if type(tbl) == "table" then
-                for key in pairs(tbl) do
-                    if type(key) == "string" then set[key:lower()] = true end
-                end
-            end
+        for name in pairs(HF_BACKUP.Baseline) do
+            if type(name) == "string" then set[name:lower()] = true end
         end
 
         if next(set) == nil then return nil end
@@ -165,7 +175,7 @@
         frame.title:SetText(Addon.p .. "Console Variable Manager")
 
         local searchBox = CreateFrame("EditBox", nil, frame, "InputBoxTemplate")
-        searchBox:SetSize(896, 20)
+        searchBox:SetSize(872, 20)
         searchBox:SetPoint("TOPLEFT", frame, "TOPLEFT", 16, -32)
         searchBox:SetAutoFocus(false)
 
@@ -185,7 +195,7 @@
                 { "CVars", "Returns only console variables (excludes console commands)." },
                 { "Commands", "Returns only console commands (the pink entries)." },
                 { "Combat / Secure", "Returns console variables that cannot be modified in combat." },
-                { "Hyperframe", "Returns all console variables tracked by the Hyperframe+ addon, if installed." },
+                { "Hyperframe", "Returns all console variables managed by the Hyperframe addon, if installed." },
             }
             for _, f in ipairs(filters) do
                 GameTooltip:AddLine(" ")
@@ -287,21 +297,48 @@
              end)
              row.resetButton:SetScript("OnLeave", GameTooltip_Hide)
 
+            local function ExecuteCommand()
+                local cmd = row.command
+                if not cmd then return end
+                local params = row.inputBox:GetText() or ""
+                params = params:gsub("%s*[,;]%s*", " "):match("^%s*(.-)%s*$")
+                local fullCommand = cmd
+                if params ~= "" then
+                    fullCommand = cmd .. " " .. params
+                end
+                local consoleShown = Addon:OpenDeveloperConsole()
+                ConsoleExec(fullCommand)
+                print("|c00ffff00[|cffdd70ddCVM|c00ffff00]: Executed console command: |c00ffffff" .. fullCommand)
+                if not consoleShown then
+                    print("|c00ffff00[|cffdd70ddCVM|c00ffff00]: " .. Addon.r .. "Could not open the developer console to show output.")
+                end
+            end
+
             row.executeButton = CreateFrame("Button", nil, row.frame, "UIPanelButtonTemplate")
             row.executeButton:SetSize(60, 20)
             row.executeButton:SetPoint("TOPRIGHT", row.frame, "TOPRIGHT", -2, -2)
             row.executeButton:SetText("Run")
             row.executeButton:Hide()
             row.executeButton:SetScript("OnClick", function(self)
-                if not row.command then return end
-                ConsoleExec(row.command)
-                print("|c00ffff00[|cffdd70ddCVM|c00ffff00]: Executed console command: |c00ffffff" .. row.command)
+                ExecuteCommand()
             end)
             row.executeButton:SetScript("OnEnter", function(self)
                 GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT", 0, 5)
-                GameTooltip:SetText(Addon.b .. "Execute Command\n" .. Addon.w .. "Click to execute this console command.")
+                GameTooltip:SetText(Addon.b .. "Execute Command\n" .. Addon.w .. "Click to execute this console command.\nOptional parameters can be entered in the text box,\nseparated by , or ;\nThe developer console will open to show the output.")
             end)
             row.executeButton:SetScript("OnLeave", GameTooltip_Hide)
+
+            row.inputBox:SetScript("OnEnter", function(self)
+                if not row.data or row.data.commandType == 0 then return end
+                GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT", 0, 5)
+                GameTooltip:SetText(Addon.b .. "Command Parameters\n" .. Addon.w .. "Optional. Separate multiple parameters with , or ;")
+                local expected = row.data.scriptParameters
+                if expected and expected:match("%S") then
+                    GameTooltip:AddLine(Addon.b .. "Expected: " .. Addon.w .. expected, nil, nil, nil, true)
+                end
+                GameTooltip:Show()
+            end)
+            row.inputBox:SetScript("OnLeave", GameTooltip_Hide)
 
             row.commandText:SetScript("OnEnter", function()
                 if not row.data then return end
@@ -361,6 +398,12 @@
             row.inputBox:SetScript("OnEnterPressed", function(self)
                 local cmd = row.command
                 if not cmd then return end
+                if row.data and row.data.commandType ~= 0 then
+                    valueSaved = true
+                    ExecuteCommand()
+                    self:ClearFocus()
+                    return
+                end
                 local newValue = self:GetText()
                 local strippedValue = newValue
                     :gsub("\124c%x%x%x%x%x%x%x%x", "")
@@ -404,6 +447,7 @@
             end)
 
             row.inputBox:SetScript("OnEditFocusLost", function(self)
+                if row.data and row.data.commandType ~= 0 then return end
                 if valueSaved then return end
                 local value = self:GetText()
                 if value == "" or value:match("^%s*$") then
@@ -431,8 +475,8 @@
             local checkCVars      = lowerFilter == "cvars"
             local checkSecure     = lowerFilter == "secure" or lowerFilter == "combat"
             local hfpSet
-            if lowerFilter == "hyperframeplus" or lowerFilter == "hyperframe" or lowerFilter == "hyperframe+" then
-                hfpSet = Addon:GetHyperframePlusCVars()
+            if lowerFilter == "hyperframe" or lowerFilter == "hf" or lowerFilter == "hyperframeplus" or lowerFilter == "hyperframe+" then
+                hfpSet = Addon:GetHyperframeCVars()
             end
 
             for command, info in pairs(Addon.CVars) do
@@ -534,7 +578,8 @@
                         row.resetButton:Show()
                         row.executeButton:Hide()
                     else
-                        row.inputBox:Hide()
+                        row.inputBox:SetText("")
+                        row.inputBox:Show()
                         row.resetButton:Hide()
                         row.executeButton:Show()
                     end
@@ -632,6 +677,22 @@
             GameTooltip:SetText(Addon.b .. "Clear Search\n" .. Addon.w .. "Click to clear the search box and resets the list.")
         end)
         clearButton:SetScript("OnLeave", GameTooltip_Hide)
+
+        local consoleButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+        consoleButton:SetText(">_")
+        consoleButton:SetSize(23, 22)
+        consoleButton:SetPoint("LEFT", clearButton, "RIGHT", 1, 0)
+        consoleButton:SetFrameLevel(9999)
+        consoleButton:SetScript("OnClick", function()
+            if not Addon:OpenDeveloperConsole() then
+                print("|c00ffff00[|cffdd70ddCVM|c00ffff00]: " .. Addon.r .. "Could not open the developer console.")
+            end
+        end)
+        consoleButton:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT", 0, 5)
+            GameTooltip:SetText(Addon.b .. "Developer Console\n" .. Addon.w .. "Click to open the in-game developer console (/console),\nwhere console command output is displayed.")
+        end)
+        consoleButton:SetScript("OnLeave", GameTooltip_Hide)
 
         frame:SetScript("OnHide", function(self)
             if CVM_SETTINGS.RememberLastSearch then

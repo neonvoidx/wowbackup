@@ -44,6 +44,7 @@ local function initCooldownPanelsDB()
 	addon.db["debugCooldownPanelsSession"] = nil
 
 	if addon.Aura and addon.Aura.CooldownPanels and addon.Aura.CooldownPanels.NormalizeAll then addon.Aura.CooldownPanels:NormalizeAll() end
+	if addon.Aura and addon.Aura.CooldownPanels and addon.Aura.CooldownPanels.RegisterDynamicAnchorPanels then addon.Aura.CooldownPanels:RegisterDynamicAnchorPanels() end
 end
 
 initCooldownPanelsDB()

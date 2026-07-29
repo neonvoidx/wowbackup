@@ -323,7 +323,7 @@ function MasqueModule:SkinViewer(viewerName)
     if not group then
         return
     end
-    for _, child in ipairs(viewer:GetItemFrames()) do
+    for _, child in ipairs(ns.API:GetViewerItemFrames(viewer)) do
         if child.Icon and child.Cooldown then
             SkinButton(group, child, def.btype)
         end

@@ -1,7 +1,7 @@
 ## Interface: 120007, 120100
 ## Title: Enhance QoL Chat & Social
 ## Author: R41Z0R
-## Version: 11.7.3
+## Version: 11.9.1
 ## Notes: Chat windows, chat history, instant messages, social privacy and ignore tools
 ## Notes-deDE: Chatfenster, Chatverlauf, Instant Messenger, Privatsphaere und Ignorierwerkzeuge
 ## Notes-esES: Ventanas de chat, historial, mensajes instantaneos, privacidad social e ignorados

@@ -44,7 +44,56 @@ function ProfileAPI:CreateProfile(profileName)
     return true
 end
 
-function ProfileAPI:CopyProfile(targetProfileName)
+local COPY_SECTION_KEYS = {
+    cooldownStyleSettings = "spellStyles",
+    editMode = "editMode",
+    tracker = "trackers",
+    tracker_count = "trackers",
+    tracker_enabled = "trackers",
+    _tracker_filled_with_defaults = "trackers",
+    buffContainers = "buffs",
+}
+
+local function IsDynamicEditModeKey(key, prefix)
+    return type(key) == "string" and key:match("^" .. prefix .. "%d+$") ~= nil
+end
+
+local function CopyValue(value)
+    return type(value) == "table" and CopyTable(value) or value
+end
+
+local function ReplaceSectionKey(profile, source, key)
+    profile[key] = CopyValue(source[key])
+end
+
+local function CopyEditModeSection(profile, source, sections)
+    local currentEditMode = profile.editMode or {}
+    local copiedEditMode = type(source.editMode) == "table" and CopyTable(source.editMode) or {}
+
+    for key in pairs(copiedEditMode) do
+        if
+            (not sections.trackers and IsDynamicEditModeKey(key, "tracker"))
+            or (not sections.buffs and IsDynamicEditModeKey(key, "buffContainer"))
+        then
+            copiedEditMode[key] = nil
+        end
+    end
+
+    for key, value in pairs(currentEditMode) do
+        if
+            (not sections.trackers and IsDynamicEditModeKey(key, "tracker"))
+            or (not sections.buffs and IsDynamicEditModeKey(key, "buffContainer"))
+        then
+            copiedEditMode[key] = CopyValue(value)
+        end
+    end
+
+    profile.editMode = copiedEditMode
+end
+
+---@param targetProfileName string
+---@param sections? table<string, boolean> Nil copies the complete profile through AceDB.
+function ProfileAPI:CopyProfile(targetProfileName, sections)
     if not ns.db then
         return false
     end
@@ -52,7 +101,65 @@ function ProfileAPI:CopyProfile(targetProfileName)
         return false
     end
 
-    ns.db:CopyProfile(targetProfileName)
+    if targetProfileName == ProfileAPI:GetCurrentProfile() then
+        return false
+    end
+
+    local source = ns.db.sv and ns.db.sv.profiles and ns.db.sv.profiles[targetProfileName]
+    if not source then
+        return false
+    end
+
+    if not sections then
+        ns.db:CopyProfile(targetProfileName)
+        return true
+    end
+
+    local hasSelection = false
+    for _, selected in pairs(sections) do
+        if selected then
+            hasSelection = true
+            break
+        end
+    end
+    if not hasSelection then
+        return false
+    end
+
+    local profile = ns.db.profile
+
+    if sections.general then
+        for key in pairs(profile) do
+            if not COPY_SECTION_KEYS[key] then
+                profile[key] = nil
+            end
+        end
+        for key, value in pairs(source) do
+            if not COPY_SECTION_KEYS[key] then
+                profile[key] = CopyValue(value)
+            end
+        end
+    end
+
+    if sections.spellStyles then
+        ReplaceSectionKey(profile, source, "cooldownStyleSettings")
+    end
+    if sections.trackers then
+        ReplaceSectionKey(profile, source, "tracker")
+        ReplaceSectionKey(profile, source, "tracker_count")
+        ReplaceSectionKey(profile, source, "tracker_enabled")
+        ReplaceSectionKey(profile, source, "_tracker_filled_with_defaults")
+    end
+    if sections.buffs then
+        ReplaceSectionKey(profile, source, "buffContainers")
+    end
+    if sections.editMode then
+        CopyEditModeSection(profile, source, sections)
+    end
+
+    if ns.Addon and ns.Addon.RefreshConfig then
+        ns.Addon:RefreshConfig()
+    end
     return true
 end
 

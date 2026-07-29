@@ -1,3 +1,0 @@
-## 6.1.20 (2026-07-03)
-
-- Added a setting to announce dungeon resets to your group

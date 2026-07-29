@@ -22,6 +22,7 @@ local GetTimePreciseSec = _G.GetTimePreciseSec
 local C_PetBar = _G.C_PetBar
 
 local EDITMODE_ID = "classBuffReminder"
+Reminder.dynamicAnchorId = "tracker:classBuffReminder"
 local ICON_MISSING = "Interface\\Icons\\INV_Misc_QuestionMark"
 local DISPLAY_MODE_FULL = "FULL"
 local DISPLAY_MODE_ICON_ONLY = "ICON_ONLY"
@@ -5331,6 +5332,22 @@ function Reminder:EnsureFrame()
 	return frame
 end
 
+function Reminder:GetDynamicAnchorWinner()
+	return addon.DynamicAnchors and addon.DynamicAnchors:GetSimpleFrameWinner(self.dynamicAnchorId) or nil
+end
+
+function Reminder:ApplyDynamicAnchor()
+	if not self.frame then return false end
+	local winner = self:GetDynamicAnchorWinner()
+	if not (winner and winner.frame) then return false end
+	local placement = winner.placement or {}
+	local point = placement.point or "CENTER"
+	local relativePoint = placement.relativePoint or point
+	self.frame:ClearAllPoints()
+	self.frame:SetPoint(point, winner.frame, relativePoint, tonumber(placement.x) or 0, tonumber(placement.y) or 0)
+	return true
+end
+
 function Reminder:GetSelfProviderStatus(provider, forceRefresh)
 	if type(provider) ~= "table" or provider.scope ~= PROVIDER_SCOPE_SELF then return nil end
 	if not self:CanReadAuraData() then
@@ -5578,6 +5595,29 @@ function Reminder:GetGlowTargets()
 	return nil
 end
 
+function Reminder:QueueGlowRefresh()
+	if self.glowRefreshPending == true then return end
+	self.glowRefreshPending = true
+	RunNextFrame(function()
+		self.glowRefreshPending = false
+		if not (Glow and self.glowShown == true and type(self.glowTargets) == "table") then return end
+
+		local style = self:GetGlowStyle()
+		local inset = self:GetGlowInset()
+		local colorR, colorG, colorB, colorA = self:GetGlowColor()
+		local iconShape = self:GetIconShape()
+		for target in pairs(self.glowTargets) do
+			Glow.Refresh(target, REMINDER_GLOW_KEY, style, {
+				inset = inset,
+				color = { colorR, colorG, colorB, colorA },
+				shape = iconShape,
+				hostFrameLevelOffset = 8,
+				frameLevel = 8,
+			})
+		end
+	end)
+end
+
 function Reminder:SetGlowShown(show)
 	if not Glow then return end
 
@@ -5608,6 +5648,7 @@ function Reminder:SetGlowShown(show)
 	local shapeChanged = self.glowActiveShape ~= iconShape
 	local targets = self:GetGlowTargets() or {}
 	local nextTargets = {}
+	local refreshNextFrame = false
 	for i = 1, #targets do
 		local target = targets[i]
 		if target then nextTargets[target] = true end
@@ -5630,6 +5671,7 @@ function Reminder:SetGlowShown(show)
 				hostFrameLevelOffset = 8,
 				frameLevel = 8,
 			})
+			refreshNextFrame = true
 		end
 		self.glowTargets[target] = true
 	end
@@ -5643,6 +5685,7 @@ function Reminder:SetGlowShown(show)
 	self.glowActiveColorB = hasGlow and colorB or nil
 	self.glowActiveColorA = hasGlow and colorA or nil
 	self.glowActiveShape = hasGlow and iconShape or nil
+	if hasGlow and refreshNextFrame then self:QueueGlowRefresh() end
 end
 
 function Reminder:StopAllGlowTargetsImmediate()
@@ -7620,6 +7663,27 @@ function Reminder:RegisterEditMode()
 	if not (EditMode and EditMode.RegisterFrame) then return end
 
 	local settings = editModeSettingsBuilders.buildAll()
+	if addon.DynamicAnchors then
+		table.insert(settings, 1, {
+			name = L["Anchor"] or "Anchor",
+			kind = SettingType.Collapsible,
+			id = "classBuffReminderAnchor",
+			defaultCollapsed = false,
+		})
+		addon.DynamicAnchors:AddEditModeAssignmentSettings(settings, SettingType, {
+			consumerId = self.dynamicAnchorId,
+			parentId = "classBuffReminderAnchor",
+			insertAfterId = "classBuffReminderAnchor",
+			refresh = function(rebuild)
+				if rebuild and EditMode and EditMode.RefreshFrame then
+					EditMode:RefreshFrame(EDITMODE_ID)
+					RunNextFrame(function() Reminder:ApplyDynamicAnchor() end)
+				else
+					Reminder:ApplyDynamicAnchor()
+				end
+			end,
+		})
+	end
 
 	EditMode:RegisterFrame(EDITMODE_ID, {
 		frame = self:EnsureFrame(),
@@ -7633,10 +7697,12 @@ function Reminder:RegisterEditMode()
 		onApply = function()
 			Reminder:ApplyVisualSettings()
 			Reminder:UpdateDisplay()
+			Reminder:ApplyDynamicAnchor()
 		end,
 		onEnter = function()
 			Reminder.editModeActive = true
 			Reminder:UpdateDisplay()
+			if addon.DynamicAnchors and addon.DynamicAnchors:IsFrameAssignmentEnabled(Reminder.dynamicAnchorId) then RunNextFrame(function() Reminder:ApplyDynamicAnchor() end) end
 		end,
 		onExit = function()
 			Reminder.editModeActive = false
@@ -7653,6 +7719,11 @@ function Reminder:RegisterEditMode()
 		end,
 		isEnabled = function() return addon.db and addon.db[DB_ENABLED] == true end,
 		settings = settings,
+		relativeTo = function()
+			local winner = Reminder:GetDynamicAnchorWinner()
+			return winner and winner.frame or UIParent
+		end,
+		allowDrag = function() return not (addon.DynamicAnchors and addon.DynamicAnchors:IsFrameAssignmentEnabled(Reminder.dynamicAnchorId)) end,
 		collapseExclusive = true,
 		-- Runtime visibility is controlled by UpdateDisplay/Render.
 		-- Keep this false so EditMode doesn't force-show the frame on login.
@@ -7679,6 +7750,19 @@ function Reminder:OnSettingChanged()
 	end
 
 	if enabled then
+		if addon.DynamicAnchors then
+			addon.DynamicAnchors:RegisterSimpleFrame({
+				id = self.dynamicAnchorId,
+				owner = "EnhanceQoLClassBuffReminder",
+				label = L["Class Buff Reminder"] or "Class Buff Reminder",
+				menuGroup = "TRACKERS",
+				menuGroupLabel = L["Dynamic Anchor Group Trackers"],
+				menuGroupOrder = 400,
+				getFrame = function() return Reminder.frame end,
+				isAvailable = function(reminderFrame) return addon.db and addon.db[DB_ENABLED] == true and reminderFrame ~= nil and reminderFrame:IsShown() end,
+				apply = function() Reminder:ApplyDynamicAnchor() end,
+			})
+		end
 		self:RegisterEditMode()
 	else
 		self:UnregisterEditMode()

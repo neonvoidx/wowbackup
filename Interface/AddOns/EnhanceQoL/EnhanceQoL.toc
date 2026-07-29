@@ -1,7 +1,7 @@
 ## Interface: 120007, 120100
 ## Title: Enhance QoL Core
 ## Author: R41Z0R
-## Version: 11.7.3
+## Version: 11.9.1
 ## IconTexture: Interface\AddOns\EnhanceQoL\Icons\Icon.tga
 ## Category: Quality of Life
 ## X-Category: Quality of Life
@@ -50,6 +50,8 @@ General\Glow.lua
 Core\EditModeLib.lua
 Core\EditMode.lua
 Core\SharedAnchors.lua
+Core\DynamicAnchors.lua
+Core\DynamicAnchors_ConditionsUI.lua
 Core\AuraCompat.lua
 Modules\ActionBarLabels.lua
 Core\Cleanup.lua

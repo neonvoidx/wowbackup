@@ -48,6 +48,12 @@ function H.PrivateAurasDisabledForClient()
 	return addon.AuraCompat ~= nil
 end
 
+function H.GetVirtualUnitFramePointOffsetY(frame, point)
+	local uf = addon.Aura and addon.Aura.UF
+	if not (uf and uf.GetVirtualUnitFramePointOffsetY) then return 0 end
+	return uf.GetVirtualUnitFramePointOffsetY(frame, point)
+end
+
 function H.UnsecretBool(value)
 	if issecretvalue and issecretvalue(value) then return nil end
 	return value
@@ -490,161 +496,293 @@ function H.getHealthCurveValue(unit, curve)
 	return UnitHealthPercent(unit, true, curve)
 end
 
-function H.setupAbsorbClamp(health, absorb)
-	if not (health and absorb) then return end
-
-	if not health.absorbClip then
-		local clip = CreateFrame("Frame", nil, health)
-		clip:SetAllPoints(health)
-		clip:SetClipsChildren(true)
-		health.absorbClip = clip
-	end
-
-	local clip = health.absorbClip
-	clip:SetAllPoints(health)
-	if clip.SetFrameStrata and health.GetFrameStrata then
-		local healthStrata = health:GetFrameStrata()
-		if healthStrata and clip:GetFrameStrata() ~= healthStrata then clip:SetFrameStrata(healthStrata) end
-	end
-	if clip.SetFrameLevel and health.GetFrameLevel then
-		local desiredLevel = (health:GetFrameLevel() or 0) + 1
-		if clip:GetFrameLevel() ~= desiredLevel then clip:SetFrameLevel(desiredLevel) end
-	end
-
-	absorb:SetParent(clip)
-	absorb:ClearAllPoints()
-
-	local htex = health:GetStatusBarTexture()
-
-	absorb:SetPoint("TOPLEFT", htex, "TOPRIGHT", 0, 0)
-	absorb:SetPoint("BOTTOMLEFT", htex, "BOTTOMRIGHT", 0, 0)
-
-	absorb:SetWidth(health:GetWidth())
-	absorb:SetHeight(health:GetHeight())
+function H.normalizeStatusBarOrientation(value)
+	return tostring(value or "HORIZONTAL"):upper() == "VERTICAL" and "VERTICAL" or "HORIZONTAL"
 end
 
-function H.setupAbsorbClampReverseAware(health, absorb)
-	H.setupAbsorbClamp(health, absorb)
-
-	local htex = health:GetStatusBarTexture()
-	absorb:ClearAllPoints()
-
-	local reverse = false
-	if health.GetFillStyle and Enum and Enum.StatusBarFillStyle then
-		reverse = health:GetFillStyle() == Enum.StatusBarFillStyle.Reverse
-	elseif health.GetReverseFill then
-		reverse = health:GetReverseFill() == true
-	end
-
-	H.applyStatusBarReverseFill(absorb, reverse)
-
-	if reverse then
-		absorb:SetPoint("TOPRIGHT", htex, "TOPLEFT", 0, 0)
-		absorb:SetPoint("BOTTOMRIGHT", htex, "BOTTOMLEFT", 0, 0)
-	else
-		absorb:SetPoint("TOPLEFT", htex, "TOPRIGHT", 0, 0)
-		absorb:SetPoint("BOTTOMLEFT", htex, "BOTTOMRIGHT", 0, 0)
-	end
-
-	absorb:SetWidth(health:GetWidth())
-	absorb:SetHeight(health:GetHeight())
+function H.applyStatusBarOrientation(bar, value)
+	if not (bar and bar.SetOrientation) then return end
+	bar:SetOrientation(H.normalizeStatusBarOrientation(value))
 end
 
-function H.setupAbsorbOverShift(healthBar, overAbsorbBar, height, maxHeight, anchorTop)
-	if not (healthBar and overAbsorbBar) then return end
+H._healthAxes = H._healthAxes or {
+	HORIZONTAL = {
+		[false] = { orientation = "HORIZONTAL", reverse = false, vertical = false, forwardReverse = false, backwardReverse = true },
+		[true] = { orientation = "HORIZONTAL", reverse = true, vertical = false, forwardReverse = true, backwardReverse = false },
+	},
+	VERTICAL = {
+		[false] = { orientation = "VERTICAL", reverse = false, vertical = true, forwardReverse = false, backwardReverse = true },
+		[true] = { orientation = "VERTICAL", reverse = true, vertical = true, forwardReverse = true, backwardReverse = false },
+	},
+}
 
-	local htex = healthBar:GetStatusBarTexture()
-
-	if not healthBar._healthFillClip then
-		local clip = CreateFrame("Frame", nil, healthBar)
-		clip:SetClipsChildren(true)
-		healthBar._healthFillClip = clip
-	end
-
-	local clip = healthBar._healthFillClip
-	if clip.SetFrameStrata and healthBar.GetFrameStrata then
-		local healthStrata = healthBar:GetFrameStrata()
-		if healthStrata and clip:GetFrameStrata() ~= healthStrata then clip:SetFrameStrata(healthStrata) end
-	end
-	if clip.SetFrameLevel and healthBar.GetFrameLevel then
-		local desiredLevel = (healthBar:GetFrameLevel() or 0) + 1
-		if clip:GetFrameLevel() ~= desiredLevel then clip:SetFrameLevel(desiredLevel) end
-	end
-	clip:ClearAllPoints()
-
-	if healthBar:GetReverseFill() then
-		clip:SetPoint("TOPRIGHT", healthBar, "TOPRIGHT", 0, 0)
-		clip:SetPoint("BOTTOMRIGHT", healthBar, "BOTTOMRIGHT", 0, 0)
-		if htex then
-			clip:SetPoint("LEFT", htex, "LEFT", 0, 0)
-		else
-			clip:SetPoint("LEFT", healthBar, "LEFT", 0, 0)
-		end
-	else
-		clip:SetPoint("TOPLEFT", healthBar, "TOPLEFT", 0, 0)
-		clip:SetPoint("BOTTOMLEFT", healthBar, "BOTTOMLEFT", 0, 0)
-		if htex then
-			clip:SetPoint("RIGHT", htex, "RIGHT", 0, 0)
-		else
-			clip:SetPoint("RIGHT", healthBar, "RIGHT", 0, 0)
-		end
-	end
-
-	overAbsorbBar:SetParent(clip)
-	overAbsorbBar:ClearAllPoints()
-
-	local desired = tonumber(height)
-	local limit = tonumber(maxHeight)
-	if not limit or limit <= 0 then limit = healthBar.GetHeight and healthBar:GetHeight() or 0 end
-	if not desired or desired <= 0 then
-		overAbsorbBar:SetPoint("TOPLEFT", healthBar, "TOPLEFT", 0, 0)
-		overAbsorbBar:SetPoint("BOTTOMRIGHT", healthBar, "BOTTOMRIGHT", 0, 0)
-	else
-		if limit and limit > 0 and desired > limit then desired = limit end
-		if anchorTop then
-			overAbsorbBar:SetPoint("TOPLEFT", healthBar, "TOPLEFT", 0, 0)
-			overAbsorbBar:SetPoint("TOPRIGHT", healthBar, "TOPRIGHT", 0, 0)
-		else
-			overAbsorbBar:SetPoint("BOTTOMLEFT", healthBar, "BOTTOMLEFT", 0, 0)
-			overAbsorbBar:SetPoint("BOTTOMRIGHT", healthBar, "BOTTOMRIGHT", 0, 0)
-		end
-		overAbsorbBar:SetHeight(desired)
-	end
-
-	overAbsorbBar:SetOrientation("HORIZONTAL")
-
-	overAbsorbBar:SetReverseFill(not healthBar:GetReverseFill())
+function H.GetHealthAxis(orientation, reverseHealth)
+	local normalized = H.normalizeStatusBarOrientation(orientation)
+	return H._healthAxes[normalized][reverseHealth == true]
 end
 
-function H.applyAbsorbClampLayout(bar, healthBar, height, maxHeight, reverseHealth, anchorTop, fallbackWidth)
-	if not bar or not healthBar then return end
+function H._syncOverlayRegionLevel(region, healthBar)
+	if region.SetFrameStrata and healthBar.GetFrameStrata then region:SetFrameStrata(healthBar:GetFrameStrata()) end
+	if region.SetFrameLevel and healthBar.GetFrameLevel then region:SetFrameLevel((healthBar:GetFrameLevel() or 0) + 1) end
+end
+
+function H.EnsureHealthOverlayRegions(healthBar)
+	if not healthBar then return nil end
+	local regions = healthBar._eqolOverlayRegions
+	if regions then return regions end
+	regions = {}
+	regions.full = CreateFrame("Frame", nil, healthBar)
+	regions.filled = CreateFrame("Frame", nil, healthBar)
+	regions.missing = CreateFrame("Frame", nil, healthBar)
+	for _, region in pairs(regions) do
+		region:SetClipsChildren(true)
+		region:EnableMouse(false)
+	end
+	healthBar._eqolOverlayRegions = regions
+	-- Compatibility aliases for existing frame-level consumers during the migration.
+	healthBar.absorbClip = regions.full
+	healthBar._healthFillClip = regions.filled
+	return regions
+end
+
+function H.LayoutHealthOverlayRegions(healthBar, axis)
+	if not healthBar then return nil end
+	axis = axis or H.GetHealthAxis("HORIZONTAL", false)
+	local regions = H.EnsureHealthOverlayRegions(healthBar)
+	local texture = healthBar.GetStatusBarTexture and healthBar:GetStatusBarTexture()
+	regions.full:ClearAllPoints()
+	regions.full:SetAllPoints(healthBar)
+	regions.filled:ClearAllPoints()
+	regions.missing:ClearAllPoints()
+	if not texture then
+		regions.filled:SetAllPoints(healthBar)
+		regions.missing:SetAllPoints(healthBar)
+	elseif axis.vertical and axis.reverse then
+		regions.filled:SetPoint("TOPLEFT", healthBar, "TOPLEFT")
+		regions.filled:SetPoint("TOPRIGHT", healthBar, "TOPRIGHT")
+		regions.filled:SetPoint("BOTTOMLEFT", texture, "BOTTOMLEFT")
+		regions.filled:SetPoint("BOTTOMRIGHT", texture, "BOTTOMRIGHT")
+		regions.missing:SetPoint("BOTTOMLEFT", healthBar, "BOTTOMLEFT")
+		regions.missing:SetPoint("BOTTOMRIGHT", healthBar, "BOTTOMRIGHT")
+		regions.missing:SetPoint("TOPLEFT", texture, "BOTTOMLEFT")
+		regions.missing:SetPoint("TOPRIGHT", texture, "BOTTOMRIGHT")
+	elseif axis.vertical then
+		regions.filled:SetPoint("BOTTOMLEFT", healthBar, "BOTTOMLEFT")
+		regions.filled:SetPoint("BOTTOMRIGHT", healthBar, "BOTTOMRIGHT")
+		regions.filled:SetPoint("TOPLEFT", texture, "TOPLEFT")
+		regions.filled:SetPoint("TOPRIGHT", texture, "TOPRIGHT")
+		regions.missing:SetPoint("TOPLEFT", healthBar, "TOPLEFT")
+		regions.missing:SetPoint("TOPRIGHT", healthBar, "TOPRIGHT")
+		regions.missing:SetPoint("BOTTOMLEFT", texture, "TOPLEFT")
+		regions.missing:SetPoint("BOTTOMRIGHT", texture, "TOPRIGHT")
+	elseif axis.reverse then
+		regions.filled:SetPoint("TOPRIGHT", healthBar, "TOPRIGHT")
+		regions.filled:SetPoint("BOTTOMRIGHT", healthBar, "BOTTOMRIGHT")
+		regions.filled:SetPoint("TOPLEFT", texture, "TOPLEFT")
+		regions.filled:SetPoint("BOTTOMLEFT", texture, "BOTTOMLEFT")
+		regions.missing:SetPoint("TOPLEFT", healthBar, "TOPLEFT")
+		regions.missing:SetPoint("BOTTOMLEFT", healthBar, "BOTTOMLEFT")
+		regions.missing:SetPoint("TOPRIGHT", texture, "TOPLEFT")
+		regions.missing:SetPoint("BOTTOMRIGHT", texture, "BOTTOMLEFT")
+	else
+		regions.filled:SetPoint("TOPLEFT", healthBar, "TOPLEFT")
+		regions.filled:SetPoint("BOTTOMLEFT", healthBar, "BOTTOMLEFT")
+		regions.filled:SetPoint("TOPRIGHT", texture, "TOPRIGHT")
+		regions.filled:SetPoint("BOTTOMRIGHT", texture, "BOTTOMRIGHT")
+		regions.missing:SetPoint("TOPRIGHT", healthBar, "TOPRIGHT")
+		regions.missing:SetPoint("BOTTOMRIGHT", healthBar, "BOTTOMRIGHT")
+		regions.missing:SetPoint("TOPLEFT", texture, "TOPRIGHT")
+		regions.missing:SetPoint("BOTTOMLEFT", texture, "BOTTOMRIGHT")
+	end
+	for _, region in pairs(regions) do H._syncOverlayRegionLevel(region, healthBar) end
+	return regions
+end
+
+function H.ResolveHealthOverlayThickness(healthBar, orientation, value)
+	local desired = tonumber(value)
+	if not desired or desired <= 0 then return nil end
+	local vertical = H.normalizeStatusBarOrientation(orientation) == "VERTICAL"
+	local limit = vertical and healthBar:GetWidth() or healthBar:GetHeight()
+	if limit and limit > 0 and desired > limit then desired = limit end
+	return desired
+end
+
+function H._anchorFullOverlay(bar, healthBar, axis, thickness, crossAlign)
 	bar:ClearAllPoints()
-	local anchor = (healthBar.GetStatusBarTexture and healthBar:GetStatusBarTexture()) or healthBar
-	local bottomPoint = reverseHealth and "BOTTOMRIGHT" or "BOTTOMLEFT"
-	local bottomAnchor = reverseHealth and "BOTTOMLEFT" or "BOTTOMRIGHT"
-	local topPoint = reverseHealth and "TOPRIGHT" or "TOPLEFT"
-	local topAnchor = reverseHealth and "TOPLEFT" or "TOPRIGHT"
-	local desired = tonumber(height)
-	local limit = tonumber(maxHeight)
-	if not limit or limit <= 0 then limit = healthBar.GetHeight and healthBar:GetHeight() or 0 end
-	if not desired or desired <= 0 then
-		bar:SetPoint(bottomPoint, anchor, bottomAnchor, 0, 0)
-		bar:SetPoint(topPoint, anchor, topAnchor, 0, 0)
+	if not thickness then
+		bar:SetAllPoints(healthBar)
+	elseif axis.vertical then
+		local side = crossAlign == "MAX" and "RIGHT" or "LEFT"
+		bar:SetPoint("TOP" .. side, healthBar, "TOP" .. side)
+		bar:SetPoint("BOTTOM" .. side, healthBar, "BOTTOM" .. side)
+		bar:SetWidth(thickness)
 	else
-		if limit and limit > 0 and desired > limit then desired = limit end
-		if anchorTop then
-			bar:SetPoint(topPoint, anchor, topAnchor, 0, 0)
+		local side = crossAlign == "MAX" and "TOP" or "BOTTOM"
+		bar:SetPoint(side .. "LEFT", healthBar, side .. "LEFT")
+		bar:SetPoint(side .. "RIGHT", healthBar, side .. "RIGHT")
+		bar:SetHeight(thickness)
+	end
+end
+
+function H._anchorMissingOverlay(bar, healthBar, axis, thickness, crossAlign)
+	local texture = healthBar.GetStatusBarTexture and healthBar:GetStatusBarTexture()
+	if not texture then
+		H._anchorFullOverlay(bar, healthBar, axis, thickness, crossAlign)
+		return
+	end
+	bar:ClearAllPoints()
+	if axis.vertical then
+		local point = axis.reverse and "TOP" or "BOTTOM"
+		local relative = axis.reverse and "BOTTOM" or "TOP"
+		if thickness then
+			local side = crossAlign == "MAX" and "RIGHT" or "LEFT"
+			bar:SetPoint(point .. side, texture, relative .. side)
+			bar:SetSize(thickness, healthBar:GetHeight())
 		else
-			bar:SetPoint(bottomPoint, anchor, bottomAnchor, 0, 0)
+			bar:SetPoint(point .. "LEFT", texture, relative .. "LEFT")
+			bar:SetPoint(point .. "RIGHT", texture, relative .. "RIGHT")
+			bar:SetHeight(healthBar:GetHeight())
 		end
-		bar:SetHeight(desired)
+	else
+		local point = axis.reverse and "RIGHT" or "LEFT"
+		local relative = axis.reverse and "LEFT" or "RIGHT"
+		if thickness then
+			local side = crossAlign == "MAX" and "TOP" or "BOTTOM"
+			bar:SetPoint(side .. point, texture, side .. relative)
+			bar:SetSize(healthBar:GetWidth(), thickness)
+		else
+			bar:SetPoint("TOP" .. point, texture, "TOP" .. relative)
+			bar:SetPoint("BOTTOM" .. point, texture, "BOTTOM" .. relative)
+			bar:SetWidth(healthBar:GetWidth())
+		end
 	end
-	local width = healthBar.GetWidth and healthBar:GetWidth() or 0
-	if not width or width <= 0 then
-		local fallback = tonumber(fallbackWidth)
-		if fallback and fallback > 0 then width = fallback end
+end
+
+function H.LayoutHealthOverlayBar(healthBar, bar, options)
+	if not (healthBar and bar) then return end
+	options = options or {}
+	local axis = options.axis or H.GetHealthAxis(options.orientation, options.reverseHealth)
+	local regions = options.regions or H.LayoutHealthOverlayRegions(healthBar, axis)
+	local role = options.role or "FULL"
+	local parent = role == "OVERFLOW_IN_FILLED" and regions.filled or regions.full
+	if bar.GetParent and bar:GetParent() ~= parent then bar:SetParent(parent) end
+	H.applyStatusBarOrientation(bar, axis.orientation)
+	local reverse = options.statusReverse == true
+	if options.direction == "HEALTH_FORWARD" then reverse = axis.forwardReverse end
+	if options.direction == "HEALTH_BACKWARD" then reverse = axis.backwardReverse end
+	H.applyStatusBarReverseFill(bar, reverse)
+	local thickness = H.ResolveHealthOverlayThickness(healthBar, axis.orientation, options.thickness)
+	local crossAlign = options.crossAlign == "MAX" and "MAX" or "MIN"
+	if role == "MISSING_FROM_CURRENT" then
+		H._anchorMissingOverlay(bar, healthBar, axis, thickness, crossAlign)
+	else
+		H._anchorFullOverlay(bar, healthBar, axis, thickness, crossAlign)
 	end
-	bar:SetWidth(width or 0)
+end
+
+function H.LayoutDamageAbsorb(healthBar, absorbBar, absorbSecondaryBar, options)
+	if not (healthBar and absorbBar) then return end
+	options = options or {}
+	local axis = options.axis or H.GetHealthAxis(options.orientation, options.reverseHealth)
+	local regions = options.regions or H.LayoutHealthOverlayRegions(healthBar, axis)
+	local shared = {
+		axis = axis,
+		regions = regions,
+		thickness = options.thickness,
+		crossAlign = options.crossAlign,
+	}
+	if options.reverseAbsorb == true then
+		if absorbSecondaryBar then
+			shared.role = "MISSING_FROM_CURRENT"
+			shared.direction = "HEALTH_FORWARD"
+			H.LayoutHealthOverlayBar(healthBar, absorbSecondaryBar, shared)
+		end
+		if options.dontOverflow == true then
+			absorbBar:SetValue(0)
+			absorbBar:Hide()
+		else
+			shared.role = "OVERFLOW_IN_FILLED"
+			shared.direction = "HEALTH_BACKWARD"
+			H.LayoutHealthOverlayBar(healthBar, absorbBar, shared)
+		end
+	else
+		shared.role = "FULL"
+		shared.direction = "STATUS_STANDARD"
+		shared.statusReverse = false
+		H.LayoutHealthOverlayBar(healthBar, absorbBar, shared)
+		if absorbSecondaryBar then
+			absorbSecondaryBar:SetValue(0)
+			absorbSecondaryBar:Hide()
+		end
+	end
+end
+
+function H.LayoutMissingHealthTexture(healthBar, texture, axis)
+	if not (healthBar and texture) then return end
+	axis = axis or H.GetHealthAxis("HORIZONTAL", false)
+	local regions = H.LayoutHealthOverlayRegions(healthBar, axis)
+	texture:ClearAllPoints()
+	texture:SetAllPoints(regions.missing)
+end
+
+function H.LayoutHealthEndGlow(healthBar, glow, axis, inset)
+	if not (healthBar and glow) then return end
+	axis = axis or H.GetHealthAxis("HORIZONTAL", false)
+	if axis.vertical then
+		glow:Hide()
+		return
+	end
+	inset = tonumber(inset) or 7
+	glow:ClearAllPoints()
+	if axis.vertical and axis.reverse then
+		glow:SetPoint("TOPLEFT", healthBar, "BOTTOMLEFT", 0, inset)
+		glow:SetPoint("TOPRIGHT", healthBar, "BOTTOMRIGHT", 0, inset)
+	elseif axis.vertical then
+		glow:SetPoint("BOTTOMLEFT", healthBar, "TOPLEFT", 0, -inset)
+		glow:SetPoint("BOTTOMRIGHT", healthBar, "TOPRIGHT", 0, -inset)
+	elseif axis.reverse then
+		glow:SetPoint("TOPRIGHT", healthBar, "TOPLEFT", inset, 0)
+		glow:SetPoint("BOTTOMRIGHT", healthBar, "BOTTOMLEFT", inset, 0)
+	else
+		glow:SetPoint("TOPLEFT", healthBar, "TOPRIGHT", -inset, 0)
+		glow:SetPoint("BOTTOMLEFT", healthBar, "BOTTOMRIGHT", -inset, 0)
+	end
+end
+
+function H.LayoutTemporaryMaxHealthLoss(healthSlot, healthBar, lossBar, options)
+	if not (healthSlot and healthBar and lossBar) then return end
+	options = options or {}
+	local axis = options.axis or H.GetHealthAxis(options.orientation, options.reverseHealth)
+	H.applyStatusBarOrientation(lossBar, axis.orientation)
+	H.applyStatusBarReverseFill(lossBar, axis.backwardReverse)
+	lossBar:ClearAllPoints()
+	lossBar:SetAllPoints(healthSlot)
+	if options.reserveHealthSpace ~= true then return end
+	local texture = lossBar.GetStatusBarTexture and lossBar:GetStatusBarTexture()
+	healthBar:ClearAllPoints()
+	if not texture then
+		healthBar:SetAllPoints(healthSlot)
+	elseif axis.vertical and axis.reverse then
+		healthBar:SetPoint("TOPLEFT", healthSlot, "TOPLEFT")
+		healthBar:SetPoint("TOPRIGHT", healthSlot, "TOPRIGHT")
+		healthBar:SetPoint("BOTTOMLEFT", texture, "TOPLEFT")
+		healthBar:SetPoint("BOTTOMRIGHT", texture, "TOPRIGHT")
+	elseif axis.vertical then
+		healthBar:SetPoint("BOTTOMLEFT", healthSlot, "BOTTOMLEFT")
+		healthBar:SetPoint("BOTTOMRIGHT", healthSlot, "BOTTOMRIGHT")
+		healthBar:SetPoint("TOPLEFT", texture, "BOTTOMLEFT")
+		healthBar:SetPoint("TOPRIGHT", texture, "BOTTOMRIGHT")
+	elseif axis.reverse then
+		healthBar:SetPoint("TOPLEFT", texture, "TOPRIGHT")
+		healthBar:SetPoint("BOTTOMLEFT", texture, "BOTTOMRIGHT")
+		healthBar:SetPoint("TOPRIGHT", healthSlot, "TOPRIGHT")
+		healthBar:SetPoint("BOTTOMRIGHT", healthSlot, "BOTTOMRIGHT")
+	else
+		healthBar:SetPoint("TOPLEFT", healthSlot, "TOPLEFT")
+		healthBar:SetPoint("BOTTOMLEFT", healthSlot, "BOTTOMLEFT")
+		healthBar:SetPoint("TOPRIGHT", texture, "TOPLEFT")
+		healthBar:SetPoint("BOTTOMRIGHT", texture, "BOTTOMLEFT")
+	end
 end
 
 function H.trim(str)
@@ -1266,7 +1404,8 @@ function H.ApplyBlizzardAuraContainer(container, unit, cfg, parent, levelFrame, 
 	container:EnableMouse(false)
 	container:Show()
 
-	local signature = H.BuildBlizzardAuraSignature(effectiveUnit, cfg)
+	local iconOffsetY = H.GetVirtualUnitFramePointOffsetY(parent, "CENTER")
+	local signature = H.BuildBlizzardAuraSignature(effectiveUnit, cfg) .. ":" .. tostring(iconOffsetY)
 	if container._eqolBlizzardAuraAnchorID and container._eqolBlizzardAuraSignature == signature then return end
 
 	H.SetBlizzardAuraContainerAttributes(container, cfg)
@@ -1289,7 +1428,7 @@ function H.ApplyBlizzardAuraContainer(container, unit, cfg, parent, levelFrame, 
 				relativePoint = "CENTER",
 				relativeTo = container,
 				offsetX = 0,
-				offsetY = 0,
+				offsetY = iconOffsetY,
 			},
 		},
 	})
@@ -1399,7 +1538,13 @@ function H.ApplyPrivateAuras(container, unit, cfg, parent, levelFrame, showSampl
 	if parent and container.GetParent and container:GetParent() ~= parent then container:SetParent(parent) end
 	H.ApplyPrivateAuraContainerFrameLevel(container, parent, levelFrame)
 	container:ClearAllPoints()
-	container:SetPoint(anchorPoint, parent or container:GetParent() or UIParent, parentPoint, parentOffsetX, parentOffsetY)
+	container:SetPoint(
+		anchorPoint,
+		parent or container:GetParent() or UIParent,
+		parentPoint,
+		parentOffsetX,
+		parentOffsetY + H.GetVirtualUnitFramePointOffsetY(parent, parentPoint)
+	)
 	container:SetSize(size, size)
 	container:Show()
 
@@ -1928,6 +2073,17 @@ end
 function H.configureSpecialTexture(bar, pType, texKey, cfg, powerEnum)
 	if not bar then return end
 	if not pType and powerEnum == nil then return end
+	local overrides = addon.db and addon.db.ufUseCustomPowerColors == true and addon.db.ufPowerColorOverrides
+	if getPowerOverrideEntry(overrides, powerEnum, pType) then
+		local tex = bar:GetStatusBarTexture()
+		if tex and tex.GetAtlas and tex:GetAtlas() and bar.SetStatusBarTexture then
+			bar:SetStatusBarTexture(H.resolveTexture(texKey))
+			tex = bar:GetStatusBarTexture()
+		end
+		if tex and tex.SetHorizTile then tex:SetHorizTile(false) end
+		if tex and tex.SetVertTile then tex:SetVertTile(false) end
+		return
+	end
 	local resolvedToken = getCanonicalPowerToken(powerEnum, pType)
 	local atlas = atlasByPower[resolvedToken]
 	if not atlas then return end
@@ -3345,9 +3501,9 @@ function H.getUnitLevelText(unit, levelOverride, hideClassificationText)
 	elseif classification == "elite" then
 		if not hideClassificationText then levelText = levelText .. "+" end
 	elseif classification == "rareelite" then
-		if not hideClassificationText then levelText = levelText .. " R+" end
+		if not hideClassificationText then levelText = levelText .. "R+" end
 	elseif classification == "rare" then
-		if not hideClassificationText then levelText = levelText .. " R" end
+		if not hideClassificationText then levelText = levelText .. "R" end
 	elseif classification == "trivial" or classification == "minus" then
 		levelText = levelText .. "-"
 	end
@@ -3666,7 +3822,16 @@ function H.getTextDelimiterTertiary(cfg, def, primary, secondary)
 	return delimiter
 end
 
+function H.isUnitIdentitySecret(unit)
+	if unit == nil or (issecretvalue and issecretvalue(unit)) then return true end
+	local secrets = _G.C_Secrets
+	local predicate = secrets and secrets.ShouldUnitIdentityBeSecret
+	if type(predicate) ~= "function" then return false end
+	return predicate(unit) == true
+end
+
 local function resolvePvPAtlas(unit)
+	if H.isUnitIdentitySecret(unit) then return nil end
 	if C_GameRules and C_GameRules.IsGameRuleActive and Enum and Enum.GameRule then
 		if C_GameRules.IsGameRuleActive(Enum.GameRule.UnitFramePvPContextualDisabled) then return nil end
 	end
@@ -3709,6 +3874,13 @@ local function resolveClassificationAtlas(classification)
 	return nil
 end
 
+function H.GetStatusVisualOffsetY(st, anchor)
+	local uf = addon.Aura and addon.Aura.UF
+	if not (uf and uf.GetStatusVisualOffsetY and st and st.status) then return 0 end
+	local physicalHeight = st.status.GetHeight and st.status:GetHeight() or nil
+	return uf.GetStatusVisualOffsetY(anchor, physicalHeight, st._statusLayoutHeight)
+end
+
 function H.updatePvPIndicator(st, unit, cfg, def, skipDisabled)
 	if unit ~= "player" and unit ~= "target" and unit ~= "focus" then return end
 	if not st or not st.pvpIcon then return end
@@ -3725,7 +3897,7 @@ function H.updatePvPIndicator(st, unit, cfg, def, skipDisabled)
 	local centerOffset = (st and st._portraitCenterOffset) or 0
 	st.pvpIcon:ClearAllPoints()
 	st.pvpIcon:SetSize(size, size)
-	st.pvpIcon:SetPoint("TOP", st.frame, "TOP", (ox or 0) + centerOffset, oy)
+	st.pvpIcon:SetPoint("TOP", st.frame, "TOP", (ox or 0) + centerOffset, oy + H.GetStatusVisualOffsetY(st, "TOP"))
 
 	if not enabled then
 		st.pvpIcon:Hide()
@@ -3766,7 +3938,7 @@ function H.updateRoleIndicator(st, unit, cfg, def, skipDisabled)
 	local centerOffset = (st and st._portraitCenterOffset) or 0
 	st.roleIcon:ClearAllPoints()
 	st.roleIcon:SetSize(size, size)
-	st.roleIcon:SetPoint("TOP", st.frame, "TOP", (ox or 0) + centerOffset, oy)
+	st.roleIcon:SetPoint("TOP", st.frame, "TOP", (ox or 0) + centerOffset, oy + H.GetStatusVisualOffsetY(st, "TOP"))
 
 	if not enabled then
 		st.roleIcon:Hide()
@@ -3775,7 +3947,7 @@ function H.updateRoleIndicator(st, unit, cfg, def, skipDisabled)
 
 	local inEditMode = addon.EditModeLib and addon.EditModeLib:IsInEditMode()
 	local inGroup = IsInGroup and IsInGroup() or false
-	local role = inGroup and UnitGroupRolesAssigned and UnitGroupRolesAssigned(unit) or nil
+	local role = not H.isUnitIdentitySecret(unit) and inGroup and UnitGroupRolesAssigned and UnitGroupRolesAssigned(unit) or nil
 	if role == "NONE" then role = nil end
 	if not role and inEditMode then role = "DAMAGER" end
 
@@ -3816,13 +3988,14 @@ function H.updateLeaderIndicator(st, unit, cfg, def, skipDisabled)
 	end
 
 	local inEditMode = addon.EditModeLib and addon.EditModeLib:IsInEditMode()
-	local showLeader = UnitIsGroupLeader and UnitIsGroupLeader(unit)
+	local identitySecret = H.isUnitIdentitySecret(unit)
+	local showLeader = not identitySecret and UnitIsGroupLeader and UnitIsGroupLeader(unit)
 	if not showLeader and inEditMode then showLeader = true end
 	if showLeader then
 		st.leaderIcon:SetAtlas("UI-HUD-UnitFrame-Player-Group-LeaderIcon", false)
 		st.leaderIcon:Show()
 	else
-		local showAssist = UnitIsGroupAssistant and UnitIsGroupAssistant(unit)
+		local showAssist = not identitySecret and UnitIsGroupAssistant and UnitIsGroupAssistant(unit)
 		if showAssist then
 			st.leaderIcon:SetTexture("Interface\\GroupFrame\\UI-Group-AssistantIcon")
 			st.leaderIcon:Show()
@@ -3853,7 +4026,7 @@ function H.updateClassificationIndicator(st, unit, cfg, def, skipDisabled)
 
 	st.classificationIcon:ClearAllPoints()
 	local anchorFrame = st.statusTextLayer or st.status
-	if anchorFrame then st.classificationIcon:SetPoint("RIGHT", anchorFrame, "RIGHT", ox or 0, oy) end
+	if anchorFrame then st.classificationIcon:SetPoint("RIGHT", anchorFrame, "RIGHT", ox or 0, oy + H.GetStatusVisualOffsetY(st, "RIGHT")) end
 	st.classificationIcon:SetSize(size, size)
 
 	if not enabled then
@@ -4018,7 +4191,8 @@ function H.applyCombatFeedbackStyle(st, cfg, def)
 	local off = c.offset or d.offset or {}
 	local ox = off.x or 0
 	local oy = off.y or 0
-	local key = tostring(font) .. "|" .. tostring(fontSize) .. "|" .. tostring(anchor) .. "|" .. tostring(location) .. "|" .. tostring(ox) .. "|" .. tostring(oy)
+	local statusOffsetY = location == "STATUS" and H.GetStatusVisualOffsetY(st, anchor) or 0
+	local key = tostring(font) .. "|" .. tostring(fontSize) .. "|" .. tostring(anchor) .. "|" .. tostring(location) .. "|" .. tostring(ox) .. "|" .. tostring(oy) .. "|" .. tostring(statusOffsetY)
 	if st._combatFeedbackStyleKey == key then return end
 	st._combatFeedbackStyleKey = key
 
@@ -4031,7 +4205,7 @@ function H.applyCombatFeedbackStyle(st, cfg, def)
 	if text.SetDrawLayer then text:SetDrawLayer("OVERLAY", 7) end
 	text:ClearAllPoints()
 	local parent = resolveCombatFeedbackParent(st, location) or st.frame
-	text:SetPoint(anchor, parent, anchor, ox, oy)
+	text:SetPoint(anchor, parent, anchor, ox, oy + statusOffsetY)
 	if text.SetJustifyH then text:SetJustifyH(combatFeedbackJustify(anchor)) end
 	if text.SetWordWrap then text:SetWordWrap(false) end
 	if text.SetMaxLines then text:SetMaxLines(1) end
@@ -4202,7 +4376,7 @@ function H.getPowerColor(powerEnum, powerToken, colorCfg, unitToken)
 		powerEnum = EnumPowerType and EnumPowerType.MANA or nil
 		powerToken = "MANA"
 	end
-	local overrides = addon.db and addon.db.ufPowerColorOverrides
+	local overrides = addon.db and addon.db.ufUseCustomPowerColors == true and addon.db.ufPowerColorOverrides
 	local override = getPowerOverrideEntry(overrides, powerEnum, powerToken)
 	if override then
 		if override.r then return override.r, override.g, override.b, override.a or 1 end
@@ -4228,7 +4402,7 @@ function H.isPowerDesaturated(powerEnum, powerToken)
 		powerToken = powerEnum
 		powerEnum = nil
 	end
-	local overrides = addon.db and addon.db.ufPowerColorOverrides
+	local overrides = addon.db and addon.db.ufUseCustomPowerColors == true and addon.db.ufPowerColorOverrides
 	return getPowerOverrideEntry(overrides, powerEnum, powerToken) ~= nil
 end
 

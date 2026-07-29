@@ -7,6 +7,10 @@ REFlexSettings = {
 ["ShowServerName"] = false,
 ["CurrentTab"] = 1,
 ["LDBMode"] = 3,
+["LDBSide"] = "A",
+["ArenaStatsLimit"] = 3,
+["ConfigVersion"] = 3501,
+["FirstTime"] = true,
 ["Filters"] = {
 ["Map"] = 1,
 ["Bracket"] = 1,
@@ -18,10 +22,6 @@ REFlexSettings = {
 ["Season"] = 0,
 ["DateMode"] = 1,
 },
-["ArenaStatsLimit"] = 3,
-["FirstTime"] = true,
-["ConfigVersion"] = 3501,
-["LDBSide"] = "A",
 }
 REFlexDatabase = {
 {
@@ -114,13 +114,13 @@ nil,
 },
 ["isRatedSoloShuffle"] = false,
 ["Hidden"] = false,
-["Map"] = 1134,
+["Time"] = 1781676634,
 ["Version"] = 3501,
 ["isRated"] = false,
-["PlayerNum"] = 3,
-["Winner"] = 0,
 ["isArena"] = true,
-["Time"] = 1781676634,
+["Winner"] = 0,
+["PlayerNum"] = 3,
+["Map"] = 1134,
 },
 }
 REFlexHonorDatabase = {

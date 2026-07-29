@@ -1,7 +1,7 @@
 ## Interface: 120007, 120100
 ## Title: Enhance QoL Resource Bars
 ## Author: R41Z0R
-## Version: 11.7.3
+## Version: 11.9.1
 ## Notes: Custom health, power and class resource bars
 ## Notes-deDE: Eigene Gesundheits-, Ressourcen- und Klassenleisten
 ## Notes-esES: Barras personalizadas de salud, poder y recursos de clase

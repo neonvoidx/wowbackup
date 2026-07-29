@@ -88,6 +88,29 @@ Api.IsEquippedItem = C_Item.IsEquippedItem
 Api.GetTime = GetTime
 Api.MenuUtil = MenuUtil
 Api.issecretvalue = _G.issecretvalue
+
+function Helper.GetPlainPositiveSpellId(value)
+	if Api.issecretvalue and Api.issecretvalue(value) then return nil end
+	if type(value) ~= "number" then return nil end
+	if value > 0 then return value end
+	return nil
+end
+
+function Helper.GetEffectiveSpellId(spellId)
+	if Api.issecretvalue and Api.issecretvalue(spellId) then return nil end
+	local id = tonumber(spellId)
+	if not id then return nil end
+	if not Api.GetOverrideSpell then return id end
+	return Helper.GetPlainPositiveSpellId(Api.GetOverrideSpell(id)) or id
+end
+
+function Helper.GetBaseSpellId(spellId)
+	if Api.issecretvalue and Api.issecretvalue(spellId) then return nil end
+	local id = tonumber(spellId)
+	if not id then return nil end
+	if not Api.GetBaseSpell then return id end
+	return Helper.GetPlainPositiveSpellId(Api.GetBaseSpell(id)) or id
+end
 Api.DurationModifierRealTime = Enum and Enum.DurationTimeModifier and Enum.DurationTimeModifier.RealTime
 
 function Api.GetItemCount(itemID, includeBank, includeUses, includeReagentBank, includeAccountBank)
@@ -185,6 +208,7 @@ Helper.PANEL_LAYOUT_DEFAULTS = {
 	rangeOverlayEnabled = false,
 	rangeOverlayColor = { 1, 0.1, 0.1, 0.35 },
 	procGlowEnabled = true,
+	glowReady = false,
 	hideGlowOutOfCombat = false,
 	readyGlowStyle = "MARCHING_ANTS",
 	readyGlowColor = { 1, 0.82, 0.2, 1 },
@@ -341,7 +365,9 @@ Helper.ENTRY_DEFAULTS = {
 	hideWhenNoResourceUseGlobal = true,
 	hideWhenNoResource = false,
 	glowReady = false,
+	glowReadyUseGlobal = true,
 	readyGlowCheckPower = false,
+	readyGlowCheckPowerUseGlobal = true,
 	interruptGlow = false,
 	pandemicGlow = false,
 	pandemicGlowColor = nil,
@@ -351,6 +377,10 @@ Helper.ENTRY_DEFAULTS = {
 	glowDuration = 0,
 	auraAppliedSound = false,
 	auraAppliedSoundFile = "None",
+	auraApplicationsIncreasedSound = false,
+	auraApplicationsIncreasedSoundFile = "None",
+	auraRemovedSound = false,
+	auraRemovedSoundFile = "None",
 	soundReady = false,
 	soundReadyFile = "None",
 	staticText = "",
@@ -398,6 +428,8 @@ Helper.GLOW_STYLE_OPTIONS = {
 	{ value = "MARCHING_ANTS", labelKey = "Marching ants", fallback = "Marching ants" },
 	{ value = "PIXEL", labelKey = "Pixel", fallback = "Pixel" },
 	{ value = "PULSING", labelKey = "Pulsing", fallback = "Pulsing" },
+	{ value = "SOLID", labelKey = "Solid", fallback = "Solid" },
+	{ value = "TINT_BORDER", labelKey = "Tint border", fallback = "Tint border" },
 }
 Helper.VALID_DIRECTIONS = {
 	RIGHT = true,
@@ -443,12 +475,16 @@ function Helper.NormalizeGlowStyle(style, fallback)
 	if normalized == "MARCHING_ANTS" or normalized == "MARCHINGANTS" or normalized == "ANTS" then return "MARCHING_ANTS" end
 	if normalized == "PIXEL" or normalized == "PIXEL_GLOW" then return "PIXEL" end
 	if normalized == "PULSING" or normalized == "PULSE" then return "PULSING" end
+	if normalized == "SOLID" or normalized == "SOLID_BORDER" then return "SOLID" end
+	if normalized == "TINT_BORDER" or normalized == "BORDER_TINT" then return "TINT_BORDER" end
 	if normalized == "FLASH" then return "FLASH" end
 	local normalizedFallback = type(fallback) == "string" and strupper(fallback) or nil
 	if normalizedFallback == "BLIZZARD" or normalizedFallback == "CLASSIC" or normalizedFallback == "BUTTON_GLOW" then return "BLIZZARD" end
 	if normalizedFallback == "FLASH" then return "FLASH" end
 	if normalizedFallback == "PIXEL" or normalizedFallback == "PIXEL_GLOW" then return "PIXEL" end
 	if normalizedFallback == "PULSING" or normalizedFallback == "PULSE" then return "PULSING" end
+	if normalizedFallback == "SOLID" or normalizedFallback == "SOLID_BORDER" then return "SOLID" end
+	if normalizedFallback == "TINT_BORDER" or normalizedFallback == "BORDER_TINT" then return "TINT_BORDER" end
 	if normalizedFallback == "MARCHING_ANTS" or normalizedFallback == "MARCHINGANTS" or normalizedFallback == "ANTS" then return "MARCHING_ANTS" end
 	return Helper.PANEL_LAYOUT_DEFAULTS.readyGlowStyle or "MARCHING_ANTS"
 end
@@ -2222,7 +2258,7 @@ end
 
 function Helper.CreateRoot()
 	return {
-		version = 2,
+		version = 3,
 		panels = {},
 		order = {},
 		selectedPanel = nil,
@@ -2274,6 +2310,7 @@ function Helper.NormalizeRoot(root)
 	root.defaults.entry.showStacksUseGlobal = Helper.ENTRY_DEFAULTS.showStacksUseGlobal
 	root.defaults.entry.glowReady = Helper.ENTRY_DEFAULTS.glowReady
 	root.defaults.entry.readyGlowCheckPower = Helper.ENTRY_DEFAULTS.readyGlowCheckPower
+	root.defaults.entry.readyGlowCheckPowerUseGlobal = Helper.ENTRY_DEFAULTS.readyGlowCheckPowerUseGlobal
 	root.defaults.entry.pandemicGlow = Helper.ENTRY_DEFAULTS.pandemicGlow
 	root.defaults.entry.checkPower = Helper.ENTRY_DEFAULTS.checkPower
 	root.defaults.entry.checkPowerUseGlobal = Helper.ENTRY_DEFAULTS.checkPowerUseGlobal
@@ -2284,6 +2321,10 @@ function Helper.NormalizeRoot(root)
 	root.defaults.entry.glowDuration = Helper.ENTRY_DEFAULTS.glowDuration
 	root.defaults.entry.auraAppliedSound = Helper.ENTRY_DEFAULTS.auraAppliedSound
 	root.defaults.entry.auraAppliedSoundFile = Helper.ENTRY_DEFAULTS.auraAppliedSoundFile
+	root.defaults.entry.auraApplicationsIncreasedSound = Helper.ENTRY_DEFAULTS.auraApplicationsIncreasedSound
+	root.defaults.entry.auraApplicationsIncreasedSoundFile = Helper.ENTRY_DEFAULTS.auraApplicationsIncreasedSoundFile
+	root.defaults.entry.auraRemovedSound = Helper.ENTRY_DEFAULTS.auraRemovedSound
+	root.defaults.entry.auraRemovedSoundFile = Helper.ENTRY_DEFAULTS.auraRemovedSoundFile
 	root.defaults.entry.soundReady = Helper.ENTRY_DEFAULTS.soundReady
 	root.defaults.entry.soundReadyFile = Helper.ENTRY_DEFAULTS.soundReadyFile
 	return root
@@ -2344,6 +2385,7 @@ function Helper.NormalizePanel(panel, defaults)
 		layoutDefaults.radialArcDegrees or Helper.PANEL_LAYOUT_DEFAULTS.radialArcDegrees or 360
 	)
 	panel.layout.procGlowEnabled = panel.layout.procGlowEnabled ~= false
+	panel.layout.glowReady = panel.layout.glowReady == true
 	panel.layout.hideGlowOutOfCombat = panel.layout.hideGlowOutOfCombat == true
 	if panel.layout.procGlowStyle ~= nil then panel.layout.procGlowStyle = Helper.NormalizeGlowStyle(panel.layout.procGlowStyle, nil) end
 	if panel.layout.procGlowInset ~= nil then panel.layout.procGlowInset = Helper.NormalizeGlowInset(panel.layout.procGlowInset, nil) end
@@ -2471,6 +2513,9 @@ function Helper.NormalizeEntry(entry, defaults)
 	local hadActivationOverlayReverse = entry.activationOverlayReverse ~= nil
 	local hadActivationOverlayOnly = entry.activationOverlayOnly ~= nil
 	local hadActivationOverlayGlow = entry.activationOverlayGlow ~= nil
+	local hadGlowReadyUseGlobal = entry.glowReadyUseGlobal ~= nil
+	local hadGlowUseGlobal = entry.glowUseGlobal ~= nil
+	local hadReadyGlowCheckPowerUseGlobal = entry.readyGlowCheckPowerUseGlobal ~= nil
 	defaults = defaults or {}
 	local entryDefaults = defaults.entry or {}
 	for key, value in pairs(entryDefaults) do
@@ -2630,6 +2675,16 @@ function Helper.NormalizeEntry(entry, defaults)
 	if type(entry.hideWhenNoResourceUseGlobal) ~= "boolean" then entry.hideWhenNoResourceUseGlobal = Helper.ENTRY_DEFAULTS.hideWhenNoResourceUseGlobal end
 	if type(entry.hideWhenNoResource) ~= "boolean" then entry.hideWhenNoResource = Helper.ENTRY_DEFAULTS.hideWhenNoResource end
 	if type(entry.readyGlowCheckPower) ~= "boolean" then entry.readyGlowCheckPower = Helper.ENTRY_DEFAULTS.readyGlowCheckPower end
+	if not hadReadyGlowCheckPowerUseGlobal then
+		entry.readyGlowCheckPowerUseGlobal = entry.readyGlowCheckPower ~= true
+	elseif type(entry.readyGlowCheckPowerUseGlobal) ~= "boolean" then
+		entry.readyGlowCheckPowerUseGlobal = Helper.ENTRY_DEFAULTS.readyGlowCheckPowerUseGlobal
+	end
+	if not hadGlowReadyUseGlobal then
+		entry.glowReadyUseGlobal = entry.glowReady ~= true
+	elseif type(entry.glowReadyUseGlobal) ~= "boolean" then
+		entry.glowReadyUseGlobal = Helper.ENTRY_DEFAULTS.glowReadyUseGlobal
+	end
 	if type(entry.interruptGlow) ~= "boolean" then entry.interruptGlow = Helper.ENTRY_DEFAULTS.interruptGlow end
 	if type(entry.procGlowEnabled) ~= "boolean" then entry.procGlowEnabled = Helper.ENTRY_DEFAULTS.procGlowEnabled end
 	if type(entry.procGlowUseGlobal) ~= "boolean" then
@@ -2637,7 +2692,7 @@ function Helper.NormalizeEntry(entry, defaults)
 				and false
 			or Helper.ENTRY_DEFAULTS.procGlowUseGlobal
 	end
-	if type(entry.glowUseGlobal) ~= "boolean" then
+	if not hadGlowUseGlobal then
 		entry.glowUseGlobal = entry.glowDuration == (Helper.ENTRY_DEFAULTS.glowDuration or 0)
 			and entry.glowColor == nil
 			and entry.glowStyle == nil
@@ -2649,10 +2704,25 @@ function Helper.NormalizeEntry(entry, defaults)
 			and entry.glowPixelCount == nil
 			and entry.glowPixelSpeed == nil
 			and entry.glowPixelThickness == nil
+	elseif type(entry.glowUseGlobal) ~= "boolean" then
+		entry.glowUseGlobal = Helper.ENTRY_DEFAULTS.glowUseGlobal
 	end
+	local glowUsesGlobal = entry.glowReadyUseGlobal ~= false and entry.glowUseGlobal ~= false
+	entry.glowReadyUseGlobal = glowUsesGlobal
+	entry.glowUseGlobal = glowUsesGlobal
 	if type(entry.auraAppliedSound) ~= "boolean" then entry.auraAppliedSound = Helper.ENTRY_DEFAULTS.auraAppliedSound end
 	if (type(entry.auraAppliedSoundFile) ~= "string" and type(entry.auraAppliedSoundFile) ~= "number") or entry.auraAppliedSoundFile == "" then
 		entry.auraAppliedSoundFile = Helper.ENTRY_DEFAULTS.auraAppliedSoundFile
+	end
+	if type(entry.auraApplicationsIncreasedSound) ~= "boolean" then
+		entry.auraApplicationsIncreasedSound = Helper.ENTRY_DEFAULTS.auraApplicationsIncreasedSound
+	end
+	if (type(entry.auraApplicationsIncreasedSoundFile) ~= "string" and type(entry.auraApplicationsIncreasedSoundFile) ~= "number") or entry.auraApplicationsIncreasedSoundFile == "" then
+		entry.auraApplicationsIncreasedSoundFile = Helper.ENTRY_DEFAULTS.auraApplicationsIncreasedSoundFile
+	end
+	if type(entry.auraRemovedSound) ~= "boolean" then entry.auraRemovedSound = Helper.ENTRY_DEFAULTS.auraRemovedSound end
+	if (type(entry.auraRemovedSoundFile) ~= "string" and type(entry.auraRemovedSoundFile) ~= "number") or entry.auraRemovedSoundFile == "" then
+		entry.auraRemovedSoundFile = Helper.ENTRY_DEFAULTS.auraRemovedSoundFile
 	end
 	if type(entry.soundReady) ~= "boolean" then entry.soundReady = Helper.ENTRY_DEFAULTS.soundReady end
 	if type(entry.soundReadyFile) ~= "string" or entry.soundReadyFile == "" then entry.soundReadyFile = Helper.ENTRY_DEFAULTS.soundReadyFile end
@@ -2885,8 +2955,6 @@ local ELVUI_ACTION_BARS = 15
 local ELVUI_ACTION_BUTTONS = 12
 
 local GetItemInfoInstantFn = C_Item and C_Item.GetItemInfoInstant
-local GetOverrideSpell = C_Spell and C_Spell.GetOverrideSpell
-local GetBaseSpell = C_Spell and C_Spell.GetBaseSpell
 local GetInventoryItemID = GetInventoryItemID
 local GetActionDisplayCount = C_ActionBar and C_ActionBar.GetActionDisplayCount
 local GetMacroIndexByName = GetMacroIndexByName
@@ -2898,23 +2966,11 @@ local DotIndicatorText = "\226\151\143"
 local strtrimFn = strtrim
 
 local function getEffectiveSpellId(spellId)
-	local id = tonumber(spellId)
-	if not id then return nil end
-	if GetOverrideSpell then
-		local overrideId = GetOverrideSpell(id)
-		if type(overrideId) == "number" and overrideId > 0 then return overrideId end
-	end
-	return id
+	return Helper.GetEffectiveSpellId(spellId)
 end
 
 local function getBaseSpellId(spellId)
-	local id = tonumber(spellId)
-	if not id then return nil end
-	if GetBaseSpell then
-		local baseId = GetBaseSpell(id)
-		if type(baseId) == "number" and baseId > 0 then return baseId end
-	end
-	return id
+	return Helper.GetBaseSpellId(spellId)
 end
 
 local function getRoot()
@@ -3401,6 +3457,10 @@ function Keybinds.GetEntryKeybindText(entry, layout, preEffectiveSpellId, preRes
 	local ignoreItems = layout and layout.keybindsIgnoreItems == true or false
 	local slotItemId
 	if entryType == "SLOT" and entry.slotID then slotItemId = GetInventoryItemID and GetInventoryItemID("player", entry.slotID) end
+	local resolvedEntryItemId
+	if entryType == "ITEM" and entry.itemID then
+		resolvedEntryItemId = CooldownPanels.ResolveEntryItemID and CooldownPanels.ResolveEntryItemID(entry, entry.itemID) or entry.itemID
+	end
 	local resolvedEffectiveSpellId, resolvedSpellId, storedBaseSpellId
 	if entryType == "SPELL" and entry.spellID then
 		if preResolvedSpellIdsReady == true then
@@ -3424,6 +3484,7 @@ function Keybinds.GetEntryKeybindText(entry, layout, preEffectiveSpellId, preRes
 		and entry._eqolKeybindCacheResolvedSpellID == resolvedSpellId
 		and entry._eqolKeybindCacheBaseSpellID == storedBaseSpellId
 		and entry._eqolKeybindCacheItemID == entry.itemID
+		and entry._eqolKeybindCacheResolvedItemID == resolvedEntryItemId
 		and entry._eqolKeybindCacheSlotID == entry.slotID
 		and entry._eqolKeybindCacheSlotItemID == slotItemId
 		and entry._eqolKeybindCacheMacroID == entry.macroID
@@ -3432,7 +3493,7 @@ function Keybinds.GetEntryKeybindText(entry, layout, preEffectiveSpellId, preRes
 		return entry._eqolKeybindCacheText or nil
 	end
 
-	local cacheValue = effectiveSpellId or resolvedSpellId or storedBaseSpellId or entry.spellID or entry.itemID or entry.slotID or entry.macroID or entry.macroName or ""
+	local cacheValue = effectiveSpellId or resolvedSpellId or storedBaseSpellId or entry.spellID or resolvedEntryItemId or entry.itemID or entry.slotID or entry.macroID or entry.macroName or ""
 	local cacheKey = tostring(entryType) .. ":" .. tostring(cacheValue) .. ":" .. tostring(slotItemId or "")
 	local cached = runtime._eqolKeybindCache[cacheKey]
 	if cached ~= nil then
@@ -3444,6 +3505,7 @@ function Keybinds.GetEntryKeybindText(entry, layout, preEffectiveSpellId, preRes
 		entry._eqolKeybindCacheResolvedSpellID = resolvedSpellId
 		entry._eqolKeybindCacheBaseSpellID = storedBaseSpellId
 		entry._eqolKeybindCacheItemID = entry.itemID
+		entry._eqolKeybindCacheResolvedItemID = resolvedEntryItemId
 		entry._eqolKeybindCacheSlotID = entry.slotID
 		entry._eqolKeybindCacheSlotItemID = slotItemId
 		entry._eqolKeybindCacheMacroID = entry.macroID
@@ -3462,7 +3524,8 @@ function Keybinds.GetEntryKeybindText(entry, layout, preEffectiveSpellId, preRes
 		if not text then text = getLookupSpellBindingTextIfDistinct(lookup, entrySpellId, usedA, usedB, usedC) end
 	elseif entryType == "ITEM" and entry.itemID then
 		local lookup = buildKeybindLookup()
-		text = lookup.item and lookup.item[entry.itemID]
+		text = lookup.item and lookup.item[resolvedEntryItemId]
+		if not text and resolvedEntryItemId ~= entry.itemID then text = lookup.item and lookup.item[entry.itemID] end
 	elseif entryType == "SLOT" and slotItemId then
 		local lookup = buildKeybindLookup()
 		text = lookup.item and lookup.item[slotItemId]
@@ -3488,6 +3551,7 @@ function Keybinds.GetEntryKeybindText(entry, layout, preEffectiveSpellId, preRes
 	entry._eqolKeybindCacheResolvedSpellID = resolvedSpellId
 	entry._eqolKeybindCacheBaseSpellID = storedBaseSpellId
 	entry._eqolKeybindCacheItemID = entry.itemID
+	entry._eqolKeybindCacheResolvedItemID = resolvedEntryItemId
 	entry._eqolKeybindCacheSlotID = entry.slotID
 	entry._eqolKeybindCacheSlotItemID = slotItemId
 	entry._eqolKeybindCacheMacroID = entry.macroID

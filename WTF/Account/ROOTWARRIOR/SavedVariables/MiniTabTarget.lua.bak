@@ -1,5 +1,5 @@
 
 MiniTabTargetDB = {
-["TargetPreviousKey"] = "SHIFT-TAB",
 ["TargetKey"] = "TAB",
+["TargetPreviousKey"] = "SHIFT-TAB",
 }

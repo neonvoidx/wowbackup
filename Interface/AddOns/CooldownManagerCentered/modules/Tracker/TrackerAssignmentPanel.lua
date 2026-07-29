@@ -3,6 +3,8 @@ local Affected = ns.API.Affected
 
 local TrackerAssignmentPanel = {}
 ns.TrackerAssignmentPanel = TrackerAssignmentPanel
+CMCCooldownViewerSettingsTrackerPanel = nil
+CMCCooldownViewerSettingsTrackerTab = nil
 
 local DB = ns.TrackerDB
 local ItemsData = ns.TrackerItemsData
@@ -21,7 +23,13 @@ local reorderMarker = nil
 local reorderCursor = nil
 local reorderCursorFollow = false
 
-local spellIconEventFrame = nil
+local function RefreshTrackers()
+    TrackerAssignmentPanel:RefreshTrackerPanel()
+    ItemViewer:RefreshItemViewerFrames()
+    if ns.EssentialCustomTracker then
+        ns.EssentialCustomTracker:Refresh()
+    end
+end
 
 -- Asked before enabling the custom tracker from the Cooldown Settings tab. Enables
 -- live (no reload); the `data` argument is a continuation run on confirm so the
@@ -203,7 +211,7 @@ StaticPopupDialogs["CMC_SET_CUSTOM_ACTIVE"] = {
         end
 
         DB.SetCustomActiveDuration(data.kind, data.id, value)
-        TrackerAssignmentPanel:RefreshMiscPanel()
+        TrackerAssignmentPanel:RefreshTrackerPanel()
         ItemViewer:RefreshItemViewerFrames()
     end,
     EditBoxOnTextChanged = function(self)
@@ -226,34 +234,97 @@ StaticPopupDialogs["CMC_SET_CUSTOM_ACTIVE"] = {
     preferredIndex = 3,
 }
 
-function TrackerAssignmentPanel:HideMiscPanel(settingsFrame)
-    ns.SettingsTabs:DeactivateAll(settingsFrame)
+local function ParseAuraSpellIDInput(text)
+    local value = tonumber(strtrim(text or ""))
+    if not value or value < 0 or value ~= math.floor(value) then
+        return nil
+    end
+    return value
 end
 
--- Called when the custom tracker is turned off. If the Cooldown Settings window is
--- currently sitting on the (now-disabled) tracker tab, drop the panel and switch
--- back to the first tab so the user isn't stranded on an empty/disabled tab.
+local function ValidateAuraSpellIDPopup(dialog)
+    if not dialog then
+        return nil
+    end
+    local editBox = dialog.editBox or (dialog.GetEditBox and dialog:GetEditBox())
+    if not editBox then
+        return nil
+    end
+    local value = ParseAuraSpellIDInput(editBox:GetText())
+    SetCustomActiveAcceptEnabled(dialog, value ~= nil)
+    return value
+end
+
+StaticPopupDialogs["CMC_SET_TRACKER_AURA"] = {
+    text = "Set Aura Spell ID. Enter 0 to clear.\nCurrent value: 0",
+    button1 = _G.ACCEPT,
+    button2 = _G.CANCEL,
+    hasEditBox = true,
+    maxLetters = 10,
+    autoCompleteParams = nil,
+    OnShow = function(self)
+        local data = self.data
+        if not data or not IsCustomActiveConfigKind(data.kind) or not data.id then
+            self:Hide()
+            return
+        end
+
+        local configuredValue = DB.GetAuraSpellID(data.kind, data.id)
+        local suggestedValue = data.kind == "spell" and tonumber(data.id) or nil
+        if not suggestedValue or suggestedValue <= 0 or suggestedValue ~= math.floor(suggestedValue) then
+            suggestedValue = nil
+        end
+        local editValue = configuredValue or suggestedValue or 0
+        local textWidget = self.text or _G[self:GetName() .. "Text"]
+        if textWidget then
+            local valueLabel = configuredValue and ("Current value: " .. configuredValue)
+                or suggestedValue and ("Suggested value: " .. suggestedValue)
+                or "Current value: 0"
+            textWidget:SetText("Set Aura Spell ID. Enter 0 to clear.\n" .. valueLabel)
+        end
+        local editBox = self.editBox or (self.GetEditBox and self:GetEditBox())
+        if editBox then
+            editBox:SetText(tostring(editValue))
+            editBox:HighlightText()
+            editBox:SetFocus()
+        end
+        ValidateAuraSpellIDPopup(self)
+    end,
+    OnAccept = function(self)
+        local data = self.data
+        local value = ValidateAuraSpellIDPopup(self)
+        if not data or value == nil then
+            ns.Addon:Print("Aura Spell ID must be a non-negative whole number.")
+            return
+        end
+        DB.SetAuraSpellID(data.kind, data.id, value)
+        TrackerAssignmentPanel:RefreshTrackerPanel()
+        ItemViewer:RefreshItemViewerFrames()
+    end,
+    EditBoxOnTextChanged = function(self)
+        ValidateAuraSpellIDPopup(self:GetParent())
+    end,
+    EditBoxOnEnterPressed = function(self)
+        local popup = self:GetParent()
+        if ValidateAuraSpellIDPopup(popup) ~= nil then
+            StaticPopup_OnClick(popup, 1)
+        else
+            ns.Addon:Print("Aura Spell ID must be a non-negative whole number.")
+        end
+    end,
+    EditBoxOnEscapePressed = function(self)
+        self:GetParent():Hide()
+    end,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3,
+}
+
 function TrackerAssignmentPanel:OnTrackerDisabled()
-    local settingsFrame = _G["CooldownViewerSettings"]
-    if not settingsFrame then
-        return
+    if CMCCooldownViewerSettingsTrackerPanel and CMCCooldownViewerSettingsTrackerPanel:IsShown() then
+        CMCCooldownViewerSettingsTrackerPanel:Hide()
     end
-    local miscPanel = Affected(settingsFrame).trackerMiscPanel
-    if not miscPanel or not miscPanel:IsShown() then
-        return
-    end
-    -- SetDisplayMode("spells") restores the first tab; the hook on it also clears
-    -- the tab checked states and hides the tracker panel.
-    if settingsFrame.SetDisplayMode then
-        settingsFrame:SetDisplayMode("spells")
-    else
-        self:HideMiscPanel(settingsFrame)
-    end
-end
-
-local function GetMiscPanelFrame()
-    local settings = _G["CooldownViewerSettings"]
-    return settings and Affected(settings).trackerMiscPanel or nil
 end
 
 local function GetEntryKindAndID(button)
@@ -274,11 +345,118 @@ local function SetButtonEntry(button, kind, id)
         button.spellID = nil
     elseif kind == "spell" then
         button.itemID = nil
-        button.spellID = id
+        button.spellID = ItemsData:GetDisplaySpellID(id) or id
     else
         button.itemID = nil
         button.spellID = nil
     end
+end
+
+local function GetStoredEntrySettings(kind, id)
+    if kind == "spell" then
+        return DB.GetSpellItemSettings(id)
+    elseif kind == "item" then
+        return DB.GetItemSettings(id)
+    elseif kind == ENTRY_KIND_WILDCARD_SLOTS then
+        return DB.GetWildcardSlotSettings(id)
+    end
+    return nil
+end
+
+local function SettingsHaveTrackerOverrides(settings, kind, id)
+    if type(settings) ~= "table" then
+        return false
+    end
+    return (IsConsumableEntry(kind, id) and settings.alwaysShow == true)
+        or (type(settings.hiddenForSpecs) == "table" and next(settings.hiddenForSpecs) ~= nil)
+        or (kind == "spell" and settings.procGlow == false)
+        or (EntryHasReadyState(kind, id) and settings.glowWhenReady == true)
+        or (EntryHasCharges(kind, id) and settings.glowOnFullCharges == true)
+        or settings.glowWhenAuraActive == true
+        or (kind == "spell" and settings.glowWhenSuggested == true)
+        or DB.GetEntryColor(kind, id, "glowColor") ~= nil
+        or DB.GetEntryColor(kind, id, "stackColor") ~= nil
+        or (IsCustomActiveMenuSupportedKind(kind) and (tonumber(settings.auraSpellID) or 0) > 0)
+        or (IsCustomActiveMenuSupportedKind(kind) and (tonumber(settings.customActiveDuration) or 0) > 0)
+end
+
+local function EntryHasTrackerOverrides(kind, id)
+    if not kind or not id then
+        return false
+    end
+    if SettingsHaveTrackerOverrides(GetStoredEntrySettings(kind, id), kind, id) then
+        return true
+    end
+
+    -- Wildcard trinket slots store aura, duration, and glow overrides on the
+    -- currently equipped item, while state/order remain attached to the slot.
+    local targetKind, targetID = ResolveCustomActiveTarget(kind, id)
+    if targetKind ~= kind or targetID ~= id then
+        return SettingsHaveTrackerOverrides(GetStoredEntrySettings(targetKind, targetID), targetKind, targetID)
+    end
+    return false
+end
+
+local function GetOrCreateTrackerOverrideIndicator(button)
+    local indicator = Affected(button).trackerOverrideIndicator
+    if indicator then
+        return indicator
+    end
+
+    indicator = CreateFrame("Frame", nil, button)
+    indicator:SetHeight(14)
+    indicator:SetFrameLevel(button:GetFrameLevel() + 20)
+    indicator:EnableMouse(false)
+
+    local background = indicator:CreateTexture(nil, "BACKGROUND")
+    background:SetAllPoints(indicator)
+    background:SetColorTexture(0, 0, 0, 0.7)
+
+    local eye = indicator:CreateTexture(nil, "ARTWORK")
+    eye:SetSize(16, 16)
+    eye:SetAtlas("common-icon-visual")
+    eye:SetGradient("VERTICAL", CreateColor(0, 0.41, 0.405), CreateColor(0.825, 0.93, 0))
+
+    local specHidden = indicator:CreateTexture(nil, "ARTWORK")
+    specHidden:SetSize(16, 16)
+    specHidden:SetAtlas("talents-heroclass-ring-minimize-hide")
+    specHidden:SetDesaturated(true)
+    specHidden:SetVertexColor(1, 0.1, 0.1, 1)
+
+    indicator.Background = background
+    indicator.Eye = eye
+    indicator.SpecHidden = specHidden
+    Affected(button).trackerOverrideIndicator = indicator
+    return indicator
+end
+
+local function RefreshTrackerOverrideIndicator(button)
+    if not button or not button.Icon then
+        return
+    end
+
+    local kind, id = GetEntryKindAndID(button)
+    local indicator = GetOrCreateTrackerOverrideIndicator(button)
+    indicator:ClearAllPoints()
+    indicator:SetPoint("TOPLEFT", button.Icon, "TOPLEFT", 0, -2)
+    indicator:SetPoint("TOPRIGHT", button.Icon, "TOPRIGHT", 0, -2)
+    indicator:SetFrameLevel(button:GetFrameLevel() + 20)
+    local hasOverrides = EntryHasTrackerOverrides(kind, id)
+    local hiddenForCurrentSpec = kind ~= nil and id ~= nil and DB.IsHiddenForCurrentSpec(kind, id)
+
+    indicator.Eye:ClearAllPoints()
+    indicator.SpecHidden:ClearAllPoints()
+    if hasOverrides and hiddenForCurrentSpec then
+        indicator.Eye:SetPoint("CENTER", indicator, "CENTER", -8, 0)
+        indicator.SpecHidden:SetPoint("CENTER", indicator, "CENTER", 8, 0)
+    elseif hasOverrides then
+        indicator.Eye:SetPoint("CENTER")
+    elseif hiddenForCurrentSpec then
+        indicator.SpecHidden:SetPoint("CENTER")
+    end
+    indicator.Eye:SetShown(hasOverrides)
+    indicator.SpecHidden:SetShown(hiddenForCurrentSpec)
+    indicator:SetShown(hasOverrides or hiddenForCurrentSpec)
 end
 
 local function SetWildcardGlow(button, kind)
@@ -290,7 +468,7 @@ local function SetWildcardGlow(button, kind)
         if not Affected(button).trackerWildcardGlow then
             Affected(button).trackerWildcardGlowFrame = CreateFrame("Frame", nil, button)
             Affected(button).trackerWildcardGlowFrame:SetAllPoints(button.Icon or button)
-            Affected(button).trackerWildcardGlowFrame:SetFrameStrata("MEDIUM")
+            Affected(button).trackerWildcardGlowFrame:SetFrameStrata("HIGH")
             Affected(button).trackerWildcardGlowFrame:SetFrameLevel(20)
             local glow = Affected(button).trackerWildcardGlowFrame:CreateTexture(nil, "ARTWORK")
 
@@ -335,6 +513,12 @@ local function SetIconFromEntry(target, kind, id)
     if not target or not target.Icon then
         return
     end
+    if kind == "native" then
+        local info = C_CooldownViewer.GetCooldownViewerCooldownInfo(id)
+        local spellID = info and (info.overrideSpellID or info.spellID)
+        target.Icon:SetTexture(spellID and C_Spell.GetSpellTexture(spellID) or 134400)
+        return
+    end
     local qualityItemID = nil
     if kind == "item" then
         qualityItemID = id
@@ -346,7 +530,7 @@ local function SetIconFromEntry(target, kind, id)
         if not target.Icon._quality then
             target.Icon._quality_frame = CreateFrame("Frame", nil, target)
             target.Icon._quality_frame:SetAllPoints(target.Icon)
-            target.Icon._quality_frame:SetFrameStrata("MEDIUM")
+            target.Icon._quality_frame:SetFrameStrata("HIGH")
             target.Icon._quality_frame:SetFrameLevel(20)
             target.Icon._quality = target.Icon._quality_frame:CreateTexture(nil, "ARTWORK")
             target.Icon._quality:SetSize(33, 28)
@@ -379,12 +563,40 @@ local function SetIconFromEntry(target, kind, id)
     target.Icon:SetTexture(icon or 134400)
 end
 
+---@param button Frame
+---@param shown boolean
+local function SetEssentialNativeLock(button, shown)
+    if not button then
+        return
+    end
+    ---@type Frame?
+    local lockFrame = Affected(button).essentialNativeLockFrame
+    if shown and not lockFrame then
+        lockFrame = CreateFrame("Frame", nil, button)
+        lockFrame:SetAllPoints(button)
+        lockFrame:EnableMouse(false)
+
+        local lock = lockFrame:CreateTexture(nil, "OVERLAY", nil, 7)
+        lock:SetAtlas("Forge-Lock", true)
+        lock:SetScale(0.4)
+        lock:SetPoint("TOPRIGHT", button, "TOPRIGHT", 14, 14)
+        lock:SetDesaturated(true)
+        lock:SetVertexColor(0.3, 1, 1, 1)
+        lockFrame.Lock = lock
+        Affected(button).essentialNativeLockFrame = lockFrame
+    end
+    if lockFrame then
+        lockFrame:SetFrameLevel(button:GetFrameLevel() + 30)
+        lockFrame:SetShown(shown == true)
+    end
+end
+
 local function IsEntryUsable(owned, kind, id)
-    if not owned and kind ~= "spell" then
+    if not owned then
         return false
     end
     if kind == "spell" then
-        return C_SpellBook and C_SpellBook.IsSpellInSpellBook(id) or owned.spells[id]
+        return owned.spells[id] == true
     end
     if kind == ENTRY_KIND_WILDCARD_SLOTS then
         return owned.wildcardSlots and owned.wildcardSlots[id]
@@ -407,7 +619,7 @@ local function HandleCursorDrop(state)
         if not spellID then
             return false
         end
-        id = C_Spell.GetBaseSpell(spellID) or spellID
+        id = ItemsData:GetCanonicalSpellID(spellID)
         kind = "spell"
     elseif cursorType == "item" then
         if not cursorID then
@@ -423,6 +635,9 @@ local function HandleCursorDrop(state)
     local ok, error = ns.API:AddToTracking(kind, id, state)
     if not ok then
         ns.Addon:Print(error)
+    end
+    if ok and state == "essential" and ns.EssentialCustomTracker then
+        ns.EssentialCustomTracker:EnsureEntryOrder(kind, id)
     end
 
     ClearCursor()
@@ -485,40 +700,16 @@ local function EnsureReorderMarker()
         return reorderMarker
     end
 
-    local miscPanel = GetMiscPanelFrame()
-    if not miscPanel then
+    if not CMCCooldownViewerSettingsTrackerPanel then
         return nil
     end
 
-    local marker = nil
-    if _G["CooldownViewerSettingsReorderMarkerTemplate"] then
-        local ok, created = pcall(CreateFrame, "Frame", nil, miscPanel, "CooldownViewerSettingsReorderMarkerTemplate")
-        if ok then
-            marker = created
-        end
-    end
-
-    if not marker or not marker.Texture then
-        marker = CreateFrame("Frame", nil, miscPanel)
-        marker:SetSize(12, 12)
-        marker.Texture = marker:CreateTexture(nil, "OVERLAY")
-        marker.Texture:SetAllPoints()
-    end
-
-    if not marker.SetHorizontal then
-        function marker:SetHorizontal()
-            if self.Texture and self.Texture.SetAtlas then
-                self.Texture:SetAtlas("cdm-vertical", true)
-            elseif self.Texture then
-                self.Texture:SetColorTexture(1, 1, 1, 1)
-            end
-        end
-    end
-
+    local marker = CreateFrame("Frame", nil, CMCCooldownViewerSettingsTrackerPanel)
+    marker.Texture = marker:CreateTexture(nil, "OVERLAY")
+    marker.Texture:SetAllPoints()
+    marker.Texture:SetAtlas("cdm-vertical", true)
+    marker:SetSize(8, 38)
     marker:Hide()
-    local spacing = Affected(miscPanel).trackerItemSpacing or 8
-    local itemSize = Affected(miscPanel).trackerItemSize or 38
-    marker:SetSize(spacing, itemSize)
     reorderMarker = marker
     return reorderMarker
 end
@@ -528,10 +719,6 @@ local function EnsureReorderCursor()
         return reorderCursor
     end
 
-    -- Self-contained cursor rather than Blizzard's CooldownViewer dragged-item
-    -- template, whose name/mixin/SetToCursor signature keep churning across
-    -- patches (SettingsDraggedItem -> DraggedItemBase in 12.1.0). We follow the
-    -- cursor ourselves in the reorder OnUpdate, so we only need an Icon texture.
     local frame = CreateFrame("Frame", nil, GetAppropriateTopLevelParent())
     frame:SetFrameStrata("TOOLTIP")
     frame:SetSize(38, 38)
@@ -581,11 +768,8 @@ local function UpdateReorderMarker()
         return
     end
 
-    local miscPanel = GetMiscPanelFrame()
-    if miscPanel then
-        local spacing = Affected(miscPanel).trackerItemSpacing or 8
-        local itemSize = Affected(miscPanel).trackerItemSize or 38
-        marker:SetSize(spacing, itemSize)
+    if CMCCooldownViewerSettingsTrackerPanel then
+        marker:SetSize(8, 38)
     end
 
     local target = reorderTarget
@@ -626,10 +810,9 @@ local function CancelOrderChange()
     reorderEatNextGlobalMouseUp = nil
     ClearItemCursor()
 
-    local miscPanel = GetMiscPanelFrame()
-    if miscPanel then
-        miscPanel:SetScript("OnUpdate", nil)
-        miscPanel:UnregisterEvent("GLOBAL_MOUSE_UP")
+    if CMCCooldownViewerSettingsTrackerPanel then
+        CMCCooldownViewerSettingsTrackerPanel:SetScript("OnUpdate", nil)
+        CMCCooldownViewerSettingsTrackerPanel:UnregisterEvent("GLOBAL_MOUSE_UP")
     end
 end
 
@@ -641,7 +824,17 @@ local function EndOrderChange()
         local targetState = targetItem.categoryState or sourceItem.categoryState
         local sourceKind, sourceID = GetEntryKindAndID(sourceItem)
         if sourceKind and sourceID then
-            if Affected(targetItem).trackerEmpty then
+            if targetState == "essential" and ns.EssentialCustomTracker then
+                local targetKind, targetID = GetEntryKindAndID(targetItem)
+                if sourceItem.categoryState ~= targetState then
+                    ItemsData:SetEntryState(sourceKind, sourceID, targetState)
+                end
+                if Affected(targetItem).trackerEmpty then
+                    ns.EssentialCustomTracker:EnsureEntryOrder(sourceKind, sourceID)
+                elseif targetKind and targetID then
+                    ns.EssentialCustomTracker:MoveEntry(sourceKind, sourceID, targetKind, targetID, reorderOffset == 0)
+                end
+            elseif Affected(targetItem).trackerEmpty then
                 if sourceItem.categoryState ~= targetState then
                     ItemsData:SetEntryState(sourceKind, sourceID, targetState)
                 end
@@ -664,12 +857,16 @@ local function EndOrderChange()
     end
 
     CancelOrderChange()
-    TrackerAssignmentPanel:RefreshMiscPanel()
-    ItemViewer:RefreshItemViewerFrames()
+    RefreshTrackers()
 end
 
 local function BeginOrderChange(itemButton, eatNextGlobalMouseUp)
-    if IsReordering() or not itemButton or Affected(itemButton).trackerEmpty then
+    if
+        IsReordering()
+        or not itemButton
+        or Affected(itemButton).trackerEmpty
+        or Affected(itemButton).essentialNative
+    then
         return
     end
 
@@ -686,12 +883,11 @@ local function BeginOrderChange(itemButton, eatNextGlobalMouseUp)
     PickupItemCursor(itemButton)
     EnsureReorderMarker()
 
-    local miscPanel = GetMiscPanelFrame()
-    if miscPanel then
-        miscPanel:SetScript("OnUpdate", function()
+    if CMCCooldownViewerSettingsTrackerPanel then
+        CMCCooldownViewerSettingsTrackerPanel:SetScript("OnUpdate", function()
             UpdateReorderMarker()
         end)
-        miscPanel:SetScript("OnEvent", function(_self, event, ...)
+        CMCCooldownViewerSettingsTrackerPanel:SetScript("OnEvent", function(_self, event, ...)
             if event == "GLOBAL_MOUSE_UP" then
                 local button = ...
                 if reorderEatNextGlobalMouseUp == button then
@@ -708,12 +904,12 @@ local function BeginOrderChange(itemButton, eatNextGlobalMouseUp)
                 end
             end
         end)
-        miscPanel:RegisterEvent("GLOBAL_MOUSE_UP")
+        CMCCooldownViewerSettingsTrackerPanel:RegisterEvent("GLOBAL_MOUSE_UP")
     end
 end
 
 local function ShowItemContextMenu(button)
-    if not button then
+    if not button or Affected(button).essentialNative then
         return
     end
     local kind, id = GetEntryKindAndID(button)
@@ -722,11 +918,6 @@ local function ShowItemContextMenu(button)
     end
     local currentState = button.categoryState
 
-    local function RefreshTrackerPanels()
-        TrackerAssignmentPanel:RefreshMiscPanel()
-        ItemViewer:RefreshItemViewerFrames()
-    end
-
     local function Generator(owner, rootDescription)
         -- Entries with curated/proc data show a disabled info button stating the
         -- source. Only entries we have NO data for get the manual "Set Custom
@@ -734,6 +925,24 @@ local function ShowItemContextMenu(button)
         if currentState ~= ITEM_STATE_HIDDEN and IsCustomActiveMenuSupportedKind(kind) then
             local targetKind, targetID = ResolveCustomActiveTarget(kind, id)
             local AuraDurations = ns.TrackerAuraDurations
+            local cooldownMenu = rootDescription:CreateButton("Cooldown")
+
+            if ns.AuraTracking and ns.AuraTracking:IsSupported() then
+                local auraSpellID = targetKind and targetID and DB.GetAuraSpellID(targetKind, targetID) or nil
+                local auraLabel = auraSpellID and ("Set Aura (id: " .. auraSpellID .. ")") or "Set Aura"
+                if not targetKind or not targetID then
+                    auraLabel = "Set Aura (equip trinket first)"
+                end
+                cooldownMenu:CreateButton(auraLabel, function()
+                    local popupKind, popupID = ResolveCustomActiveTarget(kind, id)
+                    if not popupKind or not popupID then
+                        local wildcardName = ItemsData:GetEntryName(kind, id) or tostring(id)
+                        ns.Addon:Print(wildcardName .. ": no equipped trinket to set an aura.")
+                        return
+                    end
+                    StaticPopup_Show("CMC_SET_TRACKER_AURA", nil, nil, { kind = popupKind, id = popupID })
+                end)
+            end
 
             local isProc = false
             local knownDuration = 0
@@ -745,12 +954,12 @@ local function ShowItemContextMenu(button)
             end
 
             if isProc then
-                local info = rootDescription:CreateButton("Duration from procs", function() end)
+                local info = cooldownMenu:CreateButton("Duration from procs", function() end)
                 if info and info.SetEnabled then
                     info:SetEnabled(false)
                 end
             elseif knownDuration > 0 then
-                local info = rootDescription:CreateButton(
+                local info = cooldownMenu:CreateButton(
                     "Auto duration: " .. FormatCustomActiveValue(knownDuration) .. "s",
                     function() end
                 )
@@ -768,7 +977,7 @@ local function ShowItemContextMenu(button)
                     label = "Set Custom Active (equip trinket first)"
                 end
 
-                rootDescription:CreateButton(label, function()
+                cooldownMenu:CreateButton(label, function()
                     local popupKind, popupID = ResolveCustomActiveTarget(kind, id)
                     if not popupKind or not popupID then
                         local wildcardName = ItemsData:GetEntryName(kind, id) or tostring(id)
@@ -779,33 +988,95 @@ local function ShowItemContextMenu(button)
                 end)
             end
         end
-        if ItemsData:IsTrackerState(currentState) then
+        if currentState ~= ITEM_STATE_HIDDEN then
             if IsConsumableEntry(kind, id) then
                 rootDescription:CreateCheckbox("Always Show", function()
                     return DB.GetAlwaysShow(kind, id)
                 end, function()
                     DB.SetAlwaysShow(kind, id, not DB.GetAlwaysShow(kind, id))
-                    RefreshTrackerPanels()
+                    RefreshTrackers()
                 end)
+            end
+
+            local hideForMenu = rootDescription:CreateButton("Hide for")
+            local _, _, classID = UnitClass("player")
+            local specCount = classID and C_SpecializationInfo.GetNumSpecializationsForClassID(classID) or 0
+            local sex = UnitSex("player")
+            for specIndex = 1, specCount do
+                local specID, specName, _, specIcon =
+                    GetSpecializationInfoForClassID(classID, specIndex, sex)
+                if specID and specName then
+                    local label = CreateTextureMarkup(specIcon, 64, 64, 16, 16, 0, 1, 0, 1) .. " " .. specName
+                    hideForMenu:CreateCheckbox(label, function()
+                        return DB.IsHiddenForSpec(kind, id, specID)
+                    end, function()
+                        DB.SetHiddenForSpec(kind, id, specID, not DB.IsHiddenForSpec(kind, id, specID))
+                        RefreshTrackers()
+                    end)
+                end
             end
 
             -- Wildcard slots resolve to the equipped item, matching the live tracker.
             local glowKind, glowID = ResolveCustomActiveTarget(kind, id)
             if glowKind and glowID then
+                local glowColorMenu = rootDescription:CreateButton("Glow & Color")
+                if glowKind == "spell" then
+                    local procGlow = glowColorMenu:CreateCheckbox("Proc Glow", function()
+                        return DB.GetProcGlowEnabled(glowID)
+                    end, function()
+                        DB.SetProcGlowEnabled(glowID, not DB.GetProcGlowEnabled(glowID))
+                        ItemViewer:RefreshProcGlows()
+                        TrackerAssignmentPanel:RefreshTrackerPanel()
+                    end)
+                    procGlow:SetTooltip(function(tooltip)
+                        GameTooltip_AddNormalLine(
+                            tooltip,
+                            "Use Blizzard's Spell Activation Overlay state for this tracked spell."
+                        )
+                    end)
+                end
                 local function GlowCheckbox(label, field)
-                    rootDescription:CreateCheckbox(label, function()
+                    glowColorMenu:CreateCheckbox(label, function()
                         return DB.GetGlowFlag(glowKind, glowID, field)
                     end, function()
                         DB.ToggleGlowFlag(glowKind, glowID, field)
-                        RefreshTrackerPanels()
+                        if field == "glowWhenSuggested" and ns.Assistant then
+                            ns.Assistant:RefreshSuggestionTracking()
+                        end
+                        RefreshTrackers()
                     end)
                 end
                 if EntryHasReadyState(glowKind, glowID) then
-                    GlowCheckbox("Glow when ready", "glowWhenReady")
+                    GlowCheckbox("Glow when Ready", "glowWhenReady")
                 end
                 if EntryHasCharges(glowKind, glowID) then
                     GlowCheckbox("Glow when full charges", "glowOnFullCharges")
                 end
+                if IsCustomActiveMenuSupportedKind(glowKind) then
+                    GlowCheckbox("Glow when Aura Active", "glowWhenAuraActive")
+                end
+                if glowKind == "spell" then
+                    GlowCheckbox("Glow when Suggested", "glowWhenSuggested")
+                end
+
+                local function AddColorOverride(field, label, fallbackColor)
+                    local function getColor()
+                        return DB.GetEntryColor(glowKind, glowID, field)
+                    end
+                    local function setColor(r, g, b)
+                        DB.SetEntryColor(glowKind, glowID, field, r, g, b)
+                    end
+                    ns.CooldownStyle.AddMenuColorButton(
+                        glowColorMenu,
+                        label,
+                        getColor,
+                        setColor,
+                        RefreshTrackers,
+                        fallbackColor
+                    )
+                end
+                AddColorOverride("glowColor", "Set Glow Color", ns.CooldownStyle.GetInheritedGlowColor())
+                AddColorOverride("stackColor", "Set Number Color", { 1, 1, 1 })
             end
         end
         if kind == ENTRY_KIND_WILDCARD_SLOTS then
@@ -821,9 +1092,35 @@ local function ShowItemContextMenu(button)
                 )
             end)
         end
+        if currentState ~= ITEM_STATE_HIDDEN then
+            rootDescription:CreateButton("Reset to Defaults", function()
+                if IsConsumableEntry(kind, id) then
+                    DB.SetAlwaysShow(kind, id, false)
+                end
+                DB.ClearHiddenForSpecs(kind, id)
+                local resetKind, resetID = ResolveCustomActiveTarget(kind, id)
+                if resetKind and resetID then
+                    DB.SetAuraSpellID(resetKind, resetID, 0)
+                    DB.SetCustomActiveDuration(resetKind, resetID, 0)
+                    if resetKind == "spell" then
+                        DB.SetProcGlowEnabled(resetID, true)
+                    end
+                    DB.SetGlowFlag(resetKind, resetID, "glowWhenReady", false)
+                    DB.SetGlowFlag(resetKind, resetID, "glowOnFullCharges", false)
+                    DB.SetGlowFlag(resetKind, resetID, "glowWhenAuraActive", false)
+                    DB.SetGlowFlag(resetKind, resetID, "glowWhenSuggested", false)
+                    DB.SetEntryColor(resetKind, resetID, "glowColor")
+                    DB.SetEntryColor(resetKind, resetID, "stackColor")
+                end
+                RefreshTrackers()
+                if ns.Assistant then
+                    ns.Assistant:RefreshSuggestionTracking()
+                end
+            end)
+        end
         rootDescription:CreateButton("Untrack", function()
             ItemsData:SetEntryState(kind, id, nil)
-            RefreshTrackerPanels()
+            RefreshTrackers()
         end)
     end
 
@@ -831,6 +1128,20 @@ local function ShowItemContextMenu(button)
 end
 
 local function InitializeItemButton(button)
+    if not button.Icon then
+        button:SetSize(38, 38)
+        button:EnableMouse(true)
+
+        local icon = button:CreateTexture(nil, "ARTWORK")
+        icon:SetAllPoints(button)
+        button.Icon = icon
+
+        local highlight = button:CreateTexture(nil, "HIGHLIGHT")
+        highlight:SetAllPoints(button)
+        highlight:SetTexture("Interface\\Buttons\\ButtonHilight-Square")
+        highlight:SetBlendMode("ADD")
+        button.Highlight = highlight
+    end
     if Affected(button).trackerInitialized then
         return
     end
@@ -850,6 +1161,9 @@ local function InitializeItemButton(button)
     end
 
     button:SetScript("OnMouseUp", function(self, mouseButton)
+        if Affected(self).essentialNative then
+            return
+        end
         if mouseButton == "RightButton" then
             ShowItemContextMenu(self)
         elseif mouseButton == "LeftButton" and not Affected(self).trackerEmpty then
@@ -861,7 +1175,7 @@ local function InitializeItemButton(button)
     end)
     button:RegisterForDrag("LeftButton")
     button:SetScript("OnDragStart", function(self)
-        if Affected(self).trackerEmpty then
+        if Affected(self).trackerEmpty or Affected(self).essentialNative then
             return
         end
         if PlaySound and SOUNDKIT and SOUNDKIT.UI_CURSOR_PICKUP_OBJECT then
@@ -898,11 +1212,12 @@ local function InitializeItemButton(button)
                             GameTooltip:SetText(wildcardName)
                         end
                     end
-                elseif kind == "spell" then
+                elseif kind == "spell" or kind == "native" then
+                    local spellID = kind == "native" and Affected(self).essentialSpellID or id
                     if GameTooltip.SetSpellByID then
-                        GameTooltip:SetSpellByID(id)
+                        GameTooltip:SetSpellByID(spellID)
                     else
-                        local name = ItemsData:GetEntryName(kind, id)
+                        local name = spellID and C_Spell.GetSpellName(spellID)
                         if name then
                             GameTooltip:SetText(name)
                         end
@@ -938,9 +1253,6 @@ local function InitializeItemButton(button)
     end
 
     function button:UpdateReorderMarkerPosition(marker, cursorX, _cursorY)
-        if marker and marker.SetHorizontal then
-            marker:SetHorizontal()
-        end
         local centerX = self:GetCenter()
         if centerX and cursorX < centerX then
             marker:SetPoint("CENTER", self, "LEFT", -4, 0)
@@ -968,6 +1280,7 @@ local function InitializeItemButton(button)
                 SetIconFromEntry(self, kind, id)
             end
         end
+        RefreshTrackerOverrideIndicator(self)
     end)
 
     Affected(button).trackerInitialized = true
@@ -1022,12 +1335,6 @@ function TrackerAssignmentPanel:LayoutCategory(category, entries, owned)
     local size = 38
     local spacing = 8
 
-    local miscPanel = GetMiscPanelFrame()
-    if miscPanel then
-        Affected(miscPanel).trackerItemSpacing = spacing
-        Affected(miscPanel).trackerItemSize = size
-    end
-
     if #entries == 0 then
         local emptyButton = AcquireItemButton(category)
         SetButtonEntry(emptyButton, nil, nil)
@@ -1038,6 +1345,8 @@ function TrackerAssignmentPanel:LayoutCategory(category, entries, owned)
             emptyButton.Icon._quality:Hide()
         end
         Affected(emptyButton).trackerEmpty = true
+        SetEssentialNativeLock(emptyButton, false)
+        RefreshTrackerOverrideIndicator(emptyButton)
         emptyButton.categoryState = category.state
         emptyButton.layoutIndex = 1
         emptyButton:ClearAllPoints()
@@ -1060,14 +1369,20 @@ function TrackerAssignmentPanel:LayoutCategory(category, entries, owned)
             SetButtonEntry(button, entry.kind, entry.id)
             SetWildcardGlow(button, entry.kind)
             Affected(button).trackerEmpty = false
+            Affected(button).essentialNative = entry.native == true
+            Affected(button).essentialSpellID = entry.spellID
+            RefreshTrackerOverrideIndicator(button)
             button.categoryState = category.state
             button.layoutIndex = index
             button:ClearAllPoints()
             button:SetSize(size, size)
 
             SetIconFromEntry(button, entry.kind, entry.id)
-            if button.Icon then
+            SetEssentialNativeLock(button, entry.native == true)
+            if button.Icon and not entry.native then
                 button.Icon:SetDesaturated(not IsEntryUsable(owned, entry.kind, entry.id))
+            elseif button.Icon then
+                button.Icon:SetDesaturated(false)
             end
 
             if button.Cooldown then
@@ -1099,10 +1414,10 @@ function TrackerAssignmentPanel:LayoutCategory(category, entries, owned)
     category:SetHeight(totalHeight or (headerHeight + 6 + contentHeight))
 end
 
-function TrackerAssignmentPanel:CreateItemCategory(parent, title, state)
+function TrackerAssignmentPanel:CreateItemCategory(parent, title, state, defaultCollapsed)
     local categoryDisplay = CreateFrame("Frame", nil, parent, "CooldownViewerSettingsCategoryTemplate")
     categoryDisplay.state = state
-    categoryDisplay.Collapsed = false
+    categoryDisplay.Collapsed = defaultCollapsed == true
     categoryDisplay.Header:SetHeaderText(title)
 
     categoryDisplay:Layout()
@@ -1126,7 +1441,7 @@ function TrackerAssignmentPanel:CreateItemCategory(parent, title, state)
 
     function categoryDisplay:ToggleCollapsed()
         self:SetCollapsed(not self:IsCollapsed())
-        TrackerAssignmentPanel:RefreshMiscPanel()
+        TrackerAssignmentPanel:RefreshTrackerPanel()
     end
 
     if categoryDisplay.Header then
@@ -1185,34 +1500,50 @@ function TrackerAssignmentPanel:CreateItemCategory(parent, title, state)
         end)
     end
 
-    categoryDisplay.itemPool = CreateFramePool(
-        "Frame",
-        categoryDisplay.Container,
-        "CooldownViewerSettingsItemTemplate",
-        function(_, frame)
-            frame:Hide()
-            frame.layoutIndex = nil
-            frame.itemID = nil
-            frame.spellID = nil
-            Affected(frame).trackerEntryKind = nil
-            Affected(frame).trackerEntryId = nil
-            Affected(frame).trackerEmpty = nil
-            -- Hide every custom overlay so a recycled button never carries a stale
-            -- quality badge or "Trinket Slot" glow/label onto its next entry.
-            if Affected(frame).trackerWildcardGlow then
-                Affected(frame).trackerWildcardGlow:Hide()
-            end
-            if Affected(frame).trackerWildcardName then
-                Affected(frame).trackerWildcardName:Hide()
-            end
-            if frame.Icon and frame.Icon._quality then
-                frame.Icon._quality:Hide()
-            end
-            if frame.Icon then
-                frame.Icon:SetTexture(nil)
+    categoryDisplay.itemPool = CreateFramePool("Frame", categoryDisplay.Container, nil, function(_, frame)
+        frame:Hide()
+        frame.layoutIndex = nil
+        frame.itemID = nil
+        frame.spellID = nil
+        Affected(frame).trackerEntryKind = nil
+        Affected(frame).trackerEntryId = nil
+        Affected(frame).trackerEmpty = nil
+        Affected(frame).essentialNative = nil
+        Affected(frame).essentialSpellID = nil
+        -- Hide every custom overlay so a recycled button never carries a stale
+        -- quality badge or "Trinket Slot" glow/label onto its next entry.
+        if Affected(frame).trackerWildcardGlow then
+            Affected(frame).trackerWildcardGlow:Hide()
+        end
+        if Affected(frame).trackerWildcardName then
+            Affected(frame).trackerWildcardName:Hide()
+        end
+        if Affected(frame).trackerOverrideIndicator then
+            Affected(frame).trackerOverrideIndicator:Hide()
+        end
+        if Affected(frame).essentialNativeLockFrame then
+            Affected(frame).essentialNativeLockFrame:Hide()
+        end
+        if frame.Icon and frame.Icon._quality then
+            frame.Icon._quality:Hide()
+        end
+        if frame.Icon then
+            frame.Icon:SetTexture(nil)
+        end
+    end)
+
+    -- This inherits Blizzard's category event handling, but owns plain CMC
+    -- buttons rather than CooldownViewerSettingsItemTemplate instances.
+    function categoryDisplay:RefreshSpellIcons()
+        for button in self.itemPool:EnumerateActive() do
+            if button.Icon and not Affected(button).trackerEmpty then
+                local kind, id = GetEntryKindAndID(button)
+                if kind and id then
+                    SetIconFromEntry(button, kind, id)
+                end
             end
         end
-    )
+    end
 
     function categoryDisplay:GetNearestItemToCursorWeighted(cursorX, cursorY)
         local nearestItem = nil
@@ -1261,12 +1592,12 @@ function TrackerAssignmentPanel:CreateItemCategory(parent, title, state)
         end)
     end
 
-    categoryDisplay:SetCollapsed(false)
+    categoryDisplay:SetCollapsed(defaultCollapsed == true)
 
     return categoryDisplay
 end
 
-function TrackerAssignmentPanel:RefreshMiscPanel(settingsFrame)
+function TrackerAssignmentPanel:RefreshTrackerPanel()
     if not ns.db.profile.tracker_enabled then
         return
     end
@@ -1278,20 +1609,18 @@ function TrackerAssignmentPanel:RefreshMiscPanel(settingsFrame)
         ItemViewer:ReconcileTrackerCount()
     end
 
-    local frame = settingsFrame or _G["CooldownViewerSettings"]
-    local miscPanel = Affected(frame).trackerMiscPanel
-    if not miscPanel then
+    if not CMCCooldownViewerSettingsTrackerPanel then
         return
     end
 
-    if miscPanel.SetPortraitTextureRaw then
-        miscPanel:SetPortraitTextureRaw(
+    if CMCCooldownViewerSettingsTrackerPanel.SetPortraitTextureRaw then
+        CMCCooldownViewerSettingsTrackerPanel:SetPortraitTextureRaw(
             "Interface\\Addons\\CooldownManagerCentered\\Media\\CooldownManagerCenteredIcon"
         )
     end
 
     local showUnusable = DB.GetShowingUnusable()
-    local searchTerm = Affected(miscPanel).trackerSearchTerm or ""
+    local searchTerm = Affected(CMCCooldownViewerSettingsTrackerPanel).trackerSearchTerm or ""
     local searchLower = searchTerm ~= "" and searchTerm:lower() or nil
 
     local function matchesSearch(entry)
@@ -1317,9 +1646,10 @@ function TrackerAssignmentPanel:RefreshMiscPanel(settingsFrame)
         return result
     end
 
-    local trackerCategories = Affected(miscPanel).trackerCategories
-    local hiddenCategory = Affected(miscPanel).hiddenCategory
-    if not trackerCategories or not hiddenCategory then
+    local trackerCategories = Affected(CMCCooldownViewerSettingsTrackerPanel).trackerCategories
+    local essentialCategory = Affected(CMCCooldownViewerSettingsTrackerPanel).essentialCategory
+    local hiddenCategory = Affected(CMCCooldownViewerSettingsTrackerPanel).hiddenCategory
+    if not trackerCategories or not essentialCategory or not hiddenCategory then
         return
     end
 
@@ -1327,6 +1657,9 @@ function TrackerAssignmentPanel:RefreshMiscPanel(settingsFrame)
     -- hidden bucket. `categories` holds only the visible frames for positioning.
     local count = ItemViewer:GetTrackerCount()
     local categories = {}
+    local essentialEntries = ns.EssentialCustomTracker and ns.EssentialCustomTracker:GetSettingsEntries() or {}
+    self:LayoutCategory(essentialCategory, essentialEntries, owned)
+    table.insert(categories, essentialCategory)
     local revealedNewCategory = false
     for i = 1, #trackerCategories do
         local category = trackerCategories[i]
@@ -1347,7 +1680,7 @@ function TrackerAssignmentPanel:RefreshMiscPanel(settingsFrame)
     self:LayoutCategory(hiddenCategory, collectEntries(ITEM_STATE_HIDDEN, true), owned)
     table.insert(categories, hiddenCategory)
 
-    local scrollChild = Affected(miscPanel).trackerScrollChild
+    local scrollChild = Affected(CMCCooldownViewerSettingsTrackerPanel).trackerScrollChild
     if scrollChild then
         local yOffset = 0
         local previousCategory = nil
@@ -1361,23 +1694,32 @@ function TrackerAssignmentPanel:RefreshMiscPanel(settingsFrame)
             yOffset = yOffset + category:GetHeight() + (previousCategory and 18 or 0)
             previousCategory = category
         end
-        local scrollFrame = Affected(miscPanel).trackerScrollFrame
+        local scrollFrame = Affected(CMCCooldownViewerSettingsTrackerPanel).trackerScrollFrame
         if scrollFrame then
             local paddingHeight = 18
             local frameHeight = scrollFrame:GetHeight() or 0
             local needsScrollPadding = previousCategory and (frameHeight > 0 and yOffset > frameHeight)
             if needsScrollPadding then
-                if not Affected(miscPanel).trackerScrollPadding then
-                    Affected(miscPanel).trackerScrollPadding = CreateFrame("Frame", nil, scrollChild)
-                    Affected(miscPanel).trackerScrollPadding:SetHeight(paddingHeight)
+                if not Affected(CMCCooldownViewerSettingsTrackerPanel).trackerScrollPadding then
+                    Affected(CMCCooldownViewerSettingsTrackerPanel).trackerScrollPadding =
+                        CreateFrame("Frame", nil, scrollChild)
+                    Affected(CMCCooldownViewerSettingsTrackerPanel).trackerScrollPadding:SetHeight(paddingHeight)
                 end
-                Affected(miscPanel).trackerScrollPadding:ClearAllPoints()
-                Affected(miscPanel).trackerScrollPadding:SetPoint("TOPLEFT", previousCategory, "BOTTOMLEFT")
-                Affected(miscPanel).trackerScrollPadding:SetPoint("TOPRIGHT", previousCategory, "BOTTOMRIGHT")
-                Affected(miscPanel).trackerScrollPadding:Show()
+                Affected(CMCCooldownViewerSettingsTrackerPanel).trackerScrollPadding:ClearAllPoints()
+                Affected(CMCCooldownViewerSettingsTrackerPanel).trackerScrollPadding:SetPoint(
+                    "TOPLEFT",
+                    previousCategory,
+                    "BOTTOMLEFT"
+                )
+                Affected(CMCCooldownViewerSettingsTrackerPanel).trackerScrollPadding:SetPoint(
+                    "TOPRIGHT",
+                    previousCategory,
+                    "BOTTOMRIGHT"
+                )
+                Affected(CMCCooldownViewerSettingsTrackerPanel).trackerScrollPadding:Show()
                 scrollChild:SetHeight(math.max(1, yOffset + paddingHeight))
-            elseif Affected(miscPanel).trackerScrollPadding then
-                Affected(miscPanel).trackerScrollPadding:Hide()
+            elseif Affected(CMCCooldownViewerSettingsTrackerPanel).trackerScrollPadding then
+                Affected(CMCCooldownViewerSettingsTrackerPanel).trackerScrollPadding:Hide()
                 scrollChild:SetHeight(math.max(1, yOffset))
             end
 
@@ -1392,80 +1734,40 @@ function TrackerAssignmentPanel:RefreshMiscPanel(settingsFrame)
     -- follow-up pass sees the category already shown).
     if revealedNewCategory then
         C_Timer.After(0.1, function()
-            TrackerAssignmentPanel:RefreshMiscPanel(settingsFrame)
+            TrackerAssignmentPanel:RefreshTrackerPanel()
         end)
     end
 end
 
--- Mirrors Blizzard's CooldownViewerSettingsCategoryMixin:RefreshSpellIcons. When
--- SPELL_UPDATE_ICON fires (procs / override spells / talent swaps in combat)
-function TrackerAssignmentPanel:RefreshIcons()
-    local frame = _G["CooldownViewerSettings"]
-    if not frame then
-        return
-    end
-    local miscPanel = Affected(frame).trackerMiscPanel
-    if not miscPanel or not miscPanel:IsShown() then
+function TrackerAssignmentPanel:EnsureTrackerPanel()
+    if CMCCooldownViewerSettingsTrackerPanel then
         return
     end
 
-    local function refreshCategory(category)
-        if not category or not category.itemPool then
-            return
-        end
-        for button in category.itemPool:EnumerateActive() do
-            if button.Icon and not Affected(button).trackerEmpty then
-                local kind, id = GetEntryKindAndID(button)
-                if kind and id then
-                    button.Icon:SetTexture(ItemVisuals:GetEntryIcon(kind, id))
-                end
-            end
-        end
+    CMCCooldownViewerSettingsTrackerPanel =
+        CreateFrame("Frame", "CMCCooldownViewerSettingsTrackerPanel", CooldownViewerSettings, "ButtonFrameTemplate")
+    CMCCooldownViewerSettingsTrackerPanel:SetAllPoints(CooldownViewerSettings)
+    CMCCooldownViewerSettingsTrackerPanel:SetFrameStrata("HIGH")
+    CMCCooldownViewerSettingsTrackerPanel:SetFrameLevel(CooldownViewerSettings:GetFrameLevel() + 10)
+    CooldownViewerSettingsCloseButton:SetFrameStrata("HIGH")
+    CMCCooldownViewerSettingsTrackerPanel:Hide()
+    CMCCooldownViewerSettingsTrackerPanel.Inset.Bg:SetAtlas("character-panel-background", true)
+    CMCCooldownViewerSettingsTrackerPanel.Inset.Bg:SetHorizTile(false)
+    CMCCooldownViewerSettingsTrackerPanel.Inset.Bg:SetVertTile(false)
+    CMCCooldownViewerSettingsTrackerPanel.TitleContainer.TitleText:SetText(ns.API.GradientText("CMC") .. " Trackers")
+
+    if CMCCooldownViewerSettingsTrackerPanel.CloseButton then
+        -- The native level-510 close button remains above this level-100 overlay and
+        -- receives the hardware click directly, including during combat.
+        CMCCooldownViewerSettingsTrackerPanel.CloseButton:Hide()
     end
 
-    local trackerCategories = Affected(miscPanel).trackerCategories
-    if trackerCategories then
-        for _, category in ipairs(trackerCategories) do
-            refreshCategory(category)
-        end
-    end
-    refreshCategory(Affected(miscPanel).hiddenCategory)
-end
-
--- Delegates to the shared tab coordinator (ns.SettingsTabs) so this panel and the
--- buff-container panel can never leak over each other or over native content.
-local function ShowMiscPanel(settingsFrame)
-    local miscPanel = Affected(settingsFrame).trackerMiscPanel
-    if not miscPanel then
-        return
-    end
-    ns.SettingsTabs:Activate(settingsFrame, miscPanel, function()
-        TrackerAssignmentPanel:RefreshMiscPanel(settingsFrame)
-    end)
-end
-
-function TrackerAssignmentPanel:EnsureMiscSettingsTab(settingsFrame)
-    if Affected(settingsFrame).trackerMiscPanel then
-        return
-    end
-
-    local miscPanel = CreateFrame("Frame", "_cmc_tracker_misc_panel", settingsFrame, "ButtonFrameTemplate")
-    miscPanel:SetAllPoints(settingsFrame)
-    miscPanel:Hide()
-    miscPanel.Inset.Bg:SetAtlas("character-panel-background", true)
-    miscPanel.Inset.Bg:SetHorizTile(false)
-    miscPanel.Inset.Bg:SetVertTile(false)
-    miscPanel.TitleContainer.TitleText:SetText(ns.API.GradientText("CMC") .. " Trackers")
-
-    if miscPanel.CloseButton then
-        miscPanel.CloseButton:SetScript("OnClick", function()
-            HideUIPanel(settingsFrame)
-        end)
-    end
-
-    Affected(settingsFrame).trackerMiscPanel = miscPanel
-
-    local scrollFrame = CreateFrame("ScrollFrame", "$parent.CooldownScroll", miscPanel, "ScrollFrameTemplate")
+    local scrollFrame = CreateFrame(
+        "ScrollFrame",
+        "$parent.CooldownScroll",
+        CMCCooldownViewerSettingsTrackerPanel,
+        "ScrollFrameTemplate"
+    )
     scrollFrame:SetPoint("TOPLEFT", 17, -72)
     scrollFrame:SetPoint("BOTTOMRIGHT", -30, 29)
 
@@ -1479,18 +1781,11 @@ function TrackerAssignmentPanel:EnsureMiscSettingsTab(settingsFrame)
 
     scrollFrame:SetScript("OnSizeChanged", function(self)
         scrollChild:SetWidth(self:GetWidth())
-        TrackerAssignmentPanel:RefreshMiscPanel(settingsFrame)
+        TrackerAssignmentPanel:RefreshTrackerPanel()
     end)
 
-    miscPanel:HookScript("OnShow", function()
-        scrollChild:SetWidth(scrollFrame:GetWidth())
-        TrackerAssignmentPanel:RefreshMiscPanel(settingsFrame)
-    end)
-
-    -- Pre-create the full pool of tracker categories (LibEQOL/template frames can't
-    -- be destroyed); RefreshMiscPanel shows only the active ones. The hidden bucket
-    -- is always last.
     local maxTrackers = ns.CONSTANTS.MAX_TRACKERS or 10
+    local essentialCategory = self:CreateItemCategory(scrollChild, "Essential Viewer", "essential", true)
     local trackerCategories = {}
     for i = 1, maxTrackers do
         trackerCategories[i] = self:CreateItemCategory(scrollChild, "Tracker " .. i, ItemsData:GetTrackerStateName(i))
@@ -1498,38 +1793,38 @@ function TrackerAssignmentPanel:EnsureMiscSettingsTab(settingsFrame)
     end
     local hiddenCategory = self:CreateItemCategory(scrollChild, "Not Displayed", ITEM_STATE_HIDDEN)
 
-    Affected(miscPanel).trackerCategories = trackerCategories
-    Affected(miscPanel).hiddenCategory = hiddenCategory
-    Affected(miscPanel).trackerScrollChild = scrollChild
-    Affected(miscPanel).trackerScrollFrame = scrollFrame
-    local spellsTab = settingsFrame.SpellsTab
-    local aurasTab = settingsFrame.AurasTab
+    Affected(CMCCooldownViewerSettingsTrackerPanel).trackerCategories = trackerCategories
+    Affected(CMCCooldownViewerSettingsTrackerPanel).essentialCategory = essentialCategory
+    Affected(CMCCooldownViewerSettingsTrackerPanel).hiddenCategory = hiddenCategory
+    Affected(CMCCooldownViewerSettingsTrackerPanel).trackerScrollChild = scrollChild
+    Affected(CMCCooldownViewerSettingsTrackerPanel).trackerScrollFrame = scrollFrame
+    local spellsTab = CooldownViewerSettings.SpellsTab
+    local aurasTab = CooldownViewerSettings.AurasTab
     -- 12.1.0
-    local groupBuffsTab = settingsFrame.GroupBuffsTab
+    local groupBuffsTab = CooldownViewerSettings.GroupBuffsTab
 
-    Affected(spellsTab).trackerIsTabButton = true
-    Affected(aurasTab).trackerIsTabButton = true
-    if groupBuffsTab then
-        Affected(groupBuffsTab).trackerIsTabButton = true
-    end
-
-    if not Affected(miscPanel).trackerSearchBox then
-        local searchBox = CreateFrame("EditBox", nil, miscPanel, "SearchBoxTemplate")
+    if not Affected(CMCCooldownViewerSettingsTrackerPanel).trackerSearchBox then
+        local searchBox = CreateFrame("EditBox", nil, CMCCooldownViewerSettingsTrackerPanel, "SearchBoxTemplate")
         searchBox:SetSize(290, 30)
-        searchBox:SetPoint("TOPLEFT", miscPanel, "TOPLEFT", 72, -30)
+        searchBox:SetPoint("TOPLEFT", CMCCooldownViewerSettingsTrackerPanel, "TOPLEFT", 72, -30)
         searchBox.Instructions:SetText("Enter search text")
         searchBox:SetScript("OnTextChanged", function(self)
             self.Instructions:SetShown(self:GetText() == "")
-            Affected(miscPanel).trackerSearchTerm = self:GetText()
-            TrackerAssignmentPanel:RefreshMiscPanel(settingsFrame)
+            Affected(CMCCooldownViewerSettingsTrackerPanel).trackerSearchTerm = self:GetText()
+            TrackerAssignmentPanel:RefreshTrackerPanel()
         end)
         searchBox:Hide()
-        Affected(miscPanel).trackerSearchBox = searchBox
+        Affected(CMCCooldownViewerSettingsTrackerPanel).trackerSearchBox = searchBox
     end
 
-    if not Affected(miscPanel).trackerSettingsDropdown then
-        local dropdown = CreateFrame("DropdownButton", nil, miscPanel, "UIPanelIconDropdownButtonTemplate")
-        dropdown:SetPoint("LEFT", Affected(miscPanel).trackerSearchBox, "RIGHT", 5, 0)
+    if not Affected(CMCCooldownViewerSettingsTrackerPanel).trackerSettingsDropdown then
+        local dropdown = CreateFrame(
+            "DropdownButton",
+            nil,
+            CMCCooldownViewerSettingsTrackerPanel,
+            "UIPanelIconDropdownButtonTemplate"
+        )
+        dropdown:SetPoint("LEFT", Affected(CMCCooldownViewerSettingsTrackerPanel).trackerSearchBox, "RIGHT", 5, 0)
         dropdown:SetupMenu(function(_, rootDescription)
             rootDescription:CreateCheckbox("Show Unusable", DB.GetShowingUnusable, DB.ToggleShowUnusable)
 
@@ -1546,108 +1841,89 @@ function TrackerAssignmentPanel:EnsureMiscSettingsTab(settingsFrame)
             -- end)
         end)
         dropdown:Hide()
-        Affected(miscPanel).trackerSettingsDropdown = dropdown
+        Affected(CMCCooldownViewerSettingsTrackerPanel).trackerSettingsDropdown = dropdown
     end
 
-    if not Affected(miscPanel).trackerTrackTip then
-        local trackTip = miscPanel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-        trackTip:SetPoint("BOTTOMLEFT", miscPanel, "BOTTOMLEFT", 10, 10)
+    if not Affected(CMCCooldownViewerSettingsTrackerPanel).trackerTrackTip then
+        local trackTip =
+            CMCCooldownViewerSettingsTrackerPanel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        trackTip:SetPoint("BOTTOMLEFT", CMCCooldownViewerSettingsTrackerPanel, "BOTTOMLEFT", 10, 10)
         trackTip:SetText("|cfffff100Drag&Drop|r an item or spell")
-        Affected(miscPanel).trackerTrackTip = trackTip
+        Affected(CMCCooldownViewerSettingsTrackerPanel).trackerTrackTip = trackTip
     end
 
-    miscPanel:HookScript("OnShow", function(self)
-        if Affected(self).trackerSearchBox then
-            Affected(self).trackerSearchBox:Show()
-        end
-        if Affected(self).trackerSettingsDropdown then
-            Affected(self).trackerSettingsDropdown:Show()
-        end
-
-        if not spellIconEventFrame then
-            spellIconEventFrame = CreateFrame("Frame")
-            spellIconEventFrame:SetScript("OnEvent", function()
-                TrackerAssignmentPanel:RefreshIcons()
-            end)
-        end
-        spellIconEventFrame:RegisterEvent("SPELL_UPDATE_ICON")
+    CMCCooldownViewerSettingsTrackerPanel:HookScript("OnShow", function(self)
+        scrollChild:SetWidth(scrollFrame:GetWidth())
+        Affected(self).trackerSearchBox:Show()
+        Affected(self).trackerSettingsDropdown:Show()
+        TrackerAssignmentPanel:RefreshTrackerPanel()
     end)
-    miscPanel:HookScript("OnHide", function(self)
-        if Affected(self).trackerSearchBox then
-            Affected(self).trackerSearchBox:Hide()
-        end
-        if Affected(self).trackerSettingsDropdown then
-            Affected(self).trackerSettingsDropdown:Hide()
-        end
-        if spellIconEventFrame then
-            spellIconEventFrame:UnregisterEvent("SPELL_UPDATE_ICON")
-        end
+    CMCCooldownViewerSettingsTrackerPanel:HookScript("OnHide", function(self)
+        Affected(self).trackerSearchBox:Hide()
+        Affected(self).trackerSettingsDropdown:Hide()
+        CancelOrderChange()
     end)
 
-    local miscTab = CreateFrame("Button", nil, UIParent, "CooldownViewerSettingsTabTemplate")
+    CMCCooldownViewerSettingsTrackerTab = CreateFrame("Button", nil, UIParent, "CooldownViewerSettingsTabTemplate")
 
-    -- Exposed so the custom-buff tab can anchor directly beneath this one.
-    Affected(settingsFrame).trackerMiscTab = miscTab
-    -- Coordinate with the shared tab manager so this and the buff panel are mutually
-    -- exclusive and never leak over each other or native content.
-    ns.SettingsTabs:RegisterPanel(settingsFrame, miscPanel, miscTab, "Tracker")
+    CMCCooldownViewerSettingsTrackerTab:SetFrameStrata("HIGH")
+    CMCCooldownViewerSettingsTrackerTab.tooltipText = ns.API.GradientText("CMC") .. " Trackers"
+    CMCCooldownViewerSettingsTrackerTab.activeAtlas = "unitframeicon-chromietime"
+    CMCCooldownViewerSettingsTrackerTab.inactiveAtlas = "unitframeicon-chromietime"
+    CMCCooldownViewerSettingsTrackerTab.Icon:SetDesaturated(true)
+    CMCCooldownViewerSettingsTrackerTab.Icon:SetVertexColor(1, 1, 1, 1)
+    CMCCooldownViewerSettingsTrackerTab.Icon:SetGradient(
+        "VERTICAL",
+        CreateColor(0, 0.41, 0.405),
+        CreateColor(0.825, 0.93, 0)
+    )
 
-    Affected(miscTab).trackerIsTabButton = true
-    miscTab.tooltipText = ns.API.GradientText("CMC") .. " Trackers"
-    miscTab.displayMode = "tracker"
-    miscTab.activeAtlas = "icon_cooldownmanager"
-    miscTab.inactiveAtlas = "icon_cooldownmanager"
-    miscTab.Icon:SetDesaturated(true)
-    miscTab.Icon:SetVertexColor(1, 1, 1, 1)
-    miscTab.Icon:SetGradient("VERTICAL", CreateColor(0, 0.41, 0.405), CreateColor(0.825, 0.93, 0))
+    CMCCooldownViewerSettingsTrackerTab:SetChecked(false)
 
-    miscTab:SetChecked(false)
     if groupBuffsTab then
-        miscTab:SetPoint("TOP", groupBuffsTab, "BOTTOM", 0, -3)
+        CMCCooldownViewerSettingsTrackerTab:SetPoint("TOP", groupBuffsTab, "BOTTOM", 0, -3)
     else
-        miscTab:SetPoint("TOP", aurasTab, "BOTTOM", 0, -3)
+        CMCCooldownViewerSettingsTrackerTab:SetPoint("TOP", aurasTab, "BOTTOM", 0, -3)
     end
 
-    settingsFrame:HookScript("OnHide", function()
-        miscTab:Hide()
-    end)
-    settingsFrame:HookScript("OnShow", function()
-        miscTab:Show()
-    end)
+    ns.SettingsTabs:RegisterPanel(CMCCooldownViewerSettingsTrackerPanel, CMCCooldownViewerSettingsTrackerTab, "Tracker")
 
     local function ShowTrackerTab()
-        if Affected(settingsFrame).trackerMiscPanel:IsShown() then
-            return
-        end
-        spellsTab:SetChecked(false)
-        aurasTab:SetChecked(false)
-        if groupBuffsTab then
-            groupBuffsTab:SetChecked(false)
-        end
-        miscTab:SetChecked(true)
-        ShowMiscPanel(settingsFrame)
+        ns.SettingsTabs:Activate(CMCCooldownViewerSettingsTrackerPanel, function()
+            TrackerAssignmentPanel:RefreshTrackerPanel()
+        end)
     end
 
-    miscTab:SetScript("OnClick", function()
-        -- Never silently turn the feature on: ask first, then enable live (no
-        -- reload) and open the tab only if the user confirms.
+    hooksecurefunc(CooldownViewerSettings, "Hide", function()
+        CMCCooldownViewerSettingsTrackerPanel:Hide()
+        CMCCooldownViewerSettingsTrackerTab:Hide()
+    end)
+    hooksecurefunc(CooldownViewerSettings, "Show", function()
+        if InCombatLockdown() then
+            ns.SettingsTabs:DeactivateAll()
+            CMCCooldownViewerSettingsTrackerTab:Hide()
+        else
+            CMCCooldownViewerSettingsTrackerTab:Show()
+            ns.SettingsTabs:Restore()
+        end
+    end)
+
+    CMCCooldownViewerSettingsTrackerTab:SetScript("OnClick", function()
         if not ns.db.profile.tracker_enabled then
             StaticPopup_Show("CMC_ENABLE_TRACKER", nil, nil, ShowTrackerTab)
             return
         end
+        ns.SettingsTabs:DeactivateAll()
         ShowTrackerTab()
     end)
 
-    hooksecurefunc(settingsFrame, "SetDisplayMode", function(self, mode)
-        spellsTab:SetChecked(mode == "spells")
-        aurasTab:SetChecked(mode == "auras")
-        if groupBuffsTab then
-            groupBuffsTab:SetChecked(mode == "groupBuffs")
-        end
-        miscTab:SetChecked(mode == "tracker")
-
-        TrackerAssignmentPanel:HideMiscPanel(self)
+    hooksecurefunc(CooldownViewerSettings, "SetDisplayMode", function(self, mode)
+        ns.SettingsTabs:DeactivateAll()
     end)
 
-    miscTab:Show()
+    if not InCombatLockdown() then
+        CMCCooldownViewerSettingsTrackerTab:Show()
+    else
+        CMCCooldownViewerSettingsTrackerTab:Hide()
+    end
 end

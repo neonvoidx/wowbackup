@@ -39,6 +39,10 @@ local function InvalidateIconMap()
     iconMapDirty = true
 end
 
+function ButtonPress:InvalidateIconMap()
+    InvalidateIconMap()
+end
+
 local function AddToIconMap(id, icon)
     if type(id) ~= "number" then
         return
@@ -101,6 +105,11 @@ local function RebuildIconMap()
     end
     if ns.TrackerItemViewer and ns.TrackerItemViewer.GetActiveItemFrames then
         for _, frame in ipairs(ns.TrackerItemViewer:GetActiveItemFrames()) do
+            IndexTrackerFrame(frame)
+        end
+    end
+    if ns.EssentialCustomTracker and ns.EssentialCustomTracker.GetItemFrames then
+        for _, frame in ipairs(ns.EssentialCustomTracker:GetItemFrames()) do
             IndexTrackerFrame(frame)
         end
     end

@@ -20,7 +20,9 @@
 				EnhanceQoL.Aura.UF.GroupFrames.UnitButton_OnEvent(self, event, ...);
 			</OnEvent>
 			<OnAttributeChanged>
-				EnhanceQoL.Aura.UF.GroupFrames.UnitButton_OnAttributeChanged(self, name, value);
+				if name == "unit" and (value == nil or value == "" or self.unit ~= value) then
+					EnhanceQoL.Aura.UF.GroupFrames.UnitButton_OnAttributeChanged(self, name, value);
+				end
 			</OnAttributeChanged>
 			<OnEnter>
 				EnhanceQoL.Aura.UF.GroupFrames.UnitButton_OnEnter(self);
@@ -41,7 +43,9 @@
 				EnhanceQoL.Aura.UF.GroupFrames.UnitButton_OnEvent(self, event, ...);
 			</OnEvent>
 			<OnAttributeChanged>
-				EnhanceQoL.Aura.UF.GroupFrames.UnitButton_OnAttributeChanged(self, name, value);
+				if name == "unit" and (value == nil or value == "" or self.unit ~= value) then
+					EnhanceQoL.Aura.UF.GroupFrames.UnitButton_OnAttributeChanged(self, name, value);
+				end
 			</OnAttributeChanged>
 			<OnEnter>
 				EnhanceQoL.Aura.UF.GroupFrames.UnitButton_OnEnter(self);

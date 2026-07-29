@@ -7,6 +7,7 @@ PetWalkerPerCharDB = {
 "BattlePet-0-0000237D26C1",
 "BattlePet-0-000022D91C4F",
 },
+["dbVersion"] = 3,
 ["charFavs"] = {
 ["BattlePet-0-000023798D35"] = true,
 ["BattlePet-0-000018AA8069"] = true,
