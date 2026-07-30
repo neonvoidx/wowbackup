@@ -116,7 +116,7 @@ WeakAurasOptions: enabled
 WeakAurasTemplates: enabled
 BartrubySummonPet: enabled
 BetterBlizzFrames: enabled
-BetterBlizzPlates: disabled
+BetterBlizzPlates: enabled
 Conceal: enabled
 EditModeExpanded: enabled
 idTip: enabled
@@ -492,3 +492,5 @@ SweepyBoop: enabled
 BattlegroundWinConditions: enabled
 ConsoleVariableManager: enabled
 Shackled: enabled
+ArenaAnalytics: enabled
+MiniWinLoss: enabled

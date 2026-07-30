@@ -21,7 +21,7 @@ END
 VER 3 0100000000000028 " " "134400"
 #showtooltip
 #FS OtherDPS OtherDPS OtherDPS
-/cast [@none,help][@none,help][@none,help][] Power Infusion
+/cast [@raid3,help][@raid3,help][@raid3,help][] Power Infusion
 END
 VER 3 010000000000002A " " "134400"
 #showtooltip
@@ -86,13 +86,12 @@ VER 3 0100000000000046 " " "134400"
 #showtooltip
 #FrameSort EnemyHealer
 /cancelaura Dispersion
-/cast [mod:shift,@none,exists,harm,nodead][] Silence
+/cast [mod:shift,@arena3,exists,harm,nodead][] Silence
 END
 VER 3 0100000000000047 " " "134400"
-#showtooltip Mind Control
-#FrameSort EnemyHealer
-/cast [nochanneling: Mind Control,mod:shift,@none,exists,harm,nodead][nochanneling: Mind Control] Mind Controll
-/stopcasting [channeling: Mind Control]
+#showtooltip
+#FS X EnemyHealer
+/cast [mod:shift,@none,harm][@arena3,harm][] Mind Control
 END
 VER 3 0100000000000048 " " "134400"
 #showtooltip 
@@ -107,7 +106,7 @@ END
 VER 3 010000000000004A " " "INV_Misc_QuestionMark"
 #showtooltip Voidform
 #FS OtherDPS OtherDPS OtherDPS
-/cast [@none,help][@none,help][@none,help][] Power Infusion
+/cast [@raid3,help][@raid3,help][@raid3,help][] Power Infusion
 /use 14
 /use saltwater potion
 /cast Voidform

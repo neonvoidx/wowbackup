@@ -2,10 +2,10 @@
 PetWalkerPerCharDB = {
 ["charFavsEnabled"] = true,
 ["recentPets"] = {
-"BattlePet-0-000018AA8126",
-"BattlePet-0-000022361826",
-"BattlePet-0-0000227EF788",
 "BattlePet-0-000023621622",
+"BattlePet-0-000023B3E3E6",
+"BattlePet-0-000018AA80BC",
+"BattlePet-0-000018AA809B",
 },
 ["dbVersion"] = 3,
 ["charFavs"] = {
@@ -15,8 +15,8 @@ PetWalkerPerCharDB = {
 ["BattlePet-0-000022361826"] = true,
 ["BattlePet-0-000018AA80BC"] = true,
 ["BattlePet-0-0000231251A3"] = true,
-["BattlePet-0-000018AA809B"] = true,
-["BattlePet-0-0000227EF788"] = true,
 ["BattlePet-0-000022AB6CD0"] = true,
+["BattlePet-0-0000227EF788"] = true,
+["BattlePet-0-000018AA809B"] = true,
 },
 }

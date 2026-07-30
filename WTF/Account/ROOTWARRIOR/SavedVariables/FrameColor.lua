@@ -15,32 +15,32 @@ FrameColor4DB = {
 ["Thingreyline - Tichondrius"] = "Default",
 ["Crillessana - Mal'Ganis"] = "Default",
 ["Tampacks - Tichondrius"] = "Default",
-["Tainguk - Tichondrius"] = "Default",
+["Clevagirl - Mal'Ganis"] = "Default",
 ["Auteist - Mal'Ganis"] = "Default",
 ["Ofpuss - Mal'Ganis"] = "Default",
-["Smaugchamp - Mal'Ganis"] = "Default",
+["Bigxthazug - Tichondrius"] = "Default",
 ["Reedingo - Tichondrius"] = "Default",
 ["Choppiez - Mal'Ganis"] = "Default",
 ["Gehyo - Tichondrius"] = "Default",
 ["Tampacks - Mal'Ganis"] = "Default",
-["Gehyo - Mal'Ganis"] = "Default",
-["Hellowalls - Mal'Ganis"] = "Default",
+["Manyfaced - Tichondrius"] = "Default",
+["Praisesun - Tichondrius"] = "Default",
 ["Mäñýfäçëð - Mal'Ganis"] = "Default",
 ["Hellavator - Mal'Ganis"] = "Default",
 ["Neonvoid - Mal'Ganis"] = "Default",
 ["Hellavator - Tichondrius"] = "Default",
-["Smaugchamp - Tichondrius"] = "Default",
-["Strathmoan - Tichondrius"] = "Default",
+["Mäñýfäçëð - Tichondrius"] = "Default",
+["Neonvoid - Tichondrius"] = "Default",
 ["Stormclout - Tichondrius"] = "Default",
 ["Reedingo - Mal'Ganis"] = "Default",
 ["Starstypeshi - Tichondrius"] = "Default",
-["Neonvoid - Tichondrius"] = "Default",
-["Mäñýfäçëð - Tichondrius"] = "Default",
+["Strathmoan - Tichondrius"] = "Default",
+["Smaugchamp - Tichondrius"] = "Default",
 ["Korahron - Tichondrius"] = "Default",
-["Praisesun - Tichondrius"] = "Default",
-["Manyfaced - Tichondrius"] = "Default",
-["Bigxthazug - Tichondrius"] = "Default",
-["Clevagirl - Mal'Ganis"] = "Default",
+["Hellowalls - Mal'Ganis"] = "Default",
+["Gehyo - Mal'Ganis"] = "Default",
+["Smaugchamp - Mal'Ganis"] = "Default",
+["Tainguk - Tichondrius"] = "Default",
 },
 ["profiles"] = {
 ["Default"] = {
@@ -58,10 +58,10 @@ FrameColor4DB = {
 ["background"] = {
 ["followClassColor"] = false,
 },
-["main"] = {
+["borders"] = {
 ["followClassColor"] = false,
 },
-["borders"] = {
+["main"] = {
 ["followClassColor"] = false,
 },
 },
@@ -101,14 +101,6 @@ FrameColor4DB = {
 ["background"] = {
 ["followClassColor"] = false,
 },
-["main"] = {
-["rgbaValues"] = {
-0.05098039656877518,
-0.05098039656877518,
-0.05098039656877518,
-},
-["followClassColor"] = false,
-},
 ["borders"] = {
 ["rgbaValues"] = {
 0.05098039656877518,
@@ -117,52 +109,13 @@ FrameColor4DB = {
 },
 ["followClassColor"] = false,
 },
-},
-},
-["UnitFrames"] = {
-["colors"] = {
 ["main"] = {
 ["rgbaValues"] = {
-0.06666667014360428,
-0.06666667014360428,
-0.06666667014360428,
+0.05098039656877518,
+0.05098039656877518,
+0.05098039656877518,
 },
 ["followClassColor"] = false,
-},
-["fallback"] = {
-["followClassColor"] = false,
-},
-},
-},
-["HUD"] = {
-["colors"] = {
-["tabs"] = {
-["rgbaValues"] = {
-0.1803921610116959,
-0.1803921610116959,
-0.1803921610116959,
-},
-},
-["fallback"] = {
-["rgbaValues"] = {
-0.2196078598499298,
-0.2196078598499298,
-0.2196078598499298,
-},
-},
-["main"] = {
-["rgbaValues"] = {
-0.2784313857555389,
-0.2784313857555389,
-0.2784313857555389,
-},
-},
-["borders"] = {
-["rgbaValues"] = {
-0.2000000178813934,
-0.2000000178813934,
-0.2000000178813934,
-},
 },
 },
 },
@@ -184,6 +137,53 @@ FrameColor4DB = {
 0.2784313857555389,
 0.2784313857555389,
 },
+["followClassColor"] = false,
+},
+},
+},
+["HUD"] = {
+["colors"] = {
+["tabs"] = {
+["rgbaValues"] = {
+0.1803921610116959,
+0.1803921610116959,
+0.1803921610116959,
+},
+},
+["borders"] = {
+["rgbaValues"] = {
+0.2000000178813934,
+0.2000000178813934,
+0.2000000178813934,
+},
+},
+["fallback"] = {
+["rgbaValues"] = {
+0.2196078598499298,
+0.2196078598499298,
+0.2196078598499298,
+},
+},
+["main"] = {
+["rgbaValues"] = {
+0.2784313857555389,
+0.2784313857555389,
+0.2784313857555389,
+},
+},
+},
+},
+["UnitFrames"] = {
+["colors"] = {
+["main"] = {
+["rgbaValues"] = {
+0.06666667014360428,
+0.06666667014360428,
+0.06666667014360428,
+},
+["followClassColor"] = false,
+},
+["fallback"] = {
 ["followClassColor"] = false,
 },
 },
@@ -234,10 +234,14 @@ FrameColor4DB = {
 ["_ProfessionsFrame"] = {
 ["enabled"] = true,
 },
-["_PlayerFrame"] = {
+["_AceGUI-3.0"] = {
 ["colors"] = {
-["class_power_bar"] = {
-["followClassColor"] = false,
+["main"] = {
+["rgbaValues"] = {
+0.1882353127002716,
+0.1882353127002716,
+0.1882353127002716,
+},
 },
 },
 },
@@ -259,6 +263,20 @@ FrameColor4DB = {
 },
 },
 },
+["_Minimap"] = {
+["colors"] = {
+["main"] = {
+["rgbaValues"] = {
+0,
+0,
+0,
+},
+["lockedColor"] = true,
+["followClassColor"] = false,
+},
+},
+["enabled"] = true,
+},
 ["_BaganatorBlizzardTheme"] = {
 ["colors"] = {
 ["main"] = {
@@ -279,28 +297,10 @@ FrameColor4DB = {
 },
 ["enabled"] = true,
 },
-["_Minimap"] = {
+["_PlayerFrame"] = {
 ["colors"] = {
-["main"] = {
-["rgbaValues"] = {
-0,
-0,
-0,
-},
-["lockedColor"] = true,
+["class_power_bar"] = {
 ["followClassColor"] = false,
-},
-},
-["enabled"] = true,
-},
-["_AceGUI-3.0"] = {
-["colors"] = {
-["main"] = {
-["rgbaValues"] = {
-0.1882353127002716,
-0.1882353127002716,
-0.1882353127002716,
-},
 },
 },
 },

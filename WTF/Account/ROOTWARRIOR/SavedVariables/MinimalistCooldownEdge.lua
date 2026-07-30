@@ -25,15 +25,14 @@ MinimalistCooldownEdgeDB_v2 = {
 ["font"] = "Interface\\Addons\\SharedMedia_MyMedia\\font\\1.ttf",
 },
 },
-["unitframe"] = {
-["fontSize"] = 8,
-["stackFont"] = "Interface\\Addons\\SharedMedia_MyMedia\\font\\1.ttf",
-["enabled"] = true,
+["sarena"] = {
 ["font"] = "Interface\\Addons\\SharedMedia_MyMedia\\font\\1.ttf",
+["enabled"] = true,
 },
 ["minicc"] = {
 ["enabled"] = true,
 ["font"] = "Interface\\Addons\\SharedMedia_MyMedia\\font\\1.ttf",
+["friendlyCdFontSize"] = 9,
 },
 ["actionbar"] = {
 ["font"] = "Interface\\Addons\\SharedMedia_MyMedia\\font\\1.ttf",
@@ -42,12 +41,15 @@ MinimalistCooldownEdgeDB_v2 = {
 ["enabled"] = true,
 ["font"] = "Interface\\Addons\\SharedMedia_MyMedia\\font\\1.ttf",
 },
-["sarena"] = {
-["font"] = "Interface\\Addons\\SharedMedia_MyMedia\\font\\1.ttf",
+["unitframe"] = {
+["fontSize"] = 8,
+["stackFont"] = "Interface\\Addons\\SharedMedia_MyMedia\\font\\1.ttf",
 ["enabled"] = true,
+["font"] = "Interface\\Addons\\SharedMedia_MyMedia\\font\\1.ttf",
 },
 },
 ["durationTextColors"] = {
+["enabled"] = true,
 ["thresholds"] = {
 nil,
 {
@@ -57,7 +59,6 @@ nil,
 ["threshold"] = 60,
 },
 },
-["enabled"] = true,
 },
 },
 },

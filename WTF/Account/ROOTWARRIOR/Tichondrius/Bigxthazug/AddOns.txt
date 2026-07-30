@@ -4,7 +4,7 @@ AutoCollapseBuffs: enabled
 Baganator: enabled
 BattleGroundEnemiesFixed: enabled
 BetterBlizzFrames: enabled
-BetterBlizzPlates: disabled
+BetterBlizzPlates: enabled
 BetterUpgradeTooltip: enabled
 BtWLoadouts: enabled
 !BugGrabber: enabled
@@ -94,3 +94,6 @@ Shackled: enabled
 SweepyBoop: enabled
 WarGameHelper: enabled
 ArenaDRNameplates: enabled
+ArenaAnalytics: enabled
+LibDeflate: enabled
+MiniWinLoss: enabled

@@ -2,9 +2,9 @@
 RaidLeaderMarkerDB = {
 ["leaderIcon"] = {
 ["enabled"] = true,
-["offsetX"] = 23,
+["offsetX"] = 9,
 ["anchor"] = "TOPLEFT",
-["offsetY"] = -8,
+["offsetY"] = -1,
 ["size"] = 16,
 },
 ["targetMarker"] = {

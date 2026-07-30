@@ -5,7 +5,7 @@ AutoCombatLogger: enabled
 Baganator: disabled
 BattleGroundEnemies: enabled
 BetterBlizzFrames: enabled
-BetterBlizzPlates: disabled
+BetterBlizzPlates: enabled
 BigWigs: enabled
 BigWigs_Core: enabled
 BigWigs_KhazAlgar: enabled
@@ -236,3 +236,6 @@ TweaksUI_Cooldowns: enabled
 BattlegroundWinConditions: enabled
 Shackled: enabled
 WarGameHelper: enabled
+ArenaAnalytics: enabled
+MiniWinLoss: enabled
+RareScanner: enabled

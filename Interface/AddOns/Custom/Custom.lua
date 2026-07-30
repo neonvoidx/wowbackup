@@ -276,6 +276,97 @@ local applyDarkMode = function()
 	end
 end
 
+local fancyPRDHooked = false
+local fancyPRDRunning = false
+local function applyFancyPRDTextures()
+	if fancyPRDRunning then return end
+	local prd = PersonalResourceDisplayFrame
+	if not prd then return end
+	fancyPRDRunning = true
+
+	local powerBar = prd.PowerBar
+	local altPowerBar = prd.AlternatePowerBar
+	local _, playerClass = UnitClass("player")
+
+	local powerAtlasMap = {
+		LUNAR_POWER = "Unit_Druid_AstralPower_Fill",
+		FURY        = "Unit_DemonHunter_Fury_Fill",
+		PAIN        = "Unit_DemonHunter_Fury_Fill",
+		MAELSTROM   = "Unit_Shaman_Maelstrom_Fill",
+		INSANITY    = "Unit_Priest_Insanity_Fill",
+	}
+
+	local altAtlasMap = {
+		EVOKER = "Unit_Evoker_EbonMight_Fill",
+	}
+
+	local staggerMap = {
+		green  = "Unit_Monk_Stagger_Fill_Green",
+		yellow = "Unit_Monk_Stagger_Fill_Yellow",
+		red    = "Unit_Monk_Stagger_Fill_Red",
+	}
+
+	if not fancyPRDHooked then
+		hooksecurefunc(powerBar, "SetStatusBarColor", function(self, r, g, b, a)
+			if self.fancyPRDColorLock and not self.fancyPRDSettingColor then
+				self.fancyPRDSettingColor = true
+				self:SetStatusBarColor(1, 1, 1)
+				self.fancyPRDSettingColor = nil
+			end
+		end)
+		hooksecurefunc(altPowerBar, "SetStatusBarColor", function(self, r, g, b, a)
+			if self.fancyPRDColorLock and not self.fancyPRDSettingColor then
+				self.fancyPRDSettingColor = true
+				self:SetStatusBarColor(1, 1, 1)
+				self.fancyPRDSettingColor = nil
+			end
+		end)
+		hooksecurefunc(PersonalResourceDisplayFrame, "UpdatePowerBar", applyFancyPRDTextures)
+		hooksecurefunc(PersonalResourceDisplayFrame, "UpdateAlternatePowerBar", applyFancyPRDTextures)
+		if MonkStaggerBar then
+			hooksecurefunc(MonkStaggerBar, "SetStatusBarTexture", applyFancyPRDTextures)
+		end
+		fancyPRDHooked = true
+	end
+
+	local _, powerToken = UnitPowerType("player")
+	local atlas = powerToken and powerAtlasMap[powerToken]
+	if atlas then
+		powerBar:SetStatusBarTexture(atlas)
+		powerBar.fancyPRDColorLock = true
+		powerBar:SetStatusBarColor(1, 1, 1)
+	elseif powerBar.fancyPRDColorLock then
+		powerBar.fancyPRDColorLock = nil
+		local _, ptok, altR, altG, altB = UnitPowerType("player")
+		local info = PowerBarColor[ptok] or PowerBarColor[_]
+		if info then
+			powerBar:SetStatusBarColor(info.r, info.g, info.b)
+		elseif altR then
+			powerBar:SetStatusBarColor(altR, altG, altB)
+		end
+	end
+
+	local altAtlas
+	if playerClass == "MONK" then
+		local staggerKey = altPowerBar.staggerStateKey
+		if staggerKey then
+			altAtlas = staggerMap[staggerKey]
+		end
+	else
+		altAtlas = altAtlasMap[playerClass]
+	end
+
+	if altAtlas then
+		altPowerBar:SetStatusBarTexture(altAtlas)
+		altPowerBar.fancyPRDColorLock = true
+		altPowerBar:SetStatusBarColor(1, 1, 1)
+	elseif altPowerBar.fancyPRDColorLock then
+		altPowerBar.fancyPRDColorLock = nil
+	end
+
+	fancyPRDRunning = false
+end
+
 -- #region Main Tweaks
 local function OnEvent(self, event, ...)
 	if event == "ADDON_LOADED" then
@@ -288,9 +379,13 @@ local function OnEvent(self, event, ...)
 		local unitTarget = ...
 		if unitTarget == "player" then
 			setPrdBySpec()
+			local bbpLoaded, _ = C_AddOns.IsAddOnLoaded("BetterBlizzPlates")
+			if not bbpLoaded then applyFancyPRDTextures() end
 		end
 	elseif event == "PLAYER_ENTERING_WORLD" then
 		applyDarkMode()
+		local bbpLoaded, _ = C_AddOns.IsAddOnLoaded("BetterBlizzPlates")
+		if not bbpLoaded then applyFancyPRDTextures() end
 		-- fix chat navigation
 		local editBox = ChatFrame1EditBox
 		if editBox and editBox.SetAltArrowKeyMode then
@@ -443,8 +538,7 @@ local function OnEvent(self, event, ...)
 
 		-- Just sets default nameplate stuff if not using a nameplate addon
 		local bbpLoaded, _ = C_AddOns.IsAddOnLoaded("BetterBlizzPlates")
-		local platynatorLoaded, _ = C_AddOns.IsAddOnLoaded("Platynator")
-		if not bbpLoaded and not platynatorLoaded then
+		if not bbpLoaded then
 			-- SetCVar("NamePlateHorizontalScale", 1) -- reduce horizontal scale
 			-- SetCVar("NamePlateVerticalScale", 3) -- reduce horizontal scale
 			-- SetCVar("nameplateLargerScale", 1)
@@ -453,11 +547,11 @@ local function OnEvent(self, event, ...)
 			-- SetCVar("nameplateMinScale", 1)
 			-- SetCVar("nameplateMaxScale", 1)
 			-- SetCVar("nameplateGlobalScale", 1.1)
-			SetCVar("nameplateOverlapV", 1.0) -- Vertical overlap
+			SetCVar("nameplateOverlapV", 1.1) -- Vertical overlap
 			SetCVar("nameplateOverlapH", 0.8) -- Horizontal overlap
 			SetCVar("nameplateMaxAlpha", 1)
 			SetCVar("nameplateMaxScale", 1.0)
-			SetCVar("nameplateMinScale", 0.8)
+			SetCVar("nameplateMinScale", 0.9)
 			SetCVar("nameplateSelectedScale", 1.0)
 			SetCVar("nameplateMinAlpha", 0.7)
 			SetCVar("nameplateOccludedAlphaMult", 1.0)

@@ -40,25 +40,25 @@ BWQDB = {
 ["Reedingo - Mal'Ganis"] = {
 ["activeProfile"] = 0,
 },
-["Choppiez - Tichondrius"] = {
-["activeProfile"] = 0,
-},
-["Smaugchamp - Tichondrius"] = {
-["activeProfile"] = 0,
-},
-["Neonvoid - Tichondrius"] = {
-["activeProfile"] = 0,
-},
-["Korahron - Tichondrius"] = {
-["activeProfile"] = 0,
-},
-["Stormclout - Tichondrius"] = {
+["Gehyo - Tichondrius"] = {
 ["activeProfile"] = 0,
 },
 ["Praisesun - Tichondrius"] = {
 ["activeProfile"] = 0,
 },
-["Gehyo - Tichondrius"] = {
+["Stormclout - Tichondrius"] = {
+["activeProfile"] = 0,
+},
+["Korahron - Tichondrius"] = {
+["activeProfile"] = 0,
+},
+["Neonvoid - Tichondrius"] = {
+["activeProfile"] = 0,
+},
+["Smaugchamp - Tichondrius"] = {
+["activeProfile"] = 0,
+},
+["Choppiez - Tichondrius"] = {
 ["activeProfile"] = 0,
 },
 ["Tainguk - Tichondrius"] = {
@@ -69,16 +69,16 @@ BWQDB = {
 ["versionCheck"] = 120014,
 ["profiles"] = {
 [0] = {
-["name"] = "Default",
 ["colors"] = {
 },
+["name"] = "Default",
 ["list"] = {
 },
-["pin"] = {
+["general"] = {
 },
 ["external"] = {
 },
-["general"] = {
+["pin"] = {
 },
 ["filters"] = {
 },
@@ -99,13 +99,13 @@ BWQDB = {
 ["Bigxthazug - Tichondrius"] = "Default",
 ["Strathmoan - Tichondrius"] = "Default",
 ["Reedingo - Mal'Ganis"] = "Default",
-["Choppiez - Tichondrius"] = "Default",
-["Smaugchamp - Tichondrius"] = "Default",
-["Neonvoid - Tichondrius"] = "Default",
-["Korahron - Tichondrius"] = "Default",
-["Stormclout - Tichondrius"] = "Default",
-["Praisesun - Tichondrius"] = "Default",
 ["Gehyo - Tichondrius"] = "Default",
+["Praisesun - Tichondrius"] = "Default",
+["Stormclout - Tichondrius"] = "Default",
+["Korahron - Tichondrius"] = "Default",
+["Neonvoid - Tichondrius"] = "Default",
+["Smaugchamp - Tichondrius"] = "Default",
+["Choppiez - Tichondrius"] = "Default",
 ["Tainguk - Tichondrius"] = "Default",
 },
 }

@@ -46,11 +46,14 @@ SweepyBoopDB = {
 ["raidFrameDebuffIconScale"] = 0.6000000000000001,
 ["raidFrameDebuffIconOffsetX"] = 0,
 },
+["arenaFrames"] = {
+["lastModified"] = 5100.89,
+},
 ["nameplatesFriendly"] = {
 ["hideInBattlegrounds"] = true,
 ["classIconStyle"] = 1,
 ["hideOutsidePvP"] = true,
-["lastModified"] = 10710.647,
+["lastModified"] = 6672.135,
 ["keepHealthBar"] = false,
 ["classIconOffset"] = 22,
 },
