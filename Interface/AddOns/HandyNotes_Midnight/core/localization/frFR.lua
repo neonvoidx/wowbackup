@@ -3,7 +3,7 @@ local L = ns.NewLocale('frFR')
 if not L then return end
 
 -------------------------------------------------------------------------------
------------------------------------- GEAR -------------------------------------
+------------------------------------- GEAR ------------------------------------
 -------------------------------------------------------------------------------
 
 L['bag'] = 'Sac'
@@ -38,7 +38,7 @@ L['cloak'] = 'Cape'
 L['trinket'] = 'Bijou'
 
 -------------------------------------------------------------------------------
----------------------------------- TOOLTIPS -----------------------------------
+----------------------------------- TOOLTIPS ----------------------------------
 -------------------------------------------------------------------------------
 
 L['activation_unknown'] = 'Activation inconnue'
@@ -76,7 +76,7 @@ L['quest_repeatable'] = 'Quête répétable'
 L['achievement'] = 'Haut-Fait'
 L['decor_owned'] = 'Possédé : %s'
 
----------------------------------- LOCATION -----------------------------------
+----------------------------------- LOCATION ----------------------------------
 L['in_cave'] = 'Dans une grotte.'
 L['in_small_cave'] = 'Dans une petite grotte.'
 L['in_water_cave'] = 'Dans une grotte sous-marine.'
@@ -84,14 +84,16 @@ L['in_waterfall_cave'] = 'Dans une grotte derrière une cascade.'
 L['in_water'] = 'Dans l\'eau.'
 L['in_building'] = 'A l\'intérieur du bâtiment.'
 
------------------------------------- TIME -------------------------------------
-L['now'] = 'Maintenant'
+------------------------------------- TIME ------------------------------------
+L['starts_in'] = 'Commence dans :'
+L['time_remaining'] = 'Temps restant :'
+L['next_time'] = 'Prochain dans :'
 L['hourly'] = 'Une fois par heure'
 L['daily'] = 'Quotidiennement'
 L['weekly'] = 'Hebdomadaire'
 
-L['time_format_12hrs'] = '%I:%M %p - %d/%m heure locale'
-L['time_format_24hrs'] = '%H:%M - %d/%m heure locale'
+L['time_format_12hrs'] = '%I:%M %p - %d/%m heure du serveur'
+L['time_format_24hrs'] = '%H:%M - %d/%m heure du serveur'
 
 ----------------------------------- REWARDS -----------------------------------
 L['decor'] = 'Élément de décoration intérieure'
@@ -114,7 +116,7 @@ L['follower_type_follower'] = 'Sujet'
 L['follower_type_champion'] = 'Champion'
 L['follower_type_companion'] = 'Compagnon'
 
---------------------------------- REPUTATION ----------------------------------
+---------------------------------- REPUTATION ---------------------------------
 L['rep_honored'] = 'Honoré'
 L['rep_revered'] = 'Révéré'
 L['rep_exalted'] = 'Exalté'
@@ -222,6 +224,8 @@ L['options_transmog_rewards'] = 'Afficher les transmos en récompense'
 L['options_transmog_rewards_desc'] = 'Afficher les transmos en récompenses dans les infobulles et suivre leur état de possession.'
 L['options_all_transmog_rewards'] = 'Afficher les transmos plus obtenables en récompense'
 L['options_all_transmog_rewards_desc'] = 'Afficher les transmos en récompenses pouvant être obtenus par d\'autres classes.'
+L['options_shared_appearances'] = 'Les apparences partagées par plusieurs objects sont considérées comme connues'
+L['options_shared_appearances_desc'] = 'Lorsque cette option est activée, le fait d\'obtenir une apparence partagée par autre objet marquera cette récompense comme ayant été récupérée.'
 L['options_rep_rewards'] = 'Afficher les récompenses de réputation'
 L['options_rep_rewards_desc'] = 'Afficher les récompenses de réputation dans les infobulles et suivre l\'état de leur acquisition.'
 L['options_claimed_rep_rewards'] = 'Afficher les récompenses de réputation réclamées'
@@ -248,7 +252,7 @@ L['options_path_color_desc'] = 'Définit une couleur pour les chemins quand une 
 L['options_reset_poi_colors'] = 'Réinitialiser les couleurs'
 L['options_reset_poi_colors_desc'] = 'Réinitialiser les couleurs ci-dessus à leurs valeurs par défaut.'
 
----------------------------------- TOOLTIP ---------------------------------
+----------------------------------- TOOLTIP -----------------------------------
 
 L['options_tooltip_settings'] = 'Infobulle'
 L['options_toggle_show_loot'] = 'Montrer le Butin'

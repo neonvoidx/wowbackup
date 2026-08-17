@@ -57,7 +57,7 @@ local skinners = {
     editBox.backdrop:SetPoint("TOPLEFT", 1, 0)
     editBox.backdrop:SetPoint("RIGHT", -1, 0)
     local _, size = editBox:GetFont()
-    editBox:FontTemplate(LSM:Fetch('font', CH.db.font), size, CH.db.fontOutline)
+    editBox:FontTemplate(CH.db.font, size, CH.db.fontOutline)
     addonTable.allChatFrames[1]:UpdateEditBox()
   end,
   TabButton = function(frame)
@@ -189,7 +189,7 @@ local skinners = {
     tab.glow:SetAlpha(0)
     tab:GetFontString():SetWordWrap(false)
     tab:GetFontString():SetNonSpaceWrap(false)
-    tab:GetFontString():FontTemplate(LSM:Fetch('font', CH.db.tabFont), CH.db.tabFontSize, CH.db.tabFontOutline)
+    tab:GetFontString():FontTemplate(CH.db.tabFont, CH.db.tabFontSize, CH.db.tabFontOutline)
     local fsWidth
     if tab.minWidth then
       fsWidth = tab:GetFontString():GetUnboundedStringWidth() + addonTable.Constants.TabPadding
@@ -197,6 +197,7 @@ local skinners = {
       fsWidth = math.max(tab:GetFontString():GetUnboundedStringWidth(), not tab:GetText():find("|K") and addonTable.Constants.MinTabWidth or 70) + addonTable.Constants.TabPadding
     end
     tab:GetFontString():SetWidth(fsWidth)
+    tab:GetFontString():SetJustifyH("CENTER")
     tab:SetWidth(fsWidth)
     local SetText = tab.SetText
     local text = tab:GetText()

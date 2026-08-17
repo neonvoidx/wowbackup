@@ -20,3 +20,5 @@ vkd3d-proton.cache.write
 wow_loader.dll
 /Fonts/*.slug*
 /.flavor.info
+/Errors
+/.curseclient

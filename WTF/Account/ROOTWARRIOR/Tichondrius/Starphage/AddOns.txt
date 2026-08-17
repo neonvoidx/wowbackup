@@ -5,7 +5,7 @@ Auctionator: enabled
 Baganator: enabled
 BattleGroundEnemies: enabled
 BetterBlizzFrames: enabled
-BetterBlizzPlates: enabled
+BetterBlizzPlates: disabled
 BigWigs: enabled
 BigWigs_Core: enabled
 BigWigs_KhazAlgar: enabled
@@ -210,3 +210,7 @@ WarGameHelper: enabled
 ArenaDRNameplates: enabled
 ArenaAnalytics: enabled
 MiniWinLoss: enabled
+AztarecHelper: enabled
+BarberShopProfiles: enabled
+EnhanceQoLQuickActions: enabled
+LariasWeeklyChecklist: enabled

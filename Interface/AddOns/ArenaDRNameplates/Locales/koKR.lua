@@ -9,9 +9,7 @@ if GetLocale() ~= "koKR" then
 end
 
 L.ERR_SHARED_MODULE_NOT_FOUND = "|cFFFF0000ArenaDRNameplates:|r Shared 모듈을 찾을 수 없습니다"
-L.ERR_REQUIRES_MIDNIGHT = "|cFFFF0000ArenaDRNameplates:|r 이 애드온은 WoW Midnight (12.0.0+)가 필요합니다"
 L.ERR_SETTINGS_UI_MODULE_NOT_LOADED = "|cFFFF0000ArenaDRNameplates:|r 설정 UI 모듈이 로드되지 않았습니다"
-L.ERR_SETTINGS_API_NOT_AVAILABLE = "|cFFFF0000ArenaDRNameplates:|r 설정 API를 사용할 수 없습니다"
 L.WARN_HELPER_NOT_FOUND = "|cFFFFFF00ArenaDRNameplates:|r ArenaNameplateHelper를 찾을 수 없습니다"
 L.WARN_SETTINGS_MENU_NOT_AVAILABLE = "|cFFFFFF00ArenaDRNameplates:|r 설정 메뉴를 아직 사용할 수 없습니다"
 L.MSG_SETTINGS_RESET = "|cFF00FF00ArenaDRNameplates:|r 설정이 초기화되었습니다"

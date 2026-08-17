@@ -37,6 +37,7 @@
 
 --- @class NumyConfig_SoundSelectorMixin: SettingsDropdownControlTemplate
 --- @field PreviewIcon Button
+--- @field Control SettingsDropdownWithButtonsTemplate
 
 --- @class NumyConfig_ExpandSettingData
 --- @field name string
@@ -91,13 +92,13 @@ function Settings.CreateSliderOptions(minValue, maxValue, rate) end
 --- @class NumyConfig_AceAddon: AceAddon
 local NumyConfig_AceAddon = {}
 
----@param name string
----@param ... string List of libraries to embed into the addon
+--- @param name string
+--- @param ... string List of libraries to embed into the addon
 --- @return NumyConfig_Module
 function NumyConfig_AceAddon:NewModule(name, ...) end
 
----@return fun(table: table<string, NumyConfig_Module>, index?: string): string, NumyConfig_Module iterator
----@return table<string, NumyConfig_Module> table # moduleName -> module
+--- @return fun(table: table<string, NumyConfig_Module>, index?: string): string, NumyConfig_Module iterator
+--- @return table<string, NumyConfig_Module> table # moduleName -> module
 function NumyConfig_AceAddon:IterateModules() end
 
 --- @class NumyConfig_Module: AceAddon

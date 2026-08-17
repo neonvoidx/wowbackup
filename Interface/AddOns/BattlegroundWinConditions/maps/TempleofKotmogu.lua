@@ -32,6 +32,7 @@ local instanceIdToMapId = {
   -- aura.points[3] = Damage done increase, ex: 20
   [998] = {
     id = 417,
+    maxScore = 1500,
     maxOrbs = 4,
     tickRate = 5,
     stackIncrement = 30,
@@ -77,6 +78,7 @@ end
 function TOK:ExitZone()
   if NS.db.global.maps.templeofkotmogu.enabled then
     NS.IS_TEMPLE = false
+
     OrbPrediction:StopInfoTracker()
   end
 end

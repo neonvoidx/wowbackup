@@ -3,18 +3,15 @@ local _, addon = ...
 local mini = addon.Framework
 
 local function BuildPanel(panel)
-	local title = mini:TextLine({
+	local header = mini:PanelHeader({
 		Parent = panel,
-		Text = "MiniTabTarget",
-		Font = "GameFontNormalHuge",
 	})
-	title:SetPoint("TOPLEFT", panel, "TOPLEFT", 16, -16)
 
 	local divider = mini:Divider({
 		Parent = panel,
 		Text = "How it works",
 	})
-	divider:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -mini.VerticalSpacing)
+	divider:SetPoint("TOPLEFT", header.Anchor, "BOTTOMLEFT", 0, -mini.VerticalSpacing)
 	divider:SetWidth(mini.TextMaxWidth)
 
 	local desc = mini:TextBlock({

@@ -133,22 +133,27 @@ NS.BASE_TIMER_EXPIRED = false
 NS.STACKS_COUNTING = false
 NS.HAS_FLAG_CARRIER = false
 NS.IN_GAME = false
+NS.IS_AB = false
+NS.IS_DWG = false
+NS.IS_TBFG = false
 NS.IS_TEMPLE = false
 NS.IS_EOTS = false
 NS.IS_SSM = false
 NS.IS_TP = false
 NS.IS_WG = false
 NS.IS_BLITZ = false
+NS.CUR_MAP = nil
+NS.WILL_WIN = false
 
 NS.userClass = select(2, UnitClass("player"))
 NS.userClassHexColor = "|c" .. select(4, GetClassColor(NS.userClass))
 
 NS.ADDON_PREFIX = "BGWC_VERSION"
 NS.FoundNewVersion = false
-NS.VERSION = 984
+NS.VERSION = 987
 
 NS.DefaultDatabase = {
-  lastReadVersion = "9.8.3",
+  lastReadVersion = "9.8.6",
   onlyShowWhenNewVersion = true,
   global = {
     general = {
@@ -270,6 +275,11 @@ NS.DefaultDatabase = {
     lastFlagCapBy = "",
     lastFlagStackInfo = nil,
     lastOrbStackInfo = nil,
+    lastScoreTickTime = 0,
+    allyTimers = {},
+    hordeTimers = {},
+    allyLockedTimers = {},
+    hordeLockedTimers = {},
     version = NS.VERSION,
     debug = false,
   },

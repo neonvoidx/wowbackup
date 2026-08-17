@@ -1,0 +1,23 @@
+## Interface: 120100
+## Title: Enhance QoL QuickActions
+## Author: R41Z0R
+## Version: 12.5.0
+## Notes: Open radial, horizontal, or vertical QuickActions menus using hold or toggle activation
+## Notes-deDE: Öffne radiale, horizontale oder vertikale QuickActions-Menüs per Gedrückthalten oder Umschalten
+## Notes-esES: Abre menús QuickActions radiales, horizontales o verticales manteniendo la tecla o pulsándola para alternar
+## Notes-esMX: Abre menús QuickActions radiales, horizontales o verticales manteniendo presionada la tecla o presionándola para alternar
+## Notes-frFR: Ouvrez des menus QuickActions radiaux, horizontaux ou verticaux en maintenant la touche ou en appuyant pour basculer
+## Notes-itIT: Apri menu QuickActions radiali, orizzontali o verticali tenendo premuto il tasto o premendolo per attivare/disattivare
+## Notes-koKR: 단축키를 누르고 있거나 눌러서 전환하여 원형, 가로 또는 세로 QuickActions 메뉴를 엽니다
+## Notes-ptBR: Abra menus QuickActions radiais, horizontais ou verticais segurando a tecla ou pressionando-a para alternar
+## Notes-ruRU: Открывайте радиальные, горизонтальные или вертикальные меню QuickActions в режиме удержания или переключения
+## Notes-zhCN: 通过按住或切换模式打开环形、水平或垂直 QuickActions 菜单
+## Notes-zhTW: 透過按住或切換模式開啟環形、水平或垂直 QuickActions 選單
+## Dependencies: EnhanceQoL
+## IconTexture: Interface\AddOns\EnhanceQoL\Icons\Icon.tga
+## Retail: true
+## X-Compatible-With: retail
+## LoadOnDemand: 1
+## Globe-Main: EnhanceQoL
+
+QuickActions.xml

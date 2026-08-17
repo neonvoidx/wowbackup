@@ -80,57 +80,30 @@ local function TrackRefreshable(widget)
     return widget
 end
 
-local function RegisterSettingsCategoryCompat(frame)
-    frame.OnCommit = frame.okay
-    frame.OnDefault = frame.default
-    frame.OnRefresh = frame.refresh
-
-    if Settings and Settings.RegisterCanvasLayoutCategory and Settings.RegisterAddOnCategory then
-        local category = Settings.RegisterCanvasLayoutCategory(frame, frame.name)
-        Settings.RegisterAddOnCategory(category)
-        return category
-    end
-
-    if InterfaceOptions_AddCategory then
-        return InterfaceOptions_AddCategory(frame)
-    end
+local function RegisterSettingsCategory(frame)
+    local category = Settings.RegisterCanvasLayoutCategory(frame, frame.name)
+    Settings.RegisterAddOnCategory(category)
+    return category
 end
 
-local function OpenSettingsCategoryCompat(category, panel)
-    if Settings and Settings.OpenToCategory and category then
-        local categoryID = category.GetID and category:GetID() or category.ID or category
-        if categoryID then
-            Settings.OpenToCategory(categoryID)
-            return true
-        end
+local function OpenSettingsCategory(category)
+    if not category then
+        return false
     end
 
-    if InterfaceOptionsFrame_OpenToCategory and panel then
-        InterfaceOptionsFrame_OpenToCategory(panel)
-        InterfaceOptionsFrame_OpenToCategory(panel)
-        return true
+    local categoryID = category:GetID()
+    if not categoryID then
+        return false
     end
 
-    return false
-end
-
-local function HideFrameCompat(frame)
-    if not frame or not frame:IsShown() then
-        return
-    end
-
-    if HideUIPanel then
-        HideUIPanel(frame)
-    end
-
-    if frame:IsShown() then
-        frame:Hide()
-    end
+    Settings.OpenToCategory(categoryID)
+    return true
 end
 
 local function HideSystemSettingsPanels()
-    HideFrameCompat(SettingsPanel)
-    HideFrameCompat(InterfaceOptionsFrame)
+    if SettingsPanel and SettingsPanel:IsShown() then
+        HideUIPanel(SettingsPanel)
+    end
 end
 
 local function ApplyPanelBorders(frame)
@@ -335,42 +308,22 @@ local function CreateStyledPanel(parent, width, height)
     panel.topShade:SetPoint("TOPLEFT", panel, "TOPLEFT", 1, -1)
     panel.topShade:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -1, -1)
     panel.topShade:SetHeight(30)
-    if panel.topShade.SetGradientAlpha then
-        panel.topShade:SetGradientAlpha(
-            "VERTICAL",
-            COLOR_PANEL_TOP.r,
-            COLOR_PANEL_TOP.g,
-            COLOR_PANEL_TOP.b,
-            0.22,
-            COLOR_PANEL_TOP.r,
-            COLOR_PANEL_TOP.g,
-            COLOR_PANEL_TOP.b,
-            0.04
-        )
-    else
-        panel.topShade:SetVertexColor(COLOR_PANEL_TOP.r, COLOR_PANEL_TOP.g, COLOR_PANEL_TOP.b, 0.16)
-    end
+    panel.topShade:SetGradient(
+        "VERTICAL",
+        CreateColor(COLOR_PANEL_TOP.r, COLOR_PANEL_TOP.g, COLOR_PANEL_TOP.b, 0.22),
+        CreateColor(COLOR_PANEL_TOP.r, COLOR_PANEL_TOP.g, COLOR_PANEL_TOP.b, 0.04)
+    )
 
     panel.bottomShade = panel:CreateTexture(nil, "ARTWORK")
     panel.bottomShade:SetTexture("Interface\\Buttons\\WHITE8x8")
     panel.bottomShade:SetPoint("BOTTOMLEFT", panel, "BOTTOMLEFT", 1, 1)
     panel.bottomShade:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -1, 1)
     panel.bottomShade:SetHeight(52)
-    if panel.bottomShade.SetGradientAlpha then
-        panel.bottomShade:SetGradientAlpha(
-            "VERTICAL",
-            COLOR_PANEL_BOTTOM.r,
-            COLOR_PANEL_BOTTOM.g,
-            COLOR_PANEL_BOTTOM.b,
-            0.02,
-            COLOR_PANEL_BOTTOM.r,
-            COLOR_PANEL_BOTTOM.g,
-            COLOR_PANEL_BOTTOM.b,
-            0.30
-        )
-    else
-        panel.bottomShade:SetVertexColor(COLOR_PANEL_BOTTOM.r, COLOR_PANEL_BOTTOM.g, COLOR_PANEL_BOTTOM.b, 0.20)
-    end
+    panel.bottomShade:SetGradient(
+        "VERTICAL",
+        CreateColor(COLOR_PANEL_BOTTOM.r, COLOR_PANEL_BOTTOM.g, COLOR_PANEL_BOTTOM.b, 0.02),
+        CreateColor(COLOR_PANEL_BOTTOM.r, COLOR_PANEL_BOTTOM.g, COLOR_PANEL_BOTTOM.b, 0.30)
+    )
 
     return panel
 end
@@ -2619,19 +2572,19 @@ function SettingsUI.InitializeSettingsLauncher()
     end)
     resetButton:SetPoint("TOPLEFT", slashInfo, "BOTTOMLEFT", 0, -18)
 
-    panel.okay = function()
+    panel.OnCommit = function()
     end
 
-    panel.default = function()
+    panel.OnDefault = function()
         SettingsUI.ResetAllSettings()
     end
 
-    panel.refresh = function()
+    panel.OnRefresh = function()
         SettingsUI.RefreshControls()
     end
 
     SettingsUI.settingsPanel = panel
-    SettingsUI.category = RegisterSettingsCategoryCompat(panel)
+    SettingsUI.category = RegisterSettingsCategory(panel)
     _G.ArenaDRNameplates_SettingsCategory = SettingsUI.category
 end
 
@@ -2720,7 +2673,7 @@ function SettingsUI.OpenSettingsPanel()
         SettingsUI.window:Hide()
     end
 
-    if not OpenSettingsCategoryCompat(SettingsUI.category, SettingsUI.settingsPanel) then
+    if not OpenSettingsCategory(SettingsUI.category) then
         SettingsUI.OpenPanel()
     end
 end

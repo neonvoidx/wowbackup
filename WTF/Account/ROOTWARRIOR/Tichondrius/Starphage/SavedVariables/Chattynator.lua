@@ -202,4 +202,10 @@ CHATTYNATOR_COMMAND_HISTORY = {
 "/s /edit",
 "/s /rl",
 "/s /cmc",
+"/s /m",
+"/s /edit",
+"/s /sarena test",
+"/s /edit",
+"/s /sarena hide",
+"/s /wa",
 }

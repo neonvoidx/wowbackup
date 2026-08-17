@@ -210,6 +210,11 @@ function addonTable.MessagesMonitorMixin:OnLoad()
 
   hooksecurefunc(DEFAULT_CHAT_FRAME, "AddMessage", function(_, ...)
     local fullTrace = debugstack()
+    if issecretvalue(fullTrace) then
+      self:SetIncomingType({type = "SYSTEM", event = "NONE", source = nil})
+      self:AddMessage(...)
+      return
+    end
     if fullTrace:find("ChatFrame_OnEvent") or fullTrace:find("Blizzard_Channels") or fullTrace:find("MessageEventHandler") then
       return
     end
@@ -868,7 +873,7 @@ function addonTable.MessagesMonitorMixin:AddMessage(text, r, g, b, _, _, _, _, _
 end
 
 local function GetDecoratedSenderName(event, ...)
-  local text, senderName, languageName, channelName, playerName2, specialFlags, zoneChannelID, channelIndex, channelBaseName, languageID, lineID, senderGUID, bnSenderID, isMobile = ...;
+  local text, senderName, languageName, channelName, playerName2, specialFlags, zoneChannelID, channelIndex, channelBaseName, languageID, lineID, senderGUID, bnSenderID, isMobile, discordInfo = ...;
   local chatType = string.sub(event, 10);
 
   if string.find(chatType, "^WHISPER") then
@@ -885,6 +890,16 @@ local function GetDecoratedSenderName(event, ...)
     decoratedPlayerName = Ambiguate(decoratedPlayerName, "guild");
   else
     decoratedPlayerName = Ambiguate(decoratedPlayerName, "none");
+  end
+
+  if (discordInfo and not issecretvalue(discordInfo.userID) and discordInfo.userID ~= 0) then
+    local shouldShowGlobalName = discordInfo.type == Enum.DiscordDisplayNameType.GlobalName;
+    if(discordInfo.globalName and shouldShowGlobalName) then
+    -- Names of user from Discord have a fixed color
+      return ChatFrameUtil.DiscordNameColorize(discordInfo.globalName);
+    end
+    senderGUID = discordInfo.lastOnlineGUID;
+    decoratedPlayerName = discordInfo.lastOnlineName;
   end
 
   -- Add timerunning icon when necessary based on player guid
@@ -923,8 +938,12 @@ local function GetPlayerLink(characterName, linkDisplayText, lineID, chatType, c
   return string.format("|Hplayer:%s:%s:%s:%s|h%s|h", characterName, lineID or 0, chatType or 0, chatTarget or "", linkDisplayText);
 end
 
-function GetBNPlayerLink(name, linkDisplayText, bnetIDAccount, lineID, chatType, chatTarget)
+local function GetBNPlayerLink(name, linkDisplayText, bnetIDAccount, lineID, chatType, chatTarget)
   return string.format("|HBNplayer:%s:%s:%s:%s:%s|h%s|h", name, bnetIDAccount, lineID, chatType, chatTarget, linkDisplayText);
+end
+
+local function GetDiscordUserLink(linkDisplayText, bnetIDAccount, discordUserID, lineID, chatGroup, chatTarget)
+  return string.format("|Hdiscorduser:%s:%s:%s:%s:%s|h%s|h", bnetIDAccount, discordUserID, type(lineID) == "number" and lineID or 0, chatGroup, chatTarget or "", linkDisplayText)
 end
 
 local function SanitizeCommunityData(clubId, streamId, epoch, position)
@@ -1047,6 +1066,9 @@ function GetPFlag(specialFlag, zoneChannelID, localChannelID)
       if ChatFrameUtil.GetMentorChannelStatus(Enum.PlayerMentorshipStatus.Newcomer, C_ChatInfo.GetChannelRulesetForChannelID(zoneChannelID)) == Enum.PlayerMentorshipStatus.Newcomer then
         return NPEV2_CHAT_USER_TAG_NEWCOMER;
       end
+    elseif specialFlag == "DISCORD" then
+      -- Add Discord Icon if  this was sent by DISCORD
+      return CreateAtlasMarkup("UI-ChatIcon-Discord").." ";
     else
       local pflag = _G["CHAT_FLAG_"..specialFlag];
       assertsafe(pflag ~= nil, "'pflag' at _G[CHAT_FLAG_%s] doesn't exist.", specialFlag);
@@ -1099,7 +1121,7 @@ function addonTable.MessagesMonitorMixin:MessageEventHandler(event, ...)
     return
   end
 
-  local arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, arg17 = ...;
+  local arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, arg17, discordInfo = ...;
   if arg16 then
     -- hiding sender in letterbox: do NOT even show in chat window (only shows in cinematic frame)
     return true;
@@ -1111,6 +1133,7 @@ function addonTable.MessagesMonitorMixin:MessageEventHandler(event, ...)
   local type = strsub(event, 10);
   local chatTypeInfo = addonTable.Config.Get(addonTable.Config.Options.CHAT_COLORS)
   local info = chatTypeInfo[type];
+  local isFromDiscord = discordInfo and not issecretvalue(discordInfo.userID) and discordInfo.userID and discordInfo.userID ~= 0;
 
   --If it was a GM whisper, dispatch it to the GMChat addon.
   if arg6 == "GM" and type == "WHISPER" then
@@ -1363,6 +1386,8 @@ function addonTable.MessagesMonitorMixin:MessageEventHandler(event, ...)
       else
         if ( type == "BN_WHISPER" or type == "BN_WHISPER_INFORM" ) then
           playerLink = GetBNPlayerLink(playerName, playerLinkDisplayText, bnetIDAccount, lineID, chatGroup, chatTarget);
+        elseif ( (type == "GUILD_DISCORD" or type == "GUILD") and isFromDiscord ) then
+          playerLink = GetDiscordUserLink(playerLinkDisplayText, bnetIDAccount, discordInfo.userID, lineID, chatGroup, chatTarget);
         else
           playerLink = GetPlayerLink(playerName, playerLinkDisplayText, lineID, chatGroup, chatTarget);
           local senderGUID = arg12;
@@ -1376,6 +1401,10 @@ function addonTable.MessagesMonitorMixin:MessageEventHandler(event, ...)
       -- isMobile
       if arg14 then
         message = GetMobileEmbeddedTexture(info.r, info.g, info.b)..message;
+      end
+
+      if isFromDiscord then
+        message = ChatFrameUtil.FormatDiscordMessage(discordInfo, message);
       end
 
       local outMsg;
@@ -1406,6 +1435,8 @@ function addonTable.MessagesMonitorMixin:MessageEventHandler(event, ...)
             end
           elseif (type == "GUILD_ITEM_LOOTED") then
             outMsg = string.gsub(message, "$s", GetPlayerLink(arg2, playerLinkDisplayText));
+          elseif (type == "GUILD_DISCORD") then
+            outMsg = format(GetOutMessageFormatKey(type)..message, pflag.." "..playerLink);
           else
             outMsg = string.format(GetOutMessageFormatKey(type, isSecret)..message, pflag..playerLink)
           end

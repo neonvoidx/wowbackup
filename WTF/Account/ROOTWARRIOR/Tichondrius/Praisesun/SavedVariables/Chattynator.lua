@@ -15,4 +15,5 @@ CHATTYNATOR_COMMAND_HISTORY = {
 "/i only 45min to go",
 "/i alright guess i cant pull that room",
 "/i lol",
+"/s /rl",
 }

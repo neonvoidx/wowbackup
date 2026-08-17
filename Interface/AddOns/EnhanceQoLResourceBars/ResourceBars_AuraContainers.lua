@@ -62,6 +62,17 @@ local function getDisplayMax(cfg, definition)
 	return value
 end
 
+local function getApplicationBarInset(cfg)
+	-- A positive segment offset uses per-segment borders. The native application
+	-- bar is continuous, so only inset it for the shared outer-border layout.
+	if (tonumber(cfg and cfg.separatedOffset) or 0) > 0 then return 0 end
+	local backdrop = cfg and cfg.backdrop
+	if not (backdrop and backdrop.enabled ~= false) then return 0 end
+	local borderAlpha = ResourceBars.ResolveColorAlpha and ResourceBars.ResolveColorAlpha(backdrop.borderColor) or 0
+	if not ResourceBars.ResolveBorderContentInset then return 0 end
+	return ResourceBars.ResolveBorderContentInset(backdrop.edgeSize, backdrop.outset, borderAlpha)
+end
+
 local function createTextOverlay(button)
 	local overlay = CreateFrame("Frame", nil, button)
 	overlay:SetAllPoints(button)
@@ -83,6 +94,7 @@ local function createInitializer(pType, cfg)
 	}
 	local reverseFill = cfg and cfg.reverseFill == true
 	local displayMax = getDisplayMax(cfg, definition)
+	local applicationBarInset = getApplicationBarInset(cfg)
 	local durationTextOptions = addon.functions and addon.functions.GetAuraButtonDurationTextOptions
 		and addon.functions.GetAuraButtonDurationTextOptions(cfg and cfg.durationTextProfile)
 		or nil
@@ -91,9 +103,14 @@ local function createInitializer(pType, cfg)
 		if button.SetMouseClickEnabled then button:SetMouseClickEnabled(false) end
 		if button.SetMouseMotionEnabled then button:SetMouseMotionEnabled(false) end
 		local fill = CreateFrame("StatusBar", nil, button)
-		fill:SetAllPoints(button)
+		if applicationBarInset > 0 and ResourceBars.Pixel and ResourceBars.Pixel.SetInside then
+			ResourceBars.Pixel.SetInside(fill, button, applicationBarInset, applicationBarInset)
+		else
+			fill:SetAllPoints(button)
+		end
 		fill:SetFrameLevel((button:GetFrameLevel() or 0) + 1)
 		fill:SetStatusBarTexture(texture)
+		if ResourceBars.ApplyStatusBarTexturePixelSnapping then ResourceBars.ApplyStatusBarTexturePixelSnapping(fill, 0) end
 		fill:SetStatusBarColor(r, g, b, a)
 		if fill.SetReverseFill then fill:SetReverseFill(reverseFill) end
 		button._eqolAuraPowerFill = fill
@@ -188,12 +205,14 @@ local function getStyleSignature(pType, cfg)
 	local texture = resolveTexture(cfg)
 	local r, g, b, a = resolveColor(pType, cfg, definition)
 	local displayMax = getDisplayMax(cfg, definition)
+	local applicationBarInset = getApplicationBarInset(cfg)
 	local fontColor = cfg and cfg.fontColor
 	local offset = cfg and cfg.textOffset
 	return table.concat({
 		texture,
 		tostring(r), tostring(g), tostring(b), tostring(a),
 		tostring(displayMax),
+		tostring(applicationBarInset),
 		cfg and cfg.reverseFill == true and "1" or "0",
 		tostring(cfg and cfg.textStyle or ""),
 		tostring(cfg and cfg.durationTextProfile or ""),

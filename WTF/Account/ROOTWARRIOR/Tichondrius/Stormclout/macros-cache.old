@@ -1,7 +1,3 @@
-VER 3 0100000000000069 " " "INV_Misc_QuestionMark"
-#showtooltip Rising Sun Kick
-/cast Rising Sun Kick
-END
 VER 3 010000000000006A " " "INV_Misc_QuestionMark"
 #showtooltip
 /cancelaura Flying Serpent Kick
@@ -29,7 +25,7 @@ END
 VER 3 010000000000006E " " "INV_Misc_QuestionMark"
 #showtooltip Paralysis
 #FrameSort EnemyHealer
-/cast [mod:shift,@arena3,exists,harm,nodead][] Paralysis
+/cast [mod:shift,@none,exists,harm,nodead][] Paralysis
 END
 VER 3 010000000000006F " " "INV_Misc_QuestionMark"
 #showtooltip
@@ -128,30 +124,24 @@ VER 3 0100000000000080 " " "INV_Misc_QuestionMark"
 END
 VER 3 0100000000000084 " " "INV_Misc_QuestionMark"
 #showtooltip
-/cancelaura blessing of protection
 /cast Fortifying Brew
 /use Kang's Bindstone
 END
-VER 3 0100000000000085 " " "134400"
-#showtooltip Fists of Fury
-/use Fire-Eater's Vial
-/cast Fists of Fury
+VER 3 0100000000000087 " " "134400"
+#showtooltip
+/stopmacro [channeling:Fists of Fury]
+/cast Rising Sun Kick
+END
+VER 3 0100000000000088 " " "134400"
+#showtooltip Fists of fury
+/cast [channeling:Celestial Conduit] Unity Within
+/cast [nochanneling][channeling:Spinning Crane Kick][channeling:Celestial Conduit] Fists of Fury
 END
 VER 3 0100000000000081 "Black Ox" "INV_Misc_QuestionMark"
 #showtooltip Provoke
 /targetexact Black Ox Statue
 /cast Provoke
 /targetlasttarget
-END
-VER 3 0100000000000082 "Cancel" "236356"
-/cancelaura Zen Flight
-/cancelaura Blessing of Protection
-/cancelaura Blessing of Freedom
-/cancelaura Slow Fall
-/cancelaura Flying Serpent Kick
-/cancelaura Parachute
-/dismount
-/stopcasting
 END
 VER 3 0100000000000083 "Dismiss" "615340"
 /run if not UnitAffectingCombat("player")then for i=1,4 do n="t"..i CreateFrame("Button",n,UIParent,"SecureUnitButtonTemplate")_G[n]:SetAttribute("type", "destroytotem")_G[n]:SetAttribute("totem-slot",i)end end

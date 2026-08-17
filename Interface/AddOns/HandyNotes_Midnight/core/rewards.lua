@@ -20,7 +20,7 @@ local function Icon(icon) return '|T' .. icon .. ':0:0:1:-1|t ' end
 local bullet = (GetLocale() == 'zhCN' and '·' or '•')
 
 -------------------------------------------------------------------------------
------------------------------------ REWARD ------------------------------------
+------------------------------------ REWARD -----------------------------------
 -------------------------------------------------------------------------------
 
 local Reward = Class('Reward')
@@ -105,7 +105,7 @@ function Section:Render(tooltip)
 end
 
 -------------------------------------------------------------------------------
------------------------------------ SPACER ------------------------------------
+------------------------------------ SPACER -----------------------------------
 -------------------------------------------------------------------------------
 
 local Spacer = Class('Spacer', Reward)
@@ -115,7 +115,7 @@ function Spacer:IsEnabled() return true end
 function Spacer:Render(tooltip) tooltip:AddLine(' ') end
 
 -------------------------------------------------------------------------------
---------------------------------- HUNTER PET ----------------------------------
+---------------------------------- HUNTER PET ---------------------------------
 -------------------------------------------------------------------------------
 
 local HunterPet = Class('HunterPet', Reward, {type = L['hunter_pet']})
@@ -156,6 +156,14 @@ end
 function Achievement:Initialize(attrs)
     Reward.Initialize(self, attrs)
     self.criteria = ns.AsIDTable(self.criteria)
+end
+
+function Achievement:Prepare()
+    if self.criteria then
+        for _, c in ipairs(self.criteria) do
+            if c.note then ns.PrepareLinks(c.note) end
+        end
+    end
 end
 
 function Achievement:IsObtained()
@@ -219,13 +227,14 @@ function Achievement:GetLines()
             end
             note = note and (note .. '  ' .. status) or status
         end
+        if note then note = ns.RenderLinks(note) end
 
         return ctext, note, r, g, b
     end
 end
 
 -------------------------------------------------------------------------------
------------------------------------- BUFF -------------------------------------
+------------------------------------- BUFF ------------------------------------
 -------------------------------------------------------------------------------
 
 local Buff = Class('Buff', Reward, {type = L['buff']})
@@ -267,7 +276,7 @@ function Currency:GetText()
 end
 
 -------------------------------------------------------------------------------
----------------------------------- FOLLOWER -----------------------------------
+----------------------------------- FOLLOWER ----------------------------------
 -------------------------------------------------------------------------------
 
 local Follower = Class('Follower', Reward)
@@ -318,7 +327,7 @@ function Follower:GetStatus()
 end
 
 -------------------------------------------------------------------------------
------------------------------------- ITEM -------------------------------------
+------------------------------------- ITEM ------------------------------------
 -------------------------------------------------------------------------------
 
 local Item = Class('Item', Reward)
@@ -635,7 +644,7 @@ function Appearance:GetStatus()
 end
 
 -------------------------------------------------------------------------------
----------------------------------- TRANSMOG -----------------------------------
+----------------------------------- TRANSMOG ----------------------------------
 -------------------------------------------------------------------------------
 
 local Transmog = Class('Transmog', Item,
@@ -667,19 +676,28 @@ function Transmog:IsEnabled()
 end
 
 function Transmog:IsKnown()
-    if CTC.PlayerHasTransmog(self.item) then return true end
-    local appearanceID, sourceID = CTC.GetItemInfo(self.item)
-    if sourceID and CTC.PlayerHasTransmogItemModifiedAppearance(sourceID) then
-        return true
-    end
-    if appearanceID then
-        for i, sourceID in ipairs(CTC.GetAllAppearanceSources(appearanceID)) do
-            if CTC.PlayerHasTransmogItemModifiedAppearance(sourceID) then
-                return true
+    if ns:GetOpt('transmog_shared_appearances') then
+        if CTC.PlayerHasTransmog(self.item) then return true end
+        local appearanceID, sourceID = CTC.GetItemInfo(self.item)
+        if sourceID and CTC.PlayerHasTransmogItemModifiedAppearance(sourceID) then
+            return true
+        end
+        if appearanceID then
+            for i, sourceID in ipairs(CTC.GetAllAppearanceSources(appearanceID)) do
+                if CTC.PlayerHasTransmogItemModifiedAppearance(sourceID) then
+                    return true
+                end
             end
         end
+        return false
     end
-    return false
+    -- Only count the item's own source: shared-model appearances from
+    -- other items must not mark this reward as collected.
+    local _, sourceID = CTC.GetItemInfo(self.item)
+    if sourceID then
+        return CTC.PlayerHasTransmogItemModifiedAppearance(sourceID)
+    end
+    return CTC.PlayerHasTransmog(self.item)
 end
 
 function Transmog:IsLearnable()
@@ -729,7 +747,7 @@ function Transmog:GetStatus()
 end
 
 -------------------------------------------------------------------------------
---------------------------------- REPUTATION ----------------------------------
+---------------------------------- REPUTATION ---------------------------------
 -------------------------------------------------------------------------------
 
 local Reputation = Class('Reputation', Reward,

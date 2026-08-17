@@ -3,7 +3,7 @@ Blizzard_CombatLog_Filters = {
 ["filters"] = {
 {
 ["quickButtonName"] = "My actions",
-["onQuickBar"] = true,
+["onQuickBar"] = false,
 ["quickButtonDisplay"] = {
 ["party"] = true,
 ["solo"] = true,
@@ -249,7 +249,7 @@ nil,
 },
 {
 ["quickButtonName"] = "What happened to me?",
-["onQuickBar"] = true,
+["onQuickBar"] = false,
 ["quickButtonDisplay"] = {
 ["party"] = true,
 ["solo"] = true,
@@ -505,7 +505,7 @@ nil,
 ["solo"] = true,
 ["raid"] = true,
 },
-["onQuickBar"] = true,
+["onQuickBar"] = false,
 ["settings"] = {
 ["abilityHighlighting"] = true,
 ["lineColoring"] = true,
@@ -797,7 +797,7 @@ nil,
 ["solo"] = true,
 ["raid"] = true,
 },
-["onQuickBar"] = true,
+["onQuickBar"] = false,
 ["settings"] = {
 ["abilityHighlighting"] = true,
 ["lineColoring"] = true,

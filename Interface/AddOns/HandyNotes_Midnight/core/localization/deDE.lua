@@ -3,7 +3,7 @@ local L = ns.NewLocale('deDE')
 if not L then return end
 -- German Translation by Dathwada EU-Eredar and Ioney EU-Blackrock
 -------------------------------------------------------------------------------
------------------------------------- GEAR -------------------------------------
+------------------------------------- GEAR ------------------------------------
 -------------------------------------------------------------------------------
 
 L['bag'] = 'Tasche'
@@ -38,7 +38,7 @@ L['cloak'] = 'Umhang'
 L['trinket'] = 'Schmuck'
 
 -------------------------------------------------------------------------------
----------------------------------- TOOLTIPS -----------------------------------
+----------------------------------- TOOLTIPS ----------------------------------
 -------------------------------------------------------------------------------
 
 L['activation_unknown'] = 'Aktivierung unbekannt!'
@@ -76,7 +76,7 @@ L['quest_repeatable'] = 'Wiederholbare Quest'
 L['achievement'] = 'Erfolg'
 L['decor_owned'] = 'Im Besitz: %s'
 
----------------------------------- LOCATION -----------------------------------
+----------------------------------- LOCATION ----------------------------------
 L['in_cave'] = 'In einer Höhle.'
 L['in_small_cave'] = 'In einer kleinen Höhle.'
 L['in_water_cave'] = 'In einer Unterwasserhöhle.'
@@ -84,8 +84,10 @@ L['in_waterfall_cave'] = 'In einer Höhle hinter einem Wasserfall.'
 L['in_water'] = 'Im Wasser.'
 L['in_building'] = 'Im Gebäude.'
 
------------------------------------- TIME -------------------------------------
-L['now'] = 'Jetzt'
+------------------------------------- TIME ------------------------------------
+L['starts_in'] = nil
+L['time_remaining'] = nil
+L['next_time'] = nil
 L['hourly'] = 'Stündlich'
 L['daily'] = 'Täglich'
 L['weekly'] = 'Wöchentlich'
@@ -114,7 +116,7 @@ L['follower_type_follower'] = 'Anhänger'
 L['follower_type_champion'] = 'Champion'
 L['follower_type_companion'] = 'Abenteurer'
 
---------------------------------- REPUTATION ----------------------------------
+---------------------------------- REPUTATION ---------------------------------
 L['rep_honored'] = 'Wohlwollend'
 L['rep_revered'] = 'Respektvoll'
 L['rep_exalted'] = 'Erfürchtig'
@@ -222,6 +224,8 @@ L['options_transmog_rewards'] = 'Zeige Vorlagenbelohnungen'
 L['options_transmog_rewards_desc'] = 'Zeige Vorlagenbelohnungen für Waffen und Rüstungen in Tooltips an und verfolge ihren Sammlungsstatus.'
 L['options_all_transmog_rewards'] = 'Zeige nicht erhältliche Vorlagenbelohnungen'
 L['options_all_transmog_rewards_desc'] = 'Zeigt Vorlagenbelohnungen an, die nur für andere Klassen erhältlich sind.'
+L['options_shared_appearances'] = nil
+L['options_shared_appearances_desc'] = nil
 L['options_rep_rewards'] = 'Zeige Rufbelohnungen'
 L['options_rep_rewards_desc'] = 'Zeige Rufbelohnungen in Tooltips an und verfolge ihren Sammlungsstatus.'
 L['options_claimed_rep_rewards'] = 'Zeige erhaltene Rufbelohnungen'
@@ -238,7 +242,7 @@ L['options_icons_treasures'] = 'Schätze'
 L['options_icons_vendors_desc'] = 'Zeigt die Positionen von Händlern an.'
 L['options_icons_vendors'] = 'Händler'
 
----------------------------------- FOCUS ---------------------------------
+------------------------------------ FOCUS ------------------------------------
 
 L['options_focus_settings'] = 'Orte von Interesse'
 L['options_poi_color'] = 'Punktfarbe'
@@ -248,7 +252,7 @@ L['options_path_color_desc'] = 'Legt die Farbe des Weges fest, wenn ein Symbol f
 L['options_reset_poi_colors'] = 'Farben zurücksetzen'
 L['options_reset_poi_colors_desc'] = 'Setzt die obigen Farben auf ihre Standardeinstellungen zurück.'
 
----------------------------------- TOOLTIP ---------------------------------
+----------------------------------- TOOLTIP -----------------------------------
 
 L['options_tooltip_settings'] = 'Tooltip'
 L['options_toggle_show_loot'] = 'Zeige Beute'

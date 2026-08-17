@@ -772,6 +772,18 @@ local function createNumericBreakpoint(threshold, decimalThreshold, rounding, co
 			rounding = rounding.down,
 		}
 	end
+	if threshold < 180 then
+		return {
+			threshold = threshold,
+			step = 1,
+			rounding = rounding.down,
+			format = formatWithColor("%d:%02d", color),
+			components = {
+				{ div = 60, step = 1, rounding = rounding.down },
+				{ mod = 60, step = 1, rounding = rounding.down },
+			},
+		}
+	end
 	local divisor
 	local format
 	if threshold >= 86400 then
@@ -831,6 +843,7 @@ function DurationText:CreateBindingFormatter(config)
 	addUniqueThreshold(thresholds, 0)
 	if decimalThreshold and decimalThreshold > 0 then addUniqueThreshold(thresholds, decimalThreshold) end
 	addUniqueThreshold(thresholds, 60)
+	addUniqueThreshold(thresholds, 180)
 	addUniqueThreshold(thresholds, 3600)
 	addUniqueThreshold(thresholds, 86400)
 	if colorBands then

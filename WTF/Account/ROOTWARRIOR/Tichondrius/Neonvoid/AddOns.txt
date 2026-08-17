@@ -2,10 +2,10 @@ AdvancedInterfaceOptions: enabled
 Alignment_Grids: enabled
 Auctionator: enabled
 AutoCombatLogger: enabled
-Baganator: disabled
+Baganator: enabled
 BattleGroundEnemies: enabled
 BetterBlizzFrames: enabled
-BetterBlizzPlates: enabled
+BetterBlizzPlates: disabled
 BigWigs: enabled
 BigWigs_Core: enabled
 BigWigs_KhazAlgar: enabled
@@ -239,3 +239,7 @@ WarGameHelper: enabled
 ArenaAnalytics: enabled
 MiniWinLoss: enabled
 RareScanner: enabled
+AztarecHelper: enabled
+BarberShopProfiles: enabled
+EnhanceQoLQuickActions: enabled
+LariasWeeklyChecklist: enabled

@@ -415,3 +415,11 @@ function SharedAnchors:GetUnitFrameEntries()
 	end
 	return entries
 end
+
+function SharedAnchors:GetUnitFrameDynamicAnchorConsumerId(key)
+	local generic = GENERIC_ANCHORS[key]
+	if not (generic and generic.ufKey and generic.uf) then return nil end
+	local isEQoLFrameEnabled = addon.functions and addon.functions.IsEQoLUnitOrGroupFrameEnabled
+	if not (isEQoLFrameEnabled and isEQoLFrameEnabled(generic.ufKey)) then return nil end
+	return _G[generic.uf] and ("unitFrame:" .. key) or nil
+end

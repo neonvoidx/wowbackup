@@ -982,7 +982,12 @@ local function wipeTable(target)
 end
 
 function Reminder.IsRelevantHelpfulPlayerAura(aura)
-	return aura and aura.isHelpful == true and aura.isFromPlayerOrPlayerPet == true
+	if not aura or (issecretvalue and issecretvalue(aura)) then return false end
+	local isHelpful = aura.isHelpful
+	if issecretvalue and issecretvalue(isHelpful) then return false end
+	local isFromPlayerOrPlayerPet = aura.isFromPlayerOrPlayerPet
+	if issecretvalue and issecretvalue(isFromPlayerOrPlayerPet) then return false end
+	return isHelpful == true and isFromPlayerOrPlayerPet == true
 end
 
 local function normalizeDisplayMode(value)
@@ -2930,7 +2935,7 @@ local function paladinRitesGetSelfStatus(provider, reminder)
 		reminder.runtimeEligibleUnits = reminder.runtimeEligibleUnits or {}
 		local eligibleUnits = reminder:CollectEligibleUnits(reminder.runtimeEligibleUnits, true)
 
-		if #eligibleUnits > 1 then
+		if provider.trackBeaconOfLight == true and #eligibleUnits > 1 then
 			totalRequirements = totalRequirements + 1
 			local beaconOfLightDisplaySpellId = normalizeSpellId(provider.beaconOfLightDisplaySpellId) or normalizeSpellId(provider.beaconOfLightSpellIds and provider.beaconOfLightSpellIds[1])
 			if not anyUnitHasAnyAuraSpellId(reminder, eligibleUnits, provider.beaconOfLightSpellIds) then
@@ -3399,7 +3404,10 @@ function Reminder:GetPaladinRitesProvider()
 	local adjurationKnown = safeIsPlayerSpell(PALADIN_RITES.adjuration.spellId)
 	local sanctificationKnown = safeIsPlayerSpell(PALADIN_RITES.sanctification.spellId)
 	local holyPaladin = self:GetCurrentSpecId() == PALADIN_SPEC_HOLY
-	local beaconOfLightKnown = holyPaladin and hasKnownSpellInList(HOLY_PALADIN_BEACON_OF_LIGHT_IDS) or false
+	local beaconOfLightOverrideSpellId = holyPaladin and C_Spell and C_Spell.GetOverrideSpell and C_Spell.GetOverrideSpell(HOLY_PALADIN_BEACON_OF_LIGHT_IDS[1], 0, true) or nil
+	if issecretvalue and issecretvalue(beaconOfLightOverrideSpellId) then beaconOfLightOverrideSpellId = nil end
+	local beaconOfVirtueActive = beaconOfLightOverrideSpellId == 200025 -- Beacon of Virtue
+	local beaconOfLightKnown = holyPaladin and not beaconOfVirtueActive and hasKnownSpellInList(HOLY_PALADIN_BEACON_OF_LIGHT_IDS) or false
 	local beaconOfFaithKnown = holyPaladin and hasKnownSpellInList(HOLY_PALADIN_BEACON_OF_FAITH_IDS) or false
 	local hasHolyBeaconSupport = holyPaladin and (beaconOfLightKnown or beaconOfFaithKnown)
 	if not adjurationKnown and not sanctificationKnown and not hasHolyBeaconSupport then return nil end
@@ -3468,10 +3476,11 @@ function Reminder:GetPaladinRitesProvider()
 	provider.fallbackName = fallbackName
 	provider.enchantIds = enchantIds
 	provider.trackRites = trackRites == true
+	provider.trackBeaconOfLight = beaconOfLightKnown == true
 	provider.enchantId = (#enchantIds == 1) and enchantIds[1] or nil
 	provider.tracksExternalUnitAuras = holyPaladin == true
 
-	local providerKey = string.format("%s|holy:%d|faith:%d", tostring(nextKey), holyPaladin and 1 or 0, beaconOfFaithKnown and 1 or 0)
+	local providerKey = string.format("%s|holy:%d|light:%d|faith:%d", tostring(nextKey), holyPaladin and 1 or 0, beaconOfLightKnown and 1 or 0, beaconOfFaithKnown and 1 or 0)
 	if provider.activeKey ~= providerKey then
 		provider.activeKey = providerKey
 		resetProviderRuntimeCache(provider)
@@ -5803,6 +5812,10 @@ function Reminder:ApplySamplePreview(iconSize, scale, iconGap)
 	end
 
 	if frame.sampleContainer then frame.sampleContainer:Show() end
+end
+
+function Reminder:InvalidateVisualSettingsCache()
+	if self.frame then self.frame._eqolClassBuffReminderVisualKey = nil end
 end
 
 function Reminder:ApplyVisualSettings()

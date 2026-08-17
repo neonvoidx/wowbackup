@@ -1,10 +1,5 @@
 local addonName, addon = ...
 
-local _, _, _, interfaceVersion = GetBuildInfo()
-if (tonumber(interfaceVersion) or 0) < 120100 then
-	return
-end
-
 addon.AuraCompat = addon.AuraCompat or {}
 local AuraCompat = addon.AuraCompat
 
@@ -50,9 +45,9 @@ local groupFiltersByContainer = setmetatable({}, { __mode = "k" })
 local slotFramesByContainer = setmetatable({}, { __mode = "k" })
 local itemEnchantmentFramesByContainer = setmetatable({}, { __mode = "k" })
 local tooltipPolicyByButton = setmetatable({}, { __mode = "k" })
+local liveAuraContainers = setmetatable({}, { __mode = "k" })
 AuraCompat._flowLayoutAxisByContainer = AuraCompat._flowLayoutAxisByContainer or setmetatable({}, { __mode = "k" })
 
-AuraCompat.interfaceVersion = interfaceVersion
 AuraCompat.containerAddonName = AURA_CONTAINER_ADDON
 AuraCompat.defaultContainerTemplate = DEFAULT_CONTAINER_TEMPLATE
 
@@ -68,6 +63,31 @@ local function HasRequiredContainerMethods(container)
 		if type(container[REQUIRED_CONTAINER_METHODS[i]]) ~= "function" then return false end
 	end
 	return true
+end
+
+local function RefreshVisibleAuraContainers()
+	for container in pairs(liveAuraContainers) do
+		if container.IsEnabled and container:IsEnabled() and container.IsVisible and container:IsVisible() then CallContainerMethod(container, "UpdateAllAuras") end
+	end
+end
+
+local function EnsureUnitFactionRefreshEvent()
+	if AuraCompat._unitFactionRefreshFrame then return end
+	-- Temporary 12.1 workaround: UNIT_FACTION can change whether identity
+	-- candidate filters are allowed without making native AuraContainers rebuild.
+	-- Coalesce the repeated player event and re-evaluate each live container once.
+	local frame = CreateFrame("Frame")
+	frame:RegisterUnitEvent("UNIT_FACTION", "player")
+	frame:SetScript("OnEvent", function(self)
+		if AuraCompat._unitFactionRefreshPending then return end
+		AuraCompat._unitFactionRefreshPending = true
+		self:SetScript("OnUpdate", function(refreshFrame)
+			refreshFrame:SetScript("OnUpdate", nil)
+			AuraCompat._unitFactionRefreshPending = nil
+			RefreshVisibleAuraContainers()
+		end)
+	end)
+	AuraCompat._unitFactionRefreshFrame = frame
 end
 
 local function GetInboundAuraSlotOptions(options)
@@ -248,7 +268,11 @@ function AuraCompat:CreateAuraContainer(parent, name, template)
 	template = template or DEFAULT_CONTAINER_TEMPLATE
 
 	local container = CreateFrame("AuraContainer", name, parent, template)
-	if HasRequiredContainerMethods(container) then return container end
+	if HasRequiredContainerMethods(container) then
+		liveAuraContainers[container] = true
+		EnsureUnitFactionRefreshEvent()
+		return container
+	end
 	return nil
 end
 
@@ -259,6 +283,8 @@ local RESTRICTED_GLOW_BLIZZARD_TEXTURE = [[Interface\SpellActivationOverlay\Icon
 local RESTRICTED_GLOW_BLIZZARD_ANTS_TEXTURE = [[Interface\SpellActivationOverlay\IconAlertAnts]]
 local RESTRICTED_GLOW_MARCHING_ANTS_ATLAS = "VisualAlert_Ants_Flipbook"
 local RESTRICTED_GLOW_FLASH_ATLAS = "UI-CooldownManager-VisualAlert-Glow"
+local RESTRICTED_GLOW_SHINE_TEXTURE = [[Interface\Artifacts\Artifacts]]
+local RESTRICTED_GLOW_SHINE_TEX_COORDS = { 0.8115234375, 0.9169921875, 0.8798828125, 0.9853515625 }
 local RESTRICTED_GLOW_HEXAGON_TEXTURE = [[Interface\AddOns\EnhanceQoL\Assets\hexagon_1px.tga]]
 local RESTRICTED_GLOW_DIAMOND_TEXTURE = [[Interface\AddOns\EnhanceQoL\Assets\diamond_glow.tga]]
 local RESTRICTED_GLOW_ROUND_STAR_TEXTURE = [[Interface\AddOns\EnhanceQoL\Assets\round_star_border.tga]]
@@ -275,6 +301,7 @@ local function GetRestrictedAuraGlowConfig(anchorFrame, options)
 		and style ~= "MARCHING_ANTS"
 		and style ~= "PIXEL"
 		and style ~= "PULSING"
+		and style ~= "SHINE"
 		and style ~= "SOLID"
 		and style ~= "TINT_BORDER"
 	then
@@ -453,12 +480,11 @@ local function ConfigureRestrictedPixelGlow(glow, config)
 	end
 end
 
-local function ConfigureRestrictedFlipBook(glow, key, assetType, asset, width, height, config, rows, columns, frames, duration, frameWidth, frameHeight)
+local function ConfigureRestrictedFlipBook(glow, key, assetType, asset, width, height, config, rows, columns, frames, duration, frameWidth, frameHeight, desaturated, blendMode)
 	local data = glow[key]
 	if not data then
 		local texture = glow:CreateTexture(nil, "OVERLAY", nil, 7)
 		texture:SetPoint("CENTER", glow, "CENTER")
-		if texture.SetBlendMode then texture:SetBlendMode("ADD") end
 		local animation = texture:CreateAnimationGroup()
 		animation:SetLooping("REPEAT")
 		local flipBook = animation:CreateAnimation("FlipBook")
@@ -472,7 +498,8 @@ local function ConfigureRestrictedFlipBook(glow, key, assetType, asset, width, h
 	else
 		data.texture:SetTexture(asset)
 	end
-	if data.texture.SetDesaturated then data.texture:SetDesaturated(true) end
+	if data.texture.SetBlendMode then data.texture:SetBlendMode(blendMode or "ADD") end
+	if data.texture.SetDesaturated then data.texture:SetDesaturated(desaturated ~= false) end
 	data.texture:SetVertexColor(config.r, config.g, config.b, config.a)
 	data.texture:Show()
 	data.flipBook:SetFlipBookRows(rows)
@@ -588,13 +615,13 @@ local function ConfigureRestrictedBlizzardGlow(glow, config)
 		softGlow:SetPoint("CENTER", glow, "CENTER")
 		softGlow:SetTexture(RESTRICTED_GLOW_BLIZZARD_TEXTURE)
 		softGlow:SetTexCoord(0.00781250, 0.50781250, 0.27734375, 0.52734375)
-		if softGlow.SetBlendMode then softGlow:SetBlendMode("ADD") end
+		if softGlow.SetBlendMode then softGlow:SetBlendMode("BLEND") end
 		glow.BlizzardSoftGlow = softGlow
 	end
 	local rootWidth = config.baseWidth + (2 * math.max(0, (config.baseWidth * 0.2) + config.inset))
 	local rootHeight = config.baseHeight + (2 * math.max(0, (config.baseHeight * 0.2) + config.inset))
 	softGlow:SetSize(rootWidth, rootHeight)
-	if softGlow.SetDesaturated then softGlow:SetDesaturated(true) end
+	if softGlow.SetDesaturated then softGlow:SetDesaturated(false) end
 	softGlow:SetVertexColor(config.r, config.g, config.b, config.a)
 	softGlow:Show()
 	-- Match the legacy IconAlertAnts cycle used by normal spell-frame glows.
@@ -612,8 +639,84 @@ local function ConfigureRestrictedBlizzardGlow(glow, config)
 		22,
 		math.max(0.001, duration),
 		48,
-		48
+		48,
+		false,
+		"BLEND"
 	)
+end
+
+local function GetRestrictedShinePoint(position, width, height)
+	local perimeter = 2 * (width + height)
+	position = position % perimeter
+	if position <= height then return 0, position end
+	position = position - height
+	if position <= width then return position, height end
+	position = position - width
+	if position <= height then return width, height - position end
+	return width - (position - height), 0
+end
+
+local function ConfigureRestrictedShineGlow(glow, config)
+	for _, item in ipairs(glow.ShineItems or {}) do
+		item.animation:Stop()
+		item.texture:Hide()
+	end
+
+	local width, height = config.width, config.height
+	local perimeter = 2 * (width + height)
+	local direction = config.direction
+	local corners = { 0, height, height + width, (2 * height) + width }
+	local scale = math.max(0.5, math.min(4, config.thickness / 3))
+	local sizes = { 7, 6, 5, 4 }
+	local items = {}
+	glow.ShineItems = items
+
+	for layer = 1, 4 do
+		for sparkle = 1, config.count do
+			local startPosition = ((sparkle - 1) * perimeter) / config.count
+			local startX, startY = GetRestrictedShinePoint(startPosition, width, height)
+			local texture = glow:CreateTexture(nil, "OVERLAY", nil, 7)
+			texture:SetTexture(RESTRICTED_GLOW_SHINE_TEXTURE)
+			texture:SetTexCoord(unpack(RESTRICTED_GLOW_SHINE_TEX_COORDS))
+			texture:SetVertexColor(config.r, config.g, config.b, config.a)
+			texture:SetSize(sizes[layer] * scale, sizes[layer] * scale)
+			texture:SetPoint("CENTER", glow, "BOTTOMLEFT", startX, startY)
+			if texture.SetBlendMode then texture:SetBlendMode("ADD") end
+
+			local animation = texture:CreateAnimationGroup()
+			animation:SetLooping("REPEAT")
+			local path = animation:CreateAnimation("Path")
+			path:SetDuration(math.max(0.05, config.period * layer))
+			local pathPositions = {}
+			if direction > 0 then
+				for _, corner in ipairs(corners) do
+					if corner > startPosition then pathPositions[#pathPositions + 1] = corner end
+				end
+				for _, corner in ipairs(corners) do
+					if corner < startPosition then pathPositions[#pathPositions + 1] = corner + perimeter end
+				end
+				pathPositions[#pathPositions + 1] = startPosition + perimeter
+			else
+				for cornerIndex = #corners, 1, -1 do
+					local corner = corners[cornerIndex]
+					if corner < startPosition then pathPositions[#pathPositions + 1] = corner end
+				end
+				for cornerIndex = #corners, 1, -1 do
+					local corner = corners[cornerIndex]
+					if corner > startPosition then pathPositions[#pathPositions + 1] = corner - perimeter end
+				end
+				pathPositions[#pathPositions + 1] = startPosition - perimeter
+			end
+			for pointIndex, pathPosition in ipairs(pathPositions) do
+				local pointX, pointY = GetRestrictedShinePoint(pathPosition, width, height)
+				local controlPoint = path:CreateControlPoint(nil, nil, pointIndex)
+				controlPoint:SetOffset(pointX - startX, pointY - startY)
+			end
+			texture:Show()
+			animation:Play()
+			items[#items + 1] = { texture = texture, animation = animation }
+		end
+	end
 end
 
 local function ConfigureRestrictedTintBorderGlow(glow, config)
@@ -670,6 +773,8 @@ local function ConfigureRestrictedAuraGlow(glow, anchorFrame, options)
 		ConfigureRestrictedMarchingAntsGlow(glow, config)
 	elseif config.style == "PULSING" then
 		ConfigureRestrictedPulsingGlow(glow, config)
+	elseif config.style == "SHINE" then
+		ConfigureRestrictedShineGlow(glow, config)
 	elseif config.style == "SOLID" then
 		ConfigureRestrictedLineBorder(glow, config, false, true)
 		glow:SetAlpha(config.a)

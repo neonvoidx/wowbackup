@@ -556,7 +556,7 @@ do
             sliderOptions:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right, displayFormatter);
         end
 
-        return sliderOptions;
+        return sliderOptions --[[@as NumyConfig_SliderOptions]];
     end
 
     --- @param label string

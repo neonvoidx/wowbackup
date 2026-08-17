@@ -3,7 +3,7 @@ Auctionator: enabled
 Baganator: enabled
 BattleGroundEnemiesFixed: enabled
 BetterBlizzFrames: enabled
-BetterBlizzPlates: enabled
+BetterBlizzPlates: disabled
 BtWLoadouts: enabled
 !BugGrabber: enabled
 BugSack: enabled
@@ -110,3 +110,8 @@ ArenaDRNameplates: enabled
 ArenaAnalytics: enabled
 LibDeflate: enabled
 MiniWinLoss: enabled
+AztarecHelper: enabled
+BarberShopProfiles: enabled
+BetterFishing: enabled
+EnhanceQoLQuickActions: enabled
+LariasWeeklyChecklist: enabled

@@ -2003,8 +2003,14 @@ function DataPanel.Create(id, name, existingOnly)
 		if skip or isSecretValue(text) or type(text) ~= "string" or text == "" then return text end
 		local hex = self:GetClassTextColorHex()
 		if not hex and self.info and self.info.useCustomTextColor then
-			local color = normalizeColorTable(self.info.textColor, { r = 1, g = 1, b = 1, a = 1 })
-			hex = string.format("%02x%02x%02x", math.floor((color.r or 1) * 255 + 0.5), math.floor((color.g or 1) * 255 + 0.5), math.floor((color.b or 1) * 255 + 0.5))
+			local color = self.info.textColor
+			local r, g, b = 1, 1, 1
+			if type(color) == "table" then
+				r = color.r or color[1] or 1
+				g = color.g or color[2] or 1
+				b = color.b or color[3] or 1
+			end
+			hex = string.format("%02x%02x%02x", math.floor(r * 255 + 0.5), math.floor(g * 255 + 0.5), math.floor(b * 255 + 0.5))
 		end
 		if not hex then return text end
 		return "|cff" .. hex .. text .. "|r"
@@ -2595,8 +2601,9 @@ function DataPanel.Create(id, name, existingOnly)
 			local font = panel:GetFontFace() or select(1, data.text:GetFont())
 			local baseSize = payload.fontSize or data.fontSize or 14
 			local size = panel:ApplyStreamFontScale(baseSize)
-			local fontFlags = panel:GetFontFlags()
-			local fontShadow = panel:HasFontShadow()
+			local _, fontFlags, fontShadow = panel:GetResolvedFontStyleData()
+			fontFlags = fontFlags or ""
+			fontShadow = fontShadow == true
 			local clickEnabled = not (panel.info and panel.info.clickThrough)
 
 			if payload.hidden then

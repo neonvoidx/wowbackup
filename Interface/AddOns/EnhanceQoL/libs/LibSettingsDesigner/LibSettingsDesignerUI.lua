@@ -5637,6 +5637,7 @@ local function addDropdownWidget(row, app, control, opts)
 			end)
 			for _, group in ipairs(orderedGroups) do
 				local submenu = rootDescription:CreateButton(group.label)
+				setDropdownMenuScrollMode(submenu, control, #group.options)
 				for _, option in ipairs(group.options) do addRadio(submenu, option) end
 			end
 		end)
@@ -5686,6 +5687,40 @@ local function addMultiDropdownWidget(row, app, control, opts)
 		MenuUtil.CreateContextMenu(owner, function(_, rootDescription)
 			local menuOptions = getControlOptions(control)
 			setDropdownMenuScrollMode(rootDescription, control, #menuOptions)
+			if type(control.selectAllLabel) == "string" and control.selectAllLabel ~= "" then
+				local function areAllOptionsSelected()
+					if #menuOptions == 0 then return false end
+					local selection = lib.GetMultiSelection(app, control)
+					for _, option in ipairs(menuOptions) do
+						if not lib.IsMultiOptionSelected(selection, option.value) then
+							return false
+						end
+					end
+					return true
+				end
+				local function setAllOptionsSelected()
+					local selected = not areAllOptionsSelected()
+					local selection = {}
+					if selected then
+						for _, option in ipairs(menuOptions) do
+							lib.SetMultiOptionSelected(selection, option.value, true)
+						end
+					end
+					if type(control.setSelection) == "function" or control.setting or control.setValue or control.key ~= nil then
+						app:SetControlValue(control, selection)
+					elseif type(control.setSelectedFunc) == "function" then
+						for _, option in ipairs(menuOptions) do
+							pcall(control.setSelectedFunc, option.value, selected, option)
+						end
+						if type(control.callback) == "function" then pcall(control.callback, selection, control) end
+					end
+					lib.RefreshVisibleRows(row._state)
+					refreshSummary()
+				end
+				local check = rootDescription:CreateCheckbox(control.selectAllLabel, areAllOptionsSelected, setAllOptionsSelected)
+				lib.AttachSoundPreviewCleanupInitializer(check)
+				rootDescription:CreateDivider()
+			end
 			for _, option in ipairs(menuOptions) do
 				local function isSelected(value)
 					return lib.IsMultiOptionSelected(lib.GetMultiSelection(app, control), value)
@@ -6643,6 +6678,10 @@ local function addSettingRow(state, control, pathText, parent, yOffset, width, x
 	local matrixSplitX = math.floor(rowWidth * 0.50)
 	local matrixControlX = matrixSplitX + 10
 	local matrixControlWidth = math.max(80, rowWidth - matrixControlX - actionReserveWidth - 16)
+	local usesMatrixSplit = matrixRows
+		and controlType ~= "colorpalette"
+		and controlType ~= "reorderlist"
+		and controlType ~= "custom"
 
 	local textLeft = 16
 	if control.icon or control.iconAtlas then
@@ -6674,6 +6713,7 @@ local function addSettingRow(state, control, pathText, parent, yOffset, width, x
 		desc:Hide()
 	end
 	local hasNewBadge = lib.IsControlNew(app, control)
+	local reserveInlineNewBadge = hasNewBadge and not usesMatrixSplit
 	local hasInlineToggleColor = layoutType == "boolean" and type(control.getColor) == "function" and type(control.setColor) == "function"
 	local function setMatrixTitle()
 		title:ClearAllPoints()
@@ -6689,11 +6729,11 @@ local function addSettingRow(state, control, pathText, parent, yOffset, width, x
 		if compact then
 			title:ClearAllPoints()
 			title:SetPoint("LEFT", row, "LEFT", textLeft, 0)
-			title:SetPoint("RIGHT", row, "RIGHT", hasNewBadge and rightInset(booleanControlInset + 66) or rightInset(booleanControlInset), 0)
+			title:SetPoint("RIGHT", row, "RIGHT", reserveInlineNewBadge and rightInset(booleanControlInset + 66) or rightInset(booleanControlInset), 0)
 			title:SetHeight(20)
 			title.Text:SetJustifyV("MIDDLE")
 		else
-			title:SetPoint("RIGHT", row, "RIGHT", hasNewBadge and rightInset(booleanControlInset + 66) or rightInset(booleanControlInset), 0)
+			title:SetPoint("RIGHT", row, "RIGHT", reserveInlineNewBadge and rightInset(booleanControlInset + 66) or rightInset(booleanControlInset), 0)
 			desc:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -5)
 			desc:SetPoint("RIGHT", row, "RIGHT", rightInset(booleanControlInset), 0)
 			desc:SetHeight(30)
@@ -6946,7 +6986,7 @@ local function addSettingRow(state, control, pathText, parent, yOffset, width, x
 		container._LibSettingsDesignerControl = control
 		lib.RenderCustomOwner(state, container, control, "control:" .. tostring(control.id or control.key))
 	elseif controlType == "button" then
-		title:SetPoint("RIGHT", row, "RIGHT", hasNewBadge and rightInset(154) or rightInset(18), 0)
+		title:SetPoint("RIGHT", row, "RIGHT", reserveInlineNewBadge and rightInset(154) or rightInset(18), 0)
 		if not compact then
 			desc.Text:SetText(control.description or "")
 			desc:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -6)
@@ -6970,7 +7010,7 @@ local function addSettingRow(state, control, pathText, parent, yOffset, width, x
 			end
 		end)
 	else
-		title:SetPoint("RIGHT", row, "RIGHT", hasNewBadge and rightInset(154) or rightInset(18), 0)
+		title:SetPoint("RIGHT", row, "RIGHT", reserveInlineNewBadge and rightInset(154) or rightInset(18), 0)
 		if not compact then
 			desc:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -6)
 			desc:SetPoint("RIGHT", row, "RIGHT", -18, 0)
@@ -6988,7 +7028,11 @@ local function addSettingRow(state, control, pathText, parent, yOffset, width, x
 
 	if hasNewBadge then
 		local newBadge = lib.CreateNewBadge(row)
-		newBadge:SetPoint("TOPRIGHT", row, "TOPRIGHT", rightInset(hasInlineToggleColor and 150 or 118), -8)
+		if usesMatrixSplit then
+			newBadge:SetPoint("CENTER", row, "LEFT", 0, 0)
+		else
+			newBadge:SetPoint("TOPRIGHT", row, "TOPRIGHT", rightInset(hasInlineToggleColor and 150 or 118), -8)
+		end
 	end
 
 	refreshControlRow(app, control, row)
@@ -7841,7 +7885,6 @@ function lib._Internal.addPageTabs(state, header, category, selectedPage, startX
 	local newPages = {}
 	local widths = {}
 	local totalWidth = 0
-	local newBadgeWidth = 44
 	local measure = header:CreateFontString(nil, "OVERLAY", tabFont)
 	for index = 1, #pages do
 		local page = pages[index]
@@ -7851,7 +7894,7 @@ function lib._Internal.addPageTabs(state, header, category, selectedPage, startX
 		measure:SetText(label)
 		local textWidth = math.ceil(measure:GetStringWidth() or 0)
 		textWidths[index] = textWidth
-		local measuredWidth = textWidth + (tabPaddingX * 2) + (newPages[index] and newBadgeWidth or 0)
+		local measuredWidth = textWidth + (tabPaddingX * 2)
 		widths[index] = math.max(tabMinWidth, math.min(tabMaxWidth, measuredWidth))
 		totalWidth = totalWidth + widths[index]
 	end
@@ -7886,7 +7929,7 @@ function lib._Internal.addPageTabs(state, header, category, selectedPage, startX
 		button.Underline:SetColorTexture(underlineColor[1], underlineColor[2], underlineColor[3], selected and (underlineColor[4] or 1) or 0)
 		button.Text = createText(button, tabFont, labels[index], selected and (lib.ThemeColors.tabSelectedText or TEXT.gold) or (lib.ThemeColors.tabText or TEXT.muted))
 		button.Text:SetPoint("LEFT", button, "LEFT", tabPaddingX, tabTextOffsetY)
-		button.Text:SetPoint("RIGHT", button, "RIGHT", -(tabPaddingX + (newPages[index] and newBadgeWidth or 0)), tabTextOffsetY)
+		button.Text:SetPoint("RIGHT", button, "RIGHT", -tabPaddingX, tabTextOffsetY)
 		button.Text:SetHeight(math.max(1, tabHeight - underlineHeight - 3))
 		button.Text.Text:SetJustifyV("MIDDLE")
 		if button.Text.Text.SetMaxLines then
@@ -7894,7 +7937,7 @@ function lib._Internal.addPageTabs(state, header, category, selectedPage, startX
 		end
 		if newPages[index] then
 			button.NewBadge = lib.CreateNewBadge(button, state.app)
-			button.NewBadge:SetPoint("RIGHT", button, "RIGHT", -tabPaddingX, tabTextOffsetY)
+			button.NewBadge:SetPoint("BOTTOM", button.Text, "TOP", 0, -2)
 		end
 		button:SetScript("OnEnter", function(self)
 			if self.Highlight then
@@ -7953,13 +7996,12 @@ function lib._Internal.addSectionTabs(state, page, groups)
 	local labels = {}
 	local newGroups = {}
 	local totalWidth = 0
-	local newBadgeWidth = 44
 	for index, group in ipairs(groups) do
 		local label = lib.NormalizeTextValue(group.title or group.id)
 		labels[index] = label
 		newGroups[index] = lib.IsGroupOrChildNew(state.app, group)
 		measure:SetText(label)
-		local width = math.max(minWidth, math.min(maxWidth, math.ceil(measure:GetStringWidth() or 0) + (paddingX * 2) + (newGroups[index] and newBadgeWidth or 0)))
+		local width = math.max(minWidth, math.min(maxWidth, math.ceil(measure:GetStringWidth() or 0) + (paddingX * 2)))
 		widths[index] = width
 		totalWidth = totalWidth + width
 	end
@@ -7991,7 +8033,7 @@ function lib._Internal.addSectionTabs(state, page, groups)
 		button.Underline:SetColorTexture(underlineColor[1], underlineColor[2], underlineColor[3], selected and (underlineColor[4] or 1) or 0)
 		button.Text = createText(button, FONT_MUTED, labels[index], selected and (lib.ThemeColors.tabSelectedText or TEXT.gold) or (lib.ThemeColors.tabText or TEXT.muted))
 		button.Text:SetPoint("LEFT", button, "LEFT", paddingX, 2)
-		button.Text:SetPoint("RIGHT", button, "RIGHT", -(paddingX + (newGroups[index] and newBadgeWidth or 0)), 2)
+		button.Text:SetPoint("RIGHT", button, "RIGHT", -paddingX, 2)
 		button.Text:SetHeight(22)
 		button.Text.Text:SetJustifyV("MIDDLE")
 		if button.Text.Text.SetMaxLines then
@@ -7999,7 +8041,7 @@ function lib._Internal.addSectionTabs(state, page, groups)
 		end
 		if newGroups[index] then
 			button.NewBadge = lib.CreateNewBadge(button, state.app)
-			button.NewBadge:SetPoint("RIGHT", button, "RIGHT", -paddingX, 2)
+			button.NewBadge:SetPoint("BOTTOM", button.Text, "TOP", 0, -2)
 		end
 		button:SetScript("OnEnter", function(self)
 			local hoverBg = selected and (lib.ThemeColors.tabSelectedBg or { 0.150, 0.115, 0.055, 0.20 })
@@ -8101,13 +8143,12 @@ function lib._Internal.addMatrixPageFixedHeader(state, page, groups)
 	local labels = {}
 	local newGroups = {}
 	local totalWidth = 0
-	local newBadgeWidth = 44
 	for index, group in ipairs(groups) do
 		local label = lib.NormalizeTextValue(group.title or group.id)
 		labels[index] = label
 		newGroups[index] = lib.IsGroupOrChildNew(state.app, group)
 		measure:SetText(label)
-		local tabWidth = math.max(minWidth, math.min(maxWidth, math.ceil(measure:GetStringWidth() or 0) + (paddingX * 2) + (newGroups[index] and newBadgeWidth or 0)))
+		local tabWidth = math.max(minWidth, math.min(maxWidth, math.ceil(measure:GetStringWidth() or 0) + (paddingX * 2)))
 		widths[index] = tabWidth
 		totalWidth = totalWidth + tabWidth
 	end
@@ -8137,7 +8178,7 @@ function lib._Internal.addMatrixPageFixedHeader(state, page, groups)
 		button.Underline:SetColorTexture(underlineColor[1], underlineColor[2], underlineColor[3], selected and (underlineColor[4] or 1) or 0)
 		button.Text = createText(button, FONT_MUTED, labels[index], selected and (lib.ThemeColors.tabSelectedText or TEXT.gold) or (lib.ThemeColors.tabText or TEXT.muted))
 		button.Text:SetPoint("LEFT", button, "LEFT", paddingX, 2)
-		button.Text:SetPoint("RIGHT", button, "RIGHT", -(paddingX + (newGroups[index] and newBadgeWidth or 0)), 2)
+		button.Text:SetPoint("RIGHT", button, "RIGHT", -paddingX, 2)
 		button.Text:SetHeight(22)
 		button.Text.Text:SetJustifyV("MIDDLE")
 		if button.Text.Text.SetMaxLines then
@@ -8145,7 +8186,7 @@ function lib._Internal.addMatrixPageFixedHeader(state, page, groups)
 		end
 		if newGroups[index] then
 			button.NewBadge = lib.CreateNewBadge(button, state.app)
-			button.NewBadge:SetPoint("RIGHT", button, "RIGHT", -paddingX, 2)
+			button.NewBadge:SetPoint("BOTTOM", button.Text, "TOP", 0, -2)
 		end
 		button:SetScript("OnEnter", function(self)
 			self.Highlight:SetColorTexture(0.18, 0.50, 0.50, 0.26)

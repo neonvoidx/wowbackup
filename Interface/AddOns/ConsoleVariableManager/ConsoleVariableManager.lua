@@ -9,6 +9,77 @@
         CVM_SETTINGS = CVM_SETTINGS or {}
     end
 
+-- CVar Change Tracking --
+----------------------------
+    -- Hooking SetCVar/C_CVar.SetCVar lets us walk the Lua call stack (via
+    -- debugstack) at the moment a CVar changes to see which file requested
+    -- it - the same technique Advanced Interface Options uses for its CVar log.
+    --
+    -- The client re-assigns the CVM_SETTINGS global to the loaded saved-variables
+    -- table right after this file finishes executing (wiping out anything set on
+    -- it here), so ModifiedCVars is (re)ensured lazily on every access rather than
+    -- initialized once at the top of the file.
+    local function GetModifiedCVars()
+        CVM_SETTINGS = CVM_SETTINGS or {}
+        if not CVM_SETTINGS.ModifiedCVars then
+            CVM_SETTINGS.ModifiedCVars = {}
+        end
+        return CVM_SETTINGS.ModifiedCVars
+    end
+
+    local function GetCVarChangeSourceLabel(source)
+        if not source then return nil end
+        local addonFolder = source:match("[Aa]dd[Oo]ns[\\/]([^\\/]+)[\\/]")
+        if addonFolder then return addonFolder end
+        local lowerSource = source:lower()
+        if lowerSource:find("framexml", 1, true) or lowerSource:find("sharedxml", 1, true) or lowerSource:find("blizzard_", 1, true) then
+            return "Blizzard UI"
+        end
+        return nil
+    end
+
+    local function TraceCVarChange(cvar)
+        if type(cvar) ~= "string" or cvar == "" then return end
+
+        local trace = debugstack(2)
+        local source, lineNum = trace:match('"@([^"]+)"%]:(%d+)')
+        if not source then
+            -- Fallback for stack frames that don't carry a quoted file path
+            source, lineNum = trace:match("in function <([^:%[>]+):(%d+)>")
+        end
+        if not source then return end
+
+        local lowerSource = source:lower()
+        -- Ignore ourselves and the client's internal CVar plumbing so a CVar
+        -- only ever gets attributed to the addon/UI that actually requested it.
+        if lowerSource:find("[\\/]" .. AddonFileName:lower() .. "[\\/]")
+            or lowerSource:find("cvarutil%.lua") then
+            return
+        end
+
+        GetModifiedCVars()[cvar:lower()] = {
+            source = source .. ":" .. lineNum,
+            addon = GetCVarChangeSourceLabel(source),
+            time = time(),
+        }
+    end
+
+    hooksecurefunc("SetCVar", TraceCVarChange)
+    if C_CVar and C_CVar.SetCVar then
+        hooksecurefunc(C_CVar, "SetCVar", TraceCVarChange)
+    end
+    hooksecurefunc("ConsoleExec", function(msg)
+        -- Covers /console cvar value and /console set cvar value
+        local cmd, cvar = msg:match("^(%S+)%s+(%S+)")
+        if cmd then
+            if cmd:lower() == "set" then
+                TraceCVarChange(cvar)
+            else
+                TraceCVarChange(cmd)
+            end
+        end
+    end)
+
 -- Colors --
 ------------
     Addon.b = "\124cnBATTLENET_FONT_COLOR:"
@@ -108,6 +179,12 @@
 ----------------
     function Addon:DumpCVars()
         Addon.CVars = {}
+        -- ConsoleGetAllCommands() can return an empty help string for some
+        -- CVars (e.g. GxAllowCachelessShaderMode) on the first call after
+        -- login; a throwaway priming call fixes it, matching the fact that
+        -- simply closing and reopening the UI (a second real call) always
+        -- resolves the missing descriptions.
+        ConsoleGetAllCommands()
         local commands = ConsoleGetAllCommands()
         for _, info in pairs(commands) do
             local command = info.command
@@ -196,6 +273,9 @@
                 { "Commands", "Returns only console commands (the pink entries)." },
                 { "Combat / Secure", "Returns console variables that cannot be modified in combat." },
                 { "Hyperframe", "Returns all console variables managed by the Hyperframe addon, if installed." },
+                { "Tracked", "Returns console variables that CVM has recorded a source for (which addon/UI last changed them since login)." },
+                { "Recent", "Sorts results by most recently changed first. Combine with 'tracked' to only show changed CVars." },
+                { "Combining Terms", "Separate multiple filters/keywords with a space to require all of them, e.g. 'modified nameplate' or 'vrs particle'. If a keyword itself contains a space, separate terms with ; instead, e.g. 'shadow quality;modified'." },
             }
             for _, f in ipairs(filters) do
                 GameTooltip:AddLine(" ")
@@ -356,6 +436,12 @@
                 GameTooltip:AddLine(Addon.b .. "Command Type: " .. Addon.w .. tostring(d.commandType or ""))
                 GameTooltip:AddLine(Addon.b .. "Script Parameters: " .. Addon.w .. (d.scriptParameters or ""))
                 GameTooltip:AddLine(Addon.b .. "Script Contents: " .. Addon.w .. (d.scriptContents or ""))
+                if d.modified then
+                    GameTooltip:AddLine(" ")
+                    GameTooltip:AddLine(Addon.b .. "Last Modified By: " .. Addon.w .. (d.modified.addon or "Unknown"))
+                    GameTooltip:AddLine(Addon.b .. "Source: " .. Addon.w .. d.modified.source, nil, nil, nil, true)
+                    GameTooltip:AddLine(Addon.b .. "When: " .. Addon.w .. date("%Y-%m-%d %H:%M:%S", d.modified.time))
+                end
                 if d.isSecure then
                     GameTooltip:AddLine(" ")
                     GameTooltip:AddLine(Addon.r .. "Secure CVar: " .. Addon.w .. "Cannot be modified in combat.")
@@ -465,18 +551,81 @@
 
         local sortedData = {}
 
+        -- Split a search string into AND-combined terms. ';' separates terms
+        -- explicitly (so a term can itself contain spaces); otherwise terms
+        -- are split on whitespace, letting e.g. "modified nameplate" or
+        -- "vrs particle" require multiple keywords/filters at once.
+        local function SplitFilterTerms(filterText)
+            local terms = {}
+            if not (filterText and filterText:match("%S")) then return terms end
+
+            if filterText:find(";", 1, true) then
+                for part in filterText:gmatch("[^;]+") do
+                    local trimmed = part:match("^%s*(.-)%s*$")
+                    if trimmed ~= "" then
+                        terms[#terms + 1] = trimmed:lower()
+                    end
+                end
+            else
+                for word in filterText:gmatch("%S+") do
+                    terms[#terms + 1] = word:lower()
+                end
+            end
+
+            return terms
+        end
+
+        local function BuildPredicates(terms)
+            local predicates = {}
+            local needsDefaultCompare = false
+
+            for _, term in ipairs(terms) do
+                if term == "notdefault" or term == "modified" then
+                    needsDefaultCompare = true
+                    predicates[#predicates + 1] = function(e) return e.cleanCurrent ~= e.cleanDefault end
+                elseif term == "default" then
+                    needsDefaultCompare = true
+                    predicates[#predicates + 1] = function(e) return e.cleanCurrent == e.cleanDefault end
+                elseif term == "commands" then
+                    predicates[#predicates + 1] = function(e) return e.commandType ~= 0 end
+                elseif term == "cvars" then
+                    predicates[#predicates + 1] = function(e) return e.commandType == 0 end
+                elseif term == "secure" or term == "combat" then
+                    predicates[#predicates + 1] = function(e) return e.isSecure == true end
+                elseif term == "hyperframe" or term == "hf" or term == "hyperframeplus" or term == "hyperframe+" then
+                    local hfpSet = Addon:GetHyperframeCVars()
+                    predicates[#predicates + 1] = function(e)
+                        return hfpSet ~= nil and hfpSet[e.commandLower] ~= nil
+                    end
+                elseif term == "tracked" then
+                    predicates[#predicates + 1] = function(e) return e.modified ~= nil end
+                elseif term == "recent" or term == "recently" then
+                    -- Handled as a sort mode below; doesn't filter on its own.
+                else
+                    predicates[#predicates + 1] = function(e)
+                        return e.commandLower:find(term, 1, true) ~= nil
+                            or e.defaultValue:lower():find(term, 1, true) ~= nil
+                            or e.categoryName:lower():find(term, 1, true) ~= nil
+                            or e.description:lower():find(term, 1, true) ~= nil
+                    end
+                end
+            end
+
+            return predicates, needsDefaultCompare
+        end
+
         local function FilterData(filterText)
             wipe(sortedData)
-            local lowerFilter = filterText and filterText:lower()
 
-            local checkNotDefault = lowerFilter == "notdefault" or lowerFilter == "modified"
-            local checkDefault    = lowerFilter == "default"
-            local checkCommands   = lowerFilter == "commands"
-            local checkCVars      = lowerFilter == "cvars"
-            local checkSecure     = lowerFilter == "secure" or lowerFilter == "combat"
-            local hfpSet
-            if lowerFilter == "hyperframe" or lowerFilter == "hf" or lowerFilter == "hyperframeplus" or lowerFilter == "hyperframe+" then
-                hfpSet = Addon:GetHyperframeCVars()
+            local terms = SplitFilterTerms(filterText)
+            local predicates, needsDefaultCompare = BuildPredicates(terms)
+
+            local sortByRecent = false
+            for _, term in ipairs(terms) do
+                if term == "recent" or term == "recently" then
+                    sortByRecent = true
+                    break
+                end
             end
 
             for command, info in pairs(Addon.CVars) do
@@ -485,53 +634,54 @@
                 local categoryName = CategoryNames[info.category] or ""
                 local description = info.description or ""
 
-                local include
-                if checkNotDefault or checkDefault then
-                    local cleanCurrent = tostring(removeTrailingZeros(currentValue))
-                    local cleanDefault = tostring(removeTrailingZeros(defaultValue))
-                    if checkDefault then
-                        include = cleanCurrent == cleanDefault
-                    else
-                        include = cleanCurrent ~= cleanDefault
+                local entry = {
+                    command = command,
+                    commandLower = command:lower(),
+                    commandType = info.commandType,
+                    categoryName = categoryName,
+                    description = description,
+                    defaultValue = defaultValue,
+                    cleanedDefault = removeTrailingZeros(defaultValue),
+                    currentValue = currentValue,
+                    scriptParameters = info.scriptParameters or "",
+                    scriptContents = info.scriptContents or "",
+                    isSecure = info.isSecure or false,
+                    modified = GetModifiedCVars()[command:lower()],
+                }
+
+                if needsDefaultCompare then
+                    entry.cleanCurrent = tostring(removeTrailingZeros(currentValue))
+                    entry.cleanDefault = tostring(entry.cleanedDefault)
+                end
+
+                local include = true
+                for _, predicate in ipairs(predicates) do
+                    if not predicate(entry) then
+                        include = false
+                        break
                     end
-                elseif checkCommands then
-                    include = info.commandType ~= 0
-                elseif checkCVars then
-                    include = info.commandType == 0
-                elseif checkSecure then
-                    include = info.isSecure == true
-                elseif hfpSet then
-                    include = hfpSet[command:lower()] ~= nil
-                elseif not lowerFilter then
-                    include = true
-                else
-                    include = command:lower():find(lowerFilter, 1, true) ~= nil
-                        or defaultValue:lower():find(lowerFilter, 1, true) ~= nil
-                        or categoryName:lower():find(lowerFilter, 1, true) ~= nil
-                        or description:lower():find(lowerFilter, 1, true) ~= nil
                 end
 
                 if include then
-                    sortedData[#sortedData + 1] = {
-                        command = command,
-                        commandLower = command:lower(),
-                        commandType = info.commandType,
-                        categoryName = categoryName,
-                        description = description,
-                        defaultValue = defaultValue,
-                        cleanedDefault = removeTrailingZeros(defaultValue),
-                        currentValue = currentValue,
-                        scriptParameters = info.scriptParameters or "",
-                        scriptContents = info.scriptContents or "",
-                        isSecure = info.isSecure or false,
-                    }
+                    sortedData[#sortedData + 1] = entry
                 end
             end
 
             -- Pre-lowercased keys avoid repeated lower() calls during sort comparisons
-            table.sort(sortedData, function(a, b)
-                return a.commandLower < b.commandLower
-            end)
+            if sortByRecent then
+                table.sort(sortedData, function(a, b)
+                    local aTime = a.modified and a.modified.time or -1
+                    local bTime = b.modified and b.modified.time or -1
+                    if aTime == bTime then
+                        return a.commandLower < b.commandLower
+                    end
+                    return aTime > bTime
+                end)
+            else
+                table.sort(sortedData, function(a, b)
+                    return a.commandLower < b.commandLower
+                end)
+            end
 
             content:SetHeight(math.max(1, #sortedData * ROW_HEIGHT))
         end

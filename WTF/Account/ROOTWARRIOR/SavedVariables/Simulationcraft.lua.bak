@@ -245,6 +245,9 @@ SimulationCraftDB = {
 },
 },
 ["Manyfaced - Tichondrius"] = {
+["minimap"] = {
+["hide"] = true,
+},
 },
 ["Reedmonchan - Mal'Ganis"] = {
 ["minimap"] = {

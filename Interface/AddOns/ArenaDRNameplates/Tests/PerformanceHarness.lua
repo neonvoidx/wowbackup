@@ -32,8 +32,9 @@ function wipe(tbl)
     return tbl
 end
 
-function issecretvalue()
-    return false
+local secretValuePredicate
+function issecretvalue(value)
+    return secretValuePredicate and secretValuePredicate(value) == true or false
 end
 
 -- Performance: deterministic timing, counters, status, and automatic report.
@@ -162,6 +163,7 @@ end
 do
     local arenaActive = false
     local plateVisible = false
+    local identityProtected = false
     local timers = {}
     local nameplateScans = 0
 
@@ -235,17 +237,32 @@ do
         return unit == "player"
     end
     function UnitGUID(unit)
+        if identityProtected and identities[unit] then
+            return "secret-guid"
+        end
         return identities[unit]
     end
     function UnitName(unit)
+        if identityProtected and identities[unit] then
+            return "secret-name"
+        end
         return identities[unit] and unit or nil
     end
     function UnitClass(unit)
         if identities[unit] then
+            if identityProtected then
+                return "Secret Class", "SECRET_CLASS"
+            end
             return "Rogue", "ROGUE"
         end
     end
     function UnitIsUnit(unitA, unitB)
+        if identityProtected then
+            return { secret = true }
+        end
+        return identities[unitA] ~= nil and identities[unitA] == identities[unitB]
+    end
+    function UnitIsProbablyUnit(unitA, unitB)
         return identities[unitA] ~= nil and identities[unitA] == identities[unitB]
     end
     function UnitCanAttack(_, unit)
@@ -271,7 +288,7 @@ do
             return plateVisible and { plate } or {}
         end,
         GetNamePlateForUnit = function(unit)
-            if plateVisible and (unit == "arena1" or unit == "nameplate1") then
+            if plateVisible and (unit == "nameplate1" or (unit == "arena1" and not identityProtected)) then
                 return plate
             end
         end,
@@ -323,6 +340,27 @@ do
     check(allValid, "100 stable mapping validations remain complete")
     check(nameplateScans == scansBeforeValidation,
         "100 stable mapping validations perform zero nameplate scans")
+
+    identityProtected = true
+    secretValuePredicate = function(value)
+        return value == "secret-guid"
+            or value == "secret-name"
+            or value == "Secret Class"
+            or value == "SECRET_CLASS"
+            or (type(value) == "table" and value.secret == true)
+    end
+    helper:ClearMappings()
+    local protectedChanged, protectedComplete = helper:RefreshMappings()
+    check(protectedChanged == true and protectedComplete == true
+        and helper:GetArenaToken(1) == "nameplate1",
+        "combat-safe comparison maps opponents when arena identity values are secret")
+    check(helper:GetAnchorParentByArenaID(1) == anchor,
+        "mapped nameplate token resolves an anchor when direct arena lookup is unavailable")
+    check(helper:ValidateMappings(),
+        "combat-safe comparison validates a mapping when identity values are secret")
+    identityProtected = false
+    secretValuePredicate = nil
+    check(helper:ValidateMappings(), "public identity validation resumes after arena restrictions end")
 
     helper:OnEvent("PLAYER_TARGET_CHANGED")
     helper:OnEvent("PLAYER_FOCUS_CHANGED")
@@ -408,6 +446,17 @@ do
     check(source:find("runtimeRefreshState.pending", 1, true) ~= nil,
         "runtime refresh requests share one coalesced timer")
     check(not source:find("secret and nil or"), "secret textures and atlases are never stored by a pseudo-ternary")
+    check(source:find("local LIVE_DR_RESET_DURATION = 20", 1, true) ~= nil,
+        "Midnight Season 2 DR mirrors use the 20-second reset window")
+    check(source:find(
+        "local LIVE_DR_TIMER_DURATION = LIVE_DR_RESET_DURATION + 0.1",
+        1,
+        true
+    ) ~= nil, "the local DR fallback retains its source-expiry safety margin")
+    check(not source:find("LIVE_DR_IMMUNITY_DURATION", 1, true),
+        "immune and reduced DR states share the same reset window")
+    check(not source:find("LiveSeverity", 1, true),
+        "obsolete DR severity timing state is absent")
 
     local immunityBlock = source:match("local function SetLiveSlotImmunity.-\nend\n\nlocal function GetLiveAnchorParent") or ""
     check(not immunityBlock:find("LayoutLiveContainer"), "immunity changes do not trigger layout")

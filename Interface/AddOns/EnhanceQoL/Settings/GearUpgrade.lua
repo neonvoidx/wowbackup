@@ -276,6 +276,29 @@ local enchantDisplayDropdown = addon.functions.SettingsCreateDropdown(cGearUpgra
 	parentSection = expandable,
 })
 
+addon.functions.SettingsCreateDropdown(cGearUpgrade, {
+	list = {
+		SLOT = L["gearEnchantPositionNextToSlot"] or "Next to equipment slot",
+		ITEMLEVEL = L["gearEnchantPositionBelowItemLevel"] or "Below item level",
+	},
+	order = { "SLOT", "ITEMLEVEL" },
+	text = L["gearEnchantPosition"] or "Enchant position",
+	desc = L["gearEnchantPositionDesc"],
+	get = function() return addon.db["charEnchantPosition"] or "SLOT" end,
+	set = function(key)
+		addon.db["charEnchantPosition"] = key
+		refreshItemLevelDisplays()
+	end,
+	parent = charDisplayDropdown,
+	parentCheck = isAnyEnchantDisplaySelected,
+	hiddenWhen = function() return not isAnyEnchantDisplaySelected() end,
+	default = "SLOT",
+	var = "charEnchantPosition",
+	newTagID = "charEnchantPosition",
+	type = Settings.VarType.String,
+	parentSection = expandable,
+})
+
 addon.functions.SettingsCreateColorPicker(cGearUpgrade, {
 	var = "missingEnchantOverlayColor",
 	text = L["gearDisplayOptionMissingEnchantOverlayColor"] or "Missing enchant overlay color",
@@ -295,6 +318,7 @@ addon.functions.SettingsCreateColorPicker(cGearUpgrade, {
 
 addon.functions.SettingsCreateDropdown(cGearUpgrade, {
 	list = {
+		ADJACENT = L["gearTrackPositionNextToItemLevel"] or "Next to item level",
 		LEFT = DIRECTION_LEFT_LABEL,
 		TOP = DIRECTION_TOP_LABEL,
 		RIGHT = DIRECTION_RIGHT_LABEL,
@@ -313,6 +337,7 @@ addon.functions.SettingsCreateDropdown(cGearUpgrade, {
 	hiddenWhen = function() return not isCharDisplaySelected("tracks") end,
 	default = "LEFT",
 	var = "charTrackPosition",
+	newTagID = "charTrackPositionAdjacent",
 	type = Settings.VarType.String,
 	parentSection = expandable,
 })
@@ -537,6 +562,7 @@ function addon.functions.initGearUpgrade()
 	addon.functions.InitDBValue("inspectDisplayOptions", {})
 	addon.functions.InitDBValue("charTrackPosition", "LEFT")
 	addon.functions.InitDBValue("charEnchantDisplayMode", "FULL")
+	addon.functions.InitDBValue("charEnchantPosition", "SLOT")
 	addon.functions.InitDBValue("missingEnchantOverlayColor", { r = 1, g = 0, b = 0, a = 0.6 })
 	addon.functions.InitDBValue("ilvlUseItemQualityColor", true)
 	addon.functions.InitDBValue("ilvlTextColor", { r = 1, g = 1, b = 1, a = 1 })

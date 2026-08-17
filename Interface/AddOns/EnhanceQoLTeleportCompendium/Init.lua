@@ -703,7 +703,11 @@ local function setAvailableHearthstone()
 		if v.isItem then
 			if C_Item.GetItemCount(v.id) > 0 then addIt = true end
 		elseif PlayerHasToy(v.id) then
-			if v.usable ~= nil then
+			local toyUsable = C_ToyBox and C_ToyBox.IsToyUsable and C_ToyBox.IsToyUsable(v.id)
+			if issecretvalue and issecretvalue(toyUsable) then toyUsable = nil end
+			if toyUsable == false then
+				addIt = false
+			elseif v.usable ~= nil then
 				addIt = v.usable() and true or false
 			elseif v.achievementID then
 				if select(4, GetAchievementInfo(v.achievementID)) then addIt = true end
@@ -890,6 +894,7 @@ function addon.MythicPlus.functions.setRandomHearthstone(forceRefresh)
 		isToy = hs.isToy or false,
 		toyID = hs.id,
 		isHearthstone = true,
+		isRandomHearthstone = true,
 		icon = hs.icon,
 	}
 	return homeSection.spells[RANDOM_HS_ID]

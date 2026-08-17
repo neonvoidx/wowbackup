@@ -1,11 +1,6 @@
 
 CHATTYNATOR_CURRENT_PROFILE = "DEFAULT"
 CHATTYNATOR_COMMAND_HISTORY = {
-"/i but ya",
-"/i can someone spin to farm and ill help quarry take",
-"/i someone get farm",
-"/i and they took farm",
-"/i lol",
 "/s k ill sit farm again",
 "/i priest stay quarry",
 "/i hunter go help quarry",
@@ -202,5 +197,9 @@ CHATTYNATOR_COMMAND_HISTORY = {
 "/s /bbp",
 "/s /cvm",
 "/s /rl",
+"/s /m",
+"/s /rl",
+"/s /simc minimap",
+"/s /wa",
 "/s /m",
 }

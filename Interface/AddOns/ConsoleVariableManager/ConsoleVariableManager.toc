@@ -1,5 +1,7 @@
-## Interface: 11508, 20505, 20506, 30405, 40402, 50504, 120007, 120100
+## Interface: 11509, 20505, 20506, 30405, 40402, 50504, 120007, 120100
 ## Title: Console Variable Manager
+## Notes: Tracks console variable changes as they happen, recording which addon or UI file changed each CVar and when, so you can audit what's touching your settings.
+## IconTexture: Interface\Icons\INV_Misc_Gear_01
 ## SavedVariables: CVM_SETTINGS
 
 ConsoleVariableManager.lua

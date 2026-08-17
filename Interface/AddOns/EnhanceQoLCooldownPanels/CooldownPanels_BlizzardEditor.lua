@@ -28,12 +28,20 @@ Editor.CONTENT_WIDTH = 344
 Editor.PANEL_HEADER_NAME_MAX_CHARS = 20
 Editor.PANEL_HEADER_NAME_WIDTH = 150
 Editor.ADDON_ICON = "Interface\\AddOns\\EnhanceQoL\\Icons\\Icon.tga"
+Editor.COOLDOWN_PANEL_ICON = "Interface\\AddOns\\EnhanceQoL\\Assets\\NewSettings\\CastbarsCooldowns.tga"
+Editor.QUICK_ACTIONS_ICON_ATLAS = "common-icon-undo"
+
+local function normalizeSortMode(value)
+	if value == "NAME_ASC" or value == "NAME_DESC" then return value end
+	return "MANUAL"
+end
+
 Editor.state = {
 	collapsed = {},
 	specView = "ALL",
 	classView = nil,
 	classLocked = false,
-	sortMode = "MANUAL",
+	sortMode = normalizeSortMode(addon.db and addon.db.cooldownPanelsBlizzardEditorSortMode),
 }
 
 local function normalizeId(value)
@@ -87,7 +95,8 @@ local function isSortModeSelected(value)
 end
 
 local function setSortMode(value)
-	Editor.state.sortMode = value or "MANUAL"
+	Editor.state.sortMode = normalizeSortMode(value)
+	if addon.db then addon.db.cooldownPanelsBlizzardEditorSortMode = Editor.state.sortMode end
 	Editor:Refresh()
 end
 
@@ -528,6 +537,8 @@ local function createEditorHelpButton(frame)
 		GameTooltip:AddLine(L["CooldownPanelEditorHelpTitle"] or (HELP_LABEL or "Help"), 1, 0.82, 0)
 		GameTooltip:AddLine(L["CooldownPanelEditorHelpIntro"] or "", 1, 1, 1, true)
 		GameTooltip:AddLine(" ", 1, 1, 1, true)
+		GameTooltip:AddLine(L["CooldownPanelEditorHelpStyleClipboard"] or "", 1, 1, 1, true)
+		GameTooltip:AddLine(" ", 1, 1, 1, true)
 		local auraHelpKey = CooldownPanels.AuraContainers and "CooldownPanelEditorHelpAuras121" or "CooldownPanelEditorHelpAuras"
 		GameTooltip:AddLine(L[auraHelpKey] or L["CooldownPanelEditorHelpAuras"] or "", 1, 1, 1, true)
 		GameTooltip:Show()
@@ -615,6 +626,9 @@ local function showEntryTooltip(owner, entry)
 		tooltip:SetText(getEntryName(entry))
 		tooltip:AddLine(getEntryTypeLabel(entry), 1, 0.82, 0, true)
 		tooltip:AddLine(string.format("%s: %s", _G.ITEM or "Item", itemLink or _G.NONE or "None"), 1, 1, 1, true)
+	elseif entry and entry.type == "CDM_AURA" and entry.auraPresetKey then
+		tooltip:SetText(getEntryName(entry), 1, 0.82, 0)
+		tooltip:AddLine(getEntryTypeLabel(entry), 1, 1, 1, true)
 	elseif entry and entry.spellID and tooltip.SetSpellByID then
 		tooltip:SetSpellByID(entry.spellID, false)
 	elseif entry and entry.itemID and tooltip.SetItemByID then
@@ -713,12 +727,25 @@ local function playCursorDropSound()
 	if PlaySound and SOUNDKIT and SOUNDKIT.UI_CURSOR_DROP_OBJECT then PlaySound(SOUNDKIT.UI_CURSOR_DROP_OBJECT) end
 end
 
-local function updateAlertTypesOverlay(tile, entry)
+local function updateAlertTypesOverlay(tile, entry, layout)
 	if not tile then return end
 	local alerts = {}
-	if entry and tostring(entry.type or ""):upper() == "CDM_AURA" then alerts[#alerts + 1] = "AURA" end
-	if entry and entry.soundReady == true then alerts[#alerts + 1] = Enum and Enum.CooldownViewerAlertType and Enum.CooldownViewerAlertType.Sound or "SOUND" end
-	if entry and entry.glowReady == true then alerts[#alerts + 1] = Enum and Enum.CooldownViewerAlertType and Enum.CooldownViewerAlertType.Visual or "VISUAL" end
+	local entryType = entry and tostring(entry.type or ""):upper() or nil
+	if entryType == "CDM_AURA" then alerts[#alerts + 1] = "AURA" end
+	if entry and CooldownPanels.EntryHasConfiguredSound and CooldownPanels:EntryHasConfiguredSound(layout, entry) then
+		alerts[#alerts + 1] = Enum and Enum.CooldownViewerAlertType and Enum.CooldownViewerAlertType.Sound or "SOUND"
+	end
+	local glowReady = false
+	if entry and entryType ~= "MACRO" then
+		if entryType == "CDM_AURA" and not CooldownPanels.AuraContainers then
+			glowReady = entry.glowReady == true
+		elseif CooldownPanels.ResolveEntryGlowReady then
+			glowReady = CooldownPanels:ResolveEntryGlowReady(layout, entry) == true
+		else
+			glowReady = entry.glowReady == true
+		end
+	end
+	if glowReady then alerts[#alerts + 1] = Enum and Enum.CooldownViewerAlertType and Enum.CooldownViewerAlertType.Visual or "VISUAL" end
 
 	if #alerts == 0 then
 		if tile.AlertTypesOverlay then tile.AlertTypesOverlay:Hide() end
@@ -1087,6 +1114,13 @@ function Editor:CancelDrag()
 	return true
 end
 
+function Editor:IsDirectEditModifierDown()
+	if _G.IsModifierKeyDown then return _G.IsModifierKeyDown() == true end
+	return (_G.IsAltKeyDown and _G.IsAltKeyDown() == true)
+		or (_G.IsControlKeyDown and _G.IsControlKeyDown() == true)
+		or (_G.IsShiftKeyDown and _G.IsShiftKeyDown() == true)
+end
+
 function Editor:CreateTile(parent, templateKind)
 	templateKind = templateKind == "BAR" and "BAR" or "GRID"
 	local template = templateKind == "BAR" and "EQOLCooldownPanelsBlizzardEditorBarItemTemplate" or "EQOLCooldownPanelsBlizzardEditorItemTemplate"
@@ -1107,6 +1141,7 @@ function Editor:CreateTile(parent, templateKind)
 	button.icon = button.Icon
 
 	button:SetScript("OnDragStart", function(selfButton)
+		if Editor:IsDirectEditModifierDown() then return end
 		Editor:BeginDrag(selfButton)
 	end)
 	button:SetScript("OnMouseUp", function(selfButton, buttonName)
@@ -1116,6 +1151,10 @@ function Editor:CreateTile(parent, templateKind)
 			return
 		end
 		if Editor:EndDrag(selfButton.panelId, selfButton.entryId) then return end
+		if buttonName == "LeftButton" and Editor:IsDirectEditModifierDown() and CooldownPanels.OpenBlizzardEditorEntrySettings then
+			CooldownPanels:OpenBlizzardEditorEntrySettings(selfButton.panelId, selfButton.entryId, selfButton)
+			return
+		end
 		Editor:BeginDrag(selfButton, buttonName)
 		if CooldownPanels.SelectPanel then CooldownPanels:SelectPanel(selfButton.panelId) end
 	end)
@@ -1123,11 +1162,18 @@ function Editor:CreateTile(parent, templateKind)
 		if Editor.state.drag then Editor:EndDrag(selfButton.panelId, selfButton.entryId) end
 	end)
 	button:SetScript("OnEnter", function(selfButton)
+		if CooldownPanels.SetEntryStyleClipboardHotkeyFocus then
+			CooldownPanels:SetEntryStyleClipboardHotkeyFocus(selfButton, true, selfButton.panelId, selfButton.entryId)
+		end
 		local panel = getPanel(selfButton.panelId)
 		local entry = panel and panel.entries and panel.entries[selfButton.entryId] or nil
 		showEntryTooltip(selfButton, entry)
 	end)
-	button:SetScript("OnLeave", function() getTooltip():Hide() end)
+	button:SetScript("OnLeave", function(selfButton)
+		if CooldownPanels.SetEntryStyleClipboardHotkeyFocus then CooldownPanels:SetEntryStyleClipboardHotkeyFocus(selfButton, false) end
+		getTooltip():Hide()
+	end)
+	if CooldownPanels.ConfigureEntryStyleClipboardHotkeys then CooldownPanels:ConfigureEntryStyleClipboardHotkeys(button) end
 	return button
 end
 
@@ -1144,6 +1190,10 @@ function Editor:CreateCategory(parent)
 		end
 		local panelId = selfHeader:GetParent().panelId
 		if Editor:HandleExternalDrop(panelId) then return end
+		if buttonName == "LeftButton" and Editor:IsDirectEditModifierDown() and CooldownPanels.OpenBlizzardEditorPanelSettings then
+			CooldownPanels:OpenBlizzardEditorPanelSettings(panelId, selfHeader)
+			return
+		end
 		Editor.state.collapsed[panelId] = not Editor.state.collapsed[panelId]
 		Editor:Refresh()
 	end
@@ -1315,7 +1365,8 @@ function Editor:LayoutCategory(category, panelId, panel, yOffset, filterText)
 					tile.Bar.FillTexture:SetVertexColor(1, 0.5, 0.25)
 				end
 			end
-			updateAlertTypesOverlay(tile, data.entry)
+			local entryLayout = CooldownPanels.GetEntryEffectiveLayout and CooldownPanels:GetEntryEffectiveLayout(panelId, data.entry, nil, panel) or panel.layout
+			updateAlertTypesOverlay(tile, data.entry, entryLayout)
 			tile:Show()
 		end
 
@@ -1465,6 +1516,77 @@ function Editor:ShowPanelMenu(owner, panelId)
 	end)
 end
 
+function Editor:AreSwitcherAddOnsLoaded()
+	if not (_G.C_AddOns and _G.C_AddOns.IsAddOnLoaded) then return false end
+	local _, cooldownPanelsLoaded = _G.C_AddOns.IsAddOnLoaded("EnhanceQoLCooldownPanels")
+	local _, quickActionsLoaded = _G.C_AddOns.IsAddOnLoaded("EnhanceQoLQuickActions")
+	return cooldownPanelsLoaded == true
+		and quickActionsLoaded == true
+		and addon.Aura
+		and addon.Aura.CooldownPanels
+		and addon.QuickCast
+		and addon.QuickCast.Editor ~= nil
+end
+
+function Editor:OpenQuickActionsEditor()
+	if not self:AreSwitcherAddOnsLoaded() then return end
+	local blizzardEditorFrame = self:GetFrame()
+	if blizzardEditorFrame and blizzardEditorFrame.Hide then blizzardEditorFrame:Hide() end
+	if CooldownPanels.CloseEditor then CooldownPanels:CloseEditor() end
+	addon.QuickCast.Editor:Open()
+end
+
+function Editor:SetSideTabSelected(tab, selected)
+	if not tab then return end
+	if tab.SelectedTexture then tab.SelectedTexture:SetShown(selected == true) end
+	if tab.Icon then tab.Icon:SetAlpha(selected == true and 1 or 0.55) end
+end
+
+function Editor:CreateSideTab(parent, data)
+	local tab = _G.CreateFrame("Button", nil, parent, "LargeSideTabButtonTemplate")
+	tab:SetFrameLevel(parent:GetFrameLevel() + 10)
+	tab.tooltipText = data.tooltipText
+	if data.iconAtlas then
+		tab.Icon:SetAtlas(data.iconAtlas, false)
+	else
+		tab.Icon:SetTexture(data.iconTexture)
+		tab.Icon:SetTexCoord(0, 1, 0, 1)
+	end
+	tab.Icon:SetSize(26, 26)
+	if tab.SelectedTexture then tab.SelectedTexture:SetAlpha(1) end
+	self:SetSideTabSelected(tab, data.selected)
+	tab:SetCustomOnMouseUpHandler(function(_, button, upInside)
+		if button == "LeftButton" and upInside and data.onClick then data.onClick() end
+	end)
+	return tab
+end
+
+function Editor:CreateSwitcherTabs(frame)
+	if frame.editorSwitcherTabs then return end
+	local cooldownTab = self:CreateSideTab(frame, {
+		iconTexture = self.COOLDOWN_PANEL_ICON,
+		tooltipText = L["CooldownPanelOpenEditor"] or "Open Cooldown Panel Editor",
+		selected = true,
+	})
+	cooldownTab:SetPoint("TOPLEFT", frame, "TOPRIGHT", 3, -28)
+	local quickActionsTab = self:CreateSideTab(frame, {
+		iconAtlas = self.QUICK_ACTIONS_ICON_ATLAS,
+		tooltipText = L["QuickCastOpenEditor"] or "Open QuickActions editor",
+		selected = false,
+		onClick = function() Editor:OpenQuickActionsEditor() end,
+	})
+	quickActionsTab:SetPoint("TOPLEFT", cooldownTab, "BOTTOMLEFT", 0, -3)
+	frame.editorSwitcherTabs = { cooldownTab, quickActionsTab }
+	self:UpdateSwitcherTabs(frame)
+end
+
+function Editor:UpdateSwitcherTabs(frame)
+	local tabs = frame and frame.editorSwitcherTabs
+	if not tabs then return end
+	local shown = self:AreSwitcherAddOnsLoaded()
+	for _, tab in ipairs(tabs) do tab:SetShown(shown) end
+end
+
 function Editor:CreateFrame()
 	local frame = _G.EQOLCooldownPanelsBlizzardEditor
 	frame:SetFrameStrata("DIALOG")
@@ -1478,6 +1600,7 @@ function Editor:CreateFrame()
 		selfFrame:StopMovingOrSizing()
 		saveFramePosition(selfFrame)
 	end)
+	self:CreateSwitcherTabs(frame)
 	frame:SetScript("OnShow", function(selfFrame)
 		if selfFrame.RegisterUnitEvent then
 			selfFrame:RegisterUnitEvent("PLAYER_SPECIALIZATION_CHANGED", "player")
@@ -1485,6 +1608,7 @@ function Editor:CreateFrame()
 			selfFrame:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
 		end
 		selfFrame:RegisterEvent("ACTIVE_PLAYER_SPECIALIZATION_CHANGED")
+		Editor:UpdateSwitcherTabs(selfFrame)
 	end)
 	frame:SetScript("OnHide", function(selfFrame)
 		selfFrame:UnregisterEvent("PLAYER_SPECIALIZATION_CHANGED")
@@ -1538,6 +1662,14 @@ function Editor:CreateFrame()
 	end
 
 	frame.helpButton = frame.helpButton or createEditorHelpButton(frame)
+	frame.addPanelButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+	frame.addPanelButton:SetSize(126, 22)
+	frame.addPanelButton:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -44, 4)
+	local addPanelIcon = CreateAtlasMarkup and CreateAtlasMarkup("communities-icon-addgroupplus", 16, 16, 0, -1) or "+"
+	frame.addPanelButton:SetText(string.format("%s %s", addPanelIcon, L["Add Panel"] or "Add Panel"))
+	frame.addPanelButton:SetScript("OnClick", function()
+		Editor:CreatePanelFromDropdown()
+	end)
 	frame.searchBox = frame.SearchBox
 	if frame.searchBox.Instructions then frame.searchBox.Instructions:SetText(_G.COOLDOWN_VIEWER_SETTINGS_SEARCH_INSTRUCTIONS or SEARCH) end
 	frame.searchBox:SetScript("OnTextChanged", function(selfBox)
@@ -1551,11 +1683,6 @@ function Editor:CreateFrame()
 	frame.gear:SetupMenu(function(_, rootDescription)
 		rootDescription:SetTag("MENU_EQOL_COOLDOWN_PANEL_BLIZZARD_VIEW")
 		rootDescription:CreateTitle(SETTINGS or "Settings")
-		local addPanelText = GREEN_FONT_COLOR and GREEN_FONT_COLOR:WrapTextInColorCode(L["Add Panel"] or "Add Panel") or (L["Add Panel"] or "Add Panel")
-		local addPanelIcon = CreateAtlasMarkup and CreateAtlasMarkup("communities-icon-addgroupplus", 16, 16, 0, -1) or "+"
-		rootDescription:CreateButton(addPanelIcon .. " " .. addPanelText, function()
-			Editor:CreatePanelFromDropdown()
-		end)
 		rootDescription:CreateButton(L["CooldownPanelImportPanel"] or "Import Panel", function()
 			Editor:ShowImportPanelPopup()
 		end)
@@ -1674,6 +1801,32 @@ function Editor:RefreshPanel(panelId)
 	end
 	frame.content:SetHeight(math.max(1, yOffset))
 	if not found then self:Refresh() end
+end
+
+function Editor:RefreshEntryAlert(panelId, entryId)
+	local frame = self.frame
+	if not (frame and frame:IsShown()) then return false end
+	panelId = normalizeId(panelId)
+	entryId = normalizeId(entryId)
+	local panel = panelId and getPanel(panelId) or nil
+	local entry = panel and panel.entries and panel.entries[entryId] or nil
+	if not entry then return false end
+	local entryLayout = CooldownPanels.GetEntryEffectiveLayout and CooldownPanels:GetEntryEffectiveLayout(panelId, entry, nil, panel) or panel.layout
+
+	for categoryIndex = 1, (frame.categories.active or 0) do
+		local category = frame.categories[categoryIndex]
+		if normalizeId(category and category.panelId) == panelId then
+			for tileIndex = 1, (category.tiles.active or 0) do
+				local tile = category.tiles[tileIndex]
+				if normalizeId(tile and tile.entryId) == entryId then
+					updateAlertTypesOverlay(tile, entry, entryLayout)
+					return true
+				end
+			end
+			return false
+		end
+	end
+	return false
 end
 
 function Editor:Open()

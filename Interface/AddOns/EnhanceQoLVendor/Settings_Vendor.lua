@@ -187,6 +187,26 @@ local function buildSettings()
 	local cVendor = nil
 	addon.SettingsLayout.vendorCategory = cVendor
 
+	local merchantSection = addon.SettingsLayout.vendorEconomyMerchantSection
+	if merchantSection then
+		addon.functions.SettingsCreateCheckbox(cVendor, {
+			var = "enableExtendedMerchant",
+			text = L["enableExtendedMerchant"],
+			desc = L["enableExtendedMerchantDesc"],
+			parentSection = merchantSection,
+			func = function(value)
+				addon.db["enableExtendedMerchant"] = value and true or false
+				if value and addon.Merchant and addon.Merchant.Enable then
+					addon.Merchant:Enable()
+				elseif not value and addon.Merchant and addon.Merchant.Disable then
+					addon.Merchant:Disable()
+					addon.variables.requireReload = true
+					addon.functions.checkReloadFrame()
+				end
+			end,
+		})
+	end
+
 	local quickActionsExpandable = addon.functions.SettingsCreateExpandableSection(cVendor, {
 		name = L["vendorQuickActions"] or "Vendor - Quick Actions",
 		configPageKey = "VendorQuickActions",

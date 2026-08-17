@@ -2,6 +2,23 @@
 
 All notable changes to this project should be documented in this file.
 
+## 1.5.4 - ADR Slash Command
+- Added `/adr` as a slash command alias.
+
+## 1.5.3 - Arena DR Nameplate Fix
+- Fixed DR icons not appearing on enemy nameplates during arena matches.
+
+## 1.5.2 - Patch 12.1 Stable Release
+- Promoted the WoW Patch 12.1 build from beta to a stable release.
+
+## 1.5.1 - WoW 12.1 DR Timer Fix
+- Updated DR countdowns for the 20-second Midnight Season 2 reset window.
+
+## 1.5.0 - WoW 12.1 Support
+- Updated the addon for WoW Midnight 12.1.
+- Removed support for Midnight 12.0.x.
+- Options window panels now use gradient shading.
+
 ## 1.4.7 - Arena Stuttering Improvements
 - Reduced periodic addon work during arena matches.
 - Reduced nameplate remapping during target, focus, and mouseover changes.

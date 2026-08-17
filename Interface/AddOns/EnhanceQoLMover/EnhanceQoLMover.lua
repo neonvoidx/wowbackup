@@ -137,6 +137,7 @@ local function buildSettings()
 				groupID = displayGroup.id,
 				groupTitle = displayGroup.label or displayGroup.id,
 				default = e.defaultEnabled ~= false,
+				newTagID = e.newTagID,
 				get = function() return addon.Mover.functions.IsFrameEnabled(e) end,
 				set = function(value)
 					addon.Mover.functions.SetFrameEnabled(e, value)

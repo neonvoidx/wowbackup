@@ -13,6 +13,7 @@ local instanceIdToMapId = {
   -- Deephaul Ravine
   [2656] = {
     id = 2345,
+    maxScore = 1500,
     maxCarts = 2,
     tickRate = 2,
     flagResources = {

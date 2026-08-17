@@ -10,12 +10,9 @@ L[ [=[%d points spent past the gate.
 %d extra points above the gate are free to be moved away.]=] ] = "花费 %d 点才可以解锁此天赋。在此天赋上方有 %d 点的额外点数可自由移动。"
 L["%s Switch to %s"] = "%s 切换为 %s"
 L["(was %s)"] = "（之前为 %s）"
---[[Translation missing --]]
-L["|cffeda55fClick|r to spend a point on this path."] = "|cffeda55fClick|r to spend a point on this path."
---[[Translation missing --]]
-L["|cffeda55fCTRL-Click|r to spend up to the next 5 point breakpoint."] = "|cffeda55fCTRL-Click|r to spend up to the next 5 point breakpoint."
---[[Translation missing --]]
-L["|cffeda55fShift-Click|r to spend all points on this path."] = "|cffeda55fShift-Click|r to spend all points on this path."
+L["|cffeda55fClick|r to spend a point on this path."] = "|cffeda55f单击|r在该路径上消耗1点天赋。"
+L["|cffeda55fCTRL-Click|r to spend up to the next 5 point breakpoint."] = "|cffeda55fCtrl+单击|r消耗天赋至下一个5点节点。"
+L["|cffeda55fShift-Click|r to spend all points on this path."] = "|cffeda55fShift+单击|r在该路径上消耗所有剩余天赋点。"
 L["A workaround for one of the ways that Talent Tree taint can block action buttons from working."] = "尝试修复天赋树界面引发的污染会使动作条被禁用的问题。"
 L["Addon development takes a large amount of time and effort. If you enjoy using %s, please consider supporting its development by donating. Your support helps ensure the continued improvement and maintenance of the addon. Thank you for your generosity!"] = "插件开发需要大量的时间和精力。如果您喜欢使用%s，请考虑通过捐赠来支持其开发。您的支持有助于确保插件的持续改进和维护。感谢您的慷慨！"
 L["Adds a button to link the currently shown build in chat."] = "在下拉菜单旁边添加一个按钮，点击即可将目前启用的配置发送至聊天。"
@@ -24,8 +21,7 @@ L["Adds a mini tree in various tooltips for Talent Tree Builds"] = "在天赋相
 L["Adds a more obvious highlight when you can relearn talents in bulk by shift-clicking them."] = "在点天赋的过程中，高亮你点过又取消的天赋，使你可以用 Shift  + 左键点击批量重点。当你更改某个浅层天赋节点时，这可以省去往后天赋都要重新再点一次的麻烦。"
 L["Adds a right-click menu option to directly inspect a player's talents."] = "添加右键菜单选项，可直接查看玩家的天赋。"
 L["Adds a right-click option to the loadout dropdown to export your build."] = "在天赋配置下拉菜单中，右键点击即可导出该方案。"
---[[Translation missing --]]
-L["Adds bulk spending to the profession specialization Spend Points button."] = "Adds bulk spending to the profession specialization Spend Points button."
+L["Adds bulk spending to the profession specialization Spend Points button."] = "为专业专精的\\\"消耗点数\\\"按钮增加批量消耗功能。"
 L["Adds options to adjust the background of the talent tree UI."] = "添加调整透明度的选项，使你可以调整天赋树界面的背景透明度。"
 L["Adds respec buttons to the talent tree UI."] = "在天赋介面添加专精按钮，用以快速切换专精。"
 L["Adds spell id and more to the various talent tree tooltips."] = "为天赋界面中的鼠标提示显示各种 ID。"
@@ -42,8 +38,7 @@ L["Always show the \"x more points required\" gates. Gates that are passed will 
 L["Apply DRIVE Upgrades"] = "应用DRIVE升级"
 L["Are you sure you want to reset these settings to their default values? This cannot be undone."] = "你确定要将这些设置恢复为默认值吗？此操作无法撤销。"
 L["Auto Ride Along"] = "自动前进"
---[[Translation missing --]]
-L["Auto selected a choice node."] = "Auto selected a choice node."
+L["Auto selected a choice node."] = "已自动选择了一个抉择节点。"
 L["Auto Surge Choice"] = "自动急冲选择"
 L["Auto Talent Purchaser"] = "自动天赋选择"
 L["Auto Talent Purchaser:"] = "自动天赋选择："
@@ -56,10 +51,8 @@ L["Automatically set"] = "自动设置"
 L["Background Transparency"] = "背景透明度"
 L["Basic Modules"] = "基础模块"
 L["blocked in combat"] = "战斗中禁用"
---[[Translation missing --]]
-L["Bulk Apply Knowledge"] = "Bulk Apply Knowledge"
---[[Translation missing --]]
-L["Bulk Profession Upgrade"] = "Bulk Profession Upgrade"
+L["Bulk Apply Knowledge"] = "批量应用知识点数"
+L["Bulk Profession Upgrade"] = "批量专业升级"
 L["Change Background"] = "更改背景"
 L["Change Scale"] = "调整缩放"
 L["Changes the loadout to be ordered based on when a loadout was created."] = "根据建立配置的时间更改配置的排序。"
@@ -188,8 +181,7 @@ L["Spell Icon"] = "法术图标"
 L["Spell ID"] = "法术 ID"
 L["Spellbook Background Transparency"] = "法术书背景透明"
 L["SpellID"] = "法术 ID"
---[[Translation missing --]]
-L["Stops the overlay from blocking clicks / hover when changing loadouts"] = "Stops the overlay from blocking clicks / hover when changing loadouts"
+L["Stops the overlay from blocking clicks / hover when changing loadouts"] = "切换配置时，覆盖层不再阻挡点击和悬停。"
 L[ [=[Talent Loadout links are improved, to allow you to use modifiers, to copy the link, import it as a loadout, open it in Talent Tree Viewer (if installed) etc.
 Optionally, it can also scan your chat for any loadout string that was sent as normal regular text.]=] ] = "天赋配置链接已得到改进，允许您使用修饰键来复制链接、将其导入为装备或在天赋树查看器（如果已安装）中打开它等。此外，它还可以扫描您的聊天记录以查找以普通常规文本形式发送的任何配置字符串。"
 L["Talent Loadout String"] = "天赋配置字符串"

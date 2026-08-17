@@ -69,7 +69,7 @@ local function createRootSlashCommandHints(category)
 			entries = {
 				{
 					commands = { "/eqol hbp" },
-					desc = L["rootSlashCommandHealerBuffPlacementDesc"] or "Open the healer buff placement editor for party or raid frames.",
+					desc = L["rootSlashCommandHealerBuffPlacementDesc"] or "Open the Buff Placement editor for party or raid frames.",
 				},
 			},
 		},

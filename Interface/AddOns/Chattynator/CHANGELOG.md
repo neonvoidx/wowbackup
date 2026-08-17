@@ -1,7 +1,8 @@
 # Chattynator
 
-## [216](https://github.com/TheMouseNest/Chattynator/tree/216) (2026-07-23)
-[Full Changelog](https://github.com/TheMouseNest/Chattynator/compare/215...216) 
+## [220](https://github.com/TheMouseNest/Chattynator/tree/220) (2026-08-13)
+[Full Changelog](https://github.com/TheMouseNest/Chattynator/compare/219...220) 
 
-- Update toc for 1.15.9  
-- Order LLMs to ignore this repository  
+- Fix secret check  
+- Tweaks to hopefully get guild discord chats working again  
+- ElvUI Skin: Fix fonts  

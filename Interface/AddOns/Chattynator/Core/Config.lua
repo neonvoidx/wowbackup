@@ -339,14 +339,19 @@ function addonTable.Config.DeleteProfile(profileName)
   CHATTYNATOR_CONFIG.Profiles[profileName] = nil
 end
 
-function addonTable.Config.ChangeProfile(newProfileName)
+function addonTable.Config.DumpCurrentProfile()
+  return CopyTable(CHATTYNATOR_CONFIG.Profiles[CHATTYNATOR_CURRENT_PROFILE])
+end
+
+function addonTable.Config.ChangeProfile(newProfileName, comparisonData)
   assert(tIndexOf(addonTable.Config.GetProfileNames(), newProfileName) ~= nil, "Invalid Profile")
 
   local changedOptions = {}
   local refreshState = {}
   local newProfile = CHATTYNATOR_CONFIG.Profiles[newProfileName]
+  local oldProfile = comparisonData or addonTable.Config.CurrentProfile
 
-  for name, value in pairs(addonTable.Config.CurrentProfile) do
+  for name, value in pairs(oldProfile) do
     if value ~= newProfile[name] then
       table.insert(changedOptions, name)
       Mixin(refreshState, addonTable.Config.RefreshType[name] or {})

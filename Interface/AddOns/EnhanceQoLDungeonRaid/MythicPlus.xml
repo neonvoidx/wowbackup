@@ -3,6 +3,7 @@
 	<Script file="TalentReminder.lua" />
 	<Script file="DungeonFilter.lua" />
 	<Script file="ObjectiveTracker.lua" />
+	<Script file="MythicPlusTimer_PanelFlow.lua" />
 	<Script file="MythicPlusTimer.lua" />
 	<Script file="EnhanceQoLMythicPlus.lua" />
 	<Script file="MythicPlus_BloodlustAuraContainers.lua" />

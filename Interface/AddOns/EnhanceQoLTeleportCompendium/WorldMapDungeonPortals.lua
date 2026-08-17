@@ -676,6 +676,7 @@ local function CreateSecureSpellButton(parent, entry)
 					favs[self.entry.spellID] = true
 				end
 				addon.db.teleportFavorites = favs
+				addon.MythicPlus.functions.NotifyTeleportFavoritesChanged()
 				QueuePanelRefresh({ invalidate = true, delay = 0 })
 			else
 				local entry = self.entry or {}
@@ -781,6 +782,7 @@ local function CreateLegendRowButton(parent, entry, width, height)
 					favs[self.entry.spellID] = true
 				end
 				addon.db.teleportFavorites = favs
+				addon.MythicPlus.functions.NotifyTeleportFavoritesChanged()
 				QueuePanelRefresh({ invalidate = true, delay = 0 })
 			else
 				local entry = self.entry or {}

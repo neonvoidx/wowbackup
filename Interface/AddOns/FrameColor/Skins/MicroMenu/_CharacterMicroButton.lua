@@ -56,7 +56,7 @@ function skin:OnEnable()
   end)
 
   self:HookScript(CharacterFrame, "OnHide", function()
-    if MouseIsOver(CharacterMicroButton) then
+    if CharacterMicroButton:IsMouseOver() then
       self:Apply(highlightColor, 1)
     else
       self:Apply(normalColor, 1)

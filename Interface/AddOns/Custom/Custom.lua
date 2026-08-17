@@ -34,6 +34,7 @@ local applyDarkMode = function()
 	local desat = true
 	local vc = darkModeColor
 	local cf = classicFrames
+	local _, playerClass = UnitClass("player")
 
 	-- Dark mode all the buff bars for CDM
 	local function DarkModeBuffBars()
@@ -41,10 +42,8 @@ local applyDarkMode = function()
 			return
 		end
 
-		local r, g, b = darkModeColor, darkModeColor, darkModeColor
-
 		hooksecurefunc(BuffBarCooldownViewer, "OnAcquireItemFrame", function(self, itemFrame)
-			itemFrame.Bar.BarBG:SetVertexColor(r, g, b)
+			itemFrame.Bar.BarBG:SetVertexColor(vc, vc, vc)
 		end)
 	end
 
@@ -75,7 +74,7 @@ local applyDarkMode = function()
 	end
 
 	if PlayerFrame.PlayerFrameContainer.PlayerElite then
-		PlayerFrame.PlayerFrameContainer.PlayerElite:SetVertexColor(darkModeColor, darkModeColor, darkModeColor)
+		PlayerFrame.PlayerFrameContainer.PlayerElite:SetVertexColor(vc, vc, vc)
 	end
 
 	local prdBars = {
@@ -87,7 +86,57 @@ local applyDarkMode = function()
 	for _, frame in ipairs(prdBars) do
 		for _, region in ipairs({ frame:GetRegions() }) do
 			if region:GetObjectType() == "Texture" and region:GetAtlas() == "UI-HUD-CoolDownManager-Bar-BG" then
-				region:SetVertexColor(0.1, 0.1, 0.1)
+				region:SetVertexColor(vc, vc, vc)
+			end
+		end
+	end
+
+	-- PRD Class Frame dark mode (Personal Resource Display)
+	local prdClassFrame = PersonalResourceDisplayFrame and PersonalResourceDisplayFrame.classFrame
+	if prdClassFrame and not prdClassFrame:IsForbidden() then
+		if playerClass == "DEATHKNIGHT" then
+			for i = 1, 6 do
+				applySettings(prdClassFrame["Rune" .. i].BG_Active, desat, vc)
+				applySettings(prdClassFrame["Rune" .. i].BG_Inactive, desat, vc)
+			end
+		elseif playerClass == "WARLOCK" then
+			for _, v in pairs({prdClassFrame:GetChildren()}) do
+				applySettings(v.Background, desat, vc + 0.2)
+			end
+		elseif playerClass == "DRUID" then
+			for _, v in pairs({prdClassFrame:GetChildren()}) do
+				applySettings(v.BG_Inactive, desat, vc + 0.2)
+				applySettings(v.BG_Active, desat, vc + 0.1)
+			end
+		elseif playerClass == "MAGE" then
+			for _, v in pairs({prdClassFrame:GetChildren()}) do
+				applySettings(v.ArcaneBG, desat, vc + 0.15)
+			end
+		elseif playerClass == "MONK" then
+			for _, v in pairs({prdClassFrame:GetChildren()}) do
+				applySettings(v.Chi_BG, desat, vc + 0.10)
+				applySettings(v.Chi_BG_Active, desat, vc)
+			end
+		elseif playerClass == "ROGUE" then
+			for _, v in pairs({prdClassFrame:GetChildren()}) do
+				applySettings(v.BGInactive, desat, vc + 0.45)
+				applySettings(v.BGActive, desat, vc + 0.30)
+			end
+		elseif playerClass == "PALADIN" then
+			applySettings(prdClassFrame.Background, desat, vc)
+			applySettings(prdClassFrame.ActiveTexture, desat, vc)
+		elseif playerClass == "EVOKER" then
+			local ev1 = vc + 0.10
+			local ev2 = vc
+			for _, v in pairs({prdClassFrame:GetChildren()}) do
+				if v.EssenceFillDone then applySettings(v.EssenceFillDone.CircBG, desat, ev1) end
+				if v.EssenceFilling then applySettings(v.EssenceFilling.EssenceBG, desat, ev2) end
+				if v.EssenceEmpty then applySettings(v.EssenceEmpty.EssenceBG, desat, ev2) end
+				if v.EssenceFillDone then applySettings(v.EssenceFillDone.CircBGActive, desat, ev2) end
+				if v.EssenceDepleting then applySettings(v.EssenceDepleting.EssenceBG, desat, ev2) end
+				if v.EssenceDepleting then applySettings(v.EssenceDepleting.CircBGActive, desat, ev2) end
+				if v.EssenceFillDone then applySettings(v.EssenceFillDone.RimGlow, desat, ev1) end
+				if v.EssenceDepleting then applySettings(v.EssenceDepleting.RimGlow, desat, ev1) end
 			end
 		end
 	end
@@ -456,7 +505,7 @@ local function OnEvent(self, event, ...)
 		SetCVar("raidFramesDisplayDebuffs", 1)
 		SetCVar("raidFramesDisplayOnlyHealerPowerBars", 1)
 		SetCVar("raidFramesDisplayIncomingHeals", 1)
-		SetCVar("raidFramesHealthText", "perc")
+		SetCVar("raidFramesHealthText", "none")
 		-- Character highlight
 		SetCVar("findYourselfAnywhere", 1)
 		SetCVar("findYourselfAnywhereOnlyInCombat", 1)
@@ -482,9 +531,9 @@ local function OnEvent(self, event, ...)
 		SetCVar("UnitNameEnemyPlayerName", 1)
 		SetCVar("UnitNameNPC", 1)
 		SetCVar("UnitNameFriendlyPlayerName", 1) -- Show friendly player names always
-		SetCVar("UnitNamePlayerGuild", 0) -- Show guild
 		SetCVar("UnitNameOwn", 1) -- Show own name
-		SetCVar("UnitNamePlayerPVPTitle", 0) -- Show character title
+		SetCVar("UnitNamePlayerPVPTitle", 1) -- Show character title
+		SetCVar("UnitNamePlayerGuild", 1) -- Show guild
 		-- Name size
 		SetCVar("WorldTextMinSize", 12)
 
@@ -561,9 +610,11 @@ local function OnEvent(self, event, ...)
 			SetCVar("nameplateShowCastBars", 1)
 			SetCVar("nameplateShowDebuffsOnFriendly", 1)
 			SetCVar("nameplateShowEnemies", 1)
+			SetCVar("nameplateShowFriendlyNpcs", 0)
 			SetCVar("nameplateShowEnemyGuardians", 1)
-			SetCVar("nameplateShowEnemyMinions", 1)
-			SetCVar("nameplateShowEnemyMinus", 1)
+			SetCVar("nameplateShowEnemyMinions",   "0")
+      SetCVar("nameplateShowEnemyGuardians", "0")
+      SetCVar("nameplateShowEnemyMinus",     "0")
 			SetCVar("nameplateSimplifiedScale", 0.5)
 			SetCVar("nameplateShowEnemyPets", 1)
 			SetCVar("nameplateShowEnemyTotems", 1)

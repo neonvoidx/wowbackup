@@ -14,8 +14,8 @@ VER 3 0000000000000274 " " "134400"
 /use [@mouseover,noharm,exists,nodead][] Emergency Soul Link
 END
 VER 3 0000000000000240 " " "INV_Misc_QuestionMark"
-#showtooltip 13
-/use 13
+#showtooltip [pvpcombat] 13; [] 14
+/use  [pvpcombat] 13; [] 14
 END
 VER 3 0000000000000275 " " "1385294"
 #plumber:drawer
@@ -59,7 +59,8 @@ VER 3 000000000000024B "BOW" "5927638"
 /bow
 END
 VER 3 0000000000000273 "EnhanceQoLBuffFoodMacro" "INV_Misc_QuestionMark"
-#showtooltip
+#showtooltip item:268679
+/use item:268679
 END
 VER 3 0000000000000277 "EnhanceQoLDrinkMacro" "INV_Misc_QuestionMark"
 #showtooltip
@@ -67,11 +68,13 @@ VER 3 0000000000000277 "EnhanceQoLDrinkMacro" "INV_Misc_QuestionMark"
 /cast Recuperate
 END
 VER 3 000000000000024D "EnhanceQoLFlaskMacro" "INV_Misc_QuestionMark"
-#showtooltip
+#showtooltip item:241325
+/use item:241325
 END
 VER 3 000000000000024E "EnhanceQoLHealthMacro" "INV_Misc_QuestionMark"
 #showtooltip
 /cast [nocombat] Recuperate
+/castsequence [combat] reset=combat item:271883
 END
 VER 3 000000000000024F "FOCUS" "132284"
 /focus [@mouseover,nodead,exists]; [@target,exists]
@@ -81,6 +84,9 @@ VER 3 0000000000000250 "ItemOnWeap" "INV_Misc_QuestionMark"
 /use item:243733
 /use [button:2] 17; 16
 /click StaticPopup1Button1
+END
+VER 3 0000000000000278 "LEAVE DELVE" "136116"
+/run if C_PartyInfo.IsDelveInProgress()or C_PartyInfo.IsDelveComplete()then C_PartyInfo.DelveTeleportOut()else C_PartyInfo.LeaveParty()end
 END
 VER 3 0000000000000249 "Plumber Housing Macro" "7252953"
 #plumber:home

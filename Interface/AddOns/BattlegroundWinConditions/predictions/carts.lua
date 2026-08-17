@@ -1,4 +1,4 @@
-local _, NS = ...
+local AddonName, NS = ...
 
 local CreateFrame = CreateFrame
 local pairs = pairs
@@ -9,7 +9,7 @@ local GetCaptureBarWidgetVisualizationInfo = C_UIWidgetManager.GetCaptureBarWidg
 local CartPrediction = {}
 NS.CartPrediction = CartPrediction
 
-local CartFrame = CreateFrame("Frame", "CartFrame")
+local CartFrame = CreateFrame("Frame", AddonName .. "CartFrame")
 CartFrame:SetScript("OnEvent", function(_, event, ...)
   if CartPrediction[event] then
     CartPrediction[event](CartPrediction, ...)

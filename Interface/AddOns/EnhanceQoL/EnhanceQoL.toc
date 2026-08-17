@@ -1,7 +1,7 @@
-## Interface: 120007, 120100
+## Interface: 120100
 ## Title: Enhance QoL Core
 ## Author: R41Z0R
-## Version: 11.9.1
+## Version: 12.5.0
 ## IconTexture: Interface\AddOns\EnhanceQoL\Icons\Icon.tga
 ## Category: Quality of Life
 ## X-Category: Quality of Life
@@ -74,6 +74,7 @@ Submodules\InstanceDifficulty.lua
 Submodules\DungeonJournalLootSpec.lua
 Submodules\HealthText.lua
 Modules\Aura\Init.lua
+Modules\Aura\DefensiveAuraPresets.lua
 Modules\Aura\TotalAbsorbTracker.lua
 Modules\Aura\DefaultAuraContainers.lua
 

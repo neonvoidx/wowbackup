@@ -3,7 +3,7 @@ local L = ns.NewLocale('koKR')
 if not L then return end
 
 -------------------------------------------------------------------------------
------------------------------------- GEAR -------------------------------------
+------------------------------------- GEAR ------------------------------------
 -------------------------------------------------------------------------------
 
 L['bag'] = '가방'
@@ -38,7 +38,7 @@ L['cloak'] = '망토'
 L['trinket'] = '장신구'
 
 -------------------------------------------------------------------------------
----------------------------------- TOOLTIPS -----------------------------------
+----------------------------------- TOOLTIPS ----------------------------------
 -------------------------------------------------------------------------------
 
 L['activation_unknown'] = '활성화 방법 알려지지 않음!'
@@ -76,7 +76,7 @@ L['quest_repeatable'] = nil
 L['achievement'] = nil
 L['decor_owned'] = nil
 
----------------------------------- LOCATION -----------------------------------
+----------------------------------- LOCATION ----------------------------------
 L['in_cave'] = '동굴 안에 있음.'
 L['in_small_cave'] = '작은 동굴 안에 있음.'
 L['in_water_cave'] = '수중 동굴 안에 있음.'
@@ -84,8 +84,10 @@ L['in_waterfall_cave'] = '폭포 뒤 동굴 안에 있음.'
 L['in_water'] = '물 속에 있음.'
 L['in_building'] = nil
 
------------------------------------- TIME -------------------------------------
-L['now'] = nil
+------------------------------------- TIME ------------------------------------
+L['starts_in'] = nil
+L['time_remaining'] = nil
+L['next_time'] = nil
 L['hourly'] = '한시간단위'
 L['daily'] = '일간'
 L['weekly'] = '주간'
@@ -114,7 +116,7 @@ L['follower_type_follower'] = '추종자'
 L['follower_type_champion'] = '영웅'
 L['follower_type_companion'] = '동료'
 
---------------------------------- REPUTATION ----------------------------------
+---------------------------------- REPUTATION ---------------------------------
 L['rep_honored'] = nil
 L['rep_revered'] = nil
 L['rep_exalted'] = nil
@@ -222,6 +224,8 @@ L['options_transmog_rewards'] = '형상변환 보상 표시'
 L['options_transmog_rewards_desc'] = '형상변환 보상을 툴팁에 표시하고 수집 진행상황을 추적합니다'
 L['options_all_transmog_rewards'] = '획득 불가 형상변환 보상 표시'
 L['options_all_transmog_rewards_desc'] = '타직업으로만 수집가능한 형상변환 보상을 표시합니다'
+L['options_shared_appearances'] = nil
+L['options_shared_appearances_desc'] = nil
 L['options_rep_rewards'] = nil
 L['options_rep_rewards_desc'] = nil
 L['options_claimed_rep_rewards'] = nil

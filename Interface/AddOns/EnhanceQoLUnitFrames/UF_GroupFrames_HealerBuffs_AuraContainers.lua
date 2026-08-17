@@ -70,11 +70,16 @@ local function hasSpellIDs(map)
 	return type(map) == "table" and next(map) ~= nil
 end
 
+local function isRuleRelevantToPlayer(rule, compiled)
+	return type(HB.CanPlayerProvideFamily) ~= "function" or HB.CanPlayerProvideFamily(rule.spellFamilyId, compiled) == true
+end
+
 local function getVisualSignature(group, rule, config)
 	local values = {}
 	local fields = {
 		"style", "size", "iconZoom", "barOrientation", "barAlpha", "barDrainAnimation", "barFillFrame", "barReverseFill", "borderSize", "showCooldownSwipe",
-		"showCooldownEdge", "showCooldownBling", "hideCooldownText", "hideChargeText", "cooldownTextSize", "chargeTextSize",
+		"showCooldownEdge", "showCooldownBling", "hideCooldownText", "hideChargeText", "cooldownTextSize", "chargeTextSize", "indicatorBorderEnabled",
+		"indicatorBorderTexture", "indicatorBorderSize", "indicatorBorderOffset",
 	}
 	for i = 1, #fields do values[#values + 1] = tostring(group[fields[i]]) end
 	local auraConfig = config and config.auras and config.auras.buff or EMPTY
@@ -106,6 +111,13 @@ local function getVisualSignature(group, rule, config)
 	local color = type(rule and rule.color) == "table" and rule.color or group.color
 	local colorKeys = { "r", "g", "b", "a" }
 	for i = 1, 4 do values[#values + 1] = tostring(type(color) == "table" and (color[i] or color[colorKeys[i]]) or nil) end
+	local indicatorBorderColor = group.indicatorBorderColor
+	for i = 1, 4 do values[#values + 1] = tostring(type(indicatorBorderColor) == "table" and (indicatorBorderColor[i] or indicatorBorderColor[colorKeys[i]]) or nil) end
+	if tostring(group.style or ""):upper() == "TINT" then
+		local healthConfig = config and config.health or EMPTY
+		values[#values + 1] = tostring(config and config.barTexture)
+		values[#values + 1] = tostring(healthConfig.texture)
+	end
 	return table.concat(values, "\031")
 end
 
@@ -168,6 +180,52 @@ local function ensureCommonRegions(button)
 	button.border:SetAllPoints(button)
 end
 
+local function roundInt(value)
+	local number = tonumber(value) or 0
+	if number >= 0 then return floor(number + 0.5) end
+	return -floor(-number + 0.5)
+end
+
+local function ensureIndicatorBorderFrame(button)
+	local parent = button.nativeBorderLayer or button
+	local border = button._eqolHBPManagedIndicatorBorderFrame
+	if not border then
+		border = CreateFrame("Frame", nil, parent)
+		border:EnableMouse(false)
+		button._eqolHBPManagedIndicatorBorderFrame = border
+	end
+	border:SetParent(parent)
+	if parent.GetFrameStrata then border:SetFrameStrata(parent:GetFrameStrata()) end
+	if parent.GetFrameLevel then border:SetFrameLevel(max(0, (parent:GetFrameLevel() or 0) + 2)) end
+	return border
+end
+
+local function configureIndicatorBorder(button, group)
+	if not (group and group.indicatorBorderEnabled == true and addon.functions and addon.functions.SetSafeBorder) then return end
+	local border = ensureIndicatorBorderFrame(button)
+	local size = max(1, roundInt(group.indicatorBorderSize or 1))
+	if size > 24 then size = 24 end
+	local offset = roundInt(group.indicatorBorderOffset or 0)
+	if offset < -12 then offset = -12 end
+	if offset > 12 then offset = 12 end
+	border:ClearAllPoints()
+	border:SetPoint("TOPLEFT", button, "TOPLEFT", -offset, offset)
+	border:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", offset, -offset)
+	local textureKey = group.indicatorBorderTexture
+	if type(textureKey) ~= "string" or textureKey == "" or textureKey:upper() == "SOLID" then textureKey = "DEFAULT" end
+	local color = type(group.indicatorBorderColor) == "table" and group.indicatorBorderColor or EMPTY
+	local r = color[1] or color.r or 1
+	local g = color[2] or color.g or 1
+	local b = color[3] or color.b or 1
+	local a = color[4] or color.a or 1
+	addon.functions.SetSafeBorder(border, true, textureKey, size, r, g, b, a, {
+		stateKey = "_eqolHBPManagedIndicatorBorder",
+		defaultTexture = "Interface\\Buttons\\WHITE8x8",
+		mediaType = "border",
+		drawLayer = "OVERLAY",
+	})
+end
+
 local function clearBindings(button)
 	call(button, "ClearIcon")
 	call(button, "ClearDurationCooldown")
@@ -185,6 +243,14 @@ local function clearBindings(button)
 		addon.functions.SetSafeBorder(button.border, false, nil, nil, nil, nil, nil, nil, { stateKey = "_eqolHBPManagedBorder" })
 	else
 		button.border:Hide()
+	end
+	local indicatorBorder = button._eqolHBPManagedIndicatorBorderFrame
+	if indicatorBorder then
+		if addon.functions and addon.functions.SetSafeBorder then
+			addon.functions.SetSafeBorder(indicatorBorder, false, nil, nil, nil, nil, nil, nil, { stateKey = "_eqolHBPManagedIndicatorBorder" })
+		else
+			indicatorBorder:Hide()
+		end
 	end
 end
 
@@ -225,7 +291,9 @@ local function configureIcon(button, config, group)
 end
 
 local function configureSquare(button, group, rule)
+	local size = max(1, tonumber(group.size) or 16)
 	local r, g, b, a = resolveColor(group, rule)
+	button:SetSize(size, size)
 	button.square:SetColorTexture(r, g, b, a)
 	button.square:Show()
 	if group.showCooldownSwipe ~= false then
@@ -254,9 +322,29 @@ local function configureBar(button, group, rule)
 	end
 end
 
-local function configureTint(button, group, rule)
+local function configureTint(button, group, rule, healthBar)
 	local r, g, b, a = resolveColor(group, rule)
-	button.tint:SetColorTexture(r, g, b, a)
+	-- Aura slot buttons become inaccessible after initializeFrame returns.
+	-- Clone the health texture here and let native slot/fill visibility propagate.
+	if healthBar and healthBar.GetFrameStrata then button:SetFrameStrata(healthBar:GetFrameStrata()) end
+	if healthBar and healthBar.GetFrameLevel then button:SetFrameLevel(max(0, healthBar:GetFrameLevel() or 0)) end
+	local healthTexture = healthBar and healthBar.GetStatusBarTexture and healthBar:GetStatusBarTexture()
+	button.tint:ClearAllPoints()
+	button.tint:SetAllPoints(healthTexture or button)
+	local atlas = healthTexture and healthTexture.GetAtlas and healthTexture:GetAtlas()
+	if atlas and atlas ~= "" and button.tint.SetAtlas then
+		button.tint:SetAtlas(atlas, false)
+	else
+		local texture = healthTexture and healthTexture.GetTexture and healthTexture:GetTexture()
+		button.tint:SetTexture(texture or "Interface\\Buttons\\WHITE8x8")
+		if button.tint.SetTexCoord then button.tint:SetTexCoord(0, 1, 0, 1) end
+	end
+	if button.tint.SetHorizTile then button.tint:SetHorizTile(false) end
+	if button.tint.SetVertTile then button.tint:SetVertTile(false) end
+	if button.tint.SetDesaturated then button.tint:SetDesaturated(true) end
+	if button.tint.SetBlendMode then button.tint:SetBlendMode("BLEND") end
+	if button.tint.SetDrawLayer then button.tint:SetDrawLayer("OVERLAY", 0) end
+	button.tint:SetVertexColor(r, g, b, a)
 	button.tint:Show()
 end
 
@@ -273,20 +361,22 @@ local function configureBorder(button, group, rule)
 	end
 end
 
-local function configureSlotFrame(button, config, group, rule)
+local function configureSlotFrame(button, config, group, rule, tintTarget)
 	ensureCommonRegions(button)
 	clearBindings(button)
 	local style = tostring(group.style or "ICON"):upper()
 	if style == "ICON" then
 		configureIcon(button, config, group)
+		configureIndicatorBorder(button, group)
 	elseif style == "SQUARE" then
 		configureSquare(button, group, rule)
+		configureIndicatorBorder(button, group)
 	elseif style == "BAR" then
 		configureBar(button, group, rule)
 	elseif style == "BORDER" then
 		configureBorder(button, group, rule)
 	elseif style == "TINT" then
-		configureTint(button, group, rule)
+		configureTint(button, group, rule, tintTarget)
 	end
 end
 
@@ -324,6 +414,12 @@ end
 local function layoutSlot(frame, root, group, index, priority)
 	frame:ClearAllPoints()
 	local style = tostring(group.style or "ICON"):upper()
+	if style == "TINT" then
+		frame:SetAllPoints(root)
+		if root.GetFrameStrata then frame:SetFrameStrata(root:GetFrameStrata()) end
+		if root.GetFrameLevel then frame:SetFrameLevel(max(0, root:GetFrameLevel() or 0)) end
+		return
+	end
 	local anchor = tostring(group.anchorPoint or "CENTER"):upper()
 	local ownPoint = group.anchorOutside == true and (OPPOSITE[anchor] or anchor) or anchor
 	local x, y = tonumber(group.x) or 0, tonumber(group.y) or 0
@@ -335,7 +431,7 @@ local function layoutSlot(frame, root, group, index, priority)
 		height = width
 	elseif style == "BAR" then
 		width, height = getBarSize(group, root)
-	elseif style == "BORDER" or style == "TINT" then
+	elseif style == "BORDER" then
 		local inset = max(0, tonumber(group.inset) or 0)
 		width, height = max(1, root:GetWidth() - (inset * 2)), max(1, root:GetHeight() - (inset * 2))
 	end
@@ -350,32 +446,87 @@ local function layoutSlot(frame, root, group, index, priority)
 	end
 end
 
-local function getIconGroupFilter(ruleIDs, compiled)
-	local includeSpellIDs = {}
-	local groupFilter
+local function getIconGroupFilters(ruleIDs, compiled, maxCount)
+	local filters = {}
+	local filtersByString = {}
 	for i = 1, #(ruleIDs or EMPTY) do
 		local rule = compiled.ruleById and compiled.ruleById[ruleIDs[i]]
-		if rule and rule.enabled ~= false and rule["not"] ~= true then
+		if rule and rule.enabled ~= false and rule["not"] ~= true and isRuleRelevantToPlayer(rule, compiled) then
 			local ruleSpellIDs = getRuleSpellIDs(rule, compiled)
 			local filterString = type(HB.GetRuleAuraFilter) == "function" and HB.GetRuleAuraFilter(rule, compiled) or nil
 			if not filterString then
 				local scanAll = type(HB.GetFamilyScanAllCasters) == "function" and HB.GetFamilyScanAllCasters(rule.spellFamilyId, compiled) == true
 				filterString = scanAll and "HELPFUL" or "HELPFUL|PLAYER"
 			end
-			if hasSpellIDs(ruleSpellIDs) and groupFilter and groupFilter ~= filterString then return nil, nil end
-			if hasSpellIDs(ruleSpellIDs) then groupFilter = filterString end
-			for spellID, enabled in pairs(ruleSpellIDs) do
-				if enabled == true then includeSpellIDs[spellID] = true end
+			if hasSpellIDs(ruleSpellIDs) then
+				local filter = filtersByString[filterString]
+				if not filter then
+					filter = { filterString = filterString, includeSpellIDs = {}, ruleCount = 0, maxFrameCount = 0 }
+					filtersByString[filterString] = filter
+					filters[#filters + 1] = filter
+				end
+				filter.ruleCount = filter.ruleCount + 1
+				for spellID, enabled in pairs(ruleSpellIDs) do
+					if enabled == true then filter.includeSpellIDs[spellID] = true end
+				end
 			end
 		end
 	end
-	return groupFilter, includeSpellIDs
+
+	-- Native limits apply per AuraGroup, so share the indicator limit across
+	-- caster-filter groups while preserving one dense container flow.
+	local remaining = max(0, floor(tonumber(maxCount) or 0))
+	while remaining > 0 do
+		local allocated
+		for i = 1, #filters do
+			local filter = filters[i]
+			if filter.maxFrameCount < filter.ruleCount then
+				filter.maxFrameCount = filter.maxFrameCount + 1
+				remaining = remaining - 1
+				allocated = true
+				if remaining == 0 then break end
+			end
+		end
+		if not allocated then break end
+	end
+
+	return filters
 end
 
-local function getIconGroupLayout(group)
+local function getFixedIconGroupFilters(ruleIDs, compiled)
+	local filters = {}
+	for i = 1, #(ruleIDs or EMPTY) do
+		local ruleID = ruleIDs[i]
+		local rule = compiled.ruleById and compiled.ruleById[ruleID]
+		if rule and rule.enabled ~= false and rule["not"] ~= true and isRuleRelevantToPlayer(rule, compiled) then
+			local includeSpellIDs = getRuleSpellIDs(rule, compiled)
+			if hasSpellIDs(includeSpellIDs) then
+				local filterString = type(HB.GetRuleAuraFilter) == "function" and HB.GetRuleAuraFilter(rule, compiled) or "HELPFUL|PLAYER"
+				filters[#filters + 1] = {
+					filterString = filterString,
+					includeSpellIDs = includeSpellIDs,
+					maxFrameCount = 1,
+					rule = rule,
+					ruleID = ruleID,
+				}
+			end
+		end
+	end
+	return filters
+end
+
+local function getIconGroupLayout(group, layoutIndex, fixedSquareGroup)
 	local size = max(1, tonumber(group.size) or 16)
 	local spacing = max(0, tonumber(group.spacing) or 0)
-	return { elementSpacing = spacing, lineSpacing = spacing, elementWidth = size, elementHeight = size, layoutIndex = 1 }
+	return {
+		elementSpacing = spacing,
+		lineSpacing = spacing,
+		groupSpacing = fixedSquareGroup and 0 or spacing,
+		groupLineSpacing = fixedSquareGroup and 0 or spacing,
+		elementWidth = size,
+		elementHeight = size,
+		layoutIndex = layoutIndex,
+	}
 end
 
 local function getIconGroupFlow(group)
@@ -405,6 +556,7 @@ local function getIconGroupLayoutSignature(group, root)
 	return table.concat({
 		tostring(root:GetWidth()), tostring(root:GetHeight()), tostring(group.anchorPoint), tostring(group.anchorOutside), tostring(group.x),
 		tostring(group.y), tostring(group.growth), tostring(group.perRow), tostring(group.spacing), tostring(group.size), tostring(group.max),
+		tostring(group.iconLayoutMode),
 	}, "\031")
 end
 
@@ -421,14 +573,13 @@ local function layoutIconGroupContainer(entry, root, group)
 	return addon.AuraCompat:ConfigureAuraContainerLayout(container, flow)
 end
 
-local function applyIconAllGroup(managed, root, unit, config, groupID, group, filterString, includeSpellIDs, prepareOnly)
+local function applyIconAllGroups(managed, root, unit, config, groupID, group, filters, prepareOnly)
 	managed.iconGroups = managed.iconGroups or {}
 	local entry = managed.iconGroups[groupID]
-	local maxCount = max(0, floor(tonumber(group.max) or 0))
-	if maxCount < 1 or not hasSpellIDs(includeSpellIDs) then return false end
-	local generationSignature = getVisualSignature(group, nil, config) .. "\030" .. getFilterSignature(filterString, includeSpellIDs)
+	if not (filters and filters[1]) then return false end
+	local visualSignature = getVisualSignature(group, nil, config)
 	if not entry then
-		entry = { generation = 0, container = addon.AuraCompat:CreateAuraContainer(root) }
+		entry = { generation = 0, groups = {}, container = addon.AuraCompat:CreateAuraContainer(root) }
 		if not entry.container then return false end
 		entry.container:SetEnabled(false)
 		entry.container:Hide()
@@ -438,34 +589,83 @@ local function applyIconAllGroup(managed, root, unit, config, groupID, group, fi
 		entry.unit = unit
 		entry.container:SetUnit(unit)
 	end
-	if entry.generationSignature ~= generationSignature then
-		if entry.groupKey then addon.AuraCompat:UpdateAuraGroup(entry.container, entry.groupKey, { maxFrameCount = 0 }) end
-		entry.generation = entry.generation + 1
-		entry.groupKey = "hbp-icons:" .. tostring(groupID) .. ":" .. tostring(entry.generation)
-		local initialGroup = group
-		if not addon.AuraCompat:RegisterAuraGroup(entry.container, entry.groupKey, filterString, {
-			maxFrameCount = maxCount,
-			candidateFilters = { includeSpellIDs = includeSpellIDs },
-			layout = getIconGroupLayout(group),
-			initializeFrame = function(frame)
-				ensureCommonRegions(frame)
-				configureSlotFrame(frame, config, initialGroup, nil)
-			end,
-		}) then
-			return false
+	if entry.visualSignature ~= visualSignature then
+		if entry.groupKey then
+			addon.AuraCompat:UpdateAuraGroup(entry.container, entry.groupKey, { maxFrameCount = 0, candidateFilters = EMPTY_SPELL_FILTER })
 		end
-		entry.generationSignature = generationSignature
+		for i = 1, #(entry.groups or EMPTY) do
+			addon.AuraCompat:UpdateAuraGroup(entry.container, entry.groups[i].key, { maxFrameCount = 0, candidateFilters = EMPTY_SPELL_FILTER })
+		end
+		entry.generation = entry.generation + 1
+		entry.groupKey = nil
+		entry.groups = {}
+		entry.visualSignature = visualSignature
+		entry.generationSignature = visualSignature
 		entry.layoutSignature = nil
+	end
+	entry.initializeConfig = config
+	entry.initializeGroup = group
+	for i = 1, #filters do
+		local filter = filters[i]
+		local registered = entry.groups[i]
+		local updateSignature = table.concat({
+			getFilterSignature(filter.filterString, filter.includeSpellIDs),
+			tostring(filter.ruleID),
+			tostring(filter.maxFrameCount),
+			tostring(group.spacing),
+			tostring(group.size),
+			tostring(i),
+		}, "\030")
+		if not registered then
+			local groupKey = "hbp-icons:" .. tostring(groupID) .. ":" .. tostring(entry.generation) .. ":" .. tostring(i)
+			local initializeEntry = entry
+			if not addon.AuraCompat:RegisterAuraGroup(entry.container, groupKey, filter.filterString, {
+				maxFrameCount = filter.maxFrameCount,
+				candidateFilters = { includeSpellIDs = filter.includeSpellIDs },
+				layout = getIconGroupLayout(group, i, false),
+				initializeFrame = function(frame)
+					ensureCommonRegions(frame)
+					configureSlotFrame(frame, initializeEntry.initializeConfig, initializeEntry.initializeGroup, nil)
+				end,
+			}) then
+				for registeredIndex = 1, #entry.groups do
+					local registeredGroup = entry.groups[registeredIndex]
+					addon.AuraCompat:UpdateAuraGroup(entry.container, registeredGroup.key, {
+						maxFrameCount = 0,
+						candidateFilters = EMPTY_SPELL_FILTER,
+					})
+					registeredGroup.updateSignature = nil
+					registeredGroup.active = false
+				end
+				return false
+			end
+			registered = { key = groupKey }
+			entry.groups[i] = registered
+		end
+		if registered.updateSignature ~= updateSignature then
+			if not addon.AuraCompat:UpdateAuraGroup(entry.container, registered.key, {
+				filterString = filter.filterString,
+				maxFrameCount = filter.maxFrameCount,
+				candidateFilters = { includeSpellIDs = filter.includeSpellIDs },
+				layout = getIconGroupLayout(group, i, false),
+			}) then
+				return false
+			end
+			registered.updateSignature = updateSignature
+		end
+		registered.active = true
+	end
+	for i = #filters + 1, #entry.groups do
+		local registered = entry.groups[i]
+		if registered.active ~= false then
+			addon.AuraCompat:UpdateAuraGroup(entry.container, registered.key, { maxFrameCount = 0, candidateFilters = EMPTY_SPELL_FILTER })
+			registered.updateSignature = nil
+			registered.active = false
+		end
 	end
 	local layoutSignature = getIconGroupLayoutSignature(group, root)
 	if entry.layoutSignature ~= layoutSignature then
-		if not addon.AuraCompat:UpdateAuraGroup(entry.container, entry.groupKey, {
-			maxFrameCount = maxCount,
-			candidateFilters = { includeSpellIDs = includeSpellIDs },
-			layout = getIconGroupLayout(group),
-		}) or not layoutIconGroupContainer(entry, root, group) then
-			return false
-		end
+		if not layoutIconGroupContainer(entry, root, group) then return false end
 		entry.layoutSignature = layoutSignature
 	end
 	if prepareOnly then
@@ -475,6 +675,125 @@ local function applyIconAllGroup(managed, root, unit, config, groupID, group, fi
 		entry.container:Show()
 		entry.container:SetEnabled(true)
 	end
+	entry.inactive = nil
+	return true
+end
+
+local function applySquareFixedGroups(managed, root, unit, config, groupID, group, filters, prepareOnly)
+	managed.iconGroups = managed.iconGroups or {}
+	local entryID = "square-fixed:" .. tostring(groupID)
+	local entry = managed.iconGroups[entryID]
+	if not (filters and filters[1]) then return false end
+	if not entry then
+		entry = {
+			container = addon.AuraCompat:CreateAuraContainer(root),
+			groups = {},
+			groupsByRuleID = {},
+			ruleGenerations = {},
+			generationSignature = "SQUARE_FIXED",
+		}
+		if not entry.container then return false end
+		entry.container:SetEnabled(false)
+		entry.container:Hide()
+		managed.iconGroups[entryID] = entry
+	end
+	if entry.unit ~= unit then
+		entry.unit = unit
+		entry.container:SetUnit(unit)
+	end
+
+	local activeRegistered = {}
+	for i = 1, #filters do
+		local filter = filters[i]
+		local ruleID = tostring(filter.ruleID or "")
+		local rule = filter.rule
+		local visualSignature = getVisualSignature(group, rule, config)
+		local registered = entry.groupsByRuleID[ruleID]
+		if registered and registered.visualSignature ~= visualSignature then
+			addon.AuraCompat:UpdateAuraGroup(entry.container, registered.key, {
+				maxFrameCount = 0,
+				candidateFilters = EMPTY_SPELL_FILTER,
+			})
+			registered.updateSignature = nil
+			registered.active = false
+			registered = nil
+		end
+		if not registered then
+			local generation = (entry.ruleGenerations[ruleID] or 0) + 1
+			entry.ruleGenerations[ruleID] = generation
+			local groupKey = "hbp-square-fixed:" .. tostring(groupID) .. ":" .. ruleID .. ":" .. tostring(generation)
+			local initialConfig, initialGroup, initialRule = config, group, rule
+			if not addon.AuraCompat:RegisterAuraGroup(entry.container, groupKey, filter.filterString, {
+				maxFrameCount = 1,
+				candidateFilters = { includeSpellIDs = filter.includeSpellIDs },
+				layout = getIconGroupLayout(group, i, true),
+				initializeFrame = function(frame)
+					ensureCommonRegions(frame)
+					configureSlotFrame(frame, initialConfig, initialGroup, initialRule)
+				end,
+			}) then
+				for groupIndex = 1, #entry.groups do
+					local registeredGroup = entry.groups[groupIndex]
+					addon.AuraCompat:UpdateAuraGroup(entry.container, registeredGroup.key, {
+						maxFrameCount = 0,
+						candidateFilters = EMPTY_SPELL_FILTER,
+					})
+					registeredGroup.updateSignature = nil
+					registeredGroup.active = false
+				end
+				return false
+			end
+			registered = { key = groupKey, visualSignature = visualSignature }
+			entry.groups[#entry.groups + 1] = registered
+			entry.groupsByRuleID[ruleID] = registered
+		end
+
+		local updateSignature = table.concat({
+			getFilterSignature(filter.filterString, filter.includeSpellIDs),
+			tostring(group.spacing),
+			tostring(group.size),
+			tostring(i),
+		}, "\030")
+		if registered.updateSignature ~= updateSignature then
+			if not addon.AuraCompat:UpdateAuraGroup(entry.container, registered.key, {
+				filterString = filter.filterString,
+				maxFrameCount = 1,
+				candidateFilters = { includeSpellIDs = filter.includeSpellIDs },
+				layout = getIconGroupLayout(group, i, true),
+			}) then
+				return false
+			end
+			registered.updateSignature = updateSignature
+		end
+		registered.active = true
+		activeRegistered[registered] = true
+	end
+
+	for i = 1, #entry.groups do
+		local registered = entry.groups[i]
+		if not activeRegistered[registered] and registered.active ~= false then
+			addon.AuraCompat:UpdateAuraGroup(entry.container, registered.key, {
+				maxFrameCount = 0,
+				candidateFilters = EMPTY_SPELL_FILTER,
+			})
+			registered.updateSignature = nil
+			registered.active = false
+		end
+	end
+
+	local layoutSignature = getIconGroupLayoutSignature(group, root)
+	if entry.layoutSignature ~= layoutSignature then
+		if not layoutIconGroupContainer(entry, root, group) then return false end
+		entry.layoutSignature = layoutSignature
+	end
+	if prepareOnly then
+		entry.container:SetEnabled(false)
+		entry.container:Hide()
+	else
+		entry.container:Show()
+		entry.container:SetEnabled(true)
+	end
+	entry.inactive = nil
 	return true
 end
 
@@ -525,6 +844,12 @@ function HB.ApplyManagedAuraContainer(button, prepareOnly)
 		if state then state._healerBuffPlacementActive = nil end
 		return false
 	end
+	local groupFrames = UF and UF.GroupFrames
+	if not prepareOnly and groupFrames and groupFrames.IsManagedHelpfulIdentityAllowed and not groupFrames.IsManagedHelpfulIdentityAllowed(button, unit) then
+		HB.HideManagedAuraContainer(button)
+		state._healerBuffPlacementActive = nil
+		return false
+	end
 	local container = HB.PrecreateManagedAuraContainer(button)
 	if not container then return false end
 	local dirty = managed.unit ~= unit
@@ -534,7 +859,7 @@ function HB.ApplyManagedAuraContainer(button, prepareOnly)
 	end
 	local previousActiveKeys = managed.activeKeys
 	managed.activeKeys = {}
-	local activeIconGroups = {}
+	local activeFlowGroups = {}
 	local anyActiveSlots = false
 
 	for groupIndex = 1, #(compiled.groupOrder or EMPTY) do
@@ -542,23 +867,39 @@ function HB.ApplyManagedAuraContainer(button, prepareOnly)
 		local group = compiled.groupsById and compiled.groupsById[groupID]
 		local ruleIDs = compiled.groupToEnabledRuleIds and compiled.groupToEnabledRuleIds[groupID]
 		local limit = group and max(0, floor(tonumber(group.max) or 0)) or 0
-		local compactIcons = group and tostring(group.style or ""):upper() == "ICON" and tostring(group.iconMode or "ALL"):upper() == "ALL"
-		local compactFilter, compactSpellIDs
-		if compactIcons then
-			compactFilter, compactSpellIDs = getIconGroupFilter(ruleIDs, compiled)
-			if not compactFilter or not hasSpellIDs(compactSpellIDs) then compactIcons = false end
+		local style = group and tostring(group.style or ""):upper() or ""
+		local showAll = group and tostring(group.iconMode or "ALL"):upper() == "ALL"
+		local fixedIconOrder = style == "ICON" and tostring(group.iconLayoutMode or "MAX"):upper() == "FIXED_SORT"
+		-- Show-all squares always use one native flow group per rule so active
+		-- indicators stay compact while preserving rule order and individual colors.
+		local squareFlow = showAll and style == "SQUARE"
+		local compactFlow = squareFlow or (showAll and style == "ICON" and (fixedIconOrder or limit > 0))
+		local compactFilters
+		if compactFlow then
+			if squareFlow or fixedIconOrder then
+				compactFilters = getFixedIconGroupFilters(ruleIDs, compiled)
+			elseif limit > 0 then
+				compactFilters = getIconGroupFilters(ruleIDs, compiled, limit)
+			end
+			if not (compactFilters and compactFilters[1]) then compactFlow = false end
 		end
-		if compactIcons then
-			local applied = applyIconAllGroup(managed, root, unit, config, groupID, group, compactFilter, compactSpellIDs, prepareOnly)
-			if applied then activeIconGroups[groupID] = true end
-		else
+		if compactFlow then
+			local applied
+			if squareFlow then
+				applied = applySquareFixedGroups(managed, root, unit, config, groupID, group, compactFilters, prepareOnly)
+			else
+				applied = applyIconAllGroups(managed, root, unit, config, groupID, group, compactFilters, prepareOnly)
+			end
+			if applied then activeFlowGroups[squareFlow and ("square-fixed:" .. tostring(groupID)) or groupID] = true end
+		elseif not squareFlow then
 			local used = 0
 			for ruleIndex = 1, #(ruleIDs or EMPTY) do
 			local ruleID = ruleIDs[ruleIndex]
 			local rule = compiled.ruleById and compiled.ruleById[ruleID]
-			if limit > 0 and rule and rule.enabled ~= false and rule["not"] ~= true then
+			if limit > 0 and rule and rule.enabled ~= false and rule["not"] ~= true and isRuleRelevantToPlayer(rule, compiled) then
 				local includeSpellIDs = getRuleSpellIDs(rule, compiled)
 				if hasSpellIDs(includeSpellIDs) then
+					if used >= limit then break end
 					used = used + 1
 					local baseSlotKey = "hbp:" .. tostring(ruleID)
 					local filterString = type(HB.GetRuleAuraFilter) == "function" and HB.GetRuleAuraFilter(rule, compiled) or nil
@@ -580,6 +921,7 @@ function HB.ApplyManagedAuraContainer(button, prepareOnly)
 						managed.slotGeneration = generation
 						local slotKey = baseSlotKey .. ":" .. tostring(generation)
 						local initialGroup, initialRule = group, rule
+						local initialTintTarget = tostring(group.style or ""):upper() == "TINT" and state.health or nil
 						local slotHost = CreateFrame("Frame", nil, container, "DisableUntrustedLayoutScriptsTemplate")
 						slotHost:SetSize(1, 1)
 						slotHost:SetPoint("TOPLEFT", container, "BOTTOMLEFT", -64, -64)
@@ -588,7 +930,7 @@ function HB.ApplyManagedAuraContainer(button, prepareOnly)
 							candidateFilters = { includeSpellIDs = includeSpellIDs },
 							initializeFrame = function(frame)
 								ensureCommonRegions(frame)
-								configureSlotFrame(frame, config, initialGroup, initialRule)
+								configureSlotFrame(frame, config, initialGroup, initialRule, initialTintTarget)
 							end,
 						})
 						managed.slots[slotKey] = slot
@@ -608,11 +950,13 @@ function HB.ApplyManagedAuraContainer(button, prepareOnly)
 							slotState.filterSignature = filterSignature
 							dirty = true
 						end
-						local positionIndex = math.min(used, limit)
+						local positionIndex = used
 						local priority = #ruleIDs - ruleIndex
-						local layoutSignature = getLayoutSignature(group, root, positionIndex, priority)
+						local style = tostring(group.style or ""):upper()
+						local layoutRoot = style == "TINT" and (state.health or root) or root
+						local layoutSignature = getLayoutSignature(group, layoutRoot, positionIndex, priority)
 						if slotState.layoutSignature ~= layoutSignature then
-							layoutSlot(slotState.host, root, group, positionIndex, priority)
+							layoutSlot(slotState.host, layoutRoot, group, positionIndex, priority)
 							slotState.layoutSignature = layoutSignature
 						end
 						managed.activeKeys[slotState.slotKey] = true
@@ -624,10 +968,19 @@ function HB.ApplyManagedAuraContainer(button, prepareOnly)
 		end
 	end
 
-	for iconGroupID, entry in pairs(managed.iconGroups or EMPTY) do
-		if not activeIconGroups[iconGroupID] and entry.container and entry.generationSignature ~= nil then
-			if entry.groupKey then addon.AuraCompat:UpdateAuraGroup(entry.container, entry.groupKey, { maxFrameCount = 0 }) end
-			entry.generationSignature = nil
+	for flowGroupID, entry in pairs(managed.iconGroups or EMPTY) do
+		if not activeFlowGroups[flowGroupID] and entry.container and entry.generationSignature ~= nil and entry.inactive ~= true then
+			if entry.groupKey then
+				addon.AuraCompat:UpdateAuraGroup(entry.container, entry.groupKey, { maxFrameCount = 0, candidateFilters = EMPTY_SPELL_FILTER })
+			end
+			for i = 1, #(entry.groups or EMPTY) do
+				local registered = entry.groups[i]
+				addon.AuraCompat:UpdateAuraGroup(entry.container, registered.key, { maxFrameCount = 0, candidateFilters = EMPTY_SPELL_FILTER })
+				registered.updateSignature = nil
+				registered.active = false
+			end
+			entry.layoutSignature = nil
+			entry.inactive = true
 			entry.container:SetEnabled(false)
 			entry.container:Hide()
 		end
@@ -657,6 +1010,22 @@ function HB.ApplyManagedAuraContainer(button, prepareOnly)
 		state._healerBuffPlacementActive = true
 	end
 	return true
+end
+
+function HB.RefreshManagedAuraContainers(button)
+	local state = button and button._eqolUFState
+	local managed = state and state._healerBuffManaged
+	if not managed then return false end
+	local refreshed = false
+	local function refresh(container)
+		if not container then return end
+		if container.IsEnabled and not container:IsEnabled() then return end
+		if container.IsVisible and not container:IsVisible() then return end
+		if addon.AuraCompat and addon.AuraCompat.UpdateAuraContainer and addon.AuraCompat:UpdateAuraContainer(container) then refreshed = true end
+	end
+	refresh(managed.container)
+	for _, entry in pairs(managed.iconGroups or EMPTY) do refresh(entry.container) end
+	return refreshed
 end
 
 function HB.ConsumeManagedAuraContainerPending()

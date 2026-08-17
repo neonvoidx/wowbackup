@@ -9,9 +9,7 @@ if GetLocale() ~= "frFR" then
 end
 
 L.ERR_SHARED_MODULE_NOT_FOUND = "|cFFFF0000ArenaDRNameplates:|r Module Shared introuvable"
-L.ERR_REQUIRES_MIDNIGHT = "|cFFFF0000ArenaDRNameplates:|r Cet addon nécessite WoW Midnight (12.0.0+)"
 L.ERR_SETTINGS_UI_MODULE_NOT_LOADED = "|cFFFF0000ArenaDRNameplates:|r Module d'interface des options non chargé"
-L.ERR_SETTINGS_API_NOT_AVAILABLE = "|cFFFF0000ArenaDRNameplates:|r API des options indisponible"
 L.WARN_HELPER_NOT_FOUND = "|cFFFFFF00ArenaDRNameplates:|r ArenaNameplateHelper introuvable"
 L.WARN_SETTINGS_MENU_NOT_AVAILABLE = "|cFFFFFF00ArenaDRNameplates:|r Menu des options pas encore disponible"
 L.MSG_SETTINGS_RESET = "|cFF00FF00ArenaDRNameplates:|r Options réinitialisées"

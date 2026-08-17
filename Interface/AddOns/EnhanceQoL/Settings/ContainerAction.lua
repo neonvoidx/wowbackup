@@ -14,6 +14,19 @@ local expandable = addon.functions.SettingsCreateExpandableSection(cContainer, {
 })
 
 local wOpen = false -- Variable to ignore multiple checks for openItems
+local function isBankOpen()
+	local bankAPI = _G.C_Bank
+	if bankAPI and bankAPI.AreAnyBankTypesViewable and bankAPI.AreAnyBankTypesViewable() then return true end
+	if BankFrame and BankFrame:IsShown() then return true end
+	local guildBankFrame = _G.GuildBankFrame
+	return guildBankFrame and guildBankFrame:IsShown() or false
+end
+
+local function stopContainerActions()
+	if addon.ContainerActions and addon.ContainerActions.UpdateItems then addon.ContainerActions:UpdateItems({}) end
+	wOpen = false
+end
+
 local function openItems(items)
 	local madeProgress = false
 
@@ -25,6 +38,11 @@ local function openItems(items)
 	end
 
 	local function openNextItem()
+		if isBankOpen() then
+			stopContainerActions()
+			return
+		end
+
 		if #items == 0 then
 			if madeProgress then
 				addon.functions.checkForContainer()
@@ -59,6 +77,10 @@ local function openItems(items)
 		end
 
 		C_Timer.After(0.15, function()
+			if isBankOpen() then
+				stopContainerActions()
+				return
+			end
 			C_Container.UseContainerItem(item.bag, item.slot)
 			C_Timer.After(0.4, function()
 				local afterInfo = C_Container.GetContainerItemInfo and C_Container.GetContainerItemInfo(item.bag, item.slot)
@@ -71,8 +93,12 @@ local function openItems(items)
 end
 function addon.functions.checkForContainer(bags)
 	if not addon.db["automaticallyOpenContainer"] then
-		if addon.ContainerActions and addon.ContainerActions.UpdateItems then addon.ContainerActions:UpdateItems({}) end
-		wOpen = false
+		stopContainerActions()
+		return
+	end
+
+	if isBankOpen() then
+		stopContainerActions()
 		return
 	end
 
@@ -192,12 +218,20 @@ local eventHandlers = {
 		end
 
 		if not addon.db["automaticallyOpenContainer"] then return end
+		if isBankOpen() then
+			stopContainerActions()
+			return
+		end
 		if wOpen or addon._bagScanScheduled then return end
 
 		addon._bagScanScheduled = true
 		RunNextFrame(function()
 			addon._bagScanScheduled = nil
 			if wOpen or not addon.db["automaticallyOpenContainer"] then return end
+			if isBankOpen() then
+				stopContainerActions()
+				return
+			end
 
 			wOpen = true
 

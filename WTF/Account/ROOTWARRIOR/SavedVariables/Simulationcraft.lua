@@ -148,6 +148,9 @@ SimulationCraftDB = {
 },
 },
 ["Manyfaced - Tichondrius"] = {
+["minimap"] = {
+["hide"] = true,
+},
 },
 ["Tampacks - Tichondrius"] = {
 ["minimap"] = {

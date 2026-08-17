@@ -118,6 +118,20 @@ Bars.DEFAULTS = Bars.DEFAULTS
 		barStackDividerColor = { 0.10, 0.10, 0.10, 0.95 },
 		barStackDividerThickness = 1,
 		barStackMax = 10,
+		barStackTalentMaxEnabled = false,
+		barStackTalentSpellID = 0,
+		barStackTalentMax = 10,
+		barStackMaxColorEnabled = false,
+		barStackMaxColor = { 0.35, 1.00, 0.35, 0.96 },
+		barStackThreshold1Enabled = false,
+		barStackThreshold1Value = 5,
+		barStackThreshold1Color = { 1.00, 0.82, 0.20, 0.96 },
+		barStackThreshold2Enabled = false,
+		barStackThreshold2Value = 7,
+		barStackThreshold2Color = { 1.00, 0.48, 0.16, 0.96 },
+		barStackThreshold3Enabled = false,
+		barStackThreshold3Value = 9,
+		barStackThreshold3Color = { 1.00, 0.20, 0.20, 0.96 },
 		barStackAnchor = "AUTO",
 		barStackFont = "",
 		barStackOffsetX = 0,
@@ -525,6 +539,66 @@ local function normalizeBarChargesGap(value, fallback) return Helper.ClampInt(va
 
 Bars.NormalizeBarStackMax = function(value, fallback) return Helper.ClampInt(value, 1, 1000, fallback or Bars.DEFAULTS.barStackMax) end
 
+Bars.NormalizeTalentSpellID = function(value)
+	local spellID = tonumber(value)
+	if not spellID or spellID <= 0 then return 0 end
+	return floor(spellID)
+end
+
+Bars.IsTalentSpellSelected = function(spellID)
+	spellID = Bars.NormalizeTalentSpellID(spellID)
+	if spellID <= 0 then return false end
+	local spellBook = C_SpellBook
+	local spellBookBank = Enum and Enum.SpellBookSpellBank
+	local playerBank = spellBookBank and spellBookBank.Player
+	if not (spellBook and spellBook.IsSpellKnownOrInSpellBook and playerBank ~= nil) then return false end
+	return spellBook.IsSpellKnownOrInSpellBook(spellID, playerBank, true) == true
+end
+
+Bars.ResolveBarStackMax = function(entry)
+	local baseMax = Bars.NormalizeBarStackMax(entry and entry.barStackMax, Bars.DEFAULTS.barStackMax)
+	if type(entry) ~= "table" or entry.barStackTalentMaxEnabled ~= true then return baseMax end
+	if not Bars.IsTalentSpellSelected(entry.barStackTalentSpellID) then return baseMax end
+	return Bars.NormalizeBarStackMax(entry.barStackTalentMax, baseMax)
+end
+
+Bars.NormalizeBarStackThreshold = function(value, maximum, fallback)
+	maximum = Bars.NormalizeBarStackMax(maximum, Bars.DEFAULTS.barStackMax)
+	return Helper.ClampInt(value, 1, maximum, Helper.ClampInt(fallback, 1, maximum, 1))
+end
+
+Bars.GetStackThresholds = function(entry, maximum)
+	local thresholds = {}
+	if type(entry) ~= "table" then return thresholds end
+	maximum = Bars.NormalizeBarStackMax(maximum, Bars.ResolveBarStackMax(entry))
+	for index = 1, 3 do
+		local enabledKey = "barStackThreshold" .. index .. "Enabled"
+		if entry[enabledKey] == true then
+			local valueKey = "barStackThreshold" .. index .. "Value"
+			local colorKey = "barStackThreshold" .. index .. "Color"
+			local defaultValue = Bars.DEFAULTS[valueKey] or index
+			local defaultColor = Bars.DEFAULTS[colorKey] or Bars.DEFAULTS.barColor
+			thresholds[#thresholds + 1] = {
+				index = index,
+				value = Bars.NormalizeBarStackThreshold(entry[valueKey], maximum, defaultValue),
+				color = Helper.NormalizeColor(entry[colorKey], defaultColor),
+			}
+		end
+	end
+	if entry.barStackMaxColorEnabled == true then
+		thresholds[#thresholds + 1] = {
+			index = 4,
+			value = maximum,
+			color = Helper.NormalizeColor(entry.barStackMaxColor, Bars.DEFAULTS.barStackMaxColor),
+		}
+	end
+	table.sort(thresholds, function(left, right)
+		if left.value == right.value then return left.index < right.index end
+		return left.value < right.value
+	end)
+	return thresholds
+end
+
 local function normalizeBarFont(value, fallback)
 	if type(value) == "string" then return value end
 	if type(fallback) == "string" then return fallback end
@@ -584,6 +658,19 @@ Bars.ApplyNewBarStyleDefaults = function(entry)
 	if entry.barStackDividerThickness == nil then entry.barStackDividerThickness = Bars.DEFAULTS.barStackDividerThickness end
 	if entry.barStackSeparatedOffset == nil then entry.barStackSeparatedOffset = Bars.DEFAULTS.barStackSeparatedOffset end
 	if entry.barStackMax == nil then entry.barStackMax = Bars.DEFAULTS.barStackMax end
+	if entry.barStackTalentMaxEnabled == nil then entry.barStackTalentMaxEnabled = Bars.DEFAULTS.barStackTalentMaxEnabled end
+	if entry.barStackTalentSpellID == nil then entry.barStackTalentSpellID = Bars.DEFAULTS.barStackTalentSpellID end
+	if entry.barStackTalentMax == nil then entry.barStackTalentMax = entry.barStackMax end
+	if entry.barStackMaxColorEnabled == nil then entry.barStackMaxColorEnabled = Bars.DEFAULTS.barStackMaxColorEnabled end
+	if entry.barStackMaxColor == nil then entry.barStackMaxColor = Bars.DEFAULTS.barStackMaxColor end
+	for index = 1, 3 do
+		local enabledKey = "barStackThreshold" .. index .. "Enabled"
+		local valueKey = "barStackThreshold" .. index .. "Value"
+		local colorKey = "barStackThreshold" .. index .. "Color"
+		if entry[enabledKey] == nil then entry[enabledKey] = Bars.DEFAULTS[enabledKey] end
+		if entry[valueKey] == nil then entry[valueKey] = Bars.DEFAULTS[valueKey] end
+		if entry[colorKey] == nil then entry[colorKey] = Bars.DEFAULTS[colorKey] end
+	end
 	if entry.barStackAnchor == nil then entry.barStackAnchor = Bars.DEFAULTS.barStackAnchor end
 	if entry.barStackOffsetX == nil then entry.barStackOffsetX = Bars.DEFAULTS.barStackOffsetX end
 	if entry.barStackOffsetY == nil then entry.barStackOffsetY = Bars.DEFAULTS.barStackOffsetY end
@@ -667,6 +754,8 @@ local function resolveBarBorderTexture(value)
 	if isLikelyFilePath(key) then return key end
 	return "Interface\\Buttons\\WHITE8x8"
 end
+
+Bars.ResolveBarBorderTexture = resolveBarBorderTexture
 
 local function getBarTextureOptions()
 	local list = {}
@@ -905,8 +994,9 @@ Bars.ApplySegmentStacksQuickSetup = function(panelId, entryId)
 		target.barShowLabel = false
 		target.barStacksSegmented = true
 		target.barStackMax = 4
-		target.barStackSeparatedOffset = 4
-		target.barStackDividerColor = { 0.10, 0.10, 0.10, 0 }
+		local nativeAuraStacks = Bars.IsNativeAuraStackEntry(target)
+		target.barStackSeparatedOffset = nativeAuraStacks and 0 or 4
+		target.barStackDividerColor = nativeAuraStacks and { 0.10, 0.10, 0.10, 0.95 } or { 0.10, 0.10, 0.10, 0 }
 		target.barShowStackText = false
 	end, true)
 	return true
@@ -985,6 +1075,21 @@ normalizeBarEntry = function(entry)
 	entry.barStackDividerColor = Helper.NormalizeColor(entry.barStackDividerColor, Bars.DEFAULTS.barStackDividerColor)
 	entry.barStackDividerThickness = normalizeBarStackDividerThickness(entry.barStackDividerThickness, Bars.DEFAULTS.barStackDividerThickness)
 	entry.barStackMax = Bars.NormalizeBarStackMax(entry.barStackMax, Bars.DEFAULTS.barStackMax)
+	entry.barStackTalentMaxEnabled = getStoredBoolean(entry, "barStackTalentMaxEnabled", Bars.DEFAULTS.barStackTalentMaxEnabled)
+	entry.barStackTalentSpellID = Bars.NormalizeTalentSpellID(entry.barStackTalentSpellID)
+	entry.barStackTalentMax = Bars.NormalizeBarStackMax(entry.barStackTalentMax, entry.barStackMax)
+	entry.barStackMaxColorEnabled = getStoredBoolean(entry, "barStackMaxColorEnabled", Bars.DEFAULTS.barStackMaxColorEnabled)
+	entry.barStackMaxColor = Helper.NormalizeColor(entry.barStackMaxColor, Bars.DEFAULTS.barStackMaxColor)
+	for index = 1, 3 do
+		local enabledKey = "barStackThreshold" .. index .. "Enabled"
+		local valueKey = "barStackThreshold" .. index .. "Value"
+		local colorKey = "barStackThreshold" .. index .. "Color"
+		entry[enabledKey] = getStoredBoolean(entry, enabledKey, Bars.DEFAULTS[enabledKey])
+		-- Preserve configured thresholds when the active/talent-dependent maximum
+		-- temporarily drops; the native layer clamps them to the resolved maximum.
+		entry[valueKey] = Bars.NormalizeBarStackThreshold(entry[valueKey], 1000, Bars.DEFAULTS[valueKey])
+		entry[colorKey] = Helper.NormalizeColor(entry[colorKey], Bars.DEFAULTS[colorKey])
+	end
 	entry.barStackAnchor = Bars.NormalizeTextAnchor(entry.barStackAnchor, Bars.DEFAULTS.barStackAnchor)
 	entry.barStackFont = normalizeBarFont(entry.barStackFont, Bars.DEFAULTS.barStackFont)
 	entry.barStackOffsetX = normalizeBarOffset(entry.barStackOffsetX, Bars.DEFAULTS.barStackOffsetX)
@@ -1101,7 +1206,11 @@ Bars.GetEntryChargeSegmentCountHint = function(entry, fallback)
 	local count = nil
 	if type(entry) == "table" then
 		local spellId = tonumber(entry.spellID)
-		if spellId and Helper.GetEffectiveSpellId then spellId = Helper.GetEffectiveSpellId(spellId) or spellId end
+		if spellId and CooldownPanels.IsEntryTalentChoiceExact and CooldownPanels:IsEntryTalentChoiceExact(entry) and CooldownPanels.ResolveEntryTrackedSpellID then
+			spellId = CooldownPanels:ResolveEntryTrackedSpellID(entry, spellId) or spellId
+		elseif spellId and Helper.GetEffectiveSpellId then
+			spellId = Helper.GetEffectiveSpellId(spellId) or spellId
+		end
 		local chargesInfo = spellId and CooldownPanels.GetCachedSpellChargesInfo and CooldownPanels:GetCachedSpellChargesInfo(spellId) or nil
 		count = safeNumber(chargesInfo and chargesInfo.maxCharges)
 	end
@@ -1382,13 +1491,17 @@ end
 local function applyStatusBarTexture(statusBar, texturePath)
 	if not statusBar then return end
 	local resolvedTexture = texturePath or "Interface\\TargetingFrame\\UI-StatusBar"
-	if statusBar._eqolStatusBarTexturePath ~= resolvedTexture then
+	local texturePathChanged = statusBar._eqolStatusBarTexturePath ~= resolvedTexture
+	if texturePathChanged then
 		statusBar:SetStatusBarTexture(resolvedTexture)
 		statusBar._eqolStatusBarTexturePath = resolvedTexture
 	end
 	local texture = statusBar:GetStatusBarTexture()
-	if texture ~= statusBar._eqolStatusBarTexture then
-		if texture and texture.SetSnapToPixelGrid then
+	if texturePathChanged or texture ~= statusBar._eqolStatusBarTexture then
+		local pixelUtil = addon.PixelUtil
+		if pixelUtil and pixelUtil.ApplyStatusBarTexturePixelSnapping then
+			texture = pixelUtil.ApplyStatusBarTexturePixelSnapping(statusBar, 0) or texture
+		elseif texture and texture.SetSnapToPixelGrid then
 			texture:SetSnapToPixelGrid(false)
 			texture:SetTexelSnappingBias(0)
 		end
@@ -1839,6 +1952,23 @@ local function ensureBarFrame(icon)
 	frame:Hide()
 	icon._eqolBarsFrame = frame
 	return frame
+end
+
+Bars.GetBarBodyGlowPreviewFrame = function(icon)
+	local barFrame = icon and icon._eqolBarsFrame or nil
+	if not (barFrame and barFrame.body) then return nil end
+	local preview = barFrame._eqolBodyGlowPreviewFrame
+	if not preview then
+		preview = CreateFrame("Frame", nil, barFrame)
+		preview:EnableMouse(false)
+		barFrame._eqolBodyGlowPreviewFrame = preview
+	end
+	preview:ClearAllPoints()
+	preview:SetAllPoints(barFrame.body)
+	preview:SetFrameStrata(barFrame:GetFrameStrata())
+	preview:SetFrameLevel(barFrame:GetFrameLevel())
+	preview:Show()
+	return preview
 end
 
 Bars.HideForwardHitHandle = function(hitHandle)
@@ -2615,8 +2745,10 @@ end
 local function getResolvedSpellId(entry, macro)
 	local spellId = tonumber((macro and macro.spellID) or entry.spellID)
 	if not spellId then return nil end
-	-- Match CooldownPanels runtime behavior: spell cooldown/charge APIs should use
-	-- the effective override spell, not the known-variant remap table.
+	if CooldownPanels.IsEntryTalentChoiceExact and CooldownPanels:IsEntryTalentChoiceExact(entry) and CooldownPanels.ResolveEntryTrackedSpellID then
+		return CooldownPanels:ResolveEntryTrackedSpellID(entry, spellId) or spellId
+	end
+	-- Normal entries use Blizzard's effective override spell, not the Choice-Node remap table.
 	return Helper.GetEffectiveSpellId and Helper.GetEffectiveSpellId(spellId) or spellId
 end
 
@@ -2794,6 +2926,7 @@ Bars._eqolRuntimeReuseUtil = Bars._eqolRuntimeReuseUtil or {}
 
 function Bars._eqolRuntimeReuseUtil.GetBarRuntimeData(icon, runtimeDataOverride, resolvedType, preview)
 	if preview == true then return nil end
+	if runtimeDataOverride == false then return nil end
 	local runtimeData = type(runtimeDataOverride) == "table" and runtimeDataOverride or (icon and type(icon._eqolRuntimeData) == "table" and icon._eqolRuntimeData or nil)
 	if type(runtimeData) ~= "table" then return nil end
 	if resolvedType and runtimeData.resolvedType and runtimeData.resolvedType ~= resolvedType then return nil end
@@ -2835,7 +2968,10 @@ refreshChargeBarRuntimeState = function(state, icon, runtimeData)
 	local cooldownDurationObject = rawCooldownDurationObject
 	local cooldownRemaining = getDurationObjectRemaining(cooldownDurationObject)
 
-	local cooldownStart, cooldownDuration, cooldownEnabled, cooldownRate, cooldownGCD, cooldownIsActive = 0, 0, false, 1, nil, false
+	local cooldownStart, cooldownDuration, cooldownEnabled, cooldownRate, cooldownGCD, cooldownIsActive, cooldownIsStartRecovery = 0, 0, false, 1, nil, false, false
+	if CooldownPanels.GetCachedSpellCooldownInfo then
+		cooldownIsStartRecovery = select(7, CooldownPanels:GetCachedSpellCooldownInfo(spellId, false)) == true
+	end
 	if reusableRawCooldownRuntimeData then
 		cooldownStart = reusableRawCooldownRuntimeData.cooldownStart
 		cooldownDuration = reusableRawCooldownRuntimeData.cooldownDuration
@@ -2844,7 +2980,7 @@ refreshChargeBarRuntimeState = function(state, icon, runtimeData)
 		cooldownGCD = reusableRawCooldownRuntimeData.cooldownGCD
 		cooldownIsActive = reusableRawCooldownRuntimeData.cooldownIsActive
 	elseif CooldownPanels.GetCachedSpellCooldownInfo then
-		cooldownStart, cooldownDuration, cooldownEnabled, cooldownRate, cooldownGCD, cooldownIsActive =
+		cooldownStart, cooldownDuration, cooldownEnabled, cooldownRate, cooldownGCD, cooldownIsActive, cooldownIsStartRecovery =
 			CooldownPanels:GetCachedSpellCooldownInfo(spellId, false)
 	end
 	local chargeApiIsActive = nil
@@ -2896,7 +3032,7 @@ refreshChargeBarRuntimeState = function(state, icon, runtimeData)
 	local renderChargePhase = nil
 	local freezeChargeRender = false
 	if maxCharges == 2 then
-		local chargePhaseIsEmpty = cooldownApiIsActive == true and cooldownGCD ~= true
+		local chargePhaseIsEmpty = cooldownApiIsActive == true and cooldownGCD ~= true and cooldownIsStartRecovery ~= true
 		local chargePhaseIsPartial = chargeApiIsActive == true
 		local chargePhaseIsFull = chargeApiIsActive == false
 		if chargePhaseIsEmpty then
@@ -3198,12 +3334,14 @@ Bars.GetBarStaticState = function(entry, panel, mode, resolvedType, resolvedSpel
 	state.segmentedCharges = mode == Bars.BAR_MODE.CHARGES and getStoredBoolean(entry, "barChargesSegmented", Bars.DEFAULTS.barChargesSegmented)
 	state.chargesGap = normalizeBarChargesGap(entry.barChargesGap, Bars.DEFAULTS.barChargesGap)
 	state.segmentedStacks = mode == Bars.BAR_MODE.STACKS
-		and not Bars.IsNativeAuraStackEntry(entry)
 		and getStoredBoolean(entry, "barStacksSegmented", Bars.DEFAULTS.barStacksSegmented)
 	state.stackSeparatedOffset = normalizeBarChargesGap(entry.barStackSeparatedOffset, Bars.DEFAULTS.barStackSeparatedOffset)
+	-- Native 12.1 application bars expose one secret-backed fill. They can use
+	-- public-max dividers, but not separate status bars or real segment gaps.
+	if Bars.IsNativeAuraStackEntry(entry) then state.stackSeparatedOffset = 0 end
 	state.stackDividerColor = Bars.GetCachedEntryColor(entry, "barStackDividerColor", Bars.DEFAULTS.barStackDividerColor)
 	state.stackDividerThickness = normalizeBarStackDividerThickness(entry.barStackDividerThickness, Bars.DEFAULTS.barStackDividerThickness)
-	state.stackMax = Bars.NormalizeBarStackMax(entry.barStackMax, Bars.DEFAULTS.barStackMax)
+	state.stackMax = Bars.ResolveBarStackMax(entry)
 	state.stackAnchor = Bars.NormalizeTextAnchor(entry.barStackAnchor, Bars.DEFAULTS.barStackAnchor)
 	state.stackFont = normalizeBarFont(entry.barStackFont, Bars.DEFAULTS.barStackFont)
 	state.stackOffsetX = normalizeBarOffset(entry.barStackOffsetX, Bars.DEFAULTS.barStackOffsetX)
@@ -4317,6 +4455,7 @@ layoutBarFrame = function(barFrame, icon, span, layout, state)
 	end
 
 	barFrame:SetSize(pixelSnap(frameWidth, effectiveScale), pixelSnap(frameHeight, effectiveScale))
+	if CooldownPanels.AlignHostToPixelGrid then CooldownPanels.AlignHostToPixelGrid(barFrame) end
 
 	barFrame.body:ClearAllPoints()
 	barFrame.body:SetPoint("TOPLEFT", barFrame, "TOPLEFT", bodyLeft, -bodyTop)
@@ -4743,6 +4882,27 @@ local function setEntryBarField(panelId, entryId, field, value)
 	end)
 end
 
+Bars.SetTrackedAuraUnit = function(panelId, entryId, value)
+	mutateBarEntry(panelId, entryId, function(entry)
+		if getEntryResolvedType(entry) ~= "CDM_AURA" then return end
+		entry.auraUnit = Helper.NormalizeAuraUnit(value)
+		if entry.auraUnit == "target" then
+			entry.auraFilter = entry.auraFilter == "HARMFUL" and "HARMFUL" or "HARMFUL|PLAYER"
+		elseif Helper.IsAuraGroupUnit(entry.auraUnit) then
+			entry.auraFilter = "HELPFUL|PLAYER"
+		else
+			entry.auraFilter = "HELPFUL"
+		end
+	end)
+end
+
+Bars.SetTrackedAuraOnlyMine = function(panelId, entryId, value)
+	mutateBarEntry(panelId, entryId, function(entry)
+		if getEntryResolvedType(entry) ~= "CDM_AURA" or entry.auraUnit ~= "target" then return end
+		entry.auraFilter = value == true and "HARMFUL|PLAYER" or "HARMFUL"
+	end)
+end
+
 Bars.SetTextAnchorWithFreshOffsets = function(panelId, entryId, anchorField, offsetXField, offsetYField, value, fallback)
 	local normalized = Bars.NormalizeTextAnchor(value, fallback)
 	panelId = normalizeId(panelId)
@@ -4983,6 +5143,81 @@ local function applyBarsToPanel(panelId, preview)
 	end
 end
 
+function Bars.TryRefreshRuntimeChargeBarEntry(panelId, entryId, mode)
+	if mode == "power" then return false end
+	panelId = normalizeId(panelId)
+	entryId = normalizeId(entryId)
+	if not (panelId and entryId) then return false end
+
+	local panel = CooldownPanels.GetPanel and CooldownPanels:GetPanel(panelId) or nil
+	local sharedRuntime = CooldownPanels.runtime
+	local runtime = sharedRuntime and sharedRuntime[panelId] or nil
+	if not (panel and runtime and runtime.frame and runtime.entryToIcon) then return false end
+	if CooldownPanels.IsPanelLayoutEditActive and CooldownPanels:IsPanelLayoutEditActive(panelId) then return false end
+	if not (Helper.IsFixedLayout and Helper.IsFixedLayout(panel.layout)) then return false end
+
+	local entry = panel.entries and panel.entries[entryId] or nil
+	if
+		not entry
+		or entry.type ~= "SPELL"
+		or normalizeDisplayMode(entry.displayMode, Bars.DEFAULTS.displayMode) ~= Bars.DISPLAY_MODE.BAR
+		or normalizeBarMode(entry.barMode, Bars.DEFAULTS.barMode) ~= Bars.BAR_MODE.CHARGES
+		or entry.barChargesSegmented ~= true
+		or entry.alwaysShow == false
+	then
+		return false
+	end
+
+	local icon = runtime.entryToIcon[entryId]
+	local runtimeData = icon and icon._eqolRuntimeData or nil
+	local activeIconSet = runtime._eqolBarsActiveIconSet
+	local barFrame = icon and icon._eqolBarsFrame or nil
+	if
+		not (
+			icon
+			and runtimeData
+			and runtimeData.entryId == entryId
+			and runtimeData.resolvedType == "SPELL"
+			and barFrame
+			and activeIconSet
+			and activeIconSet[icon] == true
+		)
+	then
+		return false
+	end
+
+	local entryLayout = runtimeData.layout or panel.layout
+	local hideOnCooldown, showOnCooldown = false, false
+	if CooldownPanels.ResolveEntryCooldownVisibility then hideOnCooldown, showOnCooldown = CooldownPanels:ResolveEntryCooldownVisibility(entryLayout, entry) end
+	if hideOnCooldown or showOnCooldown then return false end
+	if CooldownPanels.HasConfiguredStateTexture and CooldownPanels:HasConfiguredStateTexture(entry) then return false end
+	if entry.pandemicGlow == true or entry.glowOtherAura ~= nil then return false end
+	if CooldownPanels.ResolveEntryHideWhenNoResource and CooldownPanels:ResolveEntryHideWhenNoResource(entryLayout, entry) then return false end
+	if CooldownPanels.IsEntryCDMAuraOverlayEnabled and CooldownPanels:IsEntryCDMAuraOverlayEnabled(entryLayout, entry, "SPELL") then return false end
+	if entry.customCooldownDurationEnabled == true or entry.customCooldownDurationOnCooldownEnabled == true or entry.autoCooldownDurationEnabled == true then return false end
+
+	local cache = Helper.GetFixedLayoutCache and Helper.GetFixedLayoutCache(panel) or nil
+	local anchorCellByEntryId = cache and cache._eqolBarsAnchorCellByEntryId or nil
+	local effectiveSpanByEntryId = cache and cache._eqolBarsEffectiveSpanByEntryId or nil
+	local anchorCell = anchorCellByEntryId and anchorCellByEntryId[entryId] or nil
+	local slotColumn = Helper.NormalizeSlotCoordinate(icon._eqolPreviewCellColumn or icon._eqolLayoutSlotColumn)
+	local slotRow = Helper.NormalizeSlotCoordinate(icon._eqolPreviewCellRow or icon._eqolLayoutSlotRow)
+	if not (anchorCell and anchorCell.column == slotColumn and anchorCell.row == slotRow and isAnchorCell(panel, entryId, slotColumn, slotRow, cache)) then return false end
+
+	-- The icon runtime snapshot predates this event. Build this one bar from the
+	-- freshly invalidated spell caches instead of reusing that stale snapshot.
+	local state = buildBarState(panelId, entryId, entry, icon, false, false)
+	if not state then return false end
+	applyNativeSuppression(icon)
+	if state.visible == true then
+		layoutBarFrame(barFrame, icon, effectiveSpanByEntryId and effectiveSpanByEntryId[entryId] or 1, panel.layout, state)
+		stopBarAnimation(barFrame)
+	else
+		hideBarPresentation(icon)
+	end
+	return true
+end
+
 local originalCreateEntry = Helper.CreateEntry
 Helper.CreateEntry = function(entryType, idValue, defaults)
 	local entry = originalCreateEntry(entryType, idValue, defaults)
@@ -5209,6 +5444,62 @@ local function appendBarStandaloneAppearanceSettings(settings, ctx)
 				end
 			end
 		end,
+	}
+	settings[#settings + 1] = {
+		name = L["CooldownPanelTrackTalentChoiceSeparately"] or "Track this choice talent separately",
+		tooltip = L["CooldownPanelTrackTalentChoiceSeparatelyTooltip"],
+		kind = SettingType.Checkbox,
+		parentId = "eqolCooldownPanelStandaloneBar",
+		isShown = function()
+			local currentEntry = getStandaloneBarContextEntry(ctx)
+			return CooldownPanels:CanEntryTrackTalentChoiceSeparately(currentEntry)
+		end,
+		get = function()
+			local currentEntry = getStandaloneBarContextEntry(ctx)
+			return CooldownPanels:IsEntryTalentChoiceExact(currentEntry)
+		end,
+		set = function(_, value)
+			if CooldownPanels:SetEntryTalentChoiceExact(panelId, entryId, value) then refreshStandaloneEntryDialogForBars(panelId, entryId) end
+		end,
+	}
+	settings[#settings + 1] = {
+		name = L["CooldownPanelCDMAuraOverlayUnit"] or "Aura unit",
+		tooltip = L["CooldownPanelCDMAuraOverlayUnitTooltip"],
+		kind = SettingType.Dropdown,
+		parentId = "eqolCooldownPanelStandaloneBar",
+		height = 120,
+		isShown = function()
+			local currentEntry = getStandaloneBarContextEntry(ctx)
+			return getEntryResolvedType(currentEntry) == "CDM_AURA"
+		end,
+		get = function()
+			local currentEntry = getStandaloneBarContextEntry(ctx)
+			return Helper.NormalizeAuraUnit(currentEntry and currentEntry.auraUnit)
+		end,
+		set = function(_, value) Bars.SetTrackedAuraUnit(panelId, entryId, value) end,
+		generator = function(_, root)
+			for _, option in ipairs(Helper.GetAuraUnitOptions()) do
+				root:CreateRadio(option.label, function()
+					local currentEntry = getStandaloneBarContextEntry(ctx)
+					return Helper.NormalizeAuraUnit(currentEntry and currentEntry.auraUnit) == option.value
+				end, function() Bars.SetTrackedAuraUnit(panelId, entryId, option.value) end)
+			end
+		end,
+	}
+	settings[#settings + 1] = {
+		name = L["CooldownPanelCDMAuraOverlayOnlyMyDebuffs"] or "Only my debuffs",
+		tooltip = L["CooldownPanelCDMAuraOverlayOnlyMyDebuffsTooltip"],
+		kind = SettingType.Checkbox,
+		parentId = "eqolCooldownPanelStandaloneBar",
+		isShown = function()
+			local currentEntry = getStandaloneBarContextEntry(ctx)
+			return getEntryResolvedType(currentEntry) == "CDM_AURA" and currentEntry and currentEntry.auraUnit == "target"
+		end,
+		get = function()
+			local currentEntry = getStandaloneBarContextEntry(ctx)
+			return currentEntry and currentEntry.auraFilter ~= "HARMFUL" or false
+		end,
+		set = function(_, value) Bars.SetTrackedAuraOnlyMine(panelId, entryId, value) end,
 	}
 	settings[#settings + 1] = {
 		name = L["Bar width"] or "Bar width",
@@ -5961,6 +6252,181 @@ local function appendBarStandaloneTextSettings(settings, ctx)
 		formatter = function(value) return tostring(Bars.NormalizeBarStackMax(value, Bars.DEFAULTS.barStackMax)) end,
 	}
 	settings[#settings + 1] = {
+		name = L["CooldownPanelBarStackTalentEnabled"] or "Talent-dependent maximum",
+		tooltip = L["CooldownPanelBarStackTalentEnabledTooltip"],
+		kind = SettingType.Checkbox,
+		parentId = "eqolCooldownPanelStandaloneBarStacks",
+		newTagID = "CooldownPanelBarStackTalentMax",
+		isShown = function()
+			local currentEntry = getStandaloneBarContextEntry(ctx)
+			return normalizeBarMode(currentEntry and currentEntry.barMode, Bars.DEFAULTS.barMode) == Bars.BAR_MODE.STACKS
+		end,
+		get = function()
+			local currentEntry = getStandaloneBarContextEntry(ctx)
+			return getStoredBoolean(currentEntry, "barStackTalentMaxEnabled", Bars.DEFAULTS.barStackTalentMaxEnabled)
+		end,
+		set = function(_, value) setEntryBarBoolean(panelId, entryId, "barStackTalentMaxEnabled", value) end,
+	}
+	settings[#settings + 1] = {
+		name = L["CooldownPanelBarStackTalentSpellID"] or "Talent Spell ID",
+		kind = SettingType.Input,
+		parentId = "eqolCooldownPanelStandaloneBarStacks",
+		inputWidth = 120,
+		numeric = true,
+		maxChars = 10,
+		isShown = function()
+			local currentEntry = getStandaloneBarContextEntry(ctx)
+			return normalizeBarMode(currentEntry and currentEntry.barMode, Bars.DEFAULTS.barMode) == Bars.BAR_MODE.STACKS
+		end,
+		disabled = function()
+			local currentEntry = getStandaloneBarContextEntry(ctx)
+			return not getStoredBoolean(currentEntry, "barStackTalentMaxEnabled", Bars.DEFAULTS.barStackTalentMaxEnabled)
+		end,
+		get = function()
+			local currentEntry = getStandaloneBarContextEntry(ctx)
+			return Bars.NormalizeTalentSpellID(currentEntry and currentEntry.barStackTalentSpellID)
+		end,
+		set = function(_, value) setEntryBarField(panelId, entryId, "barStackTalentSpellID", Bars.NormalizeTalentSpellID(value)) end,
+		default = Bars.DEFAULTS.barStackTalentSpellID,
+		formatter = function(value) return tostring(Bars.NormalizeTalentSpellID(value)) end,
+	}
+	settings[#settings + 1] = {
+		name = L["CooldownPanelBarStackTalentMax"] or "Max stacks with talent",
+		kind = SettingType.Slider,
+		parentId = "eqolCooldownPanelStandaloneBarStacks",
+		minValue = 1,
+		maxValue = 1000,
+		valueStep = 1,
+		allowInput = true,
+		isShown = function()
+			local currentEntry = getStandaloneBarContextEntry(ctx)
+			return normalizeBarMode(currentEntry and currentEntry.barMode, Bars.DEFAULTS.barMode) == Bars.BAR_MODE.STACKS
+		end,
+		disabled = function()
+			local currentEntry = getStandaloneBarContextEntry(ctx)
+			return not getStoredBoolean(currentEntry, "barStackTalentMaxEnabled", Bars.DEFAULTS.barStackTalentMaxEnabled)
+		end,
+		get = function()
+			local currentEntry = getStandaloneBarContextEntry(ctx)
+			local baseMax = Bars.NormalizeBarStackMax(currentEntry and currentEntry.barStackMax, Bars.DEFAULTS.barStackMax)
+			return Bars.NormalizeBarStackMax(currentEntry and currentEntry.barStackTalentMax, baseMax)
+		end,
+		set = function(_, value)
+			local currentEntry = getStandaloneBarContextEntry(ctx)
+			local baseMax = Bars.NormalizeBarStackMax(currentEntry and currentEntry.barStackMax, Bars.DEFAULTS.barStackMax)
+			setEntryBarField(panelId, entryId, "barStackTalentMax", Bars.NormalizeBarStackMax(value, baseMax))
+		end,
+		formatter = function(value) return tostring(Bars.NormalizeBarStackMax(value, Bars.DEFAULTS.barStackMax)) end,
+	}
+	for thresholdIndex = 1, 3 do
+		local enabledKey = "barStackThreshold" .. thresholdIndex .. "Enabled"
+		local valueKey = "barStackThreshold" .. thresholdIndex .. "Value"
+		local colorKey = "barStackThreshold" .. thresholdIndex .. "Color"
+		settings[#settings + 1] = {
+			name = format(L["CooldownPanelBarStackThresholdEnabled"] or "Enable threshold %d", thresholdIndex),
+			tooltip = L["CooldownPanelBarStackThresholdTooltip"],
+			kind = SettingType.Checkbox,
+			parentId = "eqolCooldownPanelStandaloneBarStacks",
+			isShown = function()
+				local currentEntry = getStandaloneBarContextEntry(ctx)
+				return Bars.IsNativeAuraStackEntry(currentEntry)
+					and normalizeBarMode(currentEntry and currentEntry.barMode, Bars.DEFAULTS.barMode) == Bars.BAR_MODE.STACKS
+			end,
+			get = function()
+				local currentEntry = getStandaloneBarContextEntry(ctx)
+				return getStoredBoolean(currentEntry, enabledKey, Bars.DEFAULTS[enabledKey])
+			end,
+			set = function(_, value) setEntryBarBoolean(panelId, entryId, enabledKey, value) end,
+		}
+		settings[#settings + 1] = {
+			name = format(L["CooldownPanelBarStackThresholdValue"] or "Threshold %d stacks", thresholdIndex),
+			kind = SettingType.Slider,
+			parentId = "eqolCooldownPanelStandaloneBarStacks",
+			minValue = 1,
+			maxValue = 1000,
+			valueStep = 1,
+			allowInput = true,
+			isShown = function()
+				local currentEntry = getStandaloneBarContextEntry(ctx)
+				return Bars.IsNativeAuraStackEntry(currentEntry)
+					and normalizeBarMode(currentEntry and currentEntry.barMode, Bars.DEFAULTS.barMode) == Bars.BAR_MODE.STACKS
+			end,
+			disabled = function()
+				local currentEntry = getStandaloneBarContextEntry(ctx)
+				return not getStoredBoolean(currentEntry, enabledKey, Bars.DEFAULTS[enabledKey])
+			end,
+			get = function()
+				local currentEntry = getStandaloneBarContextEntry(ctx)
+				local maximum = Bars.ResolveBarStackMax(currentEntry)
+				return Bars.NormalizeBarStackThreshold(currentEntry and currentEntry[valueKey], maximum, Bars.DEFAULTS[valueKey])
+			end,
+			set = function(_, value)
+				local currentEntry = getStandaloneBarContextEntry(ctx)
+				local maximum = Bars.ResolveBarStackMax(currentEntry)
+				setEntryBarField(panelId, entryId, valueKey, Bars.NormalizeBarStackThreshold(value, maximum, Bars.DEFAULTS[valueKey]))
+			end,
+			formatter = function(value) return tostring(Helper.ClampInt(value, 1, 1000, Bars.DEFAULTS[valueKey])) end,
+		}
+		settings[#settings + 1] = {
+			name = format(L["CooldownPanelBarStackThresholdColor"] or "Threshold %d color", thresholdIndex),
+			kind = SettingType.Color,
+			parentId = "eqolCooldownPanelStandaloneBarStacks",
+			hasOpacity = true,
+			isShown = function()
+				local currentEntry = getStandaloneBarContextEntry(ctx)
+				return Bars.IsNativeAuraStackEntry(currentEntry)
+					and normalizeBarMode(currentEntry and currentEntry.barMode, Bars.DEFAULTS.barMode) == Bars.BAR_MODE.STACKS
+			end,
+			disabled = function()
+				local currentEntry = getStandaloneBarContextEntry(ctx)
+				return not getStoredBoolean(currentEntry, enabledKey, Bars.DEFAULTS[enabledKey])
+			end,
+			get = function()
+				local currentEntry = getStandaloneBarContextEntry(ctx)
+				local color = Helper.NormalizeColor(currentEntry and currentEntry[colorKey], Bars.DEFAULTS[colorKey])
+				return { r = color[1], g = color[2], b = color[3], a = color[4] }
+			end,
+			set = function(_, value) setEntryBarField(panelId, entryId, colorKey, Helper.NormalizeColor(value, Bars.DEFAULTS[colorKey])) end,
+		}
+	end
+	settings[#settings + 1] = {
+		name = L["CooldownPanelBarStackMaxColorEnabled"] or "Color at maximum stacks",
+		tooltip = L["CooldownPanelBarStackMaxColorTooltip"],
+		kind = SettingType.Checkbox,
+		parentId = "eqolCooldownPanelStandaloneBarStacks",
+		isShown = function()
+			local currentEntry = getStandaloneBarContextEntry(ctx)
+			return Bars.IsNativeAuraStackEntry(currentEntry)
+				and normalizeBarMode(currentEntry and currentEntry.barMode, Bars.DEFAULTS.barMode) == Bars.BAR_MODE.STACKS
+		end,
+		get = function()
+			local currentEntry = getStandaloneBarContextEntry(ctx)
+			return getStoredBoolean(currentEntry, "barStackMaxColorEnabled", Bars.DEFAULTS.barStackMaxColorEnabled)
+		end,
+		set = function(_, value) setEntryBarBoolean(panelId, entryId, "barStackMaxColorEnabled", value) end,
+	}
+	settings[#settings + 1] = {
+		name = L["CooldownPanelBarStackMaxColor"] or "Maximum stack color",
+		kind = SettingType.Color,
+		parentId = "eqolCooldownPanelStandaloneBarStacks",
+		hasOpacity = true,
+		isShown = function()
+			local currentEntry = getStandaloneBarContextEntry(ctx)
+			return Bars.IsNativeAuraStackEntry(currentEntry)
+				and normalizeBarMode(currentEntry and currentEntry.barMode, Bars.DEFAULTS.barMode) == Bars.BAR_MODE.STACKS
+		end,
+		disabled = function()
+			local currentEntry = getStandaloneBarContextEntry(ctx)
+			return not getStoredBoolean(currentEntry, "barStackMaxColorEnabled", Bars.DEFAULTS.barStackMaxColorEnabled)
+		end,
+		get = function()
+			local currentEntry = getStandaloneBarContextEntry(ctx)
+			local color = Helper.NormalizeColor(currentEntry and currentEntry.barStackMaxColor, Bars.DEFAULTS.barStackMaxColor)
+			return { r = color[1], g = color[2], b = color[3], a = color[4] }
+		end,
+		set = function(_, value) setEntryBarField(panelId, entryId, "barStackMaxColor", Helper.NormalizeColor(value, Bars.DEFAULTS.barStackMaxColor)) end,
+	}
+	settings[#settings + 1] = {
 		name = L["CooldownPanelBarStacksSegmented"] or "Segment stacks",
 		kind = SettingType.Checkbox,
 		parentId = "eqolCooldownPanelStandaloneBarStacks",
@@ -5968,13 +6434,8 @@ local function appendBarStandaloneTextSettings(settings, ctx)
 			local currentEntry = getStandaloneBarContextEntry(ctx)
 			return normalizeBarMode(currentEntry and currentEntry.barMode, Bars.DEFAULTS.barMode) == Bars.BAR_MODE.STACKS
 		end,
-		disabled = function()
-			local currentEntry = getStandaloneBarContextEntry(ctx)
-			return Bars.IsNativeAuraStackEntry(currentEntry)
-		end,
 		get = function()
 			local currentEntry = getStandaloneBarContextEntry(ctx)
-			if Bars.IsNativeAuraStackEntry(currentEntry) then return false end
 			return getStoredBoolean(currentEntry, "barStacksSegmented", Bars.DEFAULTS.barStacksSegmented)
 		end,
 		set = function(_, value) setEntryBarBoolean(panelId, entryId, "barStacksSegmented", value) end,
@@ -5994,7 +6455,8 @@ local function appendBarStandaloneTextSettings(settings, ctx)
 		end,
 		disabled = function()
 			local currentEntry = getStandaloneBarContextEntry(ctx)
-			return Bars.IsNativeAuraStackEntry(currentEntry) or not getStoredBoolean(currentEntry, "barStacksSegmented", Bars.DEFAULTS.barStacksSegmented)
+			return Bars.IsNativeAuraStackEntry(currentEntry)
+				or not getStoredBoolean(currentEntry, "barStacksSegmented", Bars.DEFAULTS.barStacksSegmented)
 		end,
 		get = function()
 			local currentEntry = getStandaloneBarContextEntry(ctx)
@@ -6014,7 +6476,7 @@ local function appendBarStandaloneTextSettings(settings, ctx)
 		end,
 		disabled = function()
 			local currentEntry = getStandaloneBarContextEntry(ctx)
-			return Bars.IsNativeAuraStackEntry(currentEntry) or not getStoredBoolean(currentEntry, "barStacksSegmented", Bars.DEFAULTS.barStacksSegmented)
+			return not getStoredBoolean(currentEntry, "barStacksSegmented", Bars.DEFAULTS.barStacksSegmented)
 		end,
 		get = function()
 			local currentEntry = getStandaloneBarContextEntry(ctx)
@@ -6037,7 +6499,7 @@ local function appendBarStandaloneTextSettings(settings, ctx)
 		end,
 		disabled = function()
 			local currentEntry = getStandaloneBarContextEntry(ctx)
-			return Bars.IsNativeAuraStackEntry(currentEntry) or not getStoredBoolean(currentEntry, "barStacksSegmented", Bars.DEFAULTS.barStacksSegmented)
+			return not getStoredBoolean(currentEntry, "barStacksSegmented", Bars.DEFAULTS.barStacksSegmented)
 		end,
 		get = function()
 			local currentEntry = getStandaloneBarContextEntry(ctx)
@@ -6775,8 +7237,12 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 		resolvedOptions.buttons = Bars.BuildStandaloneDialogButtons(panelId, entryId, resolvedOptions.buttons)
 		local panel, entry = getStandaloneBarEntry(panelId, entryId)
 		if panel and entry and Helper.IsFixedLayout and Helper.IsFixedLayout(panel.layout) and normalizeDisplayMode(entry.displayMode, Bars.DEFAULTS.displayMode) == Bars.DISPLAY_MODE.BAR then
+			local entrySettings = resolvedOptions.settings
 			local settings = Bars.BuildBarStandaloneSettings(panelId, entryId)
 			if settings then
+				for _, setting in ipairs(entrySettings or {}) do
+					if setting.id == "cooldownPanelStandaloneGlow" or setting.parentId == "cooldownPanelStandaloneGlow" then settings[#settings + 1] = setting end
+				end
 				resolvedOptions.settings = settings
 			end
 		end

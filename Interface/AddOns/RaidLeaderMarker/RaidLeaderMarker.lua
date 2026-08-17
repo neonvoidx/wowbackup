@@ -55,40 +55,43 @@ local function ClearAllIcons()
 end
 
 local function CollectFrames()
-  local frames = {}
+    local frames = {}
 
-  if IsInRaid() then
+    -- Compact Raid Groups
     for groupIndex = 1, 8 do
-      local group = _G["CompactRaidGroup" .. groupIndex]
-
-      if group then
-        local children = { group:GetChildren() }
-
-        for i, frame in ipairs(children) do
-          frames[#frames + 1] = frame
+        for memberIndex = 1, 5 do
+            local frame = _G["CompactRaidGroup" .. groupIndex .. "Member" .. memberIndex]
+            if frame then
+                frames[#frames + 1] = frame
+            end
         end
-      end
+    end
+
+    -- Compact Raid Frames
+    for i = 1, 40 do
+        local frame = _G["CompactRaidFrame" .. i]
+        if frame then
+            frames[#frames + 1] = frame
+        end
+    end
+
+    -- Compact Party Frames
+    for i = 1, 5 do
+        local frame = _G["CompactPartyFrameMember" .. i]
+        if frame then
+            frames[#frames + 1] = frame
+        end
     end
 
     return frames
-  end
-
-  if IsInGroup() then
-    for i = 1, GetNumGroupMembers() do
-      local frame = _G["CompactPartyFrameMember" .. i]
-        frames[#frames + 1] = frame
-    end
-
-    return frames
-  end
 end
 
 local function UpdateAll()
   ClearAllIcons()
 
-  if not IsInGroup() then
-    return
-  end
+  -- if not IsInGroup() then
+  --   return
+  -- end
 
   local frames = CollectFrames()
 

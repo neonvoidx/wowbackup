@@ -1,10 +1,62 @@
--- luacheck: globals C_Timer C_MountJournal LE_MOUNT_JOURNAL_FILTER_COLLECTED LE_MOUNT_JOURNAL_FILTER_UNUSABLE C_PetJournal C_ToyBox C_ToyBoxInfo ToyBox CollectionsMicroButton MainMenuMicroButton_HideAlert CollectionsMicroButton_SetAlertShown MicroButtonPulseStop CreateFrame C_CVar UIParent SetCVar ReloadUI GetPhysicalScreenSize GetScreenHeight
+-- luacheck: globals C_Timer C_MountJournal LE_MOUNT_JOURNAL_FILTER_COLLECTED LE_MOUNT_JOURNAL_FILTER_UNUSABLE C_PetJournal C_ToyBox C_ToyBoxInfo ToyBox CollectionsMicroButton MainMenuMicroButton_HideAlert CollectionsMicroButton_SetAlertShown MicroButtonPulseStop CreateFrame C_CVar UIParent SetCVar ReloadUI GetPhysicalScreenSize GetScreenHeight UnitAffectingCombat Settings
 
 local addonName, addon = ...
 
 local L = LibStub("AceLocale-3.0"):GetLocale(addonName)
 local getCVarOptionState = addon.functions.GetCVarOptionState or function() return false end
 local setCVarOptionState = addon.functions.SetCVarOptionState or function() end
+local setCVarValue = addon.functions.setCVarValue or function(cvar, value)
+	if C_CVar and C_CVar.SetCVar then C_CVar.SetCVar(cvar, value) end
+end
+
+local combatSelfHighlightWatcher
+
+local function getCombatSelfHighlightMode()
+	local mode = tonumber(addon.db and addon.db.combatSelfHighlightMode) or 7
+	if mode < 1 or mode > 7 then return 7 end
+	return mode
+end
+
+local function applyCombatSelfHighlight(inCombat)
+	local mode = inCombat and getCombatSelfHighlightMode() or 0
+	setCVarValue("findYourselfAnywhere", mode > 0 and "1" or "0")
+	setCVarValue("findYourselfModeIcon", mode >= 4 and "1" or "0")
+	if mode >= 4 then mode = mode - 4 end
+	setCVarValue("findYourselfModeOutline", mode >= 2 and "1" or "0")
+	if mode >= 2 then mode = mode - 2 end
+	setCVarValue("findYourselfModeCircle", mode >= 1 and "1" or "0")
+	if Settings and Settings.NotifyUpdate then Settings.NotifyUpdate("PROXY_SELF_HIGHLIGHT") end
+end
+
+local function updateCombatSelfHighlightWatcher()
+	if not combatSelfHighlightWatcher then
+		combatSelfHighlightWatcher = CreateFrame("Frame")
+		combatSelfHighlightWatcher:SetScript("OnEvent", function(_, event)
+			if not (addon.db and addon.db.combatSelfHighlight) then return end
+			if event == "PLAYER_REGEN_DISABLED" then
+				applyCombatSelfHighlight(true)
+			elseif event == "PLAYER_REGEN_ENABLED" then
+				applyCombatSelfHighlight(false)
+			else
+				applyCombatSelfHighlight(UnitAffectingCombat and UnitAffectingCombat("player") == true)
+			end
+		end)
+	end
+
+	combatSelfHighlightWatcher:UnregisterAllEvents()
+	if addon.db and addon.db.combatSelfHighlight then
+		combatSelfHighlightWatcher:RegisterEvent("PLAYER_ENTERING_WORLD")
+		combatSelfHighlightWatcher:RegisterEvent("PLAYER_REGEN_DISABLED")
+		combatSelfHighlightWatcher:RegisterEvent("PLAYER_REGEN_ENABLED")
+		combatSelfHighlightWatcher._eqolControlsSelfHighlight = true
+		applyCombatSelfHighlight(UnitAffectingCombat and UnitAffectingCombat("player") == true)
+	elseif combatSelfHighlightWatcher._eqolControlsSelfHighlight then
+		combatSelfHighlightWatcher._eqolControlsSelfHighlight = nil
+		applyCombatSelfHighlight(false)
+	end
+end
+
+addon.functions.UpdateCombatSelfHighlightWatcher = updateCombatSelfHighlightWatcher
 
 -- Mount/pet fanfare auto-clear (unwrap)
 local mountUnwrapDebounce = false
@@ -608,6 +660,47 @@ addon.functions.SettingsCreateInput(cUIInput, {
 	parentSection = interfaceExpandable,
 })
 
+local combatSelfHighlightToggle = addon.functions.SettingsCreateCheckbox(cUIInput, {
+	var = "combatSelfHighlight",
+	newTagID = "combatSelfHighlight",
+	text = L["combatSelfHighlight"],
+	desc = L["combatSelfHighlightDesc"],
+	func = function(value)
+		addon.db.combatSelfHighlight = value and true or false
+		updateCombatSelfHighlightWatcher()
+	end,
+	default = false,
+	parentSection = interfaceExpandable,
+})
+
+addon.functions.SettingsCreateDropdown(cUIInput, {
+	var = "combatSelfHighlightMode",
+	newTagID = "combatSelfHighlightMode",
+	text = _G.SELF_HIGHLIGHT_OPTION or L["combatSelfHighlight"],
+	desc = _G.OPTION_TOOLTIP_SELF_HIGHLIGHT or L["combatSelfHighlightDesc"],
+	type = Settings.VarType.Number,
+	list = {
+		[1] = _G.SELF_HIGHLIGHT_MODE_CIRCLE,
+		[2] = _G.SELF_HIGHLIGHT_MODE_OUTLINE,
+		[3] = _G.SELF_HIGHLIGHT_MODE_CIRCLE_AND_OUTLINE,
+		[4] = _G.SELF_HIGHLIGHT_MODE_ICON,
+		[5] = _G.SELF_HIGHLIGHT_MODE_CIRCLE_AND_ICON,
+		[6] = _G.SELF_HIGHLIGHT_MODE_OUTLINE_AND_ICON,
+		[7] = _G.SELF_HIGHLIGHT_MODE_CIRCLE_OUTLINE_AND_ICON,
+	},
+	order = { 1, 2, 4, 3, 5, 6, 7 },
+	default = 7,
+	get = getCombatSelfHighlightMode,
+	set = function(value)
+		addon.db.combatSelfHighlightMode = tonumber(value) or 7
+		if addon.db.combatSelfHighlight then applyCombatSelfHighlight(UnitAffectingCombat and UnitAffectingCombat("player") == true) end
+	end,
+	parent = true,
+	element = combatSelfHighlightToggle.element,
+	parentCheck = function() return addon.db and addon.db.combatSelfHighlight == true end,
+	parentSection = interfaceExpandable,
+})
+
 data = {
 	{
 		var = "ignoreTalkingHead",
@@ -692,8 +785,11 @@ addon.functions.SettingsCreateCheckbox(cUIInput, {
 function addon.functions.initUIInput()
 	addon.functions.InitDBValue("uiScalePreset", "NoScaling")
 	addon.functions.InitDBValue("autoUnwrapMounts", false)
+	addon.functions.InitDBValue("combatSelfHighlight", false)
+	addon.functions.InitDBValue("combatSelfHighlightMode", 7)
 	addon.functions.InitDBValue("hideMicroMenuNotificationOverlay", false)
 	UpdateAutoUnwrapWatcher()
+	updateCombatSelfHighlightWatcher()
 	ApplyNotificationOverlaySetting(true)
 
 	if addon.db and addon.db.modifyXPRepBar then

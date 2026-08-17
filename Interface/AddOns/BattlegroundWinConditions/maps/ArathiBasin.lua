@@ -14,6 +14,8 @@ local AB = Maps:NewMod()
 -- NS.RESET_TIME = 5
 
 local commonConfig = {
+  basesReset = false,
+  maxScore = 1500,
   maxBases = 5,
   tickRate = 2,
   assaultTime = 6,
@@ -34,6 +36,8 @@ local instanceIdToMapId = {
   -- ArathiBasin
   [2107] = {
     id = 1366,
+    basesReset = commonConfig.basesReset,
+    maxScore = commonConfig.maxScore,
     maxBases = commonConfig.maxBases,
     tickRate = commonConfig.tickRate,
     assaultTime = commonConfig.assaultTime,
@@ -45,6 +49,8 @@ local instanceIdToMapId = {
   -- ArathiCompStomp
   [2177] = {
     id = 1383,
+    basesReset = commonConfig.basesReset,
+    maxScore = commonConfig.maxScore,
     maxBases = commonConfig.maxBases,
     tickRate = commonConfig.tickRate,
     assaultTime = commonConfig.assaultTime,
@@ -56,6 +62,8 @@ local instanceIdToMapId = {
   -- ArathiBlizzard
   [1681] = {
     id = 837,
+    basesReset = commonConfig.basesReset,
+    maxScore = commonConfig.maxScore,
     maxBases = commonConfig.maxBases,
     tickRate = commonConfig.tickRate,
     assaultTime = commonConfig.assaultTime,
@@ -69,6 +77,7 @@ local instanceIdToMapId = {
 local function checkInfo(id, isBlitz)
   local convertedInfo = {}
   convertedInfo = NS.CopyTable(instanceIdToMapId[id], convertedInfo)
+  convertedInfo.basesReset = isBlitz and true or commonConfig.basesReset
   convertedInfo.assaultTime = isBlitz and 4 or commonConfig.assaultTime
   convertedInfo.contestedTime = isBlitz and 30 or commonConfig.contestedTime
   convertedInfo.resetTime = isBlitz and 5 or commonConfig.resetTime
@@ -86,15 +95,17 @@ end
 
 function AB:EnterZone(id, isBlitz)
   if NS.db and NS.db.global.maps.arathibasin.enabled then
-    if not isBlitz or isBlitz == false then
-      Info:SetAnchor(Banner.frame, 0, 0)
-      BasePrediction:StartInfoTracker(checkInfo(id, isBlitz))
-    end
+    NS.IS_AB = true
+
+    Info:SetAnchor(Banner.frame, 0, 0)
+    BasePrediction:StartInfoTracker(checkInfo(id, isBlitz))
   end
 end
 
 function AB:ExitZone()
   if NS.db.global.maps.arathibasin.enabled then
+    NS.IS_AB = false
+
     BasePrediction:StopInfoTracker()
   end
 end

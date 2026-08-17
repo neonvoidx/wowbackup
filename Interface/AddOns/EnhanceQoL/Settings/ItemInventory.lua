@@ -839,6 +839,13 @@ local upgradeTrackQualityMap = {
 	myth = (Enum and Enum.ItemQuality and Enum.ItemQuality.Legendary) or 5,
 }
 
+local upgradeTrackTooltipLevelCache = {
+	entries = {},
+	keys = {},
+	limit = 128,
+	nextIndex = 1,
+}
+
 local function normalizeUpgradeTrackKey(trackKey)
 	if type(trackKey) ~= "string" then return nil end
 	trackKey = strlower(trackKey)
@@ -875,15 +882,50 @@ local function getUpgradeTrackShortLabel(trackKey)
 	return label:match("[%z\1-\127\194-\244][\128-\191]*")
 end
 
+local function getUpgradeTrackLevelsFromTooltip(itemLink)
+	if type(itemLink) ~= "string" or not (C_TooltipInfo and C_TooltipInfo.GetHyperlink) then return nil, nil end
+	local cached = upgradeTrackTooltipLevelCache.entries[itemLink]
+	if cached then return cached[1], cached[2] end
+
+	local tooltipData = C_TooltipInfo.GetHyperlink(itemLink)
+	if type(tooltipData) ~= "table" or type(tooltipData.lines) ~= "table" then return nil, nil end
+
+	local itemUpgradeLevelLineType = Enum and Enum.TooltipDataLineType and Enum.TooltipDataLineType.ItemUpgradeLevel
+	if itemUpgradeLevelLineType == nil then return nil, nil end
+	for _, line in ipairs(tooltipData.lines) do
+		if type(line) == "table" and line.type == itemUpgradeLevelLineType then
+			local currentLevel, maxLevel
+			if type(line.leftText) == "string" then currentLevel, maxLevel = line.leftText:match("(%d+)%s*/%s*(%d+)") end
+			if not currentLevel and type(line.rightText) == "string" then currentLevel, maxLevel = line.rightText:match("(%d+)%s*/%s*(%d+)") end
+			currentLevel, maxLevel = tonumber(currentLevel), tonumber(maxLevel)
+			if currentLevel and maxLevel and currentLevel >= 0 and maxLevel > 0 and currentLevel <= maxLevel then
+				local cacheIndex = upgradeTrackTooltipLevelCache.nextIndex
+				local evictedLink = upgradeTrackTooltipLevelCache.keys[cacheIndex]
+				if evictedLink then upgradeTrackTooltipLevelCache.entries[evictedLink] = nil end
+				upgradeTrackTooltipLevelCache.entries[itemLink] = { currentLevel, maxLevel }
+				upgradeTrackTooltipLevelCache.keys[cacheIndex] = itemLink
+				upgradeTrackTooltipLevelCache.nextIndex = cacheIndex == upgradeTrackTooltipLevelCache.limit and 1 or cacheIndex + 1
+				return currentLevel, maxLevel
+			end
+		end
+	end
+
+	return nil, nil
+end
+
 local function getUpgradeTrackDisplayText(itemLink)
 	local upgradeInfo, trackKey = getUpgradeTrackInfoFromLink(itemLink)
 	if not trackKey then return nil, nil end
 	local shortLabel = getUpgradeTrackShortLabel(trackKey)
 	if not shortLabel then return trackKey, nil end
 
-	local currentLevel = tonumber(upgradeInfo and upgradeInfo.currentLevel)
-	local maxLevel = tonumber(upgradeInfo and upgradeInfo.maxLevel)
-	if currentLevel and maxLevel and currentLevel >= 0 and maxLevel > 0 then return trackKey, string.format("%s(%d/%d)", shortLabel, currentLevel, maxLevel) end
+	local currentLevel, maxLevel = getUpgradeTrackLevelsFromTooltip(itemLink)
+	if not currentLevel then currentLevel = tonumber(upgradeInfo and upgradeInfo.currentLevel) end
+	if not maxLevel then maxLevel = tonumber(upgradeInfo and upgradeInfo.maxLevel) end
+	if currentLevel and maxLevel and currentLevel >= 0 and maxLevel > 0 and currentLevel <= maxLevel then
+		return trackKey, string.format("%s(%d/%d)", shortLabel, currentLevel, maxLevel)
+	end
+	if currentLevel and currentLevel >= 0 then return trackKey, string.format("%s(%d)", shortLabel, currentLevel) end
 
 	return trackKey, shortLabel
 end
@@ -972,10 +1014,25 @@ end
 local function applyCharTrackPosition(element, slot)
 	if not element or not element.trackLabel or not element.ilvlBackground then return end
 	local pos = addon.db["charTrackPosition"] or "LEFT"
+	local side = addon.variables.itemSlotSide and addon.variables.itemSlotSide[slot] or 0
 	element.trackLabel:ClearAllPoints()
 
+	if pos == "ADJACENT" then
+		if CharOpt("ilvl") then
+			if side == 1 then
+				element.trackLabel:SetPoint("RIGHT", element.ilvlBackground, "LEFT", -2, 0)
+			else
+				element.trackLabel:SetPoint("LEFT", element.ilvlBackground, "RIGHT", 2, 0)
+			end
+		elseif side == 1 then
+			element.trackLabel:SetPoint("RIGHT", element, "LEFT", -3, -2)
+		else
+			element.trackLabel:SetPoint("LEFT", element, "RIGHT", 3, -2)
+		end
+		return
+	end
+
 	if pos == "OUTSIDE" then
-		local side = addon.variables.itemSlotSide and addon.variables.itemSlotSide[slot] or 0
 		if side == 1 then
 			element.trackLabel:SetPoint("RIGHT", element, "LEFT", -3, -2)
 		elseif side == 2 then
@@ -997,11 +1054,52 @@ local function applyCharTrackPosition(element, slot)
 	end
 end
 
+local function applyCharEnchantPosition(element, slot, itemLevelShown, inspectFrame)
+	if not element or not element.enchant then return end
+	local pos = addon.db["charEnchantPosition"] or "SLOT"
+	local side = addon.variables.itemSlotSide and addon.variables.itemSlotSide[slot] or 0
+	element.enchant:ClearAllPoints()
+
+	if pos == "ITEMLEVEL" and itemLevelShown and element.ilvl then
+		if side == 1 then
+			element.enchant:SetPoint("TOPRIGHT", element.ilvl, "BOTTOMRIGHT", 0, -1)
+		else
+			element.enchant:SetPoint("TOPLEFT", element.ilvl, "BOTTOMLEFT", 0, -1)
+		end
+		return
+	end
+
+	if inspectFrame then
+		if side == 0 then
+			element.enchant:SetPoint("BOTTOMLEFT", element, "BOTTOMRIGHT", 2, 1)
+		elseif side == 2 then
+			element.enchant:SetPoint("TOPLEFT", element, "TOPRIGHT", 2, -1)
+		else
+			element.enchant:SetPoint("BOTTOMRIGHT", element, "BOTTOMLEFT", -2, 1)
+		end
+	elseif side == 1 then
+		element.enchant:SetPoint("BOTTOMRIGHT", element, "BOTTOMLEFT", -2, -2)
+	else
+		element.enchant:SetPoint("BOTTOMLEFT", element, "BOTTOMRIGHT", 2, -2)
+	end
+end
+
 local function positionGemFrame(element, slot, gemIndex, outsideWithIlvl)
 	if not element or not element.gems or not element.gems[gemIndex] then return end
 	local gemFrame = element.gems[gemIndex]
 	local side = addon.variables.itemSlotSide and addon.variables.itemSlotSide[slot] or 0
 	gemFrame:ClearAllPoints()
+
+	local adjacentTrackVisible = addon.db["charTrackPosition"] == "ADJACENT" and element.trackLabel and element.trackLabel.IsShown
+		and element.trackLabel:IsShown()
+	if adjacentTrackVisible then
+		if side == 1 then
+			gemFrame:SetPoint("RIGHT", element.trackLabel, "LEFT", -2 - (gemIndex - 1) * 16, 0)
+		else
+			gemFrame:SetPoint("LEFT", element.trackLabel, "RIGHT", 2 + (gemIndex - 1) * 16, 0)
+		end
+		return
+	end
 
 	if outsideWithIlvl and element.ilvlBackground then
 		if side == 1 then
@@ -1443,6 +1541,7 @@ local function onInspect(arg1)
 		local frameName = inspectSlotFrameNames[key]
 		local element = frameName and _G[frameName]
 		if element then
+			if element.enchant and InspectOpt("enchants") then applyCharEnchantPosition(element, key, InspectOpt("ilvl"), true) end
 			if element.borderGradient then applyMissingEnchantOverlayStyle(element.borderGradient) end
 			local itemLink = GetInventoryItemLink(unit, key)
 			if inspectItemLinks[key] ~= itemLink then
@@ -1552,13 +1651,6 @@ local function onInspect(arg1)
 							if InspectOpt("enchants") then
 								if not element.enchant then
 									element.enchant = element:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
-									if addon.variables.itemSlotSide[key] == 0 then
-										element.enchant:SetPoint("BOTTOMLEFT", element, "BOTTOMRIGHT", 2, 1)
-									elseif addon.variables.itemSlotSide[key] == 2 then
-										element.enchant:SetPoint("TOPLEFT", element, "TOPRIGHT", 2, -1)
-									else
-										element.enchant:SetPoint("BOTTOMRIGHT", element, "BOTTOMLEFT", -2, 1)
-									end
 									if addon.variables.shouldEnchanted[key] or addon.variables.shouldEnchantedChecks[key] then
 										element.borderGradient = element:CreateTexture(nil, "ARTWORK")
 										element.borderGradient:SetPoint("TOPLEFT", element, "TOPLEFT", -2, 2)
@@ -1567,6 +1659,7 @@ local function onInspect(arg1)
 										element.borderGradient:Hide()
 									end
 								end
+								applyCharEnchantPosition(element, key, InspectOpt("ilvl"), true)
 								applyEnchantTextStyle(element.enchant)
 								local mode = getEnchantDisplayMode()
 								local showMissingOverlay = shouldShowMissingEnchantOverlayForMode(mode)
@@ -1634,6 +1727,11 @@ end
 
 local function updateCharRarityGlow(element, itemQuality)
 	if not element then return end
+	if addon.Skinner and addon.Skinner.functions and addon.Skinner.functions.IsCharacterFrameSquareSlotBordersEnabled
+		and addon.Skinner.functions.IsCharacterFrameSquareSlotBordersEnabled() then
+		if element.rarityGlow then element.rarityGlow:Hide() end
+		return
+	end
 	if not addon.db["enhancedRarityGlow"] then
 		if element.rarityGlow then element.rarityGlow:Hide() end
 		return
@@ -1772,6 +1870,7 @@ local function setIlvlText(element, slot)
 				end
 
 				if CharOpt("enchants") then
+					applyCharEnchantPosition(element, slot, CharOpt("ilvl"), false)
 					applyEnchantTextStyle(element.enchant)
 					local mode = getEnchantDisplayMode()
 					local showMissingOverlay = shouldShowMissingEnchantOverlayForMode(mode)
@@ -1954,7 +2053,6 @@ local function updateFlyoutButtonInfo(button)
 		local location = button.location
 		if not location then return end
 
-		-- TODO 12.0: EquipmentManager_UnpackLocation will change once Void Storage is removed
 		local itemLink, _, _, bags, _, slot, bag, itemLevel
 		if type(button.location) == "number" then
 			local locationData = EquipmentManager_GetLocationData(location)
@@ -2778,6 +2876,7 @@ function addon.functions.initItemInventory()
 	addon.functions.InitDBValue("showGemsTooltipOnCharframe", false)
 	addon.functions.InitDBValue("showEnchantOnCharframe", false)
 	addon.functions.InitDBValue("charEnchantDisplayMode", ENCHANT_DISPLAY_MODE_FULL)
+	addon.functions.InitDBValue("charEnchantPosition", "SLOT")
 	addon.functions.InitDBValue("showMissingEnchantOverlayOnCharframe", true)
 	addon.functions.InitDBValue("missingEnchantOverlayColor", { r = 1, g = 0, b = 0, a = 0.6 })
 	addon.functions.InitDBValue("showCatalystChargesOnCharframe", false)
@@ -2881,13 +2980,7 @@ function addon.functions.initItemInventory()
 		value.trackLabel:Hide()
 
 		value.enchant = value:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
-		if addon.variables.itemSlotSide[key] == 0 then
-			value.enchant:SetPoint("BOTTOMLEFT", value, "BOTTOMRIGHT", 2, -2)
-		elseif addon.variables.itemSlotSide[key] == 2 then
-			value.enchant:SetPoint("BOTTOMLEFT", value, "BOTTOMRIGHT", 2, -2)
-		else
-			value.enchant:SetPoint("BOTTOMRIGHT", value, "BOTTOMLEFT", -2, -2)
-		end
+		applyCharEnchantPosition(value, key, CharOpt("ilvl"), false)
 		applyEnchantTextStyle(value.enchant)
 
 		value.gems = {}

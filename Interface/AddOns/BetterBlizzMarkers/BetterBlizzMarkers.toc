@@ -1,0 +1,30 @@
+## Interface: 120100
+## Title: Better|cff00c0ffBlizz|rMarkers
+## Notes: Class icons on nameplates.
+## Author: Bodify
+## Version: v1.0.2
+## OptionalDeps: BetterBlizzPlates, BlizzMove, ElvUI, Kui_Nameplates, MoveAny, Plater, Platynator, ThreatPlates
+## SavedVariables: BetterBlizzMarkersDB
+## IconAtlas: gmchat-icon-blizz
+## X-Curse-Project-ID: 1643923
+## X-Wago-ID: Q6aRmqKW
+
+Libs\LibStub\LibStub.lua
+Libs\LibSerialize\LibSerialize.lua
+Libs\LibDeflate\LibDeflate.lua
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
+Libs\LibSharedMedia-3.0\LibSharedMedia-3.0.lua
+GUI\BetterBlizzGUI.lua
+Core\Constants.lua
+GUI\GUI.lua
+Core\BetterBlizzMarkers.lua
+Core\Profiles.lua
+Core\Util.lua
+
+Modules\ArenaNames.lua
+Modules\ClassIcon.lua
+Modules\TotemIcon.lua
+Modules\NameOnly.lua
+Modules\HideRealmNames.lua
+Modules\ClassColorNames.lua
+Modules\MoveableSettingsPanel.lua

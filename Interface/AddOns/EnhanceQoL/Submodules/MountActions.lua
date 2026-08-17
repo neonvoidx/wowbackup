@@ -71,6 +71,12 @@ local function isEntryUsable(entry)
 		local usable = C_MountJournal.GetMountUsabilityByID(entry.mountID, true)
 		if usable ~= nil then return usable == true end
 	end
+	local usabilityGeneration = MountActions.randomMountUsabilityGeneration or 0
+	if entry.usabilityGeneration ~= usabilityGeneration and C_MountJournal and C_MountJournal.GetMountInfoByID then
+		local _, _, _, _, isUsable = C_MountJournal.GetMountInfoByID(entry.mountID)
+		entry.isUsable = isUsable == true
+		entry.usabilityGeneration = usabilityGeneration
+	end
 	return entry.isUsable == true
 end
 
@@ -259,6 +265,10 @@ local function buildMountMacro(spellID)
 	return table.concat(lines, "\n")
 end
 
+function MountActions:BuildMountMacro(spellID)
+	return buildMountMacro(spellID)
+end
+
 local function buildRandomMountMacro(spellID)
 	local name = getSpellNameByID(spellID)
 	if not name or name == "" then return nil end
@@ -362,7 +372,9 @@ function MountActions:PrepareActionButton(btn)
 	btn:SetAttribute("type1", "macro")
 	btn:SetAttribute("type", "macro")
 	local isMoving = IsPlayerMoving and IsPlayerMoving()
-	if btn._eqolAction == "random" and addon.variables.unitClass == "DRUID" and IsMounted and IsMounted() and isMoving and (isSpellKnown(783) or isSpellKnown(768)) then
+	local isMounted = IsMounted and IsMounted()
+	local dismountWhileMounted = addon.db and addon.db.mountBindingDismountWhileMounted == true
+	if dismountWhileMounted and btn._eqolAction == "random" and addon.variables.unitClass == "DRUID" and isMounted and isMoving and (isSpellKnown(783) or isSpellKnown(768)) then
 		if not (IsFlying and IsFlying()) then
 			if not (addon.db and addon.db.randomMountDruidNoShiftWhileMounted) then
 				local macro = getDruidMoveFormMacro()
@@ -374,7 +386,7 @@ function MountActions:PrepareActionButton(btn)
 			end
 		end
 	end
-	if btn._eqolAction == "random" and addon.variables.unitClass == "SHAMAN" and IsMounted and IsMounted() and isMoving and isSpellKnown(GHOST_WOLF_SPELL_ID) then
+	if dismountWhileMounted and btn._eqolAction == "random" and addon.variables.unitClass == "SHAMAN" and isMounted and isMoving and isSpellKnown(GHOST_WOLF_SPELL_ID) then
 		if not (IsFlying and IsFlying()) then
 			local macro = getShamanGhostWolfMacro()
 			if macro then
@@ -384,7 +396,7 @@ function MountActions:PrepareActionButton(btn)
 			end
 		end
 	end
-	if IsMounted and IsMounted() then
+	if dismountWhileMounted and isMounted then
 		btn:SetAttribute("macrotext1", "/dismount")
 		btn:SetAttribute("macrotext", "/dismount")
 		return
@@ -444,7 +456,7 @@ function MountActions:HandleClick(btn, button, down)
 	if not btn or not btn._eqolAction then return end
 
 	if btn._eqolAction == "random" then
-		if IsMounted and IsMounted() then
+		if addon.db and addon.db.mountBindingDismountWhileMounted == true and IsMounted and IsMounted() then
 			if C_MountJournal and C_MountJournal.Dismiss then
 				C_MountJournal.Dismiss()
 			elseif Dismount then
@@ -499,7 +511,16 @@ function MountActions:Init()
 	self:EnsureButton("EQOLAuctionMountButton", "ah")
 end
 
-local function handleMountEvents() MountActions:MarkRandomCacheDirty() end
+local function handleMountEvents(_, event)
+	-- Usability is queried live in pickRandomMount, so this event does not change
+	-- the cache's collected/favorite/type data. Advance the fallback generation
+	-- for the rare case where the live API temporarily returns no value.
+	if event == "MOUNT_JOURNAL_USABILITY_CHANGED" then
+		MountActions.randomMountUsabilityGeneration = (MountActions.randomMountUsabilityGeneration or 0) + 1
+		return
+	end
+	MountActions:MarkRandomCacheDirty()
+end
 
 function MountActions:RegisterRandomCacheEvents()
 	if self.randomCacheEventFrame then return end

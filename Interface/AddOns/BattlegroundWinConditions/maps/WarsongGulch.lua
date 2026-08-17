@@ -14,6 +14,7 @@ local instanceIdToMapId = {
   -- Warsong Gulch
   [2106] = {
     id = 1339,
+    maxScore = 3,
     stackTime = 30,
   },
 }
@@ -44,6 +45,7 @@ end
 function WG:ExitZone()
   if NS.db.global.maps.warsonggulch.enabled then
     NS.IS_WG = false
+
     FlagPrediction:StopInfoTracker()
   end
 end

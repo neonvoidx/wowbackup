@@ -42,11 +42,21 @@ end
 local function getBestCandidate(specID)
 	if addon.BuffFoods and addon.BuffFoods.functions and addon.BuffFoods.functions.updateAllowedBuffFoods then
 		local list = addon.BuffFoods.functions.updateAllowedBuffFoods(specID)
-		if type(list) == "table" then return list[1] end
+		if type(list) == "table" then
+			for i = 1, #list do
+				local candidate = list[i]
+				if addon.db.buffFoodIncludeFeasts == true or candidate.isFeast ~= true then return candidate end
+			end
+		end
 	end
 
 	local list = addon.BuffFoods and addon.BuffFoods.filteredBuffFoods
-	if type(list) == "table" then return list[1] end
+	if type(list) == "table" then
+		for i = 1, #list do
+			local candidate = list[i]
+			if addon.db.buffFoodIncludeFeasts == true or candidate.isFeast ~= true then return candidate end
+		end
+	end
 	return nil
 end
 
@@ -79,6 +89,7 @@ function addon.BuffFoods.functions.InitBuffFoodMacro()
 	if not addon.db or not addon.functions or not addon.functions.InitDBValue then return end
 
 	local init = addon.functions.InitDBValue
+	init("buffFoodIncludeFeasts", false)
 	init("buffFoodMacroEnabled", false)
 	init("buffFoodPreferHearty", true)
 	init("buffFoodPreferredBySpec", {})

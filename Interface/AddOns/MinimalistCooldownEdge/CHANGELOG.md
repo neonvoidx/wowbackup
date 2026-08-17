@@ -1,5 +1,97 @@
 # Changelog
 
+## 4.5.0 - MiniAuras Group Auras Text Fixes
+- Fixed Text Size, Text Color, and Hide Countdown Numbers not applying to MiniAuras Group Auras icons.
+- Slider options now apply immediately instead of triggering a full rescan.
+
+## 4.4.5 - Raid Frame Auras Text Size Fix
+- Fixed the Raid Frame Auras Text Size option not affecting the displayed countdown text.
+
+## 4.4.4 - Unit Frame Aura Scan Freeze Fix
+- Fixed a freeze that could occur while scanning BetterBlizzFrames and BetterBlizzPlates aura groups on target, focus, and nameplate frames.
+
+## 4.4.3 - MiniAuras Forbidden Object Fix
+- Fixed forbidden object errors that could occur when styling MiniAuras cooldowns.
+
+## 4.4.2 - Complete Localization for All Languages
+- Translated all missing options, tooltips, and messages for German, Spanish, Latin American Spanish, French, Italian, Korean, Brazilian Portuguese, Russian, and Chinese (Simplified and Traditional).
+- Fixed outdated translated category descriptions that no longer matched current behavior.
+- Localized the performance warning text and the Game Default font option.
+- Removed unused and duplicate translation entries.
+
+## 4.4.1 - Nameplate Timer Fixes
+- Fixed the Hide Numbers option not working on nameplate cooldowns.
+- Removed Allow Threshold Colors from Nameplates (not supported in combat, instances, or PvP) yet.
+
+## 4.4.0 - Unit Frame Aura Visibility and MiniAuras Performance
+- Added Only My Buffs and Only My Debuffs options for target and focus frames.
+- Improved MiniAuras cooldown discovery performance with resumable scanning.
+
+## 4.3.9 - MyDRs Support
+- Added a MyDRs adapter for diminishing-returns icon cooldowns.
+- Added a MyDRs category with typography, positioning, and swipe controls.
+- Added a Swipe Shade Alpha slider for MyDRs cooldown icons.
+
+## 4.3.8 - AddOn Profiler
+- Adding support to AddOn Profiler and similar tools.
+- Reduced timer overhead by consolidating scheduled update passes.
+
+## 4.3.7 - MiniAuras Swipe Opacity Control
+- Added a Swipe Shade Alpha slider for MiniAuras cooldown icons.
+
+## 4.3.6 - BetterBlizzPlates Blizzard Numbers Compatibility
+- Replaced the BetterBlizzPlates "Use BBP Aura Threshold Colors" toggle with the standard Allow Threshold Colors option.
+- BetterBlizzPlates aura color styling now also applies when "Use Blizzard Numbers" is enabled.
+- Added a compatibility notice recommending disabling BetterBlizzPlates' "Use Blizzard Numbers" and "Expiry Colour" options.
+- Fixed possible protected-frame errors when detecting aura button support for BetterBlizzPlates, MiniAuras, TellMeWhen, and Unit Frame auras.
+
+## 4.3.5 - BetterBlizzPlates Aura Styling
+- Added an optional BetterBlizzPlates 12.1 nameplate aura styling category.
+- Added font, color, position, and swipe-edge controls for BetterBlizzPlates aura countdowns.
+- Added a toggle for BetterBlizzPlates normal, low, and threshold timer colors.
+- Fixed BetterBlizzPlates aura colors when Blizzard countdown numbers are enabled.
+- Shortened category descriptions.
+
+## 4.3.4 - TellMeWhen Combat-Ready Aura Timers
+- Fixed cooldown timer styling for TellMeWhen Buff/Debuff (combat ready) icons.
+
+## 4.3.3 - MiniAuras Nameplate Timer Fixes
+- Fixed cooldown timer fonts and number visibility on MiniAuras nameplate aura and crowd-control icons.
+- Removed MiniCE threshold color overrides from MiniAuras timers; configure them under MiniAuras > Misc > Countdown Colours.
+- Updated options menu order.
+
+## 4.3.2 - Unit Frame Threshold Colors
+- Fixed Unit Frame timer threshold colors.
+
+## 4.3.1 - Aura Timer Text Layering
+- Aura timer text now draws above debuff borders and glows on unit frames and nameplates.
+- Fixed timer text being covered by debuff borders while using BetterBlizzFrames.
+
+## 4.3.0 - Target and Focus Aura Styling for WoW 12.1
+- Added Unit Frame cooldown styling for target and focus frame auras using WoW 12.1's aura container API.
+- Added BetterBlizzFrames compatibility for target and focus aura cooldowns.
+- Only Mine now defaults to on for Unit Frame cooldown timer text.
+- Fixed protected-frame errors when styling target and focus frame auras in combat.
+- Updated the Unit Frame category description and added a WoW 12.1 compatibility note.
+
+## 4.2.0 - MiniAuras Integration
+- Replaced the MiniCC integration, dependency, settings, and help references with MiniAuras.
+- Added support for MiniAuras legacy icons and 12.1 AuraContainer icons.
+- Added styling for MiniAuras icons created before login and during play.
+- Added MiniAuras settings for Raid Frame Auras, Custom Auras, Trinkets, and current tracker modules.
+- Migrated existing MiniCC category settings to MiniAuras.
+- Removed the obsolete Healer Warning Text Color setting.
+- Fixed protected-frame errors on nameplate and unit-frame aura icons.
+- Fixed large-aura detection when frame dimensions are protected.
+
+## 4.1.8 - Patch 12.1 Stable Release
+- Promoted the WoW Patch 12.1 build from beta to a stable release.
+
+## 4.1.7 - WoW 12.1 Support
+- Updated interface support to Retail 12.1 only.
+- Player Aura styling now refreshes during combat, dungeons, and PvP matches.
+- Fixed Player Aura duration text errors when WoW hides aura data in combat.
+
 ## 4.1.6 - Profile Import Validation
 - Added validation and size limits for imported profile settings.
 - Added secret/access guards

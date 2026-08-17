@@ -43,7 +43,7 @@ local function normalizePlacement(value, fallback)
 	}
 end
 
-local CONDITION_TYPES = { CLASS = true, SPEC = true, ROLE = true, TALENT = true }
+local CONDITION_TYPES = { CLASS = true, SPEC = true, ROLE = true, TALENT = true, RAID_SIZE = true }
 local function normalizeConditionNode(node, fallbackId, depth, state)
 	if type(node) ~= "table" or depth > 4 or state.count >= 32 then return nil end
 	state.count = state.count + 1
@@ -54,6 +54,8 @@ local function normalizeConditionNode(node, fallbackId, depth, state)
 		local operator = type(node.operator) == "string" and string.upper(node.operator) or "IS"
 		if conditionType == "TALENT" then
 			operator = operator == "NOT_KNOWN" and "NOT_KNOWN" or "KNOWN"
+		elseif conditionType == "RAID_SIZE" then
+			operator = operator == "AT_LEAST" and "AT_LEAST" or "AT_MOST"
 		elseif conditionType == "CLASS" or conditionType == "SPEC" or conditionType == "ROLE" then
 			operator = (operator == "NOT_ANY_OF" or operator == "IS_NOT") and "NOT_ANY_OF" or "ANY_OF"
 		else
@@ -73,6 +75,7 @@ local function normalizeConditionNode(node, fallbackId, depth, state)
 			end
 		end
 		if conditionType == "TALENT" then value = tonumber(node.value) end
+		if conditionType == "RAID_SIZE" then value = math.max(1, math.min(40, math.floor(tonumber(node.value) or 20))) end
 		return { nodeType = "condition", id = nodeId, conditionType = conditionType, operator = operator, value = value }
 	end
 	local group = { nodeType = "group", id = nodeId, operator = node.operator == "OR" and "OR" or "AND", children = {} }
@@ -106,15 +109,21 @@ local function normalizeConditions(conditions, candidateId)
 	return root
 end
 
+local function canMatchRelativeWidth(targetId)
+	return type(targetId) == "string" and targetId ~= "core:uiparent"
+end
+
 local function copyCandidate(candidate, index)
 	candidate = type(candidate) == "table" and candidate or {}
 	local candidateId = type(candidate.id) == "string" and candidate.id or ("candidate-" .. tostring(index))
+	local targetId = type(candidate.targetId) == "string" and candidate.targetId or nil
+	local allowsWidthMatch = canMatchRelativeWidth(targetId)
 	return {
 		id = candidateId,
-		targetId = type(candidate.targetId) == "string" and candidate.targetId or nil,
+		targetId = targetId,
 		placement = normalizePlacement(candidate.placement),
-		matchRelativeWidth = candidate.matchRelativeWidth == true,
-		matchRelativeWidthOffset = tonumber(candidate.matchRelativeWidthOffset) or 0,
+		matchRelativeWidth = allowsWidthMatch and candidate.matchRelativeWidth == true,
+		matchRelativeWidthOffset = allowsWidthMatch and (tonumber(candidate.matchRelativeWidthOffset) or 0) or 0,
 		conditions = normalizeConditions(candidate.conditions, candidateId),
 	}
 end
@@ -126,6 +135,8 @@ local function getProfileStore()
 end
 
 function DynamicAnchors:GetProfiles() return getProfileStore() end
+
+function DynamicAnchors:CanMatchRelativeWidth(targetId) return canMatchRelativeWidth(targetId) end
 
 function DynamicAnchors:GetFrameAssignments()
 	addon.db = addon.db or {}
@@ -147,17 +158,31 @@ end
 DynamicAnchors._simpleTargetHookedFrames = DynamicAnchors._simpleTargetHookedFrames or setmetatable({}, { __mode = "k" })
 
 function DynamicAnchors:EnsureSimpleTargetHooks(targetId, frame)
-	if not frame or self._simpleTargetHookedFrames[frame] or not frame.HookScript then return end
-	local function changed() self:NotifyTargetChanged(targetId, "SIMPLE_TARGET_GEOMETRY", targetId) end
+	if type(targetId) ~= "string" or targetId == "" or not frame or not frame.HookScript then return end
+	local hookState = self._simpleTargetHookedFrames[frame]
+	if type(hookState) == "table" then
+		hookState.targetIds[targetId] = true
+		return
+	end
+	hookState = { targetIds = { [targetId] = true } }
+	local function changed()
+		for registeredTargetId in pairs(hookState.targetIds) do
+			self:NotifyTargetChanged(registeredTargetId, "SIMPLE_TARGET_GEOMETRY", registeredTargetId)
+		end
+	end
 	local okSize = pcall(frame.HookScript, frame, "OnSizeChanged", changed)
 	local okShow = pcall(frame.HookScript, frame, "OnShow", changed)
 	local okHide = pcall(frame.HookScript, frame, "OnHide", changed)
-	if okSize or okShow or okHide then self._simpleTargetHookedFrames[frame] = true end
+	if okSize or okShow or okHide then self._simpleTargetHookedFrames[frame] = hookState end
 end
 
 function DynamicAnchors:RegisterSimpleFrame(definition)
-	if type(definition) ~= "table" or type(definition.id) ~= "string" then return false end
-	self:RegisterTarget({
+	if type(definition) ~= "table" or type(definition.id) ~= "string" or definition.id == "" then return false end
+	local currentTarget = self.targets[definition.id]
+	local currentConsumer = self.consumers[definition.id]
+	if currentTarget and currentTarget.owner ~= definition.owner then return false end
+	if currentConsumer and currentConsumer.owner ~= definition.owner then return false end
+	local targetRegistered = self:RegisterTarget({
 		id = definition.id,
 		owner = definition.owner,
 		consumerId = definition.id,
@@ -172,7 +197,7 @@ function DynamicAnchors:RegisterSimpleFrame(definition)
 			return frame, { available = available, reason = available and nil or "FRAME_NOT_CREATED" }
 		end,
 	})
-	self:RegisterConsumer({
+	local consumerRegistered = self:RegisterConsumer({
 		id = definition.id,
 		owner = definition.owner,
 		label = definition.label,
@@ -186,7 +211,7 @@ function DynamicAnchors:RegisterSimpleFrame(definition)
 			if self:IsFrameAssignmentEnabled(definition.id) and type(definition.apply) == "function" then definition.apply() end
 		end,
 	})
-	return true
+	return targetRegistered == true and consumerRegistered == true
 end
 
 function DynamicAnchors:GetSimpleFrameWinner(consumerId)
@@ -210,6 +235,7 @@ function DynamicAnchors:AddEditModeAssignmentSettings(settings, settingType, opt
 		kind = settingType.Checkbox,
 		field = "dynamicAnchorEnabled",
 		parentId = parentId,
+		newTagID = options.enabledNewTagID,
 		default = false,
 		get = function() local value = assignment(false) return value and value.enabled == true or false end,
 		set = function(_, value)
@@ -219,6 +245,7 @@ function DynamicAnchors:AddEditModeAssignmentSettings(settings, settingType, opt
 				local profiles = self:GetProfileOptions()
 				current.profileId = profiles[1] and profiles[1].value or nil
 			end
+			self:RefreshRaidSizeConsumerTracking()
 			refresh(true)
 			refreshSettingValues()
 		end,
@@ -228,13 +255,20 @@ function DynamicAnchors:AddEditModeAssignmentSettings(settings, settingType, opt
 		kind = settingType.Dropdown,
 		field = "dynamicAnchorProfile",
 		parentId = parentId,
+		newTagID = options.profileNewTagID,
 		height = 180,
 		get = function() local value = assignment(false) return value and value.profileId or nil end,
-		set = function(_, value) assignment(true).profileId = value refresh(false) refreshSettingValues() end,
+		set = function(_, value)
+			assignment(true).profileId = value
+			self:RefreshRaidSizeConsumerTracking()
+			refresh(false)
+			refreshSettingValues()
+		end,
 		generator = function(_, root)
 			for _, option in ipairs(self:GetProfileOptions()) do
 				root:CreateRadio(option.label, function() local value = assignment(false) return value and value.profileId == option.value end, function()
 					assignment(true).profileId = option.value
+					self:RefreshRaidSizeConsumerTracking()
 					refresh(false)
 					refreshSettingValues()
 				end)
@@ -371,12 +405,12 @@ end
 function DynamicAnchors:CreateConditionNode(conditionType)
 	self._conditionSequence = (self._conditionSequence or 0) + 1
 	conditionType = CONDITION_TYPES[conditionType] and conditionType or "CLASS"
-	local defaults = { CLASS = "", SPEC = 0, ROLE = "", TALENT = 0 }
+	local defaults = { CLASS = "", SPEC = 0, ROLE = "", TALENT = 0, RAID_SIZE = 20 }
 	return {
 		nodeType = "condition",
 		id = "condition-" .. tostring(GetTime and math.floor(GetTime() * 1000) or 0) .. "-" .. tostring(self._conditionSequence),
 		conditionType = conditionType,
-		operator = conditionType == "TALENT" and "KNOWN" or (conditionType == "CLASS" or conditionType == "SPEC" or conditionType == "ROLE") and "ANY_OF" or "IS",
+		operator = conditionType == "TALENT" and "KNOWN" or conditionType == "RAID_SIZE" and "AT_MOST" or (conditionType == "CLASS" or conditionType == "SPEC" or conditionType == "ROLE") and "ANY_OF" or "IS",
 		value = defaults[conditionType],
 	}
 end
@@ -417,7 +451,9 @@ function DynamicAnchors:RegisterTarget(definition)
 	local current = self.targets[definition.id]
 	if current and current.owner ~= definition.owner then return false end
 	self.targets[definition.id] = definition
-	self:QueueAllConsumers("TARGET_REGISTERED")
+	-- Same-owner registration updates the definition without pretending the
+	-- target changed. Runtime changes must use NotifyTargetChanged explicitly.
+	if not current then self:QueueAllConsumers("TARGET_REGISTERED") end
 	return true
 end
 
@@ -432,7 +468,10 @@ function DynamicAnchors:RegisterConsumer(definition)
 	local current = self.consumers[definition.id]
 	if current and current.owner ~= definition.owner then return false end
 	self.consumers[definition.id] = definition
-	self:QueueConsumer(definition.id, "CONSUMER_REGISTERED")
+	self:RefreshRaidSizeConsumerTracking()
+	-- Replacing a same-owner callback is side-effect free. Call QueueConsumer
+	-- explicitly when the updated definition also needs to be applied.
+	if not current then self:QueueConsumer(definition.id, "CONSUMER_REGISTERED") end
 	return true
 end
 
@@ -440,6 +479,7 @@ function DynamicAnchors:UnregisterConsumer(consumerId)
 	self.consumers[consumerId] = nil
 	self.pendingConsumers[consumerId] = nil
 	self.diagnostics[consumerId] = nil
+	self:RefreshRaidSizeConsumerTracking()
 end
 
 function DynamicAnchors:UnregisterOwner(owner)
@@ -491,7 +531,7 @@ function DynamicAnchors:GetTargetOptions(consumerId)
 			local ok, value = pcall(selectable, definition)
 			selectable = ok and value ~= false
 		end
-		if targetId ~= "core:uiparent" and selectable ~= false and not self:WouldCreateCycle(consumerId, targetId) then
+		if selectable ~= false and not self:WouldCreateCycle(consumerId, targetId) then
 			options[#options + 1] = {
 				value = targetId,
 				label = self:GetTargetLabel(targetId),
@@ -509,6 +549,15 @@ local function getRuleForConsumer(definition)
 	if not definition or type(definition.getRule) ~= "function" then return nil end
 	local ok, rule = pcall(definition.getRule, definition)
 	return ok and rule or nil
+end
+
+local function getTargetConsumerId(definition)
+	if not definition then return nil end
+	if type(definition.getConsumerId) == "function" then
+		local ok, consumerId = pcall(definition.getConsumerId, definition)
+		if ok then return consumerId end
+	end
+	return definition.consumerId
 end
 
 function DynamicAnchors:GetConsumerAssignment(consumerId)
@@ -539,10 +588,85 @@ local function resolveAssignedRule(self, assignment)
 	return assignment
 end
 
+function DynamicAnchors:ConsumerUsesTarget(consumerId, targetId)
+	if type(targetId) ~= "string" or targetId == "" then return false end
+	local assignment = getRuleForConsumer(self.consumers[consumerId])
+	if type(assignment) ~= "table" or assignment.enabled ~= true then return false end
+
+	local rule = assignment
+	if type(assignment.profileId) == "string" then
+		rule = self:GetProfile(assignment.profileId)
+		if type(rule) ~= "table" then return false end
+	end
+
+	local candidateCount = 0
+	for _, candidate in ipairs(type(rule.candidates) == "table" and rule.candidates or {}) do
+		candidateCount = candidateCount + 1
+		if candidateCount > self.MAX_CANDIDATES then break end
+		if type(candidate) == "table" and candidate.targetId == targetId then return true end
+	end
+	return false
+end
+
+local function conditionTreeContainsType(node, conditionType)
+	if type(node) ~= "table" then return false end
+	if node.nodeType == "condition" then return node.conditionType == conditionType end
+	for _, child in ipairs(node.children or {}) do
+		if conditionTreeContainsType(child, conditionType) then return true end
+	end
+	return false
+end
+
+local function ruleContainsConditionType(rule, conditionType)
+	for _, candidate in ipairs(rule and rule.candidates or {}) do
+		if conditionTreeContainsType(candidate.conditions, conditionType) then return true end
+	end
+	return false
+end
+
+function DynamicAnchors:RefreshRaidSizeConsumerTracking()
+	if self._refreshingRaidSizeConsumerTracking then return end
+	self._refreshingRaidSizeConsumerTracking = true
+	local tracked = {}
+	for consumerId, definition in pairs(self.consumers) do
+		local assignment = getRuleForConsumer(definition)
+		if type(assignment) == "table" and assignment.enabled == true then
+			local rule = self:NormalizeRule(resolveAssignedRule(self, assignment))
+			if rule.enabled and ruleContainsConditionType(rule, "RAID_SIZE") then tracked[consumerId] = true end
+		end
+	end
+	self._raidSizeConsumers = tracked
+
+	local eventFrame = self.eventFrame
+	if eventFrame then
+		local shouldRegister = next(tracked) ~= nil
+		if shouldRegister and not self._raidSizeEventRegistered then
+			eventFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
+			self._raidSizeEventRegistered = true
+			self._raidSizeWasInRaid = IsInRaid and IsInRaid() == true or false
+		elseif not shouldRegister and self._raidSizeEventRegistered then
+			eventFrame:UnregisterEvent("GROUP_ROSTER_UPDATE")
+			self._raidSizeEventRegistered = nil
+			self._raidSizeWasInRaid = nil
+		end
+	end
+	self._refreshingRaidSizeConsumerTracking = nil
+end
+
+function DynamicAnchors:HandleRaidSizeRosterUpdate()
+	local isInRaid = IsInRaid and IsInRaid() == true or false
+	local wasInRaid = self._raidSizeWasInRaid == true
+	self._raidSizeWasInRaid = isInRaid
+	if not isInRaid and not wasInRaid then return end
+	for consumerId in pairs(self._raidSizeConsumers or {}) do
+		self:QueueConsumer(consumerId, "GROUP_ROSTER_UPDATE")
+	end
+end
+
 function DynamicAnchors:WouldCreateCycle(consumerId, targetId)
 	if not consumerId or not targetId then return false end
 	local startTarget = self.targets[targetId]
-	local nextConsumer = startTarget and startTarget.consumerId
+	local nextConsumer = getTargetConsumerId(startTarget)
 	if nextConsumer == consumerId then return true end
 	local visited = {}
 	local function visitsConsumer(currentConsumer)
@@ -554,7 +678,7 @@ function DynamicAnchors:WouldCreateCycle(consumerId, targetId)
 		if not rule.enabled then return false end
 		for _, candidate in ipairs(rule.candidates) do
 			local target = self.targets[candidate.targetId]
-			if target and visitsConsumer(target.consumerId) then return true end
+			if target and visitsConsumer(getTargetConsumerId(target)) then return true end
 		end
 		return false
 	end
@@ -601,6 +725,17 @@ local function candidateConditionsMatch(candidate)
 			local matches = known
 			if node.operator == "NOT_KNOWN" then matches = not known end
 			return matches, matches and nil or (node.operator == "NOT_KNOWN" and "TALENT_KNOWN" or "TALENT_NOT_KNOWN")
+		elseif node.conditionType == "RAID_SIZE" then
+			if not (IsInRaid and IsInRaid()) then return false, "RAID_SIZE_NOT_IN_RAID" end
+			local raidSize = GetNumGroupMembers and GetNumGroupMembers() or 0
+			local threshold = math.max(1, math.min(40, math.floor(tonumber(node.value) or 20)))
+			local matches
+			if node.operator == "AT_LEAST" then
+				matches = raidSize >= threshold
+			else
+				matches = raidSize <= threshold
+			end
+			return matches, matches and nil or (node.operator == "AT_LEAST" and "RAID_SIZE_BELOW_MINIMUM" or "RAID_SIZE_ABOVE_MAXIMUM")
 		else
 			return true
 		end
@@ -631,6 +766,7 @@ local function resolveTarget(definition, context)
 		state.available = false
 		state.reason = state.reason or "FRAME_NOT_CREATED"
 	end
+	if state.available and frame and definition.id then DynamicAnchors:EnsureSimpleTargetHooks(definition.id, frame) end
 	return frame, state
 end
 
@@ -663,8 +799,8 @@ function DynamicAnchors:ResolveConsumer(consumerId, context)
 					targetId = candidate.targetId,
 					frame = frame,
 					placement = candidate.placement,
-					matchRelativeWidth = candidate.matchRelativeWidth == true,
-					matchRelativeWidthOffset = tonumber(candidate.matchRelativeWidthOffset) or 0,
+					matchRelativeWidth = canMatchRelativeWidth(candidate.targetId) and candidate.matchRelativeWidth == true,
+					matchRelativeWidthOffset = canMatchRelativeWidth(candidate.targetId) and (tonumber(candidate.matchRelativeWidthOffset) or 0) or 0,
 					state = state,
 					preview = true,
 				}
@@ -689,8 +825,8 @@ function DynamicAnchors:ResolveConsumer(consumerId, context)
 					targetId = candidate.targetId,
 					frame = frame,
 					placement = candidate.placement,
-					matchRelativeWidth = candidate.matchRelativeWidth == true,
-					matchRelativeWidthOffset = tonumber(candidate.matchRelativeWidthOffset) or 0,
+					matchRelativeWidth = canMatchRelativeWidth(candidate.targetId) and candidate.matchRelativeWidth == true,
+					matchRelativeWidthOffset = canMatchRelativeWidth(candidate.targetId) and (tonumber(candidate.matchRelativeWidthOffset) or 0) or 0,
 					state = state,
 				}
 				break
@@ -744,10 +880,18 @@ end
 function DynamicAnchors:QueueConsumer(consumerId, reason)
 	if not self.consumers[consumerId] then return end
 	self.pendingConsumers[consumerId] = reason or true
-	if self._flushScheduled then return end
+	if self._flushScheduled or self._flushDeferredForCombat then return end
+	if InCombatLockdown and InCombatLockdown() then
+		self._flushDeferredForCombat = true
+		return
+	end
 	self._flushScheduled = true
 	C_Timer.After(0, function()
 		DynamicAnchors._flushScheduled = nil
+		if InCombatLockdown and InCombatLockdown() then
+			DynamicAnchors._flushDeferredForCombat = true
+			return
+		end
 		local pending = DynamicAnchors.pendingConsumers
 		DynamicAnchors.pendingConsumers = {}
 		for id in pairs(pending) do
@@ -758,6 +902,7 @@ function DynamicAnchors:QueueConsumer(consumerId, reason)
 end
 
 function DynamicAnchors:QueueAllConsumers(reason)
+	self:RefreshRaidSizeConsumerTracking()
 	for consumerId in pairs(self.consumers) do
 		self:QueueConsumer(consumerId, reason)
 	end
@@ -765,7 +910,7 @@ end
 
 function DynamicAnchors:NotifyTargetChanged(targetId, reason, excludedConsumerId)
 	for consumerId in pairs(self.consumers) do
-		if consumerId ~= excludedConsumerId then self:QueueConsumer(consumerId, reason or targetId or "TARGET_CHANGED") end
+		if consumerId ~= excludedConsumerId and self:ConsumerUsesTarget(consumerId, targetId) then self:QueueConsumer(consumerId, reason or targetId or "TARGET_CHANGED") end
 	end
 end
 
@@ -776,8 +921,8 @@ end
 DynamicAnchors:RegisterTarget({
 	id = "core:uiparent",
 	owner = addonName,
-	label = "UIParent",
-	selectable = false,
+	label = L["Screen (UIParent)"] or "Screen (UIParent)",
+	selectable = true,
 	resolve = function()
 		return UIParent, { available = UIParent ~= nil }
 	end,
@@ -804,12 +949,14 @@ if addon.SharedAnchors then
 		DynamicAnchors:RegisterTarget({
 			id = "unitFrame:" .. target.key,
 			owner = addonName,
+			getConsumerId = function() return addon.SharedAnchors:GetUnitFrameDynamicAnchorConsumerId(target.key) end,
 			label = target.label,
 			menuGroup = "UNIT_FRAMES",
 			menuGroupLabel = L["Unit Frames"],
 			menuGroupOrder = 500,
 			resolve = function()
 				local frame = addon.SharedAnchors:ResolveFrame(target.key)
+				if frame and frame ~= UIParent then DynamicAnchors:EnsureSimpleTargetHooks("unitFrame:" .. target.key, frame) end
 				return frame ~= UIParent and frame or nil, { available = frame ~= nil and frame ~= UIParent, reason = "FRAME_NOT_CREATED" }
 			end,
 		})
@@ -818,11 +965,18 @@ end
 
 if CreateFrame then
 	local eventFrame = CreateFrame("Frame")
+	DynamicAnchors.eventFrame = eventFrame
 	eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
 	eventFrame:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
 	eventFrame:RegisterEvent("PLAYER_ROLES_ASSIGNED")
 	eventFrame:RegisterEvent("TRAIT_CONFIG_UPDATED")
-	eventFrame:SetScript("OnEvent", function()
-		DynamicAnchors:QueueAllConsumers("PLAYER_REGEN_ENABLED")
+	eventFrame:SetScript("OnEvent", function(_, event)
+		if event == "PLAYER_REGEN_ENABLED" then DynamicAnchors._flushDeferredForCombat = nil end
+		if event == "GROUP_ROSTER_UPDATE" then
+			DynamicAnchors:HandleRaidSizeRosterUpdate()
+		else
+			DynamicAnchors:QueueAllConsumers(event)
+		end
 	end)
+	DynamicAnchors:RefreshRaidSizeConsumerTracking()
 end

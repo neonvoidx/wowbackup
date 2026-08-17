@@ -20,6 +20,20 @@ local DEFAULT_ANCHOR = { point = "CENTER", relativePoint = "CENTER", x = 0, y = 
 local CONTAINER_GLOW_KEY = "EQOL_CONTAINER_ACTION"
 local PERMANENT_ITEM_BLACKLIST = {
 	[240175] = true, -- Crystallized Ethereal Voidsplinter
+	[259996] = true, -- Quel'Thalas Equipment Chest
+	[277124] = true, -- Warbound Cache of Void-Touched Armaments
+	[278004] = true, -- Warbound Cache of Void-Touched Armaments: Boots
+	[278005] = true, -- Warbound Cache of Void-Touched Armaments: Legs
+	[278006] = true, -- Warbound Cache of Void-Touched Armaments: Belts
+	[278007] = true, -- Warbound Cache of Void-Touched Armaments: Gloves
+	[278008] = true, -- Warbound Cache of Void-Touched Armaments: Bracers
+	[278009] = true, -- Warbound Cache of Void-Touched Armaments: Chest
+	[278010] = true, -- Warbound Cache of Void-Touched Armaments: Cloak
+	[278011] = true, -- Warbound Cache of Void-Touched Armaments: Shoulder
+	[278012] = true, -- Warbound Cache of Void-Touched Armaments: Head
+	[278013] = true, -- Warbound Cache of Void-Touched Armaments: Weapons
+	[278014] = true, -- Warbound Cache of Void-Touched Armaments: Necklaces
+	[278015] = true, -- Warbound Cache of Void-Touched Armaments: Rings
 }
 
 ContainerActions.defaults = ContainerActions.defaults
@@ -1659,7 +1673,8 @@ function ContainerActions:ScanBags(bags)
 							safeItems[#safeItems + 1] = { bag = bag, slot = slot }
 						else
 							local _, _, _, _, _, classValue, subclassValue = C_Item.GetItemInfoInstant(info.itemID)
-							if classValue == 20 and subclassValue == 0 then table.insert(secureItems, self:BuildEntry(bag, slot, info)) end
+							local isCurio = classValue == 0 and (subclassValue == 10 or subclassValue == 11)
+							if (classValue == 20 and subclassValue == 0) or isCurio then table.insert(secureItems, self:BuildEntry(bag, slot, info)) end
 						end
 					end
 				end

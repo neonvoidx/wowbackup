@@ -313,6 +313,7 @@ function addon.Mover.functions.RegisterFrame(def)
 		groupLabel = def.groupLabel,
 		groupOrder = def.groupOrder,
 		defaultEnabled = def.defaultEnabled,
+		newTagID = def.newTagID,
 		names = names,
 		handles = (#handles > 0) and handles or nil,
 		scaleTargets = (#scaleTargets > 0) and scaleTargets or nil,

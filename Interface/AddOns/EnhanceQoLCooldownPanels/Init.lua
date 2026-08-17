@@ -13,6 +13,7 @@ local function initCooldownPanelsDB()
 
 	init("cooldownPanels", {
 		version = 1,
+		auraPresetExclusions = {},
 		panels = {},
 		order = {},
 		selectedPanel = nil,
@@ -24,11 +25,13 @@ local function initCooldownPanelsDB()
 				wrapCount = 0,
 				wrapDirection = "DOWN",
 				strata = "MEDIUM",
+				showCooldownText = true,
 			},
 			entry = {
 				alwaysShow = true,
 				showCooldown = true,
 				showCooldownText = true,
+				showCooldownTextUseGlobal = true,
 				showCharges = false,
 				showStacks = false,
 				glowReady = false,
@@ -40,6 +43,7 @@ local function initCooldownPanelsDB()
 	init("cooldownPanelsEditorX", 0)
 	init("cooldownPanelsEditorY", 0)
 	init("cooldownPanelsEditorView", "modern")
+	init("cooldownPanelsBlizzardEditorSortMode", "MANUAL")
 	addon.db["_cooldownPanelsDebugLog"] = nil
 	addon.db["debugCooldownPanelsSession"] = nil
 

@@ -337,7 +337,8 @@ local function createDefaultConfig()
 
 	return {
 		enabled = false,
-		version = 1,
+		version = 2,
+		customSpells = {},
 		byContext = {
 			party = createDefaultBucket(),
 			raid = createDefaultBucket(),
@@ -443,7 +444,8 @@ end
 local function normalizeConfig(cfg)
 	if type(cfg) ~= "table" then cfg = createDefaultConfig() end
 	cfg.enabled = cfg.enabled == true
-	cfg.version = tonumber(cfg.version) or 1
+	cfg.version = 2
+	cfg.customSpells = normalizeSpellSet(cfg.customSpells)
 	cfg.byContext = type(cfg.byContext) == "table" and cfg.byContext or {}
 
 	local _, byId = getFamilyEntries()
@@ -586,16 +588,62 @@ function GAI.ShouldIgnoreAura(context, aura, cfgOverride)
 	return GAI.ShouldIgnoreSpell(context, spellId, cfgOverride)
 end
 
+function GAI.GetIgnoredSpellIDs(context, cfgOverride)
+	local cfg = cfgOverride
+	if type(cfg) ~= "table" then
+		cfg = addon.db and addon.db.ufGlobalAuraIgnore
+		if type(cfg) ~= "table" then cfg = GAI.EnsureConfig() end
+	end
+	if cfg._eqolNormalized ~= true then cfg = normalizeConfig(cfg) end
+	if cfg.enabled ~= true then return nil end
+
+	local resolvedContext = GAI.ResolveContext(context)
+	if not resolvedContext then return nil end
+	local bucket = getContextBucket(cfg, resolvedContext)
+	if not bucket then return nil end
+
+	local spellIDs = {}
+	for spellId, ignored in pairs(bucket.ignoredSpells or {}) do
+		if ignored == true then spellIDs[spellId] = true end
+	end
+	for i = 1, #SPECIAL_DEBUFF_GROUPS do
+		local group = SPECIAL_DEBUFF_GROUPS[i]
+		if bucket.specialDebuffs[group.key] == true then
+			for spellId in pairs(SPECIAL_DEBUFF_SETS[group.key] or {}) do
+				spellIDs[spellId] = true
+			end
+		end
+	end
+	local _, familiesById = getFamilyEntries()
+	for familyId, ignored in pairs(bucket.ignoredFamilies or {}) do
+		local family = ignored == true and familiesById[tostring(familyId)] or nil
+		for i = 1, #(family and family.spellIds or {}) do
+			spellIDs[family.spellIds[i]] = true
+		end
+	end
+	for spellId, allowed in pairs(bucket.allowedSpells or {}) do
+		if allowed == true then spellIDs[spellId] = nil end
+	end
+	return next(spellIDs) and spellIDs or nil
+end
+
 local function requestAuraRefresh()
 	if InCombatLockdown and InCombatLockdown() then return end
+	local defaultAuraContainers = addon.DefaultAuraContainers and addon.DefaultAuraContainers.functions
+	if defaultAuraContainers and defaultAuraContainers.RefreshDefaultAuraIconSkin then defaultAuraContainers.RefreshDefaultAuraIconSkin() end
 
 	if UF and UF.FullScanTargetAuras then
+		if UF.RefreshNativeAuraIgnoreFilters then UF.RefreshNativeAuraIgnoreFilters("player") end
 		UF.FullScanTargetAuras("player")
+		if UF.RefreshNativeAuraIgnoreFilters then UF.RefreshNativeAuraIgnoreFilters("target") end
 		UF.FullScanTargetAuras("target")
+		if UF.RefreshNativeAuraIgnoreFilters then UF.RefreshNativeAuraIgnoreFilters("focus") end
 		UF.FullScanTargetAuras("focus")
 		local bossCount = (UF.GetBossFrameCount and UF.GetBossFrameCount()) or (UF.GetSupportedBossFrameCount and UF.GetSupportedBossFrameCount()) or 8
 		for i = 1, bossCount do
-			UF.FullScanTargetAuras("boss" .. tostring(i))
+			local unit = "boss" .. tostring(i)
+			if UF.RefreshNativeAuraIgnoreFilters then UF.RefreshNativeAuraIgnoreFilters(unit) end
+			UF.FullScanTargetAuras(unit)
 		end
 	end
 
@@ -607,10 +655,12 @@ local function requestAuraRefresh()
 end
 
 GAI.RequestAuraRefresh = requestAuraRefresh
+addon.functions = addon.functions or {}
+addon.functions.GetGlobalAuraIgnoredSpellIDs = GAI.GetIgnoredSpellIDs
 
 function GAI:ToggleEditor()
 	if addon.functions and addon.functions.OpenConfigCenter then
-		addon.functions.OpenConfigCenter("suites.unitframes-global-aura-ignore")
+		addon.functions.OpenConfigCenter("suites.customunitframes", "UFGlobalAuraIgnoreMatrix")
 	end
 end
 
@@ -837,13 +887,27 @@ local function buildSettingsCenterRows()
 			end
 		end
 	end
+
+	local cfg = GAI.EnsureConfig()
+	local customRows = {}
+	for spellId, enabled in pairs(cfg.customSpells or {}) do
+		if enabled == true then
+			local row = buildSpellMatrixRow({ spellId = spellId })
+			if row then
+				row.kind = "custom"
+				row.removable = true
+				customRows[#customRows + 1] = row
+			end
+		end
+	end
+	if #customRows > 0 then appendSettingsCenterSection(sections, tr("UFGlobalAuraIgnoreCustomAuras", "Custom auras"), customRows) end
 	appendSortedSettingsCenterSections(rows, sections)
 	return rows
 end
 
 function GAI.GetSettingsCenterTableHeight()
 	local rows = buildSettingsCenterRows()
-	local height = 80
+	local height = 122
 	for i = 1, #rows do
 		height = height + (rows[i].isHeader and 34 or 30)
 	end
@@ -969,6 +1033,9 @@ function GAI.GetSettingsCenterCustomizedCount()
 	local cfg = GAI.EnsureConfig()
 	local defaults = normalizeConfig(createDefaultConfig())
 	local count = cfg.enabled == true and 1 or 0
+	for _, enabled in pairs(cfg.customSpells or {}) do
+		if enabled == true then count = count + 1 end
+	end
 	local rows = getMatrixSettingRows()
 	for i = 1, #rows do
 		for j = 1, #UNIT_CONTEXT_ORDER do
@@ -977,6 +1044,41 @@ function GAI.GetSettingsCenterCustomizedCount()
 		end
 	end
 	return count
+end
+
+local function addCustomSpell(spellId)
+	spellId = tonumber(spellId)
+	if not spellId or spellId <= 0 or spellId ~= math.floor(spellId) then return false, "invalid" end
+	if C_Spell and C_Spell.DoesSpellExist and not C_Spell.DoesSpellExist(spellId) then return false, "invalid" end
+	local cfg = GAI.EnsureConfig()
+	if cfg.customSpells[spellId] == true then return false, "duplicate" end
+	cfg.customSpells[spellId] = true
+	for i = 1, #UNIT_CONTEXT_ORDER do
+		local bucket = getContextBucket(cfg, UNIT_CONTEXT_ORDER[i])
+		if bucket then
+			bucket.allowedSpells[spellId] = nil
+			bucket.ignoredSpells[spellId] = true
+		end
+	end
+	normalizeConfig(cfg)
+	requestAuraRefresh()
+	return true
+end
+
+local function removeCustomSpell(spellId)
+	spellId = tonumber(spellId)
+	if not spellId then return end
+	local cfg = GAI.EnsureConfig()
+	cfg.customSpells[spellId] = nil
+	for i = 1, #UNIT_CONTEXT_ORDER do
+		local bucket = getContextBucket(cfg, UNIT_CONTEXT_ORDER[i])
+		if bucket then
+			bucket.allowedSpells[spellId] = nil
+			bucket.ignoredSpells[spellId] = nil
+		end
+	end
+	normalizeConfig(cfg)
+	requestAuraRefresh()
 end
 
 local function setMatrixRowIgnored(row, context, ignored)
@@ -1028,8 +1130,9 @@ local function updateSettingsCenterChecks(handle)
 	end
 end
 
-function GAI.RenderSettingsCenterTable(parent)
+function GAI.RenderSettingsCenterTable(parent, opts)
 	if not parent then return nil end
+	opts = opts or {}
 	local handle = {
 		frames = {},
 		checks = {},
@@ -1071,9 +1174,58 @@ function GAI.RenderSettingsCenterTable(parent)
 	end)
 	handle.EnabledCheck = enabledCheck
 
+	local addFrame = track(CreateFrame("Frame", nil, parent))
+	addFrame:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -38)
+	addFrame:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, -38)
+	addFrame:SetHeight(34)
+
+	local spellIDLabel = track(addFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall"))
+	spellIDLabel:SetPoint("LEFT", addFrame, "LEFT", 6, 0)
+	spellIDLabel:SetText(tr("UFGlobalAuraIgnoreCustomSpellID", "Spell ID"))
+
+	local spellIDInput = track(CreateFrame("EditBox", nil, addFrame, "InputBoxTemplate"))
+	spellIDInput:SetSize(110, 24)
+	spellIDInput:SetPoint("LEFT", spellIDLabel, "RIGHT", 10, 0)
+	spellIDInput:SetAutoFocus(false)
+	spellIDInput:SetNumeric(true)
+	spellIDInput:SetMaxLetters(10)
+
+	local addButton = track(CreateFrame("Button", nil, addFrame, "UIPanelButtonTemplate"))
+	addButton:SetSize(78, 24)
+	addButton:SetPoint("LEFT", spellIDInput, "RIGHT", 8, 0)
+	addButton:SetText(_G.ADD or "Add")
+
+	local addStatus = track(addFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall"))
+	addStatus:SetPoint("LEFT", addButton, "RIGHT", 10, 0)
+	addStatus:SetPoint("RIGHT", addFrame, "RIGHT", -8, 0)
+	addStatus:SetJustifyH("LEFT")
+	addStatus:SetTextColor(1, 0.25, 0.25, 1)
+
+	local function requestLayout()
+		local state = opts.state
+		if state and state.RequestLayout then state:RequestLayout() end
+	end
+
+	addButton:SetScript("OnClick", function()
+		local added, reason = addCustomSpell(spellIDInput:GetText())
+		if added then
+			spellIDInput:SetText("")
+			requestLayout()
+		elseif reason == "duplicate" then
+			addStatus:SetText(tr("UFGlobalAuraIgnoreCustomAlreadyAdded", "This aura has already been added."))
+		else
+			addStatus:SetText(tr("UFGlobalAuraIgnoreCustomInvalidSpell", "Enter a valid Spell ID."))
+		end
+	end)
+	spellIDInput:SetScript("OnEnterPressed", function(self)
+		self:ClearFocus()
+		addButton:Click()
+	end)
+	spellIDInput:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+
 	local header = track(CreateFrame("Frame", nil, parent))
-	header:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -38)
-	header:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, -38)
+	header:SetPoint("TOPLEFT", addFrame, "BOTTOMLEFT", 0, -4)
+	header:SetPoint("TOPRIGHT", addFrame, "BOTTOMRIGHT", 0, -4)
 	header:SetHeight(26)
 	for i = 1, #UNIT_CONTEXT_ORDER do
 		local context = UNIT_CONTEXT_ORDER[i]
@@ -1127,9 +1279,31 @@ function GAI.RenderSettingsCenterTable(parent)
 
 			local name = track(frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall"))
 			name:SetPoint("LEFT", icon, "RIGHT", 8, 0)
-			name:SetPoint("RIGHT", frame, "RIGHT", -180, 0)
+			name:SetPoint("RIGHT", frame, "RIGHT", rowData.removable and -210 or -180, 0)
 			name:SetJustifyH("LEFT")
 			name:SetText(rowData.label or "")
+
+			if rowData.removable then
+				local removeButton = track(CreateFrame("Button", nil, frame, "UIPanelCloseButton"))
+				removeButton:SetSize(20, 20)
+				removeButton:SetPoint("RIGHT", frame, "RIGHT", -180, 0)
+				removeButton:SetFrameLevel(frame:GetFrameLevel() + 2)
+				removeButton:RegisterForClicks("LeftButtonUp")
+				removeButton._customSpellId = rowData.spellId
+				removeButton:SetScript("OnClick", function(self)
+					removeCustomSpell(self._customSpellId)
+					requestLayout()
+				end)
+				removeButton:SetScript("OnEnter", function(self)
+					if not GameTooltip then return end
+					GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+					GameTooltip:AddLine(tr("UFGlobalAuraIgnoreCustomRemove", "Remove custom aura"), 1, 0.82, 0)
+					GameTooltip:Show()
+				end)
+				removeButton:SetScript("OnLeave", function()
+					if GameTooltip then GameTooltip:Hide() end
+				end)
+			end
 
 			for j = 1, #UNIT_CONTEXT_ORDER do
 				local context = UNIT_CONTEXT_ORDER[j]

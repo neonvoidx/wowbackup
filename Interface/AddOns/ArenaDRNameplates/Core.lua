@@ -5,12 +5,6 @@ local Shared = ns.Shared
 local S = Shared.S
 local Performance = ns.Performance
 
-local isMidnight = select(4, GetBuildInfo()) >= 120000
-if not isMidnight then
-    print(S("ERR_REQUIRES_MIDNIGHT"))
-    return
-end
-
 local ARENA_IDS = { 1, 2, 3 }
 local TEST_SPELLS = {
     { spellID = 408, duration = 18 },
@@ -238,6 +232,17 @@ local function GetTrinketTimerBaseFontSize(size)
 end
 
 local function IsInArena()
+    if C_PvP and type(C_PvP.IsMatchConsideredArena) == "function" then
+        local okConsidered, consideredArena = pcall(C_PvP.IsMatchConsideredArena)
+        if okConsidered and consideredArena == true then
+            local okActive, matchActive = pcall(C_PvP.IsMatchActive)
+            local okComplete, matchComplete = pcall(C_PvP.IsMatchComplete)
+            if (okActive and matchActive == true) or (okComplete and matchComplete == true) then
+                return true
+            end
+        end
+    end
+
     local _, instanceType = IsInInstance()
     return instanceType == "arena"
 end
@@ -354,18 +359,9 @@ local function ApplyCooldownStyle(cooldown)
     end
 end
 
-local function ClearCooldownCompat(cooldown)
-    if not cooldown then
-        return
-    end
-
-    if type(CooldownFrame_Clear) == "function" then
-        CooldownFrame_Clear(cooldown)
-        return
-    end
-
-    if cooldown.SetCooldown then
-        cooldown:SetCooldown(0, 0)
+local function ClearCooldown(cooldown)
+    if cooldown then
+        cooldown:Clear()
     end
 end
 
@@ -543,35 +539,11 @@ local function ApplyTimerTextStyle(timerText, parent, fontSize)
     Shared.ApplyTextFont(timerText, actualFontSize, "OUTLINE", GetStyleSnapshot().textFont)
 end
 
-local LIVE_DR_TIMER_DURATION = 16.1
-local LIVE_DR_IMMUNITY_DURATION_FIRST = 20
-local LIVE_DR_IMMUNITY_DURATION_REPEAT = 18
-
-local function ResetLiveSlotSeverity(slot)
-    if not slot then
-        return
-    end
-
-    slot.ArenaDRNameplatesLiveSeverity = 0
-end
-
-local function IncrementLiveSlotSeverity(slot)
-    if not slot then
-        return
-    end
-
-    local current = tonumber(slot.ArenaDRNameplatesLiveSeverity) or 0
-    slot.ArenaDRNameplatesLiveSeverity = math.min(current + 1, 2)
-end
-
-local function GetLiveSlotImmunityDuration(slot)
-    local severity = tonumber(slot and slot.ArenaDRNameplatesLiveSeverity) or 0
-    if severity <= 1 then
-        return LIVE_DR_IMMUNITY_DURATION_FIRST
-    end
-
-    return LIVE_DR_IMMUNITY_DURATION_REPEAT
-end
+-- Midnight Season 2 increases the PvP DR reset window from 16 to 20 seconds.
+-- The source values are secret in combat, so the mirror uses a public fallback.
+-- Blizzard's source OnCooldownDone still clears the mirror at the exact expiry.
+local LIVE_DR_RESET_DURATION = 20
+local LIVE_DR_TIMER_DURATION = LIVE_DR_RESET_DURATION + 0.1
 
 local function StartLiveSlotCooldown(slot, durationSeconds)
     if not slot or not slot.Cooldown then
@@ -1035,7 +1007,6 @@ local function EnsureLiveSlot(arenaID, slotIndex)
     slot.ArenaDRNameplatesLiveIsImmune = false
     slot.ArenaDRNameplatesLiveCooldownActive = false
     slot.ArenaDRNameplatesStyleRevision = 0
-    ResetLiveSlotSeverity(slot)
     container.slots[slotIndex] = slot
     return slot
 end
@@ -1293,7 +1264,7 @@ local function ClearLiveSlotCooldown(slot)
         return
     end
 
-    ClearCooldownCompat(slot.Cooldown)
+    ClearCooldown(slot.Cooldown)
     slot.ArenaDRNameplatesLiveCooldownActive = false
 end
 
@@ -1443,13 +1414,6 @@ local function HookLiveSourceItem(arenaID, slotIndex, sourceItem, forceSourceRes
     local shown = SafeGetShownState(sourceItem)
     if shown ~= nil then
         slot.ArenaDRNameplatesLiveSourceShown = shown
-        if shown then
-            if (tonumber(slot.ArenaDRNameplatesLiveSeverity) or 0) == 0 then
-                IncrementLiveSlotSeverity(slot)
-            end
-        else
-            ResetLiveSlotSeverity(slot)
-        end
     end
 
     local mirroredAtlas = false
@@ -1487,7 +1451,6 @@ local function HookLiveSourceItem(arenaID, slotIndex, sourceItem, forceSourceRes
                 return
             end
 
-            IncrementLiveSlotSeverity(hookedSlot)
             hookedSlot.ArenaDRNameplatesLiveSourceShown = true
             UpdateLiveSlotVisibility(hookedArenaID, hookedSlot)
         end)
@@ -1502,7 +1465,6 @@ local function HookLiveSourceItem(arenaID, slotIndex, sourceItem, forceSourceRes
 
             hookedSlot.ArenaDRNameplatesLiveSourceShown = false
             ClearLiveSlotCooldown(hookedSlot)
-            ResetLiveSlotSeverity(hookedSlot)
             SetLiveSlotImmunity(hookedArenaID, hookedSlot, false)
             UpdateLiveSlotVisibility(hookedArenaID, hookedSlot)
         end)
@@ -1599,7 +1561,7 @@ local function HookLiveSourceItem(arenaID, slotIndex, sourceItem, forceSourceRes
                 end
 
                 ClearLiveSlotCooldown(hookedSlot)
-                StartLiveSlotCooldown(hookedSlot, GetLiveSlotImmunityDuration(hookedSlot))
+                StartLiveSlotCooldown(hookedSlot, LIVE_DR_TIMER_DURATION)
                 SetLiveSlotImmunity(hookedArenaID, hookedSlot, shown)
                 UpdateLiveSlotVisibility(hookedArenaID, hookedSlot)
             end)
@@ -1761,11 +1723,9 @@ local function IsArenaMatchEngaged(inArena)
         return false
     end
 
-    if C_PvP and C_PvP.GetActiveMatchState and Enum and Enum.PvPMatchState and Enum.PvPMatchState.Engaged then
-        local ok, state = pcall(C_PvP.GetActiveMatchState)
-        if ok and type(state) == "number" then
-            return state == Enum.PvPMatchState.Engaged
-        end
+    local ok, state = pcall(C_PvP.GetActiveMatchState)
+    if ok and type(state) == "number" then
+        return state == Enum.PvPMatchState.Engaged
     end
 
     return true
@@ -1924,7 +1884,7 @@ local function ClearLiveTrinketMirrorCooldown(frame)
     end
 
     frame.hasActiveCooldown = false
-    ClearCooldownCompat(frame.Cooldown)
+    ClearCooldown(frame.Cooldown)
 end
 
 local function UpdateLiveTrinketMirrorVisibility(frame, inArena, matchEngaged, trinketEnabled)
@@ -2025,14 +1985,12 @@ local function ApplyLiveTrinketCooldown(
     end
 
     local usedDurationObject = false
-    if C_PvP and C_PvP.GetArenaCrowdControlDuration and frame.Cooldown.SetCooldownFromDurationObject then
-        local okObj, durationObject = pcall(C_PvP.GetArenaCrowdControlDuration, arenaUnit)
-        if okObj and durationObject then
-            local okSet = pcall(function()
-                frame.Cooldown:SetCooldownFromDurationObject(durationObject)
-            end)
-            usedDurationObject = okSet == true
-        end
+    local okObj, durationObject = pcall(C_PvP.GetArenaCrowdControlDuration, arenaUnit)
+    if okObj and durationObject then
+        local okSet = pcall(function()
+            frame.Cooldown:SetCooldownFromDurationObject(durationObject)
+        end)
+        usedDurationObject = okSet == true
     end
 
     local hasStartTime = IsSecretValue(startTime) or startTime ~= nil
@@ -2520,11 +2478,7 @@ local function ApplyPreviewCooldown(icon, spellData)
 
     local duration = math.max(1, tonumber(spellData and spellData.duration) or 18)
     if not testModeStartedAt then
-        if type(CooldownFrame_Clear) == "function" then
-            CooldownFrame_Clear(icon.Cooldown)
-        else
-            icon.Cooldown:SetCooldown(0, 0)
-        end
+        ClearCooldown(icon.Cooldown)
         return
     end
 
@@ -2672,7 +2626,7 @@ local function RefreshTestTrinket()
     if not testMode or not IsTrinketEnabled() or not IsEnemyTarget() then
         frame.previewCooldownCycle = nil
         frame.previewCooldownDuration = nil
-        ClearCooldownCompat(frame.Cooldown)
+        ClearCooldown(frame.Cooldown)
         frame:Hide()
         return
     end
@@ -2849,7 +2803,7 @@ local function StopTestMode()
     if testTrinketIcon then
         testTrinketIcon.previewCooldownCycle = nil
         testTrinketIcon.previewCooldownDuration = nil
-        ClearCooldownCompat(testTrinketIcon.Cooldown)
+        ClearCooldown(testTrinketIcon.Cooldown)
         testTrinketIcon:Hide()
     end
 
@@ -3000,28 +2954,12 @@ local function OpenSettings(pageKey)
     end
 
     local category = _G.ArenaDRNameplates_SettingsCategory
-    local categoryID
-
-    if type(category) == "table" and type(category.GetID) == "function" then
-        local ok, value = pcall(category.GetID, category)
-        if ok and type(value) == "number" then
-            categoryID = value
-        end
-    end
-
-    if not categoryID and category and type(category.ID) == "number" then
-        categoryID = category.ID
-    end
-
-    if Settings and Settings.OpenToCategory then
-        if categoryID then
-            Settings.OpenToCategory(categoryID)
-        else
-            Settings.OpenToCategory()
-        end
-    else
+    if not category then
         print(S("WARN_SETTINGS_MENU_NOT_AVAILABLE"))
+        return
     end
+
+    Settings.OpenToCategory(category:GetID())
 end
 
 local function ResolveLiveArenaParents()
@@ -3284,6 +3222,7 @@ end
 
 SLASH_ArenaDRNameplates1 = "/ArenaDRNameplates"
 SLASH_ArenaDRNameplates2 = "/arenadr"
+SLASH_ArenaDRNameplates3 = "/adr"
 SlashCmdList["ArenaDRNameplates"] = SlashHandler
 
 local eventFrame = CreateFrame("Frame", NextFrameName("Core", "EventFrame"))

@@ -44,10 +44,6 @@ local C_UnitAuras = C_UnitAuras
 local UIParent = UIParent
 local DispelOverlayOrientation = EnumUtil and EnumUtil.MakeEnum("VerticalTopToBottom", "VerticalBottomToTop", "HorizontalLeftToRight")
 
-function H.PrivateAurasDisabledForClient()
-	return addon.AuraCompat ~= nil
-end
-
 function H.GetVirtualUnitFramePointOffsetY(frame, point)
 	local uf = addon.Aura and addon.Aura.UF
 	if not (uf and uf.GetVirtualUnitFramePointOffsetY) then return 0 end
@@ -109,15 +105,23 @@ end
 
 function H.IsAuraFilteredIn(unit, aura, filter)
 	if not (aura and aura.auraInstanceID) then return false end
+	if type(filter) == "table" and type(filter.filterString) == "string" then
+		if not H.IsAuraFilteredIn(unit, aura, filter.filterString) then return false end
+		local sourceFilter = filter.candidateFilters and filter.candidateFilters.isFromPlayerOrPlayerPet
+		if sourceFilter == nil then return true end
+		local sourceValue = aura.isFromPlayerOrPlayerPet
+		if _G.issecretvalue and _G.issecretvalue(sourceValue) then return false end
+		return type(sourceFilter) == "boolean" and sourceValue == sourceFilter
+	end
 	if type(filter) == "table" then
 		if #filter > 0 then
 			for _, auraFilter in ipairs(filter) do
-				if type(auraFilter) == "string" and H.IsAuraFilteredIn(unit, aura, auraFilter) then return true end
+				if (type(auraFilter) == "string" or type(auraFilter) == "table") and H.IsAuraFilteredIn(unit, aura, auraFilter) then return true end
 			end
 			return false
 		end
 		for _, auraFilter in pairs(filter) do
-			if type(auraFilter) == "string" and H.IsAuraFilteredIn(unit, aura, auraFilter) then return true end
+			if (type(auraFilter) == "string" or type(auraFilter) == "table") and H.IsAuraFilteredIn(unit, aura, auraFilter) then return true end
 		end
 		return false
 	end
@@ -500,6 +504,10 @@ function H.normalizeStatusBarOrientation(value)
 	return tostring(value or "HORIZONTAL"):upper() == "VERTICAL" and "VERTICAL" or "HORIZONTAL"
 end
 
+function H.NormalizeAbsorbLayerOrder(value)
+	return tostring(value or "INCOMING_ABOVE"):upper() == "ABSORB_ABOVE" and "ABSORB_ABOVE" or "INCOMING_ABOVE"
+end
+
 function H.applyStatusBarOrientation(bar, value)
 	if not (bar and bar.SetOrientation) then return end
 	bar:SetOrientation(H.normalizeStatusBarOrientation(value))
@@ -658,13 +666,50 @@ function H._anchorMissingOverlay(bar, healthBar, axis, thickness, crossAlign)
 	end
 end
 
+function H._anchorFilledOverlayFromCurrent(bar, healthBar, axis, thickness, crossAlign)
+	local texture = healthBar.GetStatusBarTexture and healthBar:GetStatusBarTexture()
+	if not texture then
+		H._anchorFullOverlay(bar, healthBar, axis, thickness, crossAlign)
+		return
+	end
+	bar:ClearAllPoints()
+	if axis.vertical then
+		local point = axis.reverse and "BOTTOM" or "TOP"
+		if thickness then
+			local side = crossAlign == "MAX" and "RIGHT" or "LEFT"
+			bar:SetPoint(point .. side, texture, point .. side)
+			bar:SetSize(thickness, healthBar:GetHeight())
+		else
+			bar:SetPoint(point .. "LEFT", texture, point .. "LEFT")
+			bar:SetPoint(point .. "RIGHT", texture, point .. "RIGHT")
+			bar:SetHeight(healthBar:GetHeight())
+		end
+	else
+		local point = axis.reverse and "LEFT" or "RIGHT"
+		if thickness then
+			local side = crossAlign == "MAX" and "TOP" or "BOTTOM"
+			bar:SetPoint(side .. point, texture, side .. point)
+			bar:SetSize(healthBar:GetWidth(), thickness)
+		else
+			bar:SetPoint("TOP" .. point, texture, "TOP" .. point)
+			bar:SetPoint("BOTTOM" .. point, texture, "BOTTOM" .. point)
+			bar:SetWidth(healthBar:GetWidth())
+		end
+	end
+end
+
 function H.LayoutHealthOverlayBar(healthBar, bar, options)
 	if not (healthBar and bar) then return end
 	options = options or {}
 	local axis = options.axis or H.GetHealthAxis(options.orientation, options.reverseHealth)
 	local regions = options.regions or H.LayoutHealthOverlayRegions(healthBar, axis)
 	local role = options.role or "FULL"
-	local parent = role == "OVERFLOW_IN_FILLED" and regions.filled or regions.full
+	local parent = regions.full
+	if role == "OVERFLOW_IN_FILLED" or role == "FILLED_FROM_CURRENT" then
+		parent = regions.filled
+	elseif role == "OVERFLOW_IN_MISSING" then
+		parent = regions.missing
+	end
 	if bar.GetParent and bar:GetParent() ~= parent then bar:SetParent(parent) end
 	H.applyStatusBarOrientation(bar, axis.orientation)
 	local reverse = options.statusReverse == true
@@ -675,6 +720,8 @@ function H.LayoutHealthOverlayBar(healthBar, bar, options)
 	local crossAlign = options.crossAlign == "MAX" and "MAX" or "MIN"
 	if role == "MISSING_FROM_CURRENT" then
 		H._anchorMissingOverlay(bar, healthBar, axis, thickness, crossAlign)
+	elseif role == "FILLED_FROM_CURRENT" then
+		H._anchorFilledOverlayFromCurrent(bar, healthBar, axis, thickness, crossAlign)
 	else
 		H._anchorFullOverlay(bar, healthBar, axis, thickness, crossAlign)
 	end
@@ -713,6 +760,38 @@ function H.LayoutDamageAbsorb(healthBar, absorbBar, absorbSecondaryBar, options)
 		if absorbSecondaryBar then
 			absorbSecondaryBar:SetValue(0)
 			absorbSecondaryBar:Hide()
+		end
+	end
+end
+
+function H.LayoutHealAbsorb(healthBar, healAbsorbBar, healAbsorbSecondaryBar, options)
+	if not (healthBar and healAbsorbBar) then return end
+	options = options or {}
+	local axis = options.axis or H.GetHealthAxis(options.orientation, options.reverseHealth)
+	local regions = options.regions or H.LayoutHealthOverlayRegions(healthBar, axis)
+	local shared = {
+		axis = axis,
+		regions = regions,
+		thickness = options.thickness,
+		crossAlign = options.crossAlign,
+	}
+	if options.reverseHealAbsorb == true and options.anchorToCurrentHealth == true then
+		shared.role = "FILLED_FROM_CURRENT"
+		shared.direction = "HEALTH_BACKWARD"
+		H.LayoutHealthOverlayBar(healthBar, healAbsorbBar, shared)
+		if healAbsorbSecondaryBar then
+			shared.role = "OVERFLOW_IN_MISSING"
+			shared.direction = "HEALTH_FORWARD"
+			H.LayoutHealthOverlayBar(healthBar, healAbsorbSecondaryBar, shared)
+		end
+	else
+		shared.role = "FULL"
+		shared.direction = "STATUS_STANDARD"
+		shared.statusReverse = options.reverseHealAbsorb == true
+		H.LayoutHealthOverlayBar(healthBar, healAbsorbBar, shared)
+		if healAbsorbSecondaryBar then
+			healAbsorbSecondaryBar:SetValue(0)
+			healAbsorbSecondaryBar:Hide()
 		end
 	end
 end
@@ -923,800 +1002,6 @@ function H.calcAuraBorderSize(btn, ac)
 	if size < 1 then size = 1 end
 	if size > 6 then size = 6 end
 	return size
-end
-
-local PRIVATE_AURA_INVERSE_POINTS = {
-	TOP = "BOTTOM",
-	BOTTOM = "TOP",
-	LEFT = "RIGHT",
-	RIGHT = "LEFT",
-	TOPLEFT = "BOTTOMLEFT",
-	TOPRIGHT = "BOTTOMRIGHT",
-	BOTTOMLEFT = "TOPLEFT",
-	BOTTOMRIGHT = "TOPRIGHT",
-	CENTER = "CENTER",
-}
-
-local function inversePoint(point)
-	if not point then return "CENTER" end
-	local key = tostring(point):upper()
-	return PRIVATE_AURA_INVERSE_POINTS[key] or "CENTER"
-end
-
-local function resolvePrivateAuraOffset(point, offset)
-	local p = tostring(point or "RIGHT"):upper()
-	local off = tonumber(offset) or 0
-	if p == "LEFT" then return -off, 0 end
-	if p == "TOP" then return 0, off end
-	if p == "BOTTOM" then return 0, -off end
-	return off, 0
-end
-
-function H.PrivateAuraNormalizeDirection(direction, fallback)
-	local value = tostring(direction or fallback or "RIGHT"):upper()
-	if value == "LEFT" or value == "RIGHT" or value == "UP" or value == "DOWN" then return value end
-	value = tostring(fallback or "RIGHT"):upper()
-	if value == "LEFT" or value == "RIGHT" or value == "UP" or value == "DOWN" then return value end
-	return "RIGHT"
-end
-
-function H.PrivateAuraGetGridDimensions(count, wrapCount, primaryHorizontal)
-	count = floor(tonumber(count) or 1)
-	if count < 1 then count = 1 end
-	wrapCount = floor(tonumber(wrapCount) or 0)
-	if wrapCount < 0 then wrapCount = 0 end
-	if wrapCount > 0 then
-		if primaryHorizontal then
-			local cols = math.min(count, wrapCount)
-			local rows = math.floor((count + wrapCount - 1) / wrapCount)
-			return cols, rows
-		end
-		local rows = math.min(count, wrapCount)
-		local cols = math.floor((count + wrapCount - 1) / wrapCount)
-		return cols, rows
-	end
-	if primaryHorizontal then return count, 1 end
-	return 1, count
-end
-
-local function resolvePrivateAuraUnitToken(unit)
-	if type(unit) ~= "string" then return unit end
-	if unit ~= "player" and UnitIsUnit then
-		local ok, isPlayer = pcall(UnitIsUnit, unit, "player")
-		if ok and H.UnsecretBool(isPlayer) == true then return "player" end
-	end
-	return unit
-end
-
-local PRIVATE_AURA_SAMPLE_ICON_ID = 237555
-
-local function ensurePrivateAuraSampleTexture(anchor)
-	if not anchor then return nil end
-	local tex = anchor._eqolPrivateAuraSample
-	if not tex then
-		tex = anchor:CreateTexture(nil, "OVERLAY")
-		tex:SetAllPoints(anchor)
-		tex:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-		tex:SetTexture(PRIVATE_AURA_SAMPLE_ICON_ID)
-		anchor._eqolPrivateAuraSample = tex
-	end
-	return tex
-end
-
-local privateAuraArgs = {
-	unitToken = "player",
-	parent = UIParent,
-	auraIndex = 1,
-	showCountdownFrame = true,
-	showCountdownNumbers = true,
-	isContainer = false,
-	iconInfo = {
-		iconWidth = 32,
-		iconHeight = 32,
-		iconAnchor = {
-			point = "CENTER",
-			relativePoint = "CENTER",
-			offsetX = 0,
-			offsetY = 0,
-		},
-	},
-}
-
-local privateAuraDuration = {
-	point = "CENTER",
-	relativePoint = "CENTER",
-	offsetX = 0,
-	offsetY = 0,
-}
-
-local privateAuraShowDispelType = false
-local privateAuraShowDispelCount = 0
-H._privateAuraDeferred = H._privateAuraDeferred or { containers = {} }
-
--- TODO: Remove this temporary 12.0.5 workaround once Blizzard fixes private aura anchors ignoring frame levels after reattaching.
--- Original behavior matched the parent strata and used levelFrame + 10. The workaround bumps strata and uses levelFrame + 100.
-H._privateAuraStrataFix = H._privateAuraStrataFix or {
-	BACKGROUND = "LOW",
-	LOW = "MEDIUM",
-	MEDIUM = "HIGH",
-	HIGH = "DIALOG",
-	DIALOG = "FULLSCREEN",
-	FULLSCREEN = "FULLSCREEN_DIALOG",
-	FULLSCREEN_DIALOG = "TOOLTIP",
-}
-
-function H.ApplyPrivateAuraContainerFrameLevel(container, parent, levelFrame, usePrivateAuraWorkaround)
-	if not container then return end
-	local strataSource = (levelFrame and levelFrame.GetFrameStrata and levelFrame) or (parent and parent.GetFrameStrata and parent)
-	if container.SetFrameStrata and strataSource then
-		local strata = strataSource:GetFrameStrata()
-		if usePrivateAuraWorkaround ~= false then
-			container:SetFrameStrata(H._privateAuraStrataFix[strata] or "DIALOG")
-		else
-			container:SetFrameStrata(strata or "MEDIUM")
-		end
-	end
-	if levelFrame and container.SetFrameLevel and levelFrame.GetFrameLevel then
-		local offset = (usePrivateAuraWorkaround ~= false) and 100 or 10
-		container:SetFrameLevel((levelFrame:GetFrameLevel() or 0) + offset)
-	end
-end
-
-function H.UpdatePrivateAuraDeferredEvent()
-	local frame = H._privateAuraDeferred and H._privateAuraDeferred.frame
-	if not frame then return end
-	if next(H._privateAuraDeferred.containers) then
-		frame:RegisterEvent("PLAYER_REGEN_ENABLED")
-	else
-		frame:UnregisterEvent("PLAYER_REGEN_ENABLED")
-	end
-end
-
-function H.ClearDeferredPrivateAuraMutation(container)
-	if not container then return end
-	container._eqolPrivateAuraDeferred = nil
-	H._privateAuraDeferred.containers[container] = nil
-	H.UpdatePrivateAuraDeferredEvent()
-end
-
-function H.FlushDeferredPrivateAuraMutations()
-	local queued = {}
-	for container in pairs(H._privateAuraDeferred.containers) do
-		queued[#queued + 1] = container
-	end
-	for i = 1, #queued do
-		local container = queued[i]
-		local pending = container and container._eqolPrivateAuraDeferred
-		H.ClearDeferredPrivateAuraMutation(container)
-		if pending then
-			if pending.action == "remove" then
-				H.RemovePrivateAuras(container)
-			elseif pending.action == "apply" then
-				H.ApplyPrivateAuras(container, pending.unit, pending.cfg, pending.parent, pending.levelFrame, pending.showSample, pending.inverseAnchor)
-			elseif pending.action == "applyBlizzard" then
-				H.ApplyBlizzardAuraContainer(container, pending.unit, pending.cfg, pending.parent, pending.levelFrame, pending.showSample)
-			end
-		end
-	end
-end
-
-function H.QueueDeferredPrivateAuraMutation(container, action, payload)
-	if not container then return end
-	if not H._privateAuraDeferred.frame then
-		H._privateAuraDeferred.frame = CreateFrame("Frame")
-		H._privateAuraDeferred.frame:SetScript("OnEvent", function(_, event)
-			if event == "PLAYER_REGEN_ENABLED" then H.FlushDeferredPrivateAuraMutations() end
-		end)
-	end
-	local pending = container._eqolPrivateAuraDeferred or {}
-	pending.action = action
-	if action == "apply" and payload then
-		pending.unit = payload.unit
-		pending.cfg = payload.cfg
-		pending.parent = payload.parent
-		pending.levelFrame = payload.levelFrame
-		pending.showSample = payload.showSample
-		pending.inverseAnchor = payload.inverseAnchor
-	elseif action == "applyBlizzard" and payload then
-		pending.unit = payload.unit
-		pending.cfg = payload.cfg
-		pending.parent = payload.parent
-		pending.levelFrame = payload.levelFrame
-		pending.showSample = payload.showSample
-		pending.inverseAnchor = nil
-	else
-		pending.unit = nil
-		pending.cfg = nil
-		pending.parent = nil
-		pending.levelFrame = nil
-		pending.showSample = nil
-		pending.inverseAnchor = nil
-	end
-	container._eqolPrivateAuraDeferred = pending
-	H._privateAuraDeferred.containers[container] = true
-	H.UpdatePrivateAuraDeferredEvent()
-end
-
-local function removePrivateAuraAnchor(anchor)
-	if anchor and anchor.anchorID and C_UnitAuras and C_UnitAuras.RemovePrivateAuraAnchor then
-		pcall(C_UnitAuras.RemovePrivateAuraAnchor, anchor.anchorID)
-		anchor.anchorID = nil
-	end
-end
-
-function H.RemoveBlizzardAuraContainer(container)
-	if not container then return true end
-	if container._eqolBlizzardAuraAnchorID then
-		if not (C_UnitAuras and C_UnitAuras.RemovePrivateAuraAnchor) then return false end
-		local ok = pcall(C_UnitAuras.RemovePrivateAuraAnchor, container._eqolBlizzardAuraAnchorID)
-		if not ok then return false end
-		container._eqolBlizzardAuraAnchorID = nil
-	end
-	container._eqolBlizzardAuraSignature = nil
-	return true
-end
-
-function H.NormalizeAuraRenderer(value)
-	local renderer = tostring(value or "CUSTOM"):upper()
-	if renderer == "BLIZZARD" or renderer == "BLIZZARD_CONTAINER" then return "BLIZZARD" end
-	return "CUSTOM"
-end
-
-function H.IsBlizzardAuraRenderer(value)
-	return H.NormalizeAuraRenderer(value) == "BLIZZARD"
-end
-
-function H.ResolveBlizzardAuraOrganization(value)
-	if type(value) == "number" then return value end
-	local token = tostring(value or ""):upper()
-	local org = Enum and Enum.RaidAuraOrganizationType
-	if token == "BUFFS_TOP_DEBUFFS_BOTTOM" or token == "TOP_BOTTOM" then
-		return (org and org.BuffsTopDebuffsBottom) or 1
-	elseif token == "BUFFS_RIGHT_DEBUFFS_LEFT" or token == "RIGHT_LEFT" then
-		return (org and org.BuffsRightDebuffsLeft) or 2
-	end
-	return (org and org.Legacy) or 0
-end
-
-function H.SetBlizzardAuraContainerAttributes(container, cfg)
-	local showBuffs = cfg.showBuffs == true
-	local showDebuffs = cfg.showDebuffs == true
-	local showDispels = cfg.showDispels == true
-	local showBigDefensive = cfg.showBigDefensive == true
-
-	container:SetAttribute("max-buffs", showBuffs and (cfg.maxBuffs or 0) or 0)
-	container:SetAttribute("max-debuffs", showDebuffs and (cfg.maxDebuffs or 0) or 0)
-	container:SetAttribute("max-dispel-debuffs", showDispels and (cfg.maxDispelDebuffs or 0) or 0)
-	container:SetAttribute("aura-organization-type", H.ResolveBlizzardAuraOrganization(cfg.organizationType))
-	container:SetAttribute("display-only-dispellable-debuffs", cfg.displayOnlyDispellableDebuffs == true)
-	container:SetAttribute("ignore-buffs", not showBuffs)
-	container:SetAttribute("ignore-debuffs", not showDebuffs)
-	container:SetAttribute("ignore-dispel-debuffs", not showDispels)
-	container:SetAttribute("dispel-indicator-option", cfg.dispelIndicatorOption or 2)
-	container:SetAttribute("display-larger-role-specific-debuffs", cfg.displayLargerRoleSpecificDebuffs == true)
-	container:SetAttribute("show-dispel-indicator-overlay", cfg.showDispelOverlay == true)
-	container:SetAttribute("show-big-defensive", showBigDefensive)
-	container:SetAttribute("big-defensive-size", cfg.bigDefensiveSize or cfg.iconSize or 16)
-	container:SetAttribute("icon-size", cfg.iconSize or 16)
-	container:SetAttribute("always-hide-duration", cfg.alwaysHideDuration ~= false)
-	container:SetAttribute("set-aura-size-to-icon-size", true)
-	container:SetAttribute("power-bar-used-height", cfg.powerBarUsedHeight or 0)
-	container:SetAttribute("group-type", cfg.groupType)
-	container:SetAttribute("suppress-dispel-border-icons", cfg.suppressDispelBorderIcons ~= false)
-end
-
-function H.BuildBlizzardAuraSignature(unit, cfg)
-	return table.concat({
-		tostring(unit or ""),
-		tostring(cfg.showBuffs == true),
-		tostring(cfg.showDebuffs == true),
-		tostring(cfg.showDispels == true),
-		tostring(cfg.showBigDefensive == true),
-		tostring(cfg.maxBuffs or 0),
-		tostring(cfg.maxDebuffs or 0),
-		tostring(cfg.maxDispelDebuffs or 0),
-		tostring(H.ResolveBlizzardAuraOrganization(cfg.organizationType)),
-		tostring(cfg.displayOnlyDispellableDebuffs == true),
-		tostring(cfg.displayLargerRoleSpecificDebuffs == true),
-		tostring(cfg.dispelIndicatorOption or 2),
-		tostring(cfg.showDispelOverlay == true),
-		tostring(cfg.iconSize or 16),
-		tostring(cfg.bigDefensiveSize or cfg.iconSize or 16),
-		tostring(cfg.powerBarUsedHeight or 0),
-		tostring(cfg.groupType or ""),
-		tostring(cfg.showCountdownFrame ~= false),
-		tostring(cfg.showCountdownNumbers == true),
-		tostring(cfg.borderScale or ""),
-	}, ":")
-end
-
-local function buildPrivateAuraAnchor(anchor, unit, index, size, borderScale, showFrame, showNumbers, durationEnabled, durationPoint, durationOffsetX, durationOffsetY, durationRelativeTo)
-	if not (C_UnitAuras and C_UnitAuras.AddPrivateAuraAnchor and anchor and unit and index) then return nil end
-	privateAuraArgs.unitToken = unit
-	privateAuraArgs.parent = anchor
-	privateAuraArgs.auraIndex = index
-	privateAuraArgs.showCountdownFrame = showFrame == true
-	privateAuraArgs.showCountdownNumbers = showNumbers == true
-	privateAuraArgs.isContainer = false
-
-	local icon = privateAuraArgs.iconInfo
-	icon.iconWidth = size
-	icon.iconHeight = size
-	icon.borderScale = borderScale
-	local iconAnchor = icon.iconAnchor
-	iconAnchor.relativeTo = anchor
-	iconAnchor.point = "CENTER"
-	iconAnchor.relativePoint = "CENTER"
-	iconAnchor.offsetX = 0
-	iconAnchor.offsetY = 0
-
-	if durationEnabled then
-		privateAuraDuration.relativeTo = durationRelativeTo or anchor
-		privateAuraDuration.point = inversePoint(durationPoint)
-		privateAuraDuration.relativePoint = tostring(durationPoint or "CENTER"):upper()
-		privateAuraDuration.offsetX = durationOffsetX or 0
-		privateAuraDuration.offsetY = durationOffsetY or 0
-		privateAuraArgs.durationAnchor = privateAuraDuration
-	else
-		privateAuraArgs.durationAnchor = nil
-	end
-
-	local ok, anchorID = pcall(C_UnitAuras.AddPrivateAuraAnchor, privateAuraArgs)
-	if ok then return anchorID end
-	return nil
-end
-
-local function updatePrivateAuraShowDispelType(container, enabled)
-	local want = enabled == true
-	if not (C_UnitAuras and C_UnitAuras.TriggerPrivateAuraShowDispelType) then
-		if container then container._eqolPrivateAuraShowDispelType = want end
-		return
-	end
-	local prev = container and container._eqolPrivateAuraShowDispelType == true
-	if prev == want then return end
-	if container then container._eqolPrivateAuraShowDispelType = want end
-	if want then
-		privateAuraShowDispelCount = privateAuraShowDispelCount + 1
-	else
-		privateAuraShowDispelCount = privateAuraShowDispelCount - 1
-		if privateAuraShowDispelCount < 0 then privateAuraShowDispelCount = 0 end
-	end
-	local show = privateAuraShowDispelCount > 0
-	if privateAuraShowDispelType ~= show then
-		privateAuraShowDispelType = show
-		C_UnitAuras.TriggerPrivateAuraShowDispelType(show)
-	end
-end
-
-local function ensurePrivateAuraSampleCooldown(anchor)
-	if not anchor then return nil end
-	local cd = anchor._eqolPrivateAuraSampleCooldown
-	if not cd then
-		cd = CreateFrame("Cooldown", nil, anchor, "CooldownFrameTemplate")
-		cd:SetAllPoints(anchor)
-		anchor._eqolPrivateAuraSampleCooldown = cd
-	end
-	return cd
-end
-
-local function ensurePrivateAuraSampleDuration(anchor)
-	if not anchor then return nil end
-	local fs = anchor._eqolPrivateAuraSampleDuration
-	if not fs then
-		fs = anchor:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-		anchor._eqolPrivateAuraSampleDuration = fs
-	end
-	return fs
-end
-
-local function stripCooldownEdge(anchor)
-	if not anchor or not anchor.GetRegions then return end
-	for _, region in ipairs({ anchor:GetRegions() }) do
-		if region and region.GetTexture and region.SetAlpha then
-			local tex = region:GetTexture()
-			if type(tex) == "string" and tex:find("Cooldown") and tex:find("edge") then region:SetAlpha(0) end
-		end
-	end
-end
-
-function H.RemovePrivateAuras(container)
-	if not container then return end
-	if InCombatLockdown and InCombatLockdown() then
-		updatePrivateAuraShowDispelType(container, false)
-		H.QueueDeferredPrivateAuraMutation(container, "remove")
-		container._eqolPrivateAuraState = nil
-		if container.Hide then container:Hide() end
-		return
-	end
-	H.ClearDeferredPrivateAuraMutation(container)
-	updatePrivateAuraShowDispelType(container, false)
-	if not H.RemoveBlizzardAuraContainer(container) then return false end
-	if container._eqolPrivateAuraFrames then
-		for _, anchor in ipairs(container._eqolPrivateAuraFrames) do
-			removePrivateAuraAnchor(anchor)
-			if anchor._eqolPrivateAuraBlocker and anchor._eqolPrivateAuraBlocker.Hide then anchor._eqolPrivateAuraBlocker:Hide() end
-			if anchor._eqolPrivateAuraSample then anchor._eqolPrivateAuraSample:Hide() end
-			if anchor._eqolPrivateAuraSampleCooldown then anchor._eqolPrivateAuraSampleCooldown:Hide() end
-			if anchor._eqolPrivateAuraSampleDuration then anchor._eqolPrivateAuraSampleDuration:Hide() end
-			if anchor._eqolPrivateAuraLayout then
-				if anchor._eqolPrivateAuraLayout._eqolPrivateAuraSample then anchor._eqolPrivateAuraLayout._eqolPrivateAuraSample:Hide() end
-				if anchor._eqolPrivateAuraLayout._eqolPrivateAuraSampleCooldown then anchor._eqolPrivateAuraLayout._eqolPrivateAuraSampleCooldown:Hide() end
-				if anchor._eqolPrivateAuraLayout._eqolPrivateAuraSampleDuration then anchor._eqolPrivateAuraLayout._eqolPrivateAuraSampleDuration:Hide() end
-				if anchor._eqolPrivateAuraLayout.Hide then anchor._eqolPrivateAuraLayout:Hide() end
-			end
-			if anchor.Hide then anchor:Hide() end
-		end
-	end
-	container._eqolPrivateAuraState = nil
-	return true
-end
-
-function H.ApplyBlizzardAuraContainer(container, unit, cfg, parent, levelFrame, showSample)
-	if not container then return end
-	if H.PrivateAurasDisabledForClient() then
-		if container.Hide then container:Hide() end
-		return
-	end
-	if not (C_UnitAuras and C_UnitAuras.AddPrivateAuraAnchor) then return end
-	cfg = cfg or {}
-	if not unit then
-		H.RemovePrivateAuras(container)
-		if container.Hide then container:Hide() end
-		return
-	end
-	if UnitExists and not showSample and not UnitExists(unit) then
-		H.RemovePrivateAuras(container)
-		if container.Hide then container:Hide() end
-		return
-	end
-	if InCombatLockdown and InCombatLockdown() then
-		H.QueueDeferredPrivateAuraMutation(container, "applyBlizzard", {
-			unit = unit,
-			cfg = cfg,
-			parent = parent,
-			levelFrame = levelFrame,
-			showSample = showSample,
-		})
-		return
-	end
-	H.ClearDeferredPrivateAuraMutation(container)
-	updatePrivateAuraShowDispelType(container, false)
-
-	if container._eqolPrivateAuraFrames then
-		for _, anchor in ipairs(container._eqolPrivateAuraFrames) do
-			removePrivateAuraAnchor(anchor)
-			if anchor.Hide then anchor:Hide() end
-			if anchor._eqolPrivateAuraLayout and anchor._eqolPrivateAuraLayout.Hide then anchor._eqolPrivateAuraLayout:Hide() end
-		end
-	end
-	container._eqolPrivateAuraState = nil
-
-	local effectiveUnit = resolvePrivateAuraUnitToken(unit)
-	if parent and container.GetParent and container:GetParent() ~= parent then container:SetParent(parent) end
-	H.ApplyPrivateAuraContainerFrameLevel(container, parent, levelFrame, cfg.privateAuraFrameLevelWorkaround)
-	container:ClearAllPoints()
-	if parent then
-		container:SetAllPoints(parent)
-	else
-		container:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-		container:SetSize(1, 1)
-	end
-	container:EnableMouse(false)
-	container:Show()
-
-	local iconOffsetY = H.GetVirtualUnitFramePointOffsetY(parent, "CENTER")
-	local signature = H.BuildBlizzardAuraSignature(effectiveUnit, cfg) .. ":" .. tostring(iconOffsetY)
-	if container._eqolBlizzardAuraAnchorID and container._eqolBlizzardAuraSignature == signature then return end
-
-	H.SetBlizzardAuraContainerAttributes(container, cfg)
-	if not H.RemoveBlizzardAuraContainer(container) then return end
-	local iconSize = tonumber(cfg.iconSize) or 16
-	local borderScale = tonumber(cfg.borderScale) or (iconSize / 11)
-	local ok, anchorID = pcall(C_UnitAuras.AddPrivateAuraAnchor, {
-		unitToken = effectiveUnit,
-		auraIndex = 1,
-		parent = container,
-		showCountdownFrame = cfg.showCountdownFrame ~= false,
-		showCountdownNumbers = cfg.showCountdownNumbers == true,
-		isContainer = true,
-		iconInfo = {
-			iconWidth = iconSize,
-			iconHeight = iconSize,
-			borderScale = borderScale,
-			iconAnchor = {
-				point = "CENTER",
-				relativePoint = "CENTER",
-				relativeTo = container,
-				offsetX = 0,
-				offsetY = iconOffsetY,
-			},
-		},
-	})
-	if ok and anchorID then
-		container._eqolBlizzardAuraAnchorID = anchorID
-		container._eqolBlizzardAuraSignature = signature
-	else
-		container:Hide()
-	end
-end
-
-function H.ApplyPrivateAuras(container, unit, cfg, parent, levelFrame, showSample, inverseAnchor)
-	if not container then return end
-	if H.PrivateAurasDisabledForClient() then
-		if container.Hide then container:Hide() end
-		return
-	end
-	if not (C_UnitAuras and C_UnitAuras.AddPrivateAuraAnchor) then return end
-	cfg = cfg or {}
-	local enabled = cfg.enabled == true
-	if not enabled or not unit then
-		H.RemovePrivateAuras(container)
-		if container.Hide then container:Hide() end
-		return
-	end
-	if unit == "target" then
-		H.RemovePrivateAuras(container)
-		if container.Hide then container:Hide() end
-		return
-	end
-	if UnitExists and not showSample and not UnitExists(unit) then
-		H.RemovePrivateAuras(container)
-		if container.Hide then container:Hide() end
-		return
-	end
-	if InCombatLockdown and InCombatLockdown() then
-		H.QueueDeferredPrivateAuraMutation(container, "apply", {
-			unit = unit,
-			cfg = cfg,
-			parent = parent,
-			levelFrame = levelFrame,
-			showSample = showSample,
-			inverseAnchor = inverseAnchor,
-		})
-		return
-	end
-	H.ClearDeferredPrivateAuraMutation(container)
-	if not H.RemoveBlizzardAuraContainer(container) then return end
-
-	local effectiveUnit = resolvePrivateAuraUnitToken(unit)
-	local cacheState = unit == "player" or unit == "focus"
-
-	local iconCfg = cfg.icon or {}
-	local parentCfg = cfg.parent or {}
-	local durationCfg = cfg.duration or {}
-	local layoutCfg = cfg.layout or {}
-
-	local amount = floor(tonumber(iconCfg.amount) or 1)
-	if amount < 1 then amount = 1 end
-	local minSize = floor(tonumber(iconCfg.minSize) or 4)
-	if minSize < 4 then minSize = 4 end
-	local maxSize = floor(tonumber(iconCfg.maxSize) or 100)
-	if maxSize < minSize then maxSize = minSize end
-	if maxSize > 100 then maxSize = 100 end
-	local size = floor(tonumber(iconCfg.size) or 24)
-	if size > maxSize then size = maxSize end
-	if size < minSize then size = minSize end
-	local textScale = tonumber(cfg.textScale) or 1
-	if textScale < 0.5 then
-		textScale = 0.5
-	elseif textScale > 3 then
-		textScale = 3
-	end
-	-- Keep the icon's visual size unchanged while letting the private aura frame scale its text.
-	local logicalSize = size / textScale
-	local iconPoint = tostring(iconCfg.point or "RIGHT"):upper()
-	local iconOffset = tonumber(iconCfg.offset or iconCfg.spacing or 2) or 0
-	local borderScale = tonumber(iconCfg.borderScale)
-	if borderScale == nil then borderScale = (size / 32) * 2 end
-	borderScale = borderScale / textScale
-	local layoutEnabled = layoutCfg.enabled == true or layoutCfg.wrapCount ~= nil or layoutCfg.direction ~= nil or layoutCfg.wrapDirection ~= nil
-	local layoutDirection = H.PrivateAuraNormalizeDirection(layoutCfg.direction or iconCfg.direction or iconPoint, iconPoint)
-	local primaryHorizontal = layoutDirection == "LEFT" or layoutDirection == "RIGHT"
-	local wrapCount = floor(tonumber(layoutCfg.wrapCount) or 0)
-	if wrapCount < 0 then wrapCount = 0 end
-	local wrapDirection = H.PrivateAuraNormalizeDirection(layoutCfg.wrapDirection, primaryHorizontal and "DOWN" or "RIGHT")
-	if primaryHorizontal then
-		if wrapDirection ~= "UP" and wrapDirection ~= "DOWN" then wrapDirection = "DOWN" end
-	else
-		if wrapDirection ~= "LEFT" and wrapDirection ~= "RIGHT" then wrapDirection = "RIGHT" end
-	end
-
-	local showFrame = cfg.countdownFrame ~= false
-	local showNumbers = cfg.countdownNumbers ~= false
-	local showTooltip = cfg.showTooltip == true
-	local durationEnabled = durationCfg.enable == true
-	local durationPoint = tostring(durationCfg.point or "CENTER"):upper()
-	local durationOffsetX = tonumber(durationCfg.offsetX) or 0
-	local durationOffsetY = tonumber(durationCfg.offsetY) or 0
-
-	local parentPoint = tostring(parentCfg.point or "CENTER"):upper()
-	local parentOffsetX = tonumber(parentCfg.offsetX) or 0
-	local parentOffsetY = tonumber(parentCfg.offsetY) or 0
-	local useInverse = inverseAnchor == true
-	local anchorPoint = useInverse and inversePoint(parentPoint) or parentPoint
-
-	if parent and container.GetParent and container:GetParent() ~= parent then container:SetParent(parent) end
-	H.ApplyPrivateAuraContainerFrameLevel(container, parent, levelFrame)
-	container:ClearAllPoints()
-	container:SetPoint(
-		anchorPoint,
-		parent or container:GetParent() or UIParent,
-		parentPoint,
-		parentOffsetX,
-		parentOffsetY + H.GetVirtualUnitFramePointOffsetY(parent, parentPoint)
-	)
-	container:SetSize(size, size)
-	container:Show()
-
-	local state = cacheState and (container._eqolPrivateAuraState or {}) or {}
-	local changed = not cacheState
-		or state.unitToken ~= unit
-		or state.effectiveUnit ~= effectiveUnit
-		or state.amount ~= amount
-		or state.size ~= size
-		or state.countdownFrame ~= showFrame
-		or state.countdownNumbers ~= showNumbers
-		or state.showTooltip ~= showTooltip
-		or state.borderScale ~= borderScale
-		or state.textScale ~= textScale
-		or state.durationEnabled ~= durationEnabled
-		or state.durationPoint ~= durationPoint
-		or state.durationOffsetX ~= durationOffsetX
-		or state.durationOffsetY ~= durationOffsetY
-
-	if cacheState then
-		state.unitToken = unit
-		state.effectiveUnit = effectiveUnit
-		state.amount = amount
-		state.size = size
-		state.countdownFrame = showFrame
-		state.countdownNumbers = showNumbers
-		state.showTooltip = showTooltip
-		state.borderScale = borderScale
-		state.textScale = textScale
-		state.durationEnabled = durationEnabled
-		state.durationPoint = durationPoint
-		state.durationOffsetX = durationOffsetX
-		state.durationOffsetY = durationOffsetY
-		container._eqolPrivateAuraState = state
-	else
-		container._eqolPrivateAuraState = nil
-	end
-
-	updatePrivateAuraShowDispelType(container, cfg.showDispelType == true)
-
-	container._eqolPrivateAuraFrames = container._eqolPrivateAuraFrames or {}
-	local anchors = container._eqolPrivateAuraFrames
-	local attachPoint = inversePoint(iconPoint)
-	local ox, oy = resolvePrivateAuraOffset(iconPoint, iconOffset)
-	local cols, rows = 1, 1
-	local layoutWidth, layoutHeight = size, size
-	if layoutEnabled then
-		cols, rows = H.PrivateAuraGetGridDimensions(amount, wrapCount, primaryHorizontal)
-		layoutWidth = (cols * size) + ((cols - 1) * iconOffset)
-		layoutHeight = (rows * size) + ((rows - 1) * iconOffset)
-		if layoutWidth < size then layoutWidth = size end
-		if layoutHeight < size then layoutHeight = size end
-		container:SetSize(layoutWidth, layoutHeight)
-	else
-		container:SetSize(size, size)
-	end
-	container._eqolPrivateAuraLayoutWidth = layoutWidth
-	container._eqolPrivateAuraLayoutHeight = layoutHeight
-
-	for i = 1, amount do
-		local anchor = anchors[i]
-		if not anchor then
-			anchor = CreateFrame("Frame", nil, container)
-			anchor:EnableMouse(false)
-			anchors[i] = anchor
-		end
-		local layout = anchor._eqolPrivateAuraLayout
-		if not layout then
-			layout = CreateFrame("Frame", nil, container)
-			layout:EnableMouse(false)
-			anchor._eqolPrivateAuraLayout = layout
-		elseif layout.GetParent and layout:GetParent() ~= container then
-			layout:SetParent(container)
-		end
-		layout:ClearAllPoints()
-		if layoutEnabled then
-			local col = 0
-			local row = 0
-			local primaryIndex = i - 1
-			local secondaryIndex = 0
-			if wrapCount > 0 then
-				primaryIndex = (i - 1) % wrapCount
-				secondaryIndex = math.floor((i - 1) / wrapCount)
-			end
-			if primaryHorizontal then
-				col = primaryIndex
-				row = secondaryIndex
-				if layoutDirection == "LEFT" then col = (cols - 1) - col end
-				if wrapDirection == "UP" then row = (rows - 1) - row end
-			else
-				row = primaryIndex
-				col = secondaryIndex
-				if layoutDirection == "UP" then row = (rows - 1) - row end
-				if wrapDirection == "LEFT" then col = (cols - 1) - col end
-			end
-			local step = size + iconOffset
-			local x = (-layoutWidth / 2) + (size / 2) + (col * step)
-			local y = (layoutHeight / 2) - (size / 2) - (row * step)
-			layout:SetPoint("CENTER", container, "CENTER", x, y)
-		elseif i == 1 then
-			layout:SetPoint("CENTER", container, "CENTER", 0, 0)
-		else
-			local prevLayout = (anchors[i - 1] and anchors[i - 1]._eqolPrivateAuraLayout) or anchors[i - 1]
-			layout:SetPoint(attachPoint, prevLayout, iconPoint, ox, oy)
-		end
-		layout:SetScale(textScale)
-		layout:SetSize(logicalSize, logicalSize)
-		layout:Show()
-		anchor:ClearAllPoints()
-		anchor:SetPoint("CENTER", layout, "CENTER", 0, 0)
-		if showTooltip then
-			anchor:SetSize(logicalSize, logicalSize)
-		else
-			anchor:SetSize(0.001, 0.001)
-		end
-		anchor:Show()
-		if anchor._eqolPrivateAuraBlocker and anchor._eqolPrivateAuraBlocker.Hide then anchor._eqolPrivateAuraBlocker:Hide() end
-		if showSample then
-			local tex = ensurePrivateAuraSampleTexture(layout)
-			if tex then tex:Show() end
-			local cd = ensurePrivateAuraSampleCooldown(layout)
-			if cd then
-				cd:SetAllPoints(layout)
-				if cd.SetHideCountdownNumbers then cd:SetHideCountdownNumbers(not showNumbers) end
-				local start = (GetTime and GetTime() or 0) - 10
-				if CooldownFrame_Set then
-					CooldownFrame_Set(cd, start, 30, true)
-				elseif cd.SetCooldown then
-					cd:SetCooldown(start, 30)
-				end
-				cd:SetShown(showFrame == true)
-			end
-			local dur = ensurePrivateAuraSampleDuration(layout)
-			if dur then
-				if durationEnabled then
-					dur:ClearAllPoints()
-					dur:SetPoint(inversePoint(durationPoint), layout, durationPoint, durationOffsetX, durationOffsetY)
-					dur:SetText("12s")
-					dur:Show()
-				else
-					dur:Hide()
-				end
-			end
-		else
-			if anchor._eqolPrivateAuraSample then anchor._eqolPrivateAuraSample:Hide() end
-			if anchor._eqolPrivateAuraSampleCooldown then anchor._eqolPrivateAuraSampleCooldown:Hide() end
-			if anchor._eqolPrivateAuraSampleDuration then anchor._eqolPrivateAuraSampleDuration:Hide() end
-			if layout._eqolPrivateAuraSample then layout._eqolPrivateAuraSample:Hide() end
-			if layout._eqolPrivateAuraSampleCooldown then layout._eqolPrivateAuraSampleCooldown:Hide() end
-			if layout._eqolPrivateAuraSampleDuration then layout._eqolPrivateAuraSampleDuration:Hide() end
-		end
-		if changed or not anchor.anchorID then
-			removePrivateAuraAnchor(anchor)
-			anchor.anchorID =
-				buildPrivateAuraAnchor(anchor, effectiveUnit, i, logicalSize, borderScale, showFrame, showNumbers, durationEnabled, durationPoint, durationOffsetX, durationOffsetY, layout)
-		end
-		stripCooldownEdge(anchor)
-	end
-	for i = amount + 1, #anchors do
-		removePrivateAuraAnchor(anchors[i])
-		if anchors[i]._eqolPrivateAuraBlocker and anchors[i]._eqolPrivateAuraBlocker.Hide then anchors[i]._eqolPrivateAuraBlocker:Hide() end
-		if anchors[i]._eqolPrivateAuraSample then anchors[i]._eqolPrivateAuraSample:Hide() end
-		if anchors[i]._eqolPrivateAuraSampleCooldown then anchors[i]._eqolPrivateAuraSampleCooldown:Hide() end
-		if anchors[i]._eqolPrivateAuraSampleDuration then anchors[i]._eqolPrivateAuraSampleDuration:Hide() end
-		if anchors[i]._eqolPrivateAuraLayout then
-			if anchors[i]._eqolPrivateAuraLayout._eqolPrivateAuraSample then anchors[i]._eqolPrivateAuraLayout._eqolPrivateAuraSample:Hide() end
-			if anchors[i]._eqolPrivateAuraLayout._eqolPrivateAuraSampleCooldown then anchors[i]._eqolPrivateAuraLayout._eqolPrivateAuraSampleCooldown:Hide() end
-			if anchors[i]._eqolPrivateAuraLayout._eqolPrivateAuraSampleDuration then anchors[i]._eqolPrivateAuraLayout._eqolPrivateAuraSampleDuration:Hide() end
-			if anchors[i]._eqolPrivateAuraLayout.Hide then anchors[i]._eqolPrivateAuraLayout:Hide() end
-		end
-		if anchors[i].Hide then anchors[i]:Hide() end
-	end
 end
 
 function H.NormalizeFrameStrata(value)
@@ -3438,7 +2723,7 @@ local function join3(a, b, c, sep1, sep2) return a .. sep1 .. b .. sep2 .. c end
 local function join4(a, b, c, d, sep1, sep2, sep3) return a .. sep1 .. b .. sep2 .. c .. sep3 .. d end
 
 function H.formatDisplayValue(value, useShort)
-	if addon.variables and addon.variables.isMidnight and issecretvalue and value ~= nil and issecretvalue(value) then
+	if addon.variables and addon.variables.isMidnight and issecretvalue and issecretvalue(value) then
 		if useShort == false then return BreakUpLargeNumbers(value) end
 		return AbbreviateNumbers and AbbreviateNumbers(value) or H.shortValue(value)
 	end
@@ -3447,6 +2732,7 @@ function H.formatDisplayValue(value, useShort)
 end
 
 function H.formatOptionalDisplayValue(value, useShort)
+	if addon.variables and addon.variables.isMidnight and issecretvalue and issecretvalue(value) then return H.formatDisplayValue(value, useShort) end
 	if value == nil then return "" end
 	return H.formatDisplayValue(value, useShort)
 end
@@ -3487,8 +2773,15 @@ function H.shortValue(val)
 end
 
 function H.textModeUsesLevel(mode) return type(mode) == "string" and mode:find("LEVEL", 1, true) ~= nil end
-function H.textModeUsesPercent(mode) return type(mode) == "string" and mode:find("PERCENT", 1, true) ~= nil end
-function H.textModeUsesAbsorb(mode) return mode == "ABSORB" or mode == "CURABSORB" or mode == "CURABSORBPIPE" or mode == "CURABSORBPLUS" end
+function H.textModeUsesDamageAbsorb(mode)
+	return mode == "ABSORB" or mode == "ABSORB_PERCENT" or mode == "CURABSORB" or mode == "CURABSORBPIPE" or mode == "CURABSORBPLUS"
+end
+function H.textModeUsesHealAbsorb(mode) return mode == "HEAL_ABSORB" or mode == "HEAL_ABSORB_PERCENT" end
+function H.textModeUsesAbsorbPercent(mode) return mode == "ABSORB_PERCENT" or mode == "HEAL_ABSORB_PERCENT" end
+function H.textModeUsesPercent(mode)
+	return type(mode) == "string" and mode:find("PERCENT", 1, true) ~= nil and not H.textModeUsesAbsorbPercent(mode)
+end
+function H.textModeUsesAbsorb(mode) return H.textModeUsesDamageAbsorb(mode) or H.textModeUsesHealAbsorb(mode) end
 function H.textModeUsesDeficit(mode) return mode == "DEFICIT" end
 
 function H.getUnitLevelText(unit, levelOverride, hideClassificationText)
@@ -3510,10 +2803,36 @@ function H.getUnitLevelText(unit, levelOverride, hideClassificationText)
 	return levelText
 end
 
-function H.formatText(mode, cur, maxv, useShort, percentValue, delimiter, delimiter2, delimiter3, hidePercentSymbol, levelText, missingValue, roundPercent, delimitersResolved, absorbValue)
+function H.formatText(
+	mode,
+	cur,
+	maxv,
+	useShort,
+	percentValue,
+	delimiter,
+	delimiter2,
+	delimiter3,
+	hidePercentSymbol,
+	levelText,
+	missingValue,
+	roundPercent,
+	delimitersResolved,
+	absorbValue,
+	absorbPercentValue,
+	healAbsorbValue,
+	healAbsorbPercentValue
+)
 	if mode == "NONE" then return "" end
 	if mode == "CURRENT" then return H.formatDisplayValue(cur, useShort) end
 	if mode == "MAX" then return H.formatDisplayValue(maxv, useShort) end
+	if mode == "ABSORB" then return H.formatOptionalDisplayValue(absorbValue, useShort) end
+	if mode == "HEAL_ABSORB" then return H.formatOptionalDisplayValue(healAbsorbValue, useShort) end
+	if mode == "ABSORB_PERCENT" or mode == "HEAL_ABSORB_PERCENT" then
+		local value = mode == "ABSORB_PERCENT" and absorbPercentValue or healAbsorbPercentValue
+		if issecretvalue and issecretvalue(value) then return "" end
+		if value == nil then return "" end
+		return ("%d%s"):format(floor(value + 0.5), hidePercentSymbol and "" or "%")
+	end
 	if mode == "PERCENT" then
 		local percentSuffix = hidePercentSymbol and "" or "%"
 		local hasSecretValues = addon.variables and addon.variables.isMidnight and issecretvalue
@@ -3554,7 +2873,7 @@ function H.formatText(mode, cur, maxv, useShort, percentValue, delimiter, delimi
 	local percentSuffix = hidePercentSymbol and "" or "%"
 	if levelText == nil or levelText == "" then levelText = "??" end
 	local isPercentMode = type(mode) == "string" and mode:find("PERCENT", 1, true) ~= nil
-	if H.textModeUsesAbsorb(mode) then
+	if H.textModeUsesDamageAbsorb(mode) then
 		local curText = H.formatDisplayValue(cur, useShort)
 		local absorbText = H.formatOptionalDisplayValue(absorbValue, useShort)
 		return H.formatAbsorbModeText(mode, curText, absorbText, absorbValue)
@@ -3695,7 +3014,7 @@ function H.compileTextWriter(mode, useShort, delimiter, delimiter2, delimiter3, 
 			return ("%d%s"):format(floor((cur or 0) / maxv * 100 + 0.5), suffix)
 		end
 	end
-	return function(cur, maxv, percentValue, levelText, missingValue, absorbValue)
+	return function(cur, maxv, percentValue, levelText, missingValue, absorbValue, absorbPercentValue, healAbsorbValue, healAbsorbPercentValue)
 		return H.formatText(
 			mode,
 			cur,
@@ -3710,7 +3029,10 @@ function H.compileTextWriter(mode, useShort, delimiter, delimiter2, delimiter3, 
 			missingValue,
 			roundPercent,
 			true,
-			absorbValue
+			absorbValue,
+			absorbPercentValue,
+			healAbsorbValue,
+			healAbsorbPercentValue
 		)
 	end
 end

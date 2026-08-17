@@ -1,7 +1,3 @@
-VER 3 0100000000000007 " " "INV_MISC_QUESTIONMARK"
-#showtooltip
-/cast [@mouseover,exists][] Fire blast
-END
 VER 3 0100000000000002 " " "INV_MISC_QUESTIONMARK"
 #showtooltip Arcane Intellect
 /use Goblin Weather Machine - Prototype 01-B
@@ -21,8 +17,9 @@ VER 3 010000000000000E " " "INV_MISC_QUESTIONMARK"
 END
 VER 3 010000000000000B " " "INV_MISC_QUESTIONMARK"
 #showtooltip Counterspell
+#FS EnemyHealer
 /cancelaura Ice Block
-/cast [mod:shift, @focus, exists][]Counterspell
+/cast [mod:shift, @none, exists][]Counterspell
 END
 VER 3 010000000000001D " " "134400"
 #showtooltip Arcane Surge
@@ -54,7 +51,8 @@ VER 3 0100000000000038 " " "INV_Misc_QuestionMark"
 END
 VER 3 010000000000002C " " "134400"
 #showtooltip Polymorph(Sheep)
-/cast [mod:shift,@focus,exists,harm,nodead][] Polymorph(Sheep)
+#FS EH
+/cast [mod:shift,@none,exists,harm,nodead][] Polymorph
 END
 VER 3 010000000000003A " " "134400"
 #showtooltip
@@ -64,7 +62,7 @@ END
 VER 3 010000000000003E " " "135818"
 #showtooltip
 /cast Ancient Portal: Dalaran
-/say Opening portal to Dornogal
+/say Opening portal to Silvermoon
 END
 VER 3 0100000000000046 " " "134400"
 #showtooltip
@@ -80,6 +78,14 @@ END
 VER 3 0100000000000048 " " "134400"
 #showtooltip
 /cast [@cursor] Meteor
+END
+VER 3 0100000000000049 " " "134400"
+#showtooltip Arcane Barrage
+/cast [nochanneling: arcane missiles] Arcane Barrage
+END
+VER 3 010000000000004A " " "134400"
+#showtooltip Arcane Missiles
+/cast [nochanneling: arcane missiles] Arcane Missiles
 END
 VER 3 010000000000003D "Cancel" "134400"
 #showtooltip Alter Time

@@ -10,11 +10,14 @@ local Maps = NS.Maps
 local TBFG = Maps:NewMod()
 
 local commonConfig = {
+  basesReset = false,
+  maxScore = 1500,
   maxBases = 3,
   tickRate = 1,
   assaultTime = 6,
   contestedTime = 60,
   resetTime = 0,
+  controlTime = 0,
   baseResources = {
     [0] = 0,
     [1] = 1,
@@ -27,12 +30,15 @@ local instanceIdToMapId = {
   -- Gilneas
   [761] = {
     id = 275,
+    basesReset = commonConfig.basesReset,
+    maxScore = commonConfig.maxScore,
     maxBases = commonConfig.maxBases,
     tickRate = commonConfig.tickRate,
     assaultTime = commonConfig.assaultTime,
     contestedTime = commonConfig.contestedTime,
     resetTime = commonConfig.resetTime,
     baseResources = commonConfig.baseResources,
+    controlTime = commonConfig.controlTime,
   },
 }
 
@@ -52,6 +58,8 @@ end
 
 function TBFG:EnterZone(id, isBlitz)
   if NS.db and NS.db.global.maps.thebattleforgilneas.enabled then
+    NS.IS_TBFG = true
+
     Info:SetAnchor(Banner.frame, 0, 0)
     BasePrediction:StartInfoTracker(checkInfo(id, isBlitz))
   end
@@ -59,6 +67,8 @@ end
 
 function TBFG:ExitZone()
   if NS.db.global.maps.thebattleforgilneas.enabled then
+    NS.IS_TBFG = false
+
     BasePrediction:StopInfoTracker()
   end
 end

@@ -9,9 +9,7 @@ if GetLocale() ~= "zhCN" then
 end
 
 L.ERR_SHARED_MODULE_NOT_FOUND = "|cFFFF0000ArenaDRNameplates:|r 未找到 Shared 模块"
-L.ERR_REQUIRES_MIDNIGHT = "|cFFFF0000ArenaDRNameplates:|r 此插件需要 WoW Midnight (12.0.0+)"
 L.ERR_SETTINGS_UI_MODULE_NOT_LOADED = "|cFFFF0000ArenaDRNameplates:|r 设置界面模块未加载"
-L.ERR_SETTINGS_API_NOT_AVAILABLE = "|cFFFF0000ArenaDRNameplates:|r 设置 API 不可用"
 L.WARN_HELPER_NOT_FOUND = "|cFFFFFF00ArenaDRNameplates:|r 未找到 ArenaNameplateHelper"
 L.WARN_SETTINGS_MENU_NOT_AVAILABLE = "|cFFFFFF00ArenaDRNameplates:|r 设置菜单暂不可用"
 L.MSG_SETTINGS_RESET = "|cFF00FF00ArenaDRNameplates:|r 设置已重置"

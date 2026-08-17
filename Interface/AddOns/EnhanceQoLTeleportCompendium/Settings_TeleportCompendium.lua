@@ -67,7 +67,11 @@ local function buildTeleportSettings()
 			var = "portalHideMissing",
 			text = L["portalHideMissing"],
 			desc = L["portalHideMissingDesc"],
-			func = function(v) addon.db["portalHideMissing"] = v end,
+			func = function(v)
+				addon.db["portalHideMissing"] = v
+				local functions = addon.MythicPlus and addon.MythicPlus.functions
+				if functions and functions.NotifyTeleportFavoritesChanged then functions.NotifyTeleportFavoritesChanged() end
+			end,
 		},
 	}
 	table.insert(data, {

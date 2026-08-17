@@ -15,8 +15,12 @@ local GetItemCooldownFn = C_Item.GetItemCooldown
 local GetTime = GetTime
 local GetMacroInfo = GetMacroInfo
 local EditMacro = EditMacro
+local UnitRace = UnitRace
 
 local healthMacroName = "EnhanceQoLHealthMacro"
+local earthenRecoverySpellID = 461063
+local _, playerRace = UnitRace("player")
+local isEarthen = playerRace == "EarthenDwarf"
 
 -- TODO always reorder by cooldown and remove the setting (more convinient)
 function addon.Health.functions.InitHealthMacro()
@@ -29,6 +33,7 @@ function addon.Health.functions.InitHealthMacro()
 	init("healthReset", "combat")
 	init("healthReorderByCooldown", true)
 	init("healthUseRecuperate", false)
+	init("healthUseMageFood", false)
 	init("healthStopCasting", false)
 	-- Allow using combat potions (from EnhanceQoLDrinkMacro/Health.lua entries tagged with isCombatPotion)
 	init("healthUseCombatPotions", false)
@@ -41,8 +46,6 @@ function addon.Health.functions.InitHealthMacro()
 	-- New priority-based ordering (overrides legacy prefs if set)
 	init("healthPriorityOrder", nil)
 end
-
-local function IsMidnightBuild() return addon and addon.variables and addon.variables.isMidnight end
 
 local function IsSecretValue(value)
 	if not value then return false end
@@ -57,15 +60,15 @@ local function IsSecretValue(value)
 	return false
 end
 
-local function IsMidnightCombatLocked() return IsMidnightBuild() and UnitAffectingCombat and UnitAffectingCombat("player") end
+local function IsCombatLocked() return UnitAffectingCombat and UnitAffectingCombat("player") end
 
 local function GetSpellCooldownSafe(spellId)
 	local cd = C_Spell.GetSpellCooldown(spellId)
 	if not cd then return 0, 0, false end
-	if IsMidnightBuild() and IsSecretValue(cd) then return nil, nil, true end
+	if IsSecretValue(cd) then return nil, nil, true end
 	local start = cd.startTime
 	local duration = cd.duration
-	if IsMidnightBuild() and (IsSecretValue(start) or IsSecretValue(duration)) then return nil, nil, true end
+	if IsSecretValue(start) or IsSecretValue(duration) then return nil, nil, true end
 	return start or 0, duration or 0, false
 end
 
@@ -342,8 +345,8 @@ local function resetCooldownWatch()
 end
 
 local function cooldownCheck(force, suppressRebuild)
-	if IsMidnightCombatLocked() and cooldownWatch.secretBlocked then return end
-	if cooldownWatch.secretBlocked and not IsMidnightCombatLocked() then cooldownWatch.secretBlocked = nil end
+	if IsCombatLocked() and cooldownWatch.secretBlocked then return end
+	if cooldownWatch.secretBlocked and not IsCombatLocked() then cooldownWatch.secretBlocked = nil end
 	if cooldownWatch.running then return end
 	if not addon.db or addon.db.healthReorderByCooldown ~= true then
 		resetCooldownWatch()
@@ -385,7 +388,7 @@ local function cooldownCheck(force, suppressRebuild)
 		elseif entry.kind == "spell" then
 			local start, duration, blocked = GetSpellCooldownSafe(entry.id)
 			if blocked then
-				if IsMidnightCombatLocked() then
+				if IsCombatLocked() then
 					cooldownWatch.secretBlocked = true
 					cooldownWatch.running = false
 					return
@@ -456,7 +459,7 @@ local function updateCooldownWatch(entries)
 end
 
 local function handleCooldownEvent()
-	if IsMidnightCombatLocked() and cooldownWatch.secretBlocked then return end
+	if IsCombatLocked() and cooldownWatch.secretBlocked then return end
 	if not addon.db or addon.db.healthReorderByCooldown ~= true then return end
 	if not addon.db.healthMacroEnabled then return end
 	if #cooldownWatch.entries == 0 then return end
@@ -465,7 +468,7 @@ local function handleCooldownEvent()
 	local nextPoll = cooldownWatch.nextPollAt or 0
 	if nextPoll > 0 and now < nextPoll - 0.05 then return end
 
-	if cooldownWatch.debounce then cooldownWatch.debounce:Cancel() end
+	if cooldownWatch.debounce then return end
 	cooldownWatch.debounce = C_Timer.NewTimer(0.25, function()
 		cooldownWatch.debounce = nil
 		cooldownCheck(false, false)
@@ -478,6 +481,32 @@ local function buildResetToken()
 	if r == "10" or r == "30" or r == "60" then return r end
 	if r == "target" then return "target" end
 	return "combat"
+end
+
+local function getOutOfCombatRecoverySpell()
+	if isEarthen then
+		local spellInfo = C_Spell.GetSpellInfo(earthenRecoverySpellID)
+		if spellInfo and C_SpellBook.IsSpellInSpellBook(earthenRecoverySpellID) then return spellInfo.name, "|earthenRecovery" end
+		return nil, nil
+	end
+	if addon.Recuperate and addon.Recuperate.name and addon.Recuperate.known then return addon.Recuperate.name, "|recup" end
+	return nil, nil
+end
+
+local function getAvailableMageFood()
+	if not addon.db.healthUseMageFood then return nil end
+	local drinks = addon.Drinks and addon.Drinks.drinkList
+	if type(drinks) ~= "table" then return nil end
+
+	local playerLevel = UnitLevel("player") or 0
+	for i = 1, #drinks do
+		local drink = drinks[i]
+		if drink and drink.isMageFood and drink.id and (drink.requiredLevel or 1) <= playerLevel then
+			local count = addon.functions.getFoodBagItemCount and addon.functions.getFoodBagItemCount(drink.id) or C_Item.GetItemCount(drink.id, false, false)
+			if count and count > 0 then return drink.id end
+		end
+	end
+	return nil
 end
 
 local function buildMacro()
@@ -533,31 +562,43 @@ local function buildMacro()
 	local macroBody
 	local key
 
-	-- Optional Recuperate (out of combat) line
+	-- Optional out-of-combat recovery actions
+	local mageFoodLine = ""
+	local mageFoodKey = ""
+	local mageFoodID = getAvailableMageFood()
+	if mageFoodID then
+		mageFoodLine = string.format("/use [nocombat] item:%d", mageFoodID)
+		mageFoodKey = "|mageFood:" .. mageFoodID
+	end
 	local recuperateLine = ""
 	local recuperateKey = ""
-	if addon.db.healthUseRecuperate and addon.Recuperate and addon.Recuperate.name and addon.Recuperate.known then
-		recuperateLine = string.format("/cast [nocombat] %s", addon.Recuperate.name)
-		recuperateKey = "|recup"
+	if addon.db.healthUseRecuperate then
+		local spellName, spellKey = getOutOfCombatRecoverySpell()
+		if spellName then
+			recuperateLine = string.format("/cast [nocombat] %s", spellName)
+			recuperateKey = spellKey
+		end
 	end
 	if #seqList >= 1 then
 		local parts = { "#showtooltip" }
 		if addon.db.healthStopCasting then table.insert(parts, "/stopcasting") end
+		if mageFoodLine ~= "" then table.insert(parts, mageFoodLine) end
 		if recuperateLine ~= "" then table.insert(parts, recuperateLine) end
 		local seqStr = table.concat(seqList, ", ")
-		if recuperateLine ~= "" then
+		if mageFoodLine ~= "" or recuperateLine ~= "" then
 			table.insert(parts, string.format("/castsequence [combat] reset=%s %s", resetType, seqStr))
 		else
 			table.insert(parts, string.format("/castsequence reset=%s %s", resetType, seqStr))
 		end
 		macroBody = table.concat(parts, "\n")
-		key = string.format("seq:%s|%s%s", table.concat(seqList, "|"), resetType, recuperateKey)
+		key = string.format("seq:%s|%s%s%s", table.concat(seqList, "|"), resetType, mageFoodKey, recuperateKey)
 	else
 		local parts = { "#showtooltip" }
 		if addon.db.healthStopCasting then table.insert(parts, "/stopcasting") end
+		if mageFoodLine ~= "" then table.insert(parts, mageFoodLine) end
 		if recuperateLine ~= "" then table.insert(parts, recuperateLine) end
 		macroBody = table.concat(parts, "\n")
-		key = "empty" .. recuperateKey
+		key = "empty" .. mageFoodKey .. recuperateKey
 	end
 
 	if addon.db.healthStopCasting then key = key .. "|stopcasting" end

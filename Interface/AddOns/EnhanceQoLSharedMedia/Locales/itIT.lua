@@ -4,5 +4,5 @@ if not L then return end
 L["Disable All"] = "Disattiva tutto"
 L["Enable All"] = "Attiva tutto"
 L["Play"] = "Riproduci"
-L["SharedMedia"] = "Shared Media"
-L["SharedMediaDeepVoiceSounds"] = "Suoni voce profonda Shared Media"
+L["SharedMedia"] = "Media condivisi"
+L["SharedMediaDeepVoiceSounds"] = "Suoni con voce profonda dei media condivisi"

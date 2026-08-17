@@ -14,6 +14,8 @@ local ScoreFrame = CreateFrame("Frame", AddonName .. "ScoreFrame", Info.frame)
 Score.frame = ScoreFrame
 
 local scoreformat = "Final Score: %s - %s"
+local scoreformatCurrent = "Current Score: %s - %s"
+local scoreformatFuture = "Future Score: %s - %s"
 
 function Score:SetAnchor(anchor, x, y)
   self.frame:SetPoint("TOPLEFT", anchor, "TOPLEFT", x, y)
@@ -24,7 +26,20 @@ function Score:SetText(frame, aScore, hScore)
   local aScoreFormatted = NS.formatScore(NS.ALLIANCE_NAME, aScore)
   local hScoreFormatted = NS.formatScore(NS.HORDE_NAME, hScore)
 
-  frame:SetFormattedText(scoreformat, aScoreFormatted, hScoreFormatted)
+  if NS.CUR_MAP and NS.CUR_MAP.basesReset then
+    if NS.WILL_WIN then
+      frame:SetFormattedText(scoreformat, aScoreFormatted, hScoreFormatted)
+    else
+      if NS.ACTIVE_BASE_COUNT == 0 then
+        frame:SetFormattedText(scoreformatCurrent, aScoreFormatted, hScoreFormatted)
+      else
+        frame:SetFormattedText(scoreformatFuture, aScoreFormatted, hScoreFormatted)
+      end
+    end
+  else
+    frame:SetFormattedText(scoreformat, aScoreFormatted, hScoreFormatted)
+  end
+
   NS.UpdateSize(ScoreFrame, frame)
 
   if NS.db.global.general.banner == false then

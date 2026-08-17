@@ -127,11 +127,74 @@ local function SetupGeneral(parent)
   end
   table.insert(allFrames, profileDropdown)
 
+  do
+    local exportButton = CreateFrame("Button", nil, container, "UIPanelDynamicResizeButtonTemplate")
+    exportButton:SetPoint("TOPLEFT", allFrames[#allFrames], "BOTTOM", -33, -10)
+    exportButton:SetText(addonTable.Locales.EXPORT)
+    DynamicResizeButton_Resize(exportButton)
+    exportButton:SetScript("OnClick", function()
+      local tmp = addonTable.Config.DumpCurrentProfile()
+      tmp.addon = "Chattynator"
+      tmp.version = 1
+      tmp.kind = "profile"
+      addonTable.Core.RemoveTemporaryWindows(tmp[addonTable.Config.Options.WINDOWS])
+      addonTable.Dialogs.ShowCopy("CHATTY!1!" .. C_EncodingUtil.EncodeBase64(C_EncodingUtil.CompressString(C_EncodingUtil.SerializeCBOR(tmp))))
+    end)
+    addonTable.Skins.AddFrame("Button", exportButton)
+
+    local importButton = CreateFrame("Button", nil, container, "UIPanelDynamicResizeButtonTemplate")
+    importButton:SetPoint("TOPRIGHT", allFrames[#allFrames], "BOTTOM", -45, -10)
+    importButton:SetText(addonTable.Locales.IMPORT)
+    DynamicResizeButton_Resize(importButton)
+    importButton:SetScript("OnClick", function()
+      addonTable.CustomiseDialog.ShowImportDialog(function(text)
+        local import
+        local prefix = text:match("^CHATTY!1!")
+        if not prefix then
+          addonTable.Dialogs.ShowAcknowledge(addonTable.Locales.INVALID_IMPORT)
+          return
+        end
+        local status, decoded = pcall(C_EncodingUtil.DecodeBase64, text:sub(10))
+        if not status then
+          addonTable.Dialogs.ShowAcknowledge(addonTable.Locales.INVALID_IMPORT)
+          return
+        end
+        local status, decompressed = pcall(C_EncodingUtil.DecompressString, decoded)
+        if not status then
+          addonTable.Dialogs.ShowAcknowledge(addonTable.Locales.INVALID_IMPORT)
+          return
+        end
+        status, import = pcall(C_EncodingUtil.DeserializeCBOR, decompressed)
+        if not status or type(import) ~= "table" or import.addon ~= "Chattynator" then
+          addonTable.Dialogs.ShowAcknowledge(addonTable.Locales.INVALID_IMPORT)
+          return
+        end
+        addonTable.Dialogs.ShowDualChoice(addonTable.Locales.OVERWRITE_CURRENT_PROFILE, addonTable.Locales.OVERWRITE, addonTable.Locales.MAKE_NEW,
+          function()
+            addonTable.CustomiseDialog.ImportData(import, CHATTYNATOR_CURRENT_PROFILE, true)
+            profileDropdown.DropDown:GenerateMenu()
+          end,
+          function()
+            addonTable.Dialogs.ShowEditBox(addonTable.Locales.ENTER_THE_NEW_PROFILE_NAME, OKAY, CANCEL, function(value)
+              if CHATTYNATOR_CONFIG.Profiles[value] == nil then
+                addonTable.CustomiseDialog.ImportData(import, value, false)
+                profileDropdown.DropDown:GenerateMenu()
+              else
+                addonTable.Dialogs.ShowAcknowledge(addonTable.Locales.THAT_PROFILE_NAME_ALREADY_EXISTS)
+              end
+            end)
+          end
+        )
+      end)
+    end)
+    addonTable.Skins.AddFrame("Button", importButton)
+  end
+
   local storeMessages = addonTable.CustomiseDialog.Components.GetCheckbox(container, addonTable.Locales.STORE_MESSAGES, 28, function(state)
     addonTable.Config.Set(addonTable.Config.Options.STORE_MESSAGES, state)
   end)
   storeMessages.option = addonTable.Config.Options.STORE_MESSAGES
-  storeMessages:SetPoint("TOP", allFrames[#allFrames], "BOTTOM", 0, -30)
+  storeMessages:SetPoint("TOP", allFrames[#allFrames], "BOTTOM", 0, -70)
   table.insert(allFrames, storeMessages)
 
   local removeOldMessages = addonTable.CustomiseDialog.Components.GetCheckbox(container, addonTable.Locales.REMOVE_OLD_MESSAGES, 28, function(state)
@@ -323,9 +386,7 @@ local function SetupLayout(parent)
   container:SetScript("OnShow", function()
     for _, f in ipairs(allFrames) do
       if f.SetValue then
-        if f.option == addonTable.Config.Options.NEW_WHISPER_NEW_TAB then
-          f:SetValue(addonTable.Config.Get(f.option) ~= 0)
-        elseif f.option then
+        if f.option then
           f:SetValue(addonTable.Config.Get(f.option))
         else
           f:SetValue()
@@ -745,7 +806,9 @@ local function SetupNotifications(parent)
   container:SetScript("OnShow", function()
     for _, f in ipairs(allFrames) do
       if f.SetValue then
-        if f.option then
+        if f.option == addonTable.Config.Options.NEW_WHISPER_NEW_TAB then
+          f:SetValue(addonTable.Config.Get(f.option) ~= 0)
+        elseif f.option then
           f:SetValue(addonTable.Config.Get(f.option))
         else
           f:SetValue()

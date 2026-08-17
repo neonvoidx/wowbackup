@@ -155,6 +155,19 @@ local function conditionLabel(node)
 	return tostring(node.value or 0)
 end
 
+local function conditionOperatorLabel(node)
+	if node.conditionType == "TALENT" then
+		return node.operator == "NOT_KNOWN" and L["Dynamic Anchor Talent Not Known"] or L["Dynamic Anchor Talent Known"]
+	end
+	if node.conditionType == "RAID_SIZE" then
+		return node.operator == "AT_LEAST" and L["Dynamic Anchor Operator At Least"] or L["Dynamic Anchor Operator At Most"]
+	end
+	if node.conditionType == "CLASS" or node.conditionType == "SPEC" or node.conditionType == "ROLE" then
+		return node.operator == "NOT_ANY_OF" and L["Dynamic Anchor Operator Is Not Any Of"] or L["Dynamic Anchor Operator Is Any Of"]
+	end
+	return node.operator == "IS_NOT" and L["Dynamic Anchor Operator Is Not"] or L["Dynamic Anchor Operator Is"]
+end
+
 function DynamicAnchors:RenderConditionEditor(parent, candidate, onChanged, onMutate)
 	local root = self:EnsureCandidateConditionRoot(candidate)
 	local rows = flatNodes(root, 0)
@@ -165,8 +178,17 @@ function DynamicAnchors:RenderConditionEditor(parent, candidate, onChanged, onMu
 	local function delayedChanged()
 		if C_Timer and C_Timer.After then C_Timer.After(0, function() changed(true) end) else changed(true) end
 	end
+	local function setConditionType(node, conditionType)
+		node.conditionType = conditionType
+		node.value = conditionType == "TALENT" and 0 or conditionType == "RAID_SIZE" and 20 or ""
+		node.operator = conditionType == "TALENT" and "KNOWN" or conditionType == "RAID_SIZE" and "AT_MOST" or (conditionType == "CLASS" or conditionType == "SPEC" or conditionType == "ROLE") and "ANY_OF" or "IS"
+	end
 	local function mutate(action, nodeId, value)
-		if type(onMutate) == "function" then return onMutate(action, nodeId, value) end
+		if type(onMutate) == "function" then
+			local result = onMutate(action, nodeId, value)
+			if action == "TYPE" and type(result) == "table" then setConditionType(result, value) end
+			return result
+		end
 		local node = self:FindConditionNode(candidate, nodeId)
 		if action == "ADD_CONDITION" then return self:AddConditionNode(candidate, nodeId, value) end
 		if action == "ADD_GROUP" then return self:AddConditionGroup(candidate, nodeId, value) end
@@ -174,8 +196,7 @@ function DynamicAnchors:RenderConditionEditor(parent, candidate, onChanged, onMu
 		if not node then return nil end
 		if action == "GROUP_OPERATOR" then node.operator = value
 		elseif action == "TYPE" then
-			node.conditionType, node.value = value, value == "TALENT" and 0 or ""
-			node.operator = value == "TALENT" and "KNOWN" or (value == "CLASS" or value == "SPEC" or value == "ROLE") and "ANY_OF" or "IS"
+			setConditionType(node, value)
 		elseif action == "OPERATOR" then node.operator = value
 		elseif action == "VALUE" then node.value = value end
 		return node
@@ -211,6 +232,7 @@ function DynamicAnchors:RenderConditionEditor(parent, candidate, onChanged, onMu
 			add:SetScript("OnClick", function(owner)
 				menu(owner, {
 					{ label = L["Dynamic Anchor Condition Class"], action = function() mutate("ADD_CONDITION", node.id, "CLASS") delayedChanged() end },
+					{ label = L["Dynamic Anchor Condition Raid Size"], action = function() mutate("ADD_CONDITION", node.id, "RAID_SIZE") delayedChanged() end },
 					{ label = L["Dynamic Anchor Condition Specialization"], action = function() mutate("ADD_CONDITION", node.id, "SPEC") delayedChanged() end },
 					{ label = L["Dynamic Anchor Condition Role"], action = function() mutate("ADD_CONDITION", node.id, "ROLE") delayedChanged() end },
 					{ label = L["Dynamic Anchor Condition Talent"], action = function() mutate("ADD_CONDITION", node.id, "TALENT") delayedChanged() end },
@@ -228,11 +250,17 @@ function DynamicAnchors:RenderConditionEditor(parent, candidate, onChanged, onMu
 		else
 			local typeButton = button(row, 150)
 			typeButton:SetPoint("LEFT", row, "LEFT", 10, 0)
-			local labels = { CLASS = L["Dynamic Anchor Condition Class"], SPEC = L["Dynamic Anchor Condition Specialization"], ROLE = L["Dynamic Anchor Condition Role"], TALENT = L["Dynamic Anchor Condition Talent"] }
+			local labels = {
+				CLASS = L["Dynamic Anchor Condition Class"],
+				RAID_SIZE = L["Dynamic Anchor Condition Raid Size"],
+				ROLE = L["Dynamic Anchor Condition Role"],
+				SPEC = L["Dynamic Anchor Condition Specialization"],
+				TALENT = L["Dynamic Anchor Condition Talent"],
+			}
 			typeButton:SetText(labels[node.conditionType])
 			typeButton:SetScript("OnClick", function(owner)
 				local entries = {}
-				for _, conditionType in ipairs({ "CLASS", "SPEC", "ROLE", "TALENT" }) do
+				for _, conditionType in ipairs({ "CLASS", "RAID_SIZE", "SPEC", "ROLE", "TALENT" }) do
 					local value = conditionType
 					entries[#entries + 1] = { label = labels[value], action = function()
 						mutate("TYPE", node.id, value)
@@ -245,9 +273,10 @@ function DynamicAnchors:RenderConditionEditor(parent, candidate, onChanged, onMu
 			local operator = button(row, 132)
 			operator:SetPoint("LEFT", typeButton, "RIGHT", 8, 0)
 			local multiple = node.conditionType == "CLASS" or node.conditionType == "SPEC" or node.conditionType == "ROLE"
-			operator:SetText(node.conditionType == "TALENT" and (node.operator == "NOT_KNOWN" and L["Dynamic Anchor Talent Not Known"] or L["Dynamic Anchor Talent Known"]) or (multiple and (node.operator == "NOT_ANY_OF" and L["Dynamic Anchor Operator Is Not Any Of"] or L["Dynamic Anchor Operator Is Any Of"]) or (node.operator == "IS_NOT" and L["Dynamic Anchor Operator Is Not"] or L["Dynamic Anchor Operator Is"])))
+			operator:SetText(conditionOperatorLabel(node))
 			operator:SetScript("OnClick", function()
 				if node.conditionType == "TALENT" then mutate("OPERATOR", node.id, node.operator == "NOT_KNOWN" and "KNOWN" or "NOT_KNOWN")
+				elseif node.conditionType == "RAID_SIZE" then mutate("OPERATOR", node.id, node.operator == "AT_LEAST" and "AT_MOST" or "AT_LEAST")
 				elseif multiple then mutate("OPERATOR", node.id, node.operator == "NOT_ANY_OF" and "ANY_OF" or "NOT_ANY_OF")
 				else mutate("OPERATOR", node.id, node.operator == "IS_NOT" and "IS" or "IS_NOT") end
 				changed(true)
@@ -258,7 +287,7 @@ function DynamicAnchors:RenderConditionEditor(parent, candidate, onChanged, onMu
 			remove:SetText(_G.REMOVE)
 			remove:SetScript("OnClick", function() mutate("REMOVE", node.id) changed(true) end)
 
-			if node.conditionType == "TALENT" then
+			if node.conditionType == "TALENT" or node.conditionType == "RAID_SIZE" then
 				local input = CreateFrame("EditBox", nil, row, "BackdropTemplate")
 				input:SetAutoFocus(false)
 				input:SetNumeric(true)
@@ -272,7 +301,14 @@ function DynamicAnchors:RenderConditionEditor(parent, candidate, onChanged, onMu
 				input:SetHeight(28)
 				input:SetText(tostring(node.value or 0))
 				local function commit()
-					mutate("VALUE", node.id, tonumber(input:GetText()) or 0)
+					local value = tonumber(input:GetText())
+					if node.conditionType == "RAID_SIZE" then
+						value = math.max(1, math.min(40, math.floor(value or 20)))
+						input:SetText(tostring(value))
+					else
+						value = value or 0
+					end
+					mutate("VALUE", node.id, value)
 					changed(false)
 				end
 				input:SetScript("OnEnterPressed", function(self) commit() self:ClearFocus() end)

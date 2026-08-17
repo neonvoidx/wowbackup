@@ -21,7 +21,7 @@ KeystoneLootCharDB = {
 ["difficulty"] = "normal",
 ["rank"] = 1,
 },
-["slotId"] = 0,
+["slotId"] = -2,
 ["classId"] = 8,
 },
 }

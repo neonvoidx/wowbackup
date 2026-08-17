@@ -117,12 +117,18 @@ local LEGACY_PROFILE_KEYS = {
 	"confirmPatronOrderDialog",
 	"confirmReplaceEnchant",
 	"optionsFrameScale",
+	"persistAuctionHouseFilter",
 	"showLeaderIconRaidFrame",
 	"unitFrameMaxNameLength",
 	"unitFrameTruncateNames",
 	"enhancedWaypoint",
 	"enhancedWaypointGlow",
 	"enhancedWaypointScale",
+	"groupfinderMoveResetButton",
+	"showWorldMapCoordinates",
+	"standalonePrivateAuras",
+	"worldMapCoordinatesHideCursor",
+	"worldMapCoordinatesUpdateInterval",
 }
 
 local NAMEPLATE_MOB_COLOR_SOURCE_KEYS = {
@@ -147,8 +153,6 @@ local function migrateNameplateMobColorSources(profile)
 	profile.nameplateMobThreatColors = nil
 end
 
--- TODO 12.1 cleanup: when removing native-replaced PTR workarounds, add their stored keys here
--- or to a dedicated cleanup helper. Expected keys: persistAuctionHouseFilter, groupfinderMoveResetButton.
 local MULTIDROPDOWN_SCRATCH_PROFILE_KEYS = {
 	"bagDisplayOptions",
 	"bagItemLevelTargets",
@@ -222,11 +226,25 @@ local REMOVED_DURATION_TEXT_PROFILE_KEYS = {
 	"stripIntervalWhitespace",
 }
 
+local REMOVED_MYTHIC_PLUS_TIMER_KEYS = {
+	"panelAutoLayout",
+}
+
 local function cleanupListedProfileKeys(profile, keys)
 	if type(profile) ~= "table" then return end
 	for i = 1, #keys do
 		profile[keys[i]] = nil
 	end
+end
+
+local function cleanupRemovedMythicPlusTimerKeys(profile)
+	if type(profile) ~= "table" then return end
+	cleanupListedProfileKeys(profile.mythicPlusTimer, REMOVED_MYTHIC_PLUS_TIMER_KEYS)
+end
+
+local function migrateMythicPlusTimerLayout(profile)
+	if type(profile) ~= "table" or type(profile.mythicPlusTimer) ~= "table" then return end
+	if profile.mythicPlusTimer.layoutMode == nil then profile.mythicPlusTimer.layoutMode = "PANEL" end
 end
 
 local function cleanupDebugArtifactsProfile(profile)
@@ -441,12 +459,186 @@ local function cleanupGroupFrameHighlightLayers(profile)
 	end
 end
 
+local function cleanupPartyPetFramePrototypeKeysInConfig(groupFrames)
+	local party = type(groupFrames) == "table" and groupFrames.party or nil
+	local petFrames = type(party) == "table" and party.petFrames or nil
+	if type(petFrames) == "table" then
+		petFrames.size = nil
+		petFrames.spacing = nil
+	end
+end
+
+local function cleanupPartyPetFramePrototypeKeys(profile)
+	if type(profile) ~= "table" then return end
+	cleanupPartyPetFramePrototypeKeysInConfig(profile.ufGroupFrames)
+	if type(profile.ufProfiles) == "table" then
+		for _, ufProfile in pairs(profile.ufProfiles) do
+			if type(ufProfile) == "table" then cleanupPartyPetFramePrototypeKeysInConfig(ufProfile.ufGroupFrames) end
+		end
+	end
+end
+
+local function cleanupGroupFramePermanentBuffOptionInConfig(groupFrames)
+	if type(groupFrames) ~= "table" then return end
+	for _, kind in ipairs({ "party", "raid" }) do
+		local config = groupFrames[kind]
+		local buff = type(config) == "table" and type(config.auras) == "table" and config.auras.buff or nil
+		if type(buff) == "table" then buff.hidePermanentAuras = nil end
+	end
+end
+
+local function cleanupGroupFramePermanentBuffOption(profile)
+	if type(profile) ~= "table" then return end
+	cleanupGroupFramePermanentBuffOptionInConfig(profile.ufGroupFrames)
+	if type(profile.ufProfiles) == "table" then
+		for _, ufProfile in pairs(profile.ufProfiles) do
+			if type(ufProfile) == "table" then cleanupGroupFramePermanentBuffOptionInConfig(ufProfile.ufGroupFrames) end
+		end
+	end
+end
+
+local function cleanupHealerBuffPlacementSquareLayoutModeInConfig(groupFrames)
+	if type(groupFrames) ~= "table" then return end
+	for _, config in pairs(groupFrames) do
+		local placement = type(config) == "table" and config.healerBuffPlacement or nil
+		local groupsById = type(placement) == "table" and placement.groupsById or nil
+		if type(groupsById) == "table" then
+			for _, group in pairs(groupsById) do
+				if type(group) == "table" then
+					group.squareLayoutMode = nil
+					group.squareOrderMode = nil
+				end
+			end
+		end
+	end
+end
+
+local function cleanupHealerBuffPlacementSquareLayoutMode(profile)
+	if type(profile) ~= "table" then return end
+	cleanupHealerBuffPlacementSquareLayoutModeInConfig(profile.ufGroupFrames)
+	if type(profile.ufProfiles) == "table" then
+		for _, ufProfile in pairs(profile.ufProfiles) do
+			if type(ufProfile) == "table" then cleanupHealerBuffPlacementSquareLayoutModeInConfig(ufProfile.ufGroupFrames) end
+		end
+	end
+end
+
+local function cleanupHealerBuffPlacementGlobalScopesInConfig(groupFrames)
+	if type(groupFrames) ~= "table" then return end
+	for _, config in pairs(groupFrames) do
+		local placement = type(config) == "table" and config.healerBuffPlacement or nil
+		if type(placement) == "table" then
+			placement.includeTarget = nil
+			placement.includeFocus = nil
+			placement.includeBoss = nil
+		end
+	end
+end
+
+local function cleanupHealerBuffPlacementGlobalScopes(profile)
+	if type(profile) ~= "table" then return end
+	cleanupHealerBuffPlacementGlobalScopesInConfig(profile.ufGroupFrames)
+	if type(profile.ufProfiles) == "table" then
+		for _, ufProfile in pairs(profile.ufProfiles) do
+			if type(ufProfile) == "table" then cleanupHealerBuffPlacementGlobalScopesInConfig(ufProfile.ufGroupFrames) end
+		end
+	end
+end
+
+local function cleanupPrivateAuraFrameConfig(config)
+	if type(config) ~= "table" then return end
+	config.privateAuras = nil
+
+	local function cleanupAuraConfig(auraConfig)
+		if type(auraConfig) == "table" then
+			auraConfig.renderer = nil
+			auraConfig.blizzardTypes = nil
+			auraConfig.blizzardIconSize = nil
+			auraConfig.blizzardShowCooldownText = nil
+			auraConfig.blizzardOrganizationType = nil
+			auraConfig.blizzardDispelIndicatorMode = nil
+			if type(auraConfig.debuff) == "table" then auraConfig.debuff.displayLargerRoleSpecificDebuffs = nil end
+		end
+	end
+	cleanupAuraConfig(config.auraIcons)
+	cleanupAuraConfig(config.auras)
+
+	local dispelTint = type(config.status) == "table" and config.status.dispelTint or nil
+	if type(dispelTint) == "table" then
+		dispelTint.blizzardPrivateAuraDispels = nil
+		dispelTint.blizzardDispelIndicatorMode = nil
+	end
+end
+
+local function cleanupPrivateAuraFrameConfigs(configs)
+	if type(configs) ~= "table" then return end
+	for _, config in pairs(configs) do
+		cleanupPrivateAuraFrameConfig(config)
+	end
+end
+
+local function cleanupPrivateAuraEditModeRecord(record)
+	if type(record) ~= "table" then return end
+	for field in pairs(record) do
+		if type(field) == "string" and field:find("^privateAuras") then record[field] = nil end
+	end
+	record.dispelTintBlizzardPrivateAuraDispels = nil
+	record.dispelTintBlizzardDispelMode = nil
+	record.auraRenderer = nil
+	record.auraRendererBlizzardTypes = nil
+	record.auraRendererBlizzardIconSize = nil
+	record.auraRendererBlizzardCooldownText = nil
+	record.auraRendererBlizzardOrganization = nil
+	record.auraRendererBlizzardDispelMode = nil
+	record.debuffDisplayLargerRoleSpecific = nil
+end
+
+local function cleanupPrivateAuraEditModeStore(store)
+	if type(store) ~= "table" then return end
+	store.standalonePrivateAuras = nil
+	for id, record in pairs(store) do
+		if type(record) == "table" then
+			cleanupPrivateAuraEditModeRecord(record)
+			if not next(record) then store[id] = nil end
+		end
+	end
+end
+
+local function cleanupPrivateAuraStorage(profile)
+	if type(profile) ~= "table" then return end
+	cleanupPrivateAuraFrameConfigs(profile.ufFrames)
+	cleanupPrivateAuraFrameConfigs(profile.ufGroupFrames)
+	if type(profile.ufProfiles) == "table" then
+		for _, ufProfile in pairs(profile.ufProfiles) do
+			if type(ufProfile) == "table" then
+				cleanupPrivateAuraFrameConfigs(ufProfile.ufFrames)
+				cleanupPrivateAuraFrameConfigs(ufProfile.ufGroupFrames)
+			end
+		end
+	end
+
+	cleanupPrivateAuraEditModeStore(profile.editModeData)
+	if type(profile.editModeLayouts) == "table" then
+		for layoutName, layout in pairs(profile.editModeLayouts) do
+			cleanupPrivateAuraEditModeStore(layout)
+			if type(layout) == "table" and not next(layout) then profile.editModeLayouts[layoutName] = nil end
+		end
+	end
+end
+
 local function cleanupLegacyProfileKeys(profile)
 	cleanupListedProfileKeys(profile, LEGACY_PROFILE_KEYS)
 	cleanupListedProfileKeys(profile, MULTIDROPDOWN_SCRATCH_PROFILE_KEYS)
 	cleanupRemovedCVarPersistenceKeys(profile)
 	cleanupMigratedDataPanelStreamOptionPositions(profile)
 	cleanupGroupFrameHighlightLayers(profile)
+	cleanupPartyPetFramePrototypeKeys(profile)
+	cleanupGroupFramePermanentBuffOption(profile)
+	cleanupHealerBuffPlacementSquareLayoutMode(profile)
+	cleanupHealerBuffPlacementGlobalScopes(profile)
+	cleanupPrivateAuraStorage(profile)
+	migrateMythicPlusTimerLayout(profile)
+	cleanupRemovedMythicPlusTimerKeys(profile)
 end
 
 local function cleanupCooldownPanelsStorageProfile(profile)
@@ -457,6 +649,23 @@ local function cleanupCooldownPanelsStorageProfile(profile)
 		for _, panel in pairs(root.panels) do
 			if type(panel) == "table" then
 				panel.cdmSyncActiveSpecBySource = nil
+				if type(panel.entries) == "table" then
+					for _, entry in pairs(panel.entries) do
+						if type(entry) == "table" then
+							entry.cdmAuraPartyShowNames = nil
+							entry.auraPresetActivationFilters = nil
+							entry.auraPresetEffectFilters = nil
+							if type(entry.auraPresetExcludedActivations) == "table" then
+								entry.auraPresetExcludedActivations.OTHER = nil
+								if not next(entry.auraPresetExcludedActivations) then entry.auraPresetExcludedActivations = nil end
+							end
+							if type(entry.auraPresetExcludedEffects) == "table" then
+								entry.auraPresetExcludedEffects.OTHER = nil
+								if not next(entry.auraPresetExcludedEffects) then entry.auraPresetExcludedEffects = nil end
+							end
+						end
+					end
+				end
 				if type(panel.dynamicAnchor) == "table" and type(panel.dynamicAnchor.profileId) == "string" then
 					panel.dynamicAnchor = { enabled = panel.dynamicAnchor.enabled == true, profileId = panel.dynamicAnchor.profileId }
 				end
@@ -465,6 +674,21 @@ local function cleanupCooldownPanelsStorageProfile(profile)
 	end
 	local helper = addon.Aura and addon.Aura.CooldownPanels and addon.Aura.CooldownPanels.helper or nil
 	if type(helper) == "table" and type(helper.PruneRootForStorage) == "function" then helper.PruneRootForStorage(root) end
+end
+
+local function cleanupQuickActionsStorageProfile(profile)
+	if type(profile) ~= "table" then return end
+	local root = profile.quickCast
+	local menus = type(root) == "table" and root.menus or nil
+	if type(menus) ~= "table" then return end
+	for _, menu in pairs(menus) do
+		if type(menu) == "table" and type(menu.actions) == "table" then
+			for _, action in pairs(menu.actions) do
+				local conditions = type(action) == "table" and action.conditions or nil
+				if type(conditions) == "table" then conditions.onlyWhenKnown = nil end
+			end
+		end
+	end
 end
 
 local function cleanupDynamicAnchorProfiles(profile)
@@ -611,6 +835,25 @@ function addon.functions.CleanupCooldownPanelsStorage()
 	if addon.db and addon.db ~= db then prune(addon.db) end
 end
 
+function addon.functions.CleanupQuickActionsStorage()
+	local db = _G.EnhanceQoLDB
+	local seen = {}
+	local function cleanup(profile)
+		if type(profile) ~= "table" or seen[profile] then return end
+		seen[profile] = true
+		cleanupQuickActionsStorageProfile(profile)
+	end
+	if type(db) == "table" then
+		cleanup(db)
+		if type(db.profiles) == "table" then
+			for _, profile in pairs(db.profiles) do
+				cleanup(profile)
+			end
+		end
+	end
+	if addon.db and addon.db ~= db then cleanup(addon.db) end
+end
+
 function addon.functions.CleanupDurationTextStorage()
 	local db = _G.EnhanceQoLDB
 	local seen = {}
@@ -663,6 +906,7 @@ function addon.functions.CleanupOldStuff()
 	addon.functions.CleanupDebugArtifacts()
 	addon.functions.CleanupDurationTextStorage()
 	addon.functions.CleanupLegacyProfileStorage()
+	addon.functions.CleanupQuickActionsStorage()
 	addon.functions.CleanupResourceBarStorage()
 	addon.functions.CleanupTransientProfileCaches()
 end

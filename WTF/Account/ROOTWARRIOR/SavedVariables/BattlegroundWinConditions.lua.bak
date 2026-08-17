@@ -1,16 +1,61 @@
 
 BattlegroundWinConditionsDB = {
 ["onlyShowWhenNewVersion"] = true,
-["lastReadVersion"] = "9.8.4",
+["lastReadVersion"] = "9.8.7",
 ["global"] = {
-["lastFlagCapBy"] = "",
-["debug"] = false,
+["hordeLockedTimers"] = {
+},
+["maps"] = {
+["silvershardmines"] = {
+["enabled"] = false,
+},
+["arathibasin"] = {
+["enabled"] = true,
+},
+["warsonggulch"] = {
+["enabled"] = true,
+["showdebuffinfo"] = true,
+},
+["templeofkotmogu"] = {
+["showbuffinfo"] = true,
+["enabled"] = true,
+["showorbinfo"] = true,
+},
+["deephaulravine"] = {
+["enabled"] = false,
+},
+["deepwindgorge"] = {
+["enabled"] = true,
+},
+["twinpeaks"] = {
+["enabled"] = true,
+["showdebuffinfo"] = true,
+},
+["eyeofthestorm"] = {
+["enabled"] = true,
+["showflagvalue"] = true,
+["showflaginfo"] = true,
+},
+["thebattleforgilneas"] = {
+["enabled"] = true,
+},
+},
+["hordeTimers"] = {
+},
 ["position"] = {
 "BOTTOMRIGHT",
 "BOTTOMRIGHT",
 -658.3341064453125,
 251.6669158935547,
 },
+["lastFlagCapBy"] = "",
+["version"] = 984,
+["allyTimers"] = {
+},
+["lastScoreTickTime"] = 0,
+["allyLockedTimers"] = {
+},
+["debug"] = false,
 ["general"] = {
 ["info"] = false,
 ["lock"] = true,
@@ -84,42 +129,6 @@ BattlegroundWinConditionsDB = {
 ["g"] = 0.1333333333333333,
 ["r"] = 0.6862745098039216,
 },
-},
-},
-["version"] = 984,
-["maps"] = {
-["silvershardmines"] = {
-["enabled"] = false,
-},
-["arathibasin"] = {
-["enabled"] = true,
-},
-["warsonggulch"] = {
-["enabled"] = true,
-["showdebuffinfo"] = true,
-},
-["templeofkotmogu"] = {
-["showbuffinfo"] = true,
-["enabled"] = true,
-["showorbinfo"] = true,
-},
-["deephaulravine"] = {
-["enabled"] = false,
-},
-["deepwindgorge"] = {
-["enabled"] = true,
-},
-["twinpeaks"] = {
-["enabled"] = true,
-["showdebuffinfo"] = true,
-},
-["eyeofthestorm"] = {
-["enabled"] = true,
-["showflagvalue"] = true,
-["showflaginfo"] = true,
-},
-["thebattleforgilneas"] = {
-["enabled"] = true,
 },
 },
 },

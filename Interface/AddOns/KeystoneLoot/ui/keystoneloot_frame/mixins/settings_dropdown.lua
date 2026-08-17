@@ -78,6 +78,7 @@ StaticPopupDialogs.KEYSTONELOOT_EXPORT = {
     button1 = CLOSE,
     hasEditBox = 1,
     editBoxWidth = 450,
+    maxLetters = 0,
     OnShow = function(self)
         self:GetEditBox():SetText(Favorites:Export());
         self:GetEditBox():HighlightText();
@@ -100,6 +101,7 @@ StaticPopupDialogs.KEYSTONELOOT_IMPORT = {
     button3 = CANCEL,
     hasEditBox = 1,
     editBoxWidth = 450,
+    maxLetters = 0,
     OnAccept = function(self)
         local text = self:GetEditBox():GetText();
         local success, result, skippedSpecs = Favorites:Import(text, false);
@@ -147,7 +149,7 @@ StaticPopupDialogs.KEYSTONELOOT_WHISPER_MESSAGE = {
     hideOnEscape = true
 };
 
-KeystoneLootSettingsDropdownMixin = {};
+KeystoneLootSettingsDropdownMixin = CreateFromMixins(KSLDropdownButtonMixin);
 
 function KeystoneLootSettingsDropdownMixin:Init()
     self:SetupMenu(function(dropdown, rootDescription)

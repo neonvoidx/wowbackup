@@ -28,10 +28,10 @@ local options = {
       name = "",
       isChecked = false,
     },
-    ["show_buff_border"] = {
-      name = "",
-      isChecked = true,
-    },
+    -- ["show_buff_border"] = {
+    --   name = "",
+    --   isChecked = true,
+    -- },
   },
 }
 
@@ -47,25 +47,25 @@ function skin:OnEnable()
     skin:Apply(self:GetColor("main"), self:GetColor("cast_bar"), 1)
   end
 
-  if self:GetToggleState("show_buff_border") then
-    local borderColor = self:GetColor("buff_border")
-    local buffPool = FocusFrame.auraPools:GetPool("TargetBuffFrameTemplate")
+  -- if self:GetToggleState("show_buff_border") then
+  --   local borderColor = self:GetColor("buff_border")
+  --   local buffPool = FocusFrame.auraPools:GetPool("TargetBuffFrameTemplate")
 
-    skinnedWidgets = {}
+  --   skinnedWidgets = {}
 
-    local function updateBorders()
-      for widget in buffPool:EnumerateActive() do
-        if not skinnedWidgets[widget] then
-          widget.Icon:SetTexCoord(0.1, 0.9, 0.1, 0.9)
-          self:ApplyBuffBorder(widget, borderColor)
-          skinnedWidgets[widget] = true
-        end
-      end
-    end
+  --   local function updateBorders()
+  --     for widget in buffPool:EnumerateActive() do
+  --       if not skinnedWidgets[widget] then
+  --         widget.Icon:SetTexCoord(0.1, 0.9, 0.1, 0.9)
+  --         self:ApplyBuffBorder(widget, borderColor)
+  --         skinnedWidgets[widget] = true
+  --       end
+  --     end
+  --   end
 
-    self:HookFunc(FocusFrame, "UpdateAuras", updateBorders)
-    updateBorders()
-  end
+  --   self:HookFunc(FocusFrame, "UpdateAuras", updateBorders)
+  --   updateBorders()
+  -- end
 end
 
 function skin:OnDisable()

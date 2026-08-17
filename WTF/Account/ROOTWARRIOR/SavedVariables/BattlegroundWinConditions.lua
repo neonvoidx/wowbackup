@@ -1,15 +1,9 @@
 
 BattlegroundWinConditionsDB = {
 ["onlyShowWhenNewVersion"] = true,
-["lastReadVersion"] = "9.8.4",
+["lastReadVersion"] = "9.8.7",
 ["global"] = {
-["lastFlagCapBy"] = "",
-["debug"] = false,
-["position"] = {
-"BOTTOMRIGHT",
-"BOTTOMRIGHT",
--658.3341064453125,
-251.6669158935547,
+["hordeLockedTimers"] = {
 },
 ["maps"] = {
 ["silvershardmines"] = {
@@ -46,7 +40,8 @@ BattlegroundWinConditionsDB = {
 ["enabled"] = true,
 },
 },
-["version"] = 984,
+["hordeTimers"] = {
+},
 ["general"] = {
 ["info"] = false,
 ["lock"] = true,
@@ -121,6 +116,20 @@ BattlegroundWinConditionsDB = {
 },
 ["banner"] = false,
 ["test"] = false,
+},
+["lastFlagCapBy"] = "",
+["version"] = 984,
+["position"] = {
+"BOTTOMRIGHT",
+"BOTTOMRIGHT",
+-658.3341064453125,
+251.6669158935547,
+},
+["lastScoreTickTime"] = 0,
+["debug"] = false,
+["allyLockedTimers"] = {
+},
+["allyTimers"] = {
 },
 },
 }

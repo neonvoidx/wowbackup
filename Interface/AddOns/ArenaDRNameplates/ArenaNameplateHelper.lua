@@ -124,6 +124,13 @@ local function safeUnitExists(unit)
 end
 
 local function safeUnitsMatch(unitA, unitB)
+    if type(UnitIsProbablyUnit) == "function" then
+        local probableMatch = safePublicBoolean(UnitIsProbablyUnit, unitA, unitB)
+        if probableMatch ~= nil then
+            return probableMatch
+        end
+    end
+
     return safePublicBoolean(UnitIsUnit, unitA, unitB) == true
 end
 
@@ -253,6 +260,17 @@ local function unitsShareIdentity(unitA, unitB)
 end
 
 local function isInArenaInstance()
+    if C_PvP and type(C_PvP.IsMatchConsideredArena) == "function" then
+        local consideredArena = safePublicBoolean(C_PvP.IsMatchConsideredArena)
+        if consideredArena == true then
+            local matchActive = safePublicBoolean(C_PvP.IsMatchActive)
+            local matchComplete = safePublicBoolean(C_PvP.IsMatchComplete)
+            if matchActive == true or matchComplete == true then
+                return true
+            end
+        end
+    end
+
     local arenaActive = safePublicBoolean(IsActiveBattlefieldArena)
     if arenaActive == true then
         return true
@@ -381,6 +399,14 @@ local function getValidatedTokenForUnitFromPlate(unit, plate)
         return nil
     end
 
+    -- C_NamePlate.GetNamePlateForUnit is the authoritative bridge from an
+    -- arena unit to its visible plate. Arena identity values such as GUID,
+    -- class, name, and UnitIsUnit can all be secret in Midnight combat, so
+    -- requiring those values here prevents every live arena mapping.
+    if unit:match("^arena[1-3]$") and isEnemyPlayerToken(token) then
+        return token
+    end
+
     if unitsShareIdentity(unit, token) then
         return token
     end
@@ -488,15 +514,19 @@ function Helper:ValidateMappings()
                 or self.tokenToArena[token] ~= arenaID
                 or not safeUnitExists(token) then
                 valid = false
-            elseif safeUnitsMatch(arenaUnit, token) then
-                mappedCount = mappedCount + 1
             else
-                local arenaGUID = safeUnitGUID(arenaUnit)
-                local tokenGUID = safeUnitGUID(token)
-                if arenaGUID and tokenGUID and arenaGUID == tokenGUID then
+                local directPlate = safeCall(C_NamePlate.GetNamePlateForUnit, arenaUnit)
+                local directToken = getValidatedTokenForUnitFromPlate(arenaUnit, directPlate)
+                if directToken == token or safeUnitsMatch(arenaUnit, token) then
                     mappedCount = mappedCount + 1
                 else
-                    valid = false
+                    local arenaGUID = safeUnitGUID(arenaUnit)
+                    local tokenGUID = safeUnitGUID(token)
+                    if arenaGUID and tokenGUID and arenaGUID == tokenGUID then
+                        mappedCount = mappedCount + 1
+                    else
+                        valid = false
+                    end
                 end
             end
         elseif token then
@@ -731,13 +761,13 @@ function Helper:RefreshMappings()
 
     for _, plate in ipairs(plates) do
         local token = getNameplateTokenFromPlate(plate)
-        if token then
+        if token and isEnemyPlayerToken(token) then
             local classToken = safeUnitClassToken(token)
-            if classToken and isEnemyPlayerToken(token) then
-                enemyTokenSet[token] = true
+            enemyTokenSet[token] = true
+            if classToken then
                 classByToken[token] = classToken
-                table.insert(enemyTokens, token)
             end
+            table.insert(enemyTokens, token)
         end
     end
 
@@ -764,6 +794,22 @@ function Helper:RefreshMappings()
                 local directToken = getValidatedTokenForUnitFromPlate(arenaUnit, directPlate)
                 if directToken and enemyTokenSet[directToken] then
                     tryMap(newArenaToToken, newTokenToArena, arenaID, directToken)
+                end
+            end
+        end
+    end
+
+    -- Midnight can protect UnitIsUnit, GUID, class, and name during arena
+    -- combat. UnitIsProbablyUnit is Blizzard's public comparison fallback;
+    -- compare the remaining visible enemy tokens before consulting identity
+    -- values that may be secret.
+    for arenaID = 1, 3 do
+        if arenaExistsByID[arenaID] and not newArenaToToken[arenaID] then
+            local arenaUnit = getArenaUnit(arenaID)
+            for _, token in ipairs(enemyTokens) do
+                if not newTokenToArena[token] and unitsShareIdentity(arenaUnit, token) then
+                    tryMap(newArenaToToken, newTokenToArena, arenaID, token)
+                    break
                 end
             end
         end

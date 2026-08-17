@@ -11,14 +11,13 @@ if not _G.TTT then _G.TTT = ns; end
 local Main = LibStub('AceAddon-3.0'):NewAddon(name, 'AceConsole-3.0', 'AceHook-3.0', 'NumyAceEvent-3.0');
 if not Main then return; end
 ns.Main = Main;
-ns.L = LibStub('AceLocale-3.0'):GetLocale(name);
 
 function Main:OnInitialize()
-    if NumyProfiler then
-        NumyProfiler:WrapModules(name, 'Main', self);
-        NumyProfiler:WrapModules(name, 'Util', ns.Util);
+    if NumyFunctionProfiler then
+        NumyFunctionProfiler:WrapModules(name, 'Main', self);
+        NumyFunctionProfiler:WrapModules(name, 'Util', ns.Util);
         for moduleName, module in self:IterateModules() do
-            NumyProfiler:WrapModules(name, moduleName, module);
+            NumyFunctionProfiler:WrapModules(name, moduleName, module);
         end
     end
 

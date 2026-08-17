@@ -7,6 +7,8 @@
 	<Script file="CooldownPanels_ActiveProcTriggers.lua" />
 	<Script file="CooldownPanels.lua" />
 	<Script file="CooldownPanels_CDMAuras.lua" />
+	<Script file="CooldownPanels_AuraPresetData.lua" />
+	<Script file="CooldownPanels_AuraPresets.lua" />
 	<Script file="CooldownPanels_BlizzardEditorConstants.lua" />
 	<Include file="CooldownPanels_BlizzardEditor.xml" />
 	<Script file="CooldownPanels_BlizzardEditor.lua" />

@@ -14,39 +14,6 @@ function addon.Aura.functions.InitDB()
 	if not addon.db or not addon.functions or not addon.functions.InitDBValue then return end
 	local init = addon.functions.InitDBValue
 
-	init("standalonePrivateAuras", {
-		version = 1,
-		enabled = false,
-		anchor = {
-			point = "CENTER",
-			relativePoint = "CENTER",
-			x = 0,
-			y = -140,
-		},
-		icon = {
-			amount = 3,
-			size = 64,
-			minSize = 10,
-			maxSize = 60,
-			point = "RIGHT",
-			offset = 4,
-		},
-		layout = {
-			enabled = true,
-			direction = "RIGHT",
-			wrapCount = 0,
-			wrapDirection = "DOWN",
-		},
-		countdownFrame = true,
-		countdownNumbers = false,
-		showDispelType = false,
-		duration = {
-			enable = false,
-			point = "BOTTOM",
-			offsetX = 0,
-			offsetY = -1,
-		},
-	})
 
 	init("focusInterruptTracker", {
 		version = 1,

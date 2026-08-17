@@ -1,0 +1,64 @@
+
+ArenaAnalyticsDB = {
+["formatVersion"] = 6,
+["names"] = {
+"Manyfaced",
+},
+["realms"] = {
+"Tichondrius",
+},
+}
+ArenaAnalyticsTransientDB = {
+["currentArena"] = {
+["players"] = {
+},
+["lastRoundTeam"] = {
+},
+["matchState"] = 0,
+["shuffleWinsCache"] = {
+["total"] = 0,
+["wins"] = 0,
+["estimatedRound"] = 0,
+["drawCount"] = 0,
+},
+["ended"] = false,
+["committedRounds"] = {
+},
+["deathData"] = {
+},
+["isHandlingExit"] = false,
+["locked"] = false,
+["round"] = {
+["isInitiated"] = false,
+["team"] = {
+},
+["wins"] = 0,
+["totalWins"] = 0,
+["enemy"] = {
+},
+},
+["endedProperly"] = false,
+},
+["ratedInfo"] = {
+{
+[18] = 1055,
+["lastWorldSeasonPlayed"] = 18,
+},
+{
+[8] = 288,
+["lastWorldSeasonPlayed"] = 8,
+},
+{
+[0] = 0,
+["lastWorldSeasonPlayed"] = 0,
+},
+{
+[12] = 2141,
+["lastWorldSeasonPlayed"] = 12,
+},
+["season"] = 0,
+},
+["queueTimes"] = {
+},
+}
+ArenaAnalyticsMapIconPos = 0

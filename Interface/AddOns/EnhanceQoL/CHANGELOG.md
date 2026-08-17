@@ -1,42 +1,18 @@
 # Changelog
 
-## [11.9.1] - 2026-07-24
-
-### 🐛 Fixed
-
-- Bags: Kept looted items and item cooldowns updating immediately during combat.
-- Cooldown Panels: Kept panel, icon, and border edges evenly pixel-aligned across UI scales, frame positions, and reloads.
-
----
-
-## [11.9.0] - 2026-07-24
+## [12.5.0] - 2026-08-17
 
 ### ✨ Added
 
-- Damage Meter: Added compact K/M/B numbers, a pause keybind, persistent manual visibility, and Data Broker quick controls for all windows.
-- Damage Meter: Added optional moving and resizing outside Edit Mode, with mouseover and lock controls in the Behavior settings and window menu.
-- Unit Frames: Added optional customizable main resource colors to the central Settings UI.
+- Cooldown Panels: Added an optional automatic color for tracked aura bars at maximum stacks.
+- Cooldown Panels: Added a per-entry option to track one talent from a choice node separately.
+- Unit Frames: Healer Buff Placement rules can now target Party, Raid, friendly Target, Focus, and Boss frames independently.
 
 ### 🔄 Changed
 
-- Cooldown Panels: Reordered per-entry ready-glow controls to make overrides easier to configure.
-- Damage Meter: Added the global update interval to Edit Mode and expanded its supported range down to 0.01 seconds.
-- Unit Frames: Class-colored player names are now used for the target-of-target name, rare classification text no longer adds a gap after the level, and the legacy status-row height no longer extends the clickable frame area.
-
-### 🧪 PTR 12.1 Only
-
-- Unit Frames, Group Frames, and Default Aura Frames: Updated native AuraContainer handling, including managed aura groups, friendly debuff filters, dispel overlays, vertical layouts, restricted-unit handling, combat-safe creation, and click-to-cancel support.
-- Cooldown Panels and Bloodlust Tracker: Updated native aura progress, glows, cooldown swipes, sounds, and restricted-value handling; Cooldown Panels now support separate sounds for initial application, gained applications, and removal.
-- Group Tools: Updated Healer Mana event handling for restricted role values.
-- Resource Bars: Added native application-count progress for stack-based aura resources.
+- Cooldown Panels: New panels now use Center as their default Growth Point.
 
 ### 🐛 Fixed
 
-- Class Buff Reminder: Kept shaped glows correct when the reminder first appears after login or reload.
-- Cooldown Panels: Kept synced Cooldown Manager entries stable when proc effects temporarily replace their spells.
-- Group Frames: Stopped disabled and unused secure group headers from consuming CPU while idle.
-- Minimap: Kept the loot and active specialization Quick Switch popup within the screen boundaries.
-- Resource Bars: Kept borders and segments evenly pixel-aligned across UI scales and odd or even bar sizes.
-- Teleport Compendium: Ensured equippable teleport rings and trinkets use their intended equipment slot.
-- Unit Frames: Kept one-pixel borders even and gap-free across UI scales and odd or even frame sizes.
-- Unit Frames: Preserved existing profile layouts when a newly mapped character logs in after another Unit Frames profile was active.
+- Cooldown Panels: Centered vertically growing tracked-aura grids around their configured anchor.
+- Cooldown Panels: Made Growth Point available for non-radial layouts without requiring wrapping.

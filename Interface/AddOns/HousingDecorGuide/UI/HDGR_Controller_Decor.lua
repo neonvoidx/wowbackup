@@ -1,0 +1,676 @@
+-- HDG.DecorController
+-- ============================================================================
+-- Decor browser: filter strip (top chips, toggles, search, tag slots),
+-- decorRow factory, note editbox, variant swatches, wishlist + destroy dialog.
+
+HDG = HDG or {}
+HDG.DecorController = HDG.DecorController or {}
+
+local DecorController = HDG.DecorController
+local CH = HDG.ControllerHelpers
+
+-- ===== Row factory ==========================================================
+-- [fav 14x14] [name] ... [dye dots] [collected 12x12] [owned-count 22w (craftable star underlaid top-right)]
+-- MakeRowFactory row: layout builds texture children; paint writes per-paint values.
+
+local ATLAS_FAV_FILLED   = "delves-scenario-heart-icon"        -- ships pre-tinted red
+local ATLAS_CHECK        = "common-icon-checkmark"
+local ATLAS_CRAFT_STAR   = "auctionhouse-icon-favorite-off"    -- outline variant; accepts SetVertexColor (filled = baked gold)
+
+-- ===== decorRowFactory primitives ============================================
+
+local function _layoutDecorRow(row)
+    HDG.TooltipEngine:Attach(row, HDG.TooltipRecipes.DecorRow)
+
+    local fav = row:CreateTexture(nil, "OVERLAY")
+    fav:SetSize(14, 14)
+    fav:SetPoint("LEFT", row, "LEFT", 4, 0)
+    fav:SetAtlas(ATLAS_FAV_FILLED)
+    row._favStar = fav
+
+    -- Owned-count column: always-on, hard right, right-aligned + tabular so digits line
+    -- up down the list. The craftable star underlays its top-right corner (below).
+    local storedFs = row:CreateFontString(nil, "OVERLAY")
+    HDG.UI.applyFontRole(storedFs, "small")
+    HDG.Theme:Register(storedFs, "Text")
+    storedFs:SetPoint("RIGHT", row, "RIGHT", -4, 0)
+    storedFs:SetWidth(22)
+    storedFs:SetJustifyH("RIGHT")
+    storedFs:SetDrawLayer("OVERLAY", 3)   -- ON TOP of the underlaid craftable star (sublevel 1)
+    storedFs:SetShadowColor(0, 0, 0, 1)   -- dark halo keeps digits legible over the star
+    storedFs:SetShadowOffset(1, -1)
+    row._storedCountFs = storedFs
+
+    local name = row:CreateFontString(nil, "OVERLAY")
+    HDG.UI.applyFontRole(name, "subheading")
+    HDG.Theme:Register(name, "Text")
+    name:SetPoint("LEFT",  fav, "RIGHT", 6, 0)
+    name:SetPoint("RIGHT", row, "RIGHT", -44, 0)
+    name:SetJustifyH("LEFT")
+    row._nameFs = name
+
+    -- Collected check (just left of the count column)
+    local check = row:CreateTexture(nil, "OVERLAY")
+    check:SetSize(12, 12)
+    check:SetPoint("RIGHT", row, "RIGHT", -28, 0)
+    check:SetAtlas(ATLAS_CHECK)
+    row._checkIcon = check
+
+    -- Craftable star: small, tucked into the count column's top-right corner so it no
+    -- longer eats its own slot -- the count number reads below-left of it.
+    local star = row:CreateTexture(nil, "OVERLAY")
+    star:SetSize(9, 9)
+    -- Top-LEFT of the count column: a right-aligned number leaves the left side empty
+    -- (esp. 1-2 digits), so the star tucks up there clear of the digits. Count column
+    -- left edge is row-right -26 (RIGHT -4, width 22); star's right edge sits at -17.
+    star:SetPoint("TOPRIGHT", row, "TOPRIGHT", -17, -1)
+    star:SetDrawLayer("OVERLAY", 1)                       -- behind the count number, for wide (3-digit) counts
+    star:SetAtlas(ATLAS_CRAFT_STAR)
+    row._craftStar = star
+
+    -- Dye droplets (up to 3): NOT Theme:Register'd (the dye color IS the color; a skinner would clobber it).
+    row._droplets = {}
+    for i = 1, 3 do
+        local d = row:CreateTexture(nil, "OVERLAY")
+        d:SetSize(8, 10)
+        d:SetAtlas("dye-drop_32")
+        d:Hide()
+        row._droplets[i] = d
+    end
+end
+
+-- Favourite heart (left edge) + owned-count (right column) -- now independent. The count
+-- shows for any owned copies in EVERY mode, so browsing shows "how many" too, not just
+-- Destroy mode. A blank count means 0 in storage, not "unowned" (the check covers ownership).
+local function _paintFavAndCount(row, ed)
+    if row._favStar then
+        if ed.isFavorite then row._favStar:Show() else row._favStar:Hide() end
+    end
+    if row._storedCountFs then
+        local c = ed.destroyableCount or 0  -- exception(boundary): sparse decor struct field
+        if c > 0 then
+            row._storedCountFs:SetText(tostring(c))
+            row._storedCountFs:Show()
+        else
+            row._storedCountFs:Hide()
+        end
+    end
+end
+
+-- Collected checkmark from ed.isCollected (canonical predicate via decor.isCollected).
+local function _paintCheckmark(row, ed)
+    if not row._checkIcon then return end
+    if ed.isCollected then row._checkIcon:Show() else row._checkIcon:Hide() end
+end
+
+-- Name: uncollected -> accent, collected -> normal text. ed.name stays raw for search/toasts.
+local function _paintName(row, ed)
+    if not row._nameFs then return end
+    row._nameFs:SetText(HDG.Theme:CollectionLabel(ed.isCollected, ed.name))
+end
+
+-- Dye droplets: ed.dyeColorIDs is the flat channel-ordered list (sparse 0/1/2, bake-collapsed).
+-- Tinted via swatchColorStart; name right bound tightened to reserve the droplet zone.
+local function _paintDroplets(row, ed)
+    local ids = ed.dyeColorIDs
+    local n   = (ids and #ids) or 0
+    for i = 1, 3 do
+        local d = row._droplets[i]
+        local dyeColorID = ids and ids[i]
+        if dyeColorID then
+            d:ClearAllPoints()
+            d:SetPoint("RIGHT", row, "RIGHT", -44 - (i - 1) * 9, 0)
+            local info = HDG.HousingCatalogObserver:GetDyeColorInfo(dyeColorID)
+            if info and info.swatchColorStart then
+                HDG.UI._TintTexture(d, info.swatchColorStart); d:SetAlpha(1)  -- data: the dye's actual swatch color (runtime)
+            else
+                HDG.UI._TintTexture(d, { r = 1, g = 1, b = 1 }); d:SetAlpha(0.2)  -- data: no dye -> blank swatch
+            end
+            d:Show()
+        else
+            d:Hide()
+        end
+    end
+    -- Reserve name space when droplets present (-34 default; -34 each paint is
+    -- a harmless no-op for the common non-variant row).
+    row._nameFs:SetPoint("RIGHT", row, "RIGHT", n > 0 and (-44 - n * 9 - 2) or -44, 0)
+end
+
+-- Left = select, right = favorite toggle. Toast reads state BEFORE dispatch (sync Store; order matters).
+local function _wireDecorClicks(row, ed)
+    local itemID = ed.itemID
+    if not itemID then
+        HDG.UI.WireLeftRightClick(row, nil, nil)
+        return
+    end
+    local variantKey = ed.variantKey
+    HDG.UI.WireLeftRightClick(row,
+        function()
+            -- Ctrl-click queues the item's recipe (decor rows carry no recipeID,
+            -- so resolve it via the Professions reverse index); non-craftable
+            -- decor toasts a "no recipe" note instead. Shift-click links the item
+            -- in chat (active editbox, or opens chat). A plain click selects.
+            if IsControlKeyDown() then
+                local rid = HDG.StaticData.Recipes:Get(itemID) and itemID
+                if rid then
+                    HDG.UI.QueueRecipe(rid, itemID, ed.name)
+                else
+                    HDG.Log:Info("queue", ed.name .. " has no recipe")
+                end
+                return
+            end
+            if IsShiftKeyDown() then
+                local _, link = C_Item.GetItemInfo(itemID)  -- exception(boundary): itemLink nil on cold item cache
+                if link then _G.ChatFrameUtil.InsertLink(link) end
+                return
+            end
+            -- selectedItemID drives the detail pane (base item data); the
+            -- separate selectedVariantKey drives the list highlight + the dyed
+            -- model preview (which specific owned variant was clicked).
+            CH.Mechanics.SetUITransientView("decor", "selectedItemID", itemID)
+            CH.Mechanics.SetUITransientView("decor", "selectedVariantKey", variantKey)
+        end,
+        function()
+            local wasFav = HDG.Store:GetState().account.favorites[itemID]  -- exception(false-positive): top-level controller read
+            HDG.Store:Dispatch({
+                type    = HDG.Constants.ACTIONS.FAVORITE_TOGGLE,
+                payload = { itemID = itemID },
+            })
+            HDG.Log:Info("decor_action",
+                (wasFav and "Unfavorited: " or "Favorited: ") .. ((ed and ed.name) or "item"))
+        end)
+end
+
+local function _paintDecorRow(row, ed)
+    row._itemID, row._name = ed.itemID, ed.name   -- R2 tooltip stamps
+    _paintName(row, ed)
+    _paintDroplets(row, ed)
+    _paintFavAndCount(row, ed)
+    _paintCheckmark(row, ed)
+    if row._craftStar then
+        HDG.UI:PaintCraftStar(row._craftStar, ed.craftableState,
+            HDG.Constants.RECIPE_STATE.NotARecipe)
+    end
+end
+
+HDG.Rows:Register("decorRow", {
+    font    = "body",
+    height  = 24,
+    factory = HDG.UI.MakeRowFactory({
+        layout     = _layoutDecorRow,
+        paint      = _paintDecorRow,
+        laidOutTag = "_decorLaidOut",
+        selectable = true,
+        wire       = _wireDecorClicks,
+        resetText  = { "_nameFs" },
+        reset      = function(row)
+            row._itemID, row._name = nil, nil  -- clear R2 tooltip stamps
+            if row._favStar   then row._favStar:Hide()   end
+            if row._checkIcon then row._checkIcon:Hide() end
+            if row._craftStar then row._craftStar:Hide() end
+            -- pre-layout: _droplets nil until _layoutDecorRow runs on a fresh slot.
+            if row._droplets then for i = 1, 3 do row._droplets[i]:Hide() end end
+        end,
+    }),
+    -- variantKey = itemID:<variant>|base (stamped by decor.items); itemID alone collides for variant rows.
+    key     = function(ed) return ed.variantKey end,
+})
+
+-- ===== Controller lifecycle ==================================================
+
+-- ===== Destroy stored-copies dialog =========================================
+-- Custom modal with 1-99 stepper. Destruction is irreversible; layered guards:
+--   1. Show: refuse without valid entryID + count.
+--   2. Show: clamp max to min(99, destroyableInstanceCount).
+--   3. +/-: re-check bounds before mutating qty.
+--   4. Render: refreshDestroyDialog re-clamps qty each paint.
+--   5. Click: snapshot entryID/name/q into locals (HOUSING_STORAGE_ENTRY_UPDATED
+--      dispatches synchronously inside DestroyEntry -- can't read stale state).
+--   6. Click: type-validate q; math.floor.
+--   7. Click: re-resolve live destroyable count; clamp DOWN only.
+--   8. Click: disable Destroy button for the loop (double-click guard).
+--   9. Loop: pcall each DestroyEntry; API bounds naturally limit over-loop.
+--  10. Hide: clear entryID + name to prevent stale reuse.
+
+local _destroyDialog
+local _destroyState = { qty = 1, max = 1, entryID = nil, name = nil }
+
+-- Snapshot destroy params; returns nil on any invalid input (destruction must not proceed ambiguously).
+local function validateDestroyArgs(entryID, q, max)
+    if entryID == nil then return nil end
+    if type(q)   ~= "number" or q ~= q then return nil end   -- nil / NaN
+    if type(max) ~= "number" or max < 1 then return nil end
+    q = math.floor(q)
+    if q < 1 then return nil end
+    if q > max then q = max end
+    return q
+end
+
+local function buildDestroyDialog()
+    local f = CreateFrame("Frame", "HDGR_DestroyConfirmDialog", _G.UIParent, "BackdropTemplate")   -- exception(boundary): UIParent strata; global name for WoW frame-stacking
+    f:SetSize(440, 320)
+    f:SetPoint("CENTER")
+    f:SetFrameStrata("DIALOG")
+    f:SetMovable(true); f:EnableMouse(true); f:SetClampedToScreen(true)
+    f:RegisterForDrag("LeftButton")
+    f:SetScript("OnDragStart", f.StartMoving)
+    f:SetScript("OnDragStop", f.StopMovingOrSizing)
+    -- The Frame skinner paints surface.panel + border.default via
+    -- setBackdrop (Theme.lua:253). HDG.UI:CopyDialog uses the same.
+    -- There is no "Panel" skinner registered -- that silently no-ops.
+    HDG.Theme:Register(f, "Frame")
+    f:Hide()
+
+    f.titleFs = f:CreateFontString(nil, "OVERLAY")
+    HDG.UI.applyFontRole(f.titleFs, "heading")
+    HDG.Theme:Register(f.titleFs, "Text")
+    f.titleFs:SetPoint("TOP", 0, -18)
+    f.titleFs:SetWidth(400)
+    f.titleFs:SetJustifyH("CENTER")
+    f.titleFs:SetSpacing(2)
+
+    f.bigWarnFs = f:CreateFontString(nil, "OVERLAY")   -- semantic.error; destructive-action emphasis
+    HDG.UI.applyFontRole(f.bigWarnFs, "subheading")
+    HDG.Theme:Register(f.bigWarnFs, "Text")
+    f.bigWarnFs:SetPoint("TOP", f.titleFs, "BOTTOM", 0, -16)
+    f.bigWarnFs:SetWidth(400)
+    f.bigWarnFs:SetJustifyH("CENTER")
+
+    -- Sub note: friendly elaboration on the irreversibility.
+    f.subNoteFs = f:CreateFontString(nil, "OVERLAY")
+    HDG.UI.applyFontRole(f.subNoteFs, "body")
+    HDG.Theme:Register(f.subNoteFs, "TextDim")
+    f.subNoteFs:SetPoint("TOP", f.bigWarnFs, "BOTTOM", 0, -6)
+    f.subNoteFs:SetWidth(400)
+    f.subNoteFs:SetJustifyH("CENTER")
+    f.subNoteFs:SetSpacing(2)
+
+    -- Stepper row: anchored from BOTTOM so position is fixed regardless of warning text wrap.
+    local stepperRow = CreateFrame("Frame", nil, f)
+    stepperRow:SetSize(200, 32)
+    stepperRow:SetPoint("BOTTOM", 0, 76)
+    f.stepperRow = stepperRow
+
+    f.minusBtn = HDG.UI:Button(stepperRow, "-", "heading")
+    f.minusBtn._hdgrVariant = "tertiary"
+    HDG.Theme:Register(f.minusBtn, "Button")
+    f.minusBtn:SetSize(32, 32)
+    f.minusBtn:ClearAllPoints()
+    f.minusBtn:SetPoint("CENTER", stepperRow, "CENTER", -56, 0)
+
+    f.qtyFs = stepperRow:CreateFontString(nil, "OVERLAY")
+    HDG.UI.applyFontRole(f.qtyFs, "heading")
+    HDG.Theme:Register(f.qtyFs, "Text")
+    f.qtyFs:SetPoint("CENTER", stepperRow, "CENTER", 0, 0)
+    f.qtyFs:SetWidth(80)
+    f.qtyFs:SetJustifyH("CENTER")
+
+    f.plusBtn = HDG.UI:Button(stepperRow, "+", "heading")
+    f.plusBtn._hdgrVariant = "tertiary"
+    HDG.Theme:Register(f.plusBtn, "Button")
+    f.plusBtn:SetSize(32, 32)
+    f.plusBtn:SetPoint("CENTER", stepperRow, "CENTER", 56, 0)
+
+    f.stepperMaxFs = f:CreateFontString(nil, "OVERLAY")
+    HDG.UI.applyFontRole(f.stepperMaxFs, "small")
+    HDG.Theme:Register(f.stepperMaxFs, "TextDim")
+    f.stepperMaxFs:SetPoint("TOP", stepperRow, "BOTTOM", 0, -4)
+    f.stepperMaxFs:SetWidth(400)
+    f.stepperMaxFs:SetJustifyH("CENTER")
+
+    f.destroyBtn = HDG.UI:Button(f, "Destroy", "body")
+    f.destroyBtn._hdgrVariant = "tertiary"
+    f.destroyBtn._textTone = "error"
+    HDG.Theme:Register(f.destroyBtn, "Button")
+    f.destroyBtn:SetSize(140, 30)
+    f.destroyBtn:SetPoint("BOTTOMLEFT", 50, 24)
+
+    f.cancelBtn = HDG.UI:Button(f, "Cancel", "body")
+    f.cancelBtn._hdgrVariant = "tertiary"
+    HDG.Theme:Register(f.cancelBtn, "Button")
+    f.cancelBtn:SetSize(140, 30)
+    f.cancelBtn:SetPoint("BOTTOMRIGHT", -50, 24)
+    f.cancelBtn:SetScript("OnClick", function() f:Hide() end)
+
+    -- OnHide: clear state + re-enable Destroy button (prevents stale reuse by future Show).
+    f:SetScript("OnHide", function()
+        _destroyState.entryID = nil
+        _destroyState.name    = nil
+        _destroyState.qty     = 1
+        if f.destroyBtn and f.destroyBtn.SetEnabled then
+            f.destroyBtn:SetEnabled(true)
+        end
+    end)
+
+    return f
+end
+
+local function refreshDestroyDialog()
+    if not _destroyDialog then return end
+    local f   = _destroyDialog
+    local st  = _destroyState
+    -- Coerce garbage state: shouldn't happen via Show/+/- paths but guards future callers.
+    if type(st.qty) ~= "number" then st.qty = 1 end
+    if type(st.max) ~= "number" or st.max < 1 then st.max = 1 end
+    if st.qty < 1       then st.qty = 1       end
+    if st.qty > st.max  then st.qty = st.max  end
+    local accentCC  = HDG.Theme:ColorCode("semantic.accent")
+    local errorCC   = HDG.Theme:ColorCode("semantic.error")
+    -- Title: "Destroy N copy/copies of <Name>?"
+    f.titleFs:SetText(string.format("Destroy %d %s of\n%s%s|r?",
+        st.qty,
+        st.qty == 1 and "copy" or "copies",
+        accentCC, st.name or "this decor"))
+    -- Big warning + sub-note. The warning is colored error and the sub-
+    -- note remains dim so the hierarchy reads loud-then-quiet.
+    f.bigWarnFs:SetText(errorCC .. "WARNING: This cannot be undone.|r")
+    f.subNoteFs:SetText(
+        "Destroyed decor is gone permanently.\n" ..
+        "If this was a mistake, Vamoose is very sorry -- there is nothing he can do.")
+    -- Stepper qty + live max caption.
+    f.qtyFs:SetText(tostring(st.qty))
+    local maxPlural = st.max == 1 and "copy" or "copies"
+    f.stepperMaxFs:SetText(string.format("of %d stored %s", st.max, maxPlural))
+    f.minusBtn:SetEnabled(st.qty > 1)
+    f.plusBtn:SetEnabled(st.qty < st.max)
+end
+
+local function ShowDestroyStepperDialog(sel)
+    if type(sel) ~= "table" then return end
+    local entryID = sel.entryID
+    local name    = sel.name or "this decor"
+    -- Guard: nothing destroyable -> refuse. Belt-and-braces with decor.showDestroyButton binding.
+    local liveMax = math.min(99, math.floor(sel.destroyableInstanceCount or 0))
+    if not entryID or liveMax < 1 then return end
+
+    if not _destroyDialog then _destroyDialog = buildDestroyDialog() end
+    local f  = _destroyDialog
+    local st = _destroyState
+    st.max     = liveMax
+    st.qty     = 1
+    st.entryID = entryID
+    st.name    = name
+
+    f.minusBtn:SetScript("OnClick", function()
+        if _destroyState.qty > 1 then   -- re-check: disabled state should prevent this, but input race possible
+            _destroyState.qty = _destroyState.qty - 1
+            refreshDestroyDialog()
+        end
+    end)
+    f.plusBtn:SetScript("OnClick", function()
+        if _destroyState.qty < _destroyState.max then
+            _destroyState.qty = _destroyState.qty + 1
+            refreshDestroyDialog()
+        end
+    end)
+    f.destroyBtn:SetScript("OnClick", function()
+        -- Snapshot ALL params: HOUSING_STORAGE_ENTRY_UPDATED fires synchronously inside DestroyEntry.
+        local entryID_ = _destroyState.entryID
+        local name_    = _destroyState.name
+        local qRaw     = _destroyState.qty
+        local maxRaw   = _destroyState.max
+
+        local q = validateDestroyArgs(entryID_, qRaw, maxRaw)
+        if not q then f:Hide(); return end
+
+        -- q is already clamped to the per-variant numStored (maxRaw). We deliberately do NOT
+        -- re-gate on GetCatalogEntryInfo(entryID).destroyableInstanceCount: on the base/undyed
+        -- (vid=0) entry that field is an off-by-one AGGREGATE, which would leave the last undyed
+        -- copy undestroyable. Any stale over-count is absorbed by DestroyEntry's graceful no-op.
+        local cat = _G.C_HousingCatalog
+        if not (cat and cat.DestroyEntry) then f:Hide(); return end
+
+        f.destroyBtn:SetEnabled(false)   -- guard 8: disable for loop; Hide() below is belt+braces
+        -- Hide first so user sees immediate response; 99-iteration loop can stutter a frame.
+        f:Hide()
+
+        local firstErr   -- collect first DestroyEntry failure; warn once, not N times
+        for _ = 1, q do
+            local ok, err = pcall(cat.DestroyEntry, entryID_, false)
+            if not ok and not firstErr then firstErr = err end
+        end
+        if firstErr then HDG.Log:Warn("decor", "DestroyEntry failed: " .. tostring(firstErr)) end
+
+        -- Clear selection: if all copies destroyed, the item falls out of filter;
+        -- the row at the same visual position shows a DIFFERENT item without this clear.
+        CH.Mechanics.SetUITransientView("decor", "selectedItemID", nil)
+        CH.Mechanics.SetUITransientView("decor", "selectedVariantKey", nil)
+
+        HDG.Log:Info("decor_action",
+            string.format("Destroyed %d %s of %s",
+                q, q == 1 and "copy" or "copies", name_ or "decor"))
+    end)
+    refreshDestroyDialog()
+    f:Show(); f:Raise()
+end
+
+local function SetTopFilter(value)
+    -- per ADR-018: 'all' -> UI_FILTER_RESET (atomic clear); others -> DECOR_SET_TOP_FILTER (preserves toggles + search).
+    if value == "all" then
+        HDG.Store:Dispatch({
+            type    = HDG.Constants.ACTIONS.UI_FILTER_RESET,
+            payload = { tab = "decor" },
+        })
+    else
+        HDG.Store:Dispatch({
+            type    = HDG.Constants.ACTIONS.DECOR_SET_TOP_FILTER,
+            payload = { value = value },
+        })
+    end
+end
+
+-- Keyboard nav: host:SelectByArrow handles selection + ScrollToElementData.
+
+function DecorController:Wire(rootFrame)
+    local searchBox = HDG.UI.WireSearchBox(rootFrame, "decorPanel.search", "decor", "searchQuery")
+
+    self:_wireListBox(rootFrame)
+
+    -- Top filter chips (SSoT: HDG.Constants.TOP_FILTERS used by both LayoutConfig and here).
+    for _, entry in ipairs(HDG.Constants.TOP_FILTERS or {}) do
+        local captured = entry.value
+        HDG.UI.OnClick(rootFrame, "decorPanel.topFilter_" .. captured, function()
+            SetTopFilter(captured)
+        end)
+    end
+
+    self:_wireTagSlots(rootFrame)
+
+    -- Right-side toggles
+    HDG.UI.OnClick(rootFrame, "decorPanel.onlyUncollectedToggle", function()
+        HDG.Store:Dispatch({ type = HDG.Constants.ACTIONS.DECOR_TOGGLE_ONLY_UNCOLLECTED })
+    end)
+    HDG.UI.OnClick(rootFrame, "decorPanel.onlyStoredToggle", function()
+        HDG.Store:Dispatch({ type = HDG.Constants.ACTIONS.DECOR_TOGGLE_ONLY_STORED })
+    end)
+
+    -- Reset: atomic clear via UI_FILTER_RESET (mirrors the 'all' chip).
+    HDG.UI.OnClick(rootFrame, "decorPanel.resetFilters", function()
+        HDG.Store:Dispatch({
+            type    = HDG.Constants.ACTIONS.UI_FILTER_RESET,
+            payload = { tab = "decor" },
+        })
+        if searchBox and searchBox.SetText then searchBox:SetText("") end
+    end)
+
+    self:_wireNoteBox(rootFrame)
+
+    -- Destroy button: opens the 1-99 stepper dialog.
+    local destroyBtn = HDG.UI.W(rootFrame, "decorDetailPanel.destroyBtn")
+    if destroyBtn and destroyBtn.SetScript then
+        destroyBtn:SetScript("OnClick", function()
+            local state = HDG.Store:GetState()  -- exception(false-positive): top-level controller method (not a row factory)
+            local sel = HDG.Selectors:Call("decor.selectedItem", state, {})
+            if not (sel and sel.entryID and (sel.destroyableInstanceCount or 0) > 0) then return end
+            ShowDestroyStepperDialog(sel)
+        end)
+    end
+
+    self:_wireWishlist(rootFrame)
+    self:_wireVendorNav(rootFrame)
+    self:_wireVendorHyperlink(rootFrame)
+end
+
+-- ===== Wire sub-wirings (extracted from DecorController:Wire) ===============
+
+-- |Hhdgrvendor:<npcID>|h click: route to this vendor in Acquire (vendor view).
+-- Closes the #1 cross-tab journey (UX review 2026-06-10): source line -> vendor.
+local function _parseVendorLink(link)
+    local kind, payload = strsplit(":", link or "", 2)
+    if kind ~= "hdgrvendor" or not payload or payload == "" then return nil end
+    return tonumber(payload)
+end
+
+function DecorController:_wireVendorHyperlink(rootFrame)
+    local sourceLabel = HDG.UI.W(rootFrame, "decorDetailPanel.itemSource")
+    local hyperHost   = sourceLabel and sourceLabel.GetParent and sourceLabel:GetParent()
+    if not (hyperHost and hyperHost.SetHyperlinksEnabled) then return end  -- exception(false-positive): mock-fidelity guard (mirrors acq hdgrach wiring)
+    hyperHost:EnableMouse(true)
+    hyperHost:SetHyperlinksEnabled(true)
+    hyperHost:SetScript("OnHyperlinkClick", function(_, link)
+        local npcID = _parseVendorLink(link)
+        if not npcID then return end
+        -- Transients first so the acquisition view paints in vendor mode with the
+        -- vendor already selected when the view switch lands.
+        CH.Mechanics.SetUITransientView("acquisition", "viewMode", "vendor")
+        CH.Mechanics.SetUITransientView("acquisition", "selectedNpcID", npcID)
+        HDG.Store:Dispatch({
+            type    = HDG.Constants.ACTIONS.UI_SET_PERSISTENT,
+            payload = { key = "view", value = "acquisition" },
+        })
+    end)
+    hyperHost:SetScript("OnHyperlinkEnter", function(self, link)
+        if not _parseVendorLink(link) then return end
+        HDG.TooltipEngine:Show(self, {
+            anchor     = "ANCHOR_CURSOR",
+            extraLines = {
+                { text = "Click to view this vendor in Acquire", r = 0.7, g = 0.7, b = 0.7 },
+            },
+        })
+    end)
+    hyperHost:SetScript("OnHyperlinkLeave", function() HDG.TooltipEngine:Hide() end)
+end
+
+-- List box: arrow-key navigation + SelectionBehaviorMixin store-sync.
+function DecorController:_wireListBox(rootFrame)
+    local listBox = HDG.UI.W(rootFrame, "decorPanel.list")
+    if listBox and listBox.EnableKeyboard then
+        listBox:EnableKeyboard(true)
+        listBox:SetScript("OnKeyDown", function(self, key)
+                if key ~= "UP" and key ~= "DOWN" then
+                    self:SetPropagateKeyboardInput(true)
+                    return
+                end
+                self:SetPropagateKeyboardInput(false)
+                local ed = self.SelectByArrow and self:SelectByArrow(key)
+                if ed and ed.itemID then
+                    CH.Mechanics.SetUITransientView("decor", "selectedItemID", ed.itemID)
+                    CH.Mechanics.SetUITransientView("decor", "selectedVariantKey", ed.variantKey)
+                end
+            end)
+    end
+
+    -- SelectionBehaviorMixin sync. Highlight syncs on variantKey (variant rows share an itemID).
+    if listBox and listBox.WireStoreSelectionSync then
+        listBox:WireStoreSelectionSync("session.ui.decor.selectedVariantKey",
+            function(ed, key) return ed.variantKey == key end)
+    end
+end
+
+-- Tag chip slots: click reads decor.tagsForFilter at click-time (live slot text).
+-- Dynamic tag-chip tooltips. Tag slots are pooled (the live sub-tag list maps
+-- onto fixed slots), so the def is a FUNCTION resolved live at hover -- it keys
+-- off the slot's CURRENT tag. Only tags in TAG_TOOLTIP_RECIPE get a tip.
+local TAG_TOOLTIP_RECIPE = { Redeemable = "RedeemableTag" }
+local function _makeTagTooltipDef(slot)
+    return function()
+        -- exception(false-positive): top-level controller def fn (not a row factory)
+        local tags = HDG.Selectors:Call("decor.tagsForFilter", HDG.Store:GetState(), {}) or {}
+        local name = tags[slot] and TAG_TOOLTIP_RECIPE[tags[slot]]
+        return name and { recipe = name } or nil
+    end
+end
+
+function DecorController:_wireTagSlots(rootFrame)
+    for slot = 1, (HDG.Constants.TAG_SLOT_COUNT or 12) do
+        local captured = slot
+        -- Dynamic tooltip: shows the Redeemable explainer when this slot holds it.
+        HDG.TooltipEngine:Attach(
+            HDG.UI.W(rootFrame, "decorPanel.tagSlot_" .. captured),
+            _makeTagTooltipDef(captured))
+        HDG.UI.OnClick(rootFrame, "decorPanel.tagSlot_" .. captured, function()
+            local tags = HDG.Selectors:Call("decor.tagsForFilter",
+                HDG.Store:GetState(), {}) or {}  -- exception(false-positive): top-level controller method (not a row factory)
+            local tag = tags[captured]
+            if tag then
+                -- Real branch, NOT `(current==tag) and nil or tag` -- Lua 5.1 trap returns tag when equal.
+                local current = HDG.Selectors:Call("decor.activeTag",
+                    HDG.Store:GetState(), {})  -- exception(false-positive): top-level controller method (not a row factory)
+                local nextTag = tag
+                if current == tag then nextTag = nil end
+                HDG.Store:Dispatch({
+                    type    = HDG.Constants.ACTIONS.DECOR_SET_TAG,
+                    payload = { tag = nextTag },
+                })
+            end
+        end)
+    end
+end
+
+-- (Dye-variant swatch wiring removed with the in-card variant strip. Owned
+-- dyed-variant ROWS still select via selectedVariantKey in the row factory above.)
+
+-- Note editbox: per-keystroke dispatch. Race guard: _lastBoundItemID tracks which item
+-- is displayed; OnTextChanged skips when displayed item doesn't match selection.
+function DecorController:_wireNoteBox(rootFrame)
+    HDG.ControllerHelpers.Mechanics.WireNoteBox(
+        HDG.UI.W(rootFrame, "decorDetailPanel.note"),
+        function() return HDG.Store:GetState().session.ui.decor.selectedItemID end,  -- exception(false-positive): top-level controller read
+        "itemID", "NOTE_CLEAR", "NOTE_SET")
+end
+
+-- Wishlist: adds selected item (npcID nil) to shopping list (surfaces in Wishlist section).
+function DecorController:_wireWishlist(rootFrame)
+    HDG.UI.OnClick(rootFrame, "decorDetailPanel.wishlistBtn", function()
+        local state = HDG.Store:GetState()  -- exception(false-positive): top-level controller method (not a row factory)
+        local item  = HDG.Selectors:Call("decor.selectedItem", state, {})
+        if not item then return end
+        if state.account.activeShoppingListId == "" then
+            HDG.Log:Warn("shopping",
+                "No active shopping list -- open the Shopping tab to create one (decor wishlist)")
+            return
+        end
+        HDG.Store:Dispatch({
+            type    = HDG.Constants.ACTIONS.SHOPPING_ITEM_ADD,
+            payload = { itemID = item.itemID, qty = 1 },   -- npcID nil = wishlist
+        })
+        HDG.Log:Success("shopping",
+            (item.name or "Item") .. " added to wishlist")
+    end)
+end
+
+-- Show on Map / Waypoint: reuse the shared Waypoints module against the decor's primary
+-- vendor -- identical actions to Shop by Vendor. Buttons are gated visible on a mappable
+-- vendor, so vendorOf() is non-nil at click time; the strict read is intentional.
+function DecorController:_wireVendorNav(rootFrame)
+    local function vendorOf()
+        local item = HDG.Selectors:Call("decor.selectedItem", HDG.Store:GetState(), {})  -- exception(false-positive): top-level controller method (not a row factory)
+        return item and item.vendor
+    end
+    HDG.UI.OnClick(rootFrame, "decorDetailPanel.showOnMapBtn", function()
+        local v = vendorOf()
+        if not v then return end  -- exception(nullable): selection changed between paint + click
+        HDG.Waypoints:ShowOnMap(v.mapID, v.x, v.y, v.name)
+    end)
+    HDG.UI.OnClick(rootFrame, "decorDetailPanel.waypointBtn", function()
+        local v = vendorOf()
+        if not v then return end  -- exception(nullable): selection changed between paint + click
+        HDG.Waypoints:Set(v.mapID, v.x, v.y, v.name, v.faction)
+    end)
+end
+
+function DecorController:Refresh(rootFrame, ctx)
+    -- Bindings push values; nothing imperative needed.
+end
+
+HDG.Controllers:Register("decor", DecorController)

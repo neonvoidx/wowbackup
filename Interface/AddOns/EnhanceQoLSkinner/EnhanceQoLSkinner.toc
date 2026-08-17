@@ -1,7 +1,7 @@
-## Interface: 120007, 120100
+## Interface: 120100
 ## Title: Enhance QoL Skinner
 ## Author: R41Z0R
-## Version: 11.9.1
+## Version: 12.5.0
 ## Notes: Character frame and Objective Tracker styling
 ## Notes-deDE: Charakterfenster- und Objective-Tracker-Styling
 ## Notes-esES: Estilo del marco de personaje y del seguimiento de objetivos

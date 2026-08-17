@@ -11,16 +11,18 @@ C.Addon = {
     SavedVariables = "MinimalistCooldownEdgeDB_v2",
     CooldownManagerCenteredName = "CooldownManagerCentered",
     HealerCCName = "HealerCC",
-    MiniCCName = "MiniCC",
+    MiniAurasName = "MiniAuras",
     DominosName = "Dominos",
     DominosCastName = "Dominos_Cast",
     DominosConfigName = "Dominos_Config",
     Bartender4Name = "Bartender4",
     SArenaName = "sArena_Reloaded",
     TellMeWhenName = "TellMeWhen",
+    MyDRsName = "MyDRs",
     ShinyAurasName = "ShinyAuras",
     MUIName = "mUI",
     BetterBlizzFramesName = "BetterBlizzFrames",
+    BetterBlizzPlatesName = "BetterBlizzPlates",
     VersionFallback = "Dev",
     SlashCommands = { "mce", "minice", "minimalistcooldownedge" },
 }
@@ -33,11 +35,13 @@ C.Assets = {
 C.Categories = {
     Actionbar = "actionbar",
     Nameplate = "nameplate",
+    BetterBlizzPlates = "betterblizzplates",
     Unitframe = "unitframe",
     PlayerAura = "playeraura",
     CooldownManager = "cooldownmanager",
     HealerCC = "healercc",
-    MiniCC = "minicc",
+    MiniAuras = "miniauras",
+    MyDRs = "mydrs",
     SArena = "sarena",
     TellMeWhen = "tellmewhen",
     PartyRaidRetired = "partyRaidRetired",
@@ -55,13 +59,15 @@ C.PlayerAuraTypes = {
     ExternalDefensiveBuffs = "externalDefensiveBuffs",
 }
 
-C.MiniCCFrameTypes = {
+C.MiniAurasFrameTypes = {
     CC = "cc",
-    EnemyCD = "enemycd",
-    FriendlyCD = "friendlycd",
+    RaidFrameAura = "raidframeaura",
     Nameplate = "nameplate",
     Portrait = "portrait",
     Overlay = "overlay",
+    -- MiniAuras retains these displays only on its pre-12.1 backend.
+    LegacyEnemyCD = "enemycd",
+    LegacyFriendlyCD = "friendlycd",
 }
 
 C.SArenaFrameTypes = {
@@ -140,14 +146,14 @@ C.Colors = {
 C.Defaults = {
     AllowThresholdColorsByCategory = {
         [C.Categories.Actionbar] = true,
-        [C.Categories.Nameplate] = false,
+        [C.Categories.BetterBlizzPlates] = true,
         [C.Categories.Unitframe] = true,
         [C.Categories.PlayerAura] = false,
         [C.Categories.CooldownManager] = false,
         [C.Categories.HealerCC] = false,
-        [C.Categories.MiniCC] = false,
         [C.Categories.SArena] = false,
         [C.Categories.TellMeWhen] = false,
+        [C.Categories.MyDRs] = false,
     },
     Category = {
         Font = C.Style.Fonts.GameDefault,
@@ -190,6 +196,11 @@ C.Defaults = {
         StackAnchor = C.Style.Anchors.BottomRight,
         StackOffsetX = 0,
         StackOffsetY = 0,
+        -- Visibility of auras cast by other players on target/focus. MiniCE owns
+        -- the aura container on 12.1, so Blizzard's own "only my debuffs" option
+        -- no longer applies; these mirror its historical default.
+        OnlyMineDebuffs = true,
+        OnlyMineBuffs = false,
     },
     PlayerAura = {
         DisableFading = false,
@@ -207,16 +218,13 @@ C.Defaults = {
         AuraColorEnabled = true,
         AuraColor = C.Colors.Highlight,
     },
-    MiniCC = {
+    MiniAuras = {
         CCFontSize = 18,
         CCHideCountdownNumbers = false,
         CCHideSwipe = false,
-        EnemyCDFontSize = 18,
-        EnemyCDHideCountdownNumbers = false,
-        EnemyCDHideSwipe = false,
-        FriendlyCDFontSize = 18,
-        FriendlyCDHideCountdownNumbers = false,
-        FriendlyCDHideSwipe = false,
+        RaidFrameAuraFontSize = 18,
+        RaidFrameAuraHideCountdownNumbers = false,
+        RaidFrameAuraHideSwipe = false,
         NameplateFontSize = 12,
         NameplateHideCountdownNumbers = false,
         NameplateHideSwipe = false,
@@ -226,7 +234,16 @@ C.Defaults = {
         OverlayFontSize = 18,
         OverlayHideCountdownNumbers = false,
         OverlayHideSwipe = false,
-        HealerWarningTextColor = { r = 1, g = 0.1, b = 0.1, a = 1 },
+        SwipeAlpha = 80,
+    },
+    MyDRs = {
+        FontSize = 16,
+        -- MyDRs paints its own swipe at full opacity by default, so this
+        -- matches its native look until the slider is changed.
+        SwipeAlpha = 100,
+        -- Matches MyDRs' own enableCooldownReverse default until the toggle
+        -- is changed.
+        ReverseSwipe = true,
     },
     SArena = {
         ClassIconFontSize = 18,
@@ -251,7 +268,7 @@ C.Defaults = {
 C.Urls = {
     CurseForge = "https://www.curseforge.com/wow/addons/minice-cooldown-styler",
     Developer = "https://www.curseforge.com/members/anahkas/projects",
-    MiniCC = "https://www.curseforge.com/wow/addons/minicc",
+    MiniAuras = "https://www.curseforge.com/wow/addons/minicc",
     RaidFrameAuras = "https://www.curseforge.com/wow/addons/raid-party-frame-auras",
     ArenaDRNameplates = "https://www.curseforge.com/wow/addons/arena-dr-nameplates",
     TellMeWhen = "https://www.curseforge.com/wow/addons/tellmewhen",
@@ -260,7 +277,6 @@ C.Urls = {
 
 C.ImportExport = {
     Prefix = "MCE1",
-    Base64Alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
     ImportPattern = "^(%w+):([CN]):(.+)$",
     CompressionMode = {
         Compressed = "C",
@@ -268,16 +284,10 @@ C.ImportExport = {
     },
 }
 
-C.ImportExport.Base64Lookup = {}
-for i = 1, #C.ImportExport.Base64Alphabet do
-    local character = C.ImportExport.Base64Alphabet:sub(i, i)
-    C.ImportExport.Base64Lookup[character] = i - 1
-end
-
 C.Classifier = {
     ScanDepth = 10,
     NameplateObjectType = "NamePlate",
-    MiniCCNamePrefix = "MiniCC_",
+    MiniAurasNamePrefix = "MiniAuras_",
     TellMeWhenNamePrefix = "TellMeWhen_",
     IgnoreActionbarPattern = "Aura",
     BlacklistNameContains = {
@@ -500,6 +510,14 @@ C.Adapter = {
     Nameplates = {
         MaxAncestorDepth = 4,
     },
+    BetterBlizzPlates = {
+        InterfaceVersion = 120100,
+        AuraKinds = { "debuffs", "buffs", "buffrow", "cc" },
+        MillisecondThreshold = 6,
+        LowColorThresholdDefault = 6,
+        HideLongTimerFrom = 61,
+        NativeEdgeScale = 1.4142,
+    },
     UnitFrames = {
         BlizzardRoots = { "PlayerFrame", "TargetFrame", "FocusFrame", "PetFrame" },
         ThirdPartyPatterns = { "SUF", "TPerl" },
@@ -517,9 +535,29 @@ C.Adapter = {
         FriendlyCooldownPattern = "^HealerCCIcon%d+Cooldown$",
         EnemyCooldownPattern = "^HealerCCEnemyIcon%d+Cooldown$",
     },
-    MiniCC = {
-        -- Hierarchy depth is fixed at 3 hops (Cooldown→Layer→Slot→Container)
-        -- and resolved directly; no depth constants are needed here.
+    MiniAuras = {
+        -- MiniAuras uses both IconSlotContainer and AuraContainerDisplay
+        -- hierarchies; the adapter resolves their named container ancestors.
+        MaxNamedFrameID = 20000,
+        TrailingNamedFrameMissLimit = 128,
+        -- MiniAuras keeps thousands of pooled cooldowns alive, so discovery
+        -- resumes across frames instead of resolving every named frame in a
+        -- single script call: each pass probes this many names and claims at
+        -- most this many previously unknown cooldowns.
+        DiscoveryProbesPerPass = 4000,
+        DiscoveryClaimsPerPass = 150,
+        -- MiniAuras paints its swipes at this alpha when it creates the
+        -- cooldown (both display backends) and never re-applies it. MiniCE
+        -- restores this exact value when it releases the frame, so a disabled
+        -- category never leaves the swipe at Blizzard's opaque default.
+        NativeSwipeAlpha = 0.8,
+    },
+    MyDRs = {
+        -- MyDRs names every DR icon button and hangs its cooldown on it.
+        ContainerName = "MyDRsContainer",
+        IconButtonPrefix = "MyDRsIconTracker",
+        IconButtonPattern = "^MyDRsIconTracker%d+$",
+        MaxIconIndex = 12,
     },
     SArena = {
         MaxArenaOpponents = 5,
@@ -548,8 +586,17 @@ C.Styler = {
     AlphaPercentMax = 100,
     NumericComparisonEpsilon = 0.001,
     DurationCacheSweepThreshold = 10,
+    -- Hard ceiling on distinct end-time buckets held by the duration object
+    -- cache. The cache is fed by every Cooldown:SetCooldown in the UI, so it
+    -- must bound itself instead of relying on the duration color ticker.
+    DurationCacheMaxEntries = 400,
     DurationColorTickerInterval = 0.5,
     AuraRetryMinInterval = 0.25,
+    -- Minimum delay between full player-aura refreshes triggered by a
+    -- UNIT_AURA payload whose unit token is secret (WoW 12.1). Such payloads
+    -- fire for every group member and nameplate, so the refresh is throttled
+    -- rather than coalesced per frame.
+    SecretAuraRefreshInterval = 0.25,
     CooldownTextLayer = C.Style.Layers.Overlay,
     CooldownTextSubLevel = 7,
     ActionbarTextFrameLevelOffset = 1,

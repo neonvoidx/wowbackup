@@ -9,9 +9,7 @@ if GetLocale() ~= "ptBR" then
 end
 
 L.ERR_SHARED_MODULE_NOT_FOUND = "|cFFFF0000ArenaDRNameplates:|r Módulo Shared não encontrado"
-L.ERR_REQUIRES_MIDNIGHT = "|cFFFF0000ArenaDRNameplates:|r Este addon requer WoW Midnight (12.0.0+)"
 L.ERR_SETTINGS_UI_MODULE_NOT_LOADED = "|cFFFF0000ArenaDRNameplates:|r Módulo da interface de configurações não carregado"
-L.ERR_SETTINGS_API_NOT_AVAILABLE = "|cFFFF0000ArenaDRNameplates:|r API de configurações indisponível"
 L.WARN_HELPER_NOT_FOUND = "|cFFFFFF00ArenaDRNameplates:|r ArenaNameplateHelper não encontrado"
 L.WARN_SETTINGS_MENU_NOT_AVAILABLE = "|cFFFFFF00ArenaDRNameplates:|r Menu de configurações ainda não disponível"
 L.MSG_SETTINGS_RESET = "|cFF00FF00ArenaDRNameplates:|r Configurações redefinidas"

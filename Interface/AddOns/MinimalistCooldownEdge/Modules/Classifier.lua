@@ -10,7 +10,6 @@ local C = addon.Constants
 local MCE = LibStub("AceAddon-3.0"):GetAddon(C.Addon.AceName)
 local Classifier = MCE:NewModule("Classifier")
 
-local pcall = pcall
 local strfind, ipairs = string.find, ipairs
 
 local CLASSIFIER_CONSTANTS = C.Classifier
@@ -24,6 +23,7 @@ local blacklistParentNameLookup = {}
 
 local IsSecretValue = addon.IsSecretValue
 local CanAccessAllValues = addon.CanAccessAllValues
+local GetParentSafe = addon.GetParentSafe
 
 for _, parentName in ipairs(BLACKLIST_PARENT_NAMES) do
     blacklistParentNameLookup[parentName] = true
@@ -76,7 +76,7 @@ function Classifier:IsBlacklisted(frame, knownFrameName)
             end
         end
 
-        currentObj = currentObj.GetParent and currentObj:GetParent() or nil
+        currentObj = GetParentSafe(currentObj)
         isFirstObject = false
     end
 

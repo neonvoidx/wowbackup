@@ -3,6 +3,27 @@ local addonName, addon = ...
 local mini = addon.Framework
 local horizontalSpacing = mini.HorizontalSpacing
 local verticalSpacing = mini.VerticalSpacing
+local builtinFontItems = {
+	"Fonts\\FRIZQT__.TTF",
+	"Fonts\\ARIALN.TTF",
+	"Fonts\\MORPHEUS.TTF",
+	"Fonts\\SKURRI.TTF",
+	"Fonts\\MYRIADPRO-BOLD.TTF",
+}
+local builtinFontNames = {
+	["Fonts\\FRIZQT__.TTF"] = "Friz Quadrata",
+	["Fonts\\ARIALN.TTF"] = "Arial Narrow",
+	["Fonts\\MORPHEUS.TTF"] = "Morpheus",
+	["Fonts\\SKURRI.TTF"] = "Skurri",
+	["Fonts\\MYRIADPRO-BOLD.TTF"] = "Myriad Pro",
+}
+local fontFlagItems = { "OUTLINE", "THICKOUTLINE", "MONOCHROME", "" }
+local fontFlagNames = {
+	OUTLINE = "Outline",
+	THICKOUTLINE = "Thick Outline",
+	MONOCHROME = "Monochrome",
+	[""] = "None",
+}
 ---@class Db
 local db
 ---@class Db
@@ -25,6 +46,7 @@ local dbDefaults = {
 	},
 	PaddingX = 10,
 	PaddingY = 10,
+	Locked = false,
 
 	Enabled = {
 		Arena = true,
@@ -37,6 +59,30 @@ local M = {
 	DbDefaults = dbDefaults,
 }
 addon.Config = M
+
+local function GetFontLists()
+	local lsm = LibStub and LibStub("LibSharedMedia-3.0", true)
+
+	if lsm then
+		local items = {}
+		local names = {}
+
+		for _, name in ipairs(lsm:List("font") or {}) do
+			local file = lsm:Fetch("font", name)
+
+			if file then
+				items[#items + 1] = file
+				names[file] = name
+			end
+		end
+
+		if #items > 0 then
+			return items, names
+		end
+	end
+
+	return builtinFontItems, builtinFontNames
+end
 
 function M:Init()
 	db = mini:GetSavedVars(dbDefaults)
@@ -52,17 +98,10 @@ function M:Init()
 
 	local columns = 4
 	local columnStep = mini:ColumnWidth(columns, 0, 0)
-	local version = C_AddOns.GetAddOnMetadata(addonName, "Version")
-	local title = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
-	title:SetPoint("TOPLEFT", 0, -verticalSpacing)
-	title:SetText(string.format("%s - %s", addonName, version))
-
-	local description = mini:TextLine({
+	local header = mini:PanelHeader({
 		Parent = panel,
-		Text = "Increase your awareness.",
+		Description = "Increase your awareness.",
 	})
-
-	description:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -8)
 
 	local arenaChkBox = mini:Checkbox({
 		Parent = panel,
@@ -77,7 +116,7 @@ function M:Init()
 		end,
 	})
 
-	arenaChkBox:SetPoint("TOPLEFT", description, "BOTTOMLEFT", -4, -verticalSpacing)
+	arenaChkBox:SetPoint("TOPLEFT", header.Anchor, "BOTTOMLEFT", -4, -verticalSpacing)
 
 	local bgChkBox = mini:Checkbox({
 		Parent = panel,
@@ -108,6 +147,21 @@ function M:Init()
 	})
 
 	dungeonsChkBox:SetPoint("LEFT", bgChkBox, "LEFT", columnStep, 0)
+
+	local lockChkBox = mini:Checkbox({
+		Parent = panel,
+		LabelText = "Lock",
+		Tooltip = "Prevents the frame from being dragged.",
+		GetValue = function()
+			return db.Locked
+		end,
+		SetValue = function(enabled)
+			db.Locked = enabled
+			addon:Refresh()
+		end,
+	})
+
+	lockChkBox:SetPoint("LEFT", dungeonsChkBox, "LEFT", columnStep, 0)
 
 	local messageEditBox = mini:EditBox({
 		Parent = panel,
@@ -142,6 +196,65 @@ function M:Init()
 	})
 
 	textSizeSlider.Slider:SetPoint("TOPLEFT", messageEditBox.Label, "BOTTOMLEFT", 0, -verticalSpacing * 3)
+
+	local fontItems, fontNames = GetFontLists()
+
+	local fontDdl = mini:Dropdown({
+		Parent = panel,
+		LabelText = "Font",
+		Items = fontItems,
+		Width = columnStep * 2,
+		GetValue = function()
+			return db.FontPath
+		end,
+		SetValue = function(value)
+			db.FontPath = value
+			addon:Refresh()
+		end,
+		GetText = function(value)
+			return fontNames[value] or value
+		end,
+	})
+
+	fontDdl.Label:SetPoint("TOPLEFT", textSizeSlider.Slider, "BOTTOMLEFT", 0, -verticalSpacing * 2)
+
+	local outlineDdl = mini:Dropdown({
+		Parent = panel,
+		LabelText = "Outline",
+		Items = fontFlagItems,
+		Width = columnStep,
+		GetValue = function()
+			return db.FontFlags
+		end,
+		SetValue = function(value)
+			db.FontFlags = value
+			addon:Refresh()
+		end,
+		GetText = function(value)
+			return fontFlagNames[value] or value
+		end,
+	})
+
+	outlineDdl.Label:SetPoint("LEFT", fontDdl, "RIGHT", horizontalSpacing * 2, 0)
+
+	local colourSwatch = mini:ColorSwatch({
+		Parent = panel,
+		LabelText = "Colour",
+		Tooltip = "Click to change the font colour.",
+		GetValue = function()
+			local c = db.FontColor
+			return c.R, c.G, c.B, c.A
+		end,
+		SetValue = function(r, g, b, a)
+			local c = db.FontColor
+			c.R, c.G, c.B, c.A = r, g, b, a
+		end,
+		OnChange = function()
+			addon:Refresh()
+		end,
+	})
+
+	colourSwatch:SetPoint("LEFT", outlineDdl, "RIGHT", horizontalSpacing * 2, 0)
 
 	local testBtn = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
 	testBtn:SetSize(120, 26)

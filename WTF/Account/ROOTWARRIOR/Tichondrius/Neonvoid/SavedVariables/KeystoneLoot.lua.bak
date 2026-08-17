@@ -20,7 +20,7 @@ KeystoneLootCharDB = {
 ["rank"] = 1,
 },
 ["classId"] = 5,
-["slotId"] = 10,
+["slotId"] = -1,
 ["slotIds"] = {
 },
 },

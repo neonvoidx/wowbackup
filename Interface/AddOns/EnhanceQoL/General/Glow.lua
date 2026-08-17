@@ -1495,20 +1495,27 @@ local BACKENDS = {
 	[Glow.STYLE.PROC] = {
 		start = function(host, opts)
 			if LCG and LCG.ProcGlow_Start then
+				if host and host._ProcGlow and LCG.ProcGlow_Stop then LCG.ProcGlow_Stop(host, "") end
 				local procOptions = {}
 				if type(opts) == "table" then
 					for optionKey, optionValue in pairs(opts) do
 						procOptions[optionKey] = optionValue
 					end
 				end
+				procOptions.frameLevel = normalizeScalar(opts, "frameLevel", 3)
 				procOptions.key = ""
 				LCG.ProcGlow_Start(host, procOptions)
+				resetProcGlowTextures(host and host._ProcGlow)
 			else
 				startBlizzard(host, opts)
 			end
 		end,
 		refresh = function(host, opts)
-			if not (LCG and host and host._ProcGlow) then updateBlizzardOverlay(host, opts) end
+			if LCG and host and host._ProcGlow then
+				resetProcGlowTextures(host._ProcGlow)
+			else
+				updateBlizzardOverlay(host, opts)
+			end
 		end,
 		stop = function(host)
 			if LCG and LCG.ProcGlow_Stop then
@@ -1529,6 +1536,12 @@ end
 function Glow.GetHost(target, key)
 	local state = getState(target, normalizeKey(key), false)
 	return state and state.host or nil
+end
+
+function Glow.CreateRestrictedAura(target, anchorFrame, opts)
+	local auraCompat = addon.AuraCompat
+	if not (auraCompat and auraCompat.CreateRestrictedAuraGlow) then return nil end
+	return auraCompat:CreateRestrictedAuraGlow(target, anchorFrame, opts)
 end
 
 function Glow.IsActive(target, key)

@@ -137,6 +137,8 @@ local frames = {
 		group = "housing",
 		names = { "HousingDashboardFrame" },
 		addon = "Blizzard_HousingDashboard",
+		handlesRelative = { "TitleContainer" },
+		handlesOnly = true,
 		defaultEnabled = true,
 	},
 	{
@@ -516,6 +518,17 @@ local frames = {
 		defaultEnabled = true,
 	},
 	{
+		id = "ChannelFrame",
+		label = CHAT_CHANNELS or "Channels",
+		group = "activities",
+		names = { "ChannelFrame" },
+		addon = "Blizzard_Channels",
+		handlesRelative = { "TitleContainer" },
+		handlesOnly = true,
+		defaultEnabled = true,
+		newTagID = "MoverChannelFrame",
+	},
+	{
 		id = "ClubFinderCommunityAndGuildFinderFrame",
 		label = L["Community & Guild Finder"] or "Community & Guild Finder",
 		group = "activities",
@@ -575,7 +588,10 @@ local frames = {
 		id = "FriendsFrame",
 		label = L["Friends"] or "Friends",
 		group = "activities",
-		names = { "FriendsFrame" },
+		names = { "FriendsFrame", "SocialUIFrame" },
+		addon = { "Blizzard_FriendsFrame", "Blizzard_SocialUI" },
+		handlesRelative = { "TitleContainer" },
+		handlesOnly = true,
 		defaultEnabled = true,
 	},
 	{

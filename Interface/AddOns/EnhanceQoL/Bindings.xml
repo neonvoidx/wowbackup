@@ -79,4 +79,12 @@
             EnhanceQoL.DamageMeter:TogglePaused()
         end
     </Binding>
+
+    <Binding name="EQOL_TOGGLE_DAMAGE_METER_VISIBILITY"
+             category="Enhance QoL"
+             >
+        if EnhanceQoL and EnhanceQoL.DamageMeter and EnhanceQoL.DamageMeter.ToggleManualVisibility then
+            EnhanceQoL.DamageMeter:ToggleManualVisibility()
+        end
+    </Binding>
 </Bindings>

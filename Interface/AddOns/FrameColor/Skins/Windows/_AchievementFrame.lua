@@ -94,13 +94,13 @@ function skin:Apply(mainColor, controlsColor, tabsColor, desaturation)
   end
 
   for _, box in pairs({
-    AchievementFrame.SearchBox,
+    AchievementFrame.HeaderDetails.Filters.SearchBox,
   }) do
     self:SkinBox(box, controlsColor, desaturation)
   end
 
   for _, texture in pairs({
-    AchievementFrameFilterDropdown.Background,
+    AchievementFrame.HeaderDetails.Filters.FilterDropdown.Background,
     AchievementFrameSummaryCategoriesStatusBarLeft,
     AchievementFrameSummaryCategoriesStatusBarMiddle,
     AchievementFrameSummaryCategoriesStatusBarRight,

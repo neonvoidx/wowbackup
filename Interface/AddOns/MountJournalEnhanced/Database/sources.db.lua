@@ -265,6 +265,7 @@ ADDON.DB.Source["Unavailable"] = {
 [1255480] = true, -- Felscorned Netherlord's Dreadsteed
 [1255482] = true, -- Felscorned War Wyrm
 [1272988] = true, -- Inarius' Charger
+[1301775] = true, -- Umbral Ashes
 }
 
 MergeTable(ADDON.DB.Source.Drop, {
@@ -364,9 +365,9 @@ MergeTable(ADDON.DB.Source.Drop, {
 [1243597] = {2413, 5120, 4440, 0.04}, -- Rootstalker Grimlynx
 [1253927] = {2413, 5540, 3140, 0.05}, -- Vibrant Petalwing
 [1261155] = {2405, 4360, 5140, 0.12}, -- Augmented Stormray
-[1261302] = {2395, 4020, 8520, 0.11}, -- Cobalt Dragonhawk
+[1261302] = {2395, 4020, 8520, 0.10}, -- Cobalt Dragonhawk
 [1261316] = {2437, 3340, 8840, 0.09}, -- Amani Sharptalon
 [1261323] = {2395, 5460, 6020, 0.06}, -- Cerulean Hawkstrider
 [1261351] = {2437, 4640, 4340, 0.03}, -- Witherbark Pango
-[1266700] = {2444, 4040, 8880, 0.06}, -- Sanguine Harrower
+[1266700] = {2444, 4040, 8880, 0.05}, -- Sanguine Harrower
 })

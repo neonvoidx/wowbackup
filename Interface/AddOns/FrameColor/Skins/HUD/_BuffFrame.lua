@@ -1,5 +1,8 @@
 local _, private = ...
 
+-- How far the border extends beyond the icon.
+local BORDER_PADDING = 2
+
 -- Specify the options.
 local options = {
   name = "_BuffFrame",
@@ -43,22 +46,20 @@ end
 function skin:ApplyBuffBorder(widget, borderColor)
   if widget.border then
     widget.border:Show()
-    widget.border:SetBackdropBorderColor(borderColor[1], borderColor[2], borderColor[3], borderColor[4])
+    widget.border:SetVertexColor(borderColor[1], borderColor[2], borderColor[3], borderColor[4])
     return
   end
 
   -- Create the border texture.
-  local border = CreateFrame("Frame", nil, widget, "BackdropTemplate")
-  border:SetPoint("TOPLEFT", widget.Icon, "TOPLEFT", -2, 2)
-  border:SetPoint("BOTTOMRIGHT", widget.Icon, "BOTTOMRIGHT", 2, -2)
-
-  -- Setup the backdrop.
-  border:SetBackdrop({
-    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-    edgeSize = 10,
-    insets = { left = 2, right = 2, top = 2, bottom = 2 }
-  })
-  border:SetBackdropBorderColor(borderColor[1], borderColor[2], borderColor[3], borderColor[4])
+  -- A plain texture is used instead of a BackdropTemplate frame: the aura buttons
+  -- hold secret values, so the size of anything parented to them is secret too and
+  -- Blizzard's backdrop code errors out when it does math on it. Anchoring is fine,
+  -- a texture just never reads its size in Lua.
+  local border = widget:CreateTexture(nil, "BACKGROUND", nil, -8)
+  border:SetColorTexture(1, 1, 1, 1)
+  border:SetPoint("TOPLEFT", widget.Icon, "TOPLEFT", -BORDER_PADDING, BORDER_PADDING)
+  border:SetPoint("BOTTOMRIGHT", widget.Icon, "BOTTOMRIGHT", BORDER_PADDING, -BORDER_PADDING)
+  border:SetVertexColor(borderColor[1], borderColor[2], borderColor[3], borderColor[4])
 
   -- Save the border on the widget.
   widget.border = border

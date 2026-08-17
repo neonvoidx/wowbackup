@@ -1,7 +1,3 @@
-VER 3 0100000000000069 " " "INV_Misc_QuestionMark"
-#showtooltip Rising Sun Kick
-/cast Rising Sun Kick
-END
 VER 3 010000000000006A " " "INV_Misc_QuestionMark"
 #showtooltip
 /cancelaura Flying Serpent Kick
@@ -11,11 +7,7 @@ VER 3 010000000000006A " " "INV_Misc_QuestionMark"
 END
 VER 3 010000000000006B " " "INV_Misc_QuestionMark"
 #showtooltip Tiger Palm
-/stopmacro [channeling:Fists of Fury]
-/stopmacro [channeling:Crackling Jade Lightning]
-/stopmacro [channeling:Spinning Crane Kick]
-/stopmacro [channeling:Celestial Conduit]
-/cast Tiger Palm
+/cast [nochanneling:Fists of Fury] Tiger Palm
 /petattack
 END
 VER 3 010000000000006C " " "INV_Misc_QuestionMark"
@@ -59,11 +51,7 @@ VER 3 0100000000000074 " " "INV_Misc_QuestionMark"
 END
 VER 3 0100000000000075 " " "INV_Misc_QuestionMark"
 #showtooltip Blackout Kick
-/stopmacro [channeling:Fists of Fury]
-/stopmacro [channeling:Crackling Jade Lightning]
-/stopmacro [channeling:Spinning Crane Kick]
-/stopmacro [channeling:Celestial Conduit]
-/cast Blackout Kick
+/cast [nochanneling:Fists of Fury] Blackout Kick
 END
 VER 3 0100000000000076 " " "INV_Misc_QuestionMark"
 #showtooltip [known:Chi burst] Chi Burst;[known: chi wave] Chi wave;
@@ -105,7 +93,6 @@ VER 3 010000000000007C " " "INV_Misc_QuestionMark"
 /cast Zenith
 /use Perpetual Purple Firework
 /use Winning Hand
-/cast Strike of the Windlord
 END
 VER 3 010000000000007D " " "INV_Misc_QuestionMark"
 #showtooltip
@@ -120,7 +107,7 @@ END
 VER 3 010000000000007F " " "INV_Misc_QuestionMark"
 #showtooltip Spinning Crane Kick
 /use Fire-Eater's Vial
-/cast Spinning Crane Kick
+/cast [nochanneling:Fists of Fury] Spinning Crane Kick
 END
 VER 3 0100000000000080 " " "INV_Misc_QuestionMark"
 #showtooltip Disable
@@ -128,30 +115,23 @@ VER 3 0100000000000080 " " "INV_Misc_QuestionMark"
 END
 VER 3 0100000000000084 " " "INV_Misc_QuestionMark"
 #showtooltip
-/cancelaura blessing of protection
 /cast Fortifying Brew
 /use Kang's Bindstone
 END
-VER 3 0100000000000085 " " "134400"
-#showtooltip Fists of Fury
-/use Fire-Eater's Vial
-/cast Fists of Fury
+VER 3 0100000000000087 " " "134400"
+#showtooltip Rising Sun Kick
+/cast [nochanneling:Fists of Fury] Rising Sun Kick
+END
+VER 3 0100000000000088 " " "134400"
+#showtooltip Fists of fury
+/cast [channeling:Celestial Conduit] Unity Within
+/cast [nochanneling][channeling:Spinning Crane Kick][channeling:Celestial Conduit] Fists of Fury
 END
 VER 3 0100000000000081 "Black Ox" "INV_Misc_QuestionMark"
 #showtooltip Provoke
 /targetexact Black Ox Statue
 /cast Provoke
 /targetlasttarget
-END
-VER 3 0100000000000082 "Cancel" "236356"
-/cancelaura Zen Flight
-/cancelaura Blessing of Protection
-/cancelaura Blessing of Freedom
-/cancelaura Slow Fall
-/cancelaura Flying Serpent Kick
-/cancelaura Parachute
-/dismount
-/stopcasting
 END
 VER 3 0100000000000083 "Dismiss" "615340"
 /run if not UnitAffectingCombat("player")then for i=1,4 do n="t"..i CreateFrame("Button",n,UIParent,"SecureUnitButtonTemplate")_G[n]:SetAttribute("type", "destroytotem")_G[n]:SetAttribute("totem-slot",i)end end

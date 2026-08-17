@@ -1,0 +1,1123 @@
+-- HDG.HousingObserver
+-- ============================================================================
+-- The single boundary that owns all `C_Housing` + `C_NeighborhoodInitiative`
+-- async-event impurity. Subscribes to housing-domain Blizzard events,
+-- captures the event payloads, and dispatches Store actions. Selectors
+-- never call these APIs directly -- they read from the state slots this
+-- module writes into.
+--
+-- Domains owned (per ADR-022, observer consolidated by Blizzard API
+-- namespace, not by event family):
+--
+--   1. Placed decor (account.styles.placedDecor):
+--        HOUSE_EDITOR_MODE_CHANGED       -> topology capture only (does NOT clear)
+--        HOUSING_DECOR_CUSTOMIZATION_CHANGED  -> per-decor observe (queued + batched)
+--        HOUSING_DECOR_REMOVED           -> remove
+--        PLAYER_ENTERING_WORLD           -> clear when leaving a house context
+--
+--   2. House meta (session.house.ownedHouses, keyed by houseGUID):
+--        PLAYER_HOUSE_LIST_UPDATED       -> dispatch HOUSE_LIST_UPDATED
+--        HOUSE_LEVEL_FAVOR_UPDATED       -> dispatch HOUSE_LEVEL_UPDATED
+--
+-- Initial fetch (kicks the async chain) happens at onEnable.
+-- C_Housing.GetPlayerOwnedHouses is async (fires PLAYER_HOUSE_LIST_UPDATED),
+-- spammy (3-5 fires on login -- 0.3s debounce on the handler).
+-- C_Housing.GetCurrentHouseLevelFavor is async per house (fires
+-- HOUSE_LEVEL_FAVOR_UPDATED) and the event fires for ALL houses, not just
+-- the requested one -- payload includes houseGUID so the reducer can
+-- target the right entry.
+--
+-- Placed-decor enumeration: C_HousingDecor.GetAllPlacedDecor is declared
+-- HasRestrictions = true (Blizzard_APIDocumentationGenerated/HousingDecorUIDocumentation.lua:
+-- "Placed Decor List APIs currently restricted due to being potentially very expensive
+-- operations, may be reworked & opened up in the future"). It is a POLICY gate, not taint --
+-- an addon call returns ADDON_ACTION_FORBIDDEN. Re-test each patch; Blizzard flagged it as
+-- temporary. Until then the CUSTOMIZATION_CHANGED burst is the only enumeration available,
+-- and it is complete (verified 21/21 vs Blizzard's own panel, 2026-07-26).
+
+HDG = HDG or {}
+HDG.HousingObserver = HDG.HousingObserver or {}
+local HO = HDG.HousingObserver
+
+-- Log tag for C_Housing / C_NeighborhoodInitiative boundary failures.
+-- Surfaces SECRET-value returns + invalid-GUID throws + cold-cache nil.
+HDG.Log:RegisterTags({ housing_api = { user = false, level = "warn" } })
+
+-- =============================================================================
+-- Placed-decor channel.
+-- =============================================================================
+
+local function _resolveItemID(decorID)
+    -- Map decorID -> itemID via catalog observer. Catalog may not be ready on
+    -- first edit-mode entry; dispatch carries decorID as fallback.
+    local row = HDG.HousingCatalogObserver.byDecorID[decorID]
+    return row and row.itemID
+end
+
+-- Pending batch queue. Drained on the next frame by a single dispatch.
+local _queue = {}
+local _flushScheduled = false
+
+local function _flushQueue()
+    _flushScheduled = false
+    local entries = _queue
+    _queue = {}
+    local n = #entries
+    if n == 0 then return end
+    HDG.Store:Dispatch({
+        type    = HDG.Constants.ACTIONS.STYLES_PLACED_DECOR_OBSERVED_BATCH,
+        payload = { entries = entries },
+    })
+end
+
+-- The interior room the player is standing in (nil if not in one). HO owns
+-- C_HousingLayout; the Blueprint tab reads this to save a Room blueprint.
+function HO:GetCurrentRoomGUID()
+    return C_HousingLayout and C_HousingLayout.GetRoomPlayerIsIn and C_HousingLayout.GetRoomPlayerIsIn()  -- exception(boundary): C_HousingLayout Blizzard API; returns nothing outside a room
+end
+
+function HO:Observe(decorGUID)
+    if type(decorGUID) ~= "string" then return end
+    -- decorID from GUID "Housing-1-<plotID>-<decorID>-<hash>".
+    -- exception(boundary): GetDecorInstanceInfoForGUID returns nil for freshly-enumerated GUIDs during
+    -- the editor-entry burst; parse the GUID directly instead. Instance-info = optional name enrichment.
+    local info = (C_HousingDecor and C_HousingDecor.GetDecorInstanceInfoForGUID
+                  and C_HousingDecor.GetDecorInstanceInfoForGUID(decorGUID)) or nil  -- exception(boundary): nil during editor-entry burst
+    local decorID = tonumber(decorGUID:match("^Housing%-1%-%d+%-(%d+)%-")) or (info and info.decorID)
+    if not decorID then return end
+    -- Area segment of the GUID. An AREA is indoors vs outdoors, NOT a room -- every
+    -- interior room shares one area. This is what scopes the Placed list, matching
+    -- Blizzard's panel -- verified 21/21 against it (2026-07-26).
+    local areaID = tonumber(decorGUID:match("^Housing%-1%-(%d+)%-"))
+    local name = (info and info.name)
+              or (C_HousingDecor and C_HousingDecor.GetDecorName and C_HousingDecor.GetDecorName(decorID))  -- exception(boundary): housing C_API nil off-house-context
+    _queue[#_queue + 1] = {
+        decorGUID = decorGUID,
+        decorID   = decorID,
+        areaID    = areaID,
+        itemID    = _resolveItemID(decorID),
+        name      = name,
+    }
+    if not _flushScheduled then
+        _flushScheduled = true
+        C_Timer.After(0, _flushQueue)
+    end
+end
+
+function HO:RemovePlaced(decorGUID)
+    if type(decorGUID) ~= "string" then return end
+    -- Parse decorID from GUID so pre-existing decor (never in placedDecor) is attributed.
+    -- Reducer prefers live placedDecor entry's itemID + falls back to this.
+    local decorID = tonumber(decorGUID:match("^Housing%-1%-%d+%-(%d+)%-"))
+    local itemID  = decorID and _resolveItemID(decorID)
+    HDG.Store:Dispatch({
+        type    = HDG.Constants.ACTIONS.STYLES_PLACED_DECOR_REMOVED,
+        payload = { decorGUID = decorGUID, itemID = itemID },
+    })
+end
+
+-- Stash the pending itemID here; OnDecorPlaceSuccess commits on actual world-click.
+-- A cancelled pick (ESC, no PLACE_SUCCESS) records nothing.
+function HO:SetPendingPlacement(itemID)
+    HO._pendingPlaceItemID = itemID
+end
+
+function HO:ClearPlaced()
+    HDG.Store:Dispatch({ type = HDG.Constants.ACTIONS.STYLES_PLACED_DECOR_CLEAR })
+end
+
+-- =============================================================================
+-- House meta channel.
+-- =============================================================================
+
+-- Faction derivation: HouseInfo struct lacks faction; derived from
+-- C_Housing.DoesFactionMatchNeighborhood + the player's own faction.
+local function _deriveFaction(neighborhoodGUID)
+    if not (C_Housing and C_Housing.DoesFactionMatchNeighborhood and neighborhoodGUID) then
+        return nil
+    end
+    -- Strict: sync bool getter (MCP-verified, "safe to call inline"). The pcall
+    -- that used to wrap this caught nothing and would have turned a rename into
+    -- a quiet nil instead of an error -- the 12.1 IsInsideOwnHouse lesson.
+    local matches = C_Housing.DoesFactionMatchNeighborhood(neighborhoodGUID)
+    local pFaction = UnitFactionGroup and UnitFactionGroup("player")
+    if pFaction == "Alliance" then return matches and "Alliance" or "Horde"
+    elseif pFaction == "Horde"  then return matches and "Horde"    or "Alliance" end
+    return nil
+end
+
+-- Stable order-independent digest for deduping PLAYER_HOUSE_LIST_UPDATED re-fires.
+-- Control-byte separators (US/RS, ASCII 31/30) don't occur in GUIDs/names.
+local function _houseListSignature(houseInfoList)
+    local parts = {}
+    for _, h in ipairs(houseInfoList) do
+        parts[#parts + 1] = table.concat({
+            tostring(h.houseGUID), tostring(h.neighborhoodGUID),
+            tostring(h.neighborhoodName), tostring(h.houseName),
+            tostring(h.plotID),
+        }, "\31")
+    end
+    table.sort(parts)
+    return table.concat(parts, "\30")
+end
+
+-- Gate for the REWARD fetch only (GetHouseLevelRewardsForLevel). That call fires
+-- RECEIVED_HOUSE_LEVEL_REWARDS, which Blizzard's housing dashboard rebuilds its reward track
+-- on every time -- blanking the level nodes to "0" with no repaint. HDG's reward data only
+-- feeds the House + Projects/Architect tabs, so we only request it while one of those is the
+-- active view AND the window is shown. (Favor/level fetching stays ungated -- it drives the
+-- ring and is harmless to the dashboard.) account.ui.view persists across closes, hence the
+-- mainWindowShown half. Mirrors the CATALOG_CONSUMING_TAB_VIEWS gate.
+local function _houseLevelViewActive()
+    local ui = HDG.Store:GetState().account.ui
+    return ui.mainWindowShown == true and HDG.Constants.HOUSE_LEVEL_VIEWS[ui.view] == true
+end
+
+-- PLAYER_HOUSE_LIST_UPDATED: { houseGUID, neighborhoodGUID, neighborhoodName,
+-- houseName, plotID, ... }. Faction derived here; reducer preserves level/favor on re-fire.
+function HO:OnHouseList(houseInfoList)
+    if type(houseInfoList) ~= "table" then return end
+    -- Dedup: PLAYER_HOUSE_LIST_UPDATED re-fires 3-5 times on login with identical data.
+    local sig = _houseListSignature(houseInfoList)
+    if sig == HO._lastHouseListSig then return end
+    HO._lastHouseListSig = sig
+
+    local enriched = {}
+    for i, h in ipairs(houseInfoList) do
+        enriched[i] = {
+            houseGUID        = h.houseGUID,
+            neighborhoodGUID = h.neighborhoodGUID,
+            neighborhoodName = h.neighborhoodName,
+            houseName        = h.houseName,
+            plotID           = h.plotID,
+            faction          = _deriveFaction(h.neighborhoodGUID),
+        }
+    end
+    HDG.Store:Dispatch({
+        type    = HDG.Constants.ACTIONS.HOUSE_LIST_UPDATED,
+        payload = { houses = enriched },
+    })
+    -- Kick per-house favor fetch; each fires HOUSE_LEVEL_FAVOR_UPDATED async.
+    -- Ungated: favor drives the house-level ring (always needed), and HOUSE_LEVEL_FAVOR_UPDATED
+    -- does NOT disturb Blizzard's dashboard -- only the reward fetch does (see RequestRewardsForLevel).
+    if C_Housing and C_Housing.GetCurrentHouseLevelFavor then
+        for _, h in ipairs(houseInfoList) do
+            if h.houseGUID then
+                -- exception(fire-forget): ASYNC request, returns NOTHING (MCP-verified);
+                -- the answer arrives on HOUSE_LEVEL_FAVOR_UPDATED. Unlike the sync
+                -- getters above, there is no value to strict-read -- the pcall guards
+                -- the REQUEST against a bad GUID, and the Warn keeps it visible.
+                local ok, err = pcall(C_Housing.GetCurrentHouseLevelFavor, h.houseGUID)
+                if not ok then HDG.Log:Warn("housing_api",
+                    "GetCurrentHouseLevelFavor(" .. tostring(h.houseGUID) .. ") failed: " .. tostring(err)) end
+            end
+        end
+    end
+end
+
+-- GetActiveNeighborhood is sync but cached info "invalidates immediately" (boundary:
+-- stale/nil right after set). Blizzard re-fires NEIGHBORHOOD_INITIATIVE_UPDATED every
+-- second; dedup against last-dispatched GUID prevents no-op churn.
+function HO:OnActiveNeighborhood()
+    local guid
+    if C_NeighborhoodInitiative and C_NeighborhoodInitiative.GetActiveNeighborhood then
+        guid = C_NeighborhoodInitiative.GetActiveNeighborhood()
+    end
+    if guid == HO._lastActiveNeighborhoodGUID then return end
+    HO._lastActiveNeighborhoodGUID = guid
+    HDG.Store:Dispatch({
+        type    = HDG.Constants.ACTIONS.ACTIVE_NEIGHBORHOOD_UPDATED,
+        payload = { neighborhoodGUID = guid },
+    })
+end
+
+-- HOUSE_LEVEL_FAVOR_UPDATED fires with HouseLevelFavor =
+-- { houseGUID, houseLevel, houseFavor }. Fires for ALL owned houses on
+-- each request, not just the one we asked about -- the houseGUID lets
+-- the reducer target the right entry.
+--
+-- Thresholds (favor-to-reach-each-level) come from sync API
+-- C_Housing.GetHouseLevelFavorForLevel; we compute them once per dispatch
+-- and ship in the payload. Fallback table covers headless tests + the
+-- 12.0.5 edge where the API returns 0 for unreachable levels.
+local FALLBACK_HOUSE_LEVEL_XP = {
+    [1] = 0,    [2] = 250,   [3] = 750,   [4] = 1500,  [5] = 2500,
+    [6] = 4000, [7] = 6000,  [8] = 9000,  [9] = 12900,
+}
+
+local function _buildThresholds()
+    local maxLevel = 50
+    if C_Housing and C_Housing.GetMaxHouseLevel then
+        local max = C_Housing.GetMaxHouseLevel()
+        if max then maxLevel = max end
+    end
+    -- Sparse fallback: trailing nils -> "0 favor needed" (visible cue to extend the table).
+    local thresholds = {}
+    if C_Housing and C_Housing.GetHouseLevelFavorForLevel then
+        for i = 1, maxLevel do
+            -- Strict: sync, returns the favor threshold directly (MCP-verified).
+            local val = C_Housing.GetHouseLevelFavorForLevel(i)
+            thresholds[i] = (val and val > 0) and val
+                            or FALLBACK_HOUSE_LEVEL_XP[i] or 0  -- exception(boundary): sparse fallback
+        end
+    else
+        for i = 1, maxLevel do
+            thresholds[i] = FALLBACK_HOUSE_LEVEL_XP[i] or 0  -- exception(boundary): sparse fallback
+        end
+    end
+    return maxLevel, thresholds
+end
+
+function HO:OnHouseLevelFavor(houseLevelFavor)
+    if type(houseLevelFavor) ~= "table" then return end
+    -- Capture only: dispatches the house level (drives the ring + My Homes). It does NOT kick a
+    -- reward fetch -- rewards are pulled lazily when a House/Projects view is shown (see onEnable),
+    -- matching Blizzard's fetch-once-on-open instead of re-fetching on every favor tick.
+    local guid = houseLevelFavor.houseGUID
+    if type(guid) ~= "string" then return end
+    -- Blizz struct; fields may be omitted for brand-new houses.
+    local level = houseLevelFavor.houseLevel or 1   -- exception(boundary): Blizz struct
+    local favor = houseLevelFavor.houseFavor or 0   -- exception(boundary): Blizz struct
+    -- Dedup per-GUID: HOUSE_LEVEL_FAVOR_UPDATED bursts on login with identical payloads.
+    -- Skips _buildThresholds + rewards re-fetch on no-op path.
+    HO._lastLevelFavor = HO._lastLevelFavor or {}
+    local sig = level .. ":" .. favor
+    if HO._lastLevelFavor[guid] == sig then return end
+    HO._lastLevelFavor[guid] = sig
+
+    local maxLevel, thresholds = _buildThresholds()
+    HDG.Store:Dispatch({
+        type    = HDG.Constants.ACTIONS.HOUSE_LEVEL_UPDATED,
+        payload = {
+            houseGUID  = guid,
+            level      = level,
+            favor      = favor,
+            maxLevel   = maxLevel,
+            thresholds = thresholds,
+        },
+    })
+end
+
+-- Lazy reward pull -- the ONLY initiator of reward fetches (the favor handler no longer kicks
+-- them). Called when a House/Projects view is shown; fetches each owned house's next-level
+-- rewards, once per level (RequestRewardsForLevel dedups on the cache). Self-gates on the view so
+-- it stays off Blizzard's dashboard reward track whenever HDG isn't actually displaying rewards.
+function HO:RequestRewardsForOwnedHouses()
+    if not _houseLevelViewActive() then return end
+    for _, h in pairs(HDG.Store:GetState().session.house.ownedHouses) do
+        if h.level and h.maxLevel then
+            local target = (h.level < h.maxLevel) and (h.level + 1) or h.maxLevel
+            HO:RequestRewardsForLevel(target)
+        end
+    end
+end
+
+-- =============================================================================
+-- Level rewards channel.
+-- =============================================================================
+
+-- GetHouseLevelRewardsForLevel is AllowedWhenUntainted; can throw when tainted -> pcall.
+function HO:RequestRewardsForLevel(level)
+    if type(level) ~= "number" then return end
+    -- Once per level, ever: rewards are level-based + immutable, so a cached level never needs
+    -- re-fetching (the HOUSE_REWARDS_RECEIVED reducer comment anticipates exactly this dedup).
+    -- Skipping the redundant fetch is also what keeps us off Blizzard's dashboard reward track --
+    -- each GetHouseLevelRewardsForLevel fires RECEIVED_HOUSE_LEVEL_REWARDS, which re-inits + blanks it.
+    if HDG.Store:GetState().session.house.rewardsByLevel[level] then return end
+    if not (C_Housing and C_Housing.GetHouseLevelRewardsForLevel) then return end
+    -- exception(fire-forget): ASYNC request, returns NOTHING (MCP-verified); the
+    -- rewards arrive on RECEIVED_HOUSE_LEVEL_REWARDS. Nothing to strict-read here.
+    local ok, err = pcall(C_Housing.GetHouseLevelRewardsForLevel, level)
+    if not ok then HDG.Log:Warn("housing_api",
+        "GetHouseLevelRewardsForLevel(" .. tostring(level) .. ") failed: " .. tostring(err)) end
+end
+
+-- RECEIVED_HOUSE_LEVEL_REWARDS fires with (level, rewards) per the global
+-- event signature. Reducer caches by level.
+function HO:OnHouseLevelRewards(level, rewards)
+    if type(level) ~= "number" or type(rewards) ~= "table" then return end
+    HDG.Store:Dispatch({
+        type    = HDG.Constants.ACTIONS.HOUSE_REWARDS_RECEIVED,
+        payload = { level = level, rewards = rewards },
+    })
+end
+
+-- =============================================================================
+-- Projects topology capture channel. Reads LIVE pin frames (impure boundary);
+-- pure transforms in HDG.Projects.{Capture,AutoLayout}. One atomic PROJECTS_CAPTURE_COMMIT.
+-- =============================================================================
+
+-- Static localizedName -> shapeID FALLBACK (English only, cold-catalog safety net).
+-- PRIMARY resolution is the live room catalog (_buildCatalogNameToShape below), which
+-- is locale-correct in every client. Kept in sync with ShapeAtlas IDs.
+local NAME_TO_SHAPE = {
+    ["Closet"]                  = "closet_xs",
+    ["Square Room (Tiny)"]      = "square_xs",
+    ["Square Room (Small)"]     = "square_s",
+    ["Square Room (Medium)"]    = "square_m",
+    ["Square Room (Large)"]     = "square_l",
+    ["Octagon Room (Small)"]    = "octagon_s",
+    ["Octagon Room (Medium)"]   = "octagon_m",
+    ["Octagon Room (Large)"]    = "octagon_l",
+    ["L-Shaped Room"]           = "l_shape",
+    ["T-Shaped Room"]           = "t_shape",
+    ["Cross-Shaped Room"]       = "cross_shape",
+    ["Hallway"]                 = "hallway",
+    ["Entry"]                   = "entry",
+    ["Evening Circle Room"]     = "circle_evening",
+    ["Daylight Circle Room"]    = "circle_daylight",
+    ["Stairwell (Left)"]        = "staircase",
+    ["Stairwell (Right)"]       = "staircase_mirror",
+    ["Stairwell Room (Empty)"]  = "tall_room",
+}
+
+-- Entry = the base room. pin:CanRemove() reports the IsBaseRoom restriction for it (and
+-- only it) -- a locale-independent signal read synchronously off the pin. Resolved at load;
+-- the headless harness stubs Enum, so fall back to the known enum value there.
+local ENTRY_RESTRICTION = (Enum and Enum.HousingLayoutRestriction and Enum.HousingLayoutRestriction.IsBaseRoom) or 4  -- exception(boundary): Enum.HousingLayoutRestriction absent in headless harness
+
+-- localizedName -> shapeID, built fresh per capture from the LIVE room catalog
+-- (session.house.roomCatalog). The catalog's localized name is byte-identical to
+-- pinFrame:GetRoomName() (same DB2 field -- verified enUS; the recordID->shapeID bridge
+-- is locale-independent by construction), so capture resolves shapes in EVERY locale,
+-- not just English. Prefab rooms carry nil shapeID -> skipped (catalog iconAtlas renders them).
+local function _buildCatalogNameToShape()
+    local map = {}
+    for _, e in ipairs(HDG.Store:GetState().session.house.roomCatalog.entries) do
+        if e.shapeID then map[e.name] = e.shapeID end
+    end
+    return map
+end
+
+-- Pure: resolve a captured room's shapeID. The base room is the Entry anchor -- isBase comes
+-- from the pin's IsBaseRoom removal restriction (locale-independent) and Entry is NOT a catalog
+-- room, so neither name map can cover it. Then the live-catalog map (locale-correct), then the
+-- static English fallback (cold catalog), then the raw name (unknown -> ShapeAtlas renders a
+-- generic cell; never crashes).
+function HO.ResolveShape(name, isBase, catalogNameToShape)
+    if isBase then return "entry" end
+    return catalogNameToShape[name] or NAME_TO_SHAPE[name] or name
+end
+
+local _capture     -- transient capture buffer for one Layout-mode floor session
+local _activeSweep -- active "capture all floors" sweep state (timer-driven)
+
+local function _layoutMode()   return (Enum and Enum.HouseEditorMode and Enum.HouseEditorMode.Layout)   or 3 end  -- exception(boundary): Enum.HouseEditorMode absent in headless harness
+local function _decorateMode() return (Enum and Enum.HouseEditorMode and Enum.HouseEditorMode.Decorate) or 1 end  -- exception(boundary): Enum.HouseEditorMode absent in headless harness
+
+-- Stable houseID for the house the player is currently inside: a digest of the
+-- neighborhoodName + plotID (the PLOT's identity), NOT the character's faction --
+-- so a Horde house captured on an Alliance char keys correctly, and two houses
+-- captured on one character don't collide. Name+plot is used (not the neighborhood
+-- GUID) because the name is provably stable across sessions; the GUID's cross-session
+-- stability is unverified. nil when not inside an owned house.
+local function _currentHouseID()
+    if not (C_Housing and C_Housing.GetCurrentHouseInfo) then return nil end   -- exception(boundary): C_Housing absent (headless / pre-login)
+    local info = C_Housing.GetCurrentHouseInfo()
+    if not (info and info.plotID and info.neighborhoodName) then return nil end -- exception(boundary): nil outside an owned house
+    local key = info.neighborhoodName .. ":" .. tostring(info.plotID)
+    return HDG.Projects.IDs.makeHouseID(HDG.Projects.IDs.hashToken(key))
+end
+
+-- Public accessor -- other modules must NOT re-derive house identity (HO owns C_Housing).
+function HO:CurrentHouseID() return _currentHouseID() end
+
+function HO:IsCapturing() return _capture and _capture.active or false end
+
+-- Cancel an in-flight "capture all floors" sweep. Flag AND drop: in-flight
+-- C_Timer closures check cancelled/nil; leaving _activeSweep set wedges
+-- CaptureAllFloors ("already in progress") until reload (review 17 #5). Called
+-- from OnEnteringWorld -- a hearth/reload mid-sweep must not wedge the next one.
+function HO:CancelSweep()
+    if _activeSweep then _activeSweep.cancelled = true; _activeSweep = nil end
+end
+
+-- Editor-mode + location accessors for consumers (e.g. HouseEditorCompanion).
+-- HO owns C_HouseEditor + C_Housing (invariant 9); boundary: editor C_* exists only while open.
+function HO:IsHouseEditorModeActive(mode)
+    return (C_HouseEditor and C_HouseEditor.IsHouseEditorModeActive and C_HouseEditor.IsHouseEditorModeActive(mode)) or false  -- exception(boundary): C_HouseEditor is a Blizzard API namespace; nil in headless tests
+end
+function HO:ActivateHouseEditorMode(mode)
+    if C_HouseEditor and C_HouseEditor.ActivateHouseEditorMode then C_HouseEditor.ActivateHouseEditorMode(mode) end  -- exception(boundary): C_HouseEditor is a Blizzard API namespace; nil in headless tests
+end
+function HO:IsInsideHouse()
+    return (C_Housing and C_Housing.IsInsideHouse and C_Housing.IsInsideHouse()) or false  -- exception(boundary): C_Housing is a Blizzard API namespace; nil in headless tests
+end
+
+function HO:_BeginCapture(floor)
+    -- nextIndex stamps capture order per room (surfaced in "Hallway 2" labels).
+    _capture = { active = true, floor = floor or 1, rooms = {}, nextIndex = 1 }
+    HDG.CaptureTap.OnBegin(_capture.floor)   -- raw-stream tap (inert unless HDG_DB.captureTap)
+end
+
+function HO:_EndCapture()
+    if not (_capture and _capture.active) then return nil end
+    HDG.CaptureTap.OnEnd()
+    _capture.active = false
+    local snap = _capture
+    _capture = nil
+    return snap
+end
+
+-- _pinPos: diagnostic screen-coord probe (posAdd/posFinal research; not yet driving layout).
+-- Gated on HDG_DB.perf so production sweep allocates nothing per pin. The probing
+-- itself lives in CaptureTap (shared with the raw-stream tap).
+local function _pinPos(pin)
+    -- exception(boundary): raw SavedVariable read.
+    if not (_G.HDG_DB and _G.HDG_DB.perf) then return nil end
+    return HDG.CaptureTap.ProbeGeometry(pin)
+end
+
+-- Ingest one live pin frame into the capture buffer (impure boundary read).
+local function _ingestPin(pinFrame)
+    if not (_capture and pinFrame and pinFrame.GetPinType) then return end
+    local pinType  = pinFrame:GetPinType()
+    local roomGUID = pinFrame:GetRoomGUID()
+    if not roomGUID then return end
+    local room = _capture.rooms[roomGUID]
+    if not room then
+        room = { roomGUID = roomGUID, capturedID = roomGUID, doors = {}, captureIndex = _capture.nextIndex }
+        _capture.rooms[roomGUID] = room
+        _capture.nextIndex = _capture.nextIndex + 1
+    end
+    if pinType == 1 then   -- room pin
+        -- Entry = the base room: pin:CanRemove() == IsBaseRoom restriction. Read synchronously
+        -- off the pin, NOT via C_HousingLayout.IsBaseRoom(guid) (field-reported unreliable).
+        -- Locale-independent -- Entry is not a catalog room and GetRoomName is localized.
+        room.isBase = pinFrame:CanRemove() == ENTRY_RESTRICTION
+        room.name  = pinFrame:GetRoomName()
+        _capture.nameToShape = _capture.nameToShape or _buildCatalogNameToShape()   -- locale-correct map; built once per capture
+        room.shape = HO.ResolveShape(room.name, room.isBase, _capture.nameToShape)
+        room._roomPin = pinFrame   -- temp ref; restriction flags + final pos read at finalize
+        room.posAdd   = _pinPos(pinFrame)   -- diagnostic: screen coords at pin-add time
+    elseif pinType == 0 then  -- door pin
+        local d = pinFrame:GetDoorConnectionInfo()
+        if d then
+            room.doors[#room.doors + 1] = {
+                doorID         = d.doorID,
+                connectionType = d.connectionType,
+                facing         = d.doorFacing,
+                occupied       = pinFrame:IsOccupiedDoor() and true or false,
+            }
+        end
+    end
+end
+
+function HO:OnPinFrameAdded(pinFrame)
+    HDG.CaptureTap.OnPin(pinFrame)   -- raw stream, pre-filter (tap records nil-roomGUID pins too)
+    if _capture and _capture.active then _ingestPin(pinFrame) end
+end
+
+-- Every existing room ID on a floor -- compared against a recapture's
+-- deterministic IDs to find genuinely-removed rooms (see _FinalizeCapture).
+local function _existingRoomIDsForFloor(floorID)
+    -- Recapture diffs against the live LAYOUT's placements by their captured
+    -- identity: slots carry capturedID directly; matched rooms carry it as the
+    -- room record's lineage (legacyID). boundary: a never-captured house has
+    -- no layout yet -> nothing existing to diff.
+    local IDs    = HDG.Projects.IDs
+    local parsed = IDs.parsePath(floorID)
+    local state  = HDG.Store:GetState()
+    local p      = state.account.projects
+    local house  = parsed and parsed.houseID and p.houses[parsed.houseID]
+    local layout = house and house.currentVersionID and p.layouts[house.currentVersionID]
+    local out = {}
+    if not layout then return out end
+    -- v8: lineage lives on the placement (capturedID) -- direct read.
+    for _, pl in pairs(layout.placements) do
+        local rp = pl.capturedID and IDs.parsePath(pl.capturedID)
+        if rp and rp.floorID == floorID then out[#out + 1] = pl.capturedID end
+    end
+    return out
+end
+
+-- Build fresh room records from the snapshot with DETERMINISTIC IDs (floor +
+-- capture-order) so crates stay attached on recapture; old rooms not reproduced
+-- fall to orphaned crates. SECTIONS model (solver spec SS10): every enumerated
+-- room IS its own placement -- stair shapes arrive as one section per floor
+-- (own roomGUID each, span 1), gardens as one record on their base floor
+-- (span 3 via ShapeAtlas). No shape-keyed dedup: the old seenLowerMF/mfSpan
+-- machinery collapsed genuinely-distinct stacked rooms and discarded their
+-- door data (2026-08-10 review criticals #1/#4/#7/#10).
+local function _buildCapturedRooms(snapshot, floorID)
+    local IDs, Cap, rooms = HDG.Projects.IDs, HDG.Projects.Capture, {}
+    for _, r in pairs(snapshot.rooms) do
+        local id = IDs.makeRoomID(floorID, tostring(r.captureIndex))   -- captureIndex always stamped at ingest
+        if id then rooms[id] = Cap.buildRoomRecord(r) end
+    end
+    return rooms
+end
+
+-- Existing rooms on this floor not reproduced by the capture -> deleted (their
+-- crates fall to the orphan bay, recoverable via the orphan UI).
+local function _computeDeletedRoomIDs(rooms, floorID)
+    local deleteRoomIDs = {}
+    for _, oldID in ipairs(_existingRoomIDsForFloor(floorID)) do
+        if not rooms[oldID] then deleteRoomIDs[#deleteRoomIDs + 1] = oldID end
+    end
+    return deleteRoomIDs
+end
+
+-- The house's committed live-layout placements, or nil before the first capture.
+local function _committedPlacements(houseID)
+    local p      = HDG.Store:GetState().account.projects
+    local house  = p.houses[houseID]
+    local layout = house and house.currentVersionID and p.layouts[house.currentVersionID]
+    return layout and layout.placements or nil   -- exception(nullable): first capture of a house has no committed layout
+end
+
+-- Solver seed: cells already occupied on `floor` by OTHER floors' committed
+-- multi-span rooms (garden volumes; planner-stamped stair spans) -- FloorMap
+-- projects spans, and the solver must not place into them (solver spec SS5.5).
+-- Rooms committed on THIS floor are excluded: the capture replaces them.
+local function _seedCellsFor(placements, floor)
+    if not placements then return nil end
+    local SA = HDG.Projects.ShapeAtlas
+    local rooms, exclude = {}, {}
+    for key, pl in pairs(placements) do
+        -- A CAPTURED stair section's `floors` override is a PLAN ("Expand up"),
+        -- not reality -- projecting it into the seed would pin-conflict the very
+        -- capture that materializes the plan as a real section (review #2).
+        local floors = pl.floors
+        if floors and pl.capturedID and SA.IsStairShape(pl.shape) then floors = nil end
+        rooms[key] = { shape = pl.shape, floor = pl.floor, floors = floors,
+                       cell = { x = pl.x, y = pl.y, rotation = pl.rotation } }
+        if pl.floor == floor then exclude[key] = true end
+    end
+    return HDG.Projects.FloorMap.OccupiedCells(rooms, floor, exclude)
+end
+
+-- Anchored-from-below (owner-ruled, solver spec SS10): cells on `floor` that
+-- have a ROOF under them -- committed rooms one floor down whose span TOPS OUT
+-- there. Circle shapes never support (open sky). floor 1 (the lowest) is
+-- unconstrained -> nil; an upper floor with nothing committed below returns {}
+-- so the solver falls back rather than solving in an unanchored frame.
+local function _supportCellsFor(placements, floor)
+    if floor <= 1 then return nil end
+    local SA, support = HDG.Projects.ShapeAtlas, {}
+    for _, pl in pairs(placements or {}) do   -- exception(nullable): no committed floors below yet -> empty support -> fallback
+        local span = pl.floors or SA.GetFloors(pl.shape)
+        if (pl.floor + span - 1) == (floor - 1) and not SA.IsCircle(pl.shape) then
+            local cells = SA.GetCells(pl.shape)
+            for _, m in ipairs(SA.RotateMask(SA.GetMask(pl.shape), pl.rotation or 0, cells[1], cells[2])) do
+                support[(pl.x + m[1]) .. "," .. (pl.y + m[2])] = true
+            end
+        end
+    end
+    return support
+end
+
+-- Vertical pinning (solver spec SS10): a captured stair SECTION on this floor
+-- sits directly above its lower-floor mate. Mate preference (owner-refined
+-- 2026-08-10, "a diff should help us with placement"):
+--   1. CONTINUITY -- the section was committed before (same placementIndex on
+--      this floor): its tower is the same-shape section now sitting at its old
+--      cell one floor down. Recaptures keep established towers; only sections
+--      NEW to this capture run chronology matching.
+--   2. Largest counter below its own (subsumes tower-mate adjacency: the
+--      directly-preceding counter is the largest possible). Counters can lie
+--      after edit churn (lowest-free-slot reuse, spec SS2.2) -- acceptable,
+--      continuity shields established towers.
+-- Each lower section anchors at most one upper section.
+local function _pinsFor(rooms, floor, placements)
+    if floor <= 1 or not placements then return nil end
+    local SA  = HDG.Projects.ShapeAtlas
+    local ids = {}
+    for id, rec in pairs(rooms) do
+        if SA.IsStairShape(rec.shape) and rec.placementIndex then ids[#ids + 1] = id end
+    end
+    if #ids == 0 then return nil end
+    table.sort(ids, function(a, b) return rooms[a].placementIndex < rooms[b].placementIndex end)
+
+    -- Lower-floor mate candidates + this floor's previous commit (continuity).
+    local lower, prevCell, unindexed = {}, {}, false
+    for key, pl in pairs(placements) do
+        if SA.IsStairShape(pl.shape) then
+            if pl.floor == floor - 1 then
+                lower[key] = pl
+                if not pl.placementIndex then unindexed = true end
+            elseif pl.floor == floor and pl.placementIndex then
+                prevCell[pl.placementIndex] = { x = pl.x, y = pl.y }
+            end
+        end
+    end
+
+    local pins, used = {}, {}
+    for _, id in ipairs(ids) do   -- pass 1: continuity
+        local rec = rooms[id]
+        local old = prevCell[rec.placementIndex]
+        if old then
+            for key, pl in pairs(lower) do
+                if not used[key] and pl.shape == rec.shape and pl.x == old.x and pl.y == old.y then
+                    used[key], pins[id] = true, { x = pl.x, y = pl.y }
+                    break
+                end
+            end
+        end
+    end
+    for _, id in ipairs(ids) do   -- pass 2: chronology, for NEW sections
+        if not pins[id] then
+            local rec, bestKey, bestIdx = rooms[id], nil, nil
+            for key, pl in pairs(lower) do
+                if not used[key] and pl.shape == rec.shape
+                   and pl.placementIndex and pl.placementIndex < rec.placementIndex
+                   and (bestIdx == nil or pl.placementIndex > bestIdx
+                        or (pl.placementIndex == bestIdx and key < bestKey)) then
+                    bestKey, bestIdx = key, pl.placementIndex
+                end
+            end
+            if bestKey then
+                used[bestKey] = true
+                pins[id] = { x = placements[bestKey].x, y = placements[bestKey].y }
+            elseif unindexed then
+                -- Pre-upgrade lower placements carry no placementIndex until a
+                -- bottom-up recapture -- say so instead of silently not pinning.
+                HDG.Log:Info("projects_save", "stairwell pinning skipped: the floor below predates this version -- run Capture All Floors once to heal")
+            end
+        end
+    end
+    return next(pins) and pins or nil
+end
+
+-- Frame anchor (solver spec SS10): an UNCONSTRAINED re-solve (lowest floor) must
+-- not shift the shared frame under committed upper floors -- translate the fresh
+-- layout so a previously-known room keeps its old cell.
+local function _anchorToPrevious(rooms, packed, placements)
+    if not placements then return end
+    local prev = {}
+    for _, pl in pairs(placements) do
+        if pl.capturedID then prev[pl.capturedID] = { x = pl.x, y = pl.y } end
+    end
+    local anchorID
+    for id, rec in pairs(rooms) do
+        if prev[id] and packed[id] then
+            if not anchorID
+               or (rec.placementIndex or math.huge) < (rooms[anchorID].placementIndex or math.huge)
+               or ((rec.placementIndex or math.huge) == (rooms[anchorID].placementIndex or math.huge) and id < anchorID) then
+                anchorID = id
+            end
+        end
+    end
+    if not anchorID then return end
+    local dx = prev[anchorID].x - packed[anchorID].cell.x
+    local dy = prev[anchorID].y - packed[anchorID].cell.y
+    if dx == 0 and dy == 0 then return end
+    for _, placed in pairs(packed) do
+        placed.cell.x, placed.cell.y = placed.cell.x + dx, placed.cell.y + dy
+    end
+end
+
+-- AutoLayout stamps each room's cell: connectivity-solved arrangement when the
+-- capture carries the transient door data, grid-pack rows otherwise. Baked into
+-- stored cells; E4-drag re-positions afterwards.
+local function _packRoomCells(rooms, floor, houseID)
+    local placements = _committedPlacements(houseID)
+    local seed       = _seedCellsFor(placements, floor)
+    local support    = _supportCellsFor(placements, floor)
+    local pins       = _pinsFor(rooms, floor, placements)
+    local packed = HDG.Projects.AutoLayout.compute({
+        rooms = rooms, seedCells = seed, supportCells = support, pins = pins,
+    }).layout
+    -- Unconstrained solves (lowest floor) anchor to the previous capture so the
+    -- shared frame never shifts under committed upper floors.
+    if not ((seed and next(seed)) or support or pins) then
+        _anchorToPrevious(rooms, packed, placements)
+    end
+    for roomID, placed in pairs(packed) do
+        local rec = rooms[roomID]
+        if rec then
+            rec.cell = { x = placed.cell.x, y = placed.cell.y, rotation = placed.rotation or 0, locked = false }
+        end
+    end
+end
+
+-- Persist ONLY the SSoT fields. doors/recordID fed the solver (capture-time
+-- inputs) -- not stored; doors/occupancy derive from cell + shape.
+-- placementIndex IS kept: immutable per-house identity (solver spec SS10),
+-- the vertical-pinning signal for stair sections on the floor above.
+local function _stripToSSoTFields(rooms)
+    for id, rec in pairs(rooms) do
+        rooms[id] = {
+            shape  = rec.shape, name = rec.name, cell = rec.cell,
+            isBase = rec.isBase, captureIndex = rec.captureIndex,
+            placementIndex = rec.placementIndex,
+        }
+    end
+end
+
+-- House identity for display + the capture-commit dispatch. boundary:
+-- C_Housing.GetCurrentHouseInfo() -> { houseName, plotID, neighborhoodName,
+-- houseGUID, ownerName }; houseGUID is process-scoped (opaque handle) so we KEY
+-- by faction and only LABEL by name.
+local function _dispatchCaptureCommit(houseID, rooms, deleteRoomIDs)
+    local info = (C_Housing and C_Housing.GetCurrentHouseInfo and C_Housing.GetCurrentHouseInfo()) or nil  -- exception(boundary): C_Housing is a Blizzard API namespace; returns nil in headless tests
+    HDG.Store:Dispatch({
+        type    = HDG.Constants.ACTIONS.PROJECTS_CAPTURE_COMMIT,
+        payload = {
+            houseID = houseID,
+            rooms = rooms, deleteRoomIDs = deleteRoomIDs,
+            lastCapturedAt = (time and time() or 0),  -- exception(boundary): GetTime/time absent in headless harness
+            houseName        = info and info.houseName,
+            plotID           = info and info.plotID,
+            neighborhoodName = info and info.neighborhoodName,
+        },
+    })
+end
+
+-- Finalize a captured floor by REPLACING the live layout. Every existing room deleted
+-- (crates fall to orphan bay); captured rooms added with fresh deterministic IDs +
+-- grid-packed cells. No fingerprint-merge (matching identical shapes was ambiguous).
+function HO:_FinalizeCapture(snapshot, houseID)
+    if not (snapshot and houseID) then
+        HDG.Log:Warn("projects_save", "capture discarded: missing snapshot or houseID (left the house mid-capture?)")
+        return
+    end
+    local floor   = snapshot.floor or 1
+    local floorID = HDG.Projects.IDs.makeFloorID(houseID, floor)
+    if not floorID then
+        HDG.Log:Warn("projects_save", "capture discarded: bad floor " .. tostring(floor))
+        return
+    end
+
+    -- Drop the live pin refs (restriction flags + diagnostics no longer persisted -- Phase 4).
+    for _, room in pairs(snapshot.rooms) do room._roomPin = nil end
+
+    local rooms         = _buildCapturedRooms(snapshot, floorID)
+    local deleteRoomIDs = _computeDeletedRoomIDs(rooms, floorID)
+    _packRoomCells(rooms, floor, houseID)
+    _stripToSSoTFields(rooms)
+    _dispatchCaptureCommit(houseID, rooms, deleteRoomIDs)
+end
+
+-- GetViewedFloor is 0-INDEXED (the sweep maps floor 1 -> SetViewedFloor(0)); +1 to
+-- the 1-indexed capture floor. Was fed raw: ground-floor passives were silently
+-- DISCARDED (makeFloorID rejects 0) and upper-storey passives committed one floor
+-- low, replacing the floor below via the recapture diff (solver spec SS2.8).
+local function _viewedCaptureFloor()
+    return ((C_HousingLayout and C_HousingLayout.GetViewedFloor and C_HousingLayout.GetViewedFloor()) or 0) + 1  -- exception(boundary): C_HousingLayout is a Blizzard API namespace; nil in headless tests
+end
+
+-- Passive capture: begin on Layout entry, finalize on exit. Suppressed during active sweep.
+function HO:_OnCaptureModeChanged()
+    if _activeSweep then return end
+    local active = C_HouseEditor and C_HouseEditor.IsHouseEditorActive and C_HouseEditor.IsHouseEditorActive() or false  -- exception(boundary): C_HouseEditor is a Blizzard API namespace; nil in headless tests
+    local mode   = (C_HouseEditor and C_HouseEditor.GetActiveHouseEditorMode and C_HouseEditor.GetActiveHouseEditorMode()) or 0  -- exception(boundary): C_HouseEditor is a Blizzard API namespace; nil in headless tests
+    if active and mode == _layoutMode() then
+        if not self:IsCapturing() then
+            self:_BeginCapture(_viewedCaptureFloor())
+        end
+    elseif self:IsCapturing() then
+        local snap, houseID = self:_EndCapture(), _currentHouseID()
+        if snap and houseID then self:_FinalizeCapture(snap, houseID) end
+    end
+end
+
+function HO:OnLayoutFloorChanged()
+    if _activeSweep or not self:IsCapturing() then return end
+    local snap, houseID = self:_EndCapture(), _currentHouseID()
+    if snap and houseID then self:_FinalizeCapture(snap, houseID) end
+    self:_BeginCapture(_viewedCaptureFloor())
+end
+
+-- Active sweep: Decorate->Layout (re-emits pins), iterate floors with settle delay.
+-- SetViewedFloor is 0-INDEXED.
+local function _stepSweep()
+    if not _activeSweep or _activeSweep.cancelled then return end
+    local nextFloor = _activeSweep.floor + 1
+    if HO:IsCapturing() then
+        local snap, houseID = HO:_EndCapture(), _currentHouseID()
+        if snap and houseID then HO:_FinalizeCapture(snap, houseID) end
+    end
+    if nextFloor > _activeSweep.maxFloor then
+        if C_HouseEditor and C_HouseEditor.LeaveHouseEditor then C_HouseEditor.LeaveHouseEditor() end
+        local floors = _activeSweep.maxFloor
+        _activeSweep = nil
+        -- Capture summary off the ApplyCapture echo (matched vs to-assign vs
+        -- unplaced rooms). Rooms/furnishings persist by construction -- the
+        -- "removed" count is placements only, never lost work.
+        local cap   = HDG.Store:GetState().session.furn.lastCapture or {}   -- exception(boundary): echo absent pre-first-commit
+        local total = (cap.matched or 0) + (cap.slots or 0)
+        local msg   = ("House captured (%d floor%s) -- %d room%s"):format(
+            floors, floors == 1 and "" or "s", total, total == 1 and "" or "s")
+        local parts = {}
+        if (cap.matched or 0) > 0 then parts[#parts + 1] = cap.matched .. " matched" end
+        if (cap.slots or 0) > 0 then parts[#parts + 1] = cap.slots .. " to assign (click a * room)" end
+        if (cap.removed or 0) > 0 then
+            parts[#parts + 1] = cap.removed .. " no longer placed (furnishings safe in My Designs)"
+        end
+        if #parts > 0 then msg = msg .. ": " .. table.concat(parts, ", ") end
+        HDG.Log:Success("projects_save", msg)
+        return
+    end
+    _activeSweep.floor = nextFloor
+    HO:_BeginCapture(nextFloor)
+    if C_HousingLayout and C_HousingLayout.SetViewedFloor then C_HousingLayout.SetViewedFloor(nextFloor - 1) end
+    if C_Timer and C_Timer.After then C_Timer.After(_activeSweep.settleSeconds, _stepSweep) end
+end
+
+-- C_HousingLayout.GetNumFloors was REMOVED on 12.1 in favour of the occupied-floor
+-- INDEX range (GetLowest/GetHighestOccupiedFloorIndex). Return the same floor COUNT
+-- the old API gave: prefer it on live 12.0.x, derive it from the index range on 12.1
+-- (highest - lowest + 1 -- correct for a contiguous occupied range).
+-- Owner-ruled 2026-08-10 (solver spec SS10): floors are ALWAYS indexed from 0
+-- upward regardless of how many sit below the entry -- SetViewedFloor(0) is the
+-- lowest floor, so the floor-1 mapping below is safe, basements included.
+-- exception(boundary): C_HousingLayout is a Blizzard API namespace; nil in headless tests.
+local function _numFloors()
+    local CL = C_HousingLayout
+    if not CL then return nil end
+    if CL.GetNumFloors then return CL.GetNumFloors() end                        -- live 12.0.x
+    if CL.GetHighestOccupiedFloorIndex and CL.GetLowestOccupiedFloorIndex then  -- 12.1
+        return CL.GetHighestOccupiedFloorIndex() - CL.GetLowestOccupiedFloorIndex() + 1
+    end
+    return nil
+end
+
+function HO:CaptureAllFloors()
+    if _activeSweep then return false, "already in progress" end
+    -- exception(boundary): C_Housing.IsInsideHouse() -- external Blizzard API; returns false
+    -- outside any house (including neighborhood plot). Must be inside YOUR house for
+    -- C_HousingLayout.GetNumFloors / pin enumeration to return meaningful data.
+    if not (C_Housing and C_Housing.IsInsideHouse and C_Housing.IsInsideHouse()) then  -- exception(boundary): housing C_API nil off-house-context
+        return false, "Enter your house to capture floors"
+    end
+    if not (C_HouseEditor and C_HouseEditor.IsHouseEditorStatusAvailable and C_HouseEditor.IsHouseEditorStatusAvailable()) then  -- exception(boundary): C_HouseEditor is a Blizzard API namespace; nil in headless tests
+        return false, "house editor not available -- visit your house first"
+    end
+    local houseID = _currentHouseID()
+    if not houseID then return false, "could not determine faction" end
+    if self:IsCapturing() then self:_EndCapture() end
+
+    -- Recapture prep (v8): placements persist so tags survive; CLEAR prunes
+    -- only capture-owned placements above the current floor count + resets
+    -- the capture echo. Per-floor diffs handle removals on surviving floors.
+    -- A nil floor count must ABORT: defaulting to 1 would prune every upper
+    -- floor's placements and then never revisit them (2026-08-10 review #6).
+    local maxFloor = _numFloors()
+    if not maxFloor then
+        HDG.Log:Warn("projects_save", "capture aborted: floor count unavailable -- re-enter the house and try again")
+        return false, "floor count unavailable -- try re-entering the house"
+    end
+    HDG.Store:Dispatch({
+        type    = HDG.Constants.ACTIONS.PROJECTS_CLEAR_HOUSE,
+        payload = { houseID = houseID, clearedAt = (time and time() or 0), maxFloor = maxFloor },  -- exception(boundary): GetTime/time absent in headless harness
+    })
+
+    if C_HouseEditor.EnterHouseEditor then C_HouseEditor.EnterHouseEditor() end  -- exception(boundary): C_HouseEditor is a Blizzard API namespace; nil in headless tests
+    if C_HouseEditor.ActivateHouseEditorMode then C_HouseEditor.ActivateHouseEditorMode(_decorateMode()) end  -- exception(boundary): C_HouseEditor is a Blizzard API namespace; nil in headless tests
+    _activeSweep = {
+        houseID = houseID, floor = 1,
+        maxFloor = maxFloor,
+        settleSeconds = 1.5, cancelled = false,
+    }
+    if C_Timer and C_Timer.After then
+        C_Timer.After(0.1, function()
+            if not _activeSweep or _activeSweep.cancelled then return end
+            if C_HouseEditor.ActivateHouseEditorMode then C_HouseEditor.ActivateHouseEditorMode(_layoutMode()) end  -- exception(boundary): C_HouseEditor is a Blizzard API namespace; nil in headless tests
+            if C_HousingLayout and C_HousingLayout.SetViewedFloor then C_HousingLayout.SetViewedFloor(0) end
+            if not self:IsCapturing() then self:_BeginCapture(1) end
+            C_Timer.After(_activeSweep.settleSeconds, _stepSweep)
+        end)
+    end
+    return true
+end
+
+-- Budget/floor/editor live reads -> PROJECTS_HOUSE_TICK.
+function HO:_PushHouseTick()
+    local CD, CE = C_HousingDecor, C_HouseEditor
+    HDG.Store:Dispatch({
+        type    = HDG.Constants.ACTIONS.PROJECTS_HOUSE_TICK,
+        payload = {
+            -- live decor spend; placement CAPS come from projects.placementCaps (reward-derived).
+            -- exception(boundary): live cap API is layout-editor-state-dependent (returns 9/300 until Edit Layout opens).
+            budget = {  -- exception(boundary): live C_HousingDecor reads
+                decorSpent = (CD and CD.GetSpentPlacementBudget and CD.GetSpentPlacementBudget()) or 0,  -- exception(boundary): CD = C_HousingDecor, Blizzard API namespace
+                decorCount = (CD and CD.GetNumDecorPlaced       and CD.GetNumDecorPlaced())       or 0,  -- exception(boundary): CD = C_HousingDecor, Blizzard API namespace
+            },
+            numFloors    = _numFloors() or 0,  -- exception(boundary): _numFloors nil in headless tests (no C_HousingLayout); 12.1-safe (GetNumFloors removed)
+            editorActive = (CE and CE.IsHouseEditorActive and CE.IsHouseEditorActive()) or false,  -- exception(boundary): CE = C_HouseEditor, Blizzard API namespace
+        },
+    })
+end
+
+-- =============================================================================
+-- Module registration
+-- =============================================================================
+
+HDG.Modules:Declare({
+    name = "HousingObserver",
+    dependencies = {},
+    -- ADR-011: this module is the sole owner of the housing C_* namespaces.
+    ownsBlizzardNamespaces = {
+        "C_Housing", "C_HousingDecor", "C_HouseEditor", "C_NeighborhoodInitiative",
+        "C_HousingLayout",   -- Projects topology capture + budget reads
+    },
+    blizzardEvents = {
+        -- Placed-decor channel. CUSTOMIZATION_CHANGED is the enumeration burst --
+        -- ungated on purpose (see OnDecorCustomization). It carries decor from
+        -- several area IDs including neighbouring plots, so consumers scope by the
+        -- GUID's area segment. The old "flyovers, loading screens" rationale for
+        -- gating was never evidenced and is removed; neighbours are the real and
+        -- only observed source of foreign decor.
+        HOUSE_EDITOR_MODE_CHANGED            = { handler = "OnEditorModeChanged" },
+        HOUSING_DECOR_CUSTOMIZATION_CHANGED  = { handler = "OnDecorCustomization" },
+        HOUSING_DECOR_REMOVED                = { handler = "OnDecorRemoved" },
+        HOUSING_DECOR_PLACE_SUCCESS          = { handler = "OnDecorPlaceSuccess" },
+        PLAYER_ENTERING_WORLD                = { handler = "OnEnteringWorld" },
+
+        -- House meta channel. Both events spam on login (3-5 fires);
+        -- debounce per wow-api MCP gotcha.
+        PLAYER_HOUSE_LIST_UPDATED            = { handler = "OnPlayerHouseList",          debounce = 0.3 },
+        HOUSE_LEVEL_FAVOR_UPDATED            = { handler = "OnHouseLevelFavor",          debounce = 0.3 },
+
+        -- Active-neighborhood channel. Event fires whenever the
+        -- neighborhood initiative cache settles. Handler reads
+        -- C_NeighborhoodInitiative.GetActiveNeighborhood (sync) and
+        -- dispatches whatever it returns (or nil).
+        NEIGHBORHOOD_INITIATIVE_UPDATED      = { handler = "OnActiveNeighborhoodUpdated", debounce = 0.3 },
+
+        -- Async rewards channel. Triggered by GetHouseLevelRewardsForLevel
+        -- (called from OnHouseLevelFavor). Fires per-level with rewards.
+        RECEIVED_HOUSE_LEVEL_REWARDS         = { handler = "OnHouseLevelRewardsEvent" },
+
+        -- Projects topology capture: pin frames in Layout mode (passive); floor-change finalizes.
+        -- Budget events refresh PROJECTS_HOUSE_TICK (debounced: fire per-decor during bulk placement).
+        HOUSING_LAYOUT_PIN_FRAME_ADDED       = { handler = "OnPinFrameAddedEvent" },
+        HOUSING_LAYOUT_VIEWED_FLOOR_CHANGED  = { handler = "OnLayoutFloorChangedEvent" },
+        HOUSING_NUM_DECOR_PLACED_CHANGED     = { handler = "OnHousingBudgetEvent",      debounce = 0.3 },
+        HOUSING_LAYOUT_ROOM_RECEIVED         = { handler = "OnHousingBudgetEvent",      debounce = 0.3 },
+        HOUSING_LAYOUT_ROOM_REMOVED          = { handler = "OnHousingBudgetEvent",      debounce = 0.3 },
+        HOUSING_LAYOUT_NUM_FLOORS_CHANGED    = { handler = "OnHousingBudgetEvent",      debounce = 0.3 }, -- live 12.0.x
+        HOUSING_LAYOUT_OCCUPIED_FLOOR_RANGE_CHANGED = { handler = "OnHousingBudgetEvent", debounce = 0.3 }, -- 12.1 rename of NUM_FLOORS_CHANGED; invalid name skipped per-client
+    },
+
+    OnEditorModeChanged = function(self)
+        -- Deliberately NO ClearPlaced here. This fires on EVERY mode change, not just
+        -- editor entry -- switching to Advanced mode to open Blizzard's Placed Decor
+        -- list is a mode change -- and the CUSTOMIZATION_CHANGED burst does NOT re-fire
+        -- afterwards. Clearing therefore destroyed the enumeration with no way to
+        -- rebuild it: the Placed list read 0 the moment the player touched any mode.
+        -- The clear was correct under the old semantics (placedDecor = "things I placed
+        -- this editor session"); as an enumeration cache it is data loss.
+        -- House-context changes still clear it via PLAYER_ENTERING_WORLD, and
+        -- HOUSING_DECOR_REMOVED prunes individual entries.
+        HO:_OnCaptureModeChanged()   -- begin/finalize passive topology capture
+        HO:_PushHouseTick()          -- editorActive + budgets may have changed
+    end,
+
+    OnDecorCustomization = function(self, decorGUID)
+        -- NO editor-active gate. This event is the only taint-free enumeration of
+        -- placed decor (GetAllPlacedDecor carries HasRestrictions), and it bulk-fires
+        -- as a burst. Gating on IsHouseEditorActive dropped the ENTIRE burst whenever
+        -- it landed before that flag flipped, which is why HDG never saw its own
+        -- enumeration channel. Verified 2026-07-26: an ungated probe captured the full
+        -- set and matched Blizzard's own Placed Decor panel 21/21 (0 missing, 0 extra);
+        -- HDG with the gate captured nothing.
+        --
+        -- What the gate was actually protecting against is decor that isn't yours --
+        -- the burst spans several area IDs, neighbouring plots included. That is a
+        -- SCOPE problem, not a timing one, so consumers filter on the area segment of
+        -- the GUID (session.styles.currentArea) instead. Scoping by identity works
+        -- regardless of when the burst fires, which matters because the trigger is
+        -- still unverified.
+        --
+        -- Safe because this path writes only session.styles.placedDecor (session-only,
+        -- never persisted). account.recentActivity is written by the REMOVED handler,
+        -- which fires only for the player's own removals.
+        HO:Observe(decorGUID)
+    end,
+
+    OnDecorRemoved = function(self, decorGUID)
+        HO:RemovePlaced(decorGUID)
+    end,
+
+    -- Decor committed. Use pending itemID (PLACE_SUCCESS's decorGUID arg is always nil).
+    -- Record here (not StartPlacing) so ESC cancels don't over-count.
+    OnDecorPlaceSuccess = function(self)
+        local itemID = HO._pendingPlaceItemID
+        HO._pendingPlaceItemID = nil
+        if not itemID then return end
+        local houseID = _currentHouseID()
+        if not houseID then return end
+        HDG.Store:Dispatch({
+            type    = HDG.Constants.ACTIONS.RECENT_DECOR_PLACED,
+            payload = { houseKey = houseID, itemID = itemID },
+        })
+    end,
+
+    OnEnteringWorld = function(self)
+        -- Only clear placed-decor map when leaving a house context.
+        -- C_Housing.IsInsideHouse catches both house + plot.
+        if C_Housing and not C_Housing.IsInsideHouse() then
+            HO:CancelSweep()   -- hearth//reload mid-sweep must not wedge the next capture
+            HO:ClearPlaced()
+        end
+    end,
+
+    OnPlayerHouseList = function(self, houseInfoList)
+        HO:OnHouseList(houseInfoList)
+    end,
+
+    OnHouseLevelFavor = function(self, houseLevelFavor)
+        HO:OnHouseLevelFavor(houseLevelFavor)
+    end,
+
+    OnActiveNeighborhoodUpdated = function(self)
+        HO:OnActiveNeighborhood()
+    end,
+
+    OnHouseLevelRewardsEvent = function(self, level, rewards)
+        HO:OnHouseLevelRewards(level, rewards)
+    end,
+
+    OnPinFrameAddedEvent = function(self, pinFrame)
+        HO:OnPinFrameAdded(pinFrame)
+    end,
+    OnLayoutFloorChangedEvent = function(self)
+        HO:OnLayoutFloorChanged()
+    end,
+    OnHousingBudgetEvent = function(self)
+        HO:_PushHouseTick()
+    end,
+
+    onEnable = function(self)
+        -- Defer to MAIN_WINDOW_OPENING: housing C_* null-derefs -> CTD on cold client
+        -- at PLAYER_LOGIN. Steady-state events still arrive via blizzardEvents.
+        -- See docs/COLD_CLIENT_CTD_INVESTIGATION.md.
+        local A = HDG.Constants.ACTIONS
+        self._kickToken = HDG.Store:Subscribe(function(actionType, invalidation)
+            if actionType == A.MAIN_WINDOW_OPENING then
+                if not self._kicked then
+                    self._kicked = true
+                    -- Kick: GetPlayerOwnedHouses -> PLAYER_HOUSE_LIST_UPDATED. Favor fetch
+                    -- downstream is view-gated (OnHouseList loop) so it only fires when a
+                    -- house-level view is the one being opened onto.
+                    if C_Housing and C_Housing.GetPlayerOwnedHouses then
+                        C_Housing.GetPlayerOwnedHouses()
+                    end
+                    -- Seed active-neighborhood (sync; may be nil before initiative settles -> next event updates).
+                    HO:OnActiveNeighborhood()
+                    -- Seed Projects budget/floor slot (same cold-client gate; C_HousingLayout touches housing C_*).
+                    HO:_PushHouseTick()
+                else
+                    -- Reopen: UI_SET_PERSISTENT won't fire (view unchanged), so pull here. Self-gates.
+                    HO:RequestRewardsForOwnedHouses()
+                end
+            elseif actionType == A.UI_SET_PERSISTENT then
+                -- Tab switch -> pull rewards (self-gates to house-level views). Filter on the view write.
+                if type(invalidation) == "table" and invalidation[1] ~= "account.ui.view" then return end
+                HO:RequestRewardsForOwnedHouses()
+            elseif actionType == A.HOUSE_LEVEL_UPDATED then
+                -- A house's level just became known (favor captured) -> pull its rewards. Covers
+                -- first-open, where favor lands after the House tab is already on screen. Self-gates.
+                HO:RequestRewardsForOwnedHouses()
+            end
+        end)
+    end,
+    onShutdown = function(self)
+        if self._kickToken then
+            HDG.Store:Unsubscribe(self._kickToken)
+            self._kickToken = nil
+        end
+    end,
+})

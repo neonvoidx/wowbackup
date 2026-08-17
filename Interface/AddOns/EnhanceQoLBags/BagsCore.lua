@@ -739,8 +739,7 @@ local function getCustomItemContextMatchResult(button)
 		return getDefaultItemContextMatchResult(button)
 	end
 
-	local itemLocation = ItemLocation:CreateFromBagAndSlot(bagID, slotID)
-	local customResult = addon.GetCustomBankItemContextMatchResult and addon.GetCustomBankItemContextMatchResult(itemLocation) or nil
+	local customResult = addon.GetCustomBankItemContextMatchResult and addon.GetCustomBankItemContextMatchResult(bagID, slotID) or nil
 	if customResult ~= nil then
 		return customResult
 	end
@@ -1097,6 +1096,7 @@ end
 
 applyActiveSkin = function()
 	local skin = getActiveFrameSkin()
+	state.reagentAccentR, state.reagentAccentG, state.reagentAccentB = unpackSkinColor(skin and skin.accentColor, 0.72, 1, 0.78, 1)
 	if not skin then
 		state.currentSkinSignature = addon.GetSkinSignature and addon.GetSkinSignature() or nil
 		return
@@ -3573,8 +3573,9 @@ updateReagentBagVisuals = function(button)
 	local freeSlotDisplayMode = button._bagsFreeSlotDisplayMode
 	local isColoredFreeSlot = freeSlotDisplayMode == "colors" and button._bagsFreeSlotGroup ~= nil
 	local shouldShowReagentSlotIcon = isReagentBag and renderTexture == nil and freeSlotDisplayMode ~= "texture" and not isColoredFreeSlot
-	local skin = getActiveFrameSkin()
-	local accentR, accentG, accentB = unpackSkinColor(skin and skin.accentColor, 0.72, 1, 0.78, 1)
+	local accentR = state.reagentAccentR or 0.72
+	local accentG = state.reagentAccentG or 1
+	local accentB = state.reagentAccentB or 0.78
 	if button.ReagentTint then
 		button.ReagentTint:SetColorTexture(accentR, accentG, accentB, 0.16)
 		button.ReagentTint:SetShown(isReagentBag)

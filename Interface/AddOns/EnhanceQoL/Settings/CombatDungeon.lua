@@ -1621,7 +1621,7 @@ local function applyNameplateMobColor(unitFrame)
 	local targetG = isSecretValue(color.g) and nil or color.g
 	local targetB = isSecretValue(color.b) and nil or color.b
 	if type(targetR) ~= "number" or type(targetG) ~= "number" or type(targetB) ~= "number" then return end
-	if currentR == targetR and currentG == targetG and currentB == targetB then return end
+	if not isSecretValue(currentR) and not isSecretValue(currentG) and not isSecretValue(currentB) and currentR == targetR and currentG == targetG and currentB == targetB then return end
 	healthBar:SetStatusBarColor(targetR, targetG, targetB)
 end
 
@@ -2201,22 +2201,6 @@ local function toggleGroupApplication(value)
 	end
 end
 
-local lfgPoint, lfgRelativeTo, lfgRelativePoint, lfgXOfs, lfgYOfs
-
--- TODO 12.1 cleanup: remove groupfinderMoveResetButton if Blizzard's default Group Finder layout no longer overlaps refresh/reset.
--- Also add DB/profile cleanup for groupfinderMoveResetButton when removing this workaround.
-local function toggleLFGFilterPosition()
-	if LFGListFrame and LFGListFrame.SearchPanel and LFGListFrame.SearchPanel.FilterButton and LFGListFrame.SearchPanel.FilterButton.ResetButton then
-		if addon.db["groupfinderMoveResetButton"] then
-			LFGListFrame.SearchPanel.FilterButton.ResetButton:ClearAllPoints()
-			LFGListFrame.SearchPanel.FilterButton.ResetButton:SetPoint("TOPLEFT", LFGListFrame.SearchPanel.FilterButton, "TOPLEFT", -7, 13)
-		else
-			LFGListFrame.SearchPanel.FilterButton.ResetButton:ClearAllPoints()
-			LFGListFrame.SearchPanel.FilterButton.ResetButton:SetPoint(lfgPoint, lfgRelativeTo, lfgRelativePoint, lfgXOfs, lfgYOfs)
-		end
-	end
-end
-
 function addon.functions.initDungeonFrame()
 	if addon.db and addon.db[NAMEPLATE_AURA_CLICKTHROUGH_DB_KEY] == nil and addon.db[LEGACY_NAMEPLATE_AURA_CLICKTHROUGH_DB_KEY] ~= nil then
 		addon.db[NAMEPLATE_AURA_CLICKTHROUGH_DB_KEY] = addon.db[LEGACY_NAMEPLATE_AURA_CLICKTHROUGH_DB_KEY] and true or false
@@ -2419,11 +2403,6 @@ function addon.functions.initDungeonFrame()
 		end,
 	})
 
-	if LFGListFrame and LFGListFrame.SearchPanel and LFGListFrame.SearchPanel.FilterButton and LFGListFrame.SearchPanel.FilterButton.ResetButton then
-		lfgPoint, lfgRelativeTo, lfgRelativePoint, lfgXOfs, lfgYOfs = LFGListFrame.SearchPanel.FilterButton.ResetButton:GetPoint()
-	end
-	if addon.db["groupfinderMoveResetButton"] then toggleLFGFilterPosition() end
-
 	-- Add Raider.IO URL to LFG applicant member context menu
 	if Menu and Menu.ModifyMenu then
 		local regionTable = { "US", "KR", "EU", "TW", "CN" }
@@ -2479,7 +2458,6 @@ function addon.functions.initDungeonFrame()
 	SecureHandlerExecute(btn, body)
 
 	SecureHandlerUnwrapScript(btn, "PreClick")
-	-- TODO check midnight later, /cwm 0 not working for now
 
 	SecureHandlerWrapScript(
 		btn,
@@ -2513,6 +2491,16 @@ function addon.functions.initDungeonFrame()
 	if addon.functions.initDrinkMacro then addon.functions.initDrinkMacro() end
 
 	addon.functions.SettingsCreateHeadline(addon.SettingsLayout.characterInspectCategory, L["Mounts"] or "Mounts", { parentSection = expandable })
+	addon.functions.SettingsCreateCheckbox(addon.SettingsLayout.characterInspectCategory, {
+		var = "mountBindingDismountWhileMounted",
+		text = L["mountBindingDismountWhileMounted"],
+		desc = L["mountBindingDismountWhileMountedDesc"],
+		func = function(value) addon.db["mountBindingDismountWhileMounted"] = value and true or false end,
+		default = false,
+		newTagID = "mountBindingDismountWhileMounted",
+		parentSection = expandable,
+	})
+
 	addon.functions.SettingsCreateCheckbox(addon.SettingsLayout.characterInspectCategory, {
 		var = "randomMountUseAll",
 		text = L["Use all mounts for random mount"] or "Use all mounts for random mount",
@@ -2823,16 +2811,6 @@ data = {
 			addon.db["groupfinderAppText"] = value
 			if addon.functions.UpdateGroupFinderApplicantEventRegistration then addon.functions.UpdateGroupFinderApplicantEventRegistration() end
 			toggleGroupApplication(value)
-		end,
-		parentSection = sectionGroupFinder,
-	},
-	{
-		text = L["groupfinderMoveResetButton"],
-		var = "groupfinderMoveResetButton",
-		-- TODO 12.1 cleanup: remove this setting after confirming Blizzard fixed the Group Finder refresh/reset overlap.
-		func = function(value)
-			addon.db["groupfinderMoveResetButton"] = value
-			toggleLFGFilterPosition()
 		end,
 		parentSection = sectionGroupFinder,
 	},

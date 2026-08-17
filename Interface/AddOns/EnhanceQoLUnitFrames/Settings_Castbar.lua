@@ -316,6 +316,7 @@ function CastbarSettings.BuildStandaloneCastbarSettings(ctx)
 			local options = addon.DynamicAnchors:GetProfileOptions()
 			assignment.profileId = options[1] and options[1].value or nil
 		end
+		if addon.DynamicAnchors then addon.DynamicAnchors:RefreshRaidSizeConsumerTracking() end
 		refreshCastbar()
 		refreshSettingsUI()
 	end, false, section.anchor, isCastEnabled)
@@ -334,6 +335,7 @@ function CastbarSettings.BuildStandaloneCastbarSettings(ctx)
 		set = function(_, value)
 			local assignment = getDynamicAssignment(true)
 			assignment.profileId = value
+			addon.DynamicAnchors:RefreshRaidSizeConsumerTracking()
 			refreshCastbar()
 		end,
 		generator = function(_, root)
@@ -344,6 +346,7 @@ function CastbarSettings.BuildStandaloneCastbarSettings(ctx)
 				end, function()
 					local assignment = getDynamicAssignment(true)
 					assignment.profileId = option.value
+					addon.DynamicAnchors:RefreshRaidSizeConsumerTracking()
 					refreshCastbar()
 				end)
 			end

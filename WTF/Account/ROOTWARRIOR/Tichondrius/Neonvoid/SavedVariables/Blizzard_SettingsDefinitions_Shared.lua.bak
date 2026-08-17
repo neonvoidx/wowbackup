@@ -10,4 +10,5 @@ NewSettingsSeen = {
 ["raidFramesDisplayClassColor"] = true,
 ["COMBAT_WARNINGS_LABEL"] = true,
 ["NAMEPLATES_LABEL"] = true,
+["ADVANCED_COOLDOWN_SETTINGS1"] = true,
 }

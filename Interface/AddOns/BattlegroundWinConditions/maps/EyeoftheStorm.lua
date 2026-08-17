@@ -12,11 +12,14 @@ local Bases = NS.Bases
 local EOTS = Maps:NewMod()
 
 local commonConfig = {
+  basesReset = false,
+  maxScore = 1500,
   maxBases = 4,
   tickRate = 2,
   assaultTime = 6,
   contestedTime = 60,
-  resetTime = 20,
+  resetTime = 0,
+  controlTime = 0,
   baseResources = {
     [0] = 0,
     [1] = 1,
@@ -39,17 +42,22 @@ local instanceIdToMapId = {
   -- EyeoftheStorm
   [566] = {
     id = 112,
+    basesReset = commonConfig.basesReset,
+    maxScore = commonConfig.maxScore,
     maxBases = commonConfig.maxBases,
     tickRate = commonConfig.tickRate,
     assaultTime = commonConfig.assaultTime,
     contestedTime = commonConfig.contestedTime,
     resetTime = commonConfig.resetTime,
+    controlTime = commonConfig.controlTime,
     baseResources = commonConfig.baseResources,
     flagResources = commonConfig.flagResources,
   },
   -- RatedEyeoftheStorm
   [968] = {
     id = 397,
+    basesReset = commonConfig.basesReset,
+    maxScore = commonConfig.maxScore,
     maxBases = commonConfig.maxBases,
     tickRate = commonConfig.tickRate,
     assaultTime = commonConfig.assaultTime,
@@ -65,6 +73,7 @@ local function checkInfo(id, isBlitz)
   convertedInfo = NS.CopyTable(instanceIdToMapId[id], convertedInfo)
   convertedInfo.assaultTime = isBlitz and 4 or commonConfig.assaultTime
   convertedInfo.contestedTime = isBlitz and 60 or commonConfig.contestedTime
+  convertedInfo.resetTime = isBlitz and 20 or commonConfig.resetTime
   convertedInfo.maxBases = isBlitz and 4 or commonConfig.maxBases
   convertedInfo.baseResources = isBlitz
       and {
@@ -90,6 +99,7 @@ end
 function EOTS:EnterZone(id, isBlitz)
   if NS.db.global.maps.eyeofthestorm.enabled then
     NS.IS_EOTS = true
+
     Info:SetAnchor(Banner.frame, 0, 0)
     Flags:SetAnchor(Bases.frame, 0, -5)
     BasePrediction:StartInfoTracker(checkInfo(id, isBlitz))
@@ -99,6 +109,7 @@ end
 function EOTS:ExitZone()
   if NS.db.global.maps.eyeofthestorm.enabled then
     NS.IS_EOTS = false
+
     BasePrediction:StopInfoTracker()
   end
 end

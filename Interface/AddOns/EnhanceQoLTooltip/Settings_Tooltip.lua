@@ -356,7 +356,12 @@ data = {
 	{
 		var = "TooltipShowSpellID",
 		text = L["TooltipShowSpellID"],
-		func = function(v) addon.db["TooltipShowSpellID"] = v end,
+		func = function(v)
+			addon.db["TooltipShowSpellID"] = v
+			if v and addon.Tooltip and addon.Tooltip.functions and addon.Tooltip.functions.RequestNativeAuraSpellIDs then
+				addon.Tooltip.functions.RequestNativeAuraSpellIDs()
+			end
+		end,
 		default = false,
 		type = Settings.VarType.Boolean,
 		parentSection = expandable,
@@ -535,12 +540,13 @@ data = {
 			{
 				var = "TooltipTargetOfTargetRealmMode",
 				text = L["TooltipTargetOfTargetRealmMode"],
+				order = 181,
 				list = {
 					SHOW = L["TooltipTargetOfTargetRealmModeShow"],
 					HIDE = L["TooltipTargetOfTargetRealmModeHide"],
 					STAR = L["TooltipTargetOfTargetRealmModeStar"],
 				},
-				order = { "SHOW", "HIDE", "STAR" },
+				orderList = { "SHOW", "HIDE", "STAR" },
 				get = function() return addon.db["TooltipTargetOfTargetRealmMode"] or "SHOW" end,
 				set = function(value) addon.db["TooltipTargetOfTargetRealmMode"] = value ~= "SHOW" and value or nil end,
 				default = "SHOW",
@@ -557,11 +563,12 @@ data = {
 			{
 				var = "TooltipTargetOfTargetColorMode",
 				text = L["TooltipTargetOfTargetColorMode"],
+				order = 182,
 				list = {
 					DEFAULT = L["TooltipTargetOfTargetColorModeDefault"],
 					UNIT = L["TooltipTargetOfTargetColorModeUnit"],
 				},
-				order = { "DEFAULT", "UNIT" },
+				orderList = { "DEFAULT", "UNIT" },
 				get = function() return addon.db["TooltipTargetOfTargetColorMode"] or "DEFAULT" end,
 				set = function(value) addon.db["TooltipTargetOfTargetColorMode"] = value ~= "DEFAULT" and value or nil end,
 				default = "DEFAULT",
@@ -602,6 +609,7 @@ data = {
 				var = "TooltipRealmInfoFields",
 				text = L["TooltipRealmFields"],
 				desc = L["TooltipRealmFieldsDesc"],
+				order = 151,
 				options = {
 					{ value = "connected", text = L["TooltipRealmShowConnected"] },
 					{ value = "language", text = L["TooltipRealmShowLanguage"] },
@@ -628,6 +636,7 @@ data = {
 				var = "TooltipRealmLFGDisplay",
 				text = L["TooltipRealmLFGDisplay"],
 				desc = L["TooltipRealmLFGDisplayDesc"],
+				order = 152,
 				options = {
 					{ value = "tooltip", text = L["TooltipRealmLFGTooltip"] },
 					{ value = "listingFlag", text = L["TooltipRealmLFGListingFlag"] },
@@ -663,6 +672,7 @@ data = {
 			{
 				var = "TooltipGuildRankColor",
 				text = L["TooltipGuildRankColor"],
+				order = 141,
 				parent = true,
 				parentCheck = function()
 					return addon.SettingsLayout.elements["TooltipShowGuildRank"]
@@ -689,6 +699,7 @@ data = {
 			{
 				var = "TooltipGuildNameColor",
 				text = L["TooltipGuildNameColor"],
+				order = 121,
 				parent = true,
 				parentCheck = function()
 					return addon.SettingsLayout.elements["TooltipColorGuildName"]

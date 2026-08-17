@@ -36,6 +36,7 @@ Timer.defaults = Timer.defaults
 		enabled = false,
 		showDungeon = true,
 		dungeonDisplay = "NAME_LEVEL",
+		dungeonPlacement = "ROW",
 		showAffixes = true,
 		showAffixIcons = false,
 		affixDisplay = "ICON",
@@ -44,12 +45,15 @@ Timer.defaults = Timer.defaults
 		showChestTimers = false,
 		showDeaths = true,
 		deathDisplay = "ICON",
+		deathBarMode = "DEATHS",
+		deathPlacement = "ROW",
 		deathShowTimeLost = true,
 		showObjectives = true,
 		showObjectiveValues = true,
 		hideNonBossObjectives = false,
 		showEnemyForces = true,
 		showEnemyForcesBar = true,
+		enemyForcesValueMode = "DEFAULT",
 		showObjectiveBars = true,
 		showObjectiveTimes = false,
 		showObjectiveBestTimes = true,
@@ -57,7 +61,7 @@ Timer.defaults = Timer.defaults
 		visibility = "runOrEditMode",
 		updateRate = 0.2,
 		tooltip = true,
-		layoutMode = "PANEL",
+		layoutMode = "FLOW",
 		panelHeight = 106,
 		showKeyLevel = false,
 		showBestTime = false,
@@ -115,6 +119,7 @@ Timer.defaults = Timer.defaults
 		panelObjectivesSpacing = 0,
 		panelObjectivesColumnSpacing = 0,
 		panelObjectivesInvertColumns = false,
+		panelObjectivesAttachToTimerBar = false,
 		panelBarWidth = 220,
 		panelBarHeight = 8,
 		panelTimerBarWidth = 218,
@@ -148,6 +153,7 @@ Timer.defaults = Timer.defaults
 		panelTimerBarAnchor = "BOTTOM",
 		panelTimerBarOffsetX = 0,
 		panelTimerBarOffsetY = 16,
+		panelTimerBarAttachToHeader = false,
 		panelEnemyBarWidth = 249,
 		panelEnemyBarHeight = 14,
 		panelEnemyBarColor = { r = 0.9490196704864502, g = 0.2039215862751007, b = 0.062745101749897, a = 1 },
@@ -165,8 +171,15 @@ Timer.defaults = Timer.defaults
 		panelEnemyBarAnchor = "BOTTOM",
 		panelEnemyBarOffsetX = 0,
 		panelEnemyBarOffsetY = -15,
+		panelEnemyBarAttachToObjectives = false,
+		panelEnemyBarAttachOffsetX = 0,
+		panelEnemyBarAttachOffsetY = 0,
 		panelEnemyBarTextEnabled = true,
+		panelEnemyBarTextMode = "BOTH",
 		panelEnemyBarTextAlign = "RIGHT",
+		panelEnemyBarText2Enabled = false,
+		panelEnemyBarText2Mode = "PERCENT",
+		panelEnemyBarText2Align = "LEFT",
 		panelEnemyBarTextOffsetY = 0,
 		panelEnemyBarTextFontSize = 13,
 		panelEnemyBarTextColor = { r = 1, g = 1, b = 1, a = 1 },
@@ -175,6 +188,7 @@ Timer.defaults = Timer.defaults
 		rowSpacing = 3,
 		growth = "UP",
 		align = "LEFT",
+		timerAlign = "INHERIT",
 		iconOffsetX = 0,
 		iconOffsetY = 0,
 		iconGap = 4,
@@ -236,6 +250,7 @@ Timer.defaults = Timer.defaults
 		headerBarOffsetY = -1,
 		headerBarSizeOffsetX = 9,
 		headerBarSizeOffsetY = 0,
+		footerContent = "NONE",
 		footerBarEnabled = false,
 		footerBarUseCustomTexture = false,
 		footerBarCustomTexture = "",
@@ -278,15 +293,11 @@ local function clampNumber(value, minimum, maximum, fallback)
 end
 
 local function getPixelSize()
-	local scale = UIParent and UIParent.GetEffectiveScale and UIParent:GetEffectiveScale() or 1
-	if not scale or scale <= 0 then scale = 1 end
-	return 1 / scale
+	return addon.PixelUtil.OnePixel(UIParent)
 end
 
 local function snapToPixel(value)
-	value = tonumber(value) or 0
-	local pixel = getPixelSize()
-	return math.floor((value / pixel) + 0.5) * pixel
+	return addon.PixelUtil.Snap(value, UIParent)
 end
 
 local function snapSize(value, minimum)
@@ -294,7 +305,7 @@ local function snapSize(value, minimum)
 end
 
 local function pointOffset(value, minimum, maximum, fallback)
-	return clampNumber(value, minimum, maximum, fallback)
+	return snapToPixel(clampNumber(value, minimum, maximum, fallback))
 end
 
 local function applyBorderOffset(borderFrame, target, offsetX, offsetY, positionOffsetX, positionOffsetY)
@@ -325,7 +336,7 @@ local function getTimerConfig(create)
 	local config = addon.db.mythicPlusTimer
 	if type(config) ~= "table" then
 		if not create then return nil end
-		config = {}
+		config = { layoutMode = "FLOW" }
 		addon.db.mythicPlusTimer = config
 	end
 	return config
@@ -777,6 +788,12 @@ function Timer:Get(key, fallback)
 	return getTimerConfigValue(key, fallback == nil and defaults[key] or fallback)
 end
 
+function Timer:GetLayoutMode()
+	local mode = self:Get("layoutMode")
+	if mode == "LIST" or mode == "PANEL" or mode == "FLOW" then return mode end
+	return defaults.layoutMode
+end
+
 function Timer:Set(key, value)
 	if not addon.db or defaults[key] == nil then return end
 	local config = getTimerConfig(true)
@@ -786,6 +803,19 @@ function Timer:Set(key, value)
 		return
 	end
 	self:Refresh()
+end
+
+-- The footer has one content slot. Selecting deaths there temporarily overrides,
+-- but does not discard, the stored row/header preference.
+function Timer:GetListFooterContent()
+	local content = self:Get("footerContent")
+	if content == "TIMER" or content == "DEATHS" or content == "ENEMY_FORCES" then return content end
+	return "NONE"
+end
+
+function Timer:GetListDeathPlacement()
+	if self:GetListFooterContent() == "DEATHS" then return "FOOTER" end
+	return self:Get("deathPlacement") == "HEADER" and "HEADER" or "ROW"
 end
 
 function Timer:SyncActiveTimerBase(force)
@@ -1282,6 +1312,9 @@ function Timer:EnsureFrame()
 	frame:EnableMouse(true)
 	frame:SetClampedToScreen(true)
 	frame.rows = {}
+	frame.panelStyleBounds = CreateFrame("Frame", nil, frame)
+	frame.panelStyleBounds:SetAllPoints(frame)
+	frame.panelStyleBounds:EnableMouse(false)
 	frame.windowBackground = frame:CreateTexture(nil, "BACKGROUND")
 	frame.windowBackground:SetDrawLayer("BACKGROUND", -8)
 	frame.windowBackground:Hide()
@@ -1292,6 +1325,7 @@ function Timer:EnsureFrame()
 	frame.decorBars.footer = frame:CreateTexture(nil, "BORDER")
 	frame.decorBars.footer:SetDrawLayer("BORDER", 2)
 	frame.decorBars.footer:Hide()
+	frame.decorContent = {}
 	frame.borderFrame = CreateFrame("Frame", nil, frame, BackdropTemplateMixin and "BackdropTemplate")
 	frame.borderFrame:EnableMouse(false)
 	frame.borderFrame:Hide()
@@ -1351,6 +1385,26 @@ function Timer:EnsureRow(index)
 	row.value:SetJustifyH("RIGHT")
 	frame.rows[index] = row
 	return row
+end
+
+function Timer:EnsureDecorContent(kind)
+	local frame = self:EnsureFrame()
+	frame.decorContent = frame.decorContent or {}
+	if frame.decorContent[kind] then return frame.decorContent[kind] end
+	local holder = CreateFrame("Frame", nil, frame)
+	holder:SetFrameLevel(frame:GetFrameLevel() + 40)
+	holder:EnableMouse(true)
+	holder:SetScript("OnEnter", function(holderFrame) Timer:ShowRowTooltip(holderFrame) end)
+	holder:SetScript("OnLeave", GameTooltip_Hide)
+	holder.text = holder:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+	holder.text:SetDrawLayer("OVERLAY", 7)
+	holder.text:SetJustifyH("LEFT")
+	holder.value = holder:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+	holder.value:SetDrawLayer("OVERLAY", 7)
+	holder.value:SetJustifyH("RIGHT")
+	holder:Hide()
+	frame.decorContent[kind] = holder
+	return holder
 end
 
 function Timer:EnsurePanelText(key)
@@ -1449,6 +1503,9 @@ function Timer:EnsurePanelBar(key)
 	bar.text = bar.textFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 	bar.text:SetDrawLayer("OVERLAY", 9)
 	bar.text:Hide()
+	bar.text2 = bar.textFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+	bar.text2:SetDrawLayer("OVERLAY", 9)
+	bar.text2:Hide()
 	bar.timeLeftText = bar.textFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 	bar.timeLeftText:SetDrawLayer("OVERLAY", 9)
 	bar.timeLeftText:Hide()
@@ -1474,7 +1531,17 @@ function Timer:EnsurePanelBar(key)
 	return bar
 end
 
-function Timer:HidePanelElements()
+function Timer:ReleasePanelTimerBindings()
+	if not self.frame then return end
+	self:ReleaseTimerTextBinding("panel-timer")
+	self:ReleaseTimerTextBinding("panel-chest2")
+	self:ReleaseTimerTextBinding("panel-chest3")
+	self:ReleaseTimerTextBinding("panel-bar-time-left")
+	self:ReleaseTimerTextBinding("panel-bar-panelBarChest2")
+	self:ReleaseTimerTextBinding("panel-bar-panelBarChest3")
+end
+
+function Timer:HidePanelElements(releaseBindings)
 	local frame = self.frame
 	if not frame then return end
 	for _, text in pairs(frame.panelTexts or {}) do
@@ -1486,6 +1553,7 @@ function Timer:HidePanelElements()
 		if bar.textFrame then bar.textFrame:Hide() end
 		if bar.chestMarkerTextFrame then bar.chestMarkerTextFrame:Hide() end
 		if bar.text then bar.text:Hide() end
+		if bar.text2 then bar.text2:Hide() end
 		if bar.timeLeftText then bar.timeLeftText:Hide() end
 		for _, marker in ipairs(bar.chestMarkers or {}) do
 			marker:Hide()
@@ -1506,6 +1574,10 @@ function Timer:HidePanelElements()
 	for _, item in pairs(frame.panelObjectives or {}) do
 		item:Hide()
 	end
+	if releaseBindings then
+		self:ReleasePanelTimerBindings()
+		self.panelBindingsActive = false
+	end
 end
 
 function Timer:ApplyDecorBar(kind)
@@ -1515,13 +1587,6 @@ function Timer:ApplyDecorBar(kind)
 	local prefix = kind == "footer" and "footerBar" or "headerBar"
 	local enabled = self:Get(prefix .. "Enabled") == true
 	texture:SetShown(enabled)
-	if not enabled then return end
-	local textureKind, textureValue = getCustomTextureInfo(self:Get(prefix .. "UseCustomTexture") == true and self:Get(prefix .. "CustomTexture") or nil)
-	if not textureKind then
-		textureKind = "texture"
-		textureValue = resolveMedia("statusbar", self:Get(prefix .. "Texture"), DEFAULT_BORDER)
-	end
-	local color = normalizeColor(self:Get(prefix .. "Color"), defaults[prefix .. "Color"])
 	local anchor = normalizePoint(self:Get(prefix .. "Anchor"))
 	local baseWidth = frame:GetWidth() or clampNumber(self:Get("width"), 120, 800, defaults.width)
 	local baseHeight = kind == "footer" and DEFAULT_FOOTER_BAR_HEIGHT or DEFAULT_HEADER_BAR_HEIGHT
@@ -1549,12 +1614,62 @@ function Timer:ApplyDecorBar(kind)
 	texture:ClearAllPoints()
 	texture:SetPoint(texturePoint, frame, framePoint, pointOffset(self:Get(prefix .. "OffsetX"), -1000, 1000, defaults[prefix .. "OffsetX"]), pointOffset(self:Get(prefix .. "OffsetY"), -1000, 1000, defaults[prefix .. "OffsetY"]))
 	texture:SetSize(width, height)
+	if not enabled then return end
+	local textureKind, textureValue = getCustomTextureInfo(self:Get(prefix .. "UseCustomTexture") == true and self:Get(prefix .. "CustomTexture") or nil)
+	if not textureKind then
+		textureKind = "texture"
+		textureValue = resolveMedia("statusbar", self:Get(prefix .. "Texture"), DEFAULT_BORDER)
+	end
+	local color = normalizeColor(self:Get(prefix .. "Color"), defaults[prefix .. "Color"])
 	applyTexture(texture, textureKind, textureValue)
 	texture:SetVertexColor(color.r, color.g, color.b, color.a)
 end
 
+function Timer:GetStyleTarget()
+	local frame = self:EnsureFrame()
+	if self:Get("layoutMode") == "PANEL" and frame.panelStyleBounds then return frame.panelStyleBounds end
+	return frame
+end
+
+function Timer:UpdatePanelStyleBounds()
+	local frame = self:EnsureFrame()
+	local bounds = frame.panelStyleBounds
+	if not bounds then return end
+	bounds:ClearAllPoints()
+	if self:Get("layoutMode") ~= "PANEL" then
+		bounds:SetAllPoints(frame)
+		return
+	end
+
+	local frameLeft, frameBottom = frame:GetLeft(), frame:GetBottom()
+	local frameWidth, frameHeight = frame:GetSize()
+	if not (frameLeft and frameBottom and frameWidth and frameHeight) then
+		bounds:SetAllPoints(frame)
+		return
+	end
+	local left, bottom, right, top = 0, 0, frameWidth, frameHeight
+	local function includeRegion(region)
+		if not (region and region.IsShown and region:IsShown()) then return end
+		local regionLeft, regionBottom, regionRight, regionTop = region:GetLeft(), region:GetBottom(), region:GetRight(), region:GetTop()
+		if not (regionLeft and regionBottom and regionRight and regionTop) then return end
+		left = math.min(left, regionLeft - frameLeft)
+		bottom = math.min(bottom, regionBottom - frameBottom)
+		right = math.max(right, regionRight - frameLeft)
+		top = math.max(top, regionTop - frameBottom)
+	end
+	for _, item in ipairs(frame.panelObjectives or {}) do
+		includeRegion(item)
+	end
+	if self:Get("panelEnemyBarAttachToObjectives") == true then
+		includeRegion(frame.panelBars and frame.panelBars.enemy)
+	end
+	bounds:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", snapToPixel(left), snapToPixel(bottom))
+	bounds:SetPoint("TOPRIGHT", frame, "BOTTOMLEFT", snapToPixel(right), snapToPixel(top))
+end
+
 function Timer:ApplyWindowBackground()
 	local frame = self:EnsureFrame()
+	local target = self:GetStyleTarget()
 	local texture = frame.windowBackground
 	if not texture then return end
 	local enabled = self:Get("backdropEnabled") == true
@@ -1568,10 +1683,10 @@ function Timer:ApplyWindowBackground()
 	end
 	local color = normalizeColor(self:Get("backdropColor"), defaults.backdropColor)
 	local anchor = normalizePoint(self:Get("backdropAnchor"))
-	local baseWidth = frame:GetWidth() or clampNumber(self:Get("width"), 120, 800, defaults.width)
-	local baseHeight = frame:GetHeight() or 120
+	local baseWidth = target:GetWidth() or clampNumber(self:Get("width"), 120, 800, defaults.width)
+	local baseHeight = target:GetHeight() or 120
 	texture:ClearAllPoints()
-	texture:SetPoint(anchor, frame, anchor, pointOffset(self:Get("backdropOffsetX"), -1000, 1000, defaults.backdropOffsetX), pointOffset(self:Get("backdropOffsetY"), -1000, 1000, defaults.backdropOffsetY))
+	texture:SetPoint(anchor, target, anchor, pointOffset(self:Get("backdropOffsetX"), -1000, 1000, defaults.backdropOffsetX), pointOffset(self:Get("backdropOffsetY"), -1000, 1000, defaults.backdropOffsetY))
 	texture:SetSize(snapSize(baseWidth + clampNumber(self:Get("backdropSizeOffsetX"), -1000, 1000, defaults.backdropSizeOffsetX)), snapSize(baseHeight + clampNumber(self:Get("backdropSizeOffsetY"), -1000, 1000, defaults.backdropSizeOffsetY)))
 	applyTexture(texture, textureKind, textureValue)
 	texture:SetVertexColor(color.r, color.g, color.b, color.a)
@@ -1579,8 +1694,11 @@ end
 
 function Timer:ApplyFrameStyle()
 	local frame = self:EnsureFrame()
+	local styleTarget = self:GetStyleTarget()
 	local width = snapSize(clampNumber(self:Get("width"), 120, 800, defaults.width))
 	local rowHeight = snapSize(clampNumber(self:Get("rowHeight"), 12, 48, defaults.rowHeight))
+	local barHeight = snapSize(clampNumber(self:Get("barHeight"), 1, 96, defaults.barHeight))
+	local panelMode = self:Get("layoutMode") == "PANEL"
 	local font = resolveFont(self:Get("fontFace"))
 	local style = normalizeFontStyle(self:Get("fontOutline"))
 	local fontSize = clampNumber(self:Get("fontSize"), 8, 32, defaults.fontSize)
@@ -1599,9 +1717,9 @@ function Timer:ApplyFrameStyle()
 	if frame.borderFrame then
 		frame.borderFrame:SetFrameLevel(frame:GetFrameLevel() + 30)
 		local borderOffsetX, borderOffsetY = getBorderOffsets(function(key) return self:Get(key) end, "border", "borderInset")
-		applyBorderOffset(
-			frame.borderFrame,
-			frame,
+			applyBorderOffset(
+				frame.borderFrame,
+				styleTarget,
 			borderOffsetX,
 			borderOffsetY,
 			clampNumber(self:Get("borderPositionOffsetX"), -1000, 1000, defaults.borderPositionOffsetX),
@@ -1626,7 +1744,7 @@ function Timer:ApplyFrameStyle()
 		row.bar:SetFrameLevel(math.max(0, row:GetFrameLevel() - 1))
 		row:SetHeight(rowHeight)
 		row.icon:SetSize(rowHeight, rowHeight)
-		row.bar:SetHeight(rowHeight)
+		row.bar:SetHeight(barHeight)
 		row.bar:SetStatusBarTexture(texture)
 		row.bar.bg:SetTexture(bgTexture)
 		row.bar.bg:SetVertexColor(barBgColor.r, barBgColor.g, barBgColor.b, barBgColor.a)
@@ -1635,7 +1753,7 @@ function Timer:ApplyFrameStyle()
 			local barBorderOffsetX, barBorderOffsetY = getBorderOffsets(function(key) return self:Get(key) end, "barBorder", "barBorderOffset")
 			applyBorderOffset(row.bar.borderFrame, row.bar, barBorderOffsetX, barBorderOffsetY)
 		end
-		if self:Get("barBorderEnabled") then
+		if row.bar:IsShown() and self:Get("barBorderEnabled") then
 			if row.bar.borderFrame then
 				row.bar.borderFrame:SetBackdrop({
 					edgeFile = barBorderTexture,
@@ -1672,7 +1790,7 @@ function Timer:ApplyFrameStyle()
 			local panelBorderOffsetX, panelBorderOffsetY = getBorderOffsets(function(key) return self:Get(key) end, prefix .. "Border", prefix .. "BorderOffset")
 			applyBorderOffset(bar.borderFrame, bar, panelBorderOffsetX, panelBorderOffsetY)
 		end
-		if self:Get(visibleKey) and self:Get(prefix .. "BorderEnabled") then
+		if panelMode and self:Get(visibleKey) and self:Get(prefix .. "BorderEnabled") then
 			if bar.borderFrame then
 				bar.borderFrame:SetBackdrop({
 					edgeFile = panelBorderTexture,
@@ -1788,10 +1906,15 @@ function Timer:FormatObjectiveDelta(delta)
 	return wrapColor(text, color)
 end
 
-function Timer:FormatObjectiveValue(state, objective)
-	local valueText = self:Get("showObjectiveValues") ~= false and objective.total and objective.total > 0 and string.format("%d/%d", objective.quantity or 0, objective.total) or ""
+function Timer:FormatObjectiveCount(objective)
+	if not (objective and objective.total and objective.total > 0) then return "" end
+	return string.format("%d/%d", objective.quantity or 0, objective.total)
+end
+
+function Timer:FormatObjectiveTiming(state, objective)
+	local valueText = ""
 	if self:Get("showObjectiveTimes") and objective.splitTime then
-		valueText = valueText ~= "" and (valueText .. " - " .. secondsToText(objective.splitTime)) or secondsToText(objective.splitTime)
+		valueText = secondsToText(objective.splitTime)
 		if self:Get("showObjectiveBestTimes") then
 			local best = state and state.preview and objective.bestTime or objective.previousBestTime
 			if not best and not (state and state.active) then best = self:GetBestObjectiveTime(state, objective.text) end
@@ -1799,6 +1922,63 @@ function Timer:FormatObjectiveValue(state, objective)
 		end
 	end
 	return valueText
+end
+
+function Timer:JoinObjectiveValueText(first, second)
+	if first == "" then return second or "" end
+	if not second or second == "" then return first end
+	return first .. " - " .. second
+end
+
+function Timer:FormatObjectiveValue(state, objective)
+	local countText = self:Get("showObjectiveValues") ~= false and self:FormatObjectiveCount(objective) or ""
+	return self:JoinObjectiveValueText(countText, self:FormatObjectiveTiming(state, objective))
+end
+
+function Timer:FormatEnemyForcesValue(state, objective, includeTiming, valueMode)
+	local percentText = string.format("%.2f%%", tonumber(objective and objective.percent) or 0)
+	local mode = valueMode or self:Get("enemyForcesValueMode")
+	if mode ~= "BOTH" and mode ~= "PERCENT" and mode ~= "COUNT" then
+		local objectiveValue = includeTiming == false and (self:Get("showObjectiveValues") ~= false and self:FormatObjectiveCount(objective) or "")
+			or self:FormatObjectiveValue(state, objective)
+		return self:JoinObjectiveValueText(percentText, objectiveValue)
+	end
+	local countText = self:FormatObjectiveCount(objective)
+	local primaryText
+	if mode == "COUNT" then
+		primaryText = countText ~= "" and countText or percentText
+	elseif mode == "BOTH" then
+		primaryText = self:JoinObjectiveValueText(percentText, countText)
+	else
+		primaryText = percentText
+	end
+	if includeTiming == false then return primaryText end
+	return self:JoinObjectiveValueText(primaryText, self:FormatObjectiveTiming(state, objective))
+end
+
+function Timer:GetPanelEnemyBarTextMode(slot)
+	local key = slot == 2 and "panelEnemyBarText2Mode" or "panelEnemyBarTextMode"
+	local mode = self:Get(key)
+	if mode == "BOTH" or mode == "PERCENT" or mode == "COUNT" then return mode end
+	return defaults[key]
+end
+
+function Timer:GetPanelEnemyBarAttachOffset(axis)
+	local key = "panelEnemyBarAttachOffset" .. axis
+	return clampNumber(self:Get(key), -800, 800, defaults[key])
+end
+
+function Timer:MigratePanelEnemyBarSettings()
+	local config = getTimerConfig(false)
+	if not config then return end
+	if config.panelEnemyBarTextMode == nil then
+		local mode = config.enemyForcesValueMode
+		config.panelEnemyBarTextMode = (mode == "BOTH" or mode == "PERCENT" or mode == "COUNT") and mode or defaults.panelEnemyBarTextMode
+	end
+	if config.panelEnemyBarAttachToObjectives == true then
+		if config.panelEnemyBarAttachOffsetX == nil then config.panelEnemyBarAttachOffsetX = clampNumber(config.panelEnemyBarOffsetX, -800, 800, defaults.panelEnemyBarAttachOffsetX) end
+		if config.panelEnemyBarAttachOffsetY == nil then config.panelEnemyBarAttachOffsetY = clampNumber(config.panelEnemyBarOffsetY, -800, 800, defaults.panelEnemyBarAttachOffsetY) end
+	end
 end
 
 function Timer:RecordBestTime()
@@ -1933,8 +2113,11 @@ function Timer:RenderPanelAffixes(state)
 end
 
 function Timer:RenderPanelObjectives(state)
-	if not (state and state.objectives and #state.objectives > 0) then return 0 end
 	local frame = self:EnsureFrame()
+	frame.panelObjectiveFirst = nil
+	frame.panelObjectiveBottom = nil
+	frame.panelObjectivesHeight = nil
+	if not (state and state.objectives and #state.objectives > 0) then return 0 end
 	local font = resolveFont(self:Get("panelObjectivesFontFace"))
 	local style = normalizeFontStyle(self:Get("panelObjectivesFontOutline"))
 	local fontSize = clampNumber(self:Get("panelObjectivesFontSize"), 8, 56, defaults.panelObjectivesFontSize)
@@ -1959,9 +2142,9 @@ function Timer:RenderPanelObjectives(state)
 			item:Hide()
 		else
 			shownIndex = shownIndex + 1
+			if shownIndex == 1 then frame.panelObjectiveFirst = item end
 		local color = normalizeColor(objective.completed and self:Get("objectiveCompleteColor") or self:Get("objectiveColor"), defaults.objectiveColor)
 		local valueText = self:FormatObjectiveValue(state, objective)
-		local valueWidth = valueText ~= "" and 70 or 0
 		item.tooltipType = "objective"
 		item.tooltipData = objective
 		item:SetWidth(width)
@@ -1973,9 +2156,17 @@ function Timer:RenderPanelObjectives(state)
 		item.text:ClearAllPoints()
 		applyFontString(item.value, font, fontSize, style)
 		item.value:SetText(valueText)
+		item.value:SetWordWrap(false)
+		item.value:SetNonSpaceWrap(false)
+		if item.value.SetMaxLines then item.value:SetMaxLines(1) end
 		item.value:SetTextColor(color.r, color.g, color.b, color.a)
 		item.value:ClearAllPoints()
 		local columnGap = snapToPixel(4)
+		local getValueWidth = item.value.GetUnboundedStringWidth or item.value.GetStringWidth
+		local naturalValueWidth = valueText ~= "" and (tonumber(getValueWidth and getValueWidth(item.value)) or 0) or 0
+		local minimumLabelWidth = math.max(40, fontSize * 2)
+		local maximumValueWidth = math.max(1, math.min(width * 0.65, width - minimumLabelWidth - columnGap))
+		local valueWidth = valueText ~= "" and snapSize(math.min(maximumValueWidth, math.max(fontSize * 2, naturalValueWidth + 2))) or 0
 		if invertColumns then
 			item.text:SetJustifyH("RIGHT")
 			item.value:SetJustifyH("LEFT")
@@ -2027,10 +2218,68 @@ function Timer:RenderPanelObjectives(state)
 		frame.panelObjectives[index]:Hide()
 	end
 	if shownIndex == 0 then return 0 end
+	frame.panelObjectiveBottom = growUp and frame.panelObjectiveFirst or previous
+	frame.panelObjectivesHeight = rowsHeight
 	if growUp then
 		return math.max(0, math.abs(y)) + rowsHeight + 6
 	end
 	return math.max(0, math.abs(y)) + rowsHeight + 6
+end
+
+function Timer:ApplyPanelLinks()
+	local frame = self.frame
+	if not frame then return end
+
+	local timerBar = frame.panelBars and frame.panelBars.timer
+	if not (timerBar and timerBar:IsShown() and self:Get("showPanelTimerBar")) then timerBar = nil end
+	if timerBar and self:Get("panelTimerBarAttachToHeader") == true then
+		local header = frame.decorBars and frame.decorBars.header
+		timerBar:ClearAllPoints()
+		if header and header:IsShown() then
+			timerBar:SetPoint("TOP", header, "BOTTOM", 0, 0)
+		else
+			timerBar:SetPoint("TOP", frame, "TOP", 0, 0)
+		end
+	end
+
+	local firstObjective = frame.panelObjectiveFirst
+	if
+		firstObjective
+		and firstObjective:IsShown()
+		and timerBar
+		and self:Get("showObjectives")
+		and self:Get("panelObjectivesAttachToTimerBar") == true
+	then
+		firstObjective:ClearAllPoints()
+		local x = pointOffset(self:Get("panelObjectivesOffsetX"), -800, 800, defaults.panelObjectivesOffsetX)
+		local y = pointOffset(self:Get("panelObjectivesOffsetY"), -800, 800, defaults.panelObjectivesOffsetY)
+		if self:Get("panelObjectivesGrowth") == "UP" then
+			local rowsHeight = frame.panelObjectivesHeight or 0
+			firstObjective:SetPoint("BOTTOM", timerBar, "BOTTOM", x, y - rowsHeight)
+		else
+			firstObjective:SetPoint("TOP", timerBar, "BOTTOM", x, y)
+		end
+	end
+
+	local bottomObjective = frame.panelObjectiveBottom
+	local enemyBar = frame.panelBars and frame.panelBars.enemy
+	if
+		bottomObjective
+		and bottomObjective:IsShown()
+		and enemyBar
+		and enemyBar:IsShown()
+		and self:Get("showPanelEnemyBar")
+		and self:Get("panelEnemyBarAttachToObjectives") == true
+	then
+		enemyBar:ClearAllPoints()
+		enemyBar:SetPoint(
+			"TOP",
+			bottomObjective,
+			"BOTTOM",
+			pointOffset(self:GetPanelEnemyBarAttachOffset("X"), -800, 800, defaults.panelEnemyBarAttachOffsetX),
+			pointOffset(self:GetPanelEnemyBarAttachOffset("Y"), -800, 800, defaults.panelEnemyBarAttachOffsetY)
+		)
+	end
 end
 
 function Timer:ShouldShowDeathDisplay(state)
@@ -2089,35 +2338,46 @@ function Timer:SetPanelBar(key, value, maxValue, anchorKey, xKey, yKey, color)
 	bar:Show()
 end
 
-function Timer:SetPanelEnemyBarText(percent)
+function Timer:SetPanelEnemyBarTextSlot(slot, state, objective)
 	local frame = self.frame
 	local bar = frame and frame.panelBars and frame.panelBars.enemy
-	if not (bar and bar.text) then return end
-	if not self:Get("panelEnemyBarTextEnabled") then
-		bar.text:Hide()
+	local text = bar and (slot == 2 and bar.text2 or bar.text) or nil
+	if not text then return end
+	local enabledKey = slot == 2 and "panelEnemyBarText2Enabled" or "panelEnemyBarTextEnabled"
+	if not self:Get(enabledKey) then
+		text:Hide()
 		return
 	end
-	local align = normalizeHorizontal(self:Get("panelEnemyBarTextAlign"))
+	local alignKey = slot == 2 and "panelEnemyBarText2Align" or "panelEnemyBarTextAlign"
+	local align = normalizeHorizontal(self:Get(alignKey))
 	local font = resolveFont(self:Get("fontFace"))
 	local style = normalizeFontStyle(self:Get("fontOutline"))
 	local fontSize = clampNumber(self:Get("panelEnemyBarTextFontSize"), 8, 56, defaults.panelEnemyBarTextFontSize)
 	local color = normalizeColor(self:Get("panelEnemyBarTextColor"), defaults.panelEnemyBarTextColor)
 	local offsetY = pointOffset(self:Get("panelEnemyBarTextOffsetY"), -800, 800, defaults.panelEnemyBarTextOffsetY)
-	bar.text:ClearAllPoints()
-	applyFontString(bar.text, font, fontSize, style)
-	bar.text:SetText(string.format("%.2f%%", tonumber(percent) or 0))
-	bar.text:SetTextColor(color.r, color.g, color.b, color.a)
-	bar.text:SetJustifyH(align)
+	text:ClearAllPoints()
+	applyFontString(text, font, fontSize, style)
+	-- The bar's dedicated value mode owns this text. Objective split timing is
+	-- still shown in the normal objective list, but must not become a second
+	-- value next to Count/Percentage/Both inside the bar.
+	text:SetText(self:FormatEnemyForcesValue(state, objective, false, self:GetPanelEnemyBarTextMode(slot)))
+	text:SetTextColor(color.r, color.g, color.b, color.a)
+	text:SetJustifyH(align)
 	if align == "LEFT" then
-		bar.text:SetPoint("LEFT", bar, "LEFT", 3, offsetY)
-		bar.text:SetPoint("RIGHT", bar, "RIGHT", -3, offsetY)
+		text:SetPoint("LEFT", bar, "LEFT", 3, offsetY)
+		text:SetPoint("RIGHT", bar, "RIGHT", -3, offsetY)
 	elseif align == "RIGHT" then
-		bar.text:SetPoint("LEFT", bar, "LEFT", 3, offsetY)
-		bar.text:SetPoint("RIGHT", bar, "RIGHT", -3, offsetY)
+		text:SetPoint("LEFT", bar, "LEFT", 3, offsetY)
+		text:SetPoint("RIGHT", bar, "RIGHT", -3, offsetY)
 	else
-		bar.text:SetPoint("CENTER", bar, "CENTER", 0, offsetY)
+		text:SetPoint("CENTER", bar, "CENTER", 0, offsetY)
 	end
-	bar.text:Show()
+	text:Show()
+end
+
+function Timer:SetPanelEnemyBarText(state, objective)
+	self:SetPanelEnemyBarTextSlot(1, state, objective)
+	self:SetPanelEnemyBarTextSlot(2, state, objective)
 end
 
 function Timer:SetPanelTimerBarTimeLeftText(timeLeft, state)
@@ -2242,13 +2502,14 @@ function Timer:UpdatePanelTimerBarChestMarkers(timeLimit, twoChest, threeChest)
 end
 
 function Timer:RenderPanel(state, timeLeft, twoChest, threeChest)
-	self:HidePanelElements()
-	if self:Get("layoutMode") ~= "PANEL" then return 0 end
+	local panelMode = self:Get("layoutMode") == "PANEL"
+	self:HidePanelElements(not panelMode and self.panelBindingsActive == true)
+	if not panelMode then return 0 end
+	self.panelBindingsActive = true
 	local frame = self:EnsureFrame()
-	if self:Get("showObjectives") then self:RenderPanelObjectives(state) end
 	local panelHeight = clampNumber(self:Get("panelHeight"), 24, 300, defaults.panelHeight)
 	frame:SetSize(snapSize(clampNumber(self:Get("width"), 120, 800, defaults.width)), snapSize(panelHeight))
-	self:ApplyFrameStyle()
+	if self:Get("showObjectives") then self:RenderPanelObjectives(state) end
 	local best = self:GetBestTime(state)
 	if state.preview then best = 1612 end
 	local delta = best and state.elapsed and (state.elapsed - best) or nil
@@ -2270,6 +2531,8 @@ function Timer:RenderPanel(state, timeLeft, twoChest, threeChest)
 			state.timeLimit,
 			self:Get("timerDisplay")
 		)
+	else
+		self:ReleaseTimerTextBinding("panel-timer")
 	end
 	if self:Get("showChestTimers") then
 		local hideChestLabels = self:Get("panelChestHideLabels") == true
@@ -2288,6 +2551,8 @@ function Timer:RenderPanel(state, timeLeft, twoChest, threeChest)
 				"REMAINING",
 				hideChestLabels and "{}" or "+2\n{}"
 			)
+		else
+			self:ReleaseTimerTextBinding("panel-chest2")
 		end
 		if elapsed <= threeChest then
 			self:SetBoundTimerText(
@@ -2304,7 +2569,12 @@ function Timer:RenderPanel(state, timeLeft, twoChest, threeChest)
 				"REMAINING",
 				hideChestLabels and "{}" or "+3\n{}"
 			)
+		else
+			self:ReleaseTimerTextBinding("panel-chest3")
 		end
+	else
+		self:ReleaseTimerTextBinding("panel-chest2")
+		self:ReleaseTimerTextBinding("panel-chest3")
 	end
 	if self:ShouldShowDeathDisplay(state) then
 		local deathText = self:SetPanelText("deaths", self:GetDeathDisplayText(state.deaths, self:Get("panelDeathIconSize"), state.timeLost), "deathsAnchor", "deathsOffsetX", "deathsOffsetY", self:Get("deathColor"), self:Get("panelDeathsFontSize"))
@@ -2325,14 +2595,114 @@ function Timer:RenderPanel(state, timeLeft, twoChest, threeChest)
 		self:SetPanelBar("timer", timerBarValue, state.timeLimit or 1, "panelTimerBarAnchor", "panelTimerBarOffsetX", "panelTimerBarOffsetY", timeLeft <= 0 and self:Get("panelTimerBarExpiredColor") or self:Get("panelTimerBarColor"))
 		self:UpdatePanelTimerBarChestMarkers(state.timeLimit or 0, twoChest, threeChest)
 		self:SetPanelTimerBarTimeLeftText(timeLeft, state)
+	else
+		self:ReleaseTimerTextBinding("panel-bar-time-left")
+		self:ReleaseTimerTextBinding("panel-bar-panelBarChest2")
+		self:ReleaseTimerTextBinding("panel-bar-panelBarChest3")
 	end
 	if self:Get("showPanelEnemyBar") then
 		local bar = self:EnsurePanelBar("enemy")
 		if bar.textFrame then bar.textFrame:Show() end
 		self:SetPanelBar("enemy", enemyPercent, 100, "panelEnemyBarAnchor", "panelEnemyBarOffsetX", "panelEnemyBarOffsetY", self:Get("panelEnemyBarColor"))
-		self:SetPanelEnemyBarText(enemyPercent)
+		self:SetPanelEnemyBarText(state, state.enemyForces)
 	end
+	self:ApplyPanelLinks()
+	self:UpdatePanelStyleBounds()
+	self:ApplyFrameStyle()
 	return panelHeight
+end
+
+function Timer:HideListDecorContent(activeKinds)
+	local frame = self.frame
+	if not frame then return end
+	for kind, holder in pairs(frame.decorContent or {}) do
+		if not (activeKinds and activeKinds[kind]) then
+			holder.tooltipType = nil
+			holder.tooltipData = nil
+			holder:Hide()
+			self:ReleaseTimerTextBinding("decor-" .. kind)
+		end
+	end
+end
+
+function Timer:HideListElements()
+	local frame = self.frame
+	if not frame then return end
+	for index, row in ipairs(frame.rows or {}) do
+		row:Hide()
+		self:ReleaseTimerTextBinding("row-" .. tostring(index))
+	end
+	self:HideListDecorContent()
+end
+
+function Timer:HideAllElements()
+	self:HidePanelElements(true)
+	self:HideListElements()
+	if self.PanelFlow then self.PanelFlow:Hide() end
+end
+
+function Timer:SetListDecorContent(kind, data)
+	local holder = self:EnsureDecorContent(kind)
+	local frame = self:EnsureFrame()
+	local target = frame.decorBars and frame.decorBars[kind]
+	if not target then return end
+	local textOffsetX = pointOffset(self:Get("textOffsetX"), -800, 800, defaults.textOffsetX)
+	local textOffsetY = pointOffset(self:Get("textOffsetY"), -800, 800, defaults.textOffsetY)
+	local valueOffsetX = pointOffset(self:Get("valueOffsetX"), -800, 800, defaults.valueOffsetX)
+	local valueOffsetY = pointOffset(self:Get("valueOffsetY"), -800, 800, defaults.valueOffsetY)
+	local align = data.textAlign or self:Get("align")
+	if align ~= "CENTER" and align ~= "RIGHT" then align = "LEFT" end
+	local font = resolveFont(self:Get("fontFace"))
+	local style = normalizeFontStyle(self:Get("fontOutline"))
+	local fontSize = clampNumber(data.fontSize or self:Get("fontSize"), 8, 44, defaults.fontSize)
+	local valueFontSize = clampNumber(data.valueFontSize or fontSize, 8, 44, fontSize)
+
+	holder:SetFrameLevel(frame:GetFrameLevel() + 40)
+	holder:ClearAllPoints()
+	holder:SetPoint("TOPLEFT", target, "TOPLEFT", 0, 0)
+	holder:SetPoint("BOTTOMRIGHT", target, "BOTTOMRIGHT", 0, 0)
+	holder.tooltipType = data.tooltipType
+	holder.tooltipData = data.tooltipData
+	holder:EnableMouse(data.tooltipType ~= nil)
+	holder.text:SetText(data.text or "")
+	holder.value:SetText(data.valueText or "")
+	holder.text:SetJustifyH(align)
+	holder.value:SetJustifyH("RIGHT")
+	applyFontString(holder.text, font, fontSize, style)
+	applyFontString(holder.value, font, valueFontSize, style)
+	holder.text:ClearAllPoints()
+	holder.text:SetPoint("LEFT", holder, "LEFT", textOffsetX, textOffsetY)
+	if data.fullWidthText then
+		holder.text:SetPoint("RIGHT", holder, "RIGHT", valueOffsetX, textOffsetY)
+		holder.value:Hide()
+	else
+		local valueWidth = math.max(48, (holder.value:GetStringWidth() or 0) + 8)
+		holder.text:SetPoint("RIGHT", holder, "RIGHT", valueOffsetX - valueWidth, textOffsetY)
+		holder.value:ClearAllPoints()
+		holder.value:SetPoint("LEFT", holder, "RIGHT", valueOffsetX - valueWidth + 4, valueOffsetY)
+		holder.value:SetPoint("RIGHT", holder, "RIGHT", valueOffsetX, valueOffsetY)
+		holder.value:Show()
+	end
+	local color = normalizeColor(data.color, defaults.objectiveColor)
+	local globalTextColor = self:Get("useGlobalTextColor") and self:Get("textColor") or nil
+	setTextColor(holder.text, globalTextColor or data.textColor or color)
+	setTextColor(holder.value, globalTextColor or data.valueColor or color)
+
+	local bindingKey = "decor-" .. kind
+	local durationBinding = data.durationBinding
+	if durationBinding and durationBinding.state and durationBinding.state.active then
+		local elapsed = tonumber(durationBinding.state.elapsed) or 0
+		local duration = tonumber(durationBinding.duration) or 0
+		if duration > 0 and elapsed < duration then
+			local durationObject = self:UpdateTimerDurationObject(durationBinding.key, getChallengeStartTime(self, durationBinding.state), duration)
+			if not (durationObject and self:BindTimerText(holder.value, bindingKey, durationObject, durationBinding.mode, durationBinding.textFormat)) then self:ReleaseTimerTextBinding(bindingKey) end
+		else
+			self:ReleaseTimerTextBinding(bindingKey)
+		end
+	else
+		self:ReleaseTimerTextBinding(bindingKey)
+	end
+	holder:Show()
 end
 
 function Timer:SetRow(index, data)
@@ -2351,7 +2721,7 @@ function Timer:SetRow(index, data)
 	local valueOffsetY = pointOffset(self:Get("valueOffsetY"), -800, 800, defaults.valueOffsetY)
 	local barPosition = self:Get("barPosition")
 	if barPosition ~= "TOP" and barPosition ~= "BOTTOM" then barPosition = "BACKGROUND" end
-	local align = self:Get("align")
+	local align = data.textAlign or self:Get("align")
 	if align ~= "CENTER" and align ~= "RIGHT" then align = "LEFT" end
 	local font = resolveFont(self:Get("fontFace"))
 	local style = normalizeFontStyle(self:Get("fontOutline"))
@@ -2544,6 +2914,7 @@ function Timer:LayoutRows(count, panelOffset)
 			row:Show()
 		else
 			row:Hide()
+			self:ReleaseTimerTextBinding("row-" .. tostring(index))
 		end
 	end
 end
@@ -2551,7 +2922,8 @@ end
 function Timer:Refresh()
 	if not self.initialized then return end
 	local frame = self:EnsureFrame()
-	self:ApplyFrameStyle()
+	local layoutMode = self:GetLayoutMode()
+	if layoutMode ~= "FLOW" then self:ApplyFrameStyle() end
 	local enabled = self:IsEnabled()
 	local state = self:BuildState()
 	self:UpdateObjectiveSplits(state)
@@ -2560,17 +2932,38 @@ function Timer:Refresh()
 	local inMythicPlus = isInMythicPlus()
 	local shouldShow = enabled and (state.active or inMythicPlus or not self:Get("showOnlyInMythicPlus") or inEditMode)
 	if not shouldShow then
+		self:HideAllElements()
 		frame:Hide()
 		self:ApplyObjectiveTrackerVisibility(state, false)
 		return
 	end
+
+	if layoutMode == "FLOW" and self.PanelFlow then
+		self:HidePanelElements(true)
+		self:HideListElements()
+		if frame.windowBackground then frame.windowBackground:Hide() end
+		if frame.decorBars then
+			if frame.decorBars.header then frame.decorBars.header:Hide() end
+			if frame.decorBars.footer then frame.decorBars.footer:Hide() end
+		end
+		if frame.borderFrame then frame.borderFrame:Hide() end
+		local timeLeft = (state.timeLimit or 0) - (state.elapsed or 0)
+		local twoChest, threeChest = calculateChestTimers(state.timeLimit or 0, state.affixes or {})
+		local flowHeight = self.PanelFlow:Render(state, timeLeft, twoChest, threeChest)
+		local flowShown = (tonumber(flowHeight) or 0) > 0
+		frame:SetShown(flowShown)
+		self:ApplyObjectiveTrackerVisibility(state, flowShown)
+		return
+	end
+	if self.PanelFlow then self.PanelFlow:Hide() end
 
 	local rows = 0
 	local timeLeft = (state.timeLimit or 0) - (state.elapsed or 0)
 	local twoChest, threeChest = calculateChestTimers(state.timeLimit or 0, state.affixes or {})
 	local elapsed = tonumber(state.elapsed) or 0
 	local panelOffset = self:RenderPanel(state, timeLeft, twoChest, threeChest)
-	if self:Get("layoutMode") == "PANEL" then
+	if layoutMode == "PANEL" then
+		self:HideListDecorContent()
 		self:LayoutRows(0, panelOffset)
 		local panelShown = panelOffset > 0
 		frame:SetShown(panelShown)
@@ -2578,9 +2971,26 @@ function Timer:Refresh()
 		return
 	end
 
+	local decorContentShown = {}
+	local headerEntries = {}
+	local footerEntry
+	local footerContent = self:GetListFooterContent()
+	local deathPlacement = self:GetListDeathPlacement()
+	local function addListEntry(kind, data)
+		if kind == "DUNGEON" and self:Get("dungeonPlacement") == "HEADER" then
+			headerEntries.DUNGEON = data
+		elseif kind == "DEATHS" and deathPlacement == "HEADER" then
+			headerEntries.DEATHS = data
+		elseif footerContent == kind then
+			footerEntry = data
+		else
+			rows = rows + 1
+			self:SetRow(rows, data)
+		end
+	end
+
 	if self:Get("showDungeon") then
-		rows = rows + 1
-		self:SetRow(rows, {
+		addListEntry("DUNGEON", {
 			text = self:GetDungeonDisplayText(state),
 			color = self:Get("dungeonColor"),
 			fontSize = self:Get("titleFontSize"),
@@ -2600,16 +3010,18 @@ function Timer:Refresh()
 		})
 	end
 	if self:Get("showTimer") then
-		rows = rows + 1
 		local timerDisplay = self:Get("timerDisplay")
 		local timeLimit = state.timeLimit or 1
 		local isElapsedTimer = timerDisplay == "ELAPSED_TOTAL"
 		local color = timeLeft <= 0 and self:Get("timerExpiredColor") or self:Get("timerColor")
-		self:SetRow(rows, {
+		local timerAlign = self:Get("timerAlign")
+		if timerAlign ~= "LEFT" and timerAlign ~= "CENTER" and timerAlign ~= "RIGHT" then timerAlign = nil end
+		addListEntry("TIMER", {
 			text = isElapsedTimer and (L["mythicPlusTimerTimeElapsed"] or "Time elapsed") or (L["mythicPlusTimerTimeLeft"] or "Time left"),
 			valueText = self:GetTimerDisplayText(state, timeLeft),
 			color = color,
 			fontSize = self:Get("timerFontSize"),
+			textAlign = timerAlign,
 			max = timeLimit,
 			value = isElapsedTimer and math.min(timeLimit, math.max(0, elapsed)) or math.max(0, timeLeft),
 			durationBinding = {
@@ -2655,25 +3067,31 @@ function Timer:Refresh()
 		end
 	end
 	if self:ShouldShowDeathDisplay(state) then
-		rows = rows + 1
 		local showDeathInline = self:Get("deathShowTimeLost") == true
-		self:SetRow(rows, {
+		local deathBarMode = self:Get("deathBarMode")
+		local deathBarMax = 10
+		local deathBarValue = math.min(deathBarMax, math.max(0, tonumber(state.deaths) or 0))
+		if deathBarMode == "TIME_LOST" then
+			deathBarMax = math.max(1, tonumber(state.timeLimit) or 0)
+			deathBarValue = math.min(deathBarMax, math.max(0, tonumber(state.timeLost) or 0))
+		end
+		addListEntry("DEATHS", {
 			text = self:GetDeathDisplayText(state.deaths, nil, state.timeLost),
 			valueText = showDeathInline and "" or string.format("-%s", secondsToText(state.timeLost or 0)),
 			color = self:Get("deathColor"),
-			max = 10,
-			value = math.min(10, state.deaths or 0),
+			fontSize = self:Get("fontSize"),
+			max = deathBarMax,
+			value = deathBarValue,
+			hideBar = deathBarMode == "NONE",
 			tooltipType = "deaths",
 			tooltipData = state,
 		})
 	end
 	if self:Get("showEnemyForces") and state.enemyForces then
-		rows = rows + 1
 		local percent = tonumber(state.enemyForces.percent) or 0
-		local objectiveValue = self:FormatObjectiveValue(state, state.enemyForces)
-		self:SetRow(rows, {
+		addListEntry("ENEMY_FORCES", {
 			text = state.enemyForces.text ~= "" and state.enemyForces.text or (L["mythicPlusTimerEnemyForces"] or "Enemy Forces"),
-			valueText = objectiveValue ~= "" and string.format("%.2f%% - %s", percent, objectiveValue) or string.format("%.2f%%", percent),
+			valueText = self:FormatEnemyForcesValue(state, state.enemyForces),
 			color = self:Get("enemyForcesColor"),
 			max = 100,
 			value = percent,
@@ -2697,8 +3115,38 @@ function Timer:Refresh()
 		end
 	end
 
+	local dungeonHeader = headerEntries.DUNGEON
+	local deathsHeader = headerEntries.DEATHS
+	if dungeonHeader and deathsHeader then
+		local deathText = deathsHeader.text or ""
+		if deathsHeader.valueText and deathsHeader.valueText ~= "" then deathText = deathText .. " " .. deathsHeader.valueText end
+		self:SetListDecorContent("header", {
+			text = dungeonHeader.text,
+			valueText = deathText,
+			fontSize = dungeonHeader.fontSize,
+			valueFontSize = deathsHeader.fontSize,
+			textColor = dungeonHeader.color,
+			valueColor = deathsHeader.color,
+			tooltipType = deathsHeader.tooltipType,
+			tooltipData = deathsHeader.tooltipData,
+		})
+		decorContentShown.header = true
+	elseif dungeonHeader then
+		dungeonHeader.fullWidthText = true
+		dungeonHeader.textAlign = "CENTER"
+		self:SetListDecorContent("header", dungeonHeader)
+		decorContentShown.header = true
+	elseif deathsHeader then
+		self:SetListDecorContent("header", deathsHeader)
+		decorContentShown.header = true
+	end
+	if footerEntry then
+		self:SetListDecorContent("footer", footerEntry)
+		decorContentShown.footer = true
+	end
+	self:HideListDecorContent(decorContentShown)
 	self:LayoutRows(rows, panelOffset)
-	local frameShown = rows > 0 or panelOffset > 0
+	local frameShown = rows > 0 or next(decorContentShown) ~= nil or panelOffset > 0
 	frame:SetShown(frameShown)
 	self:ApplyObjectiveTrackerVisibility(state, frameShown)
 end
@@ -2773,6 +3221,7 @@ end
 
 function Timer:UnregisterEvents()
 	self:ApplyObjectiveTrackerVisibility(self.lastState, false)
+	self:HideAllElements()
 	if self.frame then self.frame:Hide() end
 end
 
@@ -2783,6 +3232,7 @@ function Timer:UpdateEventState()
 		self:ScheduleTick()
 	else
 		self:ApplyObjectiveTrackerVisibility(self.lastState, false)
+		self:HideAllElements()
 		if self.frame then self.frame:Hide() end
 	end
 end
@@ -2791,7 +3241,7 @@ function Timer:IsInEditMode()
 	return EditMode and EditMode.IsInEditMode and EditMode:IsInEditMode()
 end
 
-local function dropdownSetting(name, getter, setter, options, parentId, height, isEnabled, isShown)
+local function dropdownSetting(name, getter, setter, options, parentId, height, isEnabled, isShown, newTagID)
 	return {
 		name = name,
 		kind = SettingType.Dropdown,
@@ -2799,6 +3249,7 @@ local function dropdownSetting(name, getter, setter, options, parentId, height, 
 		height = height or 160,
 		isEnabled = isEnabled,
 		isShown = isShown,
+		newTagID = newTagID,
 		get = getter,
 		set = function(_, value) setter(value) end,
 		generator = function(_, root)
@@ -2826,13 +3277,14 @@ local function sliderSetting(name, getter, setter, minValue, maxValue, step, par
 	}
 end
 
-local function checkboxSetting(name, getter, setter, parentId, isEnabled, isShown)
+local function checkboxSetting(name, getter, setter, parentId, isEnabled, isShown, newTagID)
 	return {
 		name = name,
 		kind = SettingType.Checkbox,
 		parentId = parentId,
 		isEnabled = isEnabled,
 		isShown = isShown,
+		newTagID = newTagID,
 		get = getter,
 		set = function(_, value) setter(value == true) end,
 	}
@@ -2950,8 +3402,23 @@ function Timer:BuildEditModeSettings()
 			if refreshSettings then requestSettingsRefresh() end
 		end
 	end
+	local function getPanelEnemyBarOffset(axis)
+		return function()
+			if Timer:Get("panelEnemyBarAttachToObjectives") == true then return Timer:GetPanelEnemyBarAttachOffset(axis) end
+			return Timer:Get("panelEnemyBarOffset" .. axis)
+		end
+	end
+	local function setPanelEnemyBarOffset(axis)
+		return function(value)
+			local key = Timer:Get("panelEnemyBarAttachToObjectives") == true and ("panelEnemyBarAttachOffset" .. axis) or ("panelEnemyBarOffset" .. axis)
+			Timer:Set(key, clampNumber(value, -800, 800, defaults[key]))
+		end
+	end
 	local function enabledWhen(key)
 		return function() return Timer:Get(key) == true end
+	end
+	local function enemyBarTextEnabled()
+		return Timer:Get("showPanelEnemyBar") == true and (Timer:Get("panelEnemyBarTextEnabled") == true or Timer:Get("panelEnemyBarText2Enabled") == true)
 	end
 	local function shownWhen(key)
 		return function() return Timer:Get(key) == true end
@@ -2980,14 +3447,67 @@ function Timer:BuildEditModeSettings()
 		return Timer:Get("showObjectives") == true and Timer:Get("showObjectiveTimes") == true
 	end
 	local function isListMode()
-		return Timer:Get("layoutMode") ~= "PANEL"
+		return Timer:GetLayoutMode() == "LIST"
 	end
 	local function isPanelMode()
-		return Timer:Get("layoutMode") == "PANEL"
+		return Timer:GetLayoutMode() == "PANEL"
+	end
+	local function isLegacyMode()
+		return Timer:GetLayoutMode() ~= "FLOW"
+	end
+	local function deathRowBarEnabled()
+		return Timer:Get("showDeaths") == true and Timer:GetListDeathPlacement() == "ROW"
+	end
+	local function setDeathPlacement(value)
+		if value == "FOOTER" then
+			Timer:Set("footerContent", "DEATHS")
+		else
+			value = value == "HEADER" and "HEADER" or "ROW"
+			if Timer:GetListFooterContent() == "DEATHS" then Timer:Set("footerContent", "NONE") end
+			Timer:Set("deathPlacement", value)
+		end
+		requestSettingsRefresh()
+	end
+	local function setFooterContent(value)
+		if value ~= "TIMER" and value ~= "DEATHS" and value ~= "ENEMY_FORCES" then value = "NONE" end
+		Timer:Set("footerContent", value)
+		requestSettingsRefresh()
+	end
+	local function headerContentEnabled()
+		return (Timer:Get("showDungeon") == true and Timer:Get("dungeonPlacement") == "HEADER") or (Timer:Get("showDeaths") == true and Timer:GetListDeathPlacement() == "HEADER")
+	end
+	local function footerContentEnabled()
+		local content = Timer:GetListFooterContent()
+		if content == "TIMER" then return Timer:Get("showTimer") == true end
+		if content == "DEATHS" then return Timer:Get("showDeaths") == true end
+		if content == "ENEMY_FORCES" then return Timer:Get("showEnemyForces") == true end
+		return false
 	end
 	local function oneDecimalSeconds(value)
 		return string.format("%.1fs", tonumber(value) or 0)
 	end
+	local function wholePixels(value)
+		return tostring(math.floor((tonumber(value) or 0) + 0.5))
+	end
+	local function normalizeEnemyForcesValueMode(value)
+		if value ~= "BOTH" and value ~= "PERCENT" and value ~= "COUNT" then return "DEFAULT" end
+		return value
+	end
+	local function normalizePanelEnemyForcesValueMode(value)
+		if value ~= "BOTH" and value ~= "PERCENT" and value ~= "COUNT" then return "BOTH" end
+		return value
+	end
+	local enemyForcesValueOptions = {
+		{ value = "DEFAULT", label = L["Default"] or "Default" },
+		{ value = "BOTH", label = _G.STATUS_TEXT_BOTH or "Both" },
+		{ value = "PERCENT", label = _G.STATUS_TEXT_PERCENT or "Percentage" },
+		{ value = "COUNT", label = L["mythicPlusTimerEnemyForcesCount"] or "Count" },
+	}
+	local panelEnemyForcesValueOptions = {
+		{ value = "BOTH", label = _G.STATUS_TEXT_BOTH or "Both" },
+		{ value = "PERCENT", label = _G.STATUS_TEXT_PERCENT or "Percentage" },
+		{ value = "COUNT", label = L["mythicPlusTimerEnemyForcesCount"] or "Count" },
+	}
 	local anchorOptions = {
 		{ value = "TOPLEFT", label = "Top left" },
 		{ value = "TOP", label = _G.TOP or "Top" },
@@ -3007,18 +3527,33 @@ function Timer:BuildEditModeSettings()
 		local enabled = enabledWhen(prefix .. "Enabled")
 		local lsmEnabled = function() return Timer:Get(prefix .. "Enabled") == true and Timer:Get(prefix .. "UseCustomTexture") ~= true end
 		local customEnabled = function() return Timer:Get(prefix .. "Enabled") == true and Timer:Get(prefix .. "UseCustomTexture") == true end
-		return {
-			checkboxSetting(L["Enabled"] or "Enabled", get(prefix .. "Enabled"), set(prefix .. "Enabled", nil, true), sectionId),
+		local positionEnabled = function()
+			if Timer:Get(prefix .. "Enabled") == true then return true end
+			if not isListMode() then return false end
+			if kind == "header" then return headerContentEnabled() end
+			return footerContentEnabled()
+		end
+		local entries = {
+			checkboxSetting(L["mythicPlusTimerShowDecorBackground"] or "Show background", get(prefix .. "Enabled"), set(prefix .. "Enabled", nil, true), sectionId),
 			checkboxSetting(L["damageMeterHeaderBackgroundUseCustomTexture"] or "Custom texture", get(prefix .. "UseCustomTexture"), set(prefix .. "UseCustomTexture", nil, true), sectionId, enabled),
 			inputSetting(L["damageMeterHeaderBackgroundCustomTexture"] or "Atlas name or texture ID", get(prefix .. "CustomTexture"), set(prefix .. "CustomTexture", trimTextureInput), sectionId, customEnabled, L["damageMeterHeaderBackgroundCustomTextureDesc"] or "Enter an atlas name, texture file ID, or texture path.", 160),
 			dropdownSetting(L["Texture"] or "Texture", get(prefix .. "Texture"), set(prefix .. "Texture"), function() return buildMediaOptions("statusbar", false) end, sectionId, 260, lsmEnabled),
 			colorSetting(L["damageMeterHeaderBackgroundColor"] or "Color", get(prefix .. "Color"), set(prefix .. "Color"), defaults[prefix .. "Color"], sectionId, enabled),
-			anchorSetting(prefix .. "Anchor", sectionId, nil, L["Anchor"] or "Anchor", enabled),
-			sliderSetting(L["damageMeterHeaderBackgroundSizeOffsetX"] or "Width offset", get(prefix .. "SizeOffsetX"), set(prefix .. "SizeOffsetX", function(value) return clampNumber(value, -1000, 1000, defaults[prefix .. "SizeOffsetX"]) end), -1000, 1000, 1, sectionId, nil, enabled),
-			sliderSetting(L["damageMeterHeaderBackgroundSizeOffsetY"] or "Height offset", get(prefix .. "SizeOffsetY"), set(prefix .. "SizeOffsetY", function(value) return clampNumber(value, -300, 300, defaults[prefix .. "SizeOffsetY"]) end), -300, 300, 1, sectionId, nil, enabled),
-			sliderSetting(L["Offset X"] or "Offset X", get(prefix .. "OffsetX"), set(prefix .. "OffsetX", function(value) return clampNumber(value, -1000, 1000, defaults[prefix .. "OffsetX"]) end), -1000, 1000, 1, sectionId, nil, enabled),
-			sliderSetting(L["Offset Y"] or "Offset Y", get(prefix .. "OffsetY"), set(prefix .. "OffsetY", function(value) return clampNumber(value, -1000, 1000, defaults[prefix .. "OffsetY"]) end), -1000, 1000, 1, sectionId, nil, enabled),
+			anchorSetting(prefix .. "Anchor", sectionId, nil, L["Anchor"] or "Anchor", positionEnabled),
+			sliderSetting(L["damageMeterHeaderBackgroundSizeOffsetX"] or "Width offset", get(prefix .. "SizeOffsetX"), set(prefix .. "SizeOffsetX", function(value) return clampNumber(value, -1000, 1000, defaults[prefix .. "SizeOffsetX"]) end), -1000, 1000, 1, sectionId, nil, positionEnabled),
+			sliderSetting(L["damageMeterHeaderBackgroundSizeOffsetY"] or "Height offset", get(prefix .. "SizeOffsetY"), set(prefix .. "SizeOffsetY", function(value) return clampNumber(value, -300, 300, defaults[prefix .. "SizeOffsetY"]) end), -300, 300, 1, sectionId, nil, positionEnabled),
+			sliderSetting(L["Offset X"] or "Offset X", get(prefix .. "OffsetX"), set(prefix .. "OffsetX", function(value) return clampNumber(value, -1000, 1000, defaults[prefix .. "OffsetX"]) end), -1000, 1000, 1, sectionId, nil, positionEnabled),
+			sliderSetting(L["Offset Y"] or "Offset Y", get(prefix .. "OffsetY"), set(prefix .. "OffsetY", function(value) return clampNumber(value, -1000, 1000, defaults[prefix .. "OffsetY"]) end), -1000, 1000, 1, sectionId, nil, positionEnabled),
 		}
+		if kind == "footer" then
+			table.insert(entries, 2, dropdownSetting(L["mythicPlusTimerFooterContent"] or "Footer content", function() return Timer:GetListFooterContent() end, setFooterContent, {
+				{ value = "NONE", label = _G.NONE or "None" },
+				{ value = "TIMER", label = L["mythicPlusTimerFooterTimer"] or "Timer" },
+				{ value = "DEATHS", label = L["mythicPlusTimerDeaths"] or "Deaths" },
+				{ value = "ENEMY_FORCES", label = L["mythicPlusTimerEnemyForces"] or "Enemy Forces" },
+			}, sectionId, 180, nil, isListMode))
+		end
+		return entries
 	end
 
 	local settings = {
@@ -3031,6 +3566,10 @@ function Timer:BuildEditModeSettings()
 			{ value = "SHORT", label = L["mythicPlusTimerDungeonDisplayShort"] or "Abbreviation" },
 			{ value = "LEVEL", label = L["mythicPlusTimerDungeonDisplayLevel"] or "Level" },
 		}, displayId, 180, enabledWhen("showDungeon"), isListMode),
+		dropdownSetting(L["mythicPlusTimerDungeonPlacement"] or "Dungeon placement", get("dungeonPlacement"), set("dungeonPlacement", function(value) return value == "HEADER" and "HEADER" or "ROW" end, true), {
+			{ value = "ROW", label = L["mythicPlusTimerPlacementListRow"] or "List row" },
+			{ value = "HEADER", label = L["mythicPlusTimerPlacementHeader"] or "Header" },
+		}, displayId, 160, enabledWhen("showDungeon"), isListMode),
 		checkboxSetting(L["mythicPlusTimerShowAffixes"] or "Show affixes", get("showAffixes"), set("showAffixes", nil, true), displayId, nil, isListMode),
 		dropdownSetting(L["mythicPlusTimerAffixDisplay"] or "Affix display", get("affixDisplay"), set("affixDisplay"), {
 			{ value = "ICON_TEXT", label = L["mythicPlusTimerAffixDisplayIconText"] or "Text + icon" },
@@ -3051,8 +3590,22 @@ function Timer:BuildEditModeSettings()
 			{ value = "ICON", label = L["mythicPlusTimerAffixDisplayIcon"] or "Icon" },
 			{ value = "TEXT", label = L["mythicPlusTimerAffixDisplayText"] or "Text" },
 		}, displayId, 160, enabledWhen("showDeaths"), isListMode),
+		dropdownSetting(L["mythicPlusTimerDeathPlacement"] or "Deaths placement", function() return Timer:GetListDeathPlacement() end, setDeathPlacement, {
+			{ value = "ROW", label = L["mythicPlusTimerPlacementListRow"] or "List row" },
+			{ value = "HEADER", label = L["mythicPlusTimerPlacementHeader"] or "Header" },
+			{ value = "FOOTER", label = L["mythicPlusTimerPlacementFooter"] or "Footer" },
+		}, displayId, 180, enabledWhen("showDeaths"), isListMode),
+		dropdownSetting(L["mythicPlusTimerDeathBarMode"] or "Death row bar", get("deathBarMode"), set("deathBarMode", function(value)
+			if value ~= "DEATHS" and value ~= "TIME_LOST" then return "NONE" end
+			return value
+		end), {
+			{ value = "NONE", label = _G.NONE or "None" },
+			{ value = "DEATHS", label = L["mythicPlusTimerDeathBarModeDeaths"] or "Death count (0-10)" },
+			{ value = "TIME_LOST", label = L["mythicPlusTimerDeathBarModeTimeLost"] or "Time lost / time limit" },
+		}, displayId, 180, deathRowBarEnabled, isListMode),
 		checkboxSetting(L["mythicPlusTimerDeathShowTimeLost"] or "Show time lost with deaths", get("deathShowTimeLost"), set("deathShowTimeLost"), displayId, enabledWhen("showDeaths"), isListMode),
 		checkboxSetting(L["mythicPlusTimerShowEnemyForces"] or "Show enemy forces", get("showEnemyForces"), set("showEnemyForces"), displayId, nil, isListMode),
+		dropdownSetting(L["mythicPlusTimerEnemyForcesValueDisplay"] or "Enemy Forces value display", get("enemyForcesValueMode"), set("enemyForcesValueMode", normalizeEnemyForcesValueMode), enemyForcesValueOptions, displayId, 180, enabledWhen("showEnemyForces"), isListMode),
 		checkboxSetting(L["mythicPlusTimerShowEnemyForcesBar"] or "Show enemy forces bar", get("showEnemyForcesBar"), set("showEnemyForcesBar"), displayId, enabledWhen("showEnemyForces"), isListMode),
 		checkboxSetting(L["mythicPlusTimerShowObjectives"] or "Show objectives", get("showObjectives"), set("showObjectives", nil, true), displayId, nil, isListMode),
 		checkboxSetting(L["mythicPlusTimerShowObjectiveValues"] or "Show objective values", get("showObjectiveValues"), set("showObjectiveValues", nil, true), displayId, enabledWhen("showObjectives"), isListMode),
@@ -3062,20 +3615,30 @@ function Timer:BuildEditModeSettings()
 		{ name = L["mythicPlusTimerSectionBehavior"] or "Behavior", kind = SettingType.Collapsible, id = behaviorId, defaultCollapsed = true },
 		checkboxSetting(L["mythicPlusTimerOnlyInMythicPlus"] or "Only show in Mythic+", get("showOnlyInMythicPlus"), set("showOnlyInMythicPlus"), behaviorId),
 		checkboxSetting(L["mythicPlusTimerTooltip"] or "Show tooltip", get("tooltip"), set("tooltip"), behaviorId),
-		checkboxSetting(L["mythicPlusTimerShowBestTime"] or "Show best time", get("showBestTime"), set("showBestTime", nil, true), behaviorId),
-		checkboxSetting(L["mythicPlusTimerShowBestDelta"] or "Show best time delta", get("showBestDelta"), set("showBestDelta"), behaviorId, enabledWhen("showBestTime")),
+		checkboxSetting(L["mythicPlusTimerShowBestTime"] or "Show best time", get("showBestTime"), set("showBestTime", nil, true), behaviorId, nil, isLegacyMode),
+		checkboxSetting(L["mythicPlusTimerShowBestDelta"] or "Show best time delta", get("showBestDelta"), set("showBestDelta"), behaviorId, enabledWhen("showBestTime"), isLegacyMode),
 		sliderSetting(L["mythicPlusTimerUpdateRate"] or "Update rate", get("updateRate"), set("updateRate", function(value) return clampNumber(value, 0.1, 5, defaults.updateRate) end), 0.1, 5, 0.1, behaviorId, oneDecimalSeconds),
 		{ name = L["mythicPlusTimerSectionLayout"] or "Layout", kind = SettingType.Collapsible, id = layoutId, defaultCollapsed = true },
 		dropdownSetting(L["mythicPlusTimerLayoutMode"] or "Layout mode", get("layoutMode"), set("layoutMode", nil, true), {
 			{ value = "LIST", label = L["mythicPlusTimerLayoutList"] or "List" },
 			{ value = "PANEL", label = L["mythicPlusTimerLayoutPanel"] or "Panel" },
-		}, layoutId),
-		sliderSetting(L["mythicPlusTimerWidth"] or "Width", get("width"), set("width", function(value) return clampNumber(value, 120, 800, defaults.width) end), 120, 800, 1, layoutId),
+			{ value = "FLOW", label = L["mythicPlusTimerLayoutFlow"] or "Flow panel" },
+		}, layoutId, nil, nil, nil, "mythicPlusTimerFlowLayout"),
+		sliderSetting(L["mythicPlusTimerWidth"] or "Width", get("width"), set("width", function(value) return clampNumber(value, 120, 800, defaults.width) end), 120, 800, 0.1, layoutId, nil, nil, isLegacyMode),
 		sliderSetting(L["mythicPlusTimerPanelHeight"] or L["Height"] or "Height", get("panelHeight"), set("panelHeight", function(value) return clampNumber(value, 24, 300, defaults.panelHeight) end), 24, 300, 1, layoutId, nil, nil, isPanelMode),
 		sliderSetting(L["mythicPlusTimerRowHeight"] or "Row height", get("rowHeight"), set("rowHeight", function(value) return clampNumber(value, 12, 48, defaults.rowHeight) end), 12, 48, 1, layoutId, nil, nil, isListMode),
 		sliderSetting(L["mythicPlusTimerRowSpacing"] or "Row spacing", get("rowSpacing"), set("rowSpacing", function(value) return clampNumber(value, 0, 24, defaults.rowSpacing) end), 0, 24, 1, layoutId, nil, nil, isListMode),
 		dropdownSetting(L["mythicPlusTimerGrowth"] or "Growth direction", get("growth"), set("growth"), { { value = "DOWN", label = L["damageMeterRowsGrowDown"] or "Down" }, { value = "UP", label = L["damageMeterRowsGrowUp"] or "Up" } }, layoutId, nil, nil, isListMode),
 		dropdownSetting(L["mythicPlusTimerAlign"] or "Text alignment", get("align"), set("align"), { { value = "LEFT", label = _G.LEFT or "Left" }, { value = "CENTER", label = _G.CENTER or "Center" }, { value = "RIGHT", label = _G.RIGHT or "Right" } }, layoutId, nil, nil, isListMode),
+		dropdownSetting(L["mythicPlusTimerTimerLabelAlign"] or "Timer label alignment", get("timerAlign"), set("timerAlign", function(value)
+			if value ~= "LEFT" and value ~= "CENTER" and value ~= "RIGHT" then return "INHERIT" end
+			return value
+		end), {
+			{ value = "INHERIT", label = L["Default"] or "Default" },
+			{ value = "LEFT", label = _G.LEFT or "Left" },
+			{ value = "CENTER", label = _G.CENTER or "Center" },
+			{ value = "RIGHT", label = _G.RIGHT or "Right" },
+		}, layoutId, 160, enabledWhen("showTimer"), isListMode),
 		sliderSetting(L["mythicPlusTimerTextOffsetX"] or "Label X offset", get("textOffsetX"), set("textOffsetX", function(value) return clampNumber(value, -800, 800, defaults.textOffsetX) end), -800, 800, 1, layoutId, nil, nil, isListMode),
 		sliderSetting(L["mythicPlusTimerTextOffsetY"] or "Label Y offset", get("textOffsetY"), set("textOffsetY", function(value) return clampNumber(value, -800, 800, defaults.textOffsetY) end), -800, 800, 1, layoutId, nil, nil, isListMode),
 		sliderSetting(L["mythicPlusTimerValueOffsetX"] or "Value X offset", get("valueOffsetX"), set("valueOffsetX", function(value) return clampNumber(value, -800, 800, defaults.valueOffsetX) end), -800, 800, 1, layoutId, nil, nil, isListMode),
@@ -3124,7 +3687,8 @@ function Timer:BuildEditModeSettings()
 		sliderSetting(L["mythicPlusTimerChest3OffsetX"] or "+3 X offset", get("chest3OffsetX"), set("chest3OffsetX", function(value) return clampNumber(value, -800, 800, defaults.chest3OffsetX) end), -800, 800, 1, "mpt-panel-time", nil, nil, shownWhen("showChestTimers")),
 		sliderSetting(L["mythicPlusTimerChest3OffsetY"] or "+3 Y offset", get("chest3OffsetY"), set("chest3OffsetY", function(value) return clampNumber(value, -800, 800, defaults.chest3OffsetY) end), -800, 800, 1, "mpt-panel-time", nil, nil, shownWhen("showChestTimers")),
 		checkboxSetting(L["mythicPlusTimerShowPanelTimerBar"] or "Show panel timer bar", get("showPanelTimerBar"), set("showPanelTimerBar", nil, true), "mpt-panel-time"),
-		sliderSetting(L["mythicPlusTimerPanelTimerBarWidth"] or L["Bar width"] or "Bar width", get("panelTimerBarWidth"), set("panelTimerBarWidth", function(value) return clampNumber(value, 20, 800, defaults.panelTimerBarWidth) end), 20, 800, 1, "mpt-panel-time", nil, enabledWhen("showPanelTimerBar")),
+		checkboxSetting(L["mythicPlusTimerPanelTimerBarAttachToHeader"] or "Attach timer bar to dungeon/key header", get("panelTimerBarAttachToHeader"), set("panelTimerBarAttachToHeader", nil, true), "mpt-panel-time", enabledWhen("showPanelTimerBar"), nil, "mythicPlusTimerPanelTimerBarAttachToHeader"),
+		sliderSetting(L["mythicPlusTimerPanelTimerBarWidth"] or L["Bar width"] or "Bar width", get("panelTimerBarWidth"), set("panelTimerBarWidth", function(value) return clampNumber(value, 20, 800, defaults.panelTimerBarWidth) end), 20, 800, 0.1, "mpt-panel-time", wholePixels, enabledWhen("showPanelTimerBar")),
 		sliderSetting(L["mythicPlusTimerPanelTimerBarHeight"] or L["Bar height"] or "Bar height", get("panelTimerBarHeight"), set("panelTimerBarHeight", function(value) return clampNumber(value, 1, 64, defaults.panelTimerBarHeight) end), 1, 64, 1, "mpt-panel-time", nil, enabledWhen("showPanelTimerBar")),
 		colorSetting(L["mythicPlusTimerPanelTimerBarColor"] or L["Color"] or "Color", get("panelTimerBarColor"), set("panelTimerBarColor"), defaults.panelTimerBarColor, "mpt-panel-time", enabledWhen("showPanelTimerBar")),
 		colorSetting(L["mythicPlusTimerPanelTimerBarExpiredColor"] or "Expired color", get("panelTimerBarExpiredColor"), set("panelTimerBarExpiredColor"), defaults.panelTimerBarExpiredColor, "mpt-panel-time", enabledWhen("showPanelTimerBar")),
@@ -3152,9 +3716,9 @@ function Timer:BuildEditModeSettings()
 		sliderSetting(L["mythicPlusTimerPanelTimerBarTimeLeftTextFontSize"] or "Time left text size", get("panelTimerBarTimeLeftTextFontSize"), set("panelTimerBarTimeLeftTextFontSize", function(value) return clampNumber(value, 8, 56, defaults.panelTimerBarTimeLeftTextFontSize) end), 8, 56, 1, "mpt-panel-time", nil, allEnabled("showPanelTimerBar", "panelTimerBarTimeLeftText"), allShown("showPanelTimerBar", "panelTimerBarTimeLeftText")),
 		colorSetting(L["mythicPlusTimerPanelTimerBarTimeLeftTextColor"] or "Time left text color", get("panelTimerBarTimeLeftTextColor"), set("panelTimerBarTimeLeftTextColor"), defaults.panelTimerBarTimeLeftTextColor, "mpt-panel-time", allEnabled("showPanelTimerBar", "panelTimerBarTimeLeftText"), allShown("showPanelTimerBar", "panelTimerBarTimeLeftText")),
 		checkboxSetting(L["mythicPlusTimerPanelTimerBarFillUp"] or "Fill timer bar up", get("panelTimerBarFillUp"), set("panelTimerBarFillUp"), "mpt-panel-time", enabledWhen("showPanelTimerBar")),
-		anchorSetting("panelTimerBarAnchor", "mpt-panel-time", nil, L["Anchor"] or "Anchor", enabledWhen("showPanelTimerBar")),
-		sliderSetting(L["mythicPlusTimerPanelTimerBarOffsetX"] or L["Offset X"] or "Offset X", get("panelTimerBarOffsetX"), set("panelTimerBarOffsetX", function(value) return clampNumber(value, -800, 800, defaults.panelTimerBarOffsetX) end), -800, 800, 1, "mpt-panel-time", nil, enabledWhen("showPanelTimerBar")),
-		sliderSetting(L["mythicPlusTimerPanelTimerBarOffsetY"] or L["Offset Y"] or "Offset Y", get("panelTimerBarOffsetY"), set("panelTimerBarOffsetY", function(value) return clampNumber(value, -800, 800, defaults.panelTimerBarOffsetY) end), -800, 800, 1, "mpt-panel-time", nil, enabledWhen("showPanelTimerBar")),
+		anchorSetting("panelTimerBarAnchor", "mpt-panel-time", nil, L["Anchor"] or "Anchor", allEnabledAndNot("panelTimerBarAttachToHeader", "showPanelTimerBar")),
+		sliderSetting(L["mythicPlusTimerPanelTimerBarOffsetX"] or L["Offset X"] or "Offset X", get("panelTimerBarOffsetX"), set("panelTimerBarOffsetX", function(value) return clampNumber(value, -800, 800, defaults.panelTimerBarOffsetX) end), -800, 800, 1, "mpt-panel-time", nil, allEnabledAndNot("panelTimerBarAttachToHeader", "showPanelTimerBar")),
+		sliderSetting(L["mythicPlusTimerPanelTimerBarOffsetY"] or L["Offset Y"] or "Offset Y", get("panelTimerBarOffsetY"), set("panelTimerBarOffsetY", function(value) return clampNumber(value, -800, 800, defaults.panelTimerBarOffsetY) end), -800, 800, 1, "mpt-panel-time", nil, allEnabledAndNot("panelTimerBarAttachToHeader", "showPanelTimerBar")),
 		{ name = L["mythicPlusTimerPanelDeaths"] or "Deaths", kind = SettingType.Collapsible, id = "mpt-panel-deaths", defaultCollapsed = true },
 		checkboxSetting(L["mythicPlusTimerShowDeaths"] or "Show deaths", get("showDeaths"), set("showDeaths", nil, true), "mpt-panel-deaths"),
 		dropdownSetting(L["mythicPlusTimerDeathDisplay"] or "Death display", get("deathDisplay"), set("deathDisplay"), {
@@ -3169,13 +3733,14 @@ function Timer:BuildEditModeSettings()
 		sliderSetting(L["mythicPlusTimerDeathsOffsetX"] or L["Offset X"] or "Offset X", get("deathsOffsetX"), set("deathsOffsetX", function(value) return clampNumber(value, -800, 800, defaults.deathsOffsetX) end), -800, 800, 1, "mpt-panel-deaths"),
 		sliderSetting(L["mythicPlusTimerDeathsOffsetY"] or L["Offset Y"] or "Offset Y", get("deathsOffsetY"), set("deathsOffsetY", function(value) return clampNumber(value, -800, 800, defaults.deathsOffsetY) end), -800, 800, 1, "mpt-panel-deaths"),
 		{ name = L["mythicPlusTimerPanelEnemyForces"] or "Enemy forces", kind = SettingType.Collapsible, id = "mpt-panel-enemy", defaultCollapsed = true },
-		checkboxSetting(L["mythicPlusTimerShowEnemyPercent"] or "Show enemy percent", get("showEnemyPercent"), set("showEnemyPercent"), "mpt-panel-enemy"),
+		checkboxSetting(L["mythicPlusTimerShowEnemyPercent"] or "Show enemy percent", get("showEnemyPercent"), set("showEnemyPercent", nil, true), "mpt-panel-enemy"),
 		sliderSetting(L["mythicPlusTimerPanelEnemyPercentFontSize"] or L["Text size"] or "Text size", get("panelEnemyPercentFontSize"), set("panelEnemyPercentFontSize", function(value) return clampNumber(value, 8, 56, defaults.panelEnemyPercentFontSize) end), 8, 56, 1, "mpt-panel-enemy", nil, enabledWhen("showEnemyPercent")),
 		anchorSetting("enemyPercentAnchor", "mpt-panel-enemy", nil, L["Anchor"] or "Anchor", enabledWhen("showEnemyPercent")),
-		sliderSetting(L["mythicPlusTimerEnemyPercentOffsetX"] or L["Offset X"] or "Offset X", get("enemyPercentOffsetX"), set("enemyPercentOffsetX", function(value) return clampNumber(value, -800, 800, defaults.enemyPercentOffsetX) end), -800, 800, 1, "mpt-panel-enemy"),
-		sliderSetting(L["mythicPlusTimerEnemyPercentOffsetY"] or L["Offset Y"] or "Offset Y", get("enemyPercentOffsetY"), set("enemyPercentOffsetY", function(value) return clampNumber(value, -800, 800, defaults.enemyPercentOffsetY) end), -800, 800, 1, "mpt-panel-enemy"),
+		sliderSetting(L["mythicPlusTimerEnemyPercentOffsetX"] or L["Offset X"] or "Offset X", get("enemyPercentOffsetX"), set("enemyPercentOffsetX", function(value) return clampNumber(value, -800, 800, defaults.enemyPercentOffsetX) end), -800, 800, 1, "mpt-panel-enemy", nil, enabledWhen("showEnemyPercent")),
+		sliderSetting(L["mythicPlusTimerEnemyPercentOffsetY"] or L["Offset Y"] or "Offset Y", get("enemyPercentOffsetY"), set("enemyPercentOffsetY", function(value) return clampNumber(value, -800, 800, defaults.enemyPercentOffsetY) end), -800, 800, 1, "mpt-panel-enemy", nil, enabledWhen("showEnemyPercent")),
 		checkboxSetting(L["mythicPlusTimerShowPanelEnemyBar"] or "Show panel enemy forces bar", get("showPanelEnemyBar"), set("showPanelEnemyBar", nil, true), "mpt-panel-enemy"),
-		sliderSetting(L["mythicPlusTimerPanelEnemyBarWidth"] or L["Bar width"] or "Bar width", get("panelEnemyBarWidth"), set("panelEnemyBarWidth", function(value) return clampNumber(value, 20, 800, defaults.panelEnemyBarWidth) end), 20, 800, 1, "mpt-panel-enemy", nil, enabledWhen("showPanelEnemyBar")),
+		checkboxSetting(L["mythicPlusTimerPanelEnemyBarAttachToObjectives"] or "Attach enemy-forces bar to objectives", get("panelEnemyBarAttachToObjectives"), set("panelEnemyBarAttachToObjectives", nil, true), "mpt-panel-enemy", allEnabled("showPanelEnemyBar", "showObjectives"), nil, "mythicPlusTimerPanelEnemyBarAttachToObjectives"),
+		sliderSetting(L["mythicPlusTimerPanelEnemyBarWidth"] or L["Bar width"] or "Bar width", get("panelEnemyBarWidth"), set("panelEnemyBarWidth", function(value) return clampNumber(value, 20, 800, defaults.panelEnemyBarWidth) end), 20, 800, 0.1, "mpt-panel-enemy", wholePixels, enabledWhen("showPanelEnemyBar")),
 		sliderSetting(L["mythicPlusTimerPanelEnemyBarHeight"] or L["Bar height"] or "Bar height", get("panelEnemyBarHeight"), set("panelEnemyBarHeight", function(value) return clampNumber(value, 1, 64, defaults.panelEnemyBarHeight) end), 1, 64, 1, "mpt-panel-enemy", nil, enabledWhen("showPanelEnemyBar")),
 		colorSetting(L["mythicPlusTimerPanelEnemyBarColor"] or L["Color"] or "Color", get("panelEnemyBarColor"), set("panelEnemyBarColor"), defaults.panelEnemyBarColor, "mpt-panel-enemy", enabledWhen("showPanelEnemyBar")),
 		dropdownSetting(L["mythicPlusTimerPanelEnemyBarTexture"] or L["Texture"] or "Texture", get("panelEnemyBarTexture"), set("panelEnemyBarTexture"), function() return buildMediaOptions("statusbar", false) end, "mpt-panel-enemy", 260, enabledWhen("showPanelEnemyBar")),
@@ -3189,18 +3754,26 @@ function Timer:BuildEditModeSettings()
 		sliderSetting(L["mythicPlusTimerPanelEnemyBarBorderOffset"] or L["Border offset"] or "Border offset", get("panelEnemyBarBorderOffset"), set("panelEnemyBarBorderOffset", function(value) return clampNumber(value, -300, 300, defaults.panelEnemyBarBorderOffset) end), -300, 300, 1, "mpt-panel-enemy", nil, allEnabledAndNot("panelEnemyBarBorderSeparateOffset", "showPanelEnemyBar", "panelEnemyBarBorderEnabled")),
 		sliderSetting(L["damageMeterBackdropSizeOffsetX"] or "Width offset", get("panelEnemyBarBorderOffsetX"), set("panelEnemyBarBorderOffsetX", function(value) return clampNumber(value, -300, 300, defaults.panelEnemyBarBorderOffsetX) end), -300, 300, 1, "mpt-panel-enemy", nil, allEnabled("showPanelEnemyBar", "panelEnemyBarBorderEnabled", "panelEnemyBarBorderSeparateOffset")),
 		sliderSetting(L["damageMeterBackdropSizeOffsetY"] or "Height offset", get("panelEnemyBarBorderOffsetY"), set("panelEnemyBarBorderOffsetY", function(value) return clampNumber(value, -300, 300, defaults.panelEnemyBarBorderOffsetY) end), -300, 300, 1, "mpt-panel-enemy", nil, allEnabled("showPanelEnemyBar", "panelEnemyBarBorderEnabled", "panelEnemyBarBorderSeparateOffset")),
-		anchorSetting("panelEnemyBarAnchor", "mpt-panel-enemy", nil, L["Anchor"] or "Anchor", enabledWhen("showPanelEnemyBar")),
-		sliderSetting(L["mythicPlusTimerPanelEnemyBarOffsetX"] or L["Offset X"] or "Offset X", get("panelEnemyBarOffsetX"), set("panelEnemyBarOffsetX", function(value) return clampNumber(value, -800, 800, defaults.panelEnemyBarOffsetX) end), -800, 800, 1, "mpt-panel-enemy", nil, enabledWhen("showPanelEnemyBar")),
-		sliderSetting(L["mythicPlusTimerPanelEnemyBarOffsetY"] or L["Offset Y"] or "Offset Y", get("panelEnemyBarOffsetY"), set("panelEnemyBarOffsetY", function(value) return clampNumber(value, -800, 800, defaults.panelEnemyBarOffsetY) end), -800, 800, 1, "mpt-panel-enemy", nil, enabledWhen("showPanelEnemyBar")),
-		checkboxSetting(L["mythicPlusTimerPanelEnemyBarTextEnabled"] or "Show percent in enemy bar", get("panelEnemyBarTextEnabled"), set("panelEnemyBarTextEnabled", nil, true), "mpt-panel-enemy", enabledWhen("showPanelEnemyBar")),
+		anchorSetting("panelEnemyBarAnchor", "mpt-panel-enemy", nil, L["Anchor"] or "Anchor", allEnabledAndNot("panelEnemyBarAttachToObjectives", "showPanelEnemyBar")),
+		sliderSetting(L["mythicPlusTimerPanelEnemyBarOffsetX"] or L["Offset X"] or "Offset X", getPanelEnemyBarOffset("X"), setPanelEnemyBarOffset("X"), -800, 800, 1, "mpt-panel-enemy", nil, enabledWhen("showPanelEnemyBar")),
+		sliderSetting(L["mythicPlusTimerPanelEnemyBarOffsetY"] or L["Offset Y"] or "Offset Y", getPanelEnemyBarOffset("Y"), setPanelEnemyBarOffset("Y"), -800, 800, 1, "mpt-panel-enemy", nil, enabledWhen("showPanelEnemyBar")),
+		checkboxSetting((L["Text"] or "Text") .. " 1", get("panelEnemyBarTextEnabled"), set("panelEnemyBarTextEnabled", nil, true), "mpt-panel-enemy", enabledWhen("showPanelEnemyBar")),
+		dropdownSetting(L["mythicPlusTimerEnemyForcesValueDisplay"] or "Enemy Forces value display", function() return Timer:GetPanelEnemyBarTextMode(1) end, set("panelEnemyBarTextMode", normalizePanelEnemyForcesValueMode), panelEnemyForcesValueOptions, "mpt-panel-enemy", 180, allEnabled("showPanelEnemyBar", "panelEnemyBarTextEnabled")),
 		dropdownSetting(L["mythicPlusTimerPanelEnemyBarTextAlign"] or "Text alignment", get("panelEnemyBarTextAlign"), set("panelEnemyBarTextAlign", normalizeHorizontal), {
 			{ value = "LEFT", label = _G.LEFT or "Left" },
 			{ value = "CENTER", label = _G.CENTER or "Center" },
 			{ value = "RIGHT", label = _G.RIGHT or "Right" },
 		}, "mpt-panel-enemy", nil, allEnabled("showPanelEnemyBar", "panelEnemyBarTextEnabled")),
-		sliderSetting(L["mythicPlusTimerPanelEnemyBarTextOffsetY"] or L["Text Y offset"] or "Text Y offset", get("panelEnemyBarTextOffsetY"), set("panelEnemyBarTextOffsetY", function(value) return clampNumber(value, -800, 800, defaults.panelEnemyBarTextOffsetY) end), -800, 800, 1, "mpt-panel-enemy", nil, allEnabled("showPanelEnemyBar", "panelEnemyBarTextEnabled")),
-		sliderSetting(L["mythicPlusTimerPanelEnemyBarTextFontSize"] or L["Text size"] or "Text size", get("panelEnemyBarTextFontSize"), set("panelEnemyBarTextFontSize", function(value) return clampNumber(value, 8, 56, defaults.panelEnemyBarTextFontSize) end), 8, 56, 1, "mpt-panel-enemy", nil, allEnabled("showPanelEnemyBar", "panelEnemyBarTextEnabled")),
-		colorSetting(L["mythicPlusTimerPanelEnemyBarTextColor"] or L["Text color"] or "Text color", get("panelEnemyBarTextColor"), set("panelEnemyBarTextColor"), defaults.panelEnemyBarTextColor, "mpt-panel-enemy", allEnabled("showPanelEnemyBar", "panelEnemyBarTextEnabled")),
+		checkboxSetting((L["Text"] or "Text") .. " 2", get("panelEnemyBarText2Enabled"), set("panelEnemyBarText2Enabled", nil, true), "mpt-panel-enemy", enabledWhen("showPanelEnemyBar"), nil, "mythicPlusTimerPanelEnemyBarSecondText"),
+		dropdownSetting(L["mythicPlusTimerEnemyForcesValueDisplay"] or "Enemy Forces value display", get("panelEnemyBarText2Mode"), set("panelEnemyBarText2Mode", normalizePanelEnemyForcesValueMode), panelEnemyForcesValueOptions, "mpt-panel-enemy", 180, allEnabled("showPanelEnemyBar", "panelEnemyBarText2Enabled")),
+		dropdownSetting(L["mythicPlusTimerPanelEnemyBarTextAlign"] or "Text alignment", get("panelEnemyBarText2Align"), set("panelEnemyBarText2Align", normalizeHorizontal), {
+			{ value = "LEFT", label = _G.LEFT or "Left" },
+			{ value = "CENTER", label = _G.CENTER or "Center" },
+			{ value = "RIGHT", label = _G.RIGHT or "Right" },
+		}, "mpt-panel-enemy", nil, allEnabled("showPanelEnemyBar", "panelEnemyBarText2Enabled")),
+		sliderSetting(L["mythicPlusTimerPanelEnemyBarTextOffsetY"] or L["Text Y offset"] or "Text Y offset", get("panelEnemyBarTextOffsetY"), set("panelEnemyBarTextOffsetY", function(value) return clampNumber(value, -800, 800, defaults.panelEnemyBarTextOffsetY) end), -800, 800, 1, "mpt-panel-enemy", nil, enemyBarTextEnabled),
+		sliderSetting(L["mythicPlusTimerPanelEnemyBarTextFontSize"] or L["Text size"] or "Text size", get("panelEnemyBarTextFontSize"), set("panelEnemyBarTextFontSize", function(value) return clampNumber(value, 8, 56, defaults.panelEnemyBarTextFontSize) end), 8, 56, 1, "mpt-panel-enemy", nil, enemyBarTextEnabled),
+		colorSetting(L["mythicPlusTimerPanelEnemyBarTextColor"] or L["Text color"] or "Text color", get("panelEnemyBarTextColor"), set("panelEnemyBarTextColor"), defaults.panelEnemyBarTextColor, "mpt-panel-enemy", enemyBarTextEnabled),
 		{ name = L["mythicPlusTimerPanelBestTime"] or "Best time", kind = SettingType.Collapsible, id = "mpt-panel-best", defaultCollapsed = true },
 		checkboxSetting(L["mythicPlusTimerShowBestTime"] or "Show best time", get("showBestTime"), set("showBestTime", nil, true), "mpt-panel-best"),
 		checkboxSetting(L["mythicPlusTimerShowBestDelta"] or "Show best time delta", get("showBestDelta"), set("showBestDelta"), "mpt-panel-best", enabledWhen("showBestTime")),
@@ -3211,6 +3784,7 @@ function Timer:BuildEditModeSettings()
 		sliderSetting(L["mythicPlusTimerBestTimeOffsetY"] or L["Offset Y"] or "Offset Y", get("bestTimeOffsetY"), set("bestTimeOffsetY", function(value) return clampNumber(value, -800, 800, defaults.bestTimeOffsetY) end), -800, 800, 1, "mpt-panel-best"),
 		{ name = L["mythicPlusTimerPanelObjectives"] or "Objectives", kind = SettingType.Collapsible, id = "mpt-panel-objectives", defaultCollapsed = true },
 		checkboxSetting(L["mythicPlusTimerShowObjectives"] or "Show objectives", get("showObjectives"), set("showObjectives", nil, true), "mpt-panel-objectives"),
+		checkboxSetting(L["mythicPlusTimerPanelObjectivesAttachToTimerBar"] or "Attach objectives to timer bar", get("panelObjectivesAttachToTimerBar"), set("panelObjectivesAttachToTimerBar", nil, true), "mpt-panel-objectives", allEnabled("showObjectives", "showPanelTimerBar"), shownWhen("showObjectives"), "mythicPlusTimerPanelObjectivesAttachToTimerBar"),
 		checkboxSetting(L["mythicPlusTimerShowObjectiveValues"] or "Show objective values", get("showObjectiveValues"), set("showObjectiveValues", nil, true), "mpt-panel-objectives", enabledWhen("showObjectives"), shownWhen("showObjectives")),
 		checkboxSetting(L["mythicPlusTimerHideNonBossObjectives"] or "Hide non-boss objectives", get("hideNonBossObjectives"), set("hideNonBossObjectives"), "mpt-panel-objectives", enabledWhen("showObjectives"), shownWhen("showObjectives")),
 		checkboxSetting(L["mythicPlusTimerShowObjectiveTimes"] or "Show objective times", get("showObjectiveTimes"), set("showObjectiveTimes", nil, true), "mpt-panel-objectives", enabledWhen("showObjectives"), shownWhen("showObjectives")),
@@ -3225,7 +3799,7 @@ function Timer:BuildEditModeSettings()
 		colorSetting(L["mythicPlusTimerObjectiveCompleteColor"] or "Completed objective color", get("objectiveCompleteColor"), set("objectiveCompleteColor"), defaults.objectiveCompleteColor, "mpt-panel-objectives", enabledWhen("showObjectives"), shownWhen("showObjectives")),
 		colorSetting(L["mythicPlusTimerObjectiveBestDeltaFasterColor"] or "Faster best delta color", get("objectiveBestDeltaFasterColor"), set("objectiveBestDeltaFasterColor"), defaults.objectiveBestDeltaFasterColor, "mpt-panel-objectives", objectiveTimesEnabled, objectiveTimesEnabled),
 		colorSetting(L["mythicPlusTimerObjectiveBestDeltaSlowerColor"] or "Slower best delta color", get("objectiveBestDeltaSlowerColor"), set("objectiveBestDeltaSlowerColor"), defaults.objectiveBestDeltaSlowerColor, "mpt-panel-objectives", objectiveTimesEnabled, objectiveTimesEnabled),
-		anchorSetting("panelObjectivesAnchor", "mpt-panel-objectives", shownWhen("showObjectives"), L["mythicPlusTimerPanelObjectivesAnchor"] or L["Anchor"] or "Anchor", enabledWhen("showObjectives")),
+		anchorSetting("panelObjectivesAnchor", "mpt-panel-objectives", shownWhen("showObjectives"), L["mythicPlusTimerPanelObjectivesAnchor"] or L["Anchor"] or "Anchor", allEnabledAndNot("panelObjectivesAttachToTimerBar", "showObjectives")),
 		dropdownSetting(L["mythicPlusTimerGrowth"] or "Growth direction", get("panelObjectivesGrowth"), set("panelObjectivesGrowth", function(value) return value == "UP" and "UP" or "DOWN" end), {
 			{ value = "DOWN", label = L["damageMeterRowsGrowDown"] or "Down" },
 			{ value = "UP", label = L["damageMeterRowsGrowUp"] or "Up" },
@@ -3253,7 +3827,7 @@ function Timer:BuildEditModeSettings()
 		sliderSetting(L["mythicPlusTimerBarHeight"] or "Bar height", get("barHeight"), set("barHeight", function(value) return clampNumber(value, 1, 96, defaults.barHeight) end), 1, 96, 1, barId, nil, nil, isListMode),
 		sliderSetting(L["mythicPlusTimerBarOffsetX"] or "Bar X offset", get("barOffsetX"), set("barOffsetX", function(value) return clampNumber(value, -800, 800, defaults.barOffsetX) end), -800, 800, 1, barId, nil, nil, isListMode),
 		sliderSetting(L["mythicPlusTimerBarOffsetY"] or "Bar Y offset", get("barOffsetY"), set("barOffsetY", function(value) return clampNumber(value, -800, 800, defaults.barOffsetY) end), -800, 800, 1, barId, nil, nil, isListMode),
-		sliderSetting(L["mythicPlusTimerBarWidthOffset"] or "Bar width offset", get("barWidthOffset"), set("barWidthOffset", function(value) return clampNumber(value, -400, 400, defaults.barWidthOffset) end), -400, 400, 1, barId, nil, nil, isListMode),
+		sliderSetting(L["mythicPlusTimerBarWidthOffset"] or "Bar width offset", get("barWidthOffset"), set("barWidthOffset", function(value) return clampNumber(value, -400, 400, defaults.barWidthOffset) end), -400, 400, 0.1, barId, wholePixels, nil, isListMode),
 		dropdownSetting(L["mythicPlusTimerTexture"] or "Bar texture", get("texture"), set("texture"), function() return buildMediaOptions("statusbar", false) end, barId, 260),
 		dropdownSetting(L["mythicPlusTimerBarBackgroundTexture"] or "Bar background texture", get("barBackgroundTexture"), set("barBackgroundTexture"), function() return buildMediaOptions("statusbar", false) end, barId, 260),
 		colorSetting(L["mythicPlusTimerBarBackgroundColor"] or "Bar background color", get("barBackgroundColor"), set("barBackgroundColor"), defaults.barBackgroundColor, barId),
@@ -3317,6 +3891,9 @@ function Timer:BuildEditModeSettings()
 	for _, setting in ipairs(decorBarSettings("footer", footerId)) do
 		settings[#settings + 1] = setting
 	end
+	if Timer.PanelFlow and Timer.PanelFlow.BuildEditModeSettings then
+		for _, setting in ipairs(Timer.PanelFlow:BuildEditModeSettings(SettingType)) do settings[#settings + 1] = setting end
+	end
 	settings = orderSettingsByParent(settings)
 	local panelIds = {
 		["mpt-panel-dungeon-key"] = true,
@@ -3329,6 +3906,18 @@ function Timer:BuildEditModeSettings()
 	}
 	for _, setting in ipairs(settings) do
 		if panelIds[setting.id] or panelIds[setting.parentId] then setting.isShown = isPanelMode end
+	end
+	local legacySectionIds = {
+		[barId] = true,
+		[fontId] = true,
+		[colorId] = true,
+		[backgroundId] = true,
+		[headerId] = true,
+		[footerId] = true,
+		[borderId] = true,
+	}
+	for _, setting in ipairs(settings) do
+		if legacySectionIds[setting.id] then setting.isShown = isLegacyMode end
 	end
 	applyParentVisibility(settings)
 	return settings
@@ -3395,6 +3984,9 @@ end
 
 function Timer:Init()
 	if self.initialized then return end
+	local config = getTimerConfig(false)
+	if config and config.layoutMode == nil then config.layoutMode = "PANEL" end
+	self:MigratePanelEnemyBarSettings()
 	self.initialized = true
 	self.eventFrame = CreateFrame("Frame")
 	self.eventFrame:SetScript("OnEvent", function(_, event, ...)

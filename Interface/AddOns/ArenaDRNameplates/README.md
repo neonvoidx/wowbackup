@@ -1,6 +1,6 @@
 # ArenaDR Nameplates
 
-ArenaDR Nameplates is a World of Warcraft addon for Midnight (`12.0.0+`) that copies Blizzard arena diminishing return tracking onto enemy nameplates.
+ArenaDR Nameplates is a World of Warcraft addon for Midnight (`12.1`) that copies Blizzard arena diminishing return tracking onto enemy nameplates.
 
 It mirrors Blizzard's arena DR tray data into its own nameplate-safe frames during arena matches and adds cleaner timer text, optional DR state text, configurable colors, and flexible placement controls.
 
@@ -26,7 +26,7 @@ It can also mirror the enemy trinket cooldown on the same nameplate mapping, usi
 
 ## Requirements
 
-- World of Warcraft Midnight (`12.0.0+`)
+- World of Warcraft Midnight (`12.1`)
 - Blizzard arena frames and enemy nameplates enabled
 
 ## Installation
@@ -77,6 +77,12 @@ The performance report lists calls, total time, average time, and maximum time f
 ## Saved Variables
 
 - `ArenaDRNameplatesDB`
+
+## Support & Links
+
+- Download: [CurseForge](https://www.curseforge.com/wow/addons/arena-dr-nameplates)
+- Source: [GitLab](https://gitlab.com/Anahkas/ArenaDRNameplates)
+- Bug reports and feature requests: [Discord](https://discord.gg/GH9KGcgKQz)
 
 ## Addon Files
 

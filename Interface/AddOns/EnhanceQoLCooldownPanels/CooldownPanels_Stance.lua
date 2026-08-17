@@ -418,6 +418,7 @@ function Stance:GetDefaultOverrides()
 		showWhenMissing = false,
 		showCooldown = false,
 		showCooldownText = false,
+		showCooldownTextUseGlobal = false,
 		glowReady = false,
 		soundReady = false,
 	}

@@ -33,26 +33,6 @@ CooldownManagerCenteredDB = {
 ["cooldownManager_squareIconsZoom_BuffIcons"] = 0,
 ["_trackerStylePerTrackerMigrated"] = true,
 ["_tracker_filled_with_defaults"] = true,
-["cooldownManager_squareIconsZoom_Utility"] = 0,
-["cooldownManager_keybindFontName"] = "1",
-["cooldownManager_squareIconsZoom_Essential"] = 0,
-["cooldownManager_visibility_perViewer"] = {
-["BuffIconCooldownViewer"] = {
-},
-["BuffBarCooldownViewer"] = {
-},
-["EssentialCooldownViewer"] = {
-["SHOW_WITH_ENEMY_TARGET"] = true,
-},
-["CMCTracker1"] = {
-},
-["UtilityCooldownViewer"] = {
-},
-["CMCTracker2"] = {
-},
-},
-["cooldownManager_customActiveColor_g"] = 0.8784314393997192,
-["cooldownManager_customActiveColor_b"] = 0.1450980454683304,
 ["editMode"] = {
 ["buffContainer1"] = {
 ["strata"] = "MEDIUM",
@@ -60,8 +40,8 @@ CooldownManagerCenteredDB = {
 ["scale"] = 1,
 ["alpha"] = 1,
 ["iconDirection"] = "Normal",
-["y"] = -135.6656799316406,
-["x"] = 4.166259765625,
+["y"] = -150.6654663085938,
+["x"] = -0.833251953125,
 ["alignment"] = "START",
 ["orientation"] = "Horizontal",
 ["anchor"] = {
@@ -176,166 +156,38 @@ CooldownManagerCenteredDB = {
 ["iconSize"] = 1,
 },
 },
+["cooldownManager_keybindFontName"] = "1",
+["cooldownManager_squareIconsZoom_Essential"] = 0,
+["cooldownManager_visibility_perViewer"] = {
+["BuffIconCooldownViewer"] = {
+},
+["BuffBarCooldownViewer"] = {
+},
+["EssentialCooldownViewer"] = {
+["SHOW_WITH_ENEMY_TARGET"] = true,
+},
+["CMCTracker1"] = {
+},
+["UtilityCooldownViewer"] = {
+},
+["CMCTracker2"] = {
+},
+},
+["cooldownManager_customActiveColor_g"] = 0.8784314393997192,
+["cooldownManager_customActiveColor_b"] = 0.1450980454683304,
 ["cooldownManager_keybindFontSize_Essential"] = 12,
 ["cooldownManager_keybindFontSize_Utility"] = 14,
+["cooldownManager_centerEssential_growFromDirection"] = "BOTTOM",
 ["cooldownManager_centerUtility_growFromDirection"] = "Disable",
 ["cooldownManager_normalizeUtilitySize"] = true,
 ["trinketRacialTracker_stackAnchor"] = "TOP",
 ["cooldownManager_cooldownFontName"] = "1",
 ["cooldownManager_stackAnchorBuffIcons_offsetX"] = 0,
+["cooldownManager_squareIconsZoom_Utility"] = 0,
 ["cooldownManager_cooldownFontFlags"] = {
 ["THICKOUTLINE"] = true,
 },
-["cooldownManager_stackAnchorBuffIcons_point"] = "TOP",
 ["cooldownManager_hide_gcd"] = true,
-["cooldownManager_customActiveColor_a"] = 0.6770832538604736,
-["cooldownManager_customSwipeColor_enabled"] = true,
-["buffContainers"] = {
-["enabled"] = false,
-["customAuras"] = {
-},
-["count"] = 2,
-["orders"] = {
-["s:335467"] = 3,
-["s:589"] = 2,
-["s:34914"] = 1,
-},
-["assignments"] = {
-["s:335467"] = 1,
-["s:589"] = 1,
-["s:34914"] = 1,
-},
-},
-["cooldownManager_stackAnchorBuffIcons_offsetY"] = 3,
-["_bug_warning_displayed"] = 20260310,
-["cooldownManager_stackFontName"] = "1",
-["cooldownManager_customActiveColor_r"] = 0.874509871006012,
-["_trackerStylePerTrackerMigrationVersion"] = 1,
-["cooldownManager_visibility_enabled_viewers"] = {
-["BuffIconCooldownViewer"] = false,
-["BuffBarCooldownViewer"] = false,
-["EssentialCooldownViewer"] = false,
-["CMCTracker1"] = false,
-["UtilityCooldownViewer"] = false,
-["CMCTracker2"] = false,
-},
-["cooldownStyleSettings"] = {
-["spellSettings"] = {
-[586] = {
-["barColor"] = {
-0.0941176563501358,
-0.7725490927696228,
-1,
-},
-},
-[81256] = {
-["alwaysGlow"] = true,
-},
-[115203] = {
-["barColor"] = {
-1,
-0.501960813999176,
-0.250980406999588,
-},
-},
-[1240201] = {
-["alwaysGlow"] = true,
-},
-[589] = {
-},
-[17] = {
-["barColor"] = {
-1,
-0.9921569228172302,
-0.8352941870689392,
-},
-},
-[1242158] = {
-},
-[1233448] = {
-},
-[47585] = {
-["barColor"] = {
-0.5215686559677124,
-0,
-1,
-},
-},
-[438439] = {
-["alwaysGlow"] = true,
-},
-[322507] = {
-["alwaysGlow"] = true,
-},
-[1246968] = {
-["alwaysGlow"] = true,
-},
-[394110] = {
-["alwaysGlow"] = true,
-},
-[137384] = {
-["alwaysGlow"] = true,
-},
-[365350] = {
-["alwaysGlow"] = true,
-},
-[13750] = {
-},
-[15286] = {
-["barColor"] = {
-0.1019607931375504,
-0.2039215862751007,
-1,
-},
-},
-[115636] = {
-},
-[1241059] = {
-["alwaysGlow"] = true,
-},
-[443294] = {
-["alwaysGlow"] = true,
-["alwaysShowCooldownEdge"] = true,
-},
-[34914] = {
-},
-[79684] = {
-["alwaysGlow"] = true,
-},
-[264571] = {
-},
-[1253304] = {
-},
-[122470] = {
-["barColor"] = {
-1,
-0.9921569228172302,
-0.874509871006012,
-},
-},
-[1238488] = {
-["alwaysGlow"] = true,
-},
-[1250566] = {
-["alwaysGlow"] = true,
-},
-[1249625] = {
-["barColor"] = {
-0.2862745225429535,
-1,
-0.4941176772117615,
-},
-["alwaysGlow"] = true,
-["alwaysShowCooldownEdge"] = true,
-},
-[49530] = {
-},
-[13877] = {
-},
-[325202] = {
-},
-},
-},
 ["tracker"] = {
 ["wildcardSlotSettings"] = {
 ["trinket1"] = {
@@ -1014,6 +866,163 @@ CooldownManagerCenteredDB = {
 ["itemViewerLayouts"] = {
 },
 ["showUnusable"] = false,
+},
+["cooldownManager_customActiveColor_a"] = 0.6770832538604736,
+["cooldownManager_customSwipeColor_enabled"] = true,
+["buffContainers"] = {
+["enabled"] = true,
+["customAuras"] = {
+},
+["count"] = 2,
+["orders"] = {
+["s:335467"] = 3,
+["s:589"] = 2,
+["s:34914"] = 1,
+["s:443294"] = 1,
+["s:451038"] = 2,
+["t:1295942"] = 1,
+["s:1244329"] = 3,
+["s:228264"] = 1,
+},
+["assignments"] = {
+["s:335467"] = 1,
+["s:589"] = 1,
+["s:34914"] = 1,
+["s:443294"] = 1,
+["s:451038"] = 1,
+["t:1295942"] = 1,
+["s:1244329"] = 1,
+["s:228264"] = 1,
+},
+},
+["cooldownManager_stackAnchorBuffIcons_offsetY"] = 3,
+["cooldownManager_customActiveColor_r"] = 0.874509871006012,
+["_bug_warning_displayed"] = 20260310,
+["cooldownManager_stackFontName"] = "1",
+["cooldownManager_stackAnchorBuffIcons_point"] = "TOP",
+["_trackerStylePerTrackerMigrationVersion"] = 1,
+["cooldownManager_visibility_enabled_viewers"] = {
+["BuffIconCooldownViewer"] = false,
+["BuffBarCooldownViewer"] = false,
+["EssentialCooldownViewer"] = false,
+["CMCTracker1"] = false,
+["UtilityCooldownViewer"] = false,
+["CMCTracker2"] = false,
+},
+["cooldownStyleSettings"] = {
+["spellSettings"] = {
+[586] = {
+["barColor"] = {
+0.0941176563501358,
+0.7725490927696228,
+1,
+},
+},
+[81256] = {
+["alwaysGlow"] = true,
+},
+[115203] = {
+["barColor"] = {
+1,
+0.501960813999176,
+0.250980406999588,
+},
+},
+[1240201] = {
+["alwaysGlow"] = true,
+},
+[589] = {
+},
+[17] = {
+["barColor"] = {
+1,
+0.9921569228172302,
+0.8352941870689392,
+},
+},
+[1242158] = {
+},
+[1233448] = {
+},
+[47585] = {
+["barColor"] = {
+0.5215686559677124,
+0,
+1,
+},
+},
+[438439] = {
+["alwaysGlow"] = true,
+},
+[322507] = {
+["alwaysGlow"] = true,
+},
+[1246968] = {
+["alwaysGlow"] = true,
+},
+[394110] = {
+["alwaysGlow"] = true,
+},
+[137384] = {
+["alwaysGlow"] = true,
+},
+[365350] = {
+},
+[13750] = {
+},
+[15286] = {
+["barColor"] = {
+0.1019607931375504,
+0.2039215862751007,
+1,
+},
+},
+[115636] = {
+},
+[1241059] = {
+["alwaysGlow"] = true,
+},
+[443294] = {
+["alwaysGlow"] = true,
+["alwaysShowCooldownEdge"] = true,
+},
+[34914] = {
+},
+[79684] = {
+},
+[264571] = {
+},
+[1253304] = {
+},
+[122470] = {
+["barColor"] = {
+1,
+0.9921569228172302,
+0.874509871006012,
+},
+},
+[1238488] = {
+["alwaysGlow"] = true,
+},
+[1250566] = {
+["alwaysGlow"] = true,
+},
+[1249625] = {
+["barColor"] = {
+0.2862745225429535,
+1,
+0.4941176772117615,
+},
+["alwaysGlow"] = true,
+["alwaysShowCooldownEdge"] = true,
+},
+[49530] = {
+},
+[13877] = {
+},
+[325202] = {
+},
+},
 },
 ["cooldownManager_stackFontFlags"] = {
 ["THICKOUTLINE"] = true,

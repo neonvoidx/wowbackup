@@ -55,11 +55,11 @@ H.CLASS_TOKENS = {
 H.CLASS_ORDER = table.concat(H.CLASS_TOKENS, ",")
 H.PREVIEW_SAMPLES = {
 	party = {
-		{ name = "Tank", class = "WARRIOR", role = "TANK", group = 1 },
-		{ name = "Healer", class = "PRIEST", role = "HEALER", group = 1 },
-		{ name = "Mage", class = "MAGE", role = "DAMAGER", group = 1 },
-		{ name = "Hunter", class = "HUNTER", role = "DAMAGER", group = 1 },
-		{ name = "Rogue", class = "ROGUE", role = "DAMAGER", group = 1 },
+		{ name = "Tank", class = "DEATHKNIGHT", role = "TANK", group = 1, ownerIndex = 1, pet = { name = "Ghoul" } },
+		{ name = "Healer", class = "PRIEST", role = "HEALER", group = 1, ownerIndex = 2 },
+		{ name = "Mage", class = "MAGE", role = "DAMAGER", group = 1, ownerIndex = 3, pet = { name = "Water Elemental" } },
+		{ name = "Hunter", class = "HUNTER", role = "DAMAGER", group = 1, ownerIndex = 4, pet = { name = "Wolf" } },
+		{ name = "Warlock", class = "WARLOCK", role = "DAMAGER", group = 1, isPlayer = true, ownerIndex = 0, pet = { name = "Felhunter" } },
 	},
 	mt = {
 		{ name = "MT", class = "WARRIOR", role = "TANK", group = 1 },
@@ -1555,15 +1555,24 @@ function H.BuildPreviewSampleList(kind, cfg, baseSamples, limit, quotaTanks, quo
 		local showPlayer = true
 		if cfg and cfg.showPlayer ~= nil then showPlayer = cfg.showPlayer == true end
 		if not showPlayer and #base > 0 then
-			local removeIndex = #base
-			for i = #base, 1, -1 do
-				if base[i] and base[i].role == "DAMAGER" then
+			local removeIndex
+			for i = 1, #base do
+				if base[i] and base[i].isPlayer == true then
 					removeIndex = i
 					break
 				end
 			end
+			if not removeIndex then
+				removeIndex = #base
+				for i = #base, 1, -1 do
+					if base[i] and base[i].role == "DAMAGER" then
+						removeIndex = i
+						break
+					end
+				end
+			end
 			local filtered = {}
-			-- Preserve tank/healer samples in the 4-unit preview and drop one DPS instead.
+			-- Party and pet previews share the same explicit owner model.
 			for i = 1, #base do
 				if i ~= removeIndex then filtered[#filtered + 1] = base[i] end
 			end
@@ -1909,6 +1918,10 @@ H.healthTextModeOptions = {
 	{ value = "CURRENT", label = "Current", text = "Current" },
 	{ value = "MAX", label = "Max", text = "Max" },
 	{ value = "DEFICIT", label = "Deficit", text = "Deficit" },
+	{ value = "ABSORB", label = L["Absorb"] or "Absorb", text = L["Absorb"] or "Absorb" },
+	{ value = "ABSORB_PERCENT", label = (L["Absorb"] or "Absorb") .. " / " .. (L["Percent"] or "Percent"), text = (L["Absorb"] or "Absorb") .. " / " .. (L["Percent"] or "Percent") },
+	{ value = "HEAL_ABSORB", label = L["Heal absorb"] or "Heal absorb", text = L["Heal absorb"] or "Heal absorb" },
+	{ value = "HEAL_ABSORB_PERCENT", label = (L["Heal absorb"] or "Heal absorb") .. " / " .. (L["Percent"] or "Percent"), text = (L["Heal absorb"] or "Heal absorb") .. " / " .. (L["Percent"] or "Percent") },
 	{ value = "CURPERCENT", label = "Current / Percent", text = "Current / Percent" },
 	{ value = "CURMAXPERCENT", label = "Current/Max Percent", text = "Current/Max Percent" },
 	{ value = "MAXPERCENT", label = "Max / Percent", text = "Max / Percent" },
@@ -2040,7 +2053,7 @@ local dispellableFilter = (tonumber(auraFilterInterfaceVersion) or 0) >= 120100 
 	or "HARMFUL|INCLUDE_NAME_PLATE_ONLY|RAID_PLAYER_DISPELLABLE"
 
 H.AuraFilters = {
-	helpful = "HELPFUL|INCLUDE_NAME_PLATE_ONLY|RAID_IN_COMBAT|PLAYER",
+	helpful = "HELPFUL|RAID_IN_COMBAT|PLAYER",
 	harmful = "HARMFUL|INCLUDE_NAME_PLATE_ONLY",
 	harmfulCrowdControl = "HARMFUL|INCLUDE_NAME_PLATE_ONLY|CROWD_CONTROL",
 	harmfulImportant = "HARMFUL|INCLUDE_NAME_PLATE_ONLY|IMPORTANT",

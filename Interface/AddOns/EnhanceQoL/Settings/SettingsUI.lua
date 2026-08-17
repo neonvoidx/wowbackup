@@ -264,7 +264,6 @@ local pageIconKeysByStableID = {
 	Teleports = "teleports",
 	Tooltip = "tooltip",
 	UFProfiles = "unitframes",
-	ufStandalonePrivateAurasExpandable = "privateaura",
 	UnitFrames = "unitframes",
 	VendorDestroyQueue = "includelists",
 	VendorIncludeExclude = "includelists",
@@ -335,7 +334,6 @@ local pageDescriptionKeysByStableID = {
 	Teleports = "configCenterPageCardDescDungeons",
 	Tooltip = "configCenterPageCardDescTooltip",
 	UFProfiles = "configCenterPageCardDescProfilesUnitFrames",
-	ufStandalonePrivateAurasExpandable = "configCenterPageCardDescStandalonePrivateAuras",
 	UnitFrames = "configCenterPageCardDescUnitFrames",
 	VendorDestroyQueue = "configCenterPageCardDescVendorDestroyQueue",
 	VendorIncludeExclude = "configCenterPageCardDescVendorIncludeExclude",
@@ -489,7 +487,6 @@ local interfaceFramesBuffsSectionOrderByStableID = {
 	UnitFrames = 10,
 	VisibilityFrames = 20,
 	DefaultAuraContainers = 30,
-	ufStandalonePrivateAurasExpandable = 40,
 	ClassBuffReminder = 50,
 }
 
@@ -658,7 +655,7 @@ local function getConfigCenterSlashCommandContent()
 		{
 			title = L["Unit Frames"] or "Unit Frames",
 			entries = {
-				{ type = "command", commands = { "/eqol hbp" }, desc = L["rootSlashCommandHealerBuffPlacementDesc"] or "Open the healer buff placement editor for party or raid frames." },
+				{ type = "command", commands = { "/eqol hbp" }, desc = L["rootSlashCommandHealerBuffPlacementDesc"] or "Open the Buff Placement editor for party or raid frames." },
 			},
 		},
 		{
@@ -880,7 +877,6 @@ local function ensureConfigApp()
 			mover = newSettingsAsset("Mover.tga"),
 			nameplate = newSettingsAsset("NameplatesNames.tga"),
 			popups = newSettingsAsset("PopupsUITweaks.tga"),
-			privateaura = newSettingsAsset("StandalonePrivateAuras.tga"),
 			privacy = newSettingsAsset("PrivacyBlockingIgnore.tga"),
 			profiles = newSettingsAsset("Profiles.tga"),
 			questing = newSettingsAsset("QuestingCinematics.tga"),
@@ -1028,7 +1024,7 @@ local function ensureConfigApp()
 		end,
 	})
 
-	app:RegisterCategory({ id = "interface", title = _G["INTERFACE_LABEL"] or "Interface", order = 100, iconAtlas = "hud-microbutton-character-up", sidebarSection = "Interface" })
+	app:RegisterCategory({ id = "interface", title = _G["INTERFACE_LABEL"] or "Interface", order = 100, iconAtlas = "hud-microbutton-character-up", sidebarSection = _G["INTERFACE_LABEL"] or "Interface" })
 	app:RegisterCategory({ id = "general", title = _G["GENERAL"] or "General", order = 200, iconAtlas = "communities-icon-chat", sidebarSection = _G["GENERAL"] or "General" })
 	app:RegisterCategory({ id = "gameplay", title = _G["SETTING_GROUP_GAMEPLAY"] or "Gameplay", order = 300, iconAtlas = "bags-button-autosort-up", sidebarSection = _G["SETTING_GROUP_GAMEPLAY"] or "Gameplay" })
 	app:RegisterCategory({ id = "social", title = _G["SOCIAL_LABEL"] or L["configCenterChatSocial"] or "Chat & Social", order = 400, iconAtlas = "socialqueuing-icon-group", sidebarSection = _G["SOCIAL_LABEL"] or L["configCenterChatSocial"] or "Chat & Social" })
@@ -1887,6 +1883,7 @@ local function getLegacyControlGroup(app, category, cbData)
 end
 
 function addon.functions.OpenConfigCenter(pageID, focusControlID)
+	if pageID == "interface.datapanel" then pageID = interfacePanelsMapPageID end
 	local app = ensureConfigApp()
 	if ConfigUILib and app then
 		addon.ConfigCenterFrame = ConfigUILib:Open(app, pageID, focusControlID)
@@ -1933,7 +1930,9 @@ end
 local function registerLegacyControl(category, cbData, controlType, setting)
 	local app = ensureConfigApp()
 	if not app or type(cbData) ~= "table" then return end
-	local key = cbData.var or cbData.key
+	local key
+	-- Derived controls can keep var as their stable ID without binding it to a direct DB key.
+	if cbData.key ~= false then key = cbData.var or cbData.key end
 	local id = cbData.id or (key and cbData.subvar and (tostring(key) .. "." .. tostring(cbData.subvar))) or key or cbData.text or cbData.label or cbData.name
 	if not id then return end
 	addon.ConfigControlOrder = (addon.ConfigControlOrder or 0) + 1
@@ -2063,7 +2062,13 @@ local function registerLegacyControl(category, cbData, controlType, setting)
 		getSelection = cbData.getSelection,
 		setSelection = cbData.setSelection,
 		selectionSource = cbData.selectionSource,
+		selectAllLabel = cbData.selectAllLabel,
+		searchable = cbData.searchable,
+		searchableBatchSize = cbData.searchableBatchSize,
+		searchableOptionAt = cbData.searchableOptionAt,
+		searchableOptionCount = cbData.searchableOptionCount,
 		summary = cbData.summary,
+		summaryText = cbData.summaryText,
 		soundResolver = cbData.soundResolver,
 		previewSoundFunc = cbData.previewSoundFunc,
 		previewTooltip = cbData.previewTooltip,

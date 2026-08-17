@@ -4482,9 +4482,21 @@ function addon.PreClickHandleCustomBankTransfer(mouseButton, bagID, slotID)
 	return true
 end
 
-function addon.GetCustomBankItemContextMatchResult(itemLocation)
-	if not isCustomBankContextVisible() then
+function addon.GetCustomBankItemContextMatchResult(itemLocationOrBagID, slotID)
+	if not state.frame or not state.frame:IsShown() then
 		return nil
+	end
+	local context = getVisibleContext()
+	if not context then
+		return nil
+	end
+
+	local itemLocation = itemLocationOrBagID
+	if slotID ~= nil then
+		if type(itemLocationOrBagID) ~= "number" or type(slotID) ~= "number" or not ItemLocation then
+			return nil
+		end
+		itemLocation = ItemLocation:CreateFromBagAndSlot(itemLocationOrBagID, slotID)
 	end
 
 	if not itemLocation
@@ -4499,7 +4511,6 @@ function addon.GetCustomBankItemContextMatchResult(itemLocation)
 		return nil
 	end
 
-	local context = getVisibleContext()
 	local bankType = getBankTypeForContext(context)
 	if bankType == nil then
 		return nil

@@ -2638,7 +2638,8 @@ local function buildInput()
 		local text = self.Input:GetText() or ""
 		local value = text
 		if self.numeric then
-			local num = tonumber((text or ""):gsub(",", "."))
+			local normalizedText = (text or ""):gsub(",", ".")
+			local num = tonumber(normalizedText)
 			if not num then
 				self:SetValue(self.currentValue)
 				return

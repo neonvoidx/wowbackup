@@ -32,27 +32,4 @@
 			</OnLeave>
 		</Scripts>
 	</Button>
-
-	<!-- TODO REMOVE when 12.1 Released -->
-	<Button name="EQOLUFGroupUnitButtonReceiverTemplate" virtual="true" inherits="BackdropTemplate,SecureUnitButtonTemplate" registerForClicks="AnyUp">
-		<Scripts>
-			<OnLoad>
-				EnhanceQoL.Aura.UF.GroupFrames.UnitButton_OnLoad(self);
-			</OnLoad>
-			<OnEvent>
-				EnhanceQoL.Aura.UF.GroupFrames.UnitButton_OnEvent(self, event, ...);
-			</OnEvent>
-			<OnAttributeChanged>
-				if name == "unit" and (value == nil or value == "" or self.unit ~= value) then
-					EnhanceQoL.Aura.UF.GroupFrames.UnitButton_OnAttributeChanged(self, name, value);
-				end
-			</OnAttributeChanged>
-			<OnEnter>
-				EnhanceQoL.Aura.UF.GroupFrames.UnitButton_OnEnter(self);
-			</OnEnter>
-			<OnLeave>
-				EnhanceQoL.Aura.UF.GroupFrames.UnitButton_OnLeave(self);
-			</OnLeave>
-		</Scripts>
-	</Button>
 </Ui>

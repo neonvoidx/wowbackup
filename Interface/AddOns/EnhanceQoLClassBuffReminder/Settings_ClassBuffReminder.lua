@@ -235,7 +235,7 @@ local function openFlaskSettings()
 		return
 	end
 
-	if addon.functions and addon.functions.OpenConfigCenter then addon.functions.OpenConfigCenter("gameplay.macrosconsumables", "flaskMacroEnabled") end
+	if addon.functions and addon.functions.OpenConfigCenter then addon.functions.OpenConfigCenter("gameplay.travel-utility", "flaskMacroEnabled") end
 end
 
 local function openFoodSettings()
@@ -249,7 +249,7 @@ local function openFoodSettings()
 		return
 	end
 
-	if addon.functions and addon.functions.OpenConfigCenter then addon.functions.OpenConfigCenter("gameplay.macrosconsumables", "buffFoodMacroEnabled") end
+	if addon.functions and addon.functions.OpenConfigCenter then addon.functions.OpenConfigCenter("gameplay.travel-utility", "buffFoodMacroEnabled") end
 end
 
 local function normalizeIconShape(value)

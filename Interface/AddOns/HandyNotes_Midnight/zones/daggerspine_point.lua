@@ -19,7 +19,7 @@ local map = Map({id = 2594, settings = true})
 local eversong = ns.maps[2395]
 
 -------------------------------------------------------------------------------
------------------------------------ RARES -------------------------------------
+------------------------------------ RARES ------------------------------------
 -------------------------------------------------------------------------------
 
 map.nodes[55103870] = Rare({
@@ -72,7 +72,7 @@ map.nodes[55804560] = RitualCollectible({
 }) -- Egg
 
 -------------------------------------------------------------------------------
-------------------------------- RUSTLING BUSH ---------------------------------
+-------------------------------- RUSTLING BUSH --------------------------------
 -------------------------------------------------------------------------------
 
 -- Void-Touched Lynx Kitten (shared across both ritual sites, Tier 3+)
@@ -91,7 +91,7 @@ map.nodes[41804970] = RitualCollectible({
     }
 }) -- Rustling Bush (Daggerspine Point)
 
------------------------------ PARENT MAP ENTRY --------------------------------
+------------------------------- PARENT MAP ENTRY ------------------------------
 -------------------------------------------------------------------------------
 
 eversong.nodes[21006600] = Node({
@@ -100,6 +100,7 @@ eversong.nodes[21006600] = Node({
     icon = 'portal_pp',
     scale = 2,
     group = ns.groups.RITUAL_SITE,
+    areaPOI = 8615, -- Ritual Site: Daggerspine Point
     OnClick = function() WorldMapFrame:SetMapID(2594) end,
     clabel = L['change_map']
 }) -- Curious Obelisk (always-visible entry)

@@ -5,9 +5,7 @@ local L = ns.L or {}
 ns.L = L
 
 L.ERR_SHARED_MODULE_NOT_FOUND = "|cFFFF0000ArenaDRNameplates:|r Shared module not found"
-L.ERR_REQUIRES_MIDNIGHT = "|cFFFF0000ArenaDRNameplates:|r This addon requires WoW Midnight (12.0.0+)"
 L.ERR_SETTINGS_UI_MODULE_NOT_LOADED = "|cFFFF0000ArenaDRNameplates:|r Settings UI module not loaded"
-L.ERR_SETTINGS_API_NOT_AVAILABLE = "|cFFFF0000ArenaDRNameplates:|r Settings API not available"
 L.WARN_HELPER_NOT_FOUND = "|cFFFFFF00ArenaDRNameplates:|r ArenaNameplateHelper not found"
 L.WARN_SETTINGS_MENU_NOT_AVAILABLE = "|cFFFFFF00ArenaDRNameplates:|r Settings menu not available yet"
 L.MSG_SETTINGS_RESET = "|cFF00FF00ArenaDRNameplates:|r Settings reset"

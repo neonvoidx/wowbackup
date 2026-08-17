@@ -9,6 +9,53 @@ NS.Changelog = Changelog
 
 local changelog = {
   {
+    Version = "9.8.7",
+    General = "Cleanup",
+    Sections = {
+      {
+        Header = "Changes",
+        Entries = {
+          "Minor cleanup",
+        },
+      },
+    },
+  },
+  {
+    Version = "9.8.6",
+    General = "Win info messaging changes",
+    Sections = {
+      {
+        Header = "Changes",
+        Entries = {
+          "Win conditions now follow score ticks instead of time",
+          "Base timers adjust for score tick drift",
+          "Updated win condition messaging",
+        },
+      },
+    },
+  },
+  {
+    Version = "9.8.5",
+    General = "Blitz AB/DWG support",
+    Sections = {
+      {
+        Header = "Changes",
+        Entries = {
+          "Adding Blitz AB/DWG support",
+          "Adding automated localization support to various features",
+          "Improving base map prediction accuracy and reload support",
+        },
+      },
+      {
+        Header = "Bugfixes",
+        Entries = {
+          "Fixing tie-break predictions",
+          "Fixing font shadows not working"
+        },
+      },
+    },
+  },
+  {
     Version = "9.8.4",
     General = "General updates",
     Sections = {
@@ -16,7 +63,7 @@ local changelog = {
         Header = "Changes",
         Entries = {
           "Lua cleanup",
-          "Adding orb stack persistence through reload"
+          "Adding orb stack persistence through reload",
         },
       },
     },

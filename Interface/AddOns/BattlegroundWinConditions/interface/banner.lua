@@ -1,6 +1,7 @@
 local AddonName, NS = ...
 
 local CreateFrame = CreateFrame
+local CreateFont = CreateFont
 local LibStub = LibStub
 local GetTime = GetTime
 
@@ -32,7 +33,11 @@ function Banner:SetTextColor(frame, color)
 end
 
 function Banner:SetFont(frame)
-  frame:SetFont(SharedMedia:Fetch("font", NS.db.global.general.bannergroup.bannerfont), 12, "")
+  local bannerFont = CreateFont(AddonName .. "BannerFont")
+  bannerFont:SetFont(SharedMedia:Fetch("font", NS.db.global.general.bannergroup.bannerfont), 12, "")
+  bannerFont:SetShadowOffset(1, -1)
+  bannerFont:SetShadowColor(0, 0, 0, 1)
+  frame:SetFontObject(bannerFont)
 end
 
 function Banner:SetScale(frame)
@@ -65,6 +70,8 @@ local bannerformat = "GG YOU %s IN %s"
 local bannerformatWin = "GG YOU %s"
 local bannerformatReset = "RESET IN %s"
 local bannerformatResetComplete = "RESET COMPLETE"
+local bannerformatAheadBehind = "%s"
+
 local function animationUpdate(frame, text, animationGroup)
   local t = GetTime()
 
@@ -79,7 +86,7 @@ local function animationUpdate(frame, text, animationGroup)
       animationGroup:Stop()
     end
 
-  -- frame.text:Hide()
+    -- frame.text:Hide()
   else
     local time = frame.exp - t
     frame.remaining = time
@@ -94,7 +101,16 @@ local function animationUpdate(frame, text, animationGroup)
       if time <= 0 then
         Banner:SetText(frame.text, bannerformatWin, text)
       else
-        Banner:SetText(frame.text, bannerformat, text, NS.formatTime(time))
+        if NS.CUR_MAP and NS.CUR_MAP.basesReset then
+          if NS.WILL_WIN then
+            Banner:SetText(frame.text, bannerformat, text, NS.formatTime(time))
+          else
+            local leadingText = text == "WIN" and "WINNING" or text == "LOSE" and "LOSING" or "TIED"
+            Banner:SetText(frame.text, bannerformatAheadBehind, leadingText)
+          end
+        else
+          Banner:SetText(frame.text, bannerformat, text, NS.formatTime(time))
+        end
       end
     end
 
@@ -122,8 +138,9 @@ function Banner:Start(duration, text)
   end
 
   self:SetBackgroundColor(self.bg, BGColor)
-  self:SetTextColor(self.text, TextColor)
+  -- SetFontObject (inside SetFont) resets text color, so apply color afterwards.
   self:SetFont(self.text)
+  self:SetTextColor(self.text, TextColor)
   BannerFrame:SetWidth(175)
   BannerFrame:SetHeight(25)
   self:SetScale(BannerFrame)
@@ -143,7 +160,16 @@ function Banner:Start(duration, text)
     if time <= 0 then
       self:SetText(self.text, bannerformatWin, text)
     else
-      self:SetText(self.text, bannerformat, text, NS.formatTime(time))
+      if NS.CUR_MAP and NS.CUR_MAP.basesReset then
+        if NS.WILL_WIN then
+          self:SetText(self.text, bannerformat, text, NS.formatTime(time))
+        else
+          local leadingText = text == "WIN" and "WINNING" or text == "LOSE" and "LOSING" or "TIED"
+          self:SetText(self.text, bannerformatAheadBehind, leadingText)
+        end
+      else
+        self:SetText(self.text, bannerformat, text, NS.formatTime(time))
+      end
     end
   end
 
@@ -173,8 +199,6 @@ function Banner:Create(anchor)
 
     local Text = BannerFrame:CreateFontString(nil, "ARTWORK")
     self:SetFont(Text)
-    Text:SetShadowOffset(1, -1)
-    Text:SetShadowColor(0, 0, 0, 1)
     Text:SetJustifyH("CENTER")
     Text:SetJustifyV("MIDDLE")
     Text:SetPoint("CENTER", BG, "CENTER", 0, 0)

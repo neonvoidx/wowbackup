@@ -48,6 +48,17 @@ NS.GetLocalizedFaction = function(faction)
   end
 end
 
+NS.GetObjectiveInfo = function(widgetID, tooltip)
+  local objectives = NS.OBJECTIVE_NAMES[widgetID]
+  local objective = objectives and objectives[tooltip]
+
+  if objective == "FLAG" then
+    return nil, true
+  end
+
+  return objective, false
+end
+
 local function ConvertSecondsToUnits(timestamp)
   timestamp = mmax(timestamp, 0)
   local days = mfloor(timestamp / SECONDS_PER_DAY)
@@ -87,6 +98,10 @@ end
 NS.formatTime = function(time)
   return NS.secondsToClock(time, false)
   -- return sformat("%02d:%02d", NS.getMinutes(time), NS.getSeconds(time))
+end
+
+NS.formatWinTime = function(time)
+  return NS.formatTime(time > 0 and mceil(time) or 0)
 end
 
 NS.isArathi = function(zoneID)
@@ -244,6 +259,62 @@ NS.getWinMinBases = function(winBases, maxBases, needBases)
   end
 end
 
+NS.getActiveBases = function(intervals, tickAt)
+  local activeBases = 0
+  for _, interval in ipairs(intervals) do
+    if interval.start < tickAt and tickAt <= interval.finish then
+      activeBases = activeBases + 1
+    end
+  end
+  return activeBases
+end
+
+NS.getProjectedInfo = function(score, intervals, tickAt, tickRate, resources, baseLimit)
+  local activeBases = NS.getActiveBases(intervals, tickAt)
+  local scoringBases = baseLimit and mmin(activeBases, baseLimit) or activeBases
+  local projectedScore = score + (tickRate * resources[scoringBases])
+  return projectedScore, activeBases
+end
+
+NS.checkPotentialOutcome = function(
+  allyScore,
+  hordeScore,
+  allyBaseLimit,
+  hordeBaseLimit,
+  allyIntervals,
+  hordeIntervals,
+  nextTickTime,
+  tickRate,
+  cycleEnd,
+  maxScore,
+  resources
+)
+  local potentialAScore = allyScore
+  local potentialHScore = hordeScore
+  local potentialTickTime = nextTickTime
+
+  while potentialTickTime <= cycleEnd do
+    potentialAScore =
+      NS.getProjectedInfo(potentialAScore, allyIntervals, potentialTickTime, tickRate, resources, allyBaseLimit)
+    potentialHScore =
+      NS.getProjectedInfo(potentialHScore, hordeIntervals, potentialTickTime, tickRate, resources, hordeBaseLimit)
+
+    if potentialAScore >= maxScore or potentialHScore >= maxScore then
+      local aWins = potentialAScore >= maxScore and potentialHScore < maxScore
+      local hWins = potentialHScore >= maxScore and potentialAScore < maxScore
+      local nWins = potentialAScore >= maxScore and potentialHScore >= maxScore
+      return true, aWins, hWins, nWins
+    end
+
+    potentialTickTime = potentialTickTime + tickRate
+  end
+
+  local aWins = potentialAScore > potentialHScore
+  local hWins = potentialHScore > potentialAScore
+  local nWins = potentialAScore == potentialHScore
+  return false, aWins, hWins, nWins
+end
+
 NS.checkWinCondition = function(
   needBases,
   winBases,
@@ -262,9 +333,11 @@ NS.checkWinCondition = function(
   tickRate,
   resources,
   assaultTime,
-  contestedTime
+  contestedTime,
+  deadlineOrigin
 )
   local table = {}
+  local deadlineStart = deadlineOrigin or GetTime()
 
   --[[
   -- we're assuming here the incoming bases have capped over and now looking forward
@@ -277,8 +350,7 @@ NS.checkWinCondition = function(
   local potentialLoseTeamBaseCount = needBases
   local potentialWinTeamBaseCount = ((needBases + winBases) > maxBases) and maxBases - needBases or winBases
 
-  local loseTeamGapScore = mceil(contestedTime / tickRate) * (tickRate * resources[loseBases])
-  local winTeamGapScore = mceil(contestedTime / tickRate) * (tickRate * resources[potentialWinTeamBaseCount])
+  local contestedTicks = mceil(contestedTime / tickRate)
   local assaultScore = mceil(assaultTime / tickRate) * (tickRate * resources[winBases])
 
   --[[
@@ -299,25 +371,29 @@ NS.checkWinCondition = function(
     local loseTeamScoreNow = loseScore + loseTeamScoreIncrease
     local winTeamScoreNow = winScore + winTeamScoreIncrease
 
-    --[[
-    -- If the total game is shorter than the contested period, gap scores are
-    -- skipped (bases can't finish capping). This check uses oldWinTicks (the
-    -- total game length) rather than remaining ticks per-iteration. At late
-    -- ticks where remaining < contestedTime, the gap score naturally pushes
-    -- the winning team's projected score past maxScore, which makes the
-    -- comparison loseTicksToWin < winTicksToWin fail — correctly preventing
-    -- win conditions at time points where base caps can't physically complete.
-    --]]
-    local loseGapScore = (oldWinTicks < mceil(contestedTime / tickRate)) and loseTeamScoreNow
-      or loseTeamScoreNow + loseTeamGapScore
-    local winGapScore = (oldWinTicks < mceil(contestedTime / tickRate)) and winTeamScoreNow
-      or winTeamScoreNow + winTeamGapScore
+    local contestedLoseTicksToWin = NS.getWinTicks(maxScore, loseTeamScoreNow, tickRate, resources[loseBases])
+    local contestedWinTicksToWin =
+      NS.getWinTicks(maxScore, winTeamScoreNow, tickRate, resources[potentialWinTeamBaseCount])
 
-    local loseTicksToWin = NS.getWinTicks(maxScore, loseGapScore, tickRate, resources[potentialLoseTeamBaseCount])
-    local winTicksToWin = NS.getWinTicks(maxScore, winGapScore, tickRate, resources[potentialWinTeamBaseCount])
+    local winTeamStillWins
 
-    if loseTicksToWin < winTicksToWin and winTeamScoreNow < maxScore then
-      local time = ticks * tickRate
+    -- First adjudicate any finish while the assaulted bases are contested.
+    -- Equal ticks are a draw, so only a strictly earlier finish preserves the win.
+    if mmin(contestedLoseTicksToWin, contestedWinTicksToWin) <= contestedTicks then
+      winTeamStillWins = contestedWinTicksToWin < contestedLoseTicksToWin
+    else
+      local loseGapScore = loseTeamScoreNow + contestedTicks * (tickRate * resources[loseBases])
+      local winGapScore = winTeamScoreNow + contestedTicks * (tickRate * resources[potentialWinTeamBaseCount])
+
+      local loseTicksToWin = NS.getWinTicks(maxScore, loseGapScore, tickRate, resources[potentialLoseTeamBaseCount])
+      local winTicksToWin = NS.getWinTicks(maxScore, winGapScore, tickRate, resources[potentialWinTeamBaseCount])
+
+      winTeamStillWins = winTicksToWin < loseTicksToWin
+    end
+
+    if not winTeamStillWins and winTeamScoreNow < maxScore then
+      -- This is the last unsafe tick; the following tick is the first guaranteed-safe tick.
+      local time = (ticks + 1) * tickRate
       --[[
       -- we need add the pending time of the current incoming
       -- bases since they actually haven't capped over yet
@@ -327,20 +403,18 @@ NS.checkWinCondition = function(
       --[[
       -- we need to accommodate for the assault time
       --]]
-      local capTime = ownTime - assaultTime
+      local capTime = ownTime - assaultTime - tickRate
       local capTicks = mceil(capTime / tickRate)
       --[[
-      -- we need to subtract the gap score from the score
-      -- you need to get the base by because we were just looking
-      -- ahead to see had you got that base would you win
-      -- so this is that score you need prior to having a gap to be had
+      -- store the first score where the current condition is guaranteed safe
       --]]
-      local ownScore = winTeamScoreNow
+      local lastUnsafeScore = winTeamScoreNow
+      local ownScore = mmin(maxScore, lastUnsafeScore + tickRate * resources[winBases])
       --[[
       -- we need to subtract the score they'll be earning during cap time
       -- as well, so thats 5 more seconds of score
       --]]
-      local capScore = ownScore - assaultScore
+      local capScore = lastUnsafeScore - assaultScore
       --[[
       -- We need to calculate the minimum bases the winning team
       -- wins with and store it for later
@@ -355,8 +429,7 @@ NS.checkWinCondition = function(
         minBases = minBases,
         maxBases = maxBases,
         --[[
-        -- we add the gap score from the score to know when
-        -- you need to get the base by
+        -- the first score where the current condition is guaranteed safe
         --]]
         ownScore = ownScore,
         --[[
@@ -370,19 +443,20 @@ NS.checkWinCondition = function(
         -- we need add the pending time of the current incoming
         -- bases since they actually haven't capped over yet
         --]]
-        ownTime = ownTime + GetTime(),
+        ownTime = ownTime + deadlineStart,
         ownTicks = ownTicks,
+        driftTime = 0,
         --[[
         -- we need to accommodate for the assault time to get by this time
         -- as well as the cap time
         --]]
-        capTime = capTime + GetTime(),
+        capTime = capTime + deadlineStart,
         capTicks = capTicks,
         --[[
         -- we need to accommodate for the assault time to get by this time
         -- as well as the cap time
         --]]
-        winTime = winTime + GetTime(), -- mmin(mmax(0, winTime), 1500) + GetTime(),
+        winTime = winTime + deadlineStart, -- mmin(mmax(0, winTime), 1500) + deadlineStart,
         winTicks = winTicks, -- mmin(mmax(0, winTicks), mceil(1500 / tickRate)),
         --[[
         -- who wins and loses
@@ -395,35 +469,154 @@ NS.checkWinCondition = function(
     end
   end
 
-  -- Log only the final stored value (the deadline), not every loop iteration
-  if table[potentialLoseTeamBaseCount] then
-    local entry = table[potentialLoseTeamBaseCount]
-    NS.Debug(
-      "WINTABLE bases:",
-      potentialLoseTeamBaseCount,
-      "ownTime:",
-      entry.ownTime - GetTime(),
-      "capTime:",
-      entry.capTime - GetTime(),
-      "winTime:",
-      entry.winTime - GetTime(),
-      "winTimeIncrease:",
-      winTimeIncrease,
-      "assaultTime:",
-      assaultTime
-    )
-  end
-
   return table
 end
 
-NS.getIncomingBaseInfo = function(timers, ownedBases, incomingBases, resources, tickRate, winTicks)
+NS.checkBlitzWinCondition = function(aScore, hScore, allyInfo, hordeInfo, now, scoreTickTime, curMap)
+  local result = {
+    willWin = false,
+    projectedAScore = aScore,
+    projectedHScore = hScore,
+    projectedAllyBases = 0,
+    projectedHordeBases = 0,
+    remainingScorableTicks = 0,
+    remainingScorableTime = 0,
+  }
+
+  local cycleEnd = mmax(allyInfo.cycleEnd, hordeInfo.cycleEnd)
+  local timersComplete = allyInfo.timersComplete
+    and hordeInfo.timersComplete
+    and scoreTickTime ~= nil
+    and scoreTickTime > 0
+
+  if not timersComplete or cycleEnd <= now then
+    return result
+  end
+
+  local tickRate = curMap.tickRate
+  local nextTickTime = scoreTickTime + tickRate
+  while nextTickTime <= now do
+    nextTickTime = nextTickTime + tickRate
+  end
+
+  local aWins, hWins, nWins = false, false, false
+  local currentTickTime = nextTickTime
+
+  while currentTickTime <= cycleEnd do
+    result.projectedAScore, result.projectedAllyBases = NS.getProjectedInfo(
+      result.projectedAScore,
+      allyInfo.intervals,
+      currentTickTime,
+      tickRate,
+      curMap.baseResources,
+      nil
+    )
+    result.projectedHScore, result.projectedHordeBases = NS.getProjectedInfo(
+      result.projectedHScore,
+      hordeInfo.intervals,
+      currentTickTime,
+      tickRate,
+      curMap.baseResources,
+      nil
+    )
+    result.remainingScorableTicks = result.remainingScorableTicks + 1
+    result.remainingScorableTime = currentTickTime - now
+
+    if result.projectedAScore >= curMap.maxScore or result.projectedHScore >= curMap.maxScore then
+      aWins = result.projectedAScore >= curMap.maxScore and result.projectedHScore < curMap.maxScore
+      hWins = result.projectedHScore >= curMap.maxScore and result.projectedAScore < curMap.maxScore
+      nWins = result.projectedAScore >= curMap.maxScore and result.projectedHScore >= curMap.maxScore
+      result.projectedAScore = mmin(result.projectedAScore, curMap.maxScore)
+      result.projectedHScore = mmin(result.projectedHScore, curMap.maxScore)
+      result.willWin = true
+      break
+    end
+
+    currentTickTime = currentTickTime + tickRate
+  end
+
+  if not result.willWin then
+    result.projectedAllyBases = 0
+    result.projectedHordeBases = 0
+    result.remainingScorableTime = cycleEnd - now
+    aWins = result.projectedAScore > result.projectedHScore
+    hWins = result.projectedHScore > result.projectedAScore
+    nWins = result.projectedAScore == result.projectedHScore
+    result.allyNeededBases =
+      NS.getNeededBaseCount(result.projectedAScore, result.projectedHScore, cycleEnd, scoreTickTime, curMap)
+    result.hordeNeededBases =
+      NS.getNeededBaseCount(result.projectedHScore, result.projectedAScore, cycleEnd, scoreTickTime, curMap)
+  end
+
+  if nWins then
+    return result
+  end
+
+  local winnerIntervals = aWins and allyInfo.intervals or hordeInfo.intervals
+  local hasScoringTick = false
+
+  local localTickTime = nextTickTime
+  while localTickTime <= cycleEnd do
+    if NS.getActiveBases(winnerIntervals, localTickTime) > 0 then
+      hasScoringTick = true
+      break
+    end
+    localTickTime = localTickTime + tickRate
+  end
+
+  if not hasScoringTick then
+    result.winnerNeededBases = 0
+    return result
+  end
+
+  for baseCount = 1, curMap.maxBases do
+    local potentialWin, allyWins, hordeWins, nobodyWins
+    if aWins then
+      potentialWin, allyWins, hordeWins, nobodyWins = NS.checkPotentialOutcome(
+        aScore,
+        hScore,
+        baseCount,
+        nil,
+        allyInfo.intervals,
+        hordeInfo.intervals,
+        nextTickTime,
+        tickRate,
+        cycleEnd,
+        curMap.maxScore,
+        curMap.baseResources
+      )
+    else
+      potentialWin, allyWins, hordeWins, nobodyWins = NS.checkPotentialOutcome(
+        aScore,
+        hScore,
+        nil,
+        baseCount,
+        allyInfo.intervals,
+        hordeInfo.intervals,
+        nextTickTime,
+        tickRate,
+        cycleEnd,
+        curMap.maxScore,
+        curMap.baseResources
+      )
+    end
+
+    local potentialMatches = (aWins and allyWins) or (hWins and hordeWins) or (nWins and nobodyWins)
+    if potentialMatches and (not result.willWin or potentialWin) then
+      result.winnerNeededBases = baseCount
+      break
+    end
+  end
+
+  return result
+end
+
+NS.getIncomingBaseInfo = function(timers, ownedBases, incomingBases, resources, tickRate, winTicks, lastScoreTickTime)
   local baseIncrease = 0
   local scoreIncrease = 0
   local tickIncrease = 0
   -- defensive init; overwritten before any read (luacheck W311)
   -- luacheck: ignore 311
-  local previousTime = 0
   local previousTicks = 0
   if timers and incomingBases > 0 then
     local timersSorted = {}
@@ -441,7 +634,12 @@ NS.getIncomingBaseInfo = function(timers, ownedBases, incomingBases, resources, 
       if key then
         local timeLeft = timers[key] - GetTime()
         if timeLeft and timeLeft > 0 then
-          local ticksLeft = mceil(timeLeft / tickRate)
+          local ticksLeft
+          if lastScoreTickTime and lastScoreTickTime > 0 then
+            ticksLeft = mmax(0, mfloor((timers[key] - lastScoreTickTime) / tickRate))
+          else
+            ticksLeft = mceil(timeLeft / tickRate)
+          end
           if ticksLeft < winTicks then
             --[[
             -- we need to subtract 1 from each incoming base + current bases
@@ -475,14 +673,130 @@ NS.getIncomingBaseInfo = function(timers, ownedBases, incomingBases, resources, 
             -- setting previous values last so our initial
             -- values are 0 when used the first time
             --]]
-            previousTime = timeLeft
-            previousTicks = mceil(previousTime / tickRate)
+            previousTicks = ticksLeft
           end
         end
       end
     end
   end
   return baseIncrease, scoreIncrease, tickIncrease
+end
+
+NS.getIncomingBlitzBaseInfo = function(ownedBases, incomingBases, timers, lockedTimers, now, curMap)
+  local intervals = {}
+  local cycleEnd = now
+  local knownOwnedBases = 0
+  local knownIncomingBases = 0
+
+  for _, lockedExpiry in pairs(lockedTimers) do
+    if lockedExpiry and lockedExpiry > now then
+      knownOwnedBases = knownOwnedBases + 1
+      cycleEnd = mmax(cycleEnd, lockedExpiry)
+      tinsert(intervals, { start = now, finish = lockedExpiry })
+    end
+  end
+
+  for _, capTime in pairs(timers) do
+    if capTime and capTime > now then
+      local lockedExpiry = capTime + curMap.controlTime
+      knownIncomingBases = knownIncomingBases + 1
+      cycleEnd = mmax(cycleEnd, lockedExpiry)
+      tinsert(intervals, { start = capTime, finish = lockedExpiry })
+    end
+  end
+
+  return {
+    intervals = intervals,
+    cycleEnd = cycleEnd,
+    timersComplete = knownOwnedBases == ownedBases and knownIncomingBases == incomingBases,
+  }
+end
+
+NS.getNeededBaseCount = function(ownScore, opposingScore, cycleEnd, scoreTickTime, curMap)
+  -- Once every currently known base has expired, compare one possible next
+  -- control window where all bases are captured together and split between the
+  -- two teams. This keeps the required-base text finite without assuming that
+  -- those bases remain controlled after their configured window.
+  local tickRate = curMap.tickRate
+  local controlStart = cycleEnd + curMap.resetTime + curMap.assaultTime + curMap.contestedTime
+  local controlEnd = controlStart + curMap.controlTime
+  local firstTickTime = scoreTickTime + tickRate
+
+  while firstTickTime <= controlStart do
+    firstTickTime = firstTickTime + tickRate
+  end
+
+  if firstTickTime > controlEnd then
+    return nil
+  end
+
+  local function winsWith(baseCount)
+    local opposingBaseCount = curMap.maxBases - baseCount
+    local resultOwnScore = ownScore
+    local resultOpposingScore = opposingScore
+    local tickTime = firstTickTime
+
+    while tickTime <= controlEnd do
+      resultOwnScore = resultOwnScore + (tickRate * curMap.baseResources[baseCount])
+      resultOpposingScore = resultOpposingScore + (tickRate * curMap.baseResources[opposingBaseCount])
+
+      if resultOwnScore >= curMap.maxScore or resultOpposingScore >= curMap.maxScore then
+        return resultOwnScore >= curMap.maxScore
+      end
+
+      tickTime = tickTime + tickRate
+    end
+
+    return resultOwnScore >= resultOpposingScore
+  end
+
+  for baseCount = 0, curMap.maxBases do
+    if winsWith(baseCount) then
+      return baseCount
+    end
+  end
+
+  return nil
+end
+
+NS.getBlitzWinTable = function(
+  winnerNeededBases,
+  loserNeededBases,
+  loserBases,
+  winnerScore,
+  winnerName,
+  loserName,
+  resultTime,
+  resultTicks,
+  curMap,
+  willWin
+)
+  if winnerNeededBases == nil or loserNeededBases == nil then
+    return {}
+  end
+
+  local duration = willWin and resultTime or 10000
+  local expiration = GetTime() + duration
+
+  return {
+    [loserNeededBases] = {
+      bases = loserNeededBases,
+      minBases = winnerNeededBases,
+      maxBases = curMap.maxBases,
+      ownScore = winnerScore,
+      capScore = winnerScore,
+      ownTime = expiration,
+      ownTicks = resultTicks,
+      capTime = expiration,
+      capTicks = resultTicks,
+      winTime = expiration,
+      winTicks = resultTicks,
+      winName = winnerName,
+      loseName = loserName,
+      loseBases = loserBases,
+      tickRate = curMap.tickRate,
+    },
+  }
 end
 
 NS.write = function(...)
@@ -536,7 +850,6 @@ end
 
 -- Function to update the size of the container based on visible children
 NS.UpdateInfoSize = function(frame, banner, children, caller)
-  -- NS.debug(caller)
   if frame == nil then
     return
   end
@@ -627,12 +940,20 @@ NS.CleanupDB = function(src, dst)
         and key ~= "lastFlagCapBy"
         and key ~= "lastFlagStackInfo"
         and key ~= "lastOrbStackInfo"
+        and key ~= "lastScoreTickTime"
         and key ~= "version"
       then
         src[key] = nil
       end
     elseif type(value) == "table" then
-      if key ~= "disabledCategories" and key ~= "categoryTextures" then -- also sat on demand
+      if
+        key ~= "disabledCategories"
+        and key ~= "categoryTextures"
+        and key ~= "allyTimers"
+        and key ~= "allyLockedTimers"
+        and key ~= "hordeTimers"
+        and key ~= "hordeLockedTimers"
+      then
         dst[key] = NS.CleanupDB(value, dst[key])
       end
     end

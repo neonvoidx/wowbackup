@@ -444,25 +444,9 @@ local merchantExpandable = addon.functions.SettingsCreateExpandableSection(cVend
 	expanded = false,
 	colorizeTitle = false,
 })
+addon.SettingsLayout.vendorEconomyMerchantSection = merchantExpandable
 
 data = {
-	{
-		var = "enableExtendedMerchant",
-		text = L["enableExtendedMerchant"],
-		func = function(v)
-			addon.db["enableExtendedMerchant"] = v
-			if addon.Merchant then
-				if v and addon.Merchant.Enable then
-					addon.Merchant:Enable()
-				elseif not v and addon.Merchant.Disable then
-					addon.Merchant:Disable()
-					addon.variables.requireReload = true
-					addon.functions.checkReloadFrame()
-				end
-			end
-		end,
-		desc = L["enableExtendedMerchantDesc"],
-	},
 	{
 		var = "markKnownOnMerchant",
 		text = L["markKnownOnMerchant"],
@@ -510,12 +494,6 @@ local auctionHouseExpandable = addon.functions.SettingsCreateExpandableSection(c
 })
 
 data = {
-	{
-		text = L["persistAuctionHouseFilter"],
-		var = "persistAuctionHouseFilter",
-		-- TODO 12.1 cleanup: remove this setting after confirming Blizzard native Auction House filter persistence.
-		func = function(value) addon.db["persistAuctionHouseFilter"] = value end,
-	},
 	{
 		text = L["closeBagsOnAuctionHouse"],
 		desc = L["closeBagsOnAuctionHouseDesc"],

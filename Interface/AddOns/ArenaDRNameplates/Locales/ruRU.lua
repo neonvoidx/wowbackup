@@ -9,9 +9,7 @@ if GetLocale() ~= "ruRU" then
 end
 
 L.ERR_SHARED_MODULE_NOT_FOUND = "|cFFFF0000ArenaDRNameplates:|r Модуль Shared не найден"
-L.ERR_REQUIRES_MIDNIGHT = "|cFFFF0000ArenaDRNameplates:|r Этот аддон требует WoW Midnight (12.0.0+)"
 L.ERR_SETTINGS_UI_MODULE_NOT_LOADED = "|cFFFF0000ArenaDRNameplates:|r Модуль интерфейса настроек не загружен"
-L.ERR_SETTINGS_API_NOT_AVAILABLE = "|cFFFF0000ArenaDRNameplates:|r API настроек недоступен"
 L.WARN_HELPER_NOT_FOUND = "|cFFFFFF00ArenaDRNameplates:|r ArenaNameplateHelper не найден"
 L.WARN_SETTINGS_MENU_NOT_AVAILABLE = "|cFFFFFF00ArenaDRNameplates:|r Меню настроек пока недоступно"
 L.MSG_SETTINGS_RESET = "|cFF00FF00ArenaDRNameplates:|r Настройки сброшены"

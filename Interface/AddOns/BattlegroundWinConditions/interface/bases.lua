@@ -26,8 +26,6 @@ Bases.frame = BasesFrame
 Bases.isWin = false
 Bases.wasWin = false
 
-local showCapTimeAwareness = false
-
 function Bases:SetAnchor(anchor, x, y)
   self.frame:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", x, y)
 end
@@ -72,49 +70,113 @@ function Bases:Stop(frame, animationGroup)
   stopAnimation(frame, animationGroup)
 end
 
-local function winMessage(text, winCondition)
+local function blitzWinMessage(text, winCondition)
   local winTime = winCondition.winTime - GetTime()
-  -- local winTicks = mceil(winTime / winCondition.tickRate)
   local ownTime = winCondition.ownTime - GetTime()
-  -- local ownTicks = mceil(ownTime / winCondition.tickRate)
   local winName = winCondition.winName
-  local loseName = winCondition.loseName
   local winMinBases = winCondition.minBases
   local maxBases = winCondition.maxBases
-  local maxWinMinBases = winMinBases - 1 <= 0 and 1 or winMinBases - 1
   local capBases = winCondition.bases
-  local loseBases = winCondition.loseBases
-  -- defensive init; overwritten before any read (luacheck W311)
-  -- luacheck: ignore 311
-  local message = ""
+  local message
 
   if winMinBases == 1 and ownTime <= 0 then
-    message = sformat("%s win\n", NS.formatTeamName(winName, NS.PLAYER_FACTION))
+    message = ""
     Bases.isWin = true
   else
     if NS.WIN_INC_BASE_COUNT > 0 and NS.ACTIVE_BASE_COUNT == maxBases and capBases == winMinBases + 1 then
-      message = sformat("%s win with %d after cap\n", NS.formatTeamName(winName, NS.PLAYER_FACTION), winMinBases)
+      if NS.WILL_WIN then
+        message = sformat("%s win with %d right now\n", NS.formatTeamName(winName, NS.PLAYER_FACTION), winMinBases)
+      else
+        message =
+          sformat("%s are ahead with %d after cap\n", NS.formatTeamName(winName, NS.PLAYER_FACTION), winMinBases)
+      end
     else
-      message = sformat("%s win with %d right now\n", NS.formatTeamName(winName, NS.PLAYER_FACTION), winMinBases)
+      if NS.WILL_WIN then
+        message = sformat("%s win with %d right now\n", NS.formatTeamName(winName, NS.PLAYER_FACTION), winMinBases)
+      else
+        message =
+          sformat("%s are ahead with %d right now\n", NS.formatTeamName(winName, NS.PLAYER_FACTION), winMinBases)
+      end
     end
 
-    if
-      winMinBases == 1 and capBases == winMinBases + 1 and loseBases == 0
-      or (NS.WIN_INC_BASE_COUNT > 0 and capBases == winMinBases + 1)
-      or (NS.ACTIVE_BASE_COUNT < maxBases and winMinBases == 1 and capBases < maxBases)
-      or (NS.INCOMING_BASE_COUNT > 0 and NS.ACTIVE_BASE_COUNT == maxBases and loseBases == 0)
-    then
-      message = message
-        .. sformat("%s can still win with %d\n", NS.formatTeamName(loseName, NS.PLAYER_FACTION), capBases)
-    end
-
-    if winMinBases == 1 then
+    if NS.WILL_WIN then
       message = message .. sformat("Hold %d for %s to win\n", winMinBases, NS.formatTime(winTime))
     else
-      message = message
-        .. sformat("Hold %d for %s to win with %d\n", winMinBases, NS.formatTime(ownTime), maxWinMinBases)
+      message = message .. "Hold what you have to stay ahead\n"
     end
   end
+
+  Bases:SetText(text, "%s", message)
+
+  if Bases.isWin ~= Bases.wasWin then
+    if NS.db.global.general.banner == false and NS.db.global.general.infogroup.infobg then
+      if NS.IN_GAME then
+        NS.UpdateInfoSize(NS.Info.frame, NS.Banner, { NS.Score, Bases, NS.Flags }, "blitzWinMessage")
+      else
+        NS.UpdateInfoSize(
+          NS.Info.frame,
+          NS.Banner,
+          { NS.Score, Bases, NS.Flags, NS.Orbs, NS.Stacks },
+          "blitzWinMessage"
+        )
+      end
+    end
+    Bases.wasWin = Bases.isWin
+  end
+end
+
+local function blitzLoseMessage(text, winCondition)
+  local ownTime = winCondition.ownTime - GetTime()
+  local capBases = winCondition.bases
+  local maxBases = winCondition.maxBases
+  local loseName = winCondition.loseName
+  local message
+
+  if NS.WILL_WIN or (capBases == maxBases and ownTime <= 0) then
+    message = ""
+  else
+    message = sformat("%s need %d to get ahead", NS.formatTeamName(loseName, NS.PLAYER_FACTION), capBases)
+  end
+
+  Bases:SetText(text, "%s", message)
+end
+
+local function winMessage(text, winCondition)
+  local ownTime = winCondition.ownTime + winCondition.driftTime - GetTime()
+  local winName = winCondition.winName
+  -- The minimum number of bases the projected winner needs to hold to still win
+  -- against this hypothetical losing-team base count. When this is 1, the winner
+  -- only needs 1 base to win from this projected state.
+  local winMinBases = winCondition.minBases
+  -- The map's total number of base nodes.
+  local maxBases = winCondition.maxBases
+  local maxWinMinBases = winMinBases - 1 <= 0 and 1 or winMinBases - 1
+  -- The number of total bases the losing team would need to control to win again.
+  local capBases = winCondition.bases
+  local message
+
+  -- NS.WIN_INC_BASE_COUNT = how many incoming bases the winning team is gaining (i.e. i just capped 1, so 1 would be the number).
+  -- NS.ACTIVE_BASE_COUNT = how many bases are claimed by either team, including incoming bases.
+
+  if NS.WIN_INC_BASE_COUNT > 0 and NS.ACTIVE_BASE_COUNT == maxBases and capBases == winMinBases + 1 then
+    message = sformat("%s win with %d after cap\n", NS.formatTeamName(winName, NS.PLAYER_FACTION), winMinBases)
+  else
+    message = sformat("%s win with %d right now\n", NS.formatTeamName(winName, NS.PLAYER_FACTION), winMinBases)
+  end
+
+  if winMinBases == 1 then
+    message = message .. sformat("Hold %d to %s to win\n", winMinBases, NS.formatScore(winName, winCondition.ownScore))
+  else
+    message = message
+      .. sformat(
+        "Hold %d to %s to win with %d\n",
+        winMinBases,
+        NS.formatScore(winName, winCondition.ownScore),
+        maxWinMinBases
+      )
+  end
+
+  message = message .. sformat("Hold for ~%s\n", NS.formatWinTime(ownTime))
 
   Bases:SetText(text, "%s", message)
 
@@ -131,36 +193,38 @@ local function winMessage(text, winCondition)
 end
 
 local function loseMessage(text, winCondition)
-  local ownTime = winCondition.ownTime - GetTime()
-  local capTime = winCondition.capTime - GetTime()
-  -- local capTicks = mceil(capTime / winCondition.tickRate)
+  local capTime = winCondition.capTime + winCondition.driftTime - GetTime()
   local capBases = winCondition.bases
   local maxBases = winCondition.maxBases
   local capScore = winCondition.capScore
   local winName = winCondition.winName
   local loseName = winCondition.loseName
+  local loseBases = winCondition.loseBases
+  local winMinBases = winCondition.minBases
+
+  local timing = NS.WIN_INC_BASE_COUNT > 0
+      and NS.ACTIVE_BASE_COUNT == maxBases
+      and capBases == winMinBases + 1
+      and "after cap"
+    or "right now"
+
   local message = ""
+  if loseBases > 0 then
+    message = sformat("%s lose with %d %s\n", NS.formatTeamName(loseName, NS.PLAYER_FACTION), loseBases, timing)
+  end
 
-  if capBases == maxBases and ownTime <= 0 then
-    message = sformat("%s lose\n", NS.formatTeamName(loseName, NS.PLAYER_FACTION))
+  message = message
+    .. sformat(
+      "%s need %d by %s\n",
+      NS.formatTeamName(loseName, NS.PLAYER_FACTION),
+      capBases,
+      NS.formatScore(winName, capScore)
+    )
+
+  if capTime <= 0 then
+    message = message .. "Not enough cap time\n"
   else
-    message = message
-      .. sformat(
-        "%s need %d by %s\n",
-        NS.formatTeamName(loseName, NS.PLAYER_FACTION),
-        capBases,
-        NS.formatScore(winName, capScore)
-      )
-
-    if showCapTimeAwareness then
-      if capTime <= 0 then
-        message = message .. sformat("Not enough cap time\n")
-      else
-        message = message .. sformat("Cap within %s\n", NS.formatTime(capTime))
-      end
-    else
-      message = message .. sformat("Cap within %s\n", NS.formatTime(ownTime))
-    end
+    message = message .. sformat("Cap within ~%s\n", NS.formatWinTime(capTime))
   end
 
   Bases:SetText(text, "%s", message)
@@ -169,7 +233,19 @@ end
 local function animationUpdate(frame, winTable, animationGroup, callbackFn)
   local t = GetTime()
 
-  if t >= frame.exp then
+  local currentKey = next(winTable)
+  if not currentKey or not winTable[currentKey] then
+    return
+  end
+
+  local winCondition = winTable[currentKey]
+
+  local driftTime
+  if NS.IN_GAME and (not NS.CUR_MAP or not NS.CUR_MAP.basesReset) then
+    driftTime = winCondition.driftTime
+  end
+
+  if t >= frame.exp and driftTime == nil then
     if animationGroup then
       animationGroup:Stop()
     end
@@ -180,19 +256,18 @@ local function animationUpdate(frame, winTable, animationGroup, callbackFn)
   local time = frame.exp - t
   frame.remaining = time
 
-  local currentKey = next(winTable)
-  if not currentKey or not winTable[currentKey] then
-    return
-  end
-
-  local winCondition = winTable[currentKey]
-  local ownTime = winCondition.ownTime - t
-  local isFirstIteration = true
+  local ownTime = winCondition.ownTime + (driftTime or 0) - t
 
   -- Check up to 5 win conditions (max bases)
   for _ = 1, 5 do
-    if ownTime > 0 or winCondition.bases == winCondition.maxBases then
-      if winCondition.winName == NS.PLAYER_FACTION then
+    if driftTime ~= nil or ownTime > 0 or winCondition.bases == winCondition.maxBases then
+      if NS.IN_GAME and NS.CUR_MAP and NS.CUR_MAP.basesReset then
+        if winCondition.winName == NS.PLAYER_FACTION then
+          blitzWinMessage(frame.text, winCondition)
+        else
+          blitzLoseMessage(frame.text, winCondition)
+        end
+      elseif winCondition.winName == NS.PLAYER_FACTION then
         winMessage(frame.text, winCondition)
       else
         loseMessage(frame.text, winCondition)
@@ -200,24 +275,15 @@ local function animationUpdate(frame, winTable, animationGroup, callbackFn)
       return
     end
 
-    -- Special handling for first iteration when timer expires
-    if isFirstIteration then
-      isFirstIteration = false
-      if NS.IN_GAME and NS.BASE_TIMER_EXPIRED == false then
-        NS.BASE_TIMER_EXPIRED = true
-        NS.Debug(
-          "OWNTIME EXPIRED -> triggering REFRESH, ownTime was:",
-          winCondition.ownTime - t,
-          "winTime was:",
-          winCondition.winTime - t,
-          "bases:",
-          winCondition.bases
-        )
-        if callbackFn then
-          callbackFn:BasePredictor(true)
-        end
+    if NS.IN_GAME and NS.BASE_TIMER_EXPIRED == false then
+      NS.BASE_TIMER_EXPIRED = true
+
+      if callbackFn and NS.CUR_MAP and NS.CUR_MAP.basesReset then
+        callbackFn:BasePredictor(true)
         return
       end
+
+      return
     end
 
     -- Try next base count
@@ -227,16 +293,29 @@ local function animationUpdate(frame, winTable, animationGroup, callbackFn)
     end
 
     winCondition = winTable[nextKey]
-    ownTime = winCondition.ownTime - t
-  end
 
-  NS.Debug("NO OPTIONS LEFT")
+    driftTime = nil
+    if NS.IN_GAME and (not NS.CUR_MAP or not NS.CUR_MAP.basesReset) then
+      driftTime = winCondition.driftTime
+    end
+
+    ownTime = winCondition.ownTime + (driftTime or 0) - t
+  end
 end
 
 function Bases:Start(duration, winTable, callbackFn)
   self:Stop(self, self.timerAnimationGroup)
 
-  self.remaining = mmin(mmax(0, duration), 1500)
+  local minDuration = 0
+  local maxDuration = 10000
+  local map = NS.CUR_MAP
+
+  if map and not map.basesReset and map.baseResources[1] then
+    local maxTicks = NS.getWinTicks(map.maxScore, 0, map.tickRate, map.baseResources[1])
+    maxDuration = NS.getWinTime(maxTicks, map.tickRate)
+  end
+
+  self.remaining = mmin(mmax(minDuration, duration), maxDuration)
   local time = self.remaining
   self.start = GetTime()
   self.exp = self.start + time
@@ -250,7 +329,13 @@ function Bases:Start(duration, winTable, callbackFn)
   if firstKey and winTable[firstKey] then
     local winCondition = winTable[firstKey]
 
-    if winCondition.winName == NS.PLAYER_FACTION then
+    if NS.IN_GAME and NS.CUR_MAP and NS.CUR_MAP.basesReset then
+      if winCondition.winName == NS.PLAYER_FACTION then
+        blitzWinMessage(self.text, winCondition)
+      else
+        blitzLoseMessage(self.text, winCondition)
+      end
+    elseif winCondition.winName == NS.PLAYER_FACTION then
       winMessage(self.text, winCondition)
     else
       loseMessage(self.text, winCondition)

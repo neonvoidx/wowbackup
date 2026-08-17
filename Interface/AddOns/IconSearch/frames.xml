@@ -1,0 +1,266 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
+..\..\FrameXML\UI.xsd">
+
+
+
+	<Button name="IconSelectorSectionTitleTemplate" virtual="true">
+		<Size x="474" y="36"/>
+		<Anchors>
+			<Anchor point="TOPLEFT" x="0" y="0"/>
+		</Anchors>
+		<ButtonText parentKey="ButtonText" nonspacewrap="true" justifyH="LEFT">
+			<Size x="234" y="10"/>
+			<Anchors>
+				<Anchor point="LEFT" x="18" y="1"/>
+			</Anchors>
+		</ButtonText>
+		<Layers>
+			<Layer level="OVERLAY">
+				<Texture parentKey="Background" atlas="UI-Character-Info-ItemLevel-Bounce" useAtlasSize="false" alpha="0.3">
+					<Size x="450" y="36"/>
+					<Anchors>
+						<Anchor point="LEFT" x="0" />
+					</Anchors>
+					<TexCoords left="0.5" right="1" top="0" bottom="1" />
+				</Texture>
+			</Layer>
+		</Layers>
+		<NormalTexture >
+			<Color r="0" g="0" b="0" a="1" />
+		</NormalTexture>
+		<HighlightTexture >
+			<Color r="1" g="1" b="1" a="0.1" />
+		</HighlightTexture>
+		<NormalFont style="Game15Font_Shadow"/>
+		<HighlightFont style="Game15Font_Shadow"/>
+	</Button>
+
+
+	<Frame name="IconSelectorSectionTemplate" mixin="IconSelectorSectionMixin" virtual="true">
+	
+		<Size x="474" y="36"/>
+		<Anchors>
+			<Anchor point="TOPLEFT" x="0" y="0"/>
+		</Anchors>
+		<Frames>
+			<Button parentKey="Title" inherits="IconSelectorSectionTitleTemplate"></Button>
+
+			<Frame parentKey="IconSelector" inherits="SelectorTemplate" mixin="IconSelectorMixin" >
+				<Anchors>
+					<Anchor point="TOPLEFT" x="16" y="-36"/>
+					<Anchor point="BOTTOMRIGHT" x="6" y="6"/>
+				</Anchors>
+				<Frames>
+					<Frame parentKey="NoSearchResultsText" hidden="true">
+						<Anchors>
+							<Anchor point="TOPLEFT" x="0" y="0"/>
+							<Anchor point="BOTTOMRIGHT" x="0" y="0"/>
+						</Anchors>
+						<Layers>
+							<Layer level="ARTWORK">
+								<FontString inherits="SystemFont_Med3" text="QUEST_LOG_NO_RESULTS" >
+									<Size x="450" y="36" />
+									<Anchors>
+										<Anchor point="TOP"  y="0"/>
+									</Anchors>
+								</FontString>
+							</Layer>
+						</Layers>
+					</Frame>
+				</Frames>
+				<Scripts>
+					<OnLoad method="OnLoad"/>
+				</Scripts>
+			</Frame>
+			
+		</Frames>
+		<Scripts>
+			<OnLoad method="OnLoad"/>
+		</Scripts>
+	</Frame>
+
+
+	<Frame name="IconSearchButtonTemplate" frameStrata="HIGH"   virtual="true" >
+		<Size x="45" y="45"/>
+		<Anchors>
+			<Anchor point="TOPLEFT" x="0" y="0"/>
+		</Anchors>
+		<Frames>
+			<Button parentKey="button" mixin="IconSearchButtonMixin" inherits="SelectorButtonTemplate"  >
+				<Anchors>
+					<Anchor point="CENTER" x="0" y="0"/>
+				</Anchors>
+				<Layers>
+					<Layer level="OVERLAY">
+						<FontString parentKey="Name" inherits="GameFontHighlightSmallOutline">
+							<Size x="36" y="10"/>
+							<Anchors>
+								<Anchor point="BOTTOM" x="0" y="2"/>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnEnter method="OnEnter"/>
+					<OnLeave method="OnLeave"/>
+					<OnClick method="OnClick"/>
+				</Scripts>
+			</Button>
+		</Frames>
+	</Frame>
+
+
+
+
+	<Frame name="IconSearchFrame" mixin="IconSearchMixin" inherits="TabSystemOwnerTemplate"  virtual="true">
+	
+		<Frames>
+
+			<Frame parentKey="IconSearchViewFrame"   mixin="IconSearchViewFrameMixin">
+				<Anchors>
+					<Anchor point="TOPLEFT" x="0" y="-3"/>
+					<Anchor point="RIGHT" x="-38" />
+					<Anchor point="BOTTOM" y="31"/>
+				</Anchors>
+				<Frames>
+
+					<EditBox parentKey="SearchBar" autoFocus="false" historyLines="1" bytes="64" mixin="IconSearchSearchBarMixin" inherits="SearchBoxTemplate">
+						<Size x="241" y="22"/>
+						<Anchors>
+							<Anchor point="TOPRIGHT" x="0" y="4" />
+						</Anchors>
+						<Scripts>
+							<OnLoad method="OnLoad" />
+							<OnEnterPressed method="OnEnterPressed" />
+							<OnKeyUp method="OnKeyUp" />
+						</Scripts>
+					</EditBox>
+					<Frame parentKey="NoSearchResultsText" hidden="true">
+						<Size x="400" y="40"/>
+						<Anchors>
+							<Anchor point="TOP" y="-40"/>
+						</Anchors>
+						<Frames>
+							<Button parentKey="button" frameStrata="HIGH" mixin="IconSearchNoResultButtonMixin"  inherits="UIPanelButtonTemplate" text="Try Blizzard">
+								<Size x="200" y="22"/>
+								<Anchors>
+									<Anchor point="TOP" y="-200"/>
+								</Anchors>
+								<Scripts>
+									<OnClick method="OnClick"/>
+								</Scripts>
+							</Button>
+				
+
+							<EditBox parentKey="IconIdInput" autoFocus="false" historyLines="1" bytes="64"  inherits="InputBoxInstructionsTemplate">
+								<Size x="200" y="22"/>
+								<Anchors>
+									<Anchor point="TOP" y="-100"/>
+								</Anchors>
+							</EditBox>
+							<Button parentKey="UseIdButton" mixin="IconSearchUseIdButtonMixin" inherits="UIPanelButtonTemplate" text="Use">
+								<Size x="200" y="22"/>
+								<Anchors>
+									<Anchor point="TOP" y="-135"/>
+								</Anchors>
+								<Scripts>
+									<OnClick method="OnClick"/>
+								</Scripts>
+							</Button>
+
+							<EditBox name="wowheadcopy" inherits="InputBoxInstructionsTemplate">
+								<Size x="300" y="30"/>
+								<Anchors>
+									<Anchor point="TOP" y="-300"/>
+								</Anchors>
+								<FontString inherits="GameFontHighlight"/>
+								<Scripts>
+								<OnLoad>
+										self:SetText("https://www.wowhead.com/icons");
+									</OnLoad>
+									<OnEscapePressed>
+										self:ClearFocus();
+									</OnEscapePressed>
+								</Scripts>
+							</EditBox>
+						</Frames>
+						<Layers>
+							<Layer level="ARTWORK">
+								<FontString inherits="SystemFont_Med3" text="QUEST_LOG_NO_RESULTS" >
+									<Size x="250"/>
+									<Anchors>
+										<Anchor point="TOP"  relativeKey="$parent.MacroSelector" relativePoint="TOP" y="-30"/>
+									</Anchors>
+								</FontString>
+								<FontString inherits="SystemFont_Med1" text="Enter an icon ID or NAME, you can use the icon search on wowhead.com/icons" >
+									<Size x="250"/>
+									<Anchors>
+										<Anchor point="TOP"  relativeKey="$parent.MacroSelector" relativePoint="TOP" y="-60"/>
+									</Anchors>
+								</FontString>
+								<FontString inherits="SystemFont_Med3" text="OR" >
+									<Size x="250"/>
+									<Anchors>
+										<Anchor point="TOP"  relativeKey="$parent.MacroSelector" relativePoint="TOP" y="-170"/>
+									</Anchors>
+								</FontString>
+							</Layer>
+						</Layers>
+					</Frame>
+					
+					<ScrollFrame parentKey="IconSectionSelector" mixin="IconSectionSelectorMixin" inherits="UIPanelScrollFrameCodeTemplate">
+						<Size x="474" y="361"/>
+						<Anchors>
+							<Anchor point="TOPLEFT" x="10" y="-25"/>
+							<Anchor point="BOTTOMRIGHT" x="0" y="0"/>
+						</Anchors>
+						<ScrollChild>
+							<Frame parentKey="Contents">
+								<Size x="474" y="0"/>
+								<Anchors>
+									<Anchor point="TOPLEFT" x="0" y="0"/>
+									<Anchor point="BOTTOMRIGHT" x="0" y="0"/>
+								</Anchors>
+							</Frame>
+						</ScrollChild>
+						<Scripts>
+							<OnLoad method="OnLoad"/>
+							<OnShow method="OnShow"/>
+							<OnUpdate method="OnUpdate"/>
+						</Scripts>
+					</ScrollFrame>
+				</Frames>
+				<Scripts>
+					<OnShow method="OnShow"/>
+				</Scripts>
+			</Frame>
+
+
+			<Frame parentKey="IconSearchBlizzadViewFrame"  >
+				<Size x="494" y="361"/>
+				<Anchors>
+					<Anchor point="TOPLEFT" x="0" y="0"/>
+				</Anchors>
+			</Frame>
+
+
+			<Frame parentKey="TabSystem" inherits="TabSystemTemplate">
+				<KeyValues>
+					<KeyValue key="minTabWidth" value="50" type="number"/>
+					<KeyValue key="maxTabWidth" value="150" type="number"/>
+					<KeyValue key="tabSelectSound" value="SOUNDKIT.UI_CLASS_TALENT_TAB" type="global"/>
+				</KeyValues>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="BOTTOMLEFT" x="22" y="2"/>
+				</Anchors>
+			</Frame>
+
+
+		</Frames>
+		<Scripts>
+			<OnLoad method="OnLoad"/>
+			<OnShow method="OnShow"/>
+		</Scripts>
+	</Frame>
+
+</Ui>

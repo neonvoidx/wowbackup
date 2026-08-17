@@ -13,6 +13,7 @@ local instanceIdToMapId = {
   -- Silvershard Mines
   [727] = {
     id = 423,
+    maxScore = 1500,
     maxCarts = 3,
     tickRate = 2,
     cartResources = {
@@ -55,6 +56,7 @@ end
 function SSM:ExitZone()
   if NS.db.global.maps.silvershardmines.enabled then
     NS.IS_SSM = false
+
     CartPrediction:StopInfoTracker()
   end
 end

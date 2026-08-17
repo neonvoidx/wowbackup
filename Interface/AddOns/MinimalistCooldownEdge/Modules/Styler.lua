@@ -10,9 +10,8 @@ local MCE = LibStub("AceAddon-3.0"):GetAddon(C.Addon.AceName)
 local Styler = MCE:NewModule("Styler")
 
 local wipe = wipe
-local C_Timer_After = C_Timer.After
+local RunAfter = addon.RunAfter
 
-local CATEGORY = C.Categories
 
 local Registry, BatchProcessor, StyleEngine, DurationColor, Classifier
 
@@ -33,7 +32,7 @@ function Styler:OnEnable()
     end)
 
     -- Initial adapter-driven discovery (short delay so frames exist)
-    C_Timer_After(2, function()
+    RunAfter(2, function()
         self:ForceUpdateAll(true)
     end)
 end
@@ -51,7 +50,11 @@ end
 
 function Styler:QueueUpdate(frame, forcedCategory)
     if not frame or MCE:IsForbiddenCached(frame) then return end
-    if Classifier and Classifier:IsBlacklisted(frame) then return end
+    local state = addon.frameState[frame]
+    if not (state and state.allowBlacklisted == true)
+       and Classifier and Classifier:IsBlacklisted(frame) then
+        return
+    end
     BatchProcessor:QueueUpdate(frame, forcedCategory)
 end
 

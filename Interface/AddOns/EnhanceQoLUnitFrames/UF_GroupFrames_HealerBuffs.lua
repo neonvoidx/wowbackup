@@ -64,6 +64,8 @@ local RULE_MATCH_ANY = "ANY"
 local RULE_MATCH_ALL = "ALL"
 local ICON_MODE_ALL = "ALL"
 local ICON_MODE_PRIORITY = "PRIORITY"
+local ICON_LAYOUT_MODE_MAX = "MAX"
+local ICON_LAYOUT_MODE_FIXED_SORT = "FIXED_SORT"
 local KIND_PARTY = "party"
 local KIND_RAID = "raid"
 
@@ -89,6 +91,9 @@ local DURATION_COLOR_STEP_MAX = 3
 local KIND_SET = {
 	[KIND_PARTY] = true,
 	[KIND_RAID] = true,
+	target = true,
+	focus = true,
+	boss = true,
 }
 
 local FRAME_STRATA_SET = {
@@ -165,6 +170,11 @@ HB.ICON_MODE_OPTIONS = {
 	{ value = ICON_MODE_PRIORITY, label = tr("UFGroupHealerBuffIconModePriority", "Show Highest Priority Only") },
 }
 
+HB.ICON_LAYOUT_MODE_OPTIONS = {
+	{ value = ICON_LAYOUT_MODE_MAX, label = tr("UFGroupHealerBuffIconLayoutModeMax", "Dynamic Maximum") },
+	{ value = ICON_LAYOUT_MODE_FIXED_SORT, label = tr("UFGroupHealerBuffIconLayoutModeFixedSort", "Fixed Rule Order (Higher resource usage)") },
+}
+
 HB.ANCHOR_OPTIONS = GFH and GFH.anchorOptions9
 	or {
 		{ value = "TOPLEFT", label = tr("Top Left", "Top Left") },
@@ -191,16 +201,15 @@ HB.GROWTH_OPTIONS = GFH and GFH.auraGrowthOptions
 	}
 
 local FAMILY_DATA = {
-	-- Shared class buffs
-	{ id = "druid_mark_of_the_wild", classToken = "DRUID", spellIds = { 1126 }, fallbackName = "Mark of the Wild", ignoreForNpcUnits = true, scanAllCasters = true },
-	{ id = "mage_arcane_intellect", classToken = "MAGE", spellIds = { 1459 }, fallbackName = "Arcane Intellect", ignoreForNpcUnits = true, scanAllCasters = true },
-	{ id = "priest_power_word_fortitude", classToken = "PRIEST", spellIds = { 21562 }, fallbackName = "Power Word: Fortitude", ignoreForNpcUnits = true, scanAllCasters = true },
-	{ id = "warrior_battle_shout", classToken = "WARRIOR", spellIds = { 6673 }, fallbackName = "Battle Shout", ignoreForNpcUnits = true, scanAllCasters = true },
+	-- Player-applied class buffs
+	{ id = "druid_mark_of_the_wild", classToken = "DRUID", spellIds = { 1126 }, fallbackName = "Mark of the Wild", ignoreForNpcUnits = true },
+	{ id = "mage_arcane_intellect", classToken = "MAGE", spellIds = { 1459 }, fallbackName = "Arcane Intellect", ignoreForNpcUnits = true },
+	{ id = "priest_power_word_fortitude", classToken = "PRIEST", spellIds = { 21562 }, fallbackName = "Power Word: Fortitude", ignoreForNpcUnits = true },
+	{ id = "warrior_battle_shout", classToken = "WARRIOR", spellIds = { 6673 }, fallbackName = "Battle Shout", ignoreForNpcUnits = true },
 	{
 		id = "evoker_blessing_of_the_bronze",
 		classToken = "EVOKER",
 		ignoreForNpcUnits = true,
-		scanAllCasters = true,
 		spellIds = {
 			381732,
 			381741,
@@ -218,7 +227,7 @@ local FAMILY_DATA = {
 		},
 		fallbackName = "Blessing of the Bronze",
 	},
-	{ id = "shaman_skyfury", classToken = "SHAMAN", spellIds = { 462854 }, fallbackName = "Skyfury", ignoreForNpcUnits = true, scanAllCasters = true },
+	{ id = "shaman_skyfury", classToken = "SHAMAN", spellIds = { 462854 }, fallbackName = "Skyfury", ignoreForNpcUnits = true },
 
 	-- Preservation Evoker
 	{ id = "evoker_pres_dream_breath", classToken = "EVOKER", spec = "Preservation", spellIds = { 355941 }, fallbackName = "Dream Breath" },
@@ -263,12 +272,29 @@ local FAMILY_DATA = {
 	{ id = "shaman_earthliving_weapon", classToken = "SHAMAN", spec = "Restoration", spellIds = { 382024 }, fallbackName = "Earthliving Weapon" },
 	{ id = "shaman_hydrobubble", classToken = "SHAMAN", spec = "Restoration", spellIds = { 444490 }, fallbackName = "Hydrobubble" },
 	-- Holy Paladin
-	{ id = "paladin_beacon_of_light", classToken = "PALADIN", spec = "Holy", spellIds = { 53563 }, fallbackName = "Beacon of Light" },
-	{ id = "paladin_eternal_flame", classToken = "PALADIN", spec = "Holy", spellIds = { 156322 }, fallbackName = "Eternal Flame" },
+	{
+		id = "paladin_beacon_of_light",
+		classToken = "PALADIN",
+		spec = "Holy",
+		spellIds = { 53563 },
+		knownSpellIds = { 53563 },
+		overrideBaseSpellId = 53563,
+		requiredOverrideSpellId = 53563,
+		fallbackName = "Beacon of Light",
+	},
+	{ id = "paladin_eternal_flame", classToken = "PALADIN", spec = "Holy", spellIds = { 156322 }, knownSpellIds = { 156322 }, fallbackName = "Eternal Flame" },
 	{ id = "paladin_dawnlight", classToken = "PALADIN", spec = "Holy", spellIds = { 431381 }, fallbackName = "Dawnlight" },
-	{ id = "paladin_beacon_of_faith", classToken = "PALADIN", spec = "Holy", spellIds = { 156910 }, fallbackName = "Beacon of Faith" },
+	{ id = "paladin_beacon_of_faith", classToken = "PALADIN", spec = "Holy", spellIds = { 156910 }, knownSpellIds = { 156910 }, fallbackName = "Beacon of Faith" },
 	{ id = "paladin_beacon_of_the_savior", classToken = "PALADIN", spec = "Holy", spellIds = { 1244893 }, fallbackName = "Beacon of the Savior" },
-	{ id = "paladin_beacon_of_virtue", classToken = "PALADIN", spec = "Holy", spellIds = { 200025 }, fallbackName = "Beacon of Virtue" },
+	{
+		id = "paladin_beacon_of_virtue",
+		classToken = "PALADIN",
+		spec = "Holy",
+		spellIds = { 200025 },
+		overrideBaseSpellId = 53563,
+		requiredOverrideSpellId = 200025,
+		fallbackName = "Beacon of Virtue",
+	},
 }
 
 local FAMILY_BY_ID = {}
@@ -388,6 +414,41 @@ local function familyMatchesPlayerSpec(family, classSpecMap, playerSpecId)
 	return true
 end
 
+function HB.IsPlayerFamilyAvailable(family)
+	if type(family) ~= "table" then return false end
+
+	local knownSpellIds = family.knownSpellIds
+	local playerSpellBank = Enum and Enum.SpellBookSpellBank and Enum.SpellBookSpellBank.Player
+	if type(knownSpellIds) == "table" and #knownSpellIds > 0 and playerSpellBank ~= nil
+		and C_SpellBook and type(C_SpellBook.IsSpellKnownOrInSpellBook) == "function" then
+		local hasKnownSpell = false
+		for i = 1, #knownSpellIds do
+			local spellId = tonumber(knownSpellIds[i])
+			if spellId and spellId > 0 then
+				local known = C_SpellBook.IsSpellKnownOrInSpellBook(spellId, playerSpellBank, true)
+				if not (issecretvalue and issecretvalue(known)) and known == true then
+					hasKnownSpell = true
+					break
+				end
+			end
+		end
+		if not hasKnownSpell then return false end
+	end
+
+	local requiredOverrideSpellId = tonumber(family.requiredOverrideSpellId)
+	local overrideBaseSpellId = tonumber(family.overrideBaseSpellId)
+	if requiredOverrideSpellId and requiredOverrideSpellId > 0 and overrideBaseSpellId and overrideBaseSpellId > 0
+		and C_Spell and type(C_Spell.GetOverrideSpell) == "function" then
+		local overrideSpellId = C_Spell.GetOverrideSpell(overrideBaseSpellId, 0, true)
+		if not (issecretvalue and issecretvalue(overrideSpellId)) then
+			overrideSpellId = tonumber(overrideSpellId)
+			if overrideSpellId ~= requiredOverrideSpellId then return false end
+		end
+	end
+
+	return true
+end
+
 local function canPlayerProvideFamily(familyId, source)
 	local family = HB.ResolveFamily(familyId, source)
 	if not family then return false end
@@ -404,13 +465,18 @@ local function canPlayerProvideFamily(familyId, source)
 		if not familyMatchesPlayerSpec(family, classSpecMap, playerSpecId) then return false end
 	end
 
-	return true
+	return HB.IsPlayerFamilyAvailable(family)
 end
 
 local _playerFamilyProvisionCache = {
 	key = nil,
 	map = nil,
 }
+
+function HB.InvalidatePlayerFamilyProvisionCache()
+	_playerFamilyProvisionCache.key = nil
+	_playerFamilyProvisionCache.map = nil
+end
 
 local function getPlayerFamilyProvisionMap()
 	local classToken = addon.variables and addon.variables.unitClass
@@ -435,9 +501,9 @@ local function getPlayerFamilyProvisionMap()
 			if tostring(family.classToken) ~= classToken then
 				map[familyIdKey] = false
 			elseif PROVIDER_CLASS_IGNORES_SPEC[classToken] then
-				map[familyIdKey] = true
+				map[familyIdKey] = HB.IsPlayerFamilyAvailable(family)
 			else
-				map[familyIdKey] = familyMatchesPlayerSpec(family, specMap, specId)
+				map[familyIdKey] = familyMatchesPlayerSpec(family, specMap, specId) and HB.IsPlayerFamilyAvailable(family)
 			end
 		end
 	end
@@ -453,6 +519,8 @@ local function canPlayerProvideFamilyCached(familyId, source)
 	if map == nil then return false end
 	return map[tostring(familyId)] == true
 end
+
+HB.CanPlayerProvideFamily = canPlayerProvideFamilyCached
 
 local function wipeTable(tbl)
 	if not tbl then return end
@@ -519,6 +587,13 @@ local function normalizeIconMode(value)
 	local mode = tostring(value or ICON_MODE_ALL):upper()
 	if ICON_MODE_SET[mode] then return mode end
 	return ICON_MODE_ALL
+end
+
+local function normalizeIconLayoutMode(value)
+	local mode = tostring(value or ICON_LAYOUT_MODE_MAX):upper()
+	if mode == "FIXED" then mode = ICON_LAYOUT_MODE_FIXED_SORT end
+	if mode == ICON_LAYOUT_MODE_MAX or mode == ICON_LAYOUT_MODE_FIXED_SORT then return mode end
+	return ICON_LAYOUT_MODE_MAX
 end
 
 local function normalizeAnchor(value)
@@ -775,7 +850,7 @@ end
 local function newPlacementConfig()
 	return {
 		enabled = false,
-		version = 1,
+		version = 2,
 		groupsById = {},
 		groupOrder = {},
 		rulesById = {},
@@ -824,6 +899,7 @@ function HB.CreateDefaultGroup(id)
 		indicatorBorderColor = { 0, 0, 0, 0.95 },
 		ruleMatch = RULE_MATCH_ANY,
 		iconMode = ICON_MODE_ALL,
+		iconLayoutMode = ICON_LAYOUT_MODE_MAX,
 		showCooldownSwipe = true,
 		showCooldownEdge = true,
 		showCooldownBling = true,
@@ -848,6 +924,9 @@ function HB.CreateDefaultRule(id, familyId, groupId)
 		enabled = true,
 		appliesParty = true,
 		appliesRaid = true,
+		appliesTarget = true,
+		appliesFocus = true,
+		appliesBoss = true,
 	}
 end
 
@@ -910,6 +989,8 @@ local function normalizeGroup(group, id)
 	group.indicatorBorderColor = normalizeColor(group.indicatorBorderColor or group.iconBorderColor, { 0, 0, 0, 0.95 })
 	group.ruleMatch = normalizeRuleMatch(group.ruleMatch or group.matchMode or group.ruleMode)
 	group.iconMode = normalizeIconMode(group.iconMode or group.iconDisplayMode or group.iconRuleMode)
+	group.iconLayoutMode = normalizeIconLayoutMode(group.iconLayoutMode or group.iconOrderMode)
+	group.iconOrderMode = nil
 	local showCooldownSwipe = group.showCooldownSwipe
 	if showCooldownSwipe == nil then showCooldownSwipe = group.cooldownSwipe end
 	group.showCooldownSwipe = showCooldownSwipe ~= false
@@ -986,6 +1067,9 @@ local function normalizeRule(rule, id)
 	if appliesRaid == nil then appliesRaid = true end
 	rule.appliesParty = appliesParty ~= false
 	rule.appliesRaid = appliesRaid ~= false
+	rule.appliesTarget = rule.appliesTarget == true
+	rule.appliesFocus = rule.appliesFocus == true
+	rule.appliesBoss = rule.appliesBoss == true
 	rule.appliesToParty = nil
 	rule.appliesToRaid = nil
 	rule.party = nil
@@ -1010,9 +1094,13 @@ function HB.EnsureConfig(cfg)
 		placement = newPlacementConfig()
 		cfg.healerBuffPlacement = placement
 	end
-	if placement._eqolNormalized == true and placement._eqolDirty ~= true then
+	if placement._eqolNormalized == true and placement._eqolDirty ~= true and (tonumber(placement.version) or 0) >= 2 then
 		if placement.enabled == nil then placement.enabled = false end
-		if placement.version == nil then placement.version = 1 end
+		placement.version = 2
+		for _, group in pairs(placement.groupsById or EMPTY) do
+			group.iconLayoutMode = normalizeIconLayoutMode(group.iconLayoutMode or group.iconOrderMode)
+			group.iconOrderMode = nil
+		end
 		for _, rule in pairs(placement.rulesById or EMPTY) do
 			local customFamilyId, customSpellId = HB.GetCustomSpellFamilyId(rule and rule.spellFamilyId)
 			if customFamilyId then HB._configuredCustomSpellToFamily[customSpellId] = customFamilyId end
@@ -1020,7 +1108,10 @@ function HB.EnsureConfig(cfg)
 		return placement
 	end
 	if placement.enabled == nil then placement.enabled = false end
-	if placement.version == nil then placement.version = 1 end
+	placement.includeTarget = nil
+	placement.includeFocus = nil
+	placement.includeBoss = nil
+	placement.version = 2
 	placement.groupsById = type(placement.groupsById) == "table" and placement.groupsById or {}
 	placement.groupOrder = type(placement.groupOrder) == "table" and placement.groupOrder or {}
 	placement.rulesById = type(placement.rulesById) == "table" and placement.rulesById or {}
@@ -1109,6 +1200,9 @@ local function ruleAppliesToKind(rule, kind)
 	if not rule then return false end
 	if kind == KIND_PARTY then return rule.appliesParty ~= false end
 	if kind == KIND_RAID then return rule.appliesRaid ~= false end
+	if kind == "target" then return rule.appliesTarget == true end
+	if kind == "focus" then return rule.appliesFocus == true end
+	if kind == "boss" then return rule.appliesBoss == true end
 	return false
 end
 
@@ -3569,7 +3663,13 @@ function HB.GetCompiledPositiveSpellIDs(compiled, suppressedOnly)
 end
 
 function HB.GetManagedSuppressedSpellIDs(compiled)
-	return HB.GetCompiledPositiveSpellIDs(compiled, true)
+	if not compiled then return nil end
+	local spellIDs = {}
+	for spellId, enabled in pairs(compiled.suppressedPositiveSpellIDs or EMPTY) do
+		local familyId = compiled.spellToFamily and compiled.spellToFamily[spellId]
+		if enabled == true and (familyId == nil or canPlayerProvideFamilyCached(familyId, compiled)) then spellIDs[spellId] = true end
+	end
+	return spellIDs
 end
 
 function HB.CompiledNeedsWideHelpfulScan(compiled) return compiled and compiled.needsWideHelpfulScan == true or false end

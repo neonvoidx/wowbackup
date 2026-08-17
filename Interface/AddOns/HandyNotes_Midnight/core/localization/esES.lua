@@ -3,7 +3,7 @@ local L = ns.NewLocale('esES')
 if not L then return end
 -- Spanish Translation by Krovikan EU-Minahonda
 -------------------------------------------------------------------------------
------------------------------------- GEAR -------------------------------------
+------------------------------------- GEAR ------------------------------------
 -------------------------------------------------------------------------------
 
 L['bag'] = 'Bolsa'
@@ -38,7 +38,7 @@ L['cloak'] = 'Capa'
 L['trinket'] = 'Abalorio'
 
 -------------------------------------------------------------------------------
----------------------------------- TOOLTIPS -----------------------------------
+----------------------------------- TOOLTIPS ----------------------------------
 -------------------------------------------------------------------------------
 
 L['activation_unknown'] = '¡Activación desconocida!'
@@ -76,7 +76,7 @@ L['quest_repeatable'] = 'Misión repetible'
 L['achievement'] = 'Logro'
 L['decor_owned'] = 'Conseguido: %s'
 
----------------------------------- LOCATION -----------------------------------
+----------------------------------- LOCATION ----------------------------------
 L['in_cave'] = 'En una cueva.'
 L['in_small_cave'] = 'En una cueva pequeña.'
 L['in_water_cave'] = 'En una cueva submarina.'
@@ -84,14 +84,16 @@ L['in_waterfall_cave'] = 'En una cueva detrás de una cascada.'
 L['in_water'] = 'Bajo el agua.'
 L['in_building'] = 'En el edificio.'
 
------------------------------------- TIME -------------------------------------
-L['now'] = 'Ahora'
+------------------------------------- TIME ------------------------------------
+L['starts_in'] = 'Comienza en:'
+L['time_remaining'] = 'Tiempo restante:'
+L['next_time'] = 'Siguiente:'
 L['hourly'] = 'Horaria'
 L['daily'] = 'Diaria'
 L['weekly'] = 'Semanal'
 
-L['time_format_12hrs'] = '%I:%M %p - %d/%m hora local'
-L['time_format_24hrs'] = '%H:%M - %d/%m hora local'
+L['time_format_12hrs'] = '%I:%M %p - %d/%m hora del servidor'
+L['time_format_24hrs'] = '%H:%M - %d/%m hora del servidor'
 
 ----------------------------------- REWARDS -----------------------------------
 L['decor'] = 'Adorno para los hogares'
@@ -114,7 +116,7 @@ L['follower_type_follower'] = 'Seguidor'
 L['follower_type_champion'] = 'Campeón'
 L['follower_type_companion'] = 'Compañero'
 
---------------------------------- REPUTATION ----------------------------------
+---------------------------------- REPUTATION ---------------------------------
 L['rep_honored'] = 'Honorable'
 L['rep_revered'] = 'Reverenciado'
 L['rep_exalted'] = 'Exaltado'
@@ -222,6 +224,8 @@ L['options_transmog_rewards'] = 'Mostrar recompensas de transfiguraciones'
 L['options_transmog_rewards_desc'] = 'Muestra las recompensas de transfiguraciones en las notas y rastrea el estado de si ha sido aprendida.'
 L['options_all_transmog_rewards'] = 'Mostrar las recompensas de transfiguraciones que no pueden conseguirse'
 L['options_all_transmog_rewards_desc'] = 'Muestra las recompensas de transfiguraciones conseguibles por otras clases.'
+L['options_shared_appearances'] = 'Las transfiguraciones compartidas por múltiples objetos cuentan como conocidas.'
+L['options_shared_appearances_desc'] = 'Cuando está activado, coleccionar una transfiguración compartida por otro objeto, marcará esa recompensa como consegida.'
 L['options_rep_rewards'] = 'Mostrar recompensas de reputaciones'
 L['options_rep_rewards_desc'] = 'Muestra las recompensas de reputaciones en las notas y rastrea el estado de si ha sido conseguida.'
 L['options_claimed_rep_rewards'] = 'Mostrar recompensas de reputación reclamadas'
@@ -238,7 +242,7 @@ L['options_icons_treasures'] = 'Tesoros'
 L['options_icons_vendors_desc'] = 'Muestra dónde están los vendedores.'
 L['options_icons_vendors'] = 'Vendedores'
 
----------------------------------- FOCUS ---------------------------------
+------------------------------------ FOCUS ------------------------------------
 
 L['options_focus_settings'] = 'Lugares de interés'
 L['options_poi_color'] = 'Color de los lugares de interés'
@@ -248,7 +252,7 @@ L['options_path_color_desc'] = 'Establece el color para los caminos cuando un ic
 L['options_reset_poi_colors'] = 'Resetear colores'
 L['options_reset_poi_colors_desc'] = 'Establece los colores de encima a sus valores por defecto.'
 
----------------------------------- TOOLTIP ---------------------------------
+----------------------------------- TOOLTIP -----------------------------------
 
 L['options_tooltip_settings'] = 'Descripción'
 L['options_toggle_show_loot'] = 'Mostrar el botín'

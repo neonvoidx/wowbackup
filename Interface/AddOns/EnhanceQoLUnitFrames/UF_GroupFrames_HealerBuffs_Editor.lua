@@ -1159,13 +1159,13 @@ function Editor:EnsureFrame()
 	applyPanelBorder(frame)
 	frame:Hide()
 
-	local title = createLabel(frame, tr("UFGroupHealerBuffEditorTitle", "Healer Buff Placement"), 15, "OUTLINE")
+	local title = createLabel(frame, tr("UFGroupHealerBuffEditorTitle", "Buff Placement"), 15, "OUTLINE")
 	title:SetPoint("TOPLEFT", 18, -14)
 	frame.Title = title
 
 	local subtitle = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 	subtitle:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -6)
-	subtitle:SetText(tr("UFGroupHealerBuffEditorSubtitle", "Configure shared spell-family placements for Party and Raid frames."))
+	subtitle:SetText(tr("UFGroupHealerBuffEditorSubtitle", "Configure shared spell-family placements for Party, Raid, and selected friendly unit frames."))
 	subtitle:SetTextColor(0.75, 0.75, 0.75, 1)
 	frame.Subtitle = subtitle
 
@@ -1205,10 +1205,10 @@ function Editor:EnsureFrame()
 
 	local kindValue = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 	kindValue:SetPoint("LEFT", kindLabel, "RIGHT", 8, 0)
-	kindValue:SetText(tr("UFGroupHealerBuffEditorScopeShared", "Shared (Party + Raid)"))
+	kindValue:SetText(tr("UFGroupHealerBuffEditorScopeShared", "Shared rules"))
 	frame.KindValue = kindValue
 
-	local enabledCheck = createCheck(frame, tr("UFGroupHealerBuffEditorEnabled", "Enable Healer Buff Placement"))
+	local enabledCheck = createCheck(frame, tr("UFGroupHealerBuffEditorEnabled", "Enable Buff Placement"))
 	enabledCheck:SetPoint("LEFT", kindValue, "RIGHT", 20, 0)
 	frame.EnabledCheck = enabledCheck
 
@@ -1595,6 +1595,12 @@ function Editor:EnsureFrame()
 	controls.GroupGrowth = createDropdown(groupControlParent, 160)
 	controls.GroupGrowth:SetPoint("TOPLEFT", controls.GroupGrowthLabel, "TOPRIGHT", 0, 12)
 
+	controls.IconLayoutModeLabel = groupControlParent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	controls.IconLayoutModeLabel:SetPoint("TOPLEFT", controls.GroupGrowthLabel, "BOTTOMLEFT", 0, -18)
+	controls.IconLayoutModeLabel:SetText(tr("UFGroupHealerBuffEditorIconLayoutMode", "Icon Layout"))
+	controls.IconLayoutMode = createDropdown(groupControlParent, 250)
+	controls.IconLayoutMode:SetPoint("TOPLEFT", controls.IconLayoutModeLabel, "TOPRIGHT", 0, 12)
+
 	controls.GroupBarOrientationLabel = groupControlParent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	controls.GroupBarOrientationLabel:SetPoint("TOPLEFT", controls.GroupGrowthLabel, "BOTTOMLEFT", 0, -18)
 	controls.GroupBarOrientationLabel:SetText(tr("UFGroupHealerBuffEditorBarOrientation", "Bar Orientation"))
@@ -1763,6 +1769,7 @@ function Editor:EnsureFrame()
 		placeDropdown(controls.GroupAnchorLabel, controls.GroupAnchor)
 		placeCheck(controls.GroupAnchorOutside)
 		placeDropdown(controls.GroupGrowthLabel, controls.GroupGrowth)
+		placeDropdown(controls.IconLayoutModeLabel, controls.IconLayoutMode)
 		placeDropdown(controls.GroupBarOrientationLabel, controls.GroupBarOrientation)
 
 		placeSlider(controls.PerRowLabel, controls.PerRow, controls.PerRowValue)
@@ -1877,10 +1884,19 @@ function Editor:EnsureFrame()
 	controls.RuleAppliesParty:SetPoint("TOPLEFT", controls.RuleMissingDesaturate, "BOTTOMLEFT", -16, -6)
 
 	controls.RuleAppliesRaid = createCheck(ruleControlParent, tr("Raid", "Raid"))
-	controls.RuleAppliesRaid:SetPoint("TOPLEFT", controls.RuleAppliesParty, "BOTTOMLEFT", 0, -6)
+	controls.RuleAppliesRaid:SetPoint("LEFT", controls.RuleAppliesParty.Text, "RIGHT", 12, 0)
+
+	controls.RuleAppliesTarget = createCheck(ruleControlParent, _G.TARGET or "Target")
+	controls.RuleAppliesTarget:SetPoint("LEFT", controls.RuleAppliesRaid.Text, "RIGHT", 12, 0)
+
+	controls.RuleAppliesFocus = createCheck(ruleControlParent, _G.FOCUS or "Focus")
+	controls.RuleAppliesFocus:SetPoint("LEFT", controls.RuleAppliesTarget.Text, "RIGHT", 12, 0)
+
+	controls.RuleAppliesBoss = createCheck(ruleControlParent, _G.BOSS or "Boss")
+	controls.RuleAppliesBoss:SetPoint("LEFT", controls.RuleAppliesFocus.Text, "RIGHT", 12, 0)
 
 	controls.RuleIconModeLabel = ruleControlParent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-	controls.RuleIconModeLabel:SetPoint("TOPLEFT", controls.RuleAppliesRaid, "BOTTOMLEFT", 0, -14)
+	controls.RuleIconModeLabel:SetPoint("TOPLEFT", controls.RuleAppliesParty, "BOTTOMLEFT", 0, -14)
 	controls.RuleIconModeLabel:SetText(tr("UFGroupHealerBuffEditorIconRuleMode", "Icon Rule Mode"))
 	controls.RuleIconMode = createDropdown(ruleControlParent, 260)
 	controls.RuleIconMode:SetPoint("TOPLEFT", controls.RuleIconModeLabel, "TOPRIGHT", 0, 12)
@@ -1888,7 +1904,7 @@ function Editor:EnsureFrame()
 	controls.RuleIconMode:Hide()
 
 	controls.RuleMatchLabel = ruleControlParent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-	controls.RuleMatchLabel:SetPoint("TOPLEFT", controls.RuleAppliesRaid, "BOTTOMLEFT", 0, -14)
+	controls.RuleMatchLabel:SetPoint("TOPLEFT", controls.RuleAppliesParty, "BOTTOMLEFT", 0, -14)
 	controls.RuleMatchLabel:SetText(tr("UFGroupHealerBuffEditorTintTrigger", "Tint Trigger"))
 	controls.RuleMatch = createDropdown(ruleControlParent, 260)
 	controls.RuleMatch:SetPoint("TOPLEFT", controls.RuleMatchLabel, "TOPRIGHT", 0, 12)
@@ -1896,7 +1912,7 @@ function Editor:EnsureFrame()
 	controls.RuleMatch:Hide()
 
 	controls.RuleColorLabel = ruleControlParent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-	controls.RuleColorLabel:SetPoint("TOPLEFT", controls.RuleAppliesRaid, "BOTTOMLEFT", 0, -14)
+	controls.RuleColorLabel:SetPoint("TOPLEFT", controls.RuleAppliesParty, "BOTTOMLEFT", 0, -14)
 	controls.RuleColorLabel:SetText(tr("UFGroupHealerBuffEditorSpellColor", "Spell Color"))
 	controls.RuleColorButton = createColorSwatchButton(ruleControlParent, 24)
 	controls.RuleColorButton:SetPoint("LEFT", controls.RuleColorLabel, "RIGHT", 10, 0)
@@ -1925,7 +1941,7 @@ function Editor:EnsureFrame()
 	end
 
 	controls.RuleInfo = ruleControlParent:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-	controls.RuleInfo:SetPoint("TOPLEFT", controls.RuleAppliesRaid, "BOTTOMLEFT", 0, -10)
+	controls.RuleInfo:SetPoint("TOPLEFT", controls.RuleAppliesParty, "BOTTOMLEFT", 0, -10)
 	controls.RuleInfo:SetPoint("RIGHT", ruleControlParent, "RIGHT", -4, 0)
 	controls.RuleInfo:SetJustifyH("LEFT")
 	controls.RuleInfo:SetTextColor(0.75, 0.75, 0.75, 1)
@@ -1990,7 +2006,18 @@ function Editor:EnsureFrame()
 			if existingRuleId then return existingRuleId, false end
 			local newId = HB.GetNextRuleId and HB.GetNextRuleId(placement) or tostring((#placement.ruleOrder or 0) + 1)
 			placement.rulesById[newId] = HB.CreateDefaultRule and HB.CreateDefaultRule(newId, targetFamilyId, groupId)
-				or { id = newId, spellFamilyId = targetFamilyId, groupId = groupId, ["not"] = false, enabled = true, appliesParty = true, appliesRaid = true }
+				or {
+					id = newId,
+					spellFamilyId = targetFamilyId,
+					groupId = groupId,
+					["not"] = false,
+					enabled = true,
+					appliesParty = true,
+					appliesRaid = true,
+					appliesTarget = true,
+					appliesFocus = true,
+					appliesBoss = true,
+				}
 			tinsert(placement.ruleOrder, newId)
 			return newId, true
 		end
@@ -3084,31 +3111,25 @@ function Editor:EnsureFrame()
 		end)
 	end)
 
-	controls.RuleAppliesParty:SetScript("OnClick", function(self)
-		local rule = ruleFromSelection()
-		if not rule then return end
-		rule.appliesParty = self:GetChecked() == true
-		if rule.appliesParty == false and rule.appliesRaid == false then
-			rule.appliesRaid = true
-			controls.RuleAppliesRaid:SetChecked(true)
-		end
-		Editor:RefreshRuleList()
-		Editor:RefreshPreview()
-		Editor:RefreshRuntimeNow()
-	end)
-
-	controls.RuleAppliesRaid:SetScript("OnClick", function(self)
-		local rule = ruleFromSelection()
-		if not rule then return end
-		rule.appliesRaid = self:GetChecked() == true
-		if rule.appliesRaid == false and rule.appliesParty == false then
-			rule.appliesParty = true
-			controls.RuleAppliesParty:SetChecked(true)
-		end
-		Editor:RefreshRuleList()
-		Editor:RefreshPreview()
-		Editor:RefreshRuntimeNow()
-	end)
+	local function bindRuleScope(control, field)
+		control:SetScript("OnClick", function(self)
+			local rule = ruleFromSelection()
+			if not rule then return end
+			rule[field] = self:GetChecked() == true
+			if rule.appliesParty ~= true and rule.appliesRaid ~= true and rule.appliesTarget ~= true and rule.appliesFocus ~= true and rule.appliesBoss ~= true then
+				rule[field] = true
+				self:SetChecked(true)
+			end
+			Editor:RefreshRuleList()
+			Editor:RefreshPreview()
+			Editor:RefreshRuntimeNow()
+		end)
+	end
+	bindRuleScope(controls.RuleAppliesParty, "appliesParty")
+	bindRuleScope(controls.RuleAppliesRaid, "appliesRaid")
+	bindRuleScope(controls.RuleAppliesTarget, "appliesTarget")
+	bindRuleScope(controls.RuleAppliesFocus, "appliesFocus")
+	bindRuleScope(controls.RuleAppliesBoss, "appliesBoss")
 
 	setDropdown(controls.RuleIconMode, HB.ICON_MODE_OPTIONS or {
 		{ value = "ALL", label = tr("UFGroupHealerBuffIconModeAll", "Show All Active Spells") },
@@ -3120,6 +3141,21 @@ function Editor:EnsureFrame()
 		local group = groupId and placement.groupsById and placement.groupsById[groupId]
 		if not group then return end
 		group.iconMode = tostring(value or "ALL"):upper()
+		Editor:RefreshGroupControls()
+		Editor:RefreshRuleControls()
+		Editor:RefreshPreview()
+		Editor:RefreshRuntimeNow()
+	end)
+	setDropdown(controls.IconLayoutMode, HB.ICON_LAYOUT_MODE_OPTIONS or {
+		{ value = "MAX", label = tr("UFGroupHealerBuffIconLayoutModeMax", "Dynamic Maximum") },
+		{ value = "FIXED_SORT", label = tr("UFGroupHealerBuffIconLayoutModeFixedSort", "Fixed Rule Order (Higher resource usage)") },
+	}, nil, function(value)
+		local _, placement = Editor:GetContext()
+		if not placement then return end
+		local groupId = Editor.selectedGroupId
+		local group = groupId and placement.groupsById and placement.groupsById[groupId]
+		if not group then return end
+		group.iconLayoutMode = tostring(value or "MAX"):upper()
 		Editor:RefreshGroupControls()
 		Editor:RefreshRuleControls()
 		Editor:RefreshPreview()
@@ -3245,16 +3281,13 @@ function Editor:RefreshRuleList()
 			local familyLabel = getFamilyLabel(rule.spellFamilyId, true)
 			local marker = rule["not"] and tr("UFGroupHealerBuffEditorRuleMarkerNot", " [NOT]") or ""
 			local state = (rule.enabled ~= false) and "" or tr("UFGroupHealerBuffEditorRuleMarkerOff", " [OFF]")
-			local appliesParty = rule.appliesParty ~= false
-			local appliesRaid = rule.appliesRaid ~= false
-			local scope = tr("UFGroupHealerBuffEditorScopeMarkerNone", " [NONE]")
-			if appliesParty and appliesRaid then
-				scope = tr("UFGroupHealerBuffEditorScopeMarkerPartyRaid", " [P/R]")
-			elseif appliesParty then
-				scope = tr("UFGroupHealerBuffEditorScopeMarkerParty", " [P]")
-			elseif appliesRaid then
-				scope = tr("UFGroupHealerBuffEditorScopeMarkerRaid", " [R]")
-			end
+			local scopeParts = {}
+			if rule.appliesParty ~= false then scopeParts[#scopeParts + 1] = "P" end
+			if rule.appliesRaid ~= false then scopeParts[#scopeParts + 1] = "R" end
+			if rule.appliesTarget == true then scopeParts[#scopeParts + 1] = "T" end
+			if rule.appliesFocus == true then scopeParts[#scopeParts + 1] = "F" end
+			if rule.appliesBoss == true then scopeParts[#scopeParts + 1] = "B" end
+			local scope = #scopeParts > 0 and (" [" .. table.concat(scopeParts, "/") .. "]") or tr("UFGroupHealerBuffEditorScopeMarkerNone", " [NONE]")
 			local label = string.format(tr("UFGroupHealerBuffEditorRuleRowFormat", "%d. %s%s%s%s"), index, familyLabel, scope, marker, state)
 			row.Text:SetText(label)
 			if ruleId == self.selectedRuleId then
@@ -3286,12 +3319,15 @@ function Editor:RefreshRuleControls()
 	local rule = placement and self.selectedRuleId and placement.rulesById and placement.rulesById[self.selectedRuleId] or nil
 	local selectedGroup = placement and self.selectedGroupId and placement.groupsById and placement.groupsById[self.selectedGroupId] or nil
 	local selectedGroupStyle = tostring(selectedGroup and selectedGroup.style or "")
+	local selectedIconMode = tostring(selectedGroup and selectedGroup.iconMode or "ALL"):upper()
+	local usesManagedAuraContainers = addon.AuraCompat and addon.AuraCompat.ShouldUseAuraContainer and addon.AuraCompat:ShouldUseAuraContainer() == true
+	local showRuleNot = not usesManagedAuraContainers
 	local showIconRuleMode = selectedGroupStyle == "ICON" or selectedGroupStyle == "SQUARE"
-	local showMissingDesaturate = selectedGroupStyle == "ICON" and rule ~= nil and rule["not"] == true
+	local showMissingDesaturate = showRuleNot and selectedGroupStyle == "ICON" and rule ~= nil and rule["not"] == true
 	local showExpirationPulse = showIconRuleMode and rule ~= nil and rule["not"] ~= true
 	local showTintRuleMatch = selectedGroupStyle == "TINT"
 	local showRuleColor = styleSupportsRuleColor(selectedGroupStyle)
-	local showDurationColorSteps = showRuleColor and rule ~= nil and rule["not"] ~= true
+	local showDurationColorSteps = not usesManagedAuraContainers and showRuleColor and rule ~= nil and rule["not"] ~= true
 	local showBarDrainInfo = selectedGroupStyle == "BAR" and selectedGroup and selectedGroup.barDrainAnimation == true
 	local iconModeOptions = HB.ICON_MODE_OPTIONS
 		or {
@@ -3314,13 +3350,14 @@ function Editor:RefreshRuleControls()
 	setControlEnabled(controls.RuleMatch, showTintRuleMatch)
 	if showTintRuleMatch then setDropdown(controls.RuleMatch, ruleMatchOptions, tostring(selectedGroup.ruleMatch or "ANY"):upper(), controls.RuleMatch._eqolOnSelect) end
 
+	local ruleStateAnchor = showRuleNot and controls.RuleNot or controls.RuleEnabled
 	controls.RuleMissingDesaturate:ClearAllPoints()
-	if showMissingDesaturate then controls.RuleMissingDesaturate:SetPoint("TOPLEFT", controls.RuleNot, "BOTTOMLEFT", 16, -6) end
+	if showMissingDesaturate then controls.RuleMissingDesaturate:SetPoint("TOPLEFT", ruleStateAnchor, "BOTTOMLEFT", 16, -6) end
 	controls.RuleExpirationPulse:ClearAllPoints()
 	if showMissingDesaturate then
 		controls.RuleExpirationPulse:SetPoint("TOPLEFT", controls.RuleMissingDesaturate, "BOTTOMLEFT", -16, -6)
 	else
-		controls.RuleExpirationPulse:SetPoint("TOPLEFT", controls.RuleNot, "BOTTOMLEFT", 0, -6)
+		controls.RuleExpirationPulse:SetPoint("TOPLEFT", ruleStateAnchor, "BOTTOMLEFT", 0, -6)
 	end
 	controls.RuleExpirationPulseThresholdLabel:ClearAllPoints()
 	controls.RuleExpirationPulseThresholdLabel:SetPoint("TOPLEFT", controls.RuleExpirationPulse, "BOTTOMLEFT", 4, -18)
@@ -3342,10 +3379,16 @@ function Editor:RefreshRuleControls()
 	elseif showMissingDesaturate then
 		controls.RuleAppliesParty:SetPoint("TOPLEFT", controls.RuleMissingDesaturate, "BOTTOMLEFT", -16, -6)
 	else
-		controls.RuleAppliesParty:SetPoint("TOPLEFT", controls.RuleNot, "BOTTOMLEFT", 0, -6)
+		controls.RuleAppliesParty:SetPoint("TOPLEFT", ruleStateAnchor, "BOTTOMLEFT", 0, -6)
 	end
 	controls.RuleAppliesRaid:ClearAllPoints()
-	controls.RuleAppliesRaid:SetPoint("TOPLEFT", controls.RuleAppliesParty, "BOTTOMLEFT", 0, -6)
+	controls.RuleAppliesRaid:SetPoint("LEFT", controls.RuleAppliesParty.Text, "RIGHT", 12, 0)
+	controls.RuleAppliesTarget:ClearAllPoints()
+	controls.RuleAppliesTarget:SetPoint("LEFT", controls.RuleAppliesRaid.Text, "RIGHT", 12, 0)
+	controls.RuleAppliesFocus:ClearAllPoints()
+	controls.RuleAppliesFocus:SetPoint("LEFT", controls.RuleAppliesTarget.Text, "RIGHT", 12, 0)
+	controls.RuleAppliesBoss:ClearAllPoints()
+	controls.RuleAppliesBoss:SetPoint("LEFT", controls.RuleAppliesFocus.Text, "RIGHT", 12, 0)
 
 	controls.RuleColorLabel:ClearAllPoints()
 	if showTintRuleMatch then
@@ -3353,7 +3396,7 @@ function Editor:RefreshRuleControls()
 	elseif showIconRuleMode then
 		controls.RuleColorLabel:SetPoint("TOPLEFT", controls.RuleIconModeLabel, "BOTTOMLEFT", 0, -16)
 	else
-		controls.RuleColorLabel:SetPoint("TOPLEFT", controls.RuleAppliesRaid, "BOTTOMLEFT", 0, -14)
+		controls.RuleColorLabel:SetPoint("TOPLEFT", controls.RuleAppliesParty, "BOTTOMLEFT", 0, -14)
 	end
 	controls.RuleColorButton:ClearAllPoints()
 	controls.RuleColorButton:SetPoint("LEFT", controls.RuleColorLabel, "RIGHT", 10, 0)
@@ -3405,7 +3448,7 @@ function Editor:RefreshRuleControls()
 	elseif showIconRuleMode then
 		controls.RuleInfo:SetPoint("TOPLEFT", controls.RuleIconModeLabel, "BOTTOMLEFT", 0, -12)
 	else
-		controls.RuleInfo:SetPoint("TOPLEFT", controls.RuleAppliesRaid, "BOTTOMLEFT", 0, -12)
+		controls.RuleInfo:SetPoint("TOPLEFT", controls.RuleAppliesParty, "BOTTOMLEFT", 0, -12)
 	end
 	controls.RuleInfo:SetPoint("RIGHT", frame.SettingsPanel.RuleControlContent, "RIGHT", -4, 0)
 
@@ -3422,8 +3465,12 @@ function Editor:RefreshRuleControls()
 	setColorPreview(controls.RuleExpirationPulseColorButton, (rule and rule.expirationPulseColor) or { 1, 0.2, 0.2, 1 })
 	controls.RuleAppliesParty:SetChecked(rule and rule.appliesParty ~= false)
 	controls.RuleAppliesRaid:SetChecked(rule and rule.appliesRaid ~= false)
+	controls.RuleAppliesTarget:SetChecked(rule and rule.appliesTarget == true)
+	controls.RuleAppliesFocus:SetChecked(rule and rule.appliesFocus == true)
+	controls.RuleAppliesBoss:SetChecked(rule and rule.appliesBoss == true)
 	setControlEnabled(controls.RuleEnabled, rule ~= nil)
-	setControlEnabled(controls.RuleNot, rule ~= nil)
+	setControlVisible(controls.RuleNot, showRuleNot)
+	setControlEnabled(controls.RuleNot, showRuleNot and rule ~= nil)
 	setControlVisible(controls.RuleMissingDesaturate, showMissingDesaturate)
 	setControlEnabled(controls.RuleMissingDesaturate, showMissingDesaturate and rule ~= nil)
 	setControlVisible(controls.RuleExpirationPulse, showExpirationPulse)
@@ -3440,6 +3487,9 @@ function Editor:RefreshRuleControls()
 	setControlEnabled(controls.RuleExpirationPulseCountdownOnly, showExpirationPulse and rule and rule.expirationPulseEnabled == true)
 	setControlEnabled(controls.RuleAppliesParty, rule ~= nil)
 	setControlEnabled(controls.RuleAppliesRaid, rule ~= nil)
+	setControlEnabled(controls.RuleAppliesTarget, rule ~= nil)
+	setControlEnabled(controls.RuleAppliesFocus, rule ~= nil)
+	setControlEnabled(controls.RuleAppliesBoss, rule ~= nil)
 	setControlEnabled(frame.RulePanel and frame.RulePanel.AddButton, self.selectedGroupId ~= nil)
 	if controls.RuleInfo then
 		local groupLabel = placement and self.selectedGroupId and getGroupLabel(placement, self.selectedGroupId) or tr("UFGroupHealerBuffEditorSelectedIndicator", "selected indicator")
@@ -3448,48 +3498,61 @@ function Editor:RefreshRuleControls()
 				string.format(
 					tr(
 						"UFGroupHealerBuffEditorRuleInfoTintColor",
-						"Showing rules for %s. Scope is set per rule (Party/Raid). Tint can require any or all active spells. When multiple rules are active, color follows the first matching rule in this list. Spell Color overrides are per rule (right click to reset)."
+						"Showing rules for %s. Scope is set per rule (Party/Raid/Target/Focus/Boss). Tint can require any or all active spells. When multiple rules are active, color follows the first matching rule in this list. Spell Color overrides are per rule (right click to reset)."
 					),
 					groupLabel
 				)
 			)
-		elseif showRuleColor and showBarDrainInfo then
+		elseif showDurationColorSteps and showBarDrainInfo then
 			controls.RuleInfo:SetText(
 				string.format(
 						tr(
 							"UFGroupHealerBuffEditorRuleInfoBarDrainColor",
-							"Showing rules for %s. Scope is set per rule (Party/Raid). Color follows the first active rule in this list. Duration Color steps can override the color by remaining aura time. Drain animation follows the first active timed aura in this list. Spell Color overrides are per rule (right click to reset)."
+							"Showing rules for %s. Scope is set per rule (Party/Raid/Target/Focus/Boss). Color follows the first active rule in this list. Duration Color steps can override the color by remaining aura time. Drain animation follows the first active timed aura in this list. Spell Color overrides are per rule (right click to reset)."
 					),
 					groupLabel
 				)
 			)
 		elseif showTintRuleMatch then
 			controls.RuleInfo:SetText(
-				string.format(tr("UFGroupHealerBuffEditorRuleInfoTint", "Showing rules for %s. Scope is set per rule (Party/Raid). Tint can require any or all active spells."), groupLabel)
+				string.format(tr("UFGroupHealerBuffEditorRuleInfoTint", "Showing rules for %s. Scope is set per rule (Party/Raid/Target/Focus/Boss). Tint can require any or all active spells."), groupLabel)
 			)
-		elseif showRuleColor then
+		elseif showDurationColorSteps then
 			controls.RuleInfo:SetText(
 				string.format(
 						tr(
 							"UFGroupHealerBuffEditorRuleInfoSquare",
-							"Showing rules for %s. Scope is set per rule (Party/Raid). Priority follows the rule order in this list. Duration Color steps can override the color by remaining aura time. Spell Color overrides are per rule (right click to reset)."
+							"Showing rules for %s. Scope is set per rule (Party/Raid/Target/Focus/Boss). Priority follows the rule order in this list. Duration Color steps can override the color by remaining aura time. Spell Color overrides are per rule (right click to reset)."
 					),
 					groupLabel
 				)
 			)
 		elseif showIconRuleMode then
+			local usesRuleOrder = selectedGroupStyle == "SQUARE"
+				or selectedIconMode == "PRIORITY"
+				or (selectedGroupStyle == "ICON"
+					and selectedIconMode == "ALL"
+					and tostring(selectedGroup and selectedGroup.iconLayoutMode or "MAX"):upper() == "FIXED_SORT")
 			controls.RuleInfo:SetText(
-				string.format(tr("UFGroupHealerBuffEditorRuleInfoIcon", "Showing rules for %s. Scope is set per rule (Party/Raid). Priority follows the rule order in this list."), groupLabel)
+				string.format(
+					usesRuleOrder
+						and tr("UFGroupHealerBuffEditorRuleInfoIcon", "Showing rules for %s. Scope is set per rule (Party/Raid/Target/Focus/Boss). Priority follows the rule order in this list.")
+						or tr(
+							"UFGroupHealerBuffEditorRuleInfoIconDynamic",
+							"Showing rules for %s. Scope is set per rule (Party/Raid/Target/Focus/Boss). Active icons fill the configured maximum and use automatic ordering."
+						),
+					groupLabel
+				)
 			)
 		elseif showBarDrainInfo then
 			controls.RuleInfo:SetText(
 				string.format(
-					tr("UFGroupHealerBuffEditorRuleInfoBarDrain", "Showing rules for %s. Scope is set per rule (Party/Raid). Drain animation follows the first active timed aura in this list."),
+					tr("UFGroupHealerBuffEditorRuleInfoBarDrain", "Showing rules for %s. Scope is set per rule (Party/Raid/Target/Focus/Boss). Drain animation follows the first active timed aura in this list."),
 					groupLabel
 				)
 			)
 		else
-			controls.RuleInfo:SetText(string.format(tr("UFGroupHealerBuffEditorRuleInfoDefault", "Showing rules for %s. Scope is set per rule (Party/Raid). Add via +, remove via x."), groupLabel))
+			controls.RuleInfo:SetText(string.format(tr("UFGroupHealerBuffEditorRuleInfoDefault", "Showing rules for %s. Scope is set per rule (Party/Raid/Target/Focus/Boss). Add via +, remove via x."), groupLabel))
 		end
 	end
 	if frame.SettingsPanel and frame.SettingsPanel.RuleControlContent then
@@ -3552,6 +3615,9 @@ function Editor:RefreshGroupControls()
 		local style = tostring(group.style or "ICON"):upper()
 		group.iconMode = tostring(group.iconMode or "ALL"):upper()
 		local isPriorityIconMode = (style == "ICON" or style == "SQUARE") and group.iconMode == "PRIORITY"
+		group.iconLayoutMode = tostring(group.iconLayoutMode or "MAX"):upper()
+		local showIconLayoutMode = style == "ICON" and group.iconMode == "ALL"
+		local showDynamicMaximum = showIconLayoutMode and group.iconLayoutMode == "MAX"
 		local showBar = style == "BAR"
 		local showBarFillFrame = showBar
 		local showBarDimensions = showBar and group.barFillFrame ~= true
@@ -3576,6 +3642,7 @@ function Editor:RefreshGroupControls()
 		setDropdown(controls.GroupAnchor, HB.ANCHOR_OPTIONS, group.anchorPoint or "CENTER", controls.GroupAnchor._eqolOnSelect)
 		controls.GroupAnchorOutside:SetChecked(group.anchorOutside == true)
 		setDropdown(controls.GroupGrowth, HB.GROWTH_OPTIONS, group.growth or "RIGHTDOWN", controls.GroupGrowth._eqolOnSelect)
+		setDropdown(controls.IconLayoutMode, HB.ICON_LAYOUT_MODE_OPTIONS, group.iconLayoutMode, controls.IconLayoutMode._eqolOnSelect)
 		setDropdown(controls.GroupBarOrientation, HB.ORIENTATION_OPTIONS, group.barOrientation or "HORIZONTAL", controls.GroupBarOrientation._eqolOnSelect)
 
 		local preview = frame.PreviewPanel and frame.PreviewPanel.Frame and frame.PreviewPanel.Frame.UnitFrame
@@ -3701,9 +3768,10 @@ function Editor:RefreshGroupControls()
 		setFieldState(controls.GroupAnchorLabel, controls.GroupAnchor, showAnchor, true)
 		setCheckState(controls.GroupAnchorOutside, showAnchor, true, group.anchorOutside == true)
 		setFieldState(controls.GroupGrowthLabel, controls.GroupGrowth, showGrowth, true)
+		setFieldState(controls.IconLayoutModeLabel, controls.IconLayoutMode, showIconLayoutMode, true)
 		setFieldState(controls.GroupBarOrientationLabel, controls.GroupBarOrientation, showBar, true)
 		setSliderState(controls.PerRowLabel, controls.PerRow, controls.PerRowValue, showGrid, true)
-		setSliderState(controls.MaxLabel, controls.MaxCount, controls.MaxValue, showGrid, true)
+		setSliderState(controls.MaxLabel, controls.MaxCount, controls.MaxValue, showDynamicMaximum, true)
 		setSliderState(controls.SpacingLabel, controls.Spacing, controls.SpacingValue, showGrid, true)
 		setSliderState(controls.SizeLabel, controls.Size, controls.SizeValue, showSize, true)
 		setSliderState(controls.IconZoomLabel, controls.IconZoom, controls.IconZoomValue, showIconZoom, true)
@@ -3740,6 +3808,7 @@ function Editor:RefreshGroupControls()
 		setFieldState(controls.GroupAnchorLabel, controls.GroupAnchor, false, false)
 		setCheckState(controls.GroupAnchorOutside, false, false, false)
 		setFieldState(controls.GroupGrowthLabel, controls.GroupGrowth, false, false)
+		setFieldState(controls.IconLayoutModeLabel, controls.IconLayoutMode, false, false)
 		setFieldState(controls.GroupBarOrientationLabel, controls.GroupBarOrientation, false, false)
 		setSliderState(controls.PerRowLabel, controls.PerRow, controls.PerRowValue, false, false)
 		setSliderState(controls.MaxLabel, controls.MaxCount, controls.MaxValue, false, false)
@@ -4230,17 +4299,28 @@ local function ruleAppliesToPreviewKind(rule, kind)
 	kind = tostring(kind or "party"):lower()
 	if kind == "mt" or kind == "ma" then kind = "raid" end
 	if kind == "raid" then return rule.appliesRaid ~= false end
+	if kind == "target" then return rule.appliesTarget == true end
+	if kind == "focus" then return rule.appliesFocus == true end
+	if kind == "boss" then return rule.appliesBoss == true end
 	return rule.appliesParty ~= false
 end
 
 local function getRuleIdsForGroup(placement, groupId, kind, classToken)
 	local list = {}
+	local hasUnsupportedMissingRule = false
+	local usesManagedAuraContainers = addon.AuraCompat and addon.AuraCompat.ShouldUseAuraContainer and addon.AuraCompat:ShouldUseAuraContainer() == true
 	eachGroupRule(placement, groupId, function(ruleId, rule)
 		if rule and rule.enabled ~= false and ruleAppliesToPreviewKind(rule, kind) then
-			if classToken == nil or isRuleForClass(rule, classToken) then list[#list + 1] = ruleId end
+			if classToken == nil or isRuleForClass(rule, classToken) then
+				if usesManagedAuraContainers and rule["not"] == true then
+					hasUnsupportedMissingRule = true
+				else
+					list[#list + 1] = ruleId
+				end
+			end
 		end
 	end)
-	return list
+	return list, hasUnsupportedMissingRule
 end
 
 local function isPreviewRuleActive(rule)
@@ -4308,7 +4388,9 @@ function Editor:RefreshPreview()
 	for index = 1, #order do
 		local groupId = order[index]
 		local group = placement.groupsById and placement.groupsById[groupId]
-		if group and (previewAll or groupId == self.selectedGroupId) then
+		local previewRuleIds, hasUnsupportedMissingRule = getRuleIdsForGroup(placement, groupId, self.kind)
+		local hasOnlyUnsupportedMissingRules = hasUnsupportedMissingRule and #previewRuleIds == 0
+		if group and not hasOnlyUnsupportedMissingRules and (previewAll or groupId == self.selectedGroupId) then
 			local style = tostring(group.style or "ICON"):upper()
 			local iconMode = tostring(group.iconMode or "ALL"):upper()
 			local anchorPoint = group.anchorPoint or "CENTER"
@@ -4324,8 +4406,10 @@ function Editor:RefreshPreview()
 			local baseY = anchorY + y
 
 			if style == "ICON" or style == "SQUARE" then
-				local ruleIds = getRuleIdsForGroup(placement, group.id, self.kind)
+				local ruleIds = previewRuleIds
 				local isPriorityMode = iconMode == "PRIORITY"
+				local fixedOrder = not isPriorityMode
+					and (style == "SQUARE" or tostring(group.iconLayoutMode or "MAX"):upper() == "FIXED_SORT")
 				if isPriorityMode and #ruleIds > 1 then
 					for trim = #ruleIds, 2, -1 do
 						ruleIds[trim] = nil
@@ -4334,7 +4418,14 @@ function Editor:RefreshPreview()
 				local size = max(4, tonumber(group.size) or 16)
 				local spacing = max(0, tonumber(group.spacing) or 0)
 				local perRow = max(1, tonumber(group.perRow) or 1)
-				local maxIcons = max(0, tonumber(group.max) or 3)
+				local maxIcons
+				if isPriorityMode then
+					maxIcons = #ruleIds > 0 and max(0, tonumber(group.max) or 3) > 0 and 1 or 0
+				elseif fixedOrder then
+					maxIcons = #ruleIds
+				else
+					maxIcons = max(0, tonumber(group.max) or 3)
+				end
 				local previewCount = isPriorityMode and min(maxIcons, 1) or min(maxIcons, 3)
 				local shown
 				if isPriorityMode then
@@ -4488,7 +4579,7 @@ end
 function Editor:RefreshControls()
 	local frame = self:EnsureFrame()
 	local _, placement = self:GetContext()
-	if frame.KindValue then frame.KindValue:SetText(tr("UFGroupHealerBuffEditorScopeShared", "Shared (Party + Raid)")) end
+	if frame.KindValue then frame.KindValue:SetText(tr("UFGroupHealerBuffEditorScopeShared", "Shared rules")) end
 	if frame.EnabledCheck and placement then frame.EnabledCheck:SetChecked(placement.enabled == true) end
 	self:RefreshGroupControls()
 	self:RefreshRuleControls()

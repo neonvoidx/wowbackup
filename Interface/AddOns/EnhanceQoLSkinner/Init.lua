@@ -16,6 +16,12 @@ local L = LibStub("AceLocale-3.0"):GetLocale(parentAddonName)
 
 local function isCharacterFrameSkinEnabled() return addon.db and addon.db.skinnerCharacterFrameEnabled == true end
 
+local function isCharacterFrameSquareSlotBordersEnabled()
+	return isCharacterFrameSkinEnabled() and addon.db.skinnerCharacterFrameSquareSlotBorders == true
+end
+
+addon.Skinner.functions.IsCharacterFrameSquareSlotBordersEnabled = isCharacterFrameSquareSlotBordersEnabled
+
 local function isCharacterFrameAddonLoaded()
 	if C_AddOns and C_AddOns.IsAddOnLoaded then return C_AddOns.IsAddOnLoaded("Blizzard_UIPanels_Game") end
 	if IsAddOnLoaded then return IsAddOnLoaded("Blizzard_UIPanels_Game") end
@@ -102,6 +108,13 @@ local DEFAULT_SIDEBAR_TAB_HEIGHT = 35
 local DEFAULT_SIDEBAR_TABS_WIDTH = 168
 local DEFAULT_SIDEBAR_TABS_HEIGHT = 35
 
+local characterModelBackgroundTextures = {
+	"CharacterModelFrameBackgroundTopLeft",
+	"CharacterModelFrameBackgroundTopRight",
+	"CharacterModelFrameBackgroundBotLeft",
+	"CharacterModelFrameBackgroundBotRight",
+}
+
 local function getCharacterFrameSkinAlpha()
 	local alpha = addon.db and addon.db.skinnerCharacterFrameAlpha
 	if alpha == nil then return FLAT_PANEL_BG.a end
@@ -109,6 +122,14 @@ local function getCharacterFrameSkinAlpha()
 	if alpha < 0 then alpha = 0 end
 	if alpha > 1 then alpha = 1 end
 	return alpha
+end
+
+local function applyCharacterModelBackgroundAlpha()
+	local alpha = addon.db and addon.db.skinnerCharacterFrameDarkBackground == true and 0 or 1
+	for i = 1, #characterModelBackgroundTextures do
+		local texture = _G[characterModelBackgroundTextures[i]]
+		if texture and texture.SetAlpha then texture:SetAlpha(alpha) end
+	end
 end
 
 local function getCharacterFrameBorderSettings()
@@ -138,7 +159,7 @@ local function createFlatBorder(frame, key)
 		frame[key] = border
 	end
 	border:ClearAllPoints()
-	border:SetPoint("TOPLEFT", frame, "TOPLEFT", -size, size - 3)
+	border:SetPoint("TOPLEFT", frame, "TOPLEFT", -size, size - 4)
 	border:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", size, -size)
 	border:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = size })
 	border:SetBackdropBorderColor(color.r, color.g, color.b, color.a)
@@ -235,6 +256,65 @@ local function applyFlatBackground(frame, key, color, inset)
 	return bg
 end
 
+local function updateCharacterSlotQualityBorder(slot)
+	if not slot then return end
+
+	local enabled = isCharacterFrameSquareSlotBordersEnabled()
+	if InCombatLockdown and InCombatLockdown() then
+		if enabled or slot.eqolSquareQualityBorderActive then
+			local applySkin = addon.Skinner.functions and addon.Skinner.functions.ApplyCharacterFrameSkin
+			if applySkin then applySkin() end
+		end
+		return
+	end
+	local border = slot.eqolSquareQualityBorder
+	if not enabled then
+		if border then border:Hide() end
+		if slot.eqolSquareQualityBorderActive then
+			slot.eqolSquareQualityBorderActive = nil
+			if _G.SetItemButtonQuality then
+				_G.SetItemButtonQuality(
+					slot,
+					GetInventoryItemQuality("player", slot:GetID()),
+					GetInventoryItemID("player", slot:GetID()),
+					slot.HasPaperDollAzeriteItemOverlay
+				)
+			end
+			if _G.SetItemCraftingQualityOverlay and _G.GetInventoryItemLink then
+				_G.SetItemCraftingQualityOverlay(slot, _G.GetInventoryItemLink("player", slot:GetID()))
+			end
+		end
+		return
+	end
+
+	local quality = GetInventoryItemQuality("player", slot:GetID())
+	local colorManager = _G.ColorManager
+	local color = quality and colorManager and colorManager.GetColorDataForBagItemQuality and colorManager.GetColorDataForBagItemQuality(quality)
+	if not color and quality and C_Item and C_Item.GetItemQualityColor then
+		local r, g, b = C_Item.GetItemQualityColor(quality)
+		if r and g and b then color = { r = r, g = g, b = b, a = 1 } end
+	end
+
+	if slot.IconBorder then slot.IconBorder:Hide() end
+	slot.eqolSquareQualityBorderActive = true
+	if not color then
+		if border then border:Hide() end
+		return
+	end
+
+	if not border then
+		border = CreateFrame("Frame", nil, slot, "BackdropTemplate")
+		border:SetAllPoints(slot)
+		border:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = 1 })
+		border:EnableMouse(false)
+		slot.eqolSquareQualityBorder = border
+	end
+	border:SetFrameLevel((slot:GetFrameLevel() or 1) + 5)
+	border:SetBackdropBorderColor(color.r, color.g, color.b, color.a or 1)
+	border:Show()
+	if slot.rarityGlow then slot.rarityGlow:Hide() end
+end
+
 local function applyCharacterSlotFlatSkin(slot)
 	if not slot then return end
 	if not slot.eqolFlatSlot then
@@ -251,6 +331,7 @@ local function applyCharacterSlotFlatSkin(slot)
 		end
 	end
 	if slot.eqolFlatBorder then slot.eqolFlatBorder:Hide() end
+	updateCharacterSlotQualityBorder(slot)
 end
 
 local function applyFlatButtonSkin(button)
@@ -620,6 +701,7 @@ local function applyCharacterFrameFlatSkin()
 	else
 		frame.eqolBodyBg:SetColorTexture(FLAT_PANEL_BG.r, FLAT_PANEL_BG.g, FLAT_PANEL_BG.b, panelAlpha)
 	end
+	applyCharacterModelBackgroundAlpha()
 	applyCharacterTabsFlatSkin()
 	applyCharacterSidebarTabsFlatSkin()
 	applyCharacterStatsPaneFlatSkin()
@@ -677,6 +759,11 @@ local function stripCharacterSlotArtwork(slot)
 end
 
 local function stripCharacterSlotNormalTextures()
+	if _G.PaperDollItemSlotButton_Update and not addon.Skinner.variables.characterSlotQualityBorderHooked then
+		addon.Skinner.variables.characterSlotQualityBorderHooked = true
+		hooksecurefunc("PaperDollItemSlotButton_Update", updateCharacterSlotQualityBorder)
+	end
+
 	for _, name in ipairs(characterSlotNames) do
 		stripCharacterSlotArtwork(_G[name])
 	end
@@ -764,6 +851,8 @@ function addon.Skinner.functions.InitDB()
 	if addon.functions and addon.functions.InitDBValue then
 		addon.functions.InitDBValue("skinnerCharacterFrameEnabled", false)
 		addon.functions.InitDBValue("skinnerCharacterFrameAlpha", FLAT_PANEL_BG.a)
+		addon.functions.InitDBValue("skinnerCharacterFrameDarkBackground", false)
+		addon.functions.InitDBValue("skinnerCharacterFrameSquareSlotBorders", false)
 		addon.functions.InitDBValue("skinnerCharacterFrameBorderEnabled", true)
 		addon.functions.InitDBValue("skinnerCharacterFrameBorderSize", 1)
 		addon.functions.InitDBValue("skinnerCharacterFrameBorderColor", {
@@ -839,6 +928,41 @@ function addon.Skinner.functions.InitSettings()
 			if addon.Skinner and addon.Skinner.functions and addon.Skinner.functions.ApplyCharacterFrameSkin and isCharacterFrameSkinEnabled() then
 				addon.Skinner.functions.ApplyCharacterFrameSkin()
 			end
+		end,
+		element = characterFrameToggle and characterFrameToggle.element,
+		parentCheck = isCharacterFrameSkinSettingEnabled,
+		parentSection = expandable,
+	})
+
+	addon.functions.SettingsCreateCheckbox(category, {
+		var = "skinnerCharacterFrameDarkBackground",
+		text = L["skinnerCharacterFrameDarkBackground"],
+		desc = L["skinnerCharacterFrameDarkBackgroundDesc"],
+		default = false,
+		newTagID = "skinnerCharacterFrameDarkBackground",
+		func = function(value)
+			addon.db["skinnerCharacterFrameDarkBackground"] = value and true or false
+			if addon.Skinner and addon.Skinner.functions and addon.Skinner.functions.ApplyCharacterFrameSkin and isCharacterFrameSkinEnabled() then
+				addon.Skinner.functions.ApplyCharacterFrameSkin()
+			end
+		end,
+		element = characterFrameToggle and characterFrameToggle.element,
+		parentCheck = isCharacterFrameSkinSettingEnabled,
+		parentSection = expandable,
+	})
+
+	addon.functions.SettingsCreateCheckbox(category, {
+		var = "skinnerCharacterFrameSquareSlotBorders",
+		text = L["skinnerCharacterFrameSquareSlotBorders"],
+		desc = L["skinnerCharacterFrameSquareSlotBordersDesc"],
+		default = false,
+		newTagID = "skinnerCharacterFrameSquareSlotBorders",
+		func = function(value)
+			addon.db["skinnerCharacterFrameSquareSlotBorders"] = value and true or false
+			if addon.Skinner and addon.Skinner.functions and addon.Skinner.functions.ApplyCharacterFrameSkin and isCharacterFrameSkinEnabled() then
+				addon.Skinner.functions.ApplyCharacterFrameSkin()
+			end
+			if addon.functions and addon.functions.setCharFrame then addon.functions.setCharFrame() end
 		end,
 		element = characterFrameToggle and characterFrameToggle.element,
 		parentCheck = isCharacterFrameSkinSettingEnabled,

@@ -9,9 +9,7 @@ if GetLocale() ~= "deDE" then
 end
 
 L.ERR_SHARED_MODULE_NOT_FOUND = "|cFFFF0000ArenaDRNameplates:|r Shared-Modul nicht gefunden"
-L.ERR_REQUIRES_MIDNIGHT = "|cFFFF0000ArenaDRNameplates:|r Dieses Addon erfordert WoW Midnight (12.0.0+)"
 L.ERR_SETTINGS_UI_MODULE_NOT_LOADED = "|cFFFF0000ArenaDRNameplates:|r Einstellungs-UI-Modul nicht geladen"
-L.ERR_SETTINGS_API_NOT_AVAILABLE = "|cFFFF0000ArenaDRNameplates:|r Settings-API nicht verfügbar"
 L.WARN_HELPER_NOT_FOUND = "|cFFFFFF00ArenaDRNameplates:|r ArenaNameplateHelper nicht gefunden"
 L.WARN_SETTINGS_MENU_NOT_AVAILABLE = "|cFFFFFF00ArenaDRNameplates:|r Einstellungsmenü noch nicht verfügbar"
 L.MSG_SETTINGS_RESET = "|cFF00FF00ArenaDRNameplates:|r Einstellungen zurückgesetzt"

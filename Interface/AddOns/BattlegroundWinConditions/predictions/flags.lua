@@ -1,4 +1,4 @@
-local _, NS = ...
+local AddonName, NS = ...
 
 local pairs = pairs
 local tnumber = tonumber
@@ -20,7 +20,7 @@ local Stacks = NS.Stacks
 local FlagPrediction = {}
 NS.FlagPrediction = FlagPrediction
 
-local FlagsFrame = CreateFrame("Frame", "FlagsFrame")
+local FlagsFrame = CreateFrame("Frame", AddonName .. "FlagsFrame")
 FlagsFrame:SetScript("OnEvent", function(_, event, ...)
   if FlagPrediction[event] then
     FlagPrediction[event](FlagPrediction, ...)
@@ -410,10 +410,15 @@ do
         hScore = scoreInfo.rightBarValue -- Horde Bar
 
         if (aScore ~= prevAScore or hScore ~= prevHScore) and aScore < maxScore and hScore < maxScore then
+          local lastFlagCapBy
+          if aScore > prevAScore then
+            lastFlagCapBy = NS.ALLIANCE_NAME
+          elseif hScore > prevHScore then
+            lastFlagCapBy = NS.HORDE_NAME
+          end
+
           prevAScore = aScore
           prevHScore = hScore
-
-          NS.Debug("TRIGGERED", "aScore", aScore, "hScore", hScore)
 
           allyFlagCarrier = nil
           hordeFlagCarrier = nil
@@ -425,7 +430,7 @@ do
           currentStacks = 0
           NS.CURRENT_STACKS = currentStacks
           stopStacks()
-          self:GetRemainingTime(6, NS.HORDE_NAME)
+          self:GetRemainingTime(6, lastFlagCapBy)
         end
       end
     end
@@ -500,9 +505,9 @@ do
       currentStacks = 0
       NS.CURRENT_STACKS = currentStacks
 
+      self:GetTimeByMapID(curMap.id)
       self:GetScoreByMapID(curMap.id)
       self:GetObjectivesByMapID(curMap.id)
-      self:GetTimeByMapID(curMap.id)
 
       -- FlagsFrame:RegisterEvent("UNIT_AURA")
       FlagsFrame:RegisterEvent("UPDATE_UI_WIDGET")

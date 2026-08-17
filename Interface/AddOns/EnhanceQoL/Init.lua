@@ -66,12 +66,14 @@ addon.general.variables.autoOpen = {
 	[147361] = true, -- Legionsfall Chest (Paragon)
 	[152923] = true, -- Gleaming Footlocker (Paragon)
 	[152922] = true, -- Brittle Krokul Chest (Paragon)
+	[268297] = true, -- Rattling Bag o' Gold
 }
 
 local AceLocale = LibStub("AceLocale-3.0")
 addon.L = AceLocale:GetLocale(addonName)
 _G["BINDING_NAME_EQOL_TOGGLE_FRIENDLY_NPCS"] = _G.UNIT_NAMEPLATES_SHOW_FRIENDLY_NPCS
 _G["BINDING_NAME_EQOL_TOGGLE_DAMAGE_METER_PAUSE"] = addon.L["damageMeterPauseKeybind"] or "Pause or resume Damage Meter"
+_G["BINDING_NAME_EQOL_TOGGLE_DAMAGE_METER_VISIBILITY"] = addon.L["damageMeterToggleVisibilityKeybind"] or "Show or hide Damage Meter"
 addon.elements = {}
 addon.itemBagFilters = {}
 addon.itemBagFiltersQuality = {}

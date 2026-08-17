@@ -69,7 +69,7 @@ addon.BuffFoods.roleLabels = addon.BuffFoods.roleLabels
 		melee = ROLE_MELEE_LABEL and ROLE_DAMAGER_LABEL and (ROLE_MELEE_LABEL .. " " .. ROLE_DAMAGER_LABEL) or ROLE_MELEE_LABEL,
 	}
 
-local function foodEntry(key, familyKey, itemId, sortRank, isHearty)
+local function foodEntry(key, familyKey, itemId, sortRank, isHearty, isFeast)
 	return {
 		key = key,
 		familyKey = familyKey,
@@ -77,6 +77,7 @@ local function foodEntry(key, familyKey, itemId, sortRank, isHearty)
 		requiredLevel = 90,
 		sortRank = sortRank,
 		isHearty = isHearty == true,
+		isFeast = isFeast == true,
 	}
 end
 
@@ -85,14 +86,14 @@ end
 addon.BuffFoods.typeFoods = addon.BuffFoods.typeFoods
 	or {
 		highestSecondary = {
-			foodEntry("HeartyQueldoreiMedley90", "queldoreiMedley", 266986, 1650, true),
-			foodEntry("HeartyQueldoreiMedley", "queldoreiMedley", 242744, 1640, true),
-			foodEntry("HeartyBloomingFeast", "bloomingFeast", 242745, 1640, true),
+			foodEntry("HeartyQueldoreiMedley90", "queldoreiMedley", 266986, 1650, true, true),
+			foodEntry("HeartyQueldoreiMedley", "queldoreiMedley", 242744, 1640, true, true),
+			foodEntry("HeartyBloomingFeast", "bloomingFeast", 242745, 1640, true, true),
 			foodEntry("HeartyFloraFrenzy90A", "floraFrenzy", 268680, 1050, true),
 			foodEntry("HeartyFloraFrenzy90B", "floraFrenzy", 267000, 1050, true),
 			foodEntry("HeartyChampionsBento", "championsBento", 242746, 1040, true),
-			foodEntry("QueldoreiMedley", "queldoreiMedley", 242272, 940, false),
-			foodEntry("BloomingFeast", "bloomingFeast", 242273, 940, false),
+			foodEntry("QueldoreiMedley", "queldoreiMedley", 242272, 940, false, true),
+			foodEntry("BloomingFeast", "bloomingFeast", 242273, 940, false, true),
 			foodEntry("FloraFrenzy", "floraFrenzy", 255848, 840, false),
 			foodEntry("ChampionsBento", "championsBento", 242274, 840, false),
 			foodEntry("HeartyVenomSpicedCutlets", "venomSpicedCutlets", 275259, 75, true),
@@ -103,10 +104,10 @@ addon.BuffFoods.typeFoods = addon.BuffFoods.typeFoods
 			foodEntry("SweetAndSourSkewers", "sweetAndSourSkewers", 275261, 65, false),
 		},
 		primary = {
-			foodEntry("HeartySilvermoonParade", "silvermoonParade", 266985, 1500, true),
-			foodEntry("HeartyHarandarCelebration", "harandarCelebration", 266996, 1500, true),
-			foodEntry("SilvermoonParade", "silvermoonParade", 255845, 1400, false),
-			foodEntry("HarandarCelebration", "harandarCelebration", 255846, 1400, false),
+			foodEntry("HeartySilvermoonParade", "silvermoonParade", 266985, 1500, true, true),
+			foodEntry("HeartyHarandarCelebration", "harandarCelebration", 266996, 1500, true, true),
+			foodEntry("SilvermoonParade", "silvermoonParade", 255845, 1400, false, true),
+			foodEntry("HarandarCelebration", "harandarCelebration", 255846, 1400, false, true),
 			foodEntry("HeartyRoyalRoast", "royalRoast", 242747, 1000, true),
 			foodEntry("HeartyImpossiblyRoyalRoast", "impossiblyRoyalRoast", 268679, 1000, true),
 			foodEntry("RoyalRoast", "royalRoast", 242275, 900, false),

@@ -25,6 +25,44 @@ local Api = Helper.Api
 Helper.ACTIVATION_OVERLAY_COLOR_DEFAULT = Helper.ACTIVATION_OVERLAY_COLOR_DEFAULT or { 1, 0.86, 0.25, 0.55 }
 Helper.CDM_AURA_OVERLAY_COLOR_DEFAULT = Helper.CDM_AURA_OVERLAY_COLOR_DEFAULT or Helper.ACTIVATION_OVERLAY_COLOR_DEFAULT
 
+function Helper.NormalizeAuraUnit(value)
+	if value == "target" or value == "pet" or value == "party" or value == "party_player" or value == "tank" or value == "healer" then return value end
+	return "player"
+end
+
+function Helper.IsAuraGroupUnit(value)
+	value = Helper.NormalizeAuraUnit(value)
+	return value == "party" or value == "party_player" or value == "tank" or value == "healer"
+end
+
+function Helper.IsAuraRoleUnit(value)
+	value = Helper.NormalizeAuraUnit(value)
+	return value == "tank" or value == "healer"
+end
+
+function Helper.GetAuraUnitLabel(value)
+	value = Helper.NormalizeAuraUnit(value)
+	if value == "target" then return _G.TARGET or "Target" end
+	if value == "pet" then return _G.PET or "Pet" end
+	if value == "party" then return _G.PARTY or "Party" end
+	if value == "party_player" then return L["CooldownPanelAuraUnitPartyPlayer"] or "Party + Player" end
+	if value == "tank" then return _G.TANK or "Tank" end
+	if value == "healer" then return _G.HEALER or "Healer" end
+	return _G.PLAYER or "Player"
+end
+
+function Helper.GetAuraUnitOptions()
+	return {
+		{ value = "player", label = Helper.GetAuraUnitLabel("player") },
+		{ value = "target", label = Helper.GetAuraUnitLabel("target") },
+		{ value = "pet", label = Helper.GetAuraUnitLabel("pet") },
+		{ value = "party", label = Helper.GetAuraUnitLabel("party") },
+		{ value = "party_player", label = Helper.GetAuraUnitLabel("party_player") },
+		{ value = "tank", label = Helper.GetAuraUnitLabel("tank") },
+		{ value = "healer", label = Helper.GetAuraUnitLabel("healer") },
+	}
+end
+
 Api.GetItemInfoInstantFn = C_Item and C_Item.GetItemInfoInstant
 Api.GetItemIconByID = C_Item and C_Item.GetItemIconByID
 Api.GetItemCooldownFn = C_Item and C_Item.GetItemCooldown
@@ -270,11 +308,13 @@ Helper.PANEL_LAYOUT_DEFAULTS = {
 	cooldownGcdDrawEdge = false,
 	cooldownGcdDrawBling = false,
 	cooldownGcdDrawSwipe = false,
+	showCooldownText = true,
 	cdmAuraOverlayEnabled = false,
 	cdmAuraOverlayColor = Helper.ACTIVATION_OVERLAY_COLOR_DEFAULT,
 	activationOverlayReverse = true,
 	activationOverlayOnly = false,
 	activationOverlayGlow = false,
+	activationOverlayGlowColor = { 1, 0.82, 0.2, 1 },
 	cooldownTextColor = { 1, 1, 1, 1 },
 	cooldownTextStyle = globalFontStyleKey(),
 	durationTextProfile = "MINIMAL",
@@ -286,6 +326,7 @@ Helper.PANEL_LAYOUT_DEFAULTS = {
 	staticTextX = 0,
 	staticTextY = 0,
 	showChargesCooldown = false,
+	hideChargeCooldownText = false,
 	showTooltips = false,
 }
 
@@ -303,6 +344,7 @@ Helper.ENTRY_DEFAULTS = {
 	iconOffsetY = 0,
 	showCooldown = true,
 	showCooldownText = true,
+	showCooldownTextUseGlobal = true,
 	trackPassiveSpell = false,
 	cooldownVisibilityUseGlobal = true,
 	hideOnCooldown = false,
@@ -335,6 +377,7 @@ Helper.ENTRY_DEFAULTS = {
 	showIconTextureUseGlobal = true,
 	cooldownVisualsUseGlobal = true,
 	showChargesCooldown = false,
+	hideChargeCooldownText = false,
 	cooldownDrawEdge = true,
 	cooldownDrawBling = true,
 	cooldownDrawSwipe = true,
@@ -343,7 +386,7 @@ Helper.ENTRY_DEFAULTS = {
 	cooldownGcdDrawBling = false,
 	cooldownGcdDrawSwipe = false,
 	cdmAuraOverlayEnabled = false,
-	cdmAuraOverlayTrackTarget = false,
+	cdmAuraOverlayUnit = "player",
 	cdmAuraOverlayTargetPlayerOnly = true,
 	cdmAuraOverlayColorUseGlobal = true,
 	cdmAuraOverlayReverse = true,
@@ -353,6 +396,7 @@ Helper.ENTRY_DEFAULTS = {
 	activationOverlayColor = Helper.ACTIVATION_OVERLAY_COLOR_DEFAULT,
 	activationOverlayOnly = false,
 	activationOverlayGlow = false,
+	activationOverlayGlowColor = { 1, 0.82, 0.2, 1 },
 	autoCooldownDurationEnabled = false,
 	customCooldownDurationEnabled = false,
 	customCooldownDuration = 0,
@@ -424,6 +468,7 @@ Helper.RADIAL_ARC_DEGREES_MAX = 360
 Helper.EXAMPLE_COOLDOWN_PERCENT = 0.55
 Helper.GLOW_STYLE_OPTIONS = {
 	{ value = "BLIZZARD", labelKey = "Blizzard", fallback = "Blizzard" },
+	{ value = "PROC", labelKey = "CooldownPanelGlowStyleActionButton", fallback = "Action button proc" },
 	{ value = "FLASH", labelKey = "Flash", fallback = "Flash" },
 	{ value = "MARCHING_ANTS", labelKey = "Marching ants", fallback = "Marching ants" },
 	{ value = "PIXEL", labelKey = "Pixel", fallback = "Pixel" },
@@ -472,6 +517,7 @@ end
 function Helper.NormalizeGlowStyle(style, fallback)
 	local normalized = type(style) == "string" and strupper(style) or nil
 	if normalized == "BLIZZARD" or normalized == "CLASSIC" or normalized == "BUTTON_GLOW" then return "BLIZZARD" end
+	if normalized == "PROC" or normalized == "PROC_GLOW" or normalized == "ACTION_BUTTON_PROC" then return "PROC" end
 	if normalized == "MARCHING_ANTS" or normalized == "MARCHINGANTS" or normalized == "ANTS" then return "MARCHING_ANTS" end
 	if normalized == "PIXEL" or normalized == "PIXEL_GLOW" then return "PIXEL" end
 	if normalized == "PULSING" or normalized == "PULSE" then return "PULSING" end
@@ -480,6 +526,7 @@ function Helper.NormalizeGlowStyle(style, fallback)
 	if normalized == "FLASH" then return "FLASH" end
 	local normalizedFallback = type(fallback) == "string" and strupper(fallback) or nil
 	if normalizedFallback == "BLIZZARD" or normalizedFallback == "CLASSIC" or normalizedFallback == "BUTTON_GLOW" then return "BLIZZARD" end
+	if normalizedFallback == "PROC" or normalizedFallback == "PROC_GLOW" or normalizedFallback == "ACTION_BUTTON_PROC" then return "PROC" end
 	if normalizedFallback == "FLASH" then return "FLASH" end
 	if normalizedFallback == "PIXEL" or normalizedFallback == "PIXEL_GLOW" then return "PIXEL" end
 	if normalizedFallback == "PULSING" or normalizedFallback == "PULSE" then return "PULSING" end
@@ -2213,6 +2260,12 @@ end
 function Helper.PruneRootForStorage(root)
 	if type(root) ~= "table" then return end
 	pruneInternalStorageKeys(root)
+	if type(root.auraPresetExclusions) == "table" then
+		for presetKey, exclusions in pairs(root.auraPresetExclusions) do
+			if type(exclusions) ~= "table" or not next(exclusions) then root.auraPresetExclusions[presetKey] = nil end
+		end
+		if not next(root.auraPresetExclusions) then root.auraPresetExclusions = nil end
+	end
 	local barsDefaults, barsColors = getStorageBarsDefaults()
 	if type(root.defaults) == "table" then
 		if type(root.defaults.layout) == "table" then
@@ -2259,6 +2312,7 @@ end
 function Helper.CreateRoot()
 	return {
 		version = 3,
+		auraPresetExclusions = {},
 		panels = {},
 		order = {},
 		selectedPanel = nil,
@@ -2272,6 +2326,23 @@ end
 function Helper.NormalizeRoot(root)
 	if type(root) ~= "table" then return Helper.CreateRoot() end
 	if type(root.version) ~= "number" then root.version = 1 end
+	if type(root.auraPresetExclusions) ~= "table" then root.auraPresetExclusions = {} end
+	for presetKey, exclusions in pairs(root.auraPresetExclusions) do
+		if type(presetKey) ~= "string" or type(exclusions) ~= "table" then
+			root.auraPresetExclusions[presetKey] = nil
+		else
+			for storedSpellID, excluded in pairs(exclusions) do
+				local spellID = tonumber(storedSpellID)
+				if excluded ~= true or not spellID or spellID <= 0 then
+					exclusions[storedSpellID] = nil
+				elseif storedSpellID ~= spellID then
+					exclusions[storedSpellID] = nil
+					exclusions[spellID] = true
+				end
+			end
+			if not next(exclusions) then root.auraPresetExclusions[presetKey] = nil end
+		end
+	end
 	if type(root.panels) ~= "table" then root.panels = {} end
 	if type(root.order) ~= "table" then root.order = {} end
 	if type(root.defaults) ~= "table" then root.defaults = {} end
@@ -2301,6 +2372,7 @@ function Helper.NormalizeRoot(root)
 	root.defaults.entry.alwaysShow = Helper.ENTRY_DEFAULTS.alwaysShow
 	root.defaults.entry.showCooldown = Helper.ENTRY_DEFAULTS.showCooldown
 	root.defaults.entry.showCooldownText = Helper.ENTRY_DEFAULTS.showCooldownText
+	root.defaults.entry.showCooldownTextUseGlobal = Helper.ENTRY_DEFAULTS.showCooldownTextUseGlobal
 	root.defaults.entry.cooldownVisibilityUseGlobal = Helper.ENTRY_DEFAULTS.cooldownVisibilityUseGlobal
 	root.defaults.entry.hideOnCooldown = Helper.ENTRY_DEFAULTS.hideOnCooldown
 	root.defaults.entry.showOnCooldown = Helper.ENTRY_DEFAULTS.showOnCooldown
@@ -2413,12 +2485,18 @@ function Helper.NormalizePanel(panel, defaults)
 		normalizeCDMAuraAlwaysShowMode(panel.layout.cdmAuraAlwaysShowMode, layoutDefaults.cdmAuraAlwaysShowMode or Helper.PANEL_LAYOUT_DEFAULTS.cdmAuraAlwaysShowMode or "HIDE")
 	panel.layout.cdmAuraOverlayEnabled = panel.layout.cdmAuraOverlayEnabled == true
 	panel.layout.cdmAuraOverlayColor = Helper.NormalizeColor(panel.layout.cdmAuraOverlayColor, layoutDefaults.cdmAuraOverlayColor or Helper.PANEL_LAYOUT_DEFAULTS.cdmAuraOverlayColor)
+	panel.layout.activationOverlayGlowColor = Helper.NormalizeColor(
+		panel.layout.activationOverlayGlowColor,
+		layoutDefaults.activationOverlayGlowColor or panel.layout.readyGlowColor or Helper.PANEL_LAYOUT_DEFAULTS.activationOverlayGlowColor
+	)
 	panel.layout.cooldownSwipeColor = Helper.NormalizeColor(panel.layout.cooldownSwipeColor, layoutDefaults.cooldownSwipeColor or Helper.PANEL_LAYOUT_DEFAULTS.cooldownSwipeColor)
 	panel.layout.showStacks = panel.layout.showStacks == true
 	panel.layout.stackColor = Helper.NormalizeColor(panel.layout.stackColor, layoutDefaults.stackColor or Helper.PANEL_LAYOUT_DEFAULTS.stackColor or { 1, 1, 1, 1 })
 	panel.layout.showCharges = panel.layout.showCharges == true
+	panel.layout.hideChargeCooldownText = panel.layout.hideChargeCooldownText == true
 	panel.layout.chargesColor = Helper.NormalizeColor(panel.layout.chargesColor, layoutDefaults.chargesColor or Helper.PANEL_LAYOUT_DEFAULTS.chargesColor or { 1, 1, 1, 1 })
 	panel.layout.chargesHideWhenZero = panel.layout.chargesHideWhenZero == true
+	panel.layout.showCooldownText = panel.layout.showCooldownText ~= false
 	panel.layout.cooldownTextColor = Helper.NormalizeColor(panel.layout.cooldownTextColor, layoutDefaults.cooldownTextColor or Helper.PANEL_LAYOUT_DEFAULTS.cooldownTextColor)
 	if
 		type(panel.barDurationTextProfile) == "string"
@@ -2503,10 +2581,13 @@ end
 
 function Helper.NormalizeEntry(entry, defaults)
 	if type(entry) ~= "table" then return end
+	local hadCDMAuraOverlayUnit = entry.cdmAuraOverlayUnit ~= nil
+	local legacyCDMAuraOverlayTrackTarget = entry.cdmAuraOverlayTrackTarget == true
 	local hadShowCharges = entry.showCharges ~= nil
 	local hadShowStacks = entry.showStacks ~= nil
 	local hadShowChargesUseGlobal = entry.showChargesUseGlobal ~= nil
 	local hadShowStacksUseGlobal = entry.showStacksUseGlobal ~= nil
+	local hadShowCooldownTextUseGlobal = entry.showCooldownTextUseGlobal ~= nil
 	local hadCDMAuraOverlayColorUseGlobal = entry.cdmAuraOverlayColorUseGlobal ~= nil
 	local hadCustomCDMAuraOverlayColor = entry.activationOverlayColor ~= nil or entry.cdmAuraOverlayColor ~= nil
 	local hadActivationOverlayBehaviorUseGlobal = entry.activationOverlayBehaviorUseGlobal ~= nil
@@ -2526,6 +2607,7 @@ function Helper.NormalizeEntry(entry, defaults)
 	end
 	if entry.alwaysShow == nil then entry.alwaysShow = true end
 	if entry.showCooldown == nil then entry.showCooldown = true end
+	if not hadShowCooldownTextUseGlobal or type(entry.showCooldownTextUseGlobal) ~= "boolean" then entry.showCooldownTextUseGlobal = entry.showCooldownText ~= false end
 	if type(entry.specFilter) == "table" then
 		local cleanedSpecFilter
 		for specId, enabled in pairs(entry.specFilter) do
@@ -2542,13 +2624,15 @@ function Helper.NormalizeEntry(entry, defaults)
 	if entry.type == "ITEM" and entry.showItemCount == nil then entry.showItemCount = true end
 	if entry.type == "SPELL" then
 		entry.cdmAuraOverlaySpellIDs = Helper.NormalizeSpellIDList(entry.cdmAuraOverlaySpellIDs)
-		entry.cdmAuraOverlayTrackTarget = entry.cdmAuraOverlayTrackTarget == true
+		entry.cdmAuraOverlayUnit = Helper.NormalizeAuraUnit(hadCDMAuraOverlayUnit and entry.cdmAuraOverlayUnit or legacyCDMAuraOverlayTrackTarget and "target" or "player")
+		entry.cdmAuraOverlayTrackTarget = nil
 		entry.cdmAuraOverlayTargetPlayerOnly = entry.cdmAuraOverlayTargetPlayerOnly ~= false
 		if not hadShowCharges then entry.showCharges = spellHasCharges(entry.spellID) end
 		if not hadShowStacks then entry.showStacks = false end
 		if hadShowCharges and not hadShowChargesUseGlobal then entry.showChargesUseGlobal = false end
 		if hadShowStacks and not hadShowStacksUseGlobal then entry.showStacksUseGlobal = false end
 	elseif entry.type == "CDM_AURA" then
+		entry.cdmAuraOverlaySpellIDs = Helper.NormalizeSpellIDList(entry.cdmAuraOverlaySpellIDs)
 		if hadShowStacks and not hadShowStacksUseGlobal then entry.showStacksUseGlobal = false end
 		local cdmAuras = CooldownPanels and CooldownPanels.CDMAuras
 		if cdmAuras and cdmAuras.NormalizeEntry then cdmAuras:NormalizeEntry(entry, defaults) end
@@ -2563,7 +2647,8 @@ function Helper.NormalizeEntry(entry, defaults)
 		if hadShowStacks and not hadShowStacksUseGlobal then entry.showStacksUseGlobal = false end
 	end
 	if entry.type ~= "SPELL" then
-		entry.cdmAuraOverlaySpellIDs = nil
+		if entry.type ~= "CDM_AURA" then entry.cdmAuraOverlaySpellIDs = nil end
+		entry.cdmAuraOverlayUnit = nil
 		entry.cdmAuraOverlayTrackTarget = nil
 		entry.cdmAuraOverlayTargetPlayerOnly = nil
 	end
@@ -2618,6 +2703,7 @@ function Helper.NormalizeEntry(entry, defaults)
 	if type(entry.showOnCooldown) ~= "boolean" then entry.showOnCooldown = Helper.ENTRY_DEFAULTS.showOnCooldown end
 	if entry.showOnCooldown == true then entry.hideOnCooldown = false end
 	if type(entry.showChargesCooldown) ~= "boolean" then entry.showChargesCooldown = Helper.ENTRY_DEFAULTS.showChargesCooldown end
+	if type(entry.hideChargeCooldownText) ~= "boolean" then entry.hideChargeCooldownText = Helper.ENTRY_DEFAULTS.hideChargeCooldownText end
 	if type(entry.cooldownDrawEdge) ~= "boolean" then entry.cooldownDrawEdge = Helper.ENTRY_DEFAULTS.cooldownDrawEdge end
 	if type(entry.cooldownDrawBling) ~= "boolean" then entry.cooldownDrawBling = Helper.ENTRY_DEFAULTS.cooldownDrawBling end
 	if type(entry.cooldownDrawSwipe) ~= "boolean" then entry.cooldownDrawSwipe = Helper.ENTRY_DEFAULTS.cooldownDrawSwipe end
@@ -2635,6 +2721,7 @@ function Helper.NormalizeEntry(entry, defaults)
 		entry.activationOverlayColor = Helper.NormalizeColor(entry.activationOverlayColor, Helper.ENTRY_DEFAULTS.activationOverlayColor)
 		entry.activationOverlayOnly = false
 		entry.activationOverlayGlow = false
+		entry.activationOverlayGlowColor = Helper.NormalizeColor(entry.activationOverlayGlowColor, Helper.ENTRY_DEFAULTS.activationOverlayGlowColor)
 		entry.autoCooldownDurationEnabled = false
 		entry.customCooldownDurationEnabled = false
 		entry.customCooldownDuration = Helper.ENTRY_DEFAULTS.customCooldownDuration
@@ -2652,6 +2739,7 @@ function Helper.NormalizeEntry(entry, defaults)
 		entry.activationOverlayColor = Helper.NormalizeColor(entry.activationOverlayColor, Helper.ENTRY_DEFAULTS.activationOverlayColor)
 		if type(entry.activationOverlayOnly) ~= "boolean" then entry.activationOverlayOnly = Helper.ENTRY_DEFAULTS.activationOverlayOnly end
 		if type(entry.activationOverlayGlow) ~= "boolean" then entry.activationOverlayGlow = Helper.ENTRY_DEFAULTS.activationOverlayGlow end
+		entry.activationOverlayGlowColor = Helper.NormalizeColor(entry.activationOverlayGlowColor, Helper.ENTRY_DEFAULTS.activationOverlayGlowColor)
 		if not hadActivationOverlayBehaviorUseGlobal then
 			local hasLegacyActivationOverride = (hadActivationOverlayReverse and entry.activationOverlayReverse == false)
 				or (hadActivationOverlayOnly and entry.activationOverlayOnly == true)
@@ -2843,6 +2931,8 @@ function Helper.CreatePanel(name, defaults)
 	if layout.keybindFontStyle == nil or layout.keybindFontStyle == "" then layout.keybindFontStyle = globalStyle end
 	if layout.cooldownTextStyle == nil or layout.cooldownTextStyle == "" then layout.cooldownTextStyle = globalStyle end
 	if layout.staticTextStyle == nil or layout.staticTextStyle == "" then layout.staticTextStyle = globalStyle end
+	-- Growth Point stores its centered option as TOP internally.
+	layout.growthPoint = "TOP"
 	layout.showChargesCooldown = true
 	layout.chargesHideWhenZero = true
 	layout.cdmAuraOverlayEnabled = true
@@ -2902,6 +2992,7 @@ function Helper.CreateEntry(entryType, idValue, defaults)
 		entry.showWhenMissing = false
 		entry.showCooldown = false
 		entry.showCooldownText = false
+		entry.showCooldownTextUseGlobal = false
 		entry.glowReady = false
 		entry.soundReady = false
 	elseif entryType == "MACRO" then

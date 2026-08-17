@@ -49,6 +49,18 @@ end
 
 function addon.MythicPlus.functions.InvalidateTeleportCompendiumCaches() clearToyUsableCache() end
 
+function addon.MythicPlus.functions.NotifyTeleportFavoritesChanged()
+	local quickActions = addon.QuickCast
+	if not quickActions then return end
+	if quickActions.QueueManagedSourceSync then
+		quickActions:QueueManagedSourceSync()
+	elseif quickActions.QueueSecureRebuild then
+		quickActions:QueueSecureRebuild()
+	end
+	local editor = quickActions.Editor
+	if editor and editor.IsOpen and editor:IsOpen() and editor.Refresh then editor:Refresh() end
+end
+
 -- Open World Map to a mapID and create a user waypoint pin at x,y (0..1)
 local function OpenMapAndCreatePin(mapID, x, y)
 	if not mapID or not x or not y then return end
@@ -497,6 +509,7 @@ local function CreatePortalButtonsWithCooldown(frame, spells)
 						else
 							favs[self.spellID] = true
 						end
+						addon.MythicPlus.functions.NotifyTeleportFavoritesChanged()
 						checkCooldown()
 					else
 						local d = self._eqolData or {}
@@ -777,6 +790,7 @@ function addon.MythicPlus.functions.BuildTeleportCompendiumSections()
 									isMagePortal = data.isMagePortal or false,
 									equipSlot = data.equipSlot,
 									isFavorite = favorites[spellID] and true or false,
+									isRandomHearthstone = data.isRandomHearthstone == true,
 									locID = data.locID,
 									x = data.x,
 									y = data.y,
@@ -835,6 +849,7 @@ function addon.MythicPlus.functions.BuildTeleportCompendiumSections()
 							isMagePortal = data.isMagePortal or false,
 							equipSlot = data.equipSlot,
 							isFavorite = favorites[spellID] and true or false,
+							isRandomHearthstone = data.isRandomHearthstone == true,
 							locID = data.locID,
 							x = data.x,
 							y = data.y,

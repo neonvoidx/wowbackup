@@ -5658,7 +5658,11 @@ registerEditModeBars = function()
 			end,
 			settings = settingsList,
 			buttons = buttons,
+			onExit = function()
+				if ResourceBars and ResourceBars.ApplyVisibilityPreference then ResourceBars.ApplyVisibilityPreference("editModeExit") end
+			end,
 			showOutsideEditMode = true,
+			manageVisibilityOutsideEditMode = false,
 			collapseExclusive = true,
 		})
 		registeredSettingsFrames[frameId] = frame

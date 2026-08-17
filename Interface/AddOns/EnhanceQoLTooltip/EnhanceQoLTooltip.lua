@@ -1017,6 +1017,15 @@ end)
 
 addon.Tooltip = addon.Tooltip or {}
 addon.Tooltip.functions = addon.Tooltip.functions or {}
+
+local AURA_SPELL_ID_CVAR = "tooltipShowAuraSpellIDs"
+
+function addon.Tooltip.functions.RequestNativeAuraSpellIDs()
+	if not (addon.db and addon.db["TooltipShowSpellID"]) then return end
+	if not (C_CVar and C_CVar.GetCVarBool and C_CVar.SetCVar) then return end
+	if C_CVar.GetCVarBool(AURA_SPELL_ID_CVAR) ~= true then C_CVar.SetCVar(AURA_SPELL_ID_CVAR, "1") end
+end
+
 function addon.Tooltip.functions.UpdateModifierTooltipRefreshEventRegistration()
 	if not fModifierTooltipRefresh then return end
 	if IsModifierTooltipRefreshNeeded() then
@@ -1410,11 +1419,12 @@ local tooltipScaleTargets = {
 	"ItemRefTooltip",
 	"ShoppingTooltip1",
 	"ShoppingTooltip2",
-	"ShoppingTooltip3",
 	"EmbeddedItemTooltip",
+	"ItemRefShoppingTooltip1",
+	"ItemRefShoppingTooltip2",
 }
 
-local function ApplyTooltipScale()
+local function GetConfiguredTooltipScale()
 	local scale = addon.db and tonumber(addon.db["TooltipScale"]) or 1
 	if not scale or scale <= 0 then scale = 1 end
 	if scale < 0.5 then
@@ -1422,9 +1432,20 @@ local function ApplyTooltipScale()
 	elseif scale > 1.5 then
 		scale = 1.5
 	end
+	return scale
+end
+
+local function ApplyTooltipScaleToTarget(tt)
+	if not tt or not tt.SetScale then return end
+	tt:SetScale(GetConfiguredTooltipScale())
+	if not tt.HookScript or tt.__EnhanceQoLTooltipScaleHooked then return end
+	tt.__EnhanceQoLTooltipScaleHooked = true
+	tt:HookScript("OnShow", function(self) self:SetScale(GetConfiguredTooltipScale()) end)
+end
+
+local function ApplyTooltipScale()
 	for _, name in ipairs(tooltipScaleTargets) do
-		local tt = _G[name]
-		if tt and tt.SetScale then tt:SetScale(scale) end
+		ApplyTooltipScaleToTarget(_G[name])
 	end
 end
 
@@ -1540,19 +1561,10 @@ local function checkItem(tooltip, id, name, guid)
 	tooltip:Hide()
 end
 
-local function checkAura(tooltip, id, name)
+local function checkAura(tooltip, id)
 	if not IsTooltipMutable(tooltip) then return end
 	local first = true
 	local showIDDetails = ShouldShowTooltipIDDetails()
-	if addon.db["TooltipShowSpellID"] and showIDDetails then
-		if id then
-			if first then
-				tooltip:AddLine(" ")
-				first = false
-			end
-			tooltip:AddDoubleLine(name, id)
-		end
-	end
 
 	if addon.db["TooltipShowSpellIconInline"] and IsValidSpellIdentifier(id) then
 		local spellInfo = C_Spell.GetSpellInfo(id)
@@ -1664,11 +1676,9 @@ if TooltipDataProcessor then
 
 		if issecretvalue and issecretvalue(data.type) then return end
 
-		local restricted = addon.functions.isRestrictedContent and addon.functions.isRestrictedContent(true)
 		local id, name, _, timeLimit, kind
 
 		kind = addon.Tooltip.variables.kindsByID[tonumber(data.type)]
-		if restricted and kind ~= "unit" then return end
 
 		if kind == "spell" then
 			id = data.id
@@ -1796,11 +1806,6 @@ local function registerTooltipHooks()
 	if addon.Tooltip.variables.hooksInitialized then return end
 	addon.Tooltip.variables.hooksInitialized = true
 
-	-- Apply initial tooltip scale once the UI is ready
-	RunNextFrame(function()
-		if addon.Tooltip and addon.Tooltip.ApplyScale then addon.Tooltip.ApplyScale() end
-	end)
-
 	hooksecurefunc("GameTooltip_SetDefaultAnchor", function(s, p)
 		if not addon.db then return end
 		if not s or not s.SetOwner then return end
@@ -1865,10 +1870,6 @@ local function registerTooltipHooks()
 	end)
 
 	RegisterLFGTooltipHooks()
-	frameLoad:RegisterEvent("ADDON_LOADED")
-	frameLoad:SetScript("OnEvent", function(_, _, loadedAddonName)
-		if loadedAddonName == "Blizzard_GroupFinder" then RegisterLFGTooltipHooks() end
-	end)
 
 	-- Optionally hide the default "Right-click for options" instruction on unit tooltips
 	hooksecurefunc("GameTooltip_AddInstructionLine", function(tt, text)
@@ -1897,9 +1898,24 @@ local function registerTooltipHooks()
 	if addon.Tooltip and addon.Tooltip.functions and addon.Tooltip.functions.UpdateQuestIDInQuestLog then addon.Tooltip.functions.UpdateQuestIDInQuestLog() end
 end
 
+local function RegisterTooltipLifecycle()
+	if addon.Tooltip.variables.scaleLifecycleInitialized then return end
+	addon.Tooltip.variables.scaleLifecycleInitialized = true
+	frameLoad:RegisterEvent("ADDON_LOADED")
+	frameLoad:SetScript("OnEvent", function(_, _, loadedAddonName)
+		if loadedAddonName == "Blizzard_GameTooltip" or loadedAddonName == "Blizzard_UIPanels_Game" then ApplyTooltipScale() end
+		if loadedAddonName == "Blizzard_GroupFinder" and addon.Tooltip.variables.hooksInitialized then RegisterLFGTooltipHooks() end
+	end)
+end
+
 function addon.Tooltip.functions.InitState()
+	RegisterTooltipLifecycle()
+	RunNextFrame(function()
+		if addon.Tooltip and addon.Tooltip.ApplyScale then addon.Tooltip.ApplyScale() end
+	end)
 	if ShouldInstallTooltipHooks() then registerTooltipHooks() end
 	if addon.Tooltip.functions.UpdateModifierTooltipRefreshEventRegistration then addon.Tooltip.functions.UpdateModifierTooltipRefreshEventRegistration() end
+	addon.Tooltip.functions.RequestNativeAuraSpellIDs()
 	UpdateInspectEventRegistration()
 	if addon.functions.RefreshNativeAuraTooltipPolicy then addon.functions.RefreshNativeAuraTooltipPolicy() end
 end

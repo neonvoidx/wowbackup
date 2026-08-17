@@ -46,7 +46,7 @@ local IMPORT_PROTECTION_DEFS = {
 	{ key = IMPORT_PROTECTION.DATA_PANELS, labelKey = "ProfileImportProtectionDataPanels", fallback = "Data Panels" },
 	{ key = IMPORT_PROTECTION.DUNGEON_COMBAT, labelKey = "ProfileImportProtectionDungeonCombat", fallback = "Dungeon & Combat Tools" },
 	{ key = IMPORT_PROTECTION.DUNGEON_RAID, labelKey = "ProfileImportProtectionDungeonRaid", fallback = "Dungeon & Raid" },
-	{ key = IMPORT_PROTECTION.HBP, labelKey = "ProfileImportProtectionHBP", fallback = "Healer Buff Placement" },
+	{ key = IMPORT_PROTECTION.HBP, labelKey = "ProfileImportProtectionHBP", fallback = "Buff Placement" },
 	{ key = IMPORT_PROTECTION.INSTANCE_DIFFICULTY, labelKey = "ProfileImportProtectionInstanceDifficulty", fallback = "Instance Difficulty" },
 	{ key = IMPORT_PROTECTION.MOUSE_ACCESSIBILITY, labelKey = "ProfileImportProtectionMouseAccessibility", fallback = "Mouse & Accessibility" },
 	{ key = IMPORT_PROTECTION.MOVER, labelKey = "ProfileImportProtectionMover", fallback = "Mover" },
@@ -840,6 +840,31 @@ local function sanitizeProfileData(source)
 	return filtered
 end
 
+local function filterQuickActionsHotkeys(profileData, currentProfile)
+	local quickCast = type(profileData) == "table" and profileData.quickCast or nil
+	local menus = type(quickCast) == "table" and quickCast.menus or nil
+	if type(menus) ~= "table" then return profileData end
+	local currentQuickCast = type(currentProfile) == "table" and currentProfile.quickCast or nil
+	local currentMenus = type(currentQuickCast) == "table" and currentQuickCast.menus or nil
+
+	-- QuickActions hotkeys are local input state: exports omit them, while imports
+	-- keep the target profile's binding for menu IDs that still exist after an update.
+	for menuID, menu in pairs(menus) do
+		if type(menu) == "table" then
+			menu.hotkey = nil
+			local currentMenu = type(currentMenus) == "table" and currentMenus[menuID] or nil
+			if type(currentMenu) ~= "table" and type(currentMenus) == "table" then
+				local numericMenuID = tonumber(menuID)
+				if numericMenuID then currentMenu = currentMenus[numericMenuID] or currentMenus[tostring(numericMenuID)] end
+			end
+			if type(currentMenu) == "table" and type(currentMenu.hotkey) == "string" and currentMenu.hotkey ~= "" then
+				menu.hotkey = currentMenu.hotkey
+			end
+		end
+	end
+	return profileData
+end
+
 local function copyProtectedProfileValue(target, key, value)
 	if type(target) ~= "table" or key == nil then return end
 	local sanitized = sanitizeProfileData({ [key] = value })
@@ -866,11 +891,14 @@ local function profileKeyStartsWith(key, prefix)
 end
 
 local function isActionBarProfileKey(key)
-	return profileKeyStartsWith(key, "actionBar") or key == "hideMacroNames" or key == "hideExtraActionArtwork"
+	return profileKeyStartsWith(key, "actionBar")
+		or profileKeyStartsWith(key, "mouseoverActionBar")
+		or key == "hideMacroNames"
+		or key == "hideExtraActionArtwork"
 end
 
 local function isBagsProfileKey(key)
-	return key == "bags" or key == "bagsProfile"
+	return key == "bags" or key == "bagsProfile" or key == "enableBagsModule"
 end
 
 local function isCastbarProfileKey(key)
@@ -918,7 +946,6 @@ local function isDungeonCombatProfileKey(key)
 		or profileKeyStartsWith(key, "xpBar")
 		or profileKeyStartsWith(key, "actionTracker")
 		or key == "focusInterruptTracker"
-		or key == "standalonePrivateAuras"
 		or key == "mythicPlusBossAlertsConfig"
 end
 
@@ -936,7 +963,6 @@ local function isDungeonRaidProfileKey(key)
 		or key == "groupfinderShowPartyKeystone"
 		or key == "noChatOnPullTimer"
 		or key == "PullTimerType"
-		or key == "standalonePrivateAuras"
 end
 
 local function isInstanceDifficultyProfileKey(key)
@@ -1229,6 +1255,7 @@ local function applyImportedMythicPlusTimerState(data)
 	local target = profileName and EnhanceQoLDB and EnhanceQoLDB.profiles and EnhanceQoLDB.profiles[profileName] or nil
 	if type(target) ~= "table" then return false, "NO_ACTIVE" end
 	target.mythicPlusTimer = sanitizeProfileData(data.mythicPlusTimer)
+	if target.mythicPlusTimer.layoutMode == nil then target.mythicPlusTimer.layoutMode = "PANEL" end
 	if addon.db == target then
 		local timer = addon.MythicPlus and addon.MythicPlus.MythicPlusTimer
 		if timer then
@@ -1240,7 +1267,7 @@ local function applyImportedMythicPlusTimerState(data)
 end
 
 local function exportMythicPlusTimer()
-	return exportPayloadWithData(MYTHIC_PLUS_TIMER_EXPORT_KIND, captureMythicPlusTimerState(), 1)
+	return exportPayloadWithData(MYTHIC_PLUS_TIMER_EXPORT_KIND, captureMythicPlusTimerState(), 2)
 end
 
 local function importMythicPlusTimer(encoded)
@@ -1302,6 +1329,7 @@ end
 
 local function normalizeProfileStorage(profileData, meta)
 	if type(profileData) ~= "table" then return end
+	if type(profileData.mythicPlusTimer) == "table" and profileData.mythicPlusTimer.layoutMode == nil then profileData.mythicPlusTimer.layoutMode = "PANEL" end
 	if addon and addon.EditMode and addon.EditMode.MigrateProfileData then addon.EditMode:MigrateProfileData(profileData) end
 	if addon and addon.ContainerActions and addon.ContainerActions.MigrateProfileData then addon.ContainerActions:MigrateProfileData(profileData) end
 	if type(meta) == "table" then remapImportedUFCharacterState(profileData, meta) end
@@ -1367,6 +1395,7 @@ local function exportActiveProfile(profileName)
 	if not next(source) and not moverState and not bagsState then return nil, "NO_DATA" end
 	if next(source) then normalizeProfileStorage(source) end
 
+	local exportData = filterQuickActionsHotkeys(sanitizeProfileData(source))
 	local payload = {
 		meta = {
 			addon = addonName,
@@ -1378,7 +1407,7 @@ local function exportActiveProfile(profileName)
 			mover = moverState,
 			bags = bagsState,
 		},
-		data = sanitizeProfileData(source),
+		data = exportData,
 	}
 
 	return encodeExportPayload(payload)
@@ -1401,9 +1430,9 @@ local function importProfile(encoded, options)
 
 	if not EnhanceQoLDB or type(EnhanceQoLDB.profiles) ~= "table" then return false, "NO_DB" end
 
-	local sanitized = sanitizeProfileData(data)
-	normalizeProfileStorage(sanitized, meta)
 	local current = EnhanceQoLDB.profiles[target]
+	local sanitized = filterQuickActionsHotkeys(sanitizeProfileData(data), current)
+	normalizeProfileStorage(sanitized, meta)
 	applyImportProtection(sanitized, current)
 	EnhanceQoLDB.profiles[target] = sanitized
 	if not isImportSectionProtected(IMPORT_PROTECTION.MOVER) then applyImportedMoverState(meta) end

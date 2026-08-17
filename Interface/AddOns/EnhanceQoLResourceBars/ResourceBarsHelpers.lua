@@ -84,11 +84,11 @@ local function updateManagedFrameAlpha(frame)
 	if not (frame and frame.SetAlpha) then return end
 	local shouldHide = frame._rbClientSceneAlphaHidden == true or frame._rbRuntimeForcedAlphaHidden == true
 	if shouldHide then
-		if frame.GetAlpha and frame:GetAlpha() ~= 0 then frame:SetAlpha(0) end
+		frame:SetAlpha(0)
 	elseif frame._rbEmptyAlphaActive == true then
 		frame:SetAlpha(frame._rbEmptyAlphaValue)
 	else
-		if frame.GetAlpha and frame:GetAlpha() == 0 then frame:SetAlpha(1) end
+		frame:SetAlpha(1)
 	end
 end
 
@@ -121,7 +121,10 @@ function ResourceBars.ApplyHideWhenEmptyAlphaToFrame(frame, cfg, rawValue)
 		emptyAlphaActive = true
 		emptyAlphaValue = rawValue
 	end
-	if frame._rbEmptyAlphaActive == emptyAlphaActive and frame._rbEmptyAlphaValue == emptyAlphaValue then return end
+	local previousValue = frame._rbEmptyAlphaValue
+	local previousValueSecret = issecretvalue and issecretvalue(previousValue)
+	local nextValueSecret = issecretvalue and issecretvalue(emptyAlphaValue)
+	if not previousValueSecret and not nextValueSecret and frame._rbEmptyAlphaActive == emptyAlphaActive and previousValue == emptyAlphaValue then return end
 	frame._rbEmptyAlphaActive = emptyAlphaActive
 	frame._rbEmptyAlphaValue = emptyAlphaValue
 	updateManagedFrameAlpha(frame)
@@ -156,6 +159,9 @@ end
 local function resolveDiscreteSegmentBackground(cfg, fallbackTexture, fallbackR, fallbackG, fallbackB, fallbackA)
 	local bd = cfg and cfg.backdrop
 	if bd and bd.enabled == false then return nil, 0, 0, 0, 0, false end
+	-- A shared outer border uses the parent backdrop for the complete bar. Drawing
+	-- the same backdrop on every segment would blend its alpha a second time.
+	if ResourceBars.ShouldUsePerSegmentBorders and not ResourceBars.ShouldUsePerSegmentBorders(cfg) then return nil, 0, 0, 0, 0, false end
 
 	if bd and bd.enabled ~= false then
 		local tex = bd.backgroundTexture or fallbackTexture or "Interface\\DialogFrame\\UI-DialogBox-Background"
@@ -321,6 +327,14 @@ function ResourceBars.InvalidateEssenceSegmentCaches(bar)
 	bar._rbDiscreteGapRequested = nil
 	bar._rbDiscreteGap = nil
 	bar._rbDiscreteReverse = nil
+	bar._rbDiscreteBoundaryEnabled = nil
+	bar._rbDiscreteBoundaryTexture = nil
+	bar._rbDiscreteBoundaryEdgeSize = nil
+	bar._rbDiscreteBoundaryOutset = nil
+	bar._rbDiscreteBoundaryR = nil
+	bar._rbDiscreteBoundaryG = nil
+	bar._rbDiscreteBoundaryB = nil
+	bar._rbDiscreteBoundaryA = nil
 	bar._essenceNextTick = nil
 	bar._essenceFraction = 0
 	bar._essenceLastPower = nil
@@ -453,7 +467,8 @@ function ResourceBars.LayoutEssences(bar, cfg, count, texturePath)
 	local requestedGap = ResourceBars.ResolveDiscreteSegmentGap and ResourceBars.ResolveDiscreteSegmentGap(cfg) or separatedOffset
 	local gap = requestedGap
 	local useSegmentStyling = true
-	local borderEnabled, borderTexture, borderEdgeSize, borderOutset, borderR, borderG, borderB, borderA = resolveDiscreteSegmentBorderStyle(cfg, useSegmentStyling)
+	local useSegmentBorders = count > 1 and ((ResourceBars.ShouldUsePerSegmentBorders and ResourceBars.ShouldUsePerSegmentBorders(cfg)) or separatedOffset > 0)
+	local borderEnabled, borderTexture, borderEdgeSize, borderOutset, borderR, borderG, borderB, borderA = resolveDiscreteSegmentBorderStyle(cfg, true)
 	local bgTexture, bgR, bgG, bgB, bgA, bgVisible
 	if useSegmentStyling then
 		bgTexture, bgR, bgG, bgB, bgA, bgVisible = resolveDiscreteSegmentBackground(cfg, texturePath, 0.35, 0.35, 0.35, 0.9)
@@ -557,7 +572,7 @@ function ResourceBars.LayoutEssences(bar, cfg, count, texturePath)
 			sb._rbSegmentBgColorKey = nil
 		end
 		if ResourceBars.ApplyDiscreteSegmentBorder then
-			ResourceBars.ApplyDiscreteSegmentBorder(sb, bar, useSegmentStyling and borderEnabled, borderTexture, borderEdgeSize, borderOutset, borderR, borderG, borderB, borderA)
+			ResourceBars.ApplyDiscreteSegmentBorder(sb, bar, useSegmentBorders and borderEnabled, borderTexture, borderEdgeSize, borderOutset, borderR, borderG, borderB, borderA)
 		end
 		if ResourceBars.ApplySegmentContentInset then
 			ResourceBars.ApplySegmentContentInset(sb, 0)
@@ -571,11 +586,26 @@ function ResourceBars.LayoutEssences(bar, cfg, count, texturePath)
 			if bar.essences[i]._rbSegmentBorder then bar.essences[i]._rbSegmentBorder:Hide() end
 		end
 	end
-	if bar.essenceGapMarks then
-		for i = 1, #bar.essenceGapMarks do
-			if bar.essenceGapMarks[i] then bar.essenceGapMarks[i]:Hide() end
-		end
-	end
+	bar.essenceGapMarks = bar.essenceGapMarks or {}
+	ResourceBars.LayoutSegmentBoundaryMarks(
+		bar,
+		inner,
+		count,
+		vertical,
+		segmentOffsetsPx,
+		segmentSizesPx,
+		scale,
+		factor,
+		bar.essenceGapMarks,
+		not useSegmentBorders and borderEnabled,
+		borderTexture,
+		borderEdgeSize,
+		borderOutset,
+		borderR,
+		borderG,
+		borderB,
+		borderA
+	)
 	bar._essenceSegments = count
 	bar._essenceVertical = vertical
 	bar._essenceGap = pixelsToUi(gapPx, scale, factor)
@@ -882,8 +912,9 @@ function ResourceBars.LayoutDiscreteSegments(bar, cfg, count, texturePath)
 
 	local segmentOffset = resolveDiscreteSegmentOffset(cfg)
 	local requestedGap = resolveDiscreteSegmentGap(cfg)
-	local useSegmentBorders = true
-	local borderEnabled, borderTexture, borderEdgeSize, borderOutset, borderR, borderG, borderB, borderA = resolveDiscreteSegmentBorderStyle(cfg, useSegmentBorders)
+	local useSegmentBorders = count > 1 and ((ResourceBars.ShouldUsePerSegmentBorders and ResourceBars.ShouldUsePerSegmentBorders(cfg)) or segmentOffset > 0)
+	local borderEnabled, borderTexture, borderEdgeSize, borderOutset, borderR, borderG, borderB, borderA = resolveDiscreteSegmentBorderStyle(cfg, true)
+	local boundaryEnabled = count > 1 and not useSegmentBorders and borderEnabled
 	if count < 2 then
 		requestedGap = 0
 	end
@@ -926,7 +957,8 @@ function ResourceBars.LayoutDiscreteSegments(bar, cfg, count, texturePath)
 	local segments = bar._rbDiscreteSegments
 	local nameBase = bar:GetName() or "EQOLDiscrete"
 	local texPath = texturePath or "Interface\\Buttons\\WHITE8x8"
-	local segmentBgPath, _, _, _, _, segmentBgVisible = resolveDiscreteSegmentBackground(cfg, texPath, 0, 0, 0, 0.8)
+	local segmentBgPath, segmentBgR, segmentBgG, segmentBgB, segmentBgA, segmentBgVisible = resolveDiscreteSegmentBackground(cfg, texPath, 0, 0, 0, 0.8)
+	local segmentBgColorKey = segmentBgR .. ":" .. segmentBgG .. ":" .. segmentBgB .. ":" .. segmentBgA
 
 	for i = 1, count do
 		local segment, fill = ensureDiscreteSegmentFrame(bar, inner, segments, i, nameBase)
@@ -960,6 +992,10 @@ function ResourceBars.LayoutDiscreteSegments(bar, cfg, count, texturePath)
 				segment._rbSegmentBg:SetTexture(segmentBgPath)
 				if ResourceBars.ApplyTexturePixelSnapping then ResourceBars.ApplyTexturePixelSnapping(segment._rbSegmentBg, 0) end
 				segment._rbSegmentBgPath = segmentBgPath
+			end
+			if segment._rbSegmentBgColorKey ~= segmentBgColorKey then
+				segment._rbSegmentBg:SetVertexColor(segmentBgR, segmentBgG, segmentBgB, segmentBgA)
+				segment._rbSegmentBgColorKey = segmentBgColorKey
 			end
 			if not segment._rbSegmentBg:IsShown() then segment._rbSegmentBg:Show() end
 		else
@@ -996,7 +1032,7 @@ function ResourceBars.LayoutDiscreteSegments(bar, cfg, count, texturePath)
 				segment:SetPoint("TOPLEFT", inner, "TOPLEFT", offsetUi, 0)
 			end
 		end
-		applyDiscreteSegmentBorder(segment, bar, borderEnabled, borderTexture, borderEdgeSize, borderOutset, borderR, borderG, borderB, borderA)
+		applyDiscreteSegmentBorder(segment, bar, useSegmentBorders and borderEnabled, borderTexture, borderEdgeSize, borderOutset, borderR, borderG, borderB, borderA)
 		if ResourceBars.ApplySegmentContentInset then
 			ResourceBars.ApplySegmentContentInset(segment, 0)
 		end
@@ -1010,9 +1046,25 @@ function ResourceBars.LayoutDiscreteSegments(bar, cfg, count, texturePath)
 		end
 	end
 
-	for i = 1, #gapMarks do
-		if gapMarks[i] then gapMarks[i]:Hide() end
-	end
+	ResourceBars.LayoutSegmentBoundaryMarks(
+		bar,
+		inner,
+		count,
+		vertical,
+		segmentOffsetsPx,
+		segmentSizesPx,
+		scale,
+		factor,
+		gapMarks,
+		boundaryEnabled,
+		borderTexture,
+		borderEdgeSize,
+		borderOutset,
+		borderR,
+		borderG,
+		borderB,
+		borderA
+	)
 
 	bar._rbDiscreteCount = count
 	bar._rbDiscreteVertical = vertical
@@ -1022,6 +1074,14 @@ function ResourceBars.LayoutDiscreteSegments(bar, cfg, count, texturePath)
 	bar._rbDiscreteSpanPixels = spanPx
 	bar._rbDiscreteCrossPixels = crossPx
 	bar._rbDiscreteReverse = reverse
+	bar._rbDiscreteBoundaryEnabled = boundaryEnabled
+	bar._rbDiscreteBoundaryTexture = borderTexture
+	bar._rbDiscreteBoundaryEdgeSize = borderEdgeSize
+	bar._rbDiscreteBoundaryOutset = borderOutset
+	bar._rbDiscreteBoundaryR = borderR
+	bar._rbDiscreteBoundaryG = borderG
+	bar._rbDiscreteBoundaryB = borderB
+	bar._rbDiscreteBoundaryA = borderA
 end
 
 function ResourceBars.UpdateDiscreteSegments(bar, cfg, count, value, color, texturePath, chargedPoints)
@@ -1029,15 +1089,28 @@ function ResourceBars.UpdateDiscreteSegments(bar, cfg, count, value, color, text
 	count = tonumber(count) or 0
 	if count < 1 then
 		ResourceBars.HideDiscreteSegments(bar)
+		bar._rbDiscreteCount = 0
 		return
 	end
 
 	local vertical = cfg and cfg.verticalFill == true
 	local reverse = cfg and cfg.reverseFill == true
 	local gap = resolveDiscreteSegmentGap(cfg)
-	local useSegmentBorders = true
-	local borderEnabled, borderTexture, borderEdgeSize, borderOutset, borderR, borderG, borderB, borderA = resolveDiscreteSegmentBorderStyle(cfg, useSegmentBorders)
+	local useSegmentBorders = count > 1 and ((ResourceBars.ShouldUsePerSegmentBorders and ResourceBars.ShouldUsePerSegmentBorders(cfg)) or gap > 0)
+	local borderEnabled, borderTexture, borderEdgeSize, borderOutset, borderR, borderG, borderB, borderA = resolveDiscreteSegmentBorderStyle(cfg, true)
+	local boundaryEnabled = count > 1 and not useSegmentBorders and borderEnabled
 	if count < 2 then gap = 0 end
+	local boundaryStyleChanged = bar._rbDiscreteBoundaryEnabled ~= boundaryEnabled
+	if boundaryEnabled then
+		boundaryStyleChanged = boundaryStyleChanged
+			or bar._rbDiscreteBoundaryTexture ~= borderTexture
+			or bar._rbDiscreteBoundaryEdgeSize ~= borderEdgeSize
+			or bar._rbDiscreteBoundaryOutset ~= borderOutset
+			or bar._rbDiscreteBoundaryR ~= borderR
+			or bar._rbDiscreteBoundaryG ~= borderG
+			or bar._rbDiscreteBoundaryB ~= borderB
+			or bar._rbDiscreteBoundaryA ~= borderA
+	end
 
 	if
 		not bar._rbDiscreteSegments
@@ -1045,6 +1118,7 @@ function ResourceBars.UpdateDiscreteSegments(bar, cfg, count, value, color, text
 		or bar._rbDiscreteVertical ~= vertical
 		or bar._rbDiscreteGapRequested ~= gap
 		or bar._rbDiscreteReverse ~= reverse
+		or boundaryStyleChanged
 	then
 		ResourceBars.LayoutDiscreteSegments(bar, cfg, count, texturePath)
 	end
@@ -1122,7 +1196,7 @@ function ResourceBars.UpdateDiscreteSegments(bar, cfg, count, value, color, text
 
 			local textureReset = ensureStatusBarTexturePath(fill, texPath)
 			if fill.SetReverseFill then fill:SetReverseFill(reverse) end
-			applyDiscreteSegmentBorder(sb, bar, borderEnabled, borderTexture, borderEdgeSize, borderOutset, borderR, borderG, borderB, borderA)
+			applyDiscreteSegmentBorder(sb, bar, useSegmentBorders and borderEnabled, borderTexture, borderEdgeSize, borderOutset, borderR, borderG, borderB, borderA)
 			if ResourceBars.ApplySegmentContentInset then
 				ResourceBars.ApplySegmentContentInset(sb, 0)
 			end

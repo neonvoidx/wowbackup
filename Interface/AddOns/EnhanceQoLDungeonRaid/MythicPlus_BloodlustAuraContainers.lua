@@ -22,17 +22,24 @@ local BLOODLUST_BUFF_IDS = {
 	32182, -- Heroism
 	80353, -- Time Warp
 	90355, -- Ancient Hysteria
+	146555, -- Drums of Rage
 	160452, -- Netherwinds
+	178207, -- Drums of Fury
+	230935, -- Drums of the Mountain
+	256740, -- Drums of the Maelstrom
 	264667, -- Primal Rage
+	309658, -- Drums of Deathly Ferocity
+	381301, -- Feral Hide Drums
 	390386, -- Fury of the Aspects
+	441076, -- Timeless Drums
+	444257, -- Thunderous Drums
+	466904, -- Harrier's Cry
+	1243972, -- Void-touched Drums
 }
 local FILTER_STRING = "HELPFUL"
 local SLOT_KEY = "bloodlustBuff"
 local FALLBACK_ICON = 136090
-local state = {
-	soundRegistrationIDs = {},
-}
-local driver
+local state = {}
 
 local function createSlotHost()
 	local host = CreateFrame("Frame", nil, UIParent)
@@ -69,6 +76,8 @@ local function createInitializer()
 	local durationTextOptions = addon.functions and addon.functions.GetAuraButtonDurationTextOptions
 		and addon.functions.GetAuraButtonDurationTextOptions(addon.db and addon.db["mythicPlusBloodlustTrackerDurationTextProfile"])
 		or nil
+	local activeGlowEnabled = addon.db and addon.db["mythicPlusBloodlustTrackerGlowOnActive"] == true
+	local trackerSize = tonumber(addon.db and addon.db["mythicPlusBloodlustButtonSize"]) or 60
 	return function(button)
 		button:EnableMouse(false)
 		if button.SetMouseClickEnabled then button:SetMouseClickEnabled(false) end
@@ -89,6 +98,7 @@ local function createInitializer()
 		cooldown:SetDrawBling(drawBling)
 		cooldown:SetHideCountdownNumbers(true)
 		if cooldown.SetUseAuraDisplayTime then cooldown:SetUseAuraDisplayTime(true) end
+		if cooldown.SetReverse then cooldown:SetReverse(true) end
 		button:SetDurationCooldown(cooldown)
 		if showDuration then
 			local durationText = button:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -110,6 +120,17 @@ local function createInitializer()
 			if addon.functions and addon.functions.ApplyFontStyleShadow then addon.functions.ApplyFontStyleShadow(durationText, fontOutline, "OUTLINE") end
 			button:SetDurationText(durationText, durationTextOptions)
 		end
+		if activeGlowEnabled and AuraCompat.CreateRestrictedAuraGlow and MythicPlus.functions.BuildBloodlustGlowOptions then
+			local style, options = MythicPlus.functions.BuildBloodlustGlowOptions(button)
+			if style and options then
+				options.style = style
+				options.cooldown = nil
+				options.frameLevelOffset = 5
+				options.width = trackerSize
+				options.height = trackerSize
+				button._eqolActiveGlow = AuraCompat:CreateRestrictedAuraGlow(button, button, options)
+			end
+		end
 
 		if MythicPlus.functions.ApplyTrackerIconShape then
 			MythicPlus.functions.ApplyTrackerIconShape(button, icon, cooldown, iconShape, iconZoom)
@@ -125,6 +146,7 @@ local function getStyleSignature()
 	local db = addon.db or {}
 	return table.concat({
 		tostring(getConfiguredIcon()),
+		tostring(db["mythicPlusBloodlustButtonSize"] or 60),
 		tostring(db["mythicPlusBloodlustTrackerIconShape"] or "DEFAULT"),
 		tostring(db["mythicPlusBloodlustTrackerIconZoom"] or 0),
 		db["mythicPlusBloodlustTrackerCooldownDrawSwipe"] ~= false and "1" or "0",
@@ -137,6 +159,17 @@ local function getStyleSignature()
 		tostring(db["mythicPlusBloodlustTrackerCooldownTextOffsetX"] or ""),
 		tostring(db["mythicPlusBloodlustTrackerCooldownTextOffsetY"] or ""),
 		tostring(db["mythicPlusBloodlustTrackerDurationTextProfile"] or ""),
+		db["mythicPlusBloodlustTrackerGlowOnActive"] == true and "1" or "0",
+		tostring(db["mythicPlusBloodlustTrackerActiveGlowStyle"] or ""),
+		tostring(db["mythicPlusBloodlustTrackerActiveGlowInset"] or ""),
+		tostring(db["mythicPlusBloodlustTrackerActiveGlowPixelCount"] or ""),
+		tostring(db["mythicPlusBloodlustTrackerActiveGlowPixelSpeed"] or ""),
+		tostring(db["mythicPlusBloodlustTrackerActiveGlowPixelThickness"] or ""),
+		db["mythicPlusBloodlustTrackerActiveGlowPixelBorder"] == true and "1" or "0",
+		tostring(type(db["mythicPlusBloodlustTrackerActiveGlowColor"]) == "table" and (db["mythicPlusBloodlustTrackerActiveGlowColor"].r or db["mythicPlusBloodlustTrackerActiveGlowColor"][1]) or ""),
+		tostring(type(db["mythicPlusBloodlustTrackerActiveGlowColor"]) == "table" and (db["mythicPlusBloodlustTrackerActiveGlowColor"].g or db["mythicPlusBloodlustTrackerActiveGlowColor"][2]) or ""),
+		tostring(type(db["mythicPlusBloodlustTrackerActiveGlowColor"]) == "table" and (db["mythicPlusBloodlustTrackerActiveGlowColor"].b or db["mythicPlusBloodlustTrackerActiveGlowColor"][3]) or ""),
+		tostring(type(db["mythicPlusBloodlustTrackerActiveGlowColor"]) == "table" and (db["mythicPlusBloodlustTrackerActiveGlowColor"].a or db["mythicPlusBloodlustTrackerActiveGlowColor"][4]) or ""),
 		tostring(addon.DurationText and addon.DurationText.version or 0),
 		tostring(type(db["mythicPlusBloodlustTrackerCooldownTextColor"]) == "table" and (db["mythicPlusBloodlustTrackerCooldownTextColor"].r or db["mythicPlusBloodlustTrackerCooldownTextColor"][1]) or ""),
 		tostring(type(db["mythicPlusBloodlustTrackerCooldownTextColor"]) == "table" and (db["mythicPlusBloodlustTrackerCooldownTextColor"].g or db["mythicPlusBloodlustTrackerCooldownTextColor"][2]) or ""),
@@ -157,82 +190,8 @@ local function discardContainer()
 	state.styleSignature = nil
 end
 
-local function canChangeAuraSoundRegistrations()
-	if InCombatLockdown and InCombatLockdown() then return false end
-	if C_Secrets and C_Secrets.ShouldAurasBeSecret and C_Secrets.ShouldAurasBeSecret() then return false end
-	return true
-end
-
-local function requestSoundRegistrationRetry()
-	if not driver then return end
-	driver:RegisterEvent("PLAYER_REGEN_ENABLED")
-	driver:RegisterEvent("ENCOUNTER_END")
-	driver:RegisterEvent("PLAYER_ENTERING_WORLD")
-	driver:RegisterEvent("ZONE_CHANGED_NEW_AREA")
-end
-
-local function clearSoundRegistrations()
-	if #state.soundRegistrationIDs > 0 and not canChangeAuraSoundRegistrations() then
-		state.pendingSoundClear = true
-		requestSoundRegistrationRetry()
-		return false
-	end
-	if C_UnitAuras and C_UnitAuras.RemoveAuraSound then
-		for i = 1, #state.soundRegistrationIDs do C_UnitAuras.RemoveAuraSound(state.soundRegistrationIDs[i]) end
-	end
-	state.soundRegistrationIDs = {}
-	state.soundSignature = nil
-	state.pendingSoundClear = nil
-	return true
-end
-
-local function resolveAppliedSound()
-	if not (addon.db and addon.db["mythicPlusBloodlustTrackerSoundOnDebuffActive"] == true) then return nil, nil end
-	if addon.db["mythicPlusBloodlustTrackerUseCustomDebuffSound"] ~= true then return nil, nil end
-	local soundName = addon.db["mythicPlusBloodlustTrackerDebuffSoundFile"]
-	if type(soundName) ~= "string" or soundName == "" then return nil, nil end
-	local LSM = LibStub("LibSharedMedia-3.0", true)
-	local value = LSM and LSM.Fetch and LSM:Fetch("sound", soundName, true) or nil
-	if type(value) == "number" and value > 0 then return nil, value end
-	if type(value) == "string" and value ~= "" then return value, nil end
-	return nil, nil
-end
-
 function Backend:IsSupported()
 	return AuraCompat:ShouldUseAuraContainer() == true
-end
-
-function Backend:SyncSounds()
-	local soundFileName, soundFileID = resolveAppliedSound()
-	local onlyInInstances = addon.db and addon.db["mythicPlusBloodlustTrackerOnlyInInstances"] == true
-	local inAllowedScope = not onlyInInstances or IsInInstance()
-	local identity = soundFileName or soundFileID
-	local signature = inAllowedScope and identity and ((soundFileName and "file:" or "id:") .. tostring(identity)) or ""
-	if state.soundSignature == signature and not state.pendingSoundClear then
-		state.pendingSoundSync = nil
-		return
-	end
-	if not canChangeAuraSoundRegistrations() then
-		state.pendingSoundSync = true
-		requestSoundRegistrationRetry()
-		return
-	end
-	state.pendingSoundSync = nil
-	if not clearSoundRegistrations() then return end
-	state.soundSignature = signature
-	if not (identity and inAllowedScope and C_UnitAuras and C_UnitAuras.AddAuraSound) then return end
-	for i = 1, #BLOODLUST_BUFF_IDS do
-		local info = {
-			unitToken = "player",
-			spellID = BLOODLUST_BUFF_IDS[i],
-			outputChannel = "Master",
-		}
-		if soundFileName then info.soundFileName = soundFileName else info.soundFileID = soundFileID end
-		-- This tracks the Bloodlust buff itself. Removed would mean that the
-		-- short buff expired, not that the longer Bloodlust lockout is ready.
-		local registrationID = C_UnitAuras.AddAuraSound(Enum.UnitAuraSoundTrigger.Added, info)
-		if registrationID then state.soundRegistrationIDs[#state.soundRegistrationIDs + 1] = registrationID end
-	end
 end
 
 function Backend:Ensure()
@@ -286,7 +245,6 @@ function Backend:Attach(host)
 	state.host = host
 	state.container:SetAlpha(1)
 	AuraCompat:RefreshAuraContainer(state.container, "player")
-	self:SyncSounds()
 	return true
 end
 
@@ -302,33 +260,12 @@ function Backend:Detach()
 	end
 end
 
-function Backend:Refresh(host)
-	self:SyncSounds()
-	if host then return self:Attach(host) end
-	if state.container then AuraCompat:RefreshAuraContainer(state.container, "player") end
-	return state.container ~= nil
-end
-
 function Backend:Sync()
 	if not (addon.db and addon.db["mythicPlusBloodlustTrackerEnabled"] == true) then
 		self:Detach()
-		clearSoundRegistrations()
 		return
 	end
-	self:SyncSounds()
 	if state.pendingHost then self:Attach(state.pendingHost) else self:Ensure() end
 end
-
-driver = CreateFrame("Frame")
-driver:SetScript("OnEvent", function(self)
-	if not canChangeAuraSoundRegistrations() then return end
-	if state.pendingSoundClear then clearSoundRegistrations() end
-	if state.pendingSoundSync then Backend:SyncSounds() end
-	if addon.db and addon.db["mythicPlusBloodlustTrackerEnabled"] == true then
-		Backend:Ensure()
-		if state.pendingHost then Backend:Attach(state.pendingHost) end
-	end
-	self:UnregisterAllEvents()
-end)
 
 Backend:Ensure()

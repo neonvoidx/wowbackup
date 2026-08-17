@@ -308,6 +308,23 @@ local function buildDrinkMacroSettings()
 	})
 
 	addon.functions.SettingsCreateCheckbox(cDrink, {
+		var = "healthUseMageFood",
+		text = L["Prefer mage food"],
+		desc = L["healthUseMageFoodDesc"],
+		func = function(value)
+			addon.db.healthUseMageFood = value and true or false
+			refreshHealthMacro()
+		end,
+		parentCheck = healthParentCheck,
+		parent = true,
+		element = healthEnable.element,
+		default = false,
+		type = Settings.VarType.Boolean,
+		newTagID = "healthUseMageFood",
+		parentSection = convenienceSection,
+	})
+
+	addon.functions.SettingsCreateCheckbox(cDrink, {
 		var = "healthStopCasting",
 		text = L["healthStopCasting"],
 		desc = L["healthStopCastingDesc"],
@@ -718,6 +735,20 @@ local function buildDrinkMacroSettings()
 	})
 
 	addon.functions.SettingsCreateCheckbox(cDrink, {
+		var = "buffFoodIncludeFeasts",
+		text = L["Include Feasts"] or "Include Feasts",
+		desc = L["Include Feasts Desc"] or "Allows the Buff Food Macro to use Feasts. Disabled by default so the macro only uses personal food.",
+		func = function(value)
+			addon.db.buffFoodIncludeFeasts = value and true or false
+			refreshBuffFoodMacro()
+		end,
+		default = false,
+		type = Settings.VarType.Boolean,
+		newTagID = "buffFoodIncludeFeasts",
+		parentSection = convenienceSection,
+	})
+
+	addon.functions.SettingsCreateCheckbox(cDrink, {
 		var = "buffFoodPreferHearty",
 		text = L["Prefer Hearty Food"] or "Prefer Hearty food",
 		desc = L["Prefer Hearty Food Desc"] or "Prioritizes Hearty buff food first; when unavailable, the macro falls back to the normal version.",
@@ -899,7 +930,7 @@ function addon.functions.OpenFlaskMacroSettings()
 	local convenienceSection = addon.SettingsLayout and addon.SettingsLayout.gameplayConvenienceSection
 	if convenienceSection and convenienceSection.data then convenienceSection.data.expanded = true end
 
-	if addon.functions and addon.functions.OpenConfigCenter then addon.functions.OpenConfigCenter("gameplay.macrosconsumables", "flaskMacroEnabled") end
+	if addon.functions and addon.functions.OpenConfigCenter then addon.functions.OpenConfigCenter("gameplay.travel-utility", "flaskMacroEnabled") end
 end
 
 function addon.functions.OpenBuffFoodMacroSettings()
@@ -912,5 +943,5 @@ function addon.functions.OpenBuffFoodMacroSettings()
 	local convenienceSection = addon.SettingsLayout and addon.SettingsLayout.gameplayConvenienceSection
 	if convenienceSection and convenienceSection.data then convenienceSection.data.expanded = true end
 
-	if addon.functions and addon.functions.OpenConfigCenter then addon.functions.OpenConfigCenter("gameplay.macrosconsumables", "buffFoodMacroEnabled") end
+	if addon.functions and addon.functions.OpenConfigCenter then addon.functions.OpenConfigCenter("gameplay.travel-utility", "buffFoodMacroEnabled") end
 end

@@ -4,7 +4,7 @@ AutoCollapseBuffs: enabled
 Baganator: enabled
 BattleGroundEnemiesFixed: enabled
 BetterBlizzFrames: enabled
-BetterBlizzPlates: enabled
+BetterBlizzPlates: disabled
 BetterUpgradeTooltip: enabled
 BtWLoadouts: enabled
 !BugGrabber: enabled
@@ -97,3 +97,8 @@ ArenaDRNameplates: enabled
 ArenaAnalytics: enabled
 LibDeflate: enabled
 MiniWinLoss: enabled
+AztarecHelper: enabled
+BarberShopProfiles: enabled
+BetterFishing: enabled
+EnhanceQoLQuickActions: enabled
+LariasWeeklyChecklist: enabled

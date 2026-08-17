@@ -169,6 +169,24 @@ local COOLDOWN_VIEWER_VISIBILITY_MODES = {
 }
 addon.constants.COOLDOWN_VIEWER_VISIBILITY_MODES = COOLDOWN_VIEWER_VISIBILITY_MODES
 
+addon.visibilityRuntime = addon.visibilityRuntime or {}
+addon.visibilityRuntime.cooldownViewerConfigKeys = {
+	COOLDOWN_VIEWER_VISIBILITY_MODES.IN_COMBAT,
+	COOLDOWN_VIEWER_VISIBILITY_MODES.WHILE_MOUNTED,
+	COOLDOWN_VIEWER_VISIBILITY_MODES.WHILE_NOT_MOUNTED,
+	COOLDOWN_VIEWER_VISIBILITY_MODES.SKYRIDING_ACTIVE,
+	COOLDOWN_VIEWER_VISIBILITY_MODES.SKYRIDING_INACTIVE,
+	COOLDOWN_VIEWER_VISIBILITY_MODES.FLYING_ACTIVE,
+	COOLDOWN_VIEWER_VISIBILITY_MODES.FLYING_INACTIVE,
+	COOLDOWN_VIEWER_VISIBILITY_MODES.MOUSEOVER,
+	COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_HAS_FOCUS,
+	COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_HAS_TARGET,
+	COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_CASTING,
+	COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_IN_GROUP,
+	COOLDOWN_VIEWER_VISIBILITY_MODES.SHOW_IN_INSTANCE,
+	COOLDOWN_VIEWER_VISIBILITY_MODES.ALWAYS_HIDDEN,
+}
+
 local SPELL_ACTIVATION_OVERLAY_FRAME_NAME = "SpellActivationOverlayFrame"
 addon.constants.SPELL_ACTIVATION_OVERLAY_FRAME_NAME = SPELL_ACTIVATION_OVERLAY_FRAME_NAME
 local SPELL_ACTIVATION_OVERLAY_VISIBILITY_KEYS = {
@@ -902,6 +920,29 @@ local function SafeRegisterUnitEvent(frame, event, ...)
 	return ok
 end
 
+addon.visibilityRuntime.playerCastingEvents = {
+	"UNIT_SPELLCAST_START",
+	"UNIT_SPELLCAST_STOP",
+	"UNIT_SPELLCAST_FAILED",
+	"UNIT_SPELLCAST_INTERRUPTED",
+	"UNIT_SPELLCAST_CHANNEL_START",
+	"UNIT_SPELLCAST_CHANNEL_STOP",
+}
+
+function addon.visibilityRuntime:SetPlayerCastingEventInterest(watcher, enabled)
+	if not watcher then return end
+	enabled = enabled == true
+	if watcher._eqolPlayerCastingEventsRegistered == enabled then return end
+	for _, event in ipairs(self.playerCastingEvents) do
+		if enabled then
+			SafeRegisterUnitEvent(watcher, event, "player")
+		elseif watcher.UnregisterEvent then
+			watcher:UnregisterEvent(event)
+		end
+	end
+	watcher._eqolPlayerCastingEventsRegistered = enabled
+end
+
 addon.functions.VisibilityConfigUsesManualEvaluation = function(config, opts)
 	if type(config) ~= "table" or not next(config) then return false end
 	local allowMouseover = not (opts and opts.allowMouseover == false)
@@ -1073,15 +1114,26 @@ local function RefreshAllFrameVisibilities()
 end
 addon.functions.RefreshAllFrameVisibilityAlpha = RefreshAllFrameVisibilities
 
+function addon.visibilityRuntime:UpdateFrameWatcherEventInterest()
+	local watcher = addon.variables and addon.variables.frameVisibilityWatcher
+	if not watcher then return end
+	local needsPlayerCasting = false
+	for _, state in pairs(frameVisibilityStates) do
+		local cfg = state and state.config
+		if not state.driverActive and state.supportsPlayerCastingRule == true and cfg and cfg.PLAYER_CASTING == true then
+			needsPlayerCasting = true
+			break
+		end
+	end
+	self:SetPlayerCastingEventInterest(watcher, needsPlayerCasting)
+end
+
 local function EnsureFrameVisibilityWatcher()
 	addon.variables = addon.variables or {}
 	if addon.variables.frameVisibilityWatcher then return end
 
 	local watcher = CreateFrame("Frame")
-	watcher:SetScript("OnEvent", function(self, event, unit)
-		UpdateFrameVisibilityContext()
-		RefreshAllFrameVisibilities()
-	end)
+	watcher:SetScript("OnEvent", RefreshAllFrameVisibilities)
 	watcher:RegisterEvent("PLAYER_ENTERING_WORLD")
 	watcher:RegisterEvent("PLAYER_DEAD")
 	watcher:RegisterEvent("PLAYER_ALIVE")
@@ -1098,13 +1150,8 @@ local function EnsureFrameVisibilityWatcher()
 	watcher:RegisterEvent("UPDATE_INSTANCE_INFO")
 	watcher:RegisterEvent("UPDATE_SHAPESHIFT_FORM")
 	watcher:RegisterEvent("GROUP_ROSTER_UPDATE")
-	SafeRegisterUnitEvent(watcher, "UNIT_SPELLCAST_START", "player")
-	SafeRegisterUnitEvent(watcher, "UNIT_SPELLCAST_STOP", "player")
-	SafeRegisterUnitEvent(watcher, "UNIT_SPELLCAST_FAILED", "player")
-	SafeRegisterUnitEvent(watcher, "UNIT_SPELLCAST_INTERRUPTED", "player")
-	SafeRegisterUnitEvent(watcher, "UNIT_SPELLCAST_CHANNEL_START", "player")
-	SafeRegisterUnitEvent(watcher, "UNIT_SPELLCAST_CHANNEL_STOP", "player")
 	addon.variables.frameVisibilityWatcher = watcher
+	addon.visibilityRuntime:UpdateFrameWatcherEventInterest()
 	UpdateFrameVisibilityContext()
 end
 
@@ -1272,6 +1319,7 @@ ApplyFrameVisibilityState = function(state)
 		if not cfg or not next(cfg) then
 			if state.visible ~= nil then SetBossFrameHidden(false) end
 			frameVisibilityStates[state.frame] = nil
+			addon.visibilityRuntime:UpdateFrameWatcherEventInterest()
 			return
 		end
 
@@ -1286,6 +1334,7 @@ ApplyFrameVisibilityState = function(state)
 	if not cfg or not next(cfg) then
 		if state.visible ~= nil then RestoreUnitFrameVisibility(state.frame, state.cbData) end
 		frameVisibilityStates[state.frame] = nil
+		addon.visibilityRuntime:UpdateFrameWatcherEventInterest()
 		return
 	end
 
@@ -1389,12 +1438,14 @@ local function ClearUnitFrameState(frame, cbData, opts)
 		ApplyUnitFrameStateDriver(frame, nil, cbData and cbData.showWhenNoRule)
 		SetBossFrameHidden(false)
 		frameVisibilityStates[frame] = nil
+		addon.visibilityRuntime:UpdateFrameWatcherEventInterest()
 		return
 	end
 	local hasDriver = frame.EQOL_VisibilityStateDriver ~= nil or (frame.GetAttribute and frame:GetAttribute("state-visibility") ~= nil)
 	if not (opts and opts.noStateDriver) or hasDriver then ApplyUnitFrameStateDriver(frame, nil, cbData and cbData.showWhenNoRule) end
 	RestoreUnitFrameVisibility(frame, cbData)
 	frameVisibilityStates[frame] = nil
+	addon.visibilityRuntime:UpdateFrameWatcherEventInterest()
 end
 
 local function ApplyVisibilityToUnitFrame(frameName, cbData, config, opts)
@@ -1434,6 +1485,7 @@ local function ApplyVisibilityToUnitFrame(frameName, cbData, config, opts)
 
 	if useDriver then
 		state.driverActive = true
+		addon.visibilityRuntime:UpdateFrameWatcherEventInterest()
 		ApplyUnitFrameStateDriver(frame, driverExpression)
 		ApplyToFrameAndChildren(state, 1, false)
 		return true
@@ -1441,6 +1493,7 @@ local function ApplyVisibilityToUnitFrame(frameName, cbData, config, opts)
 
 	local hadDriver = state.driverActive == true or frame.EQOL_VisibilityStateDriver ~= nil or (frame.GetAttribute and frame:GetAttribute("state-visibility") ~= nil)
 	state.driverActive = false
+	addon.visibilityRuntime:UpdateFrameWatcherEventInterest()
 	if not (opts and opts.noStateDriver) or state.isBossFrame or hadDriver then ApplyUnitFrameStateDriver(frame, nil, state.cbData and state.cbData.showWhenNoRule) end
 
 	if config.MOUSEOVER then
@@ -1590,12 +1643,49 @@ local function sanitizeCooldownViewerConfig(cfg)
 	return nil
 end
 
-local function HasCooldownViewerVisibilityConfig()
+function addon.visibilityRuntime:GetConfigSignature(cfg, allowedKeys)
+	local cfgType = type(cfg)
+	if cfgType == "string" then return cfg end
+	if cfgType ~= "table" then return cfgType end
+	local signature = 0
+	local bitValue = 1
+	for _, key in ipairs(self.cooldownViewerConfigKeys) do
+		if (not allowedKeys or allowedKeys[key]) and cfg[key] == true then signature = signature + bitValue end
+		bitValue = bitValue * 2
+	end
+	return signature
+end
+
+function addon.visibilityRuntime:GetCachedCooldownViewerVisibility(frameName)
+	addon.variables = addon.variables or {}
 	local db = addon.db and addon.db.cooldownViewerVisibility
-	if type(db) ~= "table" then return false end
-	for _, cfg in pairs(db) do
-		local sanitized = sanitizeCooldownViewerConfig(cfg)
-		if sanitized and next(sanitized) then return true end
+	local source = type(db) == "table" and db[frameName] or nil
+	local signature = self:GetConfigSignature(source)
+	if type(source) == "table" and source.HIDE_WHILE_MOUNTED == true then signature = signature + 16384 end
+	local cache = addon.variables.cooldownViewerVisibilityConfigCache
+	if not cache then
+		cache = {}
+		addon.variables.cooldownViewerVisibilityConfigCache = cache
+	end
+	local cached = cache[frameName]
+	if cached and cached.source == source and cached.signature == signature then return cached.config end
+	local sanitized = sanitizeCooldownViewerConfig(source)
+	cache[frameName] = { source = source, signature = signature, config = sanitized }
+	return sanitized
+end
+
+local function HasCooldownViewerVisibilityConfig()
+	for _, frameName in ipairs(COOLDOWN_VIEWER_FRAMES) do
+		local cfg = addon.visibilityRuntime:GetCachedCooldownViewerVisibility(frameName)
+		if cfg and next(cfg) then return true end
+	end
+	return false
+end
+
+function addon.visibilityRuntime:CooldownViewerUsesPlayerCasting()
+	for _, frameName in ipairs(COOLDOWN_VIEWER_FRAMES) do
+		local cfg = self:GetCachedCooldownViewerVisibility(frameName)
+		if cfg and cfg[COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_CASTING] == true then return true end
 	end
 	return false
 end
@@ -1659,7 +1749,7 @@ local function computeCooldownViewerTargetAlpha(cfg, state)
 
 	local hasFocus = UnitExists and UnitExists("focus")
 	local hasTarget = UnitExists and UnitExists("target")
-	local isCasting = IsPlayerCasting()
+	local isCasting = cfg[COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_CASTING] and IsPlayerCasting() or false
 	local inGroup = IsInGroup and IsInGroup() and true or false
 	local inInstance = IsInInstance and IsInInstance() and true or false
 	local isSkyriding = addon.variables and addon.variables.isPlayerSkyriding
@@ -2026,8 +2116,8 @@ local function ensureCooldownViewerDb()
 end
 
 function addon.functions.GetCooldownViewerVisibility(frameName)
-	local db = ensureCooldownViewerDb()
-	local sanitized = sanitizeCooldownViewerConfig(db[frameName])
+	ensureCooldownViewerDb()
+	local sanitized = addon.visibilityRuntime:GetCachedCooldownViewerVisibility(frameName)
 	if not sanitized then return nil end
 	local copy = {}
 	for k, v in pairs(sanitized) do
@@ -2076,9 +2166,9 @@ function addon.functions.ApplyCooldownViewerVisibility()
 	local missingFrame = false
 
 	for _, frameName in ipairs(COOLDOWN_VIEWER_FRAMES) do
-		local cfg = addon.functions.GetCooldownViewerVisibility(frameName)
+		local cfg = addon.visibilityRuntime:GetCachedCooldownViewerVisibility(frameName)
 		if not enabled then cfg = nil end
-		if not applyCooldownViewerMode(frameName, cfg) then missingFrame = true end
+		if not applyCooldownViewerMode(frameName, cfg) and cfg and next(cfg) then missingFrame = true end
 	end
 
 	if addon.functions.UpdateCooldownViewerCombatLocks then addon.functions.UpdateCooldownViewerCombatLocks() end
@@ -2088,6 +2178,7 @@ function addon.functions.ApplyCooldownViewerVisibility()
 	elseif addon.variables then
 		addon.variables.cooldownViewerRetryCount = nil
 	end
+	if addon.functions.EnsureCooldownViewerWatcher then addon.functions.EnsureCooldownViewerWatcher() end
 end
 
 local COOLDOWN_VIEWER_EVENTS = {
@@ -2119,33 +2210,31 @@ local COOLDOWN_VIEWER_UNIT_EVENTS = {
 	"UNIT_EXITED_VEHICLE",
 }
 
-local function setCooldownViewerWatcherEnabled(watcher, enabled)
+local function setCooldownViewerWatcherEnabled(watcher, enabled, wantsPlayerCasting)
 	if not watcher then return end
 	if enabled then
-		if watcher._eqolEventsRegistered then return end
-		for _, event in ipairs(COOLDOWN_VIEWER_EVENTS) do
-			watcher:RegisterEvent(event)
+		if not watcher._eqolEventsRegistered then
+			for _, event in ipairs(COOLDOWN_VIEWER_EVENTS) do
+				watcher:RegisterEvent(event)
+			end
+			for _, event in ipairs(COOLDOWN_VIEWER_UNIT_EVENTS) do
+				SafeRegisterUnitEvent(watcher, event, "player")
+			end
+			watcher._eqolEventsRegistered = true
 		end
-		for _, event in ipairs(COOLDOWN_VIEWER_UNIT_EVENTS) do
-			SafeRegisterUnitEvent(watcher, event, "player")
-		end
-		SafeRegisterUnitEvent(watcher, "UNIT_SPELLCAST_START", "player")
-		SafeRegisterUnitEvent(watcher, "UNIT_SPELLCAST_STOP", "player")
-		SafeRegisterUnitEvent(watcher, "UNIT_SPELLCAST_FAILED", "player")
-		SafeRegisterUnitEvent(watcher, "UNIT_SPELLCAST_INTERRUPTED", "player")
-		SafeRegisterUnitEvent(watcher, "UNIT_SPELLCAST_CHANNEL_START", "player")
-		SafeRegisterUnitEvent(watcher, "UNIT_SPELLCAST_CHANNEL_STOP", "player")
-		watcher._eqolEventsRegistered = true
+		addon.visibilityRuntime:SetPlayerCastingEventInterest(watcher, wantsPlayerCasting)
 	else
 		if not watcher._eqolEventsRegistered then return end
 		watcher:UnregisterAllEvents()
 		watcher._eqolEventsRegistered = false
+		watcher._eqolPlayerCastingEventsRegistered = false
 	end
 end
 
 local function EnsureCooldownViewerWatcher()
 	addon.variables = addon.variables or {}
 	local enable = HasCooldownViewerVisibilityConfig()
+	local wantsPlayerCasting = enable and IsCooldownViewerEnabled() and addon.visibilityRuntime:CooldownViewerUsesPlayerCasting()
 	local watcher = addon.variables.cooldownViewerWatcher
 
 	if not watcher then
@@ -2169,7 +2258,7 @@ local function EnsureCooldownViewerWatcher()
 	end
 
 	EnsureSkyridingStateDriver()
-	setCooldownViewerWatcherEnabled(watcher, true)
+	setCooldownViewerWatcherEnabled(watcher, true, wantsPlayerCasting)
 	return true
 end
 addon.functions.EnsureCooldownViewerWatcher = EnsureCooldownViewerWatcher
@@ -2213,8 +2302,19 @@ local function sanitizeSpellActivationOverlayConfig(cfg)
 	return nil
 end
 
+function addon.visibilityRuntime:GetCachedSpellActivationOverlayVisibility()
+	addon.variables = addon.variables or {}
+	local source = addon.db and addon.db.spellActivationOverlayVisibility
+	local signature = self:GetConfigSignature(source, SPELL_ACTIVATION_OVERLAY_VISIBILITY_KEYS)
+	local cached = addon.variables.spellActivationOverlayVisibilityConfigCache
+	if cached and cached.source == source and cached.signature == signature then return cached.config end
+	local sanitized = sanitizeSpellActivationOverlayConfig(source)
+	addon.variables.spellActivationOverlayVisibilityConfigCache = { source = source, signature = signature, config = sanitized }
+	return sanitized
+end
+
 function addon.functions.GetSpellActivationOverlayVisibility()
-	local cfg = sanitizeSpellActivationOverlayConfig(addon.db and addon.db.spellActivationOverlayVisibility)
+	local cfg = addon.visibilityRuntime:GetCachedSpellActivationOverlayVisibility()
 	if not cfg then return nil end
 	local copy = {}
 	for key, value in pairs(cfg) do
@@ -2253,7 +2353,7 @@ local function computeSpellActivationOverlayTargetAlpha(cfg, activeAlpha, hidden
 	local isFlying = IsPlayerFlying()
 	local hasFocus = UnitExists and UnitExists("focus") and true or false
 	local hasTarget = UnitExists and UnitExists("target") and true or false
-	local isCasting = IsPlayerCasting()
+	local isCasting = cfg[COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_CASTING] and IsPlayerCasting() or false
 	local inInstance = IsInInstance and IsInInstance() and true or false
 
 	local shouldShow = false
@@ -2331,9 +2431,9 @@ end
 function addon.functions.ApplySpellActivationOverlayVisibility()
 	addon.db = addon.db or {}
 	addon.variables = addon.variables or {}
-	EnsureSkyridingStateDriver()
 
-	local cfg = addon.functions.GetSpellActivationOverlayVisibility()
+	local cfg = addon.visibilityRuntime:GetCachedSpellActivationOverlayVisibility()
+	if cfg and (cfg[COOLDOWN_VIEWER_VISIBILITY_MODES.SKYRIDING_ACTIVE] or cfg[COOLDOWN_VIEWER_VISIBILITY_MODES.SKYRIDING_INACTIVE]) then EnsureSkyridingStateDriver() end
 	local ok = applySpellActivationOverlayMode(cfg)
 
 	if cfg and not ok then
@@ -2341,42 +2441,62 @@ function addon.functions.ApplySpellActivationOverlayVisibility()
 	elseif addon.variables then
 		addon.variables.spellActivationOverlayRetryCount = nil
 	end
+	if EnsureSpellActivationOverlayWatcher then EnsureSpellActivationOverlayWatcher() end
+end
+
+addon.visibilityRuntime.spellActivationOverlayEvents = {
+	"PLAYER_ENTERING_WORLD",
+	"PLAYER_FOCUS_CHANGED",
+	"PLAYER_TARGET_CHANGED",
+	"PLAYER_MOUNT_DISPLAY_CHANGED",
+	"ZONE_CHANGED_NEW_AREA",
+	"PLAYER_DIFFICULTY_CHANGED",
+	"INSTANCE_GROUP_SIZE_CHANGED",
+	"UPDATE_INSTANCE_INFO",
+	"UPDATE_SHAPESHIFT_FORM",
+	"UPDATE_BONUS_ACTIONBAR",
+	"UPDATE_VEHICLE_ACTIONBAR",
+	"UPDATE_OVERRIDE_ACTIONBAR",
+	"UPDATE_POSSESS_BAR",
+	"VEHICLE_UPDATE",
+}
+
+function addon.visibilityRuntime:SetSpellActivationOverlayWatcherEnabled(watcher, enabled, wantsPlayerCasting)
+	if not watcher then return end
+	if enabled then
+		if not watcher._eqolEventsRegistered then
+			for _, event in ipairs(self.spellActivationOverlayEvents) do
+				watcher:RegisterEvent(event)
+			end
+			for _, event in ipairs(COOLDOWN_VIEWER_UNIT_EVENTS) do
+				SafeRegisterUnitEvent(watcher, event, "player")
+			end
+			watcher._eqolEventsRegistered = true
+		end
+		addon.visibilityRuntime:SetPlayerCastingEventInterest(watcher, wantsPlayerCasting)
+	else
+		if not watcher._eqolEventsRegistered then return end
+		watcher:UnregisterAllEvents()
+		watcher._eqolEventsRegistered = false
+		watcher._eqolPlayerCastingEventsRegistered = false
+	end
 end
 
 EnsureSpellActivationOverlayWatcher = function()
 	addon.variables = addon.variables or {}
-	if addon.variables.spellActivationOverlayWatcher then return end
-
-	EnsureSkyridingStateDriver()
-	local watcher = CreateFrame("Frame")
-	watcher:RegisterEvent("PLAYER_ENTERING_WORLD")
-	watcher:RegisterEvent("PLAYER_FOCUS_CHANGED")
-	watcher:RegisterEvent("PLAYER_TARGET_CHANGED")
-	watcher:RegisterEvent("PLAYER_MOUNT_DISPLAY_CHANGED")
-	watcher:RegisterEvent("ZONE_CHANGED_NEW_AREA")
-	watcher:RegisterEvent("PLAYER_DIFFICULTY_CHANGED")
-	watcher:RegisterEvent("INSTANCE_GROUP_SIZE_CHANGED")
-	watcher:RegisterEvent("UPDATE_INSTANCE_INFO")
-	watcher:RegisterEvent("UPDATE_SHAPESHIFT_FORM")
-	watcher:RegisterEvent("UPDATE_BONUS_ACTIONBAR")
-	watcher:RegisterEvent("UPDATE_VEHICLE_ACTIONBAR")
-	watcher:RegisterEvent("UPDATE_OVERRIDE_ACTIONBAR")
-	watcher:RegisterEvent("UPDATE_POSSESS_BAR")
-	watcher:RegisterEvent("VEHICLE_UPDATE")
-	SafeRegisterUnitEvent(watcher, "UNIT_ENTERING_VEHICLE", "player")
-	SafeRegisterUnitEvent(watcher, "UNIT_ENTERED_VEHICLE", "player")
-	SafeRegisterUnitEvent(watcher, "UNIT_EXITING_VEHICLE", "player")
-	SafeRegisterUnitEvent(watcher, "UNIT_EXITED_VEHICLE", "player")
-	SafeRegisterUnitEvent(watcher, "UNIT_SPELLCAST_START", "player")
-	SafeRegisterUnitEvent(watcher, "UNIT_SPELLCAST_STOP", "player")
-	SafeRegisterUnitEvent(watcher, "UNIT_SPELLCAST_FAILED", "player")
-	SafeRegisterUnitEvent(watcher, "UNIT_SPELLCAST_INTERRUPTED", "player")
-	SafeRegisterUnitEvent(watcher, "UNIT_SPELLCAST_CHANNEL_START", "player")
-	SafeRegisterUnitEvent(watcher, "UNIT_SPELLCAST_CHANNEL_STOP", "player")
-	watcher:SetScript("OnEvent", function()
-		if addon.functions.ApplySpellActivationOverlayVisibility then addon.functions.ApplySpellActivationOverlayVisibility() end
-	end)
-	addon.variables.spellActivationOverlayWatcher = watcher
+	local cfg = addon.visibilityRuntime:GetCachedSpellActivationOverlayVisibility()
+	local enable = cfg and next(cfg) ~= nil
+	local watcher = addon.variables.spellActivationOverlayWatcher
+	if not watcher then
+		if not enable then return false end
+		watcher = CreateFrame("Frame")
+		watcher:SetScript("OnEvent", function()
+			if addon.functions.ApplySpellActivationOverlayVisibility then addon.functions.ApplySpellActivationOverlayVisibility() end
+		end)
+		addon.variables.spellActivationOverlayWatcher = watcher
+	end
+	addon.visibilityRuntime:SetSpellActivationOverlayWatcherEnabled(watcher, enable, enable and cfg[COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_CASTING] == true)
+	return enable
 end
 addon.functions.EnsureSpellActivationOverlayWatcher = EnsureSpellActivationOverlayWatcher
 
@@ -4266,6 +4386,7 @@ local function initUI()
 	addon.functions.InitDBValue("hideScreenshotStatus", false)
 	addon.functions.InitDBValue("showTrainAllButton", false)
 	addon.functions.InitDBValue("autoCancelDruidFlightForm", false)
+	addon.functions.InitDBValue("mountBindingDismountWhileMounted", false)
 	addon.functions.InitDBValue("randomMountDruidNoShiftWhileMounted", false)
 	addon.functions.InitDBValue("randomMountDracthyrVisageBeforeMount", false)
 	addon.functions.InitDBValue("randomMountCastSlowFallWhenFalling", false)
@@ -4362,12 +4483,7 @@ local function initUI()
 	addon.functions.InitDBValue("unclampMinimapCluster", false)
 	addon.functions.InitDBValue("enableMinimapClusterScale", false)
 	addon.functions.InitDBValue("minimapClusterScale", 1)
-	addon.functions.InitDBValue("showWorldMapCoordinates", false)
-	addon.functions.InitDBValue("worldMapCoordinatesUpdateInterval", 0.1)
-	addon.functions.InitDBValue("worldMapCoordinatesHideCursor", true)
 	addon.functions.InitDBValue("hiddenMinimapElements", addon.db["hiddenMinimapElements"] or {})
-	-- TODO 12.1 cleanup: remove persistAuctionHouseFilter if native Auction House filter persistence covers this workaround.
-	addon.functions.InitDBValue("persistAuctionHouseFilter", false)
 	addon.functions.InitDBValue("alwaysUserCurExpAuctionHouse", false)
 	addon.functions.InitDBValue("alwaysUserCurExpCraftingOrders", false)
 	addon.functions.InitDBValue("enableExtendedMerchant", false)
@@ -6508,8 +6624,9 @@ local function setAllHooks()
 	local function refreshClassBuffReminderForMedia(mediaType, mediaKey)
 		if mediaType ~= "border" then return end
 		local reminder = addon.ClassBuffReminder
-		if not (reminder and reminder.frame and reminder.GetBorderTextureKey and reminder.ApplyVisualSettings and reminder.RequestUpdate) then return end
+		if not (reminder and reminder.frame and reminder.GetBorderTextureKey and reminder.InvalidateVisualSettingsCache and reminder.ApplyVisualSettings and reminder.RequestUpdate) then return end
 		if reminder:GetBorderTextureKey() ~= mediaKey then return end
+		reminder:InvalidateVisualSettingsCache()
 		reminder:ApplyVisualSettings()
 		reminder:RequestUpdate(true)
 	end
@@ -6577,6 +6694,7 @@ local function setAllHooks()
 			end
 		end
 		if addon.Bags and addon.Bags.functions and addon.Bags.functions.RefreshGlobalFont then addon.Bags.functions.RefreshGlobalFont() end
+		if addon.QuickCast and addon.QuickCast.RefreshGlobalFont then addon.QuickCast:RefreshGlobalFont() end
 		if addon.InstanceDifficulty and addon.InstanceDifficulty.Update then addon.InstanceDifficulty:Update() end
 		if addon.Aura then
 			local xpBar = addon.Aura.ExperienceBar
@@ -7184,6 +7302,7 @@ local eventHandlers = {
 			loadSubAddon("EnhanceQoLSound")
 			loadSubAddon("EnhanceQoLClassBuffReminder")
 			loadSubAddon("EnhanceQoLMover")
+			loadSubAddon("EnhanceQoLQuickActions")
 			--[==[@debug@
 			loadSubAddon("EnhanceQoLQuery")
 			--@end-debug@]==]
@@ -7352,14 +7471,33 @@ local eventHandlers = {
 		StaticPopup_Hide("RESURRECT_NO_SICKNESS")
 		StaticPopup_Hide("RESURRECT_NO_TIMER")
 	end,
-	["PARTY_INVITE_REQUEST"] = function(unitName, arg2, arg3, arg4, arg5, arg6, unitID, arg8)
+	["PARTY_INVITE_REQUEST"] = function(unitName, arg2, arg3, arg4, arg5, arg6, inviterGUID, arg8)
 		if addon.db["autoAcceptGroupInvite"] then
 			if addon.db["autoAcceptGroupInviteGuildOnly"] then
+				local playerRealm = _G.GetNormalizedRealmName and _G.GetNormalizedRealmName()
+				if not playerRealm or playerRealm == "" then playerRealm = select(2, UnitFullName("player")) end
+
+				local function normalizeCharacterName(name)
+					if type(name) ~= "string" or name == "" then return nil end
+					local characterName, realmName = strsplit("-", name, 2)
+					if not characterName or characterName == "" then return nil end
+					if not realmName or realmName == "" then realmName = playerRealm end
+					if not realmName or realmName == "" then return nil end
+					return characterName .. "-" .. realmName
+				end
+
+				local normalizedInviterName = normalizeCharacterName(unitName)
 				local gMember = GetNumGuildMembers()
 				if gMember then
 					for i = 1, gMember do
-						local name = GetGuildRosterInfo(i)
-						if name == unitName then
+						local name, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, guid = GetGuildRosterInfo(i)
+						local matchesGuildMember
+						if inviterGUID and guid then
+							matchesGuildMember = inviterGUID == guid
+						else
+							matchesGuildMember = normalizedInviterName ~= nil and normalizeCharacterName(name) == normalizedInviterName
+						end
+						if matchesGuildMember then
 							AcceptGroup()
 							StaticPopup_Hide("PARTY_INVITE")
 							return
@@ -7368,14 +7506,14 @@ local eventHandlers = {
 				end
 			end
 			if addon.db["autoAcceptGroupInviteFriendOnly"] then
-				if C_BattleNet.GetGameAccountInfoByGUID(unitID) then
+				if C_BattleNet.GetGameAccountInfoByGUID(inviterGUID) then
 					AcceptGroup()
 					StaticPopup_Hide("PARTY_INVITE")
 					return
 				end
 				for i = 1, C_FriendList.GetNumFriends() do
 					local friendInfo = C_FriendList.GetFriendInfoByIndex(i)
-					if friendInfo.guid == unitID then
+					if friendInfo.guid == inviterGUID then
 						AcceptGroup()
 						StaticPopup_Hide("PARTY_INVITE")
 						return
@@ -7543,46 +7681,17 @@ local eventHandlers = {
 		addon.variables.auctionHouseOpen = true
 		if addon.db["closeBagsOnAuctionHouse"] and not addon.functions.isRestrictedContent() then CloseAllBags() end
 		if addon.functions.RefreshAuctionHouseBagFade then addon.functions.RefreshAuctionHouseBagFade() end
-		-- TODO 12.1 cleanup: Blizzard persists Auction House filters natively; remove this restore hook after release verification.
-		if addon.db["persistAuctionHouseFilter"] then
-			if not AuctionHouseFrame.SearchBar.FilterButton.eqolHooked then
-				hooksecurefunc(AuctionHouseFrame.SearchBar.FilterButton, "Reset", function(self)
-					if not addon.db["persistAuctionHouseFilter"] or not addon.variables.safedAuctionFilters then
-					else
-						if addon.variables.safedAuctionFilters then AuctionHouseFrame.SearchBar.FilterButton.filters = addon.variables.safedAuctionFilters end
-						AuctionHouseFrame.SearchBar.FilterButton.minLevel = addon.variables.safedAuctionMinlevel
-						AuctionHouseFrame.SearchBar.FilterButton.maxLevel = addon.variables.safedAuctionMaxlevel
-						addon.variables.safedAuctionFilters = nil
-						self.ClearFiltersButton:Show()
-						-- Ensure the Current Expansion filter remains enforced when both options are enabled
-						if addon.db["alwaysUserCurExpAuctionHouse"] then
-							AuctionHouseFrame.SearchBar.FilterButton.filters[Enum.AuctionHouseFilter.CurrentExpansionOnly] = true
-							AuctionHouseFrame.SearchBar:UpdateClearFiltersButton()
-						end
-					end
-				end)
-				AuctionHouseFrame.SearchBar.FilterButton.eqolHooked = true
-			end
-		end
 		if addon.db["alwaysUserCurExpAuctionHouse"] then
 			RunNextFrame(function()
-				AuctionHouseFrame.SearchBar.FilterButton.filters[Enum.AuctionHouseFilter.CurrentExpansionOnly] = true
-				AuctionHouseFrame.SearchBar:UpdateClearFiltersButton()
+				local filterButton = AuctionHouseFrame.SearchBar.FilterButton
+				local filter = Enum.AuctionHouseFilter.CurrentExpansionOnly
+				if not filterButton:GetFilters()[filter] then filterButton:ToggleFilter(filter) end
 			end)
 		end
 	end,
 	["AUCTION_HOUSE_CLOSED"] = function()
 		addon.variables.auctionHouseOpen = false
 		if addon.functions.RefreshAuctionHouseBagFade then addon.functions.RefreshAuctionHouseBagFade() end
-		-- TODO 12.1 cleanup: remove this saved filter cache once native Auction House persistence is confirmed on release.
-		if not addon.db["persistAuctionHouseFilter"] then return end
-		if AuctionHouseFrame.SearchBar.FilterButton.ClearFiltersButton:IsShown() then
-			addon.variables.safedAuctionFilters = AuctionHouseFrame.SearchBar.FilterButton.filters
-			addon.variables.safedAuctionMinlevel = AuctionHouseFrame.SearchBar.FilterButton.minLevel
-			addon.variables.safedAuctionMaxlevel = AuctionHouseFrame.SearchBar.FilterButton.maxLevel
-		else
-			addon.variables.safedAuctionFilters = nil
-		end
 	end,
 	["CRAFTINGORDERS_SHOW_CUSTOMER"] = function() applyCurrentExpansionCraftingOrdersFilter(3) end,
 	["CINEMATIC_START"] = function()

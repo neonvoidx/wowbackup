@@ -1,18 +1,18 @@
-## Interface: 120007, 120100
+## Interface: 120100
 ## Title: Enhance QoL Unit Frames
 ## Author: R41Z0R
-## Version: 11.9.1
-## Notes: Custom unit, party, raid, boss and private aura frames
-## Notes-deDE: Eigene Einheiten-, Gruppen-, Schlachtzug-, Boss- und Private-Aura-Frames
-## Notes-esES: Marcos personalizados de unidad, grupo, banda, jefe y auras privadas
-## Notes-esMX: Marcos personalizados de unidad, grupo, banda, jefe y auras privadas
-## Notes-frFR: Cadres personnalises d'unite, groupe, raid, boss et auras privees
-## Notes-itIT: Frame personalizzati per unita, gruppo, incursione, boss e aure private
-## Notes-koKR: 유닛, 파티, 공격대, 우두머리 및 개인 오라 프레임을 사용자 지정합니다
-## Notes-ptBR: Quadros personalizados de unidade, grupo, raide, chefe e auras privadas
-## Notes-ruRU: Пользовательские рамки персонажей, группы, рейда, боссов и личных аур
-## Notes-zhCN: 自定义单位、小队、团队、首领和私有光环框体
-## Notes-zhTW: 自訂單位、隊伍、團隊、首領與私人光環框架
+## Version: 12.5.0
+## Notes: Custom unit, party, raid and boss frames
+## Notes-deDE: Eigene Einheiten-, Gruppen-, Schlachtzug- und Boss-Frames
+## Notes-esES: Marcos personalizados de unidad, grupo, banda y jefe
+## Notes-esMX: Marcos personalizados de unidad, grupo, banda y jefe
+## Notes-frFR: Cadres personnalises d'unite, groupe, raid et boss
+## Notes-itIT: Frame personalizzati per unita, gruppo, incursione e boss
+## Notes-koKR: 유닛, 파티, 공격대 및 우두머리 프레임을 사용자 지정합니다
+## Notes-ptBR: Quadros personalizados de unidade, grupo, raide e chefe
+## Notes-ruRU: Пользовательские рамки персонажей, группы, рейда и боссов
+## Notes-zhCN: 自定义单位、小队、团队和首领框体
+## Notes-zhTW: 自訂單位、隊伍、團隊與首領框架
 ## Dependencies: EnhanceQoL
 ## IconTexture: Interface\AddOns\EnhanceQoL\Icons\Icon.tga
 ## Retail: true

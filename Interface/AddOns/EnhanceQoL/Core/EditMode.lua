@@ -541,12 +541,15 @@ function EditMode:_applyVisibility(entry, layoutName, enabled, forceImmediate)
 	local inCombat = isInCombat()
 
 	if frame then
-		local shouldShow = false
-		if enabled then
-			if entry.showOutsideEditMode then shouldShow = true end
-			if inEditMode and not inCombat then shouldShow = true end
+		local shouldShow
+		if inEditMode and not inCombat then
+			shouldShow = enabled
+		elseif entry.manageVisibilityOutsideEditMode then
+			shouldShow = enabled and entry.showOutsideEditMode or false
+		elseif inEditMode then
+			shouldShow = false
 		end
-		self:_setFrameShown(entry, shouldShow, forceImmediate)
+		if shouldShow ~= nil then self:_setFrameShown(entry, shouldShow, forceImmediate) end
 	end
 
 	if selection then
@@ -751,6 +754,7 @@ function EditMode:RegisterFrame(id, opts)
 		normalizePositionOptions = opts.normalizePositionOptions,
 		relativeTo = opts.relativeTo,
 		showOutsideEditMode = not not opts.showOutsideEditMode,
+		manageVisibilityOutsideEditMode = opts.manageVisibilityOutsideEditMode ~= false,
 		onApply = opts.onApply,
 		onEnter = opts.onEnter,
 		onExit = opts.onExit,
@@ -762,7 +766,7 @@ function EditMode:RegisterFrame(id, opts)
 
 	self:EnsureLayoutData(id, nil)
 
-	if not entry.showOutsideEditMode then frame:Hide() end
+	if entry.manageVisibilityOutsideEditMode and not entry.showOutsideEditMode then frame:Hide() end
 
 	if self:IsAvailable() then
 		self:_registerCallbacks()

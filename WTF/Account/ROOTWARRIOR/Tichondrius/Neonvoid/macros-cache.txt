@@ -25,13 +25,13 @@ VER 3 0100000000000028 " " "134400"
 END
 VER 3 010000000000002A " " "134400"
 #showtooltip
+/cast [noform] Shadowform
 /cast [@player] Power Word: Fortitude
 /use Goblin Weather Machine - Prototype 01-B
 /use Thaumaturgist's Orb
 END
 VER 3 010000000000002E " " "134400"
 #showtooltip 
-/cast [noform] Shadowform
 /cast [@mouseover,harm,exists][] Vampiric Touch
 END
 VER 3 0100000000000030 " " "134400"
@@ -62,7 +62,6 @@ VER 3 010000000000003E " " "134400"
 END
 VER 3 0100000000000042 " " "134400"
 #showtooltip
-/cast [noform] Shadowform
 /cast [@mouseover,harm,exists][] Shadow Word: Pain
 END
 VER 3 010000000000003F " " "134400"
@@ -77,40 +76,30 @@ VER 3 0100000000000041 " " "134400"
 #showtooltip
 /cast [@cursor] Power Word: Barrier
 END
-VER 3 0100000000000044 " " "134400"
-#showtooltip
-/cast [known:457042] Shadow Crash
-/cast [known:205385, @cursor] Shadow Crash
-END
 VER 3 0100000000000046 " " "134400"
 #showtooltip
 #FrameSort EnemyHealer
 /cancelaura Dispersion
 /cast [mod:shift,@none,exists,harm,nodead][] Silence
 END
-VER 3 0100000000000047 " " "134400"
-#showtooltip
+VER 3 0100000000000047 " " "136206"
+#showtooltip Mind Control
 #FS X EnemyHealer
 /cast [mod:shift,@none,harm][@none,harm][] Mind Control
 END
 VER 3 0100000000000048 " " "134400"
 #showtooltip 
-/cast [noform] Shadowform
 /cancelaura Dispersion
-/cast Mind Blast
-END
-VER 3 0100000000000049 " " "134400"
-#showtooltip
-/cast [@mouseover,help,exists,nodead][] Void shift
+/cast  Mind Blast
 END
 VER 3 010000000000004A " " "INV_Misc_QuestionMark"
-#showtooltip Voidform
+#showtooltip [known: Void Volley] void volley; Voidform
 #FS OtherDPS OtherDPS OtherDPS
-/cast [@none,help][@none,help][@none,help][] Power Infusion
+/cast [@none,help][@none,help][@none,help][@player] Power Infusion
 /use 14
 /use saltwater potion
-/cast Voidform
 /cast Void Volley
+/cast Voidform
 END
 VER 3 010000000000004B " " "134400"
 #showtooltip

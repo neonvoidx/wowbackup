@@ -1,4 +1,4 @@
-local _, NS = ...
+local AddonName, NS = ...
 
 local pairs = pairs
 local CreateFrame = CreateFrame
@@ -21,7 +21,7 @@ NS.OrbPrediction = OrbPrediction
 
 local orbTicker = nil
 
-local OrbFrame = CreateFrame("Frame", "OrbFrame")
+local OrbFrame = CreateFrame("Frame", AddonName .. "OrbFrame")
 OrbFrame:SetScript("OnEvent", function(_, event, ...)
   if OrbPrediction[event] then
     OrbPrediction[event](OrbPrediction, ...)

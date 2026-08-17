@@ -134,6 +134,7 @@ ADDON.DB.Family = {
 [2941] = true, -- Flame-Painted Sun Roc
 [2942] = true, -- [PH] Giant Eagle Sunwalker Mount White
 [2961] = true, -- Void-Corrupted Hex Eagle
+[2980] = true, -- Spirit of Tok'jara
 [3036] = true, -- Sun Festival's Painted Roc
 },
 ["Hawkstriders"] = {
@@ -167,12 +168,14 @@ ADDON.DB.Family = {
 [1493] = true, -- Forsworn Aquilon
 [1494] = true, -- Ascendant's Aquilon
 [2796] = true, -- Bronze Aquilon
+[2922] = true, -- Stoneforged Sentinel
 },
 ["Owl"] = {
 [1818] = true, -- Anu'relos, Flame's Guidance
 [2140] = true, -- Charming Courier
 [2917] = true, -- Anu'shalla, Shadow's Guidance
 [2951] = true, -- Sha-Warped Owl
+[3070] = true, -- Whoofle Bramblewing
 },
 ["Owlbear"] = {
 [1699] = true, -- Gleaming Moonbeast
@@ -218,6 +221,7 @@ ADDON.DB.Family = {
 [2478] = true, -- Blazing Royal Fire Hawk
 [2485] = true, -- Flaming Royal Fire Hawk
 [2607] = true, -- Ashes of Belo'ren
+[3069] = true, -- Umbral Ashes
 },
 ["Raptora"] = {
 [1430] = true, -- Desertwing Hunter
@@ -408,6 +412,7 @@ ADDON.DB.Family = {
 [1956] = true, -- Fur-endship Fox
 [1957] = true, -- Soaring Sky Fox
 [1958] = true, -- Twilight Sky Prowler
+[2803] = true, -- Skypaw Glimmerfur
 },
 ["Gargon"] = {
 [1298] = true, -- Hopecrusher Gargon
@@ -490,7 +495,6 @@ ADDON.DB.Family = {
 [1222] = true, -- Vulpine Familiar
 [1393] = true, -- Wild Glimmerfur Prowler
 [1841] = true, -- Crimson Glimmerfur
-[2803] = true, -- Skypaw Glimmerfur
 [2815] = true, -- Snowpaw Glimmerfur Prowler
 },
 },
@@ -654,6 +658,7 @@ ADDON.DB.Family = {
 [954] = true, -- Shackled Ur'zul
 [2471] = true, -- Ur'zul Fleshripper
 [2653] = true, -- Ghastly Ur'zul
+[2652] = true, -- Bilebound Ur'zul
 },
 },
 ["Devourer"] = {
@@ -895,6 +900,7 @@ ADDON.DB.Family = {
 [2731] = true, -- Felscorned War Wyrm
 [2801] = true, -- Galactic Gladiator's Goredrake
 [2806] = true, -- Spawn of Vyranoth
+[2821] = true, -- Venomous Gladiator's Goredrake
 [3039] = true, -- Reins of the Fire Drake
 },
 ["Stone Drakes"] = {
@@ -978,6 +984,7 @@ ADDON.DB.Family = {
 [2478] = true, -- Blazing Royal Fire Hawk
 [2485] = true, -- Flaming Royal Fire Hawk
 [2607] = true, -- Ashes of Belo'ren
+[3069] = true, -- Umbral Ashes
 },
 ["Sabers"] = {
 [896] = true, -- Primal Flamesaber
@@ -1409,6 +1416,8 @@ ADDON.DB.Family = {
 [2491] = true, -- Ruby Butterfly
 [2492] = true, -- Spring Butterfly
 [2494] = true, -- Midnight Butterfly
+[2977] = true, -- Sunflare Driftmoth
+[3068] = true, -- Sunflash Driftmoth
 },
 ["Others"] = {
 [594] = true, -- Grinning Reaver
@@ -1495,6 +1504,8 @@ ADDON.DB.Family = {
 [2772] = true, -- Blessed Amani Burrower
 [2773] = true, -- Giganto Manis
 [2775] = true, -- Witherbark Pango
+[3002] = true, -- Vicious Lightbloom Boar
+[3003] = true, -- Vicious Lightbloom Boar
 },
 ["Plant"] = {
 [1458] = true, -- Wandering Ancient
@@ -1538,7 +1549,7 @@ ADDON.DB.Family = {
 [180] = true, -- Blue Riding Nether Ray
 [2751] = true, -- Augmented Stormray
 [2828] = true, -- Voidbound Stormray
-[2829] = true, -- Lab-grown Stormray
+[2829] = true, -- Lab-Grown Stormray
 },
 ["Shalewing"] = {
 [1730] = true, -- Igneous Shalewing
@@ -1583,6 +1594,12 @@ ADDON.DB.Family = {
 [2661] = true, -- Felslate Basilisk
 [2662] = true, -- Aquamarine Basilisk
 },
+["Chameleon"] = {
+[3102] = true, -- Crested Ember Leafmimic
+[3103] = true, -- Crested Aqua Leafmimic
+[3104] = true, -- Crested Verdant Leafmimic
+[3105] = true, -- Crested Violet Leafmimic
+},
 ["Crocolisks"] = {
 [1220] = true, -- Bruce
 [2238] = true, -- Plunderlord's Golden Crocolisk
@@ -1626,6 +1643,8 @@ ADDON.DB.Family = {
 [2770] = true, -- Preyseeker's Wrath
 [2771] = true, -- Preyseeker's Nightmare
 [2915] = true, -- Unbound Manawyrm
+[3031] = true, -- Hexflame Reaver
+[3032] = true, -- Preyhunter's Fury
 },
 ["Mushan"] = {
 [515] = true, -- Son of Galleon
@@ -1648,7 +1667,6 @@ ADDON.DB.Family = {
 [1622] = true, -- Stormhide Salamanther
 [1761] = true, -- Reawakened Phase-Hunter
 [1940] = true, -- Salatrancer
-[2315] = true, -- Timbered Sky Snake
 [2732] = true, -- Cobalt Phase-Hunter
 [2747] = true, -- Untainted Grove Crawler
 [2793] = true, -- Vicious Snaplizard
@@ -1666,6 +1684,17 @@ ADDON.DB.Family = {
 [1505] = true, -- Amber Shardhide
 [1506] = true, -- Crimson Shardhide
 [1507] = true, -- Darkmaul
+},
+["Snake"] = {
+[2315] = true, -- Timbered Sky Snake
+[3020] = true, -- Caustic Venomfang
+[3021] = true, -- Crimson Venomfang
+[3023] = true, -- Auriferous Venomfang
+[3060] = true, -- Indigo Coiled Horror
+[3061] = true, -- Ruby Writhe
+[3019] = true, -- Sea-Dwelling Isle Serpent
+[3058] = true, -- The Writhing Brood
+[3062] = true, -- Venomous Coiler
 },
 ["Snapdragons"] = {
 [1237] = true, -- Royal Snapdragon
@@ -1704,6 +1733,13 @@ ADDON.DB.Family = {
 [2531] = true, -- Tyrannotort
 [2823] = true, -- Savage Crimson Battle Turtle
 },
+["Wind Serpent"] = {
+[3051] = true, -- Topaz Skyfang
+[3053] = true, -- Emerald Skyfang
+[3054] = true, -- Violet-Backed Skyfang
+[3063] = true, -- Breath of Blight
+[3064] = true, -- Breath of Ruin
+},
 },
 ["Rodent"] = {
 ["Mole"] = {
@@ -1714,6 +1750,7 @@ ADDON.DB.Family = {
 ["Rabbit"] = {
 [1594] = true, -- Jade, Bright Foreseer
 [1769] = true, -- Hao-Yue, River Foreseer
+[2984] = true, -- Rabbit'ath
 },
 ["Rats"] = {
 [804] = true, -- Ratstallion
@@ -1748,6 +1785,7 @@ ADDON.DB.Family = {
 [2526] = true, -- Felborn Cormaera
 [2527] = true, -- Molten Cormaera
 [2528] = true, -- Lavaborn Cormaera
+[3030] = true, -- Primeval Skyfriend
 },
 ["Sporebat"] = {
 [2710] = true, -- Cerulean Sporeglider
@@ -1914,6 +1952,13 @@ ADDON.DB.Family = {
 [2329] = true, -- Silvermoon Sweeper
 [2330] = true, -- Twilight Witch's Sweeper
 [2331] = true, -- Sky Witch's Sweeper
+[3004] = true, -- Autumnal Witchwick's Rider
+[3017] = true, -- Blushing Witchwick's Rider
+[3018] = true, -- Carmine Witchwick's Rider
+[3015] = true, -- Moonlit Witchwick's Rider
+[3014] = true, -- Mossy Witchwick's Rider
+[3016] = true, -- Scarlet Witchwick's Rider
+[3119] = true, -- Wintry Witchwick's Rider
 },
 ["Carpets"] = {
 [279] = true, -- Magnificent Flying Carpet
@@ -2009,11 +2054,14 @@ ADDON.DB.Family = {
 [2313] = true, -- Junkmaestro's Magnetomech
 [2604] = true, -- OC91 Chariot
 [2608] = true, -- Light-Forged Mechsuit
+[2839] = true, -- Delver's Arcane Golem
 [2840] = true, -- Silvermoon's Arcane Defender
 [2841] = true, -- Elven Arcane Guardian
 [2842] = true, -- Arcanovoid Construct
 [2990] = true, -- Netherforged Nullframe
 [3006] = true, -- Amethyst Mechsuit
+[3029] = true, -- Apophic Soul Crusher
+[3043] = true, -- Corroded Soul Crusher
 },
 ["Mechanical Animals"] = {
 [552] = true, -- Ironbound Wraithcharger
@@ -2041,6 +2089,7 @@ ADDON.DB.Family = {
 [2717] = true, -- Mechanical Prototype Panther MK-0
 [2718] = true, -- Steel Prototype Panther MK-0
 [2796] = true, -- Bronze Aquilon
+[2922] = true, -- Stoneforged Sentinel
 },
 ["Mechanostriders"] = {
 [39] = true, -- Red Mechanostrider

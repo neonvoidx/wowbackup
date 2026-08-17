@@ -525,15 +525,7 @@ function Shared.IsCVarAvailable(cvarName)
         return false
     end
 
-    if C_CVar and type(C_CVar.GetCVarInfo) == "function" then
-        return SafeCall(C_CVar.GetCVarInfo, cvarName) ~= nil
-    end
-
-    if type(GetCVar) == "function" then
-        return SafeCall(GetCVar, cvarName) ~= nil
-    end
-
-    return false
+    return SafeCall(C_CVar.GetCVarInfo, cvarName) ~= nil
 end
 
 function Shared.GetCVarBool(cvarName, fallback)
@@ -542,32 +534,14 @@ function Shared.GetCVarBool(cvarName, fallback)
         return fallback == true
     end
 
-    if C_CVar and type(C_CVar.GetCVarBool) == "function" then
-        local value = SafeCall(C_CVar.GetCVarBool, cvarName)
-        if value ~= nil then
-            return CVarValueToBool(value, fallback)
-        end
+    local value = SafeCall(C_CVar.GetCVarBool, cvarName)
+    if value ~= nil then
+        return CVarValueToBool(value, fallback)
     end
 
-    if type(GetCVarBool) == "function" then
-        local value = SafeCall(GetCVarBool, cvarName)
-        if value ~= nil then
-            return CVarValueToBool(value, fallback)
-        end
-    end
-
-    if C_CVar and type(C_CVar.GetCVar) == "function" then
-        local value = SafeCall(C_CVar.GetCVar, cvarName)
-        if value ~= nil then
-            return CVarValueToBool(value, fallback)
-        end
-    end
-
-    if type(GetCVar) == "function" then
-        local value = SafeCall(GetCVar, cvarName)
-        if value ~= nil then
-            return CVarValueToBool(value, fallback)
-        end
+    value = SafeCall(C_CVar.GetCVar, cvarName)
+    if value ~= nil then
+        return CVarValueToBool(value, fallback)
     end
 
     return fallback == true
@@ -579,18 +553,9 @@ function Shared.GetCVarDefaultBool(cvarName, fallback)
         return fallback == true
     end
 
-    if C_CVar and type(C_CVar.GetCVarDefault) == "function" then
-        local value = SafeCall(C_CVar.GetCVarDefault, cvarName)
-        if value ~= nil then
-            return CVarValueToBool(value, fallback)
-        end
-    end
-
-    if type(GetCVarDefault) == "function" then
-        local value = SafeCall(GetCVarDefault, cvarName)
-        if value ~= nil then
-            return CVarValueToBool(value, fallback)
-        end
+    local value = SafeCall(C_CVar.GetCVarDefault, cvarName)
+    if value ~= nil then
+        return CVarValueToBool(value, fallback)
     end
 
     return fallback == true
@@ -603,21 +568,7 @@ function Shared.SetCVarBool(cvarName, enabled)
     end
 
     local value = enabled and "1" or "0"
-    if C_CVar and type(C_CVar.SetCVar) == "function" then
-        local ok = pcall(C_CVar.SetCVar, cvarName, value)
-        if ok then
-            return true
-        end
-    end
-
-    if type(SetCVar) == "function" then
-        local ok = pcall(SetCVar, cvarName, value)
-        if ok then
-            return true
-        end
-    end
-
-    return false
+    return pcall(C_CVar.SetCVar, cvarName, value) == true
 end
 
 function Shared.ResetBlizzardDRCVarsToDefaults()

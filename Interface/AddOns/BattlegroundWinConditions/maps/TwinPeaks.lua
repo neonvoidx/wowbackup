@@ -14,6 +14,7 @@ local instanceIdToMapId = {
   -- Twin Peaks
   [726] = {
     id = 206,
+    maxScore = 3,
     stackTime = 30,
   },
 }
@@ -44,6 +45,7 @@ end
 function TP:ExitZone()
   if NS.db.global.maps.twinpeaks.enabled then
     NS.IS_TP = false
+
     FlagPrediction:StopInfoTracker()
   end
 end
