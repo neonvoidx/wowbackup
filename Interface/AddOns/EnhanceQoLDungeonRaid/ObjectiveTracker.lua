@@ -16,7 +16,6 @@ local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL")
 
 local frameLoad = CreateFrame("Frame")
 local hiddenElements = {}
-local collapsedElements = {}
 local alreadyHooked = {}
 local objectiveTrackerUpdateToken = 0
 
@@ -72,50 +71,29 @@ end
 
 function addon.MythicPlus.functions.setObjectiveFrames()
 	if shouldManageObjectiveTracker() then
-		for i, v in pairs(addon.MythicPlus.variables.collapseFrames) do
+		for i, v in pairs(addon.MythicPlus.variables.objectiveTrackerFrames) do
 			if not v.frame and v.name then v.frame = _G[v.name] end
 			local frame = v.frame
-			if addon.db["mythicPlusObjectiveTrackerSetting"] == 1 and frame then
+			if frame then
 				if frame:IsVisible() then
 					frame:Hide()
 					table.insert(hiddenElements, v)
 				end
 				if not alreadyHooked[frame] then
 					frame:HookScript("OnShow", function(self)
-						if shouldManageObjectiveTracker() and addon.db["mythicPlusObjectiveTrackerSetting"] == 1 then
-							self:Hide()
-						end
+						if shouldManageObjectiveTracker() then self:Hide() end
 					end)
 					alreadyHooked[frame] = true
 				end
-			elseif addon.db["mythicPlusObjectiveTrackerSetting"] == 2 and frame and frame.IsCollapsed and not frame:IsCollapsed() then
-				if frame.SetCollapsed then
-					frame:SetCollapsed(true)
-				elseif frame.Header and frame.Header.MinimizeButton then
-					frame.Header.MinimizeButton:Click()
-				end
-				table.insert(collapsedElements, v)
 			end
 		end
-	elseif #hiddenElements > 0 or #collapsedElements > 0 then
+	elseif #hiddenElements > 0 then
 		for i, v in pairs(hiddenElements) do
 			if not v.frame and v.name then v.frame = _G[v.name] end
 			local frame = v.frame
 			if frame and not frame:IsVisible() then frame:Show() end
 		end
 		wipe(hiddenElements)
-		for i, v in pairs(collapsedElements) do
-			if not v.frame and v.name then v.frame = _G[v.name] end
-			local frame = v.frame
-			if frame and frame.IsCollapsed and frame:IsCollapsed() then
-				if frame.SetCollapsed then
-					frame:SetCollapsed(false)
-				elseif frame.Header and frame.Header.MinimizeButton then
-					frame.Header.MinimizeButton:Click()
-				end
-			end
-		end
-		wipe(collapsedElements)
 	end
 end
 

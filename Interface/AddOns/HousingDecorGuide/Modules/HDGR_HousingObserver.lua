@@ -64,9 +64,17 @@ local function _flushQueue()
     _queue = {}
     local n = #entries
     if n == 0 then return end
+    -- ownedContext: whether the player is standing in a house they own at flush time.
+    -- The reducer will not let a burst retarget session.styles.currentArea when this is
+    -- false, so visiting a neighbour cannot repoint the Placed list at their plot.
+    -- HO owns C_Housing, so the read belongs here rather than in the reducer.
+    local ownedContext = true
+    if C_Housing and C_Housing.IsInsideOwnedHouse then  -- exception(boundary): absent headless / pre-login
+        ownedContext = C_Housing.IsInsideOwnedHouse() and true or false
+    end
     HDG.Store:Dispatch({
         type    = HDG.Constants.ACTIONS.STYLES_PLACED_DECOR_OBSERVED_BATCH,
-        payload = { entries = entries },
+        payload = { entries = entries, ownedContext = ownedContext },
     })
 end
 
@@ -118,8 +126,31 @@ end
 
 -- Stash the pending itemID here; OnDecorPlaceSuccess commits on actual world-click.
 -- A cancelled pick (ESC, no PLACE_SUCCESS) records nothing.
+--
+-- ...but only if the pick actually EXPIRES. It used to be written here and cleared
+-- nowhere else, so an ESC left it set indefinitely and the next unrelated commit
+-- consumed it. Stamp the pick and treat an old one as abandoned; PLACE_FAILURE
+-- clears it outright.
+local PENDING_PLACE_TTL = 60   -- seconds; a pick not committed by then was abandoned
+
 function HO:SetPendingPlacement(itemID)
     HO._pendingPlaceItemID = itemID
+    HO._pendingPlaceAt     = _G.GetTime and _G.GetTime() or 0  -- exception(boundary): GetTime absent headless
+end
+
+function HO:ClearPendingPlacement()
+    HO._pendingPlaceItemID = nil
+    HO._pendingPlaceAt     = nil
+end
+
+-- nil when there is no live pick, or the pick has gone stale.
+function HO:TakePendingPlacement()
+    local itemID, at = HO._pendingPlaceItemID, HO._pendingPlaceAt
+    HO:ClearPendingPlacement()
+    if not itemID then return nil end  -- exception(nullable): no pick in flight
+    local now = _G.GetTime and _G.GetTime() or 0  -- exception(boundary): GetTime absent headless
+    if at and (now - at) > PENDING_PLACE_TTL then return nil end
+    return itemID
 end
 
 function HO:ClearPlaced()
@@ -369,6 +400,27 @@ local NAME_TO_SHAPE = {
     ["Stairwell (Left)"]        = "staircase",
     ["Stairwell (Right)"]       = "staircase_mirror",
     ["Stairwell Room (Empty)"]  = "tall_room",
+    -- Themed rooms (12.1). Same cold-catalog safety net as above: English only,
+    -- the live catalog is the locale-correct primary. Geometry + the one-door
+    -- model live in Core/HDGR_ProjectsShapeAtlas.lua; floor spans are unverified.
+    ["Orgrimmar Stone Pit Room"]  = "org_stonepitroom",
+    ["Stormwind Kitchen"]         = "stormwind_kitchen",
+    ["Stormwind Display Room"]    = "stormwind_displayroom",
+    ["Silvermoon Display Room"]   = "silvermoon_displayroom",
+    ["Bel'ameth Theater"]         = "belameth_theater",
+    ["Bel'ameth Nestled Bedroom"] = "belameth_bedroom",
+    ["Orgrimmar Display Room"]    = "org_displayroom",
+    ["Silvermoon Small Study"]    = "silvermoon_smallstudy",
+    ["Stormwind Armory"]          = "stormwind_armory",
+    ["Silvermoon Armory"]         = "silvermoon_armory",
+    ["Bel'ameth Meeting Room"]    = "belameth_meetingroom",
+    ["Orgrimmar Theater"]         = "org_theaterroom",
+    ["Orgrimmar Council Room"]    = "org_councilroom",
+    ["Stormwind Grand Hall"]      = "stormwind_grandhall",
+    ["Silvermoon Lofty Study"]    = "silvermoon_loftystudy",
+    ["Bel'ameth Temple Room"]     = "belameth_templeroom",
+    ["Autumnal Westfall Barn"]    = "westfall_barn_autumnal",
+    ["Springtime Westfall Barn"]  = "westfall_barn_springtime",
 }
 
 -- Entry = the base room. pin:CanRemove() reports the IsBaseRoom restriction for it (and
@@ -403,7 +455,10 @@ local _capture     -- transient capture buffer for one Layout-mode floor session
 local _activeSweep -- active "capture all floors" sweep state (timer-driven)
 
 local function _layoutMode()   return (Enum and Enum.HouseEditorMode and Enum.HouseEditorMode.Layout)   or 3 end  -- exception(boundary): Enum.HouseEditorMode absent in headless harness
-local function _decorateMode() return (Enum and Enum.HouseEditorMode and Enum.HouseEditorMode.Decorate) or 1 end  -- exception(boundary): Enum.HouseEditorMode absent in headless harness
+-- BasicDecor, not Decorate: 12.1 split the single decorate mode into BasicDecor(1) /
+-- ExpertDecor(2), and `Decorate` is not a field on the enum at all -- it read nil and
+-- rode the `or 1` fallback, correct only by the accident that 1 == BasicDecor.
+local function _decorateMode() return (Enum and Enum.HouseEditorMode and Enum.HouseEditorMode.BasicDecor) or 1 end  -- exception(boundary): Enum.HouseEditorMode absent in headless harness
 
 -- Stable houseID for the house the player is currently inside: a digest of the
 -- neighborhoodName + plotID (the PLOT's identity), NOT the character's faction --
@@ -413,6 +468,11 @@ local function _decorateMode() return (Enum and Enum.HouseEditorMode and Enum.Ho
 -- stability is unverified. nil when not inside an owned house.
 local function _currentHouseID()
     if not (C_Housing and C_Housing.GetCurrentHouseInfo) then return nil end   -- exception(boundary): C_Housing absent (headless / pre-login)
+    -- Ownership, so the "nil when not inside an owned house" promise above is true.
+    -- GetCurrentHouseInfo answers for whatever house you are standing in, neighbour's
+    -- included, so without this the identity digest below would key a neighbour's plot.
+    -- Only asserted when the predicate is actually present -- absent means headless.
+    if C_Housing.IsInsideOwnedHouse and not C_Housing.IsInsideOwnedHouse() then return nil end
     local info = C_Housing.GetCurrentHouseInfo()
     if not (info and info.plotID and info.neighborhoodName) then return nil end -- exception(boundary): nil outside an owned house
     local key = info.neighborhoodName .. ":" .. tostring(info.plotID)
@@ -596,7 +656,15 @@ local function _supportCellsFor(placements, floor)
     if floor <= 1 then return nil end
     local SA, support = HDG.Projects.ShapeAtlas, {}
     for _, pl in pairs(placements or {}) do   -- exception(nullable): no committed floors below yet -> empty support -> fallback
-        local span = pl.floors or SA.GetFloors(pl.shape)
+        -- Same rule as _seedCellsFor: a CAPTURED stair section's `floors` override is a
+        -- PLAN ("Expand up"), not reality. Reading it raw here made the two functions
+        -- disagree about the same field on the same records -- the plan's span pushed the
+        -- room's top out of this floor's support, so its footprint vanished from `support`,
+        -- the room above failed _fits, and the floor grid-packed on every recapture
+        -- (review 2026-08-23).
+        local floors = pl.floors
+        if floors and pl.capturedID and SA.IsStairShape(pl.shape) then floors = nil end
+        local span = floors or SA.GetFloors(pl.shape)
         if (pl.floor + span - 1) == (floor - 1) and not SA.IsCircle(pl.shape) then
             local cells = SA.GetCells(pl.shape)
             for _, m in ipairs(SA.RotateMask(SA.GetMask(pl.shape), pl.rotation or 0, cells[1], cells[2])) do
@@ -855,7 +923,15 @@ local function _stepSweep()
     if C_Timer and C_Timer.After then C_Timer.After(_activeSweep.settleSeconds, _stepSweep) end
 end
 
--- C_HousingLayout.GetNumFloors was REMOVED on 12.1 in favour of the occupied-floor
+-- C_HousingLayout.GetNumFloors is absent from the 12.1 GENERATED DOCS but is NOT gone at
+-- runtime: Blizzard_Deprecated/Mainline/Deprecated_12_1_0.lua re-provides it as
+-- (highest - lowest) + 1 -- the same arithmetic as our own branch below -- whenever the
+-- loadDeprecationFallbacks CVar is on, which is the default. So branch 1 is what actually
+-- runs on live and the range branch is the fallback, not the other way round. Both compute
+-- the identical number, so this is a comment correction, not a behaviour one. (Same story
+-- for IsInsideOwnHouse, aliased to IsInsideOwnedHouse in that file.) The range path still
+-- earns its keep for anyone who disables the CVar. Original note: it was dropped from the
+-- documented surface on 12.1 in favour of the occupied-floor
 -- INDEX range (GetLowest/GetHighestOccupiedFloorIndex). Return the same floor COUNT
 -- the old API gave: prefer it on live 12.0.x, derive it from the index range on 12.1
 -- (highest - lowest + 1 -- correct for a contiguous occupied range).
@@ -875,11 +951,16 @@ end
 
 function HO:CaptureAllFloors()
     if _activeSweep then return false, "already in progress" end
-    -- exception(boundary): C_Housing.IsInsideHouse() -- external Blizzard API; returns false
-    -- outside any house (including neighborhood plot). Must be inside YOUR house for
-    -- C_HousingLayout.GetNumFloors / pin enumeration to return meaningful data.
-    if not (C_Housing and C_Housing.IsInsideHouse and C_Housing.IsInsideHouse()) then  -- exception(boundary): housing C_API nil off-house-context
-        return false, "Enter your house to capture floors"
+    -- IsInsideOwnedHouse, not IsInsideHouse. The comment here has always said "must be
+    -- inside YOUR house", but IsInsideHouse has no ownership component -- so standing in
+    -- a neighbour's open house it answered true, the sweep ran, and it wrote a Projects
+    -- record keyed to the NEIGHBOUR's plot while driving SetViewedFloor through someone
+    -- else's layout (review 2026-08-23). IsInsideOwnedHouse is the only ownership signal
+    -- that still answers indoors -- plot owner-type data is not served inside an interior --
+    -- and it is ACCOUNT-scoped, so a house owned by another of your characters still
+    -- counts, which is what we want.
+    if not (C_Housing and C_Housing.IsInsideOwnedHouse and C_Housing.IsInsideOwnedHouse()) then  -- exception(boundary): housing C_API nil off-house-context
+        return false, "Enter your own house to capture floors"
     end
     if not (C_HouseEditor and C_HouseEditor.IsHouseEditorStatusAvailable and C_HouseEditor.IsHouseEditorStatusAvailable()) then  -- exception(boundary): C_HouseEditor is a Blizzard API namespace; nil in headless tests
         return false, "house editor not available -- visit your house first"
@@ -934,7 +1015,7 @@ function HO:_PushHouseTick()
                 decorSpent = (CD and CD.GetSpentPlacementBudget and CD.GetSpentPlacementBudget()) or 0,  -- exception(boundary): CD = C_HousingDecor, Blizzard API namespace
                 decorCount = (CD and CD.GetNumDecorPlaced       and CD.GetNumDecorPlaced())       or 0,  -- exception(boundary): CD = C_HousingDecor, Blizzard API namespace
             },
-            numFloors    = _numFloors() or 0,  -- exception(boundary): _numFloors nil in headless tests (no C_HousingLayout); 12.1-safe (GetNumFloors removed)
+            numFloors    = _numFloors() or 0,  -- exception(boundary): _numFloors nil in headless tests (no C_HousingLayout); 12.1-safe (GetNumFloors undocumented but shimmed; range path covers CVar-off)
             editorActive = (CE and CE.IsHouseEditorActive and CE.IsHouseEditorActive()) or false,  -- exception(boundary): CE = C_HouseEditor, Blizzard API namespace
         },
     })
@@ -943,6 +1024,22 @@ end
 -- =============================================================================
 -- Module registration
 -- =============================================================================
+
+-- ===== Blizzard Housing Dashboard: DO NOT TOUCH ITS TABLES ==================
+-- A repair hook used to live here that wrote HouseDropdown.playerHouseList = {}
+-- on dashboard OnShow, to un-strand the House Info pane (Blizzard's forwarder
+-- calls InitiativesFrame:OnHouseListUpdated before HouseUpgradeFrame's; the
+-- 12.1 InitiativesFrame nil-throw kills the second call, then the dropdown's
+-- tCompare guard swallows every identical reply and the pane stays blank).
+--
+-- REMOVED 2026-08-25: the write is a TAINT BOMB. Blizzard's handler reads the
+-- tainted table in tCompare, its execution goes tainted, the reassigned list
+-- and every houseInfo derived from it carry the taint, and the dashboard's
+-- Teleport Home / Return buttons die in ADDON_ACTION_FORBIDDEN blamed on HDG
+-- (replicated on both OnClick branches, owner, 2026-08-25 -- with the "disable
+-- this addon" dialog). A sometimes-blank pane is Blizzard's bug and recoverable;
+-- a dead protected teleport is not. There is NO taint-free write into Blizzard
+-- UI state -- do not reintroduce this in any form.
 
 HDG.Modules:Declare({
     name = "HousingObserver",
@@ -963,6 +1060,7 @@ HDG.Modules:Declare({
         HOUSING_DECOR_CUSTOMIZATION_CHANGED  = { handler = "OnDecorCustomization" },
         HOUSING_DECOR_REMOVED                = { handler = "OnDecorRemoved" },
         HOUSING_DECOR_PLACE_SUCCESS          = { handler = "OnDecorPlaceSuccess" },
+        HOUSING_DECOR_PLACE_FAILURE          = { handler = "OnDecorPlaceFailure" },
         PLAYER_ENTERING_WORLD                = { handler = "OnEnteringWorld" },
 
         -- House meta channel. Both events spam on login (3-5 fires);
@@ -1031,11 +1129,21 @@ HDG.Modules:Declare({
         HO:RemovePlaced(decorGUID)
     end,
 
-    -- Decor committed. Use pending itemID (PLACE_SUCCESS's decorGUID arg is always nil).
-    -- Record here (not StartPlacing) so ESC cancels don't over-count.
-    OnDecorPlaceSuccess = function(self)
-        local itemID = HO._pendingPlaceItemID
-        HO._pendingPlaceItemID = nil
+    -- The placement did not happen: drop the pick so it cannot be consumed later.
+    OnDecorPlaceFailure = function(self)
+        HO:ClearPendingPlacement()
+    end,
+
+    -- Decor committed. Payload is (decorGUID, size, isNew, isPreview); isNew is
+    -- Nilable=false and is FALSE when an already-placed piece was merely MOVED, and
+    -- isPreview marks a preview placement. Taking no args at all meant a drag of an
+    -- existing piece consumed a stale pending itemID and recorded a placement that
+    -- never happened (review 2026-08-23). Record from the pending itemID, not the
+    -- payload -- PLACE_SUCCESS's decorGUID is not the catalog identity we need.
+    OnDecorPlaceSuccess = function(self, decorGUID, size, isNew, isPreview)
+        if isPreview then return end
+        if isNew == false then return end   -- a move, not a new placement
+        local itemID = HO:TakePendingPlacement()
         if not itemID then return end
         local houseID = _currentHouseID()
         if not houseID then return end
@@ -1092,6 +1200,19 @@ HDG.Modules:Declare({
                     -- Kick: GetPlayerOwnedHouses -> PLAYER_HOUSE_LIST_UPDATED. Favor fetch
                     -- downstream is view-gated (OnHouseList loop) so it only fires when a
                     -- house-level view is the one being opened onto.
+                    --
+                    -- LOAD THE DASHBOARD FIRST: any housing request made while
+                    -- Blizzard_HousingDashboard is unloaded warms the client house
+                    -- cache, and the dashboard's own eventual first load then gets
+                    -- a SYNCHRONOUS reply mid-OnLoad -- its broadcast fires before
+                    -- the House Info pane registers and the dashboard strands
+                    -- blank for the session (proven via registry dump 2026-08-25).
+                    -- Loading it here (first housing touch, post-login, warm
+                    -- client) makes its own request run on a cold cache instead.
+                    -- Blizzard-signed code runs secure regardless of load caller.
+                    if not C_AddOns.IsAddOnLoaded("Blizzard_HousingDashboard") then
+                        C_AddOns.LoadAddOn("Blizzard_HousingDashboard")
+                    end
                     if C_Housing and C_Housing.GetPlayerOwnedHouses then
                         C_Housing.GetPlayerOwnedHouses()
                     end

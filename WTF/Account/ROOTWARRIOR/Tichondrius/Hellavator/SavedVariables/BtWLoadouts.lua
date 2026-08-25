@@ -17,6 +17,9 @@ BtWLoadoutsCollapsed = {
 ["essences"] = {
 },
 ["actionbars"] = {
+["children"] = {
+},
+[267] = false,
 },
 }
 BtWLoadoutsCategories = {
@@ -44,6 +47,7 @@ BtWLoadoutsCategories = {
 "covenant",
 },
 ["actionbars"] = {
+"spec",
 },
 }
 BtWLoadoutsFilters = {

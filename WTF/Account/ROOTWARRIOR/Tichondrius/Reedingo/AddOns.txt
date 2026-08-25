@@ -3,7 +3,7 @@ Auctionator: enabled
 Baganator: enabled
 BattleGroundEnemiesFixed: enabled
 BetterBlizzFrames: enabled
-BetterBlizzPlates: disabled
+BetterBlizzPlates: enabled
 BtWLoadouts: enabled
 !BugGrabber: enabled
 BugSack: enabled
@@ -116,3 +116,7 @@ BarberShopProfiles: enabled
 BetterFishing: enabled
 EnhanceQoLQuickActions: enabled
 LariasWeeklyChecklist: enabled
+Collectionator: enabled
+IconSearch: enabled
+SnakeSays: enabled
+HousingDecorGuide: enabled

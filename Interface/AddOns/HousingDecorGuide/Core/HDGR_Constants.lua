@@ -13,13 +13,13 @@ HDG.Constants = {
     -- v7 = Furnishings model: crates -> sets, version.rooms -> account.rooms +
     --      layout placements (docs/crate-redesign/10-FINAL-MODEL.md).
     SCHEMA_VERSION = 8,
-    -- 12.1 "Midnight" housing-blueprint APIs (C_HousingBlueprint) exist only on
-    -- build >= 120100. Everything blueprint-related gates on this; false on live
-    -- 12.0.7 so the observer/view/controller declare nothing and the nav child hides.
-    IS_121 = (select(4, GetBuildInfo())) >= 120100,  -- exception(boundary): client build read at file load
     -- Standard icon crop (trims the baked border off square item icons).
     -- Consumed via SetTexCoord(unpack(HDG.Constants.ICON_CROP)) (hygiene A6).
     ICON_CROP = { 0.08, 0.92, 0.08, 0.92 },
+    -- The player character measured in HDGR_PetSizeDB's units. The pet tooltip
+    -- states a height against it, because a number in model units means nothing
+    -- until it has something a player already has an eye for beside it.
+    PET_CHARACTER_HEIGHT = 2.242,
     -- Generic bullet/blip dot glyph (tone varies per site; the atlas never does).
     BULLET_DOT_ATLAS = "PlayerPartyBlip",
     BLUEPRINT_SLOT_MAX = 50,  -- HousingConsts: 50 blueprints per Bnet account
@@ -216,6 +216,90 @@ HDG.Constants = {
         { id = 3393, name = "Illusionary Coin",     icon = 1717106, expansion = "Midnight"            },
     },
 
+    -- ===== Menagerie (House > Pets) =====
+    -- Namespaced "menagerie" (selectors, session.ui bucket, view) because the shipped
+    -- Decor-tab pets mode already owns the pets.* selector names; the two surfaces
+    -- converge at plan phase 5. Player-facing label stays "Pets".
+    MENAGERIE = {
+        -- Height (PetSizeDB units, player = 2.242) -> furniture-language bucket.
+        SIZE_BUCKETS = {
+            { max = 0.45, key = "shelf", label = "Shelf-sized" },
+            { max = 0.95, key = "table", label = "Table-sized" },
+            { max = 99,   key = "floor", label = "Floor-sized" },
+        },
+        -- Per-clade placement meta: what the card's "It needs" line says, and the
+        -- motif join key the clade contributes (spec section 5 rules, v1 subset).
+        CLADE_META = {
+            beast     = { needs = "open floor",             motif = "nature" },
+            rodent    = { needs = "a shelf or branch",      motif = "nature" },
+            bird      = { needs = "a perch or rafter",      motif = "nature" },
+            -- Bats are NOT birds (owner, 2026-08-25). They read as a different
+            -- THEME rather than a different animal -- you hang them in a cellar,
+            -- not on a garden perch -- so they take the gothic motif and join the
+            -- room query alongside undead rather than alongside songbirds.
+            bat       = { needs = "a rafter somewhere dim", motif = "gothic" },
+            aquatic   = { needs = "water, or a pond edge",  motif = "water" },
+            reptile   = { needs = "a warm flat spot",       motif = "nature" },
+            insect    = { needs = "a corner to explore",    motif = "nature" },
+            construct = { needs = "a workbench or plinth",  motif = "mechanical" },
+            elemental = { needs = "space -- it hovers",     motif = "arcane" },
+            undead    = { needs = "somewhere dim",          motif = "gothic" },
+            demon     = { needs = "somewhere dim",          motif = "fel" },
+            void      = { needs = "somewhere dim",          motif = "void" },
+            humanoid  = { needs = "open floor",             motif = "cultural" },
+            plant     = { needs = "a planter or garden",    motif = "nature" },
+            oddity    = { needs = "wherever it is funniest", motif = "novelty" },
+        },
+        -- Battle family (petType index) -> extra motif, where the family genuinely
+        -- adds one beyond the clade (the Mechanical Squirrel two-facts case).
+        FAMILY_MOTIF = { [9] = "mechanical", [8] = "arcane", [6] = "gothic", [2] = "reptilian" },
+        -- Identity axes for the By Pet two-row filter (ruling 14).
+        -- Kind is NOT an axis. There are 712 kinds -- 239 of them with a single
+        -- pet, 71% with four or fewer -- so as a flat chip row it could only ever
+        -- show a top-N: the shipped twelve reached 14% of species and left
+        -- "squirrel" (12 pets, 40th) unreachable with nothing on screen saying so.
+        -- Kind is the SECOND LEVEL of clade instead: pick Rodent, and row two
+        -- becomes rat / rabbit / squirrel / porcupine. Every kind is reachable,
+        -- and no row ever has to be truncated.
+        AXES = { { value = "clade", label = "Clade" },
+                 { value = "family", label = "Family" }, { value = "size", label = "Size" } },
+        -- "Also knows" whitelist: anim id -> player verb. Only ids a PLAYER would
+        -- click for fun belong here -- combat/movement ids are repertoire noise
+        -- (Pandaren Monk carries ~40; unfiltered chips overflowed the window).
+        -- Ids from the Emotes.db2-adjudicated ANIM_NAMES set.
+        -- FacetDB mood id -> pet motif, for the "Pets for this room" capture:
+        -- the room's placed decor votes through its mood facets, and the motifs
+        -- with agreement become the query. Ids from HDGR_FacetVocab.mood.
+        MOOD_MOTIFS = { [2] = "arcane", [3] = "nature", [4] = "gothic",
+                        [8] = "mechanical", [9] = "water", [10] = "void",
+                        [13] = "novelty" },
+        -- The scene strip's curated decor (ruled 2026-08-25): one bed, one
+        -- plinth. All 10 attachables stay in SceneDecorDB; these are the chips.
+        SCENE_CHIP_DECOR = { 12246, 25122 },   -- Paw Pal Bed, Loyal Companion's Plinth
+        -- Where a pet actually SITS on each scene decor, in world units.
+        --
+        -- The stage falls back to the decor's bounding-box top, which is only the
+        -- seat when the silhouette is flat. The Paw Pal Bed's box top is the crown
+        -- of its backrest (box 0.661 vs the plinth's 0.378 -- 1.75x taller than a
+        -- squat pedestal, all of it backrest), so bbox-seating floats the pet above
+        -- the cushion and the camera then clips it at the top edge.
+        --
+        -- A bounding box cannot tell us where the cushion is, so these are EYEBALLED
+        -- per decor with `/hdg petseat <z>` and written down here. An entry absent
+        -- from this table keeps the bbox-top fallback.
+        SCENE_SEAT_Z = {
+            -- [12246] = ?,   -- Paw Pal Bed: the cushion, well below the backrest
+            -- [25122] = ?,   -- Loyal Companion's Plinth: flat top, bbox is already right
+        },
+        SHOWABLE_ANIMS = {
+            [4] = "walks", [5] = "runs", [38] = "jumps", [42] = "swims",
+            [60] = "talks", [61] = "eats", [66] = "bows", [67] = "waves",
+            [68] = "cheers", [69] = "dances", [70] = "laughs", [71] = "sleeps",
+            [74] = "roars", [78] = "chicken dance", [80] = "applauds",
+            [82] = "flexes", [96] = "sits down", [100] = "sleeps",
+        },
+    },
+
     -- Top-row filter chip values. SSoT for Selectors, LayoutConfig, Controller_Decor, and the reducer.
     -- Adding or removing a bucket is one edit here.
     TOP_FILTERS = {
@@ -226,6 +310,11 @@ HDG.Constants = {
         { value = "expansions", label = "Expansions" },
         { value = "other",      label = "Other"      },
         { value = "sources",    label = "Sources"    },
+        -- Pets is a MODE, not a narrowing filter: it swaps the browser list from
+        -- decor to the player's decor-attachable pets. One row here generates the
+        -- chip widget (LayoutConfig_Decor's loop) and decor.topFilter.active_pets
+        -- (Selectors_Decor's loop), so there is nothing else to wire.
+        { value = "pets",       label = "Pets"       },
     },
 
     -- Crafting history ring-buffer cap. ~110KB worst case in SV.
@@ -345,6 +434,8 @@ HDG.Constants = {
         { view = "projectsArchitect", label = "Architect" },
         { view = "projectsLayouts",   label = "Layouts" },
         { view = "removalist",        label = "Move Planner" },
+        { view = "projectsBlueprints", label = "Blueprints" },
+        { view = "menagerie",     label = "Pets" },
         { view = "projectsPicker",    label = "Add Decor" },       -- opened via "+ Add decor"; not in NAV_TREE
         { view = "data",         label = "Your Data" },
         { view = "debug",        label = "Debug" },
@@ -355,7 +446,15 @@ HDG.Constants = {
     -- Node kinds: home | parent | header | launcher | config | divider.
     -- Child leaf kinds: mode-leaf (dispatches an action, activePath drives highlight) | view-leaf (plain view switch).
     NAV_TREE = {
-        { kind = "home",   view = "houseTab", label = "House", icon = "housing-map-plot-player-house" },
+        -- Blueprints is sub-nav UNDER House, the headline housing feature.
+        -- test_nav_tree cross-checks every nav view against TABS, so this child
+        -- and the TABS entry above travel together.
+        { kind = "home",   view = "houseTab", label = "House", icon = "housing-map-plot-player-house", children = {
+            { label = "Blueprints", view = "projectsBlueprints" },
+            -- The Menagerie (spec ruling 4): the established slot for a headline
+            -- housing feature that does not spend a top-level nav entry.
+            { label = "Pets",       view = "menagerie" },
+        }},
         { kind = "divider" },
         { kind = "parent", view = "decor",    label = "Decor", icon = "house-decor-budget-icon" },
         { kind = "parent", view = "acquisition", label = "Acquire", icon = "housing-decor-vendor_32", children = {
@@ -435,6 +534,12 @@ HDG.Constants = {
         MAIN_WINDOW_TOGGLE  = "HDGR_MAIN_WINDOW_TOGGLE",  -- flips account.ui.mainWindowShown
         NAV_TOGGLE_GROUP    = "HDGR_NAV_TOGGLE_GROUP",     -- payload: { view }; flips account.ui.nav.collapsedGroups[view]
         SESSION_END         = "HDGR_SESSION_END",          -- PLAYER_LOGOUT; reducer closes window
+        -- Pet journal collection/list changed. Bumps session.resolvers.pets.tick;
+        -- PetObserver's module index is the data, this is only the re-pull signal.
+        PETS_LIST_CHANGED   = "HDGR_PETS_LIST_CHANGED",
+        -- COMPANION_UPDATE: what is out has changed. Separate from the LIST
+        -- action because the collection has not changed, only the summon state.
+        PETS_SUMMONED_CHANGED = "HDGR_PETS_SUMMONED_CHANGED",
 
         -- Combat lifecycle (driven by CombatMiddleware via PLAYER_REGEN_*).
         COMBAT_ENTER        = "HDGR_COMBAT_ENTER",
@@ -515,6 +620,14 @@ HDG.Constants = {
         -- Per-char Essence of Lumber snapshot (chrome badge + alts hover).
         -- payload: { charKey, name, realm, class, classFile, bag, bank }
         CHARACTER_ESSENCE_UPDATED    = "HDGR_CHARACTER_ESSENCE_UPDATED",
+        -- Per-char decor-reagent snapshots (cross-character stock in the
+        -- MaterialStock hover). Bags and bank are separate actions because bank
+        -- counts are unreadable until BANKFRAME_OPENED -- one action would let a
+        -- bags sweep on a bank-less alt zero a good bank map.
+        -- payload: { charKey, name, realm, class, classFile,
+        --            counts = {[itemID]=n}, at = time() }
+        CHARACTER_REAGENT_BAGS_UPDATED = "HDGR_CHARACTER_REAGENT_BAGS_UPDATED",
+        CHARACTER_REAGENT_BANK_UPDATED = "HDGR_CHARACTER_REAGENT_BANK_UPDATED",
 
         -- Pure signal; gated modules (CollectionReconciler, BagObserver) catch up after sleeping.
         MAIN_WINDOW_OPENING          = "HDGR_MAIN_WINDOW_OPENING",
@@ -829,28 +942,6 @@ HDG.Constants = {
     },
 }
 
--- 12.1-only Blueprints tab: insert into TABS only on a 12.1 client. A TABS
--- entry generates a chrome-strip button AND makes the view resolvable via
--- persisted account.ui.view -- neither may exist on live, or a PTR tester's
--- saved nav state strands them on a dead panel after logging into 12.0.7.
-if HDG.Constants.IS_121 then
-    for i, tab in ipairs(HDG.Constants.TABS) do
-        if tab.view == "removalist" then
-            table.insert(HDG.Constants.TABS, i + 1, { view = "projectsBlueprints", label = "Blueprints" })
-            break
-        end
-    end
-    -- Matching nav child: Blueprints is sub-nav UNDER the House home node (the
-    -- 12.1 headline housing feature). test_nav_tree cross-checks every nav view
-    -- against TABS, so the TABS entry above and this child insert together or not at all.
-    for _, node in ipairs(HDG.Constants.NAV_TREE) do
-        if node.view == "houseTab" then
-            node.children = node.children or {}
-            node.children[#node.children + 1] = { label = "Blueprints", view = "projectsBlueprints", gatedBy = "blueprints.available" }
-            break
-        end
-    end
-end
 
 -- ===== Source-kind master table =====
 -- Canonical source-of-truth for source/gate kinds. Priority-ordered (most-binding first).
@@ -971,6 +1062,11 @@ HDG.Constants.PLACEHOLDER_ICON = 134400
 -- inside one tick) left 7 of 10 in bags -- the burst IS the rapid path. So buy
 -- exactly ONE per tick (genuine one-at-a-time = the straight-to-storage path).
 -- Functional throttle, NOT a UI transition (outside the no-C_Timer-in-UI rule).
+-- Community Coupons: the Midnight neighbourhood-endeavor currency, and the only
+-- non-gold cost decor vendors charge. Named here because it was a bare 3363 in
+-- the acquisition selectors and is now also the merchant buy path's one
+-- recognised currency.
+HDG.Constants.COUPON_CURRENCY_ID     = 3363
 HDG.Constants.MERCHANT_BUY_TICK_QTY  = 1     -- fixed-timer fallback: BuyMerchantItem calls per tick
 -- 0 = EVENT-DRIVEN pacing (buy one, wait for the HOUSING_STORAGE_ENTRY_UPDATED
 -- "landed in storage" signal, buy the next -- as fast as the server confirms,
@@ -1057,3 +1153,30 @@ for id, e in pairs(HDG.Constants.REP_FACTIONS) do
     HDG.Constants.REP_FACTION_BY_NAME[e.name] = id
     HDG.Constants.REP_FACTION_BY_NAME[string.lower(e.name)] = id
 end
+
+-- ===== Pet decor =============================================================
+-- Decor a PET can be placed on -- beds, plinths, cages, nests. It is furniture,
+-- not a placed pet, so these are ordinary contentType 3 (Decor) catalog rows.
+--
+-- Keyed by decorID, which is what a blueprint manifest entry carries directly
+-- (entry.recordID for contentType 3) -- so the split survives a catalog miss.
+--
+-- Source: HouseDecor.db2 `Flags & 0x800` (2048), the bit Blizzard sets for
+-- pet-accepting decor. Exactly these 10 of 2911 rows carry it on 12.1.0.69382,
+-- with no false positives (Rutaani Bird Perch and Perch of the Dawnfire Phoenix
+-- are perch-shaped scenery and correctly unflagged). The runtime catalog API
+-- does NOT expose the flag, which is why the list is baked here rather than
+-- read live. Regenerate by re-filtering HouseDecor.csv when a patch adds pet
+-- furniture; at 10 rows a constant beats a generated table.
+HDG.Constants.PET_DECOR_BY_DECOR_ID = {
+    [12245] = true,  -- Paw Pal Bed and Blanket
+    [12246] = true,  -- Paw Pal Bed
+    [15290] = true,  -- Cherished Pet's Rug
+    [25101] = true,  -- Westfall Pet Cage
+    [25102] = true,  -- Crossroads Pet Cage
+    [25103] = true,  -- Crude Pet Cage
+    [25105] = true,  -- Silvermoon Dragonhawk Incubator
+    [25106] = true,  -- Cozy Lightbloom Lilypad
+    [25121] = true,  -- Cozy Bird Nest
+    [25122] = true,  -- Loyal Companion's Plinth
+}

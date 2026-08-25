@@ -357,7 +357,8 @@ end
 local function _paintMatSubHeader(row, ed)
     row._nameFs:SetText(HDG.Theme:ColorCode("semantic.accent") .. (ed.label or "") .. "|r")
     row._qtyFs:SetText("")
-    row._tipName = nil   -- section header: no stock tooltip
+    row._tipName   = nil   -- section header: no stock tooltip
+    row._tipItemID = nil   -- pooled row: a stale itemID would render a stray item tooltip
 end
 
 -- matRow: name (left) + have/need, green when covered, red when short.
@@ -367,12 +368,20 @@ local function _paintMatRow(row, ed)
     local have = ed.have  -- recipes.materialRows stamps have (counts or 0)
     local color = HDG.Theme:GetTextStateColorToken(ed.covered and "success" or "error")
     row._qtyFs:SetText(string.format("%s%d / %d|r", color, have, need))
-    -- Stamp the hover tooltip's per-stash fields (read live by TooltipRecipes.MaterialStock).
+    -- Stamp the hover tooltip's fields (read live by TooltipRecipes.MaterialStock).
     row._tipName    = ed.name
-    row._tipBag     = ed.bag
-    row._tipBank    = ed.bank
+    row._tipItemID  = ed.itemID
     row._tipWarband = ed.warband
     row._tipNeed    = need
+end
+
+-- Shift-click links the material, which the Auction House picks up as a search
+-- when it is open -- the same gesture as the Warehouse materials list. A plain
+-- click is a no-op here: this pane is driven by the recipe selection above it.
+local function _wireMatRow(row, ed)
+    row:SetScript("OnClick", function()
+        if IsShiftKeyDown() then HDG.UI.LinkMaterial(ed.itemID, ed.name) end
+    end)
 end
 
 local function _matRowFactory(template)
@@ -381,12 +390,16 @@ local function _matRowFactory(template)
             if not row._matLaidOut then _layoutMatRow(row) end
             if ed.kind == "matSubHeader" then
                 _paintMatSubHeader(row, ed)
+                row:SetScript("OnClick", nil)   -- a section header has no item to link
             else
                 _paintMatRow(row, ed)
+                row:RegisterForClicks("LeftButtonUp")
+                _wireMatRow(row, ed)
             end
             row:SetHeight(template.height)
         end,
         Reset = function(row)
+            row:SetScript("OnClick", nil)
             HDG.UI.ClearRowText(row, "_nameFs")
             if row._qtyFs  then row._qtyFs:SetText("")  end
             row._tipName = nil   -- no tooltip on a pooled-but-unpainted row

@@ -22,8 +22,6 @@ local Flags = NS.Flags
 local Score = NS.Score
 local Stacks = NS.Stacks
 local Maps = NS.Maps
-local Version = NS.Version
-local Changelog = NS.Changelog
 
 local Options = {}
 NS.Options = Options
@@ -1176,8 +1174,6 @@ function BGWC:ADDON_LOADED(addon)
     NS.CleanupDB(BattlegroundWinConditionsDB, NS.DefaultDatabase)
 
     Options:Setup()
-    Version:Setup()
-    Changelog:Setup()
   end
 end
 BGWCFrame:RegisterEvent("ADDON_LOADED")

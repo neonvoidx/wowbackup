@@ -97,13 +97,26 @@ end
 
 local function CategoryNeedsFullScan(key)
     return key == C.Categories.HealerCC
-        or key == C.Categories.BetterBlizzPlates
         or key == C.Categories.MiniAuras
         or key == C.Categories.MyDRs
         or key == C.Categories.SArena
         or key == C.Categories.TellMeWhen
         or key == C.Categories.Unitframe
+        or key == C.Categories.Shackled
 end
+
+local OWNERSHIP_CATEGORIES = {
+    [C.Categories.Actionbar] = true,
+    [C.Categories.Nameplate] = true,
+    [C.Categories.Unitframe] = true,
+    [C.Categories.CooldownManager] = true,
+    [C.Categories.HealerCC] = true,
+    [C.Categories.MiniAuras] = true,
+    [C.Categories.MyDRs] = true,
+    [C.Categories.SArena] = true,
+    [C.Categories.TellMeWhen] = true,
+    [C.Categories.Shackled] = true,
+}
 
 --- Returns a setter function that writes and refreshes.
 local function CatSet(key, field)
@@ -450,8 +463,25 @@ local function DefaultDurationColorSet(_, r, g, b, a)
     MCE:ForceUpdateAll(true)
 end
 
+local function IsCategoryStylingBlocked(key)
+    return MCE:IsCategoryBlockedByAddonConflict(key)
+end
+
+local function GetCategoryConflictWarning(key)
+    if not IsCategoryStylingBlocked(key) then return nil end
+
+    if key == C.Categories.Unitframe then
+        return L["BETTERBLIZZFRAMES_UNITFRAME_CONFLICT_WARNING"]
+    end
+    if key == C.Categories.Nameplate then
+        return L["BETTERBLIZZPLATES_NAMEPLATE_CONFLICT_WARNING"]
+    end
+    return nil
+end
+
 local function IsCatDisabled(key)
     return not MCE.db.profile.categories[key].enabled
+        or IsCategoryStylingBlocked(key)
 end
 
 local function IsStackHidden(key)
@@ -537,9 +567,17 @@ local function RefreshDynamicCategoryLabels()
 end
 
 local function SetCategoryEnabledValue(key, value)
+    if IsCategoryStylingBlocked(key) then
+        return
+    end
+
+    local needsFullScan = CategoryNeedsFullScan(key)
     MCE.db.profile.categories[key].enabled = value
     MCE:MarkReloadRequired()
-    MCE:ForceUpdateAll(CategoryNeedsFullScan(key))
+    if OWNERSHIP_CATEGORIES[key] and not needsFullScan then
+        MCE:InvalidateOwnership()
+    end
+    MCE:ForceUpdateAll(needsFullScan)
     NotifyOptionsChanged()
 end
 
@@ -850,22 +888,34 @@ end
 -- =========================================================================
 
 local function CreateCategoryOptions(order, name, key, desc)
+    local isUnitframe = (key == C.Categories.Unitframe)
+    local isNameplate = (key == C.Categories.Nameplate)
     local disabledFn    = function() return IsCatDisabled(key) end
     local stackHiddenFn = function() return IsStackHidden(key) end
     local isCooldownManager = (key == C.Categories.CooldownManager)
     local isHealerCC = (key == C.Categories.HealerCC)
     local isMiniAuras = (key == C.Categories.MiniAuras)
     local isMyDRs = (key == C.Categories.MyDRs)
-    local isNameplate = (key == C.Categories.Nameplate)
     local isSArena = (key == C.Categories.SArena)
+    local isShackled = (key == C.Categories.Shackled)
     local isTellMeWhen = (key == C.Categories.TellMeWhen)
-    local isUnitframe = (key == C.Categories.Unitframe)
     local isPlayerAura = (key == C.Categories.PlayerAura)
     local isActionbar = (key == C.Categories.Actionbar)
     local isStackCategory = (key == C.Categories.Actionbar or key == C.Categories.Nameplate or key == C.Categories.CooldownManager or key == C.Categories.Unitframe or isPlayerAura)
     local allowsThresholdColors = not isMiniAuras and not isNameplate
     local allowThresholdColorsGet = allowsThresholdColors
         and CatGet(key, "allowThresholdColors", GetAllowThresholdDefault(key)) or nil
+    -- Explicit if/elseif rather than an `and/or` chain: Shackled's own
+    -- ReverseSwipe default is false, and `cond and false or fallback` always
+    -- picks the fallback in Lua, silently discarding a false default.
+    local reverseSwipeDefault
+    if isMyDRs then
+        reverseSwipeDefault = C.Defaults.MyDRs.ReverseSwipe
+    elseif isShackled then
+        reverseSwipeDefault = C.Defaults.Shackled.ReverseSwipe
+    else
+        reverseSwipeDefault = C.Defaults.Actionbar.ReverseSwipe
+    end
     local allowThresholdColorsSet = allowsThresholdColors
         and CatSet(key, "allowThresholdColors") or nil
 
@@ -876,12 +926,14 @@ local function CreateCategoryOptions(order, name, key, desc)
                 or (isMiniAuras and not MCE:IsMiniAurasAvailable())
                 or (isMyDRs and not MCE:IsMyDRsAvailable())
                 or (isSArena and not MCE:IsSArenaAvailable())
+                or (isShackled and not MCE:IsShackledAvailable())
                 or (isTellMeWhen and not MCE:IsTellMeWhenAvailable())
         end,
         -- Dynamic name with status indicator (colored accent when active, dimmed when inactive)
         name = function()
             if not MCE.db or not MCE.db.profile then return name end
             local enabled = MCE.db.profile.categories[key].enabled
+                and not IsCategoryStylingBlocked(key)
             if enabled then
                 return "|cff33ff99" .. L["ON"] .. "|r  " .. name
             else
@@ -897,9 +949,18 @@ local function CreateCategoryOptions(order, name, key, desc)
                     enabled = {
                         type = "toggle", order = 1, width = "full",
                         name = "|cff33ff99" .. format(L["Enable %s"], name) .. "|r",
-                        desc = L["Toggle styling for this category."],
-                        get = CatGet(key, "enabled"),
+                        desc = function()
+                            return GetCategoryConflictWarning(key)
+                                or L["Toggle styling for this category."]
+                        end,
+                        get = function()
+                            return MCE.db.profile.categories[key].enabled
+                                and not IsCategoryStylingBlocked(key)
+                        end,
                         set = SetCategoryEnabled(key),
+                        disabled = function()
+                            return IsCategoryStylingBlocked(key)
+                        end,
                     },
                     miniAurasTestToggle = isMiniAuras and {
                         type = "execute", order = 2, width = "1",
@@ -975,6 +1036,16 @@ local function CreateCategoryOptions(order, name, key, desc)
             categoryOverview = desc and {
                 type = "group", name = "", inline = true, order = 2,
                 args = {
+                    addonConflictNotice = (isUnitframe or isNameplate) and {
+                        type = "description", order = 0.05, fontSize = "medium", width = "full",
+                        name = function()
+                            return "|cffff7a1a(!) "
+                                .. (GetCategoryConflictWarning(key) or "") .. "|r"
+                        end,
+                        hidden = function()
+                            return GetCategoryConflictWarning(key) == nil
+                        end,
+                    } or nil,
                     catDesc = {
                         type = "description", order = 0.1, fontSize = "medium", width = "full",
                         name = BuildCategoryDescription(desc),
@@ -1055,6 +1126,20 @@ local function CreateCategoryOptions(order, name, key, desc)
                         desc = L["UNITFRAME_ONLY_MINE_BUFFS_DESC"],
                         get = CatGet(key, "onlyMineBuffs", false),
                         set = CatSet(key, "onlyMineBuffs"),
+                    },
+                },
+            } or nil,
+
+            unitframeCastBar = isUnitframe and {
+                type = "group", name = "|cffffd100" .. L["Cast Bar"] .. "|r",
+                inline = true, order = 6, disabled = disabledFn,
+                args = {
+                    castBarReposition = {
+                        type = "toggle", order = 1, width = 2.6,
+                        name = L["Reposition Cast Bar"],
+                        desc = L["UNITFRAME_CASTBAR_REPOSITION_DESC"],
+                        get = CatGet(key, "castBarReposition", true),
+                        set = CatSet(key, "castBarReposition"),
                     },
                 },
             } or nil,
@@ -1268,29 +1353,6 @@ local function CreateCategoryOptions(order, name, key, desc)
                         set = CatSet(key, "raidFrameAuraHideSwipe"),
                     } or nil,
                     raidFrameAuraRowBreak = isMiniAuras and RowBreak(5.293) or nil,
-                    nameplateFontSize = isMiniAuras and {
-                        type = "range", order = 5.3, width = 1.2,
-                        name = L["Nameplates Text Size"],
-                        desc = L["Applies to the MiniAuras Nameplates module."],
-                        min = 6, max = 36, step = 1,
-                        get = CatGet(key, "nameplateFontSize", 12),
-                        set = CatRangeSet(key, "nameplateFontSize"),
-                    } or nil,
-                    nameplateHideCountdownNumbers = isMiniAuras and {
-                        type = "toggle", order = 5.35, width = 0.8,
-                        name = L["Hide Numbers"],
-                        desc = L["Hide the text entirely (useful if you only want the swipe edge or stacks)."],
-                        get = CatGet(key, "nameplateHideCountdownNumbers", false),
-                        set = CatSet(key, "nameplateHideCountdownNumbers"),
-                    } or nil,
-                    nameplateHideSwipe = isMiniAuras and {
-                        type = "toggle", order = 5.37, width = 0.8,
-                        name = L["Hide Swipe"],
-                        desc = L["Hide the swipe animation for this frame group (countdown text still shows)."],
-                        get = CatGet(key, "nameplateHideSwipe", false),
-                        set = CatSet(key, "nameplateHideSwipe"),
-                    } or nil,
-                    nameplateRowBreak = isMiniAuras and RowBreak(5.39) or nil,
                     portraitFontSize = isMiniAuras and {
                         type = "range", order = 5.4, width = 1.2,
                         name = L["Portraits Text Size"],
@@ -1397,11 +1459,12 @@ local function CreateCategoryOptions(order, name, key, desc)
                         get = CatGet(key, "drawSwipe", true),
                         set = CatSet(key, "drawSwipe"),
                     } or nil,
-                    swipeAlpha = (isActionbar or isPlayerAura or isMiniAuras or isMyDRs) and {
+                    swipeAlpha = (isActionbar or isPlayerAura or isMiniAuras or isMyDRs or isShackled) and {
                         type = "range", order = 1, width = 1,
                         name = L["Swipe Shade Alpha"],
                         desc = isMiniAuras and L["MINIAURAS_SWIPE_ALPHA_DESC"]
                             or isMyDRs and L["MYDRS_SWIPE_ALPHA_DESC"]
+                            or isShackled and L["SHACKLED_SWIPE_ALPHA_DESC"]
                             or L["0% = transparent, 100% = full dark."],
                         min = 0, max = 100, step = 1,
                         get = CatGet(key, "swipeAlpha", C.Styler.DefaultSwipeAlpha),
@@ -1424,12 +1487,11 @@ local function CreateCategoryOptions(order, name, key, desc)
                         get = CatGet(key, "edgeScale"),
                         set = CatRangeSet(key, "edgeScale"),
                     },
-                    reverseSwipe = (isActionbar or isMyDRs) and {
+                    reverseSwipe = (isActionbar or isMyDRs or isShackled) and {
                         type = "toggle", order = 4, width = "full",
                         name = L["Reverse Swipe"],
                         desc = L["Reverse the swipe direction so the shade fills in the opposite direction."],
-                        get = CatGet(key, "reverseSwipe",
-                            isMyDRs and C.Defaults.MyDRs.ReverseSwipe or C.Defaults.Actionbar.ReverseSwipe),
+                        get = CatGet(key, "reverseSwipe", reverseSwipeDefault),
                         set = CatSet(key, "reverseSwipe"),
                     } or nil,
                 },
@@ -1519,166 +1581,13 @@ local function CreateCategoryOptions(order, name, key, desc)
                         desc = L["Revert this category to default settings."],
                         confirm = true,
                         func = function()
+                            local needsFullScan = CategoryNeedsFullScan(key)
                             MCE.db.profile.categories[key] = CopyTable(MCE.defaults.profile.categories[key])
-                            MCE:ForceUpdateAll()
+                            if OWNERSHIP_CATEGORIES[key] and not needsFullScan then
+                                MCE:InvalidateOwnership()
+                            end
+                            MCE:ForceUpdateAll(needsFullScan)
                             LibStub("AceConfigRegistry-3.0"):NotifyChange(addonName)
-                            MCE:Print(format(L["%s settings reset."], name))
-                        end,
-                    },
-                },
-            },
-        },
-    }
-end
-
-local function CreateBetterBlizzPlatesOptions(order, name, desc)
-    local key = C.Categories.BetterBlizzPlates
-    local disabledFn = function() return IsCatDisabled(key) end
-    local allowThresholdColorsGet = CatGet(
-        key, "allowThresholdColors", GetAllowThresholdDefault(key))
-    local allowThresholdColorsSet = CatSet(key, "allowThresholdColors")
-
-    return {
-        type = "group",
-        hidden = function()
-            return not MCE:IsBetterBlizzPlatesAvailable()
-        end,
-        name = function()
-            if not MCE.db or not MCE.db.profile then return name end
-            local enabled = MCE.db.profile.categories[key].enabled
-            if enabled then
-                return "|cff33ff99" .. L["ON"] .. "|r  " .. name
-            end
-            return "|cff555555" .. L["OFF"] .. "|r  |cff888888" .. name .. "|r"
-        end,
-        order = order,
-        args = {
-            enableGroup = {
-                type = "group", name = "", inline = true, order = 1,
-                args = {
-                    enabled = {
-                        type = "toggle", order = 1, width = "full",
-                        name = "|cff33ff99" .. format(L["Enable %s"], name) .. "|r",
-                        desc = L["Toggle styling for this category."],
-                        get = CatGet(key, "enabled"),
-                        set = SetCategoryEnabled(key),
-                    },
-                },
-            },
-            categoryOverview = {
-                type = "group", name = "", inline = true, order = 2,
-                args = {
-                    catDesc = {
-                        type = "description", order = 0.1,
-                        fontSize = "medium", width = "full",
-                        name = BuildCategoryDescription(desc),
-                    },
-                    bottomSpacing = SectionSpacer(0.12),
-                },
-            },
-            typography = {
-                type = "group",
-                name = "|cffffd100" .. L["Typography (Cooldown Numbers)"] .. "|r",
-                inline = true, order = 10, disabled = disabledFn,
-                args = {
-                    font = {
-                        type = "select", order = 1, width = 1.5,
-                        name = L["Font Face"], values = GetFontOptions,
-                        get = CatGet(key, "font"), set = CatSet(key, "font"),
-                    },
-                    fontSize = {
-                        type = "range", order = 2, width = 0.7,
-                        name = L["Size"], min = 6, max = 36, step = 1,
-                        get = CatGet(key, "fontSize"),
-                        set = CatRangeSet(key, "fontSize"),
-                    },
-                    fontStyle = {
-                        type = "select", order = 3, width = 0.8,
-                        name = L["Outline"], values = OUTLINE_OPTIONS,
-                        get = CatGet(key, "fontStyle"),
-                        set = CatSet(key, "fontStyle"),
-                    },
-                    textColor = {
-                        type = "color", order = 4, width = "half",
-                        name = L["Color"], hasAlpha = true,
-                        get = CatColorGet(key, "textColor"),
-                        set = CatColorSet(key, "textColor"),
-                    },
-                    allowThresholdColors = {
-                        type = "toggle", order = 4.5, width = "full",
-                        name = L["Allow Threshold Colors"],
-                        desc = L["Allows the global \"Color by Remaining Time\" thresholds to override this category's static text color."],
-                        get = allowThresholdColorsGet,
-                        set = allowThresholdColorsSet,
-                    },
-                    supportNotice = {
-                        type = "description", order = 4.6, width = "full", fontSize = "small",
-                        name = "|cffffd100" .. L["BBP_TYPOGRAPHY_SUPPORT_NOTICE"] .. "|r",
-                    },
-                    headerPosTopSpacing = SectionSpacer(5.9),
-                    headerPos = {
-                        type = "header", name = L["Positioning"], order = 6,
-                    },
-                    headerPosBottomSpacing = SectionSpacer(6.1),
-                    textAnchor = {
-                        type = "select", order = 7, width = "full",
-                        name = L["Anchor Point"], values = ANCHOR_OPTIONS,
-                        get = CatGet(key, "textAnchor"),
-                        set = CatSet(key, "textAnchor"),
-                    },
-                    textOffsetX = {
-                        type = "range", order = 8, width = "half",
-                        name = L["Offset X"], min = -30, max = 30, step = 1,
-                        get = CatGet(key, "textOffsetX", 0),
-                        set = CatRangeSet(key, "textOffsetX"),
-                    },
-                    textOffsetY = {
-                        type = "range", order = 9, width = "half",
-                        name = L["Offset Y"], min = -30, max = 30, step = 1,
-                        get = CatGet(key, "textOffsetY", 0),
-                        set = CatRangeSet(key, "textOffsetY"),
-                    },
-                },
-            },
-            swipeEdge = {
-                type = "group", name = "|cffffd100" .. L["Swipe Edge"] .. "|r",
-                inline = true, order = 20, disabled = disabledFn,
-                args = {
-                    edgeEnabled = {
-                        type = "toggle", order = 1, width = "1",
-                        name = L["Show Swipe Edge"],
-                        desc = L["Shows the white line indicating cooldown progress."],
-                        get = CatGet(key, "edgeEnabled"),
-                        set = CatSet(key, "edgeEnabled"),
-                    },
-                    edgeScale = {
-                        type = "range", order = 2, width = "2",
-                        name = L["Edge Thickness"],
-                        desc = L["Scale of the swipe line (1.0 = Default)."],
-                        min = 0.5, max = 2.0, step = 0.1,
-                        get = CatGet(key, "edgeScale"),
-                        set = CatRangeSet(key, "edgeScale"),
-                    },
-                },
-            },
-            maintenance = {
-                type = "group", name = "|cff999999" .. L["Maintenance"] .. "|r",
-                inline = true, order = 100,
-                args = {
-                    maintenanceDesc = {
-                        type = "description", order = 0, fontSize = "small",
-                        name = "|cff666666" .. L["MAINTENANCE_DESC"] .. "|r\n",
-                    },
-                    resetCategory = {
-                        type = "execute", order = 1, width = "full",
-                        name = "|cffff8888" .. format(L["Reset %s"], name) .. "|r",
-                        desc = L["Revert this category to default settings."],
-                        confirm = true,
-                        func = function()
-                            MCE.db.profile.categories[key] =
-                                CopyTable(MCE.defaults.profile.categories[key])
-                            MCE:ForceUpdateAll(true)
-                            AceConfigRegistry:NotifyChange(addonName)
                             MCE:Print(format(L["%s settings reset."], name))
                         end,
                     },
@@ -1777,15 +1686,35 @@ function MCE:GetOptions()
                             toggleNameplate = {
                                 type = "toggle", order = 2, width = 1.0,
                                 name = "|cffffd100" .. L["Nameplates"] .. "|r",
-                                get = function() return MCE.db.profile.categories[C.Categories.Nameplate].enabled end,
+                                desc = function()
+                                    return GetCategoryConflictWarning(C.Categories.Nameplate)
+                                        or L["Toggle styling for this category."]
+                                end,
+                                get = function()
+                                    return MCE.db.profile.categories[C.Categories.Nameplate].enabled
+                                        and not IsCategoryStylingBlocked(C.Categories.Nameplate)
+                                end,
                                 set = SetDashboardCategoryEnabled(C.Categories.Nameplate),
+                                disabled = function()
+                                    return IsCategoryStylingBlocked(C.Categories.Nameplate)
+                                end,
                             },
                             quickRowBreak1 = RowBreak(2.1),
                             toggleUnitframe = {
                                 type = "toggle", order = 3, width = 1.0,
                                 name = "|cffffd100" .. L["Unit Frames"] .. "|r",
-                                get = function() return MCE.db.profile.categories[C.Categories.Unitframe].enabled end,
+                                desc = function()
+                                    return GetCategoryConflictWarning(C.Categories.Unitframe)
+                                        or L["Toggle styling for this category."]
+                                end,
+                                get = function()
+                                    return MCE.db.profile.categories[C.Categories.Unitframe].enabled
+                                        and not IsCategoryStylingBlocked(C.Categories.Unitframe)
+                                end,
                                 set = SetDashboardCategoryEnabled(C.Categories.Unitframe),
+                                disabled = function()
+                                    return IsCategoryStylingBlocked(C.Categories.Unitframe)
+                                end,
                             },
                             togglePlayerAura = {
                                 type = "toggle", order = 4, width = 1.0,
@@ -1834,6 +1763,13 @@ function MCE:GetOptions()
                                 hidden = function() return not MCE:IsTellMeWhenAvailable() end,
                                 get = function() return MCE.db.profile.categories[C.Categories.TellMeWhen].enabled end,
                                 set = SetDashboardCategoryEnabled(C.Categories.TellMeWhen),
+                            },
+                            toggleShackled = {
+                                type = "toggle", order = 9.5, width = 0.9,
+                                name = "|cffffd100" .. L["Shackled"] .. "|r",
+                                hidden = function() return not MCE:IsShackledAvailable() end,
+                                get = function() return MCE.db.profile.categories[C.Categories.Shackled].enabled end,
+                                set = SetDashboardCategoryEnabled(C.Categories.Shackled),
                             },
                             partyRaidFramesRetired = {
                                 type = "description", order = 9.5, width = "full", fontSize = "small",
@@ -2085,8 +2021,8 @@ function MCE:GetOptions()
                 L["SARENA_DESC"]),
             [C.Categories.TellMeWhen] = CreateCategoryOptions(12, L["TellMeWhen"], C.Categories.TellMeWhen,
                 L["TELLMEWHEN_DESC"]),
-            [C.Categories.BetterBlizzPlates] = CreateBetterBlizzPlatesOptions(
-                13, L["BetterBlizzPlates Auras"], L["BETTERBLIZZPLATES_DESC"]),
+            [C.Categories.Shackled] = CreateCategoryOptions(14, L["Shackled"], C.Categories.Shackled,
+                L["SHACKLED_DESC"]),
 
             help = {
                 type = "group", name = L["Help & Support"], order = 1001,

@@ -423,6 +423,7 @@ local function ensureLSMCache(mediaType)
 			hash = EMPTY_TABLE,
 			names = EMPTY_TABLE,
 			options = EMPTY_TABLE,
+			resolved = {},
 		}
 		LSM_CACHE[key] = cache
 	end
@@ -479,6 +480,7 @@ function addon.functions.InvalidateLSMMediaCache(mediaType)
 		for _, cache in pairs(LSM_CACHE) do
 			cache.dirty = true
 			cache.version = (cache.version or 0) + 1
+			cache.resolved = {}
 		end
 		LSM_DROPDOWN_CACHE = {}
 		return
@@ -488,6 +490,7 @@ function addon.functions.InvalidateLSMMediaCache(mediaType)
 	if not cache or not key then return end
 	cache.dirty = true
 	cache.version = (cache.version or 0) + 1
+	cache.resolved = {}
 	for cacheKey in pairs(LSM_DROPDOWN_CACHE) do
 		if type(cacheKey) == "string" and cacheKey:find(key .. "|", 1, true) == 1 then LSM_DROPDOWN_CACHE[cacheKey] = nil end
 	end
@@ -808,15 +811,31 @@ function addon.functions.ResolveLSMMedia(mediaType, configured, fallback, allowP
 		if allowPath ~= false and isMediaPath(configuredValue) then return configuredValue end
 		return fallbackValue
 	end
+	local cache = ensureLSMCache(mediaKind)
+	local resolvedByConfigured = cache and cache.resolved and cache.resolved[configuredValue]
+	local fallbackKey = fallbackValue or false
+	local allowPathKey = allowPath ~= false
+	local resolvedByFallback = resolvedByConfigured and resolvedByConfigured[fallbackKey]
+	local cached = resolvedByFallback and resolvedByFallback[allowPathKey]
+	if cached then return cached end
+	local function cacheResolved(value)
+		if type(value) ~= "string" or value == "" or not cache then return value end
+		resolvedByConfigured = resolvedByConfigured or {}
+		cache.resolved[configuredValue] = resolvedByConfigured
+		resolvedByFallback = resolvedByFallback or {}
+		resolvedByConfigured[fallbackKey] = resolvedByFallback
+		resolvedByFallback[allowPathKey] = value
+		return value
+	end
 	local lsm = getSharedMedia()
 	if lsm then
 		if lsm.IsValid and lsm:IsValid(mediaKind, configuredValue) then
 			local fetched = lsm.Fetch and lsm:Fetch(mediaKind, configuredValue, true)
 			if type(fetched) == "string" and fetched ~= "" then
 				if mediaKind == "font" then
-					if isKnownFileAsset(fetched) then return fetched end
+					if isKnownFileAsset(fetched) then return cacheResolved(fetched) end
 				elseif not isMediaPath(fetched) or shouldUseFileAsset(fetched, true) then
-					return fetched
+					return cacheResolved(fetched)
 				end
 			end
 			return fallbackValue
@@ -826,25 +845,25 @@ function addon.functions.ResolveLSMMedia(mediaType, configured, fallback, allowP
 			local byName = hash[configuredValue]
 			if type(byName) == "string" and byName ~= "" then
 				if mediaKind == "font" then
-					if isKnownFileAsset(byName) then return byName end
+					if isKnownFileAsset(byName) then return cacheResolved(byName) end
 				elseif not isMediaPath(byName) or shouldUseFileAsset(byName, true) then
-					return byName
+					return cacheResolved(byName)
 				end
 				return fallbackValue
 			end
 			for _, path in pairs(hash) do
 				if path == configuredValue then
 					if mediaKind == "font" then
-						if isKnownFileAsset(configuredValue) then return configuredValue end
+						if isKnownFileAsset(configuredValue) then return cacheResolved(configuredValue) end
 					elseif not isMediaPath(configuredValue) or shouldUseFileAsset(configuredValue, true) then
-						return configuredValue
+						return cacheResolved(configuredValue)
 					end
 					return fallbackValue
 				end
 			end
 		end
 	end
-	if allowPath ~= false and mediaKind ~= "font" and isMediaPath(configuredValue) and shouldUseFileAsset(configuredValue, true) then return configuredValue end
+	if allowPath ~= false and mediaKind ~= "font" and isMediaPath(configuredValue) and shouldUseFileAsset(configuredValue, true) then return cacheResolved(configuredValue) end
 	return fallbackValue
 end
 

@@ -1,3 +1,284 @@
+## [Unreleased]
+
+## [3.28.0] - 2026-08-25 (August 2026)
+
+### Added
+- **Search your pets by name or by kind.** House > Pets has a search box under the
+  By Pet / By Spot buttons. Type a pet's name, or type what it IS -- "squirrel",
+  "moth", "golem", "murloc" -- and the list narrows to match. The kind is printed
+  beside every pet in the list, so whatever you can read there, you can type. As
+  you type, a row of suggestions appears offering the kinds that start with those
+  letters, with a count of how many you own; click one to fill it in. Two letters
+  is usually enough to get from 1,934 pets to the handful you meant.
+- **Bats are their own group.** They used to sit with the birds, which never felt
+  right -- you hang a bat in a cellar, not on a garden perch. There is now a Bat
+  group of its own, and the card tells you a bat wants a rafter somewhere dim.
+  The room matcher treats them accordingly: ask "pets for this room" in something
+  gothic and the bats put their hands up.
+- **The pet card came to the Decor tab.** Decor > Pets now shows the same card the
+  Menagerie does -- the live stage with the bed, the plinth and your own character,
+  the facts line, and the behaviour flowchart -- instead of the old flat preview.
+  One pet, one card, wherever you are looking at it from.
+
+### Changed
+- **Pets are grouped correctly now.** A pass over every pet in the game moved
+  around two hundred of them into the group they actually belong to. Crocodiles
+  were filed as birds. A wombat was a bird. Revenants, which are elementals, were
+  filed as insects, as were stone giants, a cauldron, a pen, a torch and a
+  carnivorous plant. A panther was an insect. A crate was a rodent. A dog in a
+  hard hat was a construct, and a clockwork dog was a bird. Balloon animals were
+  filed as the animals they are shaped like. If you have ever picked a group and
+  wondered why something odd was in it, that is why.
+- **The pet list is in alphabetical order.** It used to be sorted by height, which
+  made sense when each row carried a size bar; the size story moved to the card's
+  stage, and a list you arrive at knowing the name you want should be in name
+  order. Renamed pets sort under the name you gave them.
+
+### Fixed
+- **The sound button on a pet's card now works properly.** Clicking the sound chip
+  plays a different one of that pet's sounds each time rather than the same, often
+  near-silent, loop; a small bar fills to show how long the clip runs; and it no
+  longer draws that bar when the client refuses to play anything. The chip also
+  stops naming the sound after an internal file name -- it now tells you how many
+  other pets share that voice, which is the surprising part.
+- **The Pets tab no longer keeps showing the old list after you filter it.** Under
+  some combinations of filters the list could stay as it was instead of narrowing.
+
+## [3.27.0] - 2026-08-25 (August 2026)
+
+### Added
+- **The Pets tab grew into a Menagerie.** House > Pets is a new view for the whole
+  collection, built around one question: where does this pet belong in your home?
+  Browse by kind, by family, by size, or by the deeper family tree -- every rat,
+  every firefly, every construct -- or flip it around and start from the spot:
+  "a shelf", "somewhere that glows", "stays quiet", and see which pets fit. Every
+  pet gets a live stage. On its own it fills the frame like a portrait; seat it on
+  the Paw Pal Bed or the Loyal Companion's Plinth, or stand your own character
+  beside it, and everything renders at true size -- a hand-sized firefly really is
+  a speck against your boots, and the facts line tells you exactly how tall it
+  stands next to you. Under the stage, a small flowchart shows what the pet does
+  when left alone: how it idles, which rare flourishes it breaks into, whether it
+  makes noise and how often -- and every node is clickable, playing that animation
+  or sound on the stage. A row of chips plays the other tricks it knows: dances,
+  sleeps, waves, the chicken dance.
+
+### Fixed
+- **Filtering the Placed Decor search no longer trips a red "blocked from an
+  action" error.** When your search dimmed the row your mouse happened to be on,
+  the addon reached for a Blizzard-only call to switch off that piece's in-world
+  glow, and the game blocked it -- once per unlucky hover. The row now simply
+  keeps listening until your cursor leaves it, so Blizzard's own code turns the
+  glow off, the way it always does. Reported by a player -- thank you.
+- **Opening HDG no longer breaks Blizzard's Housing Dashboard.** Two faults, one
+  root. Asking the game for your house list before the dashboard had ever opened
+  left its panel blank for the whole session -- your house name in the dropdown
+  over an empty grey page. And the earlier repair for that blank panel had a worse
+  side effect: the dashboard's own Teleport Home button could fail with the red
+  "blocked from an action only available to the Blizzard UI" error, the kind that
+  offers to disable the addon. The repair is gone. Instead, HDG now wakes the
+  dashboard up before asking the game for anything housing-shaped, so it always
+  hears its own answers and fills itself the normal way.
+
+## [3.26.0] - 2026-08-24 (August 2026)
+
+### Fixed
+- **Vendors who trade in more than one place now show up in each of them.** A vendor
+  standing in both housing neighbourhoods -- or in Stormwind and Dornogal, or Darnassus
+  and the Ruins of Gilneas -- was only ever listed in one, because the addon kept just the
+  last place the game named and quietly dropped the rest. Around 30 vendor listings come
+  back, each with its own location. Some of the restored ones have no map coordinates yet,
+  so they list without a pin until someone walks them. Found by Vamoose, who kept pointing
+  at a vendor standing in Razorwind Shores that the addon insisted was in Founder's Point.
+- **The Pets tab could come up empty, and offer to summon a pet already standing
+  next to you.** After a reload it waited for the game to volunteer a pet-journal
+  update before building its list, which on a quiet login never came -- so the tab
+  said you had no pets, and a companion already out was offered a "Summon" button
+  that did nothing when clicked. It now reads your collection at startup like every
+  other part of the addon.
+- **The Goblin export wrote nonsense for anything sold at a loss.** A negative
+  profit came out as "-13.65.44" instead of "-12.34.56" -- so the rows the export
+  exists to help you find were the rows you could not read.
+- **A pet with no preview showed you nothing at all.** Rather than falling back to
+  the icon and saying "Preview unavailable", the panel went completely blank until
+  you clicked a different pet. It could also frame a pet with the camera meant for
+  furniture.
+- **Profession filters went wrong on non-English clients.** A scanned recipe stored
+  your profession's translated name over the addon's own, so the Alchemy filter
+  found nothing and the Recipes tab counted zero beside a phantom second bucket.
+- **Clicking an achievement link in combat blamed the addon.** The red "interface
+  action failed" message named Housing Decor Guide; the link now waits, as the map
+  buttons beside it already did.
+- **Being traded lumber counted as farming it.** A guildmate handing you 40 Ashwood
+  started a farming session and dropped a harvest marker where you stood. Buying
+  lumber on the auction house did the same.
+- **A guild scan left your profession window rearranged.** It borrows your filters
+  while it reads the guild's recipes and puts them back when it finishes -- but a
+  reload or logout partway through meant it never got to, and those settings persist,
+  so the window stayed that way for good. It now restores them the next time you open
+  a profession. A scan also no longer stalls ten seconds per profession your guild
+  rank cannot view, and the guild's window no longer flashes up full-size on the first
+  profession of a session.
+- **Capture Floors worked while you were standing in someone else's house**, filing
+  their layout under a house of yours. It now asks for a house you own.
+- **Moving a piece of decor could be recorded as placing a new one**, and a piece you
+  picked up and then cancelled stayed pending until something else was placed.
+- **The room-search box in the house editor** left a piece highlighted in the world
+  when you filtered it out from under the cursor, and kept working in the background
+  after you closed the editor.
+
+### Changed
+- **Decor that a vendor sells now says so, even when a quest or achievement also
+  gives it.** Hundreds of pieces are both -- and the source line used to name the
+  quest, which is true exactly once and no help at all to the person reading your
+  blueprint list who never had that quest offered to them. The vendor is standing
+  in a zone they can fly to today, so that is what gets named now, with the zone
+  beside it. The quest or achievement has not gone anywhere: it still shows on the
+  chips, so a piece you can earn as well as buy still says both. This runs
+  everywhere one source has to be named -- the Blueprints copy list, the decor
+  tooltip, and the item's detail panel -- so the three finally agree with each
+  other. The tooltip goes further and lists every vendor that stocks the piece,
+  which it could not do while a quest held the line.
+
+## [3.25.0] - 2026-08-21 (August 2026)
+
+### Added
+- **The bulk-buy window can be moved, and dismissed for a vendor.** Drag it out of
+  the way of the merchant behind it, and close it with the X if you would rather
+  buy the ordinary way -- right-clicking goes back to Blizzard's one-at-a-time
+  purchase for the rest of that visit. Walk away and come back and the window is
+  offered again, so turning it down once is not a decision you have to undo.
+- **A blueprint now tells you what it will cost you.** The band that says whether
+  a build fits your house now also carries the price of everything you are still
+  missing, so you can judge a share code before committing to it rather than
+  after. Housing decor is not bought with gold alone, so each currency is counted
+  separately -- hover for the breakdown. Decor with no listed price is called out
+  rather than quietly left out of the total. Asked for by Madailein Hatter.
+- **Copy list, on the Blueprints tab.** Next to the share code you hand
+  out, there is now a plain readable list of everything the build is made of --
+  rooms, decor, dyes and fixtures, with where each piece of decor comes from --
+  ready to paste under your post on Discord, Reddit or a comment thread. Decor a
+  pet can be placed on gets its own heading. The list describes the blueprint
+  rather than your collection, so it reads the same for whoever picks it up: the
+  counts are what the build uses, not what you happen to be short of. Asked for
+  by madaileinhatter, who was typing one out by hand to make a blueprint card.
+
+### Changed
+- **Every themed room Blizzard has shipped can now be placed in the Architect.**
+  The Stormwind, Silvermoon, Bel'ameth and Orgrimmar rooms, both Westfall barns
+  and the Orgrimmar Council and Stone Pit rooms were all missing from the room
+  palette -- the Architect only knew the plain squares, octagons and hallways.
+  They arrive in the room palette with their real sizes, their own artwork and
+  Blizzard's own names and ordering, and the two-floor rooms correctly take two
+  floors. Thanks to reganart for asking where they were.
+
+- **A blueprint's contents are now listed alphabetically.** They used to arrive in
+  whatever order the game sent them, so the dyes on a big build read Purple, Red,
+  Blue, Black, White, Brown, Green and a two-hundred-piece decor list was hopeless
+  to search by eye. Each group is now in name order, on screen and in the copied
+  list alike. Thanks to madaileinhatter for pointing it out.
+
+### Fixed
+- **Buying in bulk now works at coupon vendors.** Right-clicking a decor item at
+  a vendor opens the quantity picker, but it only ever did that for things priced
+  in gold -- anything bought with Community Coupons was left out, which is most of
+  what the neighbourhood vendors sell. The picker now counts your coupons the same
+  way it counts your gold, tells you when a stack costs more than you have, and
+  counts each purchase as it actually arrives -- coupon decor lands in your bags
+  rather than straight into decor storage, so it had nothing to count before.
+  Thanks to madaileinhatter for asking.
+- **Materials reach the Auction House search bar again.** Shift-click a material
+  -- in the Warehouse list or in a recipe's materials -- and it lands in the
+  auction house search box, which is what clicking one used to do. It moved to
+  shift because a plain click now picks the material and shows what it is used
+  in, and the two were quietly fighting over the same click. The hover tells you
+  about it, since nothing on the row does. Thanks to JodouKast for reporting it.
+
+- **The Lumber Tracker no longer stops tracking after a trip to the bank.** Visit
+  a mailbox, vendor, bank or trade window and, if the game did not tell the addon
+  the window had closed again, the tracker quietly gave up for the rest of the
+  session: it stopped following the lumber you were farming, and its numbers sat
+  still until you opened the main window. A reload was the only way back. It now
+  checks whether one of those windows is actually open instead of waiting to be
+  told it closed, so there is nothing left to get stuck. Thanks to pxspin for
+  reporting it.
+
+## [3.24.1] - 2026-08-20 (August 2026)
+
+### Fixed
+- Blizzard's Housing Dashboard no longer opens blank after using HDG. Asking the
+  game for your house list, which the House tab does, left the dashboard's own
+  panel waiting on a message it had already missed, so it opened empty while still
+  showing your house name in the dropdown. HDG now repairs that when the dashboard
+  opens.
+
+### Fixed
+- Buying a single item from the vendor quantity picker now finishes cleanly. The
+  picker counted an item as bought the moment the purchase was sent rather than
+  when it arrived in decor storage, so a purchase of one showed nothing left to
+  buy while the button still read Stop, and a purchase that was stopped or that
+  never arrived was reported as if it had succeeded. Larger purchases counted one
+  ahead the whole way for the same reason.
+
+## [3.24.0] - 2026-08-19 (August 2026)
+
+### Added
+- **Nael Silvertongue now has a waypoint.** The Silvermoon City vendor who sells
+  the Ornate Sin'dorei Sconce was in the guide but had no location, so there was
+  nothing to navigate to. Thanks to ReganB for spotting it and sending the
+  coordinates.
+
+- **Material hovers now show which of your characters is holding the mats.**
+  Hover a material on the Warehouse or Recipes list and you get one list of
+  every character with some, highest first, with the shared Warband Bank on its
+  own line at the bottom. The game will not let an addon read another
+  character's bags, so each character's figures are recorded while you are
+  playing it and the hover says so -- alt counts are from that character's last
+  login. Bank figures only refresh on characters where you have actually opened
+  a bank, so a character you have never banked on keeps its last known number
+  instead of quietly reading as empty. Thanks to TMcGee92102 for asking.
+
+- **The Lumber Stock table's hover now lists your other characters too.** The
+  table's own columns already show what the character you are playing is
+  carrying and what is in the Warband Bank, so the hover adds the part it
+  cannot: which of your other characters are sitting on that lumber, and how
+  much. It appears under the harvesting milestone, and only when somebody else
+  actually has some.
+
+- **Full item tooltips on material rows, if you want them** (Settings >
+  Helpers > Tooltips). Material rows deliberately show HDG's own compact
+  breakdown rather than the game's item tooltip, which is why other addons have
+  had nothing to attach to there. Turn this on and the game's item tooltip
+  renders above HDG's breakdown, which also gives addons like Altoholic and the
+  auction addons somewhere to add their own lines. Off by default -- it makes
+  every material hover considerably taller.
+
+## [3.23.0] - 2026-08-18 (August 2026)
+
+### Added
+- **A Pets filter in the Decor browser, for the pets you can place in a house.**
+  12.1 lets some pets sit on certain decor -- pet beds, plinths, a dog house --
+  and a Pets button at the end of the filter row lists the ones in your own
+  collection that can. The list runs smallest to largest, because size is the
+  thing no in-game window will tell you: each row carries the pet's height and a
+  bar measuring it against your own character, so you can pick something that
+  suits a windowsill rather than a courtyard. The Tags row becomes the ten pet
+  families, the search box searches your pets by name, and the panel on the
+  right shows the pet at full size with a Summon or Dismiss button beneath it.
+
+  Heights are measured from each pet's model, because the game does not report
+  one. Eleven pets have models that cannot be measured; those show no height and
+  sort to the end of the list rather than showing a number that would be wrong.
+
+- **The Mogul table exports to CSV again.** An Export button sits with the
+  filters; it opens a window with the table as comma-separated text, ready to
+  paste into a spreadsheet or send to somebody. What you get is what you are
+  looking at -- the same filters, the same sort order -- so narrowing to one
+  profession and exporting gives you that list and nothing else. The columns
+  are the ones the old export had, in the same order, so a spreadsheet built
+  against it still lines up; the five columns the table has gained since
+  (TSM minimum, TSM market, sale rate, sold per day, and quantity on the
+  auction house) follow on the end. Thanks to armaniko for asking for it back.
+
 ## [3.22.0] - 2026-08-15 (August 2026)
 
 ### Added

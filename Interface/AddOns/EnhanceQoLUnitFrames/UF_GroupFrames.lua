@@ -75,6 +75,7 @@ local GROUP_DEBUFF_FILTER_ALL = "ALL"
 local GROUP_DEBUFF_FILTER_CROWD_CONTROL = "CROWD_CONTROL"
 local GROUP_DEBUFF_FILTER_RAID = "RAID"
 local GROUP_DEBUFF_FILTER_RAID_IN_COMBAT = "RAID_IN_COMBAT"
+GF.GROUP_DEBUFF_FILTER_BOSS_AURA = "BOSS_AURA"
 GF.GROUP_DEBUFF_FILTER_IMPORTANT = "IMPORTANT"
 GF.GROUP_DEBUFF_FILTER_NON_PLAYER = "NON_PLAYER"
 GF.GROUP_DEBUFF_FILTER_RAID_PLAYER_DISPELLABLE = "RAID_PLAYER_DISPELLABLE"
@@ -89,6 +90,7 @@ local groupDebuffFilterOptions = {
 	{ value = GROUP_DEBUFF_FILTER_CROWD_CONTROL, label = L["UFGroupDebuffFilterCrowdControl"] or "Crowd control" },
 }
 if GF.GROUP_DEBUFF_FILTERS_121 then
+	groupDebuffFilterOptions[#groupDebuffFilterOptions + 1] = { value = GF.GROUP_DEBUFF_FILTER_BOSS_AURA, label = L["UFGroupDebuffFilterBossAura"] or "Boss auras" }
 	groupDebuffFilterOptions[#groupDebuffFilterOptions + 1] = { value = GF.GROUP_DEBUFF_FILTER_IMPORTANT, label = L["UFGroupDebuffFilterImportant"] or "Important" }
 	groupDebuffFilterOptions[#groupDebuffFilterOptions + 1] = {
 		value = GF.GROUP_DEBUFF_FILTER_NON_PLAYER,
@@ -555,21 +557,33 @@ local function getGroupDebuffMatchFilter(typeCfg)
 	if GFH.SelectionContains(selection, GROUP_DEBUFF_FILTER_ALL) then return AURA_FILTERS.harmful end
 
 	local filters = {}
-	local sourceCandidateFilters
-	if GF.GROUP_DEBUFF_FILTERS_121 and GFH.SelectionContains(selection, GF.GROUP_DEBUFF_FILTER_NON_PLAYER) then
+	local bossAuraSelected = GF.GROUP_DEBUFF_FILTERS_121 and GFH.SelectionContains(selection, GF.GROUP_DEBUFF_FILTER_BOSS_AURA)
+	local nonPlayerSelected = GF.GROUP_DEBUFF_FILTERS_121 and GFH.SelectionContains(selection, GF.GROUP_DEBUFF_FILTER_NON_PLAYER)
+	local remainingCandidateFilters
+	if bossAuraSelected then
 		filters[#filters + 1] = {
 			filterString = AURA_FILTERS.harmful,
-			candidateFilters = { isFromPlayerOrPlayerPet = false },
+			candidateFilters = { isBossAura = true },
+		}
+		remainingCandidateFilters = { isBossAura = false }
+	end
+	if nonPlayerSelected then
+		local nonPlayerCandidateFilters = { isFromPlayerOrPlayerPet = false }
+		if bossAuraSelected then nonPlayerCandidateFilters.isBossAura = false end
+		filters[#filters + 1] = {
+			filterString = AURA_FILTERS.harmful,
+			candidateFilters = nonPlayerCandidateFilters,
 		}
 		-- Candidate filters cannot be negated in the filter string. Restrict the
 		-- remaining selected groups to the complementary source set so their OR
 		-- union cannot render a non-player aura twice.
-		sourceCandidateFilters = { isFromPlayerOrPlayerPet = true }
+		remainingCandidateFilters = remainingCandidateFilters or {}
+		remainingCandidateFilters.isFromPlayerOrPlayerPet = true
 	end
 	local function addFilter(filterString)
 		if not filterString then return end
-		if sourceCandidateFilters then
-			filters[#filters + 1] = { filterString = filterString, candidateFilters = sourceCandidateFilters }
+		if remainingCandidateFilters then
+			filters[#filters + 1] = { filterString = filterString, candidateFilters = remainingCandidateFilters }
 		else
 			filters[#filters + 1] = filterString
 		end
@@ -2427,7 +2441,9 @@ local function resolveDispelIndicatorEnabled(cfg, kind)
 	if overlay == nil then overlay = def.enabled ~= false end
 	local glow = dt.glowEnabled
 	if glow == nil then glow = def.glowEnabled == true end
-	return overlay == true or glow == true
+	local icons = dt.iconsEnabled
+	if icons == nil then icons = def.iconsEnabled == true end
+	return overlay == true or glow == true or icons == true
 end
 
 local function setTextSlot(
@@ -2677,7 +2693,7 @@ function GF._createHealerBuffPlacementDefaults()
 	if UF.GroupFramesHealerBuffs and UF.GroupFramesHealerBuffs.CreateDefaultPlacement then return UF.GroupFramesHealerBuffs.CreateDefaultPlacement() end
 	return {
 		enabled = false,
-		version = 2,
+		version = 3,
 		groupsById = {},
 		groupOrder = {},
 		rulesById = {},
@@ -3401,6 +3417,8 @@ DEFAULTS = {
 				glowThickness = 3,
 				glowX = 0,
 				glowY = 0,
+				iconSize = 12,
+				iconsEnabled = true,
 				showSample = false,
 			},
 			groupNumber = {
@@ -4178,6 +4196,8 @@ DEFAULTS = {
 				glowThickness = 3,
 				glowX = 0,
 				glowY = 0,
+				iconSize = 12,
+				iconsEnabled = true,
 				showSample = false,
 			},
 			groupNumber = {
@@ -4815,6 +4835,8 @@ DEFAULTS = {
 				glowThickness = 3,
 				glowX = 0,
 				glowY = 0,
+				iconSize = 12,
+				iconsEnabled = true,
 				showSample = false,
 			},
 			groupNumber = {
@@ -5450,6 +5472,8 @@ DEFAULTS = {
 				glowThickness = 3,
 				glowX = 0,
 				glowY = 0,
+				iconSize = 12,
+				iconsEnabled = true,
 				showSample = false,
 			},
 			groupNumber = {
@@ -6044,6 +6068,8 @@ function GF._ensureSharedHealerBuffPlacement(db)
 	local raidPlacement = raidCfg.healerBuffPlacement
 	if type(partyPlacement) == "table" and partyPlacement == raidPlacement then
 		partyPlacement._eqolUnified = true
+		local hbm = UF.GroupFramesHealerBuffs
+		if hbm and hbm.MigrateCooldownVisibility then hbm.MigrateCooldownVisibility(partyPlacement, partyCfg, raidCfg) end
 		return partyPlacement
 	end
 
@@ -6098,6 +6124,7 @@ function GF._ensureSharedHealerBuffPlacement(db)
 	end
 	if type(partyCfg.healerBuffPlacement) == "table" then partyCfg.healerBuffPlacement._eqolUnified = true end
 	if type(raidCfg.healerBuffPlacement) == "table" then raidCfg.healerBuffPlacement._eqolUnified = true end
+	if hbm and hbm.MigrateCooldownVisibility then hbm.MigrateCooldownVisibility(partyCfg.healerBuffPlacement, partyCfg, raidCfg) end
 
 	if hbm and hbm.EnsureConfig then
 		hbm.EnsureConfig(partyCfg)
@@ -6399,7 +6426,7 @@ local function getUnit(self)
 	if self._eqolSpotlight and issecretvalue and issecretvalue(secureUnit) then return nil end
 	if secureUnit ~= nil and secureUnit ~= "" then return secureUnit end
 
-	return self.unit
+	return self._eqolUnit
 end
 
 local function unitTokenExists(unit)
@@ -6665,7 +6692,7 @@ function GF:UnitButton_EvaluateUnit(self, forceUpdate)
 	if not self then return false end
 	local unit = getUnit(self)
 	if not unitTokenExists(unit) then return false end
-	if self.unit ~= unit then
+	if self._eqolUnit ~= unit then
 		GF:UnitButton_SetUnit(self, unit)
 		return true
 	end
@@ -7163,6 +7190,7 @@ function GF:LayoutButton(self)
 	local dataBarPosition = tostring(dbc.position or defDB.position or "BELOW"):upper()
 	if dataBarPosition ~= "ABOVE" then dataBarPosition = "BELOW" end
 
+	local portraitCfg = cfg.portrait or EMPTY
 	local portraitEnabled, portraitSide, portraitSquareBackground, portraitBorderWithFrame, _, portraitShape = GF.ResolveGroupPortraitConfig(cfg, kind)
 	local portraitDetached, portraitDetachedX, portraitDetachedY, portraitDetachedSize = GF.ResolveGroupPortraitDetachedConfig(cfg, kind)
 	portraitDetached = portraitEnabled and portraitDetached == true
@@ -7425,7 +7453,6 @@ function GF:LayoutButton(self)
 				st.portraitHolder:SetPoint("CENTER", holderParent, "LEFT", holderX, 0)
 			end
 			if holderParent and st.portraitHolder.SetFrameStrata and holderParent.GetFrameStrata then
-				local portraitCfg = cfg.portrait or EMPTY
 				local portraitStrata = portraitDetached and GF.NormalizeFrameStrataToken(portraitCfg.detachedStrata) or nil
 				if portraitStrata then
 					st.portraitHolder:SetFrameStrata(portraitStrata)
@@ -7465,9 +7492,34 @@ function GF:LayoutButton(self)
 			if st.portraitBg then st.portraitBg:Hide() end
 			st.portraitHolder:Hide()
 		end
-		setBackdrop(st.portraitHolder, nil)
-		if addon.IconShape and addon.IconShape.HideBorderTextures then
-			addon.IconShape.HideBorderTextures(st.portraitHolder, { texturesKey = "_eqolPortraitShapeBorderTextures" })
+		local detachedPortraitBorderEnabled = portraitDetached and portraitBorderWithFrame and frameBorderEnabled
+		local portraitBorderCfg
+		if detachedPortraitBorderEnabled then
+			local detachedBorderOffset = portraitCfg.detachedBorderOffset
+			if detachedBorderOffset == nil then detachedBorderOffset = borderCfg.offset end
+			if detachedBorderOffset == nil then detachedBorderOffset = borderDef.offset end
+			if detachedBorderOffset == nil then detachedBorderOffset = borderCfg.inset end
+			if detachedBorderOffset == nil then detachedBorderOffset = borderDef.inset end
+			if detachedBorderOffset == nil then detachedBorderOffset = borderCfg.edgeSize or borderDef.edgeSize or 1 end
+			detachedBorderOffset = max(0, tonumber(detachedBorderOffset) or 0)
+			portraitBorderCfg = {
+				enabled = true,
+				texture = borderCfg.texture or borderDef.texture,
+				edgeSize = borderCfg.edgeSize or borderDef.edgeSize,
+				color = borderCfg.color or borderDef.color,
+				offset = detachedBorderOffset,
+				inset = borderCfg.inset ~= nil and borderCfg.inset or borderDef.inset,
+				strata = borderCfg.strata or borderDef.strata,
+				frameLevelOffset = borderCfg.frameLevelOffset ~= nil and borderCfg.frameLevelOffset or borderDef.frameLevelOffset,
+			}
+		end
+		if portraitBorderCfg and (not UF.IsPortraitShapeBackdropBorderCompatible or UF.IsPortraitShapeBackdropBorderCompatible(portraitShape)) then
+			setBackdrop(st.portraitHolder, portraitBorderCfg)
+		else
+			setBackdrop(st.portraitHolder, nil)
+		end
+		if UF.ApplyDetachedPortraitShapeBorder then
+			UF.ApplyDetachedPortraitShapeBorder(st, portraitShape, portraitBorderCfg or borderCfg, borderDef, detachedPortraitBorderEnabled)
 		end
 	end
 	if st.portraitSeparator then
@@ -8448,12 +8500,43 @@ local function calcAuraGridSize(shown, perRow, size, spacing, primary)
 	return w, h
 end
 
-local function updateAuraContainerSize(container, anchorPoint, shown, maxCount, perRow, size, spacing, primary)
+local function calcSampleAuraGridSize(shown, perRow, size, bossSize, spacing, primary)
+	local w, h = calcAuraGridSize(shown, perRow, size, spacing, primary)
+	shown = tonumber(shown) or 0
+	if shown < 1 then return w, h end
+	perRow = math.max(1, tonumber(perRow) or 1)
+	size = tonumber(size) or 16
+	bossSize = tonumber(bossSize) or size
+	spacing = tonumber(spacing) or 0
+	local delta = bossSize - size
+	if delta == 0 then return w, h end
+	local firstLineCount = math.min(shown, perRow)
+	local firstLineSize = firstLineCount * size + spacing * math.max(0, firstLineCount - 1) + delta
+	if primary == "UP" or primary == "DOWN" then
+		w = w + delta
+		h = math.max(h, firstLineSize)
+	else
+		w = math.max(w, firstLineSize)
+		h = h + delta
+	end
+	if w <= 0 then w = 0.001 end
+	if h <= 0 then h = 0.001 end
+	return w, h
+end
+
+local function updateAuraContainerSize(container, anchorPoint, shown, maxCount, perRow, size, spacing, primary, bossSize)
 	if not container then return end
 	shown = tonumber(shown) or 0
 	maxCount = tonumber(maxCount) or shown
-	local maxW, maxH = calcAuraGridSize(maxCount, perRow, size, spacing, primary)
-	local shownW, shownH = calcAuraGridSize(shown, perRow, size, spacing, primary)
+	local maxW, maxH
+	local shownW, shownH
+	if bossSize and bossSize ~= size then
+		maxW, maxH = calcSampleAuraGridSize(maxCount, perRow, size, bossSize, spacing, primary)
+		shownW, shownH = calcSampleAuraGridSize(shown, perRow, size, bossSize, spacing, primary)
+	else
+		maxW, maxH = calcAuraGridSize(maxCount, perRow, size, spacing, primary)
+		shownW, shownH = calcAuraGridSize(shown, perRow, size, spacing, primary)
+	end
 	local anchor = tostring(anchorPoint or "TOPLEFT"):upper()
 	local centerX = not anchor:find("LEFT", 1, true) and not anchor:find("RIGHT", 1, true)
 	local centerY = not anchor:find("TOP", 1, true) and not anchor:find("BOTTOM", 1, true)
@@ -8504,6 +8587,46 @@ local function positionAuraButton(btn, container, primary, secondary, index, per
 	local step = size + spacing
 	local x = roundToPixel(col * step * xSign, scale)
 	local y = roundToPixel(row * step * ySign, scale)
+	btn:ClearAllPoints()
+	if Pixel and Pixel.SetPoint then
+		Pixel.SetPoint(btn, basePoint, container, basePoint, x, y)
+	else
+		btn:SetPoint(basePoint, container, basePoint, x, y)
+	end
+end
+
+local function positionSampleAuraButton(btn, container, primary, secondary, index, perRow, size, bossSize, spacing)
+	if not (btn and container) then return end
+	perRow = math.max(1, tonumber(perRow) or 1)
+	size = tonumber(size) or 16
+	bossSize = tonumber(bossSize) or size
+	spacing = tonumber(spacing) or 0
+	local primaryHorizontal = primary == "LEFT" or primary == "RIGHT"
+	local row, col
+	if primaryHorizontal then
+		row = math.floor((index - 1) / perRow)
+		col = (index - 1) % perRow
+	else
+		row = (index - 1) % perRow
+		col = math.floor((index - 1) / perRow)
+	end
+	local x = col * (size + spacing)
+	local y = row * (size + spacing)
+	if primaryHorizontal then
+		if row == 0 and col > 0 then x = x + bossSize - size end
+		if row > 0 then y = y + bossSize - size end
+	else
+		if col > 0 then x = x + bossSize - size end
+		if col == 0 and row > 0 then y = y + bossSize - size end
+	end
+	local horizontalDir = primaryHorizontal and primary or secondary
+	local verticalDir = primaryHorizontal and secondary or primary
+	local xSign = horizontalDir == "RIGHT" and 1 or -1
+	local ySign = verticalDir == "UP" and 1 or -1
+	local basePoint = GF.GetAuraGridBasePoint(primary, secondary)
+	local scale = GFH.GetEffectiveScale(container)
+	x = roundToPixel(x * xSign, scale)
+	y = roundToPixel(y * ySign, scale)
 	btn:ClearAllPoints()
 	if Pixel and Pixel.SetPoint then
 		Pixel.SetPoint(btn, basePoint, container, basePoint, x, y)
@@ -9183,7 +9306,6 @@ end
 local function getAuraKindFlags(unit, aura, helpfulFilter, harmfulFilter, externalFilter, dispelFilter, wantBuff, wantDebuff, wantExternals, wantsDispel, wantsHealerBuffPlacement, contextKind)
 	if not (unit and aura and aura.auraInstanceID) then return nil end
 	local globallyIgnored = UF.GlobalAuraIgnore and UF.GlobalAuraIgnore.ShouldIgnoreAura and UF.GlobalAuraIgnore.ShouldIgnoreAura(contextKind, aura)
-	if globallyIgnored and not wantsHealerBuffPlacement then return nil end
 	local flags
 	local harmfulMatch, helpfulMatch
 
@@ -9201,7 +9323,7 @@ local function getAuraKindFlags(unit, aura, helpfulFilter, harmfulFilter, extern
 		if wantDebuff and harmfulMatch then flags = setAuraFlag(flags, AURA_KIND_HARMFUL) end
 	end
 
-	if wantExternals and not globallyIgnored and not harmfulMatch and UFHelper.IsAuraFilteredIn(unit, aura, externalFilter) then flags = setAuraFlag(flags, AURA_KIND_EXTERNAL) end
+	if wantExternals and not harmfulMatch and UFHelper.IsAuraFilteredIn(unit, aura, externalFilter) then flags = setAuraFlag(flags, AURA_KIND_EXTERNAL) end
 	if wantsDispel and not globallyIgnored and UFHelper.IsAuraFilteredIn(unit, aura, dispelFilter) then flags = setAuraFlag(flags, AURA_KIND_DISPEL) end
 
 	return flags
@@ -9331,10 +9453,10 @@ function GF.GetManagedAuraContainer(self, kindKey)
 	return nil
 end
 
-function GF.ShouldUseManagedAuraContainers(self)
+function GF.ShouldUseManagedAuraContainers(self, allowEditMode)
 	if not (addon.AuraCompat and addon.AuraCompat.ShouldUseAuraContainer and addon.AuraCompat:ShouldUseAuraContainer()) then return false end
-	if isEditModeActive and isEditModeActive() then return false end
-	if self and self._eqolPreview then return false end
+	if isEditModeActive and isEditModeActive() and allowEditMode ~= true then return false end
+	if self and self._eqolPreview and allowEditMode ~= true then return false end
 	return true
 end
 
@@ -9462,9 +9584,15 @@ function GF.GetManagedExternalAuraFilter()
 	return "HELPFUL"
 end
 
-function GF.GetManagedExternalAuraCandidateFilters()
+function GF.GetManagedExternalAuraSpellIDs()
 	local spellIDs = addon.Aura and addon.Aura.DefensiveAuraPresets and addon.Aura.DefensiveAuraPresets.personalAndExternalSpellIDSet
 	if type(spellIDs) ~= "table" or not next(spellIDs) then return nil end
+	return spellIDs
+end
+
+function GF.GetManagedExternalAuraCandidateFilters()
+	local spellIDs = GF.GetManagedExternalAuraSpellIDs()
+	if not spellIDs then return nil end
 	local candidateFilters = GF._managedExternalAuraCandidateFilters
 	if not candidateFilters or candidateFilters.includeSpellIDs ~= spellIDs then
 		candidateFilters = { includeSpellIDs = spellIDs }
@@ -9494,7 +9622,7 @@ function GF.BuildManagedAuraCandidateFilters(baseFilters, excludedSpellIDSets)
 end
 
 function GF.IsManagedHelpfulIdentityFrame(self)
-	if not self or self._eqolPreview or self._eqolPartyPet then return false end
+	if not self or self._eqolPreview then return false end
 	local kind = self._eqolGroupKind
 	return kind == "party" or kind == "raid"
 end
@@ -9661,8 +9789,36 @@ function GF.GetManagedAuraSignature(filters, style, isDebuff, parent, candidateF
 		local filterOption = filters[i]
 		parts[#parts + 1] = tostring(filterOption.filterString)
 		parts[#parts + 1] = GF.GetManagedAuraCandidateFilterSignature(GF.MergeManagedAuraCandidateFilters(candidateFilters, filterOption.candidateFilters))
+		parts[#parts + 1] = tostring(filterOption.elementSize or "")
 	end
 	return table.concat(parts, "\031")
+end
+
+function GF.ExpandManagedBossAuraFilters(filters, layout, isDebuff)
+	if not isDebuff then return filters end
+	local bossSize = tonumber(layout and layout.bossSize)
+	local baseSize = tonumber(layout and layout.size)
+	if not (bossSize and baseSize and bossSize > 0 and bossSize ~= baseSize) then return filters end
+	local expanded = {}
+	local filterCount = #filters
+	for auraGroupIndex = 1, 2 do
+		local isBossAura = auraGroupIndex == 1
+		for filterIndex = 1, filterCount do
+			local filterOption = filters[filterIndex]
+			local configuredBossAura = type(filterOption.candidateFilters) == "table" and filterOption.candidateFilters.isBossAura or nil
+			if configuredBossAura == nil or configuredBossAura == isBossAura then
+				expanded[#expanded + 1] = {
+					candidateFilters = configuredBossAura == nil and GF.MergeManagedAuraCandidateFilters(filterOption.candidateFilters, { isBossAura = isBossAura })
+						or filterOption.candidateFilters,
+					elementSize = isBossAura and bossSize or baseSize,
+					filterIndex = filterIndex,
+					filterString = filterOption.filterString,
+					logicalFilterCount = filterCount,
+				}
+			end
+		end
+	end
+	return expanded
 end
 
 function GF.GetManagedAuraGroupMaxFrameCount(maxCount, groupIndex, groupCount)
@@ -9674,31 +9830,49 @@ function GF.GetManagedAuraGroupMaxFrameCount(maxCount, groupIndex, groupCount)
 	return floor((maxCount + groupCount - groupIndex) / groupCount)
 end
 
-function GF.GetManagedAuraFlowLayout(layout)
+function GF.GetAuraGridFramePoint(layout)
+	local primary = layout and layout.primary
+	local secondary = layout and layout.secondary
+	local anchor = tostring(layout and (layout.containerPoint or layout.anchorPoint) or ""):upper()
+	local primaryHorizontal = primary == "LEFT" or primary == "RIGHT"
+	if primaryHorizontal then
+		local horizontalPoint = anchor:find("LEFT", 1, true) and "LEFT" or anchor:find("RIGHT", 1, true) and "RIGHT" or primary == "RIGHT" and "LEFT" or "RIGHT"
+		local verticalPoint = anchor:find("BOTTOM", 1, true) and "BOTTOM" or anchor:find("TOP", 1, true) and "TOP" or secondary == "DOWN" and "TOP" or "BOTTOM"
+		return verticalPoint .. horizontalPoint
+	end
+	local verticalPoint = anchor:find("BOTTOM", 1, true) and "BOTTOM" or anchor:find("TOP", 1, true) and "TOP" or primary == "UP" and "BOTTOM" or "TOP"
+	local horizontalPoint = anchor:find("LEFT", 1, true) and "LEFT" or anchor:find("RIGHT", 1, true) and "RIGHT" or secondary == "RIGHT" and "LEFT" or "RIGHT"
+	return verticalPoint .. horizontalPoint
+end
+
+function GF.GetManagedAuraFlowLayout(layout, region, anchorFlowToFrame)
 	local primaryHorizontal = layout.primary == "LEFT" or layout.primary == "RIGHT"
 	local horizontalDirection = primaryHorizontal and layout.primary or layout.secondary
 	local verticalDirection = primaryHorizontal and layout.secondary or layout.primary
 	local flowPerRow = layout.perRow or 1
 	if flowPerRow < 1 then flowPerRow = 1 end
+	local elementSize = math.max(tonumber(layout.size) or 1, tonumber(layout.bossSize) or 1)
+	local maximumLineSize = addon.AuraCompat:GetSafeFlowLayoutMaximumLineSize(region, elementSize, layout.spacing, flowPerRow)
 
 	local flowDirections = AnchorUtil and AnchorUtil.FlowDirection
 	local flowAxes = AnchorUtil and AnchorUtil.FlowLayoutAxis
 	if not (flowDirections and flowAxes) then return nil end
 	return {
 		axis = primaryHorizontal and flowAxes.Horizontal or flowAxes.Vertical,
-		anchorPoint = GF.GetAuraGridBasePoint(layout.primary, layout.secondary),
+		anchorPoint = anchorFlowToFrame == true and GF.GetAuraGridFramePoint(layout) or GF.GetAuraGridBasePoint(layout.primary, layout.secondary),
 		horizontalGrowthDirection = horizontalDirection == "LEFT" and flowDirections.Left or flowDirections.Right,
 		verticalGrowthDirection = verticalDirection == "UP" and flowDirections.Up or flowDirections.Down,
-		maximumLineSize = flowPerRow * layout.size + max(0, flowPerRow - 1) * layout.spacing,
+		maximumLineSize = maximumLineSize,
 	}
 end
 
-function GF.GetManagedAuraGroupLayout(layout, layoutIndex)
+function GF.GetManagedAuraGroupLayout(layout, layoutIndex, elementSize)
+	elementSize = elementSize or layout.size
 	return {
 		elementSpacing = layout.spacing,
 		lineSpacing = layout.spacing,
-		elementWidth = layout.size,
-		elementHeight = layout.size,
+		elementWidth = elementSize,
+		elementHeight = elementSize,
 		layoutIndex = layoutIndex,
 	}
 end
@@ -9711,6 +9885,7 @@ function GF:EnsureManagedAuraLane(self, kindKey, unit, filter, style, layout, is
 	if maxCount < 1 then return nil end
 	local filters = GF.BuildManagedAuraFilterOptions(filter, candidateFilters)
 	if not filters then return nil end
+	filters = GF.ExpandManagedBossAuraFilters(filters, layout, isDebuff)
 	local store = GF.GetManagedAuraLaneStore(st)
 	local lane = store and store[kindKey]
 	local parent = GF.GetLayoutAnchorFrame(st, st.barGroup or st.frame) or st.barGroup or st.frame or self
@@ -9733,22 +9908,35 @@ function GF:EnsureManagedAuraLane(self, kindKey, unit, filter, style, layout, is
 		}
 		if lane.container.SetUnit then lane.container:SetUnit(unit) end
 		for i = 1, #filters do
-			local groupLayout = GF.GetManagedAuraGroupLayout(layout, i)
+			local filterOption = filters[i]
+			local groupLayout = GF.GetManagedAuraGroupLayout(layout, i, filterOption.elementSize)
 			local groupKey = kindKey .. ":" .. tostring(generation) .. ":" .. tostring(i)
-			local groupMax = GF.GetManagedAuraGroupMaxFrameCount(maxCount, i, #filters)
-			local registered = addon.AuraCompat:RegisterAuraGroup(lane.container, groupKey, filters[i].filterString, {
+			local groupMax = GF.GetManagedAuraGroupMaxFrameCount(maxCount, filterOption.filterIndex or i, filterOption.logicalFilterCount or #filters)
+			local buttonStyle = style
+			if filterOption.elementSize and filterOption.elementSize ~= style.size then
+				buttonStyle = {}
+				for key, value in pairs(style) do buttonStyle[key] = value end
+				buttonStyle.size = filterOption.elementSize
+			end
+			local registered = addon.AuraCompat:RegisterAuraGroup(lane.container, groupKey, filterOption.filterString, {
 				maxFrameCount = groupMax,
-				candidateFilters = filters[i].candidateFilters,
+				candidateFilters = filterOption.candidateFilters,
 				layout = groupLayout,
 				initializeFrame = function(button)
-					if AuraUtil and AuraUtil.PrepareNativeAuraButton then AuraUtil.PrepareNativeAuraButton(button, style, isDebuff) end
+					if AuraUtil and AuraUtil.PrepareNativeAuraButton then AuraUtil.PrepareNativeAuraButton(button, buttonStyle, isDebuff) end
 				end,
 			})
 			if not registered then
 				GF.DisableManagedAuraLaneGroups(lane)
 				return nil
 			end
-			lane.groups[i] = { key = groupKey, max = groupMax }
+			lane.groups[i] = {
+				elementSize = filterOption.elementSize,
+				filterIndex = filterOption.filterIndex,
+				key = groupKey,
+				logicalFilterCount = filterOption.logicalFilterCount,
+				max = groupMax,
+			}
 		end
 		store[kindKey] = lane
 	else
@@ -9764,7 +9952,7 @@ function GF:EnsureManagedAuraLane(self, kindKey, unit, filter, style, layout, is
 	return lane
 end
 
-function GF:LayoutManagedAuraLane(self, kindKey, lane, style, layout)
+function GF:LayoutManagedAuraLane(self, kindKey, lane, style, layout, anchorFlowToFrame)
 	if not (self and lane and lane.container and style and layout) then return false end
 	local st = getState(self)
 	local parent = st and (GF.GetLayoutAnchorFrame(st, st.barGroup or st.frame) or st.barGroup or st.frame) or self
@@ -9782,20 +9970,20 @@ function GF:LayoutManagedAuraLane(self, kindKey, lane, style, layout)
 	end
 	for i = 1, #(lane.groups or EMPTY) do
 		local group = lane.groups[i]
-		local groupLayout = GF.GetManagedAuraGroupLayout(layout, i)
-		local groupMax = GF.GetManagedAuraGroupMaxFrameCount(layout.maxCount or lane.max, i, #lane.groups)
+		local groupLayout = GF.GetManagedAuraGroupLayout(layout, i, group.elementSize)
+		local groupMax = GF.GetManagedAuraGroupMaxFrameCount(layout.maxCount or lane.max, group.filterIndex or i, group.logicalFilterCount or #lane.groups)
 		if not addon.AuraCompat:UpdateAuraGroup(lane.container, group.key, { maxFrameCount = groupMax, layout = groupLayout }) then return false end
 		group.max = groupMax
 	end
-	local containerLayout = GF.GetManagedAuraFlowLayout(layout)
+	local containerLayout = GF.GetManagedAuraFlowLayout(layout, parent, anchorFlowToFrame)
 	if not containerLayout or not addon.AuraCompat:ConfigureAuraContainerLayout(lane.container, containerLayout) then return false end
 	lane.container:Show()
 	if lane.container.SetEnabled then lane.container:SetEnabled(true) end
 	return true
 end
 
-function GF:ApplyManagedAuraContainers(self)
-	if not GF.ShouldUseManagedAuraContainers(self) then
+function GF:ApplyManagedAuraContainers(self, allowEditMode)
+	if not GF.ShouldUseManagedAuraContainers(self, allowEditMode) then
 		GF:HideManagedAuraContainers(self)
 		return false
 	end
@@ -9825,9 +10013,10 @@ function GF:ApplyManagedAuraContainers(self)
 		and UF.GroupFramesHealerBuffs.GetManagedSuppressedSpellIDs(healerBuffCompiled)
 	local ignoredSpellIDs = UF.GlobalAuraIgnore and UF.GlobalAuraIgnore.GetIgnoredSpellIDs and UF.GlobalAuraIgnore.GetIgnoredSpellIDs(kind)
 	local debuffBaseCandidateFilters = ac.debuff and ac.debuff.hidePermanentAuras == true and { maxDuration = math.huge } or nil
-	local buffCandidateFilters = GF.BuildManagedAuraCandidateFilters(nil, { suppressedSpellIDs, ignoredSpellIDs })
+	local externalSpellIDs = wants.externals and GF.GetManagedExternalAuraSpellIDs()
+	local buffCandidateFilters = GF.BuildManagedAuraCandidateFilters({ isFromPlayerOrPlayerPet = true }, { suppressedSpellIDs, ignoredSpellIDs, externalSpellIDs })
 	local debuffCandidateFilters = GF.BuildManagedAuraCandidateFilters(debuffBaseCandidateFilters, { ignoredSpellIDs })
-	local externalCandidateFilters = GF.BuildManagedAuraCandidateFilters(GF.GetManagedExternalAuraCandidateFilters(), { ignoredSpellIDs })
+	local externalCandidateFilters = GF.GetManagedExternalAuraCandidateFilters()
 	local candidateFilters = {
 		buff = buffCandidateFilters,
 		debuff = debuffCandidateFilters,
@@ -9842,8 +10031,10 @@ function GF:ApplyManagedAuraContainers(self)
 		local style = st._auraStyle and st._auraStyle[kindKey]
 		local unitAllowed = meta.isDebuff or helpfulIdentityAllowed
 		if wants[kindKey] and layout and style and unitAllowed then
+			local anchorBossToFrame = meta.isDebuff and tonumber(layout.bossSize) ~= tonumber(layout.size)
 			local lane = GF:EnsureManagedAuraLane(self, kindKey, unit, filters[kindKey], style, layout, meta.isDebuff, candidateFilters[kindKey])
-			if lane and GF:LayoutManagedAuraLane(self, kindKey, lane, style, layout) then
+			if allowEditMode and lane and lane.container and lane.container.SetUseEditModeSource then lane.container:SetUseEditModeSource(true) end
+			if lane and GF:LayoutManagedAuraLane(self, kindKey, lane, style, layout, anchorBossToFrame) then
 				any = true
 				local legacy = st[meta.containerKey]
 				if legacy then legacy:Hide() end
@@ -9902,6 +10093,7 @@ local function getSampleAuraData(kindKey, index, now)
 		icon = icon,
 		isHelpful = kindKey ~= "debuff",
 		isHarmful = kindKey == "debuff",
+		isBossAura = kindKey == "debuff" and index == 1,
 		applications = stacks,
 		duration = duration,
 		expirationTime = expiration,
@@ -9963,6 +10155,7 @@ function GF:LayoutAuras(self)
 			local anchorOutside = typeCfg.anchorOutside == true
 			local containerPoint = GF.ResolveAuraContainerBoundaryPoint(anchorPoint, anchorOutside, primary, secondary, self)
 			local size = (tonumber(typeCfg.size) or 16) * contentScale
+			local bossSize = kindKey == "debuff" and (tonumber(typeCfg.bossAuraSize) or tonumber(typeCfg.size) or 16) * contentScale or nil
 			local spacing = (tonumber(typeCfg.spacing) or 2) * contentScale
 			local perRow = tonumber(typeCfg.perRow) or tonumber(typeCfg.max) or 6
 			if perRow < 1 then perRow = 1 end
@@ -9971,6 +10164,7 @@ function GF:LayoutAuras(self)
 			local y = (tonumber(typeCfg.y) or 0) * contentScale
 			local scale = GFH.GetEffectiveScale(parent)
 			size = roundToPixel(size, scale)
+			if bossSize then bossSize = roundToPixel(bossSize, scale) end
 			spacing = roundToPixel(spacing, scale)
 			x = roundToPixel(x, scale)
 			y = roundToPixel(y, scale)
@@ -9984,6 +10178,8 @@ function GF:LayoutAuras(self)
 				.. tostring(secondary)
 				.. "|"
 				.. size
+				.. "|"
+				.. tostring(bossSize or "")
 				.. "|"
 				.. spacing
 				.. "|"
@@ -10001,6 +10197,7 @@ function GF:LayoutAuras(self)
 			layout.primary = primary
 			layout.secondary = secondary
 			layout.size = size
+			layout.bossSize = bossSize
 			layout.spacing = spacing
 			layout.perRow = perRow
 			layout.maxCount = maxCount
@@ -10361,9 +10558,9 @@ function GF:UpdateAuras(self, updateInfo)
 	local unit = getUnit(self)
 	local inEditMode = isEditModeActive()
 	if inEditMode then
-		GF:HideManagedAuraContainers(self)
 		if UF.GroupFramesHealerBuffs and UF.GroupFramesHealerBuffs.HideManagedAuraContainer then UF.GroupFramesHealerBuffs.HideManagedAuraContainer(self) end
 		if GF and (GF._editModeSampleAuras == false or GF._editModeExiting == true) then
+			GF:HideManagedAuraContainers(self)
 			if st.buffContainer then st.buffContainer:Hide() end
 			if st.debuffContainer then st.debuffContainer:Hide() end
 			if st.externalContainer then st.externalContainer:Hide() end
@@ -10376,7 +10573,21 @@ function GF:UpdateAuras(self, updateInfo)
 			st._healerBuffPlacementActive = nil
 			return
 		end
-		GF:UpdateSampleAuras(self)
+		if st.buffContainer then st.buffContainer:Hide() end
+		if st.debuffContainer then st.debuffContainer:Hide() end
+		if st.externalContainer then st.externalContainer:Hide() end
+		hideAuraButtons(st.buffButtons, 1)
+		hideAuraButtons(st.debuffButtons, 1)
+		hideAuraButtons(st.externalButtons, 1)
+		st._auraSampleActive = nil
+		GF:UpdateDispelTint(self, nil, nil)
+		if GF.ShouldUseManagedAuraContainers(self, true) then
+			GF:ApplyManagedAuraContainers(self, true)
+		else
+			GF:HideManagedAuraContainers(self)
+		end
+		if st._healerBuffPlacementActive and UF.GroupFramesHealerBuffs and UF.GroupFramesHealerBuffs.ClearButton then UF.GroupFramesHealerBuffs.ClearButton(self) end
+		st._healerBuffPlacementActive = nil
 		return
 	elseif self._eqolPreview then
 		GF:HideManagedAuraContainers(self)
@@ -10816,20 +11027,33 @@ function GF:UpdateSampleAuras(self)
 		local sampleStyle = getSampleStyle(st, kindKey, style)
 		sampleStyle.tooltipUseEditMode = st._tooltipUseEditMode == true
 		sampleStyle.tooltipAnchor = "ANCHOR_RIGHT"
+		local bossSampleStyle
+		if kindKey == "debuff" and layout.bossSize and layout.bossSize ~= layout.size then
+			bossSampleStyle = getSampleStyle(st, "debuffBoss", style)
+			bossSampleStyle.size = layout.bossSize
+			bossSampleStyle.tooltipUseEditMode = st._tooltipUseEditMode == true
+			bossSampleStyle.tooltipAnchor = "ANCHOR_RIGHT"
+		end
+		local sampleLayoutKey = bossSampleStyle and (layout.key .. "|bossSample") or layout.key
 		local unitToken = unit or "player"
 		for i = 1, shown do
 			local aura = getSampleAuraData(kindKey, i, now)
-			local btn = AuraUtil.ensureAuraButton(container, buttons, i, sampleStyle)
-			AuraUtil.applyAuraToButton(btn, aura, sampleStyle, meta.isDebuff, unitToken)
-			if kindKey == "externals" then GF.ApplyExternalGlow(btn, sampleStyle) end
-			setAuraTooltipState(btn, sampleStyle)
-			if btn._auraLayoutKey ~= layout.key then
-				positionAuraButton(btn, container, layout.primary, layout.secondary, i, layout.perRow, layout.size, layout.spacing)
-				btn._auraLayoutKey = layout.key
+			local currentStyle = bossSampleStyle and i == 1 and bossSampleStyle or sampleStyle
+			local btn = AuraUtil.ensureAuraButton(container, buttons, i, currentStyle)
+			AuraUtil.applyAuraToButton(btn, aura, currentStyle, meta.isDebuff, unitToken)
+			if kindKey == "externals" then GF.ApplyExternalGlow(btn, currentStyle) end
+			setAuraTooltipState(btn, currentStyle)
+			if btn._auraLayoutKey ~= sampleLayoutKey then
+				if bossSampleStyle then
+					positionSampleAuraButton(btn, container, layout.primary, layout.secondary, i, layout.perRow, layout.size, layout.bossSize, layout.spacing)
+				else
+					positionAuraButton(btn, container, layout.primary, layout.secondary, i, layout.perRow, layout.size, layout.spacing)
+				end
+				btn._auraLayoutKey = sampleLayoutKey
 			end
 			btn:Show()
 		end
-		updateAuraContainerSize(container, layout.anchorPoint, shown, layout.maxCount or shown, layout.perRow, layout.size, layout.spacing, layout.primary)
+		updateAuraContainerSize(container, layout.anchorPoint, shown, layout.maxCount or shown, layout.perRow, layout.size, layout.spacing, layout.primary, bossSampleStyle and layout.bossSize or nil)
 		hideAuraButtons(buttons, shown + 1)
 	end
 
@@ -12593,7 +12817,7 @@ end
 
 function GF:UnitButton_SetUnit(self, unit)
 	if not self then return end
-	self.unit = unit
+	self._eqolUnit = unit
 	local st = self._eqolUFState
 	if st then
 		st._auraCache = nil
@@ -12621,7 +12845,7 @@ end
 
 function GF:UnitButton_DropUnitState(self)
 	if not self then return end
-	self.unit = nil
+	self._eqolUnit = nil
 	GF:UnitButton_UnregisterUnitEvents(self)
 	local st = self._eqolUFState
 	if not st then return end
@@ -12635,7 +12859,7 @@ end
 
 function GF:UnitButton_ClearUnit(self)
 	if not self then return end
-	self.unit = nil
+	self._eqolUnit = nil
 	GF:UnitButton_UnregisterUnitEvents(self)
 	local st = self._eqolUFState
 	if st then
@@ -12810,7 +13034,7 @@ function GF.UnitButton_OnAttributeChanged(self, name, value)
 		GF:UnitButton_DropUnitState(self)
 		return
 	end
-	if self.unit == value then return end
+	if self._eqolUnit == value then return end
 	GF:UnitButton_EvaluateUnit(self, false)
 end
 
@@ -13447,7 +13671,7 @@ function GF:EnsurePreviewFrames(kind)
 		btn._eqolGroupKind = kind
 		btn._eqolPreview = true
 		btn._eqolPreviewIndex = i
-		-- Preview buttons use synthetic unit assignment via self.unit, not secure header attributes.
+		-- Preview buttons use synthetic unit assignment via _eqolUnit, not secure header attributes.
 		btn._eqolUseSecureUnitAttribute = false
 		btn:SetFrameStrata(anchor:GetFrameStrata())
 		btn:SetFrameLevel(GF.ClampFrameLevel((anchor:GetFrameLevel() or 1) + 1))
@@ -13500,7 +13724,7 @@ function GF:EnsurePartyPetPreviewFrames(ownerCount)
 		btn._eqolUseSecureUnitAttribute = false
 		btn:SetFrameStrata(anchor:GetFrameStrata())
 		btn:SetFrameLevel(GF.ClampFrameLevel((anchor:GetFrameLevel() or 1) + 1))
-		if not btn.unit then GF:UnitButton_SetUnit(btn, "player") end
+		if not btn._eqolUnit then GF:UnitButton_SetUnit(btn, "player") end
 	end
 	return frames
 end
@@ -13513,7 +13737,7 @@ function GF:ShowPartyPetPreviewFrames(show, maxShown)
 	maxShown = min(#frames, max(0, floor((tonumber(maxShown) or 0) + 0.5)))
 	for i, btn in ipairs(frames) do
 		if enabled and i <= maxShown and btn._eqolPartyPetHasSample == true then
-			if not btn.unit then GF:UnitButton_SetUnit(btn, "player") end
+			if not btn._eqolUnit then GF:UnitButton_SetUnit(btn, "player") end
 			btn:Show()
 		else
 			GF:UnitButton_ClearUnit(btn)
@@ -13574,10 +13798,10 @@ function GF:UpdatePartyPetPreviewLayout(cfg, growth, maxShown, mainW, mainH, sca
 			else
 				btn:SetPoint(point, owner, relativePoint, offsetX, offsetY)
 			end
-			if not btn.unit then GF:UnitButton_SetUnit(btn, "player") end
+			if not btn._eqolUnit then GF:UnitButton_SetUnit(btn, "player") end
 			GF:CacheUnitStatic(btn)
 			GF:LayoutAuras(btn)
-			GF:UnitButton_RegisterUnitEvents(btn, btn.unit)
+			GF:UnitButton_RegisterUnitEvents(btn, btn._eqolUnit)
 			GF:LayoutButton(btn)
 			GF:UpdateAll(btn)
 			GF:UpdateAuras(btn)
@@ -14030,7 +14254,7 @@ function GF:UpdatePreviewLayout(kind)
 				end
 				GF:CacheUnitStatic(btn)
 				GF:LayoutAuras(btn)
-				if btn.unit then GF:UnitButton_RegisterUnitEvents(btn, btn.unit) end
+				if btn._eqolUnit then GF:UnitButton_RegisterUnitEvents(btn, btn._eqolUnit) end
 				if btn._eqolUFState then
 					GF:LayoutButton(btn)
 					GF:UpdateAll(btn)
@@ -14056,7 +14280,7 @@ function GF:ShowPreviewFrames(kind, show)
 	for i, btn in ipairs(frames) do
 		if btn then
 			if show and i <= maxShown then
-				if not btn.unit then GF:UnitButton_SetUnit(btn, "player") end
+				if not btn._eqolUnit then GF:UnitButton_SetUnit(btn, "player") end
 				btn:Show()
 			else
 				GF:UnitButton_ClearUnit(btn)
@@ -14391,9 +14615,9 @@ local function syncHeaderChild(child, kind, cfg, frameW, frameH, fitScale, optio
 		cachedGuid = nil
 		if st then st._guid = nil end
 	end
-	local unitUnchanged = skipUnchangedUnitUpdate and guid ~= nil and st and child.unit == unit and st._unitToken == unit and cachedGuid == guid
+	local unitUnchanged = skipUnchangedUnitUpdate and guid ~= nil and st and child._eqolUnit == unit and st._unitToken == unit and cachedGuid == guid
 	if unitUnchanged then
-		if child.unit then GF:UnitButton_RegisterUnitEvents(child, child.unit) end
+		if child._eqolUnit then GF:UnitButton_RegisterUnitEvents(child, child._eqolUnit) end
 		if layoutChanged then
 			GF:LayoutAuras(child)
 			GF:LayoutButton(child)
@@ -14403,7 +14627,7 @@ local function syncHeaderChild(child, kind, cfg, frameW, frameH, fitScale, optio
 	end
 
 	GF:LayoutAuras(child)
-	if child.unit then GF:UnitButton_RegisterUnitEvents(child, child.unit) end
+	if child._eqolUnit then GF:UnitButton_RegisterUnitEvents(child, child._eqolUnit) end
 	if st then
 		GF:CacheUnitStatic(child)
 		GF:LayoutButton(child)
@@ -14619,7 +14843,7 @@ function GF:ApplyPartyPetCompanions(cfg, mainHeader, layout, unitButtonTemplate,
 		local petUnit = GF.GetPartyPetUnitForOwner(owner and owner:GetAttribute("unit"))
 		if button:GetAttribute("unit") ~= petUnit then button:SetAttribute("unit", petUnit) end
 		if unitTokenExists(petUnit) then
-			if button.unit ~= petUnit then GF:UnitButton_SetUnit(button, petUnit) end
+			if button._eqolUnit ~= petUnit then GF:UnitButton_SetUnit(button, petUnit) end
 		else
 			GF:UnitButton_DropUnitState(button)
 		end
@@ -14651,6 +14875,28 @@ function GF:QueueEditModeAuraRefresh()
 		GF._editModeAuraRefreshQueued = nil
 		if isEditModeActive() then refreshAllAuras() end
 	end)
+end
+
+function GF:QueueEditModeAuraLayoutRefresh(kind)
+	if not isEditModeActive() then
+		GF:ApplyHeaderAttributes(kind)
+		return
+	end
+	GF._editModeAuraLayoutRefreshKinds = GF._editModeAuraLayoutRefreshKinds or {}
+	GF._editModeAuraLayoutRefreshKinds[kind] = true
+	if GF._editModeAuraLayoutRefreshTimer then return end
+	local function flush()
+		GF._editModeAuraLayoutRefreshTimer = nil
+		local kinds = GF._editModeAuraLayoutRefreshKinds
+		GF._editModeAuraLayoutRefreshKinds = nil
+		for refreshKind in pairs(kinds or EMPTY) do GF:ApplyHeaderAttributes(refreshKind) end
+	end
+	if C_Timer and C_Timer.NewTimer then
+		GF._editModeAuraLayoutRefreshTimer = C_Timer.NewTimer(0.05, flush)
+	else
+		GF._editModeAuraLayoutRefreshTimer = true
+		RunNextFrame(flush)
+	end
 end
 
 function GF:RefreshHealthForKind(kind)
@@ -15181,7 +15427,7 @@ function GF:RefreshPowerVisibility()
 		GF.ForEachVisualChild(header, function(child)
 			if child then
 				updateButtonConfig(child, child._eqolCfg)
-				if child.unit then GF:UnitButton_RegisterUnitEvents(child, child.unit) end
+				if child._eqolUnit then GF:UnitButton_RegisterUnitEvents(child, child._eqolUnit) end
 				GF:UpdatePower(child)
 			end
 		end)
@@ -16970,7 +17216,7 @@ function GF:RefreshChangedUnitButtons()
 
 		local unit = getUnit(child)
 		if unit == nil or unit == "" then
-			if child.unit then
+			if child._eqolUnit then
 				if useSecureUnitAttribute then return end
 				GF:UnitButton_ClearUnit(child)
 				GF:UpdateAll(child)
@@ -16991,7 +17237,7 @@ function GF:RefreshChangedUnitButtons()
 			cachedGuid = nil
 			st._guid = nil
 		end
-		if cachedGuid == guid and st._unitToken == unit and child.unit == unit then
+		if cachedGuid == guid and st._unitToken == unit and child._eqolUnit == unit then
 			local cfg = child._eqolCfg or getCfg(child._eqolGroupKind or "party")
 			if st._classR == nil and GF:NeedsClassColor(child, st, cfg) then
 				GF:CacheUnitStatic(child)
@@ -17004,7 +17250,7 @@ function GF:RefreshChangedUnitButtons()
 			return
 		end
 
-		if child.unit ~= unit then
+		if child._eqolUnit ~= unit then
 			if useSecureUnitAttribute then return end
 			GF:UnitButton_SetUnit(child, unit)
 			updated = updated + 1
@@ -17768,6 +18014,10 @@ function GF._copyUnitAuraIconsToGroup(sectionId, srcAuras, dest)
 		local debuffSize = source.size
 		if debuffSize ~= nil then
 			debuff.size = debuffSize
+			copied = true
+		end
+		if source.bossAuraSize ~= nil then
+			debuff.bossAuraSize = source.bossAuraSize
 			copied = true
 		end
 		local perRow = tonumber(source.perRow)
@@ -21445,7 +21695,7 @@ local function buildEditModeSettings(kind, editModeId)
 				GF:ApplyHeaderAttributes(kind)
 			end,
 			isEnabled = function()
-				if not isPortraitEnabled() or isPortraitDetached() then return false end
+				if not isPortraitEnabled() then return false end
 				local cfg = getCfg(kind)
 				local bc = cfg and cfg.border or {}
 				local bdef = (DEFAULTS[kind] and DEFAULTS[kind].border) or {}
@@ -21557,6 +21807,46 @@ local function buildEditModeSettings(kind, editModeId)
 				GF:ApplyHeaderAttributes(kind)
 			end,
 			isEnabled = function() return isPortraitEnabled() and isPortraitDetached() end,
+		},
+		{
+			name = L["Border offset"] or "Border offset",
+			kind = SettingType.Slider,
+			allowInput = true,
+			field = "portraitDetachedBorderOffset",
+			parentId = "portrait",
+			isShown = function() return kind == "party" and isPortraitDetached() end,
+			minValue = 0,
+			maxValue = 64,
+			valueStep = 1,
+			get = function()
+				local cfg = getCfg(kind)
+				local pcfg = cfg and cfg.portrait or {}
+				if pcfg.detachedBorderOffset ~= nil then return pcfg.detachedBorderOffset end
+				local bc = cfg and cfg.border or {}
+				local bdef = (DEFAULTS[kind] and DEFAULTS[kind].border) or {}
+				return bc.offset or bdef.offset or bc.inset or bdef.inset or bc.edgeSize or bdef.edgeSize or 1
+			end,
+			set = function(_, value)
+				local cfg = getCfg(kind)
+				if not cfg then return end
+				cfg.portrait = cfg.portrait or {}
+				cfg.portrait.detachedBorderOffset = clampNumber(value, 0, 64, cfg.portrait.detachedBorderOffset or 0)
+				if EditMode and EditMode.SetValue then EditMode:SetValue(editModeId, "portraitDetachedBorderOffset", cfg.portrait.detachedBorderOffset, nil, true) end
+				GF:ApplyHeaderAttributes(kind)
+			end,
+			isEnabled = function()
+				if not isPortraitEnabled() or not isPortraitDetached() then return false end
+				local cfg = getCfg(kind)
+				local pcfg = cfg and cfg.portrait or {}
+				local pdef = (DEFAULTS[kind] and DEFAULTS[kind].portrait) or {}
+				local borderWithFrame = pcfg.borderWithFrame
+				if borderWithFrame == nil then borderWithFrame = pdef.borderWithFrame end
+				local bc = cfg and cfg.border or {}
+				local bdef = (DEFAULTS[kind] and DEFAULTS[kind].border) or {}
+				local borderEnabled = bc.enabled
+				if borderEnabled == nil then borderEnabled = bdef.enabled end
+				return borderWithFrame == true and borderEnabled == true
+			end,
 		},
 		{
 			name = "Portrait detached strata",
@@ -26280,6 +26570,64 @@ local function buildEditModeSettings(kind, editModeId)
 			isShown = function() return addon.AuraCompat ~= nil end,
 		},
 		{
+			name = L["Show dispel type icons"] or "Show dispel type icons",
+			kind = SettingType.Checkbox,
+			field = "dispelTintIconsEnabled",
+			newTagID = "ufGroupDispelTypeIcons",
+			parentId = "dispeltint",
+			get = function()
+				local cfg = getCfg(kind)
+				local dt = cfg and cfg.status and cfg.status.dispelTint or {}
+				local def = (DEFAULTS[kind] and DEFAULTS[kind].status and DEFAULTS[kind].status.dispelTint) or {}
+				if dt.iconsEnabled == nil then return def.iconsEnabled == true end
+				return dt.iconsEnabled == true
+			end,
+			set = function(_, value)
+				local cfg = getCfg(kind)
+				if not cfg then return end
+				cfg.status = cfg.status or {}
+				cfg.status.dispelTint = cfg.status.dispelTint or {}
+				cfg.status.dispelTint.iconsEnabled = value and true or false
+				if EditMode and EditMode.SetValue then EditMode:SetValue(editModeId, "dispelTintIconsEnabled", cfg.status.dispelTint.iconsEnabled, nil, true) end
+				GF:ApplyHeaderAttributes(kind)
+				GF:RefreshDispelTint()
+			end,
+		},
+		{
+			name = L["Dispel icon size"] or "Dispel icon size",
+			kind = SettingType.Slider,
+			allowInput = true,
+			field = "dispelTintIconSize",
+			newTagID = "ufGroupDispelTypeIconSize",
+			parentId = "dispeltint",
+			minValue = 6,
+			maxValue = 40,
+			valueStep = 1,
+			get = function()
+				local cfg = getCfg(kind)
+				local dt = cfg and cfg.status and cfg.status.dispelTint or {}
+				local def = (DEFAULTS[kind] and DEFAULTS[kind].status and DEFAULTS[kind].status.dispelTint) or {}
+				return dt.iconSize or def.iconSize or 12
+			end,
+			set = function(_, value)
+				local cfg = getCfg(kind)
+				if not cfg then return end
+				cfg.status = cfg.status or {}
+				cfg.status.dispelTint = cfg.status.dispelTint or {}
+				cfg.status.dispelTint.iconSize = clampNumber(value, 6, 40, cfg.status.dispelTint.iconSize or 12)
+				if EditMode and EditMode.SetValue then EditMode:SetValue(editModeId, "dispelTintIconSize", cfg.status.dispelTint.iconSize, nil, true) end
+				GF:ApplyHeaderAttributes(kind)
+				GF:RefreshDispelTint()
+			end,
+			isEnabled = function()
+				local cfg = getCfg(kind)
+				local dt = cfg and cfg.status and cfg.status.dispelTint or {}
+				local def = (DEFAULTS[kind] and DEFAULTS[kind].status and DEFAULTS[kind].status.dispelTint) or {}
+				if dt.iconsEnabled == nil then return def.iconsEnabled == true end
+				return dt.iconsEnabled == true
+			end,
+		},
+		{
 			name = L["Background color change"] or "Background color change",
 			kind = SettingType.Checkbox,
 			field = "dispelTintFillEnabled",
@@ -29869,7 +30217,7 @@ local function buildEditModeSettings(kind, editModeId)
 				local ac = ensureAuraConfig(cfg)
 				ac.debuff.x = clampNumber(value, -200, 200, ac.debuff.x or 0)
 				if EditMode and EditMode.SetValue then EditMode:SetValue(editModeId, "debuffOffsetX", ac.debuff.x, nil, true) end
-				GF:ApplyHeaderAttributes(kind)
+				GF:QueueEditModeAuraLayoutRefresh(kind)
 			end,
 		},
 		{
@@ -29891,7 +30239,7 @@ local function buildEditModeSettings(kind, editModeId)
 				local ac = ensureAuraConfig(cfg)
 				ac.debuff.y = clampNumber(value, -200, 200, ac.debuff.y or 0)
 				if EditMode and EditMode.SetValue then EditMode:SetValue(editModeId, "debuffOffsetY", ac.debuff.y, nil, true) end
-				GF:ApplyHeaderAttributes(kind)
+				GF:QueueEditModeAuraLayoutRefresh(kind)
 			end,
 		},
 		{
@@ -29913,8 +30261,34 @@ local function buildEditModeSettings(kind, editModeId)
 				local ac = ensureAuraConfig(cfg)
 				ac.debuff.size = clampNumber(value, 8, 120, ac.debuff.size or 16)
 				if EditMode and EditMode.SetValue then EditMode:SetValue(editModeId, "debuffSize", ac.debuff.size, nil, true) end
-				GF:ApplyHeaderAttributes(kind)
+				GF:QueueEditModeAuraLayoutRefresh(kind)
 			end,
+		},
+		{
+			name = L["Boss aura size"] or "Boss aura size",
+			kind = SettingType.Slider,
+			allowInput = true,
+			field = "debuffBossAuraSize",
+			newTagID = "ufGroupBossAuraSize",
+			parentId = "debuffs",
+			minValue = 8,
+			maxValue = 120,
+			valueStep = 1,
+			get = function()
+				local cfg = getCfg(kind)
+				local ac = ensureAuraConfig(cfg)
+				local def = (DEFAULTS[kind] and DEFAULTS[kind].auras and DEFAULTS[kind].auras.debuff) or {}
+				return ac.debuff.bossAuraSize or def.bossAuraSize or ac.debuff.size or def.size or 16
+			end,
+			set = function(_, value)
+				local cfg = getCfg(kind)
+				local ac = ensureAuraConfig(cfg)
+				local def = (DEFAULTS[kind] and DEFAULTS[kind].auras and DEFAULTS[kind].auras.debuff) or {}
+				ac.debuff.bossAuraSize = clampNumber(value, 8, 120, ac.debuff.bossAuraSize or def.bossAuraSize or ac.debuff.size or def.size or 16)
+				if EditMode and EditMode.SetValue then EditMode:SetValue(editModeId, "debuffBossAuraSize", ac.debuff.bossAuraSize, nil, true) end
+				GF:QueueEditModeAuraLayoutRefresh(kind)
+			end,
+			isShown = function() return addon.AuraCompat ~= nil end,
 		},
 		auraIconShapeSetting("debuff", "debuffIconShape", "debuffs"),
 		auraIconZoomSetting("debuff", "debuffIconZoom", "debuffs"),
@@ -29937,7 +30311,7 @@ local function buildEditModeSettings(kind, editModeId)
 				local ac = ensureAuraConfig(cfg)
 				ac.debuff.perRow = clampNumber(value, 1, 12, ac.debuff.perRow or 6)
 				if EditMode and EditMode.SetValue then EditMode:SetValue(editModeId, "debuffPerRow", ac.debuff.perRow, nil, true) end
-				GF:ApplyHeaderAttributes(kind)
+				GF:QueueEditModeAuraLayoutRefresh(kind)
 			end,
 		},
 		{
@@ -29959,7 +30333,7 @@ local function buildEditModeSettings(kind, editModeId)
 				local ac = ensureAuraConfig(cfg)
 				ac.debuff.max = GF.ClampAuraCount(value, ac.debuff.max or 6, 20) or 6
 				if EditMode and EditMode.SetValue then EditMode:SetValue(editModeId, "debuffMax", ac.debuff.max, nil, true) end
-				GF:ApplyHeaderAttributes(kind)
+				GF:QueueEditModeAuraLayoutRefresh(kind)
 			end,
 		},
 		{
@@ -29981,7 +30355,7 @@ local function buildEditModeSettings(kind, editModeId)
 				local ac = ensureAuraConfig(cfg)
 				ac.debuff.spacing = clampNumber(value, 0, 10, ac.debuff.spacing or 2)
 				if EditMode and EditMode.SetValue then EditMode:SetValue(editModeId, "debuffSpacing", ac.debuff.spacing, nil, true) end
-				GF:ApplyHeaderAttributes(kind)
+				GF:QueueEditModeAuraLayoutRefresh(kind)
 			end,
 		},
 		{
@@ -33360,6 +33734,8 @@ local function applyEditModeData(kind, data)
 		or data.rangeFadeOfflineAlpha ~= nil
 		or data.dispelTintEnabled ~= nil
 		or data.dispelTintFilterMode ~= nil
+		or data.dispelTintIconsEnabled ~= nil
+		or data.dispelTintIconSize ~= nil
 		or data.dispelTintAlpha ~= nil
 		or data.dispelTintFillEnabled ~= nil
 		or data.dispelTintFillAlpha ~= nil
@@ -33526,6 +33902,8 @@ local function applyEditModeData(kind, data)
 	if
 		data.dispelTintEnabled ~= nil
 		or data.dispelTintFilterMode ~= nil
+		or data.dispelTintIconsEnabled ~= nil
+		or data.dispelTintIconSize ~= nil
 		or data.dispelTintAlpha ~= nil
 		or data.dispelTintFillEnabled ~= nil
 		or data.dispelTintFillAlpha ~= nil
@@ -33551,6 +33929,8 @@ local function applyEditModeData(kind, data)
 		cfg.status.dispelTint = cfg.status.dispelTint or {}
 		if data.dispelTintEnabled ~= nil then cfg.status.dispelTint.enabled = data.dispelTintEnabled and true or false end
 		if data.dispelTintFilterMode ~= nil then cfg.status.dispelTint.filterMode = GF.NormalizeDispelFilterMode(data.dispelTintFilterMode) or GF.DISPEL_FILTER_MODE_MY end
+		if data.dispelTintIconsEnabled ~= nil then cfg.status.dispelTint.iconsEnabled = data.dispelTintIconsEnabled and true or false end
+		if data.dispelTintIconSize ~= nil then cfg.status.dispelTint.iconSize = clampNumber(data.dispelTintIconSize, 6, 40, cfg.status.dispelTint.iconSize or 12) end
 		if data.dispelTintAlpha ~= nil then cfg.status.dispelTint.alpha = clampNumber(data.dispelTintAlpha, 0, 1, cfg.status.dispelTint.alpha or 0.25) end
 		if data.dispelTintFillEnabled ~= nil then cfg.status.dispelTint.fillEnabled = data.dispelTintFillEnabled and true or false end
 		if data.dispelTintFillAlpha ~= nil then cfg.status.dispelTint.fillAlpha = clampNumber(data.dispelTintFillAlpha, 0, 1, cfg.status.dispelTint.fillAlpha or 0.2) end
@@ -33906,6 +34286,7 @@ local function applyEditModeData(kind, data)
 	if data.debuffOffsetX ~= nil then ac.debuff.x = data.debuffOffsetX end
 	if data.debuffOffsetY ~= nil then ac.debuff.y = data.debuffOffsetY end
 	if data.debuffSize ~= nil then ac.debuff.size = data.debuffSize end
+	if data.debuffBossAuraSize ~= nil then ac.debuff.bossAuraSize = data.debuffBossAuraSize end
 	if data.debuffIconShape ~= nil then
 		ac.debuff.iconShape = GF.NormalizeAuraIconShape(data.debuffIconShape, ac.debuff.iconShape or "DEFAULT")
 		ac.debuff.borderTexture = GF.NormalizeAuraBorderTexture(ac.debuff.borderTexture, "DEFAULT", ac.debuff.iconShape)
@@ -34623,6 +35004,9 @@ function GF:EnsureEditMode()
 				dispelTintEnabled = (sc.dispelTint and sc.dispelTint.enabled ~= nil) and (sc.dispelTint.enabled ~= false)
 					or ((sc.dispelTint == nil or sc.dispelTint.enabled == nil) and defDispel.enabled ~= false),
 				dispelTintFilterMode = GF.GetDispelFilterMode(cfg, def),
+				dispelTintIconsEnabled = (sc.dispelTint and sc.dispelTint.iconsEnabled ~= nil) and (sc.dispelTint.iconsEnabled == true)
+					or ((sc.dispelTint == nil or sc.dispelTint.iconsEnabled == nil) and defDispel.iconsEnabled == true),
+				dispelTintIconSize = (sc.dispelTint and sc.dispelTint.iconSize) or defDispel.iconSize or 12,
 				dispelTintAlpha = (sc.dispelTint and sc.dispelTint.alpha) or defDispel.alpha or 0.25,
 				dispelTintFillEnabled = (sc.dispelTint and sc.dispelTint.fillEnabled ~= nil) and (sc.dispelTint.fillEnabled == true)
 					or ((sc.dispelTint == nil or sc.dispelTint.fillEnabled == nil) and defDispel.fillEnabled ~= false),
@@ -34803,6 +35187,7 @@ function GF:EnsureEditMode()
 				debuffOffsetX = ac.debuff.x or 0,
 				debuffOffsetY = ac.debuff.y or 0,
 				debuffSize = ac.debuff.size or 16,
+				debuffBossAuraSize = ac.debuff.bossAuraSize or defDebuff.bossAuraSize or ac.debuff.size or defDebuff.size or 16,
 				debuffPerRow = ac.debuff.perRow or 6,
 				debuffMax = GF.ClampAuraCount(ac.debuff.max, 6) or 6,
 				debuffSpacing = ac.debuff.spacing or 2,

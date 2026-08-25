@@ -532,8 +532,8 @@ local function OnEvent(self, event, ...)
 		SetCVar("UnitNameNPC", 1)
 		SetCVar("UnitNameFriendlyPlayerName", 1) -- Show friendly player names always
 		SetCVar("UnitNameOwn", 1) -- Show own name
-		SetCVar("UnitNamePlayerPVPTitle", 1) -- Show character title
-		SetCVar("UnitNamePlayerGuild", 1) -- Show guild
+		SetCVar("UnitNamePlayerPVPTitle", 0) -- Show character title
+		SetCVar("UnitNamePlayerGuild", 0) -- Show guild
 		-- Name size
 		SetCVar("WorldTextMinSize", 12)
 

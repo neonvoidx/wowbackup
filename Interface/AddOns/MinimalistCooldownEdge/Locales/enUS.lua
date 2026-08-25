@@ -5,10 +5,7 @@ if not L then return end
 L["MINIAURAS_COUNTDOWN_COLORS_NOTICE"] = "MiniAuras owns countdown threshold colours. Configure them in MiniAuras > Misc > Countdown Colours."
 L["MYDRS_SWIPE_ALPHA_DESC"] = "0% = transparent, 100% = full dark. Replaces the MyDRs Cooldown Swipe Alpha setting while this category is enabled; 100% matches the swipe MyDRs draws itself."
 L["MINIAURAS_SWIPE_ALPHA_DESC"] = "0% = transparent, 100% = full dark. Applies to every MiniAuras module group; 80% matches the swipe MiniAuras draws itself."
-L["BBP_NAMEPLATE_ADAPTER_NOTICE"] = "MiniCE owns BBP aura cooldown text colors and thresholds while BBP keeps its aura layout."
-L["BBP_TYPOGRAPHY_SUPPORT_NOTICE"] = "For best compatibility, uncheck \"Use Blizzard Numbers\" and \"Expiry Colour\" in /BBP > Nameplate Auras Options."
-L["BetterBlizzPlates Auras"] = true
-L["BETTERBLIZZPLATES_DESC"] = "MiniCE owns BBP aura cooldown text colors and remaining-time thresholds while BBP keeps its aura layout and non-color timer behavior. BBP's timer color and low-threshold options are ignored while this adapter is enabled."
+L["SHACKLED_SWIPE_ALPHA_DESC"] = "0% = transparent, 100% = full dark. Shackled draws a plain Blizzard-default swipe, so this simply re-shades it."
 
 -- Core
 L["MiniAuras test command is unavailable."] = true
@@ -29,6 +26,7 @@ L["MiniAuras"] = true
 L["MyDRs"] = true
 L["sArena"] = true
 L["TellMeWhen"] = true
+L["Shackled"] = true
 L["Profiles"] = true
 L["ShinyAuras"] = true
 L["Dominos"] = true
@@ -85,8 +83,11 @@ L["Hide the text entirely (useful if you only want the swipe edge or stacks)."] 
 L["Hide the swipe animation for this frame group (countdown text still shows)."] = true
 L["Only show cooldown timer text on your own auras. Uses Blizzard's large-aura heuristic instead of a direct sourceUnit check."] = true
 L["UNITFRAME_ONLY_MINE_DESC"] = "Only show cooldown timer text on auras cast by you. MiniCE's WoW 12.1 target/focus containers use Blizzard's Player filter; compatible addon and legacy frames use their group metadata or the large-aura fallback."
-L["UNITFRAME_ONLY_MINE_DEBUFFS_DESC"] = "Hide debuffs cast by other players on the target and focus frames. MiniCE owns these aura containers on WoW 12.1, so Blizzard's own debuff filter no longer reaches them. Has no effect while BetterBlizzFrames owns the container."
-L["UNITFRAME_ONLY_MINE_BUFFS_DESC"] = "Hide buffs cast by other players on the target and focus frames. MiniCE owns these aura containers on WoW 12.1, so Blizzard's own buff filter no longer reaches them. Has no effect while BetterBlizzFrames owns the container."
+L["UNITFRAME_ONLY_MINE_DEBUFFS_DESC"] = "Hide debuffs cast by other players on the target and focus frames. MiniCE owns these aura containers on WoW 12.1, so Blizzard's own debuff filter no longer reaches them."
+L["UNITFRAME_ONLY_MINE_BUFFS_DESC"] = "Hide buffs cast by other players on the target and focus frames. MiniCE owns these aura containers on WoW 12.1, so Blizzard's own buff filter no longer reaches them."
+L["Cast Bar"] = true
+L["Reposition Cast Bar"] = true
+L["UNITFRAME_CASTBAR_REPOSITION_DESC"] = "Anchor the target and focus cast bars below the last buff/debuff row. MiniCE owns these aura containers on WoW 12.1, so Blizzard's cast bar otherwise stays pinned to the frame and overlaps them."
 L["Keeps player aura buttons fully opaque when they are close to expiring."] = true
 L["Shows styled countdown text on Blizzard CompactPartyFrame buff and debuff icons. Disabling this hides aura countdown text on party frames."] = true
 L["Shows styled countdown text on Blizzard CompactRaidFrame buff and debuff icons. Disabling this hides aura countdown text on raid frames."] = true
@@ -145,7 +146,6 @@ L["MiniAuras text settings are grouped by module family so similar widgets share
 L["Applies to MiniAuras CC module (enemy crowd controls)."] = true
 L["Applies to MiniAuras CC, Friendly CDs, and Friendly Indicators modules."] = true
 L["Applies to the MiniAuras Raid Frame Auras module."] = true
-L["Applies to the MiniAuras Nameplates module."] = true
 L["Applies to MiniAuras portrait icons."] = true
 L["Applies to MiniAuras Alerts, Healer CC, Kick Timer, Precognition, Trinkets, and Custom Auras modules."] = true
 L["Show sArena test frames using /sarena test."] = true
@@ -253,7 +253,8 @@ L["MAINTENANCE_DESC"] = "Revert this category to factory defaults. Other categor
 L["ACTIONBAR_DESC"] = "Style cooldowns on your action bars."
 L["NAMEPLATE_DESC"] = "Style cooldowns on enemy and friendly nameplates."
 L["UNITFRAME_DESC"] = "Style aura cooldowns on target, focus, and supported unit frames."
-L["UNITFRAME_121_COMPAT_DESC"] = "WoW 12.1 restricts Blizzard's native target and focus aura buttons. While this category is enabled, MiniCE uses the supported custom aura container API and styles BetterBlizzFrames containers when BBF already owns them."
+L["BETTERBLIZZFRAMES_UNITFRAME_CONFLICT_WARNING"] = "BetterBlizzFrames is active, so MiniCE's Unit Frames styling has been disabled to prevent possible conflicts. A dedicated BetterBlizzFrames adapter is coming soon."
+L["BETTERBLIZZPLATES_NAMEPLATE_CONFLICT_WARNING"] = "BetterBlizzPlates is active, so MiniCE's Nameplates styling has been disabled to prevent possible conflicts."
 L["PLAYERAURA_DESC"] = "Style Blizzard player buff and debuff cooldowns."
 L["COOLDOWNMANAGER_DESC"] = "Style CooldownManager icon cooldowns."
 L["HEALERCC_DESC"] = "Style friendly and enemy HealerCC alert cooldowns."
@@ -263,6 +264,7 @@ L["SARENA_DESC"] = "Style sArena_Reloaded cooldown timers."
 L["TELLMEWHEN_DESC"] = "Style TellMeWhen cooldown text and swipe edges."
 L["TELLMEWHEN_TIMER_OPTIONS_NOTICE"] = "Timer visibility, timer text, shading direction, and GCD display remain controlled by TellMeWhen. Swipe edge visibility and thickness are controlled here."
 L["TELLMEWHEN_EDGE_SCALE_DESC"] = "Scales the TellMeWhen swipe edge when MiniCE has enabled it."
+L["SHACKLED_DESC"] = "Style Shackled's enemy CC-tracker icon cooldowns. Shackled draws its own remaining-time text; MiniCE takes over its font, size, color, and swipe."
 
 -- Dynamic Text Colors
 L["Dynamic Text Colors"] = true

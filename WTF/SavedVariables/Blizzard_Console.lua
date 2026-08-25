@@ -3,38 +3,6 @@ Blizzard_Console_SavedVars = {
 ["version"] = 3,
 ["messageHistory"] = {
 {
-"Reflection mode changed to 3",
-0,
-},
-{
-"Reflection downscale changed to 0",
-0,
-},
-{
-"Sunshafts quality changed to 2",
-0,
-},
-{
-"Refraction mode changed to 2",
-0,
-},
-{
-"Volume fog enabled.",
-0,
-},
-{
-"Particulate volumes enabled.",
-0,
-},
-{
-"Projected textures enabled.",
-0,
-},
-{
-"Shadow mode changed to 4 - 4 band dynamic shadows on units and terrain, 2048",
-0,
-},
-{
 "Shadow texture size changed to 2048.",
 0,
 },
@@ -175,94 +143,6 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"LimitedLuaResources: Enabled = false",
-0,
-},
-{
-"LimitedLuaResources: Enabled = false",
-0,
-},
-{
-"LimitedLuaResources: Addon capacity for Frame changed to 10000",
-0,
-},
-{
-"LimitedLuaResources: Addon capacity for Frame changed to 10000",
-0,
-},
-{
-"LimitedLuaResources: Addon capacity for Font changed to 300",
-0,
-},
-{
-"LimitedLuaResources: Addon capacity for Font changed to 300",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for AnimGroup changed to 20000",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for AnimGroup changed to 20000",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for Frame changed to 100000",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for Frame changed to 100000",
-0,
-},
-{
-"LimitedLuaResources: Addon capacity for Texture changed to 40000",
-0,
-},
-{
-"LimitedLuaResources: Addon capacity for Texture changed to 40000",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for FontString changed to 50000",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for FontString changed to 50000",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for Animation changed to 50000",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for Animation changed to 50000",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for Texture changed to 400000",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for Texture changed to 400000",
-0,
-},
-{
-"LimitedLuaResources: Addon capacity for Animation changed to 5000",
-0,
-},
-{
-"LimitedLuaResources: Addon capacity for Animation changed to 5000",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for Timer changed to 500",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for Timer changed to 500",
-0,
-},
-{
 "LimitedLuaResources: Addon capacity for AnimGroup changed to 2000",
 0,
 },
@@ -279,11 +159,91 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
+"LimitedLuaResources: Global capacity for Frame changed to 100000",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for Frame changed to 100000",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for Font changed to 300",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for Font changed to 300",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for Timer changed to 500",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for Timer changed to 500",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for Animation changed to 50000",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for Animation changed to 50000",
+0,
+},
+{
 "LimitedLuaResources: Addon capacity for Timer changed to 500",
 0,
 },
 {
 "LimitedLuaResources: Addon capacity for Timer changed to 500",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for Texture changed to 400000",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for Texture changed to 400000",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for FontString changed to 50000",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for FontString changed to 50000",
+0,
+},
+{
+"LimitedLuaResources: Enabled = false",
+0,
+},
+{
+"LimitedLuaResources: Enabled = false",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for AnimGroup changed to 20000",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for AnimGroup changed to 20000",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for Texture changed to 40000",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for Texture changed to 40000",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for Animation changed to 5000",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for Animation changed to 5000",
 0,
 },
 {
@@ -292,6 +252,14 @@ Blizzard_Console_SavedVars = {
 },
 {
 "LimitedLuaResources: Global capacity for Font changed to 3000",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for Frame changed to 10000",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for Frame changed to 10000",
 0,
 },
 {
@@ -363,23 +331,15 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"BG code=\"ERROR_OK (0)\"",
-0,
-},
-{
 "BGS_ code=\"ERROR_OK (0)\" name=\"WoW3\" numGameAccounts=\"8\" numGameAccountNames=\"0\"",
 0,
 },
 {
-"BGS_ code=\"ERROR_OK (0)\" name=\"WoW4\" numGameAccounts=\"8\" numGameAccountNames=\"1\"",
+"BGS_ code=\"ERROR_OK (0)\" name=\"WoW2\" numGameAccounts=\"8\" numGameAccountNames=\"1\"",
 0,
 },
 {
-"BGS_ACCO code=\"ERROR_OK (0)\"",
-0,
-},
-{
-"BGS_ code=\"ERROR_OK (0)\" name=\"WoW5\" numGameAccounts=\"8\" numGameAccountNames=\"2\"",
+"BGS_ code=\"ERROR_OK (0)\" name=\"ROOTWARRIOR\" numGameAccounts=\"8\" numGameAccountNames=\"2\"",
 0,
 },
 {
@@ -387,11 +347,19 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"BGS_ code=\"ERROR_OK (0)\" name=\"ROOTWARRIOR\" numGameAccounts=\"8\" numGameAccountNames=\"4\"",
+"BGS_ACCO code=\"ERROR_OK (0)\"",
 0,
 },
 {
-"BGS_ code=\"ERROR_OK (0)\" name=\"WoW2\" numGameAccounts=\"8\" numGameAccountNames=\"5\"",
+"BGS_ACCO code=\"ERROR_OK (0)\"",
+0,
+},
+{
+"BGS_ code=\"ERROR_OK (0)\" name=\"WoW5\" numGameAccounts=\"8\" numGameAccountNames=\"4\"",
+0,
+},
+{
+"BG code=\"ERROR_OK (0)\"",
 0,
 },
 {
@@ -403,11 +371,7 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"BGS_ACCO code=\"ERROR_OK (0)\"",
-0,
-},
-{
-"BGS_ACCO code=\"ERROR_OK (0)\"",
+"BGS_ code=\"ERROR_OK (0)\" name=\"WoW6\" numGameAccounts=\"8\" numGameAccountNames=\"5\"",
 0,
 },
 {
@@ -415,7 +379,7 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"BGS_ code=\"ERROR_OK (0)\" name=\"WoW6\" numGameAccounts=\"8\" numGameAccountNames=\"6\"",
+"BGS_ACCO code=\"ERROR_OK (0)\"",
 0,
 },
 {
@@ -423,7 +387,11 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"BGS_ code=\"ERROR_OK (0)\" name=\"WoW7\" numGameAccounts=\"8\" numGameAccountNames=\"7\"",
+"BGS_ code=\"ERROR_OK (0)\" name=\"WoW7\" numGameAccounts=\"8\" numGameAccountNames=\"6\"",
+0,
+},
+{
+"BGS_ code=\"ERROR_OK (0)\" name=\"WoW4\" numGameAccounts=\"8\" numGameAccountNames=\"7\"",
 0,
 },
 {
@@ -443,7 +411,7 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Reconnect token saved;  creationTime=\"1786837745\" expirationTime=\"1786852145\"",
+"Reconnect token saved;  creationTime=\"1787613174\" expirationTime=\"1787627574\"",
 0,
 },
 {
@@ -483,7 +451,7 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Received last played char code=\"ERROR_OK (0)\" subRegion=\"1-1-89\" lastPlayedTime=\"1786823714\" numRegions=\"5\" numRegionsWithData=\"3\" realmPermissions=\"3\" licensesCount=\"1\" realmEntry=\"{\"wowRealmAddress\":16973835,\"useBleepChance\":0.0,\"cfgTimezonesID\":1,\"populationState\":6,\"cfgCategoriesID\":2,\"version\":{\"versionMajor\":12,\"versionBuild\":68914,\"versionMinor\":1,\"versionRevision\":0},\"cfgRealmsID\":11,\"gameServiceRegionId\":1,\"flags\":0,\"name\":\"Tichondrius\",\"cfgConfigsID\":1,\"cfgContentSetID\":0,\"cfgLanguagesID\":1}\"",
+"Received last played char code=\"ERROR_OK (0)\" subRegion=\"1-1-89\" lastPlayedTime=\"1787601608\" numRegions=\"5\" numRegionsWithData=\"3\" realmPermissions=\"3\" licensesCount=\"1\" realmEntry=\"{\"wowRealmAddress\":16973835,\"useBleepChance\":0.0,\"cfgTimezonesID\":1,\"populationState\":6,\"cfgCategoriesID\":2,\"version\":{\"versionMajor\":12,\"versionBuild\":68914,\"versionMinor\":1,\"versionRevision\":0},\"cfgRealmsID\":11,\"gameServiceRegionId\":1,\"flags\":0,\"name\":\"Tichondrius\",\"cfgConfigsID\":1,\"cfgContentSetID\":0,\"cfgLanguagesID\":1}\"",
 0,
 },
 {
@@ -495,7 +463,7 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Found most recently played char. Joining realm. lastPlayedRegion=\"1-1-89\" realmAddress=\"16973835\" lastActiveTime=\"1786823714\"",
+"Found most recently played char. Joining realm. lastPlayedRegion=\"1-1-89\" realmAddress=\"16973835\" lastActiveTime=\"1787601608\"",
 0,
 },
 {
@@ -503,7 +471,7 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Sending ping results from timeout timeoutNs=\"22087295231200\" nowNs=\"22087306348200\"",
+"Sending ping results from timeout timeoutNs=\"39374273482700\" nowNs=\"39374276729200\"",
 0,
 },
 {
@@ -511,7 +479,7 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Connecting conn=\"(enum)0\" connPtr=\"000000003e4ee840\" protocol=\"(enum)0\"",
+"Connecting conn=\"(enum)0\" connPtr=\"00000000577b1520\" protocol=\"(enum)0\"",
 0,
 },
 {
@@ -523,15 +491,15 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Connecting conn=\"(enum)2\" connPtr=\"00000000867056b0\" protocol=\"(enum)0\"",
+"Connecting conn=\"(enum)2\" connPtr=\"000000007dd04bb0\" protocol=\"(enum)0\"",
+0,
+},
+{
+"KillConnection conn=\"00000000577b1520\" state=\"(enum)6\"",
 0,
 },
 {
 "Switching to screen=\"CharacterSelect\" (from \"login\")",
-0,
-},
-{
-"KillConnection conn=\"000000003e4ee840\" state=\"(enum)6\"",
 0,
 },
 {
@@ -551,6 +519,58 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
+"LimitedLuaResources: Global capacity for Timer changed to 500",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for Texture changed to 40000",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for Timer changed to 500",
+0,
+},
+{
+"LimitedLuaResources: Enabled = false",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for FontString changed to 5000",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for Texture changed to 400000",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for Animation changed to 50000",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for AnimGroup changed to 2000",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for AnimGroup changed to 20000",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for Font changed to 3000",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for FontString changed to 50000",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for Animation changed to 5000",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for Frame changed to 10000",
+0,
+},
+{
 "LimitedLuaResources: Addon capacity for Font changed to 300",
 0,
 },
@@ -559,59 +579,11 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"LimitedLuaResources: Addon capacity for Texture changed to 40000",
-0,
-},
-{
-"LimitedLuaResources: Addon capacity for Frame changed to 10000",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for AnimGroup changed to 20000",
-0,
-},
-{
-"LimitedLuaResources: Enabled = false",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for Font changed to 3000",
-0,
-},
-{
-"LimitedLuaResources: Addon capacity for FontString changed to 5000",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for Timer changed to 500",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for FontString changed to 50000",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for Animation changed to 50000",
-0,
-},
-{
-"LimitedLuaResources: Addon capacity for Timer changed to 500",
-0,
-},
-{
-"LimitedLuaResources: Addon capacity for AnimGroup changed to 2000",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for Texture changed to 400000",
-0,
-},
-{
-"LimitedLuaResources: Addon capacity for Animation changed to 5000",
-0,
-},
-{
 "Session with Battle.net established.",
+0,
+},
+{
+"[WowEntitlements] [BNetAccount-0-000003482BDF] [WowAccount-0-0000003C5D98] Initialized with 226 entitlements.",
 0,
 },
 {
@@ -620,10 +592,6 @@ Blizzard_Console_SavedVars = {
 },
 {
 "Disconnected from authentication server.",
-0,
-},
-{
-"[WowEntitlements] [BNetAccount-0-000003482BDF] [WowAccount-0-0000003C5D98] Initialized with 226 entitlements.",
 0,
 },
 {
@@ -639,7 +607,147 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Connecting conn=\"(enum)3\" connPtr=\"0000000126b173b0\" protocol=\"(enum)0\"",
+"Connecting conn=\"(enum)3\" connPtr=\"000000007dfdf520\" protocol=\"(enum)0\"",
+0,
+},
+{
+"Proficiency in item class 2 set to 0x0000000001",
+0,
+},
+{
+"Proficiency in item class 2 set to 0x0000000041",
+0,
+},
+{
+"Proficiency in item class 4 set to 0x0000000021",
+0,
+},
+{
+"Proficiency in item class 2 set to 0x0000004041",
+0,
+},
+{
+"Proficiency in item class 2 set to 0x0000004441",
+0,
+},
+{
+"Proficiency in item class 4 set to 0x0000000025",
+0,
+},
+{
+"Proficiency in item class 2 set to 0x0000006441",
+0,
+},
+{
+"Proficiency in item class 2 set to 0x0000106441",
+0,
+},
+{
+"Proficiency in item class 2 set to 0x0000106451",
+0,
+},
+{
+"Proficiency in item class 2 set to 0x00001064d1",
+0,
+},
+{
+"Proficiency in item class 4 set to 0x0000000027",
+0,
+},
+{
+"Proficiency in item class 2 set to 0x00001064d1",
+0,
+},
+{
+"Proficiency in item class 4 set to 0x0000000027",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Time set to 8/24/2026 (Mon) 16:12",
+0,
+},
+{
+"Gamespeed set from 0.017 to 0.017",
+0,
+},
+{
+"Connecting conn=\"(enum)3\" connPtr=\"00000000866cbb10\" protocol=\"(enum)0\"",
+0,
+},
+{
+"KillConnection conn=\"000000007dfdf520\" state=\"(enum)6\"",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Successfully instantiated mirrored storage object",
+0,
+},
+{
+"KillConnection conn=\"00000000866cbb10\" state=\"(enum)7\"",
+0,
+},
+{
+"-------------------------------------------------- Previous Session --------------------------------------------------",
+0,
+},
+{
+"LimitedLuaResources: Reset Timer",
+0,
+},
+{
+"Resume()",
+0,
+},
+{
+"Screen invalid. Changing from=\"none\" to=\"charselect\"",
+0,
+},
+{
+"Switching to screen=\"CharacterSelect\" (from \"none\")",
+0,
+},
+{
+"From EnsureValidScreen",
+0,
+},
+{
+"Switching to screen=\"CharacterCreateFrame\" (from \"charselect\")",
+0,
+},
+{
+"Switching to screen=\"CharacterSelect\" (from \"charcreate\")",
+0,
+},
+{
+"From CharacterCreateMixin:Exit",
+0,
+},
+{
+"-------------------------------------------------- Previous Session --------------------------------------------------",
+0,
+},
+{
+"Suspend()",
+0,
+},
+{
+"LimitedLuaResources: Reset Timer",
+0,
+},
+{
+"Attempted to register existing command: SetDifficulty",
+0,
+},
+{
+"Connecting conn=\"(enum)3\" connPtr=\"00000001156137d0\" protocol=\"(enum)0\"",
 0,
 },
 {
@@ -687,7 +795,7 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Time set to 8/15/2026 (Sat) 16:49",
+"Time set to 8/24/2026 (Mon) 16:16",
 0,
 },
 {
@@ -695,11 +803,31 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Connecting conn=\"(enum)3\" connPtr=\"0000000126b18de0\" protocol=\"(enum)0\"",
+"Connecting conn=\"(enum)3\" connPtr=\"000000007e2ecf90\" protocol=\"(enum)0\"",
 0,
 },
 {
-"KillConnection conn=\"0000000126b173b0\" state=\"(enum)6\"",
+"KillConnection conn=\"00000001156137d0\" state=\"(enum)6\"",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Successfully instantiated mirrored storage object",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Connecting conn=\"(enum)3\" connPtr=\"000000007e30b320\" protocol=\"(enum)0\"",
+0,
+},
+{
+"KillConnection conn=\"000000007e2ecf90\" state=\"(enum)6\"",
 0,
 },
 {
@@ -711,71 +839,11 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Connecting conn=\"(enum)3\" connPtr=\"0000000113330800\" protocol=\"(enum)0\"",
+"Connecting conn=\"(enum)3\" connPtr=\"00000001e64c3a50\" protocol=\"(enum)0\"",
 0,
 },
 {
-"KillConnection conn=\"0000000126b18de0\" state=\"(enum)6\"",
-0,
-},
-{
-"Connecting conn=\"(enum)3\" connPtr=\"000000012c7d3160\" protocol=\"(enum)0\"",
-0,
-},
-{
-"KillConnection conn=\"0000000113330800\" state=\"(enum)6\"",
-0,
-},
-{
-"[Airlock] Received PreloadMap Destination MapID:2916, Current MapID:0, PreviousTransitionID:-1, Position (5378.95, -11060.7, 30.965)",
-0,
-},
-{
-"[Airlock] Preload initiated for map 2916",
-0,
-},
-{
-"Connecting conn=\"(enum)3\" connPtr=\"000000012c7e5e90\" protocol=\"(enum)0\"",
-0,
-},
-{
-"KillConnection conn=\"000000012c7d3160\" state=\"(enum)6\"",
-0,
-},
-{
-"[Airlock] Loading new map 2916 from previous map 0 with translation: (-803.34, -232.199, -104.343)\n    Location : (5525.98, -10764, -36.3687)\n    Location in previous map : (6329.32, -10531.8, 67.9742)",
-0,
-},
-{
-"[Airlock] Swapping to preloaded map 2916 and unloading map 0. (Map Table Size 30 larger than budget 8)",
-0,
-},
-{
-"[Airlock] Finished transition to new map 2916",
-0,
-},
-{
-"[Airlock] Received PreloadMap Destination MapID:0, Current MapID:2916, PreviousTransitionID:-1, Position (6330.48, -10519.5, 67.91)",
-0,
-},
-{
-"[Airlock] Preload initiated for map 0",
-0,
-},
-{
-"[Airlock] Cancel Preload of MapID:0",
-0,
-},
-{
-"World transfer pending...",
-0,
-},
-{
-"Connecting conn=\"(enum)3\" connPtr=\"000000011312d0b0\" protocol=\"(enum)0\"",
-0,
-},
-{
-"KillConnection conn=\"000000012c7e5e90\" state=\"(enum)6\"",
+"KillConnection conn=\"000000007e30b320\" state=\"(enum)6\"",
 0,
 },
 {
@@ -783,7 +851,39 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"KillConnection conn=\"000000011312d0b0\" state=\"(enum)7\"",
+"World transfer pending...",
+0,
+},
+{
+"Connecting conn=\"(enum)3\" connPtr=\"00000001d7b2c490\" protocol=\"(enum)0\"",
+0,
+},
+{
+"KillConnection conn=\"00000001e64c3a50\" state=\"(enum)6\"",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Dissolve Effect ID 306 has invalid fade out time. This will result in the record beign ignore and a regular fade out being applied to the creature.",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Connecting conn=\"(enum)3\" connPtr=\"000000007dfb4f10\" protocol=\"(enum)0\"",
+0,
+},
+{
+"KillConnection conn=\"00000001d7b2c490\" state=\"(enum)6\"",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
 0,
 },
 {
@@ -795,115 +895,11 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Resume()",
+"LimitedLuaResources: Reset All",
 0,
 },
 {
-"Screen invalid. Changing from=\"none\" to=\"charselect\"",
-0,
-},
-{
-"Switching to screen=\"CharacterSelect\" (from \"none\")",
-0,
-},
-{
-"From EnsureValidScreen",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"Suspend()",
-0,
-},
-{
-"LimitedLuaResources: Reset Timer",
-0,
-},
-{
-"Attempted to register existing command: SetDifficulty",
-0,
-},
-{
-"Connecting conn=\"(enum)3\" connPtr=\"000000007d8587e0\" protocol=\"(enum)0\"",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000008000",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000021",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x000000c000",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x000000c400",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x000010c400",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x000010c410",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000023",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x000018c410",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x000018c410",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000023",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Time set to 8/15/2026 (Sat) 17:06",
-0,
-},
-{
-"Gamespeed set from 0.017 to 0.017",
-0,
-},
-{
-"Connecting conn=\"(enum)3\" connPtr=\"000000007d8574c0\" protocol=\"(enum)0\"",
-0,
-},
-{
-"KillConnection conn=\"000000007d8587e0\" state=\"(enum)6\"",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Connecting conn=\"(enum)3\" connPtr=\"0000000113ce90b0\" protocol=\"(enum)0\"",
-0,
-},
-{
-"KillConnection conn=\"000000007d8574c0\" state=\"(enum)6\"",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
+"Successfully instantiated mirrored storage object",
 0,
 },
 {
@@ -911,47 +907,11 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Connecting conn=\"(enum)3\" connPtr=\"0000000113cbd3d0\" protocol=\"(enum)0\"",
+"Connecting conn=\"(enum)3\" connPtr=\"0000000085ded3c0\" protocol=\"(enum)0\"",
 0,
 },
 {
-"KillConnection conn=\"0000000113ce90b0\" state=\"(enum)6\"",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Time set to 8/15/2026 (Sat) 17:09",
-0,
-},
-{
-"Time set to 8/15/2026 (Sat) 17:09",
-0,
-},
-{
-"World transfer pending...",
-0,
-},
-{
-"Connecting conn=\"(enum)3\" connPtr=\"000000011af69ca0\" protocol=\"(enum)0\"",
-0,
-},
-{
-"KillConnection conn=\"0000000113cbd3d0\" state=\"(enum)6\"",
-0,
-},
-{
-"World transfer pending...",
-0,
-},
-{
-"Connecting conn=\"(enum)3\" connPtr=\"00000001ba339a30\" protocol=\"(enum)0\"",
-0,
-},
-{
-"KillConnection conn=\"000000011af69ca0\" state=\"(enum)6\"",
+"KillConnection conn=\"000000007dfb4f10\" state=\"(enum)6\"",
 0,
 },
 {
@@ -959,7 +919,7 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Sending ping results from timeout timeoutNs=\"23887237184700\" nowNs=\"23887241716800\"",
+"Dissolve Effect ID 306 has invalid fade out time. This will result in the record beign ignore and a regular fade out being applied to the creature.",
 0,
 },
 {
@@ -967,19 +927,15 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Connecting conn=\"(enum)3\" connPtr=\"0000000086059300\" protocol=\"(enum)0\"",
+"Connecting conn=\"(enum)3\" connPtr=\"00000001d754fac0\" protocol=\"(enum)0\"",
 0,
 },
 {
-"KillConnection conn=\"00000001ba339a30\" state=\"(enum)6\"",
+"KillConnection conn=\"0000000085ded3c0\" state=\"(enum)6\"",
 0,
 },
 {
 "Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"KillConnection conn=\"0000000086059300\" state=\"(enum)7\"",
 0,
 },
 {
@@ -991,19 +947,11 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Resume()",
+"LimitedLuaResources: Reset All",
 0,
 },
 {
-"Screen invalid. Changing from=\"none\" to=\"charselect\"",
-0,
-},
-{
-"Switching to screen=\"CharacterSelect\" (from \"none\")",
-0,
-},
-{
-"From EnsureValidScreen",
+"Successfully instantiated mirrored storage object",
 0,
 },
 {
@@ -1011,7 +959,15 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Suspend()",
+"LimitedLuaResources: Reset Timer",
+0,
+},
+{
+"LimitedLuaResources: Reset All",
+0,
+},
+{
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
@@ -1019,51 +975,91 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Attempted to register existing command: SetDifficulty",
+"LimitedLuaResources: Reset All",
 0,
 },
 {
-"Connecting conn=\"(enum)3\" connPtr=\"000000011afa11a0\" protocol=\"(enum)0\"",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Proficiency in item class 2 set to 0x0000008000",
+"LimitedLuaResources: Reset Timer",
 0,
 },
 {
-"Proficiency in item class 4 set to 0x0000000021",
+"LimitedLuaResources: Reset All",
 0,
 },
 {
-"Proficiency in item class 2 set to 0x000000c000",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Proficiency in item class 2 set to 0x000000c400",
+"LimitedLuaResources: Reset Timer",
 0,
 },
 {
-"Proficiency in item class 2 set to 0x000010c400",
+"LimitedLuaResources: Reset All",
 0,
 },
 {
-"Proficiency in item class 2 set to 0x000010c410",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Proficiency in item class 4 set to 0x0000000023",
+"LimitedLuaResources: Reset Timer",
 0,
 },
 {
-"Proficiency in item class 2 set to 0x000018c410",
+"LimitedLuaResources: Reset All",
 0,
 },
 {
-"Proficiency in item class 2 set to 0x000018c410",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Proficiency in item class 4 set to 0x0000000023",
+"LimitedLuaResources: Reset Timer",
+0,
+},
+{
+"LimitedLuaResources: Reset All",
+0,
+},
+{
+"-------------------------------------------------- Previous Session --------------------------------------------------",
+0,
+},
+{
+"LimitedLuaResources: Reset Timer",
+0,
+},
+{
+"LimitedLuaResources: Reset All",
+0,
+},
+{
+"-------------------------------------------------- Previous Session --------------------------------------------------",
+0,
+},
+{
+"LimitedLuaResources: Reset Timer",
+0,
+},
+{
+"LimitedLuaResources: Reset All",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Connecting conn=\"(enum)3\" connPtr=\"00000001eb4f0e70\" protocol=\"(enum)0\"",
+0,
+},
+{
+"KillConnection conn=\"00000001d754fac0\" state=\"(enum)6\"",
 0,
 },
 {
@@ -1071,19 +1067,19 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Time set to 8/15/2026 (Sat) 17:30",
+"Dissolve Effect ID 306 has invalid fade out time. This will result in the record beign ignore and a regular fade out being applied to the creature.",
 0,
 },
 {
-"Gamespeed set from 0.017 to 0.017",
+"World transfer pending...",
 0,
 },
 {
-"Connecting conn=\"(enum)3\" connPtr=\"000000012c801400\" protocol=\"(enum)0\"",
+"Connecting conn=\"(enum)3\" connPtr=\"0000000115635760\" protocol=\"(enum)0\"",
 0,
 },
 {
-"KillConnection conn=\"000000011afa11a0\" state=\"(enum)6\"",
+"KillConnection conn=\"00000001eb4f0e70\" state=\"(enum)6\"",
 0,
 },
 {
@@ -1091,7 +1087,547 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"KillConnection conn=\"000000012c801400\" state=\"(enum)7\"",
+"Sending ping results from timeout timeoutNs=\"41174294532300\" nowNs=\"41174298577700\"",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Connecting conn=\"(enum)3\" connPtr=\"00000001d71f8680\" protocol=\"(enum)0\"",
+0,
+},
+{
+"KillConnection conn=\"0000000115635760\" state=\"(enum)6\"",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Dissolve Effect ID 306 has invalid fade out time. This will result in the record beign ignore and a regular fade out being applied to the creature.",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Connecting conn=\"(enum)3\" connPtr=\"000000007dce1c20\" protocol=\"(enum)0\"",
+0,
+},
+{
+"KillConnection conn=\"00000001d71f8680\" state=\"(enum)6\"",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"-------------------------------------------------- Previous Session --------------------------------------------------",
+0,
+},
+{
+"LimitedLuaResources: Reset Timer",
+0,
+},
+{
+"LimitedLuaResources: Reset All",
+0,
+},
+{
+"Successfully instantiated mirrored storage object",
+0,
+},
+{
+"GameTimeSync: skipping forwards 3 game minutes, (current = 8/24/2026 (Mon) 16:56, newtime = 8/24/2026 (Mon) 16:59)",
+0,
+},
+{
+"Sending ping results from timeout timeoutNs=\"42974276956800\" nowNs=\"42974286504600\"",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Connecting conn=\"(enum)3\" connPtr=\"00000001eb4f23d0\" protocol=\"(enum)0\"",
+0,
+},
+{
+"KillConnection conn=\"000000007dce1c20\" state=\"(enum)6\"",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Connecting conn=\"(enum)3\" connPtr=\"00000000961eb160\" protocol=\"(enum)0\"",
+0,
+},
+{
+"KillConnection conn=\"00000001eb4f23d0\" state=\"(enum)6\"",
+0,
+},
+{
+"Successfully instantiated mirrored storage object",
+0,
+},
+{
+"ClientHousingOpenCornerstoneUIResponse plotID=\"20\" result=\"Success\"",
+0,
+},
+{
+"UpdateNeighborhoodUIData neighborhoodGUID=\"Housing-4-1-0-AA9E\" neighborhoodName=\"71-73-74\" owner=\"0000000000000000\" isPublic=\"YES\"",
+0,
+},
+{
+"Time set to 8/24/2026 (Mon) 17:17",
+0,
+},
+{
+"Time set to 8/24/2026 (Mon) 17:17",
+0,
+},
+{
+"Set house level houseLevel=\"7\"",
+0,
+},
+{
+"Time set to 8/24/2026 (Mon) 17:18",
+0,
+},
+{
+"Time set to 8/24/2026 (Mon) 17:18",
+0,
+},
+{
+"UpdateNeighborhoodUIData neighborhoodGUID=\"Housing-4-1-0-AA9E\" neighborhoodName=\"71-73-74\" owner=\"0000000000000000\" isPublic=\"YES\"",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Connecting conn=\"(enum)3\" connPtr=\"00000001d7fb1100\" protocol=\"(enum)0\"",
+0,
+},
+{
+"KillConnection conn=\"00000000961eb160\" state=\"(enum)6\"",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"GetAllSpentDecorBudgetsForHouse: Not tracking local player storage, requesting to start tracking",
+0,
+},
+{
+"GetAllSpentDecorBudgetsForHouse failed: Should be tracking local player storage, but tracking may not have started yet",
+0,
+},
+{
+"GetAllSpentDecorBudgetsForHouse failed: Should be tracking local player storage, but tracking may not have started yet",
+0,
+},
+{
+"Successfully instantiated mirrored storage object",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Connecting conn=\"(enum)3\" connPtr=\"00000001eb526c50\" protocol=\"(enum)0\"",
+0,
+},
+{
+"KillConnection conn=\"00000001d7fb1100\" state=\"(enum)6\"",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Connecting conn=\"(enum)3\" connPtr=\"0000000113294540\" protocol=\"(enum)0\"",
+0,
+},
+{
+"KillConnection conn=\"00000001eb526c50\" state=\"(enum)6\"",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Connecting conn=\"(enum)3\" connPtr=\"000000003ea0ce90\" protocol=\"(enum)0\"",
+0,
+},
+{
+"KillConnection conn=\"0000000113294540\" state=\"(enum)6\"",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Connecting conn=\"(enum)3\" connPtr=\"00000001d71f7090\" protocol=\"(enum)0\"",
+0,
+},
+{
+"KillConnection conn=\"000000003ea0ce90\" state=\"(enum)6\"",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Time set to 8/24/2026 (Mon) 17:38",
+0,
+},
+{
+"Time set to 8/24/2026 (Mon) 17:38",
+0,
+},
+{
+"Time set to 8/24/2026 (Mon) 17:39",
+0,
+},
+{
+"Time set to 8/24/2026 (Mon) 17:39",
+0,
+},
+{
+"Changed difficulty successfully",
+0,
+},
+{
+"Sending ping results from timeout timeoutNs=\"44774228882300\" nowNs=\"44774229191500\"",
+0,
+},
+{
+"Completed challenge mode mapID 1877, level 8, time 1463245",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Connecting conn=\"(enum)3\" connPtr=\"00000001eb4f54d0\" protocol=\"(enum)0\"",
+0,
+},
+{
+"KillConnection conn=\"00000001d71f7090\" state=\"(enum)6\"",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Connecting conn=\"(enum)3\" connPtr=\"000000007dfb4260\" protocol=\"(enum)0\"",
+0,
+},
+{
+"KillConnection conn=\"00000001eb4f54d0\" state=\"(enum)6\"",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Connecting conn=\"(enum)3\" connPtr=\"00000001eb503720\" protocol=\"(enum)0\"",
+0,
+},
+{
+"KillConnection conn=\"000000007dfb4260\" state=\"(enum)6\"",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Connecting conn=\"(enum)3\" connPtr=\"000000007de276e0\" protocol=\"(enum)0\"",
+0,
+},
+{
+"KillConnection conn=\"00000001eb503720\" state=\"(enum)6\"",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Connecting conn=\"(enum)3\" connPtr=\"00000001d7872f80\" protocol=\"(enum)0\"",
+0,
+},
+{
+"KillConnection conn=\"000000007de276e0\" state=\"(enum)6\"",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Time set to 8/24/2026 (Mon) 18:11",
+0,
+},
+{
+"Time set to 8/24/2026 (Mon) 18:11",
+0,
+},
+{
+"Time set to 8/24/2026 (Mon) 18:11",
+0,
+},
+{
+"Time set to 8/24/2026 (Mon) 18:11",
+0,
+},
+{
+"Sending ping results from timeout timeoutNs=\"46574222621500\" nowNs=\"46574223735000\"",
+0,
+},
+{
+"Changed difficulty successfully",
+0,
+},
+{
+"Sending ping results from timeout timeoutNs=\"48374118605800\" nowNs=\"48374121346500\"",
+0,
+},
+{
+"Completed challenge mode mapID 1762, level 10, time 2162238",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Connecting conn=\"(enum)3\" connPtr=\"00000001376738d0\" protocol=\"(enum)0\"",
+0,
+},
+{
+"KillConnection conn=\"00000001d7872f80\" state=\"(enum)6\"",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Time set to 8/24/2026 (Mon) 18:49",
+0,
+},
+{
+"Time set to 8/24/2026 (Mon) 18:49",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Connecting conn=\"(enum)3\" connPtr=\"00000001d7b02850\" protocol=\"(enum)0\"",
+0,
+},
+{
+"KillConnection conn=\"00000001376738d0\" state=\"(enum)6\"",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Connecting conn=\"(enum)3\" connPtr=\"000000003e9caa20\" protocol=\"(enum)0\"",
+0,
+},
+{
+"KillConnection conn=\"00000001d7b02850\" state=\"(enum)6\"",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Time set to 8/24/2026 (Mon) 19:01",
+0,
+},
+{
+"Time set to 8/24/2026 (Mon) 19:01",
+0,
+},
+{
+"Time set to 8/24/2026 (Mon) 19:01",
+0,
+},
+{
+"Time set to 8/24/2026 (Mon) 19:01",
+0,
+},
+{
+"Time set to 8/24/2026 (Mon) 19:01",
+0,
+},
+{
+"Time set to 8/24/2026 (Mon) 19:01",
+0,
+},
+{
+"Changed difficulty successfully",
+0,
+},
+{
+"Sending ping results from timeout timeoutNs=\"50174190551500\" nowNs=\"50174192242500\"",
+0,
+},
+{
+"Completed challenge mode mapID 2859, level 10, time 1477573",
+0,
+},
+{
+"Successfully instantiated mirrored storage object",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Connecting conn=\"(enum)3\" connPtr=\"00000001d7fb1730\" protocol=\"(enum)0\"",
+0,
+},
+{
+"KillConnection conn=\"000000003e9caa20\" state=\"(enum)6\"",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Connecting conn=\"(enum)3\" connPtr=\"00000001e64b98c0\" protocol=\"(enum)0\"",
+0,
+},
+{
+"KillConnection conn=\"00000001d7fb1730\" state=\"(enum)6\"",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Connecting conn=\"(enum)3\" connPtr=\"00000001d7f8c1e0\" protocol=\"(enum)0\"",
+0,
+},
+{
+"KillConnection conn=\"00000001e64b98c0\" state=\"(enum)6\"",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Time set to 8/24/2026 (Mon) 19:32",
+0,
+},
+{
+"Time set to 8/24/2026 (Mon) 19:32",
+0,
+},
+{
+"Time set to 8/24/2026 (Mon) 19:33",
+0,
+},
+{
+"Time set to 8/24/2026 (Mon) 19:33",
+0,
+},
+{
+"Time set to 8/24/2026 (Mon) 19:34",
+0,
+},
+{
+"Time set to 8/24/2026 (Mon) 19:34",
+0,
+},
+{
+"Changed difficulty successfully",
+0,
+},
+{
+"Sending ping results from timeout timeoutNs=\"51974315106700\" nowNs=\"51974315236300\"",
+0,
+},
+{
+"Completed challenge mode mapID 2993, level 10, time 1518292",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Connecting conn=\"(enum)3\" connPtr=\"00000001d721ca60\" protocol=\"(enum)0\"",
+0,
+},
+{
+"KillConnection conn=\"00000001d7f8c1e0\" state=\"(enum)6\"",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Successfully instantiated mirrored storage object",
+0,
+},
+{
+"Sending ping results from timeout timeoutNs=\"53774207287400\" nowNs=\"53774212762500\"",
+0,
+},
+{
+"KillConnection conn=\"00000001d721ca60\" state=\"(enum)7\"",
 0,
 },
 {
@@ -1375,94 +1911,6 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"LimitedLuaResources: Enabled = false",
-0,
-},
-{
-"LimitedLuaResources: Enabled = false",
-0,
-},
-{
-"LimitedLuaResources: Addon capacity for Frame changed to 10000",
-0,
-},
-{
-"LimitedLuaResources: Addon capacity for Frame changed to 10000",
-0,
-},
-{
-"LimitedLuaResources: Addon capacity for Font changed to 300",
-0,
-},
-{
-"LimitedLuaResources: Addon capacity for Font changed to 300",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for AnimGroup changed to 20000",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for AnimGroup changed to 20000",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for Frame changed to 100000",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for Frame changed to 100000",
-0,
-},
-{
-"LimitedLuaResources: Addon capacity for Texture changed to 40000",
-0,
-},
-{
-"LimitedLuaResources: Addon capacity for Texture changed to 40000",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for FontString changed to 50000",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for FontString changed to 50000",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for Animation changed to 50000",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for Animation changed to 50000",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for Texture changed to 400000",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for Texture changed to 400000",
-0,
-},
-{
-"LimitedLuaResources: Addon capacity for Animation changed to 5000",
-0,
-},
-{
-"LimitedLuaResources: Addon capacity for Animation changed to 5000",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for Timer changed to 500",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for Timer changed to 500",
-0,
-},
-{
 "LimitedLuaResources: Addon capacity for AnimGroup changed to 2000",
 0,
 },
@@ -1479,11 +1927,91 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
+"LimitedLuaResources: Global capacity for Frame changed to 100000",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for Frame changed to 100000",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for Font changed to 300",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for Font changed to 300",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for Timer changed to 500",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for Timer changed to 500",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for Animation changed to 50000",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for Animation changed to 50000",
+0,
+},
+{
 "LimitedLuaResources: Addon capacity for Timer changed to 500",
 0,
 },
 {
 "LimitedLuaResources: Addon capacity for Timer changed to 500",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for Texture changed to 400000",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for Texture changed to 400000",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for FontString changed to 50000",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for FontString changed to 50000",
+0,
+},
+{
+"LimitedLuaResources: Enabled = false",
+0,
+},
+{
+"LimitedLuaResources: Enabled = false",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for AnimGroup changed to 20000",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for AnimGroup changed to 20000",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for Texture changed to 40000",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for Texture changed to 40000",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for Animation changed to 5000",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for Animation changed to 5000",
 0,
 },
 {
@@ -1492,6 +2020,14 @@ Blizzard_Console_SavedVars = {
 },
 {
 "LimitedLuaResources: Global capacity for Font changed to 3000",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for Frame changed to 10000",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for Frame changed to 10000",
 0,
 },
 {
@@ -1563,11 +2099,7 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"BG code=\"ERROR_OK (0)\"",
-0,
-},
-{
-"BGS_ code=\"ERROR_OK (0)\" name=\"WoW5\" numGameAccounts=\"8\" numGameAccountNames=\"0\"",
+"BGS_ code=\"ERROR_OK (0)\" name=\"WoW3\" numGameAccounts=\"8\" numGameAccountNames=\"0\"",
 0,
 },
 {
@@ -1575,15 +2107,11 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"BGS_ code=\"ERROR_OK (0)\" name=\"WoW3\" numGameAccounts=\"8\" numGameAccountNames=\"1\"",
+"BGS_ code=\"ERROR_OK (0)\" name=\"WoW6\" numGameAccounts=\"8\" numGameAccountNames=\"1\"",
 0,
 },
 {
-"BGS_ACCO code=\"ERROR_OK (0)\"",
-0,
-},
-{
-"BGS_ code=\"ERROR_OK (0)\" name=\"WoW4\" numGameAccounts=\"8\" numGameAccountNames=\"2\"",
+"BGS_ code=\"ERROR_OK (0)\" name=\"WoW7\" numGameAccounts=\"8\" numGameAccountNames=\"2\"",
 0,
 },
 {
@@ -1591,7 +2119,19 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"BGS_ code=\"ERROR_OK (0)\" name=\"ROOTWARRIOR\" numGameAccounts=\"8\" numGameAccountNames=\"4\"",
+"BGS_ code=\"ERROR_OK (0)\" name=\"WoW4\" numGameAccounts=\"8\" numGameAccountNames=\"4\"",
+0,
+},
+{
+"BGS_ code=\"ERROR_OK (0)\" name=\"ROOTWARRIOR\" numGameAccounts=\"8\" numGameAccountNames=\"5\"",
+0,
+},
+{
+"BGS_ code=\"ERROR_OK (0)\" name=\"WoW1\" numGameAccounts=\"8\" numGameAccountNames=\"6\"",
+0,
+},
+{
+"BG code=\"ERROR_OK (0)\"",
 0,
 },
 {
@@ -1599,7 +2139,15 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"BGS_ code=\"ERROR_OK (0)\" name=\"WoW1\" numGameAccounts=\"8\" numGameAccountNames=\"5\"",
+"BGS_ACCO code=\"ERROR_OK (0)\"",
+0,
+},
+{
+"BGS_ACCO code=\"ERROR_OK (0)\"",
+0,
+},
+{
+"BGS_ code=\"ERROR_OK (0)\" name=\"WoW5\" numGameAccounts=\"8\" numGameAccountNames=\"7\"",
 0,
 },
 {
@@ -1619,18 +2167,6 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"BGS_ code=\"ERROR_OK (0)\" name=\"WoW7\" numGameAccounts=\"8\" numGameAccountNames=\"6\"",
-0,
-},
-{
-"BGS_ code=\"ERROR_OK (0)\" name=\"WoW6\" numGameAccounts=\"8\" numGameAccountNames=\"7\"",
-0,
-},
-{
-"BGS_ACCO code=\"ERROR_OK (0)\"",
-0,
-},
-{
 "BGS_ACCO code=\"ERROR_OK (0)\"",
 0,
 },
@@ -1643,7 +2179,7 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Reconnect token saved;  creationTime=\"1786972216\" expirationTime=\"1786986616\"",
+"Reconnect token saved;  creationTime=\"1787660692\" expirationTime=\"1787675092\"",
 0,
 },
 {
@@ -1671,11 +2207,11 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Received last played char code=\" (309)\" subRegion=\"71-1-59\" lastPlayedTime=\"0\" numRegions=\"5\" numRegionsWithData=\"0\" realmPermissions=\"0\" licensesCount=\"0\" realmEntry=\"{\"wowRealmAddress\":0,\"useBleepChance\":0.0,\"cfgTimezonesID\":0,\"populationState\":0,\"cfgCategoriesID\":0,\"version\":{\"versionMajor\":0,\"versionBuild\":0,\"versionMinor\":0,\"versionRevision\":0},\"cfgRealmsID\":0,\"gameServiceRegionId\":0,\"flags\":0,\"name\":\"\",\"cfgConfigsID\":0,\"cfgContentSetID\":0,\"cfgLanguagesID\":0}\"",
+"Received last played char code=\" (309)\" subRegion=\"21-1-50\" lastPlayedTime=\"0\" numRegions=\"5\" numRegionsWithData=\"0\" realmPermissions=\"0\" licensesCount=\"0\" realmEntry=\"{\"wowRealmAddress\":0,\"useBleepChance\":0.0,\"cfgTimezonesID\":0,\"populationState\":0,\"cfgCategoriesID\":0,\"version\":{\"versionMajor\":0,\"versionBuild\":0,\"versionMinor\":0,\"versionRevision\":0},\"cfgRealmsID\":0,\"gameServiceRegionId\":0,\"flags\":0,\"name\":\"\",\"cfgConfigsID\":0,\"cfgContentSetID\":0,\"cfgLanguagesID\":0}\"",
 0,
 },
 {
-"Received last played char code=\" (309)\" subRegion=\"21-1-50\" lastPlayedTime=\"0\" numRegions=\"5\" numRegionsWithData=\"1\" realmPermissions=\"0\" licensesCount=\"0\" realmEntry=\"{\"wowRealmAddress\":0,\"useBleepChance\":0.0,\"cfgTimezonesID\":0,\"populationState\":0,\"cfgCategoriesID\":0,\"version\":{\"versionMajor\":0,\"versionBuild\":0,\"versionMinor\":0,\"versionRevision\":0},\"cfgRealmsID\":0,\"gameServiceRegionId\":0,\"flags\":0,\"name\":\"\",\"cfgConfigsID\":0,\"cfgContentSetID\":0,\"cfgLanguagesID\":0}\"",
+"Received last played char code=\" (309)\" subRegion=\"71-1-59\" lastPlayedTime=\"0\" numRegions=\"5\" numRegionsWithData=\"1\" realmPermissions=\"0\" licensesCount=\"0\" realmEntry=\"{\"wowRealmAddress\":0,\"useBleepChance\":0.0,\"cfgTimezonesID\":0,\"populationState\":0,\"cfgCategoriesID\":0,\"version\":{\"versionMajor\":0,\"versionBuild\":0,\"versionMinor\":0,\"versionRevision\":0},\"cfgRealmsID\":0,\"gameServiceRegionId\":0,\"flags\":0,\"name\":\"\",\"cfgConfigsID\":0,\"cfgContentSetID\":0,\"cfgLanguagesID\":0}\"",
 0,
 },
 {
@@ -1683,7 +2219,7 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Received last played char code=\"ERROR_OK (0)\" subRegion=\"1-1-89\" lastPlayedTime=\"1786840697\" numRegions=\"5\" numRegionsWithData=\"3\" realmPermissions=\"3\" licensesCount=\"1\" realmEntry=\"{\"wowRealmAddress\":16973835,\"useBleepChance\":0.0,\"cfgTimezonesID\":1,\"populationState\":6,\"cfgCategoriesID\":2,\"version\":{\"versionMajor\":12,\"versionBuild\":68914,\"versionMinor\":1,\"versionRevision\":0},\"cfgRealmsID\":11,\"gameServiceRegionId\":1,\"flags\":0,\"name\":\"Tichondrius\",\"cfgConfigsID\":1,\"cfgContentSetID\":0,\"cfgLanguagesID\":1}\"",
+"Received last played char code=\"ERROR_OK (0)\" subRegion=\"1-1-89\" lastPlayedTime=\"1787627980\" numRegions=\"5\" numRegionsWithData=\"3\" realmPermissions=\"3\" licensesCount=\"1\" realmEntry=\"{\"wowRealmAddress\":16973835,\"useBleepChance\":0.0,\"cfgTimezonesID\":1,\"populationState\":6,\"cfgCategoriesID\":2,\"version\":{\"versionMajor\":12,\"versionBuild\":68914,\"versionMinor\":1,\"versionRevision\":0},\"cfgRealmsID\":11,\"gameServiceRegionId\":1,\"flags\":0,\"name\":\"Tichondrius\",\"cfgConfigsID\":1,\"cfgContentSetID\":0,\"cfgLanguagesID\":1}\"",
 0,
 },
 {
@@ -1695,7 +2231,7 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Found most recently played char. Joining realm. lastPlayedRegion=\"1-1-89\" realmAddress=\"16973835\" lastActiveTime=\"1786840697\"",
+"Found most recently played char. Joining realm. lastPlayedRegion=\"1-1-89\" realmAddress=\"16973835\" lastActiveTime=\"1787627980\"",
 0,
 },
 {
@@ -1703,7 +2239,7 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Sending ping results from timeout timeoutNs=\"3007849799900\" nowNs=\"3007857874800\"",
+"Sending ping results from timeout timeoutNs=\"843489483200\" nowNs=\"843497158800\"",
 0,
 },
 {
@@ -1711,7 +2247,7 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Connecting conn=\"(enum)0\" connPtr=\"000000003e09b530\" protocol=\"(enum)0\"",
+"Connecting conn=\"(enum)0\" connPtr=\"000000003e030030\" protocol=\"(enum)0\"",
 0,
 },
 {
@@ -1743,19 +2279,15 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"LimitedLuaResources: Addon capacity for Font changed to 300",
-0,
-},
-{
 "LimitedLuaResources: Global capacity for Frame changed to 100000",
 0,
 },
 {
-"LimitedLuaResources: Addon capacity for Texture changed to 40000",
+"LimitedLuaResources: Global capacity for Font changed to 3000",
 0,
 },
 {
-"LimitedLuaResources: Addon capacity for Frame changed to 10000",
+"LimitedLuaResources: Global capacity for Texture changed to 400000",
 0,
 },
 {
@@ -1767,22 +2299,6 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"LimitedLuaResources: Global capacity for Font changed to 3000",
-0,
-},
-{
-"LimitedLuaResources: Addon capacity for FontString changed to 5000",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for Timer changed to 500",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for FontString changed to 50000",
-0,
-},
-{
 "LimitedLuaResources: Global capacity for Animation changed to 50000",
 0,
 },
@@ -1791,15 +2307,35 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"LimitedLuaResources: Addon capacity for AnimGroup changed to 2000",
+"LimitedLuaResources: Addon capacity for Texture changed to 40000",
 0,
 },
 {
-"LimitedLuaResources: Global capacity for Texture changed to 400000",
+"LimitedLuaResources: Addon capacity for FontString changed to 5000",
 0,
 },
 {
 "LimitedLuaResources: Addon capacity for Animation changed to 5000",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for FontString changed to 50000",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for AnimGroup changed to 2000",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for Frame changed to 10000",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for Timer changed to 500",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for Font changed to 300",
 0,
 },
 {
@@ -1831,7 +2367,7 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Connecting conn=\"(enum)3\" connPtr=\"0000000115d80060\" protocol=\"(enum)0\"",
+"Connecting conn=\"(enum)3\" connPtr=\"00000001215852e0\" protocol=\"(enum)0\"",
 0,
 },
 {
@@ -1855,7 +2391,7 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Proficiency in item class 2 set to 0x000010c410",
+"Proficiency in item class 2 set to 0x000010c480",
 0,
 },
 {
@@ -1863,11 +2399,11 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Proficiency in item class 2 set to 0x000018c410",
+"Proficiency in item class 2 set to 0x000018c480",
 0,
 },
 {
-"Proficiency in item class 2 set to 0x000018c410",
+"Proficiency in item class 2 set to 0x000018c480",
 0,
 },
 {
@@ -1879,7 +2415,7 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Time set to 8/17/2026 (Mon) 6:10",
+"Time set to 8/25/2026 (Tue) 5:25",
 0,
 },
 {
@@ -1887,199 +2423,11 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Connecting conn=\"(enum)3\" connPtr=\"0000000120c9c420\" protocol=\"(enum)0\"",
+"Connecting conn=\"(enum)3\" connPtr=\"0000000127798f80\" protocol=\"(enum)0\"",
 0,
 },
 {
-"KillConnection conn=\"0000000115d80060\" state=\"(enum)6\"",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"DBCache::CancelCallback ignored",
-0,
-},
-{
-"Connecting conn=\"(enum)3\" connPtr=\"00000001154207d0\" protocol=\"(enum)0\"",
-0,
-},
-{
-"KillConnection conn=\"0000000120c9c420\" state=\"(enum)6\"",
-0,
-},
-{
-"Time set to 8/17/2026 (Mon) 6:16",
-0,
-},
-{
-"Time set to 8/17/2026 (Mon) 6:16",
-0,
-},
-{
-"Time set to 8/17/2026 (Mon) 6:16",
-0,
-},
-{
-"Time set to 8/17/2026 (Mon) 6:16",
-0,
-},
-{
-"Connecting conn=\"(enum)3\" connPtr=\"0000000115402b40\" protocol=\"(enum)0\"",
-0,
-},
-{
-"KillConnection conn=\"00000001154207d0\" state=\"(enum)6\"",
-0,
-},
-{
-"Successfully instantiated mirrored storage object",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"LimitedLuaResources: Reset Timer",
-0,
-},
-{
-"LimitedLuaResources: Reset All",
-0,
-},
-{
-"Connecting conn=\"(enum)3\" connPtr=\"000000017b0616d0\" protocol=\"(enum)0\"",
-0,
-},
-{
-"KillConnection conn=\"0000000115402b40\" state=\"(enum)6\"",
-0,
-},
-{
-"Successfully instantiated mirrored storage object",
-0,
-},
-{
-"KillConnection conn=\"000000017b0616d0\" state=\"(enum)7\"",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"LimitedLuaResources: Reset Timer",
-0,
-},
-{
-"Resume()",
-0,
-},
-{
-"Screen invalid. Changing from=\"none\" to=\"charselect\"",
-0,
-},
-{
-"Switching to screen=\"CharacterSelect\" (from \"none\")",
-0,
-},
-{
-"From EnsureValidScreen",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"Suspend()",
-0,
-},
-{
-"LimitedLuaResources: Reset Timer",
-0,
-},
-{
-"Attempted to register existing command: SetDifficulty",
-0,
-},
-{
-"Connecting conn=\"(enum)3\" connPtr=\"0000000120cc1730\" protocol=\"(enum)0\"",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000000001",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000000041",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000021",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000004041",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000004441",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000025",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000006441",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000106441",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000106451",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x00001064d1",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000027",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x00001064d1",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000027",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Time set to 8/17/2026 (Mon) 6:22",
-0,
-},
-{
-"Gamespeed set from 0.017 to 0.017",
-0,
-},
-{
-"Connecting conn=\"(enum)3\" connPtr=\"0000000115d6aa60\" protocol=\"(enum)0\"",
-0,
-},
-{
-"KillConnection conn=\"0000000120cc1730\" state=\"(enum)6\"",
+"KillConnection conn=\"00000001215852e0\" state=\"(enum)6\"",
 0,
 },
 {
@@ -2095,35 +2443,11 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Connecting conn=\"(enum)3\" connPtr=\"00000001b94b7e40\" protocol=\"(enum)0\"",
+"Connecting conn=\"(enum)3\" connPtr=\"0000000127f693c0\" protocol=\"(enum)0\"",
 0,
 },
 {
-"KillConnection conn=\"0000000115d6aa60\" state=\"(enum)6\"",
-0,
-},
-{
-"GetAllSpentDecorBudgetsForHouse failed: Should be tracking local player storage, but tracking may not have started yet",
-0,
-},
-{
-"GetAllSpentDecorBudgetsForHouse failed: Should be tracking local player storage, but tracking may not have started yet",
-0,
-},
-{
-"GetAllSpentDecorBudgetsForHouse failed: Should be tracking local player storage, but tracking may not have started yet",
-0,
-},
-{
-"World transfer pending...",
-0,
-},
-{
-"Connecting conn=\"(enum)3\" connPtr=\"00000001153e84c0\" protocol=\"(enum)0\"",
-0,
-},
-{
-"KillConnection conn=\"00000001b94b7e40\" state=\"(enum)6\"",
+"KillConnection conn=\"0000000127798f80\" state=\"(enum)6\"",
 0,
 },
 {
@@ -2131,23 +2455,7 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"GetAllSpentDecorBudgetsForHouse failed: Should be tracking local player storage, but tracking may not have started yet",
-0,
-},
-{
-"GetAllSpentDecorBudgetsForHouse failed: Should be tracking local player storage, but tracking may not have started yet",
-0,
-},
-{
-"GetAllSpentDecorBudgetsForHouse failed: Should be tracking local player storage, but tracking may not have started yet",
-0,
-},
-{
-"GetAllSpentDecorBudgetsForHouse failed: Should be tracking local player storage, but tracking may not have started yet",
-0,
-},
-{
-"GetAllSpentDecorBudgetsForHouse failed: Should be tracking local player storage, but tracking may not have started yet",
+"Dissolve Effect ID 306 has invalid fade out time. This will result in the record beign ignore and a regular fade out being applied to the creature.",
 0,
 },
 {
@@ -2155,191 +2463,11 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Connecting conn=\"(enum)3\" connPtr=\"0000000120c8a740\" protocol=\"(enum)0\"",
+"Connecting conn=\"(enum)3\" connPtr=\"000000018c4eeef0\" protocol=\"(enum)0\"",
 0,
 },
 {
-"KillConnection conn=\"00000001153e84c0\" state=\"(enum)6\"",
-0,
-},
-{
-"World transfer pending...",
-0,
-},
-{
-"Connecting conn=\"(enum)3\" connPtr=\"000000017b046000\" protocol=\"(enum)0\"",
-0,
-},
-{
-"KillConnection conn=\"0000000120c8a740\" state=\"(enum)6\"",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"World transfer pending...",
-0,
-},
-{
-"Connecting conn=\"(enum)3\" connPtr=\"0000000120c9bbb0\" protocol=\"(enum)0\"",
-0,
-},
-{
-"KillConnection conn=\"000000017b046000\" state=\"(enum)6\"",
-0,
-},
-{
-"World transfer pending...",
-0,
-},
-{
-"Connecting conn=\"(enum)3\" connPtr=\"00000001bc9e3240\" protocol=\"(enum)0\"",
-0,
-},
-{
-"KillConnection conn=\"0000000120c9bbb0\" state=\"(enum)6\"",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"GetAllSpentDecorBudgetsForHouse failed: Should be tracking local player storage, but tracking may not have started yet",
-0,
-},
-{
-"GetAllSpentDecorBudgetsForHouse failed: Should be tracking local player storage, but tracking may not have started yet",
-0,
-},
-{
-"GetAllSpentDecorBudgetsForHouse failed: Should be tracking local player storage, but tracking may not have started yet",
-0,
-},
-{
-"World transfer pending...",
-0,
-},
-{
-"Connecting conn=\"(enum)3\" connPtr=\"00000000e927bb20\" protocol=\"(enum)0\"",
-0,
-},
-{
-"KillConnection conn=\"00000001bc9e3240\" state=\"(enum)6\"",
-0,
-},
-{
-"Successfully instantiated mirrored storage object",
-0,
-},
-{
-"Added house xp to all houses on account xp=\"10\"",
-0,
-},
-{
-"Added house xp to all houses on account xp=\"10\"",
-0,
-},
-{
-"World transfer pending...",
-0,
-},
-{
-"Connecting conn=\"(enum)3\" connPtr=\"000000009f085fe0\" protocol=\"(enum)0\"",
-0,
-},
-{
-"KillConnection conn=\"00000000e927bb20\" state=\"(enum)6\"",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"LimitedLuaResources: Reset Timer",
-0,
-},
-{
-"LimitedLuaResources: Reset All",
-0,
-},
-{
-"Interface/AddOns/HomeBound/HomeBound.toc:1 Couldn't open Interface/AddOns/HomeBound/HomeBound.toc",
-3,
-},
-{
-"Successfully instantiated mirrored storage object",
-0,
-},
-{
-"Sending ping results from timeout timeoutNs=\"4807711411800\" nowNs=\"4807713612200\"",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"LimitedLuaResources: Reset Timer",
-0,
-},
-{
-"LimitedLuaResources: Reset All",
-0,
-},
-{
-"World transfer pending...",
-0,
-},
-{
-"Connecting conn=\"(enum)3\" connPtr=\"00000000e9277940\" protocol=\"(enum)0\"",
-0,
-},
-{
-"KillConnection conn=\"000000009f085fe0\" state=\"(enum)6\"",
-0,
-},
-{
-"Successfully instantiated mirrored storage object",
-0,
-},
-{
-"Added house xp to all houses on account xp=\"10\"",
-0,
-},
-{
-"Added house xp to all houses on account xp=\"10\"",
-0,
-},
-{
-"Added house xp to all houses on account xp=\"10\"",
-0,
-},
-{
-"Added house xp to all houses on account xp=\"10\"",
-0,
-},
-{
-"Added house xp to all houses on account xp=\"10\"",
-0,
-},
-{
-"World transfer pending...",
-0,
-},
-{
-"Connecting conn=\"(enum)3\" connPtr=\"00000000e926d1c0\" protocol=\"(enum)0\"",
-0,
-},
-{
-"KillConnection conn=\"00000000e9277940\" state=\"(enum)6\"",
+"KillConnection conn=\"0000000127f693c0\" state=\"(enum)6\"",
 0,
 },
 {
@@ -2355,11 +2483,63 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Connecting conn=\"(enum)3\" connPtr=\"0000000117c8cf80\" protocol=\"(enum)0\"",
+"Connecting conn=\"(enum)3\" connPtr=\"00000001873f9660\" protocol=\"(enum)0\"",
 0,
 },
 {
-"KillConnection conn=\"00000000e926d1c0\" state=\"(enum)6\"",
+"KillConnection conn=\"000000018c4eeef0\" state=\"(enum)6\"",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Connecting conn=\"(enum)3\" connPtr=\"00000001b6f91390\" protocol=\"(enum)0\"",
+0,
+},
+{
+"KillConnection conn=\"00000001873f9660\" state=\"(enum)6\"",
+0,
+},
+{
+"Connecting conn=\"(enum)3\" connPtr=\"00000001874ad440\" protocol=\"(enum)0\"",
+0,
+},
+{
+"KillConnection conn=\"00000001b6f91390\" state=\"(enum)6\"",
+0,
+},
+{
+"Connecting conn=\"(enum)3\" connPtr=\"00000001b6f97e40\" protocol=\"(enum)0\"",
+0,
+},
+{
+"KillConnection conn=\"00000001874ad440\" state=\"(enum)6\"",
+0,
+},
+{
+"[Airlock] Received PreloadMap Destination MapID:2454, Current MapID:2444, PreviousTransitionID:-1, Position (100.712, 351.989, 70.5287)",
+0,
+},
+{
+"[Airlock] Preload initiated for map 2454",
+0,
+},
+{
+"Connecting conn=\"(enum)3\" connPtr=\"0000000121566fe0\" protocol=\"(enum)0\"",
+0,
+},
+{
+"KillConnection conn=\"00000001b6f97e40\" state=\"(enum)6\"",
+0,
+},
+{
+"[Airlock] Swapping to preloaded map 2454 and unloading map 2444. (Map Table Size 132 larger than budget 8)",
+0,
+},
+{
+"[Airlock] Finished transition to new map 2454",
 0,
 },
 {
@@ -2367,23 +2547,19 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
+"Sending ping results from timeout timeoutNs=\"2643432488200\" nowNs=\"2643436956400\"",
+0,
+},
+{
 "World transfer pending...",
 0,
 },
 {
-"Connecting conn=\"(enum)3\" connPtr=\"000000008422e9c0\" protocol=\"(enum)0\"",
+"Connecting conn=\"(enum)3\" connPtr=\"00000001873aa1e0\" protocol=\"(enum)0\"",
 0,
 },
 {
-"KillConnection conn=\"0000000117c8cf80\" state=\"(enum)6\"",
-0,
-},
-{
-"DBCache::CancelCallback ignored",
-0,
-},
-{
-"Successfully instantiated mirrored storage object",
+"KillConnection conn=\"0000000121566fe0\" state=\"(enum)6\"",
 0,
 },
 {
@@ -2391,27 +2567,7 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Connecting conn=\"(enum)3\" connPtr=\"00000001c0ea0be0\" protocol=\"(enum)0\"",
-0,
-},
-{
-"KillConnection conn=\"000000008422e9c0\" state=\"(enum)6\"",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Connecting conn=\"(enum)3\" connPtr=\"00000001c97d85d0\" protocol=\"(enum)0\"",
-0,
-},
-{
-"KillConnection conn=\"00000001c0ea0be0\" state=\"(enum)6\"",
-0,
-},
-{
-"Successfully instantiated mirrored storage object",
+"Added house xp xp=\"35\"",
 0,
 },
 {
@@ -2419,303 +2575,11 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Connecting conn=\"(enum)3\" connPtr=\"0000000084b18c50\" protocol=\"(enum)0\"",
+"Connecting conn=\"(enum)3\" connPtr=\"00000001132674c0\" protocol=\"(enum)0\"",
 0,
 },
 {
-"KillConnection conn=\"00000001c97d85d0\" state=\"(enum)6\"",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"World transfer pending...",
-0,
-},
-{
-"Connecting conn=\"(enum)3\" connPtr=\"0000000115d6ea40\" protocol=\"(enum)0\"",
-0,
-},
-{
-"KillConnection conn=\"0000000084b18c50\" state=\"(enum)6\"",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Successfully instantiated mirrored storage object",
-0,
-},
-{
-"Added house xp to all houses on account xp=\"10\"",
-0,
-},
-{
-"World transfer pending...",
-0,
-},
-{
-"Connecting conn=\"(enum)3\" connPtr=\"00000000e9284820\" protocol=\"(enum)0\"",
-0,
-},
-{
-"KillConnection conn=\"0000000115d6ea40\" state=\"(enum)6\"",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Successfully instantiated mirrored storage object",
-0,
-},
-{
-"World transfer pending...",
-0,
-},
-{
-"Connecting conn=\"(enum)3\" connPtr=\"000000018d46a7c0\" protocol=\"(enum)0\"",
-0,
-},
-{
-"KillConnection conn=\"00000000e9284820\" state=\"(enum)6\"",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Successfully instantiated mirrored storage object",
-0,
-},
-{
-"World transfer pending...",
-0,
-},
-{
-"Connecting conn=\"(enum)3\" connPtr=\"0000000115416d90\" protocol=\"(enum)0\"",
-0,
-},
-{
-"KillConnection conn=\"000000018d46a7c0\" state=\"(enum)6\"",
-0,
-},
-{
-"Successfully instantiated mirrored storage object",
-0,
-},
-{
-"World transfer pending...",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Sending ping results from timeout timeoutNs=\"6607697140800\" nowNs=\"6607697277200\"",
-0,
-},
-{
-"Successfully instantiated mirrored storage object",
-0,
-},
-{
-"World transfer pending...",
-0,
-},
-{
-"Connecting conn=\"(enum)3\" connPtr=\"00000001266a4440\" protocol=\"(enum)0\"",
-0,
-},
-{
-"KillConnection conn=\"0000000115416d90\" state=\"(enum)6\"",
-0,
-},
-{
-"UpdateNeighborhoodUIData neighborhoodGUID=\"Housing-4-2-8455-2C57\" neighborhoodName=\"THE MOVE\" owner=\"Guild-11-000004D1BC12\" isPublic=\"NO\"",
-0,
-},
-{
-"UpdateNeighborhoodUIData neighborhoodGUID=\"Housing-4-2-8455-2C57\" neighborhoodName=\"THE MOVE\" owner=\"Guild-11-000004D1BC12\" isPublic=\"NO\"",
-0,
-},
-{
-"UpdateNeighborhoodUIData neighborhoodGUID=\"Housing-4-2-8455-2C57\" neighborhoodName=\"THE MOVE\" owner=\"Guild-11-000004D1BC12\" isPublic=\"NO\"",
-0,
-},
-{
-"UpdateNeighborhoodUIData neighborhoodGUID=\"Housing-4-2-8455-2C57\" neighborhoodName=\"THE MOVE\" owner=\"Guild-11-000004D1BC12\" isPublic=\"NO\"",
-0,
-},
-{
-"UpdateNeighborhoodUIData neighborhoodGUID=\"Housing-4-2-8455-2C57\" neighborhoodName=\"THE MOVE\" owner=\"Guild-11-000004D1BC12\" isPublic=\"NO\"",
-0,
-},
-{
-"UpdateNeighborhoodUIData neighborhoodGUID=\"Housing-4-2-8455-2C57\" neighborhoodName=\"THE MOVE\" owner=\"Guild-11-000004D1BC12\" isPublic=\"NO\"",
-0,
-},
-{
-"UpdateNeighborhoodUIData neighborhoodGUID=\"Housing-4-2-8455-2C57\" neighborhoodName=\"THE MOVE\" owner=\"Guild-11-000004D1BC12\" isPublic=\"NO\"",
-0,
-},
-{
-"UpdateNeighborhoodUIData neighborhoodGUID=\"Housing-4-2-8455-2C57\" neighborhoodName=\"THE MOVE\" owner=\"Guild-11-000004D1BC12\" isPublic=\"NO\"",
-0,
-},
-{
-"UpdateNeighborhoodUIData neighborhoodGUID=\"Housing-4-2-8455-2C57\" neighborhoodName=\"THE MOVE\" owner=\"Guild-11-000004D1BC12\" isPublic=\"NO\"",
-0,
-},
-{
-"Successfully instantiated mirrored storage object",
-0,
-},
-{
-"UpdateNeighborhoodUIData neighborhoodGUID=\"Housing-4-2-8455-2C57\" neighborhoodName=\"THE MOVE\" owner=\"Guild-11-000004D1BC12\" isPublic=\"NO\"",
-0,
-},
-{
-"UpdateNeighborhoodUIData neighborhoodGUID=\"Housing-4-2-8455-2C57\" neighborhoodName=\"THE MOVE\" owner=\"Guild-11-000004D1BC12\" isPublic=\"NO\"",
-0,
-},
-{
-"UpdateNeighborhoodUIData neighborhoodGUID=\"Housing-4-2-8455-2C57\" neighborhoodName=\"THE MOVE\" owner=\"Guild-11-000004D1BC12\" isPublic=\"NO\"",
-0,
-},
-{
-"UpdateNeighborhoodUIData neighborhoodGUID=\"Housing-4-2-8455-2C57\" neighborhoodName=\"THE MOVE\" owner=\"Guild-11-000004D1BC12\" isPublic=\"NO\"",
-0,
-},
-{
-"UpdateNeighborhoodUIData neighborhoodGUID=\"Housing-4-2-8455-2C57\" neighborhoodName=\"THE MOVE\" owner=\"Guild-11-000004D1BC12\" isPublic=\"NO\"",
-0,
-},
-{
-"UpdateNeighborhoodUIData neighborhoodGUID=\"Housing-4-2-8455-2C57\" neighborhoodName=\"THE MOVE\" owner=\"Guild-11-000004D1BC12\" isPublic=\"NO\"",
-0,
-},
-{
-"UpdateNeighborhoodUIData neighborhoodGUID=\"Housing-4-2-8455-2C57\" neighborhoodName=\"THE MOVE\" owner=\"Guild-11-000004D1BC12\" isPublic=\"NO\"",
-0,
-},
-{
-"UpdateNeighborhoodUIData neighborhoodGUID=\"Housing-4-2-8455-2C57\" neighborhoodName=\"THE MOVE\" owner=\"Guild-11-000004D1BC12\" isPublic=\"NO\"",
-0,
-},
-{
-"UpdateNeighborhoodUIData neighborhoodGUID=\"Housing-4-2-8455-2C57\" neighborhoodName=\"THE MOVE\" owner=\"Guild-11-000004D1BC12\" isPublic=\"NO\"",
-0,
-},
-{
-"UpdateNeighborhoodUIData neighborhoodGUID=\"Housing-4-2-8455-2C57\" neighborhoodName=\"THE MOVE\" owner=\"Guild-11-000004D1BC12\" isPublic=\"NO\"",
-0,
-},
-{
-"UpdateNeighborhoodUIData neighborhoodGUID=\"Housing-4-2-8455-2C57\" neighborhoodName=\"THE MOVE\" owner=\"Guild-11-000004D1BC12\" isPublic=\"NO\"",
-0,
-},
-{
-"UpdateNeighborhoodUIData neighborhoodGUID=\"Housing-4-2-8455-2C57\" neighborhoodName=\"THE MOVE\" owner=\"Guild-11-000004D1BC12\" isPublic=\"NO\"",
-0,
-},
-{
-"UpdateNeighborhoodUIData neighborhoodGUID=\"Housing-4-2-8455-2C57\" neighborhoodName=\"THE MOVE\" owner=\"Guild-11-000004D1BC12\" isPublic=\"NO\"",
-0,
-},
-{
-"UpdateNeighborhoodUIData neighborhoodGUID=\"Housing-4-2-8455-2C57\" neighborhoodName=\"THE MOVE\" owner=\"Guild-11-000004D1BC12\" isPublic=\"NO\"",
-0,
-},
-{
-"UpdateNeighborhoodUIData neighborhoodGUID=\"Housing-4-2-8455-2C57\" neighborhoodName=\"THE MOVE\" owner=\"Guild-11-000004D1BC12\" isPublic=\"NO\"",
-0,
-},
-{
-"UpdateNeighborhoodUIData neighborhoodGUID=\"Housing-4-2-8455-2C57\" neighborhoodName=\"THE MOVE\" owner=\"Guild-11-000004D1BC12\" isPublic=\"NO\"",
-0,
-},
-{
-"UpdateNeighborhoodUIData neighborhoodGUID=\"Housing-4-2-8455-2C57\" neighborhoodName=\"THE MOVE\" owner=\"Guild-11-000004D1BC12\" isPublic=\"NO\"",
-0,
-},
-{
-"UpdateNeighborhoodUIData neighborhoodGUID=\"Housing-4-2-8455-2C57\" neighborhoodName=\"THE MOVE\" owner=\"Guild-11-000004D1BC12\" isPublic=\"NO\"",
-0,
-},
-{
-"UpdateNeighborhoodUIData neighborhoodGUID=\"Housing-4-2-8455-2C57\" neighborhoodName=\"THE MOVE\" owner=\"Guild-11-000004D1BC12\" isPublic=\"NO\"",
-0,
-},
-{
-"UpdateNeighborhoodUIData neighborhoodGUID=\"Housing-4-2-8455-2C57\" neighborhoodName=\"THE MOVE\" owner=\"Guild-11-000004D1BC12\" isPublic=\"NO\"",
-0,
-},
-{
-"UpdateNeighborhoodUIData neighborhoodGUID=\"Housing-4-2-8455-2C57\" neighborhoodName=\"THE MOVE\" owner=\"Guild-11-000004D1BC12\" isPublic=\"NO\"",
-0,
-},
-{
-"UpdateNeighborhoodUIData neighborhoodGUID=\"Housing-4-2-8455-2C57\" neighborhoodName=\"THE MOVE\" owner=\"Guild-11-000004D1BC12\" isPublic=\"NO\"",
-0,
-},
-{
-"UpdateNeighborhoodUIData neighborhoodGUID=\"Housing-4-2-8455-2C57\" neighborhoodName=\"THE MOVE\" owner=\"Guild-11-000004D1BC12\" isPublic=\"NO\"",
-0,
-},
-{
-"UpdateNeighborhoodUIData neighborhoodGUID=\"Housing-4-2-8455-2C57\" neighborhoodName=\"THE MOVE\" owner=\"Guild-11-000004D1BC12\" isPublic=\"NO\"",
-0,
-},
-{
-"World transfer pending...",
-0,
-},
-{
-"Connecting conn=\"(enum)3\" connPtr=\"00000001c97e87f0\" protocol=\"(enum)0\"",
-0,
-},
-{
-"KillConnection conn=\"00000001266a4440\" state=\"(enum)6\"",
-0,
-},
-{
-"Successfully instantiated mirrored storage object",
-0,
-},
-{
-"Added house xp to all houses on account xp=\"10\"",
-0,
-},
-{
-"Added house xp to all houses on account xp=\"10\"",
-0,
-},
-{
-"Added house xp to all houses on account xp=\"10\"",
-0,
-},
-{
-"Added house xp to all houses on account xp=\"10\"",
-0,
-},
-{
-"World transfer pending...",
-0,
-},
-{
-"Connecting conn=\"(enum)3\" connPtr=\"00000001c0e8e3c0\" protocol=\"(enum)0\"",
-0,
-},
-{
-"KillConnection conn=\"00000001c97e87f0\" state=\"(enum)6\"",
+"KillConnection conn=\"00000001873aa1e0\" state=\"(enum)6\"",
 0,
 },
 {
@@ -2739,39 +2603,7 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"LimitedLuaResources: Reset Timer",
-0,
-},
-{
-"LimitedLuaResources: Reset All",
-0,
-},
-{
-"Sending ping results from timeout timeoutNs=\"8407654849300\" nowNs=\"8407662399200\"",
-0,
-},
-{
-"GameTimeSync: skipping forwards 2 game minutes, (current = 8/17/2026 (Mon) 7:47, newtime = 8/17/2026 (Mon) 7:49)",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"LimitedLuaResources: Reset Timer",
-0,
-},
-{
-"LimitedLuaResources: Reset All",
-0,
-},
-{
-"KillConnection conn=\"00000001c0e8e3c0\" state=\"(enum)7\"",
+"KillConnection conn=\"00000001132674c0\" state=\"(enum)7\"",
 0,
 },
 {
@@ -3055,94 +2887,6 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"LimitedLuaResources: Enabled = false",
-0,
-},
-{
-"LimitedLuaResources: Enabled = false",
-0,
-},
-{
-"LimitedLuaResources: Addon capacity for Frame changed to 10000",
-0,
-},
-{
-"LimitedLuaResources: Addon capacity for Frame changed to 10000",
-0,
-},
-{
-"LimitedLuaResources: Addon capacity for Font changed to 300",
-0,
-},
-{
-"LimitedLuaResources: Addon capacity for Font changed to 300",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for AnimGroup changed to 20000",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for AnimGroup changed to 20000",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for Frame changed to 100000",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for Frame changed to 100000",
-0,
-},
-{
-"LimitedLuaResources: Addon capacity for Texture changed to 40000",
-0,
-},
-{
-"LimitedLuaResources: Addon capacity for Texture changed to 40000",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for FontString changed to 50000",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for FontString changed to 50000",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for Animation changed to 50000",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for Animation changed to 50000",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for Texture changed to 400000",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for Texture changed to 400000",
-0,
-},
-{
-"LimitedLuaResources: Addon capacity for Animation changed to 5000",
-0,
-},
-{
-"LimitedLuaResources: Addon capacity for Animation changed to 5000",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for Timer changed to 500",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for Timer changed to 500",
-0,
-},
-{
 "LimitedLuaResources: Addon capacity for AnimGroup changed to 2000",
 0,
 },
@@ -3159,11 +2903,91 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
+"LimitedLuaResources: Global capacity for Frame changed to 100000",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for Frame changed to 100000",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for Font changed to 300",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for Font changed to 300",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for Timer changed to 500",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for Timer changed to 500",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for Animation changed to 50000",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for Animation changed to 50000",
+0,
+},
+{
 "LimitedLuaResources: Addon capacity for Timer changed to 500",
 0,
 },
 {
 "LimitedLuaResources: Addon capacity for Timer changed to 500",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for Texture changed to 400000",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for Texture changed to 400000",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for FontString changed to 50000",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for FontString changed to 50000",
+0,
+},
+{
+"LimitedLuaResources: Enabled = false",
+0,
+},
+{
+"LimitedLuaResources: Enabled = false",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for AnimGroup changed to 20000",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for AnimGroup changed to 20000",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for Texture changed to 40000",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for Texture changed to 40000",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for Animation changed to 5000",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for Animation changed to 5000",
 0,
 },
 {
@@ -3172,6 +2996,14 @@ Blizzard_Console_SavedVars = {
 },
 {
 "LimitedLuaResources: Global capacity for Font changed to 3000",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for Frame changed to 10000",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for Frame changed to 10000",
 0,
 },
 {
@@ -3243,7 +3075,15 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"BGS_ code=\"ERROR_OK (0)\" name=\"WoW5\" numGameAccounts=\"8\" numGameAccountNames=\"0\"",
+"BGS_ code=\"ERROR_OK (0)\" name=\"ROOTWARRIOR\" numGameAccounts=\"8\" numGameAccountNames=\"0\"",
+0,
+},
+{
+"BGS_ code=\"ERROR_OK (0)\" name=\"WoW2\" numGameAccounts=\"8\" numGameAccountNames=\"1\"",
+0,
+},
+{
+"BGS_ code=\"ERROR_OK (0)\" name=\"WoW4\" numGameAccounts=\"8\" numGameAccountNames=\"2\"",
 0,
 },
 {
@@ -3251,19 +3091,23 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"BGS_ code=\"ERROR_OK (0)\" name=\"WoW1\" numGameAccounts=\"8\" numGameAccountNames=\"1\"",
+"BGS_ code=\"ERROR_OK (0)\" name=\"WoW5\" numGameAccounts=\"8\" numGameAccountNames=\"3\"",
 0,
 },
 {
-"BGS_ code=\"ERROR_OK (0)\" name=\"ROOTWARRIOR\" numGameAccounts=\"8\" numGameAccountNames=\"2\"",
+"BGS_ code=\"ERROR_OK (0)\" name=\"WoW1\" numGameAccounts=\"8\" numGameAccountNames=\"4\"",
 0,
 },
 {
-"BGS_ code=\"ERROR_OK (0)\" name=\"WoW3\" numGameAccounts=\"8\" numGameAccountNames=\"3\"",
+"BGS_ code=\"ERROR_OK (0)\" name=\"WoW6\" numGameAccounts=\"8\" numGameAccountNames=\"5\"",
 0,
 },
 {
-"BGS_ code=\"ERROR_OK (0)\" name=\"WoW2\" numGameAccounts=\"8\" numGameAccountNames=\"4\"",
+"BGS_ACCO code=\"ERROR_OK (0)\"",
+0,
+},
+{
+"BGS_ code=\"ERROR_OK (0)\" name=\"WoW3\" numGameAccounts=\"8\" numGameAccountNames=\"6\"",
 0,
 },
 {
@@ -3272,6 +3116,18 @@ Blizzard_Console_SavedVars = {
 },
 {
 "BG code=\"ERROR_OK (0)\"",
+0,
+},
+{
+"BGS_ code=\"ERROR_OK (0)\" name=\"WoW7\" numGameAccounts=\"8\" numGameAccountNames=\"7\"",
+0,
+},
+{
+"BGS_ACCO code=\"ERROR_OK (0)\"",
+0,
+},
+{
+"BGS_ACCO code=\"ERROR_OK (0)\"",
 0,
 },
 {
@@ -3287,30 +3143,6 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"BGS_ code=\"ERROR_OK (0)\" name=\"WoW7\" numGameAccounts=\"8\" numGameAccountNames=\"5\"",
-0,
-},
-{
-"BGS_ code=\"ERROR_OK (0)\" name=\"WoW4\" numGameAccounts=\"8\" numGameAccountNames=\"6\"",
-0,
-},
-{
-"BGS_ code=\"ERROR_OK (0)\" name=\"WoW6\" numGameAccounts=\"8\" numGameAccountNames=\"7\"",
-0,
-},
-{
-"BGS_ACCO code=\"ERROR_OK (0)\"",
-0,
-},
-{
-"BGS_ACCO code=\"ERROR_OK (0)\"",
-0,
-},
-{
-"BGS_ACCO code=\"ERROR_OK (0)\"",
-0,
-},
-{
 "BGS_ACCO code=\"ERROR_OK (0)\"",
 0,
 },
@@ -3323,7 +3155,7 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Reconnect token saved;  creationTime=\"1786982675\" expirationTime=\"1786997075\"",
+"Reconnect token saved;  creationTime=\"1787665046\" expirationTime=\"1787679446\"",
 0,
 },
 {
@@ -3351,19 +3183,571 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Received last played char code=\" (309)\" subRegion=\"71-1-59\" lastPlayedTime=\"0\" numRegions=\"5\" numRegionsWithData=\"0\" realmPermissions=\"0\" licensesCount=\"0\" realmEntry=\"{\"wowRealmAddress\":0,\"useBleepChance\":0.0,\"cfgTimezonesID\":0,\"populationState\":0,\"cfgCategoriesID\":0,\"version\":{\"versionMajor\":0,\"versionBuild\":0,\"versionMinor\":0,\"versionRevision\":0},\"cfgRealmsID\":0,\"gameServiceRegionId\":0,\"flags\":0,\"name\":\"\",\"cfgConfigsID\":0,\"cfgContentSetID\":0,\"cfgLanguagesID\":0}\"",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Received last played char code=\" (309)\" subRegion=\"21-1-50\" lastPlayedTime=\"0\" numRegions=\"5\" numRegionsWithData=\"1\" realmPermissions=\"0\" licensesCount=\"0\" realmEntry=\"{\"wowRealmAddress\":0,\"useBleepChance\":0.0,\"cfgTimezonesID\":0,\"populationState\":0,\"cfgCategoriesID\":0,\"version\":{\"versionMajor\":0,\"versionBuild\":0,\"versionMinor\":0,\"versionRevision\":0},\"cfgRealmsID\":0,\"gameServiceRegionId\":0,\"flags\":0,\"name\":\"\",\"cfgConfigsID\":0,\"cfgContentSetID\":0,\"cfgLanguagesID\":0}\"",
+"Multithreaded rendering enabled.",
 0,
 },
 {
-"Received last played char code=\" (309)\" subRegion=\"34-2-89\" lastPlayedTime=\"0\" numRegions=\"5\" numRegionsWithData=\"2\" realmPermissions=\"0\" licensesCount=\"0\" realmEntry=\"{\"wowRealmAddress\":0,\"useBleepChance\":0.0,\"cfgTimezonesID\":0,\"populationState\":0,\"cfgCategoriesID\":0,\"version\":{\"versionMajor\":0,\"versionBuild\":0,\"versionMinor\":0,\"versionRevision\":0},\"cfgRealmsID\":0,\"gameServiceRegionId\":0,\"flags\":0,\"name\":\"\",\"cfgConfigsID\":0,\"cfgContentSetID\":0,\"cfgLanguagesID\":0}\"",
+"Multithreaded BeginDraw enabled.",
 0,
 },
 {
-"Received last played char code=\"ERROR_OK (0)\" subRegion=\"1-1-89\" lastPlayedTime=\"1786978602\" numRegions=\"5\" numRegionsWithData=\"3\" realmPermissions=\"3\" licensesCount=\"1\" realmEntry=\"{\"wowRealmAddress\":16973835,\"useBleepChance\":0.0,\"cfgTimezonesID\":1,\"populationState\":6,\"cfgCategoriesID\":2,\"version\":{\"versionMajor\":12,\"versionBuild\":68914,\"versionMinor\":1,\"versionRevision\":0},\"cfgRealmsID\":11,\"gameServiceRegionId\":1,\"flags\":0,\"name\":\"Tichondrius\",\"cfgConfigsID\":1,\"cfgContentSetID\":0,\"cfgLanguagesID\":1}\"",
+"Multithread shadows changed to 1.",
+0,
+},
+{
+"Multithreaded prepass enabled.",
+0,
+},
+{
+"Multithreaded opaque pass enabled.",
+0,
+},
+{
+"Multithreaded opaque pass enabled.",
+0,
+},
+{
+"Multithreaded alpha M2 pass enabled.",
+0,
+},
+{
+"Multithreaded opaque WMO pass enabled.",
+0,
+},
+{
+"Multithreaded terrain pass enabled.",
+0,
+},
+{
+"Multithreaded volumetric fog enabled.",
+0,
+},
+{
+"Multithreaded Refraction Pass enabled.",
+0,
+},
+{
+"Multithreaded miscellaneous passes disabled.",
+0,
+},
+{
+"Multithreaded decal pass enabled.",
+0,
+},
+{
+"Multithreaded outline passes enabled.",
+0,
+},
+{
+"Multithreaded lightshaft passes enabled.",
+0,
+},
+{
+"Use trigger on BeginDrawComplete enabled.",
+4,
+},
+{
+"Multithreaded alpha pass enabled.",
+0,
+},
+{
+"Multithreaded daynight update enabled.",
+0,
+},
+{
+"Water detail changed to 3",
+0,
+},
+{
+"Ripple detail changed to 2",
+0,
+},
+{
+"Reflection mode changed to 3",
+0,
+},
+{
+"Reflection downscale changed to 0",
+0,
+},
+{
+"Sunshafts quality changed to 2",
+0,
+},
+{
+"Refraction mode changed to 2",
+0,
+},
+{
+"Volume fog enabled.",
+0,
+},
+{
+"Particulate volumes enabled.",
+0,
+},
+{
+"Projected textures enabled.",
+0,
+},
+{
+"Shadow mode changed to 4 - 4 band dynamic shadows on units and terrain, 2048",
+0,
+},
+{
+"Shadow texture size changed to 2048.",
+0,
+},
+{
+"Soft shadows changed to 1.",
+0,
+},
+{
+"Shadow cascade blending changed to 1",
+0,
+},
+{
+"Number of shadow cascades changed to 4",
+0,
+},
+{
+"Shadow RT mode changed to 0 (Disabled)",
+0,
+},
+{
+"maxLightCount must be in range 0 to 32.",
+0,
+},
+{
+"CVar 'maxLightCount' failed validation for its initial value.",
+0,
+},
+{
+"Clustered shading enabled.",
+0,
+},
+{
+"Not forcing clustered shading.",
+0,
+},
+{
+"SSAO mode set to 3",
+0,
+},
+{
+"SSAO type set to 0",
+0,
+},
+{
+"Depth Based Opacity Enabled",
+0,
+},
+{
+"SkyCloudLOD set to 1",
+0,
+},
+{
+"Texture filtering mode updated.",
+0,
+},
+{
+"Terrain mip level changed to 0.",
+0,
+},
+{
+"Outline mode changed to 2",
+0,
+},
+{
+"Physics interaction level changed to 1",
+0,
+},
+{
+"Render scale changed to 1",
+0,
+},
+{
+"Resample quality changed to 3",
+0,
+},
+{
+"MSAA set to 8 color samples, 8 coverage samples",
+0,
+},
+{
+"MSAA for alpha-test enabled.",
+0,
+},
+{
+"VALAR mode changed to 0",
+0,
+},
+{
+"lodObjectSizeScale cannot be changed.",
+0,
+},
+{
+"Volume fog enabled.",
+0,
+},
+{
+"dynamicLod enabled",
+0,
+},
+{
+"World preload object sort enabled.",
+0,
+},
+{
+"World load object sort enabled.",
+0,
+},
+{
+"World preload non critical enabled.",
+0,
+},
+{
+"World preload high res textures disabled.",
+0,
+},
+{
+"FFX: Color Blind Test Mode Disabled",
+0,
+},
+{
+"CVar 'Sound_AmbienceHighpassDSPCutoff' failed validation for its initial value.",
+0,
+},
+{
+"CVar 'Sound_AllyPlayerHighpassDSPCutoff' failed validation for its initial value.",
+0,
+},
+{
+"CVar 'Sound_EnemyPlayerHighpassDSPCutoff' failed validation for its initial value.",
+0,
+},
+{
+"CVar 'Sound_NPCHighpassDSPCutoff' failed validation for its initial value.",
+0,
+},
+{
+"ChromaEffects disabled",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for Font changed to 3000",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for Font changed to 3000",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for AnimGroup changed to 20000",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for AnimGroup changed to 20000",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for Animation changed to 5000",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for Animation changed to 5000",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for Texture changed to 40000",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for Texture changed to 40000",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for Texture changed to 400000",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for Texture changed to 400000",
+0,
+},
+{
+"LimitedLuaResources: Enabled = false",
+0,
+},
+{
+"LimitedLuaResources: Enabled = false",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for AnimGroup changed to 2000",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for AnimGroup changed to 2000",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for FontString changed to 5000",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for FontString changed to 5000",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for Timer changed to 500",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for Timer changed to 500",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for FontString changed to 50000",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for FontString changed to 50000",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for Font changed to 300",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for Font changed to 300",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for Frame changed to 100000",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for Frame changed to 100000",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for Frame changed to 10000",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for Frame changed to 10000",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for Animation changed to 50000",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for Animation changed to 50000",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for Timer changed to 500",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for Timer changed to 500",
+0,
+},
+{
+"Startup()",
+0,
+},
+{
+"Resume()",
+0,
+},
+{
+"Screen invalid. Changing from=\"none\" to=\"login\"",
+0,
+},
+{
+"Switching to screen=\"AccountLogin\" (from \"none\")",
+0,
+},
+{
+"From EnsureValidScreen",
+0,
+},
+{
+"Overlay is disabled.  Only internal builds and public China builds have it.",
+4,
+},
+{
+"Starting login launcherPortal=\"us.actual.battle.net\" loginPortal=\"us.actual.battle.net:1119\"",
+0,
+},
+{
+"Resetting",
+0,
+},
+{
+"Initializing",
+0,
+},
+{
+"Attempting logon host=\"us.actual.battle.net\" port=\"1119\"",
+0,
+},
+{
+"Waiting for server response.",
+0,
+},
+{
+"Front connected connectionId=\"1\" title_id=\"5730135\" platform=\"Wn64\" locale=\"enUS\" usedToken=\"true\"",
+0,
+},
+{
+"Waiting for server response.",
+0,
+},
+{
+"OnSendLogon result=\"0\"",
+0,
+},
+{
+"Logon complete result=\"0\" numGameAccounts=\"8\"",
+0,
+},
+{
+"Waiting for server response.",
+0,
+},
+{
+"B code=\"ERROR_OK (0)\"",
+0,
+},
+{
+"BGS_ code=\"ERROR_OK (0)\" name=\"WoW1\" numGameAccounts=\"8\" numGameAccountNames=\"0\"",
+0,
+},
+{
+"BGS_ACCO code=\"ERROR_OK (0)\"",
+0,
+},
+{
+"BGS_ code=\"ERROR_OK (0)\" name=\"ROOTWARRIOR\" numGameAccounts=\"8\" numGameAccountNames=\"1\"",
+0,
+},
+{
+"BGS_ACCO code=\"ERROR_OK (0)\"",
+0,
+},
+{
+"BGS_ code=\"ERROR_OK (0)\" name=\"WoW2\" numGameAccounts=\"8\" numGameAccountNames=\"2\"",
+0,
+},
+{
+"BGS_ code=\"ERROR_OK (0)\" name=\"WoW5\" numGameAccounts=\"8\" numGameAccountNames=\"3\"",
+0,
+},
+{
+"BGS_ACCO code=\"ERROR_OK (0)\"",
+0,
+},
+{
+"BG code=\"ERROR_OK (0)\"",
+0,
+},
+{
+"BGS_ACCO code=\"ERROR_OK (0)\"",
+0,
+},
+{
+"Received auth token  code=\"ERROR_OK (0)\" gotCredentials=\"true\"",
+0,
+},
+{
+"BGS_ code=\"ERROR_OK (0)\" name=\"WoW3\" numGameAccounts=\"8\" numGameAccountNames=\"4\"",
+0,
+},
+{
+"BGS_ACCO code=\"ERROR_OK (0)\"",
+0,
+},
+{
+"BGS_ code=\"ERROR_OK (0)\" name=\"WoW7\" numGameAccounts=\"8\" numGameAccountNames=\"5\"",
+0,
+},
+{
+"BGS_ code=\"ERROR_OK (0)\" name=\"WoW6\" numGameAccounts=\"8\" numGameAccountNames=\"6\"",
+0,
+},
+{
+"BGS_ code=\"ERROR_OK (0)\" name=\"WoW4\" numGameAccounts=\"8\" numGameAccountNames=\"7\"",
+0,
+},
+{
+"BGS_ACCO code=\"ERROR_OK (0)\"",
+0,
+},
+{
+"BGS_ACCO code=\"ERROR_OK (0)\"",
+0,
+},
+{
+"BGS_ACCO code=\"ERROR_OK (0)\"",
+0,
+},
+{
+"Updated game account list. accountList=\"WoW1||!ROOTWARRIOR||WoW5||WoW2||WoW3||WoW4||WoW6||WoW7||\"",
+0,
+},
+{
+"Logon complete.",
+0,
+},
+{
+"Reconnect token saved;  creationTime=\"1787665058\" expirationTime=\"1787679458\"",
+0,
+},
+{
+"Waiting for realm list.",
+0,
+},
+{
+"Requesting realm list ticket",
+0,
+},
+{
+"Received realm list ticket code=\"ERROR_OK (0)\"",
+0,
+},
+{
+"Waiting for realm list.",
+0,
+},
+{
+"Received sub region list code=\"ERROR_OK (0)\"",
+0,
+},
+{
+"Requesting last played chars numSubRegions=\"5\"",
+0,
+},
+{
+"Received last played char code=\" (309)\" subRegion=\"34-2-89\" lastPlayedTime=\"0\" numRegions=\"5\" numRegionsWithData=\"0\" realmPermissions=\"0\" licensesCount=\"0\" realmEntry=\"{\"wowRealmAddress\":0,\"useBleepChance\":0.0,\"cfgTimezonesID\":0,\"populationState\":0,\"cfgCategoriesID\":0,\"version\":{\"versionMajor\":0,\"versionBuild\":0,\"versionMinor\":0,\"versionRevision\":0},\"cfgRealmsID\":0,\"gameServiceRegionId\":0,\"flags\":0,\"name\":\"\",\"cfgConfigsID\":0,\"cfgContentSetID\":0,\"cfgLanguagesID\":0}\"",
+0,
+},
+{
+"Received last played char code=\" (309)\" subRegion=\"71-1-59\" lastPlayedTime=\"0\" numRegions=\"5\" numRegionsWithData=\"1\" realmPermissions=\"0\" licensesCount=\"0\" realmEntry=\"{\"wowRealmAddress\":0,\"useBleepChance\":0.0,\"cfgTimezonesID\":0,\"populationState\":0,\"cfgCategoriesID\":0,\"version\":{\"versionMajor\":0,\"versionBuild\":0,\"versionMinor\":0,\"versionRevision\":0},\"cfgRealmsID\":0,\"gameServiceRegionId\":0,\"flags\":0,\"name\":\"\",\"cfgConfigsID\":0,\"cfgContentSetID\":0,\"cfgLanguagesID\":0}\"",
+0,
+},
+{
+"Received last played char code=\" (309)\" subRegion=\"21-1-50\" lastPlayedTime=\"0\" numRegions=\"5\" numRegionsWithData=\"2\" realmPermissions=\"0\" licensesCount=\"0\" realmEntry=\"{\"wowRealmAddress\":0,\"useBleepChance\":0.0,\"cfgTimezonesID\":0,\"populationState\":0,\"cfgCategoriesID\":0,\"version\":{\"versionMajor\":0,\"versionBuild\":0,\"versionMinor\":0,\"versionRevision\":0},\"cfgRealmsID\":0,\"gameServiceRegionId\":0,\"flags\":0,\"name\":\"\",\"cfgConfigsID\":0,\"cfgContentSetID\":0,\"cfgLanguagesID\":0}\"",
+0,
+},
+{
+"Received last played char code=\"ERROR_OK (0)\" subRegion=\"1-1-89\" lastPlayedTime=\"1787663557\" numRegions=\"5\" numRegionsWithData=\"3\" realmPermissions=\"3\" licensesCount=\"1\" realmEntry=\"{\"wowRealmAddress\":16973835,\"useBleepChance\":0.0,\"cfgTimezonesID\":1,\"populationState\":6,\"cfgCategoriesID\":2,\"version\":{\"versionMajor\":12,\"versionBuild\":68914,\"versionMinor\":1,\"versionRevision\":0},\"cfgRealmsID\":11,\"gameServiceRegionId\":1,\"flags\":0,\"name\":\"Tichondrius\",\"cfgConfigsID\":1,\"cfgContentSetID\":0,\"cfgLanguagesID\":1}\"",
 0,
 },
 {
@@ -3375,7 +3759,7 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Found most recently played char. Joining realm. lastPlayedRegion=\"1-1-89\" realmAddress=\"16973835\" lastActiveTime=\"1786978602\"",
+"Found most recently played char. Joining realm. lastPlayedRegion=\"1-1-89\" realmAddress=\"16973835\" lastActiveTime=\"1787663557\"",
 0,
 },
 {
@@ -3383,7 +3767,7 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Sending ping results from timeout timeoutNs=\"13466354840000\" nowNs=\"13466363440800\"",
+"Sending ping results from timeout timeoutNs=\"5210102523300\" nowNs=\"5210119036000\"",
 0,
 },
 {
@@ -3391,7 +3775,7 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Connecting conn=\"(enum)0\" connPtr=\"000000003dde1440\" protocol=\"(enum)0\"",
+"Connecting conn=\"(enum)0\" connPtr=\"000000003e021180\" protocol=\"(enum)0\"",
 0,
 },
 {
@@ -3403,15 +3787,7 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Connecting conn=\"(enum)2\" connPtr=\"0000000086f0b450\" protocol=\"(enum)0\"",
-0,
-},
-{
 "Switching to screen=\"CharacterSelect\" (from \"login\")",
-0,
-},
-{
-"KillConnection conn=\"000000003dde1440\" state=\"(enum)6\"",
 0,
 },
 {
@@ -3431,19 +3807,15 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"LimitedLuaResources: Addon capacity for Font changed to 300",
-0,
-},
-{
 "LimitedLuaResources: Global capacity for Frame changed to 100000",
 0,
 },
 {
-"LimitedLuaResources: Addon capacity for Texture changed to 40000",
+"LimitedLuaResources: Global capacity for Font changed to 3000",
 0,
 },
 {
-"LimitedLuaResources: Addon capacity for Frame changed to 10000",
+"LimitedLuaResources: Global capacity for Texture changed to 400000",
 0,
 },
 {
@@ -3455,22 +3827,6 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"LimitedLuaResources: Global capacity for Font changed to 3000",
-0,
-},
-{
-"LimitedLuaResources: Addon capacity for FontString changed to 5000",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for Timer changed to 500",
-0,
-},
-{
-"LimitedLuaResources: Global capacity for FontString changed to 50000",
-0,
-},
-{
 "LimitedLuaResources: Global capacity for Animation changed to 50000",
 0,
 },
@@ -3479,11 +3835,11 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"LimitedLuaResources: Addon capacity for AnimGroup changed to 2000",
+"LimitedLuaResources: Addon capacity for Texture changed to 40000",
 0,
 },
 {
-"LimitedLuaResources: Global capacity for Texture changed to 400000",
+"LimitedLuaResources: Addon capacity for FontString changed to 5000",
 0,
 },
 {
@@ -3491,11 +3847,27 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Session with Battle.net established.",
+"LimitedLuaResources: Global capacity for FontString changed to 50000",
 0,
 },
 {
-"[WowEntitlements] [BNetAccount-0-000003482BDF] [WowAccount-0-0000003C5D98] Initialized with 226 entitlements.",
+"LimitedLuaResources: Addon capacity for AnimGroup changed to 2000",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for Frame changed to 10000",
+0,
+},
+{
+"LimitedLuaResources: Global capacity for Timer changed to 500",
+0,
+},
+{
+"LimitedLuaResources: Addon capacity for Font changed to 300",
+0,
+},
+{
+"Session with Battle.net established.",
 0,
 },
 {
@@ -3507,151 +3879,7 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"Suspend()",
-0,
-},
-{
-"LimitedLuaResources: Reset Timer",
-0,
-},
-{
-"Connecting conn=\"(enum)3\" connPtr=\"000000007e9811f0\" protocol=\"(enum)0\"",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000000001",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000000041",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000021",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000004041",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000004441",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000025",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000006441",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000106441",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000106451",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x00001064d1",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000027",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x00001064d1",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000027",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Time set to 8/17/2026 (Mon) 9:04",
-0,
-},
-{
-"Gamespeed set from 0.017 to 0.017",
-0,
-},
-{
-"Connecting conn=\"(enum)3\" connPtr=\"0000000087336c10\" protocol=\"(enum)0\"",
-0,
-},
-{
-"KillConnection conn=\"000000007e9811f0\" state=\"(enum)6\"",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Successfully instantiated mirrored storage object",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"LimitedLuaResources: Reset Timer",
-0,
-},
-{
-"LimitedLuaResources: Reset All",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"LimitedLuaResources: Reset Timer",
-0,
-},
-{
-"LimitedLuaResources: Reset All",
-0,
-},
-{
-"KillConnection conn=\"0000000087336c10\" state=\"(enum)7\"",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"LimitedLuaResources: Reset Timer",
-0,
-},
-{
-"Resume()",
-0,
-},
-{
-"Screen invalid. Changing from=\"none\" to=\"charselect\"",
-0,
-},
-{
-"Switching to screen=\"CharacterSelect\" (from \"none\")",
-0,
-},
-{
-"From EnsureValidScreen",
+"[WowEntitlements] [BNetAccount-0-000003482BDF] [WowAccount-0-0000003C5D98] Initialized with 226 entitlements.",
 0,
 },
 {
@@ -3667,11 +3895,7 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Attempted to register existing command: SetDifficulty",
-0,
-},
-{
-"Connecting conn=\"(enum)3\" connPtr=\"00000000a0a36960\" protocol=\"(enum)0\"",
+"Connecting conn=\"(enum)3\" connPtr=\"0000000120db8d20\" protocol=\"(enum)0\"",
 0,
 },
 {
@@ -3695,7 +3919,7 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Proficiency in item class 2 set to 0x000010c410",
+"Proficiency in item class 2 set to 0x000010c480",
 0,
 },
 {
@@ -3703,11 +3927,11 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Proficiency in item class 2 set to 0x000018c410",
+"Proficiency in item class 2 set to 0x000018c480",
 0,
 },
 {
-"Proficiency in item class 2 set to 0x000018c410",
+"Proficiency in item class 2 set to 0x000018c480",
 0,
 },
 {
@@ -3715,7 +3939,11 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Time set to 8/17/2026 (Mon) 9:12",
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Time set to 8/25/2026 (Tue) 6:38",
 0,
 },
 {
@@ -3723,11 +3951,15 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Connecting conn=\"(enum)3\" connPtr=\"000000003e426410\" protocol=\"(enum)0\"",
+"Connecting conn=\"(enum)3\" connPtr=\"0000000120dacfb0\" protocol=\"(enum)0\"",
 0,
 },
 {
-"KillConnection conn=\"00000000a0a36960\" state=\"(enum)6\"",
+"KillConnection conn=\"0000000120db8d20\" state=\"(enum)6\"",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
 0,
 },
 {
@@ -3735,7 +3967,39 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"KillConnection conn=\"000000003e426410\" state=\"(enum)7\"",
+"World transfer pending...",
+0,
+},
+{
+"Connecting conn=\"(enum)3\" connPtr=\"0000000189d21380\" protocol=\"(enum)0\"",
+0,
+},
+{
+"KillConnection conn=\"0000000120dacfb0\" state=\"(enum)6\"",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Connecting conn=\"(enum)3\" connPtr=\"00000001202e6420\" protocol=\"(enum)0\"",
+0,
+},
+{
+"KillConnection conn=\"0000000189d21380\" state=\"(enum)6\"",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"KillConnection conn=\"00000001202e6420\" state=\"(enum)7\"",
 0,
 },
 {
@@ -3760,258 +4024,6 @@ Blizzard_Console_SavedVars = {
 },
 {
 "From EnsureValidScreen",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"Suspend()",
-0,
-},
-{
-"LimitedLuaResources: Reset Timer",
-0,
-},
-{
-"Attempted to register existing command: SetDifficulty",
-0,
-},
-{
-"Connecting conn=\"(enum)3\" connPtr=\"000000007ed019e0\" protocol=\"(enum)0\"",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000000001",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000000041",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000021",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000004041",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000004441",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000025",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000006441",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000106441",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000106451",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x00001064d1",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000027",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x00001064d1",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000027",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Time set to 8/17/2026 (Mon) 9:13",
-0,
-},
-{
-"Gamespeed set from 0.017 to 0.017",
-0,
-},
-{
-"Connecting conn=\"(enum)3\" connPtr=\"000000007ed01b00\" protocol=\"(enum)0\"",
-0,
-},
-{
-"KillConnection conn=\"000000007ed019e0\" state=\"(enum)6\"",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Successfully instantiated mirrored storage object",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"LimitedLuaResources: Reset Timer",
-0,
-},
-{
-"LimitedLuaResources: Reset All",
-0,
-},
-{
-"KillConnection conn=\"000000007ed01b00\" state=\"(enum)7\"",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"LimitedLuaResources: Reset Timer",
-0,
-},
-{
-"Resume()",
-0,
-},
-{
-"Screen invalid. Changing from=\"none\" to=\"charselect\"",
-0,
-},
-{
-"Switching to screen=\"CharacterSelect\" (from \"none\")",
-0,
-},
-{
-"From EnsureValidScreen",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"Suspend()",
-0,
-},
-{
-"LimitedLuaResources: Reset Timer",
-0,
-},
-{
-"Attempted to register existing command: SetDifficulty",
-0,
-},
-{
-"Connecting conn=\"(enum)3\" connPtr=\"00000001936fe460\" protocol=\"(enum)0\"",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000000001",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000000041",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000021",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000004041",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000004441",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000025",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000006441",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000106441",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000106451",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x00001064d1",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000027",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x00001064d1",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000027",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Time set to 8/17/2026 (Mon) 9:24",
-0,
-},
-{
-"Gamespeed set from 0.017 to 0.017",
-0,
-},
-{
-"Connecting conn=\"(enum)3\" connPtr=\"000000007eea7560\" protocol=\"(enum)0\"",
-0,
-},
-{
-"KillConnection conn=\"00000001936fe460\" state=\"(enum)6\"",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Successfully instantiated mirrored storage object",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"LimitedLuaResources: Reset Timer",
-0,
-},
-{
-"LimitedLuaResources: Reset All",
 0,
 },
 },

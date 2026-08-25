@@ -90,14 +90,6 @@ local frames = {
 		defaultEnabled = true,
 	},
 	{
-		id = "MacroPopupFrame",
-		label = L["Macro Popup"] or "Macro Popup",
-		group = "system",
-		names = { "MacroPopupFrame" },
-		addon = "Blizzard_MacroUI",
-		defaultEnabled = true,
-	},
-	{
 		id = "AddonList",
 		label = L["Addon List"] or "Addon List",
 		group = "system",

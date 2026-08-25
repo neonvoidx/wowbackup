@@ -630,16 +630,6 @@ local function buildChannelKey(event, ...)
 		return base .. ":" .. keyPart, label
 	end
 
-	if event == "CHAT_MSG_COMMUNITIES_CHANNEL" then
-		local communityID = safeSelect(18, ...)
-		local streamID = safeSelect(19, ...)
-		local channelName = safeSelect(4, ...) or base
-		local descriptor
-		if communityID or streamID then descriptor = string.format("%s:%s", communityID or "COMMUNITY", streamID or "STREAM") end
-		local label = descriptor and (descriptor .. ":" .. channelName) or channelName
-		return base .. ":" .. (descriptor or channelName), label
-	end
-
 	local channelName = safeSelect(4, ...)
 	if channelName then return base .. ":" .. channelName, channelName end
 

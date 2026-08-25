@@ -21,6 +21,13 @@ addon.MythicPlus.variables.seasonMapInfo = {}
 addon.MythicPlus.variables.seasonMapHash = {}
 addon.MythicPlus.variables.seasonMapLookup = {}
 
+local DEFAULT_TALENT_REMINDER_KEY = "default"
+
+local function normalizeTalentReminderSetting(value)
+	if value == nil or value == 0 or value == "" or value == "0" then return nil end
+	return value
+end
+
 local function createSeasonInfo()
 	if not (addon.functions and addon.functions.BuildChallengeSeasonMapInfo) then return end
 	local info, hash, lookup = addon.functions.BuildChallengeSeasonMapInfo(addon.MythicPlus.variables.portalCompendium)
@@ -61,7 +68,23 @@ local function setTalentReminderSetting(specSettings, mapID, value)
 		end
 	end
 
-	specSettings[canonicalID] = value
+	specSettings[canonicalID] = normalizeTalentReminderSetting(value)
+end
+
+local function getDefaultTalentReminderSetting(specSettings)
+	if type(specSettings) ~= "table" then return nil end
+	return normalizeTalentReminderSetting(specSettings[DEFAULT_TALENT_REMINDER_KEY])
+end
+
+local function setDefaultTalentReminderSetting(specSettings, value)
+	if type(specSettings) ~= "table" then return end
+	specSettings[DEFAULT_TALENT_REMINDER_KEY] = normalizeTalentReminderSetting(value)
+end
+
+local function resolveTalentReminderSetting(specSettings, mapID)
+	local configured = normalizeTalentReminderSetting(getTalentReminderSetting(specSettings, mapID))
+	if configured ~= nil then return configured end
+	return getDefaultTalentReminderSetting(specSettings)
 end
 
 function addon.MythicPlus.functions.getAllLoadouts()
@@ -544,7 +567,7 @@ local function checkLoadout(isReadycheck)
 			end
 
 			if addon.MythicPlus.variables.seasonMapHash[mapID] then
-				local reqTalent = getTalentReminderSetting(specSettings, mapID)
+				local reqTalent = resolveTalentReminderSetting(specSettings, mapID)
 				if
 					reqTalent
 					and addon.MythicPlus.variables.knownLoadout
@@ -586,8 +609,11 @@ function addon.MythicPlus.functions.checkLoadout() checkLoadout() end
 function addon.MythicPlus.functions.createSeasonInfo() createSeasonInfo() end
 function addon.MythicPlus.functions.GetTalentReminderSetting(specSettings, mapID) return getTalentReminderSetting(specSettings, mapID) end
 function addon.MythicPlus.functions.SetTalentReminderSetting(specSettings, mapID, value) setTalentReminderSetting(specSettings, mapID, value) end
+function addon.MythicPlus.functions.GetDefaultTalentReminderSetting(specSettings) return getDefaultTalentReminderSetting(specSettings) end
+function addon.MythicPlus.functions.SetDefaultTalentReminderSetting(specSettings, value) setDefaultTalentReminderSetting(specSettings, value) end
 function addon.MythicPlus.functions.checkRemovedLoadout(clear)
 	local tRemoved = {}
+	local tRemovedDefaults = {}
 	for _, cbData in pairs(addon.MythicPlus.variables.seasonMapInfo) do
 		for i = 1, C_SpecializationInfo.GetNumSpecializationsForClassID(addon.variables.unitClassID) do
 			local specID, specName = GetSpecializationInfoForClassID(addon.variables.unitClassID, i)
@@ -597,7 +623,7 @@ function addon.MythicPlus.functions.checkRemovedLoadout(clear)
 				and addon.db["talentReminderSettings"][addon.variables.unitPlayerGUID][specID]
 			then
 				local specSettings = addon.db["talentReminderSettings"][addon.variables.unitPlayerGUID][specID]
-				local configuredLoadout = getTalentReminderSetting(specSettings, cbData.id)
+				local configuredLoadout = normalizeTalentReminderSetting(getTalentReminderSetting(specSettings, cbData.id))
 				if configuredLoadout and not addon.MythicPlus.variables.knownLoadout[specID][configuredLoadout] then
 					if clear then
 						setTalentReminderSetting(specSettings, cbData.id, nil)
@@ -608,8 +634,22 @@ function addon.MythicPlus.functions.checkRemovedLoadout(clear)
 			end
 		end
 	end
+	for i = 1, C_SpecializationInfo.GetNumSpecializationsForClassID(addon.variables.unitClassID) do
+		local specID, specName = GetSpecializationInfoForClassID(addon.variables.unitClassID, i)
+		local specSettings = addon.db["talentReminderSettings"]
+			and addon.db["talentReminderSettings"][addon.variables.unitPlayerGUID]
+			and addon.db["talentReminderSettings"][addon.variables.unitPlayerGUID][specID]
+		local configuredLoadout = getDefaultTalentReminderSetting(specSettings)
+		if configuredLoadout and not addon.MythicPlus.variables.knownLoadout[specID][configuredLoadout] then
+			if clear then
+				setDefaultTalentReminderSetting(specSettings, nil)
+			else
+				tRemovedDefaults[specName] = true
+			end
+		end
+	end
 
-	if #tRemoved > 0 then
+	if #tRemoved > 0 or next(tRemovedDefaults) ~= nil then
 		local specGroups = {}
 		for _, data in ipairs(tRemoved) do
 			if not specGroups[data.spec] then specGroups[data.spec] = {} end
@@ -620,6 +660,9 @@ function addon.MythicPlus.functions.checkRemovedLoadout(clear)
 		for spec, dungeons in pairs(specGroups) do
 			local list = spec .. ": " .. #dungeons .. " " .. DUNGEONS
 			table.insert(fullMsg, list)
+		end
+		for spec in pairs(tRemovedDefaults) do
+			table.insert(fullMsg, spec .. ": " .. L["talentReminderDefaultBuild"])
 		end
 		if #fullMsg then showWarning(table.concat(fullMsg, "\n")) end
 	end

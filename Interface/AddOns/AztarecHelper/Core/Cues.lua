@@ -67,6 +67,9 @@ end
 
 -- names for the marker each quarter can wear, raid target indexing
 local MARK_NAMES = { "Star", "Circle", "Diamond", "Triangle", "Moon", "Square", "Cross", "Skull" }
+-- the same eight by colour, for groups that call them that way. Skull has
+-- no colour of its own so it stays skull
+local MARK_COLORS = { "Yellow", "Orange", "Purple", "Green", "Silver", "Blue", "Red", "Skull" }
 
 function AZT.TtsVoices()
     return C_VoiceChat.GetTtsVoices() or {}
@@ -112,13 +115,44 @@ function AZT.Speak(text)
 end
 
 -- What a quarter is called out loud when the cues name quarters: the marker
--- it wears, read the same way the boards read it, or its direction word
--- when the room reads in arrows.
+-- it wears, read the same way the boards read it, by shape or by colour as
+-- the player likes, or its direction word when the room reads in arrows.
 function AZT.QuadWord(q)
     if AZT.Follow and AZT.Follow.Arrows() then
         return AZT.QUAD_DIR[q]
     end
-    return MARK_NAMES[AZT.QuadIcon(q) or AZT.MARK_SEED[q]]
+    local names = AztarecHelperDB.cueColors and MARK_COLORS or MARK_NAMES
+    return names[AZT.QuadIcon(q) or AZT.MARK_SEED[q]]
+end
+
+-- The game mixes a fixed number of sounds at once and culls the quietest
+-- when they run out, addon one-shots first. The cues fire at the loudest
+-- moment of the fight, so on a low mixer they play fine from the test
+-- button and vanish in combat. Below this many channels that is likely
+-- enough to say something. The tts voices ride the OS, not the mixer
+local CHANNELS_ENOUGH = 64
+
+function AZT.CueChannelsLow()
+    local n = tonumber(GetCVar("Sound_NumChannels"))
+    return n and n < CHANNELS_ENOUGH and n or nil
+end
+
+local channelsWarned
+
+-- said once a session, on the way into the delve with the recorded cues on
+function AZT.CueChannelWarn()
+    if channelsWarned or not AztarecHelperDB.cues or AztarecHelperDB.cueMarks then
+        return
+    end
+    local n = AZT.CueChannelsLow()
+    if not n then
+        return
+    end
+    channelsWarned = true
+    AZT.chat(("your game mixes only %d sounds at once, so the cues can get squeezed out mid fight"):format(n))
+    AZT.chat(
+        "the cue settings have an Audio channels slider for it, or set the Cue voice to Markers, which skips the mixer"
+    )
 end
 
 local CUE_LEAD = 0.5 -- how long before the wave lands the word plays

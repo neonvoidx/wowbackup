@@ -133,6 +133,22 @@ local function GetDefaultPartyFrame(i)
 	end
 end
 
+function BBF.GetPartyFrameUnit(frame)
+	if not frame then return end
+	local unit = frame.displayedUnit or frame.unit
+	if not unit and frame.GetAttribute then
+		unit = frame:GetAttribute("unit")
+		if unit then
+			local suffix = frame:GetAttribute("unitsuffix")
+			if suffix and suffix ~= "" then
+				unit = unit .. suffix
+			end
+		end
+	end
+	if type(unit) ~= "string" or unit == "" then return end
+	return unit
+end
+
 function BBF.FindPartyFrame(i)
 	if BetterBlizzFramesDB.partyCastBarForceDefaultPartyFrames then
 		local defaultPartyFrame, isDefault = GetDefaultPartyFrame(i)
@@ -152,6 +168,17 @@ function BBF.FindPartyFrame(i)
         end
     elseif C_AddOns.IsAddOnLoaded("ElvUI") and ElvUI[1].private.unitframe.disabledBlizzardFrames.party then
         return _G["ElvUF_PartyGroup1UnitButton" .. i]
+	elseif _G["ERFPartyHeader"] then
+        if i == 5 then
+            local euiSelfFrame = _G["ERFPartySelfButton"]
+            if euiSelfFrame and euiSelfFrame:IsShown() then
+                return euiSelfFrame
+            end
+        end
+        local partyFrame = _G["ERFPartyHeader"][i] or _G["ERFPartyHeaderUnitButton" .. i]
+        if partyFrame then
+            return partyFrame
+        end
     elseif C_AddOns.IsAddOnLoaded("Cell") then
         return _G["CellPartyFrameHeaderUnitButton" .. i]
     elseif C_AddOns.IsAddOnLoaded("Grid2") then

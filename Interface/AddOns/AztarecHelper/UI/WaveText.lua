@@ -18,7 +18,7 @@ local BOX_H = 34
 local function buildWave()
     waveFrame = CreateFrame("Frame", "AztarecHelperWaveText", UIParent)
     waveFrame:SetSize(230, BOX_H)
-    AZT.MakeMovable(waveFrame, "wavePos", "TOP", 0, -180 - BOX_H * 1.5)
+    AZT.MakeMovable(waveFrame, "wave", "TOP", 0, -180 - BOX_H * 1.5)
 
     local bg = waveFrame:CreateTexture(nil, "BACKGROUND")
     bg:SetAllPoints()
@@ -42,7 +42,7 @@ local function buildWave()
         end
         local msg
         if w.phase == "record" then
-            msg = ("answer wave %d"):format(w.idx)
+            msg = ((AZT.Safe and AZT.Safe.IsAuto() and "recording wave %d") or "answer wave %d"):format(w.idx)
         elseif w.total then
             msg = ("wave %d of %d"):format(w.idx, w.total)
         else

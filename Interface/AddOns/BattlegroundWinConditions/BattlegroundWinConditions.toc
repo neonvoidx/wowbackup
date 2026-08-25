@@ -1,6 +1,6 @@
 ## Interface: 120100
 ## Title: Battleground Win Conditions
-## Version: 9.8.7
+## Version: 9.8.9
 ## Author: RBGDEV
 ## Notes: Real time win conditions for battlegrounds
 ## IconTexture: Interface/AddOns/BattlegroundWinConditions/logo.tga
@@ -20,8 +20,6 @@ embeds.xml
 core/config.lua
 core/objectives.lua
 core/helpers.lua
-core/version.lua
-core/changelog.lua
 interface/anchor.lua
 interface/banner.lua
 interface/info.lua

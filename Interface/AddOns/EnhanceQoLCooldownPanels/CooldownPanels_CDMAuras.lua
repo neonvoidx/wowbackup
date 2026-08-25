@@ -467,6 +467,7 @@ function CDMAuras:SyncEntries(panelId, sourceKind)
 	panel.entries = panel.entries or {}
 	panel.order = panel.order or {}
 	local wantedByCooldownID = {}
+	local wantedCooldownKeysBySpellID = {}
 	local wantedOrder = {}
 	local stats = { added = 0, removed = 0, updated = 0, invalid = 0, seen = 0, sourceLabel = sourceLabel }
 	local list = self:ScanTrackedBuffs(true)
@@ -487,23 +488,37 @@ function CDMAuras:SyncEntries(panelId, sourceKind)
 					sourceViewer = ICON_VIEWER,
 				}
 				wantedOrder[#wantedOrder + 1] = cooldownKey
+				wantedCooldownKeysBySpellID[spellID] = wantedCooldownKeysBySpellID[spellID] or {}
+				wantedCooldownKeysBySpellID[spellID][#wantedCooldownKeysBySpellID[spellID] + 1] = cooldownKey
 			end
 		end
 	end
 	local existingByCooldownID = {}
+	local matchedCooldownKeyByEntryID = {}
 	local otherOrder = {}
 	for _, entryId in ipairs(panel.order) do
 		local entry = panel.entries[entryId]
 		local cooldownKey = entry and entry.type == ENTRY_TYPE and getCooldownKey(getEntrySyncCooldownID(entry))
-		if cooldownKey and wantedByCooldownID[cooldownKey] and not existingByCooldownID[cooldownKey] then
+		if not (cooldownKey and wantedByCooldownID[cooldownKey] and not existingByCooldownID[cooldownKey]) then
+			cooldownKey = nil
+			local spellID = entry and entry.type == ENTRY_TYPE and getPlainPositiveID(entry.auraSpellID or entry.spellID)
+			for _, candidateKey in ipairs(spellID and wantedCooldownKeysBySpellID[spellID] or {}) do
+				if not existingByCooldownID[candidateKey] then
+					cooldownKey = candidateKey
+					break
+				end
+			end
+		end
+		if cooldownKey then
 			existingByCooldownID[cooldownKey] = entryId
+			matchedCooldownKeyByEntryID[entryId] = cooldownKey
 		elseif entry then
 			otherOrder[#otherOrder + 1] = entryId
 		end
 	end
 	for entryId, entry in pairs(panel.entries) do
 		if entry and entry.cdmSyncManaged == true then
-			local cooldownKey = entry.type == ENTRY_TYPE and getCooldownKey(getEntrySyncCooldownID(entry))
+			local cooldownKey = matchedCooldownKeyByEntryID[entryId] or (entry.type == ENTRY_TYPE and getCooldownKey(getEntrySyncCooldownID(entry)))
 			if entry.cdmSyncSource ~= IMPORT_SOURCE_ICON or not (cooldownKey and wantedByCooldownID[cooldownKey]) then
 				if CooldownPanels.SaveCooldownManagerSyncEntryOverride then
 					CooldownPanels:SaveCooldownManagerSyncEntryOverride(panel, entry.cdmSyncSource or IMPORT_SOURCE_ICON, entry.cdmSyncKey or cooldownKey, entry)
@@ -517,7 +532,6 @@ function CDMAuras:SyncEntries(panelId, sourceKind)
 		local entryId = existingByCooldownID[cooldownKey]
 		local entryInfo = wantedByCooldownID[cooldownKey]
 		local entry = entryId and panel.entries[entryId]
-		local syncManaged = entry and entry.cdmSyncManaged == true or false
 		if not entry then
 			if CooldownPanels.GetFixedEntryAddError and CooldownPanels:GetFixedEntryAddError(panel, nil) then
 				stats.invalid = stats.invalid + 1
@@ -531,7 +545,6 @@ function CDMAuras:SyncEntries(panelId, sourceKind)
 					end
 					panel.entries[entryId] = entry
 					existingByCooldownID[cooldownKey] = entryId
-					syncManaged = true
 					stats.added = stats.added + 1
 				else
 					entry = nil
@@ -539,7 +552,7 @@ function CDMAuras:SyncEntries(panelId, sourceKind)
 				end
 			end
 		end
-		if entry and syncManaged then
+		if entry then
 			entry.spellID = entryInfo.spellID
 			entry.auraSpellID = entryInfo.spellID
 			entry.buffName = entryInfo.buffName

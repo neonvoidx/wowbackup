@@ -10,17 +10,19 @@ VER 3 0100000000000037 " " "134400"
 END
 VER 3 010000000000003A " " "134400"
 #showtooltip Fear
+#FS EH X
 /use Fire-Eater's Vial
-/cast  [mod:shift,@focus,exists][] Fear
+/cast  [mod:shift,@none,exists][mod:shift,@focus,exists][] Fear
 END
 VER 3 010000000000003C " " "134400"
-#showtooltip
-/cast [@mouseover,exists,help][] Soulstone
+#showtooltip Soulstone
+/cast [@mouseover] Soulstone
 END
 VER 3 0100000000000040 " " "134400"
-#showtooltip Burning Rush
-/cast [nomod] !Burning Rush
-/cancelaura  Burning Rush
+#showtooltip burning rush
+/cancelaura burning rush
+/cast burning rush
+/script PlaySound(13156) 
 /use Prismatic Bauble
 END
 VER 3 0100000000000041 " " "134400"
@@ -70,11 +72,9 @@ END
 VER 3 0100000000000055 " " "134400"
 #showtooltip
 /cast [@cursor] Summon Infernal
-END
-VER 3 0100000000000056 " " "134400"
-#showtooltip Summon Felguard
-/cast  Fel Domination 
-/cast Summon Felguard
+/use 14
+/use Saltwater Potion
+/use Potion of Recklessness
 END
 VER 3 010000000000005A " " "134400"
 #showtooltip
@@ -91,15 +91,26 @@ VER 3 010000000000005D " " "134400"
 END
 VER 3 010000000000005E " " "134400"
 #showtooltip Mortal Coil
-/cast  [mod:shift,@focus,exists][] Mortal Coil
+#FS EH X
+/cast  [mod:shift,@none,exists][mod:shift,@focus,exists][] Mortal Coil
 END
 VER 3 010000000000005F " " "134400"
 #showtooltip drain soul
 /cast [nochanneling] Drain Soul
 END
-VER 3 010000000000002B "Pet Movement" "132152"
+VER 3 0100000000000060 " " "134400"
+#showtoolip 
+/cast [@cursor] Cataclysm
+END
+VER 3 0100000000000061 " " "134400"
+#showtooltip 
+/cast [@mouseover,exists,harm,known:Havoc][known:Havoc] Havoc
+END
+VER 3 0100000000000062 " " "134400"
 #showtooltip
-/petassist
-/petattack
-/cast  legion strike 
+/use [spec:2]Summon Felguard;Summon Felhunter
+END
+VER 3 0100000000000063 " " "134400"
+#showtooltip
+/cast Felstorm
 END

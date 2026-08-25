@@ -640,9 +640,10 @@ local function ensureCastIconBorderFrame()
 		border:EnableMouse(false)
 		state.castIconBorder = border
 	end
-	border:SetFrameStrata(state.castBar:GetFrameStrata())
-	local baseLevel = state.castBar:GetFrameLevel() or 0
-	border:SetFrameLevel(baseLevel + 4)
+	local iconHolder = state.castIconHolder
+	border:SetFrameStrata(iconHolder:GetFrameStrata())
+	local baseLevel = iconHolder:GetFrameLevel() or (state.castBar:GetFrameLevel() or 0)
+	border:SetFrameLevel(baseLevel + 1)
 	return border
 end
 

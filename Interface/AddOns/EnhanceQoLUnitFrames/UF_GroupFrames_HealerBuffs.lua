@@ -850,7 +850,7 @@ end
 local function newPlacementConfig()
 	return {
 		enabled = false,
-		version = 2,
+		version = 3,
 		groupsById = {},
 		groupOrder = {},
 		rulesById = {},
@@ -900,6 +900,7 @@ function HB.CreateDefaultGroup(id)
 		ruleMatch = RULE_MATCH_ANY,
 		iconMode = ICON_MODE_ALL,
 		iconLayoutMode = ICON_LAYOUT_MODE_MAX,
+		showCooldown = true,
 		showCooldownSwipe = true,
 		showCooldownEdge = true,
 		showCooldownBling = true,
@@ -991,6 +992,7 @@ local function normalizeGroup(group, id)
 	group.iconMode = normalizeIconMode(group.iconMode or group.iconDisplayMode or group.iconRuleMode)
 	group.iconLayoutMode = normalizeIconLayoutMode(group.iconLayoutMode or group.iconOrderMode)
 	group.iconOrderMode = nil
+	if group.showCooldown ~= nil then group.showCooldown = group.showCooldown ~= false end
 	local showCooldownSwipe = group.showCooldownSwipe
 	if showCooldownSwipe == nil then showCooldownSwipe = group.cooldownSwipe end
 	group.showCooldownSwipe = showCooldownSwipe ~= false
@@ -1094,12 +1096,14 @@ function HB.EnsureConfig(cfg)
 		placement = newPlacementConfig()
 		cfg.healerBuffPlacement = placement
 	end
-	if placement._eqolNormalized == true and placement._eqolDirty ~= true and (tonumber(placement.version) or 0) >= 2 then
+	local placementVersion = tonumber(placement.version) or 0
+	if placement._eqolNormalized == true and placement._eqolDirty ~= true and placementVersion >= 2 then
 		if placement.enabled == nil then placement.enabled = false end
-		placement.version = 2
+		placement.version = placementVersion >= 3 and 3 or 2
 		for _, group in pairs(placement.groupsById or EMPTY) do
 			group.iconLayoutMode = normalizeIconLayoutMode(group.iconLayoutMode or group.iconOrderMode)
 			group.iconOrderMode = nil
+			if placement.version >= 3 then group.showCooldown = group.showCooldown ~= false end
 		end
 		for _, rule in pairs(placement.rulesById or EMPTY) do
 			local customFamilyId, customSpellId = HB.GetCustomSpellFamilyId(rule and rule.spellFamilyId)
@@ -1111,7 +1115,7 @@ function HB.EnsureConfig(cfg)
 	placement.includeTarget = nil
 	placement.includeFocus = nil
 	placement.includeBoss = nil
-	placement.version = 2
+	placement.version = placementVersion >= 3 and 3 or 2
 	placement.groupsById = type(placement.groupsById) == "table" and placement.groupsById or {}
 	placement.groupOrder = type(placement.groupOrder) == "table" and placement.groupOrder or {}
 	placement.rulesById = type(placement.rulesById) == "table" and placement.rulesById or {}
@@ -1140,6 +1144,37 @@ function HB.EnsureConfig(cfg)
 	placement._eqolDirty = nil
 	placement._eqolNormalized = true
 
+	return placement
+end
+
+function HB.MigrateCooldownVisibility(placement, partyCfg, raidCfg)
+	if type(placement) ~= "table" or (tonumber(placement.version) or 0) >= 3 then return placement end
+	local partyShowCooldown = not (partyCfg and partyCfg.auras and partyCfg.auras.buff and partyCfg.auras.buff.showCooldown == false)
+	local raidShowCooldown = not (raidCfg and raidCfg.auras and raidCfg.auras.buff and raidCfg.auras.buff.showCooldown == false)
+	local scopeByGroup = {}
+	for _, rule in pairs(placement.rulesById or EMPTY) do
+		if type(rule) == "table" then
+			local groupId = tostring(rule.groupId or "")
+			if groupId ~= "" then
+				local scope = scopeByGroup[groupId]
+				if not scope then
+					scope = {}
+					scopeByGroup[groupId] = scope
+				end
+				if rule.appliesParty ~= false or rule.appliesTarget == true or rule.appliesFocus == true or rule.appliesBoss == true then scope.party = true end
+				if rule.appliesRaid ~= false then scope.raid = true end
+			end
+		end
+	end
+	for groupId, group in pairs(placement.groupsById or EMPTY) do
+		if type(group) == "table" and group.showCooldown == nil then
+			local scope = scopeByGroup[tostring(groupId)]
+			local usesParty = not scope or scope.party == true
+			local usesRaid = scope and scope.raid == true
+			group.showCooldown = not ((usesParty and not partyShowCooldown) or (usesRaid and not raidShowCooldown))
+		end
+	end
+	placement.version = 3
 	return placement
 end
 
@@ -2138,15 +2173,8 @@ local function getAuraStyleForGroup(state, cfg, group)
 	local showCooldownSwipe = group.showCooldownSwipe ~= false
 	local showCooldownEdge = group.showCooldownEdge ~= false
 	local showCooldownBling = group.showCooldownBling ~= false
-	local showCooldown = ac.showCooldown ~= false
-	local showCooldownText
-	if group.hideCooldownText == true then
-		showCooldownText = false
-	elseif ac.showCooldownText ~= nil then
-		showCooldownText = ac.showCooldownText
-	else
-		showCooldownText = nil
-	end
+	local showCooldown = group.showCooldown ~= false
+	local showCooldownText = showCooldown and group.hideCooldownText ~= true
 	local showStacks
 	if group.hideChargeText == true then
 		showStacks = false
@@ -2923,7 +2951,7 @@ local function renderIconStyleForGroup(btn, st, state, compiled, cfg, group, cha
 
 	local primary, secondary = updateGroupContainerLayout(container, group, #activeRules)
 	container:Show()
-	local unitToken = btn.unit or "player"
+	local unitToken = btn._eqolUnit or "player"
 	for index = 1, #activeRules do
 		local ruleId = activeRules[index]
 		local rule = compiled.ruleById[ruleId]
@@ -3460,7 +3488,7 @@ function HB.UpdateFromAuras(btn, updateInfo, cache, changed, isFullUpdate, compi
 	end
 
 	ensureVisualLayersForUpdate(btn, st)
-	local unit = btn.unit
+	local unit = btn._eqolUnit
 	if unit == nil or unit == "" then
 		HB.ClearButton(btn)
 		return

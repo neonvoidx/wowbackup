@@ -88,7 +88,7 @@ local SPECIAL_DEBUFF_GROUPS = {
 		key = "deserter",
 		labelKey = "UFGlobalAuraIgnoreDeserter",
 		fallbackLabel = "Deserter Debuffs",
-		spellIds = { 26013, 71041 },
+		spellIds = { 26013, 71041, 1313593 },
 	},
 	{
 		key = "skyridingUtility",

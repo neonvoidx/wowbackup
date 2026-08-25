@@ -77,6 +77,144 @@ local function ShowRemoveIgnoredQuestNPCDialog(selectionKey)
 	StaticPopup_Show(REMOVE_IGNORED_QUEST_NPC_DIALOG, npcName or tostring(npcID), nil, npcID)
 end
 
+local function IsAutomaticGossipEnabled()
+	return addon.SettingsLayout.elements["autoChooseGossip"]
+		and addon.SettingsLayout.elements["autoChooseGossip"].setting
+		and addon.SettingsLayout.elements["autoChooseGossip"].setting:GetValue() == true
+end
+
+local AUTO_GOSSIP_CONTEXT_DEFAULTS = {
+	world = true,
+	delve = true,
+	scenario = true,
+	dungeonFollower = true,
+	dungeonNormal = true,
+	dungeonHeroic = true,
+	dungeonMythic = true,
+	dungeonMythicPlus = true,
+	dungeonTimewalking = true,
+	raidLfr = true,
+	raidStory = true,
+	raidNormal = true,
+	raidHeroic = true,
+	raidMythic = true,
+	raidTimewalking = true,
+	pvp = true,
+	other = true,
+}
+
+local AUTO_GOSSIP_CONTEXT_OPTIONS = {
+	{ value = "world", text = WORLD },
+	{ value = "delve", text = DELVES_LABEL or L["combatLogDelve"] },
+	{ value = "scenario", text = SCENARIOS or L["combatLogScenario"] },
+	{ value = "dungeonFollower", text = _G.LFG_TYPE_FOLLOWER_DUNGEON or L["autoGossipContextFollowerDungeon"] },
+	{ value = "dungeonNormal", text = DUNGEONS .. " - " .. PLAYER_DIFFICULTY1 },
+	{ value = "dungeonHeroic", text = DUNGEONS .. " - " .. PLAYER_DIFFICULTY2 },
+	{ value = "dungeonMythic", text = DUNGEONS .. " - " .. PLAYER_DIFFICULTY6 },
+	{ value = "dungeonMythicPlus", text = DUNGEONS .. " - " .. PLAYER_DIFFICULTY_MYTHIC_PLUS },
+	{ value = "dungeonTimewalking", text = DUNGEONS .. " - " .. PLAYER_DIFFICULTY_TIMEWALKER },
+	{ value = "raidLfr", text = RAID .. " - " .. PLAYER_DIFFICULTY3 },
+	{ value = "raidStory", text = RAID .. " - " .. (_G.PLAYER_DIFFICULTY_STORY_RAID or L["autoGossipContextStory"]) },
+	{ value = "raidNormal", text = RAID .. " - " .. PLAYER_DIFFICULTY1 },
+	{ value = "raidHeroic", text = RAID .. " - " .. PLAYER_DIFFICULTY2 },
+	{ value = "raidMythic", text = RAID .. " - " .. PLAYER_DIFFICULTY6 },
+	{ value = "raidTimewalking", text = RAID .. " - " .. PLAYER_DIFFICULTY_TIMEWALKER },
+	{ value = "pvp", text = PVP },
+	{ value = "other", text = L["autoGossipContextOther"] },
+}
+
+local function FormatGossipOptionLabel(name, gossipOptionID)
+	if name and name ~= "" then return ("%s (%s)"):format(name, tostring(gossipOptionID)) end
+	return ("ID: %s"):format(tostring(gossipOptionID))
+end
+
+local function GetSortedActiveGossipOptions()
+	local options = C_GossipInfo and C_GossipInfo.GetOptions and C_GossipInfo.GetOptions() or {}
+	table.sort(options, function(leftInfo, rightInfo) return leftInfo.orderIndex < rightInfo.orderIndex end)
+	return options
+end
+
+local function GetAutoGossipIDs(resetInvalid)
+	if not addon.db then return nil end
+	if type(addon.db.autogossipID) ~= "table" then
+		if resetInvalid then addon.db.autogossipID = {} end
+		return resetInvalid and addon.db.autogossipID or nil
+	end
+	return addon.db.autogossipID
+end
+
+local function BuildActiveGossipOptionList()
+	local list = {}
+	local order = {}
+	local saved = GetAutoGossipIDs() or {}
+	local options = GetSortedActiveGossipOptions()
+	for _, optionInfo in ipairs(options) do
+		local gossipOptionID = optionInfo.gossipOptionID
+		if gossipOptionID and not saved[gossipOptionID] and not saved[tostring(gossipOptionID)] then
+			local key = tostring(gossipOptionID)
+			if not list[key] then
+				list[key] = FormatGossipOptionLabel(addon.functions.getGossipOptionDisplayName(optionInfo), gossipOptionID)
+				order[#order + 1] = key
+			end
+		end
+	end
+	if #order == 0 then
+		list[""] = L["autoGossipNoAddOptions"]
+		order[1] = ""
+	end
+	return list, order
+end
+
+local function BuildSavedGossipOptionList()
+	local list = {}
+	local order = {}
+	local activeNames = {}
+	local activeOrder = {}
+	local saved = GetAutoGossipIDs() or {}
+	local options = GetSortedActiveGossipOptions()
+	for _, optionInfo in ipairs(options) do
+		if optionInfo.gossipOptionID then
+			local key = tostring(optionInfo.gossipOptionID)
+			activeNames[key] = addon.functions.getGossipOptionDisplayName(optionInfo)
+			activeOrder[key] = optionInfo.orderIndex
+			if saved[optionInfo.gossipOptionID] or saved[key] then addon.functions.storeAutoGossipInfo(optionInfo) end
+		end
+	end
+	local infoByID = addon.functions.getAutoGossipInfo() or {}
+	for gossipOptionID, enabled in pairs(saved) do
+		if enabled then
+			local key = tostring(gossipOptionID)
+			if not list[key] then
+				local info = infoByID[gossipOptionID] or infoByID[tonumber(gossipOptionID)]
+				local optionText = activeNames[key] or (type(info) == "table" and info.optionText)
+				local npcName = type(info) == "table" and info.npcName
+				local displayName = optionText
+				if npcName and npcName ~= "" then
+					displayName = optionText and optionText ~= "" and (npcName .. " — " .. optionText) or npcName
+				end
+				list[key] = FormatGossipOptionLabel(displayName, gossipOptionID)
+				order[#order + 1] = key
+			end
+		end
+	end
+	table.sort(order, function(left, right)
+		local leftOrder = activeOrder[left]
+		local rightOrder = activeOrder[right]
+		if leftOrder and rightOrder and leftOrder ~= rightOrder then return leftOrder < rightOrder end
+		if leftOrder ~= nil and rightOrder == nil then return true end
+		if leftOrder == nil and rightOrder ~= nil then return false end
+		local leftID = tonumber(left)
+		local rightID = tonumber(right)
+		if leftID and rightID then return leftID < rightID end
+		return left < right
+	end)
+	if #order == 0 then
+		list[""] = L["autoGossipNoSavedOptions"]
+		order[1] = ""
+	end
+	return list, order
+end
+
 local questingData = {
 	{
 		var = "autoChooseQuest",
@@ -222,6 +360,118 @@ local questingData = {
 	},
 }
 
+local gossipData = {
+	{
+		var = "autoChooseGossip",
+		groupID = "Gossip",
+		groupTitle = L["gossipSettingsHeadline"],
+		text = L["autoChooseGossip"],
+		desc = L["autoChooseGossipDesc"],
+		richNote = {
+			blocks = {
+				{ text = "|cff99e599" .. L["ignoreNPCTipp"] .. "|r" },
+			},
+		},
+		func = function(key) addon.db["autoChooseGossip"] = key end,
+		default = false,
+		newTagID = "autoChooseGossip",
+		children = {
+			{
+				var = "autoChooseGossipModifier",
+				text = L["gossipAutomationModifier"],
+				desc = L["gossipAutomationModifierDesc"],
+				listFunc = function()
+					return {
+						NONE = NONE,
+						SHIFT = SHIFT_KEY_TEXT,
+						CTRL = CTRL_KEY_TEXT,
+						ALT = ALT_KEY_TEXT,
+					}
+				end,
+				get = function() return addon.db and addon.db.autoChooseGossipModifier or "NONE" end,
+				set = function(key)
+					if not key or key == "" then key = "NONE" end
+					addon.db["autoChooseGossipModifier"] = key
+				end,
+				parentCheck = IsAutomaticGossipEnabled,
+				parent = true,
+				newTagID = "autoChooseGossipModifier",
+				sType = "dropdown",
+			},
+			{
+				var = "autoChooseGossipContexts",
+				text = L["autoGossipContexts"],
+				desc = L["autoGossipContextsDesc"],
+				options = AUTO_GOSSIP_CONTEXT_OPTIONS,
+				parentCheck = IsAutomaticGossipEnabled,
+				parent = true,
+				newTagID = "autoChooseGossipContexts",
+				sType = "multidropdown",
+			},
+		},
+	},
+	{
+		id = "autoGossipAdd",
+		var = "autoGossipAdd",
+		groupID = "Gossip",
+		groupTitle = L["gossipSettingsHeadline"],
+		key = false,
+		storage = false,
+		text = ADD,
+		desc = L["autoGossipAddDesc"],
+		listFunc = BuildActiveGossipOptionList,
+		get = function() return "" end,
+		set = function(key)
+			local gossipOptionID = tonumber(key)
+			if not gossipOptionID then return false end
+			local saved = GetAutoGossipIDs(true)
+			saved[gossipOptionID] = true
+			for _, optionInfo in ipairs(GetSortedActiveGossipOptions()) do
+				if optionInfo.gossipOptionID == gossipOptionID then
+					addon.functions.storeAutoGossipInfo(optionInfo)
+					break
+				end
+			end
+			print(ADD, "ID:", gossipOptionID)
+			return true
+		end,
+		default = "",
+		newTagID = "autoGossipAdd",
+		trackCustomized = false,
+		sType = "dropdown",
+	},
+	{
+		id = "autoGossipRemove",
+		var = "autoGossipRemove",
+		groupID = "Gossip",
+		groupTitle = L["gossipSettingsHeadline"],
+		key = false,
+		storage = false,
+		text = REMOVE,
+		desc = L["autoGossipRemoveDesc"],
+		listFunc = BuildSavedGossipOptionList,
+		get = function() return "" end,
+		set = function(key)
+			local gossipOptionID = tonumber(key)
+			if not gossipOptionID then return false end
+			local saved = GetAutoGossipIDs(true)
+			saved[gossipOptionID] = nil
+			saved[tostring(gossipOptionID)] = nil
+			local infoByID = addon.functions.getAutoGossipInfo()
+			if infoByID then
+				infoByID[gossipOptionID] = nil
+				infoByID[tostring(gossipOptionID)] = nil
+			end
+			print(REMOVE, "ID:", gossipOptionID)
+			return true
+		end,
+		default = "",
+		newTagID = "autoGossipRemove",
+		trackCustomized = false,
+		sType = "dropdown",
+	},
+}
+
 local cinematicData = {
 	{
 		var = "autoCancelCinematic",
@@ -257,6 +507,16 @@ addon.functions.SettingsCreateHeadline(cQuest, L["Questing"], { parentSection = 
 applyParentSection(questingData, questingExpandable)
 addon.functions.SettingsCreateCheckboxes(cQuest, questingData)
 
+addon.functions.SettingsCreateHeadline(cQuest, L["gossipSettingsHeadline"], {
+	parentSection = questingExpandable,
+	groupID = "Gossip",
+	groupTitle = L["gossipSettingsHeadline"],
+})
+applyParentSection(gossipData, questingExpandable)
+addon.functions.SettingsCreateCheckbox(cQuest, gossipData[1])
+addon.functions.SettingsCreateDropdown(cQuest, gossipData[2])
+addon.functions.SettingsCreateDropdown(cQuest, gossipData[3])
+
 addon.functions.SettingsCreateHeadline(cQuest, L["Cinematics"], { parentSection = questingExpandable })
 applyParentSection(cinematicData, questingExpandable)
 addon.functions.SettingsCreateCheckboxes(cQuest, cinematicData)
@@ -266,18 +526,16 @@ addon.functions.SettingsCreateCheckboxes(cQuest, cinematicData)
 function addon.functions.initQuest()
 	if addon.db then
 		if addon.db.autoChooseQuest == nil then
-			if addon.db.autoAcceptQuest == true or addon.db.autoTurnInQuest == true or addon.db.autoGossip == true then addon.db.autoChooseQuest = true end
+			if addon.db.autoAcceptQuest == true or addon.db.autoTurnInQuest == true then addon.db.autoChooseQuest = true end
 		end
 		if addon.db.autoChooseQuestModifier == nil then
 			local modifiers = {}
 			if addon.db.autoAcceptQuest == true then table.insert(modifiers, NormalizeQuestAutomationModifier(addon.db.autoAcceptQuestModifier) or "NONE") end
 			if addon.db.autoTurnInQuest == true then table.insert(modifiers, NormalizeQuestAutomationModifier(addon.db.autoTurnInQuestModifier) or "NONE") end
-			if addon.db.autoGossip == true then table.insert(modifiers, NormalizeQuestAutomationModifier(addon.db.autoGossipModifier) or "NONE") end
 			if #modifiers == 0 then
 				local fallbackModifiers = {
 					NormalizeQuestAutomationModifier(addon.db.autoAcceptQuestModifier),
 					NormalizeQuestAutomationModifier(addon.db.autoTurnInQuestModifier),
-					NormalizeQuestAutomationModifier(addon.db.autoGossipModifier),
 				}
 				for _, modifier in ipairs(fallbackModifiers) do
 					if modifier then
@@ -301,6 +559,18 @@ function addon.functions.initQuest()
 				addon.db.autoChooseQuestModifier = selectedModifier
 			end
 		end
+		if addon.db.autoChooseGossip == nil then
+			if addon.db.autoGossip ~= nil then
+				addon.db.autoChooseGossip = addon.db.autoGossip == true
+			else
+				addon.db.autoChooseGossip = addon.db.autoChooseQuest == true
+			end
+		end
+		if addon.db.autoChooseGossipModifier == nil then
+			addon.db.autoChooseGossipModifier = NormalizeQuestAutomationModifier(addon.db.autoGossipModifier)
+				or NormalizeQuestAutomationModifier(addon.db.autoChooseQuestModifier)
+				or "NONE"
+		end
 		if addon.db.ignoreDailyQuests == nil then
 			addon.db.ignoreDailyQuests = (type(addon.db.questAutomationFiltersAccept) == "table" and addon.db.questAutomationFiltersAccept.daily == true)
 				or (type(addon.db.questAutomationFiltersTurnIn) == "table" and addon.db.questAutomationFiltersTurnIn.daily == true)
@@ -320,6 +590,9 @@ function addon.functions.initQuest()
 
 	addon.functions.InitDBValue("autoChooseQuest", false)
 	addon.functions.InitDBValue("autoChooseQuestModifier", "NONE")
+	addon.functions.InitDBValue("autoChooseGossip", false)
+	addon.functions.InitDBValue("autoChooseGossipModifier", "NONE")
+	addon.functions.InitDBValue("autoChooseGossipContexts", AUTO_GOSSIP_CONTEXT_DEFAULTS)
 	addon.functions.InitDBValue("ignoreTrivialQuests", false)
 	addon.functions.InitDBValue("ignoreDailyQuests", false)
 	addon.functions.InitDBValue("ignoreGoldCostQuests", false)
@@ -329,6 +602,9 @@ function addon.functions.initQuest()
 	addon.functions.InitDBValue("ignoredQuestNPC", {})
 	GetIgnoredQuestNPCs(true)
 	addon.functions.InitDBValue("autogossipID", {})
+	GetAutoGossipIDs(true)
+	addon.functions.InitDBValue("autogossipInfo", {})
+	addon.functions.getAutoGossipInfo(true)
 	if addon.db then addon.db.testOwner = nil end
 
 
@@ -418,7 +694,7 @@ function addon.functions.initQuest()
 		end
 
 		local function AddIgnoreAutoQuest(owner, root, ctx)
-			if not addon.db["autoChooseQuest"] then return end
+			if not addon.db["autoChooseQuest"] and not addon.db["autoChooseGossip"] then return end
 			if addon.functions.isRestrictedContent() then return end
 
 			if not UnitExists("target") or UnitPlayerControlled("target") then return end

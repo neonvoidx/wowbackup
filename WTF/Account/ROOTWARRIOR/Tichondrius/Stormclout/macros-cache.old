@@ -5,14 +5,10 @@ VER 3 010000000000006A " " "INV_Misc_QuestionMark"
 /cancelaura Chi Torpedo
 /cast Leg Sweep
 END
-VER 3 010000000000006B " " "INV_Misc_QuestionMark"
-#showtooltip Tiger Palm
-/stopmacro [channeling:Fists of Fury]
-/stopmacro [channeling:Crackling Jade Lightning]
-/stopmacro [channeling:Spinning Crane Kick]
-/stopmacro [channeling:Celestial Conduit]
-/cast Tiger Palm
-/petattack
+VER 3 010000000000008A " " "134400"
+#showtooltip
+/cast Touch of karma
+/use Kang's Bindstone
 END
 VER 3 010000000000006C " " "INV_Misc_QuestionMark"
 #showtooltip Life Cocoon
@@ -24,12 +20,17 @@ VER 3 010000000000006D " " "INV_Misc_QuestionMark"
 END
 VER 3 010000000000006E " " "INV_Misc_QuestionMark"
 #showtooltip Paralysis
-#FrameSort EnemyHealer
-/cast [mod:shift,@none,exists,harm,nodead][] Paralysis
+#FS EH X
+/cast [mod:shift,@none] Paralysis
+/cast [mod:shift,@focus] Paralysis
+/cast Paralysis
 END
 VER 3 010000000000006F " " "INV_Misc_QuestionMark"
 #showtooltip
-/cast  [@focus,exists,mod:shift,harm,nodead][] Spear Hand Strike
+#FS EH X
+/cast [mod:shift,@none] Spear Hand Strike
+/cast [mod:shift,@focus] Spear Hand Strike
+/cast Spear hand strike
 /use Goblin Weather Machine - Prototype 01-B
 END
 VER 3 0100000000000070 " " "INV_Misc_QuestionMark"
@@ -53,29 +54,19 @@ VER 3 0100000000000074 " " "INV_Misc_QuestionMark"
 /cast Breath of fire
 /use Fire-eater's Vial
 END
-VER 3 0100000000000075 " " "INV_Misc_QuestionMark"
-#showtooltip Blackout Kick
-/stopmacro [channeling:Fists of Fury]
-/stopmacro [channeling:Crackling Jade Lightning]
-/stopmacro [channeling:Spinning Crane Kick]
-/stopmacro [channeling:Celestial Conduit]
-/cast Blackout Kick
-END
-VER 3 0100000000000076 " " "INV_Misc_QuestionMark"
-#showtooltip [known:Chi burst] Chi Burst;[known: chi wave] Chi wave;
-/cast [known:Chi Burst] Chi burst;
-/cast [known:Chi Wave] Chi wave
-/use Goblin Weather Machine - Prototype 01-B
+VER 3 010000000000007E " " "INV_Misc_QuestionMark"
+#showtooltip
+/cast [@mouseover, exists, harm][] Touch of Death
+/use Seafarer's Slidewhistle
 END
 VER 3 0100000000000077 " " "INV_Misc_QuestionMark"
 #showtooltip
 /cast [@cursor] Summon Jade Serpent Statue
 END
-VER 3 0100000000000078 " " "INV_Misc_QuestionMark"
-#showtooltip 
-/stopmacro [channeling:Fists of Fury]
-/cast [known: Whirling Dragon Punch] Whirling Dragon Punch
-/cast [known: Strike of the Windlord] Strike of the Windlord
+VER 3 0100000000000084 " " "INV_Misc_QuestionMark"
+#showtooltip
+/cast Fortifying Brew
+/use Kang's Bindstone
 END
 VER 3 0100000000000079 " " "INV_Misc_QuestionMark"
 #showtooltip
@@ -101,41 +92,40 @@ VER 3 010000000000007C " " "INV_Misc_QuestionMark"
 /cast Zenith
 /use Perpetual Purple Firework
 /use Winning Hand
-/cast Strike of the Windlord
 END
 VER 3 010000000000007D " " "INV_Misc_QuestionMark"
 #showtooltip
 /cast roll
 /cast Prismatic Bauble
 END
-VER 3 010000000000007E " " "INV_Misc_QuestionMark"
-#showtooltip
-/cast [@mouseover, exists, harm][] Touch of Death
-/use Seafarer's Slidewhistle
-END
-VER 3 010000000000007F " " "INV_Misc_QuestionMark"
-#showtooltip Spinning Crane Kick
-/use Fire-Eater's Vial
-/cast Spinning Crane Kick
-END
-VER 3 0100000000000080 " " "INV_Misc_QuestionMark"
-#showtooltip Disable
-/use [@target,exists] Disable
-END
-VER 3 0100000000000084 " " "INV_Misc_QuestionMark"
-#showtooltip
-/cast Fortifying Brew
-/use Kang's Bindstone
-END
-VER 3 0100000000000087 " " "134400"
-#showtooltip
-/stopmacro [channeling:Fists of Fury]
-/cast Rising Sun Kick
-END
-VER 3 0100000000000088 " " "134400"
+VER 3 0100000000000088 "!" "134400"
 #showtooltip Fists of fury
 /cast [channeling:Celestial Conduit] Unity Within
 /cast [nochanneling][channeling:Spinning Crane Kick][channeling:Celestial Conduit] Fists of Fury
+END
+VER 3 010000000000007F "!" "134400"
+#showtooltip Spinning Crane Kick
+/use Fire-Eater's Vial
+/cast [nochanneling:Fists of Fury] Spinning Crane Kick
+END
+VER 3 0100000000000078 "!" "134400"
+#showtooltip 
+/stopmacro [channeling:Fists of Fury]
+/cast [known: Whirling Dragon Punch] Whirling Dragon Punch
+/cast [known: Strike of the Windlord] Strike of the Windlord
+END
+VER 3 010000000000006B "!" "134400"
+#showtooltip Tiger Palm
+/cast [nochanneling:Fists of Fury] Tiger Palm
+/petattack
+END
+VER 3 0100000000000075 "!" "134400"
+#showtooltip Blackout Kick
+/cast [nochanneling:Fists of Fury] Blackout Kick
+END
+VER 3 0100000000000087 "!" "134400"
+#showtooltip Rising Sun Kick
+/cast [nochanneling:Fists of Fury] Rising Sun Kick
 END
 VER 3 0100000000000081 "Black Ox" "INV_Misc_QuestionMark"
 #showtooltip Provoke
@@ -149,4 +139,15 @@ VER 3 0100000000000083 "Dismiss" "615340"
 /click t2
 /click t3
 /click t4
+END
+VER 3 010000000000008D "M+" "519384"
+/btwl a WW M+
+END
+VER 3 010000000000008B "PVP" "134400"
+#showtooltip 
+/cast [known: Whirling Dragon Punch] Whirling Dragon Punch
+/cast [known: Strike of the Windlord] Strike of the Windlord
+END
+VER 3 010000000000008C "Shuffle" "1322720"
+/btwl a shuffle
 END

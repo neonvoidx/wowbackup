@@ -66,8 +66,8 @@ end
 
 addon.Drinks.drinkList = { -- Special Food
 	{ key = "ConjureRefreshment", id = 190336, requiredLevel = 5, mana = 0, isSpell = true }, -- set mana to zero, because we update it anyway
-	{ key = "CandyBar", id = 20390, requiredLevel = 1, mana = 225000 }, -- We don't know the right amount on level 41 it's 18000
-	{ key = "CandyCorn", id = 20389, requiredLevel = 1, mana = 225000 }, -- We don't know the right amount on level 41 it's 18000
+	{ key = "CandyBar", id = 20390, requiredLevel = 1, mana = 270000 }, -- We don't know the right amount on level 41 it's 18000
+	{ key = "CandyCorn", id = 20389, requiredLevel = 1, mana = 270000 }, -- We don't know the right amount on level 41 it's 18000
 	{ key = "ConjuredManaBun", id = 113509, requiredLevel = 40, mana = 0, isMageFood = true, isEarthenFood = true }, -- set mana to zero, because we update it anyway
 	{ key = "ConjuredManaFritter", id = 80618, requiredLevel = 35, mana = 0, isMageFood = true, isEarthenFood = true }, -- set mana to zero, because we update it anyway
 	{ key = "ConjuredManaPudding", id = 80610, requiredLevel = 35, mana = 0, isMageFood = true, isEarthenFood = true }, -- set mana to zero, because we update it anyway
@@ -125,7 +125,7 @@ addon.Drinks.drinkList = { -- Special Food
 	{ key = "Barter-B-Q", id = 205690, requiredLevel = 65, mana = 53332 },
 	{ key = "ArcanostabilizedProvisions", id = 201047, requiredLevel = 10, mana = 53332 },
 	{ key = "BottledWinterspringWater", id = 19300, requiredLevel = 15, mana = 1800 },
-	{ key = "EnrichedMannaBiscuit", id = 13724, requiredLevel = 20, mana = 240901 },
+	{ key = "EnrichedMannaBiscuit", id = 13724, requiredLevel = 20, mana = 289082 },
 	{ key = "CatalyzedApplePie", id = 190880, requiredLevel = 55, mana = 56 },
 	{ key = "Cupo'Wakeup", id = 197856, requiredLevel = 10, mana = 62500 },
 	{ key = "CircleofSubsistence", id = 190881, requiredLevel = 55, mana = 56 },
@@ -192,7 +192,7 @@ addon.Drinks.drinkList = { -- Special Food
 	{ key = "GoldenCarpConsomme", id = 74636, requiredLevel = 32, mana = 16 },
 	{ key = "GoldthornTea", id = 10841, requiredLevel = 11, mana = 5 },
 	{ key = "GorgrondMineralWater", id = 117452, requiredLevel = 35, mana = 10000 },
-	{ key = "Graccu'sMinceMeatFruitcake", id = 21215, requiredLevel = 17, mana = 300000 },
+	{ key = "Graccu'sMinceMeatFruitcake", id = 21215, requiredLevel = 17, mana = 360000 },
 	{ key = "GreasyWhaleMilk", id = 59029, requiredLevel = 30, mana = 10980 },
 	{ key = "GrilledBonescale", id = 34760, requiredLevel = 27, mana = 9066 },
 	{ key = "GrilledCatfish", id = 154889, requiredLevel = 45, mana = 12 },
@@ -361,18 +361,18 @@ addon.Drinks.drinkList = { -- Special Food
 	{ key = "ConjuredMineralWater", id = 8077, requiredLevel = 15, mana = 1800 },
 	{ key = "ConjuredSparklingWater", id = 8078, requiredLevel = 20, mana = 4050 },
 	{ key = "ConjuredCrystalWater", id = 8079, requiredLevel = 23, mana = 7560 },
-	{ key = "AlteracMannaBiscuit", id = 19301, requiredLevel = 22, mana = 180649 },
-	{ key = "EssenceMango", id = 20031, requiredLevel = 23, mana = 183894 },
-	{ key = "BobbingApple", id = 20516, requiredLevel = 1, mana = 225000 },
+	{ key = "AlteracMannaBiscuit", id = 19301, requiredLevel = 22, mana = 216779 },
+	{ key = "EssenceMango", id = 20031, requiredLevel = 23, mana = 220673 },
+	{ key = "BobbingApple", id = 20516, requiredLevel = 1, mana = 270000 },
 	{ key = "ConjuredGlacierWater", id = 22018, requiredLevel = 27, mana = 9918 },
-	{ key = "UndersporePod", id = 28112, requiredLevel = 1, mana = 180649 },
+	{ key = "UndersporePod", id = 28112, requiredLevel = 1, mana = 216779 },
 	{ key = "ConjuredMountainSpringWater", id = 30703, requiredLevel = 25, mana = 10704 },
 	{ key = "ConjuredManaBiscuit", id = 34062, requiredLevel = 26, mana = 9918 },
 	{ key = "NaaruRation", id = 34780, requiredLevel = 26, mana = 9918 },
 	{ key = "GiganticFeast", id = 43478, requiredLevel = 27, mana = 9066 },
 	{ key = "GarrsLimeade", id = 61382, requiredLevel = 1, mana = 8400 },
 	{ key = "SweetTea", id = 63023, requiredLevel = 15, mana = 1800 },
-	{ key = "StormwindSurprise", id = 75028, requiredLevel = 1, mana = 300000 },
+	{ key = "StormwindSurprise", id = 75028, requiredLevel = 1, mana = 360000 },
 	{ key = "PerpetualLeftovers", id = 87253, requiredLevel = 35, mana = 15000 },
 	{ key = "CupofKafa", id = 88578, requiredLevel = 1, mana = 15000 },
 	{ key = "FrostboarJerky", id = 111544, requiredLevel = 35, mana = 16 },
@@ -380,7 +380,7 @@ addon.Drinks.drinkList = { -- Special Food
 	{ key = "BlindPalefish", id = 118424, requiredLevel = 35, mana = 16 },
 	{ key = "AncientBandana", id = 130259, requiredLevel = 35, mana = 16 },
 	{ key = "Lavacolada", id = 140628, requiredLevel = 37, mana = 10000 },
-	{ key = "MardivassMagnificentDesalinatingPouch", id = 169763, requiredLevel = 1, mana = 120000 },
+	{ key = "MardivassMagnificentDesalinatingPouch", id = 169763, requiredLevel = 1, mana = 144000 },
 	{ key = "StygianStew", id = 174283, requiredLevel = 55, mana = 56 },
 	{ key = "SunwarmedXyfias", id = 177041, requiredLevel = 55, mana = 56 },
 	{ key = "FiveChimeBatzos", id = 177042, requiredLevel = 55, mana = 56 },

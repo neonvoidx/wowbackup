@@ -287,17 +287,26 @@ NS.checkPotentialOutcome = function(
   tickRate,
   cycleEnd,
   maxScore,
-  resources
+  resources,
+  baseLimitStartTime
 )
   local potentialAScore = allyScore
   local potentialHScore = hordeScore
   local potentialTickTime = nextTickTime
 
   while potentialTickTime <= cycleEnd do
+    local allyLimit = allyBaseLimit
+    local hordeLimit = hordeBaseLimit
+    -- Keep the factual counts until a delayed candidate base limit is active.
+    if baseLimitStartTime and potentialTickTime <= baseLimitStartTime then
+      allyLimit = nil
+      hordeLimit = nil
+    end
+
     potentialAScore =
-      NS.getProjectedInfo(potentialAScore, allyIntervals, potentialTickTime, tickRate, resources, allyBaseLimit)
+      NS.getProjectedInfo(potentialAScore, allyIntervals, potentialTickTime, tickRate, resources, allyLimit)
     potentialHScore =
-      NS.getProjectedInfo(potentialHScore, hordeIntervals, potentialTickTime, tickRate, resources, hordeBaseLimit)
+      NS.getProjectedInfo(potentialHScore, hordeIntervals, potentialTickTime, tickRate, resources, hordeLimit)
 
     if potentialAScore >= maxScore or potentialHScore >= maxScore then
       local aWins = potentialAScore >= maxScore and potentialHScore < maxScore
@@ -489,8 +498,8 @@ NS.checkBlitzWinCondition = function(aScore, hScore, allyInfo, hordeInfo, now, s
     and scoreTickTime ~= nil
     and scoreTickTime > 0
 
-  if not timersComplete or cycleEnd <= now then
-    return result
+  if not timersComplete then
+    return nil
   end
 
   local tickRate = curMap.tickRate
@@ -542,10 +551,8 @@ NS.checkBlitzWinCondition = function(aScore, hScore, allyInfo, hordeInfo, now, s
     aWins = result.projectedAScore > result.projectedHScore
     hWins = result.projectedHScore > result.projectedAScore
     nWins = result.projectedAScore == result.projectedHScore
-    result.allyNeededBases =
-      NS.getNeededBaseCount(result.projectedAScore, result.projectedHScore, cycleEnd, scoreTickTime, curMap)
-    result.hordeNeededBases =
-      NS.getNeededBaseCount(result.projectedHScore, result.projectedAScore, cycleEnd, scoreTickTime, curMap)
+    result.allyNeededBases = NS.getNeededBaseCount(aScore, hScore, allyInfo, hordeInfo, now, scoreTickTime, curMap)
+    result.hordeNeededBases = NS.getNeededBaseCount(hScore, aScore, hordeInfo, allyInfo, now, scoreTickTime, curMap)
   end
 
   if nWins then
@@ -712,47 +719,59 @@ NS.getIncomingBlitzBaseInfo = function(ownedBases, incomingBases, timers, locked
   }
 end
 
-NS.getNeededBaseCount = function(ownScore, opposingScore, cycleEnd, scoreTickTime, curMap)
-  -- Once every currently known base has expired, compare one possible next
-  -- control window where all bases are captured together and split between the
-  -- two teams. This keeps the required-base text finite without assuming that
-  -- those bases remain controlled after their configured window.
+NS.getNeededBaseCount = function(ownScore, opposingScore, ownInfo, opposingInfo, now, scoreTickTime, curMap)
   local tickRate = curMap.tickRate
-  local controlStart = cycleEnd + curMap.resetTime + curMap.assaultTime + curMap.contestedTime
-  local controlEnd = controlStart + curMap.controlTime
   local firstTickTime = scoreTickTime + tickRate
+  local ownedBases = 0
+  local controlStart = now + curMap.contestedTime
+  local controlEnd = controlStart + curMap.controlTime
 
-  while firstTickTime <= controlStart do
+  for _, interval in ipairs(ownInfo.intervals) do
+    if interval.start <= now and now < interval.finish then
+      ownedBases = ownedBases + 1
+    end
+  end
+
+  while firstTickTime <= now do
     firstTickTime = firstTickTime + tickRate
   end
 
-  if firstTickTime > controlEnd then
-    return nil
-  end
-
   local function winsWith(baseCount)
-    local opposingBaseCount = curMap.maxBases - baseCount
-    local resultOwnScore = ownScore
-    local resultOpposingScore = opposingScore
-    local tickTime = firstTickTime
+    local ownIntervals = {}
 
-    while tickTime <= controlEnd do
-      resultOwnScore = resultOwnScore + (tickRate * curMap.baseResources[baseCount])
-      resultOpposingScore = resultOpposingScore + (tickRate * curMap.baseResources[opposingBaseCount])
-
-      if resultOwnScore >= curMap.maxScore or resultOpposingScore >= curMap.maxScore then
-        return resultOwnScore >= curMap.maxScore
+    -- Existing bases score during the contest, then the candidate total caps together.
+    for _, interval in ipairs(ownInfo.intervals) do
+      if interval.start < controlStart then
+        tinsert(ownIntervals, { start = interval.start, finish = mmin(interval.finish, controlStart) })
       end
-
-      tickTime = tickTime + tickRate
     end
 
-    return resultOwnScore >= resultOpposingScore
+    for _ = 1, baseCount do
+      tinsert(ownIntervals, { start = controlStart, finish = controlEnd })
+    end
+
+    local _, ownWins, _, nobodyWins = NS.checkPotentialOutcome(
+      ownScore,
+      opposingScore,
+      nil,
+      curMap.maxBases - baseCount,
+      ownIntervals,
+      opposingInfo.intervals,
+      firstTickTime,
+      tickRate,
+      mmax(opposingInfo.cycleEnd, controlEnd),
+      curMap.maxScore,
+      curMap.baseResources,
+      controlStart
+    )
+    return ownWins or nobodyWins
   end
 
-  for baseCount = 0, curMap.maxBases do
-    if winsWith(baseCount) then
-      return baseCount
+  -- Match the normal path's trueLoseBases baseline before testing higher totals.
+  local currentBases = ownedBases == 0 and #ownInfo.intervals or ownedBases
+  for neededBases = currentBases + 1, curMap.maxBases do
+    if winsWith(neededBases) then
+      return neededBases
     end
   end
 
@@ -762,6 +781,7 @@ end
 NS.getBlitzWinTable = function(
   winnerNeededBases,
   loserNeededBases,
+  winnerBases,
   loserBases,
   winnerScore,
   winnerName,
@@ -792,6 +812,7 @@ NS.getBlitzWinTable = function(
       winTime = expiration,
       winTicks = resultTicks,
       winName = winnerName,
+      winBases = winnerBases,
       loseName = loserName,
       loseBases = loserBases,
       tickRate = curMap.tickRate,
@@ -935,13 +956,10 @@ NS.CleanupDB = function(src, dst)
       -- HACK: offsetsXY are not set in DEFAULT_SETTINGS but sat on demand instead to save memory,
       -- which causes nil comparison to always be true here, so always ignore these for now
       if
-        key ~= "lastReadVersion"
-        and key ~= "onlyShowWhenNewVersion"
-        and key ~= "lastFlagCapBy"
+        key ~= "lastFlagCapBy"
         and key ~= "lastFlagStackInfo"
         and key ~= "lastOrbStackInfo"
         and key ~= "lastScoreTickTime"
-        and key ~= "version"
       then
         src[key] = nil
       end

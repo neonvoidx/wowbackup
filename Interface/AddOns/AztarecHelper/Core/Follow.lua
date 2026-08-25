@@ -195,7 +195,7 @@ local function buildBoard()
     board:SetSize(300, look().now + 6)
     -- the default puts the current call itself on the screen's centerline,
     -- a touch above the character, so the offset carries the head's inset
-    AZT.MakeMovable(board, "followPos", "CENTER", 150 - 8 - look().now / 2, 120)
+    AZT.MakeMovable(board, "follow", "CENTER", 150 - 8 - look().now / 2, 120)
     local bg = board:CreateTexture(nil, "BACKGROUND")
     bg:SetAllPoints()
     bg:SetColorTexture(0, 0, 0, 0.25)
@@ -209,23 +209,42 @@ local function buildBoard()
     board:Hide()
 end
 
--- a slice of the received route into one fontstring. A build can revoke a
+-- a slice of a route into one fontstring, get(i) handing back the glyph
+-- argument for a filled slot and nothing for a hole. A build can revoke a
 -- sink's secret permission at any patch, so the fallback keeps the board
 -- honest instead of erroring on every redraw
-local function drawSlice(fs, first, last, size)
+local function drawSlice(fs, first, last, size, get)
     local glyph = look().glyph(size)
     local parts = {}
     local args = {}
     for i = first, last do
-        if filled[i] then
+        local a = get(i)
+        if a then
             parts[#parts + 1] = glyph
-            args[#args + 1] = arr[i]
+            args[#args + 1] = a
         else
             parts[#parts + 1] = "?"
         end
     end
     if not pcall(fs.SetFormattedText, fs, table.concat(parts, "  "), unpack(args)) then
         fs:SetText("route hidden this build")
+    end
+end
+
+-- the two feeds the one board can draw: the leader's received calls, or
+-- the own recorded route read in the own quarter language
+local function callAt(i)
+    return filled[i] and arr[i] or nil
+end
+
+local soloSeq
+local function soloAt(i)
+    local q = soloSeq[i]
+    if q and q ~= "?" then
+        if look() == STYLES.arrows then
+            return AZT.QUAD_DIR[q]
+        end
+        return AZT.QuadIcon(q) or AZT.MARK_SEED[q]
     end
 end
 
@@ -238,9 +257,13 @@ end
 redraw = function()
     local w = AZT.Wave
     local live = following and w.phase ~= nil
-    -- parked asks for no party, the stand-in is how the board gets placed
-    local parked = (couldFollow() or Follow.testSolo) and AZT.InDelve() and not AZT.Fighting()
-    local on = live or parked
+    -- the own route on the same board, when nobody's calls own it. The
+    -- solo feed fills as waves get answered and steps like the leader's
+    local soloLive = not live and AztarecHelperDB.soloBoard and w.phase ~= nil
+    -- parked asks for no pull, the stand-in is how the board gets placed
+    local parkedFollow = (couldFollow() or Follow.testSolo) and AZT.InDelve() and not AZT.Fighting()
+    local parkedSolo = AztarecHelperDB.soloBoard and AZT.InDelve() and not AZT.Fighting()
+    local on = live or soloLive or parkedFollow or parkedSolo
     if not board then
         if not on then
             return
@@ -257,35 +280,44 @@ redraw = function()
     board.now:SetAlpha(1)
     board.trail:SetTextColor(1, 1, 1, 1)
     board.trail:SetText("")
-    if not live then
+    local get, top
+    if live then
+        get = callAt
+        top = math.max(count, w.total or 0)
+    elseif soloLive then
+        soloSeq = AZT.Safe.GetSequence()
+        get = soloAt
+        top = math.max(#soloSeq, w.total or 0)
+    end
+    if not get or top == 0 then
         -- a stand-in where the live call will sit, drawn exactly like the
         -- real thing so placing the board shows what a call will look like.
-        -- The caption alone carries the parked look
+        -- The caption alone carries the parked look, the follower wording
+        -- winning while following is what pulls will use
+        if live then
+            board.now:SetText("waiting for calls")
+            board.now:SetTextColor(1, 1, 1, 0.8)
+            return
+        end
         board.now:SetFormattedText(s.glyph(s.now), s.sample)
-        board.trail:SetText("leader's route")
+        board.trail:SetText(parkedFollow and "leader's route" or "your route")
         board.trail:SetTextColor(1, 1, 1, 0.5)
-        return
-    end
-    local top = math.max(count, w.total or 0)
-    if top == 0 then
-        board.now:SetText("waiting for calls")
-        board.now:SetTextColor(1, 1, 1, 0.8)
         return
     end
     local current = w.phase == "echo" and w.idx or 0
     if current == 0 then
         -- still collecting. The opener draws big from the moment it lands,
         -- since that is the one the echoes will start with
-        drawSlice(board.now, 1, 1, s.now)
+        drawSlice(board.now, 1, 1, s.now, get)
         if top > 1 then
-            drawSlice(board.trail, 2, top, s.rest)
+            drawSlice(board.trail, 2, top, s.rest, get)
         end
     else
         -- the current call holds the head slot and the rest files in from
         -- the right
-        drawSlice(board.now, current, current, s.now)
+        drawSlice(board.now, current, current, s.now, get)
         if current < top then
-            drawSlice(board.trail, current + 1, top, s.upcoming)
+            drawSlice(board.trail, current + 1, top, s.upcoming, get)
         end
     end
 end
@@ -483,8 +515,17 @@ function Follow.Sync()
             askedRole = nil
         elseif InCombatLockdown() then
             ev:RegisterEvent("PLAYER_REGEN_ENABLED")
+        elseif not AztarecHelperDB.autoAsked then
+            -- the automatic recording offer goes first. Declining it comes
+            -- back through here, so the role waits its turn unasked
+            return
         else
             askedRole = role
+            -- party play rides the answer keys, so the roles are only
+            -- offered while the route is recorded by hand
+            if not AztarecHelperDB.manualMode then
+                return
+            end
             if role == "leader" and not AztarecHelperDB.callRoute then
                 AZT.ShowCallAsk()
             elseif role == "member" and not AztarecHelperDB.follow then

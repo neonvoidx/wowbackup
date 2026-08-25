@@ -378,9 +378,13 @@ function Flow:EnsureFrames()
 	local timerBar = CreateFrame("StatusBar", nil, container)
 	timerBar.bg = ensureBackground(timerBar, "BACKGROUND", -4)
 	timerBar.border = ensureBorder(timerBar)
+	timerBar.markerLayer = CreateFrame("Frame", nil, timerBar)
+	timerBar.markerLayer:SetAllPoints(timerBar)
+	timerBar.markerLayer:SetFrameLevel(timerBar:GetFrameLevel() + 1)
+	timerBar.markerLayer:EnableMouse(false)
 	timerBar.markers = {}
 	for index = 1, 2 do
-		local marker = timerBar:CreateTexture(nil, "OVERLAY")
+		local marker = timerBar.markerLayer:CreateTexture(nil, "OVERLAY")
 		marker:SetColorTexture(1, 1, 1, 0.85)
 		timerBar.markers[index] = marker
 	end
@@ -808,7 +812,8 @@ function Flow:Render(state, timeLeft, twoChest, threeChest)
 		local color = normalizeColor(expired and self:Get("timerExpiredColor") or self:Get("timerColor"), self.defaults.timerColor)
 		bar:SetStatusBarColor(color.r, color.g, color.b, color.a)
 		bar:SetMinMaxValues(0, math.max(1, tonumber(state.timeLimit) or 1))
-		bar:SetValue(self:Get("timerFillUp") == true and math.max(0, tonumber(state.elapsed) or 0) or math.max(0, tonumber(timeLeft) or 0))
+		local fillUp = self:Get("timerFillUp") == true
+		bar:SetValue(fillUp and math.max(0, tonumber(state.elapsed) or 0) or math.max(0, tonumber(timeLeft) or 0))
 		applyBorder(bar.border, self:Get("timerBorderEnabled") == true, self:Get("timerBorderTexture"), self:Get("timerBorderColor"), self:Get("timerBorderSize"))
 		local markerTimes = { threeChest, twoChest }
 		for index, marker in ipairs(bar.markers) do
@@ -818,7 +823,9 @@ function Flow:Render(state, timeLeft, twoChest, threeChest)
 			marker:SetShown(show)
 			if show then
 				local width = timerSection.right - timerSection.left
-				local x = math.floor(width * math.max(0, math.min(1, markerTime / duration)) + 0.5)
+				local ratio = markerTime / duration
+				if not fillUp then ratio = 1 - ratio end
+				local x = math.floor(width * math.max(0, math.min(1, ratio)) + 0.5)
 				marker:ClearAllPoints()
 				marker:SetPoint("TOPLEFT", bar, "TOPLEFT", fromPixels(x, bar), 0)
 				marker:SetPoint("BOTTOMLEFT", bar, "BOTTOMLEFT", fromPixels(x, bar), 0)

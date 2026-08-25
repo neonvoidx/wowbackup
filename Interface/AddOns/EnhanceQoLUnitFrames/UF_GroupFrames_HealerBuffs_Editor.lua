@@ -1680,8 +1680,10 @@ function Editor:EnsureFrame()
 	controls.BarDrainAnimation:SetPoint("TOPLEFT", controls.BarFillFrame, "BOTTOMLEFT", 0, -4)
 	controls.BarReverseFill = createCheck(groupControlParent, tr("UFGroupHealerBuffEditorBarReverseFill", "Reverse"))
 	controls.BarReverseFill:SetPoint("TOPLEFT", controls.BarDrainAnimation, "BOTTOMLEFT", 0, -4)
+	controls.CooldownEnabled = createCheck(groupControlParent, tr("UFGroupHealerBuffEditorCooldownEnabled", "Show Cooldown"))
+	controls.CooldownEnabled:SetPoint("TOPLEFT", controls.BarReverseFill, "BOTTOMLEFT", 0, -4)
 	controls.CooldownSwipe = createCheck(groupControlParent, tr("UFGroupHealerBuffEditorCooldownSwipe", "Cooldown Swipe"))
-	controls.CooldownSwipe:SetPoint("TOPLEFT", controls.BarReverseFill, "BOTTOMLEFT", 0, -4)
+	controls.CooldownSwipe:SetPoint("TOPLEFT", controls.CooldownEnabled, "BOTTOMLEFT", 0, -4)
 	controls.CooldownEdge = createCheck(groupControlParent, tr("UFGroupHealerBuffEditorCooldownEdge", "Draw Edge"))
 	controls.CooldownEdge:SetPoint("TOPLEFT", controls.CooldownSwipe, "BOTTOMLEFT", 0, -4)
 	controls.CooldownBling = createCheck(groupControlParent, tr("UFGroupHealerBuffEditorCooldownBling", "Draw Bling"))
@@ -1830,7 +1832,8 @@ function Editor:EnsureFrame()
 				end
 			end
 		end
-		placeCheck(controls.CooldownSwipe, cooldownAnchor, -4, -8)
+		placeCheck(controls.CooldownEnabled, cooldownAnchor, -4, -8)
+		placeCheck(controls.CooldownSwipe, controls.CooldownEnabled, 0, -4)
 		placeCheck(controls.CooldownEdge, controls.CooldownSwipe, 0, -4)
 		placeCheck(controls.CooldownBling, controls.CooldownEdge, 0, -4)
 		placeCheck(controls.HideCooldownText, controls.CooldownBling, 0, -4)
@@ -2848,6 +2851,19 @@ function Editor:EnsureFrame()
 		Editor:QueueRuntimeRefresh()
 	end)
 
+	controls.CooldownEnabled:SetScript("OnClick", function(self)
+		if Editor._controlUpdateLock then return end
+		local group = groupFromSelection()
+		if not group then
+			self:SetChecked(false)
+			return
+		end
+		group.showCooldown = self:GetChecked() ~= false
+		Editor:RefreshGroupControls()
+		Editor:RefreshPreview()
+		Editor:QueueRuntimeRefresh()
+	end)
+
 	controls.CooldownEdge:SetScript("OnClick", function(self)
 		if Editor._controlUpdateLock then return end
 		local group = groupFromSelection()
@@ -3753,6 +3769,7 @@ function Editor:RefreshGroupControls()
 		group.barFillFrame = group.barFillFrame == true
 		group.barReverseFill = group.barReverseFill == true
 		if group.showCooldownSwipe == nil then group.showCooldownSwipe = true end
+		if group.showCooldown == nil then group.showCooldown = true end
 		if group.showCooldownEdge == nil then group.showCooldownEdge = true end
 		if group.showCooldownBling == nil then group.showCooldownBling = true end
 		if group.hideCooldownText == nil then group.hideCooldownText = false end
@@ -3775,7 +3792,7 @@ function Editor:RefreshGroupControls()
 		setSliderState(controls.SpacingLabel, controls.Spacing, controls.SpacingValue, showGrid, true)
 		setSliderState(controls.SizeLabel, controls.Size, controls.SizeValue, showSize, true)
 		setSliderState(controls.IconZoomLabel, controls.IconZoom, controls.IconZoomValue, showIconZoom, true)
-		setSliderState(controls.CooldownTextSizeLabel, controls.CooldownTextSize, controls.CooldownTextSizeValue, showTextSizeOverrides, true)
+		setSliderState(controls.CooldownTextSizeLabel, controls.CooldownTextSize, controls.CooldownTextSizeValue, showTextSizeOverrides, group.showCooldown ~= false)
 		setSliderState(controls.ChargeTextSizeLabel, controls.ChargeTextSize, controls.ChargeTextSizeValue, showTextSizeOverrides, true)
 		setSliderState(controls.XLabel, controls.XOffset, controls.XValue, showOffsets, true)
 		setSliderState(controls.YLabel, controls.YOffset, controls.YValue, showOffsets, true)
@@ -3797,10 +3814,12 @@ function Editor:RefreshGroupControls()
 		setCheckState(controls.BarFillFrame, showBarFillFrame, true, group.barFillFrame == true)
 		setCheckState(controls.BarDrainAnimation, showBarDrainAnimation, true, group.barDrainAnimation == true)
 		setCheckState(controls.BarReverseFill, showBarReverseFill, true, group.barReverseFill == true)
-		setCheckState(controls.CooldownSwipe, showCooldownSwipe, true, group.showCooldownSwipe ~= false)
-		setCheckState(controls.CooldownEdge, showCooldownDrawOptions, true, group.showCooldownEdge ~= false)
-		setCheckState(controls.CooldownBling, showCooldownDrawOptions, true, group.showCooldownBling ~= false)
-		setCheckState(controls.HideCooldownText, showCooldownDrawOptions, true, group.hideCooldownText == true)
+		local cooldownEnabled = group.showCooldown ~= false
+		setCheckState(controls.CooldownEnabled, showCooldownDrawOptions, true, cooldownEnabled)
+		setCheckState(controls.CooldownSwipe, showCooldownSwipe, cooldownEnabled, group.showCooldownSwipe ~= false)
+		setCheckState(controls.CooldownEdge, showCooldownDrawOptions, cooldownEnabled, group.showCooldownEdge ~= false)
+		setCheckState(controls.CooldownBling, showCooldownDrawOptions, cooldownEnabled, group.showCooldownBling ~= false)
+		setCheckState(controls.HideCooldownText, showCooldownDrawOptions, cooldownEnabled, group.hideCooldownText == true)
 		setCheckState(controls.HideChargeText, showCooldownDrawOptions, true, group.hideChargeText == true)
 	else
 		controls.GroupName:SetText("")
@@ -3837,6 +3856,7 @@ function Editor:RefreshGroupControls()
 		setCheckState(controls.BarFillFrame, false, false, false)
 		setCheckState(controls.BarDrainAnimation, false, false, false)
 		setCheckState(controls.BarReverseFill, false, false, false)
+		setCheckState(controls.CooldownEnabled, false, false, false)
 		setCheckState(controls.CooldownSwipe, false, false, false)
 		setCheckState(controls.CooldownEdge, false, false, false)
 		setCheckState(controls.CooldownBling, false, false, false)
@@ -4002,6 +4022,11 @@ local function applyPreviewCooldown(icon, group, ac, sampleIndex, now, loopEnabl
 	ensurePreviewAuraWidgets(icon)
 	local cooldown = icon.PreviewCooldown
 	if not cooldown then return end
+	if group.showCooldown == false then
+		if cooldown.Clear then cooldown:Clear() end
+		cooldown:Hide()
+		return
+	end
 
 	local drawSwipe = group.showCooldownSwipe ~= false
 	local drawEdge = group.showCooldownEdge ~= false

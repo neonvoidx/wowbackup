@@ -5,10 +5,6 @@ END
 VER 3 0000000000000248 " " "1345086"
 /stopcasting
 END
-VER 3 0000000000000242 " " "INV_Misc_QuestionMark"
-#showtooltip
-/use 14
-END
 VER 3 0000000000000274 " " "134400"
 #showtooltip
 /use [@mouseover,noharm,exists,nodead][] Emergency Soul Link
@@ -19,17 +15,24 @@ VER 3 0000000000000240 " " "INV_Misc_QuestionMark"
 END
 VER 3 0000000000000275 " " "1385294"
 #plumber:drawer
-#/use item:259085
-#/use item:245880
-#/use item:241334
+#/use item:241327
 #/use item:241325
 #/use item:241321
 #/use item:243733
-#/use item:132514
-#/use item:235704
+#/use item:243734
+#/use item:259085
+#/use item:245880
+#/use item:241334
+#/use item:242747
 /click PLMR1
 END
 VER 3 0000000000000276 " " "618976"
+END
+VER 3 0000000000000280 " " "INV_Misc_QuestionMark"
+#showtooltip [known:Chi burst] Chi Burst;[known: chi wave] Chi wave;
+/cast [known:Chi Burst] Chi burst;
+/cast [known:Chi Wave] Chi wave
+/use Goblin Weather Machine - Prototype 01-B
 END
 VER 3 0000000000000243 " Clear" "1016706"
 /clearfocus
@@ -49,35 +52,51 @@ VER 3 0000000000000247 " PassiveFollow" "571320"
 /petfollow
 /petpassive
 END
+VER 3 0000000000000285 "AutoTabKick" "INV_Misc_QuestionMark"
+#showtooltip Spell Lock
+/cleartarget
+/targetenemy
+/cast Spell Lock
+/targetlasttarget
+END
 VER 3 000000000000024A "BOOGIE" "INV_Misc_QuestionMark"
 #showtooltip Blazing Shadowflame Cinder
 /use Blazing Shadowflame Cinder
 /use World Shrinker
 /use Shuffling Sands
 END
-VER 3 000000000000024B "BOW" "5927638"
-/bow
+VER 3 0000000000000279 "DELVE GOD" "413587"
+/use Corrosive Victory
+/use Dominating Victory
+/use Etheric Victory
+/use Toxic Victory
+/use Explosive Victory
 END
 VER 3 0000000000000273 "EnhanceQoLBuffFoodMacro" "INV_Misc_QuestionMark"
-#showtooltip item:268679
-/use item:268679
+#showtooltip item:242747
+/use item:242747
 END
-VER 3 0000000000000277 "EnhanceQoLDrinkMacro" "INV_Misc_QuestionMark"
+VER 3 0000000000000281 "EnhanceQoLDrinkMacro" "INV_Misc_QuestionMark"
 #showtooltip
 /castsequence reset=combat Recuperate
 /cast Recuperate
 END
 VER 3 000000000000024D "EnhanceQoLFlaskMacro" "INV_Misc_QuestionMark"
-#showtooltip item:241325
-/use item:241325
+#showtooltip
 END
-VER 3 000000000000024E "EnhanceQoLHealthMacro" "INV_Misc_QuestionMark"
+VER 3 0000000000000282 "EnhanceQoLHealthMacro" "INV_Misc_QuestionMark"
 #showtooltip
 /cast [nocombat] Recuperate
 /castsequence [combat] reset=combat item:271883
 END
 VER 3 000000000000024F "FOCUS" "132284"
 /focus [@mouseover,nodead,exists]; [@target,exists]
+END
+VER 3 0000000000000283 "FocusKick" "INV_Misc_QuestionMark"
+#showtooltip Spell Lock
+/cast [mod:shift,@focus,harm,nodead][] Spell Lock
+/focus [mod:shift,@focus,noexists] target
+/tm [mod:shift,@focus] ~4
 END
 VER 3 0000000000000250 "ItemOnWeap" "INV_Misc_QuestionMark"
 #showtooltip item:243733
@@ -97,4 +116,8 @@ VER 3 0000000000000251 "Pull" "1713482"
 END
 VER 3 0000000000000252 "Readycheck" "615342"
 /readycheck
+END
+VER 3 0000000000000284 "SetFocus" "132212"
+/focus target
+/tm [@focus] ~4
 END

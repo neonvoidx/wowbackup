@@ -798,6 +798,8 @@ function Timer:Set(key, value)
 	if not addon.db or defaults[key] == nil then return end
 	local config = getTimerConfig(true)
 	config[key] = value
+	self.panelBackdropReferenceReady = nil
+	self:EnsurePanelBackdropReference()
 	if key == "enabled" then
 		self:UpdateEventState()
 		return
@@ -1315,6 +1317,9 @@ function Timer:EnsureFrame()
 	frame.panelStyleBounds = CreateFrame("Frame", nil, frame)
 	frame.panelStyleBounds:SetAllPoints(frame)
 	frame.panelStyleBounds:EnableMouse(false)
+	frame.panelBackdropBounds = CreateFrame("Frame", nil, frame)
+	frame.panelBackdropBounds:SetAllPoints(frame)
+	frame.panelBackdropBounds:EnableMouse(false)
 	frame.windowBackground = frame:CreateTexture(nil, "BACKGROUND")
 	frame.windowBackground:SetDrawLayer("BACKGROUND", -8)
 	frame.windowBackground:Hide()
@@ -1631,6 +1636,27 @@ function Timer:GetStyleTarget()
 	return frame
 end
 
+function Timer:GetBackdropTarget()
+	local frame = self:EnsureFrame()
+	if self:Get("layoutMode") == "PANEL" and self.panelBackdropReferenceReady and frame.panelBackdropBounds then return frame.panelBackdropBounds end
+	return self:GetStyleTarget()
+end
+
+function Timer:CapturePanelBackdropReference()
+	local frame = self:EnsureFrame()
+	local source = frame.panelStyleBounds
+	local target = frame.panelBackdropBounds
+	if not (source and target) then return false end
+	local frameLeft, frameBottom = frame:GetLeft(), frame:GetBottom()
+	local sourceLeft, sourceBottom, sourceRight, sourceTop = source:GetLeft(), source:GetBottom(), source:GetRight(), source:GetTop()
+	if not (frameLeft and frameBottom and sourceLeft and sourceBottom and sourceRight and sourceTop) then return false end
+	target:ClearAllPoints()
+	target:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", snapToPixel(sourceLeft - frameLeft), snapToPixel(sourceBottom - frameBottom))
+	target:SetPoint("TOPRIGHT", frame, "BOTTOMLEFT", snapToPixel(sourceRight - frameLeft), snapToPixel(sourceTop - frameBottom))
+	self.panelBackdropReferenceReady = true
+	return true
+end
+
 function Timer:UpdatePanelStyleBounds()
 	local frame = self:EnsureFrame()
 	local bounds = frame.panelStyleBounds
@@ -1669,7 +1695,7 @@ end
 
 function Timer:ApplyWindowBackground()
 	local frame = self:EnsureFrame()
-	local target = self:GetStyleTarget()
+	local target = self:GetBackdropTarget()
 	local texture = frame.windowBackground
 	if not texture then return end
 	local enabled = self:Get("backdropEnabled") == true
@@ -2450,8 +2476,10 @@ function Timer:UpdatePanelTimerBarChestMarkers(timeLimit, twoChest, threeChest)
 	local elapsed = tonumber(self.lastState and self.lastState.elapsed) or 0
 	local threeChestTime = tonumber(threeChest) or 0
 	local twoChestTime = tonumber(twoChest) or 0
+	local fillUp = self:Get("panelTimerBarFillUp") == true
 	local function markerPosition(chestTime)
 		local ratio = chestTime / timeLimit
+		if not fillUp then ratio = 1 - ratio end
 		return width * math.max(0, math.min(1, ratio))
 	end
 	local positions = {
@@ -2608,8 +2636,21 @@ function Timer:RenderPanel(state, timeLeft, twoChest, threeChest)
 	end
 	self:ApplyPanelLinks()
 	self:UpdatePanelStyleBounds()
+	if state.preview then self:CapturePanelBackdropReference() end
 	self:ApplyFrameStyle()
 	return panelHeight
+end
+
+function Timer:EnsurePanelBackdropReference()
+	if self.panelBackdropReferenceReady or self:GetLayoutMode() ~= "PANEL" then return end
+	local frame = self:EnsureFrame()
+	local wasShown = frame:IsShown()
+	local state = self:GetPreviewState()
+	local timeLeft = (state.timeLimit or 0) - (state.elapsed or 0)
+	local twoChest, threeChest = calculateChestTimers(state.timeLimit or 0, state.affixes or {})
+	self:RenderPanel(state, timeLeft, twoChest, threeChest)
+	self:HidePanelElements(true)
+	if not wasShown then frame:Hide() end
 end
 
 function Timer:HideListDecorContent(activeKinds)
@@ -3956,6 +3997,7 @@ function Timer:RegisterEditMode()
 			Timer:ApplyDynamicAnchor()
 		end,
 		onEnter = function()
+			Timer.panelBackdropReferenceReady = nil
 			Timer:Refresh()
 			if addon.DynamicAnchors and addon.DynamicAnchors:IsFrameAssignmentEnabled(Timer.dynamicAnchorId) then RunNextFrame(function() Timer:ApplyDynamicAnchor() end) end
 			Timer:ScheduleTick()
@@ -4050,6 +4092,7 @@ function Timer:Init()
 		})
 	end
 	self:RegisterEditMode()
+	self:EnsurePanelBackdropReference()
 	self:UpdateEventState()
 end
 

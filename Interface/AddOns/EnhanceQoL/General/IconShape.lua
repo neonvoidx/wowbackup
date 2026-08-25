@@ -70,6 +70,7 @@ end
 
 IconShape.BORDER = IconShape.BORDER or {
 	NONE = "NONE",
+	ROUND_1PX = "SHAPE_TEXTURE_ROUND_1PX",
 	ROUND_METAL_LIGHT = "SHAPE_ATLAS_CHARACTERCREATE_RING_METALLIGHT",
 	ROUND_COMMUNITIES_BLUE = "SHAPE_ATLAS_COMMUNITIES_RING_BLUE",
 	ROUND_STAR_1PX = "SHAPE_TEXTURE_ROUND_STAR_1PX",
@@ -78,6 +79,14 @@ IconShape.BORDER = IconShape.BORDER or {
 }
 
 IconShape.BORDER_DEFINITIONS = IconShape.BORDER_DEFINITIONS or {
+	[IconShape.BORDER.ROUND_1PX] = {
+		texture = "Interface\\AddOns\\EnhanceQoL\\Assets\\round_1px.tga",
+		labelKey = "CooldownPanelIconBorderRound1px",
+		label = "Round 1 px",
+		shapes = { ROUND = true },
+		thicknessMode = "layers",
+		tint = true,
+	},
 	[IconShape.BORDER.ROUND_METAL_LIGHT] = {
 		atlas = "charactercreate-ring-metallight",
 		labelKey = "CooldownPanelIconBorderCharacterCreateMetalLight",
@@ -119,6 +128,7 @@ IconShape.BORDER_DEFINITIONS = IconShape.BORDER_DEFINITIONS or {
 IconShape.BORDER_ORDER = IconShape.BORDER_ORDER or {
 	IconShape.BORDER.ROUND_METAL_LIGHT,
 	IconShape.BORDER.ROUND_COMMUNITIES_BLUE,
+	IconShape.BORDER.ROUND_1PX,
 	IconShape.BORDER.ROUND_STAR_1PX,
 	IconShape.BORDER.HEXAGON_1PX,
 	IconShape.BORDER.DIAMOND_1PX,

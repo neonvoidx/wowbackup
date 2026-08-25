@@ -1210,8 +1210,10 @@ table.sort(datapanel.streams, function(left, right)
 	return tostring(left.dbKey or "") < tostring(right.dbKey or "")
 end)
 
-for index, stream in ipairs(datapanel.streams) do
-	datapanel.createStreamSection(stream, 1000 + (index * 100))
+local streamOrder = 1000
+for _, stream in ipairs(datapanel.streams) do
+	datapanel.createStreamSection(stream, streamOrder)
+	streamOrder = streamOrder + ((#(stream.controls or {}) + 1) * 10)
 end
 ----- REGION END
 

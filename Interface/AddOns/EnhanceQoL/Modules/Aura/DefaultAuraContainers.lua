@@ -1093,8 +1093,7 @@ local function applyDefaultAuraButtonStyle(button, force, config)
 			dispelIcon:ClearAllPoints()
 			dispelIcon:SetPoint("TOPLEFT", button, "TOPLEFT", 1, -1)
 			dispelIcon:SetSize(config.size * 0.4, config.size * 0.4)
-			local auraUtil = _G.AuraUtil
-			if auraUtil and auraUtil.SetAuraDispelTypeIcon then auraUtil.SetAuraDispelTypeIcon(dispelIcon, button.eqolDefaultAuraSampleDispelName) end
+			if addon.AuraCompat then addon.AuraCompat:SetDispelTypeIcon(dispelIcon, button.eqolDefaultAuraSampleDispelName) end
 			dispelIcon:Show()
 		elseif button.DispelIcon then
 			button.DispelIcon:Hide()
@@ -1793,9 +1792,10 @@ local function initializeDefaultNativeAuraButton(button, kind)
 		dispelIcon:SetPoint("TOPLEFT", button, "TOPLEFT", 1, -1)
 		dispelIcon:SetSize(config.size * 0.4, config.size * 0.4)
 		button:AddDispelTypeTexture(dispelIcon, {
-			style = Enum.CustomAuraButtonDispelTypeTextureStyle.Icon,
+			style = Enum.CustomAuraButtonDispelTypeTextureStyle.CustomAsset,
 			showWhenHarmful = true,
 			showWhenHelpful = false,
+			customDispelAssetMap = addon.AuraCompat:GetDispelTypeIconAssetMap(),
 		})
 	end
 
@@ -1854,7 +1854,7 @@ local function initializeDefaultNativeAuraButton(button, kind)
 	end
 end
 
-local function getNativeAuraLayout(kind)
+local function getNativeAuraLayout(kind, region)
 	local size = getDefaultAuraIconSize(nil, kind)
 	local spacingX = getDefaultAuraHorizontalSpacing(nil, kind)
 	local spacingY = getDefaultAuraVerticalSpacing(nil, kind)
@@ -1871,7 +1871,7 @@ local function getNativeAuraLayout(kind)
 		anchorPoint = startPoint,
 		horizontalGrowthDirection = horizontal,
 		verticalGrowthDirection = vertical,
-		maximumLineSize = maximumLineCount * size + (maximumLineCount - 1) * elementSpacing,
+		maximumLineSize = addon.AuraCompat:GetSafeFlowLayoutMaximumLineSize(region, size, elementSpacing, maximumLineCount),
 		group = {
 			elementSpacing = elementSpacing,
 			lineSpacing = lineSpacing,
@@ -1888,7 +1888,7 @@ end
 configureDefaultNativeAuraContainer = function(kind, container, anchor)
 	local AuraCompat = addon.AuraCompat
 	if not (AuraCompat and container and anchor) then return false end
-	local layout = getNativeAuraLayout(kind)
+	local layout = getNativeAuraLayout(kind, container)
 	local perRow = getDefaultAuraIconsPerRow(nil, kind)
 	local maxRows = getDefaultAuraMaxRows(nil, kind)
 	local sortMethod, sortDirection = getNativeAuraSortOptions(kind)

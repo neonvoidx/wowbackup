@@ -116,7 +116,7 @@ WeakAurasOptions: enabled
 WeakAurasTemplates: enabled
 BartrubySummonPet: enabled
 BetterBlizzFrames: enabled
-BetterBlizzPlates: disabled
+BetterBlizzPlates: enabled
 Conceal: enabled
 EditModeExpanded: enabled
 idTip: enabled
@@ -441,7 +441,7 @@ M33Auras: disabled
 AutoCollapseBuffs: disabled
 BetterUpgradeTooltip: enabled
 eAlignUpdated: enabled
-ArenaDRNameplates: enabled
+ArenaDRNameplates: disabled
 AtlasLoot_BattleforAzeroth: enabled
 AtlasLoot_BurningCrusade: enabled
 AtlasLoot_Cataclysm: enabled
@@ -492,8 +492,11 @@ SweepyBoop: enabled
 BattlegroundWinConditions: enabled
 ConsoleVariableManager: enabled
 Shackled: enabled
-ArenaAnalytics: enabled
+ArenaAnalytics: disabled
 MiniWinLoss: enabled
 AztarecHelper: enabled
 EnhanceQoLQuickActions: enabled
 LariasWeeklyChecklist: enabled
+IconSearch: enabled
+HousingDecorGuide: enabled
+SnakeSays: enabled

@@ -60,13 +60,7 @@ local function build()
 
     view = CreateFrame("Frame", "AztarecHelperRoomView", UIParent, "BackdropTemplate")
     view:SetSize(SIZE + 24, SIZE + 46)
-    local pos = AztarecHelperDB.roomPos
-    if pos and pos.point then
-        view:SetPoint(pos.point, UIParent, pos.relPoint or pos.point, pos.x or 0, pos.y or 0)
-    else
-        view:SetPoint("CENTER", UIParent, "CENTER", (SIZE + 24) * 1.5, 0)
-    end
-    view:SetFrameStrata("MEDIUM")
+    AZT.MakeMovable(view, "room", "CENTER", (SIZE + 24) * 1.5, 0)
     view:SetBackdrop({
         bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
         edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -76,15 +70,6 @@ local function build()
         insets = { left = 3, right = 3, top = 3, bottom = 3 },
     })
     view:SetBackdropColor(0, 0, 0, 0.75)
-    view:SetMovable(true)
-    view:EnableMouse(true)
-    view:RegisterForDrag("LeftButton")
-    view:SetScript("OnDragStart", view.StartMoving)
-    view:SetScript("OnDragStop", function(f)
-        f:StopMovingOrSizing()
-        local point, _, relPoint, x, y = f:GetPoint(1)
-        AztarecHelperDB.roomPos = { point = point, relPoint = relPoint, x = x, y = y }
-    end)
     view:Hide()
 
     local title = view:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -102,11 +87,24 @@ local function build()
     -- the old ? in the corner held a tooltip nobody hovered mid-fight, so
     -- the strip the status line used to occupy carries a real button now
     local instrBtn = CreateFrame("Button", nil, view, "UIPanelButtonTemplate")
-    instrBtn:SetSize(104, 18)
-    instrBtn:SetPoint("BOTTOM", 0, 3)
-    instrBtn:SetText("Instructions")
     instrBtn:SetScript("OnClick", function()
         AZT.ShowInstructions()
+    end)
+
+    -- the release note, with an orange exclamation mark beside it until the
+    -- note has been read once on this account
+    local newBtn = CreateFrame("Button", nil, view, "UIPanelButtonTemplate")
+    newBtn:SetSize(40, 18)
+    newBtn:SetPoint("BOTTOMLEFT", 6, 4)
+    newBtn:SetText("News")
+    local mark = AZT.SvgArt(newBtn, "new-mark.svg", "OVERLAY")
+    mark:SetSize(10, 10)
+    mark:SetPoint("LEFT", newBtn, "RIGHT", 1, 0)
+    mark:SetVertexColor(1, 0.5, 0.1)
+    mark:SetShown(AZT.NewsUnseen())
+    newBtn:SetScript("OnClick", function()
+        AZT.ShowWhatsNew()
+        mark:Hide()
     end)
 
     local canvas = CreateFrame("Frame", nil, view)
@@ -272,30 +270,44 @@ local function build()
     noKeys:SetTextColor(1, 0.82, 0, 0.9)
     noKeys:Hide()
 
-    -- compass letters on the view edge, the first thing to go when the
-    -- window is cut down to the room
+    -- compass letters on the view edge, carried around by the layout and
+    -- the first thing to go when the window is cut down to the room
     local compass = {}
     local edge = SIZE / 2 - 8
     for _, c in ipairs({ { "N", 0, 1 }, { "E", 1, 0 }, { "S", 0, -1 }, { "W", -1, 0 } }) do
         local fs = canvas:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         fs:SetText(c[1])
-        fs:SetPoint("CENTER", canvas, "CENTER", c[2] * edge, c[3] * edge)
-        compass[#compass + 1] = fs
+        compass[#compass + 1] = { fs = fs, dx = c[2], dy = c[3] }
     end
 
     -- Slim cuts the canvas down to the room itself, so the border lands on
     -- the wall rather than a screen's worth of empty floor. Everything that
-    -- lived out in that space goes with it, and the way into the settings
-    -- shrinks rather than leaves.
+    -- lived out in that space goes with it, and the two ways out, settings
+    -- and instructions, shrink into the empty corners rather than leave.
     local function applyChrome()
         local slim = AztarecHelperDB.roomSlim
         local side = slim and math.floor(2 * rp + 4) or SIZE
-        title:SetShown(not slim)
-        instrBtn:SetShown(not slim)
+        -- slim keeps the name too, riding just above the border where the
+        -- window has no room for it, so a stream viewer can tell what the
+        -- board is
+        title:ClearAllPoints()
+        if slim then
+            title:SetPoint("BOTTOM", view, "TOP", 0, 1)
+        else
+            title:SetPoint("TOP", 0, -8)
+        end
         optBtn:SetSize(slim and 40 or 74, 18)
         optBtn:SetText(slim and "Opts" or "Options")
-        for _, fs in ipairs(compass) do
-            fs:SetShown(not slim)
+        instrBtn:SetSize(slim and 40 or 104, 18)
+        instrBtn:SetText(slim and "Info" or "Instructions")
+        instrBtn:ClearAllPoints()
+        if slim then
+            instrBtn:SetPoint("BOTTOMRIGHT", -6, 4)
+        else
+            instrBtn:SetPoint("BOTTOM", 0, 3)
+        end
+        for _, c in ipairs(compass) do
+            c.fs:SetShown(not slim)
         end
         canvas:SetSize(side, side)
         canvas:ClearAllPoints()
@@ -308,46 +320,114 @@ local function build()
     view.applyChrome = applyChrome
     applyChrome()
 
-    -- fixed north-up layout. The grid draws turned 45 degrees so the wedges
-    -- center on their cardinal names and the boundaries land on the
-    -- diagonals. Text and colors belong to AZT.SetSafeQuads.
-    local cosr, sinr = math.cos(GRID_ROT), math.sin(GRID_ROT)
-    ns:SetRotation(GRID_ROT)
-    ew:SetRotation(GRID_ROT)
-    for _, tl in ipairs(artTiles) do
-        tl.tex:SetPoint("CENTER", canvas, "CENTER", tl.dx, tl.dy)
+    -- Positions only, text and colors belong to AZT.SetSafeQuads. The grid
+    -- draws turned 45 degrees so the wedges center on their cardinal names
+    -- and the boundaries land on the diagonals, and mapRot turns the whole
+    -- board so the way the player faces is up.
+    local glows, standGlows, flashes = {}, {}, {}
+    local function layout(mapRot)
+        mapRot = mapRot or view.mapRot or 0
+        view.mapRot = mapRot
+        local cosm, sinm = math.cos(mapRot), math.sin(mapRot)
+        for _, tl in ipairs(artTiles) do
+            tl.tex:SetRotation(mapRot)
+            tl.tex:ClearAllPoints()
+            tl.tex:SetPoint("CENTER", canvas, "CENTER", tl.dx * cosm - tl.dy * sinm, tl.dx * sinm + tl.dy * cosm)
+        end
+        for _, c in ipairs(compass) do
+            c.fs:ClearAllPoints()
+            c.fs:SetPoint(
+                "CENTER",
+                canvas,
+                "CENTER",
+                (c.dx * cosm - c.dy * sinm) * edge,
+                (c.dx * sinm + c.dy * cosm) * edge
+            )
+        end
+        local rot = GRID_ROT + mapRot
+        local cosr, sinr = math.cos(rot), math.sin(rot)
+        ns:SetRotation(rot)
+        ew:SetRotation(rot)
+        for i, q in ipairs(QUADS) do
+            -- wedge bbox center sits at (dx, dy) * r/2 from room center:
+            -- rotating texture about its own bbox center + moving the bbox
+            -- center along the same rotation = rotation about room center
+            local ox, oy = q.dx * rp / 2, q.dy * rp / 2
+            local w = wedges[i]
+            w:ClearAllPoints()
+            w:SetPoint("CENTER", canvas, "CENTER", ox * cosr - oy * sinr, ox * sinr + oy * cosr)
+            w:SetRotation(rot)
+            if glows[i] then
+                glows[i]:SetRotation(rot)
+                standGlows[i]:SetRotation(rot)
+                flashes[q.name].tex:SetRotation(rot)
+            end
+            local lx, ly = q.dx * 0.62 * rp / 1.4142, q.dy * 0.62 * rp / 1.4142
+            qlabels[i]:ClearAllPoints()
+            qlabels[i]:SetPoint("CENTER", canvas, "CENTER", lx * cosr - ly * sinr, lx * sinr + ly * cosr)
+        end
     end
-    for i, q in ipairs(QUADS) do
-        -- wedge bbox center sits at (dx, dy) * r/2 from room center:
-        -- rotating texture about its own bbox center + moving the bbox
-        -- center along the same rotation = rotation about room center
-        local ox, oy = q.dx * rp / 2, q.dy * rp / 2
-        wedges[i]:SetPoint("CENTER", canvas, "CENTER", ox * cosr - oy * sinr, ox * sinr + oy * cosr)
-        wedges[i]:SetRotation(GRID_ROT)
-        local lx, ly = q.dx * 0.62 * rp / 1.4142, q.dy * 0.62 * rp / 1.4142
-        qlabels[i]:SetPoint("CENTER", canvas, "CENTER", lx * cosr - ly * sinr, lx * sinr + ly * cosr)
-    end
+    layout(0)
     view.QUADS, view.wedges, view.qlabels = QUADS, wedges, qlabels
     AZT.SetSafeQuads(AZT.Safe and AZT.Safe.GetSequence() or nil)
+
+    -- the board turns with the player. Facing comes from the minimap, so
+    -- with a fixed minimap there is nothing to turn it by and it holds
+    -- north up, which is also a perfectly good board.
+    local spun = 0
+    local lit
+    view:SetScript("OnUpdate", function(_, dt)
+        spun = spun + dt
+        if spun < 0.05 then
+            return
+        end
+        spun = 0
+        local facing = AZT.Safe and AZT.Safe.RingFacing and AZT.Safe.RingFacing()
+        local want = facing and -facing or 0
+        if math.abs(want - (view.mapRot or 0)) > 0.01 then
+            layout(want)
+        end
+        -- while the addon records on its own, the quarter it reads you in
+        -- stays lit, so you can watch what the open wave is about to get
+        local w = AZT.Wave
+        local standing
+        if facing and w and w.phase == "record" and AZT.Safe.IsAuto() then
+            standing = AZT.Safe.RingQuadrant()
+        end
+        if standing ~= lit then
+            lit = standing
+            for i, q in ipairs(QUADS) do
+                standGlows[i]:SetShown(q.name == standing)
+            end
+        end
+    end)
 
     -- clicking a quarter during the memory game records it, same as its
     -- quarter key. The targets only exist while a recording window is open,
     -- so outside the game they steal no clicks from dragging or the icon
     -- menus, and they stay deliberately outside the padlock's reach since
     -- the lock is there to stop accidental drags, not mid-fight input
+    -- an additive wash over one wedge, on its own layer so the route
+    -- repaint and the mouse never fight over one texture's color. The
+    -- hover glow and the standing light both draw with one
+    local function wedgeGlow(i, tc, alpha)
+        local t = canvas:CreateTexture(nil, "ARTWORK", nil, 4)
+        t:SetTexture("Interface\\CharacterFrame\\TempPortraitAlphaMask")
+        t:SetTexCoord(unpack(tc))
+        t:SetAllPoints(wedges[i])
+        t:SetRotation(GRID_ROT + (view.mapRot or 0))
+        t:SetBlendMode("ADD")
+        t:SetVertexColor(1, 1, 1, alpha)
+        t:Hide()
+        return t
+    end
+
     local quadHits = {}
-    local flashes = {}
     for i, q in ipairs(QUADS) do
-        -- own layer for the hover glow, so the route repaint and the mouse
-        -- never fight over one texture's color
-        local glow = canvas:CreateTexture(nil, "ARTWORK", nil, 4)
-        glow:SetTexture("Interface\\CharacterFrame\\TempPortraitAlphaMask")
-        glow:SetTexCoord(unpack(q.tc))
-        glow:SetAllPoints(wedges[i])
-        glow:SetRotation(GRID_ROT)
-        glow:SetBlendMode("ADD")
-        glow:SetVertexColor(1, 1, 1, 0.16)
-        glow:Hide()
+        local glow = wedgeGlow(i, q.tc, 0.16)
+        glows[i] = glow
+        -- a touch brighter than the hover glow, it has to read mid-fight
+        standGlows[i] = wedgeGlow(i, q.tc, 0.2)
 
         local hit = CreateFrame("Button", nil, canvas)
         hit:SetAllPoints(wedges[i])
@@ -370,14 +450,7 @@ local function build()
 
         -- press feedback: the answered quarter blinks once, so a key hit in
         -- the scramble is never in doubt
-        local flash = canvas:CreateTexture(nil, "ARTWORK", nil, 5)
-        flash:SetTexture("Interface\\CharacterFrame\\TempPortraitAlphaMask")
-        flash:SetTexCoord(unpack(q.tc))
-        flash:SetAllPoints(wedges[i])
-        flash:SetRotation(GRID_ROT)
-        flash:SetBlendMode("ADD")
-        flash:SetVertexColor(1, 1, 1, 0.45)
-        flash:Hide()
+        local flash = wedgeGlow(i, q.tc, 0.45)
         local anim = flash:CreateAnimationGroup()
         local fade = anim:CreateAnimation("Alpha")
         fade:SetFromAlpha(1)
@@ -402,11 +475,13 @@ local function build()
     function AZT.QuadClickSync()
         local w = AZT.Wave
         local recording = w and w.phase == "record"
+        local byHand = AZT.Safe and not AZT.Safe.IsAuto()
         -- the quarters stay clickable through the echoes while any wave is
         -- still blank, since backfilling one is the only thing a click can
-        -- do by then
-        local canAnswer = recording
-        if not canAnswer and w and w.phase == "echo" then
+        -- do by then. None of it applies while the addon records itself,
+        -- where a click target would light up and then swallow the click.
+        local canAnswer = byHand and recording
+        if byHand and not canAnswer and w and w.phase == "echo" then
             for _, s in ipairs(AZT.safeList or {}) do
                 if s == "?" then
                     canAnswer = true
@@ -417,28 +492,33 @@ local function build()
         for _, hit in ipairs(quadHits) do
             hit:SetShown(canAnswer and true or false)
         end
+        local fighting = AZT.inCombat or InCombatLockdown()
+        -- the corner buttons clear off for the fight, nobody opens the
+        -- settings mid pull and the board reads better bare
+        optBtn:SetShown(not fighting)
+        instrBtn:SetShown(not fighting)
+        newBtn:SetShown(not fighting)
         -- the icon menus belong to the quiet moments. Mid-fight they would
         -- sit on top of the quarters and swallow clicks meant for recording,
         -- so they go away with their arrows
-        local calm = not recording
-            and not AZT.safeNow
-            and not (w and w.phase)
-            and not (AZT.inCombat or InCombatLockdown())
+        local calm = not recording and not AZT.safeNow and not (w and w.phase) and not fighting
         for i, hint in ipairs(labelHints) do
             hint:SetShown(calm and true or false)
             menuBtns[i]:SetShown(calm and true or false)
         end
-        -- the key tags help while learning and while recording, during the
-        -- echoes the board is telling you where to go instead
+        -- the key tags help while learning and while recording by hand.
+        -- During the echoes the board is telling you where to go instead,
+        -- and in automatic the keys do nothing worth advertising.
         local echoing = w and (w.phase == "echo" or w.phase == "replay")
         local unbound = false
         for i, q in ipairs(QUADS) do
-            local key = GetBindingKey(BIND_CMD[q.name])
-            unbound = unbound or not key
+            local bound = GetBindingKey(BIND_CMD[q.name])
+            unbound = unbound or not bound
+            local key = byHand and bound or nil
             keyTags[i]:SetText(key and GetBindingText(key) or "")
             keyTags[i]:SetShown((key and not echoing) and true or false)
         end
-        noKeys:SetShown((unbound and not echoing) and true or false)
+        noKeys:SetShown((byHand and unbound and not echoing) and true or false)
     end
     AZT.QuadClickSync()
 

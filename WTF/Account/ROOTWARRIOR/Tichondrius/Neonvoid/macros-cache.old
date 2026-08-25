@@ -20,18 +20,18 @@ VER 3 0100000000000026 " " "134400"
 END
 VER 3 0100000000000028 " " "134400"
 #showtooltip
-#FS OtherDPS OtherDPS OtherDPS
-/cast [@none,help][@none,help][@none,help][] Power Infusion
+#FS OD OD OD
+/cast [@raid3,help][@raid3,help][@raid3,help][] Power Infusion
 END
 VER 3 010000000000002A " " "134400"
 #showtooltip
+/cast [noform] Shadowform
 /cast [@player] Power Word: Fortitude
 /use Goblin Weather Machine - Prototype 01-B
 /use Thaumaturgist's Orb
 END
 VER 3 010000000000002E " " "134400"
 #showtooltip 
-/cast [noform] Shadowform
 /cast [@mouseover,harm,exists][] Vampiric Touch
 END
 VER 3 0100000000000030 " " "134400"
@@ -62,7 +62,6 @@ VER 3 010000000000003E " " "134400"
 END
 VER 3 0100000000000042 " " "134400"
 #showtooltip
-/cast [noform] Shadowform
 /cast [@mouseover,harm,exists][] Shadow Word: Pain
 END
 VER 3 010000000000003F " " "134400"
@@ -81,27 +80,28 @@ VER 3 0100000000000046 " " "134400"
 #showtooltip
 #FrameSort EnemyHealer
 /cancelaura Dispersion
-/cast [mod:shift,@none,exists,harm,nodead][] Silence
+/cast [mod:shift,@arena3,exists,harm,nodead][] Silence
 END
-VER 3 0100000000000047 " " "136206"
-#showtooltip Mind Control
-#FS X EnemyHealer
-/cast [mod:shift,@none,harm][@none,harm][] Mind Control
+VER 3 0100000000000047 " " "134400"
+#showtooltip [known:dominate mind] dominate mind; [] mind control
+#FS EnemyHealer
+/cast [mod:shift,@arena3,harm,known] Mind Control
+/cast [@target,harm,known] Mind Control
+/cast [@target,harm,known] Dominate Mind
 END
 VER 3 0100000000000048 " " "134400"
 #showtooltip 
 /cast [noform] Shadowform
 /cancelaura Dispersion
-/cast Mind Blast
+/cast  Mind Blast
 END
 VER 3 010000000000004A " " "INV_Misc_QuestionMark"
-#showtooltip [known: Void Volley] void volley; Voidform
-#FS OtherDPS OtherDPS OtherDPS
-/cast [@none,help][@none,help][@none,help][@player] Power Infusion
+#showtooltip [nostance] Void Volley; VoidForm
+#FS OD OD OD
+/cast [@raid3,exists,nodead][@raid3,exists,nodead][@raid3,exists,nodead][@player] Power Infusion
 /use 14
-/use saltwater potion
-/cast Void Volley
-/cast Voidform
+/use Voidform
+/use Void Volley
 END
 VER 3 010000000000004B " " "134400"
 #showtooltip

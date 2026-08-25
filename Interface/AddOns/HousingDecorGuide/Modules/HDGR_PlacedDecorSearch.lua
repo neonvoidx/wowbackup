@@ -65,6 +65,10 @@ local function _rows()
     local p = _panel()
     local target = p and p.ScrollBox and p.ScrollBox.ScrollTarget
     if not target then return nil end
+    -- One small table per tick. Left alone deliberately: the poller now parks itself
+    -- when the editor closes, so this only runs while the panel is actually open, and
+    -- the obvious "optimisation" (select() into a scratch table) re-calls GetChildren
+    -- per element and costs far more than the allocation it saves.
     return { target:GetChildren() }
 end
 
@@ -114,24 +118,47 @@ local function _applyDim()
             local matches = _query == ""
                 or (name and name:lower():find(_query, 1, true) ~= nil)
             row:SetAlpha(matches and 1 or DIM_ALPHA)
-            row:EnableMouse(matches and true or false)
+            -- The in-world highlight must clear through Blizzard's OWN OnLeave:
+            -- SetPlacedDecorEntryHovered is HasRestrictions=true (recorded gotcha,
+            -- re-verified live 2026-08-25 -- ADDON_ACTION_FORBIDDEN, user report).
+            -- But EnableMouse(false) on the row under the cursor skips OnLeave and
+            -- leaves the piece lit in the world (review 2026-08-23). So: a dimmed
+            -- row that is still HOVERED keeps its mouse until the cursor leaves --
+            -- Blizzard's OnLeave then clears the highlight -- and the 10 Hz poller
+            -- disables it on a later tick once IsMouseOver() is false.
+            if matches then
+                row:EnableMouse(true)
+            elseif not (row:IsMouseEnabled() and row:IsMouseOver()) then
+                row:EnableMouse(false)
+            end
         end
     end
 end
 
 -- Rows recycle as the player scrolls and do not reset our alpha, so keep
 -- correcting whatever is currently rendered. Only while their panel is open.
+-- The frame is born SHOWN, and the `_poller:Show()` branch above implies a matching
+-- hide that never existed -- so one editor open left a 10 Hz OnUpdate running in the
+-- world for the rest of the session. It now parks itself when the editor closes, and
+-- Install() (called on every editor open) brings it back.
 local function _startPolling()
     if _poller then _poller:Show() return end
     _poller = CreateFrame("Frame")
     local elapsed = 0
-    _poller:SetScript("OnUpdate", function(_, dt)
+    _poller:SetScript("OnUpdate", function(self, dt)
         elapsed = elapsed + dt
         if elapsed < POLL_EVERY then return end
         elapsed = 0
         local p = _panel()
-        local up = p and p:IsShown()
-        if _chrome then _chrome:SetShown(up and true or false) end
+        -- Editor gone entirely (closed, or the LoD addon unloaded): nothing to poll
+        -- for and nothing will re-show us except Install().
+        if not p then
+            if _chrome then _chrome:Hide() end
+            self:Hide()
+            return
+        end
+        local up = p:IsShown()
+        if _chrome then _chrome:SetShown(up) end
         if not up then return end
         _applyDim()
         _refreshCount()   -- list changes when decor is placed/removed

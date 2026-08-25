@@ -356,12 +356,10 @@ function ResourceBars.ApplySegmentContentInset(segment, inset)
 	local fill = segment.fill
 	local textureOwner = fill or segment
 	local tex = textureOwner.GetStatusBarTexture and textureOwner:GetStatusBarTexture() or nil
-	local bg = segment._rbSegmentBg
 	if
 		segment._rbSegmentContentInset == inset
 		and segment._rbSegmentContentFill == fill
 		and segment._rbSegmentContentTexture == tex
-		and segment._rbSegmentContentBg == bg
 	then
 		return
 	end
@@ -395,14 +393,23 @@ function ResourceBars.ApplySegmentContentInset(segment, inset)
 			anchorRegion(tex, segment)
 		end
 	end
-	if bg then
-		ResourceBars.ApplyTexturePixelSnapping(bg, 0)
-		anchorRegion(bg)
-	end
 	segment._rbSegmentContentInset = inset
 	segment._rbSegmentContentFill = fill
 	segment._rbSegmentContentTexture = tex
-	segment._rbSegmentContentBg = bg
+end
+
+function ResourceBars.ApplySegmentBackgroundInset(segment, cfg)
+	if not segment then return end
+	local bg = segment._rbSegmentBg
+	if not bg then return end
+	local bd = cfg and cfg.backdrop
+	local outset = tonumber(bd and bd.outset) or 0
+	local backgroundInset = max(0, tonumber(bd and bd.backgroundInset) or 0)
+	local offset = outset - backgroundInset
+	if segment._rbSegmentBackgroundRegion == bg and segment._rbSegmentBackgroundOffset == offset then return end
+	ResourceBars.Pixel.SetOutside(bg, segment, offset, offset)
+	segment._rbSegmentBackgroundRegion = bg
+	segment._rbSegmentBackgroundOffset = offset
 end
 
 function ResourceBars.GetAnchorHelper()
@@ -4325,8 +4332,9 @@ local function applyBarFillColor(bar, cfg, pType)
 	local shouldDesaturate = false
 	if pType == "STAGGER" and cfg.useBarColor ~= true then
 		local stagger = (UnitStagger and UnitStagger("player")) or 0
+		local staggerIsSecret = issecretvalue and issecretvalue(stagger)
 		local maxHealth = UnitHealthMax("player") or 1
-		local percent = maxHealth > 0 and (stagger / maxHealth) or 0
+		local percent = not staggerIsSecret and maxHealth > 0 and (stagger / maxHealth) or 0
 		baseR, baseG, baseB, baseA = getStaggerStateColor(percent, cfg)
 		baseA = baseA or (cfg.barColor and cfg.barColor[4]) or 1
 	elseif cfg.useBarColor then
@@ -5709,11 +5717,13 @@ function ResourceBars.SyncSharedSlotProxyFrame(slot, specIndex)
 	frame:ClearAllPoints()
 	if liveFrame and liveFrame ~= frame and liveFrame.GetNumPoints and liveFrame:GetNumPoints() > 0 then
 		local point, relativeTo, relativePoint, x, y = liveFrame:GetPoint(1)
-		ResourceBars.Pixel.Point(frame, point or "TOPLEFT", relativeTo or UIParent, relativePoint or point or "TOPLEFT", x or 0, y or 0)
-		ResourceBars.Pixel.Size(frame, liveFrame:GetWidth() or cfg.width or widthDefault, liveFrame:GetHeight() or cfg.height or heightDefault)
-		ResourceBars.AlignHostToPixelGrid(frame)
-		if not ResourceBars.ShouldDeferShowToVisibilityDriver or not ResourceBars.ShouldDeferShowToVisibilityDriver(frame, cfg) then frame:Show() end
-		return frame
+		if relativeTo ~= frame then
+			ResourceBars.Pixel.Point(frame, point or "TOPLEFT", relativeTo or UIParent, relativePoint or point or "TOPLEFT", x or 0, y or 0)
+			ResourceBars.Pixel.Size(frame, liveFrame:GetWidth() or cfg.width or widthDefault, liveFrame:GetHeight() or cfg.height or heightDefault)
+			ResourceBars.AlignHostToPixelGrid(frame)
+			if not ResourceBars.ShouldDeferShowToVisibilityDriver or not ResourceBars.ShouldDeferShowToVisibilityDriver(frame, cfg) then frame:Show() end
+			return frame
+		end
 	end
 
 	local anchor = getAnchor(slot, spec)
@@ -6648,6 +6658,20 @@ function updatePowerBar(type, runeSlot)
 		local style = bar._style or "PERCENT"
 		local smooth = cfg.smoothFill == true
 		setBarValue(bar, curPower, smooth)
+		if issecretvalue and issecretvalue(curPower) then
+			bar._lastVal = nil
+			if bar.text then
+				if bar._lastText ~= "" then
+					bar.text:SetText("")
+					bar._lastText = ""
+				end
+				if bar._textShown then
+					bar.text:Hide()
+					bar._textShown = false
+				end
+			end
+			return
+		end
 		bar._lastVal = curPower
 
 		local fillPercent = staggerMax > 0 and (curPower / staggerMax) or 0
@@ -7774,6 +7798,7 @@ function layoutRunes(bar)
 		if ResourceBars.ApplySegmentContentInset then
 			ResourceBars.ApplySegmentContentInset(sb, 0)
 		end
+		if ResourceBars.ApplySegmentBackgroundInset then ResourceBars.ApplySegmentBackgroundInset(sb, cfg) end
 		-- cooldown text per segment
 		if not sb.fs then sb.fs = overlay:CreateFontString(nil, "OVERLAY", "GameFontHighlight") end
 		if sb.fs:GetParent() ~= overlay then sb.fs:SetParent(overlay) end

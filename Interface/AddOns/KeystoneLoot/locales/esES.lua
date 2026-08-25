@@ -8,7 +8,7 @@ local L = KeystoneLoot.L;
 
 -- keystoneloot_frame.lua
 L["%s (%s Season %d)"] = "%s (%s temporada %d)";
-L["Import BIS items from |cnACCOUNT_WIDE_FONT_COLOR:www.keystoneloot.io|r"] = "Importa objetos BIS desde |cnACCOUNT_WIDE_FONT_COLOR:www.keystoneloot.io|r";
+L["Import BIS items from %s"] = "Importa objetos BIS desde %s";
 
 -- itemlevel_dropdown.lua
 L["Veteran"] = "Veterano";
@@ -25,6 +25,7 @@ L["The Catalyst"] = "El catalizador";
 L["Minimap button"] = "Botón del minimapa";
 L["Item level in keystone tooltip"] = "Nivel de objeto en la descripción del sigilo";
 L["Favorite in item tooltip"] = "Favorito en la descripción del objeto";
+L["Favorite on item icons"] = "Favorito en los iconos de objeto";
 L['Hide "Other" in All Slots'] = "Ocultar \"Otro\" en Todos los espacios";
 L["Loot reminder (dungeons)"] = "Recordatorio de botín (mazmorras)";
 L["Highlighting"] = "Resaltar";
@@ -75,6 +76,11 @@ L["This import string requires a newer version of KeystoneLoot."] = "Esta cadena
 L["Set Favorite"] = "Establecer favorito";
 L["Nice to have"] = "Estaría bien tenerlo";
 L["Must have"] = "Imprescindible";
+L["Catalyst"] = "Catalizador";
+L["+Secondary stats of the base item"] = "+Estadísticas secundarias del objeto base";
+
+-- copy_popup.lua
+L["Press CTRL+C to copy"] = "Pulsa CTRL+C para copiar";
 
 -- loot_reminder_frame.lua
 L["Correct loot specialization set?"] = "¿Especialización de botín correcta?";

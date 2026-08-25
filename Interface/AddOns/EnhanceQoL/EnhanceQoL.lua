@@ -4374,6 +4374,9 @@ local function initUI()
 	addon.functions.InitDBValue("detachedButtonSinkMoveModifier", "ALT")
 	addon.functions.InitDBValue("buttonSinkAnchorPreference", "AUTO")
 	addon.functions.InitDBValue("minimapButtonBinIconClickToggle", false)
+	addon.functions.InitDBValue("minimapButtonBinAutoClose", false)
+	addon.functions.InitDBValue("minimapButtonBinAutoCloseDelay", 15)
+	addon.functions.InitDBValue("minimapButtonBinCloseOnButtonClick", false)
 	addon.functions.InitDBValue("minimapButtonBinColumns", DEFAULT_BUTTON_SINK_COLUMNS)
 	addon.functions.InitDBValue("minimapButtonBinHideBackground", false)
 	addon.functions.InitDBValue("minimapButtonBinHideBorder", false)
@@ -5327,6 +5330,10 @@ local function initUI()
 
 	local function removeButtonSink()
 		if addon.variables.buttonSink then
+			if addon.variables.buttonSink.eqolAutoCloseTimer then
+				addon.variables.buttonSink.eqolAutoCloseTimer:Cancel()
+				addon.variables.buttonSink.eqolAutoCloseTimer = nil
+			end
 			addon.variables.buttonSink:SetParent(nil)
 			addon.variables.buttonSink:SetScript("OnLeave", nil)
 			addon.variables.buttonSink:SetScript("OnDragStart", nil)
@@ -5362,6 +5369,53 @@ local function initUI()
 			if button then button:Hide() end
 			LDBIcon.objects[addonName .. "_ButtonSinkMap"] = nil
 		end
+	end
+
+	local function cancelButtonSinkAutoClose(frame)
+		if not frame or not frame.eqolAutoCloseTimer then return end
+		frame.eqolAutoCloseTimer:Cancel()
+		frame.eqolAutoCloseTimer = nil
+	end
+
+	local function scheduleButtonSinkAutoClose(frame)
+		cancelButtonSinkAutoClose(frame)
+		if not frame or addon.db["minimapButtonBinIconClickToggle"] ~= true or addon.db["minimapButtonBinAutoClose"] ~= true then return end
+		local delay = tonumber(addon.db["minimapButtonBinAutoCloseDelay"]) or 15
+		delay = math.max(1, math.min(120, delay))
+		frame.eqolAutoCloseTimer = C_Timer.NewTimer(delay, function()
+			frame.eqolAutoCloseTimer = nil
+			if addon.variables.buttonSink == frame and frame:IsShown() then frame:Hide() end
+		end)
+	end
+
+	function addon.functions.updateButtonSinkAutoClose()
+		local frame = addon.variables and addon.variables.buttonSink
+		if not frame then return end
+		if frame:IsShown() then
+			scheduleButtonSinkAutoClose(frame)
+		else
+			cancelButtonSinkAutoClose(frame)
+		end
+	end
+
+	local function hookButtonSinkCloseOnClick(button)
+		addon.variables.buttonSinkClickHooks = addon.variables.buttonSinkClickHooks or setmetatable({}, { __mode = "k" })
+		if not button or addon.variables.buttonSinkClickHooks[button] then return end
+		addon.variables.buttonSinkClickHooks[button] = true
+		button:HookScript("OnClick", function(self)
+			local frame = addon.variables and addon.variables.buttonSink
+			if addon.db["minimapButtonBinIconClickToggle"] ~= true
+				or addon.db["minimapButtonBinCloseOnButtonClick"] ~= true
+				or not frame
+				or not frame:IsShown()
+				or self:GetParent() ~= frame
+			then
+				return
+			end
+			C_Timer.After(0, function()
+				if addon.variables.buttonSink == frame and frame:IsShown() then frame:Hide() end
+			end)
+		end)
 	end
 
 	local function applyButtonSinkAppearance(frame)
@@ -5513,6 +5567,8 @@ local function initUI()
 			buttonBag:SetSize(150, 150)
 			buttonBag:SetFrameStrata(BUTTON_SINK_FRAME_STRATA)
 			buttonBag:SetFrameLevel(BUTTON_SINK_FRAME_LEVEL)
+			buttonBag:SetScript("OnShow", function(self) scheduleButtonSinkAutoClose(self) end)
+			buttonBag:SetScript("OnHide", function(self) cancelButtonSinkAutoClose(self) end)
 
 			if useLauncherToggle then
 				buttonBag:SetScript("OnLeave", function()
@@ -5746,6 +5802,7 @@ local function initUI()
 						local row = math.floor((index - 1) / columns)
 
 						button:SetParent(addon.variables.buttonSink)
+						hookButtonSinkCloseOnClick(button)
 						button:SetFrameStrata(BUTTON_SINK_FRAME_STRATA)
 						button:SetFrameLevel(BUTTON_SINK_BUTTON_LEVEL)
 						button:SetSize(ICON_SIZE, ICON_SIZE)
@@ -6823,6 +6880,9 @@ local function setAllHooks()
 			queueGlobalFontRefresh()
 		end
 	end)
+	LSM:RegisterCallback("LibSharedMedia_SetGlobal", function(event, mediaType)
+		if addon.functions and addon.functions.InvalidateLSMMediaCache and mediaType then addon.functions.InvalidateLSMMediaCache(mediaType) end
+	end)
 
 	-- Init modules
 	if addon.Aura and addon.Aura.functions then
@@ -6869,12 +6929,117 @@ function addon.functions.isQuestAutomationModifierHeld(modifier)
 	return false
 end
 
-function addon.functions.shouldAutoChooseQuest()
-	if not addon.db or not addon.db["autoChooseQuest"] then return false end
-	local modifier = addon.db["autoChooseQuestModifier"]
+function addon.functions.shouldRunQuestAutomation(settingKey, modifierKey)
+	if not addon.db or not addon.db[settingKey] then return false end
+	local modifier = addon.db[modifierKey]
 	if modifier == "SHIFT" or modifier == "CTRL" or modifier == "ALT" then return addon.functions.isQuestAutomationModifierHeld(modifier) end
-	-- Legacy behavior: allow auto questing unless Shift is held
+	-- Legacy behavior: allow automation unless Shift is held
 	return not IsShiftKeyDown()
+end
+
+function addon.functions.shouldAutoChooseQuest()
+	return addon.functions.shouldRunQuestAutomation("autoChooseQuest", "autoChooseQuestModifier")
+end
+
+addon.variables.autoGossipDifficultyContexts = {
+	[1] = "dungeonNormal",
+	[2] = "dungeonHeroic",
+	[3] = "raidNormal",
+	[4] = "raidNormal",
+	[5] = "raidHeroic",
+	[6] = "raidHeroic",
+	[7] = "raidLfr",
+	[8] = "dungeonMythicPlus",
+	[9] = "raidNormal",
+	[14] = "raidNormal",
+	[15] = "raidHeroic",
+	[16] = "raidMythic",
+	[17] = "raidLfr",
+	[18] = "raidNormal",
+	[23] = "dungeonMythic",
+	[24] = "dungeonTimewalking",
+	[33] = "raidTimewalking",
+	[150] = "dungeonNormal",
+	[151] = "raidLfr",
+	[205] = "dungeonNormal",
+	[208] = "delve",
+	[216] = "dungeonNormal",
+	[220] = "raidStory",
+	[233] = "raidMythic",
+}
+
+function addon.functions.getAutoGossipContext()
+	if not (IsInInstance and GetInstanceInfo) then return "world" end
+
+	local inInstance, instanceType = IsInInstance()
+	if not inInstance or instanceType == "none" then return "world" end
+
+	local _, _, difficultyID, _, _, _, _, _, _, _, hasWorldTier = GetInstanceInfo()
+	if hasWorldTier == true or difficultyID == 208 then return "delve" end
+	if C_LFGInfo and C_LFGInfo.IsInLFGFollowerDungeon and C_LFGInfo.IsInLFGFollowerDungeon() then return "dungeonFollower" end
+
+	local context = addon.variables.autoGossipDifficultyContexts[difficultyID]
+	if context then return context end
+	if instanceType == "scenario" then return "scenario" end
+	if instanceType == "pvp" or instanceType == "arena" then return "pvp" end
+	return "other"
+end
+
+function addon.functions.isAutoGossipContextEnabled()
+	local contexts = addon.db and addon.db.autoChooseGossipContexts
+	return type(contexts) == "table" and contexts[addon.functions.getAutoGossipContext()] == true
+end
+
+function addon.functions.shouldAutoChooseGossip()
+	return addon.functions.shouldRunQuestAutomation("autoChooseGossip", "autoChooseGossipModifier") and addon.functions.isAutoGossipContextEnabled()
+end
+
+function addon.functions.getAutoGossipInfo(resetInvalid)
+	if not addon.db then return nil end
+	if type(addon.db.autogossipInfo) ~= "table" then
+		if resetInvalid then addon.db.autogossipInfo = {} end
+		return resetInvalid and addon.db.autogossipInfo or nil
+	end
+	return addon.db.autogossipInfo
+end
+
+function addon.functions.getGossipOptionDisplayName(optionInfo)
+	local name
+	local flags
+	if optionInfo then
+		name = optionInfo.name
+		flags = optionInfo.flags
+	end
+	if issecretvalue(name) then return "" end
+	if name == nil then name = "" end
+	if type(name) ~= "string" then return "" end
+
+	local recFlags = _G.Enum and _G.Enum.GossipOptionRecFlags
+	if issecretvalue(flags) or not (flags and recFlags and _G.FlagsUtil and _G.FlagsUtil.IsSet) then return name end
+
+	local prepends = {}
+	if _G.FlagsUtil.IsSet(flags, recFlags.QuestLabelPrepend) then prepends[#prepends + 1] = _G.QUEST_PREPEND end
+	if _G.FlagsUtil.IsSet(flags, recFlags.PlayMovieLabelPrepend) then prepends[#prepends + 1] = _G.PLAY_MOVIE_PREPEND end
+	if #prepends > 0 and _G.GOSSIP_OPTION_PREPEND then return _G.GOSSIP_OPTION_PREPEND:format(table.concat(prepends, " "), name) end
+	return name
+end
+
+function addon.functions.storeAutoGossipInfo(optionInfo)
+	local gossipOptionID = optionInfo and optionInfo.gossipOptionID
+	if issecretvalue(gossipOptionID) or not gossipOptionID then return end
+
+	local infoByID = addon.functions.getAutoGossipInfo(true)
+	if not infoByID then return end
+	local info = type(infoByID[gossipOptionID]) == "table" and infoByID[gossipOptionID] or {}
+	local optionText = addon.functions.getGossipOptionDisplayName(optionInfo)
+	if optionText ~= "" then info.optionText = optionText end
+
+	local npcName = UnitName("npc")
+	if not issecretvalue(npcName) and type(npcName) == "string" and npcName ~= "" then info.npcName = npcName end
+	local npcID = addon.functions.getIDFromGUID(UnitGUID("npc"))
+	if npcID then info.npcID = npcID end
+
+	if info.optionText or info.npcName or info.npcID then infoByID[gossipOptionID] = info end
 end
 
 function addon.functions.selectGossipOption(optionInfo)
@@ -6947,6 +7112,12 @@ function loadMain()
 			local id = tonumber(msg:match("^aag%s*(%d+)$")) -- Extrahiere die ID
 			if id then
 				addon.db["autogossipID"][id] = true
+				for _, optionInfo in ipairs(C_GossipInfo.GetOptions() or {}) do
+					if optionInfo.gossipOptionID == id then
+						addon.functions.storeAutoGossipInfo(optionInfo)
+						break
+					end
+				end
 				print(ADD, "ID: ", id)
 			else
 				print("|cffff0000Invalid input! Please provide a ID|r")
@@ -6956,6 +7127,11 @@ function loadMain()
 			if id then
 				if addon.db["autogossipID"][id] then
 					addon.db["autogossipID"][id] = nil
+					local infoByID = addon.functions.getAutoGossipInfo()
+					if infoByID then
+						infoByID[id] = nil
+						infoByID[tostring(id)] = nil
+					end
 					print(REMOVE, "ID: ", id)
 				end
 			else
@@ -7320,38 +7496,50 @@ local eventHandlers = {
 		addon.variables.gossipClicked = {} -- clear all already clicked gossips
 	end,
 	["GOSSIP_SHOW"] = function()
-		if addon.functions.shouldAutoChooseQuest() then
+		local chooseQuest = addon.functions.shouldAutoChooseQuest()
+		local chooseGossip = addon.functions.shouldAutoChooseGossip()
+		local options = C_GossipInfo.GetOptions()
+		local savedGossipIDs = addon.db and addon.db.autogossipID
+		if type(savedGossipIDs) == "table" then
+			for _, optionInfo in ipairs(options or {}) do
+				local gossipOptionID = optionInfo.gossipOptionID
+				if not issecretvalue(gossipOptionID) and gossipOptionID and (savedGossipIDs[gossipOptionID] or savedGossipIDs[tostring(gossipOptionID)]) then
+					addon.functions.storeAutoGossipInfo(optionInfo)
+				end
+			end
+		end
+		if chooseQuest or chooseGossip then
 			if addon.functions.isQuestAutomationIgnoredNPC() then return end
+			if chooseQuest then
+				local aQuests = C_GossipInfo.GetAvailableQuests()
+				local activeQuests = C_GossipInfo.GetActiveQuests()
 
-			local options = C_GossipInfo.GetOptions()
-			local aQuests = C_GossipInfo.GetAvailableQuests()
-			local activeQuests = C_GossipInfo.GetActiveQuests()
+				if activeQuests then
+					for _, quest in ipairs(activeQuests) do
+						if quest.isComplete then
+							C_GossipInfo.SelectActiveQuest(quest.questID)
+							return
+						end
+					end
+				end
 
-			if activeQuests then
-				for _, quest in ipairs(activeQuests) do
-					if quest.isComplete then
-						C_GossipInfo.SelectActiveQuest(quest.questID)
-						return
+				if #aQuests > 0 then
+					for _, quest in ipairs(aQuests) do
+						if addon.db["ignoreTrivialQuests"] and quest.isTrivial then
+							-- ignore trivial
+						elseif addon.db["ignoreDailyQuests"] and (quest.frequency > 0) then
+							-- ignore daily/weekly
+						elseif addon.db["ignoreWarbandCompleted"] and C_QuestLog.IsQuestFlaggedCompletedOnAccount(quest.questID) then
+							-- ignore warband completed
+						else
+							C_GossipInfo.SelectAvailableQuest(quest.questID)
+							return
+						end
 					end
 				end
 			end
 
-			if #aQuests > 0 then
-				for _, quest in ipairs(aQuests) do
-					if addon.db["ignoreTrivialQuests"] and quest.isTrivial then
-					-- ignore trivial
-					elseif addon.db["ignoreDailyQuests"] and (quest.frequency > 0) then
-						-- ignore daily/weekly
-					elseif addon.db["ignoreWarbandCompleted"] and C_QuestLog.IsQuestFlaggedCompletedOnAccount(quest.questID) then
-						-- ignore warband completed
-					else
-						C_GossipInfo.SelectAvailableQuest(quest.questID)
-						return
-					end
-				end
-			end
-
-			if options and #options > 0 then
+			if chooseGossip and options and #options > 0 then
 				for _, optionInfo in ipairs(options) do
 					if optionInfo.gossipOptionID and addon.db["autogossipID"][optionInfo.gossipOptionID] then
 						addon.functions.selectGossipOption(optionInfo)

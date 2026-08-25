@@ -123,6 +123,317 @@ local function quadFromTurn(from, turn)
     return QUADRANTS[(a - 1 + off) % 4 + 1]
 end
 
+--#region Facing
+
+-- Where the player is looking. The delve stopped handing out coordinates in
+-- 12.1, but the minimap still spins with the player when they have it set to
+-- rotate, and the compass ring's own rotation reads back plain. Measured on
+-- 2026-08-05: the ring sits at minus the facing with no offset, so undoing
+-- the sign is the whole conversion.
+local TAU = 2 * math.pi
+
+local function plainNum(v)
+    if type(v) ~= "number" then
+        return nil
+    end
+    if not pcall(function()
+        return v + 0
+    end) then
+        return nil
+    end
+    return v
+end
+
+-- A ring that never turns reads exactly like standing due north, which is
+-- the one failure that would record a whole pull of wrong quarters instead
+-- of admitting it knows nothing. So a reading counts only once the ring has
+-- been seen moving. After that a still player is just a still player.
+local RING_PROVE = 25 -- a ring that has not moved in this long has never moved
+local ringRot, ringSince, ringLive, ringWarned
+
+-- Minimap skins hide the compass ring, and a ring that is not visible stops
+-- turning. Leatrix Plus hides the texture itself, EllesmereUI hides
+-- MinimapBackdrop above it, which takes the ring with it however the texture's
+-- own flag reads (measured 2026-08-19: shown true, parent hidden, rotation
+-- frozen at 0, parent shown and it turned). In the delve the texture and
+-- every hidden ancestor above it are kept shown but fully transparant while
+-- the facing is wanted, and put back on the way out. A skin that reapplies
+-- itself (EllesmereUI does after every fight) hides them again under the
+-- lend, and a frozen ring would read as a player standing still, so the
+-- lend is reasserted on every reading rather than trusted once
+local lent = {} -- region -> the alpha it had, for every region shown on loan
+
+-- SexyMap with its north tag off swaps the method on the texture itself,
+-- MinimapCompassTexture.Show = MinimapCompassTexture.Hide, so calling
+-- r:Show() through the object would hide the ring for it. Lent regions are
+-- shown through the real method off the frame metatable, which an addon
+-- can only shadow on the object, never replace underneath
+local function show(r)
+    local mt = getmetatable(r)
+    local real = mt and type(mt.__index) == "table" and mt.__index.Show or r.Show
+    real(r)
+end
+
+local function lendCompass()
+    if not AZT.InDelve() then
+        return
+    end
+    local r = MinimapCompassTexture
+    while r and r ~= UIParent do
+        if not r:IsShown() then
+            if lent[r] == nil then
+                lent[r] = r:GetAlpha()
+                r:SetAlpha(0)
+            end
+            show(r)
+        end
+        r = r:GetParent()
+    end
+end
+
+local function returnCompass()
+    for r, alpha in pairs(lent) do
+        r:Hide()
+        r:SetAlpha(alpha)
+    end
+    wipe(lent)
+end
+
+local relentWarned
+local rotateSeenOn -- rotation has been on during this visit, so off now means something flipped it
+
+function Safe.RingFacing()
+    if not MinimapCompassTexture then
+        return nil
+    end
+    if GetCVar("rotateMinimap") == "1" then
+        if AZT.InDelve() then
+            rotateSeenOn = true
+        end
+    else
+        -- a skin that writes its own rotation setting on every reapply
+        -- (EllesmereUI at login and after each fight) turns the rotation
+        -- back off under us, lent or the player's own. While the delve wants
+        -- it rotating it goes back on whoever turned it off, and counts as
+        -- lent so it is returned on the way out. Only once it has been seen
+        -- on this visit though, so the entry sync gets to lend it first
+        if not (rotateSeenOn and AZT.DelveRotate() and AZT.InDelve()) then
+            return nil
+        end
+        C_CVar.SetCVar("rotateMinimap", "1")
+        AztarecHelperDB.rotateLent = true
+        if not relentWarned then
+            relentWarned = true
+            AZT.chat(
+                "something keeps turning the minimap rotation off, a minimap addon most likely - it is back on for the delve"
+            )
+        end
+    end
+    lendCompass()
+    local ok, rot = pcall(MinimapCompassTexture.GetRotation, MinimapCompassTexture)
+    rot = ok and plainNum(rot) or nil
+    if not rot then
+        return nil
+    end
+    local now = GetTime()
+    if ringRot == nil then
+        ringRot, ringSince = rot, now
+    elseif rot ~= ringRot then
+        ringRot, ringSince = rot, now
+        -- a ring that was given up on and turns after all takes its box
+        -- down, the player fixed the minimap or spun to check
+        if ringWarned and not ringLive then
+            AZT.HideRingWarning()
+            AZT.chat("the compass ring is turning, automatic recording can see your facing again")
+        end
+        ringLive = true
+    elseif not ringLive and now - ringSince > RING_PROVE then
+        -- said once, and never into a fight, the reader runs every frame
+        -- and picks it up again when the fight is over
+        if not ringWarned and AZT.InDelve() and not AZT.Fighting() then
+            ringWarned = true
+            AZT.chat("your minimap compass ring is not turning, so nothing here can tell which way you face")
+            -- by hand only loses the turning room view, automatic loses the
+            -- whole recording, so the box is for automatic
+            if Safe.IsAuto() then
+                AZT.ShowRingWarning(Safe.LoadedMinimapAddons())
+            end
+        end
+        return nil
+    end
+    return -rot % TAU
+end
+
+-- the box's "I was idle" answer: the ring gets another RING_PROVE to show
+-- it turns before the box comes back
+function Safe.RearmRing()
+    ringWarned = false
+    ringSince = GetTime()
+end
+
+-- minimap addons known to touch the ring or the rotation, named in the
+-- warning and the report so the player knows what to switch off
+local MINIMAP_ADDONS = {
+    "EllesmereUIMinimap",
+    "EUIStandaloneMinimap",
+    "Leatrix_Plus",
+    "ElvUI",
+    "SexyMap",
+    "BetterMinimap",
+    "BasicMinimap",
+    "Chinchilla",
+}
+
+function Safe.LoadedMinimapAddons()
+    local loaded = {}
+    for _, name in ipairs(MINIMAP_ADDONS) do
+        if C_AddOns.IsAddOnLoaded(name) then
+            loaded[#loaded + 1] = name
+        end
+    end
+    return loaded
+end
+
+-- /azt ring: what the facing reader sees, for reports of the room view
+-- not turning. Every value here is the addon's own or a plain client
+-- setting, safe to print in a fight
+function Safe.RingReport()
+    local tex = MinimapCompassTexture
+    AZT.chat(
+        ("ring report: recording %s, rotateMinimap=%s, in delve %s, rotation lent %s"):format(
+            Safe.IsAuto() and "automatic" or "by hand",
+            tostring(GetCVar("rotateMinimap")),
+            tostring(AZT.InDelve()),
+            tostring(AztarecHelperDB.rotateLent or false)
+        )
+    )
+    if not tex then
+        AZT.chat("ring: MinimapCompassTexture is missing on this client")
+        return
+    end
+    local function deg(rad, none)
+        return rad and ("%d deg"):format(math.floor(math.deg(rad) + 0.5)) or none
+    end
+    local ok, rot = pcall(tex.GetRotation, tex)
+    AZT.chat(
+        ("ring: shown %s, visible %s, alpha %.2f, rotation %s, seen moving %s, facing %s"):format(
+            tostring(tex:IsShown()),
+            tostring(tex:IsVisible()),
+            tex:GetAlpha(),
+            deg(ok and plainNum(rot), "unreadable"),
+            tostring(ringLive or false),
+            deg(Safe.RingFacing(), "none")
+        )
+    )
+    local loaded = Safe.LoadedMinimapAddons()
+    AZT.chat("minimap addons loaded: " .. (#loaded > 0 and table.concat(loaded, ", ") or "none of the known ones"))
+end
+
+-- The boss holds the middle through the whole channel and the player is
+-- looking at him, so the quarter they stand in is the one behind them.
+function Safe.RingQuadrant()
+    local f = Safe.RingFacing()
+    if not f then
+        return nil
+    end
+    local behind = (180 - math.deg(f)) % 360
+    return QUADRANTS[math.floor(((behind + 45) % 360) / 90) + 1]
+end
+
+-- by hand unless the player took the automatic offer. A practice drill is a
+-- keys drill wherever it runs, so it reads as by hand too
+function Safe.IsAuto()
+    return not AztarecHelperDB.manualMode and not practiceTicker
+end
+
+function Safe.CanAuto()
+    return Safe.RingFacing() ~= nil
+end
+
+-- Whether the minimap should rotate while the player is in the delve.
+-- Automatic recording cannot read the facing without it, so it forces the
+-- answer. By hand it is the player's setting, for a room view that turns
+-- with them and an arrow that aims from where they stand
+function AZT.DelveRotate()
+    return Safe.IsAuto() or AztarecHelperDB.delveRotate or false
+end
+
+-- The rotation is the player's setting, so the addon only ever lends it: a
+-- minimap it turned on for the delve goes back to still when they leave.
+-- rotateLent lives in the saved variables so a reload or a crash inside the
+-- delve still puts it back
+function AZT.LendRotation()
+    if GetCVar("rotateMinimap") ~= "1" then
+        C_CVar.SetCVar("rotateMinimap", "1")
+        AztarecHelperDB.rotateLent = true
+        AZT.chat("minimap set to rotate while you are in the delve, it goes back when you leave")
+    end
+end
+
+-- runs on every zone change and whenever the mode or the setting flips, so
+-- the rotation follows the wish right away: lent on the way in and on a
+-- flip to on, returned on the way out and on a flip to off
+function Safe.RotateSync()
+    if AZT.InDelve() and AZT.DelveRotate() then
+        AZT.LendRotation()
+        return
+    end
+    returnCompass()
+    rotateSeenOn = false
+    if AztarecHelperDB.rotateLent then
+        AztarecHelperDB.rotateLent = nil
+        C_CVar.SetCVar("rotateMinimap", "0")
+        AZT.chat("minimap rotation put back the way it was")
+    end
+end
+
+function AZT.SetDelveRotate(v)
+    AztarecHelperDB.delveRotate = v and true or false
+    Safe.RotateSync()
+    if AZT.RefreshOptions then
+        AZT.RefreshOptions()
+    end
+end
+
+-- one owner for the switch, since the slash command, the options panel and
+-- the offer box all flip it
+function AZT.SetManualMode(v)
+    AztarecHelperDB.manualMode = v and true or false
+    -- an explicit choice either way, so the entry offer has nohting to ask
+    AztarecHelperDB.autoAsked = true
+    Safe.Reset()
+    -- the board shows keys and click targets for hand recording only
+    if AZT.QuadClickSync then
+        AZT.QuadClickSync()
+    end
+    -- marking and calling ride the answer keys, which are idle in automatic,
+    -- so they go off with it rather than sit on and silent
+    if not v and (AztarecHelperDB.keysMark or AztarecHelperDB.callRoute) then
+        AztarecHelperDB.keysMark = false
+        if AztarecHelperDB.callRoute then
+            AZT.SetCallRoute(false)
+        end
+        AZT.chat("marking and calling: OFF - they need the keys, which belong to recording by hand")
+    end
+    AZT.MarkKeysSync()
+    if AZT.RefreshOptions then
+        AZT.RefreshOptions()
+    end
+    -- automatic forces the rotation and by hand may not want it, so the
+    -- minimap follows the mode right now
+    Safe.RotateSync()
+    if v then
+        AZT.chat("recording by hand, press a quarter key at each wave")
+    else
+        AZT.chat("recording itself again")
+        -- the picture page: which quarter gets written down. Every switch
+        -- to automatic earns it, from the offer box this reads as page two
+        AZT.ShowAutoHow()
+    end
+end
+
+--#endregion
+
 --#region Capture
 
 local function stopTicker()
@@ -170,7 +481,9 @@ local function closeWindow(i)
 end
 
 -- keep a copy of the route for review and replay, since the live table gets
--- wiped the moment the next channel starts
+-- wiped the moment the next channel starts. The copy also goes into the SV,
+-- with later death details riding the same table, so review and replay
+-- reach back past a reload or a disconnect
 local function snapshotPull()
     if #seq == 0 then
         return
@@ -178,6 +491,23 @@ local function snapshotPull()
     lastPull = { seq = {}, grid = grid, death = nil }
     for i, q in ipairs(seq) do
         lastPull.seq[i] = q
+    end
+    AztarecHelperDB.lastPull = lastPull
+end
+
+function Safe.RestorePull()
+    lastPull = AztarecHelperDB.lastPull
+end
+
+-- every edit to the route fans out through here: the room view, except
+-- during a drill where the drill itself drives it, and the route board,
+-- which reads the real sequence drill or not
+local function pushSeq(idx)
+    if AZT.SetSafeQuads and not practiceTicker then
+        AZT.SetSafeQuads(seq, idx)
+    end
+    if AZT.FollowSync then
+        AZT.FollowSync()
     end
 end
 
@@ -191,9 +521,7 @@ local function beginCapture(unit)
     chanStartT = GetTime()
     capturing = true
     winIdx = 1
-    if AZT.SetSafeQuads then
-        AZT.SetSafeQuads(seq)
-    end
+    pushSeq()
     ticker = C_Timer.NewTicker(0.2, function()
         if winIdx > MAX_WAVES then
             return
@@ -201,19 +529,26 @@ local function beginCapture(unit)
         local elapsed = GetTime() - chanStartT
         setWave("record", winIdx, nil, chanStartT + hitTime(winIdx))
         if elapsed >= hitTime(winIdx) + LOCK_DELAY then
-            if steps[winIdx] == nil then
+            -- the window shuts a beat after its wave, which is where the
+            -- player is standing when it lands and before they run for the
+            -- next one
+            if Safe.IsAuto() then
+                seq[winIdx] = Safe.RingQuadrant() or "?"
+                AZT.Log(("WINDOW %d locked %s"):format(winIdx, seq[winIdx]))
+            elseif steps[winIdx] == nil then
                 AZT.Log(("WINDOW %d closed with no input"):format(winIdx))
             end
             closeWindow(winIdx)
             winIdx = winIdx + 1
-            -- in a practice sermon the board belongs to the drill's target
-            -- colors, a neutral repaint here would blink through them
-            if AZT.SetSafeQuads and not practiceTicker then
-                AZT.SetSafeQuads(seq)
-            end
+            pushSeq()
         end
     end)
-    AZT.Log("CAPTURE open - answer each wave with the quarter you run to")
+    -- the moment it matters. A channel starting with no facing means this
+    -- pull records nothing, and finding that out afterwards is too late
+    if Safe.IsAuto() and not Safe.CanAuto() then
+        AZT.chat("cannot see which way you face, so this channel will record as unknown")
+    end
+    AZT.Log(Safe.IsAuto() and "CAPTURE open - recording on its own" or "CAPTURE open - answer each wave")
 end
 
 local function finishCapture()
@@ -230,17 +565,19 @@ local function finishCapture()
         Safe.Reset()
         return
     end
-    -- close out to the last hit that landed. Unkeyed waves stay "?" and
-    -- their echoes show as unknown, there is nothing to reconstruct from
-    -- when the player is the only sensor
+    -- close out to the last hit that landed. The last wave's window is
+    -- usually still open when the channel stops, so it gets read here.
+    -- Anything with nothing behind it stays "?" and its echo shows as
+    -- unknown rather than as a guess.
     while winIdx <= MAX_WAVES and hitTime(winIdx) <= elapsed + 0.6 do
+        if Safe.IsAuto() then
+            seq[winIdx] = Safe.RingQuadrant() or seq[winIdx]
+        end
         closeWindow(winIdx)
         winIdx = winIdx + 1
     end
     AZT.Log(("CAPTURE closed after %.1fs: %s"):format(elapsed, seqText()))
-    if AZT.SetSafeQuads then
-        AZT.SetSafeQuads(seq)
-    end
+    pushSeq()
     snapshotPull()
     setWave(nil, 0, nil, nil)
     echoIdx = 0
@@ -269,11 +606,7 @@ local function fillSpot(i, step, caught)
     local q = seq[i] or "?"
     AZT.Log(("SAFESPOT answered %d = %s -> %s%s"):format(i, step, q, caught and " (caught up)" or ""))
     AZT.chat(("safe spot %d: %s"):format(i, AZT.QuadName(q, 14)))
-    -- same blink guard as the window close, the flash and the chat line
-    -- carry the press feedback during a drill
-    if AZT.SetSafeQuads and not practiceTicker then
-        AZT.SetSafeQuads(seq, echoIdx > 0 and echoIdx or nil)
-    end
+    pushSeq(echoIdx > 0 and echoIdx or nil)
     if AZT.FlashQuad then
         AZT.FlashQuad(q)
     end
@@ -330,11 +663,29 @@ local function place(step, i, caught)
     fillSpot(i, step, caught)
 end
 
+local autoHinted = false
+
 -- The keys are bound account wide and would happily walk a route in from
 -- the middle of Dornogal, chatting about safe spots all the way. Answers
--- only count in the delve, or while a practice sermon runs anywhere.
+-- only count in the delve, or while a practice sermon runs anywhere. And
+-- the route belongs to whichever mode is running: in automatic that is the
+-- addon, so a press there means the player expected otherwise and is told
+-- once rather than every wave.
 local function answering()
-    return practiceTicker or AZT.InDelve()
+    if practiceTicker then
+        return true
+    end
+    if not AZT.InDelve() then
+        return false
+    end
+    if Safe.IsAuto() then
+        if not autoHinted and not capturing then
+            autoHinted = true
+            AZT.chat("recording itself right now, set Recording to By hand in the options to answer the waves yourself")
+        end
+        return false
+    end
+    return true
 end
 
 -- the player names the quarter outright, no position read anywhere
@@ -711,6 +1062,20 @@ ef:SetScript("OnEvent", function(_, event, ...)
                 end
                 d.safe = d.wave and lastPull.seq[d.wave] or nil
                 lastPull.death = d
+                -- the boss never calls the same quarter twice running, so a
+                -- doubled quarter in an automatic route means the facing
+                -- read lied, and facing away from the boss is how. Said
+                -- over the corpse, when the lesson lands best. The box
+                -- counts its corpse showings and mutes itself on request
+                if Safe.IsAuto() then
+                    for i = 2, #lastPull.seq do
+                        local q = lastPull.seq[i]
+                        if q ~= "?" and q == lastPull.seq[i - 1] then
+                            AZT.ShowMisreadWarning(true)
+                            break
+                        end
+                    end
+                end
             end
         elseif event == "UNIT_SPELLCAST_CHANNEL_START" then
             local unit = ...
@@ -819,7 +1184,9 @@ local COMBAT_EVENTS = {
 }
 
 function Safe.ZoneSync()
+    Safe.RotateSync()
     if AZT.InDelve() then
+        AZT.CueChannelWarn()
         for _, e in ipairs(COMBAT_EVENTS) do
             ef:RegisterEvent(e)
         end

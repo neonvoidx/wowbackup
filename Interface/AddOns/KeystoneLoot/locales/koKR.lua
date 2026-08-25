@@ -8,7 +8,7 @@ local L = KeystoneLoot.L;
 
 -- keystoneloot_frame.lua
 L["%s (%s Season %d)"] = "%s (%s 시즌 %d)";
-L["Import BIS items from |cnACCOUNT_WIDE_FONT_COLOR:www.keystoneloot.io|r"] = "|cnACCOUNT_WIDE_FONT_COLOR:www.keystoneloot.io|r에서 BIS 아이템 가져오기";
+L["Import BIS items from %s"] = "%s에서 BIS 아이템 가져오기";
 
 -- itemlevel_dropdown.lua
 L["Veteran"] = "노련가";
@@ -25,6 +25,7 @@ L["The Catalyst"] = "촉매";
 L["Minimap button"] = "미니맵 버튼";
 L["Item level in keystone tooltip"] = "쐐기돌 툴팁에 장비 수준 표시";
 L["Favorite in item tooltip"] = "아이템 툴팁에 즐겨찾기 표시";
+L["Favorite on item icons"] = "아이템 아이콘에 즐겨찾기 표시";
 L['Hide "Other" in All Slots'] = "전체 슬롯에서 \"기타\" 숨기기";
 L["Loot reminder (dungeons)"] = "전리품 리마인더 (던전)";
 L["Highlighting"] = "강조";
@@ -76,6 +77,11 @@ L["Set Favorite"] = "즐겨찾기 설정";
 L["Nice to have"] = "있으면 좋음";
 L["Must have"] = "필수";
 L["Best in Slot"] = "최고 장비";
+L["Catalyst"] = "촉매";
+L["+Secondary stats of the base item"] = "+기본 아이템의 2차 능력치";
+
+-- copy_popup.lua
+L["Press CTRL+C to copy"] = "CTRL+C를 눌러 복사";
 
 -- loot_reminder_frame.lua
 L["Correct loot specialization set?"] = "올바른 전리품 전문화 설정?";

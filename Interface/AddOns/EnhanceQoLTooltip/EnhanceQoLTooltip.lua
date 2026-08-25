@@ -1436,11 +1436,14 @@ local function GetConfiguredTooltipScale()
 end
 
 local function ApplyTooltipScaleToTarget(tt)
-	if not tt or not tt.SetScale then return end
+	if not IsTooltipMutable(tt) or not tt.SetScale then return end
 	tt:SetScale(GetConfiguredTooltipScale())
 	if not tt.HookScript or tt.__EnhanceQoLTooltipScaleHooked then return end
 	tt.__EnhanceQoLTooltipScaleHooked = true
-	tt:HookScript("OnShow", function(self) self:SetScale(GetConfiguredTooltipScale()) end)
+	tt:HookScript("OnShow", function(self)
+		if not IsTooltipMutable(self) then return end
+		self:SetScale(GetConfiguredTooltipScale())
+	end)
 end
 
 local function ApplyTooltipScale()

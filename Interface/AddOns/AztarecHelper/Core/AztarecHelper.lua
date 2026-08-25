@@ -5,7 +5,7 @@
 
 local ADDON, AZT = ...
 
-AZT.VERSION = "1.7.2"
+AZT.VERSION = "2.1.10"
 
 -- Venomfall Deeps boss room, measured on PTR 12.1.0.
 -- UnitPosition returns (a, b, z, inst). The addon prints them as world=b,a.
@@ -28,18 +28,23 @@ AZT.ROOM = {
 local DEFAULTS = {
     enabled = true,
     autoRecord = true, -- start/stop recording with combat automatically
+    delveRotate = false, -- lend the minimap rotation in the delve when recording by hand, automatic always does
     nameFilter = "", -- substring filter for target/nameplate casts, "" logs every hostile cast
     posOnCast = true, -- append a player position probe to every cast line
     roomView = true, -- the main room view window
-    roomSlim = false, -- room view without its title and buttons
+    roomSlim = true, -- room view cut down to the room, Opts and Info tucked in the corners
+    windowScale = {}, -- size per floating window, keyed like the locks, missing means 1
     mapArt = false, -- draw Blizzard's map art tiles behind the room view
     waveText = true, -- floating wave countdown window
+    soloBoard = false, -- the route board drawn from the own recording, not just the leader's calls
+    manualMode = true, -- key the route in yourself, off means it records off the minimap facing
     arrow = true, -- quest-style arrow showing the move for each echo
     arrowColor = "gold", -- key into AZT.ARROW_COLORS
     arrowCompass = false, -- arrow points the way the room view does, no spoken cues
     relativeTurns = false, -- quarter keys answer turns instead, after the first wave
     cues = true, -- the recorded solo cues during your own echoes
     cueMarks = false, -- cues name the safe quarter's marker over tts instead of the turn
+    cueColors = false, -- the marker voice says the marker's colour rather than its shape
     ttsVolume = 100, -- how loud everything the addon says over tts is
     callVoice = true, -- follower: read the leader's direction calls out loud
     keysMark = false, -- answer keys also mark the player for the party
@@ -71,6 +76,9 @@ f:SetScript("OnEvent", function(_, event, ...)
         if type(AztarecHelperDB.log) ~= "table" then
             AztarecHelperDB.log = {}
         end
+        if type(AztarecHelperDB.windowScale) ~= "table" then
+            AztarecHelperDB.windowScale = {}
+        end
         -- the grid rotation toggle is gone so clear its leftovers from old SVs
         AztarecHelperDB.quadRot = nil
         AztarecHelperDB.quadRotMigrated = nil
@@ -86,13 +94,17 @@ f:SetScript("OnEvent", function(_, event, ...)
                 end
             end
         end
-        -- 1.3.0 removed everything position-fed: auto sampling, the manual
-        -- toggle, the move warning and the view modes. Clear their leftovers
-        AztarecHelperDB.manualMode = nil
+        -- 1.3.0 removed the position-fed pieces, so clear their leftovers
         AztarecHelperDB.moveWarn = nil
         AztarecHelperDB.viewMode = nil
         AztarecHelperDB.viewModeMigrated = nil
         AztarecHelperDB.keyDebug = nil
+        -- the updates notice went with 2.0.3, the entry goes straight to the
+        -- automatic offer now
+        AztarecHelperDB.nerfNoticeSeen = nil
+        -- 2.0.4 made the delve rotation a setting that automatic forces, the
+        -- remembered choice and its offer box went with it
+        AztarecHelperDB.autoRotate = nil
         -- Talking Head was never a channel PlaySoundFile accepts
         if AztarecHelperDB.cueChannel == "Talking Head" then
             AztarecHelperDB.cueChannel = "Master"
@@ -104,6 +116,7 @@ f:SetScript("OnEvent", function(_, event, ...)
             AztarecHelperDB.compassCueAsked = true
         end
     elseif event == "PLAYER_LOGIN" then
+        AZT.Safe.RestorePull()
         if AZT.Recorder then
             AZT.Recorder.Init()
         end
@@ -194,7 +207,8 @@ end
 local HELP = {
     "/azt room          - toggle the room view (auto-shows in the delve)",
     "/azt map           - toggle the map art backdrop behind the room view",
-    "/azt n|e|s|w       - answer a wave with that quarter (bindable keys too)",
+    "/azt manual        - record the route by hand instead of automatically",
+    "/azt n|e|s|w       - answer a wave with that quarter, when recording by hand (bindable keys too)",
     "/azt replay        - replay the last recorded route with real timings",
     "/azt practice      - a pretend sermon to record and get echoed, no boss needed",
     "/azt cue           - toggle the solo spoken cues during the echoes",
@@ -202,6 +216,8 @@ local HELP = {
     "/azt call          - toggle calling the route for the party while you lead",
     "/azt follow        - toggle following the leader's calls",
     "/azt review        - what the last pull recorded and where you died",
+    "/azt ring          - what the facing reader sees, paste it when the room view will not turn",
+    "/azt badroute      - the misrecorded route warning, to read it outside a wipe",
     "/azt reset         - clear the recorded route",
     "/azt options       - open the settings panel",
     "/azt anywhere      - treat where you stand as the delve, for when detection breaks",
@@ -220,6 +236,8 @@ SlashCmdList["AZT"] = function(msg)
         AZT.ToggleRoomView()
     elseif cmd == "map" then
         AZT.ToggleMapArt()
+    elseif cmd == "manual" then
+        AZT.SetManualMode(not AztarecHelperDB.manualMode)
     elseif cmd == "n" or cmd == "e" or cmd == "s" or cmd == "w" then
         AZT.Safe.AnswerKey(cmd:upper())
     elseif cmd == "replay" then
@@ -258,7 +276,9 @@ SlashCmdList["AZT"] = function(msg)
     elseif cmd == "call" then
         -- calling belongs to the leader alone. The command refuses
         -- anyone else so two routes never fight over the boards
-        if not AztarecHelperDB.callRoute and AztarecHelperDB.relativeTurns then
+        if not AztarecHelperDB.callRoute and not AztarecHelperDB.manualMode then
+            chat("recording is automatic and the calls ride the answer keys - /azt manual first")
+        elseif not AztarecHelperDB.callRoute and AztarecHelperDB.relativeTurns then
             chat("your keys answer relative turns, and a turn has no quarter to call - /azt turns first")
         elseif not AztarecHelperDB.callRoute and not (AZT.InPlayerParty() and UnitIsGroupLeader("player")) then
             chat("route calling is for the party leader - take the lead first")
@@ -281,6 +301,10 @@ SlashCmdList["AZT"] = function(msg)
         end
     elseif cmd == "review" then
         AZT.Safe.Review()
+    elseif cmd == "ring" then
+        AZT.Safe.RingReport()
+    elseif cmd == "badroute" then
+        AZT.ShowMisreadWarning()
     elseif cmd == "reset" then
         AZT.Safe.Reset()
         chat("recorded route cleared")

@@ -1,5 +1,56 @@
 # Changelog
 
+## 4.6.2 - Cast Bar Repositioning Fix
+- Fixed the Reposition Cast Bar option not moving target and focus cast bars.
+
+## 4.6.1 - Cast Bar Repositioning
+- Added a Unit Frames option to reposition the target and focus cast bars.
+- Cast bars now anchor below the last buff or debuff row while repositioning is enabled.
+
+## 4.6.0 - UnitFrame Performance Refactor
+- Reworked UnitFrame aura handling for lower CPU usage.
+- UnitFrame auras now rely more directly on Blizzard's native 12.1 AuraContainer updates.
+- Reduced duplicate styling and unnecessary aura refreshes.
+- Improved UnitFrame initialization and combat safety.
+
+## 4.5.9 - MiniAuras Nameplate Auras Removal
+- Removed MiniCE styling support for MiniAuras Nameplate Auras: Enemy - Bar 1 and Enemy - Bar 2.
+
+## 4.5.8 - Ownership Performance
+- Reduced CPU usage from unrelated cooldown frames.
+- Improved cooldown detection efficiency across Blizzard and third-party UI elements.
+
+## 4.5.7 - Action Bar Performance
+- Reduced CPU usage during action bar cooldown, charge, and global cooldown updates.
+- Reduced background cooldown work for disabled styling categories.
+- Reduced duration tracking allocations across the interface.
+
+## 4.5.6 - BetterBlizz Conflict Detection
+- Unit Frames styling is now disabled with a warning while BetterBlizzFrames is active.
+- Nameplates styling is now disabled with a warning while BetterBlizzPlates is active.
+- Removed BetterBlizzFrames-specific Unit Frames compatibility.
+
+## 4.5.5 - Cooldown Update Performance
+- Reduced CPU usage on every cooldown update across the interface.
+- Duration tracking work is now skipped while Duration Text Colors is disabled.
+- MiniAuras and ShinyAuras cooldown checks now only run when those addons are installed.
+- Player Aura refreshes now stop while the Player Auras category is disabled.
+
+## 4.5.4 - BetterBlizzPlates Adapter Removed
+- Removed the BetterBlizzPlates nameplate aura adapter and its options category.
+- BetterBlizzPlates now has its own cooldown text styling options; configure them via /bbp > Nameplate Auras Options.
+
+## 4.5.3 - Target/Focus Cast Bar Fix
+- Fixed the target and focus cast bar disappearing after switching targets with Unit Frames auras enabled.
+
+## 4.5.2 - Shackled Support
+- Added a Shackled adapter for enemy CC cooldown icons.
+- Added a Shackled category with typography, positioning, and swipe controls.
+- Added a Swipe Shade Alpha slider and Reverse Swipe option for Shackled cooldown icons.
+
+## 4.5.1 - Action Bar Style Freeze Fix
+- Fixed a "script ran too long" error that could occur when restyling a large number of action bar cooldowns at once.
+
 ## 4.5.0 - MiniAuras Group Auras Text Fixes
 - Fixed Text Size, Text Color, and Hide Countdown Numbers not applying to MiniAuras Group Auras icons.
 - Slider options now apply immediately instead of triggering a full rescan.

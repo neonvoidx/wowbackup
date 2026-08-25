@@ -1398,19 +1398,23 @@ end
 
 local function getTooltipInfoFromLink(link)
 	if not link then return nil end
+	local enchantID = tonumber(link:match("item:%d+:(%d+)") or 0)
+	local hasEnchant = enchantID ~= nil and enchantID > 0
 
 	local cached = enchantTextLinkCache[link]
 	if cached ~= nil then
-		if cached == false then return nil end
-		return cached
+		if cached == false then return nil, hasEnchant end
+		return cached, true
 	end
 
-	local enchantID = tonumber(link:match("item:%d+:(%d+)") or 0)
 	local enchantText = nil
 
-	if enchantID and enchantID > 0 then
+	if hasEnchant then
 		enchantText = addon.enchantTextCache[enchantID]
-		if enchantText == false then enchantText = nil end
+		if enchantText == false then
+			enchantText = nil
+			addon.enchantTextCache[enchantID] = nil
+		end
 	end
 
 	if enchantText == nil then
@@ -1436,11 +1440,15 @@ local function getTooltipInfoFromLink(link)
 			end
 		end
 
-		if enchantID and enchantID > 0 then addon.enchantTextCache[enchantID] = enchantText or false end
+		if hasEnchant and enchantText then addon.enchantTextCache[enchantID] = enchantText end
 	end
 
-	setEnchantTextLinkCache(link, enchantText or false)
-	return enchantText
+	if enchantText then
+		setEnchantTextLinkCache(link, enchantText)
+	elseif not hasEnchant then
+		setEnchantTextLinkCache(link, false)
+	end
+	return enchantText, hasEnchant or enchantText ~= nil
 end
 
 local function removeInspectElements()
@@ -1663,8 +1671,8 @@ local function onInspect(arg1)
 								applyEnchantTextStyle(element.enchant)
 								local mode = getEnchantDisplayMode()
 								local showMissingOverlay = shouldShowMissingEnchantOverlayForMode(mode)
-								local enchantText = getTooltipInfoFromLink(itemLink)
-								local foundEnchant = enchantText ~= nil
+								local enchantText, hasEnchant = getTooltipInfoFromLink(itemLink)
+								local foundEnchant = hasEnchant or enchantText ~= nil
 								local showMissingEnchant = false
 								if element.borderGradient then
 									applyMissingEnchantOverlayStyle(element.borderGradient)
@@ -1823,7 +1831,7 @@ local function setIlvlText(element, slot)
 					end
 				end
 
-				local enchantText = getTooltipInfoFromLink(link)
+				local enchantText, hasEnchant = getTooltipInfoFromLink(link)
 				local trackKey, trackDisplayText = nil, nil
 				if CharOpt("tracks") then
 					trackKey, trackDisplayText = getUpgradeTrackDisplayText(link)
@@ -1879,7 +1887,7 @@ local function setIlvlText(element, slot)
 						applyMissingEnchantOverlayStyle(element.borderGradient)
 						element.borderGradient:Hide()
 					end
-					local foundEnchant = enchantText ~= nil
+					local foundEnchant = hasEnchant or enchantText ~= nil
 
 					if not foundEnchant and UnitLevel("player") == addon.variables.maxLevel then showMissingEnchant = shouldShowMissingEnchant(slot, link, eItem:GetCurrentItemLevel()) end
 					if element.borderGradient then

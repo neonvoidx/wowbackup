@@ -577,6 +577,7 @@ function ResourceBars.LayoutEssences(bar, cfg, count, texturePath)
 		if ResourceBars.ApplySegmentContentInset then
 			ResourceBars.ApplySegmentContentInset(sb, 0)
 		end
+		if ResourceBars.ApplySegmentBackgroundInset then ResourceBars.ApplySegmentBackgroundInset(sb, cfg) end
 		if not sb:IsShown() then sb:Show() end
 	end
 	for i = count + 1, #bar.essences do
@@ -1036,6 +1037,7 @@ function ResourceBars.LayoutDiscreteSegments(bar, cfg, count, texturePath)
 		if ResourceBars.ApplySegmentContentInset then
 			ResourceBars.ApplySegmentContentInset(segment, 0)
 		end
+		if ResourceBars.ApplySegmentBackgroundInset then ResourceBars.ApplySegmentBackgroundInset(segment, cfg) end
 		if not segment:IsShown() then segment:Show() end
 	end
 
@@ -1200,6 +1202,7 @@ function ResourceBars.UpdateDiscreteSegments(bar, cfg, count, value, color, text
 			if ResourceBars.ApplySegmentContentInset then
 				ResourceBars.ApplySegmentContentInset(sb, 0)
 			end
+			if ResourceBars.ApplySegmentBackgroundInset then ResourceBars.ApplySegmentBackgroundInset(sb, cfg) end
 			if sb._rbSegmentBg then
 				if segmentBgVisible then
 					local bgR, bgG, bgB, bgA = segmentBgR, segmentBgG, segmentBgB, segmentBgA

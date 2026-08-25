@@ -128,7 +128,9 @@ function AZT.MarkKeysSync()
     end
     ev:UnregisterEvent("PLAYER_REGEN_ENABLED")
     local want = AztarecHelperDB.keysMark or callActive() or (AZT.Dev and AZT.Dev.callSay)
-    if AztarecHelperDB.relativeTurns then
+    -- turn keys have no quarter to mark or call, and in automatic recording
+    -- the keys are idle altogether
+    if AztarecHelperDB.relativeTurns or not AztarecHelperDB.manualMode then
         want = false
     end
     if want and AZT.InDelve() then

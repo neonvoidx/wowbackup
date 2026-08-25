@@ -1,3 +1,41 @@
+# sArena Reloaded 2.6.1g
+## Tweak
+- Midnight: Fix an issue with DR frames sticking around between shuffle rounds and not resetting until round started.
+
+# sArena Reloaded 2.6.1f
+## Bugfix
+- Midnight: Fix DR frames getting hidden on UI hide and not coming back afterwards.
+
+# sArena Reloaded 2.6.1e
+## Tweak
+- Update Dissonance profile (www.twitch.tv/dissonancewow). Thank you for sharing!
+
+# sArena Reloaded 2.6.1d
+## Tweak
+- Update Jazggz profile (www.twitch.tv/jazggz). Thank you for sharing!
+## Bugfix
+- Fix an issue with class color frames in the new NPC Training Grounds Arena.
+
+# sArena Reloaded 2.6.1c
+## New
+- Add new Ceit profile (www.twitch.tv/ceitxd). Thank you for sharing!
+- Add new Rahbekius profile (www.twitch.tv/rahbekius). Thank you for sharing!
+## Bugfix
+- Fix an issue with the border on Class Icon for some layouts disappearing sometimes.
+
+# sArena Reloaded 2.6.1b
+## New
+- Add EllesmereUI party frames anchor support for Widgets.
+
+# sArena Reloaded 2.6.1
+## New
+- New profile: Kaaaz (www.twitch.tv/KaaazTTV). Raidframe style. Thank you for sharing!
+- Midnight: Add disarms as CC auras for Midnight. Again ty to Verz for providing the list without me even asking <3
+- Midnight: Add a few debuff auras to track (Like Hypo and Forb).
+## Bugfix
+- Midnight: Fix crop on icons for the new 12.1 auras.
+- Fix Class Icon aura highlight glow being too small on BlizzRaid layout.
+
 # sArena Reloaded 2.6.0e
 ## Bugfix
 - Fix Class Icon CD Font Size setting not applying to the cooldown text on the new Midnight 12.1 auras.

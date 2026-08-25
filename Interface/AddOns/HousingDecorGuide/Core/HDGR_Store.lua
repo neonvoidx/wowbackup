@@ -79,6 +79,11 @@ local function NewConfig()
         -- merchantQtyPicker: right-click decor at a vendor -> quantity picker (Helpers > Vendors).
         -- Ships OFF (opt-in): the picker changes right-click behaviour on every vendor decor row.
         merchantQtyPicker      = false,
+        -- materialTooltipItemData: render Blizzard's item tooltip above HDG's stock
+        -- roster on material rows, which also lets other addons' item-data processors
+        -- add their lines there. Ships OFF -- it makes every material hover much
+        -- taller, the reason those rows were title-only to begin with.
+        materialTooltipItemData = false,
         -- catalogDecorOverlay: red plus on uncollected decor in Blizzard's catalog (Helpers > Catalog).
         catalogDecorOverlay    = true,
         -- autoDepositLumber: on a banker open with Warband Bank access, move all
@@ -163,6 +168,9 @@ local function NewDecorSessionUI()
     return {
         searchQuery     = "",
         selectedItemID  = nil,
+        -- Pets browser selection. Lives in the DECOR bucket because Pets is a
+        -- top-filter mode of the decor view, not a view of its own (invariant 16).
+        selectedSpeciesID = nil,
         filters         = NewDecorFilters(),
     }
 end
@@ -573,6 +581,25 @@ local function NewBlueprintsSession()
     }
 end
 
+-- The Menagerie (House > Pets). ALL transient; UI_SET_TRANSIENT(view="menagerie")
+-- is the only writer -- zero feature-specific actions by design
+-- (HDGR_MENAGERIE_LATTICE_PLAN_2026-08-24 section 3). roomQuery is a SNAPSHOT the
+-- controller captures on click (imperative moment 1), never live-tracked.
+local function NewMenagerieSessionUI()
+    return {
+        mode = "byPet",                -- "byPet" | "bySpot"
+        axis = "clade", axval = "all", -- the two-row identity filter
+        -- Search reaches the KIND tail that no chip row can hold: 712 kinds, 509
+        -- of them with four pets or fewer. Typing "squirrel" is the surface that
+        -- scales where a nested axis did not (the drill was reverted 2026-08-25).
+        search = "",
+        spot = { surface = "any", size = "any", wants = {} },
+        roomQuery = nil,               -- { label, motifs = {..}, capturedAt } | nil
+        scene = { decorID = nil, withYou = false },
+        selectedSpeciesID = nil,
+    }
+end
+
 local function NewBlueprintsSessionUI()
     return { missingOnly = false, collapsedGroups = {}, pasteError = false }
 end
@@ -596,6 +623,7 @@ local function NewSessionUI()
         data         = NewDataSessionUI(),         -- Your Data tab: achievement-group collapse
         catalogIntro = { phase = "hidden" },        -- initial-load overlay: "hidden"|"loading"|"success"
         blueprints   = NewBlueprintsSessionUI(),    -- Blueprints tab transients (12.1)
+        menagerie    = NewMenagerieSessionUI(),     -- House > Pets (the Menagerie)
     }
 end
 
@@ -815,6 +843,12 @@ end
 -- "Name-Realm"):
 --   { name, realm, class, classFile, hidden, lastSeen,
 --     essenceStock = { bag, bank },   -- Essence of Lumber snapshot (soulbound; no warband)
+--     reagentStock = { bag = {[itemID]=n}, bank = {[itemID]=n}, bagAt, bankAt },
+--                                     -- decor reagents; sparse, nonzero only.
+--                                     -- NO warband slot: shared stash, counted
+--                                     -- once live rather than per character.
+--                                     -- bagAt/bankAt are separate because bank
+--                                     -- counts only refresh once a bank opens.
 --     professions = { [profName] = {          -- keyed by LOCALIZED name (back-compat)
 --         professionID = <TradeSkillLineID>,  -- stable, locale-invariant join key
 --         skillLines   = { [expName] = { current, max } },
@@ -1183,6 +1217,7 @@ local function EnsureSession(state)
         or { phase = "idle", active = false, done = 0, total = 0, name = "" }
     state.session.blueprints    = state.session.blueprints    or NewBlueprintsSession()
     state.session.ui.blueprints = state.session.ui.blueprints or NewBlueprintsSessionUI()
+    state.session.ui.menagerie  = state.session.ui.menagerie  or NewMenagerieSessionUI()
     -- session.house + session.daily are seeded by NewDefaultSession; EnsureSession
     -- does not need or-guards for them (strict reads from here forward).
 end
@@ -2415,6 +2450,31 @@ HDG.Actions:Register{ name = "RECIPE_HARVEST_PROGRESS",
         h.name   = payload.name or ""   -- exception(optional): phase-dependent payload
     end }
 
+-- Upsert the roster record for a character-scoped snapshot action and return it.
+-- Every such action carries the same identity fields, so the create-then-refresh
+-- block lives here once instead of being copied per action. Identity is refreshed
+-- on every call because a rename or a faction-change class swap has to land
+-- somewhere, and the scan that notices it is whichever one runs first.
+local function _upsertCharacter(state, payload)
+    local chars = state.account.characters
+    chars[payload.charKey] = chars[payload.charKey] or {
+        name        = payload.name,
+        realm       = payload.realm,
+        class       = payload.class,
+        classFile   = payload.classFile,
+        hidden      = false,
+        lastSeen    = 0,
+        professions = {},
+    }
+    local c = chars[payload.charKey]
+    c.name      = payload.name      or c.name
+    c.realm     = payload.realm     or c.realm
+    c.class     = payload.class     or c.class
+    c.classFile = payload.classFile or c.classFile
+    c.lastSeen  = (_G.time and _G.time()) or c.lastSeen or 0  -- exception(boundary): time() absent in headless tests
+    return c
+end
+
 HDG.Actions:Register{ name = "CHARACTER_PROFESSION_UPDATED",
     persists = true, combatUnsafe = false,
             invalidates = function(action) return { HDG.Paths.Join("account.characters", action.payload and action.payload.charKey) } end,
@@ -2423,26 +2483,8 @@ HDG.Actions:Register{ name = "CHARACTER_PROFESSION_UPDATED",
         -- in full (skill ladder + known recipes). Other professions on the
         -- same char survive untouched -- each profession scan only carries
         -- its own data.
-        local chars = state.account.characters
-        local key   = payload.charKey
-        if key then
-            chars[key] = chars[key] or {
-                name        = payload.name,
-                realm       = payload.realm,
-                class       = payload.class,
-                classFile   = payload.classFile,
-                hidden      = false,
-                lastSeen    = 0,
-                professions = {},
-            }
-            local c = chars[key]
-            -- Refresh identity fields on each scan (rename, class change
-            -- via faction change service, etc.).
-            c.name      = payload.name      or c.name
-            c.realm     = payload.realm     or c.realm
-            c.class     = payload.class     or c.class
-            c.classFile = payload.classFile or c.classFile
-            c.lastSeen  = (_G.time and _G.time()) or c.lastSeen or 0
+        if payload.charKey then
+            local c = _upsertCharacter(state, payload)
             -- Char-level knowsFindLumber: scanner captures via C_SpellBook
             -- on every prof scan. Tracks per-char awareness of Find Lumber
             -- (the achievement-gated find-spell), surfaced as a cyan
@@ -2468,26 +2510,43 @@ HDG.Actions:Register{ name = "CHARACTER_ESSENCE_UPDATED",
     persists = true, combatUnsafe = false,
             invalidates = function(action) return { HDG.Paths.Join("account.characters", action.payload and action.payload.charKey) } end,
     reduce = function(state, payload)
-        local key = payload.charKey
-        if key then
-            local chars = state.account.characters
-            chars[key] = chars[key] or {
-                name        = payload.name,
-                realm       = payload.realm,
-                class       = payload.class,
-                classFile   = payload.classFile,
-                hidden      = false,
-                lastSeen    = 0,
-                professions = {},
-            }
-            local c = chars[key]
-            c.name         = payload.name      or c.name
-            c.realm        = payload.realm     or c.realm
-            c.class        = payload.class     or c.class
-            c.classFile    = payload.classFile or c.classFile
-            c.lastSeen     = (_G.time and _G.time()) or c.lastSeen or 0
-            c.essenceStock = { bag = payload.bag or 0, bank = payload.bank or 0 }
+        if payload.charKey then
+            _upsertCharacter(state, payload).essenceStock =
+                { bag = payload.bag or 0, bank = payload.bank or 0 }
         end
+    end }
+
+-- Decor-reagent stock, per character, per stash. `counts` REPLACES the slot
+-- wholesale so an item spent to zero disappears instead of lingering at its old
+-- figure. Only the logged-in character is ever live; alts sit at their last-login
+-- snapshot, because WoW cannot read another character's bags.
+--
+-- No warband slot, deliberately: that stash is shared across the account, so a
+-- per-character copy would report one pile once per character.
+local function _reduceReagentStock(state, payload, slot, stamp)
+    if not payload.charKey then return end
+    local c = _upsertCharacter(state, payload)
+    c.reagentStock = c.reagentStock or {}   -- exception(nullable): absent on every record predating this feature
+    c.reagentStock[slot]  = payload.counts
+    c.reagentStock[stamp] = payload.at
+end
+
+HDG.Actions:Register{ name = "CHARACTER_REAGENT_BAGS_UPDATED",
+    persists = true, combatUnsafe = false,
+            invalidates = function(action) return { HDG.Paths.Join("account.characters", action.payload and action.payload.charKey) } end,
+    reduce = function(state, payload)
+        _reduceReagentStock(state, payload, "bag", "bagAt")
+    end }
+
+-- Dispatched ONLY after a BANKFRAME_OPENED this session -- see
+-- Modules/HDGR_ReagentStockObserver.lua. Blizzard's bank counts come from a cache
+-- that is empty until the bank frame opens, so an ungated sweep would overwrite a
+-- good bank map with zeros every time an alt logged in without visiting a bank.
+HDG.Actions:Register{ name = "CHARACTER_REAGENT_BANK_UPDATED",
+    persists = true, combatUnsafe = false,
+            invalidates = function(action) return { HDG.Paths.Join("account.characters", action.payload and action.payload.charKey) } end,
+    reduce = function(state, payload)
+        _reduceReagentStock(state, payload, "bank", "bankAt")
     end }
 
 HDG.Actions:Register{ name = "CHARACTER_DELETED",
@@ -5106,7 +5165,19 @@ HDG.Actions:Register{ name = "STYLES_PLACED_DECOR_OBSERVED_BATCH",
                 }
                 -- Last burst wins: entering an area re-bursts that area, so the
                 -- final entry of the batch names where the player now is.
-                if e.areaID then state.session.styles.currentArea = e.areaID end
+                --
+                -- CAVEAT (review 2026-08-23, NOT fully closed): batch order is Blizzard's
+                -- event order, not a statement about where the player stands, and a burst
+                -- can carry decor from several areas including neighbouring plots. The
+                -- dispatcher now refuses to retarget while the player is not inside an
+                -- owned house (HousingObserver stamps payload.ownedContext), which stops a
+                -- neighbour's plot hijacking the view from outside. It does NOT settle the
+                -- case where a mixed burst arrives while you ARE inside your own house --
+                -- areaID is parsed from the decor GUID and no API answers "which area am I
+                -- in", so closing that needs a live probe of what a real burst contains.
+                if e.areaID and payload.ownedContext ~= false then
+                    state.session.styles.currentArea = e.areaID
+                end
             end
         end
     end }
@@ -5305,6 +5376,19 @@ HDG.Resolver:Register{ name = "rep", facade = "RepObserver",
     actions = {
         { name = "REP_PROGRESS_TICK",
           noisy = true },  -- UPDATE_FACTION fires in bursts (debounced, but still chatty)
+    } }
+
+-- Decor-attachable pets. Data lives in HDG.PetObserver's module index, rebuilt
+-- from C_PetJournal.GetOwnedPetIDs -- the filter-free enumeration. noisy because
+-- PET_JOURNAL_LIST_UPDATE arrives in bursts at login and on every cage/learn;
+-- the observer debounces, this just keeps the log quiet about it.
+HDG.Resolver:Register{ name = "pets", facade = "PetObserver",
+    actions = {
+        { name = "PETS_LIST_CHANGED", noisy = true },
+        -- Same resolver: the summon state and the pet list are both read through
+        -- PetObserver, so one tick covers both. Re-running the row list on a
+        -- summon is cheap and keeps a single re-pull signal for the facade.
+        { name = "PETS_SUMMONED_CHANGED" },
     } }
 
 -- Housing catalog. Data lives in HDG.HousingCatalogObserver's module index

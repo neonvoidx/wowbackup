@@ -2179,7 +2179,7 @@ local function initializeEntryState(state, target, width, height)
 			anchorPoint = "TOPLEFT",
 			horizontalGrowthDirection = 1,
 			verticalGrowthDirection = -1,
-			maximumLineSize = (state.maxFrameCount * width) + ((state.maxFrameCount - 1) * spacing),
+			maximumLineSize = AuraCompat:GetSafeFlowLayoutMaximumLineSize(container, width, spacing, state.maxFrameCount),
 		}) then
 			AuraCompat:DisableAuraContainer(container)
 			return false
@@ -2582,7 +2582,10 @@ function AuraContainers:ResolveGridGroupPlan(panelId)
 	-- Right-aligned partial rows require addon-side alignment from the secret
 	-- visible count. Center growth instead follows the native container bounds.
 	if wraps and growthPoint == "TOPRIGHT" then return nil end
-	if type(layout.rowSizes) == "table" and next(layout.rowSizes) then return nil end
+	-- Per-row sizes depend on the resulting wrapped row assignment. Without
+	-- wrapping there is only one effective row, so its uniform override remains
+	-- compatible with Blizzard's secret-sized native container layout.
+	if wraps and type(layout.rowSizes) == "table" and next(layout.rowSizes) then return nil end
 	local spacing = Helper.ClampInt(layout.spacing, 0, Helper.SPACING_RANGE or 200, Helper.PANEL_LAYOUT_DEFAULTS.spacing or 0)
 
 	local memberIds = {}
@@ -2651,7 +2654,6 @@ function AuraContainers:ResolveGridGroupPlan(panelId)
 	end
 	if #auraStates == 0 then return nil end
 	local primarySize = horizontal and sharedWidth or sharedHeight
-	local maximumLineSize = wraps and ((wrapCount * primarySize) + (math.max(0, wrapCount - 1) * spacing)) or math.huge
 	local centerRowCount = centered and math.min(wraps and wrapCount or #memberIds, #memberIds) or 0
 	local centerOffsetX = 0
 	local centerOffsetY = 0
@@ -2685,7 +2687,9 @@ function AuraContainers:ResolveGridGroupPlan(panelId)
 		wrapDirection = wrapDirection,
 		horizontal = horizontal,
 		wraps = wraps,
-		maximumLineSize = maximumLineSize,
+		maximumLineSize = math.huge,
+		flowPrimaryCount = wraps and wrapCount or nil,
+		flowPrimarySize = wraps and primarySize or nil,
 		baseIndex = 1,
 		centered = centered,
 		centerOffsetX = centerOffsetX,
@@ -2786,7 +2790,6 @@ function AuraContainers:ResolveDynamicGroupPlan(panelId, groupId)
 	if #auraStates == 0 then return nil end
 	local primaryCount = horizontal and columns or rows
 	local primarySize = horizontal and auraStates[1].geometryWidth or auraStates[1].geometryHeight
-	local maximumLineSize = wraps and ((primaryCount * primarySize) + (math.max(0, primaryCount - 1) * spacing)) or math.huge
 	local centerRowCount = centered and math.min(columns, #memberIds) or 0
 	local centerOffsetX = centered and (((centerRowCount - 1) * (auraStates[1].geometryWidth + spacing)) / 2) or 0
 
@@ -2804,7 +2807,9 @@ function AuraContainers:ResolveDynamicGroupPlan(panelId, groupId)
 		direction = direction,
 		horizontal = horizontal,
 		wraps = wraps,
-		maximumLineSize = maximumLineSize,
+		maximumLineSize = math.huge,
+		flowPrimaryCount = wraps and primaryCount or nil,
+		flowPrimarySize = wraps and primarySize or nil,
 		baseIndex = baseIndex,
 		centered = centered,
 		centerOffsetX = centerOffsetX,
@@ -3029,7 +3034,9 @@ function AuraContainers:CreateDynamicRun(owner, unitToken, filterString)
 		anchorPoint = owner.flowAnchorPoint or owner.startPoint,
 		horizontalGrowthDirection = horizontalGrowthDirection,
 		verticalGrowthDirection = verticalGrowthDirection,
-		maximumLineSize = owner.maximumLineSize,
+		maximumLineSize = owner.wraps
+			and AuraCompat:GetSafeFlowLayoutMaximumLineSize(container, owner.flowPrimarySize, owner.spacing, owner.flowPrimaryCount)
+			or owner.maximumLineSize,
 	})
 	if not configured then
 		AuraCompat:DisableAuraContainer(container)
@@ -3068,7 +3075,6 @@ function AuraContainers:RegisterDynamicRun(owner, run, runIndex)
 			),
 			layout = {
 				elementSpacing = owner.spacing,
-				groupSpacing = owner.spacing,
 				lineSpacing = owner.spacing,
 				groupLineSpacing = owner.spacing,
 				elementWidth = state.geometryWidth,
@@ -3129,6 +3135,8 @@ function AuraContainers:BuildDynamicGroup(plan)
 		horizontal = plan.horizontal,
 		wraps = plan.wraps,
 		maximumLineSize = plan.maximumLineSize,
+		flowPrimaryCount = plan.flowPrimaryCount,
+		flowPrimarySize = plan.flowPrimarySize,
 		baseIndex = plan.baseIndex,
 		centered = plan.centered == true,
 		centerOffsetX = plan.centerOffsetX or 0,

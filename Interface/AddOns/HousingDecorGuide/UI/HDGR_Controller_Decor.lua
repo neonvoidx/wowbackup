@@ -160,8 +160,7 @@ local function _wireDecorClicks(row, ed)
                 return
             end
             if IsShiftKeyDown() then
-                local _, link = C_Item.GetItemInfo(itemID)  -- exception(boundary): itemLink nil on cold item cache
-                if link then _G.ChatFrameUtil.InsertLink(link) end
+                HDG.UI.LinkItem(itemID)
                 return
             end
             -- selectedItemID drives the detail pane (base item data); the
@@ -585,7 +584,8 @@ local TAG_TOOLTIP_RECIPE = { Redeemable = "RedeemableTag" }
 local function _makeTagTooltipDef(slot)
     return function()
         -- exception(false-positive): top-level controller def fn (not a row factory)
-        local tags = HDG.Selectors:Call("decor.tagsForFilter", HDG.Store:GetState(), {}) or {}
+        -- Strict: decor.tagsForFilter returns a table on every branch.
+        local tags = HDG.Selectors:Call("decor.tagsForFilter", HDG.Store:GetState(), {})
         local name = tags[slot] and TAG_TOOLTIP_RECIPE[tags[slot]]
         return name and { recipe = name } or nil
     end

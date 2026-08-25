@@ -75,6 +75,7 @@ local function blitzWinMessage(text, winCondition)
   local ownTime = winCondition.ownTime - GetTime()
   local winName = winCondition.winName
   local winMinBases = winCondition.minBases
+  local afterCapBases = winCondition.winBases
   local maxBases = winCondition.maxBases
   local capBases = winCondition.bases
   local message
@@ -83,25 +84,27 @@ local function blitzWinMessage(text, winCondition)
     message = ""
     Bases.isWin = true
   else
-    if NS.WIN_INC_BASE_COUNT > 0 and NS.ACTIVE_BASE_COUNT == maxBases and capBases == winMinBases + 1 then
+    if not NS.WILL_WIN and afterCapBases == 0 then
+      message = sformat("%s are ahead right now\n", NS.formatTeamName(winName, NS.PLAYER_FACTION))
+    elseif NS.WIN_INC_BASE_COUNT > 0 and NS.ACTIVE_BASE_COUNT == maxBases and capBases == winMinBases + 1 then
       if NS.WILL_WIN then
-        message = sformat("%s win with %d right now\n", NS.formatTeamName(winName, NS.PLAYER_FACTION), winMinBases)
+        message = sformat("%s win with %d right now\n", NS.formatTeamName(winName, NS.PLAYER_FACTION), afterCapBases)
       else
         message =
-          sformat("%s are ahead with %d after cap\n", NS.formatTeamName(winName, NS.PLAYER_FACTION), winMinBases)
+          sformat("%s are ahead with %d after cap\n", NS.formatTeamName(winName, NS.PLAYER_FACTION), afterCapBases)
       end
     else
       if NS.WILL_WIN then
-        message = sformat("%s win with %d right now\n", NS.formatTeamName(winName, NS.PLAYER_FACTION), winMinBases)
+        message = sformat("%s win with %d right now\n", NS.formatTeamName(winName, NS.PLAYER_FACTION), afterCapBases)
       else
         message =
-          sformat("%s are ahead with %d right now\n", NS.formatTeamName(winName, NS.PLAYER_FACTION), winMinBases)
+          sformat("%s are ahead with %d right now\n", NS.formatTeamName(winName, NS.PLAYER_FACTION), afterCapBases)
       end
     end
 
     if NS.WILL_WIN then
       message = message .. sformat("Hold %d for %s to win\n", winMinBases, NS.formatTime(winTime))
-    else
+    elseif afterCapBases > 0 then
       message = message .. "Hold what you have to stay ahead\n"
     end
   end
@@ -279,7 +282,7 @@ local function animationUpdate(frame, winTable, animationGroup, callbackFn)
       NS.BASE_TIMER_EXPIRED = true
 
       if callbackFn and NS.CUR_MAP and NS.CUR_MAP.basesReset then
-        callbackFn:BasePredictor(true)
+        callbackFn:BasePredictor(true, nil)
         return
       end
 

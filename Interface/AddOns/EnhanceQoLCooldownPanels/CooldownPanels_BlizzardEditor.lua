@@ -1510,6 +1510,11 @@ function Editor:ShowPanelMenu(owner, panelId)
 			if CooldownPanels.ShowExportPanelPopup then CooldownPanels:ShowExportPanelPopup(panelId) end
 		end)
 		rootDescription:CreateDivider()
+		if panel and panel.entries and next(panel.entries) then
+			rootDescription:CreateButton(L["CooldownPanelRemoveAllEntries"] or "Remove all entries", function()
+				if CooldownPanels.ShowRemoveAllEntriesPopup then CooldownPanels:ShowRemoveAllEntriesPopup(panelId) end
+			end)
+		end
 		rootDescription:CreateButton(REMOVE or DELETE or (L["CooldownPanelDeletePanel"] or "Delete Panel"), function()
 			if CooldownPanels.ShowDeletePanelPopup then CooldownPanels:ShowDeletePanelPopup(panelId) end
 		end)

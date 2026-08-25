@@ -50,6 +50,49 @@ AuraCompat._flowLayoutAxisByContainer = AuraCompat._flowLayoutAxisByContainer or
 
 AuraCompat.containerAddonName = AURA_CONTAINER_ADDON
 AuraCompat.defaultContainerTemplate = DEFAULT_CONTAINER_TEMPLATE
+AuraCompat.dispelTypeIconAssetMap = AuraCompat.dispelTypeIconAssetMap
+	or {
+		Bleed = { asset = "icons_64x64_bleed" },
+		Curse = { asset = "icons_64x64_curse" },
+		Disease = { asset = "icons_64x64_disease" },
+		Magic = { asset = "icons_64x64_magic" },
+		Poison = { asset = "icons_64x64_poison" },
+	}
+
+function AuraCompat:GetDispelTypeIconAssetMap()
+	return self.dispelTypeIconAssetMap
+end
+
+function AuraCompat:GetSafeFlowLayoutMaximumLineSize(region, elementSize, elementSpacing, elementCount)
+	elementSize = tonumber(elementSize) or 0
+	elementSpacing = tonumber(elementSpacing) or 0
+	elementCount = math.max(1, math.floor(tonumber(elementCount) or 1))
+
+	-- Blizzard 12.1 FlowLayout accumulates element sizes and spacing sequentially,
+	-- then wraps on a strict `>` comparison. Pixel-aligned fractional UI values can
+	-- therefore exceed an algebraically equivalent exact limit by one float step
+	-- after additional UI scaling. Keep one physical pixel of slack so exact-fit
+	-- rows remain stable. Re-check this workaround if Blizzard adds comparison
+	-- tolerance or changes AnchorUtil.ApplyFlowLayout's accumulation order.
+	local maximumLineSize = elementSize
+	for _ = 2, elementCount do
+		maximumLineSize = maximumLineSize + elementSpacing + elementSize
+	end
+	local onePixel = addon.PixelUtil and addon.PixelUtil.OnePixel and addon.PixelUtil.OnePixel(region or UIParent) or 1
+	return maximumLineSize + onePixel
+end
+
+function AuraCompat:SetDispelTypeIcon(texture, dispelType)
+	if not (texture and texture.SetAtlas) or self:IsSecretValue(dispelType) then return false end
+	local assetInfo = self.dispelTypeIconAssetMap[dispelType]
+	if not assetInfo then
+		texture:SetTexture(nil)
+		return false
+	end
+	texture:SetAtlas(assetInfo.asset, false)
+	texture:SetVertexColor(1, 1, 1, 1)
+	return true
+end
 
 local function CallContainerMethod(container, methodName, ...)
 	local method = container and container[methodName]

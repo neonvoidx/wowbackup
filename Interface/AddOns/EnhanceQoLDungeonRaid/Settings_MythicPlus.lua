@@ -88,14 +88,21 @@ local function buildSettings()
 	end
 
 	local talentLoadoutOrders = {}
-	local function buildTalentLoadoutList(specID)
+	local function buildTalentLoadoutList(specID, emptyLabel)
 		local source = (specID and addon.MythicPlus.variables.knownLoadout and addon.MythicPlus.variables.knownLoadout[specID]) or {}
 		local normalized = {}
 		for key, value in pairs(source) do
 			normalized[tostring(key)] = value
 		end
-		if not normalized["0"] then normalized["0"] = "" end
+		normalized["0"] = emptyLabel or ""
 		local list, order = addon.functions.prepareListForDropdown(normalized)
+		for index, key in ipairs(order) do
+			if key == "0" then
+				table.remove(order, index)
+				break
+			end
+		end
+		table.insert(order, 1, "0")
 		local orderTarget = talentLoadoutOrders[specID]
 		if orderTarget then
 			wipe(orderTarget)
@@ -275,13 +282,47 @@ local function buildSettings()
 			local orderTable = talentLoadoutOrders[specData.value] or {}
 			talentLoadoutOrders[specData.value] = orderTable
 			addon.functions.SettingsCreateHeadline(cGameplay, specData.text, { parentSection = sectionTalent })
+			addon.functions.SettingsCreateDropdown(cGameplay, {
+				id = string.format("talentReminderDefault_%s", specData.value),
+				var = string.format("talentReminderDefault_%s", specData.value),
+				key = false,
+				storage = false,
+				text = L["talentReminderDefaultBuild"],
+				desc = L["talentReminderDefaultBuildDesc"],
+				type = Settings.VarType.String,
+				default = "0",
+				listFunc = function() return buildTalentLoadoutList(specData.value, _G.NONE or "None") end,
+				order = orderTable,
+				get = function()
+					local specSettings = ensureTalentSettings(specData.value)
+					local current = specSettings
+						and addon.MythicPlus.functions.GetDefaultTalentReminderSetting
+						and addon.MythicPlus.functions.GetDefaultTalentReminderSetting(specSettings)
+					if type(current) == "number" then return tostring(current) end
+					if current == nil then return "0" end
+					return current
+				end,
+				set = function(value)
+					local specSettings = ensureTalentSettings(specData.value)
+					if not (specSettings and addon.MythicPlus.functions.SetDefaultTalentReminderSetting) then return end
+					local converted = tonumber(value)
+					addon.MythicPlus.functions.SetDefaultTalentReminderSetting(specSettings, converted ~= nil and converted or value)
+					C_Timer.After(1, function() addon.MythicPlus.functions.checkLoadout() end)
+				end,
+				parent = true,
+				element = talentEnable.element,
+				parentCheck = isTalentReminderEnabled,
+				parentSection = sectionTalent,
+				newTagID = "talentReminderDefaultBuild",
+			})
 			for _, mapData in ipairs(addon.MythicPlus.variables.seasonMapInfo) do
 				addon.functions.SettingsCreateDropdown(cGameplay, {
 					var = string.format("talentReminder_%s_%s", specData.value, mapData.id),
 					text = mapData.name,
 					type = Settings.VarType.String,
 					default = "0",
-					listFunc = function() return buildTalentLoadoutList(specData.value) end,
+					listFunc = function() return buildTalentLoadoutList(specData.value, L["talentReminderUseDefault"]) end,
+					customDefaultText = L["talentReminderUseDefault"],
 					order = orderTable,
 					get = function()
 						local specSettings = ensureTalentSettings(specData.value)

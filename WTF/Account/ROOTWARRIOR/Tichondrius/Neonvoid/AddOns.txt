@@ -5,7 +5,7 @@ AutoCombatLogger: enabled
 Baganator: enabled
 BattleGroundEnemies: enabled
 BetterBlizzFrames: enabled
-BetterBlizzPlates: disabled
+BetterBlizzPlates: enabled
 BigWigs: enabled
 BigWigs_Core: enabled
 BigWigs_KhazAlgar: enabled
@@ -243,3 +243,7 @@ AztarecHelper: enabled
 BarberShopProfiles: enabled
 EnhanceQoLQuickActions: enabled
 LariasWeeklyChecklist: enabled
+Collectionator: enabled
+IconSearch: enabled
+SnakeSays: enabled
+HousingDecorGuide: enabled

@@ -9,24 +9,39 @@ BtWLoadoutsCollapsed = {
 },
 },
 ["actionbars"] = {
+["children"] = {
+["children"] = {
+["children"] = {
+["children"] = {
+},
+},
+},
+},
 },
 ["equipment"] = {
+["Tichondrius-Bigxthazug"] = true,
+["Tichondrius-Stormclout"] = true,
+["Tichondrius-Hellavator"] = true,
+["Tichondrius-Auteist"] = true,
 ["children"] = {
 },
 },
 ["dftalents"] = {
-[269] = false,
-[268] = true,
+[269] = true,
+[270] = true,
+[250] = true,
 ["children"] = {
 },
+[268] = true,
 },
 ["conditions"] = {
+},
+["talents"] = {
 },
 ["profiles"] = {
 ["children"] = {
 },
-},
-["talents"] = {
+[270] = true,
 },
 }
 BtWLoadoutsCategories = {
@@ -47,15 +62,17 @@ BtWLoadoutsCategories = {
 ["dftalents"] = {
 "spec",
 },
-["actionbars"] = {
+["essences"] = {
+"role",
 },
 ["conditions"] = {
 },
 ["soulbinds"] = {
 "covenant",
 },
-["essences"] = {
-"role",
+["actionbars"] = {
+"class",
+"spec",
 },
 }
 BtWLoadoutsFilters = {
@@ -73,8 +90,8 @@ BtWLoadoutsFilters = {
 },
 ["conditions"] = {
 },
-["profiles"] = {
-},
 ["talents"] = {
+},
+["profiles"] = {
 },
 }

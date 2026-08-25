@@ -66,9 +66,6 @@ function addon.MythicPlus.functions.InitDB()
 
 	-- Misc
 
-	-- Mythic+ timer tweaks
-	init("mythicPlusShowChestTimers", true)
-
 	-- BR Tracker
 	init("mythicPlusBRTrackerEnabled", false)
 	init("mythicPlusBRButtonSize", 50)
@@ -533,7 +530,7 @@ function addon.MythicPlus.functions.removeExistingButton()
 	addon.MythicPlus.nrOfButtons = 0
 end
 
-addon.MythicPlus.variables.collapseFrames = {
+addon.MythicPlus.variables.objectiveTrackerFrames = {
 	{ frame = UIWidgetObjectiveTracker, name = "UIWidgetObjectiveTracker" },
 	{ frame = CampaignQuestObjectiveTracker, name = "CampaignQuestObjectiveTracker" },
 	{ frame = QuestObjectiveTracker, name = "QuestObjectiveTracker" },
@@ -551,11 +548,11 @@ local challengeMapIDDefaults = {
 	[559] = "NPX",
 	[558] = "MT",
 	[557] = "WS",
-	[584] = "TBV",
-	[585] = "VSA",
-	[586] = "DON",
-	[587] = "MR",
-	[588] = "AOF",
+	[584] = "VALE",
+	[585] = "VOID",
+	[586] = "NALO",
+	[587] = "MURD",
+	[588] = "FANG",
 	[239] = "SEAT",
 	[556] = "POS",
 	[542] = "ED",

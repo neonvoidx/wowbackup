@@ -2269,6 +2269,10 @@ local function isButtonSinkHoverModeEnabled() return isMinimapButtonBinEnabled()
 
 local function isButtonSinkLauncherModeEnabled() return isButtonSinkIconModeEnabled() or isDetachedButtonSinkIconModeEnabled() end
 
+local function isButtonSinkClickToggleModeEnabled() return isButtonSinkLauncherModeEnabled() and isButtonSinkSettingEnabled("minimapButtonBinIconClickToggle") end
+
+local function isButtonSinkAutoCloseEnabled() return isButtonSinkClickToggleModeEnabled() and isButtonSinkSettingEnabled("minimapButtonBinAutoClose") end
+
 data = {
 	{
 		var = "enableMinimapButtonBin",
@@ -2431,6 +2435,55 @@ data = {
 				parent = true,
 				notify = "enableMinimapButtonBin",
 				parentSection = buttonSinkSection,
+			},
+			{
+				var = "minimapButtonBinAutoClose",
+				text = L["minimapButtonBinAutoClose"],
+				desc = L["minimapButtonBinAutoCloseDesc"],
+				func = function(key)
+					addon.db["minimapButtonBinAutoClose"] = key
+					if addon.functions.updateButtonSinkAutoClose then addon.functions.updateButtonSinkAutoClose() end
+				end,
+				default = false,
+				sType = "checkbox",
+				parentCheck = isButtonSinkClickToggleModeEnabled,
+				parent = true,
+				notify = "minimapButtonBinIconClickToggle",
+				parentSection = buttonSinkSection,
+				newTagID = "minimapButtonBinAutoClose",
+			},
+			{
+				var = "minimapButtonBinAutoCloseDelay",
+				text = L["minimapButtonBinAutoCloseDelay"],
+				desc = L["minimapButtonBinAutoCloseDelayDesc"],
+				get = function() return addon.db and addon.db.minimapButtonBinAutoCloseDelay or 15 end,
+				set = function(value)
+					addon.db["minimapButtonBinAutoCloseDelay"] = value
+					if addon.functions.updateButtonSinkAutoClose then addon.functions.updateButtonSinkAutoClose() end
+				end,
+				min = 1,
+				max = 120,
+				step = 1,
+				default = 15,
+				sType = "slider",
+				parentCheck = isButtonSinkAutoCloseEnabled,
+				parent = true,
+				notify = "minimapButtonBinAutoClose",
+				parentSection = buttonSinkSection,
+				newTagID = "minimapButtonBinAutoCloseDelay",
+			},
+			{
+				var = "minimapButtonBinCloseOnButtonClick",
+				text = L["minimapButtonBinCloseOnButtonClick"],
+				desc = L["minimapButtonBinCloseOnButtonClickDesc"],
+				func = function(key) addon.db["minimapButtonBinCloseOnButtonClick"] = key end,
+				default = false,
+				sType = "checkbox",
+				parentCheck = isButtonSinkClickToggleModeEnabled,
+				parent = true,
+				notify = "minimapButtonBinIconClickToggle",
+				parentSection = buttonSinkSection,
+				newTagID = "minimapButtonBinCloseOnButtonClick",
 			},
 			{
 				var = "hideMinimapButtonBinToggle",

@@ -73,7 +73,10 @@ local DEFAULT_NAMEPLATE_FEATURE_KEYS = constants.DEFAULT_NAMEPLATE_FEATURE_KEYS
 		targetMarkerAtlas = "nameplateTargetMarkerAtlas",
 		targetMarkerHideFriendly = "nameplateTargetMarkerHideFriendly",
 		targetMarkerSize = "nameplateTargetMarkerSize",
+		healthbarTexture = "nameplateHealthbarTexture",
 		focusHealthbarTexture = "nameplateFocusHealthbarTexture",
+		mobColorFocus = "nameplateMobColorFocus",
+		mobColorFocusEnabled = "nameplateMobColorFocusEnabled",
 		mobColorBoss = "nameplateMobColorBoss",
 		mobColorBossEnabled = "nameplateMobColorBossEnabled",
 		mobColorMiniboss = "nameplateMobColorMiniboss",
@@ -1970,6 +1973,34 @@ local function createNameplatesCategory()
 	})
 
 	addon.functions.SettingsCreateScrollDropdown(category, {
+		var = DEFAULT_NAMEPLATE_FEATURE_KEYS.healthbarTexture,
+		text = L["nameplateHealthbarTexture"] or "Healthbar texture",
+		desc = L["nameplateHealthbarTextureDesc"],
+		listFunc = buildNameplateStatusbarDropdown,
+		order = nameplateStatusbarOrder,
+		height = 240,
+		default = "",
+		get = function()
+			local current = addon.db[DEFAULT_NAMEPLATE_FEATURE_KEYS.healthbarTexture] or ""
+			local list = buildNameplateStatusbarDropdown()
+			if not list[current] then current = "" end
+			return current
+		end,
+		set = function(value)
+			local list = buildNameplateStatusbarDropdown()
+			if not list[value] then value = "" end
+			if addon.functions.SetDefaultNameplateHealthbarTexture then
+				addon.functions.SetDefaultNameplateHealthbarTexture(value)
+			else
+				addon.db[DEFAULT_NAMEPLATE_FEATURE_KEYS.healthbarTexture] = value
+			end
+		end,
+		newTagID = DEFAULT_NAMEPLATE_FEATURE_KEYS.healthbarTexture,
+		parentSection = expandable,
+		order = 40,
+	})
+
+	addon.functions.SettingsCreateScrollDropdown(category, {
 		var = DEFAULT_NAMEPLATE_FEATURE_KEYS.focusHealthbarTexture,
 		text = L["nameplateFocusHealthbarTexture"] or "Focus healthbar texture",
 		desc = L["nameplateFocusHealthbarTextureDesc"],
@@ -1992,8 +2023,9 @@ local function createNameplatesCategory()
 				addon.db[DEFAULT_NAMEPLATE_FEATURE_KEYS.focusHealthbarTexture] = value
 			end
 		end,
+		newTagID = DEFAULT_NAMEPLATE_FEATURE_KEYS.focusHealthbarTexture,
 		parentSection = expandable,
-		order = 40,
+		order = 50,
 	})
 
 	local eliteMarkersToggle = addon.functions.SettingsCreateCheckbox(category, {
@@ -2212,6 +2244,7 @@ local function createNameplatesCategory()
 		})
 	end
 
+	createNameplateMobColorSourceToggle(DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorFocusEnabled, DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorFocus, L["nameplateMobColorFocus"] or "Focus color", DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorFocusEnabled)
 	createNameplateMobColorSourceToggle(DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorBossEnabled, DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorBoss, L["nameplateMobColorBoss"] or "Boss color", DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorBossEnabled)
 	createNameplateMobColorSourceToggle(DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorMinibossEnabled, DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorMiniboss, L["nameplateMobColorMiniboss"] or "Mini-boss color", DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorMinibossEnabled)
 	createNameplateMobColorSourceToggle(DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorCasterEnabled, DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorCaster, L["nameplateMobColorCaster"] or "Caster color", DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorCasterEnabled)

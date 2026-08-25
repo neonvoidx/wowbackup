@@ -1,3 +1,165 @@
+# BetterBlizzFrames 2.0.6b
+## Midnight
+### Tweak
+- Update Jazggz profile (www.twitch.tv/jazggz). Thank you for sharing!
+- Update Dissonance profile (www.twitch.tv/dissonancewow). Thank you for sharing!
+### Bugfix
+- Fix an issue causing the purgeable border on auras on the new aura settings to get stuck hidden
+
+# BetterBlizzFrames 2.0.6
+## Midnight
+### New
+- Every filter setting for Target/FocusFrame now has a "Friendly/Enemy" toggle box. So you can for example show only your buffs on Friendly Targets but all buffs on Enemy Targets.
+- New "Dispellable" filter for debuffs on Target/Focus. 
+- New Ceit profile (www.twitch.tv/ceitxd). Thank you for sharing!
+### Tweak
+- Finally fix "Mirror TargetFrame" setting for Midnight. Makes the Player Portrait round; a mirrored version of TargetFrame.
+- Add a tiny crop on spec icons for spec icon portraits setting (to hide borders sticking out)
+- Tiny tweak to ocd setting and level position.
+### Bugfix
+- Fix "Purgeable" filter to not rely on whether you can dispel or not but just the nature of the buff if its dispellable or not.
+- Fix castbars flashing white on some castbar color settings at the end of cast.
+- Fix a spacing issue between Target/FocusFrame and auras with aura settings enabled and some specific filters.
+- Fix an issue with glows on auras not showing on friendly units.
+
+# BetterBlizzFrames 2.0.5
+## Midnight
+### New
+- New Kaaaz profile (www.twitch.tv/KaaazTTV). Thank you for sharing!
+- New "Hide purge texture" setting
+- New "Show purge texture on friendly too" setting.
+### Tweak
+- Update Venruki profile (www.twitch.tv/venruki).
+- Fix the purge texture showing on friendly buffs unintentionally. Its now an optional setting instead.
+- Fix "Only mine" filters for Buffs and Debuffs for Target/FocusFrame applying where it doesnt make sense; "Only mine" on Enemy Buffs for example. "Only mine" is now only active for friendly buffs and enemy debuffs.
+- Filtered Buffs Icon now also gets disabled if "Show Buffs" is not enabled.
+- Filtered Buffs Icon now properly also gets Pixel Border if thats enabled (not only when dark mode is also enabled)
+### Bugfix
+- Fix "Hide Boss Frames" causing errors.
+- Fix an issue with blacklist + "Show Mine" tag filtering the buff anyway.
+- Fix "Big Debuffs" setting showing too many debuffs on friendly units due to a mistake in the filter.
+
+# BetterBlizzFrames 2.0.4
+## Midnight
+### New
+- "Enlarged Aura" is back as an option in the whitelist for Target & Focus. Can be combined with Important Glow for a separate (or same) color to the Important one. Scale it with "Enlarged Aura Scale" and sort the enlarged block first or last with "Sort Enlarged First". Player auras keep their Edit Mode size but still glow and sort with the block. Your old whitelist ticks and Enlarged Aura Scale carry over.
+- The "Important Glow" setting is back for whitelisted auras. Reminder that this only works for debuffs on enemies and buffs on friendlies.
+- New "Important" and "Defensives" filters under Show BUFFS and "Crowd Control" under Show DEBUFFS on Target, Focus and Player auras. Use them if you want a frame to show nothing but those auras. "Important Auras First" is still there and only moves them up front and scales them up. Unlike the whitelist/blacklist these work on every unit.
+- "Max Buffs" and "Max Debuffs" are back under Target & Focus Aura Settings but they are scuffed for now. Tldr is it cannot get properly fixed until new Blizzard API in 12.1.5.
+### Tweak
+- ENABLED: When Dark Mode is enabled the "DarkMode: Nameplate Resource" is now on by default as well. Due to this change it mightve turned on for you but can still be turned off under Dark Mode top left in /bbf.
+- Fix whitelisted auras not sorting before others as intended (even without whitelist filter enabled).
+- Aura glow settings are no longer locked behind "Important Auras First", the matching filter on that frame enables them too.
+- "Under one min", "Only mine" and "Purgeable" now only narrow the normal auras and no longer hide important/defensive/crowd control auras.
+- Add EllesmereUI partyframe support for party castbars.
+### Bugfix
+- Fix a potential lua error from hiding/showing minimap buttons in combat with that setting.
+- Fix dark mode color for nameplate/PRD resource setting.
+- Fix potential issue with TargetFrame combo points setting that could sometimes not update properly on certain events.
+- Fix "Dead/Unconcious" text layer on ToT Frame for Classic Frames setting after recent changes.
+
+# BetterBlizzFrames 2.0.3
+## Midnight
+### New
+- New setting "Sort purgeable buffs first" to move purgeable buffs ahead of other Target/Focus buffs (after important auras, defensives and whitelisted auras). Covers enrage effects too.
+### Tweak
+- REMOVED: Loss of Control Scale is removed cuz edit mode now has settings for it. Set it with edit mode instead.
+- ENABLED: Raise Target/Focus Castbar Strata is now enabled by default in the addon. All this does is make sure the target/focus castbar is on top of other elements and not hidden under. It may have turned on for you and you can turn if back off in castbar section if for whatever reason this does not fit your UI setup but most people should have this on.
+- Update the pvp blacklist ever so slightly with a few added IDs.
+### Bugfix
+- Fix a secret error in class color stuff.
+- Fix issues with purge textures on auras for both magic and enrage effects.
+- Fix a layer issue mistake in earlier update to Classic Frames setting.
+- Fix a potential party castbar issue with them not attaching to the correct frame, especially with other addons enabled.
+
+# BetterBlizzFrames 2.0.2e
+## Midnight
+### Bugfix
+- Fix arena surrender aftter API rename
+- Fix aura settings sometimes causing aura types in wrong order. Buffs first on enemy for example.
+- Race Indicator dead cuz race info is secret, fix lua errors. Idk if worth keeping now but I'll decide on that later.
+- Fix "Hide manatext on all bars" bugging in combination with classic frames setting.
+
+# BetterBlizzFrames 2.0.2d
+## Midnight
+### Bugfix
+- Remove some debug prints left in by accident
+
+# BetterBlizzFrames 2.0.2c
+## Midnight
+### Tweak
+- REMOVED: Party Frame scale is removed cuz edit mode now has settings for it. Set it with edit mode instead.
+- Tweak castbar position values a bit (so theyre identical to default by default). You might have to tweak your values a bit again if you notice this (apologies).
+- Move "Raise Castbar Strata" setting into castbar section from Misc.
+- Tweak some layer issues between tot frames, classic frames, and castbars.
+### Bugfix
+- Fix "Raise Castbar Strata" setting not working properly.
+- Fix "modern role icons" setting causing new secret errors in 12.1
+- Fix color error when BBP's npc colors was enabled.
+- Fix new 12.1 aura layer issues.
+- Fix Class Color replacement "One Color for All" setting not working after I disabled the custom coloring, this can still function ofc.
+- Fix Friendlist Class Colors setting.
+## All versions
+### Tweak
+- Fix some locale key mistakes from a while back causing wrong text here n there.
+
+# BetterBlizzFrames 2.0.2b
+## Midnight
+### New
+- Add new setting to separate aura row width between Target/Focus (ill add more of these split settings later prob)
+### Tweak
+- "Remove Debuff Color Border" now works on Player auras as well, and with Dark Mode: Auras or Pixel Border Auras enabled debuffs get that same border instead of nothing, matching the look of buffs.
+- Clean blacklist & whitelist from old named entries (not spell ids) and disallow name entry.
+- Force player aura spacing "Horizontal Padding" to the default value of 5 because I made an oopsie here. If you had changed this you will have to tweak it again :x
+- Update Saul profile (www.twitch.tv/saul)
+- Improve No Portrait: Pixel Border.
+- Fix auras not being scaled with the Target/FocusFrame like how default auras are.
+### Bugfix
+- Fix secret errors in custom class colors. Custom class colors are dead I think though :/
+- Fix issues with No Portrait: Pixel Border
+- Fix issues with castbar positioning for Target/FocusFrame.
+- Fix Highlighted Auras Scale not saving its value after reload.
+- Fix Remove Debuff Color Border for auras not applying a dark border
+
+# BetterBlizzFrames 2.0.2
+## Midnight
+### New
+- Aura settings has been completely remade with the new 12.1 API. Filters, Sorting, Glows, etc. You will have to re-do your aura settings.
+### Tweak
+- Tons of things to make things work on 12.1. Too many to mention x.x
+- Make UnitFrame castbar texture setting affect party castbars.
+### Bugfix
+- Fix TRP3 names being active on npcs and causing some issues.
+### Notes
+- I want to thank Verz and Muleyo for helping me understand some of the new 12.1 API with examples and stuff. Thank you<3
+- Please report any issues as always.
+## All versions
+### New
+- Target Text setting now has right click options to move the text ouside of the castbar and also to hide it for npcs.
+## Classics
+### New
+### Bugfix
+- For Wrath enable the same unified classic version of the addon as Wrath still loaded older version files.
+- Fix texture unitframe healthbar, manabar & castbar not affecting the default party frames.
+
+# BetterBlizzFrames 2.0.1c
+## Classics (Era, TBC & MoP)
+### New
+- "Larger Frames" setting for default Party Frames (Non-raid). Makes them similar to TargetFrame. On by default while "Bigger Healthbars" is enabled and optionally under PartyFrames in /bbf otherwise.
+- "Cast Target Text" setting in Castbars section. This shows name of true target of spell cast inside the castbar. Same as on retail just ported to classics now.
+- "Cast On Me Highlight" setting in Castbars section. Red highlight around castbar when the cast is being casted on you (true target, no macro workaround)
+## Midnight
+### Bugfix
+- Fix castbars showing normal cast/channel texture on an uninterruptible cast with certain specific settings. (2.0.1d: fix a missing check causing lua errors)
+
+# BetterBlizzFrames 2.0.1b
+## Retail
+### Tweak
+- Update Nahj profile (www.twitch.tv/nahj)
+## TBC
+### Tweak
+- Add missing kick spell id for LossOfControl
+
 # BetterBlizzFrames 2.0.1b
 ## Classic Era/SoD
 ### Tweak

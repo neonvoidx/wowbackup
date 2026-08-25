@@ -3,6 +3,14 @@ local function SetXYPoint(frame, xOffset, yOffset)
     frame:SetPoint(point, relativeTo, relativePoint, xOffset or xOfs, yOffset or yOfs)
 end
 
+local function SetManaTextParent(text, parent)
+    if BetterBlizzFramesDB.hideAllManabarText then
+        text.bbfOriginalParent = parent
+        parent = BBF.hiddenFrame
+    end
+    text:SetParent(parent)
+end
+
 local class = select(2, UnitClass("player"))
 local defaultTex = "Interface\\TargetingFrame\\UI-TargetingFrame"
 local noLvlTex = "Interface\\TargetingFrame\\UI-FocusFrame-Large"
@@ -40,7 +48,8 @@ local function MakeClassicFrame(frame)
 
         frame.ClassicFrame = CreateFrame("Frame")
         frame.ClassicFrame:SetParent(frame)
-        frame.ClassicFrame:SetFrameStrata("HIGH")
+        frame.ClassicFrame:SetFrameStrata("MEDIUM")
+        frame.ClassicFrame:SetFrameLevel(9996)
         frame.ClassicFrame:SetAllPoints(frame)
         frame.ClassicFrame.Texture = frame.ClassicFrame:CreateTexture(nil, "OVERLAY")
         frame.ClassicFrame.Texture:SetParent(frame.ClassicFrame)
@@ -80,13 +89,13 @@ local function MakeClassicFrame(frame)
         --AdjustFramePoint(hpContainer.HealthBar.OverAbsorbGlow, -7)
         hpContainer.HealthBar.OverAbsorbGlow:SetPoint("TOPLEFT", hpContainer.HealthBar, "TOPRIGHT", -7, 0)
 
-        manaBar.LeftText:SetParent(frame.ClassicFrame)
+        SetManaTextParent(manaBar.LeftText, frame.ClassicFrame)
         manaBar.LeftText:ClearAllPoints()
         manaBar.LeftText:SetPoint("LEFT", frame.ClassicFrame.Texture, "LEFT", 7, -8.5)
-        manaBar.RightText:SetParent(frame.ClassicFrame)
+        SetManaTextParent(manaBar.RightText, frame.ClassicFrame)
         manaBar.RightText:ClearAllPoints()
         manaBar.RightText:SetPoint("RIGHT", frame.ClassicFrame.Texture, "RIGHT", -108, -8.5)
-        manaBar.ManaBarText:SetParent(frame.ClassicFrame)
+        SetManaTextParent(manaBar.ManaBarText, frame.ClassicFrame)
         manaBar.ManaBarText:ClearAllPoints()
         manaBar.ManaBarText:SetPoint("CENTER", frame.ClassicFrame.Texture, "LEFT", 66, -8.5)
 
@@ -157,16 +166,17 @@ local function MakeClassicFrame(frame)
         local totFrame = frame.totFrame
         local totHpBar = totFrame.HealthBar
         local totManaBar = totFrame.ManaBar
-        totFrame:SetFrameStrata("DIALOG")
+        totFrame:SetFrameStrata("MEDIUM")
+        totFrame:SetFrameLevel(9998)
         totHpBar:SetStatusBarColor(0, 1, 0)
         totHpBar:SetSize(47, 7)
         totHpBar:ClearAllPoints()
         totHpBar:SetPoint("TOPRIGHT", -29, -15)
-        totHpBar:SetFrameLevel(1)
+        totHpBar:SetFrameLevel(9998)
         totManaBar:SetSize(49, 7)
         totManaBar:ClearAllPoints()
         totManaBar:SetPoint("TOPRIGHT", -29, -23)
-        totManaBar:SetFrameLevel(1)
+        totManaBar:SetFrameLevel(9998)
         totFrame.Background = totFrame.HealthBar:CreateTexture(nil, "BACKGROUND")
         totFrame.Background:SetColorTexture(0,0,0,0.45)
         totFrame.Background:SetPoint("TOPLEFT", totFrame.HealthBar, "TOPLEFT", 1, -1)
@@ -176,15 +186,18 @@ local function MakeClassicFrame(frame)
         totFrame.FrameTexture:SetTexCoord(0.015625, 0.7265625, 0, 0.703125)
         totFrame.FrameTexture:ClearAllPoints()
         totFrame.FrameTexture:SetPoint("TOPLEFT", 0, 0)
+        totFrame.FrameTexture:SetDrawLayer("OVERLAY", 7)
         totFrame.Portrait:SetSize(37, 37)
         totFrame.Portrait:ClearAllPoints()
         totFrame.Portrait:SetPoint("TOPLEFT", 4, -5)
         totFrame.HealthBar.DeadText:SetParent(totFrame)
         totFrame.HealthBar.DeadText:ClearAllPoints()
         totFrame.HealthBar.DeadText:SetPoint("LEFT", 48, 3)
+        totFrame.HealthBar.DeadText:SetDrawLayer("OVERLAY", 7)
         totFrame.HealthBar.UnconsciousText:SetParent(totFrame)
         totFrame.HealthBar.UnconsciousText:ClearAllPoints()
         totFrame.HealthBar.UnconsciousText:SetPoint("LEFT", 48, 3)
+        totFrame.HealthBar.UnconsciousText:SetDrawLayer("OVERLAY", 7)
 
         local hideToTDebuffs = (frame.unit == "target" and db.hideTargetToTDebuffs) or (frame.unit == "focus" and db.hideFocusToTDebuffs)
         if not hideToTDebuffs then
@@ -373,7 +386,8 @@ local function MakeClassicFrame(frame)
 
         frame.ClassicFrame = CreateFrame("Frame")
         frame.ClassicFrame:SetParent(frame)
-        frame.ClassicFrame:SetFrameStrata("HIGH")
+        frame.ClassicFrame:SetFrameStrata("MEDIUM")
+        frame.ClassicFrame:SetFrameLevel(9996)
         frame.ClassicFrame:SetAllPoints(frame)
         frame.ClassicFrame.Texture = frame.ClassicFrame:CreateTexture(nil, "OVERLAY")
         frame.ClassicFrame.Texture:SetParent(frame.ClassicFrame)
@@ -460,13 +474,13 @@ local function MakeClassicFrame(frame)
             hpContainer.HealthBarText:ClearAllPoints()
             hpContainer.HealthBarText:SetPoint("CENTER", frame.ClassicFrame.Texture, "CENTER", 52, 2.8)
 
-            manaBar.LeftText:SetParent(frame.ClassicFrame)
+            SetManaTextParent(manaBar.LeftText, frame.ClassicFrame)
             manaBar.LeftText:ClearAllPoints()
             manaBar.LeftText:SetPoint("LEFT", frame.ClassicFrame.Texture, "LEFT", 108, -8.5)
-            manaBar.RightText:SetParent(frame.ClassicFrame)
+            SetManaTextParent(manaBar.RightText, frame.ClassicFrame)
             manaBar.RightText:ClearAllPoints()
             manaBar.RightText:SetPoint("RIGHT", frame.ClassicFrame.Texture, "RIGHT", -7, -8.5)
-            manaBar.ManaBarText:SetParent(frame.ClassicFrame)
+            SetManaTextParent(manaBar.ManaBarText, frame.ClassicFrame)
             manaBar.ManaBarText:ClearAllPoints()
             manaBar.ManaBarText:SetPoint("CENTER", frame.ClassicFrame.Texture, "CENTER", 52, -8.5)
         end
@@ -611,9 +625,8 @@ local function MakeClassicFrame(frame)
             end
 
             if not InCombatLockdown() then
-                PlayerFrameBottomManagedFramesContainer:ClearAllPoints()
-                
-                -- Get positioning from the table based on specID
+                PlayerBottomManagedFrameContainer:ClearAllPoints()
+
                 local specID = GetSpecialization() and GetSpecializationInfo(GetSpecialization())
                 local posData = resourceFrameAnchorPositions[specID] or resourceFrameAnchorPositions.default
                 local point = posData.point or "TOP"
@@ -621,34 +634,34 @@ local function MakeClassicFrame(frame)
                 local relativePoint = posData.relativePoint or "BOTTOM"
                 local xOffset = posData.xOffset or 30
                 local yOffset = posData.yOffset or 25
-                
+
                 local _, _, scale = GetPlayerClassAndSpecPosition()
-                
+
                 if rogueCheck then
                     local isRogueWith5Combos = UnitPowerMax("player", Enum.PowerType.ComboPoints) == 5
                     local isRogueWith6Combos = UnitPowerMax("player", Enum.PowerType.ComboPoints) == 6
                     if isRogueWith5Combos then
-                        PlayerFrameBottomManagedFramesContainer:SetPoint(point, relativeFrame, relativePoint, 31.5, 35)
-                        PlayerFrameBottomManagedFramesContainer:SetScale(0.95)
+                        PlayerBottomManagedFrameContainer:SetPoint(point, relativeFrame, relativePoint, 31.5, 35)
+                        PlayerBottomManagedFrameContainer:SetScale(0.95)
                     elseif isRogueWith6Combos then
-                        PlayerFrameBottomManagedFramesContainer:SetPoint(point, relativeFrame, relativePoint, 46, 37)
-                        PlayerFrameBottomManagedFramesContainer:SetScale(scale)
+                        PlayerBottomManagedFrameContainer:SetPoint(point, relativeFrame, relativePoint, 46, 37)
+                        PlayerBottomManagedFrameContainer:SetScale(scale)
                     else
-                        PlayerFrameBottomManagedFramesContainer:SetPoint(point, relativeFrame, relativePoint, xOffset, yOffset)
-                        PlayerFrameBottomManagedFramesContainer:SetScale(scale)
+                        PlayerBottomManagedFrameContainer:SetPoint(point, relativeFrame, relativePoint, xOffset, yOffset)
+                        PlayerBottomManagedFrameContainer:SetScale(scale)
                     end
                 else
-                    PlayerFrameBottomManagedFramesContainer:SetPoint(point, relativeFrame, relativePoint, xOffset, yOffset)
-                    PlayerFrameBottomManagedFramesContainer:SetScale(scale)
+                    PlayerBottomManagedFrameContainer:SetPoint(point, relativeFrame, relativePoint, xOffset, yOffset)
+                    PlayerBottomManagedFrameContainer:SetScale(scale)
                 end
-                PlayerFrameBottomManagedFramesContainer:SetFrameStrata("HIGH")
+                PlayerBottomManagedFrameContainer:SetFrameStrata("HIGH")
             else
-                PlayerFrameBottomManagedFramesContainer.positionNeedsUpdate = true
+                PlayerBottomManagedFrameContainer.positionNeedsUpdate = true
                 if not BBF.CombatWaiter then
                     BBF.CombatWaiter = CreateFrame("Frame")
                     BBF.CombatWaiter:SetScript("OnEvent", function(self)
-                        if PlayerFrameBottomManagedFramesContainer.positionNeedsUpdate then
-                            PlayerFrameBottomManagedFramesContainer.positionNeedsUpdate = false
+                        if PlayerBottomManagedFrameContainer.positionNeedsUpdate then
+                            PlayerBottomManagedFrameContainer.positionNeedsUpdate = false
                             UpdateResourcePosition()
                         end
                         self:UnregisterEvent("PLAYER_REGEN_ENABLED")
@@ -843,13 +856,13 @@ local function MakeClassicFrame(frame)
             hpContainer.HealthBarText:ClearAllPoints()
             hpContainer.HealthBarText:SetPoint("CENTER", frame.ClassicFrame.Texture, "CENTER", 34, 3)
 
-            manaBar.LeftText:SetParent(frame.ClassicFrame)
+            SetManaTextParent(manaBar.LeftText, frame.ClassicFrame)
             manaBar.LeftText:ClearAllPoints()
             manaBar.LeftText:SetPoint("LEFT", frame.ClassicFrame.Texture, "LEFT", 101, -9)
-            manaBar.RightText:SetParent(frame.ClassicFrame)
+            SetManaTextParent(manaBar.RightText, frame.ClassicFrame)
             manaBar.RightText:ClearAllPoints()
             manaBar.RightText:SetPoint("RIGHT", frame.ClassicFrame.Texture, "RIGHT", -7, -9)
-            manaBar.ManaBarText:SetParent(frame.ClassicFrame)
+            SetManaTextParent(manaBar.ManaBarText, frame.ClassicFrame)
             manaBar.ManaBarText:ClearAllPoints()
             manaBar.ManaBarText:SetPoint("CENTER", frame.ClassicFrame.Texture, "CENTER", 52, -9)
 
@@ -920,9 +933,9 @@ local function MakeClassicFrame(frame)
         PetFrameHealthBarText:SetParent(PetFrame)
         PetFrameHealthBarTextLeft:SetParent(PetFrame)
         PetFrameHealthBarTextRight:SetParent(PetFrame)
-        PetFrameManaBarText:SetParent(PetFrame)
-        PetFrameManaBarTextLeft:SetParent(PetFrame)
-        PetFrameManaBarTextRight:SetParent(PetFrame)
+        SetManaTextParent(PetFrameManaBarText, PetFrame)
+        SetManaTextParent(PetFrameManaBarTextLeft, PetFrame)
+        SetManaTextParent(PetFrameManaBarTextRight, PetFrame)
 
         PetFrameHealthBarText:ClearAllPoints()
         PetFrameHealthBarText:SetPoint("CENTER", PetFrame, "TOPLEFT", 82, -26)

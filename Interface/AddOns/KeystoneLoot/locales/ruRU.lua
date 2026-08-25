@@ -8,7 +8,7 @@ local L = KeystoneLoot.L;
 
 -- keystoneloot_frame.lua
 L["%s (%s Season %d)"] = "%s (%s сезон %d)";
-L["Import BIS items from |cnACCOUNT_WIDE_FONT_COLOR:www.keystoneloot.io|r"] = "Импортируйте БиС-предметы с |cnACCOUNT_WIDE_FONT_COLOR:www.keystoneloot.io|r";
+L["Import BIS items from %s"] = "Импортируйте БиС-предметы с %s";
 
 -- itemlevel_dropdown.lua
 L["Veteran"] = "Ветеран";
@@ -25,6 +25,7 @@ L["The Catalyst"] = "Катализатор";
 L["Minimap button"] = "Включить кнопку на миникарте";
 L["Item level in keystone tooltip"] = "Показать уровень предметов во всплывающей подсказке ключа";
 L["Favorite in item tooltip"] = "Избранное в подсказке предмета";
+L["Favorite on item icons"] = "Избранное на значках предметов";
 L['Hide "Other" in All Slots'] = "Скрывать \"Прочее\" при показе всех слотов";
 L["Loot reminder (dungeons)"] = "Включить напоминание о добыче";
 L["Highlighting"] = "Подсветка";
@@ -76,7 +77,12 @@ L["Set Favorite"] = "Добавить в избранное";
 L["Nice to have"] = "Желательно";
 L["Must have"] = "Обязательно";
 L["Best in Slot"] = "БиС";
+L["Catalyst"] = "Катализатор";
 L["Voidcore used"] = "Использован сердечник Бездны";
+L["+Secondary stats of the base item"] = "+Вторичные характеристики базового предмета";
+
+-- copy_popup.lua
+L["Press CTRL+C to copy"] = "Нажмите CTRL+C, чтобы скопировать";
 
 -- loot_reminder_frame.lua
 L["Correct loot specialization set?"] = "Правильная установка специализации для добычи?";

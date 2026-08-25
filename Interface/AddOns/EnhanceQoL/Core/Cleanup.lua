@@ -12,6 +12,7 @@ local PROFILE_DEBUG_KEYS = {
 	"classBuffReminderSoundDebugTrace",
 	"_focusInterruptTrackerTraceEnabled",
 	"_focusInterruptTrackerTrace",
+	"_playerChoiceTrace",
 	"resourceBarsDebugTraceEnabled",
 	"resourceBarsDebugTraceMaxEntries",
 }
@@ -111,6 +112,8 @@ local LEGACY_PROFILE_KEYS = {
 	"mythicPlusCurrentPullPoint",
 	"mythicPlusCurrentPullX",
 	"mythicPlusCurrentPullY",
+	"mythicPlusObjectiveTrackerSetting",
+	"mythicPlusShowChestTimers",
 	"talentReminderActiveBuildLocked",
 	"soundMutedSounds",
 	"unclampDamageMeter",
@@ -132,6 +135,7 @@ local LEGACY_PROFILE_KEYS = {
 }
 
 local NAMEPLATE_MOB_COLOR_SOURCE_KEYS = {
+	"nameplateMobColorFocusEnabled",
 	"nameplateMobColorBossEnabled",
 	"nameplateMobColorMinibossEnabled",
 	"nameplateMobColorCasterEnabled",
@@ -873,6 +877,13 @@ function addon.functions.CleanupDurationTextStorage()
 	if addon.db and addon.db ~= db then cleanup(addon.db) end
 end
 
+function addon.functions.CleanupMoverStorage()
+	local moverDB = _G.EnhanceQoLMoverDB
+	if type(moverDB) ~= "table" then return end
+	moverDB.macroPopupFrame = nil
+	if type(moverDB.frames) == "table" then moverDB.frames.MacroPopupFrame = nil end
+end
+
 function addon.functions.CleanupContainerActionStorage()
 	if not (addon.ContainerActions and addon.ContainerActions.MigrateProfileData) then return end
 	local db = _G.EnhanceQoLDB
@@ -906,6 +917,7 @@ function addon.functions.CleanupOldStuff()
 	addon.functions.CleanupDebugArtifacts()
 	addon.functions.CleanupDurationTextStorage()
 	addon.functions.CleanupLegacyProfileStorage()
+	addon.functions.CleanupMoverStorage()
 	addon.functions.CleanupQuickActionsStorage()
 	addon.functions.CleanupResourceBarStorage()
 	addon.functions.CleanupTransientProfileCaches()

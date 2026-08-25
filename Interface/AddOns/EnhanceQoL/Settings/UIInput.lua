@@ -10,6 +10,85 @@ local setCVarValue = addon.functions.setCVarValue or function(cvar, value)
 end
 
 local combatSelfHighlightWatcher
+local ScreenEdgeVignette = {
+	defaultEffect = "photosensitivitywarning-vignette",
+	defaultStrata = "BACKGROUND",
+	effects = {
+		["Artifacts-BG-Shadow"] = "Artifacts-BG-Shadow",
+		["ItemUpgrade_BottomPanel-Shadow"] = "ItemUpgrade_BottomPanel-Shadow",
+		["photosensitivitywarning-vignette"] = "PhotosensitivityWarning-vignette",
+		["ui-frame-legionartifact-overlay-sides"] = "ui-frame-legionartifact-overlay-sides",
+	},
+	order = {
+		"photosensitivitywarning-vignette",
+		"ui-frame-legionartifact-overlay-sides",
+		"Artifacts-BG-Shadow",
+		"ItemUpgrade_BottomPanel-Shadow",
+	},
+	strata = {
+		BACKGROUND = "BACKGROUND",
+		LOW = "LOW",
+		MEDIUM = "MEDIUM",
+		HIGH = "HIGH",
+		DIALOG = "DIALOG",
+		FULLSCREEN = "FULLSCREEN",
+		FULLSCREEN_DIALOG = "FULLSCREEN_DIALOG",
+		TOOLTIP = "TOOLTIP",
+	},
+	strataOrder = { "BACKGROUND", "LOW", "MEDIUM", "HIGH", "DIALOG", "FULLSCREEN", "FULLSCREEN_DIALOG", "TOOLTIP" },
+}
+
+function ScreenEdgeVignette:EnsureFrame()
+	if self.frame then return self.frame end
+	local frame = CreateFrame("Frame", "EnhanceQoLScreenEdgeVignette", UIParent)
+	frame:SetAllPoints(UIParent)
+	frame:SetFrameStrata(self.defaultStrata)
+	frame:EnableMouse(false)
+	self.frame = frame
+	return frame
+end
+
+function ScreenEdgeVignette:EnsureStaticTexture()
+	if self.staticTexture then return self.staticTexture end
+	local texture = self:EnsureFrame():CreateTexture(nil, "OVERLAY")
+	texture:SetAllPoints(self.frame)
+	self.staticTexture = texture
+	return texture
+end
+
+function ScreenEdgeVignette:HideAllEffects()
+	if self.staticTexture then self.staticTexture:Hide() end
+end
+
+function ScreenEdgeVignette:Apply()
+	local enabled = addon.db and addon.db.screenEdgeVignette == true
+	if not enabled and not self.frame then return end
+	local effect = addon.db and addon.db.screenEdgeVignetteAtlas or self.defaultEffect
+	if not self.effects[effect] then effect = self.defaultEffect end
+	local strata = addon.db and addon.db.screenEdgeVignetteStrata or self.defaultStrata
+	if not self.strata[strata] then strata = self.defaultStrata end
+	local opacity = tonumber(addon.db and addon.db.screenEdgeVignetteOpacity) or 1
+	if opacity < 0 then opacity = 0 end
+	if opacity > 1 then opacity = 1 end
+
+	local frame = self:EnsureFrame()
+	frame:SetFrameStrata(strata)
+	self:HideAllEffects()
+	if enabled then
+		local texture = self:EnsureStaticTexture()
+		texture:SetAtlas(effect)
+		texture:Show()
+	end
+
+	frame:SetAlpha(opacity)
+	frame:SetShown(enabled)
+end
+
+local function applyScreenEdgeVignette()
+	ScreenEdgeVignette:Apply()
+end
+
+addon.functions.ApplyScreenEdgeVignette = applyScreenEdgeVignette
 
 local function getCombatSelfHighlightMode()
 	local mode = tonumber(addon.db and addon.db.combatSelfHighlightMode) or 7
@@ -780,6 +859,97 @@ addon.functions.SettingsCreateCheckbox(cUIInput, {
 	end,
 	parentSection = interfaceExpandable,
 })
+
+addon.functions.SettingsCreateHeadline(cUIInput, L["screenEdgeVignette"], {
+	parentSection = interfaceExpandable,
+})
+
+local screenEdgeVignetteToggle = addon.functions.SettingsCreateCheckbox(cUIInput, {
+	var = "screenEdgeVignette",
+	newTagID = "screenEdgeVignette",
+	text = L["screenEdgeVignetteEnable"],
+	desc = L["screenEdgeVignetteDesc"],
+	func = function(v)
+		addon.db.screenEdgeVignette = v and true or false
+		applyScreenEdgeVignette()
+	end,
+	default = false,
+	parentSection = interfaceExpandable,
+})
+
+addon.functions.SettingsCreateDropdown(cUIInput, {
+	var = "screenEdgeVignetteAtlas",
+	newTagID = "screenEdgeVignetteAtlas",
+	text = L["screenEdgeVignetteAtlas"],
+	desc = L["screenEdgeVignetteAtlasDesc"],
+	list = ScreenEdgeVignette.effects,
+	order = ScreenEdgeVignette.order,
+	default = ScreenEdgeVignette.defaultEffect,
+	get = function()
+		local effect = addon.db and addon.db.screenEdgeVignetteAtlas or ScreenEdgeVignette.defaultEffect
+		if not ScreenEdgeVignette.effects[effect] then effect = ScreenEdgeVignette.defaultEffect end
+		return effect
+	end,
+	set = function(effect)
+		if not ScreenEdgeVignette.effects[effect] then effect = ScreenEdgeVignette.defaultEffect end
+		addon.db.screenEdgeVignetteAtlas = effect
+		applyScreenEdgeVignette()
+	end,
+	parent = true,
+	element = screenEdgeVignetteToggle and screenEdgeVignetteToggle.element,
+	parentCheck = function() return addon.db and addon.db.screenEdgeVignette == true end,
+	parentSection = interfaceExpandable,
+})
+
+addon.functions.SettingsCreateSlider(cUIInput, {
+	var = "screenEdgeVignetteOpacity",
+	newTagID = "screenEdgeVignetteOpacity",
+	text = L["screenEdgeVignetteOpacity"],
+	desc = L["screenEdgeVignetteOpacityDesc"],
+	min = 0,
+	max = 100,
+	step = 1,
+	default = 100,
+	get = function()
+		local value = tonumber(addon.db and addon.db.screenEdgeVignetteOpacity) or 1
+		if value < 0 then value = 0 end
+		if value > 1 then value = 1 end
+		return math.floor((value * 100) + 0.5)
+	end,
+	set = function(value)
+		local percent = tonumber(value) or 100
+		if percent < 0 then percent = 0 end
+		if percent > 100 then percent = 100 end
+		addon.db.screenEdgeVignetteOpacity = percent / 100
+		applyScreenEdgeVignette()
+	end,
+	element = screenEdgeVignetteToggle and screenEdgeVignetteToggle.element,
+	parentCheck = function() return addon.db and addon.db.screenEdgeVignette == true end,
+	parentSection = interfaceExpandable,
+})
+
+addon.functions.SettingsCreateDropdown(cUIInput, {
+	var = "screenEdgeVignetteStrata",
+	newTagID = "screenEdgeVignetteStrata",
+	text = L["screenEdgeVignetteStrata"],
+	desc = L["screenEdgeVignetteStrataDesc"],
+	list = ScreenEdgeVignette.strata,
+	order = ScreenEdgeVignette.strataOrder,
+	default = ScreenEdgeVignette.defaultStrata,
+	get = function()
+		local strata = addon.db and addon.db.screenEdgeVignetteStrata or ScreenEdgeVignette.defaultStrata
+		if not ScreenEdgeVignette.strata[strata] then strata = ScreenEdgeVignette.defaultStrata end
+		return strata
+	end,
+	set = function(strata)
+		if not ScreenEdgeVignette.strata[strata] then strata = ScreenEdgeVignette.defaultStrata end
+		addon.db.screenEdgeVignetteStrata = strata
+		applyScreenEdgeVignette()
+	end,
+	element = screenEdgeVignetteToggle and screenEdgeVignetteToggle.element,
+	parentCheck = function() return addon.db and addon.db.screenEdgeVignette == true end,
+	parentSection = interfaceExpandable,
+})
 ----- REGION END
 
 function addon.functions.initUIInput()
@@ -788,9 +958,14 @@ function addon.functions.initUIInput()
 	addon.functions.InitDBValue("combatSelfHighlight", false)
 	addon.functions.InitDBValue("combatSelfHighlightMode", 7)
 	addon.functions.InitDBValue("hideMicroMenuNotificationOverlay", false)
+	addon.functions.InitDBValue("screenEdgeVignette", false)
+	addon.functions.InitDBValue("screenEdgeVignetteAtlas", ScreenEdgeVignette.defaultEffect)
+	addon.functions.InitDBValue("screenEdgeVignetteOpacity", 1)
+	addon.functions.InitDBValue("screenEdgeVignetteStrata", ScreenEdgeVignette.defaultStrata)
 	UpdateAutoUnwrapWatcher()
 	updateCombatSelfHighlightWatcher()
 	ApplyNotificationOverlaySetting(true)
+	applyScreenEdgeVignette()
 
 	if addon.db and addon.db.modifyXPRepBar then
 		local height, width, scale = 17, 571, 1

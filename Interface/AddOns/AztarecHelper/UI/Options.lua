@@ -8,7 +8,7 @@ local _, AZT = ...
 -- Settings panel. Canvas layout because the vertical list can't host the cue
 -- audition row or the key binding column. Two columns of titled sections:
 -- the windows, the sound and the route buttons on the left, keys, party and
--- the window locks on the right.
+-- the window sizes and locks on the right.
 
 local panel = CreateFrame("Frame")
 panel.name = "Azta'rec Helper"
@@ -140,6 +140,64 @@ local function addAction(label, handler, tip)
     return btn
 end
 
+-- a label at the text rail with a button of the given width flush with the
+-- right rail. The button starts blank, the caller writes its text
+local function addLabelledButton(label, tip, w, handler)
+    local fs = page:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    fs:SetPoint("TOPLEFT", cur.x + TEXT_X, cur.y - 5)
+    fs:SetText(label)
+    local btn = button("", handler, tip, cur.x + ROW_W - w, w)
+    btn.label = fs
+    down(28)
+    return btn
+end
+
+-- A slider bar at the given page height, its number hanging under it. Hand
+-- built rather than OptionsSliderTemplate, which Blizzard has reworked
+-- before. The volume, audio channels and window size bars all come off
+-- this, so they read as one instrument. The caller wires OnValueChanged
+-- and paints the fill, since what the number means differs per bar.
+-- addBar is the same with a label on the text rail, the volume bar is
+-- the one without since its label is the channel button
+local VOL_W = 130
+local function makeBar(y, lo, hi, step)
+    local s = CreateFrame("Slider", nil, page)
+    s:SetSize(VOL_W, 16)
+    s:SetPoint("TOPLEFT", cur.x + 160, y)
+    s:SetOrientation("HORIZONTAL")
+    s:SetMinMaxValues(lo, hi)
+    s:SetValueStep(step)
+    s:SetObeyStepOnDrag(true)
+    s:SetHitRectInsets(0, 0, -5, -5)
+    local track = s:CreateTexture(nil, "BACKGROUND")
+    track:SetPoint("LEFT")
+    track:SetPoint("RIGHT")
+    track:SetHeight(6)
+    track:SetColorTexture(0.1, 0.1, 0.1, 0.9)
+    s.fill = s:CreateTexture(nil, "ARTWORK")
+    s.fill:SetPoint("LEFT", track, "LEFT", 0, 0)
+    s.fill:SetHeight(6)
+    s.fill:SetColorTexture(1, 0.82, 0, 1)
+    s:SetThumbTexture("Interface/Buttons/UI-SliderBar-Button-Horizontal")
+    s:GetThumbTexture():SetSize(14, 20)
+    -- under the slider rather than beside it, since beside would reach into
+    -- the right column and strand the number under someone else's section
+    s.text = page:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    s.text:SetPoint("TOPLEFT", s, "BOTTOMLEFT", 0, -4)
+    return s
+end
+
+local function addBar(label, lo, hi, step)
+    local fs = page:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    fs:SetPoint("TOPLEFT", cur.x + TEXT_X, cur.y - 5)
+    fs:SetText(label)
+    local bar = makeBar(cur.y - 3, lo, hi, step)
+    bar.label = fs
+    -- past the number hanging under the bar, not just the bar itself
+    down(40)
+    return bar
+end
+
 -- two narrower buttons sharing a row, for sections that would otherwise
 -- run a column long with short verbs
 local function addActionPair(a, b)
@@ -149,13 +207,10 @@ local function addActionPair(a, b)
     down(28)
 end
 
--- the panel's one text palette: gold when a thing is live, grey when not
+-- the panel's one palette: gold when a thing is live, grey when not
+local GOLD, GREY = { 1, 0.82, 0 }, { 0.5, 0.5, 0.5 }
 local function tintLabel(fs, on)
-    if on then
-        fs:SetTextColor(1, 0.82, 0)
-    else
-        fs:SetTextColor(0.5, 0.5, 0.5)
-    end
+    fs:SetTextColor(unpack(on and GOLD or GREY))
 end
 
 local function enableLook(w, on, why)
@@ -169,24 +224,11 @@ end
 -- A two state switch: a labelled row like a checkbox's, with a word on each
 -- side of a small pill and a knob that slides to the chosen one, the word
 -- not chosen in grey.
--- The pill and knob are svg files, which a 12.1 client draws straight from
--- disk, so the shapes are actually round. A 12.0 client has no
--- CreateVectorGraphics and gets flat squares with the same behavior.
-local SWITCH_MEDIA = "Interface\\AddOns\\AztarecHelper\\Media\\"
+-- The pill and knob are svg files drawn through AZT.SvgArt, so the shapes
+-- are round on a 12.1 client.
 local SWITCH_W, SWITCH_H, KNOB = 46, 22, 16
-local WORD_W = 48 -- the widest side word, Relative or Compass in the small font
-
-local function switchArt(parent, file, layer)
-    if parent.CreateVectorGraphics then
-        local v = parent:CreateVectorGraphics()
-        v:SetSVG(SWITCH_MEDIA .. file)
-        v:SetDrawLayer(layer)
-        return v
-    end
-    local t = parent:CreateTexture(nil, layer)
-    t:SetColorTexture(1, 1, 1)
-    return t
-end
+local WORD_W = 52 -- the widest side word, Automatic in the small font
+local switchArt = AZT.SvgArt
 
 local function addSwitch(name, leftText, rightText, tip, get, set)
     local f = CreateFrame("Button", nil, page)
@@ -219,7 +261,7 @@ local function addSwitch(name, leftText, rightText, tip, get, set)
     local knobArt = switchArt(knob, "switch-knob.svg", "OVERLAY")
     knobArt:SetSize(KNOB, KNOB)
     knobArt:SetPoint("CENTER", knob)
-    knobArt:SetVertexColor(1, 0.82, 0)
+    knobArt:SetVertexColor(unpack(GOLD))
 
     local function paintWords(v, on)
         tintLabel(leftFS, on and not v)
@@ -287,11 +329,7 @@ local function addSwitch(name, leftText, rightText, tip, get, set)
     local setEnabled = f.SetEnabled
     function f:SetEnabled(on)
         setEnabled(self, on)
-        if on then
-            knobArt:SetVertexColor(1, 0.82, 0)
-        else
-            knobArt:SetVertexColor(0.5, 0.5, 0.5)
-        end
+        knobArt:SetVertexColor(unpack(on and GOLD or GREY))
         apply(get())
     end
 
@@ -425,30 +463,25 @@ bindWatch:SetScript("OnEvent", function(_, event)
 end)
 
 local function addBindRow(label, cmd)
-    local fs = page:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    fs:SetPoint("TOPLEFT", cur.x + TEXT_X, cur.y - 5)
-    fs:SetText(label)
-    local btn = button(
-        "",
-        nil,
+    local btn = addLabelledButton(
+        label,
         "Click, then press the key you want. Escape backs out and right click unbinds.",
-        cur.x + ROW_W - 120,
-        120
+        120,
+        function(self, mouse)
+            stopListening()
+            if mouse == "RightButton" then
+                local key = GetBindingKey(cmd)
+                if key then
+                    SetBinding(key)
+                    SaveBindings(GetCurrentBindingSet())
+                end
+                self:SetText(keyText(cmd))
+                return
+            end
+            startListening(self, cmd)
+        end
     )
     btn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
-    btn:SetScript("OnClick", function(self, mouse)
-        stopListening()
-        if mouse == "RightButton" then
-            local key = GetBindingKey(cmd)
-            if key then
-                SetBinding(key)
-                SaveBindings(GetCurrentBindingSet())
-            end
-            self:SetText(keyText(cmd))
-            return
-        end
-        startListening(self, cmd)
-    end)
     btn:SetScript("OnHide", function(self)
         if listening and listening.btn == self then
             stopListening()
@@ -457,10 +490,50 @@ local function addBindRow(label, cmd)
     refreshers[#refreshers + 1] = function()
         btn:SetText(keyText(cmd))
     end
-    down(26)
 end
 
--- Left column: everything the addon draws
+-- Left column: how the route gets recorded, then everything the addon draws
+
+section("Recording")
+
+addSwitch(
+    "Recording",
+    "By hand",
+    "Automatic",
+    "By hand, you press a quarter key or click the room view for each wave while the ground still"
+        .. " shows it. Automatic, the addon reads which way you face off the minimap and writes the"
+        .. " route down on its own while you dodge, which needs your minimap set to rotate with you."
+        .. " The keys, marking and calling stand down while it is automatic. Switching either way"
+        .. " clears the current route.",
+    function()
+        return not AztarecHelperDB.manualMode
+    end,
+    function(v)
+        AZT.SetManualMode(not v)
+    end
+)
+
+-- automatic reads the facing off the rotating minimap, so it has no say
+-- here. By hand it is a choice, the room view and the arrow follow it
+local rotateCheck = addCheck(
+    "Rotate minimap in the delve",
+    "Turns your minimap rotation on while you are in the delve and puts it back when you leave."
+        .. " The room view then turns with you and the arrow aims from where you actually stand."
+        .. " Automatic recording reads your facing off that rotation, so it keeps this on.",
+    function()
+        return AZT.DelveRotate()
+    end,
+    function(v)
+        AZT.SetDelveRotate(v)
+    end
+)
+refreshers[#refreshers + 1] = function()
+    enableLook(
+        rotateCheck,
+        not AZT.Safe.IsAuto(),
+        "Forced on while Recording is Automatic. It cannot tell which way you face without it."
+    )
+end
 
 section("Windows")
 
@@ -470,12 +543,29 @@ end, function(v)
     AZT.SetRoomShown(v)
 end)
 
+addCheck(
+    "Solo route board",
+    "The route strip followers get, drawn from your own recording. It fills as the waves"
+        .. " get answered during the Sermon and steps through the echoes with the current"
+        .. " safe spot big on the left, ? for waves nobody answered. While you follow a"
+        .. " leader their calls own the board like before.",
+    function()
+        return AztarecHelperDB.soloBoard
+    end,
+    function(v)
+        AztarecHelperDB.soloBoard = v
+        if AZT.FollowSync then
+            AZT.FollowSync()
+        end
+    end
+)
+
 addSwitch(
     "Room view size",
     "Full",
     "Slim",
     "Set to Slim, the room view is cut down to the room itself, with the excess padding removed."
-        .. " `/azt help` still opens the instructions.",
+        .. " The Info button in its corner opens the instructions, as does `/azt help`.",
     function()
         return AztarecHelperDB.roomSlim
     end,
@@ -501,8 +591,9 @@ end)
 
 followGated[#followGated + 1] = addCheck(
     "Safe-spot arrow",
-    "An arrow that shows the move for each echo, as if you were facing the boss in the middle,"
-        .. " so up means straight through him and down means stay where you are."
+    "An arrow that shows the move for each echo. While your minimap rotates it points where the"
+        .. " move really is, whichever way you look. Without that it reads as if you were facing"
+        .. " the boss, so up means straight through him and down means stay where you are."
         .. " It sits dimmed in the delve before the pull so you can drag it into place.",
     function()
         return AztarecHelperDB.arrow and not AztarecHelperDB.follow
@@ -513,32 +604,53 @@ followGated[#followGated + 1] = addCheck(
     end
 )
 
+-- the arrow colour button shows the colour as a dot beside its name and
+-- opens the menu. Gold has no tint of its own since the art is painted gold
 local colorBtn
-colorBtn = addAction("", function()
-    MenuUtil.CreateContextMenu(colorBtn, function(_, root)
-        root:CreateTitle("Arrow color")
-        for _, key in ipairs(AZT.ARROW_ORDER) do
-            root:CreateButton(AZT.ARROW_COLORS[key].label, function()
-                AztarecHelperDB.arrowColor = key
-                colorBtn:SetText("Arrow: " .. AZT.ARROW_COLORS[key].label)
-                AZT.ArrowSync()
-            end)
-        end
-    end)
-end, "The color the arrow draws in during the echoes. Gold leaves the artwork as it was painted.")
-refreshers[#refreshers + 1] = function()
-    colorBtn:SetText("Arrow: " .. AZT.ArrowColor().label)
+colorBtn = addLabelledButton(
+    "Arrow color",
+    "The color the arrow draws in during the echoes. Gold leaves the artwork as it was painted.",
+    100,
+    function()
+        MenuUtil.CreateContextMenu(colorBtn, function(_, root)
+            root:CreateTitle("Arrow color")
+            for _, key in ipairs(AZT.ARROW_ORDER) do
+                root:CreateButton(AZT.ARROW_COLORS[key].label, function()
+                    AztarecHelperDB.arrowColor = key
+                    refreshAll()
+                    AZT.ArrowSync()
+                end)
+            end
+        end)
+    end
+)
+local swatch = switchArt(colorBtn, "switch-knob.svg", "OVERLAY")
+swatch:SetSize(12, 12)
+swatch:SetPoint("LEFT", 10, 0)
+colorBtn:GetFontString():ClearAllPoints()
+colorBtn:GetFontString():SetPoint("LEFT", swatch, "RIGHT", 6, 0)
+local function paintSwatch()
+    local c = AZT.ArrowColor()
+    swatch:SetVertexColor(unpack(colorBtn:IsEnabled() and (c.rgb or GOLD) or GREY))
+    colorBtn:SetText(c.label)
 end
+local setColorEnabled = colorBtn.SetEnabled
+function colorBtn:SetEnabled(on)
+    setColorEnabled(self, on)
+    paintSwatch()
+end
+refreshers[#refreshers + 1] = paintSwatch
 followGated[#followGated + 1] = colorBtn
 
 followGated[#followGated + 1] = addSwitch(
     "Arrow mode",
     "Relative",
     "Compass",
-    "Relative is the move to make as if you were facing the boss, and the voice calls the"
-        .. " same move. Compass points the way the room view points and carries that"
-        .. " quarter's marker inside it. The spoken cues keep talking as if you face the boss either way,"
-        .. " so turn them off below if the two readings mix badly for you.",
+    "Relative is the move to make, live from your facing when the minimap rotates and as if you"
+        .. " were facing the boss when it does not, and the voice calls the same move. Compass points"
+        .. " the way the room view points and carries that quarter's marker inside it. The spoken"
+        .. " cues keep talking as if you face the boss either way, so turn them off below if the"
+        .. " two readings mix badly for you.",
     function()
         return AztarecHelperDB.arrowCompass and not AztarecHelperDB.follow
     end,
@@ -586,6 +698,23 @@ cueGated[#cueGated + 1] = addSwitch(
         refreshAll()
     end
 )
+
+-- only means something on the marker voice, so it takes a second gate under
+-- the cue one
+local colorCheck = addCheck(
+    "Say marker colors",
+    "The marker voice names the colour instead of the shape, yellow for star, orange for"
+        .. " circle, purple, green, silver, blue and red for the rest. Skull has no colour and"
+        .. " stays skull. The test buttons follow.",
+    function()
+        return AztarecHelperDB.cueColors
+    end,
+    function(v)
+        AztarecHelperDB.cueColors = v
+        refreshAll()
+    end
+)
+cueGated[#cueGated + 1] = colorCheck
 
 -- Audition cluster, so the cue sounds can be judged without a pull. Laid
 -- out the way the words mean: forward up top, left and right on their
@@ -686,36 +815,10 @@ end
 
 -- volume for the channel the cues play through. This is the game's own
 -- slider for that channel, not a private one, so what it shows is what the
--- sound options show. Hand-built rather than OptionsSliderTemplate, which
--- Blizzard has reworked before.
-local VOL_W = 130
-local volSlider = CreateFrame("Slider", nil, page)
-volSlider:SetSize(VOL_W, 16)
-volSlider:SetPoint("TOPLEFT", 176, chanY - 3)
-volSlider:SetOrientation("HORIZONTAL")
-volSlider:SetMinMaxValues(0, 100)
-volSlider:SetValueStep(1)
-volSlider:SetObeyStepOnDrag(true)
-volSlider:SetHitRectInsets(0, 0, -5, -5)
-
-local track = volSlider:CreateTexture(nil, "BACKGROUND")
-track:SetPoint("LEFT")
-track:SetPoint("RIGHT")
-track:SetHeight(6)
-track:SetColorTexture(0.1, 0.1, 0.1, 0.9)
-
-local fill = volSlider:CreateTexture(nil, "ARTWORK")
-fill:SetPoint("LEFT", track, "LEFT", 0, 0)
-fill:SetHeight(6)
-fill:SetColorTexture(1, 0.82, 0, 1)
-
-volSlider:SetThumbTexture("Interface/Buttons/UI-SliderBar-Button-Horizontal")
-volSlider:GetThumbTexture():SetSize(14, 20)
-
--- under the slider rather than beside it, since beside would reach into
--- the right column and strand the number under someone else's section
-local volText = page:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-volText:SetPoint("TOPLEFT", volSlider, "BOTTOMLEFT", 0, -4)
+-- sound options show
+local volSlider = makeBar(chanY - 3, 0, 100, 1)
+local fill = volSlider.fill
+local volText = volSlider.text
 
 local function paintVol(v)
     fill:SetWidth(VOL_W * v / 100)
@@ -764,6 +867,47 @@ refreshVol = function()
 end
 refreshers[#refreshers + 1] = refreshVol
 
+-- The game's own Audio Channels number, right where its victims live: a
+-- low mixer culls addon sounds first, so the recorded cues vanish mid
+-- fight while the test buttons play fine. Same bar as the volume, wired
+-- to the CVar both ways
+down(14)
+local chSlider = addBar("Audio channels", 20, 128, 4)
+
+local chanWarn = page:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+chanWarn:SetPoint("TOPLEFT", cur.x + TEXT_X, cur.y)
+chanWarn:SetWidth(ROW_W - TEXT_X)
+chanWarn:SetJustifyH("LEFT")
+chanWarn:SetTextColor(1, 0.35, 0.35)
+chanWarn:SetText("If the cues go quiet mid fight, try raising this.")
+down(18)
+
+local chReading
+chSlider:SetScript("OnValueChanged", function(_, v)
+    v = math.floor(v + 0.5)
+    chSlider.fill:SetWidth(VOL_W * (v - 20) / 108)
+    chSlider.text:SetText(v)
+    if not chReading then
+        C_CVar.SetCVar("Sound_NumChannels", v)
+    end
+end)
+addTip(
+    chSlider,
+    "How many sounds the game mixes at once, the same Audio Channels number as the sound"
+        .. " options, moved from either place. Low settings drop the quietest sounds when a"
+        .. " fight gets loud, and the recorded cues go first."
+)
+local function refreshChannels()
+    local v = tonumber(GetCVar("Sound_NumChannels")) or 64
+    chReading = true
+    chSlider:SetValue(v)
+    chReading = false
+    chSlider.fill:SetWidth(VOL_W * math.max(0, v - 20) / 108)
+    chSlider.text:SetText(v)
+    chanWarn:SetShown(cuesLive() and not AztarecHelperDB.cueMarks and AZT.CueChannelsLow() ~= nil)
+end
+refreshers[#refreshers + 1] = refreshChannels
+
 -- the cue gate itself, down here where everything it greys exists. The
 -- switch and the test buttons take the shared look, the rest have parts
 -- enableLook cannot reach
@@ -772,6 +916,9 @@ local function applyCueGate()
     local why = AztarecHelperDB.cues and FOLLOW_WHY or "Locked while Spoken cues is off. Tick it to use this."
     for _, w in ipairs(cueGated) do
         enableLook(w, on, why)
+    end
+    if on and not AztarecHelperDB.cueMarks then
+        enableLook(colorCheck, false, "Locked while the cue voice is Relative. It only names markers.")
     end
     tintLabel(cueLabel, on)
     tintLabel(volText, on)
@@ -783,16 +930,30 @@ local function applyCueGate()
     cueChanBtn:SetEnabled(on)
     volSlider:SetEnabled(on)
     volSlider:GetThumbTexture():SetDesaturated(not on)
+    -- the channels bar only matters to the recorded voice, tts skips the
+    -- game's mixer entirely
+    local chOn = on and not AztarecHelperDB.cueMarks
+    chSlider:SetEnabled(chOn)
+    chSlider:GetThumbTexture():SetDesaturated(not chOn)
+    tintLabel(chSlider.label, chOn)
+    tintLabel(chSlider.text, chOn)
+    if chOn then
+        chSlider.fill:SetColorTexture(1, 0.82, 0, 1)
+    else
+        chSlider.fill:SetColorTexture(0.5, 0.5, 0.5, 0.7)
+    end
 end
 refreshers[#refreshers + 1] = applyCueGate
 
 -- the sound options, a macro or anohter addon can move the same number, so
--- follow it while the panel is open
+-- follow it while the panel is open. Visible rather than shown, since the
+-- settings window closing hides its container and leaves our frame's own
+-- flag set
 local volWatch = CreateFrame("Frame")
 volWatch:RegisterEvent("CVAR_UPDATE")
 volWatch:SetScript("OnEvent", function()
-    if panel:IsShown() then
-        refreshVol()
+    if panel:IsVisible() then
+        refreshAll()
     end
 end)
 
@@ -827,6 +988,16 @@ addActionPair({
         AZT.chat("recorded route cleared")
     end,
 })
+
+addAction(
+    "Recording problems",
+    function()
+        AZT.ShowMisreadWarning()
+    end,
+    "The warning the addon raises over your corpse when an automatic recording holds the"
+        .. " same quarter twice in a row, which the boss never calls. Read here at leisure:"
+        .. " doubled quarters mean the recording watched you dodge with your back to the boss."
+)
 
 -- Right column: the keys, what the party sees and the window locks
 
@@ -902,7 +1073,8 @@ local callCb = addCheck(
     "Call the route (leader)",
     "While you lead a party in the delve, each answer key press also says that quarter's marker"
         .. " number in party chat, through the game's own macro system, so followers with the addon"
-        .. " see your route as you record it. The wiring locks when a fight starts, so a leadership"
+        .. " see your route as you record it. Only the keys call, a click on the room view answers"
+        .. " for you alone. The wiring locks when a fight starts, so a leadership"
         .. " change mid pull waits for the pull to end. One role at a time, turning this on turns"
         .. " following off.",
     function()
@@ -949,14 +1121,18 @@ local voiceCb = addCheck(
 -- that is already on stays clickable, going off is always allowed
 local TURNS_WHY = "Locked while Answer keys is set to Turns. A turn names no quarter, so there is"
     .. " nothing to mark or call. Set the switch back to Quarters to use this."
+local AUTO_WHY = "Locked while the route records on its own. Marking and calling ride the answer keys,"
+    .. " which only answer while Recording is set to By hand. Switch that to use this."
 local NOT_LEADER_WHY = "Locked because you are not leading a party. Only the party leader calls the route."
 local LEADER_WHY = "Locked because you lead the party. The leader calls the route and the others follow it."
 local NOT_FOLLOWING_WHY = "Locked until Follow the leader is on. It only reads the leader's calls."
 local function applyRoleGate()
     local leading = AZT.InPlayerParty() and UnitIsGroupLeader("player")
     local turns = AztarecHelperDB.relativeTurns
-    enableLook(callCb, (leading or AztarecHelperDB.callRoute) and not turns, turns and TURNS_WHY or NOT_LEADER_WHY)
-    enableLook(markCb, not turns, TURNS_WHY)
+    local auto = not AztarecHelperDB.manualMode
+    local keysWhy = (auto and AUTO_WHY) or (turns and TURNS_WHY)
+    enableLook(callCb, (leading or AztarecHelperDB.callRoute) and not keysWhy, keysWhy or NOT_LEADER_WHY)
+    enableLook(markCb, not keysWhy, keysWhy)
     enableLook(followCb, not leading or AztarecHelperDB.follow, LEADER_WHY)
     -- the voice only ever speaks the leader's calls, so it rides the follow
     -- toggle rather than the live role. Follow off locks it even when it is
@@ -965,22 +1141,52 @@ local function applyRoleGate()
 end
 refreshers[#refreshers + 1] = applyRoleGate
 
-section("Locks")
-
--- the three windows share one lock story, so the rows come off a list
-local LOCK_TIP =
-    "No dragging, and clicks pass through it. Hover its corner and click the padlock to unlock, or untick this."
-for _, w in ipairs({
-    { key = "arrow", label = "Lock the arrow" },
-    { key = "wave", label = "Lock the countdown" },
-    { key = "follow", label = "Lock the route board" },
+-- the four windows share one size story and one lock story, so both
+-- sections come off the same list
+local WINDOWS = {
+    { key = "arrow", label = "Arrow" },
+    { key = "wave", label = "Countdown" },
+    { key = "follow", label = "Route board" },
     {
         key = "room",
-        label = "Lock the room view",
-        tip = "No dragging, and clicks pass through it. The Opts and Instructions buttons and the padlock keep working.",
+        label = "Room view",
+        lockTip = "No dragging, and clicks pass through it. The buttons in its corners and the padlock keep working.",
     },
-}) do
-    addCheck(w.label, w.tip or LOCK_TIP, function()
+}
+
+section("Sizes")
+
+-- a window follows its bar as it drags, and keeps the spot it was put at
+for _, w in ipairs(WINDOWS) do
+    local bar = addBar(w.label, 50, 200, 5)
+    local function paint(v)
+        bar.fill:SetWidth(VOL_W * (v - 50) / 150)
+        bar.text:SetText(("%d%%"):format(v))
+    end
+    bar:SetScript("OnValueChanged", function(_, v)
+        v = math.floor(v + 0.5)
+        paint(v)
+        AZT.SetWindowScale(w.key, v / 100)
+    end)
+    addTip(
+        bar,
+        "How big the "
+            .. w.label:lower()
+            .. " draws. It keeps the spot you dragged it to and grows or shrinks around it."
+    )
+    refreshers[#refreshers + 1] = function()
+        local v = math.floor(AZT.GetWindowScale(w.key) * 100 + 0.5)
+        bar:SetValue(v)
+        paint(v)
+    end
+end
+
+section("Locks")
+
+local LOCK_TIP =
+    "No dragging, and clicks pass through it. Hover its corner and click the padlock to unlock, or untick this."
+for _, w in ipairs(WINDOWS) do
+    addCheck("Lock the " .. w.label:lower(), w.lockTip or LOCK_TIP, function()
         return AZT.GetWindowLock(w.key)
     end, function(v)
         AZT.SetWindowLock(w.key, v)
@@ -988,10 +1194,6 @@ for _, w in ipairs({
 end
 
 down(24)
-addAction("Updates", function()
-    AZT.ShowNotice()
-end)
-
 local ver = page:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 ver:SetPoint("TOPLEFT", cur.x, cur.y - 4)
 ver:SetTextColor(0.7, 0.7, 0.7)

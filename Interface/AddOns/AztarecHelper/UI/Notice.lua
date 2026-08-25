@@ -5,69 +5,34 @@
 
 local _, AZT = ...
 
--- The reading box. One frame, two things to say: the notice about the 12.1
--- position blackout, which shows itself once on the first delve entry, and
--- the instructions, which wait behind the room view's button.
+-- The reading box. One frame for the instructions behind the room view's
+-- button and for the questions the addon asks on the way into the delve.
 
 local box
 
-local NERF_TITLE = "What changed in 12.1"
-local NERF = "Since a 12.1 build the game hands out no coordinates inside this delve. "
-    .. "Nothing can read where you stand in there, this addon included, so automatic "
-    .. "recording and the dot that showed you on the map are out.\n\n"
-    .. "Recording is manual now. During the Sermon, press a quarter key or click the quarter "
-    .. "on the room view for the quarter you run to, one press per wave, and the "
-    .. "echoes play your recording back. Waves you skip show as unknown.\n\n"
-    .. "The Instructions button on the room view has the rest.\n\n"
-    .. "Also, sorry for shouting in your ear with the new spoken cues, I wanted to use "
-    .. "real voice instead of TTS for some personality. Whichever sound channel you point "
-    .. "the cues at has a volume slider in the settings, and /azt cue shuts me up for good.\n\n"
-    .. "Check back on August 19th. This will still be the best addon for this fight.\n\n"
-    .. "Fabled Let Me Solo Him: Azta'rec wants him dead on Tier ?? with nobody else in "
-    .. "your party, inside the first week of Midnight Season 2. The memory game is the "
-    .. "part that ends those runs, and remembering it is the one thing this addon does."
+-- taller reads scroll rather than grow the box past this
+local MAX_BODY = 380
 
 local INSTR_TITLE = "How to use it"
-local INSTR = "Azta'rec slams three quarters of the room at once during Sermon of Ula'tek "
-    .. "and leaves one safe, a few times in a row with the ground showing you where. "
-    .. "Then he repeats the same order with nothing showing, and that is the part this "
-    .. "addon remembers with you.\n\n"
-    .. "While the ground still shows the safe quarter, tell the addon where you went. "
-    .. "Press that quarter's key, or click the quarter on the room view. One answer per "
-    .. "wave. The countdown window says which wave it is waiting for and how long you "
-    .. "have, because the boss's own channel gives away the timing.\n\n"
-    .. "Answers land in order, so a late one still counts. Miss the third wave and your "
-    .. "next press takes the third slot, which means two quick taps get you level again. "
-    .. "You cannot answer a wave that has not happened yet, and a wave left blank when "
-    .. "the echoes begin can still be filled right up until its own echo plays. Anything "
-    .. "you never answer stays unknown.\n\n"
-    .. "If naming quarters in the scramble is the hard part, the settings can switch the keys "
-    .. "to relative turns, the same reading the arrow and the voice use. A press then says the "
-    .. "move you made rather than the place you ended up: north for straight through the boss, "
-    .. "east and west for the two sides. The first wave still names its quarter, since there "
-    .. "is nothing behind it to turn from, and that is where the route starts. South answers "
-    .. "nothing after that, the safe spot never lands twice in the same place. Marking and "
-    .. "calling need a quarter, so they switch off while it is on.\n\n"
-    .. "When the echoes start, the room view lights the quarter you are due in green and the "
-    .. "one after it yellow. The arrow shows the move to make from where the last wave "
-    .. "left you and the voice calls it out loud.\n\n"
-    .. "The arrow and the voice both talk as if you are looking at the boss in the middle "
-    .. "of the room. Forward means straight through him. Left and right are your left and "
-    .. "right from there, and stay means the route keeps you where you are. Turn "
-    .. "your back on him and they will be backwards, so keep him in front of you.\n\n"
-    .. "Your four keys live in the settings panel and in the game's Key Bindings screen "
-    .. "under AddOns. Each quarter on the room view shows its own key. The quarters wear "
-    .. "markers rather than compass letters. drop the matching world markers in the room. Click a marker out of combat "
-    .. "to change it. Between pulls, /azt replay walks "
-    .. "the last route again at "
-    .. "its real speed, /azt review says what it recorded, and /azt practice runs a whole "
-    .. "pretend sermon for you to answer and get echoed, no boss needed."
+local INSTR = "|cffffd100The fight:|r during Sermon of Ula'tek the boss slams three quarters of the "
+    .. "room at once and leaves one safe, a few waves in a row, the ground showing where. "
+    .. "Then the echoes repeat the same order with nothing on the ground.\n\n"
+    .. "|cffffd100Record the safe spots:|r while the ground shows them, press the safe quarter's key "
+    .. "or click it on the room view, one answer per wave. A missed wave is caught up by "
+    .. "your next press. Or set Recording to Automatic and the addon writes down where you "
+    .. "stood for each wave, nothing to press. Automatic reads the quarter |cffff5a5abehind|r you, "
+    .. "so face the boss the whole Sermon or it records the wrong spots.\n\n"
+    .. "|cffffd100Dodge the echoes:|r the room view lights the safe quarter green and the one after "
+    .. "it yellow, the arrow points your move and the voice calls it out loud. Go where "
+    .. "they say.\n\n"
+    .. "|cffffd100Practice:|r /azt practice runs a pretend sermon with no boss around. Every setting "
+    .. "explains itself in its tooltip."
 
 local function build()
     box = CreateFrame("Frame", "AztarecHelperNotice", UIParent, "BackdropTemplate")
     box:SetSize(480, 100)
     box:SetPoint("CENTER", 0, 140)
-    -- above the settings panel, since the Updates button opens it from there
+    -- above the settings panel, the boxes can open while it is up
     box:SetFrameStrata("FULLSCREEN_DIALOG")
     box:SetBackdrop({
         bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
@@ -88,12 +53,40 @@ local function build()
     title:SetPoint("TOP", 0, -12)
     box.title = title
 
-    local body = box:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    body:SetPoint("TOPLEFT", 18, -38)
-    body:SetPoint("TOPRIGHT", -18, -38)
+    -- room for a picture between the title and the text, the automatic
+    -- explainer puts its screenshot there. Sized per show
+    local pic = box:CreateTexture(nil, "ARTWORK")
+    pic:SetPoint("TOP", 0, -38)
+    box.pic = pic
+
+    -- the body rides a scroll frame, so a long read, the collected release
+    -- notes mostly, caps the box and rolls under the wheel instead of
+    -- running off the screen
+    local scroll = CreateFrame("ScrollFrame", nil, box)
+    local content = CreateFrame("Frame", nil, scroll)
+    scroll:SetScrollChild(content)
+    scroll:EnableMouseWheel(true)
+    scroll:SetScript("OnMouseWheel", function(self, delta)
+        local v = self:GetVerticalScroll() - delta * 40
+        self:SetVerticalScroll(math.min(math.max(v, 0), self:GetVerticalScrollRange()))
+    end)
+    local body = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    body:SetPoint("TOPLEFT")
     body:SetJustifyH("LEFT")
     body:SetSpacing(2)
-    box.body = body
+    box.scroll, box.content, box.body = scroll, content, body
+
+    -- a box can carry a link into the settings in its sentence. The links
+    -- live in the body so its frame takes the clicks, and the box closes
+    -- first so the settings do not open under it
+    content:EnableMouse(true)
+    content:SetHyperlinksEnabled(true)
+    content:SetScript("OnHyperlinkClick", function(_, link)
+        if link == "azt:options" then
+            box:Hide()
+            AZT.OpenOptions()
+        end
+    end)
 
     -- one button for reading, two when the box is asking something
     local right = CreateFrame("Button", nil, box, "UIPanelButtonTemplate")
@@ -106,17 +99,57 @@ local function build()
     left:SetPoint("RIGHT", right, "LEFT", -8, 0)
     box.left = left
 
+    -- a new frame starts shown, and the queue below reads shown as busy
+    box:Hide()
     table.insert(UISpecialFrames, "AztarecHelperNotice")
 end
 
 -- text with one dismiss button, or a question with a choice on either side
-local function show(title, text, ask)
+-- One box, so asks that land together queue up behind it and take their
+-- turn as it closes. Delve entry raises up to two at once, the automatic
+-- offer and a party role ask.
+local queue = {}
+local show
+
+local function showNext()
+    local nxt = table.remove(queue, 1)
+    if nxt then
+        show(nxt.title, nxt.text, nxt.ask, nxt.pic)
+    end
+end
+
+-- pic is { file, width, height }, shown between the title and the text
+function show(title, text, ask, pic)
     if not box then
         build()
+        box:SetScript("OnHide", showNext)
+    end
+    -- a different box waits its turn, but asking for the one already on
+    -- screen just redraws it, else a mashed button stacks copies that each
+    -- want their own Got it
+    if box:IsShown() and box.title:GetText() ~= title then
+        queue[#queue + 1] = { title = title, text = text, ask = ask, pic = pic }
+        return
     end
     box.title:SetText(title)
+    local picH = 0
+    if pic then
+        box.pic:SetTexture(pic[1])
+        box.pic:SetSize(pic[2], pic[3])
+        picH = pic[3] + 8
+    end
+    box.pic:SetShown(pic and true or false)
+    box.body:SetWidth(box:GetWidth() - 36)
     box.body:SetText(text)
-    box:SetHeight(38 + box.body:GetStringHeight() + 48)
+    local bodyH = box.body:GetStringHeight()
+    box.content:SetSize(box:GetWidth() - 36, bodyH)
+    local seen = math.min(bodyH, MAX_BODY)
+    box.scroll:ClearAllPoints()
+    box.scroll:SetPoint("TOPLEFT", 18, -38 - picH)
+    box.scroll:SetPoint("TOPRIGHT", -18, -38 - picH)
+    box.scroll:SetHeight(seen)
+    box.scroll:SetVerticalScroll(0)
+    box:SetHeight(38 + picH + seen + 48)
     box.left:SetShown(ask and true or false)
     box.right:ClearAllPoints()
     if ask then
@@ -142,13 +175,69 @@ local function show(title, text, ask)
     box:Show()
 end
 
--- the options panel's Updates button reopens the notice any time
-function AZT.ShowNotice()
-    show(NERF_TITLE, NERF)
-end
-
 function AZT.ShowInstructions()
     show(INSTR_TITLE, INSTR)
+end
+
+-- What the News button on the room view opens, newest first. Add an entry
+-- for every release with a feature to show, a sentence or two each,
+-- internal fixes stay in the changelog. The box shows every entry the
+-- player has not read yet, so a note is never missed by skipping versions,
+-- and a bump without an entry relights nothing. The whole list stays,
+-- an All notes button reads it back as the archive
+local NEWS = {
+    {
+        v = "2.1.8",
+        text = "The last pull survives reloads and disconnects now, so /azt review and /azt replay"
+            .. " still know your route and your death after one.",
+    },
+    {
+        v = "2.1.6",
+        text = "Every window has a size slider of its own in the |Hazt:options|h|cff71d5ffoptions|r|h,"
+            .. " and the slim room view got Info and News buttons in its corners.",
+    },
+}
+
+local function unseenCount()
+    local seen = AztarecHelperDB.newsSeen
+    for i, n in ipairs(NEWS) do
+        if n.v == seen then
+            return i - 1
+        end
+    end
+    return #NEWS
+end
+
+function AZT.NewsUnseen()
+    return unseenCount() > 0
+end
+
+local function newsBody(count)
+    local parts = {}
+    for i = 1, count do
+        parts[i] = "|cffffd100" .. NEWS[i].v .. "|r  " .. NEWS[i].text
+    end
+    return table.concat(parts, "\n\n")
+end
+
+local function showAllNews()
+    show("Release notes", newsBody(#NEWS))
+end
+
+function AZT.ShowWhatsNew()
+    -- nothing missed still reads as the latest note, the button always talks
+    local count = math.max(unseenCount(), 1)
+    AztarecHelperDB.newsSeen = NEWS[1].v
+    if count == #NEWS then
+        showAllNews()
+        return
+    end
+    show("What's new", newsBody(count), {
+        leftText = "All notes",
+        left = showAllNews,
+        rightText = "Got it",
+        right = function() end,
+    })
 end
 
 -- The compass arrow changes what the arrow points at, but the voice has no
@@ -183,7 +272,8 @@ local CALL_TITLE = "Call the route for your party?"
 local CALL_TEXT = "You lead this group. With calling on, your answer keys also name each"
     .. " quarter in party chat as you record, by its marker number or as a direction if you"
     .. " switch that on, and party members running the addon see your route on the boss's"
-    .. " timing. The keys work"
+    .. " timing. The calls ride the key presses themselves, so answer with your keys, a"
+    .. " click on the room view answers for you alone and says nothing. The keys work"
     .. " as before otherwise. One ask for the group: keep party chat quiet during the"
     .. " fight, since stray lines land on the followers' boards as garbage. Declining"
     .. " keeps the semi automatic mode, where you record and answer for yourself only."
@@ -223,13 +313,140 @@ function AZT.ShowFollowAsk()
     })
 end
 
+-- Automatic recording is offered once, in the delve and out of combat,
+-- rather than switched on behind the player's back. It needs the minimap
+-- set to rotate, so saying yes turns that on too when it is off.
+local AUTO_TITLE = "Record the route automatically?"
+local AUTO = "The route can record itself while you dodge, nothing to press during the Sermon. "
+    .. "It needs your minimap rotating with you: saying yes turns that on in the delve and "
+    .. "puts it back when you leave.\n\n"
+    .. "One rule: keep the boss in front of you. The quarter behind you is what each wave "
+    .. "records as safe.\n\n"
+    .. "|cffff5a5aAddon interference:|r minimap addons that square the map or hide its border get in the way of this, "
+    .. "EllesmereUI and Leatrix Plus among them. If the route records nothing, turn their "
+    .. "minimap module off.\n\n"
+    .. "The quarter keys, marking and calling rest while it records. The Recording switch in "
+    .. "the settings flips back any time."
+
+function AZT.ShowAutoOffer()
+    show(AUTO_TITLE, AUTO, {
+        leftText = "Record automatically",
+        left = function()
+            -- lends the rotation on its own, automatic forces it
+            AZT.SetManualMode(false)
+        end,
+        rightText = "Keep recording by hand",
+        right = function()
+            AztarecHelperDB.autoAsked = true
+            -- the party role ask stood aside for this box, its turn now
+            if AZT.Follow then
+                AZT.Follow.Sync()
+            end
+        end,
+    })
+end
+
+-- One picture worth of how automatic reads you, shown every time it gets
+-- switched on, from the offer, the settings or /azt manual. The screenshot
+-- has the south quarter glowing in a red box, which is the whole lesson
+local HOW_TITLE = "The quarter behind you is what counts"
+local HOW = "Face the boss while you dodge. The quarter at your back, the glowing one in the "
+    .. "red box here, is what the wave writes down as the safe spot. Turn your back on him "
+    .. "and the wrong quarter gets written, so keep him in front of you the whole Sermon."
+
+local EXAMPLE = { "Interface\\AddOns\\AztarecHelper\\Media\\example.png", 293, 301 }
+
+function AZT.ShowAutoHow()
+    show(HOW_TITLE, HOW, nil, EXAMPLE)
+end
+
+-- Raised over the corpse when an automatic route holds the same quarter
+-- twice in a row, which the boss never calls. That is the signature of
+-- dodging with your back to him, so the lesson comes with the picture
+local MISREAD_TITLE = "That route could not be right"
+local MISREAD = "This recording had the same safe quarter twice in a row, and the boss never "
+    .. "does that. It is the mark of dodging with your back to him: the addon writes down "
+    .. "the quarter behind you, so facing the wrong way files you into the wrong quarter "
+    .. "and the echoes send you somewhere false.\n\n"
+    .. "Keep the boss in front of you for the whole Sermons every single wave."
+
+-- The corpse showings are counted, and from the third one the box offers
+-- to shut up for good, since by then the reader has either learned the
+-- lesson or decided against it. The Recording problems button and
+-- /azt badroute stay outside the count and keep working muted
+function AZT.ShowMisreadWarning(fromDeath)
+    if fromDeath then
+        if AztarecHelperDB.misreadMuted then
+            return
+        end
+        AztarecHelperDB.misreadSeen = (AztarecHelperDB.misreadSeen or 0) + 1
+        if AztarecHelperDB.misreadSeen >= 3 then
+            show(MISREAD_TITLE, MISREAD, {
+                leftText = "Stop telling me",
+                left = function()
+                    AztarecHelperDB.misreadMuted = true
+                    AZT.chat("the misrecorded route warning is muted - /azt badroute reads it any time")
+                end,
+                rightText = "Got it",
+                right = function() end,
+            }, EXAMPLE)
+            return
+        end
+    end
+    show(MISREAD_TITLE, MISREAD, nil, EXAMPLE)
+end
+
+-- The facing reader found the compass ring frozen: nothing turned it in 25
+-- seconds of the player being in the delve, so automatic has nothing to
+-- read. Shown once a session, with the minimap addons it can see loaded
+-- named, since one of them hiding or replacing the ring is nearly always it
+local RING_TITLE = "Automatic recording cannot see your facing"
+
+function AZT.ShowRingWarning(loaded)
+    local culprit
+    if #loaded > 0 then
+        culprit = "Loaded right now: " .. table.concat(loaded, ", ") .. ". "
+    else
+        culprit = "None of the ones this addon knows by name are loaded, but any minimap addon or skin counts. "
+    end
+    local text = "Your minimap's compass ring has not turned for a while, and that ring is the only "
+        .. "place the addon can read which way you face in here. If you were standing still the "
+        .. "whole time, that is all this is, spin once and it comes alive.\n\n"
+        .. "If you were moving, a minimap addon that squares the map, hides its border or replaces "
+        .. "the compass is the usual cause, Leatrix Plus, EllesmereUI's minimap module, SexyMap and "
+        .. "the like. "
+        .. culprit
+        .. "Turn its minimap module off, reload, and set Recording to Automatic again.\n\n"
+        .. "Or keep your minimap as it is and record by hand, a quarter key or a click per wave."
+    show(RING_TITLE, text, {
+        leftText = "Record by hand",
+        left = function()
+            AZT.SetManualMode(true)
+        end,
+        rightText = "I was idle, check again",
+        right = function()
+            AZT.Safe.RearmRing()
+        end,
+    })
+end
+
+-- the ring turned after all, so the box has nothing true left to say. Only
+-- this box goes, the frame is shared with the instructions and the offers
+function AZT.HideRingWarning()
+    if box and box:IsShown() and box.title:GetText() == RING_TITLE then
+        box:Hide()
+    end
+end
+
 local ef = CreateFrame("Frame")
 ef:RegisterEvent("PLAYER_ENTERING_WORLD")
 ef:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 ef:SetScript("OnEvent", function()
-    if AztarecHelperDB.nerfNoticeSeen or not AZT.InDelve() then
+    if not AZT.InDelve() then
         return
     end
-    AztarecHelperDB.nerfNoticeSeen = true
-    AZT.ShowNotice()
+    -- the party role ask waits its turn behind this one, one box at a time
+    if not AztarecHelperDB.autoAsked and not AZT.Safe.IsAuto() then
+        AZT.ShowAutoOffer()
+    end
 end)

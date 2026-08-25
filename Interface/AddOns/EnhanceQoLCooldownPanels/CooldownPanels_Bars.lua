@@ -6451,12 +6451,14 @@ local function appendBarStandaloneTextSettings(settings, ctx)
 		allowInput = true,
 		isShown = function()
 			local currentEntry = getStandaloneBarContextEntry(ctx)
+			-- Native application bars currently expose only one secret-backed fill, so
+			-- real gaps are unavailable. Show this again if Blizzard exposes separable fills.
 			return normalizeBarMode(currentEntry and currentEntry.barMode, Bars.DEFAULTS.barMode) == Bars.BAR_MODE.STACKS
+				and not Bars.IsNativeAuraStackEntry(currentEntry)
 		end,
 		disabled = function()
 			local currentEntry = getStandaloneBarContextEntry(ctx)
-			return Bars.IsNativeAuraStackEntry(currentEntry)
-				or not getStoredBoolean(currentEntry, "barStacksSegmented", Bars.DEFAULTS.barStacksSegmented)
+			return not getStoredBoolean(currentEntry, "barStacksSegmented", Bars.DEFAULTS.barStacksSegmented)
 		end,
 		get = function()
 			local currentEntry = getStandaloneBarContextEntry(ctx)

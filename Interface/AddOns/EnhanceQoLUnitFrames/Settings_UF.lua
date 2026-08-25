@@ -3635,9 +3635,7 @@ function UF.ui.appendDataBarSettings(list, unit, def, refresh, refreshSelf, addD
 		end)
 	end, dataBarDef.height or 16, "dataBar", true)
 	dataBarHeight.isEnabled = isDataBarEnabled
-	if unit == "target" or unit == "targettarget" then
-		dataBarHeight.isShown = function() return getValue(unit, { "dataBar", "detached" }, dataBarDef.detached == true) ~= true end
-	end
+	dataBarHeight.isShown = function() return getValue(unit, { "dataBar", "detached" }, dataBarDef.detached == true) ~= true end
 	list[#list + 1] = dataBarHeight
 
 	local dataBarGap = slider(L["UFDataBarGap"] or "Data bar gap", -40, 40, 1, function()
@@ -3651,73 +3649,71 @@ function UF.ui.appendDataBarSettings(list, unit, def, refresh, refreshSelf, addD
 	dataBarGap.isEnabled = isDataBarEnabled
 	list[#list + 1] = dataBarGap
 
-	if unit == "target" or unit == "targettarget" then
-		local function isDataBarDetached()
-			return isDataBarEnabled() and getValue(unit, { "dataBar", "detached" }, dataBarDef.detached == true) == true
-		end
-
-		local dataBarDetached = checkbox(L["UFDataBarDetached"] or "Detach data bar", function()
-			return getValue(unit, { "dataBar", "detached" }, dataBarDef.detached == true) == true
-		end, function(val)
-			setValue(unit, { "dataBar", "detached" }, val and true or false)
-			refreshSelf()
-			refreshSettingsUI()
-		end, dataBarDef.detached == true, "dataBar", isDataBarEnabled)
-		dataBarDetached.field = "dataBarDetached"
-		list[#list + 1] = dataBarDetached
-
-		local detachedWidth = slider(L["UFDataBarWidth"] or "Data bar width", 10, 1000, 1, function()
-			return getValue(unit, { "dataBar", "detachedWidth" }, getValue(unit, { "width" }, def.width or MIN_WIDTH))
-		end, function(val)
-			debounced(unit .. "_detachedDataBarWidth", function()
-				setValue(unit, { "dataBar", "detachedWidth" }, math.min(1000, math.max(10, tonumber(val) or def.width or MIN_WIDTH)))
-				refreshSelf()
-			end)
-		end, def.width or MIN_WIDTH, "dataBar", true)
-		detachedWidth.isEnabled = isDataBarDetached
-		detachedWidth.isShown = isDataBarDetached
-		detachedWidth.field = "dataBarDetachedWidth"
-		list[#list + 1] = detachedWidth
-
-		local detachedHeight = slider(L["UFDataBarHeight"] or "Data bar height", 4, 1000, 1, function()
-			return getValue(unit, { "dataBar", "detachedHeight" }, getValue(unit, { "dataBar", "height" }, dataBarDef.height or 16))
-		end, function(val)
-			debounced(unit .. "_detachedDataBarHeight", function()
-				setValue(unit, { "dataBar", "detachedHeight" }, math.min(1000, math.max(4, tonumber(val) or dataBarDef.height or 16)))
-				refreshSelf()
-			end)
-		end, dataBarDef.detachedHeight or dataBarDef.height or 16, "dataBar", true)
-		detachedHeight.isEnabled = isDataBarDetached
-		detachedHeight.isShown = isDataBarDetached
-		detachedHeight.field = "dataBarDetachedHeight"
-		list[#list + 1] = detachedHeight
-
-		local detachedOffsetX = slider(L["Offset X"] or "Offset X", -800, 800, 1, function()
-			return getValue(unit, { "dataBar", "detachedOffset", "x" }, 0)
-		end, function(val)
-			debounced(unit .. "_detachedDataBarOffsetX", function()
-				setValue(unit, { "dataBar", "detachedOffset", "x" }, tonumber(val) or 0)
-				refreshSelf()
-			end)
-		end, 0, "dataBar", true)
-		detachedOffsetX.isEnabled = isDataBarDetached
-		detachedOffsetX.isShown = isDataBarDetached
-		detachedOffsetX.field = "dataBarDetachedOffsetX"
-		list[#list + 1] = detachedOffsetX
-
-		local detachedOffsetY = slider(L["Offset Y"] or "Offset Y", -800, 800, 1, function()
-			return getValue(unit, { "dataBar", "detachedOffset", "y" }, 0)
-		end, function(val)
-			debounced(unit .. "_detachedDataBarOffsetY", function()
-				setValue(unit, { "dataBar", "detachedOffset", "y" }, tonumber(val) or 0)
-				refreshSelf()
-			end)
-		end, 0, "dataBar", true)
-		detachedOffsetY.isEnabled = isDataBarDetached
-		detachedOffsetY.isShown = isDataBarDetached
-		detachedOffsetY.field = "dataBarDetachedOffsetY"
-		list[#list + 1] = detachedOffsetY
+	local function isDataBarDetached()
+		return isDataBarEnabled() and getValue(unit, { "dataBar", "detached" }, dataBarDef.detached == true) == true
 	end
+
+	local dataBarDetached = checkbox(L["UFDataBarDetached"] or "Detach data bar", function()
+		return getValue(unit, { "dataBar", "detached" }, dataBarDef.detached == true) == true
+	end, function(val)
+		setValue(unit, { "dataBar", "detached" }, val and true or false)
+		refreshSelf()
+		refreshSettingsUI()
+	end, dataBarDef.detached == true, "dataBar", isDataBarEnabled)
+	dataBarDetached.field = "dataBarDetached"
+	list[#list + 1] = dataBarDetached
+
+	local detachedWidth = slider(L["UFDataBarWidth"] or "Data bar width", 10, 1000, 1, function()
+		return getValue(unit, { "dataBar", "detachedWidth" }, getValue(unit, { "width" }, def.width or MIN_WIDTH))
+	end, function(val)
+		debounced(unit .. "_detachedDataBarWidth", function()
+			setValue(unit, { "dataBar", "detachedWidth" }, math.min(1000, math.max(10, tonumber(val) or def.width or MIN_WIDTH)))
+			refreshSelf()
+		end)
+	end, def.width or MIN_WIDTH, "dataBar", true)
+	detachedWidth.isEnabled = isDataBarDetached
+	detachedWidth.isShown = isDataBarDetached
+	detachedWidth.field = "dataBarDetachedWidth"
+	list[#list + 1] = detachedWidth
+
+	local detachedHeight = slider(L["UFDataBarHeight"] or "Data bar height", 4, 1000, 1, function()
+		return getValue(unit, { "dataBar", "detachedHeight" }, getValue(unit, { "dataBar", "height" }, dataBarDef.height or 16))
+	end, function(val)
+		debounced(unit .. "_detachedDataBarHeight", function()
+			setValue(unit, { "dataBar", "detachedHeight" }, math.min(1000, math.max(4, tonumber(val) or dataBarDef.height or 16)))
+			refreshSelf()
+		end)
+	end, dataBarDef.detachedHeight or dataBarDef.height or 16, "dataBar", true)
+	detachedHeight.isEnabled = isDataBarDetached
+	detachedHeight.isShown = isDataBarDetached
+	detachedHeight.field = "dataBarDetachedHeight"
+	list[#list + 1] = detachedHeight
+
+	local detachedOffsetX = slider(L["Offset X"] or "Offset X", -800, 800, 1, function()
+		return getValue(unit, { "dataBar", "detachedOffset", "x" }, 0)
+	end, function(val)
+		debounced(unit .. "_detachedDataBarOffsetX", function()
+			setValue(unit, { "dataBar", "detachedOffset", "x" }, tonumber(val) or 0)
+			refreshSelf()
+		end)
+	end, 0, "dataBar", true)
+	detachedOffsetX.isEnabled = isDataBarDetached
+	detachedOffsetX.isShown = isDataBarDetached
+	detachedOffsetX.field = "dataBarDetachedOffsetX"
+	list[#list + 1] = detachedOffsetX
+
+	local detachedOffsetY = slider(L["Offset Y"] or "Offset Y", -800, 800, 1, function()
+		return getValue(unit, { "dataBar", "detachedOffset", "y" }, 0)
+	end, function(val)
+		debounced(unit .. "_detachedDataBarOffsetY", function()
+			setValue(unit, { "dataBar", "detachedOffset", "y" }, tonumber(val) or 0)
+			refreshSelf()
+		end)
+	end, 0, "dataBar", true)
+	detachedOffsetY.isEnabled = isDataBarDetached
+	detachedOffsetY.isShown = isDataBarDetached
+	detachedOffsetY.field = "dataBarDetachedOffsetY"
+	list[#list + 1] = detachedOffsetY
 
 	list[#list + 1] = checkbox(
 		L["Use class color (players)"] or "Use class color (players)",
@@ -4617,6 +4613,9 @@ local function buildUnitSettings(unit)
 	local function isPortraitEnabled() return getValue(unit, { "portrait", "enabled" }, portraitDef.enabled == true) == true end
 	local function isPortraitDetached() return getValue(unit, { "portrait", "detached" }, portraitDef.detached == true) == true end
 	local function isDetachedPortraitEnabled() return isPortraitEnabled() and isPortraitDetached() end
+	local function isDetachedPortraitBorderEnabled()
+		return getValue(unit, { "portrait", "detachedBorderEnabled" }, portraitDef.detachedBorderEnabled ~= false) ~= false
+	end
 
 	list[#list + 1] = checkbox(L["Enable portrait"] or "Enable portrait", isPortraitEnabled, function(val)
 		setValue(unit, { "portrait", "enabled" }, val and true or false)
@@ -4702,6 +4701,31 @@ local function buildUnitSettings(unit)
 	portraitDetachedSize.isShown = isPortraitDetached
 	portraitDetachedSize.newTagID = "ufPortraitDetachedSize"
 	list[#list + 1] = portraitDetachedSize
+
+	local portraitDetachedBorder = checkbox(L["Show border"] or "Show border", isDetachedPortraitBorderEnabled, function(val)
+		setValue(unit, { "portrait", "detachedBorderEnabled" }, val and true or false)
+		refreshSelf()
+	end, portraitDef.detachedBorderEnabled ~= false, "portrait")
+	portraitDetachedBorder.isEnabled = function() return isDetachedPortraitEnabled() and isBorderEnabled() end
+	portraitDetachedBorder.isShown = isPortraitDetached
+	portraitDetachedBorder.newTagID = "ufPortraitDetachedBorderEnabled"
+	list[#list + 1] = portraitDetachedBorder
+
+	local portraitDetachedBorderOffset = slider(L["Border offset"] or "Border offset", 0, 64, 1, function()
+		local offset = getValue(unit, { "portrait", "detachedBorderOffset" }, nil)
+		if offset ~= nil then return offset end
+		local border = getValue(unit, { "border" }, def.border or {})
+		return border.offset or (def.border and def.border.offset) or border.inset or (def.border and def.border.inset) or border.edgeSize or (def.border and def.border.edgeSize) or 1
+	end, function(val)
+		debounced(unit .. "_portraitDetachedBorderOffset", function()
+			setValue(unit, { "portrait", "detachedBorderOffset" }, val or 0)
+			refreshSelf()
+		end)
+	end, (def.border and (def.border.offset or def.border.inset or def.border.edgeSize)) or 1, "portrait", true)
+	portraitDetachedBorderOffset.isEnabled = function() return isDetachedPortraitEnabled() and isBorderEnabled() and isDetachedPortraitBorderEnabled() end
+	portraitDetachedBorderOffset.isShown = isPortraitDetached
+	portraitDetachedBorderOffset.newTagID = "ufPortraitDetachedBorderOffset"
+	list[#list + 1] = portraitDetachedBorderOffset
 
 	local portraitDetachedOffsetX = slider(L["Offset X"] or "Offset X", -OFFSET_RANGE, OFFSET_RANGE, 1, function()
 		local offset = getValue(unit, { "portrait", "detachedOffset", "x" }, nil)

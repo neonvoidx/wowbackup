@@ -18,6 +18,7 @@
 --   HDGR_ReagentsDB            -> Reagents:Get / GetAll
 --   HDGR_FacetDB               -> Facets:Get / GetAll
 --   HDGR_FacetVocab            -> Facets:GetVocab
+--   HDGR_PetSizeDB             -> PetSizes:Get  (sparse; nil = never measured)
 --   HDGR_StyleDefinitions      -> Styles:GetDefinitions
 --   HDGR_CollectionDefinitions -> Collections:GetDefinitions
 --   HDGR_TrainersDB            -> Trainers:GetAll / GetByProfession / GetByProfessionAndExpansion
@@ -88,14 +89,17 @@ function S.VendorAugment:_EnsureIndexes()
     table.sort(ids)
     for _, npcID in ipairs(ids) do
         local v = t[npcID]
-        -- Name index: first occurrence wins for unqualified name; later
-        -- collisions become zone-suffixed.
-        if byName[v.name] then
-            byName[v.name .. "/" .. v.zone] = npcID
-            byName[v.name .. " (" .. v.zone .. ")"] = npcID
-        else
-            byName[v.name] = npcID
-        end
+        -- Name index. EVERY row gets its zone-qualified keys, not just collisions --
+        -- the first row used to get the bare name alone, so ResolveName(name, zone)
+        -- MISSED for it and fell through to the unqualified fallback, quietly answering
+        -- with whichever npcID sorted lowest. With a vendor in both housing
+        -- neighborhoods that meant the pane showed the wrong zone AND the wrong coords
+        -- to a player standing next to the right one (2026-08-24).
+        -- First occurrence still wins the bare name, so the zone-less fallback is
+        -- unchanged for the single-zone majority.
+        byName[v.name .. "/" .. v.zone]         = byName[v.name .. "/" .. v.zone] or npcID
+        byName[v.name .. " (" .. v.zone .. ")"] = byName[v.name .. " (" .. v.zone .. ")"] or npcID
+        if not byName[v.name] then byName[v.name] = npcID end
         -- Base-name index: curator names use "Name (Zone)" but the housing
         -- catalog reports the bare in-game name. Key base name by zone so a
         -- bare catalog name resolves to the right npcID (additive, never
@@ -384,6 +388,25 @@ function S.Facets:GetVocab()
 end
 
 -- ============================================================================
+-- PetSizes  (HDGR_PetSizeDB)
+-- ============================================================================
+-- Rendered pet height, for the Decor tab's Pets browser. The runtime has no
+-- height to offer: GetActiveBoundingBox and CreatureModelData.GeoBox are the
+-- same number and union over ANIMATION TRAVEL, so a jumping model reports the
+-- volume it moves through. These come from the M2 vertex array instead.
+
+---@class HDG.StaticData.PetSizes
+S.PetSizes = S.PetSizes or {}
+
+-- nil for a species that was never measured. A miss is a VALID answer -- callers
+-- render the row without a height rather than substituting one, because there is
+-- nothing honest to substitute.
+function S.PetSizes:Get(speciesID)
+    if not speciesID then return nil end
+    return _table("HDGR_PetSizeDB")[speciesID]
+end
+
+-- ============================================================================
 -- Styles  (HDGR_StyleDefinitions)
 -- ============================================================================
 
@@ -481,4 +504,112 @@ end
 -- Get a built scheme by name (nil if the name isn't a registered scheme).
 function S.Schemes:Get(name)
     return _table("HDGR_SchemeConstants")[name]
+end
+
+-- ============================================================================
+-- PetFacts  (HDGR_PetTaxonomyDB / PetVoiceDB / PetAnimDB / PetSceneDecorDB / PetSizeDB)
+-- ============================================================================
+-- The Menagerie's data facade (HDGR_MENAGERIE_LATTICE_PLAN_2026-08-24 section 1). The
+-- raw _G.HDGR_Pet*DB tables are read NOWHERE else; reverse indexes (kind counts,
+-- clade counts, voice sharing) build lazily once and rebuild only if the DB
+-- table reference changes (test seam -- same idiom as Recipes above).
+
+---@class HDG.StaticData.PetFacts
+S.PetFacts = S.PetFacts or {}
+
+local _pfKinds, _pfClades, _pfVoiceShare, _pfSource
+
+local function _ensurePetIndexes()
+    local db = _table("HDGR_PetTaxonomyDB")
+    if _pfSource == db then return end
+    _pfKinds, _pfClades, _pfVoiceShare = {}, {}, {}
+    for _, row in pairs(db) do
+        local kind, clade = row[1], row[2]
+        local k = _pfKinds[kind]
+        if not k then
+            k = { count = 0, clade = clade }
+            _pfKinds[kind] = k
+        end
+        k.count = k.count + 1
+        _pfClades[clade] = (_pfClades[clade] or 0) + 1
+    end
+    for _, e in pairs(_table("HDGR_PetVoiceDB").species) do
+        _pfVoiceShare[e.v] = (_pfVoiceShare[e.v] or 0) + 1
+    end
+    _pfSource = db
+end
+
+-- kind, clade for a species. nil, nil = species not in the taxonomy (a NEW pet
+-- since the last data build) -- a real state the UI shows as "?", never a guess.
+function S.PetFacts:Taxonomy(speciesID)
+    local row = _table("HDGR_PetTaxonomyDB")[speciesID]  -- exception(nullable): post-build species miss
+    if not row then return nil, nil end
+    return row[1], row[2]
+end
+
+-- nil = no idle sound recorded (NOT proven-silent; see build_pet_sound.py header).
+function S.PetFacts:Voice(speciesID)
+    local e = _table("HDGR_PetVoiceDB").species[speciesID]  -- exception(nullable): absence means quiet
+    if not e then return nil end
+    _ensurePetIndexes()
+    local v = _table("HDGR_PetVoiceDB").voices[e.v]
+    -- `word` is deliberately NOT exposed. The DB carries it (the CASC folder
+    -- stem the kits came from) but it is a build identifier, not English -- it
+    -- reads as "bloodfangwidowspider" as often as "crab", and the UI shipped it
+    -- raw once already. Anything that wants to name a voice needs a curated
+    -- vocabulary first; the facade not offering it keeps that decision here.
+    return { kits = v.kits, durs = v.durs, index = e.v,
+             delayMin = e.d1, delayMax = e.d2,
+             sharedWith = _pfVoiceShare[e.v] - 1 }
+end
+
+-- The model's behaviour record: { idle = {{animID, variation, pct, ms},...},
+-- also = {animID,...}, glow = {lights, particles, additive}, labels? }.
+-- SHARED reference -- callers read, never mutate. nil = model unparsed (6 of 967).
+function S.PetFacts:AnimProfile(speciesID)
+    local db = _table("HDGR_PetAnimDB")
+    local fdid = db.species[speciesID]  -- exception(nullable): species without a model join
+    if not fdid then return nil end
+    local m = db.models[fdid]           -- exception(nullable): parseError models are not emitted
+    return m
+end
+
+function S.PetFacts:Height(speciesID)
+    return _table("HDGR_PetSizeDB")[speciesID]  -- exception(nullable): PetSizeDB miss for a post-build species
+end
+
+function S.PetFacts:SceneScale(speciesID)
+    -- SizeDB height / vertex extent: a ModelScene actor renders the RAW vertex
+    -- mesh (no DB2 scale factor applies), so this is what SetRequestedScale
+    -- needs for the actor to render at the pet's true world height.
+    local row = _table("HDGR_PetSceneScaleDB")[speciesID]
+    return row and row[1] or 1.0  -- exception(optional): unmeasured mesh; emit convention
+end
+
+function S.PetFacts:SceneGirth(speciesID)
+    -- Larger horizontal mesh span, world units: the camera frames on
+    -- max(height, girth) so long bodies (snakes) are not cropped.
+    local row = _table("HDGR_PetSceneScaleDB")[speciesID]
+    return row and row[3] or 0  -- exception(optional): unmeasured mesh; emit convention
+end
+
+function S.PetFacts:SceneLift(speciesID)
+    -- -meshLowestZ x sceneScale: added to the seat Z it drops a hovering
+    -- mesh's bottom onto the seat (fliers are authored above their origin).
+    local row = _table("HDGR_PetSceneScaleDB")[speciesID]
+    return row and row[2] or 0  -- exception(optional): unmeasured mesh; emit convention
+end
+
+function S.PetFacts:KindIndex()
+    _ensurePetIndexes()
+    return _pfKinds
+end
+
+function S.PetFacts:CladeIndex()
+    _ensurePetIndexes()
+    return _pfClades
+end
+
+function S.PetFacts:SceneDecor()
+    return _table("HDGR_PetSceneDecorDB")
 end

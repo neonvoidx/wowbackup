@@ -336,14 +336,16 @@ function layout:Initialize(frame)
     classIcon.Texture.useModernBorder = true
 
     if not classIcon.Texture.ClassIconBorderHook then
-        hooksecurefunc(classIcon.Texture, "SetTexture", function(self, t)
+        local function UpdateClassIconBorder(self, t)
             if not t or not self.useModernBorder then
                 classIconBorder:Hide()
             else
                 classIconBorder:Hide()
                 classIconBorder:Show()
             end
-        end)
+        end
+        hooksecurefunc(classIcon.Texture, "SetTexture", UpdateClassIconBorder)
+        hooksecurefunc(classIcon.Texture, "SetAtlas", UpdateClassIconBorder)
         classIcon.Texture.ClassIconBorderHook = true
     end
 
@@ -500,6 +502,8 @@ function layout:Initialize(frame)
     f:SetPoint("CENTER", frame.HealthBar, "CENTER", -1, -5)
     f:SetSize(42, 42)
     f:SetDrawLayer("OVERLAY", 7)
+
+    frame:SetupDisconnectedIcon(frame.HealthBar, 55, true)
 
     local frameTexture = frame.frameTexture
     frameTexture:SetTexture("Interface\\AddOns\\sArena_Reloaded\\Textures\\UI-HUD-UnitFrame-Player-PortraitOff-Large.tga")

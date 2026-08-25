@@ -1572,7 +1572,7 @@ local function getEffectiveRankWidth(config)
 	local rankChars = 3
 	if config.prefixRankInName == true then
 		local fontSize = clampNumber(config.fontSize, 8, 24, DEFAULT_WINDOW.fontSize)
-		return math.min(80, math.max(8, math.ceil(rankChars * fontSize * 0.62) + 2))
+		return math.min(80, math.max(8, math.ceil((rankChars + 1) * fontSize * 0.62) + 2))
 	end
 	local rankFontSize = clampNumber(config.rankFontSize, 8, 24, DEFAULT_WINDOW.rankFontSize)
 	return math.min(80, math.max(18, math.ceil(rankChars * rankFontSize * 0.9) + 6))
@@ -1934,6 +1934,11 @@ function DamageMeter:SetTemporarySessionType(index, sessionType)
 	end)
 	self:InvalidateLiveEventWatch()
 	self:ScheduleRefresh()
+end
+
+function DamageMeter:ToggleTemporarySessionType(index)
+	local currentSessionType = self:GetEffectiveSessionType(index) or self:GetConfig(index).sessionType
+	self:SetTemporarySessionType(index, currentSessionType == "overall" and "current" or "overall")
 end
 
 function DamageMeter:SetTemporarySessionID(index, sessionID, sessionName, durationSeconds)
@@ -3504,6 +3509,7 @@ function DamageMeter:GetRowColorState(frame, config, classFilename)
 		nr = nr, ng = ng, nb = nb, na = na,
 		vr = vr, vg = vg, vb = vb, va = va,
 		prr = prr, prg = prg, prb = prb, pra = pra,
+		prefixRankColorHex = colorToHex({ r = prr, g = prg, b = prb, a = pra }),
 		rr = rr, rg = rg, rb = rb, ra = ra,
 		rbr = rbr, rbg = rbg, rbb = rbb, rba = rba,
 		bbr = bbr, bbg = bbg, bbb = bbb, bba = bba,
@@ -3834,7 +3840,7 @@ function DamageMeter:ApplyRowTextLayout(row, config, forceRankColumn)
 	local showRankColumn = config.showRanks ~= false and rankWidth > 0
 	row.rank:SetWidth(rankWidth)
 	row.rank:ClearAllPoints()
-	setShownIfChanged(row.rank, showRankColumn)
+	setShownIfChanged(row.rank, showRankColumn and not rankPrefixText)
 	row.iconFrame:SetSize(iconSize, iconSize)
 	row.iconFrame:ClearAllPoints()
 	if iconSize > 0 and showRankColumn and not rankPrefixText then
@@ -3919,11 +3925,11 @@ function DamageMeter:ApplyRowValueWidth(row, config, damageMeterType, forceRankC
 	row._damageMeterValueLayoutMode = getRowValueLayout(config)
 
 	local frameWidth = addon.PixelUtil.Snap(clampNumber(config.width, 100, 700, DEFAULT_WINDOW.width), row)
-	local leftInset, rightInset, _, rankWidth, rankGap = getRowTextInsets(config, forceRankColumn)
+	local leftInset, rightInset, _, rankWidth = getRowTextInsets(config, forceRankColumn)
 	local availableWidth = math.max(1, (frameWidth - 8) - leftInset - rightInset)
 	local nameGap = config.showNames == false and 0 or 4
 	local rankPrefixText = useTextRankPrefix(config)
-	local rankPrefixWidth = rankPrefixText and math.max(0, rankWidth + rankGap) or 0
+	local rankPrefixWidth = rankPrefixText and rankWidth or 0
 	local valueFontSize = clampNumber(config.valueFontSize, 8, 24, DEFAULT_WINDOW.valueFontSize)
 	local useValueColumns = getRowValueLayout(config) == "columns"
 	local minNameWidth = (config.showNames == false or useValueColumns) and 0 or clampNumber(config.minNameWidth, 0, 180, DEFAULT_WINDOW.minNameWidth)
@@ -3960,7 +3966,7 @@ function DamageMeter:ApplyRowValueWidth(row, config, damageMeterType, forceRankC
 		end
 		local nameWidth = math.max(0, availableWidth - columnsWidth - nameValueGap - rankPrefixWidth)
 		row.value:SetWidth(amountWidth)
-		row.name:SetWidth(nameWidth)
+		row.name:SetWidth(nameWidth + rankPrefixWidth)
 		row.name._damageMeterNameLayoutWidth = nameWidth
 		row.rank:SetWidth(rankWidth)
 		if row.rateValue then row.rateValue:SetWidth(rateWidth) end
@@ -4009,12 +4015,7 @@ function DamageMeter:ApplyRowValueWidth(row, config, damageMeterType, forceRankC
 			row.value:SetJustifyH("RIGHT")
 			previousColumn = row.value
 		end
-		if rankPrefixText then
-			row.rank:SetPoint(anchorPoint("LEFT", nameV), row.textArea, anchorPoint("LEFT", nameV), nameOffsetX, nameOffsetY)
-			row.name:SetPoint("LEFT", row.rank, "RIGHT", rankGap, 0)
-		else
-			row.name:SetPoint(anchorPoint("LEFT", nameV), row.textArea, anchorPoint("LEFT", nameV), nameOffsetX, nameOffsetY)
-		end
+		row.name:SetPoint(anchorPoint("LEFT", nameV), row.textArea, anchorPoint("LEFT", nameV), nameOffsetX, nameOffsetY)
 		if previousColumn then
 			row.name:SetPoint(anchorPoint("RIGHT", nameV), previousColumn, anchorPoint("LEFT", nameV), -nameValueGap + nameOffsetX, nameOffsetY)
 		else
@@ -4048,7 +4049,7 @@ function DamageMeter:ApplyRowValueWidth(row, config, damageMeterType, forceRankC
 	local valueWidth = math.min(math.max(minValueWidth, valueTargetWidth), maxValueWidth)
 	local nameWidth = math.max(minNameWidth, availableWidth - valueWidth - nameGap - rankPrefixWidth)
 	row.value:SetWidth(valueWidth)
-	row.name:SetWidth(nameWidth)
+	row.name:SetWidth(nameWidth + rankPrefixWidth)
 	row.name._damageMeterNameLayoutWidth = nameWidth
 	row.rank:SetWidth(rankWidth)
 	row.value:SetShown(true)
@@ -4066,19 +4067,13 @@ function DamageMeter:ApplyRowValueWidth(row, config, damageMeterType, forceRankC
 	local nameV = normalizeAnchorV(config.nameAnchorV)
 	row.value:SetPoint(anchorPoint(valueH, valueV), row.textArea, anchorPoint(valueH, valueV), clampNumber(config.valueOffsetX, -200, 200, DEFAULT_WINDOW.valueOffsetX), clampNumber(config.valueOffsetY, -200, 200, DEFAULT_WINDOW.valueOffsetY))
 	row.value:SetJustifyH(justifyFromAnchor(valueH))
-	if rankPrefixText then
-		local rankLeft = anchorPoint("LEFT", nameV)
-		row.rank:SetPoint(rankLeft, row.textArea, rankLeft, clampNumber(config.nameOffsetX, -200, 200, DEFAULT_WINDOW.nameOffsetX), clampNumber(config.nameOffsetY, -200, 200, DEFAULT_WINDOW.nameOffsetY))
-		row.name:SetPoint(anchorPoint("LEFT", nameV), row.rank, anchorPoint("RIGHT", nameV), rankGap, 0)
-	else
-		row.name:SetPoint(anchorPoint(nameH, nameV), row.textArea, anchorPoint(nameH, nameV), clampNumber(config.nameOffsetX, -200, 200, DEFAULT_WINDOW.nameOffsetX), clampNumber(config.nameOffsetY, -200, 200, DEFAULT_WINDOW.nameOffsetY))
-	end
+	row.name:SetPoint(anchorPoint(nameH, nameV), row.textArea, anchorPoint(nameH, nameV), clampNumber(config.nameOffsetX, -200, 200, DEFAULT_WINDOW.nameOffsetX), clampNumber(config.nameOffsetY, -200, 200, DEFAULT_WINDOW.nameOffsetY))
 	row.name:SetJustifyH(justifyFromAnchor(nameH))
 end
 
 function DamageMeter:ApplyRankText(row, rowIndex, config)
 	local rankWidth = getEffectiveRankWidth(config)
-	if config.showRanks == false or rankWidth <= 0 then
+	if config.showRanks == false or useTextRankPrefix(config) or rankWidth <= 0 then
 		row.rank:SetText("")
 		return
 	end
@@ -4260,6 +4255,11 @@ function DamageMeter:EnsureContextMenu()
 		self:HideContextMenu()
 		self:PromptResetData()
 	end)
+	frame.sessionToggleButton = self:CreateContextMenuIconButton(frame, "C", string.format("%s / %s", L["damageMeterCurrent"] or "Current", L["damageMeterOverall"] or "Overall"), function()
+		local index = frame.index or 1
+		self:HideContextMenu()
+		self:ToggleTemporarySessionType(index)
+	end)
 	frame.historyButton = self:CreateContextMenuIconButton(frame, "H", L["damageMeterShowHistory"] or "Show history", function()
 		local owner = frame.owner or frame
 		local index = frame.index or 1
@@ -4395,9 +4395,11 @@ function DamageMeter:RefreshContextMenu(owner, index, keepAnchor)
 	local pad = CONTEXT_MENU_PADDING
 	local y = -pad
 	local resizeOutsideEditMode = self:IsOutsideEditModeControlsEnabled()
+	local sessionType = self:GetEffectiveSessionType(index) or self:GetConfig(index).sessionType
+	frame.sessionToggleButton.text:SetText(sessionType == "overall" and "O" or "C")
 	frame.title:ClearAllPoints()
 	frame.title:SetPoint("TOPLEFT", pad, y)
-	frame.title:SetPoint("TOPRIGHT", resizeOutsideEditMode and -106 or -84, y)
+	frame.title:SetPoint("TOPRIGHT", resizeOutsideEditMode and -128 or -106, y)
 	frame.title:SetHeight(18)
 	frame.clearButton:ClearAllPoints()
 	frame.clearButton:SetPoint("TOPRIGHT", -pad, y + 1)
@@ -4405,8 +4407,10 @@ function DamageMeter:RefreshContextMenu(owner, index, keepAnchor)
 	frame.historyButton:SetPoint("RIGHT", frame.clearButton, "LEFT", -4, 0)
 	frame.resetButton:ClearAllPoints()
 	frame.resetButton:SetPoint("RIGHT", frame.historyButton, "LEFT", -4, 0)
+	frame.sessionToggleButton:ClearAllPoints()
+	frame.sessionToggleButton:SetPoint("RIGHT", frame.resetButton, "LEFT", -4, 0)
 	frame.resizeLockButton:ClearAllPoints()
-	frame.resizeLockButton:SetPoint("RIGHT", frame.resetButton, "LEFT", -4, 0)
+	frame.resizeLockButton:SetPoint("RIGHT", frame.sessionToggleButton, "LEFT", -4, 0)
 	frame.resizeLockButton:SetShown(resizeOutsideEditMode)
 	if resizeOutsideEditMode then self:UpdateResizeLockIcon(frame.resizeLockButton.icon) end
 	y = y - 24
@@ -5793,8 +5797,7 @@ function DamageMeter:EnsureWindow(index)
 	status:SetScript("OnClick", function(owner, button)
 		if DamageMeter:GetConfig(index).showFooterQuickSwitch == false then return end
 		if button == "RightButton" then
-			local currentSessionType = DamageMeter:GetEffectiveSessionType(index) or DamageMeter:GetConfig(index).sessionType
-			DamageMeter:SetTemporarySessionType(index, currentSessionType == "overall" and "current" or "overall")
+			DamageMeter:ToggleTemporarySessionType(index)
 			return
 		end
 		DamageMeter:CycleQuickDamageMeterType(index, 1)
@@ -6507,15 +6510,6 @@ function DamageMeter:RefreshWindow(index, shared, sessionCache, skipResizeContro
 
 	local forceRankColumn = false
 	local reportAvailable = self:IsReportDataAvailable(session, orderedSources, damageMeterType, config, math.min(visibleRows, #orderedSources))
-	if config.showRanks ~= false and config.prefixRankInName == true then
-		for entryIndex = 1, contentRows do
-			local source = orderedSources[entryIndex]
-			if source and isSecret(source.name) then
-				forceRankColumn = true
-				break
-			end
-		end
-	end
 
 	self:ApplyWindowStyle(index, contentRows, forceRankColumn)
 	local displayIndices = buildViewportAwareDisplayIndices(frame, config, contentRows, playerSourceIndex, highestBottom)
@@ -6567,7 +6561,6 @@ function DamageMeter:RefreshWindow(index, shared, sessionCache, skipResizeContro
 				local valueText = valueFormatter(source, percent, valueAbbreviation, valueShowPercent, valueUseParentheses, valueSeparator)
 				local amountText, rateText, percentText = formatRowValueColumnTexts(source, percent, damageMeterType, config)
 
-				self:ApplyRankText(row, sourceIndex, config)
 				row.sourceData = source
 			self:ApplyBarBackground(row, config, source.classFilename, colors)
 			self:ApplyRowBorder(row, config, source.classFilename, colors)
@@ -6575,14 +6568,16 @@ function DamageMeter:RefreshWindow(index, shared, sessionCache, skipResizeContro
 			self:ApplyBarBorder(row, config, source.classFilename, colors)
 			if config.showIcons ~= false then applySourceIcon(row.icon, source, inFollowerDungeon, damageMeterType, config) end
 			self:ApplyRowValueWidth(row, config, damageMeterType, forceRankColumn)
+			self:ApplyRankText(row, sourceIndex, config)
 			local displayName = formatDisplayName(source, config)
-			row.name:SetText(self:TruncateNameWithoutEllipsis(displayName, row.name, config))
+			local nameText = self:TruncateNameWithoutEllipsis(displayName, row.name, config)
 			setTextColorIfChanged(row.name, colors.nr, colors.ng, colors.nb, colors.na)
-				if config.prefixRankInName == true then
-					setTextColorIfChanged(row.rank, colors.prr, colors.prg, colors.prb, colors.pra)
-				else
-					setTextColorIfChanged(row.rank, colors.rr, colors.rg, colors.rb, colors.ra)
-				end
+			if useTextRankPrefix(config) then
+				row.name:SetFormattedText("|c%s%d.|r %s", colors.prefixRankColorHex, sourceIndex, nameText)
+			else
+				row.name:SetText(nameText)
+			end
+			if config.prefixRankInName ~= true then setTextColorIfChanged(row.rank, colors.rr, colors.rg, colors.rb, colors.ra) end
 				if row._damageMeterUseValueColumns then
 					row.value:SetText(amountText)
 					if row.rateValue then row.rateValue:SetText(rateText) end
@@ -7940,7 +7935,7 @@ function DamageMeter:BuildWindowSettings(index)
 		dropdownSetting(L["damageMeterRankAnchorV"] or "Rank vertical anchor", function() return normalizeAnchorV(cfg().rankAnchorV) end, function(value) self:SetConfigValue(index, "rankAnchorV", normalizeAnchorV(value)) end, buildVerticalAnchorOptions(), rankingId, 120, rankColumnEnabled),
 		sliderSetting(L["damageMeterRankOffsetX"] or "Rank X offset", function() return cfg().rankOffsetX end, function(value) self:SetConfigValue(index, "rankOffsetX", clampNumber(value, -200, 200, DEFAULT_WINDOW.rankOffsetX)) end, -200, 200, 1, rankingId, rankColumnEnabled),
 		sliderSetting(L["damageMeterRankOffsetY"] or "Rank Y offset", function() return cfg().rankOffsetY end, function(value) self:SetConfigValue(index, "rankOffsetY", clampNumber(value, -200, 200, DEFAULT_WINDOW.rankOffsetY)) end, -200, 200, 1, rankingId, rankColumnEnabled),
-		sliderSetting(L["damageMeterRankGap"] or "Rank gap", function() return cfg().rankGap end, function(value) self:SetConfigValue(index, "rankGap", clampNumber(value, -50, 50, DEFAULT_WINDOW.rankGap)) end, -50, 50, 1, rankingId, rankingEnabled),
+		sliderSetting(L["damageMeterRankGap"] or "Rank gap", function() return cfg().rankGap end, function(value) self:SetConfigValue(index, "rankGap", clampNumber(value, -50, 50, DEFAULT_WINDOW.rankGap)) end, -50, 50, 1, rankingId, rankColumnEnabled, rankColumnEnabled),
 		{ name = L["Background"] or "Backdrop", kind = SettingType.Collapsible, id = mediaId, defaultCollapsed = true },
 		checkboxSetting(L["damageMeterBackdropUseCustomTexture"] or "Custom texture", function() return cfg().backdropUseCustomTexture == true end, function(value)
 			self:SetConfigValue(index, "backdropUseCustomTexture", value)

@@ -1,5 +1,5 @@
 
-PLATYNATOR_CURRENT_PROFILE = "Zenk"
+PLATYNATOR_CURRENT_PROFILE = "Blizz+"
 PLATYNATOR_LAST_INSTANCE = {
 ["inInstance"] = false,
 ["level"] = 90,

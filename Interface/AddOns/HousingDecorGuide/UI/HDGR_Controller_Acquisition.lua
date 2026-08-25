@@ -79,8 +79,7 @@ local function _wireItemRow(row, ed)
         -- Shift-click links the item in chat (active editbox, or opens chat);
         -- mirrors the Decor browser row. A plain click selects.
         if IsShiftKeyDown() then
-            local _, link = C_Item.GetItemInfo(itemID)  -- exception(boundary): itemLink nil on cold item cache
-            if link then _G.ChatFrameUtil.InsertLink(link) end
+            HDG.UI.LinkItem(itemID)
             return
         end
         CH.Mechanics.SetUITransientView("acquisition", "selectedItemID", itemID)
@@ -515,6 +514,9 @@ function AcquisitionController:_wireAchievementHyperlinks(rootFrame)
     hyperHost:SetScript("OnHyperlinkClick", function(_, link)
         local achID = _achievementForItem(_parseAchLink(link))
         if not achID then return end
+        -- ShowUIPanel refuses insecure callers in combat (CheckProtectedFunctionsAllowed)
+        -- and blames the addon by name in the red error. Same guard the mapAllBtn uses.
+        if InCombatLockdown() then return end
         ShowAchievementFrameForAchievement(achID)  -- canonical Blizzard path (same as SetItemRef)
     end)
     hyperHost:SetScript("OnHyperlinkEnter", function(self, link)

@@ -198,6 +198,28 @@ function addon.IsMUIStyledCooldown(cooldown)
 end
 
 local addonLoadState = {}
+local ownershipProviderAddons = {
+    [C.Addon.HealerCCName] = true,
+    [C.Addon.MiniAurasName] = true,
+    [C.Addon.DominosName] = true,
+    [C.Addon.DominosCastName] = true,
+    [C.Addon.DominosConfigName] = true,
+    [C.Addon.Bartender4Name] = true,
+    [C.Addon.SArenaName] = true,
+    [C.Addon.TellMeWhenName] = true,
+    [C.Addon.MyDRsName] = true,
+    [C.Addon.ShackledName] = true,
+    [C.Addon.ShinyAurasName] = true,
+    [C.Addon.BetterBlizzFramesName] = true,
+    [C.Addon.BetterBlizzPlatesName] = true,
+    ElvUI = true,
+}
+
+local function IsOwnershipProviderAddon(addonName)
+    return ownershipProviderAddons[addonName] == true
+        or (type(addonName) == "string"
+            and addonName:find("ElvUI", 1, true) == 1)
+end
 
 local function QueryAddonLoaded(addonName)
     if type(addonName) ~= "string" or addonName == "" then
@@ -228,6 +250,10 @@ end
 
 local function getTableValue(tbl, key)
     return tbl[key]
+end
+
+local function setTableValue(tbl, key, value)
+    tbl[key] = value
 end
 
 local function getParent(frame)
@@ -394,6 +420,14 @@ function MCE:IsForbiddenCached(frame)
     return result
 end
 
+--- Cooldowns MiniCE does not track have no frameState entry to memoize into, yet
+--- this check runs first in every Cooldown hook -- so it was recomputed (a dozen
+--- pcalls) for every SetCooldown and Clear in the whole UI. The loss-of-control
+--- relation is structural: the parent key and the owner's lossOfControlCooldown
+--- field are set when the frame is built, so a verdict resolved on an
+--- inspectable frame stays valid for that frame's lifetime.
+local lossOfControlCache = setmetatable({}, weakMeta)
+
 function MCE:IsLossOfControlCooldownCached(cooldown)
     if not cooldown then return false end
     local ok, fs = pcall(getTableValue, frameState, cooldown)
@@ -401,11 +435,21 @@ function MCE:IsLossOfControlCooldownCached(cooldown)
     if fs then
         local cached = fs.isLoC
         if cached ~= nil then return cached end
-    end
-    local result = self:IsLossOfControlCooldown(cooldown)
-    if fs then
+
+        local result = self:IsLossOfControlCooldown(cooldown)
         fs.isLoC = result
+        return result
     end
+
+    local cachedOk, cached = pcall(getTableValue, lossOfControlCache, cooldown)
+    if cachedOk and cached ~= nil then return cached end
+
+    -- IsLossOfControlCooldown answers false for any frame it cannot inspect.
+    -- That answer is not a verdict, so it must never be memoized.
+    if not self:CanUseFrameAsTableKey(cooldown) then return false end
+
+    local result = self:IsLossOfControlCooldown(cooldown)
+    pcall(setTableValue, lossOfControlCache, cooldown, result)
     return result
 end
 
@@ -447,50 +491,6 @@ end
 
 function MCE:IsMiniAurasAvailable()
     return self:IsAddonLoadedCached(C.Addon.MiniAurasName)
-end
-
-function MCE:IsBetterBlizzPlatesAvailable()
-    if not self:IsAddonLoadedCached(C.Addon.BetterBlizzPlatesName) then
-        return false
-    end
-
-    local bbp = self:SafeTableGet(_G, "BBP")
-    if type(bbp) ~= "table"
-       or self:SafeTableGet(bbp, "isMidnight") ~= "12" then
-        return false
-    end
-
-    return CLIENT_INTERFACE_VERSION == C.Adapter.BetterBlizzPlates.InterfaceVersion
-end
-
-function MCE:IsBetterBlizzPlatesAuraCustomizationActive()
-    if not self:IsBetterBlizzPlatesAvailable() then return false end
-
-    local bbp = self:SafeTableGet(_G, "BBP")
-    local db = self:SafeTableGet(_G, "BetterBlizzPlatesDB")
-    return type(bbp) == "table"
-        and self:SafeTableGet(bbp, "isMidnight") == "12"
-        and type(db) == "table"
-        and self:SafeTableGet(db, "enableNameplateAuraCustomisation") == true
-end
-
-function MCE:IsBetterBlizzPlatesAuraCooldown(cooldown)
-    if not self:IsBetterBlizzPlatesAvailable()
-       or not self:CanUseFrameAsTableKey(cooldown) then
-        return false
-    end
-
-    local getParentMethod = self:SafeTableGet(cooldown, "GetParent")
-    if type(getParentMethod) ~= "function" then return false end
-
-    local parentOk, parent = pcall(getParent, cooldown)
-    if not parentOk or not self:CanUseFrameAsTableKey(parent) then return false end
-
-    local managedCooldown = self:SafeTableGet(parent, "bbpCooldown")
-    if not self:CanUseFrameAsTableKey(managedCooldown) then return false end
-
-    local sameOk, isSame = pcall(areSameValue, managedCooldown, cooldown)
-    return sameOk and isSame == true
 end
 
 function MCE:IsHealerCCAvailable()
@@ -539,6 +539,15 @@ function MCE:IsMyDRsAvailable()
     return self:IsAddonLoadedCached(C.Addon.MyDRsName)
 end
 
+function MCE:IsShackledAvailable()
+    if _G[C.Adapter.Shackled.BarFrameName] then
+        self:SetAddonLoadState(C.Addon.ShackledName, true)
+        return true
+    end
+
+    return self:IsAddonLoadedCached(C.Addon.ShackledName)
+end
+
 function MCE:IsElvUIAvailable()
     if type(_G.ElvUI) == "table" then
         self:SetAddonLoadState("ElvUI", true)
@@ -574,6 +583,52 @@ function MCE:IsShinyAurasAvailable()
     end
 
     return self:IsAddonLoadedCached(C.Addon.ShinyAurasName)
+end
+
+function MCE:IsBetterBlizzFramesAvailable()
+    if type(_G.BBF) == "table" then
+        self:SetAddonLoadState(C.Addon.BetterBlizzFramesName, true)
+        return true
+    end
+
+    return self:IsAddonLoadedCached(C.Addon.BetterBlizzFramesName)
+end
+
+function MCE:IsBetterBlizzPlatesAvailable()
+    if type(_G.BBP) == "table" then
+        self:SetAddonLoadState(C.Addon.BetterBlizzPlatesName, true)
+        return true
+    end
+
+    return self:IsAddonLoadedCached(C.Addon.BetterBlizzPlatesName)
+end
+
+function MCE:IsCategoryBlockedByAddonConflict(category)
+    if category == C.Categories.Unitframe then
+        return self:IsBetterBlizzFramesAvailable()
+    end
+    if category == C.Categories.Nameplate then
+        return self:IsBetterBlizzPlatesAvailable()
+    end
+    return false
+end
+
+function MCE:InvalidateOwnership()
+    local registry = self:GetModule("TargetRegistry", true)
+    if registry then
+        registry:InvalidateOwnership()
+    end
+end
+
+function MCE:IsCategoryActive(category, config)
+    if config == nil then
+        local profile = self.db and self.db.profile
+        local categories = profile and profile.categories
+        config = categories and categories[category]
+    end
+    return config and config.enabled == true
+        and not self:IsCategoryBlockedByAddonConflict(category)
+        or false
 end
 
 function MCE:IsShinyAurasAdapterEnabled()
@@ -628,6 +683,67 @@ end
 
 function MCE:Print(...)
     DEFAULT_CHAT_FRAME:AddMessage(BuildChatMessage(...))
+end
+
+function MCE:WarnBetterBlizzFramesUnitFrameConflict()
+    if self.betterBlizzFramesUnitFrameConflictWarned then return end
+
+    self.betterBlizzFramesUnitFrameConflictWarned = true
+    self:Print("|cffff7a1a" .. L["BETTERBLIZZFRAMES_UNITFRAME_CONFLICT_WARNING"] .. "|r")
+end
+
+function MCE:WarnBetterBlizzPlatesNameplateConflict()
+    if self.betterBlizzPlatesNameplateConflictWarned then return end
+
+    self.betterBlizzPlatesNameplateConflictWarned = true
+    self:Print("|cffff7a1a" .. L["BETTERBLIZZPLATES_NAMEPLATE_CONFLICT_WARNING"] .. "|r")
+end
+
+local pendingCategoryConflicts = {}
+local categoryConflictRefreshPending = false
+
+local function QueueCategoryConflictRefresh(self, category, adapterName)
+    pendingCategoryConflicts[category] = adapterName
+    if categoryConflictRefreshPending then return end
+
+    categoryConflictRefreshPending = true
+    addon.RunNextFrame(function()
+        categoryConflictRefreshPending = false
+        local registry = self:GetModule("TargetRegistry", true)
+        local styleEngine = self:GetModule("StyleEngine", true)
+        if registry and styleEngine then
+            for pendingCategory in pairs(pendingCategoryConflicts) do
+                for cooldown in registry:IterateCategory(pendingCategory) do
+                    if cooldown and not self:IsForbiddenCached(cooldown) then
+                        styleEngine:ApplyStyle(cooldown, pendingCategory)
+                    end
+                end
+            end
+        end
+
+        for _, pendingAdapterName in pairs(pendingCategoryConflicts) do
+            local adapter = self:GetModule(pendingAdapterName, true)
+            if adapter and adapter:IsEnabled() then
+                adapter:Disable()
+            end
+        end
+        wipe(pendingCategoryConflicts)
+
+        self:ForceUpdateAll(true)
+        AceConfigRegistry:NotifyChange(addonName)
+    end)
+end
+
+function MCE:HandleBetterBlizzFramesUnitFrameConflict()
+    self:WarnBetterBlizzFramesUnitFrameConflict()
+    QueueCategoryConflictRefresh(
+        self, C.Categories.Unitframe, "UnitFrameAdapter")
+end
+
+function MCE:HandleBetterBlizzPlatesNameplateConflict()
+    self:WarnBetterBlizzPlatesNameplateConflict()
+    QueueCategoryConflictRefresh(
+        self, C.Categories.Nameplate, "NameplateAdapter")
 end
 
 function MCE:MarkReloadRequired()
@@ -874,12 +990,6 @@ nameplateDefaults.stackAnchor = C.Defaults.Nameplate.StackAnchor
 nameplateDefaults.stackOffsetX = C.Defaults.Nameplate.StackOffsetX
 nameplateDefaults.stackOffsetY = C.Defaults.Nameplate.StackOffsetY
 
--- BBP is an optional integration with independent, opt-in styling. Keeping a
--- separate profile block prevents its presence from changing Nameplate defaults.
-local betterBlizzPlatesDefaults = CategoryDefaults(
-    C.Categories.BetterBlizzPlates, false, C.Defaults.Nameplate.FontSize)
-betterBlizzPlatesDefaults.edgeScale = C.Adapter.BetterBlizzPlates.NativeEdgeScale
-
 local unitframeDefaults = CategoryDefaults(C.Categories.Unitframe, false, 12)
 unitframeDefaults.stackSize = C.Defaults.Unitframe.StackSize
 unitframeDefaults.stackAnchor = C.Defaults.Unitframe.StackAnchor
@@ -888,6 +998,7 @@ unitframeDefaults.stackOffsetY = C.Defaults.Unitframe.StackOffsetY
 unitframeDefaults.auraCdTextOnlyMine = true
 unitframeDefaults.onlyMineDebuffs = C.Defaults.Unitframe.OnlyMineDebuffs
 unitframeDefaults.onlyMineBuffs = C.Defaults.Unitframe.OnlyMineBuffs
+unitframeDefaults.castBarReposition = C.Defaults.Unitframe.CastBarReposition
 
 local playerAuraStyleDefaults = CategoryDefaults(C.Categories.PlayerAura, true, 12)
 playerAuraStyleDefaults.reverseSwipe = C.Defaults.PlayerAura.ReverseSwipe
@@ -1050,11 +1161,6 @@ local function CleanupObsoleteProfileFields(profile)
         playerAuraCategory.auraCdTextOnlyMine = nil
     end
 
-    local betterBlizzPlatesCategory = rawget(
-        categories, C.Categories.BetterBlizzPlates)
-    if type(betterBlizzPlatesCategory) == "table" then
-        betterBlizzPlatesCategory.useBBPThresholdColors = nil
-    end
 end
 
 local function CleanupObsoleteDatabaseFields(db, profile)
@@ -1131,9 +1237,6 @@ miniAurasDefaults.ccHideSwipe = C.Defaults.MiniAuras.CCHideSwipe
 miniAurasDefaults.raidFrameAuraFontSize = C.Defaults.MiniAuras.RaidFrameAuraFontSize
 miniAurasDefaults.raidFrameAuraHideCountdownNumbers = C.Defaults.MiniAuras.RaidFrameAuraHideCountdownNumbers
 miniAurasDefaults.raidFrameAuraHideSwipe = C.Defaults.MiniAuras.RaidFrameAuraHideSwipe
-miniAurasDefaults.nameplateFontSize = C.Defaults.MiniAuras.NameplateFontSize
-miniAurasDefaults.nameplateHideCountdownNumbers = C.Defaults.MiniAuras.NameplateHideCountdownNumbers
-miniAurasDefaults.nameplateHideSwipe = C.Defaults.MiniAuras.NameplateHideSwipe
 miniAurasDefaults.portraitFontSize = C.Defaults.MiniAuras.PortraitFontSize
 miniAurasDefaults.portraitHideCountdownNumbers = C.Defaults.MiniAuras.PortraitHideCountdownNumbers
 miniAurasDefaults.portraitHideSwipe = C.Defaults.MiniAuras.PortraitHideSwipe
@@ -1194,6 +1297,14 @@ local myDRsDefaults = CategoryDefaults(C.Categories.MyDRs, false, C.Defaults.MyD
 myDRsDefaults.swipeAlpha = C.Defaults.MyDRs.SwipeAlpha
 myDRsDefaults.reverseSwipe = C.Defaults.MyDRs.ReverseSwipe
 
+-- Shackled draws its own remaining-time FontString beside the cooldown widget
+-- (Blizzard's own countdown numbers are explicitly disabled), so like MyDRs
+-- this category never gains a stack section -- Shackled icons carry no charge
+-- or application count.
+local shackledDefaults = CategoryDefaults(C.Categories.Shackled, false, C.Defaults.Shackled.FontSize)
+shackledDefaults.swipeAlpha = C.Defaults.Shackled.SwipeAlpha
+shackledDefaults.reverseSwipe = C.Defaults.Shackled.ReverseSwipe
+
 MCE.defaults = {
     profile = {
         abbrevThreshold = C.Options.DefaultAbbrevThreshold,
@@ -1206,7 +1317,6 @@ MCE.defaults = {
         categories = {
             [C.Categories.Actionbar] = actionbarDefaults,
             [C.Categories.Nameplate] = nameplateDefaults,
-            [C.Categories.BetterBlizzPlates] = betterBlizzPlatesDefaults,
             [C.Categories.Unitframe] = unitframeDefaults,
             [C.Categories.PlayerAura] = playerAuraDefaults,
             [C.Categories.CooldownManager] = cooldownManagerDefaults,
@@ -1215,6 +1325,7 @@ MCE.defaults = {
             [C.Categories.MyDRs] = myDRsDefaults,
             [C.Categories.SArena] = sArenaDefaults,
             [C.Categories.TellMeWhen] = tellMeWhenDefaults,
+            [C.Categories.Shackled] = shackledDefaults,
         },
     },
 }
@@ -1295,6 +1406,14 @@ end
 
 function MCE:ADDON_LOADED(_, loadedAddonName)
     self:SetAddonLoadState(loadedAddonName, true)
+    if IsOwnershipProviderAddon(loadedAddonName) then
+        self:InvalidateOwnership()
+    end
+    if loadedAddonName == C.Addon.BetterBlizzFramesName then
+        self:HandleBetterBlizzFramesUnitFrameConflict()
+    elseif loadedAddonName == C.Addon.BetterBlizzPlatesName then
+        self:HandleBetterBlizzPlatesNameplateConflict()
+    end
 end
 
 -- =========================================================================
@@ -1343,16 +1462,19 @@ function MCE:OnInitialize()
     self:RegisterBlizzardOptionsPanel(AceConfigDialog:AddToBlizOptions(addonName, L["MyDRs"], C.Addon.ShortName, C.Categories.MyDRs))
     self:RegisterBlizzardOptionsPanel(AceConfigDialog:AddToBlizOptions(addonName, L["sArena"], C.Addon.ShortName, C.Categories.SArena))
     self:RegisterBlizzardOptionsPanel(AceConfigDialog:AddToBlizOptions(addonName, L["TellMeWhen"], C.Addon.ShortName, C.Categories.TellMeWhen))
-    if self:IsBetterBlizzPlatesAvailable() then
-        self:RegisterBlizzardOptionsPanel(AceConfigDialog:AddToBlizOptions(
-            addonName, L["BetterBlizzPlates Auras"], C.Addon.ShortName,
-            C.Categories.BetterBlizzPlates))
-    end
+    self:RegisterBlizzardOptionsPanel(AceConfigDialog:AddToBlizOptions(addonName, L["Shackled"], C.Addon.ShortName, C.Categories.Shackled))
     self:RegisterBlizzardOptionsPanel(AceConfigDialog:AddToBlizOptions(addonName, L["Profiles"], C.Addon.ShortName, "profiles"))
     self:RegisterBlizzardOptionsPanel(AceConfigDialog:AddToBlizOptions(addonName, L["Help & Support"], C.Addon.ShortName, "help"))
 
     for i = 1, #C.Addon.SlashCommands do
         self:RegisterChatCommand(C.Addon.SlashCommands[i], "SlashCommand")
+    end
+
+    if self:IsBetterBlizzFramesAvailable() then
+        self:WarnBetterBlizzFramesUnitFrameConflict()
+    end
+    if self:IsBetterBlizzPlatesAvailable() then
+        self:WarnBetterBlizzPlatesNameplateConflict()
     end
 end
 

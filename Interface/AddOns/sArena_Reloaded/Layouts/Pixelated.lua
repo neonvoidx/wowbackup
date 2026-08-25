@@ -476,13 +476,15 @@ function layout:Initialize(frame)
     end
 
     if not frame.ClassIcon.ClassIconPixelBorderHook then
-        hooksecurefunc(frame.ClassIcon.Texture, "SetTexture", function(self, t)
+        local function UpdateClassIconPixelBorder(self, t)
             if not t or not frame.parent.showPixelBorder then
                 frame.PixelBorders.classIcon:Hide()
             else
                 frame.PixelBorders.classIcon:Show()
             end
-        end)
+        end
+        hooksecurefunc(frame.ClassIcon.Texture, "SetTexture", UpdateClassIconPixelBorder)
+        hooksecurefunc(frame.ClassIcon.Texture, "SetAtlas", UpdateClassIconPixelBorder)
         frame.ClassIcon.ClassIconPixelBorderHook = true
     end
 
@@ -505,6 +507,8 @@ function layout:Initialize(frame)
     f:ClearAllPoints()
     f:SetPoint("CENTER", frame.HealthBar, "CENTER", 0, -1)
     f:SetSize(self.db.height * 0.8, self.db.height * 0.8)
+
+    frame:SetupDisconnectedIcon(frame.HealthBar, 45)
 
     frame.PowerText:SetAlpha(frame.parent.db.profile.hidePowerText and 0 or 1)
 

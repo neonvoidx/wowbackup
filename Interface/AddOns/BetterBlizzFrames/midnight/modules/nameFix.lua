@@ -464,9 +464,10 @@ end
 local function UnitIsProbablyUnit(unit1, unit2)
     if not UnitExists(unit1) or not UnitExists(unit2) then return end
 
-    return UnitClassBase(unit1) == UnitClassBase(unit2)
-       and UnitRace(unit1) == UnitRace(unit2)
-       and UnitHonorLevel(unit1) == UnitHonorLevel(unit2)
+    local name1, name2 = UnitName(unit1), UnitName(unit2)
+    if issecretvalue(name1) or issecretvalue(name2) then return end
+
+    return name1 == name2
 end
 
 local function SetArenaName(frame, unit, textObject)
@@ -555,7 +556,7 @@ local function CompactPartyFrameNameChanges(frame)
         frame.name:SetText("")
         return
     end
-    if TRP3_API and rpNames then
+    if TRP3_API and rpNames and UnitIsPlayer(frame.unit) then
 
         SetRPName(frame.name, frame.unit)
 
@@ -637,7 +638,7 @@ local function PartyFrameNameChange(frame)
         SetArenaName(frame, frame.unit, frame.bbfName)
         return
     end
-    if TRP3_API and rpNames then
+    if TRP3_API and rpNames and UnitIsPlayer(frame.unit) then
 
         SetRPName(frame.bbfName, frame.unit)
 
@@ -1516,8 +1517,8 @@ local function PlayerFrameNameChanges(frame)
         ClassColorName(frame.bbfName, unit)
     end
     if classColorLevelText then
-        local _, class = UnitClass(unit)
-        local classColor = RAID_CLASS_COLORS[class]
+        local class = UnitClassBase(unit)
+        local classColor = C_ClassColor.GetClassColor(class)
         PlayerLevelText:SetTextColor(classColor.r, classColor.g, classColor.b)
     end
 end
@@ -1545,7 +1546,7 @@ local function TargetFrameNameChanges(frame)
             frame.bbfName:SetText("")
             return
         end
-        if TRP3_API and rpNames then
+        if TRP3_API and rpNames and UnitIsPlayer(frame.unit) then
 
             SetRPName(frame.bbfName, unit)
 
@@ -1628,8 +1629,8 @@ local function FocusFrameNameChanges(frame)
     local unit = frame.unit
 
     if classColorLevelText and UnitIsPlayer(unit) then
-        local _, class = UnitClass(unit)
-        local classColor = RAID_CLASS_COLORS[class]
+        local class = UnitClassBase(unit)
+        local classColor = C_ClassColor.GetClassColor(class)
         frame.TargetFrameContent.TargetFrameContentMain.LevelText:SetTextColor(classColor.r, classColor.g, classColor.b)
     end
 
@@ -1644,7 +1645,7 @@ local function FocusFrameNameChanges(frame)
             frame.bbfName:SetText("")
             return
         end
-        if TRP3_API and rpNames then
+        if TRP3_API and rpNames and UnitIsPlayer(frame.unit) then
 
             SetRPName(frame.bbfName, unit)
 
@@ -1697,7 +1698,7 @@ local function TargetFrameToTNameChanges(frame)
             frame.bbfName:SetText("")
             return
         end
-        if TRP3_API and rpNames then
+        if TRP3_API and rpNames and UnitIsPlayer(frame.unit) then
 
             SetRPName(frame.bbfName, unit)
 
@@ -1743,7 +1744,7 @@ local function FocusFrameToTNameChanges(frame)
             frame.bbfName:SetText("")
             return
         end
-        if TRP3_API and rpNames then
+        if TRP3_API and rpNames and UnitIsPlayer(frame.unit) then
 
             SetRPName(frame.bbfName, unit)
 

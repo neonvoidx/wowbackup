@@ -6207,6 +6207,35 @@ function CooldownPanels:RemoveEntry(panelId, entryId)
 	if self.BlizzardEditor and self.BlizzardEditor.RefreshPanel then self.BlizzardEditor:RefreshPanel(panelId) end
 end
 
+function CooldownPanels:RemoveAllEntries(panelId)
+	panelId = normalizeId(panelId)
+	local panel = self:GetPanel(panelId)
+	if not panel or not panel.entries or not next(panel.entries) then return false end
+
+	self:HideLayoutEntryStandaloneMenu(panelId, true)
+	self:ClearPanelCooldownManagerSync(panel)
+	local runtime = self.runtime
+	for entryId in pairs(panel.entries) do
+		if runtime and runtime.actionDisplayCounts then runtime.actionDisplayCounts[Helper.GetEntryKey(panelId, entryId)] = nil end
+	end
+	panel.entries = {}
+	panel.order = {}
+	self:ClearPanelCustomCooldownDurations(panelId)
+	if Helper.UpdatePanelEntrySpecFilterState then Helper.UpdatePanelEntrySpecFilterState(panel) end
+	Helper.InvalidateFixedLayoutCache(panel)
+
+	local editor = getEditor()
+	if editor and normalizeId(editor.selectedPanelId) == panelId then editor.selectedEntryId = nil end
+	local panelRuntime = self.runtime and self.runtime[panelId] or nil
+	if panelRuntime then panelRuntime.layoutEditEntryId = nil end
+
+	self:RebuildSpellIndex()
+	self:RefreshPanel(panelId)
+	self:RefreshEditor()
+	if self.BlizzardEditor and self.BlizzardEditor.Refresh then self.BlizzardEditor:Refresh() end
+	return true
+end
+
 function cdp.ENTRY.EnsureSpellEntryMeta(metaByPanel, panelId, entryId)
 	metaByPanel[panelId] = metaByPanel[panelId] or {}
 	local meta = metaByPanel[panelId][entryId]
@@ -14456,7 +14485,6 @@ function CooldownPanels:SyncPanelWithCooldownManager(panelId, sourceKind)
 		local entryId = existingBySpellId[canonicalSpellID]
 		local syncInfo = wantedBySpellId[canonicalSpellID]
 		local entry = entryId and panel.entries[entryId] or nil
-		local syncManaged = entry and entry.cdmSyncManaged == true or false
 		if not entry then
 			if self:GetFixedEntryAddError(panel, nil) then
 				stats.invalid = stats.invalid + 1
@@ -14467,11 +14495,10 @@ function CooldownPanels:SyncPanelWithCooldownManager(panelId, sourceKind)
 				cdp.SYNC.ApplyEntryOverride(panel, sourceKind, canonicalSpellID, entry)
 				panel.entries[entryId] = entry
 				existingBySpellId[canonicalSpellID] = entryId
-				syncManaged = true
 				stats.added = stats.added + 1
 			end
 		end
-		if entry and syncManaged then
+		if entry then
 			entry.cdmSyncManaged = true
 			entry.cdmSyncSource = sourceKind
 			entry.cdmSyncKey = canonicalSpellID
@@ -21063,6 +21090,15 @@ function CooldownPanels:ShowDeletePanelPopup(panelId)
 	return true
 end
 
+function CooldownPanels:ShowRemoveAllEntriesPopup(panelId)
+	panelId = normalizeId(panelId)
+	local panel = panelId and self:GetPanel(panelId) or nil
+	if not (panel and panel.entries and next(panel.entries)) then return false end
+	ensureDeletePopup()
+	StaticPopup_Show("EQOL_COOLDOWN_PANEL_REMOVE_ALL_ENTRIES", panel.name or nil, nil, { panelId = panelId })
+	return true
+end
+
 function CooldownPanels:ShowExportPanelPopup(panelId)
 	panelId = normalizeId(panelId)
 	if not (panelId and self:GetPanel(panelId)) then return false end
@@ -21086,22 +21122,38 @@ function CooldownPanels:ShowExportPanelsPopup(panelIds, title)
 end
 
 ensureDeletePopup = function()
-	if StaticPopupDialogs["EQOL_COOLDOWN_PANEL_DELETE"] then return end
-	StaticPopupDialogs["EQOL_COOLDOWN_PANEL_DELETE"] = {
-		text = L["CooldownPanelDeletePanel"] or "Delete Panel?",
-		button1 = YES,
-		button2 = CANCEL,
-		timeout = 0,
-		whileDead = true,
-		hideOnEscape = true,
-		preferredIndex = 3,
-		OnAccept = function(self, data)
-			if not data or not data.panelId then return end
-			CooldownPanels:DeletePanel(data.panelId)
-			CooldownPanels:RefreshEditor()
-			if CooldownPanels.BlizzardEditor and CooldownPanels.BlizzardEditor.Refresh then CooldownPanels.BlizzardEditor:Refresh() end
-		end,
-	}
+	if not StaticPopupDialogs["EQOL_COOLDOWN_PANEL_DELETE"] then
+		StaticPopupDialogs["EQOL_COOLDOWN_PANEL_DELETE"] = {
+			text = L["CooldownPanelDeletePanel"] or "Delete Panel?",
+			button1 = YES,
+			button2 = CANCEL,
+			timeout = 0,
+			whileDead = true,
+			hideOnEscape = true,
+			preferredIndex = 3,
+			OnAccept = function(self, data)
+				if not data or not data.panelId then return end
+				CooldownPanels:DeletePanel(data.panelId)
+				CooldownPanels:RefreshEditor()
+				if CooldownPanels.BlizzardEditor and CooldownPanels.BlizzardEditor.Refresh then CooldownPanels.BlizzardEditor:Refresh() end
+			end,
+		}
+	end
+	if not StaticPopupDialogs["EQOL_COOLDOWN_PANEL_REMOVE_ALL_ENTRIES"] then
+		StaticPopupDialogs["EQOL_COOLDOWN_PANEL_REMOVE_ALL_ENTRIES"] = {
+			text = L["CooldownPanelRemoveAllEntriesPrompt"] or 'Remove all entries from "%s"? This cannot be undone.',
+			button1 = YES,
+			button2 = CANCEL,
+			timeout = 0,
+			whileDead = true,
+			hideOnEscape = true,
+			preferredIndex = 3,
+			OnAccept = function(self, data)
+				if not data or not data.panelId then return end
+				CooldownPanels:RemoveAllEntries(data.panelId)
+			end,
+		}
+	end
 end
 
 function cdp.EXPORT.ImportErrorMessage(reason)
@@ -21549,6 +21601,12 @@ function CooldownPanels:ShowPanelGroupAssignMenu(owner, panelId)
 		if not hasGroups then
 			groupMenu:CreateButton(L["CooldownPanelNoGroups"] or "No groups", function() end)
 			rootDescription:CreateButton(L["CooldownPanelAddGroup"] or "Add Group", function() CooldownPanels:ShowEditorGroupCreatePopup() end)
+		end
+		if panel.entries and next(panel.entries) then
+			rootDescription:CreateDivider()
+			rootDescription:CreateButton(L["CooldownPanelRemoveAllEntries"] or "Remove all entries", function()
+				CooldownPanels:ShowRemoveAllEntriesPopup(panelId)
+			end)
 		end
 	end)
 end

@@ -5,6 +5,8 @@ BtWLoadoutsCollapsed = {
 ["talents"] = {
 },
 ["actionbars"] = {
+["children"] = {
+},
 },
 ["pvptalents"] = {
 },
@@ -36,6 +38,7 @@ BtWLoadoutsCategories = {
 "spec",
 },
 ["actionbars"] = {
+"spec",
 },
 ["conditions"] = {
 },

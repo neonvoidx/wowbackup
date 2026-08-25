@@ -67,7 +67,6 @@ HDG.TooltipHints = {
 HDG.TooltipRecipes = HDG.TooltipRecipes or {}
 
 local R = HDG.TooltipRecipes
-local H = HDG.TooltipHints
 
 -- ===== Window chrome ========================================================
 
@@ -173,6 +172,31 @@ R.BlueprintArchitect   = { title = "locale:TIP_BP_ARCHITECT_TITLE",   body = "lo
 R.BlueprintSave        = { title = "locale:TIP_BP_SAVE_TITLE",        body = "locale:TIP_BP_SAVE_BODY",        anchor = "ANCHOR_TOP" }
 R.BlueprintLink        = { title = "locale:TIP_BP_LINK_TITLE",        body = "locale:TIP_BP_LINK_BODY",        anchor = "ANCHOR_TOP" }
 R.BlueprintImportHouse = { title = "locale:TIP_BP_IMPORT_HOUSE_TITLE", body = "locale:TIP_BP_IMPORT_HOUSE_BODY", anchor = "ANCHOR_TOP" }
+R.BlueprintCopyReqs    = { title = "locale:TIP_BP_COPY_REQS_TITLE",   body = "locale:TIP_BP_COPY_REQS_BODY",   anchor = "ANCHOR_TOP" }
+
+-- Cost-to-build badge. One line per currency, gold as just another line (owner
+-- ruling 2026-08-04) -- housing decor is not a gold-only economy, and a single
+-- gold figure would be a different, wrong answer on most builds.
+--
+-- The unpriced count is stated rather than hidden. Some decor has no catalog
+-- cost at all, and a total that quietly omits it looks authoritative while being
+-- short -- worse than a total that admits what it could not price.
+R.BlueprintCost = function()
+    local cost = HDG.Selectors:Call("blueprints.acquisitionCost", HDG.Store:GetState(), {})
+    local dim  = HDG.Theme:ColorCode("text.dim")
+    local lines = {}
+    for _, c in ipairs(cost.currencies) do
+        lines[#lines + 1] = { text = HDG.Format.FormatCurrency(c.total, c.currencyID, c.icon) }
+    end
+    if cost.unpricedCount > 0 then
+        lines[#lines + 1] = { text = " " }
+        lines[#lines + 1] = { text = dim .. ("%d of %d missing items have no listed price|r")
+            :format(cost.unpricedCount, cost.missingCount), r = 0.75, g = 0.75, b = 0.75 }
+    end
+    lines[#lines + 1] = { text = dim .. "What you still need, at missing quantities.|r",
+                          r = 0.6, g = 0.6, b = 0.6 }
+    return { title = "Cost to build", anchor = "ANCHOR_TOP", extraLines = lines }
+end
 
 -- Recipes title: guild recipe scan.
 R.RecipesScanGuild = { title = "locale:TIP_REC_SCAN_GUILD_TITLE", body = "locale:TIP_REC_SCAN_GUILD_BODY" }
@@ -220,6 +244,7 @@ R.GoblinSrcDirect = { title = "locale:TIP_GOBLIN_SRC_DIRECT_TITLE", body = "loca
 R.GoblinTsmPct    = { title = "locale:TIP_GOBLIN_TSM_PCT_TITLE",    body = "locale:TIP_GOBLIN_TSM_PCT_BODY",    anchor = "ANCHOR_BOTTOMRIGHT" }
 R.MogulQueueAll   = { title = "locale:TIP_MOGUL_QUEUE_ALL_TITLE",   body = "locale:TIP_MOGUL_QUEUE_ALL_BODY",   anchor = "ANCHOR_BOTTOMRIGHT" }
 R.MogulSendToAH   = { title = "locale:TIP_MOGUL_SEND_AH_TITLE",     body = "locale:TIP_MOGUL_SEND_AH_BODY",     anchor = "ANCHOR_BOTTOMRIGHT" }
+R.GoblinExport    = { title = "locale:TIP_EXPORT_CSV",              body = "locale:TIP_EXPORT_CSV_DESC",        anchor = "ANCHOR_BOTTOMRIGHT" }
 
 -- ===== Recipes materials controls ===========================================
 R.RecipesGroupingToggle = { title = "locale:TIP_REC_GROUPING_TITLE", body = "locale:TIP_REC_GROUPING_BODY", anchor = "ANCHOR_BOTTOMRIGHT" }
@@ -488,29 +513,110 @@ end
 
 
 
--- R9: Material stock -- warehouse + recipes materials rows. Per-stash breakdown of
--- what you're holding (bags / bank / warband). Title-only (NO itemID/SetItemByID) so
--- other addons' item-data processors (TSM, Auctionator, ...) don't bleed in.
--- stamp: row._tipName, _tipBag, _tipBank, _tipWarband, _tipNeed
-local STOCK_TIP_ATLAS = { bag = "ParagonReputation_Bag", bank = "Banker", warband = "warbands-icon" }
-local function _stockStashLine(lines, key, label, count)
-    if count > 0 then
-        lines[#lines + 1] = {
-            text  = "|A:" .. STOCK_TIP_ATLAS[key] .. ":14:14|a " .. label,
-            right = tostring(count),
-            r = 0.75, g = 0.75, b = 0.75,   -- inline: GameTooltip is outside the theme registry
-        }
+-- R9: Material stock -- warehouse + recipes materials rows. One roster covering
+-- every character holding the reagent, then the shared warband bank on a single
+-- pinned line. Per-character bag/bank splits are deliberately NOT broken out: the
+-- Warehouse row's own chips already show where the current character's stock sits,
+-- and repeating that per alt buried the one number that matters.
+--
+-- Character counts come from the characters.reagentStock selector (persisted
+-- snapshots, written by Modules/HDGR_ReagentStockObserver.lua). Warband comes from
+-- the _tipWarband stamp, which the controllers derive from a live BagObserver
+-- split -- a selector must not call a Blizzard API.
+--
+-- stamp: row._tipName, _tipItemID, _tipWarband, _tipNeed
+local STOCK_ROSTER_CAP = 5
+local WARBAND_ICON = "|A:warbands-icon:14:14|a "
+
+-- Roster rows for this item, unioned across quality-variant siblings: a recipe
+-- names one tier and an alt may be holding another. Public because two row
+-- tooltips need it (material stock and lumber stock) -- the union is kept HERE
+-- rather than inside characters.reagentStock because the variant lookup reads
+-- account.reagentVariants, which a selector could not touch without declaring it.
+-- Returns rows sorted current-char-first then count-desc, plus their total.
+function R.CharacterRoster(itemID)
+    if not itemID then return {}, 0 end
+    local map = HDG.Selectors:Call("characters.reagentStock", HDG.Store:GetState(), {})
+    local byName, order, total = {}, {}, 0
+    local function absorb(id)
+        local entry = map[id]   -- exception(nullable): most items are held by nobody
+        if not entry then return end
+        total = total + entry.total
+        for _, row in ipairs(entry.perChar) do
+            local seen = byName[row.name]
+            if seen then
+                seen.count = seen.count + row.count
+            else
+                byName[row.name] = { name = row.name, classFile = row.classFile,
+                                     count = row.count, isCurrent = row.isCurrent }
+                order[#order + 1] = byName[row.name]
+            end
+        end
+    end
+    absorb(itemID)
+    for _, sib in ipairs(HDG.StaticData.Professions:GetQualityVariants(itemID) or {}) do  -- exception(nullable): most reagents are not tiered
+        absorb(sib)
+    end
+    table.sort(order, function(a, b)
+        if a.isCurrent ~= b.isCurrent then return a.isCurrent end
+        if a.count ~= b.count then return a.count > b.count end
+        return a.name < b.name
+    end)
+    return order, total
+end
+
+-- One character line: class-coloured name, "(you)" on the logged-in character.
+-- CLASS_COLORS is pure data keyed by classFile, so this works headless too.
+-- Format.ClassColorName is not reused here: it parenthesises its result for the
+-- Acquisition source lines.
+local function _rosterLine(lines, row)
+    local hex = HDG.Constants.CLASS_COLORS[row.classFile] or "ffffffff"  -- exception(nullable): legacy roster records predate classFile capture
+    local label = "|c" .. hex .. row.name .. "|r"
+    if row.isCurrent then label = label .. " |cff808080(you)|r" end
+    lines[#lines + 1] = { text = "  " .. label, right = tostring(row.count),
+                          r = 0.85, g = 0.85, b = 0.85 }   -- inline: GameTooltip is outside the theme registry
+end
+
+local function _appendRoster(lines, roster)
+    for i = 1, math.min(#roster, STOCK_ROSTER_CAP) do
+        _rosterLine(lines, roster[i])
+    end
+    if #roster > STOCK_ROSTER_CAP then
+        lines[#lines + 1] = { text = ("  +%d more"):format(#roster - STOCK_ROSTER_CAP),
+                              r = 0.6, g = 0.6, b = 0.6 }
     end
 end
+
+-- Only alts carry a stale figure; with just your own row the note would lie.
+local function _appendStalenessNote(lines, roster)
+    for _, row in ipairs(roster) do
+        if not row.isCurrent then
+            lines[#lines + 1] = { text = "alt counts from their last login",
+                                  r = 0.5, g = 0.5, b = 0.5 }
+            return
+        end
+    end
+end
+
+-- Shown on both materials lists (Warehouse and the Recipes pane share this
+-- recipe). The gesture has no row affordance -- nothing on the row says it is
+-- clickable -- so the hover is the only place a player can find it.
+local MATERIAL_ROW_HINTS = { shiftText = "locale:HINT_SHIFT_AH_SEARCH" }
+
 function R.MaterialStock(self)
     local name = self._tipName
     if not name then return nil end
-    local total = self._tipBag + self._tipBank + self._tipWarband
+    local roster, charTotal = R.CharacterRoster(self._tipItemID)
+    local warband = self._tipWarband
+    local total   = charTotal + warband
+
     local lines = { { text = "Your stock", right = total > 0 and tostring(total) or nil,
                       r = 1, g = 0.82, b = 0 } }   -- gold header + summed total
-    _stockStashLine(lines, "bag",     "Bags",    self._tipBag)
-    _stockStashLine(lines, "bank",    "Bank",    self._tipBank)
-    _stockStashLine(lines, "warband", "Warband", self._tipWarband)
+    _appendRoster(lines, roster)
+    if warband > 0 then
+        lines[#lines + 1] = { text = "  " .. WARBAND_ICON .. "Warband Bank",
+                              right = tostring(warband), r = 0.85, g = 0.85, b = 0.85 }
+    end
     if #lines == 1 then   -- header only -> nothing on hand anywhere
         lines[#lines + 1] = { text = "None on hand", r = 0.6, g = 0.6, b = 0.6 }
     end
@@ -518,7 +624,65 @@ function R.MaterialStock(self)
         lines[#lines + 1] = { text = "Needed by queue", right = tostring(self._tipNeed),
                               r = 0.75, g = 0.75, b = 0.75, rr = 0.95, rg = 0.55, rb = 0.45 }
     end
-    return { title = name, extraLines = lines }
+    _appendStalenessNote(lines, roster)
+    HDG.TooltipEngine.AppendClickHints(lines, MATERIAL_ROW_HINTS)
+    return {
+        title      = name,
+        -- Opt-in: SetItemByID pulls in Blizzard's whole item block plus every
+        -- other addon's TooltipDataProcessor lines. Off by default.
+        itemID     = HDG.Config:Get("MATERIAL_TOOLTIP_ITEM_DATA") and self._tipItemID or nil,
+        extraLines = lines,
+    }
+end
+
+-- R10: Lumber stock -- the 7-column lumber table on the Warehouse pane. Two
+-- blocks: the expansion's mounted-harvesting milestone, then the OTHER characters
+-- holding this lumber.
+--
+-- The current character and the warband bank are deliberately absent. The row
+-- already carries Bag / Bnk / Wband columns, so restating them in the hover would
+-- be the same numbers twice; what the row cannot show is the characters you are
+-- not currently playing. Lumber IS warband-bankable, which is exactly why the
+-- shared stash stays a column and never enters a per-character roster.
+--
+-- stamp: row._tipItemID, _tipAchieveID
+local function _appendLumberAchievement(lines, achieveID)
+    if not achieveID then return end   -- exception(nullable): a lumber with no milestone achievement
+    lines[#lines + 1] = { text = HDG.AchievementObserver:GetName(achieveID) or "Lumber Milestone",
+                          r = 1, g = 0.82, b = 0 }   -- achievement gold
+    local prog = HDG.AchievementObserver:GetCriteria(achieveID)
+    if prog then
+        lines[#lines + 1] = { text = ("Progress: %d / %d"):format(prog.qty, prog.reqQty) }
+    end
+end
+
+-- Alts only: drop the current character, whose figures are already two columns
+-- away on the same row.
+local function _otherCharacters(itemID)
+    local roster = R.CharacterRoster(itemID)
+    local others, total = {}, 0
+    for _, row in ipairs(roster) do
+        if not row.isCurrent then
+            others[#others + 1] = row
+            total = total + row.count
+        end
+    end
+    return others, total
+end
+
+function R.LumberStock(self)
+    local lines = {}
+    _appendLumberAchievement(lines, self._tipAchieveID)
+    local others, total = _otherCharacters(self._tipItemID)
+    if #others > 0 then
+        if #lines > 0 then lines[#lines + 1] = " " end   -- blank spacer below the achievement block
+        lines[#lines + 1] = { text = "Other characters", right = tostring(total),
+                              r = 1, g = 0.82, b = 0 }
+        _appendRoster(lines, others)
+        _appendStalenessNote(lines, others)
+    end
+    if #lines == 0 then return nil end   -- no milestone and nobody else holding: nothing to say
+    return { extraLines = lines }
 end
 
 -- ============================================================================

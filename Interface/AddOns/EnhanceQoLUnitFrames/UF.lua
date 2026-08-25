@@ -2090,6 +2090,7 @@ local defaults = {
 		},
 		portrait = {
 			detached = false,
+			detachedBorderEnabled = true,
 			detachedFrameLevelOffset = 1,
 			detachedSize = nil,
 			detachedStrata = nil,
@@ -2207,6 +2208,7 @@ local defaults = {
 		},
 		portrait = {
 			detached = false,
+			detachedBorderEnabled = true,
 			detachedFrameLevelOffset = 1,
 			detachedSize = nil,
 			detachedStrata = nil,
@@ -2231,6 +2233,7 @@ local defaults = {
 		anchor = { point = "CENTER", relativeTo = "UIParent", relativePoint = "CENTER", x = 520, y = -200 },
 		portrait = {
 			detached = false,
+			detachedBorderEnabled = true,
 			detachedFrameLevelOffset = 1,
 			detachedSize = nil,
 			detachedStrata = nil,
@@ -4174,8 +4177,6 @@ function AuraUtil.ensureAuraButton(container, icons, index, ac)
 		btn.border:SetAllPoints(btn)
 		btn.border:SetDrawLayer("OVERLAY", 1)
 		btn.dispelIcon = btn.foreground:CreateTexture(nil, "OVERLAY")
-		btn.dispelIcon:SetTexture("Interface\\Icons\\Spell_Holy_DispelMagic")
-		btn.dispelIcon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
 		btn.dispelIcon:SetDrawLayer("OVERLAY", 1)
 		btn.dispelIcon:Hide()
 		btn.cd:SetReverse(true)
@@ -4518,6 +4519,23 @@ function AuraUtil.ApplyIconShapeBorder(btn, ac, r, g, b, a)
 	})
 end
 
+function AuraUtil.ApplyAuraCooldownBorderInset(button, style, hasStyleBorder)
+	local cooldown = button and button.cd
+	if not cooldown then return end
+	cooldown:ClearAllPoints()
+	if not hasStyleBorder or not AuraUtil.IsIconShapeBackdropBorderCompatible(style and style.iconShape) then
+		cooldown:SetAllPoints(button)
+		return
+	end
+	local borderSize = (UFHelper and UFHelper.calcAuraBorderSize and UFHelper.calcAuraBorderSize(button, style)) or 1
+	local borderOffset = tonumber(style and style.borderOffset) or 0
+	local inset = math.max(0, borderSize - borderOffset)
+	local size = (button.GetWidth and button:GetWidth()) or tonumber(style and style.size) or 24
+	if size > 0 then inset = math.min(inset, math.max(0, (size - 1) * 0.5)) end
+	cooldown:SetPoint("TOPLEFT", button, "TOPLEFT", inset, -inset)
+	cooldown:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -inset, inset)
+end
+
 function AuraUtil.ShouldHideNativeAuraTooltipInCombat(style)
 	local explicitHideInCombat = type(style) == "table" and style.hideTooltipInCombat == true
 	if addon.AuraCompat and addon.AuraCompat.ShouldHideAuraButtonTooltipInCombat then
@@ -4791,7 +4809,6 @@ function AuraUtil.applyAuraToButton(btn, aura, ac, isDebuff, unitToken, harmfulF
 		btn.count:SetText("")
 		btn.count:Hide()
 	end
-	local dispelR, dispelG, dispelB
 	if btn.border then
 		if showBorder then
 			local r, g, b = 1, 0.25, 0.25
@@ -4821,9 +4838,6 @@ function AuraUtil.applyAuraToButton(btn, aura, ac, isDebuff, unitToken, harmfulF
 				if fr then
 					r, g, b = fr, fg, fb
 				end
-			end
-			if isDebuff then
-				dispelR, dispelG, dispelB = r, g, b
 			end
 			local customBorderColor = ac and ac.borderColor
 			if type(customBorderColor) == "table" then
@@ -4944,6 +4958,7 @@ function AuraUtil.applyAuraToButton(btn, aura, ac, isDebuff, unitToken, harmfulF
 			btn.border:Hide()
 		end
 	end
+	AuraUtil.ApplyAuraCooldownBorderInset(btn, ac, showBorder)
 	if btn.dispelIcon then
 		local showIcon = isDebuff and ac and ac.blizzardDispelBorder == true and canShowPlayerDispel
 		if showIcon then
@@ -4957,15 +4972,14 @@ function AuraUtil.applyAuraToButton(btn, aura, ac, isDebuff, unitToken, harmfulF
 				btn._eqolAuraDispelIconStyleKey = styleKey
 				btn._eqolAuraDispelIconButtonSize = btn._eqolAuraButtonSize
 			end
-			if dispelR then
-				btn.dispelIcon:SetVertexColor(dispelR, dispelG, dispelB, 1)
-			else
-				btn.dispelIcon:SetVertexColor(1, 1, 1, 1)
-			end
+			local dispelName = aura.dispelName
+			local canActivePlayerDispel = aura.canActivePlayerDispel
+			if issecretvalue and issecretvalue(dispelName) then dispelName = nil end
+			if issecretvalue and issecretvalue(canActivePlayerDispel) then canActivePlayerDispel = nil end
+			if (not dispelName or dispelName == "") and canActivePlayerDispel == true then dispelName = "Magic" end
+			if addon.AuraCompat then addon.AuraCompat:SetDispelTypeIcon(btn.dispelIcon, dispelName) end
 			local alphaOn = (ac and ac.blizzardDispelBorderAlpha) or 1
 			local alphaOff = (ac and ac.blizzardDispelBorderAlphaNot) or 0
-			local canActivePlayerDispel = aura.canActivePlayerDispel
-			if issecretvalue and issecretvalue(canActivePlayerDispel) then canActivePlayerDispel = nil end
 			if canActivePlayerDispel == nil then canActivePlayerDispel = false end
 			btn.dispelIcon:SetAlphaFromBoolean(canActivePlayerDispel, alphaOn, alphaOff)
 			btn.dispelIcon:Show()
@@ -5358,6 +5372,14 @@ function AuraUtil.ClearNativeAuraIdentityPlan(st)
 	st._nativeAuraIdentityDebuffContainer = nil
 end
 
+function AuraUtil.IsNativeAuraContainerActive(container)
+	if not container then return false end
+	if container.IsEnabled and container:IsEnabled() ~= true then return false end
+	if container.IsShown and container:IsShown() ~= true then return false end
+	if container.GetAlpha and container:GetAlpha() == 0 then return false end
+	return true
+end
+
 function AuraUtil.CacheNativeAuraIdentityPlan(st, unit, auraRuntime)
 	AuraUtil.ClearNativeAuraIdentityPlan(st)
 	if not (st and AuraUtil.ShouldUseNativeAuraContainers(unit, auraRuntime, false)) then return end
@@ -5385,10 +5407,12 @@ function AuraUtil.RefreshCompiledNativeAuraContainers(st)
 	if not (st and st._nativeAuraIdentityRefreshEnabled and addon.AuraCompat and addon.AuraCompat.UpdateAuraContainer) then return false end
 	local refreshed = false
 	if st._nativeAuraIdentityBuffContainer then
+		if not AuraUtil.IsNativeAuraContainerActive(st._nativeAuraIdentityBuffContainer) then return false end
 		if not addon.AuraCompat:UpdateAuraContainer(st._nativeAuraIdentityBuffContainer) then return false end
 		refreshed = true
 	end
 	if st._nativeAuraIdentityDebuffContainer and st._nativeAuraIdentityDebuffContainer ~= st._nativeAuraIdentityBuffContainer then
+		if not AuraUtil.IsNativeAuraContainerActive(st._nativeAuraIdentityDebuffContainer) then return false end
 		if not addon.AuraCompat:UpdateAuraContainer(st._nativeAuraIdentityDebuffContainer) then return false end
 		refreshed = true
 	end
@@ -5401,6 +5425,7 @@ function AuraUtil.RefreshNativeAuraContainers(st, unit, auraRuntime)
 	if auraRuntime.combineLayout then
 		local lane = store.combined
 		if not (lane and lane.container and lane.groups) then return false end
+		if not AuraUtil.IsNativeAuraContainerActive(lane.container) then return false end
 		if auraRuntime.showBuffs and not lane.groups.buff then return false end
 		if auraRuntime.showDebuffs and not lane.groups.debuff then return false end
 		if lane.unit ~= unit then
@@ -5419,6 +5444,7 @@ function AuraUtil.RefreshNativeAuraContainers(st, unit, auraRuntime)
 		if enabled then
 			local lane = store[key]
 			if not (lane and lane.container and lane.groupKey) then return false end
+			if not AuraUtil.IsNativeAuraContainerActive(lane.container) then return false end
 			if lane.unit ~= unit then
 				if not AuraUtil.CallNativeAuraMethod(lane.container, "SetUnit", unit) then return false end
 				lane.unit = unit
@@ -5598,9 +5624,10 @@ function AuraUtil.PrepareNativeAuraButton(button, style, isDebuff, unit, parent)
 		button.dispelIcon:SetDrawLayer("OVERLAY", 6)
 		button.dispelIcon:Show()
 		AuraUtil.CallNativeAuraMethod(button, "AddDispelTypeTexture", button.dispelIcon, {
-			style = dispelTextureStyles.Icon,
+			style = dispelTextureStyles.CustomAsset,
 			showWhenHarmful = true,
 			showWhenHelpful = false,
+			customDispelAssetMap = addon.AuraCompat:GetDispelTypeIconAssetMap(),
 		})
 	else
 		if button.dispelIcon then button.dispelIcon:Hide() end
@@ -5673,6 +5700,7 @@ function AuraUtil.PrepareNativeAuraButton(button, style, isDebuff, unit, parent)
 	end
 	AuraUtil.ApplyIconShape(button, style.iconShape, style.iconZoom)
 	local hasStyleBorder, borderKind, borderTextureCount = AuraUtil.PrepareNativeAuraStyleBorder(button, style, isDebuff)
+	AuraUtil.ApplyAuraCooldownBorderInset(button, style, hasStyleBorder)
 	if isDebuff and hasStyleBorder then AuraUtil.RegisterNativeDispelBorderTextures(button, dispelTextureStyles, borderKind, borderTextureCount) end
 	if button.externalGlow then button.externalGlow:Hide() end
 	if style.externalGlowEnabled == true and addon.Glow and addon.Glow.CreateRestrictedAura then
@@ -5819,6 +5847,7 @@ function AuraUtil.EnsureNativeAuraLane(st, key, unit, style, filterString, isDeb
 	local store = AuraUtil.GetNativeAuraLaneStore(st)
 	if not store then return nil end
 	local lane = store[key]
+	local previousLane = lane
 	local maxCount = AuraUtil.normalizeAuraQueryLimit(style and style.max) or 0
 	if maxCount < 1 then return nil end
 	local signature = table.concat({
@@ -5836,9 +5865,6 @@ function AuraUtil.EnsureNativeAuraLane(st, key, unit, style, filterString, isDeb
 	end
 	local container = lane and lane.container
 	local generation = (lane and lane.generation or 0) + 1
-	if lane and lane.groupKey and container then
-		addon.AuraCompat:UpdateAuraGroup(container, lane.groupKey, { maxFrameCount = 0 })
-	end
 	lane = {
 		filterString = filterString,
 		max = maxCount,
@@ -5869,9 +5895,14 @@ function AuraUtil.EnsureNativeAuraLane(st, key, unit, style, filterString, isDeb
 		},
 	})
 	if not registered then
-		AuraUtil.CallNativeAuraMethod(lane.container, "SetEnabled", false)
-		lane.container:Hide()
+		if not previousLane then AuraUtil.DisableNativeAuraLane(lane) end
 		return nil
+	end
+	if previousLane and previousLane.groupKey and container then
+		if not addon.AuraCompat:UpdateAuraGroup(container, previousLane.groupKey, { maxFrameCount = 0 }) then
+			addon.AuraCompat:UpdateAuraGroup(lane.container, lane.groupKey, { maxFrameCount = 0 })
+			return nil
+		end
 	end
 	lane.container:Show()
 	store[key] = lane
@@ -5883,6 +5914,7 @@ function AuraUtil.EnsureNativeCombinedAuraLane(st, unit, auraRuntime, helpfulFil
 	local store = AuraUtil.GetNativeAuraLaneStore(st)
 	if not store then return nil end
 	local lane = store.combined
+	local previousLane = lane
 	local buffStyle = auraRuntime.buff or {}
 	local debuffStyle = auraRuntime.debuff or {}
 	local signature = table.concat({
@@ -5903,11 +5935,6 @@ function AuraUtil.EnsureNativeCombinedAuraLane(st, unit, auraRuntime, helpfulFil
 	if lane and lane.signature == signature then return lane end
 
 	local container = lane and lane.container
-	if lane and lane.groups and container then
-		for _, group in pairs(lane.groups) do
-			if group.key then addon.AuraCompat:UpdateAuraGroup(container, group.key, { maxFrameCount = 0 }) end
-		end
-	end
 	local generation = (lane and lane.generation or 0) + 1
 	lane = {
 		container = container or addon.AuraCompat:CreateAuraContainer(st.frame),
@@ -5950,7 +5977,25 @@ function AuraUtil.EnsureNativeCombinedAuraLane(st, unit, auraRuntime, helpfulFil
 	end
 
 	if auraRuntime.showBuffs and not register("buff", buffStyle, helpfulFilter, false, 1) then return nil end
-	if auraRuntime.showDebuffs and not register("debuff", debuffStyle, harmfulFilter, true, 2) then return nil end
+	if auraRuntime.showDebuffs and not register("debuff", debuffStyle, harmfulFilter, true, 2) then
+		for _, group in pairs(lane.groups) do
+			if group.key then addon.AuraCompat:UpdateAuraGroup(lane.container, group.key, { maxFrameCount = 0 }) end
+		end
+		return nil
+	end
+	if previousLane and previousLane.groups and container then
+		for _, group in pairs(previousLane.groups) do
+			if group.key and not addon.AuraCompat:UpdateAuraGroup(container, group.key, { maxFrameCount = 0 }) then
+				for _, newGroup in pairs(lane.groups) do
+					if newGroup.key then addon.AuraCompat:UpdateAuraGroup(lane.container, newGroup.key, { maxFrameCount = 0 }) end
+				end
+				for _, oldGroup in pairs(previousLane.groups) do
+					if oldGroup.key then addon.AuraCompat:UpdateAuraGroup(container, oldGroup.key, { maxFrameCount = oldGroup.max }) end
+				end
+				return nil
+			end
+		end
+	end
 	store.combined = lane
 	return lane
 end
@@ -5967,7 +6012,7 @@ function AuraUtil.GetNativeAuraFlowLayout(st, style, width)
 	local perRow = UF._auraLayout.calcPerRow(st, style, width, primary)
 	local size = tonumber(style.size) or 24
 	local spacing = tonumber(style.padding) or 0
-	local maximumLineSize = math.max(size, (perRow * size) + (math.max(perRow - 1, 0) * spacing))
+	local maximumLineSize = addon.AuraCompat:GetSafeFlowLayoutMaximumLineSize(st.frame or st.barGroup or UIParent, size, spacing, perRow)
 	local horizontalPoint = horizontal == "RIGHT" and "LEFT" or "RIGHT"
 	local verticalPoint = vertical == "UP" and "BOTTOM" or "TOP"
 	local flowAxes = AnchorUtil and AnchorUtil.FlowLayoutAxis
@@ -6033,15 +6078,17 @@ function AuraUtil.LayoutNativeAuraLane(st, lane, style, width)
 	if not (st and lane and lane.container and style) then return false end
 	local flow = AuraUtil.GetNativeAuraFlowLayout(st, style, width)
 	if not flow then return false end
-	AuraUtil.PositionNativeAuraLane(st, lane.container, style, flow)
-	addon.AuraCompat:ConfigureAuraContainerLayout(lane.container, {
+	if not AuraUtil.PositionNativeAuraLane(st, lane.container, style, flow) then return false end
+	if not addon.AuraCompat:ConfigureAuraContainerLayout(lane.container, {
 		axis = flow.axis,
 		anchorPoint = flow.anchorPoint,
 		horizontalGrowthDirection = flow.horizontalGrowthDirection,
 		verticalGrowthDirection = flow.verticalGrowthDirection,
 		maximumLineSize = flow.maximumLineSize,
-	})
-	addon.AuraCompat:UpdateAuraGroup(lane.container, lane.groupKey, {
+	}) then
+		return false
+	end
+	if not addon.AuraCompat:UpdateAuraGroup(lane.container, lane.groupKey, {
 		maxFrameCount = lane.max,
 		candidateFilters = lane.candidateFilters,
 		layout = {
@@ -6051,11 +6098,13 @@ function AuraUtil.LayoutNativeAuraLane(st, lane, style, width)
 			elementHeight = flow.size,
 			layoutIndex = 1,
 		},
-	})
+	}) then
+		return false
+	end
 	AuraUtil.syncAuraContainerLayer(lane.container, st.frame)
 	lane.container:SetAlpha(1)
 	lane.container:Show()
-	AuraUtil.CallNativeAuraMethod(lane.container, "SetEnabled", true)
+	if not AuraUtil.CallNativeAuraMethod(lane.container, "SetEnabled", true) then return false end
 	return true
 end
 
@@ -6063,7 +6112,7 @@ function AuraUtil.LayoutNativeCombinedAuraLane(st, lane, auraRuntime, width)
 	if not (st and lane and lane.container and lane.groups and auraRuntime) then return false end
 	local flow, primaryStyle = AuraUtil.GetNativeCombinedAuraFlowLayout(st, auraRuntime, width)
 	if not (flow and primaryStyle) then return false end
-	AuraUtil.PositionNativeAuraLane(st, lane.container, primaryStyle, flow)
+	if not AuraUtil.PositionNativeAuraLane(st, lane.container, primaryStyle, flow) then return false end
 	if not addon.AuraCompat:ConfigureAuraContainerLayout(lane.container, {
 		axis = flow.axis,
 		anchorPoint = flow.anchorPoint,
@@ -6093,7 +6142,7 @@ function AuraUtil.LayoutNativeCombinedAuraLane(st, lane, auraRuntime, width)
 	AuraUtil.syncAuraContainerLayer(lane.container, st.frame)
 	lane.container:SetAlpha(1)
 	lane.container:Show()
-	AuraUtil.CallNativeAuraMethod(lane.container, "SetEnabled", true)
+	if not AuraUtil.CallNativeAuraMethod(lane.container, "SetEnabled", true) then return false end
 	return true
 end
 
@@ -6123,32 +6172,49 @@ function AuraUtil.ApplyNativeAuraContainers(unit, st, cfg, def, forceRefresh)
 	local helpfulFilter, harmfulFilter = AuraUtil.getUnitAuraFilters(unit, auraRuntime)
 	local width = (st.barGroup and st.barGroup:GetWidth()) or (st.frame and st.frame:GetWidth()) or 1
 	local any = false
+	local valid = true
 	local store = AuraUtil.GetNativeAuraLaneStore(st)
 	if auraRuntime.combineLayout then
 		AuraUtil.DisableNativeAuraLane(store and store.buff)
 		AuraUtil.DisableNativeAuraLane(store and store.debuff)
 		local lane = AuraUtil.EnsureNativeCombinedAuraLane(st, unit, auraRuntime, helpfulFilter, harmfulFilter)
 		if lane and AuraUtil.LayoutNativeCombinedAuraLane(st, lane, auraRuntime, width) then
-			if forceRefresh and addon.AuraCompat then addon.AuraCompat:UpdateAuraContainer(lane.container) end
-			any = true
+			if not forceRefresh or addon.AuraCompat:UpdateAuraContainer(lane.container) then
+				any = true
+			else
+				valid = false
+			end
+		else
+			if lane then AuraUtil.DisableNativeAuraLane(lane) end
+			valid = false
 		end
 	else
 		AuraUtil.DisableNativeAuraLane(store and store.combined)
 	end
 	if not auraRuntime.combineLayout and auraRuntime.showBuffs then
 		local lane = AuraUtil.EnsureNativeAuraLane(st, "buff", unit, auraRuntime.buff, helpfulFilter, false)
-		if lane then
-			AuraUtil.LayoutNativeAuraLane(st, lane, auraRuntime.buff, width)
-			if forceRefresh and addon.AuraCompat then addon.AuraCompat:UpdateAuraContainer(lane.container) end
-			any = true
+		if lane and AuraUtil.LayoutNativeAuraLane(st, lane, auraRuntime.buff, width) then
+			if not forceRefresh or addon.AuraCompat:UpdateAuraContainer(lane.container) then
+				any = true
+			else
+				valid = false
+			end
+		else
+			if lane then AuraUtil.DisableNativeAuraLane(lane) end
+			valid = false
 		end
 	end
 	if not auraRuntime.combineLayout and auraRuntime.showDebuffs then
 		local lane = AuraUtil.EnsureNativeAuraLane(st, "debuff", unit, auraRuntime.debuff, harmfulFilter, true)
-		if lane then
-			AuraUtil.LayoutNativeAuraLane(st, lane, auraRuntime.debuff, width)
-			if forceRefresh and addon.AuraCompat then addon.AuraCompat:UpdateAuraContainer(lane.container) end
-			any = true
+		if lane and AuraUtil.LayoutNativeAuraLane(st, lane, auraRuntime.debuff, width) then
+			if not forceRefresh or addon.AuraCompat:UpdateAuraContainer(lane.container) then
+				any = true
+			else
+				valid = false
+			end
+		else
+			if lane then AuraUtil.DisableNativeAuraLane(lane) end
+			valid = false
 		end
 	end
 	store = st.nativeAuraContainers
@@ -6162,12 +6228,12 @@ function AuraUtil.ApplyNativeAuraContainers(unit, st, cfg, def, forceRefresh)
 			store.debuff.container:Hide()
 		end
 	end
-	if any then
+	if any and valid then
 		AuraUtil.CacheNativeAuraIdentityPlan(st, unit, auraRuntime)
 	else
 		AuraUtil.ClearNativeAuraIdentityPlan(st)
 	end
-	return any
+	return any and valid
 end
 
 AuraUtil.HEALER_BUFF_PLACEMENT_UNIT_KINDS = {
@@ -6209,7 +6275,7 @@ function AuraUtil.RefreshHealerBuffPlacementUnit(unit)
 	frame._eqolUFState = st
 	frame._eqolCfg = groupCfg
 	frame._eqolGroupKind = kind
-	frame.unit = unit
+	frame._eqolUnit = unit
 	if not enabled then
 		if healerBuffs.HideManagedAuraContainer then healerBuffs.HideManagedAuraContainer(frame) end
 		if healerBuffs.ClearButton then healerBuffs.ClearButton(frame) end
@@ -6586,7 +6652,10 @@ function AuraUtil.fullScanTargetAuras(unit)
 		return
 	end
 	if AuraUtil.ShouldUseNativeAuraContainers(unit, auraRuntime, allowSample) then
-		if not AuraUtil.RefreshNativeAuraContainers(st, unit, auraRuntime) then AuraUtil.ApplyNativeAuraContainers(unit, st, cfg, def, true) end
+		-- Native AuraContainers support full setup during combat. Reapply here so
+		-- an invalidated style or a previously hidden boss lane is re-enabled and
+		-- laid out instead of being accepted by the refresh-only fast path.
+		AuraUtil.ApplyNativeAuraContainers(unit, st, cfg, def, true)
 		return
 	end
 	if st then st._sampleAurasActive = nil end
@@ -7227,6 +7296,9 @@ function AuraUtil.SetManagedDispelSlotFilterStrings(managed, filterString)
 	for _, slotKey in pairs(managed.overlaySlotKeys or {}) do
 		addon.AuraCompat:UpdateAuraSlot(managed.container, slotKey, { filterString = filterString })
 	end
+	for _, groupKey in pairs(managed.iconGroupKeys or {}) do
+		addon.AuraCompat:UpdateAuraGroup(managed.iconContainer, groupKey, { filterString = filterString })
+	end
 end
 
 function AuraUtil.HideManagedDispelBorder(st)
@@ -7238,6 +7310,10 @@ function AuraUtil.HideManagedDispelBorder(st)
 		AuraUtil.SetManagedDispelSlotFilterStrings(managed, "HELPFUL|HARMFUL")
 		managed.filtersReset = true
 		managed.container:Hide()
+	end
+	if managed.iconContainer then
+		if managed.iconContainer.SetEnabled then managed.iconContainer:SetEnabled(false) end
+		managed.iconContainer:Hide()
 	end
 end
 
@@ -7286,6 +7362,9 @@ function AuraUtil.GetManagedDispelGlowSignature(dcfg, defDispel, width, height)
 		tostring(dcfg.glowThickness or defDispel.glowThickness or 3),
 		tostring(dcfg.glowX or defDispel.glowX or 0),
 		tostring(dcfg.glowY or defDispel.glowY or 0),
+		tostring(dcfg.iconsEnabled == nil and defDispel.iconsEnabled == true or dcfg.iconsEnabled == true),
+		tostring(dcfg.iconSize or defDispel.iconSize or 12),
+		tostring(dcfg.iconSpacing or defDispel.iconSpacing or 1),
 		tostring(dcfg.glowStrata or defDispel.glowStrata or ""),
 		tostring(dcfg.glowFrameLevelOffset or defDispel.glowFrameLevelOffset or ""),
 		tostring(width or ""),
@@ -7459,6 +7538,81 @@ function AuraUtil.DisableManagedDispelGeneration(managed)
 	for _, slotKey in pairs(managed.overlaySlotKeys or {}) do
 		addon.AuraCompat:UpdateAuraSlot(managed.container, slotKey, { candidateFilters = { includeDispelTypes = {} } })
 	end
+	for _, groupKey in pairs(managed.iconGroupKeys or {}) do
+		addon.AuraCompat:UpdateAuraGroup(managed.iconContainer, groupKey, { maxFrameCount = 0 })
+	end
+end
+
+function AuraUtil.GetManagedDispelIconLayout(dcfg, defDispel)
+	dcfg = dcfg or {}
+	defDispel = defDispel or {}
+	return UFHelper.ClampNumber(dcfg.iconSize or defDispel.iconSize or 12, 6, 40, 12), UFHelper.ClampNumber(dcfg.iconSpacing or defDispel.iconSpacing or 1, 0, 10, 1)
+end
+
+function AuraUtil.LayoutManagedDispelIcons(managed, root, dcfg, defDispel)
+	local container = managed and managed.iconContainer
+	if not (container and root) then return false end
+	local iconSize, iconSpacing = AuraUtil.GetManagedDispelIconLayout(dcfg, defDispel)
+	container:ClearAllPoints()
+	container:SetPoint("TOPRIGHT", root, "TOPRIGHT", -2, -2)
+	if root.GetFrameStrata then container:SetFrameStrata(root:GetFrameStrata()) end
+	if root.GetFrameLevel then container:SetFrameLevel(UF.ClampFrameLevel((root:GetFrameLevel() or 0) + 35)) end
+	local flowDirections = AnchorUtil and AnchorUtil.FlowDirection
+	local flowAxes = AnchorUtil and AnchorUtil.FlowLayoutAxis
+	if not (flowDirections and flowAxes) then return false end
+	return addon.AuraCompat:ConfigureAuraContainerLayout(container, {
+		anchorPoint = "TOPRIGHT",
+		axis = flowAxes.Horizontal,
+		horizontalGrowthDirection = flowDirections.Left,
+		maximumLineSize = (iconSize * #AuraUtil.ManagedDispelTypes) + (iconSpacing * (#AuraUtil.ManagedDispelTypes - 1)),
+		verticalGrowthDirection = flowDirections.Down,
+	})
+end
+
+function AuraUtil.CreateManagedDispelIconGroups(managed, root, filterString, dcfg, defDispel, generation)
+	if not (managed and root and addon.AuraCompat and addon.AuraCompat.CreateAuraContainer) then return false end
+	if managed.iconContainer then
+		if managed.iconContainer.SetEnabled then managed.iconContainer:SetEnabled(false) end
+		managed.iconContainer:Hide()
+	end
+	managed.iconContainer = addon.AuraCompat:CreateAuraContainer(root)
+	if not managed.iconContainer then return false end
+	if not AuraUtil.LayoutManagedDispelIcons(managed, root, dcfg, defDispel) then return false end
+	managed.iconGroupKeys = {}
+	local iconSize, iconSpacing = AuraUtil.GetManagedDispelIconLayout(dcfg, defDispel)
+	local dispelTextureStyles = Enum and Enum.CustomAuraButtonDispelTypeTextureStyle
+	for i = 1, #AuraUtil.ManagedDispelTypes do
+		local dispelTypeKey = AuraUtil.ManagedDispelTypes[i].key
+		local groupKey = "eqol-dispel-icon-" .. dispelTypeKey .. ":" .. tostring(generation)
+		local registered = addon.AuraCompat:RegisterAuraGroup(managed.iconContainer, groupKey, filterString, {
+			candidateFilters = { includeDispelTypes = { [dispelTypeKey] = true } },
+			initializeFrame = function(button)
+				AuraUtil.PrepareManagedDispelSensorButton(button)
+				if not button._eqolDispelTypeIcon then
+					button._eqolDispelTypeIcon = button:CreateTexture(nil, "OVERLAY")
+					button._eqolDispelTypeIcon:SetAllPoints(button)
+				end
+				if dispelTextureStyles then
+					AuraUtil.CallNativeAuraMethod(button, "AddDispelTypeTexture", button._eqolDispelTypeIcon, {
+						customDispelAssetMap = addon.AuraCompat:GetDispelTypeIconAssetMap(),
+						showWhenHarmful = true,
+						showWhenHelpful = false,
+						style = dispelTextureStyles.CustomAsset,
+					})
+				end
+			end,
+			layout = {
+				elementHeight = iconSize,
+				elementSpacing = iconSpacing,
+				elementWidth = iconSize,
+				layoutIndex = i,
+				lineSpacing = iconSpacing,
+			},
+			maxFrameCount = 1,
+		})
+		if registered then managed.iconGroupKeys[dispelTypeKey] = groupKey end
+	end
+	return next(managed.iconGroupKeys) ~= nil
 end
 
 function AuraUtil.LayoutManagedDispelHosts(managed, root, dcfg, defDispel)
@@ -7527,8 +7681,10 @@ function AuraUtil.CreateManagedDispelGeneration(managed, root, filterString, dcf
 		})
 		if overlayRegistered then managed.overlaySlotKeys[dispelTypeKey] = overlaySlotKey end
 	end
+	AuraUtil.CreateManagedDispelIconGroups(managed, root, filterString, dcfg, defDispel, generation)
 	managed.borderEnabled = nil
 	managed.glowEnabled = nil
+	managed.iconsEnabled = nil
 	AuraUtil.LayoutManagedDispelHosts(managed, root, dcfg, defDispel)
 	return managed.slot ~= nil
 end
@@ -7609,7 +7765,9 @@ function AuraUtil.ApplyManagedDispelBorder(st, root, unit, dcfg, defDispel, forc
 	if enabled == nil then enabled = defDispel.enabled ~= false end
 	local glowEnabled = dcfg.glowEnabled
 	if glowEnabled == nil then glowEnabled = defDispel.glowEnabled == true end
-	if not enabled and not glowEnabled then
+	local iconsEnabled = dcfg.iconsEnabled
+	if iconsEnabled == nil then iconsEnabled = defDispel.iconsEnabled == true end
+	if not enabled and not glowEnabled and not iconsEnabled then
 		AuraUtil.HideManagedDispelBorder(st)
 		return true
 	end
@@ -7620,7 +7778,7 @@ function AuraUtil.ApplyManagedDispelBorder(st, root, unit, dcfg, defDispel, forc
 		AuraUtil.SetManagedDispelSlotFilterStrings(managed, managed.filterString or AuraUtil.GetManagedDispelFilterString(dcfg, defDispel))
 		managed.filtersReset = nil
 	end
-	if managed.borderEnabled ~= enabled or managed.glowEnabled ~= glowEnabled then
+	if managed.borderEnabled ~= enabled or managed.glowEnabled ~= glowEnabled or managed.iconsEnabled ~= iconsEnabled then
 		addon.AuraCompat:UpdateAuraSlot(managed.container, managed.backgroundSlotKey, {
 			candidateFilters = enabled and {} or { includeDispelTypes = {} },
 		})
@@ -7629,17 +7787,30 @@ function AuraUtil.ApplyManagedDispelBorder(st, root, unit, dcfg, defDispel, forc
 				candidateFilters = (enabled or glowEnabled) and { includeDispelTypes = { [dispelType] = true } } or { includeDispelTypes = {} },
 			})
 		end
+		for dispelType, groupKey in pairs(managed.iconGroupKeys or {}) do
+			addon.AuraCompat:UpdateAuraGroup(managed.iconContainer, groupKey, {
+				candidateFilters = iconsEnabled and { includeDispelTypes = { [dispelType] = true } } or { includeDispelTypes = {} },
+				maxFrameCount = iconsEnabled and 1 or 0,
+			})
+		end
 		managed.borderEnabled = enabled
 		managed.glowEnabled = glowEnabled
+		managed.iconsEnabled = iconsEnabled
 	end
 	local unitChanged = managed.unit ~= unit
 	if unitChanged then
 		managed.unit = unit
 		managed.container:SetUnit(unit)
+		if managed.iconContainer then managed.iconContainer:SetUnit(unit) end
 	end
 	managed.container:Show()
 	managed.container:SetEnabled(true)
+	if managed.iconContainer then
+		managed.iconContainer:SetShown(iconsEnabled)
+		managed.iconContainer:SetEnabled(iconsEnabled)
+	end
 	if forceRefresh or unitChanged or not managed.enabled then addon.AuraCompat:UpdateAuraContainer(managed.container) end
+	if iconsEnabled and managed.iconContainer and (forceRefresh or unitChanged or not managed.enabled) then addon.AuraCompat:UpdateAuraContainer(managed.iconContainer) end
 	managed.enabled = true
 	return true
 end
@@ -8516,31 +8687,21 @@ function UF._ensureDefaultCastUninterruptibleBar(st)
 	if not st or not st.castBar then return nil end
 	local overlay = st.castDefaultUninterruptibleBar
 	if not overlay then
-		overlay = st.castBar:CreateTexture(nil, "ARTWORK", nil, 0)
+		overlay = CreateFrame("StatusBar", nil, st.castBar)
+		overlay:EnableMouse(false)
+		overlay:SetAllPoints(st.castBar)
+		overlay:SetStatusBarTexture((UFHelper.resolveCastUninterruptibleTexture and UFHelper.resolveCastUninterruptibleTexture()) or "ui-castingbar-uninterruptable")
+		overlay:SetStatusBarColor(1, 1, 1, 1)
+		if overlay.SetStatusBarDesaturated then overlay:SetStatusBarDesaturated(false) end
 		st.castDefaultUninterruptibleBar = overlay
 	end
-	local normalTexture = st.castBar.GetStatusBarTexture and st.castBar:GetStatusBarTexture()
-	overlay:ClearAllPoints()
-	if normalTexture then
-		overlay:SetAllPoints(normalTexture)
-	else
-		overlay:SetAllPoints(st.castBar)
-	end
-	local tex = (UFHelper.resolveCastUninterruptibleTexture and UFHelper.resolveCastUninterruptibleTexture()) or "ui-castingbar-uninterruptable"
-	if overlay.SetAtlas then
-		overlay:SetAtlas(tex, false)
-	else
-		overlay:SetTexture(tex)
-	end
-	if overlay.SetHorizTile then overlay:SetHorizTile(false) end
-	if overlay.SetVertTile then overlay:SetVertTile(false) end
-	if overlay.SetVertexColor then overlay:SetVertexColor(1, 1, 1, 1) end
+	setFrameLevelAbove(overlay, st.castBar, 1)
 	return overlay
 end
 
-function UF._syncDefaultCastUninterruptibleBar(st, notInterruptible)
+function UF._syncDefaultCastUninterruptibleBar(st, unit, notInterruptible)
 	if not st or not st.castBar then return end
-	if st.castUseDefaultArt ~= true then
+	if st.castUseDefaultArt ~= true or unit == UNIT.PLAYER then
 		UF._hideDefaultCastUninterruptibleBar(st)
 		return
 	end
@@ -8555,11 +8716,13 @@ end
 function UF._setCastBarMinMaxValues(st, minValue, maxValue)
 	if not st or not st.castBar then return end
 	st.castBar:SetMinMaxValues(minValue, maxValue)
+	if st.castDefaultUninterruptibleBar then st.castDefaultUninterruptibleBar:SetMinMaxValues(minValue, maxValue) end
 end
 
 function UF._setCastBarValue(st, value)
 	if not st or not st.castBar then return end
 	st.castBar:SetValue(value)
+	if st.castDefaultUninterruptibleBar then st.castDefaultUninterruptibleBar:SetValue(value) end
 end
 
 local function stopCast(unit)
@@ -8584,7 +8747,7 @@ local function stopCast(unit)
 	end
 end
 
-local function applyCastLayout(cfg, unit)
+local function applyCastLayout(cfg, unit, isChannel)
 	local st = states[unit]
 	if not st or not st.castBar then return end
 	local def = defaultsFor(unit)
@@ -8658,10 +8821,11 @@ local function applyCastLayout(cfg, unit)
 	end
 	local texKey = ccfg.texture or defc.texture or "DEFAULT"
 	local useDefaultArt = not texKey or texKey == "" or texKey == "DEFAULT"
-	local castTexture = UFHelper.resolveCastTexture(texKey)
+	if isChannel == nil and st.castInfo then isChannel = st.castInfo.isChannel == true and st.castInfo.isEmpowered ~= true end
+	local castTexture = useDefaultArt and isChannel and UFHelper.resolveCastChannelTexture() or UFHelper.resolveCastTexture(texKey)
 	st.castBar:SetStatusBarTexture(castTexture)
 	st.castUseDefaultArt = useDefaultArt
-	UF._syncDefaultCastUninterruptibleBar(st, unit ~= UNIT.PLAYER and st.castInfo and st.castInfo.notInterruptible)
+	UF._syncDefaultCastUninterruptibleBar(st, unit, st.castInfo and st.castInfo.notInterruptible)
 	do -- Cast backdrop
 		local bd = (ccfg and ccfg.backdrop) or (defc and defc.backdrop) or { enabled = true, color = { 0, 0, 0, 0.6 } }
 		local backdropTexKey = bd.texture
@@ -8874,14 +9038,14 @@ local function configureCastStatic(unit, ccfg, defc)
 			)
 		end
 	end
-	UF._syncDefaultCastUninterruptibleBar(st, unit ~= UNIT.PLAYER and st.castInfo.notInterruptible)
+	UF._syncDefaultCastUninterruptibleBar(st, unit, st.castInfo.notInterruptible)
 	local duration = (st.castInfo.endTime or 0) - (st.castInfo.startTime or 0)
 	local maxValue = duration and duration > 0 and duration / 1000 or 1
 	st.castInfo.maxValue = maxValue
 	-- UFHelper.applyStatusBarReverseFill(st.castBar, st.castInfo.isChannel == true and not st.castInfo.isEmpowered)
 	UF._setCastBarMinMaxValues(st, 0, maxValue)
 	UFHelper.RefreshCastbarGradient(st.castBar, useDefaultArt and nil or gradientCfg)
-	UF._syncDefaultCastUninterruptibleBar(st, unit ~= UNIT.PLAYER and st.castInfo.notInterruptible)
+	UF._syncDefaultCastUninterruptibleBar(st, unit, st.castInfo.notInterruptible)
 	if st.castName then
 		local showName = ccfg.showName ~= false
 		st.castName:SetShown(showName)
@@ -9388,9 +9552,12 @@ local function setCastInfoFromUnit(unit)
 				return
 			end
 			UF.ClearCastInterruptState(st)
-			applyCastLayout(cfg, unit)
+			applyCastLayout(cfg, unit, isChannel and not isEmpoweredCast)
 			st.castBar:Show()
 			st.castBar:SetTimerDuration(durObj, Enum.StatusBarInterpolation.Immediate, direction)
+			if st.castDefaultUninterruptibleBar then
+				st.castDefaultUninterruptibleBar:SetTimerDuration(durObj, Enum.StatusBarInterpolation.Immediate, direction)
+			end
 			st.castBarDuration = durObj
 			if st.castName then
 				local showName = ccfg.showName ~= false
@@ -9436,7 +9603,7 @@ local function setCastInfoFromUnit(unit)
 					)
 				end
 			end
-			UF._syncDefaultCastUninterruptibleBar(st, unit ~= UNIT.PLAYER and notInterruptible)
+			UF._syncDefaultCastUninterruptibleBar(st, unit, notInterruptible)
 			st.castBar:SetStatusBarDesaturated(false)
 			local showDuration = ccfg.showDuration ~= false and st.castDuration ~= nil
 			local needsOnUpdate = showDuration
@@ -9475,7 +9642,7 @@ local function setCastInfoFromUnit(unit)
 		return
 	end
 	UF.ClearCastInterruptState(st)
-	applyCastLayout(cfg, unit)
+	applyCastLayout(cfg, unit, isChannel and not isEmpoweredCast)
 	local resolvedCfg = ccfg or defc or {}
 	st.castCfg = resolvedCfg
 	st.castInfo = {
@@ -11103,6 +11270,46 @@ function UF.ApplyPortraitShape(st, shape)
 	st._portraitShape = shape
 end
 
+function UF.IsPortraitShapeBackdropBorderCompatible(shape)
+	local iconShape = addon.IconShape
+	shape = UF.NormalizePortraitShape(shape)
+	if iconShape and iconShape.IsBackdropBorderCompatible then return iconShape.IsBackdropBorderCompatible(shape) end
+	return shape == "SQUARE"
+end
+
+function UF.ApplyDetachedPortraitShapeBorder(st, shape, borderCfg, borderDef, enabled)
+	if not (st and st.portraitHolder) then return false end
+	local iconShape = addon.IconShape
+	if iconShape and iconShape.HideBorderTextures then
+		iconShape.HideBorderTextures(st.portraitHolder, { texturesKey = "_eqolPortraitShapeBorderTextures" })
+	end
+	if enabled ~= true or UF.IsPortraitShapeBackdropBorderCompatible(shape) then return false end
+	if not (iconShape and iconShape.ApplyBorder) then return false end
+
+	borderCfg = type(borderCfg) == "table" and borderCfg or {}
+	borderDef = type(borderDef) == "table" and borderDef or {}
+	local borderSize = tonumber(borderCfg.edgeSize or borderDef.edgeSize) or 1
+	local borderOffset = borderCfg.offset
+	if borderOffset == nil then borderOffset = borderDef.offset end
+	if borderOffset == nil then borderOffset = borderSize end
+	local borderKey = borderCfg.texture
+	if UF.NormalizePortraitShape(shape) == "ROUND" and iconShape.BORDER and iconShape.BORDER.ROUND_1PX then borderKey = iconShape.BORDER.ROUND_1PX end
+	return iconShape.ApplyBorder(st.portraitHolder, borderKey, shape, {
+		allowNone = true,
+		emptyValue = iconShape.BORDER and iconShape.BORDER.NONE or "NONE",
+		fallbackBorderKey = borderDef.texture,
+		borderSize = borderSize,
+		borderOffset = borderOffset,
+		color = borderCfg.color or borderDef.color or { 0, 0, 0, 0.8 },
+		pointFrame = st.portraitHolder,
+		parent = st.portraitHolder,
+		texturesKey = "_eqolPortraitShapeBorderTextures",
+		drawLayer = "OVERLAY",
+		subLevel = 7,
+		pixelPerfect = true,
+	})
+end
+
 local function getPortraitSeparatorConfig(cfg, unit, portraitEnabled)
 	if not portraitEnabled or not cfg or cfg.enabled == false then return false, 0, "SOLID" end
 	local def = defaultsFor(unit)
@@ -11257,8 +11464,10 @@ local function layoutFrame(cfg, unit)
 	end
 	local dataBarPosition = UF.DataBar.GetPosition(cfg, def)
 	local dataBarOuterHeight = dataBarEnabled and (dataBarHeight + dataBarGap) or 0
-	local dataBarCanDetach = unit == UNIT.TARGET or unit == UNIT.TARGET_TARGET
-	local dataBarDetached = dataBarCanDetach and dataBarCfg.detached == true
+	local dataBarDetached = dataBarCfg.detached == true
+	local dataBarIntegrated = dataBarEnabled and not dataBarDetached and dataBarPosition ~= "CENTER"
+	local dataBarLayoutHeight = dataBarIntegrated and dataBarOuterHeight or 0
+	local dataBarExternalLayoutHeight = dataBarEnabled and not dataBarDetached and not dataBarIntegrated and dataBarPosition ~= "CENTER" and dataBarOuterHeight or 0
 	local stackHeight = healthHeight + (powerDetached and 0 or powerHeight) + (secondaryPowerDetached and 0 or secondaryPowerHeight)
 	local borderCfg = cfg.border or {}
 	local borderDef = def.border or {}
@@ -11288,7 +11497,7 @@ local function layoutFrame(cfg, unit)
 	local portraitEnabled, portraitSide, portraitSquareBackground, _, portraitShape = getPortraitConfig(cfg, unit)
 	local portraitDetached, portraitDetachedX, portraitDetachedY, portraitDetachedSize = UF.ResolvePortraitDetachedConfig(cfg, unit)
 	portraitDetached = portraitEnabled and portraitDetached == true
-	local portraitInnerHeight = stackHeight
+	local portraitInnerHeight = stackHeight + dataBarLayoutHeight
 	local portraitBaseSize = portraitDetached and (portraitDetachedSize or portraitInnerHeight) or portraitInnerHeight
 	local portraitSize = portraitEnabled and UF.ResolvePixelLayoutSize(st.portraitHolder or st.barGroup or st.frame, max(1, portraitBaseSize)) or 0
 	local separatorEnabled, separatorSize = getPortraitSeparatorConfig(cfg, unit, portraitEnabled)
@@ -11410,10 +11619,12 @@ local function layoutFrame(cfg, unit)
 	end
 
 	local y = 0
+	local barInsetLeft = borderOffset + barAreaOffsetLeft
+	local barInsetRight = borderOffset + barAreaOffsetRight
 	if st.dataBar then
 		if dataBarEnabled then
-			if st.dataBar.GetParent and st.dataBar:GetParent() ~= st.frame then st.dataBar:SetParent(st.frame) end
 			if dataBarDetached then
+				if st.dataBar.GetParent and st.dataBar:GetParent() ~= st.frame then st.dataBar:SetParent(st.frame) end
 				local detachedOffset = dataBarCfg.detachedOffset or dataBarDef.detachedOffset or {}
 				local detachedX = tonumber(detachedOffset.x) or 0
 				local detachedY = tonumber(detachedOffset.y) or 0
@@ -11430,9 +11641,21 @@ local function layoutFrame(cfg, unit)
 			else
 				st.dataBar:SetHeight(dataBarHeight)
 				if dataBarPosition == "CENTER" then
+					if st.dataBar.GetParent and st.dataBar:GetParent() ~= st.frame then st.dataBar:SetParent(st.frame) end
 					st.dataBar:SetPoint("LEFT", st.frame, "LEFT", 0, 0)
 					st.dataBar:SetPoint("RIGHT", st.frame, "RIGHT", 0, 0)
+				elseif dataBarIntegrated then
+					local dataBarParent = st.barGroup or st.frame
+					if st.dataBar.GetParent and st.dataBar:GetParent() ~= dataBarParent then st.dataBar:SetParent(dataBarParent) end
+					if dataBarPosition == "ABOVE" then
+						st.dataBar:SetPoint("TOPLEFT", dataBarParent, "TOPLEFT", barInsetLeft, -borderOffset)
+						st.dataBar:SetPoint("TOPRIGHT", dataBarParent, "TOPRIGHT", -barInsetRight, -borderOffset)
+					else
+						st.dataBar:SetPoint("BOTTOMLEFT", dataBarParent, "BOTTOMLEFT", barInsetLeft, borderOffset)
+						st.dataBar:SetPoint("BOTTOMRIGHT", dataBarParent, "BOTTOMRIGHT", -barInsetRight, borderOffset)
+					end
 				else
+					if st.dataBar.GetParent and st.dataBar:GetParent() ~= st.frame then st.dataBar:SetParent(st.frame) end
 					local dataBarAnchorY = -(statusHeight + stackHeight + borderOffset * 2 + dataBarGap)
 					if dataBarPosition == "ABOVE" then dataBarAnchorY = statusHeightDelta end
 					st.dataBar:SetPoint("TOPLEFT", st.frame, "TOPLEFT", 0, dataBarAnchorY)
@@ -11455,7 +11678,7 @@ local function layoutFrame(cfg, unit)
 		st.status:SetPoint("TOPRIGHT", st.frame, "TOPRIGHT", statusOffsetRight, contentTopY)
 	end
 	-- Bars container sits below status; border applied here, not on status
-	local barsHeight = UF.ResolvePixelLayoutSize(st.barGroup or st.frame, stackHeight + borderOffset * 2)
+	local barsHeight = UF.ResolvePixelLayoutSize(st.barGroup or st.frame, stackHeight + dataBarLayoutHeight + borderOffset * 2)
 	if st.barGroup then
 		st.barGroup:SetWidth(frameWidth)
 		st.barGroup:SetHeight(barsHeight)
@@ -11463,11 +11686,11 @@ local function layoutFrame(cfg, unit)
 		st.barGroup:SetPoint("TOPRIGHT", st.frame, "TOPRIGHT", 0, y)
 	end
 
-	local barInsetLeft = borderOffset + barAreaOffsetLeft
-	local barInsetRight = borderOffset + barAreaOffsetRight
 	local healthSlot = st.healthContainer or st.health
-	healthSlot:SetPoint("TOPLEFT", st.barGroup or st.frame, "TOPLEFT", barInsetLeft, -borderOffset)
-	healthSlot:SetPoint("TOPRIGHT", st.barGroup or st.frame, "TOPRIGHT", -barInsetRight, -borderOffset)
+	local healthTopInset = borderOffset
+	if dataBarIntegrated and dataBarPosition == "ABOVE" then healthTopInset = healthTopInset + dataBarLayoutHeight end
+	healthSlot:SetPoint("TOPLEFT", st.barGroup or st.frame, "TOPLEFT", barInsetLeft, -healthTopInset)
+	healthSlot:SetPoint("TOPRIGHT", st.barGroup or st.frame, "TOPRIGHT", -barInsetRight, -healthTopInset)
 	if st.healthTextLayer then
 		if st.healthTextLayer.GetParent and st.healthTextLayer:GetParent() ~= healthSlot then st.healthTextLayer:SetParent(healthSlot) end
 		st.healthTextLayer:ClearAllPoints()
@@ -11656,10 +11879,33 @@ local function layoutFrame(cfg, unit)
 			if st.portraitBg then st.portraitBg:Hide() end
 			st.portraitHolder:Hide()
 		end
-		setBackdrop(st.portraitHolder, false, nil, false)
-		if addon.IconShape and addon.IconShape.HideBorderTextures then
-			addon.IconShape.HideBorderTextures(st.portraitHolder, { texturesKey = "_eqolPortraitShapeBorderTextures" })
+		local portraitCfg = cfg.portrait or {}
+		local detachedPortraitBorderEnabled = portraitDetached and borderEnabled and portraitCfg.detachedBorderEnabled ~= false
+		local portraitBorderCfg
+		if detachedPortraitBorderEnabled then
+			local detachedBorderOffset = portraitCfg.detachedBorderOffset
+			if detachedBorderOffset == nil then detachedBorderOffset = borderCfg.offset end
+			if detachedBorderOffset == nil then detachedBorderOffset = borderDef.offset end
+			if detachedBorderOffset == nil then detachedBorderOffset = borderCfg.inset end
+			if detachedBorderOffset == nil then detachedBorderOffset = borderDef.inset end
+			if detachedBorderOffset == nil then detachedBorderOffset = borderCfg.edgeSize or borderDef.edgeSize or 1 end
+			detachedBorderOffset = max(0, tonumber(detachedBorderOffset) or 0)
+			portraitBorderCfg = {
+				enabled = true,
+				texture = borderCfg.texture or borderDef.texture,
+				edgeSize = borderCfg.edgeSize or borderDef.edgeSize,
+				color = borderCfg.color or borderDef.color,
+				offset = detachedBorderOffset,
+				inset = detachedBorderOffset,
+			}
 		end
+		if detachedPortraitBorderEnabled and UF.IsPortraitShapeBackdropBorderCompatible(portraitShape) then
+			setBackdrop(st.portraitHolder, portraitBorderCfg, borderDef, true)
+			UF.AlignBorderHostToPixelGrid(st.portraitHolder)
+		else
+			setBackdrop(st.portraitHolder, false, nil, false)
+		end
+		UF.ApplyDetachedPortraitShapeBorder(st, portraitShape, portraitBorderCfg or borderCfg, borderDef, detachedPortraitBorderEnabled)
 	end
 	applyPortraitSeparator(cfg, unit, st, portraitEnabled and not portraitDetached)
 	if st.dispelTint then
@@ -11670,8 +11916,7 @@ local function layoutFrame(cfg, unit)
 		if st.dispelTint.SetOrientation and dispelOrientation then st.dispelTint:SetOrientation(dispelOrientation.VerticalTopToBottom, 0, 0) end
 	end
 
-	local dataBarLayoutHeight = dataBarEnabled and not dataBarDetached and dataBarPosition ~= "CENTER" and dataBarOuterHeight or 0
-	local totalHeight = statusHeight + barsHeight + dataBarLayoutHeight
+	local totalHeight = statusHeight + barsHeight + dataBarExternalLayoutHeight
 	st.frame:SetHeight(totalHeight)
 	if borderEnabled then UF.AlignBorderHostToPixelGrid(st.barGroup) end
 	if detachedPowerBorder then UF.AlignBorderHostToPixelGrid(st.powerGroup) end

@@ -180,6 +180,10 @@ do
     do
       function BasePrediction:BasePredictor(refresh, tickTime)
         if aScore < maxScore and hScore < maxScore then
+          if refresh then
+            self:GetScoreByMapID(curMap.id)
+          end
+
           -- Keep score, objective, and condition-expiry predictions on the same
           -- resource-tick clock. GetTime() is only a cold-start fallback before
           -- the first score tick has been observed.
@@ -195,8 +199,7 @@ do
 
           if curMap.basesReset then
             local now = GetTime()
-            local scoreTickTime = tickTime
-              or (NS.db.global.lastScoreTickTime > 0 and NS.db.global.lastScoreTickTime or nil)
+            local scoreTickTime = deadlineOrigin
 
             local allyInfo = NS.getIncomingBlitzBaseInfo(
               allyBases,
@@ -217,6 +220,10 @@ do
 
             local blitzResult =
               NS.checkBlitzWinCondition(aScore, hScore, allyInfo, hordeInfo, now, scoreTickTime, curMap)
+
+            if not blitzResult then
+              return
+            end
 
             projectedAScore = blitzResult.projectedAScore
             projectedHScore = blitzResult.projectedHScore
@@ -292,11 +299,8 @@ do
               -- local currentWinBases = aWins and allyBases or hordeBases
               -- local currentLoseBases = aWins and hordeBases or allyBases
 
-              local effectiveAllyBases = curMap.basesReset and NS.WILL_WIN and projectedAllyBases or allyBases
-              local effectiveHordeBases = curMap.basesReset and NS.WILL_WIN and projectedHordeBases or hordeBases
-
-              winBases = aWins and effectiveAllyBases or effectiveHordeBases
-              loseBases = aWins and effectiveHordeBases or effectiveAllyBases
+              winBases = aWins and allyBases or hordeBases
+              loseBases = aWins and hordeBases or allyBases
               winScore = aWins and aScore or hScore
               loseScore = aWins and hScore or aScore
 
@@ -317,6 +321,7 @@ do
                 winTable = NS.getBlitzWinTable(
                   winnerNeededBases,
                   loserNeededBases,
+                  winBases,
                   loseBases,
                   winScore,
                   winName,
@@ -500,8 +505,13 @@ do
               -- local currentWinBases = aWins and allyBases or hordeBases
               local currentLoseBases = aWins and hordeBases or allyBases
 
-              winBases = aWins and newAllyBases or newHordeBases
-              loseBases = aWins and newHordeBases or newAllyBases
+              if curMap.basesReset then
+                winBases = aWins and (allyBases + allyIncBases) or (hordeBases + hordeIncBases)
+                loseBases = aWins and (hordeBases + hordeIncBases) or (allyBases + allyIncBases)
+              else
+                winBases = aWins and newAllyBases or newHordeBases
+                loseBases = aWins and newHordeBases or newAllyBases
+              end
               winScore = aWins and aFutureScore or hFutureScore
               loseScore = aWins and hFutureScore or aFutureScore
 
@@ -530,6 +540,7 @@ do
                 winTable = NS.getBlitzWinTable(
                   winnerNeededBases,
                   loserNeededBases,
+                  winBases,
                   loseBases,
                   winScore,
                   winName,
@@ -698,10 +709,6 @@ do
                 or aIncrease ~= prevAIncrease
                 or hIncrease ~= prevHIncrease
                 or timeBetweenEachTick ~= prevTick
-                or allyBases ~= prevABases
-                or hordeBases ~= prevHBases
-                or allyIncBases ~= prevAIncBases
-                or hordeIncBases ~= prevHIncBases
               then
                 -- if
                 --   NS.isBlitz()
@@ -788,7 +795,11 @@ do
                 -- if fresh capture for alliance, or they once had it lose it fully then got it again
                 if
                   NS.db.global.allyTimers[base] == nil
-                  or (NS.db.global.allyTimers[base] and NS.db.global.allyTimers[base] - GetTime() <= 0)
+                  or (
+                    not curMap.basesReset
+                    and NS.db.global.allyTimers[base]
+                    and NS.db.global.allyTimers[base] - GetTime() <= 0
+                  )
                 then
                   if NS.db.global.allyLockedTimers[base] then
                     allyLockedTimers[base] = nil
@@ -845,7 +856,11 @@ do
                 -- if fresh capture for horde, or they once had it lose it fully then got it again
                 if
                   NS.db.global.hordeTimers[base] == nil
-                  or (NS.db.global.hordeTimers[base] and NS.db.global.hordeTimers[base] - GetTime() <= 0)
+                  or (
+                    not curMap.basesReset
+                    and NS.db.global.hordeTimers[base]
+                    and NS.db.global.hordeTimers[base] - GetTime() <= 0
+                  )
                 then
                   if NS.db.global.hordeLockedTimers[base] then
                     hordeLockedTimers[base] = nil
@@ -1028,7 +1043,7 @@ do
             prevAIncBases = allyIncBases
             prevHIncBases = hordeIncBases
 
-            self:BasePredictor()
+            self:BasePredictor(curMap.basesReset, nil)
           end
         end
       end

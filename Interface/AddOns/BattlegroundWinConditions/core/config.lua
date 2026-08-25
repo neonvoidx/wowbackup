@@ -37,7 +37,6 @@ local GetPlayerFactionGroup = GetPlayerFactionGroup
 ---@field infobgcolor ColorArray
 
 ---@class GeneralTable : table
----@field version number
 ---@field lock boolean
 ---@field test boolean
 ---@field banner boolean
@@ -75,8 +74,6 @@ local GetPlayerFactionGroup = GetPlayerFactionGroup
 ---@field debug boolean
 
 ---@class DBTable : table
----@field lastReadVersion string
----@field onlyShowWhenNewVersion boolean
 ---@field global GlobalTable
 
 ---@class BGWC
@@ -148,13 +145,7 @@ NS.WILL_WIN = false
 NS.userClass = select(2, UnitClass("player"))
 NS.userClassHexColor = "|c" .. select(4, GetClassColor(NS.userClass))
 
-NS.ADDON_PREFIX = "BGWC_VERSION"
-NS.FoundNewVersion = false
-NS.VERSION = 987
-
 NS.DefaultDatabase = {
-  lastReadVersion = "9.8.6",
-  onlyShowWhenNewVersion = true,
   global = {
     general = {
       lock = false,
@@ -280,7 +271,6 @@ NS.DefaultDatabase = {
     hordeTimers = {},
     allyLockedTimers = {},
     hordeLockedTimers = {},
-    version = NS.VERSION,
     debug = false,
   },
 }

@@ -2,8 +2,21 @@
 BarberShopProfilesDB = {
 ["profileKeys"] = {
 ["Stormclout - Tichondrius"] = "Stormclout - Tichondrius",
+["Hellavator - Tichondrius"] = "Hellavator - Tichondrius",
 },
 ["race"] = {
+["VoidElf"] = {
+["profiles"] = {
+{
+["choices"] = {
+[8669] = 55693,
+},
+["sex"] = 1,
+["name"] = "VE",
+["isAltered"] = false,
+},
+},
+},
 ["Orc"] = {
 ["profiles"] = {
 {
@@ -18,13 +31,13 @@ BarberShopProfilesDB = {
 [847] = 9491,
 [6341] = 45098,
 [825] = 9295,
-[832] = 9390,
-[831] = 9382,
 [841] = 9471,
+[831] = 9382,
+[832] = 9390,
 },
-["isAltered"] = false,
-["name"] = "Orc Female",
 ["sex"] = 1,
+["name"] = "Orc Female",
+["isAltered"] = false,
 },
 {
 ["choices"] = {
@@ -46,9 +59,9 @@ BarberShopProfilesDB = {
 [877] = 9827,
 [24] = 439,
 },
-["isAltered"] = false,
-["name"] = "Bladefist",
 ["sex"] = 0,
+["name"] = "Bladefist",
+["isAltered"] = false,
 },
 },
 },

@@ -16,10 +16,42 @@ local _, AZT = ...
 local arrowFrame
 
 -- Two ways to read the arrow, and mixing them is what gives people mixed
--- signals. Relative assumes you look at the boss from your quarter,
--- Compass drops that assumption and points the way the room view does
+-- signals. Relative assumes you look at the boss from your quarter, same
+-- vocabulary as the spoken cues, and only fires when facing is unreadable,
+-- since a real heading beats an assumption. Compass drops the assumption
+-- and holds north up instead
 local TURN_RAD = { stay = math.pi, forward = 0, left = math.pi / 2, right = -math.pi / 2 }
 local QUAD_ROT = { N = 0, E = -math.pi / 2, S = math.pi, W = math.pi / 2 }
+
+-- each quarter's compass angle, clockwise from north
+local QUAD_ANGLE = { N = 0, E = math.pi / 2, S = math.pi, W = 3 * math.pi / 2 }
+
+-- The route says which quarter you are leaving and which you are due in, so
+-- the direction between them is known without reading a position. Facing
+-- turns that into something to draw: the arrow points where the move really
+-- is, whichever way the player happens to be looking.
+--
+-- The player fights from melee, hugging the boss in the middle, so a move
+-- starts about melee range out in the old quarter and aims at the meat of
+-- the new one, where the room view draws its label
+local MELEE_YD = 4
+local AIM_YD = 0.62 * AZT.ROOM.radius
+
+local function trueBearing(fromQ, toQ, facing)
+    local a, b = QUAD_ANGLE[fromQ], QUAD_ANGLE[toQ]
+    if not a or not b or not facing then
+        return nil
+    end
+    if fromQ == toQ then
+        return math.pi -- nowhere to go, so the arrow points at your feet
+    end
+    local dx = AIM_YD * math.sin(b) - MELEE_YD * math.sin(a)
+    local dy = AIM_YD * math.cos(b) - MELEE_YD * math.cos(a)
+    local okR, rot = pcall(function()
+        return -(facing + math.atan2(dx, dy))
+    end)
+    return okR and rot or nil
+end
 
 -- no rgb means the art draws as it was painted, which is gold
 AZT.ARROW_COLORS = {
@@ -31,6 +63,9 @@ AZT.ARROW_COLORS = {
     violet = { label = "Violet", rgb = { 0.78, 0.55, 1 } },
 }
 AZT.ARROW_ORDER = { "gold", "red", "green", "white", "cyan", "violet" }
+
+-- the one color the player does not choose: standing where you should be
+local ARRIVED_RGB = { 0.3, 0.95, 0.4 }
 
 function AZT.ArrowColor()
     return AZT.ARROW_COLORS[AztarecHelperDB.arrowColor or "gold"] or AZT.ARROW_COLORS.gold
@@ -47,7 +82,7 @@ local MARK_SIZE = 44 -- the quarter's mark under the arrow
 local function buildArrow()
     arrowFrame = CreateFrame("Frame", "AztarecHelperArrow", UIParent)
     arrowFrame:SetSize(96, 142)
-    AZT.MakeMovable(arrowFrame, "arrowPos", "TOP", 0, -100)
+    AZT.MakeMovable(arrowFrame, "arrow", "TOP", 0, -100)
 
     -- our own arrow art. Blizzard's guide arrow blp turned out to carry
     -- baked-in translucency no blend mode gets around, so this ships as a
@@ -147,21 +182,33 @@ local function buildArrow()
             setMark(safeNow)
             return
         end
-        local compass = AztarecHelperDB.arrowCompass
+        -- where you are, if the ring can say. That beats the recorded step
+        -- for aiming, since it is live and it corrects itself when a player
+        -- falls a wave behind. The route is the fallback: the quarter the
+        -- last wave left you in.
+        local here = AZT.Safe.RingQuadrant()
+        local fromQ = here or (w.idx > 1 and list[w.idx - 1] or list[#list])
+        local arrived = here ~= nil and here == safeNow
         local rot
-        if compass then
+        if AztarecHelperDB.arrowCompass then
             rot = QUAD_ROT[safeNow]
         else
-            -- the move out of the quarter the last wave left you in. It
-            -- trusts the recording, so a player who fell behind gets
-            -- pointed from where they should be standing.
-            local prevQ = w.idx > 1 and list[w.idx - 1] or list[#list]
-            local turn = AZT.Safe.TurnFromTo(prevQ, safeNow)
-            rot = turn and TURN_RAD[turn]
+            -- a real heading while facing reads, the boss-relative turn
+            -- when it does not
+            rot = trueBearing(fromQ, safeNow, AZT.Safe.RingFacing())
+            if not rot then
+                local turn = AZT.Safe.TurnFromTo(fromQ, safeNow)
+                rot = turn and TURN_RAD[turn]
+            end
         end
         setMark(safeNow)
+        if arrived then
+            label:SetTextColor(0.4, 1, 0.5)
+        end
         if rot then
-            showPointer(easeTo(rot), 1, AZT.ArrowColor().rgb)
+            -- green once you are standing in it, your own color while the
+            -- move is still owed
+            showPointer(easeTo(rot), 1, arrived and ARRIVED_RGB or AZT.ArrowColor().rgb)
         else
             -- an unknown step in the route, nothing honest to point at
             hidePointer()
@@ -197,7 +244,7 @@ function AZT.ArrowSync()
         arrowFrame.showPointer(0, PARK_ALPHA, AZT.ArrowColor().rgb)
         -- the caption helps placement and names the reading you are on
         arrowFrame.setMark(nil)
-        local mode = AztarecHelperDB.arrowCompass and "compass arrow" or "relative arrow"
+        local mode = AztarecHelperDB.arrowCompass and "compass arrow" or "safe-spot arrow"
         arrowFrame.label:SetText(fighting and "" or mode)
         arrowFrame.label:SetTextColor(1, 1, 1, 0.5)
     end

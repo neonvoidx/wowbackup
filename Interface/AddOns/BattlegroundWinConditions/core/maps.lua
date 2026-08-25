@@ -10,7 +10,6 @@ local After = C_Timer.After
 -- local IsSoloRBG = C_PvP.IsSoloRBG
 
 local Interface = NS.Interface
-local Version = NS.Version
 
 local Maps = {}
 NS.Maps = Maps
@@ -37,8 +36,6 @@ do
 
     prevZone = instanceID
     zoneIds[instanceID]:EnterZone(instanceID, isBlitz)
-
-    Version:SendVersion()
 
     -- SELECTED_CHAT_FRAME:Clear()
   end

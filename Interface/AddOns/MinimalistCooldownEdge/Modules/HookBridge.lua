@@ -31,6 +31,11 @@ local INTERNAL_VISUAL_COOLDOWN_KEY = "MCEPlayerAuraVisualOnly"
 
 local Registry, BatchProcessor, DurationColor
 
+local DURATION_INPUT_OBJECT = 1
+local DURATION_INPUT_COOLDOWN_ARGS = 2
+local DURATION_INPUT_DURATION_ARGS = 3
+local DURATION_INPUT_EXPIRATION_ARGS = 4
+
 local hookBlacklistParentNameLookup = {}
 for _, parentName in ipairs(BLACKLIST_PARENT_NAMES) do
     hookBlacklistParentNameLookup[parentName] = true
@@ -57,10 +62,6 @@ local function GetTrackedFrameState(cooldown)
     end
 
     return MCE:SafeTableGet(frameState, cooldown)
-end
-
-local function IsBetterBlizzPlatesOwnedState(fs)
-    return fs and fs.betterBlizzPlatesAura == true
 end
 
 local function IsBlacklistAllowed(cooldown)
@@ -182,10 +183,23 @@ end
 
 local VIEWER_TYPE = C.CooldownManagerViewers
 
+local function IsManagedUnitFrameAura(cooldown)
+    local state = GetTrackedFrameState(cooldown)
+    if not state or state.unitFrameManagedAura ~= true then
+        return false
+    end
+    return state.unitFrameAuraInitializing == true
+        or state.unitFrameAuraInitialized == true
+end
+
 local function IsAuraRetryCategory(category, cooldown)
-    if category == CATEGORY.Nameplate
-       or category == CATEGORY.BetterBlizzPlates
-       or category == CATEGORY.Unitframe then
+    if category == CATEGORY.Unitframe then
+        -- MiniCE creates and captures every required public output during the
+        -- AuraContainer initialize callback. Once that atomic path has begun,
+        -- there is no unresolved parent/context state for a next-frame retry.
+        return not IsManagedUnitFrameAura(cooldown)
+    end
+    if category == CATEGORY.Nameplate then
         return true
     end
     if category == CATEGORY.CooldownManager and Registry then
@@ -267,10 +281,14 @@ local function TryRegisterUnknown(cooldown)
     end
     if not MCE:CanUseFrameAsTableKey(cooldown) then return nil end
 
-    local category = Registry:GetCategory(cooldown)
+    local category, isNegative = Registry:GetCategoryAndNegative(cooldown)
     if category then
         ClearUnmanagedAuraClaimRetry(cooldown)
         return category
+    end
+
+    if isNegative then
+        return nil
     end
 
     category = Registry:TryClaim(cooldown)
@@ -346,6 +364,10 @@ local function ScheduleAuraRetry(cooldown, wantsDurationRefresh)
             return
         end
 
+        if not MCE:IsCategoryActive(retryCategory) then
+            return
+        end
+
         InvalidateResolvedFrameState(fs2, refreshDuration)
 
         if refreshDuration then
@@ -355,7 +377,60 @@ local function ScheduleAuraRetry(cooldown, wantsDurationRefresh)
     end)
 end
 
-local function ProcessCooldownUpdate(cooldown, durationObject)
+local function CaptureDurationObject(inputKind, value1, value2, value3)
+    if inputKind == DURATION_INPUT_OBJECT then
+        return value1
+    end
+    if inputKind == DURATION_INPUT_COOLDOWN_ARGS then
+        return DurationColor:CreateDurationObjectFromCooldownArgs(value1, value2, value3)
+    end
+    if inputKind == DURATION_INPUT_DURATION_ARGS then
+        if CanAccessAllValues(value1, value2)
+           and type(value1) == "number"
+           and value1 > 0 then
+            return DurationColor:CreateTransientDuration(
+                GetTime() + value1, value1, value2 or 1)
+        end
+        return nil
+    end
+    if inputKind == DURATION_INPUT_EXPIRATION_ARGS then
+        return DurationColor:CreateDurationObjectFromExpirationArgs(value1, value2, value3)
+    end
+    return nil
+end
+
+local function ProcessClaimedCooldownUpdate(cooldown, category, inputKind, value1, value2, value3)
+    ClearUnmanagedAuraClaimRetry(cooldown)
+    if not MCE:IsCategoryActive(category) then
+        return
+    end
+
+    if category == CATEGORY.Unitframe and IsManagedUnitFrameAura(cooldown) then
+        -- Blizzard is updating a duration already bound to MiniCE's persistent
+        -- AuraButton output. Structural style, native duration text, and count
+        -- metadata are stable; the AuraContainer owns the dynamic update.
+        return
+    end
+
+    local needsDurationUpdate = DurationColor:NeedsDurationUpdate(cooldown, category, true)
+    local durationObject
+    if needsDurationUpdate then
+        if DurationColor:NeedsDurationCapture(cooldown, category, true) then
+            durationObject = CaptureDurationObject(inputKind, value1, value2, value3)
+        end
+        DurationColor:HandleCooldownDurationUpdate(cooldown, durationObject)
+    end
+
+    BatchProcessor:QueueUpdate(cooldown)
+
+    if IsAuraRetryCategory(category, cooldown) then
+        local wantsDurationRefresh = needsDurationUpdate
+            and (durationObject == nil or category == CATEGORY.Nameplate)
+        ScheduleAuraRetry(cooldown, wantsDurationRefresh)
+    end
+end
+
+local function ProcessCooldownUpdate(cooldown, inputKind, value1, value2, value3)
     if IsLossOfControlCooldown(cooldown) then
         ClearUnmanagedAuraClaimRetry(cooldown)
         return
@@ -370,19 +445,14 @@ local function ProcessCooldownUpdate(cooldown, durationObject)
         return
     end
 
-    local category = Registry:GetCategory(cooldown)
+    local category, isNegative = Registry:GetCategoryAndNegative(cooldown)
     if category then
-        local fs = frameState[cooldown]
-        if fs and fs.unmanagedAuraRetryAt then
-            fs.unmanagedAuraRetryAt = nil
-        end
+        ProcessClaimedCooldownUpdate(
+            cooldown, category, inputKind, value1, value2, value3)
+        return
+    end
 
-        DurationColor:HandleCooldownDurationUpdate(cooldown, durationObject)
-        BatchProcessor:QueueUpdate(cooldown)
-
-        if IsAuraRetryCategory(category, cooldown) then
-            ScheduleAuraRetry(cooldown, durationObject == nil or category == CATEGORY.Nameplate)
-        end
+    if isNegative then
         return
     end
 
@@ -397,28 +467,28 @@ local function ProcessCooldownUpdate(cooldown, durationObject)
 
     category = Registry:TryClaim(cooldown)
     if category then
-        ClearUnmanagedAuraClaimRetry(cooldown)
-        DurationColor:HandleCooldownDurationUpdate(cooldown, durationObject)
-        BatchProcessor:QueueUpdate(cooldown)
-
-        if IsAuraRetryCategory(category, cooldown) then
-            ScheduleAuraRetry(cooldown, durationObject == nil or category == CATEGORY.Nameplate)
-        end
+        ProcessClaimedCooldownUpdate(
+            cooldown, category, inputKind, value1, value2, value3)
         return
     end
 
     if HasHookBlacklistMatch(cooldown) then
         ClearUnmanagedAuraClaimRetry(cooldown)
+        Registry:MarkNegative(cooldown)
         return
     end
 
     if not HasAuraLikeAncestor(cooldown) then
         ClearUnmanagedAuraClaimRetry(cooldown)
+        Registry:MarkNegative(cooldown)
         return
     end
 
+    -- Aura ownership can become inspectable after its provider finishes
+    -- initialization. Keep the existing throttled retry semantics for this
+    -- structurally unstable subset instead of pinning a negative verdict.
     MarkUnmanagedAuraClaimRetry(cooldown, UNMANAGED_AURA_RETRY_INTERVAL)
-    ScheduleAuraRetry(cooldown, durationObject == nil)
+    ScheduleAuraRetry(cooldown, false)
 end
 
 local function ProcessCooldownClear(cooldown)
@@ -439,9 +509,17 @@ local function ProcessCooldownClear(cooldown)
         return
     end
 
-    if Registry:IsRegistered(cooldown) then
+    local category, isNegative = Registry:GetCategoryAndNegative(cooldown)
+    if category then
         ClearUnmanagedAuraClaimRetry(cooldown)
+        if not MCE:IsCategoryActive(category) then
+            return
+        end
         DurationColor:ClearTrackedDurationColor(cooldown)
+        return
+    end
+
+    if isNegative or IsRestrictedCooldown(cooldown) then
         return
     end
 
@@ -465,59 +543,28 @@ function HookBridge:SetupHooks()
 
     if type(cooldownAPI.SetCooldown) == "function" then
         hooksecurefunc(cooldownAPI, "SetCooldown", function(cooldown, startTime, duration, modRate)
-            if IsLossOfControlCooldown(cooldown) then
-                ClearUnmanagedAuraClaimRetry(cooldown)
-                return
-            end
-            if not EnsureDependencies() then
-                return
-            end
-            local durationObject = DurationColor:CreateDurationObjectFromCooldownArgs(startTime, duration, modRate)
-            ProcessCooldownUpdate(cooldown, durationObject)
+            ProcessCooldownUpdate(
+                cooldown, DURATION_INPUT_COOLDOWN_ARGS, startTime, duration, modRate)
         end)
     end
 
     if type(cooldownAPI.SetCooldownDuration) == "function" then
         hooksecurefunc(cooldownAPI, "SetCooldownDuration", function(cooldown, duration, modRate)
-            if IsLossOfControlCooldown(cooldown) then
-                ClearUnmanagedAuraClaimRetry(cooldown)
-                return
-            end
-            if not EnsureDependencies() then
-                return
-            end
-            local durationObject
-            if CanAccessAllValues(duration, modRate)
-               and type(duration) == "number"
-               and duration > 0 then
-                durationObject = DurationColor:CreateTransientDuration(GetTime() + duration, duration, modRate or 1)
-            end
-
-            ProcessCooldownUpdate(cooldown, durationObject)
+            ProcessCooldownUpdate(
+                cooldown, DURATION_INPUT_DURATION_ARGS, duration, modRate)
         end)
     end
 
     if type(cooldownAPI.SetCooldownFromDurationObject) == "function" then
         hooksecurefunc(cooldownAPI, "SetCooldownFromDurationObject", function(cooldown, durationObject)
-            if IsLossOfControlCooldown(cooldown) then
-                ClearUnmanagedAuraClaimRetry(cooldown)
-                return
-            end
-            ProcessCooldownUpdate(cooldown, durationObject)
+            ProcessCooldownUpdate(cooldown, DURATION_INPUT_OBJECT, durationObject)
         end)
     end
 
     if type(cooldownAPI.SetCooldownFromExpirationTime) == "function" then
         hooksecurefunc(cooldownAPI, "SetCooldownFromExpirationTime", function(cooldown, expirationTime, duration, modRate)
-            if IsLossOfControlCooldown(cooldown) then
-                ClearUnmanagedAuraClaimRetry(cooldown)
-                return
-            end
-            if not EnsureDependencies() then
-                return
-            end
-            local durationObject = DurationColor:CreateDurationObjectFromExpirationArgs(expirationTime, duration, modRate)
-            ProcessCooldownUpdate(cooldown, durationObject)
+            ProcessCooldownUpdate(
+                cooldown, DURATION_INPUT_EXPIRATION_ARGS, expirationTime, duration, modRate)
         end)
     end
 
@@ -545,7 +592,6 @@ function HookBridge:SetupHooks()
         hooksecurefunc(cooldownAPI, "SetDrawEdge", function(cooldown, enabled)
             local fs = GetTrackedFrameState(cooldown)
             if not fs or fs.suppressEdge then return end
-            if IsBetterBlizzPlatesOwnedState(fs) then return end
             if IsSecretValue(enabled) then return end
             if fs.edge == nil or fs.edge == enabled then return end
             fs.suppressEdge = true
@@ -558,7 +604,6 @@ function HookBridge:SetupHooks()
         hooksecurefunc(cooldownAPI, "SetEdgeScale", function(cooldown, scale)
             local fs = GetTrackedFrameState(cooldown)
             if not fs or fs.suppressEdgeScale then return end
-            if IsBetterBlizzPlatesOwnedState(fs) then return end
             if IsSecretValue(scale) then return end
             if fs.edgeScale == nil or IsNearlyEqual(fs.edgeScale, scale) then return end
             fs.suppressEdgeScale = true
@@ -571,7 +616,6 @@ function HookBridge:SetupHooks()
         hooksecurefunc(cooldownAPI, "SetEdgeColor", function(cooldown, r, g, b, a)
             local fs = GetTrackedFrameState(cooldown)
             if not fs or fs.suppressEdgeColor then return end
-            if IsBetterBlizzPlatesOwnedState(fs) then return end
             if IsSecretValue(r)
                or IsSecretValue(g)
                or IsSecretValue(b)
@@ -589,7 +633,6 @@ function HookBridge:SetupHooks()
         hooksecurefunc(cooldownAPI, "SetSwipeColor", function(cooldown, r, g, b, a)
             local fs = GetTrackedFrameState(cooldown)
             if not fs or fs.suppressSwipe then return end
-            if IsBetterBlizzPlatesOwnedState(fs) then return end
             if IsMUIStyledCooldown(cooldown) then return end
             if IsMasqueManagedCooldown(cooldown) then return end
             if IsSecretValue(r)
@@ -612,7 +655,6 @@ function HookBridge:SetupHooks()
         hooksecurefunc(cooldownAPI, "SetHideCountdownNumbers", function(cooldown, hide)
             local fs = GetTrackedFrameState(cooldown)
             if not fs or fs.suppressHideNums then return end
-            if IsBetterBlizzPlatesOwnedState(fs) then return end
             if fs.hideNums == nil then return end
             -- hide can be a tainted boolean (MiniCE-written value flowing back through Blizzard);
             -- issecretvalue() does not detect taint, so wrap the comparison in pcall instead.
@@ -632,7 +674,6 @@ function HookBridge:SetupHooks()
         hooksecurefunc(cooldownAPI, "SetCountdownAbbrevThreshold", function(cooldown, seconds)
             local fs = GetTrackedFrameState(cooldown)
             if not fs or fs.suppressCountdownAbbrevThreshold then return end
-            if IsBetterBlizzPlatesOwnedState(fs) then return end
             local ok, shouldRestore = pcall(ShouldRestoreValue, fs.countdownAbbrevThreshold, seconds)
             if not ok or not shouldRestore then return end
             fs.suppressCountdownAbbrevThreshold = true
@@ -645,7 +686,6 @@ function HookBridge:SetupHooks()
         hooksecurefunc(cooldownAPI, "SetCountdownMillisecondsThreshold", function(cooldown, seconds)
             local fs = GetTrackedFrameState(cooldown)
             if not fs or fs.suppressCountdownMillisecondsThreshold then return end
-            if IsBetterBlizzPlatesOwnedState(fs) then return end
             local ok, shouldRestore = pcall(ShouldRestoreValue, fs.countdownMillisecondsThreshold, seconds)
             if not ok or not shouldRestore then return end
             fs.suppressCountdownMillisecondsThreshold = true
@@ -658,7 +698,6 @@ function HookBridge:SetupHooks()
         hooksecurefunc(cooldownAPI, "SetDrawSwipe", function(cooldown, enabled)
             local fs = GetTrackedFrameState(cooldown)
             if not fs or fs.suppressSwipeDraw then return end
-            if IsBetterBlizzPlatesOwnedState(fs) then return end
             -- enabled can be tainted for the same reason as hide above.
             local ok, shouldRestore = pcall(ShouldRestoreValue, fs.drawSwipe, enabled)
             if not ok or not shouldRestore then return end
@@ -672,7 +711,6 @@ function HookBridge:SetupHooks()
         hooksecurefunc(cooldownAPI, "SetReverse", function(cooldown, reverse)
             local fs = GetTrackedFrameState(cooldown)
             if not fs or fs.suppressReverseSwipe then return end
-            if IsBetterBlizzPlatesOwnedState(fs) then return end
             -- reverse can be tainted for the same reason as hide above.
             local ok, shouldRestore = pcall(ShouldRestoreValue, fs.reverseSwipe, reverse)
             if not ok or not shouldRestore then return end
@@ -686,7 +724,7 @@ function HookBridge:SetupHooks()
 end
 
 function HookBridge:HandleCooldownUpdate(cooldown, durationObject)
-    ProcessCooldownUpdate(cooldown, durationObject)
+    ProcessCooldownUpdate(cooldown, DURATION_INPUT_OBJECT, durationObject)
 end
 
 function HookBridge:HandleCooldownClear(cooldown)

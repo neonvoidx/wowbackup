@@ -1,16 +1,6 @@
 
 CHATTYNATOR_CURRENT_PROFILE = "DEFAULT"
 CHATTYNATOR_COMMAND_HISTORY = {
-"/i zz",
-"/i /lol",
-"/s /rl",
-"/i LOL Dresnik i saw that",
-"/i leave BE",
-"/i ya idk ally has been shit this week",
-"/i idk what happened",
-"/i guess horde faction changed",
-"/i i was about to say",
-"/i its ok though i watched dresnik make the funniest steal attempt",
 "/i and that was worth ",
 "/i you fc %t?",
 "/i ah youre going to fight mid",
@@ -202,4 +192,14 @@ CHATTYNATOR_COMMAND_HISTORY = {
 "/s /edit",
 "/s /rl",
 "/s /cmc",
+"/s /m",
+"/s /edit",
+"/s /sarena test",
+"/s /edit",
+"/s /sarena hide",
+"/s /wa",
+"/s /m",
+"/s /wa",
+"/s /m",
+"/s /wa",
 }

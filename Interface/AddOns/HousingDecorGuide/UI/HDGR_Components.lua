@@ -1227,10 +1227,14 @@ local function buildModelPreview(parent, spec)
     -- Default scene ID -- Blizzard's HOUSING_CATALOG_DECOR_MODELSCENEID_DEFAULT
     -- is 859 in current builds. Constants.HousingCatalogConsts is the
     -- forward-compatible source.
+    -- The spec is the ONLY source. Every decor-side widget declares
+    -- `defaultSceneID = 859` outright; the pets widget omits it deliberately, and
+    -- omission has to MEAN "there is no fallback". This used to answer with the
+    -- housing decor constant first, so a pet with no scene of its own was framed by
+    -- the decor camera -- exactly what our own recorded gotcha for
+    -- GetPetModelSceneInfoBySpeciesID forbids (review 2026-08-23). nil is an answer.
     local function GetDefaultSceneID()
-        -- exception(boundary): Blizzard has form for renaming Constants.* between expansions
-        return Constants.HousingCatalogConsts.HOUSING_CATALOG_DECOR_MODELSCENEID_DEFAULT
-            or spec.defaultSceneID
+        return spec.defaultSceneID  -- exception(optional): declared in specFields; nil = no fallback
     end
 
     -- Invert pitch so drag-UP tilts UP (PanningModelScene default is reversed).
@@ -1259,6 +1263,19 @@ local function buildModelPreview(parent, spec)
         _installInvertedPitchHook(camera)
     end
 
+    -- Pet path. A pet card scene has no "decor" actor, and a pet has no asset
+    -- fileID -- its model comes from a creature displayID. Same two calls
+    -- Blizzard's own housing pet grid makes.
+    -- Returns false when the scene has no pet actor, so the caller can drop to the
+    -- 2D fallback instead of showing an empty stage. Silently returning left the
+    -- pane blank -- no model, no icon, no "Preview unavailable".
+    local function _pointActorAtPet(displayID)
+        local actor = modelScene.GetActorByTag and modelScene:GetActorByTag("unwrapped")
+        if not actor then return false end   -- exception(boundary): scene shape is Blizzard's
+        actor:SetModelByCreatureDisplayID(displayID, true)
+        return true
+    end
+
     local function _pointActorAtAsset(asset, dyes)
         local actor = modelScene.GetActorByTag and modelScene:GetActorByTag("decor")
         if not actor then return end
@@ -1275,6 +1292,9 @@ local function buildModelPreview(parent, spec)
     -- failure (caller drops to 2D fallback).
     local function _try3DLoad(info, dyes)
         local sceneID = info.uiModelSceneID or GetDefaultSceneID()
+        -- No scene and no declared fallback is a real state (a species Blizzard has
+        -- no card scene for), not an error -- hand it to the 2D path unremarked.
+        if not sceneID then return false end
         local sceneOk, sceneErr = pcall(function()
             modelScene:TransitionToModelSceneID(
                 sceneID,
@@ -1288,7 +1308,11 @@ local function buildModelPreview(parent, spec)
             return false
         end
         _enable3DCameraPitch()
-        _pointActorAtAsset(info.asset, dyes)
+        if info.petDisplayID then
+            if not _pointActorAtPet(info.petDisplayID) then return false end
+        else
+            _pointActorAtAsset(info.asset, dyes)
+        end
         modelScene:Show()
         if frame.controls then frame.controls:Show() end
         return true
@@ -1330,7 +1354,9 @@ local function buildModelPreview(parent, spec)
             placeholder:Show()
             return
         end
-        if info.asset and _try3DLoad(info, dyes) then return end
+        -- A pet has no `asset` fileID -- its model comes from a creature displayID
+        -- -- so either key admits the 3D path.
+        if (info.asset or info.petDisplayID) and _try3DLoad(info, dyes) then return end
         _show2DFallback(info)
     end
 
@@ -1350,6 +1376,12 @@ local function dispatchModelPreview(widget, values)
     local dyes = nil
     if itemID and values.variantKey and HDG.HousingCatalogObserver and HDG.HousingCatalogObserver.GetVariantDyes then  -- exception(boundary): optional module / not yet built; resolved at widget seam for selector purity
         dyes = HDG.HousingCatalogObserver:GetVariantDyes(itemID, values.variantKey)
+    end
+    -- Pets browser: binds speciesID instead of itemID. Resolved at the widget seam
+    -- via PetObserver for the same reason itemID is -- the live read stays behind a
+    -- module boundary so the selector supplying speciesID stays pure.
+    if not info and values.speciesID then
+        info = HDG.PetObserver:Resolve(values.speciesID)  -- exception(nullable): unowned / non-attachable species
     end
     -- Configurable preview background (decor-browser dropdown): apply the chosen
     -- atlas over the dark bgTile; "default"/nil hides the override so the tile shows.
@@ -1385,13 +1417,285 @@ end
 
 HDG.WidgetTypes:Register("modelPreview", {
     build    = function(parent, spec) return buildModelPreview(parent, spec) end,
-    dispatch = { fields = { "itemID", "variantKey", "bg" }, push = dispatchModelPreview },
+    -- speciesID: the Pets browser's binding. Everything else (registered-scene
+    -- transition, orbit camera, inverted pitch, backgrounds, 2D fallback) is shared
+    -- with decor -- the pet path differs in three calls, so it branches rather than
+    -- cloning the widget.
+    dispatch = { fields = { "itemID", "variantKey", "bg", "speciesID" }, push = dispatchModelPreview },
     -- No skin: atlas bg owns the chrome; theme tinting would fight catalog-list atlas.
     requiresFont = function() return false end,
     destroy = destroyWidget,
     specFields = { "showControls", "showCorbels", "showAtlas", "bgTile",
                    "sceneInsets", "placeholder", "defaultSceneID", "configurableBg" },
 })
+
+-- ============================================================================
+-- petScene: the Menagerie's composed preview (spec rulings 11/12; probe Phase D).
+-- DELIBERATELY simpler than modelPreview: fixed camera set once, actors CREATED,
+-- TransitionToModelSceneID never called -- which is exactly what sidesteps both
+-- recorded camera traps (MAINTAIN compounding; per-species authored framing).
+-- Up to three actors: decor by fileID (bbox-top seats the pet -- decor is static,
+-- so unlike a creature's its bbox is trustworthy), pet by displayID, the player
+-- via SetModelByUnit. Actors persist for the widget's life and only re-point
+-- when their model key changes; async loads all funnel into _seatAndFrame,
+-- which reads current state -- so paint is idempotent and racing loads converge.
+-- ============================================================================
+local SCENE_SEAT_LIFT = 0    -- Phase C seat-point data replaces this per-decor
+
+local function _sceneCamera(widget, topZ, seatZ, spec)
+    -- Frame the tallest thing in shot: the seated pet (its seat + its TRUE
+    -- height) or the You actor. petHeight is a framing input only -- the pet's
+    -- rendered size comes from SetRequestedScale in the paint.
+    --
+    -- max(decor top, pet top): a pet on a low cushion must not crop the backrest
+    -- BEHIND it out of shot, and a tall pet on a low seat must not crop itself.
+    -- With no seat datum seatZ == topZ and this is the old topZ + height exactly.
+    local petTop = seatZ + (spec.petHeight or 0.9)  -- exception(nullable): SizeDB miss; median pet frames fine
+    local content = math.max(topZ, petTop)
+    if spec.petHovers then content = content + 1.1 end   -- hover anims lift the model ~a unit above its mesh
+    if spec.withYou then content = math.max(content, 2.6) end
+    -- Aim at 42% of the stack, not 55: aiming high pushed floor pets to the
+    -- bottom edge (cut off under the strip when You raised the content height).
+    -- Distance frames the larger of height and girth -- snakes are 0.1 tall
+    -- and 3 long -- with headroom for hover ANIMATIONS, which translate the
+    -- model without touching the mesh (Driftling, the batdemons).
+    local dist = math.max(content * 2.6, (spec.petGirth or 0) * 0.8, 1.5)  -- exception(nullable): SizeDB miss ships no girth
+    widget._scene:SetCameraPosition(dist, 0, content * 0.42)
+end
+
+-- Seat + frame from CURRENT widget state; every async load funnels here and the
+-- last one wins, so out-of-order streaming converges without tokens. A nil
+-- _decorTopZ means the decor is still streaming -- its own load callback
+-- re-enters when the box is readable.
+-- Alone = PORTRAIT via Blizzard's FULL card recipe, composed = TRUE SCALE.
+-- The portrait needs BOTH halves of what ApplyFromModelSceneActorInfo does:
+-- SetNormalizedScaleAggressiveness(1) (fit the runtime box -- which sees
+-- animation travel and hover, everything offline data cannot) AND
+-- SetUseCenterForOrigin (re-origin the model to its box CENTER). The first
+-- attempt shipped only the first half and a snake whose travel-box extends
+-- off-origin normalized fine but sat OUTSIDE the camera -- the "blank stage".
+-- Centered + normalized, every species lands mid-frame at the same fill.
+-- True scale (our photo-verified chain) stays for the decor/You compositions,
+-- where relative size is the point (ruling 13).
+local PORTRAIT_DIST = 3.4   -- frames the mixin's 2.118 reference box with margin
+
+local function _sceneIsPortrait(spec)
+    return not spec.decor and not spec.withYou
+end
+
+local function _seatAndFrame(widget)
+    local spec = widget._sceneSpec
+    if not spec then return end        -- exception(nullable): late load callback after deselect
+    local topZ = widget._decorTopZ
+    if not topZ then return end
+    if _sceneIsPortrait(spec) then
+        if widget._petActor then widget._petActor:SetPosition(0, 0, 0) end
+        widget._scene:SetCameraPosition(PORTRAIT_DIST, 0, 0)   -- subject is centered AT the origin
+        return
+    end
+    -- The SEAT is not the box top. A bounding box has no idea where a bed's
+    -- cushion is -- its top is the crown of the backrest -- so an eyeballed
+    -- per-decor seat wins where we have one, and the box top stands in where we
+    -- do not (right for flat-topped decor, which is why the plinth always looked
+    -- correct and the bed never did).
+    local seatZ = widget._seatOverride                      -- exception(nullable): /hdg petseat calibration only
+             or (spec.decor and spec.decor.seatZ)           -- exception(nullable): decor with no eyeballed seat yet
+             or topZ
+    if widget._petActor then
+        -- petLift grounds hovering meshes: fliers are authored above their
+        -- origin and render out of frame without it (Amberglow Stinger).
+        widget._petActor:SetPosition(0, 0, seatZ + spec.petLift + SCENE_SEAT_LIFT)
+    end
+    _sceneCamera(widget, topZ, seatZ, spec)
+end
+
+-- The three actors are created ONCE per widget and re-pointed thereafter (the
+-- modelPreview pattern): a repaint with an unchanged model touches nothing, so
+-- reconciliation pushes never reload models or restart their particle effects.
+-- Load callbacks are installed once and read current widget state only.
+local function _sceneActor(widget, slot, onLoaded)
+    local a = widget[slot]
+    if not a then
+        a = widget._scene:CreateActor(nil, "ModelSceneActorTemplate")
+        a:SetOnModelLoadedCallback(onLoaded)
+        widget[slot] = a
+    end
+    return a
+end
+
+local function dispatchPetScene(widget, values)
+    local scene = values.scene
+    widget._sceneSpec = scene
+    local keys = widget._sceneKeys
+    if not scene then
+        if keys.decor or keys.pet or keys.you then
+            keys.decor, keys.pet, keys.you = nil, nil, nil
+            for _, k in ipairs({ "_decorActor", "_petActor", "_youActor" }) do
+                if widget[k] then widget[k]:ClearModel() end
+            end
+        end
+        widget._scene:Hide()
+        widget._placeholderFs:Show()
+        return
+    end
+    widget._placeholderFs:Hide()
+    widget._scene:Show()
+
+    local decorFile = scene.decor and scene.decor.file
+    if not decorFile then
+        -- OUTSIDE the key-change branch: on the widget's very first paint
+        -- keys.decor and decorFile are both nil, the branch below is skipped,
+        -- and an uninitialized _decorTopZ left _seatAndFrame bailing -- the
+        -- first-selected pet painted unseated under the build-time camera.
+        widget._decorTopZ = 0
+    end
+    if keys.decor ~= decorFile then
+        keys.decor = decorFile
+        if decorFile then
+            widget._decorTopZ = nil        -- unknown until the load callback reads the box
+            _sceneActor(widget, "_decorActor", function(actor)
+                if widget._sceneKeys.decor then
+                    local ok, _, _, _, _, _, maxZ = pcall(actor.GetActiveBoundingBox, actor)  -- exception(boundary): nil until streamed
+                    widget._decorTopZ = (ok and maxZ) or 0.5
+                    _seatAndFrame(widget)
+                end
+            end):SetModelByFileID(decorFile)
+        elseif widget._decorActor then
+            widget._decorActor:ClearModel()
+        end
+    end
+
+    if keys.pet ~= scene.petDisplayID then
+        keys.pet = scene.petDisplayID
+        if scene.petDisplayID then
+            -- Blend None: a REUSED actor lerps between models, so stepping the
+            -- list morphs one species into the next (VPP DetailView's finding).
+            local pet = _sceneActor(widget, "_petActor", function(actor)
+                _seatAndFrame(widget)
+                -- The authored card kit, not raw sequence-0 looping: a created
+                -- actor restarts its idle each cycle, re-firing one-shot
+                -- emitters -- short-idle pets (334ms mote) strobe without this.
+                local spec = widget._sceneSpec
+                local kit = spec and HDG.PetObserver:CardAnimKit(spec.speciesID)
+                widget._petKit = kit   -- PlayPhase restores it when the base idle is clicked
+                if kit then actor:PlayAnimationKit(kit) end  -- exception(nullable): species without a card kit keeps the default loop
+            end)
+            pet:SetAnimationBlendOperation(Enum.ModelBlendOperation.None)
+            pet:SetModelByCreatureDisplayID(scene.petDisplayID)
+            -- NO arg2: the battle-pet display path renders at CARD scale, not
+            -- world scale (Carnivorous Lasher: 0.96 in world, ~2x the player on
+            -- the card path -- and VPP's banana exists because cards do not
+            -- convey true size). Raw load + SceneScaleDB is the verified
+            -- world-scale chain; the card KIT, not arg2, is what stops the
+            -- short-idle strobe.
+        elseif widget._petActor then
+            widget._petActor:ClearModel()
+        end
+    end
+    if widget._petActor and scene.petDisplayID then
+        -- Template-correct scale: the actor mixin applies requestedScale on load
+        -- and on change; raw SetScale fights its OnUpdate machinery. Both knobs
+        -- are dirty-checked, so flipping composition re-applies WITHOUT reload.
+        local pet = widget._petActor
+        if _sceneIsPortrait(scene) then
+            pet:SetUseCenterForOrigin(true, true, true)
+            pet:SetRequestedScale(1)
+            pet:SetNormalizedScaleAggressiveness(1)
+        else
+            pet:SetUseCenterForOrigin(false, false, false)
+            pet:SetRequestedScale(scene.petScale)
+            pet:SetNormalizedScaleAggressiveness(0)
+        end
+    end
+
+    local youOn = scene.withYou or nil
+    if keys.you ~= youOn then
+        keys.you = youOn
+        if youOn then
+            _sceneActor(widget, "_youActor", function(actor)
+                actor:SetPosition(0, 1.3, 0)   -- 1.6 cropped at the frame edge
+            end):SetModelByUnit("player")   -- verified on a created actor (probe /papro you)
+        elseif widget._youActor then
+            widget._youActor:ClearModel()
+        end
+    end
+
+    _seatAndFrame(widget)
+end
+
+local function buildPetScene(parent, spec)
+    local widget = CreateFrame("Frame", nil, parent)
+    widget._camDistance = spec.camDistance or 6
+    widget._sceneKeys = {}
+    local scene = CreateFrame("ModelScene", nil, widget, "NoCameraControlModelSceneMixinTemplate")
+    scene:SetAllPoints(widget)
+    scene:EnableMouse(true)   -- opaque to the world: without this, hovering the stage tooltips units BEHIND the window
+    scene:SetCameraPosition(widget._camDistance, 0, 1.2)
+    scene:SetCameraOrientationByYawPitchRoll(math.pi, 0, 0)
+    scene:SetCameraFieldOfView(0.75)
+    scene:SetLightDiffuseColor(0.8, 0.8, 0.8)
+    scene:SetLightAmbientColor(0.6, 0.6, 0.6)
+    scene:SetLightPosition(1, 0, 1)
+    scene:SetLightDirection(-1, 0, -1)
+    widget._scene = scene
+    local ph = widget:CreateFontString(nil, "OVERLAY")
+    applyFontRole(ph, "body")
+    ph:SetPoint("CENTER")
+    ph:SetText(HDG.Locale:Get("MENAGERIE_PICK_A_PET"))
+    HDG.Theme:Register(ph, "TextDim")
+    widget._placeholderFs = ph
+
+    -- Re-seat and re-frame from current widget state. Every async load already
+    -- funnels through the same path; this is the door in for a caller that
+    -- changed something the dispatcher cannot see -- today only /hdg petseat.
+    function widget:Reframe() _seatAndFrame(self) end
+
+    -- The controller's imperative surface (plays are NOT state):
+    function widget:PlayPhase(animID, variation)
+        local pet = self._petActor  ---@diagnostic disable-line: undefined-field
+        if HDG.Store:GetState().account.config.debug then
+            _G.print(("[HDG petscene] PlayPhase(%s, %s) actor=%s loaded=%s kit=%s"):format(
+                tostring(animID), tostring(variation), tostring(pet ~= nil),
+                tostring(pet and pet:IsLoaded()), tostring(self._petKit)))  ---@diagnostic disable-line: undefined-field
+        end
+        if not pet then return end
+        if animID == 0 and (variation or 0) == 0 and self._petKit then
+            -- Base idle clicked: restore the card kit rather than raw looping
+            -- sequence 0 -- the raw loop restarts one-shot emitters and strobes
+            -- short-idle pets (the mote), which the kit exists to prevent.
+            pet:PlayAnimationKit(self._petKit)
+            return
+        end
+        pet:StopAnimationKit()   -- the card kit owns the idle; a clicked phase takes over
+        local ok, err = pcall(pet.SetAnimation, pet, animID, variation)  -- exception(boundary): Blizzard API, variation arg tolerated
+        if not ok and HDG.Store:GetState().account.config.debug then
+            _G.print("[HDG petscene] SetAnimation errored: " .. tostring(err))
+        end
+    end
+    return widget
+end
+
+HDG.WidgetTypes:Register("petScene", {
+    build    = function(parent, spec) return buildPetScene(parent, spec) end,
+    dispatch = { fields = { "scene" }, push = dispatchPetScene },
+    requiresFont = function() return false end,
+    destroy  = destroyWidget,
+    specFields = { "camDistance" },
+})
+
+-- The card has TWO hosts (ruling 9) and so does its stage, which means anything
+-- reaching for "the" stage -- a chip click, a diagnostic dump -- has to ask which
+-- one is on screen. ONE answer, here: the mapping lived in the controller and the
+-- debug dump answered only for the Menagerie, so `/hdg petscene` reported "no
+-- stage widget built" from the Decor tab, where the stage was in plain sight.
+--
+-- HDG.mainFrame, not the rootFrame handed to Wire(): that proved to be a
+-- different frame whose .widgets never held the stage.
+function HDG.UI:PetStage()
+    local view = HDG.Store:GetState().account.ui.view
+    local id = view == "decor" and "petDetailPanel.stage" or "menagerieDetailPanel.stage"
+    return HDG.mainFrame and HDG.mainFrame.widgets[id]   -- exception(nullable): no frame before first open
+end
 
 HDG.WidgetTypes:Register("dropdown", {
     build = buildDropdown,
@@ -1794,9 +2098,15 @@ local function buildCloseButton(parent, spec)
     return button
 end
 
--- (Legacy `closebutton` kind retired in #10.6 -- use kind="button" with
---  options.close = true. The HDG.UI:CloseButton constructor stays as an
---  internal helper called by the unified `button` WidgetTypes entry.)
+-- (Legacy `closebutton` kind retired in #10.6 -- LayoutConfig panels use
+--  kind="button" with options.close = true.)
+
+-- Public constructor, for the hand-built dialogs that have no LayoutConfig entry
+-- to declare `close = true` on (the quantity picker). Same widget the declarative
+-- path builds, so every X in the addon is the one atlas at one tint.
+function HDG.UI:CloseButton(parent, size, iconSize)
+    return buildCloseButton(parent, { size = size or 22, iconSize = iconSize or 12 })
+end
 
 -- ===== IconButton: 3-state Blizzard atlas button (HDG MakeIconButton pattern)
 -- Use for header tab toggles where an icon reads cleaner than a text label.
@@ -2085,7 +2395,11 @@ function HDG.UI:EditBox(parent, opts, font)
         local ph = host:CreateFontString(nil, "OVERLAY")
         applyFontToFS(ph, font)
         ph:SetText(text)
-        ph:SetWordWrap(true)
+        -- Wrap ONLY where there is a second line to wrap into. A single-line
+        -- EditBox has none, so a placeholder longer than the box wrapped and
+        -- spilled out of the frame instead of being clipped (the Menagerie
+        -- search box, 2026-08-25). Multiline boxes still wrap.
+        ph:SetWordWrap(opts.multiline == true)
         ph:SetJustifyH("LEFT")
         ph:SetJustifyV("TOP")
         HDG.Theme:Register(ph, "TextDim")
@@ -2106,6 +2420,59 @@ function HDG.UI:EditBox(parent, opts, font)
         -- to the hook's suspenders.
         host._hdgrPlaceholderRefresh = refresh
         edit._hdgrPlaceholderRefresh = refresh
+        refresh()
+    end
+
+    -- Search chrome: magnifier on the left, clear "x" on the right. Ported from
+    -- VN's search box (owner likes it) but using Blizzard's own SearchBoxTemplate
+    -- art rather than VN's letter-Q stand-in -- the atlases are
+    -- `common-search-magnifyingglass` and `common-search-clearbutton`, and the
+    -- template dims the glass to 0.6 when idle and lifts it to 1.0 on focus,
+    -- which is the affordance doing the work.
+    --
+    -- The caller's OnTextChanged is NOT taken: this hooks, so the search wiring
+    -- that already owns the box keeps owning it.
+    local function attachSearchChrome(host, edit, insetL, insetR)
+        local glass = host:CreateTexture(nil, "OVERLAY")
+        glass:SetAtlas("common-search-magnifyingglass")   -- exception(boundary): Blizzard atlas
+        glass:SetSize(12, 12)
+        glass:SetPoint("LEFT", 5, 0)
+        glass:SetVertexColor(0.6, 0.6, 0.6)
+
+        local clear = CreateFrame("Button", nil, host)
+        clear:SetSize(15, 15)
+        clear:SetPoint("RIGHT", -3, 0)
+        local x = clear:CreateTexture(nil, "OVERLAY")
+        x:SetAtlas("common-search-clearbutton")           -- exception(boundary): Blizzard atlas
+        x:SetSize(10, 10)
+        x:SetPoint("CENTER")
+        x:SetAlpha(0.5)
+        clear:SetScript("OnEnter", function() x:SetAlpha(1) end)
+        clear:SetScript("OnLeave", function() x:SetAlpha(0.5) end)
+        clear:SetScript("OnClick", function()
+            edit:SetText("")
+            edit:ClearFocus()
+            -- SetText does not fire OnTextChanged with userInput, so the search
+            -- state would keep the old needle while the box read empty. Tell the
+            -- consumer explicitly.
+            if edit._hdgrOnClear then edit._hdgrOnClear() end
+            if edit._hdgrPlaceholderRefresh then edit._hdgrPlaceholderRefresh() end
+        end)
+        clear:Hide()
+
+        local function refresh()
+            local has = (edit.GetText and edit:GetText() or "") ~= ""
+            local focused = edit.HasFocus and edit:HasFocus()
+            local lit = (has or focused) and 1 or 0.6
+            glass:SetVertexColor(lit, lit, lit)
+            if has then clear:Show() else clear:Hide() end
+        end
+        edit:HookScript("OnTextChanged", refresh)
+        edit:HookScript("OnEditFocusGained", refresh)
+        edit:HookScript("OnEditFocusLost", refresh)
+        edit:SetTextInsets(insetL, insetR, 0, 0)
+        host._hdgrSearchRefresh = refresh
+        edit._hdgrSearchRefresh = refresh
         refresh()
     end
 
@@ -2130,9 +2497,16 @@ function HDG.UI:EditBox(parent, opts, font)
             box:HookScript("OnEditFocusGained", function() HDG.Theme:SetState(box, { focused = true }) end)
             box:HookScript("OnEditFocusLost",   function() HDG.Theme:SetState(box, { focused = false }) end)
         end
+        -- Search chrome first: it sets the text insets the placeholder must clear,
+        -- so the hint starts after the magnifier instead of underneath it.
+        local padL, padR = 8, 8
+        if opts.search == true then
+            attachSearchChrome(box, box, 20, 20)
+            padL, padR = 20, 20
+        end
         attachPlaceholder(box, box, opts.placeholder, function(ph)
-            ph:SetPoint("LEFT", 8, 0)
-            ph:SetPoint("RIGHT", -8, 0)
+            ph:SetPoint("LEFT", padL, 0)
+            ph:SetPoint("RIGHT", -padR, 0)
         end)
         return box
     end
@@ -2232,7 +2606,7 @@ HDG.WidgetTypes:Register("editbox", {
         },
     },
     destroy = destroyWidget,
-    specFields = { "text", "font", "multiline", "placeholder", "maxLetters",
+    specFields = { "text", "font", "multiline", "placeholder", "search", "maxLetters",
                    "justifyH", "justifyV", "wrap", "tags" },
 })
 
@@ -2771,13 +3145,19 @@ HDG.WidgetTypes:Register("filmstrip", {
     build = function(parent, spec)
         local scroll  = CreateFrame("ScrollFrame", nil, parent)
         local content = CreateFrame("Frame", nil, scroll)
-        content:SetSize(1, spec.cellSize or 60)  -- exception(optional): spec field default (validator-guarded)
+        -- Strict: every filmstrip in LayoutConfig declares both, so the old
+        -- `or 60` / `or 5` defaults had never once been reached. They were
+        -- annotated as validator-guarded optionals, which asserted a risk that
+        -- did not exist -- a filmstrip that omits either should fail loudly
+        -- here, not silently render at a size nobody chose.
+        local cellSize, cellSpacing = spec.cellSize, spec.cellSpacing
+        content:SetSize(1, cellSize)
         scroll:SetScrollChild(content)
         scroll._filmContent  = content
         scroll._filmCells    = {}
         scroll._filmCellKind = spec.cellKind
-        scroll._filmCfg      = { cellSize = spec.cellSize or 60, cellSpacing = spec.cellSpacing or 5 }  -- exception(optional): spec field default (validator-guarded)
-        local step = (spec.cellSize or 60) + (spec.cellSpacing or 5)  -- exception(optional): spec field default (validator-guarded)
+        scroll._filmCfg      = { cellSize = cellSize, cellSpacing = cellSpacing }
+        local step = cellSize + cellSpacing
 
         -- Thin auto-hiding horizontal scrollbar along the bottom: a track + a
         -- draggable thumb (width = viewport/content ratio). Hidden when nothing

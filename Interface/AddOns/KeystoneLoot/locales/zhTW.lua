@@ -8,7 +8,7 @@ local L = KeystoneLoot.L;
 
 -- keystoneloot_frame.lua
 L["%s (%s Season %d)"] = "%s（%s 第 %d 賽季）";
-L["Import BIS items from |cnACCOUNT_WIDE_FONT_COLOR:www.keystoneloot.io|r"] = "從 |cnACCOUNT_WIDE_FONT_COLOR:www.keystoneloot.io|r 匯入 BIS 物品";
+L["Import BIS items from %s"] = "從 %s 匯入 BIS 物品";
 
 -- itemlevel_dropdown.lua
 L["Veteran"] = "精兵";
@@ -25,6 +25,7 @@ L["The Catalyst"] = "催化器";
 L["Minimap button"] = "小地圖按鈕";
 L["Item level in keystone tooltip"] = "在傳奇鑰石顯示對應等級";
 L["Favorite in item tooltip"] = "在物品提示中顯示最愛";
+L["Favorite on item icons"] = "在物品圖示上顯示最愛";
 L['Hide "Other" in All Slots'] = "在「所有欄位」中隱藏「其他」物品";
 L["Loot reminder (dungeons)"] = "戰利品提醒（地城）";
 L["Highlighting"] = "高亮顯示";
@@ -76,6 +77,11 @@ L["Set Favorite"] = "設定最愛";
 L["Nice to have"] = "有更好";
 L["Must have"] = "必須取得";
 L["Best in Slot"] = "最佳裝備";
+L["Catalyst"] = "催化器";
+L["+Secondary stats of the base item"] = "+基礎物品的副屬性";
+
+-- copy_popup.lua
+L["Press CTRL+C to copy"] = "按 CTRL+C 複製";
 
 -- loot_reminder_frame.lua
 L["Correct loot specialization set?"] = "戰利品專精的設定是否正確？";

@@ -101,7 +101,11 @@ local function createInitializer()
 		if cooldown.SetReverse then cooldown:SetReverse(true) end
 		button:SetDurationCooldown(cooldown)
 		if showDuration then
-			local durationText = button:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+			local textOverlay = CreateFrame("Frame", nil, button)
+			textOverlay:SetAllPoints(button)
+			textOverlay:EnableMouse(false)
+			textOverlay:SetFrameLevel(math.min(65535, (button:GetFrameLevel() or 0) + 6))
+			local durationText = textOverlay:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 			durationText:SetPoint("CENTER", button, "CENTER", fontOffsetX, fontOffsetY)
 			durationText:SetDrawLayer("OVERLAY", 7)
 			local resolvedFont

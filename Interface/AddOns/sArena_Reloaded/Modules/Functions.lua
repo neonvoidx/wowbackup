@@ -40,6 +40,17 @@ function sArenaMixin:FindPartyFrame(i)
         end
     elseif C_AddOns.IsAddOnLoaded("ElvUI") and ElvUI[1].private.unitframe.disabledBlizzardFrames.party then
         return _G["ElvUF_PartyGroup1UnitButton" .. i]
+    elseif _G["ERFPartyHeader"] then
+        if i == 5 then
+            local euiSelfFrame = _G["ERFPartySelfButton"]
+            if euiSelfFrame and euiSelfFrame:IsShown() then
+                return euiSelfFrame
+            end
+        end
+        local partyFrame = _G["ERFPartyHeader"][i] or _G["ERFPartyHeaderUnitButton" .. i]
+        if partyFrame then
+            return partyFrame
+        end
     elseif C_AddOns.IsAddOnLoaded("Cell") then
         return _G["CellPartyFrameHeaderUnitButton" .. i]
     elseif C_AddOns.IsAddOnLoaded("Grid2") then
@@ -534,7 +545,7 @@ function sArenaFrameMixin:ResetPixelBorders()
 end
 
 function sArenaFrameMixin:UpdateFrameColors()
-    if self.parent.db.profile.classColorFrameTexture then
+    if self.parent.db.profile.classColorFrameTexture and ((not issecretvalue(self.class) and self.class) or self.tempClass) then
         self:ClassColorFrameTexture()
     elseif self.parent:DarkMode() then
         self:DarkModeFrame()
@@ -703,7 +714,7 @@ function sArenaMixin:CheckMatchStatus(event)
 
             -- Delay reset of this flag so Blizzards SetCooldown doesnt put a CD on Trinket on round start when there isn't a cooldown
             -- from equip swapping in spawn, or potentially accidentally trinketing I suppose.
-            C_Timer.After(0.5, function() self.waitingForMatchDelayedReset = nil end)
+            C_Timer.After(1, function() self.waitingForMatchDelayedReset = nil end)
         else
             self.engagedInMatch = nil
             self.waitingForMatch = true
@@ -1306,6 +1317,15 @@ function sArenaMixin:UpdateCooldownSwipeColor()
             end
         end
     end
+end
+
+function sArenaFrameMixin:SetupDisconnectedIcon(anchorTo, size, elevate, offsetX, offsetY)
+    local icon = self.DisconnectedIcon
+    icon:SetParent(elevate and self.WidgetOverlay or self)
+    icon:SetDrawLayer("OVERLAY", 7)
+    icon:ClearAllPoints()
+    icon:SetPoint("CENTER", anchorTo, "CENTER", offsetX or 0, offsetY or 0)
+    icon:SetSize(size, size)
 end
 
 -- Midnight only

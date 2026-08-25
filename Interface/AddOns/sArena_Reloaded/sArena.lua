@@ -625,6 +625,14 @@ function sArenaMixin:OnEvent(event, ...)
         self:UpdatePreGatesFrames()
     elseif event == "PVP_MATCH_STATE_CHANGED" or event == "PVP_MATCH_ACTIVE" then
         self:CheckMatchStatus(event)
+        if isMidnight and self.waitingForMatch then
+            for i = 1, self.maxArenaOpponents do
+                local frame = self["arena" .. i]
+                if frame then
+                    frame:ResetDR()
+                end
+            end
+        end
         if self:IsInArena() then
             if db and db.profile.shadowSightTimer and self.engagedInMatch and not IsSoloShuffle() then
                 self:StartShadowsightTimer(self.shadowsightStartTime)
@@ -801,15 +809,16 @@ function sArenaMixin:PreviewLayout(layout)
         frame:UpdateAuraHighlightLayout()
         frame:RefreshAuraHighlight()
 
-        if frame.SetupAuraDisplay then
-            frame:SetupAuraDisplay()
-        end
-
         frame:UpdatePlayer(UnitExists(frame.unit) and "seen" or "unseen")
         frame:UpdateClassIconCooldownReverse()
         frame:UpdateTrinketRacialCooldownReverse()
         frame:UpdateClassIconSwipeSettings()
         frame:UpdateTrinketRacialSwipeSettings()
+
+        if frame.SetupAuraDisplay and self.applyingLayout then
+            frame:SetupAuraDisplay()
+        end
+
         frame:UpdateFrameColors()
         frame:UpdateNameColor()
         frame:UpdateSpecNameColor()
@@ -870,7 +879,9 @@ function sArenaMixin:SetLayout(_, layout)
         end
     end
 
+    self.applyingLayout = true
     self:PreviewLayout(layout)
+    self.applyingLayout = nil
 
     self.optionsTable.args.layoutSettingsGroup.args = self.layouts[layout].optionsTable and self.layouts[layout].optionsTable or emptyLayoutOptionsTable
     LibStub("AceConfigRegistry-3.0"):NotifyChange("sArena")
@@ -1957,7 +1968,7 @@ function sArenaFrameMixin:SetMysteryPlayer(unitEvent)
         self:SetPreGatesUnknownPlayer()
     end
 
-    self:SetAlpha(self.parent.waitingForMatch and 1 or self.parent.stealthAlpha)
+    self:SetAlpha(self.parent.waitingForMatch and 1 or self.parent.stealthAlpha or 1)
     self.hideStatusText = true
     self:SetStatusText()
     self.WidgetOverlay:Hide()
@@ -2010,7 +2021,7 @@ function sArenaFrameMixin:GetClass()
                 self:UpdateHealerStatus()
                 --self.SpecNameText:SetText(specName)
                 self:UpdateSpecNameText(specName)
-                self.SpecNameText:SetShown(db.profile.layoutSettings[db.profile.currentLayout].showSpecManaText)
+                self.SpecNameText:SetShown(db and db.profile.layoutSettings[db.profile.currentLayout].showSpecManaText)
                 self:UpdateSpecNameColor()
                 self.specTexture = specTexture
                 self.class = class
@@ -2034,6 +2045,9 @@ function sArenaFrameMixin:GetClass()
                 self.ClassIcon.Texture:SetDesaturated(false)
                 self.ClassIcon.Texture:SetVertexColor(1, 1, 1)
                 self.secretClass = true
+                self:UpdateClassIcon(true)
+                self:UpdateFrameColors()
+                self.parent:UpdateTextures()
             end
         end
     else
@@ -2041,6 +2055,9 @@ function sArenaFrameMixin:GetClass()
         if self.class then
             self.ClassIcon.Texture:SetDesaturated(false)
             self.ClassIcon.Texture:SetVertexColor(1, 1, 1)
+            self:UpdateClassIcon(true)
+            self:UpdateFrameColors()
+            self.parent:UpdateTextures()
         end
     end
 end
@@ -2330,6 +2347,8 @@ function sArenaFrameMixin:ResetLayout()
     f.Icon:SetTexCoord(0, 1, 0, 1)
     local fontName,s,o = f.Text:GetFont()
     f.Text:SetFont(fontName, s, self.parent:GetFontFlags("OUTLINE"))
+
+    self:SetupDisconnectedIcon(self.DeathIcon, 35)
 
     self.TexturePool:ReleaseAll()
 end

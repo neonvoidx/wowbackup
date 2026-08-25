@@ -77,7 +77,7 @@ end
 local function getVisualSignature(group, rule, config)
 	local values = {}
 	local fields = {
-		"style", "size", "iconZoom", "barOrientation", "barAlpha", "barDrainAnimation", "barFillFrame", "barReverseFill", "borderSize", "showCooldownSwipe",
+		"style", "size", "iconZoom", "barOrientation", "barAlpha", "barDrainAnimation", "barFillFrame", "barReverseFill", "borderSize", "showCooldown", "showCooldownSwipe",
 		"showCooldownEdge", "showCooldownBling", "hideCooldownText", "hideChargeText", "cooldownTextSize", "chargeTextSize", "indicatorBorderEnabled",
 		"indicatorBorderTexture", "indicatorBorderSize", "indicatorBorderOffset",
 	}
@@ -87,8 +87,6 @@ local function getVisualSignature(group, rule, config)
 		"showTooltip",
 		"tooltipAnchor",
 		"hideTooltipInCombat",
-		"showCooldown",
-		"showCooldownText",
 		"showStacks",
 		"cooldownAnchor",
 		"cooldownFont",
@@ -263,11 +261,11 @@ local function getIconStyle(config, group)
 		tooltipAnchor = auraConfig.tooltipAnchor,
 		tooltipOffset = auraConfig.tooltipOffset,
 		hideTooltipInCombat = auraConfig.hideTooltipInCombat == true,
-		showCooldown = auraConfig.showCooldown ~= false,
+		showCooldown = group.showCooldown ~= false,
 		showCooldownSwipe = group.showCooldownSwipe ~= false,
 		showCooldownEdge = group.showCooldownEdge ~= false,
 		showCooldownBling = group.showCooldownBling ~= false,
-		showCooldownText = group.hideCooldownText ~= true and auraConfig.showCooldownText ~= false,
+		showCooldownText = group.showCooldown ~= false and group.hideCooldownText ~= true,
 		showStacks = group.hideChargeText ~= true and auraConfig.showStacks ~= false,
 		cooldownAnchor = auraConfig.cooldownAnchor,
 		cooldownOffset = auraConfig.cooldownOffset,
@@ -296,13 +294,16 @@ local function configureSquare(button, group, rule)
 	button:SetSize(size, size)
 	button.square:SetColorTexture(r, g, b, a)
 	button.square:Show()
-	if group.showCooldownSwipe ~= false then
-		button.cd:SetDrawSwipe(true)
+	if group.showCooldown ~= false then
+		button.cd:SetDrawSwipe(group.showCooldownSwipe ~= false)
 		button.cd:SetDrawEdge(group.showCooldownEdge ~= false)
 		button.cd:SetDrawBling(group.showCooldownBling ~= false)
 		button.cd:SetReverse(true)
 		button.cd:Show()
 		call(button, "SetDurationCooldown", button.cd)
+	else
+		call(button, "ClearDurationCooldown")
+		button.cd:Hide()
 	end
 end
 
@@ -529,7 +530,7 @@ local function getIconGroupLayout(group, layoutIndex, fixedSquareGroup)
 	}
 end
 
-local function getIconGroupFlow(group)
+local function getIconGroupFlow(group, root)
 	local axes = GROWTH[tostring(group.growth or "RIGHTDOWN"):upper()] or GROWTH.RIGHTDOWN
 	local primary, secondary = axes[1], axes[2]
 	local primaryHorizontal = primary == "LEFT" or primary == "RIGHT"
@@ -548,7 +549,7 @@ local function getIconGroupFlow(group)
 		anchorPoint = ownPoint,
 		horizontalGrowthDirection = horizontal == "LEFT" and flow.Left or flow.Right,
 		verticalGrowthDirection = vertical == "UP" and flow.Up or flow.Down,
-		maximumLineSize = (perRow * size) + (max(0, perRow - 1) * spacing),
+		maximumLineSize = addon.AuraCompat:GetSafeFlowLayoutMaximumLineSize(root, size, spacing, perRow),
 	}
 end
 
@@ -562,7 +563,7 @@ end
 
 local function layoutIconGroupContainer(entry, root, group)
 	local container = entry and entry.container
-	local flow = getIconGroupFlow(group)
+	local flow = getIconGroupFlow(group, root)
 	if not (container and flow) then return false end
 	local anchor = tostring(group.anchorPoint or "CENTER"):upper()
 	local ownPoint = group.anchorOutside == true and (OPPOSITE[anchor] or anchor) or anchor
@@ -835,7 +836,7 @@ function HB.ApplyManagedAuraContainer(button, prepareOnly)
 	if not (button and addon.AuraCompat and addon.AuraCompat.RegisterAuraSlot and addon.AuraCompat.UpdateAuraSlot) then return false end
 	local managed, state = getState(button)
 	local root = state and (state.healerBuffRoot or state.barGroup or button)
-	local unit = button.unit or (prepareOnly and "player")
+	local unit = button._eqolUnit or (prepareOnly and "player")
 	local config = button._eqolCfg
 	local kind = button._eqolGroupKind or "party"
 	local compiled = config and type(HB.GetCompiled) == "function" and HB.GetCompiled(kind, config) or nil

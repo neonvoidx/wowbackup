@@ -1265,6 +1265,8 @@ end
 
 function H.resolveCastInterruptTexture() return BLIZZARD_CAST_INTERRUPTED_TEX end
 
+function H.resolveCastChannelTexture() return "ui-castingbar-filling-channel" end
+
 function H.resolveCastUninterruptibleTexture() return "ui-castingbar-uninterruptable" end
 
 function H.resolveCastIconTexture(texture)
