@@ -2327,7 +2327,6 @@ end
 
 function Reminder:ShouldSuppressGenericWeaponBuffReminder()
 	local classToken = self:GetClassToken()
-	if classToken == "ROGUE" then return true end
 	if classToken == "SHAMAN" then
 		local specId = self:GetCurrentSpecId()
 		if specId == Reminder.shamanReminder.specEnhancement or specId == Reminder.shamanReminder.specRestoration then return true end

@@ -196,23 +196,24 @@ CooldownManagerCenteredDB = {
 ["customAuras"] = {
 },
 ["assignments"] = {
+["s:442726"] = 1,
 ["t:1295942"] = 1,
 ["t:450193"] = 1,
 ["s:335467"] = 1,
 ["s:443294"] = 1,
 ["s:451038"] = 1,
 ["s:256948"] = 1,
-["s:394087"] = 1,
+["s:146739"] = 1,
 ["s:589"] = 1,
 ["s:34914"] = 1,
-["s:146739"] = 1,
+["s:394087"] = 1,
 ["s:1240201"] = 1,
 ["s:428514"] = 1,
 ["s:1259790"] = 1,
 ["s:206476"] = 1,
 ["s:1238488"] = 1,
-["s:980"] = 1,
 ["s:48181"] = 1,
+["s:980"] = 1,
 ["s:433885"] = 1,
 ["s:408557"] = 1,
 ["s:1297033"] = 1,
@@ -226,23 +227,24 @@ CooldownManagerCenteredDB = {
 ["t:1295942"] = 1,
 ["t:450193"] = 1,
 ["s:335467"] = 3,
+["s:442726"] = 1,
 ["s:394087"] = 1,
 ["s:443294"] = 1,
 ["s:451038"] = 2,
 ["s:146739"] = 2,
-["s:1259790"] = 3,
-["s:256948"] = 2,
 ["s:408557"] = 1,
-["s:980"] = 1,
-["s:10060"] = 2,
+["s:256948"] = 2,
+["s:1259790"] = 2,
 ["s:589"] = 2,
+["s:34914"] = 1,
+["s:980"] = 1,
 ["s:1240201"] = 1,
-["s:48181"] = 4,
+["s:48181"] = 1,
 ["s:1260269"] = 2,
 ["s:206476"] = 2,
-["s:34914"] = 1,
 ["s:428514"] = 2,
 ["s:111400"] = 1,
+["s:10060"] = 2,
 ["s:433885"] = 2,
 ["s:1238488"] = 2,
 ["s:1297033"] = 1,
@@ -257,6 +259,7 @@ CooldownManagerCenteredDB = {
 ["cooldownManager_stackFontName"] = "1",
 ["_bug_warning_displayed"] = 20260310,
 ["tracker"] = {
+["showPassiveTrinkets"] = true,
 ["wildcardSlotSettings"] = {
 ["trinket1"] = {
 ["state"] = "hidden",
@@ -268,21 +271,49 @@ CooldownManagerCenteredDB = {
 },
 },
 ["spellItemSettings"] = {
+[702] = {
+["state"] = "hidden",
+["order"] = 115,
+},
 [7744] = {
 ["state"] = "tracker1",
 ["order"] = 54,
+},
+[1714] = {
+["state"] = "hidden",
+["order"] = 116,
+},
+[126] = {
+["state"] = "hidden",
+["order"] = 117,
 },
 [59545] = {
 ["state"] = "tracker1",
 ["order"] = 30,
 },
+[80240] = {
+["state"] = "hidden",
+["order"] = 118,
+},
 [20572] = {
 ["state"] = "tracker1",
 ["order"] = 15,
 },
+[20707] = {
+["state"] = "hidden",
+["order"] = 119,
+},
 [26297] = {
 ["state"] = "tracker1",
 ["order"] = 14,
+},
+[6353] = {
+["state"] = "hidden",
+["order"] = 120,
+},
+[5782] = {
+["state"] = "hidden",
+["order"] = 121,
 },
 [20594] = {
 ["state"] = "tracker1",
@@ -312,6 +343,10 @@ CooldownManagerCenteredDB = {
 ["state"] = "tracker1",
 ["order"] = 12,
 },
+[442726] = {
+["state"] = "hidden",
+["order"] = 122,
+},
 [1237885] = {
 ["state"] = "tracker1",
 ["order"] = 52,
@@ -332,6 +367,10 @@ CooldownManagerCenteredDB = {
 ["state"] = "hidden",
 ["order"] = 44,
 },
+[333889] = {
+["state"] = "hidden",
+["order"] = 123,
+},
 [59542] = {
 ["state"] = "tracker1",
 ["order"] = 27,
@@ -340,6 +379,10 @@ CooldownManagerCenteredDB = {
 ["state"] = "hidden",
 ["order"] = 41,
 },
+[410598] = {
+["state"] = "hidden",
+["order"] = 124,
+},
 [416250] = {
 ["state"] = "tracker1",
 ["order"] = 35,
@@ -347,6 +390,10 @@ CooldownManagerCenteredDB = {
 [255647] = {
 ["state"] = "tracker1",
 ["order"] = 40,
+},
+[119898] = {
+["state"] = "hidden",
+["order"] = 125,
 },
 [370626] = {
 ["state"] = "tracker1",
@@ -364,9 +411,25 @@ CooldownManagerCenteredDB = {
 ["state"] = "tracker1",
 ["order"] = 58,
 },
+[234153] = {
+["state"] = "hidden",
+["order"] = 126,
+},
+[385899] = {
+["state"] = "hidden",
+["order"] = 127,
+},
 [125439] = {
 ["state"] = "hidden",
 ["order"] = 30,
+},
+[5484] = {
+["state"] = "hidden",
+["order"] = 128,
+},
+[334275] = {
+["state"] = "hidden",
+["order"] = 129,
 },
 [1233724] = {
 ["state"] = "tracker1",
@@ -380,6 +443,14 @@ CooldownManagerCenteredDB = {
 ["state"] = "tracker1",
 ["order"] = 53,
 },
+[1254555] = {
+["state"] = "hidden",
+["order"] = 130,
+},
+[698] = {
+["state"] = "hidden",
+["order"] = 131,
+},
 [155145] = {
 ["state"] = "tracker1",
 ["order"] = 9,
@@ -387,6 +458,14 @@ CooldownManagerCenteredDB = {
 [265221] = {
 ["state"] = "tracker1",
 ["order"] = 22,
+},
+[48020] = {
+["state"] = "hidden",
+["order"] = 133,
+},
+[227892] = {
+["state"] = "hidden",
+["order"] = 138,
 },
 [59543] = {
 ["state"] = "tracker1",
@@ -396,17 +475,69 @@ CooldownManagerCenteredDB = {
 ["state"] = "tracker1",
 ["order"] = 31,
 },
+[686] = {
+["state"] = "hidden",
+["order"] = 134,
+},
 [361584] = {
 ["state"] = "hidden",
 ["order"] = 43,
+},
+[50613] = {
+["state"] = "tracker1",
+["order"] = 5,
+},
+[202719] = {
+["state"] = "tracker1",
+["order"] = 10,
+},
+[107079] = {
+["state"] = "hidden",
+["order"] = 8,
+},
+[69179] = {
+["state"] = "tracker1",
+["order"] = 6,
+},
+[48018] = {
+["state"] = "hidden",
+["order"] = 137,
+},
+[111771] = {
+["state"] = "hidden",
+["order"] = 141,
+},
+[425782] = {
+["state"] = "hidden",
+["order"] = 38,
+},
+[5019] = {
+["state"] = "hidden",
+["order"] = 143,
 },
 [232633] = {
 ["state"] = "tracker1",
 ["order"] = 11,
 },
+[116858] = {
+["state"] = "hidden",
+["order"] = 146,
+},
+[260364] = {
+["state"] = "tracker1",
+["order"] = 2,
+},
+[69041] = {
+["state"] = "tracker1",
+["order"] = 43,
+},
 [80483] = {
 ["state"] = "tracker1",
 ["order"] = 7,
+},
+[342601] = {
+["state"] = "hidden",
+["order"] = 140,
 },
 [25046] = {
 ["state"] = "tracker1",
@@ -416,25 +547,33 @@ CooldownManagerCenteredDB = {
 ["state"] = "hidden",
 ["order"] = 100,
 },
-[1249758] = {
-["state"] = "tracker1",
-["order"] = 57,
-},
-[351239] = {
+[5740] = {
 ["state"] = "hidden",
-["order"] = 80,
+["order"] = 147,
 },
 [384590] = {
 ["state"] = "hidden",
 ["order"] = 81,
 },
+[1249758] = {
+["state"] = "tracker1",
+["order"] = 57,
+},
+[6201] = {
+["state"] = "hidden",
+["order"] = 145,
+},
 [369536] = {
 ["state"] = "hidden",
 ["order"] = 84,
 },
-[358733] = {
+[1122] = {
 ["state"] = "hidden",
-["order"] = 83,
+["order"] = 132,
+},
+[28880] = {
+["state"] = "tracker1",
+["order"] = 26,
 },
 [255654] = {
 ["state"] = "tracker1",
@@ -443,6 +582,18 @@ CooldownManagerCenteredDB = {
 [312411] = {
 ["state"] = "tracker1",
 ["order"] = 13,
+},
+[358733] = {
+["state"] = "hidden",
+["order"] = 83,
+},
+[372608] = {
+["state"] = "hidden",
+["order"] = 33,
+},
+[5697] = {
+["state"] = "hidden",
+["order"] = 148,
 },
 [59544] = {
 ["state"] = "tracker1",
@@ -464,33 +615,33 @@ CooldownManagerCenteredDB = {
 ["state"] = "hidden",
 ["order"] = 28,
 },
-[50613] = {
-["state"] = "tracker1",
-["order"] = 5,
+[104773] = {
+["state"] = "hidden",
+["order"] = 149,
 },
 [372610] = {
 ["state"] = "hidden",
 ["order"] = 42,
 },
-[372608] = {
+[108416] = {
 ["state"] = "hidden",
-["order"] = 33,
+["order"] = 139,
 },
 [1225392] = {
 ["state"] = "hidden",
 ["order"] = 45,
 },
+[17962] = {
+["state"] = "hidden",
+["order"] = 135,
+},
+[351239] = {
+["state"] = "hidden",
+["order"] = 80,
+},
 [20589] = {
 ["state"] = "tracker1",
 ["order"] = 21,
-},
-[69041] = {
-["state"] = "tracker1",
-["order"] = 43,
-},
-[260364] = {
-["state"] = "tracker1",
-["order"] = 2,
 },
 [287712] = {
 ["state"] = "tracker1",
@@ -504,17 +655,21 @@ CooldownManagerCenteredDB = {
 ["state"] = "hidden",
 ["order"] = 27,
 },
+[29893] = {
+["state"] = "hidden",
+["order"] = 144,
+},
 [388213] = {
 ["state"] = "hidden",
 ["order"] = 39,
 },
-[425782] = {
-["state"] = "hidden",
-["order"] = 38,
-},
 [357214] = {
 ["state"] = "hidden",
 ["order"] = 40,
+},
+[1098] = {
+["state"] = "hidden",
+["order"] = 142,
 },
 [256948] = {
 ["state"] = "hidden",
@@ -524,25 +679,21 @@ CooldownManagerCenteredDB = {
 ["state"] = "tracker1",
 ["order"] = 17,
 },
-[107079] = {
+[17877] = {
 ["state"] = "hidden",
-["order"] = 8,
-},
-[69179] = {
-["state"] = "tracker1",
-["order"] = 6,
+["order"] = 150,
 },
 [312924] = {
 ["state"] = "tracker1",
 ["order"] = 37,
 },
-[28880] = {
-["state"] = "tracker1",
-["order"] = 26,
+[172] = {
+["state"] = "hidden",
+["order"] = 136,
 },
-[202719] = {
-["state"] = "tracker1",
-["order"] = 10,
+[6789] = {
+["state"] = "hidden",
+["order"] = 151,
 },
 [68992] = {
 ["state"] = "tracker1",
@@ -652,6 +803,10 @@ CooldownManagerCenteredDB = {
 ["state"] = "hidden",
 ["order"] = 4,
 },
+[271883] = {
+["state"] = "hidden",
+["order"] = 110,
+},
 [138728] = {
 ["state"] = "hidden",
 ["order"] = 58,
@@ -672,6 +827,10 @@ CooldownManagerCenteredDB = {
 ["state"] = "tracker1",
 ["order"] = 39,
 },
+[241309] = {
+["state"] = "hidden",
+["order"] = 111,
+},
 [220756] = {
 ["state"] = "hidden",
 ["order"] = 73,
@@ -688,6 +847,10 @@ CooldownManagerCenteredDB = {
 ["state"] = "hidden",
 ["order"] = 87,
 },
+[269586] = {
+["state"] = "hidden",
+["order"] = 59,
+},
 [244839] = {
 ["state"] = "hidden",
 ["order"] = 7,
@@ -696,17 +859,21 @@ CooldownManagerCenteredDB = {
 ["state"] = "hidden",
 ["order"] = 99,
 },
-[212264] = {
-["state"] = "hidden",
-["order"] = 107,
-},
 [255326] = {
 ["state"] = "hidden",
 ["order"] = 109,
 },
-[269586] = {
+[255825] = {
 ["state"] = "hidden",
-["order"] = 59,
+["order"] = 16,
+},
+[212264] = {
+["state"] = "hidden",
+["order"] = 107,
+},
+[81414] = {
+["state"] = "hidden",
+["order"] = 75,
 },
 [268679] = {
 ["state"] = "hidden",
@@ -716,41 +883,45 @@ CooldownManagerCenteredDB = {
 ["state"] = "hidden",
 ["order"] = 103,
 },
+[221954] = {
+["state"] = "hidden",
+["order"] = 101,
+},
 [257683] = {
 ["state"] = "hidden",
 ["order"] = 66,
-},
-[81414] = {
-["state"] = "hidden",
-["order"] = 75,
 },
 [71153] = {
 ["state"] = "hidden",
 ["order"] = 53,
 },
-[138478] = {
-["state"] = "hidden",
-["order"] = 74,
-},
 [253802] = {
 ["state"] = "hidden",
 ["order"] = 18,
 },
-[221954] = {
+[138478] = {
 ["state"] = "hidden",
-["order"] = 101,
+["order"] = 74,
 },
-[212265] = {
-["state"] = "tracker1",
-["order"] = 51,
+[260260] = {
+["state"] = "hidden",
+["order"] = 90,
+},
+[243734] = {
+["state"] = "hidden",
+["order"] = 112,
+},
+[241305] = {
+["state"] = "hidden",
+["order"] = 36,
 },
 [49040] = {
 ["state"] = "hidden",
 ["order"] = 2,
 },
-[260260] = {
+[212292] = {
 ["state"] = "hidden",
-["order"] = 90,
+["order"] = 77,
 },
 [233062] = {
 ["state"] = "hidden",
@@ -764,9 +935,9 @@ CooldownManagerCenteredDB = {
 ["state"] = "hidden",
 ["order"] = 88,
 },
-[241305] = {
+[219905] = {
 ["state"] = "hidden",
-["order"] = 36,
+["order"] = 12,
 },
 [222735] = {
 ["state"] = "hidden",
@@ -776,33 +947,33 @@ CooldownManagerCenteredDB = {
 ["state"] = "tracker1",
 ["order"] = 41,
 },
-[212292] = {
+[280118] = {
 ["state"] = "hidden",
-["order"] = 77,
+["order"] = 113,
 },
 [81412] = {
 ["state"] = "hidden",
 ["order"] = 76,
 },
-[219905] = {
-["state"] = "hidden",
-["order"] = 12,
+[212265] = {
+["state"] = "tracker1",
+["order"] = 51,
 },
 [241334] = {
 ["state"] = "hidden",
 ["order"] = 14,
 },
-[255825] = {
+[242747] = {
 ["state"] = "hidden",
-["order"] = 16,
+["order"] = 114,
 },
 [86143] = {
 ["state"] = "hidden",
 ["order"] = 47,
 },
-[241323] = {
+[40772] = {
 ["state"] = "hidden",
-["order"] = 46,
+["order"] = 102,
 },
 [124640] = {
 ["state"] = "hidden",
@@ -816,25 +987,25 @@ CooldownManagerCenteredDB = {
 ["state"] = "hidden",
 ["order"] = 48,
 },
-[241304] = {
+[241323] = {
 ["state"] = "hidden",
-["order"] = 22,
+["order"] = 46,
 },
 [250225] = {
 ["state"] = "hidden",
 ["order"] = 105,
 },
-[40772] = {
+[244193] = {
 ["state"] = "hidden",
-["order"] = 102,
+["order"] = 57,
 },
 [191393] = {
 ["state"] = "hidden",
 ["order"] = 60,
 },
-[244193] = {
+[81413] = {
 ["state"] = "hidden",
-["order"] = 57,
+["order"] = 93,
 },
 [241145] = {
 ["state"] = "hidden",
@@ -844,9 +1015,9 @@ CooldownManagerCenteredDB = {
 ["state"] = "hidden",
 ["order"] = 92,
 },
-[81413] = {
+[241304] = {
 ["state"] = "hidden",
-["order"] = 93,
+["order"] = 22,
 },
 [243733] = {
 ["state"] = "hidden",
@@ -933,7 +1104,7 @@ CooldownManagerCenteredDB = {
 },
 ["itemViewerLayouts"] = {
 },
-["showUnusable"] = false,
+["showUnusable"] = true,
 },
 ["cooldownManager_visibility_enabled_viewers"] = {
 ["BuffIconCooldownViewer"] = false,

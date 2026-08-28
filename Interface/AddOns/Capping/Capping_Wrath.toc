@@ -1,5 +1,5 @@
-## Interface: 30405, 38001
-## Version: v12.0.14
+## Interface: 30405, 38002
+## Version: v12.1.0
 ## Title: Capping
 ## Author: Funkeh
 ## Notes: Battleground timers and other PvP features.

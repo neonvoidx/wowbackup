@@ -14,9 +14,214 @@ addon.MythicPlus.variables = addon.MythicPlus.variables or {}
 local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL")
 local wipe = wipe
 
+local function buildRuntimeOwnedSettings(cGameplay)
+	local sectionDungeon = addon.SettingsLayout.gameplayDungeonsMythicSection
+	if sectionDungeon then
+		addon.functions.SettingsCreateHeadline(cGameplay, PLAYER_DIFFICULTY_MYTHIC_PLUS .. " & " .. RAID, { parentSection = sectionDungeon, order = 10 })
+
+		local keystoneEnable = addon.functions.SettingsCreateCheckbox(cGameplay, {
+			var = "enableKeystoneHelper",
+			text = L["enableKeystoneHelper"],
+			desc = L["enableKeystoneHelperDesc"],
+			func = function(v)
+				addon.db["enableKeystoneHelper"] = v
+				if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.toggleFrame then addon.MythicPlus.functions.toggleFrame() end
+			end,
+			order = 10,
+			parentSection = sectionDungeon,
+		})
+		local function isKeystoneEnabled() return keystoneEnable and keystoneEnable.setting and keystoneEnable.setting:GetValue() == true end
+
+		local keystoneChildren = {
+			{ var = "autoInsertKeystone", text = L["Automatically insert keystone"], func = function(v) addon.db["autoInsertKeystone"] = v end, order = 20, parentSection = sectionDungeon },
+			{ var = "closeBagsOnKeyInsert", text = L["Close all bags on keystone insert"], func = function(v) addon.db["closeBagsOnKeyInsert"] = v end, order = 30, parentSection = sectionDungeon },
+			{ var = "autoKeyStart", text = L["autoKeyStart"], func = function(v) addon.db["autoKeyStart"] = v end, order = 40, parentSection = sectionDungeon },
+		}
+		for _, entry in ipairs(keystoneChildren) do
+			entry.parent = true
+			entry.element = keystoneEnable.element
+			entry.parentCheck = isKeystoneEnabled
+			addon.functions.SettingsCreateCheckbox(cGameplay, entry)
+		end
+
+		local listPull, orderPull = addon.functions.prepareListForDropdown({
+			[1] = _G.NONE,
+			[2] = L["Blizzard Pull Timer"],
+			[3] = L["DBM / BigWigs Pull Timer"],
+			[4] = _G.STATUS_TEXT_BOTH,
+		})
+		addon.functions.SettingsCreateDropdown(cGameplay, {
+			var = "PullTimerType",
+			text = L["Pull Timer"],
+			desc = L["PullTimerTypeDesc"],
+			type = Settings.VarType.Number,
+			default = 2,
+			list = listPull,
+			order = 50,
+			orderList = orderPull,
+			get = function() return (addon.db and addon.db["PullTimerType"]) or 1 end,
+			set = function(value) addon.db["PullTimerType"] = value end,
+			parent = true,
+			element = keystoneEnable.element,
+			parentCheck = isKeystoneEnabled,
+			parentSection = sectionDungeon,
+		})
+
+		addon.functions.SettingsCreateCheckbox(cGameplay, {
+			var = "noChatOnPullTimer",
+			text = L["noChatOnPullTimer"],
+			desc = L["noChatOnPullTimerDesc"],
+			func = function(v) addon.db["noChatOnPullTimer"] = v end,
+			order = 60,
+			parent = true,
+			element = keystoneEnable.element,
+			parentCheck = isKeystoneEnabled,
+			parentSection = sectionDungeon,
+		})
+
+		addon.functions.SettingsCreateSlider(cGameplay, {
+			var = "pullTimerShortTime",
+			text = L["sliderShortTime"],
+			desc = L["pullTimerShortTimeDesc"],
+			min = 0,
+			max = 60,
+			step = 1,
+			default = 5,
+			order = 80,
+			get = function() return (addon.db and addon.db["pullTimerShortTime"]) or 5 end,
+			set = function(val) addon.db["pullTimerShortTime"] = val end,
+			parent = true,
+			element = keystoneEnable.element,
+			parentCheck = isKeystoneEnabled,
+			parentSection = sectionDungeon,
+		})
+
+		local objEnable = addon.functions.SettingsCreateCheckbox(cGameplay, {
+			var = "mythicPlusEnableObjectiveTracker",
+			text = L["mythicPlusEnableObjectiveTracker"],
+			desc = L["mythicPlusEnableObjectiveTrackerDesc"],
+			func = function(v)
+				addon.db["mythicPlusEnableObjectiveTracker"] = v
+				if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.setObjectiveFrames then addon.MythicPlus.functions.setObjectiveFrames() end
+			end,
+			order = 90,
+			parentSection = sectionDungeon,
+		})
+		local function isObjectiveEnabled() return objEnable and objEnable.setting and objEnable.setting:GetValue() == true end
+
+		local objectiveTrackerDefaultScope = "dungeonMythicPlus"
+		local objectiveTrackerScopeOptions = {
+			{ value = "dungeonNormal", text = DUNGEONS .. " - " .. PLAYER_DIFFICULTY1 },
+			{ value = "dungeonHeroic", text = DUNGEONS .. " - " .. PLAYER_DIFFICULTY2 },
+			{ value = "dungeonMythic", text = DUNGEONS .. " - " .. PLAYER_DIFFICULTY6 },
+			{ value = objectiveTrackerDefaultScope, text = DUNGEONS .. " - " .. PLAYER_DIFFICULTY_MYTHIC_PLUS },
+			{ value = "dungeonTimewalking", text = DUNGEONS .. " - " .. PLAYER_DIFFICULTY_TIMEWALKER },
+			{ value = "raidLfr", text = RAID .. " - " .. PLAYER_DIFFICULTY3 },
+			{ value = "raidNormal", text = RAID .. " - " .. PLAYER_DIFFICULTY1 },
+			{ value = "raidHeroic", text = RAID .. " - " .. PLAYER_DIFFICULTY2 },
+			{ value = "raidMythic", text = RAID .. " - " .. PLAYER_DIFFICULTY6 },
+			{ value = "raidTimewalking", text = RAID .. " - " .. PLAYER_DIFFICULTY_TIMEWALKER },
+			{ value = "scenarioDelve", text = L["objectiveTrackerScopeScenarioDelve"] },
+		}
+		local function getObjectiveTrackerScopes()
+			if type(addon.db["mythicPlusObjectiveTrackerScopes"]) ~= "table" then addon.db["mythicPlusObjectiveTrackerScopes"] = { [objectiveTrackerDefaultScope] = true } end
+			return addon.db["mythicPlusObjectiveTrackerScopes"]
+		end
+		addon.functions.SettingsCreateMultiDropdown(cGameplay, {
+			var = "mythicPlusObjectiveTrackerScopes",
+			text = L["objectiveTrackerScope"],
+			desc = L["objectiveTrackerScopeDesc"],
+			options = objectiveTrackerScopeOptions,
+			order = 100,
+			get = getObjectiveTrackerScopes,
+			set = function(value)
+				addon.db["mythicPlusObjectiveTrackerScopes"] = type(value) == "table" and value or { [objectiveTrackerDefaultScope] = true }
+				if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.setObjectiveFrames then addon.MythicPlus.functions.setObjectiveFrames() end
+			end,
+			parent = true,
+			element = objEnable.element,
+			parentCheck = isObjectiveEnabled,
+			parentSection = sectionDungeon,
+		})
+
+		addon.functions.SettingsCreateCheckbox(cGameplay, {
+			var = "mythicPlusBRTrackerEnabled",
+			text = L["mythicPlusBRTrackerEnabled"],
+			desc = L["mythicPlusBRTrackerEditModeHint"],
+			func = function(v)
+				addon.db["mythicPlusBRTrackerEnabled"] = v
+				if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.createBRFrame then
+					addon.MythicPlus.functions.createBRFrame()
+				elseif addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.setObjectiveFrames then
+					addon.MythicPlus.functions.setObjectiveFrames()
+				end
+			end,
+			order = 110,
+			parentSection = sectionDungeon,
+		})
+
+		addon.functions.SettingsCreateCheckbox(cGameplay, {
+			var = "mythicPlusBloodlustTrackerEnabled",
+			text = L["mythicPlusBloodlustTrackerEnabled"],
+			desc = L["mythicPlusBloodlustTrackerEditModeHint"],
+			func = function(v)
+				addon.db["mythicPlusBloodlustTrackerEnabled"] = v
+				if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.syncBloodlustUnitAuraRegistration then addon.MythicPlus.functions.syncBloodlustUnitAuraRegistration() end
+				if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.createBloodlustFrame then
+					addon.MythicPlus.functions.createBloodlustFrame()
+					if addon.MythicPlus.functions.refreshBloodlustTracker then addon.MythicPlus.functions.refreshBloodlustTracker(false) end
+				end
+			end,
+			order = 120,
+			parentSection = sectionDungeon,
+		})
+	end
+
+	local sectionGroupFinder = addon.SettingsLayout.gameplayGroupFinderSection
+	if sectionGroupFinder then
+		local groupFinderControlOrder = addon.SettingsLayout.gameplayGroupFinderControlOrder or {}
+		addon.functions.SettingsCreateCheckbox(cGameplay, {
+			var = "mythicPlusEnableDungeonFilter",
+			text = L["mythicPlusEnableDungeonFilter"],
+			desc = L["mythicPlusEnableDungeonFilterDesc"],
+			func = function(v)
+				addon.db["mythicPlusEnableDungeonFilter"] = v
+				if addon.MythicPlus and addon.MythicPlus.functions then
+					if v and addon.MythicPlus.functions.addDungeonFilter then
+						addon.MythicPlus.functions.addDungeonFilter()
+					elseif not v and addon.MythicPlus.functions.removeDungeonFilter then
+						addon.MythicPlus.functions.removeDungeonFilter()
+					end
+				end
+			end,
+			order = groupFinderControlOrder.mythicPlusEnableDungeonFilter,
+			parentSection = sectionGroupFinder,
+			children = {
+				{
+					var = "mythicPlusEnableDungeonFilterClearReset",
+					text = L["mythicPlusEnableDungeonFilterClearReset"],
+					func = function(v) addon.db["mythicPlusEnableDungeonFilterClearReset"] = v end,
+					parentCheck = function()
+						return addon.SettingsLayout.elements["mythicPlusEnableDungeonFilter"]
+							and addon.SettingsLayout.elements["mythicPlusEnableDungeonFilter"].setting
+							and addon.SettingsLayout.elements["mythicPlusEnableDungeonFilter"].setting:GetValue() == true
+					end,
+					parent = true,
+					order = groupFinderControlOrder.mythicPlusEnableDungeonFilter and groupFinderControlOrder.mythicPlusEnableDungeonFilter + 0.1 or nil,
+					default = false,
+					type = Settings.VarType.Boolean,
+					sType = "checkbox",
+					parentSection = sectionGroupFinder,
+				},
+			},
+		})
+	end
+end
+
 local function buildSettings()
 	local cGameplay = addon.SettingsLayout and addon.SettingsLayout.rootGAMEPLAY
 	if not cGameplay then return end
+	buildRuntimeOwnedSettings(cGameplay)
 
 	local suitesCategory = nil
 	local mythicPlusTimerSection = addon.SettingsLayout.suitesMythicPlusTimerSection

@@ -45,7 +45,6 @@ local groupFiltersByContainer = setmetatable({}, { __mode = "k" })
 local slotFramesByContainer = setmetatable({}, { __mode = "k" })
 local itemEnchantmentFramesByContainer = setmetatable({}, { __mode = "k" })
 local tooltipPolicyByButton = setmetatable({}, { __mode = "k" })
-local liveAuraContainers = setmetatable({}, { __mode = "k" })
 AuraCompat._flowLayoutAxisByContainer = AuraCompat._flowLayoutAxisByContainer or setmetatable({}, { __mode = "k" })
 
 AuraCompat.containerAddonName = AURA_CONTAINER_ADDON
@@ -106,31 +105,6 @@ local function HasRequiredContainerMethods(container)
 		if type(container[REQUIRED_CONTAINER_METHODS[i]]) ~= "function" then return false end
 	end
 	return true
-end
-
-local function RefreshVisibleAuraContainers()
-	for container in pairs(liveAuraContainers) do
-		if container.IsEnabled and container:IsEnabled() and container.IsVisible and container:IsVisible() then CallContainerMethod(container, "UpdateAllAuras") end
-	end
-end
-
-local function EnsureUnitFactionRefreshEvent()
-	if AuraCompat._unitFactionRefreshFrame then return end
-	-- Temporary 12.1 workaround: UNIT_FACTION can change whether identity
-	-- candidate filters are allowed without making native AuraContainers rebuild.
-	-- Coalesce the repeated player event and re-evaluate each live container once.
-	local frame = CreateFrame("Frame")
-	frame:RegisterUnitEvent("UNIT_FACTION", "player")
-	frame:SetScript("OnEvent", function(self)
-		if AuraCompat._unitFactionRefreshPending then return end
-		AuraCompat._unitFactionRefreshPending = true
-		self:SetScript("OnUpdate", function(refreshFrame)
-			refreshFrame:SetScript("OnUpdate", nil)
-			AuraCompat._unitFactionRefreshPending = nil
-			RefreshVisibleAuraContainers()
-		end)
-	end)
-	AuraCompat._unitFactionRefreshFrame = frame
 end
 
 local function GetInboundAuraSlotOptions(options)
@@ -311,11 +285,7 @@ function AuraCompat:CreateAuraContainer(parent, name, template)
 	template = template or DEFAULT_CONTAINER_TEMPLATE
 
 	local container = CreateFrame("AuraContainer", name, parent, template)
-	if HasRequiredContainerMethods(container) then
-		liveAuraContainers[container] = true
-		EnsureUnitFactionRefreshEvent()
-		return container
-	end
+	if HasRequiredContainerMethods(container) then return container end
 	return nil
 end
 

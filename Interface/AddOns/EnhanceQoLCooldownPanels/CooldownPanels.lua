@@ -2649,6 +2649,9 @@ end
 local function getSoundLabel(value)
 	local soundName = normalizeSoundName(value)
 	if soundName == "None" then return _G.NONE end
+	local soundCatalog = CooldownPanels.SoundCatalog
+	local catalogLabel = soundCatalog and soundCatalog:GetLabel(soundName)
+	if catalogLabel then return catalogLabel end
 	return soundName
 end
 
@@ -2680,9 +2683,41 @@ local function getSoundOptions()
 	return list
 end
 
+function CooldownPanels:AddSoundMenuOptions(rootDescription, getCurrentValue, setSelectedValue)
+	if not (rootDescription and rootDescription.CreateRadio and getCurrentValue and setSelectedValue) then return end
+	local function isSelected(value) return normalizeSoundName(getCurrentValue()) == value end
+	local function setSelected(value) setSelectedValue(value) end
+	rootDescription:CreateRadio(_G.NONE, isSelected, setSelected, "None")
+
+	local soundCatalog = self.SoundCatalog
+	local rootLabel = soundCatalog and soundCatalog:GetRootLabel()
+	if rootLabel and rootDescription.CreateButton then
+		local cooldownManagerMenu = rootDescription:CreateButton(rootLabel)
+		for _, group in ipairs(soundCatalog.groups) do
+			local categoryMenu = cooldownManagerMenu:CreateButton(soundCatalog:GetGroupLabel(group))
+			if categoryMenu.SetScrollMode and #group.sounds > 12 then categoryMenu:SetScrollMode(260) end
+			for _, sound in ipairs(group.sounds) do
+				categoryMenu:CreateRadio(soundCatalog:GetLabel(sound.value), isSelected, setSelected, sound.value)
+			end
+		end
+	end
+
+	local sharedMediaOptions = getSoundOptions()
+	if rootDescription.CreateButton and #sharedMediaOptions > 1 then
+		local sharedMediaMenu = rootDescription:CreateButton(L["CooldownPanelSoundSharedMedia"] or "SharedMedia")
+		if sharedMediaMenu.SetScrollMode then sharedMediaMenu:SetScrollMode(260) end
+		for _, soundName in ipairs(sharedMediaOptions) do
+			if soundName ~= "None" then sharedMediaMenu:CreateRadio(getSoundLabel(soundName), isSelected, setSelected, soundName) end
+		end
+	end
+end
+
 local function resolveSoundFile(soundName)
 	local value = normalizeSoundName(soundName)
 	if value == "None" then return nil end
+	local soundCatalog = CooldownPanels.SoundCatalog
+	local soundFileID = soundCatalog and soundCatalog:GetSoundFileID(value)
+	if soundFileID then return soundFileID end
 	if LSM and LSM.Fetch then
 		local file = LSM:Fetch("sound", value, true)
 		if file then return file end
@@ -2692,6 +2727,8 @@ end
 
 local function playSoundName(soundName)
 	if not soundName or soundName == "" then return end
+	local soundCatalog = CooldownPanels.SoundCatalog
+	if soundCatalog and soundCatalog:Play(soundName) then return end
 	local numeric = tonumber(soundName)
 	if numeric and PlaySound then
 		PlaySound(numeric, "Master")
@@ -14747,21 +14784,16 @@ local function showSoundMenu(owner, panelId, entryId)
 	if not entry then return end
 	local _, _, soundField, title = CooldownPanels:GetEntrySoundConfig(entry)
 	if not soundField then return end
-	local options = getSoundOptions()
-	if not options or #options == 0 then return end
 	Api.MenuUtil.CreateContextMenu(owner, function(_, rootDescription)
 		rootDescription:SetTag("MENU_EQOL_COOLDOWN_PANEL_SOUND")
 		if rootDescription.SetScrollMode then rootDescription:SetScrollMode(260) end
 		rootDescription:CreateTitle(title or (L["CooldownPanelSoundReady"] or "Sound when ready"))
-		for _, soundName in ipairs(options) do
-			local label = getSoundLabel(soundName)
-			rootDescription:CreateRadio(label, function() return normalizeSoundName(entry[soundField]) == soundName end, function()
-				entry[soundField] = soundName
-				playSoundName(soundName)
-				CooldownPanels:RefreshPanel(panelId)
-				CooldownPanels:RefreshEditor()
-			end)
-		end
+		CooldownPanels:AddSoundMenuOptions(rootDescription, function() return entry[soundField] end, function(value)
+			entry[soundField] = value
+			playSoundName(value)
+			CooldownPanels:RefreshPanel(panelId)
+			CooldownPanels:RefreshEditor()
+		end)
 	end)
 end
 
@@ -15779,7 +15811,7 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 		if normalizeSoundName(currentEntry[soundField]) == normalized then return end
 		currentEntry[soundField] = normalized
 		playSoundName(normalized)
-		refreshEntryViews()
+		refreshEntryPreview()
 	end
 
 	local function setAuraSoundFile(mode, soundName)
@@ -15791,7 +15823,15 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 		if normalizeSoundName(currentEntry[soundField]) == normalized then return end
 		currentEntry[soundField] = normalized
 		playSoundName(normalized)
-		refreshEntryViews()
+		refreshEntryPreview()
+	end
+
+	local function addEntrySoundMenu(root, mode, setSound)
+		CooldownPanels:AddSoundMenuOptions(root, function()
+			local _, currentEntry = getEntry()
+			local _, _, soundField = CooldownPanels:GetEntrySoundConfig(currentEntry, mode)
+			return normalizeSoundName(currentEntry and soundField and currentEntry[soundField])
+		end, setSound)
 	end
 
 	local function getCooldownTextFontSelection()
@@ -18609,14 +18649,7 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 			end,
 			set = function(_, value) setSoundReadyFile(value) end,
 			generator = function(_, root)
-				for _, soundName in ipairs(getSoundOptions()) do
-					local label = getSoundLabel(soundName)
-					root:CreateRadio(label, function()
-						local _, currentEntry = getEntry()
-						local _, _, soundField = CooldownPanels:GetEntrySoundConfig(currentEntry)
-						return normalizeSoundName(currentEntry and soundField and currentEntry[soundField]) == soundName
-					end, function() setSoundReadyFile(soundName) end)
-				end
+				addEntrySoundMenu(root, nil, setSoundReadyFile)
 			end,
 		},
 		{
@@ -18653,14 +18686,7 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 			end,
 			set = function(_, value) setAuraSoundFile("aura", value) end,
 			generator = function(_, root)
-				for _, soundName in ipairs(getSoundOptions()) do
-					local label = getSoundLabel(soundName)
-					root:CreateRadio(label, function()
-						local _, currentEntry = getEntry()
-						local _, _, soundField = CooldownPanels:GetEntrySoundConfig(currentEntry, "aura")
-						return normalizeSoundName(currentEntry and soundField and currentEntry[soundField]) == soundName
-					end, function() setAuraSoundFile("aura", soundName) end)
-				end
+				addEntrySoundMenu(root, "aura", function(value) setAuraSoundFile("aura", value) end)
 			end,
 		},
 		{
@@ -18698,14 +18724,7 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 			end,
 			set = function(_, value) setAuraSoundFile("auraApplicationsIncreased", value) end,
 			generator = function(_, root)
-				for _, soundName in ipairs(getSoundOptions()) do
-					local label = getSoundLabel(soundName)
-					root:CreateRadio(label, function()
-						local _, currentEntry = getEntry()
-						local _, _, soundField = CooldownPanels:GetEntrySoundConfig(currentEntry, "auraApplicationsIncreased")
-						return normalizeSoundName(currentEntry and soundField and currentEntry[soundField]) == soundName
-					end, function() setAuraSoundFile("auraApplicationsIncreased", soundName) end)
-				end
+				addEntrySoundMenu(root, "auraApplicationsIncreased", function(value) setAuraSoundFile("auraApplicationsIncreased", value) end)
 			end,
 		},
 		{
@@ -18743,14 +18762,7 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 			end,
 			set = function(_, value) setAuraSoundFile("auraRemoved", value) end,
 			generator = function(_, root)
-				for _, soundName in ipairs(getSoundOptions()) do
-					local label = getSoundLabel(soundName)
-					root:CreateRadio(label, function()
-						local _, currentEntry = getEntry()
-						local _, _, soundField = CooldownPanels:GetEntrySoundConfig(currentEntry, "auraRemoved")
-						return normalizeSoundName(currentEntry and soundField and currentEntry[soundField]) == soundName
-					end, function() setAuraSoundFile("auraRemoved", soundName) end)
-				end
+				addEntrySoundMenu(root, "auraRemoved", function(value) setAuraSoundFile("auraRemoved", value) end)
 			end,
 		},
 	}
@@ -23178,7 +23190,6 @@ function CooldownPanels:ApplyLayout(panelId, countOverride)
 
 	local count = countOverride or fixedLayoutCount or getPreviewCount(panel)
 	applyIconLayout(frame, count, appliedLayout)
-
 	frame:SetFrameStrata(Helper.NormalizeStrata(layout.strata, Helper.PANEL_LAYOUT_DEFAULTS.strata))
 	syncLayoutSelectionStrata(frame)
 	if frame.label then frame.label:SetText(panel.name or L["cooldownPanelDefaultName"]) end

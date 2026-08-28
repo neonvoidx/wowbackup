@@ -1,6 +1,6 @@
 
 MapPinEnhancedDB = {
-["trackerVisible"] = true,
+["trackerVisible"] = false,
 ["minimapIcon"] = {
 ["minimapPos"] = 163.5128158652648,
 ["lock"] = false,
@@ -12,6 +12,38 @@ MapPinEnhancedDB = {
 },
 ["superTrackingOther"] = false,
 ["sets"] = {
+["set-a55d24d8-a8a0"] = {
+["name"] = "Imported Set 1",
+["pins"] = {
+["setpin-8bcd2bc4-bbfb"] = {
+["y"] = 0.419,
+["x"] = 0.583,
+["title"] = "(lower level)",
+["setTracked"] = false,
+["order"] = 3,
+["color"] = "Yellow",
+["mapID"] = 2393,
+},
+["setpin-cb94db38-8fce"] = {
+["y"] = 0.4669,
+["x"] = 0.2875,
+["title"] = "Map Pin",
+["setTracked"] = false,
+["order"] = 1,
+["color"] = "Yellow",
+["mapID"] = 2393,
+},
+["setpin-08c21570-ae77"] = {
+["y"] = 0.5375,
+["x"] = 0.5132,
+["title"] = "Map Pin",
+["setTracked"] = false,
+["order"] = 2,
+["color"] = "Yellow",
+["mapID"] = 2393,
+},
+},
+},
 },
 ["tracker"] = {
 ["lockTracker"] = false,
@@ -22,17 +54,6 @@ MapPinEnhancedDB = {
 ["autoVisibility"] = "both",
 },
 ["storedPins"] = {
-{
-["mapID"] = 2133,
-["setTracked"] = true,
-["color"] = "Custom",
-["usesAtlas"] = true,
-["x"] = 0.4868009476689383,
-["title"] = "Aberrus, the Shadowed Crucible",
-["order"] = 1,
-["y"] = 0.1261015814125763,
-["texture"] = "Raid",
-},
 },
 ["general"] = {
 ["autoTrackNearestPin"] = true,

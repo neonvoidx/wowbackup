@@ -368,13 +368,8 @@ function GF.FormatOverlayHeight(value)
 	return tostring(floor((tonumber(value) or 0) + 0.5))
 end
 
-function GF.SetStatusBarValue(bar, value, smooth, forceImmediate)
+function GF.SetStatusBarValue(bar, value, smooth)
 	if not bar or value == nil then return end
-	local pixelHelper = GFH and GFH.Pixel
-	if pixelHelper and pixelHelper.SetStatusBarValue then
-		pixelHelper.SetStatusBarValue(bar, value, smooth, forceImmediate)
-		return
-	end
 	if smooth and Enum and Enum.StatusBarInterpolation and Enum.StatusBarInterpolation.ExponentialEaseOut then
 		bar:SetValue(value, Enum.StatusBarInterpolation.ExponentialEaseOut)
 	else
@@ -559,45 +554,58 @@ local function getGroupDebuffMatchFilter(typeCfg)
 	local filters = {}
 	local bossAuraSelected = GF.GROUP_DEBUFF_FILTERS_121 and GFH.SelectionContains(selection, GF.GROUP_DEBUFF_FILTER_BOSS_AURA)
 	local nonPlayerSelected = GF.GROUP_DEBUFF_FILTERS_121 and GFH.SelectionContains(selection, GF.GROUP_DEBUFF_FILTER_NON_PLAYER)
-	local remainingCandidateFilters
+	local nonBossCandidateFilters
 	if bossAuraSelected then
 		filters[#filters + 1] = {
 			filterString = AURA_FILTERS.harmful,
 			candidateFilters = { isBossAura = true },
 		}
-		remainingCandidateFilters = { isBossAura = false }
+		nonBossCandidateFilters = { isBossAura = false }
 	end
-	if nonPlayerSelected then
-		local nonPlayerCandidateFilters = { isFromPlayerOrPlayerPet = false }
-		if bossAuraSelected then nonPlayerCandidateFilters.isBossAura = false end
-		filters[#filters + 1] = {
-			filterString = AURA_FILTERS.harmful,
-			candidateFilters = nonPlayerCandidateFilters,
-		}
-		-- Candidate filters cannot be negated in the filter string. Restrict the
-		-- remaining selected groups to the complementary source set so their OR
-		-- union cannot render a non-player aura twice.
-		remainingCandidateFilters = remainingCandidateFilters or {}
-		remainingCandidateFilters.isFromPlayerOrPlayerPet = true
-	end
-	local function addFilter(filterString)
-		if not filterString then return end
-		if remainingCandidateFilters then
-			filters[#filters + 1] = { filterString = filterString, candidateFilters = remainingCandidateFilters }
+
+	-- AuraGroups do not deduplicate their results. Give each selected token
+	-- category ownership of its matches, then exclude it from every lower-priority
+	-- group so an aura can only render once.
+	local claimedTokens = {}
+	local function addTokenFilter(selected, filterString, token)
+		if not selected or not filterString then return end
+		for i = 1, #claimedTokens do filterString = filterString .. "|!" .. claimedTokens[i] end
+		if nonBossCandidateFilters then
+			filters[#filters + 1] = { filterString = filterString, candidateFilters = nonBossCandidateFilters }
 		else
 			filters[#filters + 1] = filterString
 		end
+		claimedTokens[#claimedTokens + 1] = token
 	end
-	if GFH.SelectionContains(selection, GROUP_DEBUFF_FILTER_RAID) then addFilter(AURA_FILTERS.harmfulRaid) end
-	if GFH.SelectionContains(selection, GROUP_DEBUFF_FILTER_RAID_IN_COMBAT) then addFilter(AURA_FILTERS.harmfulRaidInCombat) end
-	if GFH.SelectionContains(selection, GROUP_DEBUFF_FILTER_CROWD_CONTROL) then addFilter(AURA_FILTERS.harmfulCrowdControl) end
-	if GF.GROUP_DEBUFF_FILTERS_121 and GFH.SelectionContains(selection, GF.GROUP_DEBUFF_FILTER_IMPORTANT) and AURA_FILTERS.harmfulImportant then
-		addFilter(AURA_FILTERS.harmfulImportant)
+
+	addTokenFilter(GFH.SelectionContains(selection, GROUP_DEBUFF_FILTER_CROWD_CONTROL), AURA_FILTERS.harmfulCrowdControl, "CROWD_CONTROL")
+	addTokenFilter(
+		GF.GROUP_DEBUFF_FILTERS_121 and GFH.SelectionContains(selection, GF.GROUP_DEBUFF_FILTER_RAID_PLAYER_DISPELLABLE),
+		AURA_FILTERS.raidPlayerDispellable,
+		"RAID_PLAYER_DISPELLABLE"
+	)
+	addTokenFilter(
+		GFH.SelectionContains(selection, "DISPEL"),
+		AURA_FILTERS.dispellable,
+		GF.GROUP_DEBUFF_FILTERS_121 and "DISPELLABLE" or "RAID_PLAYER_DISPELLABLE"
+	)
+	addTokenFilter(GFH.SelectionContains(selection, GROUP_DEBUFF_FILTER_RAID), AURA_FILTERS.harmfulRaid, "RAID")
+	addTokenFilter(GFH.SelectionContains(selection, GROUP_DEBUFF_FILTER_RAID_IN_COMBAT), AURA_FILTERS.harmfulRaidInCombat, "RAID_IN_COMBAT")
+	addTokenFilter(
+		GF.GROUP_DEBUFF_FILTERS_121 and GFH.SelectionContains(selection, GF.GROUP_DEBUFF_FILTER_IMPORTANT),
+		AURA_FILTERS.harmfulImportant,
+		"IMPORTANT"
+	)
+
+	-- Non-player is a candidate-only category, so let the token categories own
+	-- their overlaps and use this final group for the remaining non-player auras.
+	if nonPlayerSelected then
+		local filterString = AURA_FILTERS.harmful
+		for i = 1, #claimedTokens do filterString = filterString .. "|!" .. claimedTokens[i] end
+		local candidateFilters = { isFromPlayerOrPlayerPet = false }
+		if bossAuraSelected then candidateFilters.isBossAura = false end
+		filters[#filters + 1] = { filterString = filterString, candidateFilters = candidateFilters }
 	end
-	if GF.GROUP_DEBUFF_FILTERS_121 and GFH.SelectionContains(selection, GF.GROUP_DEBUFF_FILTER_RAID_PLAYER_DISPELLABLE) and AURA_FILTERS.raidPlayerDispellable then
-		addFilter(AURA_FILTERS.raidPlayerDispellable)
-	end
-	if GFH.SelectionContains(selection, "DISPEL") then addFilter(AURA_FILTERS.dispellable) end
 	if #filters == 0 then return nil end
 	return filters
 end
@@ -2470,17 +2478,22 @@ local function setTextSlot(
 )
 	if not (st and fs) then return end
 	if fs.SetAlpha then
+		local alpha
 		if mode == "DEFICIT" then
-			local alpha = missingValue
-			if issecretvalue and issecretvalue(alpha) then
-				fs:SetAlpha(alpha)
-			else
-				if alpha == nil then alpha = 0 end
-				if type(alpha) ~= "number" then alpha = tonumber(alpha) or 0 end
-				fs:SetAlpha(alpha)
-			end
+			alpha = missingValue
+		elseif mode == "ABSORB" or mode == "ABSORB_PERCENT" then
+			alpha = absorbValue
+		elseif mode == "HEAL_ABSORB" or mode == "HEAL_ABSORB_PERCENT" then
+			alpha = healAbsorbValue
 		else
-			fs:SetAlpha(1)
+			alpha = 1
+		end
+		if issecretvalue and issecretvalue(alpha) then
+			fs:SetAlpha(alpha)
+		else
+			if alpha == nil then alpha = 0 end
+			if type(alpha) ~= "number" then alpha = tonumber(alpha) or 0 end
+			fs:SetAlpha(alpha)
 		end
 	end
 	local last = st[cacheKey]
@@ -6180,11 +6193,14 @@ local function ensureDB()
 	end
 	GF._ensureSharedHealerBuffPlacement(db)
 	db._eqolInited = true
-	if DB ~= db and UF and UF.Profiles and UF.Profiles.Debug then
-		local partyEnabled = db.party and db.party.enabled == true
-		local raidEnabled = db.raid and db.raid.enabled == true
-		UF.Profiles.Debug("GF ensureDB cache %s -> %s (party=%s, raid=%s)", tostring(DB), tostring(db), tostring(partyEnabled), tostring(raidEnabled))
-		if UF.Profiles.Trace then UF.Profiles.Trace("GF_ENSURE_DB", "CACHE_SWAP") end
+	if DB ~= db then
+		GF._featureEnabledCache = nil
+		if UF and UF.Profiles and UF.Profiles.Debug then
+			local partyEnabled = db.party and db.party.enabled == true
+			local raidEnabled = db.raid and db.raid.enabled == true
+			UF.Profiles.Debug("GF ensureDB cache %s -> %s (party=%s, raid=%s)", tostring(DB), tostring(db), tostring(partyEnabled), tostring(raidEnabled))
+			if UF.Profiles.Trace then UF.Profiles.Trace("GF_ENSURE_DB", "CACHE_SWAP") end
+		end
 	end
 	DB = db
 	return db
@@ -6209,10 +6225,12 @@ getCfg = function(kind)
 end
 
 local function isFeatureEnabled()
+	if GF._featureEnabledCache ~= nil then return GF._featureEnabledCache end
 	local db = DB or ensureDB()
 	local partyEnabled = db and db.party and db.party.enabled == true
 	local raidEnabled = db and db.raid and db.raid.enabled == true
-	return partyEnabled or raidEnabled
+	GF._featureEnabledCache = partyEnabled or raidEnabled
+	return GF._featureEnabledCache
 end
 
 local hiddenParent
@@ -6291,6 +6309,7 @@ function GF:EnsureDB() return ensureDB() end
 
 function GF:ResetDBCache()
 	DB = nil
+	GF._featureEnabledCache = nil
 	return ensureDB()
 end
 
@@ -6327,7 +6346,6 @@ GF._pendingSortKinds = GF._pendingSortKinds or {}
 GF._lightHeaderRefreshOptions = GF._lightHeaderRefreshOptions or { skipChildSync = true, skipUnchangedUnitUpdate = true }
 GF._pendingDisable = GF._pendingDisable or false
 GF._clientSceneActive = GF._clientSceneActive or false
-GF._postRosterHeaderApplyPending = GF._postRosterHeaderApplyPending or false
 GF._pendingPartyDynamicAnchorUpdate = GF._pendingPartyDynamicAnchorUpdate or false
 GF._pendingRaidDynamicAnchorUpdate = GF._pendingRaidDynamicAnchorUpdate or false
 
@@ -6643,16 +6661,60 @@ local function updateButtonConfig(self, cfg)
 	local pcfg = cfg.power or {}
 	local ac = cfg.auras
 	local scfg = cfg.status or {}
+	local defH = ((DEFAULTS[self._eqolGroupKind or "party"] or DEFAULTS.party).health) or {}
 
 	st._wantsName = tc.showName ~= false
 	st._wantsLevel = scfg.levelEnabled ~= false
 	st._wantsIncomingHeal = hc.incomingHealEnabled == true
 	st._wantsTempMaxHealthLoss = hc.tempMaxHealthLossEnabled ~= false
-	local healthTextUsesAbsorb = UFHelper
-		and UFHelper.textModeUsesAbsorb
-		and (UFHelper.textModeUsesAbsorb(hc.textLeft) or UFHelper.textModeUsesAbsorb(hc.textCenter) or UFHelper.textModeUsesAbsorb(hc.textRight))
-	st._wantsAbsorb = (hc.absorbEnabled ~= false) or (hc.healAbsorbEnabled ~= false) or healthTextUsesAbsorb == true
+	local healthTextLeft = hc.textLeft or defH.textLeft or "NONE"
+	local healthTextCenter = hc.textCenter or defH.textCenter or "NONE"
+	local healthTextRight = hc.textRight or defH.textRight or "NONE"
+	st._healthTextLeftMode = healthTextLeft
+	st._healthTextCenterMode = healthTextCenter
+	st._healthTextRightMode = healthTextRight
+	st._wantsHealthText = healthTextLeft ~= "NONE" or healthTextCenter ~= "NONE" or healthTextRight ~= "NONE"
+	local dbc = cfg.dataBar or {}
+	local defDB = ((DEFAULTS[self._eqolGroupKind or "party"] or DEFAULTS.party).dataBar) or {}
+	st._dataBarTextLeftMode = dbc.textLeft or defDB.textLeft or "NONE"
+	st._dataBarTextCenterMode = dbc.textCenter or defDB.textCenter or "NONE"
+	st._dataBarTextRightMode = dbc.textRight or defDB.textRight or "NONE"
+	st._wantsDataBarText = dbc.enabled == true
+		and (st._dataBarTextLeftMode ~= "NONE" or st._dataBarTextCenterMode ~= "NONE" or st._dataBarTextRightMode ~= "NONE")
+	if not st._wantsHealthText then
+		if st.healthTextLeft then st.healthTextLeft:SetText("") end
+		if st.healthTextCenter then st.healthTextCenter:SetText("") end
+		if st.healthTextRight then st.healthTextRight:SetText("") end
+		st._lastHealthTextLeft, st._lastHealthTextCenter, st._lastHealthTextRight = nil, nil, nil
+		st._nextHealthTextUpdateAt = nil
+	end
+	if not st._wantsDataBarText then GF.ClearDataBarText(st) end
+	st._healthTextUsesDamageAbsorb = UFHelper
+		and UFHelper.textModeUsesDamageAbsorb
+		and (UFHelper.textModeUsesDamageAbsorb(healthTextLeft) or UFHelper.textModeUsesDamageAbsorb(healthTextCenter) or UFHelper.textModeUsesDamageAbsorb(healthTextRight))
+	st._healthTextUsesHealAbsorb = UFHelper
+		and UFHelper.textModeUsesHealAbsorb
+		and (UFHelper.textModeUsesHealAbsorb(healthTextLeft) or UFHelper.textModeUsesHealAbsorb(healthTextCenter) or UFHelper.textModeUsesHealAbsorb(healthTextRight))
+	st._healthTextUsesPercent = UFHelper
+		and UFHelper.textModeUsesPercent
+		and (UFHelper.textModeUsesPercent(healthTextLeft) or UFHelper.textModeUsesPercent(healthTextCenter) or UFHelper.textModeUsesPercent(healthTextRight))
+	st._dataBarTextUsesPercent = st._wantsDataBarText
+		and UFHelper
+		and UFHelper.textModeUsesPercent
+		and (
+			UFHelper.textModeUsesPercent(st._dataBarTextLeftMode)
+			or UFHelper.textModeUsesPercent(st._dataBarTextCenterMode)
+			or UFHelper.textModeUsesPercent(st._dataBarTextRightMode)
+		)
+	st._damageAbsorbVisualEnabled = hc.absorbEnabled ~= false
+	st._healAbsorbVisualEnabled = hc.healAbsorbEnabled ~= false
+	st._wantsDamageAbsorb = st._damageAbsorbVisualEnabled or st._healthTextUsesDamageAbsorb
+	st._wantsHealAbsorb = st._healAbsorbVisualEnabled or st._healthTextUsesHealAbsorb
 	st._wantsStatusText = scfg and scfg.unitStatus and scfg.unitStatus.enabled ~= false
+	st._wantsPerFrameGroupNumber = resolveGroupNumberEnabled(cfg, DEFAULTS[self._eqolGroupKind or "party"] or DEFAULTS.party)
+	st._healthOrientationVertical = UFHelper.normalizeStatusBarOrientation(hc.orientation or defH.orientation) == "VERTICAL"
+	st._healthUsesEditModeSamples = hc.showSampleIncomingHeal == true or hc.showSampleAbsorb == true or hc.showSampleHealAbsorb == true
+	st._statusTextRenderCached = nil
 	st._wantsRangeFade = scfg and scfg.rangeFade and scfg.rangeFade.enabled ~= false
 	st._wantsDispelTint = resolveDispelIndicatorEnabled(cfg, self._eqolGroupKind or "party")
 	st._wantsPortrait = select(1, GF.ResolveGroupPortraitConfig(cfg, self._eqolGroupKind or "party"))
@@ -6707,7 +6769,6 @@ function GF.UnitButton_OnShow(self)
 	local st = self and self._eqolUFState
 	if st then
 		st._missedHiddenEvent = nil
-		st._managedHelpfulIdentityAllowed = nil
 	end
 
 	GF:UnitButton_EvaluateUnit(self, true)
@@ -9525,7 +9586,6 @@ function GF.ProcessManagedAuraRefreshQueue()
 					GF:UpdateAuras(button)
 					st._managedAuraRefreshActive = nil
 					st._managedAuraRefreshPrepared = true
-					if GF.IsManagedHelpfulIdentityAllowed(button) then st._managedAuraHelpfulPrepared = true end
 					refreshed = refreshed + 1
 				end
 			end
@@ -9619,105 +9679,6 @@ function GF.BuildManagedAuraCandidateFilters(baseFilters, excludedSpellIDSets)
 	end
 	if next(excludedSpellIDs) then filters.excludeSpellIDs = excludedSpellIDs end
 	return next(filters) and filters or nil
-end
-
-function GF.IsManagedHelpfulIdentityFrame(self)
-	if not self or self._eqolPreview then return false end
-	local kind = self._eqolGroupKind
-	return kind == "party" or kind == "raid"
-end
-
-function GF.ShouldTrackManagedHelpfulIdentity(self)
-	if not GF.IsManagedHelpfulIdentityFrame(self) then return false end
-	if not (addon.AuraCompat and addon.AuraCompat.ShouldUseAuraContainer and addon.AuraCompat:ShouldUseAuraContainer()) then return false end
-	local st = getState(self)
-	return st and (st._wantsAuras == true or st._wantsHealerBuffPlacement == true) or false
-end
-
-function GF.IsManagedHelpfulIdentityAllowed(self, unit)
-	if not GF.IsManagedHelpfulIdentityFrame(self) then return true end
-	unit = unit or getUnit(self)
-	if not unitTokenExists(unit) then return false end
-	return UnitCanAssist("player", unit) == true
-end
-
-function GF.ManagedHelpfulCandidateFiltersNeedIdentity(candidateFilters)
-	return type(candidateFilters) == "table" and (candidateFilters.includeSpellIDs ~= nil or candidateFilters.excludeSpellIDs ~= nil)
-end
-
--- Temporary 12.1 safeguard: native Helpful AuraContainers skip SpellID candidate
--- filters while a group unit is not assistable. Fail closed for only those
--- displays, then rebuild them after the relationship becomes valid again.
-function GF.RefreshManagedHelpfulIdentityContainers(self)
-	if not GF.IsManagedHelpfulIdentityAllowed(self) then return false end
-	local st = getState(self)
-	local store = st and st.managedAuraContainers
-	local refreshed = false
-	local function refreshLane(kindKey)
-		local lane = store and store[kindKey]
-		local container = lane and lane.container
-		if not (lane and GF.ManagedHelpfulCandidateFiltersNeedIdentity(lane.candidateFilters) and container) then return end
-		if container.IsEnabled and not container:IsEnabled() then return end
-		if container.IsVisible and not container:IsVisible() then return end
-		if addon.AuraCompat and addon.AuraCompat.UpdateAuraContainer and addon.AuraCompat:UpdateAuraContainer(container) then refreshed = true end
-	end
-	refreshLane("buff")
-	refreshLane("externals")
-	if UF.GroupFramesHealerBuffs and UF.GroupFramesHealerBuffs.RefreshManagedAuraContainers then
-		if UF.GroupFramesHealerBuffs.RefreshManagedAuraContainers(self) then refreshed = true end
-	end
-	return refreshed
-end
-
-function GF.FlushManagedHelpfulIdentityRefreshes()
-	GF._managedHelpfulIdentityRefreshQueued = nil
-	local pending = GF._managedHelpfulIdentityRefreshPending
-	GF._managedHelpfulIdentityRefreshPending = nil
-	if not isFeatureEnabled() then return end
-	for button, force in pairs(pending or EMPTY) do
-		if GF.ShouldTrackManagedHelpfulIdentity(button) and getUnit(button) then
-			local st = getState(button)
-			if button.IsVisible and not button:IsVisible() then
-				st._managedHelpfulIdentityAllowed = nil
-			else
-				local allowed = GF.IsManagedHelpfulIdentityAllowed(button)
-				if force == true or st._managedHelpfulIdentityAllowed ~= allowed then
-					GF:UpdateAuras(button)
-					if allowed then GF:RefreshManagedHelpfulIdentityContainers(button) end
-				end
-			end
-		end
-	end
-end
-
-function GF.QueueManagedHelpfulIdentityRefresh(button, force)
-	if not GF.ShouldTrackManagedHelpfulIdentity(button) then return end
-	GF._managedHelpfulIdentityRefreshPending = GF._managedHelpfulIdentityRefreshPending or {}
-	if force == true or GF._managedHelpfulIdentityRefreshPending[button] == nil then GF._managedHelpfulIdentityRefreshPending[button] = force == true end
-	if GF._managedHelpfulIdentityRefreshQueued then return end
-	GF._managedHelpfulIdentityRefreshQueued = true
-	RunNextFrame(GF.FlushManagedHelpfulIdentityRefreshes)
-end
-
-function GF.QueueAllManagedHelpfulIdentityRefreshes(force)
-	for _, header in pairs(GF.headers or EMPTY) do
-		GF.ForEachVisualChild(header, function(button)
-			GF.QueueManagedHelpfulIdentityRefresh(button, force)
-		end)
-	end
-end
-
-function GF.QueueManagedHelpfulIdentityRefreshForUnit(unit, force)
-	if type(unit) ~= "string" or unit == "" or unit == "player" then
-		GF.QueueAllManagedHelpfulIdentityRefreshes(force)
-		return
-	end
-	for _, header in pairs(GF.headers or EMPTY) do
-		GF.ForEachVisualChild(header, function(button)
-			local buttonUnit = getUnit(button)
-			if buttonUnit == unit then GF.QueueManagedHelpfulIdentityRefresh(button, force) end
-		end)
-	end
 end
 
 function GF.GetManagedAuraLaneStore(st)
@@ -9821,13 +9782,11 @@ function GF.ExpandManagedBossAuraFilters(filters, layout, isDebuff)
 	return expanded
 end
 
-function GF.GetManagedAuraGroupMaxFrameCount(maxCount, groupIndex, groupCount)
-	if groupCount <= 1 then return maxCount end
-	-- PTR4 AuraGroups have independent limits and do not deduplicate across
-	-- groups. Split the lane limit conservatively so an OR lane cannot render
-	-- more than its configured maximum, even though overlapping filters can
-	-- still select the same aura in more than one group.
-	return floor((maxCount + groupCount - groupIndex) / groupCount)
+function GF.GetManagedAuraGroupMaxFrameCount(maxCount, _groupIndex, _groupCount)
+	-- Native AuraGroups cannot share unused capacity. Keep the configured cap on
+	-- every mutually exclusive group so an empty category cannot hide matching
+	-- auras from another selected category.
+	return maxCount
 end
 
 function GF.GetAuraGridFramePoint(layout)
@@ -10022,15 +9981,12 @@ function GF:ApplyManagedAuraContainers(self, allowEditMode)
 		debuff = debuffCandidateFilters,
 		externals = externalCandidateFilters,
 	}
-	local helpfulIdentityAllowed = GF.IsManagedHelpfulIdentityAllowed(self, unit)
-	st._managedHelpfulIdentityAllowed = helpfulIdentityAllowed
 	local any = false
 	local store = GF.GetManagedAuraLaneStore(st)
 	for kindKey, meta in pairs(AURA_TYPE_META) do
 		local layout = st._auraLayout and st._auraLayout[kindKey]
 		local style = st._auraStyle and st._auraStyle[kindKey]
-		local unitAllowed = meta.isDebuff or helpfulIdentityAllowed
-		if wants[kindKey] and layout and style and unitAllowed then
+		if wants[kindKey] and layout and style then
 			local anchorBossToFrame = meta.isDebuff and tonumber(layout.bossSize) ~= tonumber(layout.size)
 			local lane = GF:EnsureManagedAuraLane(self, kindKey, unit, filters[kindKey], style, layout, meta.isDebuff, candidateFilters[kindKey])
 			if allowEditMode and lane and lane.container and lane.container.SetUseEditModeSource then lane.container:SetUseEditModeSource(true) end
@@ -10559,7 +10515,12 @@ function GF:UpdateAuras(self, updateInfo)
 	local inEditMode = isEditModeActive()
 	if inEditMode then
 		if UF.GroupFramesHealerBuffs and UF.GroupFramesHealerBuffs.HideManagedAuraContainer then UF.GroupFramesHealerBuffs.HideManagedAuraContainer(self) end
-		if GF and (GF._editModeSampleAuras == false or GF._editModeExiting == true) then
+		local groupKind = self._eqolGroupKind or "party"
+		local showAuraSamples = GF and GF._editModeSampleAuras ~= false
+		local showBuffPlacementSample = GF and GF.IsEditModeBuffPlacementPreviewEnabled and GF:IsEditModeBuffPlacementPreviewEnabled(groupKind)
+		local cfg = self._eqolCfg or getCfg(groupKind)
+		showBuffPlacementSample = showBuffPlacementSample and cfg and cfg.healerBuffPlacement and cfg.healerBuffPlacement.enabled == true
+		if (not showAuraSamples and not showBuffPlacementSample) or GF._editModeExiting == true then
 			GF:HideManagedAuraContainers(self)
 			if st.buffContainer then st.buffContainer:Hide() end
 			if st.debuffContainer then st.debuffContainer:Hide() end
@@ -10573,21 +10534,26 @@ function GF:UpdateAuras(self, updateInfo)
 			st._healerBuffPlacementActive = nil
 			return
 		end
-		if st.buffContainer then st.buffContainer:Hide() end
-		if st.debuffContainer then st.debuffContainer:Hide() end
-		if st.externalContainer then st.externalContainer:Hide() end
-		hideAuraButtons(st.buffButtons, 1)
-		hideAuraButtons(st.debuffButtons, 1)
-		hideAuraButtons(st.externalButtons, 1)
-		st._auraSampleActive = nil
-		GF:UpdateDispelTint(self, nil, nil)
-		if GF.ShouldUseManagedAuraContainers(self, true) then
-			GF:ApplyManagedAuraContainers(self, true)
+		GF:HideManagedAuraContainers(self)
+		if showAuraSamples then
+			GF:UpdateSampleAuras(self)
 		else
-			GF:HideManagedAuraContainers(self)
+			if st.buffContainer then st.buffContainer:Hide() end
+			if st.debuffContainer then st.debuffContainer:Hide() end
+			if st.externalContainer then st.externalContainer:Hide() end
+			hideAuraButtons(st.buffButtons, 1)
+			hideAuraButtons(st.debuffButtons, 1)
+			hideAuraButtons(st.externalButtons, 1)
+			st._auraSampleActive = nil
+			GF:UpdateDispelTint(self, nil, nil, true)
 		end
-		if st._healerBuffPlacementActive and UF.GroupFramesHealerBuffs and UF.GroupFramesHealerBuffs.ClearButton then UF.GroupFramesHealerBuffs.ClearButton(self) end
-		st._healerBuffPlacementActive = nil
+		if showBuffPlacementSample and UF.GroupFramesHealerBuffs and UF.GroupFramesHealerBuffs.UpdateSample then
+			UF.GroupFramesHealerBuffs.UpdateSample(self)
+			st._healerBuffPlacementActive = true
+		elseif st._healerBuffPlacementActive and UF.GroupFramesHealerBuffs and UF.GroupFramesHealerBuffs.ClearButton then
+			UF.GroupFramesHealerBuffs.ClearButton(self)
+			st._healerBuffPlacementActive = nil
+		end
 		return
 	elseif self._eqolPreview then
 		GF:HideManagedAuraContainers(self)
@@ -10624,8 +10590,7 @@ function GF:UpdateAuras(self, updateInfo)
 		-- UNIT_AURA updateInfo is secret while auras are restricted. Managed
 		-- AuraContainers consume the event themselves, so do not inspect or
 		-- forward its fields through the addon path.
-		local helpfulIdentityAllowed = GF.IsManagedHelpfulIdentityAllowed(self, unit)
-		local canReuseInCombat = st._managedAuraRefreshPrepared == true and (not helpfulIdentityAllowed or st._managedAuraHelpfulPrepared == true)
+		local canReuseInCombat = st._managedAuraRefreshPrepared == true
 		if not st._managedAuraRefreshActive and not (canReuseInCombat and InCombatLockdown and InCombatLockdown()) then
 			GF:HideManagedAuraContainers(self)
 			if UF.GroupFramesHealerBuffs and UF.GroupFramesHealerBuffs.HideManagedAuraContainer then UF.GroupFramesHealerBuffs.HideManagedAuraContainer(self) end
@@ -10948,11 +10913,6 @@ function GF:UpdateSampleAuras(self)
 	local scfg = (cfg and cfg.status) or EMPTY
 	local wantsDispelTint = resolveDispelIndicatorEnabled(cfg, kind)
 	st._wantsDispelTint = wantsDispelTint
-	local wantsHealerBuffPlacement = st._wantsHealerBuffPlacement == true
-	if wantsHealerBuffPlacement and not (cfg and cfg.healerBuffPlacement and cfg.healerBuffPlacement.enabled == true) then
-		wantsHealerBuffPlacement = false
-		st._wantsHealerBuffPlacement = false
-	end
 	if cfg then GFH.SyncAurasEnabled(cfg) end
 	local rawWantsAuras = ((ac.buff and ac.buff.enabled) or (ac.debuff and ac.debuff.enabled) or (ac.externals and ac.externals.enabled)) or false
 	if ac.enabled == true then rawWantsAuras = true end
@@ -10960,7 +10920,6 @@ function GF:UpdateSampleAuras(self)
 	local wantBuff = ac.buff and ac.buff.enabled ~= false
 	local wantDebuff = ac.debuff and ac.debuff.enabled ~= false
 	local wantExternals = ac.externals and ac.externals.enabled ~= false
-	if wantsHealerBuffPlacement then wantBuff = true end
 	local wantsCustomAuras = wantBuff or wantDebuff or wantExternals
 	if rawWantsAuras == false or (not wantsCustomAuras and not wantsDispelTint) then
 		if st.buffContainer then st.buffContainer:Hide() end
@@ -11015,14 +10974,8 @@ function GF:UpdateSampleAuras(self)
 			st[meta.buttonsKey] = buttons
 		end
 
-		local iconList = SAMPLE_BUFF_ICONS
-		if kindKey == "debuff" then
-			iconList = SAMPLE_DEBUFF_ICONS
-		elseif kindKey == "externals" then
-			iconList = SAMPLE_EXTERNAL_ICONS
-		end
 		local maxCount = layout.maxCount or 0
-		local shown = math.min(maxCount, #iconList)
+		local shown = maxCount
 		local now = GetTime and GetTime() or 0
 		local sampleStyle = getSampleStyle(st, kindKey, style)
 		sampleStyle.tooltipUseEditMode = st._tooltipUseEditMode == true
@@ -11215,9 +11168,9 @@ function GF:UpdateLevel(self)
 	GF:UpdateDataBarText(self, unit, st, nil, nil, nil, nil, nil, nil, levelText)
 end
 
-function GF:UpdateStatusText(self)
-	local st = getState(self)
-	local unit = getUnit(self)
+function GF:UpdateStatusText(self, unit, st, skipUnchanged)
+	st = st or getState(self)
+	unit = unit or getUnit(self)
 	if not st then return end
 	local statusFs = st.statusText
 	local groupFs = st.groupNumberText
@@ -11250,7 +11203,8 @@ function GF:UpdateStatusText(self)
 		end
 		return
 	end
-	local inEditMode = isEditModeActive()
+	local needsEditModeState = (self and self._eqolPreview == true) or GF._editModeSampleStatusText == false
+	local inEditMode = needsEditModeState and isEditModeActive() or false
 	if inEditMode and GF and GF._editModeSampleStatusText == false then
 		if statusFs then
 			statusFs:SetText("")
@@ -11304,7 +11258,7 @@ function GF:UpdateStatusText(self)
 	end
 
 	local groupTag
-	if resolveGroupNumberEnabled(cfg, def) then
+	if st._wantsPerFrameGroupNumber == true then
 		local subgroup = getRaidSubgroupForUnit(unit)
 		if not subgroup and allowSample then subgroup = st._previewGroup or 1 end
 		if subgroup then groupTag = formatGroupNumber(subgroup, resolveGroupNumberFormat(cfg, def)) end
@@ -11316,6 +11270,10 @@ function GF:UpdateStatusText(self)
 		if not statusTag and showDND then statusTag = DEFAULT_DND_MESSAGE or "DND" end
 		if not statusTag and showAFK then statusTag = DEFAULT_AFK_MESSAGE or "AFK" end
 	end
+	if skipUnchanged and st._statusTextRenderCached and st._lastStatusTextTag == statusTag and st._lastGroupNumberTag == groupTag then return end
+	st._statusTextRenderCached = true
+	st._lastStatusTextTag = statusTag
+	st._lastGroupNumberTag = groupTag
 	local scale = GFH.GetEffectiveScale(self)
 	if not scale or scale <= 0 then scale = (UIParent and UIParent.GetEffectiveScale and UIParent:GetEffectiveScale()) or 1 end
 	local contentScale = GF.GetDynamicContentScale(self, cfg)
@@ -11884,14 +11842,22 @@ function GF:UpdateRange(self, inRange)
 	end
 end
 
-function GF:UpdateHealthValue(self, unit, st)
+function GF:UpdateHealthValue(self, unit, st, updateKind)
 	unit = unit or getUnit(self)
 	st = st or getState(self)
 	if not (unit and st and st.health) then return end
+	local updateMain = updateKind == nil or updateKind == "ALL"
+	local updateIncomingHeal = st._wantsIncomingHeal == true and (updateMain or updateKind == "INCOMING_HEAL")
+	local updateDamageAbsorb = st._wantsDamageAbsorb == true and (updateMain or updateKind == "DAMAGE_ABSORB")
+	local updateHealAbsorb = st._wantsHealAbsorb == true and (updateMain or updateKind == "HEAL_ABSORB")
+	if not updateMain and not updateIncomingHeal and not updateDamageAbsorb and not updateHealAbsorb then return end
 	if UnitExists and not UnitExists(unit) then
 		st.health:SetMinMaxValues(0, 1)
 		GF.SetStatusBarValue(st.health, 0, false, true)
-		GF.ApplyHealthBackdrop(self, false)
+		if st._lastHealthBackdropDeadOrGhost ~= false then
+			st._lastHealthBackdropDeadOrGhost = false
+			GF.ApplyHealthBackdrop(self, false)
+		end
 		if st.incomingHeal then st.incomingHeal:Hide() end
 		if st.absorb then st.absorb:Hide() end
 		if st.absorb2 then st.absorb2:Hide() end
@@ -11922,9 +11888,13 @@ function GF:UpdateHealthValue(self, unit, st)
 	local healAbsorbDontOverflow = hc.healAbsorbDontOverflowHealthBar
 	if healAbsorbDontOverflow == nil then healAbsorbDontOverflow = defH.healAbsorbDontOverflowHealthBar ~= false end
 	healAbsorbDontOverflow = healAbsorbDontOverflow == true and reverseHealAbsorb ~= true
-	local calc = GF.EnsureHealPredictionCalculator(st)
+	local needsCalculator = updateIncomingHeal
+		or (updateDamageAbsorb and absorbDontOverflow)
+		or (updateHealAbsorb and healAbsorbDontOverflow)
+		or (updateMain and (st._healthTextUsesPercent == true or st._dataBarTextUsesPercent == true))
+	local calc = needsCalculator and (st._healPredictionCalc or GF.EnsureHealPredictionCalculator(st)) or nil
 	if calc and Enum then
-		if calc.SetDamageAbsorbClampMode and Enum.UnitDamageAbsorbClampMode then
+		if updateDamageAbsorb and calc.SetDamageAbsorbClampMode and Enum.UnitDamageAbsorbClampMode then
 			local modes = Enum.UnitDamageAbsorbClampMode
 			local mode = absorbDontOverflow and modes.MissingHealthWithoutIncomingHeals or modes.MaximumHealth
 			if mode ~= nil and st._lastDamageAbsorbClampMode ~= mode then
@@ -11932,7 +11902,7 @@ function GF:UpdateHealthValue(self, unit, st)
 				calc:SetDamageAbsorbClampMode(mode)
 			end
 		end
-		if calc.SetHealAbsorbClampMode and Enum.UnitHealAbsorbClampMode then
+		if updateHealAbsorb and calc.SetHealAbsorbClampMode and Enum.UnitHealAbsorbClampMode then
 			local modes = Enum.UnitHealAbsorbClampMode
 			local mode = healAbsorbDontOverflow and modes.CurrentHealth or modes.MaximumHealth
 			if mode ~= nil and st._lastHealAbsorbClampMode ~= mode then
@@ -11943,9 +11913,9 @@ function GF:UpdateHealthValue(self, unit, st)
 	end
 	if calc and UnitGetDetailedHealPrediction then UnitGetDetailedHealPrediction(unit, "player", calc) end
 
-	local cur = calc and calc.GetCurrentHealth and calc:GetCurrentHealth() or (UnitHealth and UnitHealth(unit))
+	local cur = UnitHealth and UnitHealth(unit)
 	if cur == nil then cur = 0 end
-	local maxv = calc and calc.GetMaximumHealth and calc:GetMaximumHealth() or (UnitHealthMax and UnitHealthMax(unit))
+	local maxv = UnitHealthMax and UnitHealthMax(unit)
 	if maxv == nil then maxv = 1 end
 	local maxForValue = 1
 	if issecretvalue and issecretvalue(maxv) then
@@ -11958,65 +11928,80 @@ function GF:UpdateHealthValue(self, unit, st)
 	local isDead = unit and UnitIsDead and GFH.UnsecretBool(UnitIsDead(unit)) or nil
 	local isGhost = unit and UnitIsGhost and GFH.UnsecretBool(UnitIsGhost(unit)) or nil
 	local deadOrGhost = (isDead == true) or (isGhost == true)
-	GF.ApplyHealthBackdrop(self, deadOrGhost)
 	local suppressAuxHealthBars = (connected == false) or deadOrGhost
 	local smoothHealth = (hc.smoothFill ~= nil) and (hc.smoothFill == true) or (defH.smoothFill == true)
-	local maxForValueSecret = issecretvalue and issecretvalue(maxForValue)
-	if maxForValueSecret then
-		st.health:SetMinMaxValues(0, maxForValue)
-		st._lastHealthMaxForValue = nil
-	elseif st._lastHealthMaxForValue ~= maxForValue then
-		st._lastHealthMaxForValue = maxForValue
-		st.health:SetMinMaxValues(0, maxForValue)
-	end
-	if connected == false then
-		GF.SetStatusBarValue(st.health, maxForValue, false, true)
-	elseif deadOrGhost then
-		GF.SetStatusBarValue(st.health, 0, false, true)
-	elseif secretHealth then
-		GF.SetStatusBarValue(st.health, cur or 0, smoothHealth, true)
-	else
-		GF.SetStatusBarValue(st.health, cur or 0, smoothHealth)
-	end
-	if st.tempMaxHealthLoss then
-		local tempMaxHealthLossEnabled = hc.tempMaxHealthLossEnabled
-		if tempMaxHealthLossEnabled == nil then tempMaxHealthLossEnabled = defH.tempMaxHealthLossEnabled ~= false end
-		if tempMaxHealthLossEnabled and not suppressAuxHealthBars then
-			st.tempMaxHealthLoss:SetMinMaxValues(0, 1)
-			GF.SetStatusBarValue(st.tempMaxHealthLoss, (_G.GetUnitTotalModifiedMaxHealthPercent and _G.GetUnitTotalModifiedMaxHealthPercent(unit)) or 0, smoothHealth)
-			st.tempMaxHealthLoss:Show()
+	if updateMain then
+		if st._lastHealthBackdropDeadOrGhost ~= deadOrGhost then
+			st._lastHealthBackdropDeadOrGhost = deadOrGhost
+			GF.ApplyHealthBackdrop(self, deadOrGhost)
+		end
+		local maxForValueSecret = issecretvalue and issecretvalue(maxForValue)
+		if maxForValueSecret then
+			st.health:SetMinMaxValues(0, maxForValue)
+			st._lastHealthMaxForValue = nil
+		elseif st._lastHealthMaxForValue ~= maxForValue then
+			st._lastHealthMaxForValue = maxForValue
+			st.health:SetMinMaxValues(0, maxForValue)
+		end
+		if connected == false then
+			GF.SetStatusBarValue(st.health, maxForValue, false, true)
+		elseif deadOrGhost then
+			GF.SetStatusBarValue(st.health, 0, false, true)
+		elseif secretHealth then
+			GF.SetStatusBarValue(st.health, cur or 0, smoothHealth, true)
 		else
-			GF.SetStatusBarValue(st.tempMaxHealthLoss, 0, false, true)
-			st.tempMaxHealthLoss:Hide()
+			GF.SetStatusBarValue(st.health, cur or 0, smoothHealth)
+		end
+		if st.tempMaxHealthLoss then
+			local tempMaxHealthLossEnabled = hc.tempMaxHealthLossEnabled
+			if tempMaxHealthLossEnabled == nil then tempMaxHealthLossEnabled = defH.tempMaxHealthLossEnabled ~= false end
+			if tempMaxHealthLossEnabled and not suppressAuxHealthBars then
+				st.tempMaxHealthLoss:SetMinMaxValues(0, 1)
+				GF.SetStatusBarValue(st.tempMaxHealthLoss, (_G.GetUnitTotalModifiedMaxHealthPercent and _G.GetUnitTotalModifiedMaxHealthPercent(unit)) or 0, smoothHealth)
+				st.tempMaxHealthLoss:Show()
+			else
+				GF.SetStatusBarValue(st.tempMaxHealthLoss, 0, false, true)
+				st.tempMaxHealthLoss:Hide()
+			end
 		end
 	end
 
-	local incomingHealEnabled = hc.incomingHealEnabled == true
-	local absorbEnabled = hc.absorbEnabled ~= false
-	local healAbsorbEnabled = hc.healAbsorbEnabled ~= false
+	local incomingHealEnabled = st._wantsIncomingHeal == true
+	local absorbEnabled = st._damageAbsorbVisualEnabled == true
+	local healAbsorbEnabled = st._healAbsorbVisualEnabled == true
 	local curSecret = issecretvalue and issecretvalue(cur)
-	local inEditMode = isEditModeActive()
+	local inEditMode = st._healthUsesEditModeSamples and isEditModeActive() or false
 	local sampleIncomingHeal = inEditMode and hc.showSampleIncomingHeal == true
 	local sampleAbsorb = inEditMode and hc.showSampleAbsorb == true
 	local sampleHealAbsorb = inEditMode and hc.showSampleHealAbsorb == true
 	local maxIsSecret = issecretvalue and issecretvalue(maxForValue)
 	local sampleMax = maxForValue
 	if (sampleIncomingHeal or sampleAbsorb or sampleHealAbsorb) and maxIsSecret then sampleMax = 100 end
-	local leftMode = (hc.textLeft ~= nil) and hc.textLeft or defH.textLeft or "NONE"
-	local centerMode = (hc.textCenter ~= nil) and hc.textCenter or defH.textCenter or "NONE"
-	local rightMode = (hc.textRight ~= nil) and hc.textRight or defH.textRight or "NONE"
+	local leftMode = updateMain and (st._healthTextLeftMode or "NONE") or "NONE"
+	local centerMode = updateMain and (st._healthTextCenterMode or "NONE") or "NONE"
+	local rightMode = updateMain and (st._healthTextRightMode or "NONE") or "NONE"
 	local wantsDamageAbsorbPercent = leftMode == "ABSORB_PERCENT" or centerMode == "ABSORB_PERCENT" or rightMode == "ABSORB_PERCENT"
 	local wantsHealAbsorbPercent = leftMode == "HEAL_ABSORB_PERCENT" or centerMode == "HEAL_ABSORB_PERCENT" or rightMode == "HEAL_ABSORB_PERCENT"
+	-- ? Re-evaluate the event-fed raw absorb cache after broader raid testing; direct API reads are the fallback if values can become stale.
 	local totalDamageAbsorb = 0
-	if calc and calc.GetTotalDamageAbsorbs then
+	if updateDamageAbsorb and calc and calc.GetTotalDamageAbsorbs then
 		local predicted = calc:GetTotalDamageAbsorbs()
 		if issecretvalue and issecretvalue(predicted) then
 			totalDamageAbsorb = predicted
 		else
 			totalDamageAbsorb = predicted or 0
 		end
-	elseif UnitGetTotalAbsorbs then
-		local predicted = UnitGetTotalAbsorbs(unit)
+		st._damageAbsorbAmount = predicted
+		st._damageAbsorbAmountReady = true
+	elseif updateDamageAbsorb then
+		local predicted
+		if st._damageAbsorbAmountReady == true then
+			predicted = st._damageAbsorbAmount
+		elseif UnitGetTotalAbsorbs then
+			predicted = UnitGetTotalAbsorbs(unit)
+			st._damageAbsorbAmount = predicted
+			st._damageAbsorbAmountReady = true
+		end
 		if issecretvalue and issecretvalue(predicted) then
 			totalDamageAbsorb = predicted
 		else
@@ -12024,23 +12009,32 @@ function GF:UpdateHealthValue(self, unit, st)
 		end
 	end
 	local totalHealAbsorb = 0
-	if calc and calc.GetTotalHealAbsorbs then
+	if updateHealAbsorb and calc and calc.GetTotalHealAbsorbs then
 		local predicted = calc:GetTotalHealAbsorbs()
 		if issecretvalue and issecretvalue(predicted) then
 			totalHealAbsorb = predicted
 		else
 			totalHealAbsorb = predicted or 0
 		end
-	elseif UnitGetTotalHealAbsorbs then
-		local predicted = UnitGetTotalHealAbsorbs(unit)
+		st._healAbsorbAmount = predicted
+		st._healAbsorbAmountReady = true
+	elseif updateHealAbsorb then
+		local predicted
+		if st._healAbsorbAmountReady == true then
+			predicted = st._healAbsorbAmount
+		elseif UnitGetTotalHealAbsorbs then
+			predicted = UnitGetTotalHealAbsorbs(unit)
+			st._healAbsorbAmount = predicted
+			st._healAbsorbAmountReady = true
+		end
 		if issecretvalue and issecretvalue(predicted) then
 			totalHealAbsorb = predicted
 		else
 			totalHealAbsorb = predicted or 0
 		end
 	end
-	if sampleAbsorb then totalDamageAbsorb = (sampleMax or 1) * 0.6 end
-	if sampleHealAbsorb then totalHealAbsorb = (sampleMax or 1) * 0.35 end
+	if updateDamageAbsorb and sampleAbsorb then totalDamageAbsorb = (sampleMax or 1) * 0.6 end
+	if updateHealAbsorb and sampleHealAbsorb then totalHealAbsorb = (sampleMax or 1) * 0.35 end
 	local absorbPercentValue, healAbsorbPercentValue
 	if wantsDamageAbsorbPercent or wantsHealAbsorbPercent then
 		local calculatorHasSecretValues = calc and calc.HasSecretValues and calc:HasSecretValues() == true
@@ -12058,7 +12052,7 @@ function GF:UpdateHealthValue(self, unit, st)
 		if st.overAbsorbGlow then st.overAbsorbGlow:Hide() end
 		if st.healAbsorb then st.healAbsorb:Hide() end
 		if st.healAbsorb2 then st.healAbsorb2:Hide() end
-	elseif incomingHealEnabled and st.incomingHeal then
+	elseif updateIncomingHeal and incomingHealEnabled and st.incomingHeal then
 		local incomingHeal = 0
 		if calc and calc.GetIncomingHeals then
 			incomingHeal = calc:GetIncomingHeals() or 0
@@ -12102,10 +12096,10 @@ function GF:UpdateHealthValue(self, unit, st)
 			st._lastIncomingHealR, st._lastIncomingHealG, st._lastIncomingHealB, st._lastIncomingHealA = incomingHealR, incomingHealG, incomingHealB, incomingHealA
 			st.incomingHeal:SetStatusBarColor(incomingHealR, incomingHealG, incomingHealB, incomingHealA)
 		end
-	elseif st.incomingHeal then
+	elseif updateIncomingHeal and st.incomingHeal then
 		st.incomingHeal:Hide()
 	end
-	if not suppressAuxHealthBars and absorbEnabled and st.absorb then
+	if updateDamageAbsorb and not suppressAuxHealthBars and absorbEnabled and st.absorb then
 		local abs = 0
 		local totalAbs = totalDamageAbsorb
 		if absorbDontOverflow and calc and calc.GetDamageAbsorbs then
@@ -12173,7 +12167,7 @@ function GF:UpdateHealthValue(self, unit, st)
 		if st.overAbsorbGlow then
 			local useAbsorbGlow = hc.useAbsorbGlow
 			if useAbsorbGlow == nil then useAbsorbGlow = defH.useAbsorbGlow == true end
-			local verticalHealth = UFHelper.normalizeStatusBarOrientation(hc.orientation or defH.orientation) == "VERTICAL"
+			local verticalHealth = st._healthOrientationVertical
 			if useAbsorbGlow and not verticalHealth then
 				st.overAbsorbGlow:SetAlpha(glowAbsorbValue)
 				st.overAbsorbGlow:Show()
@@ -12182,13 +12176,13 @@ function GF:UpdateHealthValue(self, unit, st)
 				st.overAbsorbGlow:Hide()
 			end
 		end
-	elseif st.absorb then
+	elseif updateDamageAbsorb and st.absorb then
 		st.absorb:Hide()
 		if st.absorb2 then st.absorb2:Hide() end
 		if st.overAbsorbGlow then st.overAbsorbGlow:Hide() end
 	end
 
-	if not suppressAuxHealthBars and healAbsorbEnabled and st.healAbsorb then
+	if updateHealAbsorb and not suppressAuxHealthBars and healAbsorbEnabled and st.healAbsorb then
 		local healAbs = 0
 		if calc and calc.GetHealAbsorbs then
 			local predicted = calc:GetHealAbsorbs()
@@ -12254,18 +12248,17 @@ function GF:UpdateHealthValue(self, unit, st)
 			st.healAbsorb:SetStatusBarColor(har or 1, hag or 0.3, hab or 0.3, haa or 0.7)
 		end
 		if reverseHealAbsorb and healAbsorbAnchorToCurrentHealth and st.healAbsorb2 then st.healAbsorb2:SetStatusBarColor(har or 1, hag or 0.3, hab or 0.3, haa or 0.7) end
-	elseif st.healAbsorb then
+	elseif updateHealAbsorb and st.healAbsorb then
 		st.healAbsorb:Hide()
 		if st.healAbsorb2 then st.healAbsorb2:Hide() end
 	end
+	if not updateMain then return end
+	if st._wantsHealthText ~= true and st._wantsDataBarText ~= true then return end
 
-	local hasText = (leftMode ~= "NONE") or (centerMode ~= "NONE") or (rightMode ~= "NONE")
+	local hasText = st._wantsHealthText == true
 	local dbc = cfg and cfg.dataBar or {}
 	local defDB = (DEFAULTS[kind] and DEFAULTS[kind].dataBar) or {}
-	local dbLeft = dbc.textLeft or defDB.textLeft or "NONE"
-	local dbCenter = dbc.textCenter or defDB.textCenter or "NONE"
-	local dbRight = dbc.textRight or defDB.textRight or "NONE"
-	local dataBarHasText = dbc.enabled == true and ((dbLeft ~= "NONE") or (dbCenter ~= "NONE") or (dbRight ~= "NONE"))
+	local dataBarHasText = st._wantsDataBarText == true
 	local scfg = cfg and cfg.status or {}
 	local us = scfg.unitStatus or {}
 	local hideTextOffline = us.hideHealthTextWhenOffline == true
@@ -12823,7 +12816,10 @@ function GF:UnitButton_SetUnit(self, unit)
 		st._auraCache = nil
 		st._auraCacheByKey = nil
 		st._auraQueryMax = nil
-		st._managedHelpfulIdentityAllowed = nil
+		st._damageAbsorbAmount = nil
+		st._healAbsorbAmount = nil
+		st._damageAbsorbAmountReady = nil
+		st._healAbsorbAmountReady = nil
 		clearDispelAuraState(st)
 	end
 	GF:CacheUnitStatic(self)
@@ -12832,7 +12828,6 @@ function GF:UnitButton_SetUnit(self, unit)
 	GF:UnitButton_RegisterUnitEvents(self, unit)
 
 	GF:UpdateAll(self)
-	GF.QueueManagedHelpfulIdentityRefresh(self, true)
 end
 
 function GF:UnitButton_UnregisterUnitEvents(self)
@@ -12852,9 +12847,12 @@ function GF:UnitButton_DropUnitState(self)
 	st._auraCache = nil
 	st._auraCacheByKey = nil
 	st._auraQueryMax = nil
+	st._damageAbsorbAmount = nil
+	st._healAbsorbAmount = nil
+	st._damageAbsorbAmountReady = nil
+	st._healAbsorbAmountReady = nil
 	st._guid = nil
 	st._unitToken = nil
-	st._managedHelpfulIdentityAllowed = nil
 end
 
 function GF:UnitButton_ClearUnit(self)
@@ -12876,7 +12874,10 @@ function GF:UnitButton_ClearUnit(self)
 		st._auraCache = nil
 		st._auraCacheByKey = nil
 		st._auraQueryMax = nil
-		st._managedHelpfulIdentityAllowed = nil
+		st._damageAbsorbAmount = nil
+		st._healAbsorbAmount = nil
+		st._damageAbsorbAmountReady = nil
+		st._healAbsorbAmountReady = nil
 		st._lastSummonAtlas = nil
 		st._summonActiveReal = false
 		st._phaseReason = nil
@@ -12944,10 +12945,8 @@ function GF:UnitButton_RegisterUnitEvents(self, unit)
 	if self._eqolUFState and self._eqolUFState._wantsIncomingHeal then
 		regUnit("UNIT_HEAL_PREDICTION")
 	end
-	if self._eqolUFState and self._eqolUFState._wantsAbsorb then
-		regUnit("UNIT_ABSORB_AMOUNT_CHANGED")
-		regUnit("UNIT_HEAL_ABSORB_AMOUNT_CHANGED")
-	end
+	if self._eqolUFState and self._eqolUFState._wantsDamageAbsorb then regUnit("UNIT_ABSORB_AMOUNT_CHANGED") end
+	if self._eqolUFState and self._eqolUFState._wantsHealAbsorb then regUnit("UNIT_HEAL_ABSORB_AMOUNT_CHANGED") end
 
 	local powerH = cfg and cfg.powerHeight or 0
 	local wantsPower = self._eqolUFState and self._eqolUFState._wantsPower
@@ -13015,6 +13014,7 @@ function GF.UnitButton_OnAttributeChanged(self, name, value)
 	if name ~= "unit" then return end
 	if self._eqolSpotlight and issecretvalue and issecretvalue(value) then return end
 	if value == nil or value == "" then
+		if self._eqolUnit == nil then return end
 		if self._eqolUseSecureUnitAttribute == true then
 			if self._eqolPartyPet then
 				if InCombatLockdown and InCombatLockdown() then
@@ -13041,15 +13041,24 @@ end
 local function dispatchUnitHealth(btn, unit)
 	local st = getState(btn)
 	GF:UpdateHealthValue(btn, unit, st)
-	GF:UpdateStatusText(btn, unit, st)
+	GF:UpdateStatusText(btn, unit, st, true)
+end
+local function dispatchUnitHealthValue(btn, unit)
+	GF:UpdateHealthValue(btn, unit, getState(btn))
 end
 local function dispatchUnitAbsorb(btn, unit)
 	local st = getState(btn)
-	GF:UpdateHealthValue(btn, unit, st)
+	if not st or st._wantsDamageAbsorb ~= true then return end
+	st._damageAbsorbAmount = UnitGetTotalAbsorbs and UnitGetTotalAbsorbs(unit) or 0
+	st._damageAbsorbAmountReady = true
+	GF:UpdateHealthValue(btn, unit, st, st._healthTextUsesDamageAbsorb and "ALL" or "DAMAGE_ABSORB")
 end
 local function dispatchUnitHealAbsorb(btn, unit)
 	local st = getState(btn)
-	GF:UpdateHealthValue(btn, unit, st)
+	if not st or st._wantsHealAbsorb ~= true then return end
+	st._healAbsorbAmount = UnitGetTotalHealAbsorbs and UnitGetTotalHealAbsorbs(unit) or 0
+	st._healAbsorbAmountReady = true
+	GF:UpdateHealthValue(btn, unit, st, st._healthTextUsesHealAbsorb and "ALL" or "HEAL_ABSORB")
 end
 local function dispatchUnitPower(btn, unit)
 	local st = getState(btn)
@@ -13082,7 +13091,6 @@ local function dispatchUnitFlags(btn, unit)
 	GF:UpdateName(btn, unit, st)
 	GF:UpdatePhaseIcon(btn)
 	GF:UpdateCombatIndicator(btn)
-	GF.QueueManagedHelpfulIdentityRefresh(btn)
 end
 local function dispatchUnitRange(btn, _, inRange) GF:UpdateRange(btn, inRange) end
 local function dispatchUnitAura(btn, _, updateInfo)
@@ -13098,14 +13106,15 @@ function GF.DispatchUnitThreat(btn) GF:UpdateHighlightState(btn) end
 
 local UNIT_DISPATCH = {
 	UNIT_HEALTH = dispatchUnitHealth,
-	UNIT_MAXHEALTH = dispatchUnitHealth,
+	UNIT_MAXHEALTH = dispatchUnitHealthValue,
 	UNIT_HEAL_PREDICTION = function(btn, unit)
 		local st = getState(btn)
-		GF:UpdateHealthValue(btn, unit, st)
+		if not st or st._wantsIncomingHeal ~= true then return end
+		GF:UpdateHealthValue(btn, unit, st, "INCOMING_HEAL")
 	end,
 	UNIT_ABSORB_AMOUNT_CHANGED = dispatchUnitAbsorb,
 	UNIT_HEAL_ABSORB_AMOUNT_CHANGED = dispatchUnitHealAbsorb,
-	UNIT_MAX_HEALTH_MODIFIERS_CHANGED = dispatchUnitHealth,
+	UNIT_MAX_HEALTH_MODIFIERS_CHANGED = dispatchUnitHealthValue,
 	UNIT_POWER_UPDATE = dispatchUnitPower,
 	UNIT_MAXPOWER = dispatchUnitPower,
 	UNIT_DISPLAYPOWER = dispatchUnitDisplayPower,
@@ -13133,7 +13142,6 @@ local UNIT_DISPATCH = {
 	INCOMING_RESURRECT_CHANGED = function(btn) GF:UpdateResurrectIcon(btn) end,
 	UNIT_PHASE = function(btn)
 		GF:UpdatePhaseIcon(btn)
-		GF.QueueManagedHelpfulIdentityRefresh(btn)
 	end,
 }
 
@@ -14748,7 +14756,7 @@ function GF:EnsurePartyPetCompanions(mainHeader, unitButtonTemplate)
 					if ownerIndex then petUnit = "partypet" .. ownerIndex end
 				end
 			end
-			if petButton then petButton:SetAttribute("unit", petUnit) end
+			if petButton and petButton:GetAttribute("unit") ~= petUnit then petButton:SetAttribute("unit", petUnit) end
 		end
 	]=],
 						index
@@ -14972,6 +14980,20 @@ end
 
 function GF:ToggleEditModeSampleAuras() GF:SetEditModeSampleAuras(GF._editModeSampleAuras == false) end
 
+function GF:IsEditModeBuffPlacementPreviewEnabled(kind)
+	if kind ~= "party" and kind ~= "raid" then return false end
+	return GF._editModeBuffPlacementPreview and GF._editModeBuffPlacementPreview[kind] == true
+end
+
+function GF:SetEditModeBuffPlacementPreview(kind, show)
+	if kind ~= "party" and kind ~= "raid" then return end
+	GF._editModeBuffPlacementPreview = GF._editModeBuffPlacementPreview or {}
+	local enabled = show == true
+	if GF._editModeBuffPlacementPreview[kind] == enabled then return end
+	GF._editModeBuffPlacementPreview[kind] = enabled
+	if isEditModeActive() then refreshAllAuras() end
+end
+
 function GF:SetEditModeStatusText(show)
 	local enabled = show ~= false
 	if GF._editModeSampleStatusText == enabled then return end
@@ -15063,7 +15085,6 @@ function GF:RefreshConnectionDependentVisuals(frame, unit, st)
 	GF:UpdateStatusIcons(frame)
 	GF:UpdateRange(frame, nil, unit, st)
 	GF.RememberUnitConnectedState(st, unit)
-	GF.QueueManagedHelpfulIdentityRefresh(frame)
 end
 
 function GF:RefreshConnectionState(unit)
@@ -17042,6 +17063,7 @@ function GF:EnsureHeaders()
 end
 
 function GF:EnableFeature()
+	GF._featureEnabledCache = true
 	local healerBuffs = UF.GroupFramesHealerBuffs
 	if healerBuffs and healerBuffs.InvalidatePlayerFamilyProvisionCache then healerBuffs.InvalidatePlayerFamilyProvisionCache() end
 	GF:InitializeSpotlightSelection()
@@ -17049,12 +17071,14 @@ function GF:EnableFeature()
 	registerFeatureEvents(GF._eventFrame)
 	GF:EnsureHeaders()
 	GF.FullRefresh()
+	GF:DidRosterStateChange()
 	GF:DisableBlizzardFrames()
 	GF:EnsureEditMode()
-	if GF._spotlightRosterReconcilePending then GF:SchedulePostRosterRefresh(false, true) end
+	if GF._spotlightRosterReconcilePending then GF:SchedulePostRosterRefresh() end
 end
 
 function GF:DisableFeature()
+	GF._featureEnabledCache = false
 	if InCombatLockdown and InCombatLockdown() then
 		GF._pendingDisable = true
 		return
@@ -17135,7 +17159,6 @@ end
 function GF.BuildRosterRuntimeSignature()
 	local mode
 	local groupCount = (GetNumGroupMembers and GetNumGroupMembers()) or 0
-	local subgroupCount = (GetNumSubgroupMembers and GetNumSubgroupMembers()) or 0
 	if IsInRaid and IsInRaid() then
 		mode = "raid"
 	elseif IsInGroup and IsInGroup() then
@@ -17146,16 +17169,19 @@ function GF.BuildRosterRuntimeSignature()
 
 	local signatureParts = {
 		mode,
-		tostring(groupCount),
-		tostring(subgroupCount),
 	}
 
 	if mode == "party" or mode == "solo" then
 		local partyCfg = getCfg("party")
 		local partySortState = GF.BuildPartyRuntimeSortState(partyCfg)
-		signatureParts[#signatureParts + 1] = tostring(partySortState and partySortState.sortMethod or "")
-		signatureParts[#signatureParts + 1] = tostring(partySortState and partySortState.sortDir or "")
-		signatureParts[#signatureParts + 1] = tostring(partySortState and partySortState.nameList or "")
+		if partySortState and (partySortState.centerGrowthActive or partySortState.sortMethod == "NAMELIST") then
+			signatureParts[#signatureParts + 1] = tostring(partySortState.sortMethod or "")
+			signatureParts[#signatureParts + 1] = tostring(partySortState.sortDir or "")
+			signatureParts[#signatureParts + 1] = tostring(partySortState.nameList or "")
+			signatureParts[#signatureParts + 1] = tostring(groupCount)
+		else
+			signatureParts[#signatureParts + 1] = "native"
+		end
 	else
 		local cfg = getCfg("raid")
 		local raidSortState = GF.BuildRaidRuntimeSortState(cfg)
@@ -17166,7 +17192,6 @@ function GF.BuildRosterRuntimeSignature()
 		signatureParts[#signatureParts + 1] = tostring(useGroupHeaders)
 		signatureParts[#signatureParts + 1] = tostring(raidSortState and raidSortState.sortMethod or "")
 		signatureParts[#signatureParts + 1] = tostring(raidSortState and raidSortState.sortDir or "")
-		signatureParts[#signatureParts + 1] = tostring(raidSortState and raidSortState.nameList or "")
 
 		if useGroupHeaders then
 			local specs = raidSortState and raidSortState.groupedSpecs
@@ -17174,6 +17199,15 @@ function GF.BuildRosterRuntimeSignature()
 			for _, spec in ipairs(specs or {}) do
 				signatureParts[#signatureParts + 1] = string.format("%s:%s:%s", tostring(spec and spec.group or ""), tostring(spec and spec.sortMethod or ""), tostring(spec and spec.nameList or ""))
 			end
+		else
+			local unitsPerColumn = clampNumber(tonumber(cfg and cfg.unitsPerColumn) or 5, 1, 10, 5)
+			local maxColumns = clampNumber(tonumber(cfg and cfg.maxColumns) or 8, 1, 10, 8)
+			local visibleCount = raidSortState and raidSortState.visibleCount or groupCount
+			local visibleColumns = visibleCount > 0 and math.ceil(visibleCount / unitsPerColumn) or 0
+			local runtimeColumns = max(maxColumns, visibleColumns)
+			signatureParts[#signatureParts + 1] = tostring(runtimeColumns)
+			signatureParts[#signatureParts + 1] = tostring(raidSortState and raidSortState.nameList or "")
+			if GF.IsCenterGrowthMode("raid", cfg) then signatureParts[#signatureParts + 1] = tostring(min(visibleCount, unitsPerColumn)) end
 		end
 	end
 
@@ -17193,7 +17227,7 @@ function GF:DidRosterStateChange()
 	state.mode = mode
 	state.signature = signature
 
-	return changed, modeChanged
+	return changed, modeChanged, mode
 end
 
 function GF:RefreshChangedUnitButtons()
@@ -17232,12 +17266,16 @@ function GF:RefreshChangedUnitButtons()
 			guid = UnitGUID and UnitGUID(unit) or nil
 		end
 		if issecretvalue and issecretvalue(guid) then guid = nil end
+		local rosterGuid = st._rosterGuid
+		if issecretvalue and issecretvalue(rosterGuid) then rosterGuid = nil end
+		local rosterGuidChanged = guid ~= nil and rosterGuid ~= guid
+		if rosterGuidChanged then st._rosterGuid = guid end
 		local cachedGuid = st._guid
 		if issecretvalue and issecretvalue(cachedGuid) then
 			cachedGuid = nil
 			st._guid = nil
 		end
-		if cachedGuid == guid and st._unitToken == unit and child._eqolUnit == unit then
+		if cachedGuid == guid and st._unitToken == unit and child._eqolUnit == unit and not rosterGuidChanged then
 			local cfg = child._eqolCfg or getCfg(child._eqolGroupKind or "party")
 			if st._classR == nil and GF:NeedsClassColor(child, st, cfg) then
 				GF:CacheUnitStatic(child)
@@ -17262,12 +17300,10 @@ function GF:RefreshChangedUnitButtons()
 		st._auraKindById = nil
 		st._auraChanged = nil
 		st._auraQueryMax = nil
-		st._managedHelpfulIdentityAllowed = nil
 		clearDispelAuraState(st)
 		GF:CacheUnitStatic(child)
 		GF:UnitButton_RegisterUnitEvents(child, unit)
 		GF:UpdateAll(child)
-		GF.QueueManagedHelpfulIdentityRefresh(child, true)
 		updated = updated + 1
 	end
 
@@ -29301,6 +29337,19 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
+			name = L["UFGroupShowBuffPlacementPreview"] or "Show Buff Placement in Preview",
+			kind = SettingType.Checkbox,
+			field = "showBuffPlacementPreview",
+			parentId = "buffs",
+			get = function() return GF:IsEditModeBuffPlacementPreviewEnabled(kind) end,
+			set = function(_, value) GF:SetEditModeBuffPlacementPreview(kind, value) end,
+			isShown = function() return kind == "party" or kind == "raid" end,
+			isEnabled = function()
+				local cfg = getCfg(kind)
+				return cfg and cfg.healerBuffPlacement and cfg.healerBuffPlacement.enabled == true
+			end,
+		},
+		{
 			name = L["UFGroupBuffFilter"] or "Buff filter",
 			kind = SettingType.MultiDropdown,
 			field = "buffFilters",
@@ -35397,6 +35446,7 @@ function GF:OnEnterEditMode(kind)
 	local cfg = getCfg(kind)
 	if not (cfg and cfg.enabled == true) then return end
 	if GF._editModeSampleAuras == nil then GF._editModeSampleAuras = false end
+	if GF._editModeBuffPlacementPreview == nil then GF._editModeBuffPlacementPreview = { party = false, raid = false } end
 	if GF._editModeSampleStatusText == nil then GF._editModeSampleStatusText = true end
 	if GF._editModeSampleFrames == nil then GF._editModeSampleFrames = { party = false, raid = false, mt = false, ma = false } end
 	if GF._previewSampleSize == nil then GF._previewSampleSize = { raid = 10 } end
@@ -35472,7 +35522,6 @@ registerFeatureEvents = function(frame)
 		frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 		frame:RegisterEvent("PLAYER_REGEN_ENABLED")
 		frame:RegisterEvent("PLAYER_FLAGS_CHANGED")
-		frame:RegisterEvent("UNIT_FACTION")
 		frame:RegisterEvent("UNIT_CONNECTION")
 		frame:RegisterEvent("PARTY_MEMBER_ENABLE")
 		frame:RegisterEvent("PARTY_MEMBER_DISABLE")
@@ -35491,7 +35540,6 @@ registerFeatureEvents = function(frame)
 		end
 		frame:RegisterEvent("PLAYER_TALENT_UPDATE")
 		frame:RegisterEvent("TRAIT_CONFIG_UPDATED")
-		frame:RegisterEvent("SPELLS_CHANGED")
 		frame:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
 		frame:RegisterEvent("INSPECT_READY")
 		frame:RegisterEvent("RAID_TARGET_UPDATE")
@@ -35508,7 +35556,6 @@ unregisterFeatureEvents = function(frame)
 		frame:UnregisterEvent("PLAYER_ENTERING_WORLD")
 		frame:UnregisterEvent("PLAYER_REGEN_ENABLED")
 		frame:UnregisterEvent("PLAYER_FLAGS_CHANGED")
-		frame:UnregisterEvent("UNIT_FACTION")
 		frame:UnregisterEvent("UNIT_CONNECTION")
 		frame:UnregisterEvent("PARTY_MEMBER_ENABLE")
 		frame:UnregisterEvent("PARTY_MEMBER_DISABLE")
@@ -35523,7 +35570,6 @@ unregisterFeatureEvents = function(frame)
 		frame:UnregisterEvent("PLAYER_SPECIALIZATION_CHANGED")
 		frame:UnregisterEvent("PLAYER_TALENT_UPDATE")
 		frame:UnregisterEvent("TRAIT_CONFIG_UPDATED")
-		frame:UnregisterEvent("SPELLS_CHANGED")
 		frame:UnregisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
 		frame:UnregisterEvent("INSPECT_READY")
 		frame:UnregisterEvent("RAID_TARGET_UPDATE")
@@ -35548,9 +35594,6 @@ function GF:CancelPostRosterRefreshTicker()
 	if ticker and ticker.Cancel then ticker:Cancel() end
 	self._postRosterRefreshTicker = nil
 	self._postRosterRefreshPasses = nil
-	self._postRosterRefreshSignature = nil
-	self._postRosterRefreshNeedsGlobal = nil
-	self._postRosterRefreshForceInitialHeaderApply = nil
 end
 
 function GF:RunProfileChangeRefreshPass()
@@ -35577,76 +35620,42 @@ function GF:RunPostRosterRefreshPass()
 	if not isFeatureEnabled() then return end
 	self:EnsureHeaders()
 	local spotlightChanged = self:RunSpotlightRosterReconcilePass()
-	local runGlobalRefresh = self._postRosterRefreshNeedsGlobal == true or self._postRosterHeaderApplyPending == true
-	local appliedHeaders = false
 	if InCombatLockdown and InCombatLockdown() then
 		if spotlightChanged then GF:MarkPendingHeaderRefresh("raid") end
-		if self._postRosterHeaderApplyPending then
-			GF:MarkPendingHeaderRefresh("party")
-			GF:MarkPendingHeaderRefresh("raid")
-			GF:MarkPendingHeaderRefresh("mt")
-			GF:MarkPendingHeaderRefresh("ma")
-		end
 		return
 	end
-	if not runGlobalRefresh then
-		if spotlightChanged then self:RefreshSpotlightFrames() end
-		if self._spotlightRosterReconcilePending ~= true then self:CancelPostRosterRefreshTicker() end
-		return
-	end
-	if self._postRosterHeaderApplyPending then
-		self._postRosterHeaderApplyPending = false
-		appliedHeaders = true
-		local options = GF._lightHeaderRefreshOptions
-		self:ApplyHeaderAttributes("party", options)
-		self:ApplyHeaderAttributes("raid", options)
-		self:ApplyHeaderAttributes("mt", options)
-		self:ApplyHeaderAttributes("ma", options)
-		self._postRosterRefreshSignature = self:HasCustomRosterSort() and GF.BuildRosterRuntimeSignature() or nil
-	else
-		local customRosterSortActive = self:HasCustomRosterSort()
-		local rosterStateChanged = false
-		if customRosterSortActive then
-			local runtimeSignature = GF.BuildRosterRuntimeSignature()
-			rosterStateChanged = runtimeSignature ~= self._postRosterRefreshSignature
-			self._postRosterRefreshSignature = runtimeSignature
-		end
-		local options = GF._lightHeaderRefreshOptions
-		if spotlightChanged then
-			self:ApplyHeaderAttributes("raid", options)
-			appliedHeaders = true
-		end
-		if rosterStateChanged and self:IsCustomRosterSortActive("party") then
-			self:ApplyHeaderAttributes("party", options)
-			appliedHeaders = true
-		end
-		if rosterStateChanged and self:IsCustomRosterSortActive("raid") and not spotlightChanged then
-			self:ApplyHeaderAttributes("raid", options)
-			appliedHeaders = true
-		end
+	if spotlightChanged then self:RefreshSpotlightFrames() end
+	if self._spotlightRosterReconcilePending ~= true then self:CancelPostRosterRefreshTicker() end
+end
 
-		local function nudgeVisible(header)
-			if not (header and header.IsShown and header:IsShown()) then return end
-			nudgeHeaderLayout(header)
-		end
+function GF:RunNativeRosterRefreshPass()
+	if not isFeatureEnabled() then return end
+	self:EnsureHeaders()
 
-		nudgeVisible(self.headers and self.headers.party)
-		nudgeVisible(self.headers and self.headers.raid)
-		nudgeVisible(self.headers and self.headers.mt)
-		nudgeVisible(self.headers and self.headers.ma)
-		nudgeVisible(self._spotlightHeader)
-		if self._raidGroupHeaders then
-			for _, header in ipairs(self._raidGroupHeaders) do
-				if header and not header._eqolSpecialHide then nudgeVisible(header) end
-			end
+	local headerStateChanged, modeChanged, mode = self:DidRosterStateChange()
+	if headerStateChanged then
+		local refreshParty = modeChanged or mode ~= "raid"
+		local refreshRaid = modeChanged or mode == "raid"
+		if InCombatLockdown and InCombatLockdown() then
+			if refreshParty then self:MarkPendingHeaderRefresh("party") end
+			if refreshRaid then self:MarkPendingHeaderRefresh("raid") end
+		else
+			local options = self._lightHeaderRefreshOptions
+			if refreshParty then self:ApplyHeaderAttributes("party", options) end
+			if refreshRaid then self:ApplyHeaderAttributes("raid", options) end
 		end
 	end
-	local updated = self:RefreshChangedUnitButtons() or 0
-	self:RefreshDataBarTexts()
-	if appliedHeaders or updated > 0 then
-		self:RefreshNames({ skipLayout = true })
-		self:RefreshGroupIndicators()
-	end
+
+	self:RefreshChangedUnitButtons()
+end
+
+function GF:QueueNativeRosterRefresh()
+	if self._nativeRosterRefreshQueued then return end
+	self._nativeRosterRefreshQueued = true
+	RunNextFrame(function()
+		GF._nativeRosterRefreshQueued = nil
+		GF:RunNativeRosterRefreshPass()
+	end)
 end
 
 function GF:RunPostEnterWorldRefreshPass()
@@ -35670,20 +35679,11 @@ function GF:RunPostEnterWorldRefreshPass()
 	end
 end
 
-function GF:SchedulePostRosterRefresh(forceInitialHeaderApply, spotlightOnly)
-	local needsGlobalRefresh = spotlightOnly ~= true or self._postRosterRefreshNeedsGlobal == true
-	local forceHeaderApply = forceInitialHeaderApply == true or self._postRosterRefreshForceInitialHeaderApply == true
+function GF:SchedulePostRosterRefresh()
+	if self._spotlightRosterReconcilePending ~= true then return end
 	self:CancelPostRosterRefreshTicker()
-	self._postRosterRefreshNeedsGlobal = needsGlobalRefresh
-	self._postRosterRefreshForceInitialHeaderApply = forceHeaderApply
-	if forceHeaderApply then self._postRosterHeaderApplyPending = true end
-	if not forceHeaderApply and self:HasCustomRosterSort() then
-		self._postRosterRefreshSignature = (self._rosterState and self._rosterState.signature) or GF.BuildRosterRuntimeSignature()
-	end
 	if not (C_Timer and C_Timer.NewTicker) then
 		self:RunPostRosterRefreshPass()
-		self._postRosterRefreshNeedsGlobal = nil
-		self._postRosterRefreshForceInitialHeaderApply = nil
 		return
 	end
 	self._postRosterRefreshPasses = 0
@@ -35726,9 +35726,10 @@ do
 			registerFeatureEvents(GF._eventFrame)
 			GF:EnsureHeaders()
 			GF.FullRefresh()
+			GF:DidRosterStateChange()
 			GF:DisableBlizzardFrames()
 			GF:EnsureEditMode()
-			if GF._spotlightRosterReconcilePending then GF:SchedulePostRosterRefresh(false, true) end
+			if GF._spotlightRosterReconcilePending then GF:SchedulePostRosterRefresh() end
 		end
 	end
 
@@ -35751,11 +35752,10 @@ do
 			GF._postEnterWorldDidFullPass = nil
 			GF:RunPostEnterWorldRefreshPass()
 			GF:SchedulePostEnterWorldRefresh()
-			GF.QueueAllManagedHelpfulIdentityRefreshes(true)
-			if GF._spotlightRosterReconcilePending then GF:SchedulePostRosterRefresh(false, true) end
+			GF:DidRosterStateChange()
+			if GF._spotlightRosterReconcilePending then GF:SchedulePostRosterRefresh() end
 		elseif event == "PLAYER_REGEN_ENABLED" then
 			if GF._managedAuraRefreshDeferred then GF.ScheduleManagedAuraRefreshQueue() end
-			local postRosterHeadersApplied = false
 			local refreshDeferredAuraContainers = not GF._auraContainerDeferredLoadHandled
 				and addon.AuraCompat
 				and addon.AuraCompat._auraContainerLoadDeferred
@@ -35772,30 +35772,11 @@ do
 				GF._pendingRefresh = false
 				local applied = GF:ApplyPendingHeaderKinds()
 				local appliedSort = GF:ApplyPendingSortKinds()
-				if not applied and not appliedSort then
-					GF.FullRefresh()
-					postRosterHeadersApplied = true
-				else
-					postRosterHeadersApplied = applied
-				end
-			end
-			if GF._postRosterHeaderApplyPending then
-				if not isFeatureEnabled() then
-					GF._postRosterHeaderApplyPending = false
-				else
-					if not postRosterHeadersApplied then
-						GF._pendingRefresh = false
-						local applied = GF:ApplyPendingHeaderKinds()
-						local appliedSort = GF:ApplyPendingSortKinds()
-						if not applied and not appliedSort then GF.FullRefresh() end
-					end
-					GF._postRosterHeaderApplyPending = false
-					GF:SchedulePostRosterRefresh()
-				end
+				if not applied and not appliedSort then GF.FullRefresh() end
 			end
 			if GF._pendingRaidDynamicAnchorUpdate then GF:ApplyRaidDynamicAnchorUpdate() end
 			if GF._pendingPartyDynamicAnchorUpdate then GF:ApplyPartyDynamicAnchorUpdate() end
-			if GF._spotlightRosterReconcilePending then GF:SchedulePostRosterRefresh(false, true) end
+			if GF._spotlightRosterReconcilePending then GF:SchedulePostRosterRefresh() end
 			if refreshManagedHealerBuffs or refreshDeferredAuraContainers then refreshAllAuras() end
 		elseif event == "CLIENT_SCENE_OPENED" then
 			local sceneType = ...
@@ -35814,8 +35795,6 @@ do
 			GF:RefreshReadyCheckIcons(event)
 		elseif event == "PLAYER_TARGET_CHANGED" then
 			GF:RefreshTargetHighlights()
-		elseif event == "UNIT_FACTION" then
-			GF.QueueManagedHelpfulIdentityRefreshForUnit(..., true)
 		elseif event == "UNIT_CONNECTION" or event == "PARTY_MEMBER_ENABLE" or event == "PARTY_MEMBER_DISABLE" then
 			local unit = ...
 			GF:RefreshConnectionState(unit)
@@ -35832,71 +35811,14 @@ do
 					if GF._previewActive and GF._previewActive.raid then GF:UpdatePreviewLayout("raid") end
 				end
 			end
-		elseif event == "GROUP_FORMED" or event == "GROUP_JOINED" then
+		elseif event == "GROUP_FORMED" or event == "GROUP_JOINED" or event == "GROUP_ROSTER_UPDATE" or event == "RAID_ROSTER_UPDATE" then
 			GF:QueueSpotlightRosterReconcile()
-			if GF:HasCustomRosterSort() then
-				GF:SchedulePostRosterRefresh(true)
-			elseif GF._spotlightRosterReconcilePending then
-				GF:SchedulePostRosterRefresh(false, true)
-			end
-		elseif event == "GROUP_ROSTER_UPDATE" then
-			GF:QueueSpotlightRosterReconcile()
-			local headerStateChanged = GF:DidRosterStateChange()
+			GF:QueueNativeRosterRefresh()
+			if GF._spotlightRosterReconcilePending then GF:SchedulePostRosterRefresh() end
 			local cfg = getCfg("raid")
 			local custom = cfg and GFH and GFH.EnsureCustomSortConfig and GFH.EnsureCustomSortConfig(cfg)
 			local sortMethod = cfg and resolveSortMethod(cfg) or "INDEX"
-			local updatedCount = 0
-			if headerStateChanged then
-				GF._postRosterHeaderApplyPending = true
-				if InCombatLockdown and InCombatLockdown() then
-					GF:MarkPendingHeaderRefresh("party")
-					GF:MarkPendingHeaderRefresh("raid")
-					GF:MarkPendingHeaderRefresh("mt")
-					GF:MarkPendingHeaderRefresh("ma")
-				end
-			else
-				GF.QueueAllManagedHelpfulIdentityRefreshes(true)
-				updatedCount = updatedCount + (GF:RefreshChangedUnitButtons() or 0)
-			end
-			GF:RefreshConnectionStateIfChanged()
-			GF:RefreshDataBarTexts()
-			GF:RefreshGroupIcons()
-			if headerStateChanged or updatedCount > 0 then
-				GF:RefreshStatusIcons()
-				GF:RefreshGroupIndicators()
-				queueGroupIndicatorRefresh(0, 4)
-			end
-			GF:ScheduleConnectionRefresh()
-			if headerStateChanged or updatedCount > 0 then
-				GF:SchedulePostRosterRefresh()
-			elseif GF._spotlightRosterReconcilePending then
-				GF:SchedulePostRosterRefresh(false, true)
-			end
 			if custom and custom.separateMeleeRanged == true and sortMethod == "NAMELIST" and GFH and GFH.QueueInspectGroup then GFH.QueueInspectGroup() end
-		elseif event == "RAID_ROSTER_UPDATE" then
-			GF:QueueSpotlightRosterReconcile()
-			local headerStateChanged = GF:DidRosterStateChange()
-			if headerStateChanged then
-				GF._postRosterHeaderApplyPending = true
-				if InCombatLockdown and InCombatLockdown() then
-					GF:MarkPendingHeaderRefresh("party")
-					GF:MarkPendingHeaderRefresh("raid")
-					GF:MarkPendingHeaderRefresh("mt")
-					GF:MarkPendingHeaderRefresh("ma")
-				end
-			else
-				GF:RefreshChangedUnitButtons()
-			end
-			GF:RefreshConnectionStateIfChanged()
-			GF:RefreshDataBarTexts()
-			GF:RefreshGroupIcons()
-			GF:RefreshStatusIcons()
-			GF:ScheduleConnectionRefresh()
-			if headerStateChanged then
-				GF:SchedulePostRosterRefresh()
-			elseif GF._spotlightRosterReconcilePending then
-				GF:SchedulePostRosterRefresh(false, true)
-			end
 		elseif event == "PLAYER_ROLES_ASSIGNED" then
 			GF:RefreshRoleIcons()
 			GF:RefreshTargetHighlights()
@@ -35929,7 +35851,7 @@ do
 			local custom = cfg and GFH and GFH.EnsureCustomSortConfig and GFH.EnsureCustomSortConfig(cfg)
 			if custom and custom.separateMeleeRanged == true and resolveSortMethod(cfg) == "NAMELIST" and GFH and GFH.QueueInspectGroup then GFH.QueueInspectGroup() end
 			refreshAllAuras()
-		elseif event == "PLAYER_TALENT_UPDATE" or event == "TRAIT_CONFIG_UPDATED" or event == "SPELLS_CHANGED" or event == "ACTIVE_TALENT_GROUP_CHANGED" then
+		elseif event == "PLAYER_TALENT_UPDATE" or event == "TRAIT_CONFIG_UPDATED" or event == "ACTIVE_TALENT_GROUP_CHANGED" then
 			local healerBuffs = UF.GroupFramesHealerBuffs
 			if healerBuffs and healerBuffs.InvalidatePlayerFamilyProvisionCache then healerBuffs.InvalidatePlayerFamilyProvisionCache() end
 			refreshAllAuras()

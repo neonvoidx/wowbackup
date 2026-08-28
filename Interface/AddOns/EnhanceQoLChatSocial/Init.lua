@@ -10,6 +10,67 @@ end
 local L = LibStub("AceLocale-3.0"):GetLocale(parentAddonName)
 local ChatFrameUtil = _G.ChatFrameUtil
 local CHAT_BUBBLE_FONT_DEFAULT_SIZE = 13
+local CHAT_BUBBLES_CVAR = "chatBubbles"
+
+local function getChatBubblesCVar()
+	if not (_G.C_CVar and _G.C_CVar.GetCVar) then return nil end
+	local ok, value = pcall(_G.C_CVar.GetCVar, CHAT_BUBBLES_CVAR)
+	if not ok or value == nil then return nil end
+	return tostring(value)
+end
+
+local function setChatBubblesCVar(value)
+	if not (_G.C_CVar and _G.C_CVar.SetCVar) then return false end
+	value = tostring(value)
+	if getChatBubblesCVar() == value then return true end
+	local ok, changed = pcall(_G.C_CVar.SetCVar, CHAT_BUBBLES_CVAR, value)
+	return ok and changed ~= false
+end
+
+local function restoreChatBubblesCVar()
+	addon.variables = addon.variables or {}
+	local restoreValue = addon.variables.chatBubblesInstanceRestoreValue
+	if restoreValue == nil then return end
+	if setChatBubblesCVar(restoreValue) then addon.variables.chatBubblesInstanceRestoreValue = nil end
+end
+
+function addon.functions.ApplyChatBubblesInInstances()
+	if not addon.db then return end
+	addon.variables = addon.variables or {}
+
+	local inInstance, instanceType = false, "none"
+	if _G.IsInInstance then inInstance, instanceType = _G.IsInInstance() end
+	local suppress = addon.db.chatBubblesDisableInInstances == true
+		and inInstance
+		and (instanceType == "party" or instanceType == "raid")
+
+	if suppress then
+		if addon.variables.chatBubblesInstanceRestoreValue == nil then
+			addon.variables.chatBubblesInstanceRestoreValue = getChatBubblesCVar()
+		end
+		setChatBubblesCVar("0")
+	else
+		restoreChatBubblesCVar()
+	end
+end
+
+local function ensureChatBubblesInstanceWatcher()
+	addon.variables = addon.variables or {}
+	if addon.variables.chatBubblesInstanceWatcher then return end
+
+	local watcher = CreateFrame("Frame")
+	watcher:RegisterEvent("PLAYER_ENTERING_WORLD")
+	watcher:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+	watcher:RegisterEvent("PLAYER_LOGOUT")
+	watcher:SetScript("OnEvent", function(_, event)
+		if event == "PLAYER_LOGOUT" then
+			restoreChatBubblesCVar()
+		else
+			addon.functions.ApplyChatBubblesInInstances()
+		end
+	end)
+	addon.variables.chatBubblesInstanceWatcher = watcher
+end
 
 local function initChatFrame()
 	-- Build learn/unlearn message patterns and filter once
@@ -336,7 +397,10 @@ local function initChatFrame()
 	addon.functions.InitDBValue("chatHideCombatLogTab", false)
 	addon.functions.InitDBValue("chatBubbleFontOverride", false)
 	addon.functions.InitDBValue("chatBubbleFontSize", CHAT_BUBBLE_FONT_DEFAULT_SIZE)
+	addon.functions.InitDBValue("chatBubblesDisableInInstances", false)
 	addon.functions.ApplyChatBubbleFontSize(addon.db["chatBubbleFontSize"])
+	ensureChatBubblesInstanceWatcher()
+	addon.functions.ApplyChatBubblesInInstances()
 	-- Apply learn/unlearn message filter based on saved setting
 	addon.functions.ApplyChatLearnFilter(addon.db["chatHideLearnUnlearn"])
 	if addon.ChatIcons and addon.ChatIcons.SetEnabled then addon.ChatIcons:SetEnabled(addon.db["chatShowLootCurrencyIcons"]) end

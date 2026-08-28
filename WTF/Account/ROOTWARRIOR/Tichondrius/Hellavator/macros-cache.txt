@@ -1,6 +1,7 @@
 VER 3 0100000000000021 " " "INV_MISC_QUESTIONMARK"
 #showtooltip
-/cast [mod:shift,@focus,exists][] Command Demon
+#FS EH X
+/cast [mod:shift,@none,exists][mod:shift,@focus,exists][] Command Demon
 END
 VER 3 0100000000000037 " " "134400"
 #showtooltip [group] Create Soulwell; [nogroup] Create Healthstone
@@ -16,7 +17,7 @@ VER 3 010000000000003A " " "134400"
 END
 VER 3 010000000000003C " " "134400"
 #showtooltip Soulstone
-/cast [@mouseover] Soulstone
+/cast [@mouseover,exists,noharm][@player] Soulstone
 END
 VER 3 0100000000000040 " " "134400"
 #showtooltip burning rush
@@ -80,19 +81,15 @@ VER 3 010000000000005A " " "134400"
 #showtooltip
 /cast [@cursor] Shadow Rift
 END
-VER 3 010000000000005B " " "134400"
-#showtooltip
-/cast [mod:shift,@focus,exists,harm,nodead][] Devour Magic
-END
 VER 3 010000000000005D " " "134400"
 #showtooltip Demonic Circle: Teleport
 /cast soulburn
 /cast Demonic circle: teleport
 END
-VER 3 010000000000005E " " "134400"
-#showtooltip Mortal Coil
-#FS EH X
-/cast  [mod:shift,@none,exists][mod:shift,@focus,exists][] Mortal Coil
+VER 3 0100000000000068 " " "134400"
+#showtooltip Summon Demonic Tyrant
+/use 14
+/cast Summon Demonic Tyrant
 END
 VER 3 010000000000005F " " "134400"
 #showtooltip drain soul
@@ -107,10 +104,36 @@ VER 3 0100000000000061 " " "134400"
 /cast [@mouseover,exists,harm,known:Havoc][known:Havoc] Havoc
 END
 VER 3 0100000000000062 " " "134400"
-#showtooltip
-/use [spec:2]Summon Felguard;Summon Felhunter
+#showtooltip  [spec:2] Summon Felguard; Summon Felhunter
+/cast  Fel Domination
+/cast [spec:2] Summon Felguard; Summon Felhunter
 END
 VER 3 0100000000000063 " " "134400"
 #showtooltip
 /cast Felstorm
+END
+VER 3 0100000000000064 " " "134400"
+#showtooltip
+/cast [@mouseover,harm][] Shadowburn
+END
+VER 3 0100000000000065 " " "134400"
+#showtooltip devour magic
+/cast devour magic
+END
+VER 3 0100000000000066 " " "134400"
+#showtooltip [known: Soul rip] Soul Rip; [known:Nether ward] Nether ward
+/cast [known: Soul rip] Soul Rip; [known:Nether ward] Nether ward
+END
+VER 3 0100000000000067 " " "134400"
+#showtooltip
+/cast [mod:shift,known: Curse of the Satyr] Curse of the Satyr; [mod:shift,known: curse of tongues] Curse of tongues; [mod:ctrl,known: curse of the satyr] Curse of the satyr;[mod:ctrl] Curse of weakness;  Curse of Exhaustion
+END
+VER 3 0100000000000069 " " "134400"
+#showtooltip banish
+/cast banish
+END
+VER 3 010000000000005E " modfocus" "134400"
+#showtooltip Mortal Coil
+#FS EH X
+/cast  [mod:shift,@none,exists][mod:shift,@focus,exists][] Mortal Coil
 END

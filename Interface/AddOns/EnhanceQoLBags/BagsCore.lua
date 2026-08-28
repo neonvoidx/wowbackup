@@ -2466,36 +2466,30 @@ function BagSlotPanel.ApplyCursorToBagSlot(bagID)
 	end
 end
 
-local function getCursorItemLocation()
-	if not C_Cursor or not C_Cursor.GetCursorItem or not C_Item or not C_Item.DoesItemExist then
-		return nil
-	end
-
-	local itemLocation = C_Cursor.GetCursorItem()
-	if not itemLocation or not itemLocation.HasAnyLocation or not itemLocation:HasAnyLocation() then
-		return nil
-	end
-	if not C_Item.DoesItemExist(itemLocation) then
-		return nil
-	end
-
-	return itemLocation
-end
-
 local function pickupCursorItemIntoFirstEmptyBagSlot()
-	if not C_Container or not C_Container.GetContainerNumSlots or not C_Container.GetContainerItemInfo then
+	if
+		not C_Container
+		or not C_Container.GetContainerFreeSlots
+		or not C_Container.GetContainerNumFreeSlots
+		or not C_Container.PickupContainerItem
+	then
 		return false
 	end
 
+	local cursorType, itemID = GetCursorInfo()
+	if cursorType ~= "item" or not itemID then
+		return false
+	end
+
+	local itemFamily = C_Item and C_Item.GetItemFamily and C_Item.GetItemFamily(itemID) or 0
 	for bagID = Core.BACKPACK_ID, Core.LAST_CHARACTER_BAG_ID do
-		local slotCount = C_Container.GetContainerNumSlots(bagID) or 0
-		for slotID = 1, slotCount do
-			local info = C_Container.GetContainerItemInfo(bagID, slotID)
-			if not (info and info.iconFileID) then
+		local _, bagFamily = C_Container.GetContainerNumFreeSlots(bagID)
+		bagFamily = bagFamily or 0
+		local acceptsItem = bagFamily == 0 or (itemFamily ~= 0 and _G.bit.band(itemFamily, bagFamily) ~= 0)
+		if acceptsItem then
+			for _, slotID in ipairs(C_Container.GetContainerFreeSlots(bagID) or {}) do
 				C_Container.PickupContainerItem(bagID, slotID)
-				if not getCursorItemLocation() then
-					return true
-				end
+				if not CursorHasItem() then return true end
 			end
 		end
 	end
@@ -2504,27 +2498,11 @@ local function pickupCursorItemIntoFirstEmptyBagSlot()
 end
 
 receiveCursorItemIntoBags = function()
-	if not getCursorItemLocation() then
+	if not CursorHasItem() then
 		return false
 	end
 
-	local received = false
-	if type(PutItemInBackpack) == "function" and PutItemInBackpack() then
-		received = true
-	elseif type(PutItemInBag) == "function" then
-		for bagID = 1, Core.LAST_CHARACTER_BAG_ID do
-			local inventorySlot = BagSlotPanel.GetInventorySlot(bagID)
-			if inventorySlot and PutItemInBag(inventorySlot) then
-				received = true
-				break
-			end
-		end
-	end
-
-	if not received and C_Container and C_Container.PickupContainerItem then
-		received = pickupCursorItemIntoFirstEmptyBagSlot()
-	end
-	if not received then
+	if not pickupCursorItemIntoFirstEmptyBagSlot() then
 		return false
 	end
 

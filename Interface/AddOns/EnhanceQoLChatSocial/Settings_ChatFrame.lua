@@ -910,6 +910,17 @@ local chatBubblesExpandable = addon.functions.SettingsCreateExpandableSection(cC
 
 data = {
 	{
+		var = "chatBubblesDisableInInstances",
+		text = L["chatBubblesDisableInInstances"],
+		desc = L["chatBubblesDisableInInstancesDesc"],
+		func = function(enabled)
+			addon.db.chatBubblesDisableInInstances = enabled == true
+			if addon.functions.ApplyChatBubblesInInstances then addon.functions.ApplyChatBubblesInInstances() end
+		end,
+		default = false,
+		newTagID = "chatBubblesDisableInInstances",
+	},
+	{
 		var = "chatBubbleFontOverride",
 		text = L["chatBubbleFontOverride"],
 		desc = L["chatBubbleFontOverrideDesc"],

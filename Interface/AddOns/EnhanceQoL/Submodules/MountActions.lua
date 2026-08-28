@@ -11,12 +11,16 @@ local L = LibStub("AceLocale-3.0"):GetLocale(parentAddonName)
 local MountActions = addon.MountActions or {}
 addon.MountActions = MountActions
 local issecretvalue = _G.issecretvalue
+local C_ZoneAbility = _G.C_ZoneAbility
 
 local function canReadAuraData()
 	return not addon.AuraCompat or addon.AuraCompat:CanReadAuraData()
 end
 
 local RANDOM_FAVORITE_SPELL_ID = 150544
+local G_99_BREAKNECK_SPELL_ID = 1215279
+local G_99_BREAKNECK_OVERRIDE_BAR_SKIN_ID = 534041
+local LIBERATION_OF_UNDERMINE_INSTANCE_ID = 2769
 local GHOST_WOLF_SPELL_ID = 2645
 local SLOW_FALL_SPELL_ID = 130
 local LEVITATE_SPELL_ID = 1706
@@ -24,7 +28,7 @@ local DRUID_TRAVEL_FORM_SPELL_ID = 783
 local DRACTHYR_RACE_TAG = "Dracthyr"
 local DRACTHYR_VISAGE_AURA_CHECK_SPELL_ID = 372014
 local DRACTHYR_VISAGE_SPELL_ID = 351239
-local REPAIR_MOUNT_SPELLS = { 457485, 122708, 61425, 61447 }
+local REPAIR_MOUNT_SOURCES = { 274164, 457485, 122708, 61425, 61447 }
 local AH_MOUNT_SPELLS = { 264058, 465235 }
 local MOUNT_TYPE_CATEGORIES = {
 	water = { 231, 254, 232, 407 },
@@ -50,6 +54,35 @@ local function isSwimming()
 	if IsSubmerged and IsSubmerged() then return true end
 	if IsSwimming and IsSwimming() then return true end
 	return false
+end
+
+local g99BreakneckUnlocked
+
+local function isG99BreakneckUnlocked()
+	if g99BreakneckUnlocked then return true end
+	if C_SpellBook and C_SpellBook.IsSpellKnown and C_SpellBook.IsSpellKnown(G_99_BREAKNECK_SPELL_ID, Enum.SpellBookSpellBank.Player) then
+		g99BreakneckUnlocked = true
+		return true
+	end
+	return false
+end
+
+local function isG99BreakneckAvailable()
+	if not isG99BreakneckUnlocked() then return false end
+	if not (C_Spell and C_Spell.IsSpellUsable and C_Spell.IsSpellUsable(G_99_BREAKNECK_SPELL_ID)) then return false end
+	if C_Spell and C_Spell.GetOverrideSpell and C_Spell.GetOverrideSpell(G_99_BREAKNECK_SPELL_ID) ~= G_99_BREAKNECK_SPELL_ID then return true end
+	if C_ActionBar and C_ActionBar.GetOverrideBarSkin and C_ActionBar.GetOverrideBarSkin() == G_99_BREAKNECK_OVERRIDE_BAR_SKIN_ID then return true end
+
+	if C_ZoneAbility and C_ZoneAbility.GetActiveAbilities then
+		local zoneAbilities = C_ZoneAbility.GetActiveAbilities()
+		if type(zoneAbilities) == "table" then
+			for i = 1, #zoneAbilities do
+				if zoneAbilities[i].spellID == G_99_BREAKNECK_SPELL_ID then return true end
+			end
+		end
+	end
+
+	return select(8, GetInstanceInfo()) == LIBERATION_OF_UNDERMINE_INSTANCE_ID
 end
 
 local function entryMatchesCategory(entry, category)
@@ -110,6 +143,15 @@ local function getMountIdFromSource(sourceID)
 		end
 	end
 	return nil, nil
+end
+
+local function getCastSpellIDFromSource(sourceID)
+	local mountID, sourceType = getMountIdFromSource(sourceID)
+	if sourceType == "item" and C_MountJournal and C_MountJournal.GetMountInfoByID then
+		local _, spellID = C_MountJournal.GetMountInfoByID(mountID)
+		return spellID
+	end
+	return sourceID
 end
 
 local function isMountSpellUsable(spellID)
@@ -427,17 +469,22 @@ function MountActions:PrepareActionButton(btn)
 			end
 		end
 		local spellID
-		local targetSpellID = getMountedTargetSpellID()
-		if targetSpellID and isMountSpellUsable(targetSpellID) then
-			spellID = targetSpellID
+		if isG99BreakneckAvailable() then
+			spellID = G_99_BREAKNECK_SPELL_ID
 		else
-			spellID = self:GetRandomMountSpell()
+			local targetSpellID = getMountedTargetSpellID()
+			if targetSpellID and isMountSpellUsable(targetSpellID) then
+				spellID = targetSpellID
+			else
+				spellID = self:GetRandomMountSpell()
+			end
 		end
 		local macro = buildRandomMountMacro(spellID or RANDOM_FAVORITE_SPELL_ID)
 		btn:SetAttribute("macrotext1", macro)
 		btn:SetAttribute("macrotext", macro)
 	elseif btn._eqolAction == "repair" then
-		local spellID = pickFirstUsable(REPAIR_MOUNT_SPELLS)
+		local sourceID = pickFirstUsable(REPAIR_MOUNT_SOURCES)
+		local spellID = getCastSpellIDFromSource(sourceID)
 		local macro = buildMountMacro(spellID)
 		btn:SetAttribute("macrotext1", macro)
 		btn:SetAttribute("macrotext", macro)
@@ -464,6 +511,10 @@ function MountActions:HandleClick(btn, button, down)
 			end
 			return
 		end
+		if isG99BreakneckAvailable() then
+			summonMountBySource(G_99_BREAKNECK_SPELL_ID)
+			return
+		end
 		local targetSpellID = getMountedTargetSpellID()
 		if targetSpellID and isMountSpellUsable(targetSpellID) then
 			summonMountBySource(targetSpellID)
@@ -476,7 +527,7 @@ function MountActions:HandleClick(btn, button, down)
 			summonMountBySource(RANDOM_FAVORITE_SPELL_ID)
 		end
 	elseif btn._eqolAction == "repair" then
-		local spellID = pickFirstUsable(REPAIR_MOUNT_SPELLS)
+		local spellID = pickFirstUsable(REPAIR_MOUNT_SOURCES)
 		if spellID then summonMountBySource(spellID) end
 	elseif btn._eqolAction == "ah" then
 		local spellID = pickFirstUsable(AH_MOUNT_SPELLS)

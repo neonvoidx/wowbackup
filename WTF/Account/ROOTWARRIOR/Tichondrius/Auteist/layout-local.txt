@@ -2,8 +2,8 @@ Version: 1
 Frame: sArena
 FrameLevel: 1
 Anchor: CENTER
-X: 454
-Y: 16
+X: 509
+Y: 77
 W: 1
 H: 1
 Frame: StaticPopup1
@@ -27,6 +27,13 @@ X: 621
 Y: -53
 W: 261
 H: 590
+Frame: CharacterFrame
+FrameLevel: 1
+Anchor: CENTER
+X: -37
+Y: 36
+W: 338
+H: 424
 Frame: QuestFrame
 FrameLevel: 1
 Anchor: CENTER
@@ -111,10 +118,3 @@ X: -26
 Y: -262
 W: 2
 H: 2
-Frame: CharacterFrame
-FrameLevel: 1
-Anchor: CENTER
-X: -37
-Y: 36
-W: 338
-H: 424

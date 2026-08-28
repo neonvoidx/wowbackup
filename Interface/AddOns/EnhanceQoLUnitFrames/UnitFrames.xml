@@ -1,6 +1,8 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
 	<Script file="UF_Helper.lua" />
 	<Script file="UF.lua" />
+	<Script file="UnitFrameRuntime.lua" />
+	<Script file="HealthText.lua" />
 	<Script file="UF_StandaloneCastbar.lua" />
 	<Include file="UF_GroupFrames.xml" />
 	<Script file="UF_GroupFrames_Helper.lua" />

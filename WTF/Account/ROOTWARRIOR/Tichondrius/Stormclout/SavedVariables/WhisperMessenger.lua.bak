@@ -1,0 +1,23 @@
+
+WhisperMessengerCharacterDB = {
+["minimapIcon"] = {
+["degrees"] = 45,
+},
+["window"] = {
+["y"] = 934.1665649414062,
+["x"] = 760.8333129882812,
+["minimized"] = false,
+["relativePoint"] = "BOTTOMLEFT",
+["height"] = 604.1666870117188,
+["contactsWidth"] = 198.1667433045809,
+["anchorPoint"] = "TOPLEFT",
+["width"] = 1009.166687011719,
+},
+["icon"] = {
+["anchorPoint"] = "CENTER",
+["x"] = 0,
+["y"] = 0,
+["relativePoint"] = "CENTER",
+},
+["contactsTabMode"] = "whispers",
+}

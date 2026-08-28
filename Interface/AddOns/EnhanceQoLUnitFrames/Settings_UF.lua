@@ -1822,7 +1822,7 @@ local function getCopySectionSetForUnit(unit)
 	}
 	local bossUnit = isBossUnit(unit)
 	if bossUnit then set.layout = true end
-	if unit == "target" then set.rangeFade = true end
+	if unit == "target" or bossUnit then set.rangeFade = true end
 	if unit == "player" or unit == "target" or unit == "focus" then set.incomingHeal = true end
 	if unit ~= "pet" then
 		set.absorb = true
@@ -4095,8 +4095,8 @@ local function buildUnitSettings(unit)
 	local refreshFunc = refresh
 	local function refreshSelf(syncEditModeValues)
 		local visualOnlyRefresh = consumeVisualOnlyRefreshPending()
-		if isBoss and UF.UpdateBossFrames then
-			UF.UpdateBossFrames(true)
+		if isBoss and UF.ConfigureBossFrames then
+			UF.ConfigureBossFrames()
 		else
 			refreshFunc(unit)
 		end
@@ -4886,10 +4886,14 @@ local function buildUnitSettings(unit)
 	portraitSeparatorColor.isEnabled = function() return isPortraitEnabled() and not isPortraitDetached() and isPortraitSeparatorEnabled() end
 	list[#list + 1] = portraitSeparatorColor
 
-	if unit == "target" then
+	if unit == "target" or unit == "boss" then
 		local rangeDef = def.rangeFade or {}
 		local function isRangeFadeEnabled() return getValue(unit, { "rangeFade", "enabled" }, rangeDef.enabled == true) == true end
 		local function refreshRangeFadeRuntime(rebuildSpellList, applyCurrent)
+			if unit == "boss" then
+				if UF.RefreshBossRangeFade then UF.RefreshBossRangeFade() end
+				return
+			end
 			if not UFHelper then return end
 			if UFHelper.RangeFadeMarkConfigDirty then UFHelper.RangeFadeMarkConfigDirty() end
 			if rebuildSpellList and UFHelper.RangeFadeMarkSpellListDirty then UFHelper.RangeFadeMarkSpellListDirty() end
@@ -4899,11 +4903,13 @@ local function buildUnitSettings(unit)
 
 		list[#list + 1] = { name = L["UFRangeFade"] or "Range fade", kind = UF.ui.settingType.Collapsible, id = "rangeFade", defaultCollapsed = true }
 
-		list[#list + 1] = checkbox(L["UFRangeFadeEnable"] or "Enable range fade", isRangeFadeEnabled, function(val)
+		local rangeFadeEnabled = checkbox(L["UFRangeFadeEnable"] or "Enable range fade", isRangeFadeEnabled, function(val)
 			setValue(unit, { "rangeFade", "enabled" }, val and true or false)
 			refreshSelf()
 			refreshRangeFadeRuntime(true, false)
 		end, rangeDef.enabled == true, "rangeFade")
+		if unit == "boss" then rangeFadeEnabled.newTagID = "ufBossRangeFade" end
+		list[#list + 1] = rangeFadeEnabled
 
 		local rangeFadeAlpha = slider(L["UFRangeFadeAlpha"] or "Out of range opacity", 0, 100, 1, function()
 			local alpha = getValue(unit, { "rangeFade", "alpha" }, rangeDef.alpha or 0.5)

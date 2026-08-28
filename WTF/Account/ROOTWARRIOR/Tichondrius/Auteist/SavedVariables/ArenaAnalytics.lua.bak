@@ -1,43 +1,15 @@
 
 ArenaAnalyticsDB = {
 ["formatVersion"] = 6,
-["names"] = {
-"Auteist",
-},
 ["realms"] = {
 "Tichondrius",
 },
+["names"] = {
+"Auteist",
+},
 }
 ArenaAnalyticsTransientDB = {
-["currentArena"] = {
-["players"] = {
-},
-["lastRoundTeam"] = {
-},
-["matchState"] = 0,
-["shuffleWinsCache"] = {
-["total"] = 0,
-["wins"] = 0,
-["estimatedRound"] = 0,
-["drawCount"] = 0,
-},
-["ended"] = false,
-["committedRounds"] = {
-},
-["deathData"] = {
-},
-["isHandlingExit"] = false,
-["locked"] = false,
-["round"] = {
-["isInitiated"] = false,
-["team"] = {
-},
-["wins"] = 0,
-["totalWins"] = 0,
-["enemy"] = {
-},
-},
-["endedProperly"] = false,
+["queueTimes"] = {
 },
 ["ratedInfo"] = {
 {
@@ -58,7 +30,35 @@ ArenaAnalyticsTransientDB = {
 },
 ["season"] = 42,
 },
-["queueTimes"] = {
+["currentArena"] = {
+["endedProperly"] = false,
+["lastRoundTeam"] = {
+},
+["matchState"] = 0,
+["isHandlingExit"] = false,
+["ended"] = false,
+["committedRounds"] = {
+},
+["deathData"] = {
+},
+["shuffleWinsCache"] = {
+["total"] = 0,
+["wins"] = 0,
+["drawCount"] = 0,
+["estimatedRound"] = 0,
+},
+["locked"] = false,
+["round"] = {
+["isInitiated"] = false,
+["team"] = {
+},
+["wins"] = 0,
+["totalWins"] = 0,
+["enemy"] = {
+},
+},
+["players"] = {
+},
 },
 }
 ArenaAnalyticsMapIconPos = 116.3095406686996

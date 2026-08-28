@@ -74,6 +74,18 @@ local function isRuleRelevantToPlayer(rule, compiled)
 	return type(HB.CanPlayerProvideFamily) ~= "function" or HB.CanPlayerProvideFamily(rule.spellFamilyId, compiled) == true
 end
 
+local function getExpirationPulseSignature(rule)
+	if not (rule and rule.expirationPulseEnabled == true) then return "0" end
+	local color = type(rule.expirationPulseColor) == "table" and rule.expirationPulseColor or EMPTY
+	return table.concat({
+		"1",
+		tostring(color[1] or color.r),
+		tostring(color[2] or color.g),
+		tostring(color[3] or color.b),
+		tostring(color[4] or color.a),
+	}, "\030")
+end
+
 local function getVisualSignature(group, rule, config)
 	local values = {}
 	local fields = {
@@ -111,6 +123,7 @@ local function getVisualSignature(group, rule, config)
 	for i = 1, 4 do values[#values + 1] = tostring(type(color) == "table" and (color[i] or color[colorKeys[i]]) or nil) end
 	local indicatorBorderColor = group.indicatorBorderColor
 	for i = 1, 4 do values[#values + 1] = tostring(type(indicatorBorderColor) == "table" and (indicatorBorderColor[i] or indicatorBorderColor[colorKeys[i]]) or nil) end
+	values[#values + 1] = getExpirationPulseSignature(rule)
 	if tostring(group.style or ""):upper() == "TINT" then
 		local healthConfig = config and config.health or EMPTY
 		values[#values + 1] = tostring(config and config.barTexture)
@@ -158,6 +171,9 @@ local function ensureCommonRegions(button)
 	button.square:SetAllPoints(button)
 	button.tint = button:CreateTexture(nil, "ARTWORK")
 	button.tint:SetAllPoints(button)
+	button.nativeBorderLayer = CreateFrame("Frame", nil, button)
+	button.nativeBorderLayer:EnableMouse(false)
+	button.nativeBorderLayer:SetAllPoints(button)
 	button.nativeForeground = CreateFrame("Frame", nil, button)
 	button.nativeForeground:EnableMouse(false)
 	button.nativeForeground:SetAllPoints(button)
@@ -230,6 +246,7 @@ local function clearBindings(button)
 	call(button, "ClearDurationText")
 	call(button, "ClearDurationBar")
 	call(button, "ClearApplicationCount")
+	call(button, "ClearPandemicRegions")
 	button.icon:Hide()
 	button.square:Hide()
 	button.tint:Hide()
@@ -237,6 +254,7 @@ local function clearBindings(button)
 	button.durationText:Hide()
 	button.count:Hide()
 	button.bar:Hide()
+	if button._eqolHBPPandemicGlow then button._eqolHBPPandemicGlow:Hide() end
 	if addon.functions and addon.functions.SetSafeBorder then
 		addon.functions.SetSafeBorder(button.border, false, nil, nil, nil, nil, nil, nil, { stateKey = "_eqolHBPManagedBorder" })
 	else
@@ -281,14 +299,90 @@ local function getIconStyle(config, group)
 	}
 end
 
-local function configureIcon(button, config, group)
+local function configureNativeForeground(button)
+	if button.cd and button.nativeBorderLayer then
+		button.nativeBorderLayer:SetFrameStrata(button.cd:GetFrameStrata())
+		button.nativeBorderLayer:SetFrameLevel(button.cd:GetFrameLevel() + 5)
+		button.nativeBorderLayer:Show()
+	end
+	if button.cd and button.nativeForeground then
+		button.nativeForeground:SetFrameStrata(button.cd:GetFrameStrata())
+		button.nativeForeground:SetFrameLevel(button.cd:GetFrameLevel() + 10)
+		button.nativeForeground:Show()
+	end
+end
+
+local function configurePandemicPulse(button, group, rule)
+	if not (rule and rule.expirationPulseEnabled == true and addon.AuraCompat and addon.AuraCompat.CreateRestrictedAuraGlow and type(button.AddPandemicRegion) == "function") then return end
+	configureNativeForeground(button)
+	local color = type(rule.expirationPulseColor) == "table" and rule.expirationPulseColor or { 1, 0.2, 0.2, 1 }
+	local borderLayer = button.nativeBorderLayer or button
+	local glow = addon.AuraCompat:CreateRestrictedAuraGlow(borderLayer, borderLayer, {
+		color = color,
+		style = "PULSING",
+		inset = tonumber(group.indicatorBorderOffset) or 0,
+		thickness = group.indicatorBorderEnabled == true and (tonumber(group.indicatorBorderSize) or 1) or 2,
+		frameLevelOffset = 1,
+	})
+	if glow then
+		button:AddPandemicRegion(glow)
+		button._eqolHBPPandemicGlow = glow
+	end
+end
+
+local function configureIcon(button, config, group, rule)
 	local style = getIconStyle(config, group)
 	button._eqolNativeAuraStyleKey = nil
 	if AuraUtil and AuraUtil.PrepareNativeAuraButton then AuraUtil.PrepareNativeAuraButton(button, style, false) end
 	button.icon:Show()
+	configurePandemicPulse(button, group, rule)
 end
 
-local function configureSquare(button, group, rule)
+local function configureDurationText(button, style)
+	configureNativeForeground(button)
+	if style.showCooldownText ~= false then
+		button.durationText:ClearAllPoints()
+		button.durationText:SetDrawLayer("OVERLAY", 3)
+		button.durationText:SetPoint(
+			style.cooldownAnchor or "CENTER",
+			button.nativeForeground or button,
+			style.cooldownAnchor or "CENTER",
+			(style.cooldownOffset and style.cooldownOffset.x) or 0,
+			(style.cooldownOffset and style.cooldownOffset.y) or 0
+		)
+		if UFHelper and UFHelper.applyFont then UFHelper.applyFont(button.durationText, style.cooldownFont, style.cooldownFontSize or 12, style.cooldownFontOutline) end
+		button.durationText:Show()
+		local options = addon.functions and addon.functions.GetAuraButtonDurationTextOptions and addon.functions.GetAuraButtonDurationTextOptions(style.durationTextProfile)
+		call(button, "SetDurationText", button.durationText, options)
+	else
+		call(button, "ClearDurationText")
+		button.durationText:Hide()
+	end
+end
+
+local function configureApplicationCount(button, style)
+	configureNativeForeground(button)
+	if style.showStacks ~= false then
+		button.count:ClearAllPoints()
+		button.count:SetDrawLayer("OVERLAY", 4)
+		button.count:SetPoint(
+			style.countAnchor or "BOTTOMRIGHT",
+			button.nativeForeground or button,
+			style.countAnchor or "BOTTOMRIGHT",
+			(style.countOffset and style.countOffset.x) or -2,
+			(style.countOffset and style.countOffset.y) or 2
+		)
+		if UFHelper and UFHelper.applyFont then UFHelper.applyFont(button.count, style.countFont, style.countFontSize or 14, style.countFontOutline) end
+		button.count:Show()
+		call(button, "SetApplicationCount", button.count, {})
+	else
+		call(button, "ClearApplicationCount")
+		button.count:Hide()
+	end
+end
+
+local function configureSquare(button, config, group, rule)
+	local style = getIconStyle(config, group)
 	local size = max(1, tonumber(group.size) or 16)
 	local r, g, b, a = resolveColor(group, rule)
 	button:SetSize(size, size)
@@ -305,6 +399,9 @@ local function configureSquare(button, group, rule)
 		call(button, "ClearDurationCooldown")
 		button.cd:Hide()
 	end
+	configureDurationText(button, style)
+	configureApplicationCount(button, style)
+	configurePandemicPulse(button, group, rule)
 end
 
 local function configureBar(button, group, rule)
@@ -315,8 +412,7 @@ local function configureBar(button, group, rule)
 	button.bar:Show()
 	if group.barDrainAnimation == true then
 		local interpolation = Enum and Enum.StatusBarInterpolation and Enum.StatusBarInterpolation.Immediate
-		local direction = Enum and Enum.StatusBarTimerDirection
-			and (group.barReverseFill == true and Enum.StatusBarTimerDirection.ElapsedTime or Enum.StatusBarTimerDirection.RemainingTime)
+		local direction = Enum and Enum.StatusBarTimerDirection and Enum.StatusBarTimerDirection.RemainingTime
 		call(button, "SetDurationBar", button.bar, { interpolation = interpolation, direction = direction })
 	else
 		button.bar:SetValue(1)
@@ -367,10 +463,10 @@ local function configureSlotFrame(button, config, group, rule, tintTarget)
 	clearBindings(button)
 	local style = tostring(group.style or "ICON"):upper()
 	if style == "ICON" then
-		configureIcon(button, config, group)
+		configureIcon(button, config, group, rule)
 		configureIndicatorBorder(button, group)
 	elseif style == "SQUARE" then
-		configureSquare(button, group, rule)
+		configureSquare(button, config, group, rule)
 		configureIndicatorBorder(button, group)
 	elseif style == "BAR" then
 		configureBar(button, group, rule)
@@ -460,10 +556,19 @@ local function getIconGroupFilters(ruleIDs, compiled, maxCount)
 				filterString = scanAll and "HELPFUL" or "HELPFUL|PLAYER"
 			end
 			if hasSpellIDs(ruleSpellIDs) then
-				local filter = filtersByString[filterString]
+				local pulseSignature = getExpirationPulseSignature(rule)
+				local filterKey = filterString .. "\031" .. pulseSignature
+				local filter = filtersByString[filterKey]
 				if not filter then
-					filter = { filterString = filterString, includeSpellIDs = {}, ruleCount = 0, maxFrameCount = 0 }
-					filtersByString[filterString] = filter
+					filter = {
+						filterString = filterString,
+						includeSpellIDs = {},
+						maxFrameCount = 0,
+						pulseSignature = pulseSignature,
+						rule = rule.expirationPulseEnabled == true and rule or nil,
+						ruleCount = 0,
+					}
+					filtersByString[filterKey] = filter
 					filters[#filters + 1] = filter
 				end
 				filter.ruleCount = filter.ruleCount + 1
@@ -578,7 +683,9 @@ local function applyIconAllGroups(managed, root, unit, config, groupID, group, f
 	managed.iconGroups = managed.iconGroups or {}
 	local entry = managed.iconGroups[groupID]
 	if not (filters and filters[1]) then return false end
-	local visualSignature = getVisualSignature(group, nil, config)
+	local visualSignatureValues = { getVisualSignature(group, nil, config) }
+	for i = 1, #filters do visualSignatureValues[#visualSignatureValues + 1] = filters[i].pulseSignature or getExpirationPulseSignature(filters[i].rule) end
+	local visualSignature = table.concat(visualSignatureValues, "\029")
 	if not entry then
 		entry = { generation = 0, groups = {}, container = addon.AuraCompat:CreateAuraContainer(root) }
 		if not entry.container then return false end
@@ -611,6 +718,7 @@ local function applyIconAllGroups(managed, root, unit, config, groupID, group, f
 		local registered = entry.groups[i]
 		local updateSignature = table.concat({
 			getFilterSignature(filter.filterString, filter.includeSpellIDs),
+			filter.pulseSignature or getExpirationPulseSignature(filter.rule),
 			tostring(filter.ruleID),
 			tostring(filter.maxFrameCount),
 			tostring(group.spacing),
@@ -620,13 +728,14 @@ local function applyIconAllGroups(managed, root, unit, config, groupID, group, f
 		if not registered then
 			local groupKey = "hbp-icons:" .. tostring(groupID) .. ":" .. tostring(entry.generation) .. ":" .. tostring(i)
 			local initializeEntry = entry
+			local initialRule = filter.rule
 			if not addon.AuraCompat:RegisterAuraGroup(entry.container, groupKey, filter.filterString, {
 				maxFrameCount = filter.maxFrameCount,
 				candidateFilters = { includeSpellIDs = filter.includeSpellIDs },
 				layout = getIconGroupLayout(group, i, false),
 				initializeFrame = function(frame)
 					ensureCommonRegions(frame)
-					configureSlotFrame(frame, initializeEntry.initializeConfig, initializeEntry.initializeGroup, nil)
+					configureSlotFrame(frame, initializeEntry.initializeConfig, initializeEntry.initializeGroup, initialRule)
 				end,
 			}) then
 				for registeredIndex = 1, #entry.groups do
@@ -845,12 +954,6 @@ function HB.ApplyManagedAuraContainer(button, prepareOnly)
 		if state then state._healerBuffPlacementActive = nil end
 		return false
 	end
-	local groupFrames = UF and UF.GroupFrames
-	if not prepareOnly and groupFrames and groupFrames.IsManagedHelpfulIdentityAllowed and not groupFrames.IsManagedHelpfulIdentityAllowed(button, unit) then
-		HB.HideManagedAuraContainer(button)
-		state._healerBuffPlacementActive = nil
-		return false
-	end
 	local container = HB.PrecreateManagedAuraContainer(button)
 	if not container then return false end
 	local dirty = managed.unit ~= unit
@@ -867,9 +970,10 @@ function HB.ApplyManagedAuraContainer(button, prepareOnly)
 		local groupID = compiled.groupOrder[groupIndex]
 		local group = compiled.groupsById and compiled.groupsById[groupID]
 		local ruleIDs = compiled.groupToEnabledRuleIds and compiled.groupToEnabledRuleIds[groupID]
-		local limit = group and max(0, floor(tonumber(group.max) or 0)) or 0
 		local style = group and tostring(group.style or ""):upper() or ""
 		local showAll = group and tostring(group.iconMode or "ALL"):upper() == "ALL"
+		local limit = group and max(0, floor(tonumber(group.max) or 0)) or 0
+		if limit > 0 and ((style ~= "ICON" and style ~= "SQUARE") or not showAll) then limit = #(ruleIDs or EMPTY) end
 		local fixedIconOrder = style == "ICON" and tostring(group.iconLayoutMode or "MAX"):upper() == "FIXED_SORT"
 		-- Show-all squares always use one native flow group per rule so active
 		-- indicators stay compact while preserving rule order and individual colors.
@@ -1011,22 +1115,6 @@ function HB.ApplyManagedAuraContainer(button, prepareOnly)
 		state._healerBuffPlacementActive = true
 	end
 	return true
-end
-
-function HB.RefreshManagedAuraContainers(button)
-	local state = button and button._eqolUFState
-	local managed = state and state._healerBuffManaged
-	if not managed then return false end
-	local refreshed = false
-	local function refresh(container)
-		if not container then return end
-		if container.IsEnabled and not container:IsEnabled() then return end
-		if container.IsVisible and not container:IsVisible() then return end
-		if addon.AuraCompat and addon.AuraCompat.UpdateAuraContainer and addon.AuraCompat:UpdateAuraContainer(container) then refreshed = true end
-	end
-	refresh(managed.container)
-	for _, entry in pairs(managed.iconGroups or EMPTY) do refresh(entry.container) end
-	return refreshed
 end
 
 function HB.ConsumeManagedAuraContainerPending()

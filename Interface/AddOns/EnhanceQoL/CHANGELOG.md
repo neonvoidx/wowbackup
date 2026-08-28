@@ -1,28 +1,62 @@
 # Changelog
 
-## [12.7.0] - 2026-08-24
-
-### ✨ Added
-
-- Class Buff Reminder: Added interactive, content-aware reminders with configurable actions, tracker matrix, class-color glow, Healthstone tracking, and stance reminders.
-- Cooldown Panels: Added a context-menu action to remove all panel entries after confirmation.
-- Damage Meter: Added a Current/Overall switch to the Quick Switch menu.
-- Interface: Added options to close the Button Sink click-toggle flyout automatically.
-- Nameplates: Added configurable default healthbar textures with separate focus color and texture options.
-- Talent Reminder: Added a default build per specialization for dungeons set to Use default.
-- Unit Frames: Added group-frame dispel icons, dedicated Boss aura filtering and sizing, and detachable Data Bars across supported unit frames.
-
-### 🔄 Changed
-
-- Questing: Separated automatic quest and Gossip handling, with content-specific Gossip controls and reusable saved selections.
+## [12.8.3] - 2026-08-27
 
 ### 🐛 Fixed
 
-- Auras: Prevented native aura rows from wrapping early at some UI scales.
-- Character Frame: Prevented temporarily unavailable enchant tooltips from being cached as missing enchants.
-- Cooldown Panels: Prevented existing Cooldown Manager entries from being duplicated when enabling panel sync.
-- Data Panels: Kept Data Text settings grouped with their corresponding entries.
-- Mover: Kept the Macro icon selector attached to the Macro window so it opens without errors.
-- Mythic Plus: Aligned +2/+3 timer bar markers with the configured fill direction.
-- Resource Bars: Corrected Shared Resource Bar anchoring and background insets on separated segments.
-- Unit Frames: Corrected Boss aura positioning and combat restoration, Castbar textures and icon borders, and independent Healer Buff Placement cooldown settings.
+- Unit Frames: Improved idle, combat, Boss Frame, and raid roster performance, including reduced stuttering when joining or leaving groups.
+- Group Frames: Refreshed newly assigned raid members reliably and kept inactive absorb values hidden.
+- Settings: Kept optional-addon controls and integrations tied to their loaded modules while preserving shared Dynamic Anchoring and Automatically Accept Summons settings.
+- Class Buff Reminder: Allowed Rogues to track missing weapon oils alongside their poisons.
+- DataPanel: Prevented the options-tooltip hint setting from changing Chat & Social loot and currency icons.
+
+---
+
+## [12.8.2] - 2026-08-26
+
+### 🐛 Fixed
+
+- Unit Frames: Restored stack and cooldown text on Buff Placement Square indicators, corrected reverse-filling duration bars, and kept hidden indicator limits from excluding configured rules.
+- Unit Frames: Buff Placement expiration pulses use WoW's native pandemic window while native aura rendering is active.
+
+---
+
+## [12.8.1] - 2026-08-26
+
+### 🐛 Fixed
+
+- Cooldown Panels: Restored all Anchor Point options independently of the selected growth direction.
+
+---
+
+## [12.8.0] - 2026-08-26
+
+### ✨ Added
+
+- Chat Bubbles: Added an option to disable chat bubbles only while inside dungeons and raids.
+- Cooldown Panels: Added WoW's built-in Cooldown Manager alert sounds to the per-entry sound selectors.
+- Nameplates: Added a separate text size option for default nameplate cast bars.
+- Unit Frames: Added Boss Frame range fading.
+- Unit Frames: Added an optional Buff Placement preview to Group Frame Edit Mode.
+
+### 🐛 Fixed
+
+- Bags: Allowed split item stacks to be placed into a compatible free bag slot by clicking an empty area in Category View.
+- Quick Actions: Fixed the Repair Mount button so it also uses the Hearthkeeper's Wandering Caravan.
+- Mounts: Used the G-99 Breakneck for Random Mount actions while D.R.I.V.E. is available.
+- Nameplates: Kept native health text at Blizzard's size when changing the name text size.
+- Aura displays: Kept cooldown and stack text above the native aura containers at every configured frame strata.
+- Aura displays: Kept helpful auras active through temporary vehicle, teleport, and group-member relationship transitions.
+- Health consumables: Preferred the stronger Concentrated Silvermoon Health Potion quality and counted its healing in the Damage Meter.
+- Damage Meter: Anchored upward-growing rows to the bottom of the configured row area.
+- Cooldown Panels: Kept the selected Growth Point fixed as panel contents grow or shrink.
+- Group Frames: Hid absorb and heal-absorb values when no absorb is active.
+- Group Frames: Prevented combined Debuff filters from duplicating auras or hiding matches behind unused filter limits.
+- Group Frames: Made Edit Mode aura samples work with sample frames, preserve the Boss aura size during updates, and show the configured number of Buff, Debuff, and Defensive icons.
+- Unit Frames: Kept aura cooldown swipes aligned with their full icon bounds.
+- Tooltip: Showed configured guild ranks without requiring another unit-tooltip option.
+- Mythic Plus: Loaded dungeon portals, Keystone dungeon names, and rating hover highlights correctly on the first login.
+- Mythic Plus: Refreshed party Keystone information after group changes, completed runs, and temporary addon restrictions.
+- Mythic Plus: Improved the Bloodlust tracker with layered ready, lockout, and active states, reliable exact lockout tracking, and consistent cooldown styling.
+- Mythic Plus: Fixed Bloodlust tracker sounds and Edit Mode samples, including active-glow preview behavior.
+- Vendor: Restored Alt-click add and remove actions in integrated bag views.

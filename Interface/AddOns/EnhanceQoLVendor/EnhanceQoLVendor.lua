@@ -66,6 +66,47 @@ local baganatorOverlayContext = { useCornerIcons = false }
 local vendorMarksRevision = 0
 local lastBaganatorSellDestroyWidgetRefreshRevision = -1
 
+function addon.Vendor.functions.CheckBagIgnoreJunk()
+	if not (addon.db and addon.db["sellAllJunk"]) then return end
+	local counter = 0
+	for bag = 0, NUM_TOTAL_EQUIPPED_BAG_SLOTS do
+		if C_Container.GetBagSlotFlag(bag, Enum.BagSlotFlags.ExcludeJunkSell) then counter = counter + 1 end
+	end
+	if counter == 0 then return end
+
+	StaticPopupDialogs["SellJunkIgnoredBag"] = {
+		text = string.format(L["SellJunkIgnoredBag"], counter),
+		button1 = OKAY,
+		timeout = 15,
+		whileDead = true,
+		hideOnEscape = true,
+		preferredIndex = 3,
+		OnShow = function(self) self:SetFrameStrata("TOOLTIP") end,
+	}
+	StaticPopup_Show("SellJunkIgnoredBag")
+end
+
+local function hookSellAllJunkConfirmation()
+	if addon.Vendor.variables.sellAllJunkConfirmationHooked then return end
+	addon.Vendor.variables.sellAllJunkConfirmationHooked = true
+	for i = 1, 4 do
+		local popup = _G["StaticPopup" .. i]
+		if popup then
+			hooksecurefunc(popup, "Show", function(self)
+				if addon.db
+					and addon.db["sellAllJunk"]
+					and self.data
+					and type(self.data) == "table"
+					and self.data.text == SELL_ALL_JUNK_ITEMS_POPUP
+					and self.button1
+				then
+					self.button1:Click()
+				end
+			end)
+		end
+	end
+end
+
 local function ensureDestroyListFrame()
 	if destroyState.list and destroyState.list:IsObjectType("Frame") then return destroyState.list end
 	if InCombatLockdown and InCombatLockdown() then return nil end
@@ -977,7 +1018,10 @@ local function hookBaganatorItemButton(itemButton)
 		end
 		if itemButton.SetItemFiltered then hooksecurefunc(itemButton, "SetItemFiltered", function(self) refreshSellDestroyOverlaySearchState(self) end) end
 		if itemButton.HookScript then
-			if not itemButton.GetSlotAndBagID then itemButton:HookScript("OnClick", AltClickHook) end
+			if itemButton.GetSlotAndBagID then
+				itemButton._EnhanceQoLVendorDirectAltClick = true
+				itemButton:HookScript("OnClick", AltClickHook)
+			end
 			itemButton:HookScript("OnShow", function(self)
 				refreshBaganatorVisibleButtonState(self)
 				applySellDestroyOverlayToItemButton(self)
@@ -1679,6 +1723,7 @@ end
 local eventHandlers = {
 	["MERCHANT_SHOW"] = function()
 		createSellMoreButton()
+		if addon.db["sellAllJunk"] and C_MerchantFrame.IsSellAllJunkEnabled() then C_MerchantFrame.SellAllJunkItems() end
 		if (IsShiftKeyDown() and addon.db["vendorSwapAutoSellShift"] == false) or (addon.db["vendorSwapAutoSellShift"] and not IsShiftKeyDown()) then
 			updateSellMoreButton()
 			return
@@ -1936,10 +1981,17 @@ function addon.Vendor.functions.InitState()
 	if not addon.db then return end
 	addon.Vendor.variables.vendorInitialized = true
 
+	hookSellAllJunkConfirmation()
+	addon.Vendor.functions.CheckBagIgnoreJunk()
 	registerEvents(frameLoad)
 	frameLoad:SetScript("OnEvent", eventHandler)
 
-	if _G.ContainerFrameItemButtonMixin then hooksecurefunc(_G.ContainerFrameItemButtonMixin, "OnModifiedClick", AltClickHook) end
+	if _G.ContainerFrameItemButtonMixin then
+		hooksecurefunc(_G.ContainerFrameItemButtonMixin, "OnModifiedClick", function(self, button)
+			if self and self._EnhanceQoLVendorDirectAltClick then return end
+			AltClickHook(self, button)
+		end)
+	end
 
 	if ContainerFrameCombinedBags then hookBagFrame(ContainerFrameCombinedBags) end
 	local frames = ContainerFrameContainer and ContainerFrameContainer.ContainerFrames or {}

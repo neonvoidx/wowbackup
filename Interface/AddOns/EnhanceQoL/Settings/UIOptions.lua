@@ -59,6 +59,7 @@ local DEFAULT_NAMEPLATE_FEATURE_KEYS = constants.DEFAULT_NAMEPLATE_FEATURE_KEYS
 		textFont = "nameplateTextFont",
 		textOutline = "nameplateTextOutline",
 		textSize = "nameplateTextSize",
+		castTextSize = "nameplateCastTextSize",
 		friendlyPlayerNamesOnly = "nameplateFriendlyPlayerNamesOnly",
 		friendlyPlayerClassColorNames = "nameplateFriendlyPlayerClassColorNames",
 		hideFriendlyPlayerRealms = "nameplateHideFriendlyPlayerRealms",
@@ -1811,7 +1812,7 @@ local function createNameplatesCategory()
 
 	addon.functions.SettingsCreateSlider(category, {
 		var = DEFAULT_NAMEPLATE_FEATURE_KEYS.textSize,
-		text = L["nameplateTextSize"] or "Nameplate text size",
+		text = L["nameplateTextSize"] or "Name text size",
 		desc = L["nameplateTextSizeDesc"],
 		min = 0,
 		max = 32,
@@ -1822,6 +1823,26 @@ local function createNameplatesCategory()
 			addon.db[DEFAULT_NAMEPLATE_FEATURE_KEYS.textSize] = value
 			refreshNameplateTextStyle()
 		end,
+		parent = true,
+		element = nameplateTextToggle.element,
+		parentCheck = isNameplateTextEnabled,
+		parentSection = expandable,
+	})
+
+	addon.functions.SettingsCreateSlider(category, {
+		var = DEFAULT_NAMEPLATE_FEATURE_KEYS.castTextSize,
+		text = L["nameplateCastTextSize"] or "Cast text size",
+		desc = L["nameplateCastTextSizeDesc"],
+		min = 0,
+		max = 32,
+		step = 1,
+		default = 0,
+		get = function() return addon.db[DEFAULT_NAMEPLATE_FEATURE_KEYS.castTextSize] or 0 end,
+		set = function(value)
+			addon.db[DEFAULT_NAMEPLATE_FEATURE_KEYS.castTextSize] = value
+			refreshNameplateTextStyle()
+		end,
+		newTagID = DEFAULT_NAMEPLATE_FEATURE_KEYS.castTextSize,
 		parent = true,
 		element = nameplateTextToggle.element,
 		parentCheck = isNameplateTextEnabled,

@@ -76,6 +76,8 @@ local RESOURCE_BAR_REMOVED_SEGMENT_THRESHOLD_LINE_KEYS = {
 	"thresholdCount",
 }
 
+local BOSS_RANGE_FADE_MIGRATION_FLAG = "_bossRangeFadeSettingInitializedV1"
+
 local LEGACY_RESOURCE_BAR_EDIT_MODE_IDS = {
 	resourceBar_ARCANE_CHARGES = true,
 	resourceBar_CHI = true,
@@ -461,6 +463,38 @@ local function cleanupGroupFrameHighlightLayers(profile)
 			if type(ufProfile) == "table" then cleanupGroupFrameHighlightLayersInConfig(ufProfile.ufGroupFrames) end
 		end
 	end
+end
+
+local function migrateBossRangeFadeSettingInFrames(frames)
+	if type(frames) ~= "table" then return end
+	for unit, config in pairs(frames) do
+		if type(unit) == "string" and (unit == "boss" or unit:match("^boss%d+$")) and type(config) == "table" and type(config.rangeFade) == "table" then
+			config.rangeFade.enabled = false
+		end
+	end
+end
+
+local function migrateBossRangeFadeSetting(profile)
+	if type(profile) ~= "table" then return end
+	migrateBossRangeFadeSettingInFrames(profile.ufFrames)
+	if type(profile.ufProfiles) == "table" then
+		for _, ufProfile in pairs(profile.ufProfiles) do
+			if type(ufProfile) == "table" then migrateBossRangeFadeSettingInFrames(ufProfile.ufFrames) end
+		end
+	end
+end
+
+local function migrateBossRangeFadeSettingAllProfiles()
+	local db = _G.EnhanceQoLDB
+	if type(db) ~= "table" or db[BOSS_RANGE_FADE_MIGRATION_FLAG] == true then return end
+	migrateBossRangeFadeSetting(db)
+	if type(db.profiles) == "table" then
+		for _, profile in pairs(db.profiles) do
+			migrateBossRangeFadeSetting(profile)
+		end
+	end
+	if addon.db and addon.db ~= db then migrateBossRangeFadeSetting(addon.db) end
+	db[BOSS_RANGE_FADE_MIGRATION_FLAG] = true
 end
 
 local function cleanupPartyPetFramePrototypeKeysInConfig(groupFrames)
@@ -904,6 +938,7 @@ end
 
 function addon.functions.CleanupOldStuff()
 	local db = _G.EnhanceQoLDB
+	migrateBossRangeFadeSettingAllProfiles()
 	if type(db) == "table" and type(db.profiles) == "table" then
 		for _, profile in pairs(db.profiles) do
 			migrateNameplateMobColorSources(profile)

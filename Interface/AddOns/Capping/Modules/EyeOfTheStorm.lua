@@ -27,7 +27,7 @@ do
 	local function PrintExtraMessage()
 		local _, _, _, _, _, _, _, id = GetInstanceInfo()
 		if extraMsg and id == 566 then -- Check the game isn't over
-			RaidNotice_AddMessage(RaidBossEmoteFrame, extraMsg, color, 3)
+			RaidWarningUtil.AddMessage(extraMsg, color, 3)
 		end
 	end
 	local function StartNextGravTimer()

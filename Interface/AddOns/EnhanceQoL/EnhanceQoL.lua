@@ -1,8 +1,7 @@
--- luacheck: globals DefaultCompactUnitFrameSetup CompactUnitFrame_UpdateAuras CompactUnitFrame_UpdateName UnitTokenFromGUID C_Bank CompactRaidFrameContainer
+-- luacheck: globals DefaultCompactUnitFrameSetup CompactUnitFrame_UpdateAuras CompactUnitFrame_UpdateName UnitTokenFromGUID C_Bank
 -- luacheck: globals HUD_EDIT_MODE_MINIMAP_LABEL
 -- luacheck: globals Menu MenuResponse GameTooltip_SetTitle GameTooltip_AddNormalLine EnhanceQoL
 -- luacheck: globals GenericTraitUI_LoadUI GenericTraitFrame
--- luacheck: globals CancelDuel DeclineGroup C_PetBattles
 -- luacheck: globals ExpansionLandingPage ExpansionLandingPageMinimapButton ShowGarrisonLandingPage GarrisonLandingPage GarrisonLandingPage_Toggle GarrisonLandingPageMinimapButton CovenantSanctumFrame CovenantSanctumFrame_LoadUI EasyMenu
 -- luacheck: globals ActionButton_UpdateRangeIndicator MAINMENU_BUTTON PlayerCastingBarFrame TargetFrameSpellBar FocusFrameSpellBar ChatBubbleFont
 -- luacheck: globals ChatFrame1Tab ChatFrame2 ChatFrame2Tab FCF_SetWindowName FCFDock_UpdateTabs GENERAL_CHAT_DOCK EventUtil ClassTrainerFrame ClassTrainerTrainButton ClassTrainerFrameMoneyBg
@@ -340,30 +339,6 @@ hooksecurefunc("LFGListSearchEntry_OnClick", function(s, button)
 		LFGListSearchPanel_SignUp(panel)
 	end
 end)
-
-local function checkBagIgnoreJunk()
-	if addon.db["sellAllJunk"] then
-		local counter = 0
-		for bag = 0, NUM_TOTAL_EQUIPPED_BAG_SLOTS do
-			if C_Container.GetBagSlotFlag(bag, Enum.BagSlotFlags.ExcludeJunkSell) then counter = counter + 1 end
-		end
-		if counter > 0 then
-			local message = string.format(L["SellJunkIgnoredBag"], counter)
-
-			StaticPopupDialogs["SellJunkIgnoredBag"] = {
-				text = message,
-				button1 = OKAY,
-				timeout = 15,
-				whileDead = true,
-				hideOnEscape = true,
-				preferredIndex = 3,
-				OnShow = function(self) self:SetFrameStrata("TOOLTIP") end,
-			}
-			StaticPopup_Show("SellJunkIgnoredBag")
-		end
-	end
-end
-addon.functions.checkBagIgnoreJunk = checkBagIgnoreJunk
 
 local function skipRolecheck()
 	if addon.db["groupfinderSkipRoleSelectOption"] == 1 then
@@ -3742,7 +3717,6 @@ local function initMisc()
 	addon.functions.InitPrivateDBValue("autoWarbandGoldTargetCharacter", "")
 	addon.functions.InitPrivateDBValue("autoWarbandGoldIgnoredCharacters", {})
 	addon.functions.InitPrivateDBValue("autoWarbandGoldWithdraw", false)
-	addon.functions.InitDBValue("sellAllJunk", false)
 	addon.functions.InitDBValue("autoCancelCinematic", false)
 	addon.functions.InitDBValue("quickSkipCinematic", false)
 	addon.functions.InitDBValue("ignoreTalkingHead", false)
@@ -3803,9 +3777,7 @@ local function initMisc()
 						addon.functions.hideTimeoutReleaseHint(self)
 					end
 
-					if addon.db["sellAllJunk"] and self.data and type(self.data) == "table" and self.data.text == SELL_ALL_JUNK_ITEMS_POPUP and self.button1 then
-						self.button1:Click()
-					elseif
+					if
 						addon.db["deleteItemFillDialog"]
 						and (self.which == "DELETE_GOOD_ITEM" or self.which == "DELETE_GOOD_QUEST_ITEM")
 						and (self.editBox or self.GetEditBox and self:GetEditBox())
@@ -3870,7 +3842,6 @@ local function initMisc()
 				if usedGuildBank then print(L["repairFromGuildBank"] or "Repaired from guild bank.") end
 			end
 		end
-		if addon.db["sellAllJunk"] and C_MerchantFrame.IsSellAllJunkEnabled() then C_MerchantFrame.SellAllJunkItems() end
 	end)
 
 	hooksecurefunc(TalkingHeadFrame, "PlayCurrent", function(self)
@@ -4069,117 +4040,16 @@ end
 
 local function initUnitFrame()
 	MigrateLegacyVisibilityFlags()
-	addon.functions.InitDBValue("hideHitIndicatorPlayer", false)
-	addon.functions.InitDBValue("hideHitIndicatorPet", false)
-	-- Player resting visuals (ZZZ + glow)
-	addon.functions.InitDBValue("hideRestingGlow", false)
-	addon.functions.InitDBValue("hidePartyFrameTitle", false)
-	addon.functions.InitDBValue("unitFrameScaleEnabled", false)
-	addon.functions.InitDBValue("unitFrameScale", addon.variables.unitFrameScale)
 	addon.functions.InitDBValue("ufUseCustomClassColors", false)
 	addon.functions.InitDBValue("ufUseCustomPowerColors", false)
 	addon.functions.InitDBValue("ufClassColors", {})
 	addon.functions.InitDBValue("hiddenCastBars", addon.db["hiddenCastBars"] or {})
 	addon.functions.InitDBValue("cooldownViewerVisibility", addon.db["cooldownViewerVisibility"] or {})
-	-- Health text settings (player/target/boss)
-	addon.functions.InitDBValue("healthTextPlayerMode", addon.db["healthTextPlayerMode"] or "OFF")
-	addon.functions.InitDBValue("healthTextTargetMode", addon.db["healthTextTargetMode"] or "OFF")
-	addon.functions.InitDBValue("healthTextBossMode", addon.db["healthTextBossMode"] or addon.db["bossHealthMode"] or "OFF")
-	-- No separate CVar-override flags; OFF means follow Blizzard statusText
-	if addon.db["hideHitIndicatorPlayer"] then PlayerFrame.PlayerFrameContent.PlayerFrameContentMain.HitIndicator:Hide() end
-
-	if PetHitIndicator then hooksecurefunc(PetHitIndicator, "Show", function(self)
-		if addon.db["hideHitIndicatorPet"] then PetHitIndicator:Hide() end
-	end) end
-
-	-- Hide resting ZZZ texture and resting glow loop (opt-in, perf-safe)
-	local function ApplyRestingVisuals()
-		if not PlayerFrame or not PlayerFrame.PlayerFrameContent then return end
-		local content = PlayerFrame.PlayerFrameContent
-		local main = content.PlayerFrameContentMain
-		local contextual = content.PlayerFrameContentContextual
-		local statusTexture = main and main.StatusTexture
-		local playerRestLoop = contextual and contextual.PlayerRestLoop
-		if addon.db["hideRestingGlow"] and IsResting() then
-			if statusTexture and statusTexture.Hide then statusTexture:Hide() end
-			if playerRestLoop and playerRestLoop.Hide then
-				playerRestLoop:Hide()
-				if playerRestLoop.PlayerRestLoopAnim and playerRestLoop.PlayerRestLoopAnim.Stop then playerRestLoop.PlayerRestLoopAnim:Stop() end
-			end
-		else
-			-- Let Blizzard refresh according to current resting state
-			if PlayerFrame_UpdateStatus then PlayerFrame_UpdateStatus(PlayerFrame) end
-		end
-	end
-
-	if PlayerFrame_UpdateStatus then
-		hooksecurefunc("PlayerFrame_UpdateStatus", function(self)
-			if not addon.db or not addon.db["hideRestingGlow"] then return end
-			if IsResting() then
-				local content = PlayerFrame.PlayerFrameContent
-				local main = content and content.PlayerFrameContentMain
-				local statusTexture = main and main.StatusTexture
-				if statusTexture and statusTexture.Hide then statusTexture:Hide() end
-				if PlayerFrame_UpdatePlayerRestLoop then PlayerFrame_UpdatePlayerRestLoop(true) end
-			end
-		end)
-	end
-
-	if PlayerFrame_UpdatePlayerRestLoop then
-		hooksecurefunc("PlayerFrame_UpdatePlayerRestLoop", function(state)
-			if not addon.db or not addon.db["hideRestingGlow"] then return end
-			if state then
-				local content = PlayerFrame.PlayerFrameContent
-				local contextual = content and content.PlayerFrameContentContextual
-				local playerRestLoop = contextual and contextual.PlayerRestLoop
-				if playerRestLoop and playerRestLoop.Hide then
-					playerRestLoop:Hide()
-					if playerRestLoop.PlayerRestLoopAnim and playerRestLoop.PlayerRestLoopAnim.Stop then playerRestLoop.PlayerRestLoopAnim:Stop() end
-				end
-			end
-		end)
-	end
-
-	addon.functions.ApplyRestingVisuals = ApplyRestingVisuals
-
-	function addon.functions.togglePartyFrameTitle(value)
-		if InCombatLockdown and InCombatLockdown() then
-			addon.variables = addon.variables or {}
-			addon.variables.pendingPartyFrameTitle = value
-			return
-		end
-		if not CompactPartyFrameTitle then return end
-		if value then
-			CompactPartyFrameTitle:Hide()
-		else
-			CompactPartyFrameTitle:Show()
-		end
-	end
-	if CompactPartyFrameTitle then CompactPartyFrameTitle:HookScript("OnShow", function(self)
-		if addon.db["hidePartyFrameTitle"] then self:Hide() end
-	end) end
-	addon.functions.togglePartyFrameTitle(addon.db["hidePartyFrameTitle"])
 
 	-- Name truncation was removed to avoid touching CompactUnitFrame name update flows.
 	-- Keep no-op functions for compatibility with any lingering callers.
 	addon.functions.EnsureUnitFrameNameHooks = function() end
 	addon.functions.updateUnitFrameNames = function() end
-
-	function addon.functions.updatePartyFrameScale()
-		if not addon.db["unitFrameScaleEnabled"] then return end
-		if not addon.db["unitFrameScale"] then return end
-		if InCombatLockdown and InCombatLockdown() then
-			addon.variables = addon.variables or {}
-			addon.variables.pendingPartyFrameScale = true
-			return
-		end
-		if addon.variables then addon.variables.pendingPartyFrameScale = nil end
-		local scale = addon.db["unitFrameScale"]
-		if CompactPartyFrame and CompactPartyFrame.SetScale then CompactPartyFrame:SetScale(scale) end
-		if CompactRaidFrameContainer and CompactRaidFrameContainer.SetScale then
-			CompactRaidFrameContainer:SetScale(scale)
-		end
-	end
 
 	-- Cast bar visibility handling
 	local castBarFrames = {
@@ -4237,17 +4107,6 @@ local function initUnitFrame()
 		end
 	end
 
-	if addon.db["unitFrameScaleEnabled"] then addon.functions.updatePartyFrameScale() end
-	-- Apply resting visuals if option is enabled
-	if addon.db["hideRestingGlow"] and addon.functions.ApplyRestingVisuals then addon.functions.ApplyRestingVisuals() end
-	-- Initialize HealthText module
-	if addon.HealthText then
-		if addon.HealthText.SetMode then
-			addon.HealthText:SetMode("player", addon.db["healthTextPlayerMode"])
-			addon.HealthText:SetMode("target", addon.db["healthTextTargetMode"])
-			addon.HealthText:SetMode("boss", addon.db["healthTextBossMode"])
-		end
-	end
 	addon.functions.ApplyCastBarVisibility()
 
 	for _, cbData in ipairs(addon.variables.unitFrameNames) do
@@ -7274,7 +7133,7 @@ local eventHandlers = {
 			addon.variables.unitSpecId = specId
 		end
 
-			if addon.db["enableBagsModule"] ~= true and (addon.db["showIlvlOnBagItems"] or addon.db["showUpgradeArrowOnBagItems"]) then
+			if not addon.functions.IsBagsModuleActive() and (addon.db["showIlvlOnBagItems"] or addon.db["showUpgradeArrowOnBagItems"]) then
 				addon.functions.updateBags(ContainerFrameCombinedBags)
 				for _, frame in ipairs(ContainerFrameContainer.ContainerFrames) do
 				addon.functions.updateBags(frame)
@@ -7292,7 +7151,7 @@ local eventHandlers = {
 			addon.variables.unitRole = GetSpecializationRole(addon.variables.unitSpec)
 			addon.variables.unitSpecId = specId
 		end
-		if addon.db["enableBagsModule"] ~= true and (addon.db["showIlvlOnBagItems"] or addon.db["showUpgradeArrowOnBagItems"]) then
+		if not addon.functions.IsBagsModuleActive() and (addon.db["showIlvlOnBagItems"] or addon.db["showUpgradeArrowOnBagItems"]) then
 			addon.functions.updateBags(ContainerFrameCombinedBags)
 			for _, frame in ipairs(ContainerFrameContainer.ContainerFrames) do
 				addon.functions.updateBags(frame)
@@ -7484,7 +7343,6 @@ local eventHandlers = {
 			--@end-debug@]==]
 			loadSubAddon("EnhanceQoLSharedMedia")
 
-			checkBagIgnoreJunk()
 		end
 		if arg1 == "FarmHud" then
 			if addon.functions.hookFarmHudSquareMinimapBackground then addon.functions.hookFarmHudSquareMinimapBackground() end
@@ -7609,20 +7467,8 @@ local eventHandlers = {
 			EnhanceQoLInstantCatalyst.icon:SetDesaturated(false)
 		end
 	end,
-	["DUEL_REQUESTED"] = function()
-		if addon.db["blockDuelRequests"] then
-			CancelDuel()
-			StaticPopup_Hide("DUEL_REQUESTED")
-		end
-	end,
-	["PET_BATTLE_PVP_DUEL_REQUESTED"] = function()
-		if addon.db["blockPetBattleRequests"] then
-			C_PetBattles.CancelPVPDuel()
-			StaticPopup_Hide("PET_BATTLE_PVP_DUEL_REQUESTED")
-		end
-	end,
 	["INVENTORY_SEARCH_UPDATE"] = function()
-		if addon.db["enableBagsModule"] ~= true and addon.db["showBagFilterMenu"] then
+		if not addon.functions.IsBagsModuleActive() and addon.db["showBagFilterMenu"] then
 			RunNextFrame(function()
 				addon.functions.updateBags(ContainerFrameCombinedBags)
 				for _, frame in ipairs(ContainerFrameContainer.ContainerFrames) do
@@ -7658,66 +7504,6 @@ local eventHandlers = {
 		StaticPopup_Hide("RESURRECT")
 		StaticPopup_Hide("RESURRECT_NO_SICKNESS")
 		StaticPopup_Hide("RESURRECT_NO_TIMER")
-	end,
-	["PARTY_INVITE_REQUEST"] = function(unitName, arg2, arg3, arg4, arg5, arg6, inviterGUID, arg8)
-		if addon.db["autoAcceptGroupInvite"] then
-			if addon.db["autoAcceptGroupInviteGuildOnly"] then
-				local playerRealm = _G.GetNormalizedRealmName and _G.GetNormalizedRealmName()
-				if not playerRealm or playerRealm == "" then playerRealm = select(2, UnitFullName("player")) end
-
-				local function normalizeCharacterName(name)
-					if type(name) ~= "string" or name == "" then return nil end
-					local characterName, realmName = strsplit("-", name, 2)
-					if not characterName or characterName == "" then return nil end
-					if not realmName or realmName == "" then realmName = playerRealm end
-					if not realmName or realmName == "" then return nil end
-					return characterName .. "-" .. realmName
-				end
-
-				local normalizedInviterName = normalizeCharacterName(unitName)
-				local gMember = GetNumGuildMembers()
-				if gMember then
-					for i = 1, gMember do
-						local name, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, guid = GetGuildRosterInfo(i)
-						local matchesGuildMember
-						if inviterGUID and guid then
-							matchesGuildMember = inviterGUID == guid
-						else
-							matchesGuildMember = normalizedInviterName ~= nil and normalizeCharacterName(name) == normalizedInviterName
-						end
-						if matchesGuildMember then
-							AcceptGroup()
-							StaticPopup_Hide("PARTY_INVITE")
-							return
-						end
-					end
-				end
-			end
-			if addon.db["autoAcceptGroupInviteFriendOnly"] then
-				if C_BattleNet.GetGameAccountInfoByGUID(inviterGUID) then
-					AcceptGroup()
-					StaticPopup_Hide("PARTY_INVITE")
-					return
-				end
-				for i = 1, C_FriendList.GetNumFriends() do
-					local friendInfo = C_FriendList.GetFriendInfoByIndex(i)
-					if friendInfo.guid == inviterGUID then
-						AcceptGroup()
-						StaticPopup_Hide("PARTY_INVITE")
-						return
-					end
-				end
-			end
-			if not addon.db["autoAcceptGroupInviteGuildOnly"] and not addon.db["autoAcceptGroupInviteFriendOnly"] then
-				AcceptGroup()
-				StaticPopup_Hide("PARTY_INVITE")
-				return
-			end
-		end
-		if addon.db["blockPartyInvites"] then
-			DeclineGroup()
-			StaticPopup_Hide("PARTY_INVITE")
-		end
 	end,
 	["PLAYER_INTERACTION_MANAGER_FRAME_SHOW"] = function(arg1)
 		if arg1 == 53 and addon.db["openCharframeOnUpgrade"] then
@@ -7791,15 +7577,6 @@ local eventHandlers = {
 			if addon.variables.pendingActionBarAnchorRefresh then
 				addon.variables.pendingActionBarAnchorRefresh = nil
 				RefreshAllActionBarAnchors()
-			end
-			if addon.variables.pendingPartyFrameScale then
-				addon.variables.pendingPartyFrameScale = nil
-				addon.functions.updatePartyFrameScale()
-			end
-			if addon.variables.pendingPartyFrameTitle ~= nil then
-				local pending = addon.variables.pendingPartyFrameTitle
-				addon.variables.pendingPartyFrameTitle = nil
-				addon.functions.togglePartyFrameTitle(pending)
 			end
 			if addon.variables.pendingExtraActionArtwork then
 				addon.variables.pendingExtraActionArtwork = nil

@@ -261,13 +261,6 @@ FrameColor4DB = {
 },
 ["_BaganatorBlizzardTheme"] = {
 ["colors"] = {
-["background"] = {
-["rgbaValues"] = {
-0.062745101749897,
-0.062745101749897,
-0.062745101749897,
-},
-},
 ["main"] = {
 ["rgbaValues"] = {
 0.04313725605607033,
@@ -275,6 +268,13 @@ FrameColor4DB = {
 0.04313725605607033,
 },
 ["followClassColor"] = false,
+},
+["background"] = {
+["rgbaValues"] = {
+0.062745101749897,
+0.062745101749897,
+0.062745101749897,
+},
 },
 },
 ["enabled"] = true,

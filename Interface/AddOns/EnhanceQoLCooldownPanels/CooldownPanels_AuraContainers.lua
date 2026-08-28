@@ -46,35 +46,14 @@ function AuraContainers:GetAuraGroupUnitTokens(mode)
 	return matches
 end
 
-function AuraContainers:IsVehicleAuraSuppressed()
-	return UnitHasVehiclePlayerFrameUI and UnitHasVehiclePlayerFrameUI("player") == true
-end
-
-function AuraContainers:RefreshPlayerHelpfulIdentityState()
-	local assistable = UnitCanAssist("player", "player") == true
-	local changed = self.playerHelpfulIdentityAssistable ~= assistable
-	self.playerHelpfulIdentityAssistable = assistable
-	return changed
-end
-
-function AuraContainers:IsPlayerHelpfulIdentityTracked(unitToken, filterString)
-	return unitToken == "player" and filterString == "HELPFUL"
-end
-
 function AuraContainers:IsTargetHarmfulIdentityTracked(unitToken, filterString)
 	return unitToken == "target" and (filterString == "HARMFUL" or filterString == "HARMFUL|PLAYER")
 end
 
 function AuraContainers:IsTrackedAuraSuppressed(unitToken, filterString)
-	-- Temporary 12.1 safeguard: native Helpful AuraContainers skip exact-spell
-	-- identity filters while the player is not assistable, and harmful identity
-	-- filters while the tracked target is assistable. Keep those containers
-	-- disabled until the relationship transition has finished.
-	if self:IsVehicleAuraSuppressed() then return true end
-	if self:IsTargetHarmfulIdentityTracked(unitToken, filterString) then return UnitCanAssist("player", unitToken) == true end
-	if not self:IsPlayerHelpfulIdentityTracked(unitToken, filterString) then return false end
-	if self.playerHelpfulIdentityAssistable == nil then self:RefreshPlayerHelpfulIdentityState() end
-	return self.playerHelpfulIdentityAssistable ~= true
+	-- Harmful identity filters are intentionally unavailable for friendly units.
+	-- Ignore temporary immune or uninteractable states when checking that relationship.
+	return self:IsTargetHarmfulIdentityTracked(unitToken, filterString) and UnitCanAssist("player", unitToken, true, true) == true
 end
 
 local CreateFrame = CreateFrame
@@ -959,6 +938,9 @@ local function createInitializer(mode, entry, layout, durationTextProfile, activ
 end
 
 local function resolveAuraSound(value)
+	local soundCatalog = CooldownPanels.SoundCatalog
+	local soundFileID = soundCatalog and soundCatalog:GetSoundFileID(value)
+	if soundFileID then return nil, soundFileID end
 	if type(value) == "number" and value > 0 then return nil, value end
 	if type(value) ~= "string" or value == "" or value == "None" then return nil, nil end
 	local numeric = tonumber(value)
@@ -3421,37 +3403,15 @@ function CooldownPanels:DeletePanel(panelId)
 	return AuraContainers.originalDeletePanel(self, panelId)
 end
 
-function AuraContainers:QueuePlayerHelpfulIdentityRefresh()
-	if self._identityRefreshPending then return end
-	self._identityRefreshPending = true
-	RunNextFrame(function()
-		AuraContainers._identityRefreshPending = nil
-		if not AuraContainers:RefreshPlayerHelpfulIdentityState() then return end
-
-		for _, state in pairs(states) do
-			if not state.disabled and AuraContainers:IsPlayerHelpfulIdentityTracked(state.unitToken, state.filterString) then attachState(state, "player") end
-		end
-		for _, owner in pairs(AuraContainers.dynamicGroups) do
-			if owner.enabled == true then AuraContainers:ShowDynamicGroup(owner, "player") end
-		end
-	end)
-end
-
 local driver = CreateFrame("Frame")
-driver:RegisterEvent("PLAYER_LOGIN")
 driver:RegisterEvent("PLAYER_TARGET_CHANGED")
 driver:RegisterEvent("PLAYER_REGEN_ENABLED")
 driver:RegisterEvent("GROUP_ROSTER_UPDATE")
 driver:RegisterEvent("ROLE_CHANGED_INFORM")
 driver:RegisterUnitEvent("UNIT_PET", "player")
 driver:RegisterUnitEvent("UNIT_FACTION", "target")
-driver:RegisterUnitEvent("UNIT_FLAGS", "player")
-driver:RegisterUnitEvent("UNIT_ENTERED_VEHICLE", "player")
-driver:RegisterUnitEvent("UNIT_EXITED_VEHICLE", "player")
-driver:SetScript("OnEvent", function(_, event, unit)
-	if event == "PLAYER_LOGIN" then
-		AuraContainers:QueuePlayerHelpfulIdentityRefresh()
-	elseif event == "PLAYER_REGEN_ENABLED" then
+driver:SetScript("OnEvent", function(_, event)
+	if event == "PLAYER_REGEN_ENABLED" then
 		if not AuraContainers._deferredLoadHandled and AuraCompat._auraContainerLoadDeferred and AuraCompat:HasAuraContainerSupport() then
 			AuraContainers._deferredLoadHandled = true
 			CooldownPanels:RefreshAllPanels(true)
@@ -3473,8 +3433,6 @@ driver:SetScript("OnEvent", function(_, event, unit)
 		end
 	elseif event == "ROLE_CHANGED_INFORM" then
 		CooldownPanels:RefreshAllPanels(true)
-	elseif event == "UNIT_FLAGS" then
-		AuraContainers:QueuePlayerHelpfulIdentityRefresh()
 	elseif event == "PLAYER_TARGET_CHANGED" or event == "UNIT_FACTION" then
 		local refreshUnitToken = event == "PLAYER_TARGET_CHANGED" and "target" or nil
 		for _, state in pairs(states) do
@@ -3511,14 +3469,6 @@ driver:SetScript("OnEvent", function(_, event, unit)
 				end
 			end
 		end
-	elseif event == "UNIT_ENTERED_VEHICLE" or event == "UNIT_EXITED_VEHICLE" then
-		if unit and unit ~= "player" then return end
-		AuraContainers:RefreshPlayerHelpfulIdentityState()
-		AuraContainers:RequestAllPanelSyncs()
-		C_Timer.After(0.10, function()
-			AuraContainers:RefreshPlayerHelpfulIdentityState()
-			AuraContainers:RequestAllPanelSyncs()
-		end)
 	end
 end)
 

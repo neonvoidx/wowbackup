@@ -725,9 +725,9 @@ local function buildAuraAnchorOptions()
 	}
 end
 
-local function setAuraFontStringStyle(fontString, prefix, fallbackColor, kind)
+local function setAuraFontStringStyle(fontString, prefix, fallbackColor, kind, textConfig)
 	if not fontString then return end
-	local config = getDefaultAuraTextStyleConfig(kind, prefix, fallbackColor)
+	local config = textConfig or getDefaultAuraTextStyleConfig(kind, prefix, fallbackColor)
 	if fontString.eqolDefaultAuraFontStyleKey ~= config.fontStyleKey then
 		if addon.functions and addon.functions.SetFontWithFallback then
 			addon.functions.SetFontWithFallback(fontString, config.font, config.size, config.outline, DEFAULT_FONT)
@@ -742,32 +742,43 @@ local function setAuraFontStringStyle(fontString, prefix, fallbackColor, kind)
 	end
 end
 
-local function ensureDefaultAuraTextLayer(button)
+local function ensureDefaultAuraTextLayer(button, config)
 	if not button then return nil end
 	local layer = button.eqolDefaultAuraTextLayer
 	if not layer then
 		layer = CreateFrame("Frame", nil, button)
 		button.eqolDefaultAuraTextLayer = layer
 	end
+	local strata = config and config.frameStrata or button:GetFrameStrata()
 	local level = (button:GetFrameLevel() or 1) + 10
 	if layer.eqolDefaultAuraTextLayerOwner ~= button then
 		layer:ClearAllPoints()
 		layer:SetAllPoints(button)
 		layer.eqolDefaultAuraTextLayerOwner = button
 	end
+	if layer.eqolDefaultAuraTextLayerStrata ~= strata then
+		layer:SetFrameStrata(strata)
+		layer.eqolDefaultAuraTextLayerStrata = strata
+	end
 	if layer.eqolDefaultAuraTextLayerLevel ~= level then
 		layer:SetFrameLevel(level)
 		layer.eqolDefaultAuraTextLayerLevel = level
 	end
+	layer:Show()
 	return layer
 end
 
-local function positionAuraFontString(fontString, owner, prefix, defaultPoint, defaultX, defaultY, kind)
+local function positionAuraFontString(fontString, owner, prefix, defaultPoint, defaultX, defaultY, kind, textConfig)
 	if not (fontString and owner) then return end
-	local point = normalizeAuraAnchorPoint(getDefaultAuraDBValue(kind, prefix .. "Anchor"), defaultPoint)
-	local offset = getDefaultAuraDBValue(kind, prefix .. "Offset")
-	local x = getAuraTextOffset(nil, "x", type(offset) == "table" and offset.x or defaultX)
-	local y = getAuraTextOffset(nil, "y", type(offset) == "table" and offset.y or defaultY)
+	local point, x, y
+	if textConfig then
+		point, x, y = textConfig.point, textConfig.x, textConfig.y
+	else
+		point = normalizeAuraAnchorPoint(getDefaultAuraDBValue(kind, prefix .. "Anchor"), defaultPoint)
+		local offset = getDefaultAuraDBValue(kind, prefix .. "Offset")
+		x = getAuraTextOffset(nil, "x", type(offset) == "table" and offset.x or defaultX)
+		y = getAuraTextOffset(nil, "y", type(offset) == "table" and offset.y or defaultY)
+	end
 	if fontString.eqolDefaultAuraPositionOwner ~= owner or fontString.eqolDefaultAuraPositionPoint ~= point or fontString.eqolDefaultAuraPositionX ~= x or fontString.eqolDefaultAuraPositionY ~= y then
 		fontString:ClearAllPoints()
 		fontString:SetPoint(point, owner, point, x, y)
@@ -780,10 +791,6 @@ local function positionAuraFontString(fontString, owner, prefix, defaultPoint, d
 		fontString:SetDrawLayer("OVERLAY", 7)
 		fontString.eqolDefaultAuraDrawLayerKey = "OVERLAY:7"
 	end
-end
-
-local function buildDefaultAuraTextStyleKey(kind, prefix, fallbackColor)
-	return getDefaultAuraTextStyleConfig(kind, prefix, fallbackColor).key
 end
 
 getDefaultAuraStyleConfig = function(kind)
@@ -816,12 +823,16 @@ getDefaultAuraStyleConfig = function(kind)
 	local iconDarkness = normalizeAuraIconDarkness(getDefaultAuraDBValue(kind, "IconDarkness"))
 	local iconAlpha = normalizeAuraIconAlpha(getDefaultAuraDBValue(kind, "IconAlpha"))
 	local iconDesaturate = getDefaultAuraDBValue(kind, "IconDesaturate") == true
-	local durationTextKey = buildDefaultAuraTextStyleKey(kind, "Duration", DEFAULT_AURA_DURATION_COLOR)
-	local countTextKey = buildDefaultAuraTextStyleKey(kind, "Count", DEFAULT_AURA_COUNT_COLOR)
+	local durationTextStyle = getDefaultAuraTextStyleConfig(kind, "Duration", DEFAULT_AURA_DURATION_COLOR)
+	local countTextStyle = getDefaultAuraTextStyleConfig(kind, "Count", DEFAULT_AURA_COUNT_COLOR)
+	local durationTextKey = durationTextStyle.key
+	local countTextKey = countTextStyle.key
 
 	entry.styleVersion = styleVersion
 	entry.fontVersion = fontVersion
 	entry.kind = kind
+	entry.frameStrata = normalizeDefaultAuraFrameStrata(getDefaultAuraDBValue(kind, "FrameStrata"))
+	entry.frameLevel = getDefaultAuraFrameLevel(nil, kind)
 	entry.size = size
 	entry.shape = shape
 	entry.zoom = zoom
@@ -849,6 +860,8 @@ getDefaultAuraStyleConfig = function(kind)
 	entry.hideCountdownNumbers = getDefaultAuraDBValue(kind, "DurationEnabled") == false
 	entry.durationTextKey = durationTextKey
 	entry.countTextKey = countTextKey
+	entry.durationTextStyle = durationTextStyle
+	entry.countTextStyle = countTextStyle
 	entry.styleKey = tostring(kind) .. ":" .. tostring(size) .. ":" .. tostring(shape) .. ":" .. tostring(zoom) .. ":" .. tostring(borderKey) .. ":" .. tostring(entry.borderSize) .. ":" .. tostring(entry.borderOffset) .. ":" .. tostring(entry.drawSwipe) .. ":" .. tostring(entry.drawEdge) .. ":" .. tostring(entry.cooldownReverse) .. ":" .. tostring(entry.durationTextProfile) .. ":" .. tostring(entry.durationTextVersion) .. ":" .. tostring(useDebuffTypeBorderColor) .. ":" .. tostring(showDispelIcon) .. ":" .. colorKey .. ":" .. tostring(iconDarkMode) .. ":" .. tostring(iconDarkness) .. ":" .. tostring(iconAlpha) .. ":" .. tostring(iconDesaturate) .. ":" .. durationTextKey .. ":" .. countTextKey
 	return entry
 end
@@ -1730,8 +1743,8 @@ local function getNativeAuraSortOptions(kind)
 	return nativeMethod, nativeDirection
 end
 
-local function initializeDefaultNativeAuraButton(button, kind)
-	local config = getDefaultAuraStyleConfig(kind)
+local function initializeDefaultNativeAuraButton(button, config)
+	local kind = config.kind
 	button.eqolDefaultAuraKind = kind
 	button:SetSize(config.size, config.size)
 	button:SetCancelAuraButtons(kind == "buff" and "RightButtonUp" or nil)
@@ -1754,12 +1767,12 @@ local function initializeDefaultNativeAuraButton(button, kind)
 	cooldown:SetHideCountdownNumbers(true)
 	if cooldown.SetUseAuraDisplayTime then cooldown:SetUseAuraDisplayTime(true) end
 	button:SetDurationCooldown(cooldown)
-	local textLayer = ensureDefaultAuraTextLayer(button) or button
+	local textLayer = ensureDefaultAuraTextLayer(button, config) or button
 
 	if not config.hideCountdownNumbers then
 		local duration = textLayer:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-		setAuraFontStringStyle(duration, "Duration", DEFAULT_AURA_DURATION_COLOR, kind)
-		positionAuraFontString(duration, button, "Duration", "BOTTOM", 0, -1, kind)
+		setAuraFontStringStyle(duration, "Duration", DEFAULT_AURA_DURATION_COLOR, kind, config.durationTextStyle)
+		positionAuraFontString(duration, button, "Duration", "BOTTOM", 0, -1, kind, config.durationTextStyle)
 		local options = addon.functions and addon.functions.GetAuraButtonDurationTextOptions
 			and addon.functions.GetAuraButtonDurationTextOptions(config.durationTextProfile)
 			or nil
@@ -1768,8 +1781,8 @@ local function initializeDefaultNativeAuraButton(button, kind)
 
 	if config.countEnabled then
 		local count = textLayer:CreateFontString(nil, "OVERLAY", "NumberFontNormal")
-		setAuraFontStringStyle(count, "Count", DEFAULT_AURA_COUNT_COLOR, kind)
-		positionAuraFontString(count, button, "Count", "TOPRIGHT", -1, -1, kind)
+		setAuraFontStringStyle(count, "Count", DEFAULT_AURA_COUNT_COLOR, kind, config.countTextStyle)
+		positionAuraFontString(count, button, "Count", "TOPRIGHT", -1, -1, kind, config.countTextStyle)
 		button:SetApplicationCount(count)
 	end
 
@@ -1888,12 +1901,13 @@ end
 configureDefaultNativeAuraContainer = function(kind, container, anchor)
 	local AuraCompat = addon.AuraCompat
 	if not (AuraCompat and container and anchor) then return false end
+	local config = getDefaultAuraStyleConfig(kind)
 	local layout = getNativeAuraLayout(kind, container)
 	local perRow = getDefaultAuraIconsPerRow(nil, kind)
 	local maxRows = getDefaultAuraMaxRows(nil, kind)
 	local sortMethod, sortDirection = getNativeAuraSortOptions(kind)
-	anchor:SetFrameStrata(normalizeDefaultAuraFrameStrata(getDefaultAuraDBValue(kind, "FrameStrata")))
-	anchor:SetFrameLevel(getDefaultAuraFrameLevel(nil, kind))
+	anchor:SetFrameStrata(config.frameStrata)
+	anchor:SetFrameLevel(config.frameLevel)
 	container:SetFrameStrata(anchor:GetFrameStrata())
 	container:SetFrameLevel((anchor:GetFrameLevel() or 1) + 1)
 	container:ClearAllPoints()
@@ -1904,7 +1918,7 @@ configureDefaultNativeAuraContainer = function(kind, container, anchor)
 	if not AuraCompat:RegisterAuraGroup(container, "default", kind == "debuff" and "HARMFUL" or "HELPFUL", {
 		maxFrameCount = perRow * maxRows,
 		candidateFilters = candidateFilters,
-		initializeFrame = function(button) initializeDefaultNativeAuraButton(button, kind) end,
+		initializeFrame = function(button) initializeDefaultNativeAuraButton(button, config) end,
 		sortMethod = sortMethod,
 		sortDirection = sortDirection,
 		layout = layout.group,
@@ -1913,7 +1927,7 @@ configureDefaultNativeAuraContainer = function(kind, container, anchor)
 	end
 
 	if kind == "buff" and getDefaultAuraDBValue(kind, "IncludeWeapons") == true and AuraContainerItemEnchantmentSlot then
-		local init = function(button) initializeDefaultNativeAuraButton(button, kind) end
+		local init = function(button) initializeDefaultNativeAuraButton(button, config) end
 		AuraCompat:RegisterItemEnchantment(container, AuraContainerItemEnchantmentSlot.MainHand, { initializeFrame = init, cancelAuraButtons = "RightButtonUp" })
 		AuraCompat:RegisterItemEnchantment(container, AuraContainerItemEnchantmentSlot.OffHand, { initializeFrame = init, cancelAuraButtons = "RightButtonUp" })
 		AuraCompat:RegisterItemEnchantment(container, AuraContainerItemEnchantmentSlot.Ranged, { initializeFrame = init, cancelAuraButtons = "RightButtonUp" })
@@ -1955,8 +1969,8 @@ local function getDefaultNativeAuraContainerSignature(kind)
 		tostring(config.hideCountdownNumbers),
 		tostring(config.countEnabled),
 		tostring(getDefaultAuraDBValue(kind, "IncludeWeapons") == true),
-		tostring(normalizeDefaultAuraFrameStrata(getDefaultAuraDBValue(kind, "FrameStrata"))),
-		tostring(getDefaultAuraFrameLevel(nil, kind)),
+		tostring(config.frameStrata),
+		tostring(config.frameLevel),
 	}, ":")
 end
 

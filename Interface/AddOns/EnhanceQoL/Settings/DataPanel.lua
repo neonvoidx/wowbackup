@@ -39,7 +39,6 @@ local data = {
 	order = 10,
 	get = function() return addon.DataPanel.ShouldShowOptionsHint and addon.DataPanel.ShouldShowOptionsHint() or false end,
 	func = function(key)
-		addon.db["chatShowLootCurrencyIcons"] = key
 		if addon.DataPanel.SetShowOptionsHint then
 			addon.DataPanel.SetShowOptionsHint(key and true or false)
 			for name in pairs(addon.DataHub.streams) do

@@ -179,11 +179,11 @@ do
 			if tbl and ((ti and ti ~= textureIndex) or (not ti and poiWallNames[POI])) then
 				if intactTextures[ti] and damaged[textureIndex] then -- intact before, damaged now
 					local msg = string.format(L.damaged, poiWallNames[POI])
-					RaidWarningFrame_OnEvent(RaidBossEmoteFrame, "CHAT_MSG_RAID_WARNING", msg)
+					RaidWarningFrame:OnEvent("CHAT_MSG_RAID_WARNING", msg)
 					print(msg)
 				elseif damaged[ti] and destroyed[textureIndex] then -- damaged before, destroyed now
 					local msg = string.format(L.destroyed, poiWallNames[POI])
-					RaidWarningFrame_OnEvent(RaidBossEmoteFrame, "CHAT_MSG_RAID_WARNING", msg)
+					RaidWarningFrame:OnEvent("CHAT_MSG_RAID_WARNING", msg)
 					print(msg)
 				end
 				wallTextures[POI] = all[textureIndex] and textureIndex or ti

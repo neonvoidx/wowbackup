@@ -207,6 +207,93 @@ local function buildSettings()
 		})
 	end
 
+	local auctionHouseSection = addon.SettingsLayout.vendorEconomyAuctionHouseSection
+	if auctionHouseSection then
+		local craftTitle = L["vendorCraftShopperTitle"] or "Craft Shopper"
+		local craftEnableText = L["vendorCraftShopperEnable"] or "Enable Craft Shopper"
+		local craftEnableDesc = L["vendorCraftShopperEnableDesc"]
+		local craftWarbandText = L["vendorCraftShopperIncludeWarbandBank"] or "Include Warband Bank"
+		local craftWarbandDesc = L["vendorCraftShopperIncludeWarbandBankDesc"]
+		local craftQualityText = L["vendorCraftShopperReagentQuality"] or (_G["PROFESSIONS_QUALITY_DIALOG_TITLE"] or "Reagent Quality")
+		local craftQualityDesc = L["vendorCraftShopperReagentQualityDesc"]
+		local craftQualityList = {
+			lowest = L["vendorCraftShopperReagentQualityLowest"] or "Lowest quality",
+			highest = L["vendorCraftShopperReagentQualityHighest"] or "Highest quality",
+		}
+		local craftQualityOrder = { "lowest", "highest" }
+
+		local function getCraftShopperQualityValue()
+			if addon.db["vendorCraftShopperReagentQuality"] == "lowest" then return "lowest" end
+			return "highest"
+		end
+
+		local function setCraftShopperQualityValue(value)
+			local quality = value == "lowest" and "lowest" or "highest"
+			if addon.Vendor and addon.Vendor.CraftShopper and addon.Vendor.CraftShopper.SetReagentQualityMode then
+				addon.Vendor.CraftShopper.SetReagentQualityMode(quality)
+			else
+				addon.db["vendorCraftShopperReagentQuality"] = quality
+			end
+		end
+
+		addon.functions.SettingsCreateHeadline(cVendor, craftTitle, { parentSection = auctionHouseSection, order = 10 })
+		local craftEnable = addon.functions.SettingsCreateCheckbox(cVendor, {
+			var = "vendorCraftShopperEnable",
+			text = craftEnableText,
+			desc = craftEnableDesc,
+			func = function(value)
+				addon.db["vendorCraftShopperEnable"] = value and true or false
+				if addon.Vendor and addon.Vendor.CraftShopper then
+					if value and addon.Vendor.CraftShopper.EnableCraftShopper then
+						addon.Vendor.CraftShopper.EnableCraftShopper()
+					elseif not value and addon.Vendor.CraftShopper.DisableCraftShopper then
+						addon.Vendor.CraftShopper.DisableCraftShopper()
+					end
+				end
+			end,
+			default = false,
+			order = 10,
+			parentSection = auctionHouseSection,
+		})
+
+		local function craftShopperParentCheck() return craftEnable and craftEnable.setting and craftEnable.setting:GetValue() == true end
+
+		addon.functions.SettingsCreateCheckbox(cVendor, {
+			var = "vendorCraftShopperIncludeWarbandBank",
+			text = craftWarbandText,
+			desc = craftWarbandDesc,
+			func = function(value)
+				if addon.Vendor and addon.Vendor.CraftShopper and addon.Vendor.CraftShopper.SetIncludeWarbandBank then
+					addon.Vendor.CraftShopper.SetIncludeWarbandBank(value)
+				else
+					addon.db["vendorCraftShopperIncludeWarbandBank"] = value and true or false
+				end
+			end,
+			default = false,
+			order = 20,
+			parent = true,
+			element = craftEnable.element,
+			parentCheck = craftShopperParentCheck,
+			parentSection = auctionHouseSection,
+		})
+
+		addon.functions.SettingsCreateDropdown(cVendor, {
+			var = "vendorCraftShopperReagentQuality",
+			text = craftQualityText,
+			desc = craftQualityDesc,
+			list = craftQualityList,
+			order = 30,
+			orderList = craftQualityOrder,
+			default = "highest",
+			get = function() return getCraftShopperQualityValue() end,
+			set = function(key, maybeValue) setCraftShopperQualityValue(maybeValue or key) end,
+			parent = true,
+			element = craftEnable.element,
+			parentCheck = craftShopperParentCheck,
+			parentSection = auctionHouseSection,
+		})
+	end
+
 	local quickActionsExpandable = addon.functions.SettingsCreateExpandableSection(cVendor, {
 		name = L["vendorQuickActions"] or "Vendor - Quick Actions",
 		configPageKey = "VendorQuickActions",
@@ -224,14 +311,17 @@ local function buildSettings()
 			desc = L["sellAllJunkDesc"] or "Sells all poor-quality items whenever a merchant window opens",
 			func = function(value)
 				addon.db["sellAllJunk"] = value and true or false
-				if value then addon.functions.checkBagIgnoreJunk() end
+				if value and addon.Vendor.functions.CheckBagIgnoreJunk then addon.Vendor.functions.CheckBagIgnoreJunk() end
 			end,
 		},
 		{
 			var = "vendorAltClickInclude",
 			text = L["vendorAltClickInclude"],
 			desc = L["vendorAltClickIncludeDesc"],
-			func = function(value) addon.db["vendorAltClickInclude"] = value and true or false end,
+			func = function(value)
+				addon.db["vendorAltClickInclude"] = value and true or false
+				if value and addon.Vendor.functions.refreshBaganatorWidgets then addon.Vendor.functions.refreshBaganatorWidgets() end
+			end,
 		},
 		{
 			var = "vendorShowSellTooltip",

@@ -1654,6 +1654,7 @@ local function ShouldRunTooltipPostCall()
 		or db["TooltipUnitHideInCombat"]
 		or db["TooltipUnitHideInDungeon"]
 		or db["TooltipUnitHideHealthBar"]
+		or db["TooltipShowGuildRank"]
 		or db["TooltipUnitShowTargetOfTarget"]
 		or db["TooltipUnitShowMount"]
 		or db["TooltipShowRealmInfo"]

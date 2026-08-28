@@ -1,7 +1,7 @@
 
 PetWalkerDB = {
 ["favsProbability_reset_by_pw"] = false,
-["autoEnabled"] = false,
+["autoEnabled"] = true,
 ["verbosityLevel"] = 1,
 ["recentPets"] = {
 "BattlePet-0-0000227F0880",
@@ -9,7 +9,7 @@ PetWalkerDB = {
 "BattlePet-0-0000227F123D",
 "BattlePet-0-0000228BDA93",
 },
-["remainingTimer"] = 388,
+["remainingTimer"] = 659,
 ["favsOnly_reset_by_pw"] = false,
 ["drSummoning"] = true,
 ["dbVersion"] = 3,

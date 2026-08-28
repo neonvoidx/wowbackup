@@ -4073,6 +4073,27 @@ function H.RangeFadeBuildSpellListForConfig(rangeFadeConfig, specId)
 	return list
 end
 
+function H.RangeFadeIsSpellInRange(spellId, unit, ignoreUnlimited)
+	spellId = tonumber(spellId)
+	if not IsSpellInRange or not spellId or spellId <= 0 then return true end
+	if ignoreUnlimited == true and rangeFadeIgnoredSpells[spellId] then return true end
+	return IsSpellInRange(spellId, unit) ~= false
+end
+
+function H.RangeFadeIsUnitInRange(spellList, unit, ignoreUnlimited)
+	if not IsSpellInRange or type(spellList) ~= "table" then return true end
+	local checked = false
+	for key, value in pairs(spellList) do
+		local spellId = value == true and tonumber(key) or tonumber(value)
+		if spellId and spellId > 0 and not (ignoreUnlimited == true and rangeFadeIgnoredSpells[spellId]) then
+			local inRange = IsSpellInRange(spellId, unit)
+			if inRange == true then return true end
+			if inRange ~= nil then checked = true end
+		end
+	end
+	return not checked
+end
+
 function H.RangeFadeGetSpellLabel(spellId, includeId) return getRangeFadeSpellDisplayName(spellId, includeId == true) end
 
 local function buildRangeFadeSpellOptionsFromIds(spellIds)

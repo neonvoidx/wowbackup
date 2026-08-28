@@ -1,0 +1,43 @@
+
+RatedTrackerDB = {
+["global"] = {
+["lastKnownRegion"] = "US",
+["addonVersion"] = "2.7.5",
+["queueSlotIdleSince"] = {
+},
+["queueTimerBootAt"] = 1787838797,
+["queueJoinByIndex"] = {
+},
+},
+["profileKeys"] = {
+["Hellavator - Tichondrius"] = "Default",
+},
+["profiles"] = {
+["Default"] = {
+["lastSeenWhatsNew"] = "2.7.5.29",
+["_importedSeasonRetagV1"] = true,
+["mapBracketFixV1"] = true,
+["arenaBgFixV1"] = true,
+["minimap"] = {
+["minimapPos"] = 117.4103456129933,
+},
+["history"] = {
+["perCharFilters"] = {
+["Hellavator-Tichondrius"] = {
+["filterDateRange"] = "all",
+["filterBracket"] = -1,
+},
+},
+},
+["reloadHintPending"] = false,
+["reloadHintPendingCount"] = 0,
+["display"] = {
+["lastRatedSoloSpecByBracket"] = {
+["6"] = "Destruction",
+["8"] = "Destruction",
+},
+},
+["mmrFieldsRenamedV2"] = true,
+},
+},
+}

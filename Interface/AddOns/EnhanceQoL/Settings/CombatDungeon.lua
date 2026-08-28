@@ -40,6 +40,7 @@ local NAMEPLATE_TEXT_CUSTOM_FONT_DB_KEY = "nameplateTextCustomFont"
 local NAMEPLATE_TEXT_FONT_DB_KEY = "nameplateTextFont"
 local NAMEPLATE_TEXT_OUTLINE_DB_KEY = "nameplateTextOutline"
 local NAMEPLATE_TEXT_SIZE_DB_KEY = "nameplateTextSize"
+local NAMEPLATE_CAST_TEXT_SIZE_DB_KEY = "nameplateCastTextSize"
 local NAMEPLATE_FRIENDLY_PLAYER_NAMES_ONLY_DB_KEY = "nameplateFriendlyPlayerNamesOnly"
 local NAMEPLATE_FRIENDLY_PLAYER_CLASS_COLOR_NAMES_DB_KEY = "nameplateFriendlyPlayerClassColorNames"
 local NAMEPLATE_HIDE_FRIENDLY_PLAYER_REALMS_DB_KEY = "nameplateHideFriendlyPlayerRealms"
@@ -135,6 +136,7 @@ addon.constants.DEFAULT_NAMEPLATE_FEATURE_KEYS = {
 	textFont = NAMEPLATE_TEXT_FONT_DB_KEY,
 	textOutline = NAMEPLATE_TEXT_OUTLINE_DB_KEY,
 	textSize = NAMEPLATE_TEXT_SIZE_DB_KEY,
+	castTextSize = NAMEPLATE_CAST_TEXT_SIZE_DB_KEY,
 	friendlyPlayerNamesOnly = NAMEPLATE_FRIENDLY_PLAYER_NAMES_ONLY_DB_KEY,
 	friendlyPlayerClassColorNames = NAMEPLATE_FRIENDLY_PLAYER_CLASS_COLOR_NAMES_DB_KEY,
 	hideFriendlyPlayerRealms = NAMEPLATE_HIDE_FRIENDLY_PLAYER_REALMS_DB_KEY,
@@ -635,6 +637,7 @@ end
 do
 	local nameplateSlugOutlineFrame
 	local nameplateSlugOutlineActive = false
+	local nameplateSlugOutlineApplyFrameOptionsHooked = false
 	local nameplateSlugOutlineFontObjectDefaults = {}
 	local nameplateSlugOutlineFontStringDefaults = setmetatable({}, { __mode = "k" })
 
@@ -660,6 +663,14 @@ end
 
 local function getNameplateTextSizeOverride(fallbackSize)
 	local size = addon.db and tonumber(addon.db[NAMEPLATE_TEXT_SIZE_DB_KEY]) or 0
+	if type(size) ~= "number" or size <= 0 then return fallbackSize end
+	if size < 8 then size = 8 end
+	if size > 32 then size = 32 end
+	return size
+end
+
+local function getNameplateCastTextSizeOverride(fallbackSize)
+	local size = addon.db and tonumber(addon.db[NAMEPLATE_CAST_TEXT_SIZE_DB_KEY]) or 0
 	if type(size) ~= "number" or size <= 0 then return fallbackSize end
 	if size < 8 then size = 8 end
 	if size > 32 then size = 32 end
@@ -746,7 +757,7 @@ local function applySlugOutlineToFontObject(fontObject)
 
 	local defaults = nameplateSlugOutlineFontObjectDefaults[fontObject]
 	local font = getNameplateTextFontFace(defaults and defaults.font)
-	local size = getNameplateTextSizeOverride(defaults and defaults.size)
+	local size = defaults and defaults.size
 	setNameplateTextFont(fontObject, font, size, getNameplateTextStyleFlags())
 	applyNameplateTextStyleShadow(fontObject)
 end
@@ -758,7 +769,7 @@ local function restoreSlugOutlineFontObject(fontObject)
 	restoreFontShadowDefaults(fontObject, defaults)
 end
 
-local function applySlugOutlineToFontString(fontString)
+local function applySlugOutlineToFontString(fontString, sizeOverride)
 	if not fontString or type(fontString.GetFont) ~= "function" or type(fontString.SetFont) ~= "function" then return end
 	if not nameplateSlugOutlineFontStringDefaults[fontString] then
 		local font, size, flags = fontString:GetFont()
@@ -768,7 +779,7 @@ local function applySlugOutlineToFontString(fontString)
 
 	local defaults = nameplateSlugOutlineFontStringDefaults[fontString]
 	local font = getNameplateTextFontFace(defaults and defaults.font)
-	local size = getNameplateTextSizeOverride(defaults and defaults.size)
+	local size = sizeOverride(defaults and defaults.size)
 	setNameplateTextFont(fontString, font, size, getNameplateTextStyleFlags())
 	applyNameplateTextStyleShadow(fontString)
 end
@@ -780,16 +791,59 @@ local function restoreSlugOutlineFontString(fontString)
 	restoreFontShadowDefaults(fontString, defaults)
 end
 
+local function getNameplateCastTextFontStrings(unitFrame)
+	if not unitFrame or isSecretValue(unitFrame) then return nil, nil end
+	if unitFrame.IsForbidden and unitFrame:IsForbidden() then return nil, nil end
+
+	local castBarsContainer = unitFrame.CastBarsContainer
+	if isSecretValue(castBarsContainer) then castBarsContainer = nil end
+	local castBar = castBarsContainer and castBarsContainer.castBar or unitFrame.castBar
+	if isSecretValue(castBar) then return nil, nil end
+	if not castBar or (castBar.IsForbidden and castBar:IsForbidden()) then return nil, nil end
+
+	local spellText = castBar.Text
+	if isSecretValue(spellText) or not spellText or type(spellText.SetFont) ~= "function" or type(spellText.GetFont) ~= "function" then spellText = nil end
+	local targetText = castBar.CastTargetNameText
+	if isSecretValue(targetText) or not targetText or type(targetText.SetFont) ~= "function" or type(targetText.GetFont) ~= "function" then targetText = nil end
+	return spellText, targetText
+end
+
+local function applySlugOutlineToUnitFrame(unitFrame)
+	local name = getNameplateNameFontString(unitFrame)
+	if name then applySlugOutlineToFontString(name, getNameplateTextSizeOverride) end
+
+	local spellText, targetText = getNameplateCastTextFontStrings(unitFrame)
+	if spellText then applySlugOutlineToFontString(spellText, getNameplateCastTextSizeOverride) end
+	if targetText then applySlugOutlineToFontString(targetText, getNameplateCastTextSizeOverride) end
+end
+
+local function restoreSlugOutlineOnUnitFrame(unitFrame)
+	local name = getNameplateNameFontString(unitFrame)
+	if name then restoreSlugOutlineFontString(name) end
+
+	local spellText, targetText = getNameplateCastTextFontStrings(unitFrame)
+	if spellText then restoreSlugOutlineFontString(spellText) end
+	if targetText then restoreSlugOutlineFontString(targetText) end
+end
 local function applySlugOutlineToNameplate(namePlate)
 	local unitFrame = namePlate and namePlate.UnitFrame
-	local fontString = getNameplateNameFontString(unitFrame)
-	if fontString then applySlugOutlineToFontString(fontString) end
+	applySlugOutlineToUnitFrame(unitFrame)
 end
 
 local function restoreSlugOutlineOnNameplate(namePlate)
 	local unitFrame = namePlate and namePlate.UnitFrame
-	local fontString = getNameplateNameFontString(unitFrame)
-	if fontString then restoreSlugOutlineFontString(fontString) end
+	restoreSlugOutlineOnUnitFrame(unitFrame)
+end
+
+local function ensureNameplateApplyFrameOptionsHook()
+	if nameplateSlugOutlineApplyFrameOptionsHooked then return end
+	local unitFrameMixin = _G.NamePlateUnitFrameMixin
+	if type(unitFrameMixin) ~= "table" or type(unitFrameMixin.ApplyFrameOptions) ~= "function" then return end
+
+	nameplateSlugOutlineApplyFrameOptionsHooked = true
+	hooksecurefunc(unitFrameMixin, "ApplyFrameOptions", function(unitFrame)
+		if isNameplateSlugOutlineActive() then applySlugOutlineToUnitFrame(unitFrame) end
+	end)
 end
 
 local function applyNameplateSlugOutlineToFontObjects()
@@ -841,6 +895,7 @@ end
 local function syncNameplateSlugOutline()
 	if not isNameplateSlugOutlineActive() then return end
 	ensureNameplateSlugOutlineWatcher()
+	ensureNameplateApplyFrameOptionsHook()
 	applyNameplateSlugOutlineToAllNameplates()
 end
 
@@ -2291,6 +2346,7 @@ function addon.functions.initDungeonFrame()
 	addon.functions.InitDBValue(NAMEPLATE_TEXT_FONT_DB_KEY, addon.functions.GetGlobalFontConfigKey and addon.functions.GetGlobalFontConfigKey() or "__EQOL_GLOBAL_FONT__")
 	addon.functions.InitDBValue(NAMEPLATE_TEXT_OUTLINE_DB_KEY, addon.functions.GetGlobalFontStyleConfigKey and addon.functions.GetGlobalFontStyleConfigKey() or "__EQOL_GLOBAL_FONT_STYLE__")
 	addon.functions.InitDBValue(NAMEPLATE_TEXT_SIZE_DB_KEY, 0)
+	addon.functions.InitDBValue(NAMEPLATE_CAST_TEXT_SIZE_DB_KEY, 0)
 	addon.functions.InitDBValue(NAMEPLATE_FRIENDLY_PLAYER_NAMES_ONLY_DB_KEY, false)
 	addon.functions.InitDBValue(NAMEPLATE_FRIENDLY_PLAYER_CLASS_COLOR_NAMES_DB_KEY, false)
 	addon.functions.InitDBValue(NAMEPLATE_HIDE_FRIENDLY_PLAYER_REALMS_DB_KEY, false)
@@ -2652,68 +2708,14 @@ if not sectionDungeon then
 end
 
 -- Mythic+ & Raid (Combat & Dungeon)
-local keystoneEnable
-local function isKeystoneEnabled() return keystoneEnable and keystoneEnable.setting and keystoneEnable.setting:GetValue() == true end
+local function isKeystoneEnabled()
+	local entry = addon.SettingsLayout.elements and addon.SettingsLayout.elements["enableKeystoneHelper"]
+	if not entry then return true end
+	return entry.setting and entry.setting:GetValue() == true
+end
 
 if cChar and sectionDungeon then
 	addon.functions.SettingsCreateHeadline(cChar, PLAYER_DIFFICULTY_MYTHIC_PLUS .. " & " .. RAID, { parentSection = sectionDungeon })
-
-	-- Keystone Helper
-	keystoneEnable = addon.functions.SettingsCreateCheckbox(cChar, {
-		var = "enableKeystoneHelper",
-		text = L["enableKeystoneHelper"],
-		desc = L["enableKeystoneHelperDesc"],
-		func = function(v)
-			addon.db["enableKeystoneHelper"] = v
-			if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.toggleFrame then addon.MythicPlus.functions.toggleFrame() end
-		end,
-		parentSection = sectionDungeon,
-	})
-
-	local keystoneChildren = {
-		{ var = "autoInsertKeystone", text = L["Automatically insert keystone"], func = function(v) addon.db["autoInsertKeystone"] = v end, parentSection = sectionDungeon },
-		{ var = "closeBagsOnKeyInsert", text = L["Close all bags on keystone insert"], func = function(v) addon.db["closeBagsOnKeyInsert"] = v end, parentSection = sectionDungeon },
-		{ var = "autoKeyStart", text = L["autoKeyStart"], func = function(v) addon.db["autoKeyStart"] = v end, parentSection = sectionDungeon },
-	}
-	for _, entry in ipairs(keystoneChildren) do
-		entry.parent = true
-		entry.element = keystoneEnable.element
-		entry.parentCheck = isKeystoneEnabled
-		addon.functions.SettingsCreateCheckbox(cChar, entry)
-	end
-
-	local listPull, orderPull = addon.functions.prepareListForDropdown({
-		[1] = _G.NONE,
-		[2] = L["Blizzard Pull Timer"],
-		[3] = L["DBM / BigWigs Pull Timer"],
-		[4] = _G.STATUS_TEXT_BOTH,
-	})
-	addon.functions.SettingsCreateDropdown(cChar, {
-		var = "PullTimerType",
-		text = L["Pull Timer"],
-		desc = L["PullTimerTypeDesc"],
-		type = Settings.VarType.Number,
-		default = 2,
-		list = listPull,
-		order = orderPull,
-		get = function() return (addon.db and addon.db["PullTimerType"]) or 1 end,
-		set = function(value) addon.db["PullTimerType"] = value end,
-		parent = true,
-		element = keystoneEnable.element,
-		parentCheck = isKeystoneEnabled,
-		parentSection = sectionDungeon,
-	})
-
-	addon.functions.SettingsCreateCheckbox(cChar, {
-		var = "noChatOnPullTimer",
-		text = L["noChatOnPullTimer"],
-		desc = L["noChatOnPullTimerDesc"],
-		func = function(v) addon.db["noChatOnPullTimer"] = v end,
-		parent = true,
-		element = keystoneEnable.element,
-		parentCheck = isKeystoneEnabled,
-		parentSection = sectionDungeon,
-	})
 
 	addon.functions.SettingsCreateSlider(cChar, {
 		var = "pullTimerLongTime",
@@ -2723,105 +2725,11 @@ if cChar and sectionDungeon then
 		max = 60,
 		step = 1,
 		default = 10,
+		order = 70,
 		get = function() return (addon.db and addon.db["pullTimerLongTime"]) or 10 end,
 		set = function(val) addon.db["pullTimerLongTime"] = val end,
 		parent = true,
-		element = keystoneEnable.element,
 		parentCheck = isKeystoneEnabled,
-		parentSection = sectionDungeon,
-	})
-
-	addon.functions.SettingsCreateSlider(cChar, {
-		var = "pullTimerShortTime",
-		text = L["sliderShortTime"],
-		desc = L["pullTimerShortTimeDesc"],
-		min = 0,
-		max = 60,
-		step = 1,
-		default = 5,
-		get = function() return (addon.db and addon.db["pullTimerShortTime"]) or 5 end,
-		set = function(val) addon.db["pullTimerShortTime"] = val end,
-		parent = true,
-		element = keystoneEnable.element,
-		parentCheck = isKeystoneEnabled,
-		parentSection = sectionDungeon,
-	})
-
-	-- Objective Tracker
-	local objEnable = addon.functions.SettingsCreateCheckbox(cChar, {
-		var = "mythicPlusEnableObjectiveTracker",
-		text = L["mythicPlusEnableObjectiveTracker"],
-		desc = L["mythicPlusEnableObjectiveTrackerDesc"],
-		func = function(v)
-			addon.db["mythicPlusEnableObjectiveTracker"] = v
-			if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.setObjectiveFrames then addon.MythicPlus.functions.setObjectiveFrames() end
-		end,
-		parentSection = sectionDungeon,
-	})
-	local function isObjectiveEnabled() return objEnable and objEnable.setting and objEnable.setting:GetValue() == true end
-
-	local objectiveTrackerDefaultScope = "dungeonMythicPlus"
-	local objectiveTrackerScopeOptions = {
-		{ value = "dungeonNormal", text = DUNGEONS .. " - " .. PLAYER_DIFFICULTY1 },
-		{ value = "dungeonHeroic", text = DUNGEONS .. " - " .. PLAYER_DIFFICULTY2 },
-		{ value = "dungeonMythic", text = DUNGEONS .. " - " .. PLAYER_DIFFICULTY6 },
-		{ value = objectiveTrackerDefaultScope, text = DUNGEONS .. " - " .. PLAYER_DIFFICULTY_MYTHIC_PLUS },
-		{ value = "dungeonTimewalking", text = DUNGEONS .. " - " .. PLAYER_DIFFICULTY_TIMEWALKER },
-		{ value = "raidLfr", text = RAID .. " - " .. PLAYER_DIFFICULTY3 },
-		{ value = "raidNormal", text = RAID .. " - " .. PLAYER_DIFFICULTY1 },
-		{ value = "raidHeroic", text = RAID .. " - " .. PLAYER_DIFFICULTY2 },
-		{ value = "raidMythic", text = RAID .. " - " .. PLAYER_DIFFICULTY6 },
-		{ value = "raidTimewalking", text = RAID .. " - " .. PLAYER_DIFFICULTY_TIMEWALKER },
-		{ value = "scenarioDelve", text = L["objectiveTrackerScopeScenarioDelve"] },
-	}
-	local function getObjectiveTrackerScopes()
-		if type(addon.db["mythicPlusObjectiveTrackerScopes"]) ~= "table" then addon.db["mythicPlusObjectiveTrackerScopes"] = { [objectiveTrackerDefaultScope] = true } end
-		return addon.db["mythicPlusObjectiveTrackerScopes"]
-	end
-	addon.functions.SettingsCreateMultiDropdown(cChar, {
-		var = "mythicPlusObjectiveTrackerScopes",
-		text = L["objectiveTrackerScope"],
-		desc = L["objectiveTrackerScopeDesc"],
-		options = objectiveTrackerScopeOptions,
-		get = getObjectiveTrackerScopes,
-		set = function(value)
-			addon.db["mythicPlusObjectiveTrackerScopes"] = type(value) == "table" and value or { [objectiveTrackerDefaultScope] = true }
-			if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.setObjectiveFrames then addon.MythicPlus.functions.setObjectiveFrames() end
-		end,
-		parent = true,
-		element = objEnable.element,
-		parentCheck = isObjectiveEnabled,
-		parentSection = sectionDungeon,
-	})
-
-	-- BR Tracker
-	addon.functions.SettingsCreateCheckbox(cChar, {
-		var = "mythicPlusBRTrackerEnabled",
-		text = L["mythicPlusBRTrackerEnabled"],
-		desc = L["mythicPlusBRTrackerEditModeHint"],
-		func = function(v)
-			addon.db["mythicPlusBRTrackerEnabled"] = v
-			if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.createBRFrame then
-				addon.MythicPlus.functions.createBRFrame()
-			elseif addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.setObjectiveFrames then
-				addon.MythicPlus.functions.setObjectiveFrames()
-			end
-		end,
-		parentSection = sectionDungeon,
-	})
-
-	addon.functions.SettingsCreateCheckbox(cChar, {
-		var = "mythicPlusBloodlustTrackerEnabled",
-		text = L["mythicPlusBloodlustTrackerEnabled"],
-		desc = L["mythicPlusBloodlustTrackerEditModeHint"],
-		func = function(v)
-			addon.db["mythicPlusBloodlustTrackerEnabled"] = v
-			if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.syncBloodlustUnitAuraRegistration then addon.MythicPlus.functions.syncBloodlustUnitAuraRegistration() end
-			if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.createBloodlustFrame then
-				addon.MythicPlus.functions.createBloodlustFrame()
-				if addon.MythicPlus.functions.refreshBloodlustTracker then addon.MythicPlus.functions.refreshBloodlustTracker(false) end
-			end
-		end,
 		parentSection = sectionDungeon,
 	})
 end
@@ -2924,62 +2832,28 @@ data = {
 	},
 }
 
-table.insert(data, {
-	var = "groupfinderShowPartyKeystone",
-	text = L["groupfinderShowPartyKeystone"],
-	desc = L["groupfinderShowPartyKeystoneDesc"],
-	func = function(v)
-		addon.db["groupfinderShowPartyKeystone"] = v
-		if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.togglePartyKeystone then addon.MythicPlus.functions.togglePartyKeystone() end
-	end,
-	parentSection = sectionGroupFinder,
-})
-
-table.insert(data, {
-	var = "groupfinderShowDungeonScoreFrame",
-	text = L["groupfinderShowDungeonScoreFrame"]:format(DUNGEON_SCORE),
-	desc = L["groupfinderShowDungeonScoreFrameDesc"],
-	func = function(v)
-		addon.db["groupfinderShowDungeonScoreFrame"] = v
-		if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.toggleFrame then addon.MythicPlus.functions.toggleFrame() end
-	end,
-	parentSection = sectionGroupFinder,
-})
-
-table.insert(data, {
-	var = "mythicPlusEnableDungeonFilter",
-	text = L["mythicPlusEnableDungeonFilter"],
-	desc = L["mythicPlusEnableDungeonFilterDesc"],
-	func = function(v)
-		addon.db["mythicPlusEnableDungeonFilter"] = v
-		if addon.MythicPlus and addon.MythicPlus.functions then
-			if v and addon.MythicPlus.functions.addDungeonFilter then
-				addon.MythicPlus.functions.addDungeonFilter()
-			elseif not v and addon.MythicPlus.functions.removeDungeonFilter then
-				addon.MythicPlus.functions.removeDungeonFilter()
-			end
+local groupFinderOrderEntries = {
+	{ key = "groupfinderShowPartyKeystone", text = L["groupfinderShowPartyKeystone"] },
+	{ key = "groupfinderShowDungeonScoreFrame", text = L["groupfinderShowDungeonScoreFrame"]:format(DUNGEON_SCORE) },
+	{ key = "mythicPlusEnableDungeonFilter", text = L["mythicPlusEnableDungeonFilter"] },
+}
+for _, entry in ipairs(data) do
+	groupFinderOrderEntries[#groupFinderOrderEntries + 1] = entry
+end
+table.sort(groupFinderOrderEntries, function(a, b) return a.text < b.text end)
+local groupFinderControlOrder = {}
+for index, entry in ipairs(groupFinderOrderEntries) do
+	groupFinderControlOrder[entry.var or entry.key] = index * 10
+	if entry.children then
+		for childIndex, child in ipairs(entry.children) do
+			child.order = (index * 10) + (childIndex / 10)
 		end
-	end,
-	parentSection = sectionGroupFinder,
-	children = {
-		{
-			var = "mythicPlusEnableDungeonFilterClearReset",
-			text = L["mythicPlusEnableDungeonFilterClearReset"],
-			func = function(v) addon.db["mythicPlusEnableDungeonFilterClearReset"] = v end,
-			parentCheck = function()
-				return addon.SettingsLayout.elements["mythicPlusEnableDungeonFilter"]
-					and addon.SettingsLayout.elements["mythicPlusEnableDungeonFilter"].setting
-					and addon.SettingsLayout.elements["mythicPlusEnableDungeonFilter"].setting:GetValue() == true
-			end,
-			parent = true,
-			default = false,
-			type = Settings.VarType.Boolean,
-			sType = "checkbox",
-			parentSection = sectionGroupFinder,
-		},
-	},
-})
-
+	end
+end
+addon.SettingsLayout.gameplayGroupFinderControlOrder = groupFinderControlOrder
+for _, entry in ipairs(data) do
+	entry.order = groupFinderControlOrder[entry.var]
+end
 table.sort(data, function(a, b) return a.text < b.text end)
 addon.functions.SettingsCreateCheckboxes(cChar, data)
 

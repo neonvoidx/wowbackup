@@ -1300,10 +1300,13 @@ local function CheckItemGems(element, itemLink, emptySocketsCount, key, pdElemen
 				end
 				if gemLink and showTip then
 					local anchor = "ANCHOR_CURSOR"
-					if addon.db["TooltipAnchorType"] == 3 then anchor = "ANCHOR_CURSOR_LEFT" end
-					if addon.db["TooltipAnchorType"] == 4 then anchor = "ANCHOR_CURSOR_RIGHT" end
-					local xOffset = addon.db["TooltipAnchorOffsetX"] or 0
-					local yOffset = addon.db["TooltipAnchorOffsetY"] or 0
+					local xOffset, yOffset = 0, 0
+					if addon.functions.IsTooltipAddonLoaded() then
+						if addon.db["TooltipAnchorType"] == 3 then anchor = "ANCHOR_CURSOR_LEFT" end
+						if addon.db["TooltipAnchorType"] == 4 then anchor = "ANCHOR_CURSOR_RIGHT" end
+						xOffset = addon.db["TooltipAnchorOffsetX"] or 0
+						yOffset = addon.db["TooltipAnchorOffsetY"] or 0
+					end
 					GameTooltip:SetOwner(self, anchor, xOffset, yOffset)
 					GameTooltip:SetHyperlink(gemLink)
 					GameTooltip:Show()
@@ -3019,7 +3022,7 @@ end
 local cInventory = addon.SettingsLayout.rootGENERAL
 
 local function shouldShowNativeBagSettings()
-	return not (addon.db and addon.db["enableBagsModule"] == true)
+	return not addon.functions.IsBagsModuleActive()
 end
 
 local expandable = addon.functions.SettingsCreateExpandableSection(cInventory, {

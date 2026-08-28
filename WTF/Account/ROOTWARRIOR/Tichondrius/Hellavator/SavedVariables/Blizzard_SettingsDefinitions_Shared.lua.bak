@@ -1,5 +1,10 @@
 
 NewSettingsSeen = {
 ["ADVANCED_COOLDOWN_SETTINGS1"] = true,
+["raidFramesDispelIndicatorOverlay"] = true,
+["nameplateShowFriendlyRealmName"] = true,
+["nameplateUseClassColorForFriendlyPlayerUnitNames"] = true,
 ["COMBAT_WARNINGS_LABEL"] = true,
+["raidFramesDispelIndicatorOverlayAnimation"] = true,
+["nameplateShowOnlyNameForFriendlyPlayerUnits"] = true,
 }

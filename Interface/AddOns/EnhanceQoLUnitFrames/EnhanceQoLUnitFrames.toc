@@ -1,7 +1,7 @@
 ## Interface: 120100
 ## Title: Enhance QoL Unit Frames
 ## Author: R41Z0R
-## Version: 12.7.0
+## Version: 12.8.3
 ## Notes: Custom unit, party, raid and boss frames
 ## Notes-deDE: Eigene Einheiten-, Gruppen-, Schlachtzug- und Boss-Frames
 ## Notes-esES: Marcos personalizados de unidad, grupo, banda y jefe

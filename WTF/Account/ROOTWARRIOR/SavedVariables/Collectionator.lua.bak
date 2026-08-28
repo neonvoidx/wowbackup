@@ -400,8 +400,8 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [45549] = true,
 [1225343] = true,
 [18243] = true,
-[160969] = true,
 [62045] = true,
+[160969] = true,
 [1225347] = true,
 [1285705] = true,
 [1225349] = true,
@@ -513,11 +513,11 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [88036] = true,
 [381400] = true,
 [30305] = true,
-[3918] = true,
+[160983] = true,
 [382323] = true,
 [56486] = true,
 [124225] = true,
-[160983] = true,
+[3918] = true,
 [381395] = true,
 [445091] = true,
 [381386] = true,
@@ -2100,16 +2100,17 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [3398] = {
 "Tichondrius_Alliance",
 },
-[57443] = {
+[3978] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
-[381375] = {
+[354764] = {
 "Tichondrius_Alliance",
 },
 [439714] = {
 "Tichondrius_Alliance",
 },
-[354764] = {
+[381375] = {
 "Tichondrius_Alliance",
 },
 [125601] = {
@@ -2150,7 +2151,7 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[30329] = {
+[84406] = {
 "Tichondrius_Alliance",
 },
 [1272707] = {
@@ -2161,15 +2162,15 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[84406] = {
-"Tichondrius_Alliance",
-},
-[354768] = {
+[30329] = {
 "Tichondrius_Alliance",
 },
 [1264523] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
+},
+[125602] = {
+"Tichondrius_Alliance",
 },
 [1264524] = {
 "Tichondrius_Alliance",
@@ -2195,13 +2196,13 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[104237] = {
+[81720] = {
 "Tichondrius_Alliance",
 },
 [381381] = {
 "Tichondrius_Alliance",
 },
-[81720] = {
+[104237] = {
 "Tichondrius_Alliance",
 },
 [439721] = {
@@ -2223,7 +2224,7 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [18239] = {
 "Tichondrius_Alliance",
 },
-[125603] = {
+[381383] = {
 "Tichondrius_Alliance",
 },
 [124029] = {
@@ -2242,8 +2243,9 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [145167] = {
 "Tichondrius_Alliance",
 },
-[201503] = {
+[382408] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
 [145170] = {
 "Tichondrius_Alliance",
@@ -2438,7 +2440,7 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [201500] = {
 "Tichondrius_Alliance",
 },
-[84412] = {
+[201512] = {
 "Tichondrius_Alliance",
 },
 [299008] = {
@@ -2479,7 +2481,7 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[201512] = {
+[84412] = {
 "Tichondrius_Alliance",
 },
 [299011] = {
@@ -2527,7 +2529,7 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[36210] = {
+[381411] = {
 "Tichondrius_Alliance",
 },
 [1229857] = {
@@ -2568,10 +2570,11 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[381418] = {
+[1229880] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
-[1229900] = {
+[12899] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
@@ -2581,7 +2584,7 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [64358] = {
 "Tichondrius_Alliance",
 },
-[1229912] = {
+[198965] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
@@ -2595,7 +2598,7 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[381411] = {
+[36210] = {
 "Tichondrius_Alliance",
 },
 [1229853] = {
@@ -2609,9 +2612,8 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [2795] = {
 "Tichondrius_Alliance",
 },
-[1229856] = {
+[2539] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
 [2543] = {
 "Tichondrius_Alliance",
@@ -2626,8 +2628,9 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [381413] = {
 "Tichondrius_Alliance",
 },
-[43761] = {
+[1229938] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
 [1229862] = {
 "Tichondrius_Alliance",
@@ -2698,16 +2701,16 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[1229880] = {
+[381418] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
 [12595] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[84416] = {
+[1229882] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
 [1229883] = {
 "Tichondrius_Alliance",
@@ -2721,8 +2724,9 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[1250356] = {
+[1229886] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
 [1229887] = {
 "Tichondrius_Alliance",
@@ -2775,7 +2779,7 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[12899] = {
+[1229900] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
@@ -2823,13 +2827,12 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[198965] = {
+[1229912] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[1229913] = {
+[1225819] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
 [30332] = {
 "Tichondrius_Alliance",
@@ -2902,15 +2905,15 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [160966] = {
 "Tichondrius_Alliance",
 },
-[1229938] = {
+[43761] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
 [45552] = {
 "Tichondrius_Alliance",
 },
-[7755] = {
+[178242] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
 [198968] = {
 "Tichondrius_Alliance",
@@ -2944,10 +2947,10 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [7827] = {
 "Tichondrius_Alliance",
 },
-[201528] = {
+[84420] = {
 "Tichondrius_Alliance",
 },
-[84420] = {
+[201528] = {
 "Tichondrius_Alliance",
 },
 [442333] = {
@@ -2981,8 +2984,9 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [1263663] = {
 "Tichondrius_Alliance",
 },
-[15906] = {
+[198971] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
 [88003] = {
 "Tichondrius_Alliance",
@@ -2991,9 +2995,8 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[198971] = {
+[15906] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
 [201530] = {
 "Tichondrius_Alliance",
@@ -3113,9 +3116,8 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [201534] = {
 "Tichondrius_Alliance",
 },
-[198976] = {
+[190788] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
 [1213620] = {
 "Tichondrius_Alliance",
@@ -3131,8 +3133,9 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [445127] = {
 "Tichondrius_Alliance",
 },
-[190788] = {
+[198976] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
 [291090] = {
 "Tichondrius_Alliance",
@@ -3212,17 +3215,18 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[6412] = {
+[61483] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
 [198979] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[45555] = {
+[1295534] = {
 "Tichondrius_Alliance",
 },
-[201538] = {
+[84425] = {
 "Tichondrius_Alliance",
 },
 [230046] = {
@@ -3232,11 +3236,10 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[1297585] = {
-"Tichondrius_Horde",
+[6500] = {
 "Tichondrius_Alliance",
 },
-[1295534] = {
+[45555] = {
 "Tichondrius_Alliance",
 },
 [16153] = {
@@ -3246,10 +3249,11 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[6500] = {
+[201539] = {
 "Tichondrius_Alliance",
 },
-[201539] = {
+[1297585] = {
+"Tichondrius_Horde",
 "Tichondrius_Alliance",
 },
 [58528] = {
@@ -3296,8 +3300,9 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [18244] = {
 "Tichondrius_Alliance",
 },
-[3307] = {
+[198982] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
 [30558] = {
 "Tichondrius_Alliance",
@@ -3329,7 +3334,7 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [18238] = {
 "Tichondrius_Alliance",
 },
-[201542] = {
+[84427] = {
 "Tichondrius_Alliance",
 },
 [104307] = {
@@ -3347,13 +3352,14 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [45022] = {
 "Tichondrius_Alliance",
 },
-[3371] = {
+[198984] = {
+"Tichondrius_Alliance",
+"Tichondrius_Horde",
+},
+[43765] = {
 "Tichondrius_Alliance",
 },
 [201543] = {
-"Tichondrius_Alliance",
-},
-[43765] = {
 "Tichondrius_Alliance",
 },
 [15856] = {
@@ -3367,7 +3373,7 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[84428] = {
+[201544] = {
 "Tichondrius_Alliance",
 },
 [3399] = {
@@ -3381,7 +3387,7 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[201544] = {
+[84428] = {
 "Tichondrius_Alliance",
 },
 [445116] = {
@@ -3437,7 +3443,7 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [439720] = {
 "Tichondrius_Alliance",
 },
-[201546] = {
+[84429] = {
 "Tichondrius_Alliance",
 },
 [1225818] = {
@@ -3466,14 +3472,13 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [201547] = {
 "Tichondrius_Alliance",
 },
-[84430] = {
+[201548] = {
 "Tichondrius_Alliance",
 },
-[198990] = {
+[18245] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
-[45558] = {
+[33276] = {
 "Tichondrius_Alliance",
 },
 [88012] = {
@@ -3490,16 +3495,14 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [30303] = {
 "Tichondrius_Alliance",
 },
-[201548] = {
+[84430] = {
 "Tichondrius_Alliance",
 },
-[198995] = {
+[125117] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
-[1261509] = {
+[445106] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
 [45559] = {
 "Tichondrius_Alliance",
@@ -3507,12 +3510,12 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [314961] = {
 "Tichondrius_Alliance",
 },
-[256071] = {
+[1295783] = {
+"Tichondrius_Alliance",
+},
+[198990] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
-},
-[18245] = {
-"Tichondrius_Alliance",
 },
 [24418] = {
 "Tichondrius_Alliance",
@@ -3545,21 +3548,21 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [45560] = {
 "Tichondrius_Alliance",
 },
-[407066] = {
+[201550] = {
 "Tichondrius_Alliance",
 },
 [430095] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[1248616] = {
+[124224] = {
+"Tichondrius_Alliance",
+},
+[199001] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[7828] = {
-"Tichondrius_Alliance",
-},
-[33276] = {
+[45558] = {
 "Tichondrius_Alliance",
 },
 [430096] = {
@@ -3577,11 +3580,10 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [201551] = {
 "Tichondrius_Alliance",
 },
-[3923] = {
+[201560] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
-[1226174] = {
+[185704] = {
 "Tichondrius_Alliance",
 },
 [343100] = {
@@ -3617,13 +3619,14 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[445102] = {
+[1261493] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
 [30314] = {
 "Tichondrius_Alliance",
 },
-[397860] = {
+[198994] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
@@ -3642,22 +3645,24 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[1295776] = {
+[199010] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
 [88015] = {
 "Tichondrius_Alliance",
 },
-[1295777] = {
+[1226179] = {
 "Tichondrius_Alliance",
 },
-[125117] = {
+[198995] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
 [45561] = {
 "Tichondrius_Alliance",
 },
-[201554] = {
+[314959] = {
 "Tichondrius_Alliance",
 },
 [471043] = {
@@ -3667,15 +3672,15 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [1226062] = {
 "Tichondrius_Alliance",
 },
-[445106] = {
-"Tichondrius_Alliance",
-},
-[314960] = {
-"Tichondrius_Alliance",
-},
-[19814] = {
+[1261509] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
+},
+[33277] = {
+"Tichondrius_Alliance",
+},
+[124226] = {
+"Tichondrius_Alliance",
 },
 [198996] = {
 "Tichondrius_Alliance",
@@ -3690,14 +3695,15 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [462857] = {
 "Tichondrius_Alliance",
 },
-[1226185] = {
+[256071] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
 [199005] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[88016] = {
+[314962] = {
 "Tichondrius_Alliance",
 },
 [445105] = {
@@ -3713,22 +3719,20 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [201556] = {
 "Tichondrius_Alliance",
 },
-[297080] = {
+[1226189] = {
 "Tichondrius_Alliance",
 },
-[6501] = {
+[43772] = {
 "Tichondrius_Alliance",
 },
-[199007] = {
+[125123] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
 [445104] = {
 "Tichondrius_Alliance",
 },
-[345179] = {
+[445482] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
 [18246] = {
 "Tichondrius_Alliance",
@@ -3739,7 +3743,7 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [201557] = {
 "Tichondrius_Alliance",
 },
-[1226168] = {
+[88022] = {
 "Tichondrius_Alliance",
 },
 [126654] = {
@@ -3751,8 +3755,9 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [88017] = {
 "Tichondrius_Alliance",
 },
-[1226169] = {
+[23077] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
 [198999] = {
 "Tichondrius_Alliance",
@@ -3777,20 +3782,20 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[1248613] = {
+[33278] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
 [1248614] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[1248615] = {
+[199000] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[124224] = {
+[1248616] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
 [201559] = {
 "Tichondrius_Alliance",
@@ -3812,16 +3817,16 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[199001] = {
+[125120] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
 [3919] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[201560] = {
+[3923] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
 [199009] = {
 "Tichondrius_Alliance",
@@ -3831,15 +3836,14 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[12614] = {
+[1226172] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
 [3939] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[389703] = {
+[1226174] = {
 "Tichondrius_Alliance",
 },
 [199002] = {
@@ -3864,12 +3868,12 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[88019] = {
-"Tichondrius_Alliance",
-},
-[1261493] = {
+[3971] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
+},
+[445102] = {
+"Tichondrius_Alliance",
 },
 [125121] = {
 "Tichondrius_Alliance",
@@ -3884,11 +3888,10 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[199010] = {
+[1295776] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
-[1226179] = {
+[1295777] = {
 "Tichondrius_Alliance",
 },
 [33279] = {
@@ -3902,16 +3905,17 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[124226] = {
+[19814] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
 [201563] = {
 "Tichondrius_Alliance",
 },
-[185705] = {
+[1226182] = {
 "Tichondrius_Alliance",
 },
-[1295783] = {
+[6413] = {
 "Tichondrius_Alliance",
 },
 [445100] = {
@@ -3920,9 +3924,8 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [88020] = {
 "Tichondrius_Alliance",
 },
-[209502] = {
+[1226187] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
 [125122] = {
 "Tichondrius_Alliance",
@@ -3933,9 +3936,8 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [30337] = {
 "Tichondrius_Alliance",
 },
-[413759] = {
+[297080] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
 [45563] = {
 "Tichondrius_Alliance",
@@ -3943,9 +3945,8 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [445099] = {
 "Tichondrius_Alliance",
 },
-[256072] = {
+[1226193] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
 [24356] = {
 "Tichondrius_Alliance",
@@ -3958,17 +3959,16 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [124227] = {
 "Tichondrius_Alliance",
 },
-[19815] = {
+[124230] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
-[43772] = {
+[6501] = {
 "Tichondrius_Alliance",
 },
 [445098] = {
 "Tichondrius_Alliance",
 },
-[1226197] = {
+[297082] = {
 "Tichondrius_Alliance",
 },
 [88021] = {
@@ -3978,10 +3978,11 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[125123] = {
+[199007] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
-[100687] = {
+[445479] = {
 "Tichondrius_Alliance",
 },
 [425139] = {
@@ -3997,17 +3998,17 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [445480] = {
 "Tichondrius_Alliance",
 },
-[45562] = {
+[182120] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
 [33296] = {
 "Tichondrius_Alliance",
 },
-[199008] = {
+[389700] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
-[124228] = {
+[43707] = {
 "Tichondrius_Alliance",
 },
 [407100] = {
@@ -4020,29 +4021,29 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[445482] = {
+[1226167] = {
 "Tichondrius_Alliance",
 },
-[88022] = {
+[1226168] = {
 "Tichondrius_Alliance",
 },
-[23077] = {
+[1226169] = {
+"Tichondrius_Alliance",
+},
+[389702] = {
+"Tichondrius_Alliance",
+},
+[445483] = {
+"Tichondrius_Alliance",
+},
+[12614] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
-},
-[44155] = {
-"Tichondrius_Alliance",
-},
-[1226171] = {
-"Tichondrius_Alliance",
-},
-[1226172] = {
-"Tichondrius_Alliance",
 },
 [1226173] = {
 "Tichondrius_Alliance",
 },
-[185704] = {
+[389703] = {
 "Tichondrius_Alliance",
 },
 [445484] = {
@@ -4051,44 +4052,49 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [1226176] = {
 "Tichondrius_Alliance",
 },
-[297077] = {
+[1226177] = {
 "Tichondrius_Alliance",
 },
 [389704] = {
 "Tichondrius_Alliance",
 },
-[124229] = {
+[209501] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
 [1226180] = {
 "Tichondrius_Alliance",
 },
-[1226181] = {
+[297078] = {
 "Tichondrius_Alliance",
 },
-[1226182] = {
+[185705] = {
 "Tichondrius_Alliance",
 },
-[1226183] = {
+[1291687] = {
+"Tichondrius_Horde",
 "Tichondrius_Alliance",
 },
 [1226184] = {
 "Tichondrius_Alliance",
 },
-[6413] = {
+[1226185] = {
 "Tichondrius_Alliance",
 },
-[1226186] = {
+[199011] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
-[1226187] = {
+[209502] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
 [1226188] = {
 "Tichondrius_Alliance",
 },
-[1226189] = {
+[413759] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
 [12902] = {
 "Tichondrius_Alliance",
@@ -4100,20 +4106,20 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [1226192] = {
 "Tichondrius_Alliance",
 },
-[1226193] = {
+[297081] = {
 "Tichondrius_Alliance",
 },
-[199012] = {
+[1226194] = {
+"Tichondrius_Alliance",
+},
+[19815] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
-},
-[124230] = {
-"Tichondrius_Alliance",
 },
 [1226196] = {
 "Tichondrius_Alliance",
 },
-[297082] = {
+[1226197] = {
 "Tichondrius_Alliance",
 },
 [1226198] = {
@@ -4122,7 +4128,7 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [1226199] = {
 "Tichondrius_Alliance",
 },
-[88024] = {
+[1226200] = {
 "Tichondrius_Alliance",
 },
 [256073] = {
@@ -4144,16 +4150,15 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [185708] = {
 "Tichondrius_Alliance",
 },
-[256074] = {
+[24357] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
 [445096] = {
 "Tichondrius_Alliance",
 },
-[24357] = {
+[297085] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
 [199014] = {
 "Tichondrius_Alliance",
@@ -4193,9 +4198,8 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[169078] = {
+[297088] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
 [445095] = {
 "Tichondrius_Alliance",
@@ -4240,16 +4244,16 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [44157] = {
 "Tichondrius_Alliance",
 },
-[42302] = {
+[169080] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
 [343661] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[169080] = {
+[42302] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
 [180757] = {
 "Tichondrius_Alliance",
@@ -4362,20 +4366,20 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[2544] = {
+[30563] = {
 "Tichondrius_Alliance",
 },
-[256082] = {
+[286866] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
 [2540] = {
 "Tichondrius_Alliance",
 },
-[30563] = {
+[2544] = {
 "Tichondrius_Alliance",
 },
-[2548] = {
+[95705] = {
 "Tichondrius_Alliance",
 },
 [286867] = {
@@ -4414,9 +4418,8 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [297105] = {
 "Tichondrius_Alliance",
 },
-[286872] = {
+[297107] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
 [45566] = {
 "Tichondrius_Alliance",
@@ -4432,7 +4435,7 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [297106] = {
 "Tichondrius_Alliance",
 },
-[23079] = {
+[286872] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
@@ -4450,11 +4453,13 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [88030] = {
 "Tichondrius_Alliance",
 },
-[297107] = {
+[23079] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
-[105194] = {
+[3932] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
 [12599] = {
 "Tichondrius_Alliance",
@@ -4471,7 +4476,7 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [259412] = {
 "Tichondrius_Alliance",
 },
-[445084] = {
+[105194] = {
 "Tichondrius_Alliance",
 },
 [447373] = {
@@ -4492,7 +4497,7 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [95707] = {
 "Tichondrius_Alliance",
 },
-[12759] = {
+[286875] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
@@ -4589,12 +4594,12 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [447875] = {
 "Tichondrius_Alliance",
 },
+[100587] = {
+"Tichondrius_Alliance",
+},
 [162217] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
-},
-[100587] = {
-"Tichondrius_Alliance",
 },
 [354766] = {
 "Tichondrius_Alliance",
@@ -4661,7 +4666,7 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [259419] = {
 "Tichondrius_Alliance",
 },
-[56514] = {
+[310485] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
@@ -4675,8 +4680,9 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [9513] = {
 "Tichondrius_Alliance",
 },
-[30312] = {
+[56514] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
 [290471] = {
 "Tichondrius_Alliance",
@@ -4744,28 +4750,29 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [45569] = {
 "Tichondrius_Alliance",
 },
-[259446] = {
-"Tichondrius_Alliance",
-},
-[377987] = {
-"Tichondrius_Alliance",
-},
-[251258] = {
-"Tichondrius_Alliance",
-},
-[145305] = {
-"Tichondrius_Alliance",
-},
-[22793] = {
+[12905] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
-},
-[259423] = {
-"Tichondrius_Alliance",
 },
 [1263237] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
+},
+[259446] = {
+"Tichondrius_Alliance",
+},
+[272059] = {
+"Tichondrius_Alliance",
+"Tichondrius_Horde",
+},
+[45570] = {
+"Tichondrius_Alliance",
+},
+[259423] = {
+"Tichondrius_Alliance",
+},
+[377987] = {
+"Tichondrius_Alliance",
 },
 [88036] = {
 "Tichondrius_Alliance",
@@ -4784,14 +4791,13 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [30341] = {
 "Tichondrius_Alliance",
 },
-[272062] = {
+[43779] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
 [259424] = {
 "Tichondrius_Alliance",
 },
-[274621] = {
+[282809] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
@@ -4813,9 +4819,8 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[360088] = {
+[88039] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
 [259425] = {
 "Tichondrius_Alliance",
@@ -4834,7 +4839,7 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [303788] = {
 "Tichondrius_Alliance",
 },
-[272064] = {
+[12616] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
@@ -4852,24 +4857,25 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [22761] = {
 "Tichondrius_Alliance",
 },
-[33288] = {
+[272061] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
 [282808] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[405120] = {
+[145308] = {
 "Tichondrius_Alliance",
 },
-[272066] = {
+[405121] = {
+"Tichondrius_Alliance",
+},
+[272062] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[43779] = {
-"Tichondrius_Alliance",
-},
-[282809] = {
+[274621] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
@@ -4882,18 +4888,19 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [145307] = {
 "Tichondrius_Alliance",
 },
-[282810] = {
+[23081] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[162195] = {
+[12584] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[88039] = {
+[360088] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
-[12616] = {
+[272064] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
@@ -4907,10 +4914,11 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [125141] = {
 "Tichondrius_Alliance",
 },
-[145308] = {
+[272065] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
-[259444] = {
+[105190] = {
 "Tichondrius_Alliance",
 },
 [162196] = {
@@ -4920,8 +4928,9 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [308400] = {
 "Tichondrius_Alliance",
 },
-[405121] = {
+[272066] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
 [12760] = {
 "Tichondrius_Alliance",
@@ -4930,11 +4939,12 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [259429] = {
 "Tichondrius_Alliance",
 },
-[45571] = {
+[33289] = {
 "Tichondrius_Alliance",
 },
-[145309] = {
+[272067] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
 [6414] = {
 "Tichondrius_Alliance",
@@ -4943,14 +4953,14 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[308402] = {
+[25704] = {
 "Tichondrius_Alliance",
 },
 [407170] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[105190] = {
+[259444] = {
 "Tichondrius_Alliance",
 },
 [259430] = {
@@ -4959,25 +4969,25 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [308403] = {
 "Tichondrius_Alliance",
 },
-[33289] = {
+[145310] = {
 "Tichondrius_Alliance",
-},
-[308404] = {
-"Tichondrius_Alliance",
-},
-[162198] = {
-"Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
 [19819] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
+[162198] = {
+"Tichondrius_Alliance",
+"Tichondrius_Horde",
+},
+[308404] = {
+"Tichondrius_Alliance",
+},
 [162199] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[1261258] = {
+[30310] = {
 "Tichondrius_Alliance",
 },
 [259431] = {
@@ -4996,12 +5006,11 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [125142] = {
 "Tichondrius_Alliance",
 },
-[30310] = {
+[1261258] = {
 "Tichondrius_Alliance",
 },
-[56574] = {
+[30342] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
 [28327] = {
 "Tichondrius_Alliance",
@@ -5010,15 +5019,15 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [259432] = {
 "Tichondrius_Alliance",
 },
-[3304] = {
+[15255] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
 [30566] = {
 "Tichondrius_Alliance",
 },
-[15255] = {
+[3304] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
 [3308] = {
 "Tichondrius_Alliance",
@@ -5057,8 +5066,9 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [405131] = {
 "Tichondrius_Alliance",
 },
-[3372] = {
+[162202] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
 [259434] = {
 "Tichondrius_Alliance",
@@ -5073,15 +5083,15 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[162202] = {
+[3372] = {
+"Tichondrius_Alliance",
+},
+[308412] = {
+"Tichondrius_Alliance",
+},
+[23082] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
-},
-[3376] = {
-"Tichondrius_Alliance",
-},
-[3400] = {
-"Tichondrius_Alliance",
 },
 [33292] = {
 "Tichondrius_Alliance",
@@ -5095,9 +5105,8 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [88042] = {
 "Tichondrius_Alliance",
 },
-[23082] = {
+[3400] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
 [162203] = {
 "Tichondrius_Alliance",
@@ -5135,7 +5144,7 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[19788] = {
+[305861] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
@@ -5143,11 +5152,10 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[305858] = {
+[259437] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
-[15863] = {
+[145061] = {
 "Tichondrius_Alliance",
 },
 [305860] = {
@@ -5157,14 +5165,14 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [88045] = {
 "Tichondrius_Alliance",
 },
-[305859] = {
+[162205] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
 [145062] = {
 "Tichondrius_Alliance",
 },
-[162206] = {
+[19788] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
@@ -5183,7 +5191,7 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [338101] = {
 "Tichondrius_Alliance",
 },
-[305861] = {
+[162206] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
@@ -5209,7 +5217,7 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [389701] = {
 "Tichondrius_Alliance",
 },
-[162207] = {
+[305863] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
@@ -5238,12 +5246,12 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[383649] = {
-"Tichondrius_Alliance",
-},
-[305863] = {
+[162207] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
+},
+[383649] = {
+"Tichondrius_Alliance",
 },
 [338106] = {
 "Tichondrius_Alliance",
@@ -5267,19 +5275,20 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [308426] = {
 "Tichondrius_Alliance",
 },
-[162205] = {
+[305859] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[145061] = {
+[15863] = {
 "Tichondrius_Alliance",
 },
 [438923] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[259437] = {
+[305858] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
 [22795] = {
 "Tichondrius_Alliance",
@@ -5292,7 +5301,7 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[308412] = {
+[3376] = {
 "Tichondrius_Alliance",
 },
 [280282] = {
@@ -5318,8 +5327,9 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[30342] = {
+[56574] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
 [12617] = {
 "Tichondrius_Alliance",
@@ -5332,10 +5342,10 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[145310] = {
+[45571] = {
 "Tichondrius_Alliance",
 },
-[25704] = {
+[308402] = {
 "Tichondrius_Alliance",
 },
 [338113] = {
@@ -5345,22 +5355,20 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[272065] = {
+[405120] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
-[272067] = {
+[145309] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
-[12584] = {
+[162195] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
 [259445] = {
 "Tichondrius_Alliance",
 },
-[23081] = {
+[282810] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
@@ -5371,12 +5379,12 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [338115] = {
 "Tichondrius_Alliance",
 },
-[45570] = {
-"Tichondrius_Alliance",
-},
-[272059] = {
+[22793] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
+},
+[145305] = {
+"Tichondrius_Alliance",
 },
 [177054] = {
 "Tichondrius_Alliance",
@@ -5385,13 +5393,11 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [338116] = {
 "Tichondrius_Alliance",
 },
-[12905] = {
+[251258] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
-[272061] = {
+[33288] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
 [33293] = {
 "Tichondrius_Alliance",
@@ -5432,9 +5438,8 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[310485] = {
+[30312] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
 [30344] = {
 "Tichondrius_Alliance",
@@ -5529,12 +5534,12 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [445082] = {
 "Tichondrius_Alliance",
 },
+[104298] = {
+"Tichondrius_Alliance",
+},
 [310492] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
-},
-[104298] = {
-"Tichondrius_Alliance",
 },
 [297087] = {
 "Tichondrius_Alliance",
@@ -5546,7 +5551,7 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[286875] = {
+[12759] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
@@ -5554,9 +5559,8 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[3932] = {
+[445084] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
 [3936] = {
 "Tichondrius_Alliance",
@@ -5588,16 +5592,16 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [445086] = {
 "Tichondrius_Alliance",
 },
-[3968] = {
+[104299] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
 [3972] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[104299] = {
+[3968] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
 [445087] = {
 "Tichondrius_Alliance",
@@ -5606,10 +5610,10 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[95705] = {
+[2548] = {
 "Tichondrius_Alliance",
 },
-[286866] = {
+[256082] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
@@ -5710,8 +5714,9 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[297088] = {
+[169078] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
 [399038] = {
 "Tichondrius_Alliance",
@@ -5724,8 +5729,9 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[297085] = {
+[256074] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
 [22797] = {
 "Tichondrius_Alliance",
@@ -5746,7 +5752,7 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [399040] = {
 "Tichondrius_Alliance",
 },
-[1226200] = {
+[88024] = {
 "Tichondrius_Alliance",
 },
 [264962] = {
@@ -5756,11 +5762,13 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [104302] = {
 "Tichondrius_Alliance",
 },
-[1226194] = {
+[199012] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
-[297081] = {
+[256072] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
 [12586] = {
 "Tichondrius_Alliance",
@@ -5774,9 +5782,8 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[199011] = {
+[1226186] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
 [264964] = {
 "Tichondrius_Alliance",
@@ -5785,8 +5792,7 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [60867] = {
 "Tichondrius_Alliance",
 },
-[1291687] = {
-"Tichondrius_Horde",
+[1226183] = {
 "Tichondrius_Alliance",
 },
 [8604] = {
@@ -5814,7 +5820,7 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [104303] = {
 "Tichondrius_Alliance",
 },
-[445483] = {
+[1226171] = {
 "Tichondrius_Alliance",
 },
 [6415] = {
@@ -5824,24 +5830,25 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[1226167] = {
+[345179] = {
+"Tichondrius_Alliance",
+"Tichondrius_Horde",
+},
+[124228] = {
 "Tichondrius_Alliance",
 },
-[43707] = {
+[199008] = {
 "Tichondrius_Alliance",
-},
-[389700] = {
-"Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
 [12906] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[182120] = {
+[45562] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
-[445479] = {
+[100687] = {
 "Tichondrius_Alliance",
 },
 [1261504] = {
@@ -5859,7 +5866,7 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [1265601] = {
 "Tichondrius_Alliance",
 },
-[297078] = {
+[1226181] = {
 "Tichondrius_Alliance",
 },
 [1265603] = {
@@ -5869,11 +5876,10 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [104304] = {
 "Tichondrius_Alliance",
 },
-[209501] = {
+[124229] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
-[1226177] = {
+[297077] = {
 "Tichondrius_Alliance",
 },
 [445107] = {
@@ -5882,9 +5888,8 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [28267] = {
 "Tichondrius_Alliance",
 },
-[3971] = {
+[88019] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
 [169140] = {
 "Tichondrius_Alliance",
@@ -5893,13 +5898,13 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [445108] = {
 "Tichondrius_Alliance",
 },
-[389702] = {
+[44155] = {
 "Tichondrius_Alliance",
 },
-[125120] = {
+[7828] = {
 "Tichondrius_Alliance",
 },
-[199000] = {
+[1248615] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
@@ -5913,7 +5918,7 @@ COLLECTIONATOR_RECIPES_CACHE = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[314962] = {
+[88016] = {
 "Tichondrius_Alliance",
 },
 [445110] = {
@@ -5922,23 +5927,24 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [104305] = {
 "Tichondrius_Alliance",
 },
-[314959] = {
+[201554] = {
 "Tichondrius_Alliance",
 },
-[198994] = {
+[397860] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
 [445111] = {
 "Tichondrius_Alliance",
 },
-[201550] = {
+[407066] = {
 "Tichondrius_Alliance",
 },
-[33278] = {
+[1248613] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
-[33277] = {
+[314960] = {
 "Tichondrius_Alliance",
 },
 [283399] = {
@@ -5960,7 +5966,7 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [445113] = {
 "Tichondrius_Alliance",
 },
-[84429] = {
+[201546] = {
 "Tichondrius_Alliance",
 },
 [1225820] = {
@@ -6022,9 +6028,8 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [18243] = {
 "Tichondrius_Alliance",
 },
-[198984] = {
+[3371] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
 [445118] = {
 "Tichondrius_Alliance",
@@ -6032,7 +6037,7 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [15865] = {
 "Tichondrius_Alliance",
 },
-[84427] = {
+[201542] = {
 "Tichondrius_Alliance",
 },
 [1265654] = {
@@ -6055,9 +6060,8 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [445120] = {
 "Tichondrius_Alliance",
 },
-[198982] = {
+[3307] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
 [286478] = {
 "Tichondrius_Alliance",
@@ -6098,19 +6102,18 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [2659] = {
 "Tichondrius_Alliance",
 },
-[30315] = {
-"Tichondrius_Alliance",
-},
 [310533] = {
 "Tichondrius_Alliance",
 "Tichondrius_Horde",
 },
-[84425] = {
+[30315] = {
 "Tichondrius_Alliance",
 },
-[61483] = {
+[201538] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
+},
+[6412] = {
+"Tichondrius_Alliance",
 },
 [310534] = {
 "Tichondrius_Alliance",
@@ -6286,9 +6289,8 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [288029] = {
 "Tichondrius_Alliance",
 },
-[178242] = {
+[7755] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
 [1265726] = {
 "Tichondrius_Alliance",
@@ -6303,8 +6305,9 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [1265729] = {
 "Tichondrius_Alliance",
 },
-[1225819] = {
+[1229913] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
 [305942] = {
 "Tichondrius_Alliance",
@@ -6313,13 +6316,11 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [104312] = {
 "Tichondrius_Alliance",
 },
-[1229886] = {
+[1250356] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
-[1229882] = {
+[84416] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
 [305943] = {
 "Tichondrius_Alliance",
@@ -6341,8 +6342,9 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [288033] = {
 "Tichondrius_Alliance",
 },
-[2539] = {
+[1229856] = {
 "Tichondrius_Alliance",
+"Tichondrius_Horde",
 },
 [256154] = {
 "Tichondrius_Alliance",
@@ -6462,9 +6464,8 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [84403] = {
 "Tichondrius_Alliance",
 },
-[382408] = {
+[201503] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
 [125599] = {
 "Tichondrius_Alliance",
@@ -6472,7 +6473,7 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [160973] = {
 "Tichondrius_Alliance",
 },
-[381383] = {
+[125603] = {
 "Tichondrius_Alliance",
 },
 [38868] = {
@@ -6484,7 +6485,7 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [447871] = {
 "Tichondrius_Alliance",
 },
-[125602] = {
+[354768] = {
 "Tichondrius_Alliance",
 },
 [15855] = {
@@ -6503,9 +6504,8 @@ COLLECTIONATOR_RECIPES_CACHE = {
 [3397] = {
 "Tichondrius_Alliance",
 },
-[3978] = {
+[57443] = {
 "Tichondrius_Alliance",
-"Tichondrius_Horde",
 },
 [12590] = {
 "Tichondrius_Alliance",
@@ -6584,8 +6584,12 @@ COLLECTIONATOR_PURCHASES = {
 ["Pets"] = {
 },
 ["TMog"] = {
+[5268] = true,
+[47169] = true,
 [10542] = true,
+[5157] = true,
 [10540] = true,
+[5383] = true,
 },
 ["Version"] = 2,
 ["Mounts"] = {
@@ -6639,7 +6643,7 @@ COLLECTIONATOR_PURCHASES = {
 [264679] = true,
 [252397] = true,
 [257041] = true,
-[248111] = true,
+[247222] = true,
 [258303] = true,
 [258557] = true,
 [262352] = true,
@@ -6656,24 +6660,24 @@ COLLECTIONATOR_PURCHASES = {
 [262593] = true,
 [245557] = true,
 [258245] = true,
-[258289] = true,
-[262595] = true,
-[245621] = true,
-[258560] = true,
-[258226] = true,
+[244319] = true,
 [245415] = true,
-[243336] = true,
-[248114] = true,
-[262597] = true,
+[245621] = true,
 [248654] = true,
+[258226] = true,
+[262595] = true,
+[243336] = true,
+[247225] = true,
+[262597] = true,
+[258560] = true,
 [245622] = true,
 [258238] = true,
 [258227] = true,
 [245416] = true,
 [245559] = true,
-[247225] = true,
+[248114] = true,
 [257096] = true,
-[244319] = true,
+[258289] = true,
 [245496] = true,
 [257725] = true,
 [247728] = true,
@@ -6682,7 +6686,7 @@ COLLECTIONATOR_PURCHASES = {
 [247735] = true,
 [245503] = true,
 [257038] = true,
-[247222] = true,
+[248111] = true,
 [248121] = true,
 [247220] = true,
 [262347] = true,

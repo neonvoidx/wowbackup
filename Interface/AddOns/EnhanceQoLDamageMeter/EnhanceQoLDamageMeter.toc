@@ -1,7 +1,7 @@
 ## Interface: 120100
 ## Title: Enhance QoL Damage Meter
 ## Author: R41Z0R
-## Version: 12.7.0
+## Version: 12.8.3
 ## Notes: Damage Meter windows and Edit Mode integration
 ## Notes-deDE: Damage-Meter-Fenster und Edit-Mode-Integration
 ## Notes-esES: Ventanas del medidor de dano e integracion con el modo de edicion

@@ -11,6 +11,7 @@ MinimalistCooldownEdgeDB_v2 = {
 ["Smaugchamp - Tichondrius"] = "Default",
 ["Hellavator - Tichondrius"] = "Default",
 ["Praisesun - Tichondrius"] = "Default",
+["Gehyo - Tichondrius"] = "Default",
 },
 ["profiles"] = {
 ["Default"] = {

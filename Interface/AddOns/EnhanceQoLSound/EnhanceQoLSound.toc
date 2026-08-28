@@ -1,7 +1,7 @@
 ## Interface: 120100
 ## Title: Enhance QoL Sound
 ## Author: R41Z0R
-## Version: 12.7.0
+## Version: 12.8.3
 ## Notes: Sound muting and audio helpers
 ## Notes-deDE: Sound-Stummschaltung und Audio-Helfer
 ## Notes-esES: Silenciado de sonidos y ayudas de audio

@@ -13,6 +13,39 @@ addon.functions = addon.functions or {}
 addon.PixelUtil = addon.PixelUtil or {}
 
 local PixelUtil = addon.PixelUtil
+local BAGS_ADDON_NAME = "EnhanceQoLBags"
+local RESOURCE_BARS_ADDON_NAME = "EnhanceQoLResourceBars"
+local TOOLTIP_ADDON_NAME = "EnhanceQoLTooltip"
+
+local function isAddonLoaded(addonName)
+	if C_AddOns and C_AddOns.IsAddOnLoaded then return C_AddOns.IsAddOnLoaded(addonName) == true end
+	if IsAddOnLoaded then return IsAddOnLoaded(addonName) == true end
+	return nil
+end
+
+function addon.functions.IsBagsAddonLoaded()
+	local loaded = isAddonLoaded(BAGS_ADDON_NAME)
+	if loaded ~= nil then return loaded end
+	return addon.Bags and type(addon.Bags.IsEnabled) == "function" or false
+end
+
+function addon.functions.IsBagsModuleActive()
+	if not addon.functions.IsBagsAddonLoaded() then return false end
+	if addon.Bags and type(addon.Bags.IsEnabled) == "function" then return addon.Bags.IsEnabled() == true end
+	return addon.db and addon.db.enableBagsModule == true or false
+end
+
+function addon.functions.IsResourceBarsAddonLoaded()
+	local loaded = isAddonLoaded(RESOURCE_BARS_ADDON_NAME)
+	if loaded ~= nil then return loaded end
+	return addon.Aura and addon.Aura.ResourceBars ~= nil or false
+end
+
+function addon.functions.IsTooltipAddonLoaded()
+	local loaded = isAddonLoaded(TOOLTIP_ADDON_NAME)
+	if loaded ~= nil then return loaded end
+	return addon.Tooltip ~= nil or false
+end
 
 function PixelUtil.ApplyTexturePixelSnapping(texture, bias)
 	if not texture then return nil end
@@ -1689,7 +1722,7 @@ local function clearBagButtonInfo(itemButton)
 end
 
 local function shouldUpdateBagButtonInfo()
-	if addon.db and addon.db["enableBagsModule"] == true then return false end
+	if addon.functions.IsBagsModuleActive() then return false end
 	if addon.filterFrame then return true end
 	if not addon.db then return false end
 	return addon.db["showIlvlOnBagItems"] or addon.db["showBindOnBagItems"] or addon.db["showUpgradeArrowOnBagItems"] or addon.db["showUpgradeTrackOnBagItems"] or addon.db["enhancedRarityGlow"]
@@ -2314,7 +2347,7 @@ local function InitializeFilterUI()
 end
 
 function addon.functions.updateBags(frame)
-	if addon.db and addon.db["enableBagsModule"] == true then
+	if addon.functions.IsBagsModuleActive() then
 		if addon.filterFrame then
 			addon.filterFrame:SetParent(nil)
 			addon.filterFrame:Hide()

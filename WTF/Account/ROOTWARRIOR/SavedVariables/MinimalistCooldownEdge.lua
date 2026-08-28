@@ -9,6 +9,7 @@ MinimalistCooldownEdgeDB_v2 = {
 ["Smaugchamp - Mal'Ganis"] = "Default",
 ["Manyfaced - Tichondrius"] = "Default",
 ["Smaugchamp - Tichondrius"] = "Default",
+["Gehyo - Tichondrius"] = "Default",
 ["Praisesun - Tichondrius"] = "Default",
 ["Hellavator - Tichondrius"] = "Default",
 },

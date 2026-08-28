@@ -5,6 +5,7 @@
 	<Script file="CooldownPanels_AutoDurations.lua" />
 	<Script file="CooldownPanels_SpellAutoDurations.lua" />
 	<Script file="CooldownPanels_ActiveProcTriggers.lua" />
+	<Script file="CooldownPanels_SoundData.lua" />
 	<Script file="CooldownPanels.lua" />
 	<Script file="CooldownPanels_CDMAuras.lua" />
 	<Script file="CooldownPanels_AuraPresetData.lua" />

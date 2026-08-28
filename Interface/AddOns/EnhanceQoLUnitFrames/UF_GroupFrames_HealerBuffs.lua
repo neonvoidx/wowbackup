@@ -1681,11 +1681,7 @@ local function ensureVisualLayers(btn, st, forceLayout)
 			st.healerBuffBar:SetStatusBarTexture("Interface\\Buttons\\WHITE8x8")
 		end
 		st.healerBuffBar:SetMinMaxValues(0, 1)
-		if Pixel and Pixel.SetStatusBarValue then
-			Pixel.SetStatusBarValue(st.healerBuffBar, 1, false, true)
-		else
-			st.healerBuffBar:SetValue(1)
-		end
+		st.healerBuffBar:SetValue(1)
 		st.healerBuffBar:Hide()
 	end
 	setFrameParentCached(st.healerBuffBar, root)
@@ -1729,11 +1725,7 @@ local function ensureBarForGroup(state, st, groupId)
 			bar:SetStatusBarTexture("Interface\\Buttons\\WHITE8x8")
 		end
 		bar:SetMinMaxValues(0, 1)
-		if Pixel and Pixel.SetStatusBarValue then
-			Pixel.SetStatusBarValue(bar, 1, false, true)
-		else
-			bar:SetValue(1)
-		end
+		bar:SetValue(1)
 		bar:Hide()
 		bars[groupId] = bar
 	end
@@ -1794,11 +1786,7 @@ end
 local function updateAnimatedBarValue(bar, now)
 	if not (bar and bar.SetValue) then return end
 	local fill = getTimedBarFill(bar._hbTrackedDuration, bar._hbTrackedExpirationTime, now)
-	if Pixel and Pixel.SetStatusBarValue then
-		Pixel.SetStatusBarValue(bar, fill ~= nil and fill or 1, false, true)
-	else
-		bar:SetValue(fill ~= nil and fill or 1)
-	end
+	bar:SetValue(fill ~= nil and fill or 1)
 end
 
 local function setAnimatedBarAura(bar, aura)
@@ -1807,11 +1795,7 @@ local function setAnimatedBarAura(bar, aura)
 	local expirationTime = aura and tonumber(aura.expirationTime) or nil
 	if not (duration and duration > 0 and expirationTime and expirationTime > 0) then
 		clearAnimatedBarState(bar)
-		if Pixel and Pixel.SetStatusBarValue then
-			Pixel.SetStatusBarValue(bar, 1, false, true)
-		elseif bar.SetValue then
-			bar:SetValue(1)
-		end
+		if bar.SetValue then bar:SetValue(1) end
 		return false
 	end
 	bar._hbTrackedDuration = duration
@@ -3177,11 +3161,7 @@ local function renderBar(bar, st, group, trackedAura, colorRule, colorAura)
 		setAnimatedBarAura(bar, trackedAura)
 	else
 		clearAnimatedBarState(bar)
-		if Pixel and Pixel.SetStatusBarValue then
-			Pixel.SetStatusBarValue(bar, 1, false, true)
-		else
-			bar:SetValue(1)
-		end
+		bar:SetValue(1)
 	end
 	setBarDurationColorState(bar, group, colorRule, colorAura)
 	if root then

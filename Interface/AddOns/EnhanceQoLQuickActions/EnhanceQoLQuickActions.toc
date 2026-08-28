@@ -1,7 +1,7 @@
 ## Interface: 120100
 ## Title: Enhance QoL QuickActions
 ## Author: R41Z0R
-## Version: 12.7.0
+## Version: 12.8.3
 ## Notes: Open radial, horizontal, or vertical QuickActions menus using hold or toggle activation
 ## Notes-deDE: Öffne radiale, horizontale oder vertikale QuickActions-Menüs per Gedrückthalten oder Umschalten
 ## Notes-esES: Abre menús QuickActions radiales, horizontales o verticales manteniendo la tecla o pulsándola para alternar

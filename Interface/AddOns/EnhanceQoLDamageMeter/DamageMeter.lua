@@ -28,6 +28,7 @@ DamageMeter.HEALTH_CONSUMABLE_SPELL_IDS = {
 	[307192] = true, -- Spiritual Healing Potion
 	[1234768] = true, -- Cosmic/Silvermoon Healing Potion
 	[1262857] = true, -- Potent Healing Potion
+	[1295247] = true, -- Concentrated Silvermoon Health Potion
 }
 DamageMeter.RESIZE_LOCK_TEXTURE = "Interface\\AddOns\\EnhanceQoL\\Icons\\ClosedLock.tga"
 DamageMeter.RESIZE_UNLOCK_TEXTURE = "Interface\\AddOns\\EnhanceQoL\\Icons\\OpenLock.tga"
@@ -5925,7 +5926,7 @@ function DamageMeter:ApplyWindowStyle(index, contentRows, forceRankColumn)
 	local topOffset = math.floor(heightOffset / 2)
 	local bottomOffset = heightOffset - topOffset
 	local height = addon.PixelUtil.Snap(math.max(60, viewportHeight + topInset + bottomInset + heightOffset), frame)
-	local contentHeight = contentRows > 0 and math.max(1, (contentRows * effectiveRowHeight) + (math.max(0, contentRows - 1) * spacing) + (viewportPadding * 2)) or math.max(1, viewportPadding * 2)
+	local contentHeight = math.max(viewportHeight, contentRows > 0 and math.max(1, (contentRows * effectiveRowHeight) + (math.max(0, contentRows - 1) * spacing) + (viewportPadding * 2)) or math.max(1, viewportPadding * 2))
 	local borderR, borderG, borderB, borderA = colorComponents(config.borderColor, DEFAULT_WINDOW.borderColor)
 	local titleR, titleG, titleB, titleA = colorComponents(config.titleColor, DEFAULT_WINDOW.titleColor)
 	local backdropOffsetX = clampNumber(config.backdropOffsetX, -200, 200, DEFAULT_WINDOW.backdropOffsetX)

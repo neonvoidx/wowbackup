@@ -1,6 +1,8 @@
 <Ui>
 	<Script file='SettingsUI.lua'/>
+	<Script file='DynamicAnchoring.lua'/>
 	<Script file='MainCategory.lua'/>
+	<Script file='TravelUtility.lua'/>
 	<Script file='ContainerAction.lua'/>
 	<Script file='Quest.lua'/>
 	<Script file='CombatDungeon.lua'/>

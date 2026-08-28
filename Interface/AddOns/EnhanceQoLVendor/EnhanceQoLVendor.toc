@@ -1,7 +1,7 @@
 ## Interface: 120100
 ## Title: Enhance QoL Vendor
 ## Author: R41Z0R
-## Version: 12.7.0
+## Version: 12.8.3
 ## Notes: Vendor automation and shopping helpers
 ## Notes-deDE: Haendler-Automatisierung und Einkaufshelfer
 ## Notes-esES: Automatizacion de vendedores y ayudas de compra

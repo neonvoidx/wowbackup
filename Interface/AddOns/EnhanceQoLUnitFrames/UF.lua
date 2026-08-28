@@ -119,7 +119,7 @@ function UF.ApplyDynamicAnchor(unit)
 		return false
 	end
 	if unit == "boss" then
-		if UF.UpdateBossFrames then UF.UpdateBossFrames(true) end
+		if UF.ConfigureBossFrames then UF.ConfigureBossFrames() end
 	elseif UF.RefreshUnit then
 		UF.RefreshUnit(unit)
 	end
@@ -178,8 +178,8 @@ function UF.SetEditModeSampleEnabled(unit, enabled)
 		UF._editModeSample[unit] = nil
 	end
 	if unit == "boss" then
-		if UF.UpdateBossFrames then
-			UF.UpdateBossFrames(true)
+		if UF.ConfigureBossFrames then
+			UF.ConfigureBossFrames()
 		elseif UF.Refresh then
 			UF.Refresh()
 		end
@@ -233,14 +233,8 @@ local function getSmoothInterpolation(cfg, def)
 	return nil
 end
 
-function UF.SetStatusBarValue(bar, value, smooth, forceImmediate)
+function UF.SetStatusBarValue(bar, value, smooth)
 	if not bar or value == nil then return end
-	local helper = UF.GroupFramesHelper
-	local pixelHelper = helper and helper.Pixel
-	if pixelHelper and pixelHelper.SetStatusBarValue then
-		pixelHelper.SetStatusBarValue(bar, value, smooth, forceImmediate)
-		return
-	end
 	if smooth and Enum and Enum.StatusBarInterpolation and Enum.StatusBarInterpolation.ExponentialEaseOut then
 		bar:SetValue(value, Enum.StatusBarInterpolation.ExponentialEaseOut)
 	else
@@ -607,6 +601,7 @@ end
 
 function RelativeAnchor.GetResourceBarRelativeName(relativeName)
 	if type(relativeName) ~= "string" then return nil end
+	if not (addon.functions and addon.functions.IsResourceBarsAddonLoaded and addon.functions.IsResourceBarsAddonLoaded()) then return nil end
 	local barType = relativeName == "EQOLHealthBar" and "HEALTH" or relativeName:match("^EQOL(.+)Bar$")
 	if not barType then return nil end
 	local classToken = addon.variables and addon.variables.unitClass
@@ -1648,8 +1643,11 @@ function UFProfileManager.ApplySpecMapping(source, initializedProfiles)
 end
 
 UF._bossUnitLookup = UF._bossUnitLookup or { boss = true }
+UF._bossUnitTokens = UF._bossUnitTokens or {}
 for i = 1, maxBossFrames do
-	UF._bossUnitLookup["boss" .. i] = true
+	local unit = "boss" .. i
+	UF._bossUnitLookup[unit] = true
+	UF._bossUnitTokens[i] = unit
 end
 
 local function isBossUnit(unit) return type(unit) == "string" and UF._bossUnitLookup[unit] == true end
@@ -2289,7 +2287,6 @@ local editModeHooked
 local bossContainer
 local bossLayoutDirty
 local bossHidePending
-local bossShowPending
 local bossInitPending
 
 local function defaultsFor(unit)
@@ -2660,7 +2657,6 @@ function AuraUtil.resetTargetAuras(unit)
 end
 
 local function ensureDB(unit)
-	if UFProfileManager and UFProfileManager.MaybeInitialize then UFProfileManager.MaybeInitialize() end
 	addon.db = addon.db or {}
 	addon.db.ufFrames = addon.db.ufFrames or {}
 	local db = addon.db.ufFrames
@@ -2874,6 +2870,96 @@ function UF.ScheduleRangeFadeRefresh(rebuildSpellList)
 		UF.RefreshRangeFadeSpellsNow(wantsSpellListRefresh)
 	end
 	RunNextFrame(run)
+end
+
+function UF.BuildBossRangeFadeSnapshot(cfg, def)
+	cfg = cfg or ensureDB("boss")
+	def = def or defaultsFor("boss")
+	local snapshot = UF.BuildTargetRangeFadeSnapshot(cfg, def)
+	local rangeCfg = (cfg and cfg.rangeFade) or (def and def.rangeFade) or {}
+	if UFHelper and UFHelper.RangeFadeResolveSpellPair then
+		snapshot.friendlySpell, snapshot.enemySpell = UFHelper.RangeFadeResolveSpellPair(rangeCfg, UFHelper.RangeFadeGetCurrentSpecId and UFHelper.RangeFadeGetCurrentSpecId() or nil)
+	end
+	if addon.EditModeLib and addon.EditModeLib:IsInEditMode() then snapshot.enabled = false end
+	return snapshot
+end
+
+function UF.CacheBossRangeFadeSpells(snapshot)
+	for i = 1, maxBossFrames do
+		local unit = UF._bossUnitTokens[i]
+		local st = states[unit]
+		if st then
+			local spellId
+			if snapshot and snapshot.enabled and UnitExists and UnitExists(unit) then
+				if UnitCanAttack and UnitCanAttack("player", unit) then
+					spellId = snapshot.enemySpell
+				elseif UnitCanAssist and UnitCanAssist("player", unit, true, true) then
+					spellId = snapshot.friendlySpell
+				end
+			end
+			st._bossRangeFadeSpellId = spellId
+		end
+	end
+end
+
+function UF.ApplyBossRangeFadeAlpha(unit, targetAlpha, force)
+	local st = states[unit]
+	if not st or not st.frame or not st.frame.SetAlpha then return end
+	if force or st._bossRangeFadeAlpha ~= targetAlpha then
+		st._bossRangeFadeAlpha = targetAlpha
+		st.frame:SetAlpha(targetAlpha)
+	end
+end
+
+function UF.ResetBossRangeFadeAlphas(force)
+	for i = 1, maxBossFrames do
+		UF.ApplyBossRangeFadeAlpha(UF._bossUnitTokens[i], 1, force)
+	end
+end
+
+function UF.StopBossRangeFadeTicker(restoreAlpha)
+	local ticker = UF._bossRangeFadeTicker
+	if ticker and ticker.Cancel then ticker:Cancel() end
+	UF._bossRangeFadeTicker = nil
+	if restoreAlpha then UF.ResetBossRangeFadeAlphas(true) end
+end
+
+function UF.IsBossRangeFadeEncounterActive() return IsEncounterInProgress and IsEncounterInProgress() == true end
+
+function UF.UpdateBossRangeFade(force)
+	local snapshot = UF._bossRangeFadeSnapshot
+	if not snapshot or not snapshot.enabled or not UF.IsBossRangeFadeEncounterActive() then return false end
+	local bossCount = UF.GetBossFrameCount()
+	for i = 1, maxBossFrames do
+		local unit = UF._bossUnitTokens[i]
+		local st = states[unit]
+		if i <= bossCount and st and st.frame and UnitExists and UnitExists(unit) then
+			local inRange = true
+			if UFHelper and UFHelper.RangeFadeIsSpellInRange then inRange = UFHelper.RangeFadeIsSpellInRange(st._bossRangeFadeSpellId, unit, snapshot.ignoreUnlimited) end
+			UF.ApplyBossRangeFadeAlpha(unit, inRange and 1 or snapshot.alpha, force)
+		else
+			UF.ApplyBossRangeFadeAlpha(unit, 1, force)
+		end
+	end
+	return true
+end
+
+function UF.RefreshBossRangeFade()
+	local snapshot = UF.BuildBossRangeFadeSnapshot()
+	UF._bossRangeFadeSnapshot = snapshot
+	UF.CacheBossRangeFadeSpells(snapshot)
+	if not snapshot.enabled or not UF.IsBossRangeFadeEncounterActive() or not NewTicker then
+		UF.StopBossRangeFadeTicker(not snapshot.blockedByVisibility)
+		return
+	end
+	UF.UpdateBossRangeFade(true)
+	if UF._bossRangeFadeTicker then return end
+	UF._bossRangeFadeTicker = NewTicker(0.2, function()
+		if not UF.UpdateBossRangeFade() then
+			local current = UF._bossRangeFadeSnapshot
+			UF.StopBossRangeFadeTicker(not (current and current.blockedByVisibility))
+		end
+	end)
 end
 
 local function copySettings(fromUnit, toUnit, opts)
@@ -4216,6 +4302,7 @@ function AuraUtil.ensureAuraButton(container, icons, index, ac)
 			btn._eqolAuraEnsureContainer == container
 			and btn._eqolAuraEnsureLayerParent == layerParent
 			and btn._eqolAuraEnsureSize == ensureSize
+			and btn._eqolAuraButtonSize == ensureSize
 			and btn._eqolAuraEnsureStrata == ensureStrata
 			and btn._eqolAuraEnsureLevelOffset == ensureLevelOffset
 		then
@@ -4517,23 +4604,6 @@ function AuraUtil.ApplyIconShapeBorder(btn, ac, r, g, b, a)
 		texturesKey = "_eqolAuraShapeBorderTextures",
 		allowNone = true,
 	})
-end
-
-function AuraUtil.ApplyAuraCooldownBorderInset(button, style, hasStyleBorder)
-	local cooldown = button and button.cd
-	if not cooldown then return end
-	cooldown:ClearAllPoints()
-	if not hasStyleBorder or not AuraUtil.IsIconShapeBackdropBorderCompatible(style and style.iconShape) then
-		cooldown:SetAllPoints(button)
-		return
-	end
-	local borderSize = (UFHelper and UFHelper.calcAuraBorderSize and UFHelper.calcAuraBorderSize(button, style)) or 1
-	local borderOffset = tonumber(style and style.borderOffset) or 0
-	local inset = math.max(0, borderSize - borderOffset)
-	local size = (button.GetWidth and button:GetWidth()) or tonumber(style and style.size) or 24
-	if size > 0 then inset = math.min(inset, math.max(0, (size - 1) * 0.5)) end
-	cooldown:SetPoint("TOPLEFT", button, "TOPLEFT", inset, -inset)
-	cooldown:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -inset, inset)
 end
 
 function AuraUtil.ShouldHideNativeAuraTooltipInCombat(style)
@@ -4958,7 +5028,6 @@ function AuraUtil.applyAuraToButton(btn, aura, ac, isDebuff, unitToken, harmfulF
 			btn.border:Hide()
 		end
 	end
-	AuraUtil.ApplyAuraCooldownBorderInset(btn, ac, showBorder)
 	if btn.dispelIcon then
 		local showIcon = isDebuff and ac and ac.blizzardDispelBorder == true and canShowPlayerDispel
 		if showIcon then
@@ -5201,16 +5270,13 @@ function AuraUtil.ShouldUseNativeAuraContainers(unit, auraRuntime, allowSample)
 	if addon.EditModeLib and addon.EditModeLib.IsInEditMode and addon.EditModeLib:IsInEditMode() then return false end
 	if not (unit == UNIT.PLAYER or unit == UNIT.TARGET or unit == UNIT.FOCUS or isBossUnit(unit)) then return false end
 	if not (auraRuntime and auraRuntime.enabled) then return false end
-	return addon.AuraCompat and addon.AuraCompat:ShouldUseAuraContainer() == true or false
+	return true
 end
 
 function AuraUtil.UnitUsesNativeAuraContainers(unit, allowSample)
-	local cfg = ensureDB(unit)
-	if not cfg or cfg.enabled == false then return false end
-	local def = defaultsFor(unit)
-	local ac = cfg.auraIcons or (def and def.auraIcons) or defaults.target.auraIcons or {}
-	local auraRuntime = AuraUtil.getUnitSingleAuraRuntimeConfig(unit, ac, def and def.auraIcons)
-	return AuraUtil.ShouldUseNativeAuraContainers(unit, auraRuntime, allowSample)
+	if allowSample then return false end
+	if addon.EditModeLib and addon.EditModeLib.IsInEditMode and addon.EditModeLib:IsInEditMode() then return false end
+	return unit == UNIT.PLAYER or unit == UNIT.TARGET or unit == UNIT.FOCUS or isBossUnit(unit)
 end
 
 function AuraUtil.CallNativeAuraMethod(object, method, ...)
@@ -5700,7 +5766,6 @@ function AuraUtil.PrepareNativeAuraButton(button, style, isDebuff, unit, parent)
 	end
 	AuraUtil.ApplyIconShape(button, style.iconShape, style.iconZoom)
 	local hasStyleBorder, borderKind, borderTextureCount = AuraUtil.PrepareNativeAuraStyleBorder(button, style, isDebuff)
-	AuraUtil.ApplyAuraCooldownBorderInset(button, style, hasStyleBorder)
 	if isDebuff and hasStyleBorder then AuraUtil.RegisterNativeDispelBorderTextures(button, dispelTextureStyles, borderKind, borderTextureCount) end
 	if button.externalGlow then button.externalGlow:Hide() end
 	if style.externalGlowEnabled == true and addon.Glow and addon.Glow.CreateRestrictedAura then
@@ -6253,7 +6318,7 @@ function AuraUtil.GetHealerBuffPlacementExcludedSpellIDs(unit)
 	local groupCfg = kind and groupFrames and groupFrames.GetHealerBuffPlacementConfig and groupFrames:GetHealerBuffPlacementConfig("party") or nil
 	local placement = groupCfg and healerBuffs and healerBuffs.EnsureConfig and healerBuffs.EnsureConfig(groupCfg) or nil
 	if not (placement and placement.enabled == true) then return nil end
-	if not (UnitExists and UnitExists(unit) and UnitCanAssist and UnitCanAssist("player", unit) == true) then return nil end
+	if not (UnitExists and UnitExists(unit) and UnitCanAssist and UnitCanAssist("player", unit, true, true) == true) then return nil end
 	local compiled = healerBuffs.GetCompiled and healerBuffs.GetCompiled(kind, groupCfg) or nil
 	if not (compiled and compiled.enabled == true) then return nil end
 	return healerBuffs.GetManagedSuppressedSpellIDs and healerBuffs.GetManagedSuppressedSpellIDs(compiled) or nil
@@ -6286,7 +6351,7 @@ function AuraUtil.RefreshHealerBuffPlacementUnit(unit)
 	if healerBuffs.BuildButton then healerBuffs.BuildButton(frame) end
 	if healerBuffs.LayoutButton then healerBuffs.LayoutButton(frame) end
 	if healerBuffs.PrecreateManagedAuraContainer then healerBuffs.PrecreateManagedAuraContainer(frame) end
-	local assistable = UnitExists and UnitExists(unit) and UnitCanAssist and UnitCanAssist("player", unit) == true
+	local assistable = UnitExists and UnitExists(unit) and UnitCanAssist and UnitCanAssist("player", unit, true, true) == true
 	if not assistable then
 		if healerBuffs.HideManagedAuraContainer then healerBuffs.HideManagedAuraContainer(frame) end
 		if healerBuffs.ClearButton then healerBuffs.ClearButton(frame) end
@@ -7242,6 +7307,7 @@ do
 
 	local bossDefaults = CopyTable(defaults.target)
 	bossDefaults.enabled = false
+	bossDefaults.rangeFade.enabled = false
 	bossDefaults.bossCount = MAX_BOSS_FRAMES or 5
 	bossDefaults.anchor = { point = "CENTER", relativeTo = "UIParent", relativePoint = "CENTER", x = 400, y = 200 }
 	bossDefaults.width = 220
@@ -8525,6 +8591,13 @@ function UF.RefreshHealPredictionCalculator(st, unit)
 	return calc
 end
 
+function UF.GetHealthTextPredictionCalculator(st, unit)
+	if st and st._healthTextValuesReady and st._healthTextPredictionReady and st._healPredictionCalc then return st._healPredictionCalc end
+	local calc = UF.RefreshHealPredictionCalculator(st, unit)
+	if st then st._healthTextPredictionReady = calc ~= nil end
+	return calc
+end
+
 local setFrameLevelAbove
 
 local function shouldShowSampleAbsorb(unit)
@@ -8731,16 +8804,14 @@ local function stopCast(unit)
 	UF.ClearCastInterruptState(st)
 	UFHelper.clearEmpowerStages(st)
 	UF._hideDefaultCastUninterruptibleBar(st)
+	UF.DisableCastDurationTextBinding(st, true)
 	st.castBar:Hide()
 	if st.castName then st.castName:SetText("") end
-	if st.castDuration then st.castDuration:SetText("") end
 	if st.castIconHolder then st.castIconHolder:Hide() end
 	if st.castIcon then st.castIcon:Hide() end
 	st.castIconTexture = nil
 	st.castTarget = nil
 	st.castInfo = nil
-	st.castBarDuration = nil
-	st.castDurationFormat = nil
 	if castOnUpdateHandlers[unit] then
 		st.castBar:SetScript("OnUpdate", nil)
 		castOnUpdateHandlers[unit] = nil
@@ -9198,36 +9269,65 @@ function UF.OnCastBarUpdate(self)
 	updateCastBar(unit)
 end
 
-function UF.OnCastDurationTimerUpdate(self, elapsed)
-	local unit = self and self._eqolUFUnit
-	if not unit then
-		self:SetScript("OnUpdate", nil)
-		return
+function UF.GetCastDurationTenthsFormatter()
+	if UF.castDurationTenthsFormatter then return UF.castDurationTenthsFormatter end
+	local stringUtil = _G.C_StringUtil
+	if not (stringUtil and stringUtil.CreateNumericRuleFormatter) then return nil end
+	local formatter = stringUtil.CreateNumericRuleFormatter()
+	local rounding = _G.Enum and _G.Enum.NumericRuleFormatRounding and _G.Enum.NumericRuleFormatRounding.Nearest or 0
+	formatter:SetBreakpoints({
+		{
+			threshold = 0,
+			step = 0.1,
+			rounding = rounding,
+			format = "%.1f",
+		},
+	})
+	UF.castDurationTenthsFormatter = formatter
+	return formatter
+end
+
+function UF.DisableCastDurationTextBinding(st, clearText)
+	if not st then return end
+	local owner = st.castBar
+	if owner and addon.functions and addon.functions.SetDurationTextBindingEnabled then
+		addon.functions.SetDurationTextBindingEnabled(owner, "castDuration", false)
 	end
-	local st = states[unit]
-	local timerObj = st and st.castBarDuration
-	if not st or not timerObj then
-		self:SetScript("OnUpdate", nil)
-		castOnUpdateHandlers[unit] = nil
-		return
-	end
+	if clearText and st.castDuration then st.castDuration:SetText("") end
+end
 
-	self._eqolCastDurationElapsed = (self._eqolCastDurationElapsed or 0) + (elapsed or 0)
-	if self._eqolCastDurationElapsed < 0.1 then return end
-	self._eqolCastDurationElapsed = 0
+function UF.ConfigureCastDurationTextBinding(st, durationObject, durationFormat)
+	if not (st and st.castBar and st.castDuration and durationObject) then return false end
+	local functions = addon.functions
+	local formatter = UF.GetCastDurationTenthsFormatter()
+	if not (formatter and functions and functions.ConfigureDurationTextBinding and functions.CreateDurationTextBindingFormatComponent) then return false end
 
-	local totalDuration = timerObj:GetTotalDuration()
-	if type(totalDuration) ~= "number" then totalDuration = 0 end
-	if not st.castDuration then return end
-
-	local durationFormat = st.castDurationFormat or "REMAINING"
+	local remaining = functions.CreateDurationTextBindingFormatComponent("RemainingDuration", formatter)
+	local elapsed = functions.CreateDurationTextBindingFormatComponent("ElapsedDuration", formatter)
+	local total = functions.CreateDurationTextBindingFormatComponent("TotalDuration", formatter)
+	local formatString = "{}"
+	local components = { remaining }
 	if durationFormat == "ELAPSED_TOTAL" then
-		st.castDuration:SetText(("%.1f / %.1f"):format(timerObj:GetElapsedDuration(), totalDuration))
+		formatString = "{} / {}"
+		components = { elapsed, total }
 	elseif durationFormat == "REMAINING_TOTAL" then
-		st.castDuration:SetText(("%.1f / %.1f"):format(timerObj:GetRemainingDuration(), totalDuration))
-	else
-		st.castDuration:SetText(("%.1f"):format(timerObj:GetRemainingDuration()))
+		formatString = "{} / {}"
+		components = { remaining, total }
 	end
+	if not components[1] or (formatString ~= "{}" and not components[2]) then return false end
+
+	local binding, configured = functions.ConfigureDurationTextBinding(st.castBar, "castDuration", st.castDuration, durationObject, {
+		useProfileConfig = false,
+		formatter = formatter,
+		textFormat = formatString,
+		components = components,
+		updateInterval = 0.1,
+		zeroDurationText = "",
+		expiredText = "",
+		reset = true,
+		enabled = true,
+	})
+	return binding ~= nil and configured == true
 end
 
 function UF.OnCastInterruptAnimFinished(self)
@@ -9247,6 +9347,7 @@ function UF.SetSampleCast(unit)
 	if not st or not st.castBar then return end
 	UF.ClearCastInterruptState(st)
 	UFHelper.clearEmpowerStages(st)
+	UF.DisableCastDurationTextBinding(st, false)
 	local cfg = (st and st.cfg) or ensureDB(key or unit)
 	local ccfg = (cfg or {}).cast or {}
 	local def = defaultsFor(unit)
@@ -9338,6 +9439,7 @@ function UF.ShowCastInterrupt(unit, event)
 		st.castBar:SetScript("OnUpdate", nil)
 		castOnUpdateHandlers[unit] = nil
 	end
+	UF.DisableCastDurationTextBinding(st, true)
 
 	applyCastLayout(cfg, unit)
 
@@ -9558,7 +9660,6 @@ local function setCastInfoFromUnit(unit)
 			if st.castDefaultUninterruptibleBar then
 				st.castDefaultUninterruptibleBar:SetTimerDuration(durObj, Enum.StatusBarInterpolation.Immediate, direction)
 			end
-			st.castBarDuration = durObj
 			if st.castName then
 				local showName = ccfg.showName ~= false
 				st.castName:SetShown(showName)
@@ -9606,30 +9707,21 @@ local function setCastInfoFromUnit(unit)
 			UF._syncDefaultCastUninterruptibleBar(st, unit, notInterruptible)
 			st.castBar:SetStatusBarDesaturated(false)
 			local showDuration = ccfg.showDuration ~= false and st.castDuration ~= nil
-			local needsOnUpdate = showDuration
-			if not needsOnUpdate then
-				if castOnUpdateHandlers[unit] then
-					st.castBar:SetScript("OnUpdate", nil)
-					castOnUpdateHandlers[unit] = nil
-				end
-				if st.castDuration then
-					st.castDuration:SetText("")
+			if castOnUpdateHandlers[unit] then
+				st.castBar:SetScript("OnUpdate", nil)
+				castOnUpdateHandlers[unit] = nil
+			end
+			if showDuration then
+				local durationFormat = ccfg.durationFormat or defc.durationFormat or "REMAINING"
+				if UF.ConfigureCastDurationTextBinding(st, durObj, durationFormat) then
+					st.castDuration:Show()
+				else
+					UF.DisableCastDurationTextBinding(st, true)
 					st.castDuration:Hide()
 				end
-			else
-				if st.castDuration then
-					if showDuration then
-						st.castDuration:Show()
-					else
-						st.castDuration:SetText("")
-						st.castDuration:Hide()
-					end
-				end
-				st.castDurationFormat = ccfg.durationFormat or defc.durationFormat or "REMAINING"
-				st.castBar._eqolCastDurationElapsed = 0
-				st.castBar._eqolUFUnit = unit
-				st.castBar:SetScript("OnUpdate", UF.OnCastDurationTimerUpdate)
-				castOnUpdateHandlers[unit] = true
+			elseif st.castDuration then
+				UF.DisableCastDurationTextBinding(st, true)
+				st.castDuration:Hide()
 			end
 		else
 			stopCast(unit)
@@ -9642,6 +9734,7 @@ local function setCastInfoFromUnit(unit)
 		return
 	end
 	UF.ClearCastInterruptState(st)
+	UF.DisableCastDurationTextBinding(st, false)
 	applyCastLayout(cfg, unit, isChannel and not isEmpoweredCast)
 	local resolvedCfg = ccfg or defc or {}
 	st.castCfg = resolvedCfg
@@ -9681,13 +9774,6 @@ local function getPowerPercent(unit, powerEnum, cur, maxv)
 	if addon.functions and addon.functions.GetPowerPercent then return addon.functions.GetPowerPercent(unit, powerEnum, cur, maxv, true) end
 	if maxv and maxv > 0 then return (cur or 0) / maxv * 100 end
 	return nil
-end
-
-local function ensureBossBarsVisible(unit, st)
-	if not isBossUnit(unit) then return end
-	if not UnitExists or not UnitExists(unit) then return end
-	if st.barGroup and not st.barGroup:IsShown() then st.barGroup:Show() end
-	if st.status and not st.status:IsShown() then st.status:Show() end
 end
 
 function UF.resolveHealthBaseColor(unit, hc, defH)
@@ -9916,6 +10002,8 @@ end
 
 function UF.DataBar.Hide(st)
 	if not st then return end
+	if st._dataBarHidden then return end
+	st._dataBarHidden = true
 	if st.dataBar then
 		st.dataBar:SetValue(0)
 		st.dataBar:Hide()
@@ -10007,6 +10095,7 @@ function UF.DataBar.Update(cfg, unit, deferTextUpdate)
 	end
 	local dcfg = cfg.dataBar or {}
 	local ddef = def.dataBar or {}
+	st._dataBarHidden = nil
 	st.dataBar:SetMinMaxValues(0, 1)
 	UF.SetStatusBarValue(st.dataBar, 1, false, true)
 	local color = dcfg.color or ddef.color or { 0.18, 0.18, 0.22, 1 }
@@ -10033,10 +10122,38 @@ local applyBossEditSample
 function UF.InvalidateHealthIdentityState(st)
 	if not st then return end
 	st._healthColorDirty = true
+	st._healthUsesSecretClassColor = nil
 	st._healthPercentCurveDirty = true
+	st._tempMaxHealthLossDirty = true
 	st._absorbAmount = nil
+	st._damageAbsorbDirty = true
 	st._healAbsorbAmount = nil
+	st._healAbsorbDirty = true
 	st._healthTextAbsorbAmount = nil
+	st._healthTextHealAbsorbAmount = nil
+	st._healthTextPredictionReady = nil
+end
+
+function UF.RefreshHealthIdentityClassColor(cfg, unit)
+	if unit == UNIT.PLAYER or unit == UNIT.PET or isBossUnit(unit) then return false end
+	local st = states[unit]
+	if not (st and st.health) then return false end
+	local def = st.def or defaultsFor(unit) or {}
+	local hc = (cfg and cfg.health) or {}
+	local defH = def.health or {}
+	local usePercentColorCurve = hc.usePercentColorCurve
+	if usePercentColorCurve == nil then usePercentColorCurve = defH.usePercentColorCurve end
+	local wantsSecretClassColor = hc.useCustomColor ~= true and hc.useClassColor == true and usePercentColorCurve ~= true
+	if wantsSecretClassColor and UF.ApplySecretUnitClassStatusBarColor(st.health, unit) then
+		st._healthUsesSecretClassColor = true
+		st._healthColorR, st._healthColorG, st._healthColorB, st._healthColorA = nil, nil, nil, nil
+		st._healthColorDirty = nil
+		st._healthPercentCurveDirty = true
+		return true
+	end
+	st._healthUsesSecretClassColor = nil
+	st._healthColorDirty = true
+	return false
 end
 
 local function updateHealth(cfg, unit, deferAuxiliaryUpdates)
@@ -10052,7 +10169,6 @@ local function updateHealth(cfg, unit, deferAuxiliaryUpdates)
 			return
 		end
 	end
-	ensureBossBarsVisible(unit, st)
 	local info = UNITS[unit]
 	local allowAbsorb = not (info and info.disableAbsorb)
 	local def = st.def or defaultsFor(unit) or {}
@@ -10079,7 +10195,7 @@ local function updateHealth(cfg, unit, deferAuxiliaryUpdates)
 		UF.ApplyHealthBackdrop(st, unit, hc, defH, reverseHealth)
 		st._healthBackdropDirty = nil
 	end
-	if st.tempMaxHealthLoss then
+	if st.tempMaxHealthLoss and st._tempMaxHealthLossDirty ~= false then
 		local showTempLoss = hc.tempMaxHealthLossEnabled
 		if showTempLoss == nil then showTempLoss = defH.tempMaxHealthLossEnabled ~= false end
 		if showTempLoss then
@@ -10093,18 +10209,18 @@ local function updateHealth(cfg, unit, deferAuxiliaryUpdates)
 			if st.tempMaxHealthLoss.SetAlpha then st.tempMaxHealthLoss:SetAlpha(0) end
 			st.tempMaxHealthLoss:Hide()
 		end
+		st._tempMaxHealthLossDirty = false
 	end
 	local usePercentColorCurve = hc.usePercentColorCurve
 	if usePercentColorCurve == nil then usePercentColorCurve = defH.usePercentColorCurve end
-	local appliedSecretClassColor = hc.useCustomColor ~= true
-		and hc.useClassColor == true
-		and usePercentColorCurve ~= true
-		and UF.ApplySecretUnitClassStatusBarColor(st.health, unit)
+	local wantsSecretClassColor = hc.useCustomColor ~= true and hc.useClassColor == true and usePercentColorCurve ~= true
+	local appliedSecretClassColor = wantsSecretClassColor and st._healthUsesSecretClassColor == true
 	if appliedSecretClassColor then
 		st._healthColorR, st._healthColorG, st._healthColorB, st._healthColorA = nil, nil, nil, nil
-		st._healthColorDirty = true
+		st._healthColorDirty = nil
 		st._healthPercentCurveDirty = true
 	else
+		st._healthUsesSecretClassColor = nil
 		local hr, hg, hb, ha = st._healthColorR, st._healthColorG, st._healthColorB, st._healthColorA
 		if st._healthColorDirty or hr == nil then
 			hr, hg, hb, ha = UF.resolveHealthBaseColor(unit, hc, defH)
@@ -10142,8 +10258,19 @@ local function updateHealth(cfg, unit, deferAuxiliaryUpdates)
 	local absorbDontOverflow = hc.absorbDontOverflowHealthBar
 	if absorbDontOverflow == nil then absorbDontOverflow = defH.absorbDontOverflowHealthBar == true end
 	absorbDontOverflow = absorbDontOverflow == true and reverseAbsorb == true
+	local damageAbsorbEnabled = allowAbsorb and st.absorb
+	local absorbSamples = addon.variables.ufSampleAbsorb
+	local healAbsorbSamples = addon.variables.ufSampleHealAbsorb
+	local showSampleDamageAbsorb = absorbSamples and next(absorbSamples) and shouldShowSampleAbsorb(unit) or false
+	local showSampleHealAbsorb = healAbsorbSamples and next(healAbsorbSamples) and shouldShowSampleHealAbsorb(unit) or false
+	local damageAbsorbNeedsUpdate = damageAbsorbEnabled and (st._damageAbsorbDirty ~= false or absorbDontOverflow or showSampleDamageAbsorb)
+	local healAbsorbNeedsUpdate = allowAbsorb
+		and st.healAbsorb
+		and (st._healAbsorbDirty ~= false or showSampleHealAbsorb)
+	local needsHealthPercent = st._healthTextUsesPercent == true or (st._dataBarTextEnabled == true and st._dataBarTextUsesPercent == true)
 	local healPredictionCalc
-	if hc.incomingHealEnabled == true or needsHealthAbsorbText or (allowAbsorb and st.absorb) then
+	st._healthTextPredictionReady = nil
+	if hc.incomingHealEnabled == true or needsHealthAbsorbText or needsHealthPercent or (damageAbsorbNeedsUpdate and absorbDontOverflow) then
 		healPredictionCalc = ensureHealPredictionCalculator(st)
 		if healPredictionCalc and healPredictionCalc.SetDamageAbsorbClampMode and Enum and Enum.UnitDamageAbsorbClampMode then
 			local modes = Enum.UnitDamageAbsorbClampMode
@@ -10153,22 +10280,30 @@ local function updateHealth(cfg, unit, deferAuxiliaryUpdates)
 				healPredictionCalc:SetDamageAbsorbClampMode(mode)
 			end
 		end
-		if healPredictionCalc and UnitGetDetailedHealPrediction then UnitGetDetailedHealPrediction(unit, "player", healPredictionCalc) end
+		if healPredictionCalc and UnitGetDetailedHealPrediction then
+			UnitGetDetailedHealPrediction(unit, "player", healPredictionCalc)
+			st._healthTextPredictionReady = true
+		end
 	end
 
-	updateIncomingHeal(st, unit, hc, defH, cur, maxv, interpolation, healPredictionCalc)
-	if st._absorbAmount == nil and (needsHealthAbsorbText or (allowAbsorb and st.absorb)) then
+	if hc.incomingHealEnabled == true then updateIncomingHeal(st, unit, hc, defH, cur, maxv, interpolation, healPredictionCalc) end
+	if st._absorbAmount == nil and (st._healthTextUsesDamageAbsorb == true or damageAbsorbNeedsUpdate) then
 		st._absorbAmount = UnitGetTotalAbsorbs and UnitGetTotalAbsorbs(unit) or 0
 	end
-	if allowAbsorb and st.healAbsorb and st._healAbsorbAmount == nil then
+	if (st._healthTextUsesHealAbsorb == true or healAbsorbNeedsUpdate) and st._healAbsorbAmount == nil then
 		st._healAbsorbAmount = UnitGetTotalHealAbsorbs and UnitGetTotalHealAbsorbs(unit) or 0
 	end
-	if needsHealthAbsorbText then
+	if st._healthTextUsesDamageAbsorb == true then
 		UF.CacheHealthTextAbsorbAmount(st, unit, maxv, st._absorbAmount, healPredictionCalc)
 	else
 		st._healthTextAbsorbAmount = nil
 	end
-	if allowAbsorb and st.absorb then
+	if st._healthTextUsesHealAbsorb == true then
+		st._healthTextHealAbsorbAmount = st._healAbsorbAmount
+	else
+		st._healthTextHealAbsorbAmount = nil
+	end
+	if damageAbsorbNeedsUpdate then
 		local abs
 		if absorbDontOverflow and healPredictionCalc and healPredictionCalc.GetDamageAbsorbs then
 			abs = healPredictionCalc:GetDamageAbsorbs()
@@ -10188,7 +10323,7 @@ local function updateHealth(cfg, unit, deferAuxiliaryUpdates)
 			maxForValue = (maxv and maxv > 0) and maxv or 1
 		end
 		st.absorb:SetMinMaxValues(0, maxForValue or 1)
-		if shouldShowSampleAbsorb(unit) and (not issecretvalue or not issecretvalue(maxForValue)) then abs = (maxForValue or 1) * 0.6 end
+		if showSampleDamageAbsorb and (not issecretvalue or not issecretvalue(maxForValue)) then abs = (maxForValue or 1) * 0.6 end
 		st.absorb:SetValue(abs or 0, interpolation)
 		local absorbValueForGlow = abs
 		if reverseAbsorb and st.absorb2 then
@@ -10229,8 +10364,9 @@ local function updateHealth(cfg, unit, deferAuxiliaryUpdates)
 				st.overAbsorbGlow:Hide()
 			end
 		end
+		st._damageAbsorbDirty = false
 	end
-	if allowAbsorb and st.healAbsorb then
+	if healAbsorbNeedsUpdate then
 		local healAbs = st._healAbsorbAmount
 		if healAbs == nil then
 			healAbs = UnitGetTotalHealAbsorbs and UnitGetTotalHealAbsorbs(unit) or 0
@@ -10243,19 +10379,21 @@ local function updateHealth(cfg, unit, deferAuxiliaryUpdates)
 			maxForValue = (maxv and maxv > 0) and maxv or 1
 		end
 		st.healAbsorb:SetMinMaxValues(0, maxForValue or 1)
-		local hasVisibleHealAbsorb = healAbs and (not issecretvalue or not issecretvalue(healAbs)) and healAbs > 0
-		if shouldShowSampleHealAbsorb(unit) and not hasVisibleHealAbsorb and (not issecretvalue or not issecretvalue(maxForValue)) then healAbs = (maxForValue or 1) * 0.6 end
+		local healAbsorbIsSecret = issecretvalue and issecretvalue(healAbs)
+		local hasVisibleHealAbsorb = healAbsorbIsSecret or (healAbs and healAbs > 0)
+		if showSampleHealAbsorb and not hasVisibleHealAbsorb and (not issecretvalue or not issecretvalue(maxForValue)) then healAbs = (maxForValue or 1) * 0.6 end
 		if not issecretvalue or (not issecretvalue(cur) and not issecretvalue(healAbs)) then
 			if (cur or 0) < (healAbs or 0) then healAbs = cur or 0 end
 		end
 		st.healAbsorb:SetValue(healAbs or 0, interpolation)
 		local har, hag, hab, haa = UFHelper.getHealAbsorbColor(hc, defH)
 		st.healAbsorb:SetStatusBarColor(har or 1, hag or 0.3, hab or 0.3, haa or 0.7)
+		st._healAbsorbDirty = false
 	end
-	st._healthTextDirty = true
+	if st._healthTextGroupWriter then st._healthTextDirty = true end
 	if not deferAuxiliaryUpdates then
-		UF.DataBar.Update(cfg, unit)
-		if UF.ScheduleTextUpdate then UF.ScheduleTextUpdate() end
+		if st._dataBarTextEnabled == true then UF.DataBar.Update(cfg, unit) end
+		if st._healthTextDirty and st._dataBarTextEnabled ~= true and UF.ScheduleTextUpdate then UF.ScheduleTextUpdate() end
 	end
 end
 
@@ -10341,7 +10479,7 @@ local function updatePower(cfg, unit, allowVisibilityChanges, deferAuxiliaryUpda
 			st._powerTextDirty = true
 			if not deferAuxiliaryUpdates then
 				if UF.ScheduleTextUpdate then UF.ScheduleTextUpdate() end
-				UF.DataBar.Update(cfg, unit)
+				if st._dataBarTextEnabled == true then UF.DataBar.Update(cfg, unit) end
 			end
 		end
 	end
@@ -10414,7 +10552,7 @@ local function updatePower(cfg, unit, allowVisibilityChanges, deferAuxiliaryUpda
 			if UF.ScheduleTextUpdate then UF.ScheduleTextUpdate() end
 		end
 	end
-	if not (bar and powerEnabled) then UF.DataBar.Update(cfg, unit) end
+	if not (bar and powerEnabled) and st._dataBarTextEnabled == true then UF.DataBar.Update(cfg, unit) end
 end
 
 local function layoutTexts(bar, leftFS, centerFS, rightFS, cfg, width)
@@ -12731,6 +12869,12 @@ function UF.CacheTextRuntimePlan(st, cfg, def)
 		or UFHelper.textModeUsesLevel(st._healthTextCenterMode)
 		or UFHelper.textModeUsesLevel(st._healthTextRightMode)
 	st._healthTextUsesAbsorb = UF.HealthTextUsesAbsorbMode(st._healthTextLeftMode, st._healthTextCenterMode, st._healthTextRightMode)
+	st._healthTextUsesDamageAbsorb = UFHelper.textModeUsesDamageAbsorb(st._healthTextLeftMode)
+		or UFHelper.textModeUsesDamageAbsorb(st._healthTextCenterMode)
+		or UFHelper.textModeUsesDamageAbsorb(st._healthTextRightMode)
+	st._healthTextUsesHealAbsorb = UFHelper.textModeUsesHealAbsorb(st._healthTextLeftMode)
+		or UFHelper.textModeUsesHealAbsorb(st._healthTextCenterMode)
+		or UFHelper.textModeUsesHealAbsorb(st._healthTextRightMode)
 	st._powerTextLeftMode = pcfg.textLeft or "PERCENT"
 	st._powerTextCenterMode = pcfg.textCenter or "NONE"
 	st._powerTextRightMode = pcfg.textRight or "CURMAX"
@@ -12774,63 +12918,83 @@ function UF.CacheCompiledTextWriters(st, cfg, def)
 	st._secondaryPowerTextRightWriter = UFHelper.compileTextWriter(st._secondaryPowerTextRightMode, secondaryShort, sp1, sp2, sp3, secondaryCfg.hidePercentSymbol == true, secondaryCfg.roundPercent == true)
 end
 
+function UF.SetOptionalTextRawAlpha(fontString, mode, absorbAmount, healAbsorbAmount)
+	if not (fontString and fontString.SetAlpha) then return end
+	if mode == "ABSORB" or mode == "ABSORB_PERCENT" then
+		fontString:SetAlpha(absorbAmount or 0)
+	elseif mode == "HEAL_ABSORB" or mode == "HEAL_ABSORB_PERCENT" then
+		fontString:SetAlpha(healAbsorbAmount or 0)
+	else
+		fontString:SetAlpha(1)
+	end
+end
+
 function UF.BuildCompiledTextGroup(fontString1, mode1, writer1, fontString2, mode2, writer2, fontString3, mode3, writer3)
 	if fontString1 and mode1 == "NONE" then fontString1:SetText("") fontString1 = nil end
 	if fontString2 and mode2 == "NONE" then fontString2:SetText("") fontString2 = nil end
 	if fontString3 and mode3 == "NONE" then fontString3:SetText("") fontString3 = nil end
 
-	local active1, activeWriter1, active2, activeWriter2, active3, activeWriter3
-	if fontString1 then active1, activeWriter1 = fontString1, writer1 end
+	local active1, activeWriter1, activeMode1, active2, activeWriter2, activeMode2, active3, activeWriter3, activeMode3
+	if fontString1 then active1, activeWriter1, activeMode1 = fontString1, writer1, mode1 end
 	if fontString2 then
 		if active1 then
-			active2, activeWriter2 = fontString2, writer2
+			active2, activeWriter2, activeMode2 = fontString2, writer2, mode2
 		else
-			active1, activeWriter1 = fontString2, writer2
+			active1, activeWriter1, activeMode1 = fontString2, writer2, mode2
 		end
 	end
 	if fontString3 then
 		if active2 then
-			active3, activeWriter3 = fontString3, writer3
+			active3, activeWriter3, activeMode3 = fontString3, writer3, mode3
 		elseif active1 then
-			active2, activeWriter2 = fontString3, writer3
+			active2, activeWriter2, activeMode2 = fontString3, writer3, mode3
 		else
-			active1, activeWriter1 = fontString3, writer3
+			active1, activeWriter1, activeMode1 = fontString3, writer3, mode3
 		end
 	end
 	if not active1 then return nil, nil, nil end
 
 	if active3 then
-		return function(current, maximum, percent, levelText, absorbAmount)
-			active1:SetText(activeWriter1(current, maximum, percent, levelText, nil, absorbAmount))
-			active2:SetText(activeWriter2(current, maximum, percent, levelText, nil, absorbAmount))
-			active3:SetText(activeWriter3(current, maximum, percent, levelText, nil, absorbAmount))
+		return function(current, maximum, percent, levelText, absorbAmount, healAbsorbAmount)
+			UF.SetOptionalTextRawAlpha(active1, activeMode1, absorbAmount, healAbsorbAmount)
+			UF.SetOptionalTextRawAlpha(active2, activeMode2, absorbAmount, healAbsorbAmount)
+			UF.SetOptionalTextRawAlpha(active3, activeMode3, absorbAmount, healAbsorbAmount)
+			active1:SetText(activeWriter1(current, maximum, percent, levelText, nil, absorbAmount, nil, healAbsorbAmount))
+			active2:SetText(activeWriter2(current, maximum, percent, levelText, nil, absorbAmount, nil, healAbsorbAmount))
+			active3:SetText(activeWriter3(current, maximum, percent, levelText, nil, absorbAmount, nil, healAbsorbAmount))
 		end, function()
 			active1:SetText("")
 			active2:SetText("")
 			active3:SetText("")
 		end, function(text)
+			active1:SetAlpha(1)
 			active1:SetText(text)
 			active2:SetText("")
 			active3:SetText("")
 		end
 	elseif active2 then
-		return function(current, maximum, percent, levelText, absorbAmount)
-			active1:SetText(activeWriter1(current, maximum, percent, levelText, nil, absorbAmount))
-			active2:SetText(activeWriter2(current, maximum, percent, levelText, nil, absorbAmount))
+		return function(current, maximum, percent, levelText, absorbAmount, healAbsorbAmount)
+			UF.SetOptionalTextRawAlpha(active1, activeMode1, absorbAmount, healAbsorbAmount)
+			UF.SetOptionalTextRawAlpha(active2, activeMode2, absorbAmount, healAbsorbAmount)
+			active1:SetText(activeWriter1(current, maximum, percent, levelText, nil, absorbAmount, nil, healAbsorbAmount))
+			active2:SetText(activeWriter2(current, maximum, percent, levelText, nil, absorbAmount, nil, healAbsorbAmount))
 		end, function()
 			active1:SetText("")
 			active2:SetText("")
 		end, function(text)
+			active1:SetAlpha(1)
 			active1:SetText(text)
 			active2:SetText("")
 		end
 	end
 
-	return function(current, maximum, percent, levelText, absorbAmount)
-		active1:SetText(activeWriter1(current, maximum, percent, levelText, nil, absorbAmount))
+	return function(current, maximum, percent, levelText, absorbAmount, healAbsorbAmount)
+		UF.SetOptionalTextRawAlpha(active1, activeMode1, absorbAmount, healAbsorbAmount)
+		active1:SetText(activeWriter1(current, maximum, percent, levelText, nil, absorbAmount, nil, healAbsorbAmount))
 	end, function()
 		active1:SetText("")
 	end, function(text)
+		active1:SetAlpha(1)
 		active1:SetText(text)
 	end
 end
@@ -13084,6 +13248,7 @@ local function applyConfig(unit)
 	updateStatus(cfg, unit)
 	if UFHelper and UFHelper.updateCombatFeedback then UFHelper.updateCombatFeedback(st, unit, cfg, def) end
 	updateNameAndLevel(cfg, unit)
+	UF.RefreshHealthIdentityClassColor(cfg, unit)
 	updateHealth(cfg, unit)
 	updatePower(cfg, unit)
 	if unit == UNIT.PLAYER then
@@ -13236,11 +13401,9 @@ local function hideBossFrames(forceHide)
 	end
 	if InCombatLockdown() then
 		bossHidePending = true
-		bossShowPending = nil
 		return
 	end
 	bossHidePending = nil
-	bossShowPending = nil
 	if bossContainer then
 		if forceHide or not ensureDB("boss").enabled then
 			bossContainer:Hide()
@@ -13248,6 +13411,7 @@ local function hideBossFrames(forceHide)
 			bossContainer:Show()
 		end
 	end
+	UF.RefreshBossRangeFade()
 end
 
 applyBossEditSample = function(idx, cfg)
@@ -13573,11 +13737,102 @@ function UF._setBossFrameInactive(unit)
 	AuraUtil.RefreshHealerBuffPlacementUnit(unit)
 end
 
-local function updateBossFrames(force)
+function UF.RefreshBossUnitRuntime(unit)
+	if not isBossUnit(unit) then return end
+	local cfg = ensureDB("boss")
+	if not cfg.enabled then return end
+	local bossIndex = tonumber(unit:match("^boss(%d+)$"))
+	if not bossIndex or bossIndex > UF.GetBossFrameCount(cfg) then return end
+	local st = states[unit]
+	if not st or not st.frame then
+		bossInitPending = true
+		return
+	end
+
+	st.cfg = cfg
+	local exists = UnitExists and UnitExists(unit)
+	st._bossRuntimeExists = exists and true or false
+	if exists then
+		UF.InvalidateHealthIdentityState(st)
+		local powerEnum, powerToken = refreshMainPower(unit)
+		local powerCfg = cfg.power or {}
+		if st.power and powerCfg.enabled ~= false then
+			UFHelper.configureSpecialTexture(st.power, powerToken, powerCfg.texture, powerCfg, powerEnum)
+		elseif st.power then
+			st.power:Hide()
+		end
+		if st.barGroup then st.barGroup:Show() end
+		if st.status then st.status:Show() end
+		UF.DataBar.Update(cfg, unit, true)
+		updateNameAndLevel(cfg, unit, nil, true)
+		updateHealth(cfg, unit, true)
+		if powerCfg.enabled ~= false then updatePower(cfg, unit, nil, true, powerEnum, powerToken) end
+		updatePortrait(cfg, unit)
+		checkRaidTargetIcon(unit, st, true)
+		updateUnitStatusIndicator(cfg, unit)
+		if UF.SupportsCombatIndicator(unit) then updateCombatIndicator(cfg, unit) end
+		UFHelper.updateLeaderIndicator(st, unit, cfg, defaultsFor(unit), true)
+		UFHelper.updatePvPIndicator(st, unit, cfg, defaultsFor(unit), true)
+		UFHelper.updateRoleIndicator(st, unit, cfg, defaultsFor(unit), true)
+		AuraUtil.fullScanTargetAuras(unit)
+		if st.castBar and cfg.cast and cfg.cast.enabled ~= false then
+			setCastInfoFromUnit(unit)
+		elseif st.castBar then
+			stopCast(unit)
+			st.castBar:Hide()
+		end
+		UF.UpdateUnitTexts(unit, false)
+	else
+		if st.barGroup then st.barGroup:Hide() end
+		if st.status then st.status:Hide() end
+		UF.DataBar.Hide(st)
+		if st.auraContainer then AuraUtil.hideAuraContainers(st) end
+		AuraUtil.resetTargetAuras(unit)
+		AuraUtil.HideSingleDispelIndicator(unit)
+		if st.castBar then
+			stopCast(unit)
+			st.castBar:Hide()
+		end
+	end
+	UFHelper.updateHighlight(st, unit, UNIT.PLAYER)
+	AuraUtil.RefreshHealerBuffPlacementUnit(unit)
+end
+
+function UF.RefreshBossUnitsRuntime()
+	local cfg = ensureDB("boss")
+	if not cfg.enabled then return end
+	local bossCount = UF.GetBossFrameCount(cfg)
+	for i = 1, bossCount do
+		local unit = UF._bossUnitTokens[i]
+		local st = states[unit]
+		if (UnitExists and UnitExists(unit)) or (st and st._bossRuntimeExists) then UF.RefreshBossUnitRuntime(unit) end
+	end
+	UF.RefreshBossRangeFade()
+end
+
+function UF.ScheduleBossRuntimeRefresh()
+	if UF._bossRuntimeRefreshScheduled then return end
+	UF._bossRuntimeRefreshScheduled = true
+	local function refresh()
+		UF._bossRuntimeRefreshScheduled = nil
+		UF.RefreshBossUnitsRuntime()
+	end
+	if RunNextFrame then
+		RunNextFrame(refresh)
+	else
+		refresh()
+	end
+end
+
+local function configureBossFrames()
 	local cfg = ensureDB("boss")
 	if not cfg.enabled then
 		hideBossFrames(true)
 		applyVisibilityRules("boss")
+		return
+	end
+	if InCombatLockdown() then
+		bossInitPending = true
 		return
 	end
 	if not bossContainer then ensureBossContainer() end
@@ -13589,84 +13844,38 @@ local function updateBossFrames(force)
 		if i > bossCount then
 			UF._setBossFrameInactive(unit)
 		else
-			if force or not states[unit] or not states[unit].frame or inEdit then applyConfig(unit) end
+			applyConfig(unit)
 			local st = states[unit]
 			if st then st.cfg = cfg end
 			if st and st.frame then
 				if inEdit then
-					if not InCombatLockdown() then
-						UF.ClearEqolVisibilityDriver(st, true)
-						if UnregisterStateDriver then UnregisterStateDriver(st.frame, "visibility") end
-						if st.frame.SetAttribute then st.frame:SetAttribute("state-visibility", nil) end
-						UF.ClearBossUnitWatch(st.frame, "EQOL_BossUnitWatchRegistered", true)
-						UF.ClearBossUnitWatch(st.powerGroup, "EQOL_BossPowerUnitWatchRegistered", false)
-						if st.frame.SetAttribute then st.frame:SetAttribute("unit", "player") end
-						st.frame:Show()
-					else
-						bossInitPending = true
-					end
+					UF.ClearEqolVisibilityDriver(st, true)
+					if UnregisterStateDriver then UnregisterStateDriver(st.frame, "visibility") end
+					if st.frame.SetAttribute then st.frame:SetAttribute("state-visibility", nil) end
+					UF.ClearBossUnitWatch(st.frame, "EQOL_BossUnitWatchRegistered", true)
+					UF.ClearBossUnitWatch(st.powerGroup, "EQOL_BossPowerUnitWatchRegistered", false)
+					if st.frame.SetAttribute then st.frame:SetAttribute("unit", "player") end
+					st.frame:Show()
 					if st.barGroup then st.barGroup:Show() end
 					if st.status then st.status:Show() end
 					UF.DataBar.Update(cfg, unit)
 					applyBossEditSample(i, cfg)
 					if st.auraContainer then AuraUtil.fullScanTargetAuras(unit) end
 				else
-					local exists = UnitExists and UnitExists(unit)
-					if not InCombatLockdown() then
-						if st.frame.SetAttribute then st.frame:SetAttribute("unit", unit) end
-						applyVisibilityDriver(unit, cfg.enabled)
-					else
-						if exists then
-							bossShowPending = true
-							bossHidePending = nil
-						else
-							bossHidePending = true
-							bossShowPending = nil
-						end
-					end
-					if exists then
-						if st.barGroup then st.barGroup:Show() end
-						if st.status then st.status:Show() end
-						UF.DataBar.Update(cfg, unit)
-						updateNameAndLevel(cfg, unit)
-						updateHealth(cfg, unit)
-						updatePower(cfg, unit)
-						checkRaidTargetIcon(unit, st)
-						AuraUtil.fullScanTargetAuras(unit)
-						if st.castBar and cfg.cast and cfg.cast.enabled ~= false then
-							setCastInfoFromUnit(unit)
-							if UF.ShouldShowSampleCast(unit) and (not st.castInfo or not UnitCastingInfo or (UnitCastingInfo and not UnitCastingInfo(unit))) then UF.SetSampleCast(unit) end
-						elseif st.castBar then
-							stopCast(unit)
-							st.castBar:Hide()
-						end
-					else
-						if st.barGroup then st.barGroup:Hide() end
-						if st.status then st.status:Hide() end
-						UF.DataBar.Hide(st)
-						if st.auraContainer then AuraUtil.hideAuraContainers(st) end
-						AuraUtil.resetTargetAuras(unit)
-						if st.castBar then
-							stopCast(unit)
-							st.castBar:Hide()
-						end
-					end
+					if st.frame.SetAttribute then st.frame:SetAttribute("unit", unit) end
+					applyVisibilityDriver(unit, cfg.enabled)
+					UF.RefreshBossUnitRuntime(unit)
 				end
 			end
-			UFHelper.updateHighlight(st, unit, UNIT.PLAYER)
 		end
 	end
 	anchorBossContainer(cfg)
 	layoutBossFrames(cfg)
-	if not InCombatLockdown() then
-		if bossContainer then bossContainer:Show() end
-		bossShowPending = nil
-		bossHidePending = nil
-	else
-		bossShowPending = true
-		bossHidePending = nil
-	end
+	if bossContainer then bossContainer:Show() end
+	bossHidePending = nil
+	bossInitPending = nil
 	applyVisibilityRules("boss")
+	UF.RefreshBossRangeFade()
 end
 
 local unitEvents = {
@@ -13899,6 +14108,7 @@ function UF._registerUnitScopedEvents(includePortraitEvents)
 				frame:RegisterUnitEvent(evt, token)
 			end
 		end
+		if isBossUnit(token) then frame:RegisterUnitEvent("UNIT_TARGETABLE_CHANGED", token) end
 		if includePortraitEvents then
 			for _, evt in ipairs(portraitEvents) do
 				frame:RegisterUnitEvent(evt, token)
@@ -13906,39 +14116,6 @@ function UF._registerUnitScopedEvents(includePortraitEvents)
 		end
 		frame:SetScript("OnEvent", onEvent)
 	end
-end
-
-local function ensureBossFramesReady(cfg)
-	cfg = cfg or ensureDB("boss")
-	if not cfg.enabled then return end
-	if InCombatLockdown() then
-		bossInitPending = true
-		return
-	end
-	local bossCount = UF.GetBossFrameCount(cfg)
-	for i = 1, maxBossFrames do
-		local unit = "boss" .. i
-		if i > bossCount then
-			UF._setBossFrameInactive(unit)
-		else
-			applyConfig(unit)
-			if addon.EditModeLib and addon.EditModeLib:IsInEditMode() then
-				local st = states[unit]
-				if st and st.frame then
-					UF.ClearEqolVisibilityDriver(st, true)
-					if UnregisterStateDriver then UnregisterStateDriver(st.frame, "visibility") end
-					st.frame:SetAttribute("state-visibility", nil)
-					UF.ClearBossUnitWatch(st.frame, "EQOL_BossUnitWatchRegistered", true)
-					UF.ClearBossUnitWatch(st.powerGroup, "EQOL_BossPowerUnitWatchRegistered", false)
-					st.frame:Show()
-				end
-			else
-				applyVisibilityDriver(unit, cfg.enabled)
-			end
-		end
-	end
-	if bossContainer then bossContainer:Show() end
-	bossInitPending = nil
 end
 
 local function isBossFrameSettingEnabled()
@@ -13984,13 +14161,13 @@ end
 
 local function ensureToTTicker()
 	if totTicker or not NewTicker then return end
-	totTicker = NewTicker(0.2, function()
+	totTicker = NewTicker(0.5, function()
 		local st = states[UNIT.TARGET_TARGET]
 		local cfg = st and st.cfg
 		if not cfg or not cfg.enabled then return end
+		if not UnitExists(UNIT.TARGET_TARGET) or not st.frame or not st.frame:IsVisible() then return end
 		local pcfg = cfg.power or {}
 		local powerEnabled = pcfg.enabled ~= false
-		if not UnitExists(UNIT.TARGET_TARGET) or not st.frame or not st.frame:IsShown() then return end
 		if powerEnabled then
 			local powerEnum, powerToken = UnitPowerType(UNIT.TARGET_TARGET)
 			if st.power and powerToken and powerToken ~= st._lastPowerToken then
@@ -14222,7 +14399,7 @@ function UF.ApplyPlayerDisplayPowerChange()
 	end
 end
 
-local function updateTargetTargetFrame(cfg, forceApply)
+local function updateTargetTargetFrame(cfg, forceApply, identityChanged)
 	cfg = cfg or ensureDB(UNIT.TARGET_TARGET)
 	UF._targetTargetEnabled = cfg.enabled == true
 	local st = states[UNIT.TARGET_TARGET]
@@ -14243,7 +14420,10 @@ local function updateTargetTargetFrame(cfg, forceApply)
 	end
 	if st then
 		st.cfg = st.cfg or cfg
-		UF.InvalidateHealthIdentityState(st)
+		if identityChanged then
+			UF.InvalidateHealthIdentityState(st)
+			UF.RefreshHealthIdentityClassColor(cfg, UNIT.TARGET_TARGET)
+		end
 	end
 	local lHealth = UnitHealth("target")
 	if UnitExists("target") and UnitExists(UNIT.TARGET_TARGET) and (issecretvalue and issecretvalue(lHealth) or lHealth > 0) then
@@ -14367,6 +14547,7 @@ function UF.UpdateUnitTexts(unit, force)
 		st._secondaryPowerTextDirty = nil
 		st._dataBarTextDirty = nil
 		st._healthTextValuesReady = nil
+		st._healthTextPredictionReady = nil
 		st._powerTextValuesReady = nil
 		st._secondaryPowerTextValuesReady = nil
 		UF.DataBar.ClearTexts(st)
@@ -14382,6 +14563,7 @@ function UF.UpdateUnitTexts(unit, force)
 			st._powerTextDirty = nil
 			st._secondaryPowerTextDirty = nil
 			st._dataBarTextDirty = nil
+			st._healthTextPredictionReady = nil
 			return
 		end
 	end
@@ -14395,6 +14577,8 @@ function UF.UpdateUnitTexts(unit, force)
 		st._powerTextDirty = nil
 		st._secondaryPowerTextDirty = nil
 		st._dataBarTextDirty = nil
+		st._healthTextValuesReady = nil
+		st._healthTextPredictionReady = nil
 		return
 	end
 
@@ -14428,7 +14612,7 @@ function UF.UpdateUnitTexts(unit, force)
 				usesDataBarPercent = UFHelper.textModeUsesPercent(leftMode) or UFHelper.textModeUsesPercent(centerMode) or UFHelper.textModeUsesPercent(rightMode)
 			end
 			if usesDataBarPercent == true then
-				local calc = UF.RefreshHealPredictionCalculator(st, unit)
+				local calc = UF.GetHealthTextPredictionCalculator(st, unit)
 				percentVal = getHealthPercent(unit, cur, maxv, calc)
 				healthPercentValue, healthPercentReady = percentVal, true
 			end
@@ -14468,7 +14652,7 @@ function UF.UpdateUnitTexts(unit, force)
 				if healthPercentReady then
 					percentVal = healthPercentValue
 				else
-					local calc = UF.RefreshHealPredictionCalculator(st, unit)
+					local calc = UF.GetHealthTextPredictionCalculator(st, unit)
 					percentVal = getHealthPercent(unit, cur, maxv, calc)
 					healthPercentValue, healthPercentReady = percentVal, true
 				end
@@ -14476,24 +14660,33 @@ function UF.UpdateUnitTexts(unit, force)
 
 			local levelText
 			local absorbTextAmount
+			local healAbsorbTextAmount
 			if st._healthTextUsesLevel == true then
 				levelText = UFHelper.getUnitLevelText(unit, nil, UF.ShouldHideClassificationText(cfg, unit))
 			end
-			if st._healthTextUsesAbsorb == true then
+			if st._healthTextUsesDamageAbsorb == true then
 				absorbTextAmount = st._healthTextAbsorbAmount
 				if absorbTextAmount == nil then
-					local calc = UF.RefreshHealPredictionCalculator(st, unit)
+					local calc = UF.GetHealthTextPredictionCalculator(st, unit)
 					absorbTextAmount = UF.CacheHealthTextAbsorbAmount(st, unit, maxv, st._absorbAmount, calc)
 				end
 			end
+			if st._healthTextUsesHealAbsorb == true then
+				healAbsorbTextAmount = st._healthTextHealAbsorbAmount
+				if healAbsorbTextAmount == nil then
+					healAbsorbTextAmount = UnitGetTotalHealAbsorbs and UnitGetTotalHealAbsorbs(unit) or 0
+					st._healthTextHealAbsorbAmount = healAbsorbTextAmount
+				end
+			end
 
-			st._healthTextGroupWriter(cur, maxv, percentVal, levelText, absorbTextAmount)
+			st._healthTextGroupWriter(cur, maxv, percentVal, levelText, absorbTextAmount, healAbsorbTextAmount)
 		end
 
 		st._healthTextDirty = nil
 	end
 	if st._healthTextDirty and not st._healthTextGroupWriter then st._healthTextDirty = nil end
 	st._healthTextValuesReady = nil
+	st._healthTextPredictionReady = nil
 
 	if st._powerTextDirty and st._powerTextGroupWriter then
 		local pcfg = cfg.power or {}
@@ -14664,7 +14857,6 @@ onEvent = function(self, event, unit, ...)
 		return
 	end
 	if event == "PLAYER_SPECIALIZATION_CHANGED" and unit and unit ~= "player" then return end
-	if (unitEventsMap[event] or portraitEventsMap[event]) and unit and isBossUnit(unit) and not isBossFrameSettingEnabled() then return end
 	if event == "SPELL_RANGE_CHECK_UPDATE" then
 		local spellIdentifier = unit
 		local isInRange, checksRange = ...
@@ -14679,6 +14871,7 @@ onEvent = function(self, event, unit, ...)
 		or event == "TRAIT_CONFIG_UPDATED"
 	then
 		UF.ScheduleRangeFadeRefresh(true)
+		UF.RefreshBossRangeFade()
 		if
 			event == "PLAYER_SPECIALIZATION_CHANGED"
 			or event == "PLAYER_TALENT_UPDATE"
@@ -14721,7 +14914,7 @@ onEvent = function(self, event, unit, ...)
 		UFHelper.updateAllHighlights(states, UNIT, UF.GetBossFrameCount(bossCfg))
 		updateAllRaidTargetIcons()
 		if bossCfg.enabled then
-			updateBossFrames(true)
+			configureBossFrames()
 		else
 			hideBossFrames()
 		end
@@ -14761,7 +14954,7 @@ onEvent = function(self, event, unit, ...)
 			UF._pendingDynamicAnchorUnits = nil
 			for pendingUnit in pairs(pendingDynamicAnchors or {}) do
 				if pendingUnit == "boss" then
-					updateBossFrames(true)
+					configureBossFrames()
 				else
 					UF.RefreshUnit(pendingUnit)
 				end
@@ -14772,8 +14965,8 @@ onEvent = function(self, event, unit, ...)
 			end
 			if bossLayoutDirty then layoutBossFrames() end
 			if bossHidePending then hideBossFrames(true) end
-			if bossShowPending or bossInitPending then updateBossFrames(true) end
-			bossLayoutDirty, bossHidePending, bossShowPending, bossInitPending = nil, nil, nil, nil
+			if bossInitPending then configureBossFrames() end
+			bossLayoutDirty, bossHidePending, bossInitPending = nil, nil, nil
 			if UF._playerDisplayPowerLayoutPending or UF._playerDPPending or UF._playerDPWantFull then
 				UF._playerDisplayPowerLayoutPending = nil
 				UF.SchedulePlayerDisplayPowerFlush("PLAYER_REGEN_ENABLED", UF._playerDPWantFull == true)
@@ -14797,11 +14990,12 @@ onEvent = function(self, event, unit, ...)
 		if not st or not st.frame then
 			AuraUtil.resetTargetAuras()
 			AuraUtil.updateTargetAuraIcons()
-			if totEnabled then updateTargetTargetFrame(totCfg) end
+			if totEnabled then updateTargetTargetFrame(totCfg, false, true) end
 			if UF._targetHighlightActive and UFHelper and UFHelper.updateTargetHighlights then UFHelper.updateTargetHighlights(states, UNIT, maxBossFrames) end
 			return
 		end
 		UF.InvalidateHealthIdentityState(st)
+		UF.RefreshHealthIdentityClassColor(targetCfg, unitToken)
 		if UnitExists(unitToken) then
 			if not C_PlayerInteractionManager.IsReplacingUnit() then
 				if UnitIsEnemy(unitToken, "player") then
@@ -14842,7 +15036,7 @@ onEvent = function(self, event, unit, ...)
 		end
 		if st._identityRaidIconEnabled then checkRaidTargetIcon(unitToken, st, true) end
 		if st._portraitEnabled == true then updatePortrait(targetCfg, unitToken) end
-		if totEnabled then updateTargetTargetFrame(totCfg) end
+		if totEnabled then updateTargetTargetFrame(totCfg, false, true) end
 		if st._identityUnitStatusEnabled then updateUnitStatusIndicator(targetCfg, UNIT.TARGET) end
 		if st._identityCombatIndicatorEnabled then updateCombatIndicator(targetCfg, UNIT.TARGET) end
 		local targetDef = st.def or defaultsFor(UNIT.TARGET)
@@ -14995,12 +15189,20 @@ onEvent = function(self, event, unit, ...)
 		or event == "UNIT_ABSORB_AMOUNT_CHANGED"
 		or event == "UNIT_HEAL_ABSORB_AMOUNT_CHANGED"
 	then
-		if event == "UNIT_ABSORB_AMOUNT_CHANGED" and unit then
-			local st = states[unit]
-			if st then st._absorbAmount = UnitGetTotalAbsorbs and UnitGetTotalAbsorbs(unit) or 0 end
-		elseif event == "UNIT_HEAL_ABSORB_AMOUNT_CHANGED" and unit then
-			local st = states[unit]
-			if st then st._healAbsorbAmount = UnitGetTotalHealAbsorbs and UnitGetTotalHealAbsorbs(unit) or 0 end
+		local healthState = unit and states[unit]
+		if healthState then
+			if event == "UNIT_ABSORB_AMOUNT_CHANGED" then
+				healthState._absorbAmount = UnitGetTotalAbsorbs and UnitGetTotalAbsorbs(unit) or 0
+				healthState._damageAbsorbDirty = true
+			elseif event == "UNIT_HEAL_ABSORB_AMOUNT_CHANGED" then
+				healthState._healAbsorbAmount = UnitGetTotalHealAbsorbs and UnitGetTotalHealAbsorbs(unit) or 0
+				healthState._healAbsorbDirty = true
+			elseif event == "UNIT_MAXHEALTH" then
+				healthState._damageAbsorbDirty = true
+				healthState._healAbsorbDirty = true
+			elseif event == "UNIT_MAX_HEALTH_MODIFIERS_CHANGED" then
+				healthState._tempMaxHealthLossDirty = true
+			end
 		end
 		if unit == UNIT.PLAYER then
 			local playerCfg = getCfg(UNIT.PLAYER)
@@ -15022,12 +15224,9 @@ onEvent = function(self, event, unit, ...)
 		if unit == UNIT.FOCUS then updateHealth(getCfg(UNIT.FOCUS), UNIT.FOCUS) end
 		if isBossUnit(unit) then
 			local bossCfg = getCfg(unit)
-			if bossCfg.enabled then
-				updateHealth(bossCfg, unit)
-				UF.DataBar.Update(bossCfg, unit)
-			end
+			if bossCfg.enabled then updateHealth(bossCfg, unit) end
 		end
-		if event ~= "UNIT_HEAL_PREDICTION" and unit and allowedEventUnit[unit] then updateUnitStatusIndicator(getCfg(unit), unit) end
+		if event == "UNIT_HEALTH" and unit and allowedEventUnit[unit] then updateUnitStatusIndicator(getCfg(unit), unit) end
 	elseif event == "UNIT_MAXPOWER" then
 		if unit == UNIT.PLAYER then updatePower(getCfg(UNIT.PLAYER), UNIT.PLAYER) end
 		if unit == UNIT.TARGET then updatePower(getCfg(UNIT.TARGET), UNIT.TARGET) end
@@ -15188,6 +15387,7 @@ onEvent = function(self, event, unit, ...)
 			if bossCfg.enabled then
 				updateHealth(bossCfg, unit)
 				UF.DataBar.Update(bossCfg, unit)
+				UF.RefreshBossRangeFade()
 			end
 		end
 		if unit == UNIT.TARGET or unit == UNIT.FOCUS or isBossUnit(unit) then AuraUtil.RefreshHealerBuffPlacementUnit(unit) end
@@ -15207,7 +15407,7 @@ onEvent = function(self, event, unit, ...)
 		end
 	elseif event == "UNIT_TARGET" and unit == UNIT.TARGET then
 		local totCfg = getCfg(UNIT.TARGET_TARGET)
-		if totCfg.enabled then updateTargetTargetFrame(totCfg) end
+		if totCfg.enabled then updateTargetTargetFrame(totCfg, false, true) end
 		local targetCfg = getCfg(UNIT.TARGET)
 		local targetStatusCfg = targetCfg and targetCfg.status
 		local targetTargetNameCfg = targetStatusCfg and targetStatusCfg.targetTargetName
@@ -15282,10 +15482,15 @@ onEvent = function(self, event, unit, ...)
 		if isBossUnit(unit) then
 			if not (states[unit] and states[unit].castInterruptActive) then stopCast(unit) end
 		end
+	elseif event == "ENCOUNTER_START" then
+		UF.RefreshBossRangeFade()
+	elseif event == "ENCOUNTER_END" then
+		UF.StopBossRangeFadeTicker(true)
 	elseif event == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" then
-		updateBossFrames(true)
+		UF.ScheduleBossRuntimeRefresh()
 	elseif event == "UNIT_TARGETABLE_CHANGED" and isBossUnit(unit) then
-		updateBossFrames(true)
+		UF.RefreshBossUnitRuntime(unit)
+		UF.RefreshBossRangeFade()
 	elseif event == "UNIT_PET" and unit == "player" then
 		local petCfg = getCfg(UNIT.PET)
 		if petCfg.enabled then
@@ -15340,6 +15545,7 @@ local function ensureEventHandling()
 	if not anyUFEnabled() then
 		hideBossFrames()
 		UF.ScheduleRangeFadeRefresh(true)
+		UF.StopBossRangeFadeTicker(true)
 		UF.CancelTextUpdate()
 		if UFHelper and UFHelper.disableCombatFeedbackAll then UFHelper.disableCombatFeedbackAll(states) end
 		if eventFrame and eventFrame.UnregisterAllEvents then eventFrame:UnregisterAllEvents() end
@@ -15361,8 +15567,7 @@ local function ensureEventHandling()
 				updateCombatIndicator(states[UNIT.PLAYER] and states[UNIT.PLAYER].cfg or ensureDB(UNIT.PLAYER), UNIT.PLAYER)
 				updateCombatIndicator(states[UNIT.TARGET] and states[UNIT.TARGET].cfg or ensureDB(UNIT.TARGET), UNIT.TARGET)
 				updateCombatIndicator(states[UNIT.FOCUS] and states[UNIT.FOCUS].cfg or ensureDB(UNIT.FOCUS), UNIT.FOCUS)
-				ensureBossFramesReady(ensureDB("boss"))
-				updateBossFrames(true)
+				configureBossFrames()
 				updateAllRaidTargetIcons()
 				UF.UpdateAllPvPIndicators()
 				UF.UpdateAllRoleIndicators(false)
@@ -15380,7 +15585,7 @@ local function ensureEventHandling()
 				updateCombatIndicator(states[UNIT.TARGET] and states[UNIT.TARGET].cfg or ensureDB(UNIT.TARGET), UNIT.TARGET)
 				updateCombatIndicator(states[UNIT.FOCUS] and states[UNIT.FOCUS].cfg or ensureDB(UNIT.FOCUS), UNIT.FOCUS)
 				hideBossFrames(true)
-				if ensureDB("boss").enabled then updateBossFrames(true) end
+				if ensureDB("boss").enabled then configureBossFrames() end
 				updateAllRaidTargetIcons()
 				UF.UpdateAllPvPIndicators()
 				UF.UpdateAllRoleIndicators(false)
@@ -15411,12 +15616,14 @@ local function ensureEventHandling()
 		eventFrame:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
 	end
 	if ensureDB("boss").enabled then
+		eventFrame:RegisterEvent("ENCOUNTER_START")
+		eventFrame:RegisterEvent("ENCOUNTER_END")
 		eventFrame:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
-		eventFrame:RegisterEvent("UNIT_TARGETABLE_CHANGED")
 	end
 	UF._registerUnitScopedEvents(anyPortraitEnabled())
 	syncTargetRangeFadeConfig(ensureDB(UNIT.TARGET), defaultsFor(UNIT.TARGET))
 	UF.ScheduleRangeFadeRefresh(false)
+	UF.RefreshBossRangeFade()
 	UF.UpdateAllTexts(true)
 end
 
@@ -15438,10 +15645,7 @@ function UF.Enable()
 	if ensureDB(UNIT.FOCUS).enabled then updateFocusFrame(ensureDB(UNIT.FOCUS), true) end
 	if ensureDB(UNIT.PET).enabled then applyConfig(UNIT.PET) end
 	local bossCfg = ensureDB("boss")
-	if bossCfg.enabled then
-		ensureBossFramesReady(bossCfg)
-		updateBossFrames(true)
-	end
+	if bossCfg.enabled then configureBossFrames() end
 	if addon.functions and addon.functions.UpdateClassResourceVisibility then addon.functions.UpdateClassResourceVisibility() end
 	-- hideBlizzardPlayerFrame()
 	-- hideBlizzardTargetFrame()
@@ -15502,8 +15706,7 @@ function UF.Refresh()
 		applyVisibilityRules(UNIT.PET)
 	end
 	if bossCfg.enabled then
-		ensureBossFramesReady(bossCfg)
-		updateBossFrames(true)
+		configureBossFrames()
 	else
 		hideBossFrames()
 		applyVisibilityRules("boss")
@@ -15542,7 +15745,7 @@ function UF.RefreshUnit(unit)
 			applyVisibilityRules(UNIT.PET)
 		end
 	elseif isBossUnit(unit) then
-		updateBossFrames(true)
+		configureBossFrames()
 	else
 		applyConfig(UNIT.PLAYER)
 	end
@@ -15552,6 +15755,7 @@ end
 function UF.Initialize()
 	if addon.Aura.UFInitialized then return end
 	if not addon.db then return end
+	if UFProfileManager and UFProfileManager.MaybeInitialize then UFProfileManager.MaybeInitialize() end
 	addon.Aura.UFInitialized = true
 	UF.RegisterDynamicAnchors()
 	if UF.RegisterSettings then UF.RegisterSettings() end
@@ -15596,8 +15800,7 @@ function UF.Initialize()
 	cfg = ensureDB("boss")
 	if cfg.enabled then
 		ensureEventHandling()
-		ensureBossFramesReady(cfg)
-		updateBossFrames(true)
+		configureBossFrames()
 	end
 	if isBossFrameSettingEnabled() then DisableBossFrames() end
 	UF.RefreshStandaloneCastbar()
@@ -15617,7 +15820,7 @@ UF.EnsureFrames = ensureFrames
 UF.ApplyVisibilityRules = applyVisibilityRules
 UF.ApplyVisibilityRulesAll = applyVisibilityRulesAll
 UF.StopEventsIfInactive = function() ensureEventHandling() end
-UF.UpdateBossFrames = updateBossFrames
+UF.ConfigureBossFrames = configureBossFrames
 UF.HideBossFrames = hideBossFrames
 UF.FullScanTargetAuras = AuraUtil.fullScanTargetAuras
 UF.RefreshNativeAuraIgnoreFilters = AuraUtil.RefreshNativeAuraIgnoreFilters

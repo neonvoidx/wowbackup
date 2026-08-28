@@ -416,6 +416,15 @@ local function applyFancyPRDTextures()
 	fancyPRDRunning = false
 end
 
+local function HideQuickJoinFunc()
+	local qj = QuickJoinToastButton
+	qj:UnregisterEvent("SOCIAL_QUEUE_UPDATE")
+	qj.Toast:SetScript("OnShow", function(self) if HideQuickJoinDB then self:Hide() else self:Show() end end)
+	qj.Toast:Hide()
+	qj.Toast2:SetScript("OnShow", function(self) if HideQuickJoinDB then self:Hide() else self:Show() end end)
+	qj.Toast2:Hide()
+end
+
 -- #region Main Tweaks
 local function OnEvent(self, event, ...)
 	if event == "ADDON_LOADED" then
@@ -450,6 +459,8 @@ local function OnEvent(self, event, ...)
 			end
 		end
 
+
+		HideQuickJoinFunc()
 		-- This event is fired anytime you see a load screen, i.e on login, on UI reload, on new area etc
 		-- #region Hide/Show UI elements
 		-- Hide micromenu
@@ -534,6 +545,11 @@ local function OnEvent(self, event, ...)
 		SetCVar("UnitNameOwn", 1) -- Show own name
 		SetCVar("UnitNamePlayerPVPTitle", 0) -- Show character title
 		SetCVar("UnitNamePlayerGuild", 0) -- Show guild
+		SetCVar("UnitNameFriendlyPetName", 1) -- Pet name
+
+		-- Targeting
+		SetCVar("SoftTargetEnemy", 3) -- target where looking
+		SetCVar("deselectOnClick", 0) -- sticky targeting, have to press esc to drop target
 		-- Name size
 		SetCVar("WorldTextMinSize", 12)
 

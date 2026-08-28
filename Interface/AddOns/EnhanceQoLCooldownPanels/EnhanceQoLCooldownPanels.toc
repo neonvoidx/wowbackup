@@ -1,7 +1,7 @@
 ## Interface: 120100
 ## Title: Enhance QoL Cooldown Panels
 ## Author: R41Z0R
-## Version: 12.7.0
+## Version: 12.8.3
 ## Notes: Custom cooldown panels and tracked ability bars
 ## Notes-deDE: Eigene Abklingzeit-Panels und Leisten fuer verfolgte Faehigkeiten
 ## Notes-esES: Paneles de reutilizacion personalizados y barras de habilidades rastreadas

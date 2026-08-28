@@ -1,5 +1,8 @@
 # Changelog
 
+## 4.6.3 - Player Aura Lua Error Fix
+- Fixed repeated Lua errors when Blizzard player aura data is protected.
+
 ## 4.6.2 - Cast Bar Repositioning Fix
 - Fixed the Reposition Cast Bar option not moving target and focus cast bars.
 

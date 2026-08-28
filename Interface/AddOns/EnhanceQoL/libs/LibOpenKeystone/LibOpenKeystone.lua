@@ -1,10 +1,11 @@
 -- LibOpenKeystone-1.0 (minimal, LOR-compatible J/K comms only)
-local MAJOR, MINOR = "LibOpenKeystone-1.0", 5
+local MAJOR, MINOR = "LibOpenKeystone-1.0", 6
 local lib = LibStub:NewLibrary(MAJOR, MINOR)
 if not lib then return end
 
 -- forward declarations for luacheck/lint friendliness
 local ReadOwnKeystone, SendLogged, BuildKPayload, EnsureAceReceiver, UpdateRegistrations
+local RefreshOwnKeystone, PruneKeystoneData, SchedulePostChallengeRefresh
 
 -- Storage
 lib.UnitData = lib.UnitData or {} -- [ "Name" or "Name-Realm" ] = { challengeMapID=..., level=..., lastSeen=... }
@@ -16,10 +17,13 @@ lib._bagPending = lib._bagPending or false
 -- OOC gating flags
 lib._pendingSendMyData = lib._pendingSendMyData or false
 lib._pendingRequestParty = lib._pendingRequestParty or false
+lib._pendingRefresh = lib._pendingRefresh or false
 -- M+ gating
 lib._mplusActive = lib._mplusActive or false
 lib._eligible = lib._eligible or true -- assume true until we can evaluate
 lib._enabled = lib._enabled or false
+lib._refreshSequence = lib._refreshSequence or 0
+lib._rosterFingerprint = lib._rosterFingerprint or nil
 
 -- Outgoing messages use a custom prefix; incoming accepts both LibOpenRaid
 -- and LibOpenKeystone prefixes
@@ -55,6 +59,25 @@ end
 
 local function Now() return GetServerTime() end
 local function InCombat() return InCombatLockdown and InCombatLockdown() end
+
+local function IsRelevantRestrictionType(restrictionType)
+	local restrictionTypes = Enum and Enum.AddOnRestrictionType
+	if not restrictionTypes then return false end
+	return restrictionType == restrictionTypes.Combat or restrictionType == restrictionTypes.ChallengeMode or restrictionType == restrictionTypes.Chat
+end
+
+local function IsRestricted()
+	if InCombat() or lib._mplusActive then return true end
+	local restrictionTypes = Enum and Enum.AddOnRestrictionType
+	local restrictionStates = Enum and Enum.AddOnRestrictionState
+	local restrictedActions = _G and _G.C_RestrictedActions
+	if not (restrictionTypes and restrictionStates and restrictedActions and restrictedActions.GetAddOnRestrictionState) then return false end
+
+	for _, restrictionType in ipairs({ restrictionTypes.Combat, restrictionTypes.ChallengeMode, restrictionTypes.Chat }) do
+		if restrictionType and restrictedActions.GetAddOnRestrictionState(restrictionType) ~= restrictionStates.Inactive then return true end
+	end
+	return false
+end
 
 local function IsMPlusActive()
 	if C_ChallengeMode and C_ChallengeMode.IsChallengeModeActive then
@@ -100,20 +123,29 @@ function lib.SetEnabled(enabled)
 	lib._pendingAnnounce = false
 	lib._pendingSendMyData = false
 	lib._pendingRequestParty = false
+	lib._pendingRefresh = false
 	lib._bagPending = false
 	lib._lastRequestAt = 0
+	lib._refreshSequence = (lib._refreshSequence or 0) + 1
+	lib._rosterFingerprint = nil
 
 	if lib.WipeKeystoneData then lib.WipeKeystoneData() end
 end
 
 local function FlushPending()
 	if not lib.IsEnabled() then return end
-	if lib._pendingRequestParty and lib._eligible and not InCombat() and not lib._mplusActive then
+	if IsRestricted() then return end
+	if lib._pendingRefresh and lib._eligible then
+		lib._pendingRefresh = false
+		RefreshOwnKeystone()
+	end
+	if lib._pendingRequestParty and lib._eligible then
 		lib._pendingRequestParty = false
 		-- Anfrage nach OOC
+		lib._lastRequestAt = GetTime()
 		SendLogged(KREQ_PREFIX)
 	end
-	if lib._pendingSendMyData and lib._eligible and not InCombat() and not lib._mplusActive then
+	if lib._pendingSendMyData and lib._eligible then
 		lib._pendingSendMyData = false
 		-- Eigen-Daten nach OOC
 		local mapID, level = ReadOwnKeystone()
@@ -157,6 +189,81 @@ function ReadOwnKeystone()
 		level = C_ChallengeMode.GetOwnedKeystoneLevel and (C_ChallengeMode.GetOwnedKeystoneLevel() or 0) or 0
 	end
 	return mapID, level
+end
+
+RefreshOwnKeystone = function()
+	if not lib.IsEnabled() or not lib._eligible then return false end
+	if IsRestricted() then
+		lib._pendingRefresh = true
+		return false
+	end
+
+	local me = FullName("player")
+	local mapID, level = ReadOwnKeystone()
+	local current = lib.UnitData[me]
+	if current and current.challengeMapID == mapID and current.level == level then
+		current.lastSeen = Now()
+		return true, false, mapID, level
+	end
+
+	lib.UnitData[me] = { challengeMapID = mapID, level = level, lastSeen = Now() }
+	Fire("KeystoneUpdate", me, lib.UnitData[me])
+	if IsInGroup() then QueueSendMyData() end
+	return true, true, mapID, level
+end
+
+PruneKeystoneData = function()
+	local roster = {}
+	local rosterNames = {}
+	local function AddUnit(unit)
+		if UnitExists(unit) then
+			local unitName = FullName(unit)
+			if not roster[unitName] then
+				roster[unitName] = true
+				rosterNames[#rosterNames + 1] = unitName
+			end
+		end
+	end
+
+	AddUnit("player")
+	if IsInRaid() then
+		for index = 1, GetNumGroupMembers() do
+			AddUnit("raid" .. index)
+		end
+	elseif IsInGroup() then
+		for index = 1, GetNumSubgroupMembers() do
+			AddUnit("party" .. index)
+		end
+	end
+	table.sort(rosterNames)
+	local fingerprint = table.concat(rosterNames, "\031")
+	if fingerprint ~= lib._rosterFingerprint then
+		lib._rosterFingerprint = fingerprint
+		lib._lastRequestAt = 0
+	end
+
+	local removed = false
+	for unitName in pairs(lib.UnitData) do
+		if not roster[unitName] then
+			lib.UnitData[unitName] = nil
+			removed = true
+		end
+	end
+	if removed then Fire("KeystoneWipe", lib.UnitData) end
+end
+
+SchedulePostChallengeRefresh = function()
+	lib._refreshSequence = (lib._refreshSequence or 0) + 1
+	local sequence = lib._refreshSequence
+	for attempt, delay in ipairs({ 0.75, 2.5, 6 }) do
+		local requestParty = attempt == 2
+		C_Timer.After(delay, function()
+			if not lib.IsEnabled() or sequence ~= lib._refreshSequence then return end
+			lib._pendingRefresh = true
+			if requestParty and IsInGroup() then lib._pendingRequestParty = true end
+			FlushPending()
+		end)
+	end
 end
 
 -- Public API
@@ -362,7 +469,9 @@ local EVENT_NAMES = {
 	"PLAYER_REGEN_ENABLED",
 	"CHALLENGE_MODE_START",
 	"CHALLENGE_MODE_COMPLETED",
+	"CHALLENGE_MODE_COMPLETED_REWARDS",
 	"CHALLENGE_MODE_RESET",
+	"ADDON_RESTRICTION_STATE_CHANGED",
 	"PLAYER_LEVEL_UP",
 }
 
@@ -377,12 +486,10 @@ UpdateRegistrations = function(enabled)
 			end
 			lib._aceRegistered = true
 		end
-		if not lib._eventsRegistered then
-			for _, eventName in ipairs(EVENT_NAMES) do
-				f:RegisterEvent(eventName)
-			end
-			lib._eventsRegistered = true
+		for _, eventName in ipairs(EVENT_NAMES) do
+			f:RegisterEvent(eventName)
 		end
+		lib._eventsRegistered = true
 	else
 		if lib._ace and lib._aceRegistered then
 			for p in pairs(RECV_PREFIXES) do
@@ -405,6 +512,7 @@ f:SetScript("OnEvent", function(_, ev, ...)
 		lib._mplusActive = IsMPlusActive()
 		-- Evaluate eligibility (max level)
 		lib._eligible = IsEligibleForKeystone()
+		if ev == "GROUP_ROSTER_UPDATE" then PruneKeystoneData() end
 		-- Debounce bursts: schedule a single announce for rapid event sequences
 		if not lib._pendingAnnounce then
 			lib._pendingAnnounce = true
@@ -413,13 +521,8 @@ f:SetScript("OnEvent", function(_, ev, ...)
 				if IsInGroup() then
 					lib.RequestKeystoneDataFromParty()
 				else
-					-- solo: just refresh local
-					if not lib._mplusActive and lib._eligible then
-						local me = UnitName("player")
-						local mapID, level = ReadOwnKeystone()
-						lib.UnitData[me] = { challengeMapID = mapID, level = level, lastSeen = Now() }
-						Fire("KeystoneUpdate", me, lib.UnitData[me])
-					end
+					lib._pendingRefresh = true
+					FlushPending()
 				end
 			end)
 		end
@@ -430,25 +533,8 @@ f:SetScript("OnEvent", function(_, ev, ...)
 			lib._bagPending = true
 			C_Timer.After(0.15, function()
 				lib._bagPending = false
-				-- if our key changed, notify group (cheap)
-				local me = UnitName("player")
-				local mapID, level = ReadOwnKeystone()
-				local e = lib.UnitData[me]
-				if not e or e.challengeMapID ~= mapID or e.level ~= level then
-					if not lib._mplusActive then
-						lib.UnitData[me] = { challengeMapID = mapID, level = level, lastSeen = Now() }
-						Fire("KeystoneUpdate", me, lib.UnitData[me])
-					end
-					if IsInGroup() then
-						if lib._mplusActive then
-							-- no-op during active M+
-						elseif InCombat() then
-							QueueSendMyData()
-						else
-							SendLogged(BuildKPayload(mapID, level))
-						end
-					end
-				end
+				lib._pendingRefresh = true
+				FlushPending()
 			end)
 		end
 	elseif ev == "PLAYER_REGEN_ENABLED" then
@@ -457,16 +543,28 @@ f:SetScript("OnEvent", function(_, ev, ...)
 	elseif ev == "CHALLENGE_MODE_START" then
 		-- During active M+ do not send any comms
 		lib._mplusActive = true
+		lib._refreshSequence = (lib._refreshSequence or 0) + 1
 	elseif ev == "CHALLENGE_MODE_RESET" then
-		-- Run aborted: allow comms again and do a delayed flush
+		-- Run aborted: reconcile once restrictions have cleared.
 		lib._mplusActive = false
-		lib._pendingRequestParty = true -- ensure a fresh check after abort
-		C_Timer.After(2.0, FlushPending)
+		lib._pendingRefresh = true
+		SchedulePostChallengeRefresh()
 	elseif ev == "CHALLENGE_MODE_COMPLETED" then
-		-- After finish: small grace period, then flush any pending
+		-- The replacement key may become available after the completion event.
 		lib._mplusActive = false
-		lib._pendingRequestParty = true -- ensure a fresh check after finish
-		C_Timer.After(2.0, FlushPending)
+		lib._pendingRefresh = true
+		SchedulePostChallengeRefresh()
+	elseif ev == "CHALLENGE_MODE_COMPLETED_REWARDS" then
+		lib._pendingRefresh = true
+		FlushPending()
+	elseif ev == "ADDON_RESTRICTION_STATE_CHANGED" then
+		local restrictionType, state = ...
+		if IsRelevantRestrictionType(restrictionType) then
+			local inactive = Enum and Enum.AddOnRestrictionState and Enum.AddOnRestrictionState.Inactive
+			if state == inactive then
+				C_Timer.After(0, FlushPending)
+			end
+		end
 	elseif ev == "PLAYER_LEVEL_UP" then
 		local was = lib._eligible
 		lib._eligible = IsEligibleForKeystone()
@@ -485,25 +583,26 @@ UpdateRegistrations(lib.IsEnabled())
 function lib.RequestKeystoneDataFromParty()
 	if not lib.IsEnabled() then return end
 	if not (IsInGroup() or IsInRaid()) then return end
+	if IsRestricted() then
+		QueueRequestParty()
+		QueueSendMyData()
+		return
+	end
 	-- simple cooldown to avoid burst storms
 	local t = GetTime()
 	if (t - (lib._lastRequestAt or 0)) < 5 then return end
 	lib._lastRequestAt = t
 
-	-- Anfrage
-	if lib._mplusActive then return end
-	if InCombat() then
+	-- Eigenen Cache vor Anfrage und Antwort abgleichen.
+	local refreshed, _, mapID, level = RefreshOwnKeystone()
+	if not refreshed then
 		QueueRequestParty()
-	else
-		SendLogged(KREQ_PREFIX)
+		QueueSendMyData()
+		return
 	end
 
-	-- sofortige Eigen-Antwort
-	local mapID, level = ReadOwnKeystone()
-	if lib._mplusActive then return end
-	if InCombat() then
-		QueueSendMyData()
-	else
-		SendLogged(BuildKPayload(mapID, level))
-	end
+	-- Anfrage und sofortige Eigen-Antwort
+	SendLogged(KREQ_PREFIX)
+	lib._pendingSendMyData = false
+	SendLogged(BuildKPayload(mapID, level))
 end

@@ -3341,7 +3341,8 @@ function Editor:RefreshRuleControls()
 	local showIconRuleMode = selectedGroupStyle == "ICON" or selectedGroupStyle == "SQUARE"
 	local showMissingDesaturate = showRuleNot and selectedGroupStyle == "ICON" and rule ~= nil and rule["not"] == true
 	local showExpirationPulse = showIconRuleMode and rule ~= nil and rule["not"] ~= true
-	local showTintRuleMatch = selectedGroupStyle == "TINT"
+	local showExpirationPulseThreshold = showExpirationPulse and not usesManagedAuraContainers
+	local showTintRuleMatch = not usesManagedAuraContainers and selectedGroupStyle == "TINT"
 	local showRuleColor = styleSupportsRuleColor(selectedGroupStyle)
 	local showDurationColorSteps = not usesManagedAuraContainers and showRuleColor and rule ~= nil and rule["not"] ~= true
 	local showBarDrainInfo = selectedGroupStyle == "BAR" and selectedGroup and selectedGroup.barDrainAnimation == true
@@ -3382,14 +3383,22 @@ function Editor:RefreshRuleControls()
 	controls.RuleExpirationPulseThresholdValue:ClearAllPoints()
 	controls.RuleExpirationPulseThresholdValue:SetPoint("LEFT", controls.RuleExpirationPulseThreshold, "RIGHT", 12, 0)
 	controls.RuleExpirationPulseColorLabel:ClearAllPoints()
-	controls.RuleExpirationPulseColorLabel:SetPoint("TOPLEFT", controls.RuleExpirationPulseThresholdLabel, "BOTTOMLEFT", -4, -14)
+	if showExpirationPulseThreshold then
+		controls.RuleExpirationPulseColorLabel:SetPoint("TOPLEFT", controls.RuleExpirationPulseThresholdLabel, "BOTTOMLEFT", -4, -14)
+	else
+		controls.RuleExpirationPulseColorLabel:SetPoint("TOPLEFT", controls.RuleExpirationPulse, "BOTTOMLEFT", 0, -10)
+	end
 	controls.RuleExpirationPulseColorButton:ClearAllPoints()
 	controls.RuleExpirationPulseColorButton:SetPoint("LEFT", controls.RuleExpirationPulseColorLabel, "RIGHT", 10, 0)
 	controls.RuleExpirationPulseCountdownOnly:ClearAllPoints()
 	controls.RuleExpirationPulseCountdownOnly:SetPoint("TOPLEFT", controls.RuleExpirationPulseColorLabel, "BOTTOMLEFT", -4, -10)
 	controls.RuleAppliesParty:ClearAllPoints()
 	if showExpirationPulse and rule and rule.expirationPulseEnabled == true then
-		controls.RuleAppliesParty:SetPoint("TOPLEFT", controls.RuleExpirationPulseCountdownOnly, "BOTTOMLEFT", 0, -6)
+		if showExpirationPulseThreshold then
+			controls.RuleAppliesParty:SetPoint("TOPLEFT", controls.RuleExpirationPulseCountdownOnly, "BOTTOMLEFT", 0, -6)
+		else
+			controls.RuleAppliesParty:SetPoint("TOPLEFT", controls.RuleExpirationPulseColorLabel, "BOTTOMLEFT", 0, -8)
+		end
 	elseif showExpirationPulse then
 		controls.RuleAppliesParty:SetPoint("TOPLEFT", controls.RuleExpirationPulse, "BOTTOMLEFT", 0, -6)
 	elseif showMissingDesaturate then
@@ -3491,16 +3500,16 @@ function Editor:RefreshRuleControls()
 	setControlEnabled(controls.RuleMissingDesaturate, showMissingDesaturate and rule ~= nil)
 	setControlVisible(controls.RuleExpirationPulse, showExpirationPulse)
 	setControlEnabled(controls.RuleExpirationPulse, showExpirationPulse and rule ~= nil)
-	setControlVisible(controls.RuleExpirationPulseThresholdLabel, showExpirationPulse and rule and rule.expirationPulseEnabled == true)
-	setControlVisible(controls.RuleExpirationPulseThreshold, showExpirationPulse and rule and rule.expirationPulseEnabled == true)
-	setControlVisible(controls.RuleExpirationPulseThresholdValue, showExpirationPulse and rule and rule.expirationPulseEnabled == true)
-	setControlEnabled(controls.RuleExpirationPulseThreshold, showExpirationPulse and rule and rule.expirationPulseEnabled == true)
-	setControlEnabled(controls.RuleExpirationPulseThresholdValue, showExpirationPulse and rule and rule.expirationPulseEnabled == true)
+	setControlVisible(controls.RuleExpirationPulseThresholdLabel, showExpirationPulseThreshold and rule and rule.expirationPulseEnabled == true)
+	setControlVisible(controls.RuleExpirationPulseThreshold, showExpirationPulseThreshold and rule and rule.expirationPulseEnabled == true)
+	setControlVisible(controls.RuleExpirationPulseThresholdValue, showExpirationPulseThreshold and rule and rule.expirationPulseEnabled == true)
+	setControlEnabled(controls.RuleExpirationPulseThreshold, showExpirationPulseThreshold and rule and rule.expirationPulseEnabled == true)
+	setControlEnabled(controls.RuleExpirationPulseThresholdValue, showExpirationPulseThreshold and rule and rule.expirationPulseEnabled == true)
 	setControlVisible(controls.RuleExpirationPulseColorLabel, showExpirationPulse and rule and rule.expirationPulseEnabled == true)
 	setControlVisible(controls.RuleExpirationPulseColorButton, showExpirationPulse and rule and rule.expirationPulseEnabled == true)
 	setControlEnabled(controls.RuleExpirationPulseColorButton, showExpirationPulse and rule and rule.expirationPulseEnabled == true)
-	setControlVisible(controls.RuleExpirationPulseCountdownOnly, showExpirationPulse and rule and rule.expirationPulseEnabled == true)
-	setControlEnabled(controls.RuleExpirationPulseCountdownOnly, showExpirationPulse and rule and rule.expirationPulseEnabled == true)
+	setControlVisible(controls.RuleExpirationPulseCountdownOnly, showExpirationPulseThreshold and rule and rule.expirationPulseEnabled == true)
+	setControlEnabled(controls.RuleExpirationPulseCountdownOnly, showExpirationPulseThreshold and rule and rule.expirationPulseEnabled == true)
 	setControlEnabled(controls.RuleAppliesParty, rule ~= nil)
 	setControlEnabled(controls.RuleAppliesRaid, rule ~= nil)
 	setControlEnabled(controls.RuleAppliesTarget, rule ~= nil)
@@ -3651,7 +3660,8 @@ function Editor:RefreshGroupControls()
 		local showBarReverseFill = style == "BAR" and group.barDrainAnimation == true
 		local showCooldownSwipe = style == "ICON" or style == "SQUARE"
 		local showCooldownDrawOptions = style == "ICON" or style == "SQUARE"
-		local showTextSizeOverrides = style == "ICON" or style == "SQUARE"
+		local showCooldownTextOptions = style == "ICON" or style == "SQUARE"
+		local showChargeTextOptions = style == "ICON" or style == "SQUARE"
 		local showIndicatorBorder = style == "ICON" or style == "SQUARE"
 
 		controls.GroupName:SetText(group.name or "")
@@ -3792,8 +3802,8 @@ function Editor:RefreshGroupControls()
 		setSliderState(controls.SpacingLabel, controls.Spacing, controls.SpacingValue, showGrid, true)
 		setSliderState(controls.SizeLabel, controls.Size, controls.SizeValue, showSize, true)
 		setSliderState(controls.IconZoomLabel, controls.IconZoom, controls.IconZoomValue, showIconZoom, true)
-		setSliderState(controls.CooldownTextSizeLabel, controls.CooldownTextSize, controls.CooldownTextSizeValue, showTextSizeOverrides, group.showCooldown ~= false)
-		setSliderState(controls.ChargeTextSizeLabel, controls.ChargeTextSize, controls.ChargeTextSizeValue, showTextSizeOverrides, true)
+		setSliderState(controls.CooldownTextSizeLabel, controls.CooldownTextSize, controls.CooldownTextSizeValue, showCooldownTextOptions, group.showCooldown ~= false)
+		setSliderState(controls.ChargeTextSizeLabel, controls.ChargeTextSize, controls.ChargeTextSizeValue, showChargeTextOptions, true)
 		setSliderState(controls.XLabel, controls.XOffset, controls.XValue, showOffsets, true)
 		setSliderState(controls.YLabel, controls.YOffset, controls.YValue, showOffsets, true)
 		setSliderState(controls.BarWidthLabel, controls.BarWidth, controls.BarWidthValue, showBarDimensions, true)
@@ -3819,7 +3829,7 @@ function Editor:RefreshGroupControls()
 		setCheckState(controls.CooldownSwipe, showCooldownSwipe, cooldownEnabled, group.showCooldownSwipe ~= false)
 		setCheckState(controls.CooldownEdge, showCooldownDrawOptions, cooldownEnabled, group.showCooldownEdge ~= false)
 		setCheckState(controls.CooldownBling, showCooldownDrawOptions, cooldownEnabled, group.showCooldownBling ~= false)
-		setCheckState(controls.HideCooldownText, showCooldownDrawOptions, cooldownEnabled, group.hideCooldownText == true)
+		setCheckState(controls.HideCooldownText, showCooldownTextOptions, cooldownEnabled, group.hideCooldownText == true)
 		setCheckState(controls.HideChargeText, showCooldownDrawOptions, true, group.hideChargeText == true)
 	else
 		controls.GroupName:SetText("")
@@ -4067,7 +4077,7 @@ local function applyPreviewCharges(icon, group, ac, sampleIndex)
 	local text = icon.PreviewCount
 	if not text then return end
 
-	if group.hideChargeText == true then
+	if group.hideChargeText == true or (ac and ac.showStacks == false) then
 		text:SetText("")
 		text:Hide()
 		return
@@ -4243,6 +4253,7 @@ local function applyPreviewIndicatorBorder(icon, group)
 end
 
 local function applyPreviewExpirationPulse(icon, group, rule, sampleIndex, now, loopEnabled, loopOrigin)
+	local usesManagedAuraContainers = addon.AuraCompat and addon.AuraCompat.ShouldUseAuraContainer and addon.AuraCompat:ShouldUseAuraContainer() == true
 	if not (icon and group and rule and rule.expirationPulseEnabled == true) then
 		hidePreviewExpirationPulseBorder(icon)
 		return
@@ -4252,13 +4263,18 @@ local function applyPreviewExpirationPulse(icon, group, rule, sampleIndex, now, 
 		hidePreviewExpirationPulseBorder(icon)
 		return
 	end
-	local threshold = roundInt(tonumber(rule.expirationPulseThreshold) or 3)
-	if threshold < 1 then threshold = 1 end
-	if threshold > 10 then threshold = 10 end
-	local _, remaining = getPreviewCooldownTiming(sampleIndex, now, loopEnabled, loopOrigin)
+	local duration, remaining = getPreviewCooldownTiming(sampleIndex, now, loopEnabled, loopOrigin)
+	local threshold
+	if usesManagedAuraContainers then
+		threshold = (tonumber(duration) or 0) * 0.3
+	else
+		threshold = roundInt(tonumber(rule.expirationPulseThreshold) or 3)
+		if threshold < 1 then threshold = 1 end
+		if threshold > 10 then threshold = 10 end
+	end
 	local inPulse = remaining and remaining <= threshold
 	if icon.PreviewCooldown and icon.PreviewCooldown.SetHideCountdownNumbers then
-		icon.PreviewCooldown:SetHideCountdownNumbers((group.hideCooldownText == true) or (rule.expirationPulseCountdownOnly == true and not inPulse))
+		icon.PreviewCooldown:SetHideCountdownNumbers((group.hideCooldownText == true) or (not usesManagedAuraContainers and rule.expirationPulseCountdownOnly == true and not inPulse))
 	end
 	if not inPulse then
 		hidePreviewExpirationPulseBorder(icon)
@@ -4359,6 +4375,7 @@ local function isPreviewGroupTintActive(placement, group, kind, classToken)
 	if not (placement and group and group.id) then return false end
 	local ruleIds = getRuleIdsForGroup(placement, group.id, kind, classToken)
 	local ruleMatch = tostring(group.ruleMatch or "ANY"):upper()
+	if addon.AuraCompat and addon.AuraCompat.ShouldUseAuraContainer and addon.AuraCompat:ShouldUseAuraContainer() then ruleMatch = "ANY" end
 	if ruleMatch == "ALL" then
 		if #ruleIds == 0 then return false end
 		for i = 1, #ruleIds do

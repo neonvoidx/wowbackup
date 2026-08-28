@@ -330,30 +330,84 @@ friendsData[#friendsData + 1] = {
 applyParentSection(friendsData, friendsExpandable)
 addon.functions.SettingsCreateCheckboxes(cSocial, friendsData)
 
-local summonsExpandable = addon.functions.SettingsCreateExpandableSection(nil, {
-	name = L["autoAcceptSummon"],
-	configPageKey = "AutoAcceptSummons",
-	modernCategory = "gameplay",
-	modernOnly = true,
-	iconKey = "teleports",
-	expanded = false,
-	colorizeTitle = false,
-})
-
-addon.functions.SettingsCreateCheckbox(nil, {
-	var = "autoAcceptSummon",
-	text = L["autoAcceptSummon"],
-	desc = L["autoAcceptSummonDesc"],
-	type = "CheckBox",
-	func = function(value) addon.db["autoAcceptSummon"] = value end,
-	parentSection = summonsExpandable,
-})
-
 ----- REGION END
 
 function addon.functions.initSocial() end
 
-local eventHandlers = {}
+local eventHandlers = {
+	["DUEL_REQUESTED"] = function()
+		if addon.db["blockDuelRequests"] then
+			CancelDuel()
+			StaticPopup_Hide("DUEL_REQUESTED")
+		end
+	end,
+	["PET_BATTLE_PVP_DUEL_REQUESTED"] = function()
+		if addon.db["blockPetBattleRequests"] then
+			C_PetBattles.CancelPVPDuel()
+			StaticPopup_Hide("PET_BATTLE_PVP_DUEL_REQUESTED")
+		end
+	end,
+	["PARTY_INVITE_REQUEST"] = function(unitName, arg2, arg3, arg4, arg5, arg6, inviterGUID, arg8)
+		if addon.db["autoAcceptGroupInvite"] then
+			if addon.db["autoAcceptGroupInviteGuildOnly"] then
+				local playerRealm = _G.GetNormalizedRealmName and _G.GetNormalizedRealmName()
+				if not playerRealm or playerRealm == "" then playerRealm = select(2, UnitFullName("player")) end
+
+				local function normalizeCharacterName(name)
+					if type(name) ~= "string" or name == "" then return nil end
+					local characterName, realmName = strsplit("-", name, 2)
+					if not characterName or characterName == "" then return nil end
+					if not realmName or realmName == "" then realmName = playerRealm end
+					if not realmName or realmName == "" then return nil end
+					return characterName .. "-" .. realmName
+				end
+
+				local normalizedInviterName = normalizeCharacterName(unitName)
+				local gMember = GetNumGuildMembers()
+				if gMember then
+					for i = 1, gMember do
+						local name, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, guid = GetGuildRosterInfo(i)
+						local matchesGuildMember
+						if inviterGUID and guid then
+							matchesGuildMember = inviterGUID == guid
+						else
+							matchesGuildMember = normalizedInviterName ~= nil and normalizeCharacterName(name) == normalizedInviterName
+						end
+						if matchesGuildMember then
+							AcceptGroup()
+							StaticPopup_Hide("PARTY_INVITE")
+							return
+						end
+					end
+				end
+			end
+			if addon.db["autoAcceptGroupInviteFriendOnly"] then
+				if C_BattleNet.GetGameAccountInfoByGUID(inviterGUID) then
+					AcceptGroup()
+					StaticPopup_Hide("PARTY_INVITE")
+					return
+				end
+				for i = 1, C_FriendList.GetNumFriends() do
+					local friendInfo = C_FriendList.GetFriendInfoByIndex(i)
+					if friendInfo.guid == inviterGUID then
+						AcceptGroup()
+						StaticPopup_Hide("PARTY_INVITE")
+						return
+					end
+				end
+			end
+			if not addon.db["autoAcceptGroupInviteGuildOnly"] and not addon.db["autoAcceptGroupInviteFriendOnly"] then
+				AcceptGroup()
+				StaticPopup_Hide("PARTY_INVITE")
+				return
+			end
+		end
+		if addon.db["blockPartyInvites"] then
+			DeclineGroup()
+			StaticPopup_Hide("PARTY_INVITE")
+		end
+	end,
+}
 
 local function registerEvents(frame)
 	for event in pairs(eventHandlers) do

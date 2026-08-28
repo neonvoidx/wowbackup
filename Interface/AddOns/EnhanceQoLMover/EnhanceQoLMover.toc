@@ -1,7 +1,7 @@
 ## Interface: 120100
 ## Title: Enhance QoL Mover
 ## Author: R41Z0R
-## Version: 12.7.0
+## Version: 12.8.3
 ## Notes: Move Blizzard frames
 ## Notes-deDE: Verschiebt Blizzard-Fenster
 ## Notes-esES: Mueve marcos de Blizzard

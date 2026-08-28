@@ -119,6 +119,36 @@ local function buildTeleportSettings()
 		parentSection = sectionTeleports,
 	})
 
+	local sectionGroupFinder = addon.SettingsLayout.gameplayGroupFinderSection
+	if sectionGroupFinder then
+		local groupFinderControlOrder = addon.SettingsLayout.gameplayGroupFinderControlOrder or {}
+		local groupFinderData = {
+			{
+				var = "groupfinderShowPartyKeystone",
+				text = L["groupfinderShowPartyKeystone"],
+				desc = L["groupfinderShowPartyKeystoneDesc"],
+				func = function(v)
+					addon.db["groupfinderShowPartyKeystone"] = v
+					if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.togglePartyKeystone then addon.MythicPlus.functions.togglePartyKeystone() end
+				end,
+				order = groupFinderControlOrder.groupfinderShowPartyKeystone,
+				parentSection = sectionGroupFinder,
+			},
+			{
+				var = "groupfinderShowDungeonScoreFrame",
+				text = L["groupfinderShowDungeonScoreFrame"]:format(DUNGEON_SCORE),
+				desc = L["groupfinderShowDungeonScoreFrameDesc"],
+				func = function(v)
+					addon.db["groupfinderShowDungeonScoreFrame"] = v
+					if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.toggleFrame then addon.MythicPlus.functions.toggleFrame() end
+				end,
+				order = groupFinderControlOrder.groupfinderShowDungeonScoreFrame,
+				parentSection = sectionGroupFinder,
+			},
+		}
+		table.sort(groupFinderData, function(a, b) return a.text < b.text end)
+		addon.functions.SettingsCreateCheckboxes(cGameplay, groupFinderData)
+	end
 end
 
 function addon.MythicPlus.functions.InitTeleportCompendiumSettings()

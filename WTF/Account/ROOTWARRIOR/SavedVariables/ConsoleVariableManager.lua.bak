@@ -9,16 +9,21 @@ CVM_SETTINGS = {
 ["calendarshowbattlegrounds"] = {
 ["addon"] = "LiteMount",
 ["source"] = "Interface/AddOns/LiteMount/AutoEventFrame.lua:14",
-["time"] = 1787663489,
+["time"] = 1787860464,
+},
+["unitnamefriendlypetname"] = {
+["addon"] = "Custom",
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["unitnamehostlenpc"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["nameplatemotionspeed"] = {
 ["source"] = "...Ons/BetterBlizzPlates/midnight/BetterBlizzPlates.lua:2823",
-["time"] = 1787663488,
+["time"] = 1787860464,
 },
 ["nameplateenemynpcauradisplay"] = {
 ["addon"] = "Blizzard UI",
@@ -27,8 +32,8 @@ CVM_SETTINGS = {
 },
 ["alwayscompareitems"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["encountertimelinehidelongcountdowns"] = {
 ["addon"] = "Blizzard UI",
@@ -38,7 +43,7 @@ CVM_SETTINGS = {
 ["calendarshowholidays"] = {
 ["addon"] = "LiteMount",
 ["source"] = "Interface/AddOns/LiteMount/AutoEventFrame.lua:14",
-["time"] = 1787663489,
+["time"] = 1787860464,
 },
 ["nameplateotheratbase"] = {
 ["addon"] = "Platynator",
@@ -47,37 +52,37 @@ CVM_SETTINGS = {
 },
 ["raidframesdisplayonlyhealerpowerbars"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["spellqueuewindow"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["statustext"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["externaldefensivesenabled"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["findyourselfmodecircle"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["nameplateshowfriendlyclasscolor"] = {
 ["source"] = "...Ons/BetterBlizzPlates/midnight/BetterBlizzPlates.lua:1274",
-["time"] = 1787663558,
+["time"] = 1787860494,
 },
 ["autodismount"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["raidframesdispelindicatoroverlay"] = {
 ["addon"] = "Blizzard_Settings_Shared",
@@ -87,7 +92,7 @@ CVM_SETTINGS = {
 ["actionbook-myth-state"] = {
 ["addon"] = "OPie",
 ["source"] = "...terface/AddOns/OPie/Libs/ActionBook/Conditionals.lua:1069",
-["time"] = 1787663489,
+["time"] = 1787860465,
 },
 ["enableconnecttophotosharing"] = {
 ["addon"] = "Blizzard UI",
@@ -96,8 +101,8 @@ CVM_SETTINGS = {
 },
 ["cursorfreelookstartdelta"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["nameplatethreatdisplay"] = {
 ["addon"] = "Blizzard UI",
@@ -106,8 +111,8 @@ CVM_SETTINGS = {
 },
 ["findyourselfinbgonlyincombat"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["nameplateplayermaxdistance"] = {
 ["addon"] = "Platynator",
@@ -117,32 +122,32 @@ CVM_SETTINGS = {
 ["miniworldmap"] = {
 ["addon"] = "Blizzard_WorldMap",
 ["source"] = "...face/AddOns/Blizzard_WorldMap/QuestLogOwnerMixin.lua:76",
-["time"] = 1787662393,
+["time"] = 1787854947,
 },
 ["raidframesdispelindicatoroverlayanimation"] = {
 ["addon"] = "Blizzard UI",
 ["source"] = "...lizzard_Settings_Shared/Blizzard_SettingControls.lua:608",
-["time"] = 1787142364,
+["time"] = 1787785965,
 },
 ["raidframesdisplaydebuffs"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["softtargetinteractarc"] = {
 ["addon"] = "BetterFishing",
 ["source"] = "Interface/AddOns/BetterFishing/BetterFishing.lua:325",
-["time"] = 1787663558,
+["time"] = 1787666217,
 },
 ["softtargetenemy"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["nameplatepersonalshowalways"] = {
 ["addon"] = "Custom",
 ["source"] = "Interface/AddOns/Custom/Custom.lua:1",
-["time"] = 1787663489,
+["time"] = 1787860465,
 },
 ["nameplateshowenemies"] = {
 ["addon"] = "Custom",
@@ -151,18 +156,18 @@ CVM_SETTINGS = {
 },
 ["findyourselfmodeoutline"] = {
 ["addon"] = "EnhanceQoL",
-["source"] = "Interface/AddOns/EnhanceQoL/EnhanceQoL.lua:3441",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/EnhanceQoL/EnhanceQoL.lua:3416",
+["time"] = 1787860465,
 },
 ["cameraindirectoffset"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["combatwarningsenabled"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["chatbubbles"] = {
 ["addon"] = "Blizzard UI",
@@ -176,141 +181,146 @@ CVM_SETTINGS = {
 },
 ["findyourselfinraid"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["ubertooltips"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["nameplatepersonalshowincombat"] = {
 ["addon"] = "Custom",
 ["source"] = "Interface/AddOns/Custom/Custom.lua:1",
-["time"] = 1787663489,
+["time"] = 1787860465,
 },
 ["lastlockedtieredentrancecompanionabilities"] = {
 ["addon"] = "Blizzard UI",
 ["source"] = "...onfiguration/Blizzard_DelvesCompanionAbilityList.lua:18",
-["time"] = 1787663490,
+["time"] = 1787860466,
 },
 ["nameplateoverlaph"] = {
 ["source"] = "...Ons/BetterBlizzPlates/midnight/BetterBlizzPlates.lua:1274",
-["time"] = 1787663558,
+["time"] = 1787860494,
 },
 ["spelldiminishpvpenemiesenabled"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["unitnameplayerpvptitle"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["nameplateoverlapv"] = {
 ["source"] = "...Ons/BetterBlizzPlates/midnight/BetterBlizzPlates.lua:1274",
-["time"] = 1787663558,
+["time"] = 1787860494,
 },
 ["nameplatehorizontalscale"] = {
 ["source"] = "...Ons/BetterBlizzPlates/midnight/BetterBlizzPlates.lua:2823",
-["time"] = 1787663488,
+["time"] = 1787860464,
 },
 ["statustextdisplay"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["lasttransmogcustomsetidnospec"] = {
-["addon"] = "Blizzard_StaticPopup_Game",
-["source"] = "...face/AddOns/Blizzard_StaticPopup_Game/GameDialog.lua:46",
-["time"] = 1787662246,
+["addon"] = "Blizzard_FrameXML",
+["source"] = "...face/AddOns/Blizzard_FrameXML/WardrobeCustomSets.lua:24",
+["time"] = 1787684657,
 },
 ["actionbook-encount-state"] = {
 ["addon"] = "OPie",
 ["source"] = "...terface/AddOns/OPie/Libs/ActionBook/Conditionals.lua:977",
-["time"] = 1787662891,
+["time"] = 1787678451,
 },
 ["wholechatwindowclickable"] = {
-["addon"] = "EnhanceQoL",
-["source"] = "Interface/AddOns/EnhanceQoL/Settings/SettingsUI.lua:2103",
-["time"] = 1786553976,
+["source"] = "...ndyNotes_Midnight/libs/AceTimer-3.0/AceTimer-3.0.lua:50",
+["time"] = 1787860467,
 },
 ["softtargetinteract"] = {
 ["addon"] = "BetterFishing",
 ["source"] = "Interface/AddOns/BetterFishing/BetterFishing.lua:325",
-["time"] = 1787663558,
+["time"] = 1787666217,
 },
 ["professionsorderrecipientdropdown"] = {
 ["addon"] = "Blizzard UI",
 ["source"] = "...merOrders/Blizzard_ProfessionsCustomerOrdersForm.lua:536",
-["time"] = 1787364693,
+["time"] = 1787704794,
 },
 ["nameplateshowfriendlyplayerpets"] = {
 ["source"] = "...Ons/BetterBlizzPlates/midnight/BetterBlizzPlates.lua:1274",
-["time"] = 1787663558,
+["time"] = 1787860494,
 },
 ["spellactivationoverlayopacity"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
+},
+["profanityfilter"] = {
+["source"] = "...perMessenger/UI/MessengerWindow/BehaviorSettings.lua:88",
+["time"] = 1787766216,
 },
 ["nameplateshowfriendlyplayers"] = {
-["addon"] = "Blizzard_StaticPopup_Game",
-["source"] = "...face/AddOns/Blizzard_StaticPopup_Game/GameDialog.lua:46",
-["time"] = 1787614697,
+["source"] = "...Ons/BetterBlizzPlates/midnight/BetterBlizzPlates.lua:2762",
+["time"] = 1787860371,
 },
 ["unitnameenemyplayername"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["whispermode"] = {
-["addon"] = "Chattynator",
-["source"] = "Interface/AddOns/Chattynator/Core/Overrides.lua:120",
-["time"] = 1787663487,
+["source"] = "...ndyNotes_Midnight/libs/AceTimer-3.0/AceTimer-3.0.lua:50",
+["time"] = 1787860467,
 },
 ["nameplatelargerscale"] = {
 ["source"] = "...Ons/BetterBlizzPlates/midnight/BetterBlizzPlates.lua:1274",
-["time"] = 1787663558,
+["time"] = 1787860494,
 },
 ["nameplateshowenemyminus"] = {
 ["source"] = "...Ons/BetterBlizzPlates/midnight/BetterBlizzPlates.lua:1274",
-["time"] = 1787663558,
+["time"] = 1787860494,
 },
 ["nameplateoccludedalphamult"] = {
 ["source"] = "...Ons/BetterBlizzPlates/midnight/BetterBlizzPlates.lua:1274",
-["time"] = 1787663558,
+["time"] = 1787860494,
 },
 ["raidframesdisplayincomingheals"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["findyourselfanywhere"] = {
 ["addon"] = "EnhanceQoL",
-["source"] = "Interface/AddOns/EnhanceQoL/EnhanceQoL.lua:3441",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/EnhanceQoL/EnhanceQoL.lua:3416",
+["time"] = 1787860465,
+},
+["blockchannelinvites"] = {
+["source"] = "...ndyNotes_Midnight/libs/AceTimer-3.0/AceTimer-3.0.lua:50",
+["time"] = 1787860467,
 },
 ["nameplateshowenemypets"] = {
 ["source"] = "...Ons/BetterBlizzPlates/midnight/BetterBlizzPlates.lua:1274",
-["time"] = 1787663558,
+["time"] = 1787860494,
 },
 ["nameplateshowclasscolor"] = {
 ["source"] = "...Ons/BetterBlizzPlates/midnight/BetterBlizzPlates.lua:1274",
-["time"] = 1787663558,
+["time"] = 1787860494,
 },
 ["nameplateplayerlargerscale"] = {
 ["source"] = "...Ons/BetterBlizzPlates/midnight/BetterBlizzPlates.lua:1274",
-["time"] = 1787663558,
+["time"] = 1787860494,
 },
 ["nameplateminalpha"] = {
 ["source"] = "...Ons/BetterBlizzPlates/midnight/BetterBlizzPlates.lua:1274",
-["time"] = 1787663558,
+["time"] = 1787860494,
 },
 ["nameplateshowdebuffsonfriendly"] = {
 ["source"] = "...Ons/BetterBlizzPlates/midnight/BetterBlizzPlates.lua:2823",
-["time"] = 1787663488,
+["time"] = 1787860464,
 },
 ["nameplatenotselectedalpha"] = {
 ["addon"] = "Platynator",
@@ -325,7 +335,7 @@ CVM_SETTINGS = {
 ["softtargeticoninteract"] = {
 ["addon"] = "BetterFishing",
 ["source"] = "Interface/AddOns/BetterFishing/BetterFishing.lua:325",
-["time"] = 1787663558,
+["time"] = 1787666217,
 },
 ["nameplatemaxdistance"] = {
 ["addon"] = "Platynator",
@@ -334,102 +344,121 @@ CVM_SETTINGS = {
 },
 ["nameplateshowfriendlynpcs"] = {
 ["source"] = "...Ons/BetterBlizzPlates/midnight/BetterBlizzPlates.lua:1274",
-["time"] = 1787663558,
+["time"] = 1787860494,
 },
 ["nameplatemaxscale"] = {
 ["source"] = "...Ons/BetterBlizzPlates/midnight/BetterBlizzPlates.lua:1274",
-["time"] = 1787663558,
+["time"] = 1787860494,
 },
 ["worldtextscale_v2"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["assistedcombathighlight"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["unitnameplayerguild"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
+},
+["unitnamefriendlyminionname"] = {
+["addon"] = "Blizzard UI",
+["source"] = "...lizzard_Settings_Shared/Blizzard_SettingControls.lua:608",
+["time"] = 1787855280,
+},
+["nameplateselfalpha"] = {
+["source"] = "...Ons/BetterBlizzPlates/midnight/BetterBlizzPlates.lua:1274",
+["time"] = 1787860494,
+},
+["nameplateshowenemyguardians"] = {
+["source"] = "...Ons/BetterBlizzPlates/midnight/BetterBlizzPlates.lua:1274",
+["time"] = 1787860494,
 },
 ["sound_mastervolume"] = {
 ["addon"] = "Blizzard UI",
 ["source"] = "...lizzard_Settings_Shared/Blizzard_SettingControls.lua:695",
 ["time"] = 1787613865,
 },
+["nameplateuseclasscolorforfriendlyplayerunitnames"] = {
+["addon"] = "EnhanceQoL",
+["source"] = "...terface/AddOns/EnhanceQoL/Settings/CombatDungeon.lua:558",
+["time"] = 1787860465,
+},
 ["autolootdefault"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["endeavorinitiativeslastpointsmap"] = {
 ["addon"] = "Blizzard UI",
 ["source"] = "...ngDashboard/Blizzard_HousingDashboardInitiatives.lua:447",
 ["time"] = 1786713395,
 },
-["nameplatesize"] = {
-["addon"] = "Platynator",
-["source"] = "Interface/AddOns/Platynator/Display/Initialize.lua:100",
-["time"] = 1787575468,
+["calendarshowlockouts"] = {
+["addon"] = "LiteMount",
+["source"] = "Interface/AddOns/LiteMount/AutoEventFrame.lua:14",
+["time"] = 1787860464,
 },
 ["chatbubblesparty"] = {
 ["addon"] = "Blizzard UI",
 ["source"] = "...lizzard_Settings_Shared/Blizzard_SettingControls.lua:608",
 ["time"] = 1787615080,
 },
-["nameplateselfalpha"] = {
-["source"] = "...Ons/BetterBlizzPlates/midnight/BetterBlizzPlates.lua:1274",
-["time"] = 1787663558,
+["chatstyle"] = {
+["source"] = "...ndyNotes_Midnight/libs/AceTimer-3.0/AceTimer-3.0.lua:50",
+["time"] = 1787860467,
 },
 ["damagemeterenabled"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["damagemeterresetonnewinstance"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
-["nameplateshowenemyguardians"] = {
+["nameplatesize"] = {
+["addon"] = "Platynator",
+["source"] = "Interface/AddOns/Platynator/Display/Initialize.lua:100",
+["time"] = 1787575468,
+},
+["secureabilitytoggle"] = {
+["addon"] = "Custom",
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
+},
+["chatmousescroll"] = {
+["addon"] = "EnhanceQoL",
+["source"] = "Interface/AddOns/EnhanceQoL/Settings/SettingsUI.lua:2103",
+["time"] = 1787764331,
+},
+["nameplateshowfriendlyplayertotems"] = {
 ["source"] = "...Ons/BetterBlizzPlates/midnight/BetterBlizzPlates.lua:1274",
-["time"] = 1787663558,
+["time"] = 1787860494,
+},
+["findyourselfanywhereonlyincombat"] = {
+["addon"] = "Custom",
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["sound_dialogvolume"] = {
 ["addon"] = "Blizzard UI",
 ["source"] = "...lizzard_Settings_Shared/Blizzard_SettingControls.lua:695",
 ["time"] = 1787614270,
 },
-["calendarshowlockouts"] = {
-["addon"] = "LiteMount",
-["source"] = "Interface/AddOns/LiteMount/AutoEventFrame.lua:14",
-["time"] = 1787663489,
-},
-["nameplateshowfriendlyplayertotems"] = {
-["source"] = "...Ons/BetterBlizzPlates/midnight/BetterBlizzPlates.lua:1274",
-["time"] = 1787663558,
-},
-["findyourselfanywhereonlyincombat"] = {
-["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["nameplatestyle"] = {
+["source"] = "...Ons/BetterBlizzPlates/midnight/BetterBlizzPlates.lua:2823",
+["time"] = 1787860464,
 },
 ["majorfactionrenownmap"] = {
 ["addon"] = "Blizzard UI",
 ["source"] = "...zard_EncounterJournal/Mainline/Blizzard_Journeys.lua:378",
-["time"] = 1787529704,
-},
-["nameplatestyle"] = {
-["source"] = "...Ons/BetterBlizzPlates/midnight/BetterBlizzPlates.lua:2823",
-["time"] = 1787663488,
-},
-["secureabilitytoggle"] = {
-["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["time"] = 1787685186,
 },
 ["chatbubblesraid"] = {
 ["addon"] = "Blizzard UI",
@@ -443,7 +472,7 @@ CVM_SETTINGS = {
 },
 ["nameplateshowonlynameforfriendlyplayerunits"] = {
 ["source"] = "...Ons/BetterBlizzPlates/midnight/BetterBlizzPlates.lua:1274",
-["time"] = 1787663558,
+["time"] = 1787860494,
 },
 ["nameplatetargetbehindmaxdistance"] = {
 ["addon"] = "Platynator",
@@ -452,28 +481,28 @@ CVM_SETTINGS = {
 },
 ["unitnamenpc"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["numy_talenttreetweaks"] = {
 ["addon"] = "Blizzard UI",
 ["source"] = "...Blizzard_PlayerSpells/Blizzard_PlayerSpellsFrame.lua:40",
-["time"] = 1787663371,
+["time"] = 1787860194,
 },
 ["findyourselfinbg"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["minidressupframe"] = {
 ["addon"] = "Blizzard UI",
 ["source"] = "...izzard_SharedXML/Mainline/SharedUIPanelTemplates.lua:581",
-["time"] = 1787661723,
+["time"] = 1787848762,
 },
 ["nameplategameobjectmaxdistance"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["sound_sfxvolume"] = {
 ["addon"] = "Blizzard UI",
@@ -482,11 +511,11 @@ CVM_SETTINGS = {
 },
 ["nameplateselectedscale"] = {
 ["source"] = "...Ons/BetterBlizzPlates/midnight/BetterBlizzPlates.lua:1274",
-["time"] = 1787663558,
+["time"] = 1787860494,
 },
 ["nameplateminscale"] = {
 ["source"] = "...Ons/BetterBlizzPlates/midnight/BetterBlizzPlates.lua:1274",
-["time"] = 1787663558,
+["time"] = 1787860494,
 },
 ["nameplateshowcastbars"] = {
 ["addon"] = "Custom",
@@ -495,123 +524,123 @@ CVM_SETTINGS = {
 },
 ["autodismountflying"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["unitnamefriendlyplayername"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["nameplatepersonalshowwithtarget"] = {
 ["addon"] = "Custom",
 ["source"] = "Interface/AddOns/Custom/Custom.lua:1",
-["time"] = 1787663489,
+["time"] = 1787860465,
 },
 ["nameplateshowenemyminions"] = {
 ["source"] = "...Ons/BetterBlizzPlates/midnight/BetterBlizzPlates.lua:1274",
-["time"] = 1787663558,
+["time"] = 1787860494,
 },
-["eventschedulerlastupdate"] = {
-["addon"] = "Blizzard UI",
-["source"] = "...s/Blizzard_UIPanels_Game/Mainline/EventScheduler.lua:563",
-["time"] = 1787601278,
+["showtimestamps"] = {
+["addon"] = "Prat-3.0",
+["source"] = "Interface/AddOns/Prat-3.0/addon/modules.lua:104",
+["time"] = 1787248842,
 },
 ["nameplateverticalscale"] = {
 ["source"] = "...Ons/BetterBlizzPlates/midnight/BetterBlizzPlates.lua:2823",
-["time"] = 1787663488,
+["time"] = 1787860464,
 },
 ["raidframesdisplayclasscolor"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["worldtextminsize"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
-},
-["nameplateshowself"] = {
-["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:1",
-["time"] = 1787663489,
-},
-["occludedsilhouetteplayer"] = {
-["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
-},
-["autopushspelltoactionbar"] = {
-["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["lastselectedtieredentrancetier"] = {
 ["addon"] = "Blizzard UI",
 ["source"] = "...DifficultyPicker/Blizzard_DelvesDifficultyPicker.lua:405",
 ["time"] = 1787598460,
 },
-["nameplatedebuffpadding"] = {
-["source"] = "...Ons/BetterBlizzPlates/midnight/BetterBlizzPlates.lua:1274",
-["time"] = 1787663558,
+["occludedsilhouetteplayer"] = {
+["addon"] = "Custom",
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
-["calendarshowresets"] = {
-["addon"] = "LiteMount",
-["source"] = "Interface/AddOns/LiteMount/AutoEventFrame.lua:14",
-["time"] = 1787663489,
+["autopushspelltoactionbar"] = {
+["addon"] = "Custom",
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
-["sound_outputdriverindex"] = {
-["addon"] = "EnhanceQoLSound",
-["source"] = "Interface/AddOns/EnhanceQoLSound/EnhanceQoLSound.lua:99",
-["time"] = 1787663485,
-},
-["petjournaltab"] = {
-["addon"] = "Blizzard_Game",
-["source"] = "...terface/AddOns/Blizzard_Game/Shared/EventRouting.lua:4",
-["time"] = 1787662901,
-},
-["nameplatemaxalpha"] = {
-["source"] = "...Ons/BetterBlizzPlates/midnight/BetterBlizzPlates.lua:1274",
-["time"] = 1787663558,
+["nameplateshowself"] = {
+["addon"] = "Custom",
+["source"] = "Interface/AddOns/Custom/Custom.lua:1",
+["time"] = 1787860465,
 },
 ["notifiedofnewmail"] = {
 ["addon"] = "Blizzard_Minimap",
 ["source"] = "...terface/AddOns/Blizzard_Minimap/Mainline/Minimap.lua:480",
-["time"] = 1787661742,
+["time"] = 1787852990,
+},
+["calendarshowresets"] = {
+["addon"] = "LiteMount",
+["source"] = "Interface/AddOns/LiteMount/AutoEventFrame.lua:14",
+["time"] = 1787860464,
+},
+["nameplatedebuffpadding"] = {
+["source"] = "...Ons/BetterBlizzPlates/midnight/BetterBlizzPlates.lua:1274",
+["time"] = 1787860494,
+},
+["petjournaltab"] = {
+["addon"] = "Blizzard_Game",
+["source"] = "...terface/AddOns/Blizzard_Game/Shared/EventRouting.lua:4",
+["time"] = 1787846058,
+},
+["sound_outputdriverindex"] = {
+["addon"] = "EnhanceQoLSound",
+["source"] = "Interface/AddOns/EnhanceQoLSound/EnhanceQoLSound.lua:99",
+["time"] = 1787860461,
+},
+["nameplatemaxalpha"] = {
+["source"] = "...Ons/BetterBlizzPlates/midnight/BetterBlizzPlates.lua:1274",
+["time"] = 1787860494,
 },
 ["nameplateglobalscale"] = {
 ["source"] = "...Ons/BetterBlizzPlates/midnight/BetterBlizzPlates.lua:2823",
-["time"] = 1787663488,
+["time"] = 1787860464,
 },
 ["calendarshowweeklyholidays"] = {
 ["addon"] = "LiteMount",
 ["source"] = "Interface/AddOns/LiteMount/AutoEventFrame.lua:14",
-["time"] = 1787663489,
+["time"] = 1787860464,
 },
 ["sound_enableemotesounds"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["rotateminimap"] = {
 ["addon"] = "Blizzard_EditMode",
 ["source"] = ".../AddOns/Blizzard_EditMode/Shared/EditModeManager.lua:1397",
-["time"] = 1787663487,
+["time"] = 1787860463,
 },
-["nameplateuseclasscolorforfriendlyplayerunitnames"] = {
-["addon"] = "EnhanceQoL",
-["source"] = "...terface/AddOns/EnhanceQoL/Settings/CombatDungeon.lua:556",
-["time"] = 1787663489,
+["perksactivitieslastpoints"] = {
+["addon"] = "Blizzard UI",
+["source"] = "...unterJournal/Mainline/Blizzard_MonthlyActivities.lua:1344",
+["time"] = 1787765455,
+},
+["calendarshowdarkmoon"] = {
+["addon"] = "LiteMount",
+["source"] = "Interface/AddOns/LiteMount/AutoEventFrame.lua:14",
+["time"] = 1787860464,
 },
 ["floatingcombattextcombathealing"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
-},
-["ffxnether"] = {
-["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["highestunlockedtieredentrancetier"] = {
 ["addon"] = "Blizzard UI",
@@ -620,73 +649,73 @@ CVM_SETTINGS = {
 },
 ["unitnameown"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["softtargeticongameobject"] = {
 ["addon"] = "BetterFishing",
 ["source"] = "Interface/AddOns/BetterFishing/BetterFishing.lua:325",
-["time"] = 1787663558,
+["time"] = 1787666217,
 },
 ["nameplateshowenemytotems"] = {
 ["source"] = "...Ons/BetterBlizzPlates/midnight/BetterBlizzPlates.lua:1274",
-["time"] = 1787663558,
+["time"] = 1787860494,
+},
+["ffxnether"] = {
+["addon"] = "Custom",
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["unitnameinteractivenpc"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
-},
-["calendarshowdarkmoon"] = {
-["addon"] = "LiteMount",
-["source"] = "Interface/AddOns/LiteMount/AutoEventFrame.lua:14",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["lastselectedclubid"] = {
 ["addon"] = "Blizzard_Communities",
 ["source"] = "...ace/AddOns/Blizzard_Communities/CommunitiesFrame.lua:128",
-["time"] = 1787627195,
+["time"] = 1787852458,
 },
 ["unitnamenoncombatcreaturename"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["nameplateshowfriendlyplayerguardians"] = {
 ["source"] = "...Ons/BetterBlizzPlates/midnight/BetterBlizzPlates.lua:1274",
-["time"] = 1787663558,
+["time"] = 1787860494,
 },
 ["nameplatemaxalphadistance"] = {
 ["source"] = "...Ons/BetterBlizzPlates/midnight/BetterBlizzPlates.lua:1274",
-["time"] = 1787663558,
+["time"] = 1787860494,
 },
 ["softtargetinteractrange"] = {
 ["addon"] = "BetterFishing",
 ["source"] = "Interface/AddOns/BetterFishing/BetterFishing.lua:325",
-["time"] = 1787663558,
+["time"] = 1787666217,
 },
 ["raidframeshealthtext"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["nameplateshowall"] = {
 ["source"] = "...Ons/BetterBlizzPlates/midnight/BetterBlizzPlates.lua:1274",
-["time"] = 1787663558,
+["time"] = 1787860494,
 },
 ["cooldownviewerenabled"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["nameplateshowfriendlyplayerminions"] = {
 ["source"] = "...Ons/BetterBlizzPlates/midnight/BetterBlizzPlates.lua:1274",
-["time"] = 1787663558,
+["time"] = 1787860494,
 },
 ["findyourselfinraidonlyincombat"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["encounterwarningsenabled"] = {
 ["addon"] = "Blizzard UI",
@@ -695,37 +724,37 @@ CVM_SETTINGS = {
 },
 ["findyourselfmode"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["nameplatetargetradialposition"] = {
 ["addon"] = "Platynator",
 ["source"] = "Interface/AddOns/Platynator/Display/Initialize.lua:177",
 ["time"] = 1787575501,
 },
-["showtimestamps"] = {
-["addon"] = "Prat-3.0",
-["source"] = "Interface/AddOns/Prat-3.0/addon/modules.lua:104",
-["time"] = 1787248842,
+["eventschedulerlastupdate"] = {
+["addon"] = "Blizzard UI",
+["source"] = "...s/Blizzard_UIPanels_Game/Mainline/EventScheduler.lua:563",
+["time"] = 1787601278,
 },
 ["cameraindirectvisibility"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["findyourselfmodeicon"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["minicommunitiesframe"] = {
 ["addon"] = "Blizzard UI",
 ["source"] = "...izzard_SharedXML/Mainline/SharedUIPanelTemplates.lua:581",
-["time"] = 1787627195,
+["time"] = 1787852458,
 },
 ["nameplateaurascale"] = {
 ["source"] = "...Ons/BetterBlizzPlates/midnight/BetterBlizzPlates.lua:1274",
-["time"] = 1787663558,
+["time"] = 1787860494,
 },
 ["housingstoragepanelcollapsed"] = {
 ["addon"] = "Blizzard UI",
@@ -737,14 +766,14 @@ CVM_SETTINGS = {
 ["source"] = "...lizzard_Settings_Shared/Blizzard_SettingControls.lua:608",
 ["time"] = 1786725695,
 },
-["nameplateminalphadistance"] = {
-["source"] = "...Ons/BetterBlizzPlates/midnight/BetterBlizzPlates.lua:1274",
-["time"] = 1787663558,
-},
 ["timemgruselocaltime"] = {
 ["addon"] = "Blizzard UI",
 ["source"] = "...izzard_TimeManager/Mainline/Blizzard_TimeManager.lua:71",
 ["time"] = 1786729154,
+},
+["nameplateminalphadistance"] = {
+["source"] = "...Ons/BetterBlizzPlates/midnight/BetterBlizzPlates.lua:1274",
+["time"] = 1787860494,
 },
 ["nameplateenemyplayerauradisplay"] = {
 ["addon"] = "Blizzard UI",
@@ -763,27 +792,27 @@ CVM_SETTINGS = {
 },
 ["raidoptionisshown"] = {
 ["addon"] = "BattleGroundEnemiesFixed",
-["source"] = "Interface/AddOns/BattleGroundEnemiesFixed/Main.lua:2990",
-["time"] = 1787278328,
+["source"] = "Interface/AddOns/BattleGroundEnemiesFixed/Main.lua:2983",
+["time"] = 1787771328,
 },
 ["herotalentscollapse"] = {
 ["addon"] = "Blizzard UI",
 ["source"] = "...erSpells/ClassTalents/Blizzard_ClassTalentsFrame.lua:66",
-["time"] = 1787663488,
+["time"] = 1787860464,
 },
 ["showtutorials"] = {
 ["addon"] = "Custom",
-["source"] = "Interface/AddOns/Custom/Custom.lua:420",
-["time"] = 1787663489,
+["source"] = "Interface/AddOns/Custom/Custom.lua:429",
+["time"] = 1787860465,
 },
 ["tooltipshowauraspellids"] = {
 ["addon"] = "EnhanceQoL",
 ["source"] = "Interface/AddOns/EnhanceQoL/EnhanceQoL.lua:7233",
-["time"] = 1787660740,
+["time"] = 1787833750,
 },
 ["nameplatesimplifiedscale"] = {
 ["source"] = "...Ons/BetterBlizzPlates/midnight/BetterBlizzPlates.lua:1274",
-["time"] = 1787663558,
+["time"] = 1787860494,
 },
 ["sound_ambiencevolume"] = {
 ["addon"] = "Blizzard UI",

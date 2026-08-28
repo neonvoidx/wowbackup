@@ -1,7 +1,7 @@
 ## Interface: 120100
 ## Title: Enhance QoL Class Buff Reminder
 ## Author: R41Z0R
-## Version: 12.7.0
+## Version: 12.8.3
 ## Notes: Track missing class buffs and consumables
 ## Notes-deDE: Erinnert an fehlende Klassenbuffs und Verbrauchsgueter
 ## Notes-esES: Rastrea beneficios de clase y consumibles faltantes

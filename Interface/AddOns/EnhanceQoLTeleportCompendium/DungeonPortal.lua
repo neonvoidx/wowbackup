@@ -173,7 +173,7 @@ local function getCurrentSeasonPortal()
 	-- Timerunners have no current-season portals; skip population
 	local timerunnerID = _G.PlayerGetTimerunningSeasonID and _G.PlayerGetTimerunningSeasonID() or nil
 
-	local cModeIDs = C_ChallengeMode.GetMapTable()
+	local cModeIDs = C_ChallengeMode.GetMapTable() or {}
 	local cModeIDLookup = {}
 	for _, id in ipairs(cModeIDs) do
 		cModeIDLookup[id] = true
@@ -252,7 +252,9 @@ local function getCurrentSeasonPortal()
 	portalSpells = filteredPortalSpells
 	mapInfo = filteredMapInfo
 	mapIDInfo = filteredMapID
-	currentSeasonPortalCacheBuilt = true
+	-- The map table can still be empty during the first login. Keep the cache
+	-- pending until CHALLENGE_MODE_MAPS_UPDATE supplies the requested data.
+	currentSeasonPortalCacheBuilt = #cModeIDs > 0 and next(filteredMapInfo) ~= nil
 end
 
 local function ensureCurrentSeasonPortalCache()
@@ -1523,7 +1525,15 @@ local function SyncDungeonPortalEventRegistration()
 	if not frameAnchor or not addon.db then return end
 
 	local teleportEnabled = addon.db["teleportFrame"] == true
+	local dungeonScoreEnabled = addon.db["groupfinderShowDungeonScoreFrame"] == true
 	local partyKeystoneEnabled = addon.db["groupfinderShowPartyKeystone"] == true
+	local mythicPlusMapDataEnabled = teleportEnabled or dungeonScoreEnabled or partyKeystoneEnabled
+
+	if mythicPlusMapDataEnabled then
+		frameAnchor:RegisterEvent("CHALLENGE_MODE_MAPS_UPDATE")
+	else
+		frameAnchor:UnregisterEvent("CHALLENGE_MODE_MAPS_UPDATE")
+	end
 
 	if teleportEnabled then
 		frameAnchor:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
@@ -1795,7 +1805,6 @@ function addon.MythicPlus.functions.toggleFrame()
 			ensureCurrentSeasonPortalCache()
 			checkCooldown()
 
-			-- Based on RaiderIO Client place the Frame
 			if nil ~= RaiderIO_ProfileTooltip then
 				C_Timer.After(0.1, function()
 					if InCombatLockdown() then
@@ -1843,6 +1852,12 @@ local function eventHandler(self, event, arg1, arg2, arg3, arg4)
 	-- Never show teleport frame for Timerunners
 	if addon and addon.functions and addon.functions.IsTimerunner and addon.functions.IsTimerunner() then
 		if frameAnchor then frameAnchor:Hide() end
+		return
+	end
+	if event == "CHALLENGE_MODE_MAPS_UPDATE" then
+		currentSeasonPortalCacheBuilt = false
+		ensureCurrentSeasonPortalCache()
+		if parentFrame:IsShown() then addon.MythicPlus.functions.toggleFrame() end
 		return
 	end
 	if addon.db["teleportFrame"] then
@@ -1903,6 +1918,13 @@ function addon.MythicPlus.functions.InitDungeonPortal()
 
 	-- Setze den Event-Handler
 	frameAnchor:SetScript("OnEvent", eventHandler)
+	if
+		(addon.db["teleportFrame"] or addon.db["groupfinderShowDungeonScoreFrame"] or addon.db["groupfinderShowPartyKeystone"])
+		and C_MythicPlus
+		and C_MythicPlus.RequestMapInfo
+	then
+		C_MythicPlus.RequestMapInfo()
+	end
 
 	if parentFrame and parentFrame.HookScript and not parentFrame._eqolMythicPlusPortalHook then
 		parentFrame:HookScript("OnShow", function(self) addon.MythicPlus.functions.toggleFrame() end)

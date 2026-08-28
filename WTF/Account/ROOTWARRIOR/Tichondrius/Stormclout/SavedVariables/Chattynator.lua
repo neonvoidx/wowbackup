@@ -202,4 +202,5 @@ CHATTYNATOR_COMMAND_HISTORY = {
 "/p well we didnt deerve this",
 "/p but we got it",
 "/p god damn where my neck",
+"/s /simc",
 }

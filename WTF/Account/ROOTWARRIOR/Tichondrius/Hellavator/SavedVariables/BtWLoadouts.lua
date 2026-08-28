@@ -1,30 +1,67 @@
 
 BtWLoadoutsCollapsed = {
-["equipment"] = {
+["essences"] = {
 },
-["talents"] = {
+["herotalents"] = {
 },
-["profiles"] = {
+["pvptalents"] = {
 ["children"] = {
 },
 },
-["pvptalents"] = {
+["actionbars"] = {
+[260] = true,
+[261] = true,
+[252] = true,
+[577] = true,
+[62] = true,
+[269] = true,
+[0] = false,
+[1480] = true,
+[268] = true,
+[258] = true,
+["children"] = {
+["children"] = {
+},
+},
+[267] = false,
+},
+["equipment"] = {
+["children"] = {
+},
 },
 ["dftalents"] = {
+[251] = true,
+[252] = true,
+[265] = false,
+[266] = false,
+[267] = false,
+[1480] = true,
+["children"] = {
+["children"] = {
+},
+},
+[250] = true,
+[577] = true,
 },
 ["conditions"] = {
+["children"] = {
 },
-["essences"] = {
 },
-["actionbars"] = {
+["profiles"] = {
+[269] = true,
+[270] = true,
 ["children"] = {
 },
 [267] = false,
+},
+["talents"] = {
 },
 }
 BtWLoadoutsCategories = {
 ["talents"] = {
 "spec",
+},
+["herotalents"] = {
 },
 ["pvptalents"] = {
 "spec",
@@ -38,33 +75,37 @@ BtWLoadoutsCategories = {
 ["dftalents"] = {
 "spec",
 },
-["essences"] = {
-"role",
+["actionbars"] = {
+"spec",
 },
 ["conditions"] = {
+"spec",
 },
 ["soulbinds"] = {
 "covenant",
 },
-["actionbars"] = {
-"spec",
+["essences"] = {
+"role",
 },
 }
 BtWLoadoutsFilters = {
-["equipment"] = {
+["essences"] = {
 },
-["talents"] = {
-},
-["profiles"] = {
+["herotalents"] = {
 },
 ["pvptalents"] = {
 },
+["actionbars"] = {
+},
+["equipment"] = {
+},
 ["dftalents"] = {
+["character"] = "Tichondrius-Hellavator",
 },
 ["conditions"] = {
 },
-["essences"] = {
+["profiles"] = {
 },
-["actionbars"] = {
+["talents"] = {
 },
 }

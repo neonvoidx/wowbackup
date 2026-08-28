@@ -87,16 +87,17 @@ END
 VER 3 0000000000000282 "EnhanceQoLHealthMacro" "INV_Misc_QuestionMark"
 #showtooltip
 /cast [nocombat] Recuperate
-/castsequence [combat] reset=combat item:271883
+/castsequence [combat] reset=combat item:224464, item:271883
 END
 VER 3 000000000000024F "FOCUS" "132284"
 /focus [@mouseover,nodead,exists]; [@target,exists]
 END
 VER 3 0000000000000283 "FocusKick" "INV_Misc_QuestionMark"
 #showtooltip Spell Lock
-/cast [mod:shift,@focus,harm,nodead][] Spell Lock
-/focus [mod:shift,@focus,noexists] target
-/tm [mod:shift,@focus] ~4
+#FS EH X
+/cast [mod:shift,@none,harm,nodead][mod:shift,@focus,harm,nodead][] Spell Lock
+/focus [mod:shift,@eh,noexists][mod:shift,@focus,noexists] target
+/tm [mod:shift,@eh][mod:shift,@focus] ~4
 END
 VER 3 0000000000000250 "ItemOnWeap" "INV_Misc_QuestionMark"
 #showtooltip item:243733
