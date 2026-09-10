@@ -8,12 +8,8 @@ function sArenaFrameMixin:ResetDRCooldownTextColors()
 	for i = 1, #frames do
 		local drFrame = useDrFrames and frames[i] or self[frames[i]]
 		if drFrame and drFrame.Cooldown then
-			if drFrame.Cooldown.sArenaText then
-				drFrame.Cooldown.sArenaText:SetTextColor(1, 1, 1, 1)
-			end
-			if drFrame.Cooldown.Text then
-				drFrame.Cooldown.Text:SetTextColor(1, 1, 1, 1)
-			end
+			local countdownString = drFrame.Cooldown:GetCountdownFontString()
+			countdownString:SetTextColor(1, 1, 1, 1)
 		end
 	end
 end
@@ -66,15 +62,11 @@ function sArenaFrameMixin:ResetDR()
 		local drFrame = useDrFrames and frames[i] or self[frames[i]]
 		if drFrame then
 			drFrame.Cooldown:Clear()
-			if isMidnight then
-				drFrame:Hide()
-				drFrame.DRSeverity = 0
-			end
+			drFrame:Hide()
+			drFrame.DRSeverity = 0
 		end
 	end
-	if isMidnight then
-		self:UpdateDRPositions()
-	end
+	self:UpdateDRPositions()
 end
 
 local drTime = (isMidnight and 20.1) or 20
@@ -95,8 +87,7 @@ local severityColor = {
 	[3] = { 1, 0, 0, 1 }
 }
 
-local GetTime = GetTime
-local GetSpellTexture = GetSpellTexture or C_Spell.GetSpellTexture
+local GetSpellTexture =  C_Spell.GetSpellTexture
 
 function sArenaFrameMixin:FindDR(combatEvent, spellID)
 	local category = drList[spellID]
@@ -200,8 +191,13 @@ function sArenaFrameMixin:FindDR(combatEvent, spellID)
 	local blackDRBorder = layout.dr and layout.dr.blackDRBorder
 	local thickPixelBorder = layout.dr and layout.dr.thickPixelBorder
 
+	frame.DRSeverity = (frame.DRSeverity or 0) + 1
+	if frame.DRSeverity > 3 then
+		frame.DRSeverity = 3
+	end
+
 	-- Set border colors
-	local borderColor = blackDRBorder and {0, 0, 0, 1} or severityColor[frame.severity]
+	local borderColor = blackDRBorder and {0, 0, 0, 1} or severityColor[frame.DRSeverity]
 
 	frame.Border:SetVertexColor(unpack(borderColor))
     if frame.PixelBorder then
@@ -210,7 +206,7 @@ function sArenaFrameMixin:FindDR(combatEvent, spellID)
 			frame.PixelBorder:SetVertexColor(0, 0, 0, 1)
 		elseif thickPixelBorder then
 			-- Use severity color for thick pixel borders when blackDRBorder is disabled
-			frame.PixelBorder:SetVertexColor(unpack(severityColor[frame.severity]))
+			frame.PixelBorder:SetVertexColor(unpack(severityColor[frame.DRSeverity]))
 		else
 			-- Use border color for regular pixel borders (fallback)
 			frame.PixelBorder:SetVertexColor(unpack(borderColor))
@@ -218,33 +214,25 @@ function sArenaFrameMixin:FindDR(combatEvent, spellID)
     end
     if frame.__MSQ_New_Normal then
         frame.__MSQ_New_Normal:SetDesaturated(true)
-        frame.__MSQ_New_Normal:SetVertexColor(unpack(severityColor[frame.severity]))
+        frame.__MSQ_New_Normal:SetVertexColor(unpack(severityColor[frame.DRSeverity]))
     end
 	local drText = frame.DRTextFrame.DRText
 	if drText then
-		if frame.severity == 1 then
+		if frame.DRSeverity == 1 then
 			drText:SetText("½")
-		elseif frame.severity == 2 then
+		elseif frame.DRSeverity == 2 then
 			drText:SetText("¼")
 		else
 			drText:SetText("%")
 		end
-		drText:SetTextColor(unpack(severityColor[frame.severity]))
+		drText:SetTextColor(unpack(severityColor[frame.DRSeverity]))
 	end
 
 	if self.parent.db.profile.colorDRCooldownText then
-		if frame.Cooldown.Text then
-			frame.Cooldown.Text:SetTextColor(unpack(severityColor[frame.severity]))
-		end
-		if frame.Cooldown.sArenaText then
-			frame.Cooldown.sArenaText:SetTextColor(unpack(severityColor[frame.severity]))
-		end
+		local countdownString = frame.Cooldown:GetCountdownFontString()
+		countdownString:SetTextColor(unpack(severityColor[frame.DRSeverity]))
 	end
 
-	frame.severity = frame.severity + 1
-	if frame.severity > 3 then
-		frame.severity = 3
-	end
 end
 
 

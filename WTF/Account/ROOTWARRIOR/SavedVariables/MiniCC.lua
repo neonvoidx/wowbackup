@@ -182,11 +182,60 @@ MiniCCDB = {
 },
 ["ShowTooltips"] = false,
 },
-["PortraitModule"] = {
+["FriendlyCooldownTrackerModule"] = {
 ["Enabled"] = {
-["Always"] = true,
+["BattleGrounds"] = false,
+["World"] = true,
+["Raid"] = false,
+["Arena"] = false,
+["Dungeons"] = false,
 },
+["Raid"] = {
+["Offset"] = {
+["Y"] = 0,
+["X"] = -2,
+},
+["ShowTrinket"] = true,
+["ExcludeSelf"] = false,
+["Grow"] = "CENTER",
+["IconSpacing"] = 2,
+["Predictive"] = true,
+["Icons"] = {
+["MaxIcons"] = 5,
+["SizeIsPercent"] = false,
+["Columns"] = 1,
+["SizePercent"] = 50,
+["Rows"] = 1,
 ["ReverseCooldown"] = true,
+["DesaturateOnCooldown"] = false,
+["Size"] = 20,
+},
+["ShowTooltips"] = true,
+},
+["Default"] = {
+["Offset"] = {
+["Y"] = 13,
+["X"] = 0,
+},
+["ShowTrinket"] = true,
+["ExcludeSelf"] = false,
+["Grow"] = "LEFT",
+["IconSpacing"] = 2,
+["Predictive"] = true,
+["Icons"] = {
+["MaxIcons"] = 10,
+["SizeIsPercent"] = false,
+["Columns"] = 1,
+["SizePercent"] = 100,
+["Rows"] = 2,
+["ReverseCooldown"] = true,
+["DesaturateOnCooldown"] = true,
+["Size"] = 23,
+},
+["ShowTooltips"] = true,
+},
+["DisabledSpells"] = {
+},
 },
 ["PrecogGuesserModule"] = {
 ["Enabled"] = {
@@ -254,26 +303,11 @@ MiniCCDB = {
 ["ShowTooltips"] = false,
 },
 },
-["TrinketsModule"] = {
+["PortraitModule"] = {
 ["Enabled"] = {
 ["Always"] = true,
 },
-["Font"] = {
-["File"] = "GameFontHighlightSmall",
-},
-["Point"] = "RIGHT",
-["RelativePoint"] = "LEFT",
-["Offset"] = {
-["Y"] = 0,
-["X"] = 0,
-},
-["Icons"] = {
-["ReverseCooldown"] = false,
-["Glow"] = false,
-["ShowText"] = true,
-["Size"] = 37,
-},
-["ExcludePlayer"] = false,
+["ReverseCooldown"] = true,
 },
 ["EnemyCooldownTrackerModule"] = {
 ["Enabled"] = {
@@ -391,60 +425,26 @@ MiniCCDB = {
 ["Healer"] = true,
 },
 },
-["FriendlyCooldownTrackerModule"] = {
+["TrinketsModule"] = {
 ["Enabled"] = {
-["BattleGrounds"] = false,
-["World"] = true,
-["Raid"] = false,
-["Arena"] = false,
-["Dungeons"] = false,
+["Always"] = true,
 },
-["Raid"] = {
+["Font"] = {
+["File"] = "GameFontHighlightSmall",
+},
+["Point"] = "RIGHT",
+["RelativePoint"] = "LEFT",
 ["Offset"] = {
 ["Y"] = 0,
-["X"] = -2,
-},
-["ShowTrinket"] = true,
-["ExcludeSelf"] = false,
-["Grow"] = "CENTER",
-["IconSpacing"] = 2,
-["Predictive"] = true,
-["Icons"] = {
-["MaxIcons"] = 5,
-["SizeIsPercent"] = false,
-["Columns"] = 1,
-["SizePercent"] = 50,
-["Rows"] = 1,
-["ReverseCooldown"] = true,
-["DesaturateOnCooldown"] = false,
-["Size"] = 20,
-},
-["ShowTooltips"] = true,
-},
-["Default"] = {
-["Offset"] = {
-["Y"] = 13,
 ["X"] = 0,
 },
-["ShowTrinket"] = true,
-["ExcludeSelf"] = false,
-["Grow"] = "LEFT",
-["IconSpacing"] = 2,
-["Predictive"] = true,
 ["Icons"] = {
-["MaxIcons"] = 10,
-["SizeIsPercent"] = false,
-["Columns"] = 1,
-["SizePercent"] = 100,
-["Rows"] = 2,
-["ReverseCooldown"] = true,
-["DesaturateOnCooldown"] = true,
-["Size"] = 23,
+["ReverseCooldown"] = false,
+["Glow"] = false,
+["ShowText"] = true,
+["Size"] = 37,
 },
-["ShowTooltips"] = true,
-},
-["DisabledSpells"] = {
-},
+["ExcludePlayer"] = false,
 },
 ["HealerCCModule"] = {
 ["Enabled"] = {
@@ -674,26 +674,11 @@ MiniCCDB = {
 ["Dungeons"] = false,
 },
 },
-["TrinketsModule"] = {
+["PortraitModule"] = {
 ["Enabled"] = {
 ["Always"] = true,
 },
-["Font"] = {
-["File"] = "GameFontHighlightSmall",
-},
-["Point"] = "RIGHT",
-["RelativePoint"] = "LEFT",
-["Offset"] = {
-["Y"] = 0,
-["X"] = 0,
-},
-["Icons"] = {
-["ReverseCooldown"] = false,
-["Glow"] = false,
-["ShowText"] = true,
-["Size"] = 37,
-},
-["ExcludePlayer"] = false,
+["ReverseCooldown"] = true,
 },
 ["AlertsModule"] = {
 ["Offset"] = {
@@ -802,60 +787,26 @@ MiniCCDB = {
 ["ShowTooltips"] = false,
 },
 },
-["FriendlyCooldownTrackerModule"] = {
+["TrinketsModule"] = {
 ["Enabled"] = {
-["BattleGrounds"] = false,
-["World"] = true,
-["Raid"] = false,
-["Arena"] = true,
-["Dungeons"] = true,
+["Always"] = true,
 },
-["Raid"] = {
-["ShowTooltips"] = true,
-["ShowTrinket"] = true,
-["ExcludeSelf"] = false,
+["Font"] = {
+["File"] = "GameFontHighlightSmall",
+},
+["Point"] = "RIGHT",
+["RelativePoint"] = "LEFT",
 ["Offset"] = {
 ["Y"] = 0,
-["X"] = -2,
+["X"] = 0,
 },
-["IconSpacing"] = 2,
-["Predictive"] = true,
 ["Icons"] = {
-["MaxIcons"] = 5,
-["SizeIsPercent"] = false,
-["Columns"] = 1,
-["SizePercent"] = 50,
-["Rows"] = 1,
-["ReverseCooldown"] = true,
-["DesaturateOnCooldown"] = false,
-["Size"] = 20,
+["ReverseCooldown"] = false,
+["Glow"] = false,
+["ShowText"] = true,
+["Size"] = 37,
 },
-["Grow"] = "CENTER",
-},
-["Default"] = {
-["ShowTooltips"] = true,
-["ShowTrinket"] = true,
-["ExcludeSelf"] = false,
-["Offset"] = {
-["Y"] = 13,
-["X"] = -2,
-},
-["IconSpacing"] = 2,
-["Predictive"] = true,
-["Icons"] = {
-["MaxIcons"] = 10,
-["SizeIsPercent"] = false,
-["Columns"] = 1,
-["SizePercent"] = 100,
-["Rows"] = 2,
-["ReverseCooldown"] = true,
-["DesaturateOnCooldown"] = false,
-["Size"] = 23,
-},
-["Grow"] = "LEFT",
-},
-["DisabledSpells"] = {
-},
+["ExcludePlayer"] = false,
 },
 ["EnemyCooldownTrackerModule"] = {
 ["Enabled"] = {
@@ -928,11 +879,60 @@ MiniCCDB = {
 ["Healer"] = true,
 },
 },
-["PortraitModule"] = {
+["FriendlyCooldownTrackerModule"] = {
 ["Enabled"] = {
-["Always"] = true,
+["BattleGrounds"] = false,
+["World"] = true,
+["Raid"] = false,
+["Arena"] = true,
+["Dungeons"] = true,
 },
+["Raid"] = {
+["ShowTooltips"] = true,
+["ShowTrinket"] = true,
+["ExcludeSelf"] = false,
+["Offset"] = {
+["Y"] = 0,
+["X"] = -2,
+},
+["IconSpacing"] = 2,
+["Predictive"] = true,
+["Icons"] = {
+["MaxIcons"] = 5,
+["SizeIsPercent"] = false,
+["Columns"] = 1,
+["SizePercent"] = 50,
+["Rows"] = 1,
 ["ReverseCooldown"] = true,
+["DesaturateOnCooldown"] = false,
+["Size"] = 20,
+},
+["Grow"] = "CENTER",
+},
+["Default"] = {
+["ShowTooltips"] = true,
+["ShowTrinket"] = true,
+["ExcludeSelf"] = false,
+["Offset"] = {
+["Y"] = 13,
+["X"] = -2,
+},
+["IconSpacing"] = 2,
+["Predictive"] = true,
+["Icons"] = {
+["MaxIcons"] = 10,
+["SizeIsPercent"] = false,
+["Columns"] = 1,
+["SizePercent"] = 100,
+["Rows"] = 2,
+["ReverseCooldown"] = true,
+["DesaturateOnCooldown"] = false,
+["Size"] = 23,
+},
+["Grow"] = "LEFT",
+},
+["DisabledSpells"] = {
+},
 },
 ["FriendlyIndicatorModule"] = {
 ["Enabled"] = {
@@ -1171,60 +1171,26 @@ MiniCCDB = {
 },
 ["Grow"] = "CENTER",
 },
-["FriendlyCooldownTrackerModule"] = {
+["TrinketsModule"] = {
 ["Enabled"] = {
-["BattleGrounds"] = false,
-["World"] = true,
-["Raid"] = false,
-["Arena"] = true,
-["Dungeons"] = true,
+["Always"] = true,
 },
-["Raid"] = {
-["Grow"] = "CENTER",
-["ShowTrinket"] = true,
-["ExcludeSelf"] = false,
-["ShowTooltips"] = true,
-["IconSpacing"] = 2,
-["Predictive"] = true,
-["Icons"] = {
-["MaxIcons"] = 5,
-["SizeIsPercent"] = false,
-["Columns"] = 1,
-["SizePercent"] = 50,
-["Rows"] = 1,
-["ReverseCooldown"] = true,
-["DesaturateOnCooldown"] = false,
-["Size"] = 20,
+["Font"] = {
+["File"] = "GameFontHighlightSmall",
 },
+["Point"] = "RIGHT",
+["RelativePoint"] = "LEFT",
 ["Offset"] = {
 ["Y"] = 0,
-["X"] = -2,
+["X"] = 0,
 },
-},
-["Default"] = {
-["Grow"] = "LEFT",
-["ShowTrinket"] = true,
-["ExcludeSelf"] = false,
-["ShowTooltips"] = true,
-["IconSpacing"] = 2,
-["Predictive"] = true,
 ["Icons"] = {
-["MaxIcons"] = 10,
-["SizeIsPercent"] = false,
-["Columns"] = 1,
-["SizePercent"] = 100,
-["Rows"] = 2,
-["ReverseCooldown"] = true,
-["DesaturateOnCooldown"] = true,
-["Size"] = 23,
+["ReverseCooldown"] = false,
+["Glow"] = false,
+["ShowText"] = true,
+["Size"] = 37,
 },
-["Offset"] = {
-["Y"] = 13,
-["X"] = -2,
-},
-},
-["DisabledSpells"] = {
-},
+["ExcludePlayer"] = false,
 },
 ["PrecogGuesserModule"] = {
 ["Enabled"] = {
@@ -1290,11 +1256,60 @@ MiniCCDB = {
 ["ShowTooltips"] = false,
 },
 },
-["PortraitModule"] = {
+["FriendlyCooldownTrackerModule"] = {
 ["Enabled"] = {
-["Always"] = true,
+["BattleGrounds"] = false,
+["World"] = true,
+["Raid"] = false,
+["Arena"] = true,
+["Dungeons"] = true,
 },
+["Raid"] = {
+["Grow"] = "CENTER",
+["ShowTrinket"] = true,
+["ExcludeSelf"] = false,
+["ShowTooltips"] = true,
+["IconSpacing"] = 2,
+["Predictive"] = true,
+["Icons"] = {
+["MaxIcons"] = 5,
+["SizeIsPercent"] = false,
+["Columns"] = 1,
+["SizePercent"] = 50,
+["Rows"] = 1,
 ["ReverseCooldown"] = true,
+["DesaturateOnCooldown"] = false,
+["Size"] = 20,
+},
+["Offset"] = {
+["Y"] = 0,
+["X"] = -2,
+},
+},
+["Default"] = {
+["Grow"] = "LEFT",
+["ShowTrinket"] = true,
+["ExcludeSelf"] = false,
+["ShowTooltips"] = true,
+["IconSpacing"] = 2,
+["Predictive"] = true,
+["Icons"] = {
+["MaxIcons"] = 10,
+["SizeIsPercent"] = false,
+["Columns"] = 1,
+["SizePercent"] = 100,
+["Rows"] = 2,
+["ReverseCooldown"] = true,
+["DesaturateOnCooldown"] = true,
+["Size"] = 23,
+},
+["Offset"] = {
+["Y"] = 13,
+["X"] = -2,
+},
+},
+["DisabledSpells"] = {
+},
 },
 ["EnemyCooldownTrackerModule"] = {
 ["Enabled"] = {
@@ -1410,26 +1425,11 @@ MiniCCDB = {
 ["Healer"] = true,
 },
 },
-["TrinketsModule"] = {
+["PortraitModule"] = {
 ["Enabled"] = {
 ["Always"] = true,
 },
-["Font"] = {
-["File"] = "GameFontHighlightSmall",
-},
-["Point"] = "RIGHT",
-["RelativePoint"] = "LEFT",
-["Offset"] = {
-["Y"] = 0,
-["X"] = 0,
-},
-["Icons"] = {
-["ReverseCooldown"] = false,
-["Glow"] = false,
-["ShowText"] = true,
-["Size"] = 37,
-},
-["ExcludePlayer"] = false,
+["ReverseCooldown"] = true,
 },
 ["FriendlyIndicatorModule"] = {
 ["Enabled"] = {
@@ -5175,10 +5175,9 @@ MiniCCDB = {
 ["LastSeen"] = 41849.1989418,
 ["LastAttempt"] = 41746.6535797,
 },
-["Player-3676-0EDF7A62"] = {
-["SpecId"] = 105,
-["LastSeen"] = 13176.8776531,
-["LastAttempt"] = 13176.5938335,
+["Player-11-0EA33BD7"] = {
+["LastSeen"] = 23100.8950525,
+["SpecId"] = 254,
 },
 ["Player-3684-0EABBAE2"] = {
 ["SpecId"] = 105,
@@ -5509,14 +5508,14 @@ MiniCCDB = {
 ["LastSeen"] = 10771.8593162,
 ["LastAttempt"] = 10771.5267263,
 },
-["Player-11-0E9AE5FB"] = {
-["LastSeen"] = 45928.4777934,
-["SpecId"] = 253,
-},
 ["Player-76-08D42C9D"] = {
 ["SpecId"] = 64,
 ["LastSeen"] = 17242.1944184,
 ["LastAttempt"] = 17241.8578829,
+},
+["Player-11-0E881FE8"] = {
+["LastSeen"] = 8069.590985100001,
+["SpecId"] = 105,
 },
 ["Player-61-09E26F17"] = {
 ["SpecId"] = 254,
@@ -5532,9 +5531,9 @@ MiniCCDB = {
 ["LastSeen"] = 16861.2840253,
 ["LastAttempt"] = 16860.7668201,
 },
-["Player-11-0E881FE8"] = {
-["LastSeen"] = 8069.590985100001,
-["SpecId"] = 105,
+["Player-11-0E9AE5FB"] = {
+["LastSeen"] = 45928.4777934,
+["SpecId"] = 253,
 },
 ["Player-11-0EB1ADFE"] = {
 ["LastSeen"] = 24530.4814628,
@@ -5826,18 +5825,17 @@ MiniCCDB = {
 ["LastSeen"] = 19021.8335958,
 ["LastAttempt"] = 19021.5421579,
 },
-["Player-11-0E25A95A"] = {
-["LastSeen"] = 7202.404421200001,
-["SpecId"] = 70,
+["Player-11-0E771C2D"] = {
+["LastSeen"] = 1193.5614464,
+["SpecId"] = 256,
 },
 ["Player-3676-0E6A1FA0"] = {
 ["LastSeen"] = 46976.00847740001,
 ["SpecId"] = 265,
 },
-["Player-57-0D6DDBAC"] = {
-["SpecId"] = 260,
-["LastSeen"] = 636.4630491,
-["LastAttempt"] = 302.5567774,
+["Player-11-0E25A95A"] = {
+["LastSeen"] = 7202.404421200001,
+["SpecId"] = 70,
 },
 ["Player-60-0FEA25C6"] = {
 ["LastSeen"] = 824.0475313000001,
@@ -5956,9 +5954,10 @@ MiniCCDB = {
 ["LastSeen"] = 26391.4529591,
 ["LastAttempt"] = 26391.1379348,
 },
-["Player-11-0E771C2D"] = {
-["LastSeen"] = 1193.5614464,
-["SpecId"] = 256,
+["Player-57-0D6DDBAC"] = {
+["SpecId"] = 260,
+["LastSeen"] = 636.4630491,
+["LastAttempt"] = 302.5567774,
 },
 ["Player-11-0EA2C500"] = {
 ["LastSeen"] = 8065.597187500001,
@@ -6314,14 +6313,15 @@ MiniCCDB = {
 ["LastSeen"] = 17799.6484383,
 ["SpecId"] = 70,
 },
-["Player-11-0EA33BD7"] = {
-["LastSeen"] = 23100.8950525,
-["SpecId"] = 254,
-},
 ["Player-57-0DFF7F98"] = {
 ["SpecId"] = 258,
 ["LastSeen"] = 26397.1370439,
 ["LastAttempt"] = 26396.9590499,
+},
+["Player-3676-0EDF7A62"] = {
+["SpecId"] = 105,
+["LastSeen"] = 13176.8776531,
+["LastAttempt"] = 13176.5938335,
 },
 ["Player-11-0E966068"] = {
 ["LastSeen"] = 2375.7892243,

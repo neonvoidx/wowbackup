@@ -1,5 +1,5 @@
 -- LibOpenKeystone-1.0 (minimal, LOR-compatible J/K comms only)
-local MAJOR, MINOR = "LibOpenKeystone-1.0", 6
+local MAJOR, MINOR = "LibOpenKeystone-1.0", 7
 local lib = LibStub:NewLibrary(MAJOR, MINOR)
 if not lib then return end
 
@@ -582,24 +582,32 @@ UpdateRegistrations(lib.IsEnabled())
 -- Public: request from party/raid + send own key proactively
 function lib.RequestKeystoneDataFromParty()
 	if not lib.IsEnabled() then return end
-	if not (IsInGroup() or IsInRaid()) then return end
 	if IsRestricted() then
-		QueueRequestParty()
-		QueueSendMyData()
+		lib._pendingRefresh = true
+		if IsInGroup() or IsInRaid() then
+			QueueRequestParty()
+			QueueSendMyData()
+		end
 		return
 	end
+
+	-- Eigenen Cache auch außerhalb einer Gruppe abgleichen, damit ein zuvor
+	-- ausgeblendeter und geleerter Keystone-Frame sofort wieder aufgebaut wird.
+	local refreshed, _, mapID, level = RefreshOwnKeystone()
+	if not refreshed then
+		lib._pendingRefresh = true
+		if IsInGroup() or IsInRaid() then
+			QueueRequestParty()
+			QueueSendMyData()
+		end
+		return
+	end
+	if not (IsInGroup() or IsInRaid()) then return end
+
 	-- simple cooldown to avoid burst storms
 	local t = GetTime()
 	if (t - (lib._lastRequestAt or 0)) < 5 then return end
 	lib._lastRequestAt = t
-
-	-- Eigenen Cache vor Anfrage und Antwort abgleichen.
-	local refreshed, _, mapID, level = RefreshOwnKeystone()
-	if not refreshed then
-		QueueRequestParty()
-		QueueSendMyData()
-		return
-	end
 
 	-- Anfrage und sofortige Eigen-Antwort
 	SendLogged(KREQ_PREFIX)

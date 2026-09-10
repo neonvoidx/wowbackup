@@ -86,7 +86,7 @@ function M:Slider(options)
 	slider:SetHeight(20)
 	slider:SetWidth(options.Width or 400)
 
-	local styled = GUI.IsStyled(options)
+	local styled = GUI.IsStyled(options, "Slider")
 
 	if styled then
 		-- Flat restyle: drop the template's ornate rail for a thin track with a crimson fill
@@ -152,6 +152,15 @@ function M:Slider(options)
 	if low and high then
 		low:SetText(options.Min)
 		high:SetText(options.Max)
+
+		-- The stock template hangs both range labels a few pixels outside the slider's own edges.
+		-- A slider in the leftmost column of a page then has its minimum clipped off against the
+		-- content's left edge. Pinned back inside the slider's own width, where nothing cuts them.
+		low:ClearAllPoints()
+		low:SetPoint("TOPLEFT", slider, "BOTTOMLEFT", 0, 2)
+
+		high:ClearAllPoints()
+		high:SetPoint("TOPRIGHT", slider, "BOTTOMRIGHT", 0, 2)
 	end
 
 	-- Hidden regardless of styling: the edit box below shows the value and is editable.
@@ -183,7 +192,7 @@ function M:Slider(options)
 		GUI.ConfigureNumericBox(box, options.Min < 0)
 	end
 
-	box:SetPoint("CENTER", slider, "CENTER", 0, 30)
+	box:SetPoint("CENTER", slider, "CENTER", 0, M.SliderChipOverhang)
 	box:SetFontObject("GameFontWhite")
 	box:SetSize(50, 20)
 	box:SetAutoFocus(false)

@@ -17,6 +17,7 @@ local display = addon.Modules.PersonalAuras.Display
 -- re-entering the visible world, which decides whether a caster filter can work at all.
 local UNIT_EVENTS = {
 	PLAYER_TARGET_CHANGED = "target",
+	PLAYER_FOCUS_CHANGED = "focus",
 }
 -- A healer group follows whoever holds the role, so the token itself moves. Nothing short of a
 -- full refresh covers that, since the container has to be pointed at a different unit. An arena
@@ -114,6 +115,7 @@ local function Setup()
 		"NAME_PLATE_UNIT_ADDED",
 		"NAME_PLATE_UNIT_REMOVED",
 		"PLAYER_TARGET_CHANGED",
+		"PLAYER_FOCUS_CHANGED",
 		"GROUP_ROSTER_UPDATE",
 		"PLAYER_ROLES_ASSIGNED",
 		"ARENA_OPPONENT_UPDATE",
@@ -200,6 +202,14 @@ function M:Refresh()
 	lifecycle:Refresh()
 end
 
+---Re-runs the group sound registrations alone. The engine refuses them in combat inside instanced
+---PvE, and this is what redoes the ones it turned away once the pull ends.
+function M:RefreshSounds()
+	if lifecycle and lifecycle:IsActive() then
+		display:RefreshSounds()
+	end
+end
+
 ---Normalises every saved group, and creates the starter ones for a profile that has never had
 ---them. Runs on load, after an import and after a profile switch.
 function M:NormaliseGroups()
@@ -244,5 +254,6 @@ end
 ---@class PersonalAurasModule
 ---@field Init fun(self: PersonalAurasModule)
 ---@field Refresh fun(self: PersonalAurasModule)
+---@field RefreshSounds fun(self: PersonalAurasModule)
 ---@field StartTesting fun(self: PersonalAurasModule)
 ---@field StopTesting fun(self: PersonalAurasModule)

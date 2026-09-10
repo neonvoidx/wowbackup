@@ -1,5 +1,21 @@
 
 SimulationCraftDB = {
+["char"] = {
+["Hellavator - Tichondrius"] = {
+["bonusRolls"] = {
+{
+["currency"] = 3418,
+["ts"] = 1788977040,
+["source"] = 278287,
+["season"] = 37,
+["keyLevel"] = 3,
+["spec"] = 266,
+["context"] = 5,
+["itemId"] = 270161,
+},
+},
+},
+},
 ["profileKeys"] = {
 ["Månyfaced - Mal'Ganis"] = "Månyfaced - Mal'Ganis",
 ["Juzöu - Mal'Ganis"] = "Juzöu - Mal'Ganis",

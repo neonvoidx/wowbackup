@@ -8467,6 +8467,7 @@ local function buildUnitSettings(unit)
 			"dispelTint"
 		)
 		list[#list].isEnabled = isDispelGlowEnabled
+		list[#list].isShown = function() return false end
 
 		list[#list + 1] = slider(
 			L["Animation speed"] or "Animation speed",
@@ -8484,18 +8485,21 @@ local function buildUnitSettings(unit)
 			function(value) return string.format("%.2f", tonumber(value) or 0) end
 		)
 		list[#list].isEnabled = isDispelGlowEnabled
+		list[#list].isShown = function() return false end
 
 		list[#list + 1] = slider(L["X Offset"] or "X Offset", -10, 10, 1, function() return getValue(unit, { "status", "dispelTint", "glowX" }, dispelDef.glowX or 0) end, function(val)
 			setValue(unit, { "status", "dispelTint", "glowX" }, clampNumber(val, -10, 10, dispelDef.glowX or 0))
 			refreshSelf()
 		end, dispelDef.glowX or 0, "dispelTint", true)
 		list[#list].isEnabled = isDispelGlowEnabled
+		list[#list].isShown = function() return false end
 
 		list[#list + 1] = slider(L["Y Offset"] or "Y Offset", -10, 10, 1, function() return getValue(unit, { "status", "dispelTint", "glowY" }, dispelDef.glowY or 0) end, function(val)
 			setValue(unit, { "status", "dispelTint", "glowY" }, clampNumber(val, -10, 10, dispelDef.glowY or 0))
 			refreshSelf()
 		end, dispelDef.glowY or 0, "dispelTint", true)
 		list[#list].isEnabled = isDispelGlowEnabled
+		list[#list].isShown = function() return false end
 
 		list[#list + 1] = slider(
 			L["Number of lines"] or "Number of lines",
@@ -8512,12 +8516,14 @@ local function buildUnitSettings(unit)
 			true
 		)
 		list[#list].isEnabled = isDispelGlowEnabled
+		list[#list].isShown = function() return false end
 
 		list[#list + 1] = slider(L["Thickness"] or "Thickness", 1, 10, 1, function() return getValue(unit, { "status", "dispelTint", "glowThickness" }, dispelDef.glowThickness or 3) end, function(val)
 			setValue(unit, { "status", "dispelTint", "glowThickness" }, clampNumber(val, 1, 10, dispelDef.glowThickness or 3))
 			refreshSelf()
 		end, dispelDef.glowThickness or 3, "dispelTint", true)
 		list[#list].isEnabled = isDispelGlowEnabled
+		list[#list].isShown = function() return false end
 
 		addDivider("dispelTint")
 	end

@@ -386,6 +386,8 @@ Helper.ENTRY_DEFAULTS = {
 	cooldownGcdDrawBling = false,
 	cooldownGcdDrawSwipe = false,
 	cdmAuraOverlayEnabled = false,
+	cdmAuraOverlayEnabledUseGlobal = true,
+	cdmAuraOverlayHideIcon = false,
 	cdmAuraOverlayUnit = "player",
 	cdmAuraOverlayTargetPlayerOnly = true,
 	cdmAuraOverlayColorUseGlobal = true,
@@ -400,6 +402,7 @@ Helper.ENTRY_DEFAULTS = {
 	autoCooldownDurationEnabled = false,
 	customCooldownDurationEnabled = false,
 	customCooldownDuration = 0,
+	customCooldownDurationGlowThreshold = 0,
 	cooldownTextUseGlobal = true,
 	cooldownTextStyle = globalFontStyleKey(),
 	noDesaturationUseGlobal = true,
@@ -415,6 +418,12 @@ Helper.ENTRY_DEFAULTS = {
 	interruptGlow = false,
 	pandemicGlow = false,
 	pandemicGlowColor = nil,
+	auraDurationThresholdGlowEnabled = false,
+	auraDurationThresholdAsSeconds = false,
+	auraDurationThresholdMaxDuration = 30,
+	auraDurationThresholdValue = 33,
+	auraDurationThresholdGlowStyle = "PIXEL",
+	auraDurationThresholdGlowColor = { 1, 0.2, 0.2, 1 },
 	procGlowEnabled = true,
 	procGlowUseGlobal = true,
 	glowUseGlobal = true,
@@ -2200,7 +2209,13 @@ local function getStorageEntryDefault(entry, entryDefaults, key, barsDefaults, b
 		if mode == nil and barsDefaults then mode = barsDefaults.barMode end
 		return getStorageBarColorDefault(mode, barsDefaults, barsColors)
 	end
-	if entry and entry.type == "SPELL" and (key == "showCharges" or key == "showStacks") then return nil end
+	if
+		entry
+		and entry.type == "SPELL"
+		and (key == "showCharges" or key == "showChargesUseGlobal" or key == "showStacks" or key == "showStacksUseGlobal")
+	then
+		return nil
+	end
 	if entryDefaults and entryDefaults[key] ~= nil then return entryDefaults[key] end
 	if Helper.ENTRY_DEFAULTS[key] ~= nil then return Helper.ENTRY_DEFAULTS[key] end
 	if barsDefaults and barsDefaults[key] ~= nil then return barsDefaults[key] end
@@ -2266,6 +2281,7 @@ function Helper.PruneRootForStorage(root)
 		end
 		if not next(root.auraPresetExclusions) then root.auraPresetExclusions = nil end
 	end
+	if isStorageEmptyTable(root.trinketSlotItemExclusions) then root.trinketSlotItemExclusions = nil end
 	local barsDefaults, barsColors = getStorageBarsDefaults()
 	if type(root.defaults) == "table" then
 		if type(root.defaults.layout) == "table" then
@@ -2313,6 +2329,7 @@ function Helper.CreateRoot()
 	return {
 		version = 3,
 		auraPresetExclusions = {},
+		trinketSlotItemExclusions = {},
 		panels = {},
 		order = {},
 		selectedPanel = nil,
@@ -2341,6 +2358,16 @@ function Helper.NormalizeRoot(root)
 				end
 			end
 			if not next(exclusions) then root.auraPresetExclusions[presetKey] = nil end
+		end
+	end
+	if type(root.trinketSlotItemExclusions) ~= "table" then root.trinketSlotItemExclusions = {} end
+	for storedItemID, excluded in pairs(root.trinketSlotItemExclusions) do
+		local itemID = tonumber(storedItemID)
+		if excluded ~= true or not itemID or itemID <= 0 then
+			root.trinketSlotItemExclusions[storedItemID] = nil
+		elseif storedItemID ~= itemID then
+			root.trinketSlotItemExclusions[storedItemID] = nil
+			root.trinketSlotItemExclusions[itemID] = true
 		end
 	end
 	if type(root.panels) ~= "table" then root.panels = {} end
@@ -2589,6 +2616,7 @@ function Helper.NormalizeEntry(entry, defaults)
 	local hadShowStacksUseGlobal = entry.showStacksUseGlobal ~= nil
 	local hadShowCooldownTextUseGlobal = entry.showCooldownTextUseGlobal ~= nil
 	local hadCDMAuraOverlayColorUseGlobal = entry.cdmAuraOverlayColorUseGlobal ~= nil
+	local hadCDMAuraOverlayEnabledUseGlobal = entry.cdmAuraOverlayEnabledUseGlobal ~= nil
 	local hadCustomCDMAuraOverlayColor = entry.activationOverlayColor ~= nil or entry.cdmAuraOverlayColor ~= nil
 	local hadActivationOverlayBehaviorUseGlobal = entry.activationOverlayBehaviorUseGlobal ~= nil
 	local hadActivationOverlayReverse = entry.activationOverlayReverse ~= nil
@@ -2627,6 +2655,12 @@ function Helper.NormalizeEntry(entry, defaults)
 		entry.cdmAuraOverlayUnit = Helper.NormalizeAuraUnit(hadCDMAuraOverlayUnit and entry.cdmAuraOverlayUnit or legacyCDMAuraOverlayTrackTarget and "target" or "player")
 		entry.cdmAuraOverlayTrackTarget = nil
 		entry.cdmAuraOverlayTargetPlayerOnly = entry.cdmAuraOverlayTargetPlayerOnly ~= false
+		if not hadCDMAuraOverlayEnabledUseGlobal then
+			entry.cdmAuraOverlayEnabledUseGlobal = entry.cdmAuraOverlayEnabled ~= true
+		elseif type(entry.cdmAuraOverlayEnabledUseGlobal) ~= "boolean" then
+			entry.cdmAuraOverlayEnabledUseGlobal = Helper.ENTRY_DEFAULTS.cdmAuraOverlayEnabledUseGlobal
+		end
+		if type(entry.cdmAuraOverlayHideIcon) ~= "boolean" then entry.cdmAuraOverlayHideIcon = Helper.ENTRY_DEFAULTS.cdmAuraOverlayHideIcon end
 		if not hadShowCharges then entry.showCharges = spellHasCharges(entry.spellID) end
 		if not hadShowStacks then entry.showStacks = false end
 		if hadShowCharges and not hadShowChargesUseGlobal then entry.showChargesUseGlobal = false end
@@ -2648,6 +2682,8 @@ function Helper.NormalizeEntry(entry, defaults)
 	end
 	if entry.type ~= "SPELL" then
 		if entry.type ~= "CDM_AURA" then entry.cdmAuraOverlaySpellIDs = nil end
+		entry.cdmAuraOverlayEnabledUseGlobal = true
+		entry.cdmAuraOverlayHideIcon = false
 		entry.cdmAuraOverlayUnit = nil
 		entry.cdmAuraOverlayTrackTarget = nil
 		entry.cdmAuraOverlayTargetPlayerOnly = nil
@@ -2661,6 +2697,7 @@ function Helper.NormalizeEntry(entry, defaults)
 	if entry.glowStyle ~= nil then entry.glowStyle = Helper.NormalizeGlowStyle(entry.glowStyle, nil) end
 	if entry.pandemicGlowStyle ~= nil then entry.pandemicGlowStyle = Helper.NormalizeGlowStyle(entry.pandemicGlowStyle, nil) end
 	if entry.procGlowStyle ~= nil then entry.procGlowStyle = Helper.NormalizeGlowStyle(entry.procGlowStyle, nil) end
+	if entry.customCooldownDurationGlowStyle ~= nil then entry.customCooldownDurationGlowStyle = Helper.NormalizeGlowStyle(entry.customCooldownDurationGlowStyle, nil) end
 	if entry.glowInset ~= nil then entry.glowInset = Helper.NormalizeGlowInset(entry.glowInset, nil) end
 	if entry.pandemicGlowInset ~= nil then entry.pandemicGlowInset = Helper.NormalizeGlowInset(entry.pandemicGlowInset, nil) end
 	if entry.procGlowInset ~= nil then entry.procGlowInset = Helper.NormalizeGlowInset(entry.procGlowInset, nil) end
@@ -2669,6 +2706,24 @@ function Helper.NormalizeEntry(entry, defaults)
 	if entry.glowPixelSpeed ~= nil then entry.glowPixelSpeed = Helper.NormalizeGlowPixelSpeed(entry.glowPixelSpeed, nil) end
 	if entry.glowPixelThickness ~= nil then entry.glowPixelThickness = Helper.NormalizeGlowPixelThickness(entry.glowPixelThickness, nil) end
 	if type(entry.pandemicGlow) ~= "boolean" then entry.pandemicGlow = Helper.ENTRY_DEFAULTS.pandemicGlow end
+	if type(entry.auraDurationThresholdGlowEnabled) ~= "boolean" then entry.auraDurationThresholdGlowEnabled = Helper.ENTRY_DEFAULTS.auraDurationThresholdGlowEnabled end
+	if type(entry.auraDurationThresholdAsSeconds) ~= "boolean" then entry.auraDurationThresholdAsSeconds = Helper.ENTRY_DEFAULTS.auraDurationThresholdAsSeconds end
+	entry.auraDurationThresholdMaxDuration = Helper.ClampInt(entry.auraDurationThresholdMaxDuration, 1, 3600, Helper.ENTRY_DEFAULTS.auraDurationThresholdMaxDuration)
+	entry.auraDurationThresholdValue = Helper.ClampInt(
+		entry.auraDurationThresholdValue,
+		1,
+		entry.auraDurationThresholdAsSeconds and 3600 or 100,
+		Helper.ENTRY_DEFAULTS.auraDurationThresholdValue
+	)
+	entry.auraDurationThresholdGlowStyle = Helper.NormalizeGlowStyle(entry.auraDurationThresholdGlowStyle, Helper.ENTRY_DEFAULTS.auraDurationThresholdGlowStyle)
+	if
+		entry.auraDurationThresholdGlowStyle ~= "PIXEL"
+		and entry.auraDurationThresholdGlowStyle ~= "PULSING"
+		and entry.auraDurationThresholdGlowStyle ~= "SOLID"
+	then
+		entry.auraDurationThresholdGlowStyle = Helper.ENTRY_DEFAULTS.auraDurationThresholdGlowStyle
+	end
+	entry.auraDurationThresholdGlowColor = Helper.NormalizeColor(entry.auraDurationThresholdGlowColor, Helper.ENTRY_DEFAULTS.auraDurationThresholdGlowColor)
 	if type(entry.hideIcon) ~= "boolean" then entry.hideIcon = Helper.ENTRY_DEFAULTS.hideIcon end
 	entry.customIconID = nil
 	if type(entry.iconSizeUseGlobal) ~= "boolean" then entry.iconSizeUseGlobal = true end
@@ -2713,6 +2768,8 @@ function Helper.NormalizeEntry(entry, defaults)
 	if type(entry.cooldownGcdDrawSwipe) ~= "boolean" then entry.cooldownGcdDrawSwipe = Helper.ENTRY_DEFAULTS.cooldownGcdDrawSwipe end
 	if entry.type == "CDM_AURA" or entry.type == "STANCE" then
 		entry.cdmAuraOverlayEnabled = false
+		entry.cdmAuraOverlayEnabledUseGlobal = true
+		entry.cdmAuraOverlayHideIcon = false
 		entry.cdmAuraOverlayColorUseGlobal = true
 		entry.cdmAuraOverlayReverse = Helper.ENTRY_DEFAULTS.cdmAuraOverlayReverse
 		entry.cdmAuraOverlayColor = Helper.NormalizeColor(entry.cdmAuraOverlayColor, Helper.ENTRY_DEFAULTS.cdmAuraOverlayColor)
@@ -2748,11 +2805,21 @@ function Helper.NormalizeEntry(entry, defaults)
 		elseif type(entry.activationOverlayBehaviorUseGlobal) ~= "boolean" then
 			entry.activationOverlayBehaviorUseGlobal = Helper.ENTRY_DEFAULTS.activationOverlayBehaviorUseGlobal
 		end
+		if entry.cdmAuraOverlayColorUseGlobal == false then
+			entry.activationOverlayBehaviorUseGlobal = false
+			entry.cdmAuraOverlayColorUseGlobal = true
+		end
 		if entry.type ~= "SPELL" then entry.cdmAuraOverlayEnabled = false end
 		if type(entry.autoCooldownDurationEnabled) ~= "boolean" then entry.autoCooldownDurationEnabled = Helper.ENTRY_DEFAULTS.autoCooldownDurationEnabled end
 		if entry.type ~= "SPELL" and entry.type ~= "ITEM" and entry.type ~= "SLOT" and entry.type ~= "MACRO" then entry.autoCooldownDurationEnabled = false end
 		if type(entry.customCooldownDurationEnabled) ~= "boolean" then entry.customCooldownDurationEnabled = Helper.ENTRY_DEFAULTS.customCooldownDurationEnabled end
 		entry.customCooldownDuration = Helper.ClampNumber(entry.customCooldownDuration, 0, Helper.CUSTOM_COOLDOWN_DURATION_MAX or 300, Helper.ENTRY_DEFAULTS.customCooldownDuration or 0)
+		entry.customCooldownDurationGlowThreshold = Helper.ClampNumber(
+			entry.customCooldownDurationGlowThreshold,
+			0,
+			Helper.CUSTOM_COOLDOWN_DURATION_MAX or 300,
+			Helper.ENTRY_DEFAULTS.customCooldownDurationGlowThreshold or 0
+		)
 		if not (entry.customCooldownDuration and entry.customCooldownDuration > 0) then entry.customCooldownDurationEnabled = false end
 	end
 	if type(entry.cooldownTextUseGlobal) ~= "boolean" then entry.cooldownTextUseGlobal = true end
@@ -3285,6 +3352,59 @@ local function getBindingTextForActionSlot(slot)
 	return nil
 end
 
+function Keybinds.GetActionSlotState(slot, button, keyText, actionType, actionId)
+	slot = tonumber(slot)
+	if not slot or slot <= 0 then return nil, false end
+	button = button or getActionButtonSlotMap()[slot]
+	if not button then return nil, false end
+	keyText = keyText or getBindingTextForButton(button)
+	if not keyText then return nil, false end
+	if actionType == nil and Api.GetActionInfo then actionType, actionId = Api.GetActionInfo(slot) end
+	if actionType ~= "spell" and actionType ~= "item" and actionType ~= "macro" then return nil, false end
+	actionId = tonumber(actionId)
+	if not actionId then return nil, false end
+
+	local runtime = CooldownPanels.runtime or {}
+	local tracked = runtime.keybindTrackedActions
+	local relevant = false
+	local resolvedSignature = ""
+	if tracked then
+		local function isTrackedSpell(spellId)
+			return spellId ~= nil and tracked.spell[spellId] == true
+		end
+		if actionType == "spell" then
+			local effectiveId = getEffectiveSpellId(actionId)
+			local baseId = getBaseSpellId(actionId)
+			relevant = isTrackedSpell(actionId) or isTrackedSpell(effectiveId) or isTrackedSpell(baseId)
+		elseif actionType == "item" then
+			relevant = tracked.item[actionId] == true
+		else
+			local macroName = Api.GetActionText and Api.GetActionText(slot) or nil
+			if not macroName and Api.GetMacroInfo then macroName = Api.GetMacroInfo(actionId) end
+			if CooldownPanels.NormalizeMacroName then macroName = CooldownPanels.NormalizeMacroName(macroName) end
+			relevant = tracked.macro[actionId] == true or (macroName and tracked.macroName[macroName] == true) or false
+			local resolved = CooldownPanels.ResolveMacroEntry and CooldownPanels.ResolveMacroEntry({
+				type = "MACRO",
+				macroID = actionId,
+				macroName = macroName,
+			})
+			if resolved and resolved.kind == "SPELL" then
+				local spellId = tonumber(resolved.spellID)
+				local effectiveId = getEffectiveSpellId(spellId)
+				local baseId = getBaseSpellId(spellId)
+				relevant = relevant or isTrackedSpell(spellId) or isTrackedSpell(effectiveId) or isTrackedSpell(baseId)
+				resolvedSignature = ":S" .. tostring(spellId or "")
+			elseif resolved and resolved.kind == "ITEM" then
+				local itemId = tonumber(resolved.itemID)
+				relevant = relevant or (itemId ~= nil and tracked.item[itemId] == true)
+				resolvedSignature = ":I" .. tostring(itemId or "")
+			end
+		end
+	end
+
+	return actionType .. ":" .. tostring(actionId) .. resolvedSignature .. ":" .. keyText, relevant == true
+end
+
 local function getBindingTextForSpell(spellId)
 	if not spellId then return nil end
 	local text = nil
@@ -3341,7 +3461,7 @@ end
 
 local function buildKeybindLookup()
 	local runtime = CooldownPanels.runtime or {}
-	if runtime._eqolKeybindLookup then return runtime._eqolKeybindLookup end
+	if runtime._eqolKeybindLookup and runtime._eqolActionSlotKeybindSignatures and runtime._eqolActionSlotKeybindRelevant then return runtime._eqolKeybindLookup end
 	local lookup = {
 		spell = {},
 		item = {},
@@ -3351,6 +3471,8 @@ local function buildKeybindLookup()
 	local getMacroItem = GetMacroItem
 	local getMacroSpell = Api.GetMacroSpell
 	local getActionText = Api.GetActionText or GetActionText
+	local actionSlotSignatures = {}
+	local actionSlotRelevant = {}
 
 	local function addMacroSpellBinding(macroRef, keyText)
 		if not (getMacroSpell and macroRef and keyText) then return end
@@ -3368,6 +3490,11 @@ local function buildKeybindLookup()
 		local keyText = getBindingTextForButton(button)
 		if not (keyText and GetActionInfo) then return end
 		local actionType, actionId = GetActionInfo(slot)
+		if actionSlotSignatures[slot] == nil then
+			local signature, relevant = Keybinds.GetActionSlotState(slot, button, keyText, actionType, actionId)
+			actionSlotSignatures[slot] = signature or false
+			actionSlotRelevant[slot] = relevant == true
+		end
 		if actionType == "spell" and actionId then
 			local spellId = tonumber(actionId)
 			if spellId then
@@ -3403,6 +3530,8 @@ local function buildKeybindLookup()
 	end)
 
 	runtime._eqolKeybindLookup = lookup
+	runtime._eqolActionSlotKeybindSignatures = actionSlotSignatures
+	runtime._eqolActionSlotKeybindRelevant = actionSlotRelevant
 	CooldownPanels.runtime = runtime
 	return lookup
 end
@@ -3412,6 +3541,8 @@ function Keybinds.InvalidateCache()
 	CooldownPanels.runtime._eqolActionButtonSlotMap = nil
 	CooldownPanels.runtime._eqolKeybindLookup = nil
 	CooldownPanels.runtime._eqolKeybindCache = nil
+	CooldownPanels.runtime._eqolActionSlotKeybindSignatures = nil
+	CooldownPanels.runtime._eqolActionSlotKeybindRelevant = nil
 	CooldownPanels.runtime._eqolKeybindLookupGeneration = (CooldownPanels.runtime._eqolKeybindLookupGeneration or 0) + 1
 end
 
@@ -3432,13 +3563,80 @@ function Keybinds.RebuildPanels()
 	CooldownPanels.runtime = CooldownPanels.runtime or {}
 	local runtime = CooldownPanels.runtime
 	local panels = {}
+	local tracked = {
+		spell = {},
+		item = {},
+		macro = {},
+		macroName = {},
+	}
+	local function addSpell(spellId)
+		spellId = tonumber(spellId)
+		if spellId then tracked.spell[spellId] = true end
+	end
 	for panelId, panel in pairs(root.panels) do
 		local layout = panel and panel.layout
-		if panel and panel.enabled ~= false and layout and layout.keybindsEnabled == true then panels[panelId] = true end
+		if panel and panel.enabled ~= false and layout and layout.keybindsEnabled == true then
+			panels[panelId] = true
+			for _, entry in pairs(panel.entries or {}) do
+				if entry.type == "SPELL" and entry.spellID then
+					addSpell(entry.spellID)
+					if CooldownPanels.ResolveTrackedSpellID then
+						local effectiveId, resolvedId, baseId = CooldownPanels:ResolveTrackedSpellID(entry.spellID)
+						addSpell(effectiveId)
+						addSpell(resolvedId)
+						addSpell(baseId)
+					end
+				elseif entry.type == "ITEM" and entry.itemID then
+					local itemId = CooldownPanels.ResolveEntryItemID and CooldownPanels.ResolveEntryItemID(entry, entry.itemID) or entry.itemID
+					itemId = tonumber(itemId)
+					local baseItemId = tonumber(entry.itemID)
+					if baseItemId then tracked.item[baseItemId] = true end
+					if itemId then tracked.item[itemId] = true end
+				elseif entry.type == "SLOT" and entry.slotID then
+					local itemId = GetInventoryItemID and GetInventoryItemID("player", entry.slotID)
+					if itemId then tracked.item[itemId] = true end
+				elseif entry.type == "MACRO" then
+					local macroId = tonumber(entry.macroID)
+					if macroId then tracked.macro[macroId] = true end
+					local macroName = type(entry.macroName) == "string" and entry.macroName or nil
+					if CooldownPanels.NormalizeMacroName then macroName = CooldownPanels.NormalizeMacroName(macroName) end
+					if macroName and macroName ~= "" then tracked.macroName[macroName] = true end
+				end
+			end
+		end
 	end
 	runtime.keybindPanels = panels
+	runtime.keybindTrackedActions = tracked
+	runtime._eqolActionSlotKeybindSignatures = nil
+	runtime._eqolActionSlotKeybindRelevant = nil
 	runtime.keybindPanelsDirty = nil
 	return panels
+end
+
+function Keybinds.ShouldRefreshForActionSlot(slot)
+	slot = tonumber(slot)
+	if not slot or slot <= 0 then return true end
+	local runtime = CooldownPanels.runtime
+	if not runtime then return true end
+	if not runtime.keybindTrackedActions then Keybinds.RebuildPanels() end
+
+	local signatures = runtime._eqolActionSlotKeybindSignatures
+	local relevance = runtime._eqolActionSlotKeybindRelevant
+	if not signatures or not relevance then
+		buildKeybindLookup()
+		signatures = runtime._eqolActionSlotKeybindSignatures or {}
+		relevance = runtime._eqolActionSlotKeybindRelevant or {}
+	end
+
+	local previousSignature = signatures[slot]
+	local previousRelevant = relevance[slot] == true
+	local currentSignature, currentRelevant = Keybinds.GetActionSlotState(slot)
+	currentSignature = currentSignature or false
+	signatures[slot] = currentSignature
+	relevance[slot] = currentRelevant == true
+	if previousSignature == nil then return currentRelevant == true end
+	if previousSignature == currentSignature then return false end
+	return previousRelevant or currentRelevant == true
 end
 
 function Keybinds.HasPanels()
@@ -3670,6 +3868,7 @@ function CooldownPanels:RequestPanelRefresh(panelId)
 
 		local q = runtime._eqolPanelRefreshQueue
 		if not q then return end
+		runtime._eqolRuntimePanelRefresh = true
 
 		local startedRuntimeQueryBatch = false
 		if CooldownPanels.IsRuntimeQueryBatchActive and CooldownPanels.BeginRuntimeQueryBatch and not CooldownPanels:IsRuntimeQueryBatchActive() then
@@ -3681,6 +3880,7 @@ function CooldownPanels:RequestPanelRefresh(panelId)
 			q[id] = nil
 			if CooldownPanels:GetPanel(id) then CooldownPanels:RefreshPanel(id) end
 		end
+		runtime._eqolRuntimePanelRefresh = nil
 
 		if startedRuntimeQueryBatch and CooldownPanels.EndRuntimeQueryBatch then CooldownPanels:EndRuntimeQueryBatch() end
 	end)

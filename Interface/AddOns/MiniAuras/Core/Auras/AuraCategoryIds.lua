@@ -1105,6 +1105,7 @@ addon.Core.AuraCategoryIds = {
 		[61336] = true, -- Survival Instincts
 		[79206] = true, -- Spiritwalker's Grace
 		[81256] = true, -- Dancing Rune Weapon
+		[86659] = true, -- Guardian of Ancient Kings
 		[97463] = true, -- Rallying Cry
 		[108416] = true, -- Dark Pact
 		[110960] = true, -- Greater Invisibility
@@ -1154,6 +1155,7 @@ addon.Core.AuraCategoryIds = {
 		[198819] = true, -- Sharpen Blade
 		[80240] = true, -- Havoc
 		[356723] = true, -- Scorpid Venom
+		[426593] = true, -- Goremaw's Bite
 	},
 
 	-- Announced only when the player asks for them. These land often enough that a spoken name
@@ -1213,9 +1215,9 @@ addon.Core.AuraCategoryIds = {
 		[22812] = "DRUID", -- Barkskin
 		[50334] = "DRUID", -- Berserk
 		[106951] = "DRUID", -- Berserk
-		[383410] = "DRUID", -- Celestial Alignment
+		[194223] = "DRUID", -- Celestial Alignment
 		[102543] = "DRUID", -- Incarnation: Avatar of Ashamane
-		[390414] = "DRUID", -- Incarnation: Chosen of Elune
+		[102560] = "DRUID", -- Incarnation: Chosen of Elune
 		[102558] = "DRUID", -- Incarnation: Guardian of Ursoc
 		[102342] = "DRUID", -- Ironbark
 		-- Evoker
@@ -1263,6 +1265,7 @@ addon.Core.AuraCategoryIds = {
 		[125174] = "MONK", -- Touch of Karma
 		[1249625] = "MONK", -- Zenith
 		-- Paladin
+		[86659] = "PALADIN", -- Guardian of Ancient Kings
 		[228050] = "PALADIN", -- Guardian of the Forgotten Queen
 		[31821] = "PALADIN", -- Aura Mastery
 		[210256] = "PALADIN", -- Blessing of Sanctuary
@@ -1346,7 +1349,7 @@ addon.Core.AuraCategoryIds = {
 		[106951] = true, -- Berserk
 		[19574] = true, -- Bestial Wrath
 		[1044] = true, -- Blessing of Freedom
-		[383410] = true, -- Celestial Alignment
+		[194223] = true, -- Celestial Alignment
 		[190319] = true, -- Combustion
 		[360194] = true, -- Deathmark
 		[498] = true, -- Divine Protection
@@ -1357,7 +1360,7 @@ addon.Core.AuraCategoryIds = {
 		[198144] = true, -- Ice Form
 		[12472] = true, -- Icy Veins
 		[102543] = true, -- Incarnation: Avatar of Ashamane
-		[390414] = true, -- Incarnation: Chosen of Elune
+		[102560] = true, -- Incarnation: Chosen of Elune
 		[102558] = true, -- Incarnation: Guardian of Ursoc
 		[343818] = true, -- Invoke Chi-Ji, the Red Crane
 		[132578] = true, -- Invoke Niuzao, the Black Ox

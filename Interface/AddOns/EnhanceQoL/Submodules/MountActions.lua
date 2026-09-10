@@ -56,6 +56,11 @@ local function isSwimming()
 	return false
 end
 
+local function isUnderwater()
+	local name, _, _, rate = GetMirrorTimerInfo(2)
+	return name == "BREATH" and rate < 0
+end
+
 local g99BreakneckUnlocked
 
 local function isG99BreakneckUnlocked()
@@ -296,10 +301,16 @@ local function appendRandomMountCombatMovementLines(lines)
 	end
 end
 
+local function appendCombatDismountLines(lines)
+	lines[#lines + 1] = "/dismount [combat,mounted]"
+	lines[#lines + 1] = "/stopmacro [combat,mounted]"
+end
+
 local function buildMountMacro(spellID)
 	local name = getSpellNameByID(spellID)
 	if not name or name == "" then return nil end
 	local lines = {}
+	appendCombatDismountLines(lines)
 	if addon.variables.unitClass == "DRUID" then lines[#lines + 1] = "/cancelform [nocombat]" end
 	local visageLine = getDracthyrVisageMacroLine()
 	if visageLine then lines[#lines + 1] = visageLine end
@@ -315,6 +326,7 @@ local function buildRandomMountMacro(spellID)
 	local name = getSpellNameByID(spellID)
 	if not name or name == "" then return nil end
 	local lines = {}
+	appendCombatDismountLines(lines)
 	appendRandomMountCombatMovementLines(lines)
 	if addon.variables.unitClass == "DRUID" then lines[#lines + 1] = "/cancelform [nocombat]" end
 	local visageLine = getDracthyrVisageMacroLine()
@@ -394,12 +406,15 @@ function MountActions:GetRandomMountSpell()
 	local list = self.randomMountCache
 	if not list or #list == 0 then return nil end
 	local spellID
-	if isSwimming() then
+	if isUnderwater() then
 		spellID = pickRandomMount(list, "water")
 		if not spellID and isFlyableArea() then spellID = pickRandomMount(list, "flying") end
 		if not spellID then spellID = pickRandomMount(list, "ground") end
 	elseif isFlyableArea() then
 		spellID = pickRandomMount(list, "flying")
+		if not spellID then spellID = pickRandomMount(list, "ground") end
+	elseif isSwimming() then
+		spellID = pickRandomMount(list, "water")
 		if not spellID then spellID = pickRandomMount(list, "ground") end
 	else
 		spellID = pickRandomMount(list, "ground")

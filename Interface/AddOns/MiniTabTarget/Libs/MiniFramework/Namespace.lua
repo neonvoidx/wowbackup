@@ -9,12 +9,18 @@ local M = {
 	Version = VERSION,
 	VerticalSpacing = 16,
 	HorizontalSpacing = 20,
+	-- A slider's value chip floats this far above the track, outside the frame's own rect, so
+	-- anything placed under a slider has to clear it.
+	SliderChipOverhang = 30,
 	TextMaxWidth = 600,
 	-- Widgets use stock Blizzard art unless an addon opts into the accented restyle with
 	-- M:SetCustomStyling(true). Individual widgets can override either way via
 	-- options.CustomStyling. Chrome with no Blizzard equivalent - tabs, the standalone
 	-- window, the dialog - is always styled.
 	CustomStyling = false,
+	-- A panel inside Blizzard's settings screen turns Button off here, because a styled
+	-- button clashes with the stock art around it.
+	CustomStylingOverrides = {},
 }
 
 addon.Framework = M

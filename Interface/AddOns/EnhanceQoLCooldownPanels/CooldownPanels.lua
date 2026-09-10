@@ -2057,14 +2057,15 @@ end
 
 local function resolveIconBorderTexture(value)
 	local key = normalizeIconBorderTexture(value, cdp.ICON_BORDER.DEFAULT)
-	local ufHelper = addon.Aura and addon.Aura.UFHelper
-	if ufHelper and ufHelper.resolveBorderTexture then return ufHelper.resolveBorderTexture(key) end
 	if not key or key == "" or key == cdp.ICON_BORDER.DEFAULT then return "Interface\\Buttons\\WHITE8x8" end
+	if addon.functions and addon.functions.ResolveLSMMedia then
+		return addon.functions.ResolveLSMMedia("border", key, "Interface\\Buttons\\WHITE8x8", true) or "Interface\\Buttons\\WHITE8x8"
+	end
 	if LSM and LSM.Fetch then
-		local tex = LSM:Fetch("border", key)
+		local tex = LSM:Fetch("border", key, true)
 		if type(tex) == "string" and tex ~= "" then return tex end
 	end
-	return key
+	return "Interface\\Buttons\\WHITE8x8"
 end
 
 local getEditor
@@ -2683,7 +2684,7 @@ local function getSoundOptions()
 	return list
 end
 
-function CooldownPanels:AddSoundMenuOptions(rootDescription, getCurrentValue, setSelectedValue)
+function CooldownPanels:AddSoundMenuOptions(rootDescription, getCurrentValue, setSelectedValue, attachPreview)
 	if not (rootDescription and rootDescription.CreateRadio and getCurrentValue and setSelectedValue) then return end
 	local function isSelected(value) return normalizeSoundName(getCurrentValue()) == value end
 	local function setSelected(value) setSelectedValue(value) end
@@ -2697,7 +2698,9 @@ function CooldownPanels:AddSoundMenuOptions(rootDescription, getCurrentValue, se
 			local categoryMenu = cooldownManagerMenu:CreateButton(soundCatalog:GetGroupLabel(group))
 			if categoryMenu.SetScrollMode and #group.sounds > 12 then categoryMenu:SetScrollMode(260) end
 			for _, sound in ipairs(group.sounds) do
-				categoryMenu:CreateRadio(soundCatalog:GetLabel(sound.value), isSelected, setSelected, sound.value)
+				local label = soundCatalog:GetLabel(sound.value)
+				local radio = categoryMenu:CreateRadio(label, isSelected, setSelected, sound.value)
+				if attachPreview then attachPreview(radio, sound.value, label) end
 			end
 		end
 	end
@@ -2707,7 +2710,11 @@ function CooldownPanels:AddSoundMenuOptions(rootDescription, getCurrentValue, se
 		local sharedMediaMenu = rootDescription:CreateButton(L["CooldownPanelSoundSharedMedia"] or "SharedMedia")
 		if sharedMediaMenu.SetScrollMode then sharedMediaMenu:SetScrollMode(260) end
 		for _, soundName in ipairs(sharedMediaOptions) do
-			if soundName ~= "None" then sharedMediaMenu:CreateRadio(getSoundLabel(soundName), isSelected, setSelected, soundName) end
+			if soundName ~= "None" then
+				local label = getSoundLabel(soundName)
+				local radio = sharedMediaMenu:CreateRadio(label, isSelected, setSelected, soundName)
+				if attachPreview then attachPreview(radio, soundName, label) end
+			end
 		end
 	end
 end
@@ -4169,6 +4176,8 @@ cdp.ENTRY.STYLE_CLIPBOARD = {
 	},
 	SPELL_CDM_AURA_OVERLAY_KEYS = {
 		cdmAuraOverlayEnabled = true,
+		cdmAuraOverlayEnabledUseGlobal = true,
+		cdmAuraOverlayHideIcon = true,
 		cdmAuraOverlayReverse = true,
 		cdmAuraOverlayColor = true,
 		cdmAuraOverlayColorUseGlobal = true,
@@ -4289,7 +4298,15 @@ function cdp.ENTRY.IsStyleClipboardKeyAllowedForEntry(key, entry)
 	end
 	if key == "autoCooldownDurationEnabled" then return entryType == "SPELL" or entryType == "SLOT" or entryType == "MACRO" end
 	if key == "customCooldownDurationOnCooldownMultipleStacks" then return entryType == "SPELL" end
-	if key == "customCooldownDurationEnabled" or key == "customCooldownDurationOnCooldownEnabled" or key == "customCooldownDuration" then return entryType == "SPELL" or entryType == "ITEM" or entryType == "SLOT" or entryType == "MACRO" end
+	if
+		key == "customCooldownDurationEnabled"
+		or key == "customCooldownDurationOnCooldownEnabled"
+		or key == "customCooldownDuration"
+		or key == "customCooldownDurationGlowThreshold"
+		or key == "customCooldownDurationGlowStyle"
+	then
+		return entryType == "SPELL" or entryType == "ITEM" or entryType == "SLOT" or entryType == "MACRO"
+	end
 	return true
 end
 
@@ -8073,7 +8090,10 @@ end
 
 function CooldownPanels:ClearRuntimeCooldownTextBinding(icon)
 	if not icon then return end
-	if addon.functions and addon.functions.ReleaseDurationTextBinding then addon.functions.ReleaseDurationTextBinding(icon, "cooldownText", true) end
+	local bindings = icon._eqolDurationTextBindings
+	if bindings and bindings.cooldownText and addon.functions and addon.functions.ReleaseDurationTextBinding then
+		addon.functions.ReleaseDurationTextBinding(icon, "cooldownText", true)
+	end
 	if icon.cooldownText then
 		icon.cooldownText:SetAlpha(1)
 		icon.cooldownText:Hide()
@@ -10828,12 +10848,13 @@ function CooldownPanels:IsEntryCDMAuraOverlayEnabled(layout, entry, resolvedType
 	if typeKey ~= "SPELL" or entry.type ~= "SPELL" then return false end
 	if entry.customCooldownDurationEnabled == true then return false end
 	if entry.customCooldownDurationOnCooldownEnabled == true then return false end
-	return entry.cdmAuraOverlayEnabled == true or (layout and layout.cdmAuraOverlayEnabled == true)
+	if entry.cdmAuraOverlayEnabledUseGlobal == false then return entry.cdmAuraOverlayEnabled == true end
+	return layout and layout.cdmAuraOverlayEnabled == true or false
 end
 
 function CooldownPanels:ResolveEntryCDMAuraOverlayColor(layout, entry)
 	local panelColor = Helper.NormalizeColor(layout and layout.cdmAuraOverlayColor, Helper.PANEL_LAYOUT_DEFAULTS.cdmAuraOverlayColor or Helper.ACTIVATION_OVERLAY_COLOR_DEFAULT)
-	if entry and entry.cdmAuraOverlayColorUseGlobal == false then
+	if entry and entry.activationOverlayBehaviorUseGlobal == false then
 		return CooldownPanels.ResolveCachedEntryColor("activationOverlayEntry", entry, entry.activationOverlayColor or entry.cdmAuraOverlayColor, panelColor)
 	end
 	return panelColor
@@ -10861,6 +10882,12 @@ function CooldownPanels:ResolveEntryActivationOverlayGlowColor(layout, entry)
 		return CooldownPanels.ResolveCachedEntryColor("activationOverlayGlowEntry", entry, entry.activationOverlayGlowColor, panelColor)
 	end
 	return panelColor
+end
+
+function CooldownPanels:ResolveEntryCustomDurationGlowStyle(layout, entry)
+	local _, _, inheritedStyle = self:ResolveEntryGlowStyle(layout, entry)
+	local style = cdp.ENTRY.NormalizeGlowStyleForIconShape(entry and entry.customCooldownDurationGlowStyle, inheritedStyle, layout and layout.iconShape)
+	return cdp.ENTRY.NormalizeGlowStyleForEntryDisplayMode(style, entry)
 end
 
 function CooldownPanels:ResolveEntryActivationOverlayColor(layout, entry)
@@ -11046,7 +11073,10 @@ function CooldownPanels:ClearEntryCustomCooldownDuration(panelId, entryId, suppr
 	local store = self.runtime.customCooldownDurations
 	local timers = self.runtime.customCooldownDurationTimers
 	local stackTimers = self.runtime.customCooldownDurationStackTimers
-	local hadRecord = store and store[key] ~= nil
+	local record = store and store[key] or nil
+	local hadRecord = record ~= nil
+	local glowThresholdTimer = record and record.glowThresholdTimer or nil
+	if glowThresholdTimer and glowThresholdTimer.Cancel then glowThresholdTimer:Cancel() end
 	if store then store[key] = nil end
 	local timer = timers and timers[key] or nil
 	if timer and timer.Cancel then timer:Cancel() end
@@ -11075,6 +11105,9 @@ function CooldownPanels:ClearPanelCustomCooldownDurations(panelId)
 	local changed = false
 	for key in pairs(store) do
 		if tostring(key):sub(1, #prefix) == prefix then
+			local record = store[key]
+			local glowThresholdTimer = record and record.glowThresholdTimer or nil
+			if glowThresholdTimer and glowThresholdTimer.Cancel then glowThresholdTimer:Cancel() end
 			store[key] = nil
 			local timer = timers and timers[key] or nil
 			if timer and timer.Cancel then timer:Cancel() end
@@ -11086,6 +11119,39 @@ function CooldownPanels:ClearPanelCustomCooldownDurations(panelId)
 		end
 	end
 	return changed
+end
+
+function CooldownPanels:ScheduleCustomCooldownGlowThreshold(panelId, entryId, entry, record, now)
+	if type(record) ~= "table" then return end
+	local threshold = Helper.ClampNumber(
+		entry and entry.customCooldownDurationGlowThreshold,
+		0,
+		Helper.CUSTOM_COOLDOWN_DURATION_MAX or 300,
+		Helper.ENTRY_DEFAULTS.customCooldownDurationGlowThreshold or 0
+	) or 0
+	local endTime = tonumber(record.endTime)
+	local signature = endTime and (tostring(endTime) .. ":" .. tostring(threshold)) or nil
+	if record.glowThresholdTimerSignature == signature then return end
+	local oldTimer = record.glowThresholdTimer
+	if oldTimer and oldTimer.Cancel then oldTimer:Cancel() end
+	record.glowThresholdTimer = nil
+	record.glowThresholdTimerSignature = signature
+	if threshold <= 0 or not endTime then return end
+	now = tonumber(now) or self:GetDurationNow()
+	local delay = endTime - threshold - now
+	if delay <= 0 or not (C_Timer and C_Timer.NewTimer) then return end
+	local key = Helper.GetEntryKey(panelId, entryId)
+	record.glowThresholdTimer = C_Timer.NewTimer(delay, function()
+		local currentStore = CooldownPanels.runtime and CooldownPanels.runtime.customCooldownDurations
+		local current = currentStore and currentStore[key] or nil
+		if current ~= record or current.glowThresholdTimerSignature ~= signature then return end
+		current.glowThresholdTimer = nil
+		if CooldownPanels.RequestPanelRefresh then
+			CooldownPanels:RequestPanelRefresh(panelId)
+		elseif CooldownPanels:GetPanel(panelId) then
+			CooldownPanels:RefreshPanel(panelId)
+		end
+	end)
 end
 
 function CooldownPanels:GetActiveEntryCustomCooldownDuration(panelId, entryId, entry, resolvedType)
@@ -11121,6 +11187,7 @@ function CooldownPanels:GetActiveEntryCustomCooldownDuration(panelId, entryId, e
 			return nil
 		end
 	end
+	self:ScheduleCustomCooldownGlowThreshold(panelId, entryId, entry, record, now)
 	return {
 		key = key,
 		durationObject = durationObject,
@@ -11147,6 +11214,9 @@ function CooldownPanels:StartEntryCustomCooldownDuration(panelId, entryId, entry
 	end
 	local store, timers = self:GetCustomCooldownDurationStore()
 	local key = Helper.GetEntryKey(panelId, entryId)
+	local oldRecord = store[key]
+	local oldGlowThresholdTimer = oldRecord and oldRecord.glowThresholdTimer or nil
+	if oldGlowThresholdTimer and oldGlowThresholdTimer.Cancel then oldGlowThresholdTimer:Cancel() end
 	local oldTimer = timers[key]
 	if oldTimer and oldTimer.Cancel then oldTimer:Cancel() end
 	timers[key] = nil
@@ -11168,6 +11238,7 @@ function CooldownPanels:StartEntryCustomCooldownDuration(panelId, entryId, entry
 		current.endTime = now + duration
 		current.stackMode = true
 		self:CleanupActiveProcTriggerRecord(current, now)
+		self:ScheduleCustomCooldownGlowThreshold(panelId, entryId, entry, current, now)
 		self:ScheduleCustomCooldownStackCleanup(panelId, entryId)
 		return true
 	end
@@ -11177,6 +11248,7 @@ function CooldownPanels:StartEntryCustomCooldownDuration(panelId, entryId, entry
 		duration = duration,
 		endTime = now + duration,
 	}
+	self:ScheduleCustomCooldownGlowThreshold(panelId, entryId, entry, store[key], now)
 	if C_Timer and C_Timer.NewTimer then
 		timers[key] = C_Timer.NewTimer(duration, function()
 			local currentStore = CooldownPanels.runtime and CooldownPanels.runtime.customCooldownDurations
@@ -11222,6 +11294,21 @@ function CooldownPanels:ApplyActivationOverlayVisualState(data, entry)
 		or CooldownPanels:ResolveEntryActivationOverlayColor(data.layout, entry)
 	data.activationOverlayOnly = CooldownPanels:ResolveEntryActivationOverlayOnly(data.layout, entry)
 	data.activationOverlayGlow = CooldownPanels:ResolveEntryActivationOverlayGlow(data.layout, entry)
+	data.activationOverlayGlowStyle = data.customCooldownDurationActive == true and CooldownPanels:ResolveEntryCustomDurationGlowStyle(data.layout, entry) or nil
+	if data.activationOverlayGlow and data.customCooldownDurationActive == true then
+		local threshold = Helper.ClampNumber(
+			entry and entry.customCooldownDurationGlowThreshold,
+			0,
+			Helper.CUSTOM_COOLDOWN_DURATION_MAX or 300,
+			Helper.ENTRY_DEFAULTS.customCooldownDurationGlowThreshold or 0
+		) or 0
+		if threshold > 0 then
+			local startTime = tonumber(data.customCooldownStart)
+			local duration = tonumber(data.customCooldownDuration)
+			local remaining = startTime and duration and (startTime + duration - CooldownPanels:GetDurationNow()) or nil
+			data.activationOverlayGlow = remaining ~= nil and remaining > 0 and remaining <= threshold
+		end
+	end
 	data.activationOverlayGlowColor = active and data.activationOverlayGlow and CooldownPanels:ResolveEntryActivationOverlayGlowColor(data.layout, entry) or nil
 	data.cooldownReverse = data.resolvedType == "CDM_AURA"
 		or (spellAuraOverlayActive and data.cdmAuraOverlayReverse ~= false)
@@ -11256,6 +11343,8 @@ function CooldownPanels:ShouldTriggerEntryCustomCooldownDuration(entry, castSpel
 	elseif resolvedType == "SLOT" then
 		local slotId = tonumber(entry.slotID)
 		local itemId = slotId and Api.GetInventoryItemID and Api.GetInventoryItemID("player", slotId) or nil
+		local presets = self.AuraPresets
+		if presets and presets.IsTrinketSlotItemExcluded and presets:IsTrinketSlotItemExcluded(itemId) then return false end
 		local itemSpellId = itemId and self:GetItemUseSpellID(itemId) or nil
 		return itemSpellId and self:AreSpellVariantsEquivalent(itemSpellId, castId) or false
 	end
@@ -11279,7 +11368,8 @@ function CooldownPanels:HandleCustomCooldownActivation(castSpellId)
 			if panel and panel.entries then
 				for _, entryId in ipairs(panel.order or {}) do
 					local entry = panel.entries[entryId]
-					if self:ShouldTriggerEntryCustomCooldownDuration(entry, spellId) then
+					local customCooldownEnabled = entry and (entry.customCooldownDurationEnabled == true or entry.autoCooldownDurationEnabled == true)
+					if customCooldownEnabled and self:ShouldTriggerEntryCustomCooldownDuration(entry, spellId) then
 						local macro = entry.type == "MACRO" and CooldownPanels.ResolveMacroEntry and CooldownPanels.ResolveMacroEntry(entry) or nil
 						local resolvedType = (macro and macro.kind) or entry.type
 						if self:StartEntryCustomCooldownDuration(panelId, entryId, entry, resolvedType, "activation") then
@@ -11351,14 +11441,15 @@ function CooldownPanels:HandleCustomCooldownCooldownEvent(eventSpellId, eventBas
 			if panel and panel.entries then
 				for _, entryId in ipairs(panel.order or {}) do
 					local entry = panel.entries[entryId]
-					if self:ShouldTriggerEntryCustomCooldownOnCooldown(entry, eventSpellId, eventBaseSpellId) then
+					local customCooldownEnabled = entry and (entry.customCooldownDurationOnCooldownEnabled == true or entry.autoCooldownDurationEnabled == true)
+					if customCooldownEnabled and self:ShouldTriggerEntryCustomCooldownOnCooldown(entry, eventSpellId, eventBaseSpellId) then
 						local macro = entry.type == "MACRO" and CooldownPanels.ResolveMacroEntry and CooldownPanels.ResolveMacroEntry(entry) or nil
 						local resolvedType = (macro and macro.kind) or entry.type
 						if self:StartEntryCustomCooldownDuration(panelId, entryId, entry, resolvedType, "cooldown") then
 							panelsToRefresh[panelId] = true
 							started = true
 						end
-					elseif self:ShouldClearEntryCustomCooldownOnCooldown(entry, eventSpellId) then
+					elseif entry and entry.autoCooldownDurationEnabled == true and self:ShouldClearEntryCustomCooldownOnCooldown(entry, eventSpellId) then
 						self:ClearEntryCustomCooldownDuration(panelId, entryId)
 					end
 				end
@@ -12061,6 +12152,14 @@ end
 
 local function itemHasUseSpell(itemID) return CooldownPanels.GetItemUseSpellID and CooldownPanels:GetItemUseSpellID(itemID) ~= nil or false end
 
+function CooldownPanels:TrinketSlotItemHasTrackedUseSpell(entry, itemID)
+	if not itemHasUseSpell(itemID) then return false end
+	local slotID = tonumber(entry and entry.slotID)
+	if slotID ~= 13 and slotID ~= 14 then return true end
+	local presets = self.AuraPresets
+	return not (presets and presets.IsTrinketSlotItemExcluded and presets:IsTrinketSlotItemExcluded(itemID))
+end
+
 function CooldownPanels:EntryPassesEditorRuntimeVisibility(entry)
 	if not entry or type(entry) ~= "table" then return false end
 	if not CooldownPanels.EntryAllowsSpec(entry) then return false end
@@ -12092,7 +12191,7 @@ function CooldownPanels:EntryPassesEditorRuntimeVisibility(entry)
 		if entry.slotID and Api.GetInventoryItemID then
 			local itemId = Api.GetInventoryItemID("player", entry.slotID)
 			if not itemId then return entry.showWhenNoCooldown == true end
-			if itemHasUseSpell and itemHasUseSpell(itemId) then return true end
+			if self:TrinketSlotItemHasTrackedUseSpell(entry, itemId) then return true end
 			return entry.showWhenNoCooldown == true
 		end
 		return false
@@ -15057,6 +15156,15 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 		return CooldownPanels:GetLayoutEntryStandaloneEffectiveType(currentEntry)
 	end
 
+	local function isActivationOverlayEnabled()
+		local _, currentEntry = getEntry()
+		if not currentEntry then return false end
+		return currentEntry.autoCooldownDurationEnabled == true
+			or currentEntry.customCooldownDurationEnabled == true
+			or currentEntry.customCooldownDurationOnCooldownEnabled == true
+			or CooldownPanels:IsEntryCDMAuraOverlayEnabled(getLayout(), currentEntry, getEffectiveType())
+	end
+
 	local function allowsStandaloneEntryAuraSound(effectiveType)
 		local layout = getLayout()
 		local _, currentEntry = getEntry()
@@ -15349,7 +15457,7 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 		if not currentEntry then return end
 		currentEntry.activationOverlayBehaviorUseGlobal = false
 		currentEntry.activationOverlayColor = Helper.NormalizeColor(value, Helper.ACTIVATION_OVERLAY_COLOR_DEFAULT)
-		CooldownPanels:RefreshEntryActivationOverlayColor(panelId, entryId)
+		refreshEntryViews()
 	end
 
 	local function setActivationOverlayGlowColor(_, value)
@@ -15359,7 +15467,7 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 		local panelColor = CooldownPanels:ResolveEntryActivationOverlayGlowColor(layout, nil)
 		currentEntry.activationOverlayBehaviorUseGlobal = false
 		currentEntry.activationOverlayGlowColor = Helper.NormalizeColor(value, panelColor)
-		refreshEntryGlowPreview()
+		refreshEntryViews()
 	end
 
 	local function setGlowOtherAura(_, value)
@@ -15525,6 +15633,7 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 		if not currentEntry then return end
 		local normalized = value == true
 		if normalized and not CooldownPanels:SupportsEntryCDMAuraOverlay(currentEntry, getEffectiveType()) then return end
+		currentEntry.cdmAuraOverlayEnabledUseGlobal = false
 		if currentEntry.cdmAuraOverlayEnabled == normalized then return end
 		currentEntry.cdmAuraOverlayEnabled = normalized
 		if normalized then
@@ -15534,6 +15643,16 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 		end
 		CooldownPanels:ClearEntryCustomCooldownDuration(panelId, entryId, true)
 		CooldownPanels:RebuildSpellIndex()
+		refreshEntryViews()
+	end
+
+	local function setCDMAuraOverlayOverrideEnabled(value)
+		local _, currentEntry = getEntry()
+		if not currentEntry then return end
+		local useGlobal = value ~= true
+		if currentEntry.cdmAuraOverlayEnabledUseGlobal == useGlobal then return end
+		if not useGlobal then currentEntry.cdmAuraOverlayEnabled = CooldownPanels:IsEntryCDMAuraOverlayEnabled(getLayout(), currentEntry, getEffectiveType()) end
+		currentEntry.cdmAuraOverlayEnabledUseGlobal = useGlobal
 		refreshEntryViews()
 	end
 
@@ -15576,15 +15695,6 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 		refreshEntryViews()
 	end
 
-	local function setCDMAuraOverlayColorOverrideEnabled(value)
-		local _, currentEntry = getEntry()
-		if not currentEntry then return end
-		local useGlobal = value ~= true
-		if currentEntry.cdmAuraOverlayColorUseGlobal == useGlobal then return end
-		currentEntry.cdmAuraOverlayColorUseGlobal = useGlobal
-		refreshEntryViews()
-	end
-
 	local function setActivationOverlayBehaviorOverrideEnabled(value)
 		local _, currentEntry = getEntry()
 		if not currentEntry then return end
@@ -15608,11 +15718,7 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 		currentEntry.activationOverlayBehaviorUseGlobal = false
 		if currentEntry[field] == value then return end
 		currentEntry[field] = value
-		if field == "activationOverlayGlow" then
-			refreshEntryGlowPreview()
-		else
-			refreshEntryViews()
-		end
+		refreshEntryViews()
 	end
 
 	local function setAutoCooldownDurationEnabled(value)
@@ -15826,12 +15932,12 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 		refreshEntryPreview()
 	end
 
-	local function addEntrySoundMenu(root, mode, setSound)
+	local function addEntrySoundMenu(root, mode, setSound, attachPreview)
 		CooldownPanels:AddSoundMenuOptions(root, function()
 			local _, currentEntry = getEntry()
 			local _, _, soundField = CooldownPanels:GetEntrySoundConfig(currentEntry, mode)
 			return normalizeSoundName(currentEntry and soundField and currentEntry[soundField])
-		end, setSound)
+		end, setSound, attachPreview)
 	end
 
 	local function getCooldownTextFontSelection()
@@ -17075,8 +17181,7 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 				isShown = shouldShowStandaloneActivationGroup,
 			},
 		{
-			name = L["CooldownPanelCDMAuraOverlay"] or "Show aura overlay",
-			tooltip = L["CooldownPanelCDMAuraOverlayTooltip"],
+			name = L["CooldownPanelOverwriteGlobalDefault"] or "Overwrite global default",
 			kind = SettingType.Checkbox,
 			parentId = "cooldownPanelStandaloneActivation",
 			isShown = function()
@@ -17085,7 +17190,26 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 			end,
 			get = function()
 				local _, currentEntry = getEntry()
-				return currentEntry and currentEntry.cdmAuraOverlayEnabled == true or false
+				return currentEntry and currentEntry.cdmAuraOverlayEnabledUseGlobal == false or false
+			end,
+			set = function(_, value) setCDMAuraOverlayOverrideEnabled(value) end,
+		},
+		{
+			name = L["CooldownPanelCDMAuraOverlay"] or "Show aura overlay",
+			tooltip = L["CooldownPanelCDMAuraOverlayTooltip"],
+			kind = SettingType.Checkbox,
+			parentId = "cooldownPanelStandaloneActivation",
+			isShown = function()
+				local _, currentEntry = getEntry()
+				return CooldownPanels:SupportsEntryCDMAuraOverlay(currentEntry, getEffectiveType())
+			end,
+			disabled = function()
+				local _, currentEntry = getEntry()
+				return not (currentEntry and currentEntry.cdmAuraOverlayEnabledUseGlobal == false)
+			end,
+			get = function()
+				local _, currentEntry = getEntry()
+				return CooldownPanels:IsEntryCDMAuraOverlayEnabled(getLayout(), currentEntry, getEffectiveType())
 			end,
 			set = function(_, value) setCDMAuraOverlayEnabled(value) end,
 		},
@@ -17100,9 +17224,8 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 				return CooldownPanels:SupportsEntryCDMAuraOverlay(currentEntry, getEffectiveType())
 			end,
 			disabled = function()
-				local layout = getLayout()
 				local _, currentEntry = getEntry()
-				return not (currentEntry and (currentEntry.cdmAuraOverlayEnabled == true or (layout and layout.cdmAuraOverlayEnabled == true)))
+				return not CooldownPanels:IsEntryCDMAuraOverlayEnabled(getLayout(), currentEntry, getEffectiveType())
 			end,
 			get = function()
 				local _, currentEntry = getEntry()
@@ -17129,9 +17252,8 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 					and CooldownPanels:GetEntryAuraUnit(currentEntry, getEffectiveType()) == "target"
 			end,
 			disabled = function()
-				local layout = getLayout()
 				local _, currentEntry = getEntry()
-				return not (currentEntry and (currentEntry.cdmAuraOverlayEnabled == true or (layout and layout.cdmAuraOverlayEnabled == true)))
+				return not CooldownPanels:IsEntryCDMAuraOverlayEnabled(getLayout(), currentEntry, getEffectiveType())
 			end,
 			get = function()
 				local _, currentEntry = getEntry()
@@ -17150,9 +17272,8 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 				return CooldownPanels:SupportsEntryCDMAuraOverlay(currentEntry, getEffectiveType())
 			end,
 			disabled = function()
-				local layout = getLayout()
 				local _, currentEntry = getEntry()
-				return not (currentEntry and (currentEntry.cdmAuraOverlayEnabled == true or (layout and layout.cdmAuraOverlayEnabled == true)))
+				return not CooldownPanels:IsEntryCDMAuraOverlayEnabled(getLayout(), currentEntry, getEffectiveType())
 			end,
 			get = function()
 				local _, currentEntry = getEntry()
@@ -17161,6 +17282,24 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 			set = setCDMAuraOverlaySpellIDs,
 			default = "",
 			maxChars = 255,
+		},
+		{
+			name = L["CooldownPanelCDMAuraOverlayHideIcon"] or "Hide aura icon",
+			kind = SettingType.Checkbox,
+			parentId = "cooldownPanelStandaloneActivation",
+			isShown = function()
+				local _, currentEntry = getEntry()
+				return CooldownPanels:SupportsEntryCDMAuraOverlay(currentEntry, getEffectiveType())
+			end,
+			disabled = function()
+				local _, currentEntry = getEntry()
+				return not CooldownPanels:IsEntryCDMAuraOverlayEnabled(getLayout(), currentEntry, getEffectiveType())
+			end,
+			get = function()
+				local _, currentEntry = getEntry()
+				return currentEntry and currentEntry.cdmAuraOverlayHideIcon == true or false
+			end,
+			set = function(_, value) setEntryField("cdmAuraOverlayHideIcon", value == true) end,
 		},
 		{
 			name = L["CooldownPanelAutoDuration"] or "Automatic duration on activation",
@@ -17249,25 +17388,6 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 			formatter = function(value) return tostring(math.floor((tonumber(value) or 0) + 0.5)) end,
 		},
 		{
-			name = L["CooldownPanelOverwriteGlobalDefault"] or "Overwrite global default",
-			kind = SettingType.Checkbox,
-			parentId = "cooldownPanelStandaloneActivation",
-			isShown = function()
-				local _, currentEntry = getEntry()
-				return CooldownPanels:SupportsEntryCDMAuraOverlay(currentEntry, getEffectiveType())
-			end,
-			disabled = function()
-				local layout = getLayout()
-				local _, currentEntry = getEntry()
-				return not (currentEntry and (currentEntry.cdmAuraOverlayEnabled == true or (layout and layout.cdmAuraOverlayEnabled == true)))
-			end,
-			get = function()
-				local _, currentEntry = getEntry()
-				return currentEntry and currentEntry.cdmAuraOverlayColorUseGlobal == false or false
-			end,
-			set = function(_, value) setCDMAuraOverlayColorOverrideEnabled(value) end,
-		},
-		{
 			name = L["CooldownPanelOverwritePanelActivationBehavior"] or "Overwrite panel activation behavior",
 			kind = SettingType.Checkbox,
 			parentId = "cooldownPanelStandaloneActivation",
@@ -17292,22 +17412,13 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 			end,
 			disabled = function()
 				local _, currentEntry = getEntry()
-				local layout = getLayout()
-				local panelOverlay = layout and layout.cdmAuraOverlayEnabled == true and CooldownPanels:SupportsEntryCDMAuraOverlay(currentEntry, getEffectiveType())
-				local cdmAuraOverlay = currentEntry and (currentEntry.cdmAuraOverlayEnabled == true or panelOverlay)
-				local activationOverlay = currentEntry and (currentEntry.customCooldownDurationEnabled == true or currentEntry.customCooldownDurationOnCooldownEnabled == true or currentEntry.autoCooldownDurationEnabled == true)
-				if activationOverlay then return currentEntry.activationOverlayBehaviorUseGlobal ~= false end
-				if cdmAuraOverlay then
-					return currentEntry.cdmAuraOverlayColorUseGlobal ~= false
-				end
-				return true
+				return not (currentEntry and currentEntry.activationOverlayBehaviorUseGlobal == false and isActivationOverlayEnabled())
 			end,
 			default = Helper.NormalizeColor(Helper.ACTIVATION_OVERLAY_COLOR_DEFAULT, Helper.ACTIVATION_OVERLAY_COLOR_DEFAULT),
 			get = function()
 				local _, currentEntry = getEntry()
 				local layout = getLayout()
-				local panelOverlay = layout and layout.cdmAuraOverlayEnabled == true and CooldownPanels:SupportsEntryCDMAuraOverlay(currentEntry, getEffectiveType())
-				local cdmAuraOverlay = currentEntry and (currentEntry.cdmAuraOverlayEnabled == true or panelOverlay)
+				local cdmAuraOverlay = CooldownPanels:IsEntryCDMAuraOverlayEnabled(layout, currentEntry, getEffectiveType())
 				local activationOverlay = currentEntry and (currentEntry.customCooldownDurationEnabled == true or currentEntry.customCooldownDurationOnCooldownEnabled == true or currentEntry.autoCooldownDurationEnabled == true)
 				local color = activationOverlay and CooldownPanels:ResolveEntryActivationOverlayColor(layout, currentEntry)
 					or (cdmAuraOverlay and CooldownPanels:ResolveEntryCDMAuraOverlayColor(layout, currentEntry))
@@ -17317,36 +17428,16 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 			set = setActivationOverlayColor,
 		},
 		{
-			name = L["CooldownPanelCDMAuraOverlayReverse"] or "Reverse aura swipe",
-			kind = SettingType.Checkbox,
-			parentId = "cooldownPanelStandaloneActivation",
-			isShown = function()
-				local _, currentEntry = getEntry()
-				return CooldownPanels:SupportsEntryCDMAuraOverlay(currentEntry, getEffectiveType())
-			end,
-			disabled = function()
-				local _, currentEntry = getEntry()
-				local layout = getLayout()
-				local panelOverlay = layout and layout.cdmAuraOverlayEnabled == true and CooldownPanels:SupportsEntryCDMAuraOverlay(currentEntry, getEffectiveType())
-				return not (currentEntry and (currentEntry.cdmAuraOverlayEnabled == true or panelOverlay))
-			end,
-			get = function()
-				local _, currentEntry = getEntry()
-				return not currentEntry or currentEntry.cdmAuraOverlayReverse ~= false
-			end,
-			set = function(_, value) setEntryField("cdmAuraOverlayReverse", value == true) end,
-		},
-		{
 			name = L["CooldownPanelActivationOverlayReverse"] or "Reverse activation swipe",
 			kind = SettingType.Checkbox,
 			parentId = "cooldownPanelStandaloneActivation",
 			isShown = function()
 				local _, currentEntry = getEntry()
-				return CooldownPanels:SupportsEntryCustomCooldownDuration(currentEntry, getEffectiveType())
+				return CooldownPanels:EntryUsesActivationOverlay(currentEntry, getEffectiveType())
 			end,
 			disabled = function()
 				local _, currentEntry = getEntry()
-				return not (currentEntry and currentEntry.activationOverlayBehaviorUseGlobal == false and (currentEntry.customCooldownDurationEnabled == true or currentEntry.customCooldownDurationOnCooldownEnabled == true or currentEntry.autoCooldownDurationEnabled == true))
+				return not (currentEntry and currentEntry.activationOverlayBehaviorUseGlobal == false and isActivationOverlayEnabled())
 			end,
 			get = function()
 				local _, currentEntry = getEntry()
@@ -17364,8 +17455,7 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 			end,
 			disabled = function()
 				local _, currentEntry = getEntry()
-				local panelOverlay = getLayout() and getLayout().cdmAuraOverlayEnabled == true and CooldownPanels:SupportsEntryCDMAuraOverlay(currentEntry, getEffectiveType())
-				return not (currentEntry and currentEntry.activationOverlayBehaviorUseGlobal == false and (currentEntry.customCooldownDurationEnabled == true or currentEntry.customCooldownDurationOnCooldownEnabled == true or currentEntry.autoCooldownDurationEnabled == true or currentEntry.cdmAuraOverlayEnabled == true or panelOverlay))
+				return not (currentEntry and currentEntry.activationOverlayBehaviorUseGlobal == false and isActivationOverlayEnabled())
 			end,
 			get = function()
 				local _, currentEntry = getEntry()
@@ -17383,14 +17473,91 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 			end,
 			disabled = function()
 				local _, currentEntry = getEntry()
-				local panelOverlay = getLayout() and getLayout().cdmAuraOverlayEnabled == true and CooldownPanels:SupportsEntryCDMAuraOverlay(currentEntry, getEffectiveType())
-				return not (currentEntry and currentEntry.activationOverlayBehaviorUseGlobal == false and (currentEntry.customCooldownDurationEnabled == true or currentEntry.customCooldownDurationOnCooldownEnabled == true or currentEntry.autoCooldownDurationEnabled == true or currentEntry.cdmAuraOverlayEnabled == true or panelOverlay))
+				return not (currentEntry and currentEntry.activationOverlayBehaviorUseGlobal == false and isActivationOverlayEnabled())
 			end,
 			get = function()
 				local _, currentEntry = getEntry()
 				return CooldownPanels:ResolveEntryActivationOverlayGlow(getLayout(), currentEntry)
 			end,
 			set = function(_, value) setActivationOverlayBehaviorField("activationOverlayGlow", value == true) end,
+		},
+		{
+			name = L["Glow style"] or "Glow style",
+			kind = SettingType.Dropdown,
+			parentId = "cooldownPanelStandaloneActivation",
+			height = 180,
+			isShown = function()
+				local _, currentEntry = getEntry()
+				return CooldownPanels:SupportsEntryCustomCooldownDuration(currentEntry, getEffectiveType())
+			end,
+			disabled = function()
+				local layout = getLayout()
+				local _, currentEntry = getEntry()
+				return not (
+					currentEntry
+					and currentEntry.activationOverlayBehaviorUseGlobal == false
+					and (currentEntry.customCooldownDurationEnabled == true or currentEntry.customCooldownDurationOnCooldownEnabled == true or currentEntry.autoCooldownDurationEnabled == true)
+					and CooldownPanels:ResolveEntryActivationOverlayGlow(layout, currentEntry)
+				)
+			end,
+			get = function()
+				local _, currentEntry = getEntry()
+				return CooldownPanels:ResolveEntryCustomDurationGlowStyle(getLayout(), currentEntry)
+			end,
+			set = function(_, value)
+				setEntryField("customCooldownDurationGlowStyle", Helper.NormalizeGlowStyle(value, select(3, CooldownPanels:ResolveEntryGlowStyle(getLayout(), select(2, getEntry())))))
+			end,
+			generator = function(_, root)
+				for _, option in ipairs(CooldownPanels:GetGlowStyleOptions(panelId, getLayout())) do
+					local _, currentEntry = getEntry()
+					if cdp.ENTRY.IsGlowStyleSupportedForEntryDisplayMode(option.value, currentEntry) then
+						local label = L[option.labelKey] or option.fallback
+						root:CreateRadio(label, function()
+							return CooldownPanels:ResolveEntryCustomDurationGlowStyle(getLayout(), select(2, getEntry())) == option.value
+						end, function() setEntryField("customCooldownDurationGlowStyle", option.value) end)
+					end
+				end
+			end,
+		},
+		{
+			name = L["CooldownPanelCustomDurationGlowThreshold"] or "Glow threshold (sec)",
+			tooltip = L["CooldownPanelCustomDurationGlowThresholdTooltip"],
+			kind = SettingType.Slider,
+			parentId = "cooldownPanelStandaloneActivation",
+			minValue = 0,
+			maxValue = Helper.CUSTOM_COOLDOWN_DURATION_MAX or 300,
+			valueStep = 1,
+			allowInput = true,
+			isShown = function()
+				local _, currentEntry = getEntry()
+				return CooldownPanels:SupportsEntryCustomCooldownDuration(currentEntry, getEffectiveType())
+			end,
+			disabled = function()
+				local layout = getLayout()
+				local _, currentEntry = getEntry()
+				return not (
+					currentEntry
+					and currentEntry.activationOverlayBehaviorUseGlobal == false
+					and (currentEntry.customCooldownDurationEnabled == true or currentEntry.customCooldownDurationOnCooldownEnabled == true or currentEntry.autoCooldownDurationEnabled == true)
+					and CooldownPanels:ResolveEntryActivationOverlayGlow(layout, currentEntry)
+				)
+			end,
+			get = function()
+				local _, currentEntry = getEntry()
+				return Helper.ClampNumber(
+					currentEntry and currentEntry.customCooldownDurationGlowThreshold,
+					0,
+					Helper.CUSTOM_COOLDOWN_DURATION_MAX or 300,
+					Helper.ENTRY_DEFAULTS.customCooldownDurationGlowThreshold or 0
+				)
+			end,
+			set = function(_, value)
+				setEntryField(
+					"customCooldownDurationGlowThreshold",
+					Helper.ClampNumber(value, 0, Helper.CUSTOM_COOLDOWN_DURATION_MAX or 300, Helper.ENTRY_DEFAULTS.customCooldownDurationGlowThreshold or 0)
+				)
+			end,
+			formatter = function(value) return tostring(math.floor((tonumber(value) or 0) + 0.5)) end,
 		},
 		{
 			name = L["CooldownPanelActivationOverlayGlowColor"] or "Activation glow color",
@@ -17403,9 +17570,7 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 			end,
 			disabled = function()
 				local _, currentEntry = getEntry()
-				local panelOverlay = getLayout() and getLayout().cdmAuraOverlayEnabled == true and CooldownPanels:SupportsEntryCDMAuraOverlay(currentEntry, getEffectiveType())
-				local overlayEnabled = currentEntry and (currentEntry.customCooldownDurationEnabled == true or currentEntry.customCooldownDurationOnCooldownEnabled == true or currentEntry.autoCooldownDurationEnabled == true or currentEntry.cdmAuraOverlayEnabled == true or panelOverlay)
-				return not (overlayEnabled and currentEntry.activationOverlayBehaviorUseGlobal == false and currentEntry.activationOverlayGlow == true)
+				return not (currentEntry and isActivationOverlayEnabled() and currentEntry.activationOverlayBehaviorUseGlobal == false and currentEntry.activationOverlayGlow == true)
 			end,
 			default = Helper.NormalizeColor(Helper.ENTRY_DEFAULTS.activationOverlayGlowColor, Helper.PANEL_LAYOUT_DEFAULTS.activationOverlayGlowColor),
 			get = function()
@@ -18307,6 +18472,192 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 			set = function(_, value) setEntryGlowBoolean("pandemicGlow", value) end,
 		},
 		{
+			name = L["CooldownPanelBarDurationThresholdGlowEnabled"] or "Glow at threshold",
+			kind = SettingType.Checkbox,
+			parentId = "cooldownPanelStandaloneGlow",
+			isShown = function()
+				local _, currentEntry = getEntry()
+				return getEffectiveType() == "CDM_AURA" and currentEntry and currentEntry.displayMode ~= "BAR"
+			end,
+			get = function()
+				local _, currentEntry = getEntry()
+				return currentEntry and currentEntry.auraDurationThresholdGlowEnabled == true or false
+			end,
+			set = function(_, value) setEntryField("auraDurationThresholdGlowEnabled", value == true) end,
+		},
+		{
+			name = L["CooldownPanelBarDurationThresholdMode"] or "Threshold unit",
+			kind = SettingType.Dropdown,
+			parentId = "cooldownPanelStandaloneGlow",
+			height = 100,
+			isShown = function()
+				local _, currentEntry = getEntry()
+				return getEffectiveType() == "CDM_AURA" and currentEntry and currentEntry.displayMode ~= "BAR"
+			end,
+			disabled = function()
+				local _, currentEntry = getEntry()
+				return not (currentEntry and currentEntry.auraDurationThresholdGlowEnabled == true)
+			end,
+			get = function()
+				local _, currentEntry = getEntry()
+				return currentEntry and currentEntry.auraDurationThresholdAsSeconds == true and "SECONDS" or "PERCENT"
+			end,
+			set = function(_, value) setEntryField("auraDurationThresholdAsSeconds", value == "SECONDS") end,
+			generator = function(_, root)
+				for _, option in ipairs({
+					{ value = "SECONDS", label = L["CooldownPanelBarDurationThresholdSeconds"] or "Seconds" },
+					{ value = "PERCENT", label = L["CooldownPanelBarDurationThresholdPercent"] or "Percent" },
+				}) do
+					root:CreateRadio(option.label, function()
+						local _, currentEntry = getEntry()
+						local current = currentEntry and currentEntry.auraDurationThresholdAsSeconds == true and "SECONDS" or "PERCENT"
+						return current == option.value
+					end, function() setEntryField("auraDurationThresholdAsSeconds", option.value == "SECONDS") end)
+				end
+			end,
+		},
+		{
+			name = L["CooldownPanelBarDurationThresholdMaxDuration"] or "Aura base duration",
+			tooltip = L["CooldownPanelBarDurationThresholdMaxDurationTooltip"],
+			kind = SettingType.Slider,
+			parentId = "cooldownPanelStandaloneGlow",
+			minValue = 1,
+			maxValue = 3600,
+			valueStep = 1,
+			allowInput = true,
+			isShown = function()
+				local _, currentEntry = getEntry()
+				return getEffectiveType() == "CDM_AURA"
+					and currentEntry
+					and currentEntry.displayMode ~= "BAR"
+					and currentEntry.auraDurationThresholdAsSeconds == true
+			end,
+			disabled = function()
+				local _, currentEntry = getEntry()
+				return not (currentEntry and currentEntry.auraDurationThresholdGlowEnabled == true)
+			end,
+			get = function()
+				local _, currentEntry = getEntry()
+				return Helper.ClampInt(currentEntry and currentEntry.auraDurationThresholdMaxDuration, 1, 3600, Helper.ENTRY_DEFAULTS.auraDurationThresholdMaxDuration)
+			end,
+			set = function(_, value)
+				setEntryField("auraDurationThresholdMaxDuration", Helper.ClampInt(value, 1, 3600, Helper.ENTRY_DEFAULTS.auraDurationThresholdMaxDuration))
+			end,
+			formatter = function(value) return tostring(Helper.ClampInt(value, 1, 3600, Helper.ENTRY_DEFAULTS.auraDurationThresholdMaxDuration)) end,
+		},
+		{
+			name = L["CooldownPanelBarDurationThresholdGlowThreshold"] or "Glow threshold",
+			kind = SettingType.Slider,
+			parentId = "cooldownPanelStandaloneGlow",
+			minValue = 1,
+			maxValue = 3600,
+			valueStep = 1,
+			allowInput = true,
+			isShown = function()
+				local _, currentEntry = getEntry()
+				return getEffectiveType() == "CDM_AURA"
+					and currentEntry
+					and currentEntry.displayMode ~= "BAR"
+					and currentEntry.auraDurationThresholdAsSeconds == true
+			end,
+			disabled = function()
+				local _, currentEntry = getEntry()
+				return not (currentEntry and currentEntry.auraDurationThresholdGlowEnabled == true)
+			end,
+			get = function()
+				local _, currentEntry = getEntry()
+				return Helper.ClampInt(currentEntry and currentEntry.auraDurationThresholdValue, 1, 3600, Helper.ENTRY_DEFAULTS.auraDurationThresholdValue)
+			end,
+			set = function(_, value)
+				setEntryField("auraDurationThresholdValue", Helper.ClampInt(value, 1, 3600, Helper.ENTRY_DEFAULTS.auraDurationThresholdValue))
+			end,
+			formatter = function(value) return tostring(Helper.ClampInt(value, 1, 3600, Helper.ENTRY_DEFAULTS.auraDurationThresholdValue)) end,
+		},
+		{
+			name = L["CooldownPanelBarDurationThresholdGlowThreshold"] or "Glow threshold",
+			kind = SettingType.Slider,
+			parentId = "cooldownPanelStandaloneGlow",
+			minValue = 1,
+			maxValue = 100,
+			valueStep = 1,
+			allowInput = true,
+			isShown = function()
+				local _, currentEntry = getEntry()
+				return getEffectiveType() == "CDM_AURA"
+					and currentEntry
+					and currentEntry.displayMode ~= "BAR"
+					and currentEntry.auraDurationThresholdAsSeconds ~= true
+			end,
+			disabled = function()
+				local _, currentEntry = getEntry()
+				return not (currentEntry and currentEntry.auraDurationThresholdGlowEnabled == true)
+			end,
+			get = function()
+				local _, currentEntry = getEntry()
+				return Helper.ClampInt(currentEntry and currentEntry.auraDurationThresholdValue, 1, 100, Helper.ENTRY_DEFAULTS.auraDurationThresholdValue)
+			end,
+			set = function(_, value)
+				setEntryField("auraDurationThresholdValue", Helper.ClampInt(value, 1, 100, Helper.ENTRY_DEFAULTS.auraDurationThresholdValue))
+			end,
+			formatter = function(value) return tostring(Helper.ClampInt(value, 1, 100, Helper.ENTRY_DEFAULTS.auraDurationThresholdValue)) end,
+		},
+		{
+			name = L["CooldownPanelBarDurationThresholdGlowStyle"] or "Glow style",
+			kind = SettingType.Dropdown,
+			parentId = "cooldownPanelStandaloneGlow",
+			height = 120,
+			isShown = function()
+				local _, currentEntry = getEntry()
+				return getEffectiveType() == "CDM_AURA" and currentEntry and currentEntry.displayMode ~= "BAR"
+			end,
+			disabled = function()
+				local _, currentEntry = getEntry()
+				return not (currentEntry and currentEntry.auraDurationThresholdGlowEnabled == true)
+			end,
+			get = function()
+				local _, currentEntry = getEntry()
+				local style = Helper.NormalizeGlowStyle(currentEntry and currentEntry.auraDurationThresholdGlowStyle, Helper.ENTRY_DEFAULTS.auraDurationThresholdGlowStyle)
+				return (style == "PIXEL" or style == "PULSING" or style == "SOLID") and style or "PIXEL"
+			end,
+			set = function(_, value)
+				local style = Helper.NormalizeGlowStyle(value, Helper.ENTRY_DEFAULTS.auraDurationThresholdGlowStyle)
+				setEntryField("auraDurationThresholdGlowStyle", (style == "PIXEL" or style == "PULSING" or style == "SOLID") and style or "PIXEL")
+			end,
+			generator = function(_, root)
+				for _, option in ipairs({
+					{ value = "PIXEL", label = L["Pixel"] or "Pixel" },
+					{ value = "PULSING", label = L["Pulsing"] or "Pulsing" },
+					{ value = "SOLID", label = L["Solid"] or "Solid" },
+				}) do
+					root:CreateRadio(option.label, function()
+						local _, currentEntry = getEntry()
+						return Helper.NormalizeGlowStyle(currentEntry and currentEntry.auraDurationThresholdGlowStyle, Helper.ENTRY_DEFAULTS.auraDurationThresholdGlowStyle)
+							== option.value
+					end, function() setEntryField("auraDurationThresholdGlowStyle", option.value) end)
+				end
+			end,
+		},
+		{
+			name = L["CooldownPanelBarDurationThresholdGlowColor"] or "Threshold glow color",
+			kind = SettingType.Color,
+			parentId = "cooldownPanelStandaloneGlow",
+			hasOpacity = true,
+			isShown = function()
+				local _, currentEntry = getEntry()
+				return getEffectiveType() == "CDM_AURA" and currentEntry and currentEntry.displayMode ~= "BAR"
+			end,
+			disabled = function()
+				local _, currentEntry = getEntry()
+				return not (currentEntry and currentEntry.auraDurationThresholdGlowEnabled == true)
+			end,
+			get = function()
+				local _, currentEntry = getEntry()
+				local color = Helper.NormalizeColor(currentEntry and currentEntry.auraDurationThresholdGlowColor, Helper.ENTRY_DEFAULTS.auraDurationThresholdGlowColor)
+				return { r = color[1], g = color[2], b = color[3], a = color[4] }
+			end,
+			set = function(_, value) setEntryField("auraDurationThresholdGlowColor", Helper.NormalizeColor(value, Helper.ENTRY_DEFAULTS.auraDurationThresholdGlowColor)) end,
+		},
+		{
 			name = L["CooldownPanelGlowOtherAura"] or "Glow when other aura is active",
 			kind = SettingType.Dropdown,
 			parentId = "cooldownPanelStandaloneGlow",
@@ -18633,7 +18984,7 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 		},
 		{
 			name = SOUND,
-			kind = SettingType.Dropdown,
+			kind = SettingType.SoundDropdown,
 			parentId = "cooldownPanelStandaloneSound",
 			height = 260,
 			isShown = function() return allowsStandaloneEntryReadySound(getEffectiveType()) end,
@@ -18648,8 +18999,9 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 				return normalizeSoundName(currentEntry and soundField and currentEntry[soundField])
 			end,
 			set = function(_, value) setSoundReadyFile(value) end,
-			generator = function(_, root)
-				addEntrySoundMenu(root, nil, setSoundReadyFile)
+			previewSoundFunc = playSoundName,
+			generator = function(_, root, _, attachPreview)
+				addEntrySoundMenu(root, nil, setSoundReadyFile, attachPreview)
 			end,
 		},
 		{
@@ -18670,7 +19022,7 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 		},
 		{
 			name = SOUND,
-			kind = SettingType.Dropdown,
+			kind = SettingType.SoundDropdown,
 			parentId = "cooldownPanelStandaloneSound",
 			height = 260,
 			isShown = function() return allowsStandaloneEntryAuraSound(getEffectiveType()) end,
@@ -18685,8 +19037,9 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 				return normalizeSoundName(currentEntry and soundField and currentEntry[soundField])
 			end,
 			set = function(_, value) setAuraSoundFile("aura", value) end,
-			generator = function(_, root)
-				addEntrySoundMenu(root, "aura", function(value) setAuraSoundFile("aura", value) end)
+			previewSoundFunc = playSoundName,
+			generator = function(_, root, _, attachPreview)
+				addEntrySoundMenu(root, "aura", function(value) setAuraSoundFile("aura", value) end, attachPreview)
 			end,
 		},
 		{
@@ -18708,7 +19061,7 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 		},
 		{
 			name = SOUND,
-			kind = SettingType.Dropdown,
+			kind = SettingType.SoundDropdown,
 			parentId = "cooldownPanelStandaloneSound",
 			height = 260,
 			isShown = function() return allowsStandaloneEntryAuraSound(getEffectiveType()) end,
@@ -18723,8 +19076,9 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 				return normalizeSoundName(currentEntry and soundField and currentEntry[soundField])
 			end,
 			set = function(_, value) setAuraSoundFile("auraApplicationsIncreased", value) end,
-			generator = function(_, root)
-				addEntrySoundMenu(root, "auraApplicationsIncreased", function(value) setAuraSoundFile("auraApplicationsIncreased", value) end)
+			previewSoundFunc = playSoundName,
+			generator = function(_, root, _, attachPreview)
+				addEntrySoundMenu(root, "auraApplicationsIncreased", function(value) setAuraSoundFile("auraApplicationsIncreased", value) end, attachPreview)
 			end,
 		},
 		{
@@ -18746,7 +19100,7 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 		},
 		{
 			name = SOUND,
-			kind = SettingType.Dropdown,
+			kind = SettingType.SoundDropdown,
 			parentId = "cooldownPanelStandaloneSound",
 			height = 260,
 			isShown = function() return allowsStandaloneEntryAuraSound(getEffectiveType()) end,
@@ -18761,8 +19115,9 @@ function CooldownPanels:OpenLayoutEntryStandaloneMenu(panelId, entryId, anchorFr
 				return normalizeSoundName(currentEntry and soundField and currentEntry[soundField])
 			end,
 			set = function(_, value) setAuraSoundFile("auraRemoved", value) end,
-			generator = function(_, root)
-				addEntrySoundMenu(root, "auraRemoved", function(value) setAuraSoundFile("auraRemoved", value) end)
+			previewSoundFunc = playSoundName,
+			generator = function(_, root, _, attachPreview)
+				addEntrySoundMenu(root, "auraRemoved", function(value) setAuraSoundFile("auraRemoved", value) end, attachPreview)
 			end,
 		},
 	}
@@ -20277,8 +20632,18 @@ local function ensureEditor()
 	customDurationLabel:SetPoint("LEFT", customDurationBox, "RIGHT", 6, 0)
 	customDurationLabel:SetTextColor(0.9, 0.9, 0.9, 1)
 
+	local customDurationGlowThresholdBox = Helper.CreateEditBox(rightContent, 70, 20)
+	customDurationGlowThresholdBox:SetPoint("TOPLEFT", customDurationBox, "BOTTOMLEFT", 0, -4)
+	customDurationGlowThresholdBox:SetNumeric(true)
+
+	local customDurationGlowThresholdLabel = Helper.CreateLabel(rightContent, L["CooldownPanelCustomDurationGlowThreshold"] or "Glow threshold (sec)", 10, "OUTLINE")
+	customDurationGlowThresholdLabel:SetPoint("LEFT", customDurationGlowThresholdBox, "RIGHT", 6, 0)
+	customDurationGlowThresholdLabel:SetTextColor(0.9, 0.9, 0.9, 1)
+	cdp.ENTRY.AttachControlTooltip(customDurationGlowThresholdBox, L["CooldownPanelCustomDurationGlowThresholdTooltip"])
+	cdp.ENTRY.AttachControlTooltip(customDurationGlowThresholdLabel, L["CooldownPanelCustomDurationGlowThresholdTooltip"])
+
 	local staticTextLabel = Helper.CreateLabel(rightContent, L["CooldownPanelStaticText"] or "Static text", 11, "OUTLINE")
-	staticTextLabel:SetPoint("TOPLEFT", customDurationBox, "BOTTOMLEFT", -16, -8)
+	staticTextLabel:SetPoint("TOPLEFT", customDurationGlowThresholdBox, "BOTTOMLEFT", -16, -8)
 	staticTextLabel:SetTextColor(0.9, 0.9, 0.9, 1)
 
 	local staticTextBox = Helper.CreateEditBox(rightContent, 180, 20)
@@ -20496,6 +20861,8 @@ local function ensureEditor()
 			cbCustomDurationOnCooldownMultipleStacks = cbCustomDurationOnCooldownMultipleStacks,
 			customDurationBox = customDurationBox,
 			customDurationLabel = customDurationLabel,
+			customDurationGlowThresholdBox = customDurationGlowThresholdBox,
+			customDurationGlowThresholdLabel = customDurationGlowThresholdLabel,
 			staticTextLabel = staticTextLabel,
 			staticTextBox = staticTextBox,
 			cbStaticTextDuringCD = cbStaticTextDuringCD,
@@ -20797,6 +21164,7 @@ local function ensureEditor()
 			return
 		end
 			entry.cdmAuraOverlayEnabled = enabled
+			entry.cdmAuraOverlayEnabledUseGlobal = false
 			if enabled then
 				entry.customCooldownDurationEnabled = false
 				entry.customCooldownDurationOnCooldownEnabled = false
@@ -21032,6 +21400,33 @@ local function ensureEditor()
 	customDurationBox:SetScript("OnEnterPressed", applyCustomDurationValue)
 	customDurationBox:SetScript("OnEditFocusLost", applyCustomDurationValue)
 	customDurationBox:SetScript("OnEscapePressed", function(self)
+		self:ClearFocus()
+		CooldownPanels:RefreshEditor()
+	end)
+
+	local function applyCustomDurationGlowThresholdValue(self)
+		local panelId = editor.selectedPanelId
+		local entryId = editor.selectedEntryId
+		local panel = panelId and CooldownPanels:GetPanel(panelId)
+		local entry = panel and panel.entries and panel.entries[entryId]
+		if not entry then
+			self:ClearFocus()
+			return
+		end
+		entry.customCooldownDurationGlowThreshold = Helper.ClampNumber(
+			tonumber(self:GetText()),
+			0,
+			Helper.CUSTOM_COOLDOWN_DURATION_MAX or 300,
+			entry.customCooldownDurationGlowThreshold or Helper.ENTRY_DEFAULTS.customCooldownDurationGlowThreshold or 0
+		) or 0
+		self:ClearFocus()
+		CooldownPanels:RefreshPanel(panelId)
+		CooldownPanels:RefreshEditor()
+	end
+
+	customDurationGlowThresholdBox:SetScript("OnEnterPressed", applyCustomDurationGlowThresholdValue)
+	customDurationGlowThresholdBox:SetScript("OnEditFocusLost", applyCustomDurationGlowThresholdValue)
+	customDurationGlowThresholdBox:SetScript("OnEscapePressed", function(self)
 		self:ClearFocus()
 		CooldownPanels:RefreshEditor()
 	end)
@@ -22309,7 +22704,7 @@ local function entryIsAvailableForPreview(entry, panel)
 		if entry.slotID and Api.GetInventoryItemID then
 			local itemId = Api.GetInventoryItemID("player", entry.slotID)
 			if not itemId then return entry.showWhenNoCooldown == true end
-			if itemHasUseSpell and itemHasUseSpell(itemId) then return true end
+			if CooldownPanels:TrinketSlotItemHasTrackedUseSpell(entry, itemId) then return true end
 			return entry.showWhenNoCooldown == true
 		end
 		return false
@@ -22460,6 +22855,8 @@ local function layoutInspectorToggles(inspector, entry, panel)
 		hideToggle(inspector.cbCustomDurationOnCooldown)
 		hideControl(inspector.customDurationBox)
 		hideControl(inspector.customDurationLabel)
+		hideControl(inspector.customDurationGlowThresholdBox)
+		hideControl(inspector.customDurationGlowThresholdLabel)
 		hideControl(inspector.staticTextLabel)
 		hideControl(inspector.staticTextBox)
 		hideToggle(inspector.cbStaticTextDuringCD)
@@ -22578,8 +22975,7 @@ local function layoutInspectorToggles(inspector, entry, panel)
 	local showCDMAuraOverlay = CooldownPanels:SupportsEntryCDMAuraOverlay(entry, effectiveType)
 	local showAutoDuration = CooldownPanels:SupportsEntryAutoCooldownDuration(entry, effectiveType)
 	local showActivationOverlayVisuals = showCustomDuration or showCDMAuraOverlay
-	local panelOverlayEnabled = showCDMAuraOverlay and panel and panel.layout and panel.layout.cdmAuraOverlayEnabled == true
-	local cdmAuraOverlayEnabled = entry.cdmAuraOverlayEnabled == true or panelOverlayEnabled
+	local cdmAuraOverlayEnabled = showCDMAuraOverlay and CooldownPanels:IsEntryCDMAuraOverlayEnabled(panel and panel.layout, entry, effectiveType)
 	local activationOverlayEnabled = entry.autoCooldownDurationEnabled == true or entry.customCooldownDurationEnabled == true or entry.customCooldownDurationOnCooldownEnabled == true
 	local anyActivationOverlayEnabled = cdmAuraOverlayEnabled or activationOverlayEnabled
 	place(inspector.cbCDMAuraOverlay, showCDMAuraOverlay)
@@ -22672,6 +23068,24 @@ local function layoutInspectorToggles(inspector, entry, panel)
 	else
 		hideControl(inspector.customDurationBox)
 		hideControl(inspector.customDurationLabel)
+	end
+	if showCustomDuration and inspector.customDurationGlowThresholdBox and inspector.customDurationGlowThresholdLabel then
+		inspector.customDurationGlowThresholdBox:ClearAllPoints()
+		inspector.customDurationGlowThresholdBox:SetPoint("TOPLEFT", prev, "BOTTOMLEFT", 0, -4)
+		inspector.customDurationGlowThresholdBox:Show()
+		local glowThresholdEnabled = activationOverlayEnabled and CooldownPanels:ResolveEntryActivationOverlayGlow(panel and panel.layout or nil, entry)
+		if glowThresholdEnabled then
+			inspector.customDurationGlowThresholdBox:Enable()
+		else
+			inspector.customDurationGlowThresholdBox:Disable()
+		end
+		inspector.customDurationGlowThresholdLabel:ClearAllPoints()
+		inspector.customDurationGlowThresholdLabel:SetPoint("LEFT", inspector.customDurationGlowThresholdBox, "RIGHT", 6, 0)
+		inspector.customDurationGlowThresholdLabel:Show()
+		prev = inspector.customDurationGlowThresholdBox
+	else
+		hideControl(inspector.customDurationGlowThresholdBox)
+		hideControl(inspector.customDurationGlowThresholdLabel)
 	end
 	local allowStaticText = true
 	place(inspector.staticTextLabel, allowStaticText, 2, -8)
@@ -22863,6 +23277,9 @@ local function refreshInspector(editor, panel, entry)
 		if inspector.cbCustomDurationOnCooldown then inspector.cbCustomDurationOnCooldown:SetChecked(entry.customCooldownDurationOnCooldownEnabled == true) end
 		if inspector.cbCustomDurationOnCooldownMultipleStacks then inspector.cbCustomDurationOnCooldownMultipleStacks:SetChecked(entry.customCooldownDurationOnCooldownEnabled == true and entry.customCooldownDurationOnCooldownMultipleStacks == true) end
 		if inspector.customDurationBox then inspector.customDurationBox:SetText(tostring(math.floor((tonumber(entry.customCooldownDuration) or 0) + 0.5))) end
+		if inspector.customDurationGlowThresholdBox then
+			inspector.customDurationGlowThresholdBox:SetText(tostring(math.floor((tonumber(entry.customCooldownDurationGlowThreshold) or 0) + 0.5)))
+		end
 		inspector.cbGlow:SetChecked(entry.type ~= "MACRO" and entry.glowReady and true or false)
 		inspector.cbGlow:SetEnabled(true)
 		if inspector.cbPandemicGlow then
@@ -22918,6 +23335,7 @@ local function refreshInspector(editor, panel, entry)
 		if inspector.cbCustomDuration then inspector.cbCustomDuration:SetChecked(false) end
 		if inspector.cbCustomDurationOnCooldown then inspector.cbCustomDurationOnCooldown:SetChecked(false) end
 		if inspector.customDurationBox then inspector.customDurationBox:SetText("") end
+		if inspector.customDurationGlowThresholdBox then inspector.customDurationGlowThresholdBox:SetText("") end
 		if inspector.cbTrackPassiveSpell then inspector.cbTrackPassiveSpell:SetChecked(false) end
 		if inspector.cbTrackUnknownSpell then inspector.cbTrackUnknownSpell:SetChecked(false) end
 		if inspector.auraUnitButton then inspector.auraUnitButton:SetText(L["CooldownPanelCDMAuraOverlayUnit"] or "Aura unit") end
@@ -23748,7 +24166,7 @@ function cdp.RUNTIME.ApplyLayoutEditEntryGlowPreview(icon, data)
 	if data.activationOverlayActive == true and data.activationOverlayGlow == true then
 		simpleGlowEnabled = true
 		simpleGlowColor = data.activationOverlayGlowColor or data.readyGlowColor or overlayGlowColor
-		simpleGlowStyle = data.readyGlowStyle or simpleGlowStyle
+		simpleGlowStyle = data.activationOverlayGlowStyle or data.readyGlowStyle or simpleGlowStyle
 		simpleGlowInset = data.readyGlowInset or simpleGlowInset
 	end
 
@@ -23782,7 +24200,8 @@ function cdp.RUNTIME.ApplyLayoutEditEntryGlowPreview(icon, data)
 		)
 			or data.readyGlowColor
 			or overlayGlowColor
-		simpleGlowStyle = (
+		simpleGlowStyle = (data.activationOverlayActive == true and data.activationOverlayGlow == true and data.activationOverlayGlowStyle)
+			or (
 			entry.type == "CDM_AURA"
 			and entry.pandemicGlow == true
 			and cdmAuraReadyGlowPreview ~= true
@@ -24673,7 +25092,7 @@ function CooldownPanels:UpdateRuntimeIcons(panelId)
 					if cdmAuras and cdmAuras.BuildSlotAuraOverlayData then
 						spellAuraOverlayData = cdmAuras:BuildSlotAuraOverlayData(panelId, entryId, entry, itemId, entryLayout)
 					end
-					if itemHasUseSpell(itemId) then
+					if self:TrinketSlotItemHasTrackedUseSpell(entry, itemId) then
 						canTriggerReadyGlow = true
 						if trackCooldown then
 							cooldownStart, cooldownDuration, cooldownEnabled = getItemCooldownInfo(itemId, resolvedSlotId)
@@ -25747,6 +26166,7 @@ function CooldownPanels:UpdateRuntimeIcons(panelId)
 			local simpleGlowColor = overlayGlowColor
 			local simpleGlowStyle = data.overlayGlowStyle or data.readyGlowStyle
 			local simpleGlowInset = data.overlayGlowInset or data.readyGlowInset
+			local activationGlowActive = data.activationOverlayActive == true and data.activationOverlayGlow == true
 			if data.glowReady and not useSecretReadyGlow then
 				local ready = data.readyAt ~= nil
 				if ready and data.readyGlowCheckPower == true and data.readyGlowResourceBlocked == true then ready = false end
@@ -25756,10 +26176,10 @@ function CooldownPanels:UpdateRuntimeIcons(panelId)
 				simpleGlowStyle = ready and data.readyGlowStyle or (data.overlayGlowStyle or data.readyGlowStyle)
 				simpleGlowInset = ready and data.readyGlowInset or (data.overlayGlowInset or data.readyGlowInset)
 			end
-			if data.activationOverlayActive == true and data.activationOverlayGlow == true then
+			if activationGlowActive then
 				simpleGlowEnabled = true
 				simpleGlowColor = data.activationOverlayGlowColor or data.readyGlowColor or overlayGlowColor
-				simpleGlowStyle = data.readyGlowStyle or simpleGlowStyle
+				simpleGlowStyle = data.activationOverlayGlowStyle or data.readyGlowStyle or simpleGlowStyle
 				simpleGlowInset = data.readyGlowInset or simpleGlowInset
 			end
 			if layoutEditActive then
@@ -25772,7 +26192,7 @@ function CooldownPanels:UpdateRuntimeIcons(panelId)
 					setGlow(icon, false, nil, "EQOL_READY")
 					setGlow(icon, false, nil, "EQOL_INTERRUPT")
 				elseif useSecretReadyGlow then
-					setGlow(icon, false, nil, "EQOL_SIMPLE")
+					setGlow(icon, activationGlowActive, simpleGlowColor, "EQOL_SIMPLE", nil, nil, nil, simpleGlowStyle, simpleGlowInset, data.glowPixelOptions)
 					if secretReadyGlowAllowed then
 						setGlow(
 							icon,
@@ -26170,6 +26590,24 @@ function CooldownPanels:UpdatePanelOpacity(panelId, forcedAlpha)
 	end
 end
 
+function cdp.RUNTIME.StoreVisibilityState(owner, runtime, frame, layout, state)
+	runtime._eqolVisibilityCacheReady = true
+	runtime._eqolVisibilityShouldShow = state.shouldShow
+	runtime._eqolVisibilityCanUseDriver = state.canUseDriver
+	runtime._eqolVisibilityDriverExpression = state.driverExpression
+	runtime._eqolVisibilityUsesManual = state.usesManualVisibility
+	runtime._eqolVisibilityLayoutEditActive = state.layoutEditActive
+	runtime._eqolVisibilityPanelMenuAvailable = state.panelMenuAvailable
+	runtime._eqolVisibilityInCombat = state.inCombat
+	runtime._eqolVisibilityOpacityInCombat = state.opacityInCombat
+	runtime._eqolVisibilityOpacityOutSource = layout.opacityOutOfCombat
+	runtime._eqolVisibilityOpacityInSource = layout.opacityInCombat
+	runtime._eqolVisibilityFrameShown = frame:IsShown()
+	runtime._eqolVisibilityCurrentDriver = frame._eqolVisibilityDriver
+	local pending = owner.runtime and owner.runtime.pendingVisibilityDriverUpdates
+	runtime._eqolVisibilityDriverDetachPending = pending and pending[frame] == false or false
+end
+
 function CooldownPanels:UpdateVisibility(panelId)
 	local panel = self:GetPanel(panelId)
 	local runtime = getRuntime(panelId)
@@ -26190,21 +26628,58 @@ function CooldownPanels:UpdateVisibility(panelId)
 	if canUseDriver then
 		driverExpression, usesManualVisibility = self:BuildVisibilityDriver(panel, panelId)
 	end
+	local inCombat = (InCombatLockdown and InCombatLockdown()) or false
+	local opacityInCombat = inCombat or (UnitAffectingCombat and UnitAffectingCombat("player")) or false
+	local currentDriver = frame._eqolVisibilityDriver
+	local pendingVisibilityUpdates = self.runtime and self.runtime.pendingVisibilityDriverUpdates
+	local driverDetachPending = pendingVisibilityUpdates and pendingVisibilityUpdates[frame] == false or false
+	local panelMenuAvailable = layoutEditActive and self:IsLayoutPanelStandaloneMenuAvailable(panelId) or false
+	local visibilityState = runtime._eqolVisibilityState
+	if not visibilityState then
+		visibilityState = {}
+		runtime._eqolVisibilityState = visibilityState
+	end
+	if
+		runtime._eqolVisibilityCacheReady == true
+		and runtime._eqolVisibilityShouldShow == shouldShow
+		and runtime._eqolVisibilityCanUseDriver == canUseDriver
+		and runtime._eqolVisibilityDriverExpression == driverExpression
+		and runtime._eqolVisibilityUsesManual == usesManualVisibility
+		and runtime._eqolVisibilityLayoutEditActive == layoutEditActive
+		and runtime._eqolVisibilityPanelMenuAvailable == panelMenuAvailable
+		and runtime._eqolVisibilityInCombat == inCombat
+		and runtime._eqolVisibilityOpacityInCombat == opacityInCombat
+		and runtime._eqolVisibilityOpacityOutSource == layout.opacityOutOfCombat
+		and runtime._eqolVisibilityOpacityInSource == layout.opacityInCombat
+		and runtime._eqolVisibilityFrameShown == frame:IsShown()
+		and runtime._eqolVisibilityCurrentDriver == currentDriver
+		and runtime._eqolVisibilityDriverDetachPending == driverDetachPending
+	then
+		return false
+	end
+	visibilityState.shouldShow = shouldShow
+	visibilityState.canUseDriver = canUseDriver
+	visibilityState.driverExpression = driverExpression
+	visibilityState.usesManualVisibility = usesManualVisibility
+	visibilityState.layoutEditActive = layoutEditActive
+	visibilityState.panelMenuAvailable = panelMenuAvailable
+	visibilityState.inCombat = inCombat
+	visibilityState.opacityInCombat = opacityInCombat
 	if canUseDriver and driverExpression and not usesManualVisibility then
 		if self:ApplyVisibilityDriverToFrame(frame, driverExpression) then
 			self:UpdatePanelOpacity(panelId, nil)
 			self:UpdatePanelMouseState(panelId)
 			self:NotifyDynamicAnchorTargetStateChanged(panelId, shouldShow)
-			return
+			cdp.RUNTIME.StoreVisibilityState(self, runtime, frame, layout, visibilityState)
+			return true
 		end
 	end
 	self:ApplyVisibilityDriverToFrame(frame, nil)
 	local forceAlphaHidden = false
-	local pendingVisibilityUpdates = self.runtime and self.runtime.pendingVisibilityDriverUpdates
-	local driverDetachPending = pendingVisibilityUpdates and pendingVisibilityUpdates[frame] == false
+	pendingVisibilityUpdates = self.runtime and self.runtime.pendingVisibilityDriverUpdates
+	driverDetachPending = pendingVisibilityUpdates and pendingVisibilityUpdates[frame] == false
 	local driverStillControlsVisibility = frame._eqolVisibilityDriver ~= nil or driverDetachPending
 	if frame:IsShown() ~= shouldShow then
-		local inCombat = (InCombatLockdown and InCombatLockdown()) or false
 		local isProtected = frame.IsProtected and frame:IsProtected()
 		if not shouldShow and inCombat and driverStillControlsVisibility then
 			forceAlphaHidden = true
@@ -26215,13 +26690,14 @@ function CooldownPanels:UpdateVisibility(panelId)
 			forceAlphaHidden = true
 		end
 	elseif not shouldShow then
-		local inCombat = (InCombatLockdown and InCombatLockdown()) or false
 		local isProtected = frame.IsProtected and frame:IsProtected()
 		if inCombat and (isProtected or driverStillControlsVisibility) then forceAlphaHidden = true end
 	end
 	self:UpdatePanelOpacity(panelId, forceAlphaHidden and 0 or nil)
 	self:UpdatePanelMouseState(panelId)
 	self:NotifyDynamicAnchorTargetStateChanged(panelId, shouldShow)
+	cdp.RUNTIME.StoreVisibilityState(self, runtime, frame, layout, visibilityState)
+	return true
 end
 
 function CooldownPanels:UpdatePanelMouseState(panelId)
@@ -30082,6 +30558,7 @@ function cdp.ENTRY.ApplyVisibleSpellRuntime(panelId, runtime, icon, data, resolv
 	local simpleGlowColor = overlayGlowColor
 	local simpleGlowStyle = data.overlayGlowStyle or data.readyGlowStyle
 	local simpleGlowInset = data.overlayGlowInset or data.readyGlowInset
+	local activationGlowActive = data.activationOverlayActive == true and data.activationOverlayGlow == true
 	if data.glowReady and not useSecretReadyGlow then
 		local ready = data.readyAt ~= nil
 		if ready and data.readyGlowCheckPower == true and data.readyGlowResourceBlocked == true then ready = false end
@@ -30090,6 +30567,12 @@ function cdp.ENTRY.ApplyVisibleSpellRuntime(panelId, runtime, icon, data, resolv
 		simpleGlowStyle = ready and data.readyGlowStyle or (data.overlayGlowStyle or data.readyGlowStyle)
 		simpleGlowInset = ready and data.readyGlowInset or (data.overlayGlowInset or data.readyGlowInset)
 	end
+	if activationGlowActive then
+		simpleGlowEnabled = true
+		simpleGlowColor = data.activationOverlayGlowColor or data.readyGlowColor or overlayGlowColor
+		simpleGlowStyle = data.activationOverlayGlowStyle or data.readyGlowStyle or simpleGlowStyle
+		simpleGlowInset = data.readyGlowInset or simpleGlowInset
+	end
 	setPreviewGlow(icon, false)
 	if data.liveGlowAllowed == false then
 		setGlow(icon, false, nil, "EQOL_SIMPLE")
@@ -30097,7 +30580,7 @@ function cdp.ENTRY.ApplyVisibleSpellRuntime(panelId, runtime, icon, data, resolv
 		setGlow(icon, false, nil, "EQOL_READY")
 		setGlow(icon, false, nil, "EQOL_INTERRUPT")
 	elseif useSecretReadyGlow then
-		setGlow(icon, false, nil, "EQOL_SIMPLE")
+		setGlow(icon, activationGlowActive, simpleGlowColor, "EQOL_SIMPLE", nil, nil, nil, simpleGlowStyle, simpleGlowInset, data.glowPixelOptions)
 		if secretReadyGlowAllowed then
 			setGlow(
 				icon,
@@ -30125,6 +30608,74 @@ function cdp.ENTRY.ApplyVisibleSpellRuntime(panelId, runtime, icon, data, resolv
 	end
 
 	return true
+end
+
+function cdp.ENTRY.RefreshSpellVisualEntries(spellId, mode)
+	local runtime = CooldownPanels.runtime
+	local index = runtime and runtime.spellEntryIndex
+	if not index or runtime.specRebuildPending == true then return false, false end
+	local targets = cdp.ENTRY.GetSpellTargets(runtime, spellId)
+	if not targets then return false, true end
+	local panelsToRefresh = cdp.ENTRY.GetPanelRefreshScratch(runtime, "_eqolSpellVisualRefreshScratch")
+	local refreshed = false
+	for panelId, entries in pairs(targets) do
+		local panel = CooldownPanels:GetPanel(panelId)
+		local panelRuntime = panel and getRuntime(panelId) or nil
+		local resolvedLayout = panelRuntime and panelRuntime.frame and CooldownPanels.ResolveRuntimeLayout(panelRuntime, panelRuntime.frame, panel.layout) or nil
+		local panelNeedsRefresh = false
+		for entryId in pairs(entries) do
+			local entry = panel and panel.entries and panel.entries[entryId] or nil
+			if entry and entry.displayMode == "BAR" then
+				panelNeedsRefresh = true
+				break
+			end
+			local icon = panelRuntime and panelRuntime.entryToIcon and panelRuntime.entryToIcon[entryId] or nil
+			local data = icon and icon._eqolRuntimeData or nil
+			if entry and icon and data and data.entryId == entryId and data.resolvedType == "SPELL" then
+				if mode == "glow" then
+					cdp.RUNTIME.UpdateEntryGlowConfiguration(panelId, entryId, entry, data)
+					if data.stateTextureType then
+						local overlayGlowSpells = runtime.overlayGlowSpells
+						data.stateTextureShown = entry.stateTextureShowWithoutProc == true
+							or isSpellFlagged(overlayGlowSpells, data.baseSpellId, data.effectiveSpellId) == true
+					end
+					cdp.ENTRY.ApplyVisibleSpellRuntime(panelId, panelRuntime, icon, data, resolvedLayout)
+				elseif mode == "range" then
+					local rangeOverlay = resolvedLayout and resolvedLayout.rangeOverlayEnabled == true
+						and isSpellFlagged(runtime.rangeOverlaySpells, data.baseSpellId, data.effectiveSpellId)
+					if rangeOverlay and Api.IsSpellUsableFn then
+						local checkId = data.effectiveSpellId or data.baseSpellId
+						if checkId and not Api.IsSpellUsableFn(checkId) then rangeOverlay = false end
+					end
+					data.rangeOverlay = rangeOverlay == true
+					if icon.rangeOverlay then
+						if data.rangeOverlay then
+							icon.rangeOverlay:SetColorTexture(
+								resolvedLayout.rangeOverlayR or 1,
+								resolvedLayout.rangeOverlayG or 0.1,
+								resolvedLayout.rangeOverlayB or 0.1,
+								resolvedLayout.rangeOverlayA or 0.35
+							)
+							icon.rangeOverlay:Show()
+						else
+							icon.rangeOverlay:Hide()
+						end
+					end
+				elseif mode == "icon" then
+					data.icon = getEntryIcon(entry) or Helper.PREVIEW_ICON
+					icon.texture:SetTexture(data.icon)
+					cdp.RUNTIME.WriteTextureSnapshot(icon._eqolRuntimeSnapshot, data)
+				end
+				refreshed = true
+			end
+		end
+		if panelNeedsRefresh then
+			cdp.ENTRY.QueuePanelRefresh(panelsToRefresh, panelId)
+			refreshed = true
+		end
+	end
+	if cdp.ENTRY.FlushPanelRefreshes(panelsToRefresh) then refreshed = true end
+	return refreshed, true
 end
 
 function cdp.ENTRY.ApplyVisibleItemRuntime(panelId, runtime, icon, data, resolvedLayout)
@@ -30270,7 +30821,7 @@ function cdp.ENTRY.ApplyVisibleItemRuntime(panelId, runtime, icon, data, resolve
 	if data.activationOverlayActive == true and data.activationOverlayGlow == true then
 		simpleGlowEnabled = true
 		simpleGlowColor = data.activationOverlayGlowColor or data.readyGlowColor or overlayGlowColor
-		simpleGlowStyle = data.readyGlowStyle or simpleGlowStyle
+		simpleGlowStyle = data.activationOverlayGlowStyle or data.readyGlowStyle or simpleGlowStyle
 		simpleGlowInset = data.readyGlowInset or simpleGlowInset
 	end
 	setPreviewGlow(icon, false)
@@ -30601,7 +31152,7 @@ function cdp.ENTRY.TryRefreshVisibleSlotEntry(panelId, entryId)
 	local alwaysShow = entry.alwaysShow ~= false
 	local showWhenNoCooldown = entry.showWhenNoCooldown == true
 	local itemId = Api.GetInventoryItemID and Api.GetInventoryItemID("player", slotId) or nil
-	local hasUsableItem = itemId and itemHasUseSpell(itemId) or false
+	local hasUsableItem = itemId and CooldownPanels:TrinketSlotItemHasTrackedUseSpell(entry, itemId) or false
 	local cooldownStart, cooldownDuration, cooldownEnabled
 	local cooldownGCD = false
 	local newVisible = false
@@ -30995,8 +31546,8 @@ local setOverlayGlowForSpell
 local function handleSpellUpdateIcon(spellId)
 	if spellId ~= nil then
 		invalidateSpellIconCacheForSpell(spellId)
-		if setOverlayGlowForSpell(spellId, true) then return true end
-		local _, indexReady = refreshPanelsForSpell(spellId)
+		setOverlayGlowForSpell(spellId, true)
+		local _, indexReady = cdp.ENTRY.RefreshSpellVisualEntries(spellId, "icon")
 		return indexReady == true
 	end
 
@@ -31529,7 +32080,7 @@ setOverlayGlowForSpell = function(spellId, enabled)
 		-- Sound nur wenn es frisch "an" ging.
 		if enabled and not wasEnabled then triggerProcSoundForSpell(id) end
 	end
-	local refreshed, indexReady = refreshPanelsForSpell(id)
+	local refreshed, indexReady = cdp.ENTRY.RefreshSpellVisualEntries(id, "glow")
 	if refreshed == true then return true end
 	if indexReady ~= true and CooldownPanels and CooldownPanels.RequestUpdate then CooldownPanels:RequestUpdate("OverlayGlow") end
 	return true
@@ -31600,7 +32151,9 @@ local function setRangeOverlayForSpell(spellIdentifier, isInRange, checksRange)
 	else
 		runtime.rangeOverlaySpells[id] = nil
 	end
-	if refreshPanelsForSpell and refreshPanelsForSpell(id) then return true end
+	local refreshed, indexReady = cdp.ENTRY.RefreshSpellVisualEntries(id, "range")
+	if refreshed then return true end
+	if indexReady then return true end
 	if CooldownPanels and CooldownPanels.RequestUpdate then CooldownPanels:RequestUpdate("RangeOverlay") end
 	return true
 end
@@ -32305,9 +32858,10 @@ function CooldownPanels.EnsureUpdateFrame()
 			local slot = tonumber((...))
 			-- The Single Button Assistant rotates the assisted-combat slot without changing its binding.
 			if CooldownPanels.IsAssistedCombatActionSlot(slot) then return end
+			local keybindLookupChanged = not Keybinds.ShouldRefreshForActionSlot or Keybinds.ShouldRefreshForActionSlot(slot)
 			local root = ensureRoot()
 			if not (root and root.panels) then
-				Keybinds.RequestRefresh("Event:" .. event)
+				if keybindLookupChanged then Keybinds.RequestRefresh("Event:" .. event) end
 				return
 			end
 
@@ -32332,7 +32886,7 @@ function CooldownPanels.EnsureUpdateFrame()
 			end
 
 			if not next(trackedMacroIDs) and not next(trackedMacroNames) then
-				Keybinds.RequestRefresh("Event:" .. event)
+				if keybindLookupChanged then Keybinds.RequestRefresh("Event:" .. event) end
 				return
 			end
 
@@ -32407,7 +32961,7 @@ function CooldownPanels.EnsureUpdateFrame()
 				CooldownPanels:RebuildSpellIndex()
 				CooldownPanels:RequestUpdate("Event:" .. event)
 			else
-				Keybinds.RequestRefresh("Event:" .. event)
+				if keybindLookupChanged then Keybinds.RequestRefresh("Event:" .. event) end
 			end
 			return
 		end

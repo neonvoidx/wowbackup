@@ -15,4 +15,5 @@ PlumberDB_PC = {
 ["tier"] = 8,
 },
 },
+["CurrencyCap:1602"] = 3200,
 }

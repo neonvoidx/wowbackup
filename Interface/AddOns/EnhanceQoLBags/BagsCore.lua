@@ -1,4 +1,4 @@
--- luacheck: globals BagsItemButton_OnLoad ItemButtonUtil ContainerFrameItemButtonMixin ScrollFrameTemplate_OnMouseWheel IsAnyStandardHeldBagOpen BackpackTokenFrame BagItemAutoSortButton ITEM_SEARCHBAR_LIST BagSearch_OnHide BagSearch_OnTextChanged BagSearch_OnChar UIPanelScrollFrame_OnLoad ClearItemButtonOverlay SetItemButtonQuality SetItemButtonCount SetItemButtonDesaturated SetItemButtonTextureVertexColor ContainerFrame_AllowedToOpenBags C_Cursor C_TradeSkillUI COPPER_PER_GOLD COPPER_PER_SILVER NUM_BAG_SLOTS NUM_REAGENTBAG_SLOTS GetInventoryItemTexture GetInventoryItemID GetInventoryItemQuality GetInventorySlotInfo PickupBagFromSlot PutItemInBackpack PutItemInBag CloseAllBags BAGS EQUIP_CONTAINER EQUIP_CONTAINER_REAGENT PVP_ITEM_LEVEL_TOOLTIP
+-- luacheck: globals BagsItemButton_OnLoad ItemButtonUtil ContainerFrameItemButtonMixin ScrollFrameTemplate_OnMouseWheel BackpackTokenFrame BagItemAutoSortButton ITEM_SEARCHBAR_LIST BagSearch_OnHide BagSearch_OnTextChanged BagSearch_OnChar UIPanelScrollFrame_OnLoad ClearItemButtonOverlay SetItemButtonQuality SetItemButtonCount SetItemButtonDesaturated SetItemButtonTextureVertexColor ContainerFrame_AllowedToOpenBags C_Cursor C_TradeSkillUI COPPER_PER_GOLD COPPER_PER_SILVER NUM_BAG_SLOTS NUM_REAGENTBAG_SLOTS GetInventoryItemTexture GetInventoryItemID GetInventoryItemQuality GetInventorySlotInfo PickupBagFromSlot PutItemInBackpack PutItemInBag BAGS EQUIP_CONTAINER EQUIP_CONTAINER_REAGENT PVP_ITEM_LEVEL_TOOLTIP
 local addon = _G.EnhanceQoL
 if not addon then error("EnhanceQoL is not loaded") end
 
@@ -143,6 +143,30 @@ Core.EQUIP_LOCATION_COMPARISON_SLOTS = {
 	INVTYPE_RANGEDRIGHT = { INVSLOT_MAINHAND or 16 },
 }
 
+Core.BAG_OPENING_INTERACTIONS = Core.BAG_OPENING_INTERACTIONS or {}
+do
+	local interactionTypes = Enum and Enum.PlayerInteractionType
+	local interactionNames = {
+		"Merchant",
+		"Banker",
+		"MailInfo",
+		"Auctioneer",
+		"ScrappingMachine",
+		"ItemInteraction",
+		"AzeriteForge",
+		"CharacterBanker",
+		"AccountBanker",
+	}
+	if interactionTypes then
+		for _, interactionName in ipairs(interactionNames) do
+			local interactionType = interactionTypes[interactionName]
+			if interactionType then
+				Core.BAG_OPENING_INTERACTIONS[interactionType] = true
+			end
+		end
+	end
+end
+
 local state = Bags.variables.state or {}
 Bags.variables.state = state
 state.buttons = state.buttons or {}
@@ -173,9 +197,7 @@ end
 if state.manualVisible == nil then
 	state.manualVisible = false
 end
-if state.pendingContextOpenedBagToggleSync == nil then
-	state.pendingContextOpenedBagToggleSync = false
-end
+state.autoOpenedInteractionType = nil
 if state.awaitingRuleItemData == nil then
 	state.awaitingRuleItemData = false
 end
@@ -1574,64 +1596,12 @@ local function isManagedBagUpdateID(bagID)
 	return false
 end
 
-local function isNativeStandardBagOpen()
-	if type(_G.IsAnyStandardHeldBagOpen) == "function" and IsAnyStandardHeldBagOpen() then
-		return true
-	end
-
-	if type(_G.IsBagOpen) == "function" then
-		for bagID = Core.BACKPACK_ID, Core.LAST_CHARACTER_BAG_ID do
-			if IsBagOpen(bagID) then
-				return true
-			end
-		end
-	end
-
-	if ContainerFrameCombinedBags then
-		if type(ContainerFrameCombinedBags.IsBagOpen) == "function" then
-			for bagID = Core.BACKPACK_ID, Core.LAST_CHARACTER_BAG_ID do
-				if ContainerFrameCombinedBags:IsBagOpen(bagID) then
-					return true
-				end
-			end
-		end
-
-		if ContainerFrameCombinedBags:IsShown() then
-			return true
-		end
-	end
-
-	local frames = ContainerFrameContainer and ContainerFrameContainer.ContainerFrames or {}
-	for _, frame in ipairs(frames) do
-		if frame and frame:IsShown() and frame.GetBagID then
-			local bagID = frame:GetBagID()
-			if isStandardBagID(bagID) then
-				return true
-			end
-		end
-	end
-
-	return false
-end
-
-local function shouldShowSimpleBags()
-	return isNativeStandardBagOpen()
-end
-
 local function shouldShowBankManagedBags()
 	return addon.AreAnyBankContextsViewable and addon.AreAnyBankContextsViewable() or false
 end
 
 local function shouldShowManagedContainerFrame()
-	if shouldShowSimpleBags() then
-		return true
-	end
-
-	if shouldShowBankManagedBags() then
-		return true
-	end
-
-	return false
+	return shouldShowBankManagedBags()
 end
 
 local function shouldProcessVisibleBagUpdates()
@@ -2830,19 +2800,6 @@ local function createNativeBagSortButton(parent)
 	return button
 end
 
-local function closeNativeBagsFromCustomHide()
-	if state.suppressNativeBagClose then
-		return
-	end
-	if not isNativeStandardBagOpen() or type(CloseAllBags) ~= "function" then
-		return
-	end
-
-	state.suppressNativeBagClose = true
-	CloseAllBags()
-	state.suppressNativeBagClose = false
-end
-
 local function createMainFrame()
 	if state.frame then
 		return state.frame
@@ -2906,7 +2863,6 @@ local function createMainFrame()
 		if self.BagSlotsPanel then
 			self.BagSlotsPanel:Hide()
 		end
-		closeNativeBagsFromCustomHide()
 	end)
 
 	local title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -6690,9 +6646,7 @@ local function processUpdate()
 			BagSlotPanel.Refresh()
 		end
 	else
-		state.suppressNativeBagClose = true
 		state.frame:Hide()
-		state.suppressNativeBagClose = false
 	end
 end
 
@@ -6825,13 +6779,8 @@ end
 function Bags.functions.HideFrame()
 	setManualVisibility(false)
 	state.explicitToggleVisible = false
-	if shouldShowSimpleBags() and type(CloseAllBags) == "function" then
-		CloseAllBags()
-	end
 	if state.frame and not shouldShowManagedContainerFrame() then
-		state.suppressNativeBagClose = true
 		state.frame:Hide()
-		state.suppressNativeBagClose = false
 	end
 	scheduleUpdate(false, false, true)
 end
@@ -6896,97 +6845,42 @@ function Bags.functions.EnableMain()
 	end
 end
 
-local NATIVE_BAG_TOGGLE_FILTERS = {
-	ToggleAllBags = {},
-	ToggleBackpack = {
-		"ToggleAllBags",
-	},
-	ToggleBag = {
-		"OpenBackpack",
-		"ToggleBackpack",
-	},
-}
-
-local function syncFromNativeBagState(requestRefresh, requestRebuild)
-	state.nativeBagStateSyncScheduled = false
+local function applyNativeBagVisibilityAction()
+	state.nativeBagVisibilityActionScheduled = false
 	if not state.initialized then
 		return
 	end
 
-	local nativeOpen = isNativeStandardBagOpen()
-	local synchronizeContextOpenedBags = state.pendingContextOpenedBagToggleSync == true
-	state.pendingContextOpenedBagToggleSync = false
-	if nativeOpen and synchronizeContextOpenedBags and Bags.functions.SynchronizeContextOpenedBagToggleState then
-		Bags.functions.SynchronizeContextOpenedBagToggleState()
-		nativeOpen = isNativeStandardBagOpen()
-	end
-
-	if nativeOpen then
-		state.explicitToggleVisible = true
-	else
-		state.explicitToggleVisible = false
-		setManualVisibility(false)
-	end
-
-	scheduleUpdate(nativeOpen or requestRefresh, requestRebuild, true)
-end
-
-local function scheduleNativeBagStateSync(requestRefresh, requestRebuild)
-	if state.nativeBagStateSyncScheduled then
-		return
-	end
-
-	state.nativeBagStateSyncScheduled = true
-	RunNextFrame(function()
-		syncFromNativeBagState(requestRefresh, requestRebuild)
-	end)
-end
-
-Bags.functions.SynchronizeContextOpenedBagToggleState = function()
-	if type(IsBagOpen) ~= "function" or type(OpenBag) ~= "function" then
-		return
-	end
+	local action = state.pendingNativeBagVisibilityAction
+	state.pendingNativeBagVisibilityAction = nil
 	if type(ContainerFrame_AllowedToOpenBags) == "function" and not ContainerFrame_AllowedToOpenBags() then
 		return
 	end
-
-	local hasOpenStandardBag = false
-	for bagID = Core.BACKPACK_ID, Core.LAST_CHARACTER_BAG_ID do
-		if IsBagOpen(bagID) then
-			hasOpenStandardBag = true
-			break
+	if action == "show" then
+		state.explicitToggleVisible = true
+	elseif action == "toggle" then
+		local isVisible = (state.frame and state.frame:IsShown()) or state.manualVisible or state.explicitToggleVisible
+		state.explicitToggleVisible = not isVisible
+		if isVisible then
+			setManualVisibility(false)
 		end
-	end
-	if not hasOpenStandardBag then
+	else
 		return
 	end
 
-	if not IsBagOpen(Core.BACKPACK_ID) and type(OpenBackpack) == "function" then
-		OpenBackpack()
-	end
-
-	for bagID = 1, Core.LAST_CHARACTER_BAG_ID do
-		local slotCount = C_Container and C_Container.GetContainerNumSlots and C_Container.GetContainerNumSlots(bagID) or 0
-		if slotCount > 0 and not IsBagOpen(bagID) then
-			OpenBag(bagID)
-		end
-	end
+	scheduleUpdate(state.explicitToggleVisible, false, true)
 end
 
-local function shouldIgnoreNativeBagToggle(functionName)
-	local patterns = NATIVE_BAG_TOGGLE_FILTERS[functionName]
-	if not patterns or type(debugstack) ~= "function" then
-		return false
+local function scheduleNativeBagVisibilityAction(action)
+	state.pendingNativeBagVisibilityAction = action
+	if state.nativeBagVisibilityActionScheduled then
+		return
 	end
 
-	local stack = debugstack() or ""
-	for _, pattern in ipairs(patterns) do
-		if stack:find(pattern, 1, true) then
-			return true
-		end
-	end
-
-	return false
+	state.nativeBagVisibilityActionScheduled = true
+	RunNextFrame(function()
+		applyNativeBagVisibilityAction()
+	end)
 end
 
 installVisibilityHooks = function()
@@ -7006,50 +6900,24 @@ installVisibilityHooks = function()
 		local hookName = functionName
 		if type(_G[hookName]) == "function" then
 			hooksecurefunc(hookName, function()
-				if hookName == "OpenAllBagsMatchingContext" then
-					state.pendingContextOpenedBagToggleSync = true
-				end
-				scheduleNativeBagStateSync(true, false)
+				scheduleNativeBagVisibilityAction("show")
 			end)
 		end
 	end
 
-	local closeHookTargets = {
-		"CloseAllBags",
-		"CloseBag",
-		"CloseBackpack",
+	local toggleHookTargets = {
+		"ToggleAllBags",
+		"ToggleBackpack",
+		"ToggleBag",
 	}
 
-	for _, functionName in ipairs(closeHookTargets) do
+	for _, functionName in ipairs(toggleHookTargets) do
 		local hookName = functionName
 		if type(_G[hookName]) == "function" then
 			hooksecurefunc(hookName, function()
-				scheduleNativeBagStateSync(false, false)
+				scheduleNativeBagVisibilityAction("toggle")
 			end)
 		end
-	end
-
-	for functionName in pairs(NATIVE_BAG_TOGGLE_FILTERS) do
-		local hookName = functionName
-		if type(_G[hookName]) == "function" then
-			hooksecurefunc(hookName, function()
-				if shouldIgnoreNativeBagToggle(hookName) then
-					scheduleNativeBagStateSync(true, false)
-					return
-				end
-
-				scheduleNativeBagStateSync(true, false)
-			end)
-		end
-	end
-
-	if EventRegistry and type(EventRegistry.RegisterCallback) == "function" then
-		EventRegistry:RegisterCallback("ContainerFrame.OpenAllBags", function()
-			scheduleNativeBagStateSync(true, false)
-		end, state)
-		EventRegistry:RegisterCallback("ContainerFrame.CloseAllBags", function()
-			scheduleNativeBagStateSync(false, false)
-		end, state)
 	end
 end
 
@@ -7074,6 +6942,8 @@ eventFrame:RegisterEvent("PLAYER_LOGIN")
 eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
 eventFrame:RegisterEvent("BANKFRAME_OPENED")
 eventFrame:RegisterEvent("BANKFRAME_CLOSED")
+eventFrame:RegisterEvent("PLAYER_INTERACTION_MANAGER_FRAME_SHOW")
+eventFrame:RegisterEvent("PLAYER_INTERACTION_MANAGER_FRAME_HIDE")
 eventFrame:SetScript("OnEvent", function(_, event, ...)
 	if event == "PLAYER_LOGIN" then
 		if addon.Bags and addon.Bags.IsEnabled and addon.Bags.IsEnabled() then
@@ -7097,6 +6967,18 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
 
 	if event == "PLAYER_REGEN_ENABLED" then
 		scheduleUpdate(state.pendingRefresh, state.pendingRebuild)
+	elseif event == "PLAYER_INTERACTION_MANAGER_FRAME_SHOW" then
+		local interactionType = ...
+		if Core.BAG_OPENING_INTERACTIONS[interactionType] then
+			local wasVisible = state.manualVisible or state.explicitToggleVisible
+			state.autoOpenedInteractionType = not wasVisible and interactionType or nil
+		end
+	elseif event == "PLAYER_INTERACTION_MANAGER_FRAME_HIDE" then
+		local interactionType = ...
+		if state.autoOpenedInteractionType == interactionType then
+			state.autoOpenedInteractionType = nil
+			Bags.functions.HideFrame()
+		end
 	elseif event == "BANKFRAME_OPENED" or event == "BANKFRAME_CLOSED" then
 		scheduleUpdate(true, true, true)
 	elseif event == "BAG_UPDATE" then

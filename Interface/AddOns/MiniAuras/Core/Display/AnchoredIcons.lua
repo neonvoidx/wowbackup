@@ -90,8 +90,10 @@ end
 ---@param entry table an entry carrying Container, Anchor, Display and KickTimer
 ---@param options table the module's per-instance options
 ---@param kickEntry table? the active kick, or nil to clear the slot
+---@param wantsDispelColor boolean whether the caller's colour mode resolves to the dispel palette
 ---@param onExpiry fun() re-render callback for when the kick runs out
-function M:RenderKickIcon(entry, options, kickEntry, onExpiry)
+---@param fontScale number? the owning module's text multiplier
+function M:RenderKickIcon(entry, options, kickEntry, wantsDispelColor, onExpiry, fontScale)
 	local slotOptions = nil
 
 	if kickEntry then
@@ -101,9 +103,11 @@ function M:RenderKickIcon(entry, options, kickEntry, onExpiry)
 		slotOptions.Alpha = true
 		slotOptions.ReverseCooldown = options.Icons.ReverseCooldown
 		slotOptions.ShowMilliseconds = options.Icons.ShowMilliseconds
+		-- A module with no switch of its own leaves the key unset, which reads as numbers on.
+		slotOptions.HideNumbers = options.Icons.EnableNumbers == false
 		slotOptions.Glow = options.Icons.Glow
-		slotOptions.Color = options.Icons.ColorByDispelType and kickEntry.Color or nil
-		slotOptions.FontScale = db.FontScale
+		slotOptions.Color = wantsDispelColor and kickEntry.Color or nil
+		slotOptions.FontScale = fontScale
 	end
 
 	entry.KickTimer = kickSlot:Render(entry.Container, kickEntry, slotOptions, entry.KickTimer, onExpiry)

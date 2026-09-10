@@ -13,7 +13,6 @@ local units = addon.Utils.UnitUtil
 local frames = addon.Core.Frames
 local pool = addon.Core.Pool
 local sweep = addon.Core.Sweep
-local spellSearch = addon.Core.SpellSearch
 local positionEditor = addon.Core.PositionEditor
 local groups = addon.Modules.PersonalAuras.Groups
 local sound = addon.Modules.PersonalAuras.Sound
@@ -120,8 +119,8 @@ local M = {}
 addon.Modules.PersonalAuras.Display = M
 
 -- Coalesced to one pass per frame. Plates churn a handful at a time as people come in and out of
--- range, and each rebuild walks every group's spell variants to check for a change that has usually
--- not moved. A teardown cancels the pending pass rather than let it re-register what it cleared.
+-- range, and each rebuild walks every group's spells to check for a change that has usually not
+-- moved. A teardown cancels the pending pass rather than let it re-register what it cleared.
 local QueueSoundRefresh, CancelSoundRefresh = moduleUtil:Coalesced(function()
 	M:RefreshSounds()
 end)
@@ -130,23 +129,25 @@ end)
 ---@return AuraDisplayStyle
 local function BuildStyle(group)
 	local icons = group.Icons
-	local style = auraContainerDisplay:BuildStandardStyle(icons)
+	local style = auraContainerDisplay:BuildStandardStyle(icons, icons.FontScale)
 
-	-- On top of the global scale rather than instead of it, so a group set to 100% keeps following
-	-- whatever the user picked in Miscellaneous.
-	style.FontScale = (style.FontScale or 1) * (icons.TextScale or 100) / 100
 	style.Border = icons.Border
 	-- The same colour drives the glow, the border and a bar's fill, so one swatch covers a group
 	-- whichever shape it draws.
 	style.GlowColor = moduleUtil:GetIconColorRGB(icons)
-	style.HideSwipe = icons.HideSwipe
-	style.HideNumbers = icons.HideNumbers
+	style.HideSwipe = not icons.EnableSwipe
+	style.HideNumbers = not icons.EnableNumbers
 	style.ShowTooltips = icons.ShowTooltips
 	style.Pandemic = icons.Pandemic
 	style.PandemicColor = moduleUtil:GetColorRGB(icons.PandemicColor)
 	style.BarWidth = icons.BarWidth
 	style.BarTexture = icons.BarTexture
 	style.SpellName = icons.SpellName
+
+	-- Art brings its own picture and the text shape draws no icon, so neither has one to replace.
+	if not groups:DrawsTexture(group) and not groups:DrawsTextOnly(group) then
+		style.IconAsset = icons.UseGroupIcon and groups:GetIcon(group) or nil
+	end
 
 	if groups:DrawsTexture(group) then
 		local art = group.Texture
@@ -251,6 +252,7 @@ local function ParkDisplay(entry)
 	-- Cleared, or the next group to take this entry would skip applying its own geometry.
 	entry.StyleGeneration = nil
 	entry.FilterGeneration = nil
+	entry.NameplateIgnoreScale = nil
 	entry.Unit = nil
 
 	if entry.Test then
@@ -547,6 +549,15 @@ local function PreviewSize(group)
 	return size, size
 end
 
+---The stand-ins are dragged into place against where the live copy will land, so they have to take
+---the plate's scale wherever the live copy does.
+---@param entry PersonalAuraDisplayEntry
+---@param parent table
+local function ParentTestContainer(entry, parent)
+	entry.Test.Frame:SetParent(parent)
+	entry.Test.Frame:SetIgnoreParentScale(entry.NameplateIgnoreScale ~= false)
+end
+
 ---The stand-in container for one copy, matching the shape the live display draws. Built on first
 ---use and kept, since an entry only ever comes from the pool of its own shape, so the container it
 ---grew is always the right one for whoever holds it next.
@@ -562,7 +573,7 @@ local function EnsureTestContainer(state, entry, parent)
 			entry.Test = textureSlotContainer:New(parent, width, height, MODULE_TAG)
 		end
 
-		entry.Test.Frame:SetParent(parent)
+		ParentTestContainer(entry, parent)
 		entry.Test:SetTextureSize(width, height)
 
 		return entry.Test
@@ -575,7 +586,7 @@ local function EnsureTestContainer(state, entry, parent)
 		end
 
 		-- Entries come from a shared pool, so the parent is routinely somebody else's.
-		entry.Test.Frame:SetParent(parent)
+		ParentTestContainer(entry, parent)
 		entry.Test:SetBarSize(width, height)
 		entry.Test:SetSpacing(group.Icons.Spacing)
 		entry.Test:SetGrow(group.Grow)
@@ -598,7 +609,7 @@ local function EnsureTestContainer(state, entry, parent)
 		)
 	end
 
-	entry.Test.Frame:SetParent(parent)
+	ParentTestContainer(entry, parent)
 	entry.Test:SetIconSize(height)
 	entry.Test:SetSpacing(group.Icons.Spacing)
 	-- The live display reads the grow direction off the group, so the stand-ins have to as well
@@ -666,20 +677,23 @@ local function RenderTestIcons(state, entry)
 	-- The live shape draws neither art nor a swipe, and keeps its countdown whatever the switches
 	-- say, so a stand-in that differed would be positioned against a look the group cannot have.
 	local textOnly = groups:DrawsTextOnly(group)
-	-- The same calls BuildStyle and StyleCountdown make, so the stand-ins show exactly what the
-	-- live icons will.
+	-- Mirrors what BuildStyle and StyleCountdown derive, short of the fractions a stand-in cannot draw.
 	local centerStacks = not drawsBars and not textOnly and group.Icons.CenterStacks == true
-	local hideNumbers = not textOnly and (group.Icons.HideNumbers or centerStacks)
-	local hideSwipe = group.Icons.HideSwipe or textOnly
+	local hideNumbers = not textOnly and (not group.Icons.EnableNumbers or centerStacks)
+	local hideSwipe = not group.Icons.EnableSwipe or textOnly
 	local textColor = group.Icons.ColorText
 		and moduleUtil:FillColor(textColorScratch, group.Icons.TextColor, DEFAULT_TEXT_COLOR)
 		or nil
-	local fontScale = (db.FontScale or 1) * (group.Icons.TextScale or 100) / 100
+	local fontScale = group.Icons.FontScale
 	local nextSlot
 
 	if groups:TracksSpells(group) then
+		local iconOverride = not textOnly and group.Icons.UseGroupIcon
+			and groups:GetIcon(group) or nil
+
 		nextSlot = testSpellData:FillContainer(container, group.Spells, 1, {
 			ReverseCooldown = group.Icons.ReverseCooldown,
+			IconOverride = iconOverride,
 			HideIcon = textOnly,
 			HideSwipe = hideSwipe,
 			HideNumbers = hideNumbers,
@@ -811,8 +825,8 @@ local function OnOffsetDragStart(handle)
 	dragContext.StartY = y
 	dragContext.StartOffsetX = handle.Group.Offset.X
 	dragContext.StartOffsetY = handle.Group.Offset.Y
-	-- The offset lands on the display, which ignores its parent's scale, so the cursor delta
-	-- converts through that frame's scale and not the host frame's or UIParent's.
+	-- The offset lands on the display, so the cursor delta converts through that frame's own
+	-- scale, which on a nameplate follows the plate.
 	dragContext.Scale = handle.DisplayFrame:GetEffectiveScale()
 
 	handle:SetScript("OnUpdate", OnOffsetDragUpdate)
@@ -1019,6 +1033,38 @@ local function EnsureState(groupDef)
 	return state
 end
 
+---Whether a nameplate copy should scale with its plate. The saved table holds the option even
+---while the Nameplates module has never inited, which its own cached copy does not.
+---@return boolean
+local function ScaleWithNameplateEnabled()
+	local nameplateOptions = db.Modules.Nameplates
+
+	if nameplateOptions and nameplateOptions.ScaleWithNameplate ~= nil then
+		return nameplateOptions.ScaleWithNameplate
+	end
+
+	return true
+end
+
+---Every parenting site must call this, since a pooled copy carries its last choice into whatever
+---group takes it next.
+---@param entry PersonalAuraDisplayEntry
+---@param isNameplate boolean? Whether the new parent is a nameplate, so the option applies.
+local function ApplyParentScale(entry, isNameplate)
+	local ignoreScale = not (isNameplate and ScaleWithNameplateEnabled())
+
+	if entry.NameplateIgnoreScale ~= ignoreScale then
+		entry.NameplateIgnoreScale = ignoreScale
+		entry.Display.Frame:SetIgnoreParentScale(ignoreScale)
+	end
+
+	-- Set every time rather than on the change, since the stand-ins are grown before this runs
+	-- and would otherwise keep whatever the entry was carrying when they appeared.
+	if entry.Test then
+		entry.Test.Frame:SetIgnoreParentScale(ignoreScale)
+	end
+end
+
 ---@param state PersonalAuraGroupState
 local function RefreshScreenGroup(state)
 	local group = state.Group
@@ -1035,6 +1081,7 @@ local function RefreshScreenGroup(state)
 	local strata = ResolveStrata(group, UIParent)
 	local frame = entry.Display.Frame
 	frame:SetParent(UIParent)
+	ApplyParentScale(entry)
 	frame:SetFrameStrata(strata)
 	frame:ClearAllPoints()
 	frame:SetPoint(point, anchor, point, 0, 0)
@@ -1056,7 +1103,8 @@ end
 ---@param state PersonalAuraGroupState
 ---@param entry PersonalAuraDisplayEntry
 ---@param host table The nameplate, unit frame or arena frame the copy hangs off.
-local function AnchorEntry(state, entry, host)
+---@param isNameplate boolean? Whether host is the nameplate itself, so ScaleWithNameplate applies.
+local function AnchorEntry(state, entry, host, isNameplate)
 	local group = state.Group
 	local point = growAnchors:GetPinPoint(group.Grow)
 	local level = host:GetFrameLevel() + 10
@@ -1064,6 +1112,7 @@ local function AnchorEntry(state, entry, host)
 	local frame = entry.Display.Frame
 
 	frame:SetParent(host)
+	ApplyParentScale(entry, isNameplate)
 	frame:SetFrameStrata(strata)
 	frame:SetFrameLevel(level)
 	frame:ClearAllPoints()
@@ -1150,7 +1199,7 @@ local function RefreshPlateGroup(state, token)
 	end
 
 	ConfigureDisplay(state, entry, token)
-	AnchorEntry(state, entry, plate)
+	AnchorEntry(state, entry, plate, true)
 	ApplyPreview(state, entry, plate)
 end
 
@@ -1326,13 +1375,7 @@ local function CollectSoundRequests(state)
 		end
 	end
 
-	local spellIds = {}
-
-	for _, spellId in ipairs(group.Spells) do
-		for _, variant in ipairs(spellSearch:GetVariants(spellId)) do
-			spellIds[#spellIds + 1] = variant
-		end
-	end
+	local spellIds = group.Spells
 
 	local function Add(unit)
 		for _, trigger in ipairs(configured) do
@@ -1506,7 +1549,7 @@ function M:AnchorGroup(groupId)
 		local plate = C_NamePlate.GetNamePlateForUnit(token)
 
 		if plate then
-			AnchorEntry(state, entry, plate)
+			AnchorEntry(state, entry, plate, true)
 		end
 	end
 
@@ -1540,6 +1583,12 @@ function M:Refresh(options, moduleEnabled)
 	-- Test mode ignores it. A group held back by its combat state would look broken there, with
 	-- nothing to tell it apart from one whose spells simply are not up.
 	local inCombat = InCombatLockdown()
+	-- Most profiles restrict no group, so the spec is read only when one does.
+	local playerSpecId
+
+	if groups:AnySpecRestricted(options) then
+		playerSpecId = wowEx:GetPlayerSpecId()
+	end
 
 	for _, groupDef in ipairs(options.Groups) do
 		live[groupDef.Id] = true
@@ -1548,7 +1597,9 @@ function M:Refresh(options, moduleEnabled)
 		local state = EnsureState(groupDef)
 
 		state.Allowed = moduleEnabled and groupDef.Enabled and groups:Supports(groupDef)
-			and (testModeActive or groups:ShowsInCombat(groupDef, inCombat))
+			and (testModeActive
+				or (groups:ShowsInCombat(groupDef, inCombat)
+					and groups:ShowsForSpec(groupDef, playerSpecId)))
 
 		-- Previewed only once there is something to draw. The stand-in icons are the handle, so
 		-- a group with no spells yet would be an invisible frame to drag around.
@@ -1817,6 +1868,7 @@ end
 ---@field Unit string? The unit a unit frame or arena frame copy resolved to, for the sounds.
 ---@field StyleGeneration number?
 ---@field FilterGeneration number?
+---@field NameplateIgnoreScale boolean? The SetIgnoreParentScale state last applied to the frame.
 
 ---@class PersonalAuraGroupState
 ---@field Group PersonalAuraGroup

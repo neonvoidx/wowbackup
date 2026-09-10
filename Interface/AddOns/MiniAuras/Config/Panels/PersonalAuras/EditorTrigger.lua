@@ -7,6 +7,7 @@ local spellPicker = addon.Config.SpellPicker
 local groups = addon.Modules.PersonalAuras.Groups
 local recorder = addon.Modules.PersonalAuras.Recorder
 local ui = addon.Config.PersonalAurasUI
+local wowEx = addon.Utils.WoWEx
 local MESSAGE_ROW_HEIGHT = 26
 local SPELL_ROW_HEIGHT = 26
 local SPELL_COLUMNS = 3
@@ -27,6 +28,8 @@ local SHOW_WHEN_OPTIONS = {
 	groups.ShowWhen.InCombat,
 	groups.ShowWhen.OutOfCombat,
 }
+-- The spec rows are built by a menu of the panel's own, so the framework has no list to walk.
+local EMPTY_SPEC_ITEMS = {}
 
 -- Rebuilt lists, recycled rather than recreated.
 local spellRows = {}
@@ -95,6 +98,10 @@ local function UnitLabel(unit)
 		return L["Friendly Target"]
 	elseif unit == "targetenemy" then
 		return L["Enemy Target"]
+	elseif unit == "focusfriendly" then
+		return L["Friendly Focus"]
+	elseif unit == "focusenemy" then
+		return L["Enemy Focus"]
 	elseif unit == "nameplatefriendly" then
 		return L["Friendly Nameplates"]
 	elseif unit == "nameplateenemy" then
@@ -105,7 +112,7 @@ local function UnitLabel(unit)
 end
 
 ---Builds the trigger tab, which is what makes the group fire: the unit/type/tracking dropdowns,
----then either a spell list with the picker and cast recorder, or the filter-component grid.
+---then either a spell list with the picker and aura recorder, or the filter-component grid.
 ---@param ctx PersonalAurasEditorContext
 ---@param refreshFlags fun(shown: boolean?) The filters tab's flag grid, re-read alongside the spells.
 ---@return fun(group: PersonalAuraGroup) refreshState Problem text and aura-type choices.
@@ -287,6 +294,124 @@ function ui.BuildTriggerTab(ctx, refreshFlags)
 		end,
 	}, conditionRow, 0)
 
+	local specDropdown
+
+	---@param group PersonalAuraGroup?
+	---@return string
+	local function SpecFaceText(group)
+		local wanted = group and group.Specs
+
+		if not wanted or next(wanted) == nil then
+			return L["All specs"]
+		end
+
+		local count = 0
+
+		for _ in pairs(wanted) do
+			count = count + 1
+		end
+
+		if count == 1 then
+			local specId = next(wanted)
+
+			for _, class in ipairs(wowEx:GetAllSpecs()) do
+				for _, spec in ipairs(class.Specs) do
+					if wanted[spec.Id] then
+						return class.Player and spec.Name
+							or ui.QualifiedLabel(spec.Name, class.Name)
+					end
+				end
+			end
+
+			-- The client cannot yet name a spec it has no class data for at all.
+			return tostring(specId)
+		end
+
+		return L["%d specs"]:format(count)
+	end
+
+	---@param specId number
+	---@return boolean
+	local function IsSpecTicked(specId)
+		local group = ui.Current()
+
+		return group ~= nil and group.Specs ~= nil and group.Specs[specId] == true
+	end
+
+	---@param specId number
+	local function ToggleSpec(specId)
+		local group = ui.Current()
+
+		if not group then
+			return
+		end
+
+		local wanted = {}
+
+		for id in pairs(group.Specs or EMPTY_SPEC_ITEMS) do
+			wanted[id] = true
+		end
+
+		if wanted[specId] then
+			wanted[specId] = nil
+		else
+			wanted[specId] = true
+		end
+
+		group.Specs = next(wanted) ~= nil and wanted or nil
+		ui.Apply()
+		-- The button leaves the old face up when a click selects nothing, which every row here does.
+		specDropdown:SetText()
+	end
+
+	---@param node table A menu description, either the root or a class submenu.
+	---@param class SpecClass
+	local function AddSpecRows(node, class)
+		for _, spec in ipairs(class.Specs) do
+			local row = node:CreateCheckbox(spec.Name, IsSpecTicked, ToggleSpec, spec.Id)
+
+			-- Left out of the button's own selection text, which would list every ticked name.
+			row:SetSelectionIgnored()
+		end
+	end
+
+	specDropdown = ctx.Dropdown(L["For spec"], {
+		Items = EMPTY_SPEC_ITEMS,
+		GetValue = ui.Current,
+		GetText = SpecFaceText,
+		SetValue = ToggleSpec,
+	}, conditionRow, ui.DropdownColumn)
+
+	local baseSetText = specDropdown.SetText
+
+	-- The button repaints its own face after a menu click, so every writer lands on the same string.
+	function specDropdown.SetText(ddSelf)
+		baseSetText(ddSelf, SpecFaceText(ui.Current()))
+	end
+
+	specDropdown:SetupMenu(function(_, rootDescription)
+		local classes = wowEx:GetAllSpecs()
+		local mine = false
+
+		for _, class in ipairs(classes) do
+			if class.Player then
+				rootDescription:CreateTitle(class.Name)
+				AddSpecRows(rootDescription, class)
+				mine = true
+			end
+		end
+
+		if mine then
+			rootDescription:CreateDivider()
+		end
+
+		for _, class in ipairs(classes) do
+			if not class.Player then
+				AddSpecRows(rootDescription:CreateButton(class.Name), class)
+			end
+		end
+	end)
+
 	-- Where the spell-id filter rules get explained in terms of the two dropdowns above.
 	local problem = triggerPanel:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
 	problem:SetPoint("TOPLEFT", messageRow, "TOPLEFT", 0, 0)
@@ -303,6 +428,8 @@ function ui.BuildTriggerTab(ctx, refreshFlags)
 		OnAccept = ui.AddSpellToCurrent,
 		-- Reddens a spell the selected group's aura type can never match.
 		LabelColor = ui.SpellLabelColor,
+		-- An id the shipped index has never heard of is still a spell worth tracking.
+		AcceptsTypedIds = true,
 	})
 	picker:SetPoint("TOPLEFT", pickerLabel, "BOTTOMLEFT", 6, -4)
 
@@ -360,9 +487,9 @@ function ui.BuildTriggerTab(ctx, refreshFlags)
 		GameTooltip:SetOwner(buttonSelf, "ANCHOR_RIGHT")
 		GameTooltip:SetText(L["Record"], 1, 0.82, 0)
 		GameTooltip:AddLine(
-			L["Records the spells you cast so you can add them without looking up IDs."], 1, 1, 1, true)
+			L["Records the auras you gain so you can add them without looking up IDs."], 1, 1, 1, true)
 		GameTooltip:AddLine(
-			L["This is the ID of the cast, which is often not the ID of the aura it applies."],
+			L["Nothing is recorded in combat, or anywhere else the client hides your auras."],
 			1, 0.82, 0, true)
 		GameTooltip:Show()
 	end)
@@ -371,11 +498,11 @@ function ui.BuildTriggerTab(ctx, refreshFlags)
 	end)
 
 	local recordLabel = triggerPanel:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
-	recordLabel:SetText(L["Recorded Casts"])
+	recordLabel:SetText(L["Recorded Auras"])
 	recordLabel:SetPoint("TOPLEFT", recordRow, "TOPLEFT", 0, 0)
 
-	---What the player has cast since Record was pressed. Only ever on screen while recording, so
-	---the row costs no space the rest of the time.
+	---What has landed on the player since Record was pressed. Only ever on screen while recording,
+	---so the row costs no space the rest of the time.
 	function RefreshRecorded()
 		local recording = recorder:IsRecording()
 		local entries = recorder:GetEntries()
@@ -444,7 +571,7 @@ function ui.BuildTriggerTab(ctx, refreshFlags)
 	recorder:OnChanged(RefreshRecorded)
 
 	-- The hunt is scoped to the open config window; without this, closing it mid-recording
-	-- leaves the cast event firing on every global cooldown for the rest of the session.
+	-- leaves UNIT_AURA firing into the recorder for the rest of the session.
 	addon.Config.Window:HookScript("OnHide", function()
 		if recorder:IsRecording() then
 			recorder:Stop()

@@ -69,9 +69,20 @@ addon.functions.SettingsCreateButton(cat, {
 local function registerAuraPresetTrackingSettings()
 	local panels = addon.Aura and addon.Aura.CooldownPanels
 	local presets = panels and panels.AuraPresets
-	if not (presets and presets.GetCombinedExclusions and presets.AddCombinedExclusions and presets.RemoveCombinedExclusion) then return end
+	if
+		not (
+			presets
+			and presets.GetCombinedExclusions
+			and presets.GetCombinedExclusionKinds
+			and presets.AddCombinedExclusion
+			and presets.AddCombinedExclusions
+			and presets.RemoveCombinedExclusion
+		)
+	then
+		return
+	end
 
-	addon.functions.SettingsCreateHeadline(cat, L["CooldownPanelAuraPresetTracking"] or "Automatic aura tracking", {
+	addon.functions.SettingsCreateHeadline(cat, L["CooldownPanelAuraPresetTracking"] or "Automatic effect tracking", {
 		parentSection = expandable,
 	})
 
@@ -85,21 +96,72 @@ local function registerAuraPresetTrackingSettings()
 		end)
 	end
 
+	local popupKey = "EQOL_COOLDOWN_PANEL_EXCLUSION_ID_TYPE"
+	if not StaticPopupDialogs[popupKey] then
+		StaticPopupDialogs[popupKey] = {
+			text = "%s",
+			button1 = L["CooldownPanelAuraPresetExclusionsChooseAura"] or "Aura Spell ID",
+			button2 = L["CooldownPanelAuraPresetExclusionsChooseItem"] or "Trinket Item ID",
+			button3 = CANCEL,
+			selectCallbackByIndex = true,
+			timeout = 0,
+			whileDead = true,
+			hideOnEscape = true,
+			preferredIndex = 3,
+			OnShow = function(self) self:SetFrameStrata("TOOLTIP") end,
+			OnButton1 = function(_, data)
+				if data and data.apply then data.apply("AURA") end
+			end,
+			OnButton2 = function(_, data)
+				if data and data.apply then data.apply("TRINKET_ON_USE") end
+			end,
+			OnButton3 = function() end,
+		}
+	end
+
 	local function getTypeLabel(row)
+		if row.kind == "TRINKET_ON_USE" then return L["CooldownPanelAuraPresetTypeTrinketOnUse"] or "Trinket On Use" end
 		local types = {}
-		if row.presetKeys.TRINKET_UPTIME then types[#types + 1] = L["CooldownPanelAuraPresetTypeTrinket"] or "Trinket" end
-		if row.presetKeys.COMBAT_POTION then types[#types + 1] = L["CooldownPanelAuraPresetTypePotion"] or "Combat potion" end
+		if row.presetKeys.TRINKET_UPTIME then types[#types + 1] = L["CooldownPanelAuraPresetTypeTrinket"] or "Trinket aura" end
+		if row.presetKeys.COMBAT_POTION then types[#types + 1] = L["CooldownPanelAuraPresetTypePotion"] or "Combat potion aura" end
 		return table.concat(types, " / ")
+	end
+
+	local function loadRowName(rowData, label)
+		if not (rowData and label) then return end
+		if rowData.kind == "TRINKET_ON_USE" and Item and Item.CreateFromItemID then
+			local item = Item:CreateFromItemID(rowData.itemID)
+			if item and not item:IsItemEmpty() then
+				item:ContinueOnItemLoad(function()
+					local loadedName = item:GetItemName()
+					if loadedName then
+						rowData.name = loadedName
+						label:SetText(loadedName)
+					end
+				end)
+			end
+		elseif rowData.kind == "AURA" and Spell and Spell.CreateFromSpellID then
+			local spell = Spell:CreateFromSpellID(rowData.spellID)
+			if spell and not spell:IsSpellEmpty() then
+				spell:ContinueOnSpellLoad(function()
+					local loadedName = spell:GetSpellName()
+					if loadedName then
+						rowData.name = loadedName
+						label:SetText(loadedName)
+					end
+				end)
+			end
+		end
 	end
 
 	addon.functions.SettingsCreateCustom(cat, {
 		id = "CooldownPanelAuraPresetExclusions",
 		var = "CooldownPanelAuraPresetExclusions",
-		text = L["CooldownPanelAuraPresetExclusions"] or "Excluded automatic auras",
+		text = L["CooldownPanelAuraPresetExclusions"] or "Excluded automatic effects",
 		desc = L["CooldownPanelAuraPresetExclusionsDesc"],
 		newTagID = "CooldownPanelAuraPresetExclusions",
 		parentSection = expandable,
-		getHeight = function() return 82 + (#presets:GetCombinedExclusions() * 28) end,
+		getHeight = function() return 140 + (#presets:GetCombinedExclusions() * 28) end,
 		render = function(parent, _, _, state)
 			local frame = CreateFrame("Frame", nil, parent)
 			frame:SetAllPoints()
@@ -108,26 +170,44 @@ local function registerAuraPresetTrackingSettings()
 			input:SetPoint("TOPRIGHT", -112, -4)
 			input:SetHeight(24)
 			input:SetAutoFocus(false)
+			input:SetNumeric(true)
 			input:SetTextInsets(8, 8, 0, 0)
 			input.Instructions = input:CreateFontString(nil, "ARTWORK", "GameFontDisableSmall")
 			input.Instructions:SetPoint("LEFT", 8, 0)
-			input.Instructions:SetText(L["CooldownPanelAuraPresetExclusionsPlaceholder"] or "Spell ID")
+			input.Instructions:SetText(L["CooldownPanelAuraPresetExclusionsPlaceholder"] or "Spell or Item ID")
 			input:SetScript("OnTextChanged", function(self) self.Instructions:SetShown(self:GetText() == "") end)
 
 			local addButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
 			addButton:SetPoint("LEFT", input, "RIGHT", 8, 0)
 			addButton:SetSize(88, 24)
 			addButton:SetText(_G.ADD or "Add")
-			local function addValue()
-				local changed, matched = presets:AddCombinedExclusions(input:GetText())
+			local function finishAdd(changed, matched)
 				if matched == 0 then
 					input:SetTextColor(1, 0.25, 0.25)
-					return
+					return false
 				end
 				input:SetText("")
 				input:SetTextColor(1, 1, 1)
 				if changed then queueRuntimeRefresh() end
 				if state and state.RequestLayout then state:RequestLayout() end
+				return true
+			end
+			local function addValue()
+				local id = tonumber(input:GetText())
+				local auraMatch, itemMatch = presets:GetCombinedExclusionKinds(id)
+				if auraMatch and itemMatch then
+					local prompt = string.format(
+						L["CooldownPanelAuraPresetExclusionsAmbiguous"] or "ID %d is both a tracked aura Spell ID and a trinket Item ID. Which one do you want to exclude?",
+						id
+					)
+					StaticPopup_Show(popupKey, prompt, nil, {
+						apply = function(kind)
+							finishAdd(presets:AddCombinedExclusion(id, kind))
+						end,
+					})
+					return
+				end
+				finishAdd(presets:AddCombinedExclusions(input:GetText()))
 			end
 			addButton:SetScript("OnClick", addValue)
 			input:SetScript("OnEnterPressed", function(self) addValue(); self:ClearFocus() end)
@@ -162,9 +242,10 @@ local function registerAuraPresetTrackingSettings()
 				name:SetWidth(260)
 				name:SetJustifyH("LEFT")
 				name:SetText(rowData.name)
+				if rowData.name == tostring(rowData.id) then loadRowName(rowData, name) end
 				local id = row:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
 				id:SetPoint("CENTER", 80, 0)
-				id:SetText(rowData.spellID)
+				id:SetText(rowData.id)
 				local typeLabel = row:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
 				typeLabel:SetPoint("RIGHT", -112, 0)
 				typeLabel:SetText(getTypeLabel(rowData))
@@ -173,7 +254,7 @@ local function registerAuraPresetTrackingSettings()
 				remove:SetSize(88, 22)
 				remove:SetText(_G.REMOVE or "Remove")
 				remove:SetScript("OnClick", function()
-					if presets:RemoveCombinedExclusion(rowData.spellID) then queueRuntimeRefresh() end
+					if presets:RemoveCombinedExclusion(rowData.id, rowData.kind) then queueRuntimeRefresh() end
 					if state and state.RequestLayout then state:RequestLayout() end
 				end)
 			end

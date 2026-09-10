@@ -145,7 +145,7 @@ local function GetOrCreateProfileIOWindow()
 	divider1:SetPoint("TOPRIGHT", win, "TOPRIGHT", -8, -28)
 	divider1:SetColorTexture(1, 1, 1, 0.15)
 
-	local exportLabel = win:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+	local exportLabel = win:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
 	exportLabel:SetPoint("TOPLEFT", win, "TOPLEFT", 16, -42)
 	exportLabel:SetText(L["Export Profile"])
 
@@ -165,7 +165,7 @@ local function GetOrCreateProfileIOWindow()
 	divider2:SetPoint("TOPRIGHT", exportBox, "BOTTOMRIGHT", 0, -12)
 	divider2:SetColorTexture(1, 1, 1, 0.15)
 
-	local importSectionLabel = win:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+	local importSectionLabel = win:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
 	importSectionLabel:SetPoint("TOPLEFT", divider2, "BOTTOMLEFT", 0, -12)
 	importSectionLabel:SetText(L["Import Profile"])
 
@@ -526,12 +526,12 @@ function M:Build(panel)
 
 	panel.OnMiniRefresh()
 
-	-- Refresh all panels whenever the active profile changes.
+	-- Last, so the panels read what the modules have already filled in.
 	profileManager:RegisterOnProfileChanged("ConfigUI", function()
 		local tabController = addon.Config.TabController
 		if not tabController then return end
 		for i = 1, #tabController.Tabs do
 			mini.GUI.RefreshPanelTree(tabController:GetContent(tabController.Tabs[i].Key))
 		end
-	end)
+	end, true)
 end

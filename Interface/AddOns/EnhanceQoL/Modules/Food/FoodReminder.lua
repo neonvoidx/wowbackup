@@ -466,7 +466,7 @@ local function createSoundDropdownSetting(labelKey, dbKey)
 	if not SettingType then return nil end
 	return {
 		name = L[labelKey] or labelKey,
-		kind = SettingType.Dropdown,
+		kind = SettingType.SoundDropdown,
 		height = 260,
 		get = function()
 			local value = addon.db[dbKey]
@@ -486,23 +486,34 @@ local function createSoundDropdownSetting(labelKey, dbKey)
 				if file then PlaySoundFile(file, "Master") end
 			end
 		end,
-		generator = function(_, rootDescription)
+		previewSoundFunc = function(value)
+			if value == DEFAULT_SOUND_SENTINEL then
+				PlaySound(SOUNDKIT.RAID_WARNING, "Master")
+				return
+			end
+			local soundTable = getSoundHash()
+			local file = soundTable and soundTable[value]
+			if file then PlaySoundFile(file, "Master") end
+		end,
+		generator = function(_, rootDescription, _, attachPreview)
 			if rootDescription.SetScrollMode then rootDescription:SetScrollMode(260) end
 			local noneLabel = _G.NONE
 			rootDescription:CreateRadio(noneLabel, function() return addon.db[dbKey] == NONE_SOUND_SENTINEL end, function() addon.db[dbKey] = NONE_SOUND_SENTINEL end)
 			local defaultLabel = L["mageFoodReminderDefaultSound"] or DEFAULT
-			rootDescription:CreateRadio(defaultLabel, function() return addon.db[dbKey] == nil end, function()
+			local defaultRadio = rootDescription:CreateRadio(defaultLabel, function() return addon.db[dbKey] == nil end, function()
 				addon.db[dbKey] = nil
 				PlaySound(SOUNDKIT.RAID_WARNING)
 			end)
+			attachPreview(defaultRadio, DEFAULT_SOUND_SENTINEL, defaultLabel)
 			local soundTable = getSoundHash()
 			if soundTable then
 				for _, soundName in ipairs(getSoundNames()) do
-					rootDescription:CreateRadio(soundName, function() return addon.db[dbKey] == soundName end, function()
+					local radio = rootDescription:CreateRadio(soundName, function() return addon.db[dbKey] == soundName end, function()
 						addon.db[dbKey] = soundName
 						local file = soundTable[soundName]
 						if file then PlaySoundFile(file, "Master") end
 					end)
+					attachPreview(radio, soundName, soundName)
 				end
 			end
 		end,

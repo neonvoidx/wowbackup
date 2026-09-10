@@ -1,5 +1,6 @@
-### Changes in 120000.69-Release:
+### Changes in 120100.70-Release:
 
+- Changed: Improved item detection/range logic
 - Changed: Update Interface version
-- Fixed: Hotkey text escaping the button
+- Changed: Update quest database
 

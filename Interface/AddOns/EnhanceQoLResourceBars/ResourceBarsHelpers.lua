@@ -88,7 +88,15 @@ local function updateManagedFrameAlpha(frame)
 	elseif frame._rbEmptyAlphaActive == true then
 		frame:SetAlpha(frame._rbEmptyAlphaValue)
 	else
-		frame:SetAlpha(1)
+		local controller = frame._rbEqolVisibilityController
+		local visibilityState = frame._rbEqolVisibilityDriver and controller and controller.GetAttribute and controller:GetAttribute("state-eqolvisibility")
+		if visibilityState == "fade" then
+			frame:SetAlpha(controller:GetAttribute("eqol-fade-alpha") or 0)
+		elseif visibilityState == "hide" then
+			frame:SetAlpha(0)
+		else
+			frame:SetAlpha(1)
+		end
 	end
 end
 
@@ -262,21 +270,10 @@ local function clearGradientState(bar)
 	bar._rbGradEA = nil
 end
 
-local function getStatusBarTextureVisualState(bar)
-	if not (bar and bar.GetStatusBarTexture) then return nil, nil, nil end
-	local tex = bar:GetStatusBarTexture()
-	if not tex then return nil, nil, nil end
-	local currentPath = tex.GetTexture and tex:GetTexture() or nil
-	if (currentPath == nil or currentPath == "") and tex.GetAtlas then currentPath = tex:GetAtlas() end
-	local alpha = tex.GetAlpha and tex:GetAlpha() or nil
-	return tex, currentPath, alpha
-end
-
 local function ensureStatusBarTexturePath(bar, texturePath)
 	if not (bar and texturePath and bar.SetStatusBarTexture) then return false end
-	local tex, currentPath, alpha = getStatusBarTextureVisualState(bar)
-	local needsReset = bar._rb_tex ~= texturePath or currentPath ~= texturePath
-	if not needsReset and tex and alpha ~= nil and alpha <= 0 then needsReset = true end
+	local tex = bar.GetStatusBarTexture and bar:GetStatusBarTexture()
+	local needsReset = bar._rb_tex ~= texturePath or not tex
 	if not needsReset then
 		if ResourceBars.ApplyTexturePixelSnapping then ResourceBars.ApplyTexturePixelSnapping(tex, 0) end
 		return false
@@ -339,14 +336,41 @@ function ResourceBars.InvalidateEssenceSegmentCaches(bar)
 	bar._essenceFraction = 0
 	bar._essenceLastPower = nil
 	bar._essenceTickDuration = nil
+	bar._essenceDurationFill = nil
 end
 
-function ResourceBars.DeactivateEssenceTicker(bar)
+function ResourceBars.DeactivateEssenceDuration(bar)
 	if not bar then return end
-	if bar:GetScript("OnUpdate") == bar._essenceUpdater then bar:SetScript("OnUpdate", nil) end
-	bar._essenceAnimating = false
-	bar._essenceAccum = 0
-	bar._essenceUpdateInterval = nil
+	bar._essenceDurationFill = nil
+end
+
+function ResourceBars.ApplyEssenceDuration(bar, cfg, current, maxPower, tickDuration)
+	if not bar or not current or not maxPower or current >= maxPower or not tickDuration or tickDuration <= 0 or not bar._essenceNextTick then
+		ResourceBars.DeactivateEssenceDuration(bar)
+		return false
+	end
+
+	local segments = bar._rbDiscreteSegments
+	local logicalIndex = current + 1
+	local physicalIndex = cfg and cfg.reverseFill == true and (maxPower - logicalIndex + 1) or logicalIndex
+	local segment = segments and segments[physicalIndex]
+	local fill = segment and (segment.fill or segment)
+	local durationUtil = _G.C_DurationUtil
+	if not fill or not fill.SetTimerDuration or not durationUtil or not durationUtil.CreateDuration then
+		ResourceBars.DeactivateEssenceDuration(bar)
+		return false
+	end
+
+	local durationObject = bar._essenceDurationObject
+	if not durationObject then
+		durationObject = durationUtil.CreateDuration()
+		bar._essenceDurationObject = durationObject
+	end
+	local startTime = bar._essenceNextTick - tickDuration
+	durationObject:SetTimeFromStart(startTime, tickDuration)
+	fill:SetTimerDuration(durationObject, Enum.StatusBarInterpolation.Immediate, Enum.StatusBarTimerDirection.ElapsedTime)
+	bar._essenceDurationFill = fill
+	return true
 end
 
 function ResourceBars.ComputeEssenceFraction(bar, current, maxPower, now, powerEnum)
@@ -702,7 +726,7 @@ function ResourceBars.UpdateEssenceSegments(bar, cfg, current, maxPower, fractio
 					sb:SetStatusBarColor(wantR, wantG, wantB, wantA or 1)
 				end
 				sb._rbColorInitialized = true
-			elseif ResourceBars.RefreshStatusBarGradient then
+			elseif ResourceBars.RefreshStatusBarGradient and (cfg.useGradient == true or sb._rbGradientEnabled) then
 				ResourceBars.RefreshStatusBarGradient(sb, cfg, wantR, wantG, wantB, wantA)
 			end
 			if sb._rbSegmentBg and useSegmentStyling then
@@ -894,6 +918,7 @@ function ResourceBars.HideDiscreteSegments(bar)
 			if mark then mark:Hide() end
 		end
 	end
+	bar._rbDiscreteSegmentsActive = false
 end
 
 function ResourceBars.LayoutDiscreteSegments(bar, cfg, count, texturePath)
@@ -974,10 +999,10 @@ function ResourceBars.LayoutDiscreteSegments(bar, cfg, count, texturePath)
 			local fillColor = fill._lastColor or bar._lastColor or bar._baseColor
 			if fillColor then
 				ResourceBars.SetStatusBarColorWithGradient(fill, cfg, fillColor[1] or 1, fillColor[2] or 1, fillColor[3] or 1, fillColor[4] or 1, true)
-			elseif ResourceBars.RefreshStatusBarGradient then
+			elseif ResourceBars.RefreshStatusBarGradient and (cfg.useGradient == true or fill._rbGradientEnabled) then
 				ResourceBars.RefreshStatusBarGradient(fill, cfg)
 			end
-		elseif ResourceBars.RefreshStatusBarGradient then
+		elseif ResourceBars.RefreshStatusBarGradient and (cfg.useGradient == true or fill._rbGradientEnabled) then
 			ResourceBars.RefreshStatusBarGradient(fill, cfg)
 		end
 		if not segment._rbSegmentBg then
@@ -1258,7 +1283,7 @@ function ResourceBars.UpdateDiscreteSegments(bar, cfg, count, value, color, text
 					fill:SetStatusBarColor(segmentR, segmentG, segmentB, segmentA or 1)
 				end
 				fill._rbSegmentFillColorKey = segmentColorKey
-			elseif ResourceBars.RefreshStatusBarGradient then
+			elseif ResourceBars.RefreshStatusBarGradient and (cfg.useGradient == true or fill._rbGradientEnabled) then
 				ResourceBars.RefreshStatusBarGradient(fill, cfg, segmentR, segmentG, segmentB, segmentA)
 			end
 
@@ -1284,6 +1309,7 @@ function ResourceBars.UpdateDiscreteSegments(bar, cfg, count, value, color, text
 			if segments[i]._rbSegmentBorder then segments[i]._rbSegmentBorder:Hide() end
 		end
 	end
+	bar._rbDiscreteSegmentsActive = true
 end
 
 function ResourceBars.ApplyBarGradient(bar, cfg, baseR, baseG, baseB, baseA, force)
@@ -1389,6 +1415,7 @@ end
 
 function ResourceBars.RefreshStatusBarGradient(bar, cfg, r, g, b, a)
 	if not bar then return end
+	if not (cfg and cfg.useGradient == true) and not bar._rbGradientEnabled then return end
 	if cfg and cfg.useGradient == true then
 		local br, bg, bb, ba = r, g, b, a
 		if br == nil then
@@ -1398,7 +1425,7 @@ function ResourceBars.RefreshStatusBarGradient(bar, cfg, r, g, b, a)
 				br, bg, bb, ba = bar:GetStatusBarColor()
 			end
 		end
-		ResourceBars.ApplyBarGradient(bar, cfg, br or 1, bg or 1, bb or 1, ba or 1, true)
+		ResourceBars.ApplyBarGradient(bar, cfg, br or 1, bg or 1, bb or 1, ba or 1)
 	elseif bar._rbGradientEnabled then
 		local br, bg, bb, ba = r, g, b, a
 		if br == nil then

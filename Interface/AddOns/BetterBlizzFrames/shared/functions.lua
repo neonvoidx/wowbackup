@@ -1,0 +1,397 @@
+-- Taint/combat lockdown concerns, use own to avoid Show call especially
+local FrameFadeManager = CreateFrame("Frame");
+local fadeFrames = {};
+
+function BBF.UIFrameFadeContains(frame)
+	for i, fadeFrame in ipairs(fadeFrames) do
+		if fadeFrame == frame then
+			return true;
+		end
+	end
+	return false;
+end
+
+function BBF.UIFrameFade_OnUpdate(self, elapsed)
+	local index = 1;
+
+	while fadeFrames[index] do
+		local frame = fadeFrames[index];
+		local fadeInfo = frame and frame.BBF_fadeInfo;
+
+		if not frame or not fadeInfo then
+			if frame then
+				frame.BBF_fadeInfo = nil;
+			end
+			tDeleteItem(fadeFrames, frame);
+		else
+			fadeInfo.fadeTimer = (fadeInfo.fadeTimer or 0) + elapsed;
+
+			if fadeInfo.fadeTimer < fadeInfo.timeToFade then
+				if fadeInfo.mode == "IN" then
+					frame:SetAlpha((fadeInfo.fadeTimer / fadeInfo.timeToFade) * (fadeInfo.endAlpha - fadeInfo.startAlpha) + fadeInfo.startAlpha);
+				else -- "OUT"
+					frame:SetAlpha(((fadeInfo.timeToFade - fadeInfo.fadeTimer) / fadeInfo.timeToFade) * (fadeInfo.startAlpha - fadeInfo.endAlpha) + fadeInfo.endAlpha);
+				end
+			else
+				frame:SetAlpha(fadeInfo.endAlpha);
+
+				if fadeInfo.fadeHoldTime and fadeInfo.fadeHoldTime > 0 then
+					fadeInfo.fadeHoldTime = fadeInfo.fadeHoldTime - elapsed;
+				else
+					tDeleteItem(fadeFrames, frame);
+
+					local finishedFunc = fadeInfo.finishedFunc;
+					if finishedFunc then
+						fadeInfo.finishedFunc = nil;
+						finishedFunc(fadeInfo.finishedArg1, fadeInfo.finishedArg2, fadeInfo.finishedArg3, fadeInfo.finishedArg4);
+					end
+
+					frame.BBF_fadeInfo = nil;
+				end
+			end
+
+			index = index + 1;
+		end
+	end
+
+	if #fadeFrames == 0 then
+		self:SetScript("OnUpdate", nil);
+	end
+end
+
+function BBF.UIFrameFade(frame, fadeInfo)
+	if not frame then
+		return;
+	end
+
+	fadeInfo = fadeInfo or {};
+
+	if not fadeInfo.mode then
+		fadeInfo.mode = "IN";
+	end
+
+	if fadeInfo.mode == "IN" then
+		if fadeInfo.startAlpha == nil then fadeInfo.startAlpha = 0 end
+		if fadeInfo.endAlpha == nil then fadeInfo.endAlpha = 1 end
+	elseif fadeInfo.mode == "OUT" then
+		if fadeInfo.startAlpha == nil then fadeInfo.startAlpha = 1 end
+		if fadeInfo.endAlpha == nil then fadeInfo.endAlpha = 0 end
+	end
+
+	frame.BBF_fadeInfo = fadeInfo;
+
+	frame:SetAlpha(fadeInfo.startAlpha);
+	--frame:Show();
+
+	if not BBF.UIFrameFadeContains(frame) then
+		tinsert(fadeFrames, frame);
+	end
+
+	FrameFadeManager:SetScript("OnUpdate", BBF.UIFrameFade_OnUpdate);
+end
+
+function BBF.UIFrameFadeIn(frame, timeToFade, startAlpha, endAlpha)
+	BBF.UIFrameFade(frame, {
+		mode = "IN",
+		timeToFade = timeToFade,
+		startAlpha = startAlpha,
+		endAlpha = endAlpha,
+	});
+end
+
+function BBF.UIFrameFadeOut(frame, timeToFade, startAlpha, endAlpha)
+	BBF.UIFrameFade(frame, {
+		mode = "OUT",
+		timeToFade = timeToFade,
+		startAlpha = startAlpha,
+		endAlpha = endAlpha,
+	});
+end
+
+function BBF.UIFrameFadeRemoveFrame(frame)
+	tDeleteItem(fadeFrames, frame);
+	if frame then
+		frame.BBF_fadeInfo = nil;
+	end
+end
+
+function BBF.UIFrameIsFading(frame)
+	return frame and BBF.UIFrameFadeContains(frame) or false;
+end
+
+local function GetDefaultPartyFrame(i)
+	local EM = EditModeManagerFrame
+	if EM and EM.UseRaidStylePartyFrames and EM:UseRaidStylePartyFrames() then
+		return _G["CompactPartyFrameMember" .. i] or _G["CompactRaidFrame" .. i]
+	else
+		if C_CVar.GetCVarBool("useCompactPartyFrames") then
+			return _G["CompactPartyFrameMember" .. i] or _G["CompactRaidFrame" .. i]
+		else
+			local defaultPartyFrame = true
+			return _G["PartyMemberFrame" .. i] or (_G["PartyFrame"] and _G["PartyFrame"]["MemberFrame" .. i]), defaultPartyFrame
+		end
+	end
+end
+
+function BBF.GetPartyFrameUnit(frame)
+	if not frame then return end
+	local unit = frame.displayedUnit or frame.unit
+	if not unit and frame.GetAttribute then
+		unit = frame:GetAttribute("unit")
+		if unit then
+			local suffix = frame:GetAttribute("unitsuffix")
+			if suffix and suffix ~= "" then
+				unit = unit .. suffix
+			end
+		end
+	end
+	if type(unit) ~= "string" or unit == "" then return end
+	return unit
+end
+
+function BBF.FindPartyFrame(i)
+	if BetterBlizzFramesDB.partyCastBarForceDefaultPartyFrames then
+		local defaultPartyFrame, isDefault = GetDefaultPartyFrame(i)
+		return defaultPartyFrame, isDefault
+    elseif C_AddOns.IsAddOnLoaded("DandersFrames") then
+		local _, instanceType = IsInInstance()
+    	local isInArena = instanceType == "arena"
+        if isInArena then
+            local arenaPartyFrame = _G["DandersArenaHeaderUnitButton" .. i]
+            if arenaPartyFrame then
+                return arenaPartyFrame
+            end
+        end
+        local partyFrame = _G["DandersPartyHeaderUnitButton" .. i]
+        if partyFrame then
+            return partyFrame
+        end
+    elseif C_AddOns.IsAddOnLoaded("ElvUI") and ElvUI[1].private.unitframe.disabledBlizzardFrames.party then
+        return _G["ElvUF_PartyGroup1UnitButton" .. i]
+	elseif _G["ERFPartyHeader"] then
+        if i == 5 then
+            local euiSelfFrame = _G["ERFPartySelfButton"]
+            if euiSelfFrame and euiSelfFrame:IsShown() then
+                return euiSelfFrame
+            end
+        end
+        local partyFrame = _G["ERFPartyHeader"][i] or _G["ERFPartyHeaderUnitButton" .. i]
+        if partyFrame then
+            return partyFrame
+        end
+    elseif C_AddOns.IsAddOnLoaded("Cell") then
+        return _G["CellPartyFrameHeaderUnitButton" .. i]
+    elseif C_AddOns.IsAddOnLoaded("Grid2") then
+        for h = 1, 8 do
+            local header = _G["Grid2LayoutHeader" .. h]
+            if not header then break end
+            if header:IsShown() then
+                return _G["Grid2LayoutHeader" .. h .. "UnitButton" .. i]
+            end
+        end
+    elseif C_AddOns.IsAddOnLoaded("VuhDo") then
+        return _G["Vd1H" .. i]
+    elseif (C_AddOns.IsAddOnLoaded("ShadowedUnitFrames") and ShadowUF and ShadowUF.db) then
+        -- Checking if player is shown in party group by selecting the "Show Player in party" option
+        local showPlayerInParty = ShadowUF.db.profile.units.party.showPlayer
+        -- If player is shown in party, just return default SUF PartyFrames
+        if showPlayerInParty then
+            return _G["SUFHeaderpartyUnitButton" .. i]
+        end
+        -- Otherwise, there's no player frame in the SUF Partyframes group
+        -- Still need to verify that playerframe exists, users can disable playerframe for party and use some other playerframe addon
+        -- In which case we wouldn't be able to support it (since we don't know what they use for playerframe), but at least it wouldnt throw errors
+        if (_G["SUFUnitplayer"] and i == 1) then
+            return _G["SUFUnitplayer"]
+        end
+        -- Every other partymember will be shifted upwards by 1, SUF would basically start at frame2
+        -- From testing, the sorting order doesnt matter, SUF still calls them sequentially from 1 to 4
+        return _G["SUFHeaderpartyUnitButton" .. i - 1]
+    else
+		local defaultPartyFrame, isDefault = GetDefaultPartyFrame(i)
+		return defaultPartyFrame, isDefault
+    end
+end
+
+function BBF.ActionBarCDNumberSize(reset)
+	if not BetterBlizzFramesDB.actionBarCDNumberSizeChange then
+		if BBF.actionBarCDNumberSizeActive then
+			reset = true
+			BBF.actionBarCDNumberSizeActive = nil
+		else
+			return
+		end
+	end
+
+	local cdTextSize = reset and 1 or (BetterBlizzFramesDB.actionBarCDNumberScale or 1)
+
+	local function SetCooldownFontScale(button, size)
+		if button then
+			local cd = button.Cooldown or button.cooldown
+			if cd then
+				local r1 = cd:GetRegions()
+				if r1 and r1.GetObjectType and r1:GetObjectType() == "FontString" then
+					r1:SetScale(size)
+				end
+			end
+		end
+	end
+
+	local function ApplyToAll(size)
+		if C_AddOns.IsAddOnLoaded("Bartender4") then
+			for i = 1, 180 do
+				SetCooldownFontScale(_G["BT4Button" .. i], size)
+			end
+			for i = 1, 10 do
+				SetCooldownFontScale(_G["BT4PetButton" .. i], size)
+			end
+		else
+			for i = 1, 12 do
+				SetCooldownFontScale(_G["ActionButton" .. i], size)
+				SetCooldownFontScale(_G["MultiBarBottomLeftButton" .. i], size)
+				SetCooldownFontScale(_G["MultiBarBottomRightButton" .. i], size)
+				SetCooldownFontScale(_G["MultiBarRightButton" .. i], size)
+				SetCooldownFontScale(_G["MultiBarLeftButton" .. i], size)
+				SetCooldownFontScale(_G["MultiBar5Button" .. i], size)
+				SetCooldownFontScale(_G["MultiBar6Button" .. i], size)
+				SetCooldownFontScale(_G["MultiBar7Button" .. i], size)
+				SetCooldownFontScale(_G["PetActionButton" .. i], size)
+				SetCooldownFontScale(_G["StanceButton" .. i], size)
+			end
+		end
+	end
+
+	if C_AddOns.IsAddOnLoaded("Bartender4") and not BBF.actionBarCDNumberSizeActive then
+		ApplyToAll(cdTextSize)
+	else
+		ApplyToAll(cdTextSize)
+	end
+
+	BBF.actionBarCDNumberSizeActive = BetterBlizzFramesDB.actionBarCDNumberSizeChange or nil
+end
+
+local LSM = LibStub("LibSharedMedia-3.0")
+local FontValidatorString = UIParent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+
+local function IsFontFileValid(path)
+	if type(path) ~= "string" or path == "" then
+		return false
+	end
+
+	local ok = pcall(FontValidatorString.SetFont, FontValidatorString, path, 12, "")
+	if not ok then
+		return false
+	end
+
+	return path
+end
+
+BBF.LSM = setmetatable({}, {
+	__index = function(_, k)
+		if k == "Register" then
+			return function(_, mediaType, key, data, langMask)
+				if mediaType == "font" and not IsFontFileValid(data) then
+					return false
+				end
+				return LSM:Register(mediaType, key, data, langMask)
+			end
+		end
+
+		return LSM[k]
+	end
+})
+
+BBF.allLocales = LSM.LOCALE_BIT_western+LSM.LOCALE_BIT_ruRU+LSM.LOCALE_BIT_zhCN+LSM.LOCALE_BIT_zhTW+LSM.LOCALE_BIT_koKR
+
+LSM:Register("statusbar", "Blizzard DF", [[Interface\TargetingFrame\UI-TargetingFrame-BarFill]])
+LSM:Register("statusbar", "Blizzard CF", [[Interface\AddOns\BetterBlizzFrames\media\ui-statusbar-cf]])
+LSM:Register("statusbar", "Blizzard Retail Bar", [[Interface\AddOns\BetterBlizzFrames\media\blizzTex\BlizzardRetailBar]])
+LSM:Register("statusbar", "Blizzard Retail Bar Crop", [[Interface\AddOns\BetterBlizzFrames\media\blizzTex\BlizzardRetailBarCrop]])
+LSM:Register("statusbar", "Blizzard Retail Bar Crop 2", [[Interface\AddOns\BetterBlizzFrames\media\blizzTex\BlizzardRetailBarCrop2]])
+LSM:Register("statusbar", "Smooth", [[Interface\Addons\BetterBlizzFrames\media\smooth]])
+LSM:Register("statusbar", "Smooth", [[Interface\Addons\BetterBlizzFrames\media\Minimalist]])
+LSM:Register("sound", "Lossa Countered", [[Interface\AddOns\BetterBlizzFrames\media\LossaCountered.ogg]])
+LSM:Register("font", "PT Sans Narrow Bold", "Interface\\AddOns\\BetterBlizzFrames\\media\\PTSansNarrow-Bold.ttf", BBF.allLocales)
+
+function BBF.AddFont(name)
+	if type(name) ~= "string" then
+		C_Timer.After(4, function()
+			BBF.Print(L["Print_AddFont_Name_Not_String"])
+		end)
+		return
+	end
+	if name:sub(-4):lower() == ".ttf" then
+		name = name:sub(1, -5)
+	end
+	BBF.LSM:Register("font", name, "Interface\\AddOns\\CustomMedia\\" .. name .. ".ttf", BBF.allLocales)
+end
+
+function BBF.AddTexture(name)
+	if type(name) ~= "string" then
+		C_Timer.After(4, function()
+			BBF.Print(L["Print_AddTexture_Name_Not_String"])
+		end)
+		return
+	end
+	BBF.LSM:Register("statusbar", name, "Interface\\AddOns\\CustomMedia\\" .. name)
+end
+
+function BBF.HidePlayerFrame()
+	if BetterBlizzFramesDB.playerFrameHidden then
+		PlayerFrame:SetParent(BBF.hiddenFrame)
+		BBF.hiddenPlayerFrame = true
+	elseif BBF.hiddenPlayerFrame then
+		PlayerFrame:SetParent(UIParent)
+		BBF.hiddenPlayerFrame = nil
+	end
+end
+
+local combatQueue = {}
+local combatCheck = CreateFrame("Frame")
+function BBF.RunAfterCombat(func)
+	if not InCombatLockdown() then
+		func()
+		return
+	end
+
+	table.insert(combatQueue, func)
+
+	if not combatCheck:IsEventRegistered("PLAYER_REGEN_ENABLED") then
+		combatCheck:RegisterEvent("PLAYER_REGEN_ENABLED")
+		combatCheck:SetScript("OnEvent", function(self, event)
+			if event == "PLAYER_REGEN_ENABLED" then
+				for _, queuedFunc in ipairs(combatQueue) do
+					pcall(queuedFunc)
+				end
+				combatQueue = {}
+				self:UnregisterEvent(event)
+			end
+		end)
+	end
+end
+StaticPopupDialogs["BBF_SWEEPYBOOP_CLASSCOLOR_CONFLICT"] = {
+    text = "|A:gmchat-icon-blizz:16:16|a Better|cff00c0ffBlizz|rFrames:\n\nThe \"SweepyBoop\" addon has started enabling a bunch of settings by default causing a bunch of bug reports my way.\n\n|cffffd100Class Color Unit Frames|r setting is one of them and it conflicts with BetterBlizzFrames' healthbar color and texture settings.\n\nIt has been turned off. Reload to fix.",
+    button1 = "Reload",
+    OnAccept = function()
+        ReloadUI()
+    end,
+    timeout = 0,
+    whileDead = true,
+}
+
+local function CheckSweepyBoopClassColor()
+    BBF.sweepyBoopCheckScheduled = false
+    if BBF.sweepyBoopConflictHandled then return end
+    local misc = SweepyBoop and SweepyBoop.db and SweepyBoop.db.profile and SweepyBoop.db.profile.misc
+    if not misc or not misc.classColorUnitFrames then return end
+
+    misc.classColorUnitFrames = false
+    BBF.sweepyBoopConflictHandled = true
+    StaticPopup_Show("BBF_SWEEPYBOOP_CLASSCOLOR_CONFLICT")
+end
+
+function BBF.CheckSweepyBoopClassColorConflict()
+    if BBF.sweepyBoopConflictHandled or BBF.sweepyBoopCheckScheduled then return end
+    BBF.sweepyBoopCheckScheduled = true
+    C_Timer.After(5, CheckSweepyBoopClassColor)
+end

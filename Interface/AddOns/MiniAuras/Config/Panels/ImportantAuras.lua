@@ -204,6 +204,21 @@ local function BuildInstance(panel, options, defaults)
 	size.Checkbox:SetPoint("LEFT", parent, "LEFT", enabledColumnWidth * (3 + catOffset), 0)
 	size.Checkbox:SetPoint("TOP", showDefensivesChk, "TOP", 0, 0)
 
+	local showNumbersChk = mini:Checkbox({
+		Parent = parent,
+		LabelText = L["Show numbers"],
+		Tooltip = L["Shows cooldown numbers."],
+		GetValue = function()
+			return options.Icons.EnableNumbers ~= false
+		end,
+		SetValue = function(value)
+			options.Icons.EnableNumbers = value
+			config:Apply(moduleName.ImportantAuras)
+		end,
+	})
+
+	showNumbersChk:SetPoint("TOPLEFT", showImportantChk, "BOTTOMLEFT", 0, -verticalSpacing)
+
 	local growDdl = helpers:BuildGrowDropdown({
 		Parent = parent,
 		Items = GROW_OPTIONS,
@@ -213,7 +228,7 @@ local function BuildInstance(panel, options, defaults)
 		SettingsKey = moduleName.ImportantAuras,
 	})
 
-	growDdl.Label:SetPoint("TOPLEFT", showImportantChk, "BOTTOMLEFT", 4, -verticalSpacing * 2)
+	growDdl.Label:SetPoint("TOPLEFT", showNumbersChk, "BOTTOMLEFT", 4, -verticalSpacing * 2)
 
 	size.Pixel.Slider:SetPoint("TOPLEFT", growDdl, "BOTTOMLEFT", 0, -verticalSpacing * 3)
 
@@ -247,6 +262,25 @@ local function BuildInstance(panel, options, defaults)
 	})
 
 	iconSpacing.Slider:SetPoint("TOPLEFT", size.Pixel.Slider, "BOTTOMLEFT", 0, -verticalSpacing * 2)
+
+	local fontScale = helpers:BuildClampedSlider({
+		Parent = parent,
+		LabelText = L["Font Scale"],
+		Tooltip = L["Scales this module's countdown text, leaving the icon size alone."],
+		Min = 0.5,
+		Max = 2.0,
+		Step = 0.05,
+		Default = defaults.FontScale,
+		Fallback = defaults.FontScale,
+		Float = true,
+		Width = sliderWidth,
+		Target = options,
+		Key = "FontScale",
+		SettingsKey = moduleName.ImportantAuras,
+	})
+
+	fontScale.Slider:SetPoint("LEFT", iconSpacing.Slider, "RIGHT", horizontalSpacing, 0)
+	fontScale.Slider:SetPoint("TOP", iconSpacing.Slider, "TOP", 0, 0)
 
 	local offsetX = helpers:BuildOffsetSliders({
 		Parent = parent,

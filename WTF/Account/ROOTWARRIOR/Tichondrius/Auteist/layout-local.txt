@@ -2,8 +2,8 @@ Version: 1
 Frame: sArena
 FrameLevel: 1
 Anchor: CENTER
-X: 509
-Y: 77
+X: 480
+Y: 28
 W: 1
 H: 1
 Frame: StaticPopup1

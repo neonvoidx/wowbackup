@@ -74,6 +74,15 @@ local function RegisterAuraSounds(activePool)
 		and moduleUtil:IsModuleEnabled(ModuleName.HealerCrowdControl)
 		and next(activePool) ~= nil
 
+	-- The pass after the pull has to find the stamp exactly where this one left it.
+	if not auraSounds:CanRegister() then
+		if enabled or next(registeredAuraSoundsByUnit) ~= nil then
+			auraSounds:NoteSkipped()
+		end
+
+		return
+	end
+
 	if not enabled then
 		ClearAuraSounds()
 		return

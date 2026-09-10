@@ -1,4 +1,4 @@
-local MODULE_MAJOR, MINOR = "EnhanceQoLEditMode-1.0", 21000000
+local MODULE_MAJOR, MINOR = "EnhanceQoLEditMode-1.0", 21000001
 local LibStub = _G.LibStub
 assert(LibStub, MODULE_MAJOR .. " requires LibStub")
 local C_Timer = _G.C_Timer
@@ -440,6 +440,7 @@ lib.SettingType = lib.SettingType or CopyTable(Enum.EditModeSettingDisplayType)
 lib.SettingType.Color = "Color"
 lib.SettingType.CheckboxColor = "CheckboxColor"
 lib.SettingType.DropdownColor = "DropdownColor"
+lib.SettingType.SoundDropdown = "SoundDropdown"
 lib.SettingType.MultiDropdown = "MultiDropdown"
 lib.SettingType.Divider = "Divider"
 lib.SettingType.Collapsible = "Collapsible"
@@ -1861,6 +1862,106 @@ local function dropdownSet(data)
 	Internal:RequestRefreshSettings()
 end
 
+local function playSoundDropdownPreview(data, option)
+	if not (data and option) then return end
+	local value = option.value ~= nil and option.value or option.text
+	if value == nil or value == "" then return end
+
+	if type(data.previewSoundFunc) == "function" then
+		local ok = pcall(data.previewSoundFunc, value, option, data)
+		if ok then return end
+	end
+
+	local sound
+	if type(data.soundResolver) == "function" then
+		local ok, resolved = pcall(data.soundResolver, value, option, data)
+		if ok and resolved then sound = resolved end
+	end
+	if not sound and LibStub then
+		local lsm = LibStub("LibSharedMedia-3.0", true)
+		if lsm then sound = lsm:Fetch("sound", value, true) end
+	end
+	sound = sound or value
+
+	local channel = data.playbackChannel or "Master"
+	local soundID = tonumber(sound)
+	if soundID and _G.PlaySound then
+		_G.PlaySound(soundID, channel)
+	elseif type(sound) == "string" and sound ~= "" and _G.PlaySoundFile then
+		_G.PlaySoundFile(sound, channel)
+	end
+end
+
+local function resetSoundDropdownPreview(button)
+	local preview = button and button.EnhanceQoLSoundPreview
+	if not preview then return end
+	preview.setting = nil
+	preview.option = nil
+	preview:Hide()
+end
+
+local function ensureSoundDropdownPreview(button)
+	if not button then return nil end
+	local preview = button.EnhanceQoLSoundPreview
+	if preview then return preview end
+
+	preview = CreateFrame("Button", nil, button)
+	preview:SetSize(18, 18)
+	preview:SetFrameLevel((button:GetFrameLevel() or 1) + 2)
+	if preview.SetMouseClickEnabled then preview:SetMouseClickEnabled(true) end
+	if preview.SetPropagateMouseClicks then preview:SetPropagateMouseClicks(false) end
+	if preview.SetPropagateMouseMotion then preview:SetPropagateMouseMotion(false) end
+	local icon = preview:CreateTexture(nil, "ARTWORK")
+	icon:SetAllPoints()
+	icon:SetTexture("Interface\\Common\\VoiceChat-Speaker")
+	icon:SetVertexColor(0.78, 0.72, 0.62, 1)
+	preview.Icon = icon
+	preview:SetScript("OnEnter", function(self)
+		if self.Icon then self.Icon:SetVertexColor(1, 0.82, 0.35, 1) end
+		if _G.GameTooltip then
+			local option = self.option
+			_G.GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+			_G.GameTooltip:SetText((option and (option.text or option.label)) or (_G.SOUND or "Sound"))
+			_G.GameTooltip:AddLine(_G.SOUND or "Sound", 1, 1, 1, true)
+			_G.GameTooltip:Show()
+		end
+	end)
+	preview:SetScript("OnLeave", function(self)
+		if self.Icon then self.Icon:SetVertexColor(0.78, 0.72, 0.62, 1) end
+		if _G.GameTooltip then _G.GameTooltip:Hide() end
+	end)
+	preview:SetScript("OnClick", function(self, mouseButton)
+		if mouseButton and mouseButton ~= "LeftButton" then return end
+		if self.StopPropagation then self:StopPropagation() end
+		playSoundDropdownPreview(self.setting, self.option)
+	end)
+	button.EnhanceQoLSoundPreview = preview
+	if button.HookScript and not button.EnhanceQoLSoundPreviewOnHideHooked then
+		button:HookScript("OnHide", resetSoundDropdownPreview)
+		button.EnhanceQoLSoundPreviewOnHideHooked = true
+	end
+	return preview
+end
+
+local function attachSoundDropdownPreview(description, data, option)
+	if not (description and description.AddInitializer) then return end
+	description:AddInitializer(function(button)
+		resetSoundDropdownPreview(button)
+		local value = option and (option.value ~= nil and option.value or option.text)
+		if value == nil or value == "" then return end
+		local preview = ensureSoundDropdownPreview(button)
+		if not preview then return end
+		preview:ClearAllPoints()
+		preview:SetPoint("RIGHT", button, "RIGHT", -8, 0)
+		preview:SetFrameLevel((button:GetFrameLevel() or 1) + 2)
+		preview.setting = data
+		preview.option = option
+		if preview.Icon then preview.Icon:SetVertexColor(0.78, 0.72, 0.62, 1) end
+		preview:Show()
+	end)
+	if description.AddResetter then description:AddResetter(resetSoundDropdownPreview) end
+end
+
 local function buildDropdown()
 	local mixin = {}
 
@@ -1883,17 +1984,31 @@ local function buildDropdown()
 		if data.generator then
 			self.Dropdown:SetupMenu(function(owner, rootDescription)
 				if data.height then rootDescription:SetScrollMode(data.height) end
-				pcall(data.generator, owner, rootDescription, data)
+				local function attachPreview(description, value, label)
+					if data.kind ~= lib.SettingType.SoundDropdown then return end
+					local option
+					if type(value) == "table" then
+						option = value
+					else
+						option = { value = value, text = label or tostring(value or "") }
+					end
+					attachSoundDropdownPreview(description, data, option)
+				end
+				pcall(data.generator, owner, rootDescription, data, attachPreview)
 			end)
 		elseif data.values then
 			self.Dropdown:SetupMenu(function(_, rootDescription)
 				if data.height then rootDescription:SetScrollMode(data.height) end
-				for _, value in next, data.values do
-					rootDescription:CreateRadio(value.text, dropdownGet, dropdownSet, {
+				local values = (type(data.values) == "function" and data.values() or data.values) or {}
+				for _, value in next, values do
+					local option = {
 						get = data.get,
 						set = data.set,
-						value = value.value or value.text,
-					})
+						text = value.text or value.label,
+						value = value.value ~= nil and value.value or value.text or value.label,
+					}
+					local radio = rootDescription:CreateRadio(option.text, dropdownGet, dropdownSet, option)
+					if data.kind == lib.SettingType.SoundDropdown then attachSoundDropdownPreview(radio, data, option) end
 				end
 			end)
 		end
@@ -3058,6 +3173,7 @@ end
 local builders = {
 	[lib.SettingType.Checkbox] = buildCheckbox,
 	[lib.SettingType.Dropdown] = buildDropdown,
+	[lib.SettingType.SoundDropdown] = buildDropdown,
 	[lib.SettingType.MultiDropdown] = buildMultiDropdown,
 	[lib.SettingType.Slider] = buildSlider,
 	[lib.SettingType.Input] = buildInput,

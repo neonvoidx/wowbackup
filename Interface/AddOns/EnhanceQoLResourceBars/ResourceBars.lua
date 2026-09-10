@@ -200,8 +200,6 @@ local ResourcebarVars = {
 	DEFAULT_POWER_WIDTH = 200,
 	DEFAULT_POWER_HEIGHT = 20,
 	BLIZZARD_TEX = "Interface\\TargetingFrame\\UI-StatusBar",
-	RUNE_UPDATE_INTERVAL = 0.1,
-	ESSENCE_UPDATE_INTERVAL = 0.1,
 	REFRESH_DEBOUNCE = 0.05,
 	AURA_DURATION_COLOR_UPDATE_INTERVAL = 1,
 	REANCHOR_REFRESH = { reanchorOnly = true },
@@ -274,6 +272,21 @@ function ResourceBars.GetRuntimeCfgSubtable(cfg, key)
 	return bucket
 end
 local RB = ResourcebarVars
+RB.RUNE_COOLDOWN_FORMATTER = _G.C_StringUtil.CreateNumericRuleFormatter()
+RB.RUNE_COOLDOWN_FORMATTER:SetBreakpoints({
+	{
+		threshold = 0,
+		step = 1,
+		rounding = Enum.NumericRuleFormatRounding.Up,
+		format = "%.0f",
+	},
+})
+RB.RUNE_DURATION_TEXT_OPTIONS = {
+	useProfileConfig = false,
+	formatter = RB.RUNE_COOLDOWN_FORMATTER,
+	zeroDurationText = "",
+	expiredText = "",
+}
 ResourceBars._validFrameStrata = ResourceBars._validFrameStrata or {}
 for _, strata in ipairs(RB.STRATA_ORDER) do
 	ResourceBars._validFrameStrata[strata] = true
@@ -726,7 +739,6 @@ ResourceBars.POWER_TYPE_STYLE_OVERRIDE_KEYS = {
 	"runeCooldownColor",
 }
 
-local wasMax = false
 local wasMaxPower = {}
 local curve = C_CurveUtil and C_CurveUtil.CreateColorCurve()
 local curvePower = {}
@@ -823,9 +835,15 @@ function ResourceBars.ConfigureHealPredictionCalculator(calc, settings)
 	end
 end
 
-function ResourceBars.RefreshHealPredictionCalculator(bar, unit, settings)
+function ResourceBars.PrepareHealPredictionCalculator(bar, settings)
 	local calc = ResourceBars.EnsureHealPredictionCalculator(bar)
 	ResourceBars.ConfigureHealPredictionCalculator(calc, settings)
+	if bar then bar._healPredictionCalculator = calc end
+	return calc
+end
+
+function ResourceBars.RefreshHealPredictionCalculator(bar, unit)
+	local calc = bar and bar._healPredictionCalculator
 	if calc and _G.UnitGetDetailedHealPrediction then _G.UnitGetDetailedHealPrediction(unit, "player", calc) end
 	return calc
 end
@@ -1017,8 +1035,10 @@ function ResourceBars.CanUsePlayerAuraBySpellID()
 	return C_UnitAuras and type(C_UnitAuras.GetPlayerAuraBySpellID) == "function" or false
 end
 
-function ResourceBars.RequiresNativeAuraPowerBackend()
-	return ResourceBars.IsNativeAuraPowerClient() and not ResourceBars.CanUsePlayerAuraBySpellID()
+function ResourceBars.RequiresNativeAuraPowerBackend(pType)
+	if not ResourceBars.IsNativeAuraPowerClient() then return false end
+	if pType == "EBON_MIGHT" then return true end
+	return not ResourceBars.CanUsePlayerAuraBySpellID()
 end
 
 function ResourceBars.GetNativeAuraPowerBackend()
@@ -1039,7 +1059,7 @@ function ResourceBars.IsAuraPowerBarTypeAvailable(pType)
 	if cfg.stateProvider then return true end
 	-- Soul Fragments use the unrestricted spell-cast-count API, not aura data.
 	if cfg.spellCastCountId then return true end
-	if ResourceBars.CanUsePlayerAuraBySpellID() or not ResourceBars.IsNativeAuraPowerClient() then return true end
+	if not ResourceBars.RequiresNativeAuraPowerBackend(pType) then return true end
 	local backend = ResourceBars.GetNativeAuraPowerBackend()
 	if not backend then return false end
 	return not backend.CanHandlePowerType or backend:CanHandlePowerType(pType) == true
@@ -1165,19 +1185,48 @@ local function clampStaggerThreshold(value, fallback)
 end
 
 local function getStaggerThresholds(cfg)
-	local low = clampStaggerThreshold(cfg and cfg.staggerLowThreshold, RB.STAGGER_LOW_THRESHOLD)
-	local medium = clampStaggerThreshold(cfg and cfg.staggerMediumThreshold, RB.STAGGER_MEDIUM_THRESHOLD)
-	local high = clampStaggerThreshold(cfg and cfg.staggerHighThreshold, RB.STAGGER_EXTRA_THRESHOLD_HIGH)
-	local veryHigh = clampStaggerThreshold(cfg and cfg.staggerVeryHighThreshold, RB.STAGGER_EXTRA_THRESHOLD_VERY_HIGH)
-	local extreme = clampStaggerThreshold(cfg and cfg.staggerExtremeThreshold, RB.STAGGER_EXTRA_THRESHOLD_EXTREME)
-	local critical = clampStaggerThreshold(cfg and cfg.staggerCriticalThreshold, RB.STAGGER_EXTRA_THRESHOLD_CRITICAL)
+	local rawLow = cfg and cfg.staggerLowThreshold
+	local rawMedium = cfg and cfg.staggerMediumThreshold
+	local rawHigh = cfg and cfg.staggerHighThreshold
+	local rawVeryHigh = cfg and cfg.staggerVeryHighThreshold
+	local rawExtreme = cfg and cfg.staggerExtremeThreshold
+	local rawCritical = cfg and cfg.staggerCriticalThreshold
+	local state = cfg and ResourceBars.GetRuntimeCfgState and ResourceBars.GetRuntimeCfgState(cfg, true)
+	local cache = state and state.staggerThresholdCache
+	if
+		cache
+		and cache.rawLow == rawLow
+		and cache.rawMedium == rawMedium
+		and cache.rawHigh == rawHigh
+		and cache.rawVeryHigh == rawVeryHigh
+		and cache.rawExtreme == rawExtreme
+		and cache.rawCritical == rawCritical
+	then
+		return cache.low, cache.medium, cache.high, cache.veryHigh, cache.extreme, cache.critical
+	end
+
+	local low = clampStaggerThreshold(rawLow, RB.STAGGER_LOW_THRESHOLD)
+	local medium = clampStaggerThreshold(rawMedium, RB.STAGGER_MEDIUM_THRESHOLD)
+	local high = clampStaggerThreshold(rawHigh, RB.STAGGER_EXTRA_THRESHOLD_HIGH)
+	local veryHigh = clampStaggerThreshold(rawVeryHigh, RB.STAGGER_EXTRA_THRESHOLD_VERY_HIGH)
+	local extreme = clampStaggerThreshold(rawExtreme, RB.STAGGER_EXTRA_THRESHOLD_EXTREME)
+	local critical = clampStaggerThreshold(rawCritical, RB.STAGGER_EXTRA_THRESHOLD_CRITICAL)
 
 	if high < medium then high = medium end
 	if veryHigh < high then veryHigh = high end
 	if extreme < veryHigh then extreme = veryHigh end
 	if critical < extreme then critical = extreme end
 
-	return low / 100, medium / 100, high / 100, veryHigh / 100, extreme / 100, critical / 100
+	low, medium, high, veryHigh, extreme, critical = low / 100, medium / 100, high / 100, veryHigh / 100, extreme / 100, critical / 100
+	if state then
+		cache = cache or {}
+		cache.rawLow, cache.rawMedium, cache.rawHigh = rawLow, rawMedium, rawHigh
+		cache.rawVeryHigh, cache.rawExtreme, cache.rawCritical = rawVeryHigh, rawExtreme, rawCritical
+		cache.low, cache.medium, cache.high = low, medium, high
+		cache.veryHigh, cache.extreme, cache.critical = veryHigh, extreme, critical
+		state.staggerThresholdCache = cache
+	end
+	return low, medium, high, veryHigh, extreme, critical
 end
 
 local function getStaggerBaseColor(info, cfg, state)
@@ -1297,26 +1346,21 @@ function ResourceBars.EnsureHealthTempMaxHealthLossBars(bar)
 	return bar.tempMaxHealthLoss, bar.tempMaxHealthLossMask
 end
 
-function ResourceBars.UpdateHealthTempMaxHealthLoss(bar, settings, smooth)
+function ResourceBars.ApplyHealthTempMaxHealthLossAppearance(bar, settings)
 	local tempLoss, mask = ResourceBars.EnsureHealthTempMaxHealthLossBars(bar)
 	if not tempLoss then return end
-	local loss = (_G.GetUnitTotalModifiedMaxHealthPercent and _G.GetUnitTotalModifiedMaxHealthPercent("player")) or 0
 	local reverseHealth = settings and settings.reverseFill == true
 	if mask then
 		mask:ClearAllPoints()
 		mask:SetAllPoints(bar)
 		mask:SetMinMaxValues(0, 1)
 		ResourceBars.SetStatusBarReverseFill(mask, not reverseHealth)
-		setBarValue(mask, loss, smooth)
-		mask:Show()
 	end
 	if tempLoss then
 		tempLoss:ClearAllPoints()
 		tempLoss:SetAllPoints(bar)
 		tempLoss:SetMinMaxValues(0, 1)
 		ResourceBars.SetStatusBarReverseFill(tempLoss, not reverseHealth)
-		setBarValue(tempLoss, loss, smooth)
-		tempLoss:Show()
 	end
 	if mask then
 		mask:SetStatusBarTexture("Interface\\Buttons\\WHITE8x8")
@@ -1330,6 +1374,21 @@ function ResourceBars.UpdateHealthTempMaxHealthLoss(bar, settings, smooth)
 	if tempLoss.SetStatusBarDesaturated then tempLoss:SetStatusBarDesaturated(false) end
 	if tempLoss.SetFrameStrata and bar.GetFrameStrata then tempLoss:SetFrameStrata(bar:GetFrameStrata()) end
 	if tempLoss.SetFrameLevel and bar.GetFrameLevel then tempLoss:SetFrameLevel((bar:GetFrameLevel() or 0) + 2) end
+	bar._tempMaxHealthLossSmooth = settings and settings.smoothFill == true
+end
+
+function ResourceBars.UpdateHealthTempMaxHealthLoss(bar)
+	if not bar then return end
+	local tempLoss, mask = bar.tempMaxHealthLoss, bar.tempMaxHealthLossMask
+	if not tempLoss then return end
+	local loss = (_G.GetUnitTotalModifiedMaxHealthPercent and _G.GetUnitTotalModifiedMaxHealthPercent("player")) or 0
+	local smooth = bar._tempMaxHealthLossSmooth == true
+	if mask then
+		setBarValue(mask, loss, smooth)
+		if not mask:IsShown() then mask:Show() end
+	end
+	setBarValue(tempLoss, loss, smooth)
+	if not tempLoss:IsShown() then tempLoss:Show() end
 end
 
 requestActiveRefresh = function(specIndex, opts)
@@ -1343,12 +1402,14 @@ requestActiveRefresh = function(specIndex, opts)
 end
 addon.Aura.functions.requestActiveRefresh = requestActiveRefresh
 
-local function deactivateRuneTicker(bar)
+local function deactivateRuneDurationBindings(bar)
 	if not bar then return end
-	if bar:GetScript("OnUpdate") == bar._runeUpdater then bar:SetScript("OnUpdate", nil) end
-	bar._runesAnimating = false
-	bar._runeAccum = 0
-	bar._runeUpdateInterval = nil
+	if bar.runes and addon.functions and addon.functions.SetDurationTextBindingEnabled then
+		for i = 1, 6 do
+			local sb = bar.runes[i]
+			if sb then addon.functions.SetDurationTextBindingEnabled(sb, "runeDurationText", false) end
+		end
+	end
 end
 
 function ResourceBars.DeactivateAuraDurationTicker(bar)
@@ -3419,9 +3480,9 @@ function ResourceBars.HideSegmentChildren(segments, clearCooldownText)
 			if sb._rbSegmentBg then sb._rbSegmentBg:Hide() end
 			if sb._rbSegmentBorder then sb._rbSegmentBorder:Hide() end
 			if clearCooldownText and sb.fs then
+				if addon.functions and addon.functions.SetDurationTextBindingEnabled then addon.functions.SetDurationTextBindingEnabled(sb, "runeDurationText", false) end
 				sb.fs:SetText("")
 				sb.fs:Hide()
-				sb._lastRemain = nil
 			end
 		end
 	end
@@ -3562,7 +3623,7 @@ function ResourceBars.EnsureHealthFillGeometryBar(bar, cfg)
 end
 
 function ResourceBars.SyncHealthFillGeometryBar(bar, cfg, value, maximum, smooth)
-	local geometry = ResourceBars.EnsureHealthFillGeometryBar(bar, cfg)
+	local geometry = bar and bar._rbHealthFillGeometryBar
 	if not geometry then return nil end
 	if maximum ~= nil then geometry:SetMinMaxValues(0, maximum) end
 	if value ~= nil then setBarValue(geometry, value, smooth) end
@@ -3757,6 +3818,19 @@ function ResourceBars.SyncAbsorbBarAppearance(bar, cfg, forceLayout)
 
 	local absorb = bar.absorbBar
 	local secondary = bar.absorbSecondaryBar
+	local color = cfg.absorbUseCustomColor and cfg.absorbColor
+	local r = color and color[1] or 0.8
+	local g = color and color[2] or 0.8
+	local b = color and color[3] or 0.8
+	local a = color and color[4] or 0.8
+	absorb:SetStatusBarColor(r, g, b, a)
+	if secondary then secondary:SetStatusBarColor(r, g, b, a) end
+	absorb._lastColor = absorb._lastColor or {}
+	absorb._lastColor[1], absorb._lastColor[2], absorb._lastColor[3], absorb._lastColor[4] = r, g, b, a
+	if secondary then
+		secondary._lastColor = secondary._lastColor or {}
+		secondary._lastColor[1], secondary._lastColor[2], secondary._lastColor[3], secondary._lastColor[4] = r, g, b, a
+	end
 	local desiredTexture = resolveTexture({ barTexture = cfg.absorbTexture or cfg.barTexture })
 	local currentTexture = absorb.GetStatusBarTexture and absorb:GetStatusBarTexture() or nil
 	local currentPath = currentTexture and currentTexture.GetTexture and currentTexture:GetTexture() or nil
@@ -3816,6 +3890,14 @@ function ResourceBars.SyncHealAbsorbBarAppearance(bar, cfg)
 	if not bar or not bar.healAbsorbBar then return end
 	cfg = cfg or {}
 	local healAbsorb = bar.healAbsorbBar
+	local color = cfg.healAbsorbUseCustomColor and cfg.healAbsorbColor
+	local r = color and color[1] or 1
+	local g = color and color[2] or 0.3
+	local b = color and color[3] or 0.3
+	local a = color and color[4] or 0.7
+	healAbsorb:SetStatusBarColor(r, g, b, a)
+	healAbsorb._lastColor = healAbsorb._lastColor or {}
+	healAbsorb._lastColor[1], healAbsorb._lastColor[2], healAbsorb._lastColor[3], healAbsorb._lastColor[4] = r, g, b, a
 	healAbsorb:SetStatusBarTexture(resolveTexture({ barTexture = cfg.healAbsorbTexture or cfg.barTexture or "SOLID" }))
 	if ResourceBars.ApplyStatusBarTexturePixelSnapping then ResourceBars.ApplyStatusBarTexturePixelSnapping(healAbsorb, 0) end
 	if healAbsorb.SetStatusBarDesaturated then healAbsorb:SetStatusBarDesaturated(false) end
@@ -4016,6 +4098,7 @@ end
 
 function ResourceBars.GetThresholdColorModeAndCap(pType)
 	if pType == "VOID_METAMORPHOSIS" then return "ABSOLUTE", tonumber(RB.ABSOLUTE_THRESHOLD_COLOR_VALUE_CAP_VOID_METAMORPHOSIS) or 50, 1 end
+	if pType == "EBON_MIGHT" then return "PERCENT", tonumber(RB.ABSOLUTE_THRESHOLD_COLOR_VALUE_CAP_PERCENT) or 100, 0 end
 	local auraCfg = RB.AURA_POWER_CONFIG and RB.AURA_POWER_CONFIG[pType]
 	if auraCfg and auraCfg.durationAsValue then return "ABSOLUTE", tonumber(RB.ABSOLUTE_THRESHOLD_COLOR_VALUE_CAP_DURATION) or 20, 1 end
 	if
@@ -4220,9 +4303,6 @@ end
 function ResourceBars.ResolveAbsoluteThresholdColorForSecretPower(cfg, pType, powerEnum, curPower, maxPower, baseColor, maxColor)
 	if type(cfg) ~= "table" or cfg.useAbsoluteThresholdColors ~= true then return nil end
 	if not powerEnum then return nil end
-	local points = ResourceBars.NormalizeAbsoluteThresholdColorPoints(cfg, pType)
-	if not points or #points == 0 then return nil end
-
 	if not (C_CurveUtil and C_CurveUtil.CreateColorCurve and CreateColor and Enum and Enum.LuaCurveType and Enum.LuaCurveType.Step) then return nil end
 	local br, bg, bb, ba = 1, 1, 1, 1
 	if type(baseColor) == "table" then
@@ -4240,56 +4320,76 @@ function ResourceBars.ResolveAbsoluteThresholdColorForSecretPower(cfg, pType, po
 		ma = maxColor[4] or ma
 	end
 
-	local pointsCache = ResourceBars.GetRuntimeCfgSubtable(cfg, "absoluteThresholdColorCache")[pType]
 	local curveCacheByType = ResourceBars.GetRuntimeCfgSubtable(cfg, "absoluteThresholdCurveCache")
-	local signature = ResourceBars.HashCurveStep(17, pointsCache and pointsCache.signature or #points)
-	signature = ResourceBars.HashCurveColor(signature, { br, bg, bb, ba })
-	signature = ResourceBars.HashCurveStep(signature, useMaxColor and 1 or 0)
-	if useMaxColor then signature = ResourceBars.HashCurveColor(signature, { mr, mg, mb, ma }) end
 	local curveCache = curveCacheByType[pType]
 	local curve = curveCache and curveCache.curve or nil
-	if not (curve and curveCache.signature == signature) then
-		curve = C_CurveUtil.CreateColorCurve()
-		if not curve then return nil end
-		curve:SetType(Enum.LuaCurveType.Step)
+	local runtimeRevision = ResourceBars._runtimeConfigRevision or 0
+	local cacheMatches = curve
+		and curveCache.revision == runtimeRevision
+		and curveCache.br == br
+		and curveCache.bg == bg
+		and curveCache.bb == bb
+		and curveCache.ba == ba
+		and curveCache.useMaxColor == useMaxColor
+		and curveCache.mr == mr
+		and curveCache.mg == mg
+		and curveCache.mb == mb
+		and curveCache.ma == ma
+	if not cacheMatches then
+		local points = ResourceBars.NormalizeAbsoluteThresholdColorPoints(cfg, pType)
+		if not points or #points == 0 then return nil end
+		local pointsCache = ResourceBars.GetRuntimeCfgSubtable(cfg, "absoluteThresholdColorCache")[pType]
+		local signature = ResourceBars.HashCurveStep(17, pointsCache and pointsCache.signature or #points)
+		signature = ResourceBars.HashCurveColor(signature, { br, bg, bb, ba })
+		signature = ResourceBars.HashCurveStep(signature, useMaxColor and 1 or 0)
+		if useMaxColor then signature = ResourceBars.HashCurveColor(signature, { mr, mg, mb, ma }) end
+		if not (curve and curveCache.signature == signature) then
+			curve = C_CurveUtil.CreateColorCurve()
+			if not curve then return nil end
+			curve:SetType(Enum.LuaCurveType.Step)
 
-		local lastR, lastG, lastB, lastA = br, bg, bb, ba
-		local lastProgress = nil
-		local firstProgress = nil
-		if points[1] then
-			firstProgress = tonumber(points[1].value) or 0
-			firstProgress = firstProgress / 100
-			if firstProgress < 0 then firstProgress = 0 end
-			if firstProgress > 1 then firstProgress = 1 end
-		end
-		if firstProgress == nil or firstProgress > 0 then curve:AddPoint(0.0, CreateColor(br, bg, bb, ba)) end
-
-		for i = 1, #points do
-			local point = points[i]
-			local value = tonumber(point and point.value) or 0
-			local progress = value / 100
-			if progress < 0 then progress = 0 end
-			if progress > 1 then progress = 1 end
-			if not (useMaxColor and progress >= 1) then
-				local color = point and point.color
-				local r = color and color[1] or 1
-				local g = color and color[2] or 1
-				local b = color and color[3] or 1
-				local a = color and color[4] or 1
-				curve:AddPoint(progress, CreateColor(r, g, b, a))
-				lastR, lastG, lastB, lastA = r, g, b, a
-				lastProgress = progress
+			local lastR, lastG, lastB, lastA = br, bg, bb, ba
+			local lastProgress = nil
+			local firstProgress = nil
+			if points[1] then
+				firstProgress = tonumber(points[1].value) or 0
+				firstProgress = firstProgress / 100
+				if firstProgress < 0 then firstProgress = 0 end
+				if firstProgress > 1 then firstProgress = 1 end
 			end
+			if firstProgress == nil or firstProgress > 0 then curve:AddPoint(0.0, CreateColor(br, bg, bb, ba)) end
+
+			for i = 1, #points do
+				local point = points[i]
+				local value = tonumber(point and point.value) or 0
+				local progress = value / 100
+				if progress < 0 then progress = 0 end
+				if progress > 1 then progress = 1 end
+				if not (useMaxColor and progress >= 1) then
+					local color = point and point.color
+					local r = color and color[1] or 1
+					local g = color and color[2] or 1
+					local b = color and color[3] or 1
+					local a = color and color[4] or 1
+					curve:AddPoint(progress, CreateColor(r, g, b, a))
+					lastR, lastG, lastB, lastA = r, g, b, a
+					lastProgress = progress
+				end
+			end
+			if useMaxColor then
+				curve:AddPoint(1.0, CreateColor(mr, mg, mb, ma))
+			elseif lastProgress == nil or lastProgress < 1 then
+				curve:AddPoint(1.0, CreateColor(lastR, lastG, lastB, lastA))
+			end
+			curveCache = curveCache or {}
+			curveCache.signature = signature
+			curveCache.curve = curve
+			curveCacheByType[pType] = curveCache
 		end
-		if useMaxColor then
-			curve:AddPoint(1.0, CreateColor(mr, mg, mb, ma))
-		elseif lastProgress == nil or lastProgress < 1 then
-			curve:AddPoint(1.0, CreateColor(lastR, lastG, lastB, lastA))
-		end
-		curveCacheByType[pType] = {
-			signature = signature,
-			curve = curve,
-		}
+		curveCache.revision = runtimeRevision
+		curveCache.br, curveCache.bg, curveCache.bb, curveCache.ba = br, bg, bb, ba
+		curveCache.useMaxColor = useMaxColor
+		curveCache.mr, curveCache.mg, curveCache.mb, curveCache.ma = mr, mg, mb, ma
 	end
 
 	local curveColor = getPowerPercent("player", powerEnum, curPower, maxPower, curve)
@@ -4409,7 +4509,7 @@ local function applyBarFillColor(bar, cfg, pType)
 	bar._usingAbsoluteThresholdColor = usingThresholdColor and not usingMaxColor
 	if pType and pType ~= "RUNES" then SetColorCurvePointsPower(pType, cfg.maxColor, bar._baseColor) end
 	configureSpecialTexture(bar, pType, cfg)
-	if ResourceBars.RefreshStatusBarGradient then ResourceBars.RefreshStatusBarGradient(bar, cfg) end
+	if ResourceBars.RefreshStatusBarGradient and (cfg.useGradient == true or bar._rbGradientEnabled) then ResourceBars.RefreshStatusBarGradient(bar, cfg) end
 	if secretCurveColor and secretCurveColor.GetRGBA and bar.GetStatusBarTexture then
 		local tex = bar:GetStatusBarTexture()
 		if tex and tex.SetVertexColor then tex:SetVertexColor(secretCurveColor:GetRGBA()) end
@@ -4449,7 +4549,32 @@ local function configureBarBehavior(bar, cfg, pType)
 	if bar.SetReverseFill then bar:SetReverseFill(cfg.reverseFill == true) end
 
 	if pType ~= "RUNES" and bar.SetOrientation then bar:SetOrientation((cfg.verticalFill == true) and "VERTICAL" or "HORIZONTAL") end
-	if pType == "HEALTH" and bar.absorbBar then ResourceBars.SyncAbsorbBarAppearance(bar, cfg, true) end
+	if pType == "HEALTH" then
+		bar._cfg = cfg
+		bar._healthTextStyle = cfg.textStyle or "PERCENT"
+		bar._healthTextNeedsPercent = bar._healthTextStyle:find("PERCENT", 1, true) ~= nil
+		bar._healthColorNeedsPercent = not addon.variables.isMidnight and cfg.useBarColor ~= true and cfg.useClassColor ~= true
+		bar._healthDamageNeedsClamp = cfg.absorbEnabled ~= false
+			and cfg.absorbReverseFill == true
+			and cfg.absorbDontOverflowHealthBar == true
+			and cfg.absorbOverfill ~= true
+		bar._healthHealNeedsClamp = cfg.healAbsorbEnabled ~= false
+			and cfg.healAbsorbDontOverflowHealthBar == true
+			and cfg.healAbsorbReverseFill ~= true
+		if cfg.useMaxColor then
+			SetColorCurvePoints(cfg.maxColor or RB.DEFAULT_MAX_COLOR)
+		else
+			SetColorCurvePoints()
+		end
+		if bar._healthTextNeedsPercent or bar._healthColorNeedsPercent or bar._healthDamageNeedsClamp or bar._healthHealNeedsClamp then
+			ResourceBars.PrepareHealPredictionCalculator(bar, cfg)
+		end
+		ResourceBars.EnsureHealthFillGeometryBar(bar, cfg)
+		ResourceBars.ApplyHealthTempMaxHealthLossAppearance(bar, cfg)
+		setBarDesaturated(bar, cfg.useClassColor == true or isDefaultTextureSelection(cfg, "HEALTH"))
+		if bar.absorbBar then ResourceBars.SyncAbsorbBarAppearance(bar, cfg, true) end
+		if bar.healAbsorbBar then ResourceBars.SyncHealAbsorbBarAppearance(bar, cfg) end
+	end
 
 	if bar._rbBackdropState and bar._rbBackdropState.insets then applyStatusBarInsets(bar, bar._rbBackdropState.insets, true) end
 end
@@ -5207,34 +5332,59 @@ end
 
 function updateHealthBar(evt)
 	if healthBar and healthBar:IsShown() then
+		local damageAbsorbEvent = evt == "UNIT_ABSORB_AMOUNT_CHANGED"
+		local healAbsorbEvent = evt == "UNIT_HEAL_ABSORB_AMOUNT_CHANGED"
+		local tempMaxHealthEvent = evt == "UNIT_MAX_HEALTH_MODIFIERS_CHANGED"
+		local maxHealthEvent = evt == "UNIT_MAXHEALTH"
+		local healthValueEvent = evt == "UNIT_HEALTH" or maxHealthEvent
+		local fullRefresh = not damageAbsorbEvent and not healAbsorbEvent and not tempMaxHealthEvent and not healthValueEvent
+		local updateHealthValue = fullRefresh or healthValueEvent
+		local updateDamageAbsorb = fullRefresh or maxHealthEvent or damageAbsorbEvent
+		local updateHealAbsorb = fullRefresh or maxHealthEvent or healAbsorbEvent
+		local updateTempMaxHealth = fullRefresh or maxHealthEvent or tempMaxHealthEvent
+		local settings = healthBar._cfg or {}
+		local smooth = settings.smoothFill == true
+		if tempMaxHealthEvent then
+			ResourceBars.UpdateHealthTempMaxHealthLoss(healthBar)
+			return
+		end
 		local previousMax = healthBar._lastMax or 0
-		local newMax = UnitHealthMax("player") or previousMax or 1
+		local newMax = previousMax
 
-		if previousMax ~= newMax then
-			healthBar._lastMax = newMax
-			healthBar:SetMinMaxValues(0, newMax)
-			local currentValue = healthBar:GetValue()
-			local canClamp = not (issecretvalue and (issecretvalue(currentValue) or issecretvalue(newMax)))
-			if canClamp then
-				currentValue = currentValue or 0
-				if currentValue > newMax then healthBar:SetValue(newMax) end
+		if updateHealthValue then
+			newMax = UnitHealthMax("player") or previousMax or 1
+			if previousMax ~= newMax then
+				healthBar._lastMax = newMax
+				healthBar:SetMinMaxValues(0, newMax)
+				local currentValue = healthBar:GetValue()
+				local canClamp = not (issecretvalue and (issecretvalue(currentValue) or issecretvalue(newMax)))
+				if canClamp then
+					currentValue = currentValue or 0
+					if currentValue > newMax then healthBar:SetValue(newMax) end
+				end
 			end
 		end
-		local maxHealth = healthBar._lastMax or newMax or 1
-		local curHealth = UnitHealth("player")
-		local settings = ResourceBars.GetRuntimeBarConfig("HEALTH", healthBar) or {}
-		local smooth = settings.smoothFill == true
-		local calc = ResourceBars.RefreshHealPredictionCalculator(healthBar, "player", settings)
+		local maxHealth = healthBar._lastMax or newMax
+		if not maxHealth or maxHealth <= 0 then maxHealth = UnitHealthMax("player") or 1 end
+		local damageNeedsClamp = updateDamageAbsorb and healthBar._healthDamageNeedsClamp == true
+		local healNeedsClamp = updateHealAbsorb and healthBar._healthHealNeedsClamp == true
+		local curHealth = (updateHealthValue or damageNeedsClamp) and UnitHealth("player") or nil
+		local textStyle = healthBar._healthTextStyle or "PERCENT"
+		local textNeedsPercent = healthBar._healthTextNeedsPercent == true
+		local colorNeedsPercent = healthBar._healthColorNeedsPercent == true
+		local needsCalculator = (updateHealthValue and (textNeedsPercent or colorNeedsPercent)) or damageNeedsClamp or healNeedsClamp
+		local calc = needsCalculator and ResourceBars.RefreshHealPredictionCalculator(healthBar, "player") or nil
+
+		if updateHealthValue then
 		setBarValue(healthBar, curHealth, smooth)
 		ResourceBars.SyncHealthFillGeometryBar(healthBar, settings, curHealth, maxHealth, smooth)
 		healthBar._lastVal = curHealth
 		if ResourceBars.ApplyHideWhenEmptyAlphaToFrame then ResourceBars.ApplyHideWhenEmptyAlphaToFrame(healthBar, settings, curHealth) end
-		ResourceBars.UpdateHealthTempMaxHealthLoss(healthBar, settings, smooth)
 
 		local percent = getHealthPercent("player", curHealth, maxHealth, calc)
 		local percentStr = formatPercentDisplay(percent, settings)
 		if healthBar.text then
-			local style = settings and settings.textStyle or "PERCENT"
+			local style = textStyle
 			local useShortNumbers = settings.shortNumbers ~= false
 			if style == "NONE" then
 				if healthBar._textShown then
@@ -5317,14 +5467,6 @@ function updateHealthBar(evt)
 					end
 				end
 			else
-				if wasMax ~= settings.useMaxColor then
-					wasMax = settings.useMaxColor
-					if settings.useMaxColor then
-						SetColorCurvePoints(settings.maxColor or RB.DEFAULT_MAX_COLOR)
-					else
-						SetColorCurvePoints()
-					end
-				end
 				local color = UnitHealthPercent("player", true, curve)
 				if color then
 					local tex = healthBar:GetStatusBarTexture()
@@ -5339,13 +5481,12 @@ function updateHealthBar(evt)
 				end
 			end
 		end
-		if ResourceBars.RefreshStatusBarGradient then ResourceBars.RefreshStatusBarGradient(healthBar, settings) end
-		-- Keep custom textures tintable; unconditional desaturation turns them white/gray after reload.
-		local shouldDesaturateHealth = settings.useClassColor == true or isDefaultTextureSelection(settings, "HEALTH")
-		setBarDesaturated(healthBar, shouldDesaturateHealth)
+		end
+
+		if updateTempMaxHealth then ResourceBars.UpdateHealthTempMaxHealthLoss(healthBar) end
 
 		local absorbBar = healthBar.absorbBar
-		if absorbBar then
+		if updateDamageAbsorb and absorbBar then
 			local absorbSecondaryBar = healthBar.absorbSecondaryBar
 			local absorbEnabled = settings.absorbEnabled ~= false
 			if not absorbEnabled or maxHealth <= 0 then
@@ -5359,7 +5500,6 @@ function updateHealthBar(evt)
 				setBarValue(absorbBar, 0, smooth)
 				absorbBar._lastVal = 0
 			else
-				ResourceBars.SyncAbsorbBarAppearance(healthBar, settings)
 				local reverseAbsorb = settings.absorbReverseFill == true and settings.absorbOverfill ~= true
 				local absorbDontOverflow = reverseAbsorb and settings.absorbDontOverflowHealthBar == true
 				local showPrimary = not absorbDontOverflow
@@ -5375,29 +5515,12 @@ function updateHealthBar(evt)
 						absorbSecondaryBar:Hide()
 					end
 				end
-				-- Color
-				local defAbsorb = { 0.8, 0.8, 0.8, 0.8 }
-				local col = (settings.absorbUseCustomColor and settings.absorbColor) or defAbsorb
-				local ar, ag, ab, aa = col[1] or defAbsorb[1], col[2] or defAbsorb[2], col[3] or defAbsorb[3], col[4] or defAbsorb[4]
-				if not absorbBar._lastColor or absorbBar._lastColor[1] ~= ar or absorbBar._lastColor[2] ~= ag or absorbBar._lastColor[3] ~= ab or absorbBar._lastColor[4] ~= aa then
-					absorbBar:SetStatusBarColor(ar, ag, ab, aa)
-					absorbBar._lastColor = { ar, ag, ab, aa }
-				end
-				if absorbSecondaryBar and (not absorbSecondaryBar._lastColor or absorbSecondaryBar._lastColor[1] ~= ar or absorbSecondaryBar._lastColor[2] ~= ag or absorbSecondaryBar._lastColor[3] ~= ab or absorbSecondaryBar._lastColor[4] ~= aa) then
-					absorbSecondaryBar:SetStatusBarColor(ar, ag, ab, aa)
-					absorbSecondaryBar._lastColor = { ar, ag, ab, aa }
-				end
-
 				local abs
-				local totalAbs
-				if calc and calc.GetTotalDamageAbsorbs then totalAbs = calc:GetTotalDamageAbsorbs() end
+				local totalAbs = UnitGetTotalAbsorbs("player") or 0
 				if absorbDontOverflow and calc and calc.GetDamageAbsorbs then
 					abs = calc:GetDamageAbsorbs() or 0
-				elseif totalAbs ~= nil then
-					abs = totalAbs or 0
 				else
-					abs = UnitGetTotalAbsorbs("player") or 0
-					totalAbs = abs
+					abs = totalAbs
 				end
 				local glowAbsorbValue = totalAbs ~= nil and totalAbs or abs
 				if settings.absorbSample then
@@ -5446,12 +5569,12 @@ function updateHealthBar(evt)
 					end
 				end
 			end
-		elseif healthBar.overAbsorbGlow then
+		elseif updateDamageAbsorb and healthBar.overAbsorbGlow then
 			healthBar.overAbsorbGlow:Hide()
 		end
 
 		local healAbsorbBar = healthBar.healAbsorbBar
-		if healAbsorbBar then
+		if updateHealAbsorb and healAbsorbBar then
 			local healAbsorbEnabled = settings.healAbsorbEnabled ~= false
 			if not healAbsorbEnabled or maxHealth <= 0 then
 				healAbsorbBar:Hide()
@@ -5459,20 +5582,10 @@ function updateHealthBar(evt)
 				healAbsorbBar._lastVal = 0
 			else
 				if not healAbsorbBar:IsShown() then healAbsorbBar:Show() end
-				ResourceBars.SyncHealAbsorbBarAppearance(healthBar, settings)
-				local col = settings.healAbsorbUseCustomColor and settings.healAbsorbColor
-				local hr, hg, hb, ha = 1, 0.3, 0.3, 0.7
-				if col then hr, hg, hb, ha = col[1] or hr, col[2] or hg, col[3] or hb, col[4] or ha end
-				if not healAbsorbBar._lastColor or healAbsorbBar._lastColor[1] ~= hr or healAbsorbBar._lastColor[2] ~= hg or healAbsorbBar._lastColor[3] ~= hb or healAbsorbBar._lastColor[4] ~= ha then
-					healAbsorbBar:SetStatusBarColor(hr, hg, hb, ha)
-					healAbsorbBar._lastColor = { hr, hg, hb, ha }
-				end
 
 				local healAbsorb
 				if settings.healAbsorbDontOverflowHealthBar == true and settings.healAbsorbReverseFill ~= true and calc and calc.GetHealAbsorbs then
 					healAbsorb = calc:GetHealAbsorbs() or 0
-				elseif calc and calc.GetTotalHealAbsorbs then
-					healAbsorb = calc:GetTotalHealAbsorbs() or 0
 				else
 					healAbsorb = (UnitGetTotalHealAbsorbs and UnitGetTotalHealAbsorbs("player")) or 0
 				end
@@ -5788,8 +5901,7 @@ function createHealthBar()
 		healthBar._cfg = settings
 		applyBarFrameLayers(healthBar, settings)
 		applyBackdrop(healthBar, settings)
-		if healthBar.absorbBar then ResourceBars.SyncAbsorbBarAppearance(healthBar, settings, true) end
-		if healthBar.healAbsorbBar then ResourceBars.SyncHealAbsorbBarAppearance(healthBar, settings) end
+		configureBarBehavior(healthBar, settings, "HEALTH")
 		mainFrame:Show()
 		healthBar:Show()
 		return
@@ -5912,11 +6024,10 @@ function createHealthBar()
 	healAbsorbBar:Hide()
 	healthBar.healAbsorbBar = healAbsorbBar
 	applyBarFrameLayers(healthBar, settings)
-	ResourceBars.SyncAbsorbBarAppearance(healthBar, settings, true)
-	ResourceBars.SyncHealAbsorbBarAppearance(healthBar, settings)
+	configureBarBehavior(healthBar, settings, "HEALTH")
 	if healthBar._rbBackdropState and healthBar._rbBackdropState.insets then applyStatusBarInsets(healthBar, healthBar._rbBackdropState.insets, true) end
 
-	updateHealthBar("UNIT_ABSORB_AMOUNT_CHANGED")
+	updateHealthBar("FULL_REFRESH")
 
 	-- Ensure any bars anchored to Health get reanchored when Health changes size
 	healthBar:SetScript("OnSizeChanged", function()
@@ -6301,7 +6412,7 @@ function updatePowerBar(type, runeSlot)
 	local bar = powerbar[type]
 	if not bar or not bar:IsShown() then return end
 	local nativeAuraCfg = RB.AURA_POWER_CONFIG and RB.AURA_POWER_CONFIG[type]
-	if nativeAuraCfg and not nativeAuraCfg.spellCastCountId and ResourceBars.RequiresNativeAuraPowerBackend() then
+	if nativeAuraCfg and not nativeAuraCfg.spellCastCountId and ResourceBars.RequiresNativeAuraPowerBackend(type) then
 		local backend = ResourceBars.GetNativeAuraPowerBackend()
 		if backend and backend.UpdatePowerBar then backend:UpdatePowerBar(type, bar) end
 		-- A missing/failed backend must fail closed instead of falling through to
@@ -6327,9 +6438,11 @@ function updatePowerBar(type, runeSlot)
 		for i = 1, 6 do
 			local start, duration, readyFlag = GetRuneCooldown(i)
 			bar._rune[i] = bar._rune[i] or {}
-			bar._rune[i].start = start or 0
-			bar._rune[i].duration = duration or 0
-			bar._rune[i].ready = readyFlag
+			local info = bar._rune[i]
+			info.start = start or 0
+			info.duration = duration or 0
+			info.ready = readyFlag
+			if not info.durationObject then info.durationObject = _G.C_DurationUtil.CreateDuration() end
 			if not readyFlag then
 				count = count + 1
 				charging[count] = i
@@ -6424,18 +6537,27 @@ function updatePowerBar(type, runeSlot)
 			bar._runeOrder[i] = nil
 		end
 
-		local anyActive = #charging > 0
 		local now = GetTime()
-		local soonest
 		for i = 1, 6 do
 			local runeIndex = bar._runeOrder[i]
 			local info = runeIndex and bar._rune[runeIndex]
 			local sb = bar.runes and bar.runes[i]
 			if sb and info then
 				local fill = sb.fill or sb
-				local prog = info.ready and 1 or min(1, max(0, (now - info.start) / max(info.duration, 1)))
-				fill:SetValue(prog)
-				local wantReady = info.ready or prog >= 1
+				local textDurationObject = info.durationObject
+				if info.ready then
+					info.durationObject:SetTimeFromStart(now - 1, 1)
+				else
+					info.durationObject:SetTimeFromStart(info.start, info.duration)
+					if info.start > now then
+						if not info.queuedTextDurationObject then info.queuedTextDurationObject = _G.C_DurationUtil.CreateDuration() end
+						local endTime = info.start + info.duration
+						info.queuedTextDurationObject:SetTimeFromEnd(endTime, endTime - now)
+						textDurationObject = info.queuedTextDurationObject
+					end
+				end
+				fill:SetTimerDuration(info.durationObject, Enum.StatusBarInterpolation.Immediate, Enum.StatusBarTimerDirection.ElapsedTime)
+				local wantReady = info.ready
 				local colorUpdated = false
 				if sb._isReady ~= wantReady or (wantReady and readyChanged) or ((not wantReady) and cooldownChanged) then
 					sb._isReady = wantReady
@@ -6457,9 +6579,9 @@ function updatePowerBar(type, runeSlot)
 				end
 				if not colorUpdated then
 					if wantReady then
-						if ResourceBars.RefreshStatusBarGradient then ResourceBars.RefreshStatusBarGradient(fill, cfg, readyR, readyG, readyB, readyA) end
+						if ResourceBars.RefreshStatusBarGradient and (cfg.useGradient == true or fill._rbGradientEnabled) then ResourceBars.RefreshStatusBarGradient(fill, cfg, readyR, readyG, readyB, readyA) end
 					else
-						if ResourceBars.RefreshStatusBarGradient then ResourceBars.RefreshStatusBarGradient(fill, cfg, cooldownR, cooldownG, cooldownB, cooldownA) end
+						if ResourceBars.RefreshStatusBarGradient and (cfg.useGradient == true or fill._rbGradientEnabled) then ResourceBars.RefreshStatusBarGradient(fill, cfg, cooldownR, cooldownG, cooldownB, cooldownA) end
 					end
 				end
 				if sb._rbSegmentBg then
@@ -6493,163 +6615,30 @@ function updatePowerBar(type, runeSlot)
 					end
 				end
 				if sb.fs then
-					if cfg.showCooldownText then
-						local remain = ceil((info.start + info.duration) - now)
-						if remain > 0 and not info.ready then
-							sb.fs:SetText(tostring(remain))
-						else
-							sb.fs:SetText("")
-						end
+					if cfg.showCooldownText and not info.ready then
+						addon.functions.ConfigureDurationTextBinding(sb, "runeDurationText", sb.fs, textDurationObject, RB.RUNE_DURATION_TEXT_OPTIONS)
+						sb.fs:Show()
 					else
+						addon.functions.SetDurationTextBindingEnabled(sb, "runeDurationText", false)
 						sb.fs:SetText("")
+						sb.fs:Hide()
 					end
 				end
 			end
-		end
-		if anyActive then
-			for _, idx in ipairs(charging) do
-				local info = bar._rune[idx]
-				if info and not info.ready then
-					local remain = (info.start + info.duration) - now
-					if remain and remain > 0 then
-						if not soonest or remain < soonest then soonest = remain end
-					end
-				end
-			end
-		end
-
-		if soonest then
-			bar._runeUpdateInterval = min(RB.RUNE_UPDATE_INTERVAL, max(0.05, soonest))
-		else
-			bar._runeUpdateInterval = nil
-		end
-
-		bar._runeConfig = cfg
-		if anyActive then
-			bar._runesAnimating = true
-			if not bar._runeUpdater then
-				bar._runeUpdater = function(self, elapsed)
-					if not self:IsShown() then
-						deactivateRuneTicker(self)
-						return
-					end
-					self._runeAccum = (self._runeAccum or 0) + (elapsed or 0)
-					local threshold = self._runeUpdateInterval or RB.RUNE_UPDATE_INTERVAL
-					if self._runeAccum >= threshold then
-						self._runeAccum = 0
-						local n = GetTime()
-						local cfgOnUpdate = self._runeConfig or {}
-						local rr = self._runeReadyR or readyR
-						local rg = self._runeReadyG or readyG
-						local rb = self._runeReadyB or readyB
-						local ra = self._runeReadyA or readyA or 1
-						local cr = self._runeCooldownR or cooldownR
-						local cg = self._runeCooldownG or cooldownG
-						local cb = self._runeCooldownB or cooldownB
-						local ca = self._runeCooldownA or cooldownA or 1
-						local forceReady = (self._appliedRuneReadyR ~= rr) or (self._appliedRuneReadyG ~= rg) or (self._appliedRuneReadyB ~= rb) or (self._appliedRuneReadyA ~= ra)
-						local forceCooldown = (self._appliedRuneCooldownR ~= cr) or (self._appliedRuneCooldownG ~= cg) or (self._appliedRuneCooldownB ~= cb) or (self._appliedRuneCooldownA ~= ca)
-						self._appliedRuneReadyR, self._appliedRuneReadyG, self._appliedRuneReadyB, self._appliedRuneReadyA = rr, rg, rb, ra
-						self._appliedRuneCooldownR, self._appliedRuneCooldownG, self._appliedRuneCooldownB, self._appliedRuneCooldownA = cr, cg, cb, ca
-						local allReady = true
-						for pos = 1, 6 do
-							local ri = self._runeOrder and self._runeOrder[pos]
-							local data = ri and self._rune and self._rune[ri]
-							local sb = self.runes and self.runes[pos]
-							if data and sb then
-								local fill = sb.fill or sb
-								local prog
-								local runeReady = data.ready
-								if runeReady then
-									prog = 1
-								else
-									prog = min(1, max(0, (n - data.start) / max(data.duration, 1)))
-									if prog >= 1 then
-						if not self._runeResync then
-							self._runeResync = true
-							RunNextFrame(function()
-								self._runeResync = false
-								updatePowerBar("RUNES")
-							end)
-						end
-										runeReady = true
-										prog = 1
-									end
-								end
-								fill:SetValue(prog)
-								local wantReady = runeReady
-								local colorUpdated = false
-								if sb._isReady ~= wantReady or (wantReady and forceReady) or ((not wantReady) and forceCooldown) then
-									sb._isReady = wantReady
-									if wantReady then
-										if ResourceBars.SetStatusBarColorWithGradient then
-											ResourceBars.SetStatusBarColorWithGradient(fill, cfgOnUpdate, rr, rg, rb, ra)
-										else
-											fill:SetStatusBarColor(rr, rg, rb, ra or 1)
-										end
-									else
-										if ResourceBars.SetStatusBarColorWithGradient then
-											ResourceBars.SetStatusBarColorWithGradient(fill, cfgOnUpdate, cr, cg, cb, ca)
-										else
-											fill:SetStatusBarColor(cr, cg, cb, ca or 1)
-										end
-									end
-									fill._rbColorInitialized = true
-									colorUpdated = true
-								end
-								if not colorUpdated then
-									if wantReady then
-										if ResourceBars.RefreshStatusBarGradient then ResourceBars.RefreshStatusBarGradient(fill, cfgOnUpdate, rr, rg, rb, ra) end
-									else
-										if ResourceBars.RefreshStatusBarGradient then ResourceBars.RefreshStatusBarGradient(fill, cfgOnUpdate, cr, cg, cb, ca) end
-									end
-								end
-								if sb.fs then
-									if cfgOnUpdate.showCooldownText and not runeReady then
-										local remain = ceil((data.start + data.duration) - n)
-										if remain ~= sb._lastRemain then
-											if remain > 0 then
-												sb.fs:SetText(tostring(remain))
-											else
-												sb.fs:SetText("")
-											end
-											sb._lastRemain = remain
-										end
-										sb.fs:Show()
-									else
-										if sb._lastRemain ~= nil then
-											sb.fs:SetText("")
-											sb._lastRemain = nil
-										end
-										sb.fs:Hide()
-									end
-								end
-								if not runeReady then allReady = false end
-							end
-						end
-						if allReady then deactivateRuneTicker(self) end
-					end
-				end
-			end
-			if bar:GetScript("OnUpdate") ~= bar._runeUpdater then
-				bar._runeAccum = 0
-				bar:SetScript("OnUpdate", bar._runeUpdater)
-			end
-		else
-			deactivateRuneTicker(bar)
 		end
 		if bar.text then bar.text:SetText("") end
 		return
 	end
 	if type == "STAGGER" then
 		local cfg = ResourceBars.GetRuntimeBarConfig(type, bar) or {}
-		ResourceBars.SanitizeStaggerColorOverrides(cfg)
+		local runtimeRevision = ResourceBars._runtimeConfigRevision or 0
 		local maxHealth = UnitHealthMax("player") or 1
 		if maxHealth <= 0 then return end
 		local maxPercent = cfg.useStaggerMaxOverride == true and (tonumber(cfg.staggerMaxPercent) or 200) or 100
 		if maxPercent < 100 then maxPercent = 100 end
 		local staggerMax = maxHealth * (maxPercent / 100)
-		if bar._lastMax ~= staggerMax then
+		local maxChanged = bar._lastMax ~= staggerMax
+		if maxChanged then
 			bar._lastMax = staggerMax
 			bar:SetMinMaxValues(0, staggerMax)
 		end
@@ -6657,8 +6646,8 @@ function updatePowerBar(type, runeSlot)
 
 		local style = bar._style or "PERCENT"
 		local smooth = cfg.smoothFill == true
-		setBarValue(bar, curPower, smooth)
 		if issecretvalue and issecretvalue(curPower) then
+			setBarValue(bar, curPower, smooth)
 			bar._lastVal = nil
 			if bar.text then
 				if bar._lastText ~= "" then
@@ -6672,12 +6661,16 @@ function updatePowerBar(type, runeSlot)
 			end
 			return
 		end
+		local valueChanged = bar._lastVal ~= curPower
+		local configChanged = bar._staggerRuntimeRevision ~= runtimeRevision
+		if not valueChanged and not maxChanged and not configChanged then return end
+		bar._staggerRuntimeRevision = runtimeRevision
+		if valueChanged then setBarValue(bar, curPower, smooth) end
 		bar._lastVal = curPower
 
 		local fillPercent = staggerMax > 0 and (curPower / staggerMax) or 0
 		local staggerPercent = maxHealth > 0 and (curPower / maxHealth) or 0
 		local percentDisplay = staggerPercent * 100
-		local percentStr = formatPercentDisplay(percentDisplay, cfg)
 		if bar.text then
 			local useShortNumbers = cfg.shortNumbers ~= false
 			if style == "NONE" then
@@ -6691,7 +6684,25 @@ function updatePowerBar(type, runeSlot)
 					bar._lastText = ""
 				end
 			else
-				local text = ResourceBars.FormatBarTextByStyle(style, formatNumber(curPower, useShortNumbers), formatNumber(staggerMax, useShortNumbers), percentStr)
+				local text
+				if style == "PERCENT" then
+					text = formatPercentDisplay(percentDisplay, cfg)
+				elseif style == "CURRENT" then
+					text = formatNumber(curPower, useShortNumbers)
+				elseif style == "CURPERCENT" then
+					text = formatNumber(curPower, useShortNumbers) .. " - " .. formatPercentDisplay(percentDisplay, cfg)
+				else
+					local maxText
+					if bar._staggerMaxTextValue == staggerMax and bar._staggerMaxTextShort == useShortNumbers then
+						maxText = bar._staggerMaxText
+					else
+						maxText = formatNumber(staggerMax, useShortNumbers)
+						bar._staggerMaxTextValue = staggerMax
+						bar._staggerMaxTextShort = useShortNumbers
+						bar._staggerMaxText = maxText
+					end
+					text = formatNumber(curPower, useShortNumbers) .. " / " .. maxText
+				end
 				if (not addon.variables.isMidnight or (issecretvalue and not issecretvalue(text))) and bar._lastText ~= text then
 					bar.text:SetText(text)
 					bar._lastText = text
@@ -6702,7 +6713,7 @@ function updatePowerBar(type, runeSlot)
 					bar.text:Show()
 					bar._textShown = true
 				end
-				ResourceBars.ApplyTextThresholdColor(bar, cfg, percentDisplay, type, 100)
+				if cfg.useTextThresholdColors == true or configChanged then ResourceBars.ApplyTextThresholdColor(bar, cfg, percentDisplay, type, 100) end
 			end
 		end
 
@@ -6737,8 +6748,8 @@ function updatePowerBar(type, runeSlot)
 		end
 		bar._usingMaxColor = flag == "max"
 		bar._usingAbsoluteThresholdColor = false
-		configureSpecialTexture(bar, type, cfg)
-		if ResourceBars.RefreshStatusBarGradient then ResourceBars.RefreshStatusBarGradient(bar, cfg) end
+		if configChanged then configureSpecialTexture(bar, type, cfg) end
+		if ResourceBars.RefreshStatusBarGradient and (cfg.useGradient == true or bar._rbGradientEnabled) then ResourceBars.RefreshStatusBarGradient(bar, cfg) end
 		return
 	end
 	if isAuraPowerType(type) then
@@ -6757,10 +6768,20 @@ function updatePowerBar(type, runeSlot)
 			end
 			if desiredSegments and desiredSegments > 0 then visualMax = desiredSegments end
 		end
-			if bar._lastMax ~= visualMax then
-				bar:SetMinMaxValues(0, visualMax)
-				bar._lastMax = visualMax
-			end
+		local valueIsSecret = issecretvalue and issecretvalue(stacks)
+		local maxChanged = bar._lastMax ~= visualMax
+		local typeChanged = bar._auraPowerRuntimeType ~= type
+		local runtimeRevision = ResourceBars._runtimeConfigRevision or 0
+		local configChanged = bar._auraPowerRuntimeRevision ~= runtimeRevision
+		if not valueIsSecret and bar._lastVal == stacks and not maxChanged and not typeChanged and not configChanged then
+			return
+		end
+		bar._auraPowerRuntimeType = type
+		bar._auraPowerRuntimeRevision = runtimeRevision
+		if maxChanged then
+			bar:SetMinMaxValues(0, visualMax)
+			bar._lastMax = visualMax
+		end
 
 			local style = bar._style or "CURMAX"
 			local smooth = cfg.smoothFill == true
@@ -6826,7 +6847,7 @@ function updatePowerBar(type, runeSlot)
 				configureSpecialTexture(bar, type, cfg)
 				if usingDiscreteSegments then
 					setParentBarTextureVisible(bar, false)
-				elseif ResourceBars.RefreshStatusBarGradient then
+				elseif ResourceBars.RefreshStatusBarGradient and (cfg.useGradient == true or bar._rbGradientEnabled) then
 					ResourceBars.RefreshStatusBarGradient(bar, cfg)
 				end
 				return
@@ -6970,7 +6991,7 @@ function updatePowerBar(type, runeSlot)
 		configureSpecialTexture(bar, type, cfg)
 		if usingDiscreteSegments then
 			setParentBarTextureVisible(bar, false)
-		elseif ResourceBars.RefreshStatusBarGradient then
+		elseif ResourceBars.RefreshStatusBarGradient and (cfg.useGradient == true or bar._rbGradientEnabled) then
 			ResourceBars.RefreshStatusBarGradient(bar, cfg)
 		end
 		return
@@ -7032,7 +7053,14 @@ function updatePowerBar(type, runeSlot)
 	local smooth = cfg.smoothFill == true and type ~= "ESSENCE"
 	setBarValue(bar, barValue, smooth)
 	bar._lastVal = barValue
-	if ResourceBars.ApplyHideWhenEmptyAlphaToFrame then ResourceBars.ApplyHideWhenEmptyAlphaToFrame(bar, cfg, curPower) end
+	local runtimeConfigRevision = ResourceBars._runtimeConfigRevision or 0
+	if bar._rbHideWhenEmptyRevision ~= runtimeConfigRevision then
+		bar._rbHideWhenEmptyRevision = runtimeConfigRevision
+		bar._rbHideWhenEmptyEnabled = ResourceBars.ShouldHideWhenEmpty and ResourceBars.ShouldHideWhenEmpty(cfg) or false
+	end
+	if ResourceBars.ApplyHideWhenEmptyAlphaToFrame and (bar._rbHideWhenEmptyEnabled or bar._rbEmptyAlphaActive == true) then
+		ResourceBars.ApplyHideWhenEmptyAlphaToFrame(bar, cfg, curPower)
+	end
 	local thresholdSampleValue = isSoulShards and displayCur or curPower
 	if bar.text then
 		local useShortNumbers = cfg.shortNumbers ~= false
@@ -7238,64 +7266,10 @@ function updatePowerBar(type, runeSlot)
 		local essenceTexture = resolveTexture(cfg)
 		if essenceSecret then
 			ResourceBars.UpdateEssenceSegments(bar, cfg, 0, 0, 0, RB.WHITE, ResourceBars.LayoutEssences, essenceTexture)
-			ResourceBars.DeactivateEssenceTicker(bar)
+			ResourceBars.DeactivateEssenceDuration(bar)
 		else
 			ResourceBars.UpdateEssenceSegments(bar, cfg, curPower, maxVal, essenceFraction or 0, RB.WHITE, ResourceBars.LayoutEssences, essenceTexture)
-			bar._essenceConfig = cfg
-			bar._essenceMaxPower = maxVal
-			if maxVal > 0 and curPower < maxVal then
-				bar._essenceAnimating = true
-				local tick = bar._essenceTickDuration or 5
-				bar._essenceUpdateInterval = min(RB.ESSENCE_UPDATE_INTERVAL, max(0.05, tick / 20))
-				if not bar._essenceUpdater then
-					bar._essenceUpdater = function(self, elapsed)
-						if not self:IsShown() then
-							ResourceBars.DeactivateEssenceTicker(self)
-							return
-						end
-						self._essenceAccum = (self._essenceAccum or 0) + (elapsed or 0)
-						local threshold = self._essenceUpdateInterval or RB.ESSENCE_UPDATE_INTERVAL
-						if self._essenceAccum < threshold then return end
-						self._essenceAccum = 0
-						local now = GetTime()
-						local current = UnitPower("player", POWER_ENUM.ESSENCE)
-						local maxPower = UnitPowerMax("player", POWER_ENUM.ESSENCE)
-						self._essenceMaxPower = maxPower
-						local cfgOnUpdate = self._essenceConfig or {}
-						local texOnUpdate = resolveTexture(cfgOnUpdate)
-						if issecretvalue and (issecretvalue(current) or issecretvalue(maxPower)) then
-							ResourceBars.UpdateEssenceSegments(self, cfgOnUpdate, 0, 0, 0, RB.WHITE, ResourceBars.LayoutEssences, texOnUpdate)
-							ResourceBars.DeactivateEssenceTicker(self)
-							return
-						end
-						if not maxPower or maxPower <= 0 then
-							ResourceBars.DeactivateEssenceTicker(self)
-							return
-						end
-						local fraction = ResourceBars.ComputeEssenceFraction(self, current, maxPower, now, POWER_ENUM.ESSENCE)
-						if not self._essenceNextTick or current >= maxPower then
-							ResourceBars.DeactivateEssenceTicker(self)
-							ResourceBars.UpdateEssenceSegments(self, cfgOnUpdate, current, maxPower, 0, RB.WHITE, ResourceBars.LayoutEssences, texOnUpdate)
-							return
-						end
-							if self._essenceNextTick <= now then
-								RunNextFrame(function() updatePowerBar("ESSENCE") end)
-								return
-							end
-						local value = current + (fraction or 0)
-						if value > maxPower then value = maxPower end
-						self:SetValue(value)
-						self._lastVal = value
-						ResourceBars.UpdateEssenceSegments(self, cfgOnUpdate, current, maxPower, fraction or 0, RB.WHITE, ResourceBars.LayoutEssences, texOnUpdate)
-					end
-				end
-				if bar:GetScript("OnUpdate") ~= bar._essenceUpdater then
-					bar._essenceAccum = 0
-					bar:SetScript("OnUpdate", bar._essenceUpdater)
-				end
-			else
-				ResourceBars.DeactivateEssenceTicker(bar)
-			end
+			ResourceBars.ApplyEssenceDuration(bar, cfg, curPower, maxVal, bar._essenceTickDuration)
 		end
 	else
 		local discreteCur = isSoulShards and displayCur or curPower
@@ -7306,7 +7280,7 @@ function updatePowerBar(type, runeSlot)
 	configureSpecialTexture(bar, type, cfg)
 	if usingDiscreteSegments then
 		setParentBarTextureVisible(bar, false)
-	elseif ResourceBars.RefreshStatusBarGradient then
+	elseif ResourceBars.RefreshStatusBarGradient and (cfg.useGradient == true or bar._rbGradientEnabled) then
 		ResourceBars.RefreshStatusBarGradient(bar, cfg)
 	end
 end
@@ -7375,15 +7349,19 @@ end
 refreshDiscreteSegmentsForBar = function(pType, bar, cfg, value, maxValue, rawValue, chargedPoints)
 	if not bar then return false end
 	if not shouldUseDiscreteSeparatorSegments(pType, cfg) then
-		if ResourceBars.HideDiscreteSegments then ResourceBars.HideDiscreteSegments(bar) end
-		setParentBarTextureVisible(bar, true)
+		if bar._rbDiscreteSegmentsActive ~= false then
+			if ResourceBars.HideDiscreteSegments then ResourceBars.HideDiscreteSegments(bar) end
+			setParentBarTextureVisible(bar, true)
+		end
 		return false
 	end
 
 	local segments = getSeparatorSegmentCount(pType, cfg)
 	if not segments or segments < 2 then
-		if ResourceBars.HideDiscreteSegments then ResourceBars.HideDiscreteSegments(bar) end
-		setParentBarTextureVisible(bar, true)
+		if bar._rbDiscreteSegmentsActive ~= false then
+			if ResourceBars.HideDiscreteSegments then ResourceBars.HideDiscreteSegments(bar) end
+			setParentBarTextureVisible(bar, true)
+		end
 		return false
 	end
 
@@ -7826,7 +7804,7 @@ function layoutRunes(bar)
 				fill:SetStatusBarColor(readyR, readyG, readyB, readyA or 1)
 			end
 			fill._rbColorInitialized = true
-		elseif ResourceBars.RefreshStatusBarGradient then
+		elseif ResourceBars.RefreshStatusBarGradient and (cfg.useGradient == true or fill._rbGradientEnabled) then
 			ResourceBars.RefreshStatusBarGradient(fill, cfg)
 		end
 	end
@@ -7866,10 +7844,10 @@ function ResourceBars.ResetReusedPowerBarVisualState(bar, previousType, nextType
 
 	-- Shared frames are reused across specs, so clear visuals from the old type
 	-- before the new type config is applied.
-	deactivateRuneTicker(bar)
+	deactivateRuneDurationBindings(bar)
 	if ResourceBars.DeactivateAuraDurationTicker then ResourceBars.DeactivateAuraDurationTicker(bar) end
 	if ResourceBars.ClearAuraDurationFill then ResourceBars.ClearAuraDurationFill(bar) end
-	if ResourceBars.DeactivateEssenceTicker then ResourceBars.DeactivateEssenceTicker(bar) end
+	if ResourceBars.DeactivateEssenceDuration then ResourceBars.DeactivateEssenceDuration(bar) end
 	if ResourceBars.InvalidateEssenceSegmentCaches then ResourceBars.InvalidateEssenceSegmentCaches(bar) end
 	bar._rbCfgCacheToken = nil
 	bar._lastColor = nil
@@ -8141,7 +8119,7 @@ local function createPowerBar(type, anchor, sharedSlot)
 	if type == "RUNES" and not bar._runeVisibilityHooks then
 		bar:HookScript("OnHide", function(self)
 			self._pendingRuneRefresh = true
-			deactivateRuneTicker(self)
+			deactivateRuneDurationBindings(self)
 		end)
 		bar:HookScript("OnShow", function(self)
 			self._pendingRuneRefresh = nil
@@ -8151,7 +8129,7 @@ local function createPowerBar(type, anchor, sharedSlot)
 	end
 	if type == "ESSENCE" and not bar._essenceVisibilityHooks then
 		bar:HookScript("OnHide", function(self)
-			ResourceBars.DeactivateEssenceTicker(self)
+			ResourceBars.DeactivateEssenceDuration(self)
 			if ResourceBars.InvalidateEssenceSegmentCaches then ResourceBars.InvalidateEssenceSegmentCaches(self) end
 		end)
 		bar._essenceVisibilityHooks = true
@@ -8232,7 +8210,14 @@ local function classUsesAuraPowers(class)
 	for _, specInfo in pairs(classTbl) do
 		if type(specInfo) == "table" then
 			for pType, cfg in pairs(RB.AURA_POWER_CONFIG or {}) do
-				if cfg.requiresUnitAura ~= false and ResourceBars.IsAuraPowerBarTypeAvailable(pType) and (specInfo.MAIN == pType or specInfo[pType]) then return true end
+				if
+					cfg.requiresUnitAura ~= false
+					and not ResourceBars.RequiresNativeAuraPowerBackend(pType)
+					and ResourceBars.IsAuraPowerBarTypeAvailable(pType)
+					and (specInfo.MAIN == pType or specInfo[pType])
+				then
+					return true
+				end
 			end
 		end
 	end
@@ -8590,6 +8575,7 @@ function ResourceBars.ApplyEqolVisibilityDriver(frame, expression)
 end
 
 function ResourceBars.InvalidateRuntimeConfigCaches()
+	ResourceBars._runtimeConfigRevision = (ResourceBars._runtimeConfigRevision or 0) + 1
 	if healthBar then healthBar._rbCfgCacheToken = nil end
 	for _, bar in pairs(powerbar or {}) do
 		if bar then bar._rbCfgCacheToken = nil end
@@ -9464,7 +9450,7 @@ local function eventHandler(self, event, eventArg1, eventArg2)
 	elseif event == "PLAYER_ENTERING_WORLD" then
 		ResourceBars.SyncRuntimeSpecContext()
 		if C_PetBattles and C_PetBattles.IsInBattle then ResourceBars._petBattleOpen = C_PetBattles.IsInBattle() == true end
-		updateHealthBar("UNIT_ABSORB_AMOUNT_CHANGED")
+		updateHealthBar("FULL_REFRESH")
 		setPowerbars()
 			RunNextFrame(function()
 				for pType, _ in pairs(RB.AURA_POWER_CONFIG or {}) do
@@ -9495,7 +9481,9 @@ local function eventHandler(self, event, eventArg1, eventArg2)
 		for pType in pairs(RB.AURA_POWER_CONFIG or {}) do
 			if powerbar[pType] and powerbar[pType]:IsShown() then updatePowerBar(pType) end
 		end
-		updateStaggerBarIfShown()
+		if not ResourceBars._staggerTicker then
+			updateStaggerBarIfShown()
+		end
 		return
 	elseif event == "SPELL_UPDATE_USES" then
 		if addon.variables.unitClass ~= "DEMONHUNTER" or tonumber(addon.variables.unitSpec) ~= 2 then return end
@@ -9505,15 +9493,12 @@ local function eventHandler(self, event, eventArg1, eventArg2)
 		if powerbar["SOUL_FRAGMENTS_VENGEANCE"] and powerbar["SOUL_FRAGMENTS_VENGEANCE"]:IsShown() then updatePowerBar("SOUL_FRAGMENTS_VENGEANCE") end
 		return
 	elseif event == "UNIT_MAXHEALTH" or event == "UNIT_HEALTH" or event == "UNIT_MAX_HEALTH_MODIFIERS_CHANGED" or event == "UNIT_ABSORB_AMOUNT_CHANGED" or event == "UNIT_HEAL_ABSORB_AMOUNT_CHANGED" then
-		if healthBar and healthBar:IsShown() then
-			if event == "UNIT_MAXHEALTH" then
-				local max = UnitHealthMax("player")
-				healthBar._lastMax = max
-				healthBar:SetMinMaxValues(0, max)
+		if healthBar and healthBar:IsShown() then updateHealthBar(event) end
+		if powerbar.STAGGER and powerbar.STAGGER:IsShown() then
+			if not ResourceBars._staggerTicker then
+				updateStaggerBarIfShown()
 			end
-			updateHealthBar(event)
 		end
-		updateStaggerBarIfShown()
 	elseif event == "UNIT_POWER_UPDATE" and powerbar[eventArg2] and powerbar[eventArg2]:IsShown() and not powerfrequent[eventArg2] then
 		updatePowerBar(eventArg2)
 	elseif event == "UNIT_POWER_FREQUENT" and powerbar[eventArg2] and powerbar[eventArg2]:IsShown() and powerfrequent[eventArg2] then
@@ -9696,7 +9681,7 @@ function ResourceBars.DisableResourceBars()
 	for pType, bar in pairs(powerbar) do
 		if bar then
 			resetRuntimeFrame(bar)
-			if pType == "RUNES" then deactivateRuneTicker(bar) end
+			if pType == "RUNES" then deactivateRuneDurationBindings(bar) end
 		end
 		powerbar[pType] = nil
 	end
@@ -9707,7 +9692,7 @@ function ResourceBars.DisableResourceBars()
 		local frame = _G["EQOL" .. tostring(pType) .. "Bar"]
 		if frame then
 			resetRuntimeFrame(frame)
-			if pType == "RUNES" then deactivateRuneTicker(frame) end
+			if pType == "RUNES" then deactivateRuneDurationBindings(frame) end
 		end
 	end
 	for _, slot in ipairs(ResourceBars.SHARED_SLOT_ORDER or {}) do
@@ -9729,7 +9714,7 @@ function ResourceBars.UpdateRuneEventRegistration()
 	elseif (not enabled) and frameAnchor._runeEvtRegistered then
 		frameAnchor:UnregisterEvent("RUNE_POWER_UPDATE")
 		frameAnchor._runeEvtRegistered = false
-		if powerbar and powerbar.RUNES then deactivateRuneTicker(powerbar.RUNES) end
+		if powerbar and powerbar.RUNES then deactivateRuneDurationBindings(powerbar.RUNES) end
 	end
 end
 
@@ -9737,14 +9722,11 @@ end
 function ResourceBars.ForceRuneRecolor()
 	local rb = powerbar and powerbar.RUNES
 	if not rb or not rb.runes then return end
-	-- Stop any stale ticker so the next update uses fresh spec colors.
-	deactivateRuneTicker(rb)
-	rb._runeUpdater = nil
+	deactivateRuneDurationBindings(rb)
 	for i = 1, 6 do
 		local sb = rb.runes[i]
 		if sb then
 			sb._isReady = nil
-			sb._lastRemain = nil
 		end
 	end
 end
@@ -10053,12 +10035,6 @@ function ResourceBars.Refresh()
 	-- Apply styling updates without forcing a full rebuild
 	if healthBar then
 		local hCfg = ResourceBars.GetFrameRuntimeConfig("HEALTH", healthBar) or {}
-		if hCfg.useMaxColor then
-			SetColorCurvePoints(hCfg.maxColor or RB.DEFAULT_MAX_COLOR)
-		else
-			SetColorCurvePoints()
-		end
-		wasMax = hCfg.useMaxColor == true
 		healthBar:SetStatusBarTexture(resolveTexture(hCfg))
 		if ResourceBars.ApplyStatusBarTexturePixelSnapping then ResourceBars.ApplyStatusBarTexturePixelSnapping(healthBar, 0) end
 		configureSpecialTexture(healthBar, "HEALTH", hCfg)
@@ -10067,7 +10043,6 @@ function ResourceBars.Refresh()
 		if healthBar.text then applyFontToString(healthBar.text, hCfg) end
 		applyTextPosition(healthBar, hCfg, 3, 0)
 		configureBarBehavior(healthBar, hCfg, "HEALTH")
-		if healthBar.absorbBar then ResourceBars.SyncAbsorbBarAppearance(healthBar, hCfg, true) end
 	end
 
 	for pType, bar in pairs(powerbar) do
@@ -10106,14 +10081,14 @@ function ResourceBars.Refresh()
 		end
 	end
 	if ResourceBars and ResourceBars.SyncRelativeFrameWidths then ResourceBars.SyncRelativeFrameWidths() end
-	updateHealthBar("UNIT_ABSORB_AMOUNT_CHANGED")
+	updateHealthBar("FULL_REFRESH")
 	if addon and addon.Aura and addon.Aura.ResourceBars and addon.Aura.ResourceBars.UpdateRuneEventRegistration then addon.Aura.ResourceBars.UpdateRuneEventRegistration() end
-	-- Ensure RUNES animation stops when not visible/enabled
+	-- Disable native Rune text bindings when the bar is not visible or enabled.
 	local runesEnabled = ResourceBars.IsResolvedBarTypeEnabled and ResourceBars.IsResolvedBarTypeEnabled("RUNES")
-	if powerbar and powerbar.RUNES and (not powerbar.RUNES:IsShown() or not runesEnabled) then deactivateRuneTicker(powerbar.RUNES) end
-	-- Ensure ESSENCE animation stops when not visible/enabled
+	if powerbar and powerbar.RUNES and (not powerbar.RUNES:IsShown() or not runesEnabled) then deactivateRuneDurationBindings(powerbar.RUNES) end
+	-- Release the native ESSENCE duration when the bar is not visible or enabled.
 	local essenceEnabled = ResourceBars.IsResolvedBarTypeEnabled and ResourceBars.IsResolvedBarTypeEnabled("ESSENCE")
-	if powerbar and powerbar.ESSENCE and (not powerbar.ESSENCE:IsShown() or not essenceEnabled) then ResourceBars.DeactivateEssenceTicker(powerbar.ESSENCE) end
+	if powerbar and powerbar.ESSENCE and (not powerbar.ESSENCE:IsShown() or not essenceEnabled) then ResourceBars.DeactivateEssenceDuration(powerbar.ESSENCE) end
 	if ResourceBars.SpecUsesSharedMode and ResourceBars.SpecUsesSharedMode(addon.variables.unitSpec) and ResourceBars.SyncSharedSlotProxyFrames then
 		ResourceBars.SyncSharedSlotProxyFrames(addon.variables.unitSpec)
 	end
@@ -10340,7 +10315,7 @@ function ResourceBars.ReanchorAll()
 		end
 	end
 
-	updateHealthBar("UNIT_ABSORB_AMOUNT_CHANGED")
+	updateHealthBar("FULL_REFRESH")
 	if ResourceBars and ResourceBars.SyncRelativeFrameWidths then ResourceBars.SyncRelativeFrameWidths() end
 	if ResourceBars.SpecUsesSharedMode and ResourceBars.SpecUsesSharedMode(addon.variables.unitSpec) and ResourceBars.SyncSharedSlotProxyFrames then
 		ResourceBars.SyncSharedSlotProxyFrames(addon.variables.unitSpec)

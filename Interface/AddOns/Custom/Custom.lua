@@ -5,11 +5,36 @@ local setPrdBySpec = function()
 	local _, name = C_SpecializationInfo.GetSpecializationInfo(currentSpecID)
 
 	local specsToShow = {
-		"Blood", "Havoc", "Devastation", "Arcane", "Brewmaster", "Holy", "Discipline",
-		"Assassination", "Outlaw", "Subtlety", "Restoration", "Affliction", "Demonology",
-		"Destruction", "Arms", "Fury", "Protection", "Frost", "Unholy", "Devourer",
-		"Vengeance", "Feral", "Guardian", "Restoration", "Augmentation", "Preservation",
-		"Fire", "Frost", "Shadow", "Windwalker"
+		"Blood",
+		"Havoc",
+		"Devastation",
+		"Arcane",
+		"Brewmaster",
+		"Holy",
+		"Discipline",
+		"Assassination",
+		"Outlaw",
+		"Subtlety",
+		"Restoration",
+		"Affliction",
+		"Demonology",
+		"Destruction",
+		"Arms",
+		"Fury",
+		"Protection",
+		"Frost",
+		"Unholy",
+		"Devourer",
+		"Vengeance",
+		"Feral",
+		"Guardian",
+		"Restoration",
+		"Augmentation",
+		"Preservation",
+		"Fire",
+		"Frost",
+		"Shadow",
+		"Windwalker",
 	}
 
 	local personalResource = 0
@@ -100,25 +125,25 @@ local applyDarkMode = function()
 				applySettings(prdClassFrame["Rune" .. i].BG_Inactive, desat, vc)
 			end
 		elseif playerClass == "WARLOCK" then
-			for _, v in pairs({prdClassFrame:GetChildren()}) do
+			for _, v in pairs({ prdClassFrame:GetChildren() }) do
 				applySettings(v.Background, desat, vc + 0.2)
 			end
 		elseif playerClass == "DRUID" then
-			for _, v in pairs({prdClassFrame:GetChildren()}) do
+			for _, v in pairs({ prdClassFrame:GetChildren() }) do
 				applySettings(v.BG_Inactive, desat, vc + 0.2)
 				applySettings(v.BG_Active, desat, vc + 0.1)
 			end
 		elseif playerClass == "MAGE" then
-			for _, v in pairs({prdClassFrame:GetChildren()}) do
+			for _, v in pairs({ prdClassFrame:GetChildren() }) do
 				applySettings(v.ArcaneBG, desat, vc + 0.15)
 			end
 		elseif playerClass == "MONK" then
-			for _, v in pairs({prdClassFrame:GetChildren()}) do
+			for _, v in pairs({ prdClassFrame:GetChildren() }) do
 				applySettings(v.Chi_BG, desat, vc + 0.10)
 				applySettings(v.Chi_BG_Active, desat, vc)
 			end
 		elseif playerClass == "ROGUE" then
-			for _, v in pairs({prdClassFrame:GetChildren()}) do
+			for _, v in pairs({ prdClassFrame:GetChildren() }) do
 				applySettings(v.BGInactive, desat, vc + 0.45)
 				applySettings(v.BGActive, desat, vc + 0.30)
 			end
@@ -128,15 +153,31 @@ local applyDarkMode = function()
 		elseif playerClass == "EVOKER" then
 			local ev1 = vc + 0.10
 			local ev2 = vc
-			for _, v in pairs({prdClassFrame:GetChildren()}) do
-				if v.EssenceFillDone then applySettings(v.EssenceFillDone.CircBG, desat, ev1) end
-				if v.EssenceFilling then applySettings(v.EssenceFilling.EssenceBG, desat, ev2) end
-				if v.EssenceEmpty then applySettings(v.EssenceEmpty.EssenceBG, desat, ev2) end
-				if v.EssenceFillDone then applySettings(v.EssenceFillDone.CircBGActive, desat, ev2) end
-				if v.EssenceDepleting then applySettings(v.EssenceDepleting.EssenceBG, desat, ev2) end
-				if v.EssenceDepleting then applySettings(v.EssenceDepleting.CircBGActive, desat, ev2) end
-				if v.EssenceFillDone then applySettings(v.EssenceFillDone.RimGlow, desat, ev1) end
-				if v.EssenceDepleting then applySettings(v.EssenceDepleting.RimGlow, desat, ev1) end
+			for _, v in pairs({ prdClassFrame:GetChildren() }) do
+				if v.EssenceFillDone then
+					applySettings(v.EssenceFillDone.CircBG, desat, ev1)
+				end
+				if v.EssenceFilling then
+					applySettings(v.EssenceFilling.EssenceBG, desat, ev2)
+				end
+				if v.EssenceEmpty then
+					applySettings(v.EssenceEmpty.EssenceBG, desat, ev2)
+				end
+				if v.EssenceFillDone then
+					applySettings(v.EssenceFillDone.CircBGActive, desat, ev2)
+				end
+				if v.EssenceDepleting then
+					applySettings(v.EssenceDepleting.EssenceBG, desat, ev2)
+				end
+				if v.EssenceDepleting then
+					applySettings(v.EssenceDepleting.CircBGActive, desat, ev2)
+				end
+				if v.EssenceFillDone then
+					applySettings(v.EssenceFillDone.RimGlow, desat, ev1)
+				end
+				if v.EssenceDepleting then
+					applySettings(v.EssenceDepleting.RimGlow, desat, ev1)
+				end
 			end
 		end
 	end
@@ -328,9 +369,13 @@ end
 local fancyPRDHooked = false
 local fancyPRDRunning = false
 local function applyFancyPRDTextures()
-	if fancyPRDRunning then return end
+	if fancyPRDRunning then
+		return
+	end
 	local prd = PersonalResourceDisplayFrame
-	if not prd then return end
+	if not prd then
+		return
+	end
 	fancyPRDRunning = true
 
 	local powerBar = prd.PowerBar
@@ -339,10 +384,10 @@ local function applyFancyPRDTextures()
 
 	local powerAtlasMap = {
 		LUNAR_POWER = "Unit_Druid_AstralPower_Fill",
-		FURY        = "Unit_DemonHunter_Fury_Fill",
-		PAIN        = "Unit_DemonHunter_Fury_Fill",
-		MAELSTROM   = "Unit_Shaman_Maelstrom_Fill",
-		INSANITY    = "Unit_Priest_Insanity_Fill",
+		FURY = "Unit_DemonHunter_Fury_Fill",
+		PAIN = "Unit_DemonHunter_Fury_Fill",
+		MAELSTROM = "Unit_Shaman_Maelstrom_Fill",
+		INSANITY = "Unit_Priest_Insanity_Fill",
 	}
 
 	local altAtlasMap = {
@@ -350,9 +395,9 @@ local function applyFancyPRDTextures()
 	}
 
 	local staggerMap = {
-		green  = "Unit_Monk_Stagger_Fill_Green",
+		green = "Unit_Monk_Stagger_Fill_Green",
 		yellow = "Unit_Monk_Stagger_Fill_Yellow",
-		red    = "Unit_Monk_Stagger_Fill_Red",
+		red = "Unit_Monk_Stagger_Fill_Red",
 	}
 
 	if not fancyPRDHooked then
@@ -419,9 +464,21 @@ end
 local function HideQuickJoinFunc()
 	local qj = QuickJoinToastButton
 	qj:UnregisterEvent("SOCIAL_QUEUE_UPDATE")
-	qj.Toast:SetScript("OnShow", function(self) if HideQuickJoinDB then self:Hide() else self:Show() end end)
+	qj.Toast:SetScript("OnShow", function(self)
+		if HideQuickJoinDB then
+			self:Hide()
+		else
+			self:Show()
+		end
+	end)
 	qj.Toast:Hide()
-	qj.Toast2:SetScript("OnShow", function(self) if HideQuickJoinDB then self:Hide() else self:Show() end end)
+	qj.Toast2:SetScript("OnShow", function(self)
+		if HideQuickJoinDB then
+			self:Hide()
+		else
+			self:Show()
+		end
+	end)
 	qj.Toast2:Hide()
 end
 
@@ -438,12 +495,16 @@ local function OnEvent(self, event, ...)
 		if unitTarget == "player" then
 			setPrdBySpec()
 			local bbpLoaded, _ = C_AddOns.IsAddOnLoaded("BetterBlizzPlates")
-			if not bbpLoaded then applyFancyPRDTextures() end
+			if not bbpLoaded then
+				applyFancyPRDTextures()
+			end
 		end
 	elseif event == "PLAYER_ENTERING_WORLD" then
 		applyDarkMode()
 		local bbpLoaded, _ = C_AddOns.IsAddOnLoaded("BetterBlizzPlates")
-		if not bbpLoaded then applyFancyPRDTextures() end
+		if not bbpLoaded then
+			applyFancyPRDTextures()
+		end
 		-- fix chat navigation
 		local editBox = ChatFrame1EditBox
 		if editBox and editBox.SetAltArrowKeyMode then
@@ -458,7 +519,6 @@ local function OnEvent(self, event, ...)
 				Settings.GetSetting(p .. v):SetValue(true)
 			end
 		end
-
 
 		HideQuickJoinFunc()
 		-- This event is fired anytime you see a load screen, i.e on login, on UI reload, on new area etc
@@ -551,11 +611,10 @@ local function OnEvent(self, event, ...)
 		SetCVar("SoftTargetEnemy", 3) -- target where looking
 		SetCVar("deselectOnClick", 0) -- sticky targeting, have to press esc to drop target
 		-- Name size
-		SetCVar("WorldTextMinSize", 12)
+		SetCVar("WorldTextMinSize", 10)
 
 		-- Battlepets and critters
 		SetCVar("UnitNameNonCombatCreatureName", 0) -- Show character title
-
 
 		SetCVar("damageMeterEnabled", 0)
 		SetCVar("damageMeterResetOnNewInstance", 0)
@@ -628,9 +687,9 @@ local function OnEvent(self, event, ...)
 			SetCVar("nameplateShowEnemies", 1)
 			SetCVar("nameplateShowFriendlyNpcs", 0)
 			SetCVar("nameplateShowEnemyGuardians", 1)
-			SetCVar("nameplateShowEnemyMinions",   "0")
-      SetCVar("nameplateShowEnemyGuardians", "0")
-      SetCVar("nameplateShowEnemyMinus",     "0")
+			SetCVar("nameplateShowEnemyMinions", "0")
+			SetCVar("nameplateShowEnemyGuardians", "0")
+			SetCVar("nameplateShowEnemyMinus", "0")
 			SetCVar("nameplateSimplifiedScale", 0.5)
 			SetCVar("nameplateShowEnemyPets", 1)
 			SetCVar("nameplateShowEnemyTotems", 1)
@@ -638,12 +697,14 @@ local function OnEvent(self, event, ...)
 			-- Show friendly plates for arena
 			local isInInstance, instanceType = IsInInstance()
 			-- check if we are entering or leaving an arena/bg
-			if isInInstance and instanceType == "arena" or isInInstance and instanceType == "pvp" then
+			if isInInstance and instanceType == "arena" then
 				-- turn on
 				SetCVar("nameplateShowFriendlyPlayers", 1)
+				SetCVar("nameplateShowFriendlyPlayerPets", 1)
 			else
 				-- turn off
 				SetCVar("nameplateShowFriendlyPlayers", 0)
+				SetCVar("nameplateShowFriendlyPlayerPets", 0)
 			end
 		end
 		-- #endregion

@@ -144,20 +144,10 @@ function AuraCompat:CanReadAuraData()
 	return not self:ShouldAurasBeSecret()
 end
 
-local function IsTooltipHideOverrideActive()
-	local db = addon.db
-	if not (db and db.TooltipHideOverrideEnabled) then return false end
-	local modifier = db.TooltipHideOverrideModifier or "CTRL"
-	if modifier == "SHIFT" then return _G.IsShiftKeyDown and _G.IsShiftKeyDown() == true end
-	if modifier == "ALT" then return _G.IsAltKeyDown and _G.IsAltKeyDown() == true end
-	if modifier == "CTRL" then return _G.IsControlKeyDown and _G.IsControlKeyDown() == true end
-	return false
-end
-
 function AuraCompat:GetGlobalAuraButtonTooltipHidePolicy()
 	if not (C_AddOns and C_AddOns.IsAddOnLoaded and C_AddOns.IsAddOnLoaded("EnhanceQoLTooltip")) then return false, false end
 	local db = addon.db
-	if not db or tonumber(db.TooltipBuffHideType) ~= 2 or IsTooltipHideOverrideActive() then return false, false end
+	if not db or tonumber(db.TooltipBuffHideType) ~= 2 then return false, false end
 	if db.TooltipBuffHideInDungeon == true then
 		local inInstance = _G.IsInInstance and select(1, _G.IsInInstance()) == true
 		if not inInstance then return false, false end
@@ -364,6 +354,7 @@ local function GetRestrictedAuraGlowConfig(anchorFrame, options)
 		borderSize = math.max(1, tonumber(options.borderSize) or 1),
 		borderOffset = borderOffset,
 		borderIsBlizzard = borderIsBlizzard,
+		additive = options.additive == true,
 	}
 end
 
@@ -789,7 +780,7 @@ local function ConfigureRestrictedAuraGlow(glow, anchorFrame, options)
 	elseif config.style == "SHINE" then
 		ConfigureRestrictedShineGlow(glow, config)
 	elseif config.style == "SOLID" then
-		ConfigureRestrictedLineBorder(glow, config, false, true)
+		ConfigureRestrictedLineBorder(glow, config, config.additive, true)
 		glow:SetAlpha(config.a)
 	elseif config.style == "TINT_BORDER" then
 		ConfigureRestrictedTintBorderGlow(glow, config)

@@ -102,12 +102,12 @@ function addon.functions.checkForContainer(bags)
 		return
 	end
 
-	local safeItems, secureItems = {}, {}
+	local safeItems, secureItems, scannedBags = {}, {}, bags
 	if addon.ContainerActions and addon.ContainerActions.ScanBags then
-		safeItems, secureItems = addon.ContainerActions:ScanBags(bags)
+		safeItems, secureItems, scannedBags = addon.ContainerActions:ScanBags(bags)
 	end
 
-	if addon.ContainerActions and addon.ContainerActions.UpdateItems then addon.ContainerActions:UpdateItems(secureItems, bags) end
+	if addon.ContainerActions and addon.ContainerActions.UpdateItems then addon.ContainerActions:UpdateItems(secureItems, scannedBags) end
 
 	if #safeItems > 0 then
 		openItems(safeItems)

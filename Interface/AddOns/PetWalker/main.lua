@@ -36,12 +36,13 @@ local IsStealthed = _G.IsStealthed
 -- local UnitIsControlling = _G.UnitIsControlling
 local UnitChannelInfo = _G.UnitChannelInfo
 local C_PlayerInfo_GetGlidingInfo = C_PlayerInfo.GetGlidingInfo
+local GetInstanceInfo = _G.GetInstanceInfo
 local time = _G.time
 
 local debugprint = ns.debugprint
 
 --[[===========================================================================
-	Some Variables/Constants
+	Some Variables/Constants/Flags
 ===========================================================================]]--
 
 ns.pool_initialized = false
@@ -88,6 +89,24 @@ local excluded_species = {
 -- 	2403, -- Abyssal Eel
 }
 
+-- https://warcraft.wiki.gg/wiki/DifficultyID
+-- https://warcraft.wiki.gg/wiki/Structure_DifficultyInfo
+local nopet_instance_difficulties = {
+	[8] = true, -- Mythic keystone; isChallengeMode
+-- 	[23] = true, -- Mythic dung
+-- 	[2] = true, -- Heroic dung
+	[16] = true, -- Mythic raid
+	[15] = true, -- Heroic raid
+}
+-- https://warcraft.wiki.gg/wiki/API:IsInInstance
+local nopet_instance_types = {
+	['arena'] = true, -- PvP arena
+-- 	['pvp'] = true, -- PvP battleground
+-- 	['raid'] = true, -- PvE raid
+}
+
+ns.in_nopet_instance = nil
+
 -- Debug
 ns.time_summonspell = 0
 
@@ -106,13 +125,16 @@ local function is_skyride_mounted()
 end
 
 
-local function forbidden_instance()
-	local in_instance, instance_type = IsInInstance()
-	if not in_instance then return false end
-	if instance_type == 'arena' then return true end
-	if instance_type == 'party' then
-		local _, _, difficulty_id = GetInstanceInfo()
-		if difficulty_id == 8 then return true end
+local function nopet_instance()
+	local _, type, diff_id = GetInstanceInfo()
+	debugprint('‹nopet_instance()›: type:', type, '; difficulty ID:', diff_id)
+	if type == 'none' or diff_id == 0 or ns.db.instanceMode == 0 then return false end
+	if
+		ns.db.instanceMode == 2
+		or ns.db.instanceMode == 1
+			and (nopet_instance_difficulties[diff_id] or nopet_instance_types[type])
+	then
+		return true
 	end
 end
 
@@ -203,10 +225,6 @@ local function stop_auto_summon(now)
 		or C_UnitAuras_GetPlayerAuraBySpellID(43883) -- Rental Racing Ram (Brewfest daily)
 	then
 		throttle = 40
-	elseif forbidden_instance() then
-		-- Our events will be re-enabled at the next PLAYER_ENTERING_WORLD
-		ns.events:unregister_summon_events()
-		throttle = 1 -- Must be > 0 to stop the autoaction in progress
 	end
 	if throttle > 0 then
 		debugprint('‹stop_auto_summon()›: new throttle:', throttle)
@@ -274,6 +292,7 @@ end
 TODO: Rework this function:
 - Since implementation of history we can have more than one "previous" pets
 - A nil at index 2 will stop the iteration! --> done
+See https://github.com/tflo/PetWalker/issues/28
 ]]
 function ns.saved_pet_summonability_check() --- After login
 	local priorities, perchar = {}, nil
@@ -518,11 +537,44 @@ end
 	restore_pet, as restore_pet is prefiltered by autoaction, and here we are not.
 ----------------------------------------------------------------------------]]--
 
+-- Called by:
+-- PLAYER_ENTERING_WORLD
+-- PLAYER_MAP_CHANGED
+-- PET_BATTLE_OVER
+-- ns.autoaction (true)
+-- PetWalkerCharFavsCheckbox OnClick script
+-- ns.instance_toggle
+-- ns.auto_toggle
+
 function ns.transitioncheck(checks_done)
+	if not checks_done then
+		if ns.is_initial_login then
+			ns.saved_pet_summonability_check()
+			ns.is_initial_login = nil
+		end
+		if nopet_instance() then
+			ns.events:unregister_summon_events()
+			ns.dismiss_pet()
+			ns.in_nopet_instance = true
+			ns.msg_nopet_instance_entered()
+			return
+		else
+			-- User may change the setting while autoEnabled is off
+			if ns.db.autoEnabled then
+				-- This must be the *only* place where register_summon_events is called!
+				ns.events:register_summon_events()
+			end
+			if ns.in_nopet_instance then
+				ns.msg_nopet_instance_left()
+			end
+			ns.in_nopet_instance = nil
+		end
+	end
 	-- Can be called via the entering-world events, or via `autoaction`, so we
 	-- if ns.pet_verified or InCombatLockdown() or IsFlying() or UnitOnTaxi 'player' then
 	-- TODO: Observe if stop_auto_summon works as expected here!
 	-- Never run the stop_auto_summon check twice, as the 2nd one will always find a throttle then!
+	-- checks_done is true currently only when called by autoaction
 	if not checks_done and stop_auto_summon() then
 		debugprint(
 			'‹transitioncheck()› stopped by ‹stop_auto_summon()›; ‹pet_verified›:',
@@ -538,6 +590,7 @@ function ns.transitioncheck(checks_done)
 		debugprint('‹transitioncheck()› aborted; less than 6s since ‹restore_pet()›')
 		return
 	end
+	-- TODO: leverage nopet_instance() to get the instance ID
 	ns.current_zone = C_Map_GetBestMapForUnit 'player'
 	local savedpet
 	-- TODO: shouldn't we initialize here instead?!

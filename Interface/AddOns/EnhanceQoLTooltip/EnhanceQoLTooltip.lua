@@ -241,6 +241,24 @@ local function DoesKeyMatchConfiguredModifier(key)
 	return false
 end
 
+local function DoesKeyMatchTooltipIDModifier(key)
+	if not key or not addon.db then return false end
+	local mod = addon.db["TooltipIDModifier"] or "ALT"
+	if mod == "SHIFT" then return key == "LSHIFT" or key == "RSHIFT" end
+	if mod == "ALT" then return key == "LALT" or key == "RALT" end
+	if mod == "CTRL" then return key == "LCTRL" or key == "RCTRL" end
+	return false
+end
+
+local function DoesKeyMatchTooltipHideOverrideModifier(key)
+	if not key or not addon.db then return false end
+	local mod = addon.db["TooltipHideOverrideModifier"] or "CTRL"
+	if mod == "SHIFT" then return key == "LSHIFT" or key == "RSHIFT" end
+	if mod == "ALT" then return key == "LALT" or key == "RALT" end
+	if mod == "CTRL" then return key == "LCTRL" or key == "RCTRL" end
+	return false
+end
+
 local function HasTooltipIDOptions()
 	local db = addon.db
 	if not db then return false end
@@ -978,9 +996,19 @@ local function IsModifierTooltipRefreshNeeded()
 	local db = addon.db
 	if not db then return false end
 	if db["TooltipHideOverrideEnabled"] then return true end
-	if db["TooltipShowMythicScore"] then return true end
+	if db["TooltipShowMythicScore"] and db["TooltipMythicScoreRequireModifier"] then return true end
 	if db["TooltipUnitInspectRequireModifier"] and (db["TooltipUnitShowSpec"] or db["TooltipUnitShowItemLevel"]) then return true end
 	if db["TooltipIDRequireModifier"] and HasTooltipIDOptions() then return true end
+	return false
+end
+
+local function DoesModifierKeyAffectVisibleTooltip(key)
+	local db = addon.db
+	if not db then return false end
+	if db["TooltipHideOverrideEnabled"] and DoesKeyMatchTooltipHideOverrideModifier(key) then return true end
+	if db["TooltipShowMythicScore"] and db["TooltipMythicScoreRequireModifier"] and DoesKeyMatchConfiguredModifier(key) then return true end
+	if db["TooltipUnitInspectRequireModifier"] and (db["TooltipUnitShowSpec"] or db["TooltipUnitShowItemLevel"]) and DoesKeyMatchConfiguredModifier(key) then return true end
+	if db["TooltipIDRequireModifier"] and HasTooltipIDOptions() and DoesKeyMatchTooltipIDModifier(key) then return true end
 	return false
 end
 
@@ -992,7 +1020,7 @@ local function RefreshVisibleTooltipForModifier()
 
 	local unit, hadTooltipUnit = GetUnitTokenFromTooltip(GameTooltip)
 	local kind = GetTooltipDataKind(GameTooltip)
-	if kind == "unit" or hadTooltipUnit then
+	if kind == "unit" or (not kind and hadTooltipUnit) then
 		if not SafeUnitExists(unit) and ResolveTooltipUnit then unit = ResolveTooltipUnit(GameTooltip) end
 		if not SafeUnitExists(unit) then return end
 		if GameTooltip.SetUnit and safeSecureCall(GameTooltip.SetUnit, GameTooltip, unit) then GameTooltip:Show() end
@@ -1000,17 +1028,14 @@ local function RefreshVisibleTooltipForModifier()
 	end
 
 	if not kind then return end
-	if GameTooltip.RefreshData and safeSecureCall(GameTooltip.RefreshData, GameTooltip) then return end
-	if not SafeUnitExists(unit) then return end
-	if GameTooltip.SetUnit and safeSecureCall(GameTooltip.SetUnit, GameTooltip, unit) then GameTooltip:Show() end
+	if GameTooltip.RefreshData then safeSecureCall(GameTooltip.RefreshData, GameTooltip) end
 end
 
 local fModifierTooltipRefresh = CreateFrame("Frame")
 fModifierTooltipRefresh:SetScript("OnEvent", function(_, _, key)
 	if key ~= "LSHIFT" and key ~= "RSHIFT" and key ~= "LCTRL" and key ~= "RCTRL" and key ~= "LALT" and key ~= "RALT" then return end
-	RefreshVisibleTooltipForModifier()
-	if addon.functions.RefreshNativeAuraTooltipPolicy then addon.functions.RefreshNativeAuraTooltipPolicy() end
-	if addon.db and addon.db["TooltipIDRequireModifier"] and addon.Tooltip and addon.Tooltip.functions and addon.Tooltip.functions.UpdateQuestIDInQuestLog then
+	if DoesModifierKeyAffectVisibleTooltip(key) then RefreshVisibleTooltipForModifier() end
+	if addon.db and addon.db["TooltipIDRequireModifier"] and DoesKeyMatchTooltipIDModifier(key) and addon.Tooltip and addon.Tooltip.functions and addon.Tooltip.functions.UpdateQuestIDInQuestLog then
 		addon.Tooltip.functions.UpdateQuestIDInQuestLog()
 	end
 end)
@@ -1603,7 +1628,6 @@ local function checkAura(tooltip, id)
 	if addon.db["TooltipBuffHideType"] == 1 then return end -- only hide when ON
 	if addon.db["TooltipBuffHideInDungeon"] and select(1, IsInInstance()) == false then return end -- only hide in dungeons
 	if addon.db["TooltipBuffHideInCombat"] and UnitAffectingCombat("player") == false then return end -- only hide in combat
-	if IsTooltipHideOverrideActive() then return end
 	tooltip:Hide()
 end
 

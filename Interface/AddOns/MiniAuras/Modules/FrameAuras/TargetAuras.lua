@@ -32,6 +32,8 @@ local ICON_SPACING = 2
 -- Both rows grow rightwards from their own top left, wrapping downwards. The preview reads it too,
 -- so a wrapped preview line starts on the edge the live one does.
 local ROW_GROW = "RIGHT"
+-- The corner a rightwards row hangs off, so a second line grows away from the first.
+local ROW_PIN = growAnchors:GetFlowPin(ROW_GROW)
 -- Where Blizzard's own rows sit. The frame's art runs wider and lower than the bars drawn on it,
 -- so a row is pulled back up over the texture's bottom edge rather than hung below it.
 local ROW_X = 5
@@ -43,6 +45,7 @@ local CASTBAR_Y = -5
 local MASQUE_GROUP = "Frame Auras"
 -- What a profile written before a key existed falls back to.
 local DEFAULT_SIZE = 22
+local DEFAULT_FONT_SCALE = 1.0
 local DEFAULT_PER_ROW = 6
 local DEFAULT_MAX_ICONS = 6
 -- A 22 pixel icon leaves a count of eight points at the shared ratio.
@@ -217,15 +220,24 @@ local function SuppressBlizzardAuras(frame)
 	container:Hide()
 end
 
+---What the rows multiply their text size by.
+---@return number
+local function FontScale()
+	local options = Options()
+
+	return tonumber(options and options.FontScale) or DEFAULT_FONT_SCALE
+end
+
 ---@return AuraDisplayStyle
 local function BuildStyle()
-	local style = auraContainerDisplay:BuildStandardStyle()
+	local style = auraContainerDisplay:BuildStandardStyle(nil, FontScale())
 
 	style.Stacks = true
 	style.StackCoefficient = STACK_COEFFICIENT
 	style.ReverseCooldown = true
 
-	-- No dispel-type colouring. These stand in for Blizzard's own rows, which draw a plain icon.
+	-- No dispel-type colouring. Unlike the party and raid debuff row, this row carries no switch
+	-- for it.
 	return style
 end
 
@@ -436,10 +448,10 @@ local function AnchorRows(host)
 	end
 
 	buffs:ClearAllPoints()
-	buffs:SetPoint("TOPLEFT", ArtOf(frame), "BOTTOMLEFT", ROW_X, ROW_Y)
+	buffs:SetPoint(ROW_PIN, ArtOf(frame), "BOTTOMLEFT", ROW_X, ROW_Y)
 
 	debuffs:ClearAllPoints()
-	debuffs:SetPoint("TOPLEFT", buffs, "BOTTOMLEFT", 0, 0)
+	debuffs:SetPoint(ROW_PIN, buffs, "BOTTOMLEFT", 0, 0)
 end
 
 ---One preview row. Nothing can put a fake aura in front of the engine, so the preview draws its
@@ -476,8 +488,7 @@ end
 ---row. Nil draws the row plain.
 ---@param leadColor table? The colour those icons take.
 local function FillTestRow(container, previewSpells, size, maxIcons, perRow, leadSpells, leadColor)
-	local db = mini:GetSavedVars()
-	local fontScale = db and db.FontScale
+	local fontScale = FontScale()
 	local slot = 1
 
 	container:SetIconSize(size)
@@ -567,10 +578,10 @@ local function ApplyTestRows(host, options)
 	ParentTestRow(buffs, frame)
 
 	buffs:ClearAllPoints()
-	buffs:SetPoint("TOPLEFT", ArtOf(frame), "BOTTOMLEFT", ROW_X, ROW_Y)
+	buffs:SetPoint(ROW_PIN, ArtOf(frame), "BOTTOMLEFT", ROW_X, ROW_Y)
 
 	debuffs:ClearAllPoints()
-	debuffs:SetPoint("TOPLEFT", buffs, "BOTTOMLEFT", 0, 0)
+	debuffs:SetPoint(ROW_PIN, buffs, "BOTTOMLEFT", 0, 0)
 
 	debuffs:Show()
 	buffs:Show()

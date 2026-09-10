@@ -951,6 +951,8 @@ end
 
 local function isDungeonRaidProfileKey(key)
 	return profileKeyStartsWith(key, "mythicPlus")
+		or profileKeyStartsWith(key, "partyKeystoneDungeonIndicator")
+		or profileKeyStartsWith(key, "partyKeystoneFrame")
 		or profileKeyStartsWith(key, "talentReminder")
 		or key == "autoInsertKeystone"
 		or key == "autoKeyStart"
@@ -983,6 +985,7 @@ local function isQuickAcceptProfileKey(key)
 		or key == "autoAcceptSummon"
 		or key == "autoChooseGossip"
 		or key == "autoChooseGossipContexts"
+		or key == "autoChooseGossipManualOnly"
 		or key == "autoChooseGossipModifier"
 		or key == "autoChooseQuest"
 		or key == "autoChooseQuestModifier"

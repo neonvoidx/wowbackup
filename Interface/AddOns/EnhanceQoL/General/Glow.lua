@@ -838,6 +838,7 @@ local function updateSolidOverlay(host, opts)
 	local yOffset = roundOffset(normalizeScalar(opts, "yOffset", 0))
 	local frameLevel = roundOffset(normalizeScalar(opts, "frameLevel", 3))
 	local color = normalizeColor(type(opts) == "table" and opts.color or nil, { 1, 0.82, 0.2, 1 })
+	local additive = type(opts) == "table" and opts.additive == true
 
 	overlay:SetParent(host)
 	overlay:SetFrameStrata(host:GetFrameStrata())
@@ -849,6 +850,7 @@ local function updateSolidOverlay(host, opts)
 
 	local top, bottom, left, right = overlay.lines[1], overlay.lines[2], overlay.lines[3], overlay.lines[4]
 	for i = 1, 4 do
+		overlay.lines[i]:SetBlendMode(additive and "ADD" or "BLEND")
 		overlay.lines[i]:SetVertexColor(color[1], color[2], color[3], 1)
 	end
 	top:ClearAllPoints()

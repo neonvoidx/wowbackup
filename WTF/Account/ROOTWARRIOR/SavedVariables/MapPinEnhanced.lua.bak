@@ -8,9 +8,9 @@ MapPinEnhancedDB = {
 },
 ["trackerPosition"] = {
 ["y"] = -28.43038749694824,
-["x"] = 10.78205680847168,
+["x"] = 10.782057762146,
 },
-["superTrackingOther"] = false,
+["superTrackingOther"] = true,
 ["sets"] = {
 ["set-a55d24d8-a8a0"] = {
 ["name"] = "Imported Set 1",

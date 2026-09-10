@@ -26,41 +26,6 @@ local function GetClassOptionName(classToken)
     return label
 end
 
-local function GetSpellInfoCompat(spellID)
-    if not spellID then
-        return nil
-    end
-
-    if GetSpellInfo then
-        return GetSpellInfo(spellID)
-    end
-
-    if C_Spell and C_Spell.GetSpellInfo then
-        local spellInfo = C_Spell.GetSpellInfo(spellID)
-        if spellInfo then
-            return spellInfo.name, nil, spellInfo.iconID, spellInfo.castTime, spellInfo.minRange, spellInfo.maxRange, spellInfo.spellID, spellInfo.originalIconID
-        end
-    end
-
-    return nil
-end
-
-local function GetSpellDescriptionCompat(spellID)
-    if not spellID then
-        return ""
-    end
-
-    if GetSpellDescription then
-        return GetSpellDescription(spellID) or ""
-    end
-
-    if C_Spell and C_Spell.GetSpellDescription then
-        return C_Spell.GetSpellDescription(spellID) or ""
-    end
-
-    return ""
-end
-
 local function getLayoutTable()
     local t = {}
 
@@ -841,7 +806,7 @@ function sArenaMixin:GetLayoutOptionsTable(layoutName)
                                     width = "full",
                                     name = L["Castbar_IncludeShadowWordDeath"],
                                     desc = L["Castbar_IncludeShadowWordDeath_Desc"],
-                                    hidden = function() return select(2, UnitClass("player")) ~= "PRIEST" end,
+                                    hidden = function() return UnitClassBase("player") ~= "PRIEST" end,
                                     disabled = function(info)
                                         local layout = info.handler.db.profile.layoutSettings[layoutName]
                                         return not (layout.castBar.interruptStatusColorOn)
@@ -3856,7 +3821,7 @@ function sArenaMixin:GetLayoutOptionsTable(layoutName)
                             name = L["Widget_ArenaTargetIndicators_Enable"],
                             desc = L["Widget_ArenaTargetIndicators_Desc"],
                             type = "toggle",
-                            width = "full",
+                            width = 1.2,
                             get = function(info)
                                 local widgets = info.handler.db.profile.layoutSettings[layoutName].widgets
                                 local pti = widgets and widgets.partyTargetIndicators
@@ -3870,6 +3835,32 @@ function sArenaMixin:GetLayoutOptionsTable(layoutName)
                                 info.handler.db.profile.layoutSettings[layoutName].widgets = widgets
                                 self:UpdateWidgetSettings(widgets, info, val)
                                 info.handler:Test()
+                            end,
+                        },
+                        thickOutline = {
+                            order = 0.1,
+                            name = L["Widget_ArenaTargetIndicators_ThickOutline"],
+                            desc = L["Widget_ArenaTargetIndicators_ThickOutline_Desc"],
+                            type = "toggle",
+                            width = 0.8,
+                            get = function(info)
+                                local widgets = info.handler.db.profile.layoutSettings[layoutName].widgets
+                                local pti = widgets and widgets.partyTargetIndicators
+                                return pti and pti.thickOutline
+                            end,
+                            set = function(info, val)
+                                local widgets = info.handler.db.profile.layoutSettings[layoutName].widgets
+                                widgets = widgets or {}
+                                widgets.partyTargetIndicators = widgets.partyTargetIndicators or {}
+                                widgets.partyTargetIndicators.thickOutline = val
+                                info.handler.db.profile.layoutSettings[layoutName].widgets = widgets
+                                self:UpdateWidgetSettings(widgets, info, val)
+                                info.handler:Test()
+                            end,
+                            disabled = function(info)
+                                local widgets = info.handler.db.profile.layoutSettings[layoutName].widgets
+                                local pti = widgets and widgets.partyTargetIndicators
+                                return not (pti and pti.enabled)
                             end,
                         },
                         partyOnArena = {
@@ -5037,16 +5028,12 @@ function sArenaMixin:UpdateFrameSettings(db, info, val)
 
     for i = 1, self.maxArenaOpponents do
         local frame = self["arena" .. i]
-        local text = frame.ClassIcon.Cooldown.Text
-        local fontToUse = text.fontFile
+        local countdownString = frame.ClassIcon.Cooldown:GetCountdownFontString()
+        local fontToUse = countdownString.fontFile
         if layoutCF then
             fontToUse = LSM:Fetch(LSM.MediaType.FONT, self.layoutdb.cdFont)
         end
-        text:SetFont(fontToUse, db.classIconFontSize, self:GetFontFlags("OUTLINE"))
-        local sArenaText = frame.ClassIcon.Cooldown.sArenaText
-        if sArenaText then
-            sArenaText:SetFont(fontToUse, db.classIconFontSize, self:GetFontFlags("OUTLINE"))
-        end
+        countdownString:SetFont(fontToUse, db.classIconFontSize, self:GetFontFlags("OUTLINE"))
     end
 
     if isMidnight then
@@ -5386,16 +5373,12 @@ function sArenaMixin:UpdateDRSettings(db, info, val)
                 dr.Border:SetPoint("BOTTOMRIGHT", dr, "BOTTOMRIGHT", borderSize, -borderSize)
                 dr.Cooldown:SetSwipeColor(swipeR, swipeG, swipeB, swipeA)
 
-                local text = dr.Cooldown.Text
-                local fontToUse = text.fontFile
+                local countdownString = dr.Cooldown:GetCountdownFontString()
+                local fontToUse = countdownString.fontFile
                 if layoutCF then
                     fontToUse = LSM:Fetch(LSM.MediaType.FONT, self.layoutdb.cdFont)
                 end
-                text:SetFont(fontToUse, db.fontSize, self:GetFontFlags("OUTLINE"))
-                local sArenaText = dr.Cooldown.sArenaText
-                if sArenaText then
-                    sArenaText:SetFont(fontToUse, db.fontSize, self:GetFontFlags("OUTLINE"))
-                end
+                countdownString:SetFont(fontToUse, db.fontSize, self:GetFontFlags("OUTLINE"))
 
                 if dr.Cooldown then
                     dr.Cooldown:SetReverse(reverseDR)
@@ -5550,12 +5533,12 @@ function sArenaMixin:UpdateTrinketSettings(db, info, val)
         frame.Trinket:SetPoint("CENTER", frame, "CENTER", db.posX, db.posY)
         frame.Trinket:SetScale(db.scale)
 
-        local text = self["arena" .. i].Trinket.Cooldown.Text
-        local fontToUse = text.fontFile
+        local countdownString = self["arena" .. i].Trinket.Cooldown:GetCountdownFontString()
+        local fontToUse = countdownString.fontFile
         if layoutCF then
             fontToUse = LSM:Fetch(LSM.MediaType.FONT, self.layoutdb.cdFont)
         end
-        text:SetFont(fontToUse, db.fontSize, self:GetFontFlags("OUTLINE"))
+        countdownString:SetFont(fontToUse, db.fontSize, self:GetFontFlags("OUTLINE"))
     end
 end
 
@@ -5571,13 +5554,13 @@ function sArenaMixin:UpdateRacialSettings(db, info, val)
         frame.Racial:SetPoint("CENTER", frame, "CENTER", db.posX, db.posY)
         frame.Racial:SetScale(db.scale)
 
-        local text = self["arena" .. i].Racial.Cooldown.Text
+        local countdownString = self["arena" .. i].Racial.Cooldown:GetCountdownFontString()
         local layoutCF = (self.layoutdb and self.layoutdb.changeFont)
-        local fontToUse = text.fontFile
+        local fontToUse = countdownString.fontFile
         if layoutCF then
             fontToUse = LSM:Fetch(LSM.MediaType.FONT, self.layoutdb.cdFont)
         end
-        text:SetFont(fontToUse, db.fontSize, self:GetFontFlags("OUTLINE"))
+        countdownString:SetFont(fontToUse, db.fontSize, self:GetFontFlags("OUTLINE"))
     end
 end
 
@@ -5595,12 +5578,12 @@ function sArenaMixin:UpdateDispelSettings(db, info, val)
         frame.Dispel:SetPoint("CENTER", frame, "CENTER", db.posX, db.posY)
         frame.Dispel:SetScale(db.scale)
 
-        local text = self["arena" .. i].Dispel.Cooldown.Text
-        local fontToUse = text.fontFile
+        local countdownString = self["arena" .. i].Dispel.Cooldown:GetCountdownFontString()
+        local fontToUse = countdownString.fontFile
         if layoutCF then
             fontToUse = LSM:Fetch(LSM.MediaType.FONT, self.layoutdb.cdFont)
         end
-        text:SetFont(fontToUse, db.fontSize, self:GetFontFlags("OUTLINE"))
+        countdownString:SetFont(fontToUse, db.fontSize, self:GetFontFlags("OUTLINE"))
 
         frame.Dispel:SetShown(self.db.profile.showDispels)
     end
@@ -5713,22 +5696,22 @@ local function setDRIcons()
             name = function(info)
                 local db = info.handler.db
                 if db.profile.drStaticIconsPerSpec then
-                    local className = select(1, UnitClass("player")) or L["Unknown"]
-                    local classKey = select(2, UnitClass("player"))
+                    local className = UnitClass("player") or L["Unknown"]
+                    local classKey = UnitClassBase("player")
                     local specName = info.handler.playerSpecName or L["Unknown"]
                     local classColor = C_ClassColor.GetClassColor(classKey)
                     local coloredText = specName .. " " .. className
                     if classColor then
-                        coloredText = "|c" .. classColor.colorStr .. coloredText .. "|r"
+                        coloredText = classColor:WrapTextInColorCode(coloredText)
                     end
                     return string.format(L["DR_IconsPerSpec"], coloredText)
                 elseif db.profile.drStaticIconsPerClass then
-                    local className = select(1, UnitClass("player")) or L["Unknown"]
-                    local classKey = select(2, UnitClass("player"))
+                    local className = UnitClass("player") or L["Unknown"]
+                    local classKey = UnitClassBase("player")
                     local classColor = C_ClassColor.GetClassColor(classKey)
                     local coloredText = className
                     if classColor then
-                        coloredText = "|c" .. classColor.colorStr .. coloredText .. "|r"
+                        coloredText = classColor:WrapTextInColorCode(coloredText)
                     end
                     return string.format(L["DR_IconsPerClass"], coloredText)
                 else
@@ -6060,6 +6043,53 @@ else
                 type = "group",
                 childGroups = "tree",
                 args = {
+                    arenaWidgetsGroup = {
+                        order = 1.5,
+                        name = L["Category_ArenaWidgets"],
+                        desc = L["Category_ArenaWidgets_Desc"],
+                        type = "group",
+                        args = {
+                            shadowSightTimer = {
+                                order = 1,
+                                name = L["Option_ShadowsightTimer"],
+                                desc = L["Option_ShadowsightTimer_Desc"],
+                                type = "toggle",
+                                width = "full",
+                                get = function(info) return info.handler.db.profile.shadowSightTimer end,
+                                set = function(info, val)
+                                    info.handler.db.profile.shadowSightTimer = val
+                                end,
+                            },
+                            showDampening = {
+                                order = 2,
+                                name = L["Option_ShowDampening"],
+                                desc = L["Option_ShowDampening_Desc"],
+                                type = "toggle",
+                                width = "full",
+                                get = function(info) return info.handler.db.profile.showDampening end,
+                                set = function(info, val)
+                                    info.handler.db.profile.showDampening = val
+                                    if val and info.handler:IsInArena() then
+                                        info.handler:StartDampening()
+                                    else
+                                        info.handler:ResetDampening()
+                                    end
+                                end,
+                            },
+                            gladTracker = {
+                                order = 3,
+                                name = L["Option_GladTracker"],
+                                desc = L["Option_GladTracker_Desc"],
+                                type = "toggle",
+                                width = "full",
+                                get = function(info) return info.handler.db.profile.gladTracker end,
+                                set = function(info, val)
+                                    info.handler.db.profile.gladTracker = val
+                                    info.handler:GladTracker()
+                                end,
+                            },
+                        },
+                    },
                     framesGroup = {
                         order = 1,
                         name = L["Option_ArenaFrames"],
@@ -6506,17 +6536,6 @@ else
                                             end
                                         end,
                                     },
-                                    shadowSightTimer = {
-                                        order = 7.5,
-                                        name = L["Option_ShadowsightTimer"],
-                                        desc = L["Option_ShadowsightTimer_Desc"],
-                                        type = "toggle",
-                                        width = "full",
-                                        get = function(info) return info.handler.db.profile.shadowSightTimer end,
-                                        set = function(info, val)
-                                            info.handler.db.profile.shadowSightTimer = val
-                                        end,
-                                    },
                                     colorMysteryGray = {
                                         order = 9,
                                         name = L["Option_ColorNonVisibleFramesGray"],
@@ -6818,18 +6837,6 @@ else
                                             ReloadUI()
                                         end
                                     },
-                                    removeUnequippedTrinketTexture = {
-                                        order = 2,
-                                        name = L["Option_RemoveUnEquippedTrinketTexture"],
-                                        desc = L["Trinket_HideWhenNoTrinket_Desc"],
-                                        type = "toggle",
-                                        width = "full",
-                                        get = function(info) return info.handler.db.profile.removeUnequippedTrinketTexture end,
-                                        set = function(info, val)
-                                            info.handler.db.profile.removeUnequippedTrinketTexture = val
-                                            info.handler:UpdateNoTrinketTexture()
-                                        end
-                                    },
                                     desaturateTrinketCD = {
                                         order = 2.1,
                                         name = L["Option_DesaturateTrinketCD"],
@@ -6861,18 +6868,6 @@ else
                                         get = function(info) return info.handler.db.profile.disableOvershields end,
                                         set = function(info, val)
                                             info.handler.db.profile.disableOvershields = val
-                                        end
-                                    },
-                                    gladTracker = {
-                                        order = 2.4,
-                                        name = L["Option_GladTracker"],
-                                        desc = L["Option_GladTracker_Desc"],
-                                        type = "toggle",
-                                        width = "full",
-                                        get = function(info) return info.handler.db.profile.gladTracker end,
-                                        set = function(info, val)
-                                            info.handler.db.profile.gladTracker = val
-                                            info.handler:GladTracker()
                                         end
                                     },
                                     useDefaultPartyFrames = {
@@ -7807,7 +7802,7 @@ else
                                         get = function(info) return info.handler.db.profile.showDecimalsClassIcon end,
                                         set = function(info, val)
                                             info.handler.db.profile.showDecimalsClassIcon = val
-                                            info.handler:SetupCustomCD()
+                                            info.handler:CustomizeDefaultCD()
                                             if isMidnight then
                                                 sArena_ReloadedDB.reOpenOptions = true
                                                 ReloadUI()
@@ -7828,7 +7823,7 @@ else
                                         set = function(info, val)
                                             info.handler.db.profile.decimalThreshold = val
                                             info.handler:UpdateDecimalThreshold()
-                                            info.handler:SetupCustomCD()
+                                            info.handler:CustomizeDefaultCD()
                                         end
                                     },
                                 },
@@ -8306,7 +8301,7 @@ else
                                         get = function(info) return info.handler.db.profile.showDecimalsDR end,
                                         set = function(info, val)
                                             info.handler.db.profile.showDecimalsDR = val
-                                            info.handler:SetupCustomCD()
+                                            info.handler:CustomizeDefaultCD()
                                         end
                                     },
                                     decimalThresholdDR = {
@@ -8323,7 +8318,7 @@ else
                                         set = function(info, val)
                                             info.handler.db.profile.decimalThreshold = val
                                             info.handler:UpdateDecimalThreshold()
-                                            info.handler:SetupCustomCD()
+                                            info.handler:CustomizeDefaultCD()
                                         end
                                     },
                                     colorDRCooldownText = {
@@ -8341,7 +8336,7 @@ else
                                                     frame:ResetDRCooldownTextColors()
                                                 end
                                             end
-                                            info.handler:SetupCustomCD()
+                                            info.handler:CustomizeDefaultCD()
                                             info.handler:Test()
                                         end
                                     },
@@ -8466,22 +8461,22 @@ else
                                         name = function(info)
                                             local db = info.handler.db
                                             if db.profile.drCategoriesPerSpec then
-                                                local className = select(1, UnitClass("player")) or L["Unknown"]
-                                                local classKey = select(2, UnitClass("player"))
+                                                local className = UnitClass("player") or L["Unknown"]
+                                                local classKey = UnitClassBase("player")
                                                 local specName = info.handler.playerSpecName or L["Unknown"]
                                                 local classColor = C_ClassColor.GetClassColor(classKey)
                                                 local coloredText = specName .. " " .. className
                                                 if classColor then
-                                                    coloredText = "|c" .. classColor.colorStr .. coloredText .. "|r"
+                                                    coloredText = classColor:WrapTextInColorCode(coloredText)
                                                 end
                                                 return string.format(L["DR_CategoriesPerSpec"], coloredText)
                                             elseif db.profile.drCategoriesPerClass then
-                                                local className = select(1, UnitClass("player")) or L["Unknown"]
-                                                local classKey = select(2, UnitClass("player"))
+                                                local className = UnitClass("player") or L["Unknown"]
+                                                local classKey = UnitClassBase("player")
                                                 local classColor = C_ClassColor.GetClassColor(classKey)
                                                 local coloredText = className
                                                 if classColor then
-                                                    coloredText = "|c" .. classColor.colorStr .. coloredText .. "|r"
+                                                    coloredText = classColor:WrapTextInColorCode(coloredText)
                                                 end
                                                 return string.format(L["DR_CategoriesPerClass"], coloredText)
                                             else
@@ -8734,7 +8729,7 @@ else
                                     args["healer_dispels"].args["spell_" .. spellID] = {
                                         order = healerOrder,
                                         name = function()
-                                            local spellName = GetSpellInfoCompat(spellID)
+                                            local spellName = C_Spell.GetSpellName(spellID)
                                             return "|T" .. (data.texture or "") .. ":16|t " .. (spellName or data.name)
                                         end,
                                         type = "toggle",
@@ -8750,8 +8745,8 @@ else
                                             end
                                         end,
                                         desc = function()
-                                            local spellName = GetSpellInfoCompat(spellID)
-                                            local spellDesc = GetSpellDescriptionCompat(spellID)
+                                            local spellName = C_Spell.GetSpellName(spellID)
+                                            local spellDesc = C_Spell.GetSpellDescription(spellID)
 
                                             spellName = spellName or data.name or L["Unknown_Spell"]
                                             local cooldownText = data.cooldown and string.format(L["Cooldown_Seconds"], data.cooldown) or ""
@@ -8803,7 +8798,7 @@ else
                                     args["dps_dispels"].args["spell_" .. spellID] = {
                                         order = dpsOrder,
                                         name = function()
-                                            local spellName = GetSpellInfoCompat(spellID)
+                                            local spellName = C_Spell.GetSpellName(spellID)
                                             return "|T" .. (data.texture or "134400") .. ":16|t " .. (spellName or data.name)
                                         end,
                                         type = "toggle",
@@ -8819,8 +8814,8 @@ else
                                             end
                                         end,
                                         desc = function()
-                                            local spellName = GetSpellInfoCompat(spellID)
-                                            local spellDesc = GetSpellDescriptionCompat(spellID)
+                                            local spellName = C_Spell.GetSpellName(spellID)
+                                            local spellDesc = C_Spell.GetSpellDescription(spellID)
 
                                             spellName = spellName or data.name or L["Unknown_Spell"]
                                             local cooldownText = data.cooldown and string.format(L["Cooldown_Seconds"], data.cooldown) or ""
@@ -8907,8 +8902,8 @@ else
                                                 type = "toggle",
                                                 desc = function()
                                                     if not capturedSpellID then return "" end
-                                                    local spellName = GetSpellInfoCompat(capturedSpellID)
-                                                    local spellDesc = GetSpellDescriptionCompat(capturedSpellID)
+                                                    local spellName = C_Spell.GetSpellName(capturedSpellID)
+                                                    local spellDesc = C_Spell.GetSpellDescription(capturedSpellID)
                                                     spellName = spellName or raceKey
                                                     local lines = {}
                                                     table.insert(lines, "|cFFFFD700" .. spellName .. "|r")
@@ -9450,8 +9445,10 @@ else
 
                                     local function spellTooltip(activeID, defaultID)
                                         if not activeID then return L["Widget_RangeCheck_SpellID_Desc"] end
-                                        local spellName, _, _, _, minRange, maxRange = GetSpellInfoCompat(activeID)
-                                        local tip = (spellName or "Unknown") .. " (" .. activeID .. ")"
+                                        local spellInfo = C_Spell.GetSpellInfo(activeID)
+                                        local tip = (spellInfo and spellInfo.name or "Unknown") .. " (" .. activeID .. ")"
+                                        local minRange = spellInfo and spellInfo.minRange
+                                        local maxRange = spellInfo and spellInfo.maxRange
                                         if minRange and maxRange then
                                             if minRange > 0 then
                                                 tip = tip .. "\nRange: " .. minRange .. "-" .. maxRange .. " yd"
@@ -9462,7 +9459,7 @@ else
                                             end
                                         end
                                         if defaultID then
-                                            local defName = GetSpellInfoCompat(defaultID)
+                                            local defName = C_Spell.GetSpellName(defaultID)
                                             tip = tip .. "\n\n|cff888888(default: " .. (defName or "Unknown") .. " (" .. defaultID .. "))|r"
                                         end
                                         return tip
@@ -9470,7 +9467,7 @@ else
 
                                     local function spellNameByID(spellID)
                                         if not spellID then return nil end
-                                        local name = GetSpellInfoCompat(spellID)
+                                        local name = C_Spell.GetSpellName(spellID)
                                         return name
                                     end
 
@@ -9954,6 +9951,26 @@ else
                                                 end
                                             end
                                         end,
+                                    },
+                                },
+                            },
+                            trinketMisc = {
+                                order = 3,
+                                name = L["Option_Miscellaneous"],
+                                type = "group",
+                                inline = true,
+                                args = {
+                                    removeUnequippedTrinketTexture = {
+                                        order = 1,
+                                        name = L["Option_RemoveUnEquippedTrinketTexture"],
+                                        desc = L["Trinket_HideWhenNoTrinket_Desc"],
+                                        type = "toggle",
+                                        width = "full",
+                                        get = function(info) return info.handler.db.profile.removeUnequippedTrinketTexture end,
+                                        set = function(info, val)
+                                            info.handler.db.profile.removeUnequippedTrinketTexture = val
+                                            info.handler:UpdateNoTrinketTexture()
+                                        end
                                     },
                                 },
                             },

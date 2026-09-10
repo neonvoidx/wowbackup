@@ -2222,6 +2222,22 @@ function M.buildEntrySettings(menuID, entryID)
 			set = function(_, value) M.setDefaultAction(menuID, entryID, value == true) end,
 		}),
 		M.actionSetting(menuID, entryID, {
+			name = L["QuickCastWorldMarkerAtCursor"] or "Place at cursor",
+			kind = SettingType.Checkbox,
+			parentId = "quickCastActionGeneral",
+			isShown = function()
+				local action = M.getAction(menuID, entryID)
+				return action and action.kind == "worldmarker" and action.id ~= 0 or false
+			end,
+			get = function()
+				local action = M.getAction(menuID, entryID)
+				return action and action.kind == "worldmarker" and action.atCursor == true or false
+			end,
+			set = function(_, value)
+				M.mutateAction(menuID, entryID, function(action) action.atCursor = value == true or nil end, false)
+			end,
+		}),
+		M.actionSetting(menuID, entryID, {
 			name = L["QuickCastLabelMode"] or "Label",
 			kind = SettingType.Dropdown,
 			parentId = "quickCastActionGeneral",
@@ -2762,6 +2778,14 @@ function M.showActionContext(owner, menuID, entryID)
 			end, function()
 				local current, _, menu = M.getAction(menuID, entryID)
 				if current and menu then M.setDefaultAction(menuID, entryID, menu.defaultEntryID ~= current.entryID) end
+			end)
+		end
+		if action.kind == "worldmarker" and action.id ~= 0 then
+			root:CreateCheckbox(L["QuickCastWorldMarkerAtCursor"] or "Place at cursor", function()
+				local current = M.getAction(menuID, entryID)
+				return current and current.kind == "worldmarker" and current.atCursor == true or false
+			end, function()
+				M.mutateAction(menuID, entryID, function(current) current.atCursor = current.atCursor ~= true or nil end, false)
 			end)
 		end
 		root:CreateButton(L["QuickCastActionSettings"] or _G.EDIT or "Edit", function() M.openEntrySettings(menuID, entryID) end)

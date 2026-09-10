@@ -166,6 +166,7 @@ function Config:Init(prettyAddonName, githubRepo, db, defaults, localeTable, mod
             );
             enableInitializer:AddShownPredicate(function() return not changingExpandText; end);
             configBuilder:SetEnableInitializer(enableInitializer);
+            configBuilder:SetExpandInitializer(expandInitializer);
 
             securecallfunction(module.BuildConfig, module, configBuilder, moduleDb);
         end
@@ -329,11 +330,15 @@ function Config:OpenSettingsExternal()
     self.panel:Raise();
 end
 
-function Config:OpenSettings()
+--- @param openToConfigBuilder NumyConfigBuilder?
+function Config:OpenSettings(openToConfigBuilder)
     if C_SettingsUtil and C_SettingsUtil.OpenSettingsPanel and InCombatLockdown() then
         self:OpenSettingsExternal();
     else
         Settings.OpenToCategory(self.category:GetID());
+    end
+    if openToConfigBuilder then
+        openToConfigBuilder:GetExpandInitializer():SetExpanded();
     end
 end
 
@@ -424,6 +429,16 @@ do
             scale = self:MakeSliderOptions(0.5, 2, 0.05, function(value) return ('%.1fx'):format(value); end),
             percent = self:MakeSliderOptions(0, 1, 0.01, function(value) return ('%d%%'):format(100 * value); end),
         };
+    end
+
+    --- @param initializer NumyConfig_SettingsExpandableSectionInitializer
+    function ConfigBuilderMixin:SetExpandInitializer(initializer)
+        self.expandInitializer = initializer;
+    end
+
+    --- @return NumyConfig_SettingsExpandableSectionInitializer
+    function ConfigBuilderMixin:GetExpandInitializer()
+        return self.expandInitializer;
     end
 
     --- @param initializer SettingsElementHierarchyMixin
@@ -942,13 +957,15 @@ do
     --- @param tooltip string?
     --- @param setting AddOnSettingMixin? # If provided, it'll add a checkbox to the expand box to enable/disable the setting
     --- @param checkboxTooltip string? # Tooltip for the checkbox; only applies if a setting is provided
-    --- @return SettingsExpandableSectionInitializer initializer
+    --- @return NumyConfig_SettingsExpandableSectionInitializer initializer
     --- @return fun(): boolean isExpanded
     function Config:MakeExpandableSection(sectionName, tooltip, setting, onChange, checkboxTooltip)
         local nameGetter = sectionName;
         if type(sectionName) == "string" then
             nameGetter = function() return sectionName; end
         end
+
+        --- @class NumyConfig_SettingsExpandableSectionInitializer: SettingsExpandableSectionInitializer
         local expandInitializer = CreateFromMixins(SettingsExpandableSectionInitializer);
 
         --- @type NumyConfig_ExpandSettingData
@@ -960,6 +977,16 @@ do
             self.data.name = self.data.nameGetter();
 
             SettingsExpandableSectionInitializer.InitFrame(self, frame);
+        end
+
+        --- @param isExpanded boolean?
+        function expandInitializer:SetExpanded(isExpanded)
+            expandInitializer.data.expanded = isExpanded ~= false;
+            if self.changeCallback then self.changeCallback(expandInitializer.data.expanded); end
+        end
+
+        function expandInitializer:SetExpandChangedCallback(callback, owner)
+            self.changeCallback = function(isExpanded) callback(owner, isExpanded); end;
         end
 
         self.layout:AddInitializer(expandInitializer);
@@ -1280,12 +1307,13 @@ do
         --- @class NumyConfig_ExpandMixin: SettingsExpandableSectionMixin
         local mixin = TalentTreeTweaks_SettingsExpandMixin;
 
-        --- @param initializer SettingsExpandableSectionInitializer
+        --- @param initializer NumyConfig_SettingsExpandableSectionInitializer
         function mixin:Init(initializer)
             SettingsExpandableSectionMixin.Init(self, initializer);
             --- @type NumyConfig_ExpandSettingData
             self.data = initializer.data;
             self:EvaluateVisibility(self.data.expanded);
+            initializer:SetExpandChangedCallback(self.OnExpandedChanged, self)
 
             local setting = self.data.setting;
             self.Button.Checkbox:SetShown(setting ~= nil);

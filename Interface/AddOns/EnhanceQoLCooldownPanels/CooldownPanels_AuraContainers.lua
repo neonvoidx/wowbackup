@@ -277,8 +277,8 @@ end
 local function createBarTextOverlay(button, frameLevelOffset)
 	local overlay = CreateFrame("Frame", nil, button)
 	overlay:SetAllPoints(button)
-	-- Keep text above the cooldown swipe, custom border, and active glow.
-	overlay:SetFrameLevel((button:GetFrameLevel() or 0) + (frameLevelOffset or 6))
+	-- Keep text above the cooldown swipe, custom border, and every glow layer.
+	overlay:SetFrameLevel((button:GetFrameLevel() or 0) + (frameLevelOffset or 26))
 	button._eqolAuraBarTextOverlay = overlay
 	return overlay
 end
@@ -339,6 +339,233 @@ function AuraContainers:GetStackThresholdSignature(entry, activeDesaturate)
 		parts[#parts + 1] = table.concat({
 			threshold.index or 0,
 			threshold.value or 0,
+			color.r or color[1] or 1,
+			color.g or color[2] or 1,
+			color.b or color[3] or 1,
+			color.a or color[4] or 1,
+		}, ",")
+	end
+	return table.concat(parts, ";")
+end
+
+function AuraContainers:GetDurationThresholdLayers(entry, activeDesaturate)
+	local layers = {}
+	if not (Bars and Bars.GetDurationThresholds) then return layers end
+	local configuredThresholds = Bars.GetDurationThresholds(entry, activeDesaturate)
+	local thresholds = {}
+	layers.baseColor = entry and entry.barColor or nil
+	for _, threshold in ipairs(configuredThresholds) do
+		if threshold.fraction >= 0.999 then
+			-- A threshold at or above the configured full duration is already
+			-- active when the aura starts. The lowest such threshold is the
+			-- effective base color; higher values are less urgent and cannot win.
+			layers.baseColor = threshold.color
+			break
+		end
+		thresholds[#thresholds + 1] = threshold
+	end
+	local count = #thresholds
+	if count == 0 then return layers end
+	local function add(side, fraction, color, step)
+		layers[#layers + 1] = {
+			side = side,
+			fraction = fraction,
+			color = color,
+			step = step == true,
+		}
+	end
+	if entry and entry.barReverseFill == true then
+		for index = count, 1, -1 do
+			local threshold = thresholds[index]
+			add("high", 1 - threshold.fraction, threshold.color, false)
+			add("low", 1 - threshold.fraction, threshold.color, true)
+		end
+	else
+		for index = count, 1, -1 do
+			local threshold = thresholds[index]
+			add("low", threshold.fraction, threshold.color, false)
+		end
+		for index = 1, count do
+			local threshold = thresholds[index]
+			local nextThreshold = thresholds[index + 1]
+			add("low", threshold.fraction, nextThreshold and nextThreshold.color or layers.baseColor, true)
+		end
+	end
+	return layers
+end
+
+function AuraContainers:GetDurationThresholdGlowConfig(entry, activeDesaturate, layout)
+	if activeDesaturate == true or not (entry and entry.barDurationColorEnabled == true and entry.barDurationThresholdGlowEnabled == true) then return nil end
+	local glowIndex = Helper.ClampInt(entry.barDurationThresholdGlowIndex, 1, 3, 3)
+	local selectedThreshold
+	for _, threshold in ipairs(Bars.GetDurationThresholds(entry, false)) do
+		if threshold.index == glowIndex then
+			selectedThreshold = threshold
+			break
+		end
+	end
+	if not selectedThreshold then return nil end
+	local style = Helper.NormalizeGlowStyle(entry.barDurationThresholdGlowStyle, "PIXEL")
+	if style ~= "PIXEL" and style ~= "PULSING" and style ~= "SOLID" then style = "PIXEL" end
+	local defaults = Bars and Bars.DEFAULTS or {}
+	local borderEnabled = entry.barBorderEnabled
+	if borderEnabled == nil then borderEnabled = defaults.barBorderEnabled ~= false end
+	local borderSize = math.max(0, tonumber(entry.barBorderSize) or tonumber(defaults.barBorderSize) or 1)
+	local borderOffset = tonumber(entry.barBorderOffset) or tonumber(defaults.barBorderOffset) or 0
+	local pixelOptions = CooldownPanels:ResolveGlowPixelOptions(layout, entry) or {}
+	return {
+		index = glowIndex,
+		fraction = math.max(0.001, math.min(1, selectedThreshold.fraction)),
+		style = style,
+		color = Helper.NormalizeColor(entry.barDurationThresholdGlowColor, { 1, 0.2, 0.2, 1 }),
+		inset = borderEnabled and borderSize > 0 and borderOffset or 0,
+		border = pixelOptions.border == true,
+		count = pixelOptions.count,
+		frequency = pixelOptions.frequency,
+		thickness = pixelOptions.thickness,
+	}
+end
+
+function AuraContainers:GetIconDurationThresholdGlowConfig(entry, _activeDesaturate, layout)
+	if
+		not (entry and entry.type == ENTRY_TYPE and getDisplayMode(entry) == "BUTTON" and entry.auraDurationThresholdGlowEnabled == true)
+	then
+		return nil
+	end
+	local defaults = Helper.ENTRY_DEFAULTS or {}
+	local asSeconds = entry.auraDurationThresholdAsSeconds == true
+	local maximum = Helper.ClampInt(entry.auraDurationThresholdMaxDuration, 1, 3600, defaults.auraDurationThresholdMaxDuration or 30)
+	local value = Helper.ClampInt(entry.auraDurationThresholdValue, 1, asSeconds and 3600 or 100, defaults.auraDurationThresholdValue or 33)
+	local fraction = asSeconds and (value / maximum) or (value / 100)
+	local style = Helper.NormalizeGlowStyle(entry.auraDurationThresholdGlowStyle, defaults.auraDurationThresholdGlowStyle or "PIXEL")
+	if style ~= "PIXEL" and style ~= "PULSING" and style ~= "SOLID" then style = "PIXEL" end
+	local _, _, _, inset = CooldownPanels:ResolveEntryGlowStyle(layout or Helper.PANEL_LAYOUT_DEFAULTS, entry)
+	local pixelOptions = CooldownPanels:ResolveGlowPixelOptions(layout, entry) or {}
+	return {
+		fraction = math.max(0.001, math.min(1, fraction)),
+		style = style,
+		color = Helper.NormalizeColor(entry.auraDurationThresholdGlowColor, defaults.auraDurationThresholdGlowColor or { 1, 0.2, 0.2, 1 }),
+		inset = inset or 0,
+		shape = Helper.NormalizeIconShape(layout and layout.iconShape, Helper.PANEL_LAYOUT_DEFAULTS.iconShape),
+		border = pixelOptions.border == true,
+		count = pixelOptions.count,
+		frequency = pixelOptions.frequency,
+		thickness = pixelOptions.thickness,
+	}
+end
+
+function AuraContainers:ApplyIconDurationThresholdGlow(button, config, bodyWidth, bodyHeight)
+	if not (button and config) then return end
+	local statusBar = CreateFrame("StatusBar", nil, button)
+	statusBar:SetFrameLevel((button:GetFrameLevel() or 0) + 1)
+	button:SetDurationBar(statusBar, {
+		direction = Enum.StatusBarTimerDirection.ElapsedTime,
+		interpolation = Enum.StatusBarInterpolation and Enum.StatusBarInterpolation.Immediate or nil,
+	})
+	statusBar:SetStatusBarTexture("Interface\\Buttons\\WHITE8X8")
+	statusBar:SetStatusBarColor(1, 1, 1, 0)
+	local fill = statusBar.GetStatusBarTexture and statusBar:GetStatusBarTexture()
+	if not fill then return end
+
+	local color = config.color or {}
+	local glow = AuraCompat:CreateRestrictedAuraGlow(button, button, {
+		color = {
+			color.r or color[1] or 1,
+			color.g or color[2] or 1,
+			color.b or color[3] or 1,
+			color.a or color[4] or 1,
+		},
+		style = config.style,
+		shape = config.shape,
+		border = config.border,
+		count = config.count,
+		frequency = config.frequency,
+		inset = config.inset,
+		thickness = config.thickness,
+		frameLevelOffset = 25,
+		width = bodyWidth,
+		height = bodyHeight,
+	})
+	if not glow then return end
+
+	local gateMask = button:CreateMaskTexture(nil, "ARTWORK")
+	gateMask:SetTexture("Interface\\Buttons\\WHITE8X8", "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+	gateMask:SetAllPoints(fill)
+	gateMask:Show()
+	local regions = { glow:GetRegions() }
+	for regionIndex = 1, #regions do
+		local region = regions[regionIndex]
+		if region and region.IsObjectType and region:IsObjectType("Texture") and region.AddMaskTexture then region:AddMaskTexture(gateMask) end
+	end
+
+	local inset = tonumber(config.inset) or 0
+	local glowWidth = math.max(1, (bodyWidth or 1) + (inset * 2))
+	local glowHeight = math.max(1, (bodyHeight or 1) + (inset * 2))
+	local length = math.min(120000, math.max(glowWidth, glowWidth / 0.0005))
+	local gate = math.max(0, math.min(1, 1 - config.fraction))
+	local back = length * gate
+	statusBar:ClearAllPoints()
+	statusBar:SetOrientation("HORIZONTAL")
+	statusBar:SetSize(length, glowHeight)
+	statusBar:SetPoint("LEFT", button, "LEFT", -inset - back, 0)
+	statusBar:SetMinMaxValues(gate - 0.0002, gate)
+	button._eqolIconDurationThresholdGlow = glow
+	button._eqolIconDurationThresholdGlowBar = statusBar
+end
+
+function AuraContainers:GetDurationThresholdSignature(entry, activeDesaturate, layout)
+	local parts = {}
+	local layers = self:GetDurationThresholdLayers(entry, activeDesaturate)
+	local baseColor = layers.baseColor or {}
+	parts[#parts + 1] = table.concat({
+		baseColor.r or baseColor[1] or 1,
+		baseColor.g or baseColor[2] or 1,
+		baseColor.b or baseColor[3] or 1,
+		baseColor.a or baseColor[4] or 1,
+	}, ",")
+	for _, layer in ipairs(layers) do
+		local color = layer.color or {}
+		parts[#parts + 1] = table.concat({
+			layer.side or "",
+			layer.fraction or 0,
+			layer.step and 1 or 0,
+			color.r or color[1] or 1,
+			color.g or color[2] or 1,
+			color.b or color[3] or 1,
+			color.a or color[4] or 1,
+		}, ",")
+	end
+	local glow = self:GetDurationThresholdGlowConfig(entry, activeDesaturate, layout)
+	if glow then
+		local color = glow.color or {}
+		parts[#parts + 1] = table.concat({
+			"glow",
+			glow.index or 0,
+			glow.fraction or 0,
+			glow.style or "",
+			glow.inset or 0,
+			glow.border and 1 or 0,
+			glow.count or 0,
+			glow.frequency or 0,
+			glow.thickness or 0,
+			color.r or color[1] or 1,
+			color.g or color[2] or 1,
+			color.b or color[3] or 1,
+			color.a or color[4] or 1,
+		}, ",")
+	end
+	local iconGlow = self:GetIconDurationThresholdGlowConfig(entry, activeDesaturate, layout)
+	if iconGlow then
+		local color = iconGlow.color or {}
+		parts[#parts + 1] = table.concat({
+			"iconGlow",
+			iconGlow.fraction or 0,
+			iconGlow.style or "",
+			iconGlow.inset or 0,
+			iconGlow.border and 1 or 0,
+			iconGlow.count or 0,
+			iconGlow.frequency or 0,
+			iconGlow.thickness or 0,
 			color.r or color[1] or 1,
 			color.g or color[2] or 1,
 			color.b or color[3] or 1,
@@ -487,6 +714,251 @@ function AuraContainers:RegisterStackThresholdSlots(container, state, slotHost, 
 		initializeFrame = self:CreateStackThresholdShadeInitializer(state.entry, maximum, #thresholds + 1),
 	})
 	return shade ~= nil
+end
+
+function AuraContainers:ApplyDurationThresholdGeometry(button, statusBar, mask, entry, layer, bodyWidth, bodyHeight)
+	local defaults = Bars and Bars.DEFAULTS or {}
+	local vertical = (entry and entry.barOrientation or defaults.barOrientation) == "VERTICAL"
+	local size = vertical and bodyHeight or bodyWidth
+	if type(size) ~= "number" or size < 1 then size = 1 end
+	local scale = button.GetEffectiveScale and button:GetEffectiveScale() or 1
+	local _, physicalHeight = GetPhysicalScreenSize()
+	local onePixel = physicalHeight and physicalHeight > 0 and scale and scale > 0 and (768 / physicalHeight) / scale or 1
+	local seam = math.floor((size * layer.fraction) / onePixel + 0.5) * onePixel
+	local padding = 400
+	local overlap = onePixel
+
+	mask:ClearAllPoints()
+	if vertical then
+		if layer.side == "high" then
+			mask:SetPoint("BOTTOMLEFT", button, "BOTTOMLEFT", -padding, seam - overlap)
+			mask:SetPoint("TOPRIGHT", button, "TOPRIGHT", padding, padding)
+		else
+			mask:SetPoint("BOTTOMLEFT", button, "BOTTOMLEFT", -padding, 0)
+			mask:SetPoint("TOPRIGHT", button, "BOTTOMRIGHT", padding, seam + overlap)
+		end
+	elseif layer.side == "high" then
+		mask:SetPoint("TOPLEFT", button, "TOPLEFT", seam - overlap, padding)
+		mask:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", padding, -padding)
+	else
+		mask:SetPoint("TOPLEFT", button, "TOPLEFT", 0, padding)
+		mask:SetPoint("BOTTOMRIGHT", button, "BOTTOMLEFT", seam + overlap, -padding)
+	end
+	mask:Show()
+
+	statusBar:ClearAllPoints()
+	if not layer.step then
+		statusBar:SetAllPoints(button)
+		statusBar:SetMinMaxValues(0, 1)
+		return
+	end
+	local minimum = math.min(layer.fraction, 0.9998)
+	statusBar:SetMinMaxValues(minimum, minimum + 0.0002)
+	local length = math.min(120000, math.max(size, seam / 0.0005))
+	local back = length * layer.fraction
+	if vertical then
+		statusBar:SetPoint("BOTTOMLEFT", button, "BOTTOMLEFT", 0, -back)
+		statusBar:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 0, -back)
+		statusBar:SetHeight(length)
+	else
+		statusBar:SetPoint("TOPLEFT", button, "TOPLEFT", -back, 0)
+		statusBar:SetPoint("BOTTOMLEFT", button, "BOTTOMLEFT", -back, 0)
+		statusBar:SetWidth(length)
+	end
+end
+
+function AuraContainers:CreateDurationThresholdInitializer(entry, layer, rank, bodyWidth, bodyHeight)
+	return function(button)
+		button:EnableMouse(false)
+		button:SetFrameLevel((button:GetFrameLevel() or 0) + rank)
+		local statusBar = CreateFrame("StatusBar", nil, button)
+		statusBar:SetFrameLevel((button:GetFrameLevel() or 0) + 1)
+		applyAuraBarOrientation(statusBar, entry and entry.barOrientation)
+		local interpolation = layer.step and Enum.StatusBarInterpolation and Enum.StatusBarInterpolation.Immediate or nil
+		button:SetDurationBar(statusBar, {
+			direction = entry and entry.barReverseFill == true and Enum.StatusBarTimerDirection.ElapsedTime or Enum.StatusBarTimerDirection.RemainingTime,
+			interpolation = interpolation,
+		})
+		statusBar:SetStatusBarTexture("Interface\\Buttons\\WHITE8X8")
+		local color = layer.color or {}
+		statusBar:SetStatusBarColor(color.r or color[1] or 1, color.g or color[2] or 1, color.b or color[3] or 1, color.a or color[4] or 1)
+		local mask = self:CreateStackThresholdMask(button)
+		local fill = statusBar.GetStatusBarTexture and statusBar:GetStatusBarTexture()
+		if fill and fill.AddMaskTexture then fill:AddMaskTexture(mask) end
+		self:ApplyDurationThresholdGeometry(button, statusBar, mask, entry, layer, bodyWidth, bodyHeight)
+	end
+end
+
+function AuraContainers:CreateDurationThresholdShadeInitializer(entry, rank)
+	return function(button)
+		button:EnableMouse(false)
+		button:SetFrameLevel((button:GetFrameLevel() or 0) + rank)
+		local statusBar = CreateFrame("StatusBar", nil, button)
+		statusBar:SetAllPoints(button)
+		statusBar:SetFrameLevel((button:GetFrameLevel() or 0) + 1)
+		local defaults = Bars and Bars.DEFAULTS or {}
+		statusBar:SetStatusBarTexture(resolveBarTexture(entry.barTexture or defaults.barTexture))
+		applyAuraBarOrientation(statusBar, entry.barOrientation or defaults.barOrientation)
+		statusBar:SetStatusBarColor(1, 1, 1, 1)
+		local fill = statusBar.GetStatusBarTexture and statusBar:GetStatusBarTexture()
+		if fill and fill.SetBlendMode then fill:SetBlendMode("MOD") end
+		button:SetDurationBar(statusBar, {
+			direction = entry.barReverseFill == true and Enum.StatusBarTimerDirection.ElapsedTime or Enum.StatusBarTimerDirection.RemainingTime,
+		})
+	end
+end
+
+function AuraContainers:ApplyDurationThresholdGlowGeometry(button, statusBar, mask, config, edge, bodyWidth, bodyHeight)
+	local horizontal = edge == "TOP" or edge == "BOTTOM"
+	local inset = tonumber(config.inset) or 0
+	local thickness = config.style == "PIXEL" and math.max(3, tonumber(config.thickness) or 2) or 3
+	local halfThickness = thickness / 2
+	local edgeLength = math.max(1, ((horizontal and bodyWidth or bodyHeight) or 1) + (inset * 2))
+	local length = math.min(120000, math.max(edgeLength, edgeLength / 0.0005))
+	local gate = math.max(0, math.min(1, 1 - config.fraction))
+	local back = length * gate
+
+	mask:ClearAllPoints()
+	statusBar:ClearAllPoints()
+	if horizontal then
+		mask:SetSize(edgeLength, thickness)
+		statusBar:SetOrientation("HORIZONTAL")
+		statusBar:SetSize(length, thickness)
+		if edge == "TOP" then
+			mask:SetPoint("CENTER", button, "TOP", 0, inset - halfThickness)
+			statusBar:SetPoint("LEFT", button, "TOPLEFT", -inset - back, inset - halfThickness)
+		else
+			mask:SetPoint("CENTER", button, "BOTTOM", 0, -inset + halfThickness)
+			statusBar:SetPoint("LEFT", button, "BOTTOMLEFT", -inset - back, -inset + halfThickness)
+		end
+	else
+		mask:SetSize(thickness, edgeLength)
+		statusBar:SetOrientation("VERTICAL")
+		statusBar:SetSize(thickness, length)
+		if edge == "RIGHT" then
+			mask:SetPoint("CENTER", button, "RIGHT", inset - halfThickness, 0)
+			statusBar:SetPoint("BOTTOM", button, "BOTTOMRIGHT", inset - halfThickness, -inset - back)
+		else
+			mask:SetPoint("CENTER", button, "LEFT", -inset + halfThickness, 0)
+			statusBar:SetPoint("BOTTOM", button, "BOTTOMLEFT", -inset + halfThickness, -inset - back)
+		end
+	end
+	mask:Show()
+	statusBar:SetMinMaxValues(gate - 0.0002, gate)
+end
+
+function AuraContainers:CreateDurationThresholdGlowInitializer(config, edge, rank, bodyWidth, bodyHeight)
+	return function(button)
+		button:EnableMouse(false)
+		button:SetFrameLevel((button:GetFrameLevel() or 0) + rank)
+		local statusBar = CreateFrame("StatusBar", nil, button)
+		statusBar:SetFrameLevel((button:GetFrameLevel() or 0) + 1)
+		button:SetDurationBar(statusBar, {
+			direction = Enum.StatusBarTimerDirection.ElapsedTime,
+			interpolation = Enum.StatusBarInterpolation and Enum.StatusBarInterpolation.Immediate or nil,
+		})
+		local horizontal = edge == "TOP" or edge == "BOTTOM"
+		local texture = config.style == "PIXEL"
+			and (horizontal and "Interface\\AddOns\\EnhanceQoL\\Assets\\glow_dash_h.tga" or "Interface\\AddOns\\EnhanceQoL\\Assets\\glow_dash_v.tga")
+			or "Interface\\Buttons\\WHITE8X8"
+		statusBar:SetStatusBarTexture("Interface\\Buttons\\WHITE8X8")
+		local fill = statusBar.GetStatusBarTexture and statusBar:GetStatusBarTexture()
+		if not fill then return end
+		local color = config.color or {}
+		local colorR, colorG, colorB, colorA = color.r or color[1] or 1, color.g or color[2] or 1, color.b or color[3] or 1, color.a or color[4] or 1
+		local renderTexture = fill
+		if config.style == "PIXEL" then
+			statusBar:SetStatusBarColor(1, 1, 1, 0)
+			renderTexture = button:CreateTexture(nil, "OVERLAY")
+			renderTexture:SetTexture(texture, "REPEAT", "REPEAT")
+			renderTexture:SetVertexColor(colorR, colorG, colorB, colorA)
+			renderTexture:SetBlendMode("ADD")
+			if horizontal and renderTexture.SetHorizTile then renderTexture:SetHorizTile(true) end
+			if not horizontal and renderTexture.SetVertTile then renderTexture:SetVertTile(true) end
+			local gateMask = button:CreateMaskTexture(nil, "ARTWORK")
+			gateMask:SetTexture("Interface\\Buttons\\WHITE8X8", "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+			gateMask:SetAllPoints(fill)
+			gateMask:Show()
+			renderTexture:AddMaskTexture(gateMask)
+			local frequency = tonumber(config.frequency) or 0.25
+			local period = frequency ~= 0 and math.abs(1 / frequency) or 4
+			local inset = tonumber(config.inset) or 0
+			local perimeter = math.max(1, 2 * (math.max(1, (bodyWidth or 1) + (inset * 2)) + math.max(1, (bodyHeight or 1) + (inset * 2))))
+			local textureCycle = 64
+			local animation = renderTexture:CreateAnimationGroup()
+			animation:SetLooping("REPEAT")
+			local translation = animation:CreateAnimation("Translation")
+			translation:SetSmoothing("NONE")
+			local direction = frequency < 0 and -1 or 1
+			if edge == "TOP" then
+				translation:SetOffset(textureCycle * direction, 0)
+			elseif edge == "RIGHT" then
+				translation:SetOffset(0, -textureCycle * direction)
+			elseif edge == "BOTTOM" then
+				translation:SetOffset(-textureCycle * direction, 0)
+			else
+				translation:SetOffset(0, textureCycle * direction)
+			end
+			translation:SetDuration(math.max(0.05, (textureCycle * period) / perimeter))
+			animation:Play()
+			button._eqolDurationThresholdGlowAnimation = animation
+		else
+			statusBar:SetStatusBarColor(colorR, colorG, colorB, colorA)
+			if fill.SetBlendMode then fill:SetBlendMode(config.style == "SOLID" and "BLEND" or "ADD") end
+		end
+		if config.style == "PULSING" then
+			local animation = statusBar:CreateAnimationGroup()
+			animation:SetLooping("BOUNCE")
+			animation:SetToFinalAlpha(true)
+			local alpha = animation:CreateAnimation("Alpha")
+			alpha:SetOrder(1)
+			alpha:SetSmoothing("IN_OUT")
+			alpha:SetFromAlpha(0.35)
+			alpha:SetToAlpha(1)
+			alpha:SetDuration(0.65)
+			animation:Play()
+			button._eqolDurationThresholdGlowAnimation = animation
+		end
+		local mask = self:CreateStackThresholdMask(button)
+		if renderTexture.AddMaskTexture then renderTexture:AddMaskTexture(mask) end
+		self:ApplyDurationThresholdGlowGeometry(button, statusBar, mask, config, edge, bodyWidth, bodyHeight)
+		if config.style == "PIXEL" then renderTexture:SetAllPoints(mask) end
+		button._eqolDurationThresholdGlowBar = statusBar
+	end
+end
+
+function AuraContainers:RegisterDurationThresholdSlots(container, state, slotHost, bodyWidth, bodyHeight)
+	if not (container and state and slotHost and state.mode == "BAR" and state.entry and state.entry.barMode == "COOLDOWN") then return true end
+	local layers = self:GetDurationThresholdLayers(state.entry, state.activeDesaturate)
+	local glowConfig = self:GetDurationThresholdGlowConfig(state.entry, state.activeDesaturate, state.layout)
+	if #layers == 0 and not glowConfig then return true end
+	for rank, layer in ipairs(layers) do
+		local slot = AuraCompat:RegisterAuraSlot(container, SLOT_KEY .. "DurationThreshold" .. rank, state.filterString, {
+			anchorFrame = slotHost,
+			candidateFilters = { includeSpellIDs = state.includeSpellIDs },
+			initializeFrame = self:CreateDurationThresholdInitializer(state.entry, layer, rank, bodyWidth, bodyHeight),
+		})
+		if not slot then return false end
+	end
+	if #layers > 0 then
+		local shade = AuraCompat:RegisterAuraSlot(container, SLOT_KEY .. "DurationThresholdShade", state.filterString, {
+			anchorFrame = slotHost,
+			candidateFilters = { includeSpellIDs = state.includeSpellIDs },
+			initializeFrame = self:CreateDurationThresholdShadeInitializer(state.entry, #layers + 1),
+		})
+		if not shade then return false end
+	end
+	if glowConfig then
+		for edgeIndex, edge in ipairs({ "TOP", "RIGHT", "BOTTOM", "LEFT" }) do
+			local glow = AuraCompat:RegisterAuraSlot(container, SLOT_KEY .. "DurationThresholdGlow" .. edge, state.filterString, {
+				anchorFrame = slotHost,
+				candidateFilters = { includeSpellIDs = state.includeSpellIDs },
+				initializeFrame = self:CreateDurationThresholdGlowInitializer(glowConfig, edge, #layers + 1 + edgeIndex, bodyWidth, bodyHeight),
+			})
+			if not glow then return false end
+		end
+	end
+	return true
 end
 
 local function createAuraBarChrome(button, statusBar, entry, bodyWidth, bodyHeight, overlayLevelBoost)
@@ -769,7 +1241,9 @@ local function createInitializer(mode, entry, layout, durationTextProfile, activ
 	local useApplicationBar = mode == "BAR" and entry.barMode == "STACKS"
 	local maxApplications = resolveBarStackMax(entry)
 	local stackThresholds = useApplicationBar and AuraContainers:GetStackThresholds(entry, activeDesaturate) or {}
-	local stackThresholdOverlayBoost = #stackThresholds > 0 and (#stackThresholds + 2) or 0
+	local durationThresholdLayers = mode == "BAR" and entry.barMode == "COOLDOWN" and AuraContainers:GetDurationThresholdLayers(entry, activeDesaturate) or {}
+	local iconDurationThresholdGlow = mode == "BUTTON" and AuraContainers:GetIconDurationThresholdGlowConfig(entry, activeDesaturate, layout) or nil
+	local thresholdOverlayBoost = #stackThresholds > 0 and (#stackThresholds + 2) or (#durationThresholdLayers > 0 and (#durationThresholdLayers + 2) or 0)
 	local showLabel = mode == "BAR" and entry.barShowLabel ~= false
 	local showDuration = not useApplicationBar and CooldownPanels:ShouldShowEntryCooldownText(layout, entry) and (mode ~= "BAR" or entry.barShowValueText ~= false)
 	local showStacks = (CooldownPanels:ShouldShowEntryStacks(layout, entry, ENTRY_TYPE) or useApplicationBar) and (mode ~= "BAR" or entry.barShowStackText ~= false)
@@ -799,10 +1273,10 @@ local function createInitializer(mode, entry, layout, durationTextProfile, activ
 		if mode == "BAR" then
 			local statusBar = CreateFrame("StatusBar", nil, button)
 			statusBar:SetFrameLevel((button:GetFrameLevel() or 0) + 1)
-			createAuraBarChrome(button, statusBar, entry, glowWidth, glowHeight, stackThresholdOverlayBoost)
+			createAuraBarChrome(button, statusBar, entry, glowWidth, glowHeight, thresholdOverlayBoost)
 			if useApplicationBar then AuraContainers:ApplyStackBarDirection(statusBar, entry) end
-			if #stackThresholds > 0 then statusBar:SetStatusBarTexture("Interface\\Buttons\\WHITE8X8") end
-			local color = entry.barColor
+			if #stackThresholds > 0 or #durationThresholdLayers > 0 then statusBar:SetStatusBarTexture("Interface\\Buttons\\WHITE8X8") end
+			local color = durationThresholdLayers.baseColor or entry.barColor
 			if activeDesaturate then
 				statusBar:SetStatusBarColor(0.45, 0.45, 0.45, 1)
 			elseif type(color) == "table" then
@@ -818,7 +1292,7 @@ local function createInitializer(mode, entry, layout, durationTextProfile, activ
 				})
 			end
 			button._eqolDurationBar = statusBar
-			if showLabel or showDuration or showStacks then textOverlay = createBarTextOverlay(button, 6 + stackThresholdOverlayBoost) end
+			if showLabel or showDuration or showStacks then textOverlay = createBarTextOverlay(button, 26 + thresholdOverlayBoost) end
 			if showLabel then
 				local label = textOverlay:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 				applyBarTextStyle(label, textOverlay, entry, "LABEL")
@@ -904,7 +1378,7 @@ local function createInitializer(mode, entry, layout, durationTextProfile, activ
 				borderSize = activeGlow.borderSize,
 				borderOffset = activeGlow.borderOffset,
 				borderIsBlizzard = activeGlow.borderIsBlizzard,
-				frameLevelOffset = 5 + stackThresholdOverlayBoost,
+				frameLevelOffset = 5 + thresholdOverlayBoost,
 				width = glowWidth,
 				height = glowHeight,
 			})
@@ -925,7 +1399,7 @@ local function createInitializer(mode, entry, layout, durationTextProfile, activ
 				borderSize = pandemicGlow.borderSize,
 				borderOffset = pandemicGlow.borderOffset,
 				borderIsBlizzard = pandemicGlow.borderIsBlizzard,
-				frameLevelOffset = 15 + stackThresholdOverlayBoost,
+				frameLevelOffset = 15 + thresholdOverlayBoost,
 				width = glowWidth,
 				height = glowHeight,
 			})
@@ -934,6 +1408,7 @@ local function createInitializer(mode, entry, layout, durationTextProfile, activ
 				button._eqolPandemicGlow = glow
 			end
 		end
+		if iconDurationThresholdGlow then AuraContainers:ApplyIconDurationThresholdGlow(button, iconDurationThresholdGlow, glowWidth, glowHeight) end
 	end
 end
 
@@ -1089,7 +1564,7 @@ local function createOverlayInitializer(mode, entry, layout, durationTextProfile
 	local stackThresholdOverlayBoost = #stackThresholds > 0 and (#stackThresholds + 2) or 0
 	local showLabel = mode == "BAR" and entry.barShowLabel ~= false
 	local showDuration = not useApplicationBar and CooldownPanels:ShouldShowEntryCooldownText(layout, entry) and (mode ~= "BAR" or entry.barShowValueText ~= false)
-	local showStacks = mode == "BAR" and (entry.showStacks == true or useApplicationBar) and entry.barShowStackText ~= false
+	local showStacks = (CooldownPanels:ShouldShowEntryStacks(layout, entry, entry.type) or useApplicationBar) and (mode ~= "BAR" or entry.barShowStackText ~= false)
 	local reverse = CooldownPanels:ResolveEntryActivationOverlayReverse(layout, entry)
 	local color = useActivationColor == true and CooldownPanels:ResolveEntryActivationOverlayColor(layout, entry)
 		or CooldownPanels:ResolveEntryCDMAuraOverlayColor(layout, entry)
@@ -1114,6 +1589,7 @@ local function createOverlayInitializer(mode, entry, layout, durationTextProfile
 			background:SetColorTexture(0, 0, 0, 1)
 			button._eqolOverlayBackground = background
 		end
+		local textOverlay
 		if mode == "BAR" then
 			local statusBar = CreateFrame("StatusBar", nil, button)
 			statusBar:SetFrameLevel((button:GetFrameLevel() or 0) + 1)
@@ -1129,8 +1605,7 @@ local function createOverlayInitializer(mode, entry, layout, durationTextProfile
 				})
 			end
 			button._eqolOverlayDurationBar = statusBar
-			local textOverlay
-			if showLabel or showDuration or showStacks then textOverlay = createBarTextOverlay(button, 6 + stackThresholdOverlayBoost) end
+			if showLabel or showDuration or showStacks then textOverlay = createBarTextOverlay(button, 26 + stackThresholdOverlayBoost) end
 			if showLabel then
 				local label = textOverlay:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 				applyBarTextStyle(label, textOverlay, entry, "LABEL")
@@ -1142,12 +1617,6 @@ local function createOverlayInitializer(mode, entry, layout, durationTextProfile
 				applyBarTextStyle(duration, textOverlay, entry, "VALUE")
 				button:SetDurationText(duration, durationTextOptions)
 				button._eqolOverlayDurationText = duration
-			end
-			if showStacks then
-				local count = textOverlay:CreateFontString(nil, "OVERLAY", "NumberFontNormalSmall")
-				applyBarTextStyle(count, textOverlay, entry, "STACK")
-				button:SetApplicationCount(count)
-				button._eqolOverlayApplicationCount = count
 			end
 		else
 			local icon
@@ -1181,7 +1650,7 @@ local function createOverlayInitializer(mode, entry, layout, durationTextProfile
 			if cooldown.SetReverse then cooldown:SetReverse(reverse) end
 			if cooldown.SetSwipeColor then cooldown:SetSwipeColor(r, g, b, a) end
 			if showDuration then
-				local textOverlay = createBarTextOverlay(button)
+				textOverlay = createBarTextOverlay(button)
 				local duration = textOverlay:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 				if CooldownPanels.ApplyCooldownTextFontStringStyle then
 					CooldownPanels:ApplyCooldownTextFontStringStyle(button, layout, entry, duration, textOverlay, cooldown)
@@ -1189,6 +1658,17 @@ local function createOverlayInitializer(mode, entry, layout, durationTextProfile
 				button:SetDurationText(duration, durationTextOptions)
 				button._eqolOverlayDurationText = duration
 			end
+		end
+		if showStacks then
+			if not textOverlay then textOverlay = createBarTextOverlay(button) end
+			local count = textOverlay:CreateFontString(nil, "OVERLAY", "NumberFontNormalSmall")
+			if mode == "BAR" then
+				applyBarTextStyle(count, textOverlay, entry, "STACK")
+			else
+				applyNativeStackTextStyle(count, textOverlay, layout, entry)
+			end
+			button:SetApplicationCount(count)
+			button._eqolOverlayApplicationCount = count
 		end
 
 		if showGlow then
@@ -1454,9 +1934,24 @@ local function createState(panelId, entryId, entry, layout, alwaysShowMode, unit
 	local unitToken = unitTokenOverride or configuredUnit
 	local stateKeyEntryId = stateKeySuffix and (tostring(entryId) .. ":" .. tostring(stateKeySuffix)) or entryId
 	local key = getStateKey(STATE_KIND_ENTRY, panelId, stateKeyEntryId)
+	local state = states[key]
+	local runtime = CooldownPanels.runtime
+	if
+		state
+		and not state.disabled
+		and runtime
+		and runtime._eqolRuntimePanelRefresh == true
+		and state.alwaysShowMode == alwaysShowMode
+		and state.unitToken == unitToken
+		and state.durationTextVersion == (addon.DurationText and addon.DurationText.version or 0)
+	then
+		state.entry = entry
+		state.layout = layout
+		AuraContainers:MarkStateSeen(state)
+		return state
+	end
 	local spellID = getAuraSpellID(entry)
 	if not spellID then
-		local state = states[key]
 		if state then
 			disableState(state)
 			states[key] = nil
@@ -1465,7 +1960,6 @@ local function createState(panelId, entryId, entry, layout, alwaysShowMode, unit
 	end
 	local spellIDs, includeSpellIDs, spellIDSignature = getAuraSpellIDs(entry)
 	if #spellIDs == 0 then
-		local state = states[key]
 		if state then
 			disableState(state)
 			states[key] = nil
@@ -1502,6 +1996,7 @@ local function createState(panelId, entryId, entry, layout, alwaysShowMode, unit
 	local iconBorderColor = layout and layout.iconBorderColor
 	local effectiveStackMax = resolveBarStackMax(entry)
 	local stackThresholdSignature = AuraContainers:GetStackThresholdSignature(entry, activeDesaturate)
+	local durationThresholdSignature = AuraContainers:GetDurationThresholdSignature(entry, activeDesaturate, layout)
 	local nativeStackDividers = usesNativeStackDividers(mode, entry)
 	local visualSize, visualOffsetX, visualOffsetY, visualWidth, visualHeight
 	if mode == "BUTTON" and CooldownPanels.ResolveEntryIconVisualLayout then
@@ -1524,6 +2019,7 @@ local function createState(panelId, entryId, entry, layout, alwaysShowMode, unit
 		stateTextureSignature or "",
 		CooldownPanels:ShouldShowEntryCooldownText(layout, entry) and 1 or 0,
 		cooldownTextStyleSignature,
+		showStacks and 1 or 0,
 		stackTextStyleSignature,
 		staticTextStyleSignature,
 		cooldownDrawEdge and 1 or 0,
@@ -1596,6 +2092,7 @@ local function createState(panelId, entryId, entry, layout, alwaysShowMode, unit
 		tostring(entry.barStackTalentMax or ""),
 		tostring(effectiveStackMax),
 		stackThresholdSignature,
+		durationThresholdSignature,
 		tostring(type(color) == "table" and (color.r or color[1]) or ""),
 		tostring(type(color) == "table" and (color.g or color[2]) or ""),
 		tostring(type(color) == "table" and (color.b or color[3]) or ""),
@@ -1663,7 +2160,6 @@ local function createState(panelId, entryId, entry, layout, alwaysShowMode, unit
 		tostring(entry.barOffsetX or ""),
 		tostring(entry.barOffsetY or ""),
 	}, ":")
-	local state = states[key]
 	if state and state.signature == signature and not state.disabled then
 		state.entry = entry
 		state.layout = layout
@@ -1681,6 +2177,8 @@ local function createState(panelId, entryId, entry, layout, alwaysShowMode, unit
 		state.spellIDSignature = spellIDSignature
 		state.maxFrameCount = maxFrameCount
 		state.nativeStackDividers = nativeStackDividers
+		state.alwaysShowMode = alwaysShowMode
+		state.durationTextVersion = addon.DurationText and addon.DurationText.version or 0
 		SoundLifecycle.Register(state, entry, spellIDs, unitToken)
 		AuraContainers:MarkStateSeen(state)
 		return state
@@ -1743,6 +2241,8 @@ local function createState(panelId, entryId, entry, layout, alwaysShowMode, unit
 		showInactive = showInactive,
 		showNativeStaticText = showNativeStaticText,
 		stateTextureData = stateTextureData,
+		alwaysShowMode = alwaysShowMode,
+		durationTextVersion = addon.DurationText and addon.DurationText.version or 0,
 	}
 	states[key] = state
 	SoundLifecycle.Register(state, entry, spellIDs, unitToken)
@@ -1828,9 +2328,12 @@ local function createOverlayState(panelId, entryId, entry, spellID, layout, opti
 	local valueColor = entry.barValueColor
 	local stackColor = entry.barStackColor
 	local cooldownTextStyleSignature = mode == "BUTTON" and getCooldownTextStyleSignature(layout, entry) or ""
+	local stackTextStyleSignature = mode == "BUTTON" and getStackTextStyleSignature(layout, entry) or ""
+	local showStacks = CooldownPanels:ShouldShowEntryStacks(layout, entry, options.sourceEntryType or entry.type)
 	local iconBorderColor = layout and layout.iconBorderColor
 	local effectiveStackMax = resolveBarStackMax(entry)
 	local stackThresholdSignature = AuraContainers:GetStackThresholdSignature(entry, false)
+	local durationThresholdSignature = AuraContainers:GetDurationThresholdSignature(entry, false, layout)
 	local signature = table.concat({
 		options.sourceEntryType or SPELL_ENTRY_TYPE,
 		tostring(options.sourceItemID or ""),
@@ -1848,6 +2351,8 @@ local function createOverlayState(panelId, entryId, entry, spellID, layout, opti
 		layout and layout.showTooltips == true and 1 or 0,
 		CooldownPanels:ShouldShowEntryCooldownText(layout, entry) and 1 or 0,
 		cooldownTextStyleSignature,
+		showStacks and 1 or 0,
+		stackTextStyleSignature,
 		CooldownPanels:ResolveEntryActivationOverlayReverse(layout, entry) and 1 or 0,
 		CooldownPanels:ResolveEntryActivationOverlayGlow(layout, entry) == true and 1 or 0,
 		tostring(glowR),
@@ -1874,6 +2379,7 @@ local function createOverlayState(panelId, entryId, entry, spellID, layout, opti
 		tostring(entry.barStackTalentMax or ""),
 		tostring(effectiveStackMax),
 		stackThresholdSignature,
+		durationThresholdSignature,
 		tostring(layout and layout.iconShape or ""),
 		tostring(layout and layout.iconZoom or ""),
 		layout and layout.iconBorderEnabled == true and 1 or 0,
@@ -2040,14 +2546,18 @@ function AuraContainers:BuildSpellAuraOverlayData(panelId, entryId, entry, spell
 	local groupUnitTokens = self:GetAuraGroupUnitTokens(entry and entry.cdmAuraOverlayUnit)
 	if groupUnitTokens then
 		for i, unitToken in ipairs(groupUnitTokens) do
-			local partyState = createOverlayState(panelId, entryId, entry, spellID, layout, nil, unitToken, i > 1 and unitToken or nil)
+			local partyState = createOverlayState(panelId, entryId, entry, spellID, layout, {
+				preserveHostVisual = entry and entry.cdmAuraOverlayHideIcon == true,
+			}, unitToken, i > 1 and unitToken or nil)
 			if partyState then
 				partyState.partyIndex = i
 			end
 			state = state or partyState
 		end
 	else
-		state = createOverlayState(panelId, entryId, entry, spellID, layout)
+		state = createOverlayState(panelId, entryId, entry, spellID, layout, {
+			preserveHostVisual = entry and entry.cdmAuraOverlayHideIcon == true,
+		})
 	end
 	if not state then return nil end
 	return {
@@ -2192,6 +2702,10 @@ local function initializeEntryState(state, target, width, height)
 		return false
 	end
 	if not multiFrame and not AuraContainers:RegisterStackThresholdSlots(container, state, slotHost, width, height) then
+		AuraCompat:DisableAuraContainer(container)
+		return false
+	end
+	if not multiFrame and not AuraContainers:RegisterDurationThresholdSlots(container, state, slotHost, width, height) then
 		AuraCompat:DisableAuraContainer(container)
 		return false
 	end

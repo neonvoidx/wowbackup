@@ -9,13 +9,7 @@ local GROW_OPTIONS = {
 	"RIGHT",
 	"CENTER",
 }
-local nameplatesDisplay = addon.Modules.Nameplates.Display
-local COLOR_MODE = nameplatesDisplay.ColorMode
-local COLOR_MODES = {
-	COLOR_MODE.None,
-	COLOR_MODE.Dispel,
-	COLOR_MODE.Custom,
-}
+local auraContainerDisplay = addon.Core.AuraContainerDisplay
 local verticalSpacing = mini.VerticalSpacing
 local horizontalSpacing = mini.HorizontalSpacing
 local COLUMNS = 4
@@ -28,18 +22,6 @@ local moduleName = addon.Utils.ModuleName
 local M = {}
 
 config.Nameplates = M
-
-local function ColorModeText(mode)
-	if mode == COLOR_MODE.Dispel then
-		return L["Dispel colours"]
-	end
-
-	if mode == COLOR_MODE.Custom then
-		return L["Custom"]
-	end
-
-	return L["None"]
-end
 
 ---@param parent table Tab content frame
 ---@param options NameplateSpellTypeOptions
@@ -222,18 +204,15 @@ local function BuildSpellTypeSettings(parent, options, defaults)
 	-- categories are either uncoloured, on the game's dispel palette, or on the picked tints. The
 	-- three tints themselves live on the Settings tab, since a category should read the same
 	-- colour on whichever bar it lands.
-	local colorsDdl = helpers:BuildLabelledDropdown({
+	local colorsDdl = helpers:BuildColorModeDropdown({
 		Parent = container,
-		LabelText = L["Icon colours"],
 		Tooltip = L["Tints the glow and border with the colours on the Settings tab. Dispel colours instead give CC the game's debuff colours, e.g. blue for magic."],
-		Items = COLOR_MODES,
-		GetText = ColorModeText,
 		Width = DROPDOWN_WIDTH,
 		Target = options.Icons,
 		Key = "ColorMode",
 		SettingsKey = moduleName.Nameplates,
 		GetValue = function()
-			return nameplatesDisplay:ResolveColorMode(options.Icons)
+			return auraContainerDisplay:ResolveColorMode(options.Icons)
 		end,
 	})
 
@@ -270,7 +249,9 @@ end
 
 ---@param parent table
 ---@param options NameplateModuleOptions
-local function BuildSettingsTab(parent, options)
+---@param db table Account-wide saved vars, for the one setting on this tab that isn't scoped
+---to the module.
+local function BuildSettingsTab(parent, options, db)
 	-- Shared 5-column checkbox grid so checkbox rows align across pages. These labels are
 	-- long in several locales (ruRU "Ignore Enemy Pets" needs ~220px), so the checkboxes
 	-- sit two grid columns apart in a 2x2 block instead of one per column.
@@ -315,6 +296,8 @@ local function BuildSettingsTab(parent, options)
 		SetValue = function(value)
 			options.ScaleWithNameplate = value
 			config:Apply(moduleName.Nameplates)
+			-- Nameplate-anchored personal auras read the same option.
+			config:Apply(moduleName.PersonalAuras)
 		end,
 	})
 	scaleWithNameplateChk:SetPoint("TOPLEFT", enemyIgnorePetsChk, "BOTTOMLEFT", 0, -verticalSpacing)
@@ -334,14 +317,38 @@ local function BuildSettingsTab(parent, options)
 	anchorToHealthBarChk:SetPoint("TOP", scaleWithNameplateChk, "TOP", 0, 0)
 	anchorToHealthBarChk:SetPoint("LEFT", parent, "LEFT", checkColumnWidth * 2, 0)
 
-	-- The category tints, on a row of their own below the checkbox pairs. Module wide rather than
-	-- per bar: a category should read the same colour wherever it lands, and the bar tabs only
-	-- choose between these and the game's dispel palette.
+	local configureBlizzardNameplatesChk = mini:Checkbox({
+		Parent = parent,
+		LabelText = L["Configure Blizzard Nameplates"],
+		Tooltip = L["Disables CC and BigDebuffs on Blizzard nameplates if using MiniAuras nameplates."],
+		GetValue = function()
+			if db.ConfigureBlizzardNameplates == nil then
+				return true
+			end
+			return db.ConfigureBlizzardNameplates
+		end,
+		SetValue = function(value)
+			db.ConfigureBlizzardNameplates = value
+			config:Apply(moduleName.Nameplates)
+		end,
+	})
+	configureBlizzardNameplatesChk:SetPoint("TOPLEFT", scaleWithNameplateChk, "BOTTOMLEFT", 0, -verticalSpacing)
+
+	local appearanceDivider = mini:Divider({
+		Parent = parent,
+		Text = L["Appearance"],
+	})
+	appearanceDivider:SetPoint("LEFT", parent, "LEFT")
+	appearanceDivider:SetPoint("RIGHT", parent, "RIGHT")
+	appearanceDivider:SetPoint("TOP", configureBlizzardNameplatesChk, "BOTTOM", 0, -verticalSpacing)
+
+	-- The category tints are module wide rather than per bar, since a category should read the
+	-- same colour wherever it lands.
 	---@param swatch table
 	---@param column number Grid column the swatch starts at.
 	local function PlaceSwatch(swatch, column)
 		swatch:SetPoint("LEFT", parent, "LEFT", checkColumnWidth * column, 0)
-		swatch:SetPoint("TOP", scaleWithNameplateChk, "BOTTOM", 0, -verticalSpacing)
+		swatch:SetPoint("TOP", appearanceDivider, "BOTTOM", 0, -verticalSpacing)
 	end
 
 	local ccSwatch = mini:ColorSwatch({
@@ -397,6 +404,24 @@ local function BuildSettingsTab(parent, options)
 	})
 
 	PlaceSwatch(importantSwatch, 2)
+
+	local fontScale = helpers:BuildClampedSlider({
+		Parent = parent,
+		LabelText = L["Font Scale"],
+		Tooltip = L["Scales this module's countdown text, leaving the icon size alone."],
+		Min = 0.5,
+		Max = 2.0,
+		Step = 0.05,
+		Default = dbDefaults.Modules.Nameplates.FontScale,
+		Fallback = dbDefaults.Modules.Nameplates.FontScale,
+		Float = true,
+		Width = columnWidth * 2 - horizontalSpacing,
+		Target = options,
+		Key = "FontScale",
+		SettingsKey = moduleName.Nameplates,
+	})
+
+	fontScale.Slider:SetPoint("TOPLEFT", ccSwatch, "BOTTOMLEFT", 4, -verticalSpacing * 3)
 end
 
 ---@param parent table
@@ -425,7 +450,8 @@ function M:Build(parent, options)
 	local enabledEverywhere = helpers:BuildEnableRow(parent, enabledDivider,
 		db.Modules.Nameplates.Enabled, nil, moduleName.Nameplates)
 
-	local subPanelHeight = 285
+	-- The tab does not scroll, so this has to track the height of everything on it.
+	local subPanelHeight = 369
 
 	local tabContainer = CreateFrame("Frame", nil, parent)
 	tabContainer:SetPoint("TOPLEFT",  enabledEverywhere, "BOTTOMLEFT", 0, -verticalSpacing)
@@ -449,7 +475,7 @@ function M:Build(parent, options)
 
 	local plateDefaults = dbDefaults.Modules.Nameplates
 
-	BuildSettingsTab(tabCtrl:GetContent("settings"), options)
+	BuildSettingsTab(tabCtrl:GetContent("settings"), options, db)
 	BuildSpellTypeSettings(tabCtrl:GetContent("enemyBar1"),     options.Enemy.Bar1, plateDefaults.Enemy.Bar1)
 	BuildSpellTypeSettings(tabCtrl:GetContent("enemyBar2"),     options.Enemy.Bar2, plateDefaults.Enemy.Bar2)
 	BuildSpellTypeSettings(tabCtrl:GetContent("friendlyBar1"),  options.Friendly.Bar1, plateDefaults.Friendly.Bar1)

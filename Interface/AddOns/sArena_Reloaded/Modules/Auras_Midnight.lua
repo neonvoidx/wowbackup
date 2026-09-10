@@ -18,6 +18,7 @@ local DEFAULT_SORT = { AuraContainerSortMethod.AuraInstanceIDOnly, AuraContainer
 local AURA_CATEGORIES = { "cc", "important", "defensive" }
 local otherCC = sArenaMixin.otherCC
 local otherDebuffs = sArenaMixin.otherDebuffs
+local ccBlacklist = sArenaMixin.ccBlacklist
 
 local function GetProfile(frame)
     return frame.parent and frame.parent.db and frame.parent.db.profile
@@ -61,7 +62,7 @@ local function StyleCooldown(frame, cooldown, icon)
     cooldown:SetDrawBling(false)
     frame:SetTextureCrop(icon, cropIcons, "class")
 
-    parent:CreateCustomCooldown(cooldown, profile and profile.showDecimalsClassIcon)
+    parent:UpdateCooldownThresholds(cooldown, profile and profile.showDecimalsClassIcon)
 
     local font = parent:GetAuraCooldownFont()
     cooldown:SetCountdownFont(font:GetName())
@@ -133,6 +134,11 @@ local function InitIcon(frame, button, category)
     end
 end
 
+local function CanFilterHarmfulSpellIDs(unit)
+    if not unit or not UnitExists(unit) then return false end
+    return not UnitCanAssist("player", unit, true, true)
+end
+
 local function NewContainer(frame, filter, sortKey, category, candidateFilters)
     local container = CreateFrame("AuraContainer", nil, frame.ClassIcon, "CustomAuraContainerTemplate")
     container:SetAllPoints(frame.ClassIcon)
@@ -151,6 +157,7 @@ local function NewContainer(frame, filter, sortKey, category, candidateFilters)
 
     container.sortKey = sortKey
     container.category = category
+    container.needsHarmfulSpellIDs = (candidateFilters and candidateFilters.includeSpellIDs) and true or false
     return container
 end
 
@@ -184,7 +191,7 @@ function sArenaFrameMixin:SetupAuraDisplay()
 
     self.auraSlotSignature = signature
 
-    self.AuraCC = NewContainer(self, "HARMFUL|CROWD_CONTROL", "ccSort", "cc")
+    self.AuraCC = NewContainer(self, "HARMFUL|CROWD_CONTROL", "ccSort", "cc", { excludeSpellIDs = ccBlacklist })
     self.AuraOtherCC = NewContainer(self, "HARMFUL", "ccSort", "cc", { includeSpellIDs = otherCC })
     self.AuraImportant = NewContainer(self, "HELPFUL|IMPORTANT|!BIG_DEFENSIVE|!EXTERNAL_DEFENSIVE", "importantSort", "important")
     self.AuraBigDef = NewContainer(self, "HELPFUL|BIG_DEFENSIVE", "defensiveSort", "defensive")
@@ -212,9 +219,10 @@ function sArenaFrameMixin:UpdateAuraSlotState()
         and UnitExists(self.unit)
 
     local onlyCC = profile and profile.onlyShowCCAuras
+    local harmfulIDsUsable = CanFilterHarmfulSpellIDs(self.unit)
 
     for _, container in ipairs(self.auraContainers) do
-        local wanted = active and (not onlyCC or container.isCC)
+        local wanted = active and (not onlyCC or container.isCC) and (not container.needsHarmfulSpellIDs or harmfulIDsUsable)
         container:SetEnabled(wanted and true or false)
         container:SetShown(wanted and true or false)
     end

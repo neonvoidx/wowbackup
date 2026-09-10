@@ -54,7 +54,12 @@ addon.functions.SettingsCreateCheckbox(cTooltip, {
 	var = "TooltipIDRequireModifier",
 	text = L["TooltipIDRequireModifier"],
 	desc = L["TooltipIDRequireModifierDesc"],
-	func = function(value) addon.db["TooltipIDRequireModifier"] = value and true or false end,
+	func = function(value)
+		addon.db["TooltipIDRequireModifier"] = value and true or false
+		if addon.Tooltip and addon.Tooltip.functions and addon.Tooltip.functions.UpdateModifierTooltipRefreshEventRegistration then
+			addon.Tooltip.functions.UpdateModifierTooltipRefreshEventRegistration()
+		end
+	end,
 	default = false,
 	order = 1,
 	parentSection = expandable,
@@ -766,6 +771,9 @@ local function SetTooltipPlayerDetailSelected(key, shouldSelect)
 	end
 
 	if (key == "spec" or key == "ilvl") and addon.functions.UpdateInspectEventRegistration then addon.functions.UpdateInspectEventRegistration() end
+	if addon.Tooltip and addon.Tooltip.functions and addon.Tooltip.functions.UpdateModifierTooltipRefreshEventRegistration then
+		addon.Tooltip.functions.UpdateModifierTooltipRefreshEventRegistration()
+	end
 end
 
 local function BuildMythicScorePartsOptions()
@@ -810,7 +818,12 @@ local playerDetailsInitializer = playerDetailsElement and playerDetailsElement.i
 addon.functions.SettingsCreateCheckbox(cTooltip, {
 	var = "TooltipMythicScoreRequireModifier",
 	text = L["TooltipMythicScoreRequireModifier"]:format(DUNGEON_SCORE),
-	func = function(value) addon.db["TooltipMythicScoreRequireModifier"] = value and true or false end,
+	func = function(value)
+		addon.db["TooltipMythicScoreRequireModifier"] = value and true or false
+		if addon.Tooltip and addon.Tooltip.functions and addon.Tooltip.functions.UpdateModifierTooltipRefreshEventRegistration then
+			addon.Tooltip.functions.UpdateModifierTooltipRefreshEventRegistration()
+		end
+	end,
 	default = false,
 	parent = true,
 	element = playerDetailsInitializer,
@@ -827,6 +840,9 @@ addon.functions.SettingsCreateCheckbox(cTooltip, {
 	func = function(value)
 		addon.db["TooltipUnitInspectRequireModifier"] = value and true or false
 		if addon.functions.UpdateInspectEventRegistration then addon.functions.UpdateInspectEventRegistration() end
+		if addon.Tooltip and addon.Tooltip.functions and addon.Tooltip.functions.UpdateModifierTooltipRefreshEventRegistration then
+			addon.Tooltip.functions.UpdateModifierTooltipRefreshEventRegistration()
+		end
 	end,
 	default = false,
 	parent = true,

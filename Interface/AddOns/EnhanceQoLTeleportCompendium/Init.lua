@@ -50,6 +50,49 @@ function addon.MythicPlus.functions.InitTeleportCompendiumDB()
 	init("teleportFrameData", {})
 	init("dungeonScoreFrameLocked", true)
 	init("dungeonScoreFrameData", {})
+
+	-- Party Keystone frame
+	init("partyKeystoneFrameAnchor", "DEFAULT")
+	init("partyKeystoneFrameOffsetX", 0)
+	init("partyKeystoneFrameOffsetY", 0)
+	init("partyKeystoneFrameAutoWidth", true)
+	init("partyKeystoneFrameWidth", 200)
+	init("partyKeystoneFrameHeight", 50)
+	init("partyKeystoneFrameShowIcon", true)
+	init("partyKeystoneFrameIconSize", 30)
+	init("partyKeystoneFrameShowRealm", false)
+	init("partyKeystoneFrameFont", (addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT)
+	init("partyKeystoneFrameFontStyle", "NONE")
+	init("partyKeystoneFrameLevelFontSize", 16)
+	init("partyKeystoneFrameLocationFontSize", 12)
+	init("partyKeystoneFrameNameFontSize", 12)
+	init("partyKeystoneFrameLevelColor", { r = 1, g = 1, b = 1, a = 1 })
+	init("partyKeystoneFrameLocationColor", { r = 1, g = 0.82, b = 0, a = 1 })
+	init("partyKeystoneFrameUseClassColor", true)
+	init("partyKeystoneFrameNameColor", { r = 1, g = 1, b = 1, a = 1 })
+	init("partyKeystoneFrameBackgroundColor", { r = 0, g = 0, b = 0, a = 0.8 })
+	init("partyKeystoneFrameBorderEnabled", false)
+	init("partyKeystoneFrameBorderStyle", "Blizzard Tooltip")
+	init("partyKeystoneFrameBorderSize", 16)
+	init("partyKeystoneFrameBorderColor", { r = 1, g = 1, b = 1, a = 1 })
+
+	-- Mythic dungeon Keystone reminder
+	init("partyKeystoneDungeonIndicatorEnabled", false)
+	init("partyKeystoneDungeonIndicatorShowHeader", true)
+	init("partyKeystoneDungeonIndicatorFont", addon.functions.GetGlobalFontConfigKey and addon.functions.GetGlobalFontConfigKey() or ((addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT))
+	init("partyKeystoneDungeonIndicatorFontStyle", addon.functions.GetGlobalFontStyleConfigKey and addon.functions.GetGlobalFontStyleConfigKey() or "OUTLINE")
+	init("partyKeystoneDungeonIndicatorHeaderFontSize", 20)
+	init("partyKeystoneDungeonIndicatorEntryFontSize", 18)
+	init("partyKeystoneDungeonIndicatorHeaderColor", { r = 1, g = 1, b = 1, a = 1 })
+	init("partyKeystoneDungeonIndicatorUseClassColor", true)
+	init("partyKeystoneDungeonIndicatorNameColor", { r = 1, g = 1, b = 1, a = 1 })
+	init("partyKeystoneDungeonIndicatorUseRarityColor", true)
+	init("partyKeystoneDungeonIndicatorLevelColor", { r = 1, g = 1, b = 1, a = 1 })
+	init("partyKeystoneDungeonIndicatorRowSpacing", 2)
+	init("partyKeystoneDungeonIndicatorAlignment", "LEFT")
+	init("partyKeystoneDungeonIndicatorGrowth", "DOWN")
+	init("partyKeystoneDungeonIndicatorNameOffsetX", 0)
+	init("partyKeystoneDungeonIndicatorNameOffsetY", 0)
 end
 
 -- dumb the map cursor position: /dump WorldMapFrame:GetMapID(), WorldMapFrame.ScrollContainer:GetNormalizedCursorPosition()
@@ -69,12 +112,12 @@ addon.MythicPlus.variables.portalCompendium = {
 			[1254559] = { text = "MC", cId = { [560] = true }, mapID = 2501, locID = 2437, x = 0.4368, y = 0.3963, zoneID = 2501 },
 			[1254563] = { text = "NPX", cId = { [559] = true }, mapID = 2556, locID = 2405, x = 0.6484, y = 0.6158, zoneID = 2556 },
 			[1254572] = { text = "MT", cId = { [558] = true }, mapID = 2511, locID = 2424, x = 0.6329, y = 0.1549, zoneID = 2511 },
-			[1286807] = { text = "NALO", cId = { [586] = true }, mapID = 2514, locID = 2437, x = 0.2963, y = 0.8415, zoneID = 2514 }, -- Den of Nalorakk
+			[1286807] = { text = "DON", cId = { [586] = true }, mapID = 2514, locID = 2437, x = 0.2963, y = 0.8415, zoneID = 2514 }, -- Den of Nalorakk
 			[1254400] = { text = "WS", cId = { [557] = true }, mapID = 2494, locID = 2395, x = 0.3543, y = 0.7908, zoneID = 2494 },
-			[1286801] = { text = "VALE", cId = { [584] = true }, mapID = 2500, locID = 2413, x = 0.2618, y = 0.7791, zoneID = 2500 }, -- The Blinding Vale
-			[1286804] = { text = "VOID", cId = { [585] = true }, mapID = 2572, locID = 2405, x = 0.5143, y = 0.1872, zoneID = 2572 }, -- Voidscar Arena
-			[1286809] = { text = "MURD", cId = { [587] = true }, mapID = 2433, locID = 2393, x = 0.5703, y = 0.6069, zoneID = 2433 }, -- Murder Row
-			[1286812] = { text = "FANG", cId = { [588] = true }, mapID = 2509, locID = 2509, x = 0.4713, y = 0.6793, zoneID = 2588 }, -- Altar of Fangs
+			[1286801] = { text = "BV", cId = { [584] = true }, mapID = 2500, locID = 2413, x = 0.2618, y = 0.7791, zoneID = 2500 }, -- The Blinding Vale
+			[1286804] = { text = "VSA", cId = { [585] = true }, mapID = 2572, locID = 2405, x = 0.5143, y = 0.1872, zoneID = 2572 }, -- Voidscar Arena
+			[1286809] = { text = "MR", cId = { [587] = true }, mapID = 2433, locID = 2393, x = 0.5703, y = 0.6069, zoneID = 2433 }, -- Murder Row
+			[1286812] = { text = "AOF", cId = { [588] = true }, mapID = 2509, locID = 2509, x = 0.4713, y = 0.6793, zoneID = 2588 }, -- Altar of Fangs
 			[1271425] = { text = "ABUN", isItem = true, itemID = 252607, icon = 1362642, locID = 2437, x = 0.31263855520737, y = 0.26260265863074, zoneID = 2437 }, -- Abundont Beacon
 			[1278093] = { text = "ABUN", isItem = true, itemID = 266370, icon = 236521, locID = 2437, x = 0.31263855520737, y = 0.26260265863074, zoneID = 2437 }, -- Dundun's Abundant Travel Method
 			[1299515] = { text = "LV", isToy = true, toyID = 276371, isHearthstone = true, map = { [2599] = true, [2600] = true } }, -- Lightveil Recall Beacon

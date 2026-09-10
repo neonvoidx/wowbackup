@@ -61,7 +61,8 @@ M.Nameplates = {
 }
 
 ---The party and raid frame rows, and the target and focus rows, whose plain icons take bare spell
----ids. Only the crowd control leading the debuff row is coloured, so only it is a tinted entry.
+---ids. A bare id can't carry a dispel tint itself, so Debuffs' entries take theirs from the
+---sibling DispelColors map, read only by the row with a switch for it.
 -- The frame aura rows can each let a flagged category back in, and the preview has to show that:
 -- a row with crowd control switched on wants a stun in it, and the same row with it off wants
 -- something ordinary in that slot instead. So the plain spells and the category stand-ins are
@@ -78,10 +79,18 @@ M.FrameAuras = {
 		139,    -- Renew
 		61295,  -- Riptide
 	},
-	Debuffs = { 34914, 589, 980, 146739 }, -- Vampiric Touch, Shadow Word: Pain, Agony, Corruption
+	-- Mortal Wounds leads because the preview draws only the row's budget, which starts at two.
+	Debuffs = { 115804, 34914, 589, 980, 146739 }, -- Mortal Wounds, Vampiric Touch, Shadow Word: Pain, Agony, Corruption
+	---Border tints for the debuffs above, keyed by spell id like Nameplates.DispelColors.
+	DispelColors = {
+		[115804] = DEBUFF_TYPE_NONE_COLOR, -- Mortal Wounds
+		[34914] = DEBUFF_TYPE_MAGIC_COLOR, -- Vampiric Touch
+		[589] = DEBUFF_TYPE_MAGIC_COLOR,   -- Shadow Word: Pain
+		[980] = DEBUFF_TYPE_CURSE_COLOR,   -- Agony
+		[146739] = DEBUFF_TYPE_MAGIC_COLOR, -- Corruption
+	},
 	-- One stand-in per flagged category, drawn only while the row is letting that category in.
-	-- The stun carries its tint because the live row colours that group by dispel type.
-	-- A physical stun shows its ring only while the switch is on.
+	-- The stun carries a tint because the debuff row rings a typeless aura live.
 	CrowdControl = { SpellId = 408, DispelColor = DEBUFF_TYPE_NONE_COLOR }, -- Kidney Shot
 	Important = 31884,   -- Avenging Wrath
 	Defensive = 33206,   -- Pain Suppression
@@ -124,18 +133,21 @@ M.KickSpecIds = {
 ---returns the next free slot, so a second category (or a trailing SetSlotUnused sweep) can pick
 ---up where it stopped. The one preview renderer: every module draws the same row of fake icons,
 ---differing only in which spells, where the row starts and how the icons are styled.
----A spell whose texture cannot be resolved is skipped without leaving a gap.
+---Without an IconOverride, a spell whose texture cannot be resolved is skipped without
+---leaving a gap.
 ---@param container IconSlotContainer
 ---@param spells table[]|number[] TestSpell entries, or bare spell ids.
 ---@param startSlot number First slot to write (after a kick icon, for the modules that show one).
 ---@param options table Styling and limits:
 --- ReverseCooldown/HideIcon/HideSwipe/HideNumbers/ShowNumbers/Glow/FontScale passed through
 --- to SetSlot;
---- Color tints every icon; ColorByDispelType tints each with its spell's DispelColor instead;
+--- Color tints every icon; ColorByDispelType tints each with its spell's DispelColor instead, or
+--- with DispelColors[spellId] for a bare id;
 --- TextColor tints the countdown and any stand-in count, replacing the global colour-by-time
 --- while it is set;
 --- CenterStackText puts that text centred on each icon in place of the countdown (the icon
 --- containers only, where the live displays can centre a stack count);
+--- IconOverride draws that picture on every icon in place of the spell's own artwork;
 --- ShowTooltips attaches each spell id;
 --- Count caps how many spells are drawn (default all);
 --- Repeat draws the list round again once it runs out, so Count is met rather than capped;
@@ -175,7 +187,7 @@ function M:FillContainer(container, spells, startSlot, options)
 
 		local spell = spells[index]
 		local spellId = type(spell) == "table" and spell.SpellId or spell
-		local texture = C_Spell.GetSpellTexture(spellId)
+		local texture = options.IconOverride or C_Spell.GetSpellTexture(spellId)
 
 		if texture then
 			local duration = 15
@@ -187,8 +199,12 @@ function M:FillContainer(container, spells, startSlot, options)
 			end
 
 			local color = options.Color
-			if not color and options.ColorByDispelType and type(spell) == "table" then
-				color = spell.DispelColor
+			if not color and options.ColorByDispelType then
+				if type(spell) == "table" then
+					color = spell.DispelColor
+				elseif options.DispelColors then
+					color = options.DispelColors[spellId]
+				end
 			end
 
 			container:SetSlot(slot, {

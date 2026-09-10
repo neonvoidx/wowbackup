@@ -193,6 +193,11 @@ local function normalizeColor(color, fallback)
 	}
 end
 
+local function colorComponents(color, fallback)
+	color = type(color) == "table" and color or fallback or {}
+	return clamp(color.r or color[1], 0, 1, fallback and fallback.r or 1), clamp(color.g or color[2], 0, 1, fallback and fallback.g or 1), clamp(color.b or color[3], 0, 1, fallback and fallback.b or 1), clamp(color.a or color[4], 0, 1, fallback and fallback.a or 1)
+end
+
 local function resolveMedia(mediaType, key, fallback)
 	if type(key) == "string" and key ~= "" then
 		if addon.functions.ResolveLSMMedia then
@@ -220,8 +225,10 @@ local function resolveFontStyle(value)
 end
 
 local function applyFont(fontString, face, size, style)
-	local fontKey = table.concat({ tostring(face or DEFAULT_FONT), tostring(size or 12), tostring(style or "") }, "\031")
-	if fontString._eqolFlowFontKey == fontKey then return end
+	face = face or DEFAULT_FONT
+	size = size or 12
+	style = style or ""
+	if fontString._eqolFlowFontFace == face and fontString._eqolFlowFontSize == size and fontString._eqolFlowFontStyle == style then return end
 	if addon.functions.ApplyFontString then
 		addon.functions.ApplyFontString(fontString, face, size, style, DEFAULT_FONT, "OUTLINE")
 	else
@@ -230,19 +237,26 @@ local function applyFont(fontString, face, size, style)
 	fontString:SetWordWrap(false)
 	fontString:SetNonSpaceWrap(false)
 	if fontString.SetMaxLines then fontString:SetMaxLines(1) end
-	fontString._eqolFlowFontKey = fontKey
+	fontString._eqolFlowFontFace = face
+	fontString._eqolFlowFontSize = size
+	fontString._eqolFlowFontStyle = style
 end
 
 local function applyTexture(texture, mediaType, key, fallback)
 	if not texture then return end
-	texture:SetTexture(resolveMedia(mediaType, key, fallback))
+	local asset = resolveMedia(mediaType, key, fallback)
+	if texture._eqolFlowTextureAsset == asset then return end
+	texture:SetTexture(asset)
 	texture:SetTexCoord(0, 1, 0, 1)
 	if addon.PixelUtil and addon.PixelUtil.ApplyTexturePixelSnapping then addon.PixelUtil.ApplyTexturePixelSnapping(texture, 0) end
+	texture._eqolFlowTextureAsset = asset
 end
 
-local function setTextureColor(texture, color)
-	color = normalizeColor(color)
-	texture:SetVertexColor(color.r, color.g, color.b, color.a)
+local function setTextureColor(texture, color, fallback)
+	local r, g, b, a = colorComponents(color, fallback)
+	if texture._eqolFlowColorR == r and texture._eqolFlowColorG == g and texture._eqolFlowColorB == b and texture._eqolFlowColorA == a then return end
+	texture:SetVertexColor(r, g, b, a)
+	texture._eqolFlowColorR, texture._eqolFlowColorG, texture._eqolFlowColorB, texture._eqolFlowColorA = r, g, b, a
 end
 
 local function secondsText(value)
@@ -334,13 +348,20 @@ local function ensureBackground(parent, layer, subLevel)
 end
 
 local function ensureSlotRow(parent)
-	local row = { frame = parent, slots = {} }
+	local row = { frame = parent, slots = {}, hovers = {} }
 	for index, position in ipairs({ "Left", "Center", "Right" }) do
 		local text = parent:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 		text:SetDrawLayer("OVERLAY", 7)
 		text:SetJustifyH(index == 1 and "LEFT" or index == 2 and "CENTER" or "RIGHT")
 		text:SetJustifyV("MIDDLE")
 		row.slots[position] = text
+		local hover = CreateFrame("Frame", nil, parent)
+		hover:EnableMouse(true)
+		hover:SetFrameLevel(parent:GetFrameLevel() + 25)
+		hover:SetScript("OnEnter", function(hoverFrame) Timer:ShowRowTooltip(hoverFrame) end)
+		hover:SetScript("OnLeave", GameTooltip_Hide)
+		hover:Hide()
+		row.hovers[position] = hover
 	end
 	return row
 end
@@ -445,14 +466,24 @@ end
 local function applyBorder(frame, enabled, textureKey, color, sizePixels)
 	if not frame then return end
 	if not enabled then
-		frame:SetBackdrop(nil)
+		if frame._eqolFlowBorderEnabled ~= false then frame:SetBackdrop(nil) end
+		frame._eqolFlowBorderEnabled = false
 		frame:Hide()
 		return
 	end
 	local edgeFile = resolveMedia("border", textureKey, WHITE_TEXTURE)
-	frame:SetBackdrop({ edgeFile = edgeFile, edgeSize = fromPixels(clamp(sizePixels, 1, 32, 1), frame) })
-	color = normalizeColor(color)
-	frame:SetBackdropBorderColor(color.r, color.g, color.b, color.a)
+	local edgeSize = fromPixels(clamp(sizePixels, 1, 32, 1), frame)
+	if frame._eqolFlowBorderEnabled ~= true or frame._eqolFlowBorderFile ~= edgeFile or frame._eqolFlowBorderSize ~= edgeSize then
+		frame:SetBackdrop({ edgeFile = edgeFile, edgeSize = edgeSize })
+		frame._eqolFlowBorderEnabled = true
+		frame._eqolFlowBorderFile = edgeFile
+		frame._eqolFlowBorderSize = edgeSize
+	end
+	local r, g, b, a = colorComponents(color)
+	if frame._eqolFlowBorderR ~= r or frame._eqolFlowBorderG ~= g or frame._eqolFlowBorderB ~= b or frame._eqolFlowBorderA ~= a then
+		frame:SetBackdropBorderColor(r, g, b, a)
+		frame._eqolFlowBorderR, frame._eqolFlowBorderG, frame._eqolFlowBorderB, frame._eqolFlowBorderA = r, g, b, a
+	end
 	frame:Show()
 end
 
@@ -590,9 +621,9 @@ local function slotText(flow, timer, content, state, timeLeft, twoChest, threeCh
 end
 
 local function contentColor(flow, content)
-	if content == "DUNGEON" or content == "KEY_LEVEL" then return normalizeColor(flow:Get("dungeonColor"), flow.defaults.dungeonColor) end
-	if content == "DEATHS" then return normalizeColor(flow:Get("deathColor"), flow.defaults.deathColor) end
-	return normalizeColor(flow:Get("textColor"), flow.defaults.textColor)
+	if content == "DUNGEON" or content == "KEY_LEVEL" then return colorComponents(flow:Get("dungeonColor"), flow.defaults.dungeonColor) end
+	if content == "DEATHS" then return colorComponents(flow:Get("deathColor"), flow.defaults.deathColor) end
+	return colorComponents(flow:Get("textColor"), flow.defaults.textColor)
 end
 
 local function layoutSlotRow(flow, timer, row, section, sectionName, state, timeLeft, twoChest, threeChest)
@@ -627,9 +658,33 @@ local function layoutSlotRow(flow, timer, row, section, sectionName, state, time
 		applyFont(text, face, slotFontSize, style)
 		local actualText = slotText(flow, timer, content, state, timeLeft, twoChest, threeChest, math.max(8, slotFontSize - 2))
 		text:SetText(actualText)
-		local color = contentColor(flow, content)
-		text:SetTextColor(color.r, color.g, color.b, color.a)
+		local r, g, b, a = contentColor(flow, content)
+		text:SetTextColor(r, g, b, a)
 		text:Show()
+		local bindingKey = "flow-" .. sectionName .. "-" .. position
+		if content == "TIMER" then
+			timer:BindLiveTimerText(text, bindingKey, state, state.timeLimit, flow:Get("timerDisplay"), flow:Get("timerExpiredColor"))
+		elseif content == "CHEST_2" or content == "CHEST_3" then
+			timer:DeactivateLiveTimerText(text, bindingKey)
+			local duration = content == "CHEST_2" and twoChest or threeChest
+			local durationObject = timer:UpdateTimerDurationObject(bindingKey, timer:GetChallengeStartTime(state), duration)
+			if not (durationObject and timer:BindTimerText(text, bindingKey, durationObject, "REMAINING")) then timer:ReleaseTimerTextBinding(bindingKey) end
+		else
+			timer:DeactivateLiveTimerText(text, bindingKey)
+		end
+		local hover = row.hovers[position]
+		if (content == "AFFIXES" or content == "DEATHS") and actualText ~= "" and hover then
+			hover.tooltipType = content == "AFFIXES" and "affixes" or "deaths"
+			hover.tooltipData = state
+			hover:ClearAllPoints()
+			hover:SetPoint("TOPLEFT", text, "TOPLEFT")
+			hover:SetSize(math.max(12, text:GetStringWidth() or 12), math.max(12, text:GetStringHeight() or slotFontSize))
+			hover:Show()
+		elseif hover then
+			hover.tooltipType = nil
+			hover.tooltipData = nil
+			hover:Hide()
+		end
 	end
 	frame:Show()
 end
@@ -637,14 +692,14 @@ end
 function Flow:LayoutSeparators(geometry)
 	local frames = self.frames
 	local enabled = self:Get("borderEnabled") == true
-	local color = normalizeColor(self:Get("borderColor"), self.defaults.borderColor)
+	local r, g, b, a = colorComponents(self:Get("borderColor"), self.defaults.borderColor)
 	local size = math.max(1, toPixels(self:Get("borderSize"), frames.root, 1))
 	local count = enabled and math.max(0, #geometry.sections - 1) or 0
 	for index = 1, count do
 		local section = geometry.sections[index]
 		local y = section.bottom + math.floor(math.max(0, section.gap or 0) / 2)
 		local separator = ensureSeparator(frames, index)
-		separator:SetColorTexture(color.r, color.g, color.b, color.a)
+		separator:SetColorTexture(r, g, b, a)
 		setRect(separator, frames.root, geometry.paddingLeft, y, geometry.width - geometry.paddingRight, y + size)
 		separator:Show()
 	end
@@ -753,9 +808,9 @@ function Flow:LayoutObjectives(state, geometry, objectives, rowHeights, valueWid
 		applyFont(row.value, face, fontSize, style)
 		row.text:SetText(objective.text or "")
 		row.value:SetText(objectiveValue(self, Timer, state, objective))
-		local color = normalizeColor(objective.completed and self:Get("objectiveCompleteColor") or self:Get("objectiveColor"), self.defaults.objectiveColor)
-		row.text:SetTextColor(color.r, color.g, color.b, color.a)
-		row.value:SetTextColor(color.r, color.g, color.b, color.a)
+		local r, g, b, a = colorComponents(objective.completed and self:Get("objectiveCompleteColor") or self:Get("objectiveColor"), self.defaults.objectiveColor)
+		row.text:SetTextColor(r, g, b, a)
+		row.value:SetTextColor(r, g, b, a)
 		row.text:ClearAllPoints()
 		row.value:ClearAllPoints()
 		row.value:SetPoint("TOPRIGHT", row, "TOPRIGHT", fromPixels(-paddingRight + valueOffsetX, row), fromPixels(valueOffsetY, row))
@@ -809,11 +864,12 @@ function Flow:Render(state, timeLeft, twoChest, threeChest)
 		applyTexture(bar.bg, "statusbar", self:Get("timerBackgroundTexture"), WHITE_TEXTURE)
 		setTextureColor(bar.bg, self:Get("timerBackgroundColor"))
 		local expired = (tonumber(timeLeft) or 0) <= 0
-		local color = normalizeColor(expired and self:Get("timerExpiredColor") or self:Get("timerColor"), self.defaults.timerColor)
-		bar:SetStatusBarColor(color.r, color.g, color.b, color.a)
+		local r, g, b, a = colorComponents(expired and self:Get("timerExpiredColor") or self:Get("timerColor"), self.defaults.timerColor)
+		bar:SetStatusBarColor(r, g, b, a)
 		bar:SetMinMaxValues(0, math.max(1, tonumber(state.timeLimit) or 1))
 		local fillUp = self:Get("timerFillUp") == true
 		bar:SetValue(fillUp and math.max(0, tonumber(state.elapsed) or 0) or math.max(0, tonumber(timeLeft) or 0))
+		Timer:SetNativeTimerBar(bar, state, state.timeLimit, fillUp, self:Get("timerExpiredColor"), resolveMedia("statusbar", self:Get("timerTexture"), WHITE_TEXTURE))
 		applyBorder(bar.border, self:Get("timerBorderEnabled") == true, self:Get("timerBorderTexture"), self:Get("timerBorderColor"), self:Get("timerBorderSize"))
 		local markerTimes = { threeChest, twoChest }
 		for index, marker in ipairs(bar.markers) do
@@ -847,8 +903,8 @@ function Flow:Render(state, timeLeft, twoChest, threeChest)
 		if addon.PixelUtil and addon.PixelUtil.ApplyStatusBarTexturePixelSnapping then addon.PixelUtil.ApplyStatusBarTexturePixelSnapping(bar, 0) end
 		applyTexture(bar.bg, "statusbar", self:Get("enemyBackgroundTexture"), WHITE_TEXTURE)
 		setTextureColor(bar.bg, self:Get("enemyBackgroundColor"))
-		local color = normalizeColor(self:Get("enemyColor"), self.defaults.enemyColor)
-		bar:SetStatusBarColor(color.r, color.g, color.b, color.a)
+		local r, g, b, a = colorComponents(self:Get("enemyColor"), self.defaults.enemyColor)
+		bar:SetStatusBarColor(r, g, b, a)
 		bar:SetMinMaxValues(0, 100)
 		bar:SetValue(math.max(0, math.min(100, tonumber(state.enemyForces and state.enemyForces.percent) or 0)))
 		applyBorder(bar.border, self:Get("enemyBorderEnabled") == true, self:Get("enemyBorderTexture"), self:Get("enemyBorderColor"), self:Get("enemyBorderSize"))
@@ -862,8 +918,8 @@ function Flow:Render(state, timeLeft, twoChest, threeChest)
 		bar.textRight:SetText(self:Get("enemySlotRight") == "COUNT" and count or percent)
 		for _, text in ipairs({ bar.textLeft, bar.textRight }) do
 			applyFont(text, face, fontSize, style)
-			local textColor = normalizeColor(self:Get("textColor"), self.defaults.textColor)
-			text:SetTextColor(textColor.r, textColor.g, textColor.b, textColor.a)
+			local textR, textG, textB, textA = colorComponents(self:Get("textColor"), self.defaults.textColor)
+			text:SetTextColor(textR, textG, textB, textA)
 		end
 		local leftOffsetX = toPixels(self:Get("enemySlotLeftOffsetX"), bar)
 		local leftOffsetY = toPixels(self:Get("enemySlotLeftOffsetY"), bar)
@@ -897,7 +953,12 @@ function Flow:Render(state, timeLeft, twoChest, threeChest)
 end
 
 function Flow:Hide()
-	if self.frames and self.frames.container then self.frames.container:Hide() end
+	if self.frames and self.frames.container then
+		for sectionName, row in pairs({ header = self.frames.header, timer = self.frames.timer, footer = self.frames.footer }) do
+			for position, text in pairs(row and row.slots or {}) do Timer:DeactivateLiveTimerText(text, "flow-" .. sectionName .. "-" .. position) end
+		end
+		self.frames.container:Hide()
+	end
 end
 
 local function buildMediaOptions(mediaType, includeGlobal)

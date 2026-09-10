@@ -23,8 +23,8 @@ M.SilentAlertSpellIds = sound.SilentAlertSpellIds
 -- Where the alerts read their aura data from. Arena tokens are the better source wherever they
 -- cover the whole enemy team: they stay valid while a nameplate is hidden, stealthed, or behind
 -- a pillar, which is exactly when a defensive gets missed.
-local SOURCE_ARENA = "arena"
-local SOURCE_NAMEPLATE = "nameplate"
+local SOURCE_ARENA = display.Source.Arena
+local SOURCE_NAMEPLATE = display.Source.Nameplate
 -- The client only hands out arena1..3. A bracket with more opponents than that leaves the rest
 -- of the enemy team with no token at all, so those fall back to nameplates.
 local MAX_ARENA_TOKENS = 3
@@ -268,6 +268,7 @@ local function SettleSource(active)
 		stateSub:ClearAll()
 		display:ReleaseAllDisplays()
 		activeSource = source
+		display:SetSource(source)
 	end
 
 	if plateGate then
@@ -523,6 +524,24 @@ end
 
 function M:Refresh()
 	lifecycle:Refresh()
+end
+
+---Re-runs the plate and ally sound registrations alone. The engine refuses them in combat inside
+---instanced PvE, and this is what redoes the ones it turned away once the pull ends.
+function M:RefreshSounds()
+	if not lifecycle or not lifecycle:IsActive() then
+		return
+	end
+
+	local tokens = display:GetActiveTokens()
+
+	sound:Refresh(tokens)
+
+	-- Refresh keeps its settings memo, so a plate that arrived while the engine was refusing
+	-- registrations has to be asked for by name. A warm token costs nothing.
+	for token in pairs(tokens) do
+		sound:RegisterToken(token)
+	end
 end
 
 function M:Init()

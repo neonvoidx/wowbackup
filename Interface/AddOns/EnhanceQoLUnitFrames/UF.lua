@@ -6118,6 +6118,17 @@ function AuraUtil.PositionNativeAuraLane(st, container, style, flow)
 	if ax == nil then ax = defAx end
 	local ay = style.offset and style.offset.y
 	if ay == nil then ay = defAy end
+	local barAreaOffsetLeft = tonumber(st._barAreaOffsetLeft) or 0
+	local barAreaOffsetRight = tonumber(st._barAreaOffsetRight) or 0
+	if anchor == "LEFT" then
+		ax = (ax or 0) + barAreaOffsetLeft
+	elseif anchor == "RIGHT" then
+		ax = (ax or 0) - barAreaOffsetRight
+	elseif flow.horizontal == "LEFT" then
+		ax = (ax or 0) - barAreaOffsetRight
+	else
+		ax = (ax or 0) + barAreaOffsetLeft
+	end
 	local horizontalPoint = flow.horizontal == "RIGHT" and "LEFT" or "RIGHT"
 	local verticalPoint = flow.vertical == "UP" and "BOTTOM" or "TOP"
 	local point, relativePoint
@@ -6236,6 +6247,7 @@ function AuraUtil.ApplyNativeAuraContainers(unit, st, cfg, def, forceRefresh)
 	if st.debuffContainer then st.debuffContainer:SetShown(false) end
 	local helpfulFilter, harmfulFilter = AuraUtil.getUnitAuraFilters(unit, auraRuntime)
 	local width = (st.barGroup and st.barGroup:GetWidth()) or (st.frame and st.frame:GetWidth()) or 1
+	width = math.max(1, width - (tonumber(st._barAreaOffsetLeft) or 0) - (tonumber(st._barAreaOffsetRight) or 0))
 	local any = false
 	local valid = true
 	local store = AuraUtil.GetNativeAuraLaneStore(st)
@@ -7422,12 +7434,6 @@ function AuraUtil.GetManagedDispelGlowSignature(dcfg, defDispel, width, height)
 		tostring(color[2] or color.g or 1),
 		tostring(color[3] or color.b or 1),
 		tostring(color[4] or color.a or 1),
-		tostring(dcfg.glowEffect or defDispel.glowEffect or "PIXEL"),
-		tostring(dcfg.glowFrequency or defDispel.glowFrequency or 0.25),
-		tostring(dcfg.glowLines or defDispel.glowLines or 8),
-		tostring(dcfg.glowThickness or defDispel.glowThickness or 3),
-		tostring(dcfg.glowX or defDispel.glowX or 0),
-		tostring(dcfg.glowY or defDispel.glowY or 0),
 		tostring(dcfg.iconsEnabled == nil and defDispel.iconsEnabled == true or dcfg.iconsEnabled == true),
 		tostring(dcfg.iconSize or defDispel.iconSize or 12),
 		tostring(dcfg.iconSpacing or defDispel.iconSpacing or 1),
@@ -7455,7 +7461,6 @@ function AuraUtil.GetManagedDispelGlowOptions(colorName, dcfg, defDispel)
 	if colorMode == "CUSTOM" then
 		r, g, b = unpackColor(dcfg.glowColor or defDispel.glowColor, 1, 1, 1, 1)
 	end
-	local thickness = UFHelper.ClampNumber(dcfg.glowThickness or defDispel.glowThickness or 3, 1, 10, 3)
 	local explicitGlowLevel = tonumber(rawget(dcfg, "glowFrameLevelOffset"))
 	local explicitGlowStrata = rawget(dcfg, "glowStrata")
 	local glowLevel
@@ -7467,16 +7472,14 @@ function AuraUtil.GetManagedDispelGlowOptions(colorName, dcfg, defDispel)
 		glowLevel = UFHelper.ClampNumber(defDispel.glowFrameLevelOffset, -20, 1000, 21)
 	end
 	return {
-		style = tostring(dcfg.glowEffect or defDispel.glowEffect or "PIXEL"):upper(),
+		style = "SOLID",
 		color = { r or 1, g or 1, b or 1, 1 },
-		count = UFHelper.ClampNumber(dcfg.glowLines or defDispel.glowLines or 8, 1, 20, 8),
-		frequency = UFHelper.ClampNumber(dcfg.glowFrequency or defDispel.glowFrequency or 0.25, -1.5, 1.5, 0.25),
-		scale = math.max(0.5, math.min(4, thickness / 3)),
-		thickness = thickness,
-		xOffset = UFHelper.ClampNumber(dcfg.glowX or defDispel.glowX or 0, -10, 10, 0),
-		yOffset = UFHelper.ClampNumber(dcfg.glowY or defDispel.glowY or 0, -10, 10, 0),
+		thickness = 3,
+		xOffset = 0,
+		yOffset = 0,
 		strata = dcfg.glowStrata or defDispel.glowStrata,
 		frameLevelOffset = glowLevel,
+		additive = true,
 	}
 end
 
@@ -8118,11 +8121,11 @@ function AuraUtil.UpdateSingleDispelIndicator(unit, allowSample, forceRefresh)
 		stopGlow()
 		return
 	end
-	local glowLib = LibStub and LibStub("LibCustomGlow-1.0", true)
 	local usingGlow = addon.Glow and addon.Glow.Start and addon.Glow.Stop
-	local canPixel = glowLib and glowLib.PixelGlow_Start
-	local canShine = glowLib and glowLib.AutoCastGlow_Start
-	local canButton = glowLib and glowLib.ButtonGlow_Start
+	if not usingGlow then
+		stopGlow()
+		return
+	end
 
 	local colorMode = dcfg.glowColorMode or defDispel.glowColorMode or "DISPEL"
 	local cr, cg, cb = r, g, b
@@ -8131,55 +8134,21 @@ function AuraUtil.UpdateSingleDispelIndicator(unit, allowSample, forceRefresh)
 		cr, cg, cb = unpackColor(glowColor, 1, 1, 1, 1)
 	end
 
-	local lines = clampNumber(dcfg.glowLines or defDispel.glowLines or 8, 1, 20, 8)
-	local freq = clampNumber(dcfg.glowFrequency or defDispel.glowFrequency or 0.25, -1.5, 1.5, 0.25)
-	local thickness = clampNumber(dcfg.glowThickness or defDispel.glowThickness or 3, 1, 10, 3)
-	local xoff = clampNumber(dcfg.glowX or defDispel.glowX or 0, -10, 10, 0)
-	local yoff = clampNumber(dcfg.glowY or defDispel.glowY or 0, -10, 10, 0)
-	local effect = dcfg.glowEffect or defDispel.glowEffect or "PIXEL"
-	if effect ~= "PIXEL" and effect ~= "SHINE" and effect ~= "BLIZZARD" then effect = "PIXEL" end
-
-	local appliedEffect = effect
-	if appliedEffect == "SHINE" and not canShine then
-		appliedEffect = "PIXEL"
-	elseif appliedEffect == "BLIZZARD" and not usingGlow and not canButton then
-		appliedEffect = "PIXEL"
-	end
-	if appliedEffect == "PIXEL" and not canPixel then
-		stopGlow()
-		return
-	end
+	local appliedEffect = "SOLID"
 	if st._dispelGlowActive and st._dispelGlowEffect ~= appliedEffect then stopGlow() end
 
 	local glowColor = { cr, cg, cb, 1 }
-	local scale = thickness / 3
-	if scale < 0.5 then
-		scale = 0.5
-	elseif scale > 4 then
-		scale = 4
-	end
-
-	if usingGlow then
-		local glowOptions = AuraUtil.GetManagedDispelGlowOptions(nil, dcfg, defDispel)
-		addon.Glow.Start(target, "EQOL_DISPEL", appliedEffect, {
-			color = glowColor,
-			count = lines,
-			frequency = freq,
-			scale = scale,
-			thickness = thickness,
-			xOffset = xoff,
-			yOffset = yoff,
-			strata = glowOptions.strata,
-			hostFrameLevelOffset = glowOptions.frameLevelOffset,
-			frameLevel = glowOptions.frameLevelOffset,
-		})
-	elseif appliedEffect == "SHINE" and canShine then
-		glowLib.AutoCastGlow_Start(target, glowColor, lines, freq, scale, xoff, yoff, "EQOL_DISPEL")
-	elseif appliedEffect == "BLIZZARD" and canButton then
-		glowLib.ButtonGlow_Start(target, glowColor, freq)
-	else
-		glowLib.PixelGlow_Start(target, glowColor, lines, freq, nil, thickness, xoff, yoff, nil, "EQOL_DISPEL")
-	end
+	local glowOptions = AuraUtil.GetManagedDispelGlowOptions(nil, dcfg, defDispel)
+	addon.Glow.Start(target, "EQOL_DISPEL", appliedEffect, {
+		color = glowColor,
+		thickness = glowOptions.thickness,
+		xOffset = glowOptions.xOffset,
+		yOffset = glowOptions.yOffset,
+		strata = glowOptions.strata,
+		hostFrameLevelOffset = glowOptions.frameLevelOffset,
+		frameLevel = glowOptions.frameLevelOffset,
+		additive = glowOptions.additive,
+	})
 
 	st._dispelGlowActive = true
 	st._dispelGlowEffect = appliedEffect
@@ -9757,6 +9726,37 @@ local function setCastInfoFromUnit(unit)
 	else
 		UFHelper.clearEmpowerStages(st)
 	end
+	local useBarEndGradient = unit == UNIT.PLAYER and resolvedCfg.useGradient == true and type(resolvedCfg.gradientMode) == "string" and resolvedCfg.gradientMode:upper() == "BAR_END"
+	local nativeDuration = isChannel and UnitChannelDuration or UnitCastingDuration
+	local durationObject = nativeDuration and nativeDuration(unit)
+	if durationObject and not isEmpowered and not useBarEndGradient then
+		st.castInfo.useTimer = true
+		if castOnUpdateHandlers[unit] then
+			st.castBar:SetScript("OnUpdate", nil)
+			castOnUpdateHandlers[unit] = nil
+		end
+		local direction = isChannel and Enum.StatusBarTimerDirection.RemainingTime or Enum.StatusBarTimerDirection.ElapsedTime
+		st.castBar:SetTimerDuration(durationObject, Enum.StatusBarInterpolation.Immediate, direction)
+		if st.castDefaultUninterruptibleBar then
+			st.castDefaultUninterruptibleBar:SetTimerDuration(durationObject, Enum.StatusBarInterpolation.Immediate, direction)
+		end
+		if st.castDuration then
+			if resolvedCfg.showDuration ~= false then
+				local durationFormat = resolvedCfg.durationFormat or defc.durationFormat or "REMAINING"
+				if UF.ConfigureCastDurationTextBinding(st, durationObject, durationFormat) then
+					st.castDuration:Show()
+				else
+					UF.DisableCastDurationTextBinding(st, true)
+					st.castDuration:Hide()
+				end
+			else
+				UF.DisableCastDurationTextBinding(st, true)
+				st.castDuration:Hide()
+			end
+		end
+		UFHelper.hideCastSpark(st)
+		return
+	end
 	if not castOnUpdateHandlers[unit] then
 		st.castBar._eqolUFUnit = unit
 		st.castBar:SetScript("OnUpdate", UF.OnCastBarUpdate)
@@ -9765,8 +9765,8 @@ local function setCastInfoFromUnit(unit)
 	updateCastBar(unit)
 end
 
-local function getHealthPercent(unit, cur, maxv, calc)
-	if calc and calc.EvaluateCurrentHealthPercent and CurveConstants and CurveConstants.ScaleTo100 then return calc:EvaluateCurrentHealthPercent(CurveConstants.ScaleTo100) end
+local function getHealthPercent(unit)
+	if UnitHealthPercent and CurveConstants and CurveConstants.ScaleTo100 then return UnitHealthPercent(unit, true, CurveConstants.ScaleTo100) end
 	return nil
 end
 
@@ -10267,10 +10267,9 @@ local function updateHealth(cfg, unit, deferAuxiliaryUpdates)
 	local healAbsorbNeedsUpdate = allowAbsorb
 		and st.healAbsorb
 		and (st._healAbsorbDirty ~= false or showSampleHealAbsorb)
-	local needsHealthPercent = st._healthTextUsesPercent == true or (st._dataBarTextEnabled == true and st._dataBarTextUsesPercent == true)
 	local healPredictionCalc
 	st._healthTextPredictionReady = nil
-	if hc.incomingHealEnabled == true or needsHealthAbsorbText or needsHealthPercent or (damageAbsorbNeedsUpdate and absorbDontOverflow) then
+	if hc.incomingHealEnabled == true or needsHealthAbsorbText or (damageAbsorbNeedsUpdate and absorbDontOverflow) then
 		healPredictionCalc = ensureHealPredictionCalculator(st)
 		if healPredictionCalc and healPredictionCalc.SetDamageAbsorbClampMode and Enum and Enum.UnitDamageAbsorbClampMode then
 			local modes = Enum.UnitDamageAbsorbClampMode
@@ -11650,6 +11649,8 @@ local function layoutFrame(cfg, unit)
 	local statusOffsetRight = -barAreaOffsetRight
 	st._portraitSpace = portraitSpace
 	st._portraitCenterOffset = barCenterOffset
+	st._barAreaOffsetLeft = barAreaOffsetLeft
+	st._barAreaOffsetRight = barAreaOffsetRight
 	local matchedFrameWidth
 	if dynamicWinner and dynamicWinner.matchRelativeWidth == true and dynamicWinner.frame ~= UIParent and dynamicWinner.frame.GetWidth then
 		local relativeWidth = dynamicWinner.frame:GetWidth()
@@ -14612,8 +14613,7 @@ function UF.UpdateUnitTexts(unit, force)
 				usesDataBarPercent = UFHelper.textModeUsesPercent(leftMode) or UFHelper.textModeUsesPercent(centerMode) or UFHelper.textModeUsesPercent(rightMode)
 			end
 			if usesDataBarPercent == true then
-				local calc = UF.GetHealthTextPredictionCalculator(st, unit)
-				percentVal = getHealthPercent(unit, cur, maxv, calc)
+				percentVal = getHealthPercent(unit)
 				healthPercentValue, healthPercentReady = percentVal, true
 			end
 			if st.dataBarTextLeft then st.dataBarTextLeft:SetText(UF.DataBar.GetText(leftMode, unit, cfg, def, cur, maxv, percentVal)) end
@@ -14652,8 +14652,7 @@ function UF.UpdateUnitTexts(unit, force)
 				if healthPercentReady then
 					percentVal = healthPercentValue
 				else
-					local calc = UF.GetHealthTextPredictionCalculator(st, unit)
-					percentVal = getHealthPercent(unit, cur, maxv, calc)
+					percentVal = getHealthPercent(unit)
 					healthPercentValue, healthPercentReady = percentVal, true
 				end
 			end

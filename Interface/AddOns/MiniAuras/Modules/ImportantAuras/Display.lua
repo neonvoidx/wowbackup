@@ -265,17 +265,27 @@ local function GetOptions()
 	return m[GetProfileKey()]
 end
 
+---Whether an instance drops its countdown text. The display's own vocabulary is the negative
+---one, so the instance's positive switch is turned round here.
+---@param options ImportantAurasInstanceOptions
+---@return boolean
+local function HidesNumbers(options)
+	return options.Icons.EnableNumbers == false
+end
+
 ---The look a display is built with and restyled to.
 ---@param entryOptions table
 ---@return AuraDisplayStyle
 local function BuildStyle(entryOptions)
-	local style = auraContainerDisplay:BuildStandardStyle(entryOptions.Icons)
+	local style = auraContainerDisplay:BuildStandardStyle(entryOptions.Icons, entryOptions.FontScale)
 
 	-- Only the CC group goes untinted here, and most CC is physical: without this a stun gets the
 	-- tinted glow but no ring, which reads as the border being broken. The tinted helpful groups
 	-- are unaffected, they draw their ring off the group colour.
 	style.BorderWithoutDispelType = true
 	style.ShowTooltips = entryOptions.ShowTooltips ~= false
+	-- Only ever adds to the global Disable Numbers switch, which the display resolves for itself.
+	style.HideNumbers = HidesNumbers(entryOptions)
 
 	return style
 end
@@ -361,11 +371,12 @@ local function UpdateKickIcon(entry)
 	end
 
 	local kickEntry = options.ShowKicks and kickTracker:GetKick(entry.Unit) or nil
+	local wantsDispelColor = options.Icons.ColorByDispelType == true
 
-	anchoredIcons:RenderKickIcon(entry, options, kickEntry, function()
+	anchoredIcons:RenderKickIcon(entry, options, kickEntry, wantsDispelColor, function()
 		entry.KickTimer = nil
 		UpdateKickIcon(entry)
-	end)
+	end, options.FontScale)
 end
 
 ---Budgets every group for the entry's current unit, which is a question about the unit rather
@@ -935,6 +946,7 @@ function M:RefreshTestIcons()
 		local maxIcons = options.Icons.MaxIcons or 1
 		local iconsReverse = options.Icons.ReverseCooldown
 		local iconsGlow = options.Icons.Glow
+		local iconsHideNumbers = HidesNumbers(options)
 		local colorByDispelType = options.Icons.ColorByDispelType
 		local showTooltips = options.ShowTooltips ~= false
 
@@ -946,8 +958,9 @@ function M:RefreshTestIcons()
 				DurationObject = wowEx:CreateDuration(now, 3),
 				Alpha = true,
 				ReverseCooldown = iconsReverse,
+				HideNumbers = iconsHideNumbers,
 				Glow = iconsGlow,
-				FontScale = db.FontScale,
+				FontScale = options.FontScale,
 			})
 			slotIndex = slotIndex + 1
 		end
@@ -958,31 +971,34 @@ function M:RefreshTestIcons()
 
 		slotIndex = testSpellData:FillContainer(container, testCcSpells, slotIndex, {
 			ReverseCooldown = iconsReverse,
+			HideNumbers = iconsHideNumbers,
 			Glow = iconsGlow,
 			ColorByDispelType = colorByDispelType,
 			-- The live buttons draw border and glow together, so the preview does too.
 			Border = true,
-			FontScale = db.FontScale,
+			FontScale = options.FontScale,
 			ShowTooltips = showTooltips,
 			Count = ccSlots,
 		})
 
 		slotIndex = testSpellData:FillContainer(container, testDefensiveSpells, slotIndex, {
 			ReverseCooldown = iconsReverse,
+			HideNumbers = iconsHideNumbers,
 			Glow = iconsGlow,
 			Color = colors[DEFENSIVE_GROUP_KEY],
 			Border = true,
-			FontScale = db.FontScale,
+			FontScale = options.FontScale,
 			ShowTooltips = showTooltips,
 			Count = defensiveSlots,
 		})
 
 		slotIndex = testSpellData:FillContainer(container, testImportantSpells, slotIndex, {
 			ReverseCooldown = iconsReverse,
+			HideNumbers = iconsHideNumbers,
 			Glow = iconsGlow,
 			Color = colors[IMPORTANT_GROUP_KEY],
 			Border = true,
-			FontScale = db.FontScale,
+			FontScale = options.FontScale,
 			ShowTooltips = showTooltips,
 			Count = importantSlots,
 		})

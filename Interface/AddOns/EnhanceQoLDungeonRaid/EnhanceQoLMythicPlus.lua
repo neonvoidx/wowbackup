@@ -3249,7 +3249,7 @@ local function ensureBloodlustAnchor()
 				},
 				{
 					name = L["mythicPlusBloodlustTrackerDebuffSound"] or "Active lockout sound",
-					kind = settingType.Dropdown,
+					kind = settingType.SoundDropdown,
 					parentId = "mythicPlusBloodlustTrackerSound",
 					height = 280,
 					get = function()
@@ -3257,7 +3257,7 @@ local function ensureBloodlustAnchor()
 						return value
 					end,
 					set = function(_, value) setStoredSoundKey("mythicPlusBloodlustTrackerDebuffSoundFile", value, true) end,
-					generator = function(_, root)
+					generator = function(_, root, _, attachPreview)
 						local _, entries = getStoredSoundKey("mythicPlusBloodlustTrackerDebuffSoundFile")
 						root:CreateRadio(
 							NONE,
@@ -3266,11 +3266,12 @@ local function ensureBloodlustAnchor()
 						)
 						for i = 1, #entries do
 							local soundName = entries[i]
-							root:CreateRadio(
+							local radio = root:CreateRadio(
 								soundName,
 								function() return getStoredSoundKey("mythicPlusBloodlustTrackerDebuffSoundFile") == soundName end,
 								function() setStoredSoundKey("mythicPlusBloodlustTrackerDebuffSoundFile", soundName, true) end
 							)
+							attachPreview(radio, soundName, soundName)
 						end
 					end,
 					isEnabled = function() return addon.db and addon.db["mythicPlusBloodlustTrackerSoundOnDebuffActive"] == true and addon.db["mythicPlusBloodlustTrackerUseCustomDebuffSound"] == true end,
@@ -3305,7 +3306,7 @@ local function ensureBloodlustAnchor()
 				},
 				{
 					name = L["mythicPlusBloodlustTrackerFadeSound"] or "Lockout fade sound",
-					kind = settingType.Dropdown,
+					kind = settingType.SoundDropdown,
 					parentId = "mythicPlusBloodlustTrackerSound",
 					height = 280,
 					get = function()
@@ -3313,7 +3314,7 @@ local function ensureBloodlustAnchor()
 						return value
 					end,
 					set = function(_, value) setStoredSoundKey("mythicPlusBloodlustTrackerFadeSoundFile", value, true) end,
-					generator = function(_, root)
+					generator = function(_, root, _, attachPreview)
 						local _, entries = getStoredSoundKey("mythicPlusBloodlustTrackerFadeSoundFile")
 						root:CreateRadio(
 							NONE,
@@ -3322,11 +3323,12 @@ local function ensureBloodlustAnchor()
 						)
 						for i = 1, #entries do
 							local soundName = entries[i]
-							root:CreateRadio(
+							local radio = root:CreateRadio(
 								soundName,
 								function() return getStoredSoundKey("mythicPlusBloodlustTrackerFadeSoundFile") == soundName end,
 								function() setStoredSoundKey("mythicPlusBloodlustTrackerFadeSoundFile", soundName, true) end
 							)
+							attachPreview(radio, soundName, soundName)
 						end
 					end,
 					isEnabled = function()
@@ -3354,7 +3356,7 @@ local function ensureBloodlustAnchor()
 				},
 				{
 					name = L["mythicPlusBloodlustTrackerReadySound"] or "Ready reminder sound",
-					kind = settingType.Dropdown,
+					kind = settingType.SoundDropdown,
 					parentId = "mythicPlusBloodlustTrackerSound",
 					height = 280,
 					get = function()
@@ -3362,7 +3364,7 @@ local function ensureBloodlustAnchor()
 						return value
 					end,
 					set = function(_, value) setStoredSoundKey("mythicPlusBloodlustTrackerReadySoundFile", value, true) end,
-					generator = function(_, root)
+					generator = function(_, root, _, attachPreview)
 						local _, entries = getStoredSoundKey("mythicPlusBloodlustTrackerReadySoundFile")
 						root:CreateRadio(
 							NONE,
@@ -3371,11 +3373,12 @@ local function ensureBloodlustAnchor()
 						)
 						for i = 1, #entries do
 							local soundName = entries[i]
-							root:CreateRadio(
+							local radio = root:CreateRadio(
 								soundName,
 								function() return getStoredSoundKey("mythicPlusBloodlustTrackerReadySoundFile") == soundName end,
 								function() setStoredSoundKey("mythicPlusBloodlustTrackerReadySoundFile", soundName, true) end
 							)
+							attachPreview(radio, soundName, soundName)
 						end
 					end,
 					isEnabled = function()

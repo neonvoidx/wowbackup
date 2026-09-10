@@ -3,11 +3,11 @@
 ## Notes: Swaps your tab key to target nearest player in pvp contexts.
 ## Category: Mini
 ## Author: Verz
-## Version: 1.4.6
+## Version: 1.5.1
 ## SavedVariables: MiniTabTargetDB
 ## IconTexture: Interface\AddOns\MiniTabTarget\Icon.blp
 ## X-Curse-Project-ID: 1418962
 
 Libs\MiniFramework\MiniFramework.xml
-MiniTabTargetConfig.lua
 MiniTabTarget.lua
+MiniTabTargetConfig.lua

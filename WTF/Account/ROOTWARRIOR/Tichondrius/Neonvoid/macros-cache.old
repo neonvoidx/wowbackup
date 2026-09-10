@@ -21,7 +21,7 @@ END
 VER 3 0100000000000028 " " "134400"
 #showtooltip
 #FS OD OD OD
-/cast [@raid3,help][@raid3,help][@raid3,help][] Power Infusion
+/cast [@none,help][@none,help][@none,help][] Power Infusion
 END
 VER 3 010000000000002A " " "134400"
 #showtooltip
@@ -80,14 +80,14 @@ VER 3 0100000000000046 " " "134400"
 #showtooltip
 #FrameSort EnemyHealer
 /cancelaura Dispersion
-/cast [mod:shift,@arena3,exists,harm,nodead][] Silence
+/cast [mod:shift,@none,exists,harm,nodead][] Silence
 END
 VER 3 0100000000000047 " " "134400"
 #showtooltip [known:dominate mind] dominate mind; [] mind control
 #FS EnemyHealer
-/cast [mod:shift,@arena3,harm,known] Mind Control
-/cast [@target,harm,known] Mind Control
-/cast [@target,harm,known] Dominate Mind
+/cast [mod:shift,@none,harm] Mind Control
+/cast [@target,harm] Mind Control
+/cast [@target,harm] Dominate Mind
 END
 VER 3 0100000000000048 " " "134400"
 #showtooltip 
@@ -98,7 +98,7 @@ END
 VER 3 010000000000004A " " "INV_Misc_QuestionMark"
 #showtooltip [nostance] Void Volley; VoidForm
 #FS OD OD OD
-/cast [@raid3,exists,nodead][@raid3,exists,nodead][@raid3,exists,nodead][@player] Power Infusion
+/cast [@none,exists,nodead][@none,exists,nodead][@none,exists,nodead][@player] Power Infusion
 /use 14
 /use Voidform
 /use Void Volley

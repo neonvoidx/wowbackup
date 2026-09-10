@@ -27,7 +27,6 @@ local GLOBAL_FONT_KEY = "__EQOL_GLOBAL_FONT__"
 local GLOBAL_STYLE_KEY = "__EQOL_GLOBAL_FONT_STYLE__"
 local DEFAULT_HEADER_BAR_HEIGHT = 24
 local DEFAULT_FOOTER_BAR_HEIGHT = 18
-local TICK_INTERVAL = 0.2
 local CHALLENGERS_PERIL_AFFIX_ID = 152
 local DEATH_ICON_ATLAS = "poi-graveyard-neutral"
 
@@ -59,7 +58,6 @@ Timer.defaults = Timer.defaults
 		showObjectiveBestTimes = true,
 		showOnlyInMythicPlus = true,
 		visibility = "runOrEditMode",
-		updateRate = 0.2,
 		tooltip = true,
 		layoutMode = "FLOW",
 		panelHeight = 106,
@@ -589,9 +587,13 @@ local function createTimerNumericFormatter()
 end
 
 local function getChallengeStartTime(timer, state)
-	if state and state.active and timer.timerBaseTime and timer.timerBaseElapsed then return timer.timerBaseTime - timer.timerBaseElapsed end
+	if state and state.active and not state.preview and timer.timerBaseTime and timer.timerBaseElapsed then return timer.timerBaseTime - timer.timerBaseElapsed end
 	local now = GetTime and GetTime() or 0
 	return now - (tonumber(state and state.elapsed) or 0)
+end
+
+function Timer:GetChallengeStartTime(state)
+	return getChallengeStartTime(self, state)
 end
 
 local function getActiveKeystoneInfo()
@@ -821,6 +823,7 @@ function Timer:GetListDeathPlacement()
 end
 
 function Timer:SyncActiveTimerBase(force)
+	if not force and self.activeTimerID and self.timerBaseElapsed and self.timerBaseTime then return self.activeTimerID end
 	local timerID, elapsed = getActiveChallengeTimer()
 	if not timerID then
 		self.activeTimerID = nil
@@ -842,12 +845,6 @@ function Timer:ResolveRunState()
 	local elapsed = 0
 	if active then
 		elapsed = (self.timerBaseElapsed or 0) + math.max(0, (GetTime and GetTime() or 0) - (self.timerBaseTime or 0))
-		local _, authoritativeElapsed = getActiveChallengeTimer()
-		if authoritativeElapsed and math.abs(authoritativeElapsed - elapsed) > 2 then
-			self.timerBaseElapsed = authoritativeElapsed
-			self.timerBaseTime = GetTime and GetTime() or 0
-			elapsed = authoritativeElapsed
-		end
 		self.lastRunElapsed = elapsed
 	elseif self.completedElapsed then
 		elapsed = self.completedElapsed
@@ -876,6 +873,13 @@ function Timer:ResolveRunState()
 		timeLimit = timeLimit or 1800,
 		elapsed = math.max(0, elapsed or 0),
 	}
+end
+
+function Timer:GetInterpolatedElapsed()
+	if self.activeTimerID and self.timerBaseElapsed and self.timerBaseTime then
+		return (self.timerBaseElapsed or 0) + math.max(0, (GetTime and GetTime() or 0) - (self.timerBaseTime or 0))
+	end
+	return tonumber(self.lastState and self.lastState.elapsed) or 0
 end
 
 function Timer:GetPreviewState()
@@ -1009,7 +1013,7 @@ function Timer:AddDeathDetail(guid, unit)
 	local aliveInfo = self.aliveMembersByGUID and self.aliveMembersByGUID[guid]
 	self.deathDetails = self.deathDetails or {}
 	self.deathDetails[#self.deathDetails + 1] = {
-		time = tonumber(self.lastState and self.lastState.elapsed) or 0,
+		time = self:GetInterpolatedElapsed(),
 		name = (unit and getNameFromUnit(unit)) or (aliveInfo and aliveInfo.name) or getNameFromGUID(guid) or tostring(guid),
 		class = (unit and getClassFromUnit(unit)) or (aliveInfo and aliveInfo.class) or getClassFromGUID(guid),
 	}
@@ -1241,6 +1245,168 @@ function Timer:BindTimerText(fontString, key, durationObject, mode, textFormat)
 	return ok == true
 end
 
+function Timer:BindTimerTextProperty(fontString, key, durationObject, property, textFormat)
+	if not (fontString and durationObject and addon.functions and addon.functions.BindDurationText) then return false end
+	local component = self:CreateTimerFormatComponent(property)
+	if not component then return false end
+	local _, ok = addon.functions.BindDurationText(fontString, durationObject, {
+		owner = self:EnsureFrame(),
+		key = key,
+		clearText = false,
+		expiredText = "",
+		zeroDurationText = "",
+		updateNow = true,
+		useProfileConfig = false,
+		textFormat = textFormat or "{}",
+		components = { component },
+	})
+	return ok == true
+end
+
+function Timer:EnsureOvertimeText(fontString)
+	if not fontString then return nil end
+	if fontString._eqolOvertimeText then return fontString._eqolOvertimeText end
+	local parent = fontString:GetParent()
+	if not (parent and parent.CreateFontString) then return nil end
+	local text = parent:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+	text:SetAlpha(0)
+	text:Hide()
+	fontString._eqolOvertimeText = text
+	return text
+end
+
+function Timer:SyncOvertimeTextStyle(fontString, overtimeText)
+	if not (fontString and overtimeText) then return end
+	local layer, subLevel = fontString:GetDrawLayer()
+	overtimeText:SetDrawLayer(layer or "OVERLAY", subLevel or 0)
+	local face, size, flags = fontString:GetFont()
+	if face and size then overtimeText:SetFont(face, size, flags) end
+	local r, g, b, a = fontString:GetTextColor()
+	overtimeText:SetTextColor(r, g, b, a)
+	local shadowR, shadowG, shadowB, shadowA = fontString:GetShadowColor()
+	overtimeText:SetShadowColor(shadowR, shadowG, shadowB, shadowA)
+	local shadowX, shadowY = fontString:GetShadowOffset()
+	overtimeText:SetShadowOffset(shadowX, shadowY)
+	overtimeText:SetJustifyH(fontString:GetJustifyH())
+	overtimeText:SetJustifyV(fontString:GetJustifyV())
+	overtimeText:ClearAllPoints()
+	for index = 1, fontString:GetNumPoints() do
+		local point, relativeTo, relativePoint, x, y = fontString:GetPoint(index)
+		overtimeText:SetPoint(point, relativeTo, relativePoint, x, y)
+	end
+end
+
+function Timer:SetNativeReveal(region, delay)
+	if not region then return end
+	delay = math.max(0, tonumber(delay) or 0)
+	local group = region._eqolNativeReveal
+	if not group then
+		group = region:CreateAnimationGroup()
+		group:SetToFinalAlpha(true)
+		local animation = group:CreateAnimation("Alpha")
+		animation:SetFromAlpha(0)
+		animation:SetToAlpha(1)
+		animation:SetDuration(0.001)
+		region._eqolNativeReveal = group
+		region._eqolNativeRevealAnimation = animation
+	end
+	group:Stop()
+	region:Show()
+	if delay <= 0 then
+		region:SetAlpha(1)
+		return
+	end
+	region:SetAlpha(0)
+	region._eqolNativeRevealAnimation:SetStartDelay(delay)
+	group:Play()
+end
+
+function Timer:SetNativeBoundaryRefresh(region, delay)
+	if not region then return end
+	delay = tonumber(delay)
+	local group = region._eqolNativeBoundaryRefresh
+	if not delay or delay <= 0 then
+		if group then group:Stop() end
+		return
+	end
+	if not group then
+		group = region:CreateAnimationGroup()
+		local animation = group:CreateAnimation("Alpha")
+		animation:SetFromAlpha(1)
+		animation:SetToAlpha(1)
+		animation:SetDuration(0.001)
+		group:SetScript("OnFinished", function()
+			if Timer:IsEnabled() then Timer:Refresh() end
+		end)
+		region._eqolNativeBoundaryRefresh = group
+		region._eqolNativeBoundaryRefreshAnimation = animation
+	end
+	group:Stop()
+	region._eqolNativeBoundaryRefreshAnimation:SetStartDelay(delay)
+	group:Play()
+end
+
+function Timer:DeactivateTimerTextBinding(key)
+	local durationText = addon.DurationText
+	if durationText and durationText.SetBindingEnabled then return durationText:SetBindingEnabled(self:EnsureFrame(), key, false) end
+	return false
+end
+
+function Timer:DeactivateLiveTimerText(fontString, key)
+	self:DeactivateTimerTextBinding(key)
+	self:DeactivateTimerTextBinding(key .. "-overtime")
+	local overtimeText = fontString and fontString._eqolOvertimeText
+	if overtimeText then
+		if overtimeText._eqolNativeReveal then overtimeText._eqolNativeReveal:Stop() end
+		overtimeText:SetAlpha(0)
+		overtimeText:Hide()
+	end
+end
+
+function Timer:BindLiveTimerText(fontString, key, state, duration, mode, overtimeColor)
+	if not (fontString and key) then return false end
+	duration = tonumber(duration) or 0
+	if not (state and state.active and duration > 0) then
+		self:DeactivateLiveTimerText(fontString, key)
+		return false
+	end
+	local startTime = getChallengeStartTime(self, state)
+	local elapsed = tonumber(state.elapsed) or 0
+	local totalText = secondsToText(duration)
+	if mode == "TOTAL" then
+		self:DeactivateLiveTimerText(fontString, key)
+		return false
+	end
+	if mode == "ELAPSED_TOTAL" then
+		self:DeactivateTimerTextBinding(key .. "-overtime")
+		local overtimeText = fontString._eqolOvertimeText
+		if overtimeText then
+			if overtimeText._eqolNativeReveal then overtimeText._eqolNativeReveal:Stop() end
+			overtimeText:SetAlpha(0)
+			overtimeText:Hide()
+		end
+		local elapsedDuration = self:UpdateTimerDurationObject(key .. "Elapsed", startTime, 86400)
+		return elapsedDuration and self:BindTimerTextProperty(fontString, key, elapsedDuration, "ElapsedDuration", "{} / " .. totalText) or false
+	end
+
+	local countdownDuration = self:UpdateTimerDurationObject(key .. "Countdown", startTime, duration)
+	local countdownMode = mode == "TIME_LEFT_TOTAL" and "TIME_LEFT_TOTAL" or "REMAINING"
+	local countdownBound = countdownDuration and self:BindTimerText(fontString, key, countdownDuration, countdownMode) or false
+	local overtimeText = self:EnsureOvertimeText(fontString)
+	if not overtimeText then return countdownBound end
+	self:SyncOvertimeTextStyle(fontString, overtimeText)
+	if overtimeColor then setTextColor(overtimeText, overtimeColor) end
+	local overtimeDuration = self:UpdateTimerDurationObject(key .. "Overtime", startTime + duration, 86400)
+	local overtimeFormat = mode == "TIME_LEFT_TOTAL" and ("+{} / " .. totalText) or "+{}"
+	local overtimeBound = overtimeDuration and self:BindTimerTextProperty(overtimeText, key .. "-overtime", overtimeDuration, "ElapsedDuration", overtimeFormat) or false
+	if overtimeBound then
+		self:SetNativeReveal(overtimeText, duration - elapsed)
+	else
+		overtimeText:Hide()
+	end
+	return countdownBound or overtimeBound
+end
+
 function Timer:ReleaseTimerTextBinding(key)
 	local durationText = addon.DurationText
 	if durationText and durationText.ReleaseBinding then durationText:ReleaseBinding(self:EnsureFrame(), key, false) end
@@ -1253,9 +1419,8 @@ function Timer:SetBoundTimerText(key, fallbackText, anchorKey, xKey, yKey, color
 		self:ReleaseTimerTextBinding(bindingKey)
 		return text
 	end
-	local elapsed = tonumber(state.elapsed) or 0
 	duration = tonumber(duration) or 0
-	if duration <= 0 or elapsed >= duration then
+	if duration <= 0 then
 		self:ReleaseTimerTextBinding(bindingKey)
 		return text
 	end
@@ -1538,12 +1703,13 @@ end
 
 function Timer:ReleasePanelTimerBindings()
 	if not self.frame then return end
-	self:ReleaseTimerTextBinding("panel-timer")
+	self:DeactivateLiveTimerText(self.frame.panelTexts and self.frame.panelTexts.timer, "panel-timer")
 	self:ReleaseTimerTextBinding("panel-chest2")
 	self:ReleaseTimerTextBinding("panel-chest3")
 	self:ReleaseTimerTextBinding("panel-bar-time-left")
 	self:ReleaseTimerTextBinding("panel-bar-panelBarChest2")
 	self:ReleaseTimerTextBinding("panel-bar-panelBarChest3")
+	self:DeactivateLiveTimerText(self.frame.panelTexts and self.frame.panelTexts.best, "panel-best-delta")
 end
 
 function Timer:HidePanelElements(releaseBindings)
@@ -1551,6 +1717,7 @@ function Timer:HidePanelElements(releaseBindings)
 	if not frame then return end
 	for _, text in pairs(frame.panelTexts or {}) do
 		text:Hide()
+		if text._eqolOvertimeText then text._eqolOvertimeText:Hide() end
 	end
 	for _, bar in pairs(frame.panelBars or {}) do
 		bar:Hide()
@@ -2364,6 +2531,38 @@ function Timer:SetPanelBar(key, value, maxValue, anchorKey, xKey, yKey, color)
 	bar:Show()
 end
 
+function Timer:SetNativeTimerBar(bar, state, duration, fillUp, expiredColor, textureAsset)
+	duration = tonumber(duration) or 0
+	if not (bar and bar.SetTimerDuration and state and state.active and duration > 0) then
+		if bar and bar._eqolExpiredOverlay then bar._eqolExpiredOverlay:Hide() end
+		return false
+	end
+	local durationObject = self:UpdateTimerDurationObject("bar-" .. tostring(bar), getChallengeStartTime(self, state), duration)
+	local statusBarEnum = _G.Enum
+	local interpolation = statusBarEnum and statusBarEnum.StatusBarInterpolation and statusBarEnum.StatusBarInterpolation.Immediate or 0
+	local directions = statusBarEnum and statusBarEnum.StatusBarTimerDirection
+	local direction = directions and (fillUp and directions.ElapsedTime or directions.RemainingTime) or (fillUp and 0 or 1)
+	if not durationObject then return false end
+	bar:SetTimerDuration(durationObject, interpolation, direction)
+	if fillUp and expiredColor then
+		local overlay = bar._eqolExpiredOverlay
+		if not overlay then
+			overlay = bar:CreateTexture(nil, "ARTWORK", nil, 1)
+			overlay:SetAllPoints(bar)
+			bar._eqolExpiredOverlay = overlay
+		end
+		local statusBarTexture = bar:GetStatusBarTexture()
+		overlay:SetTexture(textureAsset or (statusBarTexture and statusBarTexture:GetTexture()) or DEFAULT_STATUSBAR)
+		local color = normalizeColor(expiredColor, defaults.timerExpiredColor)
+		overlay:SetVertexColor(color.r, color.g, color.b, color.a)
+		self:SetNativeReveal(overlay, duration - (tonumber(state.elapsed) or 0))
+	elseif bar._eqolExpiredOverlay then
+		if bar._eqolExpiredOverlay._eqolNativeReveal then bar._eqolExpiredOverlay._eqolNativeReveal:Stop() end
+		bar._eqolExpiredOverlay:Hide()
+	end
+	return true
+end
+
 function Timer:SetPanelEnemyBarTextSlot(slot, state, objective)
 	local frame = self.frame
 	local bar = frame and frame.panelBars and frame.panelBars.enemy
@@ -2546,7 +2745,7 @@ function Timer:RenderPanel(state, timeLeft, twoChest, threeChest)
 	if self:Get("showDungeon") then self:SetPanelText("dungeon", self:GetDungeonDisplayText(state), "dungeonAnchor", "dungeonOffsetX", "dungeonOffsetY", self:Get("dungeonColor"), self:Get("panelDungeonFontSize")) end
 	if self:Get("showKeyLevel") then self:SetPanelText("key", tostring(state.level or 0), "keyLevelAnchor", "keyLevelOffsetX", "keyLevelOffsetY", self:Get("dungeonColor"), self:Get("panelKeyLevelFontSize")) end
 	if self:Get("showTimer") then
-		self:SetBoundTimerText(
+		local timerText = self:SetPanelText(
 			"timer",
 			self:GetTimerDisplayText(state, timeLeft),
 			"timerAnchor",
@@ -2554,13 +2753,11 @@ function Timer:RenderPanel(state, timeLeft, twoChest, threeChest)
 			"timerOffsetY",
 			timeLeft <= 0 and self:Get("timerExpiredColor") or self:Get("timerColor"),
 			self:Get("panelTimerFontSize"),
-			"CENTER",
-			state,
-			state.timeLimit,
-			self:Get("timerDisplay")
+			"CENTER"
 		)
+		self:BindLiveTimerText(timerText, "panel-timer", state, state.timeLimit, self:Get("timerDisplay"), self:Get("timerExpiredColor"))
 	else
-		self:ReleaseTimerTextBinding("panel-timer")
+		self:DeactivateLiveTimerText(self.frame and self.frame.panelTexts and self.frame.panelTexts.timer, "panel-timer")
 	end
 	if self:Get("showChestTimers") then
 		local hideChestLabels = self:Get("panelChestHideLabels") == true
@@ -2612,7 +2809,24 @@ function Timer:RenderPanel(state, timeLeft, twoChest, threeChest)
 	if self:Get("showBestTime") and best then
 		local bestText = secondsToText(best)
 		if self:Get("showBestDelta") and delta then bestText = bestText .. string.format(" (%+.0fs)", delta) end
-		self:SetPanelText("best", bestText, "bestTimeAnchor", "bestTimeOffsetX", "bestTimeOffsetY", self:Get("bestTimeColor"), self:Get("panelBestTimeFontSize"))
+		local bestFontString = self:SetPanelText("best", bestText, "bestTimeAnchor", "bestTimeOffsetX", "bestTimeOffsetY", self:Get("bestTimeColor"), self:Get("panelBestTimeFontSize"))
+		if state.active and self:Get("showBestDelta") then
+			local startTime = getChallengeStartTime(self, state)
+			local bestCountdown = self:UpdateTimerDurationObject("panelBestCountdown", startTime, best)
+			local bestOvertime = self:UpdateTimerDurationObject("panelBestOvertime", startTime + best, 86400)
+			local bestBindingKey = "panel-best-delta"
+			if bestCountdown then self:BindTimerTextProperty(bestFontString, bestBindingKey, bestCountdown, "RemainingDuration", bestText:match("^[^ ]+") .. " (-{})") end
+			local overtimeText = self:EnsureOvertimeText(bestFontString)
+			if overtimeText and bestOvertime then
+				self:SyncOvertimeTextStyle(bestFontString, overtimeText)
+				self:BindTimerTextProperty(overtimeText, bestBindingKey .. "-overtime", bestOvertime, "ElapsedDuration", bestText:match("^[^ ]+") .. " (+{})")
+				self:SetNativeReveal(overtimeText, best - elapsed)
+			end
+		else
+			self:DeactivateLiveTimerText(bestFontString, "panel-best-delta")
+		end
+	else
+		self:DeactivateLiveTimerText(self.frame and self.frame.panelTexts and self.frame.panelTexts.best, "panel-best-delta")
 	end
 	if self:Get("showAffixes") then self:RenderPanelAffixes(state) end
 	if self:Get("showPanelTimerBar") then
@@ -2621,6 +2835,14 @@ function Timer:RenderPanel(state, timeLeft, twoChest, threeChest)
 		if bar.chestMarkerTextFrame then bar.chestMarkerTextFrame:Show() end
 		local timerBarValue = self:Get("panelTimerBarFillUp") == true and math.min(state.timeLimit or 1, math.max(0, elapsed)) or math.max(0, timeLeft)
 		self:SetPanelBar("timer", timerBarValue, state.timeLimit or 1, "panelTimerBarAnchor", "panelTimerBarOffsetX", "panelTimerBarOffsetY", timeLeft <= 0 and self:Get("panelTimerBarExpiredColor") or self:Get("panelTimerBarColor"))
+		self:SetNativeTimerBar(
+			bar,
+			state,
+			state.timeLimit,
+			self:Get("panelTimerBarFillUp") == true,
+			self:Get("panelTimerBarExpiredColor"),
+			resolveMedia("statusbar", self:Get("panelTimerBarTexture") or self:Get("texture"), DEFAULT_STATUSBAR)
+		)
 		self:UpdatePanelTimerBarChestMarkers(state.timeLimit or 0, twoChest, threeChest)
 		self:SetPanelTimerBarTimeLeftText(timeLeft, state)
 	else
@@ -2662,6 +2884,8 @@ function Timer:HideListDecorContent(activeKinds)
 			holder.tooltipData = nil
 			holder:Hide()
 			self:ReleaseTimerTextBinding("decor-" .. kind)
+			self:ReleaseTimerTextBinding("decor-" .. kind .. "-overtime")
+			if holder.value and holder.value._eqolOvertimeText then holder.value._eqolOvertimeText:Hide() end
 		end
 	end
 end
@@ -2672,6 +2896,8 @@ function Timer:HideListElements()
 	for index, row in ipairs(frame.rows or {}) do
 		row:Hide()
 		self:ReleaseTimerTextBinding("row-" .. tostring(index))
+		self:ReleaseTimerTextBinding("row-" .. tostring(index) .. "-overtime")
+		if row.value and row.value._eqolOvertimeText then row.value._eqolOvertimeText:Hide() end
 	end
 	self:HideListDecorContent()
 end
@@ -2732,16 +2958,19 @@ function Timer:SetListDecorContent(kind, data)
 	local bindingKey = "decor-" .. kind
 	local durationBinding = data.durationBinding
 	if durationBinding and durationBinding.state and durationBinding.state.active then
-		local elapsed = tonumber(durationBinding.state.elapsed) or 0
 		local duration = tonumber(durationBinding.duration) or 0
-		if duration > 0 and elapsed < duration then
+		if durationBinding.allowOvertime then
+			self:BindLiveTimerText(holder.value, bindingKey, durationBinding.state, duration, durationBinding.mode, durationBinding.overtimeColor)
+		elseif duration > 0 then
+			self:ReleaseTimerTextBinding(bindingKey .. "-overtime")
+			if holder.value._eqolOvertimeText then holder.value._eqolOvertimeText:Hide() end
 			local durationObject = self:UpdateTimerDurationObject(durationBinding.key, getChallengeStartTime(self, durationBinding.state), duration)
 			if not (durationObject and self:BindTimerText(holder.value, bindingKey, durationObject, durationBinding.mode, durationBinding.textFormat)) then self:ReleaseTimerTextBinding(bindingKey) end
 		else
-			self:ReleaseTimerTextBinding(bindingKey)
+			self:DeactivateLiveTimerText(holder.value, bindingKey)
 		end
 	else
-		self:ReleaseTimerTextBinding(bindingKey)
+		self:DeactivateLiveTimerText(holder.value, bindingKey)
 	end
 	holder:Show()
 end
@@ -2817,16 +3046,29 @@ function Timer:SetRow(index, data)
 	local bindingKey = "row-" .. tostring(index)
 	local durationBinding = data.durationBinding
 	if durationBinding and durationBinding.state and durationBinding.state.active then
-		local elapsed = tonumber(durationBinding.state.elapsed) or 0
 		local duration = tonumber(durationBinding.duration) or 0
-		if duration > 0 and elapsed < duration then
+		if durationBinding.allowOvertime then
+			self:BindLiveTimerText(row.value, bindingKey, durationBinding.state, duration, durationBinding.mode, durationBinding.overtimeColor)
+		elseif duration > 0 then
+			self:ReleaseTimerTextBinding(bindingKey .. "-overtime")
+			if row.value._eqolOvertimeText then row.value._eqolOvertimeText:Hide() end
 			local durationObject = self:UpdateTimerDurationObject(durationBinding.key, getChallengeStartTime(self, durationBinding.state), duration)
 			if not (durationObject and self:BindTimerText(row.value, bindingKey, durationObject, durationBinding.mode, durationBinding.textFormat)) then self:ReleaseTimerTextBinding(bindingKey) end
 		else
-			self:ReleaseTimerTextBinding(bindingKey)
+			self:DeactivateLiveTimerText(row.value, bindingKey)
 		end
 	else
-		self:ReleaseTimerTextBinding(bindingKey)
+		self:DeactivateLiveTimerText(row.value, bindingKey)
+	end
+	if durationBinding and durationBinding.nativeBar then
+		self:SetNativeTimerBar(row.bar, durationBinding.state, durationBinding.duration, durationBinding.fillUp, durationBinding.overtimeColor)
+	elseif row.bar._eqolExpiredOverlay then
+		row.bar._eqolExpiredOverlay:Hide()
+	end
+	if durationBinding and durationBinding.removeAtExpiry then
+		self:SetNativeBoundaryRefresh(row, durationBinding.duration - (tonumber(durationBinding.state and durationBinding.state.elapsed) or 0))
+	else
+		self:SetNativeBoundaryRefresh(row, nil)
 	end
 	row:Show()
 end
@@ -2962,16 +3204,25 @@ end
 
 function Timer:Refresh()
 	if not self.initialized then return end
+	local enabled = self:IsEnabled()
+	local inEditMode = self:IsInEditMode()
+	local inMythicPlus = isInMythicPlus()
+	local showOnlyInMythicPlus = self:Get("showOnlyInMythicPlus")
+	local activeTimerID
+	if enabled and showOnlyInMythicPlus and not inEditMode and not inMythicPlus then activeTimerID = self:SyncActiveTimerBase(false) end
+	if not enabled or (showOnlyInMythicPlus and not inEditMode and not inMythicPlus and not activeTimerID) then
+		self:HideAllElements()
+		if self.frame then self.frame:Hide() end
+		self:ApplyObjectiveTrackerVisibility(self.lastState, false)
+		return
+	end
 	local frame = self:EnsureFrame()
 	local layoutMode = self:GetLayoutMode()
 	if layoutMode ~= "FLOW" then self:ApplyFrameStyle() end
-	local enabled = self:IsEnabled()
 	local state = self:BuildState()
 	self:UpdateObjectiveSplits(state)
 	self.lastState = state
-	local inEditMode = self:IsInEditMode()
-	local inMythicPlus = isInMythicPlus()
-	local shouldShow = enabled and (state.active or inMythicPlus or not self:Get("showOnlyInMythicPlus") or inEditMode)
+	local shouldShow = enabled and (state.active or inMythicPlus or not showOnlyInMythicPlus or inEditMode)
 	if not shouldShow then
 		self:HideAllElements()
 		frame:Hide()
@@ -3070,6 +3321,10 @@ function Timer:Refresh()
 				state = state,
 				duration = timeLimit,
 				mode = timerDisplay,
+				allowOvertime = true,
+				overtimeColor = self:Get("timerExpiredColor"),
+				nativeBar = true,
+				fillUp = isElapsedTimer,
 			},
 		})
 	end
@@ -3087,6 +3342,7 @@ function Timer:Refresh()
 					state = state,
 					duration = twoChest,
 					mode = "REMAINING",
+					removeAtExpiry = true,
 				},
 			})
 		end
@@ -3103,6 +3359,7 @@ function Timer:Refresh()
 					state = state,
 					duration = threeChest,
 					mode = "REMAINING",
+					removeAtExpiry = true,
 				},
 			})
 		end
@@ -3213,26 +3470,21 @@ function Timer:ShowTooltip()
 	GameTooltip:Show()
 end
 
-function Timer:ScheduleTick()
-	if self.tickScheduled then return end
-	self.tickScheduled = true
-	local state = self.lastState
-	local interval = (state and state.active) and TICK_INTERVAL or clampNumber(self:Get("updateRate"), 0.1, 5, defaults.updateRate)
-	C_Timer.After(interval, function()
-		Timer.tickScheduled = nil
-		if Timer:IsEnabled() and (isInMythicPlus() or Timer:IsInEditMode()) then
-			Timer:Refresh()
-			Timer:ScheduleTick()
-		end
-	end)
-end
-
 function Timer:ScheduleRunInfoRefresh()
 	if not C_Timer then return end
 	C_Timer.After(0.2, function()
 		if Timer:IsEnabled() and isInMythicPlus() then Timer:Refresh() end
 	end)
 	C_Timer.After(1, function()
+		if Timer:IsEnabled() and isInMythicPlus() then Timer:Refresh() end
+	end)
+end
+
+function Timer:ScheduleCriteriaRefresh()
+	if self.criteriaRefreshScheduled then return end
+	self.criteriaRefreshScheduled = true
+	RunNextFrame(function()
+		Timer.criteriaRefreshScheduled = nil
 		if Timer:IsEnabled() and isInMythicPlus() then Timer:Refresh() end
 	end)
 end
@@ -3251,7 +3503,7 @@ function Timer:RegisterEvents()
 	frame:RegisterEvent("CHALLENGE_MODE_DEATH_COUNT_UPDATED")
 	frame:RegisterEvent("CHALLENGE_MODE_RESET")
 	frame:RegisterEvent("SCENARIO_UPDATE")
-	frame:RegisterEvent("CRITERIA_UPDATE")
+	frame:RegisterEvent("SCENARIO_CRITERIA_UPDATE")
 	frame:RegisterEvent("QUEST_LOG_UPDATE")
 	frame:RegisterEvent("PLAYER_DEAD")
 	frame:RegisterEvent("PLAYER_ALIVE")
@@ -3270,7 +3522,6 @@ function Timer:UpdateEventState()
 	self:RegisterEvents()
 	if self:IsEnabled() then
 		self:Refresh()
-		self:ScheduleTick()
 	else
 		self:ApplyObjectiveTrackerVisibility(self.lastState, false)
 		self:HideAllElements()
@@ -3524,9 +3775,6 @@ function Timer:BuildEditModeSettings()
 		if content == "ENEMY_FORCES" then return Timer:Get("showEnemyForces") == true end
 		return false
 	end
-	local function oneDecimalSeconds(value)
-		return string.format("%.1fs", tonumber(value) or 0)
-	end
 	local function wholePixels(value)
 		return tostring(math.floor((tonumber(value) or 0) + 0.5))
 	end
@@ -3658,7 +3906,6 @@ function Timer:BuildEditModeSettings()
 		checkboxSetting(L["mythicPlusTimerTooltip"] or "Show tooltip", get("tooltip"), set("tooltip"), behaviorId),
 		checkboxSetting(L["mythicPlusTimerShowBestTime"] or "Show best time", get("showBestTime"), set("showBestTime", nil, true), behaviorId, nil, isLegacyMode),
 		checkboxSetting(L["mythicPlusTimerShowBestDelta"] or "Show best time delta", get("showBestDelta"), set("showBestDelta"), behaviorId, enabledWhen("showBestTime"), isLegacyMode),
-		sliderSetting(L["mythicPlusTimerUpdateRate"] or "Update rate", get("updateRate"), set("updateRate", function(value) return clampNumber(value, 0.1, 5, defaults.updateRate) end), 0.1, 5, 0.1, behaviorId, oneDecimalSeconds),
 		{ name = L["mythicPlusTimerSectionLayout"] or "Layout", kind = SettingType.Collapsible, id = layoutId, defaultCollapsed = true },
 		dropdownSetting(L["mythicPlusTimerLayoutMode"] or "Layout mode", get("layoutMode"), set("layoutMode", nil, true), {
 			{ value = "LIST", label = L["mythicPlusTimerLayoutList"] or "List" },
@@ -4000,7 +4247,6 @@ function Timer:RegisterEditMode()
 			Timer.panelBackdropReferenceReady = nil
 			Timer:Refresh()
 			if addon.DynamicAnchors and addon.DynamicAnchors:IsFrameAssignmentEnabled(Timer.dynamicAnchorId) then RunNextFrame(function() Timer:ApplyDynamicAnchor() end) end
-			Timer:ScheduleTick()
 			C_Timer.After(0, requestSettingsRefresh)
 			C_Timer.After(0.05, requestSettingsRefresh)
 		end,
@@ -4010,6 +4256,7 @@ function Timer:RegisterEditMode()
 		isEnabled = function() return Timer:IsEnabled() end,
 		settings = settings,
 		showOutsideEditMode = false,
+		manageVisibilityOutsideEditMode = false,
 		showReset = true,
 		showSettingsReset = false,
 		enableOverlayToggle = true,
@@ -4049,10 +4296,14 @@ function Timer:Init()
 			Timer:ScheduleRunInfoRefresh()
 		elseif event == "CHALLENGE_MODE_DEATH_COUNT_UPDATED" then
 			Timer:SyncActiveTimerBase(true)
+		elseif event == "SCENARIO_CRITERIA_UPDATE" then
+			Timer:ScheduleCriteriaRefresh()
+			return
 		elseif event == "UNIT_DIED" then
 			if Timer:TrackUnitDied(...) then Timer:Refresh() end
 			return
 		elseif event == "GROUP_ROSTER_UPDATE" or event == "PLAYER_ENTERING_WORLD" or event == "ZONE_CHANGED_NEW_AREA" or event == "PLAYER_DIFFICULTY_CHANGED" or event == "CHALLENGE_MODE_MAPS_UPDATE" then
+			if event ~= "GROUP_ROSTER_UPDATE" then Timer:SyncActiveTimerBase(true) end
 			Timer:RefreshGroupRoster()
 			if event == "PLAYER_DIFFICULTY_CHANGED" or event == "CHALLENGE_MODE_MAPS_UPDATE" then Timer:ScheduleRunInfoRefresh() end
 		elseif event == "WORLD_STATE_TIMER_STOP" or event == "CHALLENGE_MODE_COMPLETED" or event == "CHALLENGE_MODE_RESET" then
@@ -4076,7 +4327,6 @@ function Timer:Init()
 			Timer:SyncActiveTimerBase(true)
 		end
 		Timer:Refresh()
-		Timer:ScheduleTick()
 	end)
 	if addon.DynamicAnchors then
 		addon.DynamicAnchors:RegisterSimpleFrame({

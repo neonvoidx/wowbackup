@@ -1,0 +1,8 @@
+<Bindings>
+  <Binding name="WARGAMESPLUS_TOGGLE" header="WARGAMESPLUS">
+    SlashCmdList["WARGAMESPLUS"]("")
+  </Binding>
+  <Binding name="WARGAMESPLUS_DOCK">
+    SlashCmdList["WARGAMESPLUS"]("dock")
+  </Binding>
+</Bindings>

@@ -377,6 +377,18 @@ local gossipData = {
 		newTagID = "autoChooseGossip",
 		children = {
 			{
+				var = "autoChooseGossipManualOnly",
+				text = L["autoChooseGossipManualOnly"],
+				desc = L["autoChooseGossipManualOnlyDesc"],
+				func = function(key) addon.db["autoChooseGossipManualOnly"] = key end,
+				default = false,
+				parentCheck = IsAutomaticGossipEnabled,
+				parent = true,
+				newTagID = "autoChooseGossipManualOnly",
+				type = Settings.VarType.Boolean,
+				sType = "checkbox",
+			},
+			{
 				var = "autoChooseGossipModifier",
 				text = L["gossipAutomationModifier"],
 				desc = L["gossipAutomationModifierDesc"],
@@ -591,6 +603,7 @@ function addon.functions.initQuest()
 	addon.functions.InitDBValue("autoChooseQuest", false)
 	addon.functions.InitDBValue("autoChooseQuestModifier", "NONE")
 	addon.functions.InitDBValue("autoChooseGossip", false)
+	addon.functions.InitDBValue("autoChooseGossipManualOnly", false)
 	addon.functions.InitDBValue("autoChooseGossipModifier", "NONE")
 	addon.functions.InitDBValue("autoChooseGossipContexts", AUTO_GOSSIP_CONTEXT_DEFAULTS)
 	addon.functions.InitDBValue("ignoreTrivialQuests", false)

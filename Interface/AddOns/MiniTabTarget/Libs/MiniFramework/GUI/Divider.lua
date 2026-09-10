@@ -18,7 +18,7 @@ function M:Divider(options)
 	local line = GUI.DividerLine
 	local gold = GUI.DividerGold
 
-	local styled = GUI.IsStyled(options)
+	local styled = GUI.IsStyled(options, "Divider")
 
 	local container = CreateFrame("Frame", nil, options.Parent)
 	container:SetHeight(26)
@@ -38,6 +38,11 @@ function M:Divider(options)
 	pixel.SetHeight(leftLine, 1)
 	pixel.SetHeight(rightLine, 1)
 
+	-- Unsnapped: a divider sits inside a scroll child, whose fractional alignment can snap a
+	-- one-pixel line onto a zero-coverage row (see GUI.Unsnap).
+	GUI.Unsnap(leftLine)
+	GUI.Unsnap(rightLine)
+
 	local label = container:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	label:SetText((options.Text or ""):upper())
 
@@ -46,6 +51,7 @@ function M:Divider(options)
 	end
 
 	label:SetPoint("CENTER", container, "CENTER")
+	container.Label = label
 
 	pixel.SetPoint(leftLine, "LEFT", container, "LEFT", 0, 0)
 	pixel.SetPoint(leftLine, "RIGHT", label, "LEFT", -8, 0)

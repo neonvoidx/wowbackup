@@ -130,3 +130,16 @@ VER 3 010000000000004F " " "134400"
 /cast Shadow Word: Death
 /targetlasttarget [harm]
 END
+VER 3 0100000000000050 " " "134400"
+#showtooltip
+/cast [@mouseover,help,exists][@player] Holy Word: Serenity
+END
+VER 3 0100000000000051 " " "134400"
+#showtooltip
+/cast [@mouseover,help,exists][] Guardian Spirit
+END
+VER 3 0100000000000052 " " "134400"
+#showtooltip 
+#FS EnemyHealer
+/cast [mod:shift,@none,harm][] Holy Word: Chastise
+END

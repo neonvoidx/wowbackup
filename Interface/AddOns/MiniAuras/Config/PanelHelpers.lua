@@ -3,8 +3,15 @@ local _, addon = ...
 local mini = addon.Framework
 local L = addon.L
 local config = addon.Config
+local auraContainerDisplay = addon.Core.AuraContainerDisplay
 local verticalSpacing = mini.VerticalSpacing
 local horizontalSpacing = mini.HorizontalSpacing
+local COLOR_MODE = auraContainerDisplay.ColorMode
+local COLOR_MODES = {
+	COLOR_MODE.None,
+	COLOR_MODE.Dispel,
+	COLOR_MODE.Custom,
+}
 -- The text sits behind functions because the locale can change after this file loads, so every
 -- lookup has to happen at build time. Literal keys keep them visible to the locale checker.
 local ENABLE_ROW = {
@@ -40,6 +47,18 @@ local SPELL_ICON_SIZE = 18
 local M = {}
 
 addon.Config.PanelHelpers = M
+
+local function ColorModeText(mode)
+	if mode == COLOR_MODE.Dispel then
+		return L["Dispel colours"]
+	end
+
+	if mode == COLOR_MODE.Custom then
+		return L["Custom"]
+	end
+
+	return L["None"]
+end
 
 ---Builds the five per-context enable checkboxes on one row, on the shared 5-column grid so
 ---checkbox rows line up across pages.
@@ -245,6 +264,18 @@ function M:BuildGrowDropdown(opts)
 	return M:BuildLabelledDropdown(opts)
 end
 
+---The same thing labelled "Icon colours", with the None/Dispel/Custom item list and display text
+---fixed, for the three modules that offer the mode.
+---@param opts LabelledDropdownOptions
+---@return table dropdown Carries the label as dropdown.Label.
+function M:BuildColorModeDropdown(opts)
+	opts.LabelText = L["Icon colours"]
+	opts.Items = COLOR_MODES
+	opts.GetText = ColorModeText
+
+	return M:BuildLabelledDropdown(opts)
+end
+
 ---Builds the Offset X/Y slider pair, Y sitting to the right of X. The caller positions X.
 ---@param opts OffsetSlidersOptions
 ---@return SliderReturn offsetX
@@ -292,12 +323,17 @@ end
 function M:BuildMediaDropdown(opts)
 	local media = opts.Media
 
+	local function SourceText(value)
+		return media:DisplayText(value)
+	end
+
 	local dropdown, modern = mini:Dropdown({
 		Parent = opts.Parent,
 		Items = media:GetNames(),
 		GetValue = opts.GetValue,
 		SetValue = opts.SetValue,
-		GetText = opts.GetText,
+		-- Only the sound provider names a source.
+		GetText = opts.GetText or (media.DisplayText and SourceText),
 	})
 
 	if opts.Width then
@@ -444,6 +480,8 @@ end
 ---@class GrowDropdownOptions
 ---@field Parent table
 ---@field Items string[]
+---@field Tooltip string?
+---@field GetText (fun(value: string): string)? Display text for an item; defaults to the value.
 ---@field Width number?
 ---@field Target table? Options table holding the Grow value; used unless GetValue/SetValue are given.
 ---@field Key string? Defaults are built from Target[Key].
@@ -453,8 +491,6 @@ end
 
 ---@class LabelledDropdownOptions : GrowDropdownOptions
 ---@field LabelText string
----@field Tooltip string?
----@field GetText (fun(value: string): string)? Display text for an item; defaults to the value.
 
 ---@class OffsetSlidersOptions
 ---@field Parent table
@@ -466,7 +502,8 @@ end
 ---@class MediaDropdownOptions
 ---@field Parent table
 ---@field RefreshOn table Frame whose OnShow re-reads the media list.
----@field Media table Provider with GetNames() and OnChanged(fn) (sounds, bar textures).
+---@field Media table Provider with GetNames() and OnChanged(fn), and DisplayText(value) where its
+---rows name a source (sounds, bar textures).
 ---@field GetValue fun(): any
 ---@field SetValue fun(value: any)
 ---@field GetText (fun(value: any): string)?

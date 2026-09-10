@@ -309,7 +309,10 @@ local function normalizeAction(action, entryID)
 	elseif kind == "worldmarker" or kind == "raidtarget" then
 		local id = tonumber(action.id or action.marker)
 		local minimum = kind == "worldmarker" and 0 or 1
-		if id and id >= minimum and id <= 8 then normalized = { kind = kind, id = math.floor(id) } end
+		if id and id >= minimum and id <= 8 then
+			normalized = { kind = kind, id = math.floor(id) }
+			if kind == "worldmarker" and id > 0 then normalized.atCursor = action.atCursor == true or nil end
+		end
 	elseif kind == "equipmentset" then
 		local id = tonumber(action.id)
 		local ownerGUID = trim(action.ownerGUID)
@@ -4573,6 +4576,9 @@ local function configureCompiledActionButton(menuID, entry)
 		button:SetAttribute("macro", entry.resolvedValue)
 	elseif kind == "worldmarker" and action.id == 0 then
 		button:SetAttribute("type", "stop")
+	elseif kind == "worldmarker" and action.atCursor == true then
+		button:SetAttribute("type", "macro")
+		button:SetAttribute("macrotext", "/wm [@cursor]" .. tostring(action.id))
 	elseif kind == "worldmarker" or kind == "raidtarget" then
 		button:SetAttribute("type", kind)
 		button:SetAttribute("marker", action.id)

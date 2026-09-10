@@ -14,6 +14,7 @@ local function initCooldownPanelsDB()
 	init("cooldownPanels", {
 		version = 1,
 		auraPresetExclusions = {},
+		trinketSlotItemExclusions = {},
 		panels = {},
 		order = {},
 		selectedPanel = nil,

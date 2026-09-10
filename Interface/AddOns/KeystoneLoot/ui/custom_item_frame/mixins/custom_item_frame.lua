@@ -23,8 +23,15 @@ function KeystoneLootCustomItemFrameMixin:Init()
     DB:AddObserver("filters.specId", OnChanged);
     DB:AddObserver("filters.slotId", OnChanged);
     DB:AddObserver("ui.selectedCharacterKey", OnChanged);
+    DB:AddObserver("settings.slotName", OnChanged);
 
     self:Refresh();
+end
+
+function KeystoneLootCustomItemFrameMixin:RefreshOwnedIcons()
+    for Icon in self.iconPool:EnumerateActive() do
+        Icon:UpdateOwnedIcon();
+    end
 end
 
 function KeystoneLootCustomItemFrameMixin:Refresh()

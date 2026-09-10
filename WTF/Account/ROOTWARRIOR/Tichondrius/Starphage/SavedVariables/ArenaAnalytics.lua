@@ -1,14 +1,42 @@
 
 ArenaAnalyticsDB = {
 ["formatVersion"] = 6,
-["realms"] = {
-},
 ["names"] = {
 "Starphage",
 },
+["realms"] = {
+},
 }
 ArenaAnalyticsTransientDB = {
-["queueTimes"] = {
+["currentArena"] = {
+["players"] = {
+},
+["lastRoundTeam"] = {
+},
+["matchState"] = 0,
+["shuffleWinsCache"] = {
+["total"] = 0,
+["wins"] = 0,
+["estimatedRound"] = 0,
+["drawCount"] = 0,
+},
+["ended"] = false,
+["committedRounds"] = {
+},
+["deathData"] = {
+},
+["isHandlingExit"] = false,
+["locked"] = false,
+["round"] = {
+["isInitiated"] = false,
+["team"] = {
+},
+["wins"] = 0,
+["totalWins"] = 0,
+["enemy"] = {
+},
+},
+["endedProperly"] = false,
 },
 ["ratedInfo"] = {
 {
@@ -16,46 +44,20 @@ ArenaAnalyticsTransientDB = {
 ["lastWorldSeasonPlayed"] = 0,
 },
 {
-[170] = 2435,
-["lastWorldSeasonPlayed"] = 170,
+[0] = 0,
+["lastWorldSeasonPlayed"] = 0,
 },
 {
 [0] = 0,
 ["lastWorldSeasonPlayed"] = 0,
 },
 {
-[22] = 1833,
-["lastWorldSeasonPlayed"] = 22,
+[0] = 0,
+["lastWorldSeasonPlayed"] = 0,
 },
-["season"] = 41,
+["season"] = 42,
 },
-["currentArena"] = {
-["endedProperly"] = false,
-["lastRoundTeam"] = {
-},
-["matchState"] = 0,
-["isHandlingExit"] = false,
-["ended"] = false,
-["committedRounds"] = {
-},
-["deathData"] = {
-},
-["locked"] = false,
-["round"] = {
-["team"] = {
-},
-["isInitiated"] = false,
-["enemy"] = {
-},
-},
-["players"] = {
-},
-["shuffleWinsCache"] = {
-["total"] = 0,
-["wins"] = 0,
-["drawCount"] = 0,
-["estimatedRound"] = 0,
-},
+["queueTimes"] = {
 },
 }
 ArenaAnalyticsMapIconPos = 0

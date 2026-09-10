@@ -17,6 +17,7 @@ function addon.MythicPlus.functions.InitTeleportCompendium()
 	addon.MythicPlus.variables.teleportCompendiumInitialized = true
 	if addon.MythicPlus.functions.InitTeleportCompendiumDB then addon.MythicPlus.functions.InitTeleportCompendiumDB() end
 	if addon.MythicPlus.functions.InitDungeonPortal then addon.MythicPlus.functions.InitDungeonPortal() end
+	if addon.MythicPlus.functions.InitKeystoneDungeonIndicator then addon.MythicPlus.functions.InitKeystoneDungeonIndicator() end
 	if addon.MythicPlus.functions.InitWorldMapTeleportPanel then addon.MythicPlus.functions.InitWorldMapTeleportPanel() end
 	if addon.MythicPlus.functions.InitTeleportCompendiumSettings then addon.MythicPlus.functions.InitTeleportCompendiumSettings() end
 end

@@ -24,6 +24,13 @@ local fontFlagNames = {
 	MONOCHROME = "Monochrome",
 	[""] = "None",
 }
+-- The legacy dropdown template draws its field in from the frame's own left edge.
+local LEGACY_DROPDOWN_INSET = 16
+-- The flattened field's border draws outside the box's own frame on both sides.
+local FIELD_BORDER_LEFT = 6
+local FIELD_BORDER_RIGHT = 2
+-- The preview rows are menu rows, so their text matches the menu's own size.
+local PREVIEW_FONT_SIZE = 13
 ---@class Db
 local db
 ---@class Db
@@ -54,37 +61,116 @@ local dbDefaults = {
 		Dungeons = true,
 	},
 }
+-- The dropdown holds these tables, so they are refilled in place rather than replaced.
+local fontItems = {}
+local fontNames = {}
+local fontsDropdown
+local fontsMediaSubscribed = false
+local fontsRefreshQueued = false
 ---@class Config
 local M = {
 	DbDefaults = dbDefaults,
 }
 addon.Config = M
 
-local function GetFontLists()
+---Refills the font lists in place from LibSharedMedia, falling back to the client's own faces
+---only when nothing has registered anything at all.
+local function RefillFontLists()
+	wipe(fontItems)
+	wipe(fontNames)
+
 	local lsm = LibStub and LibStub("LibSharedMedia-3.0", true)
+	-- Fetch answers one override file for every name once an addon sets a global font.
+	local hash = lsm and lsm:HashTable("font")
 
-	if lsm then
-		local items = {}
-		local names = {}
-
+	if hash then
 		for _, name in ipairs(lsm:List("font") or {}) do
-			local file = lsm:Fetch("font", name)
+			local file = hash[name]
 
-			if file then
-				items[#items + 1] = file
-				names[file] = name
+			if file and not fontNames[file] then
+				fontItems[#fontItems + 1] = file
+				fontNames[file] = name
 			end
-		end
-
-		if #items > 0 then
-			return items, names
 		end
 	end
 
-	return builtinFontItems, builtinFontNames
+	if #fontItems == 0 then
+		for _, file in ipairs(builtinFontItems) do
+			fontItems[#fontItems + 1] = file
+			fontNames[file] = builtinFontNames[file]
+		end
+	end
+
+	table.sort(fontItems, function(a, b)
+		return (fontNames[a] or a) < (fontNames[b] or b)
+	end)
+end
+
+---Runs the list refresh once at the end of the frame however many times it is asked for in one,
+---since LibSharedMedia fires once per registered entry and a media pack registers its whole set
+---inside a single frame.
+local function QueueFontListsChanged()
+	if fontsRefreshQueued then
+		return
+	end
+
+	fontsRefreshQueued = true
+
+	C_Timer.After(0, function()
+		fontsRefreshQueued = false
+		RefillFontLists()
+
+		if fontsDropdown then
+			fontsDropdown:MiniRefresh()
+		end
+	end)
+end
+
+---Fonts keep arriving for as long as media addons keep loading, which is routinely after this
+---panel was built.
+local function EnsureFontMediaSubscription()
+	if fontsMediaSubscribed then
+		return
+	end
+
+	local lsm = LibStub and LibStub("LibSharedMedia-3.0", true)
+
+	if not lsm or not lsm.RegisterCallback then
+		return
+	end
+
+	fontsMediaSubscribed = true
+
+	lsm.RegisterCallback(M, "LibSharedMedia_Registered", QueueFontListsChanged)
+end
+
+---Previews the font each dropdown row names. Menu rows are pooled and reused across openings.
+---@param button table
+---@param file string
+local function DecorateFontRow(button, file)
+	local text = button.fontString
+
+	if not text then
+		return
+	end
+
+	if button.MiniHealerRangeStockFont == nil then
+		button.MiniHealerRangeStockFont = text:GetFontObject() or false
+	end
+
+	local preview = addon.Fonts:FileFontObject(file, PREVIEW_FONT_SIZE, "")
+
+	if preview then
+		text:SetFontObject(preview)
+	elseif button.MiniHealerRangeStockFont then
+		text:SetFontObject(button.MiniHealerRangeStockFont)
+	end
 end
 
 function M:Init()
+	-- A styled button clashes with the stock Blizzard art around it in the settings screen.
+	mini:SetCustomStyling(true, { Button = false })
+
 	db = mini:GetSavedVars(dbDefaults)
 
 	local panel = CreateFrame("Frame")
@@ -101,6 +187,18 @@ function M:Init()
 	local header = mini:PanelHeader({
 		Parent = panel,
 		Description = "Increase your awareness.",
+		Divider = true,
+		Test = {
+			OnClick = function()
+				addon:ToggleTest()
+			end,
+		},
+		Reset = {
+			OnAccept = function()
+				mini:ResetSavedVars(dbDefaults)
+				addon:Refresh()
+			end,
+		},
 	})
 
 	local arenaChkBox = mini:Checkbox({
@@ -116,7 +214,7 @@ function M:Init()
 		end,
 	})
 
-	arenaChkBox:SetPoint("TOPLEFT", header.Anchor, "BOTTOMLEFT", -4, -verticalSpacing)
+	arenaChkBox:SetPoint("TOPLEFT", header.Anchor, "BOTTOMLEFT", 0, -verticalSpacing)
 
 	local bgChkBox = mini:Checkbox({
 		Parent = panel,
@@ -163,10 +261,62 @@ function M:Init()
 
 	lockChkBox:SetPoint("LEFT", dungeonsChkBox, "LEFT", columnStep, 0)
 
+	local appearanceDivider = mini:Divider({
+		Parent = panel,
+		Text = "Appearance",
+	})
+
+	appearanceDivider:SetPoint("TOPLEFT", arenaChkBox, "BOTTOMLEFT", 0, -verticalSpacing * 2)
+	appearanceDivider:SetPoint("RIGHT", panel, "RIGHT", 0, 0)
+
+	-- Every entry spends this budget, so their right edges line up down the section.
+	local entryWidth = columnStep * 2
+
+	---Starts an entry on the section's left edge, clear of whatever control sits above it.
+	---@param region table
+	---@param above table
+	---@param gap number
+	local function StackEntry(region, above, gap)
+		region:SetPoint("TOP", above, "BOTTOM", 0, -gap)
+		region:SetPoint("LEFT", appearanceDivider, "LEFT", 0, 0)
+	end
+
+	---@param text string
+	---@return table
+	local function CreateLabel(text)
+		local label = panel:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+		label:SetText(text)
+
+		return label
+	end
+
+	local messageLabel = CreateLabel("Message")
+	local fontLabel = CreateLabel("Font")
+	local outlineLabel = CreateLabel("Outline")
+	local colourLabel = CreateLabel("Colour")
+
+	-- The widest label decides where every control starts, so the labels share one column and
+	-- the controls share another.
+	local labelColumn = 0
+
+	for _, label in ipairs({ messageLabel, fontLabel, outlineLabel, colourLabel }) do
+		labelColumn = math.max(labelColumn, label:GetStringWidth())
+	end
+
+	labelColumn = labelColumn + horizontalSpacing
+
+	local controlWidth = math.max(1, entryWidth - labelColumn)
+
+	---Puts a control in the second column, level with the label that names it.
+	---@param control table
+	---@param label table
+	---@param inset number? backed out of the column so the control's drawn edge lands on it
+	local function AttachControl(control, label, inset)
+		control:SetPoint("LEFT", label, "LEFT", labelColumn - (inset or 0), 0)
+	end
+
 	local messageEditBox = mini:EditBox({
 		Parent = panel,
-		LabelText = "Message",
-		Width = columnStep * 2,
 		GetValue = function()
 			return db.Message
 		end,
@@ -176,34 +326,17 @@ function M:Init()
 		end,
 	})
 
-	messageEditBox.Label:SetPoint("TOPLEFT", arenaChkBox, "BOTTOMLEFT", 0, -verticalSpacing)
-	messageEditBox.EditBox:SetPoint("LEFT", messageEditBox.Label, "RIGHT", horizontalSpacing, 0)
+	StackEntry(messageLabel, appearanceDivider, verticalSpacing)
+	-- The box is inset so its border, not its frame, lands on the column.
+	messageEditBox.EditBox:SetPoint("LEFT", messageLabel, "LEFT", labelColumn + FIELD_BORDER_LEFT, 0)
+	messageEditBox.EditBox:SetWidth(math.max(1, controlWidth - FIELD_BORDER_LEFT - FIELD_BORDER_RIGHT))
 
-	local textSizeSlider = mini:Slider({
+	RefillFontLists()
+
+	local fontDdl, fontIsModern = mini:Dropdown({
 		Parent = panel,
-		LabelText = "Size",
-		Min = 10,
-		-- it seems blizzard have a hard cap at 120
-		Max = 120,
-		Step = 1,
-		GetValue = function()
-			return db.FontSize
-		end,
-		SetValue = function(value)
-			db.FontSize = mini:ClampInt(value, 10, 120, dbDefaults.FontSize)
-			addon:Refresh()
-		end,
-	})
-
-	textSizeSlider.Slider:SetPoint("TOPLEFT", messageEditBox.Label, "BOTTOMLEFT", 0, -verticalSpacing * 3)
-
-	local fontItems, fontNames = GetFontLists()
-
-	local fontDdl = mini:Dropdown({
-		Parent = panel,
-		LabelText = "Font",
 		Items = fontItems,
-		Width = columnStep * 2,
+		Width = controlWidth,
 		GetValue = function()
 			return db.FontPath
 		end,
@@ -214,15 +347,21 @@ function M:Init()
 		GetText = function(value)
 			return fontNames[value] or value
 		end,
+		DecorateItem = DecorateFontRow,
 	})
 
-	fontDdl.Label:SetPoint("TOPLEFT", textSizeSlider.Slider, "BOTTOMLEFT", 0, -verticalSpacing * 2)
+	fontsDropdown = fontDdl
+	EnsureFontMediaSubscription()
+
+	local dropdownInset = fontIsModern and 0 or LEGACY_DROPDOWN_INSET
+
+	StackEntry(fontLabel, messageEditBox.EditBox, verticalSpacing)
+	AttachControl(fontDdl, fontLabel, dropdownInset)
 
 	local outlineDdl = mini:Dropdown({
 		Parent = panel,
-		LabelText = "Outline",
 		Items = fontFlagItems,
-		Width = columnStep,
+		Width = controlWidth,
 		GetValue = function()
 			return db.FontFlags
 		end,
@@ -235,11 +374,12 @@ function M:Init()
 		end,
 	})
 
-	outlineDdl.Label:SetPoint("LEFT", fontDdl, "RIGHT", horizontalSpacing * 2, 0)
+	StackEntry(outlineLabel, fontDdl, verticalSpacing)
+	AttachControl(outlineDdl, outlineLabel, dropdownInset)
 
 	local colourSwatch = mini:ColorSwatch({
 		Parent = panel,
-		LabelText = "Colour",
+		TooltipTitle = "Colour",
 		Tooltip = "Click to change the font colour.",
 		GetValue = function()
 			local c = db.FontColor
@@ -254,15 +394,27 @@ function M:Init()
 		end,
 	})
 
-	colourSwatch:SetPoint("LEFT", outlineDdl, "RIGHT", horizontalSpacing * 2, 0)
+	StackEntry(colourLabel, outlineDdl, verticalSpacing)
+	AttachControl(colourSwatch, colourLabel)
 
-	local testBtn = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
-	testBtn:SetSize(120, 26)
-	testBtn:SetPoint("BOTTOMLEFT", panel, "BOTTOMLEFT", 0, verticalSpacing)
-	testBtn:SetText("Test")
-	testBtn:SetScript("OnClick", function()
-		addon:ToggleTest()
-	end)
+	local textSizeSlider = mini:Slider({
+		Parent = panel,
+		LabelText = "Size",
+		Min = 10,
+		-- it seems blizzard have a hard cap at 120
+		Max = 120,
+		Step = 1,
+		Width = entryWidth,
+		GetValue = function()
+			return db.FontSize
+		end,
+		SetValue = function(value)
+			db.FontSize = mini:ClampInt(value, 10, 120, dbDefaults.FontSize)
+			addon:Refresh()
+		end,
+	})
+
+	StackEntry(textSizeSlider.Slider, colourSwatch, verticalSpacing + mini.SliderChipOverhang)
 
 	mini:RegisterSlashCommand(category, panel, {
 		"/minihr",

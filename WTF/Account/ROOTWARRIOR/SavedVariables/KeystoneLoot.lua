@@ -7,8 +7,11 @@ KeystoneLootDB = {
 ["CHAT_MSG_PARTY_LEADER"] = true,
 ["CHAT_MSG_GUILD"] = true,
 },
+["ownedTooltip"] = true,
+["slotName"] = true,
 ["hiddenCharacters"] = {
 },
+["mythicPlusNotification"] = true,
 ["minimap"] = {
 ["enabled"] = true,
 ["minimapPos"] = 132.5321361082827,
@@ -17,8 +20,8 @@ KeystoneLootDB = {
 ["hideOtherItems"] = false,
 ["favoriteIcon"] = true,
 ["keystoneTooltip"] = true,
-["favoriteTooltip"] = true,
 ["wideMode"] = false,
+["multiSlotFilter"] = false,
 ["highlighting"] = {
 ["versatility"] = true,
 ["comboMode"] = false,
@@ -28,14 +31,28 @@ KeystoneLootDB = {
 ["noStats"] = true,
 },
 ["lootReminder"] = {
-["whisperMessage"] = "Can I have {item} please?",
+["share"] = true,
+["party"] = true,
+["whisperMessage"] = "Hi! Any chance I could get {item} if you don't need it? Thanks a lot either way!",
 ["dropAlert"] = true,
 ["dungeons"] = true,
 },
-["multiSlotFilter"] = false,
+["favoriteTooltip"] = true,
 },
-["version"] = 10,
+["version"] = 15,
 ["favorites"] = {
+["Tichondrius-Strathmoan-6"] = {
+},
+["Tichondrius-Starphage-12"] = {
+},
+["Tichondrius-Reedingo-7"] = {
+},
+["Tichondrius-Manyfaced-4"] = {
+},
+["Tichondrius-Bigxthazug-1"] = {
+},
+["Tichondrius-Smaugchamp-13"] = {
+},
 ["Tichondrius-Auteist-8"] = {
 [2895] = {
 [62] = {
@@ -227,9 +244,9 @@ KeystoneLootDB = {
 },
 },
 },
-["Tichondrius-Starphage-12"] = {
+["Tichondrius-Starstypeshi-11"] = {
 },
-["Tichondrius-Manyfaced-4"] = {
+["Tichondrius-Praisesun-2"] = {
 },
 ["Tichondrius-Hellavator-9"] = {
 [2882] = {
@@ -278,28 +295,19 @@ KeystoneLootDB = {
 },
 },
 },
-[585] = {
-[267] = {
-[250224] = {
-["tier"] = 1,
-},
-[251232] = {
-["tier"] = 1,
-},
-[251222] = {
-["tier"] = 1,
-},
-[252258] = {
-["tier"] = 1,
-},
-},
-},
 [2894] = {
 [267] = {
 [270922] = {
 ["tier"] = 3,
 },
 [270164] = {
+["tier"] = 3,
+},
+},
+},
+[2849] = {
+[267] = {
+[270167] = {
 ["tier"] = 3,
 },
 },
@@ -314,10 +322,19 @@ KeystoneLootDB = {
 },
 },
 },
-[2849] = {
+[585] = {
 [267] = {
-[270167] = {
-["tier"] = 3,
+[252258] = {
+["tier"] = 1,
+},
+[250224] = {
+["tier"] = 1,
+},
+[251222] = {
+["tier"] = 1,
+},
+[251232] = {
+["tier"] = 1,
 },
 },
 },

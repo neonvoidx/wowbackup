@@ -10,7 +10,7 @@ local testSpellData = addon.Core.TestSpells
 local iconSlotContainer = addon.Core.IconSlotContainer
 local auraContainerDisplay = addon.Core.AuraContainerDisplay
 local auraFilters = addon.Core.AuraFilters
-local spellSearch = addon.Core.SpellSearch
+local glowStyles = addon.Core.GlowStyles
 local units = addon.Utils.UnitUtil
 local sweep = addon.Core.Sweep
 
@@ -70,14 +70,23 @@ local function AddMask(tex, mask)
 	tex:AddMaskTexture(mask)
 end
 
+---Whether the portrait icons drop their countdown text. The display's own vocabulary is the
+---negative one, so the module's positive switch is turned round here.
+---@return boolean
+local function HidesNumbers()
+	return db.Modules.Portrait.EnableNumbers == false
+end
+
 ---The button style every portrait display takes: cooldown direction from the options, and never
 ---a border, glow or mouse input. Returned in the wrapper's shared scratch, so use it and hand it
 ---straight to SetStyle.
 ---@return AuraDisplayStyle
 local function BuildPortraitStyle()
 	-- The cooldown direction lives on the module options root, so there is no Icons table to pass.
-	local style = auraContainerDisplay:BuildStandardStyle(nil)
+	local style = auraContainerDisplay:BuildStandardStyle(nil, db.Modules.Portrait.FontScale)
 	style.ReverseCooldown = db.Modules.Portrait.ReverseCooldown or false
+	-- Only ever adds to the global Disable Numbers switch, which the display resolves for itself.
+	style.HideNumbers = HidesNumbers()
 	style.ShowTooltips = false
 
 	return style
@@ -103,9 +112,8 @@ local function DeclareNextGroup(display)
 	end
 end
 
----Every id the custom list covers, each expanded to the ids sharing its name, because the aura
----the game applies is often not the one in the spellbook. A fresh table each call, since the
----engine keeps the reference it is handed.
+---The custom list as the map the engine's includeSpellIDs filter wants, exactly the ticked ids.
+---A fresh table each call, since the engine keeps the reference it is handed.
 ---@return table? candidateFilters nil while the list is empty.
 local function BuildCustomFilters()
 	local spells = db.Modules.Portrait.CustomSpells
@@ -118,9 +126,7 @@ local function BuildCustomFilters()
 	local ids = {}
 
 	for spellId in pairs(spells) do
-		for _, variant in ipairs(spellSearch:GetVariants(spellId)) do
-			ids[variant] = true
-		end
+		ids[spellId] = true
 	end
 
 	return { includeSpellIDs = ids }
@@ -148,7 +154,7 @@ end
 ---@param kickFrame table The kick IconSlotContainer's frame, already anchored over the portrait.
 ---@param unit string
 ---@param texCoord table? {left, right, top, bottom} icon crop, per unit-frame addon.
----@param mask table? MaskTexture for round portraits (Blizzard frames).
+---@param mask table? MaskTexture clipping the icon to the portrait's shape.
 ---@param iconSize number
 ---@return { Displays: AuraContainerDisplay[], DisarmDisplay: AuraContainerDisplay, CustomDisplay: AuraContainerDisplay? }
 local function CreatePortraitAuraDisplay(kickFrame, unit, texCoord, mask, iconSize)
@@ -263,31 +269,32 @@ function M:CreatePortraitMask(portrait)
 	end
 
 	local mask = parent:CreateMaskTexture()
-	mask:SetTexture("Interface\\CharacterFrame\\TempPortraitAlphaMask", "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+	mask:SetTexture(glowStyles.PortraitMask, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
 	mask:SetAllPoints(portrait)
 	return mask
 end
 
-function M:ApplyMaskToLayer(layer, mask)
+---@param layer table
+---@param mask table MaskTexture clipping the icon to the portrait's shape.
+---@param cropMin number icon crop coordinate for the left/top edge
+---@param cropMax number icon crop coordinate for the right/bottom edge
+function M:ApplyMaskToLayer(layer, mask, cropMin, cropMax)
 	if not layer then
 		return
 	end
 
-	-- A portrait is round already, so its icon must not also pick up the rounded-square corners a
-	-- glow asks for.
+	-- A masked portrait already carries its own shape, so its icon must not also pick up the
+	-- rounded-square corners a glow asks for.
 	layer.CustomShape = true
 
 	if layer.Icon then
-		if mask then
-			AddMask(layer.Icon, mask)
-		end
-		-- Crop the icon like Blizzard does
-		layer.Icon:SetTexCoord(0.1, 0.9, 0.1, 0.9)
+		AddMask(layer.Icon, mask)
+		layer.Icon:SetTexCoord(cropMin, cropMax, cropMin, cropMax)
 	end
 
 	if layer.Cooldown then
-		-- Keep cooldown within the portrait icon
-		layer.Cooldown:SetSwipeTexture("Interface\\CHARACTERFRAME\\TempPortraitAlphaMask")
+		-- The mask art is the icon's shape, so the swipe wears it too.
+		layer.Cooldown:SetSwipeTexture(glowStyles:MaskSwipeTexture(mask))
 	end
 end
 
@@ -434,7 +441,8 @@ function M:UpdateKickIcon(unit, container)
 		slotOptions.DurationObject = kickEntry.DurationObject
 		slotOptions.Alpha = true
 		slotOptions.ReverseCooldown = db.Modules.Portrait.ReverseCooldown
-		slotOptions.FontScale = db.FontScale
+		slotOptions.HideNumbers = HidesNumbers()
+		slotOptions.FontScale = db.Modules.Portrait.FontScale
 		slotOptions.Color = kickEntry.Color
 	end
 
@@ -472,7 +480,8 @@ function M:RefreshTestIcons()
 			Alpha = true,
 			Glow = false,
 			ReverseCooldown = db.Modules.Portrait.ReverseCooldown,
-			FontScale = db.FontScale,
+			HideNumbers = HidesNumbers(),
+			FontScale = db.Modules.Portrait.FontScale,
 		})
 	end
 end

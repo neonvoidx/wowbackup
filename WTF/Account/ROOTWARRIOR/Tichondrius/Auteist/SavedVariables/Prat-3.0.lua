@@ -14,13 +14,13 @@ Prat3CharDB = {
 },
 ["ChatFrame6EditBox"] = {
 },
-["ChatFrame9EditBox"] = {
+["ChatFrame3EditBox"] = {
 },
 ["ChatFrame1EditBox"] = {
 },
 ["ChatFrame2EditBox"] = {
 },
-["ChatFrame3EditBox"] = {
+["ChatFrame9EditBox"] = {
 },
 },
 },
@@ -86,7 +86,7 @@ Prat3HighCPUPerCharDB = {
 ["ChatFrame3"] = {
 ["TransformIf"] = nil --[[ skipped inline function ]],
 ["headIndex"] = {
-["value"] = 1,
+["value"] = 4,
 },
 ["GetEntryAtIndex"] = nil --[[ skipped inline function ]],
 ["CalculateElementIndex"] = nil --[[ skipped inline function ]],
@@ -103,12 +103,32 @@ Prat3HighCPUPerCharDB = {
 ["elements"] = {
 {
 ["message"] = "Speech to text allows you to add closed captioning in a voice channel.",
+["serverTime"] = 1787937261,
+["r"] = 1,
+["b"] = 0,
+["timestamp"] = 16924.914,
+["extraData"] = {
+1,
+["n"] = 1,
+},
+["g"] = 1,
+},
+{
+["message"] = "0 |4day:days;, 0 |4hour:hours;, 0 |4minute:minutes;, 0 |4second:seconds;",
+["timestamp"] = 16924.914,
+},
+{
+["message"] = "========== End of Scrollback ==========",
+["timestamp"] = 16924.914,
+},
+{
+["message"] = "Speech to text allows you to add closed captioning in a voice channel.",
 ["r"] = 1,
 ["extraData"] = {
 1,
 ["n"] = 1,
 },
-["timestamp"] = 19771.8,
+["timestamp"] = 16913.301,
 ["g"] = 1,
 ["b"] = 0,
 },
@@ -153,7 +173,7 @@ Prat3HighCPUPerCharDB = {
 ["ChatFrame6"] = {
 ["TransformIf"] = nil --[[ skipped inline function ]],
 ["headIndex"] = {
-["value"] = 1,
+["value"] = 4,
 },
 ["GetEntryAtIndex"] = nil --[[ skipped inline function ]],
 ["CalculateElementIndex"] = nil --[[ skipped inline function ]],
@@ -170,12 +190,32 @@ Prat3HighCPUPerCharDB = {
 ["elements"] = {
 {
 ["message"] = "|cff979797|Hpratcopy|h[13:48]|h|r Guild Message of the Day: \"The Move Baby! Season 2 Aug 11th!!!\"",
+["serverTime"] = 1787937261,
+["r"] = 0.250980406999588,
+["b"] = 0.250980406999588,
+["timestamp"] = 16924.914,
+["extraData"] = {
+5,
+["n"] = 1,
+},
+["g"] = 1,
+},
+{
+["message"] = "0 |4day:days;, 0 |4hour:hours;, 0 |4minute:minutes;, 0 |4second:seconds;",
+["timestamp"] = 16924.914,
+},
+{
+["message"] = "========== End of Scrollback ==========",
+["timestamp"] = 16924.914,
+},
+{
+["message"] = "|cff979797|Hpratcopy|h[13:14]|h|r Guild Message of the Day: \"The Move Baby! Season 2 Aug 11th!!!\"",
 ["r"] = 0.250980406999588,
 ["extraData"] = {
 5,
 ["n"] = 1,
 },
-["timestamp"] = 19782.607,
+["timestamp"] = 16924.617,
 ["g"] = 1,
 ["b"] = 0.250980406999588,
 },
@@ -189,7 +229,7 @@ Prat3HighCPUPerCharDB = {
 ["GetNumElements"] = nil --[[ skipped inline function ]],
 ["ReplaceElements"] = nil --[[ skipped inline function ]],
 },
-["ChatFrame8"] = {
+["ChatFrame2"] = {
 ["TransformIf"] = nil --[[ skipped inline function ]],
 ["headIndex"] = {
 ["value"] = 0,
@@ -217,7 +257,7 @@ Prat3HighCPUPerCharDB = {
 ["GetNumElements"] = nil --[[ skipped inline function ]],
 ["ReplaceElements"] = nil --[[ skipped inline function ]],
 },
-["ChatFrame2"] = {
+["ChatFrame8"] = {
 ["TransformIf"] = nil --[[ skipped inline function ]],
 ["headIndex"] = {
 ["value"] = 0,
@@ -304,7 +344,7 @@ Prat3HighCPUPerCharDB = {
 ["ChatFrame1"] = {
 ["TransformIf"] = nil --[[ skipped inline function ]],
 ["headIndex"] = {
-["value"] = 10,
+["value"] = 18,
 },
 ["GetEntryAtIndex"] = nil --[[ skipped inline function ]],
 ["CalculateElementIndex"] = nil --[[ skipped inline function ]],
@@ -320,58 +360,36 @@ Prat3HighCPUPerCharDB = {
 ["IsFull"] = nil --[[ skipped inline function ]],
 ["elements"] = {
 {
-["message"] = "|cff00ccffArenaAnalytics:|r Tracking arena games, glhf Auteist!!",
-["timestamp"] = 19772.408,
-},
-{
-["message"] = "|cff33ff99Kick Assist|r: loaded. /ka to open.",
-["timestamp"] = 19775.189,
-},
-{
-["message"] = "|cff00ccffMiniCE|r |cffff7a1aBetterBlizzFrames is active, so MiniCE's Unit Frames styling has been disabled to prevent possible conflicts. A dedicated BetterBlizzFrames adapter is coming soon.|r",
-["timestamp"] = 19775.28,
-},
-{
-["message"] = "|cff00ccffMiniCE|r |cffff7a1aBetterBlizzPlates is active, so MiniCE's Nameplates styling has been disabled to prevent possible conflicts.|r",
-["timestamp"] = 19775.28,
-},
-{
 ["message"] = "|cff979797|Hpratcopy|h[13:48]|h|r Guild Message of the Day: \"The Move Baby! Season 2 Aug 11th!!!\"",
+["serverTime"] = 1787937261,
 ["r"] = 0.250980406999588,
+["b"] = 0.250980406999588,
+["timestamp"] = 16924.914,
 ["extraData"] = {
 5,
 ["n"] = 1,
 },
-["timestamp"] = 19782.607,
 ["g"] = 1,
-["b"] = 0.250980406999588,
-},
-{
-["message"] = "|cff979797|Hpratcopy|h[13:48]|h|r FrameColor: Skin _WorldQuestTab failed to load. Please contact the Author.",
-["timestamp"] = 19782.921,
-["serverTime"] = 1787852900,
-},
-{
-["message"] = "|cff979797|Hpratcopy|h[13:48]|h|r FrameColor: Skin _WorldQuestTab failed to load. Please contact the Author.",
-["timestamp"] = 19782.921,
-["serverTime"] = 1787852900,
 },
 {
 ["message"] = "|cff979797|Hpratcopy|h[13:48]|h|r Remember to act responsibly, protect your personal information, and report anything offensive. View our In-Game Code of Conduct on |HurlIndex:64|h|cnVISITABLE_URL_DEFAULT_CHAT_LINK_COLOR:https://support.blizzard.com/article/42673|r|h for more information.",
-["serverTime"] = 1787852900,
+["b"] = 0,
 ["r"] = 1,
+["g"] = 1,
+["timestamp"] = 16924.914,
+["serverTime"] = 1787852900,
 ["extraData"] = {
 1,
 ["n"] = 1,
 },
-["timestamp"] = 19782.921,
-["g"] = 1,
-["b"] = 0,
 },
 {
 ["message"] = "|cff979797|Hpratcopy|h[13:48]|h|r You have rewards waiting for you in the Endeavor Coffer.",
-["serverTime"] = 1787852901,
+["b"] = 0,
 ["r"] = 1,
+["g"] = 1,
+["timestamp"] = 16924.914,
+["serverTime"] = 1787852901,
 ["extraData"] = {
 1,
 1,
@@ -404,6 +422,110 @@ false,
 ["hasAttachment"] = false,
 ["hasEmoji"] = false,
 ["fromDiscord"] = false,
+["hasEmbed"] = false,
+["hasPoll"] = false,
+["lastOnlineName"] = "",
+["hasForwardedMessage"] = false,
+["hasSticker"] = false,
+},
+["n"] = 18,
+},
+["n"] = 6,
+},
+},
+{
+["message"] = "0 |4day:days;, 23 |4hour:hours;, 26 |4minute:minutes;, 0 |4second:seconds;",
+["timestamp"] = 16924.914,
+},
+{
+["message"] = "========== End of Scrollback ==========",
+["timestamp"] = 16924.914,
+},
+{
+["message"] = "|cff00ccffArenaAnalytics:|r Tracking arena games, glhf Auteist!!",
+["timestamp"] = 16913.903,
+},
+{
+["message"] = "|cff33ff99Kick Assist|r: loaded. /ka to open.",
+["timestamp"] = 16916.586,
+},
+{
+["message"] = "|cff00ccffMiniCE|r |cffff7a1aBetterBlizzFrames is active, so MiniCE's Unit Frames styling has been disabled to prevent possible conflicts. A dedicated BetterBlizzFrames adapter is coming soon.|r",
+["timestamp"] = 16916.686,
+},
+{
+["message"] = "|cff00ccffMiniCE|r |cffff7a1aBetterBlizzPlates is active, so MiniCE's Nameplates styling has been disabled to prevent possible conflicts.|r",
+["timestamp"] = 16916.686,
+},
+{
+["message"] = "|cff979797|Hpratcopy|h[13:14]|h|r Guild Message of the Day: \"The Move Baby! Season 2 Aug 11th!!!\"",
+["r"] = 0.250980406999588,
+["extraData"] = {
+5,
+["n"] = 1,
+},
+["timestamp"] = 16924.617,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+{
+["message"] = "|cff979797|Hpratcopy|h[13:14]|h|r FrameColor: Skin _WorldQuestTab failed to load. Please contact the Author.",
+["timestamp"] = 16924.914,
+["serverTime"] = 1787937261,
+},
+{
+["message"] = "|cff979797|Hpratcopy|h[13:14]|h|r FrameColor: Skin _WorldQuestTab failed to load. Please contact the Author.",
+["timestamp"] = 16924.914,
+["serverTime"] = 1787937261,
+},
+{
+["message"] = "|cff979797|Hpratcopy|h[13:14]|h|r Remember to act responsibly, protect your personal information, and report anything offensive. View our In-Game Code of Conduct on |HurlIndex:64|h|cnVISITABLE_URL_DEFAULT_CHAT_LINK_COLOR:https://support.blizzard.com/article/42673|r|h for more information.",
+["serverTime"] = 1787937262,
+["r"] = 1,
+["extraData"] = {
+1,
+["n"] = 1,
+},
+["timestamp"] = 16924.914,
+["g"] = 1,
+["b"] = 0,
+},
+{
+["message"] = "|cff979797|Hpratcopy|h[13:14]|h|r You have rewards waiting for you in the Endeavor Coffer.",
+["serverTime"] = 1787937263,
+["r"] = 1,
+["extraData"] = {
+1,
+1,
+2,
+"CHAT_MSG_SYSTEM",
+{
+"You have rewards waiting for you in the Endeavor Coffer.",
+"",
+"",
+"",
+"",
+"",
+0,
+0,
+"",
+0,
+3763,
+nil,
+0,
+false,
+false,
+false,
+false,
+{
+["type"] = 0,
+["globalName"] = "",
+["forwardedMessage"] = "",
+["userID"] = 0,
+["hasError"] = false,
+["hasAttachment"] = false,
+["hasEmoji"] = false,
+["fromDiscord"] = false,
 ["hasForwardedMessage"] = false,
 ["hasPoll"] = false,
 ["lastOnlineName"] = "",
@@ -415,14 +537,89 @@ false,
 nil --[[ skipped inline function ]],
 ["n"] = 6,
 },
-["timestamp"] = 19782.921,
+["timestamp"] = 16924.914,
 ["g"] = 1,
 ["b"] = 0,
 },
 {
-["message"] = "|cff979797|Hpratcopy|h[13:48]|h|r |cffffff78Prat |cff8080ff3.0|r|r (|cff80ff80Memory|r) : Settings Loaded",
-["timestamp"] = 19794.025,
-["serverTime"] = 1787852909,
+["message"] = "|cff979797|Hpratcopy|h[13:14]|h|r Total time played: 18 |4day:days;, 13 |4hour:hours;, 24 |4minute:minutes;, 5 |4second:seconds;",
+["serverTime"] = 1787937264,
+["r"] = 1,
+["extraData"] = {
+1,
+["n"] = 1,
+},
+["timestamp"] = 16929.423,
+["g"] = 1,
+["b"] = 0,
+},
+{
+["message"] = "|cff979797|Hpratcopy|h[13:14]|h|r Time played this level: 0 |4day:days;, 14 |4hour:hours;, 12 |4minute:minutes;, 27 |4second:seconds;",
+["serverTime"] = 1787937264,
+["r"] = 1,
+["extraData"] = {
+1,
+["n"] = 1,
+},
+["timestamp"] = 16929.423,
+["g"] = 1,
+["b"] = 0,
+},
+{
+["message"] = "|cff979797|Hpratcopy|h[13:14]|h|r |cffffff78Prat |cff8080ff3.0|r|r (|cff80ff80Memory|r) : Settings Loaded",
+["timestamp"] = 16935.546,
+["serverTime"] = 1787937271,
+},
+{
+["message"] = "|cff979797|Hpratcopy|h[13:17]|h|r |TInterface\\FriendsFrame\\UI-Toast-ToastIcons.tga:16:16:0:0:128:64:2:29:34:61|t|HBNplayer:|Ks17|k:17:3777:BN_INLINE_TOAST_ALERT:0|h[|Ks17|k]|h has gone offline.",
+["serverTime"] = 1787937422,
+["r"] = 0.5098039507865906,
+["extraData"] = {
+54,
+3,
+4,
+"CHAT_MSG_BN_INLINE_TOAST_ALERT",
+{
+"FRIEND_OFFLINE",
+"|Ks17|k",
+"",
+"",
+"",
+"",
+0,
+0,
+"",
+0,
+3777,
+nil,
+17,
+false,
+false,
+false,
+false,
+{
+["type"] = 0,
+["globalName"] = "",
+["forwardedMessage"] = "",
+["userID"] = 0,
+["hasError"] = false,
+["hasAttachment"] = false,
+["hasEmoji"] = false,
+["fromDiscord"] = false,
+["hasForwardedMessage"] = false,
+["hasPoll"] = false,
+["lastOnlineName"] = "",
+["hasEmbed"] = false,
+["hasSticker"] = false,
+},
+["n"] = 18,
+},
+nil --[[ skipped inline function ]],
+["n"] = 6,
+},
+["timestamp"] = 17087.271,
+["g"] = 0.7725490927696228,
+["b"] = 1,
 },
 },
 ["maxElements"] = {

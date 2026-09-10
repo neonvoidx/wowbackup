@@ -3,7 +3,7 @@ local _, addon = ...
 
 ---@class Db
 local dbDefaults = {
-	Version = 76,
+	Version = 87,
 	Profiles = {},
 	ActiveProfile = "Default",
 	AutoSwitch = {},
@@ -15,7 +15,6 @@ local dbDefaults = {
 	Pending = {},
 	NotifiedChanges = true,
 	GlowType = "Slot Glow",
-	FontScale = 1.0,
 	-- Font face for every module's text, by LibSharedMedia name. False leaves each piece of text in
 	-- whatever face the game hands it, which is not one face.
 	Font = false,
@@ -39,6 +38,9 @@ local dbDefaults = {
 	-- Not a profile payload key. Whether the test captions are wanted is about the screen they
 	-- would crowd, not about the group the profile is for.
 	ShowTestLabels = true,
+	-- Not a profile payload key. Chasing a problem is about the player's own session, not about
+	-- the group the profile is for.
+	DebugMode = true,
 	-- Which of Blizzard's own party and raid frame aura rows Frame Auras has switched off, so a
 	-- reload between the switch and the write still hands the row back. False until a side is
 	-- switched on, and false again once it has been handed back. Written by the module.
@@ -69,6 +71,7 @@ local dbDefaults = {
 				},
 				Grow = "RIGHT",
 				IconSpacing = 2,
+				FontScale = 1.0,
 
 				Icons = {
 					Size = 32,
@@ -76,8 +79,8 @@ local dbDefaults = {
 					SizePercent = 80,
 					Glow = true,
 					ReverseCooldown = true,
-					ColorByDispelType = true,
-					-- The one tint every CC icon takes once the dispel palette is switched off.
+					ColorMode = "DISPEL",
+					-- The one tint every CC icon takes in Custom colour mode.
 					Color = { R = 0.64, G = 0.21, B = 0.93, A = 1 },
 					Count = 3,
 					ShowMilliseconds = false,
@@ -95,6 +98,7 @@ local dbDefaults = {
 				},
 				Grow = "CENTER",
 				IconSpacing = 2,
+				FontScale = 1.0,
 
 				Icons = {
 					Size = 20,
@@ -102,7 +106,7 @@ local dbDefaults = {
 					SizePercent = 50,
 					Glow = true,
 					ReverseCooldown = true,
-					ColorByDispelType = true,
+					ColorMode = "DISPEL",
 					Color = { R = 0.64, G = 0.21, B = 0.93, A = 1 },
 					Count = 3,
 					ShowMilliseconds = false,
@@ -133,6 +137,7 @@ local dbDefaults = {
 			},
 
 			IconSpacing = 2,
+			FontScale = 1.0,
 
 			Icons = {
 				Size = 20,
@@ -141,7 +146,7 @@ local dbDefaults = {
 				Count = 3,
 				Glow = true,
 				ReverseCooldown = true,
-				ColorByDispelType = true,
+				ColorMode = "DISPEL",
 				Color = { R = 0.64, G = 0.21, B = 0.93, A = 1 },
 			},
 
@@ -173,6 +178,7 @@ local dbDefaults = {
 			},
 
 			IconSpacing = 2,
+			FontScale = 1.0,
 
 			Icons = {
 				Enabled = true,
@@ -201,6 +207,9 @@ local dbDefaults = {
 			},
 
 			ReverseCooldown = true,
+			-- On, so a portrait that has always counted down keeps doing it.
+			EnableNumbers = true,
+			FontScale = 1.0,
 			-- Which of the unflagged buffs the player wants on their own portrait, under every
 			-- flagged category. Buffs only: 12.1 drops a spell id map for harmful auras on a unit
 			-- you can assist, and the layer would then match every debuff on you.
@@ -221,10 +230,10 @@ local dbDefaults = {
 			SplitBars = false,
 			-- Pixel padding between the alerts bar icons.
 			IconSpacing = 4,
-			-- Direction the alert bars extend as icons appear. Only LEFT and RIGHT render: the
-			-- chained per-unit rows have secret widths, so there is nothing to centre on. An older
-			-- db can still carry CENTER, which every reader resolves to RIGHT.
-			Grow = "RIGHT",
+			FontScale = 1.0,
+			-- Direction the alert bars extend as icons appear. CENTER splits the row either side of
+			-- the anchor and applies to the arena tokens only.
+			Grow = "CENTER",
 			Point = "CENTER",
 			RelativePoint = "TOP",
 			RelativeTo = "UIParent",
@@ -337,6 +346,7 @@ local dbDefaults = {
 			-- Anchor icons to UnitFrame.HealthBarsContainer rather than the nameplate frame, so
 			-- they follow an addon that resizes plates by shrinking that container.
 			AnchorToHealthBar = false,
+			FontScale = 1.0,
 
 			-- Category tints for every bar that colours by category. Module wide rather than per
 			-- bar, since a category should read the same on whichever bar it lands.
@@ -365,7 +375,7 @@ local dbDefaults = {
 						Size = 35,
 						Glow = true,
 						ReverseCooldown = true,
-						-- How this bar tints its icons, one of NameplatesDisplay.ColorMode. NONE
+						-- How this bar tints its icons, one of AuraContainerDisplay.ColorMode. NONE
 						-- leaves them untinted, DISPEL puts CC and disarm on the game's debuff
 						-- type palette, CUSTOM puts them on the module's CrowdControlColor.
 						ColorMode = "DISPEL",
@@ -468,14 +478,17 @@ local dbDefaults = {
 			},
 
 			IconSpacing = 2,
+			FontScale = 1.0,
+			ShowName = false,
+			UnknownKickIcon = "class",
 
 			Icons = {
 				Size = 50,
 				Glow = false,
-				Border = false,
+				Border = true,
 				ReverseCooldown = true,
-				-- Glow/border tint. These icons carry no dispel or category colouring to derive
-				-- one from, so the colour is the user's choice.
+				-- Glow/border tint, used only where the kicker's class does not resolve. Kept
+				-- for profiles saved before the swatch left the panel.
 				Color = { R = 1, G = 1, B = 1, A = 1 },
 			},
 		},
@@ -503,6 +516,7 @@ local dbDefaults = {
 
 			Grow = "DOWN",
 			BarSpacing = 2,
+			FontScale = 1.0,
 			-- Unlocked by default because the rows are their own preview.
 			Locked = false,
 			-- Enough to read a pull's worth of interrupts without becoming a wall of them.
@@ -545,6 +559,8 @@ local dbDefaults = {
 				-- one from, so the colour is the user's choice.
 				Color = { R = 1, G = 1, B = 1, A = 1 },
 			},
+
+			FontScale = 1.0,
 
 			Font = {
 				File = "GameFontHighlightSmall",
@@ -589,12 +605,15 @@ local dbDefaults = {
 				Offset = { X = 0, Y = 0 },
 				Grow = "CENTER",
 				IconSpacing = 2,
+				FontScale = 1.0,
 				Icons = {
 					Size = 20,
 					SizeIsPercent = false,
 					SizePercent = 75,
 					Glow = true,
 					ReverseCooldown = true,
+					-- On, so a display that has always counted down keeps doing it.
+					EnableNumbers = true,
 					MaxIcons = 3,
 					ColorByDispelType = true,
 				},
@@ -611,12 +630,14 @@ local dbDefaults = {
 				Offset = { X = 0, Y = 0 },
 				Grow = "CENTER",
 				IconSpacing = 2,
+				FontScale = 1.0,
 				Icons = {
 					Size = 20,
 					SizeIsPercent = false,
 					SizePercent = 65,
 					Glow = true,
 					ReverseCooldown = true,
+					EnableNumbers = true,
 					MaxIcons = 3,
 					ColorByDispelType = true,
 				},
@@ -650,6 +671,13 @@ local dbDefaults = {
 				Size = 35,
 				MaxIcons = 6,
 				PerRow = 3,
+				Padding = 1,
+				-- The corner Blizzard drew its own buff row in, with the offsets holding the icons
+				-- far enough in to clear the frame's own edge.
+				Anchor = "BOTTOMRIGHT",
+				-- Wraps a second line upwards, away from the frame below this one.
+				Grow = "LEFT_UP",
+				Offset = { X = -2, Y = 2 },
 				-- Both on, because the tracked spell list is a list of things you cast. Without them
 				-- the row fills with everyone's raid buffs.
 				Filtered = true,
@@ -666,6 +694,9 @@ local dbDefaults = {
 				-- fixed in the tracked data.
 				PandemicGlow = true,
 				PandemicColor = { R = 0.1, G = 0.9, B = 0.3 },
+				FontScale = 1.0,
+				CenterStacks = false,
+				ReverseCooldown = true,
 			},
 
 			---@class FrameAurasDebuffOptions
@@ -674,17 +705,27 @@ local dbDefaults = {
 				Size = 35,
 				MaxIcons = 2,
 				PerRow = 3,
+				Padding = 1,
+				-- The other bottom corner, so the two rows never meet.
+				Anchor = "BOTTOMLEFT",
+				Grow = "RIGHT_UP",
+				Offset = { X = 2, Y = 2 },
 				-- On, because a debuff you can cleanse is the one worth acting on first.
-				Dispellable = true,
+				DispellableByMe = true,
+				-- Off, because Dispellable by me already narrows the row, and this only widens it
+				-- back out.
+				DispellableByRaid = false,
 				-- On, because the debuffs that sit on a member all fight crowd out the one worth
 				-- reacting to.
 				ShortOnly = true,
 				-- Same again: crowd control has its own row on the Important Auras page.
 				ShowCrowdControl = false,
-				-- Only the crowd control at the head of the row takes it. The debuffs behind it
-				-- stand in for Blizzard's own, which draws a plain icon.
+				-- Only crowd control rings a debuff the game gives no dispel type.
 				ColorByDispelType = true,
 				EnableNumbers = false,
+				FontScale = 1.0,
+				CenterStacks = false,
+				ReverseCooldown = true,
 				-- No "Mine" switch on this side. Everything landing on a group member came from
 				-- somebody else, so filtering to your own would only ever empty the row.
 			},
@@ -695,9 +736,11 @@ local dbDefaults = {
 				-- A group buff nobody cast in the open world costs nothing, so the mark waits for a
 				-- place with a pull in it.
 				InstancesOnly = true,
-				-- Only the size. Which corner the mark sits in is the frame's answer rather than the
-				-- player's, like the corners the buff and debuff rows take.
 				Size = 35,
+				-- Top right is the corner Blizzard leaves free on a compact frame.
+				Anchor = "TOPRIGHT",
+				Offset = { X = -2, Y = -2 },
+				-- No grow direction, because one mark per frame has nothing to grow.
 			},
 
 			---@class FrameAurasTargetOptions
@@ -707,6 +750,7 @@ local dbDefaults = {
 				Size = 22,
 				MaxIcons = 6,
 				PerRow = 6,
+				FontScale = 1.0,
 				-- On, like the group buff row: a friendly target's buffs are worth narrowing to the
 				-- tracked list. It only bites there either way, since a spell-id map is identity
 				-- gated and the engine skips it for a helpful aura on a unit you cannot assist.

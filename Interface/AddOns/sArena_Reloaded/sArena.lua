@@ -23,8 +23,6 @@ sArenaMixin.pFont = LSM:Fetch(LSM.MediaType.FONT, "Prototype") or LSM:Fetch(LSM.
 sArenaMixin.hiddenFrame = CreateFrame("Frame")
 sArenaMixin.hiddenFrame:Hide()
 
-local GetSpellTexture = GetSpellTexture or C_Spell.GetSpellTexture
-
 -- Track which arena units we've seen (to work around UnitExists returning false for stealthed units)
 if noEarlyFrames then
     sArenaMixin.seenArenaUnits = {}
@@ -145,7 +143,8 @@ local UnitPowerMax = UnitPowerMax
 local UnitPower = UnitPower
 local UnitPowerType = UnitPowerType
 local UnitIsDeadOrGhost = UnitIsDeadOrGhost
-local GetSpellName = GetSpellName or C_Spell.GetSpellName
+local GetSpellName = C_Spell.GetSpellName
+local GetSpellTexture = C_Spell.GetSpellTexture
 local feignDeathID = 5384
 local FEIGN_DEATH = GetSpellName(feignDeathID) -- Localized name for Feign Death
 
@@ -488,14 +487,11 @@ function sArenaMixin:OnEvent(event, ...)
         end
 
     elseif (event == "UNIT_TARGET") then
-        for i = 1, self.maxArenaOpponents do
-            local unit = "arena" .. i
-            local frame = self[unit]
-            frame:UpdateArenaTargets(frame.unit)
-            frame:UpdateArenaTargetText(frame.unit)
-        end
-        self:UpdateArenaTargetsOnPartyFrames()
-        self:UpdateArenaTargetTextOnPartyFrames()
+        local eventUnit = ...
+        local watch = self.unitTargetWatch
+        local kind = eventUnit and watch and watch[eventUnit]
+        if not kind then return end
+        self:QueueUnitTargetUpdate(kind, eventUnit)
 
     elseif (event == "PLAYER_LOGIN") then
         if isMidnight then
@@ -516,9 +512,8 @@ function sArenaMixin:OnEvent(event, ...)
                 LibStub("AceConfigDialog-3.0"):Open("sArena")
             end)
         end
-
-
         self:UnregisterEvent("PLAYER_LOGIN")
+
     elseif (event == "PLAYER_ENTERING_WORLD") then
         self:UpdatePartyFrameReferences(true)
         self:UpdateBlizzArenaFrameVisibility()
@@ -545,7 +540,7 @@ function sArenaMixin:OnEvent(event, ...)
         end
         self:CheckMatchStatus(event)
 
-        self:SetupCustomCD()
+        self:CustomizeDefaultCD()
         self:UpdateArenaTargetsOnPartyFrames()
         self:PositionArenaTargetTextOnPartyFrames()
         self:UpdateArenaTargetTextOnPartyFrames()
@@ -567,6 +562,8 @@ function sArenaMixin:OnEvent(event, ...)
             self:RegisterInterruptEvents()
             self:RegisterRangeCheckEvents()
             self:UpdatePlayerSpec()
+            self:StartDampening()
+            self:RestoreShadowsightTimer()
             if self.TestTitle then
                 self.TestTitle:Hide()
                 for i = 1, self.maxArenaOpponents do
@@ -599,7 +596,9 @@ function sArenaMixin:OnEvent(event, ...)
             self:UnregisterInterruptEvents()
             self:UnregisterRangeCheckEvents()
             self:ResetShadowsightTimer()
+            self:ResetDampening()
         end
+
     elseif event == "CHAT_MSG_BG_SYSTEM_NEUTRAL" then
         local msg = ...
         if IsMatchStartedMessage(msg) then
@@ -610,19 +609,24 @@ function sArenaMixin:OnEvent(event, ...)
                 self:StartShadowsightTimer(self.shadowsightStartTime)
             end
         end
+
     elseif event == "PLAYER_SPECIALIZATION_CHANGED" then
         self:UpdatePlayerSpec()
+
     elseif event == "ARENA_PREP_OPPONENT_SPECIALIZATIONS" then
         self:CheckMatchStatus(event)
         self:ResetDetectedDispels()
         if isTBC then
             wipe(self.activeStanceAuras)
         end
+
     elseif event == "ARENA_OPPONENT_UPDATE" then
         self:CheckMatchStatus(event)
         self:UnregisterEvent(event)
+
     elseif event == "GROUP_ROSTER_UPDATE" then
         self:UpdatePreGatesFrames()
+
     elseif event == "PVP_MATCH_STATE_CHANGED" or event == "PVP_MATCH_ACTIVE" then
         self:CheckMatchStatus(event)
         if isMidnight and self.waitingForMatch then
@@ -635,11 +639,14 @@ function sArenaMixin:OnEvent(event, ...)
         end
         if self:IsInArena() then
             if db and db.profile.shadowSightTimer and self.engagedInMatch and not IsSoloShuffle() then
-                self:StartShadowsightTimer(self.shadowsightStartTime)
+                self:StartShadowsightTimer(self:GetShadowsightSpawnOffset())
             end
+            self:StartDampening()
         else
             self:ResetShadowsightTimer()
+            self:ResetDampening()
         end
+
     elseif event == "PLAYER_REGEN_ENABLED" then
         self:UnregisterEvent("PLAYER_REGEN_ENABLED")
         if self.pendingClickActions then
@@ -1351,7 +1358,7 @@ function sArenaFrameMixin:OnLoad()
     self.WidgetOverlay.healerIndicator.Texture:SetAtlas("bags-icon-addslots")
     for i = 1, 4 do
         local pt = self.WidgetOverlay["partyTarget" .. i]
-        pt.Texture:SetTexture("Interface\\AddOns\\sArena_Reloaded\\Textures\\GM-icon-headCount.tga")
+        pt.Texture:SetTexture(self.parent:GetPartyTargetIndicatorTexture())
         pt.Texture:SetDesaturated(true)
     end
     self.Trinket:SetFrameLevel(7)
@@ -1479,6 +1486,8 @@ function sArenaFrameMixin:OnEvent(event, eventUnit, arg1)
             if not isMidnight then
                 self:FindAura(arg1)
             end
+        elseif (event == "UNIT_FACTION") then
+            self:FindAura()
         elseif (event == "UNIT_HEALTH") then
             if isMidnight then
                 local isDead = UnitIsDeadOrGhost(unit)
@@ -1629,6 +1638,7 @@ function sArenaFrameMixin:OnEnter()
 
     self.HealthText:Show()
     self.PowerText:Show()
+    self:SetStatusText()
 end
 
 function sArenaFrameMixin:OnLeave()
@@ -1794,6 +1804,8 @@ function sArenaFrameMixin:UpdatePlayer(unitEvent)
     self:UpdateRacial()
     if not isMidnight then
         self:UpdateDispel()
+    elseif not self.Trinket.Texture:GetTexture() and not db.profile.removeUnequippedTrinketTexture then
+        self.Trinket.Texture:SetTexture(sArenaMixin.noTrinketTexture)
     end
     self.WidgetOverlay:Show()
     self:UpdateCombatStatus(unit)
@@ -1864,6 +1876,7 @@ function sArenaFrameMixin:UpdatePlayer(unitEvent)
 end
 
 function sArenaFrameMixin:SetPreGatesUnknownPlayer()
+    if self.class then return end
     -- Active for noEarlyFrames (TBC & Wrath)
     local id = self:GetID()
     local partySize = GetNumGroupMembers()
@@ -2002,6 +2015,12 @@ function sArenaFrameMixin:ResetUnitInfo()
     self.DeathIcon:Hide()
 end
 
+function sArenaFrameMixin:RestoreClassIcon()
+    self.ClassIcon.Texture:SetDesaturated(false)
+    self.ClassIcon.Texture:SetVertexColor(1, 1, 1)
+    self:UpdateClassIcon(true)
+end
+
 function sArenaFrameMixin:GetClass()
     if self.class then return end
 
@@ -2042,10 +2061,8 @@ function sArenaFrameMixin:GetClass()
         elseif UnitIsNPCAsPlayer(self.unit) then
             self.classLocal, self.class = UnitClass(self.unit)
             if self.class then
-                self.ClassIcon.Texture:SetDesaturated(false)
-                self.ClassIcon.Texture:SetVertexColor(1, 1, 1)
                 self.secretClass = true
-                self:UpdateClassIcon(true)
+                self:RestoreClassIcon()
                 self:UpdateFrameColors()
                 self.parent:UpdateTextures()
             end
@@ -2053,9 +2070,7 @@ function sArenaFrameMixin:GetClass()
     else
         self.classLocal, self.class = UnitClass(self.unit)
         if self.class then
-            self.ClassIcon.Texture:SetDesaturated(false)
-            self.ClassIcon.Texture:SetVertexColor(1, 1, 1)
-            self:UpdateClassIcon(true)
+            self:RestoreClassIcon()
             self:UpdateFrameColors()
             self.parent:UpdateTextures()
         end
@@ -2396,10 +2411,18 @@ local function FormatLargeNumbers(value)
     end
 end
 
+local AbbreviateNumbers = isMidnight and AbbreviateLargeNumbers or FormatLargeNumbers
+local GetHealth = (isTBC and MiniHealthNumbersApi and function(unit) return MiniHealthNumbersApi.v1:GetHealth(unit) or UnitHealth(unit) end) or UnitHealth
+
 function sArenaFrameMixin:SetStatusText(unit)
+    local healthText, powerText = self.HealthText, self.PowerText
+    local showHealth = healthText:IsShown()
+    local showPower = powerText:IsShown() and powerText:GetAlpha() > 0
+    if not showHealth and not showPower then return end
+
     if (self.hideStatusText) or not (self.parent.engagedInMatch or self.parent.arenaMatchStarted) then
-        self.HealthText:SetText("")
-        self.PowerText:SetText("")
+        healthText:SetText("")
+        powerText:SetText("")
         return
     end
 
@@ -2409,40 +2432,28 @@ function sArenaFrameMixin:SetStatusText(unit)
         unit = self.unit
     end
 
-    local hp = UnitHealth(unit)
-    local hpMax = UnitHealthMax(unit)
-    local pp = UnitPower(unit)
-    local ppMax = UnitPowerMax(unit)
-
     if (db and db.profile.statusText.usePercentage) then
-        if isMidnight then
-            self.HealthText:SetFormattedText("%0.f%%", UnitHealthPercent(unit, nil, CurveConstants.ScaleTo100))
-            self.PowerText:SetFormattedText("%0.f%%", UnitPowerPercent(unit, nil, nil, CurveConstants.ScaleTo100))
-        else
-            -- UnitHealth returns percent on TBC
-            if isTBC then
-                self.HealthText:SetText(hp .. "%")
-                self.PowerText:SetText(pp .. "%")
-            else
-                local hpPercent = (hpMax > 0) and ceil((hp / hpMax) * 100) or 0
-                local ppPercent = (ppMax > 0) and ceil((pp / ppMax) * 100) or 0
-
-                self.HealthText:SetText(hpPercent .. "%")
-                self.PowerText:SetText(ppPercent .. "%")
-            end
+        if showHealth then
+            healthText:SetFormattedText("%0.f%%", UnitHealthPercent(unit, nil, CurveConstants.ScaleTo100))
+        end
+        if showPower then
+            powerText:SetFormattedText("%0.f%%", UnitPowerPercent(unit, nil, nil, CurveConstants.ScaleTo100))
         end
     else
         if (db and db.profile.statusText.formatNumbers) then
-            if isMidnight then
-                self.HealthText:SetText(AbbreviateLargeNumbers(hp))
-                self.PowerText:SetText(AbbreviateLargeNumbers(pp))
-            else
-                self.HealthText:SetText(FormatLargeNumbers(hp))
-                self.PowerText:SetText(FormatLargeNumbers(pp))
+            if showHealth then
+                healthText:SetText(AbbreviateNumbers(GetHealth(unit)))
+            end
+            if showPower then
+                powerText:SetText(AbbreviateNumbers(UnitPower(unit)))
             end
         else
-            self.HealthText:SetText(hp)
-            self.PowerText:SetText(pp)
+            if showHealth then
+                healthText:SetText(GetHealth(unit))
+            end
+            if showPower then
+                powerText:SetText(UnitPower(unit))
+            end
         end
     end
 end
@@ -2452,6 +2463,9 @@ function sArenaFrameMixin:UpdateStatusTextVisible()
         self.HealthText:SetShown(db.profile.statusText.alwaysShow)
         self.PowerText:SetShown(db.profile.statusText.alwaysShow)
         self.PowerText:SetAlpha(db.profile.hidePowerText and 0 or 1)
+        if not self.parent.testMode then
+            self:SetStatusText()
+        end
     end
 end
 

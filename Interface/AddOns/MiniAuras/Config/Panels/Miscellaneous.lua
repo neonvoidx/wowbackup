@@ -7,8 +7,6 @@ local horizontalSpacing = mini.HorizontalSpacing
 local helpers = addon.Config.PanelHelpers
 local dbDefaults = addon.Config.Defaults
 local fonts = addon.Core.Fonts
-local config = addon.Config
-local moduleName = addon.Utils.ModuleName
 local moduleUtil = addon.Utils.ModuleUtil
 ---@class MiscellaneousConfig
 local M = {}
@@ -98,25 +96,6 @@ function M:Build(panel)
 	behaviourDivider:SetPoint("RIGHT", panel, "RIGHT")
 	behaviourDivider:SetPoint("TOP", languageDropdown, "BOTTOM", 0, -verticalSpacing)
 
-	local configureBlizzardNameplatesChk = mini:Checkbox({
-		Parent = panel,
-		LabelText = L["Configure Blizzard Nameplates"],
-		Tooltip = L["Disables CC and BigDebuffs on Blizzard nameplates if using MiniAuras nameplates."],
-		GetValue = function()
-			if db.ConfigureBlizzardNameplates == nil then
-				return true
-			end
-			return db.ConfigureBlizzardNameplates
-		end,
-		SetValue = function(value)
-			db.ConfigureBlizzardNameplates = value
-			-- Only the Nameplates module reads this, so the one scoped refresh on this page.
-			config:Apply(moduleName.Nameplates)
-		end,
-	})
-
-	configureBlizzardNameplatesChk:SetPoint("TOPLEFT", behaviourDivider, "BOTTOMLEFT", 0, -verticalSpacing)
-
 	local showTestLabelsChk = mini:Checkbox({
 		Parent = panel,
 		LabelText = L["Show Test Labels"],
@@ -137,8 +116,23 @@ function M:Build(panel)
 		end,
 	})
 
-	showTestLabelsChk:SetPoint("LEFT", panel, "LEFT", checkColumnWidth * 2, 0)
-	showTestLabelsChk:SetPoint("TOP", configureBlizzardNameplatesChk, "TOP", 0, 0)
+	showTestLabelsChk:SetPoint("TOPLEFT", behaviourDivider, "BOTTOMLEFT", 0, -verticalSpacing)
+
+	local debugModeChk = mini:Checkbox({
+		Parent = panel,
+		LabelText = L["Debug Mode"],
+		Tooltip = L["Prints extra messages in chat to help track down problems."],
+		GetValue = function()
+			return db.DebugMode ~= false
+		end,
+		-- No refresh, because the setting is read where a message would be printed.
+		SetValue = function(value)
+			db.DebugMode = value
+		end,
+	})
+
+	debugModeChk:SetPoint("LEFT", panel, "LEFT", checkColumnWidth, 0)
+	debugModeChk:SetPoint("TOP", showTestLabelsChk, "TOP", 0, 0)
 
 	local iconsDivider = mini:Divider({
 		Parent = panel,
@@ -146,7 +140,7 @@ function M:Build(panel)
 	})
 	iconsDivider:SetPoint("LEFT", panel, "LEFT")
 	iconsDivider:SetPoint("RIGHT", panel, "RIGHT")
-	iconsDivider:SetPoint("TOP", configureBlizzardNameplatesChk, "BOTTOM", 0, -verticalSpacing)
+	iconsDivider:SetPoint("TOP", debugModeChk, "BOTTOM", 0, -verticalSpacing)
 
 	local disableSwipeChk = mini:Checkbox({
 		Parent = panel,
@@ -342,25 +336,6 @@ function M:Build(panel)
 
 	glowNote:SetPoint("TOPLEFT", glowTypeDropdown, "BOTTOMLEFT", 0, -verticalSpacing)
 
-	local slidersAnchor = glowNote
-
-	local fontScaleSlider = helpers:BuildClampedSlider({
-		Parent = panel,
-		LabelText = L["Font Scale"],
-		Tooltip = L["Scales the countdown text on every icon, leaving the icon size alone."],
-		Min = 0.5,
-		Max = 1.5,
-		Step = 0.05,
-		Default = dbDefaults.FontScale,
-		Fallback = dbDefaults.FontScale,
-		Float = true,
-		Width = controlWidth,
-		Target = db,
-		Key = "FontScale",
-	})
-
-	fontScaleSlider.Slider:SetPoint("TOPLEFT", slidersAnchor, "BOTTOMLEFT", 4, -verticalSpacing * 3)
-
 	local millisThresholdSlider = helpers:BuildClampedSlider({
 		Parent = panel,
 		LabelText = L["Milliseconds Threshold"],
@@ -374,8 +349,7 @@ function M:Build(panel)
 		Key = "MillisecondsThreshold",
 	})
 
-	millisThresholdSlider.Slider:SetPoint("LEFT", fontScaleSlider.Slider, "RIGHT", horizontalSpacing, 0)
-	millisThresholdSlider.Slider:SetPoint("TOP", fontScaleSlider.Slider, "TOP", 0, 0)
+	millisThresholdSlider.Slider:SetPoint("TOPLEFT", glowNote, "BOTTOMLEFT", 4, -verticalSpacing * 3)
 
 	local countdownDivider = mini:Divider({
 		Parent = panel,
@@ -383,7 +357,7 @@ function M:Build(panel)
 	})
 	countdownDivider:SetPoint("LEFT", panel, "LEFT")
 	countdownDivider:SetPoint("RIGHT", panel, "RIGHT")
-	countdownDivider:SetPoint("TOP", fontScaleSlider.Slider, "BOTTOM", 0, -verticalSpacing * 2)
+	countdownDivider:SetPoint("TOP", millisThresholdSlider.Slider, "BOTTOM", 0, -verticalSpacing * 2)
 
 	local colorCountdownChk = mini:Checkbox({
 		Parent = panel,

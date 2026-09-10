@@ -394,6 +394,19 @@ local function createDropdownSetting(name, getValue, setValue, optionsFunc, heig
 	}
 end
 
+local function createSoundDropdownSetting(name, getValue, setValue, optionsFunc, height)
+	return {
+		name = name,
+		kind = SettingType.SoundDropdown,
+		height = height or 180,
+		get = getValue,
+		set = function(_, value) setValue(value) end,
+		values = optionsFunc,
+		soundResolver = getSoundFile,
+		playbackChannel = "Master",
+	}
+end
+
 local function createAnchorSettings(feature, editModeId, onChanged)
 	local function layoutValue(field, fallback)
 		if EditMode and EditMode.GetValue then
@@ -1433,7 +1446,7 @@ function DeathAlert:RegisterEditMode()
 			get = function() return DeathAlert:GetRoleConfig(roleKey).soundEnabled == true end,
 			set = function(_, value) applyRoleDeathSetting(roleKey, "soundEnabled", value) end,
 		}
-		local soundDropdown = createDropdownSetting(_G.SOUND or "Sound", function() return DeathAlert:GetRoleConfig(roleKey).sound or "" end, function(value) applyRoleDeathSetting(roleKey, "sound", value) end, function() return buildSoundOptions(true) end, 220)
+		local soundDropdown = createSoundDropdownSetting(_G.SOUND or "Sound", function() return DeathAlert:GetRoleConfig(roleKey).sound or "" end, function(value) applyRoleDeathSetting(roleKey, "sound", value) end, function() return buildSoundOptions(true) end, 220)
 		soundDropdown.parentId = roleSectionId
 		soundDropdown.isEnabled = roleSoundEnabled
 		settings[#settings + 1] = soundDropdown
@@ -1550,7 +1563,7 @@ function NoTarget:RegisterEditMode()
 		get = function() return addon.db and addon.db[DB.noTargetPlaySound] == true end,
 		set = function(_, value) applyNoTargetSetting("playSound", value) end,
 	}
-	settings[#settings + 1] = createDropdownSetting(_G.SOUND or "Sound", function() return getDB(DB.noTargetSound, "") end, function(value) applyNoTargetSetting("sound", value) end, function() return buildSoundOptions(true) end, 220)
+	settings[#settings + 1] = createSoundDropdownSetting(_G.SOUND or "Sound", function() return getDB(DB.noTargetSound, "") end, function(value) applyNoTargetSetting("sound", value) end, function() return buildSoundOptions(true) end, 220)
 
 	EditMode:RegisterFrame(EDITMODE_IDS.noTarget, {
 		frame = self:EnsureFrame(),

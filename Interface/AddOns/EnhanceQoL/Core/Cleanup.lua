@@ -134,6 +134,9 @@ local LEGACY_PROFILE_KEYS = {
 	"standalonePrivateAuras",
 	"worldMapCoordinatesHideCursor",
 	"worldMapCoordinatesUpdateInterval",
+	"partyKeystoneDungeonIndicatorIconSize",
+	"partyKeystoneDungeonIndicatorShowIcon",
+	"partyKeystoneDungeonIndicatorShowRealm",
 }
 
 local NAMEPLATE_MOB_COLOR_SOURCE_KEYS = {
@@ -234,6 +237,7 @@ local REMOVED_DURATION_TEXT_PROFILE_KEYS = {
 
 local REMOVED_MYTHIC_PLUS_TIMER_KEYS = {
 	"panelAutoLayout",
+	"updateRate",
 }
 
 local function cleanupListedProfileKeys(profile, keys)

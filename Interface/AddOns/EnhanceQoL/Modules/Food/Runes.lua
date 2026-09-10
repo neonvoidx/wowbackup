@@ -16,13 +16,14 @@ addon.Runes.filteredRunes = addon.Runes.filteredRunes or {}
 
 addon.Runes.items = addon.Runes.items
 	or {
-		{ key = "VoidTouchedAugmentRune", id = 259085, priority = 1, spellId = 1264426 },
-		{ key = "EtherealAugmentRune", id = 243191, priority = 2, spellId = 1234969 },
-		{ key = "SoulgorgedAugmentRune", id = 246492, priority = 3, spellId = 1242347 },
-		{ key = "CrystallizedAugmentRune", id = 224572, priority = 4, spellId = 453250 },
-		{ key = "DreamboundAugmentRune", id = 211495, priority = 5, spellId = 393438 },
-		{ key = "DraconicAugmentRune", id = 201325, priority = 6, spellId = 393438 },
-		{ key = "VeiledAugmentRune", id = 181468, priority = 7, spellId = 347901 },
+		{ key = "TideswornAugmentRune", id = 274797, priority = 1, spellId = 1295329 },
+		{ key = "VoidTouchedAugmentRune", id = 259085, priority = 2, spellId = 1264426 },
+		{ key = "EtherealAugmentRune", id = 243191, priority = 3, spellId = 1234969 },
+		{ key = "SoulgorgedAugmentRune", id = 246492, priority = 4, spellId = 1242347 },
+		{ key = "CrystallizedAugmentRune", id = 224572, priority = 5, spellId = 453250 },
+		{ key = "DreamboundAugmentRune", id = 211495, priority = 6, spellId = 393438 },
+		{ key = "DraconicAugmentRune", id = 201325, priority = 7, spellId = 393438 },
+		{ key = "VeiledAugmentRune", id = 181468, priority = 8, spellId = 347901 },
 	}
 
 local function requestItemNameData()

@@ -189,6 +189,16 @@ local function ensureScanInfo(scan, cooldownID)
 	return info
 end
 
+local function appendSourceOrder(scan, sourceType, info)
+	if not (scan and sourceType and info) then return end
+	local key = getCooldownKey(info.cooldownID)
+	if not key then return end
+	local seen = scan.orderSeenBySource[sourceType]
+	if seen[key] then return end
+	seen[key] = true
+	scan.orderBySource[sourceType][#scan.orderBySource[sourceType] + 1] = info
+end
+
 local function deriveScanInfo(info, frame, overwrite)
 	if not info then return end
 	if info.derived and not overwrite then return end
@@ -199,14 +209,24 @@ local function deriveScanInfo(info, frame, overwrite)
 	info.spellID = getPlainPositiveID(info.spellID)
 	info.buffName = info.buffName or getSpellName(info.spellID) or tostring(info.cooldownID)
 	info.iconTextureID = info.iconTextureID or getSpellTexture(info.spellID) or Helper.PREVIEW_ICON
-	info.sortName = string.lower(tostring(info.buffName or ""))
 	info.derived = true
 	if info.spellID then scanCache.bySpellID[info.spellID] = scanCache.bySpellID[info.spellID] or info end
 end
 
-local function seedCategory(scan, category, sourceType)
-	if not (category and C_CooldownViewer and C_CooldownViewer.GetCooldownViewerCategorySet) then return false end
+local function getOrderedCooldownIDs(viewerName, category)
+	local viewer = _G[viewerName]
+	if viewer and type(viewer.GetCooldownIDs) == "function" then
+		local ok, cooldownIDs = pcall(viewer.GetCooldownIDs, viewer)
+		if ok and type(cooldownIDs) == "table" then return cooldownIDs, true end
+	end
+	if not (category and C_CooldownViewer and C_CooldownViewer.GetCooldownViewerCategorySet) then return nil end
 	local cooldownIDs = C_CooldownViewer.GetCooldownViewerCategorySet(category, false)
+	return type(cooldownIDs) == "table" and cooldownIDs or nil, false
+end
+
+local function seedCategory(scan, category, sourceType, viewerName)
+	if not category then return false end
+	local cooldownIDs, hasViewerOrder = getOrderedCooldownIDs(viewerName, category)
 	if type(cooldownIDs) ~= "table" then return false end
 	local seeded = false
 	for _, cooldownID in ipairs(cooldownIDs) do
@@ -214,6 +234,7 @@ local function seedCategory(scan, category, sourceType)
 		if info then
 			seeded = true
 			info.availableSources[sourceType] = true
+			if hasViewerOrder then appendSourceOrder(scan, sourceType, info) end
 			if sourceType == SOURCE_ICON or not info.sourceType then
 				info.sourceType = sourceType
 				info.sourceViewer = sourceType == SOURCE_BAR and BAR_VIEWER or ICON_VIEWER
@@ -244,11 +265,12 @@ local function collectFrame(scan, frame, sourceType, viewerName, seenFrames)
 	local key = getCooldownKey(cooldownID)
 	local info = key and scan.byCooldownKey[key] or nil
 	if not info then
-		if scan.hasAuthoritativeSeed then return end
+		if scan.hasAuthoritativeSeed[sourceType] then return end
 		info = ensureScanInfo(scan, cooldownID)
 	end
 	if not info then return end
 	info.availableSources[sourceType] = true
+	appendSourceOrder(scan, sourceType, info)
 	local replace
 	if sourceType == SOURCE_ICON then
 		replace = shouldReplaceFrame(info.iconFrame, frame)
@@ -283,31 +305,33 @@ local function collectViewer(scan, viewerName, sourceType, seenFrames)
 	collectFramesFromContainer(scan, viewer.oldGridSettings, sourceType, viewerName, seenFrames)
 end
 
-local function sortTrackedBuffs(left, right)
-	local leftName = tostring(left and (left.sortName or left.buffName) or "")
-	local rightName = tostring(right and (right.sortName or right.buffName) or "")
-	if leftName ~= rightName then return leftName < rightName end
-	return tostring(left and left.cooldownID or "") < tostring(right and right.cooldownID or "")
-end
-
 function CDMAuras:InvalidateScan(clearCooldownViewerInfo)
 	scanCache = nil
 	if clearCooldownViewerInfo then wipe(cooldownViewerInfoByID) end
 end
 
-function CDMAuras:ScanTrackedBuffs(force)
-	if not force and scanCache then return scanCache.list, scanCache.byCooldownID, scanCache.bySpellID, scanCache.byCooldownKey end
+function CDMAuras:ScanTrackedBuffs(force, sourceType)
+	if not force and scanCache then return scanCache.orderBySource[sourceType] or scanCache.list, scanCache.byCooldownID, scanCache.bySpellID, scanCache.byCooldownKey end
 	local scan = {
 		list = {},
 		byCooldownID = {},
 		byCooldownKey = {},
 		bySpellID = {},
+		orderBySource = {
+			[SOURCE_ICON] = {},
+			[SOURCE_BAR] = {},
+		},
+		orderSeenBySource = {
+			[SOURCE_ICON] = {},
+			[SOURCE_BAR] = {},
+		},
+		hasAuthoritativeSeed = {},
 	}
 	scanCache = scan
 	local trackedBuffCategory = Enum and Enum.CooldownViewerCategory and Enum.CooldownViewerCategory.TrackedBuff
 	local trackedBarCategory = Enum and Enum.CooldownViewerCategory and Enum.CooldownViewerCategory.TrackedBar
-	if seedCategory(scan, trackedBuffCategory, SOURCE_ICON) then scan.hasAuthoritativeSeed = true end
-	if seedCategory(scan, trackedBarCategory, SOURCE_BAR) then scan.hasAuthoritativeSeed = true end
+	if seedCategory(scan, trackedBuffCategory, SOURCE_ICON, ICON_VIEWER) then scan.hasAuthoritativeSeed[SOURCE_ICON] = true end
+	if seedCategory(scan, trackedBarCategory, SOURCE_BAR, BAR_VIEWER) then scan.hasAuthoritativeSeed[SOURCE_BAR] = true end
 	local seenFrames = {}
 	collectViewer(scan, ICON_VIEWER, SOURCE_ICON, seenFrames)
 	collectViewer(scan, BAR_VIEWER, SOURCE_BAR, seenFrames)
@@ -315,10 +339,18 @@ function CDMAuras:ScanTrackedBuffs(force)
 		deriveScanInfo(info, info.iconFrame or info.barFrame, false)
 		info.sourceType = normalizeSourceType(info.sourceType or (info.availableSources[SOURCE_ICON] and SOURCE_ICON or SOURCE_BAR))
 		info.sourceViewer = info.sourceType == SOURCE_BAR and BAR_VIEWER or ICON_VIEWER
-		scan.list[#scan.list + 1] = info
 	end
-	table.sort(scan.list, sortTrackedBuffs)
-	return scan.list, scan.byCooldownID, scan.bySpellID, scan.byCooldownKey
+	local combinedSeen = {}
+	for _, orderedSource in ipairs({ SOURCE_ICON, SOURCE_BAR }) do
+		for _, info in ipairs(scan.orderBySource[orderedSource]) do
+			local key = getCooldownKey(info.cooldownID)
+			if key and not combinedSeen[key] then
+				combinedSeen[key] = true
+				scan.list[#scan.list + 1] = info
+			end
+		end
+	end
+	return scan.orderBySource[sourceType] or scan.list, scan.byCooldownID, scan.bySpellID, scan.byCooldownKey
 end
 
 -- This normalizer is intentionally kept as the first pass for saved pre-12.1
@@ -412,7 +444,7 @@ function CDMAuras:ImportEntries(panelId, sourceKind)
 			if spellID then existingBySpellID[spellID] = true end
 		end
 	end
-	local list = self:ScanTrackedBuffs(true)
+	local list = self:ScanTrackedBuffs(true, sourceType)
 	local stats = { added = 0, duplicates = 0, invalid = 0, seen = 0, sourceLabel = sourceLabel }
 	for _, info in ipairs(list or {}) do
 		local sourceFrame = info and (sourceType == SOURCE_ICON and info.iconFrame or info.barFrame)
@@ -470,7 +502,7 @@ function CDMAuras:SyncEntries(panelId, sourceKind)
 	local wantedCooldownKeysBySpellID = {}
 	local wantedOrder = {}
 	local stats = { added = 0, removed = 0, updated = 0, invalid = 0, seen = 0, sourceLabel = sourceLabel }
-	local list = self:ScanTrackedBuffs(true)
+	local list = self:ScanTrackedBuffs(true, SOURCE_ICON)
 	for _, info in ipairs(list or {}) do
 		local spellID = info and getPlainPositiveID(info.spellID)
 		local cooldownKey = info and getCooldownKey(info.cooldownID)

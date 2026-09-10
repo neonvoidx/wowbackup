@@ -17,11 +17,11 @@ MiniHealerRangeDB = {
 ["FontFlags"] = "OUTLINE",
 ["RelativeTo"] = "UIParent",
 ["Message"] = "HEALER LOS",
-["X"] = 88.33390045166016,
+["X"] = 21.66681480407715,
 ["Version"] = 1,
 ["RelativePoint"] = "TOP",
 ["Locked"] = false,
 ["Point"] = "TOP",
-["Y"] = 0,
+["Y"] = -112.4999618530273,
 ["PaddingY"] = 10,
 }

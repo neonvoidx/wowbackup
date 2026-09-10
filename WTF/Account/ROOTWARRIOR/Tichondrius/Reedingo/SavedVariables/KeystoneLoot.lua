@@ -1,11 +1,14 @@
 
 KeystoneLootCharDB = {
+["version"] = 3,
 ["ui"] = {
 ["selectedCharacterKey"] = "Tichondrius-Reedingo-7",
 ["selectedTab"] = "dungeons",
 ["selectedRaidTab"] = 1307,
 },
-["version"] = 1,
+["voidcoreChecked"] = false,
+["voidcore"] = {
+},
 ["filters"] = {
 ["dungeon"] = {
 ["track"] = "champion",

@@ -1,52 +1,32 @@
 
 ArenaAnalyticsDB = {
 ["formatVersion"] = 6,
-["realms"] = {
-"Tichondrius",
-},
 ["names"] = {
 "Manyfaced",
 },
+["realms"] = {
+"Tichondrius",
+},
 }
 ArenaAnalyticsTransientDB = {
-["queueTimes"] = {
-},
-["ratedInfo"] = {
-{
-[18] = 1055,
-["lastWorldSeasonPlayed"] = 18,
-},
-{
-[8] = 288,
-["lastWorldSeasonPlayed"] = 8,
-},
-{
-[0] = 0,
-["lastWorldSeasonPlayed"] = 0,
-},
-{
-[2] = 96,
-["lastWorldSeasonPlayed"] = 2,
-},
-["season"] = 0,
-},
 ["currentArena"] = {
-["endedProperly"] = false,
+["players"] = {
+},
 ["lastRoundTeam"] = {
 },
 ["matchState"] = 0,
-["isHandlingExit"] = false,
+["shuffleWinsCache"] = {
+["total"] = 0,
+["wins"] = 0,
+["estimatedRound"] = 0,
+["drawCount"] = 0,
+},
 ["ended"] = false,
 ["committedRounds"] = {
 },
 ["deathData"] = {
 },
-["shuffleWinsCache"] = {
-["total"] = 0,
-["wins"] = 0,
-["drawCount"] = 0,
-["estimatedRound"] = 0,
-},
+["isHandlingExit"] = false,
 ["locked"] = false,
 ["round"] = {
 ["isInitiated"] = false,
@@ -57,8 +37,28 @@ ArenaAnalyticsTransientDB = {
 ["enemy"] = {
 },
 },
-["players"] = {
+["endedProperly"] = false,
 },
+["ratedInfo"] = {
+{
+[0] = 0,
+["lastWorldSeasonPlayed"] = 0,
+},
+{
+[0] = 0,
+["lastWorldSeasonPlayed"] = 0,
+},
+{
+[0] = 0,
+["lastWorldSeasonPlayed"] = 0,
+},
+{
+[0] = 0,
+["lastWorldSeasonPlayed"] = 0,
+},
+["season"] = 42,
+},
+["queueTimes"] = {
 },
 }
 ArenaAnalyticsMapIconPos = 0

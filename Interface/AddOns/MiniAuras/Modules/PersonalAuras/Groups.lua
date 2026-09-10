@@ -2,7 +2,6 @@
 local _, addon = ...
 local mini = addon.Framework
 local artTextures = addon.Core.ArtTextures
-local spellSearch = addon.Core.SpellSearch
 local sounds = addon.Core.Sounds
 local units = addon.Utils.UnitUtil
 local changeStamp = addon.Utils.ChangeStamp
@@ -18,8 +17,6 @@ local changeStamp = addon.Utils.ChangeStamp
 -- caster filters: the engine cannot attribute casters on a unit outside the player's visible
 -- world, and a check it cannot evaluate is skipped rather than failed, so those are budgeted to
 -- zero there.
---
--- Class and spec conditions are deliberately absent. Profiles already switch on specialisation.
 
 addon.Modules.PersonalAuras = addon.Modules.PersonalAuras or {}
 
@@ -79,11 +76,10 @@ local DEFAULT_BAR_TEXTURE = "Blizzard Raid Bar"
 local DEFAULT_POSITION_Y = 220
 local MIN_ICON_SIZE = 10
 local MAX_ICON_SIZE = 200
--- Text is sized off the icon, so a group tunes it with a percentage rather than a point size. Held
--- as a whole number so it clamps like every other group value.
-local DEFAULT_TEXT_SCALE = 100
-local MIN_TEXT_SCALE = 50
-local MAX_TEXT_SCALE = 200
+-- Text is sized off the icon, so a group tunes it with a multiplier rather than a point size.
+local DEFAULT_FONT_SCALE = 1.0
+local MIN_FONT_SCALE = 0.5
+local MAX_FONT_SCALE = 2.0
 -- How many icons one group can ever show. The engine only builds a frame when there is an aura for
 -- it, so a high cap costs nothing until it is used.
 local MAX_ICONS = 40
@@ -91,7 +87,7 @@ local MAX_ICONS = 40
 -- grows without covering the screen for a filter group that could match anything.
 local PREVIEW_ICONS = 3
 -- Anything above this is a corrupt or hostile import rather than a configuration.
-local MAX_SPELLS_PER_GROUP = 100
+local MAX_SPELLS_PER_GROUP = 200
 
 -- Filter string components a group can require or forbid, in the order the options page lists
 -- them. Helpful and harmful are excluded, since AuraType already carries that.
@@ -129,6 +125,8 @@ local HEALER_UNIT = "healer"
 local OTHER_DPS_UNIT = "otherdps"
 local TARGET_FRIENDLY = "targetfriendly"
 local TARGET_ENEMY = "targetenemy"
+local FOCUS_FRIENDLY = "focusfriendly"
+local FOCUS_ENEMY = "focusenemy"
 local NAMEPLATE_FRIENDLY = "nameplatefriendly"
 local NAMEPLATE_ENEMY = "nameplateenemy"
 local UNIT_FRAMES_UNIT = "unitframes"
@@ -146,6 +144,8 @@ local UNIT_INFO = {
 	[OTHER_DPS_UNIT] = { Role = "DAMAGER", SkipSelf = true, Friendly = true, Helpful = true },
 	[TARGET_FRIENDLY] = { Token = "target", Friendly = true, Helpful = true },
 	[TARGET_ENEMY] = { Token = "target", Friendly = false, Harmful = true },
+	[FOCUS_FRIENDLY] = { Token = "focus", Friendly = true, Helpful = true },
+	[FOCUS_ENEMY] = { Token = "focus", Friendly = false, Harmful = true },
 	[NAMEPLATE_FRIENDLY] = { Plates = true, Friendly = true, Helpful = true },
 	[NAMEPLATE_ENEMY] = { Plates = true, Friendly = false, Harmful = true },
 	-- Group members are always assistable, so the harmful side is only reachable by filter.
@@ -167,13 +167,13 @@ for _, strata in ipairs(STRATA_OPTIONS) do
 	STRATA_VALID[strata] = true
 end
 
--- What a unit saved before the split becomes. Focus and the target's target are gone, so they
--- fall back to the target itself rather than quietly disabling the group.
-local RENAMED_UNITS = {
-	target = true,
-	focus = true,
-	targettarget = true,
-	nameplate = true,
+-- What a unit the picker no longer offers becomes. Kept as a table so Normalise reads one
+-- upvalue rather than four, against Lua's ceiling of 60.
+local RENAMED_PAIRS = {
+	target = { Friendly = TARGET_FRIENDLY, Enemy = TARGET_ENEMY },
+	focus = { Friendly = FOCUS_FRIENDLY, Enemy = FOCUS_ENEMY },
+	targettarget = { Friendly = TARGET_FRIENDLY, Enemy = TARGET_ENEMY },
+	nameplate = { Friendly = NAMEPLATE_FRIENDLY, Enemy = NAMEPLATE_ENEMY },
 }
 -- A sound file name when the group should stay silent.
 local NO_SOUND = ""
@@ -194,7 +194,8 @@ local spellAuraTypes = {}
 -- choices cover them by hanging a copy off each member's or opponent's frame instead.
 local UNITS = {
 	SELF_UNIT, PET_UNIT, TANK_UNIT, HEALER_UNIT, OTHER_DPS_UNIT, UNIT_FRAMES_UNIT,
-	TARGET_FRIENDLY, TARGET_ENEMY, NAMEPLATE_FRIENDLY, NAMEPLATE_ENEMY, ARENA_FRAMES_UNIT,
+	TARGET_FRIENDLY, TARGET_ENEMY, FOCUS_FRIENDLY, FOCUS_ENEMY, NAMEPLATE_FRIENDLY,
+	NAMEPLATE_ENEMY, ARENA_FRAMES_UNIT,
 }
 -- Units that are always assistable, so a harmful group on them could never filter by spell id.
 local ALWAYS_FRIENDLY = { [SELF_UNIT] = true, [PET_UNIT] = true, [UNIT_FRAMES_UNIT] = true }
@@ -237,8 +238,8 @@ M.MaxIcons = MAX_ICONS
 M.PreviewIcons = PREVIEW_ICONS
 M.MinIconSize = MIN_ICON_SIZE
 M.MaxIconSize = MAX_ICON_SIZE
-M.MinTextScale = MIN_TEXT_SCALE
-M.MaxTextScale = MAX_TEXT_SCALE
+M.MinFontScale = MIN_FONT_SCALE
+M.MaxFontScale = MAX_FONT_SCALE
 M.DisplayStyle = {
 	Icons = AS_ICONS, Bars = AS_BARS, SoundOnly = AS_SOUND, Texture = AS_TEXTURE,
 	TextOnly = AS_TEXT,
@@ -256,8 +257,13 @@ M.MaxRotation = MAX_ROTATION
 ---@param fallback number
 ---@param minimum number
 ---@param maximum number
+---@param float boolean? True keeps the fraction, for a setting whose slider steps below one.
 ---@return number
-local function Clamped(value, fallback, minimum, maximum)
+local function Clamped(value, fallback, minimum, maximum, float)
+	if float then
+		return mini:ClampFloat(value, minimum, maximum, fallback)
+	end
+
 	return mini:ClampInt(value, minimum, maximum, fallback)
 end
 
@@ -337,6 +343,32 @@ local function SpellList(stored)
 	return out
 end
 
+---The spec ids a group is limited to, rebuilt rather than cleaned in place so an import cannot
+---smuggle anything else in. String keys are coerced, since a round trip can stringify them.
+---@param stored any
+---@return table<number, boolean>?
+local function SpecSet(stored)
+	if type(stored) ~= "table" then
+		return nil
+	end
+
+	local out = {}
+	local any = false
+
+	-- An id belonging to another class is kept, because the same profile is loaded on the alt it
+	-- was set up for.
+	for key, value in pairs(stored) do
+		local specId = tonumber(key)
+
+		if value == true and specId and specId > 0 and specId == math.floor(specId) then
+			out[specId] = true
+			any = true
+		end
+	end
+
+	return any and out or nil
+end
+
 ---A fresh group with everything filled in, and the module's id counter advanced past it.
 ---@param options PersonalAurasModuleOptions
 ---@param name string?
@@ -371,16 +403,12 @@ function M:Normalise(group)
 
 	local unit = group.Unit ~= nil and tostring(group.Unit) or nil
 
-	if RENAMED_UNITS[unit] then
-		-- Saved before target and nameplates were split by reaction. Which side it becomes is
-		-- the aura type it was already set to, so the group keeps showing what it showed.
-		local harmful = group.AuraType == HARMFUL
+	local pair = RENAMED_PAIRS[unit]
 
-		if unit == "nameplate" then
-			unit = harmful and NAMEPLATE_ENEMY or NAMEPLATE_FRIENDLY
-		else
-			unit = harmful and TARGET_ENEMY or TARGET_FRIENDLY
-		end
+	if pair then
+		-- Which side it becomes is the aura type it was already set to, so the group keeps
+		-- showing what it showed.
+		unit = group.AuraType == HARMFUL and pair.Enemy or pair.Friendly
 	end
 
 	if not UNIT_INFO[unit] then
@@ -421,7 +449,8 @@ function M:Normalise(group)
 	group.Icons = icons
 	icons.Size = Clamped(icons.Size, DEFAULT_ICON_SIZE, MIN_ICON_SIZE, MAX_ICON_SIZE)
 	icons.Spacing = Clamped(icons.Spacing, DEFAULT_SPACING, 0, 50)
-	icons.TextScale = Clamped(icons.TextScale, DEFAULT_TEXT_SCALE, MIN_TEXT_SCALE, MAX_TEXT_SCALE)
+	icons.FontScale = Clamped(icons.FontScale, DEFAULT_FONT_SCALE, MIN_FONT_SCALE,
+		MAX_FONT_SCALE, true)
 	-- Icons unless the group asked for something else. A group saved before bars existed has no
 	-- field, and changing what those groups look like is not something a version bump gets to do.
 	icons.Display = (icons.Display == AS_BARS or icons.Display == AS_SOUND
@@ -439,14 +468,19 @@ function M:Normalise(group)
 	icons.Pandemic = icons.Pandemic == true
 	-- On unless it was turned off, since the swipe filling up reads as time running out.
 	icons.ReverseCooldown = icons.ReverseCooldown ~= false
-	-- Both off by default, since an aura icon without a clock is the unusual want.
-	icons.HideSwipe = icons.HideSwipe == true
-	icons.HideNumbers = icons.HideNumbers == true
+	-- The old keys are read here too, since an imported group never went through the migrations.
+	icons.EnableSwipe = icons.EnableSwipe ~= false and icons.HideSwipe ~= true
+	icons.HideSwipe = nil
+	icons.EnableNumbers = icons.EnableNumbers ~= false and icons.HideNumbers ~= true
+	icons.HideNumbers = nil
 	icons.CenterStacks = icons.CenterStacks == true
+	-- The threshold the fractions start at is global, so a group only says whether it wants them.
+	icons.ShowMilliseconds = icons.ShowMilliseconds == true
 	-- Off keeps every text on its default colouring, the colour-by-time countdown included. On puts
 	-- the group's own TextColor on all of it.
 	icons.ColorText = icons.ColorText == true
 	icons.ShowTooltips = icons.ShowTooltips == true
+	icons.UseGroupIcon = icons.UseGroupIcon == true
 	icons.Color = icons.Color or {}
 	icons.Color.R = tonumber(icons.Color.R) or 1
 	icons.Color.G = tonumber(icons.Color.G) or 1
@@ -501,6 +535,7 @@ function M:Normalise(group)
 		and group.Sort or SORT_OLDEST
 	group.ShowWhen = (group.ShowWhen == SHOW_WHEN.InCombat
 		or group.ShowWhen == SHOW_WHEN.OutOfCombat) and group.ShowWhen or SHOW_WHEN.Always
+	group.Specs = SpecSet(group.Specs)
 
 	-- Rebuilt rather than cleaned in place, so an import cannot smuggle in keys the engine would
 	-- reject and a component Blizzard has since dropped falls out on its own.
@@ -968,6 +1003,21 @@ function M:ShowsInCombat(group, inCombat)
 	return true
 end
 
+---Whether the player's current spec is one the group asked for. An empty list means every spec.
+---A spec the client cannot name yet is a loading state rather than a choice, so it shows.
+---@param group PersonalAuraGroup
+---@param specId number? The player's spec, nil while the client cannot say.
+---@return boolean
+function M:ShowsForSpec(group, specId)
+	local wanted = group.Specs
+
+	if not wanted or next(wanted) == nil or not specId then
+		return true
+	end
+
+	return wanted[specId] == true
+end
+
 ---Whether any group is conditional on combat, which is what decides whether the module has to
 ---listen for the regen events at all.
 ---@param options PersonalAurasModuleOptions
@@ -975,6 +1025,20 @@ end
 function M:AnyCombatConditional(options)
 	for _, group in ipairs(options.Groups) do
 		if group.ShowWhen == SHOW_WHEN.InCombat or group.ShowWhen == SHOW_WHEN.OutOfCombat then
+			return true
+		end
+	end
+
+	return false
+end
+
+---Whether any group is limited to a spec, which is what decides whether the display reads the
+---spec API at all.
+---@param options PersonalAurasModuleOptions
+---@return boolean
+function M:AnySpecRestricted(options)
+	for _, group in ipairs(options.Groups) do
+		if group.Specs and next(group.Specs) ~= nil then
 			return true
 		end
 	end
@@ -1064,11 +1128,10 @@ function M:CanFilterUnit(group, unit)
 	return not assistable
 end
 
----Every id a spell list covers, each expanded to the ids sharing its name, because the aura the
----game applies is often not the spellbook one.
+---A spell list as the map the engine's includeSpellIDs filter wants, exactly the ids configured.
 ---@param spells number[]
 ---@return table<number, boolean>?
-local function ExpandSpells(spells)
+local function SpellIdMap(spells)
 	if #spells == 0 then
 		return nil
 	end
@@ -1076,9 +1139,7 @@ local function ExpandSpells(spells)
 	local ids = {}
 
 	for _, spellId in ipairs(spells) do
-		for _, variant in ipairs(spellSearch:GetVariants(spellId)) do
-			ids[variant] = true
-		end
+		ids[spellId] = true
 	end
 
 	return ids
@@ -1121,7 +1182,7 @@ function M:BuildFilters(group)
 	local filters = {}
 
 	if M:TracksSpells(group) then
-		filters.includeSpellIDs = ExpandSpells(group.Spells)
+		filters.includeSpellIDs = SpellIdMap(group.Spells)
 	end
 
 	for _, flag in ipairs(CANDIDATE_FLAGS) do
@@ -1198,7 +1259,7 @@ end
 ---@field Offset { X: number, Y: number } Nameplate, unit frame and arena frame anchors only.
 ---@field Grow string
 ---@field Strata string "AUTO", or a frame strata the group's frames are pinned to.
----@field Icons { Size: number, Spacing: number, TextScale: number, Glow: boolean, Border: boolean, Pandemic: boolean, PandemicColor: table, ReverseCooldown: boolean, HideSwipe: boolean, HideNumbers: boolean, CenterStacks: boolean, ShowTooltips: boolean, Color: table, ColorText: boolean, TextColor: table, Display: string, BarWidth: number, BarHeight: number, BarTexture: string, SpellName: boolean }
+---@field Icons { Size: number, Spacing: number, FontScale: number, Glow: boolean, Border: boolean, Pandemic: boolean, PandemicColor: table, ReverseCooldown: boolean, EnableSwipe: boolean, EnableNumbers: boolean, CenterStacks: boolean, ShowMilliseconds: boolean, ShowTooltips: boolean, UseGroupIcon: boolean, Color: table, ColorText: boolean, TextColor: table, Display: string, BarWidth: number, BarHeight: number, BarTexture: string, SpellName: boolean }
 ---@field Texture { Asset: string|number, Width: number, Height: number, Rotation: number, Opacity: number, Mirror: boolean, Desaturate: boolean, Additive: boolean } Texture display only; Asset is a file id or a path, and empty draws nothing.
 ---@field Sound { Applied: string, Removed: string, Stacks: string, Channel: string } Empty means silent.
 ---@field TrackingMode string "SPELLS" narrows to a spell list, "FILTERS" to a filter string.
@@ -1207,4 +1268,5 @@ end
 ---@field Caster string "ANY"|"MINE"|"OTHERS"
 ---@field Sort string "OLDEST"|"LONGEST"|"SHORTEST"
 ---@field ShowWhen string "ALWAYS"|"INCOMBAT"|"OUTOFCOMBAT"
+---@field Specs table<number, boolean>? Spec ids the group is limited to; absent means every spec.
 ---@field Spells number[]

@@ -850,7 +850,10 @@ function addon.functions.ResolveLSMMedia(mediaType, configured, fallback, allowP
 	local allowPathKey = allowPath ~= false
 	local resolvedByFallback = resolvedByConfigured and resolvedByConfigured[fallbackKey]
 	local cached = resolvedByFallback and resolvedByFallback[allowPathKey]
-	if cached then return cached end
+	if cached ~= nil then
+		if cached == false then return fallbackValue end
+		return cached
+	end
 	local function cacheResolved(value)
 		if type(value) ~= "string" or value == "" or not cache then return value end
 		resolvedByConfigured = resolvedByConfigured or {}
@@ -859,6 +862,15 @@ function addon.functions.ResolveLSMMedia(mediaType, configured, fallback, allowP
 		resolvedByConfigured[fallbackKey] = resolvedByFallback
 		resolvedByFallback[allowPathKey] = value
 		return value
+	end
+	local function cacheMiss()
+		if not cache then return fallbackValue end
+		resolvedByConfigured = resolvedByConfigured or {}
+		cache.resolved[configuredValue] = resolvedByConfigured
+		resolvedByFallback = resolvedByFallback or {}
+		resolvedByConfigured[fallbackKey] = resolvedByFallback
+		resolvedByFallback[allowPathKey] = false
+		return fallbackValue
 	end
 	local lsm = getSharedMedia()
 	if lsm then
@@ -871,7 +883,7 @@ function addon.functions.ResolveLSMMedia(mediaType, configured, fallback, allowP
 					return cacheResolved(fetched)
 				end
 			end
-			return fallbackValue
+			return cacheMiss()
 		end
 		if lsm.HashTable then
 			local hash = lsm:HashTable(mediaKind) or {}
@@ -882,7 +894,7 @@ function addon.functions.ResolveLSMMedia(mediaType, configured, fallback, allowP
 				elseif not isMediaPath(byName) or shouldUseFileAsset(byName, true) then
 					return cacheResolved(byName)
 				end
-				return fallbackValue
+				return cacheMiss()
 			end
 			for _, path in pairs(hash) do
 				if path == configuredValue then
@@ -891,13 +903,13 @@ function addon.functions.ResolveLSMMedia(mediaType, configured, fallback, allowP
 					elseif not isMediaPath(configuredValue) or shouldUseFileAsset(configuredValue, true) then
 						return cacheResolved(configuredValue)
 					end
-					return fallbackValue
+					return cacheMiss()
 				end
 			end
 		end
 	end
 	if allowPath ~= false and mediaKind ~= "font" and isMediaPath(configuredValue) and shouldUseFileAsset(configuredValue, true) then return cacheResolved(configuredValue) end
-	return fallbackValue
+	return cacheMiss()
 end
 
 function addon.functions.ResolveFontFace(configured, fallback)

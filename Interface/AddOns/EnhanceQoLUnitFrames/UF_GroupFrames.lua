@@ -2585,8 +2585,8 @@ local function maxDelimiterCount(leftMode, centerMode, rightMode)
 	return count
 end
 
-local function getHealthPercent(unit, cur, maxv, calc)
-	if calc and calc.EvaluateCurrentHealthPercent and CurveConstants and CurveConstants.ScaleTo100 then return calc:EvaluateCurrentHealthPercent(CurveConstants.ScaleTo100) end
+local function getHealthPercent(unit)
+	if UnitHealthPercent and CurveConstants and CurveConstants.ScaleTo100 then return UnitHealthPercent(unit, true, CurveConstants.ScaleTo100) end
 	return nil
 end
 
@@ -6627,7 +6627,7 @@ function GF:UpdateDataBarText(self, unit, st, cur, maxv, calc, secretHealth, mis
 	local dbHidePercentSymbol = dbc.hidePercentSymbol == true
 	local dbPercentVal = percentVal
 	if UFHelper and dbPercentVal == nil and (UFHelper.textModeUsesPercent(dbLeft) or UFHelper.textModeUsesPercent(dbCenter) or UFHelper.textModeUsesPercent(dbRight)) then
-		dbPercentVal = getHealthPercent(unit, cur, maxv, calc)
+		dbPercentVal = getHealthPercent(unit)
 	end
 	local dbLevelText = levelText
 	if UFHelper and UFHelper.textModeUsesLevel and dbLevelText == nil then
@@ -11732,20 +11732,6 @@ function GF:UpdateDispelGlow(self, r, g, b)
 		local col = dcfg.glowColor or defDispel.glowColor or GFH.COLOR_WHITE
 		cr, cg, cb = unpackColor(col, GFH.COLOR_WHITE)
 	end
-	local lines = clampNumber(dcfg.glowLines or defDispel.glowLines or 8, 1, 20, 8)
-	local freq = clampNumber(dcfg.glowFrequency or defDispel.glowFrequency or 0.25, -1.5, 1.5, 0.25)
-	local thickness = clampNumber(dcfg.glowThickness or defDispel.glowThickness or 3, 1, 10, 3)
-	local xoff = clampNumber(dcfg.glowX or defDispel.glowX or 0, -10, 10, 0)
-	local yoff = clampNumber(dcfg.glowY or defDispel.glowY or 0, -10, 10, 0)
-	local effect = dcfg.glowEffect or defDispel.glowEffect or "PIXEL"
-	if effect ~= "PIXEL" and effect ~= "SHINE" and effect ~= "BLIZZARD" then effect = "PIXEL" end
-	local scale = thickness / 3
-	if scale < 0.5 then
-		scale = 0.5
-	elseif scale > 4 then
-		scale = 4
-	end
-
 	local glowFrameLevel, glowStrata, legacyOverOverlay = GF.ResolveDispelGlowLayer(dcfg, defDispel)
 	local target
 	if legacyOverOverlay then
@@ -11754,41 +11740,23 @@ function GF:UpdateDispelGlow(self, r, g, b)
 		target = GF.GetDispelVisualRoot(st, self)
 	end
 	local usingGlow = addon.Glow and addon.Glow.Start and addon.Glow.Stop
-	local canPixel = LCG and LCG.PixelGlow_Start
-	local canShine = LCG and LCG.AutoCastGlow_Start
-	local canButton = LCG and LCG.ButtonGlow_Start
-	local appliedEffect = effect
-	if appliedEffect == "SHINE" and not canShine then
-		appliedEffect = "PIXEL"
-	elseif appliedEffect == "BLIZZARD" and not usingGlow and not canButton then
-		appliedEffect = "PIXEL"
-	end
-	if appliedEffect == "PIXEL" and not canPixel then
+	if not usingGlow then
 		GF.StopDispelGlow(target, nil, st)
 		return
 	end
+	local appliedEffect = "SOLID"
 	if st._dispelGlowActive and (st._dispelGlowEffect ~= appliedEffect or st._dispelGlowTarget ~= target) then GF.StopDispelGlow(target, nil, st) end
 	local glowColor = { cr, cg, cb, 1 }
-	if usingGlow then
-		addon.Glow.Start(target, DISPEL_GLOW_KEY, appliedEffect, {
-			color = glowColor,
-			count = lines,
-			frequency = freq,
-			scale = scale,
-			thickness = thickness,
-			xOffset = xoff,
-			yOffset = yoff,
-			strata = glowStrata,
-			hostFrameLevelOffset = legacyOverOverlay and glowFrameLevel or 0,
-			frameLevel = glowFrameLevel,
-		})
-	elseif appliedEffect == "SHINE" and canShine then
-		LCG.AutoCastGlow_Start(target, glowColor, lines, freq, scale, xoff, yoff, DISPEL_GLOW_KEY, glowFrameLevel)
-	elseif appliedEffect == "BLIZZARD" and canButton then
-		LCG.ButtonGlow_Start(target, glowColor, freq, glowFrameLevel)
-	else
-		LCG.PixelGlow_Start(target, glowColor, lines, freq, nil, thickness, xoff, yoff, nil, DISPEL_GLOW_KEY, glowFrameLevel)
-	end
+	addon.Glow.Start(target, DISPEL_GLOW_KEY, appliedEffect, {
+		color = glowColor,
+		thickness = 3,
+		xOffset = 0,
+		yOffset = 0,
+		strata = glowStrata,
+		hostFrameLevelOffset = legacyOverOverlay and glowFrameLevel or 0,
+		frameLevel = glowFrameLevel,
+		additive = true,
+	})
 	st._dispelGlowActive = true
 	st._dispelGlowEffect = appliedEffect
 	st._dispelGlowTarget = target
@@ -11891,7 +11859,6 @@ function GF:UpdateHealthValue(self, unit, st, updateKind)
 	local needsCalculator = updateIncomingHeal
 		or (updateDamageAbsorb and absorbDontOverflow)
 		or (updateHealAbsorb and healAbsorbDontOverflow)
-		or (updateMain and (st._healthTextUsesPercent == true or st._dataBarTextUsesPercent == true))
 	local calc = needsCalculator and (st._healPredictionCalc or GF.EnsureHealPredictionCalculator(st)) or nil
 	if calc and Enum then
 		if updateDamageAbsorb and calc.SetDamageAbsorbClampMode and Enum.UnitDamageAbsorbClampMode then
@@ -12315,7 +12282,7 @@ function GF:UpdateHealthValue(self, unit, st, updateKind)
 				local hidePercentSymbol = hc.hidePercentSymbol == true
 				local percentVal
 				if UFHelper and (UFHelper.textModeUsesPercent(leftMode) or UFHelper.textModeUsesPercent(centerMode) or UFHelper.textModeUsesPercent(rightMode)) then
-					percentVal = getHealthPercent(unit, cur, maxv, calc)
+					percentVal = getHealthPercent(unit)
 				end
 				local levelText
 				if UFHelper and UFHelper.textModeUsesLevel then
@@ -12958,6 +12925,7 @@ function GF:UnitButton_RegisterUnitEvents(self, unit)
 	end
 
 	regUnit("UNIT_NAME_UPDATE")
+	reg("GROUP_ROSTER_UPDATE")
 	if self._eqolUFState and self._eqolUFState._wantsPortrait then
 		regUnit("UNIT_PORTRAIT_UPDATE")
 		regUnit("UNIT_MODEL_CHANGED")
@@ -13073,6 +13041,30 @@ local function dispatchUnitName(btn, unit)
 	GF:UpdateHealthStyle(btn, unit, st)
 	GF:UpdateLevel(btn, unit, st)
 end
+
+function GF.UnitButton_OnRosterUpdate(btn)
+	local st = getState(btn)
+	local unit = getUnit(btn)
+	if not (st and unitTokenExists(unit) and btn._eqolUnit == unit) then return end
+
+	local guid = UnitGUID and UnitGUID(unit) or nil
+	if guid == nil or (issecretvalue and issecretvalue(guid)) then return end
+
+	local rosterGuid = st._rosterGuid
+	if issecretvalue and issecretvalue(rosterGuid) then rosterGuid = nil end
+	if rosterGuid == guid then return end
+	st._rosterGuid = guid
+
+	st._auraCache = nil
+	st._auraCacheByKey = nil
+	st._auraKindById = nil
+	st._auraChanged = nil
+	st._auraQueryMax = nil
+	clearDispelAuraState(st)
+	GF:CacheUnitStatic(btn)
+	GF:UnitButton_RegisterUnitEvents(btn, unit)
+	GF:UpdateAll(btn)
+end
 local function dispatchUnitLevel(btn, unit)
 	local st = getState(btn)
 	GF:UpdateLevel(btn, unit, st)
@@ -13147,6 +13139,10 @@ local UNIT_DISPATCH = {
 
 function GF.UnitButton_OnEvent(self, event, unit, ...)
 	if not isFeatureEnabled() then return end
+	if event == "GROUP_ROSTER_UPDATE" then
+		GF.UnitButton_OnRosterUpdate(self)
+		return
+	end
 	if self.IsVisible and not self:IsVisible() then
 		local st = self._eqolUFState
 		if st then st._missedHiddenEvent = true end
@@ -15616,15 +15612,28 @@ function GF:RefreshCustomSortNameList(kind)
 	if state.useGroupedCustom then
 		if not GF._raidGroupHeaders then GF:EnsureRaidGroupHeaders() end
 		if GF._raidGroupHeaders then
+			local specsByGroup = {}
+			for _, spec in ipairs(state.groupedSpecs or EMPTY) do
+				local groupIndex = tonumber(spec and spec.group)
+				if groupIndex and groupIndex >= 1 and groupIndex <= 8 then specsByGroup[groupIndex] = spec end
+			end
 			for i, gh in ipairs(GF._raidGroupHeaders) do
 				if gh then
-					local spec = state.groupedSpecs and state.groupedSpecs[i]
+					local spec = specsByGroup[i]
 					local specSortMethod = spec and tostring(spec.sortMethod or "INDEX"):upper() or "INDEX"
 					local nameList = spec and spec.nameList
 					if specSortMethod == "NAMELIST" then
 						if not nameList or nameList == "" then nameList = EMPTY_NAMELIST_TOKEN end
+						GF:SetHeaderAttributeIfChanged(gh, "groupFilter", nil)
+						GF:SetHeaderAttributeIfChanged(gh, "roleFilter", nil)
+						GF:SetHeaderAttributeIfChanged(gh, "strictFiltering", false)
 					else
 						nameList = nil
+						local roleFilter = spec and cfg.roleFilter
+						if roleFilter == "" then roleFilter = nil end
+						GF:SetHeaderAttributeIfChanged(gh, "groupFilter", tostring((spec and spec.group) or i))
+						GF:SetHeaderAttributeIfChanged(gh, "roleFilter", roleFilter)
+						GF:SetHeaderAttributeIfChanged(gh, "strictFiltering", spec and cfg.strictFiltering == true or false)
 					end
 					GF:SetHeaderAttributeIfChanged(gh, "sortMethod", specSortMethod)
 					GF:SetHeaderAttributeIfChanged(gh, "sortDir", state.sortDir)
@@ -15696,7 +15705,7 @@ local function applyRaidGroupHeaders(cfg, layout, groupSpecs, forceShow, forceHi
 			local active = spec ~= nil
 			header._eqolForceShow = forceShow
 			header._eqolForceHide = forceHide
-			header._eqolSpecialHide = nil
+			header._eqolSpecialHide = not active
 			GF.PrepareSecureHeaderLayoutChange(
 				header,
 				GF.BuildSecureHeaderLayoutKey(layout.point, layout.xOffset, layout.yOffset, layout.columnSpacing, layout.columnAnchorPoint, 1, layout.unitsPerColumn)
@@ -15827,9 +15836,8 @@ local function applyRaidGroupHeaders(cfg, layout, groupSpecs, forceShow, forceHi
 				setAttr("strictFiltering", false)
 				setAttr("sortMethod", "INDEX")
 				setAttr("nameList", nil)
-				if unitWatchesEnabled then GF.PrecreateSecureHeaderChildren(header, layout.unitsPerColumn or 5, false) end
 			end
-			GF.SetSecureHeaderUnitWatchesEnabled(header, unitWatchesEnabled)
+			GF.SetSecureHeaderUnitWatchesEnabled(header, unitWatchesEnabled and active)
 
 			applyVisibility(header, "raid", cfg)
 
@@ -27092,6 +27100,7 @@ local function buildEditModeSettings(kind, editModeId)
 			kind = SettingType.Dropdown,
 			field = "dispelTintGlowEffect",
 			parentId = "dispeltint",
+			isShown = function() return false end,
 			generator = function(_, root, data)
 				local options = {
 					{ value = "PIXEL", label = "Pixel" },
@@ -27137,6 +27146,7 @@ local function buildEditModeSettings(kind, editModeId)
 			allowInput = true,
 			field = "dispelTintGlowFrequency",
 			parentId = "dispeltint",
+			isShown = function() return false end,
 			minValue = -1.5,
 			maxValue = 1.5,
 			valueStep = 0.25,
@@ -27172,6 +27182,7 @@ local function buildEditModeSettings(kind, editModeId)
 			allowInput = true,
 			field = "dispelTintGlowX",
 			parentId = "dispeltint",
+			isShown = function() return false end,
 			minValue = -10,
 			maxValue = 10,
 			valueStep = 1,
@@ -27207,6 +27218,7 @@ local function buildEditModeSettings(kind, editModeId)
 			allowInput = true,
 			field = "dispelTintGlowY",
 			parentId = "dispeltint",
+			isShown = function() return false end,
 			minValue = -10,
 			maxValue = 10,
 			valueStep = 1,
@@ -27242,6 +27254,7 @@ local function buildEditModeSettings(kind, editModeId)
 			allowInput = true,
 			field = "dispelTintGlowLines",
 			parentId = "dispeltint",
+			isShown = function() return false end,
 			minValue = 1,
 			maxValue = 20,
 			valueStep = 1,
@@ -27277,6 +27290,7 @@ local function buildEditModeSettings(kind, editModeId)
 			allowInput = true,
 			field = "dispelTintGlowThickness",
 			parentId = "dispeltint",
+			isShown = function() return false end,
 			minValue = 1,
 			maxValue = 10,
 			valueStep = 1,
@@ -35814,6 +35828,7 @@ do
 		elseif event == "GROUP_FORMED" or event == "GROUP_JOINED" or event == "GROUP_ROSTER_UPDATE" or event == "RAID_ROSTER_UPDATE" then
 			GF:QueueSpotlightRosterReconcile()
 			GF:QueueNativeRosterRefresh()
+			if event == "GROUP_ROSTER_UPDATE" then GF:RefreshGroupIcons() end
 			if GF._spotlightRosterReconcilePending then GF:SchedulePostRosterRefresh() end
 			local cfg = getCfg("raid")
 			local custom = cfg and GFH and GFH.EnsureCustomSortConfig and GFH.EnsureCustomSortConfig(cfg)

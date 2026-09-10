@@ -126,6 +126,11 @@ local function registerDefinition(definition)
 	definition.spellIDsByItemID = normalizeSpellIDsByItemID(definition.spellIDsByItemID)
 	definition.spellCategories = normalizeSpellCategories(definition.spellCategories)
 	definition.slotOverlaySpellIDsByItemID = normalizeSpellIDsByItemID(definition.slotOverlaySpellIDsByItemID)
+	definition.sourceItemIDSet = {}
+	for i = 1, #(type(definition.sourceItemIDs) == "table" and definition.sourceItemIDs or {}) do
+		local itemID = tonumber(definition.sourceItemIDs[i])
+		if itemID and itemID > 0 then definition.sourceItemIDSet[itemID] = true end
+	end
 	definition.spellIDSet = {}
 	for i = 1, #definition.spellIDs do definition.spellIDSet[definition.spellIDs[i]] = true end
 	AuraPresets.definitions[definition.key] = definition
@@ -399,6 +404,46 @@ end
 
 local TRACKING_PRESET_KEYS = { "TRINKET_UPTIME", "COMBAT_POTION" }
 
+local function getTrinketSlotItemExclusions(create)
+	local root = CooldownPanels.GetRoot and CooldownPanels:GetRoot() or nil
+	if not root then return nil end
+	if type(root.trinketSlotItemExclusions) ~= "table" then
+		if not create then return nil end
+		root.trinketSlotItemExclusions = {}
+	end
+	return root.trinketSlotItemExclusions
+end
+
+function AuraPresets:IsTrinketItemID(itemID)
+	local definition = self:GetDefinition("TRINKET_UPTIME")
+	itemID = tonumber(itemID)
+	if not itemID then return false end
+	if definition and definition.sourceItemIDSet[itemID] == true then return true end
+	if not (C_Item and C_Item.GetItemInfoInstant) then return false end
+	local _, _, _, itemEquipLoc = C_Item.GetItemInfoInstant(itemID)
+	return itemEquipLoc == "INVTYPE_TRINKET"
+end
+
+function AuraPresets:IsTrinketSlotItemExcluded(itemID)
+	itemID = tonumber(itemID)
+	local exclusions = itemID and getTrinketSlotItemExclusions(false) or nil
+	return exclusions and (exclusions[itemID] == true or exclusions[tostring(itemID)] == true) or false
+end
+
+function AuraPresets:GetCombinedExclusionKinds(id)
+	id = tonumber(id)
+	if not id then return false, false end
+	local auraMatch = false
+	for i = 1, #TRACKING_PRESET_KEYS do
+		local definition = self:GetDefinition(TRACKING_PRESET_KEYS[i])
+		if definition and definition.spellIDSet[id] then
+			auraMatch = true
+			break
+		end
+	end
+	return auraMatch, self:IsTrinketItemID(id)
+end
+
 function AuraPresets:GetCombinedExclusions()
 	local rowsByID = {}
 	for i = 1, #TRACKING_PRESET_KEYS do
@@ -407,57 +452,100 @@ function AuraPresets:GetCombinedExclusions()
 		for rawSpellID, excluded in pairs(type(exclusions) == "table" and exclusions or {}) do
 			local spellID = tonumber(rawSpellID)
 			if excluded == true and spellID and spellID > 0 then
-				local row = rowsByID[spellID] or { spellID = spellID, presetKeys = {} }
+				local rowKey = "AURA:" .. tostring(spellID)
+				local row = rowsByID[rowKey] or { id = spellID, spellID = spellID, kind = "AURA", presetKeys = {} }
 				row.presetKeys[presetKey] = true
-				rowsByID[spellID] = row
+				rowsByID[rowKey] = row
 			end
+		end
+	end
+	for rawItemID, excluded in pairs(getTrinketSlotItemExclusions(false) or {}) do
+		local itemID = tonumber(rawItemID)
+		if excluded == true and itemID and itemID > 0 then
+			local rowKey = "TRINKET_ON_USE:" .. tostring(itemID)
+			rowsByID[rowKey] = { id = itemID, itemID = itemID, kind = "TRINKET_ON_USE", presetKeys = {} }
 		end
 	end
 	local rows = {}
 	for _, row in pairs(rowsByID) do
-		row.name = C_Spell and C_Spell.GetSpellName and C_Spell.GetSpellName(row.spellID) or tostring(row.spellID)
+		if row.kind == "TRINKET_ON_USE" then
+			row.name = C_Item and C_Item.GetItemNameByID and C_Item.GetItemNameByID(row.itemID) or tostring(row.itemID)
+		else
+			row.name = C_Spell and C_Spell.GetSpellName and C_Spell.GetSpellName(row.spellID) or tostring(row.spellID)
+		end
 		rows[#rows + 1] = row
 	end
 	table.sort(rows, function(left, right)
 		if left.name ~= right.name then return left.name < right.name end
-		return left.spellID < right.spellID
+		if left.kind ~= right.kind then return left.kind < right.kind end
+		return left.id < right.id
 	end)
 	return rows
 end
 
-function AuraPresets:AddCombinedExclusions(value)
+function AuraPresets:AddCombinedExclusion(id, kind)
+	id = tonumber(id)
+	if not (id and id > 0 and id == math.floor(id)) then return false, 0 end
+	local auraMatch, itemMatch = self:GetCombinedExclusionKinds(id)
+	if kind == "TRINKET_ON_USE" then
+		if not itemMatch then return false, 0 end
+		local exclusions = getTrinketSlotItemExclusions(true)
+		if exclusions[id] == true then return false, 1 end
+		exclusions[id] = true
+		return true, 1
+	end
+	if kind ~= "AURA" or not auraMatch then return false, 0 end
 	local changed = false
 	local matched = 0
-	for candidate in tostring(value or ""):gmatch("[^,%s;]+") do
-		local spellID = tonumber(candidate)
-		if spellID and spellID > 0 and spellID == math.floor(spellID) then
-			for i = 1, #TRACKING_PRESET_KEYS do
-				local presetKey = TRACKING_PRESET_KEYS[i]
-				local definition = self:GetDefinition(presetKey)
-				if definition and definition.spellIDSet[spellID] then
-					matched = matched + 1
-					local exclusions = getPresetExclusions(presetKey, true)
-					if exclusions[spellID] ~= true then
-						exclusions[spellID] = true
-						invalidateEnabledSpellData(definition)
-						changed = true
-					end
-				end
+	for i = 1, #TRACKING_PRESET_KEYS do
+		local presetKey = TRACKING_PRESET_KEYS[i]
+		local definition = self:GetDefinition(presetKey)
+		if definition and definition.spellIDSet[id] then
+			matched = matched + 1
+			local exclusions = getPresetExclusions(presetKey, true)
+			if exclusions[id] ~= true then
+				exclusions[id] = true
+				invalidateEnabledSpellData(definition)
+				changed = true
 			end
 		end
 	end
 	return changed, matched
 end
 
-function AuraPresets:RemoveCombinedExclusion(spellID)
-	spellID = tonumber(spellID)
-	if not spellID then return false end
+function AuraPresets:AddCombinedExclusions(value)
+	local changed = false
+	local matched = 0
+	local ambiguousID
+	for candidate in tostring(value or ""):gmatch("[^,%s;]+") do
+		local id = tonumber(candidate)
+		local auraMatch, itemMatch = self:GetCombinedExclusionKinds(id)
+		if auraMatch and itemMatch then
+			ambiguousID = ambiguousID or id
+		else
+			local candidateChanged, candidateMatched = self:AddCombinedExclusion(id, itemMatch and "TRINKET_ON_USE" or "AURA")
+			changed = candidateChanged or changed
+			matched = matched + candidateMatched
+		end
+	end
+	return changed, matched, ambiguousID
+end
+
+function AuraPresets:RemoveCombinedExclusion(id, kind)
+	id = tonumber(id)
+	if not id then return false end
+	if kind == "TRINKET_ON_USE" then
+		local exclusions = getTrinketSlotItemExclusions(false)
+		if not exclusions or (exclusions[id] ~= true and exclusions[tostring(id)] ~= true) then return false end
+		exclusions[id], exclusions[tostring(id)] = nil, nil
+		return true
+	end
 	local changed = false
 	for i = 1, #TRACKING_PRESET_KEYS do
 		local presetKey = TRACKING_PRESET_KEYS[i]
 		local exclusions = getPresetExclusions(presetKey, false)
-		if exclusions and (exclusions[spellID] == true or exclusions[tostring(spellID)] == true) then
-			exclusions[spellID], exclusions[tostring(spellID)] = nil, nil
+		if exclusions and (exclusions[id] == true or exclusions[tostring(id)] == true) then
+			exclusions[id], exclusions[tostring(id)] = nil, nil
 			local definition = self:GetDefinition(presetKey)
 			if definition then invalidateEnabledSpellData(definition) end
 			changed = true

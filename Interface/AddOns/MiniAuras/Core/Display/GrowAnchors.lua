@@ -9,8 +9,7 @@ local _, addon = ...
 --   Chain  - how to continue a row after a preceding frame (the kick icon, or the previous
 --            unit's container in the chained 12.1 rows). XMul/YMul turn a spacing value into
 --            the offset for that direction.
---   Flow   - 12.1 AuraContainer flow layout settings, so the first icon sits nearest the
---            container's anchored edge like the legacy layouts.
+--   Flow   - 12.1 AuraContainer flow layout settings, and the point the container hangs off.
 
 ---@class GrowAnchors
 local M = {}
@@ -37,8 +36,8 @@ M.Anchor = {
 M.Chain = {
 	LEFT = { Point = "RIGHT", RelativePoint = "LEFT", XMul = -1, YMul = 0 },
 	RIGHT = { Point = "LEFT", RelativePoint = "RIGHT", XMul = 1, YMul = 0 },
-	-- CENTER cannot be centred without a readable row width, and 12.1 container sizes can be
-	-- secret, so it chains rightwards like RIGHT.
+	-- A row continuing after another frame has no centre of its own to work from, so CENTER
+	-- chains rightwards like RIGHT.
 	CENTER = { Point = "LEFT", RelativePoint = "RIGHT", XMul = 1, YMul = 0 },
 	DOWN = { Point = "TOP", RelativePoint = "BOTTOM", XMul = 0, YMul = -1 },
 	UP = { Point = "BOTTOM", RelativePoint = "TOP", XMul = 0, YMul = 1 },
@@ -46,17 +45,19 @@ M.Chain = {
 	RIGHT_UP = { Point = "LEFT", RelativePoint = "RIGHT", XMul = 1, YMul = 0 },
 }
 
----@type table<string, { Axis: string, AnchorPoint: string, Horizontal: string, Vertical: string }>
+-- AnchorPoint is the corner a run starts from, so it names the edge each axis grows away from.
+-- Pin hangs that box off the host.
+---@type table<string, { Axis: string, AnchorPoint: string, Pin: string, Horizontal: string, Vertical: string }>
 M.Flow = {
-	LEFT = { Axis = "Horizontal", AnchorPoint = "RIGHT", Horizontal = "Left", Vertical = "Down" },
-	RIGHT = { Axis = "Horizontal", AnchorPoint = "LEFT", Horizontal = "Right", Vertical = "Down" },
-	CENTER = { Axis = "Horizontal", AnchorPoint = "LEFT", Horizontal = "Right", Vertical = "Down" },
-	DOWN = { Axis = "Vertical", AnchorPoint = "TOP", Horizontal = "Right", Vertical = "Down" },
-	UP = { Axis = "Vertical", AnchorPoint = "BOTTOM", Horizontal = "Right", Vertical = "Up" },
-	-- Corner-anchored, so a wrapped line stacks upwards. A row in the bottom corner of a unit
-	-- frame that wrapped downwards would put its second line over the frame below it.
-	LEFT_UP = { Axis = "Horizontal", AnchorPoint = "BOTTOMRIGHT", Horizontal = "Left", Vertical = "Up" },
-	RIGHT_UP = { Axis = "Horizontal", AnchorPoint = "BOTTOMLEFT", Horizontal = "Right", Vertical = "Up" },
+	LEFT = { Axis = "Horizontal", AnchorPoint = "TOPRIGHT", Pin = "TOPRIGHT", Horizontal = "Left", Vertical = "Down" },
+	RIGHT = { Axis = "Horizontal", AnchorPoint = "TOPLEFT", Pin = "TOPLEFT", Horizontal = "Right", Vertical = "Down" },
+	-- A centred row spreads both ways from the anchor, so it keeps a mid-edge pin.
+	CENTER = { Axis = "Horizontal", AnchorPoint = "TOPLEFT", Pin = "TOP", Horizontal = "Right", Vertical = "Down" },
+	DOWN = { Axis = "Vertical", AnchorPoint = "TOPLEFT", Pin = "TOP", Horizontal = "Right", Vertical = "Down" },
+	UP = { Axis = "Vertical", AnchorPoint = "BOTTOMLEFT", Pin = "BOTTOM", Horizontal = "Right", Vertical = "Up" },
+	-- The two corner grows, which stack a wrapped line upwards instead of down.
+	LEFT_UP = { Axis = "Horizontal", AnchorPoint = "BOTTOMRIGHT", Pin = "BOTTOMRIGHT", Horizontal = "Left", Vertical = "Up" },
+	RIGHT_UP = { Axis = "Horizontal", AnchorPoint = "BOTTOMLEFT", Pin = "BOTTOMLEFT", Horizontal = "Right", Vertical = "Up" },
 }
 
 ---Anchor points for positioning a row against its anchor frame.
@@ -126,9 +127,17 @@ end
 
 ---12.1 flow layout settings for a container.
 ---@param grow string?
----@return { Axis: string, AnchorPoint: string, Horizontal: string, Vertical: string }
+---@return { Axis: string, AnchorPoint: string, Pin: string, Horizontal: string, Vertical: string }
 function M:GetFlow(grow)
 	return M.Flow[grow] or M.Flow[M.Default]
+end
+
+---The point of a 12.1 container to hang off its host's anchor point, so the first icon lands on
+---that anchor and every line the row gains grows away from it.
+---@param grow string?
+---@return string point
+function M:GetFlowPin(grow)
+	return (M.Flow[grow] or M.Flow[M.Default]).Pin
 end
 
 ---Whether a row runs leftwards from its anchored edge, so the first icon is the rightmost one.

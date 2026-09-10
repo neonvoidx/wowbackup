@@ -45,9 +45,9 @@ addon.functions.SettingsCreateSlider(cChar, {
 	min = 0.01,
 	max = 5,
 	step = 0.01,
-	default = 0.1,
-	formatter = function(value) return string.format("%.2f", tonumber(value) or 0.1) end,
-	get = function() return (addon.db and addon.db["damageMeterUpdateRate"]) or 0.1 end,
+	default = 1,
+	formatter = function(value) return string.format("%.2f", tonumber(value) or 1) end,
+	get = function() return (addon.db and addon.db["damageMeterUpdateRate"]) or 1 end,
 	set = function(value)
 		addon.db["damageMeterUpdateRate"] = value
 		if addon.DamageMeter and addon.DamageMeter.ScheduleRefresh then addon.DamageMeter:ScheduleRefresh() end

@@ -5,19 +5,31 @@ MiniAurasDB = {
 ["Modules"] = {
 ["FrameAuras"] = {
 ["Debuffs"] = {
-["PerRow"] = 3,
-["Dispellable"] = true,
+["DispellableByMe"] = true,
 ["ShortOnly"] = true,
 ["EnableNumbers"] = false,
+["DispellableByRaid"] = false,
+["Anchor"] = "BOTTOMLEFT",
+["Size"] = 35,
+["Offset"] = {
+["Y"] = 2,
+["X"] = 2,
+},
+["FontScale"] = 1,
+["ReverseCooldown"] = true,
 ["MaxIcons"] = 2,
 ["ShowCrowdControl"] = false,
 ["ColorByDispelType"] = true,
+["CenterStacks"] = false,
+["PerRow"] = 3,
+["Padding"] = 1,
 ["Enabled"] = false,
-["Size"] = 35,
+["Grow"] = "RIGHT_UP",
 },
 ["TargetFocus"] = {
 ["Enabled"] = false,
 ["MyBuffs"] = true,
+["FontScale"] = 1,
 ["Filtered"] = true,
 ["MyDebuffs"] = true,
 ["MaxIcons"] = 6,
@@ -38,26 +50,41 @@ MiniAurasDB = {
 },
 },
 ["Buffs"] = {
-["PandemicGlow"] = true,
+["PerRow"] = 3,
 ["ShortOnly"] = false,
-["ShowImportant"] = false,
+["EnableNumbers"] = false,
 ["Filtered"] = true,
 ["Mine"] = true,
-["MaxIcons"] = 6,
-["Enabled"] = false,
+["ShowDefensives"] = false,
 ["PandemicColor"] = {
 ["B"] = 0.3,
 ["G"] = 0.9,
 ["R"] = 0.1,
 },
-["EnableNumbers"] = false,
-["ShowDefensives"] = false,
-["PerRow"] = 3,
-["Size"] = 35,
+["Anchor"] = "BOTTOMRIGHT",
+["Size"] = 33,
+["Enabled"] = false,
+["FontScale"] = 1,
+["ShowImportant"] = false,
+["ReverseCooldown"] = true,
+["MaxIcons"] = 6,
+["CenterStacks"] = false,
+["Offset"] = {
+["Y"] = 2,
+["X"] = -2,
+},
+["Padding"] = 1,
+["PandemicGlow"] = true,
+["Grow"] = "LEFT_UP",
 },
 ["ClassBuff"] = {
 ["Enabled"] = false,
+["Anchor"] = "TOPRIGHT",
 ["Size"] = 35,
+["Offset"] = {
+["Y"] = -2,
+["X"] = -2,
+},
 ["InstancesOnly"] = true,
 },
 },
@@ -71,6 +98,7 @@ MiniAurasDB = {
 },
 ["Raid"] = {
 ["ExcludePlayer"] = false,
+["FontScale"] = 1,
 ["Offset"] = {
 ["Y"] = 0,
 ["X"] = 2,
@@ -90,16 +118,17 @@ MiniAurasDB = {
 ["SizePercent"] = 50,
 ["Count"] = 3,
 ["ShowMilliseconds"] = false,
-["ColorByDispelType"] = true,
+["ColorMode"] = "DISPEL",
 ["Size"] = 26,
 },
 ["Grow"] = "CENTER",
 },
 ["Default"] = {
 ["ExcludePlayer"] = false,
+["FontScale"] = 1,
 ["Offset"] = {
-["Y"] = 0,
-["X"] = 2,
+["Y"] = -1,
+["X"] = -2,
 },
 ["IconSpacing"] = 2,
 ["ShowTooltips"] = false,
@@ -116,10 +145,10 @@ MiniAurasDB = {
 ["SizePercent"] = 80,
 ["Count"] = 2,
 ["ShowMilliseconds"] = false,
-["ColorByDispelType"] = true,
-["Size"] = 29,
+["ColorMode"] = "DISPEL",
+["Size"] = 46,
 },
-["Grow"] = "RIGHT",
+["Grow"] = "LEFT",
 },
 },
 ["PersonalAuras"] = {
@@ -145,7 +174,6 @@ MiniAurasDB = {
 },
 ["Icons"] = {
 ["Glow"] = true,
-["HideNumbers"] = false,
 ["Pandemic"] = false,
 ["Color"] = {
 ["A"] = 1,
@@ -155,23 +183,26 @@ MiniAurasDB = {
 },
 ["BarHeight"] = 20,
 ["Border"] = true,
+["EnableSwipe"] = true,
 ["Spacing"] = 2,
+["ShowMilliseconds"] = false,
 ["SpellName"] = true,
+["FontScale"] = 1,
 ["BarWidth"] = 150,
 ["BarTexture"] = "Blizzard Raid Bar",
+["EnableNumbers"] = true,
 ["PandemicColor"] = {
 ["B"] = 0.1,
 ["G"] = 0.1,
 ["R"] = 1,
 },
-["Size"] = 37,
 ["ShowTooltips"] = false,
-["HideSwipe"] = false,
-["TextScale"] = 100,
+["Size"] = 37,
+["ReverseCooldown"] = true,
 ["CenterStacks"] = false,
 ["Display"] = "ICON",
-["ReverseCooldown"] = true,
 ["ColorText"] = false,
+["UseGroupIcon"] = false,
 ["TextColor"] = {
 ["R"] = 1,
 ["G"] = 1,
@@ -181,15 +212,15 @@ MiniAurasDB = {
 ["Caster"] = "ANY",
 ["Enabled"] = true,
 ["Sound"] = {
-["Removed"] = "",
+["Applied"] = "Notification38",
 ["Stacks"] = "",
 ["Channel"] = "Master",
-["Applied"] = "Notification38",
+["Removed"] = "",
 },
 ["Name"] = "Precog",
 ["Position"] = {
-["Y"] = -56.93338012695313,
-["X"] = -1.066705822944641,
+["Y"] = -18.53339004516602,
+["X"] = 1.599940180778503,
 ["Point"] = "CENTER",
 ["RelativePoint"] = "CENTER",
 },
@@ -228,7 +259,6 @@ MiniAurasDB = {
 },
 ["Icons"] = {
 ["Glow"] = true,
-["HideNumbers"] = false,
 ["Pandemic"] = false,
 ["Color"] = {
 ["A"] = 1,
@@ -238,23 +268,26 @@ MiniAurasDB = {
 },
 ["BarHeight"] = 20,
 ["Border"] = true,
+["EnableSwipe"] = true,
 ["Spacing"] = 2,
+["ShowMilliseconds"] = false,
 ["SpellName"] = true,
+["FontScale"] = 1,
 ["BarWidth"] = 150,
 ["BarTexture"] = "Blizzard Raid Bar",
+["EnableNumbers"] = true,
 ["PandemicColor"] = {
 ["B"] = 0.1,
 ["G"] = 0.1,
 ["R"] = 1,
 },
-["Size"] = 37,
 ["ShowTooltips"] = false,
-["HideSwipe"] = false,
-["TextScale"] = 100,
+["Size"] = 37,
+["ReverseCooldown"] = true,
 ["CenterStacks"] = false,
 ["Display"] = "ICON",
-["ReverseCooldown"] = true,
 ["ColorText"] = false,
+["UseGroupIcon"] = false,
 ["TextColor"] = {
 ["R"] = 1,
 ["G"] = 1,
@@ -264,17 +297,17 @@ MiniAurasDB = {
 ["Caster"] = "ANY",
 ["Enabled"] = true,
 ["Sound"] = {
-["Removed"] = "",
+["Applied"] = "",
 ["Stacks"] = "",
 ["Channel"] = "Master",
-["Applied"] = "",
+["Removed"] = "",
 },
 ["Name"] = "Shroud",
 ["Position"] = {
-["Y"] = -142.9666137695313,
-["X"] = -0.5332936644554138,
-["Point"] = "TOP",
-["RelativePoint"] = "TOP",
+["Y"] = 18.8000373840332,
+["X"] = 148.2667083740234,
+["Point"] = "CENTER",
+["RelativePoint"] = "CENTER",
 },
 ["TrackingMode"] = "SPELLS",
 ["ShowWhen"] = "ALWAYS",
@@ -311,7 +344,6 @@ MiniAurasDB = {
 },
 ["Icons"] = {
 ["Glow"] = true,
-["HideNumbers"] = false,
 ["Pandemic"] = false,
 ["Color"] = {
 ["A"] = 1,
@@ -321,23 +353,26 @@ MiniAurasDB = {
 },
 ["BarHeight"] = 20,
 ["Border"] = true,
+["EnableSwipe"] = true,
 ["Spacing"] = 2,
+["ShowMilliseconds"] = false,
 ["SpellName"] = true,
+["FontScale"] = 1,
 ["BarWidth"] = 150,
 ["ReverseCooldown"] = true,
+["EnableNumbers"] = true,
 ["BarTexture"] = "Blizzard Raid Bar",
+["ShowTooltips"] = false,
 ["PandemicColor"] = {
 ["B"] = 0.1,
 ["G"] = 0.1,
 ["R"] = 1,
 },
-["ShowTooltips"] = false,
-["HideSwipe"] = false,
-["TextScale"] = 100,
+["Size"] = 40,
 ["CenterStacks"] = false,
 ["Display"] = "ICON",
-["Size"] = 40,
 ["ColorText"] = false,
+["UseGroupIcon"] = false,
 ["TextColor"] = {
 ["R"] = 1,
 ["G"] = 1,
@@ -347,17 +382,17 @@ MiniAurasDB = {
 ["Caster"] = "ANY",
 ["Enabled"] = true,
 ["Sound"] = {
-["Removed"] = "",
+["Applied"] = "BubblePop",
 ["Stacks"] = "",
 ["Channel"] = "Master",
-["Applied"] = "BubblePop",
+["Removed"] = "",
 },
 ["Name"] = "PI",
 ["Position"] = {
-["Y"] = -141.3331451416016,
-["X"] = 5.927460733801127e-05,
-["Point"] = "TOP",
-["RelativePoint"] = "TOP",
+["Y"] = -66.93309783935547,
+["X"] = -117.3333740234375,
+["Point"] = "CENTER",
+["RelativePoint"] = "CENTER",
 },
 ["TrackingMode"] = "SPELLS",
 ["ShowWhen"] = "ALWAYS",
@@ -405,19 +440,20 @@ MiniAurasDB = {
 },
 ["RelativePoint"] = "TOP",
 ["Offset"] = {
-["Y"] = -64.2008056640625,
-["X"] = 0.5333529114723206,
-},
-["Sound"] = {
-["Enabled"] = true,
-["File"] = "Heart",
-["Channel"] = "Master",
+["Y"] = -142.600830078125,
+["X"] = 1.066646575927734,
 },
 ["WarningTextColor"] = {
 ["B"] = 0.1,
 ["G"] = 0.1,
 ["R"] = 1,
 },
+["Sound"] = {
+["Enabled"] = true,
+["File"] = "Heart",
+["Channel"] = "Master",
+},
+["FontScale"] = 1,
 },
 ["AllyKickTracker"] = {
 ["Offset"] = {
@@ -426,16 +462,8 @@ MiniAurasDB = {
 },
 ["RelativeTo"] = "UIParent",
 ["Point"] = "TOP",
-["MaxBars"] = 5,
+["FontScale"] = 1,
 ["Grow"] = "DOWN",
-["BarSpacing"] = 2,
-["RelativePoint"] = "CENTER",
-["Locked"] = false,
-["Bars"] = {
-["Height"] = 35,
-["Width"] = 260,
-["Texture"] = "Blizzard Raid Bar",
-},
 ["Enabled"] = {
 ["BattleGrounds"] = false,
 ["World"] = false,
@@ -444,15 +472,25 @@ MiniAurasDB = {
 ["Raid"] = false,
 ["Dungeons"] = false,
 },
+["BarSpacing"] = 2,
+["RelativePoint"] = "CENTER",
+["Locked"] = false,
+["Bars"] = {
+["Height"] = 35,
+["Width"] = 260,
+["Texture"] = "Blizzard Raid Bar",
+},
+["MaxBars"] = 5,
 ["ShowOwnCooldown"] = false,
 },
 ["Alerts"] = {
 ["Offset"] = {
-["Y"] = 488.1668701171875,
-["X"] = 1128.233764648438,
+["Y"] = 666.3002319335938,
+["X"] = 917.8003540039062,
 },
 ["SplitBars"] = false,
-["Point"] = "LEFT",
+["Point"] = "CENTER",
+["Grow"] = "CENTER",
 ["IconSpacing"] = 2,
 ["Important"] = {
 ["Enabled"] = true,
@@ -485,8 +523,6 @@ MiniAurasDB = {
 ["ClassColors"] = true,
 ["Size"] = 39,
 },
-["Grow"] = "CENTER",
-["ShowTooltips"] = false,
 ["Defensives"] = {
 ["Offset"] = {
 ["Y"] = -123.2665252685547,
@@ -496,14 +532,8 @@ MiniAurasDB = {
 ["Point"] = "TOP",
 ["RelativePoint"] = "TOP",
 },
-["Enabled"] = {
-["BattleGrounds"] = false,
-["World"] = false,
-["Arena"] = true,
-["Raid"] = false,
-["Dungeons"] = false,
-},
-["RelativePoint"] = "BOTTOMLEFT",
+["ShowTooltips"] = false,
+["RelativeTo"] = "UIParent",
 ["TTS"] = {
 ["Channel"] = "Master",
 ["VoicePack"] = "David",
@@ -523,6 +553,14 @@ MiniAurasDB = {
 },
 },
 },
+["RelativePoint"] = "BOTTOMLEFT",
+["Enabled"] = {
+["BattleGrounds"] = false,
+["World"] = false,
+["Arena"] = true,
+["Raid"] = false,
+["Dungeons"] = false,
+},
 ["IncludeDefensives"] = false,
 ["Sound"] = {
 ["Important"] = {
@@ -535,7 +573,7 @@ MiniAurasDB = {
 },
 ["Channel"] = "Master",
 },
-["RelativeTo"] = "UIParent",
+["FontScale"] = 1,
 },
 ["ImportantAuras"] = {
 ["Enabled"] = {
@@ -547,19 +585,21 @@ MiniAurasDB = {
 },
 ["Default"] = {
 ["Offset"] = {
-["Y"] = 8,
+["Y"] = 13,
 ["X"] = 0,
 },
+["FontScale"] = 1,
 ["ShowImportant"] = true,
 ["IconSpacing"] = 2,
 ["Icons"] = {
 ["MaxIcons"] = 2,
 ["Glow"] = true,
 ["SizeIsPercent"] = false,
+["EnableNumbers"] = true,
 ["ColorByDispelType"] = true,
 ["ReverseCooldown"] = true,
 ["SizePercent"] = 75,
-["Size"] = 29,
+["Size"] = 23,
 },
 ["ShowDefensives"] = true,
 ["ShowCrowdControl"] = false,
@@ -587,12 +627,14 @@ MiniAurasDB = {
 ["Y"] = 0,
 ["X"] = 0,
 },
+["FontScale"] = 1,
 ["ShowImportant"] = false,
 ["IconSpacing"] = 2,
 ["Icons"] = {
 ["MaxIcons"] = 1,
 ["Glow"] = false,
 ["SizeIsPercent"] = false,
+["EnableNumbers"] = true,
 ["ColorByDispelType"] = false,
 ["ReverseCooldown"] = false,
 ["SizePercent"] = 65,
@@ -616,6 +658,8 @@ MiniAurasDB = {
 ["Enabled"] = {
 ["Always"] = true,
 },
+["FontScale"] = 1,
+["EnableNumbers"] = true,
 ["ReverseCooldown"] = true,
 ["CustomSpells"] = {
 },
@@ -628,13 +672,7 @@ MiniAurasDB = {
 ["Raid"] = false,
 ["Dungeons"] = false,
 },
-["ScaleWithNameplate"] = false,
-["ImportantColor"] = {
-["A"] = 1,
-["B"] = 0.2,
-["G"] = 0.2,
-["R"] = 1,
-},
+["FontScale"] = 1,
 ["AnchorToHealthBar"] = false,
 ["DefensiveColor"] = {
 ["A"] = 1,
@@ -642,12 +680,7 @@ MiniAurasDB = {
 ["G"] = 1,
 ["R"] = 0.2,
 },
-["CrowdControlColor"] = {
-["A"] = 1,
-["B"] = 0.93,
-["G"] = 0.21,
-["R"] = 0.64,
-},
+["ScaleWithNameplate"] = false,
 ["Friendly"] = {
 ["Bar1"] = {
 ["Enabled"] = false,
@@ -700,8 +733,8 @@ MiniAurasDB = {
 ["ShowDefensives"] = false,
 ["ShowImportant"] = false,
 ["Offset"] = {
-["Y"] = -1,
-["X"] = -3,
+["Y"] = -3,
+["X"] = -2,
 },
 ["Grow"] = "RIGHT",
 ["Icons"] = {
@@ -711,7 +744,7 @@ MiniAurasDB = {
 ["ShowMilliseconds"] = false,
 ["ColorMode"] = "DISPEL",
 ["ReverseCooldown"] = true,
-["Size"] = 25,
+["Size"] = 23,
 },
 ["ShowTooltips"] = false,
 },
@@ -722,8 +755,8 @@ MiniAurasDB = {
 ["ShowDefensives"] = true,
 ["ShowImportant"] = true,
 ["Offset"] = {
-["Y"] = -1,
-["X"] = 4,
+["Y"] = -3,
+["X"] = 3,
 },
 ["Enabled"] = true,
 ["Icons"] = {
@@ -733,10 +766,22 @@ MiniAurasDB = {
 ["ShowMilliseconds"] = false,
 ["ColorMode"] = "DISPEL",
 ["ReverseCooldown"] = true,
-["Size"] = 26,
+["Size"] = 24,
 },
 ["ShowTooltips"] = false,
 },
+},
+["ImportantColor"] = {
+["A"] = 1,
+["B"] = 0.2,
+["G"] = 0.2,
+["R"] = 1,
+},
+["CrowdControlColor"] = {
+["A"] = 1,
+["B"] = 0.93,
+["G"] = 0.21,
+["R"] = 0.64,
 },
 },
 ["Trinkets"] = {
@@ -749,9 +794,10 @@ MiniAurasDB = {
 ["Point"] = "RIGHT",
 ["RelativePoint"] = "LEFT",
 ["Offset"] = {
-["Y"] = 0,
-["X"] = 0,
+["Y"] = 16,
+["X"] = 21,
 },
+["ExcludePlayer"] = false,
 ["Icons"] = {
 ["Glow"] = false,
 ["ShowText"] = true,
@@ -763,9 +809,9 @@ MiniAurasDB = {
 },
 ["ReverseCooldown"] = false,
 ["Border"] = false,
-["Size"] = 37,
+["Size"] = 19,
 },
-["ExcludePlayer"] = false,
+["FontScale"] = 1,
 },
 ["PetCrowdControl"] = {
 ["Grow"] = "CENTER",
@@ -773,6 +819,7 @@ MiniAurasDB = {
 ["Y"] = 0,
 ["X"] = 0,
 },
+["FontScale"] = 1,
 ["IncludePetFrame"] = false,
 ["IconSpacing"] = 2,
 ["Enabled"] = {
@@ -786,27 +833,27 @@ MiniAurasDB = {
 ["SizePercent"] = 50,
 ["Glow"] = false,
 ["SizeIsPercent"] = false,
-["Count"] = 3,
+["ReverseCooldown"] = false,
 ["Color"] = {
 ["A"] = 1,
 ["B"] = 0.93,
 ["G"] = 0.21,
 ["R"] = 0.64,
 },
-["ReverseCooldown"] = false,
-["ColorByDispelType"] = false,
+["ColorMode"] = "CUSTOM",
+["Count"] = 3,
 ["Size"] = 19,
 },
 ["ShowTooltips"] = false,
 },
 ["EnemyKickTracker"] = {
-["Offset"] = {
-["Y"] = -101.0654907226563,
-["X"] = 96.0001449584961,
+["Enabled"] = {
+["Always"] = false,
+["Caster"] = true,
+["Healer"] = true,
 },
 ["RelativeTo"] = "UIParent",
-["Point"] = "CENTER",
-["RelativePoint"] = "CENTER",
+["FontScale"] = 1,
 ["IconSpacing"] = 2,
 ["Icons"] = {
 ["Glow"] = false,
@@ -817,19 +864,20 @@ MiniAurasDB = {
 ["B"] = 1,
 },
 ["ReverseCooldown"] = true,
-["Border"] = false,
+["Border"] = true,
 ["Size"] = 27,
 },
-["Enabled"] = {
-["Always"] = false,
-["Caster"] = true,
-["Healer"] = true,
+["ShowName"] = true,
+["RelativePoint"] = "CENTER",
+["Point"] = "CENTER",
+["Offset"] = {
+["Y"] = -143.1989440917969,
+["X"] = 107.2000885009766,
 },
+["UnknownKickIcon"] = "class",
 },
 },
 ["DisableSwipe"] = false,
-["ActiveProfile"] = "Default",
-["ColorCountdownByTime"] = false,
 ["CountdownColors"] = {
 ["Under5s"] = {
 ["B"] = 0,
@@ -847,7 +895,806 @@ MiniAurasDB = {
 ["R"] = 1,
 },
 },
+["ColorCountdownByTime"] = false,
+["ActiveProfile"] = "Default",
 ["MillisecondsThreshold"] = 5,
+["AutoSwitch"] = {
+["Stormclout-Tichondrius"] = {
+[269] = "Default",
+[270] = "Default Healer",
+[268] = "Default",
+},
+},
+["FrameAuraCVars"] = {
+["Debuffs"] = false,
+["Buffs"] = false,
+},
+["DisableNumbers"] = false,
+["NotifiedChanges"] = true,
+["Version"] = 87,
+["WhatsNew"] = {
+},
+["LocaleOverride"] = false,
+["Profiles"] = {
+["Default"] = {
+["Modules"] = {
+["Portrait"] = {
+["Enabled"] = {
+["Always"] = true,
+},
+["ReverseCooldown"] = true,
+["FontScale"] = 1,
+},
+["PersonalAuras"] = {
+["SeededDefaults"] = true,
+["Groups"] = {
+{
+["Enabled"] = true,
+["Name"] = "Precog",
+["Position"] = {
+["Y"] = 41.19997406005859,
+["X"] = 0.5333529114723206,
+["Point"] = "CENTER",
+["RelativePoint"] = "CENTER",
+},
+["Id"] = "g1",
+["Spells"] = {
+377362,
+},
+["Icons"] = {
+["Glow"] = true,
+["EnableSwipe"] = true,
+["EnableNumbers"] = true,
+["Color"] = {
+["A"] = 1,
+["R"] = 1,
+["G"] = 1,
+["B"] = 1,
+},
+["ReverseCooldown"] = true,
+["Border"] = true,
+["Size"] = 37,
+},
+},
+{
+["Enabled"] = true,
+["Name"] = "Shroud",
+["Position"] = {
+["Y"] = 41.19997406005859,
+["X"] = 0.5333529114723206,
+["Point"] = "CENTER",
+["RelativePoint"] = "CENTER",
+},
+["Id"] = "g2",
+["Spells"] = {
+378464,
+},
+["Icons"] = {
+["Glow"] = true,
+["EnableSwipe"] = true,
+["EnableNumbers"] = true,
+["Color"] = {
+["A"] = 1,
+["R"] = 0.64,
+["G"] = 0.21,
+["B"] = 0.93,
+},
+["ReverseCooldown"] = true,
+["Border"] = true,
+["Size"] = 37,
+},
+},
+{
+["Name"] = "PI",
+["Position"] = {
+["Y"] = 300,
+["X"] = 0,
+},
+["Id"] = "g3",
+["Spells"] = {
+10060,
+},
+["Icons"] = {
+["Glow"] = true,
+["EnableNumbers"] = true,
+["Color"] = {
+["A"] = 1,
+["R"] = 1,
+["G"] = 0.82,
+["B"] = 0,
+},
+["Border"] = true,
+["EnableSwipe"] = true,
+},
+["Sound"] = {
+["Applied"] = "BubblePop",
+},
+},
+},
+["NextId"] = 4,
+},
+["HealerCrowdControl"] = {
+["Enabled"] = {
+["BattleGrounds"] = false,
+["Dungeons"] = false,
+["Raid"] = false,
+["Arena"] = true,
+["World"] = true,
+},
+["RelativeTo"] = "UIParent",
+["Point"] = "CENTER",
+["Icons"] = {
+["Enabled"] = true,
+["Glow"] = true,
+["ColorByDispelType"] = true,
+["ReverseCooldown"] = true,
+["Size"] = 32,
+},
+["ShowWarningText"] = true,
+["ShowTooltips"] = false,
+["Font"] = {
+["Flags"] = "OUTLINE",
+["File"] = "Fonts\\FRIZQT__.TTF",
+["Size"] = 17,
+},
+["RelativePoint"] = "CENTER",
+["Offset"] = {
+["Y"] = -179.4002990722656,
+["X"] = -2.133411645889282,
+},
+["Sound"] = {
+["Enabled"] = true,
+["File"] = "Sonar.ogg",
+["Channel"] = "Master",
+},
+["FontScale"] = 1,
+},
+["AllyKickTracker"] = {
+["FontScale"] = 1,
+},
+["PetCrowdControl"] = {
+["ShowTooltips"] = false,
+["FontScale"] = 1,
+["IncludePetFrame"] = false,
+["Grow"] = "CENTER",
+["Offset"] = {
+["Y"] = 0,
+["X"] = 0,
+},
+["Icons"] = {
+["SizePercent"] = 50,
+["Glow"] = false,
+["Count"] = 3,
+["SizeIsPercent"] = false,
+["ColorMode"] = "CUSTOM",
+["ReverseCooldown"] = false,
+["Size"] = 19,
+},
+["Enabled"] = {
+["BattleGrounds"] = false,
+["Dungeons"] = false,
+["Raid"] = false,
+["Arena"] = false,
+["World"] = false,
+},
+},
+["ImportantAuras"] = {
+["Enabled"] = {
+["BattleGrounds"] = false,
+["Dungeons"] = true,
+["Raid"] = true,
+["Arena"] = true,
+["World"] = true,
+},
+["Raid"] = {
+["Offset"] = {
+["Y"] = 0,
+["X"] = 0,
+},
+["FontScale"] = 1,
+["ShowImportant"] = false,
+["Icons"] = {
+["MaxIcons"] = 1,
+["Glow"] = false,
+["ColorByDispelType"] = false,
+["SizeIsPercent"] = false,
+["ReverseCooldown"] = false,
+["SizePercent"] = 65,
+["Size"] = 40,
+},
+["ShowDefensives"] = false,
+["ShowCrowdControl"] = false,
+["ShowKicks"] = false,
+["ShowTooltips"] = false,
+["Grow"] = "CENTER",
+["ExcludePlayer"] = false,
+},
+["Default"] = {
+["Offset"] = {
+["Y"] = 8,
+["X"] = 0,
+},
+["FontScale"] = 1,
+["ShowImportant"] = true,
+["Icons"] = {
+["MaxIcons"] = 2,
+["Glow"] = true,
+["ColorByDispelType"] = true,
+["SizeIsPercent"] = false,
+["ReverseCooldown"] = true,
+["SizePercent"] = 75,
+["Size"] = 24,
+},
+["ShowDefensives"] = true,
+["ShowCrowdControl"] = false,
+["ShowKicks"] = false,
+["ShowTooltips"] = false,
+["Grow"] = "CENTER",
+["ExcludePlayer"] = false,
+},
+},
+["Alerts"] = {
+["Enabled"] = {
+["BattleGrounds"] = false,
+["Dungeons"] = false,
+["Raid"] = false,
+["Arena"] = true,
+["World"] = true,
+},
+["SplitBars"] = false,
+["Point"] = "RIGHT",
+["Icons"] = {
+["Enabled"] = true,
+["Glow"] = true,
+["ReverseCooldown"] = true,
+["MaxIcons"] = 8,
+["Size"] = 39,
+},
+["Offset"] = {
+["Y"] = 139.9001617431641,
+["X"] = -302.7661743164063,
+},
+["ShowTooltips"] = false,
+["Sound"] = {
+["Defensive"] = {
+["Enabled"] = false,
+["File"] = "AlertToastWarm.ogg",
+},
+["Important"] = {
+["Enabled"] = false,
+["File"] = "Error.ogg",
+},
+},
+["RelativeTo"] = "UIParent",
+["RelativePoint"] = "RIGHT",
+["TTS"] = {
+["Defensive"] = {
+["Enabled"] = false,
+},
+["Important"] = {
+["Enabled"] = false,
+},
+},
+["IncludeDefensives"] = false,
+["Defensives"] = {
+["Offset"] = {
+["Y"] = -160,
+["X"] = 0,
+},
+["RelativeTo"] = "UIParent",
+["Point"] = "CENTER",
+["RelativePoint"] = "TOP",
+},
+["FontScale"] = 1,
+},
+["Nameplates"] = {
+["Enabled"] = {
+["BattleGrounds"] = true,
+["Dungeons"] = true,
+["Raid"] = true,
+["Arena"] = true,
+["World"] = true,
+},
+["FontScale"] = 1,
+["ScaleWithNameplate"] = false,
+["Friendly"] = {
+["IgnorePets"] = true,
+},
+["Enemy"] = {
+["IgnorePets"] = true,
+},
+},
+["Trinkets"] = {
+["Enabled"] = {
+["Always"] = true,
+},
+["Font"] = {
+["File"] = "GameFontHighlightSmall",
+},
+["Point"] = "RIGHT",
+["RelativePoint"] = "LEFT",
+["ExcludePlayer"] = false,
+["Offset"] = {
+["Y"] = 0,
+["X"] = 0,
+},
+["Icons"] = {
+["Glow"] = false,
+["ReverseCooldown"] = false,
+["ShowText"] = true,
+["Size"] = 37,
+},
+["FontScale"] = 1,
+},
+["CrowdControl"] = {
+["Enabled"] = {
+["BattleGrounds"] = false,
+["Dungeons"] = true,
+["Raid"] = false,
+["Arena"] = true,
+["World"] = true,
+},
+["Raid"] = {
+["ExcludePlayer"] = false,
+["FontScale"] = 1,
+["Grow"] = "CENTER",
+["Offset"] = {
+["Y"] = 0,
+["X"] = 2,
+},
+["Icons"] = {
+["SizePercent"] = 50,
+["Glow"] = true,
+["SizeIsPercent"] = false,
+["Count"] = 3,
+["ShowMilliseconds"] = false,
+["ReverseCooldown"] = false,
+["ColorMode"] = "DISPEL",
+["Size"] = 26,
+},
+["ShowTooltips"] = false,
+},
+["Default"] = {
+["ExcludePlayer"] = false,
+["FontScale"] = 1,
+["Grow"] = "LEFT",
+["Offset"] = {
+["Y"] = 0,
+["X"] = -76,
+},
+["Icons"] = {
+["SizePercent"] = 80,
+["Glow"] = true,
+["SizeIsPercent"] = false,
+["Count"] = 2,
+["ShowMilliseconds"] = false,
+["ReverseCooldown"] = true,
+["ColorMode"] = "DISPEL",
+["Size"] = 43,
+},
+["ShowTooltips"] = false,
+},
+},
+["EnemyKickTracker"] = {
+["Offset"] = {
+["Y"] = -134.6651306152344,
+["X"] = 154.1332397460938,
+},
+["RelativeTo"] = "UIParent",
+["Point"] = "CENTER",
+["RelativePoint"] = "CENTER",
+["Enabled"] = {
+["Always"] = false,
+["Healer"] = true,
+["Caster"] = true,
+},
+["Icons"] = {
+["Glow"] = false,
+["ReverseCooldown"] = true,
+["Border"] = true,
+["Size"] = 30,
+},
+["FontScale"] = 1,
+},
+},
+["ConfigureBlizzardNameplates"] = true,
+["GlowType"] = "Proc Glow",
+["ColorCountdownByTime"] = false,
+["DisableSwipe"] = false,
+},
+["Default Healer"] = {
+["Modules"] = {
+["Portrait"] = {
+["Enabled"] = {
+["Always"] = true,
+},
+["ReverseCooldown"] = true,
+["FontScale"] = 1,
+},
+["PersonalAuras"] = {
+["SeededDefaults"] = true,
+["Groups"] = {
+{
+["Enabled"] = true,
+["Name"] = "Precog",
+["Position"] = {
+["Y"] = 41.19997406005859,
+["X"] = 0.5333529114723206,
+["Point"] = "CENTER",
+["RelativePoint"] = "CENTER",
+},
+["Id"] = "g1",
+["Spells"] = {
+377362,
+},
+["Icons"] = {
+["Glow"] = true,
+["EnableSwipe"] = true,
+["EnableNumbers"] = true,
+["Color"] = {
+["A"] = 1,
+["R"] = 1,
+["G"] = 1,
+["B"] = 1,
+},
+["ReverseCooldown"] = true,
+["Border"] = true,
+["Size"] = 37,
+},
+},
+{
+["Enabled"] = true,
+["Name"] = "Shroud",
+["Position"] = {
+["Y"] = 41.19997406005859,
+["X"] = 0.5333529114723206,
+["Point"] = "CENTER",
+["RelativePoint"] = "CENTER",
+},
+["Id"] = "g2",
+["Spells"] = {
+378464,
+},
+["Icons"] = {
+["Glow"] = true,
+["EnableSwipe"] = true,
+["EnableNumbers"] = true,
+["Color"] = {
+["A"] = 1,
+["R"] = 0.64,
+["G"] = 0.21,
+["B"] = 0.93,
+},
+["ReverseCooldown"] = true,
+["Border"] = true,
+["Size"] = 37,
+},
+},
+{
+["Name"] = "PI",
+["Position"] = {
+["Y"] = 300,
+["X"] = 0,
+},
+["Id"] = "g3",
+["Spells"] = {
+10060,
+},
+["Icons"] = {
+["Glow"] = true,
+["EnableNumbers"] = true,
+["Color"] = {
+["A"] = 1,
+["R"] = 1,
+["G"] = 0.82,
+["B"] = 0,
+},
+["Border"] = true,
+["EnableSwipe"] = true,
+},
+["Sound"] = {
+["Applied"] = "BubblePop",
+},
+},
+},
+["NextId"] = 4,
+},
+["HealerCrowdControl"] = {
+["Enabled"] = {
+["BattleGrounds"] = false,
+["Dungeons"] = false,
+["Raid"] = false,
+["Arena"] = true,
+["World"] = true,
+},
+["RelativeTo"] = "UIParent",
+["Point"] = "CENTER",
+["Icons"] = {
+["Enabled"] = true,
+["Glow"] = true,
+["ColorByDispelType"] = true,
+["ReverseCooldown"] = true,
+["Size"] = 32,
+},
+["ShowWarningText"] = true,
+["ShowTooltips"] = false,
+["Font"] = {
+["Flags"] = "OUTLINE",
+["File"] = "Fonts\\FRIZQT__.TTF",
+["Size"] = 17,
+},
+["RelativePoint"] = "CENTER",
+["Offset"] = {
+["Y"] = -179.4002990722656,
+["X"] = -2.133411645889282,
+},
+["Sound"] = {
+["Enabled"] = true,
+["File"] = "Sonar.ogg",
+["Channel"] = "Master",
+},
+["FontScale"] = 1,
+},
+["AllyKickTracker"] = {
+["FontScale"] = 1,
+},
+["PetCrowdControl"] = {
+["Enabled"] = {
+["BattleGrounds"] = false,
+["Dungeons"] = false,
+["Raid"] = false,
+["Arena"] = false,
+["World"] = false,
+},
+["FontScale"] = 1,
+["IncludePetFrame"] = false,
+["ShowTooltips"] = false,
+["Offset"] = {
+["Y"] = 0,
+["X"] = 0,
+},
+["Icons"] = {
+["SizePercent"] = 50,
+["Glow"] = false,
+["Count"] = 3,
+["SizeIsPercent"] = false,
+["ColorMode"] = "CUSTOM",
+["ReverseCooldown"] = false,
+["Size"] = 19,
+},
+["Grow"] = "CENTER",
+},
+["ImportantAuras"] = {
+["Enabled"] = {
+["BattleGrounds"] = false,
+["Dungeons"] = true,
+["Raid"] = true,
+["Arena"] = true,
+["World"] = true,
+},
+["Raid"] = {
+["Offset"] = {
+["Y"] = 0,
+["X"] = 0,
+},
+["FontScale"] = 1,
+["ShowImportant"] = false,
+["Icons"] = {
+["MaxIcons"] = 1,
+["Glow"] = false,
+["ColorByDispelType"] = false,
+["SizeIsPercent"] = false,
+["ReverseCooldown"] = false,
+["SizePercent"] = 65,
+["Size"] = 40,
+},
+["ShowDefensives"] = false,
+["ShowCrowdControl"] = false,
+["ShowKicks"] = false,
+["ShowTooltips"] = false,
+["Grow"] = "CENTER",
+["ExcludePlayer"] = false,
+},
+["Default"] = {
+["Offset"] = {
+["Y"] = 8,
+["X"] = 0,
+},
+["FontScale"] = 1,
+["ShowImportant"] = true,
+["Icons"] = {
+["MaxIcons"] = 2,
+["Glow"] = true,
+["ColorByDispelType"] = true,
+["SizeIsPercent"] = false,
+["ReverseCooldown"] = true,
+["SizePercent"] = 75,
+["Size"] = 24,
+},
+["ShowDefensives"] = true,
+["ShowCrowdControl"] = false,
+["ShowKicks"] = false,
+["ShowTooltips"] = false,
+["Grow"] = "CENTER",
+["ExcludePlayer"] = false,
+},
+},
+["Alerts"] = {
+["Enabled"] = {
+["BattleGrounds"] = false,
+["Dungeons"] = false,
+["Raid"] = false,
+["Arena"] = true,
+["World"] = true,
+},
+["SplitBars"] = false,
+["Point"] = "RIGHT",
+["Icons"] = {
+["Enabled"] = true,
+["Glow"] = true,
+["ReverseCooldown"] = true,
+["MaxIcons"] = 8,
+["Size"] = 39,
+},
+["Offset"] = {
+["Y"] = 139.9001617431641,
+["X"] = -302.7661743164063,
+},
+["ShowTooltips"] = false,
+["Sound"] = {
+["Defensive"] = {
+["Enabled"] = false,
+["File"] = "AlertToastWarm.ogg",
+},
+["Important"] = {
+["Enabled"] = false,
+["File"] = "Error.ogg",
+},
+},
+["RelativeTo"] = "UIParent",
+["RelativePoint"] = "RIGHT",
+["TTS"] = {
+["Defensive"] = {
+["Enabled"] = false,
+},
+["Important"] = {
+["Enabled"] = false,
+},
+},
+["IncludeDefensives"] = false,
+["Defensives"] = {
+["Offset"] = {
+["Y"] = -160,
+["X"] = 0,
+},
+["RelativeTo"] = "UIParent",
+["Point"] = "CENTER",
+["RelativePoint"] = "TOP",
+},
+["FontScale"] = 1,
+},
+["Nameplates"] = {
+["Enabled"] = {
+["BattleGrounds"] = true,
+["Dungeons"] = true,
+["Raid"] = true,
+["Arena"] = true,
+["World"] = true,
+},
+["FontScale"] = 1,
+["ScaleWithNameplate"] = false,
+["Friendly"] = {
+["IgnorePets"] = true,
+},
+["Enemy"] = {
+["IgnorePets"] = true,
+},
+},
+["Trinkets"] = {
+["Enabled"] = {
+["Always"] = true,
+},
+["Font"] = {
+["File"] = "GameFontHighlightSmall",
+},
+["Point"] = "RIGHT",
+["RelativePoint"] = "LEFT",
+["ExcludePlayer"] = false,
+["Offset"] = {
+["Y"] = 0,
+["X"] = 0,
+},
+["Icons"] = {
+["Glow"] = false,
+["ReverseCooldown"] = false,
+["ShowText"] = true,
+["Size"] = 37,
+},
+["FontScale"] = 1,
+},
+["CrowdControl"] = {
+["Enabled"] = {
+["BattleGrounds"] = false,
+["Dungeons"] = true,
+["Raid"] = false,
+["Arena"] = true,
+["World"] = true,
+},
+["Raid"] = {
+["ExcludePlayer"] = false,
+["FontScale"] = 1,
+["Grow"] = "CENTER",
+["Offset"] = {
+["Y"] = 0,
+["X"] = 2,
+},
+["Icons"] = {
+["SizePercent"] = 50,
+["Glow"] = true,
+["SizeIsPercent"] = false,
+["Count"] = 3,
+["ShowMilliseconds"] = false,
+["ReverseCooldown"] = false,
+["ColorMode"] = "DISPEL",
+["Size"] = 26,
+},
+["ShowTooltips"] = false,
+},
+["Default"] = {
+["ExcludePlayer"] = false,
+["FontScale"] = 1,
+["Grow"] = "RIGHT",
+["Offset"] = {
+["Y"] = 0,
+["X"] = 0,
+},
+["Icons"] = {
+["SizePercent"] = 80,
+["Glow"] = true,
+["SizeIsPercent"] = false,
+["Count"] = 2,
+["ShowMilliseconds"] = false,
+["ReverseCooldown"] = true,
+["ColorMode"] = "DISPEL",
+["Size"] = 43,
+},
+["ShowTooltips"] = false,
+},
+},
+["EnemyKickTracker"] = {
+["Offset"] = {
+["Y"] = -134.6651306152344,
+["X"] = 154.1332397460938,
+},
+["RelativeTo"] = "UIParent",
+["Point"] = "CENTER",
+["RelativePoint"] = "CENTER",
+["Enabled"] = {
+["Always"] = false,
+["Healer"] = true,
+["Caster"] = true,
+},
+["Icons"] = {
+["Glow"] = false,
+["ReverseCooldown"] = true,
+["Border"] = true,
+["Size"] = 30,
+},
+["FontScale"] = 1,
+},
+},
+["ConfigureBlizzardNameplates"] = true,
+["GlowType"] = "Proc Glow",
+["ColorCountdownByTime"] = false,
+["DisableSwipe"] = false,
+},
+},
+["FadeWithParent"] = true,
+["Font"] = false,
+["MissedLegacyImport"] = false,
+["IconZoom"] = true,
+["Pending"] = {
+},
 ["SpecCache"] = {
 ["Player-57-0D8C8F3B"] = {
 ["SpecId"] = 65,
@@ -995,6 +1842,10 @@ MiniAurasDB = {
 ["SpecId"] = 254,
 ["LastSeen"] = 1402.4724557,
 },
+["Player-61-0C5A602F"] = {
+["SpecId"] = 66,
+["LastSeen"] = 7143.017147000001,
+},
 ["Player-3726-0BB846DC"] = {
 ["SpecId"] = 102,
 ["LastAttempt"] = 746.9087255000001,
@@ -1008,6 +1859,11 @@ MiniAurasDB = {
 ["Player-11-0EAEA4A5"] = {
 ["SpecId"] = 65,
 ["LastSeen"] = 39310.2482891,
+},
+["Player-60-0FF97F12"] = {
+["SpecId"] = 1480,
+["LastAttempt"] = 10567.6684978,
+["LastSeen"] = 10567.9803235,
 },
 ["Player-11-0E64142D"] = {
 ["SpecId"] = 252,
@@ -1045,6 +1901,11 @@ MiniAurasDB = {
 ["SpecId"] = 252,
 ["LastSeen"] = 6575.009522900001,
 },
+["Player-104-0BAE15B5"] = {
+["SpecId"] = 62,
+["LastAttempt"] = 9351.353663400001,
+["LastSeen"] = 9351.4861474,
+},
 ["Player-3725-0BFB7880"] = {
 ["SpecId"] = 66,
 ["LastAttempt"] = 13363.4875197,
@@ -1079,6 +1940,11 @@ MiniAurasDB = {
 ["Player-61-0FEC5396"] = {
 ["SpecId"] = 1454,
 ["LastSeen"] = 22628.9519775,
+},
+["Player-3723-0AF34D3A"] = {
+["SpecId"] = 73,
+["LastSeen"] = 7740.976456900001,
+["LastAttempt"] = 7303.1478937,
 },
 ["Player-1428-0EC30392"] = {
 ["SpecId"] = 250,
@@ -1171,6 +2037,15 @@ MiniAurasDB = {
 ["SpecId"] = 65,
 ["LastSeen"] = 40007.3406245,
 },
+["Player-60-0ECBF823"] = {
+["SpecId"] = 262,
+["LastAttempt"] = 9427.576345700001,
+["LastSeen"] = 9427.945597900001,
+},
+["Player-73-0FD98CE5"] = {
+["SpecId"] = 256,
+["LastSeen"] = 14051.4580758,
+},
 ["Player-3684-0E074A22"] = {
 ["SpecId"] = 268,
 ["LastAttempt"] = 11264.1248008,
@@ -1185,6 +2060,11 @@ MiniAurasDB = {
 ["SpecId"] = 259,
 ["LastAttempt"] = 13177.6103912,
 ["LastSeen"] = 13177.8712996,
+},
+["Player-121-0B0B56F7"] = {
+["SpecId"] = 1480,
+["LastAttempt"] = 3120.1334021,
+["LastSeen"] = 3120.2610461,
 },
 ["Player-3675-0B000093"] = {
 ["SpecId"] = 264,
@@ -1217,9 +2097,19 @@ MiniAurasDB = {
 ["SpecId"] = 253,
 ["LastSeen"] = 44073.3718664,
 },
+["Player-11-0E861EAD"] = {
+["SpecId"] = 1468,
+["LastAttempt"] = 4939.1888098,
+["LastSeen"] = 4939.500649600001,
+},
 ["Player-11-0A38C154"] = {
 ["SpecId"] = 266,
 ["LastSeen"] = 15446.8935666,
+},
+["Player-104-08416057"] = {
+["SpecId"] = 257,
+["LastAttempt"] = 10043.6448027,
+["LastSeen"] = 10044.2212613,
 },
 ["Player-76-05ECA042"] = {
 ["SpecId"] = 257,
@@ -1233,8 +2123,8 @@ MiniAurasDB = {
 },
 ["Player-3684-0E5C044E"] = {
 ["SpecId"] = 250,
-["LastAttempt"] = 44310.11900280001,
-["LastSeen"] = 55294.1709266,
+["LastAttempt"] = 8520.7153331,
+["LastSeen"] = 10565.1096268,
 },
 ["Player-11-0DDAD272"] = {
 ["SpecId"] = 257,
@@ -1265,6 +2155,10 @@ MiniAurasDB = {
 ["LastAttempt"] = 25639.7756081,
 ["LastSeen"] = 25640.0337434,
 },
+["Player-11-0B828746"] = {
+["SpecId"] = 264,
+["LastSeen"] = 3119.9816773,
+},
 ["Player-11-0E42261E"] = {
 ["SpecId"] = 262,
 ["LastSeen"] = 16174.9395029,
@@ -1288,6 +2182,10 @@ MiniAurasDB = {
 ["SpecId"] = 102,
 ["LastAttempt"] = 43862.38546380001,
 ["LastSeen"] = 43862.7914105,
+},
+["Player-60-0FECB6EB"] = {
+["SpecId"] = 71,
+["LastSeen"] = 23680.1273684,
 },
 ["Player-11-0EB55679"] = {
 ["SpecId"] = 254,
@@ -1339,6 +2237,11 @@ MiniAurasDB = {
 ["LastAttempt"] = 43862.89590600001,
 ["LastSeen"] = 43863.108965,
 },
+["Player-77-0FFBA5C8"] = {
+["SpecId"] = 62,
+["LastAttempt"] = 10898.5509712,
+["LastSeen"] = 10899.7970844,
+},
 ["Player-64-0F450BB7"] = {
 ["SpecId"] = 62,
 ["LastAttempt"] = 533.3914321000001,
@@ -1348,6 +2251,10 @@ MiniAurasDB = {
 ["SpecId"] = 256,
 ["LastAttempt"] = 4014.5887051,
 ["LastSeen"] = 4122.1606823,
+},
+["Player-11-0EBAD8C2"] = {
+["SpecId"] = 267,
+["LastSeen"] = 7769.541643400001,
 },
 ["Player-3675-0AE2E4E5"] = {
 ["SpecId"] = 264,
@@ -1399,8 +2306,8 @@ MiniAurasDB = {
 },
 ["Player-3676-0EDC268C"] = {
 ["SpecId"] = 66,
-["LastAttempt"] = 42089.4707877,
-["LastSeen"] = 43850.3802921,
+["LastAttempt"] = 8284.8379265,
+["LastSeen"] = 8285.1700686,
 },
 ["Player-11-0E242CD4"] = {
 ["SpecId"] = 266,
@@ -1431,6 +2338,11 @@ MiniAurasDB = {
 ["LastAttempt"] = 2513.5201197,
 ["LastSeen"] = 3279.6078544,
 },
+["Player-1427-0EE8B5E1"] = {
+["SpecId"] = 253,
+["LastAttempt"] = 5456.278014400001,
+["LastSeen"] = 5456.565705700001,
+},
 ["Player-76-08323ED9"] = {
 ["SpecId"] = 70,
 ["LastAttempt"] = 13336.7589591,
@@ -1445,6 +2357,21 @@ MiniAurasDB = {
 ["SpecId"] = 62,
 ["LastAttempt"] = 328.6848777,
 ["LastSeen"] = 328.9963569,
+},
+["Player-1171-0B05898F"] = {
+["SpecId"] = 102,
+["LastAttempt"] = 24078.1426179,
+["LastSeen"] = 24078.4347867,
+},
+["Player-61-0FBB9438"] = {
+["SpecId"] = 70,
+["LastAttempt"] = 5475.113785500001,
+["LastSeen"] = 5475.268168000001,
+},
+["Player-11-0E52D1F7"] = {
+["SpecId"] = 254,
+["LastAttempt"] = 24633.5613329,
+["LastSeen"] = 24633.9070793,
 },
 ["Player-5-0EAFFC97"] = {
 ["SpecId"] = 64,
@@ -1494,6 +2421,11 @@ MiniAurasDB = {
 ["Player-11-0EB15285"] = {
 ["SpecId"] = 262,
 ["LastSeen"] = 45572.8330959,
+},
+["Player-3693-0EEB67B5"] = {
+["SpecId"] = 71,
+["LastSeen"] = 8703.2495326,
+["LastAttempt"] = 8702.9598747,
 },
 ["Player-3209-0BD5A862"] = {
 ["SpecId"] = 1467,
@@ -1545,6 +2477,11 @@ MiniAurasDB = {
 ["SpecId"] = 72,
 ["LastSeen"] = 20570.8764567,
 },
+["Player-11-0E718BA8"] = {
+["SpecId"] = 65,
+["LastSeen"] = 5909.6645741,
+["LastAttempt"] = 5909.3850731,
+},
 ["Player-3676-0DF8047B"] = {
 ["SpecId"] = 1467,
 ["LastAttempt"] = 13112.2622933,
@@ -1569,6 +2506,11 @@ MiniAurasDB = {
 ["LastAttempt"] = 4491.114649,
 ["LastSeen"] = 4491.413366000001,
 },
+["Player-162-0B9E1DAF"] = {
+["SpecId"] = 258,
+["LastAttempt"] = 16486.374146,
+["LastSeen"] = 16486.6132853,
+},
 ["Player-121-0A31DB30"] = {
 ["SpecId"] = 251,
 ["LastAttempt"] = 13324.1590073,
@@ -1581,6 +2523,11 @@ MiniAurasDB = {
 ["Player-11-0E39504E"] = {
 ["SpecId"] = 65,
 ["LastSeen"] = 17799.6460045,
+},
+["Player-3684-0E426170"] = {
+["SpecId"] = 259,
+["LastSeen"] = 18783.247312,
+["LastAttempt"] = 18782.8985694,
 },
 ["Player-3678-0D4B536E"] = {
 ["SpecId"] = 64,
@@ -1605,6 +2552,11 @@ MiniAurasDB = {
 ["Player-3725-0C5D7107"] = {
 ["SpecId"] = 254,
 ["LastSeen"] = 4478.075812800001,
+},
+["Player-57-0E2C42BF"] = {
+["SpecId"] = 258,
+["LastAttempt"] = 10742.593273,
+["LastSeen"] = 10742.9557314,
 },
 ["Player-11-0E695049"] = {
 ["SpecId"] = 71,
@@ -1643,6 +2595,11 @@ MiniAurasDB = {
 ["SpecId"] = 254,
 ["LastSeen"] = 14925.9916317,
 },
+["Player-5-0EB43C6A"] = {
+["SpecId"] = 65,
+["LastAttempt"] = 9572.061429200001,
+["LastSeen"] = 9607.0770128,
+},
 ["Player-11-0E43F770"] = {
 ["SpecId"] = 267,
 ["LastSeen"] = 42506.5281478,
@@ -1664,6 +2621,11 @@ MiniAurasDB = {
 ["SpecId"] = 102,
 ["LastAttempt"] = 27535.0984417,
 ["LastSeen"] = 27535.3937166,
+},
+["Player-3721-0A61C8FC"] = {
+["SpecId"] = 71,
+["LastSeen"] = 5377.0210521,
+["LastAttempt"] = 5376.5759497,
 },
 ["Player-1427-0ED5B89B"] = {
 ["SpecId"] = 72,
@@ -1700,6 +2662,11 @@ MiniAurasDB = {
 ["SpecId"] = 63,
 ["LastSeen"] = 6583.509553100001,
 },
+["Player-121-0613E488"] = {
+["SpecId"] = 262,
+["LastSeen"] = 6752.587965600001,
+["LastAttempt"] = 6752.1516001,
+},
 ["Player-125-0A4094E5"] = {
 ["SpecId"] = 254,
 ["LastAttempt"] = 20803.5030506,
@@ -1719,10 +2686,20 @@ MiniAurasDB = {
 ["SpecId"] = 1480,
 ["LastSeen"] = 41521.9988294,
 },
+["Player-60-0FE20FE0"] = {
+["SpecId"] = 71,
+["LastSeen"] = 21837.3844978,
+["LastAttempt"] = 21809.2781412,
+},
 ["Player-104-0BF87352"] = {
 ["SpecId"] = 104,
 ["LastAttempt"] = 13442.1863504,
 ["LastSeen"] = 13442.5518052,
+},
+["Player-121-0B07E966"] = {
+["SpecId"] = 264,
+["LastAttempt"] = 10544.3387999,
+["LastSeen"] = 10544.7009217,
 },
 ["Player-11-0EB09A87"] = {
 ["SpecId"] = 254,
@@ -1809,6 +2786,16 @@ MiniAurasDB = {
 ["SpecId"] = 262,
 ["LastSeen"] = 24110.1630031,
 },
+["Player-57-0E243619"] = {
+["SpecId"] = 1480,
+["LastAttempt"] = 23778.3538703,
+["LastSeen"] = 23778.5149573,
+},
+["Player-1425-09D197B8"] = {
+["SpecId"] = 256,
+["LastSeen"] = 42523.6987203,
+["LastAttempt"] = 42523.4630531,
+},
 ["Player-76-0B7C048B"] = {
 ["SpecId"] = 257,
 ["LastSeen"] = 20772.1340203,
@@ -1818,10 +2805,19 @@ MiniAurasDB = {
 ["LastAttempt"] = 39514.0885217,
 ["LastSeen"] = 39514.4277501,
 },
+["Player-84-04D337BE"] = {
+["SpecId"] = 65,
+["LastSeen"] = 24501.7263725,
+},
 ["Player-3676-0EDF040F"] = {
 ["SpecId"] = 70,
 ["LastAttempt"] = 13175.073967,
 ["LastSeen"] = 13175.4588503,
+},
+["Player-96-0DBE9CCA"] = {
+["SpecId"] = 253,
+["LastSeen"] = 3628.7111716,
+["LastAttempt"] = 3628.3887092,
 },
 ["Player-76-0C0F57D1"] = {
 ["SpecId"] = 71,
@@ -1870,9 +2866,9 @@ MiniAurasDB = {
 ["LastSeen"] = 11007.3827492,
 },
 ["Player-3684-0EA9EC5F"] = {
-["SpecId"] = 73,
-["LastAttempt"] = 5398.095722200001,
-["LastSeen"] = 5398.4696221,
+["SpecId"] = 71,
+["LastAttempt"] = 8259.760956600001,
+["LastSeen"] = 8260.14133,
 },
 ["Player-113-0A26C08F"] = {
 ["SpecId"] = 252,
@@ -1883,6 +2879,11 @@ MiniAurasDB = {
 ["SpecId"] = 71,
 ["LastSeen"] = 22680.9487925,
 },
+["Player-11-0EA5F61A"] = {
+["SpecId"] = 262,
+["LastAttempt"] = 23362.7990378,
+["LastSeen"] = 23363.0946049,
+},
 ["Player-1428-0E4FB531"] = {
 ["SpecId"] = 105,
 ["LastSeen"] = 33105.9173496,
@@ -1890,6 +2891,11 @@ MiniAurasDB = {
 ["Player-11-0E9C4762"] = {
 ["SpecId"] = 254,
 ["LastSeen"] = 9739.7812235,
+},
+["Player-60-0FF6DD6C"] = {
+["SpecId"] = 259,
+["LastAttempt"] = 1235.1003539,
+["LastSeen"] = 1235.3777814,
 },
 ["Player-11-0A7122E6"] = {
 ["SpecId"] = 1480,
@@ -1907,6 +2913,11 @@ MiniAurasDB = {
 ["Player-69-0B8109C5"] = {
 ["SpecId"] = 256,
 ["LastSeen"] = 47066.79345190001,
+},
+["Player-57-0E065733"] = {
+["SpecId"] = 1480,
+["LastAttempt"] = 11333.8330608,
+["LastSeen"] = 11333.9281568,
 },
 ["Player-60-0FDD5BAC"] = {
 ["SpecId"] = 1480,
@@ -1964,6 +2975,10 @@ MiniAurasDB = {
 ["SpecId"] = 103,
 ["LastAttempt"] = 27705.9917503,
 ["LastSeen"] = 27706.3776093,
+},
+["Player-11-0E9CCA84"] = {
+["SpecId"] = 1468,
+["LastSeen"] = 29801.267699,
 },
 ["Player-76-0C08DCF0"] = {
 ["SpecId"] = 253,
@@ -2029,6 +3044,11 @@ MiniAurasDB = {
 ["SpecId"] = 71,
 ["LastAttempt"] = 27056.1020507,
 ["LastSeen"] = 27056.1997139,
+},
+["Player-3684-0EEC3A71"] = {
+["SpecId"] = 62,
+["LastAttempt"] = 8424.114609,
+["LastSeen"] = 18418.0539328,
 },
 ["Player-3683-0E0AC3F6"] = {
 ["SpecId"] = 252,
@@ -2105,6 +3125,11 @@ MiniAurasDB = {
 ["SpecId"] = 1480,
 ["LastSeen"] = 40223.51845020001,
 },
+["Player-57-0E2C192D"] = {
+["SpecId"] = 102,
+["LastAttempt"] = 10578.3986256,
+["LastSeen"] = 10578.5965757,
+},
 ["Player-11-0EB33F75"] = {
 ["SpecId"] = 261,
 ["LastSeen"] = 5101.3754582,
@@ -2151,10 +3176,19 @@ MiniAurasDB = {
 ["LastAttempt"] = 2341.7939099,
 ["LastSeen"] = 3252.7163808,
 },
+["Player-1427-06B9C3F9"] = {
+["SpecId"] = 71,
+["LastAttempt"] = 10231.2840029,
+["LastSeen"] = 10231.6067377,
+},
 ["Player-3209-0C0A3C96"] = {
 ["SpecId"] = 266,
 ["LastAttempt"] = 2298.7068367,
 ["LastSeen"] = 2957.8782394,
+},
+["Player-4-0E57CCAD"] = {
+["SpecId"] = 258,
+["LastSeen"] = 12150.048756,
 },
 ["Player-11-0DF696D9"] = {
 ["SpecId"] = 105,
@@ -2222,6 +3256,11 @@ MiniAurasDB = {
 ["LastAttempt"] = 43850.02825330001,
 ["LastSeen"] = 43850.20192550001,
 },
+["Player-1136-096715B4"] = {
+["SpecId"] = 253,
+["LastSeen"] = 7852.703661400001,
+["LastAttempt"] = 7852.362682000001,
+},
 ["Player-61-06E52266"] = {
 ["SpecId"] = 71,
 ["LastSeen"] = 22218.5896242,
@@ -2260,6 +3299,11 @@ MiniAurasDB = {
 ["SpecId"] = 255,
 ["LastSeen"] = 17099.2229258,
 },
+["Player-121-04353B22"] = {
+["SpecId"] = 65,
+["LastAttempt"] = 20002.198374,
+["LastSeen"] = 20002.4924465,
+},
 ["Player-11-0E4FE20C"] = {
 ["SpecId"] = 263,
 ["LastAttempt"] = 4015.0870996,
@@ -2292,6 +3336,11 @@ MiniAurasDB = {
 ["Player-60-0E9DDCF7"] = {
 ["SpecId"] = 103,
 ["LastSeen"] = 3834.6764676,
+},
+["Player-61-0BBB7EF1"] = {
+["SpecId"] = 63,
+["LastSeen"] = 14294.8979417,
+["LastAttempt"] = 14294.6014883,
 },
 ["Player-121-0AEB6DFB"] = {
 ["SpecId"] = 256,
@@ -2379,6 +3428,11 @@ MiniAurasDB = {
 ["LastAttempt"] = 11826.8387753,
 ["LastSeen"] = 12182.196675,
 },
+["Player-3661-09893746"] = {
+["SpecId"] = 1480,
+["LastAttempt"] = 10541.3247898,
+["LastSeen"] = 10543.9961109,
+},
 ["Player-3683-0B7E23ED"] = {
 ["SpecId"] = 70,
 ["LastAttempt"] = 570.9230991000001,
@@ -2428,6 +3482,11 @@ MiniAurasDB = {
 ["LastAttempt"] = 531.8492165,
 ["LastSeen"] = 532.2507198000001,
 },
+["Player-104-0E0344BD"] = {
+["SpecId"] = 259,
+["LastAttempt"] = 12112.5712584,
+["LastSeen"] = 12112.8963608,
+},
 ["Player-3721-0C1D721A"] = {
 ["SpecId"] = 262,
 ["LastAttempt"] = 16845.9961364,
@@ -2446,6 +3505,11 @@ MiniAurasDB = {
 ["SpecId"] = 1467,
 ["LastAttempt"] = 303.5595787,
 ["LastSeen"] = 813.7045732,
+},
+["Player-60-0FECBDBF"] = {
+["SpecId"] = 259,
+["LastAttempt"] = 24564.2091146,
+["LastSeen"] = 24564.3165627,
 },
 ["Player-11-0EA40F81"] = {
 ["SpecId"] = 252,
@@ -2494,6 +3558,11 @@ MiniAurasDB = {
 ["SpecId"] = 102,
 ["LastSeen"] = 10281.1842073,
 },
+["Player-57-0E2B1AE0"] = {
+["SpecId"] = 64,
+["LastAttempt"] = 4572.9216459,
+["LastSeen"] = 4573.2176533,
+},
 ["Player-11-0EA8A23C"] = {
 ["SpecId"] = 64,
 ["LastSeen"] = 23731.6169462,
@@ -2501,6 +3570,11 @@ MiniAurasDB = {
 ["Player-11-0DC16E7C"] = {
 ["SpecId"] = 103,
 ["LastSeen"] = 56288.3669882,
+},
+["Player-57-0E2A4BC3"] = {
+["SpecId"] = 252,
+["LastAttempt"] = 24578.1549895,
+["LastSeen"] = 24578.3793023,
 },
 ["Player-76-0C035EAA"] = {
 ["SpecId"] = 258,
@@ -2511,6 +3585,11 @@ MiniAurasDB = {
 ["SpecId"] = 1480,
 ["LastAttempt"] = 24599.4395928,
 ["LastSeen"] = 24599.7075427,
+},
+["Player-57-0DD18C37"] = {
+["SpecId"] = 266,
+["LastAttempt"] = 11345.8749962,
+["LastSeen"] = 11346.1921141,
 },
 ["Player-3676-0ED8C950"] = {
 ["SpecId"] = 64,
@@ -2544,6 +3623,16 @@ MiniAurasDB = {
 ["LastAttempt"] = 25965.9078404,
 ["LastSeen"] = 25966.1972807,
 },
+["Player-11-0DF8A33F"] = {
+["SpecId"] = 256,
+["LastAttempt"] = 1234.8739237,
+["LastSeen"] = 1235.0899218,
+},
+["Player-57-051805DE"] = {
+["SpecId"] = 257,
+["LastAttempt"] = 10608.3771585,
+["LastSeen"] = 10608.551191,
+},
 ["Player-11-0EB4BEE2"] = {
 ["SpecId"] = 268,
 ["LastSeen"] = 37257.1136569,
@@ -2564,6 +3653,11 @@ MiniAurasDB = {
 ["SpecId"] = 70,
 ["LastAttempt"] = 636.2389797000001,
 ["LastSeen"] = 636.5166971,
+},
+["Player-1136-0971B4C0"] = {
+["SpecId"] = 71,
+["LastAttempt"] = 2485.5282697,
+["LastSeen"] = 2485.6712353,
 },
 ["Player-11-0EB09F58"] = {
 ["SpecId"] = 71,
@@ -2600,6 +3694,10 @@ MiniAurasDB = {
 ["LastAttempt"] = 19839.9879879,
 ["LastSeen"] = 19840.3170696,
 },
+["Player-76-09F1DF19"] = {
+["SpecId"] = 264,
+["LastSeen"] = 2485.2280905,
+},
 ["Player-3676-0E8DEC17"] = {
 ["SpecId"] = 252,
 ["LastAttempt"] = 9126.6269194,
@@ -2608,6 +3706,16 @@ MiniAurasDB = {
 ["Player-1190-09AA613B"] = {
 ["SpecId"] = 267,
 ["LastSeen"] = 19006.5109885,
+},
+["Player-52-0CA2C956"] = {
+["SpecId"] = 105,
+["LastSeen"] = 11363.1149815,
+["LastAttempt"] = 11362.794021,
+},
+["Player-3208-05C84784"] = {
+["SpecId"] = 265,
+["LastAttempt"] = 20002.7128577,
+["LastSeen"] = 20002.9988558,
 },
 ["Player-1428-05B69062"] = {
 ["SpecId"] = 70,
@@ -2626,6 +3734,11 @@ MiniAurasDB = {
 ["Player-3676-0CD88908"] = {
 ["SpecId"] = 256,
 ["LastSeen"] = 10445.648949,
+},
+["Player-84-0B0B6292"] = {
+["SpecId"] = 259,
+["LastAttempt"] = 16485.9805801,
+["LastSeen"] = 16486.0873808,
 },
 ["Player-125-0A4B7274"] = {
 ["SpecId"] = 270,
@@ -2703,6 +3816,11 @@ MiniAurasDB = {
 ["Player-57-0E144181"] = {
 ["SpecId"] = 577,
 ["LastSeen"] = 20070.9412578,
+},
+["Player-3675-0AB58DF8"] = {
+["SpecId"] = 265,
+["LastAttempt"] = 9323.429564600001,
+["LastSeen"] = 9323.7225605,
 },
 ["Player-3725-0A27D2B1"] = {
 ["SpecId"] = 267,
@@ -2848,6 +3966,11 @@ MiniAurasDB = {
 ["LastAttempt"] = 44868.9675752,
 ["LastSeen"] = 44869.2434681,
 },
+["Player-73-08751BC5"] = {
+["SpecId"] = 105,
+["LastSeen"] = 18983.0073298,
+["LastAttempt"] = 18982.8327047,
+},
 ["Player-3678-0E1FF9A6"] = {
 ["SpecId"] = 70,
 ["LastSeen"] = 15015.7204659,
@@ -2857,6 +3980,11 @@ MiniAurasDB = {
 ["SpecId"] = 259,
 ["LastAttempt"] = 17272.7090968,
 ["LastSeen"] = 17273.0583778,
+},
+["Player-1136-0986CD79"] = {
+["SpecId"] = 252,
+["LastAttempt"] = 11407.1746192,
+["LastSeen"] = 11407.5090886,
 },
 ["Player-1168-0AE4EBB5"] = {
 ["SpecId"] = 263,
@@ -2899,6 +4027,10 @@ MiniAurasDB = {
 ["LastAttempt"] = 27561.1924853,
 ["LastSeen"] = 27561.5354662,
 },
+["Player-1136-0927C71D"] = {
+["SpecId"] = 264,
+["LastSeen"] = 24576.6062352,
+},
 ["Player-57-0DB71B69"] = {
 ["SpecId"] = 64,
 ["LastAttempt"] = 16468.0481745,
@@ -2908,6 +4040,15 @@ MiniAurasDB = {
 ["SpecId"] = 270,
 ["LastAttempt"] = 9133.8190464,
 ["LastSeen"] = 9189.794867,
+},
+["Player-5-0E9C32DE"] = {
+["SpecId"] = 73,
+["LastSeen"] = 24576.0156512,
+},
+["Player-60-0FF91A9D"] = {
+["SpecId"] = 71,
+["LastAttempt"] = 10567.1670899,
+["LastSeen"] = 10567.3395887,
 },
 ["Player-11-0EA20937"] = {
 ["SpecId"] = 256,
@@ -2927,6 +4068,11 @@ MiniAurasDB = {
 ["SpecId"] = 70,
 ["LastAttempt"] = 16518.4382589,
 ["LastSeen"] = 16519.4697307,
+},
+["Player-1147-07D89A3C"] = {
+["SpecId"] = 268,
+["LastSeen"] = 11376.0733168,
+["LastAttempt"] = 11375.8486475,
 },
 ["Player-1136-067D893C"] = {
 ["SpecId"] = 250,
@@ -2950,6 +4096,11 @@ MiniAurasDB = {
 ["SpecId"] = 270,
 ["LastAttempt"] = 13195.5918206,
 ["LastSeen"] = 13195.9367414,
+},
+["Player-3676-0EE4629A"] = {
+["SpecId"] = 62,
+["LastAttempt"] = 23289.7354707,
+["LastSeen"] = 23289.888884,
 },
 ["Player-100-0044641B"] = {
 ["SpecId"] = 104,
@@ -3001,6 +4152,11 @@ MiniAurasDB = {
 ["SpecId"] = 260,
 ["LastSeen"] = 21679.4646569,
 },
+["Player-3676-0EEBB86E"] = {
+["SpecId"] = 253,
+["LastAttempt"] = 15278.570654,
+["LastSeen"] = 15278.7792962,
+},
 ["Player-3723-024BAEA7"] = {
 ["SpecId"] = 260,
 ["LastAttempt"] = 13338.7787468,
@@ -3030,9 +4186,10 @@ MiniAurasDB = {
 ["LastAttempt"] = 5613.835094800001,
 ["LastSeen"] = 5695.132214400001,
 },
-["Player-5-0EA2CFE6"] = {
-["SpecId"] = 64,
-["LastSeen"] = 3595.6153501,
+["Player-11-0EB04DFD"] = {
+["SpecId"] = 252,
+["LastSeen"] = 24702.6738886,
+["LastAttempt"] = 24702.3860027,
 },
 ["Player-52-04D18F08"] = {
 ["SpecId"] = 254,
@@ -3062,9 +4219,17 @@ MiniAurasDB = {
 ["LastAttempt"] = 13137.1029194,
 ["LastSeen"] = 13137.2705863,
 },
+["Player-104-0841EF19"] = {
+["SpecId"] = 265,
+["LastSeen"] = 11540.5182215,
+},
 ["Player-11-0E841717"] = {
 ["SpecId"] = 70,
 ["LastSeen"] = 35089.02868510001,
+},
+["Player-77-0E1A10CA"] = {
+["SpecId"] = 256,
+["LastSeen"] = 24253.6823099,
 },
 ["Player-3675-0AF7B1C5"] = {
 ["SpecId"] = 72,
@@ -3143,6 +4308,16 @@ MiniAurasDB = {
 ["SpecId"] = 65,
 ["LastSeen"] = 8032.597468100001,
 },
+["Player-1428-0E896B4F"] = {
+["SpecId"] = 256,
+["LastAttempt"] = 15739.4568565,
+["LastSeen"] = 15739.7688997,
+},
+["Player-3675-0B0C2599"] = {
+["SpecId"] = 72,
+["LastAttempt"] = 10799.0728303,
+["LastSeen"] = 10799.3317554,
+},
 ["Player-11-0E89B663"] = {
 ["SpecId"] = 265,
 ["LastSeen"] = 4656.3818044,
@@ -3178,6 +4353,11 @@ MiniAurasDB = {
 ["Player-3725-0C5B846C"] = {
 ["SpecId"] = 1480,
 ["LastSeen"] = 2247.9353372,
+},
+["Player-57-0E2C61EB"] = {
+["SpecId"] = 266,
+["LastAttempt"] = 10516.8191058,
+["LastSeen"] = 10516.950893,
 },
 ["Player-3675-0AEAF5FF"] = {
 ["SpecId"] = 103,
@@ -3270,6 +4450,25 @@ MiniAurasDB = {
 ["LastAttempt"] = 5580.4891507,
 ["LastSeen"] = 5580.7977338,
 },
+["Player-11-0E602E1B"] = {
+["SpecId"] = 70,
+["LastSeen"] = 23162.9313428,
+["LastAttempt"] = 23162.7330507,
+},
+["Player-3208-086F2B71"] = {
+["SpecId"] = 65,
+["LastSeen"] = 17004.617621,
+["LastAttempt"] = 16744.9490236,
+},
+["Player-3675-0B092B33"] = {
+["SpecId"] = 65,
+["LastSeen"] = 8021.808468,
+["LastAttempt"] = 8021.4589248,
+},
+["Player-1427-0975AC6C"] = {
+["SpecId"] = 1480,
+["LastSeen"] = 61831.1190883,
+},
 ["Player-160-0BDB38EC"] = {
 ["SpecId"] = 70,
 ["LastSeen"] = 23711.6314857,
@@ -3282,10 +4481,25 @@ MiniAurasDB = {
 ["SpecId"] = 253,
 ["LastSeen"] = 2365.2438706,
 },
+["Player-3693-0733DE46"] = {
+["SpecId"] = 252,
+["LastSeen"] = 7949.9516756,
+["LastAttempt"] = 7861.689198700001,
+},
+["Player-121-09CF074A"] = {
+["SpecId"] = 253,
+["LastAttempt"] = 13323.818635,
+["LastSeen"] = 13324.1574967,
+},
 ["Player-3676-0EE7BB52"] = {
 ["SpecId"] = 262,
 ["LastSeen"] = 8490.642476,
 ["LastAttempt"] = 8490.3476819,
+},
+["Player-76-0B98DD02"] = {
+["SpecId"] = 577,
+["LastSeen"] = 26853.6423463,
+["LastAttempt"] = 26853.3050599,
 },
 ["Player-113-0A1BFA8E"] = {
 ["SpecId"] = 254,
@@ -3297,10 +4511,35 @@ MiniAurasDB = {
 ["LastAttempt"] = 5748.755913700001,
 ["LastSeen"] = 5833.260328900001,
 },
+["Player-5-0E458F8D"] = {
+["SpecId"] = 263,
+["LastAttempt"] = 13304.4366866,
+["LastSeen"] = 14689.0644117,
+},
+["Player-3208-0E2B9AC0"] = {
+["SpecId"] = 267,
+["LastSeen"] = 10661.2916869,
+["LastAttempt"] = 10660.934643,
+},
+["Player-96-0E183815"] = {
+["SpecId"] = 104,
+["LastSeen"] = 7861.370752100001,
+["LastAttempt"] = 7861.186318700001,
+},
 ["Player-3209-0C1278B0"] = {
 ["SpecId"] = 258,
 ["LastAttempt"] = 317.6447558,
 ["LastSeen"] = 800.4812722,
+},
+["Player-60-0FECB7D9"] = {
+["SpecId"] = 62,
+["LastAttempt"] = 23651.6559003,
+["LastSeen"] = 23651.9131237,
+},
+["Player-11-0EBA393E"] = {
+["SpecId"] = 64,
+["LastSeen"] = 10660.7519072,
+["LastAttempt"] = 10660.4316232,
 },
 ["Player-3723-0C45A83C"] = {
 ["SpecId"] = 266,
@@ -3330,6 +4569,11 @@ MiniAurasDB = {
 ["SpecId"] = 261,
 ["LastSeen"] = 18441.5076961,
 },
+["Player-57-0E2D7A07"] = {
+["SpecId"] = 70,
+["LastAttempt"] = 10517.3186551,
+["LastSeen"] = 10517.476473,
+},
 ["Player-11-0E9D2FF8"] = {
 ["SpecId"] = 105,
 ["LastAttempt"] = 4478.2693402,
@@ -3345,18 +4589,61 @@ MiniAurasDB = {
 ["LastAttempt"] = 341.2609532,
 ["LastSeen"] = 579.8178496,
 },
+["Player-3209-0BF5BCB3"] = {
+["SpecId"] = 72,
+["LastSeen"] = 9380.211644500001,
+["LastAttempt"] = 9379.8854441,
+},
+["Player-76-0C216D1B"] = {
+["SpecId"] = 581,
+["LastAttempt"] = 10490.5030238,
+["LastSeen"] = 10490.7337616,
+},
+["Player-3723-0C42BDB2"] = {
+["SpecId"] = 256,
+["LastSeen"] = 61842.07280350001,
+},
+["Player-57-0D818296"] = {
+["SpecId"] = 252,
+["LastAttempt"] = 24077.2441444,
+["LastSeen"] = 24077.5445357,
+},
+["Player-11-0DE26E3C"] = {
+["SpecId"] = 70,
+["LastSeen"] = 20368.0069271,
+},
 ["Player-11-0E81993B"] = {
 ["SpecId"] = 1480,
 ["LastSeen"] = 1771.6842461,
+},
+["Player-3676-0EE3225D"] = {
+["SpecId"] = 262,
+["LastAttempt"] = 10486.4736652,
+["LastSeen"] = 10487.1531654,
 },
 ["Player-47-0197850E"] = {
 ["SpecId"] = 72,
 ["LastAttempt"] = 744.3061051000001,
 ["LastSeen"] = 744.4191598000001,
 },
+["Player-3209-0513BC28"] = {
+["SpecId"] = 71,
+["LastAttempt"] = 40609.4110758,
+["LastSeen"] = 40622.6201797,
+},
 ["Player-3234-0FE9B1C6"] = {
 ["SpecId"] = 266,
 ["LastSeen"] = 823.9037783,
+},
+["Player-3678-08AABD1D"] = {
+["SpecId"] = 253,
+["LastAttempt"] = 861.6764706,
+["LastSeen"] = 861.9348738000001,
+},
+["Player-1428-0EDA8936"] = {
+["SpecId"] = 105,
+["LastSeen"] = 7408.9538129,
+["LastAttempt"] = 7408.7896602,
 },
 ["Player-127-0AFDB5EF"] = {
 ["SpecId"] = 261,
@@ -3374,29 +4661,81 @@ MiniAurasDB = {
 ["SpecId"] = 64,
 ["LastSeen"] = 3359.3436245,
 },
+["Player-3725-0C62C9B9"] = {
+["SpecId"] = 71,
+["LastAttempt"] = 15278.0801793,
+["LastSeen"] = 15278.4746226,
+},
+["Player-57-0DF914EA"] = {
+["SpecId"] = 71,
+["LastSeen"] = 3155.0947354,
+},
+["Player-11-09ABE1D2"] = {
+["SpecId"] = 70,
+["LastAttempt"] = 6732.021031200001,
+["LastSeen"] = 6732.221074200001,
+},
 ["Player-60-0A4F1ABF"] = {
 ["SpecId"] = 269,
 ["LastAttempt"] = 9090.897751100001,
 ["LastSeen"] = 9617.7500487,
+},
+["Player-86-0AA82B39"] = {
+["SpecId"] = 71,
+["LastAttempt"] = 9323.9336648,
+["LastSeen"] = 9324.2239097,
 },
 ["Player-3676-0E9AB9C6"] = {
 ["SpecId"] = 66,
 ["LastAttempt"] = 5281.3493181,
 ["LastSeen"] = 7008.1296227,
 },
+["Player-3209-0817C566"] = {
+["SpecId"] = 254,
+["LastSeen"] = 8703.7548339,
+["LastAttempt"] = 8703.4605649,
+},
 ["Player-3675-0AFEA923"] = {
 ["SpecId"] = 1480,
 ["LastAttempt"] = 7214.8481594,
 ["LastSeen"] = 7215.039950300001,
+},
+["Player-11-0E256413"] = {
+["SpecId"] = 71,
+["LastSeen"] = 10365.983934,
+},
+["Player-3676-0EEBCF69"] = {
+["SpecId"] = 254,
+["LastAttempt"] = 10607.8762241,
+["LastSeen"] = 10608.1143068,
 },
 ["Player-60-0EE9946C"] = {
 ["SpecId"] = 270,
 ["LastAttempt"] = 5798.6685189,
 ["LastSeen"] = 5798.9979337,
 },
+["Player-3676-0EE02909"] = {
+["SpecId"] = 70,
+["LastAttempt"] = 23278.0397891,
+["LastSeen"] = 23278.237483,
+},
+["Player-3723-0C41A46E"] = {
+["SpecId"] = 64,
+["LastAttempt"] = 6727.606830000001,
+["LastSeen"] = 6728.039633500001,
+},
+["Player-1168-09F5F690"] = {
+["SpecId"] = 263,
+["LastSeen"] = 5338.615906900001,
+},
 ["Player-3676-0EDDE956"] = {
 ["SpecId"] = 64,
 ["LastSeen"] = 13960.187935,
+},
+["Player-3694-0B09865A"] = {
+["SpecId"] = 105,
+["LastAttempt"] = 6803.1503743,
+["LastSeen"] = 6803.461091,
 },
 ["Player-3683-0E1C9BD1"] = {
 ["SpecId"] = 256,
@@ -3425,6 +4764,11 @@ MiniAurasDB = {
 ["SpecId"] = 257,
 ["LastSeen"] = 43319.7989747,
 },
+["Player-11-0E4C1143"] = {
+["SpecId"] = 64,
+["LastAttempt"] = 16051.3584827,
+["LastSeen"] = 16051.6722903,
+},
 ["Player-77-0529706F"] = {
 ["SpecId"] = 256,
 ["LastSeen"] = 3646.7580113,
@@ -3434,6 +4778,10 @@ MiniAurasDB = {
 ["LastAttempt"] = 19007.3630937,
 ["LastSeen"] = 19007.7792052,
 },
+["Player-3676-09337985"] = {
+["SpecId"] = 66,
+["LastSeen"] = 744.1620225,
+},
 ["Player-11-0E50525A"] = {
 ["SpecId"] = 256,
 ["LastSeen"] = 18105.280817,
@@ -3442,10 +4790,29 @@ MiniAurasDB = {
 ["SpecId"] = 262,
 ["LastSeen"] = 41400.840701,
 },
+["Player-76-0A19B264"] = {
+["SpecId"] = 62,
+["LastSeen"] = 9331.9308474,
+["LastAttempt"] = 7859.1824507,
+},
 ["Player-3726-0C2D7C1D"] = {
 ["SpecId"] = 64,
 ["LastAttempt"] = 27653.5335205,
 ["LastSeen"] = 27653.9647515,
+},
+["Player-11-0BBBC3A9"] = {
+["SpecId"] = 256,
+["LastSeen"] = 5396.461027300001,
+["LastAttempt"] = 5375.510855600001,
+},
+["Player-11-0EBB9AA0"] = {
+["SpecId"] = 264,
+["LastSeen"] = 22220.4949055,
+["LastAttempt"] = 22220.1374126,
+},
+["Player-1426-07592992"] = {
+["SpecId"] = 102,
+["LastSeen"] = 9212.6731999,
 },
 ["Player-11-0EA2E184"] = {
 ["SpecId"] = 252,
@@ -3461,15 +4828,57 @@ MiniAurasDB = {
 ["SpecId"] = 264,
 ["LastSeen"] = 6673.2291369,
 },
+["Player-11-0E483BFD"] = {
+["SpecId"] = 71,
+["LastAttempt"] = 24647.1141203,
+["LastSeen"] = 24647.4321647,
+},
 ["Player-3726-0C03B23D"] = {
 ["SpecId"] = 64,
 ["LastAttempt"] = 2648.2469721,
 ["LastSeen"] = 2648.6836268,
 },
+["Player-3684-0DF86EE7"] = {
+["SpecId"] = 1473,
+["LastAttempt"] = 17138.1192333,
+["LastSeen"] = 17138.3407994,
+},
+["Player-60-0FF78AB4"] = {
+["SpecId"] = 254,
+["LastAttempt"] = 23548.4578271,
+["LastSeen"] = 23548.7855024,
+},
+["Player-3684-09C1DFE6"] = {
+["SpecId"] = 269,
+["LastSeen"] = 59964.29682900001,
+},
+["Player-61-09738EC9"] = {
+["SpecId"] = 65,
+["LastAttempt"] = 10393.7448077,
+["LastSeen"] = 10394.1504821,
+},
 ["Player-67-0FB19395"] = {
 ["SpecId"] = 262,
 ["LastAttempt"] = 2147.6246563,
 ["LastSeen"] = 3079.6345096,
+},
+["Player-77-0FF7CAAF"] = {
+["SpecId"] = 64,
+["LastAttempt"] = 23967.8319141,
+["LastSeen"] = 23968.0007912,
+},
+["Player-3725-0C5DD2DE"] = {
+["SpecId"] = 577,
+["LastSeen"] = 4487.839079500001,
+},
+["Player-60-0FECB698"] = {
+["SpecId"] = 266,
+["LastAttempt"] = 23444.2726095,
+["LastSeen"] = 23444.5615308,
+},
+["Player-11-0E9A0FA3"] = {
+["SpecId"] = 269,
+["LastSeen"] = 22171.2352941,
 },
 ["Player-76-08E4A153"] = {
 ["SpecId"] = 261,
@@ -3480,6 +4889,40 @@ MiniAurasDB = {
 ["LastAttempt"] = 7218.363839600001,
 ["LastSeen"] = 7218.7162249,
 },
+["Player-57-0E2CCD0D"] = {
+["SpecId"] = 254,
+["LastAttempt"] = 10528.4272197,
+["LastSeen"] = 10528.5404641,
+},
+["Player-3684-0EABBAE2"] = {
+["SpecId"] = 104,
+["LastSeen"] = 18668.7557672,
+["LastAttempt"] = 18667.372564,
+},
+["Player-1427-0EE9D461"] = {
+["SpecId"] = 65,
+["LastSeen"] = 6751.696633000001,
+["LastAttempt"] = 6751.179055600001,
+},
+["Player-3208-054AFA51"] = {
+["SpecId"] = 253,
+["LastAttempt"] = 16849.5451235,
+["LastSeen"] = 16849.7326296,
+},
+["Player-5-0E83EA67"] = {
+["SpecId"] = 62,
+["LastSeen"] = 11345.2941973,
+["LastAttempt"] = 11344.8893624,
+},
+["Player-1427-0DFD317C"] = {
+["SpecId"] = 255,
+["LastSeen"] = 4236.1908734,
+},
+["Player-3675-0AFC587A"] = {
+["SpecId"] = 70,
+["LastAttempt"] = 39413.10496580001,
+["LastSeen"] = 39413.2085688,
+},
 ["Player-3209-0BE8E1BD"] = {
 ["SpecId"] = 263,
 ["LastSeen"] = 7171.1674829,
@@ -3488,6 +4931,20 @@ MiniAurasDB = {
 ["SpecId"] = 102,
 ["LastAttempt"] = 13160.2877467,
 ["LastSeen"] = 13160.6499843,
+},
+["Player-60-0F48D50C"] = {
+["SpecId"] = 70,
+["LastSeen"] = 18983.4668698,
+["LastAttempt"] = 18983.3319118,
+},
+["Player-11-0BA0C3BB"] = {
+["SpecId"] = 257,
+["LastSeen"] = 37196.912437,
+},
+["Player-57-0E2D9675"] = {
+["SpecId"] = 254,
+["LastAttempt"] = 24634.06395,
+["LastSeen"] = 24634.2767253,
 },
 ["Player-11-0EB4B3B4"] = {
 ["SpecId"] = 64,
@@ -3502,6 +4959,11 @@ MiniAurasDB = {
 ["LastAttempt"] = 8235.292320800001,
 ["LastSeen"] = 12151.7060416,
 },
+["Player-3209-0BFBD00D"] = {
+["SpecId"] = 258,
+["LastSeen"] = 23262.9652007,
+["LastAttempt"] = 23262.6174002,
+},
 ["Player-3676-0E9A0A78"] = {
 ["SpecId"] = 252,
 ["LastAttempt"] = 15045.5346324,
@@ -3510,6 +4972,20 @@ MiniAurasDB = {
 ["Player-1427-0E06C9D1"] = {
 ["SpecId"] = 259,
 ["LastSeen"] = 61835.13840720001,
+},
+["Player-76-0B29A97A"] = {
+["SpecId"] = 270,
+["LastAttempt"] = 23363.2991177,
+["LastSeen"] = 23363.541371,
+},
+["Player-3675-0AE1890A"] = {
+["SpecId"] = 70,
+["LastSeen"] = 25429.364352,
+},
+["Player-120-0AA38F71"] = {
+["SpecId"] = 1468,
+["LastAttempt"] = 24632.5599553,
+["LastSeen"] = 24632.9738532,
 },
 ["Player-1185-0E5937C3"] = {
 ["SpecId"] = 64,
@@ -3520,9 +4996,24 @@ MiniAurasDB = {
 ["SpecId"] = 1480,
 ["LastSeen"] = 7612.4769794,
 },
-["Player-9-0DF5AFA4"] = {
-["SpecId"] = 257,
-["LastSeen"] = 21735.2920673,
+["Player-1425-0A87288E"] = {
+["SpecId"] = 265,
+["LastSeen"] = 42524.2785219,
+["LastAttempt"] = 42523.9377973,
+},
+["Player-160-0B5EB1E5"] = {
+["SpecId"] = 65,
+["LastSeen"] = 27056.0133709,
+},
+["Player-3693-0774A431"] = {
+["SpecId"] = 65,
+["LastAttempt"] = 6085.5934501,
+["LastSeen"] = 6085.887214,
+},
+["Player-57-0E2A895C"] = {
+["SpecId"] = 1467,
+["LastAttempt"] = 24568.653635,
+["LastSeen"] = 24568.7959735,
 },
 ["Player-106-0EDAE329"] = {
 ["SpecId"] = 105,
@@ -3533,6 +5024,10 @@ MiniAurasDB = {
 ["SpecId"] = 103,
 ["LastAttempt"] = 532.8941171,
 ["LastSeen"] = 533.1386285,
+},
+["Player-12-0EA5D077"] = {
+["SpecId"] = 251,
+["LastSeen"] = 24257.6424675,
 },
 ["Player-11-0E40F62A"] = {
 ["SpecId"] = 1473,
@@ -3548,14 +5043,27 @@ MiniAurasDB = {
 ["SpecId"] = 70,
 ["LastSeen"] = 13729.5068001,
 },
+["Player-11-09D8BDA0"] = {
+["SpecId"] = 270,
+["LastSeen"] = 5455.9434067,
+},
 ["Player-11-0E92CD6C"] = {
 ["SpecId"] = 254,
 ["LastSeen"] = 4478.0765258,
+},
+["Player-11-0E9E1D57"] = {
+["SpecId"] = 255,
+["LastSeen"] = 18542.9869966,
 },
 ["Player-1168-0AE5F834"] = {
 ["SpecId"] = 261,
 ["LastSeen"] = 46417.7984277,
 ["LastAttempt"] = 46418.0438174,
+},
+["Player-57-0E2261EA"] = {
+["SpecId"] = 254,
+["LastSeen"] = 10697.6425942,
+["LastAttempt"] = 10697.2942651,
 },
 ["Player-1147-0658B0EF"] = {
 ["SpecId"] = 64,
@@ -3566,9 +5074,18 @@ MiniAurasDB = {
 ["SpecId"] = 270,
 ["LastSeen"] = 39452.7766438,
 },
+["Player-1426-0DFC86D7"] = {
+["SpecId"] = 261,
+["LastSeen"] = 12428.8106017,
+},
 ["Player-11-0E966068"] = {
 ["SpecId"] = 266,
 ["LastSeen"] = 2375.7892243,
+},
+["Player-52-0CB26A18"] = {
+["SpecId"] = 266,
+["LastSeen"] = 11363.5550085,
+["LastAttempt"] = 11363.3153529,
 },
 ["Player-104-0EC2B1F1"] = {
 ["SpecId"] = 255,
@@ -3577,6 +5094,24 @@ MiniAurasDB = {
 ["Player-11-0E6FF924"] = {
 ["SpecId"] = 66,
 ["LastSeen"] = 19107.8162384,
+},
+["Player-11-0E95A5A6"] = {
+["SpecId"] = 265,
+["LastSeen"] = 46245.4162245,
+},
+["Player-11-0EA6F57D"] = {
+["SpecId"] = 252,
+["LastSeen"] = 20270.9445974,
+["LastAttempt"] = 20270.6512775,
+},
+["Player-11-0E2DFED2"] = {
+["SpecId"] = 64,
+["LastSeen"] = 13791.7582687,
+},
+["Player-86-0A4C685E"] = {
+["SpecId"] = 258,
+["LastAttempt"] = 24663.82557,
+["LastSeen"] = 24664.0679707,
 },
 ["Player-11-0E8ED501"] = {
 ["SpecId"] = 254,
@@ -3616,6 +5151,11 @@ MiniAurasDB = {
 ["LastAttempt"] = 13123.5753511,
 ["LastSeen"] = 13123.7706812,
 },
+["Player-60-0FF7949C"] = {
+["SpecId"] = 257,
+["LastAttempt"] = 23448.807099,
+["LastSeen"] = 23449.845116,
+},
 ["Player-11-0E59103B"] = {
 ["SpecId"] = 70,
 ["LastSeen"] = 2334.7012925,
@@ -3624,10 +5164,34 @@ MiniAurasDB = {
 ["SpecId"] = 253,
 ["LastSeen"] = 9724.1812159,
 },
+["Player-11-0EB31EDE"] = {
+["SpecId"] = 262,
+["LastSeen"] = 46247.44962760001,
+},
+["Player-11-0EB6B5E5"] = {
+["SpecId"] = 256,
+["LastAttempt"] = 24645.1060434,
+["LastSeen"] = 24645.4202236,
+},
 ["Player-3725-0C435EF6"] = {
 ["SpecId"] = 257,
 ["LastSeen"] = 2181.5949472,
 ["LastAttempt"] = 2098.2924043,
+},
+["Player-60-0FDE722E"] = {
+["SpecId"] = 1480,
+["LastAttempt"] = 304.6498097,
+["LastSeen"] = 577.8001995000001,
+},
+["Player-71-0FD93B5F"] = {
+["SpecId"] = 257,
+["LastAttempt"] = 10772.0270003,
+["LastSeen"] = 10772.3646041,
+},
+["Player-127-085C2C88"] = {
+["SpecId"] = 102,
+["LastAttempt"] = 533.8886631,
+["LastSeen"] = 534.2748476,
 },
 ["Player-11-0EB24D17"] = {
 ["SpecId"] = 266,
@@ -3638,15 +5202,48 @@ MiniAurasDB = {
 ["LastAttempt"] = 604.5482773,
 ["LastSeen"] = 604.6714963000001,
 },
+["Player-11-0BCF0AF7"] = {
+["SpecId"] = 257,
+["LastAttempt"] = 13954.568115,
+["LastSeen"] = 13954.7720071,
+},
+["Player-73-0FDD4B63"] = {
+["SpecId"] = 65,
+["LastAttempt"] = 5316.2298809,
+["LastSeen"] = 5317.2713701,
+},
 ["Player-1136-095D5953"] = {
 ["SpecId"] = 258,
 ["LastAttempt"] = 4488.5734377,
 ["LastSeen"] = 4488.806540600001,
 },
+["Player-1425-0EBEDAC1"] = {
+["SpecId"] = 105,
+["LastAttempt"] = 21016.6472038,
+["LastSeen"] = 21016.8157845,
+},
+["Player-11-0E79EC24"] = {
+["SpecId"] = 269,
+["LastSeen"] = 24543.7230955,
+},
+["Player-60-0FF91AAF"] = {
+["SpecId"] = 270,
+["LastAttempt"] = 10502.6560119,
+["LastSeen"] = 10502.9803232,
+},
+["Player-11-0EBB59CA"] = {
+["SpecId"] = 252,
+["LastAttempt"] = 24501.7668006,
+["LastSeen"] = 24502.1157336,
+},
 ["Player-57-0DEB6426"] = {
 ["SpecId"] = 270,
 ["LastAttempt"] = 13306.8308579,
 ["LastSeen"] = 13307.0779208,
+},
+["Player-1426-07596F27"] = {
+["SpecId"] = 252,
+["LastSeen"] = 3401.1115891,
 },
 ["Player-11-0E5BB90C"] = {
 ["SpecId"] = 265,
@@ -3656,15 +5253,69 @@ MiniAurasDB = {
 ["SpecId"] = 71,
 ["LastSeen"] = 43790.8113782,
 },
+["Player-52-0E1E56F1"] = {
+["SpecId"] = 252,
+["LastSeen"] = 57823.5399149,
+},
+["Player-11-0E12645F"] = {
+["SpecId"] = 263,
+["LastSeen"] = 3778.7141658,
+},
+["Player-84-00FE8521"] = {
+["SpecId"] = 259,
+["LastAttempt"] = 24663.3241438,
+["LastSeen"] = 24663.6117536,
+},
+["Player-157-0C1AA013"] = {
+["SpecId"] = 70,
+["LastAttempt"] = 44869.4699171,
+["LastSeen"] = 44869.70004040001,
+},
+["Player-67-034E2289"] = {
+["SpecId"] = 262,
+["LastAttempt"] = 40608.4090813,
+["LastSeen"] = 41733.8096634,
+},
+["Player-11-0EB3E0D6"] = {
+["SpecId"] = 70,
+["LastSeen"] = 2377.8879424,
+},
+["Player-11-0A7A11DB"] = {
+["SpecId"] = 1480,
+["LastSeen"] = 20800.3133008,
+},
 ["Player-1168-0918A49C"] = {
 ["SpecId"] = 64,
 ["LastAttempt"] = 13138.2550186,
 ["LastSeen"] = 13138.5971845,
 },
+["Player-11-0EB09ED6"] = {
+["SpecId"] = 70,
+["LastSeen"] = 20349.1712962,
+},
+["Player-3721-0C621FB6"] = {
+["SpecId"] = 267,
+["LastSeen"] = 4640.2908945,
+["LastAttempt"] = 4639.8548226,
+},
+["Player-57-0E0FF3C6"] = {
+["SpecId"] = 65,
+["LastSeen"] = 9106.6485195,
+["LastAttempt"] = 9106.5197767,
+},
+["Player-60-0F62AF13"] = {
+["SpecId"] = 63,
+["LastAttempt"] = 10554.9787228,
+["LastSeen"] = 10555.277789,
+},
 ["Player-11-0E3BD98F"] = {
 ["SpecId"] = 72,
 ["LastAttempt"] = 4002.0547516,
 ["LastSeen"] = 4055.5112872,
+},
+["Player-60-0FCFFF96"] = {
+["SpecId"] = 71,
+["LastSeen"] = 23649.0875213,
 },
 ["Player-76-09F6B908"] = {
 ["SpecId"] = 70,
@@ -3675,27 +5326,57 @@ MiniAurasDB = {
 ["LastAttempt"] = 17271.6968754,
 ["LastSeen"] = 17424.7033498,
 },
-["Player-60-0FCFFF96"] = {
-["SpecId"] = 71,
-["LastSeen"] = 23649.0875213,
+["Player-3725-0C60B9A1"] = {
+["SpecId"] = 265,
+["LastSeen"] = 10108.7882683,
 },
-["Player-3675-0A7E1224"] = {
-["SpecId"] = 65,
-["LastSeen"] = 6329.049339,
+["Player-3725-0BF0AAA7"] = {
+["SpecId"] = 264,
+["LastSeen"] = 3876.8644915,
+["LastAttempt"] = 3877.4083641,
+},
+["Player-57-0D46E203"] = {
+["SpecId"] = 64,
+["LastAttempt"] = 2413.5481825,
+["LastSeen"] = 3327.7972772,
+},
+["Player-1427-0EDCCFAC"] = {
+["SpecId"] = 256,
+["LastSeen"] = 6978.9664945,
+},
+["Player-3676-0EC760D3"] = {
+["SpecId"] = 577,
+["LastAttempt"] = 22744.6231327,
+["LastSeen"] = 26919.3565663,
 },
 ["Player-11-0E92F1C4"] = {
 ["SpecId"] = 258,
 ["LastSeen"] = 22507.8108885,
+},
+["Player-5-0BBC9664"] = {
+["SpecId"] = 72,
+["LastSeen"] = 11376.6380425,
+["LastAttempt"] = 11376.3776343,
 },
 ["Player-61-0DE45531"] = {
 ["SpecId"] = 269,
 ["LastAttempt"] = 9126.115891000001,
 ["LastSeen"] = 9126.418461500001,
 },
+["Player-3694-0AD27391"] = {
+["SpecId"] = 263,
+["LastAttempt"] = 24645.6076253,
+["LastSeen"] = 24645.8912032,
+},
 ["Player-3675-0AE150CC"] = {
 ["SpecId"] = 256,
 ["LastAttempt"] = 25640.5446961,
 ["LastSeen"] = 25640.8369619,
+},
+["Player-3725-0BDB0F6E"] = {
+["SpecId"] = 102,
+["LastSeen"] = 7193.455091100001,
+["LastAttempt"] = 7193.196239200001,
 },
 ["Player-3678-0E16B8BC"] = {
 ["SpecId"] = 104,
@@ -3705,12 +5386,22 @@ MiniAurasDB = {
 ["Player-3684-0EAA00D1"] = {
 ["SpecId"] = 70,
 ["LastAttempt"] = 60282.7939215,
-["LastSeen"] = 60375.217038,
+["LastSeen"] = 42682.70159,
+},
+["Player-127-06B7E3BD"] = {
+["SpecId"] = 258,
+["LastAttempt"] = 4004.047111200001,
+["LastSeen"] = 4004.3776578,
 },
 ["Player-3675-0A340EBD"] = {
 ["SpecId"] = 265,
 ["LastAttempt"] = 17255.550678,
 ["LastSeen"] = 17255.9605471,
+},
+["Player-57-0D7E8028"] = {
+["SpecId"] = 66,
+["LastAttempt"] = 39245.6218201,
+["LastSeen"] = 45548.360457,
 },
 ["Player-11-0DD2E918"] = {
 ["SpecId"] = 65,
@@ -3720,6 +5411,19 @@ MiniAurasDB = {
 ["SpecId"] = 581,
 ["LastSeen"] = 7940.731798500001,
 },
+["Player-11-0E582B5F"] = {
+["SpecId"] = 72,
+["LastSeen"] = 22593.3796258,
+},
+["Player-3676-0EE41801"] = {
+["SpecId"] = 65,
+["LastAttempt"] = 10501.6112506,
+["LastSeen"] = 10501.7713143,
+},
+["Player-11-0A7F867F"] = {
+["SpecId"] = 64,
+["LastSeen"] = 4423.7756482,
+},
 ["Player-11-0E82B67E"] = {
 ["SpecId"] = 265,
 ["LastAttempt"] = 20804.2474274,
@@ -3728,6 +5432,16 @@ MiniAurasDB = {
 ["Player-57-0E166B7C"] = {
 ["SpecId"] = 256,
 ["LastSeen"] = 23349.4226603,
+},
+["Player-3725-0C5E5F39"] = {
+["SpecId"] = 264,
+["LastAttempt"] = 35555.0346876,
+["LastSeen"] = 36704.0980728,
+},
+["Player-3675-0AB38235"] = {
+["SpecId"] = 261,
+["LastAttempt"] = 16865.3730472,
+["LastSeen"] = 16866.1469944,
 },
 ["Player-76-0949FFDA"] = {
 ["SpecId"] = 577,
@@ -3741,14 +5455,47 @@ MiniAurasDB = {
 ["SpecId"] = 71,
 ["LastSeen"] = 9111.275678400001,
 },
+["Player-11-0E9FDE39"] = {
+["SpecId"] = 269,
+["LastSeen"] = 13746.0663777,
+},
 ["Player-11-0EB58F9B"] = {
 ["SpecId"] = 268,
 ["LastSeen"] = 1743.6628218,
+},
+["Player-1427-0D73E036"] = {
+["SpecId"] = 263,
+["LastAttempt"] = 3724.5657442,
+["LastSeen"] = 3724.9614491,
+},
+["Player-3684-0EDA2F3D"] = {
+["SpecId"] = 269,
+["LastSeen"] = 18204.4080999,
 },
 ["Player-1185-0E9AB7EB"] = {
 ["SpecId"] = 64,
 ["LastAttempt"] = 19304.0114444,
 ["LastSeen"] = 19648.8003423,
+},
+["Player-11-078E2996"] = {
+["SpecId"] = 65,
+["LastAttempt"] = 25966.3302091,
+["LastSeen"] = 25966.6469301,
+},
+["Player-73-0EA697CD"] = {
+["SpecId"] = 102,
+["LastSeen"] = 26682.1293126,
+["LastAttempt"] = 26681.941143,
+},
+["Player-1185-02104471"] = {
+["SpecId"] = 102,
+["LastAttempt"] = 2147.1175328,
+["LastSeen"] = 3153.1036728,
+},
+["Player-60-0F0036C8"] = {
+["SpecId"] = 102,
+["LastAttempt"] = 10556.4827781,
+["LastSeen"] = 10556.6155517,
 },
 ["Player-11-0E2996C2"] = {
 ["SpecId"] = 257,
@@ -3757,6 +5504,10 @@ MiniAurasDB = {
 ["Player-11-0E88B0CD"] = {
 ["SpecId"] = 71,
 ["LastSeen"] = 2344.734513,
+},
+["Player-3209-0B7E4C93"] = {
+["SpecId"] = 64,
+["LastSeen"] = 9245.3129002,
 },
 ["Player-3678-0DD1BBF5"] = {
 ["SpecId"] = 253,
@@ -3777,15 +5528,66 @@ MiniAurasDB = {
 ["LastAttempt"] = 13350.3779997,
 ["LastSeen"] = 13350.7014266,
 },
+["Player-11-0EB58DB2"] = {
+["SpecId"] = 261,
+["LastAttempt"] = 21616.7701555,
+["LastSeen"] = 21616.8665461,
+},
+["Player-57-0E28D99D"] = {
+["SpecId"] = 250,
+["LastAttempt"] = 23277.5376949,
+["LastSeen"] = 23277.9305378,
+},
+["Player-77-0F641A1E"] = {
+["SpecId"] = 577,
+["LastAttempt"] = 24548.9090967,
+["LastSeen"] = 24549.1858083,
+},
+["Player-3721-0AF54699"] = {
+["SpecId"] = 72,
+["LastSeen"] = 13121.5438673,
+},
+["Player-3675-0AD6167D"] = {
+["SpecId"] = 256,
+["LastSeen"] = 46428.39977210001,
+["LastAttempt"] = 46428.0677315,
+},
 ["Player-11-0DF29BE5"] = {
 ["SpecId"] = 263,
 ["LastAttempt"] = 13306.3148417,
 ["LastSeen"] = 13306.4570592,
 },
+["Player-1185-0EB51854"] = {
+["SpecId"] = 265,
+["LastAttempt"] = 646.2540471000001,
+["LastSeen"] = 646.5193376000001,
+},
+["Player-11-0DD9A55D"] = {
+["SpecId"] = 66,
+["LastSeen"] = 60682.48671310001,
+},
 ["Player-1425-0AF859A2"] = {
 ["SpecId"] = 1480,
 ["LastAttempt"] = 21957.0271324,
 ["LastSeen"] = 22012.4013841,
+},
+["Player-84-0966150C"] = {
+["SpecId"] = 577,
+["LastAttempt"] = 25642.0481781,
+["LastSeen"] = 25642.3584885,
+},
+["Player-1136-099548EC"] = {
+["SpecId"] = 1467,
+["LastAttempt"] = 10528.9291486,
+["LastSeen"] = 10529.1177692,
+},
+["Player-11-0EAD1EEB"] = {
+["SpecId"] = 262,
+["LastSeen"] = 12440.9884384,
+},
+["Player-11-0EAA5692"] = {
+["SpecId"] = 1467,
+["LastSeen"] = 22564.2749961,
 },
 ["Player-3684-0ED60517"] = {
 ["SpecId"] = 1467,
@@ -3796,10 +5598,27 @@ MiniAurasDB = {
 ["SpecId"] = 70,
 ["LastSeen"] = 13710.5439092,
 },
+["Player-3684-0CCC003E"] = {
+["SpecId"] = 264,
+["LastAttempt"] = 9069.6641985,
+["LastSeen"] = 9070.0965822,
+},
 ["Player-1426-0EC13856"] = {
 ["SpecId"] = 1480,
 ["LastAttempt"] = 13122.874314,
 ["LastSeen"] = 13123.5172216,
+},
+["Player-11-0E65FB9D"] = {
+["LastSeen"] = 8490.298773800001,
+["SpecId"] = 1468,
+},
+["Player-57-0E159807"] = {
+["SpecId"] = 1473,
+["LastSeen"] = 46934.74428090001,
+},
+["Player-127-08687827"] = {
+["SpecId"] = 102,
+["LastSeen"] = 45408.76641880001,
 },
 ["Player-120-0ADC3578"] = {
 ["SpecId"] = 64,
@@ -3811,9 +5630,33 @@ MiniAurasDB = {
 ["LastAttempt"] = 530.3167267,
 ["LastSeen"] = 531.7824177,
 },
+["Player-1136-098C7B45"] = {
+["SpecId"] = 104,
+["LastAttempt"] = 43876.0757755,
+["LastSeen"] = 43942.9122787,
+},
+["Player-1427-043A0B85"] = {
+["SpecId"] = 72,
+["LastAttempt"] = 13206.3979294,
+["LastSeen"] = 13206.5822495,
+},
 ["Player-3684-0978D5D5"] = {
 ["SpecId"] = 70,
 ["LastSeen"] = 27310.1279132,
+},
+["Player-64-0EBFB570"] = {
+["SpecId"] = 267,
+["LastSeen"] = 6475.268851000001,
+},
+["Player-3721-0AEE0732"] = {
+["SpecId"] = 261,
+["LastAttempt"] = 13338.2724009,
+["LastSeen"] = 13338.7395655,
+},
+["Player-113-09FD85CB"] = {
+["SpecId"] = 70,
+["LastAttempt"] = 328.1847878,
+["LastSeen"] = 802.5593427,
 },
 ["Player-127-0AFE2248"] = {
 ["SpecId"] = 70,
@@ -3825,13 +5668,35 @@ MiniAurasDB = {
 ["LastAttempt"] = 2465.8756913,
 ["LastSeen"] = 3417.3006276,
 },
+["Player-1175-0E801CAC"] = {
+["SpecId"] = 70,
+["LastSeen"] = 9162.4592668,
+},
+["Player-3675-0AD0C8EE"] = {
+["SpecId"] = 270,
+["LastSeen"] = 21434.5603449,
+},
 ["Player-57-0DCC4C8A"] = {
 ["SpecId"] = 105,
 ["LastSeen"] = 12124.2043923,
 },
+["Player-11-0BBF4738"] = {
+["SpecId"] = 258,
+["LastSeen"] = 2360.7814048,
+},
 ["Player-11-0E9C1F1D"] = {
 ["SpecId"] = 70,
 ["LastSeen"] = 4904.4862314,
+},
+["Player-11-0E483976"] = {
+["SpecId"] = 65,
+["LastAttempt"] = 53140.4656141,
+["LastSeen"] = 55570.6516454,
+},
+["Player-1428-0E99D81E"] = {
+["SpecId"] = 102,
+["LastSeen"] = 41418.03997010001,
+["LastAttempt"] = 41417.7370373,
 },
 ["Player-58-0DE5636C"] = {
 ["SpecId"] = 71,
@@ -3842,27 +5707,39 @@ MiniAurasDB = {
 ["LastSeen"] = 9455.336399700001,
 ["LastAttempt"] = 9454.823626200001,
 },
+["Player-11-0BC364BA"] = {
+["SpecId"] = 72,
+["LastSeen"] = 7350.3538979,
+},
 ["Player-11-0E894EF2"] = {
 ["SpecId"] = 1467,
 ["LastSeen"] = 11667.1465132,
+},
+["Player-11-0EB20C55"] = {
+["SpecId"] = 261,
+["LastSeen"] = 15872.5016876,
 },
 ["Player-3725-0B9B1ED1"] = {
 ["SpecId"] = 70,
 ["LastAttempt"] = 41746.1537499,
 ["LastSeen"] = 42309.5341701,
 },
+["Player-3725-0BFBB4D3"] = {
+["SpecId"] = 103,
+["LastSeen"] = 4777.8020152,
+},
 ["Player-3723-0C576323"] = {
 ["SpecId"] = 254,
 ["LastAttempt"] = 27547.1395265,
 ["LastSeen"] = 27547.5959649,
 },
-["Player-3721-0BD577F3"] = {
-["SpecId"] = 577,
-["LastSeen"] = 16831.6055071,
+["Player-11-0E25E626"] = {
+["SpecId"] = 70,
+["LastSeen"] = 24426.1270449,
 },
-["Player-11-0E65FB9D"] = {
-["LastSeen"] = 8490.298773800001,
-["SpecId"] = 1468,
+["Player-11-0A985E83"] = {
+["SpecId"] = 65,
+["LastSeen"] = 6134.658602500001,
 },
 ["Player-1425-0ECC5631"] = {
 ["SpecId"] = 250,
@@ -3874,58 +5751,60 @@ MiniAurasDB = {
 ["LastAttempt"] = 18657.19587,
 ["LastSeen"] = 18657.3755888,
 },
-["Player-3684-0E9EA946"] = {
-["SpecId"] = 258,
-["LastSeen"] = 41774.2680495,
+["Player-60-0FEDA301"] = {
+["SpecId"] = 251,
+["LastAttempt"] = 23528.7079393,
+["LastSeen"] = 23529.7944652,
 },
-["Player-11-0A7F867F"] = {
-["SpecId"] = 64,
-["LastSeen"] = 4423.7756482,
-},
-["Player-1427-0975AC6C"] = {
+["Player-3209-0BEA32ED"] = {
 ["SpecId"] = 1480,
-["LastSeen"] = 61831.1190883,
+["LastAttempt"] = 13124.9287973,
+["LastSeen"] = 13125.1651472,
+},
+["Player-60-0EA30833"] = {
+["SpecId"] = 1480,
+["LastAttempt"] = 17980.8821958,
+["LastSeen"] = 17981.1056891,
 },
 ["Player-1168-09A34BF1"] = {
 ["SpecId"] = 267,
 ["LastSeen"] = 7612.440660900001,
 },
-["Player-11-09D55048"] = {
-["SpecId"] = 261,
-["LastSeen"] = 33150.78186030001,
+["Player-12-0EAE9298"] = {
+["SpecId"] = 64,
+["LastAttempt"] = 43835.7164751,
+["LastSeen"] = 43836.05196020001,
 },
-["Player-3675-0AB38235"] = {
-["SpecId"] = 261,
-["LastAttempt"] = 16865.3730472,
-["LastSeen"] = 16866.1469944,
+["Player-75-0FAE37F7"] = {
+["SpecId"] = 65,
+["LastAttempt"] = 16883.1786509,
+["LastSeen"] = 16883.7383098,
 },
-["Player-71-0FDFBA00"] = {
-["SpecId"] = 264,
-["LastAttempt"] = 24561.1149003,
-["LastSeen"] = 24561.5632597,
+["Player-3684-0EDEB76E"] = {
+["SpecId"] = 256,
+["LastSeen"] = 2811.9855753,
 },
-["Player-5-0E458F8D"] = {
-["SpecId"] = 263,
-["LastAttempt"] = 13304.4366866,
-["LastSeen"] = 14689.0644117,
+["Player-11-0E8A1E04"] = {
+["SpecId"] = 62,
+["LastSeen"] = 7444.689468500001,
 },
 ["Player-11-0E6E2D56"] = {
 ["SpecId"] = 102,
 ["LastSeen"] = 15815.7593069,
 },
-["Player-1428-0EDA8936"] = {
-["SpecId"] = 105,
-["LastSeen"] = 7408.9538129,
-["LastAttempt"] = 7408.7896602,
+["Player-120-08876552"] = {
+["SpecId"] = 270,
+["LastAttempt"] = 25641.0449064,
+["LastSeen"] = 25641.1606604,
 },
-["Player-3684-0CCC003E"] = {
-["SpecId"] = 264,
-["LastAttempt"] = 9069.6641985,
-["LastSeen"] = 9070.0965822,
+["Player-11-0E6BE242"] = {
+["SpecId"] = 71,
+["LastSeen"] = 7415.588581200001,
 },
-["Player-1426-07596F27"] = {
-["SpecId"] = 252,
-["LastSeen"] = 3401.1115891,
+["Player-60-0FECC6B9"] = {
+["SpecId"] = 254,
+["LastAttempt"] = 23616.2892872,
+["LastSeen"] = 23616.4866791,
 },
 ["Player-11-0AA75AF0"] = {
 ["SpecId"] = 64,
@@ -3935,48 +5814,50 @@ MiniAurasDB = {
 ["SpecId"] = 270,
 ["LastSeen"] = 7123.9189273,
 },
-["Player-11-0E12645F"] = {
-["SpecId"] = 263,
-["LastSeen"] = 3778.7141658,
-},
-["Player-11-0EAD1EEB"] = {
-["SpecId"] = 262,
-["LastSeen"] = 12440.9884384,
-},
-["Player-11-0EAFBDE1"] = {
-["SpecId"] = 261,
-["LastSeen"] = 2337.3345121,
+["Player-3209-0C009E0A"] = {
+["SpecId"] = 581,
+["LastAttempt"] = 17253.0433844,
+["LastSeen"] = 17253.3585899,
 },
 ["Player-162-0BEDC6DE"] = {
 ["SpecId"] = 254,
 ["LastSeen"] = 21322.8763401,
 },
-["Player-3675-0AD6167D"] = {
-["SpecId"] = 256,
-["LastSeen"] = 46428.39977210001,
-["LastAttempt"] = 46428.0677315,
-},
-["Player-3721-0AF54699"] = {
-["SpecId"] = 72,
-["LastSeen"] = 13121.5438673,
-},
-["Player-11-0EB58DB2"] = {
+["Player-11-0EAFBDE1"] = {
 ["SpecId"] = 261,
-["LastAttempt"] = 21616.7701555,
-["LastSeen"] = 21616.8665461,
+["LastSeen"] = 2337.3345121,
+},
+["Player-57-0E2B5B33"] = {
+["SpecId"] = 270,
+["LastAttempt"] = 23553.0007834,
+["LastSeen"] = 23554.3740803,
+},
+["Player-11-0E1DC2A2"] = {
+["SpecId"] = 270,
+["LastSeen"] = 22817.6426966,
+},
+["Player-3684-0EBECEA1"] = {
+["SpecId"] = 102,
+["LastAttempt"] = 9145.009926800001,
+["LastSeen"] = 9191.791309400001,
+},
+["Player-11-0EB23B26"] = {
+["SpecId"] = 64,
+["LastSeen"] = 8145.863759600001,
 },
 ["Player-57-0B2D5BE8"] = {
 ["SpecId"] = 105,
 ["LastAttempt"] = 16847.0072534,
 ["LastSeen"] = 16847.2218308,
 },
-["Player-11-0EB23B26"] = {
-["SpecId"] = 64,
-["LastSeen"] = 8145.863759600001,
+["Player-114-05AD6DE9"] = {
+["SpecId"] = 256,
+["LastAttempt"] = 4002.5455967,
+["LastSeen"] = 4347.4449898,
 },
-["Player-11-0DD9A55D"] = {
-["SpecId"] = 66,
-["LastSeen"] = 60682.48671310001,
+["Player-11-0E2BF572"] = {
+["SpecId"] = 261,
+["LastSeen"] = 39161.5205447,
 },
 ["Player-11-0EADF5B1"] = {
 ["SpecId"] = 258,
@@ -3997,65 +5878,66 @@ MiniAurasDB = {
 ["LastAttempt"] = 286.1196856,
 ["LastSeen"] = 698.4160093,
 },
-["Player-11-0EB48D94"] = {
-["SpecId"] = 72,
-["LastSeen"] = 24421.780905,
-},
-["Player-11-0E9E1D57"] = {
-["SpecId"] = 255,
-["LastSeen"] = 18542.9869966,
+["Player-61-0A999173"] = {
+["SpecId"] = 1480,
+["LastAttempt"] = 544.604138,
+["LastSeen"] = 544.7436456,
 },
 ["Player-118-00B22326"] = {
 ["SpecId"] = 70,
 ["LastAttempt"] = 43889.3986615,
 ["LastSeen"] = 43889.8109448,
 },
+["Player-1426-0DDB54F2"] = {
+["SpecId"] = 266,
+["LastSeen"] = 46034.4294994,
+},
 ["Player-11-0DD3A416"] = {
 ["SpecId"] = 252,
 ["LastSeen"] = 19868.4358637,
 },
-["Player-11-0E2DFED2"] = {
-["SpecId"] = 64,
-["LastSeen"] = 13791.7582687,
+["Player-60-0E87ED74"] = {
+["SpecId"] = 253,
+["LastAttempt"] = 16882.1695737,
+["LastSeen"] = 16882.8723256,
 },
 ["Player-3725-023E610B"] = {
 ["SpecId"] = 72,
 ["LastAttempt"] = 13124.0754689,
 ["LastSeen"] = 13124.4244818,
 },
-["Player-11-0EB09ED6"] = {
-["SpecId"] = 70,
-["LastSeen"] = 20349.1712962,
+["Player-11-0E5F3096"] = {
+["SpecId"] = 265,
+["LastSeen"] = 19828.5677665,
 },
-["Player-11-0A7A11DB"] = {
-["SpecId"] = 1480,
-["LastSeen"] = 20800.3133008,
+["Player-3209-0B18DD32"] = {
+["SpecId"] = 257,
+["LastSeen"] = 3151.0937335,
 },
-["Player-52-0E1E56F1"] = {
-["SpecId"] = 252,
-["LastSeen"] = 57823.5399149,
+["Player-11-0EB5783E"] = {
+["SpecId"] = 71,
+["LastSeen"] = 7258.592715700001,
 },
 ["Player-11-0DD9B49B"] = {
 ["SpecId"] = 256,
 ["LastSeen"] = 45398.84307520001,
 },
-["Player-11-0E1F67F5"] = {
-["SpecId"] = 257,
-["LastSeen"] = 21616.1203515,
-},
-["Player-11-0E256413"] = {
+["Player-3723-0BE15B64"] = {
 ["SpecId"] = 71,
-["LastSeen"] = 10365.983934,
+["LastSeen"] = 2078.937673,
+["LastAttempt"] = 2019.1497656,
 },
-["Player-3725-0C393ECA"] = {
-["SpecId"] = 577,
-["LastAttempt"] = 3925.3910189,
-["LastSeen"] = 3925.836958,
+["Player-76-0922DF34"] = {
+["SpecId"] = 270,
+["LastSeen"] = 47066.7939169,
 },
-["Player-3721-0AEE0732"] = {
-["SpecId"] = 261,
-["LastAttempt"] = 13338.2724009,
-["LastSeen"] = 13338.7395655,
+["Player-76-0BFCBC77"] = {
+["SpecId"] = 256,
+["LastSeen"] = 5938.8568763,
+},
+["Player-3675-0B000665"] = {
+["SpecId"] = 72,
+["LastSeen"] = 40686.6180168,
 },
 ["Player-3725-0BE4D831"] = {
 ["SpecId"] = 268,
@@ -4071,40 +5953,42 @@ MiniAurasDB = {
 ["SpecId"] = 253,
 ["LastSeen"] = 7679.417717,
 },
-["Player-11-0EAA5692"] = {
-["SpecId"] = 1467,
-["LastSeen"] = 22564.2749961,
+["Player-61-0E3D2811"] = {
+["SpecId"] = 64,
+["LastAttempt"] = 35565.04274680001,
+["LastSeen"] = 37062.5945842,
 },
 ["Player-60-0F401184"] = {
 ["SpecId"] = 1480,
 ["LastAttempt"] = 24623.1750723,
 ["LastSeen"] = 24623.4737149,
 },
-["Player-5-090A8FBD"] = {
-["SpecId"] = 104,
-["LastAttempt"] = 17254.0346972,
-["LastSeen"] = 17254.2284077,
+["Player-3675-06E472F2"] = {
+["SpecId"] = 72,
+["LastAttempt"] = 17240.3504473,
+["LastSeen"] = 17240.6159925,
 },
 ["Player-11-0DCC0704"] = {
 ["SpecId"] = 268,
 ["LastSeen"] = 43886.37219,
 },
-["Player-84-0966150C"] = {
-["SpecId"] = 577,
-["LastAttempt"] = 25642.0481781,
-["LastSeen"] = 25642.3584885,
+["Player-115-088E9978"] = {
+["SpecId"] = 259,
+["LastSeen"] = 7852.137428100001,
+["LastAttempt"] = 7851.859149000001,
 },
 ["Player-11-0E9054BC"] = {
 ["SpecId"] = 267,
 ["LastSeen"] = 21425.6349376,
 },
-["Player-3676-09337985"] = {
-["SpecId"] = 66,
-["LastSeen"] = 744.1620225,
+["Player-3685-0714FFE6"] = {
+["SpecId"] = 266,
+["LastAttempt"] = 422.9559466,
+["LastSeen"] = 815.8293645,
 },
-["Player-57-0E159807"] = {
-["SpecId"] = 1473,
-["LastSeen"] = 46934.74428090001,
+["Player-106-0DCEE6BE"] = {
+["SpecId"] = 261,
+["LastSeen"] = 8980.393203200001,
 },
 ["Player-3678-0E1A5CA6"] = {
 ["SpecId"] = 264,
@@ -4115,18 +5999,19 @@ MiniAurasDB = {
 ["SpecId"] = 103,
 ["LastSeen"] = 23009.9461929,
 },
-["Player-60-0FDD7AFB"] = {
-["SpecId"] = 1480,
-["LastAttempt"] = 13136.737657,
-["LastSeen"] = 13136.9462382,
+["Player-3725-0BF6028D"] = {
+["SpecId"] = 261,
+["LastAttempt"] = 14198.176607,
+["LastSeen"] = 14198.6177938,
 },
-["Player-12-0EA5D077"] = {
-["SpecId"] = 251,
-["LastSeen"] = 24257.6424675,
+["Player-104-0E142157"] = {
+["SpecId"] = 253,
+["LastAttempt"] = 43876.5832313,
+["LastSeen"] = 43876.8487882,
 },
-["Player-1427-0EDCCFAC"] = {
-["SpecId"] = 256,
-["LastSeen"] = 6978.9664945,
+["Player-127-0A9FF023"] = {
+["SpecId"] = 577,
+["LastSeen"] = 40606.9436063,
 },
 ["Player-11-0E9A5AF6"] = {
 ["SpecId"] = 251,
@@ -4141,55 +6026,53 @@ MiniAurasDB = {
 ["SpecId"] = 1468,
 ["LastSeen"] = 24605.0635252,
 },
-["Player-77-0F641A1E"] = {
-["SpecId"] = 577,
-["LastAttempt"] = 24548.9090967,
-["LastSeen"] = 24549.1858083,
+["Player-1426-0E419F30"] = {
+["SpecId"] = 64,
+["LastSeen"] = 17602.8862408,
+["LastAttempt"] = 17602.6343029,
 },
-["Player-76-0BFCBC77"] = {
-["SpecId"] = 256,
-["LastSeen"] = 5938.8568763,
+["Player-11-0EA91479"] = {
+["SpecId"] = 267,
+["LastSeen"] = 44048.0092133,
 },
 ["Player-1168-0B0229C1"] = {
 ["SpecId"] = 254,
 ["LastAttempt"] = 13967.3768371,
 ["LastSeen"] = 13967.9232613,
 },
-["Player-3684-0EDA2F3D"] = {
-["SpecId"] = 269,
-["LastSeen"] = 18204.4080999,
+["Player-11-0EB56B7C"] = {
+["SpecId"] = 71,
+["LastSeen"] = 5227.1091327,
 },
-["Player-127-06B7E3BD"] = {
-["SpecId"] = 258,
-["LastAttempt"] = 4004.047111200001,
-["LastSeen"] = 4004.3776578,
-},
-["Player-1175-0E801CAC"] = {
-["SpecId"] = 70,
-["LastSeen"] = 9162.4592668,
-},
-["Player-57-0E0FF3C6"] = {
+["Player-1168-0AEC10D7"] = {
 ["SpecId"] = 65,
-["LastSeen"] = 9106.6485195,
-["LastAttempt"] = 9106.5197767,
+["LastSeen"] = 28019.1812153,
 },
-["Player-60-0EA30833"] = {
-["SpecId"] = 1480,
-["LastAttempt"] = 17980.8821958,
-["LastSeen"] = 17981.1056891,
+["Player-3675-0AD49A06"] = {
+["SpecId"] = 105,
+["LastSeen"] = 20270.4041234,
+["LastAttempt"] = 20270.3038201,
 },
-["Player-64-0EBFB570"] = {
-["SpecId"] = 267,
-["LastSeen"] = 6475.268851000001,
+["Player-1427-0966ED4A"] = {
+["SpecId"] = 71,
+["LastSeen"] = 18072.8592684,
+},
+["Player-3723-0C4DC315"] = {
+["LastSeen"] = 7451.739486400001,
+["SpecId"] = 65,
+},
+["Player-11-0E88E5A0"] = {
+["SpecId"] = 70,
+["LastSeen"] = 10439.8492304,
 },
 ["Player-1427-0DE37B33"] = {
 ["SpecId"] = 256,
 ["LastSeen"] = 61827.08376530001,
 },
-["Player-53-0C63A721"] = {
-["SpecId"] = 254,
-["LastAttempt"] = 9303.1680966,
-["LastSeen"] = 9303.356933500001,
+["Player-3684-0E8EFBF9"] = {
+["SpecId"] = 260,
+["LastSeen"] = 18987.4859899,
+["LastAttempt"] = 18768.3785038,
 },
 ["Player-5-0EB059BF"] = {
 ["SpecId"] = 264,
@@ -4204,66 +6087,67 @@ MiniAurasDB = {
 ["LastAttempt"] = 19838.9823885,
 ["LastSeen"] = 19839.286327,
 },
-["Player-3676-0DB17138"] = {
-["SpecId"] = 250,
-["LastAttempt"] = 557.7681624,
-["LastSeen"] = 557.9167836,
+["Player-157-0A0E4BA5"] = {
+["SpecId"] = 266,
+["LastSeen"] = 2203.072098,
 },
 ["Player-3661-091E6465"] = {
 ["SpecId"] = 65,
 ["LastAttempt"] = 317.1441136,
 ["LastSeen"] = 485.8490763,
 },
-["Player-157-0A0E4BA5"] = {
-["SpecId"] = 266,
-["LastSeen"] = 2203.072098,
+["Player-3675-0AFD5746"] = {
+["SpecId"] = 103,
+["LastSeen"] = 24702.1993003,
+["LastAttempt"] = 24701.8073913,
 },
-["Player-9-0E363C28"] = {
-["SpecId"] = 268,
-["LastAttempt"] = 17240.8556206,
-["LastSeen"] = 17241.1856821,
+["Player-11-0ADAA882"] = {
+["SpecId"] = 105,
+["LastAttempt"] = 24077.7470137,
+["LastSeen"] = 24078.1510522,
 },
-["Player-3684-0EBECEA1"] = {
-["SpecId"] = 102,
-["LastAttempt"] = 9145.009926800001,
-["LastSeen"] = 9191.791309400001,
+["Player-11-0EACE945"] = {
+["SpecId"] = 1467,
+["LastSeen"] = 3945.8817056,
 },
-["Player-76-0C0FE524"] = {
-["SpecId"] = 65,
-["LastSeen"] = 23649.0885013,
+["Player-11-0EB35EB6"] = {
+["SpecId"] = 70,
+["LastSeen"] = 61120.46932500001,
+["LastAttempt"] = 3449.1298191,
 },
-["Player-120-08876552"] = {
-["SpecId"] = 270,
-["LastAttempt"] = 25641.0449064,
-["LastSeen"] = 25641.1606604,
+["Player-1428-0E0E30FE"] = {
+["LastSeen"] = 11344.6670483,
+["SpecId"] = 253,
 },
-["Player-1427-0DFD317C"] = {
-["SpecId"] = 255,
-["LastSeen"] = 4236.1908734,
+["Player-1175-0D8120AA"] = {
+["SpecId"] = 70,
+["LastSeen"] = 17937.8436972,
+["LastAttempt"] = 17637.3151123,
 },
 ["Player-3676-0E3D6AF9"] = {
 ["SpecId"] = 254,
 ["LastAttempt"] = 546.6168217000001,
 ["LastSeen"] = 547.0733630000001,
 },
-["Player-60-0F3AACBC"] = {
-["SpecId"] = 577,
-["LastSeen"] = 6194.3866396,
+["Player-5-0B2778A7"] = {
+["SpecId"] = 264,
+["LastAttempt"] = 560.2995633,
+["LastSeen"] = 560.5530054000001,
 },
-["Player-114-05AD6DE9"] = {
-["SpecId"] = 256,
-["LastAttempt"] = 4002.5455967,
-["LastSeen"] = 4347.4449898,
+["Player-57-0D808CC8"] = {
+["SpecId"] = 270,
+["LastAttempt"] = 13203.5983293,
+["LastSeen"] = 13204.3380959,
 },
-["Player-1428-0DFF98CC"] = {
-["SpecId"] = 1480,
-["LastAttempt"] = 13324.6694469,
-["LastSeen"] = 13324.9893573,
+["Player-121-09C8A943"] = {
+["SpecId"] = 105,
+["LastAttempt"] = 39461.33777090001,
+["LastSeen"] = 39461.6337836,
 },
-["Player-1185-0EB51854"] = {
-["SpecId"] = 265,
-["LastAttempt"] = 646.2540471000001,
-["LastSeen"] = 646.5193376000001,
+["Player-3684-0EBA89BC"] = {
+["SpecId"] = 264,
+["LastAttempt"] = 16847.5614574,
+["LastSeen"] = 16848.0954553,
 },
 ["Player-3678-0B36A159"] = {
 ["SpecId"] = 70,
@@ -4274,72 +6158,71 @@ MiniAurasDB = {
 ["SpecId"] = 70,
 ["LastSeen"] = 32667.9101664,
 },
-["Player-11-0E8B874A"] = {
-["SpecId"] = 254,
-["LastSeen"] = 4874.2172084,
+["Player-151-0926CC45"] = {
+["SpecId"] = 1467,
+["LastAttempt"] = 558.7816803000001,
+["LastSeen"] = 559.1838299000001,
 },
-["Player-1426-07592992"] = {
-["SpecId"] = 102,
-["LastSeen"] = 9212.6731999,
+["Player-5-0EB2FE27"] = {
+["SpecId"] = 70,
+["LastAttempt"] = 11825.0842681,
+["LastSeen"] = 13133.1433635,
 },
-["Player-11-0E7F3CE2"] = {
-["SpecId"] = 64,
-["LastSeen"] = 10309.0840031,
+["Player-3693-0ECE9954"] = {
+["SpecId"] = 267,
+["LastSeen"] = 9666.4883788,
 },
-["Player-11-0EB50C40"] = {
-["SpecId"] = 256,
-["LastSeen"] = 32390.7245512,
+["Player-3676-0EDF871E"] = {
+["SpecId"] = 1468,
+["LastSeen"] = 18702.2950532,
 },
-["Player-3723-0C42BDB2"] = {
-["SpecId"] = 256,
-["LastSeen"] = 61842.07280350001,
+["Player-11-0E283542"] = {
+["SpecId"] = 71,
+["LastSeen"] = 9083.198628600001,
 },
-["Player-3209-0BEA32ED"] = {
-["SpecId"] = 1480,
-["LastAttempt"] = 13124.9287973,
-["LastSeen"] = 13125.1651472,
+["Player-5-0B101664"] = {
+["SpecId"] = 71,
+["LastSeen"] = 941.2296469,
 },
 ["Player-11-0E27CA2E"] = {
 ["SpecId"] = 252,
 ["LastSeen"] = 10293.3841292,
 },
-["Player-11-0E8A1E04"] = {
-["SpecId"] = 62,
-["LastSeen"] = 7444.689468500001,
+["Player-57-0E2E7C86"] = {
+["SpecId"] = 250,
+["LastSeen"] = 11375.4455474,
+["LastAttempt"] = 11375.3404977,
 },
-["Player-67-034E2289"] = {
-["SpecId"] = 262,
-["LastAttempt"] = 40608.4090813,
-["LastSeen"] = 41733.8096634,
+["Player-3675-0A64FA49"] = {
+["SpecId"] = 261,
+["LastAttempt"] = 11825.3286961,
+["LastSeen"] = 12102.683886,
 },
-["Player-11-0BC364BA"] = {
+["Player-3684-0D679A7E"] = {
 ["SpecId"] = 72,
-["LastSeen"] = 7350.3538979,
+["LastSeen"] = 56080.74265830001,
 },
-["Player-3723-0BE15B64"] = {
-["SpecId"] = 71,
-["LastSeen"] = 2078.937673,
-["LastAttempt"] = 2019.1497656,
+["Player-3675-0B004500"] = {
+["SpecId"] = 581,
+["LastAttempt"] = 24622.6751167,
+["LastSeen"] = 24623.042784,
 },
-["Player-3725-0BF0AAA7"] = {
-["SpecId"] = 264,
-["LastSeen"] = 3876.8644915,
-["LastAttempt"] = 3877.4083641,
+["Player-11-0EAA9B8C"] = {
+["SpecId"] = 256,
+["LastSeen"] = 7485.856941200001,
 },
 ["Player-1138-061F9F2C"] = {
 ["SpecId"] = 63,
 ["LastAttempt"] = 18656.3039295,
 ["LastSeen"] = 18656.4478481,
 },
-["Player-3209-0513BC28"] = {
-["SpecId"] = 71,
-["LastAttempt"] = 40609.4110758,
-["LastSeen"] = 40622.6201797,
+["Player-11-0EB2A538"] = {
+["SpecId"] = 104,
+["LastSeen"] = 21329.2027797,
 },
-["Player-160-0BA36DE1"] = {
-["SpecId"] = 268,
-["LastAttempt"] = 16866.396783,
-["LastSeen"] = 16867.1067776,
+["Player-11-0EB0E1E3"] = {
+["SpecId"] = 256,
+["LastSeen"] = 44018.42575130001,
 },
 ["Player-11-0E7D8539"] = {
 ["SpecId"] = 254,
@@ -4351,18 +6234,18 @@ MiniAurasDB = {
 ["LastAttempt"] = 21602.7303801,
 ["LastSeen"] = 21603.0271994,
 },
-["Player-3684-09C1DFE6"] = {
-["SpecId"] = 269,
-["LastSeen"] = 59964.29682900001,
+["Player-11-0E7557FB"] = {
+["SpecId"] = 268,
+["LastSeen"] = 21398.6092277,
 },
-["Player-11-0EB20C55"] = {
-["SpecId"] = 261,
-["LastSeen"] = 15872.5016876,
+["Player-57-0D7B72C2"] = {
+["SpecId"] = 581,
+["LastAttempt"] = 704.3936511,
+["LastSeen"] = 704.9107015000001,
 },
-["Player-60-0E87ED74"] = {
-["SpecId"] = 253,
-["LastAttempt"] = 16882.1695737,
-["LastSeen"] = 16882.8723256,
+["Player-11-0E25A95A"] = {
+["SpecId"] = 70,
+["LastSeen"] = 7202.404421200001,
 },
 ["Player-120-0B038BBA"] = {
 ["SpecId"] = 270,
@@ -4374,122 +6257,126 @@ MiniAurasDB = {
 ["LastAttempt"] = 17448.6855935,
 ["LastSeen"] = 17449.0497371,
 },
-["Player-113-0A21F8D6"] = {
-["SpecId"] = 104,
-["LastAttempt"] = 43888.8868961,
-["LastSeen"] = 43940.8802729,
+["Player-11-0E99FACE"] = {
+["SpecId"] = 270,
+["LastAttempt"] = 9302.666268300001,
+["LastSeen"] = 8646.1446309,
 },
 ["Player-3684-0ED6F537"] = {
 ["SpecId"] = 268,
 ["LastSeen"] = 41816.8006369,
 },
-["Player-1427-043A0B85"] = {
-["SpecId"] = 72,
-["LastAttempt"] = 13206.3979294,
-["LastSeen"] = 13206.5822495,
+["Player-1136-098CC2DD"] = {
+["SpecId"] = 270,
+["LastSeen"] = 39105.83617230001,
 },
 ["Player-11-0EA3D359"] = {
 ["SpecId"] = 105,
 ["LastSeen"] = 20514.9879489,
 },
-["Player-11-0E2003EF"] = {
-["SpecId"] = 253,
-["LastSeen"] = 8608.3187058,
-},
-["Player-60-0FDE722E"] = {
-["SpecId"] = 1480,
-["LastAttempt"] = 304.6498097,
-["LastSeen"] = 577.8001995000001,
-},
-["Player-3209-0BE9411D"] = {
-["SpecId"] = 258,
-["LastAttempt"] = 13137.7507033,
-["LastSeen"] = 13138.083528,
-},
-["Player-11-0E582B5F"] = {
-["SpecId"] = 72,
-["LastSeen"] = 22593.3796258,
-},
-["Player-11-0BD53DF7"] = {
-["SpecId"] = 64,
-["LastSeen"] = 24458.8679684,
+["Player-115-0AB4E7E1"] = {
+["SpecId"] = 264,
+["LastAttempt"] = 24578.6522307,
+["LastSeen"] = 24578.8541401,
 },
 ["Player-11-0E656D12"] = {
 ["SpecId"] = 269,
 ["LastAttempt"] = 18667.9409866,
 ["LastSeen"] = 18668.2369944,
 },
-["Player-3676-0DF79405"] = {
-["SpecId"] = 1467,
-["LastAttempt"] = 8235.793796900001,
-["LastSeen"] = 8802.157252300001,
-},
-["Player-11-0EB56B7C"] = {
-["SpecId"] = 71,
-["LastSeen"] = 5227.1091327,
+["Player-3209-0BE9411D"] = {
+["SpecId"] = 258,
+["LastAttempt"] = 13137.7507033,
+["LastSeen"] = 13138.083528,
 },
 ["Player-11-0E344746"] = {
 ["SpecId"] = 105,
 ["LastSeen"] = 22216.6301375,
 },
+["Player-11-0BD53DF7"] = {
+["SpecId"] = 64,
+["LastSeen"] = 24458.8679684,
+},
+["Player-11-0EB490AF"] = {
+["SpecId"] = 64,
+["LastSeen"] = 8039.290749700001,
+},
+["Player-3676-0DF79405"] = {
+["SpecId"] = 1467,
+["LastAttempt"] = 8235.793796900001,
+["LastSeen"] = 8802.157252300001,
+},
+["Player-60-0FF78F51"] = {
+["SpecId"] = 266,
+["LastAttempt"] = 23652.1556967,
+["LastSeen"] = 23652.376254,
+},
+["Player-3675-0AA1F0C3"] = {
+["SpecId"] = 72,
+["LastSeen"] = 3369.4060068,
+["LastAttempt"] = 3100.9767415,
+},
 ["Player-96-0CB286E3"] = {
 ["SpecId"] = 64,
 ["LastSeen"] = 4950.313799600001,
 },
-["Player-12-0EAE9298"] = {
-["SpecId"] = 64,
-["LastAttempt"] = 43835.7164751,
-["LastSeen"] = 43836.05196020001,
+["Player-11-0E766041"] = {
+["SpecId"] = 254,
+["LastSeen"] = 56273.85101660001,
 },
-["Player-11-0E75671A"] = {
-["SpecId"] = 266,
-["LastSeen"] = 6342.0003796,
+["Player-3676-0EA362F8"] = {
+["SpecId"] = 70,
+["LastAttempt"] = 44869.97159070001,
+["LastSeen"] = 44870.3688225,
 },
-["Player-160-0835D761"] = {
-["SpecId"] = 262,
-["LastSeen"] = 770.407271,
+["Player-3676-0DF9785E"] = {
+["SpecId"] = 1468,
+["LastSeen"] = 14106.3335678,
 },
-["Player-11-0EB5783E"] = {
-["SpecId"] = 71,
-["LastSeen"] = 7258.592715700001,
+["Player-1428-097CC69D"] = {
+["SpecId"] = 252,
+["LastAttempt"] = 6180.299230500001,
+["LastSeen"] = 6180.7073723,
 },
-["Player-3685-0714FFE6"] = {
-["SpecId"] = 266,
-["LastAttempt"] = 422.9559466,
-["LastSeen"] = 815.8293645,
+["Player-11-0E8F5A15"] = {
+["SpecId"] = 1467,
+["LastSeen"] = 43980.68135380001,
 },
-["Player-11-0E283542"] = {
-["SpecId"] = 71,
-["LastSeen"] = 9083.198628600001,
+["Player-3676-0EEA10F2"] = {
+["SpecId"] = 65,
+["LastAttempt"] = 23498.6587638,
+["LastSeen"] = 23498.8709837,
 },
-["Player-1426-0DDB54F2"] = {
-["SpecId"] = 266,
-["LastSeen"] = 46034.4294994,
+["Player-3693-0D7DA94B"] = {
+["SpecId"] = 102,
+["LastSeen"] = 46256.10997880001,
 },
 ["Player-11-0EB4F2B0"] = {
 ["SpecId"] = 253,
 ["LastSeen"] = 4921.6736342,
 },
-["Player-11-0A3D5D22"] = {
-["SpecId"] = 264,
-["LastSeen"] = 1937.5094226,
+["Player-3678-0E2E741B"] = {
+["SpecId"] = 257,
+["LastAttempt"] = 11538.4874101,
+["LastSeen"] = 11538.8098211,
 },
-["Player-11-0EB3B54A"] = {
-["SpecId"] = 253,
-["LastSeen"] = 9108.733762400001,
-},
-["Player-5-0E9C5C09"] = {
-["SpecId"] = 269,
-["LastSeen"] = 47065.23455240001,
-},
-["Player-3675-06E472F2"] = {
+["Player-11-0EB31800"] = {
 ["SpecId"] = 72,
-["LastAttempt"] = 17240.3504473,
-["LastSeen"] = 17240.6159925,
+["LastSeen"] = 17163.0470921,
 },
-["Player-11-0A985E83"] = {
-["SpecId"] = 65,
-["LastSeen"] = 6134.658602500001,
+["Player-11-0E0287FE"] = {
+["SpecId"] = 261,
+["LastSeen"] = 4094.8729706,
+},
+["Player-1138-08B727A3"] = {
+["SpecId"] = 70,
+["LastAttempt"] = 6590.0891804,
+["LastSeen"] = 6590.5195098,
+},
+["Player-58-0A3803F5"] = {
+["SpecId"] = 1480,
+["LastAttempt"] = 24718.4391892,
+["LastSeen"] = 24718.8071753,
 },
 ["Player-63-003C34B4"] = {
 ["SpecId"] = 64,
@@ -4501,67 +6388,64 @@ MiniAurasDB = {
 ["LastAttempt"] = 17241.3557921,
 ["LastSeen"] = 17241.4758612,
 },
-["Player-3725-0BF6028D"] = {
-["SpecId"] = 261,
-["LastAttempt"] = 14198.176607,
-["LastSeen"] = 14198.6177938,
-},
-["Player-11-0E3462B0"] = {
-["SpecId"] = 268,
-["LastSeen"] = 17659.0112579,
-},
-["Player-3676-0D07CFCF"] = {
-["SpecId"] = 252,
-["LastAttempt"] = 13305.8541608,
-["LastSeen"] = 13306.0402551,
-},
-["Player-11-0EA93DC6"] = {
-["SpecId"] = 71,
-["LastAttempt"] = 25640.0410952,
-["LastSeen"] = 25640.2906533,
-},
-["Player-1136-07F378B0"] = {
-["SpecId"] = 253,
-["LastAttempt"] = 13364.5033975,
-["LastSeen"] = 13364.8217733,
-},
-["Player-57-0D46E203"] = {
+["Player-11-0EB0B07C"] = {
 ["SpecId"] = 64,
-["LastAttempt"] = 2413.5481825,
-["LastSeen"] = 3327.7972772,
+["LastSeen"] = 10325.1507497,
+},
+["Player-11-0EB4DC88"] = {
+["SpecId"] = 72,
+["LastSeen"] = 1345.7268743,
+},
+["Player-3661-06D71F45"] = {
+["SpecId"] = 267,
+["LastAttempt"] = 287.6358735,
+["LastSeen"] = 776.220395,
+},
+["Player-3726-0C6118E4"] = {
+["SpecId"] = 269,
+["LastSeen"] = 11352.2469463,
+["LastAttempt"] = 11351.6898613,
+},
+["Player-11-0E7F9902"] = {
+["SpecId"] = 64,
+["LastSeen"] = 7903.8317132,
+},
+["Player-3725-0C5C6A2F"] = {
+["SpecId"] = 264,
+["LastAttempt"] = 20631.403436,
+["LastSeen"] = 21349.45338,
 },
 ["Player-11-0E70B0DB"] = {
 ["SpecId"] = 105,
 ["LastSeen"] = 14322.8834121,
-},
-["Player-76-0C046D27"] = {
-["SpecId"] = 72,
-["LastAttempt"] = 14343.0591055,
-["LastSeen"] = 14810.5586491,
-},
-["Player-104-0E142157"] = {
-["SpecId"] = 253,
-["LastAttempt"] = 43876.5832313,
-["LastSeen"] = 43876.8487882,
 },
 ["Player-3676-0EAAB520"] = {
 ["SpecId"] = 269,
 ["LastAttempt"] = 14344.5628022,
 ["LastSeen"] = 14734.0317659,
 },
-["Player-3676-0EA362F8"] = {
-["SpecId"] = 70,
-["LastAttempt"] = 44869.97159070001,
-["LastSeen"] = 44870.3688225,
+["Player-120-046B99E0"] = {
+["SpecId"] = 259,
+["LastSeen"] = 9379.5813713,
+["LastAttempt"] = 9379.384489900001,
+},
+["Player-11-0EAD1B31"] = {
+["SpecId"] = 64,
+["LastSeen"] = 24233.0221231,
+},
+["Player-60-06DB085C"] = {
+["SpecId"] = 73,
+["LastAttempt"] = 315.1355992,
+["LastSeen"] = 385.1026229,
 },
 ["Player-3676-0EDF7A62"] = {
 ["SpecId"] = 105,
 ["LastAttempt"] = 13176.5938335,
 ["LastSeen"] = 13176.8776531,
 },
-["Player-11-0E25E626"] = {
-["SpecId"] = 70,
-["LastSeen"] = 24426.1270449,
+["Player-11-0EA33BD7"] = {
+["SpecId"] = 254,
+["LastSeen"] = 23100.8950525,
 },
 ["Player-11-0E2FC4B0"] = {
 ["SpecId"] = 270,
@@ -4581,14 +6465,15 @@ MiniAurasDB = {
 ["LastAttempt"] = 41746.6535797,
 ["LastSeen"] = 41849.1989418,
 },
+["Player-73-0FEA2206"] = {
+["SpecId"] = 63,
+["LastAttempt"] = 9125.1081572,
+["LastSeen"] = 9125.3060382,
+},
 ["Player-57-0DFF7F98"] = {
 ["SpecId"] = 258,
 ["LastAttempt"] = 26396.9590499,
 ["LastSeen"] = 26397.1370439,
-},
-["Player-11-0EA33BD7"] = {
-["SpecId"] = 254,
-["LastSeen"] = 23100.8950525,
 },
 ["Player-71-0F028E5A"] = {
 ["SpecId"] = 253,
@@ -4604,9 +6489,10 @@ MiniAurasDB = {
 ["LastAttempt"] = 24613.068734,
 ["LastSeen"] = 24613.213074,
 },
-["Player-11-0E0287FE"] = {
-["SpecId"] = 261,
-["LastSeen"] = 4094.8729706,
+["Player-3661-092FA280"] = {
+["SpecId"] = 270,
+["LastAttempt"] = 44457.1156921,
+["LastSeen"] = 55751.7948771,
 },
 ["Player-57-00409689"] = {
 ["SpecId"] = 256,
@@ -4621,30 +6507,27 @@ MiniAurasDB = {
 ["SpecId"] = 71,
 ["LastSeen"] = 41223.2026987,
 },
-["Player-3725-0C5E5F39"] = {
-["SpecId"] = 264,
-["LastAttempt"] = 35555.0346876,
-["LastSeen"] = 36704.0980728,
+["Player-3676-0D07CFCF"] = {
+["SpecId"] = 252,
+["LastAttempt"] = 13305.8541608,
+["LastSeen"] = 13306.0402551,
 },
-["Player-73-0FEA2206"] = {
-["SpecId"] = 63,
-["LastAttempt"] = 9125.1081572,
-["LastSeen"] = 9125.3060382,
-},
-["Player-151-0926CC45"] = {
-["SpecId"] = 1467,
-["LastAttempt"] = 558.7816803000001,
-["LastSeen"] = 559.1838299000001,
-},
-["Player-3676-0E5BD065"] = {
+["Player-76-0C14C28A"] = {
 ["SpecId"] = 1480,
-["LastAttempt"] = 545.6108774,
-["LastSeen"] = 546.0918103,
+["LastSeen"] = 4668.678864,
 },
-["Player-121-0AD9EA25"] = {
+["Player-11-0EA7D247"] = {
 ["SpecId"] = 253,
-["LastAttempt"] = 13956.8500165,
-["LastSeen"] = 13957.1882504,
+["LastSeen"] = 11171.8474821,
+},
+["Player-11-0EA1CC14"] = {
+["SpecId"] = 64,
+["LastSeen"] = 21834.8055793,
+},
+["Player-3676-0EC3BB9A"] = {
+["SpecId"] = 264,
+["LastAttempt"] = 2501.6682967,
+["LastSeen"] = 2502.0009817,
 },
 ["Player-5-0EA57A83"] = {
 ["SpecId"] = 266,
@@ -4680,45 +6563,44 @@ MiniAurasDB = {
 ["LastAttempt"] = 27534.0975273,
 ["LastSeen"] = 27534.3969576,
 },
-["Player-11-0EB35EB6"] = {
-["SpecId"] = 70,
-["LastSeen"] = 61120.46932500001,
-["LastAttempt"] = 3449.1298191,
+["Player-60-0FE45019"] = {
+["SpecId"] = 268,
+["LastSeen"] = 26644.3238057,
 },
 ["Player-11-0EB49FE7"] = {
 ["SpecId"] = 263,
 ["LastSeen"] = 44067.1694025,
 },
-["Player-3683-0AAF82A4"] = {
-["SpecId"] = 70,
-["LastSeen"] = 366.0942061,
+["Player-11-0EAA5A37"] = {
+["SpecId"] = 65,
+["LastSeen"] = 10042.6145395,
 },
 ["Player-61-0FE83B9E"] = {
 ["SpecId"] = 65,
 ["LastSeen"] = 16021.5937076,
 },
-["Player-3209-0B7E4C93"] = {
-["SpecId"] = 64,
-["LastSeen"] = 9245.3129002,
+["Player-11-0E53214E"] = {
+["SpecId"] = 102,
+["LastSeen"] = 3262.3395597,
 },
 ["Player-57-0A144DD3"] = {
 ["SpecId"] = 258,
 ["LastAttempt"] = 2216.3669294,
 ["LastSeen"] = 3195.0112064,
 },
-["Player-57-0D7B72C2"] = {
-["SpecId"] = 581,
-["LastAttempt"] = 704.3936511,
-["LastSeen"] = 704.9107015000001,
+["Player-60-0FFB1BE0"] = {
+["SpecId"] = 62,
+["LastAttempt"] = 10529.9394636,
+["LastSeen"] = 10530.1002497,
 },
 ["Player-3678-0D7B3B84"] = {
 ["SpecId"] = 265,
 ["LastAttempt"] = 16992.4078076,
 ["LastSeen"] = 16993.0292423,
 },
-["Player-11-0E79CE72"] = {
-["SpecId"] = 104,
-["LastSeen"] = 871.1960484000001,
+["Player-3683-0AAF82A4"] = {
+["SpecId"] = 70,
+["LastSeen"] = 366.0942061,
 },
 ["Player-11-0E9D9EF9"] = {
 ["SpecId"] = 70,
@@ -4729,24 +6611,22 @@ MiniAurasDB = {
 ["LastAttempt"] = 43836.2408718,
 ["LastSeen"] = 43836.6145947,
 },
-["Player-1427-0966ED4A"] = {
-["SpecId"] = 71,
-["LastSeen"] = 18072.8592684,
+["Player-52-0DB41EC3"] = {
+["SpecId"] = 259,
+["LastSeen"] = 11364.0640768,
+["LastAttempt"] = 11363.8357606,
 },
-["Player-11-0EB334F6"] = {
-["SpecId"] = 268,
-["LastAttempt"] = 659.7959252,
-["LastSeen"] = 660.0629572,
+["Player-60-0FEA25C6"] = {
+["SpecId"] = 66,
+["LastSeen"] = 824.0475313000001,
 },
-["Player-3678-08AABD1D"] = {
-["SpecId"] = 253,
-["LastAttempt"] = 861.6764706,
-["LastSeen"] = 861.9348738000001,
+["Player-11-0DC05999"] = {
+["SpecId"] = 261,
+["LastSeen"] = 17194.7330772,
 },
-["Player-77-0EE4098E"] = {
-["SpecId"] = 73,
-["LastAttempt"] = 13205.8984253,
-["LastSeen"] = 13206.246782,
+["Player-11-0E771C2D"] = {
+["SpecId"] = 256,
+["LastSeen"] = 1193.5614464,
 },
 ["Player-127-0A608CC6"] = {
 ["SpecId"] = 1468,
@@ -4757,32 +6637,32 @@ MiniAurasDB = {
 ["LastAttempt"] = 44231.1593249,
 ["LastSeen"] = 55574.66796490001,
 },
-["Player-1138-08B727A3"] = {
-["SpecId"] = 70,
-["LastAttempt"] = 6590.0891804,
-["LastSeen"] = 6590.5195098,
+["Player-11-0EB4E206"] = {
+["SpecId"] = 1468,
+["LastAttempt"] = 19205.015515,
+["LastSeen"] = 19695.8388307,
 },
-["Player-11-0EACE945"] = {
-["SpecId"] = 1467,
-["LastSeen"] = 3945.8817056,
+["Player-11-0B75DCA6"] = {
+["SpecId"] = 267,
+["LastSeen"] = 10019.714375,
 },
-["Player-11-0E99FACE"] = {
-["SpecId"] = 270,
-["LastAttempt"] = 9302.666268300001,
-["LastSeen"] = 8646.1446309,
+["Player-76-0BCAD08C"] = {
+["SpecId"] = 105,
+["LastSeen"] = 5290.7006192,
 },
 ["Player-104-0C741348"] = {
 ["SpecId"] = 102,
 ["LastAttempt"] = 13376.6237854,
 ["LastSeen"] = 13376.9979535,
 },
-["Player-76-0BCAD08C"] = {
-["SpecId"] = 105,
-["LastSeen"] = 5290.7006192,
+["Player-3678-093AA337"] = {
+["SpecId"] = 65,
+["LastSeen"] = 17024.1745655,
+["LastAttempt"] = 16911.1731035,
 },
-["Player-11-0E483D9F"] = {
-["SpecId"] = 102,
-["LastSeen"] = 1505.4537927,
+["Player-3684-0E1EDEC4"] = {
+["SpecId"] = 65,
+["LastSeen"] = 812.7377213000001,
 },
 ["Player-121-0A019F6E"] = {
 ["SpecId"] = 263,
@@ -4794,38 +6674,38 @@ MiniAurasDB = {
 ["LastAttempt"] = 6588.9951577,
 ["LastSeen"] = 6589.232554900001,
 },
-["Player-57-0D808CC8"] = {
-["SpecId"] = 270,
-["LastAttempt"] = 13203.5983293,
-["LastSeen"] = 13204.3380959,
+["Player-60-0FDD9378"] = {
+["SpecId"] = 70,
+["LastSeen"] = 5792.071851100001,
 },
-["Player-3725-0BD96ECA"] = {
-["SpecId"] = 257,
-["LastAttempt"] = 13507.2576722,
-["LastSeen"] = 13507.6903459,
+["Player-117-0472BE61"] = {
+["SpecId"] = 254,
+["LastAttempt"] = 15964.9976327,
+["LastSeen"] = 15965.3298348,
 },
-["Player-1426-0DFC86D7"] = {
-["SpecId"] = 261,
-["LastSeen"] = 12428.8106017,
+["Player-76-0B8779EB"] = {
+["SpecId"] = 102,
+["LastAttempt"] = 13125.0801035,
+["LastSeen"] = 13125.5419051,
 },
-["Player-3675-0A64FA49"] = {
-["SpecId"] = 261,
-["LastAttempt"] = 11825.3286961,
-["LastSeen"] = 12102.683886,
+["Player-11-0E9EB8F5"] = {
+["SpecId"] = 104,
+["LastSeen"] = 39350.9474124,
 },
-["Player-5-0E01F16F"] = {
-["SpecId"] = 64,
-["LastAttempt"] = 16896.2313145,
-["LastSeen"] = 16896.7866668,
+["Player-3684-0DC42AE3"] = {
+["SpecId"] = 269,
+["LastAttempt"] = 46872.9606646,
+["LastSeen"] = 55641.99584810001,
 },
-["Player-3675-0B004500"] = {
-["SpecId"] = 581,
-["LastAttempt"] = 24622.6751167,
-["LastSeen"] = 24623.042784,
+["Player-1428-0E8DDBBF"] = {
+["SpecId"] = 269,
+["LastAttempt"] = 24600.9402086,
+["LastSeen"] = 24601.1395484,
 },
-["Player-11-0E8F5A15"] = {
-["SpecId"] = 1467,
-["LastSeen"] = 43980.68135380001,
+["Player-3723-0C5D3C71"] = {
+["SpecId"] = 66,
+["LastAttempt"] = 15046.0353254,
+["LastSeen"] = 15046.5632558,
 },
 ["Player-11-0E227301"] = {
 ["SpecId"] = 270,
@@ -4835,36 +6715,35 @@ MiniAurasDB = {
 ["SpecId"] = 70,
 ["LastSeen"] = 2383.1777219,
 },
-["Player-1168-0A93B29D"] = {
-["SpecId"] = 258,
-["LastAttempt"] = 13116.9099439,
-["LastSeen"] = 13117.1505517,
+["Player-1147-09268B09"] = {
+["SpecId"] = 1473,
+["LastAttempt"] = 22293.0993317,
+["LastSeen"] = 22293.4253758,
 },
-["Player-3676-06DA9DFB"] = {
-["SpecId"] = 64,
-["LastAttempt"] = 316.6413793,
-["LastSeen"] = 787.9790615000001,
+["Player-3693-0EDF9E79"] = {
+["SpecId"] = 1480,
+["LastSeen"] = 21356.8810583,
 },
 ["Player-11-0EAC7717"] = {
 ["SpecId"] = 254,
 ["LastAttempt"] = 4490.592434400001,
 ["LastSeen"] = 4490.8970582,
 },
-["Player-11-0EB0B07C"] = {
-["SpecId"] = 64,
-["LastSeen"] = 10325.1507497,
+["Player-11-09F84AF0"] = {
+["SpecId"] = 265,
+["LastSeen"] = 33880.6134612,
 },
-["Player-11-0E7DBD86"] = {
-["SpecId"] = 1480,
-["LastSeen"] = 34354.44015,
-},
-["Player-11-0EAD2976"] = {
-["SpecId"] = 253,
-["LastSeen"] = 7399.020384,
+["Player-57-0DF29A8A"] = {
+["SpecId"] = 70,
+["LastSeen"] = 19929.8068747,
 },
 ["Player-11-0EB245A6"] = {
 ["SpecId"] = 72,
 ["LastSeen"] = 14498.7919154,
+},
+["Player-11-0E7DBD86"] = {
+["SpecId"] = 1480,
+["LastSeen"] = 34354.44015,
 },
 ["Player-57-0E0C7062"] = {
 ["SpecId"] = 266,
@@ -4875,53 +6754,56 @@ MiniAurasDB = {
 ["SpecId"] = 70,
 ["LastSeen"] = 5131.316871,
 },
-["Player-11-0EB4DC88"] = {
-["SpecId"] = 72,
-["LastSeen"] = 1345.7268743,
-},
-["Player-3676-0DF9785E"] = {
-["SpecId"] = 1468,
-["LastSeen"] = 14106.3335678,
-},
-["Player-76-0BE4F401"] = {
-["SpecId"] = 261,
-["LastSeen"] = 47066.7933267,
-},
-["Player-11-0E7F9902"] = {
+["Player-3676-06DA9DFB"] = {
 ["SpecId"] = 64,
-["LastSeen"] = 7903.8317132,
+["LastAttempt"] = 316.6413793,
+["LastSeen"] = 787.9790615000001,
 },
-["Player-60-06DB085C"] = {
-["SpecId"] = 73,
-["LastAttempt"] = 315.1355992,
-["LastSeen"] = 385.1026229,
+["Player-1136-0987B399"] = {
+["SpecId"] = 62,
+["LastAttempt"] = 10617.2963569,
+["LastSeen"] = 10617.616808,
+},
+["Player-3676-0DDE6C73"] = {
+["SpecId"] = 252,
+["LastAttempt"] = 13117.4109714,
+["LastSeen"] = 13117.7523625,
+},
+["Player-160-0B11BC91"] = {
+["SpecId"] = 70,
+["LastAttempt"] = 16881.3700313,
+["LastSeen"] = 16881.6979376,
 },
 ["Player-76-0B39C938"] = {
 ["SpecId"] = 256,
 ["LastSeen"] = 18700.2943535,
 },
-["Player-11-0E9AE5FB"] = {
-["SpecId"] = 253,
-["LastSeen"] = 45928.4777934,
+["Player-11-0EA799F3"] = {
+["SpecId"] = 256,
+["LastSeen"] = 3371.7538471,
 },
-["Player-67-0DBC3DF8"] = {
-["SpecId"] = 71,
-["LastAttempt"] = 13125.4381947,
-["LastSeen"] = 13125.9323182,
+["Player-11-0EB1ADFE"] = {
+["SpecId"] = 70,
+["LastSeen"] = 24530.4814628,
+},
+["Player-3676-06E0BFD8"] = {
+["SpecId"] = 64,
+["LastAttempt"] = 532.3517679,
+["LastSeen"] = 532.7194093,
 },
 ["Player-162-0B3E5BE1"] = {
 ["SpecId"] = 65,
 ["LastAttempt"] = 10771.5267263,
 ["LastSeen"] = 10771.8593162,
 },
-["Player-76-08D42C9D"] = {
-["SpecId"] = 64,
-["LastAttempt"] = 17241.8578829,
-["LastSeen"] = 17242.1944184,
+["Player-60-0FE41944"] = {
+["SpecId"] = 104,
+["LastAttempt"] = 15000.7972574,
+["LastSeen"] = 15001.0368052,
 },
-["Player-55-0B49AA9C"] = {
-["SpecId"] = 254,
-["LastSeen"] = 56583.5274653,
+["Player-11-0E9AE5FB"] = {
+["SpecId"] = 253,
+["LastSeen"] = 45928.4777934,
 },
 ["Player-61-09E26F17"] = {
 ["SpecId"] = 254,
@@ -4937,62 +6819,63 @@ MiniAurasDB = {
 ["LastAttempt"] = 16860.7668201,
 ["LastSeen"] = 16861.2840253,
 },
-["Player-11-0E881FE8"] = {
-["SpecId"] = 105,
-["LastSeen"] = 8069.590985100001,
+["Player-76-08D42C9D"] = {
+["SpecId"] = 64,
+["LastAttempt"] = 17241.8578829,
+["LastSeen"] = 17242.1944184,
 },
-["Player-58-0A3803F5"] = {
+["Player-11-0E52E1FC"] = {
+["SpecId"] = 71,
+["LastSeen"] = 15767.207508,
+},
+["Player-3693-0A03E61E"] = {
+["SpecId"] = 102,
+["LastAttempt"] = 19882.1863396,
+["LastSeen"] = 20014.0879892,
+},
+["Player-3675-0AF9770D"] = {
 ["SpecId"] = 1480,
-["LastAttempt"] = 24718.4391892,
-["LastSeen"] = 24718.8071753,
+["LastAttempt"] = 6586.9877832,
+["LastSeen"] = 6587.187800600001,
 },
-["Player-3725-0B3801A3"] = {
-["SpecId"] = 261,
-["LastSeen"] = 5800.596673100001,
+["Player-11-0EBA3F84"] = {
+["SpecId"] = 253,
+["LastSeen"] = 6731.880126100001,
 },
-["Player-11-0EB1ADFE"] = {
-["SpecId"] = 70,
-["LastSeen"] = 24530.4814628,
-},
-["Player-3725-0AAB19CE"] = {
-["SpecId"] = 577,
-["LastAttempt"] = 9127.130800500001,
-["LastSeen"] = 9613.991427500001,
+["Player-11-0E864E06"] = {
+["SpecId"] = 105,
+["LastSeen"] = 22717.1785892,
 },
 ["Player-11-0EAF8800"] = {
 ["SpecId"] = 253,
 ["LastSeen"] = 60951.30379950001,
-},
-["Player-57-0DF914EA"] = {
-["SpecId"] = 71,
-["LastSeen"] = 3155.0947354,
 },
 ["Player-3675-0A722B6A"] = {
 ["SpecId"] = 266,
 ["LastAttempt"] = 8233.967139800001,
 ["LastSeen"] = 8763.0348051,
 },
-["Player-57-0D7E8028"] = {
-["SpecId"] = 66,
-["LastAttempt"] = 39245.6218201,
-["LastSeen"] = 45548.360457,
+["Player-11-0E9D18F6"] = {
+["SpecId"] = 102,
+["LastSeen"] = 34098.0704972,
 },
-["Player-11-0E9C4BF0"] = {
-["SpecId"] = 261,
-["LastSeen"] = 32087.8143717,
+["Player-11-0E881FE8"] = {
+["SpecId"] = 105,
+["LastSeen"] = 8069.590985100001,
 },
-["Player-11-0E766041"] = {
-["SpecId"] = 254,
-["LastSeen"] = 56273.85101660001,
+["Player-11-0EAFE4AE"] = {
+["SpecId"] = 257,
+["LastAttempt"] = 22293.5993045,
+["LastSeen"] = 22293.9798987,
 },
-["Player-3676-06E0BFD8"] = {
+["Player-57-0E2C467C"] = {
+["SpecId"] = 266,
+["LastAttempt"] = 10513.2857302,
+["LastSeen"] = 10516.7990202,
+},
+["Player-11-0EB4AEF3"] = {
 ["SpecId"] = 64,
-["LastAttempt"] = 532.3517679,
-["LastSeen"] = 532.7194093,
-},
-["Player-11-0EB0E1E3"] = {
-["SpecId"] = 256,
-["LastSeen"] = 44018.42575130001,
+["LastSeen"] = 46381.9477236,
 },
 ["Player-3723-079C3AA9"] = {
 ["SpecId"] = 261,
@@ -5004,14 +6887,14 @@ MiniAurasDB = {
 ["LastAttempt"] = 17255.0450065,
 ["LastSeen"] = 17426.6014364,
 },
-["Player-11-09F84AF0"] = {
-["SpecId"] = 265,
-["LastSeen"] = 33880.6134612,
+["Player-1168-067D8B4D"] = {
+["SpecId"] = 71,
+["LastAttempt"] = 16051.8607169,
+["LastSeen"] = 16052.1684278,
 },
-["Player-1428-0E8DDBBF"] = {
-["SpecId"] = 269,
-["LastAttempt"] = 24600.9402086,
-["LastSeen"] = 24601.1395484,
+["Player-11-0EB13AF8"] = {
+["SpecId"] = 1467,
+["LastSeen"] = 22554.7587627,
 },
 ["Player-162-068CA833"] = {
 ["SpecId"] = 258,
@@ -5027,9 +6910,10 @@ MiniAurasDB = {
 ["SpecId"] = 253,
 ["LastSeen"] = 16550.3439329,
 },
-["Player-11-0EB3E0D6"] = {
-["SpecId"] = 70,
-["LastSeen"] = 2377.8879424,
+["Player-57-0DC5FC56"] = {
+["SpecId"] = 254,
+["LastSeen"] = 37322.1658043,
+["LastAttempt"] = 37322.0003794,
 },
 ["Player-1136-097C31FB"] = {
 ["SpecId"] = 103,
@@ -5040,59 +6924,60 @@ MiniAurasDB = {
 ["SpecId"] = 64,
 ["LastSeen"] = 61833.0911511,
 },
-["Player-11-0E2BF572"] = {
-["SpecId"] = 261,
-["LastSeen"] = 39161.5205447,
+["Player-3725-0BD96ECA"] = {
+["SpecId"] = 257,
+["LastAttempt"] = 13507.2576722,
+["LastSeen"] = 13507.6903459,
 },
 ["Player-86-0AD2050F"] = {
 ["SpecId"] = 267,
 ["LastAttempt"] = 26476.6612908,
 ["LastSeen"] = 26476.9552001,
 },
-["Player-60-0FDD9378"] = {
-["SpecId"] = 70,
-["LastSeen"] = 5792.071851100001,
+["Player-3684-0DA2968F"] = {
+["SpecId"] = 102,
+["LastAttempt"] = 10617.7957538,
+["LastSeen"] = 10618.0815947,
 },
-["Player-3684-0DC42AE3"] = {
-["SpecId"] = 269,
-["LastAttempt"] = 46872.9606646,
-["LastSeen"] = 55641.99584810001,
+["Player-60-0FECB7A4"] = {
+["SpecId"] = 262,
+["LastAttempt"] = 23301.4795098,
+["LastSeen"] = 23301.8077383,
 },
-["Player-11-0DC05999"] = {
-["SpecId"] = 261,
-["LastSeen"] = 17194.7330772,
+["Player-11-0E79CE72"] = {
+["SpecId"] = 104,
+["LastSeen"] = 871.1960484000001,
 },
-["Player-61-0F6F540D"] = {
-["SpecId"] = 577,
-["LastAttempt"] = 24612.5601413,
-["LastSeen"] = 24612.8186871,
+["Player-67-0DBC3DF8"] = {
+["SpecId"] = 71,
+["LastAttempt"] = 13125.4381947,
+["LastSeen"] = 13125.9323182,
 },
 ["Player-3678-0DBD2419"] = {
 ["SpecId"] = 261,
 ["LastAttempt"] = 16833.5691682,
 ["LastSeen"] = 16834.1640738,
 },
-["Player-5-0EB3D1C0"] = {
-["SpecId"] = 264,
-["LastAttempt"] = 19837.7861766,
-["LastSeen"] = 19838.0195316,
+["Player-1168-0B03C661"] = {
+["SpecId"] = 1467,
+["LastSeen"] = 44061.9903329,
 },
-["Player-3209-0B18DD32"] = {
-["SpecId"] = 257,
-["LastSeen"] = 3151.0937335,
+["Player-11-0EB52D88"] = {
+["SpecId"] = 1468,
+["LastSeen"] = 55780.8513437,
 },
 ["Player-11-0E305240"] = {
 ["SpecId"] = 259,
 ["LastSeen"] = 3228.0399523,
 },
-["Player-5-093CAA27"] = {
-["SpecId"] = 64,
-["LastAttempt"] = 5577.4410961,
-["LastSeen"] = 5577.8741368,
+["Player-11-0E9C4BF0"] = {
+["SpecId"] = 261,
+["LastSeen"] = 32087.8143717,
 },
-["Player-11-0EB13AF8"] = {
-["SpecId"] = 1467,
-["LastSeen"] = 22554.7587627,
+["Player-53-0E1DE760"] = {
+["SpecId"] = 256,
+["LastSeen"] = 2994.0652721,
+["LastAttempt"] = 2993.7448237,
 },
 ["Player-11-0E80B907"] = {
 ["SpecId"] = 264,
@@ -5103,28 +6988,30 @@ MiniAurasDB = {
 ["LastAttempt"] = 2081.2814551,
 ["LastSeen"] = 2081.5304904,
 },
-["Player-1168-067D8B4D"] = {
-["SpecId"] = 71,
-["LastAttempt"] = 16051.8607169,
-["LastSeen"] = 16052.1684278,
+["Player-3676-0E5BD065"] = {
+["SpecId"] = 1480,
+["LastAttempt"] = 545.6108774,
+["LastSeen"] = 546.0918103,
 },
-["Player-1168-0B03C661"] = {
+["Player-1427-0EDBCD08"] = {
+["SpecId"] = 265,
+["LastAttempt"] = 9303.6674107,
+["LastSeen"] = 9304.067847600001,
+},
+["Player-3209-0B8E16DB"] = {
 ["SpecId"] = 1467,
-["LastSeen"] = 44061.9903329,
+["LastAttempt"] = 7321.945415,
+["LastSeen"] = 7322.129132700001,
 },
-["Player-71-0FD93B5F"] = {
-["SpecId"] = 257,
-["LastAttempt"] = 10772.0270003,
-["LastSeen"] = 10772.3646041,
+["Player-96-0EDA950F"] = {
+["SpecId"] = 1480,
+["LastAttempt"] = 16848.5379873,
+["LastSeen"] = 16849.4638163,
 },
-["Player-3661-092FA280"] = {
-["SpecId"] = 270,
-["LastAttempt"] = 44457.1156921,
-["LastSeen"] = 55751.7948771,
-},
-["Player-11-0E6BEF97"] = {
-["SpecId"] = 261,
-["LastSeen"] = 40524.481454,
+["Player-1425-0EEC5E03"] = {
+["SpecId"] = 71,
+["LastAttempt"] = 7991.392731100001,
+["LastSeen"] = 7991.7280607,
 },
 ["Player-1136-092EEAA7"] = {
 ["SpecId"] = 577,
@@ -5140,54 +7027,58 @@ MiniAurasDB = {
 ["SpecId"] = 70,
 ["LastSeen"] = 10203.9828408,
 },
-["Player-3676-0DDE6C73"] = {
-["SpecId"] = 252,
-["LastAttempt"] = 13117.4109714,
-["LastSeen"] = 13117.7523625,
-},
-["Player-60-0FE45019"] = {
-["SpecId"] = 268,
-["LastSeen"] = 26644.3238057,
-},
-["Player-11-0E4C1143"] = {
+["Player-5-093CAA27"] = {
 ["SpecId"] = 64,
-["LastAttempt"] = 16051.3584827,
-["LastSeen"] = 16051.6722903,
+["LastAttempt"] = 5577.4410961,
+["LastSeen"] = 5577.8741368,
 },
-["Player-11-0E52E1FC"] = {
-["SpecId"] = 71,
-["LastSeen"] = 15767.207508,
+["Player-104-0E5429E3"] = {
+["SpecId"] = 261,
+["LastAttempt"] = 13175.574913,
+["LastSeen"] = 13176.222965,
 },
-["Player-11-0E4E4695"] = {
-["SpecId"] = 253,
-["LastAttempt"] = 26391.1379348,
-["LastSeen"] = 26391.4529591,
+["Player-11-0EAAADCA"] = {
+["SpecId"] = 258,
+["LastAttempt"] = 15951.4027368,
+["LastSeen"] = 15951.6994511,
+},
+["Player-77-0EE4098E"] = {
+["SpecId"] = 73,
+["LastAttempt"] = 13205.8984253,
+["LastSeen"] = 13206.246782,
+},
+["Player-57-0D6DDBAC"] = {
+["SpecId"] = 260,
+["LastAttempt"] = 302.5567774,
+["LastSeen"] = 636.4630491,
 },
 ["Player-3693-0744AEE4"] = {
 ["SpecId"] = 257,
 ["LastSeen"] = 4083.2523517,
 },
-["Player-11-0EA7D247"] = {
+["Player-3725-0AAB19CE"] = {
+["SpecId"] = 577,
+["LastAttempt"] = 9127.130800500001,
+["LastSeen"] = 9613.991427500001,
+},
+["Player-160-0B2BA71A"] = {
 ["SpecId"] = 253,
-["LastSeen"] = 11171.8474821,
+["LastSeen"] = 38534.9445365,
+["LastAttempt"] = 38534.7148842,
 },
-["Player-11-0EB4E206"] = {
-["SpecId"] = 1468,
-["LastAttempt"] = 19205.015515,
-["LastSeen"] = 19695.8388307,
-},
-["Player-11-0E9EB8F5"] = {
-["SpecId"] = 104,
-["LastSeen"] = 39350.9474124,
-},
-["Player-1428-0E952E3E"] = {
-["SpecId"] = 251,
-["LastAttempt"] = 11827.338684,
-["LastSeen"] = 12056.3487346,
-},
-["Player-60-0FEA25C6"] = {
+["Player-11-0EB54762"] = {
 ["SpecId"] = 66,
-["LastSeen"] = 824.0475313000001,
+["LastSeen"] = 7511.349785300001,
+},
+["Player-1168-0A93B29D"] = {
+["SpecId"] = 258,
+["LastAttempt"] = 13116.9099439,
+["LastSeen"] = 13117.1505517,
+},
+["Player-5-0EB3D1C0"] = {
+["SpecId"] = 264,
+["LastAttempt"] = 19837.7861766,
+["LastSeen"] = 19838.0195316,
 },
 ["Player-11-0E10CAEA"] = {
 ["SpecId"] = 257,
@@ -5198,23 +7089,23 @@ MiniAurasDB = {
 ["LastAttempt"] = 19882.6856472,
 ["LastSeen"] = 20234.8515968,
 },
-["Player-3684-0E1EDEC4"] = {
-["SpecId"] = 65,
-["LastSeen"] = 812.7377213000001,
-},
-["Player-1428-097CC69D"] = {
-["SpecId"] = 252,
-["LastAttempt"] = 6180.299230500001,
-["LastSeen"] = 6180.7073723,
-},
-["Player-11-0E88E5A0"] = {
-["SpecId"] = 70,
-["LastSeen"] = 10439.8492304,
-},
-["Player-11-0EB50D37"] = {
+["Player-11-0EAD2976"] = {
 ["SpecId"] = 253,
-["LastAttempt"] = 21633.8078354,
-["LastSeen"] = 21634.1389829,
+["LastSeen"] = 7399.020384,
+},
+["Player-3693-0EDC48E2"] = {
+["SpecId"] = 64,
+["LastAttempt"] = 17982.6338629,
+["LastSeen"] = 17982.9821953,
+},
+["Player-9-0E363C28"] = {
+["SpecId"] = 268,
+["LastAttempt"] = 17240.8556206,
+["LastSeen"] = 17241.1856821,
+},
+["Player-3725-0B3801A3"] = {
+["SpecId"] = 261,
+["LastSeen"] = 5800.596673100001,
 },
 ["Player-154-0C077686"] = {
 ["SpecId"] = 266,
@@ -5231,49 +7122,49 @@ MiniAurasDB = {
 ["LastAttempt"] = 19021.5421579,
 ["LastSeen"] = 19021.8335958,
 },
-["Player-11-0EAA5A37"] = {
-["SpecId"] = 65,
-["LastSeen"] = 10042.6145395,
+["Player-3675-0AFFB224"] = {
+["SpecId"] = 102,
+["LastSeen"] = 19880.4615393,
 },
 ["Player-3676-0E6A1FA0"] = {
 ["SpecId"] = 265,
 ["LastSeen"] = 46976.00847740001,
 },
-["Player-57-0D6DDBAC"] = {
-["SpecId"] = 260,
-["LastAttempt"] = 302.5567774,
-["LastSeen"] = 636.4630491,
+["Player-162-0BDEA4B3"] = {
+["SpecId"] = 266,
+["LastSeen"] = 11332.3111715,
 },
-["Player-3723-0C41A46E"] = {
+["Player-3678-0B7166EC"] = {
 ["SpecId"] = 64,
-["LastAttempt"] = 6727.606830000001,
-["LastSeen"] = 6728.039633500001,
+["LastAttempt"] = 13351.8915282,
+["LastSeen"] = 13352.2591582,
 },
 ["Player-52-0CB3B048"] = {
 ["SpecId"] = 270,
 ["LastAttempt"] = 43836.73980500001,
 ["LastSeen"] = 43837.1527995,
 },
+["Player-1129-0BE2C12A"] = {
+["SpecId"] = 1468,
+["LastSeen"] = 46256.11130780001,
+},
+["Player-76-0BE4F401"] = {
+["SpecId"] = 261,
+["LastSeen"] = 47066.7933267,
+},
+["Player-11-0EB334F6"] = {
+["SpecId"] = 268,
+["LastAttempt"] = 659.7959252,
+["LastSeen"] = 660.0629572,
+},
+["Player-3675-0B017D26"] = {
+["SpecId"] = 65,
+["LastSeen"] = 40607.1868867,
+},
 ["Player-113-0B03A169"] = {
 ["SpecId"] = 252,
 ["LastAttempt"] = 19205.5173929,
 ["LastSeen"] = 19613.8996359,
-},
-["Player-5-0B101664"] = {
-["SpecId"] = 71,
-["LastSeen"] = 941.2296469,
-},
-["Player-57-0DF29A8A"] = {
-["SpecId"] = 70,
-["LastSeen"] = 19929.8068747,
-},
-["Player-11-0E9D18F6"] = {
-["SpecId"] = 102,
-["LastSeen"] = 34098.0704972,
-},
-["Player-3684-0D679A7E"] = {
-["SpecId"] = 72,
-["LastSeen"] = 56080.74265830001,
 },
 ["Player-3683-0D9B84BB"] = {
 ["SpecId"] = 72,
@@ -5303,47 +7194,46 @@ MiniAurasDB = {
 ["LastAttempt"] = 19516.7030543,
 ["LastSeen"] = 19779.9828142,
 },
-["Player-3208-054AFA51"] = {
-["SpecId"] = 253,
-["LastAttempt"] = 16849.5451235,
-["LastSeen"] = 16849.7326296,
+["Player-1427-0DC5DD6C"] = {
+["SpecId"] = 105,
+["LastAttempt"] = 22788.9192129,
+["LastSeen"] = 26823.0911033,
 },
-["Player-3693-0A03E61E"] = {
-["SpecId"] = 102,
-["LastAttempt"] = 19882.1863396,
-["LastSeen"] = 20014.0879892,
+["Player-76-0C046D27"] = {
+["SpecId"] = 72,
+["LastAttempt"] = 14343.0591055,
+["LastSeen"] = 14810.5586491,
 },
-["Player-53-0E1DE760"] = {
-["SpecId"] = 256,
-["LastSeen"] = 2994.0652721,
-["LastAttempt"] = 2993.7448237,
+["Player-1428-0DFF98CC"] = {
+["SpecId"] = 1480,
+["LastAttempt"] = 13324.6694469,
+["LastSeen"] = 13324.9893573,
 },
-["Player-3676-0EDF871E"] = {
-["SpecId"] = 1468,
-["LastSeen"] = 18702.2950532,
+["Player-3661-09767931"] = {
+["SpecId"] = 270,
+["LastAttempt"] = 22928.2159964,
+["LastSeen"] = 22928.5046857,
 },
 ["Player-1427-04FDC766"] = {
 ["SpecId"] = 262,
 ["LastAttempt"] = 43863.9114694,
 ["LastSeen"] = 43864.2516368,
 },
-["Player-60-0FE41944"] = {
-["SpecId"] = 104,
-["LastAttempt"] = 15000.7972574,
-["LastSeen"] = 15001.0368052,
+["Player-86-0AA49679"] = {
+["SpecId"] = 270,
+["LastSeen"] = 9195.851767400001,
 },
-["Player-3725-0C5C6A2F"] = {
-["SpecId"] = 264,
-["LastAttempt"] = 20631.403436,
-["LastSeen"] = 21349.45338,
+["Player-55-0B49AA9C"] = {
+["SpecId"] = 254,
+["LastSeen"] = 56583.5274653,
 },
-["Player-11-0E771C2D"] = {
-["SpecId"] = 256,
-["LastSeen"] = 1193.5614464,
+["Player-11-0EB3B54A"] = {
+["SpecId"] = 253,
+["LastSeen"] = 9108.733762400001,
 },
-["Player-11-0E25A95A"] = {
-["SpecId"] = 70,
-["LastSeen"] = 7202.404421200001,
+["Player-11-0DFCF7C8"] = {
+["SpecId"] = 257,
+["LastSeen"] = 11200.7474597,
 },
 ["Player-11-0EB3F6D9"] = {
 ["SpecId"] = 103,
@@ -5353,19 +7243,20 @@ MiniAurasDB = {
 ["SpecId"] = 253,
 ["LastSeen"] = 1840.6428069,
 },
-["Player-3693-0EDC48E2"] = {
-["SpecId"] = 64,
-["LastAttempt"] = 17982.6338629,
-["LastSeen"] = 17982.9821953,
+["Player-53-0C63A721"] = {
+["SpecId"] = 254,
+["LastAttempt"] = 9303.1680966,
+["LastSeen"] = 9303.356933500001,
 },
-["Player-11-0EB31800"] = {
-["SpecId"] = 72,
-["LastSeen"] = 17163.0470921,
+["Player-11-0EA93DC6"] = {
+["SpecId"] = 71,
+["LastAttempt"] = 25640.0410952,
+["LastSeen"] = 25640.2906533,
 },
-["Player-127-085C2C88"] = {
-["SpecId"] = 102,
-["LastAttempt"] = 533.8886631,
-["LastSeen"] = 534.2748476,
+["Player-1070-039B4E5B"] = {
+["SpecId"] = 70,
+["LastAttempt"] = 17273.7108036,
+["LastSeen"] = 17274.0304454,
 },
 ["Player-11-0EA2C500"] = {
 ["SpecId"] = 263,
@@ -5380,17 +7271,18 @@ MiniAurasDB = {
 ["SpecId"] = 102,
 ["LastSeen"] = 8104.8973431,
 },
-["Player-11-0B75DCA6"] = {
-["SpecId"] = 267,
-["LastSeen"] = 10019.714375,
+["Player-5-0E9C5C09"] = {
+["SpecId"] = 269,
+["LastSeen"] = 47065.23455240001,
 },
 ["Player-76-0A4CDFE4"] = {
 ["SpecId"] = 65,
 ["LastSeen"] = 9109.3702354,
 },
-["Player-11-0EB52D88"] = {
-["SpecId"] = 1468,
-["LastSeen"] = 55780.8513437,
+["Player-61-0F41419A"] = {
+["SpecId"] = 102,
+["LastSeen"] = 24204.4458721,
+["LastAttempt"] = 24203.6797386,
 },
 ["Player-3725-0C22AF9C"] = {
 ["SpecId"] = 577,
@@ -5400,32 +7292,32 @@ MiniAurasDB = {
 ["SpecId"] = 270,
 ["LastSeen"] = 5099.4969603,
 },
-["Player-1136-098CC2DD"] = {
-["SpecId"] = 270,
-["LastSeen"] = 39105.83617230001,
+["Player-3693-0EA0AA3C"] = {
+["LastSeen"] = 37321.9634017,
+["SpecId"] = 105,
 },
 ["Player-57-0E1434B1"] = {
 ["SpecId"] = 1480,
 ["LastAttempt"] = 2282.4756984,
 ["LastSeen"] = 3322.4197607,
 },
-["Player-3675-0AFC587A"] = {
-["SpecId"] = 70,
-["LastAttempt"] = 39413.10496580001,
-["LastSeen"] = 39413.2085688,
+["Player-1427-01DB9C05"] = {
+["SpecId"] = 105,
+["LastAttempt"] = 10231.7876088,
+["LastSeen"] = 10232.5807166,
 },
-["Player-104-0E5429E3"] = {
-["SpecId"] = 261,
-["LastAttempt"] = 13175.574913,
-["LastSeen"] = 13176.222965,
+["Player-11-0E2003EF"] = {
+["SpecId"] = 253,
+["LastSeen"] = 8608.3187058,
 },
-["Player-11-0EA1CC14"] = {
-["SpecId"] = 64,
-["LastSeen"] = 21834.8055793,
+["Player-1136-07F378B0"] = {
+["SpecId"] = 253,
+["LastAttempt"] = 13364.5033975,
+["LastSeen"] = 13364.8217733,
 },
-["Player-11-0E53214E"] = {
+["Player-11-0E483D9F"] = {
 ["SpecId"] = 102,
-["LastSeen"] = 3262.3395597,
+["LastSeen"] = 1505.4537927,
 },
 ["Player-106-053D39C5"] = {
 ["SpecId"] = 254,
@@ -5437,22 +7329,23 @@ MiniAurasDB = {
 ["LastAttempt"] = 18659.7438468,
 ["LastSeen"] = 18659.9195617,
 },
-["Player-11-0E79EC24"] = {
-["SpecId"] = 269,
-["LastSeen"] = 24543.7230955,
+["Player-3209-0C1FA4F1"] = {
+["SpecId"] = 259,
+["LastAttempt"] = 4939.688873,
+["LastSeen"] = 4940.0041278,
 },
 ["Player-1168-087E6AFD"] = {
 ["SpecId"] = 254,
 ["LastSeen"] = 18144.0218932,
 },
-["Player-1185-02104471"] = {
-["SpecId"] = 102,
-["LastAttempt"] = 2147.1175328,
-["LastSeen"] = 3153.1036728,
+["Player-60-0FDD7AFB"] = {
+["SpecId"] = 1480,
+["LastAttempt"] = 13136.737657,
+["LastSeen"] = 13136.9462382,
 },
-["Player-3675-0B017D26"] = {
-["SpecId"] = 65,
-["LastSeen"] = 40607.1868867,
+["Player-11-0EB50C40"] = {
+["SpecId"] = 256,
+["LastSeen"] = 32390.7245512,
 },
 ["Player-11-0EAB249C"] = {
 ["SpecId"] = 70,
@@ -5463,18 +7356,18 @@ MiniAurasDB = {
 ["SpecId"] = 258,
 ["LastSeen"] = 24811.0598732,
 },
-["Player-11-0E7557FB"] = {
-["SpecId"] = 268,
-["LastSeen"] = 21398.6092277,
+["Player-60-0F3AACBC"] = {
+["SpecId"] = 577,
+["LastSeen"] = 6194.3866396,
 },
-["Player-76-0C14C28A"] = {
-["SpecId"] = 1480,
-["LastSeen"] = 4668.678864,
+["Player-11-0E39AEF2"] = {
+["SpecId"] = 105,
+["LastSeen"] = 3331.4221202,
 },
-["Player-160-0B11BC91"] = {
-["SpecId"] = 70,
-["LastAttempt"] = 16881.3700313,
-["LastSeen"] = 16881.6979376,
+["Player-60-0FECBE66"] = {
+["SpecId"] = 62,
+["LastAttempt"] = 23663.9669373,
+["LastSeen"] = 23664.2990635,
 },
 ["Player-11-0E9A01F8"] = {
 ["SpecId"] = 267,
@@ -5490,18 +7383,19 @@ MiniAurasDB = {
 ["SpecId"] = 270,
 ["LastSeen"] = 3403.1472674,
 },
-["Player-11-0E864E06"] = {
-["SpecId"] = 105,
-["LastSeen"] = 22717.1785892,
+["Player-3676-0DFF13A6"] = {
+["SpecId"] = 267,
+["LastAttempt"] = 3035.0147756,
+["LastSeen"] = 3341.7566822,
 },
 ["Player-11-0E43DD99"] = {
 ["SpecId"] = 70,
 ["LastSeen"] = 17145.2357311,
 },
-["Player-76-0B8779EB"] = {
-["SpecId"] = 102,
-["LastAttempt"] = 13125.0801035,
-["LastSeen"] = 13125.5419051,
+["Player-160-0BA36DE1"] = {
+["SpecId"] = 268,
+["LastAttempt"] = 16866.396783,
+["LastSeen"] = 16867.1067776,
 },
 ["Player-77-0D35BBD7"] = {
 ["SpecId"] = 70,
@@ -5517,27 +7411,28 @@ MiniAurasDB = {
 ["LastSeen"] = 24203.5692212,
 ["LastAttempt"] = 24204.6373741,
 },
-["Player-11-0EAAADCA"] = {
+["Player-11-0E75671A"] = {
+["SpecId"] = 266,
+["LastSeen"] = 6342.0003796,
+},
+["Player-3684-0E9EA946"] = {
 ["SpecId"] = 258,
-["LastAttempt"] = 15951.4027368,
-["LastSeen"] = 15951.6994511,
+["LastSeen"] = 41774.2680495,
 },
-["Player-3693-0D7DA94B"] = {
-["SpecId"] = 102,
-["LastSeen"] = 46256.10997880001,
+["Player-3684-0EDF714F"] = {
+["SpecId"] = 261,
+["LastAttempt"] = 40607.9085903,
+["LastSeen"] = 40690.8320822,
 },
-["Player-11-0EA799F3"] = {
-["SpecId"] = 256,
-["LastSeen"] = 3371.7538471,
+["Player-60-0FF95DBF"] = {
+["SpecId"] = 254,
+["LastAttempt"] = 10501.1060201,
+["LastSeen"] = 10501.3500746,
 },
-["Player-3725-0BFBB4D3"] = {
-["SpecId"] = 103,
-["LastSeen"] = 4777.8020152,
-},
-["Player-5-0EB2FE27"] = {
-["SpecId"] = 70,
-["LastAttempt"] = 11825.0842681,
-["LastSeen"] = 13133.1433635,
+["Player-5-0E42B10F"] = {
+["SpecId"] = 65,
+["LastAttempt"] = 25349.4789385,
+["LastSeen"] = 25349.8099078,
 },
 ["Player-99-083B097D"] = {
 ["SpecId"] = 66,
@@ -5553,28 +7448,29 @@ MiniAurasDB = {
 ["LastSeen"] = 20641.7921573,
 ["LastAttempt"] = 20638.7450006,
 },
-["Player-3661-06D71F45"] = {
-["SpecId"] = 267,
-["LastAttempt"] = 287.6358735,
-["LastSeen"] = 776.220395,
+["Player-11-0EB2FF9A"] = {
+["SpecId"] = 268,
+["LastSeen"] = 33980.8062605,
 },
-["Player-106-0DCEE6BE"] = {
-["SpecId"] = 261,
-["LastSeen"] = 8980.393203200001,
+["Player-1428-0EDF1EB5"] = {
+["SpecId"] = 254,
+["LastAttempt"] = 15738.9508088,
+["LastSeen"] = 15739.2602941,
 },
-["Player-3693-0EDF9E79"] = {
-["SpecId"] = 1480,
-["LastSeen"] = 21356.8810583,
+["Player-60-0EFB023F"] = {
+["SpecId"] = 265,
+["LastAttempt"] = 17238.84422,
+["LastSeen"] = 17240.3383223,
 },
-["Player-3723-0C5D3C71"] = {
-["SpecId"] = 66,
-["LastAttempt"] = 15046.0353254,
-["LastSeen"] = 15046.5632558,
+["Player-3694-069F8F0B"] = {
+["SpecId"] = 70,
+["LastAttempt"] = 943.8241075000001,
+["LastSeen"] = 944.1139816000001,
 },
-["Player-3675-0AF9770D"] = {
-["SpecId"] = 1480,
-["LastAttempt"] = 6586.9877832,
-["LastSeen"] = 6587.187800600001,
+["Player-11-0EBB3B75"] = {
+["SpecId"] = 259,
+["LastAttempt"] = 2365.7221225,
+["LastSeen"] = 2366.0608538,
 },
 ["Player-76-0C1105B2"] = {
 ["SpecId"] = 253,
@@ -5590,19 +7486,18 @@ MiniAurasDB = {
 ["LastAttempt"] = 665.3026707,
 ["LastSeen"] = 665.6270685000001,
 },
-["Player-117-0472BE61"] = {
-["SpecId"] = 254,
-["LastAttempt"] = 15964.9976327,
-["LastSeen"] = 15965.3298348,
-},
-["Player-3678-0B7166EC"] = {
+["Player-11-0E7F3CE2"] = {
 ["SpecId"] = 64,
-["LastAttempt"] = 13351.8915282,
-["LastSeen"] = 13352.2591582,
+["LastSeen"] = 10309.0840031,
 },
-["Player-11-0DFCF7C8"] = {
-["SpecId"] = 257,
-["LastSeen"] = 11200.7474597,
+["Player-3721-0BD577F3"] = {
+["SpecId"] = 577,
+["LastSeen"] = 16831.6055071,
+},
+["Player-113-0A21F8D6"] = {
+["SpecId"] = 104,
+["LastAttempt"] = 43888.8868961,
+["LastSeen"] = 43940.8802729,
 },
 ["Player-5-0EB03076"] = {
 ["SpecId"] = 256,
@@ -5618,52 +7513,56 @@ MiniAurasDB = {
 ["LastAttempt"] = 13259.791102,
 ["LastSeen"] = 13260.1098424,
 },
-["Player-11-0EB4AEF3"] = {
+["Player-163-0BA57A60"] = {
 ["SpecId"] = 64,
-["LastSeen"] = 46381.9477236,
+["LastAttempt"] = 13336.2535992,
+["LastSeen"] = 13336.6060769,
 },
-["Player-11-0EB2A538"] = {
-["SpecId"] = 104,
-["LastSeen"] = 21329.2027797,
+["Player-60-0FECBD75"] = {
+["SpecId"] = 268,
+["LastAttempt"] = 24215.2577603,
+["LastSeen"] = 24215.4317895,
 },
-["Player-86-0AA49679"] = {
-["SpecId"] = 270,
-["LastSeen"] = 9195.851767400001,
+["Player-11-0E1F67F5"] = {
+["SpecId"] = 257,
+["LastSeen"] = 21616.1203515,
 },
 ["Player-11-0E21BD19"] = {
 ["SpecId"] = 266,
 ["LastSeen"] = 2359.8557201,
 },
-["Player-3675-0B000665"] = {
-["SpecId"] = 72,
-["LastSeen"] = 40686.6180168,
+["Player-11-0A3D5D22"] = {
+["SpecId"] = 264,
+["LastSeen"] = 1937.5094226,
 },
-["Player-11-0EAA9B8C"] = {
-["SpecId"] = 256,
-["LastSeen"] = 7485.856941200001,
+["Player-106-0E6DE8FC"] = {
+["SpecId"] = 269,
+["LastAttempt"] = 13684.1274269,
+["LastSeen"] = 13684.5978237,
 },
 ["Player-61-0F64DC74"] = {
 ["SpecId"] = 105,
 ["LastAttempt"] = 329.1870008,
 ["LastSeen"] = 641.2002593000001,
 },
-["Player-1427-0EDBCD08"] = {
-["SpecId"] = 265,
-["LastAttempt"] = 9303.6674107,
-["LastSeen"] = 9304.067847600001,
-},
-["Player-127-0A9FF023"] = {
+["Player-11-0EA2035C"] = {
 ["SpecId"] = 577,
-["LastSeen"] = 40606.9436063,
+["LastSeen"] = 4123.6184024,
+},
+["Player-5-090A8FBD"] = {
+["SpecId"] = 104,
+["LastAttempt"] = 17254.0346972,
+["LastSeen"] = 17254.2284077,
 },
 ["Player-1175-0FE5F5CE"] = {
 ["SpecId"] = 253,
 ["LastAttempt"] = 286.545307,
 ["LastSeen"] = 600.2809889,
 },
-["Player-11-0EB31EDE"] = {
-["SpecId"] = 262,
-["LastSeen"] = 46247.44962760001,
+["Player-11-0EAE207A"] = {
+["SpecId"] = 70,
+["LastAttempt"] = 15950.8994331,
+["LastSeen"] = 15951.1312679,
 },
 ["Player-11-0E67F392"] = {
 ["SpecId"] = 1480,
@@ -5678,79 +7577,80 @@ MiniAurasDB = {
 ["SpecId"] = 264,
 ["LastSeen"] = 1337.89095,
 },
-["Player-96-0EDA950F"] = {
-["SpecId"] = 1480,
-["LastAttempt"] = 16848.5379873,
-["LastSeen"] = 16849.4638163,
+["Player-84-0B00A947"] = {
+["SpecId"] = 255,
+["LastSeen"] = 5330.3768122,
 },
 ["Player-77-0FA7AB69"] = {
 ["SpecId"] = 66,
 ["LastSeen"] = 3344.8195937,
 },
-["Player-11-0EAD1B31"] = {
-["SpecId"] = 64,
-["LastSeen"] = 24233.0221231,
-},
-["Player-3684-0EBA89BC"] = {
+["Player-3676-0D36DD6A"] = {
 ["SpecId"] = 264,
-["LastAttempt"] = 16847.5614574,
-["LastSeen"] = 16848.0954553,
+["LastSeen"] = 38534.6126076,
+["LastAttempt"] = 38534.37825330001,
+},
+["Player-60-06D264AF"] = {
+["SpecId"] = 264,
+["LastSeen"] = 14295.3989428,
+["LastAttempt"] = 14295.0757385,
 },
 ["Player-11-0EA586CE"] = {
 ["SpecId"] = 70,
 ["LastAttempt"] = 18659.2409748,
 ["LastSeen"] = 18659.4158278,
 },
-["Player-1427-0DC5DD6C"] = {
-["SpecId"] = 105,
-["LastAttempt"] = 22788.9192129,
-["LastSeen"] = 26823.0911033,
+["Player-5-0EAC12C6"] = {
+["SpecId"] = 253,
+["LastAttempt"] = 19838.4831908,
+["LastSeen"] = 19838.8125105,
 },
-["Player-11-0E1DC2A2"] = {
-["SpecId"] = 270,
-["LastSeen"] = 22817.6426966,
+["Player-3725-0C393ECA"] = {
+["SpecId"] = 577,
+["LastAttempt"] = 3925.3910189,
+["LastSeen"] = 3925.836958,
 },
 ["Player-11-0EADEE6C"] = {
 ["SpecId"] = 266,
 ["LastAttempt"] = 20895.4747195,
 ["LastSeen"] = 20895.7580083,
 },
-["Player-3684-0EABBAE2"] = {
-["SpecId"] = 105,
-["LastAttempt"] = 11423.7639366,
-["LastSeen"] = 11424.2130242,
+["Player-3675-0A7E1224"] = {
+["SpecId"] = 65,
+["LastSeen"] = 6329.049339,
 },
 ["Player-3661-073CB670"] = {
 ["SpecId"] = 70,
 ["LastSeen"] = 17799.6484383,
 },
-["Player-106-0E6DE8FC"] = {
-["SpecId"] = 269,
-["LastAttempt"] = 13684.1274269,
-["LastSeen"] = 13684.5978237,
+["Player-3676-0EBC4F18"] = {
+["SpecId"] = 252,
+["LastSeen"] = 5910.431078000001,
+["LastAttempt"] = 5910.115471900001,
 },
-["Player-121-09C8A943"] = {
-["SpecId"] = 105,
-["LastAttempt"] = 39461.33777090001,
-["LastSeen"] = 39461.6337836,
+["Player-60-0FFB69E7"] = {
+["LastSeen"] = 10696.9935909,
+["SpecId"] = 256,
 },
-["Player-11-0EB54762"] = {
-["SpecId"] = 66,
-["LastSeen"] = 7511.349785300001,
+["Player-3676-0AEBA7FF"] = {
+["SpecId"] = 253,
+["LastAttempt"] = 13151.0217316,
+["LastSeen"] = 13158.3012577,
 },
-["Player-3209-0BFBD00D"] = {
-["SpecId"] = 258,
-["LastSeen"] = 23262.9652007,
-["LastAttempt"] = 23262.6174002,
+["Player-3676-0DB17138"] = {
+["SpecId"] = 250,
+["LastAttempt"] = 557.7681624,
+["LastSeen"] = 557.9167836,
 },
-["Player-61-0A999173"] = {
-["SpecId"] = 1480,
-["LastAttempt"] = 544.604138,
-["LastSeen"] = 544.7436456,
+["Player-76-0C20D88E"] = {
+["SpecId"] = 250,
+["LastAttempt"] = 10487.477144,
+["LastSeen"] = 10487.8030038,
 },
-["Player-1129-0BE2C12A"] = {
-["SpecId"] = 1468,
-["LastSeen"] = 46256.11130780001,
+["Player-3676-0EEB9BE3"] = {
+["SpecId"] = 256,
+["LastSeen"] = 41417.49903270001,
+["LastAttempt"] = 41417.2465571,
 },
 ["Player-3676-0EB0850B"] = {
 ["SpecId"] = 252,
@@ -5770,36 +7670,39 @@ MiniAurasDB = {
 ["LastAttempt"] = 13325.1755069,
 ["LastSeen"] = 13325.5543472,
 },
-["Player-1168-0AEC10D7"] = {
-["SpecId"] = 65,
-["LastSeen"] = 28019.1812153,
+["Player-60-0FFAC303"] = {
+["SpecId"] = 250,
+["LastAttempt"] = 23276.5235592,
+["LastSeen"] = 23277.4497483,
 },
 ["Player-61-0F01C966"] = {
 ["SpecId"] = 250,
 ["LastAttempt"] = 2280.965155,
 ["LastSeen"] = 3275.6075572,
 },
-["Player-11-0EB490AF"] = {
-["SpecId"] = 64,
-["LastSeen"] = 8039.290749700001,
+["Player-3661-06DA5D7B"] = {
+["SpecId"] = 268,
+["LastAttempt"] = 13177.0929694,
+["LastSeen"] = 13177.5869691,
 },
-["Player-3675-0AA1F0C3"] = {
-["SpecId"] = 72,
-["LastSeen"] = 3369.4060068,
-["LastAttempt"] = 3100.9767415,
+["Player-127-091DBD7A"] = {
+["LastSeen"] = 22066.7195961,
+["SpecId"] = 62,
 },
 ["Player-60-0F8ED2A7"] = {
 ["SpecId"] = 270,
 ["LastAttempt"] = 17285.4048742,
 ["LastSeen"] = 17285.6784819,
 },
-["Player-11-0EB2FF9A"] = {
-["SpecId"] = 268,
-["LastSeen"] = 33980.8062605,
+["Player-3684-0EEBE3D1"] = {
+["SpecId"] = 264,
+["LastSeen"] = 18666.6277097,
+["LastAttempt"] = 18665.1947811,
 },
-["Player-3675-0AFFB224"] = {
-["SpecId"] = 102,
-["LastSeen"] = 19880.4615393,
+["Player-71-0FDFBA00"] = {
+["SpecId"] = 264,
+["LastAttempt"] = 24561.1149003,
+["LastSeen"] = 24561.5632597,
 },
 ["Player-60-0FEC5791"] = {
 ["SpecId"] = 269,
@@ -5811,24 +7714,25 @@ MiniAurasDB = {
 ["LastAttempt"] = 13002.4158029,
 ["LastSeen"] = 13612.1087886,
 },
-["Player-61-0E3D2811"] = {
-["SpecId"] = 64,
-["LastAttempt"] = 35565.04274680001,
-["LastSeen"] = 37062.5945842,
+["Player-60-0FECB70A"] = {
+["SpecId"] = 102,
+["LastAttempt"] = 23626.0323557,
+["LastSeen"] = 23628.0656754,
 },
-["Player-3725-0C5DD2DE"] = {
-["SpecId"] = 577,
-["LastSeen"] = 4487.839079500001,
+["Player-3209-0BCECBD4"] = {
+["SpecId"] = 102,
+["LastSeen"] = 7456.0539176,
+["LastAttempt"] = 7456.011532500001,
 },
 ["Player-57-0DFACC5F"] = {
 ["SpecId"] = 252,
 ["LastAttempt"] = 24601.9395877,
 ["LastSeen"] = 24602.2422815,
 },
-["Player-1070-039B4E5B"] = {
-["SpecId"] = 70,
-["LastAttempt"] = 17273.7108036,
-["LastSeen"] = 17274.0304454,
+["Player-3675-0AC494CE"] = {
+["SpecId"] = 267,
+["LastAttempt"] = 24646.1083804,
+["LastSeen"] = 24646.3520303,
 },
 ["Player-3678-0E1B2C2E"] = {
 ["SpecId"] = 263,
@@ -5839,33 +7743,33 @@ MiniAurasDB = {
 ["LastAttempt"] = 11266.6970411,
 ["LastSeen"] = 11267.1122348,
 },
-["Player-11-0E39AEF2"] = {
-["SpecId"] = 105,
-["LastSeen"] = 3331.4221202,
+["Player-3675-0B0A7476"] = {
+["SpecId"] = 258,
+["LastAttempt"] = 24633.0601874,
+["LastSeen"] = 24633.3115707,
 },
-["Player-61-0F41419A"] = {
-["SpecId"] = 102,
-["LastSeen"] = 24204.4458721,
-["LastAttempt"] = 24203.6797386,
+["Player-3684-0EE00006"] = {
+["SpecId"] = 257,
+["LastSeen"] = 12112.3283538,
 },
-["Player-1175-0D8120AA"] = {
-["SpecId"] = 70,
-["LastSeen"] = 17937.8436972,
-["LastAttempt"] = 17637.3151123,
+["Player-121-0AD9EA25"] = {
+["SpecId"] = 253,
+["LastAttempt"] = 13956.8500165,
+["LastSeen"] = 13957.1882504,
 },
-["Player-11-0E5F3096"] = {
-["SpecId"] = 265,
-["LastSeen"] = 19828.5677665,
+["Player-61-0F6F540D"] = {
+["SpecId"] = 577,
+["LastAttempt"] = 24612.5601413,
+["LastSeen"] = 24612.8186871,
 },
-["Player-5-0E42B10F"] = {
-["SpecId"] = 65,
-["LastAttempt"] = 25349.4789385,
-["LastSeen"] = 25349.8099078,
+["Player-5-0E01F16F"] = {
+["SpecId"] = 64,
+["LastAttempt"] = 16896.2313145,
+["LastSeen"] = 16896.7866668,
 },
-["Player-5-0B2778A7"] = {
-["SpecId"] = 264,
-["LastAttempt"] = 560.2995633,
-["LastSeen"] = 560.5530054000001,
+["Player-9-0DF5AFA4"] = {
+["SpecId"] = 257,
+["LastSeen"] = 21735.2920673,
 },
 ["Player-11-0EB44402"] = {
 ["SpecId"] = 251,
@@ -5875,36 +7779,39 @@ MiniAurasDB = {
 ["SpecId"] = 66,
 ["LastSeen"] = 16071.9628793,
 },
-["Player-76-0922DF34"] = {
-["SpecId"] = 270,
-["LastSeen"] = 47066.7939169,
+["Player-57-0E2D7B5A"] = {
+["SpecId"] = 266,
+["LastAttempt"] = 10540.8252873,
+["LastSeen"] = 10540.9612194,
 },
-["Player-11-0EAE207A"] = {
-["SpecId"] = 70,
-["LastAttempt"] = 15950.8994331,
-["LastSeen"] = 15951.1312679,
+["Player-11-0EAC1F52"] = {
+["SpecId"] = 257,
+["LastSeen"] = 7192.830500800001,
+["LastAttempt"] = 7192.723647000001,
 },
 ["Player-1184-08099B71"] = {
 ["SpecId"] = 256,
 ["LastAttempt"] = 18410.6255427,
 ["LastSeen"] = 18413.6771524,
 },
-["Player-3684-0EDEB76E"] = {
-["SpecId"] = 256,
-["LastSeen"] = 2811.9855753,
+["Player-1428-0E952E3E"] = {
+["SpecId"] = 251,
+["LastAttempt"] = 11827.338684,
+["LastSeen"] = 12056.3487346,
 },
 ["Player-104-00233CE1"] = {
 ["SpecId"] = 64,
 ["LastAttempt"] = 43877.0869524,
 ["LastSeen"] = 43877.29168520001,
 },
-["Player-11-0E6BE242"] = {
-["SpecId"] = 71,
-["LastSeen"] = 7415.588581200001,
+["Player-61-0B8A4180"] = {
+["SpecId"] = 70,
+["LastSeen"] = 11364.5030174,
+["LastAttempt"] = 11364.3319288,
 },
-["Player-3693-0ECE9954"] = {
-["SpecId"] = 267,
-["LastSeen"] = 9666.4883788,
+["Player-11-0E8B874A"] = {
+["SpecId"] = 254,
+["LastSeen"] = 4874.2172084,
 },
 ["Player-5-0E9A5FD1"] = {
 ["SpecId"] = 260,
@@ -5914,23 +7821,22 @@ MiniAurasDB = {
 ["SpecId"] = 268,
 ["LastSeen"] = 18945.7659423,
 },
-["Player-3209-0C009E0A"] = {
-["SpecId"] = 581,
-["LastAttempt"] = 17253.0433844,
-["LastSeen"] = 17253.3585899,
+["Player-1184-080D1FEE"] = {
+["SpecId"] = 252,
+["LastAttempt"] = 2170.345493,
+["LastSeen"] = 3271.4297068,
 },
-["Player-75-0FAE37F7"] = {
+["Player-76-0C0FE524"] = {
 ["SpecId"] = 65,
-["LastAttempt"] = 16883.1786509,
-["LastSeen"] = 16883.7383098,
+["LastSeen"] = 23649.0885013,
 },
 ["Player-3683-098AAE5F"] = {
 ["SpecId"] = 577,
 ["LastSeen"] = 449.5049044,
 },
-["Player-84-0B00A947"] = {
-["SpecId"] = 255,
-["LastSeen"] = 5330.3768122,
+["Player-160-0835D761"] = {
+["SpecId"] = 262,
+["LastSeen"] = 770.407271,
 },
 ["Player-78-0EECAD8F"] = {
 ["SpecId"] = 270,
@@ -5946,96 +7852,101 @@ MiniAurasDB = {
 ["SpecId"] = 577,
 ["LastSeen"] = 10262.6492344,
 },
-["Player-11-0E483976"] = {
-["SpecId"] = 65,
-["LastAttempt"] = 53140.4656141,
-["LastSeen"] = 55570.6516454,
+["Player-73-0FF06CBD"] = {
+["SpecId"] = 70,
+["LastAttempt"] = 10877.9585648,
+["LastSeen"] = 10878.1040415,
 },
 ["Player-1151-077F77CE"] = {
 ["SpecId"] = 102,
 ["LastAttempt"] = 13362.9853653,
 ["LastSeen"] = 13363.2823008,
 },
-["Player-11-0DE26E3C"] = {
-["SpecId"] = 70,
-["LastSeen"] = 20368.0069271,
+["Player-84-0AFCC858"] = {
+["SpecId"] = 103,
+["LastAttempt"] = 6803.653411,
+["LastSeen"] = 6804.0433597,
 },
-["Player-11-0EA91479"] = {
-["SpecId"] = 267,
-["LastSeen"] = 44048.0092133,
+["Player-11-0E6BEF97"] = {
+["SpecId"] = 261,
+["LastSeen"] = 40524.481454,
 },
 ["Player-61-0F6F6CCD"] = {
 ["SpecId"] = 1467,
 ["LastAttempt"] = 24677.6276907,
 ["LastSeen"] = 24677.7312268,
 },
-["Player-3684-0EDF714F"] = {
-["SpecId"] = 261,
-["LastAttempt"] = 40607.9085903,
-["LastSeen"] = 40690.8320822,
+["Player-9-0EBA801A"] = {
+["SpecId"] = 256,
+["LastSeen"] = 26681.6097644,
+["LastAttempt"] = 26681.4412648,
 },
 ["Player-11-0E5927D9"] = {
 ["SpecId"] = 70,
 ["LastAttempt"] = 7221.8773987,
 ["LastSeen"] = 7222.1722766,
 },
-["Player-127-08687827"] = {
-["SpecId"] = 102,
-["LastSeen"] = 45408.76641880001,
+["Player-3675-0AFFFCE9"] = {
+["SpecId"] = 71,
+["LastSeen"] = 26853.1263737,
+["LastAttempt"] = 26852.8276006,
 },
-["Player-3675-0AD0C8EE"] = {
-["SpecId"] = 270,
-["LastSeen"] = 21434.5603449,
+["Player-57-0B576334"] = {
+["SpecId"] = 71,
+["LastAttempt"] = 23719.743955,
+["LastSeen"] = 23720.5546208,
 },
-["Player-11-0BA0C3BB"] = {
-["SpecId"] = 257,
-["LastSeen"] = 37196.912437,
+["Player-3676-0EEA07EF"] = {
+["SpecId"] = 264,
+["LastAttempt"] = 10502.1508075,
+["LastSeen"] = 10502.2725889,
 },
 ["Player-3678-0DFD9262"] = {
 ["SpecId"] = 73,
 ["LastSeen"] = 56853.38499850001,
 },
-["Player-11-0BBF4738"] = {
-["SpecId"] = 258,
-["LastSeen"] = 2360.7814048,
+["Player-58-0ABD8247"] = {
+["SpecId"] = 254,
+["LastAttempt"] = 14051.5930339,
+["LastSeen"] = 14051.7422447,
 },
-["Player-3694-069F8F0B"] = {
-["SpecId"] = 70,
-["LastAttempt"] = 943.8241075000001,
-["LastSeen"] = 944.1139816000001,
+["Player-3678-0D19E8B2"] = {
+["SpecId"] = 260,
+["LastAttempt"] = 13123.0773024,
+["LastSeen"] = 13123.357931,
 },
-["Player-3676-0EC760D3"] = {
-["SpecId"] = 577,
-["LastAttempt"] = 22744.6231327,
-["LastSeen"] = 26919.3565663,
-},
-["Player-5-0EAC12C6"] = {
+["Player-11-0EB50D37"] = {
 ["SpecId"] = 253,
-["LastAttempt"] = 19838.4831908,
-["LastSeen"] = 19838.8125105,
+["LastAttempt"] = 21633.8078354,
+["LastSeen"] = 21634.1389829,
 },
-["Player-113-09FD85CB"] = {
-["SpecId"] = 70,
-["LastAttempt"] = 328.1847878,
-["LastSeen"] = 802.5593427,
+["Player-3675-0B07D817"] = {
+["SpecId"] = 63,
+["LastAttempt"] = 7990.386854400001,
+["LastSeen"] = 7990.901725400001,
+},
+["Player-3684-0EEAA5EB"] = {
+["SpecId"] = 103,
+["LastAttempt"] = 10108.9527133,
+["LastSeen"] = 10109.2786511,
 },
 ["Player-1136-0973F0DB"] = {
 ["SpecId"] = 73,
 ["LastSeen"] = 3329.0181654,
 },
-["Player-11-0EA2035C"] = {
-["SpecId"] = 577,
-["LastSeen"] = 4123.6184024,
+["Player-11-0EACA5E9"] = {
+["SpecId"] = 264,
+["LastAttempt"] = 24644.6026127,
+["LastSeen"] = 24644.955284,
 },
-["Player-1184-080D1FEE"] = {
-["SpecId"] = 252,
-["LastAttempt"] = 2170.345493,
-["LastSeen"] = 3271.4297068,
+["Player-3723-0C464764"] = {
+["SpecId"] = 259,
+["LastSeen"] = 10799.9873299,
 },
-["Player-11-0BCF0AF7"] = {
-["SpecId"] = 257,
-["LastAttempt"] = 13954.568115,
-["LastSeen"] = 13954.7720071,
+["Player-106-0ECA38C8"] = {
+["SpecId"] = 259,
+["LastAttempt"] = 10744.6087046,
+["LastSeen"] = 10745.0921829,
 },
 ["Player-11-0B88C3B8"] = {
 ["SpecId"] = 263,
@@ -6045,875 +7956,96 @@ MiniAurasDB = {
 ["SpecId"] = 103,
 ["LastSeen"] = 1311.1689729,
 },
-["Player-60-0EFB023F"] = {
-["SpecId"] = 265,
-["LastAttempt"] = 17238.84422,
-["LastSeen"] = 17240.3383223,
-},
-["Player-3661-06DA5D7B"] = {
+["Player-11-0E3462B0"] = {
 ["SpecId"] = 268,
-["LastAttempt"] = 13177.0929694,
-["LastSeen"] = 13177.5869691,
+["LastSeen"] = 17659.0112579,
 },
-["Player-1136-098C7B45"] = {
-["SpecId"] = 104,
-["LastAttempt"] = 43876.0757755,
-["LastSeen"] = 43942.9122787,
+["Player-3684-09C9900D"] = {
+["SpecId"] = 256,
+["LastAttempt"] = 23300.9977266,
+["LastSeen"] = 23301.1272963,
+},
+["Player-1136-090EF99C"] = {
+["SpecId"] = 265,
+["LastAttempt"] = 24646.6114578,
+["LastSeen"] = 24646.8908825,
 },
 ["Player-3209-0B6293AA"] = {
 ["SpecId"] = 268,
 ["LastAttempt"] = 13136.2271606,
 ["LastSeen"] = 13136.6203729,
 },
-["Player-3676-0AEBA7FF"] = {
-["SpecId"] = 253,
-["LastAttempt"] = 13151.0217316,
-["LastSeen"] = 13158.3012577,
+["Player-11-0EB48D94"] = {
+["SpecId"] = 72,
+["LastSeen"] = 24421.780905,
 },
 ["Player-53-0E1D6185"] = {
 ["SpecId"] = 1467,
 ["LastAttempt"] = 42562.5353697,
 ["LastSeen"] = 42761.1202722,
 },
-["Player-157-0C1AA013"] = {
-["SpecId"] = 70,
-["LastAttempt"] = 44869.4699171,
-["LastSeen"] = 44869.70004040001,
+["Player-11-0E4E4695"] = {
+["SpecId"] = 253,
+["LastAttempt"] = 26391.1379348,
+["LastSeen"] = 26391.4529591,
 },
 ["Player-162-0C151FE5"] = {
 ["SpecId"] = 65,
 ["LastSeen"] = 46204.8313786,
 },
-["Player-163-0BA57A60"] = {
-["SpecId"] = 64,
-["LastAttempt"] = 13336.2535992,
-["LastSeen"] = 13336.6060769,
+["Player-11-09D55048"] = {
+["SpecId"] = 261,
+["LastSeen"] = 33150.78186030001,
 },
 ["Player-11-0EA8D025"] = {
 ["SpecId"] = 105,
 ["LastAttempt"] = 9089.8282985,
 ["LastSeen"] = 9627.7800595,
 },
-["Player-11-0E9FDE39"] = {
-["SpecId"] = 269,
-["LastSeen"] = 13746.0663777,
+["Player-60-0FF99377"] = {
+["SpecId"] = 252,
+["LastAttempt"] = 10529.4348794,
+["LastSeen"] = 10529.7573257,
 },
 ["Player-11-0E8A96C2"] = {
 ["SpecId"] = 256,
 ["LastAttempt"] = 12866.7930632,
 ["LastSeen"] = 12866.9343809,
 },
-["Player-11-0E95A5A6"] = {
-["SpecId"] = 265,
-["LastSeen"] = 46245.4162245,
+["Player-3676-0EEBDAD9"] = {
+["SpecId"] = 264,
+["LastAttempt"] = 10555.9809556,
+["LastSeen"] = 10556.0761153,
 },
-["Player-121-09CF074A"] = {
-["SpecId"] = 253,
-["LastAttempt"] = 13323.818635,
-["LastSeen"] = 13324.1574967,
+["Player-60-0FECB6FA"] = {
+["SpecId"] = 263,
+["LastSeen"] = 23434.4997263,
 },
-["Player-11-0E9A0FA3"] = {
-["SpecId"] = 269,
-["LastSeen"] = 22171.2352941,
+["Player-60-0FF05C40"] = {
+["SpecId"] = 250,
+["LastAttempt"] = 10765.6729844,
+["LastSeen"] = 10765.8140446,
 },
 ["Player-57-0DF82367"] = {
 ["SpecId"] = 1480,
 ["LastAttempt"] = 9125.6139688,
 ["LastSeen"] = 9612.634526,
 },
-["Player-3678-0D19E8B2"] = {
-["SpecId"] = 260,
-["LastAttempt"] = 13123.0773024,
-["LastSeen"] = 13123.357931,
+["Player-3676-0EE69D66"] = {
+["SpecId"] = 269,
+["LastSeen"] = 12383.1176217,
+["LastAttempt"] = 12382.8080751,
+},
+["Player-3676-0EE30FBA"] = {
+["SpecId"] = 262,
+["LastSeen"] = 11316.7993417,
+},
+["Player-11-0EBB84E4"] = {
+["SpecId"] = 257,
+["LastAttempt"] = 14635.3841854,
+["LastSeen"] = 14635.6992504,
 },
-["Player-11-078E2996"] = {
-["SpecId"] = 65,
-["LastAttempt"] = 25966.3302091,
-["LastSeen"] = 25966.6469301,
-},
-["Player-160-0B5EB1E5"] = {
-["SpecId"] = 65,
-["LastSeen"] = 27056.0133709,
-},
-},
-["MissedLegacyImport"] = false,
-["FontScale"] = 1,
-["NotifiedChanges"] = true,
-["IconZoom"] = true,
-["WhatsNew"] = {
-},
-["LocaleOverride"] = false,
-["Profiles"] = {
-["Default"] = {
-["Modules"] = {
-["Portrait"] = {
-["Enabled"] = {
-["Always"] = true,
-},
-["ReverseCooldown"] = true,
-},
-["PersonalAuras"] = {
-["SeededDefaults"] = true,
-["Groups"] = {
-{
-["Enabled"] = true,
-["Name"] = "Precog",
-["Position"] = {
-["Y"] = 41.19997406005859,
-["X"] = 0.5333529114723206,
-["Point"] = "CENTER",
-["RelativePoint"] = "CENTER",
-},
-["Id"] = "g1",
-["Spells"] = {
-377362,
-},
-["Icons"] = {
-["Glow"] = true,
-["Color"] = {
-["A"] = 1,
-["R"] = 1,
-["G"] = 1,
-["B"] = 1,
-},
-["ReverseCooldown"] = true,
-["Border"] = true,
-["Size"] = 37,
-},
-},
-{
-["Enabled"] = true,
-["Name"] = "Shroud",
-["Position"] = {
-["Y"] = 41.19997406005859,
-["X"] = 0.5333529114723206,
-["Point"] = "CENTER",
-["RelativePoint"] = "CENTER",
-},
-["Id"] = "g2",
-["Spells"] = {
-378464,
-},
-["Icons"] = {
-["Glow"] = true,
-["Color"] = {
-["A"] = 1,
-["R"] = 0.64,
-["G"] = 0.21,
-["B"] = 0.93,
-},
-["ReverseCooldown"] = true,
-["Border"] = true,
-["Size"] = 37,
-},
-},
-{
-["Name"] = "PI",
-["Position"] = {
-["Y"] = 300,
-["X"] = 0,
-},
-["Id"] = "g3",
-["Spells"] = {
-10060,
-},
-["Icons"] = {
-["Color"] = {
-["A"] = 1,
-["R"] = 1,
-["G"] = 0.82,
-["B"] = 0,
-},
-["Glow"] = true,
-["Border"] = true,
-},
-["Sound"] = {
-["Applied"] = "BubblePop",
-},
-},
-},
-["NextId"] = 4,
-},
-["HealerCrowdControl"] = {
-["Enabled"] = {
-["BattleGrounds"] = false,
-["Dungeons"] = false,
-["Raid"] = false,
-["Arena"] = true,
-["World"] = true,
-},
-["RelativeTo"] = "UIParent",
-["Point"] = "CENTER",
-["Icons"] = {
-["Enabled"] = true,
-["Glow"] = true,
-["ColorByDispelType"] = true,
-["ReverseCooldown"] = true,
-["Size"] = 32,
-},
-["ShowWarningText"] = true,
-["ShowTooltips"] = false,
-["Font"] = {
-["Flags"] = "OUTLINE",
-["File"] = "Fonts\\FRIZQT__.TTF",
-["Size"] = 17,
-},
-["RelativePoint"] = "CENTER",
-["Sound"] = {
-["Enabled"] = true,
-["File"] = "Sonar.ogg",
-["Channel"] = "Master",
-},
-["Offset"] = {
-["Y"] = -179.4002990722656,
-["X"] = -2.133411645889282,
-},
-},
-["PetCrowdControl"] = {
-["ShowTooltips"] = false,
-["IncludePetFrame"] = false,
-["Grow"] = "CENTER",
-["Offset"] = {
-["Y"] = 0,
-["X"] = 0,
-},
-["Icons"] = {
-["SizePercent"] = 50,
-["Glow"] = false,
-["Count"] = 3,
-["SizeIsPercent"] = false,
-["ReverseCooldown"] = false,
-["ColorByDispelType"] = false,
-["Size"] = 19,
-},
-["Enabled"] = {
-["BattleGrounds"] = false,
-["Dungeons"] = false,
-["Raid"] = false,
-["Arena"] = false,
-["World"] = false,
-},
-},
-["ImportantAuras"] = {
-["Enabled"] = {
-["BattleGrounds"] = false,
-["Dungeons"] = true,
-["Raid"] = true,
-["Arena"] = true,
-["World"] = true,
-},
-["Raid"] = {
-["Offset"] = {
-["Y"] = 0,
-["X"] = 0,
-},
-["ShowImportant"] = false,
-["Icons"] = {
-["MaxIcons"] = 1,
-["Glow"] = false,
-["ColorByDispelType"] = false,
-["SizeIsPercent"] = false,
-["ReverseCooldown"] = false,
-["SizePercent"] = 65,
-["Size"] = 40,
-},
-["ShowDefensives"] = false,
-["ShowCrowdControl"] = false,
-["ShowKicks"] = false,
-["ShowTooltips"] = false,
-["Grow"] = "CENTER",
-["ExcludePlayer"] = false,
-},
-["Default"] = {
-["Offset"] = {
-["Y"] = 8,
-["X"] = 0,
-},
-["ShowImportant"] = true,
-["Icons"] = {
-["MaxIcons"] = 2,
-["Glow"] = true,
-["ColorByDispelType"] = true,
-["SizeIsPercent"] = false,
-["ReverseCooldown"] = true,
-["SizePercent"] = 75,
-["Size"] = 24,
-},
-["ShowDefensives"] = true,
-["ShowCrowdControl"] = false,
-["ShowKicks"] = false,
-["ShowTooltips"] = false,
-["Grow"] = "CENTER",
-["ExcludePlayer"] = false,
-},
-},
-["Alerts"] = {
-["Enabled"] = {
-["BattleGrounds"] = false,
-["Dungeons"] = false,
-["Raid"] = false,
-["Arena"] = true,
-["World"] = true,
-},
-["SplitBars"] = false,
-["Point"] = "RIGHT",
-["Icons"] = {
-["Enabled"] = true,
-["Glow"] = true,
-["ReverseCooldown"] = true,
-["MaxIcons"] = 8,
-["Size"] = 39,
-},
-["ShowTooltips"] = false,
-["Offset"] = {
-["Y"] = 139.9001617431641,
-["X"] = -302.7661743164063,
-},
-["Sound"] = {
-["Defensive"] = {
-["Enabled"] = false,
-["File"] = "AlertToastWarm.ogg",
-},
-["Important"] = {
-["Enabled"] = false,
-["File"] = "Error.ogg",
-},
-},
-["RelativePoint"] = "RIGHT",
-["TTS"] = {
-["Defensive"] = {
-["Enabled"] = false,
-},
-["Important"] = {
-["Enabled"] = false,
-},
-},
-["IncludeDefensives"] = false,
-["Defensives"] = {
-["Offset"] = {
-["Y"] = -160,
-["X"] = 0,
-},
-["RelativeTo"] = "UIParent",
-["Point"] = "CENTER",
-["RelativePoint"] = "TOP",
-},
-["RelativeTo"] = "UIParent",
-},
-["Nameplates"] = {
-["Enabled"] = {
-["BattleGrounds"] = true,
-["Dungeons"] = true,
-["Raid"] = true,
-["Arena"] = true,
-["World"] = true,
-},
-["ScaleWithNameplate"] = false,
-["Friendly"] = {
-["IgnorePets"] = true,
-},
-["Enemy"] = {
-["IgnorePets"] = true,
-},
-},
-["Trinkets"] = {
-["Enabled"] = {
-["Always"] = true,
-},
-["Font"] = {
-["File"] = "GameFontHighlightSmall",
-},
-["Point"] = "RIGHT",
-["RelativePoint"] = "LEFT",
-["ExcludePlayer"] = false,
-["Icons"] = {
-["Glow"] = false,
-["ReverseCooldown"] = false,
-["ShowText"] = true,
-["Size"] = 37,
-},
-["Offset"] = {
-["Y"] = 0,
-["X"] = 0,
-},
-},
-["CrowdControl"] = {
-["Enabled"] = {
-["BattleGrounds"] = false,
-["Dungeons"] = true,
-["Raid"] = false,
-["Arena"] = true,
-["World"] = true,
-},
-["Raid"] = {
-["ExcludePlayer"] = false,
-["Grow"] = "CENTER",
-["Offset"] = {
-["Y"] = 0,
-["X"] = 2,
-},
-["Icons"] = {
-["SizePercent"] = 50,
-["Glow"] = true,
-["ColorByDispelType"] = true,
-["SizeIsPercent"] = false,
-["Count"] = 3,
-["ReverseCooldown"] = false,
-["ShowMilliseconds"] = false,
-["Size"] = 26,
-},
-["ShowTooltips"] = false,
-},
-["Default"] = {
-["ExcludePlayer"] = false,
-["Grow"] = "LEFT",
-["Offset"] = {
-["Y"] = 0,
-["X"] = -76,
-},
-["Icons"] = {
-["SizePercent"] = 80,
-["Glow"] = true,
-["ColorByDispelType"] = true,
-["SizeIsPercent"] = false,
-["Count"] = 2,
-["ReverseCooldown"] = true,
-["ShowMilliseconds"] = false,
-["Size"] = 43,
-},
-["ShowTooltips"] = false,
-},
-},
-["EnemyKickTracker"] = {
-["Offset"] = {
-["Y"] = -134.6651306152344,
-["X"] = 154.1332397460938,
-},
-["RelativeTo"] = "UIParent",
-["Point"] = "CENTER",
-["RelativePoint"] = "CENTER",
-["Icons"] = {
-["Glow"] = false,
-["ReverseCooldown"] = true,
-["Size"] = 30,
-},
-["Enabled"] = {
-["Always"] = false,
-["Healer"] = true,
-["Caster"] = true,
-},
-},
-},
-["ConfigureBlizzardNameplates"] = true,
-["FontScale"] = 1,
-["GlowType"] = "Proc Glow",
-["ColorCountdownByTime"] = false,
-["DisableSwipe"] = false,
-},
-["Default Healer"] = {
-["Modules"] = {
-["Portrait"] = {
-["Enabled"] = {
-["Always"] = true,
-},
-["ReverseCooldown"] = true,
-},
-["PersonalAuras"] = {
-["SeededDefaults"] = true,
-["Groups"] = {
-{
-["Enabled"] = true,
-["Name"] = "Precog",
-["Position"] = {
-["Y"] = 41.19997406005859,
-["X"] = 0.5333529114723206,
-["Point"] = "CENTER",
-["RelativePoint"] = "CENTER",
-},
-["Id"] = "g1",
-["Spells"] = {
-377362,
-},
-["Icons"] = {
-["Glow"] = true,
-["Color"] = {
-["A"] = 1,
-["R"] = 1,
-["G"] = 1,
-["B"] = 1,
-},
-["ReverseCooldown"] = true,
-["Border"] = true,
-["Size"] = 37,
-},
-},
-{
-["Enabled"] = true,
-["Name"] = "Shroud",
-["Position"] = {
-["Y"] = 41.19997406005859,
-["X"] = 0.5333529114723206,
-["Point"] = "CENTER",
-["RelativePoint"] = "CENTER",
-},
-["Id"] = "g2",
-["Spells"] = {
-378464,
-},
-["Icons"] = {
-["Glow"] = true,
-["Color"] = {
-["A"] = 1,
-["R"] = 0.64,
-["G"] = 0.21,
-["B"] = 0.93,
-},
-["ReverseCooldown"] = true,
-["Border"] = true,
-["Size"] = 37,
-},
-},
-{
-["Name"] = "PI",
-["Position"] = {
-["Y"] = 300,
-["X"] = 0,
-},
-["Id"] = "g3",
-["Spells"] = {
-10060,
-},
-["Icons"] = {
-["Color"] = {
-["A"] = 1,
-["R"] = 1,
-["G"] = 0.82,
-["B"] = 0,
-},
-["Glow"] = true,
-["Border"] = true,
-},
-["Sound"] = {
-["Applied"] = "BubblePop",
-},
-},
-},
-["NextId"] = 4,
-},
-["HealerCrowdControl"] = {
-["Enabled"] = {
-["BattleGrounds"] = false,
-["Dungeons"] = false,
-["Raid"] = false,
-["Arena"] = true,
-["World"] = true,
-},
-["RelativeTo"] = "UIParent",
-["Point"] = "CENTER",
-["Icons"] = {
-["Enabled"] = true,
-["Glow"] = true,
-["ColorByDispelType"] = true,
-["ReverseCooldown"] = true,
-["Size"] = 32,
-},
-["ShowWarningText"] = true,
-["ShowTooltips"] = false,
-["Font"] = {
-["Flags"] = "OUTLINE",
-["File"] = "Fonts\\FRIZQT__.TTF",
-["Size"] = 17,
-},
-["RelativePoint"] = "CENTER",
-["Sound"] = {
-["Enabled"] = true,
-["File"] = "Sonar.ogg",
-["Channel"] = "Master",
-},
-["Offset"] = {
-["Y"] = -179.4002990722656,
-["X"] = -2.133411645889282,
-},
-},
-["PetCrowdControl"] = {
-["Enabled"] = {
-["BattleGrounds"] = false,
-["Dungeons"] = false,
-["Raid"] = false,
-["Arena"] = false,
-["World"] = false,
-},
-["IncludePetFrame"] = false,
-["ShowTooltips"] = false,
-["Offset"] = {
-["Y"] = 0,
-["X"] = 0,
-},
-["Icons"] = {
-["SizePercent"] = 50,
-["Glow"] = false,
-["Count"] = 3,
-["SizeIsPercent"] = false,
-["ReverseCooldown"] = false,
-["ColorByDispelType"] = false,
-["Size"] = 19,
-},
-["Grow"] = "CENTER",
-},
-["ImportantAuras"] = {
-["Enabled"] = {
-["BattleGrounds"] = false,
-["Dungeons"] = true,
-["Raid"] = true,
-["Arena"] = true,
-["World"] = true,
-},
-["Raid"] = {
-["Offset"] = {
-["Y"] = 0,
-["X"] = 0,
-},
-["ShowImportant"] = false,
-["Icons"] = {
-["MaxIcons"] = 1,
-["Glow"] = false,
-["ColorByDispelType"] = false,
-["SizeIsPercent"] = false,
-["ReverseCooldown"] = false,
-["SizePercent"] = 65,
-["Size"] = 40,
-},
-["ShowDefensives"] = false,
-["ShowCrowdControl"] = false,
-["ShowKicks"] = false,
-["ShowTooltips"] = false,
-["Grow"] = "CENTER",
-["ExcludePlayer"] = false,
-},
-["Default"] = {
-["Offset"] = {
-["Y"] = 8,
-["X"] = 0,
-},
-["ShowImportant"] = true,
-["Icons"] = {
-["MaxIcons"] = 2,
-["Glow"] = true,
-["ColorByDispelType"] = true,
-["SizeIsPercent"] = false,
-["ReverseCooldown"] = true,
-["SizePercent"] = 75,
-["Size"] = 24,
-},
-["ShowDefensives"] = true,
-["ShowCrowdControl"] = false,
-["ShowKicks"] = false,
-["ShowTooltips"] = false,
-["Grow"] = "CENTER",
-["ExcludePlayer"] = false,
-},
-},
-["Alerts"] = {
-["Enabled"] = {
-["BattleGrounds"] = false,
-["Dungeons"] = false,
-["Raid"] = false,
-["Arena"] = true,
-["World"] = true,
-},
-["SplitBars"] = false,
-["Point"] = "RIGHT",
-["Icons"] = {
-["Enabled"] = true,
-["Glow"] = true,
-["ReverseCooldown"] = true,
-["MaxIcons"] = 8,
-["Size"] = 39,
-},
-["ShowTooltips"] = false,
-["Offset"] = {
-["Y"] = 139.9001617431641,
-["X"] = -302.7661743164063,
-},
-["Sound"] = {
-["Defensive"] = {
-["Enabled"] = false,
-["File"] = "AlertToastWarm.ogg",
-},
-["Important"] = {
-["Enabled"] = false,
-["File"] = "Error.ogg",
-},
-},
-["RelativePoint"] = "RIGHT",
-["TTS"] = {
-["Defensive"] = {
-["Enabled"] = false,
-},
-["Important"] = {
-["Enabled"] = false,
-},
-},
-["IncludeDefensives"] = false,
-["Defensives"] = {
-["Offset"] = {
-["Y"] = -160,
-["X"] = 0,
-},
-["RelativeTo"] = "UIParent",
-["Point"] = "CENTER",
-["RelativePoint"] = "TOP",
-},
-["RelativeTo"] = "UIParent",
-},
-["Nameplates"] = {
-["Enabled"] = {
-["BattleGrounds"] = true,
-["Dungeons"] = true,
-["Raid"] = true,
-["Arena"] = true,
-["World"] = true,
-},
-["ScaleWithNameplate"] = false,
-["Friendly"] = {
-["IgnorePets"] = true,
-},
-["Enemy"] = {
-["IgnorePets"] = true,
-},
-},
-["Trinkets"] = {
-["Enabled"] = {
-["Always"] = true,
-},
-["Font"] = {
-["File"] = "GameFontHighlightSmall",
-},
-["Point"] = "RIGHT",
-["RelativePoint"] = "LEFT",
-["ExcludePlayer"] = false,
-["Icons"] = {
-["Glow"] = false,
-["ReverseCooldown"] = false,
-["ShowText"] = true,
-["Size"] = 37,
-},
-["Offset"] = {
-["Y"] = 0,
-["X"] = 0,
-},
-},
-["CrowdControl"] = {
-["Enabled"] = {
-["BattleGrounds"] = false,
-["Dungeons"] = true,
-["Raid"] = false,
-["Arena"] = true,
-["World"] = true,
-},
-["Raid"] = {
-["ExcludePlayer"] = false,
-["Grow"] = "CENTER",
-["Offset"] = {
-["Y"] = 0,
-["X"] = 2,
-},
-["Icons"] = {
-["SizePercent"] = 50,
-["Glow"] = true,
-["ColorByDispelType"] = true,
-["SizeIsPercent"] = false,
-["Count"] = 3,
-["ShowMilliseconds"] = false,
-["ReverseCooldown"] = false,
-["Size"] = 26,
-},
-["ShowTooltips"] = false,
-},
-["Default"] = {
-["ExcludePlayer"] = false,
-["Grow"] = "RIGHT",
-["Offset"] = {
-["Y"] = 0,
-["X"] = 0,
-},
-["Icons"] = {
-["SizePercent"] = 80,
-["Glow"] = true,
-["ColorByDispelType"] = true,
-["SizeIsPercent"] = false,
-["Count"] = 2,
-["ShowMilliseconds"] = false,
-["ReverseCooldown"] = true,
-["Size"] = 43,
-},
-["ShowTooltips"] = false,
-},
-},
-["EnemyKickTracker"] = {
-["Offset"] = {
-["Y"] = -134.6651306152344,
-["X"] = 154.1332397460938,
-},
-["RelativeTo"] = "UIParent",
-["Point"] = "CENTER",
-["RelativePoint"] = "CENTER",
-["Icons"] = {
-["Glow"] = false,
-["ReverseCooldown"] = true,
-["Size"] = 30,
-},
-["Enabled"] = {
-["Always"] = false,
-["Healer"] = true,
-["Caster"] = true,
-},
-},
-},
-["ConfigureBlizzardNameplates"] = true,
-["FontScale"] = 1,
-["GlowType"] = "Proc Glow",
-["ColorCountdownByTime"] = false,
-["DisableSwipe"] = false,
-},
-},
-["DisableNumbers"] = false,
-["Font"] = false,
-["FrameAuraCVars"] = {
-["Debuffs"] = false,
-["Buffs"] = false,
-},
-["FadeWithParent"] = true,
-["Version"] = 76,
-["Pending"] = {
 },
 ["ShowTestLabels"] = true,
-["AutoSwitch"] = {
-["Stormclout-Tichondrius"] = {
-[269] = "Default",
-[270] = "Default Healer",
-[268] = "Default",
-},
-},
-}
-MiniAurasSpellCache = {
-["Stamp"] = "28171e28bbfa:5.26.0:69497:enUS",
-["Ids"] = {
-[377362] = {
-377362,
-},
-[378464] = {
-378464,
-},
-[10060] = {
-10060,
-37274,
-54521,
-122860,
-173040,
-265314,
-359794,
-365722,
-},
-},
+["DebugMode"] = true,
 }

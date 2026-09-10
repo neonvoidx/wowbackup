@@ -3,8 +3,10 @@
 ## Notes: Shows your win-loss for rated pvp on the conquest frame.
 ## Category: Mini
 ## Author: Verz
-## Version: 1.1.5
+## Version: 1.1.6
 ## IconTexture: Interface\AddOns\MiniWinLoss\Icon.blp
 ## X-Curse-Project-ID: 1419503
 
+Libs\MiniFramework\MiniFramework.xml
+Config.lua
 MiniWinLoss.lua

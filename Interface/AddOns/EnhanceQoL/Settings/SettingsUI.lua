@@ -1685,6 +1685,7 @@ local function registerSectionHeaderControl(app, section, pageID, headerText, da
 		groupID = groupID,
 		groupTitle = groupTitle,
 		trackCustomized = false,
+		newTagID = data and data.newTagID,
 	})
 	return nil
 end

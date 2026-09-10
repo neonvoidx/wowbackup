@@ -1,6 +1,10 @@
 ---@type string, Addon
 local _, addon = ...
+local mini = addon.Framework
+local L = addon.L
 local sounds = addon.Core.Sounds
+local auraSounds = addon.Core.AuraSounds
+local debugOptions = addon.Core.DebugOptions
 local changeStamp = addon.Utils.ChangeStamp
 
 -- The engine plays the sound, because the addon is never told an aura landed. Registrations bake
@@ -15,7 +19,7 @@ local changeStamp = addon.Utils.ChangeStamp
 
 addon.Modules.PersonalAuras = addon.Modules.PersonalAuras or {}
 
--- Variants times triggers times visible plates reaches the thousands on a careless configuration.
+-- Spells times triggers times visible plates reaches the thousands on a careless configuration.
 local MAX_REGISTRATIONS = 1500
 -- Group sound keys to the engine trigger each registers against.
 local TRIGGER_ENUM = Enum.UnitAuraSoundTrigger or {}
@@ -96,10 +100,8 @@ local function ReleaseHandles(entry)
 
 	liveHandles = liveHandles - #handles
 
-	-- Wrapped like the add is. A throw part way would strand the rest of the list registered with
-	-- the count already saying they are gone.
 	for index = #handles, 1, -1 do
-		pcall(C_UnitAuras.RemoveAuraSound, handles[index])
+		auraSounds:Remove(handles[index])
 		handles[index] = nil
 	end
 end
@@ -167,6 +169,16 @@ local function TrimWanted(wanted, read, write)
 	end
 end
 
+---@param waiting number spell ids the pass left with no handle
+local function ReportTruncated(waiting)
+	if not debugOptions:Enabled() then
+		return
+	end
+
+	mini:NotifyWithPrefix(L["Sound registration hit its limit of %d. Group sounds still waiting: %d."],
+		MAX_REGISTRATIONS, waiting)
+end
+
 ---Offers the pending keys a spell id apiece per lap, so a key with a long list cannot eat the
 ---whole budget before the keys behind it have had any.
 ---@param pending number
@@ -190,11 +202,9 @@ local function DrainPending(pending)
 				info.outputChannel = entry.Channel
 				info.spellID = wanted[read]
 
-				-- Reported throwing now and again, with no cause found. Combat lockdown is not it,
-				-- since this call is allowed there.
-				local ok, handle = pcall(C_UnitAuras.AddAuraSound, entry.Trigger, info)
+				local handle = auraSounds:Add(entry.Trigger, info)
 
-				if ok and handle then
+				if handle then
 					entry.Handles[#entry.Handles + 1] = handle
 					liveHandles = liveHandles + 1
 				else
@@ -236,6 +246,16 @@ end
 ---request reads the same as last time keeps the handles it already has.
 ---@param requests PersonalAuraSoundRequest[]
 function M:Apply(requests)
+	-- Ahead of the sweep below, because a registration made before the pull keeps playing through
+	-- it and forgetting a key here would take it away.
+	if not auraSounds:CanRegister() then
+		if #requests > 0 or next(registered) ~= nil then
+			auraSounds:NoteSkipped()
+		end
+
+		return
+	end
+
 	wipe(wantedKeys)
 	wipe(requestKeys)
 	wipe(resolvedFiles)
@@ -300,15 +320,26 @@ function M:Apply(requests)
 	end
 
 	local remaining = DrainPending(pending)
+	local wasTruncated = truncated
+	local waiting = 0
 
 	truncated = remaining > 0
 
 	for index = 1, remaining do
-		TrimWanted(pendingKeys[index].Wanted, pendingRead[index], pendingWrite[index])
+		local wanted = pendingKeys[index].Wanted
+
+		TrimWanted(wanted, pendingRead[index], pendingWrite[index])
+
+		waiting = waiting + #wanted
 
 		pendingKeys[index] = nil
 		pendingRead[index] = nil
 		pendingWrite[index] = nil
+	end
+
+	-- Only as it goes over, or a player who lives above the cap hears about it on every pass.
+	if truncated and not wasTruncated then
+		ReportTruncated(waiting)
 	end
 end
 
@@ -332,6 +363,7 @@ function M:Clear()
 	end
 
 	truncated = false
+	auraSounds:ResetDebugLog()
 end
 
 ---@class PersonalAuraSoundRequest

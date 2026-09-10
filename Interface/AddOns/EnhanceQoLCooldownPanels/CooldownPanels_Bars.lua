@@ -21,6 +21,7 @@ local Bars = CooldownPanels.Bars
 if Bars._eqolSupplementLoaded == true then return end
 Bars._eqolSupplementLoaded = true
 Bars.STANDALONE_STACKS_SECTION_ID = Bars.STANDALONE_STACKS_SECTION_ID or "eqolCooldownPanelStandaloneBarStacks"
+Bars.STANDALONE_DURATION_COLORS_SECTION_ID = Bars.STANDALONE_DURATION_COLORS_SECTION_ID or "eqolCooldownPanelStandaloneAuraBarDurationColors"
 
 Bars.GetGlobalFontStyleKey = Bars.GetGlobalFontStyleKey
 	or function()
@@ -89,6 +90,22 @@ Bars.DEFAULTS = Bars.DEFAULTS
 		barHeight = 26,
 		barTexture = "SOLID",
 		barColor = { 0.98, 0.74, 0.22, 0.96 },
+		barDurationColorEnabled = false,
+		barDurationThresholdAsSeconds = true,
+		barDurationThresholdMaxDuration = 30,
+		barDurationThreshold1Enabled = true,
+		barDurationThreshold1Value = 10,
+		barDurationThreshold1Color = { 1.00, 0.82, 0.20, 0.96 },
+		barDurationThreshold2Enabled = true,
+		barDurationThreshold2Value = 5,
+		barDurationThreshold2Color = { 1.00, 0.48, 0.16, 0.96 },
+		barDurationThreshold3Enabled = true,
+		barDurationThreshold3Value = 3,
+		barDurationThreshold3Color = { 1.00, 0.20, 0.20, 0.96 },
+		barDurationThresholdGlowEnabled = false,
+		barDurationThresholdGlowIndex = 3,
+		barDurationThresholdGlowStyle = "PIXEL",
+		barDurationThresholdGlowColor = { 1.00, 0.20, 0.20, 1.00 },
 		barBackgroundColor = { 0.05, 0.05, 0.05, 0.82 },
 		barBorderEnabled = true,
 		barBorderColor = { 0.85, 0.85, 0.85, 0.90 },
@@ -599,6 +616,43 @@ Bars.GetStackThresholds = function(entry, maximum)
 	return thresholds
 end
 
+Bars.NormalizeBarDurationThresholdMax = function(value, fallback)
+	return Helper.ClampInt(value, 1, 3600, fallback or Bars.DEFAULTS.barDurationThresholdMaxDuration)
+end
+
+Bars.NormalizeBarDurationThreshold = function(value, asSeconds, fallback)
+	return Helper.ClampInt(value, 1, asSeconds and 3600 or 100, fallback or 1)
+end
+
+Bars.GetDurationThresholds = function(entry, activeDesaturate)
+	local thresholds = {}
+	if type(entry) ~= "table" or entry.barDurationColorEnabled ~= true or activeDesaturate == true then return thresholds end
+	local asSeconds = entry.barDurationThresholdAsSeconds ~= false
+	local maximum = Bars.NormalizeBarDurationThresholdMax(entry.barDurationThresholdMaxDuration, Bars.DEFAULTS.barDurationThresholdMaxDuration)
+	for index = 1, 3 do
+		local enabledKey = "barDurationThreshold" .. index .. "Enabled"
+		if entry[enabledKey] == true then
+			local valueKey = "barDurationThreshold" .. index .. "Value"
+			local colorKey = "barDurationThreshold" .. index .. "Color"
+			local value = Bars.NormalizeBarDurationThreshold(entry[valueKey], asSeconds, Bars.DEFAULTS[valueKey])
+			local fraction = asSeconds and (value / maximum) or (value / 100)
+			if fraction > 0.001 then
+				thresholds[#thresholds + 1] = {
+					index = index,
+					value = value,
+					fraction = fraction,
+					color = Helper.NormalizeColor(entry[colorKey], Bars.DEFAULTS[colorKey]),
+				}
+			end
+		end
+	end
+	table.sort(thresholds, function(left, right)
+		if left.fraction == right.fraction then return left.index < right.index end
+		return left.fraction < right.fraction
+	end)
+	return thresholds
+end
+
 local function normalizeBarFont(value, fallback)
 	if type(value) == "string" then return value end
 	if type(fallback) == "string" then return fallback end
@@ -653,6 +707,21 @@ Bars.ApplyNewBarStyleDefaults = function(entry)
 	if entry.barBorderEnabled == nil then entry.barBorderEnabled = Bars.DEFAULTS.barBorderEnabled end
 	if entry.barShowChargeDuration == nil then entry.barShowChargeDuration = Bars.DEFAULTS.barShowChargeDuration end
 	if entry.barShowStackText == nil then entry.barShowStackText = Bars.DEFAULTS.barShowStackText end
+	if entry.barDurationColorEnabled == nil then entry.barDurationColorEnabled = Bars.DEFAULTS.barDurationColorEnabled end
+	if entry.barDurationThresholdAsSeconds == nil then entry.barDurationThresholdAsSeconds = Bars.DEFAULTS.barDurationThresholdAsSeconds end
+	if entry.barDurationThresholdMaxDuration == nil then entry.barDurationThresholdMaxDuration = Bars.DEFAULTS.barDurationThresholdMaxDuration end
+	for index = 1, 3 do
+		local enabledKey = "barDurationThreshold" .. index .. "Enabled"
+		local valueKey = "barDurationThreshold" .. index .. "Value"
+		local colorKey = "barDurationThreshold" .. index .. "Color"
+		if entry[enabledKey] == nil then entry[enabledKey] = Bars.DEFAULTS[enabledKey] end
+		if entry[valueKey] == nil then entry[valueKey] = Bars.DEFAULTS[valueKey] end
+		if entry[colorKey] == nil then entry[colorKey] = Bars.DEFAULTS[colorKey] end
+	end
+	if entry.barDurationThresholdGlowEnabled == nil then entry.barDurationThresholdGlowEnabled = Bars.DEFAULTS.barDurationThresholdGlowEnabled end
+	if entry.barDurationThresholdGlowIndex == nil then entry.barDurationThresholdGlowIndex = Bars.DEFAULTS.barDurationThresholdGlowIndex end
+	if entry.barDurationThresholdGlowStyle == nil then entry.barDurationThresholdGlowStyle = Bars.DEFAULTS.barDurationThresholdGlowStyle end
+	if entry.barDurationThresholdGlowColor == nil then entry.barDurationThresholdGlowColor = Bars.DEFAULTS.barDurationThresholdGlowColor end
 	if entry.barStacksSegmented == nil then entry.barStacksSegmented = Bars.DEFAULTS.barStacksSegmented end
 	if entry.barStackDividerColor == nil then entry.barStackDividerColor = Bars.DEFAULTS.barStackDividerColor end
 	if entry.barStackDividerThickness == nil then entry.barStackDividerThickness = Bars.DEFAULTS.barStackDividerThickness end
@@ -946,6 +1015,8 @@ Bars.IsNativeAuraStackEntry = function(entry)
 	return addon.AuraCompat ~= nil and getEntryResolvedType(entry) == "CDM_AURA"
 end
 
+Bars.IsNativeAuraBarEntry = Bars.IsNativeAuraStackEntry
+
 Bars.FocusStandaloneSection = function(panelId, entryId, targetGroupId)
 	if not (CooldownPanels and CooldownPanels.FocusLayoutEntryStandaloneSettingsGroup) then return false end
 	return CooldownPanels:FocusLayoutEntryStandaloneSettingsGroup(panelId, entryId, targetGroupId)
@@ -1045,6 +1116,24 @@ normalizeBarEntry = function(entry)
 	entry.barHeight = normalizeBarHeight(entry.barHeight, Bars.DEFAULTS.barHeight)
 	entry.barTexture = normalizeBarTexture(entry.barTexture, Bars.DEFAULTS.barTexture)
 	entry.barColor = Helper.NormalizeColor(entry.barColor, getDefaultBarColorForMode(entry.barMode))
+	entry.barDurationColorEnabled = getStoredBoolean(entry, "barDurationColorEnabled", Bars.DEFAULTS.barDurationColorEnabled)
+	entry.barDurationThresholdAsSeconds = getStoredBoolean(entry, "barDurationThresholdAsSeconds", Bars.DEFAULTS.barDurationThresholdAsSeconds)
+	entry.barDurationThresholdMaxDuration = Bars.NormalizeBarDurationThresholdMax(entry.barDurationThresholdMaxDuration, Bars.DEFAULTS.barDurationThresholdMaxDuration)
+	for index = 1, 3 do
+		local enabledKey = "barDurationThreshold" .. index .. "Enabled"
+		local valueKey = "barDurationThreshold" .. index .. "Value"
+		local colorKey = "barDurationThreshold" .. index .. "Color"
+		entry[enabledKey] = getStoredBoolean(entry, enabledKey, Bars.DEFAULTS[enabledKey])
+		entry[valueKey] = Bars.NormalizeBarDurationThreshold(entry[valueKey], entry.barDurationThresholdAsSeconds, Bars.DEFAULTS[valueKey])
+		entry[colorKey] = Helper.NormalizeColor(entry[colorKey], Bars.DEFAULTS[colorKey])
+	end
+	entry.barDurationThresholdGlowEnabled = getStoredBoolean(entry, "barDurationThresholdGlowEnabled", Bars.DEFAULTS.barDurationThresholdGlowEnabled)
+	entry.barDurationThresholdGlowIndex = Helper.ClampInt(entry.barDurationThresholdGlowIndex, 1, 3, Bars.DEFAULTS.barDurationThresholdGlowIndex)
+	entry.barDurationThresholdGlowStyle = Helper.NormalizeGlowStyle(entry.barDurationThresholdGlowStyle, Bars.DEFAULTS.barDurationThresholdGlowStyle)
+	if entry.barDurationThresholdGlowStyle ~= "PIXEL" and entry.barDurationThresholdGlowStyle ~= "PULSING" and entry.barDurationThresholdGlowStyle ~= "SOLID" then
+		entry.barDurationThresholdGlowStyle = Bars.DEFAULTS.barDurationThresholdGlowStyle
+	end
+	entry.barDurationThresholdGlowColor = Helper.NormalizeColor(entry.barDurationThresholdGlowColor, Bars.DEFAULTS.barDurationThresholdGlowColor)
 	entry.barBackgroundColor = Helper.NormalizeColor(entry.barBackgroundColor, Bars.DEFAULTS.barBackgroundColor)
 	entry.barBorderEnabled = getStoredBoolean(entry, "barBorderEnabled", Bars.DEFAULTS.barBorderEnabled)
 	entry.barBorderColor = Helper.NormalizeColor(entry.barBorderColor, Bars.DEFAULTS.barBorderColor)
@@ -5625,6 +5714,245 @@ local function appendBarStandaloneAppearanceSettings(settings, ctx)
 		end,
 	}
 	settings[#settings + 1] = {
+		name = L["CooldownPanelBarDurationColorsEnabled"] or "Color by remaining time",
+		tooltip = L["CooldownPanelBarDurationColorsEnabledTooltip"],
+		kind = SettingType.Checkbox,
+		parentId = Bars.STANDALONE_DURATION_COLORS_SECTION_ID,
+		get = function()
+			local currentEntry = getStandaloneBarContextEntry(ctx)
+			return getStoredBoolean(currentEntry, "barDurationColorEnabled", Bars.DEFAULTS.barDurationColorEnabled)
+		end,
+		set = function(_, value) setEntryBarBoolean(panelId, entryId, "barDurationColorEnabled", value) end,
+	}
+	settings[#settings + 1] = {
+		name = L["CooldownPanelBarDurationThresholdMode"] or "Threshold unit",
+		kind = SettingType.Dropdown,
+		parentId = Bars.STANDALONE_DURATION_COLORS_SECTION_ID,
+		height = 100,
+		disabled = function()
+			local currentEntry = getStandaloneBarContextEntry(ctx)
+			return not getStoredBoolean(currentEntry, "barDurationColorEnabled", Bars.DEFAULTS.barDurationColorEnabled)
+		end,
+		get = function()
+			local currentEntry = getStandaloneBarContextEntry(ctx)
+			return getStoredBoolean(currentEntry, "barDurationThresholdAsSeconds", Bars.DEFAULTS.barDurationThresholdAsSeconds) and "SECONDS" or "PERCENT"
+		end,
+		set = function(_, value) setEntryBarBoolean(panelId, entryId, "barDurationThresholdAsSeconds", value == "SECONDS") end,
+		generator = function(_, root)
+			for _, option in ipairs({
+				{ value = "SECONDS", label = L["CooldownPanelBarDurationThresholdSeconds"] or "Seconds" },
+				{ value = "PERCENT", label = L["CooldownPanelBarDurationThresholdPercent"] or "Percent" },
+			}) do
+				root:CreateRadio(option.label, function()
+					local currentEntry = getStandaloneBarContextEntry(ctx)
+					local current = getStoredBoolean(currentEntry, "barDurationThresholdAsSeconds", Bars.DEFAULTS.barDurationThresholdAsSeconds) and "SECONDS" or "PERCENT"
+					return current == option.value
+				end, function() setEntryBarBoolean(panelId, entryId, "barDurationThresholdAsSeconds", option.value == "SECONDS") end)
+			end
+		end,
+	}
+	settings[#settings + 1] = {
+		name = L["CooldownPanelBarDurationThresholdMaxDuration"] or "Aura base duration",
+		tooltip = L["CooldownPanelBarDurationThresholdMaxDurationTooltip"],
+		kind = SettingType.Slider,
+		parentId = Bars.STANDALONE_DURATION_COLORS_SECTION_ID,
+		minValue = 1,
+		maxValue = 3600,
+		valueStep = 1,
+		allowInput = true,
+		isShown = function()
+			local currentEntry = getStandaloneBarContextEntry(ctx)
+			return getStoredBoolean(currentEntry, "barDurationThresholdAsSeconds", Bars.DEFAULTS.barDurationThresholdAsSeconds)
+		end,
+		disabled = function()
+			local currentEntry = getStandaloneBarContextEntry(ctx)
+			return not getStoredBoolean(currentEntry, "barDurationColorEnabled", Bars.DEFAULTS.barDurationColorEnabled)
+		end,
+		get = function()
+			local currentEntry = getStandaloneBarContextEntry(ctx)
+			return Bars.NormalizeBarDurationThresholdMax(currentEntry and currentEntry.barDurationThresholdMaxDuration, Bars.DEFAULTS.barDurationThresholdMaxDuration)
+		end,
+		set = function(_, value)
+			setEntryBarField(panelId, entryId, "barDurationThresholdMaxDuration", Bars.NormalizeBarDurationThresholdMax(value, Bars.DEFAULTS.barDurationThresholdMaxDuration))
+		end,
+		formatter = function(value) return tostring(Bars.NormalizeBarDurationThresholdMax(value, Bars.DEFAULTS.barDurationThresholdMaxDuration)) end,
+	}
+	for thresholdIndex = 1, 3 do
+		local enabledKey = "barDurationThreshold" .. thresholdIndex .. "Enabled"
+		local valueKey = "barDurationThreshold" .. thresholdIndex .. "Value"
+		local colorKey = "barDurationThreshold" .. thresholdIndex .. "Color"
+		settings[#settings + 1] = {
+			name = format(L["CooldownPanelBarDurationThresholdEnabled"] or "Enable threshold %d", thresholdIndex),
+			kind = SettingType.Checkbox,
+			parentId = Bars.STANDALONE_DURATION_COLORS_SECTION_ID,
+			disabled = function()
+				local currentEntry = getStandaloneBarContextEntry(ctx)
+				return not getStoredBoolean(currentEntry, "barDurationColorEnabled", Bars.DEFAULTS.barDurationColorEnabled)
+			end,
+			get = function()
+				local currentEntry = getStandaloneBarContextEntry(ctx)
+				return getStoredBoolean(currentEntry, enabledKey, Bars.DEFAULTS[enabledKey])
+			end,
+			set = function(_, value) setEntryBarBoolean(panelId, entryId, enabledKey, value) end,
+		}
+		settings[#settings + 1] = {
+			name = format(L["CooldownPanelBarDurationThresholdValue"] or "Threshold %d value", thresholdIndex),
+			kind = SettingType.Slider,
+			parentId = Bars.STANDALONE_DURATION_COLORS_SECTION_ID,
+			minValue = 1,
+			maxValue = 3600,
+			valueStep = 1,
+			allowInput = true,
+			isShown = function()
+				local currentEntry = getStandaloneBarContextEntry(ctx)
+				return getStoredBoolean(currentEntry, "barDurationThresholdAsSeconds", Bars.DEFAULTS.barDurationThresholdAsSeconds)
+			end,
+			disabled = function()
+				local currentEntry = getStandaloneBarContextEntry(ctx)
+				return not getStoredBoolean(currentEntry, "barDurationColorEnabled", Bars.DEFAULTS.barDurationColorEnabled)
+					or not getStoredBoolean(currentEntry, enabledKey, Bars.DEFAULTS[enabledKey])
+			end,
+			get = function()
+				local currentEntry = getStandaloneBarContextEntry(ctx)
+				local asSeconds = getStoredBoolean(currentEntry, "barDurationThresholdAsSeconds", Bars.DEFAULTS.barDurationThresholdAsSeconds)
+				return Bars.NormalizeBarDurationThreshold(currentEntry and currentEntry[valueKey], asSeconds, Bars.DEFAULTS[valueKey])
+			end,
+			set = function(_, value)
+				local currentEntry = getStandaloneBarContextEntry(ctx)
+				local asSeconds = getStoredBoolean(currentEntry, "barDurationThresholdAsSeconds", Bars.DEFAULTS.barDurationThresholdAsSeconds)
+				setEntryBarField(panelId, entryId, valueKey, Bars.NormalizeBarDurationThreshold(value, asSeconds, Bars.DEFAULTS[valueKey]))
+			end,
+			formatter = function(value) return tostring(Bars.NormalizeBarDurationThreshold(value, true, Bars.DEFAULTS[valueKey])) end,
+		}
+		settings[#settings + 1] = {
+			name = format(L["CooldownPanelBarDurationThresholdValue"] or "Threshold %d value", thresholdIndex),
+			kind = SettingType.Slider,
+			parentId = Bars.STANDALONE_DURATION_COLORS_SECTION_ID,
+			minValue = 1,
+			maxValue = 100,
+			valueStep = 1,
+			allowInput = true,
+			isShown = function()
+				local currentEntry = getStandaloneBarContextEntry(ctx)
+				return not getStoredBoolean(currentEntry, "barDurationThresholdAsSeconds", Bars.DEFAULTS.barDurationThresholdAsSeconds)
+			end,
+			disabled = function()
+				local currentEntry = getStandaloneBarContextEntry(ctx)
+				return not getStoredBoolean(currentEntry, "barDurationColorEnabled", Bars.DEFAULTS.barDurationColorEnabled)
+					or not getStoredBoolean(currentEntry, enabledKey, Bars.DEFAULTS[enabledKey])
+			end,
+			get = function()
+				local currentEntry = getStandaloneBarContextEntry(ctx)
+				return Bars.NormalizeBarDurationThreshold(currentEntry and currentEntry[valueKey], false, Bars.DEFAULTS[valueKey])
+			end,
+			set = function(_, value)
+				setEntryBarField(panelId, entryId, valueKey, Bars.NormalizeBarDurationThreshold(value, false, Bars.DEFAULTS[valueKey]))
+			end,
+			formatter = function(value) return tostring(Bars.NormalizeBarDurationThreshold(value, false, Bars.DEFAULTS[valueKey])) end,
+		}
+		settings[#settings + 1] = {
+			name = format(L["CooldownPanelBarDurationThresholdColor"] or "Threshold %d color", thresholdIndex),
+			kind = SettingType.Color,
+			parentId = Bars.STANDALONE_DURATION_COLORS_SECTION_ID,
+			hasOpacity = true,
+			disabled = function()
+				local currentEntry = getStandaloneBarContextEntry(ctx)
+				return not getStoredBoolean(currentEntry, "barDurationColorEnabled", Bars.DEFAULTS.barDurationColorEnabled)
+					or not getStoredBoolean(currentEntry, enabledKey, Bars.DEFAULTS[enabledKey])
+			end,
+			get = function()
+				local currentEntry = getStandaloneBarContextEntry(ctx)
+				local color = Helper.NormalizeColor(currentEntry and currentEntry[colorKey], Bars.DEFAULTS[colorKey])
+				return { r = color[1], g = color[2], b = color[3], a = color[4] }
+			end,
+			set = function(_, value) setEntryBarField(panelId, entryId, colorKey, Helper.NormalizeColor(value, Bars.DEFAULTS[colorKey])) end,
+		}
+	end
+	settings[#settings + 1] = {
+		name = L["CooldownPanelBarDurationThresholdGlowEnabled"] or "Glow at threshold",
+		tooltip = L["CooldownPanelBarDurationThresholdGlowEnabledTooltip"],
+		kind = SettingType.Checkbox,
+		parentId = Bars.STANDALONE_DURATION_COLORS_SECTION_ID,
+		disabled = function()
+			local currentEntry = getStandaloneBarContextEntry(ctx)
+			return not getStoredBoolean(currentEntry, "barDurationColorEnabled", Bars.DEFAULTS.barDurationColorEnabled)
+		end,
+		get = function()
+			local currentEntry = getStandaloneBarContextEntry(ctx)
+			return getStoredBoolean(currentEntry, "barDurationThresholdGlowEnabled", Bars.DEFAULTS.barDurationThresholdGlowEnabled)
+		end,
+		set = function(_, value) setEntryBarBoolean(panelId, entryId, "barDurationThresholdGlowEnabled", value) end,
+	}
+	settings[#settings + 1] = {
+		name = L["CooldownPanelBarDurationThresholdGlowThreshold"] or "Glow threshold",
+		kind = SettingType.Dropdown,
+		parentId = Bars.STANDALONE_DURATION_COLORS_SECTION_ID,
+		height = 120,
+		disabled = function()
+			local currentEntry = getStandaloneBarContextEntry(ctx)
+			return not getStoredBoolean(currentEntry, "barDurationColorEnabled", Bars.DEFAULTS.barDurationColorEnabled)
+				or not getStoredBoolean(currentEntry, "barDurationThresholdGlowEnabled", Bars.DEFAULTS.barDurationThresholdGlowEnabled)
+		end,
+		get = function()
+			local currentEntry = getStandaloneBarContextEntry(ctx)
+			return Helper.ClampInt(currentEntry and currentEntry.barDurationThresholdGlowIndex, 1, 3, Bars.DEFAULTS.barDurationThresholdGlowIndex)
+		end,
+		set = function(_, value) setEntryBarField(panelId, entryId, "barDurationThresholdGlowIndex", Helper.ClampInt(value, 1, 3, Bars.DEFAULTS.barDurationThresholdGlowIndex)) end,
+		generator = function(_, root)
+			for thresholdIndex = 1, 3 do
+				root:CreateRadio(format(L["CooldownPanelBarDurationThresholdNumber"] or "Threshold %d", thresholdIndex), function()
+					local currentEntry = getStandaloneBarContextEntry(ctx)
+					return Helper.ClampInt(currentEntry and currentEntry.barDurationThresholdGlowIndex, 1, 3, Bars.DEFAULTS.barDurationThresholdGlowIndex) == thresholdIndex
+				end, function() setEntryBarField(panelId, entryId, "barDurationThresholdGlowIndex", thresholdIndex) end)
+			end
+		end,
+	}
+	settings[#settings + 1] = {
+		name = L["CooldownPanelBarDurationThresholdGlowStyle"] or "Glow style",
+		kind = SettingType.Dropdown,
+		parentId = Bars.STANDALONE_DURATION_COLORS_SECTION_ID,
+		height = 120,
+		disabled = function()
+			local currentEntry = getStandaloneBarContextEntry(ctx)
+			return not getStoredBoolean(currentEntry, "barDurationColorEnabled", Bars.DEFAULTS.barDurationColorEnabled)
+				or not getStoredBoolean(currentEntry, "barDurationThresholdGlowEnabled", Bars.DEFAULTS.barDurationThresholdGlowEnabled)
+		end,
+		get = function()
+			local currentEntry = getStandaloneBarContextEntry(ctx)
+			return Helper.NormalizeGlowStyle(currentEntry and currentEntry.barDurationThresholdGlowStyle, Bars.DEFAULTS.barDurationThresholdGlowStyle)
+		end,
+		set = function(_, value) setEntryBarField(panelId, entryId, "barDurationThresholdGlowStyle", Helper.NormalizeGlowStyle(value, Bars.DEFAULTS.barDurationThresholdGlowStyle)) end,
+		generator = function(_, root)
+			for _, option in ipairs({
+				{ value = "PIXEL", label = L["Pixel"] or "Pixel" },
+				{ value = "PULSING", label = L["Pulsing"] or "Pulsing" },
+				{ value = "SOLID", label = L["Solid"] or "Solid" },
+			}) do
+				root:CreateRadio(option.label, function()
+					local currentEntry = getStandaloneBarContextEntry(ctx)
+					return Helper.NormalizeGlowStyle(currentEntry and currentEntry.barDurationThresholdGlowStyle, Bars.DEFAULTS.barDurationThresholdGlowStyle) == option.value
+				end, function() setEntryBarField(panelId, entryId, "barDurationThresholdGlowStyle", option.value) end)
+			end
+		end,
+	}
+	settings[#settings + 1] = {
+		name = L["CooldownPanelBarDurationThresholdGlowColor"] or "Threshold glow color",
+		kind = SettingType.Color,
+		parentId = Bars.STANDALONE_DURATION_COLORS_SECTION_ID,
+		hasOpacity = true,
+		disabled = function()
+			local currentEntry = getStandaloneBarContextEntry(ctx)
+			return not getStoredBoolean(currentEntry, "barDurationColorEnabled", Bars.DEFAULTS.barDurationColorEnabled)
+				or not getStoredBoolean(currentEntry, "barDurationThresholdGlowEnabled", Bars.DEFAULTS.barDurationThresholdGlowEnabled)
+		end,
+		get = function()
+			local currentEntry = getStandaloneBarContextEntry(ctx)
+			local color = Helper.NormalizeColor(currentEntry and currentEntry.barDurationThresholdGlowColor, Bars.DEFAULTS.barDurationThresholdGlowColor)
+			return { r = color[1], g = color[2], b = color[3], a = color[4] }
+		end,
+		set = function(_, value) setEntryBarField(panelId, entryId, "barDurationThresholdGlowColor", Helper.NormalizeColor(value, Bars.DEFAULTS.barDurationThresholdGlowColor)) end,
+	}
+	settings[#settings + 1] = {
 		name = L["CooldownPanelBarProcGlowColor"] or "Proc glow color",
 		kind = SettingType.Color,
 		parentId = "eqolCooldownPanelStandaloneBarFill",
@@ -5772,6 +6100,17 @@ Bars.AppendBarStandaloneDetailHeaders = function(settings, ctx)
 		isShown = function()
 			local currentEntry = getStandaloneBarContextEntry(ctx)
 			return normalizeBarMode(currentEntry and currentEntry.barMode, Bars.DEFAULTS.barMode) == Bars.BAR_MODE.COOLDOWN
+		end,
+	}
+	settings[#settings + 1] = {
+		name = L["CooldownPanelBarDurationColorsHeader"] or "Remaining time colors",
+		kind = SettingType.Collapsible,
+		id = Bars.STANDALONE_DURATION_COLORS_SECTION_ID,
+		defaultCollapsed = true,
+		isShown = function()
+			local currentEntry = getStandaloneBarContextEntry(ctx)
+			return Bars.IsNativeAuraBarEntry(currentEntry)
+				and normalizeBarMode(currentEntry and currentEntry.barMode, Bars.DEFAULTS.barMode) == Bars.BAR_MODE.COOLDOWN
 		end,
 	}
 	settings[#settings + 1] = {
@@ -7183,6 +7522,7 @@ Bars.BuildBarStandaloneSettings = function(panelId, entryId)
 			"eqolCooldownPanelStandaloneBarLayout",
 			"eqolCooldownPanelStandaloneBarIcon",
 			"eqolCooldownPanelStandaloneBarFill",
+			Bars.STANDALONE_DURATION_COLORS_SECTION_ID,
 			"eqolCooldownPanelStandaloneBarBorder",
 			"eqolCooldownPanelStandaloneBarVisibility",
 			"eqolCooldownPanelStandaloneBarCooldown",

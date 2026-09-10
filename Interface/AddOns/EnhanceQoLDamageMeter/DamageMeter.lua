@@ -1,4 +1,4 @@
--- luacheck: globals C_DamageMeter C_DeathRecap C_LFGInfo C_Spell C_StringUtil C_CVar C_RestrictedActions C_ChallengeMode C_ChatInfo SetCVar StaticPopupDialogs StaticPopup_Show YES CANCEL OKAY MenuUtil Menu GameTooltip SecondsToClock DAMAGE_METER_COMBAT_NUMBER CLASS_ICON_TCOORDS UnitClass UnitExists UnitGUID UnitName UnitCanAttack UnitIsPlayer UnitAffectingCombat UnitDetailedThreatSituation GetNumGroupMembers GetNumSubgroupMembers IsInRaid IsInInstance GetInstanceInfo Ambiguate UISpecialFrames GetCursorPosition GetTime C_Timer ACTION_SWING ACTION_ENVIRONMENTAL_DAMAGE_DROWNING ACTION_ENVIRONMENTAL_DAMAGE_FALLING ACTION_ENVIRONMENTAL_DAMAGE_FIRE ACTION_ENVIRONMENTAL_DAMAGE_LAVA ACTION_ENVIRONMENTAL_DAMAGE_SLIME ACTION_ENVIRONMENTAL_DAMAGE_FATIGUE DEATH_RECAP_TITLE CreateAbbreviateConfig
+-- luacheck: globals C_DamageMeter C_DeathRecap C_DurationUtil C_LFGInfo C_Spell C_StringUtil C_CVar C_RestrictedActions C_ChallengeMode C_ChatInfo SetCVar StaticPopupDialogs StaticPopup_Show YES CANCEL OKAY MenuUtil Menu GameTooltip SecondsToClock DAMAGE_METER_COMBAT_NUMBER CLASS_ICON_TCOORDS UnitClass UnitExists UnitGUID UnitName UnitCanAttack UnitIsPlayer UnitAffectingCombat UnitDetailedThreatSituation GetNumGroupMembers GetNumSubgroupMembers IsInRaid IsInInstance GetInstanceInfo Ambiguate UISpecialFrames GetCursorPosition GetTime GetSpecializationRole C_Timer ACTION_SWING ACTION_ENVIRONMENTAL_DAMAGE_DROWNING ACTION_ENVIRONMENTAL_DAMAGE_FALLING ACTION_ENVIRONMENTAL_DAMAGE_FIRE ACTION_ENVIRONMENTAL_DAMAGE_LAVA ACTION_ENVIRONMENTAL_DAMAGE_SLIME ACTION_ENVIRONMENTAL_DAMAGE_FATIGUE DEATH_RECAP_TITLE CreateAbbreviateConfig
 local parentAddonName = "EnhanceQoL"
 local addon = select(2, ...)
 if _G[parentAddonName] then
@@ -41,7 +41,7 @@ function DamageMeter:InitDB()
 	init("damageMeterEnabled", false)
 	init("damageMeterAutomaticClear", "never")
 	init("damageMeterAutomaticClearInstances", { party = true, raid = true })
-	init("damageMeterUpdateRate", 0.1)
+	init("damageMeterUpdateRate", 1)
 	init("damageMeterManualVisibility", "auto")
 	init("damageMeterWindowCount", 1)
 	init("damageMeterLinkSegments", false)
@@ -1651,7 +1651,7 @@ local function getRowValueLayout(config)
 end
 
 local function getUpdateRate()
-	return clampNumber(db().damageMeterUpdateRate, 0.01, 5, 0.1)
+	return clampNumber(db().damageMeterUpdateRate, 0.01, 5, 1)
 end
 
 local function normalizeAutoClearMode(value)
@@ -1749,9 +1749,17 @@ function DamageMeter:GetTemporarySelection(index)
 	return self.temporarySelections[index]
 end
 
+function DamageMeter:RefreshPlayerRole()
+	local specialization = C_SpecializationInfo.GetSpecialization()
+	self.playerRole = specialization and GetSpecializationRole(specialization) or nil
+	self.playerRoleInitialized = true
+	return self.playerRole
+end
+
 function DamageMeter:GetRoleSpecificDamageMeterType(config)
 	if not config or config.roleSpecificType ~= true then return nil end
-	local role = addon.variables.unitRole
+	if self.playerRoleInitialized ~= true then self:RefreshPlayerRole() end
+	local role = self.playerRole
 	if role == "TANK" then return config.tankDamageMeterType end
 	if role == "HEALER" then return config.healerDamageMeterType end
 	if role == "DAMAGER" then return config.damagerDamageMeterType end
@@ -2122,6 +2130,7 @@ function DamageMeter:SetPaused(paused)
 	if paused then self:Refresh() end
 	self.paused = paused
 	self:UpdatePauseIndicators()
+	self:UpdateHeaderDurationBindings()
 	if not paused then self:Refresh() end
 end
 
@@ -2889,12 +2898,38 @@ function DamageMeter:BuildLiveEventWatch()
 			sessionWatch[key] = nil
 		end
 	end
+	local windowTypes = self.liveEventWindowTypes
+	if not windowTypes then
+		windowTypes = {}
+		self.liveEventWindowTypes = windowTypes
+	end
+	local windowSessionIDs = self.liveEventWindowSessionIDs
+	if not windowSessionIDs then
+		windowSessionIDs = {}
+		self.liveEventWindowSessionIDs = windowSessionIDs
+	end
+	local currentSessionWindows = self.liveEventCurrentSessionWindows
+	if not currentSessionWindows then
+		currentSessionWindows = {}
+		self.liveEventCurrentSessionWindows = currentSessionWindows
+	end
+	for index = 1, MAX_WINDOWS do
+		windowTypes[index] = nil
+		windowSessionIDs[index] = nil
+		currentSessionWindows[index] = nil
+	end
+	self.liveEventWindowCount = 0
 	if self:IsEnabled() then
-		for index = 1, getWindowCount() do
+		local windowCount = getWindowCount()
+		self.liveEventWindowCount = windowCount
+		for index = 1, windowCount do
 			local damageMeterType = getDamageMeterTypeValue(self:GetEffectiveDamageMeterType(index))
+			local sessionID = self:GetEffectiveSessionID(index)
+			windowTypes[index] = damageMeterType
+			windowSessionIDs[index] = sessionID or false
+			currentSessionWindows[index] = sessionID == nil and self:GetEffectiveSessionType(index) == "current"
 			if damageMeterType ~= nil then
 				typeWatch[damageMeterType] = true
-				local sessionID = self:GetEffectiveSessionID(index)
 				if sessionID then
 					local sessions = sessionWatch[damageMeterType]
 					if not sessions then
@@ -3492,7 +3527,7 @@ function DamageMeter:GetRowColorState(frame, config, classFilename)
 		cache = { styleVersion = styleVersion, byClass = {} }
 		frame._damageMeterRowColorCache = cache
 	end
-	local classKey = type(classFilename) == "string" and classFilename ~= "" and classFilename or false
+	local classKey = not isSecret(classFilename) and type(classFilename) == "string" and classFilename ~= "" and classFilename or false
 	local entry = cache.byClass[classKey]
 	if entry then return entry end
 	local r, g, b, a = self:GetBarColor(config, classKey)
@@ -3740,7 +3775,7 @@ function DamageMeter:ApplyRowBorder(row, config, classFilename, colors)
 	if not border then return end
 	local enabled = config.rowBorderEnabled == true
 	local styleVersion = self:GetWindowStyleVersion(row.windowIndex or 0)
-	local classKey = enabled and config.rowBorderUseClassColor == true and type(classFilename) == "string" and classFilename ~= "" and classFilename or false
+	local classKey = enabled and config.rowBorderUseClassColor == true and not isSecret(classFilename) and type(classFilename) == "string" and classFilename ~= "" and classFilename or false
 	if border._damageMeterApplyVersion == styleVersion
 		and border._damageMeterApplyEnabled == enabled
 		and border._damageMeterApplyClassKey == classKey then
@@ -3768,7 +3803,7 @@ function DamageMeter:ApplyBarBorder(row, config, classFilename, colors)
 	local border = row.barBorder
 	if not border then return end
 	local enabled = config.barBorderEnabled == true
-	local classKey = enabled and config.barBorderUseClassColor == true and type(classFilename) == "string" and classFilename ~= "" and classFilename or false
+	local classKey = enabled and config.barBorderUseClassColor == true and not isSecret(classFilename) and type(classFilename) == "string" and classFilename ~= "" and classFilename or false
 	local styleVersion = self:GetWindowStyleVersion(row.windowIndex or 0)
 	if border._damageMeterApplyVersion == styleVersion
 		and border._damageMeterApplyEnabled == enabled
@@ -3797,7 +3832,7 @@ function DamageMeter:ApplyIconBorder(row, config, classFilename, colors)
 	local border = row.iconBorder
 	if not border then return end
 	local enabled = config.showIcons ~= false and config.iconBorderEnabled == true
-	local classKey = enabled and config.iconBorderUseClassColor == true and type(classFilename) == "string" and classFilename ~= "" and classFilename or false
+	local classKey = enabled and config.iconBorderUseClassColor == true and not isSecret(classFilename) and type(classFilename) == "string" and classFilename ~= "" and classFilename or false
 	local styleVersion = self:GetWindowStyleVersion(row.windowIndex or 0)
 	if border._damageMeterApplyVersion == styleVersion
 		and border._damageMeterApplyEnabled == enabled
@@ -4075,12 +4110,12 @@ end
 function DamageMeter:ApplyRankText(row, rowIndex, config)
 	local rankWidth = getEffectiveRankWidth(config)
 	if config.showRanks == false or useTextRankPrefix(config) or rankWidth <= 0 then
-		row.rank:SetText("")
+		setPlainTextIfChanged(row.rank, "")
 		return
 	end
 
 	local text = rowIndex .. "."
-	row.rank:SetText(text)
+	setPlainTextIfChanged(row.rank, text)
 end
 
 function DamageMeter:ShowTooltip(owner, text)
@@ -5377,8 +5412,41 @@ function DamageMeter:CreateRow(window, index, forceRankColumn)
 	self:ApplyIconBorder(row, config)
 	self:ApplyBarBorder(row, config)
 
+	row:Hide()
 	window.rows[index] = row
 	return row
+end
+
+function DamageMeter:ScheduleRowPrewarm()
+	if self.rowPrewarmPending or not self:IsEnabled() then return end
+	if UnitAffectingCombat and UnitAffectingCombat("player") == true then return end
+	self.rowPrewarmPending = true
+	local windowIndex = 1
+	local function createNextRow()
+		if UnitAffectingCombat and UnitAffectingCombat("player") == true then
+			DamageMeter.rowPrewarmPending = nil
+			return
+		end
+		if not DamageMeter:IsEnabled() then
+			DamageMeter.rowPrewarmPending = nil
+			return
+		end
+		local windowCount = getWindowCount()
+		while windowIndex <= windowCount do
+			local frame = DamageMeter:EnsureWindow(windowIndex)
+			local config = DamageMeter:GetConfig(windowIndex)
+			local groupSize = math.max(1, GetNumGroupMembers and GetNumGroupMembers() or 1)
+			local targetRows = math.max(groupSize, getEffectiveVisibleRows(config))
+			if #frame.rows < targetRows then
+				DamageMeter:CreateRow(frame, #frame.rows + 1, false)
+				C_Timer.After(0.01, createNextRow)
+				return
+			end
+			windowIndex = windowIndex + 1
+		end
+		DamageMeter.rowPrewarmPending = nil
+	end
+	C_Timer.After(0, createNextRow)
 end
 
 function DamageMeter:CommitWindowResize(index, targetWidth, targetHeight)
@@ -5758,7 +5826,7 @@ function DamageMeter:EnsureWindow(index)
 		local currentScroll = rowsViewport:GetVerticalScroll() or 0
 		local nextScroll = clampNumber(currentScroll - (delta * rowPitch), 0, maxScroll, 0)
 		rowsViewport:SetVerticalScroll(nextScroll)
-		if config.alwaysShowPlayer == true and nextScroll ~= currentScroll then
+		if nextScroll ~= currentScroll then
 			DamageMeter:RefreshWindow(index, DamageMeter:BuildRefreshSharedState())
 		end
 	end)
@@ -5878,17 +5946,42 @@ function DamageMeter:ApplyWindowAnchor(index)
 	frame._damageMeterAnchored = true
 end
 
+function DamageMeter:UpdateWindowContentGeometry(frame, contentRows, width, viewportHeight, effectiveRowHeight, spacing, viewportPadding)
+	contentRows = math.max(0, tonumber(contentRows) or 0)
+	local contentHeight = math.max(viewportHeight, contentRows > 0 and math.max(1, (contentRows * effectiveRowHeight) + (math.max(0, contentRows - 1) * spacing) + (viewportPadding * 2)) or math.max(1, viewportPadding * 2))
+	frame.contentRows = contentRows
+	if frame._damageMeterContentGeometryRows == contentRows
+		and frame._damageMeterContentGeometryWidth == width
+		and frame._damageMeterContentGeometryHeight == contentHeight
+		and frame._damageMeterContentGeometryViewportHeight == viewportHeight then
+		return
+	end
+	frame._damageMeterContentGeometryRows = contentRows
+	frame._damageMeterContentGeometryWidth = width
+	frame._damageMeterContentGeometryHeight = contentHeight
+	frame._damageMeterContentGeometryViewportHeight = viewportHeight
+	addon.PixelUtil.Size(frame.rowsContainer, math.max(1, width - 8), math.max(1, contentHeight))
+	local maxScroll = math.max(0, contentHeight - viewportHeight)
+	if (frame.rowsViewport:GetVerticalScroll() or 0) > maxScroll then
+		frame.rowsViewport:SetVerticalScroll(maxScroll)
+	end
+end
+
 function DamageMeter:ApplyWindowStyle(index, contentRows, forceRankColumn)
 	local frame = self:EnsureWindow(index)
 	local config = self:GetConfig(index)
 	local damageMeterType = self:GetEffectiveDamageMeterType(index)
 	local rowMode = config.raidRowsEnabled == true and IsInRaid() and "raid" or "default"
 	local styleVersion = self:GetWindowStyleVersion(index)
-	local rowCount = #frame.rows
 	local globalFontVersion = getGlobalFontStateVersion()
+	local width = addon.PixelUtil.Snap(clampNumber(config.width, 100, 700, DEFAULT_WINDOW.width), frame)
+	local _, _, spacing = getRowMetrics(config)
+	local effectiveRowHeight = getEffectiveRowHeight(config)
+	local viewportPadding = self:GetRowViewportPadding(config)
+	local visibleRows = getEffectiveVisibleRows(config)
+	local viewportHeight = math.max(1, (visibleRows * effectiveRowHeight) + (math.max(0, visibleRows - 1) * spacing) + (viewportPadding * 2))
+	self:UpdateWindowContentGeometry(frame, contentRows, width, viewportHeight, effectiveRowHeight, spacing, viewportPadding)
 	if frame._damageMeterWindowStyleVersion == styleVersion
-		and frame._damageMeterWindowStyleContentRows == contentRows
-		and frame._damageMeterWindowStyleRowCount == rowCount
 		and frame._damageMeterWindowStyleRowMode == rowMode
 		and frame._damageMeterWindowStyleGlobalFontVersion == globalFontVersion
 		and frame._damageMeterWindowStyleDamageMeterType == damageMeterType
@@ -5896,25 +5989,16 @@ function DamageMeter:ApplyWindowStyle(index, contentRows, forceRankColumn)
 		return
 	end
 	frame._damageMeterWindowStyleVersion = styleVersion
-	frame._damageMeterWindowStyleContentRows = contentRows
-	frame._damageMeterWindowStyleRowCount = rowCount
 	frame._damageMeterWindowStyleRowMode = rowMode
 	frame._damageMeterWindowStyleGlobalFontVersion = globalFontVersion
 	frame._damageMeterWindowStyleDamageMeterType = damageMeterType
 	frame._damageMeterWindowStyleForceRankColumn = forceRankColumn == true
 
-	local width = addon.PixelUtil.Snap(clampNumber(config.width, 100, 700, DEFAULT_WINDOW.width), frame)
 	local showHeader = config.showHeader == true
 	local showHeaderButtons = showHeader and config.showHeaderButtons ~= false and normalizeDamageMeterTypeKey(damageMeterType) ~= "Threat"
 	local showStatus = config.showStatus ~= false
 	local headerPosition = normalizeHeaderPosition(config.headerPosition)
 	local rowsGrowUp = normalizeRowGrowth(config.rowGrowth) == "UP"
-	local _, _, spacing = getRowMetrics(config)
-	local effectiveRowHeight = getEffectiveRowHeight(config)
-	local viewportPadding = self:GetRowViewportPadding(config)
-	local visibleRows = getEffectiveVisibleRows(config)
-	contentRows = math.max(0, tonumber(contentRows) or 0)
-	local viewportHeight = math.max(1, (visibleRows * effectiveRowHeight) + (math.max(0, visibleRows - 1) * spacing) + (viewportPadding * 2))
 	local titleFontSize = clampNumber(config.titleFontSize, 8, 28, DEFAULT_WINDOW.titleFontSize)
 	local statusFontSize = clampNumber(config.statusFontSize, 8, 24, DEFAULT_WINDOW.statusFontSize)
 	local headerButtonSize = clampNumber(config.headerButtonSize, 10, 32, DEFAULT_WINDOW.headerButtonSize)
@@ -5926,7 +6010,6 @@ function DamageMeter:ApplyWindowStyle(index, contentRows, forceRankColumn)
 	local topOffset = math.floor(heightOffset / 2)
 	local bottomOffset = heightOffset - topOffset
 	local height = addon.PixelUtil.Snap(math.max(60, viewportHeight + topInset + bottomInset + heightOffset), frame)
-	local contentHeight = math.max(viewportHeight, contentRows > 0 and math.max(1, (contentRows * effectiveRowHeight) + (math.max(0, contentRows - 1) * spacing) + (viewportPadding * 2)) or math.max(1, viewportPadding * 2))
 	local borderR, borderG, borderB, borderA = colorComponents(config.borderColor, DEFAULT_WINDOW.borderColor)
 	local titleR, titleG, titleB, titleA = colorComponents(config.titleColor, DEFAULT_WINDOW.titleColor)
 	local backdropOffsetX = clampNumber(config.backdropOffsetX, -200, 200, DEFAULT_WINDOW.backdropOffsetX)
@@ -5949,8 +6032,6 @@ function DamageMeter:ApplyWindowStyle(index, contentRows, forceRankColumn)
 	local footerBackgroundOffsetY = clampNumber(config.footerBackgroundOffsetY, -200, 200, DEFAULT_WINDOW.footerBackgroundOffsetY)
 	local footerBackgroundSizeOffsetX = clampNumber(config.footerBackgroundSizeOffsetX, -200, 200, DEFAULT_WINDOW.footerBackgroundSizeOffsetX)
 	local footerBackgroundSizeOffsetY = clampNumber(config.footerBackgroundSizeOffsetY, -200, 200, DEFAULT_WINDOW.footerBackgroundSizeOffsetY)
-	frame.contentRows = contentRows
-
 	local texture = resolveMedia("statusbar", config.texture, DEFAULT_TEXTURE)
 	if frame.SetClampedToScreen then frame:SetClampedToScreen(config.unclampWindow ~= true) end
 	frame:SetSize(width, height)
@@ -6029,11 +6110,6 @@ function DamageMeter:ApplyWindowStyle(index, contentRows, forceRankColumn)
 	frame.rowsViewport:SetPoint("TOPLEFT", 4, -(topInset + topOffset))
 	frame.rowsViewport:SetPoint("TOPRIGHT", -4, -(topInset + topOffset))
 	frame.rowsViewport:SetHeight(viewportHeight)
-	addon.PixelUtil.Size(frame.rowsContainer, math.max(1, width - 8), math.max(1, contentHeight))
-	local maxScroll = math.max(0, contentHeight - viewportHeight)
-	if (frame.rowsViewport:GetVerticalScroll() or 0) > maxScroll then
-		frame.rowsViewport:SetVerticalScroll(maxScroll)
-	end
 
 	self:ApplyTitleFontString(frame.header, config)
 	setTextColorIfChanged(frame.header, titleR, titleG, titleB, titleA)
@@ -6082,6 +6158,82 @@ function DamageMeter:ApplyWindowStyle(index, contentRows, forceRankColumn)
 	end
 end
 
+function DamageMeter:GetHeaderDurationFormatter(mode)
+	if not (C_StringUtil and C_StringUtil.CreateNumericRuleFormatter) then return nil end
+	self.headerDurationFormatters = self.headerDurationFormatters or {}
+	if self.headerDurationFormatters[mode] then return self.headerDurationFormatters[mode] end
+	local formatter = C_StringUtil.CreateNumericRuleFormatter()
+	local roundingEnum = Enum and Enum.NumericRuleFormatRounding
+	local nearest = roundingEnum and roundingEnum.Nearest or 0
+	local down = roundingEnum and roundingEnum.Down or 2
+	local clockRule = {
+		threshold = mode == "smart" and 60 or 0,
+		step = 1,
+		rounding = nearest,
+		format = "%d:%02d",
+		components = {
+			{ div = 60, step = 1, rounding = down },
+			{ mod = 60, step = 1, rounding = down },
+		},
+	}
+	local breakpoints
+	if mode == "seconds" then
+		breakpoints = { { threshold = 0, step = 1, rounding = nearest, format = "%.0fs" } }
+	elseif mode == "smart" then
+		breakpoints = {
+			{ threshold = 0, step = 1, rounding = nearest, format = "%.0fs" },
+			clockRule,
+		}
+	else
+		breakpoints = { clockRule }
+	end
+	if formatter.SetBreakpoints then formatter:SetBreakpoints(breakpoints) end
+	self.headerDurationFormatters[mode] = formatter
+	return formatter
+end
+
+function DamageMeter:ReleaseHeaderDurationBinding(frame)
+	if not frame then return end
+	if addon.functions and addon.functions.ReleaseDurationTextBinding then addon.functions.ReleaseDurationTextBinding(frame, "damageMeterHeader", false) end
+end
+
+function DamageMeter:ConfigureHeaderDurationBinding(frame, formatText, duration, mode)
+	if not (frame and frame.header and C_DurationUtil and C_DurationUtil.CreateDuration and addon.functions and addon.functions.ConfigureDurationTextBinding) then return false end
+	local formatter = self:GetHeaderDurationFormatter(mode)
+	if not formatter then return false end
+	local durationObject = self.headerDurationObject
+	if not durationObject then
+		durationObject = C_DurationUtil.CreateDuration()
+		self.headerDurationObject = durationObject
+	end
+	durationObject:SetTimeFromStart(GetTime() - duration, math.max(86400, duration + 86400), 1)
+	local component = addon.functions.CreateDurationTextBindingFormatComponent and addon.functions.CreateDurationTextBindingFormatComponent("ElapsedDuration", formatter)
+	if not component then return false end
+	local _, configured = addon.functions.ConfigureDurationTextBinding(frame, "damageMeterHeader", frame.header, durationObject, {
+		components = { component },
+		enabled = not self:IsPaused() and UnitAffectingCombat("player"),
+		formatter = formatter,
+		reset = true,
+		textFormat = formatText,
+		updateInterval = 0.5,
+		useProfileConfig = false,
+	})
+	return configured == true
+end
+
+function DamageMeter:UpdateHeaderDurationBindings()
+	local enabled = not self:IsPaused() and self.liveEventsRegistered == true and self:IsEnabled() and self:IsAvailable() and UnitAffectingCombat("player")
+	if not (addon.functions and addon.functions.SetDurationTextBindingEnabled) then return end
+	for index = 1, MAX_WINDOWS do
+		local frame = self.windows and self.windows[index]
+		if frame and frame._damageMeterHeaderUsesDurationBinding == true then
+			local bindingEnabled = enabled and frame:IsShown()
+			if not bindingEnabled and addon.functions.UpdateDurationTextBinding then addon.functions.UpdateDurationTextBinding(frame, "damageMeterHeader") end
+			addon.functions.SetDurationTextBindingEnabled(frame, "damageMeterHeader", bindingEnabled)
+		end
+	end
+end
+
 function DamageMeter:UpdateHeader(index, session, state)
 	state = state or self:BuildWindowRefreshState(index)
 	local frame = self:EnsureWindow(index)
@@ -6089,7 +6241,11 @@ function DamageMeter:UpdateHeader(index, session, state)
 	local showHeader = config.showHeader == true
 	local showStatus = config.showStatus ~= false
 	local showFooterQuickSwitch = showStatus and config.showFooterQuickSwitch ~= false
-	if not showHeader and not showStatus then return end
+	if not showHeader and not showStatus then
+		frame._damageMeterHeaderUsesDurationBinding = false
+		self:ReleaseHeaderDurationBinding(frame)
+		return
+	end
 	local sessionLabel
 	if state.sessionID then
 		local fallback = DAMAGE_METER_COMBAT_NUMBER and DAMAGE_METER_COMBAT_NUMBER:format(state.sessionID) or string.format("%s %d", L["damageMeterCombat"] or "Combat", state.sessionID)
@@ -6099,16 +6255,14 @@ function DamageMeter:UpdateHeader(index, session, state)
 	end
 	local typeLabel = getDamageMeterTypeLabel(state.damageMeterType)
 	local durationText
-	local durationBucket = false
+	local duration
 	local headerTimeFormat = normalizeHeaderTimeFormat(config.headerTimeFormat)
 	local showHeaderTime = config.showHeaderTime ~= false and state.sessionType ~= "overall"
 	if showHeader and showHeaderTime then
-		local duration = self:GetSessionDuration(index, session, state)
-		if duration then
-			durationBucket = math.floor(duration + 0.5)
-			durationText = formatDuration(duration, headerTimeFormat)
-		end
+		duration = self:GetSessionDuration(index, session, state)
 	end
+	local useDurationBinding = duration ~= nil and not state.preview and state.sessionID == nil and state.sessionType == "current" and C_DurationUtil and C_DurationUtil.CreateDurationTextBinding ~= nil
+	durationText = useDurationBinding and "{}" or formatDuration(duration, headerTimeFormat)
 	local formatMode = normalizeHeaderFormat(config.headerFormat)
 	local quickTypeLabels = showFooterQuickSwitch and self:GetQuickDamageMeterTypeLabels(index, typeLabel) or nil
 	local styleVersion = self:GetWindowStyleVersion(index)
@@ -6121,10 +6275,13 @@ function DamageMeter:UpdateHeader(index, session, state)
 		and frame._damageMeterHeaderShowTime == showHeaderTime
 		and frame._damageMeterHeaderFormat == formatMode
 		and frame._damageMeterHeaderTimeFormat == headerTimeFormat
-		and frame._damageMeterHeaderDurationBucket == durationBucket
+		and frame._damageMeterHeaderUsesDurationBinding == useDurationBinding
 		and frame._damageMeterHeaderSessionLabel == sessionLabel
 		and frame._damageMeterHeaderTypeLabel == typeLabel
 		and frame._damageMeterHeaderQuickTypeLabels == quickTypeLabels then
+		if useDurationBinding and self.headerDurationObject then
+			self.headerDurationObject:SetTimeFromStart(GetTime() - duration, math.max(86400, duration + 86400), 1)
+		end
 		return
 	end
 	frame._damageMeterHeaderStyleVersion = styleVersion
@@ -6136,7 +6293,7 @@ function DamageMeter:UpdateHeader(index, session, state)
 	frame._damageMeterHeaderShowTime = showHeaderTime
 	frame._damageMeterHeaderFormat = formatMode
 	frame._damageMeterHeaderTimeFormat = headerTimeFormat
-	frame._damageMeterHeaderDurationBucket = durationBucket
+	frame._damageMeterHeaderUsesDurationBinding = useDurationBinding
 	frame._damageMeterHeaderSessionLabel = sessionLabel
 	frame._damageMeterHeaderTypeLabel = typeLabel
 	frame._damageMeterHeaderQuickTypeLabels = quickTypeLabels
@@ -6158,11 +6315,33 @@ function DamageMeter:UpdateHeader(index, session, state)
 				headerText = sessionLabel
 			end
 		end
-		setPlainTextIfChanged(frame.header, headerText)
+		if useDurationBinding and self:ConfigureHeaderDurationBinding(frame, headerText, duration, headerTimeFormat) then
+			frame.header._damageMeterPlainText = nil
+		else
+			frame._damageMeterHeaderUsesDurationBinding = false
+			self:ReleaseHeaderDurationBinding(frame)
+			if useDurationBinding then headerText = headerText:gsub("%{%}", formatDuration(duration, headerTimeFormat) or "", 1) end
+			setPlainTextIfChanged(frame.header, headerText)
+		end
+	else
+		frame._damageMeterHeaderUsesDurationBinding = false
+		self:ReleaseHeaderDurationBinding(frame)
 	end
 	if showStatus then
 		setPlainTextIfChanged(frame.status.text, showFooterQuickSwitch and string.format("%s  |  %s", sessionLabel, quickTypeLabels) or "")
 	end
+end
+
+function DamageMeter:SetDynamicText(fontString, text)
+	if isSecret(text) then
+		fontString._damageMeterPlainText = nil
+		fontString:SetText(text)
+		return
+	end
+	text = text or ""
+	if fontString._damageMeterPlainText == text then return end
+	fontString._damageMeterPlainText = text
+	fontString:SetText(text)
 end
 
 function DamageMeter:GetReportOrderedSources(session, damageMeterType)
@@ -6508,6 +6687,7 @@ function DamageMeter:RefreshWindow(index, shared, sessionCache, skipResizeContro
 	local visibleRows = getEffectiveVisibleRows(config)
 	local contentRows = #orderedSources
 	local playerSourceIndex = config.alwaysShowPlayer == true and findLocalPlayerSourceIndex(orderedSources) or nil
+	local viewportStart, viewportEnd = getScrollViewportVisualRange(frame, config, contentRows)
 
 	local forceRankColumn = false
 	local reportAvailable = self:IsReportDataAvailable(session, orderedSources, damageMeterType, config, math.min(visibleRows, #orderedSources))
@@ -6528,22 +6708,26 @@ function DamageMeter:RefreshWindow(index, shared, sessionCache, skipResizeContro
 	local valueShowPercent = config.showPercent ~= false
 	local valueUseParentheses = config.valueFormat == "parentheses"
 	local valueSeparator = normalizeValueSeparator(config.valueSeparator)
+	local rowStyleVersion = self:GetWindowStyleVersion(index)
 
 	for rowIndex = 1, contentRows do
 		local visualTopIndex = rowsGrowUp and (contentRows - rowIndex + 1) or rowIndex
-		local entryIndex = highestBottom and (contentRows - visualTopIndex + 1) or visualTopIndex
-		local sourceIndex
-		if entryIndex >= 1 and entryIndex <= contentRows then
-			if displayIndices then
-				sourceIndex = displayIndices[entryIndex]
-			else
-				sourceIndex = entryIndex
-			end
-		end
-		local source = sourceIndex and orderedSources[sourceIndex] or nil
 		local row = frame.rows[rowIndex]
 		if not row then
 			row = self:CreateRow(frame, rowIndex, forceRankColumn)
+		end
+		local sourceIndex
+		local source
+		if visualTopIndex >= viewportStart and visualTopIndex <= viewportEnd then
+			local entryIndex = highestBottom and (contentRows - visualTopIndex + 1) or visualTopIndex
+			if entryIndex >= 1 and entryIndex <= contentRows then
+				if displayIndices then
+					sourceIndex = displayIndices[entryIndex]
+				else
+					sourceIndex = entryIndex
+				end
+			end
+			source = sourceIndex and orderedSources[sourceIndex] or nil
 		end
 		if source then
 			local rawMaxAmount, rawAmount
@@ -6558,52 +6742,106 @@ function DamageMeter:RefreshWindow(index, shared, sessionCache, skipResizeContro
 			end
 				local amount = safeNumber(source.totalAmount)
 				local percent = totalAmount and totalAmount > 0 and amount and (amount / totalAmount * 100) or nil
-				local colors = self:GetRowColorState(frame, config, source.classFilename)
-				local valueText = valueFormatter(source, percent, valueAbbreviation, valueShowPercent, valueUseParentheses, valueSeparator)
-				local amountText, rateText, percentText = formatRowValueColumnTexts(source, percent, damageMeterType, config)
-
-				row.sourceData = source
-			self:ApplyBarBackground(row, config, source.classFilename, colors)
-			self:ApplyRowBorder(row, config, source.classFilename, colors)
-			self:ApplyIconBorder(row, config, source.classFilename, colors)
-			self:ApplyBarBorder(row, config, source.classFilename, colors)
-			if config.showIcons ~= false then applySourceIcon(row.icon, source, inFollowerDungeon, damageMeterType, config) end
-			self:ApplyRowValueWidth(row, config, damageMeterType, forceRankColumn)
-			self:ApplyRankText(row, sourceIndex, config)
-			local displayName = formatDisplayName(source, config)
-			local nameText = self:TruncateNameWithoutEllipsis(displayName, row.name, config)
-			setTextColorIfChanged(row.name, colors.nr, colors.ng, colors.nb, colors.na)
-			if useTextRankPrefix(config) then
-				row.name:SetFormattedText("|c%s%d.|r %s", colors.prefixRankColorHex, sourceIndex, nameText)
-			else
-				row.name:SetText(nameText)
-			end
-			if config.prefixRankInName ~= true then setTextColorIfChanged(row.rank, colors.rr, colors.rg, colors.rb, colors.ra) end
+				local classFilename = source.classFilename
+				local classSecret = isSecret(classFilename)
+				local colors = self:GetRowColorState(frame, config, classFilename)
+				self:ApplyRowValueWidth(row, config, damageMeterType, forceRankColumn)
+				local valueText, amountText, rateText, percentText
 				if row._damageMeterUseValueColumns then
-					row.value:SetText(amountText)
-					if row.rateValue then row.rateValue:SetText(rateText) end
-					if row.percentValue then row.percentValue:SetText(percentText) end
+					amountText, rateText, percentText = formatRowValueColumnTexts(source, percent, damageMeterType, config)
 				else
-					row.value:SetText(valueText)
-					if row.rateValue then row.rateValue:SetText("") end
-					if row.percentValue then row.percentValue:SetText("") end
+					valueText = valueFormatter(source, percent, valueAbbreviation, valueShowPercent, valueUseParentheses, valueSeparator)
 				end
+
+
+			row.sourceData = source
+			local appearanceChanged = classSecret
+				or row._damageMeterAppearanceStyleVersion ~= rowStyleVersion
+				or row._damageMeterAppearanceClass ~= classFilename
+			if appearanceChanged then
+				row._damageMeterAppearanceStyleVersion = rowStyleVersion
+				if classSecret then
+					row._damageMeterAppearanceClass = nil
+				else
+					row._damageMeterAppearanceClass = classFilename
+				end
+				self:ApplyBarBackground(row, config, classFilename, colors)
+				self:ApplyRowBorder(row, config, classFilename, colors)
+				self:ApplyIconBorder(row, config, classFilename, colors)
+				self:ApplyBarBorder(row, config, classFilename, colors)
+				setTextColorIfChanged(row.name, colors.nr, colors.ng, colors.nb, colors.na)
+				if config.prefixRankInName ~= true then setTextColorIfChanged(row.rank, colors.rr, colors.rg, colors.rb, colors.ra) end
 				setTextColorIfChanged(row.value, colors.vr, colors.vg, colors.vb, colors.va)
 				if row.rateValue then setTextColorIfChanged(row.rateValue, colors.vr, colors.vg, colors.vb, colors.va) end
 				if row.percentValue then setTextColorIfChanged(row.percentValue, colors.vr, colors.vg, colors.vb, colors.va) end
 				row.bar:SetStatusBarColor(colors.r, colors.g, colors.b, colors.a)
+			end
+			if config.showIcons ~= false then
+				local specIconID = source.specIconID
+				local specSecret = isSecret(specIconID)
+				if appearanceChanged or specSecret or row._damageMeterIconSpec ~= specIconID or row._damageMeterIconFollower ~= inFollowerDungeon or row._damageMeterIconType ~= damageMeterType then
+					if specSecret then
+						row._damageMeterIconSpec = nil
+					else
+						row._damageMeterIconSpec = specIconID
+					end
+					row._damageMeterIconFollower = inFollowerDungeon
+					row._damageMeterIconType = damageMeterType
+					applySourceIcon(row.icon, source, inFollowerDungeon, damageMeterType, config)
+				end
+			end
+			self:ApplyRankText(row, sourceIndex, config)
+			local rawName = source.name
+			local rawNameSecret = isSecret(rawName)
+			local nameText
+			if not rawNameSecret and row._damageMeterRawName == rawName and row._damageMeterNameStyleVersion == rowStyleVersion then
+				nameText = row._damageMeterDisplayName
+			else
+				local displayName = formatDisplayName(source, config)
+				nameText = self:TruncateNameWithoutEllipsis(displayName, row.name, config)
+				if rawNameSecret then
+					row._damageMeterRawName = nil
+					row._damageMeterNameStyleVersion = nil
+					row._damageMeterDisplayName = nil
+				else
+					row._damageMeterRawName = rawName
+					row._damageMeterNameStyleVersion = rowStyleVersion
+					row._damageMeterDisplayName = nameText
+				end
+			end
+			if useTextRankPrefix(config) then
+				if isSecret(nameText) then
+					row.name._damageMeterPlainText = nil
+					row.name:SetFormattedText("|c%s%d.|r %s", colors.prefixRankColorHex, sourceIndex, nameText)
+				else
+					self:SetDynamicText(row.name, string.format("|c%s%d.|r %s", colors.prefixRankColorHex, sourceIndex, nameText or ""))
+				end
+			else
+				self:SetDynamicText(row.name, nameText)
+			end
+				if row._damageMeterUseValueColumns then
+					self:SetDynamicText(row.value, amountText)
+					if row.rateValue then self:SetDynamicText(row.rateValue, rateText) end
+					if row.percentValue then self:SetDynamicText(row.percentValue, percentText) end
+				else
+					self:SetDynamicText(row.value, valueText)
+					if row.rateValue then setPlainTextIfChanged(row.rateValue, "") end
+					if row.percentValue then setPlainTextIfChanged(row.percentValue, "") end
+				end
 			row.bar:SetMinMaxValues(0, rawMaxAmount)
 			setStatusBarValue(row.bar, rawAmount, config.smoothBars == true)
-			row:Show()
+			setShownIfChanged(row, true)
 			shown = shown + 1
 		else
+			if self.pinnedTooltipOwner == row then self:ClearPinnedTooltip(index) end
 			row.sourceData = nil
-			row:Hide()
+			setShownIfChanged(row, false)
 		end
 	end
 
 	for rowIndex = contentRows + 1, #frame.rows do
-		frame.rows[rowIndex]:Hide()
+		frame.rows[rowIndex].sourceData = nil
+		setShownIfChanged(frame.rows[rowIndex], false)
 	end
 
 	frame.empty:SetShown(shown == 0 and config.showNoData ~= false)
@@ -6628,12 +6866,12 @@ function DamageMeter:CleanupInactiveWindows(windowCount)
 	end
 end
 
-function DamageMeter:Refresh(skipResizeControls)
+function DamageMeter:Refresh(skipResizeControls, windowSet)
 	local shared = self:BuildRefreshSharedState()
 	self:CleanupInactiveWindows(shared.windowCount)
 	if self:IsPaused() then
 		for index = 1, shared.windowCount do
-			self:RefreshWindow(index, shared, nil, skipResizeControls)
+			if not windowSet or windowSet[index] then self:RefreshWindow(index, shared, nil, skipResizeControls) end
 		end
 		return
 	end
@@ -6644,25 +6882,87 @@ function DamageMeter:Refresh(skipResizeControls)
 	end
 	self:ClearRefreshSessionCache(sessionCache)
 	for index = 1, shared.windowCount do
-		self:RefreshWindow(index, shared, sessionCache, skipResizeControls)
+		if not windowSet or windowSet[index] then self:RefreshWindow(index, shared, sessionCache, skipResizeControls) end
 	end
 	self:ClearRefreshSessionCache(sessionCache)
 end
 
-function DamageMeter:ScheduleRefresh()
-	if GetTime then
-		self.lastLiveRefreshTime = GetTime()
+function DamageMeter:ClearPendingLiveRefresh()
+	local windows = self.pendingLiveRefreshWindows
+	if windows then
+		for index in pairs(windows) do
+			windows[index] = nil
+		end
 	end
-	self:Refresh()
+	self.liveRefreshPending = nil
+	self.liveRefreshScheduleToken = (self.liveRefreshScheduleToken or 0) + 1
 end
 
-function DamageMeter:RefreshFromLiveEvent(damageMeterType, sessionID)
-	if not self:IsLiveEventRelevant(damageMeterType, sessionID) then return end
+function DamageMeter:ScheduleRefresh()
+	self:ClearPendingLiveRefresh()
+	if GetTime then self.lastLiveRefreshTime = GetTime() end
+	self:Refresh()
+	self:UpdateHeaderDurationBindings()
+	self:ScheduleRowPrewarm()
+end
+
+function DamageMeter:MarkLiveRefreshWindows(damageMeterType, sessionID, currentSessionOnly)
+	if self.liveEventWatchDirty or not self.liveEventWindowTypes then self:BuildLiveEventWatch() end
+	if damageMeterType ~= nil and not self:IsLiveEventRelevant(damageMeterType, sessionID) then return false end
+	local windows = self.pendingLiveRefreshWindows
+	if not windows then
+		windows = {}
+		self.pendingLiveRefreshWindows = windows
+	end
+	local marked = false
+	local windowTypes = self.liveEventWindowTypes
+	local windowSessionIDs = self.liveEventWindowSessionIDs
+	local currentSessionWindows = self.liveEventCurrentSessionWindows
+	for index = 1, self.liveEventWindowCount or 0 do
+		local matches
+		if currentSessionOnly then
+			matches = currentSessionWindows[index] == true
+		else
+			local windowSessionID = windowSessionIDs[index]
+			matches = windowTypes[index] == damageMeterType and (windowSessionID == false or windowSessionID == sessionID)
+		end
+		if matches then
+			windows[index] = true
+			marked = true
+		end
+	end
+	return marked
+end
+
+function DamageMeter:FlushLiveEventRefresh()
+	local windows = self.pendingLiveRefreshWindows
+	self.liveRefreshPending = nil
+	self.liveRefreshScheduleToken = (self.liveRefreshScheduleToken or 0) + 1
+	if not windows or next(windows) == nil then return end
+	self.lastLiveRefreshTime = GetTime and GetTime() or (time and time() or 0)
+	self:Refresh(true, windows)
+	for index in pairs(windows) do
+		windows[index] = nil
+	end
+end
+
+function DamageMeter:RefreshFromLiveEvent(damageMeterType, sessionID, currentSessionOnly)
+	if not self:MarkLiveRefreshWindows(damageMeterType, sessionID, currentSessionOnly) then return end
 	local now = GetTime and GetTime() or (time and time() or 0)
 	local last = self.lastLiveRefreshTime or 0
-	if now - last < getUpdateRate() then return end
-	self.lastLiveRefreshTime = now
-	self:Refresh(true)
+	local remaining = getUpdateRate() - (now - last)
+	if remaining <= 0 then
+		self:FlushLiveEventRefresh()
+		return
+	end
+	if self.liveRefreshPending then return end
+	self.liveRefreshPending = true
+	self.liveRefreshScheduleToken = (self.liveRefreshScheduleToken or 0) + 1
+	local token = self.liveRefreshScheduleToken
+	C_Timer.After(math.max(0.01, remaining), function()
+		if DamageMeter.liveRefreshScheduleToken ~= token then return end
+		DamageMeter:FlushLiveEventRefresh()
+	end)
 end
 
 function DamageMeter:ScheduleContextRefresh()
@@ -6711,6 +7011,7 @@ function DamageMeter:RegisterLiveEvents()
 	frame:RegisterEvent("CHALLENGE_MODE_RESET")
 	frame:RegisterEvent("ADDON_RESTRICTION_STATE_CHANGED")
 	self.liveEventsRegistered = true
+	self:UpdateHeaderDurationBindings()
 end
 
 function DamageMeter:UnregisterLiveEvents()
@@ -6732,6 +7033,7 @@ function DamageMeter:UnregisterLiveEvents()
 	frame:UnregisterEvent("CHALLENGE_MODE_RESET")
 	frame:UnregisterEvent("ADDON_RESTRICTION_STATE_CHANGED")
 	self.liveEventsRegistered = false
+	self:UpdateHeaderDurationBindings()
 end
 
 function DamageMeter:HasRoleSpecificTypeWindows()
@@ -6754,6 +7056,7 @@ end
 function DamageMeter:RegisterRoleTypeEvents()
 	local frame = self.eventFrame
 	if not frame or self.roleTypeEventsRegistered then return end
+	self:RefreshPlayerRole()
 	frame:RegisterEvent("PLAYER_ROLES_ASSIGNED")
 	if frame.RegisterUnitEvent then
 		frame:RegisterUnitEvent("PLAYER_SPECIALIZATION_CHANGED", "player")
@@ -7334,6 +7637,7 @@ function DamageMeter:SetConfigValue(index, key, value)
 			self:MarkWindowStyleDirty(windowIndex)
 		end
 		self:Refresh()
+		self:UpdateHeaderDurationBindings()
 		return
 	end
 	if key == "damageMeterType" or key == "roleSpecificType" or key == "tankDamageMeterType" or key == "healerDamageMeterType" or key == "damagerDamageMeterType" then self:UpdateEventState() end
@@ -7382,6 +7686,7 @@ function DamageMeter:SetConfigValue(index, key, value)
 	else
 		self:RefreshWindow(index)
 	end
+	self:UpdateHeaderDurationBindings()
 end
 
 function DamageMeter:BuildWindowSettings(index)
@@ -7456,7 +7761,7 @@ function DamageMeter:BuildWindowSettings(index)
 		end, function() return buildWindowCopyOptions(index) end, settingsId, 160, function() return getWindowCount() > 1 and db().damageMeterSyncSettings ~= true end),
 		{ name = L["Behavior"] or "Behavior", kind = SettingType.Collapsible, id = behaviorId, defaultCollapsed = true },
 		sliderSetting(L["damageMeterGlobalUpdateInterval"] or "Global update interval", function() return getUpdateRate() end, function(value)
-			db().damageMeterUpdateRate = clampNumber(value, 0.01, 5, 0.1)
+			db().damageMeterUpdateRate = clampNumber(value, 0.01, 5, 1)
 			self:ScheduleRefresh()
 		end, 0.01, 5, 0.01, behaviorId, nil, nil, formatAlphaSliderValue),
 		checkboxSetting(L["damageMeterResizeOutsideEditMode"] or "Allow resizing outside Edit Mode", function() return self:IsResizeOutsideEditModeEnabled() end, function(value)
@@ -8083,6 +8388,7 @@ function DamageMeter:Init()
 			self:ClearMythicPlusOverallLocksOutsideDungeon()
 			self:ScheduleCompletedSessionSnapshot()
 		elseif event == "PLAYER_ROLES_ASSIGNED" or event == "PLAYER_SPECIALIZATION_CHANGED" or event == "ACTIVE_PLAYER_SPECIALIZATION_CHANGED" then
+			self:RefreshPlayerRole()
 			self:InvalidateLiveEventWatch()
 		elseif event == "PLAYER_REGEN_DISABLED" then
 			self:RefreshReportRestrictionState()
@@ -8111,7 +8417,7 @@ function DamageMeter:Init()
 			self:RefreshFromLiveEvent(arg1, arg2)
 		elseif event == "DAMAGE_METER_CURRENT_SESSION_UPDATED" then
 			self:InvalidateDerivedTargetCache(true)
-			self:RefreshFromLiveEvent()
+			self:RefreshFromLiveEvent(nil, nil, true)
 		elseif event == "UNIT_THREAT_LIST_UPDATE" or event == "UNIT_THREAT_SITUATION_UPDATE" or event == "UNIT_TARGET" or event == "PLAYER_TARGET_CHANGED" then
 			self:ScheduleThreatRefresh()
 		elseif event == "ADDON_RESTRICTION_STATE_CHANGED" then

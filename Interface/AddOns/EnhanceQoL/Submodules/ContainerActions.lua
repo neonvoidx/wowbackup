@@ -1619,6 +1619,7 @@ function ContainerActions:ScanBags(bags)
 	self:Init()
 	-- Chunked items must be evaluated across the entire carried inventory. A partial
 	-- dirty-bag scan could otherwise retain a stale queue entry for the same item.
+	-- Return the effective scope so a promoted full scan also fully replaces the queue.
 	if type(bags) == "table" and self:HasChunkItemConfig() then bags = nil end
 	self._tooltipScanBudget = (addon.db and addon.db.containerActionTooltipBudget) or 4
 	local scanOpenables = (addon.db and addon.db.containerActionScanOpenables) ~= false
@@ -1626,7 +1627,7 @@ function ContainerActions:ScanBags(bags)
 	local handledChunkItems = {}
 	if #safeItems > 0 then wipe(safeItems) end
 	if #secureItems > 0 then wipe(secureItems) end
-	if not self:IsEnabled() then return safeItems, secureItems end
+	if not self:IsEnabled() then return safeItems, secureItems, bags end
 	local function ScanBag(bag)
 		local slotCount = GetContainerNumSlots and GetContainerNumSlots(bag)
 		if slotCount and slotCount > 0 then
@@ -1697,7 +1698,7 @@ function ContainerActions:ScanBags(bags)
 			ScanBag(bag)
 		end
 	end
-	return safeItems, secureItems
+	return safeItems, secureItems, bags
 end
 
 function ContainerActions:OnSettingChanged(enabled)

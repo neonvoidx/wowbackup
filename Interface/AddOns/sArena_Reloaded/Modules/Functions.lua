@@ -87,7 +87,7 @@ end
 
 function sArenaMixin:UpdatePartyFrameReferences(delay)
     local function UpdatePartyFrameReferences()
-        for i = 1, 4 do
+        for i = 1, 5 do
             self["partyFrame" .. i] = self:FindPartyFrame(i)
         end
         if self.db then
@@ -140,6 +140,72 @@ function sArenaFrameMixin:SetUnitAuraRegistration()
     end
 end
 
+function sArenaMixin:UpdateTopTextAnchors()
+    local container = UIWidgetTopCenterContainerFrame
+    local shadowsight = self.ShadowsightTimer
+    local dampening = self.DampeningText
+
+    if shadowsight then
+        shadowsight:ClearAllPoints()
+        if container then
+            shadowsight:SetParent(container)
+            shadowsight:SetPoint("TOP", container, "BOTTOM", 0, 5)
+        else
+            shadowsight:SetParent(UIParent)
+            shadowsight:SetPoint("TOP", UIParent, "TOP", 0, -100)
+        end
+    end
+
+    if dampening then
+        dampening:ClearAllPoints()
+        if shadowsight and shadowsight:IsShown() then
+            dampening:SetParent(shadowsight:GetParent())
+            dampening:SetPoint("TOP", shadowsight, "BOTTOM", 0, 0)
+        elseif container then
+            dampening:SetParent(container)
+            dampening:SetPoint("TOP", container, "BOTTOM", 0, 5)
+        else
+            dampening:SetParent(UIParent)
+            dampening:SetPoint("TOP", UIParent, "TOP", 0, -100)
+        end
+    end
+end
+
+local function GetActiveMatchDuration()
+    local duration = C_PvP.GetActiveMatchDuration and C_PvP.GetActiveMatchDuration()
+    if duration and duration > 0 then
+        return duration
+    end
+
+    if GetBattlefieldInstanceRunTime then
+        local runTime = GetBattlefieldInstanceRunTime()
+        if runTime and runTime > 0 then
+            return runTime / 1000
+        end
+    end
+end
+
+function sArenaMixin:GetShadowsightSpawnOffset()
+    return self.shadowsightStartTime - (GetActiveMatchDuration() or 0)
+end
+
+function sArenaMixin:RestoreShadowsightTimer(attempt)
+    if not self:IsInArena() then return end
+    if not (self.db and self.db.profile.shadowSightTimer) then return end
+    if C_PvP.IsSoloShuffle and C_PvP.IsSoloShuffle() then return end
+
+    local duration = GetActiveMatchDuration()
+    if not duration then
+        attempt = (attempt or 0) + 1
+        if attempt <= 3 then
+            C_Timer.After(1, function() self:RestoreShadowsightTimer(attempt) end)
+        end
+        return
+    end
+
+    self:StartShadowsightTimer(self.shadowsightStartTime - duration)
+end
+
 function sArenaMixin:ResetShadowsightTimer()
     if self.shadowsightTicker then
         self.shadowsightTicker:Cancel()
@@ -150,6 +216,7 @@ function sArenaMixin:ResetShadowsightTimer()
             self.ShadowsightTimer.Text:SetText("")
         end
         self.ShadowsightTimer:Hide()
+        self:UpdateTopTextAnchors()
     end
     self.shadowsightTimers = {0, 0}
     self.shadowsightAvailable = 2
@@ -161,15 +228,8 @@ function sArenaMixin:StartShadowsightTimer(time)
         self.shadowsightTicker = nil
     end
 
-    self.ShadowsightTimer:ClearAllPoints()
-    if UIWidgetTopCenterContainerFrame then
-        self.ShadowsightTimer:SetParent(UIWidgetTopCenterContainerFrame)
-        self.ShadowsightTimer:SetPoint("TOP", UIWidgetTopCenterContainerFrame, "BOTTOM", 0, 5)
-    else
-        self.ShadowsightTimer:SetPoint("TOP", UIParent, "TOP", 0, -100)
-    end
-
     self.ShadowsightTimer:Show()
+    self:UpdateTopTextAnchors()
 
     local currentTime = GetTime()
     if isMidnight then
@@ -197,14 +257,8 @@ function sArenaMixin:OnShadowsightTaken()
         self.shadowsightTimers[2] = 0
 
         if not self.shadowsightTicker then
-            self.ShadowsightTimer:ClearAllPoints()
-            if UIWidgetTopCenterContainerFrame then
-                self.ShadowsightTimer:SetParent(UIWidgetTopCenterContainerFrame)
-                self.ShadowsightTimer:SetPoint("TOP", UIWidgetTopCenterContainerFrame, "BOTTOM", 0, -10)
-            else
-                self.ShadowsightTimer:SetPoint("TOP", UIParent, "TOP", 0, -100)
-            end
             self.ShadowsightTimer:Show()
+            self:UpdateTopTextAnchors()
 
             self.shadowsightTicker = C_Timer.NewTicker(0.1, function()
                 self:UpdateShadowsightDisplay()
@@ -605,6 +659,8 @@ function sArenaFrameMixin:RegisterFrameEvents()
 
     if not isMidnight then
         self:RegisterEvent("ARENA_CROWD_CONTROL_SPELL_UPDATE")
+    else
+        self:RegisterUnitEvent("UNIT_FACTION", unit, "player")
     end
 end
 
@@ -763,32 +819,25 @@ function sArenaMixin:UpdateCDTextVisibility()
         -- Class Icon
         local classIconCD = frame.ClassIcon and frame.ClassIcon.Cooldown
         if classIconCD then
-            local hideDefaultCD = hideClassIcon or classIconCD.hideDefaultCD
-            classIconCD:SetHideCountdownNumbers(hideDefaultCD and true or false)
-            if classIconCD.Text then
-                classIconCD.Text:SetAlpha(hideDefaultCD and 0 or 1)
-            end
-            if classIconCD.sArenaText then
-                classIconCD.sArenaText:SetAlpha(hideClassIcon and 0 or 1)
-            end
+            classIconCD:SetHideCountdownNumbers(hideClassIcon and true or false)
+            local countdownString = classIconCD:GetCountdownFontString()
+            countdownString:SetAlpha(hideClassIcon and 0 or 1)
         end
 
         -- Trinket
         local trinketCD = frame.Trinket and frame.Trinket.Cooldown
         if trinketCD then
             trinketCD:SetHideCountdownNumbers(hideTrinket)
-            if trinketCD.Text then
-                trinketCD.Text:SetAlpha(hideTrinket and 0 or 1)
-            end
+            local countdownString = trinketCD:GetCountdownFontString()
+            countdownString:SetAlpha(hideTrinket and 0 or 1)
         end
 
         -- Racial
         local racialCD = frame.Racial and frame.Racial.Cooldown
         if racialCD then
             racialCD:SetHideCountdownNumbers(hideRacial)
-            if racialCD.Text then
-                racialCD.Text:SetAlpha(hideRacial and 0 or 1)
-            end
+            local countdownString = racialCD:GetCountdownFontString()
+            countdownString:SetAlpha(hideRacial and 0 or 1)
         end
 
         -- DRs
@@ -798,14 +847,9 @@ function sArenaMixin:UpdateCDTextVisibility()
             for j = 1, #drList do
                 local drFrame = useDrFrames and drList[j] or frame[drList[j]]
                 if drFrame then
-                    local hideDefaultCD = hideDR or drFrame.Cooldown.hideDefaultCD
-                    drFrame.Cooldown:SetHideCountdownNumbers(hideDefaultCD and true or false)
-                    if drFrame.Cooldown.Text then
-                        drFrame.Cooldown.Text:SetAlpha(hideDefaultCD and 0 or 1)
-                    end
-                    if drFrame.Cooldown.sArenaText then
-                        drFrame.Cooldown.sArenaText:SetAlpha(hideDR and 0 or 1)
-                    end
+                    drFrame.Cooldown:SetHideCountdownNumbers(hideDR and true or false)
+                    local countdownString = drFrame.Cooldown:GetCountdownFontString()
+                    countdownString:SetAlpha(hideDR and 0 or 1)
                 end
             end
         end
@@ -1402,12 +1446,28 @@ function sArenaMixin:CreateMidnightDRFrame(arenaFrame)
     return sArenaDRFrame
 end
 
+-- Blizzard bug: MirrorTimerContainer's shown state is only ever toggled by Edit Mode.
+-- Entering Edit Mode with no timer running hides the container and nothing ever shows it again
+-- so the breath/fatigue bars stay invisible for the rest of the session.
+local function FixMirrorTimerContainer()
+    local container = MirrorTimerContainer
+    if not container or container.BodyBugfix then return end
+
+    container.BodyBugfix = true
+    hooksecurefunc(container, "SetupTimer", function(self)
+        if not self:IsShown() and self:ShouldShow() then
+            self:Show()
+        end
+    end)
+end
+
 function sArenaMixin:ToggleEditMode(show)
     if (not (EditModeManagerFrame and EditModeManagerFrame.AccountSettings)) or sArena_ReloadedDB.skipEMDR then return end
     if show then
         ShowUIPanel(EditModeManagerFrame)
     else
         HideUIPanel(EditModeManagerFrame)
+        FixMirrorTimerContainer()
     end
 end
 
@@ -1518,7 +1578,8 @@ function sArenaMixin:HookMidnightDRFrame(blizzDRFrame)
         end
 
         if self.db and self.db.profile.colorDRCooldownText then
-            sArenaDRFrame.Cooldown.Text:SetVertexColorFromBoolean(shown, red, green)
+            local countdownString = sArenaDRFrame.Cooldown:GetCountdownFontString()
+            countdownString:SetVertexColorFromBoolean(shown, red, green)
         end
 
         local drText = sArenaDRFrame.DRTextFrame.DRText

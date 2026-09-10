@@ -1,6 +1,7 @@
 
 KeystoneLootCharDB = {
 ["voidcore"] = {
+[270161] = true,
 },
 ["ui"] = {
 ["selectedCharacterKey"] = "Tichondrius-Hellavator-9",
@@ -14,14 +15,14 @@ KeystoneLootCharDB = {
 ["track"] = "champion",
 ["rank"] = 1,
 },
-["specId"] = 267,
-["classId"] = 9,
+["specId"] = 265,
+["slotIds"] = {
+},
 ["raid"] = {
 ["difficulty"] = "normal",
 ["rank"] = 1,
 },
-["slotId"] = -2,
-["slotIds"] = {
-},
+["slotId"] = -1,
+["classId"] = 9,
 },
 }

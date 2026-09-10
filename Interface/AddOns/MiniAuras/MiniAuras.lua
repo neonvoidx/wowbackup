@@ -7,6 +7,7 @@ local frames = addon.Core.Frames
 local config = addon.Config
 local migrator = addon.Config.Migrator
 local testModeManager = addon.Core.TestModeManager
+local auraSounds = addon.Core.AuraSounds
 local moduleUtil = addon.Utils.ModuleUtil
 local legacyAddon = addon.Core.LegacyAddon
 -- Every module Inits and Refreshes unconditionally; whether it draws anything, and whether it
@@ -162,6 +163,14 @@ local function OnEvent(_, event, unit)
 			testModeManager:StopTesting()
 			RefreshShared()
 		end
+	elseif event == "PLAYER_REGEN_ENABLED" then
+		if auraSounds:ConsumeSkipped() then
+			for _, module in ipairs(modules) do
+				if module.RefreshSounds then
+					module:RefreshSounds()
+				end
+			end
+		end
 	elseif event == "PLAYER_LOGIN" then
 		if migrator:RunDeferredMigrations(db) then
 			-- Only for pages that already exist, which means the player had the options open
@@ -200,8 +209,8 @@ local function OnEvent(_, event, unit)
 		-- re-run the gates so everything hides on the way in and wakes on the way out.
 		QueueHousingCheck()
 	elseif event == "PLAYER_SPECIALIZATION_CHANGED" then
-		-- The kick trackers are enabled per spec. A respec fires no world or roster event, so
-		-- without this nothing would wake a module the player's new spec switches on.
+		-- The kick trackers are enabled per spec, and a personal aura group can be limited to one.
+		-- A respec fires no world or roster event, so without this nothing would notice.
 		if unit == "player" then
 			addon:Refresh()
 		end
@@ -247,6 +256,7 @@ local function OnAddonLoaded()
 	eventsFrame = CreateFrame("Frame")
 	eventsFrame:SetScript("OnEvent", OnEvent)
 	eventsFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
+	eventsFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
 	eventsFrame:RegisterEvent("PLAYER_LOGIN")
 	eventsFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 	eventsFrame:RegisterEvent("GROUP_ROSTER_UPDATE")

@@ -1,3 +1,42 @@
+# BetterBlizzFrames 2.0.7b
+## Midnight
+### Bugfix
+- Fix some new (and old) issues with the No Portrait skip settings; multiple other places only checked for no portrait setting and not if they were skipped or not causing lua errors.
+### Tweak
+- Restructure addon folders and get rid of unused files from the transition period between tww to midnight and from all the different classic updates slowly getting the retail treatment.
+
+# BetterBlizzFrames 2.0.7
+## Midnight
+### New
+- "No Portrait" settings now have right click options to disable for certain frames and/or only enable for party frames.
+### Tweak
+- Move the "Zzz" rest animation a bit for no portrait.
+### Bugfix
+- Fix issue with overlapping auras in PvE due to private auras.
+- Fix a lua error that could happen in combat if micromenu tried to resize in combat
+## Classic Era
+### Tweak
+- Fix shamans not being class colored blue like intended (after the "Midnight patches" came to Era as well)
+## All versions
+- Add a check for new SweepyBoop setting messing with BetterBlizzFrames' class coloring settings and turn it off. Too many bug reports for this.
+
+# BetterBlizzFrames 2.0.6e
+## Midnight
+### Tweak
+- Minor tweak to auras to try avoid spammy buggy auras due to Blizzard API while waiting for fix.
+
+# BetterBlizzFrames 2.0.6d
+## Midnight
+### Tweak
+- Update Snupy profile (www.twitch.tv/snupy). Thank you for sharing!
+- Update Saul profile (www.twitch.tv/saul). Thank you for sharing!
+- Fix Queue Status Eye's frame strata when moved.
+### Bugfix
+- Fix "Hide StanceBar" setting leaving a clickable area where it was hidden.
+## All versions
+### Tweak
+- Add a hidden close button for the profiles sidebar in the top right corner of it that shows on mouseover.
+
 # BetterBlizzFrames 2.0.6c
 ## Midnight
 ### New

@@ -2,85 +2,240 @@
 local _, addon = ...
 
 addon.GeneratedChangelog = {
-	sourceTag = "12.8.3",
+	sourceTag = "12.9.11",
 	releases = {
 		{
-			tag = "12.8.3",
-			date = "2026-08-27",
+			tag = "12.9.11",
+			date = "2026-09-03",
 			sections = {
 				{
 					title = "Fixed",
 					items = {
-						"Unit Frames: Improved idle, combat, Boss Frame, and raid roster performance, including reduced stuttering when joining or leaving groups.",
-						"Group Frames: Refreshed newly assigned raid members reliably and kept inactive absorb values hidden.",
-						"Settings: Kept optional-addon controls and integrations tied to their loaded modules while preserving shared Dynamic Anchoring and Automatically Accept Summons settings.",
-						"Class Buff Reminder: Allowed Rogues to track missing weapon oils alongside their poisons.",
-						"DataPanel: Prevented the options-tooltip hint setting from changing Chat & Social loot and currency icons.",
+						"Mythic+ Timer: Kept the custom timer visible across combat transitions until the active run is completed.",
 					},
 				},
 			},
 		},
 		{
-			tag = "12.8.2",
-			date = "2026-08-26",
+			tag = "12.9.10",
+			date = "2026-09-02",
 			sections = {
 				{
 					title = "Fixed",
 					items = {
-						"Unit Frames: Restored stack and cooldown text on Buff Placement Square indicators, corrected reverse-filling duration bars, and kept hidden indicator limits from excluding configured rules.",
-						"Unit Frames: Buff Placement expiration pulses use WoW's native pandemic window while native aura rendering is active.",
+						"Mythic+ Timer: Updated enemy forces and dungeon objectives immediately when their scenario progress changes.",
 					},
 				},
 			},
 		},
 		{
-			tag = "12.8.1",
-			date = "2026-08-26",
+			tag = "12.9.9",
+			date = "2026-09-02",
 			sections = {
+				{
+					title = "Performance",
+					items = {
+						"Unit Frames: Replaced animated dispel glows with a bright static border to prevent severe persistent frame-rate loss after dispellable auras were shown. Animated dispel glows remain disabled until Blizzard provides an API that can safely control their lifetime.",
+					},
+				},
 				{
 					title = "Fixed",
 					items = {
-						"Cooldown Panels: Restored all Anchor Point options independently of the selected growth direction.",
+						"Resource Bars: Preserved configured out-of-combat fading after mount, loot, and other bar refreshes.",
 					},
 				},
 			},
 		},
 		{
-			tag = "12.8.0",
-			date = "2026-08-26",
+			tag = "12.9.8",
+			date = "2026-08-31",
+			sections = {
+				{
+					title = "Performance",
+					items = {
+						"Tooltip: Avoided refreshing every native aura button on modifier-key changes now that aura tooltip visibility no longer uses the global modifier override.",
+						"Unit Frames: Switched regular castbars to native duration timers and bindings to remove their per-frame Lua updates.",
+						"Damage Meter: Reduced combat refresh work with a lower-impact default interval, independently updated combat time, cached affected-window routing, visible-row rendering, row-state caching, and data-only row-count updates.",
+						"Mythic+ Timer: Replaced continuous full-window refreshes with native timer bars and duration text updates driven by dungeon events, while reusing timer bindings and unchanged Flow styles.",
+					},
+				},
+				{
+					title = "Fixed",
+					items = {
+						"Cooldown Panels: Restored configured aura icon borders after login and UI reloads when their SharedMedia texture becomes available during startup.",
+						"Class Buff Reminder: Kept the pet health portrait aligned with the configured icon shape.",
+						"Damage Meter: Prevented empty preloaded rows from appearing after login or reload.",
+						"Mythic+ Timer: Prevented hidden timer views from rebuilding dungeon state outside active Mythic+ runs.",
+						"Shared Media: Avoided repeatedly resolving unavailable configured media until the available media library changes.",
+						"Group Frames: Prevented absent or disabled raid groups from repeating players from other groups when custom sorting is enabled.",
+						"Group Frames: Refreshed raid assistant icons immediately when raid permissions change.",
+						"Nameplates: Fixed focus, threat and tapped colors being applied in PvP and arena contexts where nameplate coloring is disabled.",
+						"Unit Frames: Allowed the configured Totem Frame to remain visible when the legacy Blizzard Totem Bar hide option is enabled.",
+						"Unit Frames: Kept health percentage text synchronized after player control changes.",
+					},
+				},
+			},
+		},
+		{
+			tag = "12.9.7",
+			date = "2026-08-30",
+			sections = {
+				{
+					title = "Performance",
+					items = {
+						"Damage Meter: Reduced combat refresh work by updating only visible rows and formatting only the active value layout.",
+						"Total Absorb Tracker: Avoided rebuilding its layout and anchor list during absorb and maximum-health updates.",
+					},
+				},
+				{
+					title = "Fixed",
+					items = {
+						"Damage Meter: Initialized role-specific display selection independently and prevented a login-time error during initial Edit Mode registration.",
+						"Mythic+ Timer: Restored affix tooltips when using the Flow layout.",
+						"Mythic+ Timer: Restored death counter tooltips when using the Flow layout.",
+					},
+				},
+			},
+		},
+		{
+			tag = "12.9.6",
+			date = "2026-08-30",
+			sections = {
+				{
+					title = "Fixed",
+					items = {
+						"Cooldown Panels: Kept aura-overlay stack text above borders and glows.",
+					},
+				},
+			},
+		},
+		{
+			tag = "12.9.5",
+			date = "2026-08-30",
+			sections = {
+				{
+					title = "Fixed",
+					items = {
+						"QuickActions: Added the missing option to place individual World Markers directly at the cursor.",
+						"Cooldown Panels: Restored aura-overlay stack counts using each panel or spell entry's configured stack visibility and text style.",
+						"Cooldown Panels: Added the missing per-spell setting to hide an aura overlay's icon while retaining its timer and effects, and organized inherited activation controls beneath their overrides.",
+						"Cooldown Panels: Preserved per-spell Charges and Stacks global-default overrides across reloads.",
+						"Unit Frames: Kept raid-frame players visible and correctly identified when roster slots are reassigned.",
+					},
+				},
+			},
+		},
+		{
+			tag = "12.9.4",
+			date = "2026-08-30",
+			sections = {
+				{
+					title = "Fixed",
+					items = {
+						"Bags: Closed automatically opened bags when leaving vendors, mailboxes, auction houses, banks, and other bag-opening interactions while keeping previously open bags visible.",
+						"Container Actions: Prevented unchanged bag items from being counted more than once after looting items.",
+						"Mount Actions: Allowed mount bindings to dismount while in combat, including from flying mounts, without preventing mount switching outside combat.",
+						"Mount Actions: Preferred flying mounts while swimming at the surface in flyable areas while retaining water mounts when submerged.",
+					},
+				},
+			},
+		},
+		{
+			tag = "12.9.3",
+			date = "2026-08-29",
+			sections = {
+				{
+					title = "Fixed",
+					items = {
+						"Corrected the abbreviations for the current Mythic+ dungeon pool.",
+						"Tooltip: Kept aura tooltips visible when showing modifier-gated player details.",
+					},
+				},
+			},
+		},
+		{
+			tag = "12.9.2",
+			date = "2026-08-29",
+			sections = {
+				{
+					title = "Fixed",
+					items = {
+						"Bags: Prevented bag visibility handling from blocking other windows from closing with Escape during combat.",
+						"Class Buff Reminder: Restored Arcane Familiar tracking for Mages.",
+						"Class Buff Reminder: Restored Grimoire of Sacrifice reminders for Warlocks.",
+						"Class Buff Reminder: Recognized the Tidesworn Augment Rune.",
+						"Class Buff Reminder: Restored group-buff checks during restricted content.",
+						"Unit Frames: Kept native aura offsets aligned with the bar area when an attached portrait is enabled.",
+					},
+				},
+			},
+		},
+		{
+			tag = "12.9.1",
+			date = "2026-08-29",
+			sections = {
+				{
+					title = "Fixed",
+					items = {
+						"Cooldown Panels: Allowed automatic slot On Use tracking to be excluded by trinket Item ID without hiding passive auras.",
+						"Cooldown Panels: Updated automatic-effect exclusion names as uncached spell and item data finishes loading.",
+						"Cooldown Panels: Preserved Cooldown Manager buff ordering when importing or synchronizing panels.",
+						"Cooldown Panels: Restored equipped-slot entries while their usable items are ready.",
+						"Cooldown Panels: Kept custom-duration threshold glows visible when ready glows are enabled.",
+						"Cooldown Panels: Kept the automatic-aura exclusion list inside its Settings background as entries are added.",
+					},
+				},
+			},
+		},
+		{
+			tag = "12.9.0",
+			date = "2026-08-29",
 			sections = {
 				{
 					title = "Added",
 					items = {
-						"Chat Bubbles: Added an option to disable chat bubbles only while inside dungeons and raids.",
-						"Cooldown Panels: Added WoW's built-in Cooldown Manager alert sounds to the per-entry sound selectors.",
-						"Nameplates: Added a separate text size option for default nameplate cast bars.",
-						"Unit Frames: Added Boss Frame range fading.",
-						"Unit Frames: Added an optional Buff Placement preview to Group Frame Edit Mode.",
+						"Class Buff Reminder: Added configuration prompts for tracked Food and Flask reminders when no preference is selected.",
+						"Class Buff Reminder: Added separate expiration warning times for Mythic dungeons and raids.",
+						"Class Buff Reminder: Added an optional pet health warning with the current pet portrait, health percentage, configurable threshold, and Warlock talent filter.",
+						"Cooldown Panels: Added configurable threshold glows for tracked-aura bars and icons, including percentage- or seconds-based thresholds, styles, and colors.",
+						"Cooldown Panels: Added configurable seconds-based threshold glows for custom durations, including a separate glow style.",
+						"Gossip Automation: Added an option to select only manually added Gossip options.",
+						"Keystone: Added extensive Group Finder settings for layout, typography, colors, borders, positioning, and row-wide teleport actions.",
+						"Keystone: Added an optional Edit Mode display showing matching party Keystones for the current Mythic dungeon, sorted by level with rarity colors.",
+					},
+				},
+				{
+					title = "Changed",
+					items = {
+						"Keystone: Organized frame, text, background, and border options into stacked blocks on the existing Group Finder page.",
+					},
+				},
+				{
+					title = "Performance",
+					items = {
+						"Class Buff Reminder: Group buffs are now checked only outside combat, with separate controls for group buff tracking and personal reminder combat visibility.",
+						"Class Buff Reminder: Limited aura events to the player on classes without group aura responsibilities.",
+						"Cooldown Panels: Reduced repeated custom cooldown checks, duration-text binding cleanup, spell-visual refreshes, tracked-aura updates, and unchanged panel-visibility work during combat.",
+						"Cooldown Panels: Limited action-bar keybind refreshes to tracked entries affected by the changed slot.",
+						"Resource Bars: Reduced combat work by updating health, absorb, heal-absorb, temporary maximum-health, Brewmaster Stagger, and aura-based resource displays only when relevant events or values require it.",
+						"Resource Bars: Avoided redundant gradient refreshes while gradients are disabled and avoided repeated inactive alpha and segment cleanup work during power updates.",
+						"Resource Bars: Moved Rune recharge and Essence regeneration animations and cooldown text to native duration handling.",
+						"Resource Bars: Reused protected power threshold curves instead of rebuilding their configuration during power updates.",
+						"Resource Bars: Prevented segmented resource gradients from being rebuilt on every power update.",
 					},
 				},
 				{
 					title = "Fixed",
 					items = {
-						"Bags: Allowed split item stacks to be placed into a compatible free bag slot by clicking an empty area in Category View.",
-						"Quick Actions: Fixed the Repair Mount button so it also uses the Hearthkeeper's Wandering Caravan.",
-						"Mounts: Used the G-99 Breakneck for Random Mount actions while D.R.I.V.E. is available.",
-						"Nameplates: Kept native health text at Blizzard's size when changing the name text size.",
-						"Aura displays: Kept cooldown and stack text above the native aura containers at every configured frame strata.",
-						"Aura displays: Kept helpful auras active through temporary vehicle, teleport, and group-member relationship transitions.",
-						"Health consumables: Preferred the stronger Concentrated Silvermoon Health Potion quality and counted its healing in the Damage Meter.",
-						"Damage Meter: Anchored upward-growing rows to the bottom of the configured row area.",
-						"Cooldown Panels: Kept the selected Growth Point fixed as panel contents grow or shrink.",
-						"Group Frames: Hid absorb and heal-absorb values when no absorb is active.",
-						"Group Frames: Prevented combined Debuff filters from duplicating auras or hiding matches behind unused filter limits.",
-						"Group Frames: Made Edit Mode aura samples work with sample frames, preserve the Boss aura size during updates, and show the configured number of Buff, Debuff, and Defensive icons.",
-						"Unit Frames: Kept aura cooldown swipes aligned with their full icon bounds.",
-						"Tooltip: Showed configured guild ranks without requiring another unit-tooltip option.",
-						"Mythic Plus: Loaded dungeon portals, Keystone dungeon names, and rating hover highlights correctly on the first login.",
-						"Mythic Plus: Refreshed party Keystone information after group changes, completed runs, and temporary addon restrictions.",
-						"Mythic Plus: Improved the Bloodlust tracker with layered ready, lockout, and active states, reliable exact lockout tracking, and consistent cooldown styling.",
-						"Mythic Plus: Fixed Bloodlust tracker sounds and Edit Mode samples, including active-glow preview behavior.",
-						"Vendor: Restored Alt-click add and remove actions in integrated bag views.",
+						"Restored sound previews in Edit Mode sound selectors, including Bloodlust, cooldown, buff, food, death, and no-target alerts.",
+						"Class Buff Reminder: Allowed Shaman shield preferences to be changed from the reminder's right-click menu.",
+						"Cooldown Panels: Restored configurable remaining-time color thresholds for tracked-aura bars.",
+						"Cooldown Panels: Kept tracked-aura bar pixel threshold glows at a consistent speed across horizontal and vertical layouts.",
+						"Keystone: Kept party Keystone updates active when the separate teleport panel is disabled.",
+						"Keystone: Removed background gaps around styled borders and kept large Keystone levels fully visible.",
+						"Keystone: Kept the open Edit Mode anchor and position controls synchronized after moving the dungeon Keystone display.",
+						"Keystone: Restored the party Keystone display immediately after re-enabling it without requiring a UI reload.",
+						"Resource Bars: Restored the Ebon Might duration bar for Augmentation Evokers and applied configured percentage-based colors to its duration bar and text.",
 					},
 				},
 			},

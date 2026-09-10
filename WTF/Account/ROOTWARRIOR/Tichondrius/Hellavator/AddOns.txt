@@ -128,3 +128,7 @@ SnakeSays: enabled
 HousingDecorGuide: enabled
 KickAssist: enabled
 PlateTweaks: enabled
+LargerMacroIconSelection: enabled
+LargerMacroIconSelectionData: enabled
+MiniAuras: enabled
+Prat-3.0: enabled

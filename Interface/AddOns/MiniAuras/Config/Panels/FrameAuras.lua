@@ -15,6 +15,9 @@ local targetAuras = addon.Modules.FrameAuras.TargetAuras
 local verticalSpacing = mini.VerticalSpacing
 local horizontalSpacing = mini.HorizontalSpacing
 local COLUMNS = 2
+-- The two aura tabs carry a third control on their second slider row. That one row is laid on a
+-- grid of its own because the page has no height left for another line.
+local TRIPLE_COLUMNS = 3
 -- Every tab's row of switches is laid on the same grid, whether it fills it or not, so a switch
 -- sits in the same place from one tab to the next. Four is the widest row any of them carries.
 local SWITCH_COLUMNS = 4
@@ -27,7 +30,7 @@ local SLIDER_ROW_GAP = verticalSpacing * 3
 -- How tall every tab's page is. The window measures its scroll range from the tab container once,
 -- when the page is first shown, so a container that grew on a later tab change could never be
 -- scrolled to. Sized inside the window's own viewport, so only the spell list needs a scrollbar.
-local TAB_HEIGHT = 470
+local TAB_HEIGHT = 506
 local SIDEBAR_WIDTH = 120
 local SIDEBAR_ROW_HEIGHT = 24
 local SIDEBAR_ROW_GAP = 25
@@ -51,11 +54,15 @@ local BOUNDS = {
 		Size = { Min = 15, Max = 50 },
 		MaxIcons = { Min = 1, Max = 9 },
 		PerRow = { Min = 1, Max = 6 },
+		Padding = { Min = 0, Max = 5 },
+		FontScale = { Min = 0.5, Max = 2.0, Step = 0.05 },
 	},
 	Debuffs = {
 		Size = { Min = 15, Max = 50 },
 		MaxIcons = { Min = 1, Max = 9 },
 		PerRow = { Min = 1, Max = 6 },
+		Padding = { Min = 0, Max = 5 },
+		FontScale = { Min = 0.5, Max = 2.0, Step = 0.05 },
 	},
 	ClassBuff = {
 		Size = { Min = 15, Max = 50 },
@@ -64,11 +71,31 @@ local BOUNDS = {
 		Size = { Min = 12, Max = 40 },
 		MaxIcons = { Min = 1, Max = 12 },
 		PerRow = { Min = 1, Max = 12 },
+		FontScale = { Min = 0.5, Max = 2.0, Step = 0.05 },
 	},
 }
 
+-- The nine points a row can be pinned to, in reading order.
+local ANCHOR_OPTIONS = {
+	"TOPLEFT", "TOP", "TOPRIGHT",
+	"LEFT", "CENTER", "RIGHT",
+	"BOTTOMLEFT", "BOTTOM", "BOTTOMRIGHT",
+}
+-- No vertical grow. The live row would fill down its column where the preview fills across.
+local GROW_OPTIONS = {
+	"LEFT",
+	"RIGHT",
+	"CENTER",
+	"LEFT_UP",
+	"RIGHT_UP",
+}
+-- A compact unit frame is small enough that a wider range would only ever throw the row off it.
+local OFFSET_RANGE = 50
+
 local columnWidth
 local controlWidth
+local tripleColumnWidth
+local tripleControlWidth
 -- The grid the switch rows are laid on, which the glow colour follows so it lines up with the
 -- switch above it rather than sitting half a page out.
 local switchColumnWidth
@@ -103,9 +130,12 @@ end
 ---@param key string
 ---@param label string
 ---@param tooltip string
+---@param excludes string? A key on the same table this one clears when it turns on.
 ---@return table
-local function Checkbox(parent, options, key, label, tooltip)
-	return mini:Checkbox({
+local function Checkbox(parent, options, key, label, tooltip, excludes)
+	local checkbox
+
+	checkbox = mini:Checkbox({
 		Parent = parent,
 		LabelText = label,
 		Tooltip = tooltip,
@@ -114,9 +144,22 @@ local function Checkbox(parent, options, key, label, tooltip)
 		end,
 		SetValue = function(value)
 			options[key] = value == true
+
+			if options[key] and excludes then
+				options[excludes] = false
+			end
+
 			config:Apply(moduleName.FrameAuras)
+
+			-- The paired switch, if this row wired one on, paints from the same table but has no
+			-- way to notice this one wrote to it.
+			if checkbox.__pairedControl then
+				checkbox.__pairedControl.MiniRefresh()
+			end
 		end,
 	})
+
+	return checkbox
 end
 
 ---@param parent table
@@ -125,8 +168,9 @@ end
 ---@param key string
 ---@param label string
 ---@param tooltip string
+---@param width number? Overrides the page's own column width, for a row laid on a finer grid.
 ---@return SliderReturn
-local function Slider(parent, options, part, key, label, tooltip)
+local function Slider(parent, options, part, key, label, tooltip, width)
 	local range = BOUNDS[part][key]
 
 	return helpers:BuildClampedSlider({
@@ -135,12 +179,68 @@ local function Slider(parent, options, part, key, label, tooltip)
 		Tooltip = tooltip,
 		Min = range.Min,
 		Max = range.Max,
+		Step = range.Step,
+		-- A fractional step has to clamp without rounding.
+		Float = range.Step ~= nil and range.Step < 1,
 		Default = dbDefaults.Modules.FrameAuras[part][key],
-		Width = controlWidth,
+		Width = width or controlWidth,
 		Target = options,
 		Key = key,
 		SettingsKey = moduleName.FrameAuras,
 	})
+end
+
+---Lays the placement controls across one row of the switch grid.
+---@param parent table
+---@param options table
+---@param below table The control the row hangs under.
+---@param withGrow boolean Off for a display of one icon, which has nothing to grow.
+---@return table anchorDropdown What the section below hangs off.
+local function PlacementRow(parent, options, below, withGrow)
+	local width = switchColumnWidth - horizontalSpacing
+
+	local anchorDdl = helpers:BuildLabelledDropdown({
+		Parent = parent,
+		LabelText = L["Anchor"],
+		Tooltip = L["Which point of the unit frame this is pinned to."],
+		Items = ANCHOR_OPTIONS,
+		Target = options,
+		Key = "Anchor",
+		Width = width,
+		SettingsKey = moduleName.FrameAuras,
+	})
+
+	anchorDdl.Label:SetPoint("TOPLEFT", below, "BOTTOMLEFT", 0, -verticalSpacing * 2)
+
+	local offsetColumn = 1
+
+	if withGrow then
+		local growDdl = helpers:BuildGrowDropdown({
+			Parent = parent,
+			Items = GROW_OPTIONS,
+			Target = options,
+			Key = "Grow",
+			Width = width,
+			SettingsKey = moduleName.FrameAuras,
+		})
+
+		growDdl.Label:SetPoint("TOPLEFT", anchorDdl.Label, "TOPLEFT", switchColumnWidth, 0)
+		offsetColumn = 2
+	end
+
+	local offsetX = helpers:BuildOffsetSliders({
+		Parent = parent,
+		Offset = options.Offset,
+		Width = width,
+		Range = OFFSET_RANGE,
+		SettingsKey = moduleName.FrameAuras,
+	})
+
+	-- A dropdown and a slider both sit the same distance under their own label, so lining the two
+	-- up puts every label on the row at one height.
+	offsetX.Slider:SetPoint("TOPLEFT", anchorDdl, "TOPLEFT", switchColumnWidth * offsetColumn, 0)
+
+	return anchorDdl
 end
 
 ---Lays a set of switches across one row, each in its own column of the shared grid. Every tab
@@ -150,9 +250,12 @@ end
 ---
 ---The grid is a fixed width rather than one column per switch, so a tab carrying three of them
 ---lines up with the tabs carrying four instead of spreading to fill the page.
+---
+---A spec's Excludes names another key on the row that switching this one on clears, and the two
+---controls repaint each other so the one just cleared shows off too.
 ---@param parent table
 ---@param options table
----@param specs { Key: string, Label: string, Tooltip: string }[]
+---@param specs { Key: string, Label: string, Tooltip: string, Excludes: string? }[]
 ---@param anchor table? Frame the row hangs below; nil pins it to the page's top left.
 ---@return table first The leftmost switch, which is what the section below anchors to.
 local function CheckboxRow(parent, options, specs, anchor)
@@ -163,9 +266,11 @@ local function CheckboxRow(parent, options, specs, anchor)
 	-- placed instead would put that control under whichever column the row happened to end in.
 	local bottomLeftIndex = 1 + SWITCH_COLUMNS * math.floor((#specs - 1) / SWITCH_COLUMNS)
 	local bottomLeft
+	local byKey = {}
 
 	for index, spec in ipairs(specs) do
-		local checkbox = Checkbox(parent, options, spec.Key, spec.Label, spec.Tooltip)
+		local checkbox = Checkbox(parent, options, spec.Key, spec.Label, spec.Tooltip, spec.Excludes)
+		byKey[spec.Key] = checkbox
 		-- Past the grid's width the row wraps rather than squeezing another column in, so the
 		-- switches on a longer tab still line up with the ones on a shorter one.
 		local column = (index - 1) % SWITCH_COLUMNS
@@ -186,6 +291,13 @@ local function CheckboxRow(parent, options, specs, anchor)
 
 		if index == bottomLeftIndex then
 			bottomLeft = checkbox
+		end
+	end
+
+	-- Wired after the loop, since an Excludes spec can name a key built later in the same row.
+	for _, spec in ipairs(specs) do
+		if spec.Excludes and byKey[spec.Excludes] then
+			byKey[spec.Key].__pairedControl = byKey[spec.Excludes]
 		end
 	end
 
@@ -496,17 +608,27 @@ local function BuildBuffs(content, options)
 		{
 			Key = "ShowImportant",
 			Label = L["Important"],
-			Tooltip = L["Lets the buffs the game flags as important into this row. Off by default, because Important Auras already draws them."],
+			Tooltip = L["Includes important buffs."],
 		},
 		{
 			Key = "ShowDefensives",
 			Label = L["Defensives"],
-			Tooltip = L["Lets defensive cooldowns into this row. Off by default, because Important Auras already draws them."],
+			Tooltip = L["Includes defensive buffs."],
 		},
 		{
 			Key = "EnableNumbers",
 			Label = L["Show numbers"],
-			Tooltip = L["Shows the countdown timer text on this row. Turning it off leaves the cooldown swipe animation shown."],
+			Tooltip = L["Shows cooldown numbers."],
+		},
+		{
+			Key = "CenterStacks",
+			Label = L["Centre stacks"],
+			Tooltip = L["Show the stack count in the middle of the icon instead of the countdown text."],
+		},
+		{
+			Key = "ReverseCooldown",
+			Label = L["Reverse swipe"],
+			Tooltip = L["Reverses the direction of the cooldown swipe animation."],
 		},
 	}, blurb)
 
@@ -523,10 +645,20 @@ local function BuildBuffs(content, options)
 	maxIcons.Slider:SetPoint("TOPLEFT", size.Slider, "TOPLEFT", columnWidth, 0)
 
 	local perRow = Slider(content, options, "Buffs", "PerRow", L["Icons per row"],
-		L["How many icons fit on one row before the next one starts."])
+		L["How many icons fit on one row before the next one starts."], tripleControlWidth)
 	perRow.Slider:SetPoint("TOPLEFT", size.Slider, "BOTTOMLEFT", 0, -SLIDER_ROW_GAP)
 
-	local glow = Divider(content, L["Refresh window"], perRow.Slider)
+	local padding = Slider(content, options, "Buffs", "Padding", L["Icon Padding"],
+		L["Space between icons."], tripleControlWidth)
+	padding.Slider:SetPoint("TOPLEFT", perRow.Slider, "TOPLEFT", tripleColumnWidth, 0)
+
+	local fontScale = Slider(content, options, "Buffs", "FontScale", L["Font Scale"],
+		L["Scales this row's countdown and stack count text."], tripleControlWidth)
+	fontScale.Slider:SetPoint("TOPLEFT", perRow.Slider, "TOPLEFT", tripleColumnWidth * 2, 0)
+
+	local placement = PlacementRow(content, options, perRow.Slider, true)
+
+	local glow = Divider(content, L["Refresh window"], placement)
 
 	local pandemic = Checkbox(content, options, "PandemicGlow", L["Pandemic glow"],
 		L["Lights a heal-over-time up as its refresh window opens, so a refresh lands on time rather than early."])
@@ -589,9 +721,16 @@ local function BuildDebuffs(content, options)
 			Tooltip = L["Replaces Blizzard's debuffs on the party and raid frames with these ones."],
 		},
 		{
-			Key = "Dispellable",
-			Label = L["Dispellable"],
+			Key = "DispellableByMe",
+			Label = L["Dispellable by me"],
 			Tooltip = L["Shows only the debuffs your own spec can dispel."],
+			Excludes = "DispellableByRaid",
+		},
+		{
+			Key = "DispellableByRaid",
+			Label = L["Dispellable by raid"],
+			Tooltip = L["Shows only the debuffs somebody in the group can dispel."],
+			Excludes = "DispellableByMe",
 		},
 		{
 			Key = "ShortOnly",
@@ -601,7 +740,7 @@ local function BuildDebuffs(content, options)
 		{
 			Key = "ShowCrowdControl",
 			Label = L["Crowd control"],
-			Tooltip = L["Lets crowd control into this row. Off by default, because Important Auras already draws it."],
+			Tooltip = L["Shows crowd control debuffs."],
 		},
 		{
 			Key = "ColorByDispelType",
@@ -611,7 +750,17 @@ local function BuildDebuffs(content, options)
 		{
 			Key = "EnableNumbers",
 			Label = L["Show numbers"],
-			Tooltip = L["Shows the countdown timer text on this row. Turning it off leaves the cooldown swipe animation shown."],
+			Tooltip = L["Shows cooldown numbers."],
+		},
+		{
+			Key = "CenterStacks",
+			Label = L["Centre stacks"],
+			Tooltip = L["Show the stack count in the middle of the icon instead of the countdown text."],
+		},
+		{
+			Key = "ReverseCooldown",
+			Label = L["Reverse swipe"],
+			Tooltip = L["Reverses the direction of the cooldown swipe animation."],
 		},
 	}, blurb)
 
@@ -626,8 +775,18 @@ local function BuildDebuffs(content, options)
 	maxIcons.Slider:SetPoint("TOPLEFT", size.Slider, "TOPLEFT", columnWidth, 0)
 
 	local perRow = Slider(content, options, "Debuffs", "PerRow", L["Icons per row"],
-		L["How many icons fit on one row before the next one starts."])
+		L["How many icons fit on one row before the next one starts."], tripleControlWidth)
 	perRow.Slider:SetPoint("TOPLEFT", size.Slider, "BOTTOMLEFT", 0, -SLIDER_ROW_GAP)
+
+	local padding = Slider(content, options, "Debuffs", "Padding", L["Icon Padding"],
+		L["Space between icons."], tripleControlWidth)
+	padding.Slider:SetPoint("TOPLEFT", perRow.Slider, "TOPLEFT", tripleColumnWidth, 0)
+
+	local fontScale = Slider(content, options, "Debuffs", "FontScale", L["Font Scale"],
+		L["Scales this row's countdown and stack count text."], tripleControlWidth)
+	fontScale.Slider:SetPoint("TOPLEFT", perRow.Slider, "TOPLEFT", tripleColumnWidth * 2, 0)
+
+	PlacementRow(content, options, perRow.Slider, true)
 end
 
 ---The name of the buff the player brings, for a page that can then say which one it means.
@@ -668,12 +827,11 @@ local function BuildClassBuff(content, options)
 		},
 	}, blurb)
 
-	-- The corner the mark sits in is fixed. It stands in for something Blizzard would have drawn
-	-- itself, so where it goes is the frame's answer rather than the player's, exactly like the
-	-- buff and debuff rows on the other two tabs.
 	local size = Slider(content, options, "ClassBuff", "Size", L["Icon size"],
 		L["Icon height as a percentage of the unit frame's own height."])
 	size.Slider:SetPoint("TOPLEFT", top, "BOTTOMLEFT", 0, -SLIDER_TOP_GAP)
+
+	PlacementRow(content, options, size.Slider, false)
 end
 
 ---@param content table
@@ -731,6 +889,10 @@ local function BuildTargetFocus(content, options)
 		L["How many icons fit on one row before the next one starts."])
 	perRow.Slider:SetPoint("TOPLEFT", size.Slider, "BOTTOMLEFT", 0, -SLIDER_ROW_GAP)
 
+	local fontScale = Slider(content, options, "TargetFocus", "FontScale", L["Font Scale"],
+		L["Scales this row's countdown and stack count text."])
+	fontScale.Slider:SetPoint("TOPLEFT", perRow.Slider, "TOPLEFT", columnWidth, 0)
+
 	local purge = Divider(content, L["Purgeable buffs"], perRow.Slider)
 
 	local purgeGlow = Checkbox(content, options, "PurgeGlow", L["Purge glow"],
@@ -761,6 +923,8 @@ end
 function M:Build(panel)
 	columnWidth = mini:ColumnWidth(COLUMNS, 0, 0)
 	controlWidth = columnWidth - horizontalSpacing
+	tripleColumnWidth = mini:ColumnWidth(TRIPLE_COLUMNS, 0, 0)
+	tripleControlWidth = tripleColumnWidth - horizontalSpacing
 	switchColumnWidth = mini:ColumnWidth(SWITCH_COLUMNS, 0, 0)
 
 	local db = mini:GetSavedVars()

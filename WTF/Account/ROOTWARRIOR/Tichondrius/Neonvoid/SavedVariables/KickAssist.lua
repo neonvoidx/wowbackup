@@ -32,11 +32,11 @@ KickAssistDB = {
 ["interruptAlertSound"] = "Default",
 ["macroTemplate"] = "#showtooltip {interrupt}\n/cast [@focus,harm,nodead] {interrupt}\n/focus [@focus,noexists] target\n/tm [@focus] ~{marker}",
 ["optW"] = 460,
-["message"] = "My Focus Kick is %MARKER%",
+["autoTabTemplate"] = "#showtooltip {interrupt}\n/cleartarget\n/targetenemy\n/cast {interrupt}\n/targetlasttarget",
 ["classicLook"] = false,
 ["setFocusTemplate"] = "/focus target\n/tm [@focus] ~{marker}",
 ["announceOnReadyCheck"] = true,
-["autoTabTemplate"] = "#showtooltip {interrupt}\n/cleartarget\n/targetenemy\n/cast {interrupt}\n/targetlasttarget",
+["message"] = "My Focus Kick is %MARKER%",
 ["optH"] = 540,
 ["macroPoint"] = {
 "CENTER",

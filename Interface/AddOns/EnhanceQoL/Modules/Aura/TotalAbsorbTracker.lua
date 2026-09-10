@@ -605,14 +605,13 @@ function Tracker:RefreshAppearance()
 	end
 end
 
-function Tracker:Refresh()
+function Tracker:RefreshValue(trackerFrame)
 	if not self:IsEnabled() then
 		if frame then frame:Hide() end
 		return
 	end
 
-	local trackerFrame = self:EnsureFrame()
-	self:ApplyLayoutData(self:BuildLayoutRecordFromProfile())
+	trackerFrame = trackerFrame or self:EnsureFrame()
 
 	if self.previewing then
 		trackerFrame:Show()
@@ -632,6 +631,17 @@ function Tracker:Refresh()
 	trackerFrame:Show()
 end
 
+function Tracker:Refresh()
+	if not self:IsEnabled() then
+		if frame then frame:Hide() end
+		return
+	end
+
+	local trackerFrame = self:EnsureFrame()
+	self:ApplyLayoutData(self:BuildLayoutRecordFromProfile())
+	self:RefreshValue(trackerFrame)
+end
+
 function Tracker:EnsureEventFrame()
 	if eventFrame then return eventFrame end
 	eventFrame = CreateFrame("Frame")
@@ -641,7 +651,7 @@ function Tracker:EnsureEventFrame()
 			return
 		end
 		if unit ~= "player" then return end
-		Tracker:Refresh()
+		Tracker:RefreshValue()
 	end)
 	return eventFrame
 end

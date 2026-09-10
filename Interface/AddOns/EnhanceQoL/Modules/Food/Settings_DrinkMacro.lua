@@ -920,7 +920,7 @@ function addon.functions.initDrinkMacro()
 	addon.SettingsLayout.drinkMacroSettingsReady = true
 end
 
-function addon.functions.OpenFlaskMacroSettings()
+function addon.functions.OpenFlaskMacroSettings(focusControlId)
 	if InCombatLockdown and InCombatLockdown() then
 		if UIErrorsFrame and ERR_NOT_IN_COMBAT then UIErrorsFrame:AddMessage(ERR_NOT_IN_COMBAT, 1, 0, 0) end
 		return
@@ -930,10 +930,10 @@ function addon.functions.OpenFlaskMacroSettings()
 	local convenienceSection = addon.SettingsLayout and addon.SettingsLayout.gameplayConvenienceSection
 	if convenienceSection and convenienceSection.data then convenienceSection.data.expanded = true end
 
-	if addon.functions and addon.functions.OpenConfigCenter then addon.functions.OpenConfigCenter("gameplay.travel-utility", "flaskMacroEnabled") end
+	if addon.functions and addon.functions.OpenConfigCenter then addon.functions.OpenConfigCenter("gameplay.travel-utility", focusControlId or "flaskMacroEnabled") end
 end
 
-function addon.functions.OpenBuffFoodMacroSettings()
+function addon.functions.OpenBuffFoodMacroSettings(focusControlId)
 	if InCombatLockdown and InCombatLockdown() then
 		if UIErrorsFrame and ERR_NOT_IN_COMBAT then UIErrorsFrame:AddMessage(ERR_NOT_IN_COMBAT, 1, 0, 0) end
 		return
@@ -943,5 +943,5 @@ function addon.functions.OpenBuffFoodMacroSettings()
 	local convenienceSection = addon.SettingsLayout and addon.SettingsLayout.gameplayConvenienceSection
 	if convenienceSection and convenienceSection.data then convenienceSection.data.expanded = true end
 
-	if addon.functions and addon.functions.OpenConfigCenter then addon.functions.OpenConfigCenter("gameplay.travel-utility", "buffFoodMacroEnabled") end
+	if addon.functions and addon.functions.OpenConfigCenter then addon.functions.OpenConfigCenter("gameplay.travel-utility", focusControlId or "buffFoodMacroEnabled") end
 end

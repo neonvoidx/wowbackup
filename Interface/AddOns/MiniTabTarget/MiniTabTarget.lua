@@ -8,13 +8,49 @@ local db
 local dbDefaults = {
 	TargetKey = "TAB",
 	TargetPreviousKey = "SHIFT-TAB",
+	Arena = true,
+	SoloShuffle = true,
+	Battleground = true,
 }
 
-local function UpdateBindings()
-	if InCombatLockdown() then
+---Which of the three bracket flags the current zone falls under, or nil outside a PvP instance.
+---Classic has no C_PvP at all, and some clients carry it without IsSoloShuffle.
+local function Bracket()
+	local _, instanceType = IsInInstance()
+
+	if instanceType == "arena" then
+		if C_PvP and C_PvP.IsSoloShuffle and C_PvP.IsSoloShuffle() then
+			return "SoloShuffle"
+		end
+
+		return "Arena"
+	end
+
+	if instanceType == "pvp" then
+		return "Battleground"
+	end
+
+	return nil
+end
+
+---A saved RatedBattleground key marks a save from before the merge, so the fold runs once.
+---Folds toward on, so a player who had only one of the two toggles on keeps that bracket.
+local function MigrateRatedBattleground()
+	local vars = _G.MiniTabTargetDB
+
+	if not vars or vars.RatedBattleground == nil then
 		return
 	end
 
+	if vars.RatedBattleground then
+		vars.Battleground = true
+	end
+
+	vars.RatedBattleground = nil
+end
+
+---SetBinding is protected, so this only runs out of combat.
+local function ApplyBindings()
 	local targetKey = db.TargetKey or dbDefaults.TargetKey
 	local targetPreviousKey = db.TargetPreviousKey or dbDefaults.TargetPreviousKey
 
@@ -25,8 +61,9 @@ local function UpdateBindings()
 		targetPreviousKey = GetBindingKey("TARGETPREVIOUSENEMY") or GetBindingKey("TARGETPREVIOUSENEMYPLAYER") or targetPreviousKey
 	end
 
-	local _, instanceType = IsInInstance()
-	local isPvp = instanceType == "pvp" or instanceType == "arena"
+	-- A bracket that is off falls back to the PvE keys, same as no bracket at all.
+	local bracket = Bracket()
+	local isPvp = bracket ~= nil and db[bracket]
 
 	if isPvp then
 		-- in pvp mode set tab to target player
@@ -39,12 +76,20 @@ local function UpdateBindings()
 	end
 end
 
+local function UpdateBindings()
+	mini:RunWhenCombatEnds(ApplyBindings, "MiniTabTarget-UpdateBindings")
+end
+
 local function OnEvent()
 	UpdateBindings()
 end
 
 local function Init()
+	MigrateRatedBattleground()
+
 	db = mini:GetSavedVars(dbDefaults)
+	addon.Db = db
+	addon.UpdateBindings = UpdateBindings
 
 	UpdateBindings()
 end
@@ -53,4 +98,6 @@ mini:WaitForAddonLoad(Init)
 
 frame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 frame:RegisterEvent("PLAYER_ENTERING_WORLD")
+-- The match type can settle just after the zone change, so the bracket needs another look.
+frame:RegisterEvent("UPDATE_BATTLEFIELD_STATUS")
 frame:SetScript("OnEvent", OnEvent)

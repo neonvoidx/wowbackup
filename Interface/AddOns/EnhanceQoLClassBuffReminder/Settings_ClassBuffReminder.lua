@@ -17,6 +17,7 @@ local DB = {
 	SHOW_PARTY = "classBuffReminderShowParty",
 	SHOW_RAID = "classBuffReminderShowRaid",
 	SHOW_SOLO = "classBuffReminderShowSolo",
+	TRACK_GROUP_BUFFS = "classBuffReminderTrackGroupBuffs",
 	HIDE_IN_RESTED_AREA = "classBuffReminderHideInRestedArea",
 	ONLY_OUT_OF_COMBAT = "classBuffReminderOnlyOutOfCombat",
 	ROLE_FILTER_ENABLED = "classBuffReminderRoleFilterEnabled",
@@ -54,9 +55,14 @@ local DB = {
 	TRACK_STANCES = "classBuffReminderTrackStances",
 	TRACK_STANCES_CONTENT = "classBuffReminderTrackStancesContent",
 	EXPIRATION_WARNING_MINUTES = "classBuffReminderExpirationWarningMinutes",
+	EXPIRATION_WARNING_MINUTES_MYTHIC_DUNGEON = "classBuffReminderExpirationWarningMinutesMythicDungeon",
+	EXPIRATION_WARNING_MINUTES_RAID = "classBuffReminderExpirationWarningMinutesRaid",
 	TRACK_PETS = "classBuffReminderTrackPets",
 	TRACK_PETS_CONTENT = "classBuffReminderTrackPetsContent",
 	TRACK_PETS_INSTANCE_ONLY = "classBuffReminderTrackPetsInstanceOnly",
+	PET_HEALTH_REMINDER_ENABLED = "classBuffReminderPetHealthEnabled",
+	PET_HEALTH_REMINDER_THRESHOLD = "classBuffReminderPetHealthThreshold",
+	PET_HEALTH_REMINDER_INFERNAL_BENEFICIARY_ONLY = "classBuffReminderPetHealthInfernalBeneficiaryOnly",
 	IGNORE_PET_DEFENSIVE = "classBuffReminderIgnorePetDefensive",
 	IGNORE_PET_PASSIVE = "classBuffReminderIgnorePetPassive",
 	HIDE_PET_REMINDER_TEXT = "classBuffReminderHidePetReminderText",
@@ -124,6 +130,7 @@ local defaults = (Reminder and Reminder.defaults)
 		showParty = true,
 		showRaid = true,
 		showSolo = false,
+		trackGroupBuffs = true,
 		hideInRestedArea = false,
 		onlyOutOfCombat = false,
 		roleFilterEnabled = false,
@@ -161,9 +168,14 @@ local defaults = (Reminder and Reminder.defaults)
 		trackStances = true,
 		trackStancesContent = createAllTrackingContentSelection(),
 		expirationWarningMinutes = 0,
+		expirationWarningMinutesMythicDungeon = 0,
+		expirationWarningMinutesRaid = 0,
 		trackPets = false,
 		trackPetsContent = createDefaultTrackingContentSelection(),
 		trackPetsInstanceOnly = false,
+		petHealthReminderEnabled = false,
+		petHealthReminderThreshold = 30,
+		petHealthReminderInfernalBeneficiaryOnly = false,
 		ignorePetDefensive = false,
 		ignorePetPassive = false,
 		hidePetReminderText = false,
@@ -186,6 +198,7 @@ if defaults.glowStyle == nil then defaults.glowStyle = "MARCHING_ANTS" end
 if defaults.glowInset == nil then defaults.glowInset = 0 end
 if type(defaults.glowColor) ~= "table" then defaults.glowColor = { r = 0.95, g = 0.95, b = 0.2, a = 1 } end
 if defaults.glowUseClassColor == nil then defaults.glowUseClassColor = false end
+if defaults.trackGroupBuffs == nil then defaults.trackGroupBuffs = true end
 if defaults.hideInRestedArea == nil then defaults.hideInRestedArea = false end
 if defaults.onlyOutOfCombat == nil then defaults.onlyOutOfCombat = false end
 if defaults.roleFilterEnabled == nil then defaults.roleFilterEnabled = false end
@@ -208,8 +221,13 @@ if type(defaults.trackHealthstonesContent) ~= "table" then defaults.trackHealths
 if defaults.trackStances == nil then defaults.trackStances = true end
 if type(defaults.trackStancesContent) ~= "table" then defaults.trackStancesContent = createAllTrackingContentSelection() end
 if defaults.expirationWarningMinutes == nil then defaults.expirationWarningMinutes = 0 end
+if defaults.expirationWarningMinutesMythicDungeon == nil then defaults.expirationWarningMinutesMythicDungeon = defaults.expirationWarningMinutes end
+if defaults.expirationWarningMinutesRaid == nil then defaults.expirationWarningMinutesRaid = defaults.expirationWarningMinutes end
 if defaults.trackPets == nil then defaults.trackPets = false end
 if type(defaults.trackPetsContent) ~= "table" then defaults.trackPetsContent = createDefaultTrackingContentSelection() end
+if defaults.petHealthReminderEnabled == nil then defaults.petHealthReminderEnabled = false end
+if defaults.petHealthReminderThreshold == nil then defaults.petHealthReminderThreshold = 30 end
+if defaults.petHealthReminderInfernalBeneficiaryOnly == nil then defaults.petHealthReminderInfernalBeneficiaryOnly = false end
 if defaults.ignorePetDefensive == nil then defaults.ignorePetDefensive = false end
 if defaults.ignorePetPassive == nil then defaults.ignorePetPassive = false end
 if defaults.borderEnabled == nil then defaults.borderEnabled = false end
@@ -228,6 +246,13 @@ local function normalizeExpirationWarningMinutes(value)
 	if minutes < EXPIRATION_WARNING_MINUTES_MIN then minutes = EXPIRATION_WARNING_MINUTES_MIN end
 	if minutes > EXPIRATION_WARNING_MINUTES_MAX then minutes = EXPIRATION_WARNING_MINUTES_MAX end
 	return minutes
+end
+
+local function normalizePetHealthThreshold(value)
+	local threshold = math.floor((tonumber(value) or defaults.petHealthReminderThreshold or 30) + 0.5)
+	if threshold < 1 then threshold = 1 end
+	if threshold > 100 then threshold = 100 end
+	return threshold
 end
 
 local function formatExpirationWarningMinutes(value)
@@ -288,6 +313,10 @@ local function openFoodSettings()
 	end
 
 	if addon.functions and addon.functions.OpenConfigCenter then addon.functions.OpenConfigCenter("gameplay.travel-utility", "buffFoodMacroEnabled") end
+end
+
+local function isReminderSelectionConfigured(methodName)
+	return Reminder and type(Reminder[methodName]) == "function" and Reminder[methodName](Reminder) == true
 end
 
 local function normalizeIconShape(value)
@@ -397,9 +426,13 @@ addon.functions.SettingsCreateCheckbox(cat, {
 	parentSection = expandable,
 })
 
+addon.functions.SettingsCreateHeadline(cat, L["ClassBuffReminderExpirationWarningMinutes"] or "Show before expiration", {
+	parentSection = expandable,
+})
+
 addon.functions.SettingsCreateSlider(cat, {
 	var = DB.EXPIRATION_WARNING_MINUTES,
-	text = L["ClassBuffReminderExpirationWarningMinutes"] or "Show before expiration",
+	text = _G.OTHER or "Other",
 	desc = L["ClassBuffReminderExpirationWarningMinutesDesc"] or "0 keeps the current behavior. Higher values show the reminder when a tracked buff has this many minutes or less remaining.",
 	min = EXPIRATION_WARNING_MINUTES_MIN,
 	max = EXPIRATION_WARNING_MINUTES_MAX,
@@ -421,6 +454,56 @@ addon.functions.SettingsCreateSlider(cat, {
 	parentSection = expandable,
 })
 
+addon.functions.SettingsCreateSlider(cat, {
+	var = DB.EXPIRATION_WARNING_MINUTES_MYTHIC_DUNGEON,
+	text = (_G.DUNGEON or "Dungeon") .. " (" .. (_G.PLAYER_DIFFICULTY6 or "Mythic") .. ")",
+	desc = L["ClassBuffReminderExpirationWarningMinutesDesc"] or "0 keeps the current behavior. Higher values show the reminder when a tracked buff has this many minutes or less remaining.",
+	min = EXPIRATION_WARNING_MINUTES_MIN,
+	max = EXPIRATION_WARNING_MINUTES_MAX,
+	step = 1,
+	default = defaults.expirationWarningMinutesMythicDungeon or 0,
+	get = function()
+		if Reminder and Reminder.GetMythicDungeonExpirationWarningMinutes then return Reminder:GetMythicDungeonExpirationWarningMinutes() end
+		return normalizeExpirationWarningMinutes(addon.db and addon.db[DB.EXPIRATION_WARNING_MINUTES_MYTHIC_DUNGEON])
+	end,
+	func = function(value)
+		if Reminder and Reminder.SetMythicDungeonExpirationWarningMinutes then
+			Reminder:SetMythicDungeonExpirationWarningMinutes(value)
+			return
+		end
+		if addon.db then addon.db[DB.EXPIRATION_WARNING_MINUTES_MYTHIC_DUNGEON] = normalizeExpirationWarningMinutes(value) end
+		refreshReminder()
+	end,
+	formatter = formatExpirationWarningMinutes,
+	parentSection = expandable,
+	newTagID = "ClassBuffReminderExpirationWarningMythicDungeon",
+})
+
+addon.functions.SettingsCreateSlider(cat, {
+	var = DB.EXPIRATION_WARNING_MINUTES_RAID,
+	text = _G.RAID or "Raid",
+	desc = L["ClassBuffReminderExpirationWarningMinutesDesc"] or "0 keeps the current behavior. Higher values show the reminder when a tracked buff has this many minutes or less remaining.",
+	min = EXPIRATION_WARNING_MINUTES_MIN,
+	max = EXPIRATION_WARNING_MINUTES_MAX,
+	step = 1,
+	default = defaults.expirationWarningMinutesRaid or 0,
+	get = function()
+		if Reminder and Reminder.GetRaidExpirationWarningMinutes then return Reminder:GetRaidExpirationWarningMinutes() end
+		return normalizeExpirationWarningMinutes(addon.db and addon.db[DB.EXPIRATION_WARNING_MINUTES_RAID])
+	end,
+	func = function(value)
+		if Reminder and Reminder.SetRaidExpirationWarningMinutes then
+			Reminder:SetRaidExpirationWarningMinutes(value)
+			return
+		end
+		if addon.db then addon.db[DB.EXPIRATION_WARNING_MINUTES_RAID] = normalizeExpirationWarningMinutes(value) end
+		refreshReminder()
+	end,
+	formatter = formatExpirationWarningMinutes,
+	parentSection = expandable,
+	newTagID = "ClassBuffReminderExpirationWarningRaid",
+})
+
 addon.functions.SettingsCreateText(cat, L["ClassBuffReminderFlaskSharedHint"] or "Flask preferences are shared with Flask Macro (Gameplay -> Macros & Consumables).", {
 	parentSection = expandable,
 })
@@ -430,6 +513,24 @@ addon.functions.SettingsCreateButton(cat, {
 	text = L["ClassBuffReminderOpenFlaskSettings"] or "Open Flask settings",
 	desc = L["ClassBuffReminderOpenFlaskSettingsDesc"] or "Jumps to Gameplay -> Macros & Consumables and focuses Flask Macro settings.",
 	func = openFlaskSettings,
+	buttonText = _G.OKAY or "OK",
+	hiddenWhen = function() return not isReminderSelectionConfigured("IsFlaskSelectionConfigured") end,
+	parentSection = expandable,
+})
+
+addon.functions.SettingsCreateButton(cat, {
+	var = "classBuffReminderOpenFlaskSettingsUnconfigured",
+	text = L["ClassBuffReminderOpenFlaskSettings"] or "Open Flask settings",
+	desc = L["ClassBuffReminderOpenFlaskSettingsDesc"] or "Jumps to Gameplay -> Macros & Consumables and focuses Flask Macro settings.",
+	func = function()
+		if Reminder and Reminder.OpenConsumablePreferenceSettings then
+			Reminder:OpenConsumablePreferenceSettings("FLASK")
+		else
+			openFlaskSettings()
+		end
+	end,
+	buttonText = L["ClassBuffReminderNotConfigured"] or "Not configured",
+	visibleWhen = function() return not isReminderSelectionConfigured("IsFlaskSelectionConfigured") end,
 	parentSection = expandable,
 })
 
@@ -438,11 +539,81 @@ addon.functions.SettingsCreateButton(cat, {
 	text = L["ClassBuffReminderOpenFoodSettings"] or "Open Food settings",
 	desc = L["ClassBuffReminderOpenFoodSettingsDesc"] or "Jumps to Gameplay -> Macros & Consumables and focuses Buff Food Macro settings.",
 	func = openFoodSettings,
+	buttonText = _G.OKAY or "OK",
+	hiddenWhen = function() return not isReminderSelectionConfigured("IsFoodSelectionConfigured") end,
+	parentSection = expandable,
+})
+
+addon.functions.SettingsCreateButton(cat, {
+	var = "classBuffReminderOpenFoodSettingsUnconfigured",
+	text = L["ClassBuffReminderOpenFoodSettings"] or "Open Food settings",
+	desc = L["ClassBuffReminderOpenFoodSettingsDesc"] or "Jumps to Gameplay -> Macros & Consumables and focuses Buff Food Macro settings.",
+	func = function()
+		if Reminder and Reminder.OpenConsumablePreferenceSettings then
+			Reminder:OpenConsumablePreferenceSettings("FOOD")
+		else
+			openFoodSettings()
+		end
+	end,
+	buttonText = L["ClassBuffReminderNotConfigured"] or "Not configured",
+	visibleWhen = function() return not isReminderSelectionConfigured("IsFoodSelectionConfigured") end,
 	parentSection = expandable,
 })
 
 addon.functions.SettingsCreateHeadline(cat, L["ClassBuffReminderPetBehavior"] or "Pet behavior", {
 	parentSection = expandable,
+})
+
+addon.functions.SettingsCreateCheckbox(cat, {
+	var = DB.PET_HEALTH_REMINDER_ENABLED,
+	text = L["ClassBuffReminderPetHealthReminder"] or "Pet health reminder",
+	desc = L["ClassBuffReminderPetHealthReminderDesc"] or "Shows the pet icon when its health falls below the configured threshold.",
+	func = function(value)
+		if Reminder and Reminder.SetPetHealthReminderEnabled then Reminder:SetPetHealthReminderEnabled(value) end
+	end,
+	parentSection = expandable,
+	parentCheck = function() return addon.db and addon.db[DB.TRACK_PETS] == true end,
+	newTagID = "ClassBuffReminderPetHealthReminder",
+})
+
+addon.functions.SettingsCreateSlider(cat, {
+	var = DB.PET_HEALTH_REMINDER_THRESHOLD,
+	text = L["ClassBuffReminderPetHealthThreshold"] or "Pet health threshold",
+	desc = L["ClassBuffReminderPetHealthThresholdDesc"] or "Shows the reminder while pet health is below this percentage.",
+	min = 1,
+	max = 100,
+	step = 1,
+	default = defaults.petHealthReminderThreshold or 30,
+	get = function()
+		if Reminder and Reminder.GetPetHealthReminderThreshold then return Reminder:GetPetHealthReminderThreshold() end
+		return normalizePetHealthThreshold(addon.db and addon.db[DB.PET_HEALTH_REMINDER_THRESHOLD])
+	end,
+	func = function(value)
+		if Reminder and Reminder.SetPetHealthReminderThreshold then Reminder:SetPetHealthReminderThreshold(value) end
+	end,
+	formatter = function(value) return string.format("%d%%", normalizePetHealthThreshold(value)) end,
+	parentSection = expandable,
+	parentCheck = function() return addon.db and addon.db[DB.TRACK_PETS] == true and addon.db[DB.PET_HEALTH_REMINDER_ENABLED] == true end,
+	newTagID = "ClassBuffReminderPetHealthThreshold",
+})
+
+addon.functions.SettingsCreateCheckbox(cat, {
+	var = DB.PET_HEALTH_REMINDER_INFERNAL_BENEFICIARY_ONLY,
+	text = L["ClassBuffReminderPetHealthInfernalBeneficiaryOnly"] or "Only with Infernal Beneficiary",
+	desc = L["ClassBuffReminderPetHealthInfernalBeneficiaryOnlyDesc"] or "For Warlocks, only shows the pet health reminder while Infernal Beneficiary is talented.",
+	func = function(value)
+		if Reminder and Reminder.SetPetHealthReminderInfernalBeneficiaryOnly then Reminder:SetPetHealthReminderInfernalBeneficiaryOnly(value) end
+	end,
+	parentSection = expandable,
+	parentCheck = function()
+		return addon.db
+			and addon.db[DB.TRACK_PETS] == true
+			and addon.db[DB.PET_HEALTH_REMINDER_ENABLED] == true
+			and Reminder
+			and Reminder.GetClassToken
+			and Reminder:GetClassToken() == "WARLOCK"
+	end,
+	newTagID = "ClassBuffReminderPetHealthInfernalBeneficiaryOnly",
 })
 
 addon.functions.SettingsCreateCheckbox(cat, {
@@ -489,6 +660,7 @@ function Reminder:Initialize()
 	init(DB.SHOW_PARTY, defaults.showParty)
 	init(DB.SHOW_RAID, defaults.showRaid)
 	init(DB.SHOW_SOLO, defaults.showSolo)
+	init(DB.TRACK_GROUP_BUFFS, defaults.trackGroupBuffs)
 	init(DB.HIDE_IN_RESTED_AREA, defaults.hideInRestedArea)
 	init(DB.ONLY_OUT_OF_COMBAT, defaults.onlyOutOfCombat)
 	init(DB.ROLE_FILTER_ENABLED, defaults.roleFilterEnabled)
@@ -517,7 +689,17 @@ function Reminder:Initialize()
 	init(DB.TRACK_HEALTHSTONES, defaults.trackHealthstones)
 	init(DB.TRACK_STANCES, defaults.trackStances)
 	init(DB.EXPIRATION_WARNING_MINUTES, defaults.expirationWarningMinutes)
+	if addon.db then
+		local inheritedExpirationWarning = normalizeExpirationWarningMinutes(addon.db[DB.EXPIRATION_WARNING_MINUTES])
+		if addon.db[DB.EXPIRATION_WARNING_MINUTES_MYTHIC_DUNGEON] == nil then addon.db[DB.EXPIRATION_WARNING_MINUTES_MYTHIC_DUNGEON] = inheritedExpirationWarning end
+		if addon.db[DB.EXPIRATION_WARNING_MINUTES_RAID] == nil then addon.db[DB.EXPIRATION_WARNING_MINUTES_RAID] = inheritedExpirationWarning end
+	end
+	init(DB.EXPIRATION_WARNING_MINUTES_MYTHIC_DUNGEON, defaults.expirationWarningMinutesMythicDungeon)
+	init(DB.EXPIRATION_WARNING_MINUTES_RAID, defaults.expirationWarningMinutesRaid)
 	init(DB.TRACK_PETS, defaults.trackPets)
+	init(DB.PET_HEALTH_REMINDER_ENABLED, defaults.petHealthReminderEnabled)
+	init(DB.PET_HEALTH_REMINDER_THRESHOLD, defaults.petHealthReminderThreshold)
+	init(DB.PET_HEALTH_REMINDER_INFERNAL_BENEFICIARY_ONLY, defaults.petHealthReminderInfernalBeneficiaryOnly)
 	init(DB.IGNORE_PET_PASSIVE, defaults.ignorePetPassive)
 	init(DB.IGNORE_PET_DEFENSIVE, defaults.ignorePetDefensive)
 	init(DB.SCALE, defaults.scale)

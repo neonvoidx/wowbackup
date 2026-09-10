@@ -25,9 +25,9 @@ local BUFF_GROUP = "FrameBuffs"
 local BUFF_PANDEMIC_GROUP = "FrameBuffsPandemic"
 local DEBUFF_GROUP = "FrameDebuffs"
 local DEBUFF_CROWD_CONTROL_GROUP = "FrameDebuffsCrowdControl"
-local DEBUFF_PRIORITY_GROUP = "FrameDebuffsPriority"
+local DEBUFF_ROLE_GROUP = "FrameDebuffsRole"
 local BUFF_GROUP_KEYS = { BUFF_PANDEMIC_GROUP, BUFF_GROUP }
-local DEBUFF_GROUP_KEYS = { DEBUFF_CROWD_CONTROL_GROUP, DEBUFF_PRIORITY_GROUP, DEBUFF_GROUP }
+local DEBUFF_GROUP_KEYS = { DEBUFF_ROLE_GROUP, DEBUFF_CROWD_CONTROL_GROUP, DEBUFF_GROUP }
 local BUFF_FILTER = "HELPFUL"
 local BUFF_FILTER_MINE = "HELPFUL|PLAYER"
 local DEBUFF_FILTER = "HARMFUL"
@@ -38,46 +38,71 @@ local DEBUFF_FILTER = "HARMFUL"
 local EXCLUDE_IMPORTANT = "|!IMPORTANT"
 local EXCLUDE_DEFENSIVE = "|!BIG_DEFENSIVE|!EXTERNAL_DEFENSIVE"
 local EXCLUDE_CROWD_CONTROL = "|!CROWD_CONTROL"
--- The debuff row's parts. Everything behind the crowd control group negates that token, so no aura
--- lands in two of them.
+-- Narrows to what anybody in the group can take off.
+local REQUIRE_DISPELLABLE = "|DISPELLABLE"
+-- The plain group never draws crowd control, whatever the switch says.
 local DEBUFF_PLAIN_FILTER = DEBUFF_FILTER .. EXCLUDE_CROWD_CONTROL
 local DEBUFF_CROWD_CONTROL_FILTER = DEBUFF_FILTER .. "|CROWD_CONTROL"
--- Identical to the plain string. What tells the two groups apart is in DebuffCandidates.
-local DEBUFF_PRIORITY_FILTER = DEBUFF_PLAIN_FILTER
 -- Where each part sits in the row. Spelled out because the crowd control group is declared after
 -- the others when the player switches it on mid-session, and the engine falls back to the order
 -- groups were declared in.
-local DEBUFF_CROWD_CONTROL_INDEX = 1
-local DEBUFF_PRIORITY_INDEX = 2
+local DEBUFF_ROLE_INDEX = 1
+local DEBUFF_CROWD_CONTROL_INDEX = 2
 local DEBUFF_PLAIN_INDEX = 3
--- What the front of the debuff row is drawn at, as a share of the rest of it. A stun or a priority
--- debuff on a party member is worth more than the debuff beside it.
-local LEAD_SIZE_SCALE = 1.25
+-- What the front of the debuff row is drawn at, as a share of the rest of it. A stun or a boss and
+-- role debuff on a party member is worth more than the debuff beside it.
+local LEAD_SIZE_SCALE = 1.4
 -- The most icons the head of the row holds. Its own cap rather than the row's, because two stuns
 -- at once on one member is already unusual.
 local MAX_CROWD_CONTROL_ICONS = 2
--- The same cap on the priority debuffs behind them, and for the same reason. Two of those at once
--- on one member is as unusual as two stuns.
-local MAX_PRIORITY_ICONS = 2
+-- The same cap on the boss and role auras leading the row, and for the same reason.
+local MAX_ROLE_ICONS = 2
 -- What "under a minute" means to the engine: a bound on an aura's whole duration rather than on
 -- what is left of it. Any value at all also drops the auras that never run out.
 local SHORT_AURA_SECONDS = 60
--- Where each row sits. The offsets hold the row far enough in to clear the frame's own edge, and
--- the grow wraps a second line upwards, away from the frame below this one.
-local PLACEMENT = {
-	Buffs = { Point = "BOTTOMRIGHT", Grow = "LEFT_UP", OffsetX = -2, OffsetY = 2 },
-	Debuffs = { Point = "BOTTOMLEFT", Grow = "RIGHT_UP", OffsetX = 2, OffsetY = 2 },
+-- Where each row sits when a profile has never held a placement of its own. Spelled out rather
+-- than read off the defaults table, which loads after the modules do.
+local DEFAULT_PLACEMENT = {
+	Buffs = { Anchor = "BOTTOMRIGHT", Grow = "LEFT_UP", Offset = { X = -2, Y = 2 } },
+	Debuffs = { Anchor = "BOTTOMLEFT", Grow = "RIGHT_UP", Offset = { X = 2, Y = 2 } },
 }
-local ICON_SPACING = 1
+-- The points a row may hang off. An imported or hand-edited profile can hold anything, and a
+-- point the client does not know throws out of SetPoint and takes the module down with it.
+local ANCHOR_POINTS = {
+	TOPLEFT = true,
+	TOP = true,
+	TOPRIGHT = true,
+	LEFT = true,
+	CENTER = true,
+	RIGHT = true,
+	BOTTOMLEFT = true,
+	BOTTOM = true,
+	BOTTOMRIGHT = true,
+}
+-- UP and DOWN are left out on purpose. They run the live row down a column, which the preview row
+-- draws across instead, so a profile holding one would preview somewhere it will not appear.
+local GROW_DIRECTIONS = {
+	LEFT = true,
+	RIGHT = true,
+	CENTER = true,
+	LEFT_UP = true,
+	RIGHT_UP = true,
+}
+-- The gap a profile written before the slider existed falls back to.
+local DEFAULT_PADDING = 1
+local MIN_PADDING = 0
+local MAX_PADDING = 5
 -- Icons take a share of the frame's height rather than a fixed size, because a raid profile and a
 -- party profile size their frames very differently. This is what one falls back to when the client
--- will not say how tall the frame is.
-local FALLBACK_ICON_SIZE = 14
+-- has never once said how tall the frame is.
+-- Erring large, because a row that is too big is something the player can see and correct.
+local FALLBACK_ICON_SIZE = 30
 -- The shipped budgets a profile written before a key existed falls back to. Spelled out rather
 -- than read off the defaults table, which loads after the modules do.
 local DEFAULT_MAX_ICONS = { Buffs = 6, Debuffs = 2 }
 local DEFAULT_PER_ROW = 3
 local DEFAULT_SIZE_PERCENT = 35
+local DEFAULT_FONT_SCALE = 1.0
 -- An icon sized off a party frame is about eighteen pixels, where the shared ratio leaves a count
 -- of six points.
 local STACK_COEFFICIENT = 0.4
@@ -101,6 +126,8 @@ local SIDES = { "Buffs", "Debuffs" }
 -- Where each side's preview row is kept on an entry. The engine decides what an AuraContainer
 -- shows, so a fake aura cannot be fed to one and the preview draws its own icons instead.
 local TEST_FIELDS = { Buffs = "TestBuffs", Debuffs = "TestDebuffs" }
+-- What a stand-in icon shows for a centred stack count, where a live icon shows the real one.
+local PREVIEW_STACK_COUNT = "3"
 
 addon.Modules.FrameAuras = addon.Modules.FrameAuras or {}
 
@@ -122,16 +149,19 @@ local generation = 0
 -- Unit frame -> its two displays. The frames are Blizzard's own and live for the session, so there
 -- is nothing to clear.
 local watchers = {}
+-- Last size each side measured on each frame, so a frame the client can't measure right now keeps
+-- the size it actually has instead of jumping to the fallback.
+local lastIconSize = setmetatable({}, { __mode = "k" })
+-- Frame and side each display was built for, so the walker can re-measure right before it declares
+-- a group rather than trust what New saw.
+local groupSource = setmetatable({}, { __mode = "k" })
 -- The filters the displays currently hold, one set between them all. The engine keeps the
 -- reference it is handed, and handing the same one back costs nothing.
 local pandemicCandidates
 local plainCandidates
-local debuffCandidates
-local priorityDebuffCandidates
-local plainDebuffCandidates
--- Whether the debuff sets have been worked out yet. Its own flag because the crowd control answer
--- is nil under stock settings, and testing the set itself would rebuild it on every call.
-local debuffCandidatesBuilt
+local roleDebuffCandidates
+local restDebuffCandidates
+local crowdControlDebuffCandidates
 local eventsFrame
 ---@type EventGate?
 local rosterGate
@@ -252,8 +282,18 @@ end
 local function IconSize(frame, side)
 	local options = SideOptions(side)
 	local percent = options and options.Size or DEFAULT_SIZE_PERCENT
+	local size = pixels:ShareOfHeight(frame, percent)
+	local sides = lastIconSize[frame]
 
-	return pixels:ShareOfHeight(frame, percent, FALLBACK_ICON_SIZE)
+	if size then
+		sides = sides or {}
+		sides[side] = size
+		lastIconSize[frame] = sides
+
+		return size
+	end
+
+	return (sides and sides[side]) or FALLBACK_ICON_SIZE
 end
 
 ---The engine's own answer to "can I dispel this", which it works out per aura from the player's
@@ -267,6 +307,7 @@ end
 ---Blizzard's own raid frame debuff order, which is what ranks a group's own matches against each
 ---other. The engine has to do it because an aura's spell id is secret, so nothing can reorder a
 ---group once it has rendered.
+
 ---@return number?
 local function DebuffSort()
 	if not AuraContainerSortMethod then
@@ -327,54 +368,51 @@ local function BuffCandidates()
 	return pandemicCandidates, plainCandidates
 end
 
+---Whether the raid half of the dispellable switch is on. It covers the "by me" half, which goes
+---quiet while it is.
+---@return boolean
+local function DispellableByRaidOn()
+	local options = SideOptions("Debuffs")
+
+	return options ~= nil and options.DispellableByRaid == true
+end
+
 ---The debuff filters, built the same way and for the same reason.
 ---
----The two switches on the page narrow all three sets. They are about the row rather than about a
----category of it, so a stun the player cannot dispel is dropped exactly as a debuff would be.
+---The boss and role partition is made here rather than in a filter string, because the game
+---answers isBossOrRoleAura on the aura itself and nothing negates that in a string. It is always
+---set, so none of them can come back nil.
 ---
----The priority flag on the last two sets is what tells those groups apart. Nothing else narrows
----the row, which is ranked by the game's own raid frame debuff order.
----@return table? crowdControl Nil when the row is not narrowed, which the engine reads as
----"everything".
----@return table priority
----@return table plain
+---Crowd control gets its own table with no dispel-type filter at all, because a spec's inability
+---to dispel a stun is not a reason to hide it.
+---@return table role Feeds the group leading the row.
+---@return table rest Feeds the plain group behind crowd control.
+---@return table crowdControl Feeds the crowd control group.
 local function DebuffCandidates()
-	if debuffCandidatesBuilt then
-		return debuffCandidates, priorityDebuffCandidates, plainDebuffCandidates
+	if roleDebuffCandidates then
+		return roleDebuffCandidates, restDebuffCandidates, crowdControlDebuffCandidates
 	end
 
 	local options = SideOptions("Debuffs") or {}
 	local maxDuration = options.ShortOnly == true and SHORT_AURA_SECONDS or nil
-	local dispellable = options.Dispellable == true and DispelType() or nil
+	local dispellable = options.DispellableByMe == true and not DispellableByRaidOn() and DispelType() or nil
 
-	debuffCandidatesBuilt = true
-	debuffCandidates = nil
-
-	if maxDuration or dispellable then
-		debuffCandidates = {
-			maxDuration = maxDuration,
-			processedAuraType = dispellable,
-		}
-	end
-
-	-- The two halves behind crowd control are told apart here rather than in their filter strings,
-	-- because the game flags a priority aura with no token a string can negate.
-	--
-	-- The engine compares the flag against these, so an answer that is neither true nor false is
-	-- turned away by both halves. A debuff row showing nothing behind the crowd control is the
-	-- shape that failure takes, and no partition can be written without a boolean.
-	priorityDebuffCandidates = {
+	roleDebuffCandidates = {
 		maxDuration = maxDuration,
 		processedAuraType = dispellable,
-		isPriorityAura = true,
+		isBossOrRoleAura = true,
 	}
-	plainDebuffCandidates = {
+	restDebuffCandidates = {
 		maxDuration = maxDuration,
 		processedAuraType = dispellable,
-		isPriorityAura = false,
+		isBossOrRoleAura = false,
+	}
+	crowdControlDebuffCandidates = {
+		maxDuration = maxDuration,
+		isBossOrRoleAura = false,
 	}
 
-	return debuffCandidates, priorityDebuffCandidates, plainDebuffCandidates
+	return roleDebuffCandidates, restDebuffCandidates, crowdControlDebuffCandidates
 end
 
 ---Whether the debuff displays have to classify each aura for the dispellable filter. Asking for a
@@ -383,7 +421,7 @@ end
 local function ClassifiesDebuffs()
 	local options = SideOptions("Debuffs")
 
-	return options ~= nil and options.Dispellable == true and DispelType() ~= nil
+	return options ~= nil and options.DispellableByMe == true and not DispellableByRaidOn() and DispelType() ~= nil
 end
 
 ---@param side "Buffs"|"Debuffs"
@@ -416,17 +454,49 @@ local function CrowdControlIcons()
 	return math.min(MaxIcons("Debuffs"), MAX_CROWD_CONTROL_ICONS)
 end
 
----How many icons the priority group behind the crowd control may draw. Capped for the same reason,
----and never more than the row's own budget.
----@return number
-local function PriorityIcons()
-	return math.min(MaxIcons("Debuffs"), MAX_PRIORITY_ICONS)
+---The boss and role group's filter. It closes to crowd control when the Crowd control switch is
+---off, and narrows to what the raid can dispel when the Dispellable by raid switch is on.
+---@return string
+local function RoleFilter()
+	local options = SideOptions("Debuffs")
+	local filter = DEBUFF_FILTER
+
+	if options == nil or options.ShowCrowdControl ~= true then
+		filter = filter .. EXCLUDE_CROWD_CONTROL
+	end
+
+	if DispellableByRaidOn() then
+		filter = filter .. REQUIRE_DISPELLABLE
+	end
+
+	return filter
 end
 
----Whether the crowd control at the head of the debuff row is ringed in the game's dispel colours.
----Only that group asks.
+---The plain group's filter, which narrows to what the raid can dispel the same way the role
+---group's does.
+---@return string
+local function PlainFilter()
+	local filter = DEBUFF_PLAIN_FILTER
+
+	if DispellableByRaidOn() then
+		filter = filter .. REQUIRE_DISPELLABLE
+	end
+
+	return filter
+end
+
+---How many icons the boss and role group at the head of the row may draw. Never gated on a
+---setting, because a boss or role aura has to be on the row whatever the player switched off.
+---Still never more than the row's own budget.
+---@return number
+local function RoleIcons()
+	return math.min(MaxIcons("Debuffs"), MAX_ROLE_ICONS)
+end
+
+---Whether the debuff row is ringed in the game's dispel colours. The one switch on the row governs
+---all three of its groups.
 ---@return boolean
-local function CrowdControlDispelColors()
+local function DebuffDispelColors()
 	local options = SideOptions("Debuffs")
 
 	return options ~= nil and options.ColorByDispelType == true
@@ -446,8 +516,8 @@ local function GroupIcons(side, key)
 		return CrowdControlIcons()
 	end
 
-	if key == DEBUFF_PRIORITY_GROUP then
-		return PriorityIcons()
+	if key == DEBUFF_ROLE_GROUP then
+		return RoleIcons()
 	end
 
 	return MaxIcons(side)
@@ -459,6 +529,54 @@ local function PerRow(side)
 	local options = SideOptions(side)
 
 	return tonumber(options and options.PerRow) or DEFAULT_PER_ROW
+end
+
+---The gap one row leaves between one icon and the next. An imported or hand-edited profile can
+---hold anything, and a gap wider than the frame would push the row off it.
+---@param side "Buffs"|"Debuffs"
+---@return number
+local function Padding(side)
+	local options = SideOptions(side)
+	local padding = tonumber(options and options.Padding)
+
+	if not padding then
+		return DEFAULT_PADDING
+	end
+
+	return math.min(math.max(padding, MIN_PADDING), MAX_PADDING)
+end
+
+---The point of the frame one row hangs off. The same point is used on both sides of the anchor,
+---so a corner holds the row inside the frame rather than half over its edge.
+---@param side "Buffs"|"Debuffs"
+---@return string
+local function AnchorPoint(side)
+	local options = SideOptions(side)
+	local anchor = options and options.Anchor
+
+	return ANCHOR_POINTS[anchor] and anchor or DEFAULT_PLACEMENT[side].Anchor
+end
+
+---Which way one row runs, and which way a wrapped line stacks.
+---@param side "Buffs"|"Debuffs"
+---@return string
+local function Grow(side)
+	local options = SideOptions(side)
+	local grow = options and options.Grow
+
+	return GROW_DIRECTIONS[grow] and grow or DEFAULT_PLACEMENT[side].Grow
+end
+
+---How far one row sits off the point it hangs from.
+---@param side "Buffs"|"Debuffs"
+---@return number x
+---@return number y
+local function Offset(side)
+	local options = SideOptions(side)
+	local offset = options and options.Offset
+	local shipped = DEFAULT_PLACEMENT[side].Offset
+
+	return tonumber(offset and offset.X) or shipped.X, tonumber(offset and offset.Y) or shipped.Y
 end
 
 ---Whether the preview row leads with a crowd control stand-in. What draws that icon and what
@@ -473,6 +591,33 @@ local function PreviewLeadsWithCrowdControl(side)
 	local options = SideOptions(side)
 
 	return options ~= nil and options.ShowCrowdControl == true
+end
+
+---What one row multiplies its text size by.
+---@param side "Buffs"|"Debuffs"
+---@return number
+local function FontScale(side)
+	local options = SideOptions(side)
+
+	return tonumber(options and options.FontScale) or DEFAULT_FONT_SCALE
+end
+
+---Whether one row puts the stack count where the countdown goes.
+---@param side "Buffs"|"Debuffs"
+---@return boolean
+local function CentersStacks(side)
+	local options = SideOptions(side)
+
+	return options ~= nil and options.CenterStacks == true
+end
+
+---Which way one row's cooldown swipe runs.
+---@param side "Buffs"|"Debuffs"
+---@return boolean
+local function ReversesCooldown(side)
+	local options = SideOptions(side)
+
+	return options == nil or options.ReverseCooldown ~= false
 end
 
 ---Whether one row drops its countdown text. The display's own vocabulary is the negative one, so
@@ -536,17 +681,19 @@ local function BuildStyle(side)
 
 	style.Stacks = true
 	style.StackCoefficient = STACK_COEFFICIENT
-	style.ReverseCooldown = true
+	style.ReverseCooldown = ReversesCooldown(side)
 	-- Only ever adds to the global Disable Numbers switch, which the display resolves for itself.
 	style.HideNumbers = HidesNumbers(side)
+	style.FontScale = FontScale(side)
+	style.CenterStacks = CentersStacks(side)
 
 	if side == "Buffs" then
 		style.Pandemic = options.PandemicGlow == true
 		style.PandemicColor = moduleUtil:GetColorRGB(options.PandemicColor)
 	end
 
-	-- Most crowd control is physical, which the engine gives no dispel type, so without this the
-	-- stun leading the row would draw no ring.
+	-- A physical debuff carries no dispel type, so without this a stun would go unringed wherever
+	-- on the row it landed.
 	style.BorderWithoutDispelType = side == "Debuffs"
 
 	return style
@@ -557,6 +704,14 @@ end
 ---@param display AuraContainerDisplay
 ---@return SweepVerdict?
 local function DeclareNextGroup(display)
+	local source = groupSource[display]
+
+	if source then
+		-- The frame is usually not laid out when the display is built, and a button is born at
+		-- whatever size the display carries now.
+		display:SetIconSize(IconSize(source.Frame, source.Side))
+	end
+
 	if display:AddNextGroup() and display:HasPendingGroups() then
 		return sweep.Verdict.Unfinished
 	end
@@ -595,7 +750,7 @@ local function BuildBuffs(frame, unit)
 		Pandemic = false,
 	}
 
-	return auraContainerDisplay:New(frame, unit or "none", groups, IconSize(frame, "Buffs"), ICON_SPACING, MASQUE_GROUP, {
+	local display = auraContainerDisplay:New(frame, unit or "none", groups, IconSize(frame, "Buffs"), Padding("Buffs"), MASQUE_GROUP, {
 		Style = BuildStyle("Buffs"),
 		MasqueGroup = MASQUE_GROUP,
 		Pandemic = true,
@@ -605,19 +760,40 @@ local function BuildBuffs(frame, unit)
 		-- on the spot.
 		DeferGroups = true,
 	})
+
+	groupSource[display] = { Frame = frame, Side = "Buffs" }
+
+	return display
 end
 
 ---The crowd control group at the head of the debuff row. Built fresh each time because a display
 ---stamps its own state on the spec it is handed and keeps the reference.
 ---@return AuraDisplayGroupSpec
 local function CrowdControlGroup()
+	local _, _, crowdControl = DebuffCandidates()
+
 	return {
 		Key = DEBUFF_CROWD_CONTROL_GROUP,
 		FilterString = DEBUFF_CROWD_CONTROL_FILTER,
 		MaxIcons = CrowdControlIcons(),
-		CandidateFilters = DebuffCandidates(),
+		CandidateFilters = crowdControl,
 		SizeScale = LEAD_SIZE_SCALE,
 		LayoutIndex = DEBUFF_CROWD_CONTROL_INDEX,
+	}
+end
+
+---The boss and role group leading the debuff row, ahead of crowd control.
+---@return AuraDisplayGroupSpec
+local function RoleGroup()
+	local role = DebuffCandidates()
+
+	return {
+		Key = DEBUFF_ROLE_GROUP,
+		FilterString = RoleFilter(),
+		MaxIcons = RoleIcons(),
+		CandidateFilters = role,
+		SizeScale = LEAD_SIZE_SCALE,
+		LayoutIndex = DEBUFF_ROLE_INDEX,
 	}
 end
 
@@ -625,41 +801,35 @@ end
 ---@param unit string?
 ---@return AuraContainerDisplay
 local function BuildDebuffs(frame, unit)
-	local _, priority, plain = DebuffCandidates()
-	local maxIcons = MaxIcons("Debuffs")
+	local _, rest = DebuffCandidates()
 	local groups = {}
 
-	-- Crowd control leads the row, in a group of its own because an icon's size is fixed per group
-	-- and this one is drawn larger than the rest. Left out until the player asks for it.
+	-- The game's own boss and role auras lead the row, unconditionally, so nothing ordinary can ever
+	-- push one of them off.
+	groups[#groups + 1] = RoleGroup()
+
+	-- Crowd control follows, in a group of its own because an icon's size is fixed per group and
+	-- this one is drawn larger than the rest. Left out until the player asks for it.
 	if CrowdControlIcons() > 0 then
 		groups[#groups + 1] = CrowdControlGroup()
 	end
 
-	-- The debuffs the game itself flags as priority follow, at the same size, because they are the
-	-- ones a healer has to see before the rest of the row.
-	groups[#groups + 1] = {
-		Key = DEBUFF_PRIORITY_GROUP,
-		FilterString = DEBUFF_PRIORITY_FILTER,
-		MaxIcons = PriorityIcons(),
-		CandidateFilters = priority,
-		SizeScale = LEAD_SIZE_SCALE,
-		LayoutIndex = DEBUFF_PRIORITY_INDEX,
-	}
-
 	groups[#groups + 1] = {
 		Key = DEBUFF_GROUP,
-		FilterString = DEBUFF_PLAIN_FILTER,
-		MaxIcons = maxIcons,
-		CandidateFilters = plain,
+		FilterString = PlainFilter(),
+		MaxIcons = MaxIcons("Debuffs"),
+		CandidateFilters = rest,
 		LayoutIndex = DEBUFF_PLAIN_INDEX,
 	}
 
-	local display = auraContainerDisplay:New(frame, unit or "none", groups, IconSize(frame, "Debuffs"), ICON_SPACING, MASQUE_GROUP, {
+	local display = auraContainerDisplay:New(frame, unit or "none", groups, IconSize(frame, "Debuffs"), Padding("Debuffs"), MASQUE_GROUP, {
 		Style = BuildStyle("Debuffs"),
 		MasqueGroup = MASQUE_GROUP,
 		PerLine = PerRow("Debuffs"),
 		DeferGroups = true,
 	})
+
+	groupSource[display] = { Frame = frame, Side = "Debuffs" }
 
 	local sort = DebuffSort()
 
@@ -713,6 +883,20 @@ local function PowerBarInset(frame)
 	return pixels:Number(frame.powerBarUsedHeight) or 0
 end
 
+---How far a row hanging off a given point has to rise to clear the power bar. Only a bottom point
+---sits in the space the bar takes, and only a row stacking up over that point stays in it.
+---@param frame table
+---@param point string
+---@param pin string The point of the row itself that hangs off `point`.
+---@return number
+local function PowerBarLift(frame, point, pin)
+	if not point:find("BOTTOM") or not pin:find("BOTTOM") then
+		return 0
+	end
+
+	return PowerBarInset(frame)
+end
+
 ---Pins one side's row into its corner of the frame, and puts it over the frame's own artwork.
 ---Parented to the frame, so the row fades and hides with the unit frame the way Blizzard's own row
 ---did.
@@ -720,10 +904,13 @@ end
 ---@param frame table
 ---@param side "Buffs"|"Debuffs"
 local function AnchorSide(display, frame, side)
-	local place = PLACEMENT[side]
 	local containerFrame = display.Frame
+	local point = AnchorPoint(side)
+	local grow = Grow(side)
+	local pin = growAnchors:GetFlowPin(grow)
+	local offsetX, offsetY = Offset(side)
 
-	display:SetGrow(place.Grow)
+	display:SetGrow(grow)
 
 	-- Scales with the frame, unlike the free-standing displays elsewhere. At any UI scale but 1, a
 	-- row that ignored it would take the wrong fraction of the frame and its corner inset would not
@@ -740,7 +927,7 @@ local function AnchorSide(display, frame, side)
 	end
 
 	containerFrame:ClearAllPoints()
-	containerFrame:SetPoint(place.Point, frame, place.Point, place.OffsetX, place.OffsetY + PowerBarInset(frame))
+	containerFrame:SetPoint(pin, frame, point, offsetX, offsetY + PowerBarLift(frame, point, pin))
 end
 
 ---@param container IconSlotContainer?
@@ -767,14 +954,11 @@ local function EnsureTestContainer(entry, side)
 			entry.Frame,
 			TestIconCount(side),
 			IconSize(entry.Frame, side),
-			ICON_SPACING,
+			Padding(side),
 			MASQUE_GROUP,
 			nil,
 			MASQUE_GROUP
 		)
-		-- Both rows are anchored in a bottom corner, so a wrapped line goes up rather than over
-		-- the frame below this one.
-		container:SetGrowUp(true)
 		entry[field] = container
 	end
 
@@ -797,29 +981,43 @@ local function ApplyTestSide(entry, side)
 	container = EnsureTestContainer(entry, side)
 
 	local frame = entry.Frame
-	local place = PLACEMENT[side]
+	local grow = Grow(side)
+	local point = AnchorPoint(side)
+	local flow = growAnchors:GetFlow(grow)
+	local pin = growAnchors:GetFlowPin(grow)
+	local offsetX, offsetY = Offset(side)
 	local containerFrame = container.Frame
 	local count = TestIconCount(side)
 
 	container:SetIconSize(IconSize(frame, side))
+	-- A container built on an earlier pass keeps the gap it was made with, so the slider only
+	-- reaches an existing preview through here.
+	container:SetSpacing(Padding(side))
 	container:SetCount(count)
+	-- Which way a wrapped line stacks, the same answer the live row's flow layout gets.
+	container:SetGrowUp(flow.Vertical == "Up")
+	container:SetGrowDown(flow.Vertical ~= "Up")
 	-- The grid sizes the row to its full column width, so a budget that never reaches one line
 	-- would leave the frame wider than the icons in it.
-	container:SetColumns(math.min(PerRow(side), count), growAnchors:FillsLeftward(place.Grow))
+	container:SetColumns(math.min(PerRow(side), count), growAnchors:FillsLeftward(grow))
 	-- The live row hands crowd control its own group so it can be drawn larger, which a preview
 	-- row of one container has to reproduce a slot at a time.
 	container:SetLeadScale(PreviewLeadsWithCrowdControl(side) and LEAD_SIZE_SCALE or nil)
 
-	local db = mini:GetSavedVars()
 	local list, leading = TestSpellList(side)
+	-- The stand-ins have to fold this in themselves, where a live button gets it from the display.
+	local centersStacks = CentersStacks(side)
 	local nextSlot = testSpells:FillContainer(container, list, 1, {
-		ReverseCooldown = true,
-		HideNumbers = HidesNumbers(side),
+		ReverseCooldown = ReversesCooldown(side),
+		HideNumbers = HidesNumbers(side) or centersStacks,
 		Glow = false,
-		-- Only the crowd control stand-in carries a tint, so the plain spells behind it stay bare
-		-- however this is set.
-		ColorByDispelType = PreviewLeadsWithCrowdControl(side) and CrowdControlDispelColors(),
-		FontScale = db and db.FontScale,
+		-- Buffs carries no switch for this, and the debuff row's own reaches every stand-in on it.
+		ColorByDispelType = side == "Debuffs" and DebuffDispelColors(),
+		DispelColors = side == "Debuffs" and testSpells.FrameAuras.DispelColors or nil,
+		-- The live buttons round their corners under the ring, so the stand-ins do too.
+		Border = side == "Debuffs" and DebuffDispelColors() or nil,
+		CenterStackText = centersStacks and PREVIEW_STACK_COUNT or nil,
+		FontScale = FontScale(side),
 		Stagger = true,
 		Count = count,
 		Repeat = true,
@@ -841,7 +1039,7 @@ local function ApplyTestSide(entry, side)
 	end
 
 	containerFrame:ClearAllPoints()
-	containerFrame:SetPoint(place.Point, frame, place.Point, place.OffsetX, place.OffsetY + PowerBarInset(frame))
+	containerFrame:SetPoint(pin, frame, point, offsetX, offsetY + PowerBarLift(frame, point, pin))
 	containerFrame:Show()
 end
 
@@ -859,7 +1057,7 @@ end
 ---@param groupKeys string[]
 local function ApplySide(display, frame, side, groupKeys)
 	display:SetPerLine(PerRow(side))
-	display:ApplyConfig(IconSize(frame, side), ICON_SPACING, BuildStyle(side))
+	display:ApplyConfig(IconSize(frame, side), Padding(side), BuildStyle(side))
 
 	for _, key in ipairs(groupKeys) do
 		if display:HasGroup(key) then
@@ -921,18 +1119,20 @@ local function ApplySettings(entry)
 
 		-- A display already built keeps the group it was created with, so the switch only reaches
 		-- the row it is on this way.
-		entry.Debuffs:SetGroupColorByDispelType(DEBUFF_CROWD_CONTROL_GROUP, CrowdControlDispelColors())
+		entry.Debuffs:SetGroupColorByDispelTypes(DEBUFF_GROUP_KEYS, DebuffDispelColors())
 
-		-- The filter strings are fixed, so only the candidate filters are re-published. One set per
-		-- group, since what keeps the three apart is the set rather than the string.
-		local candidates, priority, plain = DebuffCandidates()
+		-- The boss and role flag is what keeps the leading group apart from the two behind it.
+		local role, rest, crowdControl = DebuffCandidates()
+
+		entry.Debuffs:SetFilterString(DEBUFF_ROLE_GROUP, RoleFilter())
+		entry.Debuffs:SetCandidateFilters(DEBUFF_ROLE_GROUP, role)
 
 		if entry.Debuffs:HasGroup(DEBUFF_CROWD_CONTROL_GROUP) then
-			entry.Debuffs:SetCandidateFilters(DEBUFF_CROWD_CONTROL_GROUP, candidates)
+			entry.Debuffs:SetCandidateFilters(DEBUFF_CROWD_CONTROL_GROUP, crowdControl)
 		end
 
-		entry.Debuffs:SetCandidateFilters(DEBUFF_PRIORITY_GROUP, priority)
-		entry.Debuffs:SetCandidateFilters(DEBUFF_GROUP, plain)
+		entry.Debuffs:SetFilterString(DEBUFF_GROUP, PlainFilter())
+		entry.Debuffs:SetCandidateFilters(DEBUFF_GROUP, rest)
 	end
 end
 
@@ -1276,10 +1476,9 @@ function M:Refresh()
 	-- nothing about the tracked ids still has to hand the engine tables it will accept.
 	pandemicCandidates = nil
 	plainCandidates = nil
-	debuffCandidates = nil
-	priorityDebuffCandidates = nil
-	plainDebuffCandidates = nil
-	debuffCandidatesBuilt = nil
+	roleDebuffCandidates = nil
+	restDebuffCandidates = nil
+	crowdControlDebuffCandidates = nil
 
 	if AnySideActive() then
 		InstallHooks()
@@ -1314,3 +1513,4 @@ end
 ---@field Generation number|string? The refresh it was last drawn for, or a stand-in while a
 ---loading screen is up.
 ---@field PowerBarInset number? The power bar height the rows were last placed above.
+

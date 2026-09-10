@@ -26,11 +26,19 @@ L["Minimap button"] = "Botón del minimapa";
 L["Item level in keystone tooltip"] = "Nivel de objeto en la descripción del sigilo";
 L["Favorite in item tooltip"] = "Favorito en la descripción del objeto";
 L["Favorite on item icons"] = "Favorito en los iconos de objeto";
+L["Slot name on item icons"] = "Nombre del espacio en los iconos de objeto";
+L["Owned in item tooltip"] = "En posesión en la descripción del objeto";
+L["Shows in the item tooltip where the item is: equipped, bags or bank."] = "Muestra en la descripción del objeto dónde se encuentra: equipado, inventario o banco.";
+L["Already shown by another addon."] = "Ya lo muestra otro addon.";
 L['Hide "Other" in All Slots'] = "Ocultar \"Otro\" en Todos los espacios";
 L["Loot reminder (dungeons)"] = "Recordatorio de botín (mazmorras)";
+L["Own favorites"] = "Favoritos propios";
+L["Group favorites"] = "Favoritos del grupo";
+L["Share favorites with group"] = "Compartir favoritos con el grupo";
 L["Highlighting"] = "Resaltar";
 L["No stats"] = "Sin estadísticas";
 L["Combination mode"] = "Modo combinación";
+L["Highlights an item only if its stats match a combination of your selection. Otherwise one matching stat is enough."] = "Resalta un objeto solo si sus estadísticas coinciden con una combinación de tu selección. De lo contrario, basta con una estadística coincidente.";
 L["Export..."] = "Exportar...";
 L["Import..."] = "Importar...";
 L["Export favorites of %s"] = "Exportar favoritos de %s";
@@ -47,12 +55,20 @@ L["Manage characters"] = "Gestionar personajes";
 L["Hidden"] = "Oculto";
 L["Delete..."] = "Eliminar...";
 L["Delete all data for %s?"] = "¿Eliminar todos los datos de %s?";
+L["Reset..."] = "Restablecer...";
+L["Reset all favorites of %s?"] = "¿Restablecer todos los favoritos de %s?";
+L["Removes all favorites of the selected character."] = "Elimina todos los favoritos del personaje seleccionado.";
+L["Removes the selected character and all of its data."] = "Elimina el personaje seleccionado y todos sus datos.";
 L["Cannot delete the currently logged in character."] = "No se puede eliminar el personaje con sesión iniciada actualmente.";
 L["This character is hidden."] = "Este personaje está oculto.";
 L["Wide mode"] = "Modo amplio";
-L["Drop alert (favorites)"] = "Alerta de botín (favoritos)";
+L["Drop notification (favorites)"] = "Alerta de botín (favoritos)";
 L["Reminds you on dungeon entry if your loot spec doesn't match your favorites, or if switching it could increase your chances of getting them."] = "Te recuerda al entrar a una mazmorra si tu especialización de botín no coincide con tus favoritos o si cambiarla podría aumentar tus posibilidades de obtenerlos.";
+L["If you have no favorites in a dungeon, shows you the loot spec that lets items drop for you which your group members have marked as favorites. Only works if other group members also have this addon."] = "Si no tienes favoritos en una mazmorra, te muestra la especialización de botín con la que pueden caerte objetos que los miembros de tu grupo han marcado como favoritos. Solo funciona si otros miembros del grupo también tienen este addon.";
+L["Shares your favorites with your group members so they can choose their loot spec in a way that lets your favorites drop for them."] = "Comparte tus favoritos con los miembros de tu grupo para que puedan elegir su especialización de botín de modo que tus favoritos les caigan a ellos.";
 L["Shows a notification when another player loots an item you have marked as a favorite."] = "Muestra una notificación cuando otro jugador saquea un objeto que has marcado como favorito.";
+L["Teleport notification (Mythic+)"] = "Notificación de teletransporte (Mítica+)";
+L["Shows the dungeon and your role with a teleport button when you join a Mythic+ group or the group becomes full."] = "Muestra la mazmorra y tu rol con un botón de teletransporte cuando te unes a un grupo de Mítica+ o el grupo se completa.";
 L["Whisper message..."] = "Mensaje susurro...";
 L["Whisper message\n{item} will be replaced with the item link."] = "Mensaje susurro\n{item} será reemplazado por el enlace del objeto.";
 L["Multiple slot filtering"] = "Filtrado de varios espacios";
@@ -63,7 +79,7 @@ L["Automatically responds with your current Mythic+ keystone when someone types 
 
 -- custom_item_icon.lua
 L["Custom Items"] = "Objetos personalizados";
-L["Import items from external sources like www.keystoneloot.io"] = "Objetos importados de fuentes externas como www.keystoneloot.io";
+L["Import items from external sources like keystoneloot.io"] = "Objetos importados de fuentes externas como keystoneloot.io";
 
 -- favorites.lua
 L["No favorites found"] = "No se encontraron favoritos";
@@ -80,6 +96,31 @@ L["Catalyst"] = "Catalizador";
 L["+Secondary stats of the base item"] = "+Estadísticas secundarias del objeto base";
 L["Tier token"] = "Ficha de tier";
 
+-- icon_button.lua
+L["Head"] = "Cabeza";
+L["Neck"] = "Cuello";
+L["Shoulder"] = "Hombros";
+L["Back"] = "Espalda";
+L["Chest"] = "Pecho";
+L["Wrist"] = "Muñecas";
+L["Hands"] = "Manos";
+L["Waist"] = "Cintura";
+L["Legs"] = "Piernas";
+L["Feet"] = "Pies";
+L["1H"] = "1M";
+L["2H"] = "2M";
+L["Main"] = "Princ.";
+L["Off"] = "Secund.";
+L["Shield"] = "Escudo";
+L["Ranged"] = "Dist.";
+L["Ring"] = "Anillo";
+L["Trinket"] = "Abalorio";
+
+-- owned.lua
+L["Already equipped"] = "Ya equipado";
+L["In your bags"] = "En tu inventario";
+L["In your bank"] = "En tu banco";
+
 -- copy_popup.lua
 L["Press CTRL+C to copy"] = "Pulsa CTRL+C para copiar";
 
@@ -88,12 +129,18 @@ L["Correct loot specialization set?"] = "¿Especialización de botín correcta?"
 L["+1 item dropping for all specs."] = "+1 objeto que cae para todas las especializaciones.";
 L["+%d items dropping for all specs."] = "+%d objetos que caen para todas las especializaciones.";
 L["%s has a smaller loot pool than %s"] = "%s tiene un pool de botín más pequeño que %s";
+L["Your group needs loot from here"] = "Tu grupo necesita botín de aquí";
+L["Wanted by %s"] = "Deseado por %s";
 
 -- minimap_button.lua
 L["Left click: Open overview"] = "Clic izquierdo: Abrir vista general";
 
 -- drop_notification_frame.lua
 L["Favorite dropped!"] = "¡Favorito obtenido!";
+
+-- mythicplus_notification_frame.lua
+L["Mythic+ group joined!"] = "¡Te has unido a un grupo de Mítica+!";
+L["Group is full!"] = "¡Grupo completo!";
 
 -- whisper_button.lua
 L["Text can be modified in the settings."] = "El texto se puede modificar en los ajustes.";
@@ -104,3 +151,6 @@ L["Rescan bonus rolls"] = "Volver a escanear tiradas bonificadas";
 L["Checking for past bonus rolls (one time)..."] = "Buscando tiradas bonificadas anteriores (una vez)...";
 L["%d past |4bonus roll:bonus rolls; detected."] = "%d |4tirada bonificada anterior detectada:tiradas bonificadas anteriores detectadas;.";
 L["No untracked bonus rolls found."] = "No se encontraron tiradas bonificadas sin registrar.";
+
+-- bindings.lua
+L["Toggle Window"] = "Mostrar/ocultar ventana";

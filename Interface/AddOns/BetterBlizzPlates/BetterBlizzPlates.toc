@@ -2,7 +2,7 @@
 ## Title: Better|cff00c0ffBlizz|rPlates
 ## Notes: Default Blizzard Nameplates with more features added to them with easy settings.
 ## Author: Bodify
-## Version: v2.1.2f
+## Version: v2.1.2i
 ## SavedVariables: BetterBlizzPlatesDB, BBPCVarBackupsDB
 ## IconAtlas: gmchat-icon-blizz
 ## X-Curse-Project-ID: 913377

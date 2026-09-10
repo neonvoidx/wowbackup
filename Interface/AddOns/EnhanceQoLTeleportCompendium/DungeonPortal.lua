@@ -1563,6 +1563,7 @@ local function SyncDungeonPortalEventRegistration()
 end
 
 local keyStoneFrame
+local KeystoneFrame = { styleVersion = 1 }
 EnsureMeasureFontString = function()
 	if measureFontString then return measureFontString end
 	if not UIParent or not UIParent.CreateFontString then return nil end
@@ -1571,31 +1572,345 @@ EnsureMeasureFontString = function()
 	return measureFontString
 end
 
-local function calculateMaxWidth(dataTable)
-	local fontString = EnsureMeasureFontString()
-	if not fontString then return 200 end
-	local maxWidth = 0
-	for key, data in pairs(dataTable) do
-		if UnitInParty(key) or key == UnitName("player") then
-			local widthMap = 0
-			if data.challengeMapID and data.challengeMapID > 0 then
-				local mapData = mapInfo[data.challengeMapID]
-				if not mapData then mapData = { mapName = L["NoKeystone"] } end
-				fontString:SetText(mapData.mapName or "")
-				widthMap = fontString:GetStringWidth() + 25 + buttonSize
-			else
-				fontString:SetText(L["NoKeystone"] or "")
-				widthMap = fontString:GetStringWidth() + 25 + buttonSize
-			end
-			local uName = UnitName(key)
+function KeystoneFrame.Clamp(value, minimum, maximum, fallback)
+	value = tonumber(value) or fallback
+	if value < minimum then return minimum end
+	if value > maximum then return maximum end
+	return value
+end
 
-			fontString:SetText(uName or "")
-			local widthCharName = fontString:GetStringWidth() + 25 + buttonSize
-			local width = max(widthCharName, widthMap)
-			if width > maxWidth then maxWidth = width end
+function KeystoneFrame.Color(key, fallback)
+	local color = addon.db and addon.db[key]
+	if type(color) ~= "table" then color = fallback end
+	return color.r or fallback.r, color.g or fallback.g, color.b or fallback.b, color.a or fallback.a
+end
+
+function KeystoneFrame.FontConfig()
+	local fallback = (addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT
+	local configured = addon.db.partyKeystoneFrameFont or fallback
+	local face = addon.functions.ResolveFontFace and addon.functions.ResolveFontFace(configured, fallback) or fallback
+	local style = addon.db.partyKeystoneFrameFontStyle or "NONE"
+	local flags = ""
+	if addon.functions.ResolveFontStyle then
+		local _, resolvedFlags = addon.functions.ResolveFontStyle(style, "NONE")
+		flags = resolvedFlags or ""
+	end
+	return face, flags or "", style
+end
+
+function KeystoneFrame.GetStyleState()
+	local globalVersion = addon.functions.GetGlobalFontStateVersion and addon.functions.GetGlobalFontStateVersion() or 0
+	return KeystoneFrame.styleVersion, globalVersion
+end
+
+function KeystoneFrame.ApplyFont(fontString, size)
+	local face, _, style = KeystoneFrame.FontConfig()
+	if addon.functions.ApplyFontString then
+		addon.functions.ApplyFontString(fontString, face, size, style, face, "NONE")
+	else
+		fontString:SetFont(face, size, "")
+	end
+end
+
+function KeystoneFrame.GetUnitData(keystoneData, unit, showRealm)
+	local name, realm = UnitFullName(unit)
+	if not name then return nil end
+	realm = realm or ""
+	local fullName = realm ~= "" and (name .. "-" .. realm) or name
+	local data = keystoneData[fullName] or keystoneData[name]
+	if not data then return nil end
+	local mapDataEntry
+	if data.challengeMapID and data.challengeMapID > 0 then mapDataEntry = mapInfo[data.challengeMapID] end
+	mapDataEntry = mapDataEntry or { mapName = L["NoKeystone"] }
+	local displayName = name
+	if showRealm == nil then showRealm = addon.db.partyKeystoneFrameShowRealm end
+	if showRealm and realm ~= "" then displayName = fullName end
+	local classColor = RAID_CLASS_COLORS[select(2, UnitClass(unit))] or { r = 1, g = 1, b = 1 }
+	return {
+		unit = unit,
+		data = data,
+		mapData = mapDataEntry,
+		name = displayName,
+		classColor = classColor,
+	}
+end
+
+function KeystoneFrame.BuildEntries(keystoneData, showRealm)
+	local entries = {}
+	local player = KeystoneFrame.GetUnitData(keystoneData, "player", showRealm)
+	if player then entries[#entries + 1] = player end
+	for index = 1, 4 do
+		local unit = "party" .. index
+		if UnitExists(unit) then
+			local entry = KeystoneFrame.GetUnitData(keystoneData, unit, showRealm)
+			if entry then entries[#entries + 1] = entry end
 		end
 	end
-	return max(maxWidth, 200)
+	return entries
+end
+
+function addon.MythicPlus.functions.GetCurrentDungeonChallengeMapID()
+	ensureCurrentSeasonPortalCache()
+	local _, instanceType, difficultyID, _, _, _, _, instanceID = GetInstanceInfo()
+	if instanceType ~= "party" or difficultyID ~= 23 then return nil end
+	return mapIDInfo[instanceID], instanceID
+end
+
+function addon.MythicPlus.functions.GetPartyKeystoneEntries(showRealm)
+	ensureCurrentSeasonPortalCache()
+	local keystoneData = openRaidLib and openRaidLib.GetAllKeystonesInfo and openRaidLib.GetAllKeystonesInfo()
+	if type(keystoneData) ~= "table" then return {} end
+	return KeystoneFrame.BuildEntries(keystoneData, showRealm)
+end
+
+function KeystoneFrame.MeasureWidth(entries, showIcon, iconSize)
+	if addon.db.partyKeystoneFrameAutoWidth ~= true then return KeystoneFrame.Clamp(addon.db.partyKeystoneFrameWidth, 160, 600, 200) end
+	local styleVersion, globalFontVersion = KeystoneFrame.GetStyleState()
+	local signatureParts = { showIcon and "1" or "0", tostring(iconSize) }
+	for _, entry in ipairs(entries) do
+		signatureParts[#signatureParts + 1] = entry.name or ""
+		signatureParts[#signatureParts + 1] = entry.mapData.mapName or ""
+	end
+	local contentSignature = table.concat(signatureParts, "\031")
+	local widthCache = KeystoneFrame.widthCache
+	if
+		widthCache
+		and widthCache.styleVersion == styleVersion
+		and widthCache.globalFontVersion == globalFontVersion
+		and widthCache.contentSignature == contentSignature
+	then
+		return widthCache.width
+	end
+	local face, flags = KeystoneFrame.FontConfig()
+	local levelSize = KeystoneFrame.Clamp(addon.db.partyKeystoneFrameLevelFontSize, 8, 32, 16)
+	local locationSize = KeystoneFrame.Clamp(addon.db.partyKeystoneFrameLocationFontSize, 8, 32, 12)
+	local nameSize = KeystoneFrame.Clamp(addon.db.partyKeystoneFrameNameFontSize, 8, 32, 12)
+	local levelRegionWidth = max(showIcon and iconSize or 34, math.ceil(MeasureTextWidth("99", nil, face, levelSize, flags)) + 4)
+	local prefixWidth = 20 + levelRegionWidth
+	local width = 200
+	for _, entry in ipairs(entries) do
+		local locationWidth = MeasureTextWidth(entry.mapData.mapName or L["unknownDungeon"], nil, face, locationSize, flags)
+		local nameWidth = MeasureTextWidth(entry.name, nil, face, nameSize, flags)
+		width = max(width, prefixWidth + max(locationWidth, nameWidth) + 15)
+	end
+	width = KeystoneFrame.Clamp(math.ceil(width), 160, 600, 200)
+	KeystoneFrame.widthCache = {
+		styleVersion = styleVersion,
+		globalFontVersion = globalFontVersion,
+		contentSignature = contentSignature,
+		width = width,
+	}
+	return width
+end
+
+function KeystoneFrame.EnsureContainer()
+	if keyStoneFrame then return keyStoneFrame end
+	keyStoneFrame = CreateFrame("Frame", nil, parentFrame)
+	keyStoneFrame.rows = {}
+	return keyStoneFrame
+end
+
+function KeystoneFrame.CreateRow(index)
+	local container = KeystoneFrame.EnsureContainer()
+	local row = CreateFrame("Button", nil, container, "InsecureActionButtonTemplate,BackdropTemplate")
+	row:RegisterForClicks("AnyUp", "AnyDown")
+	row.icon = row:CreateTexture(nil, "ARTWORK")
+	row.iconBorder = row:CreateTexture(nil, "BORDER")
+	row.iconBorder:SetColorTexture(1, 1, 1, 1)
+	row.highlight = row:CreateTexture(nil, "HIGHLIGHT")
+	row.highlight:SetColorTexture(1, 1, 0, 0.25)
+	row:SetHighlightTexture(row.highlight)
+	row.level = row:CreateFontString(nil, "OVERLAY")
+	row.level:SetJustifyH("CENTER")
+	row.level:SetJustifyV("MIDDLE")
+	row.level:SetWordWrap(false)
+	row.level:SetMaxLines(1)
+	row.location = row:CreateFontString(nil, "OVERLAY")
+	row.location:SetJustifyH("LEFT")
+	row.location:SetWordWrap(false)
+	row.location:SetMaxLines(1)
+	row.name = row:CreateFontString(nil, "OVERLAY")
+	row.name:SetJustifyH("LEFT")
+	row.name:SetWordWrap(false)
+	row.name:SetMaxLines(1)
+	container.rows[index] = row
+	return row
+end
+
+function KeystoneFrame.ApplyAnchor(container, width, height)
+	local offsetX = tonumber(addon.db.partyKeystoneFrameOffsetX) or 0
+	local offsetY = tonumber(addon.db.partyKeystoneFrameOffsetY) or 0
+	local anchor = addon.db.partyKeystoneFrameAnchor or "DEFAULT"
+	local styleVersion, globalFontVersion = KeystoneFrame.GetStyleState()
+	local cache = container._keystoneLayoutCache
+	if
+		cache
+		and cache.styleVersion == styleVersion
+		and cache.globalFontVersion == globalFontVersion
+		and cache.width == width
+		and cache.height == height
+		and cache.offsetX == offsetX
+		and cache.offsetY == offsetY
+		and cache.anchor == anchor
+	then
+		return
+	end
+	container:ClearAllPoints()
+	if anchor == "RIGHT" then
+		container:SetPoint("TOPLEFT", parentFrame, "TOPRIGHT", offsetX, offsetY)
+	elseif anchor == "LEFT" then
+		container:SetPoint("TOPRIGHT", parentFrame, "TOPLEFT", offsetX, offsetY)
+	elseif anchor == "TOP" then
+		container:SetPoint("BOTTOMRIGHT", parentFrame, "TOPRIGHT", offsetX, offsetY)
+	else
+		local tabOffset = 0
+		if PVEFrameTab1 and PVEFrameTab1:IsVisible() then tabOffset = -PVEFrameTab1:GetHeight() end
+		container:SetPoint("TOPRIGHT", parentFrame, "BOTTOMRIGHT", offsetX, tabOffset + offsetY)
+	end
+	SafeSetSize(container, width, height)
+	container._keystoneLayoutCache = {
+		styleVersion = styleVersion,
+		globalFontVersion = globalFontVersion,
+		width = width,
+		height = height,
+		offsetX = offsetX,
+		offsetY = offsetY,
+		anchor = anchor,
+	}
+end
+
+function KeystoneFrame.ApplyRow(row, entry, index, width, rowHeight, showIcon, iconSize)
+	local contentIconSize = min(iconSize, rowHeight - 8)
+	local styleVersion, globalFontVersion = KeystoneFrame.GetStyleState()
+	local cache = row._keystoneStyleCache
+	local styleChanged = not cache
+		or cache.styleVersion ~= styleVersion
+		or cache.globalFontVersion ~= globalFontVersion
+		or cache.index ~= index
+		or cache.width ~= width
+		or cache.rowHeight ~= rowHeight
+		or cache.showIcon ~= showIcon
+		or cache.iconSize ~= contentIconSize
+	if styleChanged then
+		local levelSize = KeystoneFrame.Clamp(addon.db.partyKeystoneFrameLevelFontSize, 8, 32, 16)
+		local locationSize = KeystoneFrame.Clamp(addon.db.partyKeystoneFrameLocationFontSize, 8, 32, 12)
+		local nameSize = KeystoneFrame.Clamp(addon.db.partyKeystoneFrameNameFontSize, 8, 32, 12)
+		local levelFace, levelFlags = KeystoneFrame.FontConfig()
+		local levelRegionWidth = max(showIcon and contentIconSize or 34, math.ceil(MeasureTextWidth("99", nil, levelFace, levelSize, levelFlags)) + 4)
+		local textOffset = 15 + levelRegionWidth
+		SafeSetSize(row, width, rowHeight)
+		row:ClearAllPoints()
+		row:SetPoint("TOPLEFT", keyStoneFrame, "TOPLEFT", 0, -((index - 1) * rowHeight))
+
+		local borderEnabled = addon.db.partyKeystoneFrameBorderEnabled == true
+		local edgeFile
+		if borderEnabled then
+			local fallback = "Interface\\Tooltips\\UI-Tooltip-Border"
+			edgeFile = addon.functions.ResolveLSMMedia and addon.functions.ResolveLSMMedia("border", addon.db.partyKeystoneFrameBorderStyle, fallback, true) or fallback
+		end
+		local borderSize = KeystoneFrame.Clamp(addon.db.partyKeystoneFrameBorderSize, 1, 32, 16)
+		row:SetBackdrop({
+			bgFile = "Interface\\Buttons\\WHITE8x8",
+			edgeFile = edgeFile,
+			edgeSize = borderSize,
+		})
+		row:SetBackdropColor(KeystoneFrame.Color("partyKeystoneFrameBackgroundColor", { r = 0, g = 0, b = 0, a = 0.8 }))
+		if borderEnabled then row:SetBackdropBorderColor(KeystoneFrame.Color("partyKeystoneFrameBorderColor", { r = 1, g = 1, b = 1, a = 1 })) end
+
+		row.icon:ClearAllPoints()
+		row.iconBorder:ClearAllPoints()
+		row.level:ClearAllPoints()
+		row.highlight:ClearAllPoints()
+		if showIcon then
+			row.icon:SetSize(contentIconSize, contentIconSize)
+			row.icon:SetPoint("LEFT", row, "LEFT", 10, 0)
+			row.icon:Show()
+			row.iconBorder:SetPoint("TOPLEFT", row.icon, "TOPLEFT", -1, 1)
+			row.iconBorder:SetPoint("BOTTOMRIGHT", row.icon, "BOTTOMRIGHT", 1, -1)
+			row.iconBorder:Show()
+			row.level:SetPoint("CENTER", row.icon, "CENTER", 0, 0)
+			row.highlight:SetAllPoints(row.icon)
+			row:SetHitRectInsets(10, max(0, width - 10 - contentIconSize), max(0, (rowHeight - contentIconSize) / 2), max(0, (rowHeight - contentIconSize) / 2))
+		else
+			row.icon:Hide()
+			row.iconBorder:Hide()
+			row.level:SetPoint("LEFT", row, "LEFT", 10, 0)
+			row.highlight:SetAllPoints(row)
+			row:SetHitRectInsets(0, 0, 0, 0)
+		end
+		row.level:SetSize(levelRegionWidth, rowHeight)
+
+		KeystoneFrame.ApplyFont(row.level, levelSize)
+		KeystoneFrame.ApplyFont(row.location, locationSize)
+		KeystoneFrame.ApplyFont(row.name, nameSize)
+		row.level:SetTextColor(KeystoneFrame.Color("partyKeystoneFrameLevelColor", { r = 1, g = 1, b = 1, a = 1 }))
+		row.location:ClearAllPoints()
+		row.location:SetPoint("TOPLEFT", row, "TOPLEFT", textOffset, -7)
+		row.location:SetWidth(max(1, width - textOffset - 8))
+		row.location:SetTextColor(KeystoneFrame.Color("partyKeystoneFrameLocationColor", { r = 1, g = 0.82, b = 0, a = 1 }))
+		row.name:ClearAllPoints()
+		row.name:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", textOffset, 7)
+		row.name:SetWidth(max(1, width - textOffset - 8))
+		row._keystoneStyleCache = {
+			styleVersion = styleVersion,
+			globalFontVersion = globalFontVersion,
+			index = index,
+			width = width,
+			rowHeight = rowHeight,
+			showIcon = showIcon,
+			iconSize = contentIconSize,
+		}
+	end
+
+	local contentCache = row._keystoneContentCache or {}
+	local iconTexture = entry.mapData.texture or "Interface\\ICONS\\INV_Misc_QuestionMark"
+	if showIcon and (styleChanged or contentCache.iconTexture ~= iconTexture) then row.icon:SetTexture(iconTexture) end
+	local levelText = entry.data.level and entry.data.level > 0 and tostring(entry.data.level) or ""
+	if contentCache.levelText ~= levelText then row.level:SetText(levelText) end
+	local locationText = entry.mapData.mapName or L["unknownDungeon"]
+	if contentCache.locationText ~= locationText then row.location:SetText(locationText) end
+	if contentCache.nameText ~= entry.name then row.name:SetText(entry.name) end
+	local nameR, nameG, nameB, nameA
+	if addon.db.partyKeystoneFrameUseClassColor ~= false then
+		nameR, nameG, nameB, nameA = entry.classColor.r, entry.classColor.g, entry.classColor.b, 1
+	else
+		nameR, nameG, nameB, nameA = KeystoneFrame.Color("partyKeystoneFrameNameColor", { r = 1, g = 1, b = 1, a = 1 })
+	end
+	if contentCache.nameR ~= nameR or contentCache.nameG ~= nameG or contentCache.nameB ~= nameB or contentCache.nameA ~= nameA then row.name:SetTextColor(nameR, nameG, nameB, nameA) end
+
+	local spellID = entry.mapData.spellId
+	local canTeleport = false
+	if spellID and C_SpellBook.IsSpellInSpellBook(spellID) then
+		local cooldownData = C_Spell.GetSpellCooldown(spellID)
+		local enabled = cooldownData and cooldownData.isEnabled
+		if cooldownData and ((issecretvalue and issecretvalue(enabled)) or enabled) then canTeleport = true end
+	end
+	if not contentCache.actionInitialized or contentCache.spellID ~= spellID or contentCache.canTeleport ~= canTeleport then
+		row:SetAttribute("type", nil)
+		row:SetAttribute("spell", nil)
+		row.spellID = spellID
+		if canTeleport then
+			row:SetAttribute("type", "spell")
+			row:SetAttribute("spell", spellID)
+			row:EnableMouse(true)
+		else
+			row:EnableMouse(false)
+		end
+	end
+	row._keystoneContentCache = {
+		iconTexture = iconTexture,
+		levelText = levelText,
+		locationText = locationText,
+		nameText = entry.name,
+		nameR = nameR,
+		nameG = nameG,
+		nameB = nameB,
+		nameA = nameA,
+		spellID = spellID,
+		canTeleport = canTeleport,
+		actionInitialized = true,
+	}
+	if not row:IsShown() then row:Show() end
 end
 
 local function updateKeystoneInfo()
@@ -1604,136 +1919,45 @@ local function updateKeystoneInfo()
 		return
 	end
 	if isRestrictedContent() then return end
-	if parentFrame:IsShown() then
-		local minHightOffset = 0
-		if PVEFrameTab1 and PVEFrameTab1:IsVisible() then minHightOffset = 0 - PVEFrameTab1:GetHeight() end
-		if not keyStoneFrame then
-			keyStoneFrame = CreateFrame("Frame", nil, parentFrame, "BackdropTemplate")
-			SafeSetSize(keyStoneFrame, 200, 300)
-			keyStoneFrame:Show()
-		else
-			for _, child in ipairs({ keyStoneFrame:GetChildren() }) do
-				child:Hide()
-				child:SetParent(nil)
-			end
-		end
-		if IsInRaid() then return end
-		keyStoneFrame:SetPoint("TOPRIGHT", parentFrame, "BOTTOMRIGHT", 0, minHightOffset)
-		ensureCurrentSeasonPortalCache()
-		local keystoneData = openRaidLib.GetAllKeystonesInfo()
-
-		if keystoneData then
-			local unitsAdded = {}
-			local isOnline = true
-
-			local maxWidthKeystone = calculateMaxWidth(keystoneData)
-
-			local index = 0
-			for key, data in pairs(keystoneData) do
-				local uName, uRealm = UnitName(key)
-				data.charName = uName
-				data.classColor = RAID_CLASS_COLORS[select(2, UnitClass(key))] or { r = 1, g = 1, b = 1 }
-
-				if UnitInParty(key) or key == addon.variables.unitName then
-					local mapData
-					if data.challengeMapID and data.challengeMapID > 0 then
-						mapData = mapInfo[data.challengeMapID]
-						if not mapData then mapData = {
-							mapName = L["NoKeystone"],
-						} end
-					else
-						mapData = {
-							mapName = L["NoKeystone"],
-						}
-					end
-
-					local frame = CreateFrame("Frame", nil, keyStoneFrame, "BackdropTemplate")
-					SafeSetSize(frame, maxWidthKeystone or 200, 50)
-					frame:SetPoint("TOPRIGHT", keyStoneFrame, "TOPRIGHT", 0, -50 * index)
-					frame:SetBackdrop({
-						bgFile = "Interface\\Buttons\\WHITE8x8", -- Hintergrund
-						edgeFile = nil, -- Rahmen
-						edgeSize = 16,
-						insets = { left = 4, right = 4, top = 1, bottom = 0 },
-					})
-					frame:SetBackdropColor(0, 0, 0, 0.8) -- Dunkler Hintergrund mit 80% Transparenz
-					frame:Show()
-
-					-- Button erstellen
-					local button = CreateFrame("Button", nil, frame, "InsecureActionButtonTemplate")
-					button:SetSize(buttonSize, buttonSize)
-					button:SetPoint("LEFT", frame, "LEFT", 10, 0)
-					if mapData.spellId then button.spellID = mapData.spellId end
-					-- Dungeonname (zum Beispiel rechtsbündig)
-					local dungeonText = button:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-					dungeonText:SetPoint("TOPLEFT", button, "TOPRIGHT", 5, 0)
-						dungeonText:SetText(mapData.mapName or L["unknownDungeon"])
-
-					-- Hintergrund
-					local bg = button:CreateTexture(nil, "BACKGROUND")
-					bg:SetAllPoints(button)
-					bg:SetColorTexture(0, 0, 0, 0.8)
-
-					-- Rahmen
-					local border = button:CreateTexture(nil, "BORDER")
-					border:SetPoint("TOPLEFT", button, "TOPLEFT", -1, 1)
-					border:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 1, -1)
-					border:SetColorTexture(1, 1, 1, 1)
-
-					-- Highlight/Glow-Effekt
-					local highlight = button:CreateTexture(nil, "HIGHLIGHT")
-					highlight:SetAllPoints(button)
-					highlight:SetColorTexture(1, 1, 0, 0.4)
-					button:SetHighlightTexture(highlight)
-
-					-- Icon
-					local icon = button:CreateTexture(nil, "ARTWORK")
-					icon:SetAllPoints(button)
-					icon:SetTexture(mapData.texture or "Interface\\ICONS\\INV_Misc_QuestionMark")
-					button.icon = icon
-
-					-- Überprüfen, ob der Zauber bekannt ist
-					if mapData.spellId and C_SpellBook.IsSpellInSpellBook(mapData.spellId) then
-						local cooldownData = C_Spell.GetSpellCooldown(mapData.spellId)
-						local enabled = cooldownData and cooldownData.isEnabled
-						if cooldownData and ((issecretvalue and issecretvalue(enabled)) or enabled) then
-							button:EnableMouse(true) -- Aktiviert Klicks
-
-							-- Cooldown-Spirale
-							button:SetAttribute("type", "spell")
-							button:SetAttribute("spell", mapData.spellId)
-							button:RegisterForClicks("AnyUp", "AnyDown")
-						else
-							button:EnableMouse(false)
-						end
-					else
-						button:EnableMouse(false) -- Deaktiviert Klicks auf den Button
-					end
-
-					if data.level and data.level > 0 then
-						-- Key-Level als Text
-						local levelText = button:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-						levelText:SetPoint("CENTER", button, "CENTER", 0, 0)
-						levelText:SetText((data.level or "0"))
-						levelText:SetTextColor(1, 1, 1)
-					end
-
-					-- Spielername in Klassenfarbe
-					local playerNameText = button:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-					playerNameText:SetPoint("BOTTOMLEFT", button, "BOTTOMRIGHT", 5, 0)
-
-					local classColor = data.classColor
-					playerNameText:SetText(data.charName)
-					playerNameText:SetTextColor(classColor.r, classColor.g, classColor.b)
-					index = index + 1
-				end
-			end
-		end
+	local container = KeystoneFrame.EnsureContainer()
+	if not parentFrame:IsShown() or IsInRaid() or addon.db.groupfinderShowPartyKeystone ~= true then
+		container:Hide()
+		return
 	end
+	ensureCurrentSeasonPortalCache()
+	local keystoneData = openRaidLib and openRaidLib.GetAllKeystonesInfo and openRaidLib.GetAllKeystonesInfo()
+	if type(keystoneData) ~= "table" then
+		container:Hide()
+		return
+	end
+	local entries = KeystoneFrame.BuildEntries(keystoneData)
+	if #entries == 0 then
+		container:Hide()
+		return
+	end
+	local rowHeight = KeystoneFrame.Clamp(addon.db.partyKeystoneFrameHeight, 36, 100, 50)
+	local showIcon = addon.db.partyKeystoneFrameShowIcon ~= false
+	local iconSize = KeystoneFrame.Clamp(addon.db.partyKeystoneFrameIconSize, 16, 64, 30)
+	local width = KeystoneFrame.MeasureWidth(entries, showIcon, iconSize)
+	KeystoneFrame.ApplyAnchor(container, width, rowHeight * #entries)
+	for index, entry in ipairs(entries) do
+		local row = container.rows[index] or KeystoneFrame.CreateRow(index)
+		KeystoneFrame.ApplyRow(row, entry, index, width, rowHeight, showIcon, iconSize)
+	end
+	for index = #entries + 1, #container.rows do
+		container.rows[index]:Hide()
+	end
+	container:Show()
+end
+
+function addon.MythicPlus.functions.RefreshPartyKeystoneFrame()
+	KeystoneFrame.styleVersion = KeystoneFrame.styleVersion + 1
+	if keyStoneFrame and parentFrame:IsShown() then updateKeystoneInfo() end
 end
 
 function addon.MythicPlus.onKeystoneUpdate(unitName, keystoneInfo, keystoneData)
 	if parentFrame:IsShown() then updateKeystoneInfo() end
+	if addon.MythicPlus.functions.RefreshKeystoneDungeonIndicator then addon.MythicPlus.functions.RefreshKeystoneDungeonIndicator() end
 end
 
 local isRegistered = false
@@ -1750,20 +1974,18 @@ function addon.MythicPlus.functions.togglePartyKeystone()
 				isRegistered = true
 				EnsureMeasureFontString()
 				openRaidLib.RegisterCallback(addon.MythicPlus, "KeystoneUpdate", "onKeystoneUpdate")
+				openRaidLib.RegisterCallback(addon.MythicPlus, "KeystoneWipe", "onKeystoneUpdate")
 				openRaidLib.RequestKeystoneDataFromParty()
 			end
 		else
 			isRegistered = false
-			measureFontString = nil
-			if keyStoneFrame then
-				keyStoneFrame:Hide()
-				keyStoneFrame:SetParent(nil)
-				keyStoneFrame = nil
-			end
+			if keyStoneFrame then keyStoneFrame:Hide() end
 			openRaidLib.UnregisterCallback(addon.MythicPlus, "KeystoneUpdate", "onKeystoneUpdate")
+			openRaidLib.UnregisterCallback(addon.MythicPlus, "KeystoneWipe", "onKeystoneUpdate")
 			openRaidLib.WipeKeystoneData()
 		end
 	end
+	if addon.MythicPlus.functions.UpdateKeystoneDungeonIndicator then addon.MythicPlus.functions.UpdateKeystoneDungeonIndicator() end
 end
 
 function addon.MythicPlus.triggerRequest()
@@ -1852,12 +2074,23 @@ local function eventHandler(self, event, arg1, arg2, arg3, arg4)
 	-- Never show teleport frame for Timerunners
 	if addon and addon.functions and addon.functions.IsTimerunner and addon.functions.IsTimerunner() then
 		if frameAnchor then frameAnchor:Hide() end
+		if keyStoneFrame then keyStoneFrame:Hide() end
 		return
 	end
 	if event == "CHALLENGE_MODE_MAPS_UPDATE" then
 		currentSeasonPortalCacheBuilt = false
 		ensureCurrentSeasonPortalCache()
 		if parentFrame:IsShown() then addon.MythicPlus.functions.toggleFrame() end
+		return
+	end
+	if event == "GROUP_ROSTER_UPDATE" then
+		if (IsInRaid() and isRegistered) or (not IsInRaid() and not isRegistered) then addon.MythicPlus.functions.togglePartyKeystone() end
+		if addon.db.groupfinderShowPartyKeystone and parentFrame:IsShown() then updateKeystoneInfo() end
+		return
+	end
+	if event == "PLAYER_REGEN_ENABLED" and doAfterCombat then
+		if (IsInRaid() and isRegistered) or (not IsInRaid() and not isRegistered) then addon.MythicPlus.functions.togglePartyKeystone() end
+		addon.MythicPlus.functions.toggleFrame()
 		return
 	end
 	if addon.db["teleportFrame"] then
@@ -1877,8 +2110,6 @@ local function eventHandler(self, event, arg1, arg2, arg3, arg4)
 				if PVEFrame:IsShown() then
 					addon.MythicPlus.triggerRequest() -- because I won't get the information from the people already in party otherwise
 				end
-			elseif event == "GROUP_ROSTER_UPDATE" then
-				if (IsInRaid() and isRegistered) or (not IsInRaid() and not isRegistered) then addon.MythicPlus.functions.togglePartyKeystone() end
 			elseif parentFrame:IsShown() then -- Only do stuff, when PVEFrame Open
 				if event == "UNIT_SPELLCAST_SUCCEEDED" and arg1 == "player" then
 					if allSpells[arg3] then waitCooldown(arg3) end
@@ -1886,11 +2117,6 @@ local function eventHandler(self, event, arg1, arg2, arg3, arg4)
 					C_Timer.After(0.1, function() checkCooldown() end)
 				elseif event == "SPELL_DATA_LOAD_RESULT" and portalSpells[arg1] then
 					print("Loaded", portalSpells[arg1].text)
-				elseif event == "PLAYER_REGEN_ENABLED" then
-					if doAfterCombat then
-						if (IsInRaid() and isRegistered) or (not IsInRaid() and not isRegistered) then addon.MythicPlus.functions.togglePartyKeystone() end
-						addon.MythicPlus.functions.toggleFrame()
-					end
 				end
 			end
 		end

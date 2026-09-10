@@ -1,0 +1,19 @@
+## Interface: 120100
+## Title: |cff00d8ffWargames+|r
+## Notes: Custom Wargame and Solo Shuffle Wargame UI
+## Author: Waxology
+## Version: 4.2.2
+## SavedVariables: WG_History
+## IconTexture: Interface\AddOns\Wargames\media\wglogo.blp
+
+Localization.lua
+uikit.lua
+core.lua
+tracker.lua
+advanced.lua
+comm.lua
+veto.lua
+readycheck.lua
+slaughterhouse.lua
+dock.lua
+lfg.lua

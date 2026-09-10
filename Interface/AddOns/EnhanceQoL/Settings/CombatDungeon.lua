@@ -1702,6 +1702,7 @@ local function applyNameplateMobColor(unitFrame)
 	if isPlayerControlledNameplateUnit(unit) then return end
 
 	updateNameplateMobColorContext()
+	if not nameplateMobColorState.isActive then return end
 	local threatStatus = getNameplateThreatStatus(unitFrame)
 	local color
 	if addon.db and addon.db.nameplateMobColorFocusEnabled == true and UnitIsUnit(unit, "focus") then color = getNameplateMobColor(NAMEPLATE_MOB_COLOR_FOCUS_DB_KEY) end
@@ -1855,6 +1856,7 @@ local function refreshNameplateMobColorUnitFrame(unitFrame, refreshKind)
 	if not isNameplateMobColorsActive() then return end
 
 	applyNameplateBaseHealthColor(unitFrame)
+	if not nameplateMobColorState.isActive then return end
 	applyNameplateMobColor(unitFrame)
 end
 
@@ -2833,7 +2835,6 @@ data = {
 }
 
 local groupFinderOrderEntries = {
-	{ key = "groupfinderShowPartyKeystone", text = L["groupfinderShowPartyKeystone"] },
 	{ key = "groupfinderShowDungeonScoreFrame", text = L["groupfinderShowDungeonScoreFrame"]:format(DUNGEON_SCORE) },
 	{ key = "mythicPlusEnableDungeonFilter", text = L["mythicPlusEnableDungeonFilter"] },
 }

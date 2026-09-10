@@ -4,19 +4,19 @@ BtWLoadoutsCollapsed = {
 },
 ["talents"] = {
 },
-["actionbars"] = {
-},
-["pvptalents"] = {
-},
-["essences"] = {
-},
-["conditions"] = {
-},
-["dftalents"] = {
-},
 ["profiles"] = {
 ["children"] = {
 },
+},
+["pvptalents"] = {
+},
+["dftalents"] = {
+},
+["conditions"] = {
+},
+["essences"] = {
+},
+["actionbars"] = {
 },
 }
 BtWLoadoutsCategories = {
@@ -35,15 +35,15 @@ BtWLoadoutsCategories = {
 ["dftalents"] = {
 "spec",
 },
-["actionbars"] = {
+["essences"] = {
+"role",
 },
 ["conditions"] = {
 },
 ["soulbinds"] = {
 "covenant",
 },
-["essences"] = {
-"role",
+["actionbars"] = {
 },
 }
 BtWLoadoutsFilters = {
@@ -51,16 +51,16 @@ BtWLoadoutsFilters = {
 },
 ["talents"] = {
 },
-["actionbars"] = {
+["profiles"] = {
 },
 ["pvptalents"] = {
 },
-["essences"] = {
+["dftalents"] = {
 },
 ["conditions"] = {
 },
-["dftalents"] = {
+["essences"] = {
 },
-["profiles"] = {
+["actionbars"] = {
 },
 }

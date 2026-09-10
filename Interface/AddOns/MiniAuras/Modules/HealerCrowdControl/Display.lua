@@ -135,7 +135,7 @@ end
 ---@param options table
 ---@return AuraDisplayStyle
 local function BuildStyle(options)
-	local style = auraContainerDisplay:BuildStandardStyle(options.Icons)
+	local style = auraContainerDisplay:BuildStandardStyle(options.Icons, options.FontScale)
 
 	-- The display only ever holds CC, and most of that is physical: without this a stun gets the
 	-- tinted glow but no ring, which reads as the border being broken.
@@ -421,6 +421,12 @@ local function CreateFrames()
 	iconsContainer.Frame:Show()
 end
 
+---Reconciles the healer sound registrations without touching a display. The engine takes none
+---while the player is fighting inside instanced PvE, so the end of a pull redoes them.
+function M:RefreshSounds()
+	sound:Refresh(activePool)
+end
+
 ---Every healer the module currently draws, for the unit state poller's visibility scan.
 ---@param out string[] Filled in place and returned, so the caller can keep one table.
 ---@return string[]
@@ -556,7 +562,7 @@ function M:RefreshTestFrame()
 			ColorByDispelType = options.Icons.ColorByDispelType,
 			-- The live buttons draw border and glow together, so the preview does too.
 			Border = true,
-			FontScale = db.FontScale,
+			FontScale = options.FontScale,
 			ShowTooltips = options.ShowTooltips ~= false,
 			Stagger = true,
 		})

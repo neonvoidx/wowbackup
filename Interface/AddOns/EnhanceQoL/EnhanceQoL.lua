@@ -6303,9 +6303,9 @@ local function setAllHooks()
 		local classname = classTag and string.lower(classTag)
 		local hideKey = classname and (classname .. "_HideTotemBar")
 		TotemFrame:HookScript("OnShow", function(self)
-			if hideKey and addon.db and addon.db[hideKey] then self:Hide() end
+			if hideKey and addon.db and addon.db[hideKey] and not isPlayerUFActive() then self:Hide() end
 		end)
-		if hideKey and addon.db and addon.db[hideKey] then TotemFrame:Hide() end
+		if hideKey and addon.db and addon.db[hideKey] and not isPlayerUFActive() then TotemFrame:Hide() end
 	end
 
 	local ignoredApplicants = {}
@@ -6578,13 +6578,28 @@ local function setAllHooks()
 		addon.functions.applySquareMinimapBorder()
 	end
 
-	local function refreshCooldownPanelsForMedia(mediaType)
-		if mediaType ~= "statusbar" and mediaType ~= "border" then return end
+	local cooldownPanelMediaRefreshQueued = false
+	local cooldownPanelBorderMediaDirty = false
+	local function refreshCooldownPanelsForMedia()
+		cooldownPanelMediaRefreshQueued = false
 		local panels = addon.Aura and addon.Aura.CooldownPanels
 		if not (panels and panels.RefreshAllPanels) then return end
-		if mediaType == "border" and panels.InvalidateAllPanelLayoutShapeCaches then panels:InvalidateAllPanelLayoutShapeCaches() end
-		panels:RefreshAllPanels()
+		if cooldownPanelBorderMediaDirty and panels.InvalidateAllPanelLayoutShapeCaches then panels:InvalidateAllPanelLayoutShapeCaches() end
+		cooldownPanelBorderMediaDirty = false
+		panels:RefreshAllPanels(true)
 		if panels.IsEditorOpen and panels:IsEditorOpen() and panels.RefreshEditor then panels:RefreshEditor() end
+	end
+
+	local function queueCooldownPanelsMediaRefresh(mediaType)
+		if mediaType ~= "statusbar" and mediaType ~= "border" then return end
+		if mediaType == "border" then cooldownPanelBorderMediaDirty = true end
+		if cooldownPanelMediaRefreshQueued then return end
+		cooldownPanelMediaRefreshQueued = true
+		if C_Timer and C_Timer.After then
+			C_Timer.After(0.2, refreshCooldownPanelsForMedia)
+		else
+			refreshCooldownPanelsForMedia()
+		end
 	end
 
 	local function refreshGlobalFontConsumers()
@@ -6712,7 +6727,7 @@ local function setAllHooks()
 			refreshReputationBarForMedia(mediaType, mediaKey)
 			refreshHonorBarForMedia(mediaType, mediaKey)
 			refreshGCDBarForMedia(mediaType, mediaKey)
-			refreshCooldownPanelsForMedia(mediaType)
+			queueCooldownPanelsMediaRefresh(mediaType)
 		elseif mediaType == "border" then
 			if ActionBarLabels and ActionBarLabels.ResetBorderCache then ActionBarLabels.ResetBorderCache() end
 			refreshExperienceBarForMedia(mediaType, mediaKey)
@@ -6726,7 +6741,7 @@ local function setAllHooks()
 			refreshClassBuffReminderForMedia(mediaType, mediaKey)
 			refreshDefaultAuraContainersForMedia(mediaType, mediaKey)
 			refreshSquareMinimapBorderForMedia(mediaType, mediaKey)
-			refreshCooldownPanelsForMedia(mediaType)
+			queueCooldownPanelsMediaRefresh(mediaType)
 			if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.refreshBloodlustMedia then addon.MythicPlus.functions.refreshBloodlustMedia(mediaType, mediaKey) end
 		elseif mediaType == "font" then
 			refreshExperienceBarForMedia(mediaType, mediaKey)
@@ -6741,6 +6756,7 @@ local function setAllHooks()
 	end)
 	LSM:RegisterCallback("LibSharedMedia_SetGlobal", function(event, mediaType)
 		if addon.functions and addon.functions.InvalidateLSMMediaCache and mediaType then addon.functions.InvalidateLSMMediaCache(mediaType) end
+		queueCooldownPanelsMediaRefresh(mediaType)
 	end)
 
 	-- Init modules
@@ -7399,11 +7415,17 @@ local eventHandlers = {
 
 			if chooseGossip and options and #options > 0 then
 				for _, optionInfo in ipairs(options) do
-					if optionInfo.gossipOptionID and addon.db["autogossipID"][optionInfo.gossipOptionID] then
+					local gossipOptionID = optionInfo.gossipOptionID
+					if
+						not issecretvalue(gossipOptionID)
+						and gossipOptionID
+						and (addon.db["autogossipID"][gossipOptionID] or addon.db["autogossipID"][tostring(gossipOptionID)])
+					then
 						addon.functions.selectGossipOption(optionInfo)
 						return
 					end
 				end
+				if addon.db.autoChooseGossipManualOnly then return end
 
 				local questOption
 				local questOptionCount = 0

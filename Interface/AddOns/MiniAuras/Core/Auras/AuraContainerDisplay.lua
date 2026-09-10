@@ -7,6 +7,7 @@ local wowEx = addon.Utils.WoWEx
 local growAnchors = addon.Core.GrowAnchors
 local glowStyles = addon.Core.GlowStyles
 local barTextures = addon.Core.BarTextures
+local borderTextures = addon.Core.BorderTextures
 local artTextures = addon.Core.ArtTextures
 local outline = addon.Core.Outline
 local auraFilters = addon.Core.AuraFilters
@@ -46,6 +47,7 @@ local STYLE_FIELDS = {
 	"FontScale",
 	"ShowTooltips",
 	"Pandemic",
+	"IconAsset",
 	"LabelFontSize",
 	"LabelFontFlags",
 	"BarWidth",
@@ -60,6 +62,10 @@ local STYLE_FIELDS = {
 	"TextureAlpha",
 }
 
+-- How far the corner stack count sits off the icon's bottom right corner.
+local STACK_INSET = 0
+-- The cover has to draw over the engine's icon and under the cooldown swipe.
+local ICON_COVER_LAYER, ICON_COVER_SUBLEVEL = "BACKGROUND", 2
 -- Geometry for bar buttons, all derived from the bar's height so one size setting drives the row.
 -- The icon leads the bar and is square, and the fill starts where it ends with no gap, so the icon
 -- reads as the bar's head.
@@ -134,6 +140,23 @@ local M = {}
 M.__index = M
 
 addon.Core.AuraContainerDisplay = M
+
+-- How a display's icons take their colour, stored on its Icons.ColorMode.
+local COLOR_MODE_NONE = "NONE"
+local COLOR_MODE_DISPEL = "DISPEL"
+local COLOR_MODE_CUSTOM = "CUSTOM"
+
+-- For the options pages and the migrations that fill the field.
+M.ColorMode = { None = COLOR_MODE_NONE, Dispel = COLOR_MODE_DISPEL, Custom = COLOR_MODE_CUSTOM }
+
+---A display's colour mode, with anything unrecognised read as the shipped default.
+---@param iconOptions table An Icons options table.
+---@return string one of M.ColorMode
+function M:ResolveColorMode(iconOptions)
+	local mode = iconOptions.ColorMode
+
+	return (mode == COLOR_MODE_NONE or mode == COLOR_MODE_CUSTOM) and mode or COLOR_MODE_DISPEL
+end
 
 local function GetDb()
 	if not cachedDb then
@@ -217,21 +240,21 @@ local function StoreGroupColor(instance, groupKey, color)
 	return true
 end
 
----Whether any group asks for artwork that rings its icons, which is what the icon corners follow.
+---Whether any group glows, which rounds every icon on the row.
 ---Kept on the instance because it is read per button on every restyle, and it only moves when a
 ---group does.
 ---@param instance AuraContainerDisplay
-local function StoreGroupRinged(instance)
+local function StoreGroupGlow(instance)
 	local any = false
 
 	for _, group in ipairs(instance.Groups) do
-		if group.Glow == true or group.ColorByDispelType == true then
+		if group.Glow == true then
 			any = true
 			break
 		end
 	end
 
-	instance.GroupRinged = any
+	instance.GroupGlow = any
 end
 
 local function NextFrameName(frameType)
@@ -835,7 +858,7 @@ local function StyleStacks(instance, button, widgets, size, fontScale)
 			stacks:ClearAllPoints()
 			stacks:SetJustifyH("RIGHT")
 			stacks:SetPoint("BOTTOMRIGHT", widgets.Bar and widgets.Icon or button,
-				"BOTTOMRIGHT", -1, 1)
+				"BOTTOMRIGHT", -STACK_INSET, STACK_INSET)
 
 			if stacks.MiniAurasFace then
 				local _, currentSize = stacks:GetFont()
@@ -910,17 +933,14 @@ local function StyleGlow(instance, button, widgets, size)
 		glow:Hide()
 	end
 
-	-- Every overlay in the catalog has rounded inner corners, and so does the border ring, so the
-	-- icon takes the same shape while any of them is showing. A square icon under a rounded ring
-	-- leaves its corners poking out.
-	-- The dispel ring counts as a border here, since every display that asks for one also asks for
-	-- it on auras with no dispel type, so the ring is always there.
+	-- Every overlay in the catalog has rounded inner corners, and so does the ring border, so an
+	-- icon under either takes the same shape rather than poking its corners out past the art.
+	-- A group's own glow counts for the whole display, or a row would carry two icon shapes side
+	-- by side.
 	-- Displays that brought their own mask keep it, and a bar's leading icon is square against the
 	-- fill by design.
-	-- A group's own glow or dispel ring counts for the whole display rather than its own buttons,
-	-- or a row would carry two icon shapes side by side.
-	local ringed = style.Glow == true or instance.GroupRinged == true
-		or style.Border == true or style.ColorByDispelType == true
+	local ringed = style.Glow == true or instance.GroupGlow == true
+		or style.Border == true or auraButtonPaint:DispelColorWanted(instance, widgets)
 	local rounded = ringed and not widgets.Bar
 	if widgets.CornersRounded ~= rounded and widgets.Icon and not instance.IconMask then
 		widgets.CornersRounded = rounded
@@ -976,6 +996,61 @@ local function StylePandemic(widgets, style, size)
 	pandemic.Texture:SetShown(shown)
 end
 
+---One picture painted over the engine's spell art, for a display whose every aura draws the
+---caller's own icon. The engine owns the icon region through SetIcon, so the art is covered
+---rather than replaced.
+---The texture is only ever built for a caller that asked for it, and only from StyleButton, which
+---is reached from initializeFrame or out of combat.
+---@param instance AuraContainerDisplay
+---@param button table
+---@param widgets table
+local function StyleIconCover(instance, button, widgets)
+	local icon = widgets.Icon
+	local cover = widgets.IconCover
+	local asset = instance.Style.IconAsset
+
+	if not icon or (not cover and asset == nil) then
+		return
+	end
+
+	if not cover then
+		cover = button:CreateTexture(nil, ICON_COVER_LAYER, nil, ICON_COVER_SUBLEVEL)
+		cover:SetAllPoints(icon)
+
+		local texCoord = instance.IconTexCoord
+
+		if texCoord then
+			cover:SetTexCoord(texCoord[1], texCoord[2], texCoord[3], texCoord[4])
+		end
+
+		if instance.IconMask then
+			cover:AddMaskTexture(instance.IconMask)
+		end
+
+		widgets.IconCover = cover
+	end
+
+	if widgets.IconCoverAsset ~= asset then
+		widgets.IconCoverAsset = asset
+		cover:SetTexture(asset)
+	end
+
+	-- A square cover under a rounded ring shows its corners.
+	local rounded = widgets.CornersRounded == true and widgets.CornerMask ~= nil
+
+	if widgets.CoverRounded ~= rounded then
+		widgets.CoverRounded = rounded
+
+		if rounded then
+			cover:AddMaskTexture(widgets.CornerMask)
+		elseif widgets.CornerMask then
+			cover:RemoveMaskTexture(widgets.CornerMask)
+		end
+	end
+
+	cover:SetShown(asset ~= nil)
+end
+
 -- Applies the stored per-button style (size, cooldown settings, border, glow, mouse) to one
 -- button. Safe only while buttons are not forbidden, which is initializeFrame or out of combat.
 ---@param instance AuraContainerDisplay
@@ -1019,6 +1094,8 @@ local function StyleButton(instance, button)
 	end
 
 	StyleGlow(instance, button, widgets, size)
+	-- After StyleGlow, which is what decides the corner rounding the cover has to match.
+	StyleIconCover(instance, button, widgets)
 	StylePandemic(widgets, style, size)
 
 	-- Tooltips (and click-to-cancel, which we never register) require mouse input.
@@ -1161,8 +1238,8 @@ local function InitializeButton(instance, button, group)
 	cd:SetSwipeColor(0, 0, 0, 0.7)
 	glowStyles:SquareSwipe(cd)
 	if instance.IconMask then
-		-- Keep the swipe inside the masked (round) icon.
-		cd:SetSwipeTexture("Interface\\CHARACTERFRAME\\TempPortraitAlphaMask")
+		-- The mask art is the icon's shape, so the swipe wears it too.
+		cd:SetSwipeTexture(glowStyles:MaskSwipeTexture(instance.IconMask))
 	end
 	button:SetDurationCooldown(cd)
 
@@ -1176,12 +1253,10 @@ local function InitializeButton(instance, button, group)
 	local borders, glow
 
 	if not instance.Minimal then
-		-- Border sized 1px past the icon, same asset/coords as the legacy border.
 		local border = button:CreateTexture(nil, "OVERLAY")
 		border:SetPoint("TOPLEFT", button, "TOPLEFT", -1, 1)
 		border:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 1, -1)
-		border:SetTexture("Interface\\Buttons\\UI-Debuff-Overlays")
-		border:SetTexCoord(0.296875, 0.5703125, 0, 0.515625)
+		borderTextures:ApplyDispel(border)
 		-- Hidden until registered via AddDispelTypeTexture, which takes over its visibility.
 		-- Otherwise it would render uncoloured over every aura icon.
 		border:Hide()
@@ -1202,7 +1277,7 @@ local function InitializeButton(instance, button, group)
 	end
 
 	local stacks = CreateStacks(button, textOverlay)
-	stacks:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -1, 1)
+	stacks:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -STACK_INSET, STACK_INSET)
 
 	button:SetTooltipAnchorPoint("ANCHOR_RIGHT")
 
@@ -1331,7 +1406,7 @@ local function InitializeBarButton(instance, button, group)
 
 	-- On the icon rather than the fill, which already carries the name and the countdown.
 	local stacks = CreateStacks(button, textOverlay)
-	stacks:SetPoint("BOTTOMRIGHT", icon, "BOTTOMRIGHT", -1, 1)
+	stacks:SetPoint("BOTTOMRIGHT", icon, "BOTTOMRIGHT", -STACK_INSET, STACK_INSET)
 
 	button:SetTooltipAnchorPoint("ANCHOR_RIGHT")
 
@@ -1425,7 +1500,8 @@ local function LineSize(instance)
 	end
 
 	-- Every scaled icon a group can land on one line counts, or a full line wraps one icon early.
-	-- The premium stays under an icon and its gap, so a line that was full still takes no more.
+	-- Two scaled groups push the premium past a plain icon and its gap, so a full line takes one
+	-- more than PerLine asked for.
 	return perLine * size + perLine * instance.Spacing + premium
 end
 
@@ -1558,6 +1634,10 @@ function M:New(parent, unit, groups, size, spacing, moduleName, options)
 
 	instance.Size = size or 20
 	instance.Spacing = spacing or 2
+	-- Size and Spacing must stay at what the buttons were built with, so the setters move these
+	-- instead until a restyle can carry both across together.
+	instance.PendingSize = instance.Size
+	instance.PendingSpacing = instance.Spacing
 	instance.Groups = groups
 	-- Key -> spec, so the per-category budget setter is a lookup rather than a scan and can tell a
 	-- caller that its group key is wrong instead of silently doing nothing.
@@ -1629,7 +1709,7 @@ function M:New(parent, unit, groups, size, spacing, moduleName, options)
 		or InitializeButton
 
 	instance.Initialize = initialize
-	StoreGroupRinged(instance)
+	StoreGroupGlow(instance)
 
 	for _, group in ipairs(groups) do
 		instance.GroupsByKey[group.Key] = group
@@ -1700,7 +1780,7 @@ function M:AddPendingGroup(group)
 
 	self.Groups[index] = group
 	self.GroupsByKey[group.Key] = group
-	StoreGroupRinged(self)
+	StoreGroupGlow(self)
 
 	-- A group drawn larger than the display widens where a line wraps, and nothing else on the
 	-- path that adds one re-applies that.
@@ -1826,11 +1906,11 @@ end
 ---@param newSize number
 function M:SetIconSize(newSize)
 	newSize = tonumber(newSize)
-	if not newSize or newSize <= 0 or self.Size == newSize then
+	if not newSize or newSize <= 0 or self.PendingSize == newSize then
 		return
 	end
 
-	self.Size = newSize
+	self.PendingSize = newSize
 	-- Applies the layout too, gated so it can't run ahead of the button resize.
 	self:RestyleButtons()
 end
@@ -1838,11 +1918,11 @@ end
 ---@param newSpacing number
 function M:SetSpacing(newSpacing)
 	newSpacing = tonumber(newSpacing)
-	if not newSpacing or newSpacing < 0 or self.Spacing == newSpacing then
+	if not newSpacing or newSpacing < 0 or self.PendingSpacing == newSpacing then
 		return
 	end
 
-	self.Spacing = newSpacing
+	self.PendingSpacing = newSpacing
 	-- Routed through the restyle gate as well, because BuildGroupLayout reads Size and applying
 	-- the layout for a spacing change would also publish a Size the buttons haven't taken yet.
 	self:RestyleButtons()
@@ -1863,13 +1943,13 @@ function M:ApplyConfig(size, spacing, style)
 
 	local changed = false
 
-	if size and size > 0 and self.Size ~= size then
-		self.Size = size
+	if size and size > 0 and self.PendingSize ~= size then
+		self.PendingSize = size
 		changed = true
 	end
 
-	if spacing and spacing >= 0 and self.Spacing ~= spacing then
-		self.Spacing = spacing
+	if spacing and spacing >= 0 and self.PendingSpacing ~= spacing then
+		self.PendingSpacing = spacing
 		changed = true
 	end
 
@@ -2008,25 +2088,29 @@ function M:SetGroupGlow(groupKey, enabled)
 	end
 
 	group.Glow = enabled
-	StoreGroupRinged(self)
+	StoreGroupGlow(self)
 	self:RestyleButtons()
 end
 
----Turns one group's dispel-type colouring on or off after the display exists, so a row can colour
----the crowd control leading it while the debuffs behind it stay plain. Nil hands the group back to
----the display-wide switch.
----@param groupKey string
+---Turns dispel-type colouring on or off for the named groups, restyling once rather than once per
+---group. Nil hands a group back to the display-wide switch.
+---@param groupKeys string[]
 ---@param enabled boolean?
-function M:SetGroupColorByDispelType(groupKey, enabled)
-	local group = self.GroupsByKey[groupKey]
+function M:SetGroupColorByDispelTypes(groupKeys, enabled)
+	local changed = false
 
-	if not group or group.ColorByDispelType == enabled then
-		return
+	for _, groupKey in ipairs(groupKeys) do
+		local group = self.GroupsByKey[groupKey]
+
+		if group and group.ColorByDispelType ~= enabled then
+			group.ColorByDispelType = enabled
+			changed = true
+		end
 	end
 
-	group.ColorByDispelType = enabled
-	StoreGroupRinged(self)
-	self:RestyleButtons()
+	if changed then
+		self:RestyleButtons()
+	end
 end
 
 ---A group's current icon budget, for callers that only want to act when it actually moves.
@@ -2106,9 +2190,8 @@ function M:SetPerLine(perLine)
 	ApplyFlowLayout(self)
 end
 
----Whether the engine classifies every aura before the candidate filters see it. Only the
----dispellable filter (processedAuraType) reads that classification, so it goes off again when
----nothing wants it. The work runs per aura, on every unit the display follows.
+---Whether the engine classifies every aura before the candidate filters see it, which is what the
+---dispellable filter reads. The work runs per aura, on every unit the display follows.
 ---@param processing boolean
 function M:SetProcessingPolicy(processing)
 	local policies = CustomAuraContainerAuraProcessingPolicy
@@ -2144,14 +2227,12 @@ function M:GetStyleScratch()
 	return styleScratch
 end
 
----Fills the shared style scratch with the fields every module resolves the same way:
----ReverseCooldown, ShowMilliseconds, ColorByDispelType and Glow are read off the module's Icons
----options sub-table, and FontScale comes from the global db. Returns the same scratch as
----GetStyleScratch with every other field cleared, so append any extras (ShowTooltips, GlowColor,
----Stacks, Border, ...) before handing it to New/SetStyle/ApplyConfig, and never retain it.
+---Returns the shared scratch with every other field cleared, so append any extras before handing
+---it to New/SetStyle/ApplyConfig, and never retain it.
 ---@param iconOptions table? A module's Icons options table. Nil leaves the four fields unset.
+---@param fontScale number? The owning module's text multiplier.
 ---@return AuraDisplayStyle
-function M:BuildStandardStyle(iconOptions)
+function M:BuildStandardStyle(iconOptions, fontScale)
 	local style = self:GetStyleScratch()
 
 	if iconOptions then
@@ -2161,8 +2242,7 @@ function M:BuildStandardStyle(iconOptions)
 		style.Glow = iconOptions.Glow
 	end
 
-	local db = GetDb()
-	style.FontScale = db and db.FontScale
+	style.FontScale = fontScale
 
 	return style
 end
@@ -2255,10 +2335,25 @@ end
 ---otherwise never be touched again.
 function M:RestyleButtons()
 	if wowEx:IsAuraStylingRestricted() then
+		-- Held back only to keep buttons already built in step with a layout they have not taken.
+		-- The ones the engine builds next are then born the right size.
+		if #self.Buttons == 0 then
+			self.Size = self.PendingSize
+			self.Spacing = self.PendingSpacing
+			ApplyGroupLayout(self)
+		end
+
 		SetRestylePending(self, true)
 		return
 	end
 
+	-- Committed only once the buttons below are about to be resized to match, so a button the
+	-- engine creates before this point still sees the size it was actually built at.
+	self.Size = self.PendingSize
+	self.Spacing = self.PendingSpacing
+
+	-- Cleared after the commit, so anything returning early between the two leaves the display
+	-- pending rather than claiming a size its buttons never took.
 	SetRestylePending(self, false)
 
 	-- The group layout spaces icons by elementWidth, but the engine only ever positions a button,
@@ -2311,8 +2406,8 @@ end
 ---@field ShowMilliseconds boolean?
 ---@field ColorByDispelType boolean?
 ---@field BorderWithoutDispelType boolean? Keep the dispel-coloured border on auras with no dispel
----type, tinted with the "None" palette colour like the glow. For displays whose untinted groups
----only ever hold CC, where a stun should ring the same as a polymorph.
+---type, tinted with the "None" palette colour like the glow. A group's own answer overrides this.
+---See AuraDisplayGroupSpec.BorderWithoutDispelType.
 ---@field Glow boolean?
 ---@field FontScale number?
 ---@field ShowTooltips boolean?
@@ -2326,6 +2421,9 @@ end
 ---keeps the fonts' own white and leaves the global colour-by-time countdown alone, while a set one
 ---wins over it, white included, so pass nil rather than white for "no opinion". Copied
 ---component-wise like GlowColor, so callers may pass a reused scratch.
+---@field IconAsset string|number? One picture painted over every aura's own icon, so a display
+---draws the caller's art rather than the engine's spell art. Unset leaves the spell art showing
+---and costs the display nothing.
 ---@field Pandemic boolean? Reveal the engine-driven refresh-window ring. Only displays created
 ---with the Pandemic option carry the regions, and elsewhere this field is inert.
 ---@field PandemicColor number[]? {r, g, b} tint for the pandemic ring. Unset keeps the built-in
@@ -2387,7 +2485,10 @@ end
 ---creation, since a region can only be added as a button is built.
 ---@field ColorByDispelType boolean? Whether this group's borders take the engine's dispel palette,
 ---overriding the display-wide Style.ColorByDispelType so one row can colour a single category.
----Unset follows the display. Changed after creation with SetGroupColorByDispelType.
+---Unset follows the display. Changed after creation with SetGroupColorByDispelTypes.
+---@field BorderWithoutDispelType boolean? Whether this group rings an aura with no dispel type at
+---all, overriding the display-wide Style.BorderWithoutDispelType. No module sets it today, since
+---every row that rings at all rings a typeless aura. Unset follows the display. Fixed at creation.
 ---@field GlowColor number[]? {r, g, b} tint for this group's glow and border, so one container can
 ---colour its categories differently. A tinted group opts out of dispel-type colouring, which has
 ---nothing to say about a buff. Changed after creation with SetGroupGlowColors.
@@ -2443,8 +2544,11 @@ end
 ---@field Initialize fun(instance: AuraContainerDisplay, button: table, group: AuraDisplayGroupSpec)
 ---@field Size number
 ---@field Spacing number
+---@field PendingSize number Size the buttons will carry once a deferred restyle lifts.
+---@field PendingSpacing number Spacing the buttons will carry once a deferred restyle lifts.
 ---@field Groups AuraDisplayGroupSpec[]
 ---@field GroupsByKey table<string, AuraDisplayGroupSpec>
+---@field GroupGlow boolean Whether any group glows, which rounds every icon on the row.
 ---@field Grow string
 ---@field Style AuraDisplayStyle
 ---@field Buttons table[]

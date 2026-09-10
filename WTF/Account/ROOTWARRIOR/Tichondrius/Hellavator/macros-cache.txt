@@ -126,11 +126,15 @@ VER 3 0100000000000066 " " "134400"
 END
 VER 3 0100000000000067 " " "134400"
 #showtooltip
-/cast [mod:shift,known: Curse of the Satyr] Curse of the Satyr; [mod:shift,known: curse of tongues] Curse of tongues; [mod:ctrl,known: curse of the satyr] Curse of the satyr;[mod:ctrl] Curse of weakness;  Curse of Exhaustion
+/cast [mod:shift,known:440057] Curse of the Satyr; [mod:shift] Curse of Tongues; [mod:ctrl,known:440057] Curse of the Satyr; [mod:ctrl] Curse of Weakness; Curse of Exhaustion
 END
 VER 3 0100000000000069 " " "134400"
 #showtooltip banish
 /cast banish
+END
+VER 3 010000000000006A " " "134400"
+#showtooltip 
+/cast [known: power siphon] power siphon; [known:implosion] implosion
 END
 VER 3 010000000000005E " modfocus" "134400"
 #showtooltip Mortal Coil
