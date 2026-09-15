@@ -2,7 +2,7 @@
 ## Title: Better|cff00c0ffBlizz|rPlates
 ## Notes: Default Blizzard Nameplates with more features added to them with easy settings.
 ## Author: Bodify
-## Version: v2.1.2i
+## Version: v2.1.3
 ## SavedVariables: BetterBlizzPlatesDB, BBPCVarBackupsDB
 ## IconAtlas: gmchat-icon-blizz
 ## X-Curse-Project-ID: 913377
@@ -11,6 +11,7 @@
 embeds.xml
 
 init.lua
+shared\functions_classics.lua
 retail\temp_tww.lua
 temp_shared\ImportExport.lua
 
@@ -35,6 +36,8 @@ midnight\modules\misc.lua
 midnight\modules\prd.lua
 midnight\modules\totem.lua
 midnight\modules\druid\overcharges.lua
+midnight\modules\shaman\maelstrom.lua
+midnight\modules\hunter\tipofthespear.lua
 
 midnight\gui.lua
 midnight\BetterBlizzPlates.lua

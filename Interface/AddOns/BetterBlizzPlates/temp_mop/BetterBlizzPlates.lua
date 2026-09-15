@@ -25,7 +25,7 @@ local playerClassColor
 BBP.hiddenFrame = CreateFrame("Frame")
 BBP.hiddenFrame:Hide()
 
-local RAID_CLASS_COLORS = RAID_CLASS_COLORS
+local GetClassColor = BBP.GetClassColor
 local UnitName = UnitName
 local UnitIsUnit = UnitIsUnit
 local UnitIsPlayer = UnitIsPlayer
@@ -148,6 +148,7 @@ local defaultSettings = {
     smallPetsHeight = 6,
     nameplateNonTargetAlpha = 0.5,
     hideNpAurasOnUnattackableEnemies = true,
+    colorShamansBlue = true,
 
     mopUpdated = true,
     -- Enemy
@@ -315,6 +316,7 @@ local defaultSettings = {
     targetIndicatorAnchor = "TOP",
     targetIndicatorTestMode = false,
     targetIndicatorColorNameplateRGB = {1, 0, 0.44},
+    targetIndicatorRGB = {1, 0, 0.44},
     targetIndicatorTexture = "Checkered (BBP)",
     -- Focus Target Indicator
     focusTargetIndicator = false,
@@ -1317,6 +1319,47 @@ local function InitializeSavedVariables()
     end
 
     BBP.defaultTotemIndicatorNpcList = defaultSettings.totemIndicatorNpcList
+
+    BBP.InitContextCVarSets()
+end
+
+local contextCVarDefaults = {
+    nameplateShowEnemyMinions = true,
+    nameplateShowEnemyGuardians = true,
+    nameplateShowEnemyMinus = false,
+    nameplateShowEnemyPets = true,
+    nameplateShowEnemyTotems = true,
+    nameplateShowFriendlyPlayerMinions = false,
+    nameplateShowFriendlyPlayerGuardians = false,
+    nameplateShowFriendlyNpcs = false,
+    nameplateShowFriendlyPlayerPets = false,
+    nameplateShowFriendlyPlayerTotems = false,
+}
+
+function BBP.InitContextCVarSets(resetToDefaults)
+    local db = BetterBlizzPlatesDB
+    if not db then return end
+
+    for _, setKey in ipairs({ "cvarContextPvP", "cvarContextPvE" }) do
+        if type(db[setKey]) ~= "table" then db[setKey] = {} end
+        for cvar, fallback in pairs(contextCVarDefaults) do
+            if resetToDefaults then
+                db[setKey][cvar] = fallback
+            elseif db[setKey][cvar] == nil then
+                local previous = db[cvar]
+                if previous ~= nil then
+                    db[setKey][cvar] = previous == "1" or previous == 1 or previous == true
+                else
+                    local live = C_CVar.GetCVar(cvar)
+                    if live ~= nil then
+                        db[setKey][cvar] = live == "1"
+                    else
+                        db[setKey][cvar] = fallback
+                    end
+                end
+            end
+        end
+    end
 end
 
 function BBP.ResetTotemList()
@@ -1722,16 +1765,7 @@ local function ResetNameplates()
     BetterBlizzPlatesDB.nameplateSelectedAlpha = "1"
     BetterBlizzPlatesDB.nameplateNotSelectedAlpha = "0.5"
 
-    BetterBlizzPlatesDB.nameplateShowEnemyGuardians = "1"
-    BetterBlizzPlatesDB.nameplateShowEnemyMinions = "1"
-    BetterBlizzPlatesDB.nameplateShowEnemyMinus = "0"
-    BetterBlizzPlatesDB.nameplateShowEnemyPets = "1"
-    BetterBlizzPlatesDB.nameplateShowEnemyTotems = "1"
-
-    BetterBlizzPlatesDB.nameplateShowFriendlyPlayerGuardians = "0"
-    BetterBlizzPlatesDB.nameplateShowFriendlyPlayerMinions = "0"
-    BetterBlizzPlatesDB.nameplateShowFriendlyPlayerPets = "0"
-    BetterBlizzPlatesDB.nameplateShowFriendlyPlayerTotems = "0"
+    BBP.InitContextCVarSets(true)
 
     BetterBlizzPlatesDB.enemyNameplateHealthbarHeight = 11
     BetterBlizzPlatesDB.castBarHeight = classic and 10 or 16--big and 18.8 or 8
@@ -1756,15 +1790,7 @@ local function ResetNameplates()
     C_CVar.SetCVar("nameplateMaxAlpha", BetterBlizzPlatesDB.nameplateMaxAlpha)
     C_CVar.SetCVar("nameplateMaxAlphaDistance", BetterBlizzPlatesDB.nameplateMaxAlphaDistance)
     C_CVar.SetCVar("nameplateOccludedAlphaMult", BetterBlizzPlatesDB.nameplateOccludedAlphaMult)
-    C_CVar.SetCVar("nameplateShowEnemyMinions", BetterBlizzPlatesDB.nameplateShowEnemyMinions)
-    C_CVar.SetCVar("nameplateShowEnemyGuardians", BetterBlizzPlatesDB.nameplateShowEnemyGuardians)
-    C_CVar.SetCVar("nameplateShowEnemyMinus", BetterBlizzPlatesDB.nameplateShowEnemyMinus)
-    C_CVar.SetCVar("nameplateShowEnemyPets", BetterBlizzPlatesDB.nameplateShowEnemyPets)
-    C_CVar.SetCVar("nameplateShowEnemyTotems", BetterBlizzPlatesDB.nameplateShowEnemyTotems)
-    C_CVar.SetCVar("nameplateShowFriendlyPlayerMinions", BetterBlizzPlatesDB.nameplateShowFriendlyPlayerMinions)
-    C_CVar.SetCVar("nameplateShowFriendlyPlayerGuardians", BetterBlizzPlatesDB.nameplateShowFriendlyPlayerGuardians)
-    C_CVar.SetCVar("nameplateShowFriendlyPlayerPets", BetterBlizzPlatesDB.nameplateShowFriendlyPlayerPets)
-    C_CVar.SetCVar("nameplateShowFriendlyPlayerTotems", BetterBlizzPlatesDB.nameplateShowFriendlyPlayerTotems)
+    BBP.UpdateContextCVars()
     C_CVar.SetCVar('nameplateShowOnlyNameForFriendlyPlayerUnits', "0")
     C_CVar.SetCVar("nameplateShowAll", "1")
 
@@ -2083,7 +2109,7 @@ local function ClassColorPlayerNameplate(frame, force)
     end
 
     local class = UnitClassBase(frame.unit)
-    local classColor = class and RAID_CLASS_COLORS[class]
+    local classColor = class and GetClassColor(class)
     if classColor then
         frame.healthBar:SetStatusBarColor(classColor.r, classColor.g, classColor.b)
         frame.needsRecolor = true
@@ -2528,15 +2554,6 @@ function BBP.ApplyCustomTextureToNameplate(frame)
         config.customTextureSelfMana = LSM:Fetch(LSM.MediaType.STATUSBAR, customTextureSelfMana)
         --frame.HealthBarsContainer.healthBar.bgTexture:SetDrawLayer("HIGH")
 
-        config.targetIndicatorChangeTexture = BetterBlizzPlatesDB.targetIndicatorChangeTexture
-        config.focusTargetIndicatorChangeTexture = BetterBlizzPlatesDB.focusTargetIndicatorChangeTexture
-        if config.targetIndicatorChangeTexture then
-            config.targetIndicatorTexturePath = LSM:Fetch(LSM.MediaType.STATUSBAR, BetterBlizzPlatesDB.targetIndicatorTexture)
-        end
-        if config.focusTargetIndicatorChangeTexture then
-            config.focusTargetIndicatorTexturePath = LSM:Fetch(LSM.MediaType.STATUSBAR, BetterBlizzPlatesDB.focusTargetIndicatorTexture)
-        end
-
         config.customTextureInitialized = true
     end
 
@@ -2855,19 +2872,6 @@ local function SetCVarsOnLogin()
                 C_CVar.SetCVar("nameplateShowAll", BetterBlizzPlatesDB.nameplateShowAll)
             end
 
-            C_CVar.SetCVar("nameplateShowEnemyMinions", BetterBlizzPlatesDB.nameplateShowEnemyMinions)
-            C_CVar.SetCVar("nameplateShowEnemyGuardians", BetterBlizzPlatesDB.nameplateShowEnemyGuardians)
-            C_CVar.SetCVar("nameplateShowEnemyMinus", BetterBlizzPlatesDB.nameplateShowEnemyMinus)
-            C_CVar.SetCVar("nameplateShowEnemyPets", BetterBlizzPlatesDB.nameplateShowEnemyPets)
-            C_CVar.SetCVar("nameplateShowEnemyTotems", BetterBlizzPlatesDB.nameplateShowEnemyTotems)
-
-            C_CVar.SetCVar("nameplateShowFriendlyPlayerMinions", BetterBlizzPlatesDB.nameplateShowFriendlyPlayerMinions)
-            C_CVar.SetCVar("nameplateShowFriendlyPlayerGuardians", BetterBlizzPlatesDB.nameplateShowFriendlyPlayerGuardians)
-            if BetterBlizzPlatesDB.nameplateShowFriendlyNpcs then
-                C_CVar.SetCVar("nameplateShowFriendlyNpcs", BetterBlizzPlatesDB.nameplateShowFriendlyNpcs)
-            end
-            C_CVar.SetCVar("nameplateShowFriendlyPlayerPets", BetterBlizzPlatesDB.nameplateShowFriendlyPlayerPets)
-            C_CVar.SetCVar("nameplateShowFriendlyPlayerTotems", BetterBlizzPlatesDB.nameplateShowFriendlyPlayerTotems)
         end
 
         if BetterBlizzPlatesDB.friendlyClassColorName then
@@ -2990,8 +2994,8 @@ function BBP.ClassColorAndScaleNames(frame)
     -- Set the name's color based on unit relation and options
     if isPlayer then
         if ((isEnemy or isNeutral) and enemyClassColorName) or (isFriend and friendlyClassColorName) then
-            local _, class = UnitClass(frame.unit)
-            local classColor = RAID_CLASS_COLORS[class]
+            local class = UnitClassBase(frame.unit)
+            local classColor = GetClassColor(class)
             frame.name:SetVertexColor(classColor.r, classColor.g, classColor.b)
         elseif ((isEnemy or isNeutral) and enemyColorName) or (isFriend and friendlyColorName) then
             local color = isEnemy and db.enemyColorNameRGB or db.friendlyColorNameRGB
@@ -5138,28 +5142,7 @@ hooksecurefunc("CompactUnitFrame_UpdateHealthColor", function(frame)
         config.updateHealthColorInitialized = true
     end
 
-    ClassColorPlayerNameplate(frame)
-
-    if info.isSelf then
-        if config.classColorPersonalNameplate then
-            frame.healthBar:SetStatusBarColor(playerClassColor.r, playerClassColor.g, playerClassColor.b)
-        end
-    end
-
-    if info.isPlayer then
-        if info.isEnemy and BetterBlizzPlatesDB.nameplateShowClassColor == "1"  then
-            local classColor = RAID_CLASS_COLORS[info.class]
-            if classColor then
-                frame.healthBar:SetStatusBarColor(classColor.r, classColor.g, classColor.b)
-            end
-        end
-        if info.isFriend and BetterBlizzPlatesDB.nameplateShowFriendlyClassColor == "1" then
-            local classColor = RAID_CLASS_COLORS[info.class]
-            if classColor then
-                frame.healthBar:SetStatusBarColor(classColor.r, classColor.g, classColor.b)
-            end
-        end
-    end
+    ClassColorPlayerNameplate(frame, true)
 
     if config.friendlyHealthBarColor or config.enemyHealthBarColor then
         ColorNameplateByReaction(frame)
@@ -5265,8 +5248,8 @@ function BBP.CompactUnitFrame_UpdateHealthColor(frame, exitLoop)
 			r, g, b = healthBarColorOverride.r, healthBarColorOverride.g, healthBarColorOverride.b;
 		else
 			--Try to color it by class.
-			local localizedClass, englishClass = UnitClass(frame.unit);
-			local classColor = RAID_CLASS_COLORS[englishClass];
+			local class = UnitClassBase(frame.unit);
+			local classColor = GetClassColor(class);
 			if ( (frame.optionTable.allowClassColorsForNPCs or UnitIsPlayer(frame.unit)) and classColor and frame.optionTable.useClassColors ) or (unitIsPlayer and (UnitCanAttack("player", frame.unit) and BetterBlizzPlatesDB.nameplateShowClassColor == "1") or (unitIsPlayer and not UnitCanAttack("player", frame.unit) and BetterBlizzPlatesDB.nameplateShowFriendlyClassColor == "1")) then
 				-- Use class colors for players if class color option is turned on
 				r, g, b = classColor.r, classColor.g, classColor.b;
@@ -5301,7 +5284,7 @@ function BBP.CompactUnitFrame_UpdateHealthColor(frame, exitLoop)
 	-- Update whether healthbar is hidden due to being dead - only applies to non-player nameplates
 	-- local hideHealthBecauseDead = unitIsDead and not unitIsPlayer;
 	-- CompactUnitFrame_SetHideHealth(frame, hideHealthBecauseDead, HEALTH_BAR_HIDE_REASON_UNIT_DEAD);
-    ClassColorPlayerNameplate(frame)
+    ClassColorPlayerNameplate(frame, true)
 
     if config.friendlyHealthBarColor or config.enemyHealthBarColor then
         ColorNameplateByReaction(frame)
@@ -5518,7 +5501,7 @@ function BBP.ColorNameplateBorder(frame)
 
         if config.npBorderClassColor then
             if info.isPlayer then
-                local classColor = RAID_CLASS_COLORS[info.class]
+                local classColor = GetClassColor(info.class)
                 border:SetBorderColor(classColor.r, classColor.g, classColor.b)
             else
                 border:SetBorderColor(unpack(config.npBorderNpcColorRGB))
@@ -5847,6 +5830,9 @@ local function HandleNamePlateRemoved(unit)
     if frame.targetIndicator then
         frame.targetIndicator:Hide()
     end
+    if frame.targetIndicatorMirror then
+        frame.targetIndicatorMirror:Hide()
+    end
     -- Execute indicator
     if frame.executeIndicator then
         frame.executeIndicator:SetText("")
@@ -6141,7 +6127,7 @@ local function HandleNamePlateAdded(unit)
     if not info then return end
     local hooks = GetNameplateHookTable(frame)
 
-    ClassColorPlayerNameplate(frame)
+    ClassColorPlayerNameplate(frame, true)
 
     if not frame.BuffFrame then
         if not config.nameplateAurasYPos then
@@ -6740,6 +6726,54 @@ unitFaction:SetScript("OnEvent", function(self, event, unit)
     end)
 end)
 
+--#################################################################################################
+-- Arena late nameplate refresh
+local arenaMatchStartMessages = {
+    ["The Arena battle has begun!"] = true,
+    ["¡La batalla en arena ha comenzado!"] = true,
+    ["A batalha na Arena começou!"] = true,
+    ["Der Arenakampf hat begonnen!"] = true,
+    ["Le combat d'arène commence\194\160!"] = true,
+    ["Бой начался!"] = true,
+    ["투기장 전투가 시작되었습니다!"] = true,
+    ["竞技场战斗开始了！"] = true,
+    ["竞技场的战斗开始了！"] = true,
+    ["競技場戰鬥開始了！"] = true,
+}
+
+local arenaNpcRefreshPending
+
+local function RefreshAllNpcNameplates()
+    arenaNpcRefreshPending = nil
+    for _, nameplate in pairs(C_NamePlate.GetNamePlates()) do
+        local frame = nameplate.UnitFrame
+        if frame and not frame:IsForbidden() and frame.unit and not UnitIsPlayer(frame.unit) then
+            HandleNamePlateAdded(frame.unit)
+        end
+    end
+end
+BBP.RefreshAllNpcNameplates = RefreshAllNpcNameplates
+
+local function QueueArenaNpcRefresh()
+    if arenaNpcRefreshPending then return end
+    arenaNpcRefreshPending = true
+    C_Timer.After(1, RefreshAllNpcNameplates)
+end
+
+local arenaNpcRefresh = CreateFrame("Frame")
+arenaNpcRefresh:RegisterEvent("CHAT_MSG_BG_SYSTEM_NEUTRAL")
+arenaNpcRefresh:RegisterEvent("UNIT_PET")
+arenaNpcRefresh:SetScript("OnEvent", function(self, event, arg1)
+    if not BBP.isInArena then return end
+    if event == "CHAT_MSG_BG_SYSTEM_NEUTRAL" then
+        if not arenaMatchStartMessages[arg1] then return end
+        QueueArenaNpcRefresh()
+    elseif event == "UNIT_PET" then
+        if not arg1 or not arg1:match("^arena%d") then return end
+        QueueArenaNpcRefresh()
+    end
+end)
+
 function BBP.RefreshAllNameplatesLightVer()
     CacheFontSettings()
     if not BetterBlizzPlatesDB.skipAdjustingFixedFonts then
@@ -6967,7 +7001,7 @@ local function UpdateClassRoleStatus(self, event)
         local role = specIndex and GetSpecializationRole(specIndex)
         isTank = role == "TANK"
     else
-        local _, class = UnitClass("player")
+        local class = UnitClassBase("player")
 
         -- Check the player's talent tree to infer if they are a tank
         local spec1, _, _, _, pointsSpent1 = GetTalentTabInfo(1)
@@ -6995,7 +7029,7 @@ local function UpdateClassRoleStatus(self, event)
 
     offTanks = GetGroupTanks()
 
-    BBP.isRoleTank = isTank
+    BBP.isRoleTank = BBP.forceTankRole or isTank
 end
 
 local ClassRoleChecker = CreateFrame("Frame")
@@ -7079,10 +7113,12 @@ local function CheckIfInInstance(self, event, ...)
     -- SetNameplateBehavior()
     if event == "PLAYER_ENTERING_WORLD" or event == "ZONE_CHANGED_NEW_AREA" then
         UpdateInstanceStatus()
+        BBP.UpdateContextCVars()
         SetNameplateBehavior()
         BBP.fistweaverFound = nil
     elseif event == "PLAYER_REGEN_ENABLED" then
         SetNameplateBehavior()
+        BBP.UpdateContextCVars()
         InstanceChecker:UnregisterEvent("PLAYER_REGEN_ENABLED")
     end
 end
@@ -7090,6 +7126,88 @@ end
 InstanceChecker:RegisterEvent("PLAYER_ENTERING_WORLD")
 InstanceChecker:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 InstanceChecker:SetScript("OnEvent", CheckIfInInstance)
+
+BBP.contextCVarList = {
+    "nameplateShowEnemyMinions",
+    "nameplateShowEnemyGuardians",
+    "nameplateShowEnemyMinus",
+    "nameplateShowEnemyPets",
+    "nameplateShowEnemyTotems",
+    "nameplateShowFriendlyPlayerMinions",
+    "nameplateShowFriendlyPlayerGuardians",
+    "nameplateShowFriendlyNpcs",
+    "nameplateShowFriendlyPlayerPets",
+    "nameplateShowFriendlyPlayerTotems",
+}
+
+local contextMinionChildren = {
+    {
+        "nameplateShowEnemyGuardians",
+        "nameplateShowEnemyMinus",
+        "nameplateShowEnemyPets",
+        "nameplateShowEnemyTotems",
+    },
+    {
+        "nameplateShowFriendlyPlayerGuardians",
+        "nameplateShowFriendlyPlayerPets",
+        "nameplateShowFriendlyPlayerTotems",
+    },
+}
+
+BBP.contextCVarLookup = {}
+for _, cvar in ipairs(BBP.contextCVarList) do
+    BBP.contextCVarLookup[cvar] = true
+end
+
+function BBP.GetActiveContextSetKey()
+    return BBP.isInPvP and "cvarContextPvP" or "cvarContextPvE"
+end
+
+local function ContextCVarIsOn(value)
+    return value == "1" or value == 1 or value == true
+end
+
+function BBP.SaveContextCVar(cvarName, value)
+    local db = BetterBlizzPlatesDB
+    if not db or not BBP.contextCVarLookup[cvarName] then return false end
+    local setKey = BBP.GetActiveContextSetKey()
+    if type(db[setKey]) ~= "table" then db[setKey] = {} end
+    db[setKey][cvarName] = ContextCVarIsOn(value)
+    return true
+end
+
+local function ApplyContextCVars(target)
+    BBP.CVarTrackingDisabled = true
+    for _, cvar in ipairs(BBP.contextCVarList) do
+        C_CVar.SetCVar(cvar, target[cvar] and "1" or "0")
+    end
+    for _, children in ipairs(contextMinionChildren) do
+        for _, cvar in ipairs(children) do
+            C_CVar.SetCVar(cvar, target[cvar] and "1" or "0")
+        end
+    end
+    BBP.CVarTrackingDisabled = nil
+end
+
+function BBP.UpdateContextCVars()
+    local db = BetterBlizzPlatesDB
+    if not db or not BBP.variablesLoaded then return end
+
+    if InCombatLockdown() then
+        if not InstanceChecker:IsEventRegistered("PLAYER_REGEN_ENABLED") then
+            InstanceChecker:RegisterEvent("PLAYER_REGEN_ENABLED")
+        end
+        return
+    end
+
+    local source = db[BBP.GetActiveContextSetKey()] or {}
+    local target = {}
+    for _, cvar in ipairs(BBP.contextCVarList) do
+        target[cvar] = source[cvar] and true or false
+    end
+
+    ApplyContextCVars(target)
+end
 
 function BBP.CheckIfInInstanceCaller()
     CheckIfInInstance()
@@ -7257,8 +7375,8 @@ Frame:SetScript("OnEvent", function(...)
 
     CheckForUpdate()
 
-    _, playerClass = UnitClass("player")
-    playerClassColor = RAID_CLASS_COLORS[playerClass]
+    playerClass = UnitClassBase("player")
+    playerClassColor = GetClassColor(playerClass)
 
     if db.enableNameplateAuraCustomisation then
         BBP.RunAuraModule()
@@ -7870,8 +7988,8 @@ local temporaryNpCastTest = CreateFrame("Frame")
 local function GetTestCastbarText(spellName)
     if BetterBlizzPlatesDB.showNameplateTargetText and BetterBlizzPlatesDB.castbarTargetTextInsideBar then
         local name = GetUnitName("player")
-        local _, classIdentifier = UnitClass("player")
-        local color = classIdentifier and C_ClassColor.GetClassColor(classIdentifier)
+        local class = UnitClassBase("player")
+        local color = class and GetClassColor(class)
         if color then
             name = color:WrapTextInColorCode(name)
         end
@@ -7971,8 +8089,8 @@ local function NamePlateCastBarTestMode(frame)
                         frame.dummyNameText = frame.healthBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                         frame.dummyNameText:SetJustifyH("CENTER")
 
-                        local _, classIdentifier = UnitClass("player")
-                        local color = RAID_CLASS_COLORS[classIdentifier]
+                        local class = UnitClassBase("player")
+                        local color = GetClassColor(class)
 
                         if color then
                             frame.dummyNameText:SetText(GetUnitName("player"))
@@ -8508,11 +8626,17 @@ hooksecurefunc(NamePlateUnitFrameMixin, "UpdateAnchors", function(self)
     if not self.BetterBlizzPlates then return end
     local config = self.BetterBlizzPlates.config
     if not config then return end
-    if config.targetIndicator and config.targetIndicatorChangeTexture and UnitIsUnit(self.unit, "target") then
-        self.healthBar:SetStatusBarTexture(config.targetIndicatorTexturePath)
+    if config.targetIndicator and BetterBlizzPlatesDB.targetIndicatorChangeTexture and UnitIsUnit(self.unit, "target") then
+        local texture = config.targetIndicatorTextureLSM or LSM:Fetch(LSM.MediaType.STATUSBAR, BetterBlizzPlatesDB.targetIndicatorTexture)
+        if texture then
+            self.healthBar:SetStatusBarTexture(texture)
+        end
     end
-    if config.focusTargetIndicator and config.focusTargetIndicatorChangeTexture and UnitIsUnit(self.unit, "focus") then
-        self.healthBar:SetStatusBarTexture(config.focusTargetIndicatorTexturePath)
+    if config.focusTargetIndicator and BetterBlizzPlatesDB.focusTargetIndicatorChangeTexture and UnitIsUnit(self.unit, "focus") then
+        local texture = LSM:Fetch(LSM.MediaType.STATUSBAR, BetterBlizzPlatesDB.focusTargetIndicatorTexture)
+        if texture then
+            self.healthBar:SetStatusBarTexture(texture)
+        end
     end
     if not BetterBlizzPlatesDB.hideLevelFrame and self.unit then
         TweakLevelFrame(self)

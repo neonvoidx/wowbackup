@@ -30,7 +30,7 @@ local pointerOffsets = {
     [5] = -2,
 }
 
-local playerClass = select(2, UnitClass("player"))
+local playerClass = UnitClassBase("player")
 
 -- Class Indicator
 function BBP.PartyPointer(frame)
@@ -146,6 +146,7 @@ function BBP.PartyPointer(frame)
             frame.classIndicatorCC.Icon:SetSize(39, 39)
 
             frame.classIndicatorCC.Cooldown = CreateFrame("Cooldown", nil, frame.classIndicatorCC, "CooldownFrameTemplate")
+            frame.classIndicatorCC.Cooldown:SetMinimumCountdownDuration(0)
             frame.classIndicatorCC.Cooldown:SetAllPoints(frame.classIndicatorCC.Icon)
             frame.classIndicatorCC.Cooldown:SetDrawEdge(false)
             frame.classIndicatorCC.Cooldown:SetDrawSwipe(true)
@@ -177,7 +178,7 @@ function BBP.PartyPointer(frame)
         for i = 1, 2 do
             local partyPet = "partypet"..i
             if UnitExists(partyPet) and UnitIsUnit(partyPet, frame.unit) then
-                local _, partyClass = UnitClass("party"..i)
+                local partyClass = UnitClassBase("party"..i)
                 if partyClass then
                     class = partyClass
                 end
