@@ -1,0 +1,77 @@
+---@class MapPinEnhanced
+local MapPinEnhanced = select(2, ...)
+local Pins = MapPinEnhanced:GetModule("Pins")
+local Wayfinders = MapPinEnhanced:GetModule("Wayfinders")
+local L = MapPinEnhanced.L
+
+---@return string? title
+---@return string? description
+---@return pinData? pinData
+---@return MapPinEnhancedPinMixin? pin
+local function GetWaypointDetails()
+    if C_SuperTrack.GetHighestPrioritySuperTrackingType() ~= Enum.SuperTrackingType.UserWaypoint then return end
+    -- A temporary Step takes precedence over the original tracked pin. These
+    -- optional readers tolerate the late tracking-owner initialization.
+    if Wayfinders.IsStepSuperTracking and Wayfinders:IsStepSuperTracking() then
+        local step = Wayfinders.GetStepSnapshot and Wayfinders:GetStepSnapshot()
+        if step then
+            local description = step.destinationTitle
+            if step.status and step.status ~= "" then
+                description = description and description .. "\n" .. step.status or step.status
+            end
+            return step.instruction, description
+        end
+        return
+    end
+
+    local pin = Pins:GetTrackedPin()
+    local data = pin and pin.pinData
+    local waypoint = C_Map.GetUserWaypoint()
+    if not data or not waypoint or waypoint.uiMapID ~= data.mapID or
+        math.abs(waypoint.position.x - data.x) > 0.0001 or
+        math.abs(waypoint.position.y - data.y) > 0.0001 then
+        return
+    end
+    return data.title or L["Map Pin"], data.description, data, pin
+end
+
+TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.MinimapMouseover, function(tooltip)
+    if tooltip ~= GameTooltip then return end
+    local title, description, data, pin = GetWaypointDetails()
+    if not title then return end
+    title = MapPinEnhanced:EscapeMarkup(title)
+
+    -- Minimap mouseover can include several nearby markers. Replace only the
+    -- generic waypoint entry, preserving all native names and tooltip ownership.
+    local replaced = false
+    for index = 1, tooltip:NumLines() do
+        local line = _G["GameTooltipTextLeft" .. index] ---@type FontString?
+        local text = line and line:GetText()
+        if line and not issecretvalue(text) and type(text) == "string" then
+            local changed = false
+            local replacement = text:gsub("[^\n]+", function(entry)
+                if entry ~= MAP_PIN then return entry end
+                changed = true
+                return title
+            end)
+            if changed then
+                line:SetText(replacement)
+                replaced = true
+            end
+        end
+    end
+    if not replaced then return end
+
+    MapPinEnhanced:AddDescriptionToTooltip(description)
+    if data and pin then
+        local mapInfo = C_Map.GetMapInfo(data.mapID)
+        tooltip:AddLine(string.format("%s (%.2f, %.2f)", mapInfo and mapInfo.name or tostring(data.mapID),
+            data.x * 100, data.y * 100), 1, 1, 1, true)
+        local group = pin.group
+        local count = group and group:GetPinCount() or 1
+        local progress = group and group:IsRestorable() and
+            string.format("%d/%d", group:GetClearedPinCount(), group:GetTotalPinCount()) or tostring(count)
+        tooltip:AddLine(string.format("%s: %s", group and group:GetName() or L["Ungrouped Pins"], progress),
+            0.65, 0.65, 0.65, true)
+    end
+end)

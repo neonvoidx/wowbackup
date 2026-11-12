@@ -1,0 +1,9 @@
+
+BetterBags_Bound_SavedVars = {
+["enableWoe"] = true,
+["wipeOnLoad"] = true,
+["enableBop"] = false,
+["onlyEquippable"] = true,
+["enableBoe"] = true,
+["enableBoa"] = true,
+}

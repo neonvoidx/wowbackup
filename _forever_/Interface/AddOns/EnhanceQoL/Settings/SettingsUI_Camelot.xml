@@ -1,0 +1,36 @@
+<Ui>
+	<Script file='SettingsUI.lua'/>
+	<Script file='DynamicAnchoring.lua'/>
+	<Script file='MainCategory.lua'/>
+	<Script file='TravelUtility.lua'/>
+	<Script file='ContainerAction.lua'/>
+	<Script file='QuestZoneFilter.lua'/>
+	<Script file='Quest_Camelot.lua'/>
+	<Script file='CombatDungeon_Camelot.lua'/>
+	<Script file='GearUpgrade_Camelot.lua'/>
+	<Script file='ItemInventory_Camelot.lua'/>
+	<Script file='DefaultAuraContainers.lua'/>
+	<Script file='Loot_Camelot.lua'/>
+	<Script file='VendorEconomy_Camelot.lua'/>
+	<Script file='System.lua'/>
+	<Script file='CVarOptions.lua'/>
+	<Script file='AutoRankUp.lua'/>
+	<Script file='NameplateLevel_Camelot.lua'/>
+	<Script file='ProfessionText_Camelot.lua'/>
+	<Script file='UIOptions.lua'/>
+	<Script file='NameplateAuraColorsRuntime.lua'/>
+	<Script file='NameplateAuraColors.lua'/>
+	<Script file='DurationText.lua'/>
+	<Script file='TrackingBarVisibility.lua'/>
+	<Script file='UIInput.lua'/>
+	<Script file='Camera.lua'/>
+	<Script file='UIErrors.lua'/>
+	<Script file='ActionTracker.lua'/>
+	<Script file='RangeDisplay_Camelot.lua'/>
+	<Script file='MapNavigation_Camelot.lua'/>
+	<Script file='DataPanel_Camelot.lua'/>
+	<Script file='Profiles.lua'/>
+	<Script file='UnitFrames.lua'/>
+	<Script file='GroupTools.lua'/>
+	<Script file='ClassicResources.lua'/>
+</Ui>

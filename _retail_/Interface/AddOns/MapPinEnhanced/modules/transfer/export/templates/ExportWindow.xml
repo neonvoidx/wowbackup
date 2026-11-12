@@ -1,0 +1,68 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ https://raw.githubusercontent.com/Gethe/wow-ui-source/live/Interface/AddOns/Blizzard_SharedXML/UI.xsd">
+
+    <Include file="ExportWindow.lua" />
+    <Frame name="MapPinEnhancedExportWindowTemplate" inherits="MapPinEnhancedWindowTemplate" virtual="true" mixin="MapPinEnhancedExportWindowMixin">
+        <Size x="650" y="450" />
+        <KeyValues>
+            <KeyValue key="windowTitle" value="Export" />
+        </KeyValues>
+        <Layers>
+            <Layer level="ARTWORK">
+                <FontString parentKey="description" inherits="MapPinEnhancedFontHighlight" justifyH="LEFT">
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="25" y="-64" />
+                        <Anchor point="TOPRIGHT" x="-25" y="-64" />
+                    </Anchors>
+                </FontString>
+                <FontString parentKey="exportTypeLabel" inherits="MapPinEnhancedFontHighlight" justifyH="LEFT">
+                    <Size x="180" y="16" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT" relativeKey="$parent.description" relativePoint="BOTTOMLEFT" y="-18" />
+                    </Anchors>
+                </FontString>
+                <FontString parentKey="prefixLabel" inherits="MapPinEnhancedFontHighlight" justifyH="LEFT">
+                    <Size x="180" y="16" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT" relativeKey="$parent.exportTypeLabel" relativePoint="TOPRIGHT" x="16" />
+                    </Anchors>
+                </FontString>
+                <FontString parentKey="warning" inherits="MapPinEnhancedFontNormal" justifyH="LEFT" justifyV="TOP" hidden="true">
+                    <Size x="1" y="32" />
+                    <Color r="1" g="0.45" b="0.1" />
+                    <Anchors>
+                        <Anchor point="BOTTOMLEFT" x="25" y="10" />
+                        <Anchor point="BOTTOMRIGHT" x="-25" y="10" />
+                    </Anchors>
+                </FontString>
+                <FontString parentKey="summary" inherits="MapPinEnhancedFontHighlightSmall" justifyH="LEFT">
+                    <Size x="1" y="16" />
+                    <Anchors>
+                        <Anchor relativePoint="TOPLEFT" point="BOTTOMLEFT" y="10" relativeKey="$parent.warning"/>
+                        <Anchor relativePoint="TOPRIGHT" point="BOTTOMRIGHT" y="10" relativeKey="$parent.warning" />
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Frames>
+            <DropdownButton inherits="MapPinEnhancedDropdownTemplate" parentKey="exportTypeDropdown">
+                <Size x="180" y="25" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeKey="$parent.exportTypeLabel" relativePoint="BOTTOMLEFT" y="-6" />
+                </Anchors>
+            </DropdownButton>
+            <DropdownButton inherits="MapPinEnhancedDropdownTemplate" parentKey="prefixDropdown">
+                <Size x="180" y="25" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeKey="$parent.prefixLabel" relativePoint="BOTTOMLEFT" y="-6" />
+                </Anchors>
+            </DropdownButton>
+            <ScrollFrame inherits="MapPinEnhancedTextareaTemplate" parentKey="textarea">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" x="10" y="-24" relativeKey="$parent.exportTypeDropdown" />
+                    <Anchor point="BOTTOMRIGHT" relativePoint="TOPRIGHT" x="-10" y="20" relativeKey="$parent.summary" />
+                </Anchors>
+            </ScrollFrame>
+        </Frames>
+    </Frame>
+</Ui>

@@ -1,0 +1,40 @@
+
+EldenWoWDB = {
+["kill"] = {
+["enabled"] = true,
+["fontSize"] = 64,
+["hideWorld"] = false,
+["color"] = {
+0.83,
+0.69,
+0.36,
+},
+["text"] = "CHUD VANQUISHED",
+["backdrop"] = 0.6500000357627869,
+["hideArena"] = false,
+["channel"] = "Master",
+["soundPath"] = "",
+["hideBG"] = false,
+["sound"] = true,
+["duration"] = 4.5,
+},
+["version"] = 1,
+["death"] = {
+["enabled"] = true,
+["fontSize"] = 72,
+["hideWorld"] = false,
+["color"] = {
+0.65,
+0.08,
+0.06,
+},
+["text"] = "YOU DIED",
+["backdrop"] = 0.6500000357627869,
+["hideArena"] = false,
+["channel"] = "Master",
+["soundPath"] = "",
+["hideBG"] = false,
+["sound"] = true,
+["duration"] = 5,
+},
+}

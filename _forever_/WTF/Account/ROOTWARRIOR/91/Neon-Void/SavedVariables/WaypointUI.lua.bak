@@ -1,0 +1,16 @@
+
+WaypointDB_Local = {
+["mapPinSessionData"] = {
+["userNavigation"] = {
+["mapID"] = 1420,
+["superTracked"] = true,
+["y"] = 0.006302011013031006,
+["x"] = 0.003285013139247894,
+["name"] = "Journey to RestedXP",
+["fromWUI"] = true,
+},
+["pinSequence"] = 0,
+},
+}
+WaypointDB_Local_Persistent = {
+}

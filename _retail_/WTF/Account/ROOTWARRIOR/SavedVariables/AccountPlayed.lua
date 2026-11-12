@@ -1,0 +1,87 @@
+
+AccountPlayedDB = {
+["Tichondrius-Manyfaced"] = {
+["time"] = 1544407,
+["class"] = "ROGUE",
+},
+["Tichondrius-Choppiez"] = {
+["time"] = 413106,
+["class"] = "WARRIOR",
+},
+["Mal'Ganis-Reedingo"] = {
+["time"] = 712572,
+["class"] = "SHAMAN",
+},
+["Tichondrius-Neonvoid"] = {
+["time"] = 1023088,
+["class"] = "PRIEST",
+},
+["Mal'Ganis-Tampacks"] = {
+["time"] = 29500,
+["class"] = "DEATHKNIGHT",
+},
+["Tichondrius-Strathmoan"] = {
+["time"] = 258331,
+["class"] = "DEATHKNIGHT",
+},
+["Tichondrius-Gehyo"] = {
+["time"] = 80073,
+["class"] = "HUNTER",
+},
+["Tichondrius-Starphage"] = {
+["time"] = 4626110,
+["class"] = "DEMONHUNTER",
+},
+["Tichondrius-Smaugchamp"] = {
+["time"] = 180135,
+["class"] = "EVOKER",
+},
+["Tichondrius-Hellavator"] = {
+["time"] = 4022435,
+["class"] = "WARLOCK",
+},
+["Tichondrius-Mäñýfäçëð"] = {
+["time"] = 1357318,
+["class"] = "ROGUE",
+},
+["Tichondrius-Bigxthazug"] = {
+["time"] = 431781,
+["class"] = "WARRIOR",
+},
+["Tichondrius-Stormclout"] = {
+["time"] = 5665039,
+["class"] = "MONK",
+},
+["Tichondrius-Starstypeshi"] = {
+["time"] = 114146,
+["class"] = "DRUID",
+},
+["Tichondrius-Praisesun"] = {
+["time"] = 137976,
+["class"] = "PALADIN",
+},
+["Tichondrius-Auteist"] = {
+["time"] = 1603445,
+["class"] = "MAGE",
+},
+["Tichondrius-Reedingo"] = {
+["time"] = 712728,
+["class"] = "SHAMAN",
+},
+}
+AccountPlayedMinimapDB = {
+["y"] = -22.25610696596216,
+["x"] = -107.2143709667531,
+["hidden"] = false,
+["locked"] = true,
+}
+AccountPlayedPopupDB = {
+["y"] = 117.5001983642578,
+["x"] = -447.50048828125,
+["point"] = "CENTER",
+["useYears"] = true,
+["height"] = 300,
+["textScale"] = 1,
+["valueMode"] = "both",
+["width"] = 520,
+}

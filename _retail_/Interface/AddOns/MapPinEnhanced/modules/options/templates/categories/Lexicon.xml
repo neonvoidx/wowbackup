@@ -1,0 +1,34 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ https://raw.githubusercontent.com/Gethe/wow-ui-source/live/Interface/AddOns/Blizzard_SharedXML/UI.xsd">
+
+    <Script file="Lexicon.lua" />
+    <Frame name="MapPinEnhancedOptionLexiconKeybindTemplate" virtual="true" inherits="MapPinEnhancedFormElementTemplate" mixin="MapPinEnhancedOptionLexiconKeybindMixin">
+        <KeyValues>
+            <KeyValue key="key" value="Lexicon.Keybind" />
+        </KeyValues>
+        <Frames>
+            <Button parentKey="child" inherits="MapPinEnhancedKeybindTemplate" />
+        </Frames>
+    </Frame>
+
+    <Frame name="MapPinEnhancedOptionCategoryLexiconTemplate" virtual="true" inherits="MapPinEnhancedOptionCategoryBaseTemplate">
+        <KeyValues>
+            <KeyValue key="categoryName" value="Location Lexicon" />
+            <KeyValue key="enableKey" value="Lexicon.Enable" />
+        </KeyValues>
+        <Frames>
+            <Frame inherits="MapPinEnhancedOptionToggleTemplate">
+                <KeyValues>
+                    <KeyValue key="key" value="Lexicon.Enable" />
+                    <KeyValue key="padding" value="12" type="number" />
+                </KeyValues>
+            </Frame>
+            <Frame inherits="MapPinEnhancedOptionMultiselectTemplate">
+                <KeyValues>
+                    <KeyValue key="key" value="Lexicon.DataTypes" />
+                </KeyValues>
+            </Frame>
+            <Frame inherits="MapPinEnhancedOptionLexiconKeybindTemplate" />
+        </Frames>
+    </Frame>
+</Ui>

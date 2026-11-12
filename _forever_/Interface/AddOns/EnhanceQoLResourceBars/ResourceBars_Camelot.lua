@@ -1,0 +1,9881 @@
+local parentAddonName = "EnhanceQoL"
+local addon = select(2, ...)
+
+if _G[parentAddonName] then
+	addon = _G[parentAddonName]
+else
+	error(parentAddonName .. " is not loaded")
+end
+
+addon.Aura = addon.Aura or {}
+local ResourceBars = {}
+addon.Aura.ResourceBars = ResourceBars
+-- A single internal class context is used by shared rendering helpers. This does
+-- not represent a specialization and never changes the core player spec state.
+function ResourceBars.GetClassContext() return 1 end
+ResourceBars.ui = ResourceBars.ui or {}
+ResourceBars._runtimeCfgState = ResourceBars._runtimeCfgState or setmetatable({}, { __mode = "k" })
+ResourceBars.blizzardTracking = ResourceBars.blizzardTracking or {}
+ResourceBars._customVisibilityFrames = ResourceBars._customVisibilityFrames or {}
+
+-- forward declarations to satisfy luacheck for early function
+local LSM = LibStub("LibSharedMedia-3.0")
+
+local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL")
+
+local UnitPower, UnitPowerMax, UnitHealth, UnitHealthMax, UnitGetTotalAbsorbs, UnitStagger, GetTime = UnitPower, UnitPowerMax, UnitHealth, UnitHealthMax, UnitGetTotalAbsorbs, UnitStagger, GetTime
+-- Combo points belong to the current target on Camelot.
+UnitPower = function(unit, powerType, unmodified)
+	if powerType == Enum.PowerType.ComboPoints then return GetComboPoints(unit, "target") end
+	return _G.UnitPower(unit, powerType, unmodified)
+end
+local CreateFrame = CreateFrame
+local After = C_Timer and C_Timer.After
+local CopyTable = CopyTable
+local tostring = tostring
+local floor, max, min, ceil, abs = math.floor, math.max, math.min, math.ceil, math.abs
+local tinsert, tsort = table.insert, table.sort
+local applyVisibilityDriverToFrame
+local registerEditModeCallbacks
+
+ResourceBars.blizzardTracking.frames = ResourceBars.blizzardTracking.frames or {
+	"MainStatusTrackingBarContainer",
+	"SecondaryStatusTrackingBarContainer",
+	"StatusTrackingBarManager",
+}
+
+function ResourceBars.blizzardTracking.GetHiddenParent()
+	if ResourceBars.blizzardTracking.hiddenParent then return ResourceBars.blizzardTracking.hiddenParent end
+	ResourceBars.blizzardTracking.hiddenParent = CreateFrame("Frame", "EQOLResourceBarsHiddenTrackingParent")
+	ResourceBars.blizzardTracking.hiddenParent:Hide()
+	return ResourceBars.blizzardTracking.hiddenParent
+end
+
+function ResourceBars.blizzardTracking.HasKillOwner(frame)
+	local owners = frame and frame._eqolTrackingKillOwners
+	if type(owners) ~= "table" then return false end
+	for _, enabled in pairs(owners) do
+		if enabled then return true end
+	end
+	return false
+end
+
+function ResourceBars.blizzardTracking.EnforceHidden(frame)
+	if not frame or not ResourceBars.blizzardTracking.HasKillOwner(frame) then return end
+	-- Protected Edit Mode containers must only be hidden outside combat.
+	if InCombatLockdown and InCombatLockdown() then
+		local tracking = ResourceBars.blizzardTracking
+		tracking.pending = tracking.pending or {}
+		tracking.pending[frame] = true
+		if not tracking.combatWatcher then
+			tracking.combatWatcher = CreateFrame("Frame")
+			tracking.combatWatcher:SetScript("OnEvent", function(watcher)
+				watcher:UnregisterEvent("PLAYER_REGEN_ENABLED")
+				local pending = tracking.pending
+				tracking.pending = nil
+				for target in pairs(pending or {}) do tracking.EnforceHidden(target) end
+			end)
+		end
+		tracking.combatWatcher:RegisterEvent("PLAYER_REGEN_ENABLED")
+		return
+	end
+	if frame.UnregisterAllEvents then pcall(frame.UnregisterAllEvents, frame) end
+	if frame.SetAlpha then pcall(frame.SetAlpha, frame, 0) end
+	if frame.Hide then pcall(frame.Hide, frame) end
+	-- Containers call GetParent():CheckForLayoutChange(); preserve that manager.
+	-- Hiding the manager hides the entire tree without changing ownership.
+end
+
+function ResourceBars.blizzardTracking.MarkReloadRequired()
+	if addon.variables then addon.variables.requireReload = true end
+	if addon.functions and addon.functions.checkReloadFrame then addon.functions.checkReloadFrame() end
+end
+
+function ResourceBars.SetBlizzardTrackingKilled(ownerKey, enabled)
+	ownerKey = tostring(ownerKey or "")
+	if ownerKey == "" then return end
+
+	for _, frameName in ipairs(ResourceBars.blizzardTracking.frames) do
+		local frame = _G and _G[frameName]
+		if frame then
+			frame._eqolTrackingKillOwners = frame._eqolTrackingKillOwners or {}
+			if enabled then
+				frame._eqolTrackingKillOwners[ownerKey] = true
+				frame._eqolTrackingKilled = true
+				if not frame._eqolTrackingKillHooks then
+					frame._eqolTrackingKillHooks = true
+					if frame.Show then hooksecurefunc(frame, "Show", ResourceBars.blizzardTracking.EnforceHidden) end
+					if frame.SetShown then
+						hooksecurefunc(frame, "SetShown", function(target, shown)
+							if shown then ResourceBars.blizzardTracking.EnforceHidden(target) end
+						end)
+					end
+					if frame.SetParent then hooksecurefunc(frame, "SetParent", ResourceBars.blizzardTracking.EnforceHidden) end
+				end
+				ResourceBars.blizzardTracking.EnforceHidden(frame)
+			elseif frame._eqolTrackingKillOwners[ownerKey] then
+				frame._eqolTrackingKillOwners[ownerKey] = nil
+				if frame._eqolTrackingKilled then ResourceBars.blizzardTracking.MarkReloadRequired() end
+			end
+		end
+	end
+end
+
+local frameAnchor
+local mainFrame
+local healthBar
+local powerbar = {}
+local powerfrequent = {}
+local getBarSettings
+local getAnchor
+local layoutRunes
+local createHealthBar
+local updateHealthBar
+local updatePowerBar
+local updateBarSeparators
+local updateBarThresholds
+local forceColorUpdate
+local applyAbsorbLayout
+local setParentBarTextureVisible
+local getSeparatorSegmentCount
+local shouldUseDiscreteSeparatorSegments
+local refreshDiscreteSegmentsForBar
+local ensureEditModeRegistration
+local ensureRelativeFrameFallback
+local visibilityDriverWatcher
+local ResourcebarVars = {
+	STRATA_ORDER = {
+		"BACKGROUND",
+		"LOW",
+		"MEDIUM",
+		"HIGH",
+		"DIALOG",
+		"FULLSCREEN",
+		"FULLSCREEN_DIALOG",
+		"TOOLTIP",
+	},
+	DEFAULT_FRAME_STRATA = "MEDIUM",
+	MAX_FRAME_LEVEL_OFFSET = 50,
+	RESOURCE_SHARE_KIND = "EQOL_RESOURCE_BAR_PROFILE",
+	COOLDOWN_VIEWER_FRAME_NAME = "EssentialCooldownViewer",
+	MIN_RESOURCE_BAR_WIDTH = 10,
+	DEFAULT_STACK_SPACING = 0,
+	SEPARATOR_THICKNESS = 1,
+	SEP_DEFAULT = { 1, 1, 1, 0.5 },
+	THRESHOLD_THICKNESS = 1,
+	THRESHOLD_DEFAULT = { 1, 1, 1, 0.5 },
+	DEFAULT_THRESHOLDS = { 25, 50, 75, 90 },
+	DEFAULT_THRESHOLD_COUNT = 3,
+	ABSOLUTE_THRESHOLD_COLOR_MAX_POINTS = 10,
+	ABSOLUTE_THRESHOLD_COLOR_DEFAULT_COUNT = 2,
+	ABSOLUTE_THRESHOLD_COLOR_VALUE_CAP = 10,
+	ABSOLUTE_THRESHOLD_COLOR_VALUE_CAP_DURATION = 20,
+	ABSOLUTE_THRESHOLD_COLOR_VALUE_CAP_VOID_METAMORPHOSIS = 50,
+	ABSOLUTE_THRESHOLD_COLOR_VALUE_CAP_CONTINUOUS = 200,
+	ABSOLUTE_THRESHOLD_COLOR_VALUE_CAP_PERCENT = 100,
+	ABSOLUTE_THRESHOLD_COLOR_DEFAULTS = {
+		{ value = 2, color = { 1.00, 0.78, 0.25, 1.0 } },
+		{ value = 4, color = { 0.95, 0.55, 0.20, 1.0 } },
+		{ value = 6, color = { 0.95, 0.90, 0.20, 1.0 } },
+		{ value = 8, color = { 0.45, 0.90, 0.25, 1.0 } },
+		{ value = 10, color = { 0.20, 0.90, 0.40, 1.0 } },
+	},
+	ABSOLUTE_THRESHOLD_COLOR_DEFAULTS_VOID_METAMORPHOSIS = {
+		{ value = 10, color = { 1.00, 0.78, 0.25, 1.0 } },
+		{ value = 20, color = { 0.95, 0.55, 0.20, 1.0 } },
+		{ value = 30, color = { 0.95, 0.90, 0.20, 1.0 } },
+		{ value = 40, color = { 0.45, 0.90, 0.25, 1.0 } },
+		{ value = 50, color = { 0.20, 0.90, 0.40, 1.0 } },
+	},
+	ABSOLUTE_THRESHOLD_COLOR_DEFAULTS_CONTINUOUS = {
+		{ value = 50, color = { 1.00, 0.78, 0.25, 1.0 } },
+		{ value = 100, color = { 0.95, 0.55, 0.20, 1.0 } },
+		{ value = 150, color = { 0.95, 0.90, 0.20, 1.0 } },
+		{ value = 200, color = { 0.20, 0.90, 0.40, 1.0 } },
+	},
+	ABSOLUTE_THRESHOLD_COLOR_DEFAULTS_PERCENT = {
+		{ value = 25, color = { 1.00, 0.78, 0.25, 1.0 } },
+		{ value = 50, color = { 0.95, 0.55, 0.20, 1.0 } },
+		{ value = 75, color = { 0.95, 0.90, 0.20, 1.0 } },
+		{ value = 100, color = { 0.20, 0.90, 0.40, 1.0 } },
+	},
+	ABSOLUTE_THRESHOLD_COLOR_DEFAULTS_DURATION = {
+		{ value = 5, color = { 1.00, 0.25, 0.20, 1.0 } },
+		{ value = 10, color = { 0.95, 0.55, 0.20, 1.0 } },
+		{ value = 15, color = { 0.95, 0.90, 0.20, 1.0 } },
+		{ value = 20, color = { 0.20, 0.90, 0.40, 1.0 } },
+	},
+	WHITE = { 1, 1, 1, 1 },
+	VALID_TEXT_ANCHORS = {
+		TOPLEFT = true,
+		TOP = true,
+		TOPRIGHT = true,
+		LEFT = true,
+		CENTER = true,
+		RIGHT = true,
+		BOTTOMLEFT = true,
+		BOTTOM = true,
+		BOTTOMRIGHT = true,
+	},
+	DEFAULT_MAX_COLOR = { 0, 1, 0, 1 },
+	DEFAULT_RB_TEX = "Interface\\Buttons\\WHITE8x8", -- historical default (Solid)
+	DEFAULT_HEALTH_WIDTH = 200,
+	DEFAULT_HEALTH_HEIGHT = 20,
+	DEFAULT_POWER_WIDTH = 200,
+	DEFAULT_POWER_HEIGHT = 20,
+	BLIZZARD_TEX = "Interface\\TargetingFrame\\UI-StatusBar",
+	REFRESH_DEBOUNCE = 0.05,
+	AURA_DURATION_COLOR_UPDATE_INTERVAL = 1,
+	REANCHOR_REFRESH = { reanchorOnly = true },
+	OOC_VISIBILITY_DRIVER = "[combat] show; hide",
+	MAELSTROM_WEAPON_MAX_STACKS = 10,
+	MAELSTROM_WEAPON_SEGMENTS = 5,
+	MAELSTROM_WEAPON_MID_STACK_DEFAULT = 5,
+	MAELSTROM_WEAPON_SPELL_ID = 344179,
+	ICICLES_SPELL_ID = 205473,
+	VENGEANCE_SOUL_FRAGMENTS_SPELL_ID = 203981,
+	VENGEANCE_SOUL_CLEAVE_SPELL_ID = 228477,
+	VENGEANCE_SOUL_CLEAVE_BASE_SPELL_ID = 344862,
+	VENGEANCE_SOUL_FRAGMENTS_MAX = 6,
+	VOID_METAMORPHOSIS_SPELL_ID = 1225789,
+	VOID_META_TALENT_SOUL_GLUTTON_SPELL_ID = 1247534,
+	COLLAPSING_STAR_SPELL_ID = 1227702,
+	EBON_MIGHT_SPELL_ID = 395296,
+	TIP_OF_THE_SPEAR_SPELL_ID = 260286,
+	DEFAULT_MAELSTROM_WEAPON_FIVE_COLOR = { 0.10, 0.85, 0.55, 1 },
+	ROGUE_CHARGED_COMBO_DEFAULTS = {
+		enabled = true,
+		affectFill = true,
+		affectBackground = true,
+		fillUseCustomColor = false,
+		fillColor = { 1.0, 0.95, 0.45, 1.0 },
+		fillLighten = 0.35,
+		fillAlphaBoost = 0.10,
+		backgroundUseCustomColor = false,
+		backgroundColor = { 0.75, 0.60, 0.25, 0.75 },
+		backgroundLighten = 0.30,
+		backgroundAlphaBoost = 0.10,
+	},
+	CUSTOM_POWER_COLORS = {
+		MAELSTROM_WEAPON = { 0.15, 0.45, 1.00 },
+		ICICLES = { 0.45, 0.80, 1.00 },
+	},
+	POWER_LABELS = {},
+	AURA_POWER_CONFIG = {},
+}
+
+function ResourceBars.GetRuntimeCfgState(cfg, create)
+	if type(cfg) ~= "table" then return nil end
+	local runtimeCfgState = ResourceBars._runtimeCfgState
+	local state = runtimeCfgState[cfg]
+	if not state and create then
+		state = {}
+		runtimeCfgState[cfg] = state
+	end
+	return state
+end
+
+function ResourceBars.GetRuntimeCfgField(cfg, key)
+	local state = ResourceBars.GetRuntimeCfgState(cfg, false)
+	return state and state[key] or nil
+end
+
+function ResourceBars.SetRuntimeCfgField(cfg, key, value)
+	local state = ResourceBars.GetRuntimeCfgState(cfg, value ~= nil)
+	if not state then return end
+	state[key] = value
+end
+
+function ResourceBars.GetRuntimeCfgSubtable(cfg, key)
+	local state = ResourceBars.GetRuntimeCfgState(cfg, true)
+	local bucket = state[key]
+	if not bucket then
+		bucket = {}
+		state[key] = bucket
+	end
+	return bucket
+end
+local RB = ResourcebarVars
+RB.RUNE_COOLDOWN_FORMATTER = _G.C_StringUtil.CreateNumericRuleFormatter()
+RB.RUNE_COOLDOWN_FORMATTER:SetBreakpoints({
+	{
+		threshold = 0,
+		step = 1,
+		rounding = Enum.NumericRuleFormatRounding.Up,
+		format = "%.0f",
+	},
+})
+RB.RUNE_DURATION_TEXT_OPTIONS = {
+	useProfileConfig = false,
+	formatter = RB.RUNE_COOLDOWN_FORMATTER,
+	zeroDurationText = "",
+	expiredText = "",
+}
+ResourceBars._validFrameStrata = ResourceBars._validFrameStrata or {}
+for _, strata in ipairs(RB.STRATA_ORDER) do
+	ResourceBars._validFrameStrata[strata] = true
+end
+
+function ResourceBars.ApplyTexturePixelSnapping(texture, bias)
+	return addon.PixelUtil and addon.PixelUtil.ApplyTexturePixelSnapping(texture, bias) or texture
+end
+
+function ResourceBars.RoundPixel(value)
+	return addon.PixelUtil and addon.PixelUtil.Round(value) or 0
+end
+
+function ResourceBars.GetPixelScale(region)
+	if addon.PixelUtil and addon.PixelUtil.GetPixelScale then return addon.PixelUtil.GetPixelScale(region) end
+	return 1, 1
+end
+
+function ResourceBars.UiToPixels(value, region, minPixels)
+	if addon.PixelUtil and addon.PixelUtil.UiToPixels then return addon.PixelUtil.UiToPixels(value, region, minPixels) end
+	return tonumber(value) or 0, 1, 1
+end
+
+function ResourceBars.PixelsToUi(pixels, scale, factor)
+	if addon.PixelUtil and addon.PixelUtil.PixelsToUi then return addon.PixelUtil.PixelsToUi(pixels, scale, factor) end
+	return tonumber(pixels) or 0
+end
+
+ResourceBars.Pixel = addon.PixelUtil or ResourceBars.Pixel or {}
+
+function ResourceBars.ApplyStatusBarTexturePixelSnapping(bar, bias)
+	return addon.PixelUtil and addon.PixelUtil.ApplyStatusBarTexturePixelSnapping(bar, bias) or nil
+end
+
+function ResourceBars.AlignHostToPixelGrid(frame)
+	if not (frame and frame.GetNumPoints and frame.GetLeft and frame.GetBottom) then return false end
+	local pixelUtil = addon.PixelUtil
+	if not (pixelUtil and pixelUtil.Snap) then return false end
+	local left, bottom = frame:GetLeft(), frame:GetBottom()
+	if left == nil or bottom == nil then return false end
+	if issecretvalue and (issecretvalue(left) or issecretvalue(bottom)) then return false end
+	local offsetX = pixelUtil.Snap(left, frame) - left
+	local offsetY = pixelUtil.Snap(bottom, frame) - bottom
+	local epsilon = ((pixelUtil.OnePixel and pixelUtil.OnePixel(frame)) or 1) * 0.001
+	if abs(offsetX) < epsilon then offsetX = 0 end
+	if abs(offsetY) < epsilon then offsetY = 0 end
+	if offsetX == 0 and offsetY == 0 then return false end
+
+	local points = {}
+	for index = 1, frame:GetNumPoints() do
+		local point, relativeTo, relativePoint, x, y = frame:GetPoint(index)
+		if issecretvalue and (issecretvalue(x) or issecretvalue(y)) then return false end
+		points[#points + 1] = { point, relativeTo, relativePoint, x or 0, y or 0 }
+	end
+	if #points == 0 then return false end
+
+	frame:ClearAllPoints()
+	for _, pointData in ipairs(points) do
+		frame:SetPoint(pointData[1], pointData[2], pointData[3], pointData[4] + offsetX, pointData[5] + offsetY)
+	end
+	return true
+end
+
+function ResourceBars.ApplySafeBorderTextureSnapping(frame, stateKey, bias)
+	if addon.PixelUtil and addon.PixelUtil.ApplySafeBorderTextureSnapping then addon.PixelUtil.ApplySafeBorderTextureSnapping(frame, stateKey, bias) end
+end
+
+function ResourceBars.ResolveBorderContentInset(edgeSize, outset, alpha)
+	return addon.PixelUtil and addon.PixelUtil.ResolveBorderContentInset(edgeSize, outset, alpha) or 0
+end
+
+function ResourceBars.ResolveColorAlpha(color)
+	return addon.PixelUtil and addon.PixelUtil.ResolveColorAlpha(color) or 0
+end
+
+function ResourceBars.ApplySegmentContentInset(segment, inset)
+	if not segment then return end
+	inset = tonumber(inset) or 0
+	if inset < 0 then inset = 0 end
+	local fill = segment.fill
+	local textureOwner = fill or segment
+	local tex = textureOwner.GetStatusBarTexture and textureOwner:GetStatusBarTexture() or nil
+	if
+		segment._rbSegmentContentInset == inset
+		and segment._rbSegmentContentFill == fill
+		and segment._rbSegmentContentTexture == tex
+	then
+		return
+	end
+
+	local function anchorRegion(region, target)
+		if not (region and region.ClearAllPoints and region.SetPoint) then return end
+		target = target or segment
+		if inset > 0 then
+			ResourceBars.Pixel.SetInside(region, target, inset, inset)
+		elseif region.SetAllPoints then
+			ResourceBars.ApplyTexturePixelSnapping(region, 0)
+			region:ClearAllPoints()
+			region:SetAllPoints(target)
+		else
+			ResourceBars.Pixel.SetInside(region, target, 0, 0)
+		end
+	end
+
+	if fill then anchorRegion(fill) end
+	if tex then
+		ResourceBars.ApplyTexturePixelSnapping(tex, 0)
+		if fill then
+			if tex.SetAllPoints then
+				ResourceBars.ApplyTexturePixelSnapping(tex, 0)
+				tex:ClearAllPoints()
+				tex:SetAllPoints(fill)
+			else
+				ResourceBars.Pixel.SetInside(tex, fill, 0, 0)
+			end
+		else
+			anchorRegion(tex, segment)
+		end
+	end
+	segment._rbSegmentContentInset = inset
+	segment._rbSegmentContentFill = fill
+	segment._rbSegmentContentTexture = tex
+end
+
+function ResourceBars.ApplySegmentBackgroundInset(segment, cfg)
+	if not segment then return end
+	local bg = segment._rbSegmentBg
+	if not bg then return end
+	local bd = cfg and cfg.backdrop
+	local outset = tonumber(bd and bd.outset) or 0
+	local backgroundInset = max(0, tonumber(bd and bd.backgroundInset) or 0)
+	local offset = outset - backgroundInset
+	if segment._rbSegmentBackgroundRegion == bg and segment._rbSegmentBackgroundOffset == offset then return end
+	ResourceBars.Pixel.SetOutside(bg, segment, offset, offset)
+	segment._rbSegmentBackgroundRegion = bg
+	segment._rbSegmentBackgroundOffset = offset
+end
+
+function ResourceBars.GetAnchorHelper()
+	return addon.Aura and addon.Aura.CooldownPanels and addon.Aura.CooldownPanels.AnchorHelper
+end
+
+RB.UNITFRAME_ANCHOR_MAP = {
+	PlayerFrame = { uf = "EQOLUFPlayerFrame", blizz = "PlayerFrame", ufKey = "player" },
+	EQOLUFPlayerFrame = { uf = "EQOLUFPlayerFrame", blizz = "PlayerFrame", ufKey = "player" },
+	TargetFrame = { uf = "EQOLUFTargetFrame", blizz = "TargetFrame", ufKey = "target" },
+	EQOLUFTargetFrame = { uf = "EQOLUFTargetFrame", blizz = "TargetFrame", ufKey = "target" },
+	TargetFrameToT = { uf = "EQOLUFToTFrame", blizz = "TargetFrameToT", ufKey = "targettarget" },
+	EQOLUFToTFrame = { uf = "EQOLUFToTFrame", blizz = "TargetFrameToT", ufKey = "targettarget" },
+	FocusFrame = { uf = "EQOLUFFocusFrame", blizz = "FocusFrame", ufKey = "focus" },
+	EQOLUFFocusFrame = { uf = "EQOLUFFocusFrame", blizz = "FocusFrame", ufKey = "focus" },
+	PetFrame = { uf = "EQOLUFPetFrame", blizz = "PetFrame", ufKey = "pet" },
+	EQOLUFPetFrame = { uf = "EQOLUFPetFrame", blizz = "PetFrame", ufKey = "pet" },
+	BossTargetFrameContainer = { uf = "EQOLUFBossContainer", blizz = "BossTargetFrameContainer", ufKey = "boss" },
+	EQOLUFBossContainer = { uf = "EQOLUFBossContainer", blizz = "BossTargetFrameContainer", ufKey = "boss" },
+	EQOL_ANCHOR_PLAYER = { uf = "EQOLUFPlayerFrame", blizz = "PlayerFrame", ufKey = "player" },
+	EQOL_ANCHOR_TARGET = { uf = "EQOLUFTargetFrame", blizz = "TargetFrame", ufKey = "target" },
+	EQOL_ANCHOR_TARGETTARGET = { uf = "EQOLUFToTFrame", blizz = "TargetFrameToT", ufKey = "targettarget" },
+	EQOL_ANCHOR_FOCUS = { uf = "EQOLUFFocusFrame", blizz = "FocusFrame", ufKey = "focus" },
+	EQOL_ANCHOR_PET = { uf = "EQOLUFPetFrame", blizz = "PetFrame", ufKey = "pet" },
+	EQOL_ANCHOR_PARTY = { uf = "EQOLUFPartyAnchor", blizz = "CompactPartyFrame", ufKey = "party" },
+	CompactPartyFrame = { uf = "EQOLUFPartyAnchor", blizz = "CompactPartyFrame", ufKey = "party" },
+	EQOLUFPartyAnchor = { uf = "EQOLUFPartyAnchor", blizz = "CompactPartyFrame", ufKey = "party" },
+	EQOL_ANCHOR_RAID = { uf = "EQOLUFRaidAnchor", blizz = "CompactRaidFrameContainer", ufKey = "raid" },
+	CompactRaidFrameContainer = { uf = "EQOLUFRaidAnchor", blizz = "CompactRaidFrameContainer", ufKey = "raid" },
+	EQOLUFRaidAnchor = { uf = "EQOLUFRaidAnchor", blizz = "CompactRaidFrameContainer", ufKey = "raid" },
+	EQOL_ANCHOR_BOSS = { uf = "EQOLUFBossContainer", blizz = "BossTargetFrameContainer", ufKey = "boss" },
+}
+
+function ResourceBars.IsMappedUFEnabled(ufKey)
+	if addon.functions and addon.functions.IsEQoLUnitOrGroupFrameEnabled then return addon.functions.IsEQoLUnitOrGroupFrameEnabled(ufKey) end
+	local ufCfg = addon.db and addon.db.ufFrames
+	local cfg = ufCfg and ufCfg[ufKey]
+	if cfg and cfg.enabled == true then return true end
+	local groupCfg = addon.db and addon.db.ufGroupFrames
+	local group = groupCfg and groupCfg[ufKey]
+	return group and group.enabled == true
+end
+
+function ResourceBars.IsCooldownPanelAnchorUnavailable(relativeName)
+	local panelId = type(relativeName) == "string" and relativeName:match("^EQOL_CooldownPanel(%d+)$")
+	if not panelId then return false end
+	local panels = addon.Aura and addon.Aura.CooldownPanels
+	local root = addon.db and addon.db.cooldownPanels
+	local panel = root and root.panels and root.panels[tonumber(panelId)]
+	if not panels or not panels.IsPanelRuntimeEnabled then return true end
+	return not panels.IsPanelRuntimeEnabled(tonumber(panelId), panel)
+end
+
+function ResourceBars.ResolveRelativeFrameByName(relativeName, allowMissing)
+	if type(relativeName) ~= "string" or relativeName == "" or relativeName == "UIParent" then return UIParent end
+	if ResourceBars.IsCooldownPanelAnchorUnavailable(relativeName) then
+		if allowMissing then return nil end
+		return UIParent
+	end
+	local anchorHelper = ResourceBars.GetAnchorHelper and ResourceBars.GetAnchorHelper()
+	if anchorHelper and anchorHelper.ResolveExternalFrame then
+		local externalFrame = anchorHelper:ResolveExternalFrame(relativeName)
+		if externalFrame then return externalFrame end
+	end
+	local sharedSlot = ResourceBars.GetSharedSlotFromFrameName and ResourceBars.GetSharedSlotFromFrameName(relativeName)
+	if sharedSlot then
+		local proxy = _G[relativeName]
+		local resolvedType = ResourceBars.GetResolvedBarTypeForSharedSlot and ResourceBars.GetResolvedBarTypeForSharedSlot(sharedSlot)
+		if resolvedType == "HEALTH" then return _G.EQOLHealthBar or proxy or (not allowMissing and UIParent or nil) end
+		if type(resolvedType) == "string" and resolvedType ~= "" then return _G["EQOL" .. resolvedType .. "Bar"] or proxy or (not allowMissing and UIParent or nil) end
+		return proxy or (not allowMissing and UIParent or nil)
+	end
+	local mapped = RB.UNITFRAME_ANCHOR_MAP[relativeName]
+	if mapped then
+		if mapped.ufKey and ResourceBars.IsMappedUFEnabled(mapped.ufKey) then
+			local ufFrame = _G[mapped.uf]
+			if ufFrame then return ufFrame end
+		end
+		local blizzFrame = _G[mapped.blizz]
+		if blizzFrame then return blizzFrame end
+	end
+	return _G[relativeName] or (not allowMissing and UIParent or nil)
+end
+
+function ResourceBars.IsRelativeFrameMissing(relativeName)
+	if type(relativeName) ~= "string" or relativeName == "" or relativeName == "UIParent" then return false end
+	return ResourceBars.ResolveRelativeFrameByName(relativeName, true) == nil
+end
+
+function ResourceBars.TryPrepareExternalAnchorFrame(relativeName)
+	if ResourceBars.IsCooldownPanelAnchorUnavailable(relativeName) then return nil end
+	local panelId = type(relativeName) == "string" and relativeName:match("^EQOL_CooldownPanel(%d+)$")
+	if panelId then
+		local panels = addon.Aura and addon.Aura.CooldownPanels
+		panelId = tonumber(panelId)
+		if panels and panelId then
+			if panels.EnsurePanelFrame then panels:EnsurePanelFrame(panelId) end
+			if panels.ApplyPanelPosition then panels:ApplyPanelPosition(panelId) end
+			if panels.UpdateVisibility then panels:UpdateVisibility(panelId) end
+		end
+	end
+	return ResourceBars.ResolveRelativeFrameByName(relativeName, true)
+end
+
+function ResourceBars.ScheduleMissingAnchorRetry(relativeName)
+	if type(relativeName) ~= "string" or relativeName == "" or relativeName == "UIParent" then return end
+	if not ResourceBars.IsRelativeFrameMissing(relativeName) then return end
+	ResourceBars._missingAnchorRetries = ResourceBars._missingAnchorRetries or {}
+	if ResourceBars._missingAnchorRetries[relativeName] then return end
+
+	local state = { attempts = 0 }
+	ResourceBars._missingAnchorRetries[relativeName] = state
+	local function clear()
+		if state.ticker and state.ticker.Cancel then state.ticker:Cancel() end
+		ResourceBars._missingAnchorRetries[relativeName] = nil
+	end
+	local function retry()
+		if addon.db and addon.db.enableResourceFrame == false then clear(); return end
+		state.attempts = (state.attempts or 0) + 1
+		if InCombatLockdown and InCombatLockdown() then
+			ResourceBars._pendingReanchorAll = true
+			if state.attempts >= 50 then clear() end
+			return
+		end
+		local frame = ResourceBars.TryPrepareExternalAnchorFrame and ResourceBars.TryPrepareExternalAnchorFrame(relativeName)
+		if frame then
+			clear()
+			if ResourceBars.ReanchorAll then ResourceBars.ReanchorAll() end
+			if ResourceBars.SyncRelativeFrameWidths then ResourceBars.SyncRelativeFrameWidths() end
+			return
+		end
+		if state.attempts >= 50 then clear() end
+	end
+
+	if C_Timer and C_Timer.NewTicker then
+		state.ticker = C_Timer.NewTicker(0.2, retry)
+	elseif C_Timer and C_Timer.After then
+		C_Timer.After(0.2, retry)
+	end
+end
+
+function ResourceBars.RelativeFrameMatchesName(relativeName, frameName)
+	if not relativeName or not frameName then return false end
+	if relativeName == frameName then return true end
+	local sharedSlot = ResourceBars.GetSharedSlotFromFrameName and ResourceBars.GetSharedSlotFromFrameName(relativeName)
+	if sharedSlot then
+		local resolvedType = ResourceBars.GetResolvedBarTypeForSharedSlot and ResourceBars.GetResolvedBarTypeForSharedSlot(sharedSlot)
+		if resolvedType == "HEALTH" then return frameName == "EQOLHealthBar" end
+		if type(resolvedType) == "string" and resolvedType ~= "" then return frameName == ("EQOL" .. resolvedType .. "Bar") end
+		return frameName == relativeName
+	end
+	local mapped = RB.UNITFRAME_ANCHOR_MAP[relativeName]
+	if not mapped then return false end
+	return frameName == mapped.uf or frameName == mapped.blizz
+end
+
+function ResourceBars.GetRelativeFrameHookTargets(relativeName)
+	ResourceBars._relativeFrameHookTargetsCache = ResourceBars._relativeFrameHookTargetsCache or {}
+	if type(relativeName) ~= "string" or relativeName == "" then return ResourceBars._emptyRelativeFrameHookTargets or {} end
+	local cached = ResourceBars._relativeFrameHookTargetsCache[relativeName]
+	if cached then return cached end
+	local targets = {}
+	local seen = {}
+	local function add(name)
+		if type(name) ~= "string" or name == "" or seen[name] then return end
+		seen[name] = true
+		targets[#targets + 1] = name
+	end
+	local sharedSlot = ResourceBars.GetSharedSlotFromFrameName and ResourceBars.GetSharedSlotFromFrameName(relativeName)
+	if sharedSlot then
+		local resolvedType = ResourceBars.GetResolvedBarTypeForSharedSlot and ResourceBars.GetResolvedBarTypeForSharedSlot(sharedSlot)
+		if resolvedType == "HEALTH" then add("EQOLHealthBar") end
+		if type(resolvedType) == "string" and resolvedType ~= "" and resolvedType ~= "HEALTH" then add("EQOL" .. resolvedType .. "Bar") end
+		add(relativeName)
+		ResourceBars._relativeFrameHookTargetsCache[relativeName] = targets
+		return targets
+	end
+	local mapped = RB.UNITFRAME_ANCHOR_MAP[relativeName]
+	if mapped then
+		add(mapped.blizz)
+		add(mapped.uf)
+	end
+	local anchorHelper = ResourceBars.GetAnchorHelper and ResourceBars.GetAnchorHelper()
+	if anchorHelper and anchorHelper.ResolveExternalFrame then
+		local externalFrame = anchorHelper:ResolveExternalFrame(relativeName)
+		if externalFrame and externalFrame.GetName then add(externalFrame:GetName()) end
+	end
+	add(relativeName)
+	ResourceBars._relativeFrameHookTargetsCache[relativeName] = targets
+	return targets
+end
+
+local requestActiveRefresh
+local getStatusbarDropdownLists
+local ensureRelativeFrameHooks
+local scheduleRelativeFrameWidthSync
+local ensureSpecCfg
+local ensureDruidShowFormsDefaults
+local classPowerTypes
+local powertypeClasses
+local COSMETIC_BAR_KEYS = {
+	"barTexture",
+	"width",
+	"height",
+	"strata",
+	"frameLevelOffset",
+	"textStyle",
+	"textLeft",
+	"textRight",
+	"textLeftOffset",
+	"textRightOffset",
+	"shortNumbers",
+	"percentRounding",
+	"hidePercentSign",
+	"fontSize",
+	"fontFace",
+	"fontOutline",
+	"fontColor",
+	"textUsePowerColor",
+	"hideTextAtFullPower",
+	"hideTextAtZeroPower",
+	"hideTextAtFullHealth",
+	"hideTextAtZeroHealth",
+	"textOffset",
+	"useBarColor",
+	"barColor",
+	"useClassColor",
+	"useMaxColor",
+	"maxColor",
+	"useGradient",
+	"gradientStartColor",
+	"gradientEndColor",
+	"gradientDirection",
+	"staggerLowThreshold",
+	"staggerLowColor",
+	"staggerMediumThreshold",
+	"staggerMediumColor",
+	"staggerBaseHighColor",
+	"staggerHighColors",
+	"useStaggerMaxOverride",
+	"staggerMaxPercent",
+	"staggerHighThreshold",
+	"staggerVeryHighThreshold",
+	"staggerExtremeThreshold",
+	"staggerHighColor",
+	"staggerVeryHighColor",
+	"staggerExtremeColor",
+	"staggerCriticalThreshold",
+	"staggerCriticalColor",
+	"useMaelstromFiveColor",
+	"useMaelstromTenStacks",
+	"visualSegments",
+	"useMaelstromCarryFill",
+	"maelstromFiveColor",
+	"maelstromMidStack",
+	"useHolyThreeColor",
+	"holyThreeColor",
+	"useChargedComboStyling",
+	"chargedComboAffectFill",
+	"chargedComboUseCustomFillColor",
+	"chargedComboFillColor",
+	"chargedComboFillLighten",
+	"chargedComboFillAlphaBoost",
+	"chargedComboAffectBackground",
+	"chargedComboUseCustomBackgroundColor",
+	"chargedComboBackgroundColor",
+	"chargedComboBackgroundLighten",
+	"chargedComboBackgroundAlphaBoost",
+	"runeCooldownColor",
+	"absorbEnabled",
+	"absorbUseCustomColor",
+	"absorbColor",
+	"absorbTexture",
+	"absorbSample",
+	"absorbReverseFill",
+	"absorbDontOverflowHealthBar",
+	"absorbOverfill",
+	"useAbsorbGlow",
+	"healAbsorbEnabled",
+	"healAbsorbUseCustomColor",
+	"healAbsorbColor",
+	"healAbsorbTexture",
+	"healAbsorbSample",
+	"healAbsorbReverseFill",
+	"healAbsorbDontOverflowHealthBar",
+	"healAbsorbOverlayHeight",
+	"reverseFill",
+	"verticalFill",
+	"smoothFill",
+	"separatedOffset",
+	"showThresholds",
+	"useAbsoluteThresholds",
+	"thresholds",
+	"thresholdColor",
+	"thresholdThickness",
+	"thresholdCount",
+	"useAbsoluteThresholdColors",
+	"absoluteThresholdColorPointCount",
+	"absoluteThresholdColorPoints",
+	"useTextThresholdColors",
+	"textThresholdColorPointCount",
+	"textThresholdColorPoints",
+	"showCooldownText",
+	"cooldownTextFontSize",
+	"backdrop",
+}
+ResourceBars.POWER_TYPE_STYLE_OVERRIDE_KEYS = {
+	"showThresholds",
+	"useAbsoluteThresholds",
+	"thresholds",
+	"thresholdColor",
+	"thresholdThickness",
+	"thresholdCount",
+	"barTexture",
+	"textStyle",
+	"textLeft",
+	"textRight",
+	"textLeftOffset",
+	"textRightOffset",
+	"shortNumbers",
+	"percentRounding",
+	"hidePercentSign",
+	"useBarColor",
+	"barColor",
+	"useClassColor",
+	"useMaxColor",
+	"maxColor",
+	"useGradient",
+	"gradientStartColor",
+	"gradientEndColor",
+	"gradientDirection",
+	"useTextThresholdColors",
+	"textThresholdColorPointCount",
+	"textThresholdColorPoints",
+	"useHolyThreeColor",
+	"holyThreeColor",
+	"useMaelstromFiveColor",
+	"useMaelstromTenStacks",
+	"visualSegments",
+	"useMaelstromCarryFill",
+	"maelstromFiveColor",
+	"maelstromMidStack",
+	"useChargedComboStyling",
+	"chargedComboAffectFill",
+	"chargedComboUseCustomFillColor",
+	"chargedComboFillColor",
+	"chargedComboFillLighten",
+	"chargedComboFillAlphaBoost",
+	"chargedComboAffectBackground",
+	"chargedComboUseCustomBackgroundColor",
+	"chargedComboBackgroundColor",
+	"chargedComboBackgroundLighten",
+	"chargedComboBackgroundAlphaBoost",
+	"runeCooldownColor",
+}
+
+local wasMaxPower = {}
+local curve = C_CurveUtil and C_CurveUtil.CreateColorCurve()
+local curvePower = {}
+
+function ResourceBars.HashCurveStep(hash, value)
+	local numeric = tonumber(value)
+	if numeric == nil then numeric = 0 end
+	numeric = floor((numeric * 1000) + 0.5)
+	return ((hash * 131) + numeric) % 2147483647
+end
+
+function ResourceBars.HashCurveColor(hash, color)
+	if type(color) ~= "table" then
+		hash = ResourceBars.HashCurveStep(hash, 1)
+		hash = ResourceBars.HashCurveStep(hash, 1)
+		hash = ResourceBars.HashCurveStep(hash, 1)
+		hash = ResourceBars.HashCurveStep(hash, 1)
+		return hash
+	end
+	hash = ResourceBars.HashCurveStep(hash, color[1] or color.r or 1)
+	hash = ResourceBars.HashCurveStep(hash, color[2] or color.g or 1)
+	hash = ResourceBars.HashCurveStep(hash, color[3] or color.b or 1)
+	hash = ResourceBars.HashCurveStep(hash, color[4] or color.a or 1)
+	return hash
+end
+
+local function SetColorCurvePoints(maxColor)
+	if not (C_CurveUtil and C_CurveUtil.CreateColorCurve and CreateColor and Enum and Enum.LuaCurveType and Enum.LuaCurveType.Cosine) then return end
+	local signature = ResourceBars.HashCurveColor(17, maxColor)
+	if curve and ResourceBars._curveSignature == signature then return end
+	curve = C_CurveUtil.CreateColorCurve()
+	if not curve then return end
+	curve:SetType(Enum.LuaCurveType.Cosine)
+	if maxColor then
+		curve:AddPoint(1.0, CreateColor(maxColor[1], maxColor[2], maxColor[3], maxColor[4])) -- sattes Grün
+	else
+		curve:AddPoint(1.0, CreateColor(0.0, 0.85, 0.0, 1)) -- sattes Grün
+	end
+	curve:AddPoint(0.8, CreateColor(0.6, 0.85, 0.0, 1)) -- Gelbgrün
+	curve:AddPoint(0.6, CreateColor(0.9, 0.9, 0.0, 1)) -- Knallgelb
+	curve:AddPoint(0.4, CreateColor(0.95, 0.6, 0.0, 1)) -- Orange
+	curve:AddPoint(0.2, CreateColor(0.95, 0.25, 0.0, 1)) -- Rot-Orange
+	curve:AddPoint(0.0, CreateColor(0.9, 0.0, 0.0, 1)) -- Rot
+	ResourceBars._curveSignature = signature
+end
+local function SetColorCurvePointsPower(pType, maxColor, defColor)
+	if not pType then return end
+	if not (C_CurveUtil and C_CurveUtil.CreateColorCurve and CreateColor and Enum and Enum.LuaCurveType and Enum.LuaCurveType.Cosine) then return end
+	ResourceBars._curvePowerSignature = ResourceBars._curvePowerSignature or {}
+	local signature = ResourceBars.HashCurveColor(ResourceBars.HashCurveColor(17, maxColor), defColor)
+	if curvePower[pType] and ResourceBars._curvePowerSignature[pType] == signature then return end
+	local builtCurve = C_CurveUtil.CreateColorCurve()
+	if not builtCurve then return end
+	builtCurve:SetType(Enum.LuaCurveType.Cosine)
+	if maxColor then builtCurve:AddPoint(1.0, CreateColor(maxColor[1], maxColor[2], maxColor[3], maxColor[4])) end
+	if defColor then builtCurve:AddPoint(1.0, CreateColor(defColor[1], defColor[2], defColor[3], defColor[4])) end
+	curvePower[pType] = builtCurve
+	ResourceBars._curvePowerSignature[pType] = signature
+end
+SetColorCurvePoints()
+
+function ResourceBars.EnsureHealPredictionCalculator(bar)
+	if not bar or bar._healPredictionCalcUnsupported then return nil end
+	if bar._healPredictionCalc then return bar._healPredictionCalc end
+	if not (_G.CreateUnitHealPredictionCalculator and _G.UnitGetDetailedHealPrediction) then
+		bar._healPredictionCalcUnsupported = true
+		return nil
+	end
+	local calc = _G.CreateUnitHealPredictionCalculator()
+	if not calc then
+		bar._healPredictionCalcUnsupported = true
+		return nil
+	end
+	if calc.SetIncomingHealOverflowPercent then calc:SetIncomingHealOverflowPercent(1) end
+	bar._healPredictionCalc = calc
+	return calc
+end
+
+function ResourceBars.ConfigureHealPredictionCalculator(calc, settings)
+	if not (calc and Enum and Enum.UnitDamageAbsorbClampMode) then return end
+	if calc.SetDamageAbsorbClampMode then
+		local clampAbsorb = settings
+			and settings.absorbReverseFill == true
+			and settings.absorbDontOverflowHealthBar == true
+			and settings.absorbOverfill ~= true
+		local mode = clampAbsorb and Enum.UnitDamageAbsorbClampMode.MissingHealthWithoutIncomingHeals
+			or Enum.UnitDamageAbsorbClampMode.MaximumHealth
+		if mode ~= nil then calc:SetDamageAbsorbClampMode(mode) end
+	end
+	if calc.SetHealAbsorbClampMode and Enum.UnitHealAbsorbClampMode then
+		local mode = settings and settings.healAbsorbDontOverflowHealthBar == true and settings.healAbsorbReverseFill ~= true and Enum.UnitHealAbsorbClampMode.CurrentHealth
+			or Enum.UnitHealAbsorbClampMode.MaximumHealth
+		if mode ~= nil then calc:SetHealAbsorbClampMode(mode) end
+	end
+end
+
+function ResourceBars.PrepareHealPredictionCalculator(bar, settings)
+	local calc = ResourceBars.EnsureHealPredictionCalculator(bar)
+	ResourceBars.ConfigureHealPredictionCalculator(calc, settings)
+	if bar then bar._healPredictionCalculator = calc end
+	return calc
+end
+
+function ResourceBars.RefreshHealPredictionCalculator(bar, unit)
+	local calc = bar and bar._healPredictionCalculator
+	if calc and _G.UnitGetDetailedHealPrediction then _G.UnitGetDetailedHealPrediction(unit, "player", calc) end
+	return calc
+end
+
+local function getHealthPercent(unit, curHealth, maxHealth, calc)
+	if calc and calc.EvaluateCurrentHealthPercent and CurveConstants and CurveConstants.ScaleTo100 then return calc:EvaluateCurrentHealthPercent(CurveConstants.ScaleTo100) end
+	return nil
+end
+
+local function getPowerPercent(unit, powerEnum, curPower, maxPower, curve)
+	if addon.functions and addon.functions.GetPowerPercent then
+		return addon.functions.GetPowerPercent(unit, powerEnum, curPower, maxPower, true, curve)
+		-- Unmodified flag defaults to true for personal resource bars
+	end
+	if curve and UnitPowerPercent then return UnitPowerPercent(unit, powerEnum, true, curve) end
+	curPower = curPower or UnitPower(unit, powerEnum)
+	maxPower = maxPower or UnitPowerMax(unit, powerEnum)
+	if maxPower and maxPower > 0 then return (curPower or 0) / maxPower * 100 end
+	return 0
+end
+
+local function formatSoulShardValue(value)
+	if value == nil then return "0" end
+	local text = string.format("%.1f", value)
+	return text:gsub("%.0$", "")
+end
+
+function ResourceBars.ShouldUseRawPowerValues() return false end
+
+local function formatNumber(value, useShort)
+	if value == nil then return "0" end
+	if useShort then return AbbreviateNumbers(value) end
+	return tostring(value)
+end
+
+function ResourceBars.FormatDurationValue(value)
+	local seconds = tonumber(value) or 0
+	if seconds <= 0 then return "0" end
+	seconds = ceil(seconds)
+	if seconds >= 60 then
+		local minutes = floor(seconds / 60)
+		local remainder = seconds % 60
+		return string.format("%d:%02d", minutes, remainder)
+	end
+	return tostring(seconds)
+end
+
+function ResourceBars.GetDurationObjectRemaining(durationObject)
+	if not (durationObject and durationObject.GetRemainingDuration) then return nil end
+	local modifier = Enum and Enum.DurationTimeModifier and Enum.DurationTimeModifier.RealTime
+	return tonumber(durationObject.GetRemainingDuration(durationObject, modifier))
+end
+
+function ResourceBars.GetDurationObjectTotal(durationObject)
+	if not (durationObject and durationObject.GetTotalDuration) then return nil end
+	local modifier = Enum and Enum.DurationTimeModifier and Enum.DurationTimeModifier.RealTime
+	return tonumber(durationObject.GetTotalDuration(durationObject, modifier))
+end
+
+function ResourceBars.GetAuraDurationRemaining(bar)
+	if not bar then return nil end
+	local remaining = ResourceBars.GetDurationObjectRemaining(bar._auraDurationObject)
+	if remaining ~= nil then return remaining end
+	local expirationTime = tonumber(bar._auraExpirationTime)
+	if expirationTime and expirationTime > 0 then return max(0, expirationTime - GetTime()) end
+	return nil
+end
+
+local function formatPercentText(value, cfg)
+	if value == nil then return "0" end
+	local mode = cfg and cfg.percentRounding
+	if mode == "FLOOR" then
+		if C_StringUtil and C_StringUtil.FloorToNearestString then return C_StringUtil.FloorToNearestString(value) end
+		return tostring(floor(value))
+	end
+	if C_StringUtil and C_StringUtil.RoundToNearestString then return C_StringUtil.RoundToNearestString(value) end
+	return tostring(floor(value + 0.5))
+end
+
+local function formatPercentDisplay(value, cfg)
+	local percentText = formatPercentText(value, cfg)
+	if cfg and cfg.hidePercentSign == true then return percentText end
+	return (addon.variables and addon.variables.isMidnight) and (percentText .. "%") or percentText
+end
+
+function ResourceBars.FormatBarTextByStyle(style, currentText, maxText, percentText)
+	if style == "PERCENT" then return percentText end
+	if style == "CURRENT" then return currentText end
+	if style == "CURPERCENT" then return currentText .. " - " .. percentText end
+	return currentText .. " / " .. maxText
+end
+
+local function isSpellKnownSafe(spellId)
+	if not spellId then return false end
+	if issecretvalue and issecretvalue(spellId) then return false end
+	if C_SpellBook and C_SpellBook.IsSpellKnown then return C_SpellBook.IsSpellKnown(spellId) end
+	return false
+end
+
+ResourceBars.PowerLabels = {
+	MAELSTROM_WEAPON = (C_Spell.GetSpellName(RB.MAELSTROM_WEAPON_SPELL_ID)) or "Maelstrom Weapon",
+	ICICLES = (C_Spell.GetSpellName(RB.ICICLES_SPELL_ID)) or (L and L["Icicles"]) or "Icicles",
+	SOUL_FRAGMENTS_VENGEANCE = (C_Spell.GetSpellName(RB.VENGEANCE_SOUL_FRAGMENTS_SPELL_ID)) or "Soul Fragments",
+	VOID_METAMORPHOSIS = (C_Spell.GetSpellName(RB.VOID_METAMORPHOSIS_SPELL_ID)) or "Void Metamorphosis",
+	EBON_MIGHT = (C_Spell.GetSpellName(RB.EBON_MIGHT_SPELL_ID)) or "Ebon Might",
+	TIP_OF_THE_SPEAR = (C_Spell.GetSpellName(RB.TIP_OF_THE_SPEAR_SPELL_ID)) or "Tip of the Spear",
+	WHIRLWIND = (C_Spell.GetSpellName(190411)) or "Whirlwind",
+	STAGGER = (_G and _G["STAGGER"]) or "Stagger",
+}
+
+RB.AURA_POWER_CONFIG = {
+	MAELSTROM_WEAPON = {
+		spellIds = { RB.MAELSTROM_WEAPON_SPELL_ID },
+		maxStacks = RB.MAELSTROM_WEAPON_MAX_STACKS,
+		visualSegments = RB.MAELSTROM_WEAPON_SEGMENTS,
+		midColor = RB.DEFAULT_MAELSTROM_WEAPON_FIVE_COLOR,
+		useMidColorKey = "useMaelstromFiveColor",
+		midColorKey = "maelstromFiveColor",
+		useMaxColorDefault = true,
+	},
+	ICICLES = {
+		spellIds = { RB.ICICLES_SPELL_ID },
+		maxStacks = 5,
+		visualSegments = 5,
+		defaultColor = { 0.45, 0.80, 1.00, 1 },
+		useMaxColorDefault = true,
+	},
+	TIP_OF_THE_SPEAR = {
+		spellIds = { RB.TIP_OF_THE_SPEAR_SPELL_ID },
+		maxStacks = 3,
+		visualSegments = 3,
+		defaultColor = { 1.00, 0.60, 0.20, 1 },
+		useMaxColorDefault = true,
+	},
+	SOUL_FRAGMENTS_VENGEANCE = {
+		spellCastCountId = RB.VENGEANCE_SOUL_CLEAVE_SPELL_ID,
+		maxStacks = RB.VENGEANCE_SOUL_FRAGMENTS_MAX,
+		visualSegments = RB.VENGEANCE_SOUL_FRAGMENTS_MAX,
+		defaultColor = { 0.35, 0.25, 0.73, 1 },
+		useMaxColorDefault = true,
+	},
+	VOID_METAMORPHOSIS = {
+		spellIds = { RB.VOID_METAMORPHOSIS_SPELL_ID, RB.COLLAPSING_STAR_SPELL_ID },
+		maxStacks = 50,
+		maxStacksBySpellId = {
+			[RB.COLLAPSING_STAR_SPELL_ID] = 40,
+		},
+		maxStacksTalent = { spellId = RB.VOID_META_TALENT_SOUL_GLUTTON_SPELL_ID, value = 35 },
+		visualSegments = 0,
+		clampOverflowToMax = true,
+		defaultColor = { 0.35, 0.25, 0.73, 1 }, -- #5940BA (Blizzard voidMetamorphosisProgess)
+		useMaxColorDefault = true,
+	},
+	EBON_MIGHT = {
+		spellIds = { RB.EBON_MIGHT_SPELL_ID },
+		maxDuration = 24,
+		visualSegments = 24,
+		durationAsValue = true,
+		clampOverflowToMax = true,
+		defaultColor = { 0.85, 0.62, 0.25, 1 },
+		defaultTextStyle = "CURRENT",
+	},
+	WHIRLWIND = {
+		requiredSpellId = 12950, -- Improved Whirlwind
+		stateProvider = function()
+			local tracker = addon.Aura and addon.Aura.WhirlwindTracker
+			if tracker and tracker.GetCounts then return tracker:GetCounts() end
+			return 0, 4, 4
+		end,
+		requiresUnitAura = false,
+		maxStacks = 4,
+		visualSegments = 4,
+		defaultColor = { 0.78, 0.18, 0.18, 1 },
+		useMaxColorDefault = true,
+	},
+}
+
+local function isAuraPowerType(pType) return RB.AURA_POWER_CONFIG and RB.AURA_POWER_CONFIG[pType] ~= nil end
+
+function ResourceBars.IsAuraPowerType(pType)
+	return isAuraPowerType(pType)
+end
+
+function ResourceBars.IsNativeAuraPowerClient()
+	return (tonumber((select(4, GetBuildInfo()))) or 0) >= 120100
+end
+
+function ResourceBars.CanUsePlayerAuraBySpellID()
+	return C_UnitAuras and type(C_UnitAuras.GetPlayerAuraBySpellID) == "function" or false
+end
+
+function ResourceBars.RequiresNativeAuraPowerBackend(pType)
+	if not ResourceBars.IsNativeAuraPowerClient() then return false end
+	if pType == "EBON_MIGHT" then return true end
+	return not ResourceBars.CanUsePlayerAuraBySpellID()
+end
+
+function ResourceBars.GetNativeAuraPowerBackend()
+	local backend = ResourceBars.NativeAuraPowerBackend
+	if not (backend and backend.IsSupported and backend:IsSupported()) then return nil end
+	return backend
+end
+
+function ResourceBars.AreAuraPowerBarsDisabledForClient()
+	if not ResourceBars.RequiresNativeAuraPowerBackend() then return false end
+	return ResourceBars.GetNativeAuraPowerBackend() == nil
+end
+
+function ResourceBars.IsAuraPowerBarTypeAvailable(pType)
+	local cfg = RB.AURA_POWER_CONFIG and RB.AURA_POWER_CONFIG[pType]
+	if not cfg then return false end
+	if cfg.requiredSpellId and not isSpellKnownSafe(cfg.requiredSpellId) then return false end
+	if cfg.stateProvider then return true end
+	-- Soul Fragments use the unrestricted spell-cast-count API, not aura data.
+	if cfg.spellCastCountId then return true end
+	if not ResourceBars.RequiresNativeAuraPowerBackend(pType) then return true end
+	local backend = ResourceBars.GetNativeAuraPowerBackend()
+	if not backend then return false end
+	return not backend.CanHandlePowerType or backend:CanHandlePowerType(pType) == true
+end
+
+function ResourceBars.GetAuraPowerConfig(pType)
+	return RB.AURA_POWER_CONFIG and RB.AURA_POWER_CONFIG[pType] or nil
+end
+
+function ResourceBars.GetAuraPowerConfigs()
+	return RB.AURA_POWER_CONFIG or {}
+end
+
+function ResourceBars.GetPowerBar(pType)
+	return powerbar and powerbar[pType] or nil
+end
+
+function ResourceBars.IsDurationPowerType(pType)
+	local cfg = RB.AURA_POWER_CONFIG and RB.AURA_POWER_CONFIG[pType]
+	return cfg and cfg.durationAsValue == true or false
+end
+
+local function getAuraPowerCounts(pType)
+	local cfg = RB.AURA_POWER_CONFIG[pType]
+	if not cfg then return 0, 0, 0 end
+	if cfg.stateProvider then return cfg.stateProvider() end
+	if cfg.spellCastCountId and C_Spell and C_Spell.GetSpellCastCount then
+		local current = C_Spell.GetSpellCastCount(cfg.spellCastCountId) or 0
+		local maxStacks = tonumber(cfg.maxStacks) or tonumber(cfg.visualSegments) or 0
+		return current or 0, maxStacks, tonumber(cfg.visualSegments) or maxStacks
+	end
+	-- This lookup is explicitly available to tainted addon code and returns no
+	-- value for a secret aura. Do not fall back to APIs requiring unit-aura access.
+	if not ResourceBars.CanUsePlayerAuraBySpellID() then return 0, 0, 0 end
+	local auraData
+	for _, sid in ipairs(cfg.spellIds or {}) do
+		local aura = C_UnitAuras.GetPlayerAuraBySpellID(sid)
+		if aura then
+			auraData = aura
+			break
+		end
+	end
+	if not auraData then return 0, cfg.maxDuration or cfg.maxStacks or 0, cfg.visualSegments or cfg.maxDuration or (cfg.maxStacks or 0) end
+	if cfg.durationAsValue then
+		local duration = tonumber(auraData.duration) or tonumber(auraData.pointsMax) or tonumber(cfg.maxDuration) or tonumber(cfg.maxStacks) or 0
+		local expirationTime = tonumber(auraData.expirationTime)
+		local remaining = (expirationTime and expirationTime > 0 and max(0, expirationTime - GetTime())) or duration
+		if duration <= 0 then duration = remaining end
+		local visualSegments = tonumber(cfg.visualSegments) or tonumber(cfg.maxDuration) or duration
+		return remaining or 0, duration or 0, visualSegments or duration or 0, nil, expirationTime
+	end
+	local stacks = auraData.applications or auraData.charges or 0
+	local logicalMax = auraData.maxCharges or auraData.pointsMax or cfg.maxStacks or stacks
+	if auraData.spellId and cfg.maxStacksBySpellId and cfg.maxStacksBySpellId[auraData.spellId] then
+		logicalMax = cfg.maxStacksBySpellId[auraData.spellId]
+	elseif cfg.maxStacksTalent and auraData.spellId == RB.VOID_METAMORPHOSIS_SPELL_ID then
+		if isSpellKnownSafe(cfg.maxStacksTalent.spellId) then logicalMax = cfg.maxStacksTalent.value or logicalMax end
+	end
+	local visualSegments = cfg.visualSegments or logicalMax or stacks
+	return stacks or 0, logicalMax or 0, visualSegments or logicalMax
+end
+
+-- Retained for the Unit Frames bridge. Direct spell-ID lookups need no event cache.
+function ResourceBars.UpdateAuraPowerState() end
+
+ResourceBars.GetAuraPowerCounts = getAuraPowerCounts
+
+local function getPlayerClassColor()
+	local class = addon and addon.variables and addon.variables.unitClass
+	if not class then return 0, 0.7, 0, 1 end
+	local color = (CUSTOM_CLASS_COLORS and CUSTOM_CLASS_COLORS[class]) or (RAID_CLASS_COLORS and RAID_CLASS_COLORS[class])
+	if color then return color.r or color[1] or 0, color.g or color[2] or 0.7, color.b or color[3] or 0, color.a or 1 end
+	return 0, 0.7, 0, 1
+end
+
+local function getHolyThreeColor(cfg)
+	local col = cfg and cfg.holyThreeColor or { 1, 0.8, 0.2, 1 }
+	return col[1] or 1, col[2] or 0.8, col[3] or 0.2, col[4] or 1
+end
+
+local function setBarDesaturated(bar, flag)
+	if bar and bar.SetStatusBarDesaturated then bar:SetStatusBarDesaturated(flag and true or false) end
+end
+
+RB.STAGGER_LOW_THRESHOLD = 30
+RB.STAGGER_MEDIUM_THRESHOLD = 60
+RB.STAGGER_THRESHOLD_MAX = 1000
+RB.STAGGER_YELLOW_THRESHOLD = RB.STAGGER_LOW_THRESHOLD / 100
+RB.STAGGER_RED_THRESHOLD = RB.STAGGER_MEDIUM_THRESHOLD / 100
+RB.STAGGER_EXTRA_THRESHOLD_HIGH = 200
+RB.STAGGER_EXTRA_THRESHOLD_VERY_HIGH = 250
+RB.STAGGER_EXTRA_THRESHOLD_EXTREME = 300
+RB.STAGGER_EXTRA_THRESHOLD_CRITICAL = 350
+RB.STAGGER_EXTRA_COLORS = {
+	high = { r = 0.62, g = 0.2, b = 1.0, a = 1 },
+	veryHigh = { r = 0.85, g = 0.2, b = 1.0, a = 1 },
+	extreme = { r = 1.0, g = 0.2, b = 0.8, a = 1 },
+	critical = { r = 1.0, g = 0.1, b = 0.45, a = 1 },
+}
+RB.STAGGER_FALLBACK_COLORS = {
+	green = { r = 0.52, g = 1.0, b = 0.52 },
+	yellow = { r = 1.0, g = 0.98, b = 0.72 },
+	red = { r = 1.0, g = 0.42, b = 0.42 },
+}
+
+local function getColorComponents(color, fallback)
+	color = color or fallback
+	if not color then return 1, 1, 1, 1 end
+	if color.r then return color.r or 1, color.g or 1, color.b or 1, color.a or 1 end
+	return color[1] or 1, color[2] or 1, color[3] or 1, color[4] or 1
+end
+
+local function clampStaggerThreshold(value, fallback)
+	local n = tonumber(value)
+	if n == nil then n = fallback end
+	if n == nil then return nil end
+	if n < 0 then
+		n = 0
+	elseif n > RB.STAGGER_THRESHOLD_MAX then
+		n = RB.STAGGER_THRESHOLD_MAX
+	end
+	return n
+end
+
+local function getStaggerThresholds(cfg)
+	local rawLow = cfg and cfg.staggerLowThreshold
+	local rawMedium = cfg and cfg.staggerMediumThreshold
+	local rawHigh = cfg and cfg.staggerHighThreshold
+	local rawVeryHigh = cfg and cfg.staggerVeryHighThreshold
+	local rawExtreme = cfg and cfg.staggerExtremeThreshold
+	local rawCritical = cfg and cfg.staggerCriticalThreshold
+	local state = cfg and ResourceBars.GetRuntimeCfgState and ResourceBars.GetRuntimeCfgState(cfg, true)
+	local cache = state and state.staggerThresholdCache
+	if
+		cache
+		and cache.rawLow == rawLow
+		and cache.rawMedium == rawMedium
+		and cache.rawHigh == rawHigh
+		and cache.rawVeryHigh == rawVeryHigh
+		and cache.rawExtreme == rawExtreme
+		and cache.rawCritical == rawCritical
+	then
+		return cache.low, cache.medium, cache.high, cache.veryHigh, cache.extreme, cache.critical
+	end
+
+	local low = clampStaggerThreshold(rawLow, RB.STAGGER_LOW_THRESHOLD)
+	local medium = clampStaggerThreshold(rawMedium, RB.STAGGER_MEDIUM_THRESHOLD)
+	local high = clampStaggerThreshold(rawHigh, RB.STAGGER_EXTRA_THRESHOLD_HIGH)
+	local veryHigh = clampStaggerThreshold(rawVeryHigh, RB.STAGGER_EXTRA_THRESHOLD_VERY_HIGH)
+	local extreme = clampStaggerThreshold(rawExtreme, RB.STAGGER_EXTRA_THRESHOLD_EXTREME)
+	local critical = clampStaggerThreshold(rawCritical, RB.STAGGER_EXTRA_THRESHOLD_CRITICAL)
+
+	if high < medium then high = medium end
+	if veryHigh < high then veryHigh = high end
+	if extreme < veryHigh then extreme = veryHigh end
+	if critical < extreme then critical = extreme end
+
+	low, medium, high, veryHigh, extreme, critical = low / 100, medium / 100, high / 100, veryHigh / 100, extreme / 100, critical / 100
+	if state then
+		cache = cache or {}
+		cache.rawLow, cache.rawMedium, cache.rawHigh = rawLow, rawMedium, rawHigh
+		cache.rawVeryHigh, cache.rawExtreme, cache.rawCritical = rawVeryHigh, rawExtreme, rawCritical
+		cache.low, cache.medium, cache.high = low, medium, high
+		cache.veryHigh, cache.extreme, cache.critical = veryHigh, extreme, critical
+		state.staggerThresholdCache = cache
+	end
+	return low, medium, high, veryHigh, extreme, critical
+end
+
+local function getStaggerBaseColor(info, cfg, state)
+	if state == "medium" then
+		return getColorComponents(cfg and cfg.staggerMediumColor, (info and info.yellow) or RB.STAGGER_FALLBACK_COLORS.yellow)
+	elseif state == "high" then
+		return getColorComponents(cfg and cfg.staggerBaseHighColor, (info and info.red) or RB.STAGGER_FALLBACK_COLORS.red)
+	end
+	return getColorComponents(cfg and cfg.staggerLowColor, (info and info.green) or RB.STAGGER_FALLBACK_COLORS.green)
+end
+
+local function getStaggerStateColor(percent, cfg)
+	local info = (GetPowerBarColor and GetPowerBarColor("STAGGER")) or (PowerBarColor and PowerBarColor["STAGGER"])
+	local lowRatio, mediumRatio, highRatio, veryHighRatio, extremeRatio, criticalRatio = getStaggerThresholds(cfg)
+	if cfg and cfg.staggerHighColors == true then
+		if percent >= criticalRatio then
+			return getColorComponents(cfg.staggerCriticalColor, RB.STAGGER_EXTRA_COLORS.critical)
+		elseif percent >= extremeRatio then
+			return getColorComponents(cfg.staggerExtremeColor, RB.STAGGER_EXTRA_COLORS.extreme)
+		elseif percent >= veryHighRatio then
+			return getColorComponents(cfg.staggerVeryHighColor, RB.STAGGER_EXTRA_COLORS.veryHigh)
+		elseif percent >= highRatio then
+			return getColorComponents(cfg.staggerHighColor, RB.STAGGER_EXTRA_COLORS.high)
+		end
+	end
+	if percent >= mediumRatio then return getStaggerBaseColor(info, cfg, "high") end
+	if percent >= lowRatio then return getStaggerBaseColor(info, cfg, "medium") end
+	return getStaggerBaseColor(info, cfg, "low")
+end
+
+local function getPowerBarColor(type)
+	if type == "STAGGER" then
+		local r, g, b = getStaggerStateColor(0)
+		return r or 1, g or 1, b or 1
+	end
+	if ResourcebarVars.CUSTOM_POWER_COLORS and ResourcebarVars.CUSTOM_POWER_COLORS[type] then
+		local c = ResourcebarVars.CUSTOM_POWER_COLORS[type]
+		return c[1] or 1, c[2] or 1, c[3] or 1
+	end
+	local colorTable = PowerBarColor
+	if colorTable then
+		local entry = colorTable[string.upper(type)]
+		if entry and entry.r then return entry.r, entry.g, entry.b end
+	end
+	return 1, 1, 1
+end
+
+function ResourceBars.GetBasePowerColor(type)
+	local pType = type and tostring(type):upper() or "MANA"
+	if pType == "STAGGER" then
+		local r, g, b, a = getStaggerStateColor(0)
+		return { r or 1, g or 1, b or 1, a or 1 }
+	end
+	local auraCfg = RB.AURA_POWER_CONFIG and RB.AURA_POWER_CONFIG[pType]
+	if auraCfg and auraCfg.defaultColor then return CopyTable(auraCfg.defaultColor) end
+	local colorTable = PowerBarColor
+	if colorTable then
+		local entry = colorTable[pType]
+		if entry and entry.r then return { entry.r or 1, entry.g or 1, entry.b or 1, entry.a or 1 } end
+	end
+	return { 1, 1, 1, 1 }
+end
+
+function ResourceBars.RefreshTextureDropdown()
+	local dd = ResourceBars.ui and ResourceBars.ui.textureDropdown
+	if not dd then return end
+	local list, order = getStatusbarDropdownLists(true)
+	dd:SetList(list, order)
+	local cfg = dd._rb_cfgRef
+	local cur = (cfg and cfg.barTexture) or "DEFAULT"
+	if not list[cur] then cur = "DEFAULT" end
+	dd:SetValue(cur)
+end
+
+local STATUSBAR_INTERP = Enum and Enum.StatusBarInterpolation
+local INTERP_EASE = STATUSBAR_INTERP and STATUSBAR_INTERP.ExponentialEaseOut
+
+local function setBarValue(bar, value, smooth)
+	if not bar or value == nil then return end
+	if smooth and INTERP_EASE then
+		bar:SetValue(value, INTERP_EASE)
+	else
+		bar:SetValue(value)
+	end
+end
+
+function ResourceBars.SetStatusBarReverseFill(bar, reverse)
+	if not bar then return end
+	local UFHelper = addon.Aura and addon.Aura.UFHelper
+	if UFHelper and UFHelper.applyStatusBarReverseFill then
+		UFHelper.applyStatusBarReverseFill(bar, reverse == true)
+	elseif bar.SetReverseFill then
+		bar:SetReverseFill(reverse == true)
+	end
+end
+
+function ResourceBars.EnsureHealthTempMaxHealthLossBars(bar)
+	if not bar then return end
+	if not bar.tempMaxHealthLossMask then
+		bar.tempMaxHealthLossMask = CreateFrame("StatusBar", "EQOLHealthBarTempMaxHealthLossMask", bar, "BackdropTemplate")
+		bar.tempMaxHealthLossMask:SetMinMaxValues(0, 1)
+		bar.tempMaxHealthLossMask:SetStatusBarTexture("Interface\\Buttons\\WHITE8x8")
+		if ResourceBars.ApplyStatusBarTexturePixelSnapping then ResourceBars.ApplyStatusBarTexturePixelSnapping(bar.tempMaxHealthLossMask, 0) end
+		bar.tempMaxHealthLossMask:SetStatusBarColor(0, 0, 0, 0.68)
+		setBarValue(bar.tempMaxHealthLossMask, 0, false)
+		bar.tempMaxHealthLossMask:Hide()
+	end
+	if not bar.tempMaxHealthLoss then
+		bar.tempMaxHealthLoss = CreateFrame("StatusBar", "EQOLHealthBarTempMaxHealthLoss", bar, "BackdropTemplate")
+		bar.tempMaxHealthLoss:SetMinMaxValues(0, 1)
+		bar.tempMaxHealthLoss:SetStatusBarTexture("UI-HUD-UnitFrame-Target-PortraitOn-Bar-TempHPLoss")
+		if ResourceBars.ApplyStatusBarTexturePixelSnapping then ResourceBars.ApplyStatusBarTexturePixelSnapping(bar.tempMaxHealthLoss, 0) end
+		if bar.tempMaxHealthLoss.SetStatusBarDesaturated then bar.tempMaxHealthLoss:SetStatusBarDesaturated(false) end
+		setBarValue(bar.tempMaxHealthLoss, 0, false)
+		bar.tempMaxHealthLoss:Hide()
+	end
+	return bar.tempMaxHealthLoss, bar.tempMaxHealthLossMask
+end
+
+function ResourceBars.ApplyHealthTempMaxHealthLossAppearance(bar, settings)
+	local tempLoss, mask = ResourceBars.EnsureHealthTempMaxHealthLossBars(bar)
+	if not tempLoss then return end
+	local reverseHealth = settings and settings.reverseFill == true
+	if mask then
+		mask:ClearAllPoints()
+		mask:SetAllPoints(bar)
+		mask:SetMinMaxValues(0, 1)
+		ResourceBars.SetStatusBarReverseFill(mask, not reverseHealth)
+	end
+	if tempLoss then
+		tempLoss:ClearAllPoints()
+		tempLoss:SetAllPoints(bar)
+		tempLoss:SetMinMaxValues(0, 1)
+		ResourceBars.SetStatusBarReverseFill(tempLoss, not reverseHealth)
+	end
+	if mask then
+		mask:SetStatusBarTexture("Interface\\Buttons\\WHITE8x8")
+		if ResourceBars.ApplyStatusBarTexturePixelSnapping then ResourceBars.ApplyStatusBarTexturePixelSnapping(mask, 0) end
+		mask:SetStatusBarColor(0, 0, 0, 0.68)
+		if mask.SetFrameStrata and bar.GetFrameStrata then mask:SetFrameStrata(bar:GetFrameStrata()) end
+		if mask.SetFrameLevel and bar.GetFrameLevel then mask:SetFrameLevel((bar:GetFrameLevel() or 0) + 1) end
+	end
+	tempLoss:SetStatusBarTexture("UI-HUD-UnitFrame-Target-PortraitOn-Bar-TempHPLoss")
+	if ResourceBars.ApplyStatusBarTexturePixelSnapping then ResourceBars.ApplyStatusBarTexturePixelSnapping(tempLoss, 0) end
+	if tempLoss.SetStatusBarDesaturated then tempLoss:SetStatusBarDesaturated(false) end
+	if tempLoss.SetFrameStrata and bar.GetFrameStrata then tempLoss:SetFrameStrata(bar:GetFrameStrata()) end
+	if tempLoss.SetFrameLevel and bar.GetFrameLevel then tempLoss:SetFrameLevel((bar:GetFrameLevel() or 0) + 2) end
+	bar._tempMaxHealthLossSmooth = settings and settings.smoothFill == true
+end
+
+function ResourceBars.UpdateHealthTempMaxHealthLoss(bar)
+	if not bar then return end
+	local tempLoss, mask = bar.tempMaxHealthLoss, bar.tempMaxHealthLossMask
+	if not tempLoss then return end
+	local loss = (_G.GetUnitTotalModifiedMaxHealthPercent and _G.GetUnitTotalModifiedMaxHealthPercent("player")) or 0
+	local smooth = bar._tempMaxHealthLossSmooth == true
+	if mask then
+		setBarValue(mask, loss, smooth)
+		if not mask:IsShown() then mask:Show() end
+	end
+	setBarValue(tempLoss, loss, smooth)
+	if not tempLoss:IsShown() then tempLoss:Show() end
+end
+
+requestActiveRefresh = function(specIndex, opts)
+	if not addon or not addon.Aura or not addon.Aura.ResourceBars then return end
+	local rb = addon.Aura.ResourceBars
+	if rb.QueueRefresh then
+		rb.QueueRefresh(specIndex, opts)
+	elseif rb.MaybeRefreshActive then
+		rb.MaybeRefreshActive(specIndex)
+	end
+end
+addon.Aura.functions.requestActiveRefresh = requestActiveRefresh
+
+local function deactivateRuneDurationBindings(bar)
+	if not bar then return end
+	if bar.runes and addon.functions and addon.functions.SetDurationTextBindingEnabled then
+		for i = 1, 6 do
+			local sb = bar.runes[i]
+			if sb then addon.functions.SetDurationTextBindingEnabled(sb, "runeDurationText", false) end
+		end
+	end
+end
+
+function ResourceBars.DeactivateAuraDurationTicker(bar)
+	if not bar then return end
+	if bar:GetScript("OnUpdate") == bar._auraDurationUpdater then bar:SetScript("OnUpdate", nil) end
+	bar._auraDurationAccum = nil
+end
+
+function ResourceBars.ReleaseAuraDurationTextBinding(bar, clearText)
+	if not bar then return end
+	if addon.functions and addon.functions.ReleaseDurationTextBinding then
+		addon.functions.ReleaseDurationTextBinding(bar, "auraDurationText", clearText == true)
+		for _, slot in ipairs(bar._textSlots or {}) do
+			addon.functions.ReleaseDurationTextBinding(slot, "auraDurationText", clearText == true)
+			slot._auraDurationTextBindingActive = nil
+		end
+	end
+end
+
+ResourceBars.NormalizeDurationTextProfile = function(value)
+	local durationText = addon.DurationText
+	if durationText and durationText.GetProfileKey then return durationText:GetProfileKey(value or "MINIMAL") end
+	if type(value) == "string" and value ~= "" then return value end
+	return "MINIMAL"
+end
+
+function ResourceBars.ClearAuraDurationFill(bar)
+	if not bar then return end
+	ResourceBars.ReleaseAuraDurationTextBinding(bar, true)
+	bar._auraDurationObject = nil
+	bar._auraExpirationTime = nil
+	bar._auraDurationKey = nil
+	bar._auraDurationVisualMax = nil
+	bar._auraDurationTimerKey = nil
+	bar._auraDurationTimerObject = nil
+	bar._auraDurationFillNative = nil
+	bar._auraDurationTextBindingActive = nil
+	if bar.SetToTargetValue then bar:SetToTargetValue() end
+end
+
+function ResourceBars.ApplyAuraDurationFill(bar, durationObject, cacheKey, maxValue)
+	if not (bar and durationObject) then
+		if ResourceBars.ClearAuraDurationFill then ResourceBars.ClearAuraDurationFill(bar) end
+		return false
+	end
+	local key = cacheKey or durationObject
+	local durationMax = tonumber(maxValue) or 24
+	if durationMax < 1 then durationMax = 1 end
+	if bar.SetMinMaxValues and bar._lastMax ~= durationMax then
+		bar:SetMinMaxValues(0, durationMax)
+		bar._lastMax = durationMax
+	end
+	bar._auraDurationObject = durationObject
+	bar._auraDurationKey = key
+	bar._auraDurationVisualMax = durationMax
+	if bar.SetTimerDuration then
+		if bar._auraDurationTimerKey ~= key or bar._auraDurationTimerObject ~= durationObject then
+			bar:SetTimerDuration(durationObject, Enum.StatusBarInterpolation.Immediate, Enum.StatusBarTimerDirection.RemainingTime)
+			bar._auraDurationTimerKey = key
+			bar._auraDurationTimerObject = durationObject
+		end
+		bar._auraDurationFillNative = true
+	else
+		bar._auraDurationFillNative = nil
+		ResourceBars.UpdateAuraDurationFillValue(bar)
+	end
+	return true
+end
+
+function ResourceBars.ApplyAuraDurationTextBinding(bar, textSlot)
+	textSlot = textSlot or (bar and bar._textSlots and bar._textSlots[1])
+	if not (bar and textSlot and textSlot.text and bar._auraDurationObject and addon.functions and addon.functions.BindDurationText) then
+		if textSlot and addon.functions.ReleaseDurationTextBinding then addon.functions.ReleaseDurationTextBinding(textSlot, "auraDurationText", true) end
+		if textSlot then textSlot._auraDurationTextBindingActive = nil end
+		return false
+	end
+	local pType = bar._rbType
+	local cfg = ResourceBars.GetRuntimeBarConfig(pType, bar) or bar._cfg or {}
+	local style = textSlot.style or "CURRENT"
+	local profileKey = ResourceBars.NormalizeDurationTextProfile(cfg.durationTextProfile)
+	if style == "NONE" then
+		if textSlot and addon.functions.ReleaseDurationTextBinding then addon.functions.ReleaseDurationTextBinding(textSlot, "auraDurationText", true) end
+		textSlot._auraDurationTextBindingActive = nil
+		if textSlot._textShown then
+			textSlot.text:Hide()
+			textSlot._textShown = false
+		end
+		return false
+	end
+	if style ~= "CURRENT" and style ~= "CURMAX" and style ~= "CURRENT_MAX" then
+		if textSlot and addon.functions.ReleaseDurationTextBinding then addon.functions.ReleaseDurationTextBinding(textSlot, "auraDurationText", true) end
+		textSlot._auraDurationTextBindingActive = nil
+		return false
+	end
+	local options = {
+		owner = textSlot,
+		key = "auraDurationText",
+		clearText = true,
+		profileKey = profileKey,
+	}
+	if style == "CURMAX" or style == "CURRENT_MAX" then
+		local remainingComponent = addon.functions.CreateRemainingDurationTextComponent and addon.functions.CreateRemainingDurationTextComponent(profileKey)
+		local totalComponent = addon.functions.CreateTotalDurationTextComponent and addon.functions.CreateTotalDurationTextComponent(profileKey)
+		if remainingComponent and totalComponent then
+			options.textFormat = "{} / {}"
+			options.components = { remainingComponent, totalComponent }
+		end
+	end
+	local ok = addon.functions.BindDurationText(textSlot.text, bar._auraDurationObject, options)
+	if not ok then
+		textSlot._auraDurationTextBindingActive = nil
+		return false
+	end
+	textSlot._auraDurationTextBindingActive = true
+	textSlot._lastText = nil
+	if not textSlot._textShown then
+		textSlot.text:Show()
+		textSlot._textShown = true
+	end
+	return true
+end
+
+function ResourceBars.UpdateAuraDurationFillValue(bar)
+	if not bar then return end
+	local visualMax = tonumber(bar._auraDurationVisualMax) or tonumber(bar._lastMax) or 24
+	if visualMax < 1 then visualMax = 1 end
+	local remaining = ResourceBars.GetAuraDurationRemaining(bar) or 0
+	setBarValue(bar, min(remaining, visualMax), false)
+	bar._lastVal = min(remaining, visualMax)
+end
+
+function ResourceBars.UpdateAuraDurationText(bar, onlySlot)
+	if not (bar and bar.text) then return end
+	local pType = bar._rbType
+	local cfg = ResourceBars.GetRuntimeBarConfig(pType, bar) or bar._cfg or {}
+	local remaining, total, percent
+	for _, textSlot in ipairs(bar._textSlots or {}) do
+		if (not onlySlot or onlySlot == textSlot) and textSlot.text and textSlot.style ~= "NONE" and not textSlot._auraDurationTextBindingActive then
+			if remaining == nil then
+				remaining = ResourceBars.GetAuraDurationRemaining(bar) or 0
+				total = ResourceBars.GetDurationObjectTotal(bar._auraDurationObject) or bar._auraDurationTotal or 0
+				percent = total > 0 and (remaining / total * 100) or 0
+			end
+			local text = ResourceBars.FormatBarTextByStyle(textSlot.style, ResourceBars.FormatDurationValue(remaining), ResourceBars.FormatDurationValue(total), formatPercentDisplay(percent, cfg))
+			if (not addon.variables.isMidnight or (issecretvalue and not issecretvalue(text))) and textSlot._lastText ~= text then
+				textSlot.text:SetText(text)
+				textSlot._lastText = text
+			else
+				textSlot.text:SetText(text)
+			end
+			if not textSlot._textShown then
+				textSlot.text:Show()
+				textSlot._textShown = true
+			end
+			ResourceBars.ApplyTextThresholdColor(bar, cfg, remaining, pType, total, textSlot.text)
+		end
+	end
+end
+
+function ResourceBars.UpdateAuraDurationThresholdColor(bar)
+	if not bar then return end
+	local pType = bar._rbType
+	local cfg = ResourceBars.GetRuntimeBarConfig(pType, bar) or bar._cfg or {}
+	local remaining = ResourceBars.GetAuraDurationRemaining(bar) or 0
+	local total = ResourceBars.GetDurationObjectTotal(bar._auraDurationObject) or bar._auraDurationTotal or 0
+	local thresholdR, thresholdG, thresholdB, thresholdA = ResourceBars.ResolveAbsoluteThresholdColor(cfg, remaining, pType, total)
+	local base = bar._baseColor or RB.WHITE
+	local targetR, targetG, targetB, targetA = thresholdR or base[1] or 1, thresholdG or base[2] or 1, thresholdB or base[3] or 1, thresholdA or base[4] or 1
+	local lc = bar._lastColor or {}
+	if lc[1] ~= targetR or lc[2] ~= targetG or lc[3] ~= targetB or lc[4] ~= targetA then
+		lc[1], lc[2], lc[3], lc[4] = targetR, targetG, targetB, targetA
+		bar._lastColor = lc
+		if ResourceBars.SetStatusBarColorWithGradient then
+			ResourceBars.SetStatusBarColorWithGradient(bar, cfg, targetR, targetG, targetB, targetA)
+		else
+			bar:SetStatusBarColor(targetR, targetG, targetB, targetA)
+		end
+	end
+	bar._usingAbsoluteThresholdColor = thresholdR ~= nil
+	for _, slot in ipairs(bar._textSlots or {}) do
+		if slot.text then ResourceBars.ApplyTextThresholdColor(bar, cfg, remaining, pType, total, slot.text) end
+	end
+end
+
+RB.TEXTURE_LIST_CACHE = {
+	dirty = true,
+}
+
+local function markTextureListDirty() RB.TEXTURE_LIST_CACHE.dirty = true end
+
+ResourceBars.MarkTextureListDirty = markTextureListDirty
+
+local function cloneMap(src)
+	if not src then return {} end
+	local dest = {}
+	for k, v in pairs(src) do
+		dest[k] = v
+	end
+	return dest
+end
+
+local function cloneArray(src)
+	if not src then return {} end
+	local dest = {}
+	for i = 1, #src do
+		dest[i] = src[i]
+	end
+	return dest
+end
+
+local function copyCosmeticBarSettings(source, dest)
+	if not source or not dest then return end
+	for _, key in ipairs(COSMETIC_BAR_KEYS) do
+		local value = source[key]
+		if type(value) == "table" then
+			dest[key] = CopyTable(value)
+		else
+			dest[key] = value
+		end
+	end
+end
+
+RB.STAGGER_HIDDEN_COLOR_OVERRIDE_KEYS = {
+	"useBarColor",
+	"barColor",
+	"useClassColor",
+	"useMaxColor",
+	"maxColor",
+	"useGradient",
+	"gradientStartColor",
+	"gradientEndColor",
+	"gradientDirection",
+}
+
+function ResourceBars.SanitizeStaggerColorOverrides(cfg)
+	if type(cfg) ~= "table" then return false end
+	local changed = false
+	for _, key in ipairs(RB.STAGGER_HIDDEN_COLOR_OVERRIDE_KEYS) do
+		if cfg[key] ~= nil then
+			cfg[key] = nil
+			changed = true
+		end
+	end
+	return changed
+end
+
+function ResourceBars.SanitizeSavedStaggerColorOverrides(db)
+	if type(db) ~= "table" then return false end
+	local changed = false
+	local personal = db.personalResourceBarSettings
+	if type(personal) == "table" then
+		for _, classCfg in pairs(personal) do
+			if type(classCfg) == "table" then
+				for _, specCfg in pairs(classCfg) do
+					if type(specCfg) == "table" and ResourceBars.SanitizeStaggerColorOverrides(specCfg.STAGGER) then changed = true end
+				end
+			end
+		end
+	end
+	local global = db.globalResourceBarSettings
+	if type(global) == "table" and ResourceBars.SanitizeStaggerColorOverrides(global.STAGGER) then changed = true end
+	local shared = db.sharedResourceBarSettings
+	if type(shared) == "table" then
+		for _, slotCfg in pairs(shared) do
+			local overrides = type(slotCfg) == "table" and slotCfg.powerTypeOverrides or nil
+			if type(overrides) == "table" and ResourceBars.SanitizeStaggerColorOverrides(overrides.STAGGER) then changed = true end
+		end
+	end
+	return changed
+end
+
+local function ensureMaelstromWeaponDefaults(cfg)
+	if not cfg then return end
+	if cfg.useMaelstromFiveColor == nil then cfg.useMaelstromFiveColor = true end
+	if cfg.useMaelstromTenStacks == nil then cfg.useMaelstromTenStacks = cfg.visualSegments == RB.MAELSTROM_WEAPON_MAX_STACKS end
+	if cfg.useMaelstromCarryFill == nil then cfg.useMaelstromCarryFill = false end
+	do
+		local maxStacks = tonumber(RB.MAELSTROM_WEAPON_MAX_STACKS) or 10
+		local cap = max(1, maxStacks - 1)
+		local midStack = tonumber(cfg.maelstromMidStack)
+		if midStack == nil then midStack = tonumber(RB.MAELSTROM_WEAPON_MID_STACK_DEFAULT) or tonumber(RB.MAELSTROM_WEAPON_SEGMENTS) or 5 end
+		midStack = floor(midStack + 0.5)
+		if midStack < 1 then midStack = 1 end
+		if midStack > cap then midStack = cap end
+		cfg.maelstromMidStack = midStack
+	end
+	if cfg.useMaxColor == nil then cfg.useMaxColor = true end
+	if not cfg.maxColor then cfg.maxColor = CopyTable(RB.DEFAULT_MAX_COLOR) end
+	if not cfg.maelstromFiveColor then cfg.maelstromFiveColor = CopyTable(ResourcebarVars.DEFAULT_MAELSTROM_WEAPON_FIVE_COLOR) end
+	if cfg.useMaelstromTenStacks then
+		cfg.visualSegments = RB.MAELSTROM_WEAPON_MAX_STACKS
+	elseif cfg.visualSegments == nil or cfg.visualSegments == RB.MAELSTROM_WEAPON_MAX_STACKS then
+		cfg.visualSegments = RB.MAELSTROM_WEAPON_SEGMENTS
+	end
+	if cfg.separatedOffset == nil then cfg.separatedOffset = 0 end
+end
+
+local function ensureAuraPowerDefaults(pType, cfg)
+	if not cfg then return end
+	local def = RB.AURA_POWER_CONFIG[pType]
+	if cfg.separatedOffset == nil then cfg.separatedOffset = 0 end
+	if def then
+		if pType == "MAELSTROM_WEAPON" then
+			if not cfg.visualSegments then cfg.visualSegments = def.visualSegments end
+		else
+			cfg.visualSegments = def.visualSegments
+		end
+	end
+	if def and def.defaultTextStyle and cfg.textStyle == nil then cfg.textStyle = def.defaultTextStyle end
+	if def and def.useMaxColorDefault and cfg.useMaxColor == nil then cfg.useMaxColor = true end
+	if cfg.useMaxColor and not cfg.maxColor then cfg.maxColor = CopyTable(RB.DEFAULT_MAX_COLOR) end
+	if pType == "MAELSTROM_WEAPON" then ensureMaelstromWeaponDefaults(cfg) end
+end
+
+function ResourceBars.EnsureRogueChargedComboDefaults(cfg, pType)
+	if addon.variables.unitClass ~= "ROGUE" or pType ~= "COMBO_POINTS" then return end
+	if not cfg then return end
+	local defaults = RB.ROGUE_CHARGED_COMBO_DEFAULTS or {}
+
+	if cfg.useChargedComboStyling == nil then cfg.useChargedComboStyling = defaults.enabled ~= false end
+	if cfg.chargedComboAffectFill == nil then cfg.chargedComboAffectFill = defaults.affectFill ~= false end
+	if cfg.chargedComboAffectBackground == nil then cfg.chargedComboAffectBackground = defaults.affectBackground ~= false end
+	if cfg.chargedComboUseCustomFillColor == nil then cfg.chargedComboUseCustomFillColor = defaults.fillUseCustomColor == true end
+	if cfg.chargedComboUseCustomBackgroundColor == nil then cfg.chargedComboUseCustomBackgroundColor = defaults.backgroundUseCustomColor == true end
+	if not cfg.chargedComboFillColor then cfg.chargedComboFillColor = CopyTable(defaults.fillColor or { 1.0, 0.95, 0.45, 1.0 }) end
+	if not cfg.chargedComboBackgroundColor then cfg.chargedComboBackgroundColor = CopyTable(defaults.backgroundColor or { 0.75, 0.60, 0.25, 0.75 }) end
+
+	local fillLighten = tonumber(cfg.chargedComboFillLighten)
+	if fillLighten == nil then fillLighten = tonumber(defaults.fillLighten) or 0.35 end
+	if fillLighten < 0 then
+		fillLighten = 0
+	elseif fillLighten > 1 then
+		fillLighten = 1
+	end
+	cfg.chargedComboFillLighten = fillLighten
+
+	local fillAlphaBoost = tonumber(cfg.chargedComboFillAlphaBoost)
+	if fillAlphaBoost == nil then fillAlphaBoost = tonumber(defaults.fillAlphaBoost) or 0.10 end
+	if fillAlphaBoost < 0 then
+		fillAlphaBoost = 0
+	elseif fillAlphaBoost > 1 then
+		fillAlphaBoost = 1
+	end
+	cfg.chargedComboFillAlphaBoost = fillAlphaBoost
+
+	local backgroundLighten = tonumber(cfg.chargedComboBackgroundLighten)
+	if backgroundLighten == nil then backgroundLighten = tonumber(defaults.backgroundLighten) or 0.30 end
+	if backgroundLighten < 0 then
+		backgroundLighten = 0
+	elseif backgroundLighten > 1 then
+		backgroundLighten = 1
+	end
+	cfg.chargedComboBackgroundLighten = backgroundLighten
+
+	local backgroundAlphaBoost = tonumber(cfg.chargedComboBackgroundAlphaBoost)
+	if backgroundAlphaBoost == nil then backgroundAlphaBoost = tonumber(defaults.backgroundAlphaBoost) or 0.10 end
+	if backgroundAlphaBoost < 0 then
+		backgroundAlphaBoost = 0
+	elseif backgroundAlphaBoost > 1 then
+		backgroundAlphaBoost = 1
+	end
+	cfg.chargedComboBackgroundAlphaBoost = backgroundAlphaBoost
+end
+
+local function ensureGlobalStore()
+	addon.db.globalResourceBarSettings = addon.db.globalResourceBarSettings or {}
+	return addon.db.globalResourceBarSettings
+end
+
+ResourceBars.SHARED_SLOT_ORDER = { "HEALTH", "MAIN", "SECONDARY", "TERTIARY" }
+ResourceBars.SHARED_SLOT_FRAME_NAME = {
+	HEALTH = "EQOLSharedHealthBar",
+	MAIN = "EQOLSharedMainBar",
+	SECONDARY = "EQOLSharedSecondaryBar",
+	TERTIARY = "EQOLSharedTertiaryBar",
+}
+ResourceBars.SHARED_POWER_TYPE_DEFAULT_OVERRIDES = {
+	ARCANE_CHARGES = { textStyle = "CURRENT" },
+	CHI = { textStyle = "CURRENT" },
+	COMBO_POINTS = { textStyle = "CURRENT" },
+	ESSENCE = { textStyle = "CURRENT" },
+	HOLY_POWER = { textStyle = "CURRENT" },
+	ICICLES = { textStyle = "CURRENT" },
+	MAELSTROM_WEAPON = { textStyle = "CURRENT" },
+	EBON_MIGHT = { textStyle = "CURRENT" },
+	SOUL_FRAGMENTS_VENGEANCE = { textStyle = "CURRENT" },
+	SOUL_SHARDS = { textStyle = "CURRENT" },
+	TIP_OF_THE_SPEAR = { textStyle = "CURRENT" },
+}
+ResourceBars.SHARED_SLOT_ASSIGNMENTS = {}
+
+ResourceBars.SHARED_SLOT_BY_FRAME_NAME = {}
+for slot, frameName in pairs(ResourceBars.SHARED_SLOT_FRAME_NAME) do
+	ResourceBars.SHARED_SLOT_BY_FRAME_NAME[frameName] = slot
+end
+ResourceBars._sharedSlotFrames = ResourceBars._sharedSlotFrames or {}
+ResourceBars._sharedSlotResolvedTypes = ResourceBars._sharedSlotResolvedTypes or {}
+
+ResourceBars.SHARED_VISIBILITY_SLOTS = { "MAIN", "SECONDARY", "TERTIARY" }
+ResourceBars.SHARED_VISIBILITY_DRUID_FORMS = { "BEAR", "CAT", "MOONKIN", "HUMANOID" }
+
+local function normalizeSharedSlotStore(store)
+	if type(store) ~= "table" then store = {} end
+	for _, slot in ipairs(ResourceBars.SHARED_VISIBILITY_SLOTS) do
+		local cfg = store[slot]
+		if type(cfg) == "table" then
+			cfg.powerTypeOverrides = cfg.powerTypeOverrides or {}
+			for pType, defaults in pairs(ResourceBars.SHARED_POWER_TYPE_DEFAULT_OVERRIDES or {}) do
+				if cfg.powerTypeOverrides[pType] == nil then
+					cfg.powerTypeOverrides[pType] = CopyTable(defaults)
+					cfg.powerTypeOverrides[pType].enabled = true
+				end
+			end
+		end
+	end
+	return store
+end
+
+function ResourceBars.NormalizeDruidSharedVisibilityForm(formKey)
+	formKey = tostring(formKey or ""):upper()
+	if formKey == "BEAR" or formKey == "CAT" or formKey == "MOONKIN" then return formKey end
+	return "HUMANOID"
+end
+
+function ResourceBars.EnsureSharedVisibilityStore()
+	addon.db.sharedResourceBarVisibility = addon.db.sharedResourceBarVisibility or {}
+	return addon.db.sharedResourceBarVisibility
+end
+
+function ResourceBars.GetSharedVisibilityEntry(classTag, _, create)
+	local class = classTag or addon.variables.unitClass
+	if not class then return nil end
+	local store = create and ResourceBars.EnsureSharedVisibilityStore() or addon.db and addon.db.sharedResourceBarVisibility
+	local classStore = store and store[class]
+	if not classStore and create then classStore = {}; store[class] = classStore end
+	if not classStore then return nil end
+	-- Preserve imported Retail visibility entries; Forever has one class entry.
+	if create and not classStore.FOREVER then classStore.FOREVER = {} end
+	return classStore.FOREVER
+end
+
+function ResourceBars.IsSharedVisibilityEnabled(classTag, specIndex, key)
+	local entry = ResourceBars.GetSharedVisibilityEntry(classTag, specIndex, false)
+	if type(entry) ~= "table" then return true end
+	return entry[key] ~= false
+end
+
+function ResourceBars.SetSharedVisibilityEnabled(classTag, specIndex, key, enabled)
+	local entry = ResourceBars.GetSharedVisibilityEntry(classTag, specIndex, true)
+	if not entry then return end
+	if enabled == false then
+		entry[key] = false
+	else
+		entry[key] = nil
+	end
+end
+
+function ResourceBars.IsSharedSlotAllowed(classTag, specIndex, slot, formKey)
+	slot = tostring(slot or ""):upper()
+	if slot == "" then return true end
+	if classTag == "DRUID" and slot == "SECONDARY" then
+		local form = ResourceBars.NormalizeDruidSharedVisibilityForm(formKey)
+		if ResourceBars.IsSharedVisibilityEnabled(classTag, specIndex, form) == false then return false end
+		return true
+	end
+	if ResourceBars.IsSharedVisibilityEnabled(classTag, specIndex, slot) == false then return false end
+	return true
+end
+
+function ResourceBars.GetFixedSharedSlotAssignment() return nil end
+function ResourceBars.NormalizeSpecMode() return "SHARED" end
+function ResourceBars.GetDefaultSpecMode() return "SHARED" end
+
+function ResourceBars.EnsureSharedStore()
+	addon.db.sharedResourceBarSettings = addon.db.sharedResourceBarSettings or {}
+	normalizeSharedSlotStore(addon.db.sharedResourceBarSettings)
+	return addon.db.sharedResourceBarSettings
+end
+
+function ResourceBars.EnsureSharedSlotStore(slot)
+	if not slot then return nil end
+	slot = tostring(slot):upper()
+	if not ResourceBars.SHARED_SLOT_FRAME_NAME[slot] then return nil end
+	local store = ResourceBars.EnsureSharedStore()
+	store[slot] = store[slot] or {}
+	if store[slot].enabled == nil then store[slot].enabled = true end
+	return store[slot]
+end
+
+function ResourceBars.SpecConfigHasConcreteData(specCfg)
+	if type(specCfg) ~= "table" then return false end
+	for key, value in pairs(specCfg) do
+		if type(key) == "string" and key:sub(1, 1) ~= "_" and type(value) == "table" then return true end
+	end
+	return false
+end
+
+function ResourceBars.GetSharedSlotFrameName(slot) return ResourceBars.SHARED_SLOT_FRAME_NAME[slot] end
+
+function ResourceBars.GetSharedSlotFromFrameName(frameName) return ResourceBars.SHARED_SLOT_BY_FRAME_NAME[frameName] end
+
+function ResourceBars.GetSharedSlotLiveFrame(slot)
+	slot = tostring(slot or ""):upper()
+	if slot == "HEALTH" then return healthBar or _G.EQOLHealthBar end
+	local frameName = ResourceBars.GetSharedSlotFrameName and ResourceBars.GetSharedSlotFrameName(slot)
+	if not frameName then return nil end
+	ResourceBars._sharedSlotFrames = ResourceBars._sharedSlotFrames or {}
+	local namedFrame = _G[frameName]
+	if namedFrame then return namedFrame end
+	local trackedFrame = ResourceBars._sharedSlotFrames[slot]
+	if trackedFrame and trackedFrame.GetName and trackedFrame:GetName() == frameName then return trackedFrame end
+	return nil
+end
+
+function ResourceBars.BindSharedSlotRuntimeFrame(slot, pType, frame)
+	slot = tostring(slot or ""):upper()
+	if slot == "" then return end
+	ResourceBars._sharedSlotFrames = ResourceBars._sharedSlotFrames or {}
+	ResourceBars._sharedSlotResolvedTypes = ResourceBars._sharedSlotResolvedTypes or {}
+	local sharedFrame = frame or ResourceBars.GetSharedSlotLiveFrame(slot)
+	if sharedFrame then
+		ResourceBars._sharedSlotFrames[slot] = sharedFrame
+		sharedFrame._rbSharedSlot = slot
+		sharedFrame._rbType = pType
+		if ResourceBars.ApplyRuntimeForceHiddenAlphaToFrame then ResourceBars.ApplyRuntimeForceHiddenAlphaToFrame(sharedFrame, false) end
+	end
+	local previousType = ResourceBars._sharedSlotResolvedTypes[slot]
+	if previousType and previousType ~= pType and sharedFrame and powerbar[previousType] == sharedFrame then powerbar[previousType] = nil end
+	ResourceBars._sharedSlotResolvedTypes[slot] = pType
+	if sharedFrame and type(pType) == "string" and pType ~= "" then powerbar[pType] = sharedFrame end
+	if ResourceBars.NotifySharedSlotDynamicAnchorChanged then ResourceBars.NotifySharedSlotDynamicAnchorChanged(slot, "SHARED_SLOT_BOUND") end
+end
+
+function ResourceBars.ClearSharedSlotRuntimeFrame(slot, hideFrame)
+	slot = tostring(slot or ""):upper()
+	if slot == "" then return end
+	ResourceBars._sharedSlotFrames = ResourceBars._sharedSlotFrames or {}
+	ResourceBars._sharedSlotResolvedTypes = ResourceBars._sharedSlotResolvedTypes or {}
+	local sharedFrame = ResourceBars.GetSharedSlotLiveFrame(slot)
+	local previousType = ResourceBars._sharedSlotResolvedTypes[slot]
+	if previousType and sharedFrame and powerbar[previousType] == sharedFrame then powerbar[previousType] = nil end
+	ResourceBars._sharedSlotResolvedTypes[slot] = nil
+	if hideFrame and sharedFrame then
+		if ResourceBars.ResetReusedPowerBarVisualState then ResourceBars.ResetReusedPowerBarVisualState(sharedFrame, previousType, nil) end
+		if applyVisibilityDriverToFrame then applyVisibilityDriverToFrame(sharedFrame, nil) end
+		sharedFrame._rbManualVisibilityHidden = nil
+		sharedFrame._rbDesiredVisible = false
+		sharedFrame._cfg = nil
+		sharedFrame._rbType = nil
+		if ResourceBars.ApplyRuntimeForceHiddenAlphaToFrame then ResourceBars.ApplyRuntimeForceHiddenAlphaToFrame(sharedFrame, true) end
+		sharedFrame:Hide()
+	end
+	if ResourceBars.NotifySharedSlotDynamicAnchorChanged then ResourceBars.NotifySharedSlotDynamicAnchorChanged(slot, "SHARED_SLOT_CLEARED") end
+end
+
+function ResourceBars.GetSpecMode() return "SHARED" end
+function ResourceBars.SetClassMode() return false end
+function ResourceBars.SetSpecMode() return false end
+function ResourceBars.SpecUsesSharedMode() return true end
+
+local function getSpecInfo() return ResourceBars.GetClassResourceInfo() end
+
+function ResourceBars.IsSpecBarTypeSupported(specInfo, barType)
+	if barType == "HEALTH" then return true end
+	if not specInfo then return true end
+	return specInfo.MAIN == barType or specInfo[barType] == true
+end
+
+function ResourceBars.IsBarTypeSupportedForClass(barType, classTag)
+	if barType == "HEALTH" then return true end
+	local info = ResourceBars.CLASS_RESOURCES[classTag or addon.variables.unitClass]
+	return info and (info.MAIN == barType or info[barType] == true) or false
+end
+
+function ResourceBars.IsRuntimeBarTypeSupported(barType)
+	if barType == "HEALTH" then return true end
+	local info = getSpecInfo()
+	return info and (info.MAIN == barType or info[barType] == true) or false
+end
+
+function ResourceBars.GetClassPowerTypes(classTag)
+	local class = classTag or addon.variables.unitClass
+	local list = {}
+	if not class then return list end
+	for _, pType in ipairs(classPowerTypes or {}) do
+		if ResourceBars.IsBarTypeSupportedForClass(pType, class, nil) then list[#list + 1] = pType end
+	end
+	return list
+end
+
+local function specSecondaries(specInfo)
+	local list = {}
+	if not specInfo then return list end
+	for _, pType in ipairs(classPowerTypes) do
+		if pType ~= specInfo.MAIN and specInfo[pType] then list[#list + 1] = pType end
+	end
+	return list
+end
+
+function ResourceBars.GetEditModeLegacyFrameId(barType, classTag)
+	local class = classTag or addon.variables.unitClass or "UNKNOWN"
+	return "resourceBar_" .. tostring(class) .. "_" .. tostring(barType or "")
+end
+
+function ResourceBars.GetEditModeFrameId(barType, classTag)
+	local token = ResourceBars.GetSharedSlotForResolvedBar(barType) or barType
+	return "resourceBar_" .. tostring(classTag or addon.variables.unitClass or "UNKNOWN") .. "_FOREVER_" .. tostring(token or "")
+end
+
+local function secondaryIndex(specInfo, pType)
+	if not specInfo then return nil end
+	for idx, val in ipairs(specSecondaries(specInfo)) do
+		if val == pType then return idx end
+	end
+	return nil
+end
+
+local function maybeChainSecondaryAnchor(cfg, prevType)
+	if not cfg or cfg.anchor then return end
+	if not prevType then return end
+	cfg.anchor = {
+		point = "TOPLEFT",
+		relativePoint = "BOTTOMLEFT",
+		relativeFrame = "EQOL" .. prevType .. "Bar",
+		x = 0,
+		y = RB.DEFAULT_STACK_SPACING,
+		autoSpacing = true,
+		matchRelativeWidth = true,
+	}
+end
+
+local function mainTemplateMatches(store, barType)
+	if not store or not store.MAIN then return nil end
+	return store.MAIN
+end
+
+local function resolveGlobalTemplate(barType, specIndex)
+	if not barType then return nil end
+	local store = addon.db.globalResourceBarSettings
+	if store and store[barType] then return store[barType] end
+
+	local specInfo = getSpecInfo(specIndex)
+	if not specInfo then return nil end
+
+	-- MAIN fallback
+	if specInfo.MAIN == barType then
+		local main = mainTemplateMatches(store, barType)
+		if main then return main end
+	end
+
+	-- Secondary fallback
+	local idx = secondaryIndex(specInfo, barType)
+	if idx and store then
+		if idx == 1 and store.SECONDARY then return store.SECONDARY, idx end
+		if idx > 1 and store.TERTIARY then return store.TERTIARY, idx end
+		if store.SECONDARY then return store.SECONDARY, idx end
+	end
+
+	return nil
+end
+
+local function saveGlobalProfile(barType, specIndex, targetKey)
+	if not barType then return false, "NO_BAR" end
+	local specCfg = ensureSpecCfg(specIndex or ResourceBars.GetClassContext())
+	if not specCfg then return false, "NO_SPEC" end
+	local cfg = specCfg[barType]
+	if not cfg then return false, "NO_CFG" end
+
+	local function normalizeSize(source)
+		local copy = CopyTable(source or {})
+		if not copy.width or not copy.height then
+			local frameName = (barType == "HEALTH") and "EQOLHealthBar" or ("EQOL" .. tostring(barType) .. "Bar")
+			local frame = _G[frameName]
+			if frame and frame.GetWidth and frame.GetHeight then
+				copy.width = copy.width or frame:GetWidth()
+				copy.height = copy.height or frame:GetHeight()
+			end
+		end
+		if not copy.width then copy.width = (barType == "HEALTH") and RB.DEFAULT_HEALTH_WIDTH or RB.DEFAULT_POWER_WIDTH end
+		if not copy.height then copy.height = (barType == "HEALTH") and RB.DEFAULT_HEALTH_HEIGHT or RB.DEFAULT_POWER_HEIGHT end
+		return copy
+	end
+
+	local normalized = normalizeSize(cfg)
+	ResourceBars.SetRuntimeCfgField(normalized, "rbType", barType)
+	local store = ensureGlobalStore()
+	local specInfo = getSpecInfo(specIndex)
+	local function assign(key)
+		if not key then return end
+		if key == "MAIN" then
+			store.MAIN = CopyTable(normalized)
+			store._MAIN_TYPE = barType
+		elseif key == "SECONDARY" or key == "TERTIARY" then
+			store[key] = CopyTable(normalized)
+		else
+			store[key] = normalized
+		end
+	end
+
+	if targetKey then
+		assign(targetKey)
+	else
+		store[barType] = normalized
+		-- Also keep generic MAIN/SECONDARY templates for cross-bar reuse
+		if specInfo then
+			if specInfo.MAIN == barType then assign("MAIN") end
+			local secondaries = specSecondaries(specInfo)
+			if secondaries[1] == barType then assign("SECONDARY") end
+			if secondaries[2] == barType then assign("TERTIARY") end
+		end
+	end
+	return true
+end
+
+local function applyGlobalProfile(barType, specIndex, cosmeticOnly, sourceKey)
+	if not barType then return false, "NO_BAR" end
+	local store = addon.db and addon.db.globalResourceBarSettings
+	local specInfo = getSpecInfo(specIndex)
+	local globalCfg
+	local secondaryIdx
+
+	local function resolveExplicit(key)
+		if not key then return nil end
+		if key == "MAIN" then
+			-- Explicit MAIN request: allow even if stored type tag differs
+			return store and store.MAIN
+		end
+		if key == "SECONDARY" or key == "TERTIARY" then
+			secondaryIdx = secondaryIndex(specInfo, barType)
+			return store and store[key]
+		end
+		return store and store[key]
+	end
+
+	if sourceKey then
+		globalCfg = resolveExplicit(sourceKey)
+	else
+		globalCfg, secondaryIdx = resolveGlobalTemplate(barType, specIndex)
+		if not globalCfg then
+			local main = mainTemplateMatches(store, barType)
+			if main then
+				globalCfg = main
+				secondaryIdx = specInfo and secondaryIndex(specInfo, barType)
+			end
+		end
+	end
+	if not globalCfg then return false, "NO_GLOBAL" end
+	local sourceBarType
+	do
+		local tagged = ResourceBars.GetRuntimeCfgField(globalCfg, "rbType")
+		if type(tagged) == "string" and tagged ~= "" then
+			sourceBarType = tagged
+		elseif sourceKey == "MAIN" then
+			local mainType = store and store._MAIN_TYPE
+			if type(mainType) == "string" and mainType ~= "" then sourceBarType = mainType end
+		elseif type(sourceKey) == "string" and sourceKey ~= "" and sourceKey ~= "SECONDARY" and sourceKey ~= "TERTIARY" then
+			sourceBarType = sourceKey
+		elseif store and globalCfg == store[barType] then
+			sourceBarType = barType
+		elseif store and globalCfg == store.MAIN then
+			local mainType = store._MAIN_TYPE
+			if type(mainType) == "string" and mainType ~= "" then sourceBarType = mainType end
+		end
+	end
+	-- Ensure size fields exist even for older saved globals
+	if not globalCfg.width or not globalCfg.height then
+		local frameName = (barType == "HEALTH") and "EQOLHealthBar" or ("EQOL" .. tostring(barType) .. "Bar")
+		local frame = _G[frameName]
+		if frame and frame.GetWidth and frame.GetHeight then
+			globalCfg = CopyTable(globalCfg)
+			globalCfg.width = globalCfg.width or frame:GetWidth() or ((barType == "HEALTH") and RB.DEFAULT_HEALTH_WIDTH or RB.DEFAULT_POWER_WIDTH)
+			globalCfg.height = globalCfg.height or frame:GetHeight() or ((barType == "HEALTH") and RB.DEFAULT_HEALTH_HEIGHT or RB.DEFAULT_POWER_HEIGHT)
+		end
+	end
+	local specCfg = ensureSpecCfg(specIndex or ResourceBars.GetClassContext())
+	if not specCfg then return false, "NO_SPEC" end
+	if addon.EditModeLib and addon.EditModeLib.InvalidateContext then addon.EditModeLib:InvalidateContext("resource-profile") end
+	specCfg[barType] = specCfg[barType] or {}
+	if cosmeticOnly then
+		copyCosmeticBarSettings(globalCfg, specCfg[barType])
+	else
+		local copied = CopyTable(globalCfg or {})
+		ResourceBars.SetRuntimeCfgField(copied, "rbType", barType)
+		local relType
+		do
+			local anchor = copied.anchor
+			local rf = anchor and anchor.relativeFrame
+			relType = ResourceBars.ResolveBarTypeFromFrameToken(rf, specIndex)
+		end
+		local crossTypeTemplate = sourceBarType and sourceBarType ~= barType
+		local unsupportedRelative = relType and relType ~= "HEALTH" and specInfo and not (specInfo.MAIN == relType or specInfo[relType])
+		if crossTypeTemplate or unsupportedRelative then copied.anchor = nil end
+		specCfg[barType] = copied
+		if barType == "STAGGER" then ResourceBars.SanitizeStaggerColorOverrides(specCfg[barType]) end
+		-- Chain secondary anchors if we are applying to second or later secondary
+		if secondaryIdx and secondaryIdx > 1 then
+			local prevType = specSecondaries(getSpecInfo(specIndex))[secondaryIdx - 1]
+			if prevType then maybeChainSecondaryAnchor(specCfg[barType], prevType) end
+		end
+	end
+	if barType == "STAGGER" then ResourceBars.SanitizeStaggerColorOverrides(specCfg[barType]) end
+	if specCfg[barType] then ResourceBars.SetRuntimeCfgField(specCfg[barType], "rbType", barType) end
+	return true
+end
+
+local function trim(str)
+	if type(str) ~= "string" then return str end
+	return str:match("^%s*(.-)%s*$")
+end
+
+local function notifyUser(msg)
+	if not msg or msg == "" then return end
+	print("|cff00ff98Enhance QoL|r: " .. tostring(msg))
+end
+
+local function autoEnableSelection()
+	addon.db.resourceBarsAutoEnable = addon.db.resourceBarsAutoEnable or {}
+	-- Migrate legacy boolean flag to the new map-based selection
+	if addon.db.resourceBarsAutoEnableAll ~= nil then
+		if addon.db.resourceBarsAutoEnableAll == true and not next(addon.db.resourceBarsAutoEnable) then
+				addon.db.resourceBarsAutoEnable.HEALTH = true
+				addon.db.resourceBarsAutoEnable.MAIN = true
+				addon.db.resourceBarsAutoEnable.SECONDARY = true
+				addon.db.resourceBarsAutoEnable.TERTIARY = true
+		end
+		addon.db.resourceBarsAutoEnableAll = nil
+	end
+	return addon.db.resourceBarsAutoEnable
+end
+
+local function shouldAutoEnableBar(pType, specInfo, selection)
+	if not selection then return false end
+	if pType == "HEALTH" then return selection.HEALTH == true end
+	if specInfo and specInfo.MAIN == pType then return selection.MAIN == true end
+	if specInfo and pType ~= specInfo.MAIN and pType ~= "HEALTH" then
+		local idx = secondaryIndex(specInfo, pType) or 0
+		return specInfo[pType] == true and ((idx <= 1 and selection.SECONDARY == true) or (idx > 1 and selection.TERTIARY == true))
+	end
+	return false
+end
+
+function ResourceBars.EnsureVengeanceSoulFragmentsBackfill(class, spec, specCfg)
+	local specNumber = tonumber(spec)
+	if class ~= "DEMONHUNTER" or specNumber ~= 2 or type(specCfg) ~= "table" then return end
+	local soulType = "SOUL_FRAGMENTS_VENGEANCE"
+	local voidType = "VOID_METAMORPHOSIS"
+	local soulCfg = specCfg[soulType]
+	if type(soulCfg) == "table" then return end
+
+	local voidCfg = specCfg[voidType]
+	local voidWasEnabled = type(voidCfg) == "table" and voidCfg.enabled == true
+	local selection = autoEnableSelection()
+	local wantsSecondary = selection and selection.SECONDARY == true
+	if not voidWasEnabled and not wantsSecondary then return end
+
+	local globalCfg = resolveGlobalTemplate(soulType, specNumber)
+	if globalCfg then
+		specCfg[soulType] = CopyTable(globalCfg)
+	elseif type(voidCfg) == "table" then
+		specCfg[soulType] = CopyTable(voidCfg)
+	else
+		specCfg[soulType] = {}
+	end
+
+	ResourceBars.SetRuntimeCfgField(specCfg[soulType], "rbType", soulType)
+	specCfg[soulType].enabled = true
+	if ResourceBars.PrepareBarConfigForRuntime then ResourceBars.PrepareBarConfigForRuntime(specCfg[soulType], soulType, powertypeClasses[class] and powertypeClasses[class][specNumber]) end
+
+	if voidWasEnabled and type(voidCfg) == "table" then voidCfg.enabled = false end
+end
+
+ensureSpecCfg = function()
+	-- Only helper bookkeeping lives here. Visible bar settings always live in
+	-- sharedResourceBarSettings; imported Retail spec settings stay untouched.
+	ResourceBars._classContextSettings = ResourceBars._classContextSettings or { _mode = "SHARED" }
+	for _, slot in ipairs(ResourceBars.SHARED_SLOT_ORDER) do ResourceBars.EnsureSharedSlotStore(slot) end
+	return ResourceBars._classContextSettings
+end
+
+-- Profile serialization is supplied by ResourceBarsProfiles_Camelot.lua.
+
+local function exportErrorMessage(reason)
+	if reason == "NO_DATA" or reason == "EMPTY" then return L["ExportProfileEmpty"] or "Nothing to export for this selection." end
+	if reason == "SPEC_EMPTY" then return L["ExportProfileSpecEmpty"] or "The selected specialization has no saved settings yet." end
+	return L["ExportProfileFailed"] or "Could not create an export code."
+end
+
+local function importErrorMessage(reason, extra)
+	if reason == "NO_INPUT" then return L["Please enter a code to import."] or "Please enter a code to import." end
+	if reason == "DECODE" or reason == "DECOMPRESS" or reason == "DESERIALIZE" or reason == "WRONG_KIND" then return L["The code could not be read."] or "The code could not be read." end
+	if reason == "WRONG_CLASS" then
+		local className = extra or UNKNOWN or "Unknown class"
+		return (L["ImportProfileWrongClass"] or "This profile belongs to %s."):format(className)
+	end
+	if reason == "NO_SPECS" then return L["ImportProfileNoSpecs"] or "The code does not contain any Resource Bars settings." end
+	if reason == "SPEC_MISMATCH" or reason == "NO_SPEC" then return L["ImportProfileMissingSpec"] or "The code does not contain settings for that specialization." end
+	if reason == "SPEC_EMPTY" then return L["The code could not be read."] or "The code could not be read." end
+	return L["ImportProfileFailed"] or "Could not import the Resource Bars profile."
+end
+
+local function rebuildTextureCache()
+	local map = {
+		["DEFAULT"] = DEFAULT,
+		[RB.BLIZZARD_TEX] = "Blizzard: UI-StatusBar",
+		["Interface\\Tooltips\\UI-Tooltip-Background"] = "Dark Flat (Tooltip bg)",
+		["Interface\\TargetingFrame\\UI-StatusBar"] = "Blizzard Unit Frame",
+		["Interface\\UnitPowerBarAlt\\Generic1Texture"] = "Alternate Power",
+	}
+	local names = addon.functions and addon.functions.GetLSMMediaNames and addon.functions.GetLSMMediaNames("statusbar") or {}
+	local hash = addon.functions and addon.functions.GetLSMMediaHash and addon.functions.GetLSMMediaHash("statusbar") or {}
+	local pathCache = {}
+	for i = 1, #names do
+		local name = names[i]
+		local path = hash[name]
+		if type(path) == "string" and path ~= "" then
+			map[path] = tostring(name)
+			pathCache[path] = true
+		end
+	end
+	local noDefault = {}
+	for k, v in pairs(map) do
+		if k ~= "DEFAULT" then noDefault[k] = v end
+	end
+	local sortedNoDefault, orderNoDefault = addon.functions.prepareListForDropdown(noDefault)
+	local sortedWithDefault = {}
+	for k, v in pairs(sortedNoDefault) do
+		sortedWithDefault[k] = v
+	end
+	sortedWithDefault["DEFAULT"] = DEFAULT
+	local orderWithDefault = { "DEFAULT" }
+	for i = 1, #orderNoDefault do
+		orderWithDefault[#orderWithDefault + 1] = orderNoDefault[i]
+	end
+	RB.TEXTURE_LIST_CACHE.noDefaultList = sortedNoDefault
+	RB.TEXTURE_LIST_CACHE.noDefaultOrder = orderNoDefault
+	RB.TEXTURE_LIST_CACHE.fullList = sortedWithDefault
+	RB.TEXTURE_LIST_CACHE.fullOrder = orderWithDefault
+	RB.TEXTURE_LIST_CACHE.statusbarPathCache = pathCache
+	RB.TEXTURE_LIST_CACHE.statusbarVersion = (addon.functions and addon.functions.GetLSMMediaVersion and addon.functions.GetLSMMediaVersion("statusbar")) or 0
+	RB.TEXTURE_LIST_CACHE.dirty = false
+end
+
+getStatusbarDropdownLists = function(includeDefault)
+	if RB.TEXTURE_LIST_CACHE.dirty or not RB.TEXTURE_LIST_CACHE.fullList then rebuildTextureCache() end
+	if includeDefault then return cloneMap(RB.TEXTURE_LIST_CACHE.fullList), cloneArray(RB.TEXTURE_LIST_CACHE.fullOrder) end
+	return cloneMap(RB.TEXTURE_LIST_CACHE.noDefaultList), cloneArray(RB.TEXTURE_LIST_CACHE.noDefaultOrder)
+end
+addon.Aura.functions.getStatusbarDropdownLists = getStatusbarDropdownLists
+
+-- Detect Atlas: /run local t=PlayerFrame_GetManaBar():GetStatusBarTexture(); print("tex:", t:GetTexture(), "atlas:", t:GetAtlas()); local a,b,c,d,e,f,g,h=t:GetTexCoord(); print("tc:",a,b,c,d,e,f,g,h)
+-- Healthbar: /run local t=PlayerFrame_GetHealthBar():GetStatusBarTexture(); print("tex:", t:GetTexture(), "atlas:", t:GetAtlas()); local a,b,c,d,e,f,g,h=t:GetTexCoord(); print("tc:",a,b,c,d,e,f,g,h)
+
+RB.ATLAS_BY_POWER = {
+	LUNAR_POWER = "Unit_Druid_AstralPower_Fill",
+	MAELSTROM = "Unit_Shaman_Maelstrom_Fill",
+	INSANITY = "Unit_Priest_Insanity_Fill",
+	FURY = "Unit_DemonHunter_Fury_Fill",
+	VOID_METAMORPHOSIS = "UF-DDH-VoidMeta-Bar",
+	RUNIC_POWER = "UI-HUD-UnitFrame-Player-PortraitOn-Bar-RunicPower",
+	ENERGY = "UI-HUD-UnitFrame-Player-PortraitOn-ClassResource-Bar-Energy",
+	FOCUS = "UI-HUD-UnitFrame-Player-PortraitOn-Bar-Focus",
+	RAGE = "UI-HUD-UnitFrame-Player-PortraitOn-Bar-Rage",
+	MANA = "UI-HUD-UnitFrame-Player-PortraitOn-Bar-Mana",
+	HEALTH = "UI-HUD-UnitFrame-Player-PortraitOn-Bar-Health",
+}
+
+local function isDefaultTextureSelection(cfg, pType)
+	local sel = cfg and cfg.barTexture
+	if sel == nil or sel == "" or sel == "DEFAULT" then return true end
+	if pType == "VOID_METAMORPHOSIS" and sel == RB.DEFAULT_RB_TEX then return true end
+	return false
+end
+
+local function shouldNormalizeAtlasColor(cfg, pType, bar)
+	if cfg then
+		if cfg.useBarColor == true then return false end
+		if cfg.useClassColor == true then return false end
+		if cfg.useGradient == true then return false end
+		if cfg.useMaxColor == true and bar and bar._usingMaxColor then return false end
+		if cfg.useAbsoluteThresholdColors == true and bar and bar._usingAbsoluteThresholdColor then return false end
+	end
+	local auraDef = RB.AURA_POWER_CONFIG and RB.AURA_POWER_CONFIG[pType]
+	if auraDef and auraDef.defaultColor then return false end
+	return true
+end
+
+local function configureSpecialTexture(bar, pType, cfg)
+	if not bar then return end
+	local atlas = RB.ATLAS_BY_POWER[pType]
+	if not atlas then
+		bar._eqolSpecialAtlas = nil
+		bar._eqolSpecialAtlasNormalized = nil
+		return
+	end
+	cfg = cfg or bar._cfg
+	if not isDefaultTextureSelection(cfg, pType) then
+		bar._eqolSpecialAtlas = nil
+		bar._eqolSpecialAtlasNormalized = nil
+		return
+	end
+	local shouldNormalize = shouldNormalizeAtlasColor(cfg, pType, bar)
+	local tex = bar.GetStatusBarTexture and bar:GetStatusBarTexture() or nil
+	local currentAlpha = tex and tex.GetAlpha and tex:GetAlpha() or nil
+	local currentAtlas = tex and tex.GetAtlas and tex:GetAtlas() or nil
+	if bar._eqolSpecialAtlas == atlas and bar._eqolSpecialAtlasNormalized == shouldNormalize and currentAtlas == atlas then return end
+	if bar.SetStatusBarTexture then bar:SetStatusBarTexture(atlas) end
+	tex = bar.GetStatusBarTexture and bar:GetStatusBarTexture() or nil
+	if tex and tex.SetAtlas then
+		if ResourceBars.ApplyTexturePixelSnapping then ResourceBars.ApplyTexturePixelSnapping(tex, 0) end
+		if currentAlpha ~= nil and tex.SetAlpha then tex:SetAlpha(currentAlpha) end
+		currentAtlas = tex.GetAtlas and tex:GetAtlas()
+		if currentAtlas ~= atlas then tex:SetAtlas(atlas, true) end
+		if tex.SetHorizTile then tex:SetHorizTile(false) end
+		if tex.SetVertTile then tex:SetVertTile(false) end
+		if shouldNormalize then
+			bar:SetStatusBarColor(1, 1, 1, 1)
+			bar._baseColor = bar._baseColor or {}
+			bar._baseColor[1], bar._baseColor[2], bar._baseColor[3], bar._baseColor[4] = 1, 1, 1, 1
+			bar._lastColor = bar._lastColor or {}
+			bar._lastColor[1], bar._lastColor[2], bar._lastColor[3], bar._lastColor[4] = 1, 1, 1, 1
+			bar._usingMaxColor = false
+		else
+			local keepSecretCurve = addon.variables and addon.variables.isMidnight and cfg and cfg.useMaxColor == true
+			if not keepSecretCurve then
+				local lc = bar._lastColor
+				if lc then bar:SetStatusBarColor(lc[1] or 1, lc[2] or 1, lc[3] or 1, lc[4] or 1) end
+			end
+		end
+	end
+	bar._eqolSpecialAtlas = atlas
+	bar._eqolSpecialAtlasNormalized = shouldNormalize
+end
+
+local function isValidStatusbarPath(path)
+	if not path or type(path) ~= "string" or path == "" then return false end
+	if path == RB.BLIZZARD_TEX then return true end
+	if path == "Interface\\Buttons\\WHITE8x8" then return true end
+	if path == "Interface\\Tooltips\\UI-Tooltip-Background" then return true end
+	local cache = RB.TEXTURE_LIST_CACHE or {}
+	local version = (addon.functions and addon.functions.GetLSMMediaVersion and addon.functions.GetLSMMediaVersion("statusbar")) or 0
+	if cache.dirty or not cache.statusbarPathCache or cache.statusbarVersion ~= version then rebuildTextureCache() end
+	return RB.TEXTURE_LIST_CACHE and RB.TEXTURE_LIST_CACHE.statusbarPathCache and RB.TEXTURE_LIST_CACHE.statusbarPathCache[path] == true
+end
+
+local function resolveTexture(cfg)
+	local sel = cfg and cfg.barTexture
+	if sel == nil or sel == "DEFAULT" or not isValidStatusbarPath(sel) then return RB.DEFAULT_RB_TEX end
+	return sel
+end
+
+local function shouldEnableBarMouse(cfg) return not (cfg and cfg.clickThrough == true) end
+
+local function isEQOLFrameName(name)
+	if name == "EQOLHealthBar" then return true end
+	if ResourceBars.GetSharedSlotFromFrameName and ResourceBars.GetSharedSlotFromFrameName(name) then return true end
+	return type(name) == "string" and name:match("^EQOL.+Bar$")
+end
+-- Fixed, non-DB defaults are stored in ResourcebarVars (RB)
+
+local function defaultFontPath()
+	if addon.functions and addon.functions.GetGlobalDefaultFontFace then return addon.functions.GetGlobalDefaultFontFace() end
+	return (addon.variables and addon.variables.defaultFont) or (LSM and LSM.DefaultMedia and LSM:Fetch("font", LSM.DefaultMedia.font)) or STANDARD_TEXT_FONT
+end
+
+local function resolveFontFace(cfg)
+	local configured = cfg and cfg.fontFace
+	if addon.functions and addon.functions.ResolveFontFace then return addon.functions.ResolveFontFace(configured, defaultFontPath()) end
+	if configured and configured ~= "" then return configured end
+	return defaultFontPath()
+end
+
+local function resolveFontStyleChoice(cfg)
+	local outline = cfg and cfg.fontOutline
+	if addon.functions and addon.functions.NormalizeFontStyleChoice then return addon.functions.NormalizeFontStyleChoice(outline, "OUTLINE", true) end
+	if outline == nil or outline == "" then return "OUTLINE" end
+	return outline
+end
+
+local function resolveFontOutline(cfg)
+	local style = resolveFontStyleChoice(cfg)
+	if addon.functions and addon.functions.GetFontFlagsForStyle then return addon.functions.GetFontFlagsForStyle(style, "OUTLINE") end
+	if style == nil then return "OUTLINE" end
+	if style == "" or style == "NONE" then return nil end
+	return style
+end
+
+local function resolveFontColor(cfg)
+	local fc = cfg and cfg.fontColor
+	return fc and (fc[1] or 1) or 1, fc and (fc[2] or 1) or 1, fc and (fc[3] or 1) or 1, fc and (fc[4] or 1) or 1
+end
+
+function ResourceBars.NormalizeFrameStrataToken(strata)
+	if type(strata) ~= "string" or strata == "" then return nil end
+	local upper = string.upper(strata)
+	if ResourceBars._validFrameStrata and ResourceBars._validFrameStrata[upper] then return upper end
+	return nil
+end
+
+function ResourceBars.NormalizeFrameLevelOffset(offset)
+	local value = tonumber(offset)
+	if value == nil then return nil end
+	value = floor(value + 0.5)
+	if value < 0 then
+		value = 0
+	elseif value > RB.MAX_FRAME_LEVEL_OFFSET then
+		value = RB.MAX_FRAME_LEVEL_OFFSET
+	end
+	return value
+end
+
+local function setFontWithFallback(fs, face, size, outline)
+	if not fs or not face then return end
+	if outline == "" then outline = nil end
+	if addon.functions and addon.functions.SetFontWithFallback then
+		addon.functions.SetFontWithFallback(fs, face, size, outline, defaultFontPath())
+		return
+	end
+	if not fs:SetFont(face, size, outline) then
+		local fallbackOutline = outline or "OUTLINE"
+		fs:SetFont(defaultFontPath(), size, fallbackOutline)
+	end
+end
+
+local function applyFontToString(fs, cfg)
+	if not fs then return end
+	local size = (cfg and cfg.fontSize) or 16
+	local styleChoice = resolveFontStyleChoice(cfg)
+	setFontWithFallback(fs, resolveFontFace(cfg), size, resolveFontOutline(cfg))
+	if addon.functions and addon.functions.ApplyFontStyleShadow then addon.functions.ApplyFontStyleShadow(fs, styleChoice, "OUTLINE") end
+	local r, g, b, a = resolveFontColor(cfg)
+	fs:SetTextColor(r, g, b, a)
+	local parent = fs.GetParent and fs:GetParent()
+	if parent then
+		parent._textColorR, parent._textColorG, parent._textColorB, parent._textColorA = r, g, b, a
+	end
+end
+
+local function ensureBackdropFrames(frame)
+	if not frame then return nil end
+	local bg = frame._rbBackground
+	if not bg then
+		bg = CreateFrame("Frame", nil, frame, "BackdropTemplate")
+		bg:EnableMouse(false)
+		frame._rbBackground = bg
+	end
+	local border = frame._rbBorder
+	if not border then
+		border = CreateFrame("Frame", nil, frame, "BackdropTemplate")
+		border:EnableMouse(false)
+		frame._rbBorder = border
+	end
+	local base = frame:GetFrameLevel() or 1
+	local strata = (frame.GetFrameStrata and frame:GetFrameStrata()) or RB.DEFAULT_FRAME_STRATA
+	if bg.GetFrameStrata and bg:GetFrameStrata() ~= strata then bg:SetFrameStrata(strata) end
+	if border.GetFrameStrata and border:GetFrameStrata() ~= strata then border:SetFrameStrata(strata) end
+	if bg.GetFrameLevel and bg:GetFrameLevel() ~= max(base - 2, 0) then bg:SetFrameLevel(max(base - 2, 0)) end
+	if border.GetFrameLevel and border:GetFrameLevel() ~= min(base + 2, 65535) then border:SetFrameLevel(min(base + 2, 65535)) end
+	return bg, border
+end
+
+RB.LEGACY_CUSTOM_BORDER_IDS = {
+	EQOL_BORDER_RUNES = true,
+	EQOL_BORDER_GOLDEN = true,
+	EQOL_BORDER_MODERN = true,
+	EQOL_BORDER_CLASSIC = true,
+}
+RB.DEFAULT_BACKDROP_BORDER_TEXTURE = "Interface\\Tooltips\\UI-Tooltip-Border"
+
+function ResourceBars.ResolveBorderTexture(value, fallback)
+	local borderTexture = type(value) == "string" and value or nil
+	if not borderTexture or borderTexture == "" then return fallback end
+	if borderTexture == "DEFAULT" then return fallback or RB.DEFAULT_BACKDROP_BORDER_TEXTURE end
+	if RB.LEGACY_CUSTOM_BORDER_IDS[borderTexture] then return RB.DEFAULT_BACKDROP_BORDER_TEXTURE end
+	if borderTexture:find("\\", 1, true) or borderTexture:find("/", 1, true) then return borderTexture end
+	if LSM and LSM.Fetch then
+		local texture = LSM:Fetch("border", borderTexture, true)
+		if type(texture) == "string" and texture ~= "" then return texture end
+	end
+	return fallback or RB.DEFAULT_BACKDROP_BORDER_TEXTURE
+end
+
+local function normalizeBorderTexture(bd)
+	if not bd then return nil end
+	local borderTexture = bd.borderTexture
+	if borderTexture and RB.LEGACY_CUSTOM_BORDER_IDS[borderTexture] then
+		borderTexture = RB.DEFAULT_BACKDROP_BORDER_TEXTURE
+		bd.borderTexture = borderTexture
+	end
+	return ResourceBars.ResolveBorderTexture(borderTexture, RB.DEFAULT_BACKDROP_BORDER_TEXTURE)
+end
+
+-- Statusbar content inset controller
+RB.ZERO_INSETS = { left = 0, right = 0, top = 0, bottom = 0 }
+
+local function copyInsetValues(src, dest)
+	dest = dest or {}
+	dest.left = src.left or 0
+	dest.right = src.right or 0
+	dest.top = src.top or 0
+	dest.bottom = src.bottom or 0
+	return dest
+end
+
+local function resolveInnerInset(bd, frame)
+	-- Health and absorb fills share the full bar geometry beneath decorative borders.
+	-- Border edge size includes transparent texture padding and must not shrink it.
+	if frame and frame._rbType == "HEALTH" then return RB.ZERO_INSETS end
+	if not bd or bd.enabled == false then return RB.ZERO_INSETS end
+	local borderColor = bd.borderColor
+	local borderAlpha = ResourceBars.ResolveColorAlpha(borderColor)
+	if issecretvalue and issecretvalue(borderAlpha) then return RB.ZERO_INSETS end
+	if (tonumber(borderAlpha) or 0) <= 0 then return RB.ZERO_INSETS end
+	local borderTexture = normalizeBorderTexture(bd)
+	if not borderTexture or borderTexture == "" then return RB.ZERO_INSETS end
+	local edgeSize = tonumber(bd.edgeSize) or 0
+	local outset = max(0, tonumber(bd.outset) or 0)
+	local inset = edgeSize - outset
+	if inset <= 0 then return RB.ZERO_INSETS end
+	inset = max(1, ceil(inset))
+	return { left = inset, right = inset, top = inset, bottom = inset }
+end
+
+local function ensureInnerFrame(frame)
+	local inner = frame._rbInner
+	if not inner then
+		inner = CreateFrame("Frame", nil, frame)
+		inner:EnableMouse(false)
+		inner:SetClipsChildren(true)
+		frame._rbInner = inner
+	end
+	return inner
+end
+
+local function ensureTextOverlayFrame(bar)
+	if not bar then return nil end
+	local overlay = bar._rbTextOverlay
+	if not overlay then
+		overlay = CreateFrame("Frame", nil, bar)
+		overlay:SetAllPoints(bar)
+		overlay:EnableMouse(false)
+		bar._rbTextOverlay = overlay
+	end
+	local baseLevel = bar:GetFrameLevel() or 1
+	local borderLevel = bar._rbBorder and bar._rbBorder:GetFrameLevel() or baseLevel
+	overlay:SetFrameStrata(bar:GetFrameStrata())
+	overlay:SetFrameLevel(max(borderLevel + 1, baseLevel + 1))
+	return overlay
+end
+
+function ResourceBars.LayoutSegmentBoundaryMarks(
+	bar,
+	inner,
+	count,
+	vertical,
+	segmentOffsetsPx,
+	segmentSizesPx,
+	scale,
+	factor,
+	marks,
+	enabled,
+	texture,
+	edgeSize,
+	outset,
+	r,
+	g,
+	b,
+	a
+)
+	if not bar or not marks then return end
+	count = tonumber(count) or 0
+	local thicknessPx = max(0, floor((tonumber(edgeSize) or 0) + 0.5))
+	if enabled ~= true or count < 2 or thicknessPx <= 0 or not texture or texture == "" then
+		for i = 1, #marks do
+			if marks[i] then marks[i]:Hide() end
+		end
+		return
+	end
+
+	inner = inner or bar._rbInner or bar
+	if not inner then return end
+	local overlay = ensureTextOverlayFrame(bar) or bar
+	local outsetPx = select(1, ResourceBars.UiToPixels(max(0, tonumber(outset) or 0), inner, 0))
+	local spanPx = max(0, (segmentOffsetsPx[count] or 0) + (segmentSizesPx[count] or 0))
+	local markThicknessPx = min(thicknessPx, spanPx)
+	if markThicknessPx <= 0 then
+		for i = 1, #marks do
+			if marks[i] then marks[i]:Hide() end
+		end
+		return
+	end
+	local crossSpan = vertical and (inner:GetWidth() or 0) or (inner:GetHeight() or 0)
+	local crossSpanPx = select(1, ResourceBars.UiToPixels(max(0, crossSpan), inner, 0))
+	local contentInset = bar._rbContentInset
+	local crossAxisAlreadyInset = contentInset
+		and (
+			(vertical and ((contentInset.left or 0) > 0 or (contentInset.right or 0) > 0))
+			or (not vertical and ((contentInset.top or 0) > 0 or (contentInset.bottom or 0) > 0))
+		)
+	local requestedCrossInsetPx = max(0, thicknessPx - outsetPx)
+	local crossInsetPx = crossAxisAlreadyInset and 0 or requestedCrossInsetPx
+	if crossInsetPx * 2 >= crossSpanPx then crossInsetPx = 0 end
+	local thicknessUi = ResourceBars.PixelsToUi(markThicknessPx, scale, factor)
+	local crossInsetUi = ResourceBars.PixelsToUi(crossInsetPx, scale, factor)
+	local useSlices = texture ~= "Interface\\Buttons\\WHITE8x8"
+
+	for i = 1, count - 1 do
+		local mark = marks[i]
+		if not mark then
+			mark = overlay:CreateTexture(nil, "ARTWORK", nil, 7)
+			marks[i] = mark
+		elseif mark:GetParent() ~= overlay then
+			mark:SetParent(overlay)
+		end
+		if mark.SetDrawLayer then mark:SetDrawLayer("ARTWORK", 7) end
+		mark:ClearAllPoints()
+		mark:SetTexture(texture)
+		if useSlices then
+			if vertical then
+				mark:SetTexCoord(0.2578125, 0.9375, 0.3671875, 0.9375, 0.2578125, 0.0625, 0.3671875, 0.0625)
+			else
+				mark:SetTexCoord(0.1328125, 0.0625, 0.1328125, 0.9375, 0.2421875, 0.0625, 0.2421875, 0.9375)
+			end
+		else
+			mark:SetTexCoord(0, 1, 0, 1)
+		end
+		mark:SetVertexColor(r, g, b, a)
+		ResourceBars.ApplyTexturePixelSnapping(mark, 0)
+
+		local boundaryPx = (segmentOffsetsPx[i] or 0) + (segmentSizesPx[i] or 0)
+		local markOffsetPx = min(max(0, boundaryPx + outsetPx - markThicknessPx), max(0, spanPx - markThicknessPx))
+		local markOffsetUi = ResourceBars.PixelsToUi(markOffsetPx, scale, factor)
+		if vertical then
+			ResourceBars.Pixel.Point(mark, "BOTTOMLEFT", inner, "BOTTOMLEFT", crossInsetUi, markOffsetUi)
+			ResourceBars.Pixel.Point(mark, "BOTTOMRIGHT", inner, "BOTTOMRIGHT", -crossInsetUi, markOffsetUi)
+			ResourceBars.Pixel.Height(mark, thicknessUi)
+		else
+			ResourceBars.Pixel.Point(mark, "TOPLEFT", inner, "TOPLEFT", markOffsetUi, -crossInsetUi)
+			ResourceBars.Pixel.Point(mark, "BOTTOMLEFT", inner, "BOTTOMLEFT", markOffsetUi, crossInsetUi)
+			ResourceBars.Pixel.Width(mark, thicknessUi)
+		end
+		if not mark:IsShown() then mark:Show() end
+	end
+
+	for i = count, #marks do
+		if marks[i] then marks[i]:Hide() end
+	end
+end
+
+local function applyBarFrameLayers(bar, cfg)
+	if not bar then return end
+	local function setFrameStrataIfNeeded(frame, strata)
+		if not (frame and frame.SetFrameStrata and strata) then return end
+		if frame:GetFrameStrata() ~= strata then frame:SetFrameStrata(strata) end
+	end
+
+	local function setFrameLevelIfNeeded(frame, level)
+		if not (frame and frame.SetFrameLevel and level ~= nil) then return end
+		if frame:GetFrameLevel() ~= level then frame:SetFrameLevel(level) end
+	end
+
+	if bar._rbBaseStrata == nil and bar.GetFrameStrata then bar._rbBaseStrata = ResourceBars.NormalizeFrameStrataToken(bar:GetFrameStrata()) or RB.DEFAULT_FRAME_STRATA end
+	if bar._rbBaseFrameLevel == nil and bar.GetFrameLevel then bar._rbBaseFrameLevel = bar:GetFrameLevel() or 0 end
+
+	local strata = ResourceBars.NormalizeFrameStrataToken(cfg and cfg.strata) or bar._rbBaseStrata or RB.DEFAULT_FRAME_STRATA
+	local baseLevel = tonumber(bar._rbBaseFrameLevel)
+	if baseLevel == nil then baseLevel = (bar.GetFrameLevel and bar:GetFrameLevel()) or 0 end
+	local levelOffset = ResourceBars.NormalizeFrameLevelOffset(cfg and cfg.frameLevelOffset) or 0
+	local desiredLevel = max(0, baseLevel + levelOffset)
+	setFrameStrataIfNeeded(bar, strata)
+	setFrameLevelIfNeeded(bar, desiredLevel)
+	do
+		local childLevel = min(desiredLevel + 1, 65535)
+		local borderLevel = min(desiredLevel + 2, 65535)
+		local bg, border = ensureBackdropFrames(bar)
+		if bg then
+			setFrameStrataIfNeeded(bg, strata)
+			setFrameLevelIfNeeded(bg, max(desiredLevel - 2, 0))
+		end
+		if border then
+			setFrameStrataIfNeeded(border, strata)
+			setFrameLevelIfNeeded(border, borderLevel)
+		end
+		if bar._rbInner then
+			setFrameStrataIfNeeded(bar._rbInner, strata)
+			setFrameLevelIfNeeded(bar._rbInner, desiredLevel)
+		end
+		if bar._rbTextOverlay then
+			setFrameStrataIfNeeded(bar._rbTextOverlay, strata)
+			setFrameLevelIfNeeded(bar._rbTextOverlay, max(borderLevel + 1, childLevel))
+		end
+		if bar.absorbBar then
+			setFrameStrataIfNeeded(bar.absorbBar, strata)
+			setFrameLevelIfNeeded(bar.absorbBar, childLevel)
+		end
+		if bar.absorbSecondaryBar then
+			setFrameStrataIfNeeded(bar.absorbSecondaryBar, strata)
+			setFrameLevelIfNeeded(bar.absorbSecondaryBar, childLevel)
+		end
+		if bar._rbAbsorbClipRegions then
+			for _, region in pairs(bar._rbAbsorbClipRegions) do
+				setFrameStrataIfNeeded(region, strata)
+				setFrameLevelIfNeeded(region, childLevel)
+			end
+		end
+		if bar.healAbsorbBar then
+			setFrameStrataIfNeeded(bar.healAbsorbBar, strata)
+			setFrameLevelIfNeeded(bar.healAbsorbBar, childLevel)
+		end
+		if bar.runes then
+			for i = 1, #bar.runes do
+				local sb = bar.runes[i]
+				if sb then
+					setFrameStrataIfNeeded(sb, strata)
+					setFrameLevelIfNeeded(sb, childLevel)
+					if sb._rbSegmentBorder then
+						setFrameStrataIfNeeded(sb._rbSegmentBorder, strata)
+						setFrameLevelIfNeeded(sb._rbSegmentBorder, borderLevel)
+					end
+				end
+			end
+		end
+		if bar._rbDiscreteSegments then
+			for i = 1, #bar._rbDiscreteSegments do
+				local sb = bar._rbDiscreteSegments[i]
+				if sb then
+					setFrameStrataIfNeeded(sb, strata)
+					setFrameLevelIfNeeded(sb, childLevel)
+					if sb._rbSegmentBorder then
+						setFrameStrataIfNeeded(sb._rbSegmentBorder, strata)
+						setFrameLevelIfNeeded(sb._rbSegmentBorder, borderLevel)
+					end
+				end
+			end
+		end
+	end
+	return strata, desiredLevel
+end
+
+local EnumPowerType = Enum.PowerType
+
+local POWER_ENUM = {
+	MANA = (EnumPowerType and EnumPowerType.Mana) or 0,
+	RAGE = (EnumPowerType and EnumPowerType.Rage) or 1,
+	FOCUS = (EnumPowerType and EnumPowerType.Focus) or 2,
+	ENERGY = (EnumPowerType and EnumPowerType.Energy) or 3,
+	COMBO_POINTS = (EnumPowerType and EnumPowerType.ComboPoints) or 4,
+	RUNES = (EnumPowerType and EnumPowerType.Runes) or 5,
+	RUNIC_POWER = (EnumPowerType and EnumPowerType.RunicPower) or 6,
+	SOUL_SHARDS = (EnumPowerType and EnumPowerType.SoulShards) or 7,
+	LUNAR_POWER = (EnumPowerType and EnumPowerType.LunarPower) or (EnumPowerType and EnumPowerType.Alternate) or 8,
+	HOLY_POWER = (EnumPowerType and EnumPowerType.HolyPower) or 9,
+	MAELSTROM = (EnumPowerType and EnumPowerType.Maelstrom) or 11,
+	CHI = (EnumPowerType and EnumPowerType.Chi) or 12,
+	INSANITY = (EnumPowerType and EnumPowerType.Insanity) or 13,
+	ARCANE_CHARGES = (EnumPowerType and EnumPowerType.ArcaneCharges) or 16,
+	FURY = (EnumPowerType and EnumPowerType.Fury) or 17,
+	PAIN = (EnumPowerType and EnumPowerType.Pain) or 18,
+	ESSENCE = (EnumPowerType and EnumPowerType.Essence) or 19,
+}
+
+function ResourceBars.GetClassResourceInfo()
+	local class = addon.variables.unitClass
+	local supported = ResourceBars.CLASS_RESOURCES[class]
+	if not supported then return nil end
+	local _, main = UnitPowerType("player")
+	if not ResourceBars.IsBarTypeSupportedForClass(main, class) then main = supported.MAIN end
+	local info = { MAIN = main }
+	if class == "ROGUE" or (class == "DRUID" and main == "ENERGY") then info.COMBO_POINTS = true end
+	if class == "DRUID" and main ~= "MANA" then info.MANA = true end
+	return info
+end
+
+function ResourceBars.HideSegmentChildren(segments, clearCooldownText)
+	if not segments then return end
+	for i = 1, #segments do
+		local sb = segments[i]
+		if sb then
+			sb:Hide()
+			if sb._rbSegmentBg then sb._rbSegmentBg:Hide() end
+			if sb._rbSegmentBorder then sb._rbSegmentBorder:Hide() end
+			if clearCooldownText and sb.fs then
+				if addon.functions and addon.functions.SetDurationTextBindingEnabled then addon.functions.SetDurationTextBindingEnabled(sb, "runeDurationText", false) end
+				sb.fs:SetText("")
+				sb.fs:Hide()
+			end
+		end
+	end
+end
+
+function ResourceBars.HideInactiveEssenceChildren(frame)
+	if not frame then return end
+	ResourceBars.HideSegmentChildren(frame.essences, false)
+	if frame.essenceGapMarks then
+		for i = 1, #frame.essenceGapMarks do
+			local mark = frame.essenceGapMarks[i]
+			if mark then mark:Hide() end
+		end
+	end
+	frame._essenceSegments = 0
+	frame._essenceVertical = nil
+	frame._essenceGap = nil
+	frame._essenceGapRequested = nil
+	frame._essenceSegmentStyled = nil
+end
+
+function ResourceBars.HideInactiveRuneChildren(frame)
+	if not frame then return end
+	ResourceBars.HideSegmentChildren(frame.runes, true)
+	if frame.runeGapMarks then
+		for i = 1, #frame.runeGapMarks do
+			local mark = frame.runeGapMarks[i]
+			if mark then mark:Hide() end
+		end
+	end
+end
+
+local function applyStatusBarInsets(frame, inset, force)
+	if not frame then return end
+	inset = inset or RB.ZERO_INSETS
+	local l = inset.left or 0
+	local r = inset.right or 0
+	local t = inset.top or 0
+	local b = inset.bottom or 0
+	frame._rbInsetState = frame._rbInsetState or {}
+	local state = frame._rbInsetState
+	if not force and state.left == l and state.right == r and state.top == t and state.bottom == b then
+		-- no-op
+	else
+		state.left, state.right, state.top, state.bottom = l, r, t, b
+	end
+
+	local inner = ensureInnerFrame(frame)
+	ResourceBars.Pixel.SetInset(inner, frame, l, r, t, b)
+	local innerLevel = (frame:GetFrameLevel() or 1)
+	inner:SetFrameStrata(frame:GetFrameStrata())
+	inner:SetFrameLevel(innerLevel)
+
+	local function alignTexture(bar, target)
+		if not bar then return end
+		local tex = bar.GetStatusBarTexture and bar:GetStatusBarTexture()
+		if tex then
+			ResourceBars.Pixel.SetInside(tex, target, 0, 0)
+		end
+	end
+
+	alignTexture(frame, inner)
+	if frame.absorbBar then
+		local cfg = frame._cfg or (frame._rbType and getBarSettings and getBarSettings(frame._rbType)) or {}
+		applyAbsorbLayout(frame, cfg)
+	end
+	if frame.healAbsorbBar then
+		local cfg = frame._cfg or (frame._rbType and getBarSettings and getBarSettings(frame._rbType)) or {}
+		ResourceBars.ApplyHealthOverlayHeight(frame.healAbsorbBar, frame, cfg.healAbsorbOverlayHeight)
+	end
+
+	frame._rbContentInset = frame._rbContentInset or {}
+	frame._rbContentInset.left = l
+	frame._rbContentInset.right = r
+	frame._rbContentInset.top = t
+	frame._rbContentInset.bottom = b
+
+	if frame.separatorMarks then
+		frame._sepW, frame._sepH, frame._sepSegments = nil, nil, nil
+	end
+	if frame._rbType then
+		updateBarSeparators(frame._rbType)
+		updateBarThresholds(frame._rbType)
+	end
+	if frame.runes then
+		if frame._rbType == "RUNES" then
+			layoutRunes(frame)
+		else
+			ResourceBars.HideInactiveRuneChildren(frame)
+		end
+	end
+	if frame.essences then
+		if frame._rbType == "ESSENCE" then
+			local cfg = frame._cfg or getBarSettings("ESSENCE") or {}
+			local count = POWER_ENUM and UnitPowerMax("player", POWER_ENUM.ESSENCE) or 0
+			ResourceBars.LayoutEssences(frame, cfg, count, resolveTexture(cfg))
+		else
+			ResourceBars.HideInactiveEssenceChildren(frame)
+		end
+	end
+end
+
+function ResourceBars.StabilizeStatusBarGeometry(bar)
+	if not bar then return end
+	if bar.SetSnapToPixelGrid then bar:SetSnapToPixelGrid(false) end
+	if bar.SetTexelSnappingBias then bar:SetTexelSnappingBias(0) end
+	local texture = bar.GetStatusBarTexture and bar:GetStatusBarTexture()
+	if not texture then return end
+	if texture.SetSnapToPixelGrid then texture:SetSnapToPixelGrid(false) end
+	if texture.SetTexelSnappingBias then texture:SetTexelSnappingBias(0) end
+	if texture.SetHorizTile then texture:SetHorizTile(false) end
+	if texture.SetVertTile then texture:SetVertTile(false) end
+	if texture.SetTexCoord then texture:SetTexCoord(0, 1, 0, 1) end
+end
+
+function ResourceBars.EnsureHealthFillGeometryBar(bar, cfg)
+	if not bar then return nil end
+	local geometry = bar._rbHealthFillGeometryBar
+	if not geometry then
+		geometry = CreateFrame("StatusBar", nil, bar)
+		geometry:SetMinMaxValues(0, 1)
+		geometry:SetValue(0)
+		geometry:SetStatusBarTexture("Interface\\Buttons\\WHITE8x8")
+		geometry:SetStatusBarColor(1, 1, 1, 0)
+		geometry:EnableMouse(false)
+		geometry:Show()
+		bar._rbHealthFillGeometryBar = geometry
+	end
+	if geometry:GetParent() ~= bar then geometry:SetParent(bar) end
+	local inner = bar._rbInner or bar
+	geometry:ClearAllPoints()
+	geometry:SetAllPoints(inner)
+	local vertical = cfg and cfg.verticalFill == true
+	if geometry.SetOrientation then geometry:SetOrientation(vertical and "VERTICAL" or "HORIZONTAL") end
+	ResourceBars.SetStatusBarReverseFill(geometry, cfg and cfg.reverseFill == true)
+	ResourceBars.StabilizeStatusBarGeometry(geometry)
+	return geometry
+end
+
+function ResourceBars.SyncHealthFillGeometryBar(bar, cfg, value, maximum, smooth)
+	local geometry = bar and bar._rbHealthFillGeometryBar
+	if not geometry then return nil end
+	if maximum ~= nil then geometry:SetMinMaxValues(0, maximum) end
+	if value ~= nil then setBarValue(geometry, value, smooth) end
+	return geometry
+end
+
+function ResourceBars.GetHealthFillGeometryTexture(bar, cfg)
+	local geometry = ResourceBars.EnsureHealthFillGeometryBar(bar, cfg)
+	return geometry and geometry.GetStatusBarTexture and geometry:GetStatusBarTexture() or nil
+end
+
+function ResourceBars.EnsureAbsorbClipRegions(bar)
+	if not bar then return nil end
+	local regions = bar._rbAbsorbClipRegions
+	if regions then return regions end
+	regions = {
+		filled = CreateFrame("Frame", nil, bar),
+		missing = CreateFrame("Frame", nil, bar),
+	}
+	for _, region in pairs(regions) do
+		region:SetClipsChildren(true)
+		region:EnableMouse(false)
+	end
+	bar._rbAbsorbClipRegions = regions
+	return regions
+end
+
+function ResourceBars.LayoutAbsorbClipRegions(bar, cfg)
+	if not bar then return nil end
+	cfg = cfg or {}
+	local regions = ResourceBars.EnsureAbsorbClipRegions(bar)
+	local inner = bar._rbInner or bar
+	local texture = ResourceBars.GetHealthFillGeometryTexture(bar, cfg)
+	local vertical = cfg.verticalFill == true
+	local reverseHealth = cfg.reverseFill == true
+
+	regions.filled:ClearAllPoints()
+	regions.missing:ClearAllPoints()
+	if not texture then
+		regions.filled:SetAllPoints(inner)
+		regions.missing:SetAllPoints(inner)
+	elseif vertical and reverseHealth then
+		regions.filled:SetPoint("TOPLEFT", inner, "TOPLEFT")
+		regions.filled:SetPoint("TOPRIGHT", inner, "TOPRIGHT")
+		regions.filled:SetPoint("BOTTOMLEFT", texture, "BOTTOMLEFT")
+		regions.filled:SetPoint("BOTTOMRIGHT", texture, "BOTTOMRIGHT")
+		regions.missing:SetPoint("BOTTOMLEFT", inner, "BOTTOMLEFT")
+		regions.missing:SetPoint("BOTTOMRIGHT", inner, "BOTTOMRIGHT")
+		regions.missing:SetPoint("TOPLEFT", texture, "BOTTOMLEFT")
+		regions.missing:SetPoint("TOPRIGHT", texture, "BOTTOMRIGHT")
+	elseif vertical then
+		regions.filled:SetPoint("BOTTOMLEFT", inner, "BOTTOMLEFT")
+		regions.filled:SetPoint("BOTTOMRIGHT", inner, "BOTTOMRIGHT")
+		regions.filled:SetPoint("TOPLEFT", texture, "TOPLEFT")
+		regions.filled:SetPoint("TOPRIGHT", texture, "TOPRIGHT")
+		regions.missing:SetPoint("TOPLEFT", inner, "TOPLEFT")
+		regions.missing:SetPoint("TOPRIGHT", inner, "TOPRIGHT")
+		regions.missing:SetPoint("BOTTOMLEFT", texture, "TOPLEFT")
+		regions.missing:SetPoint("BOTTOMRIGHT", texture, "TOPRIGHT")
+	elseif reverseHealth then
+		regions.filled:SetPoint("TOPRIGHT", inner, "TOPRIGHT")
+		regions.filled:SetPoint("BOTTOMRIGHT", inner, "BOTTOMRIGHT")
+		regions.filled:SetPoint("TOPLEFT", texture, "TOPLEFT")
+		regions.filled:SetPoint("BOTTOMLEFT", texture, "BOTTOMLEFT")
+		regions.missing:SetPoint("TOPLEFT", inner, "TOPLEFT")
+		regions.missing:SetPoint("BOTTOMLEFT", inner, "BOTTOMLEFT")
+		regions.missing:SetPoint("TOPRIGHT", texture, "TOPLEFT")
+		regions.missing:SetPoint("BOTTOMRIGHT", texture, "BOTTOMLEFT")
+	else
+		regions.filled:SetPoint("TOPLEFT", inner, "TOPLEFT")
+		regions.filled:SetPoint("BOTTOMLEFT", inner, "BOTTOMLEFT")
+		regions.filled:SetPoint("TOPRIGHT", texture, "TOPRIGHT")
+		regions.filled:SetPoint("BOTTOMRIGHT", texture, "BOTTOMRIGHT")
+		regions.missing:SetPoint("TOPRIGHT", inner, "TOPRIGHT")
+		regions.missing:SetPoint("BOTTOMRIGHT", inner, "BOTTOMRIGHT")
+		regions.missing:SetPoint("TOPLEFT", texture, "TOPRIGHT")
+		regions.missing:SetPoint("BOTTOMLEFT", texture, "BOTTOMRIGHT")
+	end
+	return regions
+end
+
+function ResourceBars.AnchorAbsorbFromCurrentHealth(absorb, bar, cfg)
+	if not (absorb and bar) then return end
+	cfg = cfg or {}
+	local inner = bar._rbInner or bar
+	local texture = ResourceBars.GetHealthFillGeometryTexture(bar, cfg)
+	local vertical = cfg.verticalFill == true
+	local reverseHealth = cfg.reverseFill == true
+	absorb:ClearAllPoints()
+	if not texture then
+		absorb:SetAllPoints(inner)
+	elseif vertical then
+		absorb:SetPoint("LEFT", inner, "LEFT")
+		absorb:SetPoint("RIGHT", inner, "RIGHT")
+		if reverseHealth then
+			absorb:SetPoint("TOP", texture, "BOTTOM")
+		else
+			absorb:SetPoint("BOTTOM", texture, "TOP")
+		end
+		absorb:SetHeight(inner:GetHeight())
+	else
+		absorb:SetPoint("TOP", inner, "TOP")
+		absorb:SetPoint("BOTTOM", inner, "BOTTOM")
+		if reverseHealth then
+			absorb:SetPoint("RIGHT", texture, "LEFT")
+		else
+			absorb:SetPoint("LEFT", texture, "RIGHT")
+		end
+		absorb:SetWidth(inner:GetWidth())
+	end
+end
+
+applyAbsorbLayout = function(bar, cfg)
+	if not bar or not bar.absorbBar then return end
+	cfg = cfg or {}
+	local absorb = bar.absorbBar
+	local secondary = bar.absorbSecondaryBar
+	local inner = bar._rbInner or bar
+	local overfill = cfg.absorbOverfill == true
+	local reverseAbsorb = cfg.absorbReverseFill == true and not overfill
+	local healthTex = overfill and ResourceBars.GetHealthFillGeometryTexture(bar, cfg) or nil
+	if overfill and not healthTex then overfill = false end
+
+	if absorb:GetParent() ~= bar then absorb:SetParent(bar) end
+	if secondary and secondary:GetParent() ~= bar then secondary:SetParent(bar) end
+	absorb:ClearAllPoints()
+	if overfill then
+		local vertical = cfg.verticalFill == true
+		local reverseHealth = cfg.reverseFill == true
+		local baseW = (inner and inner.GetWidth and inner:GetWidth()) or (bar.GetWidth and bar:GetWidth()) or 0
+		local baseH = (inner and inner.GetHeight and inner:GetHeight()) or (bar.GetHeight and bar:GetHeight()) or 0
+		if vertical then
+			ResourceBars.Pixel.Point(absorb, "LEFT", inner, "LEFT", 0, 0)
+			ResourceBars.Pixel.Point(absorb, "RIGHT", inner, "RIGHT", 0, 0)
+			if reverseHealth then
+				ResourceBars.Pixel.Point(absorb, "TOP", healthTex, "BOTTOM", 0, 0)
+			else
+				ResourceBars.Pixel.Point(absorb, "BOTTOM", healthTex, "TOP", 0, 0)
+			end
+			if absorb._overfillHeight ~= baseH then
+				ResourceBars.Pixel.Height(absorb, baseH)
+				absorb._overfillHeight = baseH
+			end
+			absorb._overfillWidth = nil
+		else
+			ResourceBars.Pixel.Point(absorb, "TOP", inner, "TOP", 0, 0)
+			ResourceBars.Pixel.Point(absorb, "BOTTOM", inner, "BOTTOM", 0, 0)
+			if reverseHealth then
+				ResourceBars.Pixel.Point(absorb, "RIGHT", healthTex, "LEFT", 0, 0)
+			else
+				ResourceBars.Pixel.Point(absorb, "LEFT", healthTex, "RIGHT", 0, 0)
+			end
+			if absorb._overfillWidth ~= baseW then
+				ResourceBars.Pixel.Width(absorb, baseW)
+				absorb._overfillWidth = baseW
+			end
+			absorb._overfillHeight = nil
+		end
+	elseif reverseAbsorb and secondary then
+		local regions = ResourceBars.LayoutAbsorbClipRegions(bar, cfg)
+		absorb:SetParent(regions.filled)
+		secondary:SetParent(regions.missing)
+		ResourceBars.Pixel.SetInside(absorb, inner, 0, 0)
+		ResourceBars.AnchorAbsorbFromCurrentHealth(secondary, bar, cfg)
+		ResourceBars.SetStatusBarReverseFill(absorb, cfg.reverseFill ~= true)
+		ResourceBars.SetStatusBarReverseFill(secondary, cfg.reverseFill == true)
+		absorb._overfillWidth = nil
+		absorb._overfillHeight = nil
+	else
+		ResourceBars.Pixel.SetInside(absorb, inner, 0, 0)
+		absorb._overfillWidth = nil
+		absorb._overfillHeight = nil
+	end
+	if secondary and not reverseAbsorb then
+		secondary:SetValue(0)
+		secondary:Hide()
+	end
+
+	local tex = absorb.GetStatusBarTexture and absorb:GetStatusBarTexture()
+	if tex then
+		if ResourceBars.ApplyTexturePixelSnapping then ResourceBars.ApplyTexturePixelSnapping(tex, 0) end
+		ResourceBars.Pixel.SetInside(tex, absorb, 0, 0)
+	end
+	absorb._rbOverfill = overfill and true or false
+	absorb._rbReverseAbsorb = reverseAbsorb and true or false
+	applyBarFrameLayers(bar, cfg)
+end
+
+function ResourceBars.SyncAbsorbBarAppearance(bar, cfg, forceLayout)
+	if not bar or not bar.absorbBar then return end
+	cfg = cfg or {}
+
+	local absorb = bar.absorbBar
+	local secondary = bar.absorbSecondaryBar
+	local color = cfg.absorbUseCustomColor and cfg.absorbColor
+	local r = color and color[1] or 0.8
+	local g = color and color[2] or 0.8
+	local b = color and color[3] or 0.8
+	local a = color and color[4] or 0.8
+	absorb:SetStatusBarColor(r, g, b, a)
+	if secondary then secondary:SetStatusBarColor(r, g, b, a) end
+	absorb._lastColor = absorb._lastColor or {}
+	absorb._lastColor[1], absorb._lastColor[2], absorb._lastColor[3], absorb._lastColor[4] = r, g, b, a
+	if secondary then
+		secondary._lastColor = secondary._lastColor or {}
+		secondary._lastColor[1], secondary._lastColor[2], secondary._lastColor[3], secondary._lastColor[4] = r, g, b, a
+	end
+	local desiredTexture = resolveTexture({ barTexture = cfg.absorbTexture or cfg.barTexture })
+	local currentTexture = absorb.GetStatusBarTexture and absorb:GetStatusBarTexture() or nil
+	local currentPath = currentTexture and currentTexture.GetTexture and currentTexture:GetTexture() or nil
+	local textureChanged = currentPath ~= desiredTexture
+
+	if textureChanged and absorb.SetStatusBarTexture then absorb:SetStatusBarTexture(desiredTexture) end
+	if ResourceBars.ApplyStatusBarTexturePixelSnapping then ResourceBars.ApplyStatusBarTexturePixelSnapping(absorb, 0) end
+	if secondary then
+		local secondaryTexture = secondary.GetStatusBarTexture and secondary:GetStatusBarTexture()
+		local secondaryPath = secondaryTexture and secondaryTexture.GetTexture and secondaryTexture:GetTexture()
+		if secondaryPath ~= desiredTexture and secondary.SetStatusBarTexture then secondary:SetStatusBarTexture(desiredTexture) end
+		if ResourceBars.ApplyStatusBarTexturePixelSnapping then ResourceBars.ApplyStatusBarTexturePixelSnapping(secondary, 0) end
+	end
+
+	local wantVertical = cfg.verticalFill == true
+	if absorb.SetOrientation and absorb._isVertical ~= wantVertical then
+		absorb:SetOrientation(wantVertical and "VERTICAL" or "HORIZONTAL")
+		absorb._isVertical = wantVertical
+	end
+	if secondary and secondary.SetOrientation and secondary._isVertical ~= wantVertical then
+		secondary:SetOrientation(wantVertical and "VERTICAL" or "HORIZONTAL")
+		secondary._isVertical = wantVertical
+	end
+
+	local tex = absorb.GetStatusBarTexture and absorb:GetStatusBarTexture() or nil
+	if tex and tex.SetRotation then
+		if textureChanged or absorb._texRotation ~= 0 then tex:SetRotation(0) end
+		if absorb._texRotation ~= 0 then textureChanged = true end
+		absorb._texRotation = 0
+	end
+
+	local reverseAbsorb = cfg.absorbReverseFill == true
+	if cfg.absorbOverfill then reverseAbsorb = false end
+	if not reverseAbsorb and absorb.SetReverseFill then absorb:SetReverseFill(false) end
+
+	local layoutChanged = absorb._rbReverseAbsorb ~= reverseAbsorb or absorb._rbOverfill ~= (cfg.absorbOverfill == true)
+	if forceLayout or textureChanged or cfg.absorbOverfill or layoutChanged then applyAbsorbLayout(bar, cfg) end
+end
+
+function ResourceBars.ApplyHealthOverlayHeight(overlay, bar, overlayHeight)
+	if not (overlay and bar) then return end
+	local target = bar._rbInner or bar
+	overlay:ClearAllPoints()
+	local heightPercent = tonumber(overlayHeight) or 100
+	if heightPercent <= 0 or heightPercent >= 100 then
+		ResourceBars.Pixel.SetInside(overlay, target, 0, 0)
+		return
+	end
+	local height = ((target.GetHeight and target:GetHeight()) or (bar.GetHeight and bar:GetHeight()) or RB.DEFAULT_HEALTH_HEIGHT) * (heightPercent / 100)
+	ResourceBars.Pixel.Point(overlay, "LEFT", target, "LEFT", 0, 0)
+	ResourceBars.Pixel.Point(overlay, "RIGHT", target, "RIGHT", 0, 0)
+	ResourceBars.Pixel.Point(overlay, "CENTER", target, "CENTER", 0, 0)
+	ResourceBars.Pixel.Height(overlay, height)
+end
+
+function ResourceBars.SyncHealAbsorbBarAppearance(bar, cfg)
+	if not bar or not bar.healAbsorbBar then return end
+	cfg = cfg or {}
+	local healAbsorb = bar.healAbsorbBar
+	local color = cfg.healAbsorbUseCustomColor and cfg.healAbsorbColor
+	local r = color and color[1] or 1
+	local g = color and color[2] or 0.3
+	local b = color and color[3] or 0.3
+	local a = color and color[4] or 0.7
+	healAbsorb:SetStatusBarColor(r, g, b, a)
+	healAbsorb._lastColor = healAbsorb._lastColor or {}
+	healAbsorb._lastColor[1], healAbsorb._lastColor[2], healAbsorb._lastColor[3], healAbsorb._lastColor[4] = r, g, b, a
+	healAbsorb:SetStatusBarTexture(resolveTexture({ barTexture = cfg.healAbsorbTexture or cfg.barTexture or "SOLID" }))
+	if ResourceBars.ApplyStatusBarTexturePixelSnapping then ResourceBars.ApplyStatusBarTexturePixelSnapping(healAbsorb, 0) end
+	if healAbsorb.SetStatusBarDesaturated then healAbsorb:SetStatusBarDesaturated(false) end
+	if healAbsorb.SetOrientation then healAbsorb:SetOrientation((cfg.verticalFill == true) and "VERTICAL" or "HORIZONTAL") end
+	ResourceBars.SetStatusBarReverseFill(healAbsorb, cfg.healAbsorbReverseFill == true)
+	ResourceBars.ApplyHealthOverlayHeight(healAbsorb, bar, cfg.healAbsorbOverlayHeight)
+	local tex = healAbsorb.GetStatusBarTexture and healAbsorb:GetStatusBarTexture()
+	if tex then
+		if ResourceBars.ApplyTexturePixelSnapping then ResourceBars.ApplyTexturePixelSnapping(tex, 0) end
+		ResourceBars.Pixel.SetInside(tex, healAbsorb, 0, 0)
+	end
+	if bar.overAbsorbGlow then
+		bar.overAbsorbGlow:ClearAllPoints()
+		local target = bar._rbInner or bar
+		if cfg.reverseFill == true then
+			ResourceBars.Pixel.Point(bar.overAbsorbGlow, "TOPRIGHT", target, "TOPLEFT", 7, 0)
+			ResourceBars.Pixel.Point(bar.overAbsorbGlow, "BOTTOMRIGHT", target, "BOTTOMLEFT", 7, 0)
+		else
+			ResourceBars.Pixel.Point(bar.overAbsorbGlow, "TOPLEFT", target, "TOPRIGHT", -7, 0)
+			ResourceBars.Pixel.Point(bar.overAbsorbGlow, "BOTTOMLEFT", target, "BOTTOMRIGHT", -7, 0)
+		end
+	end
+end
+
+function ResourceBars.ShouldHideParentBackdropForSeparated(frame, cfg)
+	if not frame or not frame._rbType then return false end
+
+	local pType = frame._rbType
+	local count = getSeparatorSegmentCount and getSeparatorSegmentCount(pType, cfg) or 0
+	if not count or count < 2 then return false end
+
+	if pType == "RUNES" then return true end
+	if pType == "ESSENCE" then return true end
+	return shouldUseDiscreteSeparatorSegments and shouldUseDiscreteSeparatorSegments(pType, cfg) == true
+end
+
+function ResourceBars.ShouldUsePerSegmentBorders(cfg)
+	local offset = max(0, floor((tonumber(cfg and cfg.separatedOffset) or 0) + 0.5))
+	return offset > 0
+end
+
+local function applyBackdrop(frame, cfg)
+	if not frame then return end
+	cfg = cfg or {}
+	cfg.backdrop = cfg.backdrop
+		or {
+			enabled = true,
+			backgroundTexture = "Interface\\DialogFrame\\UI-DialogBox-Background",
+			backgroundColor = { 0, 0, 0, 0.8 },
+			borderTexture = "Interface\\Tooltips\\UI-Tooltip-Border",
+			borderColor = { 0, 0, 0, 0 },
+			edgeSize = 3,
+			outset = 0,
+		}
+	local bd = cfg.backdrop
+	local bgFrame, borderFrame = ensureBackdropFrames(frame)
+	if not bgFrame or not borderFrame then return end
+	frame._rbBackdropState = frame._rbBackdropState or {}
+	local state = frame._rbBackdropState
+
+	local separatedDiscrete = ResourceBars.ShouldHideParentBackdropForSeparated(frame, cfg)
+	local useSharedSegmentBorder = separatedDiscrete and not ResourceBars.ShouldUsePerSegmentBorders(cfg)
+	-- Shared-border segments live inside the border content inset. Keep the parent
+	-- background behind that inset so it does not appear as an empty outer gap.
+	local useParentBackground = not separatedDiscrete or useSharedSegmentBorder
+	if separatedDiscrete then
+		-- Shared outer borders overlay segmented fills. Insetting the segment host
+		-- creates empty end caps and can collapse thin bars entirely.
+		state.insets = copyInsetValues(RB.ZERO_INSETS, state.insets)
+		applyStatusBarInsets(frame, state.insets, true)
+		if not useParentBackground and bgFrame:IsShown() then bgFrame:Hide() end
+		state.separatedDiscrete = true
+		state.sharedSegmentBorder = useSharedSegmentBorder or nil
+		if not useSharedSegmentBorder then
+			if addon.functions and addon.functions.SetSafeBorder then addon.functions.SetSafeBorder(borderFrame, false, nil, nil, nil, nil, nil, nil, { stateKey = "_rbParentSafeBorder" }) end
+			if borderFrame.SetBackdrop then borderFrame:SetBackdrop(nil) end
+			if borderFrame:IsShown() then borderFrame:Hide() end
+			state.enabled = false
+			return
+		end
+	else
+		if state.separatedDiscrete then state.separatedDiscrete = nil end
+		if state.sharedSegmentBorder then state.sharedSegmentBorder = nil end
+		local contentInset = resolveInnerInset(bd, frame)
+		state.insets = copyInsetValues(contentInset, state.insets)
+		applyStatusBarInsets(frame, state.insets, true)
+	end
+
+	if bd.enabled == false then
+		if bgFrame:IsShown() then bgFrame:Hide() end
+		if addon.functions and addon.functions.SetSafeBorder then addon.functions.SetSafeBorder(borderFrame, false, nil, nil, nil, nil, nil, nil, { stateKey = "_rbParentSafeBorder" }) end
+		if borderFrame.SetBackdrop then borderFrame:SetBackdrop(nil) end
+		if borderFrame:IsShown() then borderFrame:Hide() end
+		state.enabled = false
+		return
+	end
+	state.enabled = true
+
+	local outset = tonumber(bd.outset) or 0
+	local edgeSize = tonumber(bd.edgeSize) or 0
+	local bgInset = max(0, tonumber(bd.backgroundInset) or 0)
+	local borderOutset = max(0, outset)
+
+	if useParentBackground then ResourceBars.Pixel.SetOutside(bgFrame, frame, outset - bgInset, outset - bgInset) end
+
+	if state.outset ~= borderOutset then
+		ResourceBars.Pixel.SetOutside(borderFrame, frame, borderOutset, borderOutset)
+		state.outset = borderOutset
+	end
+
+	if useParentBackground and bgFrame.SetBackdrop then
+		local bgTexture = bd.backgroundTexture or "Interface\\DialogFrame\\UI-DialogBox-Background"
+		local bgChanged = false
+		if state.bgTexture ~= bgTexture or (bgFrame.GetBackdrop and not bgFrame:GetBackdrop()) then
+			bgFrame:SetBackdrop({
+				bgFile = bgTexture,
+				edgeFile = nil,
+				tile = false,
+				edgeSize = 0,
+				insets = { left = 0, right = 0, top = 0, bottom = 0 },
+			})
+			state.bgTexture = bgTexture
+			bgChanged = true
+		end
+		local bc = bd.backgroundColor or { 0, 0, 0, 0.8 }
+		local br, bgc, bb, ba = bc[1] or 0, bc[2] or 0, bc[3] or 0, bc[4] or 1
+		if bgChanged or state.bgR ~= br or state.bgG ~= bgc or state.bgB ~= bb or state.bgA ~= ba then
+			if bgFrame.SetBackdropColor then bgFrame:SetBackdropColor(br, bgc, bb, ba) end
+			state.bgR, state.bgG, state.bgB, state.bgA = br, bgc, bb, ba
+		end
+		if bgFrame.SetBackdropBorderColor then bgFrame:SetBackdropBorderColor(0, 0, 0, 0) end
+		if not bgFrame:IsShown() then bgFrame:Show() end
+	elseif bgFrame:IsShown() then
+		bgFrame:Hide()
+	end
+
+	do
+		local borderTexture = normalizeBorderTexture(bd)
+		local boc = bd.borderColor or { 0, 0, 0, 0 }
+		local cr, cg, cb, ca = boc[1] or 0, boc[2] or 0, boc[3] or 0, boc[4] or 1
+		if borderFrame.SetBackdrop then borderFrame:SetBackdrop(nil) end
+		if borderTexture and borderTexture ~= "" and edgeSize > 0 and ca > 0 and addon.functions and addon.functions.SetSafeBorder then
+			addon.functions.SetSafeBorder(borderFrame, true, borderTexture, edgeSize, cr, cg, cb, ca, {
+				stateKey = "_rbParentSafeBorder",
+				defaultTexture = "Interface\\Buttons\\WHITE8x8",
+				mediaType = "border",
+				drawLayer = "OVERLAY",
+				pixelPerfect = true,
+			})
+			ResourceBars.ApplySafeBorderTextureSnapping(borderFrame, "_rbParentSafeBorder", 0)
+			state.borderTexture = borderTexture
+			state.borderEdgeSize = edgeSize
+			state.borderR, state.borderG, state.borderB, state.borderA = cr, cg, cb, ca
+		else
+			if addon.functions and addon.functions.SetSafeBorder then addon.functions.SetSafeBorder(borderFrame, false, nil, nil, nil, nil, nil, nil, { stateKey = "_rbParentSafeBorder" }) end
+			state.borderTexture = nil
+			state.borderEdgeSize = nil
+			state.borderR, state.borderG, state.borderB, state.borderA = nil, nil, nil, nil
+			if borderFrame:IsShown() then borderFrame:Hide() end
+		end
+	end
+end
+
+local function ensureTextOffsetTable(cfg)
+	cfg = cfg or {}
+	cfg.textOffset = cfg.textOffset or { x = 0, y = 0 }
+	return cfg.textOffset
+end
+
+function ResourceBars.NormalizeTextAnchor(value, fallback)
+	local fallbackAnchor = tostring(fallback or "CENTER"):upper()
+	if not RB.VALID_TEXT_ANCHORS[fallbackAnchor] then fallbackAnchor = "CENTER" end
+	local anchor = tostring(value or fallbackAnchor):upper()
+	if RB.VALID_TEXT_ANCHORS[anchor] then return anchor end
+	return fallbackAnchor
+end
+
+function ResourceBars.GetTextJustifyH(anchor)
+	anchor = ResourceBars.NormalizeTextAnchor(anchor, "CENTER")
+	if anchor == "LEFT" or anchor == "TOPLEFT" or anchor == "BOTTOMLEFT" then return "LEFT" end
+	if anchor == "RIGHT" or anchor == "TOPRIGHT" or anchor == "BOTTOMRIGHT" then return "RIGHT" end
+	return "CENTER"
+end
+
+local function applyTextPosition(bar, cfg, baseX, baseY)
+	if not bar or not bar.text then return end
+	local offset = ensureTextOffsetTable(cfg)
+	local ox = (baseX or 0) + (offset.x or 0)
+	local oy = (baseY or 0) + (offset.y or 0)
+	local anchor = ResourceBars.NormalizeTextAnchor(cfg and cfg.textAnchor, "CENTER")
+	local textParent = ensureTextOverlayFrame(bar) or bar
+	if bar.text:GetParent() ~= textParent then bar.text:SetParent(textParent) end
+	bar.text:SetDrawLayer("OVERLAY")
+	bar.text:ClearAllPoints()
+	bar.text:SetPoint(anchor, bar, anchor, ox, oy)
+	if bar.text.SetJustifyH then bar.text:SetJustifyH(ResourceBars.GetTextJustifyH(anchor)) end
+	bar._textSlots = bar._textSlots or { { text = bar.text }, {}, {} }
+	local centerStyle = cfg and cfg.textStyle or bar._style or bar._healthTextStyle or "PERCENT"
+	if bar._textSlots[1].style ~= centerStyle then
+		if addon.functions.ReleaseDurationTextBinding then addon.functions.ReleaseDurationTextBinding(bar._textSlots[1], "auraDurationText", true) end
+		bar._textSlots[1]._auraDurationTextBindingActive = nil
+	end
+	bar._textSlots[1]._lastText = nil
+	bar._textSlots[1]._textShown = nil
+	bar._textSlots[1].style = centerStyle
+	bar.text._rbTextColorR = nil
+	for i = 2, 3 do
+		local slot = bar._textSlots[i]
+		local side = i == 2 and "Left" or "Right"
+		local sideAnchor = i == 2 and "LEFT" or "RIGHT"
+		local style = cfg and cfg["text" .. side] or "NONE"
+		if slot.style ~= style then
+			if addon.functions.ReleaseDurationTextBinding then addon.functions.ReleaseDurationTextBinding(slot, "auraDurationText", true) end
+			slot._auraDurationTextBindingActive = nil
+		end
+		slot.style = style
+		if slot.style ~= "NONE" and not slot.text then slot.text = bar:CreateFontString(nil, "OVERLAY", "GameFontHighlight") end
+		if slot.text then
+			applyFontToString(slot.text, cfg)
+			slot.text._rbTextColorR = nil
+			slot.text:SetParent(textParent)
+			slot.text:SetDrawLayer("OVERLAY")
+			slot.text:ClearAllPoints()
+			local off = cfg and cfg["text" .. side .. "Offset"] or {}
+			slot.text:SetPoint(sideAnchor, bar, sideAnchor, (i == 2 and 3 or -3) + (off.x or 0), off.y or 0)
+			slot.text:SetJustifyH(sideAnchor)
+			slot.text:SetShown(slot.style ~= "NONE")
+			slot._lastText = nil
+			slot._textShown = slot.style ~= "NONE"
+		end
+	end
+end
+
+function ResourceBars.GetThresholdColorModeAndCap(pType)
+	if pType == "VOID_METAMORPHOSIS" then return "ABSOLUTE", tonumber(RB.ABSOLUTE_THRESHOLD_COLOR_VALUE_CAP_VOID_METAMORPHOSIS) or 50, 1 end
+	if pType == "EBON_MIGHT" then return "PERCENT", tonumber(RB.ABSOLUTE_THRESHOLD_COLOR_VALUE_CAP_PERCENT) or 100, 0 end
+	local auraCfg = RB.AURA_POWER_CONFIG and RB.AURA_POWER_CONFIG[pType]
+	if auraCfg and auraCfg.durationAsValue then return "ABSOLUTE", tonumber(RB.ABSOLUTE_THRESHOLD_COLOR_VALUE_CAP_DURATION) or 20, 1 end
+	if
+		pType == "MANA"
+		or pType == "ENERGY"
+		or pType == "RAGE"
+		or pType == "FURY"
+		or pType == "FOCUS"
+		or pType == "INSANITY"
+		or pType == "LUNAR_POWER"
+		or pType == "RUNIC_POWER"
+		or pType == "MAELSTROM"
+	then
+		return "PERCENT", tonumber(RB.ABSOLUTE_THRESHOLD_COLOR_VALUE_CAP_PERCENT) or 100, 0
+	end
+	if ResourceBars.separatorEligible and ResourceBars.separatorEligible[pType] then return "ABSOLUTE", tonumber(RB.ABSOLUTE_THRESHOLD_COLOR_VALUE_CAP) or 10, 1 end
+	return "ABSOLUTE", tonumber(RB.ABSOLUTE_THRESHOLD_COLOR_VALUE_CAP_CONTINUOUS) or 200, 1
+end
+
+function ResourceBars.ClampAbsoluteThresholdColorValue(value, pType)
+	local mode, cap, minValue = ResourceBars.GetThresholdColorModeAndCap(pType)
+	local v = tonumber(value)
+	if v == nil then return nil end
+	if mode == "PERCENT" then
+		v = floor((v * 10) + 0.5) / 10
+	else
+		v = floor(v + 0.5)
+	end
+	if v < (minValue or 1) then v = minValue or 1 end
+	if v > cap then v = cap end
+	return v
+end
+
+function ResourceBars.GetDefaultAbsoluteThresholdColorPoint(index, pType)
+	local mode, cap = ResourceBars.GetThresholdColorModeAndCap(pType)
+	local defaults
+	if mode == "PERCENT" then
+		defaults = RB.ABSOLUTE_THRESHOLD_COLOR_DEFAULTS_PERCENT
+	elseif pType == "VOID_METAMORPHOSIS" then
+		defaults = RB.ABSOLUTE_THRESHOLD_COLOR_DEFAULTS_VOID_METAMORPHOSIS
+	elseif RB.AURA_POWER_CONFIG and RB.AURA_POWER_CONFIG[pType] and RB.AURA_POWER_CONFIG[pType].durationAsValue then
+		defaults = RB.ABSOLUTE_THRESHOLD_COLOR_DEFAULTS_DURATION
+	elseif cap and cap <= (tonumber(RB.ABSOLUTE_THRESHOLD_COLOR_VALUE_CAP) or 10) then
+		defaults = RB.ABSOLUTE_THRESHOLD_COLOR_DEFAULTS
+	else
+		defaults = RB.ABSOLUTE_THRESHOLD_COLOR_DEFAULTS_CONTINUOUS
+	end
+	local fallback = type(defaults) == "table" and defaults[index]
+	if fallback == nil and type(defaults) == "table" then fallback = defaults[#defaults] end
+	local fallbackValue = fallback and (fallback.value or fallback[1]) or index
+	local value = ResourceBars.ClampAbsoluteThresholdColorValue(fallbackValue, pType)
+	if value == nil then
+		local _, _, minValue = ResourceBars.GetThresholdColorModeAndCap(pType)
+		value = minValue or 1
+	end
+	local color = fallback and (fallback.color or fallback[2]) or RB.WHITE
+	local r, g, b, a
+	if type(color) == "table" then
+		if color.r then
+			r, g, b, a = color.r or 1, color.g or 1, color.b or 1, color.a or 1
+		else
+			r, g, b, a = color[1] or 1, color[2] or 1, color[3] or 1, color[4] or 1
+		end
+	else
+		r, g, b, a = 1, 1, 1, 1
+	end
+	return value, { r, g, b, a }
+end
+
+function ResourceBars.NormalizeAbsoluteThresholdColorPoints(cfg, pType)
+	if type(cfg) ~= "table" or cfg.useAbsoluteThresholdColors ~= true then return nil end
+	local cacheByType = ResourceBars.GetRuntimeCfgSubtable(cfg, "absoluteThresholdColorCache")
+
+	local maxPoints = tonumber(RB.ABSOLUTE_THRESHOLD_COLOR_MAX_POINTS) or 10
+	local count = tonumber(cfg.absoluteThresholdColorPointCount) or tonumber(RB.ABSOLUTE_THRESHOLD_COLOR_DEFAULT_COUNT) or 2
+	count = floor(count + 0.5)
+	if count < 1 then count = 1 end
+	if count > maxPoints then count = maxPoints end
+	local signature = ResourceBars.HashCurveStep(ResourceBars.HashCurveStep(17, count), #tostring(pType or ""))
+	local source = cfg.absoluteThresholdColorPoints
+
+	for i = 1, count do
+		local defaultValue, defaultColor = ResourceBars.GetDefaultAbsoluteThresholdColorPoint(i, pType)
+		local entry = type(source) == "table" and source[i] or nil
+		local value = ResourceBars.ClampAbsoluteThresholdColorValue(entry and (entry.value or entry[1]), pType) or defaultValue
+		local color = entry and (entry.color or entry[2]) or defaultColor
+		local r, g, b, a
+		if type(color) == "table" then
+			if color.r then
+				r, g, b, a = color.r or defaultColor[1], color.g or defaultColor[2], color.b or defaultColor[3], color.a or defaultColor[4]
+			else
+				r = color[1] or defaultColor[1]
+				g = color[2] or defaultColor[2]
+				b = color[3] or defaultColor[3]
+				a = color[4] or defaultColor[4]
+			end
+		else
+			r, g, b, a = defaultColor[1], defaultColor[2], defaultColor[3], defaultColor[4]
+		end
+
+		signature = ResourceBars.HashCurveStep(signature, value)
+		signature = ResourceBars.HashCurveStep(signature, r)
+		signature = ResourceBars.HashCurveStep(signature, g)
+		signature = ResourceBars.HashCurveStep(signature, b)
+		signature = ResourceBars.HashCurveStep(signature, a)
+	end
+
+	local cached = cacheByType[pType]
+	if cached and cached.signature == signature then return cached.points end
+
+	local points = {}
+	for i = 1, count do
+		local defaultValue, defaultColor = ResourceBars.GetDefaultAbsoluteThresholdColorPoint(i, pType)
+		local entry = type(source) == "table" and source[i] or nil
+		local value = ResourceBars.ClampAbsoluteThresholdColorValue(entry and (entry.value or entry[1]), pType) or defaultValue
+		local color = entry and (entry.color or entry[2]) or defaultColor
+		local r, g, b, a
+		if type(color) == "table" then
+			if color.r then
+				r, g, b, a = color.r or defaultColor[1], color.g or defaultColor[2], color.b or defaultColor[3], color.a or defaultColor[4]
+			else
+				r = color[1] or defaultColor[1]
+				g = color[2] or defaultColor[2]
+				b = color[3] or defaultColor[3]
+				a = color[4] or defaultColor[4]
+			end
+		else
+			r, g, b, a = defaultColor[1], defaultColor[2], defaultColor[3], defaultColor[4]
+		end
+		points[#points + 1] = { value = value, color = { r, g, b, a } }
+	end
+
+	if #points == 0 then return nil end
+	tsort(points, function(a, b) return (a.value or 0) < (b.value or 0) end)
+	cacheByType[pType] = {
+		signature = signature,
+		points = points,
+	}
+	return points
+end
+
+function ResourceBars.ResolveAbsoluteThresholdColor(cfg, currentValue, pType, maxValue)
+	if type(cfg) ~= "table" or cfg.useAbsoluteThresholdColors ~= true then return nil end
+	if issecretvalue and (issecretvalue(currentValue) or issecretvalue(maxValue)) then return nil end
+	local cur = tonumber(currentValue)
+	if cur == nil then return nil end
+	local mode = ResourceBars.GetThresholdColorModeAndCap(pType)
+	if mode == "PERCENT" then
+		local mx = tonumber(maxValue)
+		if mx ~= nil and mx > 0 then cur = (cur / mx) * 100 end
+		cur = floor((cur * 10) + 0.5) / 10
+	end
+	local points = ResourceBars.NormalizeAbsoluteThresholdColorPoints(cfg, pType)
+	if not points then return nil end
+	local selectedColor
+	if RB.AURA_POWER_CONFIG and RB.AURA_POWER_CONFIG[pType] and RB.AURA_POWER_CONFIG[pType].durationAsValue then
+		for i = 1, #points do
+			local point = points[i]
+			if cur <= (point.value or 0) then
+				selectedColor = point.color
+				break
+			end
+		end
+	else
+		for i = 1, #points do
+			local point = points[i]
+			if cur >= (point.value or 0) then
+				selectedColor = point.color
+			else
+				break
+			end
+		end
+	end
+	if not selectedColor then return nil end
+	return selectedColor[1] or 1, selectedColor[2] or 1, selectedColor[3] or 1, selectedColor[4] or 1
+end
+
+function ResourceBars.GetTextThresholdColorConfig(cfg)
+	if type(cfg) ~= "table" or cfg.useTextThresholdColors ~= true then return nil end
+	local proxy = ResourceBars.GetRuntimeCfgSubtable(cfg, "textThresholdColorProxy")
+	proxy.useAbsoluteThresholdColors = true
+	proxy.absoluteThresholdColorPointCount = cfg.textThresholdColorPointCount
+	proxy.absoluteThresholdColorPoints = cfg.textThresholdColorPoints
+	return proxy
+end
+
+function ResourceBars.ResolveTextThresholdColor(cfg, currentValue, pType, maxValue)
+	local proxy = ResourceBars.GetTextThresholdColorConfig(cfg)
+	if not proxy then return nil end
+	return ResourceBars.ResolveAbsoluteThresholdColor(proxy, currentValue, pType, maxValue)
+end
+
+function ResourceBars.ApplyTextThresholdColor(bar, cfg, currentValue, pType, maxValue, fontString)
+	fontString = fontString or (bar and bar.text)
+	if not fontString then return end
+	fontString:SetAlpha(addon.functions.GetPowerTextAlpha("player", cfg, addon.EditMode and addon.EditMode.IsInEditMode and addon.EditMode:IsInEditMode(), POWER_ENUM[pType], currentValue, maxValue))
+	local r, g, b, a = ResourceBars.ResolveTextThresholdColor(cfg, currentValue, pType, maxValue)
+	if r == nil and cfg and cfg.textUsePowerColor == true then
+		local color = ResourceBars.GetBasePowerColor(pType)
+		r, g, b, a = color[1], color[2], color[3], color[4]
+	end
+	if r == nil then r, g, b, a = resolveFontColor(cfg) end
+	if fontString._rbTextColorR == r and fontString._rbTextColorG == g and fontString._rbTextColorB == b and fontString._rbTextColorA == a then return end
+	fontString:SetTextColor(r, g, b, a)
+	fontString._rbTextColorR, fontString._rbTextColorG, fontString._rbTextColorB, fontString._rbTextColorA = r, g, b, a
+end
+
+function ResourceBars.ResolveAbsoluteThresholdColorForSecretPower(cfg, pType, powerEnum, curPower, maxPower, baseColor, maxColor)
+	if type(cfg) ~= "table" or cfg.useAbsoluteThresholdColors ~= true then return nil end
+	if not powerEnum then return nil end
+	if not (C_CurveUtil and C_CurveUtil.CreateColorCurve and CreateColor and Enum and Enum.LuaCurveType and Enum.LuaCurveType.Step) then return nil end
+	local br, bg, bb, ba = 1, 1, 1, 1
+	if type(baseColor) == "table" then
+		br = baseColor[1] or 1
+		bg = baseColor[2] or 1
+		bb = baseColor[3] or 1
+		ba = baseColor[4] or 1
+	end
+	local useMaxColor = type(maxColor) == "table"
+	local mr, mg, mb, ma = br, bg, bb, ba
+	if useMaxColor then
+		mr = maxColor[1] or mr
+		mg = maxColor[2] or mg
+		mb = maxColor[3] or mb
+		ma = maxColor[4] or ma
+	end
+
+	local curveCacheByType = ResourceBars.GetRuntimeCfgSubtable(cfg, "absoluteThresholdCurveCache")
+	local curveCache = curveCacheByType[pType]
+	local curve = curveCache and curveCache.curve or nil
+	local runtimeRevision = ResourceBars._runtimeConfigRevision or 0
+	local cacheMatches = curve
+		and curveCache.revision == runtimeRevision
+		and curveCache.br == br
+		and curveCache.bg == bg
+		and curveCache.bb == bb
+		and curveCache.ba == ba
+		and curveCache.useMaxColor == useMaxColor
+		and curveCache.mr == mr
+		and curveCache.mg == mg
+		and curveCache.mb == mb
+		and curveCache.ma == ma
+	if not cacheMatches then
+		local points = ResourceBars.NormalizeAbsoluteThresholdColorPoints(cfg, pType)
+		if not points or #points == 0 then return nil end
+		local pointsCache = ResourceBars.GetRuntimeCfgSubtable(cfg, "absoluteThresholdColorCache")[pType]
+		local signature = ResourceBars.HashCurveStep(17, pointsCache and pointsCache.signature or #points)
+		signature = ResourceBars.HashCurveColor(signature, { br, bg, bb, ba })
+		signature = ResourceBars.HashCurveStep(signature, useMaxColor and 1 or 0)
+		if useMaxColor then signature = ResourceBars.HashCurveColor(signature, { mr, mg, mb, ma }) end
+		if not (curve and curveCache.signature == signature) then
+			curve = C_CurveUtil.CreateColorCurve()
+			if not curve then return nil end
+			curve:SetType(Enum.LuaCurveType.Step)
+
+			local lastR, lastG, lastB, lastA = br, bg, bb, ba
+			local lastProgress = nil
+			local firstProgress = nil
+			if points[1] then
+				firstProgress = tonumber(points[1].value) or 0
+				firstProgress = firstProgress / 100
+				if firstProgress < 0 then firstProgress = 0 end
+				if firstProgress > 1 then firstProgress = 1 end
+			end
+			if firstProgress == nil or firstProgress > 0 then curve:AddPoint(0.0, CreateColor(br, bg, bb, ba)) end
+
+			for i = 1, #points do
+				local point = points[i]
+				local value = tonumber(point and point.value) or 0
+				local progress = value / 100
+				if progress < 0 then progress = 0 end
+				if progress > 1 then progress = 1 end
+				if not (useMaxColor and progress >= 1) then
+					local color = point and point.color
+					local r = color and color[1] or 1
+					local g = color and color[2] or 1
+					local b = color and color[3] or 1
+					local a = color and color[4] or 1
+					curve:AddPoint(progress, CreateColor(r, g, b, a))
+					lastR, lastG, lastB, lastA = r, g, b, a
+					lastProgress = progress
+				end
+			end
+			if useMaxColor then
+				curve:AddPoint(1.0, CreateColor(mr, mg, mb, ma))
+			elseif lastProgress == nil or lastProgress < 1 then
+				curve:AddPoint(1.0, CreateColor(lastR, lastG, lastB, lastA))
+			end
+			curveCache = curveCache or {}
+			curveCache.signature = signature
+			curveCache.curve = curve
+			curveCacheByType[pType] = curveCache
+		end
+		curveCache.revision = runtimeRevision
+		curveCache.br, curveCache.bg, curveCache.bb, curveCache.ba = br, bg, bb, ba
+		curveCache.useMaxColor = useMaxColor
+		curveCache.mr, curveCache.mg, curveCache.mb, curveCache.ma = mr, mg, mb, ma
+	end
+
+	local curveColor = getPowerPercent("player", powerEnum, curPower, maxPower, curve)
+	if curveColor and curveColor.GetRGBA then return curveColor:GetRGBA() end
+	return nil
+end
+
+local function applyBarFillColor(bar, cfg, pType)
+	if not bar then return end
+	cfg = cfg or {}
+	local function isAtCap()
+		if pType == "HEALTH" then
+			local cur = UnitHealth("player")
+			local mx = UnitHealthMax("player")
+			if issecretvalue and (issecretvalue(cur) or issecretvalue(mx)) then return nil end
+			return (cur or 0) >= max((mx or 1), 1)
+		end
+		if pType == "STAGGER" then
+			local stagger = (UnitStagger and UnitStagger("player")) or 0
+			local mx = UnitHealthMax("player") or 1
+			if issecretvalue and (issecretvalue(stagger) or issecretvalue(mx)) then return nil end
+			return stagger >= max(mx, 1)
+		end
+		if isAuraPowerType and isAuraPowerType(pType) and getAuraPowerCounts then
+			local stacks, logicalMax = getAuraPowerCounts(pType)
+			if issecretvalue and (issecretvalue(stacks) or issecretvalue(logicalMax)) then return nil end
+			return (logicalMax or 0) > 0 and (stacks or 0) >= logicalMax
+		end
+		if pType == "RUNES" then return false end
+		local powerEnum = POWER_ENUM and POWER_ENUM[pType]
+		if not powerEnum then return false end
+		local useRaw = ResourceBars.ShouldUseRawPowerValues(pType)
+		local curPower = UnitPower("player", powerEnum, useRaw)
+		local maxPower = UnitPowerMax("player", powerEnum, useRaw)
+		if issecretvalue and (issecretvalue(curPower) or issecretvalue(maxPower)) then return nil end
+		return (curPower or 0) >= max((maxPower or 1), 1)
+	end
+
+	local baseR, baseG, baseB, baseA
+	local shouldDesaturate = false
+	if pType == "STAGGER" and cfg.useBarColor ~= true then
+		local stagger = (UnitStagger and UnitStagger("player")) or 0
+		local staggerIsSecret = issecretvalue and issecretvalue(stagger)
+		local maxHealth = UnitHealthMax("player") or 1
+		local percent = not staggerIsSecret and maxHealth > 0 and (stagger / maxHealth) or 0
+		baseR, baseG, baseB, baseA = getStaggerStateColor(percent, cfg)
+		baseA = baseA or (cfg.barColor and cfg.barColor[4]) or 1
+	elseif cfg.useBarColor then
+		local color = cfg.barColor or RB.WHITE
+		baseR, baseG, baseB, baseA = color[1] or 1, color[2] or 1, color[3] or 1, color[4] or 1
+	elseif cfg.useClassColor == true then
+		baseR, baseG, baseB, baseA = getPlayerClassColor()
+		baseA = baseA or (cfg.barColor and cfg.barColor[4]) or 1
+		if pType == "HEALTH" then shouldDesaturate = true end
+	elseif ResourceBars.GetRuntimeCfgField(cfg, "resolvedDefaultPowerColor") then
+		local color = ResourceBars.GetRuntimeCfgField(cfg, "resolvedDefaultPowerColor")
+		baseR, baseG, baseB, baseA = color[1] or 1, color[2] or 1, color[3] or 1, color[4] or 1
+	else
+		baseR, baseG, baseB = getPowerBarColor(pType or "MANA")
+		baseA = (cfg.barColor and cfg.barColor[4]) or 1
+	end
+
+	local targetR, targetG, targetB, targetA = baseR, baseG, baseB, baseA
+	local usingMaxColor = false
+	local usingThresholdColor = false
+	local secretCurveColor
+	local thresholdMode = ResourceBars.GetThresholdColorModeAndCap and ResourceBars.GetThresholdColorModeAndCap(pType) or nil
+	local wantsSecretThresholdCurve = cfg.useAbsoluteThresholdColors == true and pType ~= "RUNES" and thresholdMode == "PERCENT"
+	local capState = (cfg.useMaxColor == true or wantsSecretThresholdCurve) and isAtCap() or false
+	if cfg.useMaxColor == true and capState == true then
+		local maxCol = cfg.maxColor or RB.DEFAULT_MAX_COLOR
+		targetR = maxCol[1] or targetR
+		targetG = maxCol[2] or targetG
+		targetB = maxCol[3] or targetB
+		targetA = maxCol[4] or targetA
+		usingMaxColor = true
+	elseif capState == nil and pType ~= "RUNES" then
+		-- Midnight secret values must use curves instead of direct comparisons.
+		local powerEnum = POWER_ENUM and POWER_ENUM[pType]
+		local useRawPower = ResourceBars.ShouldUseRawPowerValues(pType)
+		if powerEnum and ResourceBars.ResolveAbsoluteThresholdColorForSecretPower and thresholdMode == "PERCENT" then
+			local tr, tg, tb, ta = ResourceBars.ResolveAbsoluteThresholdColorForSecretPower(
+				cfg,
+				pType,
+				powerEnum,
+				UnitPower("player", powerEnum, useRawPower),
+				UnitPowerMax("player", powerEnum, useRawPower),
+				{ baseR, baseG, baseB, baseA or 1 },
+				cfg.useMaxColor == true and (cfg.maxColor or RB.DEFAULT_MAX_COLOR) or nil
+			)
+			if tr ~= nil then
+				targetR, targetG, targetB, targetA = tr, tg, tb, ta
+				usingThresholdColor = true
+			end
+		end
+		if not usingThresholdColor then
+			if pType == "HEALTH" then
+				if UnitHealthPercent and curve then
+					SetColorCurvePoints(cfg.maxColor or RB.DEFAULT_MAX_COLOR)
+					secretCurveColor = UnitHealthPercent("player", true, curve)
+				end
+			elseif cfg.useMaxColor == true and powerEnum and UnitPowerPercent then
+				SetColorCurvePointsPower(pType, cfg.maxColor or RB.DEFAULT_MAX_COLOR, { baseR, baseG, baseB, baseA or 1 })
+				if curvePower[pType] then secretCurveColor = UnitPowerPercent("player", powerEnum, false, curvePower[pType]) end
+			end
+			if secretCurveColor then usingMaxColor = true end
+		end
+	end
+
+	bar:SetStatusBarColor(targetR, targetG, targetB, targetA or 1)
+	setBarDesaturated(bar, shouldDesaturate)
+	bar._baseColor = bar._baseColor or {}
+	bar._baseColor[1], bar._baseColor[2], bar._baseColor[3], bar._baseColor[4] = baseR, baseG, baseB, baseA or 1
+	bar._lastColor = bar._lastColor or {}
+	bar._lastColor[1], bar._lastColor[2], bar._lastColor[3], bar._lastColor[4] = targetR, targetG, targetB, targetA or 1
+	bar._usingMaxColor = usingMaxColor
+	bar._usingAbsoluteThresholdColor = usingThresholdColor and not usingMaxColor
+	if pType and pType ~= "RUNES" then SetColorCurvePointsPower(pType, cfg.maxColor, bar._baseColor) end
+	configureSpecialTexture(bar, pType, cfg)
+	if ResourceBars.RefreshStatusBarGradient and (cfg.useGradient == true or bar._rbGradientEnabled) then ResourceBars.RefreshStatusBarGradient(bar, cfg) end
+	if secretCurveColor and secretCurveColor.GetRGBA and bar.GetStatusBarTexture then
+		local tex = bar:GetStatusBarTexture()
+		if tex and tex.SetVertexColor then tex:SetVertexColor(secretCurveColor:GetRGBA()) end
+	end
+end
+
+RB.DK_SPEC_COLOR = {
+	[1] = { 0.8, 0.1, 0.1 },
+	[2] = { 0.2, 0.6, 1.0 },
+	[3] = { 0.0, 0.9, 0.3 },
+}
+local function dkSpecColor()
+	-- Retained color fallback for imported layouts.
+	return RB.DK_SPEC_COLOR[ResourceBars.GetClassContext()] or RB.DK_SPEC_COLOR[1]
+end
+
+local function resolveRuneReadyColor(cfg)
+	cfg = cfg or {}
+	if cfg.useBarColor and cfg.barColor then
+		local c = cfg.barColor
+		return c[1] or 1, c[2] or 1, c[3] or 1, c[4] or 1
+	end
+	local dk = dkSpecColor()
+	if dk then return dk[1] or 1, dk[2] or 1, dk[3] or 1, 1 end
+	local cc = C_ClassColor and C_ClassColor.GetClassColor and C_ClassColor.GetClassColor("DEATHKNIGHT")
+	if cc and cc.GetRGB then
+		local cr, cg, cb = cc:GetRGB()
+		return cr or 1, cg or 1, cb or 1, 1
+	end
+	local pr, pg, pb = getPowerBarColor("RUNES")
+	return pr or 1, pg or 1, pb or 1, 1
+end
+
+local function configureBarBehavior(bar, cfg, pType)
+	if not bar then return end
+	cfg = cfg or {}
+	if bar.SetReverseFill then bar:SetReverseFill(cfg.reverseFill == true) end
+	if ResourceBars.UpdateFillSpark then ResourceBars.UpdateFillSpark(bar, cfg, pType, POWER_ENUM[pType], bar._lastVal, bar._lastMax) end
+
+	if pType ~= "RUNES" and bar.SetOrientation then bar:SetOrientation((cfg.verticalFill == true) and "VERTICAL" or "HORIZONTAL") end
+	if pType == "HEALTH" then
+		bar._cfg = cfg
+		bar._healthTextStyle = cfg.textStyle or "PERCENT"
+		bar._healthTextNeedsPercent = ResourceBars.TextSlotsNeedPercent(cfg, bar._healthTextStyle)
+		bar._healthColorNeedsPercent = not addon.variables.isMidnight and cfg.useBarColor ~= true and cfg.useClassColor ~= true
+		bar._healthDamageNeedsClamp = cfg.absorbEnabled ~= false
+			and cfg.absorbReverseFill == true
+			and cfg.absorbDontOverflowHealthBar == true
+			and cfg.absorbOverfill ~= true
+		bar._healthHealNeedsClamp = cfg.healAbsorbEnabled ~= false
+			and cfg.healAbsorbDontOverflowHealthBar == true
+			and cfg.healAbsorbReverseFill ~= true
+		if cfg.useMaxColor then
+			SetColorCurvePoints(cfg.maxColor or RB.DEFAULT_MAX_COLOR)
+		else
+			SetColorCurvePoints()
+		end
+		if bar._healthTextNeedsPercent or bar._healthColorNeedsPercent or bar._healthDamageNeedsClamp or bar._healthHealNeedsClamp then
+			ResourceBars.PrepareHealPredictionCalculator(bar, cfg)
+		end
+		ResourceBars.EnsureHealthFillGeometryBar(bar, cfg)
+		ResourceBars.ApplyHealthTempMaxHealthLossAppearance(bar, cfg)
+		setBarDesaturated(bar, cfg.useClassColor == true or isDefaultTextureSelection(cfg, "HEALTH"))
+		if bar.absorbBar then ResourceBars.SyncAbsorbBarAppearance(bar, cfg, true) end
+		if bar.healAbsorbBar then ResourceBars.SyncHealAbsorbBarAppearance(bar, cfg) end
+	end
+
+	if bar._rbBackdropState and bar._rbBackdropState.insets then applyStatusBarInsets(bar, bar._rbBackdropState.insets, true) end
+end
+
+local function behaviorOptionsForType(pType)
+	local opts = {
+		{ value = "reverseFill", text = L["Reverse fill"] or "Reverse fill" },
+	}
+	if pType ~= "RUNES" then
+		opts[#opts + 1] = { value = "verticalFill", text = L["Vertical orientation"] or "Vertical orientation" }
+		opts[#opts + 1] = { value = "smoothFill", text = L["Smooth fill"] or "Smooth fill" }
+	end
+	return opts
+end
+
+local function behaviorSelectionFromConfig(cfg, pType)
+	local selection = {}
+	cfg = cfg or {}
+	if cfg.reverseFill == true then selection.reverseFill = true end
+	if pType ~= "RUNES" then
+		if cfg.verticalFill == true then selection.verticalFill = true end
+		if cfg.smoothFill == true then selection.smoothFill = true end
+	end
+	return selection
+end
+
+local function applyBehaviorSelection(cfg, selection, pType, specIndex)
+	if not cfg then return false end
+	selection = selection or {}
+	local beforeVertical = cfg.verticalFill == true
+
+	cfg.reverseFill = selection.reverseFill == true
+	if pType ~= "RUNES" then
+		cfg.verticalFill = selection.verticalFill == true
+		cfg.smoothFill = selection.smoothFill == true
+	else
+		cfg.verticalFill = nil
+		cfg.smoothFill = nil
+	end
+
+	local afterVertical = cfg.verticalFill == true
+	local dimensionsChanged = beforeVertical ~= afterVertical
+
+	if dimensionsChanged then
+		local defaultW = (pType == "HEALTH") and RB.DEFAULT_HEALTH_WIDTH or RB.DEFAULT_POWER_WIDTH
+		local defaultH = (pType == "HEALTH") and RB.DEFAULT_HEALTH_HEIGHT or RB.DEFAULT_POWER_HEIGHT
+		local curW = cfg.width or defaultW
+		local curH = cfg.height or defaultH
+		cfg.width, cfg.height = curH, curW
+		local activeSpec = specIndex or ResourceBars.GetClassContext()
+		if activeSpec and activeSpec == ResourceBars.GetClassContext() then
+			if pType == "HEALTH" then
+				ResourceBars.SetHealthBarSize(cfg.width or defaultW, cfg.height or defaultH)
+			else
+				ResourceBars.SetPowerBarSize(cfg.width or defaultW, cfg.height or defaultH, pType)
+			end
+		end
+	end
+
+	return dimensionsChanged
+end
+
+local editModeCallbacksRegistered
+registerEditModeCallbacks = function()
+	if editModeCallbacksRegistered then return end
+	local editMode = addon and addon.EditMode
+	local lib = editMode and editMode.lib
+	if not lib or not lib.RegisterCallback then return end
+	local function refreshForEditModeTransition()
+		local rb = addon and addon.Aura and addon.Aura.ResourceBars
+		if rb and rb.RegisterEditModeFrames then rb.RegisterEditModeFrames() end
+		if rb and rb.Refresh then
+			rb:Refresh()
+		else
+			if addon.Aura.functions.setPowerBars then addon.Aura.functions.setPowerBars() end
+			if rb and rb.ReanchorAll then rb.ReanchorAll() end
+		end
+		if rb and rb.UpdateRuneEventRegistration then rb.UpdateRuneEventRegistration() end
+	end
+	lib:RegisterCallback("enter", function() refreshForEditModeTransition() end)
+	lib:RegisterCallback("exit", function()
+		-- Re-evaluate active bars (e.g., druid forms) when leaving Edit Mode
+		refreshForEditModeTransition()
+	end)
+	editModeCallbacksRegistered = true
+end
+
+ensureEditModeRegistration = function()
+	if registerEditModeCallbacks then registerEditModeCallbacks() end
+	if ResourceBars and ResourceBars.RegisterEditModeFrames then ResourceBars.RegisterEditModeFrames() end
+end
+
+local function SnapFractionToSpan(bar, span, frac)
+	local s = (bar and bar.GetEffectiveScale and bar:GetEffectiveScale()) or 1
+	if s <= 0 then s = 1 end
+	local physicalSpan = max(1, floor((span or 0) * s + 0.5))
+	local physicalOffset = floor((physicalSpan * (frac or 0)) + 0.5)
+	return physicalOffset / s
+end
+
+-- One-time migration path from old Edit Mode position storage into spec anchors.
+local function backfillAnchorFromLayout(anchor, barType, specIndex)
+	if not anchor or (anchor.x ~= nil and anchor.y ~= nil) then return end
+	if anchor.relativeFrame and anchor.relativeFrame ~= "" and anchor.relativeFrame ~= "UIParent" then return end
+	local store = addon and addon.db and addon.db.editModeData
+	local frameId = ResourceBars.GetEditModeFrameId(barType, nil, specIndex)
+	local data = store and store[frameId]
+	if type(data) ~= "table" or data.x == nil or data.y == nil then data = nil end
+	if (not data or data.x == nil or data.y == nil) and ResourceBars.GetEditModeLegacyFrameId then
+		local legacyId = ResourceBars.GetEditModeLegacyFrameId(barType)
+		if legacyId and legacyId ~= frameId then
+			local legacy = store and store[legacyId]
+			if legacy and legacy.x ~= nil and legacy.y ~= nil then data = legacy end
+		end
+	end
+	if not data or data.x == nil or data.y == nil then return end
+	local point = data.point or data.relativePoint
+	if not point then return end
+	anchor.point = anchor.point or point
+	anchor.relativePoint = anchor.relativePoint or data.relativePoint or point
+	anchor.relativeFrame = anchor.relativeFrame or "UIParent"
+	anchor.x = data.x
+	anchor.y = data.y
+end
+
+RB.FREQUENT_POWER_TYPES = { MANA = true, ENERGY = true, FOCUS = true, RAGE = true, RUNIC_POWER = true, LUNAR_POWER = true }
+local formIndexToKey = {
+	[0] = "HUMANOID",
+	[1] = "BEAR",
+	[2] = "CAT",
+	[3] = "TRAVEL",
+	[4] = "MOONKIN",
+	[6] = "STAG",
+}
+local formIDToKey = {}
+local function mapFormID(key, ...)
+	for i = 1, select("#", ...) do
+		local formID = select(i, ...)
+		if type(formID) == "number" then formIDToKey[formID] = key end
+	end
+end
+mapFormID("BEAR", DRUID_BEAR_FORM)
+mapFormID("CAT", DRUID_CAT_FORM)
+mapFormID("TRAVEL", DRUID_TRAVEL_FORM, DRUID_ACQUATIC_FORM, DRUID_FLIGHT_FORM, DRUID_SWIFT_FLIGHT_FORM)
+mapFormID("MOONKIN", DRUID_MOONKIN_FORM_1, DRUID_MOONKIN_FORM_2)
+mapFormID("HUMANOID", DRUID_TREE_FORM)
+local formSpellIDToKey = {
+	[768] = "CAT", -- Cat Form
+	[5487] = "BEAR", -- Bear Form
+	[783] = "TRAVEL", -- Travel Form
+	[1066] = "TRAVEL", -- Aquatic Form
+	[33943] = "TRAVEL", -- Flight Form
+	[40120] = "TRAVEL", -- Swift Flight Form
+	[24858] = "MOONKIN", -- Moonkin Form
+	[33891] = "HUMANOID", -- Tree of Life
+	[114282] = "HUMANOID", -- Treant Form
+	[210053] = "STAG", -- Mount Form
+}
+local formKeyToIndex = {}
+for idx, key in pairs(formIndexToKey) do
+	formKeyToIndex[key] = idx
+end
+local DRUID_FORM_SEQUENCE = { "HUMANOID", "BEAR", "CAT", "TRAVEL", "MOONKIN", "STAG" }
+local function shouldUseDruidFormDriver(cfg)
+	if addon.variables.unitClass ~= "DRUID" then return false end
+	if type(cfg) ~= "table" then return false end
+	if ResourceBars.GetRuntimeCfgField(cfg, "sourceMode") == "SHARED" then return false end
+	local showForms = cfg.showForms
+	if type(showForms) ~= "table" then return false end
+	for _, key in ipairs(DRUID_FORM_SEQUENCE) do
+		if showForms[key] == false then return true end
+	end
+	return false
+end
+ResourceBars.ShouldUseDruidFormDriver = shouldUseDruidFormDriver
+
+function ResourceBars.ShouldKeepDruidFormDriverManaged(cfg)
+	if not shouldUseDruidFormDriver(cfg) then return false end
+	local showForms = cfg.showForms
+	if type(showForms) ~= "table" then return false end
+	for _, key in ipairs(DRUID_FORM_SEQUENCE) do
+		if showForms[key] == true then return true end
+	end
+	return false
+end
+local function mapFormNameToKey(name)
+	if not name then return nil end
+	name = tostring(name):lower()
+	if name:find("bear") then return "BEAR" end
+	if name:find("cat") then return "CAT" end
+	if name:find("travel") or name:find("aquatic") or name:find("flight") or name:find("flight form") then return "TRAVEL" end
+	if name:find("moonkin") or name:find("owl") then return "MOONKIN" end
+	if name:find("treant") then return "HUMANOID" end
+	if name:find("tree of life") or name:find("tree form") or name:find("treeform") then return "HUMANOID" end
+	if name:find("mount") then return "STAG" end
+	if name:find("stag") then return "STAG" end
+	return nil
+end
+
+local function resolveFormKeyFromShapeshiftIndex(idx)
+	if not idx or idx <= 0 or not GetShapeshiftFormInfo then return nil end
+	local texture, _, _, spellID = GetShapeshiftFormInfo(idx)
+	if spellID and formSpellIDToKey[spellID] then return formSpellIDToKey[spellID] end
+	if spellID and C_Spell and C_Spell.GetSpellName then
+		local key = mapFormNameToKey(C_Spell.GetSpellName(spellID))
+		if key then return key end
+	end
+	if type(texture) == "string" then
+		local key = mapFormNameToKey(texture)
+		if key then return key end
+	end
+	return nil
+end
+
+local function addUniqueStanceIndex(dst, idx)
+	if not dst or not idx or idx <= 0 then return end
+	for i = 1, #dst do
+		if dst[i] == idx then return end
+	end
+	dst[#dst + 1] = idx
+end
+
+local function getDruidFormStanceMap()
+	local map = {}
+	if addon.variables.unitClass ~= "DRUID" then return map end
+
+	local numForms = GetNumShapeshiftForms and GetNumShapeshiftForms() or 0
+	for idx = 1, numForms do
+		local key = resolveFormKeyFromShapeshiftIndex(idx)
+		if key then
+			map[key] = map[key] or {}
+			addUniqueStanceIndex(map[key], idx)
+		end
+	end
+
+	local activeIdx = GetShapeshiftForm and (GetShapeshiftForm() or 0) or 0
+	if activeIdx > 0 then
+		local activeKey
+		if GetShapeshiftFormID then activeKey = formIDToKey[GetShapeshiftFormID()] end
+		if not activeKey then activeKey = resolveFormKeyFromShapeshiftIndex(activeIdx) end
+		if activeKey then
+			map[activeKey] = map[activeKey] or {}
+			addUniqueStanceIndex(map[activeKey], activeIdx)
+		end
+	end
+
+	for _, indices in pairs(map) do
+		tsort(indices)
+	end
+
+	return map
+end
+
+function ResourceBars.GetCurrentDruidFormKey()
+	if addon.variables.unitClass ~= "DRUID" then return nil end
+	if GetShapeshiftFormID then
+		local formID = GetShapeshiftFormID()
+		local key = formIDToKey[formID]
+		if key then return key end
+	end
+	local idx = GetShapeshiftForm and (GetShapeshiftForm() or 0) or 0
+	local key = resolveFormKeyFromShapeshiftIndex(idx)
+	if key then return key end
+	key = formIndexToKey[idx]
+	if key then return key end
+	return "HUMANOID"
+end
+
+function ResourceBars.GetRuntimeConfigBatchToken(specIndex)
+	local class = tostring(addon.variables.unitClass or "")
+	local spec = tonumber(specIndex or ResourceBars.GetClassContext()) or 0
+	local mode = (ResourceBars.SpecUsesSharedMode and ResourceBars.SpecUsesSharedMode(spec)) and "SHARED" or "SPEC"
+	local form = (class == "DRUID" and ResourceBars.GetCurrentDruidFormKey and ResourceBars.GetCurrentDruidFormKey()) or ""
+	return class .. "|" .. tostring(spec) .. "|" .. mode .. "|" .. tostring(form or "")
+end
+
+function ResourceBars.BeginRuntimeConfigBatch()
+	local depth = (ResourceBars._runtimeConfigBatchDepth or 0) + 1
+	ResourceBars._runtimeConfigBatchDepth = depth
+	if depth > 1 then return end
+	ResourceBars._runtimeConfigBatch = {
+		barSettings = {},
+		sharedAssignments = {},
+	}
+end
+
+function ResourceBars.EndRuntimeConfigBatch()
+	local depth = (ResourceBars._runtimeConfigBatchDepth or 0) - 1
+	if depth <= 0 then
+		ResourceBars._runtimeConfigBatchDepth = nil
+		ResourceBars._runtimeConfigBatch = nil
+		return
+	end
+	ResourceBars._runtimeConfigBatchDepth = depth
+end
+
+function ResourceBars.GetRuntimeConfigBatchBucket(kind, specIndex)
+	local batch = ResourceBars._runtimeConfigBatch
+	if not batch then return nil end
+	local buckets = batch[kind]
+	if not buckets then return nil end
+	local token = ResourceBars.GetRuntimeConfigBatchToken(specIndex)
+	local bucket = buckets[token]
+	if not bucket then
+		bucket = {}
+		buckets[token] = bucket
+	end
+	return bucket
+end
+
+function ResourceBars.GetSharedVisibilityConfig() return {} end
+function ResourceBars.IsSharedSecondaryCurrentlyVisible() return true end
+
+local function resolveDruidSharedMainAndSecondary()
+	local info = ResourceBars.GetClassResourceInfo()
+	local main = info and info.MAIN or "MANA"
+	if addon.db.resourceBarsDruidFixedMana == true then
+		if main == "MANA" then return nil, nil, "MANA" end
+		return main, main == "ENERGY" and "COMBO_POINTS" or nil, "MANA"
+	end
+	if main == "ENERGY" then return main, "COMBO_POINTS", "MANA" end
+	if main ~= "MANA" then return main, "MANA" end
+	return main
+end
+
+function ResourceBars.ScheduleDelayedSharedShapeshiftRefresh()
+	if addon.variables.unitClass ~= "DRUID" then return end
+	local spec = ResourceBars.GetClassContext()
+	if not (ResourceBars.SpecUsesSharedMode and ResourceBars.SpecUsesSharedMode(spec)) then return end
+	if frameAnchor and frameAnchor._sharedShapeshiftRefreshScheduled then return end
+	if frameAnchor then frameAnchor._sharedShapeshiftRefreshScheduled = true end
+	RunNextFrame(function()
+		if frameAnchor then frameAnchor._sharedShapeshiftRefreshScheduled = false end
+		if not frameAnchor then return end
+		local runtimeSpec = ResourceBars.GetClassContext()
+		if addon.variables.unitClass ~= "DRUID" then return end
+		if not (ResourceBars.SpecUsesSharedMode and ResourceBars.SpecUsesSharedMode(runtimeSpec)) then return end
+		local setBars = addon and addon.Aura and addon.Aura.functions and addon.Aura.functions.setPowerBars
+		if type(setBars) ~= "function" then return end
+		local needsPostReanchor = setBars({ fastReuseExisting = true }) == true
+		if addon.EditMode and addon.EditMode.IsInEditMode and addon.EditMode:IsInEditMode() and ResourceBars.RegisterEditModeFrames then ResourceBars.RegisterEditModeFrames() end
+		if ResourceBars.SyncSharedSlotProxyFrames then ResourceBars.SyncSharedSlotProxyFrames(runtimeSpec) end
+		if needsPostReanchor and ResourceBars.ReanchorAll then ResourceBars.ReanchorAll() end
+	end)
+end
+
+function ResourceBars.GetSharedSlotPossibleTypes(slot, classTag)
+	local class = classTag or addon.variables.unitClass
+	if slot == "HEALTH" then return { "HEALTH" } end
+	if class == "DRUID" then
+		if slot == "MAIN" then return { "MANA", "RAGE", "ENERGY" } end
+		if slot == "SECONDARY" then return { "MANA", "COMBO_POINTS" } end
+		if slot == "TERTIARY" then return { "MANA" } end
+	end
+	local info = ResourceBars.CLASS_RESOURCES[class]
+	if slot == "MAIN" and info then return { info.MAIN } end
+	if slot == "SECONDARY" and class == "ROGUE" then return { "COMBO_POINTS" } end
+	return {}
+end
+
+function ResourceBars.GetDruidSharedAssignmentForForm(_, formKey)
+	local form = ResourceBars.NormalizeDruidSharedVisibilityForm(formKey)
+	if addon.db.resourceBarsDruidFixedMana == true then
+		if form == "BEAR" then return "RAGE", nil, "MANA" end
+		if form == "CAT" then return "ENERGY", "COMBO_POINTS", "MANA" end
+		return nil, nil, "MANA"
+	end
+	if form == "BEAR" then return "RAGE", "MANA" end
+	if form == "CAT" then return "ENERGY", "COMBO_POINTS", "MANA" end
+	return "MANA"
+end
+
+function ResourceBars.GetSharedAssignmentForClassSpec(classTag)
+	local info = ResourceBars.CLASS_RESOURCES[classTag]
+	if not info then return nil end
+	local assignment = { MAIN = info.MAIN, SECONDARY = classTag == "ROGUE" and "COMBO_POINTS" or nil }
+	if classTag == "DRUID" then
+		assignment.druidForms = {}
+		for _, form in ipairs({ "BEAR", "CAT", "MOONKIN", "HUMANOID" }) do
+			local main, secondary, tertiary = ResourceBars.GetDruidSharedAssignmentForForm(nil, form)
+			assignment.druidForms[form] = { MAIN = main, SECONDARY = secondary, TERTIARY = tertiary }
+		end
+	end
+	return assignment
+end
+
+function ResourceBars.GetClassInfoByFile(classTag)
+	if GetClassInfo then
+		for classID = 1, 20 do
+			local className, classFile = GetClassInfo(classID)
+			if classFile == classTag then return classID, className end
+		end
+	end
+	local localized = (LOCALIZED_CLASS_NAMES_MALE and LOCALIZED_CLASS_NAMES_MALE[classTag])
+		or (LOCALIZED_CLASS_NAMES_FEMALE and LOCALIZED_CLASS_NAMES_FEMALE[classTag])
+	return nil, localized or classTag
+end
+
+function ResourceBars.BuildSharedVisibilityRows()
+	local rows = {}
+	for classTag in pairs(ResourceBars.CLASS_RESOURCES) do
+		local classID, className = ResourceBars.GetClassInfoByFile(classTag)
+		rows[#rows + 1] = { classTag = classTag, classID = classID, className = className,
+			specIndex = ResourceBars.GetClassContext(), assignments = ResourceBars.GetSharedAssignmentForClassSpec(classTag), isDruid = classTag == "DRUID" }
+	end
+	table.sort(rows, function(a, b) return a.className < b.className end)
+	return rows
+end
+
+function ResourceBars.ResolveSharedSlotAssignments()
+	if ResourceBars.ResolveCustomSharedAssignments then
+		local custom = ResourceBars.ResolveCustomSharedAssignments(nil)
+		if custom then return custom end
+	end
+	local resolved = { HEALTH = "HEALTH", byType = { HEALTH = "HEALTH" }, order = { "HEALTH" }, secondaryTypes = {} }
+	local info = ResourceBars.GetClassResourceInfo()
+	if not info then return resolved end
+	local class = addon.variables.unitClass
+	local form = class == "DRUID" and ResourceBars.GetCurrentDruidFormKey() or nil
+	local main, secondary, tertiary = info.MAIN, info.COMBO_POINTS and "COMBO_POINTS" or nil
+	if class == "DRUID" then main, secondary, tertiary = resolveDruidSharedMainAndSecondary() end
+	local function assign(slot, power)
+		if not power or not ResourceBars.IsSharedSlotAllowed(class, nil, slot, form) then return end
+		resolved[slot] = power
+		resolved.byType[power] = slot
+		resolved.order[#resolved.order + 1] = slot
+		if slot ~= "MAIN" then resolved.secondaryTypes[#resolved.secondaryTypes + 1] = power end
+	end
+	assign("MAIN", main)
+	assign("SECONDARY", secondary)
+	assign("TERTIARY", tertiary)
+	return resolved
+end
+
+function ResourceBars.GetResolvedBarTypeForSharedSlot(slot, specIndex)
+	slot = tostring(slot or ""):upper()
+	local assignments = ResourceBars.ResolveSharedSlotAssignments(specIndex)
+	return assignments and assignments[slot] or nil
+end
+
+function ResourceBars.GetSharedSlotForResolvedBar(pType, specIndex)
+	local assignments = ResourceBars.ResolveSharedSlotAssignments(specIndex)
+	return assignments and assignments.byType and assignments.byType[pType] or nil
+end
+
+function ResourceBars.ResolveConfigSourceForBar(pType)
+	local slot = ResourceBars.GetSharedSlotFrameName(pType) and pType or ResourceBars.GetSharedSlotForResolvedBar(pType)
+	return slot and ResourceBars.EnsureSharedSlotStore(slot) or nil, "SHARED", slot, getSpecInfo()
+end
+
+function ResourceBars.IsResolvedBarTypeEnabled(pType, specIndex)
+	if isAuraPowerType(pType) and not ResourceBars.IsAuraPowerBarTypeAvailable(pType) then return false end
+	local spec = tonumber(specIndex or ResourceBars.GetClassContext())
+	if ResourceBars.SpecUsesSharedMode(spec) then
+		local slot = ResourceBars.GetSharedSlotForResolvedBar(pType, spec)
+		if not slot then return false end
+		local cfg = ResourceBars.EnsureSharedSlotStore(slot)
+		return cfg and cfg.enabled == true
+	end
+	local specCfg = ensureSpecCfg(spec)
+	local cfg = specCfg and specCfg[pType]
+	return cfg and cfg.enabled == true or false
+end
+
+function ResourceBars.ResolveBarTypeFromFrameToken(frameName, specIndex)
+	if frameName == "EQOLHealthBar" then return "HEALTH" end
+	local sharedSlot = ResourceBars.GetSharedSlotFromFrameName and ResourceBars.GetSharedSlotFromFrameName(frameName)
+	if sharedSlot then return ResourceBars.GetResolvedBarTypeForSharedSlot and ResourceBars.GetResolvedBarTypeForSharedSlot(sharedSlot, specIndex) end
+	if type(frameName) ~= "string" then return nil end
+	return frameName:match("^EQOL(.+)Bar$")
+end
+
+ensureDruidShowFormsDefaults = function(cfg, pType, specInfo)
+	if addon.variables.unitClass ~= "DRUID" then return end
+	if not cfg or type(cfg) ~= "table" then return end
+	if ResourceBars.GetRuntimeCfgField(cfg, "sourceMode") == "SHARED" then
+		cfg.showForms = nil
+		return
+	end
+	if pType == "HEALTH" then return end
+
+	-- Combo points are only meaningful in Cat; force that mapping regardless of previous user input.
+	if pType == "COMBO_POINTS" then
+		cfg.showForms = {
+			HUMANOID = false,
+			BEAR = false,
+			CAT = true,
+			TRAVEL = false,
+			MOONKIN = false,
+			STAG = false,
+		}
+		return
+	end
+
+	-- Other bars: fill missing defaults without overwriting existing user choices.
+	local sf = type(cfg.showForms) == "table" and cfg.showForms or {}
+	local defaults = {}
+	local isSecondaryMana = pType == "MANA" and specInfo and specInfo.MAIN ~= "MANA"
+	local isSecondaryEnergy = pType == "ENERGY" and specInfo and specInfo.MAIN ~= "ENERGY"
+	if isSecondaryMana then
+		defaults.HUMANOID, defaults.BEAR, defaults.CAT, defaults.TRAVEL, defaults.MOONKIN, defaults.STAG = true, false, false, false, false, false
+	elseif isSecondaryEnergy then
+		defaults.HUMANOID, defaults.BEAR, defaults.CAT, defaults.TRAVEL, defaults.MOONKIN, defaults.STAG = false, false, true, false, false, false
+	else
+		defaults.HUMANOID, defaults.BEAR, defaults.CAT, defaults.TRAVEL, defaults.MOONKIN, defaults.STAG = true, true, true, true, true, true
+	end
+	for k, v in pairs(defaults) do
+		if sf[k] == nil then sf[k] = v end
+	end
+	cfg.showForms = sf
+end
+
+function ResourceBars.PrepareBarConfigForRuntime(cfg, pType, specInfo)
+	if type(cfg) ~= "table" then return cfg end
+	ResourceBars.ResetMissingPanelAnchor(cfg, pType)
+	if pType == "STAGGER" then ResourceBars.SanitizeStaggerColorOverrides(cfg) end
+
+	local stamp = tostring(addon.variables.unitClass or "") .. "|" .. tostring(ResourceBars.GetClassContext() or "") .. "|" .. tostring(specInfo and specInfo.MAIN or "") .. "|" .. tostring(pType or "")
+	if ResourceBars.GetRuntimeCfgField(cfg, "runtimePrepareStamp") == stamp then return cfg end
+
+	ResourceBars.SetRuntimeCfgField(cfg, "rbType", pType)
+	cfg.strata = ResourceBars.NormalizeFrameStrataToken(cfg.strata)
+	cfg.frameLevelOffset = ResourceBars.NormalizeFrameLevelOffset(cfg.frameLevelOffset)
+	if isAuraPowerType and isAuraPowerType(pType) then ensureAuraPowerDefaults(pType, cfg) end
+	if ResourceBars.EnsureRogueChargedComboDefaults then ResourceBars.EnsureRogueChargedComboDefaults(cfg, pType) end
+	ensureDruidShowFormsDefaults(cfg, pType, specInfo)
+	ensureRelativeFrameFallback(cfg.anchor, pType, specInfo)
+	ResourceBars.SetRuntimeCfgField(cfg, "runtimePrepareStamp", stamp)
+	return cfg
+end
+
+function ResourceBars.GetRuntimeBarConfig(pType, frame)
+	local cfg = frame and frame._cfg
+	if cfg then return cfg end
+	cfg = getBarSettings(pType)
+	if frame and cfg then frame._cfg = cfg end
+	return cfg
+end
+
+function ResourceBars.RegisterCustomVisibilityFrame(key, frame, cfg)
+	if not key or not frame then return end
+	ResourceBars._customVisibilityFrames[key] = {
+		frame = frame,
+		cfg = cfg,
+	}
+	frame._rbType = key
+	frame._cfg = cfg
+end
+
+function ResourceBars.UnregisterCustomVisibilityFrame(key, frame)
+	if not key then return end
+	local record = ResourceBars._customVisibilityFrames[key]
+	if not record then return end
+	if frame and record.frame ~= frame then return end
+	if record.frame then
+		if ResourceBars.TrackingMouseover then ResourceBars.TrackingMouseover:Clear(record.frame) end
+		record.frame._rbDesiredVisible = nil
+		record.frame._cfg = nil
+	end
+	ResourceBars._customVisibilityFrames[key] = nil
+end
+
+local function isEQOLBarFrameName(name)
+	if ResourceBars.GetSharedSlotFromFrameName and ResourceBars.GetSharedSlotFromFrameName(name) then return true end
+	return type(name) == "string" and name:match("^EQOL.+Bar$")
+end
+
+ensureRelativeFrameFallback = function(anchor, pType, specInfo)
+	if pType == "HEALTH" then return end
+	if not anchor then return end
+	local rf = anchor.relativeFrame
+	if not rf or rf == "" then return end
+	if not isEQOLBarFrameName(rf) then return end
+	local relType = ResourceBars.ResolveBarTypeFromFrameToken(rf)
+	if relType and relType ~= "" then
+		-- If the target bar type is valid for this spec, keep it even if the frame isn't created yet
+		if relType == "HEALTH" then return end
+		if specInfo and (specInfo.MAIN == relType or specInfo[relType]) then return end
+	end
+	if _G[rf] then return end -- relative bar already exists (e.g., created earlier)
+end
+
+function updateHealthBar(evt)
+	if healthBar and healthBar:IsShown() then
+		local damageAbsorbEvent = evt == "UNIT_ABSORB_AMOUNT_CHANGED"
+		local healAbsorbEvent = evt == "UNIT_HEAL_ABSORB_AMOUNT_CHANGED"
+		local tempMaxHealthEvent = evt == "UNIT_MAX_HEALTH_MODIFIERS_CHANGED"
+		local maxHealthEvent = evt == "UNIT_MAXHEALTH"
+		local healthValueEvent = evt == "UNIT_HEALTH" or maxHealthEvent
+		local fullRefresh = not damageAbsorbEvent and not healAbsorbEvent and not tempMaxHealthEvent and not healthValueEvent
+		local updateHealthValue = fullRefresh or healthValueEvent
+		local updateDamageAbsorb = fullRefresh or maxHealthEvent or damageAbsorbEvent
+		local updateHealAbsorb = fullRefresh or maxHealthEvent or healAbsorbEvent
+		local updateTempMaxHealth = fullRefresh or maxHealthEvent or tempMaxHealthEvent
+		local settings = healthBar._cfg or {}
+		local smooth = settings.smoothFill == true
+		if tempMaxHealthEvent then
+			ResourceBars.UpdateHealthTempMaxHealthLoss(healthBar)
+			return
+		end
+		local previousMax = healthBar._lastMax or 0
+		local newMax = previousMax
+
+		if updateHealthValue then
+			newMax = UnitHealthMax("player") or previousMax or 1
+			if previousMax ~= newMax then
+				healthBar._lastMax = newMax
+				healthBar:SetMinMaxValues(0, newMax)
+				local currentValue = healthBar:GetValue()
+				local canClamp = not (issecretvalue and (issecretvalue(currentValue) or issecretvalue(newMax)))
+				if canClamp then
+					currentValue = currentValue or 0
+					if currentValue > newMax then healthBar:SetValue(newMax) end
+				end
+			end
+		end
+		local maxHealth = healthBar._lastMax or newMax
+		if not maxHealth or maxHealth <= 0 then maxHealth = UnitHealthMax("player") or 1 end
+		local damageNeedsClamp = updateDamageAbsorb and healthBar._healthDamageNeedsClamp == true
+		local healNeedsClamp = updateHealAbsorb and healthBar._healthHealNeedsClamp == true
+		local curHealth = (updateHealthValue or damageNeedsClamp) and UnitHealth("player") or nil
+		local textStyle = healthBar._healthTextStyle or "PERCENT"
+		local textNeedsPercent = healthBar._healthTextNeedsPercent == true
+		local colorNeedsPercent = healthBar._healthColorNeedsPercent == true
+		local needsCalculator = (updateHealthValue and (textNeedsPercent or colorNeedsPercent)) or damageNeedsClamp or healNeedsClamp
+		local calc = needsCalculator and ResourceBars.RefreshHealPredictionCalculator(healthBar, "player") or nil
+
+		if updateHealthValue then
+		setBarValue(healthBar, curHealth, smooth)
+		if ResourceBars.UpdateFillSpark then ResourceBars.UpdateFillSpark(healthBar, settings, "HEALTH", nil, curHealth, maxHealth) end
+		ResourceBars.SyncHealthFillGeometryBar(healthBar, settings, curHealth, maxHealth, smooth)
+		healthBar._lastVal = curHealth
+		if ResourceBars.ApplyHideWhenEmptyAlphaToFrame then ResourceBars.ApplyHideWhenEmptyAlphaToFrame(healthBar, settings, curHealth) end
+
+		local percent = getHealthPercent("player", curHealth, maxHealth, calc)
+		local percentStr = formatPercentDisplay(percent, settings)
+		for _, textSlot in ipairs(healthBar._textSlots or {}) do
+			if textSlot.text then
+				textSlot.text:SetAlpha(addon.functions.GetHealthTextAlpha("player", settings, addon.EditMode and addon.EditMode.IsInEditMode and addon.EditMode:IsInEditMode()))
+				local style = textSlot.style
+				local useShortNumbers = settings.shortNumbers ~= false
+				if style == "NONE" then
+					if textSlot._textShown then
+						textSlot.text:SetText("")
+						textSlot._lastText = ""
+						textSlot.text:Hide()
+						textSlot._textShown = false
+					elseif textSlot._lastText ~= "" then
+						textSlot.text:SetText("")
+						textSlot._lastText = ""
+					end
+				else
+					local text = ResourceBars.FormatBarTextByStyle(style, formatNumber(curHealth, useShortNumbers), formatNumber(maxHealth, useShortNumbers), percentStr)
+					if not addon.variables.isMidnight and textSlot._lastText ~= text then
+						textSlot.text:SetText(text)
+						textSlot._lastText = text
+					else
+						textSlot.text:SetText(text)
+					end
+					if not textSlot._textShown then
+						textSlot.text:Show()
+						textSlot._textShown = true
+					end
+				end
+			end
+		end
+		local baseR, baseG, baseB, baseA
+		if settings.useBarColor then
+			local custom = settings.barColor or RB.WHITE
+			baseR, baseG, baseB, baseA = custom[1] or 1, custom[2] or 1, custom[3] or 1, custom[4] or 1
+		elseif settings.useClassColor then
+			baseR, baseG, baseB, baseA = getPlayerClassColor()
+		else
+			if not addon.variables.isMidnight then
+				local colorPercent = percent
+				if issecretvalue and issecretvalue(colorPercent) then colorPercent = nil end
+				colorPercent = tonumber(colorPercent) or 0
+				if colorPercent >= 60 then
+					baseR, baseG, baseB, baseA = 0, 0.7, 0, 1
+				elseif colorPercent >= 40 then
+					baseR, baseG, baseB, baseA = 0.7, 0.7, 0, 1
+				else
+					baseR, baseG, baseB, baseA = 0.7, 0, 0, 1
+				end
+			end
+		end
+		healthBar._baseColor = healthBar._baseColor or {}
+		healthBar._baseColor[1], healthBar._baseColor[2], healthBar._baseColor[3], healthBar._baseColor[4] = baseR, baseG, baseB, baseA
+
+		if not addon.variables.isMidnight then
+			local reachedCap = maxHealth > 0 and curHealth >= maxHealth
+			local useMaxColor = settings.useMaxColor == true
+			local finalR, finalG, finalB, finalA = baseR, baseG, baseB, baseA
+			if useMaxColor and reachedCap then
+				local maxCol = settings.maxColor or RB.DEFAULT_MAX_COLOR
+				finalR, finalG, finalB, finalA = maxCol[1] or baseR, maxCol[2] or baseG, maxCol[3] or baseB, maxCol[4] or baseA
+			end
+
+			local lc = healthBar._lastColor or {}
+			local fa = finalA or 1
+			if lc[1] ~= finalR or lc[2] ~= finalG or lc[3] ~= finalB or lc[4] ~= fa then
+				lc[1], lc[2], lc[3], lc[4] = finalR, finalG, finalB, fa
+				healthBar._lastColor = lc
+				if ResourceBars.SetStatusBarColorWithGradient then
+					ResourceBars.SetStatusBarColorWithGradient(healthBar, settings, lc[1], lc[2], lc[3], lc[4], true)
+				else
+					healthBar:SetStatusBarColor(lc[1], lc[2], lc[3], lc[4])
+				end
+			end
+		else
+			local lc = healthBar._lastColor or {}
+			if (settings.useBarColor or settings.useClassColor) and not settings.useMaxColor then
+				if lc[1] ~= baseR or lc[2] ~= baseG or lc[3] ~= baseB or lc[4] ~= baseA then
+					lc[1], lc[2], lc[3], lc[4] = baseR, baseG, baseB, baseA or 1
+					healthBar._lastColor = lc
+					healthBar:GetStatusBarTexture():SetVertexColor(1, 1, 1, 1)
+					if ResourceBars.SetStatusBarColorWithGradient then
+						ResourceBars.SetStatusBarColorWithGradient(healthBar, settings, baseR, baseG, baseB, baseA, true)
+					else
+						healthBar:SetStatusBarColor(baseR, baseG, baseB, baseA)
+					end
+				end
+			else
+				local color = UnitHealthPercent("player", true, curve)
+				if color then
+					local tex = healthBar:GetStatusBarTexture()
+					if tex and tex.SetVertexColor then
+						if color.GetRGBA then
+							tex:SetVertexColor(color:GetRGBA())
+						elseif color.GetRGB then
+							tex:SetVertexColor(color:GetRGB())
+						end
+					end
+					healthBar._lastColor = nil
+				end
+			end
+		end
+		end
+
+		if updateTempMaxHealth then ResourceBars.UpdateHealthTempMaxHealthLoss(healthBar) end
+
+		local absorbBar = healthBar.absorbBar
+		if updateDamageAbsorb and absorbBar then
+			local absorbSecondaryBar = healthBar.absorbSecondaryBar
+			local absorbEnabled = settings.absorbEnabled ~= false
+			if not absorbEnabled or maxHealth <= 0 then
+				absorbBar:Hide()
+				if absorbSecondaryBar then
+					absorbSecondaryBar:Hide()
+					setBarValue(absorbSecondaryBar, 0, smooth)
+					absorbSecondaryBar._lastVal = 0
+				end
+				if healthBar.overAbsorbGlow then healthBar.overAbsorbGlow:Hide() end
+				setBarValue(absorbBar, 0, smooth)
+				absorbBar._lastVal = 0
+			else
+				local reverseAbsorb = settings.absorbReverseFill == true and settings.absorbOverfill ~= true
+				local absorbDontOverflow = reverseAbsorb and settings.absorbDontOverflowHealthBar == true
+				local showPrimary = not absorbDontOverflow
+				if showPrimary then
+					if not absorbBar:IsShown() then absorbBar:Show() end
+				else
+					absorbBar:Hide()
+				end
+				if absorbSecondaryBar then
+					if reverseAbsorb then
+						if not absorbSecondaryBar:IsShown() then absorbSecondaryBar:Show() end
+					else
+						absorbSecondaryBar:Hide()
+					end
+				end
+				local abs
+				local totalAbs = UnitGetTotalAbsorbs("player") or 0
+				if absorbDontOverflow and calc and calc.GetDamageAbsorbs then
+					abs = calc:GetDamageAbsorbs() or 0
+				else
+					abs = totalAbs
+				end
+				local glowAbsorbValue = totalAbs ~= nil and totalAbs or abs
+				if settings.absorbSample then
+					abs = maxHealth * 0.6
+					glowAbsorbValue = abs
+				end
+				local absIsSecret = issecretvalue and issecretvalue(abs)
+				local curHealthIsSecret = issecretvalue and issecretvalue(curHealth)
+				if absorbDontOverflow and not absIsSecret and not curHealthIsSecret then
+					local missingHealth = (tonumber(maxHealth) or 0) - (tonumber(curHealth) or 0)
+					if missingHealth < 0 then missingHealth = 0 end
+					if (abs or 0) > missingHealth then abs = missingHealth end
+					if settings.absorbSample then glowAbsorbValue = abs end
+				end
+				if healthBar.overAbsorbGlow then
+					if settings.useAbsorbGlow == true then
+						healthBar.overAbsorbGlow:SetAlpha(glowAbsorbValue or 0)
+						healthBar.overAbsorbGlow:Show()
+					else
+						healthBar.overAbsorbGlow:SetAlpha(0)
+						healthBar.overAbsorbGlow:Hide()
+					end
+				end
+				if addon.variables.isMidnight then
+					absorbBar:SetMinMaxValues(0, maxHealth)
+					setBarValue(absorbBar, abs, smooth)
+					if absorbSecondaryBar then
+						absorbSecondaryBar:SetMinMaxValues(0, maxHealth)
+						setBarValue(absorbSecondaryBar, abs, smooth)
+					end
+				else
+					if not absIsSecret and abs > maxHealth then abs = maxHealth end
+					if absorbBar._lastMax ~= maxHealth then
+						absorbBar:SetMinMaxValues(0, maxHealth)
+						absorbBar._lastMax = maxHealth
+					end
+					setBarValue(absorbBar, abs, smooth)
+					absorbBar._lastVal = abs
+					if absorbSecondaryBar then
+						if absorbSecondaryBar._lastMax ~= maxHealth then
+							absorbSecondaryBar:SetMinMaxValues(0, maxHealth)
+							absorbSecondaryBar._lastMax = maxHealth
+						end
+						setBarValue(absorbSecondaryBar, abs, smooth)
+						absorbSecondaryBar._lastVal = abs
+					end
+				end
+			end
+		elseif updateDamageAbsorb and healthBar.overAbsorbGlow then
+			healthBar.overAbsorbGlow:Hide()
+		end
+
+		local healAbsorbBar = healthBar.healAbsorbBar
+		if updateHealAbsorb and healAbsorbBar then
+			local healAbsorbEnabled = settings.healAbsorbEnabled ~= false
+			if not healAbsorbEnabled or maxHealth <= 0 then
+				healAbsorbBar:Hide()
+				setBarValue(healAbsorbBar, 0, smooth)
+				healAbsorbBar._lastVal = 0
+			else
+				if not healAbsorbBar:IsShown() then healAbsorbBar:Show() end
+
+				local healAbsorb
+				if settings.healAbsorbDontOverflowHealthBar == true and settings.healAbsorbReverseFill ~= true and calc and calc.GetHealAbsorbs then
+					healAbsorb = calc:GetHealAbsorbs() or 0
+				else
+					healAbsorb = (UnitGetTotalHealAbsorbs and UnitGetTotalHealAbsorbs("player")) or 0
+				end
+				if settings.healAbsorbSample then healAbsorb = maxHealth * 0.6 end
+				if healAbsorbBar._lastMax ~= maxHealth then
+					healAbsorbBar:SetMinMaxValues(0, maxHealth)
+					healAbsorbBar._lastMax = maxHealth
+				end
+				setBarValue(healAbsorbBar, healAbsorb, smooth)
+				healAbsorbBar._lastVal = healAbsorb
+			end
+		end
+	end
+end
+
+function ResourceBars.ResetMissingPanelAnchor(cfg, pType)
+	local anchor = type(cfg) == "table" and cfg.anchor
+	if type(anchor) ~= "table" then return false end
+	local panelId = type(anchor.relativeFrame) == "string" and anchor.relativeFrame:match("^EQOL_CooldownPanel(%d+)$")
+	local root = addon.db and addon.db.cooldownPanels
+	if not panelId or not root or type(root.panels) ~= "table" or root.panels[tonumber(panelId)] then return false end
+	if anchor.matchRelativeWidth or anchor.matchEssentialWidth then
+		cfg.width = pType == "HEALTH" and RB.DEFAULT_HEALTH_WIDTH or RB.DEFAULT_POWER_WIDTH
+	end
+	anchor.relativeFrame, anchor.point, anchor.relativePoint = "UIParent", "CENTER", "CENTER"
+	anchor.x, anchor.y = 0, 0
+	anchor.matchRelativeWidth, anchor.matchEssentialWidth, anchor.matchRelativeWidthOffset, anchor.autoSpacing = nil, nil, nil, nil
+	return true
+end
+
+function ResourceBars.OnCooldownPanelDeleted(panelId)
+	local target = "EQOL_CooldownPanel" .. tostring(panelId)
+	local function resetStore(store)
+		for pType, cfg in pairs(store or {}) do
+			if type(cfg) == "table" and type(cfg.anchor) == "table" and cfg.anchor.relativeFrame == target then
+				ResourceBars.ResetMissingPanelAnchor(cfg, pType)
+			end
+		end
+	end
+	resetStore(addon.db and addon.db.globalResourceBarSettings)
+	resetStore(addon.db and addon.db.sharedResourceBarSettings)
+	for _, class in pairs(addon.db and addon.db.personalResourceBarSettings or {}) do
+		if type(class) == "table" then
+			for _, spec in pairs(class) do
+				if type(spec) == "table" then resetStore(spec) end
+			end
+		end
+	end
+	if ResourceBars.InvalidateRuntimeConfigCaches then ResourceBars.InvalidateRuntimeConfigCaches() end
+	if ResourceBars.ReanchorAll then ResourceBars.ReanchorAll() end
+end
+
+function getAnchor(name, spec)
+	local class = addon.variables.unitClass
+	spec = spec or ResourceBars.GetClassContext()
+	if not class or not spec then return {} end
+	ensureSpecCfg(spec)
+	local cfg = select(1, ResourceBars.ResolveConfigSourceForBar(name, spec))
+	if not cfg then return {} end
+	ResourceBars.ResetMissingPanelAnchor(cfg, name)
+	cfg.anchor = cfg.anchor or {}
+	local anchor = cfg.anchor
+	if anchor.matchRelativeWidth == nil and anchor.matchEssentialWidth ~= nil then
+		anchor.matchRelativeWidth = anchor.matchEssentialWidth and true or nil
+		anchor.matchEssentialWidth = nil
+	end
+	if (anchor.relativeFrame or "UIParent") == "UIParent" then anchor.matchRelativeWidth = nil end
+	backfillAnchorFromLayout(anchor, name, spec)
+	do
+		local editMode = addon and addon.EditMode
+		local frameId = ResourceBars.GetEditModeFrameId and ResourceBars.GetEditModeFrameId(name, nil, spec)
+		local legacyId = ResourceBars.GetEditModeLegacyFrameId and ResourceBars.GetEditModeLegacyFrameId(name)
+		local store = addon and addon.db and addon.db.editModeData
+		local cleared = ResourceBars._clearedEditModeAnchorIds
+		if not cleared then
+			cleared = {}
+			ResourceBars._clearedEditModeAnchorIds = cleared
+		end
+		local profileToken = tostring(addon and addon.db)
+		local function clear(id)
+			if not id or id == "" then return end
+			local clearKey = profileToken .. ":" .. tostring(id)
+			if cleared[clearKey] then return end
+			if editMode and editMode.ClearStoredPosition then
+				editMode:ClearStoredPosition(id)
+			elseif type(store) == "table" then
+				store[id] = nil
+			end
+			cleared[clearKey] = true
+		end
+		clear(frameId)
+		if legacyId and legacyId ~= frameId then clear(legacyId) end
+	end
+	return anchor
+end
+
+function ResourceBars.GetMatchedBarWidth(relativeWidth, offset, cfg)
+	if relativeWidth == nil then return nil end
+	local width = (relativeWidth or 0) + (tonumber(offset) or 0)
+	if cfg and cfg.verticalFill == true then return max(RB.MIN_RESOURCE_BAR_WIDTH, width) end
+	if width <= RB.MIN_RESOURCE_BAR_WIDTH then return nil end
+	return width
+end
+
+function ResourceBars.GetMissingAnchorFallbackWidth(pType, width)
+	local default = pType == "HEALTH" and RB.DEFAULT_HEALTH_WIDTH or RB.DEFAULT_POWER_WIDTH
+	return max(default, width or default)
+end
+
+function ResourceBars.RefreshAnchorAvailability()
+	local watched = ResourceBars._anchorAvailability
+	if not watched then return end
+	local changed = false
+	for frame, state in pairs(watched) do
+		if (addon.db and addon.db.enableResourceFrame == false) or (frame._cfg and frame._cfg.enabled == false) then
+			watched[frame] = nil
+		else
+			local missing = ResourceBars.IsRelativeFrameMissing(state.name)
+			if missing ~= state.missing then
+				state.missing = missing
+				changed = true
+			end
+		end
+	end
+	if not next(watched) and ResourceBars._anchorAvailabilityTicker then
+		ResourceBars._anchorAvailabilityTicker:Cancel()
+		ResourceBars._anchorAvailabilityTicker = nil
+	end
+	if not changed then return end
+	if InCombatLockdown and InCombatLockdown() then
+		ResourceBars._pendingReanchorAll = true
+	elseif ResourceBars.ReanchorAll then
+		ResourceBars.ReanchorAll()
+	end
+end
+
+function ResourceBars.ApplyResolvedBarAnchor(frame, anchor, relative, pType)
+	local name = anchor.relativeFrame
+	local missing = relative == UIParent and ResourceBars.IsRelativeFrameMissing(name)
+	ResourceBars._anchorAvailability = ResourceBars._anchorAvailability or setmetatable({}, { __mode = "k" })
+	local watched = ResourceBars._anchorAvailability
+	if type(name) == "string" and name ~= "" and name ~= "UIParent" then
+		watched[frame] = { name = name, missing = missing }
+		if not ResourceBars._anchorAvailabilityTicker and C_Timer and C_Timer.NewTicker then
+			ResourceBars._anchorAvailabilityTicker = C_Timer.NewTicker(1, ResourceBars.RefreshAnchorAvailability)
+		end
+	else
+		watched[frame] = nil
+	end
+	if missing then
+		-- This position is temporary; retain the saved target for late loading or spec changes.
+		if anchor.matchRelativeWidth == true then
+			ResourceBars.Pixel.Width(frame, ResourceBars.GetMissingAnchorFallbackWidth(pType, frame:GetWidth()))
+		end
+		ResourceBars.Pixel.Point(frame, "CENTER", UIParent, "CENTER", 0, 0)
+		return
+	end
+	ResourceBars.Pixel.Point(frame, anchor.point or "TOPLEFT", relative or UIParent, anchor.relativePoint or anchor.point or "TOPLEFT", anchor.x or 0, anchor.y or 0)
+end
+
+local function resolveAnchor(info, type)
+	local relativeFrame = info and info.relativeFrame
+	if ResourceBars.IsRelativeFrameMissing and ResourceBars.IsRelativeFrameMissing(relativeFrame) then ResourceBars.ScheduleMissingAnchorRetry(relativeFrame) end
+	local frame = ResourceBars.ResolveRelativeFrameByName(relativeFrame)
+	if not frame or frame == UIParent then return frame or UIParent, false end
+
+	local visited = {}
+	local check = frame
+	local limit = 10
+
+	while check and check.GetName and check ~= UIParent and limit > 0 do
+		local fname = check:GetName()
+		if visited[fname] then
+			print("|cff00ff98Enhance QoL|r: " .. L["AnchorLoop"]:format(fname))
+			return UIParent, true
+		end
+		visited[fname] = true
+
+		local bType
+		if fname == "EQOLHealthBar" then
+			bType = "HEALTH"
+		else
+			bType = ResourceBars.ResolveBarTypeFromFrameToken(fname)
+		end
+
+		if not bType then break end
+		local anch = getAnchor(bType, ResourceBars.GetClassContext())
+		check = ResourceBars.ResolveRelativeFrameByName(anch and anch.relativeFrame)
+		if check == nil or check == UIParent then break end
+		limit = limit - 1
+	end
+
+	if limit <= 0 then
+		print("|cff00ff98Enhance QoL|r: " .. L["AnchorLoop"]:format(info.relativeFrame or ""))
+		return UIParent, true
+	end
+	return frame or UIParent, false
+end
+
+function ResourceBars.EnsureSharedSlotProxyFrame(slot)
+	slot = tostring(slot or ""):upper()
+	if slot == "HEALTH" then
+		local frame = healthBar or _G.EQOLHealthBar
+		local obsoleteProxy = _G.EQOLSharedHealthBar
+		if obsoleteProxy and obsoleteProxy ~= frame then
+			obsoleteProxy._rbDesiredVisible = false
+			obsoleteProxy:Hide()
+		end
+		return frame
+	end
+	local frameName = ResourceBars.GetSharedSlotFrameName and ResourceBars.GetSharedSlotFrameName(slot)
+	if not frameName then return nil end
+	local frame = ResourceBars.GetSharedSlotLiveFrame and ResourceBars.GetSharedSlotLiveFrame(slot) or _G[frameName]
+	if frame then
+		-- TODO: Remove this 12.1 PTR gate after 12.1 is the supported baseline.
+		if tonumber((select(4, GetBuildInfo()))) >= 120100 and type(frame.SetRolesets) == "function" then frame:SetRolesets("statusBars") end
+		return frame
+	end
+	frame = CreateFrame("StatusBar", frameName, UIParent, "BackdropTemplate")
+	-- TODO: Remove this 12.1 PTR gate after 12.1 is the supported baseline.
+	if tonumber((select(4, GetBuildInfo()))) >= 120100 and type(frame.SetRolesets) == "function" then frame:SetRolesets("statusBars") end
+	frame:SetClampedToScreen(true)
+	frame:SetMovable(true)
+	frame:EnableMouse(false)
+	frame:SetFrameStrata("MEDIUM")
+	frame:SetFrameLevel(1)
+	frame:SetMinMaxValues(0, 1)
+	frame:SetValue(0)
+	ResourceBars.Pixel.Size(frame, RB.DEFAULT_POWER_WIDTH, RB.DEFAULT_POWER_HEIGHT)
+	frame:Hide()
+	if slot ~= "HEALTH" then
+		ResourceBars._sharedSlotFrames = ResourceBars._sharedSlotFrames or {}
+		ResourceBars._sharedSlotFrames[slot] = frame
+		frame._rbSharedSlot = slot
+	end
+	return frame
+end
+
+function ResourceBars.GetSharedSlotDynamicAnchorId(slot)
+	slot = tostring(slot or ""):upper()
+	if not ResourceBars.SHARED_SLOT_FRAME_NAME[slot] then return nil end
+	return "resourceBarSlot:" .. string.lower(slot)
+end
+
+function ResourceBars.IsSharedSlotDynamicAnchorEnabled(slot)
+	if not (ResourceBars.SpecUsesSharedMode and ResourceBars.SpecUsesSharedMode(addon.variables and ResourceBars.GetClassContext())) then return false end
+	local dynamicAnchors = addon.DynamicAnchors
+	local consumerId = ResourceBars.GetSharedSlotDynamicAnchorId(slot)
+	return consumerId and dynamicAnchors and dynamicAnchors.IsFrameAssignmentEnabled and dynamicAnchors:IsFrameAssignmentEnabled(consumerId) or false
+end
+
+function ResourceBars.NotifySharedSlotDynamicAnchorChanged(slot, reason)
+	local dynamicAnchors = addon.DynamicAnchors
+	local consumerId = ResourceBars.GetSharedSlotDynamicAnchorId(slot)
+	if not (consumerId and dynamicAnchors) then return end
+	if dynamicAnchors.QueueConsumer then dynamicAnchors:QueueConsumer(consumerId, reason or "SHARED_SLOT_CHANGED") end
+	if dynamicAnchors.NotifyTargetChanged then dynamicAnchors:NotifyTargetChanged(consumerId, reason or "SHARED_SLOT_CHANGED", consumerId) end
+end
+
+function ResourceBars.ApplySharedSlotDynamicAnchor(slot)
+	slot = tostring(slot or ""):upper()
+	if not ResourceBars.IsSharedSlotDynamicAnchorEnabled(slot) then return false end
+	local frame = ResourceBars.GetSharedSlotLiveFrame(slot)
+	local consumerId = ResourceBars.GetSharedSlotDynamicAnchorId(slot)
+	local dynamicAnchors = addon.DynamicAnchors
+	local winner = consumerId and dynamicAnchors and dynamicAnchors.GetSimpleFrameWinner and dynamicAnchors:GetSimpleFrameWinner(consumerId)
+	if not (frame and winner and winner.frame and winner.placement) then return false end
+
+	local cfg = ResourceBars.EnsureSharedSlotStore(slot) or {}
+	local widthDefault = slot == "HEALTH" and RB.DEFAULT_HEALTH_WIDTH or RB.DEFAULT_POWER_WIDTH
+	local heightDefault = slot == "HEALTH" and RB.DEFAULT_HEALTH_HEIGHT or RB.DEFAULT_POWER_HEIGHT
+	local width = cfg.width or widthDefault
+	local height = cfg.height or heightDefault
+	if winner.matchRelativeWidth == true and winner.frame ~= UIParent and winner.frame.GetWidth then
+		local matchedWidth = ResourceBars.GetMatchedBarWidth(winner.frame:GetWidth(), winner.matchRelativeWidthOffset, cfg)
+		if matchedWidth then
+			width = matchedWidth
+			if ResourceBars.PersistMatchedBarWidth then ResourceBars.PersistMatchedBarWidth(slot, frame, width) end
+		end
+	end
+	ResourceBars.Pixel.Size(frame, width, height)
+
+	local placement = winner.placement
+	frame:ClearAllPoints()
+	local anchored = pcall(
+		ResourceBars.Pixel.Point,
+		frame,
+		placement.point or "TOPLEFT",
+		winner.frame,
+		placement.relativePoint or placement.point or "TOPLEFT",
+		placement.x or 0,
+		placement.y or 0
+	)
+	if not anchored then
+		frame:ClearAllPoints()
+		ResourceBars.Pixel.Point(frame, "CENTER", UIParent, "CENTER", 0, 0)
+	end
+	ResourceBars.AlignHostToPixelGrid(frame)
+	return true
+end
+
+function ResourceBars.SyncSharedSlotProxyFrame(slot, specIndex)
+	local spec = tonumber(specIndex or ResourceBars.GetClassContext())
+	local resolvedType = ResourceBars.GetResolvedBarTypeForSharedSlot and ResourceBars.GetResolvedBarTypeForSharedSlot(slot, spec)
+	if slot == "TERTIARY" and not resolvedType then
+		local existing = ResourceBars.GetSharedSlotLiveFrame and ResourceBars.GetSharedSlotLiveFrame(slot)
+		if existing then
+			existing._rbDesiredVisible = false
+			existing:Hide()
+		end
+		return nil
+	end
+	local frame = ResourceBars.EnsureSharedSlotProxyFrame(slot)
+	if not frame then return nil end
+	local editModeActive = addon.EditMode and addon.EditMode.IsInEditMode and addon.EditMode:IsInEditMode()
+	local liveFrame
+	if resolvedType == "HEALTH" then
+		liveFrame = healthBar or _G.EQOLHealthBar
+	elseif type(resolvedType) == "string" and resolvedType ~= "" then
+		liveFrame = powerbar[resolvedType] or _G["EQOL" .. resolvedType .. "Bar"]
+	end
+
+	local cfg = ResourceBars.EnsureSharedSlotStore and ResourceBars.EnsureSharedSlotStore(slot) or {}
+	local widthDefault = slot == "HEALTH" and RB.DEFAULT_HEALTH_WIDTH or RB.DEFAULT_POWER_WIDTH
+	local heightDefault = slot == "HEALTH" and RB.DEFAULT_HEALTH_HEIGHT or RB.DEFAULT_POWER_HEIGHT
+	if cfg.enabled ~= true then
+		frame._rbDesiredVisible = false
+		frame:Hide()
+		return frame
+	end
+	if not editModeActive and ((slot ~= "HEALTH" and type(resolvedType) ~= "string") or (slot ~= "HEALTH" and resolvedType == "")) then
+		frame._rbDesiredVisible = false
+		frame:Hide()
+		return frame
+	end
+	if ResourceBars.ApplySharedSlotDynamicAnchor(slot) then
+		if not ResourceBars.ShouldDeferShowToVisibilityDriver or not ResourceBars.ShouldDeferShowToVisibilityDriver(frame, cfg) then frame:Show() end
+		return frame
+	end
+
+	frame:ClearAllPoints()
+	if liveFrame and liveFrame ~= frame and liveFrame.GetNumPoints and liveFrame:GetNumPoints() > 0 then
+		local point, relativeTo, relativePoint, x, y = liveFrame:GetPoint(1)
+		if relativeTo ~= frame then
+			ResourceBars.Pixel.Point(frame, point or "TOPLEFT", relativeTo or UIParent, relativePoint or point or "TOPLEFT", x or 0, y or 0)
+			ResourceBars.Pixel.Size(frame, liveFrame:GetWidth() or cfg.width or widthDefault, liveFrame:GetHeight() or cfg.height or heightDefault)
+			ResourceBars.AlignHostToPixelGrid(frame)
+			if not ResourceBars.ShouldDeferShowToVisibilityDriver or not ResourceBars.ShouldDeferShowToVisibilityDriver(frame, cfg) then frame:Show() end
+			return frame
+		end
+	end
+
+	local anchor = getAnchor(slot, spec)
+	if (anchor.relativeFrame or "UIParent") == "UIParent" then
+		anchor.point = anchor.point or "TOPLEFT"
+		anchor.relativePoint = anchor.relativePoint or anchor.point
+		if anchor.x == nil or anchor.y == nil then
+			local pw = UIParent and UIParent.GetWidth and UIParent:GetWidth() or 0
+			local ph = UIParent and UIParent.GetHeight and UIParent:GetHeight() or 0
+			local w = cfg.width or widthDefault
+			local h = cfg.height or heightDefault
+			anchor.x = (pw - w) / 2
+			anchor.y = (h - ph) / 2
+		end
+	end
+
+	local relative, looped = resolveAnchor(anchor, resolvedType or slot)
+	if looped and (anchor.relativeFrame or "UIParent") ~= "UIParent" then
+		local pw = UIParent and UIParent.GetWidth and UIParent:GetWidth() or 0
+		local ph = UIParent and UIParent.GetHeight and UIParent:GetHeight() or 0
+		local w = cfg.width or widthDefault
+		local h = cfg.height or heightDefault
+		anchor.point = "TOPLEFT"
+		anchor.relativeFrame = "UIParent"
+		anchor.relativePoint = "TOPLEFT"
+		anchor.x = (pw - w) / 2
+		anchor.y = (h - ph) / 2
+		relative = UIParent
+	end
+
+	local width = cfg.width or widthDefault
+	local height = cfg.height or heightDefault
+	if anchor.matchRelativeWidth == true and relative and relative ~= UIParent and relative.GetWidth then
+		width = ResourceBars.GetMatchedBarWidth(relative:GetWidth(), anchor.matchRelativeWidthOffset, cfg) or width
+	end
+	ResourceBars.Pixel.Size(frame, width, height)
+	ResourceBars.ApplyResolvedBarAnchor(frame, anchor, relative, resolvedType or slot)
+	ResourceBars.AlignHostToPixelGrid(frame)
+	if not ResourceBars.ShouldDeferShowToVisibilityDriver or not ResourceBars.ShouldDeferShowToVisibilityDriver(frame, cfg) then frame:Show() end
+	return frame
+end
+
+function ResourceBars.SyncSharedSlotProxyFrames(specIndex)
+	if ResourceBars.BeginRuntimeConfigBatch then ResourceBars.BeginRuntimeConfigBatch() end
+	for _, slot in ipairs(ResourceBars.SHARED_SLOT_ORDER or {}) do
+		ResourceBars.SyncSharedSlotProxyFrame(slot, specIndex)
+	end
+	if ResourceBars.EndRuntimeConfigBatch then ResourceBars.EndRuntimeConfigBatch() end
+end
+
+function createHealthBar()
+	if mainFrame then
+		-- Ensure correct parent when re-enabling
+		-- TODO: Remove this 12.1 PTR gate after 12.1 is the supported baseline.
+		if tonumber((select(4, GetBuildInfo()))) >= 120100 and type(mainFrame.SetRolesets) == "function" then mainFrame:SetRolesets("statusBars") end
+		if healthBar and tonumber((select(4, GetBuildInfo()))) >= 120100 and type(healthBar.SetRolesets) == "function" then healthBar:SetRolesets("statusBars") end
+		if mainFrame:GetParent() ~= UIParent then mainFrame:SetParent(UIParent) end
+		if healthBar and healthBar.GetParent and healthBar:GetParent() ~= UIParent then healthBar:SetParent(UIParent) end
+		if mainFrame.SetClampedToScreen then mainFrame:SetClampedToScreen(true) end
+		if healthBar then healthBar._rbSharedSlot = ResourceBars.SpecUsesSharedMode and ResourceBars.SpecUsesSharedMode(ResourceBars.GetClassContext()) and "HEALTH" or nil end
+		local settings = getBarSettings("HEALTH") or {}
+		healthBar._cfg = settings
+		applyBarFrameLayers(healthBar, settings)
+		applyBackdrop(healthBar, settings)
+		configureBarBehavior(healthBar, settings, "HEALTH")
+		mainFrame:Show()
+		healthBar:Show()
+		return
+	end
+
+	-- Reuse existing named frames if they still exist from a previous enable
+	mainFrame = _G["EQOLResourceFrame"] or CreateFrame("frame", "EQOLResourceFrame", UIParent)
+	-- TODO: Remove this 12.1 PTR gate after 12.1 is the supported baseline.
+	if tonumber((select(4, GetBuildInfo()))) >= 120100 and type(mainFrame.SetRolesets) == "function" then mainFrame:SetRolesets("statusBars") end
+	if mainFrame:GetParent() ~= UIParent then mainFrame:SetParent(UIParent) end
+	if mainFrame.SetClampedToScreen then mainFrame:SetClampedToScreen(true) end
+	healthBar = _G["EQOLHealthBar"] or CreateFrame("StatusBar", "EQOLHealthBar", UIParent, "BackdropTemplate")
+	if tonumber((select(4, GetBuildInfo()))) >= 120100 and type(healthBar.SetRolesets) == "function" then healthBar:SetRolesets("statusBars") end
+	if healthBar:GetParent() ~= UIParent then healthBar:SetParent(UIParent) end
+	healthBar._rbType = "HEALTH"
+	healthBar._rbSharedSlot = ResourceBars.SpecUsesSharedMode and ResourceBars.SpecUsesSharedMode(ResourceBars.GetClassContext()) and "HEALTH" or nil
+	do
+		local cfg = getBarSettings("HEALTH")
+		local w = max(RB.MIN_RESOURCE_BAR_WIDTH, (cfg and cfg.width) or RB.DEFAULT_HEALTH_WIDTH)
+		local h = (cfg and cfg.height) or RB.DEFAULT_HEALTH_HEIGHT
+		ResourceBars.Pixel.Size(healthBar, w, h)
+	end
+	if not healthBar._rbRefreshOnShow then
+		healthBar:HookScript("OnShow", function(self) updateHealthBar("ON_SHOW") end)
+		healthBar._rbRefreshOnShow = true
+	end
+	do
+		local cfgTex = getBarSettings("HEALTH") or {}
+		healthBar:SetStatusBarTexture(resolveTexture(cfgTex))
+		if ResourceBars.ApplyStatusBarTexturePixelSnapping then ResourceBars.ApplyStatusBarTexturePixelSnapping(healthBar, 0) end
+	end
+	healthBar:SetClampedToScreen(true)
+	local dynamicApplied = ResourceBars.ApplySharedSlotDynamicAnchor and ResourceBars.ApplySharedSlotDynamicAnchor("HEALTH")
+	if not dynamicApplied then
+	local anchor = getAnchor("HEALTH", ResourceBars.GetClassContext())
+	local rel, looped = resolveAnchor(anchor, "HEALTH")
+	-- If we had to fallback due to a loop, recenter on UIParent using TOPLEFT/TOPLEFT
+	if looped and (anchor.relativeFrame or "UIParent") ~= "UIParent" then
+		local pw = UIParent and UIParent.GetWidth and UIParent:GetWidth() or 0
+		local ph = UIParent and UIParent.GetHeight and UIParent:GetHeight() or 0
+		local w = healthBar:GetWidth() or RB.DEFAULT_HEALTH_WIDTH
+		local h = healthBar:GetHeight() or RB.DEFAULT_HEALTH_HEIGHT
+		anchor.point = "TOPLEFT"
+		anchor.relativeFrame = "UIParent"
+		anchor.relativePoint = "TOPLEFT"
+		anchor.x = (pw - w) / 2
+		anchor.y = (h - ph) / 2
+		anchor.autoSpacing = nil
+		rel = UIParent
+	end
+	-- If first run and anchored to UIParent with no persisted offsets yet, persist centered offsets
+	if (anchor.relativeFrame or "UIParent") == "UIParent" and (anchor.x == nil or anchor.y == nil) then
+		local pw = UIParent and UIParent.GetWidth and UIParent:GetWidth() or 0
+		local ph = UIParent and UIParent.GetHeight and UIParent:GetHeight() or 0
+		local w = healthBar:GetWidth() or RB.DEFAULT_HEALTH_WIDTH
+		local h = healthBar:GetHeight() or RB.DEFAULT_HEALTH_HEIGHT
+		anchor.point = anchor.point or "TOPLEFT"
+		anchor.relativePoint = anchor.relativePoint or "TOPLEFT"
+		anchor.x = (pw - w) / 2
+		anchor.y = (h - ph) / 2
+		anchor.autoSpacing = nil
+		rel = UIParent
+	end
+	healthBar:ClearAllPoints()
+	ResourceBars.ApplyResolvedBarAnchor(healthBar, anchor, rel, "HEALTH")
+	ResourceBars.AlignHostToPixelGrid(healthBar)
+	end
+	local settings = getBarSettings("HEALTH")
+	healthBar._cfg = settings
+	applyBarFrameLayers(healthBar, settings)
+	applyBackdrop(healthBar, settings)
+
+	if not healthBar.text then healthBar.text = healthBar:CreateFontString(nil, "OVERLAY", "GameFontHighlight") end
+	applyFontToString(healthBar.text, settings)
+	applyTextPosition(healthBar, settings, 3, 0)
+	configureBarBehavior(healthBar, settings, "HEALTH")
+
+	healthBar:SetMovable(false)
+	healthBar:EnableMouse(false)
+	if ensureEditModeRegistration then ensureEditModeRegistration() end
+
+	local absorbBar = CreateFrame("StatusBar", "EQOLAbsorbBar", healthBar)
+	absorbBar:SetAllPoints(healthBar)
+	absorbBar:SetFrameStrata(healthBar:GetFrameStrata())
+	absorbBar:SetFrameLevel((healthBar:GetFrameLevel() + 1))
+	do
+		local cfgTexH = getBarSettings("HEALTH") or {}
+		absorbBar:SetStatusBarTexture(resolveTexture({ barTexture = cfgTexH.absorbTexture or cfgTexH.barTexture }))
+		if ResourceBars.ApplyStatusBarTexturePixelSnapping then ResourceBars.ApplyStatusBarTexturePixelSnapping(absorbBar, 0) end
+	end
+	absorbBar:SetStatusBarColor(0.8, 0.8, 0.8, 0.8)
+	healthBar.absorbBar = absorbBar
+	local absorbSecondaryBar = _G.EQOLAbsorbSecondaryBar or CreateFrame("StatusBar", "EQOLAbsorbSecondaryBar", healthBar)
+	if absorbSecondaryBar:GetParent() ~= healthBar then absorbSecondaryBar:SetParent(healthBar) end
+	absorbSecondaryBar:ClearAllPoints()
+	absorbSecondaryBar:SetAllPoints(healthBar)
+	absorbSecondaryBar:SetFrameStrata(healthBar:GetFrameStrata())
+	absorbSecondaryBar:SetFrameLevel((healthBar:GetFrameLevel() + 1))
+	absorbSecondaryBar:SetStatusBarTexture(resolveTexture({ barTexture = settings.absorbTexture or settings.barTexture }))
+	if ResourceBars.ApplyStatusBarTexturePixelSnapping then ResourceBars.ApplyStatusBarTexturePixelSnapping(absorbSecondaryBar, 0) end
+	absorbSecondaryBar:SetStatusBarColor(0.8, 0.8, 0.8, 0.8)
+	absorbSecondaryBar:Hide()
+	healthBar.absorbSecondaryBar = absorbSecondaryBar
+	local overAbsorbGlow = healthBar:CreateTexture(nil, "ARTWORK", "OverAbsorbGlowTemplate")
+	if not overAbsorbGlow then overAbsorbGlow = healthBar:CreateTexture(nil, "ARTWORK") end
+	if overAbsorbGlow then
+		overAbsorbGlow:SetTexture(798066)
+		overAbsorbGlow:SetBlendMode("ADD")
+		if overAbsorbGlow.SetDrawLayer then overAbsorbGlow:SetDrawLayer("OVERLAY", 7) end
+		overAbsorbGlow:SetAlpha(0)
+		overAbsorbGlow:Hide()
+		healthBar.overAbsorbGlow = overAbsorbGlow
+		absorbBar.overAbsorbGlow = overAbsorbGlow
+	end
+	local healAbsorbBar = _G.EQOLHealAbsorbBar or CreateFrame("StatusBar", "EQOLHealAbsorbBar", healthBar, "BackdropTemplate")
+	healAbsorbBar:SetMinMaxValues(0, 1)
+	healAbsorbBar:SetFrameStrata(healthBar:GetFrameStrata())
+	healAbsorbBar:SetFrameLevel((healthBar:GetFrameLevel() + 1))
+	healAbsorbBar:SetStatusBarColor(1, 0.3, 0.3, 0.7)
+	healAbsorbBar:Hide()
+	healthBar.healAbsorbBar = healAbsorbBar
+	applyBarFrameLayers(healthBar, settings)
+	configureBarBehavior(healthBar, settings, "HEALTH")
+	if healthBar._rbBackdropState and healthBar._rbBackdropState.insets then applyStatusBarInsets(healthBar, healthBar._rbBackdropState.insets, true) end
+
+	updateHealthBar("FULL_REFRESH")
+
+	-- Ensure any bars anchored to Health get reanchored when Health changes size
+	healthBar:SetScript("OnSizeChanged", function()
+		if addon and addon.Aura and addon.Aura.ResourceBars and addon.Aura.ResourceBars.ReanchorDependentsOf then addon.Aura.ResourceBars.ReanchorDependentsOf("EQOLHealthBar") end
+	end)
+end
+
+ResourceBars.CLASS_RESOURCES = {
+	WARRIOR = { MAIN = "RAGE" }, PALADIN = { MAIN = "MANA" }, HUNTER = { MAIN = "MANA" },
+	ROGUE = { MAIN = "ENERGY", COMBO_POINTS = true }, PRIEST = { MAIN = "MANA" },
+	SHAMAN = { MAIN = "MANA" }, MAGE = { MAIN = "MANA" }, WARLOCK = { MAIN = "MANA" },
+	DRUID = { MAIN = "MANA", RAGE = true, ENERGY = true, COMBO_POINTS = true },
+}
+-- Compatibility shape for existing helper iteration; the only key is a class
+-- context, not a client specialization.
+powertypeClasses = {}
+for class, info in pairs(ResourceBars.CLASS_RESOURCES) do powertypeClasses[class] = { [ResourceBars.GetClassContext()] = info } end
+classPowerTypes = { "MANA", "RAGE", "ENERGY", "COMBO_POINTS" }
+
+ResourceBars.powertypeClasses = powertypeClasses
+ResourceBars.classPowerTypes = classPowerTypes
+ResourceBars.COSMETIC_BAR_KEYS = COSMETIC_BAR_KEYS
+ResourceBars.separatorEligible = {
+	HOLY_POWER = true,
+	SOUL_SHARDS = true,
+	ESSENCE = true,
+	ARCANE_CHARGES = true,
+	CHI = true,
+	COMBO_POINTS = true,
+	ICICLES = true,
+	TIP_OF_THE_SPEAR = true,
+	WHIRLWIND = true,
+	SOUL_FRAGMENTS_VENGEANCE = true,
+	VOID_METAMORPHOSIS = true,
+	MAELSTROM_WEAPON = true,
+	RUNES = true,
+}
+
+function ResourceBars.SupportsThresholdLines(pType)
+	return pType ~= "HEALTH" and not (ResourceBars.separatorEligible and ResourceBars.separatorEligible[pType])
+end
+
+function ResourceBars.ApplySharedPowerTypeOverride(runtimeCfg, sourceCfg, pType)
+	local overrides = type(sourceCfg) == "table" and sourceCfg.powerTypeOverrides or nil
+	local override = type(overrides) == "table" and overrides[pType] or nil
+	if type(override) ~= "table" or override.enabled ~= true then return end
+	local slotTextDisabled = runtimeCfg and runtimeCfg.textStyle == "NONE"
+	for _, key in ipairs(ResourceBars.POWER_TYPE_STYLE_OVERRIDE_KEYS or {}) do
+		if override[key] ~= nil and not (slotTextDisabled and key == "textStyle") and (key ~= "visualSegments" or pType == "MAELSTROM_WEAPON") then
+			runtimeCfg[key] = type(override[key]) == "table" and CopyTable(override[key]) or override[key]
+		end
+	end
+end
+
+function getBarSettings(pType)
+	local class = addon.variables.unitClass
+	local spec = ResourceBars.GetClassContext()
+	local cache = ResourceBars.GetRuntimeConfigBatchBucket and ResourceBars.GetRuntimeConfigBatchBucket("barSettings", spec)
+	if cache and cache[pType] ~= nil then return cache[pType] end
+	local specInfo = getSpecInfo(spec)
+	if class and not ResourceBars.IsRuntimeBarTypeSupported(pType, spec) then return nil end
+	local sourceCfg, sourceMode, sharedSlot = ResourceBars.ResolveConfigSourceForBar(pType, spec)
+	if sourceMode == "SHARED" then
+		ResourceBars.ResetMissingPanelAnchor(sourceCfg, pType)
+		local runtimeCfg = CopyTable(sourceCfg or {})
+		ResourceBars.SetRuntimeCfgField(runtimeCfg, "sourceMode", "SHARED")
+		ResourceBars.SetRuntimeCfgField(runtimeCfg, "sourceSlot", sharedSlot)
+		if ResourceBars.ApplySharedPowerTypeOverride then ResourceBars.ApplySharedPowerTypeOverride(runtimeCfg, sourceCfg, pType) end
+		if type(sourceCfg) == "table" and type(sourceCfg.defaultPowerColors) == "table" and type(sourceCfg.defaultPowerColors[pType]) == "table" and sourceCfg.defaultPowerColors[pType].enabled ~= false then
+			ResourceBars.SetRuntimeCfgField(runtimeCfg, "resolvedDefaultPowerColor", CopyTable(sourceCfg.defaultPowerColors[pType]))
+		end
+		runtimeCfg = ResourceBars.PrepareBarConfigForRuntime(runtimeCfg, pType, specInfo)
+		if cache and runtimeCfg ~= nil then cache[pType] = runtimeCfg end
+		return runtimeCfg
+	end
+
+	return nil
+end
+
+function ResourceBars.GetFrameRuntimeConfigToken(pType, specIndex)
+	local class = tostring(addon.variables.unitClass or "")
+	local spec = tonumber(specIndex or ResourceBars.GetClassContext()) or 0
+	local mode = (ResourceBars.SpecUsesSharedMode and ResourceBars.SpecUsesSharedMode(spec)) and "SHARED" or "SPEC"
+	local form = (class == "DRUID" and ResourceBars.GetCurrentDruidFormKey and ResourceBars.GetCurrentDruidFormKey()) or ""
+	return class .. "|" .. tostring(spec) .. "|" .. mode .. "|" .. tostring(pType or "") .. "|" .. tostring(form or "")
+end
+
+function ResourceBars.AssignFrameRuntimeConfig(frame, cfg, pType, specIndex)
+	if not frame then return cfg end
+	frame._cfg = cfg
+	frame._rbCfgCacheToken = cfg and ResourceBars.GetFrameRuntimeConfigToken(pType, specIndex) or nil
+	local backend = ResourceBars.NativeAuraPowerBackend
+	if backend and backend.OnBarTypeAssigned then backend:OnBarTypeAssigned(frame, pType) end
+	return cfg
+end
+
+function ResourceBars.GetFrameRuntimeConfig(pType, frame, specIndex)
+	if not frame then return getBarSettings(pType) end
+	local token = ResourceBars.GetFrameRuntimeConfigToken(pType, specIndex)
+	if frame._cfg and frame._rbCfgCacheToken == token then return frame._cfg end
+	return ResourceBars.AssignFrameRuntimeConfig(frame, getBarSettings(pType), pType, specIndex)
+end
+
+local function wantsRelativeFrameWidthMatch(anchor) return anchor and (anchor.relativeFrame or "UIParent") ~= "UIParent" and anchor.matchRelativeWidth == true end
+
+local function getConfiguredBarWidth(pType, frame)
+	local cfg = ResourceBars.GetFrameRuntimeConfig(pType, frame)
+	local default = (pType == "HEALTH") and RB.DEFAULT_HEALTH_WIDTH or RB.DEFAULT_POWER_WIDTH
+	local width = (cfg and type(cfg.width) == "number" and cfg.width > 0 and cfg.width) or default or RB.MIN_RESOURCE_BAR_WIDTH
+	return max(RB.MIN_RESOURCE_BAR_WIDTH, width or RB.MIN_RESOURCE_BAR_WIDTH)
+end
+
+function ResourceBars.PersistMatchedBarWidth(pType, frame, width)
+	local cfg = select(1, ResourceBars.ResolveConfigSourceForBar(pType, ResourceBars.GetClassContext()))
+	if type(cfg) == "table" then cfg.width = width end
+	if frame and type(frame._cfg) == "table" then frame._cfg.width = width end
+end
+
+local function syncBarWidthWithAnchor(pType)
+	local frame = (pType == "HEALTH") and healthBar or powerbar[pType]
+	if not frame then return false end
+	local sharedSlot = pType == "HEALTH" and "HEALTH" or frame._rbSharedSlot
+	if sharedSlot and ResourceBars.IsSharedSlotDynamicAnchorEnabled and ResourceBars.IsSharedSlotDynamicAnchorEnabled(sharedSlot) then return false end
+	local anchor = getAnchor(pType, ResourceBars.GetClassContext())
+	local baseWidth = max(1, getConfiguredBarWidth(pType, frame) or 0)
+	if wantsRelativeFrameWidthMatch(anchor) and ResourceBars.IsRelativeFrameMissing(anchor.relativeFrame) then
+		baseWidth = ResourceBars.GetMissingAnchorFallbackWidth(pType, baseWidth)
+	end
+	if not wantsRelativeFrameWidthMatch(anchor) then
+		local current = frame:GetWidth() or 0
+		if abs(current - baseWidth) < 0.5 then return false end
+		ResourceBars.Pixel.Width(frame, baseWidth)
+		ResourceBars.AlignHostToPixelGrid(frame)
+		return true
+	end
+	local relativeFrameName = anchor.relativeFrame
+	ensureRelativeFrameHooks(relativeFrameName)
+	local relFrame = ResourceBars.ResolveRelativeFrameByName(relativeFrameName)
+	if not relFrame or relFrame == UIParent or not relFrame.GetWidth then
+		local current = frame:GetWidth() or 0
+		if abs(current - baseWidth) < 0.5 then return false end
+		ResourceBars.Pixel.Width(frame, baseWidth)
+		ResourceBars.AlignHostToPixelGrid(frame)
+		return true
+	end
+	local matchedWidth = ResourceBars.GetMatchedBarWidth(relFrame:GetWidth(), anchor.matchRelativeWidthOffset, ResourceBars.GetFrameRuntimeConfig(pType, frame))
+	local desired = matchedWidth or baseWidth
+	if matchedWidth then ResourceBars.PersistMatchedBarWidth(pType, frame, matchedWidth) end
+	local current = frame:GetWidth() or 0
+	if abs(current - desired) < 0.5 then return false end
+	ResourceBars.Pixel.Width(frame, desired)
+	ResourceBars.AlignHostToPixelGrid(frame)
+	return true
+end
+
+local function syncRelativeFrameWidths()
+	if InCombatLockdown and InCombatLockdown() then
+		ResourceBars._pendingRelativeFrameWidthSync = true
+		return false
+	end
+	ResourceBars._pendingRelativeFrameWidthSync = nil
+	if ResourceBars.BeginRuntimeConfigBatch then ResourceBars.BeginRuntimeConfigBatch() end
+	local changedAny = false
+	local passLimit = 1
+	for _ in pairs(powerbar or {}) do
+		passLimit = passLimit + 1
+	end
+
+	for _ = 1, passLimit do
+		local changedThisPass = false
+		if healthBar then changedThisPass = syncBarWidthWithAnchor("HEALTH") or changedThisPass end
+		for pType, bar in pairs(powerbar or {}) do
+			if bar then changedThisPass = syncBarWidthWithAnchor(pType) or changedThisPass end
+		end
+		changedAny = changedAny or changedThisPass
+		if not changedThisPass then break end
+	end
+
+	if ResourceBars.EndRuntimeConfigBatch then ResourceBars.EndRuntimeConfigBatch() end
+	return changedAny
+end
+
+ResourceBars.SyncRelativeFrameWidths = syncRelativeFrameWidths
+
+local function handleRelativeFrameGeometryChanged()
+	if scheduleRelativeFrameWidthSync then
+		scheduleRelativeFrameWidthSync()
+	elseif ResourceBars and ResourceBars.SyncRelativeFrameWidths then
+		ResourceBars.SyncRelativeFrameWidths()
+	end
+end
+
+local widthMatchHookedFrames = {}
+local pendingHookRetries = {}
+
+ensureRelativeFrameHooks = function(frameName)
+	if not frameName or frameName == "UIParent" then return end
+	local foundFrame = false
+	local hookedAny = false
+	for _, targetName in ipairs(ResourceBars.GetRelativeFrameHookTargets(frameName)) do
+		local frame = _G[targetName]
+		if frame then
+			foundFrame = true
+			if not widthMatchHookedFrames[targetName] and frame.HookScript then
+				local okSize = pcall(frame.HookScript, frame, "OnSizeChanged", handleRelativeFrameGeometryChanged)
+				local okShow = pcall(frame.HookScript, frame, "OnShow", handleRelativeFrameGeometryChanged)
+				local okHide = pcall(frame.HookScript, frame, "OnHide", handleRelativeFrameGeometryChanged)
+				if okSize or okShow or okHide then
+					widthMatchHookedFrames[targetName] = true
+					hookedAny = true
+				end
+			end
+		end
+	end
+	if foundFrame then
+		if hookedAny then handleRelativeFrameGeometryChanged() end
+		return
+	end
+	if not foundFrame then
+		if After and not pendingHookRetries[frameName] then
+			pendingHookRetries[frameName] = true
+			After(1, function()
+				pendingHookRetries[frameName] = nil
+				if ensureRelativeFrameHooks then ensureRelativeFrameHooks(frameName) end
+			end)
+		end
+		return
+	end
+end
+
+local relativeFrameWidthPending = false
+scheduleRelativeFrameWidthSync = function()
+	if not ResourceBars.SyncRelativeFrameWidths then return end
+	if not After then
+		ResourceBars.SyncRelativeFrameWidths()
+		return
+	end
+	if relativeFrameWidthPending then return end
+	relativeFrameWidthPending = true
+	After(0.25, function()
+		relativeFrameWidthPending = false
+		ResourceBars.SyncRelativeFrameWidths()
+	end)
+end
+
+function updatePowerBar(type, runeSlot)
+	local bar = powerbar[type]
+	if not bar or not bar:IsShown() then return end
+	local nativeAuraCfg = RB.AURA_POWER_CONFIG and RB.AURA_POWER_CONFIG[type]
+	if nativeAuraCfg and not nativeAuraCfg.spellCastCountId and ResourceBars.RequiresNativeAuraPowerBackend(type) then
+		local backend = ResourceBars.GetNativeAuraPowerBackend()
+		if backend and backend.UpdatePowerBar then backend:UpdatePowerBar(type, bar) end
+		-- A missing/failed backend must fail closed instead of falling through to
+		-- unit-aura APIs when the guarded spell-ID lookup is unavailable.
+		return
+	end
+	-- Special handling for DK RUNES: six sub-bars that fill as cooldown progresses
+	if type == "RUNES" then
+		local cfg = ResourceBars.GetRuntimeBarConfig("RUNES", bar) or {}
+		local readyR, readyG, readyB, readyA = resolveRuneReadyColor(cfg)
+		local cooldownR, cooldownG, cooldownB, cooldownA
+		if ResourceBars.ResolveRuneCooldownColor then
+			cooldownR, cooldownG, cooldownB, cooldownA = ResourceBars.ResolveRuneCooldownColor(cfg)
+		else
+			cooldownR, cooldownG, cooldownB, cooldownA = 0.35, 0.35, 0.35, 1
+		end
+		bar._rune = bar._rune or {}
+		bar._runeOrder = bar._runeOrder or {}
+		bar._charging = bar._charging or {}
+		local charging = bar._charging
+		-- Always rescan all 6 runes (cheap + keeps cache in sync)
+		local count = 0
+		for i = 1, 6 do
+			local start, duration, readyFlag = GetRuneCooldown(i)
+			bar._rune[i] = bar._rune[i] or {}
+			local info = bar._rune[i]
+			info.start = start or 0
+			info.duration = duration or 0
+			info.ready = readyFlag
+			if not info.durationObject then info.durationObject = _G.C_DurationUtil.CreateDuration() end
+			if not readyFlag then
+				count = count + 1
+				charging[count] = i
+			end
+		end
+		for i = count + 1, #charging do
+			charging[i] = nil
+		end
+		local readyCount = 6 - count
+		local usingThresholdColor = false
+		do
+			local tr, tg, tb, ta = ResourceBars.ResolveAbsoluteThresholdColor(cfg, readyCount, "RUNES", 6)
+			if tr ~= nil then
+				readyR, readyG, readyB, readyA = tr, tg, tb, ta
+				usingThresholdColor = true
+			end
+		end
+		-- Runes use max color only when all six runes are ready (resource at maximum).
+		local allRunesReady = count == 0
+		if cfg.useMaxColor == true and allRunesReady then
+			local maxCol = cfg.maxColor or RB.DEFAULT_MAX_COLOR
+			readyR = maxCol[1] or readyR
+			readyG = maxCol[2] or readyG
+			readyB = maxCol[3] or readyB
+			readyA = maxCol[4] or readyA
+		end
+		local readyChanged = (bar._runeReadyR ~= readyR) or (bar._runeReadyG ~= readyG) or (bar._runeReadyB ~= readyB) or (bar._runeReadyA ~= readyA)
+		local cooldownChanged = (bar._runeCooldownR ~= cooldownR) or (bar._runeCooldownG ~= cooldownG) or (bar._runeCooldownB ~= cooldownB) or (bar._runeCooldownA ~= cooldownA)
+		bar._runeReadyR, bar._runeReadyG, bar._runeReadyB, bar._runeReadyA = readyR, readyG, readyB, readyA
+		bar._runeCooldownR, bar._runeCooldownG, bar._runeCooldownB, bar._runeCooldownA = cooldownR, cooldownG, cooldownB, cooldownA
+		bar._usingMaxColor = cfg.useMaxColor == true and allRunesReady
+		bar._usingAbsoluteThresholdColor = usingThresholdColor and not bar._usingMaxColor
+		if count > 1 then
+			local snapshot = bar._chargingSnapshot
+			if not snapshot then
+				snapshot = {}
+				bar._chargingSnapshot = snapshot
+			end
+			local needsSort = false
+			if (bar._lastChargingCount or 0) ~= count then
+				needsSort = true
+			else
+				for i = 1, count do
+					if snapshot[i] ~= charging[i] then
+						needsSort = true
+						break
+					end
+				end
+			end
+			if needsSort then
+				tsort(charging, function(a, b)
+					local ra = (bar._rune[a].start + bar._rune[a].duration)
+					local rb = (bar._rune[b].start + bar._rune[b].duration)
+					return ra < rb
+				end)
+				for i = 1, count do
+					snapshot[i] = charging[i]
+				end
+			end
+			for i = count + 1, (bar._chargingSnapshot and #bar._chargingSnapshot or 0) do
+				snapshot[i] = nil
+			end
+			bar._lastChargingCount = count
+		else
+			bar._lastChargingCount = count
+			if bar._chargingSnapshot then
+				for i = 1, #bar._chargingSnapshot do
+					bar._chargingSnapshot[i] = nil
+				end
+			end
+		end
+		local chargingMap = bar._chargingMap or {}
+		bar._chargingMap = chargingMap
+		for i = 1, 6 do
+			chargingMap[i] = nil
+		end
+		for _, idx in ipairs(charging) do
+			chargingMap[idx] = true
+		end
+		local pos = 1
+		for i = 1, 6 do
+			if not chargingMap[i] then
+				bar._runeOrder[pos] = i
+				pos = pos + 1
+			end
+		end
+		for _, idx in ipairs(charging) do
+			bar._runeOrder[pos] = idx
+			pos = pos + 1
+		end
+		for i = pos, #bar._runeOrder do
+			bar._runeOrder[i] = nil
+		end
+
+		local now = GetTime()
+		for i = 1, 6 do
+			local runeIndex = bar._runeOrder[i]
+			local info = runeIndex and bar._rune[runeIndex]
+			local sb = bar.runes and bar.runes[i]
+			if sb and info then
+				local fill = sb.fill or sb
+				local textDurationObject = info.durationObject
+				if info.ready then
+					info.durationObject:SetTimeFromStart(now - 1, 1)
+				else
+					info.durationObject:SetTimeFromStart(info.start, info.duration)
+					if info.start > now then
+						if not info.queuedTextDurationObject then info.queuedTextDurationObject = _G.C_DurationUtil.CreateDuration() end
+						local endTime = info.start + info.duration
+						info.queuedTextDurationObject:SetTimeFromEnd(endTime, endTime - now)
+						textDurationObject = info.queuedTextDurationObject
+					end
+				end
+				fill:SetTimerDuration(info.durationObject, Enum.StatusBarInterpolation.Immediate, Enum.StatusBarTimerDirection.ElapsedTime)
+				local wantReady = info.ready
+				local colorUpdated = false
+				if sb._isReady ~= wantReady or (wantReady and readyChanged) or ((not wantReady) and cooldownChanged) then
+					sb._isReady = wantReady
+					if wantReady then
+						if ResourceBars.SetStatusBarColorWithGradient then
+							ResourceBars.SetStatusBarColorWithGradient(fill, cfg, readyR, readyG, readyB, readyA)
+						else
+							fill:SetStatusBarColor(readyR, readyG, readyB, readyA or 1)
+						end
+					else
+						if ResourceBars.SetStatusBarColorWithGradient then
+							ResourceBars.SetStatusBarColorWithGradient(fill, cfg, cooldownR, cooldownG, cooldownB, cooldownA)
+						else
+							fill:SetStatusBarColor(cooldownR, cooldownG, cooldownB, cooldownA or 1)
+						end
+					end
+					fill._rbColorInitialized = true
+					colorUpdated = true
+				end
+				if not colorUpdated then
+					if wantReady then
+						if ResourceBars.RefreshStatusBarGradient and (cfg.useGradient == true or fill._rbGradientEnabled) then ResourceBars.RefreshStatusBarGradient(fill, cfg, readyR, readyG, readyB, readyA) end
+					else
+						if ResourceBars.RefreshStatusBarGradient and (cfg.useGradient == true or fill._rbGradientEnabled) then ResourceBars.RefreshStatusBarGradient(fill, cfg, cooldownR, cooldownG, cooldownB, cooldownA) end
+					end
+				end
+				if sb._rbSegmentBg then
+					local fallbackR, fallbackG, fallbackB, fallbackA
+					if wantReady then
+						fallbackR, fallbackG, fallbackB, fallbackA = readyR * 0.35, readyG * 0.35, readyB * 0.35, (readyA or 1) * 0.9
+					else
+						fallbackR, fallbackG, fallbackB, fallbackA = cooldownR * 0.35, cooldownG * 0.35, cooldownB * 0.35, (cooldownA or 1) * 0.9
+					end
+					local bgTexture, bgR, bgG, bgB, bgA, bgVisible
+					if ResourceBars.ResolveDiscreteSegmentBackground then
+						bgTexture, bgR, bgG, bgB, bgA, bgVisible = ResourceBars.ResolveDiscreteSegmentBackground(cfg, resolveTexture(cfg), fallbackR, fallbackG, fallbackB, fallbackA)
+					else
+						bgTexture, bgR, bgG, bgB, bgA, bgVisible = resolveTexture(cfg), fallbackR, fallbackG, fallbackB, fallbackA, true
+					end
+					if bgVisible then
+						if sb._rbSegmentBgPath ~= bgTexture then
+							sb._rbSegmentBg:SetTexture(bgTexture)
+							sb._rbSegmentBgPath = bgTexture
+						end
+						local bgColorKey = tostring(bgR) .. ":" .. tostring(bgG) .. ":" .. tostring(bgB) .. ":" .. tostring(bgA)
+						if sb._rbSegmentBgColorKey ~= bgColorKey then
+							sb._rbSegmentBg:SetVertexColor(bgR, bgG, bgB, bgA)
+							sb._rbSegmentBgColorKey = bgColorKey
+						end
+						if not sb._rbSegmentBg:IsShown() then sb._rbSegmentBg:Show() end
+					else
+						if sb._rbSegmentBg:IsShown() then sb._rbSegmentBg:Hide() end
+						sb._rbSegmentBgPath = nil
+						sb._rbSegmentBgColorKey = nil
+					end
+				end
+				if sb.fs then
+					if cfg.showCooldownText and not info.ready then
+						addon.functions.ConfigureDurationTextBinding(sb, "runeDurationText", sb.fs, textDurationObject, RB.RUNE_DURATION_TEXT_OPTIONS)
+						sb.fs:Show()
+					else
+						addon.functions.SetDurationTextBindingEnabled(sb, "runeDurationText", false)
+						sb.fs:SetText("")
+						sb.fs:Hide()
+					end
+				end
+			end
+		end
+		for _, slot in ipairs(bar._textSlots or {}) do
+			if slot.text then
+				slot.text:SetText("")
+				slot.text:Hide()
+				slot._textShown = false
+			end
+		end
+		return
+	end
+	if type == "STAGGER" then
+		local cfg = ResourceBars.GetRuntimeBarConfig(type, bar) or {}
+		local runtimeRevision = ResourceBars._runtimeConfigRevision or 0
+		local maxHealth = UnitHealthMax("player") or 1
+		if maxHealth <= 0 then return end
+		local maxPercent = cfg.useStaggerMaxOverride == true and (tonumber(cfg.staggerMaxPercent) or 200) or 100
+		if maxPercent < 100 then maxPercent = 100 end
+		local staggerMax = maxHealth * (maxPercent / 100)
+		local maxChanged = bar._lastMax ~= staggerMax
+		if maxChanged then
+			bar._lastMax = staggerMax
+			bar:SetMinMaxValues(0, staggerMax)
+		end
+		local curPower = (UnitStagger and UnitStagger("player")) or 0
+
+		local smooth = cfg.smoothFill == true
+		if issecretvalue and issecretvalue(curPower) then
+			setBarValue(bar, curPower, smooth)
+			bar._lastVal = nil
+			for _, textSlot in ipairs(bar._textSlots or {}) do
+				if textSlot.text then
+					if textSlot._lastText ~= "" then
+						textSlot.text:SetText("")
+						textSlot._lastText = ""
+					end
+					if textSlot._textShown then
+						textSlot.text:Hide()
+						textSlot._textShown = false
+					end
+				end
+			end
+			return
+		end
+		local valueChanged = bar._lastVal ~= curPower
+		local configChanged = bar._staggerRuntimeRevision ~= runtimeRevision
+		if not valueChanged and not maxChanged and not configChanged then return end
+		bar._staggerRuntimeRevision = runtimeRevision
+		if valueChanged then setBarValue(bar, curPower, smooth) end
+		bar._lastVal = curPower
+
+		local fillPercent = staggerMax > 0 and (curPower / staggerMax) or 0
+		local staggerPercent = maxHealth > 0 and (curPower / maxHealth) or 0
+		local percentDisplay = staggerPercent * 100
+		for _, textSlot in ipairs(bar._textSlots or {}) do
+			if textSlot.text then
+				local style = textSlot.style
+				local useShortNumbers = cfg.shortNumbers ~= false
+				if style == "NONE" then
+					if textSlot._textShown then
+						textSlot.text:SetText("")
+						textSlot._lastText = ""
+						textSlot.text:Hide()
+						textSlot._textShown = false
+					elseif textSlot._lastText ~= "" then
+						textSlot.text:SetText("")
+						textSlot._lastText = ""
+					end
+				else
+					local text
+					if style == "PERCENT" then
+						text = formatPercentDisplay(percentDisplay, cfg)
+					elseif style == "CURRENT" then
+						text = formatNumber(curPower, useShortNumbers)
+					elseif style == "CURPERCENT" then
+						text = formatNumber(curPower, useShortNumbers) .. " - " .. formatPercentDisplay(percentDisplay, cfg)
+					else
+						local maxText
+						if bar._staggerMaxTextValue == staggerMax and bar._staggerMaxTextShort == useShortNumbers then
+							maxText = bar._staggerMaxText
+						else
+							maxText = formatNumber(staggerMax, useShortNumbers)
+							bar._staggerMaxTextValue = staggerMax
+							bar._staggerMaxTextShort = useShortNumbers
+							bar._staggerMaxText = maxText
+						end
+						text = formatNumber(curPower, useShortNumbers) .. " / " .. maxText
+					end
+					if (not addon.variables.isMidnight or (issecretvalue and not issecretvalue(text))) and textSlot._lastText ~= text then
+						textSlot.text:SetText(text)
+						textSlot._lastText = text
+					else
+						textSlot.text:SetText(text)
+					end
+					if not textSlot._textShown then
+						textSlot.text:Show()
+						textSlot._textShown = true
+					end
+					if cfg.useTextThresholdColors == true or cfg.hideTextAtFullPower or cfg.hideTextAtZeroPower or configChanged then ResourceBars.ApplyTextThresholdColor(bar, cfg, percentDisplay, type, 100, textSlot.text) end
+				end
+			end
+		end
+
+		local baseR, baseG, baseB, baseA
+		if cfg.useBarColor then
+			local custom = cfg.barColor or RB.WHITE
+			baseR, baseG, baseB, baseA = custom[1] or 1, custom[2] or 1, custom[3] or 1, custom[4] or 1
+		else
+			local r, g, b, a = getStaggerStateColor(staggerPercent, cfg)
+			baseR, baseG, baseB = r or 1, g or 1, b or 1
+			baseA = a or (cfg.barColor and cfg.barColor[4]) or 1
+		end
+		bar._baseColor = bar._baseColor or {}
+		bar._baseColor[1], bar._baseColor[2], bar._baseColor[3], bar._baseColor[4] = baseR, baseG, baseB, baseA
+
+		local targetR, targetG, targetB, targetA = baseR, baseG, baseB, baseA
+		local flag
+		if cfg.useMaxColor == true and curPower >= max(staggerMax, 1) then
+			local maxCol = cfg.maxColor or RB.DEFAULT_MAX_COLOR
+			targetR, targetG, targetB, targetA = maxCol[1] or targetR, maxCol[2] or targetG, maxCol[3] or targetB, maxCol[4] or targetA
+			flag = "max"
+		end
+		local lc = bar._lastColor or {}
+		if lc[1] ~= targetR or lc[2] ~= targetG or lc[3] ~= targetB or lc[4] ~= targetA then
+			lc[1], lc[2], lc[3], lc[4] = targetR, targetG, targetB, targetA
+			bar._lastColor = lc
+			if ResourceBars.SetStatusBarColorWithGradient then
+				ResourceBars.SetStatusBarColorWithGradient(bar, cfg, lc[1], lc[2], lc[3], lc[4])
+			else
+				bar:SetStatusBarColor(lc[1], lc[2], lc[3], lc[4])
+			end
+		end
+		bar._usingMaxColor = flag == "max"
+		bar._usingAbsoluteThresholdColor = false
+		if configChanged then configureSpecialTexture(bar, type, cfg) end
+		if ResourceBars.RefreshStatusBarGradient and (cfg.useGradient == true or bar._rbGradientEnabled) then ResourceBars.RefreshStatusBarGradient(bar, cfg) end
+		return
+	end
+	if isAuraPowerType(type) then
+		local cfg = ResourceBars.GetRuntimeBarConfig(type, bar) or {}
+		if type == "MAELSTROM_WEAPON" then ensureMaelstromWeaponDefaults(cfg) end
+		local stacks, logicalMax, visualMax, durationObject, auraExpirationTime = getAuraPowerCounts(type)
+		local cfgDef = RB.AURA_POWER_CONFIG[type] or {}
+		logicalMax = logicalMax > 0 and logicalMax or cfgDef.maxStacks or visualMax
+		visualMax = visualMax > 0 and visualMax or logicalMax
+		if type == "MAELSTROM_WEAPON" then
+			local desiredSegments
+			if cfg.useMaelstromTenStacks then
+				desiredSegments = logicalMax > 0 and logicalMax or RB.MAELSTROM_WEAPON_MAX_STACKS
+			else
+				desiredSegments = cfg.visualSegments or RB.MAELSTROM_WEAPON_SEGMENTS
+			end
+			if desiredSegments and desiredSegments > 0 then visualMax = desiredSegments end
+		end
+		local valueIsSecret = issecretvalue and issecretvalue(stacks)
+		local maxChanged = bar._lastMax ~= visualMax
+		local typeChanged = bar._auraPowerRuntimeType ~= type
+		local runtimeRevision = ResourceBars._runtimeConfigRevision or 0
+		local configChanged = bar._auraPowerRuntimeRevision ~= runtimeRevision
+		if not valueIsSecret and bar._lastVal == stacks and not maxChanged and not typeChanged and not configChanged then
+			return
+		end
+		bar._auraPowerRuntimeType = type
+		bar._auraPowerRuntimeRevision = runtimeRevision
+		if maxChanged then
+			bar:SetMinMaxValues(0, visualMax)
+			bar._lastMax = visualMax
+		end
+
+			local style = bar._style or "CURMAX"
+			local smooth = cfg.smoothFill == true
+			if cfgDef.spellCastCountId then
+				setBarValue(bar, stacks, smooth)
+				bar._lastVal = stacks
+				for _, textSlot in ipairs(bar._textSlots or {}) do
+					if textSlot.text then
+						local style = textSlot.style
+						if style == "NONE" then
+							if textSlot._textShown then
+								textSlot.text:SetText("")
+								textSlot._lastText = ""
+								textSlot.text:Hide()
+								textSlot._textShown = false
+							elseif textSlot._lastText ~= "" then
+								textSlot.text:SetText("")
+								textSlot._lastText = ""
+							end
+						else
+							textSlot.text:SetText(stacks)
+							textSlot._lastText = nil
+							if not textSlot._textShown then
+								textSlot.text:Show()
+								textSlot._textShown = true
+							end
+							ResourceBars.ApplyTextThresholdColor(bar, cfg, stacks, type, logicalMax, textSlot.text)
+						end
+					end
+				end
+
+				bar._baseColor = bar._baseColor or {}
+				if bar._baseColor[1] == nil then
+					local br, bg, bb, ba = bar:GetStatusBarColor()
+					bar._baseColor[1], bar._baseColor[2], bar._baseColor[3], bar._baseColor[4] = br, bg, bb, ba or 1
+				end
+				if cfg.useBarColor then
+					local custom = cfg.barColor or RB.WHITE
+					bar._baseColor[1], bar._baseColor[2], bar._baseColor[3], bar._baseColor[4] = custom[1] or 1, custom[2] or 1, custom[3] or 1, custom[4] or 1
+				elseif cfg.useClassColor == true then
+					local cr, cg, cb, ca = getPlayerClassColor()
+					bar._baseColor[1], bar._baseColor[2], bar._baseColor[3], bar._baseColor[4] = cr, cg, cb, ca or (cfg.barColor and cfg.barColor[4]) or 1
+				elseif ResourceBars.GetRuntimeCfgField(cfg, "resolvedDefaultPowerColor") then
+					local c = ResourceBars.GetRuntimeCfgField(cfg, "resolvedDefaultPowerColor")
+					bar._baseColor[1], bar._baseColor[2], bar._baseColor[3], bar._baseColor[4] = c[1] or 1, c[2] or 1, c[3] or 1, c[4] or 1
+				elseif cfgDef.defaultColor then
+					local c = cfgDef.defaultColor
+					bar._baseColor[1], bar._baseColor[2], bar._baseColor[3], bar._baseColor[4] = c[1] or 1, c[2] or 1, c[3] or 1, c[4] or 1
+				end
+
+				local targetR, targetG, targetB, targetA = bar._baseColor[1] or 1, bar._baseColor[2] or 1, bar._baseColor[3] or 1, bar._baseColor[4] or 1
+				local lc = bar._lastColor or {}
+				if lc[1] ~= targetR or lc[2] ~= targetG or lc[3] ~= targetB or lc[4] ~= targetA then
+					lc[1], lc[2], lc[3], lc[4] = targetR, targetG, targetB, targetA
+					bar._lastColor = lc
+					if ResourceBars.SetStatusBarColorWithGradient then
+						ResourceBars.SetStatusBarColorWithGradient(bar, cfg, lc[1], lc[2], lc[3], lc[4])
+					else
+						bar:SetStatusBarColor(lc[1], lc[2], lc[3], lc[4])
+					end
+				end
+				bar._usingMaxColor = false
+				bar._usingAbsoluteThresholdColor = false
+				bar._usingMaelstromFiveColor = false
+				local usingDiscreteSegments = refreshDiscreteSegmentsForBar(type, bar, cfg, stacks, visualMax, stacks)
+				configureSpecialTexture(bar, type, cfg)
+				if usingDiscreteSegments then
+					setParentBarTextureVisible(bar, false)
+				elseif ResourceBars.RefreshStatusBarGradient and (cfg.useGradient == true or bar._rbGradientEnabled) then
+					ResourceBars.RefreshStatusBarGradient(bar, cfg)
+				end
+				return
+			end
+			local shownStacks = stacks
+			if visualMax and visualMax > 0 then
+				if stacks <= 0 then
+					shownStacks = 0
+			elseif cfgDef.clampOverflowToMax or cfg.clampOverflowToMax then
+				shownStacks = min(stacks, visualMax)
+			else
+				shownStacks = (((stacks - 1) % visualMax) + 1)
+			end
+		end
+		if cfgDef.durationAsValue and durationObject then
+			ResourceBars.ApplyAuraDurationFill(bar, durationObject, type, visualMax)
+		else
+			if cfgDef.durationAsValue and ResourceBars.ClearAuraDurationFill then ResourceBars.ClearAuraDurationFill(bar) end
+			setBarValue(bar, shownStacks, smooth)
+		end
+		bar._lastVal = shownStacks
+		if cfgDef.durationAsValue then
+			if stacks > 0 and logicalMax > 0 then
+				bar._auraDurationObject = durationObject
+				bar._auraExpirationTime = auraExpirationTime
+				bar._auraDurationTotal = logicalMax
+				bar._auraDurationVisualMax = visualMax
+				if not bar._auraDurationUpdater then
+					bar._auraDurationUpdater = function(self, elapsed)
+						self._auraDurationAccum = (self._auraDurationAccum or 0) + (elapsed or 0)
+						if self._auraDurationAccum < (RB.AURA_DURATION_COLOR_UPDATE_INTERVAL or 1) then return end
+						self._auraDurationAccum = 0
+						if self._auraDurationFillNative ~= true then ResourceBars.UpdateAuraDurationFillValue(self) end
+						ResourceBars.UpdateAuraDurationText(self)
+						ResourceBars.UpdateAuraDurationThresholdColor(self)
+					end
+				end
+				if bar:GetScript("OnUpdate") ~= bar._auraDurationUpdater then
+					bar._auraDurationAccum = 0
+					bar:SetScript("OnUpdate", bar._auraDurationUpdater)
+				end
+			elseif ResourceBars.DeactivateAuraDurationTicker then
+				ResourceBars.DeactivateAuraDurationTicker(bar)
+			end
+		elseif ResourceBars.DeactivateAuraDurationTicker then
+			ResourceBars.DeactivateAuraDurationTicker(bar)
+			if ResourceBars.ClearAuraDurationFill then ResourceBars.ClearAuraDurationFill(bar) end
+		end
+
+		local percent = logicalMax > 0 and (stacks / logicalMax * 100) or 0
+		local percentStr = formatPercentDisplay(percent, cfg)
+
+		for _, textSlot in ipairs(bar._textSlots or {}) do
+			if textSlot.text then
+				local style = textSlot.style
+				local useShortNumbers = cfg.shortNumbers ~= false
+				if style == "NONE" then
+					if textSlot._textShown then
+						textSlot.text:SetText("")
+						textSlot._lastText = ""
+						textSlot.text:Hide()
+						textSlot._textShown = false
+					elseif textSlot._lastText ~= "" then
+						textSlot.text:SetText("")
+						textSlot._lastText = ""
+					end
+				else
+				if cfgDef.durationAsValue and durationObject then
+					if not ResourceBars.ApplyAuraDurationTextBinding(bar, textSlot) then ResourceBars.UpdateAuraDurationText(bar, textSlot) end
+					ResourceBars.UpdateAuraDurationThresholdColor(bar)
+				else
+						local currentText = cfgDef.durationAsValue and ResourceBars.FormatDurationValue(stacks) or formatNumber(stacks, useShortNumbers)
+						local maxText = cfgDef.durationAsValue and ResourceBars.FormatDurationValue(logicalMax) or formatNumber(logicalMax, useShortNumbers)
+						local text = ResourceBars.FormatBarTextByStyle(style, currentText, maxText, percentStr)
+						if (not addon.variables.isMidnight or (issecretvalue and not issecretvalue(text))) and textSlot._lastText ~= text then
+							textSlot.text:SetText(text)
+							textSlot._lastText = text
+						else
+							textSlot.text:SetText(text)
+						end
+						if not textSlot._textShown then
+							textSlot.text:Show()
+							textSlot._textShown = true
+						end
+						ResourceBars.ApplyTextThresholdColor(bar, cfg, stacks, type, logicalMax, textSlot.text)
+					end
+				end
+			end
+		end
+
+		bar._baseColor = bar._baseColor or {}
+		if bar._baseColor[1] == nil then
+			local br, bg, bb, ba = bar:GetStatusBarColor()
+			bar._baseColor[1], bar._baseColor[2], bar._baseColor[3], bar._baseColor[4] = br, bg, bb, ba or 1
+		end
+		if cfg.useBarColor then
+			local custom = cfg.barColor or RB.WHITE
+			bar._baseColor[1], bar._baseColor[2], bar._baseColor[3], bar._baseColor[4] = custom[1] or 1, custom[2] or 1, custom[3] or 1, custom[4] or 1
+		elseif cfg.useClassColor == true then
+			local cr, cg, cb, ca = getPlayerClassColor()
+			bar._baseColor[1], bar._baseColor[2], bar._baseColor[3], bar._baseColor[4] = cr, cg, cb, ca or (cfg.barColor and cfg.barColor[4]) or 1
+		elseif ResourceBars.GetRuntimeCfgField(cfg, "resolvedDefaultPowerColor") then
+			local c = ResourceBars.GetRuntimeCfgField(cfg, "resolvedDefaultPowerColor")
+			bar._baseColor[1], bar._baseColor[2], bar._baseColor[3], bar._baseColor[4] = c[1] or 1, c[2] or 1, c[3] or 1, c[4] or 1
+		elseif cfgDef and cfgDef.defaultColor then
+			local c = cfgDef.defaultColor
+			bar._baseColor[1], bar._baseColor[2], bar._baseColor[3], bar._baseColor[4] = c[1] or 1, c[2] or 1, c[3] or 1, c[4] or 1
+		end
+
+		local targetR, targetG, targetB, targetA = bar._baseColor[1] or 1, bar._baseColor[2] or 1, bar._baseColor[3] or 1, bar._baseColor[4] or 1
+		local flag
+		local thresholdR, thresholdG, thresholdB, thresholdA = ResourceBars.ResolveAbsoluteThresholdColor(cfg, stacks, type, logicalMax)
+		local useMaxDefault = (RB.AURA_POWER_CONFIG[type] and RB.AURA_POWER_CONFIG[type].useMaxColorDefault) or false
+		if not cfgDef.durationAsValue and (cfg.useMaxColor ~= false and (cfg.useMaxColor or useMaxDefault)) and logicalMax > 0 and stacks >= logicalMax then
+			local maxCol = cfg.maxColor or RB.DEFAULT_MAX_COLOR
+			targetR, targetG, targetB, targetA = maxCol[1] or targetR, maxCol[2] or targetG, maxCol[3] or targetB, maxCol[4] or targetA
+			flag = "max"
+		elseif thresholdR ~= nil then
+			targetR, targetG, targetB, targetA = thresholdR, thresholdG, thresholdB, thresholdA
+			flag = "threshold"
+		elseif
+			type == "MAELSTROM_WEAPON"
+			and cfg.useMaelstromFiveColor ~= false
+			and stacks >= (tonumber(cfg.maelstromMidStack) or tonumber(RB.MAELSTROM_WEAPON_MID_STACK_DEFAULT) or RB.MAELSTROM_WEAPON_SEGMENTS)
+		then
+			local mid = cfg.maelstromFiveColor or ResourcebarVars.DEFAULT_MAELSTROM_WEAPON_FIVE_COLOR
+			targetR, targetG, targetB, targetA = mid[1] or targetR, mid[2] or targetG, mid[3] or targetB, mid[4] or targetA
+			flag = "mid"
+		end
+		local lc = bar._lastColor or {}
+		if lc[1] ~= targetR or lc[2] ~= targetG or lc[3] ~= targetB or lc[4] ~= targetA then
+			lc[1], lc[2], lc[3], lc[4] = targetR, targetG, targetB, targetA
+			bar._lastColor = lc
+			if ResourceBars.SetStatusBarColorWithGradient then
+				ResourceBars.SetStatusBarColorWithGradient(bar, cfg, lc[1], lc[2], lc[3], lc[4])
+			else
+				bar:SetStatusBarColor(lc[1], lc[2], lc[3], lc[4])
+			end
+		end
+		bar._usingMaxColor = flag == "max"
+		bar._usingAbsoluteThresholdColor = flag == "threshold"
+		bar._usingMaelstromFiveColor = flag == "mid"
+		local usingDiscreteSegments = refreshDiscreteSegmentsForBar(type, bar, cfg, shownStacks, visualMax, stacks)
+		configureSpecialTexture(bar, type, cfg)
+		if usingDiscreteSegments then
+			setParentBarTextureVisible(bar, false)
+		elseif ResourceBars.RefreshStatusBarGradient and (cfg.useGradient == true or bar._rbGradientEnabled) then
+			ResourceBars.RefreshStatusBarGradient(bar, cfg)
+		end
+		return
+	end
+	local pType = POWER_ENUM[type]
+	if not pType then return end
+	local cfg = ResourceBars.GetRuntimeBarConfig(type, bar) or {}
+	local cfgDef = (RB.POWER_CONFIG and RB.POWER_CONFIG[type]) or {}
+	local thresholdModeForBar = ResourceBars.GetThresholdColorModeAndCap(type)
+	local isSoulShards = type == "SOUL_SHARDS"
+	local useRaw = ResourceBars.ShouldUseRawPowerValues(type)
+	local maxPower = UnitPowerMax("player", pType, useRaw) or 0
+	if bar._lastMax ~= maxPower or bar._lastMaxRaw ~= useRaw then
+		bar._lastMax = maxPower
+		bar._lastMaxRaw = useRaw
+		bar:SetMinMaxValues(0, max(maxPower, 1))
+	end
+	local curPower = UnitPower("player", pType, useRaw)
+	local barValue = curPower
+	local essenceFraction
+	local essenceSecret
+	local usingDiscreteSegments = false
+	if type == "ESSENCE" then
+		essenceSecret = issecretvalue and (issecretvalue(curPower) or issecretvalue(maxPower))
+		if not essenceSecret and maxPower and maxPower > 0 then
+			local now = GetTime()
+			essenceFraction = ResourceBars.ComputeEssenceFraction(bar, curPower, maxPower, now, POWER_ENUM.ESSENCE)
+			if essenceFraction and essenceFraction > 0 and curPower < maxPower then barValue = min(maxPower, curPower + essenceFraction) end
+		else
+			essenceFraction = 0
+		end
+	end
+	local displayCur = curPower
+	local displayMax = maxPower
+	if isSoulShards and useRaw then
+		displayCur = (curPower or 0) / 10
+		displayMax = (maxPower or 0) / 10
+	end
+	local chargedPowerPointMap
+	if type == "COMBO_POINTS" and addon.variables.unitClass == "ROGUE" then
+		local chargedCache = bar._rbChargedPowerPointMap or {}
+		for index in pairs(chargedCache) do
+			chargedCache[index] = nil
+		end
+		if cfg.useChargedComboStyling ~= false and _G.GetUnitChargedPowerPoints then
+			local chargedPoints = _G.GetUnitChargedPowerPoints("player")
+			if _G.type(chargedPoints) == "table" then
+				for i = 1, #chargedPoints do
+					local pointIndex = tonumber(chargedPoints[i])
+					if pointIndex and pointIndex > 0 then chargedCache[pointIndex] = true end
+				end
+			end
+		end
+		bar._rbChargedPowerPointMap = chargedCache
+		if next(chargedCache) ~= nil then chargedPowerPointMap = chargedCache end
+	end
+
+	local smooth = cfg.smoothFill == true and type ~= "ESSENCE"
+	setBarValue(bar, barValue, smooth)
+	if ResourceBars.UpdateFillSpark then ResourceBars.UpdateFillSpark(bar, cfg, type, pType, curPower, maxPower) end
+	bar._lastVal = barValue
+	local runtimeConfigRevision = ResourceBars._runtimeConfigRevision or 0
+	if bar._rbHideWhenEmptyRevision ~= runtimeConfigRevision then
+		bar._rbHideWhenEmptyRevision = runtimeConfigRevision
+		bar._rbHideWhenEmptyEnabled = ResourceBars.ShouldHideWhenEmpty and ResourceBars.ShouldHideWhenEmpty(cfg) or false
+	end
+	if ResourceBars.ApplyHideWhenEmptyAlphaToFrame and (bar._rbHideWhenEmptyEnabled or bar._rbEmptyAlphaActive == true) then
+		ResourceBars.ApplyHideWhenEmptyAlphaToFrame(bar, cfg, curPower)
+	end
+	local thresholdSampleValue = isSoulShards and displayCur or curPower
+	for _, textSlot in ipairs(bar._textSlots or {}) do
+		if textSlot.text then
+			local style = textSlot.style
+			local useShortNumbers = cfg.shortNumbers ~= false
+			if style == "NONE" then
+				if textSlot._textShown then
+					textSlot.text:SetText("")
+					textSlot._lastText = ""
+					textSlot.text:Hide()
+					textSlot._textShown = false
+				elseif textSlot._lastText ~= "" then
+					textSlot.text:SetText("")
+					textSlot._lastText = ""
+				end
+			else
+				local currentText
+				local maxText
+				local textCacheSafe = not (addon.variables.isMidnight and issecretvalue and (issecretvalue(curPower) or issecretvalue(maxPower) or issecretvalue(displayCur) or issecretvalue(displayMax)))
+				local currentValue = isSoulShards and displayCur or curPower
+				local maxValue = isSoulShards and displayMax or maxPower
+				if isSoulShards then
+					if textCacheSafe and bar._rbPowerTextCurrentValue == currentValue and bar._rbPowerTextCurrentSoul == true then
+						currentText = bar._rbPowerTextCurrent
+					else
+						currentText = formatSoulShardValue(displayCur)
+						if textCacheSafe then
+							bar._rbPowerTextCurrentValue = currentValue
+							bar._rbPowerTextCurrentSoul = true
+							bar._rbPowerTextCurrent = currentText
+						end
+					end
+					if textCacheSafe and bar._rbPowerTextMaxValue == maxValue and bar._rbPowerTextMaxSoul == true then
+						maxText = bar._rbPowerTextMax
+					else
+						maxText = formatSoulShardValue(displayMax)
+						if textCacheSafe then
+							bar._rbPowerTextMaxValue = maxValue
+							bar._rbPowerTextMaxSoul = true
+							bar._rbPowerTextMax = maxText
+						end
+					end
+				else
+					if textCacheSafe and bar._rbPowerTextCurrentValue == currentValue and bar._rbPowerTextCurrentShort == useShortNumbers and bar._rbPowerTextCurrentSoul ~= true then
+						currentText = bar._rbPowerTextCurrent
+					else
+						currentText = formatNumber(curPower, useShortNumbers)
+						if textCacheSafe then
+							bar._rbPowerTextCurrentValue = currentValue
+							bar._rbPowerTextCurrentShort = useShortNumbers
+							bar._rbPowerTextCurrentSoul = false
+							bar._rbPowerTextCurrent = currentText
+						end
+					end
+					if textCacheSafe and bar._rbPowerTextMaxValue == maxValue and bar._rbPowerTextMaxShort == useShortNumbers and bar._rbPowerTextMaxSoul ~= true then
+						maxText = bar._rbPowerTextMax
+					else
+						maxText = formatNumber(maxPower, useShortNumbers)
+						if textCacheSafe then
+							bar._rbPowerTextMaxValue = maxValue
+							bar._rbPowerTextMaxShort = useShortNumbers
+							bar._rbPowerTextMaxSoul = false
+							bar._rbPowerTextMax = maxText
+						end
+					end
+				end
+				local percentStr
+				if style == "PERCENT" or style == "CURPERCENT" then
+					percentStr = formatPercentDisplay(getPowerPercent("player", pType, curPower, maxPower), cfg)
+				end
+				local text = ResourceBars.FormatBarTextByStyle(style, currentText, maxText, percentStr)
+				if addon.variables.isMidnight and issecretvalue and issecretvalue(text) then
+					textSlot.text:SetText(text)
+					textSlot._lastText = nil
+				elseif textSlot._lastText ~= text then
+					textSlot.text:SetText(text)
+					textSlot._lastText = text
+				end
+				if not textSlot._textShown then
+					textSlot.text:Show()
+					textSlot._textShown = true
+				end
+				ResourceBars.ApplyTextThresholdColor(bar, cfg, thresholdSampleValue, type, isSoulShards and displayMax or maxPower, textSlot.text)
+			end
+		end
+	end
+
+	bar._baseColor = bar._baseColor or {}
+	if bar._baseColor[1] == nil then
+		local br, bg, bb, ba = bar:GetStatusBarColor()
+		bar._baseColor[1], bar._baseColor[2], bar._baseColor[3], bar._baseColor[4] = br, bg, bb, ba or 1
+	end
+	if cfg.useBarColor then
+		local custom = cfg.barColor or RB.WHITE
+		bar._baseColor[1], bar._baseColor[2], bar._baseColor[3], bar._baseColor[4] = custom[1] or 1, custom[2] or 1, custom[3] or 1, custom[4] or 1
+	elseif cfg.useClassColor == true then
+		local cr, cg, cb, ca = getPlayerClassColor()
+		bar._baseColor[1], bar._baseColor[2], bar._baseColor[3], bar._baseColor[4] = cr, cg, cb, ca or (cfg.barColor and cfg.barColor[4]) or 1
+	elseif ResourceBars.GetRuntimeCfgField(cfg, "resolvedDefaultPowerColor") then
+		local c = ResourceBars.GetRuntimeCfgField(cfg, "resolvedDefaultPowerColor")
+		bar._baseColor[1], bar._baseColor[2], bar._baseColor[3], bar._baseColor[4] = c[1] or 1, c[2] or 1, c[3] or 1, c[4] or 1
+	elseif cfgDef and cfgDef.defaultColor then
+		local c = cfgDef.defaultColor
+		bar._baseColor[1], bar._baseColor[2], bar._baseColor[3], bar._baseColor[4] = c[1] or 1, c[2] or 1, c[3] or 1, c[4] or 1
+	end
+
+	local useHolyThreeColor = (type == "HOLY_POWER") and cfg.useHolyThreeColor == true
+	local holyThreeThreshold = 3
+	local curPowerSecret = addon.variables.isMidnight and issecretvalue and issecretvalue(curPower)
+	local maxPowerSecret = addon.variables.isMidnight and issecretvalue and issecretvalue(maxPower)
+	local hasSecretPower = curPowerSecret or maxPowerSecret
+	local reachedThree = useHolyThreeColor and not curPowerSecret and curPower >= holyThreeThreshold
+	local secretThresholdR, secretThresholdG, secretThresholdB, secretThresholdA
+	if hasSecretPower and thresholdModeForBar == "PERCENT" then
+		secretThresholdR, secretThresholdG, secretThresholdB, secretThresholdA =
+			ResourceBars.ResolveAbsoluteThresholdColorForSecretPower(cfg, type, pType, curPower, maxPower, bar._baseColor, cfg.useMaxColor == true and (cfg.maxColor or RB.DEFAULT_MAX_COLOR) or nil)
+	end
+	if not hasSecretPower then
+		local reachedCap = curPower >= max(maxPower, 1)
+		local useMaxColor = cfg.useMaxColor == true
+		local thresholdR, thresholdG, thresholdB, thresholdA = ResourceBars.ResolveAbsoluteThresholdColor(cfg, thresholdSampleValue, type, maxPower)
+		local targetR, targetG, targetB, targetA = bar._baseColor[1], bar._baseColor[2], bar._baseColor[3], bar._baseColor[4]
+		local flag
+		if useMaxColor and reachedCap then
+			local maxCol = cfg.maxColor or RB.DEFAULT_MAX_COLOR
+			targetR, targetG, targetB, targetA = maxCol[1] or targetR, maxCol[2] or targetG, maxCol[3] or targetB, maxCol[4] or (bar._baseColor[4] or 1)
+			flag = "max"
+		elseif thresholdR ~= nil then
+			targetR, targetG, targetB, targetA = thresholdR, thresholdG, thresholdB, thresholdA
+			flag = "threshold"
+		elseif reachedThree then
+			targetR, targetG, targetB, targetA = getHolyThreeColor(cfg)
+			flag = "holy3"
+		end
+		local lc = bar._lastColor or {}
+		local lcHasSecret = issecretvalue and (issecretvalue(lc[1]) or issecretvalue(lc[2]) or issecretvalue(lc[3]) or issecretvalue(lc[4]))
+		if lcHasSecret or lc[1] ~= targetR or lc[2] ~= targetG or lc[3] ~= targetB or lc[4] ~= targetA then
+			lc[1], lc[2], lc[3], lc[4] = targetR, targetG, targetB, targetA
+			bar._lastColor = lc
+			if ResourceBars.SetStatusBarColorWithGradient then
+				ResourceBars.SetStatusBarColorWithGradient(bar, cfg, lc[1], lc[2], lc[3], lc[4])
+			else
+				bar:SetStatusBarColor(lc[1], lc[2], lc[3], lc[4])
+			end
+		end
+		bar._usingMaxColor = flag == "max"
+		bar._usingAbsoluteThresholdColor = flag == "threshold"
+		bar._usingHolyThreeColor = flag == "holy3"
+	else
+		local lc = bar._lastColor or {}
+		local base = bar._baseColor
+		if base then
+			local br, bgc, bb, ba = base[1] or 1, base[2] or 1, base[3] or 1, base[4] or 1
+			local targetR, targetG, targetB, targetA = br, bgc, bb, ba
+			local useMaxColor = cfg.useMaxColor == true
+			local flag
+			if secretThresholdR ~= nil then
+				targetR, targetG, targetB, targetA = secretThresholdR, secretThresholdG, secretThresholdB, secretThresholdA
+				flag = "threshold"
+			elseif useMaxColor and UnitPowerPercent then
+				SetColorCurvePointsPower(type, cfg.maxColor or RB.DEFAULT_MAX_COLOR, { br, bgc, bb, ba })
+				if curvePower[type] then
+					local curveColor = UnitPowerPercent("player", pType, false, curvePower[type])
+					if curveColor then
+						local cr, cg, cb, ca = curveColor:GetRGBA()
+						local tex = bar.GetStatusBarTexture and bar:GetStatusBarTexture()
+						if tex and tex.SetVertexColor then tex:SetVertexColor(cr, cg, cb, ca) end
+						lc[1], lc[2], lc[3], lc[4] = cr, cg, cb, ca
+						bar._lastColor = lc
+						flag = "maxCurve"
+					end
+				end
+			elseif reachedThree then
+				targetR, targetG, targetB, targetA = getHolyThreeColor(cfg)
+				flag = "holy3"
+			end
+			if flag ~= "maxCurve" then
+				lc[1], lc[2], lc[3], lc[4] = targetR, targetG, targetB, targetA
+				bar._lastColor = lc
+				local forceStatusBarColor = false
+				if cfg.useBarColor and not cfg.useMaxColor and not reachedThree then
+					local tex = bar.GetStatusBarTexture and bar:GetStatusBarTexture()
+					if tex and tex.SetVertexColor then
+						tex:SetVertexColor(1, 1, 1, 1)
+						forceStatusBarColor = true
+					end
+				end
+				if ResourceBars.SetStatusBarColorWithGradient then
+					ResourceBars.SetStatusBarColorWithGradient(bar, cfg, targetR, targetG, targetB, targetA, forceStatusBarColor)
+				else
+					bar:SetStatusBarColor(targetR, targetG, targetB, targetA)
+				end
+			end
+			bar._usingMaxColor = flag == "maxCurve"
+			bar._usingAbsoluteThresholdColor = flag == "threshold"
+			bar._usingHolyThreeColor = flag == "holy3"
+		else
+			bar._usingMaxColor = false
+			bar._usingAbsoluteThresholdColor = false
+			bar._usingHolyThreeColor = false
+		end
+	end
+
+	if type == "ESSENCE" then
+		local maxVal = maxPower or 0
+		local essenceTexture = resolveTexture(cfg)
+		if essenceSecret then
+			ResourceBars.UpdateEssenceSegments(bar, cfg, 0, 0, 0, RB.WHITE, ResourceBars.LayoutEssences, essenceTexture)
+			ResourceBars.DeactivateEssenceDuration(bar)
+		else
+			ResourceBars.UpdateEssenceSegments(bar, cfg, curPower, maxVal, essenceFraction or 0, RB.WHITE, ResourceBars.LayoutEssences, essenceTexture)
+			ResourceBars.ApplyEssenceDuration(bar, cfg, curPower, maxVal, bar._essenceTickDuration)
+		end
+	else
+		local discreteCur = isSoulShards and displayCur or curPower
+		local discreteMax = isSoulShards and displayMax or maxPower
+		usingDiscreteSegments = refreshDiscreteSegmentsForBar(type, bar, cfg, discreteCur, discreteMax, nil, chargedPowerPointMap)
+	end
+
+	configureSpecialTexture(bar, type, cfg)
+	if usingDiscreteSegments then
+		setParentBarTextureVisible(bar, false)
+	elseif ResourceBars.RefreshStatusBarGradient and (cfg.useGradient == true or bar._rbGradientEnabled) then
+		ResourceBars.RefreshStatusBarGradient(bar, cfg)
+	end
+end
+
+function ResourceBars.RefreshAuraPowerBar(pType)
+	if not isAuraPowerType(pType) then return false end
+	local bar = powerbar[pType]
+	if not (bar and bar:IsShown()) then return false end
+	updatePowerBar(pType)
+	return true
+end
+
+ResourceBars.UpdatePowerBar = updatePowerBar
+
+function forceColorUpdate(pType)
+	if pType == "HEALTH" then
+		updateHealthBar("FORCE_COLOR")
+		return
+	end
+
+	if pType and powerbar[pType] then updatePowerBar(pType) end
+end
+
+setParentBarTextureVisible = function(bar, visible)
+	if not bar then return end
+	local tex = bar.GetStatusBarTexture and bar:GetStatusBarTexture()
+	if tex then
+		tex:SetAlpha(visible and 1 or 0)
+		if visible then
+			if not tex:IsShown() then tex:Show() end
+		else
+			if tex:IsShown() then tex:Hide() end
+		end
+	end
+	local gradTex = bar._rbGradientTex
+	if gradTex and gradTex ~= tex then
+		gradTex:SetAlpha(visible and 1 or 0)
+		if visible then
+			if not gradTex:IsShown() then gradTex:Show() end
+		else
+			if gradTex:IsShown() then gradTex:Hide() end
+		end
+	end
+end
+
+getSeparatorSegmentCount = function(pType, cfg)
+	if pType == "RUNES" then
+		return 6
+	elseif pType == "ESSENCE" then
+		return POWER_ENUM and UnitPowerMax("player", POWER_ENUM.ESSENCE) or 0
+	elseif isAuraPowerType and isAuraPowerType(pType) then
+		local auraCfg = RB.AURA_POWER_CONFIG[pType] or {}
+		if pType == "MAELSTROM_WEAPON" then return (cfg and cfg.visualSegments) or auraCfg.visualSegments or auraCfg.maxStacks or 0 end
+		return auraCfg.visualSegments or auraCfg.maxStacks or 0
+	end
+	local enumId = POWER_ENUM[pType]
+	return enumId and UnitPowerMax("player", enumId) or 0
+end
+
+shouldUseDiscreteSeparatorSegments = function(pType, cfg)
+	if pType == "RUNES" or pType == "ESSENCE" then return false end
+	if not (ResourceBars.separatorEligible and ResourceBars.separatorEligible[pType] and cfg) then return false end
+	return true
+end
+
+refreshDiscreteSegmentsForBar = function(pType, bar, cfg, value, maxValue, rawValue, chargedPoints)
+	if not bar then return false end
+	if not shouldUseDiscreteSeparatorSegments(pType, cfg) then
+		if bar._rbDiscreteSegmentsActive ~= false then
+			if ResourceBars.HideDiscreteSegments then ResourceBars.HideDiscreteSegments(bar) end
+			setParentBarTextureVisible(bar, true)
+		end
+		return false
+	end
+
+	local segments = getSeparatorSegmentCount(pType, cfg)
+	if not segments or segments < 2 then
+		if bar._rbDiscreteSegmentsActive ~= false then
+			if ResourceBars.HideDiscreteSegments then ResourceBars.HideDiscreteSegments(bar) end
+			setParentBarTextureVisible(bar, true)
+		end
+		return false
+	end
+
+	local valueIsSecret = issecretvalue and issecretvalue(value)
+	local scaledValue = value
+	if not valueIsSecret then
+		scaledValue = tonumber(value) or 0
+		local sourceMax = tonumber(maxValue) or segments
+		if sourceMax > 0 and sourceMax ~= segments then scaledValue = (scaledValue / sourceMax) * segments end
+	end
+	if valueIsSecret then
+		bar._rbDiscreteRawValue = nil
+	else
+		bar._rbDiscreteRawValue = tonumber(rawValue) or tonumber(value) or 0
+	end
+
+	if ResourceBars.UpdateDiscreteSegments then
+		ResourceBars.UpdateDiscreteSegments(
+			bar,
+			cfg,
+			segments,
+			scaledValue,
+			bar._lastColor or bar._baseColor or RB.WHITE,
+			resolveTexture(cfg),
+			chargedPoints
+		)
+		setParentBarTextureVisible(bar, false)
+		return true
+	end
+
+	setParentBarTextureVisible(bar, true)
+	return false
+end
+
+-- Create/update separator ticks for a given bar type if enabled
+updateBarSeparators = function(pType, cfg)
+	local eligible = ResourceBars.separatorEligible
+	if pType ~= "RUNES" and (not eligible or not eligible[pType]) then return end
+	local bar = powerbar[pType]
+	if not bar then return end
+	if pType == "RUNES" then
+		if bar.separatorMarks then
+			for _, tx in ipairs(bar.separatorMarks) do
+				tx:Hide()
+			end
+		end
+		if bar:IsShown() then layoutRunes(bar) end
+		return
+	end
+	if pType == "ESSENCE" then
+		cfg = cfg or bar._cfg or getBarSettings("ESSENCE") or {}
+		if bar.separatorMarks then
+			for _, tx in ipairs(bar.separatorMarks) do
+				tx:Hide()
+			end
+		end
+		if bar:IsShown() then
+			local count = POWER_ENUM and UnitPowerMax("player", POWER_ENUM.ESSENCE) or 0
+			ResourceBars.LayoutEssences(bar, cfg, count, resolveTexture(cfg))
+		end
+		return
+	end
+	cfg = cfg or bar._cfg or getBarSettings(pType)
+	local useDiscrete = shouldUseDiscreteSeparatorSegments(pType, cfg)
+	if not (cfg and useDiscrete) then
+		if pType == "ESSENCE" then
+			if ResourceBars.HideDiscreteSegments then ResourceBars.HideDiscreteSegments(bar) end
+			if bar:IsShown() then
+				local count = POWER_ENUM and UnitPowerMax("player", POWER_ENUM.ESSENCE) or 0
+				ResourceBars.LayoutEssences(bar, cfg or {}, count, resolveTexture(cfg or {}))
+			end
+		elseif pType ~= "RUNES" then
+			if ResourceBars.HideDiscreteSegments then ResourceBars.HideDiscreteSegments(bar) end
+			setParentBarTextureVisible(bar, true)
+		end
+		if bar.separatorMarks then
+			for _, tx in ipairs(bar.separatorMarks) do
+				tx:Hide()
+			end
+		end
+		return
+	end
+
+	if bar._sepOverlay then
+		bar._sepOverlay:Hide()
+		bar._sepOverlay:SetParent(nil)
+		bar._sepOverlay = nil
+	end
+
+	local segCount = getSeparatorSegmentCount(pType, cfg)
+	if ResourceBars.LayoutDiscreteSegments and segCount and segCount >= 2 then
+		ResourceBars.LayoutDiscreteSegments(bar, cfg, segCount, resolveTexture(cfg))
+		setParentBarTextureVisible(bar, false)
+	else
+		if ResourceBars.HideDiscreteSegments then ResourceBars.HideDiscreteSegments(bar) end
+		setParentBarTextureVisible(bar, true)
+	end
+	if bar.separatorMarks then
+		for _, tx in ipairs(bar.separatorMarks) do
+			tx:Hide()
+		end
+	end
+end
+
+local function getSafeThresholdMaxValue(bar, pType)
+	local function isSecret(value) return issecretvalue and issecretvalue(value) end
+
+	local maxValue
+	if bar and bar.GetMinMaxValues then
+		local _, tmpMax = bar:GetMinMaxValues()
+		if tmpMax ~= nil and not isSecret(tmpMax) then maxValue = tmpMax end
+	end
+	if not maxValue and bar then
+		local last = bar._lastMax
+		if last ~= nil and not isSecret(last) then maxValue = last end
+	end
+	if not maxValue and pType and POWER_ENUM and UnitPowerMax then
+		local useRaw = ResourceBars.ShouldUseRawPowerValues(pType)
+		local tmp = UnitPowerMax("player", POWER_ENUM[pType], useRaw)
+		if tmp ~= nil and not isSecret(tmp) then maxValue = tmp end
+	end
+	if maxValue and bar then
+		bar._rbThresholdMax = maxValue
+	elseif bar and bar._rbThresholdMax and not isSecret(bar._rbThresholdMax) then
+		maxValue = bar._rbThresholdMax
+	end
+	return maxValue
+end
+
+updateBarThresholds = function(pType, cfg)
+	local bar = powerbar[pType]
+	if not bar then return end
+	local function hideThresholdMarks()
+		if bar.thresholdMarks then
+			for _, tx in ipairs(bar.thresholdMarks) do
+				tx:Hide()
+			end
+		end
+	end
+	if ResourceBars.SupportsThresholdLines and not ResourceBars.SupportsThresholdLines(pType) then
+		hideThresholdMarks()
+		return
+	end
+	cfg = cfg or bar._cfg or getBarSettings(pType)
+	if not (cfg and cfg.showThresholds) then
+		hideThresholdMarks()
+		return
+	end
+
+	local values = {}
+	local useAbsolute = cfg.useAbsoluteThresholds == true
+	local maxValue
+	if useAbsolute then
+		maxValue = getSafeThresholdMaxValue(bar, pType)
+		if not maxValue or maxValue <= 0 then
+			hideThresholdMarks()
+			return
+		end
+	end
+	local count = tonumber(cfg and cfg.thresholdCount) or RB.DEFAULT_THRESHOLD_COUNT or 3
+	if count < 1 then count = 1 end
+	if count > 4 then count = 4 end
+	local list = cfg and cfg.thresholds
+	local function addThresholdValue(v)
+		if not v or v <= 0 then return end
+		if useAbsolute then
+			if maxValue and maxValue > 0 and v < maxValue then values[#values + 1] = (v / maxValue) * 100 end
+		elseif v < 100 then
+			values[#values + 1] = v
+		end
+	end
+	if type(list) == "table" then
+		for i = 1, min(#list, count) do
+			local v = tonumber(list[i])
+			addThresholdValue(v)
+		end
+	else
+		local defaults = RB.DEFAULT_THRESHOLDS
+		if type(defaults) == "table" then
+			for i = 1, min(#defaults, count) do
+				local v = tonumber(defaults[i])
+				addThresholdValue(v)
+			end
+		end
+	end
+
+	if #values == 0 then
+		hideThresholdMarks()
+		return
+	end
+
+	tsort(values)
+	local unique = {}
+	local last
+	for i = 1, #values do
+		local v = values[i]
+		if v ~= last then
+			unique[#unique + 1] = v
+			last = v
+		end
+	end
+	values = unique
+	if #values == 0 then
+		hideThresholdMarks()
+		return
+	end
+
+	local inset = bar._rbContentInset or RB.ZERO_INSETS
+	local inner = bar._rbInner or bar
+	local overlay = ensureTextOverlayFrame(bar) or bar
+	bar.thresholdMarks = bar.thresholdMarks or {}
+
+	local function AcquireMark(index)
+		local tex = bar.thresholdMarks[index]
+		if not tex then
+			tex = overlay:CreateTexture(nil, "ARTWORK", nil, 6)
+			if ResourceBars.ApplyTexturePixelSnapping then ResourceBars.ApplyTexturePixelSnapping(tex, 0) end
+			bar.thresholdMarks[index] = tex
+		elseif tex.GetParent and tex:GetParent() ~= overlay then
+			tex:SetParent(overlay)
+		end
+		if tex.SetDrawLayer then tex:SetDrawLayer("ARTWORK", 6) end
+		return tex
+	end
+
+	for _, tx in ipairs(bar.thresholdMarks) do
+		if tx then
+			if tx.GetParent and tx:GetParent() ~= overlay then tx:SetParent(overlay) end
+			if tx.SetDrawLayer then tx:SetDrawLayer("ARTWORK", 6) end
+		end
+	end
+
+	local barW = max(1, (bar.GetWidth and bar:GetWidth()) or 0)
+	local barH = max(1, (bar.GetHeight and bar:GetHeight()) or 0)
+	local w = max(1, (inner and inner.GetWidth and inner:GetWidth()) or (barW - (inset.left + inset.right)))
+	local h = max(1, (inner and inner.GetHeight and inner:GetHeight()) or (barH - (inset.top + inset.bottom)))
+	local vertical = cfg and cfg.verticalFill == true
+	local reverse = cfg and cfg.reverseFill == true
+	local desiredThickness = (cfg and cfg.thresholdThickness) or RB.THRESHOLD_THICKNESS or 1
+	local thickness = min(desiredThickness, vertical and h or w)
+	if thickness < 1 then thickness = 1 end
+	local tc = (cfg and cfg.thresholdColor) or RB.THRESHOLD_DEFAULT or RB.WHITE
+	local r, g, b, a
+	if tc.r then
+		r, g, b, a = tc.r or 1, tc.g or 1, tc.b or 1, tc.a or 0.5
+	else
+		r, g, b, a = tc[1] or 1, tc[2] or 1, tc[3] or 1, tc[4] or 0.5
+	end
+
+	for i = 1, #values do
+		local tx = AcquireMark(i)
+		tx:ClearAllPoints()
+		local frac = values[i] / 100
+		if reverse then frac = 1 - frac end
+		local half = floor(thickness * 0.5)
+		tx:SetColorTexture(r, g, b, a)
+		if vertical then
+			local y = SnapFractionToSpan(bar, h, frac)
+			local posY = (inset.bottom or 0) + y - max(0, half)
+			ResourceBars.Pixel.Point(tx, "BOTTOMLEFT", bar, "BOTTOMLEFT", 0, posY)
+			ResourceBars.Pixel.Point(tx, "BOTTOMRIGHT", bar, "BOTTOMRIGHT", 0, posY)
+			ResourceBars.Pixel.Height(tx, thickness)
+		else
+			local x = SnapFractionToSpan(bar, w, frac)
+			local posX = (inset.left or 0) + x - max(0, half)
+			ResourceBars.Pixel.Point(tx, "TOPLEFT", bar, "TOPLEFT", posX, 0)
+			ResourceBars.Pixel.Point(tx, "BOTTOMLEFT", bar, "BOTTOMLEFT", posX, 0)
+			ResourceBars.Pixel.Width(tx, thickness)
+		end
+		tx:Show()
+	end
+	for i = #values + 1, #bar.thresholdMarks do
+		bar.thresholdMarks[i]:Hide()
+	end
+end
+
+-- Layout helper for DK RUNES: create or resize 6 child statusbars
+function layoutRunes(bar)
+	if not bar then return end
+	bar.runes = bar.runes or {}
+	local count = 6
+	local inner = bar._rbInner or bar
+	local overlay = ensureTextOverlayFrame(bar) or bar
+	local w = max(1, inner:GetWidth() or (bar:GetWidth() or 0))
+	local h = max(1, inner:GetHeight() or (bar:GetHeight() or 0))
+	local cfg = getBarSettings("RUNES") or {}
+	local gap = 0
+	if ResourceBars.ResolveDiscreteSegmentGap then
+		gap = ResourceBars.ResolveDiscreteSegmentGap(cfg)
+	end
+	gap = max(0, floor((tonumber(gap) or 0) + 0.5))
+	if nil == cfg.showCooldownText then cfg.showCooldownText = true end
+	local show = cfg.showCooldownText ~= false -- default on
+	local size = cfg.cooldownTextFontSize or cfg.fontSize or 16
+	local fontPath = resolveFontFace(cfg)
+	local fontStyleChoice = resolveFontStyleChoice(cfg)
+	local fontOutline = resolveFontOutline(cfg)
+	local fr, fg, fb, fa = resolveFontColor(cfg)
+	local vertical = cfg.verticalFill == true
+	local readyR, readyG, readyB, readyA = resolveRuneReadyColor(cfg)
+	local texturePath = resolveTexture(cfg)
+	local useSegmentBorders = ResourceBars.ShouldUsePerSegmentBorders(cfg)
+	local borderEnabled, borderTexture, borderEdgeSize, borderOutset, borderR, borderG, borderB, borderA
+	if ResourceBars.ResolveDiscreteSegmentBorderStyle then
+		borderEnabled, borderTexture, borderEdgeSize, borderOutset, borderR, borderG, borderB, borderA = ResourceBars.ResolveDiscreteSegmentBorderStyle(cfg, true)
+	end
+	local bgTexture, bgR, bgG, bgB, bgA, bgVisible
+	if ResourceBars.ResolveDiscreteSegmentBackground then
+		bgTexture, bgR, bgG, bgB, bgA, bgVisible = ResourceBars.ResolveDiscreteSegmentBackground(cfg, texturePath, readyR * 0.35, readyG * 0.35, readyB * 0.35, (readyA or 1) * 0.9)
+	else
+		bgTexture, bgR, bgG, bgB, bgA, bgVisible = texturePath, readyR * 0.35, readyG * 0.35, readyB * 0.35, (readyA or 1) * 0.9, true
+	end
+	local span = vertical and h or w
+	local spanPx, scale, factor = ResourceBars.UiToPixels(span, inner, count)
+	local crossPx = select(1, ResourceBars.UiToPixels(vertical and w or h, inner, 1))
+	local gapPx = (count > 1) and select(1, ResourceBars.UiToPixels(gap, inner, 0)) or 0
+	local maxGapPx = (count > 1) and max(0, floor((spanPx - count) / (count - 1))) or 0
+	if gapPx > maxGapPx then gapPx = maxGapPx end
+	local availablePx = spanPx - (gapPx * (count - 1))
+	if availablePx < count then availablePx = count end
+	local segmentBasePx = max(1, floor(availablePx / count))
+	local remainderPx = max(0, availablePx - (segmentBasePx * count))
+	local segmentOffsetsPx = bar._rbRuneSegmentOffsetsPx
+	if not segmentOffsetsPx then
+		segmentOffsetsPx = {}
+		bar._rbRuneSegmentOffsetsPx = segmentOffsetsPx
+	end
+	local segmentSizesPx = bar._rbRuneSegmentSizesPx
+	if not segmentSizesPx then
+		segmentSizesPx = {}
+		bar._rbRuneSegmentSizesPx = segmentSizesPx
+	end
+	for i = 1, count do
+		local extraPx = i <= remainderPx and 1 or 0
+		segmentSizesPx[i] = segmentBasePx + extraPx
+		segmentOffsetsPx[i] = ((i - 1) * (segmentBasePx + gapPx)) + min(i - 1, remainderPx)
+	end
+	for i = count + 1, #segmentSizesPx do
+		segmentSizesPx[i] = nil
+		segmentOffsetsPx[i] = nil
+	end
+	if bar._rbRuneSeparatorBG then
+		if bar._rbRuneSeparatorBG:IsShown() then bar._rbRuneSeparatorBG:Hide() end
+	end
+	for i = 1, count do
+		local sb = bar.runes[i]
+		if not (sb and sb._rbRuneSegmentFrame and sb.IsObjectType and sb:IsObjectType("StatusBar")) then
+			if sb then
+				sb:Hide()
+				if sb._rbSegmentBorder then sb._rbSegmentBorder:Hide() end
+			end
+			sb = CreateFrame("StatusBar", bar:GetName() .. "Rune" .. i, inner)
+			sb._rbRuneSegmentFrame = true
+			sb:EnableMouse(false)
+			if sb.SetClipsChildren then sb:SetClipsChildren(true) end
+			local cfgR = getBarSettings("RUNES") or {}
+			sb:SetStatusBarTexture(resolveTexture(cfgR))
+			if ResourceBars.ApplyStatusBarTexturePixelSnapping then ResourceBars.ApplyStatusBarTexturePixelSnapping(sb, 0) end
+			sb:SetMinMaxValues(0, 1)
+			sb:Show()
+			bar.runes[i] = sb
+		end
+		local fill = sb
+		do
+			local cfgR2 = getBarSettings("RUNES") or {}
+			local wantTex = resolveTexture(cfgR2)
+			if fill._rb_tex ~= wantTex then fill:SetStatusBarTexture(wantTex) end
+			if ResourceBars.ApplyStatusBarTexturePixelSnapping then ResourceBars.ApplyStatusBarTexturePixelSnapping(fill, 0) end
+			fill._rb_tex = wantTex
+		end
+		sb:ClearAllPoints()
+		if sb:GetParent() ~= inner then sb:SetParent(inner) end
+		if sb.SetFrameStrata then sb:SetFrameStrata(bar:GetFrameStrata()) end
+		sb:SetFrameLevel((bar:GetFrameLevel() or 1) + 1)
+		local primaryUi = ResourceBars.PixelsToUi(segmentSizesPx[i], scale, factor)
+		local offsetUi = ResourceBars.PixelsToUi(segmentOffsetsPx[i], scale, factor)
+		local crossUi = ResourceBars.PixelsToUi(crossPx, scale, factor)
+		if vertical then
+			ResourceBars.Pixel.Size(sb, crossUi, primaryUi)
+			fill:SetOrientation("VERTICAL")
+			ResourceBars.Pixel.Point(sb, "BOTTOMLEFT", inner, "BOTTOMLEFT", 0, offsetUi)
+		else
+			ResourceBars.Pixel.Size(sb, primaryUi, crossUi)
+			fill:SetOrientation("HORIZONTAL")
+			ResourceBars.Pixel.Point(sb, "TOPLEFT", inner, "TOPLEFT", offsetUi, 0)
+		end
+		if not sb._rbSegmentBg then
+			sb._rbSegmentBg = sb:CreateTexture(nil, "BACKGROUND")
+			ResourceBars.Pixel.SetInside(sb._rbSegmentBg, sb, 0, 0)
+			if ResourceBars.ApplyTexturePixelSnapping then ResourceBars.ApplyTexturePixelSnapping(sb._rbSegmentBg, 0) end
+		end
+		if bgVisible then
+			if sb._rbSegmentBgPath ~= bgTexture then
+				sb._rbSegmentBg:SetTexture(bgTexture)
+				if ResourceBars.ApplyTexturePixelSnapping then ResourceBars.ApplyTexturePixelSnapping(sb._rbSegmentBg, 0) end
+				sb._rbSegmentBgPath = bgTexture
+			end
+			local bgColorKey = tostring(bgR) .. ":" .. tostring(bgG) .. ":" .. tostring(bgB) .. ":" .. tostring(bgA)
+			if sb._rbSegmentBgColorKey ~= bgColorKey then
+				sb._rbSegmentBg:SetVertexColor(bgR, bgG, bgB, bgA)
+				sb._rbSegmentBgColorKey = bgColorKey
+			end
+			if not sb._rbSegmentBg:IsShown() then sb._rbSegmentBg:Show() end
+		else
+			if sb._rbSegmentBg:IsShown() then sb._rbSegmentBg:Hide() end
+			sb._rbSegmentBgPath = nil
+			sb._rbSegmentBgColorKey = nil
+		end
+		if ResourceBars.ApplyDiscreteSegmentBorder then
+			ResourceBars.ApplyDiscreteSegmentBorder(sb, bar, useSegmentBorders and borderEnabled, borderTexture, borderEdgeSize, borderOutset, borderR, borderG, borderB, borderA)
+		end
+		if ResourceBars.ApplySegmentContentInset then
+			ResourceBars.ApplySegmentContentInset(sb, 0)
+		end
+		if ResourceBars.ApplySegmentBackgroundInset then ResourceBars.ApplySegmentBackgroundInset(sb, cfg) end
+		-- cooldown text per segment
+		if not sb.fs then sb.fs = overlay:CreateFontString(nil, "OVERLAY", "GameFontHighlight") end
+		if sb.fs:GetParent() ~= overlay then sb.fs:SetParent(overlay) end
+		sb.fs:SetDrawLayer("OVERLAY")
+		sb.fs:ClearAllPoints()
+		sb.fs:SetPoint("CENTER", sb, "CENTER", 0, 0)
+		if sb._fsSize ~= size or sb._fsFont ~= fontPath or sb._fsOutline ~= fontOutline or sb._fsStyleChoice ~= fontStyleChoice then
+			setFontWithFallback(sb.fs, fontPath, size, fontOutline)
+			if addon.functions and addon.functions.ApplyFontStyleShadow then addon.functions.ApplyFontStyleShadow(sb.fs, fontStyleChoice, "OUTLINE") end
+			sb._fsSize = size
+			sb._fsFont = fontPath
+			sb._fsOutline = fontOutline
+			sb._fsStyleChoice = fontStyleChoice
+		end
+		sb.fs:SetTextColor(fr, fg, fb, fa)
+		if show then
+			sb.fs:Show()
+		else
+			sb.fs:Hide()
+		end
+		if not fill._rbColorInitialized then
+			if ResourceBars.SetStatusBarColorWithGradient then
+				ResourceBars.SetStatusBarColorWithGradient(fill, cfg, readyR, readyG, readyB, readyA)
+			else
+				fill:SetStatusBarColor(readyR, readyG, readyB, readyA or 1)
+			end
+			fill._rbColorInitialized = true
+		elseif ResourceBars.RefreshStatusBarGradient and (cfg.useGradient == true or fill._rbGradientEnabled) then
+			ResourceBars.RefreshStatusBarGradient(fill, cfg)
+		end
+	end
+
+	bar.runeGapMarks = bar.runeGapMarks or {}
+	local gapMarks = bar.runeGapMarks
+	ResourceBars.LayoutSegmentBoundaryMarks(
+		bar,
+		inner,
+		count,
+		vertical,
+		segmentOffsetsPx,
+		segmentSizesPx,
+		scale,
+		factor,
+		gapMarks,
+		not useSegmentBorders and borderEnabled,
+		borderTexture,
+		borderEdgeSize,
+		borderOutset,
+		borderR,
+		borderG,
+		borderB,
+		borderA
+	)
+end
+
+function ResourceBars.RequestRelativeWidthSync() ResourceBars._widthSyncRequested = true end
+
+function ResourceBars.RequestStructuralLayoutRefresh(needsReanchor)
+	ResourceBars.RequestRelativeWidthSync()
+	if needsReanchor then ResourceBars._reanchorRequested = true end
+end
+
+function ResourceBars.ResetReusedPowerBarVisualState(bar, previousType, nextType)
+	if not bar or previousType == nextType then return end
+	if addon.ManaRegen then addon.ManaRegen.SetEnabled(bar, false) end
+
+	-- Shared frames are reused across specs, so clear visuals from the old type
+	-- before the new type config is applied.
+	deactivateRuneDurationBindings(bar)
+	if ResourceBars.DeactivateAuraDurationTicker then ResourceBars.DeactivateAuraDurationTicker(bar) end
+	if ResourceBars.ClearAuraDurationFill then ResourceBars.ClearAuraDurationFill(bar) end
+	if ResourceBars.DeactivateEssenceDuration then ResourceBars.DeactivateEssenceDuration(bar) end
+	if ResourceBars.InvalidateEssenceSegmentCaches then ResourceBars.InvalidateEssenceSegmentCaches(bar) end
+	bar._rbCfgCacheToken = nil
+	bar._lastColor = nil
+	bar._baseColor = nil
+	bar._usingMaxColor = nil
+	bar._usingAbsoluteThresholdColor = nil
+	bar._usingHolyThreeColor = nil
+	bar._usingMaelstromFiveColor = nil
+
+	ResourceBars.HideSegmentChildren(bar.runes, true)
+	ResourceBars.HideSegmentChildren(bar.essences, false)
+
+	if bar.runeGapMarks then
+		for i = 1, #bar.runeGapMarks do
+			local mark = bar.runeGapMarks[i]
+			if mark then mark:Hide() end
+		end
+	end
+
+	if bar.separatorMarks then
+		for i = 1, #bar.separatorMarks do
+			local mark = bar.separatorMarks[i]
+			if mark then mark:Hide() end
+		end
+	end
+
+	if ResourceBars.HideDiscreteSegments then ResourceBars.HideDiscreteSegments(bar) end
+	setParentBarTextureVisible(bar, true)
+end
+
+function ResourceBars.ReuseExistingPowerBar(type, sharedSlot)
+	local bar
+	if sharedSlot then
+		bar = ResourceBars.GetSharedSlotLiveFrame and ResourceBars.GetSharedSlotLiveFrame(sharedSlot)
+	else
+		bar = powerbar[type] or _G["EQOL" .. type .. "Bar"]
+	end
+	if not bar or not bar._rbInitialized then return false end
+	if bar._rbSharedSlot ~= sharedSlot then return false end
+	if bar:GetParent() ~= UIParent then bar:SetParent(UIParent) end
+	ResourceBars.ResetReusedPowerBarVisualState(bar, bar._rbType, type)
+
+	local settings = ResourceBars.GetFrameRuntimeConfig(type, bar) or bar._cfg or {}
+	local defaultStyle = (type == "MANA" or type == "STAGGER") and "PERCENT" or "CURMAX"
+	bar._cfg = settings
+	bar._rbType = type
+	bar._rbSharedSlot = sharedSlot
+	bar._style = settings and settings.textStyle or defaultStyle
+	bar:SetClampedToScreen(true)
+	bar:SetStatusBarTexture(resolveTexture(settings or {}))
+	if ResourceBars.ApplyStatusBarTexturePixelSnapping then ResourceBars.ApplyStatusBarTexturePixelSnapping(bar, 0) end
+	configureSpecialTexture(bar, type, settings or {})
+
+	if type ~= "RUNES" then applyBarFillColor(bar, settings, type) end
+
+	if type == "RUNES" then
+		bar:SetStatusBarColor(getPowerBarColor(type))
+	end
+
+	if type ~= "RUNES" and bar.text then
+		applyFontToString(bar.text, settings)
+		applyTextPosition(bar, settings, 3, 0)
+		bar.text:Show()
+	end
+
+	configureBarBehavior(bar, settings, type)
+	bar:SetMovable(false)
+	bar:EnableMouse(shouldEnableBarMouse(settings))
+	if sharedSlot and ResourceBars.BindSharedSlotRuntimeFrame then
+		ResourceBars.BindSharedSlotRuntimeFrame(sharedSlot, type, bar)
+	else
+		powerbar[type] = bar
+	end
+	applyBarFrameLayers(bar, settings)
+	applyBackdrop(bar, settings)
+	if not ResourceBars.ShouldDeferShowToVisibilityDriver or not ResourceBars.ShouldDeferShowToVisibilityDriver(bar, settings) then
+		if not bar:IsShown() then bar:Show() end
+	end
+	if type == "RUNES" then ResourceBars.ForceRuneRecolor() end
+	updatePowerBar(type)
+	if type == "RUNES" then
+		updateBarSeparators("RUNES", settings)
+	elseif ResourceBars.separatorEligible[type] then
+		updateBarSeparators(type, settings)
+	end
+	updateBarThresholds(type, settings)
+	return true
+end
+
+local function createPowerBar(type, anchor, sharedSlot)
+	-- Reuse existing bar if present; avoid destroying frames to preserve anchors
+	local sharedFrameName = sharedSlot and ResourceBars.GetSharedSlotFrameName and ResourceBars.GetSharedSlotFrameName(sharedSlot) or nil
+	local existingBar
+	if sharedSlot then
+		existingBar = (ResourceBars.EnsureSharedSlotProxyFrame and ResourceBars.EnsureSharedSlotProxyFrame(sharedSlot))
+			or (ResourceBars.GetSharedSlotLiveFrame and ResourceBars.GetSharedSlotLiveFrame(sharedSlot))
+	else
+		existingBar = powerbar[type] or _G["EQOL" .. type .. "Bar"]
+	end
+	local bar = existingBar
+	if not bar then bar = CreateFrame("StatusBar", sharedFrameName or ("EQOL" .. type .. "Bar"), UIParent, "BackdropTemplate") end
+	-- TODO: Remove this 12.1 PTR gate after 12.1 is the supported baseline.
+	if tonumber((select(4, GetBuildInfo()))) >= 120100 and _G.type(bar.SetRolesets) == "function" then bar:SetRolesets("statusBars") end
+	if not existingBar or not existingBar._rbInitialized then ResourceBars.RequestStructuralLayoutRefresh(true) end
+	-- Ensure a valid parent when reusing frames after disable
+	if bar:GetParent() ~= UIParent then bar:SetParent(UIParent) end
+
+	-- Refresh bar immediately when it becomes visible (e.g. combat show via StateDriver)
+	if type ~= "RUNES" and not bar._rbRefreshOnShow then
+		bar:HookScript("OnShow", function(self)
+			-- Force re-read of max (fixes “cap changed while hidden”)
+			self._lastMax = nil
+			self._lastMaxRaw = nil
+			local showCfg = ResourceBars.GetRuntimeBarConfig(self._rbType, self) or self._cfg or getBarSettings(self._rbType) or {}
+			self._cfg = showCfg
+			applyBarFrameLayers(self, showCfg)
+			applyBackdrop(self, showCfg)
+
+			updatePowerBar(self._rbType)
+
+			if ResourceBars.separatorEligible and ResourceBars.separatorEligible[self._rbType] then updateBarSeparators(self._rbType) end
+			updateBarThresholds(self._rbType)
+		end)
+		bar._rbRefreshOnShow = true
+	end
+
+	local previousWidth = bar.GetWidth and bar:GetWidth() or 0
+	local previousHeight = bar.GetHeight and bar:GetHeight() or 0
+	local previousType = bar._rbType
+	local previousSharedSlot = bar._rbSharedSlot
+	local settings = ResourceBars.GetFrameRuntimeConfig(type, bar) or bar._cfg or {}
+	local w = max(RB.MIN_RESOURCE_BAR_WIDTH, (settings and settings.width) or RB.DEFAULT_POWER_WIDTH)
+	local h = settings and settings.height or RB.DEFAULT_POWER_HEIGHT
+	ResourceBars.ResetReusedPowerBarVisualState(bar, previousType, type)
+	ResourceBars.AssignFrameRuntimeConfig(bar, settings, type)
+	bar._rbType = type
+	bar._rbSharedSlot = sharedSlot
+	if sharedSlot and ResourceBars.BindSharedSlotRuntimeFrame then
+		ResourceBars.BindSharedSlotRuntimeFrame(sharedSlot, type, bar)
+	else
+		powerbar[type] = bar
+	end
+	local defaultStyle = (type == "MANA" or type == "STAGGER") and "PERCENT" or "CURMAX"
+	bar._style = settings and settings.textStyle or defaultStyle
+	if previousSharedSlot ~= sharedSlot then ResourceBars.RequestRelativeWidthSync() end
+	if not existingBar or abs(previousWidth - w) >= 0.5 or abs(previousHeight - h) >= 0.5 then
+		ResourceBars.Pixel.Size(bar, w, h)
+		ResourceBars.RequestRelativeWidthSync()
+	end
+	bar:SetStatusBarTexture(resolveTexture(settings or {}))
+	if ResourceBars.ApplyStatusBarTexturePixelSnapping then ResourceBars.ApplyStatusBarTexturePixelSnapping(bar, 0) end
+	configureSpecialTexture(bar, type, settings or {})
+	bar:SetClampedToScreen(true)
+	local stackSpacing = RB.DEFAULT_STACK_SPACING
+
+	-- Anchor handling: during spec/trait refresh we suppress inter-bar anchoring
+	local dynamicEnabled = sharedSlot and ResourceBars.IsSharedSlotDynamicAnchorEnabled and ResourceBars.IsSharedSlotDynamicAnchorEnabled(sharedSlot)
+	if dynamicEnabled then
+		if ResourceBars._suspendAnchors then
+			bar:ClearAllPoints()
+			ResourceBars.Pixel.Point(bar, "TOPLEFT", UIParent, "TOPLEFT", 0, 0)
+			ResourceBars.AlignHostToPixelGrid(bar)
+		else
+			ResourceBars.ApplySharedSlotDynamicAnchor(sharedSlot)
+		end
+	else
+	local a = getAnchor(type, ResourceBars.GetClassContext())
+	if ResourceBars._suspendAnchors then
+		bar:ClearAllPoints()
+		ResourceBars.Pixel.Point(bar, "TOPLEFT", UIParent, "TOPLEFT", a.x or 0, a.y or 0)
+		ResourceBars.AlignHostToPixelGrid(bar)
+	else
+		if a.point then
+			if
+				a.autoSpacing
+				or (a.autoSpacing == nil and isEQOLFrameName(a.relativeFrame) and (a.point or "TOPLEFT") == "TOPLEFT" and (a.relativePoint or "BOTTOMLEFT") == "BOTTOMLEFT" and (a.x or 0) == 0)
+			then
+				a.x = 0
+				a.y = stackSpacing
+				a.autoSpacing = true
+			end
+			local rel, looped = resolveAnchor(a, type)
+			if looped and (a.relativeFrame or "UIParent") ~= "UIParent" then
+				-- Loop fallback: recenter on UIParent
+				local pw = UIParent and UIParent.GetWidth and UIParent:GetWidth() or 0
+				local ph = UIParent and UIParent.GetHeight and UIParent:GetHeight() or 0
+				a.point = "TOPLEFT"
+				a.relativeFrame = "UIParent"
+				a.relativePoint = "TOPLEFT"
+				a.x = (pw - w) / 2
+				a.y = (h - ph) / 2
+				a.autoSpacing = nil
+				ResourceBars.RequestStructuralLayoutRefresh(true)
+				rel = UIParent
+			end
+			bar:ClearAllPoints()
+			ResourceBars.ApplyResolvedBarAnchor(bar, a, rel, type)
+			ResourceBars.AlignHostToPixelGrid(bar)
+		elseif anchor then
+			-- Default stack below provided anchor and persist default anchor in DB
+			bar:ClearAllPoints()
+			ResourceBars.Pixel.Point(bar, "TOPLEFT", anchor, "BOTTOMLEFT", 0, stackSpacing)
+			local relativeFrameName = (anchor._rbSharedSlot and ResourceBars.GetSharedSlotFrameName and ResourceBars.GetSharedSlotFrameName(anchor._rbSharedSlot)) or (anchor:GetName() or "UIParent")
+			a.point = "TOPLEFT"
+			a.relativeFrame = relativeFrameName
+			a.relativePoint = "BOTTOMLEFT"
+			a.x = 0
+			a.y = stackSpacing
+			a.autoSpacing = true
+			if a.matchRelativeWidth == nil then a.matchRelativeWidth = true end
+			ResourceBars.RequestStructuralLayoutRefresh(true)
+			ResourceBars.AlignHostToPixelGrid(bar)
+		else
+			-- No anchor in DB and no previous anchor in code path; default: center on UIParent
+			bar:ClearAllPoints()
+			local pw = UIParent and UIParent.GetWidth and UIParent:GetWidth() or 0
+			local ph = UIParent and UIParent.GetHeight and UIParent:GetHeight() or 0
+			local cx = (pw - w) / 2
+			local cy = (h - ph) / 2
+			ResourceBars.Pixel.Point(bar, "TOPLEFT", UIParent, "TOPLEFT", cx, cy)
+			a.point = "TOPLEFT"
+			a.relativeFrame = "UIParent"
+			a.relativePoint = "TOPLEFT"
+			a.x = cx
+			a.y = cy
+			ResourceBars.RequestStructuralLayoutRefresh(true)
+			ResourceBars.AlignHostToPixelGrid(bar)
+		end
+	end
+	end
+
+	-- Visuals and text
+	applyBarFrameLayers(bar, settings)
+	applyBackdrop(bar, settings)
+	if type ~= "RUNES" then applyBarFillColor(bar, settings, type) end
+
+	if type == "RUNES" then
+		if bar.text then
+			bar.text:SetText("")
+			bar.text:Hide()
+		end
+		for _, slot in ipairs(bar._textSlots or {}) do
+			if slot.text then slot.text:Hide() end
+			slot._textShown = false
+		end
+		-- Hide parent statusbar texture; we render child rune bars
+		local tex = bar:GetStatusBarTexture()
+		if tex then tex:SetAlpha(0) end
+		layoutRunes(bar)
+	elseif type == "ESSENCE" then
+		if not bar.text then bar.text = bar:CreateFontString(nil, "OVERLAY", "GameFontHighlight") end
+		applyFontToString(bar.text, settings)
+		applyTextPosition(bar, settings, 3, 0)
+		bar.text:Show()
+		-- Hide parent statusbar texture; we render segmented essence bars
+		local tex = bar:GetStatusBarTexture()
+		if tex then tex:SetAlpha(0) end
+		local count = POWER_ENUM and UnitPowerMax("player", POWER_ENUM.ESSENCE) or 0
+		ResourceBars.LayoutEssences(bar, settings or {}, count, resolveTexture(settings or {}))
+	else
+		if not bar.text then bar.text = bar:CreateFontString(nil, "OVERLAY", "GameFontHighlight") end
+		applyFontToString(bar.text, settings)
+		applyTextPosition(bar, settings, 3, 0)
+		bar.text:Show()
+	end
+	if type == "RUNES" and not bar._runeVisibilityHooks then
+		bar:HookScript("OnHide", function(self)
+			self._pendingRuneRefresh = true
+			deactivateRuneDurationBindings(self)
+		end)
+		bar:HookScript("OnShow", function(self)
+			self._pendingRuneRefresh = nil
+			updatePowerBar("RUNES")
+		end)
+		bar._runeVisibilityHooks = true
+	end
+	if type == "ESSENCE" and not bar._essenceVisibilityHooks then
+		bar:HookScript("OnHide", function(self)
+			ResourceBars.DeactivateEssenceDuration(self)
+			if ResourceBars.InvalidateEssenceSegmentCaches then ResourceBars.InvalidateEssenceSegmentCaches(self) end
+		end)
+		bar._essenceVisibilityHooks = true
+	end
+	if type == "RUNES" then
+		bar:SetStatusBarColor(getPowerBarColor(type))
+	end
+	configureBarBehavior(bar, settings, type)
+
+	-- Dragging disabled outside Edit Mode; positioning handled via Edit Mode
+	bar:SetMovable(false)
+	bar:EnableMouse(shouldEnableBarMouse(settings))
+	if not ResourceBars.ShouldDeferShowToVisibilityDriver or not ResourceBars.ShouldDeferShowToVisibilityDriver(bar, settings) then bar:Show() end
+	if type == "RUNES" then ResourceBars.ForceRuneRecolor() end
+	updatePowerBar(type)
+	if type == "RUNES" then
+		updateBarSeparators("RUNES", settings)
+	elseif ResourceBars.separatorEligible[type] then
+		updateBarSeparators(type, settings)
+	end
+	updateBarThresholds(type, settings)
+
+	-- Ensure dependents re-anchor when this bar changes size
+	if not bar._rbSizeChangedHooked then
+		bar:SetScript("OnSizeChanged", function(self)
+			local barType = self._rbType
+			if addon and addon.Aura and addon.Aura.ResourceBars and addon.Aura.ResourceBars.ReanchorDependentsOf then
+				addon.Aura.ResourceBars.ReanchorDependentsOf("EQOL" .. tostring(barType) .. "Bar")
+			end
+			if barType == "RUNES" then
+				layoutRunes(self)
+				updateBarSeparators("RUNES")
+			elseif barType == "ESSENCE" then
+				local cfg = ResourceBars.GetRuntimeBarConfig("ESSENCE", self) or {}
+				local count = POWER_ENUM and UnitPowerMax("player", POWER_ENUM.ESSENCE) or 0
+				ResourceBars.LayoutEssences(self, cfg, count, resolveTexture(cfg))
+				if ResourceBars.separatorEligible[barType] then updateBarSeparators(barType) end
+			elseif ResourceBars.separatorEligible[barType] then
+				updateBarSeparators(barType)
+			end
+			updateBarThresholds(barType)
+		end)
+		bar._rbSizeChangedHooked = true
+	end
+
+	if not ((ResourceBars._barBuildBatchDepth or 0) > 0) then
+		local editModeActive = addon.EditMode and addon.EditMode.IsInEditMode and addon.EditMode:IsInEditMode()
+		if ResourceBars and ResourceBars.SyncRelativeFrameWidths and ResourceBars._widthSyncRequested == true then ResourceBars.SyncRelativeFrameWidths() end
+		if editModeActive and ensureEditModeRegistration then ensureEditModeRegistration() end
+	end
+	bar._rbInitialized = true
+end
+
+RB.EVENTS_TO_REGISTER = {
+	"UNIT_HEALTH",
+	"UNIT_MAXHEALTH",
+	"UNIT_MAX_HEALTH_MODIFIERS_CHANGED",
+	"UNIT_ABSORB_AMOUNT_CHANGED",
+	"UNIT_HEAL_ABSORB_AMOUNT_CHANGED",
+	"UNIT_POWER_UPDATE",
+	"UNIT_POWER_FREQUENT",
+	"UNIT_DISPLAYPOWER",
+	"UNIT_MAXPOWER",
+	"UNIT_POWER_POINT_CHARGE",
+	"UPDATE_SHAPESHIFT_FORM",
+}
+local function classUsesAuraPowers(class)
+	local classTbl = powertypeClasses and powertypeClasses[class]
+	if not classTbl then return false end
+
+	for _, specInfo in pairs(classTbl) do
+		if type(specInfo) == "table" then
+			for pType, cfg in pairs(RB.AURA_POWER_CONFIG or {}) do
+				if
+					cfg.requiresUnitAura ~= false
+					and not ResourceBars.RequiresNativeAuraPowerBackend(pType)
+					and ResourceBars.IsAuraPowerBarTypeAvailable(pType)
+					and (specInfo.MAIN == pType or specInfo[pType])
+				then
+					return true
+				end
+			end
+		end
+	end
+	return false
+end
+
+local function classNeedsUnitAura(class)
+	if ResourceBars.RequiresNativeAuraPowerBackend() then return false end
+	return classUsesAuraPowers(class)
+end
+
+if classNeedsUnitAura(addon.variables.unitClass) then table.insert(RB.EVENTS_TO_REGISTER, "UNIT_AURA") end
+local function isResourceFrameEnabled()
+	-- Keep legacy behavior: only explicit `false` disables resource bars.
+	return not (addon and addon.db and addon.db.enableResourceFrame == false)
+end
+
+local function setPowerbars(opts)
+	if ResourceBars.BeginRuntimeConfigBatch then ResourceBars.BeginRuntimeConfigBatch() end
+	ResourceBars._reanchorRequested = false
+	ResourceBars._widthSyncRequested = false
+	if not isResourceFrameEnabled() then
+		if ResourceBars and ResourceBars.DisableResourceBars then ResourceBars.DisableResourceBars() end
+		if ResourceBars._staggerTicker then ResourceBars._staggerTicker:Cancel() end
+		ResourceBars._staggerTicker = nil
+		ResourceBars._reanchorRequested = nil
+		ResourceBars._widthSyncRequested = nil
+		if ResourceBars.EndRuntimeConfigBatch then ResourceBars.EndRuntimeConfigBatch() end
+		return
+	end
+
+	powerfrequent = {}
+	local isDruid = addon.variables.unitClass == "DRUID"
+	local editModeActive = addon.EditMode and addon.EditMode.IsInEditMode and addon.EditMode:IsInEditMode()
+	RB.EMPTY_OPTS = RB.EMPTY_OPTS or {}
+	opts = opts or RB.EMPTY_OPTS
+	local forceAllDruidBars = isDruid and ((opts.forceAllDruidBars == true) or editModeActive)
+	local druidForm = isDruid and ResourceBars.GetCurrentDruidFormKey and ResourceBars.GetCurrentDruidFormKey() or nil
+	local mainPowerBar
+	local lastBar
+	local specCfg = ensureSpecCfg(ResourceBars.GetClassContext())
+	local specInfo = getSpecInfo(ResourceBars.GetClassContext())
+	local sharedMode = ResourceBars.SpecUsesSharedMode and ResourceBars.SpecUsesSharedMode(ResourceBars.GetClassContext())
+	local sharedAssignments = sharedMode and ResourceBars.ResolveSharedSlotAssignments(ResourceBars.GetClassContext()) or nil
+	local fastReuseExisting = opts.fastReuseExisting == true and not editModeActive
+	local function activatePowerBar(pType, anchorFrame, sharedSlot)
+		if fastReuseExisting and ResourceBars.ReuseExistingPowerBar(pType, sharedSlot) then return end
+		createPowerBar(pType, anchorFrame, sharedSlot)
+	end
+
+	RB.desiredVisibility = RB.desiredVisibility or {}
+	local desiredVisibility = RB.desiredVisibility
+	for pType in pairs(desiredVisibility) do
+		desiredVisibility[pType] = nil
+	end
+	ResourceBars._barBuildBatchDepth = (ResourceBars._barBuildBatchDepth or 0) + 1
+	for _, pType in ipairs(classPowerTypes) do
+		desiredVisibility[pType] = false
+	end
+	for pType in pairs(powerbar or {}) do
+		desiredVisibility[pType] = false
+	end
+	if not sharedMode and ResourceBars.ClearSharedSlotRuntimeFrame then
+		for _, slot in ipairs(ResourceBars.SHARED_SLOT_ORDER or {}) do
+			if slot ~= "HEALTH" then ResourceBars.ClearSharedSlotRuntimeFrame(slot, true) end
+		end
+	end
+
+	local sharedHealthCfg = sharedMode and ResourceBars.EnsureSharedSlotStore("HEALTH") or nil
+	local healthEnabled = sharedMode and (sharedHealthCfg and sharedHealthCfg.enabled == true) or (specCfg and specCfg.HEALTH and specCfg.HEALTH.enabled == true)
+	if healthBar then healthBar._rbSharedSlot = sharedMode and "HEALTH" or nil end
+
+	if sharedMode then
+		local sharedMainCfg = ResourceBars.EnsureSharedSlotStore("MAIN")
+		local mainType = sharedAssignments and sharedAssignments.MAIN or nil
+		if isAuraPowerType(mainType) and not ResourceBars.IsAuraPowerBarTypeAvailable(mainType) then mainType = nil end
+		local enabledMain = mainType and sharedMainCfg and sharedMainCfg.enabled == true
+		if enabledMain then
+			activatePowerBar(mainType, healthEnabled and healthBar or nil, "MAIN")
+			mainPowerBar = mainType
+			lastBar = mainPowerBar
+			if RB.FREQUENT_POWER_TYPES[mainType] then powerfrequent[mainType] = true end
+		end
+		if mainType then desiredVisibility[mainType] = enabledMain and true or false end
+
+		for _, slot in ipairs({ "SECONDARY", "TERTIARY" }) do
+			local pType = sharedAssignments and sharedAssignments[slot] or nil
+			if isAuraPowerType(pType) and not ResourceBars.IsAuraPowerBarTypeAvailable(pType) then pType = nil end
+			local slotCfg = ResourceBars.EnsureSharedSlotStore(slot)
+			local showBar = pType and slotCfg and slotCfg.enabled == true
+			if pType then
+				if showBar then
+					if RB.FREQUENT_POWER_TYPES[pType] then powerfrequent[pType] = true end
+					activatePowerBar(pType, powerbar[lastBar] or (healthEnabled and healthBar or nil), slot)
+					lastBar = pType
+				end
+				desiredVisibility[pType] = showBar and true or false
+			elseif ResourceBars.ClearSharedSlotRuntimeFrame then
+				ResourceBars.ClearSharedSlotRuntimeFrame(slot, true)
+			end
+		end
+	else
+		if specInfo and specInfo.MAIN then
+			local mType = specInfo.MAIN
+			if isAuraPowerType(mType) and not ResourceBars.IsAuraPowerBarTypeAvailable(mType) then mType = nil end
+			local enabledMain = mType and specCfg and specCfg[mType] and specCfg[mType].enabled == true
+			if mType and enabledMain then
+				activatePowerBar(mType, (healthEnabled and healthBar or nil))
+				mainPowerBar = mType
+				lastBar = mainPowerBar
+			end
+			if mType then desiredVisibility[mType] = enabledMain end
+		end
+
+		for _, pType in ipairs(classPowerTypes) do
+			local showBar = false
+			local shouldShow = false
+			if (not isAuraPowerType(pType) or ResourceBars.IsAuraPowerBarTypeAvailable(pType)) and specCfg and specCfg[pType] and specCfg[pType].enabled == true then
+				if mainPowerBar == pType then
+					shouldShow = true
+				elseif specInfo and specInfo[pType] then
+					shouldShow = true
+				end
+			end
+
+			if shouldShow then
+				local formAllowed = true
+				local keepForDruidFormDriver = false
+				local barCfg = specCfg and specCfg[pType]
+				if isDruid and barCfg and barCfg.showForms then
+					local allowed = barCfg.showForms
+					keepForDruidFormDriver = ResourceBars.ShouldKeepDruidFormDriverManaged(barCfg)
+					if druidForm and allowed[druidForm] == false then formAllowed = false end
+				end
+				if forceAllDruidBars then formAllowed = true end
+				if (formAllowed or keepForDruidFormDriver) and addon.variables.unitClass == "DRUID" then
+					if RB.FREQUENT_POWER_TYPES[pType] then powerfrequent[pType] = true end
+					if forceAllDruidBars then
+						if mainPowerBar ~= pType then
+							activatePowerBar(pType, powerbar[lastBar] or (healthEnabled and healthBar or nil))
+							lastBar = pType
+						end
+						showBar = true
+					elseif pType == mainPowerBar then
+						showBar = true
+					elseif pType == "COMBO_POINTS" and druidForm == "CAT" then
+						activatePowerBar(pType, powerbar[lastBar] or (healthEnabled and healthBar or nil))
+						lastBar = pType
+						showBar = true
+					else
+						activatePowerBar(pType, powerbar[lastBar] or (healthEnabled and healthBar or nil))
+						lastBar = pType
+						showBar = true
+					end
+				elseif formAllowed then
+					if RB.FREQUENT_POWER_TYPES[pType] then powerfrequent[pType] = true end
+					if mainPowerBar ~= pType then
+						activatePowerBar(pType, powerbar[lastBar] or (healthEnabled and healthBar or nil))
+						lastBar = pType
+					end
+					showBar = true
+				end
+			end
+
+			desiredVisibility[pType] = showBar
+		end
+	end
+
+	for pType, wantVisible in pairs(desiredVisibility) do
+		local bar = powerbar[pType]
+		if bar then
+			bar._cfg = ResourceBars.GetFrameRuntimeConfig(pType, bar)
+			bar._rbDesiredVisible = wantVisible and true or false
+			if addon.ManaRegen then addon.ManaRegen.SetEnabled(bar, wantVisible and pType == "MANA" and bar._cfg and bar._cfg.manaRegenSpark == true, true) end
+			if wantVisible then
+				if (not ResourceBars.ShouldDeferShowToVisibilityDriver or not ResourceBars.ShouldDeferShowToVisibilityDriver(bar, bar._cfg)) and not bar:IsShown() then bar:Show() end
+			else
+				if bar:IsShown() then bar:Hide() end
+			end
+		end
+	end
+	if sharedMode and ResourceBars.ClearSharedSlotRuntimeFrame then
+		for _, slot in ipairs({ "MAIN", "SECONDARY", "TERTIARY" }) do
+			if not (sharedAssignments and sharedAssignments[slot]) then ResourceBars.ClearSharedSlotRuntimeFrame(slot, true) end
+		end
+	end
+
+	-- Toggle Health visibility according to config
+	if healthBar then
+		local healthCfg = ResourceBars.GetFrameRuntimeConfig("HEALTH", healthBar) or nil
+		local showHealth = healthEnabled and true or false
+		healthBar._rbDesiredVisible = showHealth and true or false
+		if showHealth then
+			if (not ResourceBars.ShouldDeferShowToVisibilityDriver or not ResourceBars.ShouldDeferShowToVisibilityDriver(healthBar, healthCfg)) and not healthBar:IsShown() then healthBar:Show() end
+		else
+			if healthBar:IsShown() then healthBar:Hide() end
+		end
+	end
+
+	ResourceBars._barBuildBatchDepth = max(0, (ResourceBars._barBuildBatchDepth or 1) - 1)
+	if addon and addon.Aura and addon.Aura.ResourceBars and addon.Aura.ResourceBars.ApplyVisibilityPreference then addon.Aura.ResourceBars.ApplyVisibilityPreference("fromSetPowerbars") end
+	if ResourceBars and ResourceBars.SyncRelativeFrameWidths and ResourceBars._widthSyncRequested == true then ResourceBars.SyncRelativeFrameWidths() end
+	if editModeActive and ensureEditModeRegistration then ensureEditModeRegistration() end
+	local needsPostReanchor = ResourceBars._reanchorRequested == true
+	ResourceBars._widthSyncRequested = nil
+	ResourceBars._reanchorRequested = nil
+	if ResourceBars.EndRuntimeConfigBatch then ResourceBars.EndRuntimeConfigBatch() end
+	ResourceBars._runtimeSpec = tonumber(ResourceBars.GetClassContext())
+	ResourceBars._runtimeSpecMode = sharedMode and "SHARED" or "SPEC"
+	if ResourceBars.RefreshStaggerTicker then ResourceBars.RefreshStaggerTicker() end
+	local whirlwindTracker = addon.Aura and addon.Aura.WhirlwindTracker
+	if whirlwindTracker and whirlwindTracker.SetActive then
+		local whirlwindBar = powerbar.WHIRLWIND
+		whirlwindTracker:SetActive(whirlwindBar and whirlwindBar._rbDesiredVisible == true)
+	end
+	if addon.DynamicAnchors and addon.DynamicAnchors.NotifyOwnerChanged then addon.DynamicAnchors:NotifyOwnerChanged("EnhanceQoLResourceBars", "RESOURCE_BARS_UPDATED") end
+	return needsPostReanchor
+end
+addon.Aura.functions.setPowerBars = setPowerbars
+
+local function forEachResourceBarFrame(callback)
+	if type(callback) ~= "function" then return end
+	if healthBar then callback(healthBar, "HEALTH") end
+	for pType, bar in pairs(powerbar) do
+		if bar then callback(bar, pType) end
+	end
+	for key, record in pairs(ResourceBars._customVisibilityFrames or {}) do
+		local frame = record and record.frame
+		if frame then callback(frame, key) end
+	end
+end
+
+local function resolveBarConfigForFrame(pType, frame)
+	local custom = ResourceBars._customVisibilityFrames and ResourceBars._customVisibilityFrames[pType]
+	if custom and custom.frame == frame then return custom.cfg or frame._cfg end
+	return ResourceBars.GetFrameRuntimeConfig(pType, frame)
+end
+
+function ResourceBars.IsCustomVisibilityFrame(pType, frame)
+	local custom = ResourceBars._customVisibilityFrames and ResourceBars._customVisibilityFrames[pType]
+	if custom and custom.frame == frame then return true end
+	if pType ~= nil then return false end
+	for _, record in pairs(ResourceBars._customVisibilityFrames or {}) do
+		if record and record.frame == frame then return true end
+	end
+	return false
+end
+
+local visibilityLogic = {
+	ruleMapCache = nil,
+	optionsCache = nil,
+	sortedRuleKeysCache = nil,
+	driverCache = setmetatable({}, { __mode = "k" }),
+	playerSpellcastEvents = {
+		"UNIT_SPELLCAST_START",
+		"UNIT_SPELLCAST_STOP",
+		"UNIT_SPELLCAST_FAILED",
+		"UNIT_SPELLCAST_INTERRUPTED",
+		"UNIT_SPELLCAST_CHANNEL_START",
+		"UNIT_SPELLCAST_CHANNEL_STOP",
+	},
+}
+
+function visibilityLogic:UpdatePlayerCastingEventInterest(enabled)
+	if not frameAnchor then return end
+	enabled = enabled == true
+	if frameAnchor._rbPlayerCastingEventsRegistered == enabled then return end
+	for _, event in ipairs(self.playerSpellcastEvents) do
+		if enabled then
+			if frameAnchor.RegisterUnitEvent then
+				frameAnchor:RegisterUnitEvent(event, "player")
+			else
+				frameAnchor:RegisterEvent(event)
+			end
+		else
+			frameAnchor:UnregisterEvent(event)
+		end
+	end
+	frameAnchor._rbPlayerCastingEventsRegistered = enabled
+end
+
+function ResourceBars.GetVisibilityInactiveAlpha(cfg)
+	if cfg and cfg.separateCombatOpacity == true then return 0 end
+	local strength = cfg and cfg.visibilityFadeStrength
+	strength = tonumber(strength) or 1
+	if strength < 0 then strength = 0 end
+	if strength > 1 then strength = 1 end
+	return 1 - strength
+end
+
+function ResourceBars.GetVisibilityInactiveState(cfg)
+	local alpha = ResourceBars.GetVisibilityInactiveAlpha(cfg)
+	if alpha <= 0 then return "hide", alpha end
+	if alpha >= 1 then return "show", alpha end
+	return "fade", alpha
+end
+
+function ResourceBars.EnsureEqolVisibilityController(frame)
+	if not frame then return nil end
+	local controller = frame._rbEqolVisibilityController
+	if not controller then
+		-- Camelot cannot compile restricted snippets while loadstring_untainted
+		-- is unavailable. These addon-owned bars can use a normal Lua callback.
+		controller = CreateFrame("Frame", nil, frame)
+		controller:SetScript("OnAttributeChanged", function(self, attribute, state)
+			if attribute ~= "state-eqolvisibility" then return end
+			if state == "show" then
+				frame:Show()
+				frame:SetAlpha(1)
+			elseif state == "fade" then
+				frame:Show()
+				frame:SetAlpha(self:GetAttribute("eqol-fade-alpha") or 0)
+			elseif state == "hide" then
+				frame:SetAlpha(0)
+				frame:Hide()
+			end
+		end)
+		frame._rbEqolVisibilityController = controller
+	end
+	return controller
+end
+
+function ResourceBars.ClearEqolVisibilityDriver(frame, resetAlpha)
+	if not frame then return end
+	local controller = frame._rbEqolVisibilityController
+	if controller then
+		if _G.UnregisterAttributeDriver then pcall(_G.UnregisterAttributeDriver, controller, "state-eqolvisibility") end
+		if controller.SetAttribute then controller:SetAttribute("state-eqolvisibility", nil) end
+	end
+	frame._rbEqolVisibilityDriver = nil
+	if resetAlpha ~= false and frame.SetAlpha then frame:SetAlpha(1) end
+end
+
+function ResourceBars.ApplyEqolVisibilityDriver(frame, expression)
+	if not frame or not expression or not _G.RegisterAttributeDriver then return false end
+	local controller = ResourceBars.EnsureEqolVisibilityController(frame)
+	if not controller then return false end
+	local cfg = ResourceBars.GetRuntimeBarConfig(frame._rbType, frame)
+	local alpha = ResourceBars.GetVisibilityInactiveAlpha(cfg)
+	controller:SetAttribute("eqol-fade-alpha", alpha)
+	if frame._rbEqolVisibilityDriver == expression then
+		local currentState = controller.GetAttribute and controller:GetAttribute("state-eqolvisibility")
+		if currentState then
+			controller:SetAttribute("state-eqolvisibility", nil)
+			controller:SetAttribute("state-eqolvisibility", currentState)
+		end
+		return true
+	end
+	if _G.UnregisterAttributeDriver then pcall(_G.UnregisterAttributeDriver, controller, "state-eqolvisibility") end
+	local ok = pcall(_G.RegisterAttributeDriver, controller, "state-eqolvisibility", expression)
+	if ok then frame._rbEqolVisibilityDriver = expression end
+	return ok
+end
+
+function ResourceBars.InvalidateRuntimeConfigCaches()
+	ResourceBars._runtimeConfigRevision = (ResourceBars._runtimeConfigRevision or 0) + 1
+	if healthBar then healthBar._rbCfgCacheToken = nil end
+	for _, bar in pairs(powerbar or {}) do
+		if bar then bar._rbCfgCacheToken = nil end
+	end
+	if visibilityLogic then visibilityLogic.driverCache = setmetatable({}, { __mode = "k" }) end
+end
+
+function visibilityLogic:CopySelectionMap(selection)
+	if type(selection) ~= "table" then return nil end
+	local out
+	for key, value in pairs(selection) do
+		if value == true then
+			out = out or {}
+			out[key] = true
+		end
+	end
+	return out
+end
+
+function visibilityLogic:GetRuleMap()
+	if self.ruleMapCache then return self.ruleMapCache end
+	local allowed = {}
+	local visibilityKeys = addon.constants and addon.constants.ACTIONBAR_VISIBILITY_KEYS
+	if type(visibilityKeys) == "table" then
+		for key in pairs(visibilityKeys) do
+			allowed[key] = true
+		end
+	end
+	allowed.PLAYER_IN_PARTY = true
+	allowed.PLAYER_IN_RAID = true
+	self.ruleMapCache = allowed
+	self.sortedRuleKeysCache = nil
+	return allowed
+end
+
+function visibilityLogic:GetSortedRuleKeys()
+	local cached = self.sortedRuleKeysCache
+	if cached then return cached end
+	local keys = {}
+	local ruleMap = self:GetRuleMap()
+	for key in pairs(ruleMap) do
+		keys[#keys + 1] = key
+	end
+	table.sort(keys, function(a, b)
+		local left = tostring(a or "")
+		local right = tostring(b or "")
+		if strcmputf8i then return strcmputf8i(left, right) < 0 end
+		return left:lower() < right:lower()
+	end)
+	self.sortedRuleKeysCache = keys
+	return keys
+end
+
+function visibilityLogic:NormalizeConfig(config, legacyCfg)
+	local normalizeActionbarVisibilityConfig = addon.functions and addon.functions.NormalizeActionbarVisibilityConfig
+	local out = normalizeActionbarVisibilityConfig and normalizeActionbarVisibilityConfig(config) or nil
+	-- Resource bars support separate party/raid rules without broadening action bar rules.
+	if type(config) == "table" then
+		if config.PLAYER_IN_PARTY == true then
+			out = out or {}
+			out.PLAYER_IN_PARTY = true
+		end
+		if config.PLAYER_IN_RAID == true then
+			out = out or {}
+			out.PLAYER_IN_RAID = true
+		end
+	end
+	if not out and type(legacyCfg) == "table" and legacyCfg.visibilityExplicit == true then out = {} end
+	if not out and type(legacyCfg) == "table" and legacyCfg.visibilityExplicit ~= true then
+		local legacy = nil
+		if legacyCfg.hideOutOfCombat == true then
+			legacy = legacy or {}
+			legacy.ALWAYS_IN_COMBAT = true
+		end
+		if legacyCfg.hideMounted == true then
+			legacy = legacy or {}
+			legacy.PLAYER_NOT_MOUNTED = true
+		end
+		if legacy then out = normalizeActionbarVisibilityConfig and normalizeActionbarVisibilityConfig(legacy) or legacy end
+	end
+	if not out then return nil end
+	if out.ALWAYS_HIDDEN then return { ALWAYS_HIDDEN = true } end
+	return out
+end
+
+function visibilityLogic:SortRuleOptions(options)
+	return addon.functions.SortVisibilityRuleOptions(options)
+end
+
+function visibilityLogic:GetRuleOptions()
+	if self.optionsCache then return self.optionsCache end
+	local getActionbarVisibilityRuleOptions = addon.functions and addon.functions.GetActionbarVisibilityRuleOptions
+	local options = getActionbarVisibilityRuleOptions and getActionbarVisibilityRuleOptions() or {}
+	for _, groupOption in ipairs({
+		{ value = "PLAYER_IN_PARTY", label = L["In party"], text = L["In party"], order = 48, group = L["visibilityGroup_group"], groupOrder = 4, menuSection = 1 },
+		{ value = "PLAYER_IN_RAID", label = L["In raid"], text = L["In raid"], order = 49, group = L["visibilityGroup_group"], groupOrder = 4, menuSection = 1 },
+	}) do
+		options[#options + 1] = groupOption
+	end
+	self:SortRuleOptions(options)
+	self.optionsCache = options
+	return options
+end
+
+ResourceBars.CopyVisibilitySelection = function(selection) return visibilityLogic:CopySelectionMap(selection) end
+ResourceBars.NormalizeVisibilityConfig = function(config, legacyCfg) return visibilityLogic:NormalizeConfig(config, legacyCfg) end
+ResourceBars.GetVisibilityRuleOptions = function(includeMouseover)
+	if includeMouseover then return visibilityLogic:SortRuleOptions(ResourceBars.TrackingMouseover:GetRuleOptions()) end
+	return visibilityLogic:GetRuleOptions()
+end
+
+function visibilityLogic:IsPlayerMounted()
+	if IsMounted and IsMounted() then return true end
+	if addon.variables.unitClass ~= "DRUID" then return false end
+	local formIndex = GetShapeshiftForm and (GetShapeshiftForm() or 0) or 0
+	if not formIndex or formIndex <= 0 then return false end
+	local formKey
+	if GetShapeshiftFormID then formKey = formIDToKey[GetShapeshiftFormID()] end
+	if not formKey then formKey = resolveFormKeyFromShapeshiftIndex(formIndex) end
+	if not formKey then formKey = formIndexToKey[formIndex] end
+	return formKey == "TRAVEL" or formKey == "STAG"
+end
+
+function visibilityLogic:IsPlayerCasting()
+	if UnitCastingInfo and UnitCastingInfo("player") then return true end
+	if UnitChannelInfo and UnitChannelInfo("player") then return true end
+	return false
+end
+
+function visibilityLogic:IsPlayerSkyriding()
+	if UnitIsDeadOrGhost and UnitIsDeadOrGhost("player") then return false end
+	if C_PlayerInfo and C_PlayerInfo.GetGlidingInfo then
+		local _, canGlide = C_PlayerInfo.GetGlidingInfo()
+		if canGlide ~= nil then return canGlide == true end
+	end
+	if SecureCmdOptionParse then
+		if addon.variables.unitClass == "DRUID" then
+			return SecureCmdOptionParse("[nodead,advflyable,flyable,mounted,flying] 1; [nodead,advflyable,flyable,stance:3,flying] 1; [nodead,advflyable,flyable,stance:6,flying] 1; 0") == "1"
+		end
+		return SecureCmdOptionParse("[nodead,advflyable,flyable,mounted,flying] 1; 0") == "1"
+	end
+	return addon.variables and addon.variables.isPlayerSkyriding == true
+end
+
+function visibilityLogic:IsPlayerFlying()
+	if UnitIsDeadOrGhost and UnitIsDeadOrGhost("player") then return false end
+	if C_PlayerInfo and C_PlayerInfo.GetGlidingInfo then
+		local isGliding = C_PlayerInfo.GetGlidingInfo()
+		if isGliding ~= nil then return isGliding == true end
+	end
+	if IsFlying and IsFlying() then return true end
+	return false
+end
+
+function visibilityLogic:HasShowRules(config)
+	if not config then return false end
+	return config.ALWAYS_IN_COMBAT
+		or config.ALWAYS_OUT_OF_COMBAT
+		or config.SKYRIDING_ACTIVE
+		or config.FLYING_ACTIVE
+		or config.PLAYER_CASTING
+		or config.PLAYER_MOUNTED
+		or config.PLAYER_NOT_MOUNTED
+		or config.PLAYER_HAS_FOCUS
+		or config.PLAYER_HAS_TARGET
+		or config.PLAYER_HAS_ATTACKABLE_TARGET
+		or config.PLAYER_IN_GROUP
+		or config.PLAYER_IN_PARTY
+		or config.PLAYER_IN_RAID
+		or config.SHOW_IN_INSTANCE
+		or addon.functions.HasAdditionalVisibilityRule(config)
+end
+
+function visibilityLogic:ShouldShow(config, useAnd)
+	if not config then return true end
+	if config.ALWAYS_HIDDEN then return false end
+
+	local inCombat = false
+	if InCombatLockdown and InCombatLockdown() then
+		inCombat = true
+	elseif UnitAffectingCombat then
+		inCombat = UnitAffectingCombat("player") == true
+	end
+	local hasFocus = UnitExists and UnitExists("focus") == true
+	local hasTarget = UnitExists and UnitExists("target") == true
+	local inGroup = IsInGroup and IsInGroup() == true
+	local inRaid = IsInRaid and IsInRaid() == true
+	local inParty = inGroup and not inRaid
+	local mounted = self:IsPlayerMounted()
+	local casting = self:IsPlayerCasting()
+	local skyriding = self:IsPlayerSkyriding()
+	local flying = self:IsPlayerFlying()
+	local inInstance = IsInInstance and IsInInstance() == true
+	local additionalContext
+	if addon.functions.HasAdditionalVisibilityRule(config) then additionalContext = { isCasting = casting, isFlying = flying, isSkyriding = skyriding, inGroup = inGroup, inParty = inParty, inRaid = inRaid, hasFocus = hasFocus, hasTarget = hasTarget, hasAttackableTarget = UnitCanAttack and UnitCanAttack("player", "target") == true or false } end
+
+	if useAnd then
+		local hasRule = false
+		local function requireRule(enabled, condition)
+			if enabled ~= true then return true end
+			hasRule = true
+			return condition == true
+		end
+		if not requireRule(config.SKYRIDING_INACTIVE, not skyriding) then return false end
+		if not requireRule(config.FLYING_INACTIVE, not flying) then return false end
+		if not requireRule(config.SKYRIDING_ACTIVE, skyriding) then return false end
+		if not requireRule(config.FLYING_ACTIVE, flying) then return false end
+		if not requireRule(config.ALWAYS_IN_COMBAT, inCombat) then return false end
+		if not requireRule(config.ALWAYS_OUT_OF_COMBAT, not inCombat) then return false end
+		if not requireRule(config.PLAYER_CASTING, casting) then return false end
+		if not requireRule(config.PLAYER_MOUNTED, mounted) then return false end
+		if not requireRule(config.PLAYER_NOT_MOUNTED, not mounted) then return false end
+		if not requireRule(config.PLAYER_HAS_FOCUS, hasFocus) then return false end
+		if not requireRule(config.PLAYER_HAS_TARGET, hasTarget) then return false end
+		if not requireRule(config.PLAYER_HAS_ATTACKABLE_TARGET, UnitCanAttack and UnitCanAttack("player", "target")) then return false end
+		if not requireRule(config.PLAYER_IN_GROUP, inGroup) then return false end
+		if not requireRule(config.PLAYER_IN_PARTY, inParty) then return false end
+		if not requireRule(config.PLAYER_IN_RAID, inRaid) then return false end
+		if not requireRule(config.SHOW_IN_INSTANCE, inInstance) then return false end
+		for key, data in pairs(addon.constants.VISIBILITY_RULES) do
+			if data.additionalRule and config[key] and not addon.functions.MatchAdditionalVisibilityRule(key, additionalContext) then return false end
+		end
+		if hasRule then return true end
+		return true
+	end
+
+	if config.SKYRIDING_INACTIVE then
+		if skyriding then return false end
+		if not self:HasShowRules(config) then return true end
+	end
+	if config.FLYING_INACTIVE then
+		if flying then return false end
+		if not self:HasShowRules(config) then return true end
+	end
+
+	if config.SKYRIDING_ACTIVE and skyriding then return true end
+	if config.FLYING_ACTIVE and flying then return true end
+	if config.ALWAYS_IN_COMBAT and inCombat then return true end
+	if config.ALWAYS_OUT_OF_COMBAT and not inCombat then return true end
+	if config.PLAYER_CASTING and casting then return true end
+	if config.PLAYER_MOUNTED and mounted then return true end
+	if config.PLAYER_NOT_MOUNTED and not mounted then return true end
+	if config.PLAYER_HAS_FOCUS and hasFocus then return true end
+	if config.PLAYER_HAS_TARGET and hasTarget then return true end
+	if config.PLAYER_HAS_ATTACKABLE_TARGET and UnitCanAttack and UnitCanAttack("player", "target") then return true end
+	if config.PLAYER_IN_GROUP and inGroup then return true end
+	if config.PLAYER_IN_PARTY and inParty then return true end
+	if config.PLAYER_IN_RAID and inRaid then return true end
+	if config.SHOW_IN_INSTANCE and inInstance then return true end
+	if addon.functions.EvaluateAdditionalVisibilityRules(config, additionalContext) then return true end
+	return false
+end
+
+function visibilityLogic:UsesManualRules(config, useAnd)
+	if not config then return false end
+	if useAnd == true then return true end
+	return config.PLAYER_CASTING == true or config.SKYRIDING_ACTIVE == true or config.SKYRIDING_INACTIVE == true or config.FLYING_ACTIVE == true or config.FLYING_INACTIVE == true or config.SHOW_IN_INSTANCE == true or addon.functions.HasAdditionalVisibilityRule(config, true)
+end
+
+function visibilityLogic:AppendUniqueClause(clauses, seen, condition, action)
+	if not condition or condition == "" then return end
+	local clause = ("[%s] %s"):format(condition, action or "show")
+	if seen[clause] then return end
+	seen[clause] = true
+	clauses[#clauses + 1] = clause
+end
+
+function visibilityLogic:AppendDruidTravelClauses(clauses, seen, action)
+	if addon.variables.unitClass ~= "DRUID" then return end
+	local map = getDruidFormStanceMap()
+	local function appendIndices(indices)
+		if type(indices) ~= "table" then return end
+		for _, idx in ipairs(indices) do
+			if idx and idx > 0 then self:AppendUniqueClause(clauses, seen, "stance:" .. idx, action) end
+		end
+	end
+	appendIndices(map and map.TRAVEL)
+	appendIndices(map and map.STAG)
+	if not (map and map.TRAVEL and #map.TRAVEL > 0) then
+		local idx = formKeyToIndex.TRAVEL
+		if idx and idx > 0 then self:AppendUniqueClause(clauses, seen, "stance:" .. idx, action) end
+	end
+	if not (map and map.STAG and #map.STAG > 0) then
+		local idx = formKeyToIndex.STAG
+		if idx and idx > 0 then self:AppendUniqueClause(clauses, seen, "stance:" .. idx, action) end
+	end
+end
+
+function visibilityLogic:AppendDruidFormHideClauses(clauses, seen, showForms, formMap)
+	if addon.variables.unitClass ~= "DRUID" then return end
+	if type(showForms) ~= "table" then return end
+
+	local map = formMap or getDruidFormStanceMap()
+	if showForms.HUMANOID == false then
+		-- Restrict to allowed forms so temporary, unlisted forms cannot fall through to show.
+		local allowed, indicesSeen = {}, {}
+		for _, key in ipairs(DRUID_FORM_SEQUENCE) do
+			if key ~= "HUMANOID" and showForms[key] ~= false then
+				for _, idx in ipairs(map[key] or {}) do
+					if idx > 0 and not indicesSeen[idx] then
+						indicesSeen[idx] = true
+						allowed[#allowed + 1] = idx
+					end
+				end
+			end
+		end
+		if #allowed > 0 then
+			tsort(allowed)
+			self:AppendUniqueClause(clauses, seen, "nostance:" .. table.concat(allowed, "/"), "hide")
+		else
+			self:AppendUniqueClause(clauses, seen, "stance", "hide")
+			self:AppendUniqueClause(clauses, seen, "nostance", "hide")
+		end
+		return
+	end
+
+	-- Unlisted temporary forms remain part of the humanoid selection.
+	for _, key in ipairs(DRUID_FORM_SEQUENCE) do
+		if showForms[key] == false then
+			for _, idx in ipairs(map[key] or {}) do
+				if idx > 0 then self:AppendUniqueClause(clauses, seen, "stance:" .. idx, "hide") end
+			end
+		end
+	end
+end
+
+function visibilityLogic:GetDruidFormHideConditions(showForms, formMap)
+	local conditions = {}
+	local seen = {}
+	local clauses = {}
+	self:AppendDruidFormHideClauses(clauses, seen, showForms, formMap)
+	for i = 1, #clauses do
+		local condition = clauses[i] and clauses[i]:match("^%[([^%]]+)%]%s+hide$")
+		if condition and not seen[condition] then
+			seen[condition] = true
+			conditions[#conditions + 1] = condition
+		end
+	end
+	return conditions
+end
+
+function visibilityLogic:BuildDriver(cfg)
+	cfg = cfg or {}
+	local shouldHideOutOfCombat = ResourceBars.ShouldHideOutOfCombat and ResourceBars.ShouldHideOutOfCombat(cfg)
+	local shouldHideMounted = ResourceBars.ShouldHideMounted and ResourceBars.ShouldHideMounted(cfg)
+	local hideVehicle = ResourceBars.ShouldHideInVehicle and ResourceBars.ShouldHideInVehicle(cfg)
+	local hidePetBattle = ResourceBars.ShouldHideInPetBattle and ResourceBars.ShouldHideInPetBattle(cfg)
+	local useDruidFormDriver = shouldUseDruidFormDriver(cfg)
+	local druidFormMap = useDruidFormDriver and getDruidFormStanceMap() or nil
+	local inactiveState = ResourceBars.GetVisibilityInactiveState(cfg)
+
+	-- Cache driver generation by a compact signature of visibility-relevant config.
+	local function hashStep(hash, value) return ((hash * 131) + value) % 2147483647 end
+	local driverSignature = 17
+	if hideVehicle then driverSignature = hashStep(driverSignature, 2) end
+	if hidePetBattle then driverSignature = hashStep(driverSignature, 3) end
+	if shouldHideOutOfCombat then driverSignature = hashStep(driverSignature, 4) end
+	if shouldHideMounted then driverSignature = hashStep(driverSignature, 5) end
+	if cfg.visibilityExplicit == true then driverSignature = hashStep(driverSignature, 6) end
+	if cfg.allowMouseover == true then driverSignature = hashStep(driverSignature, 10) end
+	if useDruidFormDriver then driverSignature = hashStep(driverSignature, 7) end
+	if inactiveState == "fade" then
+		driverSignature = hashStep(driverSignature, 8)
+	elseif inactiveState == "show" then
+		driverSignature = hashStep(driverSignature, 9)
+	end
+	local unitClass = tostring(addon.variables and addon.variables.unitClass or "")
+	for i = 1, #unitClass do
+		driverSignature = hashStep(driverSignature, unitClass:byte(i))
+	end
+	local rawVisibility = type(cfg.visibility) == "table" and cfg.visibility or nil
+	if rawVisibility then
+		local sortedKeys = self:GetSortedRuleKeys()
+		for i = 1, #sortedKeys do
+			local key = sortedKeys[i]
+			if rawVisibility[key] == true then driverSignature = hashStep(driverSignature, 100 + i) end
+		end
+	end
+	local showForms = type(cfg.showForms) == "table" and cfg.showForms or nil
+	if showForms then
+		for i = 1, #DRUID_FORM_SEQUENCE do
+			local key = DRUID_FORM_SEQUENCE[i]
+			local value = showForms[key]
+			if value == false then
+				driverSignature = hashStep(driverSignature, 200 + i)
+			elseif value == true then
+				driverSignature = hashStep(driverSignature, 300 + i)
+			end
+		end
+	end
+
+	if druidFormMap then
+		for i, key in ipairs(DRUID_FORM_SEQUENCE) do
+			driverSignature = hashStep(driverSignature, 400 + i)
+			for _, idx in ipairs(druidFormMap[key] or {}) do
+				driverSignature = hashStep(driverSignature, idx)
+			end
+		end
+	end
+
+	local cached = self.driverCache and self.driverCache[cfg]
+	if cached and cached.signature == driverSignature then return cached.expr, cached.usesManualVisibility, cached.visibilityCfg end
+
+	local visibilityCfg = self:NormalizeConfig(cfg.visibility, cfg)
+	if visibilityCfg == nil and (shouldHideOutOfCombat or shouldHideMounted) then
+		visibilityCfg = {}
+		if shouldHideOutOfCombat then visibilityCfg.ALWAYS_IN_COMBAT = true end
+		if shouldHideMounted then visibilityCfg.PLAYER_NOT_MOUNTED = true end
+	end
+	if visibilityCfg and visibilityCfg.ALWAYS_HIDDEN then
+		self.driverCache[cfg] = { signature = driverSignature, expr = "hide", usesManualVisibility = false, visibilityCfg = visibilityCfg }
+		return "hide", false, visibilityCfg
+	end
+	local visibilityConfigUsesManualEvaluation = addon.functions and addon.functions.VisibilityConfigUsesManualEvaluation
+	if visibilityConfigUsesManualEvaluation and visibilityConfigUsesManualEvaluation(visibilityCfg, { allowMouseover = cfg.allowMouseover == true }) then
+		self.driverCache[cfg] = { signature = driverSignature, expr = nil, usesManualVisibility = true, visibilityCfg = visibilityCfg }
+		return nil, true, visibilityCfg
+	end
+	if not visibilityCfg and not hideVehicle and not hidePetBattle and not useDruidFormDriver then
+		self.driverCache[cfg] = { signature = driverSignature, expr = nil, usesManualVisibility = false, visibilityCfg = visibilityCfg }
+		return nil, false, visibilityCfg
+	end
+
+	local prependHideClauses = {}
+	local prependSeen = {}
+	local function addHideClause(condition)
+		if not condition or condition == "" or prependSeen[condition] then return end
+		prependSeen[condition] = true
+		prependHideClauses[#prependHideClauses + 1] = condition
+	end
+
+	if hidePetBattle then addHideClause("petbattle") end
+	if hideVehicle then addHideClause("vehicleui") end
+	if useDruidFormDriver then
+		for _, condition in ipairs(self:GetDruidFormHideConditions(showForms, druidFormMap)) do
+			addHideClause(condition)
+		end
+	end
+
+	local expr
+	local buildVisibilityDriverExpression = addon.functions and addon.functions.BuildUnitFrameDriverExpression
+	if visibilityCfg and next(visibilityCfg) and buildVisibilityDriverExpression then
+		expr = buildVisibilityDriverExpression(visibilityCfg, { prependHideClauses = prependHideClauses, inactiveState = inactiveState })
+	end
+	if not expr and #prependHideClauses > 0 then
+		local clauses = {}
+		local seen = {}
+		for _, condition in ipairs(prependHideClauses) do
+			self:AppendUniqueClause(clauses, seen, condition, "hide")
+		end
+		clauses[#clauses + 1] = "show"
+		expr = table.concat(clauses, "; ")
+	end
+	self.driverCache[cfg] = { signature = driverSignature, expr = expr, usesManualVisibility = false, visibilityCfg = visibilityCfg }
+	return expr, false, visibilityCfg
+end
+
+function ResourceBars.ShouldDeferShowToVisibilityDriver(frame, cfg)
+	if not frame or not cfg then return false end
+	if frame._eqolEditModeVisibilitySuppressed then return true end
+	if addon.EditMode and addon.EditMode.IsInEditMode and addon.EditMode:IsInEditMode() then return false end
+	local expr, usesManualVisibility = visibilityLogic:BuildDriver(cfg)
+	if usesManualVisibility == true and frame._rbManualVisibilityHidden == true then return true end
+	return expr ~= nil and usesManualVisibility ~= true
+end
+
+function visibilityLogic:IsPetBattleActive()
+	if ResourceBars._petBattleOpen == true then return true end
+	if C_PetBattles and C_PetBattles.IsInBattle then return C_PetBattles.IsInBattle() == true end
+	return false
+end
+
+function visibilityLogic:ShouldShowManual(cfg, visibilityCfg, frame)
+	if not cfg then return false end
+	if addon.variables.unitClass == "DRUID" and type(cfg.showForms) == "table" then
+		local currentForm = ResourceBars.GetCurrentDruidFormKey and ResourceBars.GetCurrentDruidFormKey()
+		if currentForm and cfg.showForms[currentForm] == false then return false end
+	end
+	if ResourceBars.ShouldHideInVehicle and ResourceBars.ShouldHideInVehicle(cfg) then
+		if UnitInVehicle and UnitInVehicle("player") then return false end
+	end
+	if ResourceBars.ShouldHideInPetBattle and ResourceBars.ShouldHideInPetBattle(cfg) then
+		if self:IsPetBattleActive() then return false end
+	end
+	local shouldShowVisibilityConfig = addon.functions and addon.functions.ShouldShowVisibilityConfig
+	if shouldShowVisibilityConfig then
+		return shouldShowVisibilityConfig(visibilityCfg, {
+			isMouseOver = visibilityCfg and visibilityCfg.MOUSEOVER == true and frame ~= nil and addon.functions.MouseIsOver(frame) or false,
+			supportsPlayerFocusRule = true,
+			supportsPlayerTargetRule = true,
+			supportsPlayerCastingRule = true,
+			supportsPlayerMountedRule = true,
+			supportsGroupRule = true,
+		})
+	end
+	return true
+end
+
+function visibilityLogic:ApplyManualFrameVisibility(frame, shouldShow)
+	if not frame then return end
+	if shouldShow then
+		if frame._rbManualVisibilityHidden then
+			frame._rbManualVisibilityHidden = nil
+			if not frame:IsShown() then frame:Show() end
+		end
+		return
+	end
+	frame._rbManualVisibilityHidden = true
+	if frame:IsShown() then frame:Hide() end
+end
+
+function visibilityLogic:EnsureWatcher()
+	if visibilityDriverWatcher then return end
+	visibilityDriverWatcher = CreateFrame("Frame")
+	visibilityDriverWatcher:RegisterEvent("PLAYER_REGEN_ENABLED")
+	visibilityDriverWatcher:RegisterEvent("PLAYER_MOUNT_DISPLAY_CHANGED")
+	visibilityDriverWatcher:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+	visibilityDriverWatcher:RegisterEvent("PLAYER_DIFFICULTY_CHANGED")
+	visibilityDriverWatcher:RegisterEvent("INSTANCE_GROUP_SIZE_CHANGED")
+	visibilityDriverWatcher:RegisterEvent("UPDATE_INSTANCE_INFO")
+	if visibilityDriverWatcher.RegisterUnitEvent then
+		visibilityDriverWatcher:RegisterUnitEvent("UNIT_ENTERED_VEHICLE", "player")
+		visibilityDriverWatcher:RegisterUnitEvent("UNIT_EXITED_VEHICLE", "player")
+	else
+		visibilityDriverWatcher:RegisterEvent("UNIT_ENTERED_VEHICLE")
+		visibilityDriverWatcher:RegisterEvent("UNIT_EXITED_VEHICLE")
+	end
+	visibilityDriverWatcher._playerMounted = IsMounted and IsMounted() or false
+	visibilityDriverWatcher._playerVehicle = UnitInVehicle and UnitInVehicle("player") or false
+	visibilityDriverWatcher:SetScript("OnEvent", function(self, event, unit)
+		if event == "PLAYER_REGEN_ENABLED" then
+			if ResourceBars._pendingVisibilityDriver then
+				ResourceBars._pendingVisibilityDriver = nil
+				ResourceBars.ApplyVisibilityPreference("pending")
+			end
+			local pendingUpdates = ResourceBars._pendingVisibilityDriverUpdates
+			if pendingUpdates then
+				ResourceBars._pendingVisibilityDriverUpdates = nil
+				for frame, expr in pairs(pendingUpdates) do
+					if frame then
+						local desired = expr
+						if desired == false then desired = nil end
+						applyVisibilityDriverToFrame(frame, desired)
+					end
+				end
+			end
+			return
+		end
+
+		if event == "PLAYER_MOUNT_DISPLAY_CHANGED" then
+			local mounted = IsMounted and IsMounted() or false
+			if not ResourceBars._pendingVisibilityDriver and self._playerMounted == mounted then return end
+			self._playerMounted = mounted
+		elseif event == "ZONE_CHANGED_NEW_AREA" or event == "PLAYER_DIFFICULTY_CHANGED" or event == "INSTANCE_GROUP_SIZE_CHANGED" or event == "UPDATE_INSTANCE_INFO" then
+			-- Instance state is not expressible as a secure driver condition.
+		elseif event == "UNIT_ENTERED_VEHICLE" or event == "UNIT_EXITED_VEHICLE" then
+			if unit and unit ~= "player" then return end
+			local inVehicle = UnitInVehicle and UnitInVehicle("player") or false
+			if not ResourceBars._pendingVisibilityDriver and self._playerVehicle == inVehicle then return end
+			self._playerVehicle = inVehicle
+		else
+			return
+		end
+		ResourceBars.ApplyVisibilityPreference(event)
+	end)
+end
+
+function visibilityLogic:CanApplyDriver()
+	if InCombatLockdown and InCombatLockdown() then
+		ResourceBars._pendingVisibilityDriver = true
+		self:EnsureWatcher()
+		return false
+	end
+	return true
+end
+
+function ResourceBars.ScheduleVisibilityDriverAlphaRefresh()
+	if InCombatLockdown and InCombatLockdown() then
+		ResourceBars._pendingVisibilityDriver = true
+		visibilityLogic:EnsureWatcher()
+		return
+	end
+	if ResourceBars._visibilityDriverAlphaRefreshPending then return end
+	ResourceBars._visibilityDriverAlphaRefreshPending = true
+	RunNextFrame(function()
+		ResourceBars._visibilityDriverAlphaRefreshPending = nil
+		if visibilityLogic then visibilityLogic.driverCache = setmetatable({}, { __mode = "k" }) end
+		ResourceBars.ApplyVisibilityPreference("fadeAlpha")
+	end)
+end
+
+function applyVisibilityDriverToFrame(frame, expression)
+	if not frame then return end
+	if InCombatLockdown and InCombatLockdown() then
+		ResourceBars._pendingVisibilityDriverUpdates = ResourceBars._pendingVisibilityDriverUpdates or {}
+		ResourceBars._pendingVisibilityDriverUpdates[frame] = expression == nil and false or expression
+		visibilityLogic:EnsureWatcher()
+		return
+	end
+	if not expression then
+		if frame._rbVisibilityDriver then
+			if UnregisterStateDriver then pcall(UnregisterStateDriver, frame, "visibility") end
+			frame._rbVisibilityDriver = nil
+		end
+		ResourceBars.ClearEqolVisibilityDriver(frame)
+		return
+	end
+	if expression and expression:find("fade", 1, true) then
+		if frame._rbVisibilityDriver then
+			if UnregisterStateDriver then pcall(UnregisterStateDriver, frame, "visibility") end
+			frame._rbVisibilityDriver = nil
+		end
+		if frame.SetAttribute then frame:SetAttribute("state-visibility", nil) end
+		ResourceBars.ApplyEqolVisibilityDriver(frame, expression)
+		return
+	end
+	ResourceBars.ClearEqolVisibilityDriver(frame)
+	if frame._rbVisibilityDriver == expression then return end
+	if RegisterStateDriver then
+		if frame._rbVisibilityDriver and UnregisterStateDriver then
+			pcall(UnregisterStateDriver, frame, "visibility")
+			frame._rbVisibilityDriver = nil
+		end
+		local ok = pcall(RegisterStateDriver, frame, "visibility", expression)
+		if ok then frame._rbVisibilityDriver = expression end
+	end
+end
+
+function ResourceBars.ApplyVisibilityPreference(context)
+	if not RegisterStateDriver or not UnregisterStateDriver then return end
+	local canApplyDriver = visibilityLogic:CanApplyDriver()
+	if canApplyDriver then ResourceBars._pendingVisibilityDriver = nil end
+	local barsEnabled = not (addon and addon.db and addon.db.enableResourceFrame == false)
+	local editModeActive = addon.EditMode and addon.EditMode.IsInEditMode and addon.EditMode:IsInEditMode()
+	local driverWasActive = ResourceBars._visibilityDriverActive == true
+	local releasedManualHidden = false
+	local needsPlayerCastingEvents = false
+	if not barsEnabled then
+		forEachResourceBarFrame(function(frame)
+			if ResourceBars.IsCustomVisibilityFrame and ResourceBars.IsCustomVisibilityFrame(nil, frame) then return end
+			if canApplyDriver then applyVisibilityDriverToFrame(frame, nil) end
+			if frame and frame._rbManualVisibilityHidden then
+				frame._rbManualVisibilityHidden = nil
+				releasedManualHidden = true
+			end
+			if ResourceBars.ApplyClientSceneAlphaToFrame then ResourceBars.ApplyClientSceneAlphaToFrame(frame, false) end
+			if ResourceBars.ApplyHideWhenEmptyAlphaToFrame then ResourceBars.ApplyHideWhenEmptyAlphaToFrame(frame, nil, nil) end
+		end)
+		if canApplyDriver then
+			ResourceBars._visibilityDriverActive = false
+		else
+			ResourceBars._visibilityDriverActive = driverWasActive
+		end
+	end
+	local driverActiveNow = false
+	forEachResourceBarFrame(function(frame, pType)
+		if ResourceBars.TrackingMouseover then ResourceBars.TrackingMouseover:Clear(frame) end
+		local cfg = resolveBarConfigForFrame(pType, frame)
+		local customFrame = ResourceBars.IsCustomVisibilityFrame and ResourceBars.IsCustomVisibilityFrame(pType, frame)
+		local barEnabled = cfg and cfg.enabled == true and (barsEnabled or customFrame)
+		if ResourceBars.ApplyCombatOpacityToFrame then ResourceBars.ApplyCombatOpacityToFrame(frame, barEnabled and not editModeActive and cfg or nil, context) end
+		if barEnabled then
+			local editModeVisibilitySuppressed = editModeActive and frame and frame._eqolEditModeVisibilitySuppressed
+			if editModeVisibilitySuppressed then
+				if canApplyDriver then applyVisibilityDriverToFrame(frame, nil) end
+				if frame._rbManualVisibilityHidden then
+					frame._rbManualVisibilityHidden = nil
+					releasedManualHidden = true
+				end
+				if frame:IsShown() then frame:Hide() end
+				if ResourceBars.ApplyClientSceneAlphaToFrame then ResourceBars.ApplyClientSceneAlphaToFrame(frame, false) end
+				if ResourceBars.ApplyHideWhenEmptyAlphaToFrame then ResourceBars.ApplyHideWhenEmptyAlphaToFrame(frame, nil, nil) end
+				return
+			end
+			local runtimeVisible = not frame or frame._rbDesiredVisible ~= false
+			if not runtimeVisible and ResourceBars.ShouldKeepDruidFormDriverManaged(cfg) then runtimeVisible = true end
+			if not runtimeVisible then
+				if canApplyDriver then applyVisibilityDriverToFrame(frame, nil) end
+				if frame and frame._rbManualVisibilityHidden then
+					frame._rbManualVisibilityHidden = nil
+					releasedManualHidden = true
+				end
+				if frame and frame:IsShown() then frame:Hide() end
+				if ResourceBars.ApplyClientSceneAlphaToFrame then ResourceBars.ApplyClientSceneAlphaToFrame(frame, false) end
+				if ResourceBars.ApplyHideWhenEmptyAlphaToFrame then ResourceBars.ApplyHideWhenEmptyAlphaToFrame(frame, nil, nil) end
+				return
+			end
+
+			local hideInClientScene = not editModeActive and ResourceBars.ShouldHideInClientScene and ResourceBars.ShouldHideInClientScene(cfg) and ResourceBars._clientSceneOpen == true
+			if editModeActive then
+				if canApplyDriver then applyVisibilityDriverToFrame(frame, "show") end
+				if frame and frame._rbManualVisibilityHidden then
+					frame._rbManualVisibilityHidden = nil
+					releasedManualHidden = true
+				end
+				driverActiveNow = true
+			else
+				local expr, usesManualVisibility, visibilityCfg = visibilityLogic:BuildDriver(cfg)
+				if usesManualVisibility then
+					if visibilityCfg and visibilityCfg.PLAYER_CASTING == true then needsPlayerCastingEvents = true end
+					if canApplyDriver then applyVisibilityDriverToFrame(frame, nil) end
+					if customFrame and visibilityCfg and visibilityCfg.MOUSEOVER then
+						ResourceBars.TrackingMouseover:Apply(frame, cfg, visibilityCfg, visibilityLogic)
+					else
+						visibilityLogic:ApplyManualFrameVisibility(frame, visibilityLogic:ShouldShowManual(cfg, visibilityCfg))
+					end
+				else
+					if expr then driverActiveNow = true end
+					if canApplyDriver then applyVisibilityDriverToFrame(frame, expr) end
+					if frame and frame._rbManualVisibilityHidden then
+						frame._rbManualVisibilityHidden = nil
+						releasedManualHidden = true
+					end
+				end
+			end
+			if ResourceBars.ApplyClientSceneAlphaToFrame then ResourceBars.ApplyClientSceneAlphaToFrame(frame, hideInClientScene) end
+		else
+			if canApplyDriver then applyVisibilityDriverToFrame(frame, nil) end
+			if frame and frame._rbManualVisibilityHidden then
+				frame._rbManualVisibilityHidden = nil
+				releasedManualHidden = true
+			end
+			if frame then
+				frame._rbDesiredVisible = false
+				if frame:IsShown() then frame:Hide() end
+			end
+			if ResourceBars.ApplyClientSceneAlphaToFrame then ResourceBars.ApplyClientSceneAlphaToFrame(frame, false) end
+			if ResourceBars.ApplyHideWhenEmptyAlphaToFrame then ResourceBars.ApplyHideWhenEmptyAlphaToFrame(frame, nil, nil) end
+		end
+	end)
+	if canApplyDriver then
+		ResourceBars._visibilityDriverActive = driverActiveNow
+		if driverWasActive and not driverActiveNow and context ~= "fromSetPowerbars" and frameAnchor then
+			setPowerbars()
+		elseif releasedManualHidden and context ~= "fromSetPowerbars" and frameAnchor then
+			setPowerbars()
+		end
+	else
+		ResourceBars._visibilityDriverActive = driverWasActive
+	end
+	visibilityLogic:UpdatePlayerCastingEventInterest(needsPlayerCastingEvents)
+end
+
+local resourceBarsLoaded = addon.Aura.ResourceBars ~= nil
+local function LoadResourceBars()
+	if not resourceBarsLoaded then
+		addon.Aura.ResourceBars = addon.Aura.ResourceBars or {}
+		resourceBarsLoaded = true
+	end
+end
+
+local function wipeTable(t)
+	for k in pairs(t) do
+		t[k] = nil
+	end
+end
+
+function ResourceBars.SyncRuntimeSpecContext() end
+
+-- Coalesce spec/trait refreshes to avoid duplicate work or timing races
+local function scheduleSpecRefresh()
+	if frameAnchor and frameAnchor._specRefreshScheduled then return end
+	if InCombatLockdown and InCombatLockdown() then
+		ResourceBars._pendingSpecRefresh = true
+		return
+	end
+	ResourceBars._pendingSpecRefresh = nil
+	if frameAnchor then frameAnchor._specRefreshScheduled = true end
+	After(0.2, function()
+		if frameAnchor then frameAnchor._specRefreshScheduled = false end
+		if InCombatLockdown and InCombatLockdown() then
+			ResourceBars._pendingSpecRefresh = true
+			return
+		end
+		ResourceBars._pendingSpecRefresh = nil
+		local previousMode = ResourceBars._runtimeSpecMode
+		ResourceBars.SyncRuntimeSpecContext()
+		ResourceBars.InvalidateRuntimeConfigCaches()
+		local currentSpec = tonumber(ResourceBars.GetClassContext())
+		local currentMode = ResourceBars.GetSpecMode and ResourceBars.GetSpecMode(currentSpec) or "SPEC"
+		local editModeActive = addon.EditMode and addon.EditMode.IsInEditMode and addon.EditMode:IsInEditMode()
+		if editModeActive and ResourceBars.UnregisterEditModeFrames then ResourceBars.UnregisterEditModeFrames() end
+		if previousMode and previousMode ~= currentMode and ResourceBars.DisableResourceBars and ResourceBars.EnableResourceBars then
+			ResourceBars.DisableResourceBars()
+			ResourceBars.EnableResourceBars()
+			if editModeActive and addon.EditMode and addon.EditMode.OnEnterEditMode then addon.EditMode:OnEnterEditMode() end
+			ResourceBars._runtimeSpec = currentSpec
+			ResourceBars._runtimeSpecMode = currentMode
+			return
+		end
+		-- First detach all bar points to avoid transient loops
+		if addon and addon.Aura and addon.Aura.ResourceBars and addon.Aura.ResourceBars.DetachAllBars then addon.Aura.ResourceBars.DetachAllBars() end
+		ResourceBars._suspendAnchors = true
+		setPowerbars()
+		ResourceBars._suspendAnchors = false
+		if editModeActive and ResourceBars.RegisterEditModeFrames then ResourceBars.RegisterEditModeFrames() end
+		if addon and addon.Aura and addon.Aura.ResourceBars and addon.Aura.ResourceBars.ReanchorAll then addon.Aura.ResourceBars.ReanchorAll() end
+		if addon and addon.Aura and addon.Aura.ResourceBars and addon.Aura.ResourceBars.UpdateRuneEventRegistration then addon.Aura.ResourceBars.UpdateRuneEventRegistration() end
+		if addon and addon.Aura and addon.Aura.ResourceBars and addon.Aura.ResourceBars.ForceRuneRecolor then addon.Aura.ResourceBars.ForceRuneRecolor() end
+		if addon.variables.unitClass == "DEATHKNIGHT" then updatePowerBar("RUNES") end
+	end)
+end
+
+local function updateStaggerBarIfShown()
+	if powerbar["STAGGER"] and powerbar["STAGGER"]:IsShown() then updatePowerBar("STAGGER") end
+end
+
+function ResourceBars.RefreshStaggerTicker()
+	local bar = addon.variables.unitClass == "MONK" and powerbar["STAGGER"] or nil
+	local shouldRun = bar and bar:IsShown() or false
+	if not shouldRun then
+		if ResourceBars._staggerTicker then ResourceBars._staggerTicker:Cancel() end
+		ResourceBars._staggerTicker = nil
+		return
+	end
+	if not bar._eqolStaggerTickerVisibilityHooked then
+		bar:HookScript("OnShow", function() ResourceBars.RefreshStaggerTicker() end)
+		bar:HookScript("OnHide", function() ResourceBars.RefreshStaggerTicker() end)
+		bar._eqolStaggerTickerVisibilityHooked = true
+	end
+	if not ResourceBars._staggerTicker and C_Timer and C_Timer.NewTicker then
+		-- Blizzard marks its Stagger bar for frequent OnUpdate refreshes. A
+		-- visibility-scoped 20 Hz ticker gives us the same reliable decay/purify
+		-- updates without retaining UNIT_AURA solely for this non-aura resource.
+		ResourceBars._staggerTicker = C_Timer.NewTicker(0.05, updateStaggerBarIfShown)
+	end
+end
+
+function ResourceBars.ResetPowerBarRuntimeCaches()
+	for pType, bar in pairs(powerbar or {}) do
+		if bar then
+			bar._lastMax = nil
+			bar._lastMaxRaw = nil
+			if pType == "ESSENCE" then
+				bar._essenceNextTick = nil
+				bar._essenceFraction = 0
+				bar._essenceLastPower = nil
+				if ResourceBars.InvalidateEssenceSegmentCaches then ResourceBars.InvalidateEssenceSegmentCaches(bar) end
+			end
+		end
+	end
+end
+
+function ResourceBars.RefreshBarsAfterPlayerStateChange(reason)
+	ResourceBars.ResetPowerBarRuntimeCaches()
+	if setPowerbars then setPowerbars() end
+	if healthBar then
+		healthBar._lastMax = nil
+		if healthBar:IsShown() then updateHealthBar(reason or "PLAYER_STATE_CHANGED") end
+	end
+	for pType, bar in pairs(powerbar or {}) do
+		if bar and bar:IsShown() then updatePowerBar(pType) end
+	end
+end
+
+local function eventHandler(self, event, eventArg1, eventArg2)
+	local unit = eventArg1
+	if (event == "PLAYER_TARGET_CHANGED" or event == "COMBO_TARGET_CHANGED") and powerbar.COMBO_POINTS then updatePowerBar("COMBO_POINTS") end
+	if event == "ADDON_LOADED" then
+		local anchorHelper = ResourceBars.GetAnchorHelper and ResourceBars.GetAnchorHelper()
+		if anchorHelper and anchorHelper.HandleAddonLoaded then anchorHelper:HandleAddonLoaded(unit) end
+		ResourceBars._relativeFrameHookTargetsCache = {}
+		if ResourceBars.ReanchorAll then ResourceBars.ReanchorAll() end
+		if scheduleRelativeFrameWidthSync then scheduleRelativeFrameWidthSync() end
+	elseif event == "UNIT_DISPLAYPOWER" and unit == "player" then
+		setPowerbars()
+		if ResourceBars.ScheduleDelayedSharedShapeshiftRefresh then ResourceBars.ScheduleDelayedSharedShapeshiftRefresh() end
+	elseif event == "PLAYER_SPECIALIZATION_CHANGED" then
+		ResourceBars.SyncRuntimeSpecContext()
+		scheduleSpecRefresh()
+		if scheduleRelativeFrameWidthSync then scheduleRelativeFrameWidthSync() end
+	elseif event == "TRAIT_CONFIG_UPDATED" then
+		ResourceBars.SyncRuntimeSpecContext()
+		scheduleSpecRefresh()
+		if scheduleRelativeFrameWidthSync then scheduleRelativeFrameWidthSync() end
+	elseif event == "PLAYER_LEVEL_CHANGED" then
+		do
+			local needsPostReanchor = setPowerbars() == true
+			if needsPostReanchor and ResourceBars.ReanchorAll then ResourceBars.ReanchorAll() end
+		end
+		return
+	elseif event == "PLAYER_DEAD" or event == "PLAYER_ALIVE" or event == "PLAYER_UNGHOST" then
+		ResourceBars.RefreshBarsAfterPlayerStateChange(event)
+		if After and event ~= "PLAYER_DEAD" then After(0.20, function()
+			if frameAnchor then ResourceBars.RefreshBarsAfterPlayerStateChange(event .. "_DELAYED") end
+		end) end
+		return
+	elseif event == "PET_BATTLE_OPENING_START" then
+		ResourceBars._petBattleOpen = true
+		ResourceBars.ApplyVisibilityPreference(event)
+		return
+	elseif event == "PET_BATTLE_CLOSE" then
+		ResourceBars._petBattleOpen = false
+		ResourceBars.ApplyVisibilityPreference(event)
+		return
+	elseif
+		event == "PLAYER_TARGET_CHANGED"
+		or event == "UNIT_FACTION"
+		or event == "GROUP_ROSTER_UPDATE"
+		or event == "PLAYER_REGEN_DISABLED"
+		or event == "PLAYER_REGEN_ENABLED"
+		or event == "PLAYER_MOUNT_DISPLAY_CHANGED"
+		or event == "ZONE_CHANGED_NEW_AREA"
+		or event == "PLAYER_DIFFICULTY_CHANGED"
+		or event == "INSTANCE_GROUP_SIZE_CHANGED"
+		or event == "UPDATE_INSTANCE_INFO"
+		or event == "PLAYER_CAN_GLIDE_CHANGED"
+		or event == "PLAYER_IS_GLIDING_CHANGED"
+	then
+		if event == "PLAYER_REGEN_ENABLED" then
+			if ResourceBars._pendingRelativeFrameWidthSync and scheduleRelativeFrameWidthSync then scheduleRelativeFrameWidthSync() end
+			if ResourceBars._pendingSpecRefresh then
+				ResourceBars._pendingSpecRefresh = nil
+				ResourceBars._pendingReanchorAll = nil
+				scheduleSpecRefresh()
+			elseif ResourceBars._pendingReanchorAll then
+				ResourceBars.ReanchorAll()
+			end
+		end
+		ResourceBars.ApplyVisibilityPreference(event)
+		return
+	elseif
+		event == "UNIT_SPELLCAST_START"
+		or event == "UNIT_SPELLCAST_STOP"
+		or event == "UNIT_SPELLCAST_FAILED"
+		or event == "UNIT_SPELLCAST_INTERRUPTED"
+		or event == "UNIT_SPELLCAST_CHANNEL_START"
+		or event == "UNIT_SPELLCAST_CHANNEL_STOP"
+	then
+		if unit ~= "player" then return end
+		ResourceBars.ApplyVisibilityPreference(event)
+		return
+	elseif event == "UNIT_ENTERED_VEHICLE" or event == "UNIT_EXITED_VEHICLE" then
+		if unit ~= "player" then return end
+		ResourceBars.ApplyVisibilityPreference(event)
+		return
+	elseif event == "CLIENT_SCENE_OPENED" then
+		local sceneType = unit
+		ResourceBars._clientSceneOpen = addon.functions and addon.functions.IsMinigameClientScene and addon.functions.IsMinigameClientScene(sceneType) or false
+		ResourceBars.ApplyVisibilityPreference(event)
+		return
+	elseif event == "CLIENT_SCENE_CLOSED" then
+		ResourceBars._clientSceneOpen = false
+		ResourceBars.ApplyVisibilityPreference(event)
+		return
+	elseif event == "PLAYER_ENTERING_WORLD" then
+		ResourceBars.SyncRuntimeSpecContext()
+		if C_PetBattles and C_PetBattles.IsInBattle then ResourceBars._petBattleOpen = C_PetBattles.IsInBattle() == true end
+		updateHealthBar("FULL_REFRESH")
+		setPowerbars()
+			RunNextFrame(function()
+				for pType, _ in pairs(RB.AURA_POWER_CONFIG or {}) do
+					if powerbar[pType] and powerbar[pType]:IsShown() then updatePowerBar(pType) end
+				end
+			end)
+		if scheduleRelativeFrameWidthSync then scheduleRelativeFrameWidthSync() end
+	elseif event == "UPDATE_SHAPESHIFT_FORM" then
+		local needsPostReanchor = setPowerbars({ fastReuseExisting = true }) == true
+		if ResourceBars.ScheduleDelayedSharedShapeshiftRefresh then ResourceBars.ScheduleDelayedSharedShapeshiftRefresh() end
+		local spec = ResourceBars.GetClassContext()
+		local sharedMode = ResourceBars.SpecUsesSharedMode and ResourceBars.SpecUsesSharedMode(spec)
+		local function finalizeShapeshiftLayout()
+			if addon.EditMode and addon.EditMode.IsInEditMode and addon.EditMode:IsInEditMode() and ResourceBars.RegisterEditModeFrames then ResourceBars.RegisterEditModeFrames() end
+			if sharedMode and addon and addon.Aura and addon.Aura.ResourceBars and addon.Aura.ResourceBars.SyncSharedSlotProxyFrames then addon.Aura.ResourceBars.SyncSharedSlotProxyFrames(spec) end
+			if needsPostReanchor and addon and addon.Aura and addon.Aura.ResourceBars and addon.Aura.ResourceBars.ReanchorAll then addon.Aura.ResourceBars.ReanchorAll() end
+			if addon and addon.Aura and addon.Aura.ResourceBars and addon.Aura.ResourceBars.UpdateRuneEventRegistration then addon.Aura.ResourceBars.UpdateRuneEventRegistration() end
+		end
+		-- Reanchor only when setPowerbars had to introduce or repair anchor state.
+		if needsPostReanchor and After then
+			After(0.05, finalizeShapeshiftLayout)
+		else
+			finalizeShapeshiftLayout()
+		end
+	elseif event == "UNIT_AURA" and unit == "player" then
+		-- Treat UNIT_AURA only as a refresh signal. Its update payload can contain
+		-- restricted aura data; each configured aura is queried safely by spell ID.
+		for pType in pairs(RB.AURA_POWER_CONFIG or {}) do
+			if powerbar[pType] and powerbar[pType]:IsShown() then updatePowerBar(pType) end
+		end
+		if not ResourceBars._staggerTicker then
+			updateStaggerBarIfShown()
+		end
+		return
+	elseif event == "SPELL_UPDATE_USES" then
+		if addon.variables.unitClass ~= "DEMONHUNTER" or tonumber(ResourceBars.GetClassContext()) ~= 2 then return end
+		local spellId = tonumber(eventArg1)
+		local baseSpellId = tonumber(eventArg2)
+		if spellId ~= RB.VENGEANCE_SOUL_CLEAVE_SPELL_ID and baseSpellId ~= RB.VENGEANCE_SOUL_CLEAVE_BASE_SPELL_ID then return end
+		if powerbar["SOUL_FRAGMENTS_VENGEANCE"] and powerbar["SOUL_FRAGMENTS_VENGEANCE"]:IsShown() then updatePowerBar("SOUL_FRAGMENTS_VENGEANCE") end
+		return
+	elseif event == "UNIT_MAXHEALTH" or event == "UNIT_HEALTH" or event == "UNIT_MAX_HEALTH_MODIFIERS_CHANGED" or event == "UNIT_ABSORB_AMOUNT_CHANGED" or event == "UNIT_HEAL_ABSORB_AMOUNT_CHANGED" then
+		if healthBar and healthBar:IsShown() then updateHealthBar(event) end
+		if powerbar.STAGGER and powerbar.STAGGER:IsShown() then
+			if not ResourceBars._staggerTicker then
+				updateStaggerBarIfShown()
+			end
+		end
+	elseif event == "UNIT_POWER_UPDATE" and powerbar[eventArg2] and powerbar[eventArg2]:IsShown() and not powerfrequent[eventArg2] then
+		updatePowerBar(eventArg2)
+	elseif event == "UNIT_POWER_FREQUENT" and powerbar[eventArg2] and powerbar[eventArg2]:IsShown() and powerfrequent[eventArg2] then
+		updatePowerBar(eventArg2)
+	elseif event == "UNIT_POWER_POINT_CHARGE" then
+		local comboBar = powerbar["COMBO_POINTS"]
+		if comboBar and comboBar:IsShown() then
+			local comboCfg = ResourceBars.GetRuntimeBarConfig("COMBO_POINTS", comboBar) or comboBar._cfg or getBarSettings("COMBO_POINTS") or {}
+			comboBar._cfg = comboCfg
+			applyBackdrop(comboBar, comboCfg)
+			updatePowerBar("COMBO_POINTS")
+			updateBarSeparators("COMBO_POINTS", comboCfg)
+			updateBarThresholds("COMBO_POINTS", comboCfg)
+		end
+	elseif event == "UNIT_MAXPOWER" and powerbar[eventArg2] and powerbar[eventArg2]:IsShown() then
+		local enum = POWER_ENUM[eventArg2]
+		local bar = powerbar[eventArg2]
+		local separatorCfg
+		if ResourceBars.separatorEligible[eventArg2] then
+			separatorCfg = ResourceBars.GetRuntimeBarConfig(eventArg2, bar) or bar._cfg or getBarSettings(eventArg2) or {}
+			bar._cfg = separatorCfg
+			applyBackdrop(bar, separatorCfg)
+		end
+		if enum and bar then
+			local useRaw = ResourceBars.ShouldUseRawPowerValues(eventArg2)
+			local max = UnitPowerMax("player", enum, useRaw)
+			bar._lastMax = max
+			bar._lastMaxRaw = useRaw
+			bar:SetMinMaxValues(0, max)
+		end
+		updatePowerBar(eventArg2)
+		if separatorCfg then updateBarSeparators(eventArg2, separatorCfg) end
+	elseif event == "RUNE_POWER_UPDATE" then
+		-- payload: runeIndex, isEnergize -> first vararg is held in 'unit' here
+		if powerbar["RUNES"] and powerbar["RUNES"]:IsShown() then updatePowerBar("RUNES", unit) end
+	end
+end
+
+function ResourceBars.EnableResourceBars()
+	if not frameAnchor then
+		frameAnchor = CreateFrame("Frame")
+		addon.Aura.anchorFrame = frameAnchor
+	end
+	ResourceBars._petBattleOpen = C_PetBattles and C_PetBattles.IsInBattle and (C_PetBattles.IsInBattle() == true) or false
+	for _, event in ipairs(RB.EVENTS_TO_REGISTER) do
+		-- Register unit vs non-unit events correctly
+		if event == "UPDATE_SHAPESHIFT_FORM" then
+			frameAnchor:RegisterEvent(event)
+		else
+			frameAnchor:RegisterUnitEvent(event, "player")
+		end
+	end
+	frameAnchor:RegisterEvent("PLAYER_ENTERING_WORLD")
+	frameAnchor:RegisterEvent("PLAYER_LEVEL_CHANGED")
+	frameAnchor:RegisterEvent("PLAYER_DEAD")
+	frameAnchor:RegisterEvent("PLAYER_ALIVE")
+	frameAnchor:RegisterEvent("PLAYER_UNGHOST")
+	if frameAnchor.RegisterUnitEvent then
+		frameAnchor:RegisterUnitEvent("PLAYER_SPECIALIZATION_CHANGED", "player")
+	else
+		frameAnchor:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
+	end
+	frameAnchor:RegisterEvent("TRAIT_CONFIG_UPDATED")
+	frameAnchor:RegisterEvent("CLIENT_SCENE_OPENED")
+	frameAnchor:RegisterEvent("CLIENT_SCENE_CLOSED")
+	frameAnchor:RegisterEvent("PLAYER_TARGET_CHANGED")
+	frameAnchor:RegisterUnitEvent("UNIT_FACTION", "target")
+	frameAnchor:RegisterEvent("COMBO_TARGET_CHANGED")
+	frameAnchor:RegisterEvent("GROUP_ROSTER_UPDATE")
+	frameAnchor:RegisterEvent("PLAYER_REGEN_DISABLED")
+	frameAnchor:RegisterEvent("PLAYER_REGEN_ENABLED")
+	frameAnchor:RegisterEvent("PLAYER_MOUNT_DISPLAY_CHANGED")
+	frameAnchor:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+	frameAnchor:RegisterEvent("PLAYER_DIFFICULTY_CHANGED")
+	frameAnchor:RegisterEvent("INSTANCE_GROUP_SIZE_CHANGED")
+	frameAnchor:RegisterEvent("UPDATE_INSTANCE_INFO")
+	frameAnchor:RegisterEvent("PLAYER_CAN_GLIDE_CHANGED")
+	frameAnchor:RegisterEvent("PLAYER_IS_GLIDING_CHANGED")
+	frameAnchor:RegisterEvent("PET_BATTLE_OPENING_START")
+	frameAnchor:RegisterEvent("PET_BATTLE_CLOSE")
+	frameAnchor:RegisterEvent("ADDON_LOADED")
+	if addon.variables.unitClass == "DEMONHUNTER" then frameAnchor:RegisterEvent("SPELL_UPDATE_USES") end
+	if frameAnchor.RegisterUnitEvent then
+		frameAnchor:RegisterUnitEvent("UNIT_ENTERED_VEHICLE", "player")
+		frameAnchor:RegisterUnitEvent("UNIT_EXITED_VEHICLE", "player")
+	else
+		frameAnchor:RegisterEvent("UNIT_ENTERED_VEHICLE")
+		frameAnchor:RegisterEvent("UNIT_EXITED_VEHICLE")
+	end
+	frameAnchor:SetScript("OnEvent", eventHandler)
+	frameAnchor:Hide()
+
+	createHealthBar()
+	-- Build bars and anchor immediately; no deferred timers needed
+	if addon and addon.Aura and addon.Aura.ResourceBars and addon.Aura.ResourceBars.Refresh then
+		addon.Aura.ResourceBars.Refresh()
+	else
+		if setPowerbars then setPowerbars() end
+		if addon and addon.Aura and addon.Aura.ResourceBars and addon.Aura.ResourceBars.ReanchorAll then addon.Aura.ResourceBars.ReanchorAll() end
+	end
+	if addon.variables and addon.variables.unitClass == "DRUID" and setPowerbars then
+		setPowerbars({ forceAllDruidBars = true })
+		setPowerbars()
+	end
+	if ResourceBars and ResourceBars.SyncRelativeFrameWidths then ResourceBars.SyncRelativeFrameWidths() end
+	if addon and addon.Aura and addon.Aura.ResourceBars and addon.Aura.ResourceBars.UpdateRuneEventRegistration then addon.Aura.ResourceBars.UpdateRuneEventRegistration() end
+	if ensureEditModeRegistration then ensureEditModeRegistration() end
+end
+
+function ResourceBars.DisableResourceBars()
+	local whirlwindTracker = addon.Aura and addon.Aura.WhirlwindTracker
+	if whirlwindTracker and whirlwindTracker.SetActive then whirlwindTracker:SetActive(false) end
+	local function resetRuntimeFrame(frame)
+		if not frame then return end
+		if addon.ManaRegen then addon.ManaRegen.SetEnabled(frame, false) end
+		applyVisibilityDriverToFrame(frame, nil)
+		frame._rbManualVisibilityHidden = nil
+		frame._rbDesiredVisible = nil
+		frame._rbSharedSlot = nil
+		frame._rbType = nil
+		frame._cfg = nil
+		if ResourceBars.ApplyRuntimeForceHiddenAlphaToFrame then ResourceBars.ApplyRuntimeForceHiddenAlphaToFrame(frame, false) end
+		frame:Hide()
+	end
+
+	ResourceBars._clientSceneOpen = false
+	ResourceBars._petBattleOpen = false
+	ResourceBars._runtimeSpec = nil
+	ResourceBars._runtimeSpecMode = nil
+	ResourceBars._pendingVisibilityDriver = nil
+	ResourceBars._visibilityDriverActive = false
+	if ResourceBars._pendingRefresh then
+		for spec in pairs(ResourceBars._pendingRefresh) do
+			ResourceBars._pendingRefresh[spec] = nil
+		end
+	end
+	if frameAnchor then
+		frameAnchor:UnregisterAllEvents()
+		frameAnchor:SetScript("OnEvent", nil)
+		frameAnchor = nil
+		addon.Aura.anchorFrame = nil
+	end
+	if ResourceBars.UnregisterEditModeFrames then ResourceBars.UnregisterEditModeFrames() end
+	if mainFrame then
+		resetRuntimeFrame(mainFrame)
+		-- Keep parent to preserve frame and anchors for reuse
+		mainFrame = nil
+	end
+	if healthBar then
+		resetRuntimeFrame(healthBar)
+		if healthBar.absorbBar then
+			local absorbBar = healthBar.absorbBar
+			absorbBar:SetMinMaxValues(0, 1)
+			absorbBar:SetValue(0)
+			absorbBar._lastVal = 0
+			absorbBar._lastMax = 1
+		end
+		if healthBar.absorbSecondaryBar then
+			local absorbSecondaryBar = healthBar.absorbSecondaryBar
+			absorbSecondaryBar:SetMinMaxValues(0, 1)
+			absorbSecondaryBar:SetValue(0)
+			absorbSecondaryBar._lastVal = 0
+			absorbSecondaryBar._lastMax = 1
+			absorbSecondaryBar:Hide()
+		end
+		if healthBar._rbHealthFillGeometryBar then
+			healthBar._rbHealthFillGeometryBar:SetMinMaxValues(0, 1)
+			healthBar._rbHealthFillGeometryBar:SetValue(0)
+		end
+		if healthBar.healAbsorbBar then
+			local healAbsorbBar = healthBar.healAbsorbBar
+			healAbsorbBar:SetMinMaxValues(0, 1)
+			healAbsorbBar:SetValue(0)
+			healAbsorbBar._lastVal = 0
+			healAbsorbBar._lastMax = 1
+			healAbsorbBar:Hide()
+		end
+		healthBar._lastMax = nil
+		healthBar._lastValue = nil
+		-- Keep parent to preserve frame and anchors for reuse
+		healthBar = nil
+	end
+	for pType, bar in pairs(powerbar) do
+		if bar then
+			resetRuntimeFrame(bar)
+			if pType == "RUNES" then deactivateRuneDurationBindings(bar) end
+		end
+		powerbar[pType] = nil
+	end
+	powerbar = {}
+	ResourceBars._sharedSlotFrames = {}
+	ResourceBars._sharedSlotResolvedTypes = {}
+	for _, pType in ipairs(classPowerTypes or {}) do
+		local frame = _G["EQOL" .. tostring(pType) .. "Bar"]
+		if frame then
+			resetRuntimeFrame(frame)
+			if pType == "RUNES" then deactivateRuneDurationBindings(frame) end
+		end
+	end
+	for _, slot in ipairs(ResourceBars.SHARED_SLOT_ORDER or {}) do
+		local frameName = ResourceBars.GetSharedSlotFrameName and ResourceBars.GetSharedSlotFrameName(slot)
+		local frame = frameName and _G[frameName]
+		if frame then resetRuntimeFrame(frame) end
+	end
+end
+
+-- Register/unregister DK rune event depending on class and user config
+function ResourceBars.UpdateRuneEventRegistration()
+	if not frameAnchor then return end
+	local isDK = addon.variables.unitClass == "DEATHKNIGHT"
+	local spec = ResourceBars.GetClassContext()
+	local enabled = isDK and ResourceBars.IsResolvedBarTypeEnabled and ResourceBars.IsResolvedBarTypeEnabled("RUNES", spec)
+	if enabled and not frameAnchor._runeEvtRegistered then
+		frameAnchor:RegisterEvent("RUNE_POWER_UPDATE")
+		frameAnchor._runeEvtRegistered = true
+	elseif (not enabled) and frameAnchor._runeEvtRegistered then
+		frameAnchor:UnregisterEvent("RUNE_POWER_UPDATE")
+		frameAnchor._runeEvtRegistered = false
+		if powerbar and powerbar.RUNES then deactivateRuneDurationBindings(powerbar.RUNES) end
+	end
+end
+
+-- Force a recolor of rune segments (used on spec change)
+function ResourceBars.ForceRuneRecolor()
+	local rb = powerbar and powerbar.RUNES
+	if not rb or not rb.runes then return end
+	deactivateRuneDurationBindings(rb)
+	for i = 1, 6 do
+		local sb = rb.runes[i]
+		if sb then
+			sb._isReady = nil
+		end
+	end
+end
+
+-- Clear all points for current bars to break transient inter-bar dependencies
+function ResourceBars.DetachAllBars()
+	if healthBar then healthBar:ClearAllPoints() end
+	for _, bar in pairs(powerbar) do
+		if bar then bar:ClearAllPoints() end
+	end
+end
+
+local function getFrameName(pType)
+	if pType == "HEALTH" then return "EQOLHealthBar" end
+	return "EQOL" .. pType .. "Bar"
+end
+
+function ResourceBars.GetStoredFrameNameForBarType(pType, specIndex)
+	local spec = tonumber(specIndex or ResourceBars.GetClassContext())
+	if ResourceBars.SpecUsesSharedMode and ResourceBars.SpecUsesSharedMode(spec) then
+		local slot = ResourceBars.GetSharedSlotForResolvedBar and ResourceBars.GetSharedSlotForResolvedBar(pType, spec)
+		local frameName = slot and ResourceBars.GetSharedSlotFrameName and ResourceBars.GetSharedSlotFrameName(slot)
+		if frameName then return frameName end
+	end
+	return getFrameName(pType)
+end
+
+function ResourceBars.GetAnchorConfigRoot(specIndex)
+	local spec = tonumber(specIndex or ResourceBars.GetClassContext())
+	if ResourceBars.SpecUsesSharedMode and ResourceBars.SpecUsesSharedMode(spec) then return ResourceBars.EnsureSharedStore() end
+	local class = addon.variables.unitClass
+	return addon.db.personalResourceBarSettings and addon.db.personalResourceBarSettings[class] and addon.db.personalResourceBarSettings[class][spec]
+end
+
+function ResourceBars.ResolveConfigTokenToBarType(token, specIndex)
+	if type(token) ~= "string" then return nil end
+	if ResourceBars.GetSharedSlotFrameName and ResourceBars.GetSharedSlotFrameName(token) then
+		return ResourceBars.GetResolvedBarTypeForSharedSlot and ResourceBars.GetResolvedBarTypeForSharedSlot(token, specIndex)
+	end
+	return token
+end
+
+local function frameNameToBarType(fname) return ResourceBars.ResolveBarTypeFromFrameToken(fname, addon.variables and ResourceBars.GetClassContext()) end
+
+function ResourceBars.DetachAnchorsFrom(disabledType, specIndex)
+	local spec = specIndex or ResourceBars.GetClassContext()
+	local configRoot = ResourceBars.GetAnchorConfigRoot(spec)
+	if not configRoot then return end
+	local targetName = ResourceBars.GetStoredFrameNameForBarType(disabledType, spec)
+	local targetActualName = getFrameName(disabledType)
+	local disabledAnchor = getAnchor(disabledType, spec)
+	local upstreamName = disabledAnchor and disabledAnchor.relativeFrame or "UIParent"
+
+	for token, cfg in pairs(configRoot) do
+		local pType = ResourceBars.ResolveConfigTokenToBarType(token, spec)
+		local dynamicSlot = ResourceBars.GetSharedSlotFrameName and ResourceBars.GetSharedSlotFrameName(token) and token or nil
+		local dynamicEnabled = dynamicSlot and ResourceBars.IsSharedSlotDynamicAnchorEnabled and ResourceBars.IsSharedSlotDynamicAnchorEnabled(dynamicSlot)
+		if not dynamicEnabled and pType and pType ~= disabledType and cfg.anchor and (cfg.anchor.relativeFrame == targetName or ResourceBars.RelativeFrameMatchesName(cfg.anchor.relativeFrame, targetActualName)) then
+			local depFrame = (pType == "HEALTH") and healthBar or powerbar[pType]
+			local upstream = _G[upstreamName]
+			if upstreamName ~= "UIParent" and upstream then
+				-- Reattach below the disabled bar's upstream anchor target for intuitive stacking
+				cfg.anchor.point = "TOPLEFT"
+				cfg.anchor.relativeFrame = upstreamName
+				cfg.anchor.relativePoint = "BOTTOMLEFT"
+				cfg.anchor.x = 0
+				cfg.anchor.y = 0
+			else
+				-- Fallback to centered on UIParent (TOPLEFT/TOPLEFT offsets to center)
+				local pw = UIParent and UIParent.GetWidth and UIParent:GetWidth() or 0
+				local ph = UIParent and UIParent.GetHeight and UIParent:GetHeight() or 0
+				-- Determine dependent frame size (fallback to defaults by bar type)
+				local cfgDep = getBarSettings(pType)
+				local defaultW = (pType == "HEALTH") and RB.DEFAULT_HEALTH_WIDTH or RB.DEFAULT_POWER_WIDTH
+				local defaultH = (pType == "HEALTH") and RB.DEFAULT_HEALTH_HEIGHT or RB.DEFAULT_POWER_HEIGHT
+				local w = (depFrame and depFrame.GetWidth and depFrame:GetWidth()) or (cfgDep and cfgDep.width) or defaultW or 0
+				local h = (depFrame and depFrame.GetHeight and depFrame:GetHeight()) or (cfgDep and cfgDep.height) or defaultH or 0
+				cfg.anchor.point = "TOPLEFT"
+				cfg.anchor.relativeFrame = "UIParent"
+				cfg.anchor.relativePoint = "TOPLEFT"
+				cfg.anchor.x = (pw - w) / 2
+				cfg.anchor.y = (h - ph) / 2
+			end
+		end
+	end
+end
+
+function ResourceBars.SetHealthBarSize(w, h)
+	local width = max(RB.MIN_RESOURCE_BAR_WIDTH, w or RB.DEFAULT_HEALTH_WIDTH)
+	local height = h or RB.DEFAULT_HEALTH_HEIGHT
+	if healthBar then
+		ResourceBars.Pixel.Size(healthBar, width, height)
+		ResourceBars.AlignHostToPixelGrid(healthBar)
+	end
+	if ResourceBars and ResourceBars.SyncRelativeFrameWidths then ResourceBars.SyncRelativeFrameWidths() end
+end
+
+function ResourceBars.SetPowerBarSize(w, h, pType)
+	local changed = {}
+	local spec = ResourceBars.GetClassContext()
+	-- Ensure sane defaults if nil provided
+	if pType then
+		local s = getBarSettings(pType)
+		local defaultW = RB.DEFAULT_POWER_WIDTH
+		local defaultH = RB.DEFAULT_POWER_HEIGHT
+		w = max(RB.MIN_RESOURCE_BAR_WIDTH, w or (s and s.width) or defaultW)
+		h = h or (s and s.height) or defaultH
+	end
+	if pType then
+		if powerbar[pType] then
+			ResourceBars.Pixel.Size(powerbar[pType], w, h)
+			ResourceBars.AlignHostToPixelGrid(powerbar[pType])
+			changed[getFrameName(pType)] = true
+			changed[ResourceBars.GetStoredFrameNameForBarType(pType, spec)] = true
+		end
+	else
+		local width = max(RB.MIN_RESOURCE_BAR_WIDTH, w or RB.DEFAULT_POWER_WIDTH)
+		local height = h or RB.DEFAULT_POWER_HEIGHT
+		for t, bar in pairs(powerbar) do
+			ResourceBars.Pixel.Size(bar, width, height)
+			ResourceBars.AlignHostToPixelGrid(bar)
+			changed[getFrameName(t)] = true
+			changed[ResourceBars.GetStoredFrameNameForBarType(t, spec)] = true
+		end
+	end
+
+	local specCfg = ResourceBars.GetAnchorConfigRoot(spec)
+
+	if specCfg then
+		for token, cfg in pairs(specCfg) do
+			local bType = ResourceBars.ResolveConfigTokenToBarType(token, spec)
+			if type(cfg) == "table" and bType then
+				local anchor = cfg.anchor
+				if anchor and changed[anchor.relativeFrame] then
+					local frame = bType == "HEALTH" and healthBar or powerbar[bType]
+					if frame then
+						local rel = ResourceBars.ResolveRelativeFrameByName(anchor.relativeFrame)
+						-- Ensure we don't accumulate multiple points to stale relatives
+						frame:ClearAllPoints()
+						ResourceBars.Pixel.Point(frame, anchor.point or "CENTER", rel, anchor.relativePoint or anchor.point or "CENTER", anchor.x or 0, anchor.y or 0)
+						ResourceBars.AlignHostToPixelGrid(frame)
+					end
+				end
+			end
+		end
+	end
+	if ResourceBars and ResourceBars.SyncRelativeFrameWidths then ResourceBars.SyncRelativeFrameWidths() end
+end
+
+-- Re-apply anchors for any bars that currently reference a given frame name
+function ResourceBars.ReanchorDependentsOf(frameName)
+	if ResourceBars._reanchoring then return end
+	local spec = ResourceBars.GetClassContext()
+	local specCfg = ResourceBars.GetAnchorConfigRoot(spec)
+	if not specCfg then return end
+
+	for token, cfg in pairs(specCfg) do
+		local bType = ResourceBars.ResolveConfigTokenToBarType(token, spec)
+		if type(cfg) == "table" and bType then
+			local anch = cfg.anchor
+			if anch and ResourceBars.RelativeFrameMatchesName(anch.relativeFrame, frameName) then
+				local frame = (bType == "HEALTH") and healthBar or powerbar[bType]
+				if frame then
+					local rel = ResourceBars.ResolveRelativeFrameByName(anch.relativeFrame)
+					frame:ClearAllPoints()
+					ResourceBars.Pixel.Point(frame, anch.point or "TOPLEFT", rel, anch.relativePoint or anch.point or "TOPLEFT", anch.x or 0, anch.y or 0)
+					ResourceBars.AlignHostToPixelGrid(frame)
+				end
+			end
+		end
+	end
+end
+
+function ResourceBars.SchedulePostLoginAnchorRefresh()
+	if ResourceBars._postLoginAnchorRefreshQueued or not RunNextFrame then return end
+	ResourceBars._postLoginAnchorRefreshQueued = true
+	RunNextFrame(function()
+		ResourceBars._postLoginAnchorRefreshQueued = nil
+		if addon.db and addon.db["enableResourceFrame"] and frameAnchor then
+			if ResourceBars.RegisterEditModeFrames then ResourceBars.RegisterEditModeFrames() end
+			if ResourceBars.Refresh then ResourceBars.Refresh() elseif ResourceBars.ReanchorAll then ResourceBars.ReanchorAll() end
+			if ResourceBars.SyncRelativeFrameWidths then ResourceBars.SyncRelativeFrameWidths() end
+		end
+	end)
+end
+
+function ResourceBars.Refresh()
+	if ResourceBars.InvalidateRuntimeConfigCaches then ResourceBars.InvalidateRuntimeConfigCaches() end
+	if ResourceBars.BeginRuntimeConfigBatch then ResourceBars.BeginRuntimeConfigBatch() end
+	if not isResourceFrameEnabled() then
+		if ResourceBars and ResourceBars.DisableResourceBars then ResourceBars.DisableResourceBars() end
+		if ResourceBars.EndRuntimeConfigBatch then ResourceBars.EndRuntimeConfigBatch() end
+		return
+	end
+
+	setPowerbars()
+	-- Re-apply anchors so option changes take effect immediately
+	if healthBar then
+		local dynamicApplied = ResourceBars.ApplySharedSlotDynamicAnchor and ResourceBars.ApplySharedSlotDynamicAnchor("HEALTH")
+		if not dynamicApplied then
+		local a = getAnchor("HEALTH", ResourceBars.GetClassContext())
+		if (a.relativeFrame or "UIParent") == "UIParent" then
+			a.point = a.point or "TOPLEFT"
+			a.relativePoint = a.relativePoint or "TOPLEFT"
+			if a.x == nil or a.y == nil then
+				local pw = UIParent and UIParent.GetWidth and UIParent:GetWidth() or 0
+				local ph = UIParent and UIParent.GetHeight and UIParent:GetHeight() or 0
+				local w = healthBar:GetWidth() or RB.DEFAULT_HEALTH_WIDTH
+				local h = healthBar:GetHeight() or RB.DEFAULT_HEALTH_HEIGHT
+				a.x = (pw - w) / 2
+				a.y = (h - ph) / 2
+			end
+		end
+		local rel, looped = resolveAnchor(a, "HEALTH")
+		if looped and (a.relativeFrame or "UIParent") ~= "UIParent" then
+			local pw = UIParent and UIParent.GetWidth and UIParent:GetWidth() or 0
+			local ph = UIParent and UIParent.GetHeight and UIParent:GetHeight() or 0
+			local w = healthBar:GetWidth() or RB.DEFAULT_HEALTH_WIDTH
+			local h = healthBar:GetHeight() or RB.DEFAULT_HEALTH_HEIGHT
+			a.point = "TOPLEFT"
+			a.relativeFrame = "UIParent"
+			a.relativePoint = "TOPLEFT"
+			a.x = (pw - w) / 2
+			a.y = (h - ph) / 2
+			rel = UIParent
+		end
+		-- Apply current texture selection to health bar
+		local hCfg2 = ResourceBars.GetFrameRuntimeConfig("HEALTH", healthBar) or {}
+		local hTex = resolveTexture(hCfg2)
+		healthBar:SetStatusBarTexture(hTex)
+		if ResourceBars.ApplyStatusBarTexturePixelSnapping then ResourceBars.ApplyStatusBarTexturePixelSnapping(healthBar, 0) end
+		configureSpecialTexture(healthBar, "HEALTH", hCfg2)
+		applyBarFrameLayers(healthBar, hCfg2)
+		if healthBar.absorbBar then ResourceBars.SyncAbsorbBarAppearance(healthBar, hCfg2, true) end
+		healthBar:ClearAllPoints()
+		ResourceBars.ApplyResolvedBarAnchor(healthBar, a, rel, "HEALTH")
+		ResourceBars.AlignHostToPixelGrid(healthBar)
+		end
+	end
+	for pType, bar in pairs(powerbar) do
+		if bar then
+			local cfg = ResourceBars.GetFrameRuntimeConfig(pType, bar)
+			local dynamicApplied = bar._rbSharedSlot and ResourceBars.ApplySharedSlotDynamicAnchor and ResourceBars.ApplySharedSlotDynamicAnchor(bar._rbSharedSlot)
+			if not dynamicApplied then
+			local a = getAnchor(pType, ResourceBars.GetClassContext())
+			if (a.relativeFrame or "UIParent") == "UIParent" then
+				a.point = a.point or "TOPLEFT"
+				a.relativePoint = a.relativePoint or "TOPLEFT"
+				if a.x == nil or a.y == nil then
+					local pw = UIParent and UIParent.GetWidth and UIParent:GetWidth() or 0
+					local ph = UIParent and UIParent.GetHeight and UIParent:GetHeight() or 0
+					local w = bar:GetWidth() or RB.DEFAULT_POWER_WIDTH
+					local h = bar:GetHeight() or RB.DEFAULT_POWER_HEIGHT
+					a.x = (pw - w) / 2
+					a.y = (h - ph) / 2
+				end
+			end
+			if
+				a.autoSpacing
+				or (a.autoSpacing == nil and isEQOLFrameName(a.relativeFrame) and (a.point or "TOPLEFT") == "TOPLEFT" and (a.relativePoint or "BOTTOMLEFT") == "BOTTOMLEFT" and (a.x or 0) == 0)
+			then
+				a.x = 0
+				a.y = RB.DEFAULT_STACK_SPACING
+				a.autoSpacing = true
+			end
+			local rel, looped = resolveAnchor(a, pType)
+			if looped and (a.relativeFrame or "UIParent") ~= "UIParent" then
+				local pw = UIParent and UIParent.GetWidth and UIParent:GetWidth() or 0
+				local ph = UIParent and UIParent.GetHeight and UIParent:GetHeight() or 0
+				local w = bar:GetWidth() or RB.DEFAULT_POWER_WIDTH
+				local h = bar:GetHeight() or RB.DEFAULT_POWER_HEIGHT
+				a.point = "TOPLEFT"
+				a.relativeFrame = "UIParent"
+				a.relativePoint = "TOPLEFT"
+				a.x = (pw - w) / 2
+				a.y = (h - ph) / 2
+				rel = UIParent
+			end
+			bar:ClearAllPoints()
+			ResourceBars.ApplyResolvedBarAnchor(bar, a, rel, pType)
+			ResourceBars.AlignHostToPixelGrid(bar)
+			-- Update movability based on anchor target (only movable when relative to UIParent)
+			local isUI = (a.relativeFrame or "UIParent") == "UIParent"
+			bar:SetMovable(isUI)
+			bar:EnableMouse(shouldEnableBarMouse(cfg))
+			end
+
+			local defaultStyle = (pType == "MANA" or pType == "STAGGER") and "PERCENT" or "CURMAX"
+			bar._style = (cfg and cfg.textStyle) or defaultStyle
+			applyBarFrameLayers(bar, cfg)
+
+			if pType == "RUNES" then
+				layoutRunes(bar)
+				updatePowerBar("RUNES")
+			elseif pType == "ESSENCE" then
+				local count = POWER_ENUM and UnitPowerMax("player", POWER_ENUM.ESSENCE) or 0
+				ResourceBars.LayoutEssences(bar, cfg or {}, count, resolveTexture(cfg or {}))
+				updatePowerBar("ESSENCE")
+			else
+				updatePowerBar(pType)
+			end
+			if ResourceBars.separatorEligible[pType] then updateBarSeparators(pType, cfg) end
+			updateBarThresholds(pType, cfg)
+		end
+	end
+	-- Apply styling updates without forcing a full rebuild
+	if healthBar then
+		local hCfg = ResourceBars.GetFrameRuntimeConfig("HEALTH", healthBar) or {}
+		healthBar:SetStatusBarTexture(resolveTexture(hCfg))
+		if ResourceBars.ApplyStatusBarTexturePixelSnapping then ResourceBars.ApplyStatusBarTexturePixelSnapping(healthBar, 0) end
+		configureSpecialTexture(healthBar, "HEALTH", hCfg)
+		applyBarFrameLayers(healthBar, hCfg)
+		applyBackdrop(healthBar, hCfg)
+		if healthBar.text then applyFontToString(healthBar.text, hCfg) end
+		applyTextPosition(healthBar, hCfg, 3, 0)
+		configureBarBehavior(healthBar, hCfg, "HEALTH")
+	end
+
+	for pType, bar in pairs(powerbar) do
+		if bar then
+			local cfg = ResourceBars.GetFrameRuntimeConfig(pType, bar) or {}
+			if pType == "RUNES" then
+				bar:SetStatusBarTexture(resolveTexture(cfg))
+				if ResourceBars.ApplyStatusBarTexturePixelSnapping then ResourceBars.ApplyStatusBarTexturePixelSnapping(bar, 0) end
+				local tex = bar:GetStatusBarTexture()
+				if tex then tex:SetAlpha(0) end
+			elseif pType == "ESSENCE" then
+				bar:SetStatusBarTexture(resolveTexture(cfg))
+				if ResourceBars.ApplyStatusBarTexturePixelSnapping then ResourceBars.ApplyStatusBarTexturePixelSnapping(bar, 0) end
+				local tex = bar:GetStatusBarTexture()
+				if tex then tex:SetAlpha(0) end
+			else
+				bar:SetStatusBarTexture(resolveTexture(cfg))
+				if ResourceBars.ApplyStatusBarTexturePixelSnapping then ResourceBars.ApplyStatusBarTexturePixelSnapping(bar, 0) end
+				configureSpecialTexture(bar, pType, cfg)
+			end
+			applyBarFrameLayers(bar, cfg)
+			applyBackdrop(bar, cfg)
+			configureBarBehavior(bar, cfg, pType)
+			if pType ~= "RUNES" then applyBarFillColor(bar, cfg, pType) end
+			if pType ~= "RUNES" and bar.text then
+				applyFontToString(bar.text, cfg)
+				applyTextPosition(bar, cfg, 3, 0)
+			end
+			if pType == "RUNES" then
+				layoutRunes(bar)
+			elseif pType == "ESSENCE" then
+				local count = POWER_ENUM and UnitPowerMax("player", POWER_ENUM.ESSENCE) or 0
+				ResourceBars.LayoutEssences(bar, cfg or {}, count, resolveTexture(cfg or {}))
+			end
+			if pType ~= "RUNES" then updatePowerBar(pType) end
+		end
+	end
+	if ResourceBars and ResourceBars.SyncRelativeFrameWidths then ResourceBars.SyncRelativeFrameWidths() end
+	updateHealthBar("FULL_REFRESH")
+	if addon and addon.Aura and addon.Aura.ResourceBars and addon.Aura.ResourceBars.UpdateRuneEventRegistration then addon.Aura.ResourceBars.UpdateRuneEventRegistration() end
+	-- Disable native Rune text bindings when the bar is not visible or enabled.
+	local runesEnabled = ResourceBars.IsResolvedBarTypeEnabled and ResourceBars.IsResolvedBarTypeEnabled("RUNES")
+	if powerbar and powerbar.RUNES and (not powerbar.RUNES:IsShown() or not runesEnabled) then deactivateRuneDurationBindings(powerbar.RUNES) end
+	-- Release the native ESSENCE duration when the bar is not visible or enabled.
+	local essenceEnabled = ResourceBars.IsResolvedBarTypeEnabled and ResourceBars.IsResolvedBarTypeEnabled("ESSENCE")
+	if powerbar and powerbar.ESSENCE and (not powerbar.ESSENCE:IsShown() or not essenceEnabled) then ResourceBars.DeactivateEssenceDuration(powerbar.ESSENCE) end
+	if ResourceBars.SpecUsesSharedMode and ResourceBars.SpecUsesSharedMode(ResourceBars.GetClassContext()) and ResourceBars.SyncSharedSlotProxyFrames then
+		ResourceBars.SyncSharedSlotProxyFrames(ResourceBars.GetClassContext())
+	end
+	if ResourceBars.EndRuntimeConfigBatch then ResourceBars.EndRuntimeConfigBatch() end
+end
+
+ResourceBars._pendingRefresh = ResourceBars._pendingRefresh or {}
+
+function ResourceBars.QueueRefresh(specIndex, opts)
+	local spec = specIndex or ResourceBars.GetClassContext()
+	if not spec then return end
+	local now = GetTime and GetTime() or 0
+	local mode = (opts and opts.reanchorOnly) and "reanchor" or "full"
+	local pending = ResourceBars._pendingRefresh
+	local entry = pending[spec]
+	if not entry then
+		entry = { mode = mode, nextRunAt = now + RB.REFRESH_DEBOUNCE }
+		pending[spec] = entry
+	else
+		if entry.mode ~= "full" and mode == "full" then entry.mode = "full" end
+		entry.nextRunAt = now + RB.REFRESH_DEBOUNCE
+	end
+	if not After then
+		pending[spec] = nil
+		if spec ~= ResourceBars.GetClassContext() then return end
+		if entry.mode == "full" then
+			ResourceBars.Refresh()
+		else
+			ResourceBars.ReanchorAll()
+		end
+		return
+	end
+	if entry.timerActive then return end
+	entry.timerActive = true
+
+	local function pump()
+		local current = pending[spec]
+		if not current then return end
+		local target = current.nextRunAt or 0
+		local nowTime = GetTime and GetTime() or target
+		if nowTime < target then
+			local delay = target - nowTime
+			if delay < 0.01 then delay = 0.01 end
+			After(delay, pump)
+			return
+		end
+		current.timerActive = nil
+		pending[spec] = nil
+		if spec ~= ResourceBars.GetClassContext() then return end
+		if current.mode == "full" then
+			ResourceBars.Refresh()
+		else
+			ResourceBars.ReanchorAll()
+		end
+	end
+
+	local initialDelay = entry.nextRunAt - now
+	if initialDelay < 0.01 then initialDelay = 0.01 end
+	After(initialDelay, pump)
+end
+
+-- Only refresh live bars when editing the active spec
+function ResourceBars.MaybeRefreshActive(specIndex)
+	if specIndex ~= ResourceBars.GetClassContext() then return end
+	if ResourceBars.QueueRefresh then
+		ResourceBars.QueueRefresh(specIndex)
+	else
+		ResourceBars.Refresh()
+	end
+end
+
+-- Re-anchor pass only: reapplies anchor points without rebuilding bars
+function ResourceBars.ReanchorAll()
+	if InCombatLockdown and InCombatLockdown() then
+		ResourceBars._pendingReanchorAll = true
+		return
+	end
+	if ResourceBars._reanchoring then return end
+	ResourceBars._pendingReanchorAll = nil
+	if ResourceBars.BeginRuntimeConfigBatch then ResourceBars.BeginRuntimeConfigBatch() end
+	ResourceBars._reanchoring = true
+	-- Health first
+	if healthBar and not (ResourceBars.IsSharedSlotDynamicAnchorEnabled and ResourceBars.IsSharedSlotDynamicAnchorEnabled("HEALTH")) then
+		local a = getAnchor("HEALTH", ResourceBars.GetClassContext())
+		if (a.relativeFrame or "UIParent") == "UIParent" then
+			a.point = a.point or "TOPLEFT"
+			a.relativePoint = a.relativePoint or "TOPLEFT"
+			if a.x == nil or a.y == nil then
+				local pw = UIParent and UIParent.GetWidth and UIParent:GetWidth() or 0
+				local ph = UIParent and UIParent.GetHeight and UIParent:GetHeight() or 0
+				local w = healthBar:GetWidth() or RB.DEFAULT_HEALTH_WIDTH
+				local h = healthBar:GetHeight() or RB.DEFAULT_HEALTH_HEIGHT
+				a.x = (pw - w) / 2
+				a.y = (h - ph) / 2
+			end
+		end
+		local rel, looped = resolveAnchor(a, "HEALTH")
+		if looped and (a.relativeFrame or "UIParent") ~= "UIParent" then
+			local pw = UIParent and UIParent.GetWidth and UIParent:GetWidth() or 0
+			local ph = UIParent and UIParent.GetHeight and UIParent:GetHeight() or 0
+			local w = healthBar:GetWidth() or RB.DEFAULT_HEALTH_WIDTH
+			local h = healthBar:GetHeight() or RB.DEFAULT_HEALTH_HEIGHT
+			a.point = "TOPLEFT"
+			a.relativeFrame = "UIParent"
+			a.relativePoint = "TOPLEFT"
+			a.x = (pw - w) / 2
+			a.y = (h - ph) / 2
+			rel = UIParent
+		end
+		healthBar:ClearAllPoints()
+		ResourceBars.ApplyResolvedBarAnchor(healthBar, a, rel, "HEALTH")
+		ResourceBars.AlignHostToPixelGrid(healthBar)
+	end
+
+	-- Then power bars: anchor in a safe order (parents first), break cycles if detected
+	local spec = ResourceBars.GetClassContext()
+	local types = {}
+	local includedTypes = {}
+	for pType, bar in pairs(powerbar) do
+		if bar then
+			local slotMatches = true
+			if ResourceBars.SpecUsesSharedMode(spec) and bar._rbSharedSlot then slotMatches = ResourceBars.GetSharedSlotForResolvedBar(pType, spec) == bar._rbSharedSlot end
+			if slotMatches and bar._rbSharedSlot and ResourceBars.IsSharedSlotDynamicAnchorEnabled then
+				slotMatches = not ResourceBars.IsSharedSlotDynamicAnchorEnabled(bar._rbSharedSlot)
+			end
+			if slotMatches then
+				tinsert(types, pType)
+				includedTypes[pType] = true
+			end
+		end
+	end
+
+	-- Build a graph of bar -> bar it anchors to (only EQOL bars)
+	local edges = {}
+	local anchors = {}
+	for _, pType in ipairs(types) do
+		local a = getAnchor(pType, spec)
+		anchors[pType] = a
+		local relType = frameNameToBarType(a and a.relativeFrame)
+		if relType and includedTypes[relType] and powerbar[relType] then
+			edges[pType] = relType
+		else
+			edges[pType] = nil
+		end
+	end
+
+	-- DFS for ordering; break cycles by forcing current node to UIParent
+	local order, visiting, visited = {}, {}, {}
+	local function ensureUIParentDefaults(a, bar)
+		a.point = a.point or "TOPLEFT"
+		a.relativeFrame = "UIParent"
+		a.relativePoint = a.relativePoint or "TOPLEFT"
+		if a.x == nil or a.y == nil then
+			local pw = UIParent and UIParent.GetWidth and UIParent:GetWidth() or 0
+			local ph = UIParent and UIParent.GetHeight and UIParent:GetHeight() or 0
+			local w = (bar and bar.GetWidth and bar:GetWidth()) or RB.DEFAULT_POWER_WIDTH
+			local h = (bar and bar.GetHeight and bar:GetHeight()) or RB.DEFAULT_POWER_HEIGHT
+			a.x = (pw - w) / 2
+			a.y = (h - ph) / 2
+		end
+	end
+
+	-- Pre-detach all bars to UIParent to avoid transient cycles during reanchor
+	for _, pType in ipairs(types) do
+		local bar = powerbar[pType]
+		local a = anchors[pType]
+		if bar and a then
+			if (a.relativeFrame or "UIParent") == "UIParent" then ensureUIParentDefaults(a, bar) end
+			bar:ClearAllPoints()
+			ResourceBars.Pixel.Point(bar, "TOPLEFT", UIParent, "TOPLEFT", a.x or 0, a.y or 0)
+		end
+	end
+
+	local function dfs(node)
+		if visited[node] then return end
+		if visiting[node] then
+			-- Cycle detected: break by reanchoring this node to UIParent
+			local a = anchors[node]
+			ensureUIParentDefaults(a, powerbar[node])
+			edges[node] = nil
+			visiting[node] = nil
+			visited[node] = true
+			tinsert(order, node)
+			return
+		end
+		visiting[node] = true
+		local to = edges[node]
+		if to then dfs(to) end
+		visiting[node] = nil
+		visited[node] = true
+		tinsert(order, node)
+	end
+
+	for _, pType in ipairs(types) do
+		dfs(pType)
+	end
+
+	-- Apply anchors in computed order
+	for _, pType in ipairs(order) do
+		local bar = powerbar[pType]
+		if bar then
+			local a = anchors[pType]
+			if (a.relativeFrame or "UIParent") == "UIParent" then ensureUIParentDefaults(a, bar) end
+			if
+				a.autoSpacing
+				or (a.autoSpacing == nil and isEQOLFrameName(a.relativeFrame) and (a.point or "TOPLEFT") == "TOPLEFT" and (a.relativePoint or "BOTTOMLEFT") == "BOTTOMLEFT" and (a.x or 0) == 0)
+			then
+				a.x = 0
+				a.y = RB.DEFAULT_STACK_SPACING
+				a.autoSpacing = true
+			end
+			local rel, looped = resolveAnchor(a, pType)
+			if looped and (a.relativeFrame or "UIParent") ~= "UIParent" then
+				ensureUIParentDefaults(a, bar)
+				rel = UIParent
+			end
+			bar:ClearAllPoints()
+			ResourceBars.ApplyResolvedBarAnchor(bar, a, rel, pType)
+			ResourceBars.AlignHostToPixelGrid(bar)
+			local isUI = (a.relativeFrame or "UIParent") == "UIParent"
+			bar:SetMovable(isUI)
+			local cfg = getBarSettings(pType)
+			bar:EnableMouse(shouldEnableBarMouse(cfg))
+		end
+	end
+
+	updateHealthBar("FULL_REFRESH")
+	if ResourceBars and ResourceBars.SyncRelativeFrameWidths then ResourceBars.SyncRelativeFrameWidths() end
+	if ResourceBars.SpecUsesSharedMode and ResourceBars.SpecUsesSharedMode(ResourceBars.GetClassContext()) and ResourceBars.SyncSharedSlotProxyFrames then
+		ResourceBars.SyncSharedSlotProxyFrames(ResourceBars.GetClassContext())
+	end
+	ResourceBars._reanchoring = false
+	if ResourceBars.EndRuntimeConfigBatch then ResourceBars.EndRuntimeConfigBatch() end
+end
+
+ResourceBars.DEFAULT_HEALTH_WIDTH = RB.DEFAULT_HEALTH_WIDTH
+ResourceBars.DEFAULT_HEALTH_HEIGHT = RB.DEFAULT_HEALTH_HEIGHT
+ResourceBars.DEFAULT_POWER_WIDTH = RB.DEFAULT_POWER_WIDTH
+ResourceBars.DEFAULT_POWER_HEIGHT = RB.DEFAULT_POWER_HEIGHT or RB.DEFAULT_HEALTH_HEIGHT
+ResourceBars.STRATA_ORDER = RB.STRATA_ORDER
+ResourceBars.MAX_FRAME_LEVEL_OFFSET = RB.MAX_FRAME_LEVEL_OFFSET
+ResourceBars.MIN_RESOURCE_BAR_WIDTH = RB.MIN_RESOURCE_BAR_WIDTH
+ResourceBars.MAELSTROM_WEAPON_SEGMENTS = RB.MAELSTROM_WEAPON_SEGMENTS
+ResourceBars.MAELSTROM_WEAPON_MAX_STACKS = RB.MAELSTROM_WEAPON_MAX_STACKS
+ResourceBars.MAELSTROM_WEAPON_MID_STACK_DEFAULT = RB.MAELSTROM_WEAPON_MID_STACK_DEFAULT
+ResourceBars.ROGUE_CHARGED_COMBO_DEFAULTS = RB.ROGUE_CHARGED_COMBO_DEFAULTS
+ResourceBars.THRESHOLD_THICKNESS = RB.THRESHOLD_THICKNESS
+ResourceBars.THRESHOLD_DEFAULT = RB.THRESHOLD_DEFAULT
+ResourceBars.DEFAULT_THRESHOLDS = RB.DEFAULT_THRESHOLDS
+ResourceBars.DEFAULT_THRESHOLD_COUNT = RB.DEFAULT_THRESHOLD_COUNT
+ResourceBars.ABSOLUTE_THRESHOLD_COLOR_MAX_POINTS = RB.ABSOLUTE_THRESHOLD_COLOR_MAX_POINTS
+ResourceBars.ABSOLUTE_THRESHOLD_COLOR_DEFAULT_COUNT = RB.ABSOLUTE_THRESHOLD_COLOR_DEFAULT_COUNT
+ResourceBars.ABSOLUTE_THRESHOLD_COLOR_VALUE_CAP = RB.ABSOLUTE_THRESHOLD_COLOR_VALUE_CAP
+ResourceBars.ABSOLUTE_THRESHOLD_COLOR_VALUE_CAP_DURATION = RB.ABSOLUTE_THRESHOLD_COLOR_VALUE_CAP_DURATION
+ResourceBars.ABSOLUTE_THRESHOLD_COLOR_VALUE_CAP_VOID_METAMORPHOSIS = RB.ABSOLUTE_THRESHOLD_COLOR_VALUE_CAP_VOID_METAMORPHOSIS
+ResourceBars.ABSOLUTE_THRESHOLD_COLOR_VALUE_CAP_CONTINUOUS = RB.ABSOLUTE_THRESHOLD_COLOR_VALUE_CAP_CONTINUOUS
+ResourceBars.ABSOLUTE_THRESHOLD_COLOR_VALUE_CAP_PERCENT = RB.ABSOLUTE_THRESHOLD_COLOR_VALUE_CAP_PERCENT
+ResourceBars.ABSOLUTE_THRESHOLD_COLOR_DEFAULTS = RB.ABSOLUTE_THRESHOLD_COLOR_DEFAULTS
+ResourceBars.ABSOLUTE_THRESHOLD_COLOR_DEFAULTS_VOID_METAMORPHOSIS = RB.ABSOLUTE_THRESHOLD_COLOR_DEFAULTS_VOID_METAMORPHOSIS
+ResourceBars.ABSOLUTE_THRESHOLD_COLOR_DEFAULTS_CONTINUOUS = RB.ABSOLUTE_THRESHOLD_COLOR_DEFAULTS_CONTINUOUS
+ResourceBars.ABSOLUTE_THRESHOLD_COLOR_DEFAULTS_PERCENT = RB.ABSOLUTE_THRESHOLD_COLOR_DEFAULTS_PERCENT
+ResourceBars.ABSOLUTE_THRESHOLD_COLOR_DEFAULTS_DURATION = RB.ABSOLUTE_THRESHOLD_COLOR_DEFAULTS_DURATION
+ResourceBars.STAGGER_LOW_THRESHOLD = RB.STAGGER_LOW_THRESHOLD
+ResourceBars.STAGGER_MEDIUM_THRESHOLD = RB.STAGGER_MEDIUM_THRESHOLD
+ResourceBars.STAGGER_THRESHOLD_MAX = RB.STAGGER_THRESHOLD_MAX
+ResourceBars.STAGGER_EXTRA_THRESHOLD_HIGH = RB.STAGGER_EXTRA_THRESHOLD_HIGH
+ResourceBars.STAGGER_EXTRA_THRESHOLD_VERY_HIGH = RB.STAGGER_EXTRA_THRESHOLD_VERY_HIGH
+ResourceBars.STAGGER_EXTRA_THRESHOLD_EXTREME = RB.STAGGER_EXTRA_THRESHOLD_EXTREME
+ResourceBars.STAGGER_EXTRA_THRESHOLD_CRITICAL = RB.STAGGER_EXTRA_THRESHOLD_CRITICAL
+ResourceBars.STAGGER_EXTRA_COLORS = RB.STAGGER_EXTRA_COLORS
+ResourceBars.STAGGER_FALLBACK_COLORS = RB.STAGGER_FALLBACK_COLORS
+ResourceBars.getBarSettings = getBarSettings
+ResourceBars.getAnchor = getAnchor
+ResourceBars.BehaviorOptionsForType = behaviorOptionsForType
+ResourceBars.BehaviorSelectionFromConfig = behaviorSelectionFromConfig
+ResourceBars.ApplyBehaviorSelection = applyBehaviorSelection
+ResourceBars.ExportErrorMessage = exportErrorMessage
+ResourceBars.ImportErrorMessage = importErrorMessage
+ResourceBars.SaveGlobalProfile = saveGlobalProfile
+ResourceBars.ApplyGlobalProfile = applyGlobalProfile
+
+function ResourceBars:RegisterDynamicAnchorTargets()
+	local dynamicAnchors = addon.DynamicAnchors
+	if not (dynamicAnchors and dynamicAnchors.RegisterTarget) then return end
+	local function usesSharedMode()
+		return ResourceBars.SpecUsesSharedMode and ResourceBars.SpecUsesSharedMode(addon.variables and ResourceBars.GetClassContext()) == true
+	end
+	local slotLabels = {
+		HEALTH = L["ResourceBarsHealth"] or HEALTH or "Health",
+		MAIN = L["ResourceBarsMain"] or "Main",
+		SECONDARY = L["ResourceBarsSecondary"] or "Secondary",
+		TERTIARY = L["ResourceBarsTertiary"] or "Tertiary",
+	}
+	for _, slot in ipairs({ "HEALTH", "MAIN", "SECONDARY", "TERTIARY" }) do
+		local targetSlot = slot
+		local targetId = ResourceBars.GetSharedSlotDynamicAnchorId(targetSlot)
+		dynamicAnchors:RegisterTarget({
+			id = targetId,
+			owner = "EnhanceQoLResourceBars",
+			consumerId = targetId,
+			label = slotLabels[targetSlot],
+			menuGroup = "RESOURCE_BARS",
+			menuGroupLabel = L["Resource Bars"],
+			menuGroupOrder = 200,
+			selectable = usesSharedMode,
+			resolve = function()
+				if not usesSharedMode() then return nil, { available = false, reason = "NOT_SHARED_MODE" } end
+				local resolvedType = targetSlot == "HEALTH" and "HEALTH" or (ResourceBars.GetResolvedBarTypeForSharedSlot and ResourceBars.GetResolvedBarTypeForSharedSlot(targetSlot))
+				if not resolvedType then return nil, { available = false, reason = "SLOT_UNASSIGNED" } end
+				local frame = ResourceBars.GetSharedSlotLiveFrame and ResourceBars.GetSharedSlotLiveFrame(targetSlot)
+				if not frame then return nil, { available = false, reason = "FRAME_NOT_CREATED" } end
+				if dynamicAnchors.EnsureSimpleTargetHooks then dynamicAnchors:EnsureSimpleTargetHooks(targetId, frame) end
+				if frame._rbDesiredVisible ~= true then return nil, { available = false, reason = "DESIRED_HIDDEN" } end
+				return frame, { available = true, sharedSlot = targetSlot, powerType = resolvedType }
+			end,
+		})
+		dynamicAnchors:RegisterConsumer({
+			id = targetId,
+			owner = "EnhanceQoLResourceBars",
+			label = slotLabels[targetSlot],
+			ensureRule = function() return dynamicAnchors:GetFrameAssignment(targetId, true) end,
+			getRule = function()
+				local assignment = dynamicAnchors:GetFrameAssignment(targetId, false)
+				if assignment then dynamicAnchors:EnsureAssignmentProfile(assignment, slotLabels[targetSlot]) end
+				return assignment
+			end,
+			apply = function()
+				if dynamicAnchors:IsFrameAssignmentEnabled(targetId) then ResourceBars.ApplySharedSlotDynamicAnchor(targetSlot) end
+			end,
+		})
+	end
+	for _, pType in ipairs(classPowerTypes or {}) do
+		local targetType = pType
+		dynamicAnchors:RegisterTarget({
+			id = "resourceBar:" .. string.lower(targetType),
+			owner = "EnhanceQoLResourceBars",
+			menuGroup = "RESOURCE_BARS",
+			menuGroupLabel = L["Resource Bars"],
+			menuGroupOrder = 200,
+			selectable = function() return not usesSharedMode() end,
+			getLabel = function()
+				return (ResourceBars.PowerLabels and ResourceBars.PowerLabels[targetType]) or _G["POWER_TYPE_" .. targetType] or _G[targetType] or targetType
+			end,
+			resolve = function()
+				if not (addon.functions and addon.functions.IsAddOnLoaded and addon.functions.IsAddOnLoaded("EnhanceQoLResourceBars")) and not (C_AddOns and C_AddOns.IsAddOnLoaded and C_AddOns.IsAddOnLoaded("EnhanceQoLResourceBars")) then
+					return nil, { available = false, reason = "OWNER_NOT_LOADED" }
+				end
+				if addon.db and addon.db.enableResourceFrame == false then return nil, { available = false, reason = "CONFIG_DISABLED" } end
+				if not ResourceBars.IsRuntimeBarTypeSupported(targetType, addon.variables and ResourceBars.GetClassContext()) then return nil, { available = false, reason = "SPEC_INELIGIBLE" } end
+				if isAuraPowerType(targetType) and not ResourceBars.IsAuraPowerBarTypeAvailable(targetType) then return nil, { available = false, reason = "POWER_UNAVAILABLE" } end
+				local frame = ResourceBars.GetPowerBar(targetType)
+				if not frame then return nil, { available = false, reason = "FRAME_NOT_CREATED" } end
+				if frame._rbDesiredVisible ~= true then return nil, { available = false, reason = "DESIRED_HIDDEN" } end
+				return frame, {
+					available = true,
+					desiredVisible = true,
+					shown = frame.IsShown and frame:IsShown() or false,
+					powerType = targetType,
+				}
+			end,
+		})
+	end
+end
+
+
+addon.exportResourceProfile = function(profileName, scopeKey) return ResourceBars.ExportProfile(scopeKey, profileName) end
+addon.importResourceProfile = function(encoded, scopeKey) return ResourceBars.ImportProfile(encoded, scopeKey) end
+
+function ResourceBars.LoadEnabledResourceBars()
+	if not addon.db["enableResourceFrame"] then return end
+	LoadResourceBars()
+	addon.Aura.ResourceBars.EnableResourceBars()
+	if ResourceBars.SchedulePostLoginAnchorRefresh then ResourceBars.SchedulePostLoginAnchorRefresh() end
+end
+
+function addon.Aura.functions.InitResourceBars()
+	ResourceBars:RegisterDynamicAnchorTargets()
+	if not addon.db["enableResourceFrame"] then return end
+	if IsLoggedIn and IsLoggedIn() then
+		ResourceBars.LoadEnabledResourceBars()
+		return
+	end
+
+	local frameLogin = CreateFrame("Frame")
+	frameLogin:RegisterEvent("PLAYER_LOGIN")
+	frameLogin:SetScript("OnEvent", function(self, event)
+		if event ~= "PLAYER_LOGIN" then return end
+		ResourceBars.LoadEnabledResourceBars()
+		frameLogin:UnregisterAllEvents()
+		frameLogin:SetScript("OnEvent", nil)
+		frameLogin = nil
+	end)
+end

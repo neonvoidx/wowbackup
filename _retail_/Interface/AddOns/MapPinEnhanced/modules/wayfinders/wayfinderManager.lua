@@ -1,0 +1,536 @@
+---@class MapPinEnhanced
+local MapPinEnhanced = select(2, ...)
+
+---@class Wayfinders
+---@field wayfinders table<string, MapPinEnhancedWayfinder> a table of registered wayfinders, with values injected in each wayfinder file
+---@field activeWayfinder MapPinEnhancedWayfinder? the selected wayfinder presentation
+---@field setupAfterCombat fun()?
+---@field displaysSetup boolean?
+---@field TARGET_TYPE_PIN WayfinderTargetType
+---@field TARGET_TYPE_BLIZZARD WayfinderTargetType
+local Wayfinders = MapPinEnhanced:GetModule("Wayfinders")
+local Options = MapPinEnhanced:GetModule("Options")
+
+---@class MapPinEnhancedWayfinder
+---@field Setup fun(self: MapPinEnhancedWayfinder) creates protected controls outside combat
+---@field GetActionDebugText fun(self: MapPinEnhancedWayfinder): string
+---@field Init fun(self: MapPinEnhancedWayfinder, targetData: WayfinderData | nil) sets the wayfinder pin for the wayfinder
+---@field Enable fun(self: MapPinEnhancedWayfinder) enables the wayfinder
+---@field Disable fun(self: MapPinEnhancedWayfinder) disables the wayfinder
+---@field SetDestinationText fun(self: MapPinEnhancedWayfinder, title: string, description: string?)
+---@field SetTitle fun(self: MapPinEnhancedWayfinder, title: string) sets the wayfinder title, if the wayfinder supports it
+---@field SetColor fun(self: MapPinEnhancedWayfinder, color: string) sets the wayfinder color, if the wayfinder supports it
+---@field SetTexture fun(self: MapPinEnhancedWayfinder, texture: string|number, usesAtlas: boolean, useFrameMask: boolean?) sets the wayfinder texture, if the wayfinder supports it
+---@field SetLock fun(self: MapPinEnhancedWayfinder, lock: boolean) sets the wayfinder lock, if the wayfinder supports it
+---@field SetStep fun(self: MapPinEnhancedWayfinder, step: WayfinderStepData?)
+
+---@alias WayfinderTargetType "pin" | "blizzard"
+Wayfinders.TARGET_TYPE_PIN = "pin"
+Wayfinders.TARGET_TYPE_BLIZZARD = "blizzard"
+
+---@enum WayfinderType
+local AVAILABLE_WAYFINDERS = {
+    WAYFINDER_FLOATING = "WAYFINDER_FLOATING",
+    WAYFINDER_ARROW = "WAYFINDER_ARROW",
+}
+
+local WAYFINDER_SELECTION_OPTION = "Wayfinder.Selection"
+local HIDE_BLIZZARD_OPTION = "Wayfinder.HideBlizzardFloatingDiamond"
+local WAYFINDER_TYPES_BY_SELECTION = {
+    [Options.WAYFINDER_SELECTION_ARROW] = AVAILABLE_WAYFINDERS.WAYFINDER_ARROW,
+    [Options.WAYFINDER_SELECTION_FLOATING] = AVAILABLE_WAYFINDERS.WAYFINDER_FLOATING,
+}
+---@class WayfinderData
+---@field mapID number UIMapID of the zone
+---@field x number x coordinate between 0 and 1
+---@field y number y coordinate between 0 and 1
+---@field title string? title of the target
+---@field description string? original destination plain text
+---@field texture string|number? an optional texture to use for the target; this overrides the color
+---@field usesAtlas boolean? if true, the texture is an atlas, otherwise it is a file path
+---@field useFrameMask boolean? use GenericFrameMask for raw item/toy step artwork
+---@field color string? the target color; ignored when texture is set
+---@field lock boolean? if true, the target will not be removed automatically when reached
+---@field targetType WayfinderTargetType? the target source kind; missing or unknown values use the addon pin kind
+---@field mapDistanceOnly boolean? if true, distance sampling ignores Blizzard's separately super-tracked destination
+
+---@alias WayfinderTargetArrival fun()
+
+---@class ActiveWayfinderTarget
+---@field data WayfinderData
+---@field onArrival WayfinderTargetArrival?
+---@field arrivalIdentity string?
+
+---@type ActiveWayfinderTarget?
+local activeTarget
+
+---@class WayfinderDesiredAction
+---@field type "spell"|"item"|"toy"
+---@field id number
+
+---@class WayfinderProgressEntry
+---@field icon string|number? intermediate step catalog key or item/toy texture
+---@field destination WayfinderData? final destination appearance
+---@field r number
+---@field g number
+---@field b number
+---@field title string
+---@field instruction string
+---@field location string
+
+---@class WayfinderStepData
+---@field changeNumber integer
+---@field arrivalIdentity string
+---@field arrivalMapID number? required player map for arrival confirmation
+---@field showDirection boolean
+---@field showInstruction boolean? false hides navigation instructions when routing is disabled
+---@field canSkipNavigation boolean?
+---@field navigationSkipped boolean?
+---@field phase string
+---@field isFinalDestination boolean?
+---@field isTraversal boolean?
+---@field nativeTraversalTarget WayfinderData? Native tracking owned by an explicit entrance step
+---@field insideObjectiveArea boolean?
+---@field showDirectionInObjectiveArea boolean?
+---@field stepIndex integer?
+---@field stepCount integer?
+---@field progressEntries WayfinderProgressEntry[]?
+---@field instruction string
+---@field destinationTitle string? original destination title
+---@field destinationMapID number? original destination map
+---@field status string?
+---@field travelDataWarning string?
+---@field desiredAction WayfinderDesiredAction?
+
+---@type WayfinderStepData?
+local activeStep
+local skipDialog ---@type MapPinEnhancedStaticDialogFrame?
+---@type WayfinderSelection?
+local selectedWayfinder
+local ownsTraversalTracking = false
+
+---@param wayfinderType WayfinderType
+---@return MapPinEnhancedWayfinder
+local function GetWayfinder(wayfinderType)
+    local wayfinder = Wayfinders.wayfinders and Wayfinders.wayfinders[wayfinderType]
+    assert(wayfinder, "Wayfinders: wayfinder type is not registered: " .. tostring(wayfinderType))
+    assert(wayfinder.Enable and wayfinder.Disable and wayfinder.Init and
+        wayfinder.SetStep and wayfinder.Setup,
+        "Wayfinders: registered wayfinder does not implement the required interface")
+    return wayfinder
+end
+
+---@param action WayfinderDesiredAction?
+---@return WayfinderDesiredAction?
+local function CopyDesiredAction(action)
+    if not action then return nil end
+    return { type = action.type, id = action.id }
+end
+
+---@param step WayfinderStepData
+---@param previous WayfinderStepData?
+---@return WayfinderStepData
+local function CopyStep(step, previous)
+    local entries = step.progressEntries
+    if entries then
+        -- Progress rows depend on their contents, not a new status/command version.
+        -- These are owned display copies; Navigation never receives them back.
+        entries = previous and previous.progressEntries and tCompare(previous.progressEntries, entries, 3) and
+            previous.progressEntries or CopyTable(entries)
+    end
+    return {
+        changeNumber = step.changeNumber,
+        arrivalIdentity = step.arrivalIdentity,
+        arrivalMapID = step.arrivalMapID,
+        showDirection = step.showDirection,
+        showInstruction = step.showInstruction,
+        canSkipNavigation = step.canSkipNavigation,
+        navigationSkipped = step.navigationSkipped,
+        phase = step.phase,
+        isFinalDestination = step.isFinalDestination,
+        isTraversal = step.isTraversal,
+        nativeTraversalTarget = step.nativeTraversalTarget and CopyTable(step.nativeTraversalTarget) or nil,
+        insideObjectiveArea = step.insideObjectiveArea,
+        showDirectionInObjectiveArea = step.showDirectionInObjectiveArea,
+        stepIndex = step.stepIndex,
+        stepCount = step.stepCount,
+        progressEntries = entries,
+        instruction = step.instruction,
+        destinationTitle = step.destinationTitle,
+        destinationMapID = step.destinationMapID,
+        status = step.status,
+        travelDataWarning = step.travelDataWarning,
+        desiredAction = CopyDesiredAction(step.desiredAction),
+    }
+end
+
+local function ApplyActiveStep()
+    -- Both displays select an explicit entrance while its step is active.
+    -- Reapply after display replacement; stepTracking owns restoration/feedback.
+    local target = activeStep and activeStep.nativeTraversalTarget
+    if target then
+        ownsTraversalTracking = true
+        Wayfinders:SetStepSuperTracking(target)
+    elseif ownsTraversalTracking then
+        ownsTraversalTracking = false
+        Wayfinders:ClearStepSuperTracking()
+    end
+    if Wayfinders.activeWayfinder then
+        Wayfinders.activeWayfinder:SetStep(activeStep)
+    end
+    Wayfinders:RefreshSuperTrackingMinimapPin()
+end
+
+---@param texture string|number
+---@param usesAtlas boolean
+function Wayfinders:UpdateDestinationIcon(texture, usesAtlas)
+    if not activeStep then return end
+    local entries = activeStep.progressEntries
+    local finalEntry = entries and entries[#entries]
+    if finalEntry and finalEntry.destination then
+        -- A new presentation copy also invalidates the progress strip's pooled rows.
+        entries = CopyTable(entries) ---@type WayfinderProgressEntry[]
+        activeStep.progressEntries = entries
+        local destination = entries[#entries].destination
+        if destination then destination.texture, destination.usesAtlas = texture, usesAtlas end
+    end
+    if activeTarget and activeStep.isFinalDestination then
+        local data = activeTarget.data
+        data.texture, data.usesAtlas = texture, usesAtlas
+        if self.activeWayfinder then
+            self.activeWayfinder:SetTexture(texture, usesAtlas)
+        end
+    end
+    ApplyActiveStep()
+end
+
+---@param inside boolean
+---@param showDirection boolean
+function Wayfinders:UpdateDestinationAreaState(inside, showDirection)
+    if not activeStep or not activeStep.isFinalDestination then return end
+    if (activeStep.insideObjectiveArea == true) == inside and
+        (activeStep.showDirectionInObjectiveArea == true) == showDirection then
+        return
+    end
+    activeStep.insideObjectiveArea = inside
+    activeStep.showDirectionInObjectiveArea = showDirection
+    ApplyActiveStep()
+end
+
+-- Combat can change the action blocker without changing the requested Step.
+MapPinEnhanced:RegisterEvent("PLAYER_REGEN_DISABLED", ApplyActiveStep)
+MapPinEnhanced:RegisterEvent("PLAYER_REGEN_ENABLED", ApplyActiveStep)
+Options:SubscribeToOptionChanges("Wayfinder.ShowObjectiveFrame", ApplyActiveStep)
+
+---@return WayfinderStepData?
+function Wayfinders:GetStepSnapshot()
+    return activeStep and CopyStep(activeStep) or nil
+end
+
+---@return boolean
+function Wayfinders:IsInsideObjectiveArea()
+    return activeStep ~= nil and activeStep.insideObjectiveArea == true
+end
+
+---@return boolean
+function Wayfinders:IsIntermediateStep()
+    return activeStep ~= nil and (activeStep.isTraversal == true or
+        activeStep.stepIndex ~= nil and activeStep.stepCount ~= nil and activeStep.stepIndex < activeStep.stepCount)
+end
+
+---@return string
+function Wayfinders:GetActionDebugText()
+    return self.activeWayfinder and self.activeWayfinder:GetActionDebugText() or "Wayfinder not selected"
+end
+
+---@param button MapPinEnhancedIconButtonTemplate
+---@param step WayfinderStepData?
+function Wayfinders:UpdateSkipNavigationButton(button, step)
+    button:SetShown(step ~= nil and step.canSkipNavigation == true)
+    button:SetIconTexture(step and step.navigationSkipped and "arrowcircle" or "forward")
+    button:SetTooltip(MapPinEnhanced.L[step and step.navigationSkipped and "Resume navigation" or
+    "Skip navigation tooltip"])
+end
+
+---@param changeNumber integer
+function Wayfinders:ToggleNavigationSkipped(changeNumber)
+    if not activeStep or activeStep.changeNumber ~= changeNumber or not activeStep.canSkipNavigation then return end
+    if skipDialog then skipDialog:Hide() end
+    local Navigation = MapPinEnhanced:GetModule("Navigation")
+    local owner, destinationID, destinationChangeNumber = Navigation:GetActiveDestinationState()
+    if not owner or not destinationID then return end
+    if activeStep.navigationSkipped then
+        Navigation:ResumeDestinationNavigation(owner, destinationID, destinationChangeNumber)
+        return
+    end
+    -- Route publications can change while the dialog is open. Bind acceptance
+    -- to the destination lifetime, never to whatever happens to be tracked later.
+    local function Skip()
+        if Navigation.routeNavigationEnabled then
+            Navigation:UseDirectDestination(owner, destinationID, destinationChangeNumber)
+        end
+    end
+    if IsShiftKeyDown() then
+        Skip()
+        return
+    end
+    local L = MapPinEnhanced.L
+    skipDialog = MapPinEnhanced:ShowConfirmDialog(L["Skip navigation confirmation"],
+        string.format(L["Skip navigation destination"], activeStep.destinationTitle or L["Map Pin"]),
+        Skip, nil, function() skipDialog = nil end, L["Skip navigation"])
+end
+
+MapPinEnhanced:RegisterCallback("NAVIGATION_DESTINATION_CHANGED", function()
+    if skipDialog then skipDialog:Hide() end
+end)
+
+---@return AnyMenuEntry[]
+function Wayfinders:BuildNavigationMenuEntries()
+    local step = self:GetStepSnapshot()
+    if not step then return {} end
+    local Navigation = MapPinEnhanced:GetModule("Navigation")
+    local entries = {
+        { type = "title", label = MapPinEnhanced.L["Navigation"] },
+        {
+            type = "button",
+            label = MapPinEnhanced:Iconize("arrowcircle", MapPinEnhanced.L[
+            step.navigationSkipped and "Resume navigation" or "Recalculate Route"]),
+            onClick = function()
+                if step.navigationSkipped then
+                    self:ToggleNavigationSkipped(step.changeNumber)
+                else
+                    Navigation:Recalculate(step.changeNumber)
+                end
+            end
+        },
+        {
+            type = "button",
+            label = MapPinEnhanced:Iconize("report", MapPinEnhanced.L["Report"]),
+            onClick = function() Navigation:ShowDebugDump() end,
+        },
+    }
+    if Navigation:GetRouteChatSteps(step.changeNumber) then
+        entries[#entries + 1] = {
+            type = "button",
+            label = MapPinEnhanced:Iconize("share", MapPinEnhanced.L["Share to Chat"]),
+            onClick = function()
+                self:ShareRouteToChat(step.changeNumber)
+            end,
+        }
+    end
+    return entries
+end
+
+---@param targetData WayfinderData
+---@return WayfinderData
+local function CopyWayfinderData(targetData)
+    return {
+        mapID = targetData.mapID,
+        x = targetData.x,
+        y = targetData.y,
+        title = targetData.title,
+        description = targetData.description,
+        texture = targetData.texture,
+        usesAtlas = targetData.usesAtlas,
+        useFrameMask = targetData.useFrameMask,
+        color = targetData.color,
+        lock = targetData.lock,
+        targetType = Wayfinders:GetTargetTypeOrDefault(targetData.targetType),
+        mapDistanceOnly = targetData.mapDistanceOnly,
+    }
+end
+
+---@param targetData WayfinderData?
+---@param onArrival WayfinderTargetArrival?
+---@param arrivalIdentity string?
+---@return boolean refreshDisplay
+local function ApplyActiveTarget(targetData, onArrival, arrivalIdentity)
+    local previous = activeTarget
+    local data = targetData and CopyWayfinderData(targetData) or nil
+    local old = previous and previous.data
+    local sameArrival = previous ~= nil and previous.arrivalIdentity == arrivalIdentity
+    local sameGeometry = old ~= nil and data ~= nil and old.mapID == data.mapID and
+        old.x == data.x and old.y == data.y and old.lock == data.lock and
+        old.mapDistanceOnly == data.mapDistanceOnly
+    -- A status update must not rearm a consumed arrival or reset its samples.
+    if sameArrival and previous then onArrival = previous.onArrival end
+    activeTarget = data and { data = data, onArrival = onArrival, arrivalIdentity = arrivalIdentity } or nil
+    local refreshTarget = not sameGeometry or not sameArrival
+    local refreshDisplay = refreshTarget or
+        old and data and (old.title ~= data.title or old.description ~= data.description or
+            old.texture ~= data.texture or old.usesAtlas ~= data.usesAtlas or old.color ~= data.color or
+            old.targetType ~= data.targetType or old.useFrameMask ~= data.useFrameMask)
+    if refreshTarget then Wayfinders:ResetArrivalDetection() end
+    if refreshDisplay and Wayfinders.activeWayfinder then Wayfinders.activeWayfinder:Init(data) end
+    if refreshTarget then
+        if data and data.mapID and data.x and data.y then
+            MapPinEnhanced:EnableContinuousDistanceCheck(data.mapID, data.x, data.y, not data.mapDistanceOnly)
+        else
+            MapPinEnhanced:DisableContinuousDistanceCheck()
+        end
+    end
+    return refreshDisplay == true
+end
+
+---@param targetData WayfinderData
+---@param onArrival WayfinderTargetArrival?
+---@param presentation WayfinderStepData
+function Wayfinders:ApplyPresentation(targetData, onArrival, presentation)
+    assert(type(targetData) == "table", "Wayfinders:ApplyPresentation: targetData must be a table")
+    assert(onArrival == nil or type(onArrival) == "function",
+        "Wayfinders:ApplyPresentation: onArrival must be a function or nil")
+    assert(type(presentation) == "table", "Wayfinders:ApplyPresentation: presentation must be a table")
+    if skipDialog and (presentation.navigationSkipped or not presentation.canSkipNavigation) then skipDialog:Hide() end
+    -- Retained display references need the latest command version even when
+    -- their content is unchanged. Compare through progress-entry destination
+    -- data (four table levels), including action removal and traversal changes.
+    if activeStep then activeStep.changeNumber = presentation.changeNumber end
+    local sameStep = activeStep ~= nil and tCompare(activeStep, presentation, 4)
+    if not sameStep then activeStep = CopyStep(presentation, activeStep) end
+    local refreshDisplay = ApplyActiveTarget(targetData, onArrival, presentation.arrivalIdentity)
+    if not sameStep or refreshDisplay then ApplyActiveStep() end
+end
+
+---@param targetType string?
+---@return WayfinderTargetType
+function Wayfinders:GetTargetTypeOrDefault(targetType)
+    if targetType == self.TARGET_TYPE_BLIZZARD then
+        return self.TARGET_TYPE_BLIZZARD
+    end
+    return self.TARGET_TYPE_PIN
+end
+
+function Wayfinders:ClearPresentation()
+    if skipDialog then skipDialog:Hide() end
+    activeStep = nil
+    ApplyActiveTarget(nil)
+    ApplyActiveStep()
+end
+
+---@return boolean
+function Wayfinders:CanDetectActiveTargetArrival()
+    return activeTarget ~= nil and activeTarget.onArrival ~= nil and
+        (not activeTarget.data.lock or activeTarget.data.targetType == self.TARGET_TYPE_PIN)
+end
+
+---@param sampledDistance number
+---@return number?
+function Wayfinders:GetActiveTargetArrivalDistance(sampledDistance)
+    local data = activeTarget and activeTarget.data
+    if not data then return nil end
+    local x, y, mapID = MapPinEnhanced:GetPlayerMapPosition()
+    if not mapID or not x or not y then return nil end
+    if activeStep and activeStep.arrivalMapID and mapID ~= activeStep.arrivalMapID then return nil end
+    local mapDistance = MapPinEnhanced.HBD:GetZoneDistance(mapID, x, y, data.mapID, data.x, data.y)
+    if type(mapDistance) ~= "number" or mapDistance ~= mapDistance or mapDistance < 0 then return nil end
+    -- Native navigation can still describe another waypoint during a transition.
+    -- Arrival requires proximity to the owned target, not just that native guide.
+    return math.max(sampledDistance, mapDistance)
+end
+
+function Wayfinders:CompleteActiveTargetArrival()
+    if not self:CanDetectActiveTargetArrival() then return end
+
+    local target = activeTarget
+    if not target then return end
+    local onArrival = target.onArrival
+    target.onArrival = nil
+    self:ResetArrivalDetection()
+    if onArrival then onArrival() end
+end
+
+---@param wayfinder MapPinEnhancedWayfinder
+local function RefreshWayfinder(wayfinder)
+    if activeTarget then
+        wayfinder:Init(activeTarget.data)
+    else
+        wayfinder:Init(nil)
+    end
+end
+
+local function RefreshBlizzardVisibility()
+    if not selectedWayfinder then return end
+    local floatingSelected = selectedWayfinder == Options.WAYFINDER_SELECTION_FLOATING
+    local waypointUILoaded = C_AddOns.IsAddOnLoaded("WaypointUI")
+    Options:SetOptionEnabled(HIDE_BLIZZARD_OPTION, not floatingSelected and not waypointUILoaded)
+    -- Floating owns native visibility while presenting a target. Scenarios have
+    -- no addon presentation and must keep Blizzard's diamond even in Arrow mode.
+    if floatingSelected then return end
+    local floating = GetWayfinder(AVAILABLE_WAYFINDERS.WAYFINDER_FLOATING)
+    ---@cast floating MapPinEnhancedWayfinderFloating
+    -- WaypointUI needs the native frame too; retain the preference without shutting it down.
+    if not waypointUILoaded and Options:GetOptionValue(HIDE_BLIZZARD_OPTION) and
+        C_SuperTrack.GetHighestPrioritySuperTrackingType() ~= Enum.SuperTrackingType.Scenario then
+        floating:HideBlizzardForSession()
+    else
+        floating:RestoreBlizzardForFloating()
+    end
+end
+
+---@param selection WayfinderSelection
+function Wayfinders:SelectWayfinder(selection)
+    local wayfinderType = WAYFINDER_TYPES_BY_SELECTION[selection]
+    assert(wayfinderType, "Wayfinders:SelectWayfinder: invalid selection " .. tostring(selection))
+    selectedWayfinder = selection
+    if not self.displaysSetup then
+        if InCombatLockdown() then
+            -- Initial setup needs protected controls. Retain the latest selection
+            -- and copied presentation until the controls can be created safely.
+            if not self.setupAfterCombat then
+                self.setupAfterCombat = MapPinEnhanced:RegisterEventBucket({ "PLAYER_REGEN_ENABLED" }, function()
+                    if selectedWayfinder then self:SelectWayfinder(selectedWayfinder) end
+                end)
+            end
+            return
+        end
+        if self.setupAfterCombat then
+            self.setupAfterCombat()
+            self.setupAfterCombat = nil
+        end
+        -- Each type owns its protected frames; prepare both before combat switching.
+        for _, registeredType in pairs(AVAILABLE_WAYFINDERS) do
+            GetWayfinder(registeredType):Setup()
+        end
+        self.displaysSetup = true
+    end
+    local wayfinder = GetWayfinder(wayfinderType)
+    if self.activeWayfinder ~= wayfinder then
+        if self.activeWayfinder then self.activeWayfinder:Disable() end
+        wayfinder:Enable()
+        self.activeWayfinder = wayfinder
+        RefreshWayfinder(wayfinder)
+    end
+    ApplyActiveStep()
+
+    RefreshBlizzardVisibility()
+end
+
+MapPinEnhanced:RegisterEvent("SUPER_TRACKING_CHANGED", RefreshBlizzardVisibility)
+MapPinEnhanced:RegisterEvent("ADDON_LOADED", function(addonName)
+    if addonName == "WaypointUI" then RefreshBlizzardVisibility() end
+end)
+Options:SubscribeToOptionChanges(HIDE_BLIZZARD_OPTION, RefreshBlizzardVisibility)
+
+Options:SubscribeToOptionChanges(WAYFINDER_SELECTION_OPTION, function(selection)
+    Wayfinders:SelectWayfinder(selection)
+end)
+
+---@param title string
+---@param description string?
+function Wayfinders:UpdateDestinationText(title, description)
+    if not activeTarget then return end
+    activeTarget.data.title = title
+    activeTarget.data.description = description
+    if activeStep then activeStep.destinationTitle = title end
+    if self.activeWayfinder then self.activeWayfinder:SetDestinationText(title, description) end
+end
+
+local function RefreshTextLayout()
+    if not activeTarget or not Wayfinders.activeWayfinder then return end
+    Wayfinders.activeWayfinder:SetDestinationText(activeTarget.data.title or "", activeTarget.data.description)
+end
+
+MapPinEnhanced:RegisterEvent("UI_SCALE_CHANGED", RefreshTextLayout)
+MapPinEnhanced:RegisterEvent("DISPLAY_SIZE_CHANGED", RefreshTextLayout)
+Options:SubscribeToOptionChanges("Tracker.Scale", RefreshTextLayout)
+Options:SubscribeToOptionChanges("Wayfinder.FloatingScale", RefreshTextLayout)

@@ -1,0 +1,46 @@
+
+Prat3DB = {
+["namespaces"] = {
+["Prat_Frames"] = {
+["profiles"] = {
+["Default"] = {
+["minchatwidthdefault"] = 250,
+["maxchatheightdefault"] = 800,
+["initialized"] = true,
+},
+},
+},
+["Prat_Font"] = {
+["profiles"] = {
+["Default"] = {
+["size"] = {
+["ChatFrame5"] = 18,
+["ChatFrame4"] = 18,
+["ChatFrame1"] = 18,
+},
+},
+},
+},
+},
+["profileKeys"] = {
+["Beat Ngu"] = "Default",
+["Neon Void"] = "Default",
+},
+["profiles"] = {
+["Default"] = {
+["modules"] = {
+["EventNames"] = 3,
+["ChatLog"] = 2,
+["Mentions"] = 2,
+["PopupMessage"] = 2,
+["AltNames"] = 2,
+["Sounds"] = 2,
+["Paragraph"] = 2,
+["KeyBindings"] = 2,
+["LinkInfoIcons"] = 2,
+["Alias"] = 2,
+["OriginalButtons"] = 2,
+},
+},
+},
+}

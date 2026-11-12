@@ -1,0 +1,70 @@
+
+ManaRiseDB = {
+["fillAlpha"] = 0.16,
+["soundSpells"] = {
+},
+["resource"] = "all",
+["bubbles"] = false,
+["pulse"] = false,
+["sound"] = "off",
+["enabled"] = true,
+["fxColors"] = {
+},
+["debug"] = false,
+["rangeUsable"] = true,
+["preset"] = "classic",
+["style"] = "liquid",
+["cats"] = {
+},
+["overlay"] = true,
+["rangeAlpha"] = 0.4,
+["perClass"] = false,
+["minimap"] = {
+["locked"] = true,
+["angle"] = 168.9227752365419,
+["hide"] = true,
+},
+["lastVersion"] = "1.12.29",
+["soundCustom"] = "",
+["soundOnly"] = false,
+["rangeColor"] = "D91A1A",
+["characters"] = {
+},
+["smooth"] = true,
+["waves"] = "normal",
+["resSettings"] = {
+},
+["readyAnim"] = "flash",
+["darkAlpha"] = 0.55,
+["classes"] = {
+},
+["profileMode"] = "account",
+["colors"] = {
+["rage"] = {
+["r"] = 0.8784313725490196,
+["g"] = 0.1490196078431373,
+["b"] = 0.1176470588235294,
+},
+["mana"] = {
+["r"] = 0.1450980392156863,
+["g"] = 0.5372549019607843,
+["b"] = 0.9098039215686274,
+},
+["energy"] = {
+["r"] = 1,
+["g"] = 0.8470588235294118,
+["b"] = 0.1019607843137255,
+},
+["focus"] = {
+["r"] = 1,
+["g"] = 0.5019607843137255,
+["b"] = 0.2509803921568627,
+},
+},
+["range"] = false,
+["glow"] = true,
+["resStyles"] = {
+},
+["waveHeight"] = "low",
+["rangeStyle"] = "tint",
+}

@@ -1,0 +1,369 @@
+---@class MapPinEnhanced
+local MapPinEnhanced = select(2, ...)
+
+---@class Groups
+local Groups = MapPinEnhanced:GetModule("Groups")
+
+---@class GroupInfo
+---@field groupID UUID? stable group identifier
+---@field name string the name of the group; registration accepts at most 32 characters after trimming
+---@field source string the addon which owns the group
+---@field icon string|number? the icon displayed for the group
+---@field order number? higher group orders render earlier
+---@field hidden boolean? true when the group has no active map pins
+---@field restorable boolean? retain cleared pins for explicit restoration; defaults to false
+---@field groupType "ungrouped"|"way-back"|"tomtom"? protected system group type
+---@field trackingMode GroupTrackingMode? controls how the next tracked pin is selected
+
+---@class MapPinEnhancedGroupMixin
+---@field classification "group"
+---@field groupID UUID
+---@field pinState MapPinEnhancedGroupPinStateMixin
+---@field name string
+---@field source string
+---@field icon string|number?
+---@field order number
+---@field hidden boolean
+---@field restorable boolean
+---@field groupType "ungrouped"|"way-back"|"tomtom"|nil
+---@field protected boolean
+---@field trackingMode GroupTrackingMode
+---@field predictionChangeNumber number? session-only mutations relevant to next-pin prediction
+---@field trackingCursorOrder number? runtime-only order cursor used for ordered tracking
+---@field cancelBatch fun()?
+---@field pinsUpdating boolean?
+---@field batchLocked boolean?
+---@field restoreData SaveableGroupData?
+---@field lifetimeChangeNumber number
+---@field isDeleting boolean
+MapPinEnhancedGroupMixin = CreateFromMixins(
+    { classification = "group" },
+    MapPinEnhancedGroupTrackingMixin,
+    MapPinEnhancedGroupPinAddingMixin,
+    MapPinEnhancedGroupPinOperationsMixin,
+    MapPinEnhancedGroupVisibilityMixin,
+    MapPinEnhancedGroupPinRestorationMixin,
+    MapPinEnhancedGroupPinEditingMixin
+)
+
+function MapPinEnhancedGroupMixin:Init()
+    self.lifetimeChangeNumber = 0
+    self.groupID = nil
+    self.pinState = CreateAndInitFromMixin(MapPinEnhancedGroupPinStateMixin, self)
+    self.order = GetTime()
+    self.hidden = false
+    self.restorable = false
+    self.trackingMode = Groups.TRACKING_MODE_NEAREST
+    self.trackingCursorOrder = nil
+    self.protected = false
+    self.isDeleting = false
+end
+
+---@param force boolean? owner teardown may discard locked work
+---@return boolean accepted
+function MapPinEnhancedGroupMixin:CancelBatch(force)
+    if not force and (self.isDeleting or self.batchLocked or self.restoreData) then return false end
+    local cancelBatch = self.cancelBatch
+    self.cancelBatch = nil
+    if cancelBatch then cancelBatch() end
+    return not self.isDeleting or force == true
+end
+
+function MapPinEnhancedGroupMixin:BeginPinChanges()
+    Groups:CancelNextPinPrediction(self)
+    Groups:CancelGroupPersist(self:GetGroupID())
+    self.pinsUpdating = true
+    local batchLocked, cancelBatch = self.batchLocked, self.cancelBatch
+    self.batchLocked = true
+    -- Consumers detach rows before pooled pins can be released or reused.
+    MapPinEnhanced:FireCallback("GROUP_UPDATED", nil, self)
+    if self.cancelBatch == cancelBatch then self.batchLocked = batchLocked end
+end
+
+---@param groupID UUID
+---@param lifetimeChangeNumber number
+---@return boolean
+function MapPinEnhancedGroupMixin:IsSameGroup(groupID, lifetimeChangeNumber)
+    return not self.isDeleting and self.groupID == groupID and
+        self.lifetimeChangeNumber == lifetimeChangeNumber and Groups:GetGroupByID(groupID) == self
+end
+
+function MapPinEnhancedGroupMixin:Reset()
+    Groups:CancelNextPinPrediction(self)
+    self.lifetimeChangeNumber = self.lifetimeChangeNumber + 1
+    self:CancelBatch(true)
+    self.pinsUpdating, self.batchLocked, self.restoreData = nil, nil, nil
+    Groups:CancelGroupPersist(self:GetGroupID())
+    self.pinState:Reset()
+    self.groupID = nil
+    self.name = nil
+    self.source = nil
+    self.icon = nil
+    self.order = 0
+    self.hidden = false
+    self.restorable = false
+    self.groupType = nil
+    self.trackingMode = nil
+    self.trackingCursorOrder = nil
+    self.protected = false
+    self.isDeleting = false
+end
+
+---@param groupInfo GroupInfo
+function MapPinEnhancedGroupMixin:ApplyGroupInfo(groupInfo)
+    Groups:CancelNextPinPrediction(self)
+    self.groupID = groupInfo.groupID or self.groupID or MapPinEnhanced:GenerateUUID("group")
+    self.name = Groups:CleanGroupName(groupInfo.name)
+    self.source = groupInfo.source
+    self.icon = groupInfo.icon or "Interface\\Icons\\INV_Misc_QuestionMark"
+    self.order = groupInfo.order or self.order or GetTime()
+    self.groupType = Groups:GetSystemGroupType(self.groupID)
+    -- TomTom keeps its original generated group ID when becoming a system group.
+    if not self.groupType and groupInfo.source == MapPinEnhanced.name and groupInfo.groupType == "tomtom" then
+        self.groupType = "tomtom"
+    end
+    self.protected = self.groupType ~= nil
+    self.hidden = not self.protected and groupInfo.hidden and true or false
+    self.restorable = not self.protected and groupInfo.restorable == true
+    if self.protected then
+        self.trackingMode = Groups.TRACKING_MODE_NEAREST
+    else
+        self.trackingMode = Groups:GetTrackingModeOrDefault(groupInfo.trackingMode or self.trackingMode)
+    end
+end
+
+---@param name string
+---@return boolean
+function MapPinEnhancedGroupMixin:SetName(name)
+    if not self:CancelBatch() then return false end
+    assert(name, "MapPinEnhancedGroupMixin:SetName: name is nil")
+    assert(type(name) == "string", "MapPinEnhancedGroupMixin:SetName: name must be a string")
+    if self.groupType == "ungrouped" then
+        return Groups:CreateGroupFromUngrouped(name) ~= nil
+    end
+    if self.protected then return false end
+
+    local cleanName = Groups:CleanGroupName(name)
+    local existingGroup = Groups:GetGroupByName(cleanName)
+    if existingGroup and existingGroup ~= self then return false end
+
+    self.name = cleanName
+    self:TouchOrder()
+    Groups:PersistGroup(self)
+    MapPinEnhanced:FireCallback("GROUP_UPDATED", nil, self)
+    return true
+end
+
+function MapPinEnhancedGroupMixin:GetName()
+    return self.name
+end
+
+function MapPinEnhancedGroupMixin:GetGroupID()
+    return self.groupID
+end
+
+---@param source string
+---@return boolean accepted
+function MapPinEnhancedGroupMixin:SetSource(source)
+    if not self:CancelBatch() then return false end
+    assert(source, "MapPinEnhancedGroupMixin:SetSource: source is nil")
+    assert(type(source) == "string", "MapPinEnhancedGroupMixin:SetSource: source must be a string")
+    assert(C_AddOns.IsAddOnLoaded(source), "MapPinEnhancedGroupMixin:SetSource: source is not a loaded addon")
+    self.source = source
+    Groups:PersistGroup(self)
+    return true
+end
+
+function MapPinEnhancedGroupMixin:GetSource()
+    return self.source
+end
+
+---@param icon string|number
+---@return boolean accepted
+function MapPinEnhancedGroupMixin:SetIcon(icon)
+    if not self:CancelBatch() then return false end
+    assert(icon, "MapPinEnhancedGroupMixin:SetIcon: icon is nil")
+    assert(type(icon) == "string" or type(icon) == "number",
+        "MapPinEnhancedGroupMixin:SetIcon: icon must be a string or number")
+    self.icon = icon
+    self:TouchOrder()
+    Groups:PersistGroup(self)
+    return true
+end
+
+function MapPinEnhancedGroupMixin:GetIcon()
+    return self.icon
+end
+
+function MapPinEnhancedGroupMixin:IsHidden()
+    return self.hidden
+end
+
+function MapPinEnhancedGroupMixin:IsProtected()
+    return self.protected
+end
+
+---@return boolean
+function MapPinEnhancedGroupMixin:IsRestorable()
+    return not self.protected and self.restorable
+end
+
+---@return fun(table: table<UUID, MapPinEnhancedPinMixin>, index?: UUID): UUID, MapPinEnhancedPinMixin
+---@return table<UUID, MapPinEnhancedPinMixin>
+---@return nil
+function MapPinEnhancedGroupMixin:EnumeratePins()
+    return self.pinState:EnumeratePins()
+end
+
+---@return MapPinEnhancedGroupPinEntry[]
+function MapPinEnhancedGroupMixin:GetPinEntries()
+    return self.pinState:GetEntries()
+end
+
+---@return MapPinEnhancedGroupPinDisplayEntry[]
+function MapPinEnhancedGroupMixin:GetPinDisplayEntries()
+    return self.pinState:GetDisplayEntries()
+end
+
+---@param pinID UUID
+---@return MapPinEnhancedPinMixin?
+function MapPinEnhancedGroupMixin:GetPinByID(pinID)
+    assert(type(pinID) == "string", "MapPinEnhancedGroupMixin:GetPinByID: pinID must be a string")
+    return self.pinState:GetPin(pinID)
+end
+
+---@param pinID UUID
+---@return ArchivedPinData?
+function MapPinEnhancedGroupMixin:GetArchivedPinByID(pinID)
+    assert(type(pinID) == "string", "MapPinEnhancedGroupMixin:GetArchivedPinByID: pinID must be a string")
+    return self.pinState:GetArchivedCopy(pinID)
+end
+
+---@return number
+function MapPinEnhancedGroupMixin:GetPinCount()
+    return self.pinState.count
+end
+
+---@param state "cleared"|"hidden"?
+---@return number
+function MapPinEnhancedGroupMixin:GetArchiveCount(state)
+    return self.pinState:GetArchiveCount(state)
+end
+
+---@return number
+function MapPinEnhancedGroupMixin:GetClearedPinCount()
+    return self:GetArchiveCount("cleared")
+end
+
+---@return number
+function MapPinEnhancedGroupMixin:GetTotalPinCount()
+    return self:GetPinCount() + self:GetArchiveCount()
+end
+
+---@return number active
+---@return number cleared
+---@return number total
+function MapPinEnhancedGroupMixin:GetPinCounts()
+    return self.pinState:GetCounts()
+end
+
+---@param pinID UUID
+---@return number
+function MapPinEnhancedGroupMixin:GetPinOrder(pinID)
+    assert(type(pinID) == "string", "MapPinEnhancedGroupMixin:GetPinOrder: pinID must be a string")
+    return assert(self.pinState:GetOrder(pinID),
+        "MapPinEnhancedGroupMixin:GetPinOrder: pin is not retained by this group")
+end
+
+---@param pinID UUID
+---@param order number
+---@return boolean
+function MapPinEnhancedGroupMixin:SetPinOrder(pinID, order)
+    if not self:CancelBatch() then return false end
+    assert(type(pinID) == "string", "MapPinEnhancedGroupMixin:SetPinOrder: pinID must be a string")
+    assert(type(order) == "number", "MapPinEnhancedGroupMixin:SetPinOrder: order must be a number")
+    if not self.pinState:SetOrder(pinID, order) then return false end
+    self:PersistPinChanges()
+    return true
+end
+
+---@param order number
+---@return boolean accepted
+function MapPinEnhancedGroupMixin:SetOrder(order)
+    if not self:CancelBatch() then return false end
+    assert(type(order) == "number", "MapPinEnhancedGroupMixin:SetOrder: order must be a number")
+    self.order = order
+    Groups:PersistGroup(self)
+    return true
+end
+
+function MapPinEnhancedGroupMixin:TouchOrder()
+    if self.protected then return end
+    self.order = GetTime()
+end
+
+---Check a mutation boundary unless local assertions or the bulk worker already checked it.
+---@param updateGroupOrder boolean?
+---@param skipCheck boolean? local assertions or a completed bulk check already validated the change
+function MapPinEnhancedGroupMixin:PersistPinChanges(updateGroupOrder, skipCheck)
+    if not skipCheck then self.pinState:CheckPinState() end
+    if updateGroupOrder then self:TouchOrder() end
+    Groups:PersistGroup(self)
+end
+
+---@return number
+function MapPinEnhancedGroupMixin:GetOrder()
+    return self.order
+end
+
+---@class SaveableGroupData : GroupInfo
+---@field groupID UUID
+---@field hidden boolean
+---@field pins SaveablePinData[] active pin data that belongs to this group
+---@field pinOrder table<UUID, number> active pin order values keyed by pinID
+---@field pinArchive table<UUID, ArchivedPinData>
+---@field trackingMode GroupTrackingMode?
+
+---@return SaveableGroupData
+---@param checkpoint fun()?
+function MapPinEnhancedGroupMixin:GetSaveableData(checkpoint)
+    ---@type SaveablePinData[]
+    local pins
+    ---@type table<UUID, number>
+    local pinOrder
+    ---@type table<UUID, ArchivedPinData>
+    local pinArchive
+    if self.restoreData then
+        pins, pinOrder, pinArchive = {}, {}, {}
+        for _, pin in ipairs(self.restoreData.pins or {}) do
+            pins[#pins + 1] = CopyTable(pin)
+            if checkpoint then checkpoint() end
+        end
+        for pinID, order in pairs(self.restoreData.pinOrder or {}) do
+            pinOrder[pinID] = order
+            if checkpoint then checkpoint() end
+        end
+        for pinID, pin in pairs(self.restoreData.pinArchive or {}) do
+            pinArchive[pinID] = CopyTable(pin)
+            if checkpoint then checkpoint() end
+        end
+    else
+        pins, pinOrder, pinArchive = self.pinState:Serialize(checkpoint)
+    end
+    local data = {
+        groupID = self.groupID,
+        name = self.name,
+        source = self.source,
+        icon = self.icon,
+        order = self.order,
+        hidden = self.hidden,
+        restorable = self:IsRestorable(),
+        groupType = self.groupType,
+        pins = pins,
+        pinOrder = pinOrder,
+        pinArchive = pinArchive,
+    }
+    ---@cast data SaveableGroupData
+    if not self:IsProtected() then data.trackingMode = self:GetTrackingMode() end
+    return data
+end

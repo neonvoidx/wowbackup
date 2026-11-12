@@ -1,0 +1,18 @@
+## Interface: 16001
+## X-EQOL-Flavor: forever
+## Title: Enhance QoL Items
+## Author: R41Z0R
+## Version: 13.20.1
+## Dependencies: EnhanceQoL
+## IconTexture: Interface\AddOns\EnhanceQoL\Icons\Icon.tga
+## X-Compatible-With: forever
+## LoadOnDemand: 1
+## Globe-Main: EnhanceQoL
+
+Init.lua
+Registry.lua
+Enums.lua
+Facts.lua
+Tooltip.lua
+Query.lua
+Completion.lua

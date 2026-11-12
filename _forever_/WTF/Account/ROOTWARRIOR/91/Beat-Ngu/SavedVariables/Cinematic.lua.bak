@@ -1,0 +1,33 @@
+
+CinematicCharDB = {
+["cardSeen"] = {
+["zones"] = {
+["Durotar"] = true,
+["Stranglethorn Vale"] = true,
+["Orgrimmar"] = true,
+},
+["places"] = {
+["Durotar|Durotar"] = true,
+["Stranglethorn Vale|The Vile Reef"] = true,
+["Durotar|Skull Rock"] = true,
+["Durotar|Bladefist Bay"] = true,
+["Durotar|Jaggedswine Farm"] = true,
+["Orgrimmar|Orgrimmar"] = true,
+},
+["instances"] = {
+},
+},
+["questItemObjectives"] = {
+},
+["session"] = {
+["zones"] = {
+["Durotar"] = 109.7390000000014,
+["Stranglethorn Vale"] = 7.949000000000524,
+["Orgrimmar"] = 153.5009999999966,
+},
+["moneyStart"] = 179600,
+["begun"] = 1794281262,
+["lastZone"] = "Stranglethorn Vale",
+["saved"] = 1794281542,
+},
+}

@@ -1,0 +1,432 @@
+---@class MapPinEnhanced
+local MapPinEnhanced = select(2, ...)
+
+---@class Wayfinders
+local Wayfinders = MapPinEnhanced:GetModule("Wayfinders")
+local Providers = MapPinEnhanced:GetModule("Providers")
+local Navigation = MapPinEnhanced:GetModule("Navigation")
+local L = MapPinEnhanced.L
+
+---@alias SuperTrackingRestore fun(): boolean
+
+---@class SuperTrackingProvider
+---@field source string
+---@field superTrackingType Enum.SuperTrackingType
+---@field getTargetID fun(): string
+---@field read fun(previous: WayfinderData?): WayfinderData?, boolean?, boolean?
+---@field readText? fun(targetID: string, data: WayfinderData): string?, string?, boolean?
+---@field events WowEvent[]?
+
+---@class SuperTrackingFallbackProvider
+---@field source string
+---@field getTargetID fun(): string
+---@field read fun(previous: WayfinderData?): WayfinderData?, boolean?, boolean?
+---@field readText? fun(targetID: string, data: WayfinderData): string?, string?, boolean?
+---@field events WowEvent[]?
+
+local TARGET_RETRY_DELAYS = { 0.1, 0.25, 0.5, 1, 2 }
+
+---@type table<Enum.SuperTrackingType, SuperTrackingProvider>
+local providersByType = {}
+---@type table<string, SuperTrackingProvider|SuperTrackingFallbackProvider>
+local providersBySource = {}
+---@type SuperTrackingFallbackProvider?
+local fallbackProvider
+---@type table<WowEvent, table<string, boolean>>
+local sourceEventProviders = {}
+
+---@param source string
+function Wayfinders:RefreshOwnedDestinationText(source)
+    local provider = providersBySource[source]
+    local owner, targetID, changeNumber = Navigation:GetActiveDestinationState()
+    if owner ~= source or not targetID or not provider or not provider.readText then return end
+    local data = Navigation:GetDestinationData(owner, targetID, changeNumber)
+    if not data then return end
+    if source == "quest" then self:RefreshQuestState() end
+    local title, description, available = provider.readText(targetID, data)
+    if not available then return end
+    title = Providers:PlainDescription(title) or data.title or L["Target"]
+    description = Providers:PlainDescription(description, title)
+    Navigation:UpdateDestinationText(owner, targetID, changeNumber, title, description)
+    self:UpdateSuperTrackingEntryText(owner, targetID, title, description)
+end
+
+---@class WaitingSuperTrackingTarget
+---@field targetID string
+---@field changeNumber integer
+---@field attempts number
+---@field timer FunctionContainer?
+
+---@type table<string, WaitingSuperTrackingTarget>
+local waitingTargets = {}
+
+---@return SuperTrackingProvider|SuperTrackingFallbackProvider|nil
+local function GetActiveProvider()
+    local superTrackingType = C_SuperTrack.GetHighestPrioritySuperTrackingType()
+    -- Scenario guidance belongs entirely to Blizzard, including coordinate-bearing targets.
+    if superTrackingType == nil or superTrackingType == Enum.SuperTrackingType.UserWaypoint or
+        superTrackingType == Enum.SuperTrackingType.Scenario then
+        return nil
+    end
+    return providersByType[superTrackingType] or fallbackProvider
+end
+
+---@param mapID number
+---@param x number
+---@param y number
+---@return boolean
+function Wayfinders:IsSuperTrackingDestination(mapID, x, y)
+    local provider = GetActiveProvider()
+    if not provider or not C_SuperTrack.IsSuperTrackingAnything() then return false end
+    local owner, targetID, changeNumber = Navigation:GetActiveDestinationState()
+    if owner ~= provider.source or targetID ~= provider.getTargetID() then return false end
+    local data = Navigation:GetDestinationData(owner, targetID, changeNumber)
+    if not data then return false end
+    if data.mapID == mapID and data.x == x and data.y == y then return true end
+    local distance = MapPinEnhanced.HBD:GetZoneDistance(data.mapID, data.x, data.y, mapID, x, y)
+    return type(distance) == "number" and distance <= 5
+end
+
+MapPinEnhanced:OnLoad(function()
+    MapPinEnhanced:DeleteVar("superTrackingWayfinder")
+end)
+
+---@param source string
+local function CancelTargetRetry(source)
+    local waitingTarget = waitingTargets[source]
+    if not waitingTarget then return end
+    if waitingTarget.timer then waitingTarget.timer:Cancel() end
+    waitingTargets[source] = nil
+end
+
+---@param activeSource string?
+local function CancelInactiveTargetRetries(activeSource)
+    ---@type string[]
+    local sourcesToCancel = {}
+    for waitingSource in pairs(waitingTargets) do
+        if waitingSource ~= activeSource then table.insert(sourcesToCancel, waitingSource) end
+    end
+    for _, waitingSource in ipairs(sourcesToCancel) do
+        CancelTargetRetry(waitingSource)
+    end
+end
+
+---@param provider SuperTrackingProvider|SuperTrackingFallbackProvider|nil
+local function ClearInactiveProviderTarget(provider)
+    local owner, targetID, changeNumber = Navigation:GetActiveDestinationState()
+    if not owner or not providersBySource[owner] then return end
+    if provider and provider.source == owner then return end
+    CancelTargetRetry(owner)
+    Navigation:ClearDestination(owner, targetID, changeNumber)
+end
+
+---@type NavigationDestinationRemoval
+local function RemoveSourceDestination(source, targetID, changeNumber)
+    Wayfinders:RemoveSuperTrackingDestination(source, targetID, changeNumber)
+end
+
+---@param provider SuperTrackingProvider|SuperTrackingFallbackProvider
+local function ReadProviderTarget(provider)
+    local targetID = provider.getTargetID()
+    -- Artwork and objective state must update before destination comparison.
+    if provider.source == "quest" then
+        Wayfinders:RefreshQuestState(tonumber(targetID:match("^quest:(%d+)$")))
+    end
+    local _, _, changeNumber = Navigation:GetActiveDestinationState()
+    local previous = Navigation:GetDestinationData(provider.source, targetID, changeNumber)
+    local data, removable, textAvailable = provider.read(previous)
+    if not data then
+        Wayfinders:HandleUnresolvedSuperTrackingTarget(provider.source, targetID)
+        return
+    end
+    ---@type NavigationDestinationRemoval?
+    local removeDestination = removable and RemoveSourceDestination or nil
+    Wayfinders:SetSuperTrackingWayfinderData(provider.source, targetID, data, removeDestination, textAvailable)
+    if provider.source == "quest" then
+        Wayfinders:RefreshQuestState(tonumber(targetID:match("^quest:(%d+)$")))
+    end
+end
+
+---@param provider SuperTrackingProvider|SuperTrackingFallbackProvider|nil
+local function UpdateProviderTarget(provider)
+    Wayfinders:UpdateSuperTrackingEntrySelection(provider and provider.source,
+        provider and provider.getTargetID(), C_SuperTrack.IsSuperTrackingUserWaypoint())
+    ClearInactiveProviderTarget(provider)
+    CancelInactiveTargetRetries(provider and provider.source or nil)
+    if provider then ReadProviderTarget(provider) end
+end
+
+---@param selectionOnly boolean?
+function Wayfinders:RefreshSuperTrackingSelection(selectionOnly)
+    if self:IsChangingSuperTrackingEntry() then return end
+    local selectedProvider = GetActiveProvider()
+    self:UpdateCorpseTracking(selectedProvider and selectedProvider.source,
+        selectedProvider and selectedProvider.getTargetID())
+    if self:ShouldIgnoreStepTrackingChange() then return end
+    local provider = GetActiveProvider()
+    if selectionOnly then
+        self:UpdateSuperTrackingEntrySelection(provider and provider.source,
+            provider and provider.getTargetID(), C_SuperTrack.IsSuperTrackingUserWaypoint())
+    else
+        UpdateProviderTarget(provider)
+    end
+end
+
+local function RefreshActiveProvider()
+    if Wayfinders:IsClearingTracking() then return end
+    Wayfinders:RefreshSuperTrackingSelection()
+end
+
+---@param events table<string, boolean>
+local function OnSourceEvents(events)
+    if Wayfinders:IsClearingTracking() then return end
+    if Wayfinders:IsChangingSuperTrackingEntry() then return end
+    -- Revival must reconcile the restored source even when Blizzard emits no
+    -- separate selection/path event, or its new provider is not the corpse.
+    if events.corpse then
+        Wayfinders:RefreshSuperTrackingSelection()
+        return
+    end
+    if Wayfinders:ShouldIgnoreStepTrackingChange(true) then
+        local owner = Navigation:GetActiveDestinationState()
+        if owner and events[owner] then
+            Wayfinders:RefreshOwnedDestinationText(owner)
+        end
+        return
+    end
+    local provider = GetActiveProvider()
+    if not provider then
+        UpdateProviderTarget(nil)
+        return
+    end
+    if events[provider.source] then UpdateProviderTarget(provider) end
+end
+
+---@param provider SuperTrackingProvider|SuperTrackingFallbackProvider
+local function RegisterSourceEvents(provider)
+    ---@type table<WowEvent, boolean>
+    local seenEvents = {}
+    for _, event in ipairs(provider.events or {}) do
+        assert(type(event) == "string" and event ~= "",
+            "Wayfinders:RegisterSuperTrackingProvider: events must contain non-empty strings")
+        assert(event ~= "SUPER_TRACKING_CHANGED" and event ~= "SUPER_TRACKING_PATH_UPDATED" and
+            event ~= "PLAYER_LOGIN",
+            "Wayfinders:RegisterSuperTrackingProvider: common events are registered by the coordinator")
+        assert(not seenEvents[event],
+            "Wayfinders:RegisterSuperTrackingProvider: provider contains a duplicate event")
+        seenEvents[event] = true
+
+        local eventProviders = sourceEventProviders[event]
+        if not eventProviders then
+            eventProviders = {}
+            sourceEventProviders[event] = eventProviders
+        end
+        eventProviders[provider.source] = true
+    end
+end
+
+-- Source data bursts publish current state once, never captured target data.
+-- Selection and clearing remain immediate.
+local BUCKET_SOURCE_EVENTS = {
+    AREA_POIS_UPDATED = true,
+    NEIGHBORHOOD_MAP_DATA_UPDATED = true,
+    QUEST_POI_UPDATE = true,
+    QUEST_LOG_UPDATE = true,
+    QUEST_WATCH_UPDATE = true,
+    -- Death events may precede Blizzard's final corpse/selection update.
+    PLAYER_DEAD = true,
+    PLAYER_ALIVE = true,
+    PLAYER_UNGHOST = true,
+}
+MapPinEnhanced:OnLoad(function()
+    ---@type WowEvent[]
+    local bucketEvents = {}
+    for event, sources in pairs(sourceEventProviders) do
+        if not BUCKET_SOURCE_EVENTS[event] then
+            MapPinEnhanced:RegisterEvent(event, function() OnSourceEvents(sources) end)
+        else
+            bucketEvents[#bucketEvents + 1] = event
+        end
+    end
+    if #bucketEvents > 0 then
+        MapPinEnhanced:RegisterEventBucket(bucketEvents, function(events)
+            ---@type table<string, boolean>
+            local sources = {}
+            for event in pairs(events) do
+                for source in pairs(sourceEventProviders[event]) do sources[source] = true end
+            end
+            OnSourceEvents(sources)
+        end)
+    end
+end)
+
+---@param provider SuperTrackingProvider|SuperTrackingFallbackProvider
+local function CheckProvider(provider)
+    assert(type(provider) == "table", "Wayfinders:RegisterSuperTrackingProvider: provider must be a table")
+    assert(type(provider.source) == "string" and provider.source ~= "",
+        "Wayfinders:RegisterSuperTrackingProvider: source must be a non-empty string")
+    assert(type(provider.getTargetID) == "function",
+        "Wayfinders:RegisterSuperTrackingProvider: getTargetID must be a function")
+    assert(type(provider.read) == "function",
+        "Wayfinders:RegisterSuperTrackingProvider: read must be a function")
+    assert(provider.events == nil or type(provider.events) == "table",
+        "Wayfinders:RegisterSuperTrackingProvider: events must be a table or nil")
+    assert(not providersBySource[provider.source],
+        "Wayfinders:RegisterSuperTrackingProvider: source is already registered")
+end
+
+---@param source string
+---@param targetID string
+function Wayfinders:HandleUnresolvedSuperTrackingTarget(source, targetID)
+    local provider = providersBySource[source]
+    assert(provider, "Wayfinders:HandleUnresolvedSuperTrackingTarget: source is not registered")
+
+    -- Keep valid data while Blizzard rebuilds the path for the same target. If the
+    -- target itself changed, the old coordinates must not remain visible.
+    local activeOwner, activeTargetID, activeChangeNumber = Navigation:GetActiveDestinationState()
+    if activeOwner == source and activeTargetID ~= targetID then
+        Navigation:ClearDestination(source, activeTargetID, activeChangeNumber)
+    end
+
+    local waitingTarget = waitingTargets[source]
+    if waitingTarget and waitingTarget.targetID ~= targetID then
+        CancelTargetRetry(source)
+    end
+    waitingTarget = waitingTargets[source]
+    if not waitingTarget then
+        local _, _, changeNumber = Navigation:GetActiveDestinationState()
+        waitingTarget = { targetID = targetID, changeNumber = changeNumber, attempts = 0 }
+        waitingTargets[source] = waitingTarget
+    end
+    if waitingTarget.timer then return end
+
+    local retryDelay = TARGET_RETRY_DELAYS[waitingTarget.attempts + 1]
+    if not retryDelay then
+        -- Retain exhausted attempts until resolution or selection changes, so
+        -- repeated source events cannot restart the retry timers.
+        self:ClearSuperTrackingEntry(source, targetID)
+        Navigation:ClearDestination(source, targetID, waitingTarget.changeNumber)
+        -- A vanished map marker must not remain selected after its wayfinder
+        -- clears. Destination callbacks may have selected another target.
+        if source == "mapPin" and waitingTargets[source] == waitingTarget and
+            GetActiveProvider() == provider and provider.getTargetID() == targetID then
+            CancelTargetRetry(source)
+            self:UntrackSuperTrackingSource(source)
+        end
+        return
+    end
+
+    waitingTarget.attempts = waitingTarget.attempts + 1
+    waitingTarget.timer = C_Timer.NewTimer(retryDelay, function()
+        if waitingTargets[source] ~= waitingTarget then return end
+        local activeProvider = GetActiveProvider()
+        if not activeProvider or activeProvider ~= provider or activeProvider.getTargetID() ~= waitingTarget.targetID then
+            waitingTargets[source] = nil
+            return
+        end
+        local _, _, changeNumber = Navigation:GetActiveDestinationState()
+        if changeNumber ~= waitingTarget.changeNumber then
+            waitingTargets[source] = nil
+            return
+        end
+        waitingTarget.timer = nil
+        ReadProviderTarget(provider)
+    end)
+end
+
+---@param provider SuperTrackingProvider
+function Wayfinders:RegisterSuperTrackingProvider(provider)
+    CheckProvider(provider)
+    assert(type(provider.superTrackingType) == "number",
+        "Wayfinders:RegisterSuperTrackingProvider: superTrackingType must be a number")
+    assert(not providersByType[provider.superTrackingType],
+        "Wayfinders:RegisterSuperTrackingProvider: superTrackingType is already registered")
+    providersByType[provider.superTrackingType] = provider
+    providersBySource[provider.source] = provider
+    RegisterSourceEvents(provider)
+end
+
+---@param provider SuperTrackingFallbackProvider
+function Wayfinders:RegisterSuperTrackingFallback(provider)
+    CheckProvider(provider)
+    assert(not fallbackProvider, "Wayfinders:RegisterSuperTrackingFallback: fallback is already registered")
+    fallbackProvider = provider
+    providersBySource[provider.source] = provider
+    RegisterSourceEvents(provider)
+end
+
+---@param source string
+function Wayfinders:RefreshSuperTrackingProvider(source)
+    if self:IsClearingTracking() then return end
+    if self:IsChangingSuperTrackingEntry() then return end
+    if self:ShouldIgnoreStepTrackingChange(true) then
+        self:RefreshOwnedDestinationText(source)
+        return
+    end
+    local provider = GetActiveProvider()
+    if provider and provider.source == source then UpdateProviderTarget(provider) end
+end
+
+---@param source string
+---@param targetID string
+---@param targetData WayfinderData
+---@param removeDestination NavigationDestinationRemoval?
+---@param textAvailable boolean? nil reads text; true uses prepared text; false retains previous text
+---@return integer changeNumber
+function Wayfinders:SetSuperTrackingWayfinderData(source, targetID, targetData, removeDestination, textAvailable)
+    CancelTargetRetry(source)
+    CancelInactiveTargetRetries(source)
+    local provider = providersBySource[source]
+    if textAvailable == nil and provider.readText then
+        local title, description, available = provider.readText(targetID, targetData)
+        textAvailable = available == true
+        if textAvailable then targetData.title, targetData.description = title, description end
+    end
+    if textAvailable == false then
+        local _, _, changeNumber = Navigation:GetActiveDestinationState()
+        local previous = Navigation:GetDestinationData(source, targetID, changeNumber)
+        if previous then targetData.title, targetData.description = previous.title, previous.description end
+    end
+    targetData.title = Providers:PlainDescription(targetData.title) or L["Target"]
+    targetData.description = Providers:PlainDescription(targetData.description, targetData.title)
+    targetData.targetType = Wayfinders.TARGET_TYPE_BLIZZARD
+    self:ApplySuperTrackingEntry(providersBySource[source], targetID, targetData)
+    return Navigation:SetDestination(source, targetID, targetData, removeDestination)
+end
+
+---@param source string
+---@param targetID string?
+---@param changeNumber integer?
+---@return boolean
+function Wayfinders:ClearSuperTrackingWayfinderData(source, targetID, changeNumber)
+    if not Navigation:IsDestinationActive(source, targetID, changeNumber) then return false end
+    CancelTargetRetry(source)
+    self:ClearSuperTrackingEntry(source, targetID)
+    return Navigation:ClearDestination(source, targetID, changeNumber)
+end
+
+function Wayfinders:CancelSuperTrackingTargetRetries()
+    ---@type string[]
+    local sourcesToCancel = {}
+    for source in pairs(waitingTargets) do
+        table.insert(sourcesToCancel, source)
+    end
+    for _, source in ipairs(sourcesToCancel) do
+        CancelTargetRetry(source)
+    end
+end
+
+MapPinEnhanced:RegisterEvent("SUPER_TRACKING_CHANGED", RefreshActiveProvider)
+-- Native path notifications can arrive every frame. Read the current selection
+-- once per window; actual selection changes still reconcile synchronously above.
+MapPinEnhanced:RegisterEventBucket({ "SUPER_TRACKING_PATH_UPDATED" }, RefreshActiveProvider, 0.1)
+MapPinEnhanced:RegisterEvent("PLAYER_LOGIN", function()
+    -- Startup configuration only; later user changes remain authoritative.
+    if C_CVar and C_CVar.GetCVar and C_CVar.SetCVar then
+        local value = C_CVar.GetCVar("showInGameNavigation")
+        if not MapPinEnhanced:IsSecretValue(value) and value == "0" then
+            C_CVar.SetCVar("showInGameNavigation", "1")
+        end
+    end
+    RefreshActiveProvider()
+end)

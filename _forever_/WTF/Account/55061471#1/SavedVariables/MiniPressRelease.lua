@@ -1,0 +1,2 @@
+
+MiniPressReleaseDB = nil

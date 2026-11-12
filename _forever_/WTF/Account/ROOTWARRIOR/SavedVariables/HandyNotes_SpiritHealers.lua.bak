@@ -1,0 +1,13 @@
+
+HandyNotes_SpiritHealersDB = {
+["profileKeys"] = {
+["Beat Ngu"] = "Default",
+},
+["global"] = {
+["setupDone"] = true,
+},
+["profiles"] = {
+["Default"] = {
+},
+},
+}

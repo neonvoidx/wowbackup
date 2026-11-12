@@ -1,0 +1,173 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\..\FrameXML\UI.xsd">
+
+<!-- Copyright 2011 Mike Battersby -->
+
+<Script file="PanelTemplate.lua" />
+
+<Frame name="LiteMountContainerStyleTemplate" virtual="true" inherits="BackdropTemplate" useParentLevel="true">
+    <KeyValues>
+        <KeyValue key="backdropInfo" value="LM_CONTAINER_BACKDROP_INFO" type="global"/>
+        <KeyValue key="backdropBorderColor" value="DARKGRAY_COLOR" type="global"/>
+        <KeyValue key="backdropColor" value="VERY_DARK_GRAY_COLOR" type="global"/>
+        <KeyValue key="backdropColorAlpha" value="0.5" type="number"/>
+    </KeyValues>
+</Frame>
+
+<Frame name="LiteMountPopOverStyleTemplate" virtual="true" inherits="BackdropTemplate">
+    <KeyValues>
+        <KeyValue key="backdropInfo" value="LM_POPOVER_BACKDROP_INFO" type="global"/>
+        <KeyValue key="backdropBorderColor" value="DARKGRAY_COLOR" type="global"/>
+        <KeyValue key="backdropColor" value="VERY_DARK_GRAY_COLOR" type="global"/>
+    </KeyValues>
+</Frame>
+
+<Button name="LiteMountListItemStyleTemplate" virtual="true" inherits="BackdropTemplate">
+    <KeyValues>
+        <KeyValue key="backdropInfo" value="LM_LIST_ITEM_BACKDROP_INFO" type="global" />
+        <KeyValue key="backdropColor" value="DARKGRAY_COLOR" type="global"/>
+        <KeyValue key="backdropColorAlpha" value="0.5" type="number"/>
+        <KeyValue key="backdropBorderColor" value="DARKGRAY_COLOR" type="global"/>
+        <KeyValue key="backdropBorderColorAlpha" value="0.7" type="number"/>
+    </KeyValues>
+</Button>
+
+<Button name="LiteMountListSelectButtonTemplate" virtual="true">
+    <Size y="20" />
+    <ButtonText inherits="GameFontWhite" parentKey="Text" />
+    <HighlightTexture atlas="Options_List_Hover" />
+    <Layers>
+        <Layer level="BACKGROUND">
+            <Texture parentKey="SelectedTexture" atlas="Options_List_Active" useAtlasSize="true" hidden="true">
+                <Anchors>
+                    <Anchor point="CENTER"/>
+                </Anchors>
+            </Texture>
+        </Layer>
+    </Layers>
+</Button>
+
+<Frame name="LiteMountEditBoxStyleTemplate" virtual="true">
+    <Frames>
+        <Frame parentKey="NineSlice" inherits="NineSlicePanelTemplate" alpha="0.4" useParentLevel="true">
+            <Anchors>
+                <Anchor point="TOPLEFT" x="-8" y="8" />
+                <Anchor point="BOTTOMRIGHT" x="8" y="-8" />
+            </Anchors>
+            <Scripts>
+                <OnLoad>
+                    local layout = NineSliceUtil.GetLayout("ChatBubble")
+                    NineSliceUtil.ApplyLayout(self, layout)
+                </OnLoad>
+            </Scripts>
+        </Frame>
+    </Frames>
+</Frame>
+
+<Button name="LiteMountUIButtonTemplate" virtual="true">
+    <Size x="192" y="36" />
+    <NormalTexture parentKey="NormalTexture" atlas="charactercreate-customize-dropdownbox" />
+    <HighlightTexture parentKey="HighlightTexture" atlas="charactercreate-customize-dropdownbox-open" alphaMode="ADD" alpha="0.2" />
+    <ButtonText inherits="GameFontNormal" parentKey="Text" />
+</Button>
+
+<Button name="LiteMountUISelectButtonTemplate" inherits="LiteMountUIButtonTemplate" virtual="true">
+    <Scripts>
+        <OnEnter>
+            self.HighlightTexture:SetAlpha(0)
+            self.NormalTexture:SetAtlas("charactercreate-customize-dropdownbox-hover")
+        </OnEnter>
+        <OnLeave>
+            self.HighlightTexture:SetAlpha(0.2)
+            self.NormalTexture:SetAtlas("charactercreate-customize-dropdownbox")
+        </OnLeave>
+    </Scripts>
+</Button>
+
+<!-- Checkbox on the left, text to the right full width -->
+<Frame name="LiteMountCheckboxControlTemplate" inherits="SettingsListElementTemplate" mixin="LiteMountCheckboxControlMixin" virtual="true">
+    <Size x="280" y="26"/>
+    <Scripts>
+        <OnLoad method="OnLoad"/>
+    </Scripts>
+</Frame>
+
+<!-- Label above, full width dropdown below -->
+<Frame name="LiteMountDropdownControlTemplate" inherits="SettingsListElementTemplate" mixin="LiteMountDropdownControlMixin" virtual="true">
+    <Size x="560" y="60"/>
+    <Scripts>
+        <OnLoad method="OnLoad"/>
+    </Scripts>
+</Frame>
+
+<Frame name="LiteMountSettingsPanelTemplate" parent="UIParent" mixin="LiteMountSettingsPanelMixin" hidden="true" virtual="true">
+    <Scripts>
+        <OnLoad method="OnLoad" />
+        <OnShow method="OnShow" />
+        <OnHide method="OnHide" />
+    </Scripts>
+    <Layers>
+        <Layer level="ARTWORK">
+            <FontString parentKey="Title" inherits="GameFontHighlightHuge" justifyH="LEFT">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="7" y="-22" />
+                </Anchors>
+            </FontString>
+            <Texture atlas="Options_HorizontalDivider" useAtlasSize="true">
+                <Anchors>
+                    <Anchor point="TOP" y="-50"/>
+                </Anchors>
+            </Texture>
+        </Layer>
+    </Layers>
+    <Frames>
+        <Button parentKey="DefaultsButton" inherits="UIPanelButtonTemplate" text="SETTINGS_DEFAULTS">
+            <Size x="96" y="22"/>
+            <Anchors>
+                <Anchor point="TOPRIGHT" x="-36" y="-16"/>
+            </Anchors>
+        </Button>
+        <Button parentKey="RevertButton" inherits="UIPanelButtonTemplate" text="REVERT">
+            <Size x="96" y="22" />
+            <Anchors>
+                <Anchor point="RIGHT" relativePoint="LEFT" relativeKey="$parent.DefaultsButton" x="-8" />
+            </Anchors>
+        </Button>
+        <Frame parentKey="Disable" setAllPoints="true" hidden="true" enableMouse="true">
+            <Scripts>
+                <OnLoad>
+                    self:SetFrameLevel(self:GetParent():GetFrameLevel() + 3)
+                </OnLoad>
+            </Scripts>
+            <Layers>
+                <Layer level="OVERLAY">
+                    <Texture>
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="3" y="-3" />
+                            <Anchor point="BOTTOMRIGHT" x="-3" y="3" />
+                        </Anchors>
+                        <Color r="0.3" g="0.3" b="0.3" a="0.6" />
+                    </Texture>
+                </Layer>
+            </Layers>
+        </Frame>
+    </Frames>
+</Frame>
+
+<Frame name="LiteMountPopOverPanelTemplate" virtual="true" mixin="LiteMountPopOverPanelMixin" inherits="LiteMountPopOverStyleTemplate">
+    <Scripts>
+        <OnLoad inherit="prepend" method="OnLoad" />
+        <OnHide inherit="prepend" method="OnHide" />
+        <OnShow inherit="prepend" method="OnShow" />
+    </Scripts>
+    <Layers>
+        <Layer level="ARTWORK">
+            <FontString inherits="GameFontHighlightLarge" parentKey="Title">
+                <Anchors>
+                    <Anchor point="TOP" y="-16" />
+                </Anchors>
+            </FontString>
+        </Layer>
+    </Layers>
+</Frame>
+
+</Ui>

@@ -1,0 +1,7 @@
+local L = LibStub("AceLocale-3.0"):NewLocale("EnhanceQoL_SharedMedia", "ruRU", true)
+
+L["Disable All"] = "Отключить все"
+L["Enable All"] = "Включить все"
+L["Play"] = "Воспроизвести"
+L["SharedMedia"] = "Общие медиа"
+L["SharedMediaDeepVoiceSounds"] = "Звуки глубокого голоса Shared Media"

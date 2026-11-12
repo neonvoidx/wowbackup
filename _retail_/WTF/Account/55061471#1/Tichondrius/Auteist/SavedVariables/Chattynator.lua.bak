@@ -1,0 +1,25 @@
+
+CHATTYNATOR_CURRENT_PROFILE = "DEFAULT"
+CHATTYNATOR_COMMAND_HISTORY = {
+"/s /m",
+"/s /rl",
+"/s /wa",
+"/s /m",
+"/s /opie",
+"/s /m",
+"/s /opie",
+"/s /m",
+"/s /pw",
+"/s /rl",
+"/s /wa",
+"/s /pg",
+"/s /wa",
+"/s /rl",
+"/s /wa",
+"/s /m",
+"/s /rl",
+"/s /m",
+"/s /wa",
+"/s /m",
+"/s /rl",
+}

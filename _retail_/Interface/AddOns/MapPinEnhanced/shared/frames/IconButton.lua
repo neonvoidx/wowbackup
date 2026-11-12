@@ -1,0 +1,100 @@
+---@class MapPinEnhanced
+local MapPinEnhanced = select(2, ...)
+
+---@class MapPinEnhancedIconButtonTemplate: Button, MapPinEnhancedTooltipMixin
+---@field iconTexture MapPinEnhancedIconMixin
+---@field bottomLine Texture
+---@field icon MapPinEnhancedIcon
+---@field iconSize MapPinEnhancedIconButtonSize
+---@field customIcon boolean?
+MapPinEnhancedIconButtonMixin = {}
+
+---@alias MapPinEnhancedIconButtonSize "small"|"medium"|"large"
+
+---@type table<MapPinEnhancedIconButtonSize, number>
+local ICON_SIZE_PERCENTAGES = {
+    small = 0.35,
+    medium = 0.45,
+    large = 0.5,
+}
+
+---@param icon? MapPinEnhancedIcon
+---@param color? ColorMixin
+function MapPinEnhancedIconButtonMixin:SetIconTexture(icon, color)
+    if icon then
+        -- Allow setting the icon directly if provided
+        self.icon = icon
+    end
+    assert(self.icon, "MapPinEnhancedIconButtonMixin: SetIconTexture called without icon set")
+    self.iconTexture:SetIconTexture(self.icon, color)
+end
+
+function MapPinEnhancedIconButtonMixin:UpdateLayout()
+    local percentage = ICON_SIZE_PERCENTAGES[self.iconSize]
+    assert(percentage, "MapPinEnhancedIconButtonMixin: invalid iconSize: " .. tostring(self.iconSize))
+    local size = math.min(self:GetWidth(), self:GetHeight()) * percentage
+    self.iconTexture:SetSize(size, size)
+
+    -- Match the stretched button artwork, preserving the insets of a 20-pixel button.
+    local insetX = self:GetWidth() * 0.2
+    local insetY = self:GetHeight() * 0.1
+    self.bottomLine:SetPoint("BOTTOMLEFT", self, "BOTTOMLEFT", insetX, insetY)
+    self.bottomLine:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", -insetX, insetY)
+end
+
+function MapPinEnhancedIconButtonMixin:OnLoad()
+    self:OnTooltipLoad()
+    if not self.customIcon then
+        self:SetIconTexture()
+    end
+    self:UpdateIconState()
+    self:UpdateLayout()
+end
+
+function MapPinEnhancedIconButtonMixin:UpdateIconState()
+    self.iconTexture:SetIconEnabled(self:IsEnabled())
+    self.bottomLine:SetShown(self:IsEnabled())
+end
+
+function MapPinEnhancedIconButtonMixin:OnSizeChanged()
+    self:UpdateLayout()
+end
+
+function MapPinEnhancedIconButtonMixin:OnMouseDown()
+    if not self:IsEnabled() then return end
+    self.iconTexture:SetPoint("CENTER", self, "CENTER", 1, -1)
+    self.iconTexture:SetAlpha(0.6)
+end
+
+function MapPinEnhancedIconButtonMixin:OnMouseUp()
+    if not self:IsEnabled() then return end
+    self.iconTexture:SetPoint("CENTER", self, "CENTER", 0, 0)
+    self.iconTexture:SetAlpha(1.0)
+end
+
+---@param callback fun(value: mouseButton, down: boolean)
+function MapPinEnhancedIconButtonMixin:SetCallback(callback)
+    assert(type(callback) == "function", "Callback must be a function.")
+    self.onChangeCallback = MapPinEnhanced:DebounceChange(callback, 0.1)
+end
+
+---@param formData ButtonSetup
+function MapPinEnhancedIconButtonMixin:Setup(formData)
+    assert(type(formData) == "table", "Form data must be a table.")
+    assert(type(formData.onChange) == "function", "onChange callback must be a function.")
+
+    self:SetCallback(formData.onChange)
+    self:SetScript("OnClick", function(_, button, down)
+        if self.onChangeCallback then
+            self.onChangeCallback(button, down)
+        end
+    end)
+end
+
+---@param triggerCallback boolean|nil
+function MapPinEnhancedIconButtonMixin:SetValue(_, triggerCallback)
+    if triggerCallback and self.onChangeCallback then
+        -- simulate a left button click
+        self.onChangeCallback("LeftButton", false)
+    end
+end

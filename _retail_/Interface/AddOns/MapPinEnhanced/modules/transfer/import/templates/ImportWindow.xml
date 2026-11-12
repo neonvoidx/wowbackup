@@ -1,0 +1,53 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ https://raw.githubusercontent.com/Gethe/wow-ui-source/live/Interface/AddOns/Blizzard_SharedXML/UI.xsd">
+
+    <Include file="ImportWindow.lua" />
+    <Frame name="MapPinEnhancedImportWindowTemplate" inherits="MapPinEnhancedWindowTemplate" virtual="true" mixin="MapPinEnhancedImportWindowMixin">
+        <Size x="720" y="420" />
+        <KeyValues>
+            <KeyValue key="windowTitle" value="Import" />
+        </KeyValues>
+        <Layers>
+            <Layer level="ARTWORK">
+                <FontString parentKey="description" inherits="MapPinEnhancedFontHighlight" justifyH="CENTER" justifyV="TOP" spacing="2">
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="100" y="-50" />
+                        <Anchor point="TOPRIGHT" x="-100" y="-50" />
+                    </Anchors>
+                </FontString>
+                <FontString parentKey="summary" inherits="MapPinEnhancedFontHighlightSmall" justifyH="LEFT">
+                    <Size x="450" y="18" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="20" y="-82" />
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Frames>
+            <ScrollFrame inherits="MapPinEnhancedTextareaTemplate" parentKey="textarea">
+                <Size x="450" y="280" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativePoint="TOPLEFT" x="20" y="-110" />
+                </Anchors>
+            </ScrollFrame>
+            <Button inherits="MapPinEnhancedButtonTemplate" parentKey="cancelButton" text="Cancel">
+                <Size x="100" y="34" />
+                <KeyValues>
+                    <KeyValue key="icon" value="close" />
+                </KeyValues>
+                <Anchors>
+                    <Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" x="-10" y="25" />
+                </Anchors>
+            </Button>
+            <Button inherits="MapPinEnhancedButtonTemplate" parentKey="importButton" text="Import">
+                <Size x="100" y="34" />
+                <KeyValues>
+                    <KeyValue key="icon" value="import" />
+                </KeyValues>
+                <Anchors>
+                    <Anchor point="TOPRIGHT" relativeKey="$parent.cancelButton" relativePoint="TOPLEFT" x="-10" y="0" />
+                </Anchors>
+            </Button>
+        </Frames>
+    </Frame>
+</Ui>

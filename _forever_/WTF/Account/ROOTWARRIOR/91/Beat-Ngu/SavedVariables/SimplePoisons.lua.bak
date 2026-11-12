@@ -1,0 +1,24 @@
+
+SimplePoisonsDB = {
+["minimapAngle"] = 225,
+["clicks"] = {
+["MiddleButton"] = "crippling",
+["RightButton"] = "deadly",
+["LeftButton"] = "instant",
+},
+["scale"] = 1,
+["lowCharges"] = 10,
+["schemaVersion"] = 2,
+["position"] = {
+["y"] = -250.8333282470703,
+["x"] = -307.4995422363281,
+["point"] = "CENTER",
+["relativePoint"] = "CENTER",
+},
+["showSettingsIcon"] = true,
+["lowMinutes"] = 3,
+["orientation"] = "HORIZONTAL",
+["showMinimap"] = true,
+["textSize"] = 13,
+["hands"] = "BOTH",
+}

@@ -1,0 +1,35 @@
+
+KeystoneLootCharDB = {
+["simcImported"] = false,
+["voidcore"] = {
+[270164] = true,
+[270161] = true,
+[271874] = true,
+},
+["bankTracks"] = {
+},
+["ui"] = {
+["selectedCharacterKey"] = "Tichondrius-Hellavator-9",
+["selectedTab"] = "dungeons",
+["selectedRaidTab"] = 1307,
+},
+["voidcoreChecked"] = true,
+["version"] = 5,
+["filters"] = {
+["dungeon"] = {
+["track"] = "champion",
+["rank"] = 1,
+},
+["specId"] = 267,
+["classId"] = 9,
+["raid"] = {
+["difficulty"] = "normal",
+["rank"] = 1,
+},
+["weaponTypes"] = {
+},
+["slotId"] = 0,
+["slotIds"] = {
+},
+},
+}

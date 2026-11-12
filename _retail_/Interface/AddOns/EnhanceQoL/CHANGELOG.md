@@ -1,0 +1,42 @@
+# Changelog
+
+## [13.20.1] - 2026-11-11
+
+### Changed
+
+- Bags: Automatic equipment-set categories can now be managed in the category editor, including their group, display order and color.
+- Settings: Grouped Graphics & Game Options by topic.
+- Edit Mode: Removed quick-hide crosses; visibility remains configurable in the Edit Mode list.
+
+### Fixed
+
+- Chat History: Improved storage and loading of large chat and whisper histories to prevent saved-data loading failures and reduce delays.
+- ChatIM: Fixed the disappearing text cursor in the whisper input field.
+- ChatIM: Fixed an error when sharing a map waypoint.
+- Bags: Settings and color buttons no longer pass clicks through to windows behind them.
+- Mover: Books and letters can now be moved and scaled.
+- Resource Bars: Fixed horizontal bar width when matching or resetting an anchor.
+- Party Frames: Pet buffs, debuffs and externals can now use independent aura settings.
+
+## [13.20.0] - 2026-11-10
+
+### Added
+
+- Bags: Added a category filter editor with visual and expression views, searchable conditions, autocomplete, validation and matching-item previews.
+- Bags: Added crafting category templates with selectable material groups and profession recipes.
+- Bags: Added class colors for custom categories and groups, settings-window scaling and optional detailed item tooltips while holding Alt.
+- Item Search: Added live search, item inspection and saved searches across accessible bags, equipment and banks using the same filters as bag categories.
+- Item filters: Added name wildcards such as Scroll* and attribute-presence conditions such as HAS intellect.
+- Class Buff Reminder: Added a combat-only option for warrior shouts.
+
+### Changed
+
+- Bags: Reorganized category settings into filters, assigned items and appearance tabs with compact controls and searchable filter values.
+- Class Buff Reminder: Configure where each buff and reminder appears directly in the class table.
+
+### Fixed
+
+- Bags: Reduced delays when opening bags, switching categories and updating item data; improved settings scrolling, checkbox alignment and category tooltips.
+- ChatIM: Fixed cursor placement and clicking in multiline drafts containing links, and restored direct whisper sending for linked messages.
+- Mirror Timers: Custom timers now remain inactive until enabled; disabling them also removes their Edit Mode entries and stops updates.
+- Buff and Debuff Frames: Time sorting now orders auras strictly by expiration time.

@@ -1,0 +1,12 @@
+## Interface: 120100, 16001
+## Title: Frogski's Chat Loot Filter
+## Category: Frogski's Murky Pond
+## Notes: Filters and formats loot lines in your loot chat window, with a searchable loot history. Type /fcl for options.
+## Author: Frogski
+## Version: 1.4.67
+## IconTexture: Interface\Icons\inv_frog2_darkgreen
+## SavedVariables: FrogskisChatLootDB
+
+Core.lua
+History.lua
+Options.lua

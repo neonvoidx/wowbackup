@@ -1,0 +1,120 @@
+---@class MapPinEnhanced
+local MapPinEnhanced = select(2, ...)
+
+---@class MapPinEnhancedExportWindowTemplate : MapPinEnhancedWindowTemplate
+---@field textarea MapPinEnhancedTextareaTemplate
+---@field exportTypeDropdown MapPinEnhancedDropdownTemplate
+---@field prefixDropdown MapPinEnhancedDropdownTemplate
+---@field description FontString
+---@field summary FontString
+---@field exportTypeLabel FontString
+---@field prefixLabel FontString
+---@field warning FontString
+---@field exportData SerializedExport?
+---@field selectedExportType "way"|"serialized"
+---@field selectedPrefix "/way"|"/mpe"|"/mappin"
+---@field output string
+MapPinEnhancedExportWindowMixin = CreateFromMixins(MapPinEnhancedWindowMixin)
+
+local L = MapPinEnhanced.L
+local Transfer = MapPinEnhanced:GetModule("Transfer")
+
+local exportOptions = {
+    { label = L["Serialized data"], value = "serialized" },
+    { label = L["Way commands"],    value = "way" },
+}
+
+
+
+local prefixOptions = {
+    { label = "/way",                                                                                   value = "/way" },
+    { label = "/mpe",                                                                                   value = "/mpe" },
+    { label = "/mappin " .. "|T" .. MapPinEnhanced.assetsPath .. "\\misc\\WoWLogo.png" .. ":14:14|t", value = "/mappin" },
+}
+
+---@param pins pinData[]
+function MapPinEnhancedExportWindowMixin:UpdateSummary(pins)
+    ---@type table<number, boolean>
+    local maps = {}
+    for _, pinData in ipairs(pins) do maps[pinData.mapID] = true end
+    local mapCount = 0
+    for _ in pairs(maps) do mapCount = mapCount + 1 end
+    self.summary:SetText(string.format(L["Exporting %d pins across %d maps"], #pins, mapCount))
+end
+
+function MapPinEnhancedExportWindowMixin:UpdateOutput()
+    if not self.exportData then return end
+    local pins = self.exportData.group.pins
+    ---@type string
+    local output
+    if self.selectedExportType == "serialized" then
+        output = Transfer:SerializeData(self.exportData)
+    else
+        local lines = {}
+        for _, pinData in ipairs(pins) do
+            table.insert(lines, MapPinEnhanced:SerializeWayLine(pinData, self.selectedPrefix))
+        end
+        output = table.concat(lines, "\n")
+    end
+
+    self.output = output
+    self.textarea:SetValue(output)
+    self.textarea.editbox:HighlightText()
+    self:UpdateSummary(pins)
+
+    self.warning:SetShown(self.selectedExportType == "way")
+    self.prefixDropdown:SetEnabled(self.selectedExportType == "way")
+    self.prefixLabel:SetAlpha(self.selectedExportType == "way" and 1 or 0.5)
+end
+
+---@param target ExportTarget
+function MapPinEnhancedExportWindowMixin:SetExportTarget(target)
+    assert(target, "MapPinEnhancedExportWindowMixin:SetExportTarget: target is nil")
+    self.exportData = Transfer:GetSerializedTarget(target)
+    if self.textarea then self:UpdateOutput() end
+end
+
+function MapPinEnhancedExportWindowMixin:OnHide()
+    MapPinEnhancedWindowMixin.OnHide(self)
+    if self:IsShown() and not self.visibilityHiding then return end
+    self.exportData = nil
+    self.output = ""
+    self.textarea:SetValue("")
+end
+
+function MapPinEnhancedExportWindowMixin:OnLoad()
+    MapPinEnhancedWindowMixin.OnLoad(self)
+    self.description:SetText(L["Choose an export format, then copy the text below."])
+    self.exportTypeLabel:SetText(L["Export format:"])
+    self.prefixLabel:SetText(L["Command prefix:"])
+    self.warning:SetText(L
+        ["Warning: slash commands do not preserve descriptions, custom icons or colors. /mappin also omits pin titles."])
+    self.textarea:Setup({ onChange = function() end })
+    self.textarea.editbox:SetScript("OnTextChanged", function(_, userInput)
+        if userInput then
+            self.textarea:SetValue(self.output or "")
+            self.textarea.editbox:HighlightText()
+        end
+    end)
+    self.textarea.editbox:HookScript("OnEditFocusGained", function(editbox)
+        editbox:HighlightText()
+    end)
+    self.exportTypeDropdown:Setup({
+        options = exportOptions,
+        init = function() return "serialized" end,
+        onChange = function(value)
+            self.selectedExportType = value
+            self:UpdateOutput()
+        end,
+    })
+    self.prefixDropdown:Setup({
+        options = prefixOptions,
+        init = function() return "/way" end,
+        onChange = function(value)
+            self.selectedPrefix = value
+            self:UpdateOutput()
+        end,
+    })
+    self.selectedExportType = "serialized"
+    self.selectedPrefix = "/way"
+end

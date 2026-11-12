@@ -1,0 +1,44 @@
+## Interface: 120105, 16001
+
+## Title: Map Pin Enhanced
+## Notes: A companion to save your favorite locations and travel around Azeroth.
+## Notes-deDE: Ein Begleiter, mit dem du deine Lieblingsorte speichern und durch Azeroth reisen kannst.
+## Notes-ruRU: Компаньон, с помощью которого можно сохранять любимые места и путешествовать по Азероту.
+## Notes-zhCN: 一款可保存您喜爱的地点并带您畅游艾泽拉斯的随身伙伴。
+## Notes-zhTW: 一款能讓你儲存最喜愛的地點，並在艾澤拉斯各地旅行的隨身夥伴。
+## Notes-koKR: 아제로스를 여행하며 마음에 드는 장소를 저장해 둘 수 있는 동반자입니다.
+## Notes-frFR: Un compagnon qui vous permet d'enregistrer vos lieux préférés et de voyager à travers Azeroth.
+## Notes-esES: Un compañero con el que guardar tus lugares favoritos y viajar por Azeroth.
+## Notes-esMX: Un compañero para guardar tus lugares favoritos y viajar por Azeroth.
+## Notes-itIT: Un compagno che ti permette di salvare i tuoi luoghi preferiti e di viaggiare per Azeroth.
+## Notes-ptBR: Um companheiro para salvar seus locais favoritos e viajar por Azeroth.
+## Author: Nerc, Eminos
+## Version: 4.0.2
+## IconTexture: Interface\Addons\MapPinEnhanced\assets\Logo.png
+
+## Category: Map
+## Category-deDE: Karte
+## Category-esES: Mapa
+## Category-esMX: Mapa
+## Category-frFR: Carte
+## Category-itIT: Mappa
+## Category-koKR: 지도
+## Category-ptBR: Mapa
+## Category-ruRU: Карта
+## Category-zhCN: 地图
+## Category-zhTW: 地圖
+
+## X-License: All Rights Reserved; Blizzard and other third-party material: respective owners' terms
+## X-Curse-Project-ID: 441677
+## X-Wago-ID: XKqELXKy
+
+## OptionalDeps: CallbackHandler-1.0, ChatThrottleLib, Chomp, HereBeDragons, LibDataBroker-1.1, LibDBIcon-1.0, LibStub, LibWindow-1.1
+## SavedVariables: MapPinEnhancedDB
+## LoadSavedVariablesFirst: 1
+
+libs\_imports.xml
+MapPinEnhanced.lua
+locales\_imports.xml
+core\_imports.xml
+shared\_imports.xml
+modules\_imports.xml

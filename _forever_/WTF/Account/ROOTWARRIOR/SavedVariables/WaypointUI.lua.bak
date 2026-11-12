@@ -1,0 +1,11 @@
+
+WaypointDB_Global = {
+["lastLoadedVersion"] = 10705,
+["WaypointDistanceSubtextAlpha"] = 0.7000000000000001,
+["WaypointDistanceTextAlpha"] = 0.7000000000000001,
+["RestedXPSupportEnabled"] = true,
+["AudioGlobal"] = false,
+["fontPath"] = "Fonts\\FRIZQT__.TTF",
+}
+WaypointDB_Global_Persistent = {
+}

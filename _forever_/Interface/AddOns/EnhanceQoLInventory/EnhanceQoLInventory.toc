@@ -1,0 +1,27 @@
+## Interface: 16001
+## X-EQOL-Flavor: forever
+## Title: Enhance QoL Inventory
+## Author: R41Z0R
+## Version: 13.20.1
+## Notes: Inventory data and search API
+## Notes-deDE: Inventardaten und Such-API
+## Notes-esES: Datos de inventario y API de búsqueda
+## Notes-esMX: Datos de inventario y API de búsqueda
+## Notes-frFR: Données d’inventaire et API de recherche
+## Notes-itIT: Dati dell’inventario e API di ricerca
+## Notes-koKR: 소지품 데이터 및 검색 API
+## Notes-ptBR: Dados de inventário e API de pesquisa
+## Notes-ruRU: Данные инвентаря и API поиска
+## Notes-zhCN: 物品数据与搜索 API
+## Notes-zhTW: 物品資料與搜尋 API
+## Dependencies: EnhanceQoL, EnhanceQoLItems
+## SavedVariables: EnhanceQoLInventoryDB
+## IconTexture: Interface\AddOns\EnhanceQoL\Icons\Icon.tga
+## LoadOnDemand: 1
+## Globe-Main: EnhanceQoL
+## X-Compatible-With: forever
+
+Init.lua
+LiveSearch.lua
+SearchWindow.lua
+Runtime.lua

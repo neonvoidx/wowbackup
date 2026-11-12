@@ -1,0 +1,254 @@
+local addonName, addon = ...
+---@type MiniFramework
+local mini = addon.Framework
+local testMode = false
+local frame
+local updateInterval = 0.5
+-- Group unit tokens by prefix and index, built as they are first asked for. The ticker walks
+-- the group twice a second and the tokens never change.
+local unitTokens = { raid = {}, party = {} }
+local draggable
+local text
+local ticker
+local LRC = LibStub and LibStub("LibRangeCheck-3.0", true)
+---@type Db
+local db
+---@type Db
+local dbDefaults = addon.Config.DbDefaults
+
+local function ResizeDraggableToText()
+	local w = text:GetStringWidth() or 0
+	local h = text:GetStringHeight() or 0
+
+	if w < 1 then
+		w = 1
+	end
+	if h < 1 then
+		h = 1
+	end
+
+	draggable:SetSize(w + (db.PaddingX or 0) * 2, h + (db.PaddingY or 0) * 2)
+end
+
+local function UpdateText()
+	text:SetText(db.Message)
+
+	ResizeDraggableToText()
+end
+
+local function UpdateFontStyle()
+	local object = addon.Fonts:FileFontObject(db.FontPath or "Fonts\\FRIZQT__.TTF", db.FontSize or 18, db.FontFlags or "OUTLINE")
+	local message = text:GetText()
+
+	text:SetFontObject(object)
+	-- Attaching a new object doesn't repaint text already drawn.
+	text:SetText("")
+	text:SetText(message)
+
+	local c = db.FontColor
+	local r, g, b, a = 1, 1, 1, 1
+
+	if type(c) == "table" then
+		r = (type(c.R) == "number") and c.R or r
+		g = (type(c.G) == "number") and c.G or g
+		b = (type(c.B) == "number") and c.B or b
+		a = (type(c.A) == "number") and c.A or a
+	end
+
+	text:SetTextColor(r, g, b, a)
+end
+
+local function StopTicker()
+	if ticker then
+		ticker:Cancel()
+		ticker = nil
+	end
+end
+
+local function IsHealer(unit)
+	return UnitGroupRolesAssigned(unit) == "HEALER"
+end
+
+local function GetRangeMax(unit)
+	if LRC then
+		local _, maxRange = LRC:GetRange(unit)
+		return maxRange
+	end
+
+	return nil
+end
+
+local function UnitToken(prefix, index)
+	local byIndex = unitTokens[prefix]
+	local token = byIndex[index]
+
+	if not token then
+		token = prefix .. index
+		byIndex[index] = token
+	end
+
+	return token
+end
+
+local function FindClosestHealer()
+	local inRaid = IsInRaid()
+	local prefix = inRaid and "raid" or "party"
+	local members = GetNumGroupMembers() or 0
+	-- Only the members actually in the group, rather than every token the game could name.
+	-- Raid tokens cover the whole group; party tokens are everyone but the player.
+	local count = inRaid and members or (members > 0 and members - 1 or 0)
+	local healer = nil
+	-- 25 yards for evokers
+	local healerWithin25Yards = nil
+	local healerWithin40Yards = nil
+
+	for i = 1, count do
+		local unit = UnitToken(prefix, i)
+
+		if IsHealer(unit) then
+			healer = unit
+
+			-- One range check answers both bands. LibRangeCheck walks a list of spells and
+			-- items per call, and this runs twice a second.
+			local max = GetRangeMax(unit)
+
+			if max and max <= 40 then
+				healerWithin40Yards = unit
+
+				if max <= 25 then
+					healerWithin25Yards = unit
+				end
+			end
+		end
+	end
+
+	return healerWithin25Yards or healerWithin40Yards or healer
+end
+
+local function ShouldRun()
+	if testMode then
+		return true
+	end
+
+	if IsHealer("player") then
+		return false
+	end
+
+	local _, instanceType = IsInInstance()
+
+	if instanceType == "arena" then
+		return db.Enabled.Arena
+	end
+
+	if instanceType == "pvp" then
+		return db.Enabled.Battlegrounds
+	end
+
+	if instanceType == "party" or instanceType == "scenario" then
+		return db.Enabled.Dungeons
+	end
+
+	return false
+end
+
+local function Run()
+	if not ShouldRun() then
+		StopTicker()
+		draggable:Hide()
+		return
+	end
+
+	if testMode then
+		draggable:Show()
+		return
+	end
+
+	local healer = FindClosestHealer()
+
+	if not healer then
+		StopTicker()
+		draggable:Hide()
+		return
+	end
+
+	local inRange = UnitInRange(healer)
+
+	if mini:IsSecret(inRange) then
+		draggable:SetAlphaFromBoolean(inRange, 0, 1)
+		draggable:Show()
+	else
+		if inRange then
+			draggable:Hide()
+		else
+			draggable:Show()
+		end
+	end
+end
+
+local function EnsureTicker()
+	if ticker then
+		return
+	end
+
+	ticker = C_Timer.NewTicker(updateInterval, Run)
+end
+
+local function OnEvent(_, event)
+	if event == "PLAYER_REGEN_DISABLED" then
+		if testMode then
+			testMode = false
+			addon:Refresh()
+			return
+		end
+	end
+
+	EnsureTicker()
+	Run()
+end
+
+local function OnAddonLoaded()
+	addon.Config:Init()
+
+	db = mini:GetSavedVars(dbDefaults)
+
+	draggable = CreateFrame("Frame", addonName .. "Frame", UIParent)
+	draggable:Hide()
+
+	mini:MakeMovable(draggable, db, {
+		IsLocked = function()
+			return db.Locked
+		end,
+	})
+	mini:ApplyPosition(draggable, db, dbDefaults)
+
+	text = draggable:CreateFontString(nil, "OVERLAY")
+	text:SetPoint("CENTER", draggable, "CENTER", 0, 0)
+	text:Show()
+
+	-- must apply font before setting the text
+	UpdateFontStyle()
+	UpdateText()
+
+	frame = CreateFrame("Frame")
+	frame:RegisterEvent("PLAYER_ENTERING_WORLD")
+	frame:RegisterEvent("GROUP_ROSTER_UPDATE")
+	frame:RegisterEvent("PLAYER_REGEN_DISABLED")
+
+	frame:SetScript("OnEvent", OnEvent)
+end
+
+function addon:Refresh()
+	UpdateFontStyle()
+	UpdateText()
+	-- The reset restores the default anchor, and nothing else re-applies it.
+	mini:ApplyPosition(draggable, db, dbDefaults)
+	mini:SetPositionLocked(draggable, db.Locked)
+	Run()
+end
+
+function addon:ToggleTest()
+	testMode = not testMode
+	addon:Refresh()
+end
+
+mini:WaitForAddonLoad(OnAddonLoaded)

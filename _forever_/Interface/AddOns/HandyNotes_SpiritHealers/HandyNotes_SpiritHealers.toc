@@ -1,0 +1,20 @@
+## Interface: 16001
+
+## Title: HandyNotes: Spirit Healers
+## Version: 1.1.1
+## Notes: Shows every spirit healer and graveyard in WoW Forever on your world map and minimap.
+## Author: Frost Forever | EU Normal Ruleset
+## X-Curse-Project-ID: 1767767
+## IconTexture: Interface\ICONS\Spell_Holy_Resurrection
+## Category: Map
+
+## AllowLoadGameType: camelot
+## DefaultState: enabled
+## RequiredDeps: HandyNotes
+## OptionalDeps: TomTom
+## SavedVariables: HandyNotes_SpiritHealersDB
+
+Data.lua
+Core.lua
+Pins.lua
+Setup.lua

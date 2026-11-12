@@ -1,0 +1,12 @@
+
+MyslotSettings = {
+["defaultIgnore"] = {
+["export"] = {
+},
+["import"] = {
+},
+},
+["minimap"] = {
+["hide"] = false,
+},
+}

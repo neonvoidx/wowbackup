@@ -1,0 +1,50 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ https://raw.githubusercontent.com/Gethe/wow-ui-source/live/Interface/AddOns/Blizzard_SharedXML/UI.xsd">
+    <Script file="TrackerHiddenGroups.lua" />
+
+    <Frame name="MapPinEnhancedTrackerHiddenGroupsTemplate" mixin="MapPinEnhancedTrackerHiddenGroupsMixin" virtual="true" hidden="true" enableMouse="true" frameStrata="DIALOG" inherits="MapPinEnhancedFadingFrameTemplate">
+        <Size x="315" y="36" />
+        <Anchors>
+            <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" y="3"/>
+            <Anchor point="TOPRIGHT" relativePoint="BOTTOMRIGHT" y="3" />
+        </Anchors>
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture inherits="MapPinEnhancedGenericFrameOpaqueTextureTemplate" setAllPoints="true">
+                    <Gradient orientation="VERTICAL">
+                        <MinColor r="0.5" g="0.5" b="0.5" a="0.7" />
+                        <MaxColor r="0.5" g="0.5" b="0.5" a="0.9" />
+                    </Gradient>
+                </Texture>
+            </Layer>
+            <Layer level="ARTWORK">
+                <FontString parentKey="title" inherits="MapPinEnhancedFontNormalSmall" justifyH="LEFT">
+                    <Size x="0" y="20" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="12" y="-8" />
+                        <Anchor point="TOPRIGHT" x="-12" y="-8" />
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Frames>
+            <Frame parentKey="scrollBox" inherits="WowScrollBoxList">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="8" y="-28" />
+                    <Anchor point="BOTTOMRIGHT" x="-24" y="8" />
+                </Anchors>
+            </Frame>
+            <EventFrame parentKey="scrollBar" inherits="MinimalScrollBar">
+                <Anchors>
+                    <Anchor point="TOPRIGHT" x="-8" y="-28" />
+                    <Anchor point="BOTTOMRIGHT" x="-8" y="8" />
+                </Anchors>
+            </EventFrame>
+        </Frames>
+        <Scripts>
+            <OnLoad method="OnLoad" />
+            <OnShow method="OnShow" />
+            <OnHide method="OnHide" />
+        </Scripts>
+    </Frame>
+</Ui>

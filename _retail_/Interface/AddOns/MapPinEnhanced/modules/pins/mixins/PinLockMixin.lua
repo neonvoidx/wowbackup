@@ -1,0 +1,35 @@
+---@class MapPinEnhanced
+local MapPinEnhanced = select(2, ...)
+
+---@class Pins
+local Pins = MapPinEnhanced:GetModule("Pins")
+
+---@class MapPinEnhancedPinMixin
+MapPinEnhancedPinLockMixin = {}
+
+
+function MapPinEnhancedPinLockMixin:SetLock(lock)
+    if not self:CanApplyChanges() then return end
+    self.pinData.lock = lock
+    self:PersistPin()
+
+    self.worldmapPin:SetLock(lock)
+    self.minimapPin:SetLock(lock)
+    for _, frame in ipairs({ self.worldmapPin, self.minimapPin }) do
+        if GameTooltip:IsOwned(frame) then self:ShowTooltip(frame) end
+    end
+
+    if not self.groupIsAddingPin then
+        MapPinEnhanced:FireCallback("PIN_UPDATED_LOCK", self.pinID, lock)
+    end
+end
+
+---@return boolean
+function MapPinEnhancedPinLockMixin:IsLocked()
+    return self.pinData.lock
+end
+
+function MapPinEnhancedPinLockMixin:ToggleLock()
+    if not self:IsLocked() and not MapPinEnhanced:GetModule("Options"):GetOptionValue("Pins.EnableLockedPins") then return end
+    self:SetLock(not self:IsLocked())
+end

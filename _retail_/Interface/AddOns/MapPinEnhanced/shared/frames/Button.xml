@@ -1,0 +1,43 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ https://raw.githubusercontent.com/Gethe/wow-ui-source/live/Interface/AddOns/Blizzard_SharedXML/UI.xsd">
+    <Include file="Button.lua" />
+    <Button name="MapPinEnhancedButtonTemplate" mixin="MapPinEnhancedButtonMixin,MapPinEnhancedTooltipMixin" virtual="true">
+        <KeyValues>
+            <KeyValue key="fontSize" value="medium" />
+        </KeyValues>
+        <NormalTexture atlas="common-button-tertiary-normal" setAllPoints="true" />
+        <PushedTexture atlas="common-button-tertiary-pressed" setAllPoints="true" />
+        <DisabledTexture atlas="common-button-tertiary-disabled" setAllPoints="true" />
+        <HighlightTexture atlas="common-button-tertiary-normal" alphaMode="ADD" alpha="0.6" setAllPoints="true">
+            <Color r="1" g="0.82" b="0.00" />
+        </HighlightTexture>
+        <PushedTextOffset x="-2" y="-1" />
+        <ButtonText parentKey="text">
+        </ButtonText>
+        <NormalFont style="MapPinEnhancedFontNormal" />
+        <HighlightFont style="MapPinEnhancedFontHighlight" />
+        <DisabledFont style="MapPinEnhancedFontDisabled" />
+        <Layers>
+            <Layer level="OVERLAY">
+                <Texture parentKey="iconTexture" inherits="MapPinEnhancedIconTemplate">
+                    <Anchors>
+                        <Anchor point="LEFT" relativePoint="LEFT" x="0" y="0" />
+                    </Anchors>
+                    <Size x="16" y="16" />
+                </Texture>
+                <Texture parentKey="bottomLine" inherits="MapPinEnhancedBottomLineTextureTemplate">
+                    <Anchors>
+                        <Anchor point="BOTTOMLEFT" x="1" y="4" />
+                        <Anchor point="BOTTOMRIGHT" x="-1" y="4" />
+                    </Anchors>
+                </Texture>
+            </Layer>
+        </Layers>
+        <Scripts>
+            <OnLoad method="OnLoad" />
+            <OnShow method="OnShow" />
+            <OnEnable method="OnEnable" />
+            <OnDisable method="OnDisable" />
+        </Scripts>
+    </Button>
+</Ui>

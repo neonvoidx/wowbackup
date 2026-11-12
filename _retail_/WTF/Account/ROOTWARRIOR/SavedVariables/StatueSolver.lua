@@ -1,0 +1,2 @@
+
+StatueSolverSettings = nil

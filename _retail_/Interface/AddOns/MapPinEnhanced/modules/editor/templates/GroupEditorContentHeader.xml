@@ -1,0 +1,178 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ https://raw.githubusercontent.com/Gethe/wow-ui-source/live/Interface/AddOns/Blizzard_SharedXML/UI.xsd">
+    <Include file="GroupEditorContentHeader.lua" />
+
+    <Frame name="MapPinEnhancedGroupEditorContentHeaderTemplate" virtual="true" mixin="MapPinEnhancedGroupEditorContentHeaderMixin">
+        <Size x="1" y="60" />
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture file="Interface/AddOns/MapPinEnhanced/assets/shared/DividerHorizontal.png" setAllPoints="true">
+                    <Size x="1" y="1" />
+                    <Color r="1" g="0.82" b="0" />
+                    <Anchors>
+                        <Anchor point="BOTTOMLEFT" y="0" />
+                        <Anchor point="BOTTOMRIGHT" y="0" />
+                    </Anchors>
+                </Texture>
+            </Layer>
+        </Layers>
+        <Frames>
+            <Button parentKey="iconButton" mixin="MapPinEnhancedTooltipMixin">
+                <Size x="45" y="45" />
+                <KeyValues>
+                    <KeyValue key="tooltip" value="Choose an icon for this group." />
+                </KeyValues>
+                <Anchors>
+                    <Anchor point="LEFT" x="16" y="0" />
+                </Anchors>
+                <HighlightTexture file="Interface/AddOns/MapPinEnhanced/assets/group/GroupMask.png" alphaMode="ADD">
+                    <Size x="44" y="44" />
+                    <Anchors>
+                        <Anchor point="CENTER" />
+                    </Anchors>
+                    <Color r="1" g="0.82" b="0" a="0.3" />
+                </HighlightTexture>
+                <PushedTexture file="Interface/AddOns/MapPinEnhanced/assets/group/GroupMask.png" alphaMode="BLEND">
+                    <Size x="44" y="44" />
+                    <Anchors>
+                        <Anchor point="CENTER" />
+                    </Anchors>
+                    <Color r="0" g="0" b="0" a="0.35" />
+                </PushedTexture>
+                <DisabledTexture file="Interface/AddOns/MapPinEnhanced/assets/group/GroupMask.png" alphaMode="BLEND">
+                    <Size x="44" y="44" />
+                    <Anchors>
+                        <Anchor point="CENTER" />
+                    </Anchors>
+                    <Color r="0" g="0" b="0" a="0.5" />
+                </DisabledTexture>
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <Texture file="Interface/AddOns/MapPinEnhanced/assets/group/GroupShadow.png">
+                            <Anchors>
+                                <Anchor point="TOPLEFT" relativeKey="$parent.iconTexture" />
+                                <Anchor point="BOTTOMRIGHT" relativeKey="$parent.iconTexture" />
+                            </Anchors>
+                        </Texture>
+                    </Layer>
+                    <Layer level="BORDER">
+                        <Texture file="Interface/AddOns/MapPinEnhanced/assets/group/GroupBorder.png">
+                            <Color r="1" g="0.82" b="0" />
+                            <Anchors>
+                                <Anchor point="TOPLEFT" relativeKey="$parent.iconTexture" />
+                                <Anchor point="BOTTOMRIGHT" relativeKey="$parent.iconTexture" />
+                            </Anchors>
+                        </Texture>
+                    </Layer>
+                    <Layer level="ARTWORK">
+                        <Texture parentKey="iconTexture">
+                            <Size x="44" y="44" />
+                            <Anchors>
+                                <Anchor point="CENTER" />
+                            </Anchors>
+                        </Texture>
+                        <MaskTexture file="Interface/AddOns/MapPinEnhanced/assets/group/GroupMask.png" vWrapMode="CLAMPTOBLACKADDITIVE" hWrapMode="CLAMPTOBLACKADDITIVE">
+                            <Anchors>
+                                <Anchor point="TOPLEFT" relativeKey="$parent.iconTexture" />
+                                <Anchor point="BOTTOMRIGHT" relativeKey="$parent.iconTexture" />
+                            </Anchors>
+                            <MaskedTextures>
+                                <MaskedTexture childKey="iconTexture" />
+                            </MaskedTextures>
+                        </MaskTexture>
+                    </Layer>
+                    <Layer level="OVERLAY">
+                        <Texture file="Interface/AddOns/MapPinEnhanced/assets/group/GroupShadowInner.png">
+                            <Anchors>
+                                <Anchor point="TOPLEFT" relativeKey="$parent.iconTexture" />
+                                <Anchor point="BOTTOMRIGHT" relativeKey="$parent.iconTexture" />
+                            </Anchors>
+                        </Texture>
+                    </Layer>
+                </Layers>
+                <Scripts>
+                    <OnLoad method="OnTooltipLoad" />
+                    <OnHide method="OnTooltipLeave" />
+                </Scripts>
+            </Button>
+            <Frame parentKey="nameField" inherits="MapPinEnhancedFormFieldTemplate">
+                <Size x="300" y="24" />
+                <KeyValues>
+                    <KeyValue key="labelText" value="Name" />
+                </KeyValues>
+                <Anchors>
+                    <Anchor point="BOTTOMLEFT" relativeKey="$parent.iconButton" relativePoint="BOTTOMRIGHT" x="12" y="2"/>
+                </Anchors>
+                <Frames>
+                    <EditBox parentKey="child" inherits="MapPinEnhancedInputTemplate" letters="32">
+                        <Size x="300" y="24" />
+                    </EditBox>
+                </Frames>
+            </Frame>
+            <Frame parentKey="trackingModeField" inherits="MapPinEnhancedFormFieldTemplate">
+                <Size x="150" y="24" />
+                <KeyValues>
+                    <KeyValue key="labelText" value="Tracking Mode" />
+                </KeyValues>
+                <Anchors>
+                    <Anchor point="LEFT" relativeKey="$parent.nameField" relativePoint="RIGHT" x="12" />
+                </Anchors>
+                <Frames>
+                    <DropdownButton parentKey="child" inherits="MapPinEnhancedDropdownTemplate">
+                        <Size x="150" y="24" />
+                    </DropdownButton>
+                </Frames>
+            </Frame>
+            <Frame parentKey="restorableField" inherits="MapPinEnhancedFormFieldTemplate">
+                <Size x="180" y="25" />
+                <KeyValues>
+                    <KeyValue key="labelText" value="Make pins restorable" />
+                </KeyValues>
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeKey="$parent.trackingModeField" relativePoint="TOPRIGHT" x="12" />
+                </Anchors>
+                <Frames>
+                    <Button parentKey="child" inherits="MapPinEnhancedToggleTemplate" />
+                </Frames>
+            </Frame>
+
+
+            <Button parentKey="deleteButton" inherits="MapPinEnhancedIconButtonTemplate">
+                <Size x="32" y="32" />
+                <KeyValues>
+                    <KeyValue key="icon" value="trash" />
+                    <KeyValue key="iconSize" value="medium" />
+                    <KeyValue key="tooltip" value="Delete this group and all of its pins. System groups are cleared instead." />
+                </KeyValues>
+                <Anchors>
+                    <Anchor point="RIGHT" x="-24" y="-5" />
+                </Anchors>
+            </Button>
+            <Button parentKey="hideButton" inherits="MapPinEnhancedIconButtonTemplate">
+                <Size x="32" y="32" />
+                <KeyValues>
+                    <KeyValue key="icon" value="eye" />
+                    <KeyValue key="iconSize" value="medium" />
+                    <KeyValue key="tooltip" value="Hide or show this group." />
+                </KeyValues>
+                <Anchors>
+                    <Anchor point="RIGHT" relativeKey="$parent.deleteButton" relativePoint="LEFT" x="-2" />
+                </Anchors>
+            </Button>
+            <Button parentKey="exportButton" inherits="MapPinEnhancedIconButtonTemplate">
+                <Size x="32" y="32" />
+                <KeyValues>
+                    <KeyValue key="icon" value="export" />
+                    <KeyValue key="iconSize" value="medium" />
+                    <KeyValue key="tooltip" value="Export" />
+                </KeyValues>
+                <Anchors>
+                    <Anchor point="RIGHT" relativeKey="$parent.hideButton" relativePoint="LEFT" x="-2" />
+                </Anchors>
+            </Button>
+        </Frames>
+        <Scripts>
+            <OnHide method="Reset" />
+        </Scripts>
+    </Frame>
+</Ui>

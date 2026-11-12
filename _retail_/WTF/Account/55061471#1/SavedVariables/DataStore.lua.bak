@@ -1,0 +1,27 @@
+
+DataStoreDB = {
+	["profileKeys"] = {
+		["Ofpuss - Mal'Ganis"] = "Ofpuss - Mal'Ganis",
+		["Stormclout - Mal'Ganis"] = "Stormclout - Mal'Ganis",
+	},
+	["global"] = {
+		["Guilds"] = {
+			["Default.Mal'Ganis.Almost Awesome"] = {
+				["faction"] = "Horde",
+			},
+		},
+		["Characters"] = {
+			["Default.Mal'Ganis.Stormclout"] = {
+				["guildName"] = "Almost Awesome",
+				["faction"] = "Horde",
+			},
+			["Default.Mal'Ganis.Ofpuss"] = {
+				["faction"] = "Alliance",
+				["guildName"] = "Almost Awesome",
+			},
+		},
+		["ShortToLongRealmNames"] = {
+			["Mal'Ganis"] = "Mal'Ganis",
+		},
+	},
+}

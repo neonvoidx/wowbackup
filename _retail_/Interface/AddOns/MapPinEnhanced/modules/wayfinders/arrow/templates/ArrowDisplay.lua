@@ -1,0 +1,290 @@
+---@class MapPinEnhanced
+local MapPinEnhanced = select(2, ...)
+local L = MapPinEnhanced.L
+
+---@class MapPinEnhancedArrowNeedle : Texture
+---@field fadeIn MapPinEnhancedAnimationVisibilityMixin
+---@field fadeOut MapPinEnhancedAnimationVisibilityMixin
+
+---@class MapPinEnhancedArrowCloseNeedle : MapPinEnhancedArrowNeedle
+---@field jump AnimationGroup
+
+---@class MapPinEnhancedArrowNeedleContainer : Frame
+---@field needle MapPinEnhancedArrowNeedle
+---@field closeNeedle MapPinEnhancedArrowCloseNeedle
+
+---@class MapPinEnhancedArrowTextContainer : Frame
+---@field loading Texture
+---@field description MapPinEnhancedWayfinderDescriptionTemplate
+---@field title FontString
+---@field readout MapPinEnhancedWayfinderReadoutTemplate
+
+---@class MapPinEnhancedWayfinderArrowTemplate : Frame, MapPinEnhancedWayfinderDistanceMixin, MapPinEnhancedWayfinderDirectionMixin
+---@field needleContainer MapPinEnhancedArrowNeedleContainer
+---@field textContainer MapPinEnhancedArrowTextContainer
+---@field pin MapPinEnhancedBasePinTemplate
+---@field loading Texture
+---@field title FontString
+---@field readout MapPinEnhancedWayfinderReadoutTemplate
+---@field fadeIn MapPinEnhancedAnimationVisibilityMixin
+---@field fadeOut MapPinEnhancedAnimationVisibilityMixin
+---@field needleRotation number | nil
+---@field newNeedleRotation number | nil
+---@field needleFrameIndex integer?
+---@field directionVisible boolean?
+---@field forceClose boolean?
+---@field step WayfinderStepData?
+---@field dataWarning MapPinEnhancedTooltipMixin
+---@field clearButton Button
+---@field skipButton MapPinEnhancedIconButtonTemplate
+---@field progress MapPinEnhancedWayfinderProgressTemplate
+---@field displayType 'close' | 'far' | nil
+---@field fullTitle string?
+---@field fullDescription string?
+---@field instructionText string?
+---@field textTruncated boolean?
+MapPinEnhancedWayfinderArrowMixin = CreateFromMixins(MapPinEnhancedWayfinderDistanceMixin,
+    MapPinEnhancedWayfinderDirectionMixin)
+
+local Pins = MapPinEnhanced:GetModule("Pins")
+local Options = MapPinEnhanced:GetModule("Options")
+local Wayfinders = MapPinEnhanced:GetModule("Wayfinders")
+local MAX_NEEDLE_ALPHA = 1
+
+local mathSin = math.sin
+local mathCos = math.cos
+local mathAtan2 = math.atan2
+local DeltaLerp = DeltaLerp
+
+local function IsDraggingLocked()
+    return InCombatLockdown() or Options:GetOptionValue("Wayfinder.LockArrow") == true
+end
+
+---@param color PinColor
+function MapPinEnhancedWayfinderArrowMixin:SetColor(color)
+    self.pin:SetColor(color)
+    self.needleContainer.needle:SetVertexColor(self.pin:GetActiveStyleColor():GetRGBA())
+    self.needleContainer.closeNeedle:SetVertexColor(self.pin:GetActiveStyleColor():GetRGBA())
+end
+
+---@param texture string|number?
+---@param usesAtlas boolean?
+---@param useFrameMask boolean?
+---@return boolean? hasIcon
+function MapPinEnhancedWayfinderArrowMixin:SetTexture(texture, usesAtlas, useFrameMask)
+    if not texture then return end
+    local hasIcon = self.pin:SetIconTexture(texture, usesAtlas, useFrameMask)
+    self.needleContainer.needle:SetVertexColor(self.pin:GetActiveStyleColor():GetRGBA())
+    self.needleContainer.closeNeedle:SetVertexColor(self.pin:GetActiveStyleColor():GetRGBA())
+    return hasIcon
+end
+
+function MapPinEnhancedWayfinderArrowMixin:SetTitle(title)
+    self.title:SetText(title)
+end
+
+function MapPinEnhancedWayfinderArrowMixin:SetLocation(mapID, x, y)
+    self:ResetDistanceReadout()
+    self:SetTargetLocation(mapID, x, y)
+end
+
+---@param displayType 'close' | 'far'
+function MapPinEnhancedWayfinderArrowMixin:SetDisplayType(displayType)
+    if self.forceClose then displayType = "close" end
+    if self.displayType == displayType then return end
+    self.displayType = displayType
+    local needle = self.needleContainer.needle
+    local closeNeedle = self.needleContainer.closeNeedle
+    -- Finish the outgoing fade even if distance changes again; completion uses the latest state.
+    if needle.fadeOut:IsPlaying() or closeNeedle.fadeOut:IsPlaying() then return end
+    local outgoing = displayType == "close" and needle or closeNeedle
+    if outgoing:IsShown() then
+        outgoing.fadeOut:PlayReplacing(outgoing.fadeIn)
+    else
+        self:FinishNeedleTransition()
+    end
+end
+
+function MapPinEnhancedWayfinderArrowMixin:FinishNeedleTransition()
+    if not self:IsVisible() or self.directionVisible == false then return end
+    local needle = self.needleContainer.needle
+    local closeNeedle = self.needleContainer.closeNeedle
+    if self.displayType == "close" then
+        closeNeedle.fadeIn:PlayShowing(closeNeedle.fadeOut)
+        closeNeedle.jump:Play()
+    else
+        self:SetNeedleRotation(-(self.needleRotation or 0))
+        needle.fadeIn:PlayShowing(needle.fadeOut)
+    end
+end
+
+function MapPinEnhancedWayfinderArrowMixin:UpdateNeedlePosition(elapsed)
+    local angle = self:SampleTargetAngle(elapsed)
+    if angle == nil then return end
+    self.newNeedleRotation = angle
+end
+
+local FRAME_COUNT = 120
+local COLUMNS = 16
+local ROWS = 8
+local FULL_ROTATION = 2 * math.pi
+
+---@param rotation number Counterclockwise radians, matching Texture:SetRotation.
+function MapPinEnhancedWayfinderArrowMixin:SetNeedleRotation(rotation)
+    -- The sheet advances clockwise in 3-degree steps; its final eight cells are empty.
+    local frame = math.floor((-rotation % FULL_ROTATION) / FULL_ROTATION * FRAME_COUNT + 0.5) % FRAME_COUNT
+    if self.needleFrameIndex == frame then return end
+    self.needleFrameIndex = frame
+    local column = frame % COLUMNS
+    local row = math.floor(frame / COLUMNS)
+    self.needleContainer.needle:SetTexCoord(column / COLUMNS, (column + 1) / COLUMNS, row / ROWS, (row + 1) / ROWS)
+end
+
+function MapPinEnhancedWayfinderArrowMixin:AnimateRotation(elapsed)
+    if not self.displayType or self.displayType == "close" then return end
+    local currentRotation = self.needleRotation or 0
+    local targetRotation = self.newNeedleRotation or 0
+
+    local angleDifference = mathAtan2(
+        mathSin(targetRotation - currentRotation),
+        mathCos(targetRotation - currentRotation)
+    )
+    local newRotation = DeltaLerp(currentRotation, currentRotation + angleDifference, .2, elapsed)
+    self.needleRotation = newRotation
+
+    self:SetNeedleRotation(-newRotation)
+end
+
+---@param elapsed number
+function MapPinEnhancedWayfinderArrowMixin:OnUpdate(elapsed)
+    if self.directionVisible == false then return end
+    self:UpdateNeedlePosition(elapsed)
+    if self.displayType == "close" then return end
+    self:AnimateRotation(elapsed)
+end
+
+function MapPinEnhancedWayfinderArrowMixin:OnDistanceUpdate(distance, timeToTarget)
+    if self.directionVisible == false then return end
+    if distance and distance < 10 then
+        self:SetDisplayType("close")
+    else
+        self:SetDisplayType("far")
+    end
+end
+
+---@param mouseButton MouseButton
+function MapPinEnhancedWayfinderArrowMixin:OnMouseDown(mouseButton)
+    if mouseButton ~= "RightButton" then return end
+
+    local trackedPin = Pins:GetTrackedPin()
+    local menu = trackedPin and trackedPin:BuildPinMenuEntries() or {}
+
+    if trackedPin then
+        table.insert(menu, {
+            type = "divider",
+        })
+    end
+
+    for _, entry in ipairs(Wayfinders:BuildNavigationMenuEntries()) do
+        table.insert(menu, entry)
+    end
+
+    MapPinEnhanced:GenerateMenu(self, menu)
+end
+
+function MapPinEnhancedWayfinderArrowMixin:OnLoad()
+    self.textContainer.description.mouseOwner = self
+    self.loading = self.textContainer.loading
+    self.title = self.textContainer.title
+    self.title:SetNonSpaceWrap(true)
+    self.readout = self.textContainer.readout
+    self.readout.text:SetNonSpaceWrap(false)
+
+    local frameLevel = self:GetFrameLevel()
+    self.needleContainer:SetFrameLevel(frameLevel + 1)
+    self.pin:SetFrameLevel(frameLevel + 1)
+    self.textContainer:SetFrameLevel(frameLevel)
+    self.progress:SetFrameLevel(frameLevel + 2)
+
+    local position = self:GetParent()
+    assert(position, "Arrow:OnLoad requires its position owner")
+    MapPinEnhanced:RegisterDraggableFrame(position, "floatingArrow", self, IsDraggingLocked)
+    MapPinEnhanced:RestoreFrame(position)
+    MapPinEnhanced:UnregisterDraggableFrame(position)
+    -- The secure position owner stays shown; only the visible display accepts dragging.
+    self:HookScript("OnMouseDown", function(_, mouseButton)
+        self:OnMouseDown(mouseButton)
+    end)
+    self.pin:SetTracked(true)
+end
+
+---@param visible boolean
+function MapPinEnhancedWayfinderArrowMixin:SetDirectionVisible(visible)
+    if self.directionVisible == visible then return end
+    self.directionVisible = visible
+    if not visible then self:Reset() end
+end
+
+function MapPinEnhancedWayfinderArrowMixin:OnShow()
+    self.needleFrameIndex = nil
+    MapPinEnhanced:RegisterDraggableFrame(self:GetParent(), "floatingArrow", self, IsDraggingLocked)
+    self:SetScript("OnUpdate", function(_, elapsed) self:OnUpdate(elapsed) end)
+    self:StartDistanceUpdates(self.readout, function(distance, timeToTarget)
+        self:OnDistanceUpdate(distance, timeToTarget)
+    end)
+    self:UpdateNeedlePosition()
+    self:SetDisplayType("far")
+end
+
+function MapPinEnhancedWayfinderArrowMixin:Reset()
+    self.displayType = "far"
+    local needle = self.needleContainer.needle
+    local closeNeedle = self.needleContainer.closeNeedle
+    closeNeedle.jump:Stop()
+    closeNeedle.fadeIn:SetParentShownInstantly(false, closeNeedle.fadeOut)
+    needle.fadeIn:SetParentShownInstantly(true, needle.fadeOut)
+    self:ResetDirectionSampling()
+    self.needleRotation = nil
+    self.newNeedleRotation = nil
+    self.needleFrameIndex = nil
+    self:SetNeedleRotation(0)
+    self.needleContainer.needle:SetAlpha(MAX_NEEDLE_ALPHA)
+end
+
+function MapPinEnhancedWayfinderArrowMixin:OnHide()
+    self:OnLeave()
+    MapPinEnhanced:UnregisterDraggableFrame(self:GetParent())
+    self:SetScript("OnUpdate", nil)
+    self:StopDistanceUpdates()
+    self:Reset()
+end
+
+function MapPinEnhancedWayfinderArrowMixin:OnEnter()
+    if self.textTruncated then
+        local title = self.instructionText and self.instructionText .. "\n" .. (self.fullTitle or "") or self.fullTitle
+        Wayfinders:ShowTextTooltip(self, title, self.fullDescription)
+    else
+        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+    end
+    MapPinEnhanced:AddTooltipInteractions(GameTooltip, { { L["Right Click"], L["Open menu"] } })
+    if GameTooltip:NumLines() > 0 then GameTooltip:Show() end
+end
+
+function MapPinEnhancedWayfinderArrowMixin:OnLeave()
+    if GameTooltip:IsOwned(self) then GameTooltip:Hide() end
+end
+
+function MapPinEnhancedWayfinderArrowMixin:ClearTracking()
+    if self.step then
+        MapPinEnhanced:GetModule("Wayfinders"):ClearNavigationTracking(self.step.changeNumber)
+    end
+end
+
+function MapPinEnhancedWayfinderArrowMixin:ToggleNavigationSkipped()
+    if self.step then Wayfinders:ToggleNavigationSkipped(self.step.changeNumber) end
+end
+
+--[==[@debug@
+MapPinEnhancedWayfinderArrowMixin.OnUpdate = MapPinEnhanced.profiler:WrapScope("Wayfinders.Arrow.OnUpdate",
+    MapPinEnhancedWayfinderArrowMixin.OnUpdate)
+--@end-debug@]==]

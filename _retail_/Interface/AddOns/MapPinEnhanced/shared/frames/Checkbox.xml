@@ -1,0 +1,20 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ https://raw.githubusercontent.com/Gethe/wow-ui-source/live/Interface/AddOns/Blizzard_SharedXML/UI.xsd">
+    <Include file="Checkbox.lua" />
+
+    <CheckButton name="MapPinEnhancedCheckboxTemplate" mixin="MapPinEnhancedCheckboxMixin" virtual="true" propagateMouseInput="Motion">
+        <Size x="25" y="25" />
+        <NormalTexture parentKey="NormalTexture" inherits="MapPinEnhancedGenericFrameTextureTemplate" setAllPoints="true" />
+        <HighlightTexture parentKey="HighlightTexture" inherits="MapPinEnhancedGenericFrameTextureTemplate" alphaMode="ADD" alpha="0.2" setAllPoints="true" />
+        <CheckedTexture parentKey="CheckedTexture" file="Interface/AddOns/MapPinEnhanced/assets/shared/Checkmark.png" setAllPoints="true">
+            <Color r="1" g="0.82" b="0" />
+            <Animations>
+                <AnimationGroup parentKey="fadeIn" inherits="MapPinEnhancedAnimationFadeZoomIn" />
+                <AnimationGroup parentKey="fadeOut" inherits="MapPinEnhancedAnimationFadeZoomOut" />
+            </Animations>
+        </CheckedTexture>
+        <DisabledCheckedTexture parentKey="CheckedTexture" file="Interface/AddOns/MapPinEnhanced/assets/shared/Checkmark.png" setAllPoints="true">
+            <Color r="0.5" g="0.5" b="0.5" />
+        </DisabledCheckedTexture>
+    </CheckButton>
+</Ui>

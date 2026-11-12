@@ -1,0 +1,459 @@
+local parentAddonName = "EnhanceQoL"
+local addonName, addon = ...
+
+if _G[parentAddonName] then
+	addon = _G[parentAddonName]
+else
+	error(parentAddonName .. " is not loaded")
+end
+
+if not addon.Sounds or not addon.Sounds.soundFiles then return end
+
+local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL")
+local wipeTable = _G.wipe or table.wipe
+
+local SOUND_LABEL_ALIASES = {
+	auctionhouse = { locale = "Auction House", fallback = "Auction House" },
+	chat = { locale = "Chat", fallback = "Chat" },
+	dungeon = { locale = "Dungeon", fallback = "Dungeon" },
+	general = { locale = "General", fallback = "General" },
+	mounts = { locale = "Mounts", fallback = "Mounts" },
+	professions = { locale = "Professions", fallback = "Professions" },
+	quest = { locale = "Quest", fallback = "Quest" },
+	soundMuteGazeOfTheAlnseer = { itemID = 249343, locale = "soundMuteGazeOfTheAlnseer", fallback = "Gaze of the Alnseer" },
+	soundExtraEventChatWhisper = { global = "WHISPER", fallback = "Whisper" },
+	soundExtraEventReadyCheck = { global = "READY_CHECK", fallback = "Ready check" },
+	trinkets = { locale = "trinkets", global = "INVTYPE_TRINKET", fallback = "Trinkets" },
+	whisper = { global = "WHISPER", fallback = "Whisper" },
+}
+
+local SOUND_MUTE_GROUPS = {
+	gameplay = {
+		label = _G.SETTING_GROUP_GAMEPLAY or _G.GAMEPLAY or "Gameplay",
+		order = 10,
+		keys = {
+			class = true,
+			dungeon = true,
+			mounts = true,
+			professions = true,
+			quest = true,
+			spells = true,
+			trinkets = true,
+		},
+	},
+	interface = {
+		label = _G.INTERFACE_LABEL or "Interface",
+		order = 20,
+		keys = {
+			auctionhouse = true,
+			general = true,
+			interface = true,
+			ping = true,
+		},
+	},
+	social = {
+		label = _G.SOCIAL_LABEL or "Social",
+		order = 30,
+		keys = {
+			chat = true,
+			emotes = true,
+		},
+	},
+	misc = {
+		label = _G.MISCELLANEOUS or "Miscellaneous",
+		order = 40,
+		keys = {
+			misc = true,
+		},
+	},
+}
+
+local function GetLocaleIfPresent(key)
+	if type(key) ~= "string" or key == "" then return nil end
+	return rawget(L, key)
+end
+
+local function GetGlobalStringIfPresent(key)
+	if type(key) ~= "string" or key == "" then return nil end
+	local value = rawget(_G, key)
+	if type(value) == "string" and value ~= "" then return value end
+	return nil
+end
+
+local function GetItemNameIfPresent(itemID)
+	itemID = tonumber(itemID)
+	if not itemID or itemID <= 0 then return nil end
+
+	if C_Item and C_Item.GetItemNameByID then
+		local itemName = C_Item.GetItemNameByID(itemID)
+		if type(itemName) == "string" and itemName ~= "" then return itemName end
+	end
+
+	if GetItemInfo then
+		local itemName = GetItemInfo(itemID)
+		if type(itemName) == "string" and itemName ~= "" then return itemName end
+	end
+
+	return nil
+end
+
+local function GetLabel(key)
+	if type(key) ~= "string" or key == "" then return key end
+
+	local alias = SOUND_LABEL_ALIASES[key]
+	if alias then
+		local itemName = GetItemNameIfPresent(alias.itemID)
+		if itemName then return itemName end
+
+		local globalValue = GetGlobalStringIfPresent(alias.global)
+		if globalValue then return globalValue end
+
+		local localeValue = GetLocaleIfPresent(alias.locale)
+		if localeValue then return localeValue end
+
+		if alias.fallback then return alias.fallback end
+	end
+
+	local localeValue = GetLocaleIfPresent(key)
+	if localeValue then return localeValue end
+
+	local globalValue = GetGlobalStringIfPresent(key)
+	if globalValue then return globalValue end
+
+	return key
+end
+
+local function IsPureNumbersTable(tbl)
+	local hasEntries
+	for _, v in pairs(tbl) do
+		hasEntries = true
+		if type(v) ~= "number" then return false end
+	end
+	return hasEntries and true or false
+end
+
+local function AllChildrenArePureNumbers(tbl)
+	local hasEntries
+	for _, child in pairs(tbl) do
+		hasEntries = true
+		if type(child) ~= "table" or not IsPureNumbersTable(child) then return false end
+	end
+	return hasEntries and true or false
+end
+
+local soundCategory = nil
+
+local audioDeviceExpandable = addon.functions.SettingsCreateExpandableSection(soundCategory, {
+	name = L["audioDeviceSection"] or "Audio device",
+	configPageKey = "SoundAudioDevice",
+	iconKey = "soundsettings",
+	expanded = false,
+	colorizeTitle = false,
+	modernCategory = "sound",
+	modernOnly = true,
+})
+
+local function CreateAudioCheckbox(data)
+	data.parentSection = audioDeviceExpandable
+	return addon.functions.SettingsCreateCheckbox(soundCategory, data)
+end
+
+CreateAudioCheckbox({
+	var = "keepAudioSynced",
+	text = L["keepAudioSynced"] or "Keep audio synced",
+	desc = L["keepAudioSyncedDesc"],
+	func = function(value)
+		addon.db.keepAudioSynced = value and true or false
+		if addon.Sounds and addon.Sounds.functions and addon.Sounds.functions.UpdateAudioSync then addon.Sounds.functions.UpdateAudioSync() end
+	end,
+	default = false,
+})
+
+local soundExpandable = addon.functions.SettingsCreateExpandableSection(soundCategory, {
+	name = L["soundMuteSection"] or "Sounds to mute",
+	configPageKey = "SoundMute",
+	iconKey = "sound",
+	expanded = false,
+	colorizeTitle = false,
+	modernCategory = "sound",
+	modernOnly = true,
+})
+
+local activeSoundMuteGroup
+local function GetSoundMuteGroup(path)
+	local firstKey = path and path[1]
+	local leafKey = path and path[#path]
+	if leafKey and leafKey ~= firstKey then
+		for groupID, group in pairs(SOUND_MUTE_GROUPS) do
+			if group.keys[leafKey] then return groupID, group end
+		end
+	end
+	for groupID, group in pairs(SOUND_MUTE_GROUPS) do
+		if firstKey and group.keys[firstKey] then return groupID, group end
+	end
+	return "misc", SOUND_MUTE_GROUPS.misc
+end
+
+local function EnsureSoundMuteGroup(path)
+	local groupID, group = GetSoundMuteGroup(path)
+	if activeSoundMuteGroup == groupID then return end
+	activeSoundMuteGroup = groupID
+	addon.functions.SettingsCreateHeadline(soundCategory, group.label, {
+		parentSection = soundExpandable,
+		groupID = "sound-mute-" .. groupID,
+		order = group.order,
+	})
+end
+
+local function CreateSectionHeader(text, path)
+	EnsureSoundMuteGroup(path)
+	addon.functions.SettingsCreateSectionHeader(soundCategory, text, { parentSection = soundExpandable })
+end
+
+local function CreateCheckbox(data)
+	if data.var == "sounds_dungeon_nekzali_voice" then
+		data.newTagID = "soundMuteNekzaliVoice"
+		data.desc = L["nekzali_voiceDesc"]
+	end
+	data.parentSection = soundExpandable
+	return addon.functions.SettingsCreateCheckbox(soundCategory, data)
+end
+
+local headlineCache = {}
+local function EnsureHeadlineForPath(path)
+	local key = table.concat(path, "/")
+	if headlineCache[key] then return end
+	headlineCache[key] = true
+	local label = GetLabel(path[#path])
+	CreateSectionHeader(label, path)
+end
+
+local function SortKeys(keys)
+	table.sort(keys, function(a, b)
+		local la, lb = GetLabel(a), GetLabel(b)
+		if la == lb then return tostring(a) < tostring(b) end
+		return la < lb
+	end)
+end
+
+local function RefreshMutedSounds()
+	if addon.Sounds.functions.UpdateMutedSounds then addon.Sounds.functions.UpdateMutedSounds() end
+end
+
+local function AddSoundOptions(path, data)
+	if type(data) ~= "table" then return false end
+
+	if IsPureNumbersTable(data) then
+		EnsureSoundMuteGroup(path)
+		local varName = "sounds_" .. table.concat(path, "_")
+		local label = GetLabel(path[#path])
+		CreateCheckbox({
+			var = varName,
+			text = label,
+			func = function(value)
+				addon.db[varName] = value and true or false
+				RefreshMutedSounds()
+			end,
+			default = false,
+		})
+		return true
+	end
+
+	if AllChildrenArePureNumbers(data) then
+		local keys = {}
+		for key in pairs(data) do
+			table.insert(keys, key)
+		end
+		SortKeys(keys)
+
+		if #path == 1 then
+			local needHeadline
+			for _, key in ipairs(keys) do
+				local child = data[key]
+				if type(child) == "table" and IsPureNumbersTable(child) then
+					needHeadline = true
+					break
+				end
+			end
+			if needHeadline then EnsureHeadlineForPath(path) end
+
+			local created = false
+			for _, key in ipairs(keys) do
+				table.insert(path, key)
+				if AddSoundOptions(path, data[key]) then created = true end
+				table.remove(path)
+			end
+			return created
+		end
+
+		local created = false
+		local groupKey = table.concat(path, "_")
+		if #keys > 0 then EnsureHeadlineForPath(path) end
+		for _, key in ipairs(keys) do
+			local varName = "sounds_" .. groupKey .. "_" .. key
+			local label = GetLabel(key)
+
+			CreateCheckbox({
+				var = varName,
+				text = label,
+				func = function(value)
+					addon.db[varName] = value and true or false
+					RefreshMutedSounds()
+				end,
+				default = false,
+			})
+			created = true
+		end
+		return created
+	end
+
+	local created = false
+	local children = {}
+	for key, value in pairs(data) do
+		if type(value) == "table" then table.insert(children, key) end
+	end
+	SortKeys(children)
+
+	for _, key in ipairs(children) do
+		table.insert(path, key)
+		if AddSoundOptions(path, data[key]) then created = true end
+		table.remove(path)
+	end
+	return created
+end
+
+local topKeys = {}
+for key in pairs(addon.Sounds.soundFiles) do
+	table.insert(topKeys, key)
+end
+SortKeys(topKeys)
+
+for _, treeKey in ipairs(topKeys) do
+	AddSoundOptions({ treeKey }, addon.Sounds.soundFiles[treeKey])
+end
+
+local extraSoundExpandable = addon.functions.SettingsCreateExpandableSection(soundCategory, {
+	name = L["soundEventSection"] or L["soundExtraSection"] or "Event sounds",
+	configPageKey = "SoundExtra",
+	iconKey = "sound",
+	expanded = false,
+	colorizeTitle = false,
+	modernCategory = "sound",
+	modernOnly = true,
+})
+
+local extraSoundOptionsCache = {}
+local extraSoundOrder = {}
+local extraSoundOptionsVersion = -1
+local extraSoundOptionsNoneLabel
+
+local function buildExtraSoundOptions()
+	local noneLabel = NONE
+	local version = (addon.functions and addon.functions.GetLSMMediaVersion and addon.functions.GetLSMMediaVersion("sound")) or 0
+	if extraSoundOptionsCache and extraSoundOptionsVersion == version and extraSoundOptionsNoneLabel == noneLabel then return extraSoundOptionsCache, extraSoundOrder end
+
+	wipeTable(extraSoundOptionsCache)
+	wipeTable(extraSoundOrder)
+	extraSoundOptionsCache[""] = noneLabel
+	extraSoundOrder[#extraSoundOrder + 1] = ""
+
+	local sounds = (addon.functions and addon.functions.GetLSMMediaNames and addon.functions.GetLSMMediaNames("sound")) or {}
+	for i = 1, #sounds do
+		local name = sounds[i]
+		if name ~= "" and name ~= "None" and name ~= NONE and name ~= noneLabel then
+			extraSoundOptionsCache[name] = name
+			extraSoundOrder[#extraSoundOrder + 1] = name
+		end
+	end
+
+	extraSoundOptionsVersion = version
+	extraSoundOptionsNoneLabel = noneLabel
+	return extraSoundOptionsCache, extraSoundOrder
+end
+
+local function getExtraSound(eventName)
+	local mapping = addon.db and addon.db.soundExtraEvents
+	return (mapping and mapping[eventName]) or ""
+end
+
+local function setExtraSound(eventName, value)
+	addon.db.soundExtraEvents = addon.db.soundExtraEvents or {}
+	if not value or value == "" then
+		addon.db.soundExtraEvents[eventName] = nil
+	else
+		addon.db.soundExtraEvents[eventName] = value
+	end
+	if addon.Sounds and addon.Sounds.functions and addon.Sounds.functions.UpdateExtraSounds then addon.Sounds.functions.UpdateExtraSounds() end
+end
+
+local extraEnable = addon.functions.SettingsCreateCheckbox(soundCategory, {
+	var = "soundExtraEnabled",
+	text = L["soundExtraEnable"] or "Enable extra sounds",
+	desc = L["soundExtraEnableDesc"],
+	func = function(value)
+		addon.db.soundExtraEnabled = value and true or false
+		if addon.Sounds and addon.Sounds.functions and addon.Sounds.functions.UpdateExtraSounds then addon.Sounds.functions.UpdateExtraSounds() end
+	end,
+	default = false,
+	parentSection = extraSoundExpandable,
+})
+
+local function isExtraEnabled() return addon.db and addon.db.soundExtraEnabled == true end
+
+local extraEvents = addon.Sounds and addon.Sounds.extraSoundEvents
+if type(extraEvents) == "table" then
+	local groupTitles = { L["soundEventCommunicationHeader"], L["Group"], L["soundEventCombatHeader"], L["Dungeon"], L["Loot"], L["Professions"], L["Other"] }
+	local eventGroups = {
+		CHAT_MSG_BN_WHISPER = 1, CHAT_MSG_WHISPER = 1, UPDATE_PENDING_MAIL = 1,
+		PARTY_INVITE_REQUEST = 2, GROUP_INVITE_CONFIRMATION = 2, LFG_PROPOSAL_SHOW = 2, LFG_ROLE_CHECK_SHOW = 2, READY_CHECK = 2, START_PLAYER_COUNTDOWN = 2,
+		PLAYER_REGEN_DISABLED = 3, PLAYER_REGEN_ENABLED = 3, RESURRECT_REQUEST = 3,
+		CHALLENGE_MODE_DEATH_COUNT_UPDATED = 4, CHALLENGE_MODE_LEAVER_TIMER_STARTED = 4,
+		ACHIEVEMENT_EARNED = 5, LOOT_ITEM_ROLL_WON = 5, SHOW_LOOT_TOAST_LEGENDARY_LOOTED = 5, SHOW_LOOT_TOAST_UPGRADE = 5,
+		CRAFTINGORDERS_PERSONAL_ORDER_NEW = 6, CRAFTINGORDERS_PERSONAL_ORDER_REMOVED = 6,
+	}
+	local ordered = {}
+	for _, entry in ipairs(extraEvents) do
+		local eventName = entry and entry.event
+		if type(eventName) == "string" and eventName ~= "" then
+			local label = GetLabel(entry.label) or eventName
+			ordered[#ordered + 1] = {
+				event = eventName,
+				group = eventGroups[eventName] or 7,
+				label = label,
+				sortKey = string.lower(tostring(label or "")),
+			}
+		end
+	end
+	table.sort(ordered, function(a, b)
+		if a.group ~= b.group then return a.group < b.group end
+		if a.sortKey == b.sortKey then return tostring(a.event or "") < tostring(b.event or "") end
+		return a.sortKey < b.sortKey
+	end)
+	local currentGroup
+	for _, entry in ipairs(ordered) do
+		if entry.group ~= currentGroup then
+			currentGroup = entry.group
+			addon.functions.SettingsCreateSectionHeader(soundCategory, groupTitles[currentGroup], { parentSection = extraSoundExpandable, headerStyle = "subtle", indent = 16 })
+		end
+		local eventName = entry.event
+		local label = entry.label or eventName
+		local varName = "soundExtraEvent_" .. eventName
+		addon.functions.SettingsCreateSoundDropdown(soundCategory, {
+			var = varName,
+			indent = 16,
+			text = label,
+			listFunc = buildExtraSoundOptions,
+			order = extraSoundOrder,
+			default = "",
+			get = function() return getExtraSound(eventName) end,
+			set = function(value) setExtraSound(eventName, value) end,
+			parent = true,
+			element = extraEnable.element,
+			parentCheck = isExtraEnabled,
+			parentSection = extraSoundExpandable,
+			placeholderText = NONE,
+			playbackChannel = "Master",
+		})
+		addon.functions.SettingsAttachNotify(extraEnable.setting, varName)
+	end
+end

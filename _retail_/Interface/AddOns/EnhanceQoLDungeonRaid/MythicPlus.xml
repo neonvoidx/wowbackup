@@ -1,0 +1,16 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+	<Script file="Init.lua" />
+	<Script file="DungeonFinderPanels.lua" />
+	<Script file="KeystoneDungeonIndicator.lua" />
+	<Script file="Settings_DungeonFinderPanels.lua" />
+	<Script file="TalentReminder.lua" />
+	<Script file="DungeonFilter.lua" />
+	<Script file="ObjectiveTracker.lua" />
+	<Script file="MythicPlusTimer_PanelFlow.lua" />
+	<Script file="MythicPlusTimer.lua" />
+	<Script file="EnhanceQoLMythicPlus.lua" />
+	<Script file="MythicPlus_BloodlustAuraContainers.lua" />
+	<Script file="Settings_Profiles.lua" />
+	<Script file="Settings_MythicPlus.lua" />
+	<Script file="GroupTools.lua" />
+</Ui>

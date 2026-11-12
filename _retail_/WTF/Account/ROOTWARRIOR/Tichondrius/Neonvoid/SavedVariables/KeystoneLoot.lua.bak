@@ -1,0 +1,29 @@
+
+KeystoneLootCharDB = {
+["version"] = 4,
+["bankTracks"] = {
+},
+["ui"] = {
+["selectedCharacterKey"] = "Tichondrius-Neonvoid-5",
+["selectedTab"] = "dungeons",
+["selectedRaidTab"] = 1307,
+},
+["voidcore"] = {
+},
+["voidcoreChecked"] = true,
+["filters"] = {
+["dungeon"] = {
+["track"] = "champion",
+["rank"] = 1,
+},
+["specId"] = 258,
+["slotIds"] = {
+},
+["raid"] = {
+["difficulty"] = "normal",
+["rank"] = 1,
+},
+["slotId"] = -2,
+["classId"] = 5,
+},
+}

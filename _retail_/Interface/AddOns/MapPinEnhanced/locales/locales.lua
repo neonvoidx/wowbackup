@@ -1,0 +1,31 @@
+---@class MapPinEnhanced
+---@field L table<string, string> a list of localization strings for the addon
+---@field locale AceLocale.LocaleCode the locale for the addon
+local MapPinEnhanced = select(2, ...)
+
+-- Translations are maintained in locale files through GitHub pull requests.
+-- English defaults and the selected locale overlay load before consumers.
+-- *** Using Phanx's method to localize strings ***
+-- You can find the original code here: https://phanx.net/addons/tutorials/localize
+local L = setmetatable({}, {
+    __index = function(t, k)
+        local v = tostring(k)
+        --[==[@debug@
+        if MapPinEnhanced.Debug then
+            MapPinEnhanced:Debug("Missing localization for: " .. v)
+        else
+            -- Delay the error message by 1 second if the locale is called before the full addon is loaded
+            C_Timer.After(1, function()
+                if MapPinEnhanced.Debug then
+                    MapPinEnhanced:Debug("Missing localization for: " .. v)
+                end
+            end)
+        end
+        --@end-debug@]==]
+        rawset(t, k, v)
+        return v
+    end
+})
+
+MapPinEnhanced.L = L
+MapPinEnhanced.locale = GetLocale()

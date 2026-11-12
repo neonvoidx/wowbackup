@@ -1,0 +1,44 @@
+
+WaylaidCostDB = {
+["tooltipExplanations"] = "shift",
+["rewardDefaultsInitialized"] = true,
+["showMinimap"] = true,
+["common"] = true,
+["details"] = false,
+["showUnavailable"] = true,
+["uncommon"] = true,
+["writRewards"] = {
+[94219] = {
+["items"] = {
+"1× ",
+},
+["key"] = "CAMWOW US2 Realm 6 PvP:Beat",
+["money"] = 0,
+["locale"] = "enUS",
+["at"] = 1794161380,
+},
+},
+["levelOnly"] = true,
+["itemTooltips"] = true,
+["enableWrits"] = true,
+["auctionatorSearch"] = true,
+["rewardDataVersion"] = 3,
+["auctionatorPrices"] = true,
+["rewards"] = {
+["Apprentice"] = {
+5,
+10,
+},
+["Expert"] = {
+15,
+30,
+},
+["Artisan"] = {
+},
+["Journeyman"] = {
+10,
+20,
+},
+},
+["orderKind"] = "waylaid",
+}

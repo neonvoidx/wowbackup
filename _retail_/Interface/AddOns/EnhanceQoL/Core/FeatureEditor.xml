@@ -1,0 +1,102 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+	<Frame name="EQOLFeatureEditorItemTemplate" registerForDrag="LeftButton" ignoreChildrenForBounds="true" virtual="true">
+		<Size x="38" y="38"/>
+		<Layers>
+			<Layer level="ARTWORK">
+				<Texture parentKey="Icon" setAllPoints="true"/>
+			</Layer>
+			<Layer level="HIGHLIGHT">
+				<Texture parentKey="Highlight" setAllPoints="true" file="Interface\Buttons\ButtonHilight-Square" alphaMode="ADD"/>
+			</Layer>
+		</Layers>
+	</Frame>
+	<Frame name="EQOLFeatureEditorCategoryTemplate" inherits="ResizeLayoutFrame" virtual="true">
+		<KeyValues>
+			<KeyValue key="minimumHeight" value="22" type="number"/>
+			<KeyValue key="minimumWidth" value="344" type="number"/>
+			<KeyValue key="maximumWidth" value="344" type="number"/>
+		</KeyValues>
+		<Frames>
+			<Button parentKey="Header" inherits="ListHeaderThreeSliceTemplate" registerForClicks="LeftButtonUp">
+				<Size x="0" y="22"/>
+				<Anchors>
+					<Anchor point="TOPLEFT"/>
+					<Anchor point="TOPRIGHT"/>
+				</Anchors>
+			</Button>
+			<Frame parentKey="Container" inherits="GridLayoutFrame">
+				<KeyValues>
+					<KeyValue key="childXPadding" value="8" type="number"/>
+					<KeyValue key="childYPadding" value="8" type="number"/>
+					<KeyValue key="isHorizontal" value="true" type="boolean"/>
+					<KeyValue key="stride" value="7" type="number"/>
+					<KeyValue key="layoutFramesGoingRight" value="true" type="boolean"/>
+					<KeyValue key="layoutFramesGoingUp" value="false" type="boolean"/>
+					<KeyValue key="alwaysUpdateLayout" value="true" type="boolean"/>
+				</KeyValues>
+				<Size x="315" y="70"/>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeKey="$parent.Header" relativePoint="BOTTOMLEFT" x="13" y="-15"/>
+				</Anchors>
+			</Frame>
+		</Frames>
+	</Frame>
+	<Frame name="EQOLFeatureEditorWindowTemplate" inherits="ButtonFrameTemplate" toplevel="true" hidden="true" virtual="true">
+		<Size x="399" y="609"/>
+		<Anchors>
+			<Anchor point="CENTER"/>
+		</Anchors>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture parentKey="Background" atlas="character-panel-background">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeKey="$parent.Inset"/>
+						<Anchor point="BOTTOMRIGHT" relativeKey="$parent.Inset"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+		<Frames>
+			<EditBox parentKey="SearchBox" inherits="SearchBoxTemplate">
+				<Size x="290" y="30"/>
+				<Anchors>
+					<Anchor point="TOPLEFT" x="72" y="-30"/>
+				</Anchors>
+			</EditBox>
+			<DropdownButton parentKey="SettingsDropdown" inherits="UIPanelIconDropdownButtonTemplate">
+				<Anchors>
+					<Anchor point="LEFT" relativeKey="$parent.SearchBox" relativePoint="RIGHT" x="5"/>
+				</Anchors>
+			</DropdownButton>
+			<ScrollFrame parentKey="CooldownScroll" inherits="ScrollFrameTemplate">
+				<KeyValues>
+					<KeyValue key="scrollBarHideIfUnscrollable" value="false" type="boolean"/>
+					<KeyValue key="scrollBarHideTrackIfThumbExceedsTrack" value="true" type="boolean"/>
+					<KeyValue key="scrollBarTopY" value="0" type="number"/>
+					<KeyValue key="scrollBarBottomY" value="0" type="number"/>
+				</KeyValues>
+				<Anchors>
+					<Anchor point="TOPLEFT" x="17" y="-72"/>
+					<Anchor point="BOTTOMRIGHT" x="-30" y="29"/>
+				</Anchors>
+				<ScrollChild>
+					<Frame parentKey="Content">
+						<Size x="300" y="1"/>
+						<Anchors>
+							<Anchor point="TOPLEFT"/>
+						</Anchors>
+					</Frame>
+				</ScrollChild>
+			</ScrollFrame>
+			<DropdownButton parentKey="LayoutDropdown" inherits="WowStyle1DropdownTemplate">
+				<KeyValues>
+					<KeyValue key="menuPoint" type="string" value="BOTTOMLEFT"/>
+					<KeyValue key="menuRelativePoint" type="string" value="TOPLEFT"/>
+				</KeyValues>
+				<Anchors>
+					<Anchor point="BOTTOMLEFT" x="5" y="3"/>
+				</Anchors>
+			</DropdownButton>
+		</Frames>
+	</Frame>
+</Ui>

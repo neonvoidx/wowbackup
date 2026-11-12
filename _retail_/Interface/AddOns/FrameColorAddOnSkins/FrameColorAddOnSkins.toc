@@ -1,0 +1,16 @@
+## X-Curse-Project-ID: 1220160
+## Interface: 120007
+## Version: 1.1.2
+## Title: FrameColor AddOnSkins
+## Author: Slothpala
+## Dependencies: FrameColor
+## IconTexture: Interface\AddOns\FrameColor\Assets\SecondaryIcon.tga
+
+embeds.xml
+
+Init.lua
+
+Skins\Skins.xml
+
+FrameColorAddOnSkins.lua
+

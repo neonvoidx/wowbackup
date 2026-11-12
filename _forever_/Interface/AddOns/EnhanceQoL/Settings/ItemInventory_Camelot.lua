@@ -1,0 +1,3586 @@
+-- luacheck: globals GenericTraitUI_LoadUI GenericTraitFrame SettingsInbound GetInventoryItemDurability GetInventoryItemLink CreateFrame UIParent STANDARD_TEXT_FONT DEFAULT FONT_SIZE NONE
+
+local addonName, addon = ...
+
+local L = LibStub("AceLocale-3.0"):GetLocale(addonName)
+local LFGListFrame = _G.LFGListFrame
+local GetContainerItemInfo = C_Container.GetContainerItemInfo
+local SetSortBagsRightToLeft = C_Container.SetSortBagsRightToLeft
+local SetInsertItemsLeftToRight = C_Container.SetInsertItemsLeftToRight
+local StaticPopup_Visible = StaticPopup_Visible
+local IsShiftKeyDown = IsShiftKeyDown
+local IsControlKeyDown = IsControlKeyDown
+local IsAltKeyDown = IsAltKeyDown
+local IsInGroup = IsInGroup
+local math = math
+local TooltipUtil = _G.TooltipUtil
+local GetTime = GetTime
+local DIRECTION_TOP_LABEL = HUD_EDIT_MODE_SETTING_ENCOUNTER_EVENTS_ICON_DIRECTION_TOP
+local DIRECTION_LEFT_LABEL = HUD_EDIT_MODE_SETTING_ENCOUNTER_EVENTS_ICON_DIRECTION_LEFT
+local DIRECTION_RIGHT_LABEL = HUD_EDIT_MODE_SETTING_ENCOUNTER_EVENTS_ICON_DIRECTION_RIGHT
+local DIRECTION_BOTTOM_LABEL = HUD_EDIT_MODE_SETTING_ENCOUNTER_EVENTS_ICON_DIRECTION_BOTTOM
+
+
+addon.DurabilityWarning = addon.DurabilityWarning or {}
+local DurabilityWarning = addon.DurabilityWarning
+local DurabilityEditMode = addon.EditMode
+local DurabilitySettingType = DurabilityEditMode and DurabilityEditMode.lib and DurabilityEditMode.lib.SettingType
+local DurabilitySharedAnchors = addon.SharedAnchors
+local DURABILITY_WARNING_EDITMODE_ID = "durabilityWarning"
+local DURABILITY_WARNING_DB_ENABLED = "durabilityWarningEnabled"
+local DURABILITY_WARNING_DB_THRESHOLD = "durabilityWarningThreshold"
+local DURABILITY_WARNING_DB_READY_ENABLED = "durabilityWarningReadyCheckEnabled"
+local DURABILITY_WARNING_DB_READY_THRESHOLD = "durabilityWarningReadyCheckThreshold"
+local DURABILITY_WARNING_DB_FONT_SIZE = "durabilityWarningFontSize"
+local DURABILITY_WARNING_DB_FONT_FACE = "durabilityWarningFontFace"
+local DURABILITY_WARNING_DB_FONT_STYLE = "durabilityWarningFontStyle"
+local DURABILITY_WARNING_DB_COLOR = "durabilityWarningColor"
+local DURABILITY_WARNING_DB_BLINK = "durabilityWarningBlinkEnabled"
+local DURABILITY_WARNING_DB_BLINK_RATE = "durabilityWarningBlinkRate"
+local DURABILITY_WARNING_DB_ANCHOR_TARGET = "durabilityWarningAnchorTarget"
+local DURABILITY_WARNING_DB_READY_DURATION = "durabilityWarningReadyCheckDuration"
+local DURABILITY_WARNING_BLINK_TICK = 1 / 30
+local DURABILITY_WARNING_HOLD_FRACTION = 0.1
+local DURABILITY_WARNING_MAX_HOLD = 0.12
+
+DurabilityWarning.defaults = DurabilityWarning.defaults or {
+	enabled = false,
+	threshold = 20,
+	readyCheckEnabled = false,
+	readyCheckThreshold = 40,
+	readyCheckDuration = 12,
+	fontSize = 32,
+	fontFace = addon.functions.GetGlobalFontConfigKey and addon.functions.GetGlobalFontConfigKey() or "__EQOL_GLOBAL_FONT__",
+	fontStyle = addon.functions.GetGlobalFontStyleConfigKey and addon.functions.GetGlobalFontStyleConfigKey() or "__EQOL_GLOBAL_FONT_STYLE__",
+	color = { r = 1, g = 0.1, b = 0.1, a = 1 },
+	blinkEnabled = true,
+	blinkRate = 0.7,
+	anchorTarget = "UIParent",
+}
+
+local durabilityWarningEventFrame
+local durabilityWarningEditModeRegistered
+local durabilityWarningBlinkTicker
+local durabilityWarningBlinkTickInterval
+local durabilityWarningReadyUntil = 0
+local durabilityWarningLastValue = 100
+local durabilityWarningPreviewActive = false
+
+local function durabilityWarningDefaultFontFace()
+	if addon.functions and addon.functions.GetGlobalDefaultFontFace then return addon.functions.GetGlobalDefaultFontFace() end
+	return (addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT
+end
+
+local function durabilityWarningGlobalFontConfigKey()
+	if addon.functions and addon.functions.GetGlobalFontConfigKey then return addon.functions.GetGlobalFontConfigKey() end
+	return "__EQOL_GLOBAL_FONT__"
+end
+
+local function durabilityWarningGlobalFontConfigLabel()
+	if addon.functions and addon.functions.GetGlobalFontConfigLabel then return addon.functions.GetGlobalFontConfigLabel() end
+	return L["useGlobalFontConfig"] or "Use global font config"
+end
+
+local function durabilityWarningGlobalFontStyleConfigKey()
+	if addon.functions and addon.functions.GetGlobalFontStyleConfigKey then return addon.functions.GetGlobalFontStyleConfigKey() end
+	return "__EQOL_GLOBAL_FONT_STYLE__"
+end
+
+local function durabilityWarningNormalizeFontStyle(value, fallback)
+	if addon.functions and addon.functions.NormalizeFontStyleChoice then return addon.functions.NormalizeFontStyleChoice(value, fallback, true) end
+	if type(value) == "string" and value ~= "" then return value end
+	return fallback or "OUTLINE"
+end
+
+local function durabilityWarningMediaNames(mediaType)
+	if addon.functions and addon.functions.GetLSMMediaNames then
+		local names = addon.functions.GetLSMMediaNames(mediaType)
+		if type(names) == "table" then return names end
+	end
+	return {}
+end
+
+local function durabilityWarningMediaHash(mediaType)
+	if addon.functions and addon.functions.GetLSMMediaHash then
+		local hash = addon.functions.GetLSMMediaHash(mediaType)
+		if type(hash) == "table" then return hash end
+	end
+	return {}
+end
+
+local function durabilityWarningFontFaceOptions()
+	local list = {}
+	local defaultPath = durabilityWarningDefaultFontFace()
+	local hasDefault = false
+	local names = durabilityWarningMediaNames("font")
+	local hash = durabilityWarningMediaHash("font")
+	for i = 1, #names do
+		local name = names[i]
+		local path = hash[name]
+		if type(path) == "string" and path ~= "" then
+			list[#list + 1] = { value = path, label = tostring(name) }
+			if path == defaultPath then hasDefault = true end
+		end
+	end
+	if defaultPath and not hasDefault then list[#list + 1] = { value = defaultPath, label = DEFAULT or "Default" } end
+	table.insert(list, 1, { value = durabilityWarningGlobalFontConfigKey(), label = durabilityWarningGlobalFontConfigLabel() })
+	return list
+end
+
+local function durabilityWarningFontStyleOptions()
+	if addon.functions and addon.functions.GetFontStyleOptionList then return addon.functions.GetFontStyleOptionList(true) end
+	return {
+		{ value = durabilityWarningGlobalFontStyleConfigKey(), label = L["useGlobalFontStyleConfig"] or "Use global font styling" },
+		{ value = "NONE", label = NONE or "None" },
+		{ value = "OUTLINE", label = L["Outline"] or "Outline" },
+	}
+end
+
+local durabilityWarningAnchorOptions = {
+	{ value = "TOPLEFT", label = "TOPLEFT" },
+	{ value = "TOP", label = "TOP" },
+	{ value = "TOPRIGHT", label = "TOPRIGHT" },
+	{ value = "LEFT", label = "LEFT" },
+	{ value = "CENTER", label = "CENTER" },
+	{ value = "RIGHT", label = "RIGHT" },
+	{ value = "BOTTOMLEFT", label = "BOTTOMLEFT" },
+	{ value = "BOTTOM", label = "BOTTOM" },
+	{ value = "BOTTOMRIGHT", label = "BOTTOMRIGHT" },
+}
+
+local function durabilityWarningFormatSliderValue(value)
+	return tostring(math.floor((tonumber(value) or 0) + 0.5))
+end
+
+local function durabilityWarningRefreshEditModeSettingValues()
+	if addon.EditModeLib and addon.EditModeLib.internal and addon.EditModeLib.internal.RefreshSettingValues then
+		addon.EditModeLib.internal:RefreshSettingValues()
+	end
+end
+
+local function durabilityWarningNormalizeAnchorTarget(value, fallback)
+	fallback = fallback or DurabilityWarning.defaults.anchorTarget
+	if DurabilitySharedAnchors and DurabilitySharedAnchors.ValidateTarget then return DurabilitySharedAnchors:ValidateTarget(value, fallback, { includeCursor = false }) end
+	if type(value) == "string" and value ~= "" then return value end
+	return fallback
+end
+
+function DurabilityWarning:GetAnchorTarget()
+	return durabilityWarningNormalizeAnchorTarget(addon.db and addon.db[DURABILITY_WARNING_DB_ANCHOR_TARGET], DurabilityWarning.defaults.anchorTarget)
+end
+
+function DurabilityWarning:ResolveAnchorFrame()
+	local target = self:GetAnchorTarget()
+	if DurabilitySharedAnchors and DurabilitySharedAnchors.ResolveFrame then return DurabilitySharedAnchors:ResolveFrame(target) end
+	return UIParent
+end
+
+function DurabilityWarning:AnchorUsesUIParent()
+	local target = self:GetAnchorTarget()
+	if DurabilitySharedAnchors and DurabilitySharedAnchors.IsUIParentTarget then return DurabilitySharedAnchors:IsUIParentTarget(target) end
+	return target == "UIParent"
+end
+
+local function durabilityWarningAnchorEntries(current)
+	if DurabilitySharedAnchors and DurabilitySharedAnchors.GetEntries then return DurabilitySharedAnchors:GetEntries(current, { includeCursor = false }) end
+	return { { key = "UIParent", label = UIParent and UIParent:GetName() or "UIParent" } }
+end
+
+local function durabilityWarningAnchorDefaultData(target)
+	if DurabilitySharedAnchors and DurabilitySharedAnchors.GetDefaultAnchorData then return DurabilitySharedAnchors:GetDefaultAnchorData(target) end
+	return { point = "CENTER", relativePoint = "CENTER", x = 0, y = 180 }
+end
+
+local function durabilityWarningGetLayoutValue(field)
+	if DurabilityEditMode and DurabilityEditMode.GetValue then
+		local value = DurabilityEditMode:GetValue(DURABILITY_WARNING_EDITMODE_ID, field)
+		if value ~= nil then return value end
+	end
+	local defaults = durabilityWarningAnchorDefaultData(DurabilityWarning:GetAnchorTarget())
+	if field == "anchorTarget" then return DurabilityWarning:GetAnchorTarget() end
+	return defaults and defaults[field]
+end
+
+local function durabilityWarningColor()
+	local c = addon.db and addon.db[DURABILITY_WARNING_DB_COLOR] or DurabilityWarning.defaults.color
+	return (c and c.r) or 1, (c and c.g) or 0.1, (c and c.b) or 0.1, (c and c.a) or 1
+end
+
+local function durabilityWarningClamp(value, minValue, maxValue, fallback)
+	value = tonumber(value) or fallback or minValue
+	if value < minValue then return minValue end
+	if value > maxValue then return maxValue end
+	return value
+end
+
+local function getEquippedDurabilityPercent()
+	if addon.functions and addon.functions.IsTimerunner and addon.functions.IsTimerunner() then return 100 end
+	local maxDur = 0
+	local currentDur = 0
+	for slot in pairs(addon.variables.itemSlots or {}) do
+		local link = GetInventoryItemLink and GetInventoryItemLink("player", slot)
+		if link and not (addon.functions and addon.functions.IsIndestructible and addon.functions.IsIndestructible(link)) then
+			local current, maximum = GetInventoryItemDurability(slot)
+			if current and maximum and maximum > 0 then
+				maxDur = maxDur + maximum
+				currentDur = currentDur + current
+			end
+		end
+	end
+	if maxDur <= 0 then return 100 end
+	return math.floor(((currentDur / maxDur) * 100) + 0.5)
+end
+
+local function durabilityWarningText(value)
+	local formatText = L["DurabilityWarningText"] or "%d%% Durability"
+	return string.format(formatText, tonumber(value) or 0)
+end
+
+function DurabilityWarning:EnsureFrame()
+	if self.frame then return self.frame end
+	local frame = CreateFrame("Frame", "EnhanceQoLDurabilityWarningFrame", UIParent, "BackdropTemplate")
+	frame:SetSize(260, 48)
+	frame:SetPoint("CENTER", UIParent, "CENTER", 0, 180)
+	frame:EnableMouse(false)
+	frame:SetFrameStrata("HIGH")
+	frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
+	frame.text:SetPoint("CENTER", frame, "CENTER", 0, 0)
+	frame.text:SetJustifyH("CENTER")
+	frame.text:SetJustifyV("MIDDLE")
+	frame.text:SetText(durabilityWarningText(0))
+	frame:Hide()
+	self.frame = frame
+	return frame
+end
+
+function DurabilityWarning:ApplyStyle()
+	local frame = self:EnsureFrame()
+	local font = addon.db and addon.db[DURABILITY_WARNING_DB_FONT_FACE] or DurabilityWarning.defaults.fontFace
+	local size = tonumber(addon.db and addon.db[DURABILITY_WARNING_DB_FONT_SIZE]) or DurabilityWarning.defaults.fontSize
+	local style = addon.db and addon.db[DURABILITY_WARNING_DB_FONT_STYLE] or DurabilityWarning.defaults.fontStyle
+	if addon.functions and addon.functions.ApplyFontString then
+		addon.functions.ApplyFontString(frame.text, font, size, style, durabilityWarningDefaultFontFace(), DurabilityWarning.defaults.fontStyle)
+	else
+		local resolvedFont = addon.functions and addon.functions.ResolveFontFace and addon.functions.ResolveFontFace(font, durabilityWarningDefaultFontFace()) or durabilityWarningDefaultFontFace()
+		local flags = addon.functions and addon.functions.GetFontFlagsForStyle and addon.functions.GetFontFlagsForStyle(style, "OUTLINE") or "OUTLINE"
+		frame.text:SetFont(resolvedFont, size, flags)
+	end
+	frame.text:SetTextColor(durabilityWarningColor())
+end
+
+function DurabilityWarning:UpdateFrameSize()
+	local frame = self:EnsureFrame()
+	local width = frame.text:GetStringWidth()
+	local height = frame.text:GetStringHeight()
+	frame:SetSize(math.max(1, width + 24), math.max(1, height + 16))
+end
+
+
+function DurabilityWarning:ApplyAnchorPosition(data)
+	local frame = self:EnsureFrame()
+	if not frame then return end
+	data = data or {}
+	local point = data.point or (DurabilityEditMode and DurabilityEditMode.GetValue and DurabilityEditMode:GetValue(DURABILITY_WARNING_EDITMODE_ID, "point")) or "CENTER"
+	local relativePoint = data.relativePoint or (DurabilityEditMode and DurabilityEditMode.GetValue and DurabilityEditMode:GetValue(DURABILITY_WARNING_EDITMODE_ID, "relativePoint")) or point
+	local x = data.x
+	if x == nil and DurabilityEditMode and DurabilityEditMode.GetValue then x = DurabilityEditMode:GetValue(DURABILITY_WARNING_EDITMODE_ID, "x") end
+	local y = data.y
+	if y == nil and DurabilityEditMode and DurabilityEditMode.GetValue then y = DurabilityEditMode:GetValue(DURABILITY_WARNING_EDITMODE_ID, "y") end
+	if DurabilitySharedAnchors and DurabilitySharedAnchors.NormalizePoint then
+		point = DurabilitySharedAnchors:NormalizePoint(point, "CENTER")
+		relativePoint = DurabilitySharedAnchors:NormalizePoint(relativePoint, point)
+	end
+	frame:ClearAllPoints()
+	frame:SetPoint(point, self:ResolveAnchorFrame(), relativePoint, tonumber(x) or 0, tonumber(y) or 0)
+end
+
+local function durabilityWarningStopBlinkTicker()
+	if durabilityWarningBlinkTicker then
+		durabilityWarningBlinkTicker:Cancel()
+		durabilityWarningBlinkTicker = nil
+		durabilityWarningBlinkTickInterval = nil
+	end
+end
+
+local function durabilityWarningStartBlinkTicker(tick)
+	if durabilityWarningBlinkTicker and durabilityWarningBlinkTickInterval == tick then return end
+	durabilityWarningStopBlinkTicker()
+	durabilityWarningBlinkTickInterval = tick
+	durabilityWarningBlinkTicker = C_Timer.NewTicker(tick, function() DurabilityWarning:Refresh() end)
+end
+
+function DurabilityWarning:IsEnabled() return addon.db and addon.db[DURABILITY_WARNING_DB_ENABLED] == true end
+
+function DurabilityWarning:ShouldShow(value)
+	if not self:IsEnabled() then return false end
+	if addon.functions and addon.functions.IsTimerunner and addon.functions.IsTimerunner() then return false end
+	value = tonumber(value) or 100
+	local threshold = tonumber(addon.db and addon.db[DURABILITY_WARNING_DB_THRESHOLD]) or DurabilityWarning.defaults.threshold
+	if value <= threshold then return true end
+	if addon.db and addon.db[DURABILITY_WARNING_DB_READY_ENABLED] == true and GetTime and GetTime() < durabilityWarningReadyUntil then
+		local readyThreshold = tonumber(addon.db[DURABILITY_WARNING_DB_READY_THRESHOLD]) or DurabilityWarning.defaults.readyCheckThreshold
+		if value <= readyThreshold then return true end
+	end
+	return false
+end
+
+function DurabilityWarning:GetBlinkAlpha()
+	if not (addon.db and addon.db[DURABILITY_WARNING_DB_BLINK] == true) then return 1 end
+	if not GetTime then return 1 end
+	local rate = tonumber(addon.db[DURABILITY_WARNING_DB_BLINK_RATE]) or DurabilityWarning.defaults.blinkRate
+	if rate <= 0 then return 1 end
+	local hold = math.min(DURABILITY_WARNING_MAX_HOLD, rate * DURABILITY_WARNING_HOLD_FRACTION)
+	local t = GetTime() % rate
+	if t <= hold then return 1 end
+	local active = math.max(0.001, rate - hold)
+	local phase = (t - hold) / active
+	return 0.25 + (0.75 * (0.5 + 0.5 * math.cos(phase * math.pi * 2)))
+end
+
+function DurabilityWarning:ShowPreview()
+	local frame = self:EnsureFrame()
+	local wasShown = frame:IsShown()
+	frame.text:SetText(durabilityWarningText(durabilityWarningLastValue or DurabilityWarning.defaults.threshold))
+	self:ApplyStyle()
+	self:UpdateFrameSize()
+	if not wasShown then self:ApplyAnchorPosition() end
+	frame:SetAlpha(self:GetBlinkAlpha())
+	frame:EnableMouse(false)
+	frame:Show()
+	if addon.db and addon.db[DURABILITY_WARNING_DB_BLINK] == true then
+		durabilityWarningStartBlinkTicker(DURABILITY_WARNING_BLINK_TICK)
+	else
+		durabilityWarningStopBlinkTicker()
+	end
+end
+
+function DurabilityWarning:Refresh()
+	if durabilityWarningPreviewActive then
+		self:ShowPreview()
+		return
+	end
+	local frame = self:EnsureFrame()
+	durabilityWarningLastValue = getEquippedDurabilityPercent()
+	if not self:ShouldShow(durabilityWarningLastValue) then
+		frame:Hide()
+		durabilityWarningStopBlinkTicker()
+		return
+	end
+	frame.text:SetText(durabilityWarningText(durabilityWarningLastValue))
+	self:ApplyStyle()
+	self:UpdateFrameSize()
+	self:ApplyAnchorPosition()
+	frame:SetAlpha(self:GetBlinkAlpha())
+	frame:EnableMouse(false)
+	frame:Show()
+	if addon.db and addon.db[DURABILITY_WARNING_DB_BLINK] == true then
+		durabilityWarningStartBlinkTicker(DURABILITY_WARNING_BLINK_TICK)
+	else
+		durabilityWarningStopBlinkTicker()
+	end
+end
+
+function DurabilityWarning:ShowEditModeHint(show)
+	durabilityWarningPreviewActive = show == true
+	if durabilityWarningPreviewActive then
+		self:ShowPreview()
+	else
+		self:Refresh()
+	end
+end
+
+function DurabilityWarning:ApplyLayoutData(data)
+	if not data or not addon.db then return end
+	local anchorTargetChanged
+	if data.anchorTarget ~= nil then
+		local current = self:GetAnchorTarget()
+		local target = durabilityWarningNormalizeAnchorTarget(data.anchorTarget, current)
+		addon.db[DURABILITY_WARNING_DB_ANCHOR_TARGET] = target
+		anchorTargetChanged = target ~= current
+		if anchorTargetChanged and DurabilityEditMode and DurabilityEditMode.SetValue then
+			local defaults = durabilityWarningAnchorDefaultData(target)
+			DurabilityEditMode:SetValue(DURABILITY_WARNING_EDITMODE_ID, "point", defaults.point or "CENTER", nil, true)
+			DurabilityEditMode:SetValue(DURABILITY_WARNING_EDITMODE_ID, "relativePoint", defaults.relativePoint or defaults.point or "CENTER", nil, true)
+			DurabilityEditMode:SetValue(DURABILITY_WARNING_EDITMODE_ID, "x", defaults.x or 0, nil, true)
+			DurabilityEditMode:SetValue(DURABILITY_WARNING_EDITMODE_ID, "y", defaults.y or 0, nil, true)
+		end
+		durabilityWarningRefreshEditModeSettingValues()
+		if DurabilityEditMode and DurabilityEditMode.RefreshFrame then DurabilityEditMode:RefreshFrame(DURABILITY_WARNING_EDITMODE_ID) end
+	end
+	if data.point ~= nil and DurabilityEditMode and DurabilityEditMode.SetValue then
+		local point = data.point
+		if DurabilitySharedAnchors and DurabilitySharedAnchors.NormalizePoint then point = DurabilitySharedAnchors:NormalizePoint(point, durabilityWarningGetLayoutValue("point") or "CENTER") end
+		DurabilityEditMode:SetValue(DURABILITY_WARNING_EDITMODE_ID, "point", point or "CENTER", nil, true)
+	end
+	if data.relativePoint ~= nil and DurabilityEditMode and DurabilityEditMode.SetValue then
+		local relativePoint = data.relativePoint
+		if DurabilitySharedAnchors and DurabilitySharedAnchors.NormalizePoint then relativePoint = DurabilitySharedAnchors:NormalizePoint(relativePoint, durabilityWarningGetLayoutValue("relativePoint") or durabilityWarningGetLayoutValue("point") or "CENTER") end
+		DurabilityEditMode:SetValue(DURABILITY_WARNING_EDITMODE_ID, "relativePoint", relativePoint or durabilityWarningGetLayoutValue("point") or "CENTER", nil, true)
+	end
+	if data.x ~= nil and DurabilityEditMode and DurabilityEditMode.SetValue then DurabilityEditMode:SetValue(DURABILITY_WARNING_EDITMODE_ID, "x", durabilityWarningClamp(data.x, -1000, 1000, 0), nil, true) end
+	if data.y ~= nil and DurabilityEditMode and DurabilityEditMode.SetValue then DurabilityEditMode:SetValue(DURABILITY_WARNING_EDITMODE_ID, "y", durabilityWarningClamp(data.y, -1000, 1000, 0), nil, true) end
+	if data.threshold ~= nil then addon.db[DURABILITY_WARNING_DB_THRESHOLD] = durabilityWarningClamp(data.threshold, 0, 100, DurabilityWarning.defaults.threshold) end
+	if data.readyCheckEnabled ~= nil then addon.db[DURABILITY_WARNING_DB_READY_ENABLED] = data.readyCheckEnabled == true end
+	if data.readyCheckThreshold ~= nil then addon.db[DURABILITY_WARNING_DB_READY_THRESHOLD] = durabilityWarningClamp(data.readyCheckThreshold, 0, 100, DurabilityWarning.defaults.readyCheckThreshold) end
+	if data.readyCheckDuration ~= nil then addon.db[DURABILITY_WARNING_DB_READY_DURATION] = durabilityWarningClamp(data.readyCheckDuration, 1, 60, DurabilityWarning.defaults.readyCheckDuration) end
+	if data.fontSize ~= nil then addon.db[DURABILITY_WARNING_DB_FONT_SIZE] = durabilityWarningClamp(data.fontSize, 8, 96, DurabilityWarning.defaults.fontSize) end
+	if type(data.fontFace) == "string" and data.fontFace ~= "" then addon.db[DURABILITY_WARNING_DB_FONT_FACE] = data.fontFace end
+	if type(data.fontStyle) == "string" and data.fontStyle ~= "" then addon.db[DURABILITY_WARNING_DB_FONT_STYLE] = durabilityWarningNormalizeFontStyle(data.fontStyle, DurabilityWarning.defaults.fontStyle) end
+	if type(data.color) == "table" then addon.db[DURABILITY_WARNING_DB_COLOR] = { r = data.color.r or 1, g = data.color.g or 0.1, b = data.color.b or 0.1, a = data.color.a or 1 } end
+	if data.blinkEnabled ~= nil then addon.db[DURABILITY_WARNING_DB_BLINK] = data.blinkEnabled == true end
+	if data.blinkRate ~= nil then addon.db[DURABILITY_WARNING_DB_BLINK_RATE] = durabilityWarningClamp(data.blinkRate, 0.2, 2, DurabilityWarning.defaults.blinkRate) end
+	self:ApplyAnchorPosition(anchorTargetChanged and durabilityWarningAnchorDefaultData(self:GetAnchorTarget()) or data)
+	if durabilityWarningPreviewActive then
+		self:ShowPreview()
+	else
+		self:Refresh()
+	end
+end
+
+local function durabilityWarningApplySetting(field, value)
+	if not addon.db then return end
+	if field == "anchorTarget" then
+		DurabilityWarning:ApplyLayoutData({ anchorTarget = value })
+		return
+	elseif field == "point" or field == "relativePoint" or field == "x" or field == "y" then
+		DurabilityWarning:ApplyLayoutData({ [field] = value })
+		return
+	elseif field == "threshold" then
+		addon.db[DURABILITY_WARNING_DB_THRESHOLD] = durabilityWarningClamp(value, 0, 100, DurabilityWarning.defaults.threshold)
+	elseif field == "readyCheckEnabled" then
+		addon.db[DURABILITY_WARNING_DB_READY_ENABLED] = value == true
+	elseif field == "readyCheckThreshold" then
+		addon.db[DURABILITY_WARNING_DB_READY_THRESHOLD] = durabilityWarningClamp(value, 0, 100, DurabilityWarning.defaults.readyCheckThreshold)
+	elseif field == "readyCheckDuration" then
+		addon.db[DURABILITY_WARNING_DB_READY_DURATION] = durabilityWarningClamp(value, 1, 60, DurabilityWarning.defaults.readyCheckDuration)
+	elseif field == "fontSize" then
+		addon.db[DURABILITY_WARNING_DB_FONT_SIZE] = durabilityWarningClamp(value, 8, 96, DurabilityWarning.defaults.fontSize)
+	elseif field == "fontFace" then
+		addon.db[DURABILITY_WARNING_DB_FONT_FACE] = type(value) == "string" and value ~= "" and value or DurabilityWarning.defaults.fontFace
+	elseif field == "fontStyle" then
+		addon.db[DURABILITY_WARNING_DB_FONT_STYLE] = durabilityWarningNormalizeFontStyle(value, DurabilityWarning.defaults.fontStyle)
+	elseif field == "color" and type(value) == "table" then
+		addon.db[DURABILITY_WARNING_DB_COLOR] = { r = value.r or 1, g = value.g or 0.1, b = value.b or 0.1, a = value.a or 1 }
+	elseif field == "blinkEnabled" then
+		addon.db[DURABILITY_WARNING_DB_BLINK] = value == true
+	elseif field == "blinkRate" then
+		addon.db[DURABILITY_WARNING_DB_BLINK_RATE] = durabilityWarningClamp(value, 0.2, 2, DurabilityWarning.defaults.blinkRate)
+	end
+	if durabilityWarningPreviewActive then
+		DurabilityWarning:ShowPreview()
+	else
+		DurabilityWarning:Refresh()
+	end
+end
+
+function DurabilityWarning:RegisterEditMode()
+	if durabilityWarningEditModeRegistered then return end
+	if not (DurabilityEditMode and DurabilityEditMode.RegisterFrame and DurabilitySettingType) then return end
+	local settings = {
+		{
+			name = L["Anchor"] or "Anchor",
+			kind = DurabilitySettingType.Collapsible,
+			id = "durabilityWarningAnchor",
+			defaultCollapsed = false,
+		},
+		{
+			name = L["Anchor to"] or "Anchor to",
+			kind = DurabilitySettingType.Dropdown,
+			field = "anchorTarget",
+			parentId = "durabilityWarningAnchor",
+			height = 260,
+			get = function() return DurabilityWarning:GetAnchorTarget() end,
+			set = function(_, value) durabilityWarningApplySetting("anchorTarget", value) end,
+			generator = function(_, root)
+				local current = DurabilityWarning:GetAnchorTarget()
+				for _, option in ipairs(durabilityWarningAnchorEntries(current)) do
+					local key = option.key or option.value
+					local label = option.label or option.text or tostring(key)
+					root:CreateRadio(label, function() return DurabilityWarning:GetAnchorTarget() == key end, function() durabilityWarningApplySetting("anchorTarget", key) end)
+				end
+			end,
+		},
+		{
+			name = L["Anchor point"] or "Anchor point",
+			kind = DurabilitySettingType.Dropdown,
+			field = "point",
+			parentId = "durabilityWarningAnchor",
+			height = 180,
+			get = function() return durabilityWarningGetLayoutValue("point") or "CENTER" end,
+			set = function(_, value) durabilityWarningApplySetting("point", value) end,
+			generator = function(_, root)
+				for _, option in ipairs(durabilityWarningAnchorOptions) do
+					root:CreateRadio(option.label, function() return (durabilityWarningGetLayoutValue("point") or "CENTER") == option.value end, function() durabilityWarningApplySetting("point", option.value) end)
+				end
+			end,
+		},
+		{
+			name = L["Relative point"] or "Relative point",
+			kind = DurabilitySettingType.Dropdown,
+			field = "relativePoint",
+			parentId = "durabilityWarningAnchor",
+			height = 180,
+			get = function() return durabilityWarningGetLayoutValue("relativePoint") or durabilityWarningGetLayoutValue("point") or "CENTER" end,
+			set = function(_, value) durabilityWarningApplySetting("relativePoint", value) end,
+			generator = function(_, root)
+				for _, option in ipairs(durabilityWarningAnchorOptions) do
+					root:CreateRadio(option.label, function() return (durabilityWarningGetLayoutValue("relativePoint") or durabilityWarningGetLayoutValue("point") or "CENTER") == option.value end, function() durabilityWarningApplySetting("relativePoint", option.value) end)
+				end
+			end,
+		},
+		{
+			name = L["X Offset"] or "X Offset",
+			kind = DurabilitySettingType.Slider,
+			field = "x",
+			parentId = "durabilityWarningAnchor",
+			minValue = -1000,
+			maxValue = 1000,
+			valueStep = 1,
+			allowInput = true,
+			get = function() return tonumber(durabilityWarningGetLayoutValue("x")) or 0 end,
+			set = function(_, value) durabilityWarningApplySetting("x", value) end,
+			formatter = durabilityWarningFormatSliderValue,
+		},
+		{
+			name = L["Y Offset"] or "Y Offset",
+			kind = DurabilitySettingType.Slider,
+			field = "y",
+			parentId = "durabilityWarningAnchor",
+			minValue = -1000,
+			maxValue = 1000,
+			valueStep = 1,
+			allowInput = true,
+			get = function() return tonumber(durabilityWarningGetLayoutValue("y")) or 0 end,
+			set = function(_, value) durabilityWarningApplySetting("y", value) end,
+			formatter = durabilityWarningFormatSliderValue,
+		},
+		{
+			name = L["DurabilityWarningThreshold"] or "Show below durability",
+			kind = DurabilitySettingType.Slider,
+			field = "threshold",
+			default = DurabilityWarning.defaults.threshold,
+			minValue = 0,
+			maxValue = 100,
+			valueStep = 1,
+			get = function() return tonumber(addon.db and addon.db[DURABILITY_WARNING_DB_THRESHOLD]) or DurabilityWarning.defaults.threshold end,
+			set = function(_, value) durabilityWarningApplySetting("threshold", value) end,
+			formatter = function(value) return string.format("%d%%", math.floor((tonumber(value) or 0) + 0.5)) end,
+		},
+		{
+			name = L["DurabilityWarningReadyCheckEnabled"] or "Show on ready check",
+			kind = DurabilitySettingType.Checkbox,
+			field = "readyCheckEnabled",
+			default = DurabilityWarning.defaults.readyCheckEnabled,
+			get = function() return addon.db and addon.db[DURABILITY_WARNING_DB_READY_ENABLED] == true end,
+			set = function(_, value) durabilityWarningApplySetting("readyCheckEnabled", value) end,
+		},
+		{
+			name = L["DurabilityWarningReadyCheckThreshold"] or "Ready check threshold",
+			kind = DurabilitySettingType.Slider,
+			field = "readyCheckThreshold",
+			default = DurabilityWarning.defaults.readyCheckThreshold,
+			minValue = 0,
+			maxValue = 100,
+			valueStep = 1,
+			get = function() return tonumber(addon.db and addon.db[DURABILITY_WARNING_DB_READY_THRESHOLD]) or DurabilityWarning.defaults.readyCheckThreshold end,
+			set = function(_, value) durabilityWarningApplySetting("readyCheckThreshold", value) end,
+			formatter = function(value) return string.format("%d%%", math.floor((tonumber(value) or 0) + 0.5)) end,
+			isEnabled = function() return addon.db and addon.db[DURABILITY_WARNING_DB_READY_ENABLED] == true end,
+		},
+		{
+			name = L["DurabilityWarningReadyCheckDuration"] or "Ready check display time",
+			kind = DurabilitySettingType.Slider,
+			field = "readyCheckDuration",
+			default = DurabilityWarning.defaults.readyCheckDuration,
+			minValue = 1,
+			maxValue = 60,
+			valueStep = 1,
+			get = function() return tonumber(addon.db and addon.db[DURABILITY_WARNING_DB_READY_DURATION]) or DurabilityWarning.defaults.readyCheckDuration end,
+			set = function(_, value) durabilityWarningApplySetting("readyCheckDuration", value) end,
+			formatter = function(value) return string.format("%ds", math.floor((tonumber(value) or 0) + 0.5)) end,
+			isEnabled = function() return addon.db and addon.db[DURABILITY_WARNING_DB_READY_ENABLED] == true end,
+		},
+		{
+			name = L["Blink"] or "Blink",
+			kind = DurabilitySettingType.Checkbox,
+			field = "blinkEnabled",
+			default = DurabilityWarning.defaults.blinkEnabled,
+			get = function() return addon.db and addon.db[DURABILITY_WARNING_DB_BLINK] == true end,
+			set = function(_, value) durabilityWarningApplySetting("blinkEnabled", value) end,
+		},
+		{
+			name = L["Blink rate (s)"] or "Blink rate (s)",
+			kind = DurabilitySettingType.Slider,
+			field = "blinkRate",
+			default = DurabilityWarning.defaults.blinkRate,
+			minValue = 0.2,
+			maxValue = 2,
+			valueStep = 0.05,
+			get = function() return tonumber(addon.db and addon.db[DURABILITY_WARNING_DB_BLINK_RATE]) or DurabilityWarning.defaults.blinkRate end,
+			set = function(_, value) durabilityWarningApplySetting("blinkRate", value) end,
+			formatter = function(value) return string.format("%.2fs", tonumber(value) or 0) end,
+			isEnabled = function() return addon.db and addon.db[DURABILITY_WARNING_DB_BLINK] == true end,
+		},
+		{
+			name = FONT_SIZE,
+			kind = DurabilitySettingType.Slider,
+			field = "fontSize",
+			default = DurabilityWarning.defaults.fontSize,
+			minValue = 8,
+			maxValue = 96,
+			valueStep = 1,
+			get = function() return tonumber(addon.db and addon.db[DURABILITY_WARNING_DB_FONT_SIZE]) or DurabilityWarning.defaults.fontSize end,
+			set = function(_, value) durabilityWarningApplySetting("fontSize", value) end,
+			formatter = function(value) return tostring(math.floor((tonumber(value) or 0) + 0.5)) end,
+		},
+		{
+			name = L["Font"] or "Font",
+			kind = DurabilitySettingType.Dropdown,
+			field = "fontFace",
+			height = 200,
+			get = function() return addon.db and addon.db[DURABILITY_WARNING_DB_FONT_FACE] or DurabilityWarning.defaults.fontFace end,
+			set = function(_, value) durabilityWarningApplySetting("fontFace", value) end,
+			generator = function(_, root)
+				for _, option in ipairs(durabilityWarningFontFaceOptions()) do
+					root:CreateRadio(option.label, function() return (addon.db and addon.db[DURABILITY_WARNING_DB_FONT_FACE] or DurabilityWarning.defaults.fontFace) == option.value end, function() durabilityWarningApplySetting("fontFace", option.value) end)
+				end
+			end,
+		},
+		{
+			name = L["Font outline"] or "Font outline",
+			kind = DurabilitySettingType.Dropdown,
+			field = "fontStyle",
+			height = 220,
+			get = function() return addon.db and addon.db[DURABILITY_WARNING_DB_FONT_STYLE] or DurabilityWarning.defaults.fontStyle end,
+			set = function(_, value) durabilityWarningApplySetting("fontStyle", value) end,
+			generator = function(_, root)
+				for _, option in ipairs(durabilityWarningFontStyleOptions()) do
+					root:CreateRadio(option.label, function() return (addon.db and addon.db[DURABILITY_WARNING_DB_FONT_STYLE] or DurabilityWarning.defaults.fontStyle) == option.value end, function() durabilityWarningApplySetting("fontStyle", option.value) end)
+				end
+			end,
+		},
+		{
+			name = L["Text color"] or "Text color",
+			kind = DurabilitySettingType.Color,
+			field = "color",
+			default = DurabilityWarning.defaults.color,
+			hasOpacity = true,
+			get = function()
+				local r, g, b, a = durabilityWarningColor()
+				return { r = r, g = g, b = b, a = a }
+			end,
+			set = function(_, value) durabilityWarningApplySetting("color", value) end,
+		},
+	}
+	DurabilityEditMode:RegisterFrame(DURABILITY_WARNING_EDITMODE_ID, {
+		frame = self:EnsureFrame(),
+		title = L["DurabilityWarning"] or "Durability Warning",
+		managerCategory = "utilities",
+		layoutDefaults = { point = "CENTER", relativePoint = "CENTER", x = 0, y = 180 },
+		onApply = function(_, _, data)
+			if data then data.anchorTarget = nil end
+			DurabilityWarning:ApplyLayoutData(data)
+		end,
+		onEnter = function() DurabilityWarning:ShowEditModeHint(true) end,
+		onExit = function() DurabilityWarning:ShowEditModeHint(false) end,
+		isEnabled = function() return addon.db and addon.db[DURABILITY_WARNING_DB_ENABLED] == true end,
+		settings = settings,
+		settingsFactoryDefaults = DurabilityWarning.defaults,
+		relativeTo = function() return DurabilityWarning:ResolveAnchorFrame() end,
+		allowDrag = function() return DurabilityWarning:AnchorUsesUIParent() end,
+		managePosition = false,
+		showOutsideEditMode = false,
+		showReset = false,
+		showSettingsReset = false,
+		enableOverlayToggle = true,
+	})
+	durabilityWarningEditModeRegistered = true
+end
+
+function DurabilityWarning:RegisterEvents()
+	if durabilityWarningEventFrame then return end
+	durabilityWarningEventFrame = CreateFrame("Frame")
+	durabilityWarningEventFrame:RegisterEvent("PLAYER_LOGIN")
+	durabilityWarningEventFrame:RegisterEvent("UPDATE_INVENTORY_DURABILITY")
+	durabilityWarningEventFrame:RegisterEvent("READY_CHECK")
+	durabilityWarningEventFrame:SetScript("OnEvent", function(_, event)
+		if not DurabilityWarning:IsEnabled() then return end
+		if event == "READY_CHECK" then durabilityWarningReadyUntil = (GetTime and GetTime() or 0) + (tonumber(addon.db and addon.db[DURABILITY_WARNING_DB_READY_DURATION]) or DurabilityWarning.defaults.readyCheckDuration) end
+		DurabilityWarning:Refresh()
+	end)
+end
+
+function DurabilityWarning:UnregisterEvents()
+	if not durabilityWarningEventFrame then return end
+	durabilityWarningEventFrame:UnregisterAllEvents()
+	durabilityWarningEventFrame:SetScript("OnEvent", nil)
+	durabilityWarningEventFrame = nil
+end
+
+function DurabilityWarning:Enable()
+	self:EnsureFrame()
+	self:ApplyStyle()
+	self:RegisterEditMode()
+	self:RegisterEvents()
+	self:Refresh()
+	if DurabilityEditMode and DurabilityEditMode.RefreshFrame then DurabilityEditMode:RefreshFrame(DURABILITY_WARNING_EDITMODE_ID) end
+end
+
+function DurabilityWarning:Disable()
+	durabilityWarningReadyUntil = 0
+	durabilityWarningStopBlinkTicker()
+	self:UnregisterEvents()
+	if self.frame then self.frame:Hide() end
+	if DurabilityEditMode and DurabilityEditMode.RefreshFrame then DurabilityEditMode:RefreshFrame(DURABILITY_WARNING_EDITMODE_ID) end
+end
+
+function DurabilityWarning:Initialize()
+	if not addon.db then return end
+	addon.functions.InitDBValue(DURABILITY_WARNING_DB_ENABLED, DurabilityWarning.defaults.enabled)
+	addon.functions.InitDBValue(DURABILITY_WARNING_DB_THRESHOLD, DurabilityWarning.defaults.threshold)
+	addon.functions.InitDBValue(DURABILITY_WARNING_DB_READY_ENABLED, DurabilityWarning.defaults.readyCheckEnabled)
+	addon.functions.InitDBValue(DURABILITY_WARNING_DB_READY_THRESHOLD, DurabilityWarning.defaults.readyCheckThreshold)
+	addon.functions.InitDBValue(DURABILITY_WARNING_DB_READY_DURATION, DurabilityWarning.defaults.readyCheckDuration)
+	addon.functions.InitDBValue(DURABILITY_WARNING_DB_FONT_SIZE, DurabilityWarning.defaults.fontSize)
+	addon.functions.InitDBValue(DURABILITY_WARNING_DB_FONT_FACE, DurabilityWarning.defaults.fontFace)
+	addon.functions.InitDBValue(DURABILITY_WARNING_DB_FONT_STYLE, DurabilityWarning.defaults.fontStyle)
+	addon.functions.InitDBValue(DURABILITY_WARNING_DB_COLOR, DurabilityWarning.defaults.color)
+	addon.functions.InitDBValue(DURABILITY_WARNING_DB_BLINK, DurabilityWarning.defaults.blinkEnabled)
+	addon.functions.InitDBValue(DURABILITY_WARNING_DB_BLINK_RATE, DurabilityWarning.defaults.blinkRate)
+	addon.functions.InitDBValue(DURABILITY_WARNING_DB_ANCHOR_TARGET, DurabilityWarning.defaults.anchorTarget)
+	if self:IsEnabled() then self:Enable() end
+end
+
+---- REGION Functions
+
+local doneHook = false
+local inspectDone = {}
+local inspectUnit = nil
+local inspectItemLinks = {}
+local inspectSlotOrder = { 1, 2, 3, 15, 5, 9, 10, 6, 7, 8, 11, 12, 13, 14, 16, 17, 18 }
+local inspectSlotFrameNames = {
+	[1] = "InspectHeadSlot",
+	[2] = "InspectNeckSlot",
+	[3] = "InspectShoulderSlot",
+	[15] = "InspectBackSlot",
+	[5] = "InspectChestSlot",
+	[9] = "InspectWristSlot",
+	[10] = "InspectHandsSlot",
+	[6] = "InspectWaistSlot",
+	[7] = "InspectLegsSlot",
+	[8] = "InspectFeetSlot",
+	[11] = "InspectFinger0Slot",
+	[12] = "InspectFinger1Slot",
+	[13] = "InspectTrinket0Slot",
+	[14] = "InspectTrinket1Slot",
+	[16] = "InspectMainHandSlot",
+	[17] = "InspectSecondaryHandSlot",
+	[18] = "InspectRangedSlot",
+}
+addon.enchantTextCache = addon.enchantTextCache or {}
+local MAX_ENCHANT_LINK_CACHE = 2048
+local enchantTextLinkCache = {}
+local enchantTextLinkCacheCount = 0
+-- New helpers for Character vs Inspect display options
+local function _ensureDisplayDB()
+	addon.db = addon.db or {}
+	-- migrate legacy toggles to new multi-select tables once
+	if not addon.db.charDisplayOptions then
+		addon.db.charDisplayOptions = {}
+		if addon.db["showIlvlOnCharframe"] then addon.db.charDisplayOptions.ilvl = true end
+		if addon.db["showGemsOnCharframe"] then addon.db.charDisplayOptions.gems = true end
+		if addon.db["showEnchantOnCharframe"] then addon.db.charDisplayOptions.enchants = true end
+		if addon.db["showGemsTooltipOnCharframe"] then addon.db.charDisplayOptions.gemtip = true end
+	end
+	if not addon.db.inspectDisplayOptions then
+		addon.db.inspectDisplayOptions = {}
+		for k, v in pairs(addon.db.charDisplayOptions) do
+			addon.db.inspectDisplayOptions[k] = v
+		end
+	end
+end
+addon.functions.ensureDisplayDB = _ensureDisplayDB
+
+local function CharOpt(opt)
+	_ensureDisplayDB()
+	local t = addon.db.charDisplayOptions or {}
+	-- Disable enchant checks entirely for Timerunners
+	if opt == "enchants" and addon.functions and addon.functions.IsTimerunner and addon.functions.IsTimerunner() then return false end
+	return t[opt] == true
+end
+
+local function InspectOpt(opt)
+	_ensureDisplayDB()
+	local t = addon.db.inspectDisplayOptions or {}
+	-- Also suppress enchant checks in Inspect when player is a Timerunner
+	if opt == "enchants" and addon.functions and addon.functions.IsTimerunner and addon.functions.IsTimerunner() then return false end
+	return t[opt] == true
+end
+
+local function AnyInspectEnabled()
+	_ensureDisplayDB()
+	local t = addon.db.inspectDisplayOptions or {}
+	return t.ilvl or t.gems or t.enchants or t.gemtip
+end
+
+local charIlvlAnchors = {
+	TOPLEFT = { bgPoint = "TOPLEFT", bgX = -1, bgY = 1, textPoint = "TOPLEFT", textX = 1, textY = -2 },
+	TOP = { bgPoint = "TOP", bgX = 0, bgY = 1, textPoint = "TOP", textX = 0, textY = -2 },
+	TOPRIGHT = { bgPoint = "TOPRIGHT", bgX = 1, bgY = 1, textPoint = "TOPRIGHT", textX = -1, textY = -2 },
+	LEFT = { bgPoint = "LEFT", bgX = -1, bgY = 0, textPoint = "LEFT", textX = 1, textY = 0 },
+	CENTER = { bgPoint = "CENTER", bgX = 0, bgY = 0, textPoint = "CENTER", textX = 0, textY = 0 },
+	RIGHT = { bgPoint = "RIGHT", bgX = 1, bgY = 0, textPoint = "RIGHT", textX = -1, textY = 0 },
+	BOTTOMLEFT = { bgPoint = "BOTTOMLEFT", bgX = -1, bgY = -1, textPoint = "BOTTOMLEFT", textX = 1, textY = 1 },
+	BOTTOM = { bgPoint = "BOTTOM", bgX = 0, bgY = -1, textPoint = "BOTTOM", textX = 0, textY = 1 },
+	BOTTOMRIGHT = { bgPoint = "BOTTOMRIGHT", bgX = 1, bgY = -1, textPoint = "BOTTOMRIGHT", textX = -1, textY = 1 },
+}
+
+local function isCharIlvlOutsidePosition() return (addon.db["charIlvlPosition"] or "TOPRIGHT") == "OUTSIDE" end
+
+local function getFlyoutIlvlPosition()
+	local pos = addon.db and addon.db["flyoutIlvlPosition"]
+	if type(pos) == "string" and pos ~= "" and pos ~= "OUTSIDE" then return pos end
+	local fallback = (addon.db and addon.db["charIlvlPosition"]) or (addon.db and addon.db["bagIlvlPosition"]) or "TOPRIGHT"
+	if fallback == "OUTSIDE" then fallback = "TOPRIGHT" end
+	return fallback
+end
+
+local function hideIlvlBackground(element)
+	if not element or not element.ilvlBackground then return end
+	element.ilvlBackground:SetColorTexture(0, 0, 0, 0)
+	element.ilvlBackground:Hide()
+end
+
+local function applyCharIlvlPosition(element, slot)
+	if not element or not element.ilvlBackground or not element.ilvl then return end
+	local pos = addon.db["charIlvlPosition"] or "TOPRIGHT"
+	element.ilvlBackground:ClearAllPoints()
+	element.ilvl:ClearAllPoints()
+
+	if pos == "OUTSIDE" then
+		local side = addon.variables.itemSlotSide and addon.variables.itemSlotSide[slot] or 0
+		if side == 1 then
+			element.ilvlBackground:SetPoint("TOPRIGHT", element, "TOPLEFT", -5, -1)
+		else
+			element.ilvlBackground:SetPoint("TOPLEFT", element, "TOPRIGHT", 5, -1)
+		end
+		element.ilvl:SetPoint("CENTER", element.ilvlBackground, "CENTER", 0, 0)
+		hideIlvlBackground(element)
+		return
+	end
+
+	local anchor = charIlvlAnchors[pos] or charIlvlAnchors.TOPRIGHT
+	element.ilvlBackground:SetPoint(anchor.bgPoint, element, anchor.bgPoint, anchor.bgX, anchor.bgY)
+	element.ilvl:SetPoint(anchor.textPoint, element.ilvlBackground, anchor.textPoint, anchor.textX, anchor.textY)
+	hideIlvlBackground(element)
+end
+
+
+local function applyCharEnchantPosition(element, slot, itemLevelShown, inspectFrame)
+	if not element or not element.enchant then return end
+	local pos = addon.db["charEnchantPosition"] or "SLOT"
+	local side = addon.variables.itemSlotSide and addon.variables.itemSlotSide[slot] or 0
+	element.enchant:ClearAllPoints()
+
+	if pos == "ITEMLEVEL" and itemLevelShown and element.ilvl then
+		if side == 1 then
+			element.enchant:SetPoint("TOPRIGHT", element.ilvl, "BOTTOMRIGHT", 0, -1)
+		else
+			element.enchant:SetPoint("TOPLEFT", element.ilvl, "BOTTOMLEFT", 0, -1)
+		end
+		return
+	end
+
+	if inspectFrame then
+		if side == 0 then
+			element.enchant:SetPoint("BOTTOMLEFT", element, "BOTTOMRIGHT", 2, 1)
+		elseif side == 2 then
+			element.enchant:SetPoint("TOPLEFT", element, "TOPRIGHT", 2, -1)
+		else
+			element.enchant:SetPoint("BOTTOMRIGHT", element, "BOTTOMLEFT", -2, 1)
+		end
+	elseif side == 1 then
+		element.enchant:SetPoint("BOTTOMRIGHT", element, "BOTTOMLEFT", -2, -2)
+	else
+		element.enchant:SetPoint("BOTTOMLEFT", element, "BOTTOMRIGHT", 2, -2)
+	end
+end
+
+local function positionGemFrame(element, slot, gemIndex, outsideWithIlvl)
+	if not element or not element.gems or not element.gems[gemIndex] then return end
+	local gemFrame = element.gems[gemIndex]
+	local side = addon.variables.itemSlotSide and addon.variables.itemSlotSide[slot] or 0
+	gemFrame:ClearAllPoints()
+
+
+	if outsideWithIlvl and element.ilvlBackground then
+		if side == 1 then
+			gemFrame:SetPoint("TOPRIGHT", element.ilvlBackground, "TOPLEFT", -2 - (gemIndex - 1) * 16, 0)
+		else
+			gemFrame:SetPoint("TOPLEFT", element.ilvlBackground, "TOPRIGHT", 2 + (gemIndex - 1) * 16, 0)
+		end
+		return
+	end
+
+	if side == 0 then
+		gemFrame:SetPoint("TOPLEFT", element, "TOPRIGHT", 5 + (gemIndex - 1) * 16, 0)
+	elseif side == 1 then
+		gemFrame:SetPoint("TOPRIGHT", element, "TOPLEFT", -5 - (gemIndex - 1) * 16, 0)
+	else
+		gemFrame:SetPoint("BOTTOM", element, "TOPLEFT", -1, 6 + (gemIndex - 1) * 16)
+	end
+end
+
+local function applyGemLayout(element, slot, displayCount, outsideWithIlvl)
+	if not element or not element.gems or displayCount <= 0 then return end
+	for i = 1, displayCount do
+		if element.gems[i] then positionGemFrame(element, slot, i, outsideWithIlvl) end
+	end
+end
+
+local function clearGemFrame(gemFrame)
+	if not gemFrame then return end
+	if gemFrame.EnableMouse then gemFrame:EnableMouse(false) end
+	gemFrame:SetScript("OnEnter", nil)
+	gemFrame:SetScript("OnUpdate", nil)
+	gemFrame:UnregisterAllEvents()
+	gemFrame:Hide()
+end
+
+local function setGemFrameTooltip(gemFrame, enabled)
+	if not gemFrame then return end
+	if gemFrame.EnableMouse then gemFrame:EnableMouse(enabled == true) end
+end
+
+local function getMissingEnchantOverlayColor()
+	local c = addon.db and addon.db["missingEnchantOverlayColor"]
+	local r = (c and c.r) or 1
+	local g = (c and c.g) or 0
+	local b = (c and c.b) or 0
+	local a = (c and c.a)
+	if a == nil then a = 0.6 end
+	return r, g, b, a
+end
+
+local function applyMissingEnchantOverlayStyle(texture)
+	if not texture then return end
+	local r, g, b, a = getMissingEnchantOverlayColor()
+	texture:SetColorTexture(r, g, b, a)
+	local topAlpha = math.min(1, a + 0.35)
+	local bottomAlpha = math.max(0, a - 0.15)
+	if texture.SetGradientAlpha then texture:SetGradientAlpha("VERTICAL", r, g, b, topAlpha, r, g, b, bottomAlpha) end
+end
+
+local function normalizeItemDetailOutline(outline)
+	if addon.functions and addon.functions.GetFontFlagsForStyle then return addon.functions.GetFontFlagsForStyle(outline, "OUTLINE") end
+	if outline == nil then return "OUTLINE" end
+	if outline == "" or outline == "NONE" then return nil end
+	return outline
+end
+
+local function applyEnchantTextStyle(fontString)
+	if not fontString or not fontString.SetFont then return end
+	local defaultFace = (addon.functions and addon.functions.GetGlobalDefaultFontFace and addon.functions.GetGlobalDefaultFontFace())
+		or (addon.variables and addon.variables.defaultFont)
+		or STANDARD_TEXT_FONT
+	local configuredFace = addon.db and addon.db["ilvlFontFace"]
+	local face = defaultFace
+	if addon.functions and addon.functions.ResolveFontFace then
+		face = addon.functions.ResolveFontFace(configuredFace, defaultFace) or defaultFace
+	elseif type(configuredFace) == "string" and configuredFace ~= "" then
+		face = configuredFace
+	end
+	local style = addon.db and addon.db["ilvlFontOutline"]
+	local outline = normalizeItemDetailOutline(style)
+	local ok = fontString:SetFont(face, 12, outline)
+	if ok == false then fontString:SetFont(defaultFace, 12, outline) end
+	if addon.functions and addon.functions.ApplyFontStyleShadow then addon.functions.ApplyFontStyleShadow(fontString, style, "OUTLINE") end
+end
+
+local function applyCharacterFrameElementTextStyle(fontString, size)
+	if not fontString or not fontString.SetFont then return end
+	local globalFace = (addon.functions and addon.functions.GetGlobalDefaultFontFace and addon.functions.GetGlobalDefaultFontFace())
+		or (addon.variables and addon.variables.defaultFont)
+		or STANDARD_TEXT_FONT
+	local fallbackFace = (addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT
+	local style = addon.db and addon.db["globalFontStyle"] or "OUTLINE"
+	local outline = addon.functions and addon.functions.GetFontFlagsForStyle and addon.functions.GetFontFlagsForStyle(style, "OUTLINE") or "OUTLINE"
+	local ok = fontString:SetFont(globalFace, size, outline)
+	if ok == false then fontString:SetFont(fallbackFace, size, outline) end
+	if addon.functions and addon.functions.ApplyFontStyleShadow then addon.functions.ApplyFontStyleShadow(fontString, style, "OUTLINE") end
+end
+
+local function refreshCharacterFrameElementFonts()
+	if addon.general and addon.general.durabilityIconFrame and addon.general.durabilityIconFrame.count then applyCharacterFrameElementTextStyle(addon.general.durabilityIconFrame.count, 12) end
+end
+
+addon.functions.refreshCharacterFrameElementFonts = refreshCharacterFrameElementFonts
+
+local ENCHANT_DISPLAY_MODE_FULL = "FULL"
+local ENCHANT_DISPLAY_MODE_FULL_ICON = "FULL_ICON"
+local ENCHANT_DISPLAY_MODE_BADGE = "BADGE"
+local ENCHANT_DISPLAY_MODE_BADGE_ICON = "BADGE_ICON"
+local ENCHANT_DISPLAY_MODE_WARNING = "WARNING"
+local ENCHANT_DISPLAY_MODE_WARNING_ICON = "WARNING_ICON"
+local ENCHANT_DISPLAY_MODE_APPLIED = "APPLIED"
+local ENCHANT_DISPLAY_MODE_APPLIED_ICON = "APPLIED_ICON"
+
+local function normalizeEnchantDisplayMode(mode, showMissingOverlay)
+	if mode == ENCHANT_DISPLAY_MODE_FULL_ICON or mode == ENCHANT_DISPLAY_MODE_BADGE_ICON or mode == ENCHANT_DISPLAY_MODE_WARNING_ICON or mode == ENCHANT_DISPLAY_MODE_APPLIED_ICON then return mode end
+
+	local overlayEnabled = showMissingOverlay ~= false
+	if mode == ENCHANT_DISPLAY_MODE_BADGE then return overlayEnabled and ENCHANT_DISPLAY_MODE_BADGE_ICON or ENCHANT_DISPLAY_MODE_BADGE end
+	if mode == ENCHANT_DISPLAY_MODE_WARNING then return overlayEnabled and ENCHANT_DISPLAY_MODE_WARNING_ICON or ENCHANT_DISPLAY_MODE_WARNING end
+	if mode == ENCHANT_DISPLAY_MODE_APPLIED then return overlayEnabled and ENCHANT_DISPLAY_MODE_APPLIED_ICON or ENCHANT_DISPLAY_MODE_APPLIED end
+	return overlayEnabled and ENCHANT_DISPLAY_MODE_FULL_ICON or ENCHANT_DISPLAY_MODE_FULL
+end
+
+local function getEnchantDisplayModeBase(mode)
+	if mode == ENCHANT_DISPLAY_MODE_FULL_ICON then return ENCHANT_DISPLAY_MODE_FULL end
+	if mode == ENCHANT_DISPLAY_MODE_BADGE_ICON then return ENCHANT_DISPLAY_MODE_BADGE end
+	if mode == ENCHANT_DISPLAY_MODE_WARNING_ICON then return ENCHANT_DISPLAY_MODE_WARNING end
+	if mode == ENCHANT_DISPLAY_MODE_APPLIED_ICON then return ENCHANT_DISPLAY_MODE_APPLIED end
+	return mode
+end
+
+local function shouldShowMissingEnchantOverlayForMode(mode)
+	return mode == ENCHANT_DISPLAY_MODE_FULL_ICON or mode == ENCHANT_DISPLAY_MODE_BADGE_ICON or mode == ENCHANT_DISPLAY_MODE_WARNING_ICON or mode == ENCHANT_DISPLAY_MODE_APPLIED_ICON
+end
+
+local function getEnchantDisplayMode()
+	local mode = addon.db and addon.db["charEnchantDisplayMode"]
+	local showMissingOverlay = addon.db and addon.db["showMissingEnchantOverlayOnCharframe"]
+	return normalizeEnchantDisplayMode(mode, showMissingOverlay)
+end
+
+addon.ItemEnchantDisplay = addon.ItemEnchantDisplay or {}
+
+function addon.ItemEnchantDisplay.GetQualityInfo(link)
+	if not link or not addon.ItemEnchantData then return nil, false end
+	local enchantID = tonumber(link:match("item:%d+:(%d+)") or 0)
+	if not enchantID or enchantID <= 0 then return nil, false end
+	local data = addon.ItemEnchantData.byEnchantID and addon.ItemEnchantData.byEnchantID[enchantID]
+	if not data then return nil, false end
+	local family = addon.ItemEnchantData.families and addon.ItemEnchantData.families[data.craftingDataID]
+	if not family or not family.qualities then return data, false end
+	local bestQuality = data.quality or 0
+	for quality in pairs(family.qualities) do
+		if quality > bestQuality then bestQuality = quality end
+	end
+	return data, data.quality < bestQuality
+end
+
+function addon.ItemEnchantDisplay.GetWarning(link)
+	local data, lowQuality = addon.ItemEnchantDisplay.GetQualityInfo(link)
+	if data and lowQuality then return "LOW" end
+	return nil
+end
+
+function addon.ItemEnchantDisplay.SetWarningTooltip(element, warning)
+	if not element or not element.enchant then return end
+	local frame = element.enchantWarningTooltip
+	if not warning then
+		if frame then
+			frame.warningText = nil
+			frame:Hide()
+		end
+		return
+	end
+	if not frame then
+		frame = CreateFrame("Frame", nil, element)
+		frame:SetFrameLevel(element:GetFrameLevel() + 20)
+		frame:EnableMouse(true)
+		frame:SetScript("OnEnter", function(self)
+			if not self.warningText then return end
+			GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+			GameTooltip:SetText(self.warningText, 1, 0.82, 0, 1, true)
+			GameTooltip:Show()
+		end)
+		frame:SetScript("OnLeave", function() GameTooltip:Hide() end)
+		element.enchantWarningTooltip = frame
+	end
+	frame:ClearAllPoints()
+	frame:SetPoint("CENTER", element.enchant, "CENTER")
+	frame:SetSize(math.max(element.enchant:GetStringWidth() + 4, 12), math.max(element.enchant:GetStringHeight() + 4, 12))
+	frame.warningText = L["gearEnchantWarningLow"]
+	frame:Show()
+end
+
+function addon.ItemEnchantDisplay.Clear(element)
+	if not element then return end
+	if element.enchant then element.enchant:SetText("") end
+	addon.ItemEnchantDisplay.SetWarningTooltip(element, nil)
+end
+
+function addon.ItemEnchantDisplay.Apply(element, displayText, warning)
+	addon.ItemEnchantDisplay.Clear(element)
+	if not element or not element.enchant or not displayText then return end
+	element.enchant:SetFormattedText(displayText)
+	addon.ItemEnchantDisplay.SetWarningTooltip(element, warning)
+end
+
+local function shouldShowMissingEnchant(slot, link, itemLevel)
+	local hasStaticRule = addon.variables.shouldEnchanted[slot] == true
+	local dynamicRule = addon.variables.shouldEnchantedChecks[slot]
+
+	if not hasStaticRule and dynamicRule == nil then return false end
+	if dynamicRule ~= nil and not dynamicRule.func(itemLevel) then return false end
+	if slot ~= 17 then return true end
+	local _, _, _, _, _, _, _, _, itemEquipLoc = C_Item.GetItemInfoInstant(link)
+	return addon.variables.allowedEnchantTypesForOffhand[itemEquipLoc] == true
+end
+
+local function getEnchantDisplayText(mode, enchantText, missingEnchant, enchantWarning)
+	mode = getEnchantDisplayModeBase(mode)
+	if missingEnchant then
+		if mode == ENCHANT_DISPLAY_MODE_APPLIED then return nil end
+		if mode == ENCHANT_DISPLAY_MODE_BADGE then return "|cffff4040E|r" end
+		return ("|cff%02x%02x%02x"):format(255, 0, 0) .. L["MissingEnchant"] .. "|r"
+	end
+	if enchantWarning then
+		if mode == ENCHANT_DISPLAY_MODE_BADGE or mode == ENCHANT_DISPLAY_MODE_WARNING or not enchantText then return "|cffffff00W|r" end
+		return "|cffffff00" .. enchantText:gsub("^|c%x%x%x%x%x%x%x%x", "", 1)
+	end
+	if not enchantText then return nil end
+	if mode == ENCHANT_DISPLAY_MODE_BADGE then return "|cff00ff00E|r" end
+	if mode == ENCHANT_DISPLAY_MODE_WARNING then return nil end
+	return enchantText
+end
+
+local function CheckItemGems(element, itemLink, emptySocketsCount, key, pdElement, attempts)
+	attempts = attempts or 1 -- Anzahl der Versuche
+	if attempts > 10 then -- Abbruch nach 5 Versuchen, um Endlosschleifen zu vermeiden
+		return
+	end
+
+	for i = 1, emptySocketsCount do
+		local gemName, gemLink = C_Item.GetItemGem(itemLink, i)
+		element.gems[i]:SetScript("OnEnter", nil)
+		setGemFrameTooltip(element.gems[i], false)
+
+		if gemName then
+			local icon = C_Item.GetItemIconByID(gemLink)
+			element.gems[i].icon:SetTexture(icon)
+			element.gems[i].icon:SetVertexColor(1, 1, 1)
+			if pdElement == InspectPaperDollFrame then
+				setGemFrameTooltip(element.gems[i], InspectOpt("gemtip"))
+			else
+				setGemFrameTooltip(element.gems[i], CharOpt("gemtip"))
+			end
+			element.gems[i]:SetScript("OnEnter", function(self)
+				local showTip
+				if pdElement == InspectPaperDollFrame then
+					showTip = InspectOpt("gemtip")
+				else
+					showTip = CharOpt("gemtip")
+				end
+				if gemLink and showTip then
+					local anchor = "ANCHOR_CURSOR"
+					local xOffset, yOffset = 0, 0
+					if addon.functions.IsTooltipAddonLoaded() then
+						if addon.db["TooltipAnchorType"] == 3 then anchor = "ANCHOR_CURSOR_LEFT" end
+						if addon.db["TooltipAnchorType"] == 4 then anchor = "ANCHOR_CURSOR_RIGHT" end
+						xOffset = addon.db["TooltipAnchorOffsetX"] or 0
+						yOffset = addon.db["TooltipAnchorOffsetY"] or 0
+					end
+					GameTooltip:SetOwner(self, anchor, xOffset, yOffset)
+					GameTooltip:SetHyperlink(gemLink)
+					GameTooltip:Show()
+				end
+			end)
+		else
+			-- Wiederhole die Überprüfung nach einer Verzögerung, wenn der Edelstein noch nicht geladen ist
+			C_Timer.After(0.1, function() CheckItemGems(element, itemLink, emptySocketsCount, key, pdElement, attempts + 1) end)
+			return -- Abbrechen, damit wir auf die nächste Überprüfung warten
+		end
+	end
+end
+
+local function setEnchantTextLinkCache(link, value)
+	if enchantTextLinkCache[link] == nil then
+		enchantTextLinkCacheCount = enchantTextLinkCacheCount + 1
+		if enchantTextLinkCacheCount > MAX_ENCHANT_LINK_CACHE then
+			enchantTextLinkCache = {}
+			enchantTextLinkCacheCount = 1
+		end
+	end
+	enchantTextLinkCache[link] = value
+end
+
+local function trimText(text)
+	if type(text) ~= "string" then return nil end
+	text = text:gsub("^%s+", ""):gsub("%s+$", "")
+	if text == "" then return nil end
+	return text
+end
+
+local enchantPrefixKeywords = nil
+local function getEnchantPrefixKeywords()
+	if enchantPrefixKeywords then return enchantPrefixKeywords end
+	enchantPrefixKeywords = {}
+	local seen = {}
+	local function addKeyword(keyword)
+		keyword = trimText(keyword)
+		if not keyword then return end
+		if seen[keyword] then return end
+		seen[keyword] = true
+		table.insert(enchantPrefixKeywords, keyword)
+	end
+
+	addKeyword(TRADEFRAME_ENCHANT_SLOT_LABEL)
+	addKeyword(_G.ENCHANT)
+	addKeyword(ENCHANTS)
+	addKeyword(_G.PROFESSIONS_ENCHANTING)
+
+	return enchantPrefixKeywords
+end
+
+local function prefixLooksLikeEnchant(prefixText)
+	local keywords = getEnchantPrefixKeywords()
+	if #keywords == 0 then return false end
+	local loweredPrefix = strlower(prefixText)
+	for _, keyword in ipairs(keywords) do
+		if prefixText:find(keyword, 1, true) then return true end
+		local loweredKeyword = strlower(keyword)
+		if loweredKeyword ~= keyword and loweredPrefix:find(loweredKeyword, 1, true) then return true end
+	end
+	return false
+end
+
+local function stripEnchantCraftPrefix(text)
+	text = trimText(text)
+	if not text then return nil end
+
+	for _, separator in ipairs({ " - " }) do
+		local separatorPos = text:find(separator, 1, true)
+		if separatorPos then
+			local left = trimText(text:sub(1, separatorPos - 1))
+			local right = trimText(text:sub(separatorPos + #separator))
+			if left and right and not left:find("%d") then
+				if prefixLooksLikeEnchant(left) then return right end
+
+				-- Language-agnostic fallback:
+				-- New crafted enchant names commonly follow "<craft prefix> - <enchant name>".
+				-- Keep this conservative to avoid stripping arbitrary long names.
+				local wordCount = 0
+				for _ in left:gmatch("%S+") do
+					wordCount = wordCount + 1
+					if wordCount > 4 then break end
+				end
+				if wordCount >= 1 and wordCount <= 4 and #left <= 32 and #right >= 2 then return right end
+			end
+		end
+	end
+
+	return text
+end
+
+local function getTooltipInfoFromLink(link)
+	if not link then return nil end
+	local enchantID = tonumber(link:match("item:%d+:(%d+)") or 0)
+	local hasEnchant = enchantID ~= nil and enchantID > 0
+
+	local cached = enchantTextLinkCache[link]
+	if cached ~= nil then
+		if cached == false then return nil, hasEnchant end
+		return cached, true
+	end
+
+	local enchantText = nil
+
+	if hasEnchant then
+		enchantText = addon.enchantTextCache[enchantID]
+		if enchantText == false then
+			enchantText = nil
+			addon.enchantTextCache[enchantID] = nil
+		end
+	end
+
+	if enchantText == nil then
+		local data = C_TooltipInfo.GetHyperlink(link)
+		if data and data.lines then
+			for _, v in pairs(data.lines) do
+				if v.type == 15 then
+					local text = strmatch(gsub(gsub(gsub(v.leftText, "%s?|A.-|a", ""), "|cn.-:(.-)|r", "%1"), "[&+] ?", ""), addon.variables.enchantString)
+					local icons = {}
+					v.leftText:gsub("(|A.-|a)", function(iconString) table.insert(icons, iconString) end)
+					text = stripEnchantCraftPrefix(text)
+					if text then
+						-- Tooltip colors can reflect the viewer's class restrictions, not enchant quality.
+						text = text:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+						text = text:gsub("(%a%a%a)%a+", "%1")
+						text = text:gsub("%%", "%%%%")
+						enchantText = "|cff00ff00" .. text .. (icons[1] or "") .. "|r"
+						break
+					end
+				end
+			end
+		end
+
+		if hasEnchant and enchantText then addon.enchantTextCache[enchantID] = enchantText end
+	end
+
+	if enchantText then
+		setEnchantTextLinkCache(link, enchantText)
+	elseif not hasEnchant then
+		setEnchantTextLinkCache(link, false)
+	end
+	return enchantText, hasEnchant or enchantText ~= nil
+end
+
+local function removeInspectElements()
+	if nil == InspectPaperDollFrame then return end
+	if InspectPaperDollFrame.ilvl then InspectPaperDollFrame.ilvl:SetText("") end
+	for _, key in ipairs(inspectSlotOrder) do
+		local frameName = inspectSlotFrameNames[key]
+		local element = frameName and _G[frameName]
+		if element then
+			if element.ilvl then element.ilvl:SetFormattedText("") end
+			if element.ilvlBackground then element.ilvlBackground:Hide() end
+			addon.ItemEnchantDisplay.Clear(element)
+			if element.borderGradient then element.borderGradient:Hide() end
+			if element.gems and #element.gems > 0 then
+				for i = 1, #element.gems do
+					clearGemFrame(element.gems[i])
+				end
+			end
+		end
+	end
+end
+
+local tooltipCache = {}
+
+local pvpItemTooltip = addon.functions.fmtToPattern(PVP_ITEM_LEVEL_TOOLTIP)
+
+local function getTooltipInfo(link)
+	local key = link
+	local cached = tooltipCache[key]
+	if cached then return cached[1], cached[2] end
+
+	local upgradeKey, isPVP
+	local data = C_TooltipInfo.GetHyperlink(link)
+	if data and data.lines then
+		for i, v in pairs(data.lines) do
+			if v.type == 42 then
+				local text = v.rightText or v.leftText
+				if text then
+					local tier = text:gsub(".+:%s?", ""):gsub("%s?%d/%d", "")
+					if tier then upgradeKey = string.lower(tier) end
+				end
+			elseif v.type == 0 and v.leftText:match(pvpItemTooltip) then
+				isPVP = true
+			end
+		end
+	end
+
+	tooltipCache[key] = { upgradeKey, isPVP }
+	return upgradeKey, isPVP
+end
+
+local function onInspect(arg1)
+	if nil == InspectFrame then return end
+	local unit = InspectFrame.unit
+	if nil == unit then return end
+	if issecretvalue(unit) then return end
+	local unitGUID = UnitGUID(unit)
+	if not (issecretvalue(unitGUID) or issecretvalue(arg1)) and unitGUID ~= arg1 then return end
+
+	local pdElement = InspectPaperDollFrame
+	if not doneHook then
+		doneHook = true
+		InspectFrame:HookScript("OnHide", function(self)
+			inspectDone = {}
+			inspectItemLinks = {}
+			removeInspectElements()
+		end)
+	end
+	if inspectUnit ~= InspectFrame.unit then
+		inspectUnit = InspectFrame.unit
+		inspectDone = {}
+		inspectItemLinks = {}
+	end
+	if not InspectOpt("ilvl") and pdElement.ilvl then pdElement.ilvl:SetText("") end
+	if not pdElement.ilvl and InspectOpt("ilvl") then
+		pdElement.ilvlBackground = pdElement:CreateTexture(nil, "BACKGROUND")
+		pdElement.ilvlBackground:SetColorTexture(0, 0, 0, 0)
+		pdElement.ilvlBackground:SetPoint("TOPRIGHT", pdElement, "TOPRIGHT", -10, -28)
+		pdElement.ilvlBackground:SetSize(20, 16)
+
+		pdElement.ilvl = pdElement:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
+		pdElement.ilvl:SetPoint("TOPRIGHT", pdElement.ilvlBackground, "TOPRIGHT", -1, -1)
+		addon.functions.ApplyItemLevelTextStyle(pdElement.ilvl)
+
+		if C_PaperDollInfo and C_PaperDollInfo.GetInspectItemLevel then
+			local ilvl = C_PaperDollInfo.GetInspectItemLevel(unit)
+			if ilvl then pdElement.ilvl:SetFormattedText(string.format("%.1f", ilvl)) end
+		else
+			pdElement.ilvl:SetFormattedText("")
+		end
+		addon.functions.ApplyItemLevelTextColor(pdElement.ilvl, nil)
+		hideIlvlBackground(pdElement)
+
+		local textWidth = pdElement.ilvl:GetStringWidth()
+		pdElement.ilvlBackground:SetSize(textWidth + 6, pdElement.ilvl:GetStringHeight() + 4)
+	end
+	for _, key in ipairs(inspectSlotOrder) do
+		local frameName = inspectSlotFrameNames[key]
+		local element = frameName and _G[frameName]
+		if element then
+			if element.enchant and InspectOpt("enchants") then applyCharEnchantPosition(element, key, InspectOpt("ilvl"), true) end
+			if element.borderGradient then applyMissingEnchantOverlayStyle(element.borderGradient) end
+			local itemLink = GetInventoryItemLink(unit, key)
+			if inspectItemLinks[key] ~= itemLink then
+				inspectItemLinks[key] = itemLink
+				inspectDone[key] = nil
+			end
+			if inspectDone[key] ~= true and inspectDone[key] ~= "pending" then
+				if element.ilvl then element.ilvl:SetFormattedText("") end
+				if element.ilvlBackground then element.ilvlBackground:Hide() end
+				addon.ItemEnchantDisplay.Clear(element)
+				if itemLink then
+					local eItem = Item:CreateFromItemLink(itemLink)
+					if eItem and not eItem:IsItemEmpty() then
+						inspectDone[key] = "pending"
+						eItem:ContinueOnItemLoad(function()
+							-- Link changed while item was loading; skip stale callback work.
+							if inspectItemLinks[key] ~= itemLink then
+								if inspectDone[key] == "pending" then inspectDone[key] = nil end
+								return
+							end
+							inspectDone[key] = true
+							local displayCount = 0
+							if InspectOpt("gems") then
+								local itemStats = C_Item.GetItemStats(itemLink)
+								local socketCount = 0
+								for statName, statValue in pairs(itemStats) do
+									if (statName:find("EMPTY_SOCKET") or statName:find("empty_socket")) and addon.variables.allowedSockets[statName] then socketCount = socketCount + statValue end
+								end
+								local neededSockets = addon.variables.shouldSocketed[key] or 0
+								if neededSockets > 0 then
+									local cSeason, isPvP = getTooltipInfo(itemLink)
+									if addon.variables.shouldSocketedChecks[key] then
+										if not addon.variables.shouldSocketedChecks[key].func(cSeason, isPvP) then neededSockets = 0 end
+									end
+								end
+								displayCount = math.max(socketCount, neededSockets)
+								if element.gems and #element.gems > displayCount then
+									for i = displayCount + 1, #element.gems do
+										clearGemFrame(element.gems[i])
+									end
+								end
+								if not element.gems then element.gems = {} end
+								for i = 1, displayCount do
+									if not element.gems[i] then
+										element.gems[i] = CreateFrame("Frame", nil, pdElement)
+										element.gems[i]:SetSize(16, 16) -- Setze die Größe des Icons
+
+										element.gems[i]:SetFrameStrata("DIALOG")
+										element.gems[i]:SetScript("OnLeave", function(self) GameTooltip:Hide() end)
+
+										element.gems[i].icon = element.gems[i]:CreateTexture(nil, "OVERLAY")
+										element.gems[i].icon:SetAllPoints(element.gems[i])
+									end
+									positionGemFrame(element, key, i, false)
+									element.gems[i].icon:SetTexture("Interface\\ItemSocketingFrame\\UI-EmptySocket-Prismatic")
+									if i > socketCount then
+										element.gems[i].icon:SetVertexColor(1, 0, 0)
+										element.gems[i]:SetScript("OnEnter", nil)
+										setGemFrameTooltip(element.gems[i], false)
+									else
+										element.gems[i].icon:SetVertexColor(1, 1, 1)
+									end
+									element.gems[i]:Show()
+								end
+								if socketCount > 0 then CheckItemGems(element, itemLink, socketCount, key, pdElement) end
+							elseif element.gems and #element.gems > 0 then
+								for i = 1, #element.gems do
+									clearGemFrame(element.gems[i])
+								end
+							end
+
+							if InspectOpt("ilvl") then
+								if not element.ilvlBackground then
+									element.ilvlBackground = element:CreateTexture(nil, "BACKGROUND")
+									element.ilvlBackground:SetColorTexture(0, 0, 0, 0)
+									element.ilvl = element:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
+								end
+								addon.functions.ApplyItemLevelTextStyle(element.ilvl)
+
+								applyCharIlvlPosition(element, key)
+								element.ilvlBackground:SetSize(30, 16)
+								hideIlvlBackground(element)
+
+								local color = eItem:GetItemQualityColor()
+
+								local itemLevelText
+
+								local ttData = C_TooltipInfo.GetInventoryItem(unit, key, true)
+								if ttData and ttData.lines then
+									for i, v in pairs(ttData.lines) do
+										if v.type == 41 then itemLevelText = v.itemLevel end
+									end
+								end
+								if not itemLevelText then itemLevelText = eItem:GetCurrentItemLevel() end
+
+								element.ilvl:SetFormattedText(itemLevelText)
+								addon.functions.ApplyItemLevelTextColor(element.ilvl, color)
+
+								local textWidth = element.ilvl:GetStringWidth()
+								element.ilvlBackground:SetSize(textWidth + 6, element.ilvl:GetStringHeight() + 4)
+								hideIlvlBackground(element)
+							end
+							if InspectOpt("gems") and displayCount > 0 then
+								local outsideWithIlvl = isCharIlvlOutsidePosition() and InspectOpt("ilvl")
+								applyGemLayout(element, key, displayCount, outsideWithIlvl)
+							end
+							if InspectOpt("enchants") then
+								if not element.enchant then
+									element.enchant = element:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
+									if addon.variables.shouldEnchanted[key] or addon.variables.shouldEnchantedChecks[key] then
+										element.borderGradient = element:CreateTexture(nil, "ARTWORK")
+										element.borderGradient:SetPoint("TOPLEFT", element, "TOPLEFT", -2, 2)
+										element.borderGradient:SetPoint("BOTTOMRIGHT", element, "BOTTOMRIGHT", 2, -2)
+										applyMissingEnchantOverlayStyle(element.borderGradient)
+										element.borderGradient:Hide()
+									end
+								end
+								applyCharEnchantPosition(element, key, InspectOpt("ilvl"), true)
+								applyEnchantTextStyle(element.enchant)
+								local mode = getEnchantDisplayMode()
+								local showMissingOverlay = shouldShowMissingEnchantOverlayForMode(mode)
+								local enchantText, hasEnchant = getTooltipInfoFromLink(itemLink)
+								local enchantWarning = addon.ItemEnchantDisplay.GetWarning(itemLink)
+								local foundEnchant = hasEnchant or enchantText ~= nil
+								local showMissingEnchant = false
+								if element.borderGradient then
+									applyMissingEnchantOverlayStyle(element.borderGradient)
+									element.borderGradient:Hide()
+								end
+								if not foundEnchant and UnitLevel(inspectUnit) == addon.variables.maxLevel then
+									showMissingEnchant = shouldShowMissingEnchant(key, itemLink, eItem:GetCurrentItemLevel())
+								end
+								if element.borderGradient then
+									if showMissingEnchant and showMissingOverlay then
+										element.borderGradient:Show()
+									else
+										element.borderGradient:Hide()
+									end
+								end
+								local displayText = getEnchantDisplayText(mode, enchantText, showMissingEnchant, enchantWarning)
+								addon.ItemEnchantDisplay.Apply(element, displayText, enchantWarning)
+							else
+								if element.borderGradient then element.borderGradient:Hide() end
+								addon.ItemEnchantDisplay.Clear(element)
+							end
+						end)
+					else
+						inspectDone[key] = true
+					end
+				else
+					inspectDone[key] = true
+				end
+			end
+		end
+	end
+
+	if pdElement.ilvl then
+		if C_PaperDollInfo and C_PaperDollInfo.GetInspectItemLevel then
+			addon.functions.ApplyItemLevelTextStyle(pdElement.ilvl)
+			local ilvl = C_PaperDollInfo.GetInspectItemLevel(unit)
+			if ilvl then pdElement.ilvl:SetFormattedText(string.format("%.1f", ilvl)) end
+			addon.functions.ApplyItemLevelTextColor(pdElement.ilvl, nil)
+		else
+			pdElement.ilvl:SetFormattedText("")
+		end
+		hideIlvlBackground(pdElement)
+	end
+end
+
+addon.functions.onInspect = onInspect
+
+local function ensureRarityGlow(element)
+	if not element then return nil end
+	if element.rarityGlow then return element.rarityGlow end
+	local glow = element:CreateTexture(nil, "BORDER")
+	glow:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
+	glow:SetBlendMode("ADD")
+	glow:SetAlpha(0.9)
+	glow:SetPoint("CENTER", element, "CENTER", 0, 0)
+	element.rarityGlow = glow
+	return glow
+end
+
+local function updateCharRarityGlow(element, itemQuality)
+	if not element then return end
+	if addon.Skinner and addon.Skinner.functions and addon.Skinner.functions.IsCharacterFrameSquareSlotBordersEnabled
+		and addon.Skinner.functions.IsCharacterFrameSquareSlotBordersEnabled() then
+		if element.rarityGlow then element.rarityGlow:Hide() end
+		return
+	end
+	if not addon.db["enhancedRarityGlow"] then
+		if element.rarityGlow then element.rarityGlow:Hide() end
+		return
+	end
+	if not itemQuality or itemQuality < 2 then
+		if element.rarityGlow then element.rarityGlow:Hide() end
+		return
+	end
+	local glow = ensureRarityGlow(element)
+	if not glow then return end
+	local w, h = element:GetSize()
+	if w and h and w > 0 and h > 0 then
+		glow:SetSize(w + 26, h + 26)
+	else
+		glow:SetSize(64, 64)
+	end
+	local r, g, b = C_Item.GetItemQualityColor(itemQuality)
+	glow:SetVertexColor(r, g, b)
+	glow:Show()
+end
+
+local function setIlvlText(element, slot)
+	-- Hide all gemslots
+	if element then
+		if element.gems then
+			for i = 1, 3 do
+				if element.gems[i] then
+					clearGemFrame(element.gems[i])
+					element.gems[i].icon:SetTexture("Interface\\ItemSocketingFrame\\UI-EmptySocket-Prismatic")
+					element.gems[i].icon:SetVertexColor(1, 1, 1)
+				end
+			end
+		end
+
+		if element.borderGradient then element.borderGradient:Hide() end
+		if not (CharOpt("gems") or CharOpt("ilvl") or CharOpt("enchants")) then
+			element.ilvl:SetFormattedText("")
+			addon.ItemEnchantDisplay.Clear(element)
+			element.ilvlBackground:Hide()
+			if not addon.db["enhancedRarityGlow"] then return end
+		end
+
+		local eItem = Item:CreateFromEquipmentSlot(slot)
+		if eItem and not eItem:IsItemEmpty() then
+			eItem:ContinueOnItemLoad(function()
+				local link = eItem:GetItemLink()
+				local itemQuality = link and select(3, C_Item.GetItemInfo(link)) or nil
+				updateCharRarityGlow(element, itemQuality)
+				local _, itemID, enchantID = string.match(link, "item:(%d+):(%d*):(%d*):(%d*):(%d*):(%d*):(%d*):(%d*):(%d*):(%d*):(%d*)")
+				local displayCount = 0
+				if CharOpt("gems") then
+					local itemStats = C_Item.GetItemStats(link)
+					local socketCount = 0
+					for statName, statValue in pairs(itemStats) do
+						if (statName:find("EMPTY_SOCKET") or statName:find("empty_socket")) and addon.variables.allowedSockets[statName] then socketCount = socketCount + statValue end
+					end
+					local neededSockets = addon.variables.shouldSocketed[slot] or 0
+					if neededSockets > 0 then
+						local cSeason, isPvP = getTooltipInfo(link)
+						if addon.variables.shouldSocketedChecks[slot] then
+							if not addon.variables.shouldSocketedChecks[slot].func(cSeason, isPvP) then neededSockets = 0 end
+						end
+					end
+					displayCount = math.max(socketCount, neededSockets)
+					for i = 1, #element.gems do
+						if i <= displayCount then
+							positionGemFrame(element, slot, i, false)
+							element.gems[i]:Show()
+							element.gems[i].icon:SetTexture("Interface\\ItemSocketingFrame\\UI-EmptySocket-Prismatic")
+							if i > socketCount then
+								element.gems[i].icon:SetVertexColor(1, 0, 0)
+								element.gems[i]:SetScript("OnEnter", nil)
+								setGemFrameTooltip(element.gems[i], false)
+							else
+								element.gems[i].icon:SetVertexColor(1, 1, 1)
+							end
+						else
+							clearGemFrame(element.gems[i])
+						end
+					end
+					if socketCount > 0 then CheckItemGems(element, link, socketCount, slot) end
+				else
+					for i = 1, #element.gems do
+						clearGemFrame(element.gems[i])
+					end
+				end
+
+				local enchantText, hasEnchant = getTooltipInfoFromLink(link)
+				local enchantWarning = addon.ItemEnchantDisplay.GetWarning(link)
+
+				if CharOpt("ilvl") then
+					applyCharIlvlPosition(element, slot)
+					hideIlvlBackground(element)
+				end
+
+				if CharOpt("ilvl") then
+					local color = eItem:GetItemQualityColor()
+					local itemLevelText = eItem:GetCurrentItemLevel()
+					addon.functions.ApplyItemLevelTextStyle(element.ilvl)
+
+					element.ilvl:SetFormattedText(itemLevelText)
+					addon.functions.ApplyItemLevelTextColor(element.ilvl, color)
+
+					local textWidth = element.ilvl:GetStringWidth()
+					element.ilvlBackground:SetSize(textWidth + 6, element.ilvl:GetStringHeight() + 4)
+					hideIlvlBackground(element)
+				else
+					element.ilvl:SetFormattedText("")
+					element.ilvlBackground:Hide()
+				end
+				if CharOpt("gems") and displayCount > 0 then
+					local outsideWithIlvl = isCharIlvlOutsidePosition() and CharOpt("ilvl")
+					applyGemLayout(element, slot, displayCount, outsideWithIlvl)
+				end
+
+				if CharOpt("enchants") then
+					applyCharEnchantPosition(element, slot, CharOpt("ilvl"), false)
+					applyEnchantTextStyle(element.enchant)
+					local mode = getEnchantDisplayMode()
+					local showMissingOverlay = shouldShowMissingEnchantOverlayForMode(mode)
+					local showMissingEnchant = false
+					if element.borderGradient then
+						applyMissingEnchantOverlayStyle(element.borderGradient)
+						element.borderGradient:Hide()
+					end
+					local foundEnchant = hasEnchant or enchantText ~= nil
+
+					if not foundEnchant and UnitLevel("player") == addon.variables.maxLevel then showMissingEnchant = shouldShowMissingEnchant(slot, link, eItem:GetCurrentItemLevel()) end
+					if element.borderGradient then
+						if showMissingEnchant and showMissingOverlay then
+							element.borderGradient:Show()
+						else
+							element.borderGradient:Hide()
+						end
+					end
+					local displayText = getEnchantDisplayText(mode, enchantText, showMissingEnchant, enchantWarning)
+					addon.ItemEnchantDisplay.Apply(element, displayText, enchantWarning)
+				else
+					addon.ItemEnchantDisplay.Clear(element)
+				end
+			end)
+		else
+			element.ilvl:SetFormattedText("")
+			element.ilvlBackground:Hide()
+			addon.ItemEnchantDisplay.Clear(element)
+			if element.borderGradient then element.borderGradient:Hide() end
+			updateCharRarityGlow(element, nil)
+		end
+	end
+end
+
+function addon.functions.IsIndestructible(link)
+	local itemParts = { strsplit(":", link) }
+	for i = 13, #itemParts do
+		local bonusID = tonumber(itemParts[i])
+		if bonusID and bonusID == 43 then return true end
+	end
+	return false
+end
+
+local function calculateDurability()
+	local frame = addon.general and addon.general.durabilityIconFrame
+	if not frame then return end
+	if not addon.db or not addon.db.showDurabilityOnCharframe then
+		frame:Hide()
+		return
+	end
+	frame:Show()
+	-- Timerunner gear is indestructible; hide and skip
+	if addon.functions and addon.functions.IsTimerunner and addon.functions.IsTimerunner() then
+		if addon.general and addon.general.durabilityIconFrame then addon.general.durabilityIconFrame:Hide() end
+		return
+	end
+	local maxDur = 0 -- combined value of durability
+	local currentDura = 0
+	local critDura = 0 -- counter of items under 50%
+
+	for key, _ in pairs(addon.variables.itemSlots) do
+		local eItem = Item:CreateFromEquipmentSlot(key)
+		if eItem and not eItem:IsItemEmpty() then
+			eItem:ContinueOnItemLoad(function()
+				local link = eItem:GetItemLink()
+				if link then
+					if addon.functions.IsIndestructible(link) == false then
+						local current, maximum = GetInventoryItemDurability(key)
+						if nil ~= current then
+							local fDur = tonumber(string.format("%." .. 0 .. "f", current * 100 / maximum))
+							maxDur = maxDur + maximum
+							currentDura = currentDura + current
+							if fDur < 50 then critDura = critDura + 1 end
+						end
+					end
+				end
+			end)
+		end
+	end
+
+	-- When we only have full durable items so fake the numbers to show 100%
+	if maxDur == 0 and currentDura == 0 then
+		maxDur = 100
+		currentDura = 100
+	end
+
+	local durValue = currentDura / maxDur * 100
+
+	addon.variables.durabilityCount = tonumber(string.format("%." .. 0 .. "f", durValue)) .. "%"
+	addon.general.durabilityIconFrame.count:SetText(addon.variables.durabilityCount)
+
+	if tonumber(string.format("%." .. 0 .. "f", durValue)) > 80 then
+		addon.general.durabilityIconFrame.count:SetTextColor(1, 1, 1)
+	elseif tonumber(string.format("%." .. 0 .. "f", durValue)) > 50 then
+		addon.general.durabilityIconFrame.count:SetTextColor(1, 1, 0)
+	else
+		addon.general.durabilityIconFrame.count:SetTextColor(1, 0, 0)
+	end
+end
+addon.functions.calculateDurability = calculateDurability
+
+local function UpdateItemLevel()
+	local statFrame = CharacterStatsPane and CharacterStatsPane.ItemLevelFrame
+	if not (statFrame and statFrame.Value and GetAverageItemLevel) then return end
+
+	if not (CharOpt("ilvl") and addon.db["characterItemLevelDecimals"]) then return end
+
+	local avgItemLevel, equippedItemLevel = GetAverageItemLevel()
+	if not avgItemLevel or not equippedItemLevel then return end
+
+	local formatString = "%.2f"
+	local equippedText = string.format(formatString, equippedItemLevel)
+	local avgText = string.format(formatString, avgItemLevel)
+	if avgText ~= equippedText then
+		statFrame.Value:SetText(equippedText .. "/" .. avgText)
+	else
+		statFrame.Value:SetText(equippedText)
+	end
+
+	if GetItemLevelColor then
+		local r, g, b = GetItemLevelColor()
+		if r and g and b then statFrame.Value:SetTextColor(r, g, b) end
+	end
+end
+hooksecurefunc("PaperDollFrame_SetItemLevel", function(statFrame, unit) UpdateItemLevel() end)
+
+local requestDurabilityUpdate
+
+local function setCharFrame()
+	if addon.functions and addon.functions.refreshCharacterFrameElementFonts then addon.functions.refreshCharacterFrameElementFonts() end
+	if InCombatLockdown and InCombatLockdown() then
+		addon.variables = addon.variables or {}
+		addon.variables.pendingCharFrameUpdate = true
+		return
+	end
+	UpdateItemLevel()
+	requestDurabilityUpdate()
+	for key, value in pairs(addon.variables.itemSlots) do
+		setIlvlText(value, key)
+	end
+end
+addon.functions.setCharFrame = setCharFrame
+
+
+local function updateFlyoutButtonInfo(button)
+	if not button then return end
+
+	if CharOpt("ilvl") then
+		-- Reset stale overlays on recycled flyout buttons
+		if button.ItemUpgradeArrow then button.ItemUpgradeArrow:Hide() end
+		if button.ItemUpgradeIcon then button.ItemUpgradeIcon:Hide() end
+		if button.ItemUpgradeIconGlow then button.ItemUpgradeIconGlow:Hide() end
+		local location = button.location
+		if not location then return end
+
+		local itemLink, _, _, bags, _, slot, bag, itemLevel
+		if type(button.location) == "number" then
+			local locationData = EquipmentManager_GetLocationData(location)
+			bags = locationData.isBags or false
+			slot = locationData.slot
+			bag = locationData.bag
+
+			if bags then
+				itemLink = C_Container.GetContainerItemLink(bag, slot)
+			elseif not bags then
+				itemLink = GetInventoryItemLink("player", slot)
+			end
+		elseif button.itemLink then
+			itemLink = button.itemLink
+		end
+		if itemLink then
+			local eItem = Item:CreateFromItemLink(itemLink)
+			if eItem and not eItem:IsItemEmpty() then
+				eItem:ContinueOnItemLoad(function()
+					if bags then
+						local loc = ItemLocation:CreateFromBagAndSlot(bag, slot)
+						if loc then itemLevel = C_Item.GetCurrentItemLevel(loc) end
+					elseif slot then
+						local loc = ItemLocation:CreateFromEquipmentSlot(slot)
+						if loc then itemLevel = C_Item.GetCurrentItemLevel(loc) end
+					end
+					if not itemLevel then itemLevel = eItem:GetCurrentItemLevel() end
+					local quality = eItem:GetItemQualityColor()
+
+					if not button.ItemLevelText then button.ItemLevelText = button:CreateFontString(nil, "OVERLAY") end
+					addon.functions.ApplyItemLevelTextStyle(button.ItemLevelText)
+					addon.functions.ApplyBagItemLevelPosition(button.ItemLevelText, button, getFlyoutIlvlPosition())
+
+					-- Setze den Text und die Farbe
+					button.ItemLevelText:SetText(itemLevel)
+					addon.functions.ApplyItemLevelTextColor(button.ItemLevelText, quality)
+					button.ItemLevelText:Show()
+
+					-- Upgrade icon for Flyout items: compare against the specific slot's equipped item
+					if addon.db["showUpgradeArrowOnBagItems"] and itemLink then
+						local function getEquipSlotsFor(equipLoc)
+							if equipLoc == "INVTYPE_FINGER" then
+								return { 11, 12 }
+							elseif equipLoc == "INVTYPE_TRINKET" then
+								return { 13, 14 }
+							elseif equipLoc == "INVTYPE_HEAD" then
+								return { 1 }
+							elseif equipLoc == "INVTYPE_NECK" then
+								return { 2 }
+							elseif equipLoc == "INVTYPE_SHOULDER" then
+								return { 3 }
+							elseif equipLoc == "INVTYPE_CLOAK" then
+								return { 15 }
+							elseif equipLoc == "INVTYPE_CHEST" or equipLoc == "INVTYPE_ROBE" then
+								return { 5 }
+							elseif equipLoc == "INVTYPE_WRIST" then
+								return { 9 }
+							elseif equipLoc == "INVTYPE_HAND" then
+								return { 10 }
+							elseif equipLoc == "INVTYPE_WAIST" then
+								return { 6 }
+							elseif equipLoc == "INVTYPE_LEGS" then
+								return { 7 }
+							elseif equipLoc == "INVTYPE_FEET" then
+								return { 8 }
+							elseif equipLoc == "INVTYPE_WEAPONMAINHAND" or equipLoc == "INVTYPE_2HWEAPON" or equipLoc == "INVTYPE_RANGED" or equipLoc == "INVTYPE_RANGEDRIGHT" then
+								return { 16 }
+							elseif equipLoc == "INVTYPE_WEAPONOFFHAND" or equipLoc == "INVTYPE_HOLDABLE" or equipLoc == "INVTYPE_SHIELD" then
+								return { 17 }
+							elseif equipLoc == "INVTYPE_WEAPON" then
+								return { 16, 17 }
+							end
+							return nil
+						end
+
+						local invSlot = select(4, C_Item.GetItemInfoInstant(itemLink))
+						local slots = getEquipSlotsFor(invSlot)
+
+						-- Determine the specific target slot for this flyout (e.g., 13 or 14 for trinkets)
+						local flyoutFrame = _G.EquipmentFlyoutFrame
+						local targetSlot = flyoutFrame and flyoutFrame.button and flyoutFrame.button.GetID and flyoutFrame.button:GetID() or nil
+
+						local baseline
+						if slots and #slots > 0 then
+							local function containsSlot(tbl, val)
+								for i = 1, #tbl do
+									if tbl[i] == val then return true end
+								end
+								return false
+							end
+							if targetSlot and containsSlot(slots, targetSlot) then
+								-- Compare only against the item in the specific flyout's slot
+								local eqLink = GetInventoryItemLink("player", targetSlot)
+								baseline = eqLink and (C_Item.GetDetailedItemLevelInfo(eqLink) or 0) or 0
+							else
+								-- Fallback: compare against the worst of the valid slots
+								for _, s in ipairs(slots) do
+									local eqLink = GetInventoryItemLink("player", s)
+									local eqIlvl = eqLink and (C_Item.GetDetailedItemLevelInfo(eqLink) or 0) or 0
+									if baseline == nil then
+										baseline = eqIlvl
+									else
+										baseline = math.min(baseline, eqIlvl)
+									end
+								end
+							end
+						end
+						local isUpgrade = baseline ~= nil and itemLevel and itemLevel > baseline
+						if isUpgrade then
+							addon.functions.EnsureBagUpgradeIcon(button)
+							local posUp = addon.db["bagUpgradeIconPosition"] or "BOTTOMRIGHT"
+							addon.functions.ApplyBagUpgradeIconPosition(button.ItemUpgradeIcon, button, posUp)
+							addon.functions.AlignUpgradeIconGlow(button.ItemUpgradeIconGlow, button.ItemUpgradeIcon)
+							button.ItemUpgradeIconGlow:Show()
+							button.ItemUpgradeIcon:Show()
+						elseif button.ItemUpgradeIcon then
+							button.ItemUpgradeIcon:Hide()
+							if button.ItemUpgradeIconGlow then button.ItemUpgradeIconGlow:Hide() end
+						end
+					end
+
+					local bType
+					if bag and slot then
+						if addon.db["showBindOnBagItems"] then
+							local data = C_TooltipInfo.GetBagItem(bag, slot)
+							for i, v in pairs(data.lines) do
+								if v.type == 20 then
+									if v.leftText == ITEM_BIND_ON_EQUIP then
+										bType = "BoE"
+									elseif v.leftText == ITEM_ACCOUNTBOUND_UNTIL_EQUIP or v.leftText == ITEM_BIND_TO_ACCOUNT_UNTIL_EQUIP then
+										bType = "WuE"
+									elseif v.leftText == ITEM_ACCOUNTBOUND or v.leftText == ITEM_BIND_TO_BNETACCOUNT then
+										bType = "WB"
+									end
+									break
+								end
+							end
+						end
+					end
+					if bType then
+						if not button.ItemBoundType then
+							button.ItemBoundType = button:CreateFontString(nil, "OVERLAY")
+							button.ItemBoundType:SetFont(addon.variables.defaultFont, 10, "OUTLINE")
+							button.ItemBoundType:SetShadowOffset(2, 2)
+							button.ItemBoundType:SetShadowColor(0, 0, 0, 1)
+						end
+						button.ItemBoundType:ClearAllPoints()
+						addon.functions.ApplyBagBoundPosition(button.ItemBoundType, button, addon.db["bagIlvlPosition"])
+						button.ItemBoundType:SetFormattedText(bType)
+						button.ItemBoundType:Show()
+					elseif button.ItemBoundType then
+						button.ItemBoundType:Hide()
+					end
+				end)
+			end
+		elseif button.ItemLevelText then
+			if button.ItemBoundType then button.ItemBoundType:Hide() end
+			if button.ItemUpgradeArrow then button.ItemUpgradeArrow:Hide() end
+			if button.ItemUpgradeIcon then button.ItemUpgradeIcon:Hide() end
+			if button.ItemUpgradeIconGlow then button.ItemUpgradeIconGlow:Hide() end
+			button.ItemLevelText:Hide()
+		end
+	elseif button.ItemLevelText then
+		if button.ItemBoundType then button.ItemBoundType:Hide() end
+		if button.ItemUpgradeArrow then button.ItemUpgradeArrow:Hide() end
+		if button.ItemUpgradeIcon then button.ItemUpgradeIcon:Hide() end
+		if button.ItemUpgradeIconGlow then button.ItemUpgradeIconGlow:Hide() end
+		button.ItemLevelText:Hide()
+	end
+end
+
+local function desaturateMerchantIcon(itemButton, desaturate)
+	if not itemButton then return end
+
+	local iconTexture = itemButton.Icon or itemButton.icon or itemButton.IconTexture or itemButton:GetNormalTexture()
+	if iconTexture then
+		if iconTexture.SetDesaturated then iconTexture:SetDesaturated(desaturate) end
+		if iconTexture.SetVertexColor then
+			if desaturate then
+				iconTexture:SetVertexColor(0.7, 0.7, 0.7, 1)
+			else
+				iconTexture:SetVertexColor(1, 1, 1, 1)
+			end
+		end
+	end
+end
+local function applyKnownFontTint(fontString, state)
+	if not fontString or fontString.GetObjectType and fontString:GetObjectType() ~= "FontString" then return end
+	if state then
+		if not fontString.__EnhanceQoLOriginalColor then
+			local r, g, b, a = fontString:GetTextColor()
+			if not r or not g or not b then
+				r, g, b = 1, 1, 1
+			end
+			if not a then a = 1 end
+			fontString.__EnhanceQoLOriginalColor = { r, g, b, a }
+		end
+		local stored = fontString.__EnhanceQoLOriginalColor
+		local r, g, b = stored[1], stored[2], stored[3]
+		fontString:SetTextColor(r or 1, g or 1, b or 1, 0.4)
+	elseif fontString.__EnhanceQoLOriginalColor then
+		local color = fontString.__EnhanceQoLOriginalColor
+		fontString:SetTextColor(color[1], color[2], color[3], color[4] or 1)
+		fontString.__EnhanceQoLOriginalColor = nil
+	end
+end
+
+local function applyKnownTextureTint(texture, state)
+	if not texture or texture.GetObjectType and texture:GetObjectType() ~= "Texture" then return end
+	if state then
+		if not texture.__EnhanceQoLOriginalVertexColor then
+			local r, g, b, a = texture:GetVertexColor()
+			if not r or not g or not b then
+				r, g, b = 1, 1, 1
+			end
+			if not a or a == 0 then a = texture:GetAlpha() or 1 end
+			texture.__EnhanceQoLOriginalVertexColor = { r, g, b, a }
+		end
+		local stored = texture.__EnhanceQoLOriginalVertexColor
+		texture:SetVertexColor(0.55, 0.55, 0.55, stored and stored[4] or texture:GetAlpha() or 1)
+	else
+		local color = texture.__EnhanceQoLOriginalVertexColor
+		if color then
+			texture:SetVertexColor(color[1], color[2], color[3], color[4] or texture:GetAlpha() or 1)
+			texture.__EnhanceQoLOriginalVertexColor = nil
+		end
+	end
+end
+local merchantKnownVisited = {}
+local applyKnownStateToFrame
+
+local function applyKnownStateToObjects(state, visited, object, ...)
+	if not object then return end
+	applyKnownStateToFrame(object, state, visited)
+	return applyKnownStateToObjects(state, visited, ...)
+end
+
+applyKnownStateToFrame = function(frame, state, visited)
+	if not frame or visited[frame] then return end
+	visited[frame] = true
+
+	local objectType = frame.GetObjectType and frame:GetObjectType()
+	if objectType == "FontString" then
+		applyKnownFontTint(frame, state)
+		return
+	elseif objectType == "Texture" then
+		applyKnownTextureTint(frame, state)
+		return
+	end
+
+	if frame.GetRegions then
+		applyKnownStateToObjects(state, visited, frame:GetRegions())
+	end
+
+	if frame.GetChildren then
+		applyKnownStateToObjects(state, visited, frame:GetChildren())
+	end
+end
+
+local function applyKnownStateToRoot(frame, state)
+	wipe(merchantKnownVisited)
+	applyKnownStateToFrame(frame, state, merchantKnownVisited)
+end
+
+local function setMerchantKnownIcon(itemButton, state, hasItem, sourceMissing)
+	if not itemButton then return end
+	local iconsOnly = addon.db["merchantKnownIconsOnly"] == true
+	local known = state
+	sourceMissing = sourceMissing == true
+	local showMarker = iconsOnly and hasItem
+	local previousDimmed = itemButton.__EnhanceQoLMerchantKnownDimmed
+	if itemButton.__EnhanceQoLMerchantKnownState == state
+		and itemButton.__EnhanceQoLMerchantKnownIconsOnly == iconsOnly
+		and itemButton.__EnhanceQoLMerchantKnownHasItem == hasItem
+		and itemButton.__EnhanceQoLMerchantSourceMissing == sourceMissing then return end
+	itemButton.__EnhanceQoLMerchantKnownState = state
+	itemButton.__EnhanceQoLMerchantKnownIconsOnly = iconsOnly
+	itemButton.__EnhanceQoLMerchantKnownHasItem = hasItem
+	itemButton.__EnhanceQoLMerchantSourceMissing = sourceMissing
+	state = state and not iconsOnly
+	itemButton.__EnhanceQoLMerchantKnownDimmed = state
+	if previousDimmed and not state then desaturateMerchantIcon(itemButton, false) end
+
+	if itemButton.MerchantKnownOutline then
+		for _, outline in ipairs(itemButton.MerchantKnownOutline) do outline:Hide() end
+	end
+
+	if state then
+		if not itemButton.MerchantKnownIcon then
+			local icon = itemButton:CreateTexture(nil, "OVERLAY", nil, 7)
+			if icon.SetAtlas and icon:SetAtlas("common-icon-checkmark") then
+				icon:SetTexCoord(0, 1, 0, 1)
+			else
+				icon:SetTexture("Interface\\Buttons\\UI-CheckBox-Check")
+			end
+			icon:SetSize(18, 18)
+			icon:SetPoint("TOPRIGHT", itemButton, "TOPRIGHT", 2, 2)
+			icon:SetVertexColor(0.2, 0.9, 0.2, 0.9)
+			itemButton.MerchantKnownIcon = icon
+		end
+		itemButton.MerchantKnownIcon:Show()
+		if not itemButton.MerchantKnownOverlay then
+			local overlay = itemButton:CreateTexture(nil, "OVERLAY", nil, 7)
+			overlay:SetAllPoints()
+			overlay:SetColorTexture(0.1, 0.1, 0.1, 0.55)
+			itemButton.MerchantKnownOverlay = overlay
+		end
+		itemButton.MerchantKnownOverlay:Show()
+		desaturateMerchantIcon(itemButton, true)
+		local parentFrame = itemButton:GetParent()
+		if parentFrame then
+			local parentName = parentFrame:GetName()
+			local nameRegion = parentFrame.Name or (parentName and _G[parentName .. "Name"])
+			if nameRegion then applyKnownFontTint(nameRegion, true) end
+
+			local moneyFrame = parentFrame.MoneyFrame or (parentName and _G[parentName .. "MoneyFrame"])
+			if moneyFrame then applyKnownStateToRoot(moneyFrame, true) end
+
+			local altCurrencyFrame = parentFrame.AltCurrencyFrame or (parentName and _G[parentName .. "AltCurrencyFrame"])
+			if altCurrencyFrame then applyKnownStateToRoot(altCurrencyFrame, true) end
+		end
+	else
+		if itemButton.MerchantKnownIcon then itemButton.MerchantKnownIcon:Hide() end
+		if itemButton.MerchantKnownOverlay then itemButton.MerchantKnownOverlay:Hide() end
+		-- desaturateMerchantIcon(itemButton, false)
+		local parentFrame = itemButton:GetParent()
+		if parentFrame then
+			local parentName = parentFrame:GetName()
+			local nameRegion = parentFrame.Name or (parentName and _G[parentName .. "Name"])
+			if nameRegion then applyKnownFontTint(nameRegion, false) end
+
+			local moneyFrame = parentFrame.MoneyFrame or (parentName and _G[parentName .. "MoneyFrame"])
+			if moneyFrame then applyKnownStateToRoot(moneyFrame, false) end
+
+			local altCurrencyFrame = parentFrame.AltCurrencyFrame or (parentName and _G[parentName .. "AltCurrencyFrame"])
+			if altCurrencyFrame then applyKnownStateToRoot(altCurrencyFrame, false) end
+		end
+	end
+	if showMarker then
+		if not itemButton.MerchantKnownIcon then
+			itemButton.MerchantKnownIcon = itemButton:CreateTexture(nil, "OVERLAY", nil, 7)
+			itemButton.MerchantKnownIcon:SetSize(18, 18)
+			itemButton.MerchantKnownIcon:SetPoint("TOPRIGHT", itemButton, "TOPRIGHT", 2, 2)
+		end
+		local icon = itemButton.MerchantKnownIcon
+		icon:ClearAllPoints()
+		icon:SetSize(18, 18)
+		icon:SetPoint("TOPRIGHT", itemButton, "TOPRIGHT", 0, 0)
+		icon:SetAtlas(known and "common-icon-checkmark" or "common-icon-redx")
+		icon:SetTexCoord(0, 1, 0, 1)
+		icon:SetDesaturated(false)
+		icon:SetVertexColor(1, 1, 1, 1)
+		if not itemButton.MerchantKnownOutline then
+			itemButton.MerchantKnownOutline = {}
+			for _, offset in ipairs({ { -1, -1 }, { -1, 0 }, { -1, 1 }, { 0, -1 }, { 0, 1 }, { 1, -1 }, { 1, 0 }, { 1, 1 } }) do
+				local outline = itemButton:CreateTexture(nil, "OVERLAY", nil, 6)
+				outline:SetSize(18, 18)
+				outline:SetPoint("CENTER", icon, "CENTER", offset[1], offset[2])
+				outline:SetVertexColor(0, 0, 0, 1)
+				table.insert(itemButton.MerchantKnownOutline, outline)
+			end
+		end
+		for _, outline in ipairs(itemButton.MerchantKnownOutline) do
+			outline:SetSize(sourceMissing and 20 or 18, sourceMissing and 20 or 18)
+			if sourceMissing then
+				outline:SetTexture("Interface\\AddOns\\EnhanceQoL\\Assets\\merchant_checkmark.tga")
+			else
+				outline:SetAtlas(known and "common-icon-checkmark" or "common-icon-redx")
+			end
+			outline:SetTexCoord(0, 1, 0, 1)
+			outline:Show()
+		end
+		icon:Show()
+	elseif not iconsOnly and itemButton.MerchantKnownIcon then
+		itemButton.MerchantKnownIcon:ClearAllPoints()
+		itemButton.MerchantKnownIcon:SetSize(18, 18)
+		itemButton.MerchantKnownIcon:SetPoint("TOPRIGHT", itemButton, "TOPRIGHT", 2, 2)
+		itemButton.MerchantKnownIcon:SetAtlas("common-icon-checkmark")
+		itemButton.MerchantKnownIcon:SetDesaturated(false)
+		itemButton.MerchantKnownIcon:SetVertexColor(0.2, 0.9, 0.2, 0.9)
+	end
+	if known and sourceMissing and itemButton.MerchantKnownIcon then
+		-- A white alpha mask preserves the requested color's full brightness.
+		itemButton.MerchantKnownIcon:SetTexture("Interface\\AddOns\\EnhanceQoL\\Assets\\merchant_checkmark.tga")
+		itemButton.MerchantKnownIcon:SetTexCoord(0, 1, 0, 1)
+		itemButton.MerchantKnownIcon:SetDesaturated(false)
+		itemButton.MerchantKnownIcon:SetVertexColor(0.55, 0.88, 1, 1)
+	end
+end
+
+local function merchantKnownTextMatches(text)
+	if not text then return false end
+	if ITEM_SPELL_KNOWN and text:find(ITEM_SPELL_KNOWN, 1, true) then return true end
+	local cosmeticKnownText = _G.ERR_COSMETIC_KNOWN
+	if cosmeticKnownText and text:find(cosmeticKnownText, 1, true) then return true end
+	return false
+end
+
+local function merchantHousingOwnedTextMatches(text)
+	local decorOwnedCountFormat = _G.HOUSING_DECOR_OWNED_COUNT_FORMAT
+	if not text or not decorOwnedCountFormat then return false end
+
+	local prefix = decorOwnedCountFormat:match("^(.-)%%[%d%$%.%-]*d")
+	if not prefix or prefix == "" or not text:find(prefix, 1, true) then return false end
+
+	local totalOwned = tonumber(text:match("(%d+)"))
+	return totalOwned ~= nil and totalOwned > 0
+end
+
+local ITEM_CLASS_HOUSING = Enum and Enum.ItemClass and Enum.ItemClass.Housing or 20
+local merchantKnownStateCache = {}
+
+local function clearMerchantKnownStateCache()
+	if wipe then
+		wipe(merchantKnownStateCache)
+	else
+		merchantKnownStateCache = {}
+	end
+end
+
+local function merchantTooltipHasKnownState(tooltipData, isHousingItem)
+	if not tooltipData then return false end
+	if TooltipUtil and TooltipUtil.SurfaceArgs then TooltipUtil.SurfaceArgs(tooltipData) end
+	if not tooltipData.lines then return false end
+
+	local isOwnedHousingDecor = false
+	for _, line in ipairs(tooltipData.lines) do
+		if TooltipUtil and TooltipUtil.SurfaceArgs then TooltipUtil.SurfaceArgs(line) end
+		local text = line.leftText or line.rightText
+		if merchantKnownTextMatches(text) then return true end
+		if merchantHousingOwnedTextMatches(text) then isOwnedHousingDecor = true end
+	end
+
+	return isHousingItem and isOwnedHousingDecor
+end
+
+local function merchantItemHasCollection(itemLink, itemClassID)
+	if not itemLink then return false end
+	-- A recipe or decor item is itself collectible; a reward container is not.
+	if itemClassID == 9 or itemClassID == ITEM_CLASS_HOUSING then return true end
+	local itemID = C_Item and C_Item.GetItemInfoInstant and C_Item.GetItemInfoInstant(itemLink)
+	if not itemID then return false end
+	if C_ToyBox and C_ToyBox.GetToyInfo then
+		local toyID = C_ToyBox.GetToyInfo(itemID)
+		if toyID and toyID > 0 then return true end
+	end
+	if C_MountJournal and C_MountJournal.GetMountFromItem then
+		local mountID = C_MountJournal.GetMountFromItem(itemID)
+		if mountID and mountID > 0 then return true end
+	end
+	if C_Heirloom and C_Heirloom.IsItemHeirloom and C_Heirloom.IsItemHeirloom(itemID) then return true end
+	if C_PetJournal and C_PetJournal.GetPetInfoByItemID then
+		local speciesID = select(13, C_PetJournal.GetPetInfoByItemID(itemID))
+		if speciesID and speciesID > 0 then return true end
+	end
+	if C_TransmogCollection and C_TransmogCollection.GetItemInfo then
+		local _, sourceID = C_TransmogCollection.GetItemInfo(itemLink)
+		if sourceID and sourceID > 0 then return true end
+	end
+	return false
+end
+
+local function merchantFallbackAppearanceState(appearanceID, sourceID)
+	local collection = C_TransmogCollection
+	if not collection or not collection.GetSourceInfo then return false, false end
+	local current = collection.GetSourceInfo(sourceID)
+	if not current then return false, false end
+	if issecretvalue and issecretvalue(current.isCollected) then return false, false end
+	if type(current.isCollected) ~= "boolean" then return false, false end
+	if current.isCollected then return true, true, false end
+	if issecretvalue and issecretvalue(appearanceID) then return false, false end
+	if not appearanceID or appearanceID <= 0 or not collection.GetAllAppearanceSources then return false, false end
+	-- The character-filtered appearance queries can omit collectible cosmetic sources.
+	-- Check every source of the same visual before calling its appearance uncollected.
+	local sources = collection.GetAllAppearanceSources(appearanceID)
+	if not sources then return false, false end
+	local sawCurrent, incomplete = false, false
+	for _, candidateID in ipairs(sources) do
+		if issecretvalue and issecretvalue(candidateID) then
+			incomplete = true
+		else
+			local candidate = candidateID == sourceID and current or collection.GetSourceInfo(candidateID)
+			if candidateID == sourceID then sawCurrent = true end
+			if not candidate or (issecretvalue and issecretvalue(candidate.isCollected)) then
+				incomplete = true
+			elseif type(candidate.isCollected) ~= "boolean" then
+				incomplete = true
+			elseif candidate.isCollected then
+				return true, true, true
+			end
+		end
+	end
+	if sawCurrent and not incomplete then return false, true, false end
+	return false, false
+end
+
+local function merchantItemIsKnown(itemIndex)
+	if not itemIndex or itemIndex <= 0 then return false end
+	local itemLink = GetMerchantItemLink and GetMerchantItemLink(itemIndex) or nil
+	if itemLink and C_Item and C_Item.GetItemLearnTransmogSet then
+		local setID = C_Item.GetItemLearnTransmogSet(itemLink)
+		if issecretvalue and issecretvalue(setID) then return false, false end
+		if setID and setID > 0 then
+			-- Ensembles teach a whole set rather than an individual item appearance.
+			-- Query the exact set on each refresh so learning it cannot leave a stale marker.
+			local setInfo = C_TransmogSets and C_TransmogSets.GetSetInfo and C_TransmogSets.GetSetInfo(setID)
+			if not setInfo then return false, false end
+			if issecretvalue and issecretvalue(setInfo.collected) then return false, false end
+			if type(setInfo.collected) ~= "boolean" then return false, false end
+			return setInfo.collected, true
+		end
+	end
+	if itemLink and C_TransmogCollection and C_TransmogCollection.GetItemInfo and C_TransmogCollection.GetAppearanceInfoBySource then
+		local appearanceID, sourceID = C_TransmogCollection.GetItemInfo(itemLink)
+		if issecretvalue and issecretvalue(sourceID) then return false, false end
+		if sourceID and sourceID > 0 then
+			-- An appearance may already be unlocked through a different item source.
+			local appearanceInfo = C_TransmogCollection.GetAppearanceInfoBySource(sourceID)
+			if not appearanceInfo then return merchantFallbackAppearanceState(appearanceID, sourceID) end
+			if issecretvalue and issecretvalue(appearanceInfo.appearanceIsCollected) then return false, false end
+			if type(appearanceInfo.appearanceIsCollected) ~= "boolean" then return false, false end
+			if appearanceInfo.appearanceIsCollected then
+				if issecretvalue and issecretvalue(appearanceInfo.sourceIsCollected) then return false, false end
+				if type(appearanceInfo.sourceIsCollected) ~= "boolean" then return false, false end
+			end
+			return appearanceInfo.appearanceIsCollected, true, appearanceInfo.appearanceIsCollected and not appearanceInfo.sourceIsCollected
+		end
+	end
+	local cached = itemLink and merchantKnownStateCache[itemLink]
+	if cached then return cached.known, cached.collectible end
+	local itemClassID = itemLink and C_Item and C_Item.GetItemInfoInstant and select(6, C_Item.GetItemInfoInstant(itemLink)) or nil
+	local isHousingItem = itemClassID == ITEM_CLASS_HOUSING
+	if not C_TooltipInfo or (not C_TooltipInfo.GetMerchantItem and not C_TooltipInfo.GetHyperlink) then return false end
+	local tooltipData
+	if C_TooltipInfo.GetMerchantItem then tooltipData = C_TooltipInfo.GetMerchantItem(itemIndex) end
+
+	if not tooltipData and C_TooltipInfo.GetHyperlink and GetMerchantItemLink then
+		if itemLink then tooltipData = C_TooltipInfo.GetHyperlink(itemLink) end
+	end
+
+	local isKnown = merchantTooltipHasKnownState(tooltipData, isHousingItem)
+	local isCollectible = isKnown or merchantItemHasCollection(itemLink, itemClassID)
+	if itemLink and tooltipData and tooltipData.lines then merchantKnownStateCache[itemLink] = { known = isKnown, collectible = isCollectible } end
+	return isKnown, isCollectible
+end
+
+local petCollectedCache = {}
+
+local function clearPetCollectedCache() wipe(petCollectedCache) end
+
+local function getPetCollectedCount(speciesID)
+	if not speciesID then return 0 end
+	local cached = petCollectedCache[speciesID]
+	if cached ~= nil then return cached end
+	if not C_PetJournal or not C_PetJournal.GetNumCollectedInfo then return 0 end
+	local numCollected = C_PetJournal.GetNumCollectedInfo(speciesID) or 0
+	petCollectedCache[speciesID] = numCollected
+	return numCollected
+end
+
+local function IsPetAlreadyCollectedFromItem(itemID)
+	if not C_PetJournal or not C_PetJournal.GetNumCollectedInfo then return false end
+	if not itemID then return false end
+
+	if not C_PetJournal.GetPetInfoByItemID then return false end
+
+	local speciesID = select(13, C_PetJournal.GetPetInfoByItemID(itemID))
+	if not speciesID then return false end
+
+	local count = getPetCollectedCount(speciesID)
+	return count > 0
+end
+
+if C_PetJournal then
+	local petJournalWatcher = CreateFrame("Frame")
+	petJournalWatcher:RegisterEvent("PET_JOURNAL_LIST_UPDATE")
+	petJournalWatcher:RegisterEvent("PET_JOURNAL_PET_DELETED")
+	petJournalWatcher:RegisterEvent("PET_JOURNAL_PET_RESTORED")
+	petJournalWatcher:RegisterEvent("NEW_PET_ADDED")
+	petJournalWatcher:SetScript("OnEvent", clearPetCollectedCache)
+end
+
+local merchantButtonInfoTouched = false
+
+local function isMerchantButtonInfoEnabled()
+	return addon.db["merchantKnownIconsOnly"] or addon.db["showIlvlOnMerchantframe"] or addon.db["markKnownOnMerchant"] or addon.db["markCollectedPetsOnMerchant"]
+end
+
+local function applyMerchantButtonInfo()
+	local showIlvl = addon.db["showIlvlOnMerchantframe"]
+	local highlightKnown = addon.db["markKnownOnMerchant"] or addon.db["merchantKnownIconsOnly"]
+	local highlightCollectedPets = addon.db["markCollectedPetsOnMerchant"] or addon.db["merchantKnownIconsOnly"]
+	if not showIlvl and not highlightKnown and not highlightCollectedPets then
+		if not merchantButtonInfoTouched then return end
+		local itemsPerPage = MERCHANT_ITEMS_PER_PAGE or 10
+		for i = 1, itemsPerPage do
+			local itemButton = _G["MerchantItem" .. i .. "ItemButton"]
+			if itemButton then
+				setMerchantKnownIcon(itemButton, false)
+				if itemButton.ItemUpgradeIcon then itemButton.ItemUpgradeIcon:Hide() end
+				if itemButton.ItemUpgradeIconGlow then itemButton.ItemUpgradeIconGlow:Hide() end
+				if itemButton.ItemUpgradeArrow then itemButton.ItemUpgradeArrow:Hide() end
+				if itemButton.ItemBoundType then itemButton.ItemBoundType:Hide() end
+				if itemButton.ItemLevelText then itemButton.ItemLevelText:Hide() end
+			end
+		end
+		merchantButtonInfoTouched = false
+		return
+	end
+
+	merchantButtonInfoTouched = true
+
+	local itemsPerPage = MERCHANT_ITEMS_PER_PAGE or 10 -- Anzahl der Items pro Seite (Standard 10)
+	local currentPage = MerchantFrame.page or 1 -- Aktuelle Seite
+	local startIndex = (currentPage - 1) * itemsPerPage + 1 -- Startindex basierend auf der aktuellen Seite
+
+	for i = 1, itemsPerPage do
+		local itemButton = _G["MerchantItem" .. i .. "ItemButton"]
+		if itemButton then
+			if not itemButton:IsShown() then
+				setMerchantKnownIcon(itemButton, false)
+				if itemButton.ItemUpgradeArrow then itemButton.ItemUpgradeArrow:Hide() end
+				if itemButton.ItemUpgradeIcon then itemButton.ItemUpgradeIcon:Hide() end
+				if itemButton.ItemUpgradeIconGlow then itemButton.ItemUpgradeIconGlow:Hide() end
+				if itemButton.ItemBoundType then itemButton.ItemBoundType:Hide() end
+				if itemButton.ItemLevelText then itemButton.ItemLevelText:Hide() end
+			else
+				local itemIndex = startIndex + i - 1
+				local buttonID = itemButton:GetID()
+				if buttonID and buttonID > 0 then itemIndex = buttonID end
+
+				local itemLink = itemIndex and GetMerchantItemLink(itemIndex) or nil
+
+				if itemLink then
+					local merchantButton = itemButton:GetParent()
+					if merchantButton and merchantButton.GetName and merchantButton:GetName():find("^MerchantItem%d+$") then MerchantFrameItem_UpdateQuality(merchantButton, itemLink) end
+				end
+
+				local shouldHighlight, hasCollectionState, sourceMissing = false, false, false
+				if highlightKnown then
+					shouldHighlight, hasCollectionState, sourceMissing = merchantItemIsKnown(itemIndex)
+				end
+				if not shouldHighlight and highlightCollectedPets and itemLink then
+					local itemID, _, _, _, _, classID, subclassID = C_Item.GetItemInfoInstant(itemLink)
+					if classID == 15 and subclassID == 2 then
+						hasCollectionState = true
+						local collected = IsPetAlreadyCollectedFromItem(itemID)
+						if collected then shouldHighlight = true end
+					end
+				end
+				setMerchantKnownIcon(itemButton, shouldHighlight, hasCollectionState, sourceMissing)
+				-- The merchant redraw reapplies its own tint to owned heirlooms.
+				-- Refresh this independently of the cached collection-marker state.
+				if addon.db.merchantKnownIconsOnly and shouldHighlight and GetMerchantItemID and C_Heirloom and C_Heirloom.IsItemHeirloom and C_Heirloom.PlayerHasHeirloom then
+					local itemID = GetMerchantItemID(itemIndex)
+					if itemID and C_Heirloom.IsItemHeirloom(itemID) and C_Heirloom.PlayerHasHeirloom(itemID) then
+						if SetItemButtonDesaturated then SetItemButtonDesaturated(itemButton, false) end
+						if SetItemButtonTextureVertexColor then SetItemButtonTextureVertexColor(itemButton, 1, 1, 1) end
+						if SetItemButtonNormalTextureVertexColor then SetItemButtonNormalTextureVertexColor(itemButton, 1, 1, 1) end
+						local merchantButton = itemButton:GetParent()
+						if merchantButton then
+							if SetItemButtonSlotVertexColor then SetItemButtonSlotVertexColor(merchantButton, 1, 1, 1) end
+							if SetItemButtonNameFrameVertexColor then SetItemButtonNameFrameVertexColor(merchantButton, 0.5, 0.5, 0.5) end
+						end
+					end
+				end
+				-- Clear any stale overlays from recycled buttons
+				if itemButton.ItemUpgradeArrow then itemButton.ItemUpgradeArrow:Hide() end
+				if itemButton.ItemUpgradeIcon then itemButton.ItemUpgradeIcon:Hide() end
+				if itemButton.ItemUpgradeIconGlow then itemButton.ItemUpgradeIconGlow:Hide() end
+				if showIlvl and itemLink and itemLink:find("item:") then
+					local eItem = Item:CreateFromItemLink(itemLink)
+					eItem:ContinueOnItemLoad(function()
+						-- local itemName, _, _, _, _, _, _, _, itemEquipLoc = C_Item.GetItemInfo(itemLink)
+						local _, _, _, _, _, _, _, _, itemEquipLoc, _, _, classID, subclassID = C_Item.GetItemInfo(itemLink)
+
+						if
+							(itemEquipLoc ~= "INVTYPE_NON_EQUIP_IGNORE" or (classID == 4 and subclassID == 0)) and not (classID == 4 and subclassID == 5) -- Cosmetic
+						then
+							local link = eItem:GetItemLink()
+							local invSlot = select(4, C_Item.GetItemInfoInstant(link))
+							if nil == addon.variables.allowedEquipSlotsBagIlvl[invSlot] then
+								if itemButton.ItemBoundType then itemButton.ItemBoundType:Hide() end
+								if itemButton.ItemLevelText then itemButton.ItemLevelText:Hide() end
+								return
+							end
+
+							if not itemButton.ItemLevelText then
+								itemButton.ItemLevelText = itemButton:CreateFontString(nil, "OVERLAY")
+								itemButton.ItemLevelText:SetShadowOffset(1, -1)
+								itemButton.ItemLevelText:SetShadowColor(0, 0, 0, 1)
+							end
+							addon.functions.ApplyItemLevelTextStyle(itemButton.ItemLevelText)
+							addon.functions.ApplyBagItemLevelPosition(itemButton.ItemLevelText, itemButton, addon.db["bagIlvlPosition"])
+
+							local color = eItem:GetItemQualityColor()
+							local candidateIlvl = eItem:GetCurrentItemLevel()
+							itemButton.ItemLevelText:SetText(candidateIlvl)
+							addon.functions.ApplyItemLevelTextColor(itemButton.ItemLevelText, color)
+							itemButton.ItemLevelText:Show()
+							local bType
+
+							-- Upgrade arrow for Merchant items
+							if addon.db["showUpgradeArrowOnBagItems"] then
+								local isRecommended = addon.functions.IsItemRecommendedForSpec and addon.functions.IsItemRecommendedForSpec(itemLink, itemEquipLoc, classID, subclassID)
+								local function getEquipSlotsFor(equipLoc)
+									if equipLoc == "INVTYPE_FINGER" then
+										return { 11, 12 }
+									elseif equipLoc == "INVTYPE_TRINKET" then
+										return { 13, 14 }
+									elseif equipLoc == "INVTYPE_HEAD" then
+										return { 1 }
+									elseif equipLoc == "INVTYPE_NECK" then
+										return { 2 }
+									elseif equipLoc == "INVTYPE_SHOULDER" then
+										return { 3 }
+									elseif equipLoc == "INVTYPE_CLOAK" then
+										return { 15 }
+									elseif equipLoc == "INVTYPE_CHEST" or equipLoc == "INVTYPE_ROBE" then
+										return { 5 }
+									elseif equipLoc == "INVTYPE_WRIST" then
+										return { 9 }
+									elseif equipLoc == "INVTYPE_HAND" then
+										return { 10 }
+									elseif equipLoc == "INVTYPE_WAIST" then
+										return { 6 }
+									elseif equipLoc == "INVTYPE_LEGS" then
+										return { 7 }
+									elseif equipLoc == "INVTYPE_FEET" then
+										return { 8 }
+									elseif equipLoc == "INVTYPE_WEAPONMAINHAND" or equipLoc == "INVTYPE_2HWEAPON" or equipLoc == "INVTYPE_RANGED" or equipLoc == "INVTYPE_RANGEDRIGHT" then
+										return { 16 }
+									elseif equipLoc == "INVTYPE_WEAPONOFFHAND" or equipLoc == "INVTYPE_HOLDABLE" or equipLoc == "INVTYPE_SHIELD" then
+										return { 17 }
+									elseif equipLoc == "INVTYPE_WEAPON" then
+										return { 16, 17 }
+									end
+									return nil
+								end
+
+								local isUpgrade = false
+								if isRecommended then
+									local invSlot = select(4, C_Item.GetItemInfoInstant(itemLink))
+									local slots = getEquipSlotsFor(invSlot)
+									local baseline
+									if slots and #slots > 0 then
+										for _, s in ipairs(slots) do
+											local eqLink = GetInventoryItemLink("player", s)
+											local eqIlvl = eqLink and (C_Item.GetDetailedItemLevelInfo(eqLink) or 0) or 0
+											if baseline == nil then
+												baseline = eqIlvl
+											else
+												baseline = math.min(baseline, eqIlvl)
+											end
+										end
+									end
+									isUpgrade = baseline ~= nil and candidateIlvl and candidateIlvl > baseline
+								end
+								if isUpgrade then
+									addon.functions.EnsureBagUpgradeIcon(itemButton)
+									local posUp = addon.db["bagUpgradeIconPosition"] or "BOTTOMRIGHT"
+									addon.functions.ApplyBagUpgradeIconPosition(itemButton.ItemUpgradeIcon, itemButton, posUp)
+									addon.functions.AlignUpgradeIconGlow(itemButton.ItemUpgradeIconGlow, itemButton.ItemUpgradeIcon)
+									itemButton.ItemUpgradeIconGlow:Show()
+									itemButton.ItemUpgradeIcon:Show()
+								elseif itemButton.ItemUpgradeIcon then
+									itemButton.ItemUpgradeIcon:Hide()
+									if itemButton.ItemUpgradeIconGlow then itemButton.ItemUpgradeIconGlow:Hide() end
+								end
+							end
+
+							if addon.db["showBindOnBagItems"] then
+								local data = C_TooltipInfo.GetMerchantItem(itemIndex)
+								for i, v in pairs(data.lines) do
+									if v.type == 20 then
+										if v.leftText == ITEM_BIND_ON_EQUIP then
+											bType = "BoE"
+										elseif v.leftText == ITEM_ACCOUNTBOUND_UNTIL_EQUIP or v.leftText == ITEM_BIND_TO_ACCOUNT_UNTIL_EQUIP then
+											bType = "WuE"
+										elseif v.leftText == ITEM_ACCOUNTBOUND or v.leftText == ITEM_BIND_TO_BNETACCOUNT then
+											bType = "WB"
+										end
+										break
+									end
+								end
+							end
+							if bType then
+								if not itemButton.ItemBoundType then
+									itemButton.ItemBoundType = itemButton:CreateFontString(nil, "OVERLAY")
+									itemButton.ItemBoundType:SetFont(addon.variables.defaultFont, 10, "OUTLINE")
+									itemButton.ItemBoundType:SetShadowOffset(2, 2)
+									itemButton.ItemBoundType:SetShadowColor(0, 0, 0, 1)
+								end
+								itemButton.ItemBoundType:ClearAllPoints()
+								addon.functions.ApplyBagBoundPosition(itemButton.ItemBoundType, itemButton, addon.db["bagIlvlPosition"])
+								itemButton.ItemBoundType:SetFormattedText(bType)
+								itemButton.ItemBoundType:Show()
+							elseif itemButton.ItemBoundType then
+								itemButton.ItemBoundType:Hide()
+							end
+						else
+							if itemButton.ItemBoundType then itemButton.ItemBoundType:Hide() end
+							if itemButton.ItemLevelText then itemButton.ItemLevelText:Hide() end
+						end
+					end)
+				else
+					if itemButton.ItemBoundType then itemButton.ItemBoundType:Hide() end
+					if itemButton.ItemLevelText then itemButton.ItemLevelText:Hide() end
+				end
+			end
+		end
+	end
+end
+
+local merchantRefreshPending = false
+local merchantRefreshDeferredForAutoSell = false
+local durabilityUpdateDeferredForAutoSell = false
+local flushingDeferredAutoSellUpdates = false
+
+local function isVendorAutoSellInProgress()
+	local vendorFunctions = addon.Vendor and addon.Vendor.functions
+	return vendorFunctions and vendorFunctions.IsAutoSellInProgress and vendorFunctions.IsAutoSellInProgress() == true
+end
+
+local function isPaperDollFrameVisible()
+	return _G.PaperDollFrame and _G.PaperDollFrame:IsVisible()
+end
+
+requestDurabilityUpdate = function()
+	if not addon.db["showDurabilityOnCharframe"] then return end
+	if not isPaperDollFrameVisible() then return end
+	if not flushingDeferredAutoSellUpdates and isVendorAutoSellInProgress() then
+		durabilityUpdateDeferredForAutoSell = true
+		return
+	end
+	calculateDurability()
+end
+
+local function updateMerchantButtonInfo()
+	if not isMerchantButtonInfoEnabled() and not merchantButtonInfoTouched then return end
+	if not flushingDeferredAutoSellUpdates and isVendorAutoSellInProgress() then
+		merchantRefreshDeferredForAutoSell = true
+		return
+	end
+	if merchantRefreshPending then return end
+	merchantRefreshPending = true
+
+	RunNextFrame(function()
+		merchantRefreshPending = false
+		applyMerchantButtonInfo()
+	end)
+end
+
+function addon.functions.FlushDeferredItemInventoryAutoSellUpdates()
+	if flushingDeferredAutoSellUpdates then return end
+	if not merchantRefreshDeferredForAutoSell and not durabilityUpdateDeferredForAutoSell then return end
+
+	local refreshMerchant = merchantRefreshDeferredForAutoSell
+	local refreshDurability = durabilityUpdateDeferredForAutoSell
+	merchantRefreshDeferredForAutoSell = false
+	durabilityUpdateDeferredForAutoSell = false
+	flushingDeferredAutoSellUpdates = true
+	if refreshMerchant then updateMerchantButtonInfo() end
+	if refreshDurability then requestDurabilityUpdate() end
+	flushingDeferredAutoSellUpdates = false
+end
+
+local function updateBuybackButtonInfo()
+	local showIlvl = addon.db["showIlvlOnMerchantframe"]
+	local highlightKnown = addon.db["markKnownOnMerchant"] or addon.db["merchantKnownIconsOnly"]
+	if not showIlvl and not highlightKnown then return end
+
+	local itemsPerPage = BUYBACK_ITEMS_PER_PAGE or 12
+	for i = 1, itemsPerPage do
+		local itemButton = _G["MerchantItem" .. i .. "ItemButton"]
+		local itemLink = GetBuybackItemLink(i)
+
+		if itemButton then
+			setMerchantKnownIcon(itemButton, false)
+			if not showIlvl then
+				if itemButton.ItemBoundType then itemButton.ItemBoundType:Hide() end
+				if itemButton.ItemLevelText then itemButton.ItemLevelText:Hide() end
+			elseif itemLink and itemLink:find("item:") then
+				local eItem = Item:CreateFromItemLink(itemLink)
+				eItem:ContinueOnItemLoad(function()
+					local _, _, _, _, _, _, _, _, itemEquipLoc, _, _, classID, subclassID = C_Item.GetItemInfo(itemLink)
+
+					if (itemEquipLoc ~= "INVTYPE_NON_EQUIP_IGNORE" or (classID == 4 and subclassID == 0)) and not (classID == 4 and subclassID == 5) then
+						local link = eItem:GetItemLink()
+						local invSlot = select(4, C_Item.GetItemInfoInstant(link))
+						if nil == addon.variables.allowedEquipSlotsBagIlvl[invSlot] then
+							if itemButton.ItemBoundType then itemButton.ItemBoundType:Hide() end
+							if itemButton.ItemLevelText then itemButton.ItemLevelText:Hide() end
+							return
+						end
+
+						if not itemButton.ItemLevelText then
+							itemButton.ItemLevelText = itemButton:CreateFontString(nil, "OVERLAY")
+							itemButton.ItemLevelText:SetShadowOffset(1, -1)
+							itemButton.ItemLevelText:SetShadowColor(0, 0, 0, 1)
+						end
+						addon.functions.ApplyItemLevelTextStyle(itemButton.ItemLevelText)
+						addon.functions.ApplyBagItemLevelPosition(itemButton.ItemLevelText, itemButton, addon.db["bagIlvlPosition"])
+
+						local color = eItem:GetItemQualityColor()
+						itemButton.ItemLevelText:SetText(eItem:GetCurrentItemLevel())
+						addon.functions.ApplyItemLevelTextColor(itemButton.ItemLevelText, color)
+						itemButton.ItemLevelText:Show()
+
+						local bType
+						if addon.db["showBindOnBagItems"] then
+							local data = C_TooltipInfo.GetBuybackItem(i)
+							for _, v in pairs(data.lines) do
+								if v.type == 20 then
+									if v.leftText == ITEM_BIND_ON_EQUIP then
+										bType = "BoE"
+									elseif v.leftText == ITEM_ACCOUNTBOUND_UNTIL_EQUIP or v.leftText == ITEM_BIND_TO_ACCOUNT_UNTIL_EQUIP then
+										bType = "WuE"
+									elseif v.leftText == ITEM_ACCOUNTBOUND or v.leftText == ITEM_BIND_TO_BNETACCOUNT then
+										bType = "WB"
+									end
+									break
+								end
+							end
+						end
+						if bType then
+							if not itemButton.ItemBoundType then
+								itemButton.ItemBoundType = itemButton:CreateFontString(nil, "OVERLAY")
+								itemButton.ItemBoundType:SetFont(addon.variables.defaultFont, 10, "OUTLINE")
+								itemButton.ItemBoundType:SetShadowOffset(2, 2)
+								itemButton.ItemBoundType:SetShadowColor(0, 0, 0, 1)
+							end
+							itemButton.ItemBoundType:ClearAllPoints()
+							addon.functions.ApplyBagBoundPosition(itemButton.ItemBoundType, itemButton, addon.db["bagIlvlPosition"])
+							itemButton.ItemBoundType:SetFormattedText(bType)
+							itemButton.ItemBoundType:Show()
+						elseif itemButton.ItemBoundType then
+							itemButton.ItemBoundType:Hide()
+						end
+					else
+						if itemButton.ItemBoundType then itemButton.ItemBoundType:Hide() end
+						if itemButton.ItemLevelText then itemButton.ItemLevelText:Hide() end
+					end
+				end)
+			else
+				if itemButton.ItemBoundType then itemButton.ItemBoundType:Hide() end
+				if itemButton.ItemUpgradeArrow then itemButton.ItemUpgradeArrow:Hide() end
+				if itemButton.ItemLevelText then itemButton.ItemLevelText:Hide() end
+			end
+		end
+	end
+end
+
+local function applyBagSortOrder()
+	if not SetSortBagsRightToLeft or not addon.db then return end
+	if addon.db["bagSortOrderEnabled"] then
+		local direction = addon.db["bagSortOrderDirection"] or "DEFAULT"
+		SetSortBagsRightToLeft(direction == "REVERSE")
+	end
+end
+
+local function applyLootOrder()
+	if not SetInsertItemsLeftToRight or not addon.db then return end
+	if addon.db["bagLootOrderEnabled"] then
+		local direction = addon.db["bagLootOrderDirection"] or "DEFAULT"
+		SetInsertItemsLeftToRight(direction == "REVERSE")
+	end
+end
+
+function addon.functions.initItemInventory()
+	addon.functions.InitDBValue("showIlvlOnBankFrame", false)
+	addon.functions.InitDBValue("showIlvlOnMerchantframe", false)
+	addon.functions.InitDBValue("markKnownOnMerchant", false)
+	addon.functions.InitDBValue("merchantKnownIconsOnly", false)
+	addon.functions.InitDBValue("markCollectedPetsOnMerchant", false)
+	addon.functions.InitDBValue("showIlvlOnCharframe", false)
+	addon.functions.InitDBValue("showIlvlOnBagItems", false)
+	addon.functions.InitDBValue("showBagFilterMenu", false)
+	addon.functions.InitDBValue("bagFilterDockFrame", true)
+	addon.functions.InitDBValue("showBindOnBagItems", false)
+	addon.functions.InitDBValue("showUpgradeArrowOnBagItems", false)
+	addon.functions.InitDBValue("bagIlvlPosition", "TOPRIGHT")
+	addon.functions.InitDBValue("bagUpgradeIconPosition", "BOTTOMRIGHT")
+	addon.functions.InitDBValue("petFoodIndicatorBlizzard", false)
+	addon.functions.InitDBValue("petFoodIndicatorCustom", false)
+	addon.functions.InitDBValue("petFoodIndicatorPosition", "BOTTOMLEFT")
+	addon.functions.InitDBValue("petFoodIndicatorSize", 14)
+	addon.functions.InitDBValue("charIlvlPosition", "TOPRIGHT")
+	addon.functions.InitDBValue("flyoutIlvlPosition", getFlyoutIlvlPosition())
+	addon.functions.InitDBValue("ilvlUseItemQualityColor", true)
+	addon.functions.InitDBValue("ilvlTextColor", { r = 1, g = 1, b = 1, a = 1 })
+	addon.functions.InitDBValue("ilvlFontFace", addon.functions.GetGlobalFontConfigKey and addon.functions.GetGlobalFontConfigKey() or "__EQOL_GLOBAL_FONT__")
+	addon.functions.InitDBValue("ilvlFontSize", 14)
+	addon.functions.InitDBValue("ilvlFontOutline", addon.functions.GetGlobalFontStyleConfigKey and addon.functions.GetGlobalFontStyleConfigKey() or "__EQOL_GLOBAL_FONT_STYLE__")
+	addon.functions.InitDBValue("fadeBagQualityIcons", false)
+	addon.functions.InitDBValue("enhancedRarityGlow", false)
+	addon.functions.InitDBValue("showGemsOnCharframe", false)
+	addon.functions.InitDBValue("showGemsTooltipOnCharframe", false)
+	addon.functions.InitDBValue("showEnchantOnCharframe", false)
+	addon.functions.InitDBValue("charEnchantDisplayMode", ENCHANT_DISPLAY_MODE_FULL)
+	addon.functions.InitDBValue("charEnchantPosition", "SLOT")
+	addon.functions.InitDBValue("showMissingEnchantOverlayOnCharframe", true)
+	addon.functions.InitDBValue("missingEnchantOverlayColor", { r = 1, g = 0, b = 0, a = 0.6 })
+	addon.functions.InitDBValue("characterStatsFormattingEnabled", false)
+	addon.functions.InitDBValue("bagFilterFrameData", {})
+	addon.functions.InitDBValue("closeBagsOnAuctionHouse", false)
+	addon.functions.InitDBValue("showDurabilityOnCharframe", false)
+	addon.functions.InitDBValue("bagSortOrderEnabled", false)
+	addon.functions.InitDBValue("bagSortOrderDirection", "DEFAULT")
+	addon.functions.InitDBValue("bagLootOrderEnabled", false)
+	addon.functions.InitDBValue("bagLootOrderDirection", "DEFAULT")
+	if addon.DurabilityWarning and addon.DurabilityWarning.Initialize then addon.DurabilityWarning:Initialize() end
+
+	applyBagSortOrder()
+	applyLootOrder()
+
+	hooksecurefunc(ContainerFrameCombinedBags, "UpdateItems", addon.functions.updateBags)
+	for _, frame in ipairs(ContainerFrameContainer.ContainerFrames) do
+		hooksecurefunc(frame, "UpdateItems", addon.functions.updateBags)
+	end
+
+	local merchantKnownCacheFrame = CreateFrame("Frame")
+	merchantKnownCacheFrame:RegisterEvent("MERCHANT_SHOW")
+	merchantKnownCacheFrame:RegisterEvent("MERCHANT_CLOSED")
+	merchantKnownCacheFrame:RegisterEvent("BAG_UPDATE_DELAYED")
+	if C_TransmogCollection or (C_Item and C_Item.GetItemLearnTransmogSet and C_TransmogSets) then
+		merchantKnownCacheFrame:RegisterEvent("TRANSMOG_COLLECTION_UPDATED")
+		merchantKnownCacheFrame:RegisterEvent("TRANSMOG_COLLECTION_ITEM_UPDATE")
+		merchantKnownCacheFrame:RegisterEvent("GET_ITEM_INFO_RECEIVED")
+	end
+	merchantKnownCacheFrame:SetScript("OnEvent", function(_, event)
+		clearMerchantKnownStateCache()
+		local refreshCollection = event == "TRANSMOG_COLLECTION_UPDATED" or event == "TRANSMOG_COLLECTION_ITEM_UPDATE" or event == "GET_ITEM_INFO_RECEIVED"
+		if refreshCollection and MerchantFrame:IsShown() and MerchantFrame.selectedTab == 1 then updateMerchantButtonInfo() end
+	end)
+
+	hooksecurefunc("MerchantFrame_UpdateMerchantInfo", updateMerchantButtonInfo)
+	hooksecurefunc("MerchantFrame_UpdateBuybackInfo", updateBuybackButtonInfo)
+
+	local function RefreshAllFlyoutButtons()
+		local f = _G.EquipmentFlyoutFrame
+		if not f then return end
+		-- Blizzard pflegt eine buttons-Liste, darauf verlassen wir uns:
+		if f.buttons then
+			for _, btn in ipairs(f.buttons) do
+				if btn and btn:IsShown() then
+					updateFlyoutButtonInfo(btn) -- <- deine vorhandene Routine
+				end
+			end
+			return
+		end
+		-- Fallback (falls mal keine Liste existiert): Children scannen
+		for i = 1, (f:GetNumChildren() or 0) do
+			local child = select(i, f:GetChildren())
+			if child and child:IsShown() and child.icon then updateFlyoutButtonInfo(child) end
+		end
+	end
+	hooksecurefunc("EquipmentFlyout_UpdateItems", RefreshAllFlyoutButtons)
+
+	if _G.BankPanel then
+		hooksecurefunc(BankPanel, "GenerateItemSlotsForSelectedTab", addon.functions.updateBags)
+		hooksecurefunc(BankPanel, "RefreshAllItemsForSelectedTab", addon.functions.updateBags)
+		hooksecurefunc(BankPanel, "UpdateSearchResults", addon.functions.updateBags)
+	end
+
+	if addon.CharacterStatsFormatting and addon.CharacterStatsFormatting.Refresh then addon.CharacterStatsFormatting.Refresh() end
+	-- add durability icon on charframe
+
+	addon.general.durabilityIconFrame = CreateFrame("Button", nil, PaperDollFrame, "BackdropTemplate")
+	addon.general.durabilityIconFrame:SetFrameStrata("MEDIUM")
+	addon.general.durabilityIconFrame:SetFrameLevel((CharacterFrame.NineSlice or CharacterFrame):GetFrameLevel() + 1)
+	addon.general.durabilityIconFrame:SetSize(36, 36)
+	if _G.PaperDollSidebarTab1 then
+		addon.general.durabilityIconFrame:SetPoint("RIGHT", _G.PaperDollSidebarTab1, "LEFT", -8, 0)
+	else
+		addon.general.durabilityIconFrame:SetPoint("TOPLEFT", CharacterFramePortrait, "RIGHT", 4, 0)
+	end
+
+	addon.general.durabilityIconFrame.icon = addon.general.durabilityIconFrame:CreateTexture(nil, "OVERLAY")
+	addon.general.durabilityIconFrame.icon:SetSize(36, 36)
+	addon.general.durabilityIconFrame.icon:SetPoint("CENTER", addon.general.durabilityIconFrame, "CENTER")
+	addon.general.durabilityIconFrame.icon:SetTexture("Interface\\AddOns\\EnhanceQoL\\Icons\\DurabilityForever.tga")
+
+	addon.general.durabilityIconFrame.count = addon.general.durabilityIconFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
+	addon.general.durabilityIconFrame.count:SetPoint("BOTTOMRIGHT", addon.general.durabilityIconFrame, "BOTTOMRIGHT", 1, 2)
+	applyCharacterFrameElementTextStyle(addon.general.durabilityIconFrame.count, 12)
+
+	if addon.db["showDurabilityOnCharframe"] == false or (addon.functions and addon.functions.IsTimerunner and addon.functions.IsTimerunner()) then addon.general.durabilityIconFrame:Hide() end
+
+	for key, value in pairs(addon.variables.itemSlots) do
+		value.ilvlBackground = value:CreateTexture(nil, "BACKGROUND")
+		value.ilvlBackground:SetColorTexture(0, 0, 0, 0)
+		value.ilvlBackground:SetPoint("TOPRIGHT", value, "TOPRIGHT", 1, 1)
+		value.ilvlBackground:SetSize(30, 16)
+		hideIlvlBackground(value)
+
+		-- Roter Rahmen mit Farbverlauf
+		if addon.variables.shouldEnchanted[key] or addon.variables.shouldEnchantedChecks[key] then
+			value.borderGradient = value:CreateTexture(nil, "ARTWORK")
+			value.borderGradient:SetPoint("TOPLEFT", value, "TOPLEFT", -2, 2)
+			value.borderGradient:SetPoint("BOTTOMRIGHT", value, "BOTTOMRIGHT", 2, -2)
+			applyMissingEnchantOverlayStyle(value.borderGradient)
+			value.borderGradient:Hide()
+		end
+		-- Text für das Item-Level
+		value.ilvl = value:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
+		addon.functions.ApplyItemLevelTextStyle(value.ilvl)
+		applyCharIlvlPosition(value, key)
+
+
+		value.enchant = value:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
+		applyCharEnchantPosition(value, key, CharOpt("ilvl"), false)
+		applyEnchantTextStyle(value.enchant)
+
+		value.gems = {}
+		for i = 1, 3 do
+			value.gems[i] = CreateFrame("Frame", nil, value)
+			value.gems[i]:SetSize(16, 16) -- Setze die Größe des Icons
+			positionGemFrame(value, key, i, false)
+
+			value.gems[i]:SetFrameStrata("DIALOG")
+			value.gems[i]:SetFrameLevel(value:GetFrameLevel() + 20)
+			value.gems[i]:EnableMouse(false)
+
+			value.gems[i]:SetScript("OnLeave", function(self) GameTooltip:Hide() end)
+
+			value.gems[i].icon = value.gems[i]:CreateTexture(nil, "OVERLAY")
+			value.gems[i].icon:SetAllPoints(value.gems[i])
+			value.gems[i].icon:SetTexture("Interface\\ItemSocketingFrame\\UI-EmptySocket-Prismatic") -- Setze die erhaltene Textur
+
+			value.gems[i]:Hide()
+		end
+	end
+end
+
+---- END REGION
+
+---- REGION SETTINGS
+
+local cInventory = addon.SettingsLayout.rootGENERAL
+
+local function shouldShowNativeBagSettings()
+	return not addon.functions.IsBagsModuleActive()
+end
+
+local expandable = addon.functions.SettingsCreateExpandableSection(cInventory, {
+	name = L["ItemsInventory"],
+	newTagID = "BagsInventory",
+	iconKey = "bags",
+	isVisible = shouldShowNativeBagSettings,
+	modernOnly = true,
+	expanded = false,
+	colorizeTitle = false,
+})
+addon.SettingsLayout.bagsInventorySection = expandable
+
+local function refreshSettingsLayout()
+	if SettingsInbound and SettingsInbound.RepairDisplay then
+		SettingsInbound.RepairDisplay()
+	elseif SettingsPanel and SettingsPanel.RepairDisplay then
+		SettingsPanel:RepairDisplay()
+	end
+end
+
+local function gateNativeBagSetting(entry)
+	local initializer = entry
+	if type(entry) == "table" then
+		initializer = entry.initializer or entry.element or entry
+	end
+	if initializer and initializer.AddShownPredicate then
+		initializer:AddShownPredicate(shouldShowNativeBagSettings)
+	end
+	return entry
+end
+gateNativeBagSetting(expandable)
+
+assert(addon.SettingsLayout.gearUpgradeSection, "GearUpgrade section must be registered before durability warning settings")
+addon.functions.SettingsCreateCheckbox(cInventory, {
+	var = DURABILITY_WARNING_DB_ENABLED,
+	text = L["DurabilityWarningEnable"] or "Low durability warning",
+	desc = L["DurabilityWarningEnableDesc"] or "Shows a movable warning text when your equipped gear durability is low.",
+	default = DurabilityWarning.defaults.enabled,
+	func = function(value)
+		addon.db[DURABILITY_WARNING_DB_ENABLED] = value == true
+		if addon.db[DURABILITY_WARNING_DB_ENABLED] then
+			DurabilityWarning:Enable()
+		else
+			DurabilityWarning:Disable()
+		end
+	end,
+	parentSection = addon.SettingsLayout.gearUpgradeSection,
+})
+
+if shouldShowNativeBagSettings() then
+	gateNativeBagSetting(addon.functions.SettingsCreateHeadline(cInventory, BAGSLOT, { parentSection = expandable }))
+
+local function refreshBagFrames(includeBankPanel)
+	for _, frame in ipairs(ContainerFrameContainer.ContainerFrames) do
+		if frame:IsShown() then addon.functions.updateBags(frame) end
+	end
+	if ContainerFrameCombinedBags:IsShown() then addon.functions.updateBags(ContainerFrameCombinedBags) end
+	if includeBankPanel and _G.BankPanel and _G.BankPanel:IsShown() then addon.functions.updateBags(_G.BankPanel) end
+end
+
+local function refreshBankSlots(showIlvl)
+	if not BankFrame or not BankFrame:IsShown() then return end
+	for slot = 1, C_Container.GetContainerNumSlots(BANK_CONTAINER) do
+		local itemButton = _G["BankFrameItem" .. slot]
+		if itemButton then
+			if showIlvl then
+				addon.functions.updateBank(itemButton, -1, slot)
+			elseif itemButton.ItemLevelText then
+				itemButton.ItemLevelText:Hide()
+			end
+		end
+	end
+end
+
+local function refreshMerchantButtons()
+	if MerchantFrame and MerchantFrame:IsShown() then
+		updateMerchantButtonInfo()
+		updateBuybackButtonInfo()
+	end
+end
+
+local function refreshBaganatorCornerWidgets()
+	if addon.Vendor and addon.Vendor.functions and addon.Vendor.functions.refreshBaganatorWidgets then addon.Vendor.functions.refreshBaganatorWidgets() end
+end
+
+local function refreshItemLevelDisplays()
+	if not addon.db["characterItemLevelDecimals"] and CharacterStatsPane and CharacterStatsPane.ItemLevelFrame and type(_G.PaperDollFrame_SetItemLevel) == "function" then
+		_G.PaperDollFrame_SetItemLevel(CharacterStatsPane.ItemLevelFrame, "player")
+	end
+	if addon.functions and addon.functions.setCharFrame then addon.functions.setCharFrame() end
+	refreshBagFrames(true)
+	refreshBankSlots(addon.db["showIlvlOnBankFrame"] == true)
+	refreshMerchantButtons()
+	if EquipmentFlyoutFrame and EquipmentFlyoutFrame:IsShown() and EquipmentFlyout_UpdateItems then EquipmentFlyout_UpdateItems() end
+	if InspectFrame and InspectFrame:IsShown() and InspectFrame.unit and AnyInspectEnabled() then
+		local guid = UnitGUID(InspectFrame.unit)
+		if guid then onInspect(guid) end
+	end
+	refreshBaganatorCornerWidgets()
+end
+
+addon.functions.refreshItemLevelDisplays = refreshItemLevelDisplays
+
+local function isBagDisplaySelected(key)
+	if key == "ilvl" then return addon.db["showIlvlOnBagItems"] == true end
+	if key == "upgrade" then return addon.db["showUpgradeArrowOnBagItems"] == true end
+	if key == "bind" then return addon.db["showBindOnBagItems"] == true end
+	return false
+end
+
+local function setBagDisplayOption(key, value)
+	local enabled = value and true or false
+	if key == "ilvl" then
+		addon.db["showIlvlOnBagItems"] = enabled
+		refreshBagFrames(false)
+	elseif key == "upgrade" then
+		addon.db["showUpgradeArrowOnBagItems"] = enabled
+		refreshBagFrames(true)
+		refreshBaganatorCornerWidgets()
+	elseif key == "bind" then
+		addon.db["showBindOnBagItems"] = enabled
+		refreshBagFrames(false)
+	end
+end
+
+local function applyBagDisplaySelection(selection)
+	selection = selection or {}
+	addon.db["showIlvlOnBagItems"] = selection.ilvl == true
+	addon.db["showUpgradeArrowOnBagItems"] = selection.upgrade == true
+	addon.db["showBindOnBagItems"] = selection.bind == true
+	refreshBagFrames(true)
+	refreshBaganatorCornerWidgets()
+end
+
+local bindDesc = L["showBindOnBagItemsDesc"]
+if bindDesc then bindDesc = bindDesc:format(_G.ITEM_BIND_ON_EQUIP, _G.ITEM_ACCOUNTBOUND_UNTIL_EQUIP, _G.ITEM_BNETACCOUNTBOUND) end
+
+local bagDisplayDropdown = gateNativeBagSetting(addon.functions.SettingsCreateMultiDropdown(cInventory, {
+	var = "bagDisplayOptions",
+	storage = false,
+	text = L["bagDisplayElements"] or "Bag indicators",
+	desc = L["bagDisplayElementsDesc"],
+	options = {
+		{ value = "ilvl", text = L["showIlvlOnBagItems"], tooltip = L["showIlvlOnBagItemsDesc"] },
+		{ value = "upgrade", text = L["showUpgradeArrowOnBagItems"], tooltip = L["showUpgradeArrowOnBagItemsDesc"] },
+		{ value = "bind", text = L["showBindOnBagItems"], tooltip = bindDesc },
+	},
+	isSelectedFunc = function(key) return isBagDisplaySelected(key) end,
+	setSelectedFunc = function(key, selected) setBagDisplayOption(key, selected) end,
+	setSelection = applyBagDisplaySelection,
+	refreshOnChange = true,
+	parentSection = expandable,
+}))
+
+
+gateNativeBagSetting(addon.functions.SettingsCreateDropdown(cInventory, {
+	list = {
+		TOPLEFT = L["Top Left"],
+		TOP = DIRECTION_TOP_LABEL,
+		TOPRIGHT = L["Top Right"],
+		LEFT = DIRECTION_LEFT_LABEL,
+		CENTER = L["center"],
+		RIGHT = DIRECTION_RIGHT_LABEL,
+		BOTTOMLEFT = L["Bottom Left"],
+		BOTTOM = DIRECTION_BOTTOM_LABEL,
+		BOTTOMRIGHT = L["Bottom Right"],
+		OUTSIDE = L["Outside"] or "Outside",
+	},
+	text = L["Item level position"],
+	desc = L["bagIlvlPositionDesc"],
+	get = function() return addon.db["bagIlvlPosition"] or "TOPLEFT" end,
+	set = function(key)
+		addon.db["bagIlvlPosition"] = key
+		refreshItemLevelDisplays()
+	end,
+	parent = bagDisplayDropdown,
+	parentCheck = function() return isBagDisplaySelected("ilvl") end,
+	hiddenWhen = function() return not isBagDisplaySelected("ilvl") end,
+	default = "BOTTOMLEFT",
+	var = "bagIlvlPosition",
+	type = Settings.VarType.String,
+	parentSection = expandable,
+}))
+
+
+gateNativeBagSetting(addon.functions.SettingsCreateDropdown(cInventory, {
+	list = {
+		TOPLEFT = L["Top Left"],
+		TOPRIGHT = L["Top Right"],
+		BOTTOMLEFT = L["Bottom Left"],
+		BOTTOMRIGHT = L["Bottom Right"],
+	},
+	text = L["bagUpgradeIconPosition"],
+	desc = L["bagUpgradeIconPositionDesc"],
+	get = function() return addon.db["bagUpgradeIconPosition"] or "TOPLEFT" end,
+	set = function(key)
+		addon.db["bagUpgradeIconPosition"] = key
+		for _, frame in ipairs(ContainerFrameContainer.ContainerFrames) do
+			if frame and frame:IsShown() then addon.functions.updateBags(frame) end
+		end
+		if ContainerFrameCombinedBags:IsShown() then addon.functions.updateBags(ContainerFrameCombinedBags) end
+		if _G.BankPanel and _G.BankPanel:IsShown() then addon.functions.updateBags(_G.BankPanel) end
+		if MerchantFrame and MerchantFrame:IsShown() then
+			if MerchantFrame_UpdateMerchantInfo then MerchantFrame_UpdateMerchantInfo() end
+			if MerchantFrame_UpdateBuybackInfo then MerchantFrame_UpdateBuybackInfo() end
+		end
+		if EquipmentFlyoutFrame and EquipmentFlyoutFrame:IsShown() and EquipmentFlyout_UpdateItems then EquipmentFlyout_UpdateItems() end
+	end,
+	parent = bagDisplayDropdown,
+	parentCheck = function() return isBagDisplaySelected("upgrade") end,
+	hiddenWhen = function() return not isBagDisplaySelected("upgrade") end,
+	default = "TOPRIGHT",
+	var = "bagUpgradeIconPosition",
+	type = Settings.VarType.String,
+	parentSection = expandable,
+}))
+
+local function isBagItemLevelTargetSelected(key)
+	if key == "bank" then return addon.db["showIlvlOnBankFrame"] == true end
+	if key == "merchant" then return addon.db["showIlvlOnMerchantframe"] == true end
+	return false
+end
+
+local function setBagItemLevelTarget(key, value)
+	local enabled = value and true or false
+	if key == "bank" then
+		addon.db["showIlvlOnBankFrame"] = enabled
+		refreshBankSlots(enabled)
+		if _G.BankPanel and _G.BankPanel:IsShown() then addon.functions.updateBags(_G.BankPanel) end
+	elseif key == "merchant" then
+		addon.db["showIlvlOnMerchantframe"] = enabled
+		refreshMerchantButtons()
+	end
+end
+
+local function applyBagItemLevelTargets(selection)
+	selection = selection or {}
+	addon.db["showIlvlOnBankFrame"] = selection.bank == true
+	addon.db["showIlvlOnMerchantframe"] = selection.merchant == true
+	refreshBankSlots(addon.db["showIlvlOnBankFrame"])
+	if _G.BankPanel and _G.BankPanel:IsShown() then addon.functions.updateBags(_G.BankPanel) end
+	refreshMerchantButtons()
+end
+
+gateNativeBagSetting(addon.functions.SettingsCreateMultiDropdown(cInventory, {
+	var = "bagItemLevelTargets",
+	storage = false,
+	text = L["bagItemLevelTargets"] or "Item level targets",
+	desc = L["bagItemLevelTargetsDesc"],
+	options = {
+		{ value = "bank", text = BANK, tooltip = L["showIlvlOnBankFrameDesc"] },
+		{ value = "merchant", text = MERCHANT, tooltip = L["showIlvlOnMerchantframeDesc"] },
+	},
+	isSelectedFunc = function(key) return isBagItemLevelTargetSelected(key) end,
+	setSelectedFunc = function(key, selected) setBagItemLevelTarget(key, selected) end,
+	setSelection = applyBagItemLevelTargets,
+	parent = bagDisplayDropdown,
+	parentCheck = function() return isBagDisplaySelected("ilvl") end,
+	hiddenWhen = function() return not isBagDisplaySelected("ilvl") end,
+	parentSection = expandable,
+}))
+
+gateNativeBagSetting(addon.functions.SettingsCreateCheckbox(cInventory, {
+	var = "showBagFilterMenu",
+	text = L["showBagFilterMenu"],
+	desc = (L["showBagFilterMenuDesc"]):format(SHIFT_KEY_TEXT),
+	func = function(value)
+		addon.db["showBagFilterMenu"] = value
+		for _, frame in ipairs(ContainerFrameContainer.ContainerFrames) do
+			if frame:IsShown() then addon.functions.updateBags(frame) end
+		end
+		if ContainerFrameCombinedBags:IsShown() then addon.functions.updateBags(ContainerFrameCombinedBags) end
+		if value then
+			if BankFrame:IsShown() then
+				for slot = 1, C_Container.GetContainerNumSlots(BANK_CONTAINER) do
+					local itemButton = _G["BankFrameItem" .. slot]
+					if itemButton then addon.functions.updateBank(itemButton, -1, slot) end
+				end
+			end
+		else
+			if BankFrame:IsShown() then
+				for slot = 1, C_Container.GetContainerNumSlots(BANK_CONTAINER) do
+					local itemButton = _G["BankFrameItem" .. slot]
+					if itemButton and itemButton.ItemLevelText then itemButton.ItemLevelText:Hide() end
+				end
+			end
+		end
+		if _G.BankPanel and _G.BankPanel:IsShown() then addon.functions.updateBags(_G.BankPanel) end
+	end,
+	parentSection = expandable,
+}))
+
+gateNativeBagSetting(addon.functions.SettingsCreateCheckbox(cInventory, {
+	var = "fadeBagQualityIcons",
+	text = L["fadeBagQualityIcons"],
+	desc = L["fadeBagQualityIconsDesc"],
+	func = function(value)
+		addon.db["fadeBagQualityIcons"] = value
+		for _, frame in ipairs(ContainerFrameContainer.ContainerFrames) do
+			if frame:IsShown() then addon.functions.updateBags(frame) end
+		end
+		if ContainerFrameCombinedBags:IsShown() then addon.functions.updateBags(ContainerFrameCombinedBags) end
+		if _G.BankPanel and _G.BankPanel:IsShown() then addon.functions.updateBags(_G.BankPanel) end
+	end,
+	parentSection = expandable,
+}))
+
+gateNativeBagSetting(addon.functions.SettingsCreateCheckbox(cInventory, {
+	var = "enhancedRarityGlow",
+	text = L["enhancedRarityGlow"] or "Greater rarity glow",
+	desc = L["enhancedRarityGlowDesc"] or "Adds a stronger item-quality border to bags and the character panel.",
+	func = function(value)
+		addon.db["enhancedRarityGlow"] = value
+		refreshBagFrames(true)
+		if addon.functions and addon.functions.setCharFrame then addon.functions.setCharFrame() end
+	end,
+	parentSection = expandable,
+}))
+
+gateNativeBagSetting(addon.functions.SettingsCreateHeadline(cInventory, L["bagOrderHeader"] or "Bag sort & loot order", { parentSection = expandable }))
+gateNativeBagSetting(addon.functions.SettingsCreateText(cInventory, L["bagOrderHint"] or "These options only change which bag position sorting/looting starts in. Bags still fill top-left to bottom-right.", {
+	parentSection = expandable,
+}))
+
+gateNativeBagSetting(addon.functions.SettingsCreateCheckbox(cInventory, {
+	var = "bagSortOrderEnabled",
+	text = L["bagSortOrderEnabled"] or "Change sort order",
+	desc = L["bagSortOrderEnabledDesc"] or "Overrides the clean-up bags start position when enabled.",
+	func = function(value)
+		addon.db["bagSortOrderEnabled"] = value
+		if value then applyBagSortOrder() end
+	end,
+	parentSection = expandable,
+}))
+
+local sortOrderParent = addon.SettingsLayout.elements["bagSortOrderEnabled"] and addon.SettingsLayout.elements["bagSortOrderEnabled"].element
+gateNativeBagSetting(addon.functions.SettingsCreateDropdown(cInventory, {
+	list = {
+		DEFAULT = L["bagSortOrderDefault"] or "Default (Left-to-Right)",
+		REVERSE = L["bagSortOrderReverse"] or "Reverse (Right-to-Left)",
+	},
+	text = L["bagSortOrderDirection"] or "Sort order direction",
+	desc = L["bagSortOrderDirectionDesc"],
+	get = function() return addon.db["bagSortOrderDirection"] or "DEFAULT" end,
+	set = function(key)
+		addon.db["bagSortOrderDirection"] = key
+		if addon.db["bagSortOrderEnabled"] then applyBagSortOrder() end
+	end,
+	parent = sortOrderParent,
+	parentCheck = function() return addon.db["bagSortOrderEnabled"] == true end,
+	default = "DEFAULT",
+	var = "bagSortOrderDirection",
+	type = Settings.VarType.String,
+	parentSection = expandable,
+}))
+
+gateNativeBagSetting(addon.functions.SettingsCreateCheckbox(cInventory, {
+	var = "bagLootOrderEnabled",
+	text = L["bagLootOrderEnabled"] or "Change loot order",
+	desc = L["bagLootOrderEnabledDesc"] or "Overrides the loot start position when enabled.",
+	func = function(value)
+		addon.db["bagLootOrderEnabled"] = value
+		if value then applyLootOrder() end
+	end,
+	parentSection = expandable,
+}))
+
+local lootOrderParent = addon.SettingsLayout.elements["bagLootOrderEnabled"] and addon.SettingsLayout.elements["bagLootOrderEnabled"].element
+gateNativeBagSetting(addon.functions.SettingsCreateDropdown(cInventory, {
+	list = {
+		DEFAULT = L["bagLootOrderDefault"] or "Default (Right-to-Left)",
+		REVERSE = L["bagLootOrderReverse"] or "Reverse (Left-to-Right)",
+	},
+	text = L["bagLootOrderDirection"] or "Loot order direction",
+	desc = L["bagLootOrderDirectionDesc"],
+	get = function() return addon.db["bagLootOrderDirection"] or "DEFAULT" end,
+	set = function(key)
+		addon.db["bagLootOrderDirection"] = key
+		if addon.db["bagLootOrderEnabled"] then applyLootOrder() end
+	end,
+	parent = lootOrderParent,
+	parentCheck = function() return addon.db["bagLootOrderEnabled"] == true end,
+	default = "DEFAULT",
+	var = "bagLootOrderDirection",
+	type = Settings.VarType.String,
+	parentSection = expandable,
+}))
+end
+
+if addon.variables.unitClass == "HUNTER" then
+	gateNativeBagSetting(addon.functions.SettingsCreateCheckbox(cInventory, {
+		var = "petFoodIndicatorBlizzard",
+		text = L["petFoodIndicatorBlizzard"],
+		desc = L["petFoodIndicatorDesc"],
+		default = false,
+		newTagID = "PetFoodNativeEnabled",
+		func = function(value)
+			addon.db.petFoodIndicatorBlizzard = value == true
+			addon.functions.RefreshPetFoodIndicators()
+		end,
+		parentSection = expandable,
+	}))
+
+	gateNativeBagSetting(addon.functions.SettingsCreateDropdown(cInventory, {
+		var = "petFoodIndicatorPosition",
+		text = L["petFoodIndicatorPosition"],
+		list = {
+			TOPLEFT = L["Top Left"],
+			TOPRIGHT = L["Top Right"],
+			BOTTOMLEFT = L["Bottom Left"],
+			BOTTOMRIGHT = L["Bottom Right"],
+		},
+		get = function() return addon.db.petFoodIndicatorPosition or "BOTTOMLEFT" end,
+		set = function(value)
+			addon.db.petFoodIndicatorPosition = value
+			addon.functions.RefreshPetFoodIndicators()
+		end,
+		default = "BOTTOMLEFT",
+		type = Settings.VarType.String,
+		newTagID = "PetFoodNativePosition",
+		parentSection = expandable,
+	}))
+
+	gateNativeBagSetting(addon.functions.SettingsCreateSlider(cInventory, {
+		var = "petFoodIndicatorSize",
+		text = L["petFoodIndicatorSize"],
+		min = 8,
+		max = 28,
+		step = 1,
+		default = 14,
+		get = function() return addon.db.petFoodIndicatorSize or 14 end,
+		set = function(value)
+			addon.db.petFoodIndicatorSize = value
+			addon.functions.RefreshPetFoodIndicators()
+		end,
+		newTagID = "PetFoodNativeSize",
+		parentSection = expandable,
+	}))
+end
+-- moved Money Tracker to Vendors & Economy → Money
+
+---- REGION END
+
+local function ensureCharFrameOnShowHook()
+	if addon.variables and addon.variables.eqolCharFrameHooked then return end
+	if not _G.PaperDollFrame then return end
+	addon.variables = addon.variables or {}
+	addon.variables.eqolCharFrameHooked = true
+	_G.PaperDollFrame:HookScript("OnShow", function()
+		if InCombatLockdown and InCombatLockdown() then
+			addon.variables.pendingCharFrameUpdate = true
+			return
+		end
+		setCharFrame()
+	end)
+end
+
+local eventHandlers = {
+	["ADDON_LOADED"] = function(arg1)
+		if arg1 ~= "Blizzard_UIPanels_Game" then return end
+		ensureCharFrameOnShowHook()
+		if InCombatLockdown and InCombatLockdown() then
+			addon.variables.pendingCharFrameUpdate = true
+			return
+		end
+		setCharFrame()
+	end,
+	["ENCHANT_SPELL_COMPLETED"] = function(arg1, arg2)
+		if isPaperDollFrameVisible() and CharOpt("enchants") and arg1 == true and arg2 and arg2.equipmentSlotIndex then
+			C_Timer.After(1, function() setIlvlText(addon.variables.itemSlots[arg2.equipmentSlotIndex], arg2.equipmentSlotIndex) end)
+		end
+	end,
+	["INSPECT_READY"] = function(arg1)
+		if AnyInspectEnabled() then onInspect(arg1) end
+	end,
+	["PLAYERBANKSLOTS_CHANGED"] = function(arg1)
+		if not addon.db["showIlvlOnBankFrame"] then return end
+		local itemButton = _G["BankFrameItem" .. arg1]
+		if itemButton then addon.functions.updateBank(itemButton, -1, arg1) end
+	end,
+	["PLAYER_DEAD"] = function()
+		requestDurabilityUpdate()
+	end,
+	["PLAYER_EQUIPMENT_CHANGED"] = function(arg1)
+		if addon.variables.itemSlots[arg1] and isPaperDollFrameVisible() then
+			if ItemInteractionFrame and ItemInteractionFrame:IsShown() then
+				C_Timer.After(0.4, function() setIlvlText(addon.variables.itemSlots[arg1], arg1) end)
+			else
+				setIlvlText(addon.variables.itemSlots[arg1], arg1)
+			end
+		end
+		requestDurabilityUpdate()
+	end,
+	["PLAYER_REGEN_ENABLED"] = function()
+		if addon.variables and addon.variables.pendingCharFrameUpdate and isPaperDollFrameVisible() then
+			addon.variables.pendingCharFrameUpdate = nil
+			setCharFrame()
+		end
+	end,
+	["PLAYER_UNGHOST"] = function()
+		requestDurabilityUpdate()
+	end,
+	["SOCKET_INFO_UPDATE"] = function()
+		if isPaperDollFrameVisible() and CharOpt("gems") then C_Timer.After(0.5, function() setCharFrame() end) end
+	end,
+	["UPDATE_INVENTORY_DURABILITY"] = function()
+		requestDurabilityUpdate()
+	end,
+}
+
+local function registerEvents(frame)
+	for event in pairs(eventHandlers) do
+		if event == "ENCHANT_SPELL_COMPLETED" and not CharOpt("enchants") then
+			-- Registered dynamically when character enchant display is enabled.
+		elseif (event == "PLAYER_DEAD" or event == "PLAYER_UNGHOST" or event == "UPDATE_INVENTORY_DURABILITY") and not addon.db["showDurabilityOnCharframe"] then
+			-- Registered dynamically when character durability display is enabled.
+		else
+			frame:RegisterEvent(event)
+		end
+	end
+end
+
+local function eventHandler(self, event, ...)
+	if eventHandlers[event] then eventHandlers[event](...) end
+end
+
+local frameLoad = CreateFrame("Frame")
+
+registerEvents(frameLoad)
+frameLoad:SetScript("OnEvent", eventHandler)
+
+function addon.functions.SyncItemInventoryEventRegistration()
+	if not frameLoad then return end
+	if CharOpt("enchants") then
+		frameLoad:RegisterEvent("ENCHANT_SPELL_COMPLETED")
+	else
+		frameLoad:UnregisterEvent("ENCHANT_SPELL_COMPLETED")
+	end
+	if addon.db["showDurabilityOnCharframe"] then
+		frameLoad:RegisterEvent("PLAYER_DEAD")
+		frameLoad:RegisterEvent("PLAYER_UNGHOST")
+		frameLoad:RegisterEvent("UPDATE_INVENTORY_DURABILITY")
+	else
+		frameLoad:UnregisterEvent("PLAYER_DEAD")
+		frameLoad:UnregisterEvent("PLAYER_UNGHOST")
+		frameLoad:UnregisterEvent("UPDATE_INVENTORY_DURABILITY")
+	end
+end
+
+-- If Blizzard_UIPanels_Game is already loaded, wire up immediately.
+if _G.PaperDollFrame then ensureCharFrameOnShowHook() end

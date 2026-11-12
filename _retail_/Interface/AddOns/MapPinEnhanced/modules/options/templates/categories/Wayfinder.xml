@@ -1,0 +1,84 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ https://raw.githubusercontent.com/Gethe/wow-ui-source/live/Interface/AddOns/Blizzard_SharedXML/UI.xsd">
+
+    <Script file="Wayfinder.lua" />
+    <Frame name="MapPinEnhancedOptionCategoryWayfinderTemplate" virtual="true" inherits="MapPinEnhancedOptionCategoryBaseTemplate" mixin="MapPinEnhancedOptionCategoryWayfinderMixin">
+        <KeyValues>
+            <KeyValue key="categoryName" value="Wayfinder" />
+        </KeyValues>
+        <Frames>
+            <Frame inherits="MapPinEnhancedOptionWayfinderTemplate">
+                <KeyValues>
+                    <KeyValue key="key" value="Wayfinder.Selection" />
+                </KeyValues>
+            </Frame>
+            <Frame parentKey="searchNote" hidden="true">
+                <Size x="1" y="20" />
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <FontString parentKey="text" inherits="MapPinEnhancedFontOptionsHighlight" justifyH="LEFT">
+                            <Anchors>
+                                <Anchor point="TOPLEFT" />
+                                <Anchor point="TOPRIGHT" />
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+            </Frame>
+            <Frame inherits="MapPinEnhancedOptionDropdownTemplate" parentKey="floatingScale">
+                <KeyValues>
+                    <KeyValue key="key" value="Wayfinder.FloatingScale" />
+                </KeyValues>
+            </Frame>
+            <Frame inherits="MapPinEnhancedOptionCheckboxTemplate" parentKey="scaleWithDistance">
+                <KeyValues>
+                    <KeyValue key="key" value="Wayfinder.ScaleWithDistance" />
+                </KeyValues>
+            </Frame>
+            <Frame inherits="MapPinEnhancedOptionCheckboxTemplate" parentKey="switchToCloseState">
+                <KeyValues>
+                    <KeyValue key="key" value="Wayfinder.SwitchToCloseState" />
+                </KeyValues>
+            </Frame>
+            <Frame inherits="MapPinEnhancedOptionCheckboxTemplate" parentKey="beam">
+                <KeyValues>
+                    <KeyValue key="key" value="Wayfinder.ShowBeam" />
+                </KeyValues>
+            </Frame>
+            <Frame inherits="MapPinEnhancedOptionCheckboxTemplate" parentKey="textOutline">
+                <KeyValues>
+                    <KeyValue key="key" value="Wayfinder.ShowTextOutline" />
+                </KeyValues>
+            </Frame>
+            <Frame inherits="MapPinEnhancedOptionCheckboxTemplate" parentKey="lockArrow">
+                <KeyValues>
+                    <KeyValue key="key" value="Wayfinder.LockArrow" />
+                </KeyValues>
+            </Frame>
+            <Frame inherits="MapPinEnhancedOptionCheckboxTemplate" parentKey="hideBlizzard">
+                <KeyValues>
+                    <KeyValue key="key" value="Wayfinder.HideBlizzardFloatingDiamond" />
+                </KeyValues>
+            </Frame>
+            <Frame inherits="MapPinEnhancedOptionCheckboxTemplate">
+                <KeyValues>
+                    <KeyValue key="key" value="Wayfinder.ShowDistanceUnit" />
+                </KeyValues>
+            </Frame>
+            <Frame inherits="MapPinEnhancedOptionCheckboxTemplate">
+                <KeyValues>
+                    <KeyValue key="key" value="Wayfinder.ShowETA" />
+                </KeyValues>
+            </Frame>
+            <Frame inherits="MapPinEnhancedOptionCheckboxTemplate">
+                <KeyValues>
+                    <KeyValue key="key" value="Wayfinder.ShowObjectiveFrame" />
+                </KeyValues>
+            </Frame>
+        </Frames>
+        <Scripts>
+            <OnShow method="OnShow" />
+            <OnHide method="OnHide" />
+        </Scripts>
+    </Frame>
+</Ui>

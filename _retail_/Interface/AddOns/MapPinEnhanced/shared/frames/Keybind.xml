@@ -1,0 +1,14 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <Script file="Keybind.lua" />
+    <Button name="MapPinEnhancedKeybindTemplate" virtual="true" inherits="MapPinEnhancedButtonTemplate" mixin="MapPinEnhancedKeybindMixin" text="Not bound">
+        <Size x="190" y="30" />
+        <Scripts>
+            <OnLoad method="OnLoad" />
+            <OnShow method="OnShow" />
+            <OnHide method="OnHide" />
+            <OnClick method="OnClick" />
+            <OnKeyDown method="OnKeyDown" />
+            <OnMouseWheel method="OnMouseWheel" />
+        </Scripts>
+    </Button>
+</Ui>

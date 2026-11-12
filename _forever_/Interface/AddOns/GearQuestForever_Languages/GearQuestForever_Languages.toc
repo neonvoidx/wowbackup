@@ -1,0 +1,70 @@
+## Interface: 16001
+## Title: GearQuest Forever: Languages
+## Notes: French, German, and the other client languages. GearQuest loads this only when a language other than English is selected. Disable it to keep GearQuest in English.
+## Author: Henrik8210
+## Version: 1.1.4
+## IconTexture: Interface\Icons\INV_Misc_Book_09
+## LoadOnDemand: 1
+## OptionalDeps: GearQuestForever
+## DefaultState: enabled
+
+Rules.lua
+frFR.lua
+frFR.rules.lua
+frFR.sentences.lua
+frFR.names.lua
+frFR.db2.lua
+frFR.quests.lua
+frFR.lore.lua
+deDE.lua
+deDE.rules.lua
+deDE.sentences.lua
+deDE.names.lua
+deDE.db2.lua
+deDE.quests.lua
+deDE.lore.lua
+esES.lua
+esES.rules.lua
+esES.sentences.lua
+esES.names.lua
+esES.db2.lua
+esES.quests.lua
+esES.lore.lua
+esMX.names.lua
+esMX.db2.lua
+esMX.quests.lua
+ptBR.lua
+ptBR.rules.lua
+ptBR.sentences.lua
+ptBR.names.lua
+ptBR.db2.lua
+ptBR.quests.lua
+ptBR.lore.lua
+ruRU.lua
+ruRU.rules.lua
+ruRU.sentences.lua
+ruRU.names.lua
+ruRU.db2.lua
+ruRU.quests.lua
+ruRU.lore.lua
+koKR.lua
+koKR.rules.lua
+koKR.sentences.lua
+koKR.names.lua
+koKR.db2.lua
+koKR.quests.lua
+koKR.lore.lua
+zhCN.lua
+zhCN.rules.lua
+zhCN.sentences.lua
+zhCN.names.lua
+zhCN.db2.lua
+zhCN.quests.lua
+zhCN.lore.lua
+zhTW.lua
+zhTW.rules.lua
+zhTW.sentences.lua
+zhTW.names.lua
+zhTW.db2.lua
+zhTW.quests.lua
+zhTW.lore.lua

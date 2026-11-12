@@ -1,0 +1,3530 @@
+local addonName, addon = ...
+addon.DataPanel = addon.DataPanel or {}
+local DataPanel = addon.DataPanel
+local DataHub = addon.DataHub
+local L = addon.L
+local EditMode = addon.EditMode
+local SettingType = EditMode and EditMode.lib and EditMode.lib.SettingType
+local LSM = LibStub("LibSharedMedia-3.0", true)
+local LDB = LibStub("LibDataBroker-1.1", true)
+local issecretvalue = _G.issecretvalue
+
+local DEFAULT_TEXT_ALPHA = 100
+local DEFAULT_TEXT_COLOR = { r = 1, g = 1, b = 1, a = 1 }
+local DEFAULT_BACKDROP_ALPHA = 0.5
+local DEFAULT_BORDER_ALPHA = 1
+local DEFAULT_BORDER_SIZE = 16
+local DEFAULT_BORDER_OFFSET = 0
+local DEFAULT_FONT_STYLE = addon.functions and addon.functions.GetGlobalFontStyleConfigKey and addon.functions.GetGlobalFontStyleConfigKey() or "__EQOL_GLOBAL_FONT_STYLE__"
+local DEFAULT_STREAM_GAP = 5
+local DEFAULT_STREAM_FONT_SCALE = 100
+local PANEL_WIDTH_MIN = 50
+local PANEL_WIDTH_MAX = 5000
+local PANEL_HEIGHT_MIN = 16
+local PANEL_HEIGHT_MAX = 800
+local SHADOW_OFFSET_X = 1
+local SHADOW_OFFSET_Y = -1
+local SHADOW_ALPHA = 0.8
+local DEFAULT_BACKGROUND_TEXTURE = "Interface/Tooltips/UI-Tooltip-Background"
+local DEFAULT_BORDER_TEXTURE = "Interface/Tooltips/UI-Tooltip-Border"
+local SOLID_TEXTURE = "Interface\\Buttons\\WHITE8x8"
+local DEFAULT_BACKDROP_COLOR = { r = 0, g = 0, b = 0, a = DEFAULT_BACKDROP_ALPHA }
+local DEFAULT_BORDER_COLOR = { r = 1, g = 1, b = 1, a = DEFAULT_BORDER_ALPHA }
+local BACKDROP_INSET = 4
+local LDB_STREAM_PREFIX = "ldb:"
+local LDB_BRIDGE_OWNER = addonName .. "_DataPanelLDBBridge"
+
+local DELETE_BUTTON_LABEL = L["DataPanelDelete"] or "Delete panel"
+local DELETE_CONFIRM_TEXT = L["DataPanelDeleteConfirm"] or 'Are you sure you want to delete "%s"? This cannot be undone.'
+
+local DELETE_PANEL_POPUP = addonName .. "DeleteDataPanel"
+if not StaticPopupDialogs[DELETE_PANEL_POPUP] then
+	StaticPopupDialogs[DELETE_PANEL_POPUP] = {
+		text = DELETE_CONFIRM_TEXT,
+		button1 = YES,
+		button2 = CANCEL,
+		showAlert = true,
+		hideOnEscape = true,
+		timeout = 0,
+		whileDead = 1,
+		preferredIndex = 3,
+		OnAccept = function(self)
+			if self.data then DataPanel.Delete(self.data) end
+		end,
+	}
+end
+
+local panels = {}
+local ldbObjectsByStream = {}
+local ldbStreamsByObject = {}
+local STRATA_ORDER = { "BACKGROUND", "LOW", "MEDIUM", "HIGH", "DIALOG", "FULLSCREEN", "FULLSCREEN_DIALOG", "TOOLTIP" }
+local VALID_STRATA = {}
+for _, strata in ipairs(STRATA_ORDER) do
+	VALID_STRATA[strata] = true
+end
+local STRATA_INDEX = {}
+for index, strata in ipairs(STRATA_ORDER) do
+	STRATA_INDEX[strata] = index
+end
+local CONTENT_ANCHOR_ORDER = { "LEFT", "CENTER", "RIGHT" }
+local VALID_CONTENT_ANCHOR = {}
+for _, anchor in ipairs(CONTENT_ANCHOR_ORDER) do
+	VALID_CONTENT_ANCHOR[anchor] = true
+end
+local CONTENT_ANCHOR_OPTIONS = {
+	{ value = "LEFT", label = L["Left"] or "Left" },
+	{ value = "CENTER", label = L["Center"] or "Center" },
+	{ value = "RIGHT", label = L["Right"] or "Right" },
+}
+local TOOLTIP_GROWTH_ORDER = { "AUTO", "UP", "DOWN" }
+local VALID_TOOLTIP_GROWTH = {}
+for _, growth in ipairs(TOOLTIP_GROWTH_ORDER) do
+	VALID_TOOLTIP_GROWTH[growth] = true
+end
+local TOOLTIP_GROWTH_OPTIONS = {
+	{ value = "AUTO", text = L["Auto"] or "Auto" },
+	{ value = "UP", text = L["Up"] or "Up" },
+	{ value = "DOWN", text = L["Down"] or "Down" },
+}
+
+local function normalizePercent(value, fallback)
+	local num = tonumber(value)
+	if not num then num = tonumber(fallback) end
+	if not num then return DEFAULT_TEXT_ALPHA end
+	if num < 0 then return 0 end
+	if num > 100 then return 100 end
+	return num
+end
+
+local function clamp(value, minV, maxV)
+	if value < minV then return minV end
+	if value > maxV then return maxV end
+	return value
+end
+
+local function isSecretValue(value) return issecretvalue and issecretvalue(value) end
+
+local function sanitizeValue(value)
+	if isSecretValue(value) then return nil end
+	return value
+end
+
+local function normalizeStreamGap(value, fallback)
+	local num = tonumber(value)
+	if not num then num = tonumber(fallback) end
+	if not num then return DEFAULT_STREAM_GAP end
+	if num < 0 then return 0 end
+	if num > 100 then return 100 end
+	return num
+end
+
+local function normalizeStreamFontScale(value, fallback)
+	local num = tonumber(value)
+	if not num then num = tonumber(fallback) end
+	if not num then return DEFAULT_STREAM_FONT_SCALE end
+	if num < 50 then return 50 end
+	if num > 200 then return 200 end
+	return num
+end
+
+local function normalizePanelWidth(value, fallback)
+	local num = tonumber(value)
+	if not num then num = tonumber(fallback) end
+	if not num then return 300 end
+	return clamp(num, PANEL_WIDTH_MIN, PANEL_WIDTH_MAX)
+end
+
+local function normalizePanelHeight(value, fallback)
+	local num = tonumber(value)
+	if not num then num = tonumber(fallback) end
+	if not num then return 40 end
+	return clamp(num, PANEL_HEIGHT_MIN, PANEL_HEIGHT_MAX)
+end
+
+local function normalizeBorderSize(value, fallback)
+	local num = tonumber(value)
+	if not num then num = tonumber(fallback) end
+	if not num then return DEFAULT_BORDER_SIZE end
+	return clamp(num, 1, 64)
+end
+
+local function normalizeBorderOffset(value, fallback)
+	local num = tonumber(value)
+	if not num then num = tonumber(fallback) end
+	if not num then return DEFAULT_BORDER_OFFSET end
+	return clamp(num, -20, 20)
+end
+
+local function defaultFontFace()
+	if addon.functions and addon.functions.GetGlobalDefaultFontFace then return addon.functions.GetGlobalDefaultFontFace() end
+	return (addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT
+end
+
+local function globalFontConfigKey()
+	if addon.functions and addon.functions.GetGlobalFontConfigKey then return addon.functions.GetGlobalFontConfigKey() end
+	return "__EQOL_GLOBAL_FONT__"
+end
+
+local function globalFontConfigLabel()
+	if addon.functions and addon.functions.GetGlobalFontConfigLabel then return addon.functions.GetGlobalFontConfigLabel() end
+	return "Use global font config"
+end
+
+local function globalFontStyleConfigKey()
+	if addon.functions and addon.functions.GetGlobalFontStyleConfigKey then return addon.functions.GetGlobalFontStyleConfigKey() end
+	return "__EQOL_GLOBAL_FONT_STYLE__"
+end
+
+local function normalizeFontFace(value)
+	if type(value) ~= "string" or value == "" then return nil end
+	return value
+end
+
+local function normalizeFontSetting(value, fallback)
+	local selected = normalizeFontFace(value)
+	if selected then return selected end
+	local fallbackValue = normalizeFontFace(fallback)
+	if fallbackValue then return fallbackValue end
+	return globalFontConfigKey()
+end
+
+local function normalizeFontStyleChoice(value, fallback)
+	if addon.functions and addon.functions.NormalizeFontStyleChoice then
+		return addon.functions.NormalizeFontStyleChoice(value, fallback or globalFontStyleConfigKey(), true)
+	end
+	if type(value) == "string" and value ~= "" then return value end
+	return fallback or globalFontStyleConfigKey()
+end
+
+local function legacyFontStyleChoice(outlineEnabled, shadowEnabled, fallback)
+	local useOutline = outlineEnabled ~= false
+	local useShadow = shadowEnabled == true
+	if useOutline and useShadow then return normalizeFontStyleChoice("SHADOWOUTLINE", fallback) end
+	if useShadow then return normalizeFontStyleChoice("SHADOW", fallback) end
+	if useOutline then return normalizeFontStyleChoice("OUTLINE", fallback) end
+	return normalizeFontStyleChoice("NONE", fallback)
+end
+
+local function normalizePanelFontStyle(style, fallback, legacyOutline, legacyShadow)
+	local fallbackChoice = normalizeFontStyleChoice(fallback, globalFontStyleConfigKey())
+	if style ~= nil then return normalizeFontStyleChoice(style, fallbackChoice) end
+	if legacyOutline ~= nil or legacyShadow ~= nil then return legacyFontStyleChoice(legacyOutline, legacyShadow, fallbackChoice) end
+	return fallbackChoice
+end
+
+local function resolvePanelFontStyle(style, fallback, legacyOutline, legacyShadow)
+	local choice = normalizePanelFontStyle(style, fallback, legacyOutline, legacyShadow)
+	if addon.functions and addon.functions.ResolveFontStyle then
+		local resolvedChoice, flags, shadowAlpha = addon.functions.ResolveFontStyle(choice, fallback or globalFontStyleConfigKey())
+		return resolvedChoice, flags or "", (shadowAlpha or 0) > 0
+	end
+	return choice, choice == "NONE" and "" or "OUTLINE", choice == "SHADOW" or choice == "SHADOWOUTLINE" or choice == "SHADOWTHICKOUTLINE"
+end
+
+local function fontStyleOptions()
+	if addon.functions and addon.functions.GetFontStyleOptionList then return addon.functions.GetFontStyleOptionList(true) end
+	return {
+		{ value = globalFontStyleConfigKey(), label = addon.functions and addon.functions.GetGlobalFontStyleConfigLabel and addon.functions.GetGlobalFontStyleConfigLabel() or "Use global font styling" },
+		{ value = "NONE", label = _G.NONE or "None" },
+		{ value = "OUTLINE", label = L["Outline"] or "Outline" },
+	}
+end
+
+local function resolveFontFace(value, fallback)
+	local fallbackFace = normalizeFontFace(fallback) or defaultFontFace()
+	local resolver = addon.functions and addon.functions.ResolveFontFace
+	if resolver then
+		local resolved = resolver(value, fallbackFace)
+		if type(resolved) == "string" and resolved ~= "" then return resolved end
+	end
+	return normalizeFontFace(value) or fallbackFace
+end
+
+local function normalizeMediaKey(value, fallback)
+	if type(value) ~= "string" or value == "" then return fallback end
+	return value
+end
+
+local function normalizeColorTable(value, fallback)
+	local r, g, b, a
+	if type(value) == "table" then
+		r = value.r or value[1]
+		g = value.g or value[2]
+		b = value.b or value[3]
+		a = value.a or value[4]
+	elseif type(value) == "number" then
+		r, g, b, a = value, value, value, 1
+	end
+	fallback = fallback or DEFAULT_BACKDROP_COLOR
+	r = r or fallback.r or fallback[1] or 1
+	g = g or fallback.g or fallback[2] or 1
+	b = b or fallback.b or fallback[3] or 1
+	a = a or fallback.a or fallback[4] or 1
+	return { r = r, g = g, b = b, a = a }
+end
+
+local function colorsEqual(a, b)
+	if a == b then return true end
+	if type(a) ~= "table" or type(b) ~= "table" then return false end
+	local ar, ag, ab, aa = a.r or a[1], a.g or a[2], a.b or a[3], a.a or a[4]
+	local br, bg, bb, ba = b.r or b[1], b.g or b[2], b.b or b[3], b.a or b[4]
+	return ar == br and ag == bg and ab == bb and aa == ba
+end
+
+local CustomTexture = {}
+
+function CustomTexture.ResolveBackground(key)
+	if key == "SOLID" then return SOLID_TEXTURE end
+	if not key or key == "" or key == "DEFAULT" then return DEFAULT_BACKGROUND_TEXTURE end
+	if LSM and LSM.Fetch then
+		local tex = LSM:Fetch("background", key, true)
+		if tex and tex ~= "" then return tex end
+	end
+	return key
+end
+
+function CustomTexture.Trim(value)
+	if type(value) ~= "string" then return "" end
+	return (value:gsub("^%s+", ""):gsub("%s+$", ""))
+end
+
+function CustomTexture.GetInfo(value)
+	value = CustomTexture.Trim(value)
+	if value == "" then return nil end
+	local textureID = tonumber(value)
+	if textureID then return "texture", textureID end
+	if _G.C_Texture and _G.C_Texture.GetAtlasInfo and _G.C_Texture.GetAtlasInfo(value) then
+		return "atlas", value
+	end
+	return "texture", value
+end
+
+function CustomTexture.Apply(textureObject, textureKind, texture)
+	if not textureObject then return end
+	if textureObject._eqolDataPanelTextureKind == textureKind and textureObject._eqolDataPanelTexture == texture then return end
+	textureObject._eqolDataPanelTextureKind = textureKind
+	textureObject._eqolDataPanelTexture = texture
+	if textureKind == "atlas" and textureObject.SetAtlas then
+		textureObject:SetAtlas(texture)
+	else
+		textureObject:SetTexture(texture)
+		textureObject:SetTexCoord(0, 1, 0, 1)
+	end
+end
+
+function CustomTexture.NormalizeOffset(value, fallback)
+	local num = tonumber(value)
+	if not num then num = tonumber(fallback) end
+	if not num then return 0 end
+	return clamp(num, -200, 200)
+end
+
+local function resolveBorderTexture(key)
+	if key == "SOLID" then return SOLID_TEXTURE end
+	if not key or key == "" or key == "DEFAULT" then return DEFAULT_BORDER_TEXTURE end
+	if LSM and LSM.Fetch then
+		local tex = LSM:Fetch("border", key, true)
+		if tex and tex ~= "" then return tex end
+	end
+	return key
+end
+
+local function getCachedMediaNames(mediaType)
+	if addon.functions and addon.functions.GetLSMMediaNames then
+		local names = addon.functions.GetLSMMediaNames(mediaType)
+		if type(names) == "table" then return names end
+	end
+	return {}
+end
+
+local function getCachedMediaHash(mediaType)
+	if addon.functions and addon.functions.GetLSMMediaHash then
+		local hash = addon.functions.GetLSMMediaHash(mediaType)
+		if type(hash) == "table" then return hash end
+	end
+	return {}
+end
+
+local function fontFaceOptions()
+	local list = {}
+	local defaultPath = defaultFontFace()
+	local hasDefault = false
+	local names = getCachedMediaNames("font")
+	local hash = getCachedMediaHash("font")
+	for i = 1, #names do
+		local name = names[i]
+		local path = hash[name]
+		if type(path) == "string" and path ~= "" then
+			list[#list + 1] = { value = path, label = tostring(name) }
+			if path == defaultPath then hasDefault = true end
+		end
+	end
+	if defaultPath and not hasDefault then list[#list + 1] = { value = defaultPath, label = DEFAULT } end
+	table.insert(list, 1, { value = globalFontConfigKey(), label = globalFontConfigLabel() })
+	return list
+end
+
+local function backgroundTextureOptions()
+	local list = {}
+	local seen = {}
+	local function add(value, label)
+		local lv = tostring(value or ""):lower()
+		if lv == "" or seen[lv] then return end
+		seen[lv] = true
+		list[#list + 1] = { value = value, label = label }
+	end
+	add("DEFAULT", _G.DEFAULT or "Default")
+	add("SOLID", L["Solid"])
+	local names = getCachedMediaNames("background")
+	local hash = getCachedMediaHash("background")
+	for i = 1, #names do
+		local name = names[i]
+		local path = hash[name]
+		if type(path) == "string" and path ~= "" then add(name, tostring(name)) end
+	end
+	return list
+end
+
+local function borderTextureOptions()
+	local list = {}
+	local seen = {}
+	local function add(value, label)
+		local lv = tostring(value or ""):lower()
+		if lv == "" or seen[lv] then return end
+		seen[lv] = true
+		list[#list + 1] = { value = value, label = label }
+	end
+	add("DEFAULT", _G.DEFAULT or "Default")
+	add("SOLID", L["Solid"])
+	local names = getCachedMediaNames("border")
+	local hash = getCachedMediaHash("border")
+	for i = 1, #names do
+		local name = names[i]
+		local path = hash[name]
+		if type(path) == "string" and path ~= "" then add(name, tostring(name)) end
+	end
+	return list
+end
+
+local function slotTooltipsEnabled(slot)
+	local panel = slot and slot.panel
+	return not (panel and panel.info and panel.info.showTooltips == false)
+end
+
+local fadeWatcher
+local function ensureFadeWatcher()
+	if fadeWatcher then return end
+	fadeWatcher = CreateFrame("Frame")
+	fadeWatcher:RegisterEvent("PLAYER_ENTERING_WORLD")
+	fadeWatcher:RegisterEvent("PLAYER_REGEN_DISABLED")
+	fadeWatcher:RegisterEvent("PLAYER_REGEN_ENABLED")
+	fadeWatcher:SetScript("OnEvent", function(_, event)
+		local inCombat
+		if event == "PLAYER_REGEN_ENABLED" then
+			inCombat = false
+		elseif event == "PLAYER_REGEN_DISABLED" then
+			inCombat = true
+		end
+		for _, panel in pairs(panels) do
+			if panel and panel.ApplyAlpha then panel:ApplyAlpha(inCombat) end
+		end
+	end)
+end
+ensureFadeWatcher()
+
+local function normalizeStrata(strata, fallback)
+	if type(strata) == "string" then
+		local upper = string.upper(strata)
+		if VALID_STRATA[upper] then return upper end
+	end
+	if type(fallback) == "string" then
+		local upper = string.upper(fallback)
+		if VALID_STRATA[upper] then return upper end
+	end
+	return "MEDIUM"
+end
+
+local function normalizeContentAnchor(anchor, fallback)
+	if type(anchor) == "string" then
+		local upper = string.upper(anchor)
+		if VALID_CONTENT_ANCHOR[upper] then return upper end
+	end
+	if type(fallback) == "string" then
+		local upper = string.upper(fallback)
+		if VALID_CONTENT_ANCHOR[upper] then return upper end
+	end
+	return "LEFT"
+end
+
+local function normalizeTooltipGrowth(value, fallback)
+	if type(value) == "string" then
+		local upper = string.upper(value)
+		if VALID_TOOLTIP_GROWTH[upper] then return upper end
+	end
+	if type(fallback) == "string" then
+		local upper = string.upper(fallback)
+		if VALID_TOOLTIP_GROWTH[upper] then return upper end
+	end
+	return "AUTO"
+end
+
+local function resolveTooltipGrowthMode(panel)
+	return normalizeTooltipGrowth(panel and panel.info and panel.info.tooltipGrowth, "AUTO")
+end
+
+function DataPanel.SetTooltipOwner(owner, tooltip, panel)
+	local tip = tooltip or GameTooltip
+	if not tip or not owner then return end
+	if tip.ClearAllPoints then tip:ClearAllPoints() end
+	if tip.SetOwner then tip:SetOwner(owner, "ANCHOR_NONE") end
+
+	local mode = resolveTooltipGrowthMode(panel or (owner.slot and owner.slot.panel))
+	if mode == "UP" then
+		if tip.SetPoint then tip:SetPoint("BOTTOMLEFT", owner, "TOPLEFT", 0, 2) end
+		return
+	end
+	if mode == "DOWN" then
+		if tip.SetPoint then tip:SetPoint("TOPLEFT", owner, "BOTTOMLEFT", 0, -2) end
+		return
+	end
+
+	local ownerY = owner.GetCenter and select(2, owner:GetCenter())
+	local parentY = UIParent and UIParent.GetCenter and select(2, UIParent:GetCenter())
+	if ownerY and parentY and ownerY <= parentY then
+		if tip.SetPoint then tip:SetPoint("TOPLEFT", owner, "BOTTOMLEFT", 0, -2) end
+	else
+		if tip.SetPoint then tip:SetPoint("BOTTOMLEFT", owner, "TOPLEFT", 0, 2) end
+	end
+end
+
+local function hasInlineTexture(text)
+	if isSecretValue(text) then return false end
+	if type(text) ~= "string" then return false end
+	return text:find("|T", 1, true) or text:find("|A", 1, true)
+end
+
+local function scheduleInlineReflowAll()
+	for _, panel in pairs(panels) do
+		if panel and panel.ScheduleTextReflow then panel:ScheduleTextReflow() end
+	end
+end
+
+local function panelHasSecretWidthPending(panel)
+	if not panel or not panel.streams then return false end
+	for _, data in pairs(panel.streams) do
+		if data then
+			if data.secretWidthPending then return true end
+			if data.parts then
+				for _, child in ipairs(data.parts) do
+					if child and child.secretWidthPending then return true end
+				end
+			end
+		end
+	end
+	return false
+end
+
+local restrictionReflowFrame = CreateFrame("Frame")
+restrictionReflowFrame:RegisterEvent("ADDON_RESTRICTION_STATE_CHANGED")
+restrictionReflowFrame:SetScript("OnEvent", function()
+	for _, panel in pairs(panels) do
+		if panelHasSecretWidthPending(panel) and panel.ScheduleTextReflow then panel:ScheduleTextReflow() end
+	end
+end)
+
+local function updateSelectionStrata(panel, targetStrata)
+	if not panel or not panel.frame then return end
+	local selection = panel.frame.Selection
+	if not selection or not selection.SetFrameStrata then return end
+	if not panel._selectionBaseStrata then
+		local baseStrata = (selection.GetFrameStrata and selection:GetFrameStrata()) or "MEDIUM"
+		panel._selectionBaseStrata = baseStrata
+		panel._selectionBaseStrataIndex = STRATA_INDEX[baseStrata] or STRATA_INDEX.MEDIUM
+	end
+	local baseIndex = panel._selectionBaseStrataIndex or STRATA_INDEX.MEDIUM
+	local normalized = normalizeStrata(targetStrata, panel._selectionBaseStrata)
+	local targetIndex = STRATA_INDEX[normalized]
+	local targetStrataFinal = (targetIndex and targetIndex > baseIndex) and normalized or panel._selectionBaseStrata
+	if targetStrataFinal and selection.GetFrameStrata and selection:GetFrameStrata() ~= targetStrataFinal then selection:SetFrameStrata(targetStrataFinal) end
+end
+
+local STRATA_DROPDOWN_VALUES = {}
+for _, strata in ipairs(STRATA_ORDER) do
+	STRATA_DROPDOWN_VALUES[#STRATA_DROPDOWN_VALUES + 1] = { text = strata, isRadio = true }
+end
+
+local function copyList(source)
+	local result = {}
+	if source then
+		for i, v in ipairs(source) do
+			result[i] = v
+		end
+	end
+	return result
+end
+
+local function sanitizeStreamList(source)
+	local list = {}
+	local set = {}
+	if type(source) ~= "table" then return list, set end
+	for _, name in ipairs(source) do
+		if type(name) == "string" and name ~= "" and not set[name] then
+			set[name] = true
+			list[#list + 1] = name
+		end
+	end
+	return list, set
+end
+
+local function isStreamAvailable(name)
+	return type(name) == "string" and name ~= "" and DataHub and DataHub.streams and DataHub.streams[name] ~= nil
+end
+
+local function streamDisplayName(name)
+	local stream = DataHub and DataHub.streams and DataHub.streams[name]
+	if stream and stream.meta then return stream.meta.title or stream.meta.name or name end
+	return name
+end
+
+local function sortedStreams()
+	local list = {}
+	if DataHub and DataHub.streams then
+		for name in pairs(DataHub.streams) do
+			list[#list + 1] = name
+		end
+	end
+	table.sort(list, function(a, b) return streamDisplayName(a) < streamDisplayName(b) end)
+	return list
+end
+
+local function ldbStreamName(name)
+	if type(name) ~= "string" or name == "" then return nil end
+	return LDB_STREAM_PREFIX .. name
+end
+
+local function ldbTitle(name, dataobj)
+	local label = dataobj and dataobj.label
+	if type(label) == "string" and label ~= "" then return "LDB: " .. label end
+	return "LDB: " .. tostring(name)
+end
+
+local function ldbValueToText(value)
+	if value == nil then return nil end
+	if type(value) == "string" then return value end
+	if type(value) == "number" or type(value) == "boolean" then return tostring(value) end
+	return nil
+end
+
+local function ldbCoordToPixel(value, fallback)
+	local num = tonumber(value)
+	if not num then num = fallback end
+	num = clamp(num or fallback or 0, 0, 1)
+	return math.floor(num * 64 + 0.5)
+end
+
+local function ldbBuildIconTag(dataobj, size)
+	local icon = dataobj and dataobj.icon
+	if type(icon) ~= "string" or icon == "" then return nil end
+	local iconSize = tonumber(dataobj.iconSize) or tonumber(size) or 14
+	if iconSize < 8 then iconSize = 8 end
+	local iconCoords = dataobj.iconCoords
+	if type(iconCoords) == "table" then
+		local left = ldbCoordToPixel(iconCoords[1] or iconCoords.left, 0)
+		local right = ldbCoordToPixel(iconCoords[2] or iconCoords.right, 1)
+		local top = ldbCoordToPixel(iconCoords[3] or iconCoords.top, 0)
+		local bottom = ldbCoordToPixel(iconCoords[4] or iconCoords.bottom, 1)
+		return ("|T%s:%d:%d:0:0:64:64:%d:%d:%d:%d|t"):format(icon, iconSize, iconSize, left, right, top, bottom)
+	end
+	return ("|T%s:%d:%d:0:0|t"):format(icon, iconSize, iconSize)
+end
+
+local function ldbBuildText(name, dataobj, fontSize)
+	local label = ldbValueToText(dataobj and dataobj.label)
+	local text = ldbValueToText(dataobj and dataobj.text)
+	if not text or text == "" then
+		local value = ldbValueToText(dataobj and dataobj.value)
+		if value and value ~= "" and label and label ~= "" then
+			text = label .. ": " .. value
+		else
+			text = value or label
+		end
+	end
+	if not text or text == "" then text = tostring(name) end
+	local icon = ldbBuildIconTag(dataobj, fontSize)
+	if not icon then return text end
+	if text and text ~= "" then return icon .. " " .. text end
+	return icon
+end
+
+local function ldbWrapClick(dataobj)
+	local fn = dataobj and dataobj.OnClick
+	if type(fn) ~= "function" then return false end
+	return function(button, btn, ...)
+		local ok, err = pcall(fn, button, btn, ...)
+		if not ok and geterrorhandler then geterrorhandler()(err) end
+	end
+end
+
+local function ldbWrapMouseEnter(dataobj)
+	local onEnter = dataobj and dataobj.OnEnter
+	local onTooltipShow = dataobj and dataobj.OnTooltipShow
+	if type(onEnter) ~= "function" and type(onTooltipShow) ~= "function" then return nil end
+	return function(button)
+		if type(onEnter) == "function" then
+			local ok, err = pcall(onEnter, button)
+			if not ok and geterrorhandler then geterrorhandler()(err) end
+		end
+		if type(onTooltipShow) == "function" and GameTooltip and GameTooltip.SetOwner and GameTooltip.ClearLines then
+			if not (GameTooltip.IsOwned and GameTooltip:IsOwned(button)) then
+				DataPanel.SetTooltipOwner(button, GameTooltip)
+				GameTooltip:ClearLines()
+			end
+			local ok, err = pcall(onTooltipShow, GameTooltip)
+			if not ok and geterrorhandler then geterrorhandler()(err) end
+			GameTooltip:Show()
+		end
+	end
+end
+
+local function ldbWrapMouseLeave(dataobj)
+	local onLeave = dataobj and dataobj.OnLeave
+	if type(onLeave) ~= "function" then return nil end
+	return function(button)
+		local ok, err = pcall(onLeave, button)
+		if not ok and geterrorhandler then geterrorhandler()(err) end
+	end
+end
+
+local function ldbBuildTooltip(name, dataobj, text)
+	local tooltip = ldbValueToText((dataobj and dataobj.tooltiptext) or (dataobj and dataobj.tooltipText))
+	if tooltip and tooltip ~= "" then return tooltip end
+	if dataobj and (type(dataobj.OnEnter) == "function" or type(dataobj.OnTooltipShow) == "function") then return nil end
+	local label = ldbValueToText(dataobj and dataobj.label)
+	if label and label ~= "" and text and text ~= "" and label ~= text then return label .. "\n" .. text end
+	if label and label ~= "" then return label end
+	return tostring(name)
+end
+
+local function ldbBuildPayload(name, dataobj)
+	local hidden = true
+	if type(dataobj) == "table" then hidden = dataobj.hidden == true or dataobj.isHidden == true end
+	local payload = {
+		fontSize = tonumber(dataobj and dataobj.fontSize) or 14,
+		hidden = hidden,
+		ignoreMenuModifier = true,
+		OnClick = ldbWrapClick(dataobj),
+		OnMouseEnter = ldbWrapMouseEnter(dataobj),
+		OnMouseLeave = ldbWrapMouseLeave(dataobj),
+	}
+	if payload.hidden then
+		payload.text = ""
+		payload.tooltip = nil
+		return payload
+	end
+	local text = ldbBuildText(name, dataobj, payload.fontSize)
+	payload.text = text
+	payload.tooltip = ldbBuildTooltip(name, dataobj, text)
+	return payload
+end
+
+local function ensureLDBStream(name, dataobj)
+	if not LDB or not DataHub then return nil end
+	local streamName = ldbStreamsByObject[name]
+	if not streamName then
+		streamName = ldbStreamName(name)
+		if not streamName then return nil end
+		ldbStreamsByObject[name] = streamName
+	end
+	ldbObjectsByStream[streamName] = dataobj
+
+	local stream = DataHub.streams and DataHub.streams[streamName]
+	if not stream then
+		stream = DataHub:RegisterStream({
+			id = streamName,
+			version = 1,
+			title = ldbTitle(name, dataobj),
+			ldb = true,
+			ldbName = name,
+			update = function(s)
+				local obj = ldbObjectsByStream[s.name]
+				local payload = ldbBuildPayload(name, obj)
+				if type(s.snapshot) ~= "table" then
+					s.snapshot = {}
+				else
+					wipe(s.snapshot)
+				end
+				for key, value in pairs(payload) do
+					s.snapshot[key] = value
+				end
+			end,
+		})
+	end
+
+	if stream and stream.meta then
+		stream.meta.title = ldbTitle(name, dataobj)
+		stream.meta.name = name
+		stream.meta.ldb = true
+		stream.meta.ldbName = name
+	end
+
+	return streamName, stream
+end
+
+local function restoreConfiguredPanelsForStream(streamName)
+	if not isStreamAvailable(streamName) then return end
+	for _, panel in pairs(panels) do
+		if panel and panel.info and panel.info.streamSet and panel.info.streamSet[streamName] and not panel.streams[streamName] and panel.ApplyStreams then
+			panel:ApplyStreams(copyList(panel.info.streams))
+		end
+	end
+end
+
+local function onLDBDataObjectCreated(_, name, dataobj)
+	local streamName = ensureLDBStream(name, dataobj)
+	if streamName then
+		restoreConfiguredPanelsForStream(streamName)
+		DataHub:RequestUpdate(streamName)
+	end
+end
+
+local function onLDBAttributeChanged(_, name, attr, _, dataobj)
+	local streamName, stream = ensureLDBStream(name, dataobj or (LDB and LDB.GetDataObjectByName and LDB:GetDataObjectByName(name)))
+	if not streamName then return end
+	if stream and stream.meta and (attr == "label" or attr == "type") then stream.meta.title = ldbTitle(name, dataobj or ldbObjectsByStream[streamName]) end
+	DataHub:RequestUpdate(streamName)
+end
+
+local function initLDBBridge()
+	if not LDB or not DataHub then return end
+	if LDB.DataObjectIterator then
+		for name, dataobj in LDB:DataObjectIterator() do
+			ensureLDBStream(name, dataobj)
+		end
+	end
+	if LDB.RegisterCallback then
+		LDB.RegisterCallback(LDB_BRIDGE_OWNER, "LibDataBroker_DataObjectCreated", onLDBDataObjectCreated)
+		LDB.RegisterCallback(LDB_BRIDGE_OWNER, "LibDataBroker_AttributeChanged", onLDBAttributeChanged)
+	end
+end
+
+initLDBBridge()
+
+local function shouldShowOptionsHint()
+	local opts = addon.db and addon.db.dataPanelsOptions
+	return not (opts and opts.hideRightClickHint)
+end
+
+function DataPanel.ShouldShowOptionsHint() return shouldShowOptionsHint() end
+
+function DataPanel.GetOptionsHintText()
+	if shouldShowOptionsHint() then return L["Right-Click for options"] end
+end
+
+function DataPanel.GetStreamOptionsTitle(streamTitle)
+	local optionsTitle = GAMEMENU_OPTIONS or OPTIONS or "Options"
+	if streamTitle and streamTitle ~= "" then return tostring(streamTitle) .. " - " .. optionsTitle end
+	return optionsTitle
+end
+
+local function partsOnEnter(b)
+	local s = b and b.slot
+	if not s then return end
+	if not slotTooltipsEnabled(s) then return end
+
+	-- Let stream-specific handlers (e.g. LDB) fully control tooltip behavior.
+	if s.OnMouseEnter then
+		s.OnMouseEnter(b)
+		return
+	end
+
+	if s.perCurrency and b.currencyID then
+		DataPanel.SetTooltipOwner(b, GameTooltip)
+		GameTooltip:SetCurrencyByID(b.currencyID)
+		if s.showDescription == false then
+			local info = C_CurrencyInfo.GetCurrencyInfo(b.currencyID)
+			if info and info.description and info.description ~= "" then
+				local name = GameTooltip:GetName()
+				for i = 2, GameTooltip:NumLines() do
+					local line = _G[name .. "TextLeft" .. i]
+					if line and line:GetText() == info.description then
+						line:SetText("")
+						break
+					end
+				end
+			end
+		end
+		local hint = DataPanel.GetOptionsHintText and DataPanel.GetOptionsHintText()
+		if hint then
+			GameTooltip:AddLine(" ")
+			GameTooltip:AddLine(hint)
+		end
+		GameTooltip:Show()
+	elseif s.tooltip then
+		DataPanel.SetTooltipOwner(b, GameTooltip)
+		GameTooltip:SetText(s.tooltip)
+		GameTooltip:Show()
+	end
+end
+
+local function partsOnLeave(b)
+	local s = b and b.slot
+	if s and s.OnMouseLeave then s.OnMouseLeave(b) end
+	GameTooltip:Hide()
+end
+
+local function partsOnClick(b, btn, ...)
+	local s = b.slot
+	if btn == "RightButton" and not (s and s.ignoreMenuModifier) and not DataPanel.IsMenuModifierActive(btn) then return end
+	if not s then return end
+	local fn = s.OnClick
+	if type(fn) == "table" then fn = fn[btn] end
+	if fn then fn(b, btn, ...) end
+end
+
+local pendingSecure = {}
+local pendingSecureFrame
+
+local function queueSecureUpdate(data)
+	if not data then return end
+	pendingSecure[data] = true
+	if not pendingSecureFrame then
+		pendingSecureFrame = CreateFrame("Frame")
+		pendingSecureFrame:SetScript("OnEvent", function()
+			if InCombatLockdown and InCombatLockdown() then return end
+			for entry in pairs(pendingSecure) do
+				pendingSecure[entry] = nil
+				local payload = entry.pendingPayload
+				entry.pendingPayload = nil
+				if entry.applyPayload and payload then entry.applyPayload(payload, true) end
+			end
+			if not next(pendingSecure) then pendingSecureFrame:UnregisterEvent("PLAYER_REGEN_ENABLED") end
+		end)
+	end
+	pendingSecureFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+end
+
+local function payloadHasSecureParts(payload)
+	if not payload or not payload.parts then return false end
+	for _, part in ipairs(payload.parts) do
+		if part and part.secure then return true end
+	end
+	return false
+end
+
+local function seedEditModeRecordFromPanelInfo(panel, defaults, record)
+	if type(panel) ~= "table" or type(defaults) ~= "table" or type(record) ~= "table" then return end
+	local info = panel.info or {}
+
+	record.point = info.point or defaults.point or "CENTER"
+	record.relativePoint = record.point
+	record.x = info.x or defaults.x or 0
+	record.y = info.y or defaults.y or 0
+	record.width = normalizePanelWidth(info.width, defaults.width)
+	record.height = normalizePanelHeight(info.height, defaults.height)
+	record.autoWidth = info.autoWidth == true
+	record.hideBorder = info.hideBorder and true or false
+	record.clickThrough = info.clickThrough == true
+	record.strata = normalizeStrata(info.strata, defaults.strata)
+	record.contentAnchor = normalizeContentAnchor(info.contentAnchor, defaults.contentAnchor)
+	record.streams = copyList(info.streams or defaults.streams)
+	record.streamGap = normalizeStreamGap(info.streamGap, defaults.streamGap)
+	record.fontStyle = normalizePanelFontStyle(info.fontStyle, defaults.fontStyle or DEFAULT_FONT_STYLE, info.fontOutline, info.fontShadow)
+	record.streamFontScale = normalizeStreamFontScale(info.streamFontScale, defaults.streamFontScale)
+	record.useClassTextColor = info.useClassTextColor == true
+	record.useCustomTextColor = info.useCustomTextColor == true
+	record.textColor = normalizeColorTable(info.textColor, defaults.textColor)
+	record.fontFace = normalizeFontSetting(info.fontFace, defaults.fontFace)
+	record.backgroundTexture = normalizeMediaKey(info.backgroundTexture, defaults.backgroundTexture)
+	record.backgroundUseCustomTexture = info.backgroundUseCustomTexture == true
+	record.backgroundCustomTexture = CustomTexture.Trim(info.backgroundCustomTexture)
+	record.backgroundOffsetX = CustomTexture.NormalizeOffset(info.backgroundOffsetX, defaults.backgroundOffsetX)
+	record.backgroundOffsetY = CustomTexture.NormalizeOffset(info.backgroundOffsetY, defaults.backgroundOffsetY)
+	record.backgroundSizeOffsetX = CustomTexture.NormalizeOffset(info.backgroundSizeOffsetX, defaults.backgroundSizeOffsetX)
+	record.backgroundSizeOffsetY = CustomTexture.NormalizeOffset(info.backgroundSizeOffsetY, defaults.backgroundSizeOffsetY)
+	record.backgroundColor = normalizeColorTable(info.backgroundColor, defaults.backgroundColor)
+	record.borderTexture = normalizeMediaKey(info.borderTexture, defaults.borderTexture)
+	record.borderColor = normalizeColorTable(info.borderColor, defaults.borderColor)
+	record.borderSize = normalizeBorderSize(info.borderSize, defaults.borderSize)
+	record.borderOffset = normalizeBorderOffset(info.borderOffset, defaults.borderOffset)
+	record.showTooltips = info.showTooltips ~= false
+	record.tooltipGrowth = normalizeTooltipGrowth(info.tooltipGrowth, defaults.tooltipGrowth)
+	record.textAlphaInCombat = normalizePercent(info.textAlphaInCombat, defaults.textAlphaInCombat)
+	record.textAlphaOutOfCombat = normalizePercent(info.textAlphaOutOfCombat, defaults.textAlphaOutOfCombat)
+end
+
+function DataPanel.GetFactorySettings(id, name)
+	return {
+		point = "CENTER",
+		x = 0,
+		y = 0,
+		width = 300,
+		height = 40,
+		autoWidth = false,
+		streams = {},
+		streamSet = {},
+		name = name or ((L["Panel"] or "Panel") .. " " .. id),
+		hideBorder = false,
+		clickThrough = false,
+		strata = "MEDIUM",
+		contentAnchor = "LEFT",
+		streamGap = DEFAULT_STREAM_GAP,
+		fontStyle = DEFAULT_FONT_STYLE,
+		streamFontScale = DEFAULT_STREAM_FONT_SCALE,
+		useClassTextColor = false,
+		useCustomTextColor = false,
+		textColor = { r = 1, g = 1, b = 1, a = 1 },
+		fontFace = globalFontConfigKey(),
+		backgroundTexture = "DEFAULT",
+		backgroundUseCustomTexture = false,
+		backgroundCustomTexture = "",
+		backgroundOffsetX = 0,
+		backgroundOffsetY = 0,
+		backgroundSizeOffsetX = 0,
+		backgroundSizeOffsetY = 0,
+		backgroundColor = { r = 0, g = 0, b = 0, a = DEFAULT_BACKDROP_ALPHA },
+		borderTexture = "DEFAULT",
+		borderColor = { r = 1, g = 1, b = 1, a = DEFAULT_BORDER_ALPHA },
+		borderSize = DEFAULT_BORDER_SIZE,
+		borderOffset = DEFAULT_BORDER_OFFSET,
+		showTooltips = true,
+		tooltipGrowth = "AUTO",
+		textAlphaInCombat = DEFAULT_TEXT_ALPHA,
+		textAlphaOutOfCombat = DEFAULT_TEXT_ALPHA,
+	}
+end
+
+local function registerEditModePanel(panel)
+	if not EditMode or not EditMode.RegisterFrame then return end
+	if panel.editModeRegistered then
+		if panel.editModeId then EditMode:RefreshFrame(panel.editModeId) end
+		return
+	end
+
+	local id = "dataPanel:" .. tostring(panel.id)
+	panel.frame.editModeName = panel.name
+
+	local defaults = {
+		point = panel.info.point or "CENTER",
+		x = panel.info.x or 0,
+		y = panel.info.y or 0,
+		width = normalizePanelWidth(panel.info.width, panel.frame:GetWidth() or 200),
+		height = normalizePanelHeight(panel.info.height, panel.frame:GetHeight() or 20),
+		autoWidth = panel.info.autoWidth == true,
+		hideBorder = panel.info.hideBorder or false,
+		clickThrough = panel.info.clickThrough == true,
+		strata = normalizeStrata(panel.info.strata, panel.frame:GetFrameStrata()),
+		contentAnchor = normalizeContentAnchor(panel.info.contentAnchor, "LEFT"),
+		streams = copyList(panel.info.streams),
+		streamGap = normalizeStreamGap(panel.info.streamGap, DEFAULT_STREAM_GAP),
+		fontStyle = normalizePanelFontStyle(panel.info.fontStyle, DEFAULT_FONT_STYLE, panel.info.fontOutline, panel.info.fontShadow),
+		streamFontScale = normalizeStreamFontScale(panel.info.streamFontScale, DEFAULT_STREAM_FONT_SCALE),
+		useClassTextColor = panel.info.useClassTextColor == true,
+		useCustomTextColor = panel.info.useCustomTextColor == true,
+		textColor = normalizeColorTable(panel.info.textColor, DEFAULT_TEXT_COLOR),
+		fontFace = normalizeFontSetting(panel.info.fontFace, globalFontConfigKey()),
+		backgroundTexture = normalizeMediaKey(panel.info.backgroundTexture, "DEFAULT"),
+		backgroundUseCustomTexture = panel.info.backgroundUseCustomTexture == true,
+		backgroundCustomTexture = CustomTexture.Trim(panel.info.backgroundCustomTexture),
+		backgroundOffsetX = CustomTexture.NormalizeOffset(panel.info.backgroundOffsetX, 0),
+		backgroundOffsetY = CustomTexture.NormalizeOffset(panel.info.backgroundOffsetY, 0),
+		backgroundSizeOffsetX = CustomTexture.NormalizeOffset(panel.info.backgroundSizeOffsetX, 0),
+		backgroundSizeOffsetY = CustomTexture.NormalizeOffset(panel.info.backgroundSizeOffsetY, 0),
+		backgroundColor = normalizeColorTable(panel.info.backgroundColor, DEFAULT_BACKDROP_COLOR),
+		borderTexture = normalizeMediaKey(panel.info.borderTexture, "DEFAULT"),
+		borderColor = normalizeColorTable(panel.info.borderColor, DEFAULT_BORDER_COLOR),
+		borderSize = normalizeBorderSize(panel.info.borderSize, DEFAULT_BORDER_SIZE),
+		borderOffset = normalizeBorderOffset(panel.info.borderOffset, DEFAULT_BORDER_OFFSET),
+		showTooltips = panel.info.showTooltips ~= false,
+		tooltipGrowth = normalizeTooltipGrowth(panel.info.tooltipGrowth, "AUTO"),
+		textAlphaInCombat = normalizePercent(panel.info.textAlphaInCombat, DEFAULT_TEXT_ALPHA),
+		textAlphaOutOfCombat = normalizePercent(panel.info.textAlphaOutOfCombat, panel.info.textAlphaInCombat),
+	}
+	panel.info.strata = defaults.strata
+	panel.info.autoWidth = defaults.autoWidth
+	panel.info.contentAnchor = defaults.contentAnchor
+	panel.info.fontFace = defaults.fontFace
+	panel.info.fontStyle = defaults.fontStyle
+	panel.info.backgroundTexture = defaults.backgroundTexture
+	panel.info.backgroundUseCustomTexture = defaults.backgroundUseCustomTexture
+	panel.info.backgroundCustomTexture = defaults.backgroundCustomTexture
+	panel.info.backgroundOffsetX = defaults.backgroundOffsetX
+	panel.info.backgroundOffsetY = defaults.backgroundOffsetY
+	panel.info.backgroundSizeOffsetX = defaults.backgroundSizeOffsetX
+	panel.info.backgroundSizeOffsetY = defaults.backgroundSizeOffsetY
+	panel.info.backgroundColor = defaults.backgroundColor
+	panel.info.borderTexture = defaults.borderTexture
+	panel.info.borderColor = defaults.borderColor
+	panel.info.borderSize = defaults.borderSize
+	panel.info.borderOffset = defaults.borderOffset
+	panel.info.showTooltips = defaults.showTooltips
+	panel.info.tooltipGrowth = defaults.tooltipGrowth
+	panel.info.streamGap = defaults.streamGap
+	panel.info.useCustomTextColor = defaults.useCustomTextColor
+	panel.info.textColor = defaults.textColor
+
+	local settings
+	if SettingType then
+		local section = {
+			layout = "dataPanelLayout",
+			background = "dataPanelBackground",
+			border = "dataPanelBorder",
+			streams = "dataPanelStreams",
+			text = "dataPanelText",
+			tooltip = "dataPanelTooltip",
+		}
+
+		local function isBorderVisible(layoutName)
+			if EditMode and EditMode.GetValue then
+				local value = EditMode:GetValue(id, "hideBorder", layoutName)
+				if value ~= nil then return not value end
+			end
+			return not (panel.info and panel.info.hideBorder)
+		end
+		local function isClickThrough(layoutName)
+			if EditMode and EditMode.GetValue then
+				local value = EditMode:GetValue(id, "clickThrough", layoutName)
+				if value ~= nil then return value == true end
+			end
+			return panel.info and panel.info.clickThrough == true
+		end
+
+		local function getEditModeFontStyle(layoutName)
+			if EditMode and EditMode.GetValue then
+				local style = EditMode:GetValue(id, "fontStyle", layoutName)
+				local legacyOutline = EditMode:GetValue(id, "fontOutline", layoutName)
+				local legacyShadow = EditMode:GetValue(id, "fontShadow", layoutName)
+				return normalizePanelFontStyle(style, defaults.fontStyle, legacyOutline, legacyShadow)
+			end
+			return normalizePanelFontStyle(panel.info and panel.info.fontStyle, defaults.fontStyle, panel.info and panel.info.fontOutline, panel.info and panel.info.fontShadow)
+		end
+
+		local function isCustomTextColorEnabled(layoutName)
+			if EditMode and EditMode.GetValue then
+				local useClass = EditMode:GetValue(id, "useClassTextColor", layoutName)
+				if useClass == true then return false end
+				local useCustom = EditMode:GetValue(id, "useCustomTextColor", layoutName)
+				if useCustom ~= nil then return useCustom == true end
+			end
+			return panel.info and panel.info.useClassTextColor ~= true and panel.info.useCustomTextColor == true
+		end
+
+		local function isCustomBackgroundTextureEnabled(layoutName)
+			if EditMode and EditMode.GetValue then
+				local value = EditMode:GetValue(id, "backgroundUseCustomTexture", layoutName)
+				if value ~= nil then return value == true end
+			end
+			return panel.info and panel.info.backgroundUseCustomTexture == true
+		end
+
+		local function isAutoWidthEnabled(layoutName)
+			if EditMode and EditMode.GetValue then
+				local value = EditMode:GetValue(id, "autoWidth", layoutName)
+				if value ~= nil then return value == true end
+			end
+			return panel.info and panel.info.autoWidth == true
+		end
+
+		settings = {
+			{ name = L["Layout"] or "Layout", kind = SettingType.Collapsible, id = section.layout, defaultCollapsed = false },
+			{
+				name = (L["Auto"] or "Auto") .. " " .. (L["Width"] or "Width"),
+				kind = SettingType.Checkbox,
+				field = "autoWidth",
+				parentId = section.layout,
+				default = defaults.autoWidth,
+			},
+			{
+				name = L["DataPanelWidth"],
+				kind = SettingType.Slider,
+				field = "width",
+				parentId = section.layout,
+				default = defaults.width,
+				minValue = PANEL_WIDTH_MIN,
+				maxValue = PANEL_WIDTH_MAX,
+				valueStep = 1,
+				allowInput = true,
+				formatter = function(value)
+					local num = normalizePanelWidth(value, defaults.width)
+					return tostring(math.floor(num + 0.5))
+				end,
+				isEnabled = function(layoutName) return not isAutoWidthEnabled(layoutName) end,
+				get = function(layoutName)
+					local value
+					if EditMode and EditMode.GetValue then
+						value = EditMode:GetValue(id, "width", layoutName)
+					elseif panel.info then
+						value = panel.info.width
+					end
+					return normalizePanelWidth(value, defaults.width)
+				end,
+				set = function(layoutName, value)
+					local width = normalizePanelWidth(value, defaults.width)
+					if EditMode and EditMode.SetValue then
+						EditMode:SetValue(id, "width", width, layoutName)
+					elseif panel.info then
+						panel.info.width = width
+						if panel.info.autoWidth ~= true then panel.frame:SetWidth(width) end
+					end
+				end,
+			},
+			{
+				name = L["DataPanelHeight"],
+				kind = SettingType.Slider,
+				field = "height",
+				allowInput = true,
+				parentId = section.layout,
+				default = defaults.height,
+				minValue = PANEL_HEIGHT_MIN,
+				maxValue = PANEL_HEIGHT_MAX,
+				valueStep = 1,
+			},
+			{ name = L["Background"] or "Background", kind = SettingType.Collapsible, id = section.background, defaultCollapsed = true },
+			{
+				name = L["Background texture"] or "Background texture",
+				kind = SettingType.Dropdown,
+				field = "backgroundTexture",
+				parentId = section.background,
+				default = defaults.backgroundTexture,
+				height = 200,
+				get = function(layoutName)
+					if EditMode and EditMode.GetValue then return EditMode:GetValue(id, "backgroundTexture", layoutName) end
+					return panel.info and panel.info.backgroundTexture or defaults.backgroundTexture
+				end,
+				set = function(layoutName, value)
+					if EditMode and EditMode.SetValue then
+						EditMode:SetValue(id, "backgroundTexture", value, layoutName)
+					elseif panel.info then
+						panel.info.backgroundTexture = normalizeMediaKey(value, "DEFAULT")
+						panel:ApplyBorder()
+					end
+				end,
+				generator = function(_, rootDescription, data)
+					for _, option in ipairs(backgroundTextureOptions()) do
+						rootDescription:CreateRadio(option.label, function() return data.get and data.get(nil) == option.value end, function()
+							if data.set then data.set(nil, option.value) end
+						end)
+					end
+				end,
+				isEnabled = function(layoutName) return not isCustomBackgroundTextureEnabled(layoutName) end,
+			},
+			{
+				name = L["DataPanelBackgroundUseCustomTexture"] or "Custom texture",
+				kind = SettingType.Checkbox,
+				field = "backgroundUseCustomTexture",
+				parentId = section.background,
+				default = defaults.backgroundUseCustomTexture,
+			},
+			{
+				name = L["DataPanelBackgroundCustomTexture"] or "Atlas name or texture ID",
+				kind = SettingType.Input,
+				field = "backgroundCustomTexture",
+				parentId = section.background,
+				default = defaults.backgroundCustomTexture,
+				maxChars = 160,
+				tooltip = L["DataPanelBackgroundCustomTextureDesc"] or "Enter an atlas name, texture file ID, or texture path.",
+				isEnabled = isCustomBackgroundTextureEnabled,
+			},
+			{
+				name = L["Background color"] or "Background color",
+				kind = SettingType.Color,
+				field = "backgroundColor",
+				parentId = section.background,
+				default = defaults.backgroundColor,
+				hasOpacity = true,
+				get = function(layoutName)
+					if EditMode and EditMode.GetValue then return EditMode:GetValue(id, "backgroundColor", layoutName) end
+					return panel.info and panel.info.backgroundColor or defaults.backgroundColor
+				end,
+				set = function(layoutName, value)
+					if EditMode and EditMode.SetValue then
+						EditMode:SetValue(id, "backgroundColor", value, layoutName)
+					elseif panel.info then
+						panel.info.backgroundColor = normalizeColorTable(value, DEFAULT_BACKDROP_COLOR)
+						panel:ApplyBackdropAlpha()
+					end
+				end,
+			},
+			{ name = L["Position"], kind = SettingType.Divider, parentId = section.background },
+			{
+				name = L["DataPanelBackgroundOffsetX"] or "X offset",
+				kind = SettingType.Slider,
+				field = "backgroundOffsetX",
+				allowInput = true,
+				parentId = section.background,
+				default = defaults.backgroundOffsetX,
+				minValue = -200,
+				maxValue = 200,
+				valueStep = 1,
+				formatter = function(value) return tostring(math.floor((tonumber(value) or 0) + 0.5)) end,
+			},
+			{
+				name = L["DataPanelBackgroundOffsetY"] or "Y offset",
+				kind = SettingType.Slider,
+				field = "backgroundOffsetY",
+				allowInput = true,
+				parentId = section.background,
+				default = defaults.backgroundOffsetY,
+				minValue = -200,
+				maxValue = 200,
+				valueStep = 1,
+				formatter = function(value) return tostring(math.floor((tonumber(value) or 0) + 0.5)) end,
+			},
+			{
+				name = L["DataPanelBackgroundSizeOffsetX"] or "Width offset",
+				kind = SettingType.Slider,
+				field = "backgroundSizeOffsetX",
+				allowInput = true,
+				parentId = section.background,
+				default = defaults.backgroundSizeOffsetX,
+				minValue = -200,
+				maxValue = 200,
+				valueStep = 1,
+				formatter = function(value) return tostring(math.floor((tonumber(value) or 0) + 0.5)) end,
+			},
+			{
+				name = L["DataPanelBackgroundSizeOffsetY"] or "Height offset",
+				kind = SettingType.Slider,
+				field = "backgroundSizeOffsetY",
+				allowInput = true,
+				parentId = section.background,
+				default = defaults.backgroundSizeOffsetY,
+				minValue = -200,
+				maxValue = 200,
+				valueStep = 1,
+				formatter = function(value) return tostring(math.floor((tonumber(value) or 0) + 0.5)) end,
+			},
+			{ name = L["Border"] or "Border", kind = SettingType.Collapsible, id = section.border, defaultCollapsed = true },
+			{
+				name = L["Hide border"],
+				kind = SettingType.Checkbox,
+				field = "hideBorder",
+				parentId = section.border,
+				default = defaults.hideBorder,
+			},
+			{
+				name = L["Border texture"] or "Border texture",
+				kind = SettingType.Dropdown,
+				field = "borderTexture",
+				parentId = section.border,
+				default = defaults.borderTexture,
+				height = 200,
+				get = function(layoutName)
+					if EditMode and EditMode.GetValue then return EditMode:GetValue(id, "borderTexture", layoutName) end
+					return panel.info and panel.info.borderTexture or defaults.borderTexture
+				end,
+				set = function(layoutName, value)
+					if EditMode and EditMode.SetValue then
+						EditMode:SetValue(id, "borderTexture", value, layoutName)
+					elseif panel.info then
+						panel.info.borderTexture = normalizeMediaKey(value, "DEFAULT")
+						panel:ApplyBorder()
+					end
+				end,
+				generator = function(_, rootDescription, data)
+					for _, option in ipairs(borderTextureOptions()) do
+						rootDescription:CreateRadio(option.label, function() return data.get and data.get(nil) == option.value end, function()
+							if data.set then data.set(nil, option.value) end
+						end)
+					end
+				end,
+				isEnabled = isBorderVisible,
+			},
+			{
+				name = L["Border size"] or "Border size",
+				kind = SettingType.Slider,
+				field = "borderSize",
+				allowInput = true,
+				parentId = section.border,
+				default = defaults.borderSize,
+				minValue = 1,
+				maxValue = 64,
+				valueStep = 1,
+				formatter = function(value) return tostring(math.floor((tonumber(value) or 0) + 0.5)) end,
+				isEnabled = isBorderVisible,
+			},
+			{
+				name = L["Border offset"] or "Border offset",
+				kind = SettingType.Slider,
+				field = "borderOffset",
+				allowInput = true,
+				parentId = section.border,
+				default = defaults.borderOffset,
+				minValue = -20,
+				maxValue = 20,
+				valueStep = 1,
+				formatter = function(value) return tostring(math.floor((tonumber(value) or 0) + 0.5)) end,
+				isEnabled = isBorderVisible,
+			},
+			{
+				name = EMBLEM_BORDER_COLOR,
+				kind = SettingType.Color,
+				field = "borderColor",
+				parentId = section.border,
+				default = defaults.borderColor,
+				hasOpacity = true,
+				get = function(layoutName)
+					if EditMode and EditMode.GetValue then return EditMode:GetValue(id, "borderColor", layoutName) end
+					return panel.info and panel.info.borderColor or defaults.borderColor
+				end,
+				set = function(layoutName, value)
+					if EditMode and EditMode.SetValue then
+						EditMode:SetValue(id, "borderColor", value, layoutName)
+					elseif panel.info then
+						panel.info.borderColor = normalizeColorTable(value, DEFAULT_BORDER_COLOR)
+						panel:ApplyBackdropAlpha()
+					end
+				end,
+				isEnabled = isBorderVisible,
+			},
+			{ name = L["Tooltip"] or "Tooltip", kind = SettingType.Collapsible, id = section.tooltip, defaultCollapsed = true },
+			{
+				name = L["Click-through"] or "Click-through",
+				kind = SettingType.Checkbox,
+				field = "clickThrough",
+				parentId = section.tooltip,
+				default = defaults.clickThrough,
+			},
+			{
+				name = L["DataPanelShowTooltips"] or "Show tooltips",
+				kind = SettingType.Checkbox,
+				field = "showTooltips",
+				parentId = section.tooltip,
+				default = defaults.showTooltips,
+				isEnabled = function(layoutName) return not isClickThrough(layoutName) end,
+			},
+			{
+				name = L["Tooltip growth"] or "Tooltip growth",
+				kind = SettingType.Dropdown,
+				field = "tooltipGrowth",
+				parentId = section.tooltip,
+				default = defaults.tooltipGrowth,
+				values = TOOLTIP_GROWTH_OPTIONS,
+				isEnabled = function(layoutName)
+					if isClickThrough(layoutName) then return false end
+					if EditMode and EditMode.GetValue then
+						local value = EditMode:GetValue(id, "showTooltips", layoutName)
+						if value ~= nil then return value == true end
+					end
+					return panel.info and panel.info.showTooltips ~= false
+				end,
+			},
+			{
+				name = L["Frame strata"],
+				kind = SettingType.Dropdown,
+				field = "strata",
+				parentId = section.layout,
+				default = defaults.strata,
+				values = STRATA_DROPDOWN_VALUES,
+			},
+			{ name = L["DataPanelStreams"], kind = SettingType.Collapsible, id = section.streams, defaultCollapsed = false },
+			{
+				name = L["DataPanelStreams"],
+				tooltip = L["DataPanelStreamsDesc"],
+				kind = SettingType.Dropdown,
+				field = "streams",
+				parentId = section.streams,
+				default = copyList(defaults.streams),
+				height = 240,
+				get = function() return copyList(panel.info.streams) end,
+				set = function(_, value)
+					panel.applyingFromEditMode = true
+					panel:ApplyStreams(copyList(value) or {})
+					panel.applyingFromEditMode = nil
+				end,
+				generator = function(_, rootDescription)
+					for _, streamName in ipairs(sortedStreams()) do
+						rootDescription:CreateCheckbox(streamDisplayName(streamName), function() return panel.info.streamSet and panel.info.streamSet[streamName] end, function()
+							local enabled = panel.info.streamSet and panel.info.streamSet[streamName]
+							if enabled then
+								panel:RemoveStream(streamName)
+							else
+								panel:AddStream(streamName)
+							end
+						end)
+					end
+				end,
+			},
+			{
+				name = L["DataPanelStreamGap"] or "Stream gap",
+				kind = SettingType.Slider,
+				field = "streamGap",
+				allowInput = true,
+				parentId = section.streams,
+				default = defaults.streamGap,
+				minValue = 0,
+				maxValue = 100,
+				valueStep = 1,
+			},
+			{
+				name = L["DataPanelContentAlignment"] or "Content alignment",
+				kind = SettingType.Dropdown,
+				field = "contentAnchor",
+				parentId = section.streams,
+				default = defaults.contentAnchor,
+				get = function(layoutName)
+					if EditMode and EditMode.GetValue then return EditMode:GetValue(id, "contentAnchor", layoutName) end
+					return panel.info and panel.info.contentAnchor or defaults.contentAnchor
+				end,
+				set = function(layoutName, value)
+					if EditMode and EditMode.SetValue then
+						EditMode:SetValue(id, "contentAnchor", value, layoutName)
+					elseif panel.info then
+						panel.info.contentAnchor = normalizeContentAnchor(value, panel.info.contentAnchor)
+						panel:Refresh()
+					end
+				end,
+				generator = function(_, rootDescription, data)
+					for _, option in ipairs(CONTENT_ANCHOR_OPTIONS) do
+						rootDescription:CreateRadio(option.label, function() return data.get and data.get(nil) == option.value end, function()
+							if data.set then data.set(nil, option.value) end
+						end)
+					end
+				end,
+			},
+			{ name = L["Text"] or "Text", kind = SettingType.Collapsible, id = section.text, defaultCollapsed = true },
+			{
+				name = L["Font"] or "Font",
+				kind = SettingType.Dropdown,
+				field = "fontFace",
+				parentId = section.text,
+				default = defaults.fontFace,
+				height = 200,
+				get = function(layoutName)
+					if EditMode and EditMode.GetValue then return normalizeFontSetting(EditMode:GetValue(id, "fontFace", layoutName), defaults.fontFace) end
+					return normalizeFontSetting(panel.info and panel.info.fontFace, defaults.fontFace)
+				end,
+				set = function(layoutName, value)
+					if EditMode and EditMode.SetValue then
+						EditMode:SetValue(id, "fontFace", value, layoutName)
+					elseif panel.info then
+						panel.info.fontFace = normalizeFontSetting(value, panel.info.fontFace or globalFontConfigKey())
+						panel:ApplyTextStyle()
+					end
+				end,
+				generator = function(_, rootDescription, data)
+					for _, option in ipairs(fontFaceOptions()) do
+						rootDescription:CreateRadio(option.label, function() return data.get and data.get(nil) == option.value end, function()
+							if data.set then data.set(nil, option.value) end
+						end)
+					end
+				end,
+			},
+			{
+				name = L["DataPanelFontStyle"] or "Font style",
+				kind = SettingType.Dropdown,
+				field = "fontStyle",
+				parentId = section.text,
+				default = defaults.fontStyle,
+				height = 220,
+				get = function(layoutName) return getEditModeFontStyle(layoutName) end,
+				set = function(layoutName, value)
+					local normalized = normalizePanelFontStyle(value, defaults.fontStyle)
+					if EditMode and EditMode.SetValue then
+						EditMode:SetValue(id, "fontStyle", normalized, layoutName)
+					elseif panel.info then
+						panel.info.fontStyle = normalized
+						panel:ApplyTextStyle()
+					end
+				end,
+				generator = function(_, rootDescription, data)
+					for _, option in ipairs(fontStyleOptions()) do
+						rootDescription:CreateRadio(option.label, function() return data.get and data.get(nil) == option.value end, function()
+							if data.set then data.set(nil, option.value) end
+						end)
+					end
+				end,
+			},
+			{
+				name = L["Text scale"] or "Text scale",
+				kind = SettingType.Slider,
+				field = "streamFontScale",
+				allowInput = true,
+				parentId = section.text,
+				default = defaults.streamFontScale,
+				minValue = 50,
+				maxValue = 200,
+				valueStep = 1,
+				formatter = function(value) return string.format("%d%%", math.floor((tonumber(value) or 100) + 0.5)) end,
+			},
+			{ name = L["Colors"], kind = SettingType.Divider, parentId = section.text },
+			{
+				name = L["DataPanelUseClassTextColor"] or "Use class text color",
+				kind = SettingType.Checkbox,
+				field = "useClassTextColor",
+				parentId = section.text,
+				default = defaults.useClassTextColor,
+			},
+			{
+				name = L["Use custom text color"] or "Use custom text color",
+				kind = SettingType.Checkbox,
+				field = "useCustomTextColor",
+				parentId = section.text,
+				default = defaults.useCustomTextColor,
+				isEnabled = function(layoutName)
+					if EditMode and EditMode.GetValue then
+						local value = EditMode:GetValue(id, "useClassTextColor", layoutName)
+						if value ~= nil then return value ~= true end
+					end
+					return panel.info and panel.info.useClassTextColor ~= true
+				end,
+			},
+			{
+				name = L["Text color"] or "Text color",
+				kind = SettingType.Color,
+				field = "textColor",
+				parentId = section.text,
+				default = defaults.textColor,
+				get = function(layoutName)
+					if EditMode and EditMode.GetValue then return normalizeColorTable(EditMode:GetValue(id, "textColor", layoutName), defaults.textColor) end
+					return normalizeColorTable(panel.info and panel.info.textColor, defaults.textColor)
+				end,
+				set = function(layoutName, value)
+					local desired = normalizeColorTable(value, DEFAULT_TEXT_COLOR)
+					if EditMode and EditMode.SetValue then
+						EditMode:SetValue(id, "textColor", desired, layoutName)
+					elseif panel.info then
+						panel.info.textColor = desired
+						panel:ReapplyPayloads()
+						panel:ApplyTextStyle()
+					end
+				end,
+				isEnabled = isCustomTextColorEnabled,
+			},
+			{ name = L["Alpha"], kind = SettingType.Divider, parentId = section.text },
+			{
+				name = L["DataPanelOpacityInCombat"] or "Opacity in combat",
+				kind = SettingType.Slider,
+				field = "textAlphaInCombat",
+				allowInput = true,
+				parentId = section.text,
+				default = defaults.textAlphaInCombat,
+				minValue = 0,
+				maxValue = 100,
+				valueStep = 1,
+				formatter = function(value) return string.format("%d%%", math.floor((tonumber(value) or 0) + 0.5)) end,
+			},
+			{
+				name = L["DataPanelOpacityOutOfCombat"] or "Opacity out of combat",
+				kind = SettingType.Slider,
+				field = "textAlphaOutOfCombat",
+				allowInput = true,
+				parentId = section.text,
+				default = defaults.textAlphaOutOfCombat,
+				minValue = 0,
+				maxValue = 100,
+				valueStep = 1,
+				formatter = function(value) return string.format("%d%%", math.floor((tonumber(value) or 0) + 0.5)) end,
+			},
+		}
+	end
+
+	if SettingType and addon.EditModeAnchors and addon.DynamicAnchors then
+		local anchors, dynamic = addon.EditModeAnchors, addon.DynamicAnchors
+		local group = "dataPanelAnchor"
+		local function entry() return EditMode.frames[id] end
+		local function assignment(create)
+			-- Databars use the generic consumer registered by EditModeAnchors.
+			local consumerId = "editMode:" .. id
+			return create and dynamic:EnsureConsumerAssignment(consumerId) or dynamic:GetConsumerAssignment(consumerId)
+		end
+		local function record(create) return anchors:Store(id, create) end
+		local function dynamicEnabled()
+			local stored, rule = record(false), assignment(false)
+			return stored and stored.dynamicMode == true and rule and rule.enabled == true or false
+		end
+		local function refresh()
+			local current = entry()
+			if current then anchors:Changed(current); EditMode:ApplyLayout(id) end
+			local internal = addon.EditModeLib and addon.EditModeLib.internal
+			if internal and internal.RefreshSettingValues then internal:RefreshSettingValues() end
+		end
+		local function placement()
+			-- These controls edit the configured static anchor, not a live winner.
+			-- Resolving every radio selection would repeatedly traverse all consumers.
+			local stored = record(false)
+			local configured = stored and stored.dynamicMode == true and stored.staticAssignment or assignment(false)
+			local rule = configured and configured.enabled and (configured.profileId and dynamic:GetProfile(configured.profileId) or configured)
+			local candidate = rule and rule.candidates and rule.candidates[1]
+			return candidate and candidate.placement or EditMode:EnsureLayoutData(id), candidate
+		end
+		local function setPlacement(field, value)
+			local current = entry()
+			if not current or anchors:InCombat() then return end
+			local p, candidate = placement()
+			if candidate then
+				anchors:ChangePlacement(current, field == "point" and value or p.point, field == "relativePoint" and value or p.relativePoint,
+					field == "x" and value or p.x, field == "y" and value or p.y)
+			else
+				EditMode:SetFramePosition(id, field == "point" and value or p.point, field == "x" and value or p.x, field == "y" and value or p.y, nil, true,
+					field == "relativePoint" and value or p.relativePoint)
+				if current.onPositionChanged then current.onPositionChanged(current.frame, EditMode:GetActiveLayoutName(), EditMode:EnsureLayoutData(id)) end
+			end
+			refresh()
+		end
+		local function staticShown() return not dynamicEnabled() end
+		local enabled = {
+			name = L["Enable Dynamic Anchoring"], kind = SettingType.Checkbox, field = "dynamicAnchorEnabled", parentId = group,
+			default = false, navigationDefaultVerified = true, get = dynamicEnabled,
+			set = function(_, value)
+				local current = entry()
+				if not current or anchors:InCombat() then return end
+				local stored = record(true)
+				if value == true then
+					if stored.dynamicMode ~= true then
+						stored.staticAssignment = CopyTable(assignment(true))
+						stored.staticProfileId = stored.profileId
+					end
+					if not stored.dynamicAssignment then
+						local staticRule = stored.staticAssignment and stored.staticAssignment.profileId and dynamic:GetProfile(stored.staticAssignment.profileId)
+						stored.dynamicAssignment = { enabled = true, profileId = dynamic:CreateProfile(panel.name, staticRule) }
+					end
+					stored.assignment = CopyTable(stored.dynamicAssignment)
+					stored.assignment.enabled = true
+					stored.profileId = stored.assignment.profileId
+					stored.dynamicMode = true
+				elseif stored.dynamicMode == true then
+					stored.dynamicAssignment = CopyTable(assignment(false))
+					stored.assignment = CopyTable(stored.staticAssignment or { enabled = false })
+					stored.profileId = stored.staticProfileId
+					stored.dynamicMode = nil
+				end
+				dynamic:RefreshRaidSizeConsumerTracking()
+				refresh()
+			end,
+		}
+		settings[#settings + 1] = { name = L["Anchor"], kind = SettingType.Collapsible, id = group, defaultCollapsed = true }
+		settings[#settings + 1] = enabled
+		settings[#settings + 1] = {
+			name = L["Dynamic Anchor Profile"], kind = SettingType.Dropdown, field = "dynamicAnchorProfile", parentId = group, height = 180,
+			get = function() local rule = assignment(false); return rule and rule.profileId end,
+			set = function(_, value) local rule = assignment(true); if not rule then return end; rule.profileId = value; dynamic:RefreshRaidSizeConsumerTracking(); refresh() end,
+			generator = function(_, root, data)
+				for _, option in ipairs(dynamic:GetProfileOptions()) do
+					root:CreateRadio(option.label, function() return data.get() == option.value end, function() data.set(nil, option.value) end)
+				end
+			end,
+			isShown = dynamicEnabled, navigationHint = function() return enabled.name, nil, group end,
+			navigationReset = function()
+				local rule, stored = assignment(false), record(false)
+				if rule then rule.profileId = nil end
+				if stored then
+					stored.staticAssignment, stored.staticProfileId, stored.dynamicAssignment, stored.dynamicMode, stored.profileId = nil, nil, nil, nil, nil
+				end
+			end,
+		}
+		local function staticHint() return enabled.name, nil, group end
+		settings[#settings + 1] = {
+			name = L["EditModeAnchorTarget"], kind = SettingType.Dropdown, field = "anchorRelativeFrame", parentId = group,
+			default = "core:uiparent", navigationDefaultVerified = true, isShown = staticShown, navigationHint = staticHint, height = 240,
+			get = function() local _, candidate = placement(); return candidate and candidate.targetId or "core:uiparent" end,
+			set = function(_, target)
+				local current = entry()
+				if not current or anchors:InCombat() then return end
+				if target == "core:uiparent" then
+					anchors:Detach(current)
+				elseif anchors:SetAnchor(current, target) then
+					local undo = anchors.undo
+					anchors:ChangePlacement(current, nil, nil, 0, 0)
+					anchors.undo = undo
+				end
+				refresh()
+			end,
+			generator = function(_, root, data)
+				local current, context = entry(), {}
+				local choices, byFrame, byConsumer = {}, {}, {}
+				for _, option in ipairs(dynamic:GetTargetOptions("editMode:" .. id, context)) do
+					if not current or not anchors:WouldCycle(current, option.value, context) then
+						local frame = anchors:ResolveTarget(option.value, context)
+						if frame and issecretvalue and issecretvalue(frame) then frame = nil end
+						local consumer = anchors:TargetConsumer(option.value, context)
+						local choice = frame and byFrame[frame] or consumer and byConsumer[consumer]
+						if choice then
+							choice.aliases[option.value] = true
+							local generic, previousGeneric = option.value:sub(1, 9) == "editMode:", choice.option.value:sub(1, 9) == "editMode:"
+							if (previousGeneric and not generic) or (previousGeneric == generic and option.value < choice.option.value) then choice.option = option end
+						else
+							choice = { option = option, frame = frame, aliases = { [option.value] = true } }
+							choices[#choices + 1] = choice
+						end
+						if frame then byFrame[frame] = choice end
+						if consumer then byConsumer[consumer] = choice end
+					end
+				end
+				for _, choice in ipairs(choices) do
+					local option = choice.option
+					choice.label = option.label
+					if option.anchorContext and option.anchorContext ~= "" then choice.label = option.anchorContext .. " — " .. choice.label end
+				end
+				table.sort(choices, function(a, b)
+					local left, right = string.lower(a.label), string.lower(b.label)
+					if left == right then return a.option.value < b.option.value end
+					return left < right
+				end)
+				for _, choice in ipairs(choices) do
+					local option = choice.option
+					root:CreateRadio(choice.label, function() return choice.aliases[data.get()] == true end, function() data.set(nil, option.value) end)
+				end
+			end,
+		}
+		for _, descriptor in ipairs({ { "anchorPoint", "point", "EditModeAnchorPoint" }, { "anchorRelativePoint", "relativePoint", "EditModeAnchorRelativePoint" } }) do
+			local field, key = descriptor[1], descriptor[2]
+			settings[#settings + 1] = {
+				name = L[descriptor[3]], kind = SettingType.Dropdown, field = field, parentId = group,
+				default = "CENTER", navigationDefaultVerified = true, isShown = staticShown, navigationHint = staticHint,
+				get = function() local p = placement(); return p[key] or p.point or "CENTER" end,
+				set = function(_, value) if anchors.factors[value] then setPlacement(key, value) end end,
+				generator = function(_, root, data)
+					for _, point in ipairs(anchors.points) do
+						root:CreateRadio(anchors:PointLabel(point), function() return data.get() == point end, function() data.set(nil, point) end)
+					end
+				end,
+			}
+		end
+		for _, descriptor in ipairs({ { "anchorOffsetX", "x", "Offset X" }, { "anchorOffsetY", "y", "Offset Y" } }) do
+			local field, key = descriptor[1], descriptor[2]
+			settings[#settings + 1] = {
+				name = L[descriptor[3]], kind = SettingType.Slider, field = field, parentId = group,
+				default = 0, navigationDefaultVerified = true, minValue = -3000, maxValue = 3000, valueStep = 1, allowInput = true,
+				isShown = staticShown, navigationHint = staticHint,
+				get = function() local p = placement(); return p[key] or 0 end,
+				set = function(_, value) setPlacement(key, tonumber(value) or 0) end,
+			}
+		end
+	end
+
+	if addon.EditModeNavigationDefaults then
+		addon.EditModeNavigationDefaults.Prepare(settings, DataPanel.GetFactorySettings(panel.id, panel.name))
+	end
+	local navigationLabels = {
+		width = L["Width"], height = L["Height"], strata = L["Strata"],
+		backgroundTexture = L["Texture"], backgroundColor = L["Color"],
+		backgroundOffsetX = L["Offset X"], backgroundOffsetY = L["Offset Y"],
+		borderTexture = L["Texture"], borderColor = L["Color"], borderSize = L["Size"], borderOffset = L["Offset"],
+		fontFace = L["Font"], fontStyle = L["Font outline"],
+	}
+	for _, data in ipairs(settings or {}) do
+		if navigationLabels[data.field] then data.name = navigationLabels[data.field] end
+	end
+
+	local buttons = {
+		{
+			text = L["DataPanelRename"],
+			click = function() DataPanel:PromptRename(panel) end,
+		},
+		{
+			text = L["EditModeAnchorTitle"],
+			click = function()
+				local anchors = addon.EditModeAnchors
+				if anchors and not anchors:InCombat() then anchors:SetActive(true); anchors:SelectFrame(panel.frame) end
+			end,
+		},
+		{
+			text = DELETE_BUTTON_LABEL,
+			click = function() DataPanel:PromptDelete(panel) end,
+		},
+	}
+
+	EditMode:RegisterFrame(id, {
+		frame = panel.frame,
+		anchorAdapter = {
+			inheritSizeSettings = true,
+			prepareSize = function(axis)
+				if axis == "width" then EditMode:SetValue(id, "autoWidth", false) end
+			end,
+		},
+		title = panel.name,
+		managerCategory = "dataPanels",
+		allowDrag = function()
+			local stored = addon.EditModeAnchors and addon.EditModeAnchors:Store(id)
+			return not (stored and stored.assignment and stored.assignment.enabled == true)
+		end,
+		layoutDefaults = defaults,
+		normalizePosition = true,
+		onApply = function(_, layoutName, data)
+			if not panel._eqolEditModeHydrated then
+				panel._eqolEditModeHydrated = true
+				local record = data or {}
+				seedEditModeRecordFromPanelInfo(panel, defaults, record)
+				if EditMode and EditMode.SetFramePosition then
+					EditMode:SetFramePosition(id, record.point or "CENTER", record.x or 0, record.y or 0, layoutName)
+					return
+				end
+			end
+			panel:ApplyEditMode(data or {})
+		end,
+		onPositionChanged = function(_, _, data) panel:UpdatePositionInfo(data) end,
+		settings = settings,
+		buttons = buttons,
+		showOutsideEditMode = true,
+		enableOverlayToggle = true,
+		collapseExclusive = true,
+		showReset = false,
+		showSettingsReset = false,
+		settingsMaxHeight = 430,
+	})
+	panel.editModeRegistered = true
+	panel.editModeId = id
+end
+
+function DataPanel.SetShowOptionsHint(val)
+	addon.db = addon.db or {}
+	addon.db.dataPanelsOptions = addon.db.dataPanelsOptions or {}
+	if val then
+		addon.db.dataPanelsOptions.hideRightClickHint = nil
+	else
+		addon.db.dataPanelsOptions.hideRightClickHint = true
+	end
+end
+
+local function getMenuModifierSetting()
+	local opts = addon.db and addon.db.dataPanelsOptions
+	return (opts and opts.menuModifier) or "NONE"
+end
+
+local function isModifierDown(mod)
+	if mod == "SHIFT" then
+		return IsShiftKeyDown()
+	elseif mod == "CTRL" then
+		return IsControlKeyDown()
+	elseif mod == "ALT" then
+		return IsAltKeyDown()
+	end
+	return true
+end
+
+function DataPanel.GetMenuModifier() return getMenuModifierSetting() end
+
+function DataPanel.SetMenuModifier(mod)
+	addon.db = addon.db or {}
+	addon.db.dataPanelsOptions = addon.db.dataPanelsOptions or {}
+	if not mod or not (mod == "NONE" or mod == "SHIFT" or mod == "CTRL" or mod == "ALT") then mod = "NONE" end
+	addon.db.dataPanelsOptions.menuModifier = mod
+end
+
+function DataPanel.IsMenuModifierActive(btn)
+	if btn and btn ~= "RightButton" then return true end
+	local mod = getMenuModifierSetting()
+	if mod == "NONE" then return true end
+	return isModifierDown(mod)
+end
+
+function DataPanel.Rename(id, name)
+	local panel = panels[tostring(id)]
+	if not panel or type(name) ~= "string" then return false end
+	if InCombatLockdown and InCombatLockdown() then
+		if UIErrorsFrame and ERR_NOT_IN_COMBAT then UIErrorsFrame:AddMessage(ERR_NOT_IN_COMBAT) end
+		return false
+	end
+	name = strtrim(name)
+	if name == "" then return false end
+	-- Names must not collide with another panel's name or legacy name-based ID.
+	for otherId, info in pairs(addon.db.dataPanels) do
+		if tostring(otherId) ~= tostring(panel.id) and (tostring(otherId) == name or info.name == name) then
+			if UIErrorsFrame then UIErrorsFrame:AddMessage(L["DataPanelNameExists"], 1, 0, 0) end
+			return false
+		end
+	end
+	panel.name = name
+	panel.info.name = name
+	if EditMode and panel.editModeId then EditMode:SetFrameTitle(panel.editModeId, name) end
+	return true
+end
+
+function DataPanel:PromptRename(target)
+	local panel = type(target) == "table" and target or panels[tostring(target)]
+	if not panel or not panel.id then return end
+	if InCombatLockdown and InCombatLockdown() then
+		if UIErrorsFrame and ERR_NOT_IN_COMBAT then UIErrorsFrame:AddMessage(ERR_NOT_IN_COMBAT) end
+		return
+	end
+	StaticPopupDialogs["EQOL_RENAME_DATAPANEL"] = StaticPopupDialogs["EQOL_RENAME_DATAPANEL"] or {
+		text = L["Panel Name"],
+		hasEditBox = true,
+		EditBoxOnEscapePressed = addon.functions.CancelPopupOnEscape,
+		button1 = L["DataPanelRename"],
+		button2 = CANCEL,
+		timeout = 0,
+		whileDead = true,
+		hideOnEscape = true,
+		preferredIndex = 3,
+		OnShow = function(popup, id)
+			local current = panels[tostring(id)]
+			local editBox = popup.editBox or popup:GetEditBox()
+			editBox:SetText(current and current.name or "")
+			editBox:SetFocus()
+			editBox:HighlightText()
+		end,
+		OnAccept = function(popup, id)
+			if not panels[tostring(id)] then return end
+			local editBox = popup.editBox or popup:GetEditBox()
+			return not DataPanel.Rename(id, editBox:GetText())
+		end,
+		EditBoxOnEnterPressed = addon.functions.AcceptPopupOnEnter,
+	}
+	StaticPopup_Show("EQOL_RENAME_DATAPANEL", nil, nil, panel.id)
+end
+
+function DataPanel:PromptDelete(target)
+	local panel = target
+	if type(panel) ~= "table" or not panel.id then panel = panels[tostring(target)] end
+	if not panel or not panel.id then return end
+	if InCombatLockdown and InCombatLockdown() then
+		if UIErrorsFrame and ERR_NOT_IN_COMBAT then UIErrorsFrame:AddMessage(ERR_NOT_IN_COMBAT) end
+		return
+	end
+	local dialog = StaticPopup_Show(DELETE_PANEL_POPUP, panel.name or panel.id)
+	if dialog then dialog.data = panel.id end
+end
+
+local function ensureSettings(id, name)
+	id = tostring(id)
+	addon.db = addon.db or {}
+	addon.db.dataPanels = addon.db.dataPanels or {}
+	local info = addon.db.dataPanels[id] or addon.db.dataPanels[tonumber(id)]
+	if not info then
+		info = DataPanel.GetFactorySettings(id, name)
+	else
+		info.streams = info.streams or {}
+		info.streamSet = info.streamSet or {}
+		info.name = info.name or name or ((L["Panel"] or "Panel") .. " " .. id)
+		if info.hideBorder == nil then
+			if info.noBorder ~= nil then
+				info.hideBorder = info.noBorder and true or false
+				if info.noBorder then
+					info.backgroundColor = normalizeColorTable(info.backgroundColor, DEFAULT_BACKDROP_COLOR)
+					info.backgroundColor.a = 0
+				end
+			else
+				info.hideBorder = false
+			end
+		end
+		info.noBorder = nil
+		if info.clickThrough == nil then info.clickThrough = false end
+		info.strata = normalizeStrata(info.strata, "MEDIUM")
+		info.contentAnchor = normalizeContentAnchor(info.contentAnchor, "LEFT")
+		info.streamGap = normalizeStreamGap(info.streamGap, DEFAULT_STREAM_GAP)
+		info.fontStyle = normalizePanelFontStyle(info.fontStyle, DEFAULT_FONT_STYLE, info.fontOutline, info.fontShadow)
+		info.fontOutline = nil
+		info.fontShadow = nil
+		info.streamFontScale = normalizeStreamFontScale(info.streamFontScale, DEFAULT_STREAM_FONT_SCALE)
+		if info.useClassTextColor == nil then info.useClassTextColor = false end
+		if info.useCustomTextColor == nil then info.useCustomTextColor = false end
+		info.textColor = normalizeColorTable(info.textColor, DEFAULT_TEXT_COLOR)
+		info.fontFace = normalizeFontSetting(info.fontFace, globalFontConfigKey())
+		info.backgroundTexture = normalizeMediaKey(info.backgroundTexture, "DEFAULT")
+		info.backgroundUseCustomTexture = info.backgroundUseCustomTexture == true
+		info.backgroundCustomTexture = CustomTexture.Trim(info.backgroundCustomTexture)
+		info.backgroundOffsetX = CustomTexture.NormalizeOffset(info.backgroundOffsetX, 0)
+		info.backgroundOffsetY = CustomTexture.NormalizeOffset(info.backgroundOffsetY, 0)
+		info.backgroundSizeOffsetX = CustomTexture.NormalizeOffset(info.backgroundSizeOffsetX, 0)
+		info.backgroundSizeOffsetY = CustomTexture.NormalizeOffset(info.backgroundSizeOffsetY, 0)
+		info.backgroundColor = normalizeColorTable(info.backgroundColor, DEFAULT_BACKDROP_COLOR)
+		info.borderTexture = normalizeMediaKey(info.borderTexture, "DEFAULT")
+		info.borderColor = normalizeColorTable(info.borderColor, DEFAULT_BORDER_COLOR)
+		info.borderSize = normalizeBorderSize(info.borderSize, DEFAULT_BORDER_SIZE)
+		info.borderOffset = normalizeBorderOffset(info.borderOffset, DEFAULT_BORDER_OFFSET)
+		if info.showTooltips == nil then info.showTooltips = true end
+		info.tooltipGrowth = normalizeTooltipGrowth(info.tooltipGrowth, "AUTO")
+		info.textAlphaInCombat = normalizePercent(info.textAlphaInCombat, DEFAULT_TEXT_ALPHA)
+		info.textAlphaOutOfCombat = normalizePercent(info.textAlphaOutOfCombat, info.textAlphaInCombat)
+	end
+	info.width = normalizePanelWidth(info.width, 300)
+	info.height = normalizePanelHeight(info.height, 40)
+	info.autoWidth = info.autoWidth == true
+
+	addon.db.dataPanels[id] = info
+	if addon.db.dataPanels[tonumber(id)] then addon.db.dataPanels[tonumber(id)] = nil end
+
+	info.streams, info.streamSet = sanitizeStreamList(info.streams)
+
+	return info
+end
+
+local function round2(v) return math.floor(v * 100 + 0.5) / 100 end
+
+local function savePosition(frame, id)
+	id = tostring(id)
+	-- Do not recreate database entries when saving position.
+	-- Only persist if the panel still exists in the DB.
+	if not addon.db or not addon.db.dataPanels or not addon.db.dataPanels[id] then return end
+	local info = addon.db.dataPanels[id]
+	info.point, _, _, info.x, info.y = frame:GetPoint()
+	info.width = normalizePanelWidth(round2(frame:GetWidth()), info.width or 300)
+	info.height = normalizePanelHeight(round2(frame:GetHeight()), info.height or 40)
+	local panel = panels[id]
+	if panel then
+		panel:SyncEditModePosition(info.point, info.x, info.y)
+		panel:SyncEditModeValue("width", info.width)
+		panel:SyncEditModeValue("height", info.height)
+	end
+end
+
+function DataPanel.Create(id, name, existingOnly)
+	addon.db = addon.db or {}
+	addon.db.dataPanels = addon.db.dataPanels or {}
+	addon.db.dataPanelsOptions = addon.db.dataPanelsOptions or {}
+	addon.db.dataPanelsOptions.menuModifier = addon.db.dataPanelsOptions.menuModifier or "NONE"
+	if not addon.db.nextPanelId then
+		addon.db.nextPanelId = 1
+		for k in pairs(addon.db.dataPanels) do
+			local num = tonumber(k)
+			if num and num >= addon.db.nextPanelId then addon.db.nextPanelId = num + 1 end
+		end
+	end
+	if not id then
+		id = tostring(addon.db.nextPanelId)
+		addon.db.nextPanelId = addon.db.nextPanelId + 1
+	else
+		id = tostring(id)
+	end
+	if panels[id] then return panels[id] end
+
+	-- If we are asked to only use existing panels, do not implicitly
+	-- create a new database entry for unknown IDs.
+	if existingOnly and not addon.db.dataPanels[id] and not addon.db.dataPanels[tonumber(id)] then return nil end
+
+	local info = ensureSettings(id, name)
+	local frame = CreateFrame("Frame", addonName .. "DataPanel" .. id, UIParent, "BackdropTemplate")
+	frame:SetSize(info.width, info.height)
+	frame:SetPoint(info.point, info.x, info.y)
+	frame:SetMovable(true)
+	frame:SetResizable(true)
+	frame:EnableMouse(true)
+	local initialStrata = normalizeStrata(info.strata, frame:GetFrameStrata())
+	info.strata = initialStrata
+	if frame:GetFrameStrata() ~= initialStrata then frame:SetFrameStrata(initialStrata) end
+
+	local panel = { frame = frame, id = id, name = info.name, streams = {}, order = {}, info = info }
+
+	frame:SetScript("OnSizeChanged", function(f)
+		savePosition(f, id)
+		for _, data in pairs(panel.streams) do
+			data.button:SetHeight(f:GetHeight())
+		end
+		if panel.Refresh then panel:Refresh() end
+	end)
+
+	function panel:ApplyBorder()
+		local i = self.info
+		if self.frame and self.frame.SetBackdrop then self.frame:SetBackdrop(nil) end
+		if not self.frame.bg or not self.frame.border then
+			local level = (self.frame and self.frame.GetFrameLevel and self.frame:GetFrameLevel()) or 0
+			local borderLevel = math.max(level - 1, 0)
+			local bgLevel = math.max(borderLevel - 1, 0)
+			local bgFrame = CreateFrame("Frame", nil, self.frame, "BackdropTemplate")
+			bgFrame:SetFrameLevel(bgLevel)
+			bgFrame:SetAllPoints(self.frame)
+			self.frame.bg = bgFrame
+			local borderFrame = CreateFrame("Frame", nil, self.frame, "BackdropTemplate")
+			borderFrame:SetFrameLevel(borderLevel)
+			self.frame.border = borderFrame
+		end
+		local bgFrame = self.frame.bg
+		local borderFrame = self.frame.border
+		if bgFrame and bgFrame.SetBackdrop then
+			local customTextureKind, customTexture = CustomTexture.GetInfo(i and i.backgroundUseCustomTexture == true and i.backgroundCustomTexture or nil)
+			local offsetX = CustomTexture.NormalizeOffset(i and i.backgroundOffsetX, 0)
+			local offsetY = CustomTexture.NormalizeOffset(i and i.backgroundOffsetY, 0)
+			local sizeOffsetX = CustomTexture.NormalizeOffset(i and i.backgroundSizeOffsetX, 0)
+			local sizeOffsetY = CustomTexture.NormalizeOffset(i and i.backgroundSizeOffsetY, 0)
+			if customTextureKind then
+				bgFrame:SetBackdrop(nil)
+				if not bgFrame.customBackground then
+					local texture = bgFrame:CreateTexture(nil, "BACKGROUND")
+					bgFrame.customBackground = texture
+				end
+				bgFrame.customBackground:ClearAllPoints()
+				bgFrame.customBackground:SetPoint("TOPLEFT", bgFrame, "TOPLEFT", offsetX - sizeOffsetX, offsetY + sizeOffsetY)
+				bgFrame.customBackground:SetPoint("BOTTOMRIGHT", bgFrame, "BOTTOMRIGHT", offsetX + sizeOffsetX, offsetY - sizeOffsetY)
+				CustomTexture.Apply(bgFrame.customBackground, customTextureKind, customTexture)
+				bgFrame.customBackground:Show()
+			else
+				bgFrame:SetBackdrop(nil)
+				if not bgFrame.customBackground then
+					local texture = bgFrame:CreateTexture(nil, "BACKGROUND")
+					bgFrame.customBackground = texture
+				end
+				bgFrame.customBackground:ClearAllPoints()
+				bgFrame.customBackground:SetPoint("TOPLEFT", bgFrame, "TOPLEFT", offsetX + BACKDROP_INSET - sizeOffsetX, offsetY - BACKDROP_INSET + sizeOffsetY)
+				bgFrame.customBackground:SetPoint("BOTTOMRIGHT", bgFrame, "BOTTOMRIGHT", offsetX - BACKDROP_INSET + sizeOffsetX, offsetY + BACKDROP_INSET - sizeOffsetY)
+				CustomTexture.Apply(bgFrame.customBackground, "texture", CustomTexture.ResolveBackground(i and i.backgroundTexture))
+				bgFrame.customBackground:Show()
+			end
+			if bgFrame.SetBackdropBorderColor then bgFrame:SetBackdropBorderColor(0, 0, 0, 0) end
+			bgFrame:Show()
+		end
+		if borderFrame and borderFrame.SetBackdrop then
+			if i and i.hideBorder then
+				borderFrame:Hide()
+			else
+				local borderSize = normalizeBorderSize(i and i.borderSize, DEFAULT_BORDER_SIZE)
+				local borderOffset = normalizeBorderOffset(i and i.borderOffset, DEFAULT_BORDER_OFFSET)
+				borderFrame:SetBackdrop({
+					bgFile = nil,
+					edgeFile = resolveBorderTexture(i and i.borderTexture),
+					tile = false,
+					edgeSize = borderSize,
+					insets = { left = 0, right = 0, top = 0, bottom = 0 },
+				})
+				if borderFrame.SetBackdropColor then borderFrame:SetBackdropColor(0, 0, 0, 0) end
+				borderFrame:ClearAllPoints()
+				borderFrame:SetPoint("TOPLEFT", self.frame, "TOPLEFT", -borderOffset, borderOffset)
+				borderFrame:SetPoint("BOTTOMRIGHT", self.frame, "BOTTOMRIGHT", borderOffset, -borderOffset)
+				borderFrame:Show()
+			end
+		end
+		self:ApplyBackdropAlpha(InCombatLockdown and InCombatLockdown() or false)
+		self:SyncEditModeValue("hideBorder", i and i.hideBorder or false)
+		self:SyncEditModeValue("backgroundTexture", i and i.backgroundTexture or "DEFAULT")
+		self:SyncEditModeValue("backgroundUseCustomTexture", i and i.backgroundUseCustomTexture == true)
+		self:SyncEditModeValue("backgroundCustomTexture", i and i.backgroundCustomTexture or "")
+		self:SyncEditModeValue("backgroundOffsetX", i and i.backgroundOffsetX or 0)
+		self:SyncEditModeValue("backgroundOffsetY", i and i.backgroundOffsetY or 0)
+		self:SyncEditModeValue("backgroundSizeOffsetX", i and i.backgroundSizeOffsetX or 0)
+		self:SyncEditModeValue("backgroundSizeOffsetY", i and i.backgroundSizeOffsetY or 0)
+		self:SyncEditModeValue("backgroundColor", i and i.backgroundColor or DEFAULT_BACKDROP_COLOR)
+		self:SyncEditModeValue("borderTexture", i and i.borderTexture or "DEFAULT")
+		self:SyncEditModeValue("borderColor", i and i.borderColor or DEFAULT_BORDER_COLOR)
+		self:SyncEditModeValue("borderSize", i and i.borderSize or DEFAULT_BORDER_SIZE)
+		self:SyncEditModeValue("borderOffset", i and i.borderOffset or DEFAULT_BORDER_OFFSET)
+	end
+
+	function panel:ApplyClickThroughToData(data)
+		local enabled = not (self.info and self.info.clickThrough)
+		if data and data.button and data.button.EnableMouse then data.button:EnableMouse(enabled) end
+		if data and data.parts then
+			for _, child in ipairs(data.parts) do
+				if child and child.EnableMouse then child:EnableMouse(enabled) end
+			end
+		end
+	end
+
+	function panel:ApplyClickThrough()
+		local enabled = not (self.info and self.info.clickThrough)
+		if self.frame and self.frame.EnableMouse then self.frame:EnableMouse(enabled) end
+		for _, data in pairs(self.streams) do
+			self:ApplyClickThroughToData(data)
+		end
+		self:SyncEditModeValue("clickThrough", self.info and self.info.clickThrough or false)
+	end
+
+	function panel:ApplyStrata(strata)
+		local fallback = (self.info and self.info.strata) or (self.frame and self.frame:GetFrameStrata())
+		local normalized = normalizeStrata(strata, fallback)
+		if self.info then self.info.strata = normalized end
+		if self.frame and self.frame:GetFrameStrata() ~= normalized then self.frame:SetFrameStrata(normalized) end
+		updateSelectionStrata(self, normalized)
+		self:SyncEditModeValue("strata", normalized)
+	end
+
+	function panel:GetFontStyleChoice()
+		return normalizePanelFontStyle(self.info and self.info.fontStyle, DEFAULT_FONT_STYLE, self.info and self.info.fontOutline, self.info and self.info.fontShadow)
+	end
+
+	function panel:GetResolvedFontStyleData()
+		return resolvePanelFontStyle(self.info and self.info.fontStyle, DEFAULT_FONT_STYLE, self.info and self.info.fontOutline, self.info and self.info.fontShadow)
+	end
+
+	function panel:GetFontFlags()
+		local _, flags = self:GetResolvedFontStyleData()
+		return flags or ""
+	end
+
+	function panel:HasFontShadow()
+		local _, _, hasShadow = self:GetResolvedFontStyleData()
+		return hasShadow == true
+	end
+
+	function panel:GetFontFace() return resolveFontFace(self.info and self.info.fontFace, defaultFontFace()) end
+
+	function panel:ApplyFontStyle(fontString, font, size)
+		if not fontString or not fontString.SetFont or not size then return end
+		local styleChoice = self:GetFontStyleChoice()
+		local applied = false
+		if addon.functions and addon.functions.ApplyFontString then
+			applied = addon.functions.ApplyFontString(fontString, font or self:GetFontFace(), size, styleChoice, defaultFontFace(), DEFAULT_FONT_STYLE) ~= false
+		else
+			local targetFont = resolveFontFace(font, self:GetFontFace())
+			if not targetFont then return end
+			local fontFlags = self:GetFontFlags()
+			local ok = fontString:SetFont(targetFont, size, fontFlags)
+			if ok == false then
+				local fallback = resolveFontFace(defaultFontFace(), STANDARD_TEXT_FONT)
+				local fallbackOk
+				if fallback then fallbackOk = fontString:SetFont(fallback, size, fontFlags) end
+				if fallbackOk == false and STANDARD_TEXT_FONT and STANDARD_TEXT_FONT ~= fallback then fontString:SetFont(STANDARD_TEXT_FONT, size, fontFlags) end
+			end
+			if fontString.SetShadowColor then
+				if self:HasFontShadow() then
+					fontString:SetShadowColor(0, 0, 0, SHADOW_ALPHA)
+					fontString:SetShadowOffset(SHADOW_OFFSET_X, SHADOW_OFFSET_Y)
+				else
+					fontString:SetShadowColor(0, 0, 0, 0)
+					fontString:SetShadowOffset(0, 0)
+				end
+			end
+			applied = true
+		end
+		if not applied then return end
+		-- Force an immediate redraw for style-only changes (font face/size/flags/shadow).
+		if fontString.GetText and fontString.SetText then
+			local currentText = fontString:GetText()
+			if currentText ~= nil then fontString:SetText(currentText) end
+		end
+	end
+
+	function panel:GetStreamFontScale() return normalizeStreamFontScale(self.info and self.info.streamFontScale, DEFAULT_STREAM_FONT_SCALE) end
+
+	function panel:GetClassTextColorHex()
+		if not (self.info and self.info.useClassTextColor) then return nil end
+		local classToken = UnitClass and select(2, UnitClass("player"))
+		if not classToken then return nil end
+		local color = (CUSTOM_CLASS_COLORS or RAID_CLASS_COLORS) and (CUSTOM_CLASS_COLORS or RAID_CLASS_COLORS)[classToken]
+		if not color then return nil end
+		return string.format("%02x%02x%02x", math.floor((color.r or 1) * 255 + 0.5), math.floor((color.g or 1) * 255 + 0.5), math.floor((color.b or 1) * 255 + 0.5))
+	end
+
+	function panel:ApplyClassTextColor(text, skip)
+		if skip or isSecretValue(text) or type(text) ~= "string" or text == "" then return text end
+		local hex = self:GetClassTextColorHex()
+		if not hex and self.info and self.info.useCustomTextColor then
+			local color = self.info.textColor
+			local r, g, b = 1, 1, 1
+			if type(color) == "table" then
+				r = color.r or color[1] or 1
+				g = color.g or color[2] or 1
+				b = color.b or color[3] or 1
+			end
+			hex = string.format("%02x%02x%02x", math.floor(r * 255 + 0.5), math.floor(g * 255 + 0.5), math.floor(b * 255 + 0.5))
+		end
+		if not hex then return text end
+		return "|cff" .. hex .. text .. "|r"
+	end
+
+	function panel:ApplyStreamFontScale(size)
+		local baseSize = tonumber(size) or 14
+		local scale = self:GetStreamFontScale() / 100
+		return math.max(6, math.floor(baseSize * scale + 0.5))
+	end
+
+	function panel:ReapplyPayloads()
+		for _, data in pairs(self.streams) do
+			if data and data.applyPayload and data.lastPayload then data.applyPayload(data.lastPayload, true) end
+		end
+	end
+
+	function panel:GetTextAlpha(inCombat)
+		local info = self.info or {}
+		local value = (inCombat or false) and info.textAlphaInCombat or info.textAlphaOutOfCombat
+		return normalizePercent(value, DEFAULT_TEXT_ALPHA) / 100
+	end
+
+	function panel:ApplyBackdropAlpha(inCombat)
+		if not self.frame then return end
+		local bgFrame = self.frame.bg
+		local borderFrame = self.frame.border
+		if not bgFrame or not borderFrame then return end
+		local alpha = self:GetTextAlpha(inCombat)
+		local bg = normalizeColorTable(self.info and self.info.backgroundColor, DEFAULT_BACKDROP_COLOR)
+		local bc = normalizeColorTable(self.info and self.info.borderColor, DEFAULT_BORDER_COLOR)
+		if bgFrame.SetBackdropColor then bgFrame:SetBackdropColor(bg.r or 0, bg.g or 0, bg.b or 0, (bg.a or DEFAULT_BACKDROP_ALPHA) * alpha) end
+		if bgFrame.customBackground and bgFrame.customBackground.SetVertexColor then bgFrame.customBackground:SetVertexColor(bg.r or 0, bg.g or 0, bg.b or 0, (bg.a or DEFAULT_BACKDROP_ALPHA) * alpha) end
+		if borderFrame.SetBackdropBorderColor then borderFrame:SetBackdropBorderColor(bc.r or 1, bc.g or 1, bc.b or 1, (bc.a or DEFAULT_BORDER_ALPHA) * alpha) end
+	end
+
+	function panel:ApplyAlpha(inCombat)
+		local alpha = self:GetTextAlpha(inCombat)
+		for _, data in pairs(self.streams) do
+			if data and data.button and data.button.SetAlpha then data.button:SetAlpha(alpha) end
+		end
+		self:ApplyBackdropAlpha(inCombat)
+	end
+
+	function panel:ApplyTextStyle()
+		local font = self:GetFontFace()
+		local _, fontFlags, fontShadow = self:GetResolvedFontStyleData()
+		local changed = false
+
+		for _, data in pairs(self.streams) do
+			if data.text then
+				local _, size = data.text:GetFont()
+				if font and size then
+					self:ApplyFontStyle(data.text, font, size)
+					data.fontFlags = fontFlags
+					data.fontShadow = fontShadow
+				end
+			end
+
+			if data.parts then
+				data.partsFont = font
+				data.partsFontFlags = fontFlags
+				data.partsFontShadow = fontShadow
+				local total = 0
+				local visibleCount = 0
+				for _, child in ipairs(data.parts) do
+					if child and child.text then
+						local _, size = child.text:GetFont()
+						if font and size then self:ApplyFontStyle(child.text, font, size) end
+						if child:IsShown() and not child.usingIcons then
+							local width = child.text:GetStringWidth()
+							if isSecretValue(width) then
+								child.secretWidthPending = true
+								local fallbackWidth = child.lastWidth or 0
+								if fallbackWidth > 0 then child:SetWidth(fallbackWidth) end
+							elseif child.secretWidthPending or width ~= child.lastWidth then
+								child.secretWidthPending = nil
+								child.lastWidth = width
+								child:SetWidth(width)
+							end
+						end
+					end
+					if child and child:IsShown() then
+						local width = child.lastWidth or 0
+						if visibleCount > 0 then total = total + 5 end
+						total = total + width
+						visibleCount = visibleCount + 1
+					end
+				end
+				if data.usingParts and total ~= data.lastWidth then
+					data.lastWidth = total
+					if data.button then data.button:SetWidth(total) end
+					changed = true
+				end
+			end
+
+			if not data.usingParts and data.text then
+				local currentText = data.text:GetText()
+				local width = data.text:GetStringWidth()
+				if isSecretValue(width) then
+					data.secretWidthPending = true
+					local fallbackWidth = data.lastWidth or 0
+					if fallbackWidth <= 0 and self.frame and self.frame.GetWidth then fallbackWidth = self.frame:GetWidth() or 0 end
+					if data.button and fallbackWidth > 0 then data.button:SetWidth(fallbackWidth) end
+				else
+					local minWidth = 0
+					if type(data.minWidthText) == "string" and data.minWidthText ~= "" then
+						data.text:SetText(data.minWidthText)
+						minWidth = data.text:GetStringWidth()
+						data.text:SetText(currentText or "")
+						if isSecretValue(minWidth) then minWidth = 0 end
+					end
+					if minWidth > width then width = minWidth end
+					if data.secretWidthPending or width ~= data.lastWidth then
+						data.secretWidthPending = nil
+						data.lastWidth = width
+						if data.button then data.button:SetWidth(width) end
+						changed = true
+					end
+				end
+			end
+		end
+
+		if changed then self:Refresh() end
+	end
+
+	function panel:ScheduleTextReflow()
+		if self._eqolTextReflowScheduled then return end
+		if not C_Timer or not C_Timer.After then return end
+		self._eqolTextReflowScheduled = true
+		C_Timer.After(0.05, function()
+			if panels[id] ~= panel then return end
+			panel._eqolTextReflowScheduled = nil
+			if panel.ApplyTextStyle then panel:ApplyTextStyle() end
+		end)
+	end
+
+	function panel:SyncEditModeValue(field, value)
+		if not EditMode or not self.editModeId or self.suspendEditSync or self.applyingFromEditMode then return end
+		self.suspendEditSync = true
+		if
+			field == "width"
+			or field == "autoWidth"
+			or field == "height"
+			or field == "hideBorder"
+			or field == "clickThrough"
+			or field == "streams"
+			or field == "strata"
+			or field == "contentAnchor"
+			or field == "streamGap"
+			or field == "fontFace"
+			or field == "fontStyle"
+			or field == "streamFontScale"
+			or field == "useClassTextColor"
+			or field == "useCustomTextColor"
+			or field == "textColor"
+			or field == "showTooltips"
+			or field == "tooltipGrowth"
+			or field == "textAlphaInCombat"
+			or field == "textAlphaOutOfCombat"
+			or field == "backgroundTexture"
+			or field == "backgroundUseCustomTexture"
+			or field == "backgroundCustomTexture"
+			or field == "backgroundOffsetX"
+			or field == "backgroundOffsetY"
+			or field == "backgroundSizeOffsetX"
+			or field == "backgroundSizeOffsetY"
+			or field == "backgroundColor"
+			or field == "borderTexture"
+			or field == "borderColor"
+			or field == "borderSize"
+			or field == "borderOffset"
+		then
+			EditMode:SetValue(self.editModeId, field, value)
+		end
+		self.suspendEditSync = nil
+	end
+
+	function panel:SyncEditModePosition(point, x, y)
+		if not EditMode or not self.editModeId or self.suspendEditSync then return end
+		self.suspendEditSync = true
+		EditMode:SetFramePosition(self.editModeId, point, x, y)
+		self.suspendEditSync = nil
+	end
+
+	function panel:SyncEditModeStreams()
+		if not EditMode or not self.editModeId then return end
+		self:SyncEditModeValue("streams", copyList(self.info.streams))
+	end
+
+	function panel:SyncEditModeStrata()
+		if not EditMode or not self.editModeId then return end
+		self:SyncEditModeValue("strata", self.info and self.info.strata or "MEDIUM")
+	end
+
+	function panel:UpdatePositionInfo(data)
+		if not data then return end
+		local info = self.info
+		if not info then return end
+		if data.point then info.point = data.point end
+		if data.x then info.x = data.x end
+		if data.y then info.y = data.y end
+	end
+
+	function panel:ApplyStreams(streamList)
+		self.suspendEditSync = true
+		local configured, desired = sanitizeStreamList(streamList)
+		local removeList = {}
+		for existing in pairs(self.streams) do
+			if not desired[existing] then removeList[#removeList + 1] = existing end
+		end
+		for _, name in ipairs(removeList) do
+			self:RemoveStream(name)
+		end
+		for _, name in ipairs(configured) do
+			if isStreamAvailable(name) and not self.streams[name] then self:AddStream(name) end
+		end
+		self.order = {}
+		-- Preserve configured-but-missing streams so external LDB providers can reattach later.
+		self.info.streams = configured
+		self.info.streamSet = desired
+		for _, name in ipairs(configured) do
+			if self.streams[name] then self.order[#self.order + 1] = name end
+		end
+		self:Refresh()
+		self.suspendEditSync = nil
+		if not self.applyingFromEditMode then self:SyncEditModeStreams() end
+	end
+
+	function panel:ApplyEditMode(data)
+		self.suspendEditSync = true
+		local info = self.info
+		local alphaChanged = false
+		local fontStyleChanged = false
+		local fontFaceChanged = false
+		local payloadStyleChanged = false
+		local backdropChanged = false
+		local backdropColorChanged = false
+		local layoutChanged = false
+		if data.width then
+			info.width = normalizePanelWidth(round2(data.width), info.width or 300)
+			if info.autoWidth ~= true then self.frame:SetWidth(info.width) end
+		end
+		if data.autoWidth ~= nil then
+			local desired = data.autoWidth == true
+			if info.autoWidth ~= desired then
+				info.autoWidth = desired
+				layoutChanged = true
+			end
+		end
+		if data.height then
+			info.height = normalizePanelHeight(round2(data.height), info.height or 40)
+			self.frame:SetHeight(info.height)
+		end
+		if data.hideBorder ~= nil then
+			info.hideBorder = data.hideBorder and true or false
+			self:ApplyBorder()
+		end
+		if data.backgroundTexture ~= nil then
+			local desired = normalizeMediaKey(data.backgroundTexture, "DEFAULT")
+			if info.backgroundTexture ~= desired then
+				info.backgroundTexture = desired
+				backdropChanged = true
+			end
+		end
+		if data.backgroundUseCustomTexture ~= nil then
+			local desired = data.backgroundUseCustomTexture == true
+			if info.backgroundUseCustomTexture ~= desired then
+				info.backgroundUseCustomTexture = desired
+				backdropChanged = true
+			end
+		end
+		if data.backgroundCustomTexture ~= nil then
+			local desired = CustomTexture.Trim(data.backgroundCustomTexture)
+			if info.backgroundCustomTexture ~= desired then
+				info.backgroundCustomTexture = desired
+				backdropChanged = true
+			end
+		end
+		if data.backgroundOffsetX ~= nil then
+			local desired = CustomTexture.NormalizeOffset(data.backgroundOffsetX, info.backgroundOffsetX)
+			if info.backgroundOffsetX ~= desired then
+				info.backgroundOffsetX = desired
+				backdropChanged = true
+			end
+		end
+		if data.backgroundOffsetY ~= nil then
+			local desired = CustomTexture.NormalizeOffset(data.backgroundOffsetY, info.backgroundOffsetY)
+			if info.backgroundOffsetY ~= desired then
+				info.backgroundOffsetY = desired
+				backdropChanged = true
+			end
+		end
+		if data.backgroundSizeOffsetX ~= nil then
+			local desired = CustomTexture.NormalizeOffset(data.backgroundSizeOffsetX, info.backgroundSizeOffsetX)
+			if info.backgroundSizeOffsetX ~= desired then
+				info.backgroundSizeOffsetX = desired
+				backdropChanged = true
+			end
+		end
+		if data.backgroundSizeOffsetY ~= nil then
+			local desired = CustomTexture.NormalizeOffset(data.backgroundSizeOffsetY, info.backgroundSizeOffsetY)
+			if info.backgroundSizeOffsetY ~= desired then
+				info.backgroundSizeOffsetY = desired
+				backdropChanged = true
+			end
+		end
+		if data.borderTexture ~= nil then
+			local desired = normalizeMediaKey(data.borderTexture, "DEFAULT")
+			if info.borderTexture ~= desired then
+				info.borderTexture = desired
+				backdropChanged = true
+			end
+		end
+		if data.borderSize ~= nil then
+			local desired = normalizeBorderSize(data.borderSize, info.borderSize)
+			if info.borderSize ~= desired then
+				info.borderSize = desired
+				backdropChanged = true
+			end
+		end
+		if data.borderOffset ~= nil then
+			local desired = normalizeBorderOffset(data.borderOffset, info.borderOffset)
+			if info.borderOffset ~= desired then
+				info.borderOffset = desired
+				backdropChanged = true
+			end
+		end
+		if data.backgroundColor ~= nil then
+			local desired = normalizeColorTable(data.backgroundColor, DEFAULT_BACKDROP_COLOR)
+			if not colorsEqual(info.backgroundColor, desired) then
+				info.backgroundColor = desired
+				backdropColorChanged = true
+			end
+		end
+		if data.borderColor ~= nil then
+			local desired = normalizeColorTable(data.borderColor, DEFAULT_BORDER_COLOR)
+			if not colorsEqual(info.borderColor, desired) then
+				info.borderColor = desired
+				backdropColorChanged = true
+			end
+		end
+		if data.clickThrough ~= nil then
+			local desired = data.clickThrough and true or false
+			if info.clickThrough ~= desired then
+				info.clickThrough = desired
+				self:ApplyClickThrough()
+			end
+		end
+		if data.strata then self:ApplyStrata(data.strata) end
+		if data.contentAnchor then
+			local anchor = normalizeContentAnchor(data.contentAnchor, info.contentAnchor)
+			if info.contentAnchor ~= anchor then
+				info.contentAnchor = anchor
+				layoutChanged = true
+			end
+		end
+		if data.streamGap ~= nil then
+			local value = normalizeStreamGap(data.streamGap, info.streamGap)
+			if info.streamGap ~= value then
+				info.streamGap = value
+				layoutChanged = true
+			end
+		end
+		if data.fontFace ~= nil then
+			local desired = normalizeFontSetting(data.fontFace, info.fontFace or globalFontConfigKey())
+			if info.fontFace ~= desired then
+				info.fontFace = desired
+				fontFaceChanged = true
+			end
+		end
+		if data.fontStyle ~= nil or data.fontOutline ~= nil or data.fontShadow ~= nil then
+			local desired = normalizePanelFontStyle(data.fontStyle, info.fontStyle or DEFAULT_FONT_STYLE, data.fontOutline, data.fontShadow)
+			if info.fontStyle ~= desired then
+				info.fontStyle = desired
+				fontStyleChanged = true
+			end
+			info.fontOutline = nil
+			info.fontShadow = nil
+		end
+		if data.streamFontScale ~= nil then
+			local desired = normalizeStreamFontScale(data.streamFontScale, info.streamFontScale)
+			if info.streamFontScale ~= desired then
+				info.streamFontScale = desired
+				payloadStyleChanged = true
+			end
+		end
+		if data.useClassTextColor ~= nil then
+			local desired = data.useClassTextColor and true or false
+			if info.useClassTextColor ~= desired then
+				info.useClassTextColor = desired
+				payloadStyleChanged = true
+			end
+		end
+		if data.useCustomTextColor ~= nil then
+			local desired = data.useCustomTextColor and true or false
+			if info.useCustomTextColor ~= desired then
+				info.useCustomTextColor = desired
+				payloadStyleChanged = true
+			end
+		end
+		if data.textColor ~= nil then
+			local desired = normalizeColorTable(data.textColor, { r = 1, g = 1, b = 1, a = 1 })
+			if not colorsEqual(info.textColor, desired) then
+				info.textColor = desired
+				payloadStyleChanged = true
+			end
+		end
+		if data.showTooltips ~= nil then
+			local desired = data.showTooltips and true or false
+			if info.showTooltips ~= desired then
+				info.showTooltips = desired
+				if not desired then GameTooltip:Hide() end
+			end
+		end
+		if data.tooltipGrowth ~= nil then
+			local desired = normalizeTooltipGrowth(data.tooltipGrowth, info.tooltipGrowth)
+			if info.tooltipGrowth ~= desired then
+				info.tooltipGrowth = desired
+			end
+		end
+		if data.textAlphaInCombat ~= nil then
+			local value = normalizePercent(data.textAlphaInCombat, info.textAlphaInCombat)
+			if info.textAlphaInCombat ~= value then
+				info.textAlphaInCombat = value
+				alphaChanged = true
+			end
+		end
+		if data.textAlphaOutOfCombat ~= nil then
+			local value = normalizePercent(data.textAlphaOutOfCombat, info.textAlphaOutOfCombat)
+			if info.textAlphaOutOfCombat ~= value then
+				info.textAlphaOutOfCombat = value
+				alphaChanged = true
+			end
+		end
+		if data.streams then
+			self.applyingFromEditMode = true
+			self:ApplyStreams(data.streams)
+			self.applyingFromEditMode = nil
+		end
+		if payloadStyleChanged then self:ReapplyPayloads() end
+		if fontStyleChanged or fontFaceChanged or payloadStyleChanged then self:ApplyTextStyle() end
+		if backdropChanged then
+			self:ApplyBorder()
+		elseif backdropColorChanged then
+			self:ApplyBackdropAlpha()
+		end
+		if alphaChanged then self:ApplyAlpha() end
+		if layoutChanged then self:Refresh() end
+		self.suspendEditSync = nil
+	end
+
+	function panel:Refresh(force)
+		local visible = {}
+		for _, name in ipairs(self.order) do
+			local data = self.streams[name]
+			if data then
+				if data.hidden then
+					data.button:Hide()
+				else
+					visible[#visible + 1] = name
+				end
+			end
+		end
+
+		local frameWidth = self.frame and self.frame.GetWidth and self.frame:GetWidth() or 0
+		local contentAnchor = normalizeContentAnchor(self.info and self.info.contentAnchor, "LEFT")
+		local spacing = normalizeStreamGap(self.info and self.info.streamGap, DEFAULT_STREAM_GAP)
+		local autoWidth = self.info and self.info.autoWidth == true
+		local changed = force and true or self.lastLayoutAnchor ~= contentAnchor or self.lastLayoutWidth ~= frameWidth or self.lastLayoutSpacing ~= spacing or self.lastLayoutAutoWidth ~= autoWidth
+		if not self.lastOrder or #self.lastOrder ~= #visible then
+			changed = true
+		else
+			for i, name in ipairs(visible) do
+				local data = self.streams[name]
+				if self.lastOrder[i] ~= name or (self.lastWidths and self.lastWidths[name] ~= (data.lastWidth or 0)) then
+					changed = true
+					break
+				end
+			end
+		end
+		if not changed then return end
+
+		local padding = 5
+		local totalWidth = 0
+		for i, name in ipairs(visible) do
+			local data = self.streams[name]
+			local width = (data and data.lastWidth) or 0
+			if i > 1 then totalWidth = totalWidth + spacing end
+			totalWidth = totalWidth + width
+		end
+		if autoWidth and self.frame and self.frame.SetWidth then
+			local targetWidth = normalizePanelWidth(totalWidth + (padding * 2), self.info and self.info.width or frameWidth)
+			if math.abs(targetWidth - frameWidth) >= 0.5 then
+				self.info.width = targetWidth
+				self.frame:SetWidth(targetWidth)
+				frameWidth = targetWidth
+			end
+		end
+		local startX = padding
+		if contentAnchor == "CENTER" then
+			local available = frameWidth - (padding * 2)
+			startX = padding + (available - totalWidth) / 2
+		elseif contentAnchor == "RIGHT" then
+			startX = frameWidth - padding - totalWidth
+		end
+
+		local prev
+		for _, name in ipairs(visible) do
+			local data = self.streams[name]
+			local btn = data.button
+			btn:Show()
+			btn:ClearAllPoints()
+			btn:SetWidth(data.lastWidth or 0)
+			if prev then
+				btn:SetPoint("LEFT", prev, "RIGHT", spacing, 0)
+			else
+				btn:SetPoint("LEFT", self.frame, "LEFT", startX, 0)
+			end
+			prev = btn
+		end
+
+		self.lastOrder = {}
+		self.lastWidths = {}
+		for i, name in ipairs(visible) do
+			self.lastOrder[i] = name
+			self.lastWidths[name] = self.streams[name].lastWidth or 0
+		end
+		self.lastLayoutAnchor = contentAnchor
+		self.lastLayoutWidth = frameWidth
+		self.lastLayoutSpacing = spacing
+		self.lastLayoutAutoWidth = autoWidth
+	end
+
+	function panel:AddStream(name)
+		if self.streams[name] or not isStreamAvailable(name) then return end
+		local button = CreateFrame("Button", nil, self.frame)
+		button:SetHeight(self.frame:GetHeight())
+		local text = button:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+		text:SetAllPoints()
+		text:SetJustifyH("LEFT")
+		local initialWidth = text:GetStringWidth()
+		local initialSecretWidth = isSecretValue(initialWidth)
+		if initialSecretWidth then initialWidth = 0 end
+		local data = { button = button, text = text, lastWidth = initialWidth or 0, lastText = "", panel = self, secretWidthPending = initialSecretWidth and true or nil }
+		button.slot = data
+		button:SetScript("OnEnter", function(b)
+			local s = b.slot
+			if slotTooltipsEnabled(s) then
+				if s.tooltip then
+					DataPanel.SetTooltipOwner(b, GameTooltip)
+					GameTooltip:SetText(s.tooltip)
+					GameTooltip:Show()
+				end
+				if s.OnMouseEnter then s.OnMouseEnter(b) end
+			end
+		end)
+		button:SetScript("OnLeave", function(b)
+			local s = b.slot
+			if slotTooltipsEnabled(s) and s.OnMouseLeave then s.OnMouseLeave(b) end
+			GameTooltip:Hide()
+		end)
+		button:RegisterForClicks("AnyUp")
+		button:SetScript("OnClick", function(b, btn, ...)
+			local s = b.slot
+			if btn == "RightButton" and not (s and s.ignoreMenuModifier) and not DataPanel.IsMenuModifierActive(btn) then return end
+			local fn = s and s.OnClick
+			if type(fn) == "table" then fn = fn[btn] end
+			if fn then fn(b, btn, ...) end
+		end)
+
+		self:ApplyClickThroughToData(data)
+
+		self.order[#self.order + 1] = name
+
+		local function cb(payload)
+			payload = sanitizeValue(payload) or {}
+			if type(payload) ~= "table" then payload = {} end
+			data.lastPayload = payload
+			local layoutNeedsRefresh = false
+			local hasSecureParts = payloadHasSecureParts(payload)
+			if hasSecureParts then data.secureParts = true end
+			if hasSecureParts and InCombatLockdown and InCombatLockdown() and not data.secureInitialized then
+				data.pendingPayload = payload
+				queueSecureUpdate(data)
+				return
+			end
+			local font = panel:GetFontFace() or select(1, data.text:GetFont())
+			local baseSize = payload.fontSize or data.fontSize or 14
+			local size = panel:ApplyStreamFontScale(baseSize)
+			local _, fontFlags, fontShadow = panel:GetResolvedFontStyleData()
+			fontFlags = fontFlags or ""
+			fontShadow = fontShadow == true
+			local clickEnabled = not (panel.info and panel.info.clickThrough)
+
+			if payload.hidden then
+				data.button:Hide()
+				if not data.hidden then
+					data.hidden = true
+					data.lastWidth = 0
+					data.lastText = ""
+					if data.parts then
+						for _, child in ipairs(data.parts) do
+							child:Hide()
+						end
+					end
+					data.text:SetText("")
+					self:Refresh()
+				end
+				data.tooltip = nil
+				data.perCurrency = nil
+				data.showDescription = nil
+				data.hover = nil
+				data.OnMouseEnter = nil
+				data.OnMouseLeave = nil
+				data.ignoreMenuModifier = sanitizeValue(payload.ignoreMenuModifier)
+				data.minWidthText = sanitizeValue(payload.minWidthText)
+				local onClick = sanitizeValue(payload.OnClick)
+				if onClick ~= nil then data.OnClick = onClick end
+				return
+			elseif data.hidden then
+				data.hidden = nil
+				data.button:Show()
+				self:Refresh()
+			end
+
+			local wasParts = data.usingParts
+			if payload.parts then
+				data.usingParts = true
+				data.text:SetText("")
+				data.text:Hide()
+				data.parts = data.parts or {}
+				local partsFontChanged = data.partsFont ~= font or data.partsFontSize ~= size or data.partsFontFlags ~= fontFlags or data.partsFontShadow ~= fontShadow
+				if partsFontChanged then
+					data.partsFont = font
+					data.partsFontSize = size
+					data.partsFontFlags = fontFlags
+					data.partsFontShadow = fontShadow
+				end
+				local buttonHeight = button:GetHeight()
+				local heightChanged = data.partsHeight ~= buttonHeight
+				if heightChanged then data.partsHeight = buttonHeight end
+				local partSpacing = tonumber(payload.partSpacing)
+				if not partSpacing then partSpacing = 5 end
+				if partSpacing < -10 then partSpacing = -10 end
+				local spacingChanged = data.partsSpacing ~= partSpacing
+				if spacingChanged then data.partsSpacing = partSpacing end
+				local partsLayout = payload.partsLayout == "vertical" and "vertical" or "horizontal"
+				local layoutChanged = data.partsLayout ~= partsLayout
+				if layoutChanged then data.partsLayout = partsLayout end
+				local totalWidth = 0
+				local totalHeight = 0
+				local partsPositionChanged = layoutChanged or spacingChanged
+				for i, part in ipairs(payload.parts) do
+					local secureSpec = part and part.secure
+					local isSecure = secureSpec ~= nil
+					local secureTemplate
+					local secureAttributes
+					local secureClicks
+					local secureKey
+					if isSecure and type(secureSpec) == "table" then
+						secureTemplate = secureSpec.template
+						secureAttributes = secureSpec.attributes
+						secureClicks = secureSpec.registerClicks
+						secureKey = secureSpec.key
+					end
+					if isSecure and not secureTemplate then secureTemplate = "SecureActionButtonTemplate" end
+
+					local child = data.parts[i]
+					local isNew = false
+					local needsRebuild = false
+					if child then
+						if isSecure ~= (child.isSecure == true) then
+							needsRebuild = true
+						elseif isSecure and child.secureTemplate ~= secureTemplate then
+							needsRebuild = true
+						end
+					end
+					if needsRebuild then
+						if InCombatLockdown and InCombatLockdown() then
+							data.pendingPayload = payload
+							queueSecureUpdate(data)
+							return
+						end
+						child:Hide()
+						child:SetParent(nil)
+						data.parts[i] = nil
+						child = nil
+					end
+					if not child then
+						if isSecure and InCombatLockdown and InCombatLockdown() then
+							data.pendingPayload = payload
+							queueSecureUpdate(data)
+							return
+						end
+						if isSecure then
+							child = CreateFrame("Button", nil, button, secureTemplate)
+							child.isSecure = true
+							child.secureTemplate = secureTemplate
+							child:RegisterForClicks(secureClicks or "AnyDown", "AnyUp")
+							child:SetAttribute("pressAndHoldAction", false)
+						else
+							child = CreateFrame("Button", nil, button)
+							child:RegisterForClicks("AnyUp")
+							child:SetScript("OnClick", partsOnClick)
+						end
+						if child.EnableMouse then child:EnableMouse(clickEnabled) end
+						child.text = child:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+						child.text:SetAllPoints()
+						child.slot = data
+						child:SetScript("OnEnter", partsOnEnter)
+						child:SetScript("OnLeave", partsOnLeave)
+						data.parts[i] = child
+						isNew = true
+					end
+					if isNew then partsPositionChanged = true end
+					if isNew or spacingChanged or layoutChanged then
+						child:ClearAllPoints()
+						if partsLayout ~= "vertical" then
+							if i == 1 then
+								child:SetPoint("LEFT", button, "LEFT", 0, 0)
+							else
+								child:SetPoint("LEFT", data.parts[i - 1], "RIGHT", partSpacing, 0)
+							end
+						end
+					end
+					child.slot = data
+					child:Show()
+					local backdropSpec = part.backdrop
+					if backdropSpec then
+						local backdrop = child.eqolBackdrop
+						if not backdrop then
+							backdrop = CreateFrame("Frame", nil, child, "BackdropTemplate")
+							backdrop:SetFrameStrata(child:GetFrameStrata())
+							backdrop:SetFrameLevel(math.max((child:GetFrameLevel() or 1) - 1, 0))
+							child.eqolBackdrop = backdrop
+						end
+						local bgFile = backdropSpec.bgFile or "Interface\\Buttons\\WHITE8x8"
+						local edgeFile = backdropSpec.edgeFile or "Interface\\Buttons\\WHITE8x8"
+						local edgeSize = tonumber(backdropSpec.edgeSize) or 1
+						if edgeSize < 0.5 then edgeSize = 0.5 end
+						if backdrop.eqolBgFile ~= bgFile or backdrop.eqolEdgeFile ~= edgeFile or backdrop.eqolEdgeSize ~= edgeSize then
+							backdrop:SetBackdrop({
+								bgFile = bgFile,
+								edgeFile = edgeFile,
+								edgeSize = edgeSize,
+								insets = { left = 0, right = 0, top = 0, bottom = 0 },
+							})
+							backdrop.eqolBgFile = bgFile
+							backdrop.eqolEdgeFile = edgeFile
+							backdrop.eqolEdgeSize = edgeSize
+						end
+						local offset = tonumber(backdropSpec.offset) or 0
+						backdrop:ClearAllPoints()
+						backdrop:SetPoint("TOPLEFT", child, "TOPLEFT", -offset, offset)
+						backdrop:SetPoint("BOTTOMRIGHT", child, "BOTTOMRIGHT", offset, -offset)
+						local bgColor = backdropSpec.bgColor or { 0, 0, 0, 0.5 }
+						local borderColor = backdropSpec.borderColor or { 1, 1, 1, 0.7 }
+						backdrop:SetBackdropColor(bgColor[1] or bgColor.r or 0, bgColor[2] or bgColor.g or 0, bgColor[3] or bgColor.b or 0, bgColor[4] or bgColor.a or 0.5)
+						backdrop:SetBackdropBorderColor(
+							borderColor[1] or borderColor.r or 1,
+							borderColor[2] or borderColor.g or 1,
+							borderColor[3] or borderColor.b or 1,
+							borderColor[4] or borderColor.a or 0.7
+						)
+						backdrop:Show()
+					elseif child.eqolBackdrop then
+						child.eqolBackdrop:Hide()
+					end
+					if isSecure then
+						local needsSecureConfig = not child.secureConfigured or (secureKey and child.secureKey ~= secureKey)
+						if needsSecureConfig then
+							if InCombatLockdown and InCombatLockdown() then
+								data.pendingPayload = payload
+								queueSecureUpdate(data)
+								return
+							end
+							if secureAttributes then
+								for key, value in pairs(secureAttributes) do
+									child:SetAttribute(key, value)
+								end
+							end
+							if secureSpec and secureSpec.forwardRightClick then
+								if not (secureAttributes and secureAttributes.type2) then child:SetAttribute("type2", "click") end
+								if not (secureAttributes and secureAttributes.clickbutton2) then child:SetAttribute("clickbutton2", button) end
+							end
+							child.secureConfigured = true
+							child.secureKey = secureKey
+						end
+					end
+					local partHeight = tonumber(part.height)
+					if not partHeight then partHeight = tonumber(part.iconHeight) or tonumber(part.iconSize) or tonumber(part.iconWidth) or buttonHeight end
+					if partsLayout ~= "vertical" and partHeight < buttonHeight then partHeight = buttonHeight end
+					if isNew or heightChanged or child.lastHeight ~= partHeight then
+						child.lastHeight = partHeight
+						child:SetHeight(partHeight)
+						if partsLayout == "vertical" then partsPositionChanged = true end
+					end
+					if isNew or partsFontChanged then panel:ApplyFontStyle(child.text, font, size) end
+					if isNew or layoutChanged then child.text:SetJustifyH(partsLayout == "vertical" and "CENTER" or "LEFT") end
+					local iconSpec = part.icon
+					local overlaySpec = part.iconOverlay
+					local useIcons = iconSpec ~= nil or overlaySpec ~= nil
+					if useIcons then
+						child.usingIcons = true
+						child.text:SetText("")
+						child.text:Hide()
+
+						local function applyIcon(tex, spec, sublevel, defaultSize)
+							if spec == nil then
+								if tex then tex:Hide() end
+								return tex
+							end
+							if not tex then tex = child:CreateTexture(nil, "ARTWORK", nil, sublevel) end
+							local tc = spec.texCoord
+							if spec.atlas then
+								tex:SetAtlas(spec.atlas, true)
+								if type(tc) == "table" then
+									local l = tc[1] or 0
+									local r = tc[2] or 1
+									local t = tc[3] or 0
+									local b = tc[4] or 1
+									tex:SetTexCoord(l, r, t, b)
+								else
+									tex:SetTexCoord(0, 1, 0, 1)
+								end
+							elseif spec.texture then
+								tex:SetTexture(spec.texture)
+								if type(tc) == "table" then
+									local l = tc[1] or 0
+									local r = tc[2] or 1
+									local t = tc[3] or 0
+									local b = tc[4] or 1
+									tex:SetTexCoord(l, r, t, b)
+								else
+									tex:SetTexCoord(0, 1, 0, 1)
+								end
+							end
+							local color = spec.vertexColor or spec.color
+							if type(color) == "table" then
+								local r = color.r or color[1] or 1
+								local g = color.g or color[2] or 1
+								local b = color.b or color[3] or 1
+								local a = color.a or color[4] or 1
+								tex:SetVertexColor(r, g, b, a)
+							else
+								tex:SetVertexColor(1, 1, 1, 1)
+							end
+							if spec.desaturate ~= nil then
+								tex:SetDesaturated(spec.desaturate and true or false)
+							else
+								tex:SetDesaturated(false)
+							end
+							local iconSize = spec.size or defaultSize
+							tex:SetSize(iconSize, iconSize)
+							tex:SetPoint("CENTER", child, "CENTER", spec.offsetX or 0, spec.offsetY or 0)
+							tex:Show()
+							return tex
+						end
+
+						local baseSize = part.iconSize or size
+						child.icon = applyIcon(child.icon, iconSpec, 0, baseSize)
+						child.iconOverlay = applyIcon(child.iconOverlay, overlaySpec, 1, baseSize)
+						local iconWidth = part.iconWidth or baseSize
+						if child.lastWidth ~= iconWidth then
+							child.lastWidth = iconWidth
+							child:SetWidth(iconWidth)
+						end
+					else
+						if child.usingIcons then
+							child.usingIcons = nil
+							if child.icon then child.icon:Hide() end
+							if child.iconOverlay then child.iconOverlay:Hide() end
+							child.text:Show()
+						end
+						local rawText = part.text or ""
+						local text = panel:ApplyClassTextColor(rawText, part.skipPanelClassColor == true or payload.skipPanelClassColor == true)
+						local secretText = isSecretValue(text)
+						local textChanged = secretText or text ~= child.lastText
+						if isNew or textChanged then
+							child.text:SetText(text)
+							child.lastText = secretText and nil or text
+						end
+						if isNew or textChanged or partsFontChanged or child.secretWidthPending then
+							local w = child.text:GetStringWidth()
+							if isSecretValue(w) then
+								child.secretWidthPending = true
+								local fallbackWidth = child.lastWidth or 0
+								if fallbackWidth > 0 then child:SetWidth(fallbackWidth) end
+							else
+								child.secretWidthPending = nil
+								child.lastWidth = w
+								child:SetWidth(w)
+							end
+						end
+						if (isNew or textChanged or partsFontChanged) and hasInlineTexture(rawText) then panel:ScheduleTextReflow() end
+					end
+					child.currencyID = part.id
+					if partsLayout == "vertical" then
+						totalWidth = math.max(totalWidth, child.lastWidth or 0)
+						totalHeight = totalHeight + (child.lastHeight or 0) + (i > 1 and partSpacing or 0)
+					else
+						totalWidth = totalWidth + (child.lastWidth or 0) + (i > 1 and partSpacing or 0)
+					end
+				end
+				if data.parts then
+					for i = #payload.parts + 1, #data.parts do
+						data.parts[i]:Hide()
+					end
+				end
+				if partsLayout == "vertical" then
+					local stackChanged = partsPositionChanged or data.partsStackHeight ~= totalHeight or data.partsStackWidth ~= totalWidth
+					if stackChanged then
+						data.partsStackHeight = totalHeight
+						data.partsStackWidth = totalWidth
+						local topOffset = totalHeight / 2
+						for i = 1, #payload.parts do
+							local child = data.parts[i]
+							if child then
+								child:ClearAllPoints()
+								if i == 1 then
+									child:SetPoint("TOP", button, "CENTER", 0, topOffset)
+								else
+									child:SetPoint("TOP", data.parts[i - 1], "BOTTOM", 0, -partSpacing)
+								end
+							end
+						end
+					end
+				end
+				if totalWidth ~= data.lastWidth then
+					data.lastWidth = totalWidth
+					data.button:SetWidth(totalWidth)
+					if self.lastWidths and self.lastWidths[name] then self.lastWidths[name] = totalWidth end
+					layoutNeedsRefresh = true
+				end
+			else
+				data.usingParts = nil
+				if data.parts then
+					for _, child in ipairs(data.parts) do
+						child:Hide()
+					end
+				end
+				data.text:Show()
+				local rawText = payload.text or ""
+				local textChanged = false
+				if payload.textFormat and data.text.SetFormattedText then
+					local unpackFn = _G.unpack or unpack
+					if type(unpackFn) == "function" then
+						data.text:SetFormattedText(payload.textFormat, unpackFn(payload.textArgs or {}))
+						data.lastText = nil
+						textChanged = true
+					end
+				end
+				if not textChanged then
+					local text = panel:ApplyClassTextColor(rawText, payload.skipPanelClassColor == true)
+					local secretText = isSecretValue(text)
+					textChanged = secretText or text ~= data.lastText
+					if textChanged or wasParts then
+						data.text:SetText(text)
+						data.lastText = secretText and nil or text
+						textChanged = true
+					end
+				end
+				data.minWidthText = sanitizeValue(payload.minWidthText)
+				local newSize = panel:ApplyStreamFontScale(payload.fontSize or data.fontSize or 14)
+				local fontChanged = newSize and (data.fontSize ~= newSize or data.fontFlags ~= fontFlags or data.fontShadow ~= fontShadow)
+				if fontChanged then
+					panel:ApplyFontStyle(data.text, font, newSize)
+					data.fontSize = newSize
+					data.fontFlags = fontFlags
+					data.fontShadow = fontShadow
+				end
+				if textChanged or fontChanged or wasParts or data.secretWidthPending or data.lastMinWidthText ~= data.minWidthText then
+					local currentText = data.text:GetText()
+					local width = data.text:GetStringWidth()
+					if isSecretValue(width) then
+						data.secretWidthPending = true
+						local fallbackWidth = data.lastWidth or 0
+						if fallbackWidth <= 0 and self.frame and self.frame.GetWidth then fallbackWidth = self.frame:GetWidth() or 0 end
+						if fallbackWidth > 0 then data.button:SetWidth(fallbackWidth) end
+					else
+						local minWidth = 0
+						if type(data.minWidthText) == "string" and data.minWidthText ~= "" then
+							data.text:SetText(data.minWidthText)
+							minWidth = data.text:GetStringWidth()
+							data.text:SetText(currentText or "")
+							if isSecretValue(minWidth) then minWidth = 0 end
+						end
+						if minWidth > width then width = minWidth end
+						if data.secretWidthPending or width ~= data.lastWidth then
+							data.secretWidthPending = nil
+							data.lastWidth = width
+							data.button:SetWidth(width)
+							if self.lastWidths and self.lastWidths[name] then self.lastWidths[name] = width end
+							layoutNeedsRefresh = true
+						end
+					end
+					data.lastMinWidthText = data.minWidthText
+					if hasInlineTexture(rawText) then panel:ScheduleTextReflow() end
+				end
+			end
+			if payload.parts then
+				local newSize = panel:ApplyStreamFontScale(payload.fontSize or data.fontSize or 14)
+				if newSize and (data.fontSize ~= newSize or data.fontFlags ~= fontFlags or data.fontShadow ~= fontShadow) then
+					panel:ApplyFontStyle(data.text, font, newSize)
+					data.fontSize = newSize
+					data.fontFlags = fontFlags
+					data.fontShadow = fontShadow
+				end
+			end
+			local textAlpha = payload.textAlpha
+			if textAlpha == nil then textAlpha = 1 end
+			if data.textAlpha ~= textAlpha then
+				data.textAlpha = textAlpha
+				if data.text and data.text.SetAlpha then data.text:SetAlpha(textAlpha) end
+				if data.parts then
+					for _, child in ipairs(data.parts) do
+						if child and child.SetAlpha then child:SetAlpha(textAlpha) end
+					end
+				end
+			end
+			data.tooltip = sanitizeValue(payload.tooltip)
+			data.perCurrency = sanitizeValue(payload.perCurrency)
+			data.showDescription = sanitizeValue(payload.showDescription)
+			data.hover = sanitizeValue(payload.hover)
+			data.OnMouseEnter = sanitizeValue(payload.OnMouseEnter)
+			data.OnMouseLeave = sanitizeValue(payload.OnMouseLeave)
+			data.ignoreMenuModifier = sanitizeValue(payload.ignoreMenuModifier)
+			local onClick = sanitizeValue(payload.OnClick)
+			if onClick ~= nil then data.OnClick = onClick end
+			if hasSecureParts then data.secureInitialized = true end
+			if data.pendingPayload then
+				data.pendingPayload = nil
+				pendingSecure[data] = nil
+			end
+			if layoutNeedsRefresh then self:Refresh(true) end
+		end
+
+		data.applyPayload = cb
+		data.unsub = DataHub:Subscribe(name, cb)
+		self.streams[name] = data
+		if data.button and data.button.SetAlpha then data.button:SetAlpha(self:GetTextAlpha()) end
+
+		local streams = self.info.streams
+		local streamSet = self.info.streamSet
+		if not streamSet[name] then
+			streamSet[name] = true
+			streams[#streams + 1] = name
+		end
+		self:SyncEditModeStreams()
+	end
+
+	function panel:RemoveStream(name)
+		local info = self.streams[name]
+		if not info then return end
+		if info.unsub then info.unsub() end
+		info.button:Hide()
+		info.button:SetParent(nil)
+		self.streams[name] = nil
+		for i, n in ipairs(self.order) do
+			if n == name then
+				table.remove(self.order, i)
+				break
+			end
+		end
+		self:Refresh()
+
+		local streams = self.info.streams
+		local streamSet = self.info.streamSet
+		if streamSet[name] then
+			streamSet[name] = nil
+			for i, s in ipairs(streams) do
+				if s == name then
+					table.remove(streams, i)
+					break
+				end
+			end
+		end
+		self:SyncEditModeStreams()
+	end
+
+	panels[id] = panel
+
+	if info.streams then
+		for _, name in ipairs(info.streams) do
+			panel:AddStream(name)
+		end
+	end
+
+	registerEditModePanel(panel)
+	panel:SyncEditModeStreams()
+	panel:SyncEditModeStrata()
+	updateSelectionStrata(panel, info.strata)
+	panel:ApplyClickThrough()
+	panel:ApplyBorder()
+	panel:ApplyAlpha()
+
+	return panel
+end
+
+function DataPanel.Get(id)
+	id = tostring(id)
+	return panels[id]
+end
+
+function DataPanel.AddStream(id, name)
+	id = tostring(id)
+	local panel = panels[id] or panels[tonumber(id)]
+	if panel then panel:AddStream(name) end
+end
+
+function DataPanel.RemoveStream(id, name)
+	id = tostring(id)
+	local panel = panels[id]
+	if panel then panel:RemoveStream(name) end
+end
+
+function DataPanel.Move(id, point, x, y)
+	id = tostring(id)
+	local panel = panels[id]
+	if panel then
+		panel.frame:ClearAllPoints()
+		panel.frame:SetPoint(point, x, y)
+		savePosition(panel.frame, id)
+	end
+end
+
+function DataPanel.List()
+	addon.db = addon.db or {}
+	addon.db.dataPanels = addon.db.dataPanels or {}
+	local result = {}
+	for rawId, info in pairs(addon.db.dataPanels) do
+		local id = tostring(rawId)
+		local entry = { list = {}, set = {} }
+		result[id] = entry
+		if info.streams then
+			for _, stream in ipairs(info.streams) do
+				if not entry.set[stream] then
+					entry.set[stream] = true
+					entry.list[#entry.list + 1] = stream
+				end
+			end
+		end
+	end
+	for rawId, panel in pairs(panels) do
+		local id = tostring(rawId)
+		local entry = result[id]
+		if not entry then
+			entry = { list = {}, set = {} }
+			result[id] = entry
+		end
+		for _, stream in ipairs(panel.order) do
+			if not entry.set[stream] then
+				entry.set[stream] = true
+				entry.list[#entry.list + 1] = stream
+			end
+		end
+	end
+	for id, info in pairs(result) do
+		result[id] = info.list
+	end
+	return result
+end
+
+function DataPanel.Delete(id)
+	id = tostring(id)
+	local panel = panels[id] or panels[tonumber(id)]
+	-- Always remove the database entry first so a partial failure in
+	-- UI cleanup never re-saves an empty leftover panel on reload.
+	if addon.db and addon.db.dataPanels then
+		local named = panel and panel.name
+		-- primary key cleanup
+		addon.db.dataPanels[id] = nil
+		if addon.db.dataPanels[tonumber(id)] then addon.db.dataPanels[tonumber(id)] = nil end
+		-- defensive sweep: remove any entries that accidentally reference the same panel
+		for k, info in pairs(addon.db.dataPanels) do
+			if tostring(k) == id then
+				addon.db.dataPanels[k] = nil
+			elseif type(info) == "table" then
+				if info.name == id or (named and info.name == named) then addon.db.dataPanels[k] = nil end
+			end
+		end
+	end
+
+	if panel then
+		if EditMode and panel.editModeId then
+			local ok, err = pcall(function() EditMode:UnregisterFrame(panel.editModeId, true) end)
+			if not ok then geterrorhandler()(err) end
+			panel.editModeRegistered = nil
+			panel.editModeId = nil
+		end
+		-- Unsubscribe and detach all streams safely
+		for i = #panel.order, 1, -1 do
+			local ok = pcall(function() panel:RemoveStream(panel.order[i]) end)
+			if not ok then
+				-- continue cleanup even if a single stream removal fails
+			end
+		end
+		if panel.frame then
+			-- Prevent savePosition from firing during teardown
+			panel.frame:SetScript("OnSizeChanged", nil)
+			panel.frame:Hide()
+			panel.frame:SetParent(nil)
+		end
+		panels[id] = nil
+		if panels[tonumber(id)] then panels[tonumber(id)] = nil end
+	end
+end
+
+local initFrame = CreateFrame("Frame")
+initFrame:RegisterEvent("PLAYER_LOGIN")
+initFrame:RegisterEvent("UI_SCALE_CHANGED")
+initFrame:RegisterEvent("DISPLAY_SIZE_CHANGED")
+initFrame:SetScript("OnEvent", function(self, event)
+	if event == "UI_SCALE_CHANGED" or event == "DISPLAY_SIZE_CHANGED" then
+		scheduleInlineReflowAll()
+		return
+	end
+	addon.db = addon.db or {}
+	local panelsDB = addon.db.dataPanels or {}
+	addon.db.dataPanels = panelsDB
+
+	for id in pairs(panelsDB) do
+		DataPanel.Create(id, nil, true)
+	end
+
+	self:UnregisterEvent("PLAYER_LOGIN")
+	scheduleInlineReflowAll()
+	if C_Timer and C_Timer.After then C_Timer.After(0.1, scheduleInlineReflowAll) end
+end)
+
+return DataPanel

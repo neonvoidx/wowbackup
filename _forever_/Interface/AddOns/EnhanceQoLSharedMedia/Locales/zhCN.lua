@@ -1,0 +1,7 @@
+local L = LibStub("AceLocale-3.0"):NewLocale("EnhanceQoL_SharedMedia", "zhCN", true)
+
+L["Disable All"] = "全部禁用"
+L["Enable All"] = "全部启用"
+L["Play"] = "播放"
+L["SharedMedia"] = "共享媒体"
+L["SharedMediaDeepVoiceSounds"] = "共享媒体低沉语音音效"

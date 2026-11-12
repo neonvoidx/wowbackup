@@ -1,0 +1,143 @@
+VER 3 0100000000000021 " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+#FS EH X
+/cast [mod:shift,@none,exists][mod:shift,@focus,exists][] Command Demon
+END
+VER 3 0100000000000037 " " "134400"
+#showtooltip [group] Create Soulwell; [nogroup] Create Healthstone
+/use Goblin Weather Machine - Prototype 01-B
+/cast [group] Create Soulwell
+/cast  [nogroup] Create Healthstone
+END
+VER 3 010000000000003A " " "134400"
+#showtooltip Fear
+#FS EH X
+/use Fire-Eater's Vial
+/cast  [mod:shift,@none,exists][mod:shift,@focus,exists][] Fear
+END
+VER 3 010000000000003C " " "134400"
+#showtooltip Soulstone
+/cast [@mouseover,exists,noharm][@player] Soulstone
+END
+VER 3 0100000000000040 " " "134400"
+#showtooltip burning rush
+/cancelaura burning rush
+/cast burning rush
+/script PlaySound(13156) 
+/use Prismatic Bauble
+END
+VER 3 0100000000000041 " " "134400"
+#showtooltip
+/cast [@cursor] Vile Taint
+END
+VER 3 0100000000000047 " " "134400"
+#showtooltip
+/cast [@cursor] Rain of Fire
+END
+VER 3 0100000000000051 " " "134400"
+#showtooltip Summon Darkglare
+/cast Blood Fury
+/cast Beserking
+/use Saltwater Potion
+/use 14
+/cast Summon Darkglare
+END
+VER 3 010000000000004B " " "134400"
+#showtooltip
+/cast [known:Phantom Singularity] Phantom Singularity
+/cast [known:Vile Taint] Vile Taint
+END
+VER 3 010000000000004C " " "134400"
+#showtooltip
+/cast [@mouseover,harm,exists,nodead][] Havoc
+END
+VER 3 0100000000000050 " " "134400"
+#showtooltip
+/cast [known:Shadowfury,@cursor] Shadowfury
+/cast [known: Howl of Terror] Howl of Terror
+END
+VER 3 0100000000000052 " " "134400"
+#showtooltip Demonic Gateway
+/cast soulburn
+/cast [@cursor] Demonic Gateway
+END
+VER 3 0100000000000053 " " "134400"
+#showtooltip [known: Pact of Gluttony] Demonic Healthstone; [] Healthstone
+/cast Soulburn
+/use [known: Pact of Gluttony] Demonic Healthstone;[] Healthstone
+END
+VER 3 0100000000000054 " " "134400"
+#showtooltip
+/cast [@cursor] Call Fel Lord
+END
+VER 3 0100000000000055 " " "134400"
+#showtooltip
+/cast [@cursor] Summon Infernal
+/use 14
+/use Saltwater Potion
+/use Potion of Recklessness
+END
+VER 3 010000000000005A " " "134400"
+#showtooltip
+/cast [@cursor] Shadow Rift
+END
+VER 3 010000000000005D " " "134400"
+#showtooltip Demonic Circle: Teleport
+/cast soulburn
+/cast Demonic circle: teleport
+END
+VER 3 0100000000000068 " " "134400"
+#showtooltip Summon Demonic Tyrant
+/use 14
+/cast Summon Demonic Tyrant
+END
+VER 3 010000000000005F " " "134400"
+#showtooltip drain soul
+/cast [nochanneling] Drain Soul
+END
+VER 3 0100000000000060 " " "134400"
+#showtoolip 
+/cast [@cursor] Cataclysm
+END
+VER 3 0100000000000061 " " "134400"
+#showtooltip 
+/cast [@mouseover,exists,harm,known:Havoc][known:Havoc] Havoc
+END
+VER 3 0100000000000062 " " "134400"
+#showtooltip  [spec:2] Summon Felguard; Summon Felhunter
+/cast  Fel Domination
+/cast [spec:2] Summon Felguard; Summon Felhunter
+END
+VER 3 0100000000000063 " " "134400"
+#showtooltip
+/cast Felstorm
+END
+VER 3 0100000000000064 " " "134400"
+#showtooltip
+/cast [@mouseover,harm][] Shadowburn
+END
+VER 3 0100000000000065 " " "134400"
+#showtooltip devour magic
+/cast devour magic
+END
+VER 3 0100000000000066 " " "134400"
+#showtooltip [known: Soul rip] Soul Rip; [known:Nether ward] Nether ward
+/cast [known: Soul rip] Soul Rip; [known:Nether ward] Nether ward
+END
+VER 3 0100000000000067 " " "134400"
+#showtooltip
+/cast [mod:shift,known:440057] Curse of the Satyr; [mod:shift] Curse of Tongues; [mod:ctrl,known:440057] Curse of the Satyr; [mod:ctrl] Curse of Weakness; Curse of Exhaustion
+END
+VER 3 0100000000000069 " " "134400"
+#showtooltip banish
+/cast banish
+END
+VER 3 010000000000006A " " "134400"
+#showtooltip 
+/cast [known: power siphon] power siphon; [known:implosion] implosion
+END
+VER 3 010000000000005E " modfocus" "134400"
+#showtooltip Mortal Coil
+#FS EH X
+/cast  [mod:shift,@none,exists][mod:shift,@focus,exists][] Mortal Coil
+END

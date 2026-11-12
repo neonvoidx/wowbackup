@@ -1,0 +1,12 @@
+## Interface: 16001
+## X-EQOL-Flavor: forever
+## Title: Enhance QoL Dungeon & Raid
+## Author: R41Z0R
+## Version: 13.20.1
+## Notes: Movable party and raid tools
+## Dependencies: EnhanceQoL
+## LoadOnDemand: 1
+## Globe-Main: EnhanceQoL
+## IconTexture: Interface\AddOns\EnhanceQoL\Icons\Icon.tga
+
+GroupTools.lua

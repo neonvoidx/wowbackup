@@ -1,0 +1,766 @@
+-- luacheck: globals SendMailFrame_SendMail SendMailFrame_Reset EQOLMailboxFrameSearchBox EQOLMailboxFrame_OnMouseDown EQOLMailboxFrame_OnMouseUp
+local parentAddonName = "EnhanceQoL"
+local addonName, addon = ...
+if _G[parentAddonName] then
+	addon = _G[parentAddonName]
+else
+	error(parentAddonName .. " is not loaded")
+end
+
+local L = addon.L
+local MU = MenuUtil
+
+local Mailbox = addon.Mailbox or {}
+addon.Mailbox = Mailbox
+
+local function getPrivateDB() return addon.functions and addon.functions.GetPrivateDB and addon.functions.GetPrivateDB() or addon.privateDB or {} end
+
+local function normalizeMailboxContacts()
+	if not addon or not addon.db then return nil end
+	local contacts = addon.db.mailboxContacts
+	if type(contacts) == "table" then return contacts end
+
+	local normalized = {}
+	if type(contacts) == "string" and contacts ~= "" then
+		local name, realm = contacts:match("^([^%-]+)%-(.+)$")
+		name = name or contacts
+		realm = realm or ""
+		normalized[contacts] = {
+			name = name,
+			realm = realm,
+		}
+	end
+	addon.db.mailboxContacts = normalized
+	return normalized
+end
+
+Mailbox.NormalizeContacts = normalizeMailboxContacts
+
+Mailbox.enabled = Mailbox.enabled or false
+Mailbox.frame = Mailbox.frame or nil
+Mailbox.searchText = Mailbox.searchText or ""
+Mailbox.hooked = Mailbox.hooked or false
+Mailbox.eventFrame = Mailbox.eventFrame or nil
+Mailbox.rows = Mailbox.rows or {}
+Mailbox.filtered = Mailbox.filtered or {}
+Mailbox.sortKey = Mailbox.sortKey or "name"
+Mailbox.sortAsc = Mailbox.sortAsc ~= false -- default true
+Mailbox.seeded = Mailbox.seeded or false
+Mailbox.lastRecipient = Mailbox.lastRecipient or nil
+Mailbox.rememberHooksInit = Mailbox.rememberHooksInit or false
+Mailbox.rememberHooksAttached = Mailbox.rememberHooksAttached or false
+Mailbox.rememberEventFrame = Mailbox.rememberEventFrame or nil
+
+local ROW_HEIGHT = 20
+local DEFAULT_POINT = "TOPLEFT"
+local DEFAULT_RELATIVE_POINT = "TOPRIGHT"
+local DEFAULT_X = 6
+local DEFAULT_Y = 0
+-- Effective content width equals 222 (see XML). Allocate columns conservatively to avoid clipping
+local widths = { 130, 92 } -- name, server (sum=222)
+
+local function ensureDB()
+	if not addon or not addon.db then return end
+	if addon.functions and addon.functions.InitDBValue then
+		addon.functions.InitDBValue("enableMailboxAddressBook", false)
+		addon.functions.InitDBValue("mailboxContacts", {})
+		addon.functions.InitDBValue("mailboxRememberLastRecipient", false)
+		addon.functions.InitDBValue("mailboxAddressBookLocked", true)
+		addon.functions.InitDBValue("mailboxAddressBookPoint", DEFAULT_POINT)
+		addon.functions.InitDBValue("mailboxAddressBookRelativePoint", DEFAULT_RELATIVE_POINT)
+		addon.functions.InitDBValue("mailboxAddressBookX", DEFAULT_X)
+		addon.functions.InitDBValue("mailboxAddressBookY", DEFAULT_Y)
+	else
+		addon.db.enableMailboxAddressBook = addon.db.enableMailboxAddressBook or false
+		addon.db.mailboxContacts = addon.db.mailboxContacts or {}
+		addon.db.mailboxRememberLastRecipient = addon.db.mailboxRememberLastRecipient or false
+		if addon.db.mailboxAddressBookLocked == nil then addon.db.mailboxAddressBookLocked = true end
+		addon.db.mailboxAddressBookPoint = addon.db.mailboxAddressBookPoint or DEFAULT_POINT
+		addon.db.mailboxAddressBookRelativePoint = addon.db.mailboxAddressBookRelativePoint or DEFAULT_RELATIVE_POINT
+		addon.db.mailboxAddressBookX = addon.db.mailboxAddressBookX or DEFAULT_X
+		addon.db.mailboxAddressBookY = addon.db.mailboxAddressBookY or DEFAULT_Y
+	end
+	normalizeMailboxContacts()
+end
+
+local function updateLockButton()
+	local frame = Mailbox.frame
+	local button = frame and frame.lockButton
+	if not button then return end
+	if addon.db and addon.db.mailboxAddressBookLocked then
+		button.icon:SetTexture("Interface\\Addons\\EnhanceQoL\\Icons\\ClosedLock.tga")
+	else
+		button.icon:SetTexture("Interface\\Addons\\EnhanceQoL\\Icons\\OpenLock.tga")
+	end
+end
+
+local function applyMailboxPosition()
+	local frame = Mailbox.frame
+	if not frame then return end
+	ensureDB()
+
+	frame:ClearAllPoints()
+	if addon.db.mailboxAddressBookLocked or not MailFrame then
+		frame:SetPoint(DEFAULT_POINT, MailFrame or UIParent, DEFAULT_RELATIVE_POINT, DEFAULT_X, DEFAULT_Y)
+		frame:SetMovable(false)
+	else
+		frame:SetPoint(
+			addon.db.mailboxAddressBookPoint or DEFAULT_POINT,
+			MailFrame,
+			addon.db.mailboxAddressBookRelativePoint or DEFAULT_RELATIVE_POINT,
+			addon.db.mailboxAddressBookX or DEFAULT_X,
+			addon.db.mailboxAddressBookY or DEFAULT_Y
+		)
+		frame:SetMovable(true)
+	end
+	updateLockButton()
+end
+
+local function saveMailboxPosition()
+	local frame = Mailbox.frame
+	if not (frame and addon.db and MailFrame) then return end
+	local left = frame:GetLeft()
+	local top = frame:GetTop()
+	local mailLeft = MailFrame:GetLeft()
+	local mailTop = MailFrame:GetTop()
+	if not (left and top and mailLeft and mailTop) then return end
+	addon.db.mailboxAddressBookPoint = "TOPLEFT"
+	addon.db.mailboxAddressBookRelativePoint = "TOPLEFT"
+	addon.db.mailboxAddressBookX = left - mailLeft
+	addon.db.mailboxAddressBookY = top - mailTop
+end
+
+function Mailbox:SetLocked(locked)
+	ensureDB()
+	addon.db.mailboxAddressBookLocked = locked and true or false
+	if not addon.db.mailboxAddressBookLocked then saveMailboxPosition() end
+	applyMailboxPosition()
+end
+
+function Mailbox:ToggleLocked()
+	ensureDB()
+	self:SetLocked(not addon.db.mailboxAddressBookLocked)
+end
+
+function Mailbox:StartMovingFrame(mouseButton)
+	if not (self.frame and addon.db) then return end
+	if mouseButton ~= "LeftButton" then return end
+	if not (IsShiftKeyDown and IsShiftKeyDown()) then return end
+	addon.db.mailboxAddressBookLocked = false
+	updateLockButton()
+	self.frame:SetMovable(true)
+	self.moving = true
+	self.frame:StartMoving()
+end
+
+function Mailbox:StopMovingFrame()
+	if not self.frame then return end
+	self.frame:StopMovingOrSizing()
+	if self.moving then
+		self.moving = false
+		saveMailboxPosition()
+		applyMailboxPosition()
+	end
+end
+
+local function getClassColor(class)
+	local tbl = (CUSTOM_CLASS_COLORS or RAID_CLASS_COLORS) or {}
+	local c = tbl[class] or { r = 1, g = 1, b = 1 }
+	return c.r or 1, c.g or 1, c.b or 1
+end
+
+local function normalizeRealmForCompare(realm)
+	if type(realm) ~= "string" then return "" end
+	return realm:gsub("[%s%-']", ""):lower()
+end
+
+local function lowerNoSpaces(value)
+	return (value or ""):lower():gsub("%s", "")
+end
+
+local function usesSurnames() return addon.variables and addon.variables.isForever and not addon.variables.isTBC end
+
+local function buildRecipientForMail(name, realm, fallback)
+	local recipientName = name
+	local recipientRealm = realm
+
+	if (not recipientName or recipientName == "") and type(fallback) == "string" and fallback ~= "" then
+		recipientName, recipientRealm = fallback:match("^([^%-]+)%-(.+)$")
+		if not recipientName or recipientName == "" then
+			recipientName = fallback
+			recipientRealm = recipientRealm or ""
+		end
+	end
+
+	if not recipientName or recipientName == "" then return fallback end
+
+	local myRealm = usesSurnames() and GetRealmName() or select(2, UnitFullName("player"))
+	myRealm = myRealm or GetRealmName() or ""
+	local normalizedRecipientRealm = normalizeRealmForCompare(recipientRealm)
+	local normalizedMyRealm = normalizeRealmForCompare(myRealm)
+	if normalizedRecipientRealm == "" or normalizedRecipientRealm == normalizedMyRealm then return recipientName end
+
+	return string.format("%s-%s", recipientName, recipientRealm or "")
+end
+
+local function rememberRecipientEnabled() return addon.db and addon.db.mailboxRememberLastRecipient end
+
+local function clearRememberedRecipient() Mailbox.lastRecipient = nil end
+
+local function captureRememberedRecipient()
+	if not rememberRecipientEnabled() then return end
+	if not SendMailNameEditBox then return end
+	local name = SendMailNameEditBox:GetText()
+	if name and name ~= "" then
+		Mailbox.lastRecipient = name
+	else
+		Mailbox.lastRecipient = nil
+	end
+end
+
+local function restoreRememberedRecipient()
+	if not rememberRecipientEnabled() then return end
+	if not MailFrame or not MailFrame:IsShown() then return end
+	if not SendMailNameEditBox then return end
+	local name = Mailbox.lastRecipient
+	if name and name ~= "" then
+		SendMailNameEditBox:SetText(name)
+		SendMailNameEditBox:HighlightText(0, 0)
+	end
+end
+
+local mailboxFilteredSort
+
+local function mailboxDisplayContactSort(a, b)
+	return (a.sortKey or "") < (b.sortKey or "")
+end
+
+function Mailbox:EnsureRememberRecipientHooks()
+	if self.rememberHooksInit then return end
+	self.rememberHooksInit = true
+
+	local function tryHook()
+		if self.rememberHooksAttached then return end
+		if type(SendMailFrame_SendMail) ~= "function" or type(SendMailFrame_Reset) ~= "function" then return end
+		hooksecurefunc("SendMailFrame_SendMail", captureRememberedRecipient)
+		hooksecurefunc("SendMailFrame_Reset", restoreRememberedRecipient)
+		self.rememberHooksAttached = true
+	end
+
+	local frame = self.rememberEventFrame
+	if not frame then
+		frame = CreateFrame("Frame")
+		self.rememberEventFrame = frame
+	end
+	frame:RegisterEvent("ADDON_LOADED")
+	frame:RegisterEvent("MAIL_SHOW")
+	frame:RegisterEvent("MAIL_CLOSED")
+	frame:SetScript("OnEvent", function(_, event, addonName)
+		if event == "ADDON_LOADED" then
+			if addonName ~= "Blizzard_MailFrame" then return end
+			tryHook()
+		elseif event == "MAIL_SHOW" then
+			tryHook()
+		elseif event == "MAIL_CLOSED" then
+			clearRememberedRecipient()
+		end
+	end)
+
+	tryHook()
+end
+
+function Mailbox:SetRememberRecipientEnabled(v)
+	ensureDB()
+	addon.db.mailboxRememberLastRecipient = v and true or false
+	if addon.db.mailboxRememberLastRecipient then
+		self:EnsureRememberRecipientHooks()
+	else
+		clearRememberedRecipient()
+	end
+end
+
+function Mailbox:AddSelfToContacts()
+	ensureDB()
+	if not addon.db.enableMailboxAddressBook then return end
+
+	local name, realm = UnitName("player"), GetRealmName()
+	if not name or name == "" then return end
+	realm = realm or ""
+	local class = select(2, UnitClass("player")) or "PRIEST"
+	local r, g, b = getClassColor(class)
+	local key = string.format("%s-%s", name, realm)
+
+	local contacts = normalizeMailboxContacts()
+	if not contacts then return end
+	local rec = contacts[key] or {}
+	rec.name = usesSurnames() and addon.functions.GetUnitDisplayName("player") or name
+	rec.realm = realm
+	rec.class = class
+	rec.color = { r = r, g = g, b = b }
+	contacts[key] = rec
+end
+
+local function filteredContacts()
+	ensureDB()
+	local list = {}
+	local needle = (Mailbox.searchText or ""):lower()
+	local contacts = normalizeMailboxContacts() or {}
+	for key, rec in pairs(contacts) do
+		if type(rec) ~= "table" then rec = { name = key, realm = "" } end
+		local display = key
+		local matchStr = (rec.name or "") .. "-" .. (rec.realm or "")
+		if needle == "" or string.find(matchStr:lower(), needle, 1, true) then
+			local r, g, b = 1, 1, 1
+			if rec.class then
+				r, g, b = getClassColor(rec.class)
+			end
+			table.insert(list, {
+				key = key,
+				display = string.format("|cff%02x%02x%02x%s|r", r * 255, g * 255, b * 255, display),
+				sortKey = (rec.name or key):lower(),
+			})
+		end
+	end
+	table.sort(list, mailboxDisplayContactSort)
+	return list
+end
+
+local function onMailboxRowClick(button, mouseButton)
+	button:OnClick(mouseButton)
+end
+
+-- HybridScroll row mixin
+local RowMixin = {}
+function RowMixin:OnAcquired()
+	if self.initialized then return end
+	self.bg = self:CreateTexture(nil, "BACKGROUND")
+	self.bg:SetAllPoints(self)
+	self.bg:SetColorTexture(0, 0, 0, 0)
+
+	self.cols = {}
+	local x = 0
+	for i, w in ipairs(widths) do
+		local fs = self:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+		fs:SetPoint("LEFT", x, 0)
+		fs:SetWidth(w)
+		fs:SetJustifyH("LEFT")
+		self.cols[i] = fs
+		x = x + w
+	end
+	self:SetHighlightTexture("Interface/QuestFrame/UI-QuestTitleHighlight")
+	self:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+	self:SetScript("OnClick", onMailboxRowClick)
+	self.initialized = true
+end
+
+function RowMixin:Init(elementData)
+	self.key = elementData.key
+	self.name = elementData.name
+	self.realm = elementData.realm
+	self.cols[1]:SetText(elementData.nameColored or elementData.name or "")
+	self.cols[2]:SetText(usesSurnames() and "" or elementData.realm or "")
+end
+
+function RowMixin:OnClick(button)
+	if button == "RightButton" then
+		local key = self.key
+		if not key then return end
+		MU.CreateContextMenu(self, function(_, root)
+			root:CreateTitle(usesSurnames() and (self.name or key) or key)
+			root:CreateButton(REMOVE, function()
+				if addon.db and addon.db.mailboxContacts and addon.db.mailboxContacts[key] then
+					addon.db.mailboxContacts[key] = nil
+					if addon.Mailbox and addon.Mailbox.RefreshList then addon.Mailbox:RefreshList(true) end
+				end
+			end)
+		end)
+		return
+	end
+
+	if SendMailNameEditBox and self.key then
+		local recipient = buildRecipientForMail(self.name, self.realm, self.key)
+		SendMailNameEditBox:SetText(recipient or self.key)
+		SendMailNameEditBox:HighlightText(0, 0)
+		SendMailNameEditBox:ClearFocus()
+	end
+end
+
+function Mailbox:UpdateVisibility()
+	if not self.enabled then
+		if self.frame then self.frame:Hide() end
+		return
+	end
+	if not MailFrame then return end
+	if not self.frame then self.frame = _G.EQOLMailboxFrame end
+	-- The Lua file can initialize after login before the following XML creates the frame.
+	if not self.frame then return end
+
+	local shouldShow = MailFrame:IsShown() and (SendMailFrame and SendMailFrame:IsShown())
+	if shouldShow then
+		applyMailboxPosition()
+		self.frame:Show()
+		-- Match MailFrame height to avoid awkward gaps
+		if MailFrame and self.frame then self.frame:SetHeight(MailFrame:GetHeight() or 430) end
+		if MailFrame and self.frame then self.frame:SetFrameStrata(MailFrame:GetFrameStrata() or "MEDIUM") end
+		-- Make sure we have visible rows once the frame has a real height
+		if not self.rows or #self.rows == 0 then
+			if self.EnsureRows then self:EnsureRows() end
+		end
+		self:RefreshList(true)
+	else
+		self.frame:Hide()
+	end
+end
+
+local function ensureHooks()
+	if Mailbox.hooked then return end
+	Mailbox.hooked = true
+	local function updateMailboxVisibilityDeferred()
+		if addon.Mailbox then addon.Mailbox:UpdateVisibility() end
+	end
+
+	local function onMailboxEvent(_, event)
+		if event == "MAIL_SHOW" then
+			RunNextFrame(updateMailboxVisibilityDeferred)
+		elseif event == "MAIL_SEND_INFO_UPDATE" then
+			if addon.Mailbox then addon.Mailbox:RefreshList() end
+		else -- MAIL_CLOSED
+			if addon.Mailbox and addon.Mailbox.frame then addon.Mailbox.frame:Hide() end
+		end
+	end
+
+	-- Events for show/hide
+	Mailbox.eventFrame = Mailbox.eventFrame or CreateFrame("Frame")
+	Mailbox.eventFrame:RegisterEvent("MAIL_SHOW")
+	Mailbox.eventFrame:RegisterEvent("MAIL_CLOSED")
+	Mailbox.eventFrame:RegisterEvent("MAIL_SEND_INFO_UPDATE")
+	Mailbox.eventFrame:SetScript("OnEvent", onMailboxEvent)
+
+	-- Also watch tab changes to update visibility
+	hooksecurefunc("MailFrameTab_OnClick", function()
+		if addon.Mailbox then addon.Mailbox:UpdateVisibility() end
+	end)
+end
+
+function Mailbox:SetEnabled(v)
+	ensureDB()
+	self.enabled = v and true or false
+	if self.enabled then
+		-- Immediately add current character on enable
+		self:AddSelfToContacts()
+		-- Seed from moneyTracker if present and mailbox is empty
+		local privateDB = getPrivateDB()
+		local contacts = normalizeMailboxContacts()
+		if addon.db and contacts and next(contacts) == nil and type(privateDB.moneyTracker) == "table" then
+			for guid, info in pairs(privateDB.moneyTracker) do
+				if type(info) == "table" and info.name then
+					local name = info.name
+					local realm = info.realm or GetRealmName() or ""
+					local class = info.class or select(2, UnitClass("player"))
+					local r, g, b = getClassColor(class)
+					local key = string.format("%s-%s", name, realm)
+					contacts[key] = {
+						name = name,
+						realm = realm,
+						class = class,
+						color = { r = r, g = g, b = b },
+					}
+				end
+			end
+		end
+		ensureHooks()
+		-- If frame is loaded via XML OnLoad we already have it; else it will appear later
+		self:UpdateVisibility()
+	else
+		if self.frame then self.frame:Hide() end
+	end
+end
+
+mailboxFilteredSort = function(a, b)
+	local sk = Mailbox.sortKey
+	local av, bv
+	if sk == "name" then
+		av = a.name:lower()
+		bv = b.name:lower()
+		if av == bv then
+			av = a.realm:lower()
+			bv = b.realm:lower()
+		end
+	elseif sk == "realm" then
+		av = (a.realm or ""):lower()
+		bv = (b.realm or ""):lower()
+	else
+		av = a.name:lower()
+		bv = b.name:lower()
+	end
+	if Mailbox.sortAsc then
+		return av < bv
+	else
+		return av > bv
+	end
+end
+
+-- Build filtered + sorted table from saved contacts
+local function BuildFiltered()
+	if not addon or not addon.db then
+		wipe(Mailbox.filtered)
+		return
+	end
+	-- If contacts are empty but we have moneyTracker info, import once
+	local contacts = normalizeMailboxContacts() or {}
+	local privateDB = getPrivateDB()
+	if not Mailbox.seeded and next(contacts) == nil and type(privateDB.moneyTracker) == "table" then
+		for _, info in pairs(privateDB.moneyTracker) do
+			if type(info) == "table" and info.name then
+				local name = info.name
+				local realm = info.realm or GetRealmName() or ""
+				local class = info.class or select(2, UnitClass("player"))
+				local r, g, b = getClassColor(class)
+				local key = string.format("%s-%s", name, realm)
+				contacts[key] = {
+					name = name,
+					realm = realm,
+					class = class,
+					color = { r = r, g = g, b = b },
+				}
+			end
+		end
+		Mailbox.seeded = true
+	end
+	if not contacts then
+		wipe(Mailbox.filtered)
+		return
+	end
+	wipe(Mailbox.filtered)
+	-- determine own character to hide from list (normalize realms by removing spaces)
+	local meName, meRealm = UnitFullName("player")
+	if usesSurnames() then
+		meName = UnitName("player")
+		meRealm = GetRealmName()
+	end
+	meRealm = meRealm or (GetRealmName() or "")
+	local myKeyLower = meName and string.format("%s-%s", meName, meRealm):lower() or nil
+	local myKeyLowerNS = meName and string.format("%s-%s", meName, meRealm) or nil
+	myKeyLowerNS = lowerNoSpaces(myKeyLowerNS)
+	local needle = (Mailbox.searchText or ""):lower()
+	for key, rec in pairs(contacts) do
+		if type(rec) ~= "table" then rec = { name = key, realm = "" } end
+		-- skip own character (compare raw-lower and also lower-without-spaces for realm)
+		local skip = false
+		if myKeyLower and key and key:lower() == myKeyLower then
+			skip = true
+		else
+			local keyNS = lowerNoSpaces(key)
+			if myKeyLowerNS and keyNS == myKeyLowerNS then
+				skip = true
+			elseif meName and rec then
+				local rn = rec.name and rec.name:lower()
+				local rr = lowerNoSpaces(rec.realm)
+				local displayName = usesSurnames() and addon.functions.GetUnitDisplayName("player") or meName
+				if rn and (rn == meName:lower() or rn == displayName:lower()) and rr == lowerNoSpaces(meRealm) then skip = true end
+			end
+		end
+		if skip then
+		-- continue
+		else
+			local name = rec.name or key
+			local realm = rec.realm or ""
+			local class = rec.class or ""
+			local r, g, b = getClassColor(class)
+			local displayName = string.format("|cff%02x%02x%02x%s|r", r * 255, g * 255, b * 255, name)
+
+			local match
+			if needle == "" then
+				match = true
+			else
+				if string.find(name:lower(), needle, 1, true) then match = true end
+				if not match and realm ~= "" and string.find(realm:lower(), needle, 1, true) then match = true end
+			end
+			if match then table.insert(Mailbox.filtered, {
+				key = key,
+				name = name,
+				nameColored = displayName,
+				realm = realm,
+			}) end
+		end
+	end
+
+	table.sort(Mailbox.filtered, mailboxFilteredSort)
+end
+
+local function mailboxHeaderOnClick(self)
+	if Mailbox.sortKey ~= self.sortKey then
+		Mailbox.sortKey = self.sortKey
+		Mailbox.sortAsc = true
+	else
+		Mailbox.sortAsc = not Mailbox.sortAsc
+	end
+	BuildFiltered()
+	Mailbox:UpdateRows()
+end
+
+local function mailboxScrollFrameUpdate()
+	Mailbox:UpdateRows()
+end
+
+local function mailboxSearchBoxOnTextChanged(self)
+	Mailbox.searchText = self:GetText() or ""
+	BuildFiltered()
+	Mailbox:UpdateRows()
+end
+
+local function mailboxEnsureRowsAndRefresh()
+	Mailbox:EnsureRows()
+	Mailbox:UpdateRows()
+end
+
+local function mailboxLoginOnEvent()
+	ensureDB()
+	if addon.db.enableMailboxAddressBook then Mailbox:AddSelfToContacts() end
+	-- Apply enable state once UI exists
+	Mailbox:SetEnabled(addon.db.enableMailboxAddressBook)
+	if addon.db.mailboxRememberLastRecipient then Mailbox:EnsureRememberRecipientHooks() end
+end
+
+function Mailbox:UpdateRows()
+	if not self.scrollFrame or not self.rows then return end
+	local buttons = self.rows
+	local offset = HybridScrollFrame_GetOffset(self.scrollFrame)
+	for i = 1, #buttons do
+		local idx = i + offset
+		local row = buttons[i]
+		if self.filtered[idx] then
+			row:Show()
+			row:Init(self.filtered[idx])
+		else
+			row:Hide()
+		end
+	end
+	local displayed = self.scrollFrame:GetHeight() or (10 * ROW_HEIGHT)
+	HybridScrollFrame_Update(self.scrollFrame, #self.filtered * ROW_HEIGHT, displayed)
+end
+
+function Mailbox:RefreshList(rebuild)
+	if rebuild then BuildFiltered() end
+	self:UpdateRows()
+end
+
+-- Frame OnLoad from XML
+function EQOLMailboxFrame_OnLoad(frame)
+	ensureDB()
+	Mailbox.frame = frame
+	Mailbox.searchBox = _G[frame:GetName() .. "SearchBox"]
+	Mailbox.header = _G[frame:GetName() .. "Header"]
+	Mailbox.scrollFrame = _G[frame:GetName() .. "ScrollFrame"]
+	Mailbox.scrollFrame.scrollBar = _G[frame:GetName() .. "ScrollFrameScrollBar"]
+
+	-- Title and search label (like Ignore frame)
+	frame:SetFrameStrata("DIALOG")
+	frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+	frame.title:SetPoint("TOP", frame, "TOP", 0, -6)
+	frame.title:SetText((L and L["MailboxWindowTitle"]) or "Address Book")
+
+	frame.lockButton = CreateFrame("Button", frame:GetName() .. "LockButton", frame)
+	frame.lockButton:SetSize(16, 16)
+	frame.lockButton:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -32, -6)
+	frame.lockButton.icon = frame.lockButton:CreateTexture(nil, "ARTWORK")
+	frame.lockButton.icon:SetAllPoints(frame.lockButton)
+	frame.lockButton:SetScript("OnClick", function()
+		if addon.Mailbox and addon.Mailbox.ToggleLocked then addon.Mailbox:ToggleLocked() end
+	end)
+	frame.lockButton:SetScript("OnEnter", function(self)
+		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+		if addon.db and addon.db.mailboxAddressBookLocked then
+			GameTooltip:SetText(L["frameUnlock"] or "Click to unlock this window. Hold Shift and drag to move; position is saved.")
+		else
+			GameTooltip:SetText(L["frameLock"] or "Click to lock this window to its default position.")
+		end
+		GameTooltip:Show()
+	end)
+	frame.lockButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+	updateLockButton()
+
+	frame.searchLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+	if Mailbox.searchBox then
+		frame.searchLabel:SetPoint("RIGHT", Mailbox.searchBox, "LEFT", -5, 0)
+		frame.searchLabel:SetText(SEARCH .. ":")
+	end
+
+	-- Column headers
+	local columns = {
+		{ key = "name", text = NAME, width = widths[1], idx = 1 },
+		{ key = "realm", text = (FRIENDS_LIST_REALM or "Realm"):gsub(":%s*$", ""), width = widths[2], idx = 2 },
+	}
+	local c = 1
+	for _, col in ipairs(columns) do
+		local btn = _G[Mailbox.header:GetName() .. "Col" .. c]
+		if btn then
+			btn:SetWidth(col.width)
+			local middle = _G[btn:GetName() .. "Middle"]
+			if middle then middle:SetWidth(col.width - 9) end
+			btn:SetText(col.text)
+			btn.sortKey = col.key
+			btn:SetScript("OnClick", mailboxHeaderOnClick)
+		end
+		c = c + 1
+	end
+
+	function Mailbox:EnsureRows()
+		if not self.scrollFrame then return end
+		local have = (self.rows and #self.rows) or 0
+		local height = self.scrollFrame:GetHeight() or 0
+		-- Grow the existing pool once layout resolves; replacing it leaves visible orphan rows.
+		local needed = math.ceil(height / ROW_HEIGHT) + 1
+		if have > 0 and have >= needed then return end
+
+		HybridScrollFrame_CreateButtons(self.scrollFrame, "EQOLMailboxRowTemplate", 5, -6)
+		self.rows = self.scrollFrame.buttons or {}
+		self.scrollFrame.rows = self.rows
+		for _, row in ipairs(self.rows) do
+			Mixin(row, RowMixin)
+			row:OnAcquired()
+		end
+		self.scrollFrame.update = mailboxScrollFrameUpdate
+	end
+	Mailbox:EnsureRows()
+
+	-- Search box handler
+	if Mailbox.searchBox then Mailbox.searchBox:SetScript("OnTextChanged", mailboxSearchBoxOnTextChanged) end
+
+	-- Initial build
+	BuildFiltered()
+	-- Ensure rows even if OnLoad sizing was 0
+	if not Mailbox.rows or #Mailbox.rows == 0 then RunNextFrame(mailboxEnsureRowsAndRefresh) end
+	applyMailboxPosition()
+	Mailbox:UpdateRows()
+	Mailbox:UpdateVisibility()
+end
+
+-- Called from XML OnShow to finalize rows after the frame has a real height
+function EQOLMailboxFrame_OnShow(frame)
+	if not addon or not addon.Mailbox then return end
+	local mb = addon.Mailbox
+	applyMailboxPosition()
+	mb:EnsureRows()
+	mb:RefreshList(true)
+end
+
+function EQOLMailboxFrame_OnMouseDown(_, button)
+	if addon and addon.Mailbox and addon.Mailbox.StartMovingFrame then addon.Mailbox:StartMovingFrame(button) end
+	if EQOLMailboxFrameSearchBox then EQOLMailboxFrameSearchBox:ClearFocus() end
+end
+
+function EQOLMailboxFrame_OnMouseUp()
+	if addon and addon.Mailbox and addon.Mailbox.StopMovingFrame then addon.Mailbox:StopMovingFrame() end
+end
+
+-- Register a local login listener to add the player if enabled
+if not Mailbox.loginFrame then
+	Mailbox.loginFrame = CreateFrame("Frame")
+	Mailbox.loginFrame:SetScript("OnEvent", mailboxLoginOnEvent)
+	if IsLoggedIn and IsLoggedIn() then
+		mailboxLoginOnEvent()
+	else
+		Mailbox.loginFrame:RegisterEvent("PLAYER_LOGIN")
+	end
+end

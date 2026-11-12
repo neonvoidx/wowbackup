@@ -1,0 +1,83 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ https://raw.githubusercontent.com/Gethe/wow-ui-source/live/Interface/AddOns/Blizzard_SharedXML/UI.xsd">
+    <Script file="FloatingTitle.lua" />
+
+    <Frame name="MapPinEnhancedWayfinderFloatingTitleTemplate" inherits="MapPinEnhancedFadingFrameTemplate" virtual="true" mixin="MapPinEnhancedWayfinderFloatingTitleMixin" hidden="true" propagateMouseInput="Both">
+        <Size x="10" y="20" />
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture parentKey="background" inherits="MapPinEnhancedGenericFrameTextureTemplate">
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="-10" />
+                        <Anchor point="BOTTOMRIGHT" x="10" />
+                    </Anchors>
+                </Texture>
+            </Layer>
+            <Layer level="BORDER">
+                <Texture parentKey="border" inherits="MapPinEnhancedGenericFrameTextureTemplate" alphaMode="ADD">
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="-10" />
+                        <Anchor point="BOTTOMRIGHT" x="10" />
+                    </Anchors>
+                </Texture>
+            </Layer>
+            <Layer level="ARTWORK">
+                <FontString parentKey="title" inherits="MapPinEnhancedFontNormalSmall" justifyH="CENTER" justifyV="TOP" wordwrap="true" spacing="3">
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="15" y="-10" />
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Frames>
+            <Frame parentKey="normalTextAnchor">
+                <Size x="1" y="1" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="15" y="-10" />
+                </Anchors>
+            </Frame>
+            <Frame parentKey="fallbackTextAnchor">
+                <Size x="1" y="1" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="64" y="-8" />
+                </Anchors>
+            </Frame>
+            <Frame parentKey="info" enableMouse="true" propagateMouseInput="Both" hidden="true">
+                <Size x="18" y="18" />
+                <Anchors>
+                    <Anchor point="RIGHT" relativePoint="RIGHT" x="-8" />
+                </Anchors>
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <Texture inherits="MapPinEnhancedIconTemplate">
+                            <Size x="12" y="12" />
+                            <KeyValues>
+                                <KeyValue key="icon" value="info" />
+                            </KeyValues>
+                            <Anchors>
+                                <Anchor point="CENTER" />
+                            </Anchors>
+                        </Texture>
+                    </Layer>
+                </Layers>
+                <Scripts>
+                    <OnEnter>self:GetParent():ShowInfoTooltip()</OnEnter>
+                    <OnLeave>self:GetParent():HideInfoTooltip()</OnLeave>
+                    <OnHide>self:GetParent():HideInfoTooltip()</OnHide>
+                </Scripts>
+            </Frame>
+            <Frame parentKey="description" inherits="MapPinEnhancedWayfinderDescriptionTemplate" propagateMouseInput="Both">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeKey="$parent.title" y="-3" />
+                </Anchors>
+            </Frame>
+        </Frames>
+        <Scripts>
+            <OnLoad method="OnLoad" />
+            <OnMouseUp method="OnMouseUp" />
+            <OnEnter method="OnEnter" />
+            <OnLeave method="OnLeave" />
+            <OnHide method="OnLeave" />
+        </Scripts>
+    </Frame>
+</Ui>

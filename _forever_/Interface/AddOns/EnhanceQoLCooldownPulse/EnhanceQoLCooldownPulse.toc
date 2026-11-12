@@ -1,0 +1,19 @@
+## Interface: 16001
+## Title: Enhance QoL Cooldown Pulse
+## Author: R41Z0R
+## Version: 13.20.1
+## Dependencies: EnhanceQoL
+## LoadOnDemand: 1
+## Globe-Main: EnhanceQoL
+## X-Compatible-With: forever
+## X-EQOL-Flavor: forever
+## IconTexture: Interface\AddOns\EnhanceQoL\Icons\Icon.tga
+
+Core.lua
+Runtime.lua
+Observers.lua
+Diagnostics.lua
+Editor.lua
+Overview.lua
+Settings.lua
+Init.lua

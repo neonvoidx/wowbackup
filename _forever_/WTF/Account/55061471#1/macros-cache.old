@@ -1,0 +1,42 @@
+VER 3 0000000000000008 " " "1385294"
+#plumber:drawer
+/click PLMR1
+END
+VER 3 0000000000000004 " " "2869702"
+#plumber:outfit
+/click PLMR_OUTFIT
+END
+VER 3 0000000000000007 " " "INV_Misc_QuestionMark"
+#showtooltip 13
+/use  13
+END
+VER 3 0000000000000011 "attack" "236299"
+/petattack
+END
+VER 3 0000000000000023 "EnhanceQoLDrinkMacro" "INV_Misc_QuestionMark"
+#showtooltip
+END
+VER 3 0000000000000024 "EnhanceQoLHealthMacro" "INV_Misc_QuestionMark"
+#showtooltip
+/use [nocombat] item:4604
+END
+VER 3 000000000000001A "FOCUS" "132284"
+/focus [@mouseover,nodead,exists]; [@target,exists]
+END
+VER 3 0000000000000026 "follow" "5159899"
+/petfollow
+END
+VER 3 0000000000000025 "move" "1378284"
+#showtooltip 
+/petmoveto
+END
+VER 3 0000000000000022 "RS_MACRO" "667492"
+END
+VER 3 0000000000000027 "RXPTargeting" "Ability_eyeoftheowl"
+/targetexact Mangy Duskbat
+/targetexact Duskbat
+/targetexact Ragged Scavenger
+/targetexact Young Scavenger
+/targetexact Rattlecage Skeleton
+/targetlasttarget [dead]
+END

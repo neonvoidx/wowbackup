@@ -1,0 +1,53 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/UI.xsd">
+  <Button name="FrameColorOptions_ColorButtonTemplate" virtual="true">
+    <Size y="32"/>
+    <Layers>
+      <Layer level="OVERLAY">
+        <FontString parentKey="name" inherits="GameFontNormalLeft">
+          <Anchors>
+            <Anchor point="LEFT" x="10" y="0"/>
+          </Anchors>
+        </FontString>
+      </Layer>
+        <Layer level="BACKGROUND">
+          <Texture parentKey="backgroundTexture" file="Interface\BUTTONS\UI-Listbox-Highlight2.blp">
+          <Color r="0.3" g="0.5" b="0.8" a="0.2"/>
+          </Texture>
+        </Layer>
+		</Layers>
+    <Frames>
+      <CheckButton parentKey="followClassColor">
+        <Size x="28" y ="28"/>
+        <Anchors>
+          <Anchor point="RIGHT" x="-30"/>
+        </Anchors>
+        <NormalTexture atlas="checkbox-minimal" useAtlasSize="true"/>
+        <PushedTexture atlas="checkbox-minimal" useAtlasSize="true"/>
+        <HighlightTexture atlas="checkbox-minimal" useAtlasSize="true" alphaMode="ADD"/>
+        <CheckedTexture atlas="checkmark-minimal" useAtlasSize="true"/>
+      </CheckButton>
+      <Button parentKey="colorPicker">
+        <HighlightTexture atlas="ArtifactsFX-YellowRing" setAllPoints="true"/>
+        <Size x="22" y ="22"/>
+        <Anchors>
+          <Anchor point="RIGHT" x="-70"/>
+        </Anchors>
+        <Layers>
+					<Layer level="ARTWORK" textureSubLevel="1">
+						<Texture parentKey="backgroundTexture" setAllPoints="true">
+            <Color r="0.2" g="0.2" b="0.2" a="1" />
+						</Texture>
+						<MaskTexture atlas="CircleMaskScalable" useAtlasSize="true" hWrapMode="CLAMPTOBLACKADDITIVE" vWrapMode="CLAMPTOBLACKADDITIVE" setAllPoints="true">
+							<MaskedTextures>
+								<MaskedTexture childKey="backgroundTexture"/>
+							</MaskedTextures>
+						</MaskTexture>
+					</Layer>
+          <Layer level="ARTWORK" textureSubLevel="2">
+            <Texture parentKey="border" atlas="talents-node-choiceflyout-circle-yellow" useAtlasSize="true" setAllPoints="true"/>
+          </Layer>
+        </Layers>
+      </Button>
+		</Frames>
+  </Button>
+</Ui>

@@ -1,0 +1,18 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+	<Script file="WhirlwindTracker.lua" />
+	<Script file="ResourceBars.lua" />
+	<Script file="TrackingBarMouseover.lua" />
+	<Script file="ResourceBars_AuraContainers.lua" />
+	<Script file="ResourceBarsHelpers.lua" />
+	<Script file="SharedAssignments.lua" />
+	<Script file="GCDBar.lua" />
+	<Script file="ExperienceBar.lua" />
+	<Script file="ReputationBar.lua" />
+	<Script file="HonorBar.lua" />
+	<Script file="MirrorTimers.lua" />
+	<Script file="Settings_MirrorTimers.lua" />
+	<Script file="Init.lua" />
+	<Script file="Navigation.lua" />
+	<Script file="Settings_Ressourcebars.lua" />
+	<Script file="MirrorTimersSettingsCenter.lua" />
+</Ui>

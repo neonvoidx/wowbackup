@@ -1,0 +1,5 @@
+
+Notepad_CVars = {
+["Notes"] = {
+},
+}

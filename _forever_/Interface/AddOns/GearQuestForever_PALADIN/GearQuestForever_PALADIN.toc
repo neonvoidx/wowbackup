@@ -1,0 +1,13 @@
+## Interface: 16001
+## Title: GearQuest Forever: Paladin
+## Notes: Hunt lists for this class. GearQuest Forever loads this when you play or simulate it.
+## Author: Henrik8210
+## Version: 1.1.4
+## IconTexture: Interface\Icons\ClassIcon_Paladin
+## LoadOnDemand: 1
+## Dependencies: GearQuestForever
+## RequiredDeps: GearQuestForever
+
+Data.Paladin.generated.lua
+Data.Paladin.Early.1to9.generated.lua
+AuditTips.lua

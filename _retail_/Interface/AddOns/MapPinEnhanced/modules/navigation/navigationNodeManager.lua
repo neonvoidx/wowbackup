@@ -1,0 +1,1284 @@
+---@class MapPinEnhanced
+local MapPinEnhanced = select(2, ...)
+
+---@class Navigation
+local Navigation = MapPinEnhanced:GetModule("Navigation")
+
+---@class NavigationStaticPath
+---@field fromPointID number?
+---@field fromMap number?
+---@field fromX number?
+---@field fromY number?
+---@field toPointID number
+---@field toMap number
+---@field destinationNameMapID number? Display-only arrival city when the endpoint map names an interior
+---@field toX number
+---@field toY number
+---@field type string
+---@field travelDuration number?
+---@field travelDurationEstimated boolean? Estimated taxi timing, not a measurement
+---@field fromTaxiNodeID number?
+---@field toTaxiNodeID number?
+---@field taxiPathIDs integer[]?
+---@field requirement NavigationRequirement?
+---@field gossip NavigationStaticGossip?
+---@field phase NavigationStaticPhase?
+
+---@class NavigationStaticGossip
+---@field npcID number
+---@field gossipOptionID number
+---@field parentOptionID number? Category option preceding a destination submenu
+---@field destinationNameKey string? Localized destination option label when the map name differs
+---@field requiresObservation boolean? Require positive character-specific menu observation
+---@field unlockQuestID number? Completed destination unlock also satisfies the observation gate
+
+---@class NavigationRequirementCheck
+---@field operation "check"
+---@field kind string A reagent check denotes a vendor-purchased spell reagent, not a travel item.
+---@field value any
+
+---@class NavigationRequirementGroup
+---@field operation "all"|"any"
+---@field children NavigationRequirement[]
+
+---@class NavigationRequirementNot
+---@field operation "not"
+---@field children NavigationRequirement[]
+
+---@alias NavigationRequirement NavigationRequirementCheck|NavigationRequirementGroup|NavigationRequirementNot
+
+---@class NavigationPathData
+---@field pathType string
+---@field paths NavigationStaticPath[]
+
+local registeredPathData = {} ---@type NavigationPathData[]
+local navigationGraph ---@type NavigationGraph?
+local preparedNavigationData ---@type NavigationPreparedData?
+local preparedDataDirty = true
+local allRequirementsDirty = true
+local dirtyRequirementKinds = {} ---@type table<string, boolean>
+-- Only graph-owned immutable values may retain a canonical key between passes.
+-- False marks an unbuilt key; weak keys do not retain discarded requirement values.
+local structuredObservationKeys = setmetatable({}, { __mode = "k" }) ---@type table<table, string|false>
+local preparationChangeNumber = 0
+local cancelPreparation ---@type fun()?
+local preparingAllRequirements = false
+local preparingRequirementKinds ---@type table<string, boolean>?
+local preparationFailure ---@type string?
+--[==[@debug@
+local profilePreparation ---@type ProfilerPreparation?
+--@end-debug@]==]
+local hearthstonePathReferences = {} ---@type integer[]
+local campPathReferences = {} ---@type integer[]
+local hasBuffRequirements = false
+local observedMovementCapabilities ---@type NavigationMovementCapabilities?
+
+local includeDungeonPortals = false
+
+---@return string?
+function Navigation:GetMissingTravelDataWarning()
+    if not self.routeNavigationEnabled then return nil end
+    local warnings = {} ---@type string[]
+    if not self:HasHearthstoneDestination() then
+        warnings[#warnings + 1] = MapPinEnhanced.L["Navigation Hearthstone Data Missing"]
+    end
+    if not self:HasTaxiNodeKnowledge() then
+        warnings[#warnings + 1] = MapPinEnhanced.L["Navigation Flight Data Missing"]
+    end
+    return #warnings > 0 and table.concat(warnings, "\n") or nil
+end
+
+---@param enabled boolean
+function Navigation:SetIncludeDungeonPortals(enabled)
+    includeDungeonPortals = enabled == true and not MapPinEnhanced.isForever
+    self:RefreshPreparedData()
+end
+
+---@return NavigationGraph?
+function Navigation:GetGraph()
+    return navigationGraph
+end
+
+---@return NavigationPreparedData?
+function Navigation:GetPreparedData()
+    return preparedNavigationData
+end
+
+---@class NavigationGraph
+---@field pointIDs number[]
+---@field pointMapIDs number[]
+---@field pointXs number[]
+---@field pointYs number[]
+---@field pathFromPointIndexes table<integer, integer>
+---@field pathToPointIndexes integer[]
+---@field pathTypes string[]
+---@field pathDurations table<integer, number>
+---@field pathDestinationNameMapIDs table<integer, number>
+---@field hearthstoneBindName string?
+---@field pathRequirements table<integer, table>
+---@field pathsByRequirementKind table<string, integer[]>
+---@field requirementKindsByPath table<integer, table<string, boolean>>
+---@field actionPathReferences integer[]
+---@field phaseGroupsByPath table<integer, string[]>
+---@field pathHandlerData table<integer, any>
+---@field currentPlayerPathReferences integer[]
+---@field outgoingPathReferences integer[]
+---@field firstOutgoingPathByPointIndex integer[]
+---@field outgoingPathCountByPointIndex integer[]
+---@field excludedPaths table<integer, string>
+---@field pathCount integer
+
+---@class NavigationMovementData
+---@field movement NavigationMovementCapabilities
+---@field movementOnly true?
+---@field taxiObservation NavigationTaxiObservation?
+
+---@class NavigationPreparedData : NavigationMovementData
+---@field frozenPathCosts table<integer, NavigationCalculatedPathCost>?
+---@field frozenPathFailures table<integer, string>?
+---@field phaseStates table<integer, NavigationRequirementState>?
+---@field phaseFailures table<integer, string>?
+---@field phaseObservations NavigationRequirementObservations?
+---@field observations NavigationRequirementObservations?
+---@field unknownRequirementPaths table<integer, boolean>?
+---@field includeDungeonPortals boolean?
+---@field requirementStateByPath table<integer, NavigationRequirementState>
+---@field exclusionReasonByPath table<integer, string>
+---@field movement NavigationMovementCapabilities
+---@field taxiObservation NavigationTaxiObservation?
+---@field taxiSpeedMultiplier number?
+---@field taxiCosts table<integer, NavigationCalculatedPathCost>
+---@field taxiFailures table<integer, string>
+
+---@param pathType string
+---@param paths NavigationStaticPath[]
+function Navigation:RegisterPathData(pathType, paths)
+    assert(type(pathType) == "string" and pathType ~= "",
+        "Navigation:RegisterPathData requires a Path type")
+    assert(type(paths) == "table", "Navigation:RegisterPathData requires a Path table")
+    if pathType == "flighttaxi" then
+        -- Generated taxi requirements include both endpoints. The departure
+        -- can be learned on arrival, so retain only the destination/access checks.
+        for _, path in ipairs(paths) do
+            local requirement = path.requirement
+            if requirement and requirement.operation == "all" then
+                for index = #requirement.children, 1, -1 do
+                    local child = requirement.children[index]
+                    if child.operation == "check" and child.kind == "taxiNodeKnown" and
+                        child.value == path.fromTaxiNodeID then
+                        table.remove(requirement.children, index)
+                    end
+                end
+            end
+        end
+    end
+    table.insert(registeredPathData, { pathType = pathType, paths = paths })
+end
+
+---@param graph NavigationGraph
+---@param pointIndexByID table<number, integer>
+---@param pointID number
+---@param mapID number?
+---@param x number?
+---@param y number?
+---@return integer
+local function GetOrAddPoint(graph, pointIndexByID, pointID, mapID, x, y)
+    local pointIndex = pointIndexByID[pointID]
+    if pointIndex then
+        if (graph.pointMapIDs[pointIndex] == nil or graph.pointXs[pointIndex] == nil or
+                graph.pointYs[pointIndex] == nil) and type(mapID) == "number" and
+            type(x) == "number" and type(y) == "number" then
+            graph.pointMapIDs[pointIndex] = mapID
+            graph.pointXs[pointIndex] = x
+            graph.pointYs[pointIndex] = y
+        end
+        return pointIndex
+    end
+
+    pointIndex = #graph.pointIDs + 1
+    pointIndexByID[pointID] = pointIndex
+    graph.pointIDs[pointIndex] = pointID
+    graph.pointMapIDs[pointIndex] = mapID
+    graph.pointXs[pointIndex] = x
+    graph.pointYs[pointIndex] = y
+    return pointIndex
+end
+
+---@param path NavigationStaticPath
+---@return any handlerData
+---@return string? failure
+local function PrepareStaticPath(path)
+    if type(path.toPointID) ~= "number" or type(path.toMap) ~= "number" or
+        type(path.toX) ~= "number" or type(path.toY) ~= "number" then
+        return nil, "missing destination"
+    end
+    if path.toX < 0 or path.toX > 1 or path.toY < 0 or path.toY > 1 then
+        return nil, "invalid destination coordinates"
+    end
+    if path.fromPointID ~= nil and (type(path.fromMap) ~= "number" or
+            type(path.fromX) ~= "number" or type(path.fromY) ~= "number") then
+        return nil, "missing origin"
+    end
+    if path.fromPointID ~= nil and
+        (path.fromX < 0 or path.fromX > 1 or path.fromY < 0 or path.fromY > 1) then
+        return nil, "invalid origin coordinates"
+    end
+    return Navigation:GetPathData(path)
+end
+
+---@param requirement NavigationRequirement?
+---@param kinds table<string, boolean>
+local function CollectRequirementKinds(requirement, kinds)
+    if type(requirement) ~= "table" then return end
+    if requirement.operation == "check" then
+        if MapPinEnhanced:IsReadableTable(requirement.value) then
+            structuredObservationKeys[requirement.value] = false
+        end
+        local kind = requirement.kind
+        if kind == "spellKnown" then kind = "spell" end
+        if kind == "toyKnown" then kind = "toy" end
+        if type(kind) == "string" then kinds[kind] = true end
+    elseif type(requirement.children) == "table" then
+        -- Include every branch, even one currently short-circuited by all/any/not.
+        -- Tagged item+toy groups also retain their toy ownership dependency.
+        for _, child in ipairs(requirement.children) do
+            CollectRequirementKinds(child, kinds)
+        end
+    end
+end
+
+function Navigation:BuildGraph()
+    -- Authored IDs are resolved once; runtime routing uses dense point indexes.
+    local pointIndexByID = {} ---@type table<number, integer>
+    ---@type NavigationGraph
+    local graph = {
+        pointIDs = {},
+        pointMapIDs = {},
+        pointXs = {},
+        pointYs = {},
+        pathFromPointIndexes = {},
+        pathToPointIndexes = {},
+        pathTypes = {},
+        pathDurations = {},
+        pathDestinationNameMapIDs = {},
+        pathRequirements = {},
+        pathsByRequirementKind = {},
+        requirementKindsByPath = {},
+        actionPathReferences = {},
+        phaseGroupsByPath = {},
+        pathHandlerData = {},
+        currentPlayerPathReferences = {},
+        outgoingPathReferences = {},
+        firstOutgoingPathByPointIndex = {},
+        outgoingPathCountByPointIndex = {},
+        excludedPaths = {},
+        pathCount = 0,
+    }
+
+    for _, pathData in ipairs(registeredPathData) do
+        for _, path in ipairs(pathData.paths) do
+            assert(path.type == pathData.pathType,
+                "Navigation:RegisterPathData Path type does not match its registered table: " ..
+                tostring(pathData.pathType))
+            local pathReference = graph.pathCount + 1
+            graph.pathCount = pathReference
+            ---@type integer?
+            local toPointIndex
+            if type(path.toPointID) == "number" then
+                toPointIndex = GetOrAddPoint(graph, pointIndexByID, path.toPointID, path.toMap, path.toX, path.toY)
+            end
+            ---@type integer?
+            local fromPointIndex
+            if type(path.fromPointID) == "number" then
+                fromPointIndex = GetOrAddPoint(graph, pointIndexByID, path.fromPointID, path.fromMap, path.fromX,
+                    path.fromY)
+            end
+            local handlerData, failure = PrepareStaticPath(path)
+            if failure then
+                graph.excludedPaths[pathReference] = failure
+            else
+                ---@cast toPointIndex integer
+                if fromPointIndex then
+                    graph.pathFromPointIndexes[pathReference] = fromPointIndex
+                else
+                    table.insert(graph.currentPlayerPathReferences, pathReference)
+                end
+                graph.pathToPointIndexes[pathReference] = toPointIndex
+                graph.pathTypes[pathReference] = path.type
+                graph.pathDurations[pathReference] = path.travelDuration
+                graph.pathDestinationNameMapIDs[pathReference] = path.destinationNameMapID
+                graph.pathRequirements[pathReference] = path.requirement
+                graph.pathHandlerData[pathReference] = handlerData
+                if fromPointIndex then
+                    graph.outgoingPathCountByPointIndex[fromPointIndex] =
+                        (graph.outgoingPathCountByPointIndex[fromPointIndex] or 0) + 1
+                end
+            end
+        end
+    end
+
+    -- Reserve one stable runtime endpoint after the generated graph. Its
+    -- coordinates are replaced on binding without rebuilding authored Paths.
+    local hearthstonePointIndex = #graph.pointIDs + 1
+    graph.pointIDs[hearthstonePointIndex] = -1
+    graph.pointMapIDs[hearthstonePointIndex] = 0
+    graph.pointXs[hearthstonePointIndex] = 0
+    graph.pointYs[hearthstonePointIndex] = 0
+    local items = {} ---@type number[]
+    for itemID in pairs(self.hearthstoneItems) do table.insert(items, itemID) end
+    table.sort(items)
+    for _, itemID in ipairs(items) do
+        local reference = graph.pathCount + 1
+        graph.pathCount = reference
+        graph.pathToPointIndexes[reference] = hearthstonePointIndex
+        graph.pathTypes[reference] = "hearthstone"
+        graph.pathRequirements[reference] = {
+            operation = "check", kind = itemID == 6948 and "item" or "toy", value = itemID,
+        }
+        graph.excludedPaths[reference] = "hearthstone destination unknown"
+        table.insert(graph.currentPlayerPathReferences, reference)
+        table.insert(hearthstonePathReferences, reference)
+    end
+
+    for _, spellID in ipairs(self.hearthstoneSpells or {}) do
+        local reference = graph.pathCount + 1
+        graph.pathCount = reference
+        graph.pathToPointIndexes[reference] = hearthstonePointIndex
+        graph.pathTypes[reference] = "hearthstone"
+        graph.pathRequirements[reference] = { operation = "check", kind = "spellKnown", value = spellID }
+        graph.excludedPaths[reference] = "hearthstone destination unknown"
+        table.insert(graph.currentPlayerPathReferences, reference)
+        table.insert(hearthstonePathReferences, reference)
+    end
+
+    if not MapPinEnhanced.isForever then
+        local point = #graph.pointIDs + 1
+        graph.pointIDs[point] = -2
+        graph.pointMapIDs[point], graph.pointXs[point], graph.pointYs[point] = 0, 0, 0
+        local reference = graph.pathCount + 1
+        graph.pathCount = reference
+        graph.pathToPointIndexes[reference] = point
+        graph.pathTypes[reference] = "spell"
+        graph.pathRequirements[reference] = { operation = "check", kind = "spellKnown", value = 312372 }
+        graph.excludedPaths[reference] = "camp destination unknown"
+        table.insert(graph.currentPlayerPathReferences, reference)
+        campPathReferences = { reference }
+    end
+
+    local nextOffset = 1
+    local nextPathOffsetByPointIndex = {} ---@type integer[]
+    for pointIndex = 1, #graph.pointIDs do
+        graph.firstOutgoingPathByPointIndex[pointIndex] = nextOffset
+        nextPathOffsetByPointIndex[pointIndex] = nextOffset
+        nextOffset = nextOffset + (graph.outgoingPathCountByPointIndex[pointIndex] or 0)
+    end
+    for pathReference = 1, graph.pathCount do
+        local fromPointIndex = graph.pathFromPointIndexes[pathReference]
+        if fromPointIndex then
+            local offset = nextPathOffsetByPointIndex[fromPointIndex]
+            graph.outgoingPathReferences[offset] = pathReference
+            nextPathOffsetByPointIndex[fromPointIndex] = offset + 1
+        end
+    end
+
+    self:IndexTaxiConnections(graph)
+    for reference, requirement in pairs(graph.pathRequirements) do
+        local kinds = {} ---@type table<string, boolean>
+        CollectRequirementKinds(requirement, kinds)
+        graph.requirementKindsByPath[reference] = kinds
+        for kind in pairs(kinds) do
+            local paths = graph.pathsByRequirementKind[kind]
+            if not paths then
+                paths = {}
+                graph.pathsByRequirementKind[kind] = paths
+            end
+            paths[#paths + 1] = reference
+        end
+    end
+    for reference = 1, graph.pathCount do
+        if self:GetPathAction(graph.pathTypes[reference], graph.pathRequirements[reference]) then
+            graph.actionPathReferences[#graph.actionPathReferences + 1] = reference
+        end
+    end
+    self:IndexTravelPhaseRequirements(graph)
+    hasBuffRequirements = graph.pathsByRequirementKind.buff ~= nil
+    navigationGraph = graph
+    preparedNavigationData = nil
+    registeredPathData = {}
+    self:RefreshPreparedData()
+end
+
+---@param references integer[]
+---@param destination NavigationCampDestination|NavigationHearthstoneDestination|nil
+---@param missingReason string
+---@return NavigationGraph?
+local function ReplaceDestination(references, destination, missingReason)
+    local graph = navigationGraph
+    local reference = references[1]
+    if not graph or not reference then return end
+    local point = graph.pathToPointIndexes[reference]
+    local mapID, x, y = 0, 0, 0
+    if destination then
+        -- Bind observations can use a continent map. Resolve the routing copy
+        -- on both restore and learning without replacing the saved observation.
+        mapID, x, y = MapPinEnhanced:ResolveZonePosition(destination.mapID, destination.x, destination.y)
+    end
+    -- Existing Routes and jobs own immutable geometry. Share the static arrays,
+    -- copying only the arrays whose character destination changes.
+    local replacement = CopyTable(graph, true) ---@type NavigationGraph
+    replacement.pointMapIDs = CopyTable(graph.pointMapIDs)
+    replacement.pointXs = CopyTable(graph.pointXs)
+    replacement.pointYs = CopyTable(graph.pointYs)
+    replacement.excludedPaths = CopyTable(graph.excludedPaths)
+    replacement.pointMapIDs[point] = mapID
+    replacement.pointXs[point] = x
+    replacement.pointYs[point] = y
+    for _, pathReference in ipairs(references) do
+        replacement.excludedPaths[pathReference] = not destination and missingReason or nil
+        Navigation.avoidedPaths[pathReference] = nil
+    end
+    navigationGraph = replacement
+    return replacement
+end
+
+---@param destination NavigationHearthstoneDestination?
+function Navigation:UpdateHearthstonePath(destination)
+    local graph = ReplaceDestination(hearthstonePathReferences, destination, "hearthstone destination unknown")
+    if not graph then return end
+    graph.hearthstoneBindName = destination and MapPinEnhanced:NormalizeText(destination.bindName) or nil
+    self:RefreshPreparedData()
+    self:RefreshDynamicDestinationRoute()
+end
+
+---@param destination NavigationCampDestination?
+function Navigation:UpdateCampPath(destination)
+    if not ReplaceDestination(campPathReferences, destination, "camp destination unknown") then return end
+    self:RefreshPreparedData()
+    self:RefreshDynamicDestinationRoute()
+end
+
+-- Character requirement preparation
+---@alias NavigationRequirementState "satisfied"|"unsatisfied"|"unknown"
+
+local SATISFIED = "satisfied"
+local UNSATISFIED = "unsatisfied"
+local UNKNOWN = "unknown"
+
+---@param nodeID number
+---@return boolean? known
+function Navigation:IsLegacyTraitKnown(nodeID)
+    local legacy = Constants and Constants.LegacyConsts
+    if not legacy then return false end
+    if not C_Traits or not C_Traits.GetConfigIDByTreeID or not C_Traits.GetNodeInfo then return nil end
+    local treeID = legacy.LEGACY_TREE_ADVENTURE_ID
+    if not MapPinEnhanced:IsReadablePositiveInteger(treeID) then return nil end
+    -- Forever's three Legacy trees share one character-specific configuration.
+    -- Committed entries exclude purchases/refunds still staged in the Legacy UI.
+    local configID = C_Traits.GetConfigIDByTreeID(treeID)
+    if not MapPinEnhanced:IsReadablePositiveInteger(configID) then return nil end
+    local node = C_Traits.GetNodeInfo(configID, nodeID)
+    if not MapPinEnhanced:IsReadableTable(node) or
+        not MapPinEnhanced:IsReadableTable(node.entryIDsWithCommittedRanks) then
+        return nil
+    end
+    return #node.entryIDsWithCommittedRanks > 0
+end
+
+---@param result boolean?
+---@return NavigationRequirementState
+local function StateFromBoolean(result)
+    if MapPinEnhanced:IsSecretValue(result) or type(result) ~= "boolean" then return UNKNOWN end
+    return result and SATISFIED or UNSATISFIED
+end
+
+---@param itemID any
+---@return NavigationRequirementState
+local function EvaluateToyOwnership(itemID)
+    if type(itemID) ~= "number" or not PlayerHasToy then return UNKNOWN end
+    return StateFromBoolean(PlayerHasToy(itemID))
+end
+
+-- Generated toy Paths pair tagged item and toy checks under one all operation.
+---@param requirement NavigationRequirement
+---@return number?
+local function GetQualifiedToyItemID(requirement)
+    if requirement.operation ~= "all" or type(requirement.children) ~= "table" or
+        #requirement.children ~= 2 then
+        return nil
+    end
+    ---@type number?
+    local itemID
+    local hasToyQualifier = false
+    for _, child in ipairs(requirement.children) do
+        if type(child) ~= "table" then return nil end
+        if child.operation == "check" and child.kind == "item" and
+            type(child.value) == "number" and not itemID then
+            itemID = child.value
+        elseif child.operation == "check" and child.kind == "toy" and
+            child.value == true and not hasToyQualifier then
+            hasToyQualifier = true
+        else
+            return nil
+        end
+    end
+    return hasToyQualifier and itemID or nil
+end
+
+---@param value any
+---@param expected any
+---@return boolean
+local function ValueMatches(value, expected)
+    if type(expected) ~= "table" then return value == expected end
+    ---@cast expected any[]
+    for _, accepted in ipairs(expected) do
+        if value == accepted then return true end
+    end
+    return false
+end
+
+---@param key string
+---@param value any
+---@return NavigationRequirementState
+local function EvaluateDirectCheck(key, value)
+    if key == "taxiNodeKnown" then
+        if type(value) ~= "number" then return UNKNOWN end
+        return StateFromBoolean(Navigation:IsTaxiNodeKnown(value))
+    elseif key == "event" then
+        if type(value) ~= "string" then return UNKNOWN end
+        return StateFromBoolean(Navigation:IsCalendarEventActive(value))
+    elseif key == "mapPOIPresent" then
+        if type(value) ~= "table" or type(value.mapID) ~= "number" or type(value.poiID) ~= "number" or
+            not C_AreaPoiInfo or not C_AreaPoiInfo.GetAreaPOIForMap then
+            return UNKNOWN
+        end
+        local poiIDs = C_AreaPoiInfo.GetAreaPOIForMap(value.mapID)
+        if not MapPinEnhanced:IsReadableTable(poiIDs) then return UNKNOWN end
+        local sawUnknown = false
+        for _, poiID in ipairs(poiIDs) do
+            if MapPinEnhanced:IsSecretValue(poiID) or type(poiID) ~= "number" then
+                sawUnknown = true
+            elseif poiID == value.poiID then
+                return SATISFIED
+            end
+        end
+        return sawUnknown and UNKNOWN or UNSATISFIED
+    elseif key == "mapOverlayTexture" then
+        if type(value) ~= "table" or type(value.mapID) ~= "number" or type(value.textureID) ~= "number" or
+            not C_MapExplorationInfo or not C_MapExplorationInfo.GetExploredMapTextures then
+            return UNKNOWN
+        end
+        local textures = C_MapExplorationInfo.GetExploredMapTextures(value.mapID)
+        if not MapPinEnhanced:IsReadableTable(textures) or not MapPinEnhanced:IsReadableTable(textures[1]) or
+            not MapPinEnhanced:IsReadableTable(textures[1].fileDataIDs) then
+            return UNKNOWN
+        end
+        -- The source invasion selector observes the first overlay's first texture.
+        local textureID = textures[1].fileDataIDs[1]
+        if MapPinEnhanced:IsSecretValue(textureID) or type(textureID) ~= "number" then return UNKNOWN end
+        return StateFromBoolean(textureID == value.textureID)
+    elseif key == "contributionStateMin" then
+        if type(value) ~= "table" or type(value.collectorID) ~= "number" or type(value.state) ~= "number" or
+            not C_ContributionCollector or not C_ContributionCollector.GetState then
+            return UNKNOWN
+        end
+        local state = C_ContributionCollector.GetState(value.collectorID)
+        if MapPinEnhanced:IsSecretValue(state) or type(state) ~= "number" or
+            state == Enum.ContributionState.None then
+            return UNKNOWN
+        end
+        return StateFromBoolean(state >= value.state)
+    elseif key == "garrison" then
+        if type(value) ~= "table" or type(value.type) ~= "number" or type(value.level) ~= "number" or
+            not C_Garrison or not C_Garrison.GetGarrisonInfo then
+            return UNKNOWN
+        end
+        local level = C_Garrison.GetGarrisonInfo(value.type)
+        if MapPinEnhanced:IsSecretValue(level) or type(level) ~= "number" then return UNKNOWN end
+        return StateFromBoolean(level == value.level)
+    elseif key == "legionUnlocked" then
+        if type(value) ~= "boolean" then return UNKNOWN end
+        local level = UnitLevel("player")
+        local levelKnown = not MapPinEnhanced:IsSecretValue(level) and type(level) == "number" and level > 0
+        if levelKnown and level >= 50 then return StateFromBoolean(value) end
+        local completed = C_QuestLog and C_QuestLog.IsQuestFlaggedCompleted and
+            C_QuestLog.IsQuestFlaggedCompleted(44663)
+        if MapPinEnhanced:IsSecretValue(completed) then return UNKNOWN end
+        if completed == true then return StateFromBoolean(value) end
+        if completed == false and levelKnown then return StateFromBoolean(not value) end
+        return UNKNOWN
+    elseif key == "faction" then
+        local faction = UnitFactionGroup("player")
+        if MapPinEnhanced:IsSecretValue(faction) or type(faction) ~= "string" then return UNKNOWN end
+        return StateFromBoolean(ValueMatches(faction, value))
+    elseif key == "class" then
+        local class = select(2, UnitClass("player"))
+        return StateFromBoolean(ValueMatches(class, value))
+    elseif key == "race" then
+        local race = select(2, UnitRace("player"))
+        return StateFromBoolean(ValueMatches(race, value))
+    elseif key == "level" then
+        if type(value) ~= "number" then return UNKNOWN end
+        return StateFromBoolean(UnitLevel("player") == value)
+    elseif key == "minLevel" then
+        if type(value) ~= "number" then return UNKNOWN end
+        return StateFromBoolean(UnitLevel("player") >= value)
+    elseif key == "minLevelExclusive" then
+        if type(value) ~= "number" then return UNKNOWN end
+        return StateFromBoolean(UnitLevel("player") > value)
+    elseif key == "maxLevelExclusive" then
+        if type(value) ~= "number" then return UNKNOWN end
+        return StateFromBoolean(UnitLevel("player") < value)
+    elseif key == "questCompleted" then
+        if type(value) ~= "number" then return UNKNOWN end
+        if not C_QuestLog or not C_QuestLog.IsQuestFlaggedCompleted then return UNKNOWN end
+        return StateFromBoolean(C_QuestLog.IsQuestFlaggedCompleted(value))
+    elseif key == "questActive" then
+        if type(value) ~= "number" then return UNKNOWN end
+        if not C_QuestLog or not C_QuestLog.IsOnQuest then return UNKNOWN end
+        return StateFromBoolean(C_QuestLog.IsOnQuest(value))
+    elseif key == "questActiveOrComplete" then
+        if type(value) ~= "number" then return UNKNOWN end
+        if not C_QuestLog or not C_QuestLog.IsQuestFlaggedCompleted or not C_QuestLog.IsOnQuest then return UNKNOWN end
+        return StateFromBoolean(C_QuestLog.IsQuestFlaggedCompleted(value) or C_QuestLog.IsOnQuest(value))
+    elseif key == "traitEntry" then
+        if type(value) ~= "table" or
+            not MapPinEnhanced:IsReadablePositiveInteger(value.treeID) or
+            not MapPinEnhanced:IsReadablePositiveInteger(value.nodeID) or
+            not MapPinEnhanced:IsReadablePositiveInteger(value.entryID) or
+            not C_Traits or not C_Traits.GetConfigIDByTreeID or not C_Traits.GetNodeInfo then
+            return UNKNOWN
+        end
+        local configID = C_Traits.GetConfigIDByTreeID(value.treeID)
+        if not MapPinEnhanced:IsReadablePositiveInteger(configID) then return UNKNOWN end
+        local node = C_Traits.GetNodeInfo(configID, value.nodeID)
+        if not MapPinEnhanced:IsReadableTable(node) or
+            not MapPinEnhanced:IsReadableTable(node.entryIDsWithCommittedRanks) then
+            return UNKNOWN
+        end
+        -- Discovery unlocks a choice; only the applied entry grants travel.
+        -- Staged purchases or the other choice must not admit the extra stations.
+        for _, entryID in ipairs(node.entryIDsWithCommittedRanks) do
+            if not MapPinEnhanced:IsReadablePositiveInteger(entryID) then return UNKNOWN end
+            if entryID == value.entryID then return SATISFIED end
+        end
+        return UNSATISFIED
+    elseif key == "spell" or key == "spellKnown" then
+        if type(value) ~= "number" then return UNKNOWN end
+        if IsPlayerSpell then return StateFromBoolean(IsPlayerSpell(value)) end
+        if IsSpellKnown then return StateFromBoolean(IsSpellKnown(value)) end
+        return UNKNOWN
+    elseif key == "item" or key == "reagent" then
+        if type(value) ~= "number" then return UNKNOWN end
+        local reagentFree = false
+        if key == "reagent" then
+            reagentFree = Navigation:IsLegacyTraitKnown(110309) -- Reagent Economy
+            if reagentFree then return SATISFIED end
+        end
+        local count = C_Item and C_Item.GetItemCount and C_Item.GetItemCount(value) or
+            GetItemCount and GetItemCount(value)
+        if MapPinEnhanced:IsSecretValue(count) or type(count) ~= "number" then return UNKNOWN end
+        if count <= 0 and reagentFree == nil then return UNKNOWN end
+        return StateFromBoolean(count > 0)
+    elseif key == "toy" or key == "toyKnown" then
+        return EvaluateToyOwnership(value)
+    elseif key == "achievement" then
+        if type(value) == "table" then
+            if not MapPinEnhanced:IsReadableTable(value) or type(value.id) ~= "number" or
+                type(value.criteria) ~= "number" or value.id <= 0 or value.id % 1 ~= 0 or
+                value.criteria <= 0 or value.criteria % 1 ~= 0 or not GetAchievementCriteriaInfo then
+                return UNKNOWN
+            end
+            -- Authored criteria are indexes, as in the source's achieved(id, index).
+            -- Unavailable criteria can throw; keep that observation unknown without aborting preparation.
+            local success, _, _, completed = pcall(GetAchievementCriteriaInfo, value.id, value.criteria)
+            if not success then return UNKNOWN end
+            return StateFromBoolean(completed)
+        end
+        if type(value) ~= "number" or value <= 0 or value % 1 ~= 0 or not GetAchievementInfo then return UNKNOWN end
+        local completed = select(4, GetAchievementInfo(value))
+        return StateFromBoolean(completed)
+    elseif key == "mapArtID" then
+        if type(value) ~= "table" or type(value[1]) ~= "number" or type(value[2]) ~= "number" or
+            not C_Map or not C_Map.GetMapArtID then
+            return UNKNOWN
+        end
+        local artID = C_Map.GetMapArtID(value[1])
+        if MapPinEnhanced:IsSecretValue(artID) or type(artID) ~= "number" then return UNKNOWN end
+        return StateFromBoolean(artID == value[2])
+    elseif key == "currentMap" then
+        if not C_Map or not C_Map.GetBestMapForUnit then return UNKNOWN end
+        local mapID = C_Map.GetBestMapForUnit("player")
+        if MapPinEnhanced:IsSecretValue(mapID) or type(mapID) ~= "number" then return UNKNOWN end
+        return StateFromBoolean(ValueMatches(mapID, value))
+    elseif key == "buff" then
+        if type(value) ~= "number" or value <= 0 or value % 1 ~= 0 or
+            not C_UnitAuras or not C_UnitAuras.GetPlayerAuraBySpellID or
+            not C_Secrets or not C_Secrets.ShouldSpellAuraBeSecret then
+            return UNKNOWN
+        end
+        -- Restricted lookups can return nil too; that is not proof of absence.
+        local restricted = C_Secrets.ShouldSpellAuraBeSecret(value)
+        if MapPinEnhanced:IsSecretValue(restricted) or restricted ~= false then return UNKNOWN end
+        local aura = C_UnitAuras.GetPlayerAuraBySpellID(value)
+        if MapPinEnhanced:IsSecretValue(aura) then return UNKNOWN end
+        if aura == nil then return UNSATISFIED end
+        if not MapPinEnhanced:IsReadableTable(aura) then return UNKNOWN end
+        return SATISFIED
+    elseif key == "covenant" then
+        if type(value) ~= "number" or value < 1 or value > 4 or value % 1 ~= 0 or
+            not C_Covenants or not C_Covenants.GetActiveCovenantID then
+            return UNKNOWN
+        end
+        local covenantID = C_Covenants.GetActiveCovenantID()
+        if MapPinEnhanced:IsSecretValue(covenantID) or type(covenantID) ~= "number" then return UNKNOWN end
+        return StateFromBoolean(covenantID == value)
+    elseif key == "chromieTime" then
+        if type(value) ~= "number" then return UNKNOWN end
+        if not C_ChromieTime or not C_ChromieTime.GetChromieTimeExpansionOption then return UNKNOWN end
+        local option = C_ChromieTime.GetChromieTimeExpansionOption(value)
+        return StateFromBoolean(option and option.alreadyOn)
+    end
+    return UNKNOWN
+end
+
+-- Typed, length-prefixed keys include every parameter of structured checks,
+-- such as achievement criteria, map/texture pairs and garrison type/level.
+---@param value any
+---@return string?
+local function GetObservationScalarKey(value)
+    if MapPinEnhanced:IsSecretValue(value) then return nil end
+    local kind = type(value)
+    if kind == "string" then return "s" .. #value .. ":" .. value end
+    if kind == "number" and MapPinEnhanced:IsReadableNumber(value) then return "n" .. string.format("%.17g", value) end
+    if kind == "boolean" then return value and "true" or "false" end
+    if value == nil then return "nil" end
+    return nil
+end
+
+---@param value any
+---@return string|number|boolean|nil
+local function GetObservationKey(value)
+    if MapPinEnhanced:IsSecretValue(value) then return nil end
+    local kind = type(value)
+    if kind == "number" then
+        return MapPinEnhanced:IsReadableNumber(value) and value or nil
+    end
+    if kind == "boolean" then return value end
+    if kind == "string" then return "s:" .. value end
+    if value == nil then return "nil" end
+    if not MapPinEnhanced:IsReadableTable(value) then return nil end
+    local cachedKey = structuredObservationKeys[value]
+    if cachedKey then return cachedKey end
+    local fields = {} ---@type string[]
+    ---@cast value table<any, any>
+    for key, item in pairs(value) do
+        local fieldKey, fieldValue = GetObservationScalarKey(key), GetObservationScalarKey(item)
+        -- Nested/malformed values bypass reuse and retain the evaluator's result.
+        if not fieldKey or not fieldValue then return nil end
+        fields[#fields + 1] = #fieldKey .. ":" .. fieldKey .. #fieldValue .. ":" .. fieldValue
+    end
+    table.sort(fields)
+    local key = "table:" .. table.concat(fields)
+    if cachedKey == false then structuredObservationKeys[value] = key end
+    return key
+end
+
+---@alias NavigationRequirementObservations table<string, table<string|number|boolean, NavigationRequirementState>>
+
+--[==[@debug@
+EvaluateDirectCheck = MapPinEnhanced.profiler:WrapScope("Navigation.Requirements.DirectCheck", EvaluateDirectCheck)
+--@end-debug@]==]
+
+---@param kind string
+---@param value any
+---@param observations NavigationRequirementObservations?
+---@return NavigationRequirementState
+local function ObserveRequirement(kind, value, observations)
+    if MapPinEnhanced:IsSecretValue(value) then return UNKNOWN end
+    if kind == "spellKnown" then kind = "spell" end
+    if kind == "toyKnown" then kind = "toy" end
+    if kind == "event" and type(value) == "string" then value = string.upper(value) end
+    local key = observations and GetObservationKey(value)
+    local states = observations and observations[kind]
+    if key ~= nil and states and states[key] then return states[key] end
+    local state = EvaluateDirectCheck(kind, value)
+    if key ~= nil and observations then
+        states = states or {}
+        states[key] = state
+        observations[kind] = states
+    end
+    return state
+end
+
+--[==[@debug@
+ObserveRequirement = MapPinEnhanced.profiler:WrapScope("Navigation.Requirements.Observe", ObserveRequirement)
+--@end-debug@]==]
+
+---@param requirement NavigationRequirement?
+---@param observations NavigationRequirementObservations?
+---@return NavigationRequirementState state
+---@return string? failure
+---@return boolean? retryUnknown False only when every unknown awaits taxi discovery.
+---@param phaseState table<string, number>?
+function Navigation:EvaluateRequirement(requirement, observations, phaseState)
+    if requirement == nil then return SATISFIED end
+    if type(requirement) ~= "table" then return UNKNOWN, "invalid requirement" end
+
+    local toyItemID = GetQualifiedToyItemID(requirement)
+    if toyItemID then
+        local state = ObserveRequirement("toy", toyItemID, observations)
+        if state == UNKNOWN then return state, "toy ownership unavailable" end
+        return state
+    end
+
+    local operation = requirement.operation
+    if operation == "all" or operation == "any" then
+        local children = requirement.children
+        if type(children) ~= "table" or #children == 0 then return UNKNOWN, "empty requirement group" end
+        local sawUnknown = false
+        local retryUnknown = false
+        local unknownFailure ---@type string?
+        for _, child in ipairs(children) do
+            local state, failure, retry = self:EvaluateRequirement(child, observations, phaseState)
+            if operation == "all" and state == UNSATISFIED then return UNSATISFIED end
+            if operation == "any" and state == SATISFIED then return SATISFIED end
+            if state == UNKNOWN then
+                sawUnknown = true
+                retryUnknown = retryUnknown or retry ~= false
+                unknownFailure = unknownFailure or failure
+            end
+        end
+        if sawUnknown then return UNKNOWN, unknownFailure or "requirement unavailable", retryUnknown end
+        return operation == "all" and SATISFIED or UNSATISFIED
+    elseif operation == "not" then
+        local children = requirement.children
+        if type(children) ~= "table" or #children ~= 1 then return UNKNOWN, "invalid negation requirement" end
+        local state, failure, retry = self:EvaluateRequirement(children[1], observations, phaseState)
+        if state == UNKNOWN then return UNKNOWN, failure or "requirement unavailable", retry end
+        return state == SATISFIED and UNSATISFIED or SATISFIED
+    elseif operation ~= "check" or type(requirement.kind) ~= "string" then
+        return UNKNOWN, "invalid requirement shape"
+    end
+
+    local state = self:EvaluateTravelPhaseRequirement(requirement, phaseState) or
+        ObserveRequirement(requirement.kind, requirement.value, observations)
+    if state == UNKNOWN then
+        local retry = true
+        if requirement.kind == "taxiNodeKnown" and type(requirement.value) == "number" then
+            -- Missing positive discovery is still unknown, including under not.
+            -- Once loaded, this owned set changes only at a flight master, whose
+            -- invalidation selects every taxi requirement. API absence still retries.
+            local _, ready = self:HasTaxiNodeKnowledge()
+            retry = not ready
+        end
+        return state, "unsupported or unavailable requirement: " .. requirement.kind, retry
+    end
+    return state
+end
+
+---@param requirement NavigationRequirement?
+---@param resourceKey string
+---@return number?
+function Navigation:GetRequirementResource(requirement, resourceKey)
+    if type(requirement) ~= "table" then return nil end
+    if resourceKey == "toy" then
+        local toyItemID = GetQualifiedToyItemID(requirement)
+        if toyItemID then return toyItemID end
+    end
+
+    if requirement.operation == "check" then
+        local matchesResource = requirement.kind == resourceKey or
+            resourceKey == "toy" and requirement.kind == "toyKnown" or
+            resourceKey == "spell" and requirement.kind == "spellKnown"
+        return matchesResource and type(requirement.value) == "number" and requirement.value or nil
+    end
+    if requirement.operation ~= "all" and requirement.operation ~= "any" or
+        type(requirement.children) ~= "table" then
+        return nil
+    end
+
+    ---@type number?
+    local found
+    for _, child in ipairs(requirement.children) do
+        local childValue = self:GetRequirementResource(child, resourceKey)
+        if childValue then
+            if found and found ~= childValue then return nil end
+            found = childValue
+        end
+    end
+    return found
+end
+
+-- Retain the published eligibility of paths whose inputs did not change. Both
+-- catalogs share this index: crossing a subzone cannot erase taxi discovery or
+-- change character identity/collections. World entry, explicit and unmapped
+-- invalidations discard cached results. Movement refreshes on each pass;
+-- requirements and taxi prices are observed only when a candidate needs them.
+local WORLD_REQUIREMENT_KINDS = { "mapPOIPresent", "mapArtID", "mapOverlayTexture", "currentMap",
+    "questCompleted", "questActive", "questActiveOrComplete", "legionUnlocked",
+    "contributionStateMin", "buff", "chromieTime", "traitEntry" }
+-- Zone/quest transitions can also change contextual spell and garrison access.
+-- Keep those observations fresh while retaining identity, collection and taxi
+-- eligibility. POI-only refreshes keep their narrower established scope.
+local ZONE_REQUIREMENT_KINDS = { "mapPOIPresent", "mapArtID", "mapOverlayTexture", "currentMap",
+    "questCompleted", "questActive", "questActiveOrComplete", "legionUnlocked",
+    "contributionStateMin", "buff", "chromieTime", "spell", "garrison", "covenant", "traitEntry" }
+local REQUIREMENT_KINDS_BY_EVENT = {
+    AREA_POIS_UPDATED = WORLD_REQUIREMENT_KINDS,
+    ZONE_CHANGED = ZONE_REQUIREMENT_KINDS,
+    ZONE_CHANGED_INDOORS = ZONE_REQUIREMENT_KINDS,
+    ZONE_CHANGED_NEW_AREA = ZONE_REQUIREMENT_KINDS,
+    QUEST_ACCEPTED = ZONE_REQUIREMENT_KINDS,
+    QUEST_LOG_UPDATE = ZONE_REQUIREMENT_KINDS,
+    QUEST_REMOVED = ZONE_REQUIREMENT_KINDS,
+    QUEST_TURNED_IN = ZONE_REQUIREMENT_KINDS,
+    BAG_UPDATE_DELAYED = { "item", "reagent" },
+    NEW_TOY_ADDED = { "toy" },
+    TOYS_UPDATED = { "toy" },
+    SPELLS_CHANGED = { "spell", "buff" },
+    PLAYER_SPECIALIZATION_CHANGED = { "spell", "buff" },
+    PLAYER_TALENT_UPDATE = { "spell", "buff" },
+    TRAIT_CONFIG_UPDATED = { "spell", "buff", "reagent", "traitEntry" },
+    UNIT_AURA = { "buff" },
+    ACHIEVEMENT_EARNED = { "achievement" },
+    CRITERIA_UPDATE = { "achievement" },
+    GARRISON_UPDATE = { "garrison" },
+    CALENDAR_UPDATE_EVENT_LIST = { "event" },
+    CVAR_UPDATE = { "event" }, -- Only filtered calendarShow input reaches this owner.
+    TAXIMAP_OPENED = { "taxiNodeKnown" },
+}
+
+local SOFT_EVENTS = {
+    BAG_UPDATE_DELAYED = true,
+    QUEST_ACCEPTED = true,
+    QUEST_LOG_UPDATE = true,
+    QUEST_REMOVED = true,
+    QUEST_TURNED_IN = true,
+    ACHIEVEMENT_EARNED = true,
+    CRITERIA_UPDATE = true,
+}
+
+-- Includes notifications that can change action prices without rebuilding requirements.
+local predictionChangeNumber = 0
+
+function Navigation:GetPredictionChangeNumber()
+    return predictionChangeNumber
+end
+
+local function InvalidatePrediction()
+    predictionChangeNumber = predictionChangeNumber + 1
+end
+
+for _, event in ipairs({ "SPELL_UPDATE_COOLDOWN", "SPELL_UPDATE_CHARGES", "BAG_UPDATE_COOLDOWN",
+    "PLAYER_EQUIPMENT_CHANGED" }) do
+    MapPinEnhanced:RegisterEvent(event, InvalidatePrediction)
+end
+
+function Navigation:ArePreparedInputsFresh()
+    return not preparedDataDirty and preparedNavigationData ~= nil
+end
+
+-- Invalidations retain no event payloads. Published tables belong to snapshots and
+-- must never be refilled while a Route or calculation still references them.
+---@param event? WowEvent
+function Navigation:InvalidatePreparedData(event)
+    InvalidatePrediction()
+    --[==[@debug@
+    MapPinEnhanced.profiler:InvalidatePreparation(event)
+    --@end-debug@]==]
+    local kinds = event and REQUIREMENT_KINDS_BY_EVENT[event]
+    if not kinds then
+        allRequirementsDirty = true
+    elseif not allRequirementsDirty then
+        for _, kind in ipairs(kinds) do dirtyRequirementKinds[kind] = true end
+    end
+    -- Do not clear dirty kinds when cancelling: the replacement still owes every
+    -- observation accepted since the last complete publication.
+    preparedDataDirty = true
+    preparationChangeNumber = preparationChangeNumber + 1
+    preparationFailure = nil
+    if event and SOFT_EVENTS[event] then return end
+    self:CancelPreparedData()
+    local job = self.activeCalculation
+    if job then
+        local restart = job.restart
+        self:CancelRouteCalculation(job)
+        -- Intake rejects stale work immediately. The existing bucket, or an
+        -- explicit preparation request, resumes it once fresh data is complete.
+        self.pendingCalculationRestart = restart
+    end
+end
+
+local predictionPreparation = false
+
+function Navigation:CancelPredictionPreparation()
+    if predictionPreparation and not self.activeCalculation and not self.pendingCalculationRestart then
+        self:CancelPreparedData()
+    end
+end
+
+function Navigation:CancelPreparedData()
+    predictionPreparation = false
+    if cancelPreparation then
+        --[==[@debug@
+        MapPinEnhanced.profiler:FinishPreparation(profilePreparation, "cancelled")
+        profilePreparation = nil
+        --@end-debug@]==]
+        cancelPreparation()
+        -- Nothing from the private candidate was published. Requeue its scope
+        -- alongside newer events, without turning an interrupted selective pass
+        -- into a whole-graph refresh. Unknown retries remain in the published set.
+        if preparingAllRequirements then
+            allRequirementsDirty = true
+        elseif not allRequirementsDirty then
+            for kind in pairs(preparingRequirementKinds or {}) do dirtyRequirementKinds[kind] = true end
+        end
+        preparedDataDirty = true
+    end
+    cancelPreparation = nil
+    preparingAllRequirements, preparingRequirementKinds = false, nil
+end
+
+function Navigation:RefreshPreparedData()
+    self:InvalidatePreparedData()
+    if self.routeNavigationEnabled and self.activeDestination and not self:IsDirectOnlyRoute() then
+        self:EnsurePreparedData()
+    end
+end
+
+---@param first NavigationMovementCapabilities
+---@param second NavigationMovementCapabilities
+---@return boolean
+local function SameMovementCapabilities(first, second)
+    return first.walkingSpeed == second.walkingSpeed and
+        first.groundSpeed == second.groundSpeed and
+        first.steadyFlightSpeed == second.steadyFlightSpeed and
+        first.skyridingSpeed == second.skyridingSpeed and
+        first.canFly == second.canFly and first.canSkyriding == second.canSkyriding and
+        first.activeFlightMode == second.activeFlightMode
+end
+
+---Aura traffic cannot change requirements when the graph contains no buff checks.
+---Compare with the latest observation, including an unfinished preparation pass.
+---Dirty data alone must not let repeated movement auras keep cancelling that pass.
+---@return boolean
+function Navigation:NeedsAuraRefresh()
+    if not self.routeNavigationEnabled or not self.activeDestination then
+        -- Keep future preparation fresh without querying movement while idle.
+        self:InvalidatePreparedData("UNIT_AURA")
+        observedMovementCapabilities = nil
+        return false
+    end
+    if hasBuffRequirements then return true end
+    local movement = self:GetMovementCapabilities()
+    local previous = observedMovementCapabilities or
+        self.progression and self.progression.route.preparedData.movement
+    observedMovementCapabilities = movement
+    return previous ~= nil and not SameMovementCapabilities(movement, previous)
+end
+
+-- Synchronous readers only schedule preparation. The private candidate is
+-- published atomically; cancelled workers never resume into a newer generation.
+---@return NavigationPreparedData?
+---@return string? failure
+---@param background boolean?
+function Navigation:EnsurePreparedData(background)
+    if not navigationGraph then return nil, "navigation data is not ready" end
+    if not preparedDataDirty then return preparedNavigationData end
+    if self.routeNavigationEnabled and self.activeDestination and not cancelPreparation and not preparationFailure then
+        local graph, changeNumber = navigationGraph, preparationChangeNumber
+        local fullRefresh, kinds = not preparedNavigationData or allRequirementsDirty, dirtyRequirementKinds
+        preparingAllRequirements, preparingRequirementKinds = fullRefresh, kinds
+        allRequirementsDirty, dirtyRequirementKinds = false, {}
+        --[==[@debug@
+        local profilePass = MapPinEnhanced.profiler:BeginPreparation(not preparedNavigationData or fullRefresh)
+        profilePreparation = profilePass
+        --@end-debug@]==]
+        predictionPreparation = background == true
+        cancelPreparation = MapPinEnhanced:BatchExecution({ function()
+            --[==[@debug@
+            MapPinEnhanced.profiler:SetWorkerScope("Navigation.PreparationSlice", profilePass)
+            MapPinEnhanced.profiler:SetWorkerPhase("Navigation.Preparation.Requirements")
+            --@end-debug@]==]
+            local checkpoint = self:CreateNavigationCheckpoint(nil, background and 0.1 or nil)
+            -- Carry only observations that a previous search actually requested.
+            -- Dirty and temporary-unknown paths stay absent until a search needs them.
+            local previous = preparedNavigationData
+            local states = {} ---@type table<integer, NavigationRequirementState>
+            local reasons = {} ---@type table<integer, string>
+            if previous and not fullRefresh then
+                for reference, state in pairs(previous.requirementStateByPath) do
+                    checkpoint()
+                    local dirty = previous.unknownRequirementPaths and previous.unknownRequirementPaths[reference]
+                    for kind in pairs(graph.requirementKindsByPath[reference] or {}) do
+                        if kinds[kind] then
+                            dirty = true
+                            break
+                        end
+                    end
+                    if not dirty then
+                        states[reference] = state
+                        reasons[reference] = previous.exclusionReasonByPath[reference]
+                    end
+                end
+            end
+            --[==[@debug@
+            MapPinEnhanced.profiler:SetWorkerPhase("Navigation.Preparation.Movement")
+            --@end-debug@]==]
+            local movement = self:GetMovementCapabilities()
+            observedMovementCapabilities = movement
+            if previous and SameMovementCapabilities(movement, previous.movement) then
+                movement = previous.movement
+            end
+            -- Taxi prices are filled only for requested candidates. Existing
+            -- booked Routes retain their selected immutable prices and evidence.
+            --[==[@debug@
+            MapPinEnhanced.profiler:SetWorkerPhase("Navigation.Preparation.TaxiCosts")
+            --@end-debug@]==]
+            local costs, failures = {}, {}
+            --[==[@debug@
+            MapPinEnhanced.profiler:SetWorkerPhase("Navigation.Preparation.Publication")
+            --@end-debug@]==]
+            local observation = self:GetTaxiObservation()
+            checkpoint()
+            if graph ~= navigationGraph then return end
+            -- Sparse memo tables belong to this generation. Never share mutable
+            -- memos with an older Route or a calculation invalidated while yielding.
+            preparedNavigationData = {
+                requirementStateByPath = states,
+                exclusionReasonByPath = reasons,
+                observations = {},
+                unknownRequirementPaths = {},
+                includeDungeonPortals = includeDungeonPortals,
+                movement = movement,
+                taxiObservation = observation,
+                taxiSpeedMultiplier = self:IsLegacyTraitKnown(110300) and 1.2 or 1,
+                taxiCosts = costs,
+                taxiFailures = failures,
+            }
+            -- A soft event may queue another pass while this one runs. Keep its
+            -- completed immutable observations, but do not certify freshness yet.
+            preparedDataDirty = changeNumber ~= preparationChangeNumber
+        end }, nil, function()
+            --[==[@debug@
+            MapPinEnhanced.profiler:FinishPreparation(profilePass,
+                graph ~= navigationGraph and "graph replaced" or preparedDataDirty and "completed; inputs changed" or
+                "completed")
+            profilePreparation = nil
+            --@end-debug@]==]
+            cancelPreparation = nil
+            preparingAllRequirements, preparingRequirementKinds = false, nil
+            predictionPreparation = false
+            if preparedDataDirty then
+                self:EnsurePreparedData(background)
+            elseif not background or self.activeCalculation or not self:IsDirectOnlyRoute() then
+                self:RefreshEligibility({})
+            end
+        end, 1, function(message)
+            --[==[@debug@
+            MapPinEnhanced.profiler:FinishPreparation(profilePass, "error")
+            profilePreparation = nil
+            --@end-debug@]==]
+            cancelPreparation = nil
+            preparingAllRequirements, preparingRequirementKinds = false, nil
+            predictionPreparation = false
+            allRequirementsDirty = true
+            preparationFailure = message
+            local restart = self.pendingCalculationRestart
+            if restart then restart() end
+            geterrorhandler()(message)
+        end)
+    end
+    return nil, preparationFailure
+end
+
+---@async
+---@param checkpoint fun()
+---@param wait fun()?
+---@return NavigationPreparedData?
+---@return string? failure
+function Navigation:AwaitPreparedData(checkpoint, wait)
+    local prepared, failure = self:EnsurePreparedData()
+    while not prepared and cancelPreparation do
+        if wait then wait() else coroutine.yield() end
+        checkpoint()
+        prepared, failure = self:EnsurePreparedData()
+    end
+    return prepared, failure
+end
+
+-- Eligibility is observed only when a search reaches a candidate path. A missing
+-- memo entry means unexamined, never unavailable. Phase variants have separate
+-- search-local memos so future switches cannot change ordinary route readiness.
+---@param graph NavigationGraph
+---@param prepared NavigationPreparedData
+---@param reference integer
+---@return NavigationRequirementState
+---@return string?
+function Navigation:GetPreparedPathState(graph, prepared, reference)
+    local phase = prepared.phaseStates and graph.phaseGroupsByPath[reference]
+    local states = phase and prepared.phaseStates or prepared.requirementStateByPath
+    local reasons = phase and prepared.phaseFailures or prepared.exclusionReasonByPath
+    if states[reference] then return states[reference], reasons[reference] end
+    local state ---@type NavigationRequirementState
+    local reason ---@type string?
+    local retry ---@type boolean?
+    if graph.pathTypes[reference] == "dungeonteleport" and not prepared.includeDungeonPortals then
+        state, reason = UNSATISFIED, "dungeon portals disabled"
+    elseif graph.excludedPaths[reference] then
+        state, reason = UNKNOWN, graph.excludedPaths[reference]
+    elseif phase then
+        local variants = {} ---@type table<string, number>
+        for _, name in ipairs(phase) do variants[name] = -1 end
+        state, reason = self:EvaluateTravelPhasePathRequirement(graph, reference, variants, prepared.phaseObservations)
+    else
+        state, reason, retry = self:EvaluateRequirement(graph.pathRequirements[reference], prepared.observations)
+    end
+    states[reference] = state
+    if state ~= SATISFIED then reasons[reference] = reason or state end
+    if not phase and state == UNKNOWN and retry ~= false and prepared.unknownRequirementPaths then
+        prepared.unknownRequirementPaths[reference] = true
+    end
+    return state, reasons[reference]
+end
+
+-- Failure recovery reads a new requirement observation without mutating any
+-- prepared snapshot held by a running calculation or retained Route.
+---@param pathReference integer
+---@return NavigationCalculatedPathCost?
+---@return string? failure
+---@param phaseState table<string, number>?
+---@param taxiJourneyLeg boolean? Validate a journey's source leg rather than a standalone departure.
+function Navigation:GetFreshPathCost(pathReference, phaseState, taxiJourneyLeg)
+    if pathReference < 0 then return nil, "taxi journey requires current interaction" end
+    local graph = navigationGraph
+    if not graph then return nil, "navigation data is not ready" end
+    if graph.pathTypes[pathReference] == "dungeonteleport" and not includeDungeonPortals then
+        return nil, "dungeon portals disabled"
+    end
+    if graph.excludedPaths[pathReference] then return nil, graph.excludedPaths[pathReference] end
+    local data = graph.pathTypes[pathReference] == "phaseswitch" and graph.pathHandlerData[pathReference]
+    if data and data.phase then
+        local current = phaseState or self:GetTravelPhaseState()
+        if current[data.phase.group] ~= data.phase.fromArtID then return nil, "phase origin unavailable" end
+    end
+    local state, failure = self:EvaluateTravelPhasePathRequirement(graph, pathReference, phaseState)
+    if state ~= SATISFIED then return nil, failure or state end
+    local fresh = {
+        requirementStateByPath = { [pathReference] = state },
+        exclusionReasonByPath = {},
+        movement = self:GetMovementCapabilities(),
+        taxiObservation = self:GetTaxiObservation(),
+        taxiCosts = {},
+        taxiFailures = {},
+    }
+    if graph.pathTypes[pathReference] == "flighttaxi" then
+        fresh.taxiCosts, fresh.taxiFailures = self:PrepareTaxiCosts(graph, pathReference)
+        -- The enclosing journey validates the exact preview. Its source legs
+        -- still need fresh eligibility/prices, without standalone-departure suppression.
+        if taxiJourneyLeg then
+            return fresh.taxiCosts[pathReference], fresh.taxiFailures[pathReference]
+        end
+    end
+    return self:GetPathCost(graph, fresh, pathReference)
+end

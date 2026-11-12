@@ -1,0 +1,18 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+  <Script file="_ActionBar1.lua"/>
+  <Script file="_ActionBar1.lua"/>
+  <Script file="_ActionBar2.lua"/>
+  <Script file="_ActionBar3.lua"/>
+  <Script file="_ActionBar4.lua"/>
+  <Script file="_ActionBar5.lua"/>
+  <Script file="_ActionBar6.lua"/>
+  <Script file="_ActionBar7.lua"/>
+  <Script file="_ActionBar8.lua"/>
+  <Script file="_StanceBar.lua"/>
+  <Script file="_PetBar.lua"/>
+  <Script file="_Bartender4BonusActionBar.lua"/>
+  <Script file="_Bartender4ClassBar1.lua"/>
+  <Script file="_Bartender4ClassBar2.lua"/>
+  <Script file="_Bartender4ClassBar3.lua"/>
+  <Script file="_Bartender4ClassBar4.lua"/>
+</Ui>

@@ -1,0 +1,114 @@
+## Interface: 16001
+## X-EQOL-Flavor: forever
+## Title: Enhance QoL Core
+## Author: R41Z0R
+## Version: 13.20.1
+## IconTexture: Interface\AddOns\EnhanceQoL\Icons\Icon.tga
+## Category: Quality of Life
+## X-Category: Quality of Life
+## Notes: Little Tweaks for enhancing your Quality of Life
+## Notes-deDE: Kleine Anpassungen zur Verbesserung deiner Lebensqualität
+## Notes-esES: Pequeños ajustes para mejorar tu calidad de vida
+## Notes-esMX: Pequeños ajustes para mejorar tu calidad de vida
+## Notes-frFR: Petits ajustements pour améliorer votre confort de jeu
+## Notes-itIT: Piccole modifiche per migliorare la tua qualità di vita
+## Notes-ptBR: Pequenos ajustes para melhorar sua qualidade de vida
+## Notes-ruRU: Небольшие изменения для улучшения качества вашей игры
+## Notes-koKR: 사소한 편의 기능으로 게임 품질을 향상합니다
+## Notes-zhCN: 一些小调整，以改善您的游戏体验
+## Notes-zhTW: 一些小調整，以改善您的遊戲體驗
+## SavedVariables: EnhanceQoLDB, EnhanceQoLDBPrivate, EnhanceQoL_IgnoreDB, EnhanceQoLMoverDB, EnhanceQoLBagsDB
+## X-Wago-ID: aN0Ykv6j
+## X-Curse-Project-ID: 1076354
+## X-Compatible-With: forever
+## X-WoWI-ID: 26888
+## OptionalDeps: Blizzard_AuraContainer, MidnightSimpleUnitFrames, UnhaltedUnitFrames, ElvUI, EllesmereUI, EllesmereUIUnitFrames, EllesmereUICooldownManager, Baganator, DragonRider, FarmHud
+
+Flavor_Camelot.lua
+libs\LibStub\LibStub.lua
+libs\AceLocale-3.0\AceLocale-3.0.xml
+libs\LibCustomGlow-1.0\LibCustomGlow-1.0.lua
+locales\[TextLocale].lua
+Data\ItemEnchants.lua
+Init.lua
+Core\Client_Camelot.lua
+NewSettingsTable.lua
+
+libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
+libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
+libs\LibDBIcon-1.0\lib.xml
+libs\LibDeflate\lib.xml
+libs\LibSharedMedia-3.0\lib.xml
+libs\AceSerializer-3.0\AceSerializer-3.0.xml
+libs\AceComm-3.0\AceComm-3.0.xml
+libs\LibSettingsDesigner\LibSettingsDesigner.xml
+libs\EnhanceQoLEditMode\EnhanceQoLEditMode.lua
+Bindings\Slider.xml
+Sounds\sounds.lua
+General\functions.lua
+General\BufferedPaste.lua
+General\PetFoodIndicator_Camelot.lua
+General\ManaRegen_Camelot.lua
+Data\SpellRankData_Camelot.lua
+Submodules\AutoRankUp.lua
+General\EquipmentRecommendations_Camelot.lua
+General\DurationText.lua
+General\IconShape.lua
+General\Glow.lua
+Core\EditMode.lua
+Core\EditModeNavigation.lua
+Core\EditModeNavigationDefaults.lua
+Core\FeatureEditor.xml
+Core\FeatureEditor.lua
+Core\EntryPicker.lua
+Core\EditModeNavigationSmallFrames.lua
+Core\EditModeNavigationProfiles.lua
+Core\SharedAnchors.lua
+Core\DynamicAnchors.lua
+Core\DynamicAnchors_ConditionsUI.lua
+Core\EditModeAnchors.lua
+Core\EditModeAnchorAdapters.lua
+Core\EditModeAnchorUI.lua
+Core\AuraCompat.lua
+Modules\ActionBarLabels.lua
+Core\Cleanup.lua
+Core\DevMode.lua
+EnhanceQoL_Camelot.lua
+Core\MinimapTrackingMouseover.lua
+GeneratedChangelog.lua
+Core\ClassicResources.lua
+Core\DataHub.lua
+Core\DataPanel.lua
+Data\WorldMapReveal_Camelot.lua
+Core\WorldMapReveal.lua
+Core\CharacterStatsFormatting.lua
+Core\Streams\Streams_Camelot.xml
+Submodules\GemHelper.lua
+Submodules\ContainerActions.lua
+Submodules\ContainerActions_Camelot.lua
+Submodules\MountActions.lua
+Submodules\ActionTracker.lua
+Submodules\CombatText.lua
+Core\RangeDisplay\Data_Camelot.lua
+Core\RangeDisplay\Spells_Camelot.lua
+Core\RangeDisplay\Runtime_Camelot.lua
+Core\RangeDisplay\Editor_Camelot.lua
+Submodules\UIErrors.lua
+Submodules\GroupTools_Camelot.lua
+Submodules\LootToast.lua
+Modules\Aura\Init.lua
+Modules\Aura\DefensiveAuraPresets_Camelot.lua
+Modules\Aura\WellFed_Camelot.lua
+Modules\Aura\TotalAbsorbTracker.lua
+Modules\Aura\DefaultAuraContainers.lua
+
+Settings\SettingsUI_Camelot.xml
+
+# Aura
+Modules\Aura\Aura.xml
+
+# Mouse
+Modules\Mouse\Mouse_Camelot.xml
+
+# Food
+Modules\Food\Food_Camelot.xml

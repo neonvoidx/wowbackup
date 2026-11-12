@@ -1,0 +1,15 @@
+
+RepRewards_CharDB = {
+["favorites"] = {
+},
+["filters"] = {
+["type"] = "Any",
+["name"] = "",
+["slot"] = "Any",
+["availableNow"] = false,
+["stat"] = "Any",
+["suitableForMe"] = true,
+["profession"] = "Any",
+},
+}
+ReputationRewards_CharDB = nil

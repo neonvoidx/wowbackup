@@ -1,0 +1,935 @@
+
+BAGANATOR_CONFIG = {
+["Version"] = 1,
+["CharacterSpecific"] = {
+["sort_ignore_bank_slots_count"] = {
+["Beat Ngu-PvP"] = 0,
+},
+["currencies_tracked_imported"] = {
+},
+["currencies_tracked"] = {
+["Beat Ngu-PvP"] = {
+{
+["currencyID"] = 1792,
+},
+{
+["currencyID"] = 3402,
+},
+},
+},
+["sort_ignore_slots_count_2"] = {
+["Beat Ngu-PvP"] = 0,
+},
+},
+["Profiles"] = {
+["DEFAULT"] = {
+["guild_view_width"] = 14,
+["junk_plugin"] = "enhanceqol_vendor",
+["reduce_spacing"] = false,
+["upgrade_plugin"] = "none",
+["automatic_categories_added"] = {
+["default_auto_recents"] = true,
+["default_miscellaneous"] = true,
+["default_armor"] = true,
+["default_junk"] = true,
+["default_projectile"] = true,
+["default_weapon"] = true,
+["default_other"] = true,
+["default_quiver"] = true,
+["default_reagent"] = true,
+["default_special_empty"] = true,
+["default_consumable"] = true,
+["default_tradegoods"] = true,
+["default_questitem"] = true,
+["default_auto_equipment_sets"] = true,
+["default_container"] = true,
+["default_key"] = true,
+["default_hearthstone"] = true,
+["default_recipe"] = true,
+},
+["show_search_box"] = true,
+["debug_categories_search"] = false,
+["bank_view_show_bag_slots"] = true,
+["bank_view_width"] = 18,
+["sort_method"] = "type",
+["reverse_groups_sort_order"] = false,
+["auto_open"] = {
+["merchant"] = true,
+["item_upgrade"] = true,
+["guild_bank"] = false,
+["auction_house"] = false,
+["trade_partner"] = false,
+["tradeskill"] = false,
+["character_panel"] = false,
+["scrapping_machine"] = true,
+["item_interaction"] = true,
+["mail"] = false,
+["sockets"] = false,
+["forge_of_bonds"] = false,
+["bank"] = true,
+},
+["icon_corners_auto_insert_applied"] = {
+["enhanceqol_upgrade_arrow"] = true,
+["bag_type"] = true,
+},
+["migrated_sort_method"] = true,
+["category_hidden"] = {
+["65"] = false,
+["64"] = false,
+["Junk"] = true,
+["66"] = false,
+},
+["icon_mark_unusable"] = false,
+["icon_flash_similar_alt"] = false,
+["category_edit_search_mode"] = "visual",
+["icon_context_fading"] = true,
+["warband_current_tab"] = 1,
+["category_item_grouping"] = true,
+["icon_top_left_corner_array"] = {
+"junk",
+"item_level",
+},
+["recent_timeout"] = 15,
+["category_display_order"] = {
+"_1",
+"default_special_empty",
+"default_junk",
+"41",
+"33",
+"43",
+"66",
+"59",
+"50",
+"61",
+"46",
+"39",
+"default_other",
+"__end",
+"_2",
+"44",
+"37",
+"40",
+"52",
+"36",
+"35",
+"38",
+"48",
+"__end",
+"_3",
+"42",
+"57",
+"47",
+"51",
+"__end",
+"_4",
+"64",
+"65",
+"60",
+"63",
+"45",
+"54",
+"55",
+"34",
+"58",
+"49",
+"56",
+"62",
+"__end",
+},
+["current_skin"] = "blizzard_black",
+["hide_boe_on_common"] = false,
+["bank_view_type"] = "category",
+["icon_grey_junk"] = false,
+["category_sort_method"] = "type",
+["sort_start_at_bottom"] = false,
+["icon_top_right_corner_array"] = {
+},
+["icon_bottom_right_corner_array"] = {
+"quantity",
+"enhanceqol_upgrade_arrow",
+},
+["bank_view_position"] = {
+"BOTTOMLEFT",
+1116.667236328125,
+488.3330078125,
+},
+["recent_include_owned"] = false,
+["guild_view_position_2"] = {
+"TOPLEFT",
+30,
+-235,
+},
+["category_sections"] = {
+["1"] = {
+["name"] = "World of Warcraft",
+},
+["4"] = {
+["name"] = "Profession",
+},
+["3"] = {
+["name"] = "Prep",
+},
+["2"] = {
+["name"] = "Gear",
+},
+},
+["seen_welcome"] = 1,
+["hide_special_container"] = {
+},
+["bag_empty_space_at_top"] = false,
+["category_horizontal_spacing_2"] = 0.3,
+["category_default_import"] = 1,
+["debug_categories"] = false,
+["character_bank_current_tab"] = 1,
+["icon_bottom_left_corner_array"] = {
+"bag_type",
+"equipment_set",
+},
+["custom_categories"] = {
+["53"] = {
+["name"] = "Soulbound",
+["search"] = "soulbound",
+},
+["43"] = {
+["name"] = "Key",
+["search"] = "#keystone",
+},
+["63"] = {
+["name"] = "Cooking",
+["search"] = "#cooking|#fish",
+},
+["47"] = {
+["name"] = "Pot",
+["search"] = "#potion",
+},
+["37"] = {
+["name"] = "Weapon",
+["search"] = "#weapon",
+},
+["57"] = {
+["name"] = "Food",
+["search"] = "#food",
+},
+["27"] = {
+["name"] = "Cloth",
+["search"] = "#reagent & (#cloth | #tailoring | cloth | thread | spool | web | silk | stoff | faden | spule | zwirn | seide)",
+},
+["17"] = {
+["name"] = "Portals & Teleports",
+["search"] = "portal | teleport | hearthstone | ruhestein",
+},
+["13"] = {
+["name"] = "BoE",
+["search"] = "#boe",
+},
+["33"] = {
+["name"] = "Quest",
+["search"] = "#quest",
+},
+["23"] = {
+["name"] = "Miscellaneous",
+["search"] = "#miscellaneous",
+},
+["42"] = {
+["name"] = "Consumable",
+["search"] = "#consumable",
+},
+["52"] = {
+["name"] = "Armor",
+["search"] = "#armor",
+},
+["62"] = {
+["name"] = "Recipe",
+["search"] = "#recipe",
+},
+["36"] = {
+["name"] = "Crafted",
+["search"] = "#gear&#crafted",
+},
+["46"] = {
+["name"] = "Misc",
+["search"] = "#miscellaneous",
+},
+["56"] = {
+["name"] = "Reagents",
+["search"] = "#finishing reagents|#optional reagents|#crafting reagent|#reagent",
+},
+["66"] = {
+["name"] = "Rogue",
+["search"] = "",
+},
+["16"] = {
+["name"] = "Jewelry / Rings",
+["search"] = "(#trinket | #finger | #neck) & !#boe",
+},
+["26"] = {
+["name"] = "Potions",
+["search"] = "#potion",
+},
+["12"] = {
+["name"] = "Armor",
+["search"] = "#armor & !#boe",
+},
+["22"] = {
+["name"] = "Keys",
+["search"] = "#key | key | schlüssel",
+},
+["32"] = {
+["name"] = "Recipes",
+["search"] = "#recipe | rezept | bauplan | muster | formel | schematic | pattern | formula | plan",
+},
+["61"] = {
+["name"] = "Container",
+["search"] = "#open",
+},
+["51"] = {
+["name"] = "Enchant",
+["search"] = "#item enhancement",
+},
+["41"] = {
+["name"] = "Perma",
+["search"] = "",
+},
+["65"] = {
+["name"] = "Eng",
+["search"] = "",
+},
+["55"] = {
+["name"] = "Enchanting",
+["search"] = "#enchanting",
+},
+["45"] = {
+["name"] = "Fishing",
+["search"] = "#fishing",
+},
+["35"] = {
+["name"] = "Shirts",
+["search"] = "#tabard|#shirt",
+},
+["59"] = {
+["name"] = "Pets",
+["search"] = "#battle pet|#battle pets",
+},
+["49"] = {
+["name"] = "Ores",
+["search"] = "#metal stone|#parts|#blacksmithing|#engineering",
+},
+["39"] = {
+["name"] = "Housing",
+["search"] = "#housing",
+},
+["29"] = {
+["name"] = "Important",
+["search"] = "",
+},
+["1"] = {
+["name"] = "Food & Drink",
+["search"] = "#food | #drink | brew | bräu | sausage | wurst | feast | festmahl | meal | mahlzeit",
+},
+["3"] = {
+["name"] = "Weapons",
+["search"] = "#weapon & !#boe",
+},
+["2"] = {
+["name"] = "Junk",
+["search"] = "#junk",
+},
+["5"] = {
+["name"] = "Pets",
+["search"] = "#battle pet",
+},
+["4"] = {
+["name"] = "Tabards / Shirts",
+["search"] = "#tabard | #shirt",
+},
+["7"] = {
+["name"] = "Bandages & First Aid",
+["search"] = "bandage | verband | first aid | erste hilfe | poultice | tourniquet | anti-venom | gegengift",
+},
+["6"] = {
+["name"] = "Class Reagents",
+["search"] = "soul shard | seelensplitter | ankh | poison | blinding | blendung | arrow | pfeil | bullet | kugel | healthstone | gesundheitsstein | soulstone | seelenstein | firestone | feuerstein | spellstone | zauberstein",
+},
+["9"] = {
+["name"] = "Elemental",
+["search"] = "#reagent & (elementar | essenz | kern | feuer | wasser | erde | luft | elemental | essence | core | globe | fire | water | earth | air)",
+},
+["8"] = {
+["name"] = "Gear Sets",
+["search"] = "#set | #equipment set | tier | token",
+},
+["31"] = {
+["name"] = "Enchanting",
+["search"] = "#reagent & (#enchanting | enchant | dust | shard | crystal | essence | residue | verzauber | staub | splitter | kristall | essenz)",
+},
+["21"] = {
+["name"] = "Herbs & Alch",
+["search"] = "#reagent & (#herb | #alchemy | herb | flower | bloom | lotus | root | kraut | kräuter | blume | blüte | wurzel)",
+},
+["11"] = {
+["name"] = "Containers",
+["search"] = "#open | pouch | bag | box | strongbox | säckchen | tasche | beutel | kiste | kassette | quiver | köcher",
+},
+["60"] = {
+["name"] = "Cloth",
+["search"] = "!gear&(#cloth|#tailoring|#first aid)",
+},
+["40"] = {
+["name"] = "Trinkets",
+["search"] = "#trinket",
+},
+["50"] = {
+["name"] = "Toys",
+["search"] = "#toy",
+},
+["54"] = {
+["name"] = "Elemental",
+["search"] = "#elemental",
+},
+["64"] = {
+["name"] = "Tools",
+["search"] = "",
+},
+["34"] = {
+["name"] = "Herb",
+["search"] = "#herb|#alchemy",
+},
+["44"] = {
+["name"] = "PvP",
+["search"] = "#pvp",
+},
+["48"] = {
+["name"] = "Tradeable",
+["search"] = "#tradeable loot|#tradable loot",
+},
+["58"] = {
+["name"] = "Leather",
+["search"] = "!gear&(#leather|#leatherworking)",
+},
+["28"] = {
+["name"] = "Quest",
+["search"] = "#quest",
+},
+["38"] = {
+["name"] = "BoE",
+["search"] = "#boe",
+},
+["18"] = {
+["name"] = "Mounts",
+["search"] = "#mount",
+},
+["14"] = {
+["name"] = "Hearthstones / Permanent",
+["search"] = "",
+},
+["24"] = {
+["name"] = "Fishing",
+["search"] = "#fishing",
+},
+["15"] = {
+["name"] = "Reagents (General)",
+["search"] = "#reagent",
+},
+["25"] = {
+["name"] = "Cooking & Fish",
+["search"] = "#reagent & (#cooking | #fish | meat | fish | filet | spice | fleisch | fisch | gewürz)",
+},
+["20"] = {
+["name"] = "Leather",
+["search"] = "#reagent & (#leather | #leatherworking | leather | hide | scale | pelt | leder | balg | schuppe | fell) | gloves | handschuhe",
+},
+["30"] = {
+["name"] = "Utility",
+["search"] = "",
+},
+["19"] = {
+["name"] = "Ore & Engi",
+["search"] = "#reagent & (#ore | #metal | #stone | #parts | #mining | ore | metal | stone | ingot | part | erz | metall | stein | barren | teil | zahnrad)",
+},
+["10"] = {
+["name"] = "Camping",
+["search"] = "camping | campsite | tent | zelt | lagerfeuer | campfire",
+},
+},
+["category_group_empty_slots"] = true,
+["guild_current_tab"] = 1,
+["saved_searches"] = {
+},
+["icon_equipment_set_border"] = true,
+["category_modifications"] = {
+["53"] = {
+["hideIn"] = {
+},
+["priority"] = 0,
+},
+["43"] = {
+["showGroupPrefix"] = true,
+["priority"] = 1,
+["hideIn"] = {
+},
+},
+["63"] = {
+["showGroupPrefix"] = true,
+["priority"] = 0,
+["hideIn"] = {
+},
+},
+["47"] = {
+["showGroupPrefix"] = true,
+["priority"] = 0,
+["hideIn"] = {
+},
+},
+["37"] = {
+["showGroupPrefix"] = true,
+["priority"] = 0,
+["hideIn"] = {
+},
+},
+["57"] = {
+["showGroupPrefix"] = true,
+["priority"] = 0,
+["hideIn"] = {
+},
+},
+["default_hearthstone"] = {
+["hideIn"] = {
+},
+["addedItems"] = {
+["i:65274"] = true,
+["i:210494"] = true,
+["i:188152"] = true,
+["i:109076"] = true,
+},
+},
+["27"] = {
+["priority"] = 2,
+},
+["17"] = {
+["priority"] = 2,
+},
+["13"] = {
+["priority"] = 2,
+},
+["33"] = {
+["showGroupPrefix"] = true,
+["priority"] = 1,
+["hideIn"] = {
+},
+},
+["23"] = {
+["priority"] = 0,
+},
+["42"] = {
+["showGroupPrefix"] = true,
+["priority"] = -1,
+["hideIn"] = {
+},
+},
+["52"] = {
+["showGroupPrefix"] = true,
+["priority"] = 0,
+["hideIn"] = {
+},
+},
+["62"] = {
+["showGroupPrefix"] = true,
+["priority"] = 1,
+["hideIn"] = {
+},
+},
+["36"] = {
+["showGroupPrefix"] = true,
+["priority"] = 0,
+["hideIn"] = {
+},
+},
+["46"] = {
+["showGroupPrefix"] = true,
+["priority"] = 0,
+["hideIn"] = {
+},
+},
+["56"] = {
+["showGroupPrefix"] = true,
+["priority"] = -1,
+["hideIn"] = {
+},
+},
+["66"] = {
+["showGroupPrefix"] = true,
+["priority"] = 0,
+["addedItems"] = {
+["i:6947"] = true,
+["i:7676"] = true,
+["i:5140"] = true,
+["i:5530"] = true,
+["i:210955"] = true,
+["i:3371"] = true,
+["i:2452"] = true,
+["i:5173"] = true,
+["i:2930"] = true,
+["i:5237"] = true,
+["i:3775"] = true,
+["i:17124"] = true,
+["i:5060"] = true,
+},
+},
+["16"] = {
+["priority"] = 3,
+},
+["26"] = {
+["priority"] = 0,
+},
+["12"] = {
+["priority"] = 3,
+},
+["22"] = {
+["priority"] = 1,
+},
+["32"] = {
+["priority"] = 1,
+},
+["61"] = {
+["showGroupPrefix"] = true,
+["priority"] = 1,
+["hideIn"] = {
+},
+},
+["51"] = {
+["showGroupPrefix"] = true,
+["priority"] = 0,
+["hideIn"] = {
+},
+},
+["41"] = {
+["showGroupPrefix"] = true,
+["priority"] = 2,
+["hideIn"] = {
+},
+["addedItems"] = {
+["i:9173"] = true,
+["i:6948"] = true,
+["i:211527"] = true,
+["i:7005"] = true,
+},
+},
+["65"] = {
+["showGroupPrefix"] = true,
+["priority"] = 0,
+["addedItems"] = {
+["i:4359"] = true,
+["i:4357"] = true,
+},
+},
+["55"] = {
+["showGroupPrefix"] = true,
+["priority"] = 0,
+["hideIn"] = {
+},
+},
+["45"] = {
+["showGroupPrefix"] = true,
+["priority"] = 0,
+["hideIn"] = {
+},
+},
+["35"] = {
+["showGroupPrefix"] = true,
+["priority"] = 3,
+["hideIn"] = {
+},
+},
+["59"] = {
+["showGroupPrefix"] = true,
+["priority"] = 1,
+["hideIn"] = {
+},
+},
+["49"] = {
+["showGroupPrefix"] = true,
+["priority"] = 0,
+["hideIn"] = {
+},
+},
+["39"] = {
+["showGroupPrefix"] = true,
+["priority"] = 0,
+["hideIn"] = {
+},
+},
+["29"] = {
+["addedItems"] = {
+["i:178740"] = true,
+},
+["priority"] = 0,
+},
+["1"] = {
+["priority"] = 0,
+},
+["3"] = {
+["priority"] = 3,
+},
+["2"] = {
+["showGroupPrefix"] = true,
+["priority"] = 0,
+["hideIn"] = {
+},
+},
+["19"] = {
+["priority"] = 2,
+},
+["4"] = {
+["showGroupPrefix"] = true,
+["priority"] = 1,
+["hideIn"] = {
+},
+},
+["7"] = {
+["priority"] = 1,
+},
+["6"] = {
+["priority"] = 3,
+},
+["25"] = {
+["priority"] = 2,
+},
+["15"] = {
+["priority"] = 0,
+},
+["default_auto_equipment_sets"] = {
+["showGroupPrefix"] = true,
+["priority"] = 1,
+["hideIn"] = {
+},
+},
+["31"] = {
+["priority"] = 2,
+},
+["21"] = {
+["priority"] = 2,
+},
+["11"] = {
+["priority"] = 2,
+},
+["60"] = {
+["showGroupPrefix"] = true,
+["priority"] = 0,
+["hideIn"] = {
+},
+},
+["40"] = {
+["showGroupPrefix"] = true,
+["priority"] = 0,
+["hideIn"] = {
+},
+},
+["50"] = {
+["showGroupPrefix"] = true,
+["priority"] = 1,
+["hideIn"] = {
+},
+},
+["54"] = {
+["showGroupPrefix"] = true,
+["priority"] = 0,
+["hideIn"] = {
+},
+},
+["default_junk"] = {
+["showGroupPrefix"] = true,
+["priority"] = 1,
+["hideIn"] = {
+},
+},
+["34"] = {
+["showGroupPrefix"] = true,
+["priority"] = 0,
+["hideIn"] = {
+},
+},
+["44"] = {
+["showGroupPrefix"] = true,
+["priority"] = 1,
+["hideIn"] = {
+},
+},
+["48"] = {
+["showGroupPrefix"] = true,
+["priority"] = 3,
+["hideIn"] = {
+},
+},
+["58"] = {
+["showGroupPrefix"] = true,
+["priority"] = 0,
+["hideIn"] = {
+},
+},
+["28"] = {
+["priority"] = 1,
+},
+["38"] = {
+["showGroupPrefix"] = true,
+["priority"] = 2,
+["hideIn"] = {
+},
+},
+["default_reagent"] = {
+["group"] = "type",
+["priority"] = -1,
+["hideIn"] = {
+},
+},
+["64"] = {
+["showGroupPrefix"] = true,
+["priority"] = 0,
+["addedItems"] = {
+["i:2901"] = true,
+["i:4471"] = true,
+["i:6256"] = true,
+["i:6219"] = true,
+["i:5956"] = true,
+},
+},
+["18"] = {
+["priority"] = 3,
+},
+["9"] = {
+["priority"] = 2,
+},
+["default_armor"] = {
+["group"] = "type",
+["hideIn"] = {
+},
+},
+["14"] = {
+["addedItems"] = {
+["i:110560"] = true,
+["i:140192"] = true,
+},
+["priority"] = 2,
+},
+["24"] = {
+["priority"] = 2,
+},
+["default_other"] = {
+["showGroupPrefix"] = true,
+["priority"] = -1,
+["hideIn"] = {
+},
+},
+["5"] = {
+["showGroupPrefix"] = true,
+["priority"] = 3,
+["hideIn"] = {
+},
+},
+["20"] = {
+["showGroupPrefix"] = true,
+["priority"] = 2,
+["hideIn"] = {
+},
+},
+["30"] = {
+["addedItems"] = {
+["i:64670"] = true,
+["i:49040"] = true,
+["i:109253"] = true,
+["i:87216"] = true,
+},
+["priority"] = 0,
+},
+["8"] = {
+["priority"] = 5,
+},
+["10"] = {
+["showGroupPrefix"] = true,
+["priority"] = 0,
+["hideIn"] = {
+},
+},
+},
+["warband_bank_view_width"] = 14,
+["sort_ignore_slots_at_end"] = false,
+["add_to_category_buttons_2"] = "drag",
+["view_type"] = "unset",
+["bank_current_tab"] = 1,
+["icon_text_quality_colors"] = false,
+["character_bank_view_width"] = 14,
+["icon_text_font_size"] = 14,
+["bag_icon_size"] = 53,
+["bag_view_width"] = 12,
+["disabled_skins"] = {
+},
+["setting_anchors"] = false,
+["sort_ignore_bank_slots_count"] = 0,
+["upgrade_plugin_ignored"] = {
+},
+["debug_keywords"] = false,
+["skins"] = {
+["blizzard"] = {
+["no_frame_borders"] = false,
+["view_transparency"] = 0,
+["empty_slot_background"] = false,
+},
+["blizzard_black"] = {
+["empty_slot_background"] = false,
+},
+["dark"] = {
+["no_frame_borders"] = false,
+["square_icons"] = false,
+["view_transparency"] = 0,
+["empty_slot_background"] = false,
+},
+},
+["bag_view_position"] = {
+"BOTTOMRIGHT",
+-115.832763671875,
+79.99968719482422,
+},
+["auto_sort_on_open"] = false,
+["category_migration"] = 5,
+["debug_timers"] = false,
+["bag_view_show_bag_slots"] = false,
+["show_buttons_on_alt"] = false,
+["guild_view_dialog_position"] = {
+"BOTTOM",
+"Baganator_GuildViewFrame",
+"TOP",
+0,
+0,
+},
+["new_items_flashing"] = true,
+["character_select_position"] = {
+"RIGHT",
+"Baganator_CategoryViewBackpackViewFrameblizzard_black",
+"LEFT",
+0,
+0,
+},
+["category_section_toggled"] = {
+},
+["show_sort_button_2"] = true,
+["sort_ignore_slots_count_2"] = 0,
+["bag_view_type"] = "category",
+["currency_panel_position"] = {
+"RIGHT",
+"Baganator_CategoryViewBackpackViewFrameblizzard_black",
+"LEFT",
+0,
+0,
+},
+["lock_frames"] = false,
+["currencies_tracked"] = {
+},
+["junk_plugin_ignored"] = {
+["none"] = true,
+},
+["currency_headers_collapsed"] = {
+},
+["currencies_tracked_imported"] = 0,
+},
+},
+}
+BAGANATOR_DATA = nil

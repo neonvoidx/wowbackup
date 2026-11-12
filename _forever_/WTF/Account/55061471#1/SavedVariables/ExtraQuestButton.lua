@@ -1,0 +1,75 @@
+
+ExtraQuestButtonDB3 = {
+["profiles"] = {
+["Default Heals"] = {
+["artworkAlpha"] = 1,
+["artworkStyle"] = "Default",
+["trackingOnly"] = false,
+["position"] = {
+["y"] = 0,
+["x"] = 0,
+["point"] = "CENTER",
+},
+["scale"] = 1,
+["zoneOnly"] = false,
+["distanceYd"] = 1000,
+["noCooldownText"] = false,
+},
+["Default"] = {
+["artworkAlpha"] = 1,
+["noCooldownText"] = false,
+["trackingOnly"] = false,
+["position"] = {
+["y"] = 269.0045776367188,
+["x"] = -250.3261108398438,
+["point"] = "BOTTOM",
+},
+["artworkStyle"] = "BrewmoonKeg",
+["distanceYd"] = 1000,
+["zoneOnly"] = false,
+["scale"] = 1,
+},
+["MidScreen"] = {
+["artworkAlpha"] = 1,
+["scale"] = 1,
+["trackingOnly"] = false,
+["position"] = {
+["y"] = 0,
+["x"] = 0,
+["point"] = "CENTER",
+},
+["noCooldownText"] = false,
+["distanceYd"] = 1000,
+["zoneOnly"] = false,
+["artworkStyle"] = "Default",
+},
+["Classic"] = {
+["artworkAlpha"] = 1,
+["scale"] = 1,
+["trackingOnly"] = false,
+["position"] = {
+["y"] = 0,
+["x"] = 0,
+["point"] = "CENTER",
+},
+["noCooldownText"] = false,
+["zoneOnly"] = false,
+["distanceYd"] = 1000,
+["artworkStyle"] = "Default",
+},
+["Modern"] = {
+["artworkAlpha"] = 1,
+["scale"] = 1,
+["trackingOnly"] = false,
+["position"] = {
+["y"] = 0,
+["x"] = 0,
+["point"] = "CENTER",
+},
+["noCooldownText"] = false,
+["distanceYd"] = 1000,
+["zoneOnly"] = false,
+["artworkStyle"] = "Default",
+},
+},
+}

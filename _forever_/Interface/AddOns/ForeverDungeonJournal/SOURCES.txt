@@ -1,0 +1,865 @@
+Deadmines data references, checked 22 September 2026
+===================================================
+Quest IDs, minimum levels, rewards and beta-only quest:
+https://wowforevertalents.com/quests/red-silk-bandanas-214/
+https://wowforevertalents.com/quests/collecting-memories-168/
+https://wowforevertalents.com/quests/destruction-in-deadmines-92753/
+https://wowforevertalents.com/quests/oh-brother-167/
+https://wowforevertalents.com/quests/underground-assault-2040/
+https://wowforevertalents.com/quests/the-defias-brotherhood-166/
+https://wowforevertalents.com/quests/the-unsent-letter-373/
+
+Bosses and item IDs / loot grouping:
+https://wowforevertalents.com/dungeons/deadmines/
+https://foreverchanges.pro/dungeons/the-deadmines
+https://wowf.io/en/dungeons/deadmines
+https://wowsrc.com/loot/the-deadmines/
+
+New loot IDs:
+273289 Ogre Loincloth (Rhahk'Zor)
+273293 Bandsaw Wristbands (Sneed)
+285292 Dull Sawblade (Sneed's Shredder)
+273297 Goblin Hammer (Gilnid)
+284715 First Mate Band (Mr. Smite)
+273298 Lookie's Spyglass (Cookie)
+
+Coverage notes:
+- Separate entries for Sneed and the shredder; Miner Johnson is a rare spawn.
+- Sources mix observed Forever items with inherited Classic drop assignments.
+  The addon does not claim drop chances or hard-code combat stats.
+- Standard quest pickup locations use Classic references except where a beta
+  sighting is recorded. Gryan Stoutmantle is recorded at 56.4, 47.5.
+- Destruction in Deadmines starts from Extra-Destructive Explosives. How the
+  player obtains that item is not confirmed here and is labelled accordingly.
+- All seven included quests are Alliance quests. No Horde quests are recorded.
+- XP: current client first; observed fallbacks from ForeverChanges are 4688 for
+  Red Silk Bandanas, 5813 for Underground Assault and 9750 for Defias Brotherhood.
+  Other Deadmines base-cache XP is omitted because it may not reflect beta tuning.
+- Existing Hall of Thanes and Ruins of Lordaeron data is retained.
+
+Blackfathom Deeps data references, checked 22 September 2026
+==========================================================
+Current Forever beta dungeon/quest cache:
+https://wowforevertalents.com/dungeons/blackfathom-deeps/
+
+Boss and loot grouping, observed beta XP and quest-start references:
+https://foreverchanges.pro/dungeons/blackfathom-deeps
+
+Notes:
+- The current 5-player client row contains seven bosses. Baron Aquanis is kept as
+  an optional quest-summoned encounter because he and Strange Water Globe remain
+  present in the client/source data.
+- Quest XP uses live client values when available. The listed fallback values are
+  current observed beta values where ForeverChanges has recorded them.
+- Map buttons use Classic/Forever UIMapIDs and the addon's custom map marker, not
+  Blizzard's unsupported user-waypoint API.
+
+
+v0.10.0 additions (2026-09-22)
+- Ragefire Chasm Forever beta dungeon/quest data: https://wowforevertalents.com/dungeons/ragefire-chasm/
+- Wilder Thistlenettle Classic location cross-check: https://warcraft.wiki.gg/wiki/Wilder_Thistlenettle
+
+Shadowfang Keep data references, checked 23 September 2026
+========================================================
+Forever beta dungeon/quest cache and XP rewards:
+https://wowforevertalents.com/dungeons/shadowfang-keep/
+
+Current beta loot observations plus Classic fallback drops:
+https://wowforevertalent.com/dungeons/shadowfang-keep/
+
+Quest giver/map cross-checks:
+https://wowhandbook.com/zones/dungeons/shadowfang-keep/
+https://warcraft.wiki.gg/wiki/Shadowfang_Keep_(Classic)
+
+Notes:
+- Current Forever client row: 5 players, Group Finder level 18, 8 bosses, 4 quests.
+- XP fallbacks: Deathstalkers 2000; Orb of Soran'ruk 2550; Book of Ur 2100; Arugal Must Die 3300.
+- The addon still prefers the live client quest reward over fallback XP.
+- Forever-confirmed new drops are used where item IDs are available; Classic drops are retained as fallback/reference loot where the beta source marks them unconfirmed.
+
+Wailing Caverns Leaders of the Fang reward correction, checked 24 September 2026
+===============================================================================
+Forever beta quest reward set:
+https://www.wowhead.com/forever/quest=914/leaders-of-the-fang
+
+Reward item IDs:
+6505 Crescent Staff
+6504 Wingblade
+270018 Hammerbone (new in WoW Forever)
+
+Notes:
+- Leaders of the Fang now correctly shows all three Forever reward choices.
+- The previous Venomstrike / Deviate Scale Cloak entries were incorrect dungeon loot,
+  not quest rewards.
+- Current observed Forever beta reward XP is 6,380; Thunder Bluff reputation remains +150.
+
+
+Dungeon quest XP audit, checked 24 September 2026
+=================================================
+The addon previously allowed base/cache XP to override the much larger server-tuned
+Forever dungeon-quest rewards. This audit applies the current observed Forever values
+across every dungeon currently shipped in the addon, while retaining beta-cache XP only
+for quests where no server-side adjustment has been confirmed. The live client reward
+API remains authoritative when it returns a value.
+
+Primary current observations:
+https://foreverchanges.pro/dungeons/hall-of-thanes
+https://foreverchanges.pro/dungeons/wailing-caverns
+https://foreverchanges.pro/dungeons/ruins-of-lordaeron
+https://foreverchanges.pro/dungeons/the-deadmines
+https://foreverchanges.pro/dungeons/blackfathom-deeps
+https://foreverchanges.pro/dungeons/ragefire-chasm
+https://foreverchanges.pro/dungeons/shadowfang-keep
+
+Quest-cache / missing-observation cross-checks:
+https://wowforevertalents.com/quests/
+https://wowforevertalents.com/dungeons/deadmines/
+https://wowforevertalents.com/dungeons/ragefire-chasm/
+https://wowforeverbuilds.com/quests/the-orb-of-soran-ruk-1740
+
+Hall of Thanes Treaty beta report:
+https://www.wowhead.com/forever/quest=98423/the-treaty-of-understanding
+https://quissy.tv/hall-of-thanes-quests-locations-rewards-wow-forever/
+
+Current beta build note (69977):
+https://us.forums.blizzard.com/en/wow/t/beta-client-update-september-22/2358655/1
+
+Important: these are beta values and Blizzard can retune them. The addon asks the live
+client first and uses this table only as a fallback, so a client-provided reward replaces
+the static number automatically.
+
+2026-09-24 v1.0.1 loot / quest reward audit:
+- https://foreverchanges.pro/dungeons/hall-of-thanes
+- https://foreverchanges.pro/dungeons/ragefire-chasm
+- https://foreverchanges.pro/dungeons/ruins-of-lordaeron
+- https://foreverchanges.pro/dungeons/wailing-caverns
+- https://foreverchanges.pro/dungeons/the-deadmines
+- https://foreverchanges.pro/dungeons/shadowfang-keep
+- https://foreverchanges.pro/dungeons/blackfathom-deeps
+- Cross-checked current Forever item / quest IDs with Wowhead Forever and 60.tools where needed.
+- Audit reflects Forever beta data available 2026-09-24. Forever is still in beta, and Blizzard can change drops or quest rewards before release.
+
+
+2026-09-25 v1.0.9 quest-start / map reference fixes
+====================================================
+Dark Iron Map (item 274268) and Old Ironforge Incursion chain:
+https://www.wowhead.com/forever/item=274268/dark-iron-map
+https://www.wowhead.com/forever/quest=96393/old-ironforge-incursion
+
+Notes:
+- Dark Iron Map is recorded from Dark Iron Spies in Dun Morogh near 77, 60.
+- Deviate Eradication's Ebru map marker uses the Wailing Caverns above-entrance cave.
+- Item-start quests now show their starting item directly instead of a quest-giver map button.
+
+
+Ruins of Lordaeron quest/location UI audit, checked 25 September 2026
+====================================================================
+Crest of Lordaeron item/spawn reports:
+https://www.wowhead.com/forever/item=268579/crest-of-lordaeron
+https://www.wowhead.com/forever/zone=16611/ruins-of-lordaeron
+
+Current quest-giver/map cross-checks:
+https://www.wowhead.com/forever/guide/dungeons/every-dungeon-quest-location
+https://www.chromie.de/ruinen-von-lordaeron-alle-quests-im-uberblick
+https://warcraft.wiki.gg/wiki/Deathguard_Kristof
+
+Small Sack of Gems quality:
+https://www.60.tools/items/280567
+
+Notes:
+- Crest of Lordaeron is an item-start quest with multiple community-reported spawn
+  points inside Ruins of Lordaeron; the journal no longer shows quest-ID trivia.
+- Non-item Ruins quests now have map buttons for their known quest givers (or the
+  dungeon entrance for Captain Truman, who is just inside).
+- Quest-start / quest-note item names are shown in white in the journal UI.
+- Small Sack of Gems is Common and is forced to white if stale beta cache color
+  metadata says otherwise.
+- Stat-delta display deduplicates client aliases that can expose the same resistance
+  more than once (for example Fire Resistance).
+
+
+2026-09-25 v1.0.11 map/pin corrections
+========================================
+- Serpentbloom (962) starts/ends at Apothecary Zamah in the Pools of Vision, Thunder Bluff.
+  The prior Barrens / Apothecary Helbrim pin was incorrect.
+  Sources: https://www.wowhead.com/forever/quest=962/serpentbloom
+           https://www.60.tools/quests/962
+- Dark Iron Map (274268) drops from Dark Iron Spies around Ironband's Compound in Dun Morogh;
+  the clickable item now targets the Dark Iron Spy area rather than only a generic location.
+  Sources: https://www.wowhead.com/forever/item=274268/dark-iron-map
+- Crest of Lordaeron XP remains intentionally faction-specific from observed Forever beta data:
+  Alliance 9,750 XP (95189), Horde 8,320 XP (95204).
+  Source: https://foreverchanges.pro/dungeons/ruins-of-lordaeron
+- World-map pins now anchor to WorldMapFrame:GetCanvas()/SetPinPosition when available and
+  repeat SetMapID briefly after opening. This fixes pins disappearing or the map restoring the
+  previously viewed zone while Forever's map canvas initializes.
+- Deathguard Kristof remains at Tirisfal Glades 65.2, 60.2 for The Wrath of Rath'mael.
+  Source: https://warcraft.wiki.gg/wiki/Deathguard_Kristof
+
+Boss portrait display IDs (v1.0.14 direct-portrait conversion)
+- Legacy dungeon NPC -> CreatureDisplayID values cross-checked against current Classic database records (OctoWoW/Turtle-style Classic data; examples: Lord Cobrahn 3669->4213, Mutanus 3654->4088, Commander Springvale 4278->3223, Archmage Arugal 4275->2353).
+- Forever-specific bosses continue to prefer display IDs already learned from the live Forever client in SavedVariables, then Blizzard Encounter Journal displayInfo. No PlayerModel/SetCreature resolver is used in v1.0.14.
+
+2026-09-25 v1.0.15 quest-chain / item-link / quality-color fixes
+=================================================================
+- Leaders of the Fang (914) requires level 10 in current Forever data and remains
+  gated behind the Barrens oasis chain -> Hamuul Runetotem -> Nara Wildmane.
+  Source: https://www.wowhead.com/forever/quest=914/leaders-of-the-fang
+- The Glowing Shard follow-up In Nightmares rewards Talbar Mantle (10657) or
+  Quagmire Galoshes (10658); those follow-up rewards are now shown as clickable
+  item-link-style names in Notes.
+  Sources: https://www.wowhead.com/forever/quest=3369/in-nightmares
+           https://www.wowhead.com/forever/quest=3370/in-nightmares
+- Hidden Enemies follow-up (5730) rewards Kris of Orgrimmar (15443), Hammer of
+  Orgrimmar (15445), Axe of Orgrimmar (15424), or Staff of Orgrimmar (15444);
+  these are also shown as clickable item-link-style names in Notes.
+  Source: https://www.wowhead.com/forever/quest=5730/hidden-enemies
+- Deviate Hide Pack (918) is Common/white. The addon now uses the actual tooltip
+  renderer's title color as the primary quality-color source for ALL displayed
+  loot/reward items, so Forever quality changes no longer depend on stale item-link
+  or Classic-era metadata. A Common fallback remains for item 918 while data loads.
+  Sources: https://wowclassicdatabase.com/item/deviate-hide-pack
+           https://www.wowhead.com/forever/quest=1486/deviate-hides
+
+2026-09-25 v1.0.16 portrait / item-quality regression fix
+==========================================================
+- v1.0.15 did not restore the old zoning portrait warmup; the PLAYER_ENTERING_WORLD
+  portrait path remained direct-only. The new synchronous work in v1.0.15 was the
+  hidden tooltip quality-color scan. That scan has been removed.
+- Item row colors now prefer the live client's numeric item quality (GetItemInfo /
+  C_Item.GetItemQualityByID) and only request data for items currently being shown.
+  Known Forever exceptions remain explicit: Deviate Hide Pack common, Fel Steed
+  Saddlebags uncommon, Snakeskin Bag uncommon, Small Sack of Gems common.
+- v1.0.14's direct-only portrait conversion could leave Forever-exclusive bosses as
+  question marks on a fresh install because Ruins of Lordaeron / Hall of Thanes do
+  not always expose a usable Encounter Journal displayInfo. v1.0.16 keeps all known
+  portraits direct 2D but adds a one-time lazy fallback for an unknown Forever NPC:
+  it resolves only while the boss page is visible, saves the display ID, clears the
+  PlayerModel immediately, and is hard-cancelled on PLAYER_LEAVING_WORLD.
+- Follow-up quest rewards in Notes now use the same icon/name item cards and full
+  hover tooltips as normal quest rewards instead of text-only colored links.
+
+
+2026-09-25 v1.0.17 quality / rare-boss / portrait-learning fixes
+- Restored tooltip-rendered quality colors from v1.0.15 because Forever beta item
+  metadata can disagree with the color actually rendered in the live item tooltip.
+- Verified current dungeon rare spawns against ForeverChanges beta tables:
+  Wailing Caverns = Deviate Faerie Dragon; The Deadmines = Miner Johnson;
+  Shadowfang Keep = Deathsworn Captain; Ruins of Lordaeron = Lordaeron Captain.
+  Hall of Thanes, Ragefire Chasm and Blackfathom Deeps currently list no rare spawn.
+  Sources: https://foreverchanges.pro/dungeons/wailing-caverns
+           https://foreverchanges.pro/dungeons/the-deadmines
+           https://foreverchanges.pro/dungeons/shadowfang-keep
+           https://foreverchanges.pro/dungeons/ruins-of-lordaeron
+- Lordaeron Captain has been player-observed as a rare elite in Ruins, but current
+  public beta-client extracts still do not expose a stable creature ID for it.
+  Do not guess an old-WoW NPC ID. The addon now learns the real ID safely from a
+  live rare/rareelite target/nameplate and persists it, then resolves/caches its
+  display ID once.
+  Sources: https://foreverchanges.pro/rares
+           https://wowforevertalents.com/dungeons/ruins-of-lordaeron/
+
+2026-09-25 v1.0.18 rare portrait hotfix
+- Fixed NAME_PLATE_UNIT_ADDED using the wrong event argument, which prevented
+  learning some Forever-only NPC IDs from nameplates.
+- Live rare boss portraits are now captured from SetPortraitTexture and persisted
+  as a direct 2D portrait when the client exposes a reusable texture.
+- Added a user-observed Lordaeron Captain portrait fallback from the Forever beta.
+- Corrected the classic rare-elite target-frame texture crop so the silver dragon
+  wraps the portrait instead of showing a compressed/yellow strip.
+
+2026-09-25 v1.0.19 rare portrait layout cleanup
+- Removed the screenshot-derived Lordaeron Captain fallback portrait because it contained pieces of the target-frame artwork/level medallion. The addon now uses the live learned portrait/display-ID path for him instead of showing contaminated art.
+- Rare boss silver-dragon overlay was tightened to the portrait itself and cropped above the target-frame level medallion, so no level circle is shown in boss rows or the selected-boss panel.
+
+
+v1.0.21 portrait architecture
+- Removed live boss NPC/portrait learning from target, mouseover, and nameplates.
+- No portrait-learning events are registered and no PlayerModel resolver is started.
+- Existing SavedVariables display-ID cache is read only as upgrade compatibility; v1.0.21 never writes new learned portrait IDs.
+- Lordaeron Captain uses a bundled clean portrait cropped from the user-provided in-game Dressing Room/unit portrait screenshot, avoiding the contaminated rare-frame/raid-marker crop used in earlier tests.
+
+
+2026-09-27 v1.2.2 Deadmines unique trash loot test
+=====================================================
+Only dungeon-specific trash drops are listed; generic world drops are intentionally excluded.
+Forever item/source cross-checks:
+- Blackened Defias Boots (10402): Defias Strip Miner, The Deadmines
+  https://www.wowhead.com/forever/item=10402/blackened-defias-boots
+- Blackened Defias Gloves (10401): Defias Overseer / Defias Taskmaster, The Deadmines
+  https://www.wowhead.com/forever/item=10401/blackened-defias-gloves
+- Blackened Defias Leggings (10400): Defias Overseer / Defias Taskmaster, The Deadmines
+  https://www.wowhead.com/forever/item=10400/blackened-defias-leggings
+- Blackened Defias Belt remains on Captain Greenskin; Blackened Defias Armor remains on Edwin VanCleef.
+
+2026-09-28 v1.3.2 Alliance route guide for Ruins of Lordaeron
+- Wowhead Forever Ruins of Lordaeron overview (updated 2026-09-26): Alliance route via Stormwind -> Auberdine -> Menethil/Southshore boat, then north past Dalaran and through Lordamere Lake to Tirisfal.
+- Blizzard Forever Found Photos recap: confirms the new Stormwind Harbor <-> Auberdine route and the Menethil / Southshore / Auberdine travel connection.
+- Wowhead Three New Ship Routes Debuting in Forever: confirms the Menethil -> Southshore -> Auberdine stop order.
+
+2026-10-02 quest audit, build 70170
+https://us.forums.blizzard.com/en/wow/t/wow-forever-beta-development-notes-%E2%80%93-updated-october-1/2360696/4
+https://wowforevertalents.com/quests/
+https://wowforevertalents.com/dungeons/excavation-site-wetlands/
+https://wowforevertalents.com/dungeons/razorfen-kraul/
+https://wowforevertalents.com/quests/a-green-sample-92456/
+https://wowforevertalents.com/quests/power-overwhelming-92489/
+https://wowforevertalents.com/quests/opportunistic-education-96987/
+https://wowforevertalents.com/quests/source-of-power-96988/
+https://wowforevertalents.com/quests/the-grave-knight-96986/
+The public cache is partial. Missing quests are not evidence of removal. Quest XP in a cache is not a verified server-side turn-in reward. Existing faction restrictions are retained unless independently contradicted.
+https://wowforevertalents.com/dungeons/ragefire-chasm/
+https://wowforevertalents.com/dungeons/the-hall-of-thanes/
+https://wowforevertalents.com/dungeons/ruins-of-lordaeron/
+https://wowforevertalents.com/dungeons/deadmines/
+https://wowforevertalents.com/dungeons/wailing-caverns/
+https://wowforevertalents.com/dungeons/shadowfang-keep/
+https://wowforevertalents.com/dungeons/blackfathom-deeps/
+https://wowforevertalents.com/dungeons/stormwind-stockade/
+https://wowforevertalents.com/dungeons/gnomeregan/
+https://wowforevertalents.com/dungeons/scarlet-monastery/
+
+2026-10-03 screenshot corrections
+Power Overwhelming: Arcanic Enigma slain; High Sorcerer Andromath; rare Violet Sash / Runebound Gloves choice and 1 gold. Accepted at level 25 in report (not evidence of a changed minimum level).
+The Fury Runs Deep: screenshot confirms Magistrate's Pantaloons as third rare choice and 5,750 XP.
+Archmage Arugal: level 24, reported directly by user.
+
+2026-10-03 City of Dalaran Alliance quest-giver map positions
+A Green Sample (92456) and Power Overwhelming (92489) used Classic-era Stormwind coordinates. Forever's Stormwind map (1453) is the larger harbor layout, so the pins landed too far north-west.
+Shylamiir (NPC 5502): Classic 15.2, 49.8 -> Forever 31.4, 62.8 (The Park).
+High Sorcerer Andromath (NPC 5694): Classic 37.6, 81.6 -> Forever 48.8, 87.6 (Wizard's Sanctum, Mage Quarter).
+https://www.wowhead.com/forever/npc=5502/shylamiir
+https://www.wowhead.com/forever/npc=5694/high-sorcerer-andromath
+Cross-check: same Classic -> Forever offset as the already-correct Shoni the Shilent (55.6, 12.6 -> 62.4, 34.2) and Warden Thelwater (41.2, 58.0 -> 51.6, 69.4) entries.
+
+2026-10-03 Elder Knowledge / Earthen Echo NPC and Roogug map position
+Elder Knowledge (95664): Wowhead Forever Quick Facts list End: Bashana Runetotem (NPC 9087). Earthen Echo (98823): Start: Bashana Runetotem.
+Bashana Runetotem: Thunder Bluff, Elder Rise, 70.8, 33.4.
+https://www.wowhead.com/forever/quest=95664/elder-knowledge
+https://www.wowhead.com/forever/quest=98823/earthen-echo
+https://www.wowhead.com/forever/npc=9087/bashana-runetotem
+Roogug (NPC 6168): no Forever/Classic map coordinates are published. Position 64.6, 43.0 is the centre of the Wowhead retail spawn cluster (64.4-66.0, 42.2-46.6) on the same Razorfen Kraul map art; Charlga Razorflank on that data set (21.9, 31.1) matches the existing pin.
+It agrees with the Classic route notes: first left after the entrance, across the large vine, at the back of the small area. Not yet confirmed in the Forever beta.
+https://www.wowhead.com/npc=6168/roogug
+https://www.wowhead.com/classic/npc=6168/roogug
+
+2026-10-03 boss level audit
+All returning-dungeon boss levels compared with Classic Era creature data (Wowhead Classic and Wowhead Forever NPC tooltips, which currently carry the same levels).
+Corrected: Mekgineer Thermaplugg 35 -> 34. Fel Steed / Shadow Charger 20-21 -> 19-21 (Fel Steed 19-20, Shadow Charger 20-21).
+Kept: Archmage Arugal 24 (in-game report by user; Classic data says 26).
+Forever-only bosses (Hall of Thanes, Ruins of Lordaeron, Excavation Site, City of Dalaran): no public source lists boss levels as of build 70170, so these remain unverified.
+https://www.wowhead.com/forever/npc=7800/mekgineer-thermaplugg
+https://www.wowhead.com/forever/npc=3864/fel-steed
+https://www.wowhead.com/forever/npc=3865/shadow-charger
+
+2026-10-03 Stockade loot audit
+Compared with the Wowhead Forever drop tables of each Stockade boss. Added: Demolition Girdle 273807 (Kam Deepfury), Repurposed Rack 273811 (Hamhock), Graverobber's Shovel 273817 and Boneslicer 273819 (Dextren Ward). Kam's Walking Stick 2280 quality corrected to rare.
+Nightskulker Ring 273820 stays on Dextren Ward (Wowhead Forever; confirmed by user). foreverchanges.pro lists it under Targorr.
+The table now has all 21 drops Wowhead Forever lists, so the "Full Items Data TBD" note was removed.
+https://www.wowhead.com/forever/npc=1666
+https://www.wowhead.com/forever/npc=1717
+https://www.wowhead.com/forever/npc=1663
+https://foreverchanges.pro/dungeons/the-stockade
+
+2026-10-03 boss portrait display IDs
+The 45 bosses without a bundled CreatureDisplayID showed question marks on a fresh install while the hidden model resolver worked through them one by one.
+Their display IDs were taken from the resolver cache of the Forever beta client (build 70170, saved-variables table displayIDs) and bundled in Data/Bosses.lua.
+The five Stockade boss IDs (517, 825, 3250, 2149, 1621) match the client encounter rows listed on https://foreverdb.net/dungeon/34
+Mana Elemental (City of Dalaran) has no NPC ID yet and is not covered.
+
+2026-10-03 localized boss names
+Official client names for the 86 bosses with NPC IDs, per language, from the Wowhead Forever NPC database (tooltip service, locale-specific).
+Languages: deDE, frFR, esES, ptBR, ruRU, koKR, zhCN, zhTW. Names identical to English or not yet localized are left to fall back to English.
+Italian is not included: Wowhead has no Italian names in its Forever or Classic data.
+
+2026-10-03 Shadowfang Keep map
+The Forever client maps Shadowfang Keep on four levels (The Courtyard, Dining Hall, The Wall Walk, Arugal's Chamber = map tiles 1, 2, 7, 6). The addon previously used six tile sets.
+Boss positions follow https://foreverchanges.pro/dungeons/shadowfang-keep ; Baron Silverlaine, Commander Springvale and the Arugal chamber also match the retail journal pins on the same map art (Wowhead NPCs 3887, 4278, 46964).
+Arugal's Voidwalker and the three ladder positions are estimates.
+
+2026-10-03 The Test of Righteousness (paladin, human / dwarf)
+Chain and quest data from Wowhead Forever: 1649, 1650, 1651, 1652 The Tome of Valor; 1653, 1654, 1806 The Test of Righteousness; 1655 Bailor's Ore Shipment; 1442 Seeking the Kor Gem.
+https://www.wowhead.com/forever/quest=1806/the-test-of-righteousness
+Parts: Whitestone Oak Lumber 6994 (Goblin Woodcarver, The Deadmines); Jordan's Smithing Hammer 6895 (object Jordan's Hammer, Shadowfang Keep); Jordan's Refined Ore Shipment 6993 (reward of 1655); Purified Kor Gem 7083 (reward of 1442; Corrupted Kor Gem 6995 from Blackfathom naga).
+Reward of 1806: Verigan's Fist 6953. XP values are the Wowhead Forever quest figures and only used as offline fallbacks.
+The start of 1649 is not listed on Wowhead and is marked not confirmed.
+A Horde paladin equivalent exists (A Moon-Kissed Blade 95036, Seeking the Kor Gem 95042) and is not added yet.
+
+2026-10-03 Trapper's Leather Helm
+Item 252513 seen dropping from Interrogator Vishas (stream) and Fallen Champion (screenshot), reported by user. Listed on both; the wider drop pool is unknown.
+
+2026-10-03 The Test of Righteousness chain correction
+Chain now ends on 1806 (Verigan's Fist) as on the Wowhead series; the side quests 1655 and 1442 are no longer listed as steps and are described inside step 1654.
+1806 experience set to 5,500 as displayed on Wowhead Forever (the raw quest record says 2,200). Unverified XP fallbacks for the earlier steps were removed; the game supplies those values live.
+
+2026-10-03 The Test of Righteousness chain, second correction
+The chain list now matches the Wowhead series exactly: 1651, 1652 The Tome of Valor; 1653, 1654, 1806 The Test of Righteousness. 1649 and 1650 are a separate two-quest series on Wowhead and were removed.
+The final step 1806 is now a row in the chain and shows Verigan's Fist and 5,500 experience.
+https://www.wowhead.com/forever/quest=1651/the-tome-of-valor
+
+2026-10-03 The Test of Righteousness, step 4 item list
+Quest 1654 now lists its items as item buttons under the objective, as on the Wowhead quest page: Whitestone Oak Lumber 6994, Jordan's Refined Ore Shipment 6993, Jordan's Smithing Hammer 6895, Purified Kor Gem 7083; provided item Jordan's Weapon Notes 6996.
+Tooltip source lines: 6994 Goblin Woodcarver, The Deadmines; 6895 object Jordan's Hammer, Shadowfang Keep; 6993 reward of quest 1655 Bailor's Ore Shipment; 7083 reward of quest 1442 Seeking the Kor Gem (Corrupted Kor Gem 6995 from Blackfathom naga).
+https://www.wowhead.com/forever/quest=1654/the-test-of-righteousness
+
+2026-10-03 Trash drop scout (Wowhead Forever)
+Method: zone pages (NPC list, Drops tab) and each non-boss NPC's drop list; an item counts as dungeon trash when every recorded dropper is inside that dungeon and at least one is not a boss.
+Ruins of Lordaeron (zone 16611): 286981 Death Bindings (Skeleton 8/465, Skeletal Soldier 12/508, Skeletal Mage 2/210, Fallen Necromancer 3/122); 286977 Sword of the Fallen (Ghoul, Ragged Ghoul, Plague Ghoul); 286978 Rotmender's Garb (Flesh Golem); 286980 Rotmender's Sash (Shrieking Banshee). 286979 Rotmender's Gloves has no recorded dropper and is not listed.
+271207 and 271214 are now named Rotmender's Leggings and Rotmender's Treads on Wowhead (Rotmender's Raiment set).
+The Deadmines (1581): 1951, 1929, 1934, 1936, 1930, 1943, 1944, 1945, 1925 with the droppers named in the data.
+Razorfen Kraul (491): 776, 1727, 1975, 1976, 2549, 1978, 2264, 4438, 2039 zone-wide; 3569 Death's Head Priest; 6679 Razorfen Spearhide. 1488 Avenger's Armor no longer exists in Forever.
+Scarlet Monastery (796): 5819, 7730, 7761, 7787 drop from Graveyard trash (Unfettered Spirit, Anguished Dead, Haunting Phantasm, Scarlet Torturer, Scarlet Scryer). 7757 Windweaver Staff has no Graveyard dropper; 2262 Mark of Kern has no item page.
+Nothing new found for Wailing Caverns, Blackfathom Deeps, Ragefire Chasm, Shadowfang Keep, The Stockade, Gnomeregan, Excavation Site. Hall of Thanes and City of Dalaran have no zone or trash data on Wowhead yet.
+Most Classic-dungeon figures are Wowhead counts inherited from Classic; the Ruins of Lordaeron figures are Forever beta data.
+https://www.wowhead.com/forever/item=286981/death-bindings
+
+2026-10-03 Boss recipe drops and trash clean-up
+Recipes (item class 9, Forever item IDs 251341-253986) and blueprints (273085-273141) added to each boss that Wowhead Forever records dropping them. They come from a shared low-rate pool, so a boss can drop recipes not yet listed.
+Pattern: Wisdom's Leather Gloves 252782 on Fel Steed / Shadow Charger confirmed by user screenshot.
+All uncommon (green) items removed from Trash Drops lists at the author's request, including the Scarlet Crusade mail set.
+
+2026-10-03 Loot Filter
+Scarlet Crusade mail set restored to Scarlet Monastery: Graveyard trash drops as rare quality (author: the set is blue in Forever).
+Class usability uses Classic weapon and armor proficiencies (mail and plate from level 40); stat filters read the item tooltip.
+
+2026-10-04 Blackfathom Villainy (Horde, 6561)
+Pickup changed from Argent Guard Thaelrid (Classic) to Bashana Runetotem, Elder Rise, Thunder Bluff, on a CurseForge player report (romantic_hugle41). Wowhead Forever still shows the Classic start, so this rests on the player report only. Map position reused from Elder Knowledge.
+Later the same day: an older Wowhead comment says the quest has two starts (Thunder Bluff, or the corpse inside Blackfathom Deeps), so the pickup line now lists both; Show on Map points at Thunder Bluff.
+
+2026-10-04 An Unholy Alliance final step (6521)
+Wowhead Forever: choice of 17039 Skullbreaker, 17042 Nail Spitter, 17043 Zealot's Robe, 270054 Cultist's Chestguard; 20 silver; 3,500 XP. Turn in to Varimathras, Undercity.
+https://www.wowhead.com/forever/quest=6521/an-unholy-alliance
+
+2026-10-04 Scarlet Monastery quests available at level 30 or below (Wowhead Forever zone 796)
+Added 1050 Mythology of the Titans, 96800 Past Due (giver not listed), 1049 Compendium of the Fallen, 1160 Test of Lore with its earlier chain steps (names only). All are Library quests by Classic knowledge; listed under the Graveyard page at the author's request. 1048 and 1053 need level 33/34 and are left out.
+
+2026-10-04 Scarlet Monastery: Library
+Bosses, levels (Loksey 34, Doan 37), display IDs and loot from Wowhead Forever NPC pages 3974 and 6487; The Scarlet Key from Doan's Strongbox (object 103821). Level range 33-41 from foreverchanges.pro. Trash: zone blues and Scarlet Boots recorded on Library mobs. Wowhead has no map coordinates for either boss, so the map has no pins. The Library quests moved here from the Graveyard page.
+
+Baron Aquanis quest (6922), Strange Water Globe item-start, rewards, and practical Amongst the Ruins prerequisite: https://www.wowhead.com/forever/quest=6922/baron-aquanis ; https://www.wowhead.com/forever/guide/blackfathom-deeps-dungeon-overview-location-rewards
+
+
+2026-10-07 City of Dalaran Horde attunement
+- Wowhead Forever news: "How to Become Attuned to City of Dalaran Dungeon as Horde in WoW: Forever" (article 383256).
+- Required Magus Wordeen Voidglare path recorded as Prison Break In (544), Key to the City (93680), Dalaran Patrols (545), Blood in the Streets (92434), then Horde Heart of Disruption (96984).
+- Wowhead quest pages confirm 544 -> 545 and 92434 -> 96984; Key to the City is a Horde quest from Magus Wordeen Voidglare requiring the Grimy Key (279469).
+- A current Wowhead comment on Blood in the Streets states Keeper Bel'varil's Stone Tokens (556) -> Bracers of Binding (557) branch is NOT required for the attunement, despite the news article recommending doing it alongside the route. The Journal therefore does not gate attunement on those quests.
+- Horde Heart of Disruption provides Dalaran Sewer Key (277507), requires Arcane Mote (251961), and offers Battle Spaulders (279842), Enchanted Sandals (279843), or Striking Staff (279844).
+
+
+2026-11-05 Maps for The Drowned City, Krol'dok Stronghold and Shaper's Terrace
+- Parchment maps: "Atlas de Azeroth: Forever" recreations by Santiago Reyes (2026); the credit stays in the art.
+- Entrance markers sit on the portal swirl drawn on each map. Shaper's Terrace shows two swirls and no source says which one is the entrance, so it has no marker yet.
+
+2026-11-05 The New Plague prerequisite chain
+- Live change: Theodore Griffs only offers The New Plague (95216) after the whole A Recipe For Death chain, 447 -> 450 -> 451 (https://www.wowhead.com/forever/quest=447/a-recipe-for-death).
+- Chain data (givers, objectives, items, drop sources, coordinates, rewards, XP): Forever client tables via QuestieDB (Forever) and Polestar forever-db; Berard's Journal in the Pyrewood Village inn per classicdb.ch quest 450 and warcraft.wiki.gg; localized quest, NPC and item names from the Forever client lookups.
+
+2026-11-05 The Wrath of Rath'mael prerequisite chain
+- Live change: Deathguard Kristof only offers The Wrath of Rath'mael (92422) after Rear Guard Patrol 356 -> 99156 (https://www.wowhead.com/forever/quest=356/rear-guard-patrol).
+- Chain data (Deathguard Linnea, kill targets and spawns at the Balnir Farmstead, Riptear's Heart, rewards, XP, money, official localized names): Forever client tables via Polestar forever-db and QuestieDB (Forever). Riptear (276020), level 13 elite in Venomweb Vale at 83.9, 44.0: https://warcraft.wiki.gg/wiki/Riptear ; group-quest notes: https://allthings.how/rear-guard-patrol-how-to-get-riptear-s-heart-in-wow-forever/
+
+2026-11-06 The Drowned City
+- Quests 95775, 95776, 96774 and the Horde chain steps 629, 95748, 95770, 95773: levels, XP, start/end NPCs (Kin'weelay 2519, Mazu'kon 264074), objectives (the four Tablets of I'lalai 270308-270311, Brinescale Trident 270305, The Third Troll Legend 2007 from the tablet Fall of Gurubashi, Ancient Gurubashi Idol 276894, kill 258924 = Var'Taka) and spawn points: Forever client tables via Polestar forever-db (https://github.com/fitzforge/polestar, forever-db/).
+- Bosses and order: the client's "Staging Area 1-6" creatures (Zul'Alai 270882, Var'Taka 270883, Captain Dreadrise 270884, Deathless Marrow 270885 with a Primeval Elemental 270887, Gill 270888, Min'loth the Serpent 270886), same source; bosses with no live NPC ID yet take their portrait from these copies; Zul'Alai's enrage and the name Zin'aka for the second boss: https://www.warcrafttavern.com/forever/news/the-drowned-city-dungeon-preview-in-wow-forever/ ; Min'loth lore: https://warcraft.wiki.gg/wiki/Min%27loth ; final-kill creature 260274: https://foreverchanges.pro/dungeons/the-drowned-city (unconfirmed).
+- Quest names, chain order, Kin'weelay as giver of The Drowned City, rewards: https://foreverchanges.pro/quests/stranglethorn-vale , https://foreverchanges.pro/quest/96774/ancient-gurubashi-idol , https://wowforever.uk/info/dungeons/the-drowned-city/ , https://expcarry.com/wow-forever-the-drowned-city-guide ; reward items 279888 Tidesoaked Leggings and 279889 Naga Priestess's Mantle: https://www.wowhead.com/forever/item=279888/tidesoaked-leggings
+- Alliance quest 97130 Ancient Gurubashi Secrets (level 40, needs 34; objective, 10,450 XP, 50s, Kirin Tor +300, Stormwind +150; the text names Archmage Lan'dalock, NPC 20735, in Dalaran; no giver listed yet): https://www.wowhead.com/forever/quest=97130/ancient-gurubashi-secrets
+- Alliance quests 95787 Take Two With Water and 95788 Magics of the Drowned City: https://www.warcrafttavern.com/forever/guides/the-drowned-city/ , expcarry (objectives; An Acquaintance in Southshore lead-in to Loremaster Dibbs). Givers not confirmed; not in the client tables yet.
+- Entrance (around 21.4, 27.9, Sunken Hollow): Warcraft Tavern guide above. Level 35-40: Blizzard (https://news.blizzard.com/en-us/article/24301455).
+- No loot is known anywhere yet.
+
+2026-11-06 Cozy Sleeping Bag quest chain
+- Quests 79007 (Horde) / 79008 (Alliance) ... and that note you found, 79192 Stepping Stones, 79980 Scramble, 79974 Wet Job, 79975 Eagle's Fist, 79976 This Must Be The Place and the optional 80001 Rekindle: levels, required level 14, XP, start/end objects (Burned-Out Remains 415106/415107, Nailed Plank 417072/424010, Pocket Litter 424005, Mound of Dirt 424012, Carved Figurine 424007, Messenger Bag 406918, Hastily Rolled-Up Satchel 424006, Firepit 424082) and their spawn points: Forever client tables via Polestar forever-db (https://github.com/fitzforge/polestar, forever-db/).
+- The way to each spot (the path north-east of Sun Rock Retreat, the jump to the Mound of Dirt, the carved heads of the dam, the cart into Thoradin's Wall): https://www.wowhead.com/forever/guide/cozy-sleeping-bag-locations-rewards
+- Rewards, texts, "Not sharable": the Wowhead (Forever) quest pages, e.g. https://www.wowhead.com/forever/quest=79192/stepping-stones ; the bag: https://www.wowhead.com/forever/item=211527/cozy-sleeping-bag
+- Which way round per faction (Alliance: Westfall, then The Barrens; Horde the reverse): the guide's Alliance/Horde tabs, the quests' Side and Start/End objects on https://www.wowhead.com/forever/quest=79008 and https://www.wowhead.com/forever/quest=79007 , and players' comments there.
+
+2026-11-06 The Glowing Shard turn-in
+- Objective "Speak with someone in Ratchet about the Glowing Shard" and the end NPC Falla Sagewind: https://www.wowhead.com/forever/quest=6981/the-glowing-shard ; Sputtervalve (3442) by the Ratchet flight master and Falla Sagewind (8418) on the mountain above Wailing Caverns, spawn points: Forever client tables via Polestar forever-db.
+- Titan Relic (Prehistoric Prism / Earthen Echo) and Small Scroll (An Unholy Alliance, Charlga Razorflank) as quest-starting drops inside their dungeons: the existing chain data and https://www.wowhead.com/forever/quest=6522 .
+
+2026-11-06 Quest objective names in the game's other languages
+- Objective targets (items, creatures, objects) of the journal's quests: Polestar forever-db quest_objective, item, npc and object tables (https://github.com/fitzforge/polestar, forever-db/); their names in deDE, esES, frFR, koKR, ptBR, ruRU, zhCN and zhTW: the Polestar locale name packs (addon/Polestar_<locale>/Names.lua, generated from the Forever client's tables), gaps filled from QuestieDB's Forever lookups (https://github.com/Questie/QuestieDB, l10n/Forever/).
+- How each language words a counted objective line in Forever (QUEST_MONSTERS_KILLED, QUEST_ITEMS_NEEDED, QUEST_OBJECTS_FOUND): Questie's test/fixtures/objectiveTextLocales.lua (copied from the Townlong Yak GlobalStrings snapshots linked there).
+
+2026-11-06 Boats and zeppelins for the waypoint arrow
+- Which boats and zeppelins WoW Forever has (Stormwind Harbor - Auberdine, the Auberdine - Menethil Harbor - Southshore loop, Menethil Harbor - Theramore, Ratchet - Booty Bay, Steamwheedle Port - Powderfuse Port, the Horde zeppelins, Zephras Isle's): Method, All Travel Routes in WoW Forever (https://www.method.gg/wow-forever/all-travel-routes-in-wow-forever-boats-zeppelins).
+- Where they leave from and land: where the Forever client's own NPCs stand at each dock, from the Polestar forever-db spawn table (https://github.com/fitzforge/polestar): the zeppelin masters (Frezza, Snurk Bucksquick, Zapetta, Nez'raz), Grizzlowe in Booty Bay, Decedra Willham in Theramore, Raul Sweete in Southshore, the wharfmasters of Steamwheedle and Powderfuse Port, a Stormwind Harbor Guard on the Stormwind pier, Menethil Sentries on Menethil's two piers, the docks' world markers in Auberdine and Ratchet, the High Order and Windshapers Dockmasters on Zephras Isle, and the High Order Mage in Dalaran and Alaana Stormwalker in Mulgore where the Zephras ships land.
+
+2026-11-06 Flight points for the waypoint arrow
+- Which flight points the character has found, where they are and their names: the game itself (C_TaxiMap.GetTaxiNodesForMap, the world map's own flight point list), read while playing; nothing stored in the addon.
+
+2026-11-06 Heights of quest NPCs and flight times, for the waypoint arrow
+- Which quest NPCs stand well below or above the ground around them (FDJ.NPC_FLOORS in Data/QuestUpdates.lua): their spawn heights against the outdoor lamps within 25 yards, from the Polestar forever-db spawn table (https://github.com/fitzforge/polestar, data/spawn.jsonl, heights to 0.1 yd). Undercity as a whole: under the Ruins of Lordaeron.
+- How long a flight takes: timed in the game on each flight the player takes and kept in the saved variables; the first time a guess from the straight-line distance between the two flight points.
+
+2026-11-06 Deathstalker Vincent in Shadowfang Keep
+- Where he lies: "just after Rethilgore, to the right of the stairs leading into the courtyard" (Warcraft Tavern, Shadowfang Keep Quests, Forever: https://www.warcrafttavern.com/forever/guides/shadowfang-keep-quests/) and, from Wowhead's quest comments, just inside the courtyard, straight ahead of the entrance behind the gate; placed by hand on the keep's first-level map (approximate).
+
+2026-11-06 Trash counts for RPG Mode's map unlock
+- How many trash mobs each classic dungeon has (RPG Mode opens the dungeon map at about 20% of them): hostile creature spawns per instance map that are not bosses, rares, critters or friendly NPCs, counted from the cmangos classic-db world database (https://github.com/cmangos/classic-db, Full_DB/ClassicDB_1_12_1_z2815.sql.gz: creature, creature_spawn_entry and creature_template); the Scarlet Monastery wings, Lower and Upper Blackrock Spire, the Dire Maul wings and the two sides of Stratholme split by the nearest of their bosses. Only the counts are used. WoW Forever's own dungeons (Hall of Thanes, Ruins of Lordaeron, Excavation Site: Wetlands, City of Dalaran, The Drowned City) have no spawn data: about 20 per boss, estimated.
+
+2026-11-06 Archmage Lan'dalock's quests in Dalaran
+- The Coldbringer's Eye (Razorfen Downs) and The Witch Doctor's Head (Zul'Farrak): name, objective, the item each needs, XP and money as the game shows them in the quest log (screenshots from a stream, 2026-11-06), taken in Dalaran; Alliance for now (Dalaran is where the Alliance lands from Zephras Isle). Quest levels 42 and 46 from their XP (8,600 and 10,100: twice what Forever gives for a level 42 and a level 46 quest); required levels as the dungeon's other quests. Quest IDs not public yet: learned in the game.
+- Where Archmage Lan'dalock stands and the item IDs (276916 The Coldbringer's Eye, 277112 Zum'rah's Head): the Polestar forever-db (https://github.com/fitzforge/polestar, data/spawn.jsonl and data/item.jsonl); the hand-in marker on the world map in the screenshot sits on him.
+
+2026-11-06 The Drowned City's card art
+- Its loading screen as shown in the game (a stream, 2026-11-06), the streamer's webcam cropped off and the mouse pointer painted out.
+
+2026-11-07 The Drowned City's bosses: levels and drops
+- Levels (Zul'Alai 37, Var'Taka 38, Captain Dreadrise 38, Deathless Marrow 39, Primeval Elemental 38, Min'loth the Serpent 40) and the drops seen so far (Berserker Shackles, Brinebelly Leggings, Frosty Blunderbuss, Briny Sash, Bloodspine Staff, Waterlogged Burial Shroud, Ritual-Binder's Gloves) and who dropped them: screenshots from the game, 2026-11-06. Their item IDs (274600-274612): the game's own item data, the ItemSparse records of the client's hotfix cache (Cache/ADB/enUS/DBCache.bin, build 70790). Primeval Elemental's picture: the client's "Staging Area" copy (Polestar forever-db NPC 270887).
+
+2026-11-07 The Drowned City's probable drops
+- The rest of the batch of new items its seen drops belong to (274598-274615: Bloodslash Axe, Oathbound Bracers, Harpoon of Command, Dreadfrost Saber, Viscera Spaulders, Maw of Min'loth, Serpentbane Crown, Robe of the Drowned, Priestess Cloak, Knucklebone Ring, Heart of the Primeval): names, slots and required levels from the same ItemSparse and Item records of the client's hotfix cache (Cache/ADB/enUS/DBCache.bin, build 70790). Each is put with a boss by item ID order and required level, next to that boss's drops seen so far. Nobody has seen them drop yet: they are listed under "Not confirmed, but probable drop".
+
+2026-11-07 Quest spots on the dungeon maps
+- Where quest objects lie, quest NPCs stand and quest places are inside the Classic dungeons: the CMaNGOS Classic database (https://github.com/cmangos/classic-db: gameobject, creature, quest_template, gameobject_loot_template, quest and NPC relations), converted to map positions with the client's UiMapAssignment regions (DB2 export in Questie's repository, https://github.com/Questie/Questie, ExternalScripts/DBC - WoW.tools/uimapassignment_wotlk.csv, the same Classic dungeon maps) and places to explore from its areatrigger_classic.csv; the level of each spot checked on the map art. Spots right next to a boss portrait are drawn just beside it. Captain Truman (Ruins of Lordaeron): the journal's own spot for him.
+
+2026-11-07 Krol'dok Stronghold
+- Bosses, levels (Slavecrusher Grox 42, Twilight Commander Zarmok 43, Nar'gurk 44, Bossman Toof 42, Overlord Mugg 45) and the drops seen so far (Chain of Binding, Zarmok's Plated Signet, Chain of the Corruptor, Toofbreaker, Emblem of Slamming, with the stats the game showed): screenshots from a stream of the dungeon, 2026-11-07. Its loading screen (the card art) from the same stream, the mouse pointer painted out.
+- The commander's full name, Handler Ashka and the boss list of the game's data (Overseer Mugg): https://foreverchanges.pro/dungeons/kroldok-stronghold ; Head of Zarmok (item 267087) names him too.
+- Item IDs: Zarmok's Plated Signet 275000, War Handler's Gaze 275002, Toofbreaker 286430 and the Krol'dok Warplate set of Krol'dok Battlegear (Helmet 275006, Pauldrons 287014, Chest 275005, Gauntlets 287012, Legplates 287013): https://foreverchanges.pro/hidden-items . War Handler's Gaze is put with Handler Ashka by its name, the Warplate set under Trash Drops; nobody has seen them drop yet: listed under "Not confirmed, but probable drop". Chain of Binding, Chain of the Corruptor and Emblem of Slamming have no ID yet (the journal's ItemIdLearner fills them in).
+- RPG Mode's trash count for its map: about 20 per boss, estimated (no spawn data).
+- Its seven quests (Eye of Mugg 94968 / 94982, Tome of Twilight 94972 / 94984, A Token of Vengeance 94975, Twilight Mementos 94983, Vengeance of the Highborne 96771; the Alliance Tome of Twilight's lead-in A Small Favor 94907): names, levels, objectives, quest items, rewards and reputation from https://www.wowhead.com/forever/zone=16842/kroldok-stronghold and the quests' own pages there. Givers as the quest texts name them (Krom'rosh, Commander Brant = Demar Brant, Ashe Amberhall; all in the Riverglades on Wowhead's NPC list); the rest not known yet. XP at the quests' level: Wowhead's level-50 figure times 2.68, as The Drowned City's quests scale.
+- Resistance Breaker Spaulder (274996, Slavecrusher Grox), Shadowlight Athame (274998, Twilight Commander Zarmok) and Big-Belly Belt (286429, Bossman Toof): seen dropping in the game (screenshots, 2026-11-07); IDs from Wowhead Forever's item list.
+
+2026-11-07 Gill in The Drowned City
+- Gill, a rare, drops Gill's Gills (item 286646): a player's post on the WoW Forever Discord. Item ID, and the items numbered right after it at the same item level (Tidebound Dagger 286649, Pyromancer's Baton 286650, Flamestarter's Signet 286651, Umbral Scaled Belt 286658, Deep-Dweller's Grips 286662): the ItemSparse and Item records of the client's hotfix cache (Cache/ADB/enUS/DBCache.bin). Listed as probable drops; nobody has seen them drop yet.
+
+2026-11-07 Scarlet Monastery Library
+- Houndmaster Boomerang (274292) from Houndmaster Loksey and Library Walkers (274294) from Arcanist Doan: https://timesaver.gg/tools/wow-forever/dungeon-loot/scarlet-monastery ; names, slots and quality also in the client's hotfix cache (the same batch as Spellsever Crossbow and Polished Skullcap).
+
+2026-11-07 Quest NPCs inside Excavation Site: Wetlands
+- Where Ardin Grassman is (up on the wooden tower by the Site of the Guardian, the last boss's arena) and Daewyn Songblade's body (in a tent of the Dragonmaw camp at the Lost Dig Site): https://www.warcrafttavern.com/forever/guides/excavation-site-wetlands-quests/ , its screenshots (zone name and minimap) and the dungeon's map in https://www.warcrafttavern.com/forever/guides/excavation-site-wetlands/ . Placed by eye on the journal's map art; Ardin just beside the Relic Guardian's portrait, which covers the tower.
+
+2026-11-07 Krol'dok Stronghold's and The Drowned City's NPC IDs; the Saltseer quests
+- NPC IDs (Slavecrusher Grox 258966, Twilight Commander Zarmok 258972, War Handler Ashka 259281, Nar'gurk 258964, Bossman Toof 264773, Overlord Mugg 258968; Zul'Alai 258905, Captain Dreadrise 260042, Gill 264177): Wowhead Forever's NPC list (https://www.wowhead.com/forever/npcs). Captain Dreadrise's is the one the quest The Saltseer Captain asks for.
+- Shady Saltseers (95789) and The Saltseer Captain (95791): name, objective, giver (Krazek), rewards and reputation: https://www.wowhead.com/forever/zone=16550/the-drowned-city , https://www.wowhead.com/forever/quest=95789/shady-saltseers , https://www.wowhead.com/forever/quest=95791/the-saltseer-captain ; the Alliance quest log (a screenshot, 2026-11-07) shows both. Krazek's spot: the Polestar forever-db spawn table.
+- Band of Crimson Light (274295) from Herod: a player's post on the WoW Forever Discord (2026-11-07) with https://www.wowhead.com/forever/item=274295/band-of-crimson-light .
+
+2026-11-07 Points on the way for the Sleeping Bag arrow
+- Where the straight line to the chain's hidden spots does not go, the arrow leads to a point on the way first: the path into the Stonetalon hills off the road (50.9, 52.3 in Stonetalon Mountains), the fallen cart against Thoradin's Wall (87.5, 47.7 in Hillsbrad Foothills) and, for the Alliance, the road into Stonetalon north of Honor's Stand (40.2, 24.9 in The Barrens): the Polestar guide to the chain (https://github.com/fitzforge/polestar, guides/forever/miscellaneous/cozy-sleeping-bag.guide), which gives them from players' reports.
+
+2026-11-07 The way to the Pocket Litter, on walking maps
+- The routes to the abandoned camp in Stonetalon (from Sun Rock Retreat: the crater's east exit at 50.0, 61.0, the road north to 52.2, 53.4, the path up to 51.0, 52.4 and west along 48.8, 54.2 and 43.0, 54.1; from the Barrens road; for the Alliance from Stonetalon Peak down the road and the path off the Charred Vale descent at 37.6, 52.7 and 40.7, 55.2), and that the Mound of Dirt lies straight north of the camp over a 20-yard ridge: walking routes found on Polestar's walking maps of Kalimdor (Polestar_Nav, https://github.com/fitzforge/polestar, GPL-3.0-or-later; grown from Shortest Path Forever's format by Cillian Berragan, https://github.com/cjber/shortest-path-forever) with Polestar's walking router run offline, 2026-11-07, after a player reported that an earlier test build's point (50.9, 52.3) sent him up a cliff from Sun Rock Retreat. Players' descriptions agree: https://www.wowhead.com/classic/quest=79192/stepping-stones#comments ("find road north of Sun Rock Retreat, look to your left as you take the main road up the hill"; "travel to 51,51, from the road follow the opening into the mountains"; Alliance: "run south then west down the path towards the Charred Vale, halfway down turn right into the mountains"; the mound: "head north over the ridge and down the hillside").
+
+2026-11-07 Thoradin's Wall, the climb to the Messenger Bag
+- The fallen cart (its bed about 6 yards above the ground, centre 88.0, 47.1), the rubble a few yards south-west of it (87.7, 48.0) and the ramp from there up onto Thoradin's Wall and along it to the Messenger Bag (85.7, 52.2, about 30 yards up), and the grid of raised ground the arrow reads (0.1 % map steps from 85.0, 46.4): heights of the walkable surfaces on Polestar's walking maps of the Eastern Kingdoms (Polestar_Nav, https://github.com/fitzforge/polestar, GPL-3.0-or-later; grown from Shortest Path Forever's format by Cillian Berragan, https://github.com/cjber/shortest-path-forever), read offline 2026-11-07, after a player reported the arrow left the cart (old point 87.5, 47.7, from a Wowhead comment) before he had climbed it.
+
+2026-11-07 Flight times
+- How far each flight flies along its path (the waypoint arrow's first count-down): the flight masters' positions and the yards of each one-way flight, from Blizzard's Classic Era client tables TaxiNodes, TaxiPath and TaxiPathNode (wago.tools build 1.15.9.70576) as gathered in Polestar's travel data (https://github.com/fitzforge/polestar, addon/Polestar/Nav/TravelData.lua, GPL-3.0-or-later); the speed, 30 yards a second plus 2 seconds a hop, as Polestar times flights. Flights the tables do not have (WoW Forever's own) are taken as 1.4 times the straight line, the middle of the paths that are known.
+
+2026-11-07 The Drowned City (Alliance): Loremaster Dibbs' quests
+- Magics of the Drowned City picked up and handed in at Loremaster Dibbs, Southshore; Findings for the Explorer's League (quest 95799: to Historian Karnik, Ironforge; Ancient Voodoo Pouch or Intrepid Explorer's Chainmail, Translated Tale of I'lalai, 35 silver, Stormwind +75, Ironforge +50, 2,350 XP) and The Web of Magic (quest 95798: to Abra Cadabra, Dalaran; Rune-Etched Epaulets or Apprentice Sorcerer's Slacks, 35 silver, Stormwind +75, 2,350 XP), level 40, requiring level 30: M's notes from the game, quest IDs, levels, XP, money and rewards checked on Wowhead Forever (https://www.wowhead.com/forever/quest=95799, https://www.wowhead.com/forever/quest=95798), 2026-11-07.
+- Oathbound Bracers (Zul'Alai), Harpoon of Command (Var'Taka) and Robe of the Drowned (Primeval Elemental) seen dropping: M, 2026-11-07.
+
+2026-11-07 The Drowned City (Alliance) as chains
+- An Acquaintance in Southshore (quest 95786: Brother Nimetz sends the fetishes, legends and the Savage Coast Report Bundle to Loremaster Dibbs; level 40, requires 30, 3,150 XP) leading to Take Two With Water (95787, the four Tablets of I'lalai, items 270308-270311) and Magics of the Drowned City (95788), which lead to Findings for the Explorer's League (95799) and The Web of Magic (95798): the quests' own texts on Wowhead Forever (https://www.wowhead.com/forever/quest=95786, 95787, 95788, 95798, 95799), 2026-11-07. Where Brother Nimetz (Rebel Camp, 37.8, 3.6), Loremaster Dibbs (Southshore, 50.6, 57.1), Historian Karnik (Ironforge, 77.5, 11.8) and Abra Cadabra (Dalaran, Alterac Mountains 13.2, 69.6) stand: WoW Forever client tables via Polestar forever-db (spawns of NPCs 739, 2277, 2916, 252019).
+
+2026-11-07 Alcaz Prison
+- Bosses and their order (Overseer Wrex, Tidemistress Ca'zass, Katerina the Cleaner, The Questioner, Blazeroar; map 2994): the game's DungeonEncounter data, build 1.60.1.70862, https://github.com/fooxytv/AdventureGuideClassic/issues/153 .
+- Levels (Tidemistress Ca'zass 50, Katerina the Cleaner 52, The Questioner 51, Blazeroar 53), the drops seen (Grips of Control from Overseer Wrex, Tidesong Wand from Tidemistress Ca'zass, Cutthroat Chestguard from Katerina the Cleaner, Girdle of Extracted Answers from The Questioner, with the stats the game showed) and the quest Thrall Needs to Know (Commander Folkar; rewards Fatebound Buckler, Courier's Clasp, Dustwallow Dirk): screenshots from a stream of the dungeon, 2026-11-07. Its loading screen (the card art): a clean copy of the art provided by the author (2026-11-07), cropped to the card's shape.
+- NPC IDs (Tidemistress Ca'zass 255997, Katerina the Cleaner 257016, The Questioner 256236, Blazeroar 255702, Commander Folkar 260386) and item IDs (Girdle of Extracted Answers 276742; Wrex's Pinky Ring 276734, Cloak of the Tidemistress 276737, Sentimental Locket 276740, Defias Enforcer's Shoulderpads 276741, Defias Enforcer's Legguards 276746): Wowhead Forever (https://www.wowhead.com/forever). The ring and the cloak are put with the boss they are named after; the rest under Trash Drops. Nobody has seen them drop yet: listed under "Not confirmed, but probable drop".
+- Thrall's spot in Orgrimmar (32.0, 37.8): https://db.icy-veins.com/wow-forever/quests/5730 . The quest's ID is not public yet: it has a stand-in ID until the game names it.
+
+2026-11-07 Blackmaw Hold
+- Bosses and their order (Withermaw, Impaan the Imprisoner, Elder Shaman Bloodmane, Bonesnout the Unbroken, Varrox Bleakhoof, Blackmaw Behemoth, Unbound Spirit; map 2974): the game's DungeonEncounter data, build 1.60.1.70862, https://github.com/fooxytv/AdventureGuideClassic/issues/153 .
+- Levels (Withermaw 58, Impaan the Imprisoner 57, Bonesnout the Unbroken 58, Varrox Bleakhoof 60, the rare Moontouched Wanderer 55) and the drops seen (Withering Grips from Withermaw, its tooltip cut off; Impish Chain Hood from Impaan the Imprisoner; Lucky Shovelnose Tuft from Bonesnout the Unbroken; Claymore of Two Moons from Moontouched Wanderer; Satyr's Touch from a Legashi Ritualist, trash), with the stats the game showed: screenshots from a stream of the dungeon, 2026-11-07; which drop came from which mob as the author confirmed.
+- NPC IDs (Withermaw 247195, Impaan the Imprisoner 247206, Elder Shaman Bloodmane 247209, Bonesnout the Unbroken 247198, Varrox Bleakhoof 247234, Blackmaw Behemoth 247207, Unbound Spirit 247231, Moontouched Wanderer 269104): Wowhead Forever (https://www.wowhead.com/forever).
+- Its loading screen (the card art): a clean copy of the art provided by the author (2026-11-07), cropped to the card's shape.
+
+2026-11-07 Turn-in spots
+- World spots of turn-in NPCs (Dawnwatcher Selgorm 4783, High Explorer Magellas 5387, Treshala Fallowbrook 4521, Monika Sengutz 3982, Keeper Remulos 11832, Sanath Lim-yo 8395, Greta Mosshoof 10922, Malyfous Darkhammer 10637, Franclorn Forgewright 8888, Lothos Riftwaker 14387, Krom'rosh 256418, Ashe Amberhall 257591, Muln Earthfury 259118) and who ends Detonation at a Distance (Jasper Fel, quest 92750) / Earthen Echo (Muln Earthfury, quest 98823): Wowhead Forever (https://www.wowhead.com/forever).
+- Demar Brant in Farholde Keep, Riverglades (66.6, 79.9): https://warcraft.wiki.gg/wiki/Demar_Brant .
+
+2026-11-07 The Coldbringer's Eye (Horde)
+- Quest 97196 (level, required level, side, shareable, XP, money, reputation, the item 276916): https://www.wowhead.com/forever/quest=97196/the-coldbringers-eye .
+
+2026-11-08 Waypoint arrow: Teldrassil and the hearthstone
+- The portals: west of the Temple Gardens in Darnassus (30, 41) and on the hill in Rut'theran Village (55, 89): Wowhead comments on Darnassus (https://cn.wowhead.com/cata/cn/zone=1657) and the player's own screenshots (31.6, 42.4 beside the Darnassus portal). Rut'theran's boat runs to Auberdine's northern pier (https://warcraft.wiki.gg/wiki/Travel_guide_to_Deeprun_Tram_and_boats; WoW Forever routes: https://www.method.gg/wow-forever/all-travel-routes-in-wow-forever-boats-zeppelins). The piers' map spots are estimates from Nessa Shadowsong (Teldrassil 56.2, 92.4) and Auberdine's other piers.
+- Vesprystus (Rut'theran hippogryph master, Teldrassil 58.4, 94.0) and the capitals' innkeepers (Saelienne, Allison, Firebrew, Gryshka, Pala, Norman), Shaussiy in Auberdine: Wowhead Forever NPC pages (https://www.wowhead.com/forever).
+
+2026-11-08 Loot and boss portraits
+- Krol'dok Stronghold drops (Mugg's Jabber 275007 from Overlord Mugg, Krol'dok Warplate Chest 275005 from Nar'gurk, Slavecrusher Scepter 274995 from Slavecrusher Grox, Bloodied Gutslicer 275001 from War Handler Ashka): players' loot screenshots (Discord, Nov 2026); item IDs, and those of Emblem of Slamming 275009, Chain of Binding 274997 and Chain of the Corruptor 275004: Wowhead Forever item search.
+- Guardian's Emblem (286995) from the City of Dalaran trash mob Fragmented Sentry (246664): a player's screenshot (Discord, Nov 2026) and https://www.wowhead.com/forever/item=286995/guardians-emblem .
+- Creature display IDs of the bosses of The Drowned City, Krol'dok Stronghold, Alcaz Prison and Blackmaw Hold, and of the Fragmented Sentry: the model shown on their Wowhead Forever NPC pages (https://www.wowhead.com/forever/npc=<id>).
+
+2026-11-08 Alcaz Prison
+- Parchment maps of Alcaz Prison and The Drowned City (new version): "Atlas de Azeroth: Forever" recreations by Santiago Reyes (2026); the credit stays in the art.
+- Drops seen (players' screenshots, Discord, Nov 2026): Wrex's Pinky Ring (Overseer Wrex), Seascale Bracers (Tidemistress Ca'zass), Fingerbreaker Stamp (The Questioner); item IDs 276734, 276736, 276743 from the Wowhead Forever item search.
+- Quests No Orc Left Behind, The Honor of the Kor'kron and Blood Red Bandanas: players' screenshots (objectives, texts, XP, rewards Bloodsplattered Bandana 279448 and Makeshift Belt 279473, Blood Red Bandana 274028: Wowhead Forever item search). Sergeant Ulka (260383, Dustwallow Marsh 70.4, 19.0) and Eitrigg (3144, Orgrimmar 34.4, 38.6): Wowhead Forever NPC pages.
+- 1.7.3 (players' screenshots, Nov 2026): Bad News for Folkar (2,472 XP) leads to Thrall Needs to Know (2,472 XP; Fatebound Buckler, Courier's Clasp, Dustwallow Dirk); A Little Payback (level 53: 15 Strashaz Soldier, 8 Strashaz Enchantress, Ca'zass's Head 273883); Defias Enforcer's Shoulderpads from The Questioner, Defias Enforcer's Prowlers from the trash. The Defias Enforcer's Garb set (2136: Mask 287019, Shoulderpads 276741, Chest 287020, Legguards 276746, Prowlers 287021): https://www.wowhead.com/forever/item-set=2136 .
+- 1.7.3 (a player's notes, Discord, Nov 2026): Alliance Drowned City chain order The Second Rebellion + Bad Medicine -> Kurzen's Mystery -> Troll Witchery -> An Acquaintance in Southshore -> Take Two With Water / Magics of the Drowned City; Krazek gives Shady Saltseers and The Saltseer Captain; Archmage Timear gives Ancient Gurubashi Secrets. Levels, objectives and XP: Wowhead Forever quests 203 (1,950), 204 (2,700), 207 (3,550), 205 (3,150), 95787 and 95788 (8,450). Tablets: Wowhead Forever objects 57 Moon Over the Vale, 58 Gri'lek the Wanderer, 52 Fall of Gurubashi, 54 The Emperor's Tomb (The First and Third Troll Legend confirmed there; the Second and Fourth as in the original game). Sergeant Yohwa (733) and Archmage Timear (31439): Wowhead Forever spawns.
+- 1.7.3 (a player, Nov 2026): Overseer Wrex is level 50; The Questioner is Alcaz Prison's second boss.
+- 1.7.3 (a player's screenshots, Nov 2026): Ranath Nightstride in the Dalaran inn gives Vengeance of the Highborne; Archmage Lan'dalock gives The Coldbringer's Eye (Alliance). Ranath's spot: Wowhead Forever NPC 268425 (Alterac Mountains 17.8, 66.0); quest 96771 shareable: https://www.wowhead.com/forever/quest=96771 .
+- 1.7.3 (a player's screenshot, Nov 2026): Thrall Needs to Know rewards a choice of Fatebound Buckler (279831), Courier's Clasp (279833) or Dustwallow Dirk (279474); item IDs and quality: Wowhead Forever.
+- 1.7.3 (a player, Discord, Nov 2026): Enemies in the Water needs The Gurubashi Legends of Old; The Only Good Brinescale... needs Locating the Lost City too. Giver and hand-in of both, Commander Aggro'gosh (NPC 2464, Stranglethorn Vale 32.2, 28.8): Wowhead Forever, https://www.wowhead.com/forever/quest=95773 and https://www.wowhead.com/forever/quest=95776 .
+- 1.7.3 (a player's screenshot, Discord, Nov 2026): Coldbringer Spine drops from Amnennar the Coldbringer; item ID 274381 and quality: Wowhead Forever.
+- 1.7.4 (a player, Discord, Nov 2026): in Forever, Blackfathom Villainy can be accepted and completed without In Search of Thaelrid, which then can no longer be completed. Questie's Classic quest data (v9.5.2) has In Search of Thaelrid's next quest in chain as Blackfathom Villainy ("if this quest is active/finished, the current quest is not available anymore").
+- 1.7.4 (players' screenshots, Discord, Nov 2026): Bloodslash Axe (274598) from Zul'Alai; Strongly Scented Hood (275010, French client: Chaperon au parfum entêtant) from Overlord Mugg. Mugg's Crosser (275008): Wowhead Forever, not seen dropping yet.
+- 1.7.4 (a player's screenshots, Nov 2026): Blackmaw Hold drops Veilpiercer Girdle (Elder Shaman Bloodmane), Behemoth Bones (Blackmaw Behemoth), Burnished Pridescales (Unbound Spirit), Bleak Eye Shoulderplates (Varrox Bleakhoof, the final boss); levels 59 for Bloodmane, the Behemoth and Unbound Spirit. Not on Wowhead Forever yet (no item IDs).
+- 1.7.4 (a player's screenshots, Nov 2026): Shaper's Terrace bosses, levels and drops. NPC IDs and display IDs: Wowhead Forever (253201 Titanosaur, 261813 Venomridge, 261812 Thunderhoof, 262127 Direhorn Matriarch, 262081 Bolt, 272561 Vitrix).
+- 1.7.4: Shaper's Terrace's loading screen (the card art): a clean copy of the art provided by the author (2026-11-08), cropped to the card's shape.
+- 1.7.4 (players' loot-roll screenshots, Nov 2026): Priestess Cloak from Var'Taka, Heart of the Primeval from Primeval Elemental, Maw of Min'loth from Min'loth the Serpent; Glutton's Abomination Chain (274385, German client: Monstrositätenkette) and Plans: Justicar's Boots (251402, German: Pläne: Stiefel des Rechtsprechers), IDs from Wowhead Forever.
+- 1.7.4 (player loot-roll screenshot, Nov 2026): Knucklebone Ring (274614) from Deathless Marrow, in the Deathless Guardians encounter.
+- 1.7.4 (a player's quest-log screenshots, Nov 2026; Wowhead Forever quest 96078): A Tale Spun Around the Fire follows The Drowned City; Kin'weelay to Master Gadrin; rewards Ceremonial Mallet 279885, Sacrificial Sword 279886, I'lalai Flayer 279887 (choice), Translated Tale of I'lalai 270312, Tale of I'lalai in Zandali 270313; 2,350 XP, 35s.
+- 1.7.4 (a player's loot screenshots, Nov 2026): Shaper's Terrace - Nanaya (Wowhead Forever NPC 261809, display 143832, level 62) last boss with Leggings of Curation 280025 and Maker's Spark 273128; Titanosaur Scale Pendant 280009 (Titanosaur drops two items a kill); Spiderchitin Wrap, Dinofrill Casque, Tooth of the Matriarch and the trash drop Shaper's Robe from their tooltips (not on Wowhead yet).
+- 1.7.4 (a player's loot screenshot, Nov 2026): Flameslash Crescent from Impaan the Imprisoner, from its tooltip (not on Wowhead yet).
+- 1.7.4 (a player's loot screenshots and boss order, Nov 2026): Blackmaw Hold - Lunarlight Robe, Shamanic Wristguards, Trousers of the Ebon Giant, Scalding Flamehoof, from their tooltips (not on Wowhead yet).
+- 1.7.4 (a reported quest checklist, Nov 2026, checked on Wowhead Forever): The Dragon's Journal 96772; Krol'dok Moulding 94980/94973, Key Ingredients 94981/94974 (Krol'dok Compound Key 267089); Scraps of Knowledge 94879, Curious Trinkets 94881, A Small Favor 94907 -> Tome of Twilight 94984; Twilight Mementos 94983 -> Lingering Essence 94997 (Wowhead series), Curios of Curiosity 94998 (Curio-Adorned Necklace 279850) probably after it.
+- 1.7.4 (a Wowhead Forever comment on quest 94983, Nov 2026): Twilight Mementos unlocks after handing in Bring Me His Head (94890) to Sergeant Riftan.
+- 1.7.4 (a reported quest checklist and ConquestCapped's Blackmaw Hold guide, Nov 2026): Beneath Nordrassil 92346/92345 -> Get to the Roots of It 92343/92344; Blackmaw Magic 97173 (Alliance; the Horde ID is learnt in game); Claws That Rend, Tusks that Gore 92069 (Ogtinc); levels, XP and reputation from the guide.
+- 1.7.4 (Wowhead Forever, Nov 2026): rewards of Get to the Roots of It (11,300 XP), Blackmaw Magic 97173/97198 (12,800 / 16,100 XP, 90s), Claws That Rend, Tusks that Gore (Great Bear Claw 260213, Staff of Wild Beasts 260214, Wild Malleus 260215; 12,400 XP); quest items Nordrassil Root Cap 250773, Claws of the Great Bear 249697, Tusks of the Unbroken 249696; The Dragon's Journal (14,410 XP, 80s, Kirin Tor +300, Stormwind +150); Krol'dok Moulding / Key Ingredients (3,300 XP, 55s), Scraps of Knowledge 3,150, Curious Trinkets 2,850, Bring Me His Head 5,050 (Twilight Overlord Drape 275046 / Farholde Bastion 275049), Lingering Essence and Curios of Curiosity 3,450 XP, 55s.
+- 1.7.4 (Horde players' quest logs, Nov 2026, with Wowhead Forever): Crystalline Elements 95928 (Mayena Earthseeker NPC 263445, Mulgore 34.8, 22.2; 17,655 XP; Orgrimmar +50, Earthen Ring +100; Crystalline Pauldrons 279904 / Potent Treads 279906); Essence of Seeping Slimes (Seeping Slime Essence 276235; Slime-Resistant Shroud 279932 / Reinforced Muck Protectors 279902; 90s), The Dark Crystal (Drained Crystal Fragment 271771; Crystal-Infused Cleaver 279908 / Beastslayer's Trident 279910 / Faintly Glowing Orb 279912) and Blackmaw Pouches (Ekkal NPC 235903, Azshara 41.8, 38.8; Blackmaw Pouch 273050; 90s), not on Wowhead yet.
+- 1.7.4 (a player's report on Discord, Nov 2026): the game's Wailing Caverns map art is the patch 4.1 version; the full pre-4.1 map (image supplied by the author) is shipped as Media/Maps/WailingCavernsFull.tga. Boss pins in the east placed on that map's printed skulls.
+- 1.7.4 (a player's loot screenshots, Nov 2026; IDs from Wowhead Forever): Shaper's Terrace - Izha'Rel (NPC 253218, display 143040) and Tor'Rel (261811, 143039), level 61, Raptorscale Bulwark 280014 (Talon of Tor'Rel 280012 probable); Venomvessel Ring 280015 (Venomridge); Nanaya's Control Spire 280023 (Nanaya).
+- 1.7.4 (Wowhead Forever item tooltips 280009-280032): Shaper's Terrace item IDs; probable drops by ID order: Frostfang Mail Vest 280013 (raptors), Legplates of Reinforced Crystal 280024 (Nanaya), Albinofur Grips 280026 and Crownroar Chestplate 280027 (Vitrix, a guess).
+- 1.7.4 (a player's loot screenshot, Nov 2026): Frostfang Mail Vest 280013 confirmed from Izha'Rel and Tor'Rel.
+- 1.7.4 (players' loot screenshots, Nov 2026; IDs from Wowhead Forever): Legplates of Reinforced Crystal 280024 from Nanaya; Pusillin (NPC 14354, display 7552, level 57) drops Obsidian Bauble 18316 and Recipe: Runn Tum Tuber Surprise 18267; Fervent Helm 18319 drops with a random enchantment (seen: of Frost Resistance).
+- 1.7.4 (a player's quest log, Discord, Nov 2026; Wowhead Forever quests 96775 and 96770): Zum'rah's Head from Mazu'kon (Horde; level 46, from 42; 10,100 XP, 65s, Earthen Ring +300, Darkspear Trolls +150); The Witch Doctor's Head is 96770 (from 39; Kirin Tor +300).
+- 1.7.4 (a player's loot screenshot, Nov 2026): Stoneflower Staff 18353 from Tendris Warpwood (Dire Maul West).
+
+2026-11-10 Zul'Farrak boss loot
+- Nekrum Gutchewer (NPC 7796, level 45) drops Desert Ziggurat Drape (274645): player screenshots from a live Forever dungeon run; item ID and item stats corroborated by https://www.wowhead.com/forever/item=274645/desert-ziggurat-drape . Nekrum portrait display 6690 from Classic NPC model data. Boss inserted before Shadowpriest Sezz'ziz.
+
+- 2.0.16 (2026-11-10): Overseer Wrex in Alcaz Prison is NPC 255391 with creature display ID 7914 (https://www.wowhead.com/forever/npc=255391/overseer-wrex); the display ID is also documented in DFL Dungeon Journal 5.21.18 release notes. These IDs drive the existing boss portrait renderer. No loot data changed.
+
+- 2.0.17 (2026-11-10): Fixed three overlapping boss-level lookup keys
+  in Data/Bosses.lua. BRD (26 entries), UBRS (9) retained existing level values
+  confirmed against https://www.60.tools/dungeons/blackrock-depths and
+  https://foreverchanges.pro/dungeons/upper-blackrock-spire . LBRS (15)
+  corrected using https://foreverchanges.pro/dungeons/lower-blackrock-spire
+  and https://www.eversixty.com/dungeons/lower-blackrock-spire . These sources
+  identify the per-NPC levels as Classic-based; direct Forever live levels
+  may diverge. No unrelated dungeon data altered.
+
+2026-11-11 Krol'dok Stronghold quests (2.0.20)
+- Givers, coordinates, series and XP: Wowhead Forever quest pages 94983, 94984, 94968, 94981, 94980 (https://www.wowhead.com/forever/quest=<id>); the Horde unlock order from a comment on 94968.
+- Quest names and XP of the Riverglades steps: https://forever-tool.com/en/quests/zone/16591/ and https://forever-tool.com/en/quests/zone/16842/
+- Tran'gul (Horde Tome of Twilight), Break Their Chains, It Is Time, Brother..., Tunk and the Moulding, Riftan, Melanie Sable, Lan'dalock (The Dragon's Journal): players' reports and screenshots in the Discord's report-new-loot-quests forum.
+- Cross-check of givers and coordinates: https://conquestcapped.com/guides/wow-forever/wow-forever-kroldok-stronghold-guide/
+- Not added: Krol'dok No More! (94969 / 95056), in the game data as a 3,450 XP dungeon quest but with no giver, level or objective known.
+
+2026-11-11 Krol'dok Stronghold chains (2.0.21)
+- Alliance Eye of Mugg chain start (Scraps of Knowledge), Twilight Mementos start (Saving Sunnyglade), Horde start (Encroaching Twilight): https://mobalytics.gg/wow-forever/dungeons/krol-dok-stronghold-complete-dungeon-guide-uncas
+- Steps, givers, coordinates, series and comments: Wowhead Forever quests 94982, 94890, 94891, 94886, 94888, 94889, 94877, 94879, 94672, 95428, 94744, 94745, 94748, 95432, 95278, 94968 (https://www.wowhead.com/forever/quest=<id>)
+- Cross-checked, no chain info for Alliance Eye of Mugg: https://www.zockify.com/forever/dungeons/kroldok-stronghold/ , https://wow4ever.quest/en/articles/misiones-mazmorras-nuevas-wow-forever , https://mmonster.co/wow-forever/guides/dungeons/kroldok-stronghold , https://gamingguidearchives.com/guide/wow-forever-kroldok-stronghold-dungeon-guide/
+- Key Ingredients note (key opens the upper side of the dungeon): the author, Nov 2026.
+
+2026-11-11 Alcaz Prison quests (2.0.22)
+- Quest IDs, series, objectives, reward items, reputation and comments: Wowhead Forever quests 95483, 96369, 95454, 95309, 95283, 95284, 95285, 96332, 96334, 95262, 95263, 96335, 96337, 96376, 96377, 96379, 96381, 95194, 95196, 95198, 96772 (https://www.wowhead.com/forever/quest=<id>); NPC spots: Wowhead Forever NPCs 260146 / 260271 (Sully McCleary), 260383 (Sergeant Ulka), 332 (Mathias Shaw)
+- XP: https://forever-tool.com/en/quests/zone/16620/ , https://forever-tool.com/en/quests/zone/15/ , https://foreverchanges.pro/quests/alcaz-prison
+- Horde givers and order (Eitrigg, Nazeer Bloodspike, Sergeant Ulka): Ke on the Discord (report-new-loot-quests, 'Alcaz Prison Quests Horde'); The Dragon's Journal giver and turn-in: Ed on the Discord
+- Mason Connery's text and treasure: https://foreverchanges.pro/quest/96337/more-valuable-than-gold , https://foreverchanges.pro/quest/96335/the-man-in-the-iron-chains
+- Krol'dok Horde chain: Show Them How It's Done needed first, Snax on the Discord ('Riverglades Dungeon Chain')
+
+2026-11-11 Maraudon (2.0.23)
+- Rot and Regret's unlock chain, givers, coordinates and tips: Wowhead Forever quests 93594, 93404, 92914, 96010, 96018, 93016, 93394, 93341, 93601, 93604 and NPC 254578 (Mithera) (https://www.wowhead.com/forever/quest=<id>)
+- Chain and XP: https://foreverchanges.pro/quest/93404/rot-and-regret ; quest list and XP: https://forever-tool.com/en/quests/zone/2100/ , https://foreverchanges.pro/quests/maraudon
+- Players' screenshots of Rot and Regret and An'she's Radiance: the Discord (Bov, Snax)
+
+2026-11-11 Razorfen Downs (2.0.24)
+- Agamaggan's Blood and Passing the Blame: Wowhead Forever quests 93604, 93601 (comments: the cauldron), NPC 253527 Kog'thug the Brave (Shen'dralas 72.6, 31.4)
+- XP, rewards, reputation, givers: Wowhead Forever quests 6626, 3341, 3636, 3525, 3523, 6521, 6522, 96773, 97196 (https://www.wowhead.com/forever/quest=<id>)
+- XP cross-check: https://forever-tool.com/en/quests/zone/722/ ; quest list: https://foreverchanges.pro/quests/razorfen-downs
+
+2026-11-11 Uldaman and Zul'Farrak (2.0.25)
+- XP: https://forever-tool.com/en/quests/zone/1517/ , https://forever-tool.com/en/quests/zone/978/ ; spot-checks on Wowhead Forever quests 2398, 2418, 2279, 2280, 1956, 2936, 3527, 2769, 707
+- New steps (givers, rewards, reputation): Wowhead Forever quests 2361, 2340, 2341, 2439 (https://www.wowhead.com/forever/quest=<id>)
+- Quest lists and reward items: https://foreverchanges.pro/quests/uldaman , https://foreverchanges.pro/quests/zulfarrak
+- Discord (report-new-loot-quests): Zum'rah's Head (Magisch), Arch of the Covenant / Theka's Last Breath / Blood Ritual Ring (Ed): already in the journal
+
+2026-11-11 Uldaman / Zul'Farrak items (2.0.26)
+- Item IDs and where they come from: Wowhead Forever quests 2199, 1954, 2201, 2204, 2258, 2500, 2339, 2934, 2990, 704, 17, 709, 2418, 1360, 2342; ForeverChanges quest pages 722, 1139, 1956, 2283, 2770, 2846, 2768, 3042, 3527, 2991, 2865 (https://foreverchanges.pro/quest/<id>)
+- Scarab Shells / Tran'rek: Ed on the Discord (bug-reports, 'Scarab Shells ZF quest - needs prequest'); Wowhead Forever 2865 / 2864 (series and the Classic-era comment that Tran'rek isn't required); breadcrumb behaviour: https://github.com/ccshiro/cc-buglist/issues/730 , https://eu.forums.blizzard.com/en/wow/t/unavailable-pre-quests-due-to-completed-follow-up-quests/120333
+
+2.0.27 (2026-11-11)
+- Data Rescue guide display: no new quest data; the punch card steps are the
+  ones already sourced in 2.0.x (Wowhead quest 2930, Matrix Punchograph 3005-A..D).
+  Change requested by the addon author from in-game testing.
+
+2.0.28 (2026-11-11)
+- Blackmaw Chain Belt (Blackmaw Behemoth): player screenshot from the addon author;
+  item ID and tooltip: https://www.wowhead.com/forever/item=280067/blackmaw-chain-belt
+- Wayfarer's Knapsack, Ribbly's Quiver, Ribbly's Bandolier (Ribbly Screwspigot):
+  https://www.wowhead.com/forever/npc=9543/ribbly-screwspigot (drops tab)
+  https://www.wowhead.com/forever/item=11742/wayfarers-knapsack
+  https://warcraft.wiki.gg/wiki/Wayfarer%27s_Knapsack
+
+2.0.29 (2026-11-11)
+- Stratholme wing NPC IDs checked on Wowhead Classic (tooltip data), e.g.
+  https://www.wowhead.com/classic/npc=10418/crimson-guardsman (10418-10426, 11043,
+  11054 Crimson; 10394, 10399, 10412, 10413, 10416, 10417 Undead side).
+- Discord (read only): suggestions threads "Dungeontracker" and "Add a way to
+  re-open Dungeon Tracker after closing it please".
+
+2.0.30 (2026-11-11)
+- BRD / Maraudon loot cross-check:
+  https://wowtbc.gg/warcraftforever/loot-tables/dungeons/blackrock-depths/
+  https://wowtbc.gg/warcraftforever/loot-tables/dungeons/maraudon/
+  https://conquestcapped.com/guides/wow-forever/wow-forever-maraudon-guide/ (no Forever changes to Maraudon bosses)
+- Sources of each item (Warcraft Wiki): https://warcraft.wiki.gg/wiki/Chest_of_The_Seven ,
+  https://warcraft.wiki.gg/wiki/Secret_Safe , https://warcraft.wiki.gg/wiki/Theldren ,
+  item pages (Incendic Bracers, Rockfist, Circle of Flame, Ghostshroud, the 13 zone drops, Highborne Bracelets = world drop)
+- IDs, quality and slots: Wowhead tooltip data, e.g. https://nether.wowhead.com/classic/tooltip/item/11684
+
+2.0.31 (2026-11-11)
+- Discord report-new-loot-quests: "Blackrock Depths Quest" by Snax (screenshot, level 49).
+- Forever BRD quest list + XP (official data): https://forever-tool.com/quests/zone/1584/
+  https://forever-tool.com/quests/97197/ , /quests/9015/ , /quests/8948/ , /8949/ , /8950/ , /4004/ , /4363/ , /3911/
+- Wowhead Forever tooltip: https://nether.wowhead.com/forever/tooltip/quest/97197 (level 55, Alaana Stormwalker, Mulgore)
+- The Challenge chain: https://warcraft.wiki.gg/wiki/The_Challenge_(quest) , https://classicdb.ch/?quest=8949 ,
+  https://warcraft.wiki.gg/wiki/Top_Piece_of_Lord_Valthalak%27s_Amulet , https://warcraft.wiki.gg/wiki/Jeering_Spectre%27s_Essence
+
+2.0.32 (2026-11-11)
+- Official quest lists: https://forever-tool.com/quests/zone/16554/ (Blackmaw Hold), https://forever-tool.com/quests/zone/1417/ (Sunken Temple)
+- Quest pages https://forever-tool.com/quests/<id>/ for 92065, 92066, 92067, 97327, 96246, 97173, 97198, 6031, 3380, 3445, 3444,
+  4143, 4146, the class quests and every chain step (XP, money, reputation)
+- Wowhead Forever tooltips https://nether.wowhead.com/forever/tooltip/quest/<id> (92065, 92066, 92067, 97327, 96246, 97173, 97198)
+- The Sunken Temple chain: https://warcraft.wiki.gg/wiki/The_Sunken_Temple_(quest) , https://classicdb.ch/?quest=3444 ,
+  https://www.zockify.com/classic/dungeons/sunken-temple/ (NPC coordinates)
+
+2.0.33 (2026-11-11)
+- Discord bug-reports: "Can't finish Dungeon" by KleineTascha (German client, City of Dalaran, screenshot).
+- German boss names: Wowhead Forever German tooltip data, https://nether.wowhead.com/forever/de/tooltip/npc/<npcID>
+  (e.g. 247126 Atrexis der Grabritter). Bosses Wowhead shows in [brackets] have no German data yet and were not added.
+
+2.0.35 (2026-11-11)
+- Discord #help: Zanth (solo Ragefire Chasm, English client, tracker shown only after the first boss; tracker kept after reset on public 2.0.1), with replies from Yuma, Saintblade and Exehn (screenshots).
+- No outside data: the fix is in the addon's kill detection (Systems/RunLog.lua), tested with a simulated client.
+
+2.0.36 (2026-11-11)
+- Discord: kAldown, "Elemental aid for RFK" missing from the quests tab (screenshot).
+- Quest IDs, levels, objectives, totems (Wowhead Forever tooltips):
+  https://nether.wowhead.com/forever/tooltip/quest/96264 (Elemental Aid, Alliance, level 33, Tattered Note)
+  https://nether.wowhead.com/forever/tooltip/quest/79360 (Elemental Aid, Horde)
+  https://nether.wowhead.com/forever/tooltip/quest/79364 (Eyes on the Sky, Horde)
+  https://nether.wowhead.com/forever/tooltip/quest/79358 and /79361 (Storm, Earth, and Fire; Veyric / Prate)
+  https://nether.wowhead.com/forever/tooltip/quest/96135 and /79366 (Heed My Call, level 40)
+  https://nether.wowhead.com/forever/tooltip/quest/96016 and /79442 (The Tempest's Weapons)
+  https://nether.wowhead.com/forever/tooltip/quest/94789 and /1531 (Call of Air)
+  https://nether.wowhead.com/forever/tooltip/item/274463 (Tattered Note, Charlga Razorflank)
+  https://nether.wowhead.com/forever/tooltip/item/280604, /280605, /280607, /280696 (rewards)
+- XP, money and Alliance rewards (official data, build 1.60.1.70399):
+  https://forever-tool.com/quests/96264/ (6,950 XP, 35s)
+  https://forever-tool.com/quests/96135/ (3,150 XP, 50s)
+  https://forever-tool.com/quests/96016/ (3,900 XP, Elementalist's Guard + weapon choice)
+- Chain order, givers, totem drops, ritual, sharing:
+  https://conquestcapped.com/guides/wow-forever/wow-forever-shaman-weapon-quest/
+  https://expcarry.com/wow-forever-tempests-weapons-quest (Veyric 59.6, 27.6 - only source; Rau 46.1, 51.7)
+  https://www.icy-veins.com/wow-forever/shaman-class-quests (search excerpt; the page itself didn't load)
+  https://epiccarry.com/blogs/rage-of-the-storm-wow-forever/ (search excerpt; sharing, Horde reward rune)
+- NPC spots: Prate Cloudseer 53, 42 https://warcraft.wiki.gg/wiki/Call_of_Air_(Orgrimmar) and https://classicdb.ch/?quest=1531 ;
+  Rau Cliffrunner 46.0, 51.6 https://warcrafttavern.com/wow-classic/guides/maelstrom-weapon-rune-season-of-discovery-sod
+- Not confirmed: Horde givers after Razorfen Kraul (records name both Prate and Rau), Horde XP and money.
+
+2.0.37 (2026-11-11)
+- Razorfen Kraul Warrior quests (gap found while checking 2.0.36):
+  https://www.warcrafttavern.com/forever/guides/razorfen-kraul-quests/ (both chains, materials and drop locations)
+  https://www.icy-veins.com/wow-forever/warrior-class-quests (search excerpt: Forever chain order, follow-up smiths)
+- Wowhead Forever tooltips:
+  quests https://nether.wowhead.com/forever/tooltip/quest/1699 , /1702 , /1701 (level 28, materials) , /1782 , /1698 ,
+  /1823 , /1824 , /1825 , /1838 , /1848 , /1844
+  items https://nether.wowhead.com/forever/tooltip/item/6841 (Vial of Phlogiston, Roogug) , /6838 , /6839 , /6840 , /6842 ,
+  /6843 , /7126 , /7127 , /6972 , /7133 , /6971 , /6973 , /6974 , /7129 , /7130 , /7132
+- XP (official data, build 1.60.1.70399): https://forever-tool.com/quests/1701/ (2,300) , https://forever-tool.com/quests/1838/ (3,650) ,
+  https://forever-tool.com/quests/1848/ (3,050, Brutal Hauberk 7133)
+- Furen's Armor is quest 1782, 3,400 XP (Classic value; forever-tool has no page for it): https://warcraft.wiki.gg/wiki/Furen's_Armor
+- Follow-up smiths: https://warcraft.wiki.gg/wiki/Thun%27grim_Firegaze , https://classicdb.ch/?quest=1701
+- NPC spots: Thun'grim 57, 30 https://classicdb.ch/?quest=1502 ; Furen Longbeard 58, 16.8 https://wow.gg/guides/razorfen-kraul ;
+  Camp Taurajo 45, 59 https://warcraft.wiki.gg/wiki/Barrens_quests ; 30-minute timer https://warcraft.wiki.gg/wiki/The_Barrens_questing_guide/Southern_Barrens
+
+2.0.3 (2026-11-11)
+- Discord #help: Krixx (Zul'Farrak, German client, run not reset, extra bosses), Trinii (Die Versunkene Stadt, German client, tracker never finished).
+- Instance IDs The Drowned City 2970, Krol'dok Stronghold 3039 (Forever Map.db2 / Group Finder activities), three projects agree:
+  https://github.com/fooxytv/AdventureGuideClassic/issues/153
+  https://github.com/cjber/adventure-guide-forever/pull/510
+  https://github.com/xIGBClutchIx/ForeverPlusPlus/blob/main/docs/forever-api.md
+- Encounter IDs (Data/RunLogEncounters.lua):
+  Forever dungeons: DungeonEncounter.db2, build 1.60.1.70862 - https://github.com/fooxytv/AdventureGuideClassic/issues/153 and data/Dungeons/forever in https://github.com/fooxytv/AdventureGuideClassic
+  Classic dungeons with newer boss events (RFC, SFK, Stockade, BFD, RFK, RFD, UBRS): https://github.com/DeadlyBossMods/DBM-Dungeons (DBM-Party-Vanilla/Classic)
+  Zul'Farrak, Dire Maul, Stratholme: https://github.com/BigWigsMods/LittleWigs (Classic)
+  All Classic dungeons: https://warcraft.wiki.gg/wiki/DungeonEncounterID (Classic section)
+  Deadmines (Classic IDs 2741-2747): LittleWigs Classic/Deadmines; Blackfathom Deeps Forever IDs 2910-2916: DBM-Party-Vanilla
+- German boss names: https://nether.wowhead.com/forever/de/tooltip/npc/7023 , /9218 , /9217 (Sergeant Bly 7604 and Pusillin 14354 are the same in German)
+- Discord #help: Leiv (English client, closed the tracker, /dj tracker inside the dungeon said there was no run).
+- Client names (Systems/ClientNames.lua): C_TooltipInfo.GetHyperlink and GetRealZoneText(mapID), no secret returns in Blizzard's
+  Forever API docs (1.60.1.70888): https://github.com/Gethe/wow-ui-source/tree/forever (TooltipInfoDocumentation.lua, ZoneScriptDocumentation.lua)
+- Malor the Zealous (npc 11032, encounter 476): https://nether.wowhead.com/forever/tooltip/npc/11032 ; loot: https://mmonster.co/wow-forever/guides/dungeons/stratholme-main-gate (no boss loot in Forever yet) ,
+  https://www.zockify.com/forever/dungeons/stratholme/ (Medallion of Faith) , https://nether.wowhead.com/forever/tooltip/item/12845 ; Classic: https://vanilla-wow-archive.fandom.com/wiki/Malor_the_Zealous ,
+  https://www.warcrafttavern.com/forever/guides/stratholme-living-quests/ , https://almarsguides.com/wow/instances/classic/stratholmeliving/ ; display ID 10458: https://octowow.st/db/?npc=11032 ; encounter: LittleWigs Classic/Stratholme/CommanderMalor.lua
+
+2026-11-11 localization audit (Italian excluded)
+- All effective boss pages and quest/prerequisite translation IDs checked against current Wowhead Forever localized tooltip data.
+- Secondary name and client DungeonEncounter references: https://github.com/fitzforge/polestar/tree/next/addon (Polestar_<locale>/Names.lua and LICENSE-DATA.txt).
+- See LOCALIZATION-AUDIT.md for source hierarchy, corrections, coverage, unverified entries and validation.
+
+2026-11-11 Dungeon Tracker, kills without XP (2.0.4)
+- PARTY_KILL is flagged SecretWhenUnitIdentityRestricted (the target GUID is hidden inside instances, the event still fires); Forever's chat events have no CHAT_MSG_COMBAT_HOSTILE_DEATH: https://github.com/Gethe/wow-ui-source/tree/forever (Blizzard_APIDocumentationGenerated, UnitDocumentation.lua and ChatInfoDocumentation.lua, build 1.60.1)
+
+2026-11-11 Dungeon names (2.0.4): the nine Forever dungeons (Hall of Thanes, Ruins of Lordaeron, Excavation Site: Wetlands, City of Dalaran, The Drowned City, Krol'dok Stronghold, Alcaz Prison, Blackmaw Hold, Shaper's Terrace) in de/fr/es/pt/ru/ko/zhCN/zhTW from "WoW Forever | Dungeon Localizations" (corrected reference, Wowhead Forever localized zone records); Italian keeps the English names (no official Italian Forever client).
+- https://www.wowhead.com/forever/de/zones/instances/dungeons
+- https://www.wowhead.com/forever/fr/zones/instances/dungeons
+- https://www.wowhead.com/forever/es/zones/instances/dungeons
+- https://www.wowhead.com/forever/pt/zones/instances/dungeons
+- https://www.wowhead.com/forever/ru/zones/instances/dungeons
+- https://www.wowhead.com/forever/ko/zones/instances/dungeons
+- https://www.wowhead.com/forever/cn/zones/instances/dungeons
+- https://www.wowhead.com/forever/tw/zones/instances/dungeons
+- zhTW checked against Blizzard's announcement of 20 Oct 2026: https://worldofwarcraft.blizzard.com/zh-tw/news/24301455
+
+2026-11-11 Shaper's Terrace quests (2.0.4): reported research "Shaper's Terrace — Quest research" (11 Nov 2026), cross-checked:
+- Panic at the Digsite 95924 (Alliance, 60/55, Venomridge + 6 Ravasaur Matriarchs + 8 Ironhide Ravasaurs, text says 9; Diemetradon Scale Spaulders 279903 / Ravasaur Hide Footpads 279905; 17,650 XP; 90s; Ironforge +100, Stormwind +50; shareable): https://foreverchanges.pro/quest/95924/panic-at-the-digsite , https://nether.wowhead.com/forever/tooltip/quest/95924
+- Mapping the Way Forward 95925 (Alliance, 60/55, five landmarks; Crystal-Infused Cleaver 279908 / Beastslayer's Trident 279910 / Faintly Glowing Orb 279912; 17,650 XP; Ironforge +100, Stormwind +50; not shareable per the report): https://foreverchanges.pro/quest/95925/mapping-the-way-forward , https://nether.wowhead.com/forever/tooltip/quest/95925
+- The Dark Crystal 95926 (Horde, 60/55; same three rewards; 6,600 XP; Undercity +100, Orgrimmar +50; shareable per the report): https://foreverchanges.pro/quest/95926/the-dark-crystal , https://nether.wowhead.com/forever/tooltip/quest/95926
+- Essence of Seeping Slimes 97049 (Horde, 60/55; 8 Seeping Slime Essence; Slime-Resistant Shroud 279932 / Reinforced Muck Protectors 279902; 17,650 XP; 90s; Undercity +100, Orgrimmar +50; shareable): https://foreverchanges.pro/quest/97049/essence-of-seeping-slimes , https://nether.wowhead.com/forever/tooltip/quest/97049
+- Crystalline Elements 95928 (shareable): https://foreverchanges.pro/quest/95928/crystalline-elements
+- Digestible Research (Alliance; 15 Partially Digested Journal Pages; Lost Researcher's Hood / Expeditionary Legplates; Ironforge +100, Stormwind +100; not shareable): the report only (ID 95790 there); not found on Wowhead or ForeverChanges, so a stand-in ID learnt in game.
+- Also listed: https://www.wowhead.com/forever/quest=95924 (and =95925, =95790, =95928, =95926, =97049), https://db.icy-veins.com/wow-forever/quests/zones/the-shaper-s-terrace/ (not reachable here), https://github.com/naowh-gaming/NaowhForever/pull/1058 (the same five IDs from ForeverChanges).
+
+2026-11-11 Archmage Tervosh (Shadowshard Fragments 7070, 2.0.4; reported by Nyby on Discord): Theramore Isle tower, Dustwallow Marsh (66.4, 49.3).
+- https://foreverchanges.pro/quest/7070/shadowshard-fragments
+- https://warcraft.wiki.gg/wiki/Archmage_Tervosh
+
+2026-11-11 Classic dungeon names (2.0.4): Ragefire Chasm, Wailing Caverns, The Deadmines, Shadowfang Keep, Blackfathom Deeps, The Stockade, Gnomeregan, Razorfen Kraul, Scarlet Monastery (Graveyard, Library, Armory, Cathedral), Razorfen Downs, Uldaman, Maraudon, Zul'Farrak, Sunken Temple (The Temple of Atal'Hakkar), Blackrock Depths, Lower/Upper Blackrock Spire, Dire Maul (East, North, West), Scholomance, Stratholme (Living = Main Gate, Undead = Service Entrance) in de/fr/es/pt/ru/ko/zhCN/zhTW from "DungeonJournal Classic Translations" (2026-11-11, fixed edition). Italian not changed (the reference gives no Italian names).
+- https://github.com/arithmandar/LibBabble-SubZone-3.0
+- https://www.wowace.com/projects/libbabble-subzone-3-0/files/9524371
+- https://foreverchanges.pro/dungeons
+
+2026-11-11 Alcaz Prison loot (2.0.4): from "Alcaz Prison — Boss & Loot Audit" (11 Nov 2026), each item checked on its Wowhead Forever page ("Dropped by", count/sample): Overseer Wrex 255391 (Alcaz Willcrusher 276732 11/31, Grips of Control 276733 11/31, Wrex's Pinky Ring 276734 9/31); Tidemistress Ca'zass 255997 (Tidesong Wand 276735 14/48, Seascale Bracers 276736 11/48, Cloak of the Tidemistress 276737 21/48, Ca'zass's Head 273883 7/48); Katerina the Cleaner 257016 (Katerina's Shanker 276738 10/39, Cutthroat Chestguard 276739 21/39, Sentimental Locket 276740 8/39); The Questioner 256236 (Defias Enforcer's Shoulderpads 276741 20/65, Girdle of Extracted Answers 276742 18/65, Fingerbreaker Stamp 276743 27/65, Ornate Shackle Key 274029 3/65); Blazeroar 255702 (Zarla's Snack Pouch 276744 16/50, Beastbond Robe 276745 16/50, Defias Enforcer's Legguards 276746 18/50, Zarla's Journal 276890 4/50). Trash: Defias Enforcer's Mask 287019 (Slavering Hound, Strashaz Soldier, Alcaz Jailer), Defias Enforcer's Prowlers 287021 (Alcaz Chaplain, Alcaz Jailer, Strashaz Soldier), Defias Enforcer's Chest 287020 (no drop recorded). Zarla Ober and Commander Folkar: no loot added (none recorded).
+- https://www.wowhead.com/forever/item=276732 (and =276733 to =276746, =276890, =273883, =274029, =287019, =287020, =287021)
+- https://conquestcapped.com/guides/wow-forever/wow-forever-alcaz-prison-guide/
+- https://wowtbc.gg/warcraftforever/loot-tables/dungeons/alcaz-prison/
+- https://foreverchanges.pro/dungeons/alcaz-prison
+- https://metaforge.app/wow-forever/database/keys/overseers-keyring (Overseer's Keyring, not added: no item ID or source yet)
+- Compound Gloves 287018 (blue, cloth hands, binds when equipped): dropped by Defias Truthfinder 255271 (1/32), Alcaz Prison (zone 16620): https://www.wowhead.com/forever/item=287018/compound-gloves and https://www.wowhead.com/forever/npc=255271
+
+2026-11-11 Discord reports, checked on Wowhead Forever (2.0.4):
+- Old Fire-Eye's chain (belpickle, xperl73): the series of quest 91858, with each step's level, giver, turn-in and map spot: https://www.wowhead.com/forever/quest=91858 (and =91859, =91860, =91861, =91862, =96204, =95034); the Fenris Isle Key 267412 from the Rot Hide gnolls.
+- Rituals of Power (Phoen1x): https://www.wowhead.com/forever/quest=1951 (series 1949 Hidden Secrets, 1950 Get the Scoop); the book 7274 is in object 103664 in the Scarlet Monastery Library; "on a bookshelf in the last hallway before Arcanist Doan": Wowhead comments on https://www.wowhead.com/classic/quest=1951
+- A Lesson in Literacy (Vakos, Phoen1x): https://www.wowhead.com/forever/quest=82084 (Garion Wendell, Stormwind 48.8, 86.6; Owen Thadd, Undercity 73.6, 33.0; reward Personal Spellbook 221344; the papyrus from Zul'Farrak Zombie 7286, also a Wowhead comment)
+- Blueprint: Tanning Rack (KramS, screenshot of the loot window on a Russian client): https://www.wowhead.com/forever/item=273096 (dropped by Razorclaw the Butcher, 192/2533)
+
+2026-11-12 Missing loot (2.0.4), Wowhead Forever "Dropped by" (count/sample):
+- Mutilator 12469 from Dustwraith 10081 (11/20; the only other blue on his list is Desertwalker Cane): https://www.wowhead.com/forever/npc=10081/dustwraith
+- Hydra Leather Legs 274657 from Gahz'rilla 7273 (51/130): https://www.wowhead.com/forever/item=274657/hydra-leather-legs
+- Gutcutter Hatchet 274643 (thrown) from Nekrum Gutchewer 7796 (51/151): https://www.wowhead.com/forever/item=274643/gutcutter-hatchet
+- Stretched Footpads 287007 (blue cloth feet) from Twilight Grunt 258042 (3/1408), Twilight Lieutenant 258104 (1/416), Redridge Prisoner 257900 (1/254); the same mobs drop the Krol'dok Warplate Gauntlets 287012, so they are Krol'dok Stronghold trash: https://www.wowhead.com/forever/item=287007/stretched-footpads and https://www.wowhead.com/forever/item=287012
+- Trash portraits (creature display IDs from the Wowhead Forever NPC pages): Twilight Grunt 140001, Twilight Lieutenant 143142, Redridge Prisoner 487, Alcaz Chaplain 138722 (npc 255262), Alcaz Jailer 138843 (npc 255377, 271784), Strashaz Soldier 4764 (npc 255995), Slavering Hound 6195 (npc 255267), Defias Truthfinder 144356 (npc 255271).
+- Other sites checked (no data on these items yet): web search for each item name.
+
+2026-11-12 The Drowned City (2.0.4), Wowhead Forever "Dropped by" (count/sample):
+- Sword of Dismemberment 287005 (blue two-hand sword, binds when equipped): Risen Sentry 258792 1/2310, Champion of the Deep 258797 1/1051, Brinescale Sorceress 258804 1/1153, Makrura Snapper 258897 2/228: https://www.wowhead.com/forever/item=287005/sword-of-dismemberment
+- Linken's Boots of Iron 271718 (blue mail feet, binds when picked up): Zul'Alai 8/936, Var'Taka 1/546, Captain Dreadrise 5/809, Deathless Marrow 4/586, Min'loth the Serpent 8/594, Primeval Elemental 6/350, Gill 1/46: https://www.wowhead.com/forever/item=271718/linkens-boots-of-iron
+- Portraits (creature display IDs, Wowhead Forever NPC pages): Champion of the Deep 145404, Brinescale Sorceress 4975, Makrura Snapper 2426.
+- Umbral Scaled Belt (Umbra) and Viscera Spaulders (Deathless Marrow): confirmed by M (Nov 2026).
+
+2026-11-12 Shaper's Terrace, Vitrix, Cinder and Snowtalon (2.0.4):
+- Heartflame Gauntlets 280028 (blue plate hands, binds when picked up, 410 armor, +14 Intellect, crit 1.0%, Holy damage up to 18, level 58): player screenshots of the Loot Rolls from a dead Vitrix and a dead Cinder (12 Nov 2026). Wowhead Forever's "Dropped by" lists Cinder 261974 (5/7): https://www.wowhead.com/forever/item=280028
+- Crownroar Chestplate 280027 (blue plate chest, binds when picked up, 657 armor, +21 Spirit, crit 1.0%, healing up to 40 / damage up to 13, level 58, sells for 4g 7s 51c): a player's screenshot of the Loot Roll from Snowtalon 262297 (12 Nov 2026): https://www.wowhead.com/forever/item=280027
+
+2026-11-12 Zul'Farrak and Blackmaw Hold loot (2.0.4), Wowhead Forever "Drops" / "Dropped by" (count/sample):
+- Ruuzlu 7797: Sandfury Guillotine 274654 (two-hand axe, 54/150), Peacekeeper Wand 274655 (wand, 35/150); Embrace of the Lycan 9479 drops from him too (51/150) and from Chief Ukorz Sandscalp (14/147), left on the Chief's page: https://www.wowhead.com/forever/npc=7797/ruuzlu and https://www.wowhead.com/forever/npc=7267/chief-ukorz-sandscalp
+- Sandarr Dunereaver 10080: Sandarr's Shoulders 274660 (mail shoulders, 9/18), Bloodsand Belt 274659 (plate belt, 8/18): https://www.wowhead.com/forever/npc=10080/sandarr-dunereaver
+- Octofinger Gauntlets 280086 (blue plate hands, binds when picked up, level 52): Tunnelweb Matriarch 250034 (2/2): https://www.wowhead.com/forever/item=280086/octofinger-gauntlets
+- Other sites: a web search for each item name (12 Nov 2026) found no other site listing these items yet.

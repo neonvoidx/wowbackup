@@ -1,0 +1,148 @@
+
+DrpulseV2DB = {
+["plateY"] = 0,
+["plateAnchor"] = "TOP",
+["iconSource"] = "spell",
+["plateIconSource"] = "spell",
+["plateSwipe"] = true,
+["sources"] = {
+["feedback"] = true,
+["casts"] = true,
+["group"] = true,
+["native"] = true,
+["assume"] = true,
+["auras"] = true,
+},
+["npcs"] = false,
+["target"] = true,
+["plateX"] = 0,
+["enabled"] = true,
+["openGroups"] = {
+},
+["y"] = -150,
+["pvpOnly"] = false,
+["timer"] = true,
+["schema"] = 1,
+["categories"] = {
+["Taunt"] = "never",
+["AoEKnockback"] = "never",
+},
+["plateStackStyle"] = "pips",
+["plateSize"] = 20,
+["chat"] = true,
+["combatOnly"] = false,
+["iconSize"] = 30,
+["plateOffset"] = 4,
+["font"] = "default",
+["swipe"] = true,
+["plateTargetOnly"] = false,
+["x"] = 0,
+["resetTime"] = 18,
+["plateTimer"] = true,
+["plateFont"] = "default",
+["stackStyle"] = "pips",
+["learned"] = {
+[1777] = 4,
+[853] = 3,
+[3355] = 10,
+[1833] = 4,
+[6770] = 25,
+},
+["custom"] = {
+},
+["filter"] = "mine",
+["nameplates"] = true,
+["items"] = true,
+["locked"] = true,
+["profile"] = {
+["locked"] = true,
+["minimap"] = {
+["hide"] = false,
+["angle"] = 128.514059127523,
+},
+},
+}
+DrpulseDB = nil
+DRiftDB = nil
+DrpulseProfilesDB = {
+["characters"] = {
+["Neon-Void"] = {
+["profile"] = "Default",
+["specs"] = {
+},
+["autoSpec"] = false,
+},
+["Beat-Ngu"] = {
+["profile"] = "Default",
+["specs"] = {
+},
+["autoSpec"] = false,
+},
+},
+["schema"] = 1,
+["profiles"] = {
+["Default"] = {
+["plateY"] = 0,
+["plateAnchor"] = "TOP",
+["iconSource"] = "spell",
+["plateIconSource"] = "spell",
+["plateSwipe"] = true,
+["sources"] = {
+["feedback"] = true,
+["casts"] = true,
+["group"] = true,
+["native"] = true,
+["assume"] = true,
+["auras"] = true,
+},
+["npcs"] = false,
+["target"] = true,
+["plateX"] = 0,
+["enabled"] = true,
+["openGroups"] = {
+},
+["y"] = -150,
+["pvpOnly"] = false,
+["timer"] = true,
+["schema"] = 1,
+["categories"] = {
+["Taunt"] = "never",
+["AoEKnockback"] = "never",
+},
+["plateStackStyle"] = "pips",
+["plateSize"] = 20,
+["chat"] = true,
+["combatOnly"] = false,
+["iconSize"] = 30,
+["plateOffset"] = 4,
+["font"] = "default",
+["swipe"] = true,
+["plateTargetOnly"] = false,
+["x"] = 0,
+["resetTime"] = 18,
+["plateTimer"] = true,
+["plateFont"] = "default",
+["stackStyle"] = "pips",
+["learned"] = {
+[1777] = 4,
+[853] = 3,
+[3355] = 10,
+[1833] = 4,
+[6770] = 25,
+},
+["custom"] = {
+},
+["filter"] = "mine",
+["nameplates"] = true,
+["items"] = true,
+["locked"] = true,
+["profile"] = {
+["locked"] = true,
+["minimap"] = {
+["hide"] = false,
+["angle"] = 128.514059127523,
+},
+},
+},
+},
+}

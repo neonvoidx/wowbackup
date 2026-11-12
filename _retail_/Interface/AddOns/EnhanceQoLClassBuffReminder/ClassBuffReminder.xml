@@ -1,0 +1,9 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+	<Script file="ClassBuffReminder.lua" />
+	<Script file="ExpirationWarnings.lua" />
+	<Script file="IconPresentation.lua" />
+	<Script file="SpellSelection.lua" />
+	<Script file="Settings_ClassBuffReminder.lua" />
+	<Script file="TrackerMatrix.lua" />
+	<Script file="ClassBuffSettings.lua" />
+</Ui>

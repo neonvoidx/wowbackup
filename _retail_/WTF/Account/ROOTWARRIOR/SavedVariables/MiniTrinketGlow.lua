@@ -1,0 +1,4 @@
+
+MiniTrinketGlowDB = {
+["CombatOnly"] = true,
+}

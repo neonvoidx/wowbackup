@@ -1,0 +1,83 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ https://raw.githubusercontent.com/Gethe/wow-ui-source/live/Interface/AddOns/Blizzard_SharedXML/UI.xsd">
+
+    <Script file="TrackerHeader.lua" />
+    <Frame name="MapPinEnhancedTrackerHeaderTemplate" inherits="MapPinEnhancedGenericFrameWithBottomLineTemplate" mixin="MapPinEnhancedTrackerHeaderMixin" virtual="true" enableMouse="true" propagateMouseInput="Both">
+        <Size x="1" y="30" />
+        <Anchors>
+            <Anchor point="TOPLEFT" x="0" y="0" />
+            <Anchor point="TOPRIGHT" x="0" y="0" />
+        </Anchors>
+        <Layers>
+            <Layer level="OVERLAY">
+                <Texture inherits="MapPinEnhancedIconTemplate" parentKey="icon">
+                    <Size x="14" y="14" />
+                    <KeyValues>
+                        <KeyValue key="icon" value="pin" />
+                    </KeyValues>
+                    <Anchors>
+                        <Anchor point="LEFT" x="8" />
+                    </Anchors>
+                </Texture>
+                <FontString parentKey="title" inherits="MapPinEnhancedFontNormal" justifyH="LEFT" justifyV="MIDDLE" wordwrap="false">
+                    <Size y="18" />
+                    <Anchors>
+                        <Anchor point="LEFT" relativePoint="RIGHT" relativeKey="$parent.icon" x="5" />
+                        <Anchor point="RIGHT" x="-110" />
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Frames>
+            <Frame parentKey="hiddenGroupsMenu" inherits="MapPinEnhancedTrackerHiddenGroupsTemplate" />
+            <Button parentKey="closeButton" inherits="MapPinEnhancedIconButtonTemplate">
+                <Size x="24" y="24" />
+                <KeyValues>
+                    <KeyValue key="icon" value="close" />
+                </KeyValues>
+                <Anchors>
+                    <Anchor point="RIGHT" x="-5" />
+                </Anchors>
+            </Button>
+            <Button parentKey="hiddenGroupsButton" inherits="MapPinEnhancedIconButtonTemplate">
+                <Size x="24" y="24" />
+                <KeyValues>
+                    <KeyValue key="icon" value="eyeslash" />
+                    <KeyValue key="tooltip" value="Show hidden group" />
+                </KeyValues>
+                <Anchors>
+                    <Anchor point="RIGHT" x="-1" y="0" relativeKey="$parent.closeButton" relativePoint="LEFT" />
+                </Anchors>
+            </Button>
+            <Button parentKey="importButton" inherits="MapPinEnhancedIconButtonTemplate">
+                <Size x="24" y="24" />
+                <KeyValues>
+                    <KeyValue key="icon" value="import" />
+                    <KeyValue key="tooltip" value="Import" />
+                </KeyValues>
+                <Anchors>
+                    <Anchor point="RIGHT" x="-1" y="0" relativeKey="$parent.hiddenGroupsButton" relativePoint="LEFT" />
+                </Anchors>
+            </Button>
+            <Button parentKey="lexiconButton" inherits="MapPinEnhancedIconButtonTemplate">
+                <Size x="24" y="24" />
+                <KeyValues>
+                    <KeyValue key="icon" value="lexicon" />
+                    <KeyValue key="tooltip" value="Location Lexicon" />
+                </KeyValues>
+                <Anchors>
+                    <Anchor point="RIGHT" x="-1" relativeKey="$parent.importButton" relativePoint="LEFT" />
+                </Anchors>
+                <Scripts>
+                    <OnClick>self:GetParent():ShowLexicon()</OnClick>
+                </Scripts>
+            </Button>
+        </Frames>
+        <Scripts>
+            <OnLoad method="OnLoad" />
+            <OnMouseDown method="OnMouseDown" />
+            <!-- HideFrame fades the menu with the tracker; clear its shown bit afterward. -->
+            <OnHide>self.hiddenGroupsMenu:HideImmediately()</OnHide>
+        </Scripts>
+    </Frame>
+</Ui>

@@ -1,0 +1,50 @@
+
+TrueSpyDB = {
+["share"] = true,
+["minimapPos"] = 136.1126972361638,
+["sessionMeta"] = "2026-10-20 15:41:18 | FOREVER 70450 | v1.5.3 | Many-Classic Beta PvP 2",
+["winPos"] = {
+["y"] = 215.7874145507813,
+["p"] = "BOTTOMRIGHT",
+["x"] = -343.9397277832031,
+["r"] = "BOTTOMRIGHT",
+},
+["sessionLog"] = {
+"15:40:05 client: FOREVER 1.60.1 (build 70450, toc 16001, project 18, toc file FOREVER)",
+"15:40:05 settings: account file",
+"15:40:06 combat log closed by this client",
+},
+["selfTaxiQuiet"] = true,
+["winH"] = 163,
+["winW"] = 272,
+["autoInspect"] = true,
+["skipTaxi"] = true,
+["realms"] = {
+["Classic Beta PvP 2"] = {
+["deaths"] = {
+},
+["kills"] = {
+},
+["aars"] = {
+},
+["kos"] = {
+},
+["history"] = {
+},
+["ignore"] = {
+},
+},
+},
+["enabled"] = true,
+["optsPos"] = {
+["y"] = 153.3333129882813,
+["p"] = "CENTER",
+["x"] = -425.0003356933594,
+["r"] = "CENTER",
+},
+["seenVersion"] = "1.5.3",
+["curSession"] = {
+["start"] = 1792507206,
+["ended"] = 1792507206,
+},
+}

@@ -1,0 +1,15 @@
+
+CharacterAchievementsDB = {
+["defaultSkin"] = false,
+["fullName"] = "Stormclout",
+["position"] = {
+["xOffset"] = -7.8,
+["yOffset"] = -53.5,
+["point"] = "TOPLEFT",
+["relativePoint"] = "TOPLEFT",
+},
+["isEnabled"] = true,
+["isAccountWide"] = true,
+["hideCompletedDate"] = false,
+["isMovementEnabled"] = false,
+}

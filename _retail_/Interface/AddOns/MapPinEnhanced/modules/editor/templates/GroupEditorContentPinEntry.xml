@@ -1,0 +1,166 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ https://raw.githubusercontent.com/Gethe/wow-ui-source/live/Interface/AddOns/Blizzard_SharedXML/UI.xsd">
+    <Script file="GroupEditorContentPinEntry.lua" />
+
+    <Frame name="MapPinEnhancedGroupEditorContentPinEntryTemplate" virtual="true" mixin="MapPinEnhancedGroupEditorContentPinEntryMixin" enableMouse="true">
+        <Size x="842" y="52" />
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture parentKey="background" inherits="MapPinEnhancedGenericFrameTextureTemplate">
+                    <Gradient orientation="HORIZONTAL">
+                        <MinColor r="1" g="1" b="1" a="0.5" />
+                        <MaxColor r="1" g="1" b="1" a="0" />
+                    </Gradient>
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="42" y="0" />
+                        <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+                    </Anchors>
+                </Texture>
+            </Layer>
+            <Layer level="ARTWORK">
+                <Texture parentKey="dropLine" file="Interface/AddOns/MapPinEnhanced/assets/shared/DividerHorizontal.png" hidden="true">
+                    <Size x="760" y="4" />
+                    <Color r="1" g="0.82" b="0" a="1" />
+                </Texture>
+            </Layer>
+        </Layers>
+        <Frames>
+            <Button parentKey="dragHandle" registerForDrag="LeftButton">
+                <Size x="22" y="52" />
+                <Anchors>
+                    <Anchor point="LEFT" x="-5" />
+                </Anchors>
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <Texture inherits="MapPinEnhancedIconTemplate">
+                            <Size x="20" y="20" />
+                            <KeyValues>
+                                <KeyValue key="icon" value="drag" />
+                            </KeyValues>
+                            <Anchors>
+                                <Anchor point="CENTER" />
+                            </Anchors>
+                        </Texture>
+                    </Layer>
+                </Layers>
+            </Button>
+            <Frame parentKey="pinFrame" inherits="MapPinEnhancedBasePinTemplate" propagateMouseInput="Motion">
+                <Anchors>
+                    <Anchor point="LEFT" x="34" />
+                </Anchors>
+            </Frame>
+            <Frame parentKey="nameField" inherits="MapPinEnhancedFormFieldTemplate">
+                <Size x="180" y="24" />
+                <KeyValues>
+                    <KeyValue key="labelText" value="Name" />
+                </KeyValues>
+                <Anchors>
+                    <Anchor point="LEFT" x="75" y="-2" />
+                </Anchors>
+                <Frames>
+                    <EditBox parentKey="child" inherits="MapPinEnhancedInputTemplate" letters="64">
+                        <Size x="180" y="24" />
+                        <Scripts>
+                            <OnTabPressed>self:GetParent():GetParent():OnInputTabPressed(self)</OnTabPressed>
+                        </Scripts>
+                    </EditBox>
+                </Frames>
+            </Frame>
+            <Frame parentKey="mapField" inherits="MapPinEnhancedFormFieldTemplate">
+                <Size x="200" y="24" />
+                <KeyValues>
+                    <KeyValue key="labelText" value="Map" />
+                </KeyValues>
+                <Anchors>
+                    <Anchor point="LEFT" relativeKey="$parent.nameField" relativePoint="RIGHT" x="10" />
+                </Anchors>
+                <Frames>
+                    <EditBox parentKey="child" inherits="MapPinEnhancedAutocompleteTemplate">
+                        <Size x="175" y="24" />
+                        <Scripts>
+                            <OnTabPressed>self:GetParent():GetParent():OnInputTabPressed(self)</OnTabPressed>
+                        </Scripts>
+                    </EditBox>
+                </Frames>
+            </Frame>
+            <Frame parentKey="xField" inherits="MapPinEnhancedFormFieldTemplate">
+                <Size x="100" y="24" />
+                <KeyValues>
+                    <KeyValue key="labelText" value="X" />
+                </KeyValues>
+                <Anchors>
+                    <Anchor point="LEFT" relativeKey="$parent.mapField" relativePoint="RIGHT" x="10" />
+                </Anchors>
+                <Frames>
+                    <EditBox parentKey="child" inherits="MapPinEnhancedInputTemplate" letters="10">
+                        <Size x="100" y="24" />
+                        <Scripts>
+                            <OnTextChanged>self:GetParent():GetParent():OnCoordinateTextChanged(self, userInput)</OnTextChanged>
+                            <OnTabPressed>self:GetParent():GetParent():OnInputTabPressed(self)</OnTabPressed>
+                        </Scripts>
+                    </EditBox>
+                </Frames>
+            </Frame>
+            <Frame parentKey="yField" inherits="MapPinEnhancedFormFieldTemplate">
+                <Size x="100" y="24" />
+                <KeyValues>
+                    <KeyValue key="labelText" value="Y" />
+                </KeyValues>
+                <Anchors>
+                    <Anchor point="LEFT" relativeKey="$parent.xField" relativePoint="RIGHT" x="10" />
+                </Anchors>
+                <Frames>
+                    <EditBox parentKey="child" inherits="MapPinEnhancedInputTemplate" letters="10">
+                        <Size x="100" y="24" />
+                        <Scripts>
+                            <OnTextChanged>self:GetParent():GetParent():OnCoordinateTextChanged(self, userInput)</OnTextChanged>
+                            <OnTabPressed>self:GetParent():GetParent():OnInputTabPressed(self)</OnTabPressed>
+                        </Scripts>
+                    </EditBox>
+                </Frames>
+            </Frame>
+
+            <Button parentKey="deleteButton" inherits="MapPinEnhancedIconButtonTemplate">
+                <Size x="28" y="28" />
+                <KeyValues>
+                    <KeyValue key="icon" value="trash" />
+                    <KeyValue key="iconSize" value="medium" />
+                    <KeyValue key="tooltip" value="Permanently delete this pin." />
+                </KeyValues>
+                <Anchors>
+                    <Anchor point="RIGHT" x="-8" y="-1" />
+                </Anchors>
+            </Button>
+            <Button parentKey="duplicateButton" inherits="MapPinEnhancedIconButtonTemplate">
+                <Size x="28" y="28" />
+                <KeyValues>
+                    <KeyValue key="icon" value="duplicate" />
+                    <KeyValue key="iconSize" value="medium" />
+                    <KeyValue key="tooltip" value="Create a copy of this pin." />
+                </KeyValues>
+                <Anchors>
+                    <Anchor point="RIGHT" relativeKey="$parent.deleteButton" relativePoint="LEFT" x="-2"/>
+                </Anchors>
+            </Button>
+            <Button parentKey="descriptionButton" inherits="MapPinEnhancedIconButtonTemplate">
+                <Size x="28" y="28" />
+                <KeyValues>
+                    <KeyValue key="icon" value="edit" />
+                    <KeyValue key="iconSize" value="medium" />
+                    <KeyValue key="tooltip" value="Description" />
+                </KeyValues>
+                <Anchors>
+                    <Anchor point="RIGHT" relativeKey="$parent.duplicateButton" relativePoint="LEFT" x="-2"/>
+                </Anchors>
+                <Scripts>
+                    <OnClick>self:GetParent():EditDescription()</OnClick>
+                </Scripts>
+            </Button>
+        </Frames>
+        <Scripts>
+            <OnEnter method="OnEnter" />
+            <OnLeave method="OnLeave" />
+            <OnHide method="OnLeave" />
+        </Scripts>
+    </Frame>
+</Ui>

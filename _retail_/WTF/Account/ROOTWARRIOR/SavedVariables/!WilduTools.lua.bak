@@ -1,0 +1,53 @@
+
+WilduToolsDB = {
+["profileKeys"] = {
+["Stormclout - Tichondrius"] = "Default",
+["Neonvoid - Tichondrius"] = "Default",
+},
+["profiles"] = {
+["Default"] = {
+["editMode"] = {
+["rangeCheck"] = {
+["alpha"] = 1,
+["y"] = 234,
+["x"] = -443,
+},
+["playerCombat"] = {
+["alpha"] = 1,
+},
+["gcdHistory"] = {
+["point"] = "BOTTOMRIGHT",
+["iconCount"] = 4,
+["fadeTime"] = 5,
+["alpha"] = 1,
+["y"] = 200,
+["x"] = -192,
+["iconSize"] = 42,
+},
+["mountIcon"] = {
+["y"] = 11,
+["hide_whenmounted"] = true,
+["point"] = "BOTTOM",
+["scale"] = 2.399999856948853,
+["alpha"] = 1,
+},
+["targetCombat"] = {
+["alpha"] = 1,
+},
+["rangeMeleeIndicator"] = {
+["alpha"] = 1,
+["y"] = 59,
+},
+},
+["wilduUI_rangeMeleeIndicator"] = true,
+["wilduUI_mountableArea"] = true,
+["blizzUI_hideScreenshotText"] = true,
+["wilduUI_gcdHistory"] = true,
+["automation_autoNeedDecorAndToysEnabled"] = true,
+["automation_autoConfirmBindOnRollAndLootEnabled"] = true,
+["blizzUI_cleanupObjectiveTracker"] = true,
+["blizzUI_altPowerBarText"] = true,
+["wilduUI_targetRangeFrame"] = true,
+},
+},
+}

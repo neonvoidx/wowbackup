@@ -1,0 +1,45 @@
+## Interface: 120105, 16001
+## Title: BattleGroundEnemiesFixed
+## Version: 12.1.5.4
+## Author: RBGDEV
+## Category: RBGDEV
+## Notes: Credit to BattleGroundEnemies for the original code, author: Bullsei
+## SavedVariables: BattleGroundEnemiesDB
+## OptionalDeps: Blizzard_UnitFrame, Ace3, LibStub, LibRaces-1.0, UTF8, LibSharedMedia-3.0, AceGUI-3.0-SharedMediaWidgets
+## IconTexture: Interface\AddOns\BattleGroundEnemiesFixed\bge_logo.tga
+## X-Curse-Project-ID: 1444858
+## X-Wago-ID: kNM3PmKz
+## X-WoWI-ID: 27022
+
+#@no-lib-strip@
+embeds.xml
+#@end-no-lib-strip@
+
+Locales.lua
+
+Helpers.lua
+Data.lua
+Defaults.lua
+Main.lua
+dbupgrades.lua
+ImportExport.lua
+Mainframe.lua
+PlayerButton.lua
+
+Modules\ContainerTemplate.lua
+Modules\HealthBar.lua
+Modules\Level.lua
+Modules\Name.lua
+Modules\ObjectiveAndRespawn.lua
+Modules\Power.lua
+Modules\RaidTargetIcon.lua
+Modules\Role.lua
+Modules\SpecClassPriority.lua
+Modules\SpecName.lua
+Modules\TargetIndicatorNumeric.lua
+Modules\TargetIndicatorSymbolic.lua
+Modules\CombatIndicator.lua
+Modules\Trinket.lua
+Modules\DR.lua
+
+Options.lua

@@ -1,0 +1,62 @@
+---@class MapPinEnhanced
+local MapPinEnhanced = select(2, ...)
+
+---@class MapPinEnhancedPinMixin
+MapPinEnhancedPinTooltipMixin = {}
+
+local L = MapPinEnhanced.L
+
+---@param description string?
+function MapPinEnhancedPinTooltipMixin:SetDescription(description)
+    if not self:CanApplyChanges() then return end
+    description = MapPinEnhanced:NormalizeText(description)
+    if self.pinData.description == description then return end
+    self.pinData.description = description
+    self:PersistPin()
+    for _, frame in ipairs({ self.worldmapPin, self.minimapPin }) do
+        if GameTooltip:IsOwned(frame) then self:ShowTooltip(frame) end
+    end
+    if not self.groupIsAddingPin then
+        MapPinEnhanced:FireCallback("PIN_UPDATED_DESCRIPTION", self.pinID, description)
+    end
+end
+
+---@param owner Frame
+---@param anchor? string
+function MapPinEnhancedPinTooltipMixin:ShowTooltip(owner, anchor)
+    local pinData = self.pinData
+    if not pinData then return end
+
+    GameTooltip:SetOwner(owner, anchor or "ANCHOR_TOPLEFT", 20)
+    GameTooltip:AddLine(pinData.title or L["Map Pin"], 1, 0.82, 0, true)
+    if self:IsLocked() then
+        GameTooltip:AddLine(L["This pin is locked and won’t be cleared automatically."], 1, 0.82, 0, true)
+    end
+
+    local mapInfo = C_Map.GetMapInfo(pinData.mapID)
+    local mapName = mapInfo and mapInfo.name or tostring(pinData.mapID)
+    local coordinates = string.format("%.2f, %.2f", pinData.x * 100, pinData.y * 100)
+    local group = self.group
+    local groupName = group and group:GetName() or L["Ungrouped Pins"]
+    local count = group and group:GetPinCount() or 1
+    local progress = group and group:IsRestorable() and
+        string.format("%d/%d", group:GetClearedPinCount(), group:GetTotalPinCount()) or tostring(count)
+
+    MapPinEnhanced:AddDescriptionToTooltip(pinData.description)
+    GameTooltip:AddLine(string.format("%s %s", mapName, coordinates), 1, 1, 1, true)
+    GameTooltip:AddLine(" ")
+    GameTooltip:AddLine(string.format("%s: %s", groupName, progress), 0.65, 0.65, 0.65, true)
+    if self:CanApplyChanges() then
+        local showLockHint = MapPinEnhanced:GetModule("Options"):GetOptionValue("Pins.EnableLockedPins") ==
+            true
+        MapPinEnhanced:AddTooltipInteractions(GameTooltip, {
+            { L["Left Click"],         self:IsTracked() and L["Stop tracking"] or L["Track"] },
+            { L["Ctrl + Left Click"],  L["Clear Pin"] },
+            { L["Shift + Left Click"], L["Share to Chat"] },
+            { L["Alt + Left Click"],   not InCombatLockdown() and L["Show on Map"] or nil },
+            { L["Right Click"],        L["Open menu"] },
+            { L["Middle Click"],       showLockHint and (self:IsLocked() and L["Unlock Pin"] or L["Lock Pin"]) or nil },
+        })
+    end
+    GameTooltip:Show()
+end

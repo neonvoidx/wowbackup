@@ -1,0 +1,842 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
+..\FrameXML\UI.xsd">
+
+	<!-- /*******************/ CUSTOM TEMPLATES /*************************/ -->
+
+
+	<!-- nice icon button template -->
+	<Button name="NysTDL_IconButtonTemplate" virtual="true">
+		<NormalTexture file="Interface\Buttons\UI-SquareButton-Up" desaturated="true">
+			<Color r="0.75" g="0.75" b="0.75"/>
+		</NormalTexture>
+		<PushedTexture file="Interface\Buttons\UI-SquareButton-Down" desaturated="true">
+			<Color r="0.75" g="0.75" b="0.75"/>
+		</PushedTexture>
+		<HighlightTexture file="Interface\Buttons\UI-Common-MouseHilight" alphaMode="ADD" alpha="0.75">
+			<Anchors>
+				<Anchor point="TOPLEFT" x="2" y="-2"/>
+				<Anchor point="BOTTOMRIGHT" x="-2" y="2"/>
+			</Anchors>
+		</HighlightTexture>
+	</Button>
+
+	<Frame name="NysTDL_IconButtonPositionScripts" virtual="true">
+		<!-- icon position adaptation scripts -->
+		<Scripts>
+			<OnMouseDown>
+				if not self:IsEnabled() then return end
+				<!-- nudge and dim the icon down a little -->
+				local xOffset = -1
+				<!-- if self.name == "UndoButton" then xOffset = -2 end -->
+				if self.name == "CategoryButton" then xOffset = 0 end
+				if self.name == "MoveButton" then xOffset = 1 end
+				if self.name == "cvSwitchButton" then xOffset = -2 end
+				<!-- if self.name == "ViewButton" then xOffset = -2 end -->
+				if self.name == "cvTabsDropdown" then xOffset = -2 end
+
+				local yOffset = -2
+				<!-- if self.name == "UndoButton" then yOffset = -3 end -->
+				if self.name == "CategoryButton" then yOffset = -3 end
+				if self.name == "cvTabsDropdown" then yOffset = 0 end
+
+				self.Icon:SetPoint("CENTER", xOffset, yOffset)
+
+				self.Icon:SetAlpha(0.5)
+
+				self.pressed = true
+			</OnMouseDown>
+			<OnMouseUp>
+				if not self:IsEnabled() then return end
+				<!-- reset the icon's position and opacity -->
+				local xOffset = 0
+				<!-- if self.name == "UndoButton" then xOffset = -1 end -->
+				if self.name == "CategoryButton" then xOffset = 1 end
+				if self.name == "cvSwitchButton" then xOffset = -1 end
+				<!-- if self.name == "ViewButton" then xOffset = -1 end -->
+				if self.name == "cvTabsDropdown" then xOffset = -1 end
+
+				local yOffset = 0
+				<!-- if self.name == "UndoButton" then yOffset = -1 end -->
+				if self.name == "CategoryButton" then yOffset = -1 end
+				if self.name == "cvTabsDropdown" then yOffset = 2 end
+
+				self.Icon:SetPoint("CENTER", xOffset, yOffset)
+
+				local alpha = 1
+				<!-- if self.name == "ViewButton" then alpha = 0.8 end -->
+				<!-- if self.name == "cvSwitchButton" then alpha = 0.9 end -->
+				self.Icon:SetAlpha(alpha)
+
+				self.pressed = false
+			</OnMouseUp>
+			<OnShow>
+				<!-- reset the icon's position and opacity -->
+				local xOffset = 0
+				<!-- if self.name == "UndoButton" then xOffset = -1 end -->
+				if self.name == "CategoryButton" then xOffset = 1 end
+				if self.name == "cvSwitchButton" then xOffset = -1 end
+				<!-- if self.name == "ViewButton" then xOffset = -1 end -->
+				if self.name == "cvTabsDropdown" then xOffset = -1 end
+
+				local yOffset = 0
+				<!-- if self.name == "UndoButton" then yOffset = -1 end -->
+				if self.name == "CategoryButton" then yOffset = -1 end
+				if self.name == "cvTabsDropdown" then yOffset = 2 end
+
+				self.Icon:SetPoint("CENTER", xOffset, yOffset)
+
+				local alpha = 1
+				<!-- if self.name == "ViewButton" then alpha = 0.8 end -->
+				<!-- if self.name == "cvSwitchButton" then alpha = 0.9 end -->
+				self.Icon:SetAlpha(alpha)
+
+				self.pressed = false
+			</OnShow>
+		</Scripts>
+	</Frame>
+
+	<!-- Category button -->
+	<Button name="NysTDL_CategoryButton" inherits="NysTDL_IconButtonTemplate, NysTDL_IconButtonPositionScripts" virtual="true">
+		<Size x="32" y="32"/>
+		<KeyValues>
+			<KeyValue key="name" value="CategoryButton"/>
+		</KeyValues>
+		<Layers>
+			<Layer level="OVERLAY">
+				<Texture parentKey="Icon">
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+	</Button>
+
+	<!-- Undo button -->
+	<Button name="NysTDL_UndoButton" inherits="NysTDL_IconButtonTemplate, NysTDL_IconButtonPositionScripts" virtual="true">
+		<Size x="32" y="32"/>
+		<KeyValues>
+			<KeyValue key="name" value="UndoButton"/>
+		</KeyValues>
+		<Layers>
+			<Layer level="OVERLAY">
+				<Texture parentKey="Icon" atlas="transmog-icon-revert-small">
+					<Color r="0.9" g="1" b="1"/>
+					<Size x="20" y="20"/>
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+	</Button>
+
+	<!-- Tab Actions button -->
+	<Button name="NysTDL_TabActionsButton" inherits="NysTDL_IconButtonTemplate, NysTDL_IconButtonPositionScripts" virtual="true">
+		<Size x="32" y="32"/>
+		<KeyValues>
+			<KeyValue key="name" value="TabActionsButton"/>
+		</KeyValues>
+		<Layers>
+			<Layer level="OVERLAY">
+				<Texture parentKey="Icon" file="Interface\BUTTONS\UI-GuildButton-MOTD-Up">
+					<Size x="14" y="14"/>
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+	</Button>
+
+	<!-- Edit Mode button -->
+	<Button name="NysTDL_EditModeButton" virtual="true">
+		<Size x="32" y="32"/>
+		<KeyValues>
+			<KeyValue key="name" value="EditModeButton"/>
+		</KeyValues>
+		<NormalTexture file="Interface\FriendsFrame\UI-FriendsList-Large-Up">
+		<!-- <NormalTexture file="Interface\FriendsFrame\UI-FriendsList-Small-Up"> -->
+			<Color r="0.75" g="0.75" b="0.75"/>
+		</NormalTexture>
+		<PushedTexture file="Interface\FriendsFrame\UI-FriendsList-Large-Down">
+		<!-- <PushedTexture file="Interface\FriendsFrame\UI-FriendsList-Small-Down"> -->
+			<Color r="0.75" g="0.75" b="0.75"/>
+		</PushedTexture>
+		<HighlightTexture file="Interface\Buttons\UI-Common-MouseHilight" alphaMode="ADD" alpha="0.75">
+			<Anchors>
+				<Anchor point="TOPLEFT" x="2" y="-2"/>
+				<Anchor point="BOTTOMRIGHT" x="-2" y="2"/>
+			</Anchors>
+		</HighlightTexture>
+		<Layers>
+			<Layer level="OVERLAY">
+				<Texture parentKey="Glow" file="Interface\BUTTONS\CheckButtonGlow" hidden="true">
+					<Size x="40" y="40"/>
+					<Anchors>
+						<Anchor point="CENTER" x="-1"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+	</Button>
+
+	<!-- Copy button -->
+	<Button name="NysTDL_CopyButton" virtual="true">
+		<Size x="32" y="32"/>
+		<KeyValues>
+			<KeyValue key="name" value="CopyButton"/>
+		</KeyValues>
+		<NormalTexture file="Interface\FriendsFrame\UI-FriendsList-Small-Up"/>
+		<PushedTexture file="Interface\FriendsFrame\UI-FriendsList-Small-Down"/>
+		<HighlightTexture file="Interface\Buttons\UI-Common-MouseHilight" alphaMode="ADD" alpha="0.75">
+			<Anchors>
+				<Anchor point="TOPLEFT" x="2" y="-2"/>
+				<Anchor point="BOTTOMRIGHT" x="-2" y="2"/>
+			</Anchors>
+		</HighlightTexture>
+	</Button>
+
+	<!-- Frame Options button -->
+	<Button name="NysTDL_FrameOptionsButton" inherits="NysTDL_IconButtonTemplate, NysTDL_IconButtonPositionScripts" virtual="true">
+		<Size x="32" y="32"/>
+		<KeyValues>
+			<KeyValue key="name" value="FrameOptionsButton"/>
+		</KeyValues>
+		<Layers>
+			<Layer level="OVERLAY">
+				<Texture parentKey="Icon" file="Interface\Buttons\UI-OptionsButton">
+					<Size x="16" y="16"/>
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+	</Button>
+
+	<!-- Help button -->
+	<Button name="NysTDL_HelpButton" inherits="InlineHyperlinkFrameTemplate, NysTDL_IconButtonPositionScripts" virtual="true">
+		<Size x="30" y="30"/>
+		<KeyValues>
+			<KeyValue key="name" value="HelpButton"/>
+		</KeyValues>
+		<Layers>
+			<Layer level="OVERLAY">
+				<Texture parentKey="Icon" file="Interface\COMMON\help-i">
+					<Size x="40" y="40"/>
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+	</Button>
+
+	<!-- Move button -->
+	<Button name="NysTDL_MoveButton" inherits="InlineHyperlinkFrameTemplate, NysTDL_IconButtonPositionScripts" virtual="true">
+		<Size x="20" y="20"/>
+		<KeyValues>
+			<KeyValue key="name" value="MoveButton"/>
+		</KeyValues>
+		<Layers>
+			<Layer level="OVERLAY">
+				<Texture parentKey="Icon" file="Interface\CURSOR\UI-Cursor-Move">
+					<Size x="20" y="20"/>
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+	</Button>
+
+	<!-- Close button -->
+	<Button name="NysTDL_CloseButton" inherits="NysTDL_IconButtonTemplate, NysTDL_IconButtonPositionScripts" virtual="true">
+		<Size x="25" y="25"/>
+		<KeyValues>
+			<KeyValue key="name" value="CloseButton"/>
+		</KeyValues>
+		<Layers>
+			<Layer level="OVERLAY">
+				<Texture parentKey="Icon" file="Interface\Buttons\UI-StopButton">
+					<Size x="14" y="14"/>
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+	</Button>
+
+	<!-- View button -->
+	<Button name="NysTDL_ViewButton" inherits="NysTDL_IconButtonTemplate, NysTDL_IconButtonPositionScripts" virtual="true">
+		<Size x="26" y="26"/>
+		<KeyValues>
+			<KeyValue key="name" value="ViewButton"/>
+		</KeyValues>
+		<Layers>
+			<Layer level="OVERLAY">
+				<Texture parentKey="Icon">
+					<Size x="14" y="18"/>
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+	</Button>
+
+	<!-- Clear button -->
+	<Button name="NysTDL_ClearButton" inherits="NysTDL_IconButtonTemplate, NysTDL_IconButtonPositionScripts" virtual="true">
+		<Size x="25" y="25"/>
+		<KeyValues>
+			<KeyValue key="name" value="ClearButton"/>
+		</KeyValues>
+		<Layers>
+			<Layer level="OVERLAY">
+				<Texture parentKey="Icon" file="Interface\FriendsFrame\StatusIcon-DnD">
+					<Size x="17" y="17"/>
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+	</Button>
+
+	<!-- Remove button -->
+	<Button name="NysTDL_RemoveButton" inherits="InlineHyperlinkFrameTemplate, NysTDL_IconButtonPositionScripts" virtual="true">
+		<Size x="13" y="13"/>
+		<KeyValues>
+			<KeyValue key="name" value="RemoveButton"/>
+		</KeyValues>
+		<Layers>
+			<Layer level="OVERLAY">
+				<Texture parentKey="Icon" file="Interface\Buttons\UI-StopButton">
+					<Size x="14" y="14"/>
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+	</Button>
+
+	<!-- Favorite button -->
+	<Button name="NysTDL_FavoriteButton" inherits="InlineHyperlinkFrameTemplate, NysTDL_IconButtonPositionScripts" virtual="true">
+		<Size x="16" y="16"/> <!-- Size of interactable zone -->
+		<KeyValues>
+			<KeyValue key="name" value="FavoriteButton"/>
+		</KeyValues>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture parentKey="Icon" file="Interface\COMMON\FavoritesIcon">
+					<Size x="26" y="26"/> <!-- Size of the texture -->
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+	</Button>
+
+	<!-- Description button -->
+	<Button name="NysTDL_DescButton" inherits="InlineHyperlinkFrameTemplate, NysTDL_IconButtonPositionScripts" virtual="true">
+		<Size x="13" y="13"/> <!-- Size of interactable zone -->
+		<KeyValues>
+			<KeyValue key="name" value="DescButton"/>
+		</KeyValues>
+		<Layers>
+			<Layer level="OVERLAY">
+				<Texture parentKey="Icon" file="Interface\BUTTONS\UI-GuildButton-PublicNote-Up">
+					<Size x="13" y="13"/> <!-- Size of the texture -->
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+	</Button>
+
+	<!-- Description button -->
+	<Button name="NysTDL_CharButton" inherits="InlineHyperlinkFrameTemplate, NysTDL_IconButtonPositionScripts" virtual="true">
+		<Size x="13" y="13"/> <!-- Size of interactable zone -->
+		<KeyValues>
+			<KeyValue key="name" value="CharButton"/>
+		</KeyValues>
+		<Layers>
+			<Layer level="OVERLAY">
+				<Texture parentKey="Icon" file="Interface\AddOns\Nys_ToDoList\Assets\Art\UIMicroMenu2x">
+					<TexCoords left="0.328" right="0.436" top="0.02" bottom="0.074"/>
+					<Size x="12" y="12"/> <!-- Size of the texture -->
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+	</Button>
+
+	<!-- Add button (item/sub-cat) -->
+	<Button name="NysTDL_AddButton" inherits="NysTDL_IconButtonPositionScripts" virtual="true">
+		<Size x="17" y="17"/> <!-- Size of interactable zone -->
+		<KeyValues>
+			<KeyValue key="name" value="AddButton"/>
+		</KeyValues>
+		<Layers>
+			<Layer level="OVERLAY">
+				<Texture parentKey="Icon">
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+	</Button>
+
+	<!-- Valid button -->
+	<Button name="NysTDL_ValidButton" inherits="NysTDL_IconButtonPositionScripts" virtual="true">
+		<Size x="12" y="11"/> <!-- Size of interactable zone -->
+		<KeyValues>
+			<KeyValue key="name" value="ValidButton"/>
+		</KeyValues>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture parentKey="Icon"/>
+				<Texture parentKey="IconGreen" file="Interface\Tooltips\AchievementCompare">
+					<TexCoords left="0.03125" right="0.3125" top="0.125" bottom="0.75"/>
+					<Size x="12" y="11"/> <!-- Size of the texture -->
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</Texture>
+				<Texture parentKey="IconYellow" file="Interface\Tooltips\AchievementCompare">
+					<TexCoords left="0.375" right="0.65625" top="0.125" bottom="0.75"/>
+					<Size x="12" y="11"/> <!-- Size of the texture -->
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+	</Button>
+
+	<!-- Dropdown button -->
+	<Button name="NysTDL_DropdownButton" virtual="true">
+		<Size x="25" y="25"/> <!-- Size of interactable zone -->
+		<KeyValues>
+			<KeyValue key="name" value="DropdownButton"/>
+		</KeyValues>
+		<NormalTexture file="Interface\ChatFrame\UI-ChatIcon-ScrollDown-Up"/>
+		<PushedTexture file="Interface\ChatFrame\UI-ChatIcon-ScrollDown-Down"/>
+		<DisabledTexture file="Interface\ChatFrame\UI-ChatIcon-ScrollDown-Disabled"/>
+		<HighlightTexture file="Interface\Buttons\UI-Common-MouseHilight" alphaMode="ADD" alpha="0.75">
+			<Anchors>
+				<Anchor point="TOPLEFT" x="2" y="-2"/>
+				<Anchor point="BOTTOMRIGHT" x="-2" y="2"/>
+			</Anchors>
+		</HighlightTexture>
+	</Button>
+
+	<!-- resize button with tooltip -->
+	<Button name="NysTDL_TooltipResizeButton" virtual="true">
+		<Size x="16" y="16"/> <!-- Size of interactable zone -->
+		<KeyValues>
+			<KeyValue key="name" value="TooltipResizeButton"/>
+		</KeyValues>
+		<NormalTexture file="Interface\ChatFrame\UI-ChatIM-SizeGrabber-Up"/>
+		<PushedTexture file="Interface\ChatFrame\UI-ChatIM-SizeGrabber-Down"/>
+		<HighlightTexture file="Interface\ChatFrame\UI-ChatIM-SizeGrabber-Highlight" alphaMode="ADD"/>
+	</Button>
+
+	<!-- Normal button with nice highlight -->
+	<Button name="NysTDL_NormalButton" virtual="true">
+		<Size>
+			<AbsDimension x="96" y="33"/>
+		</Size>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture parentKey="Left" file="Interface\Buttons\UI-SilverButtonLG-Left-Up">
+					<Size>
+						<AbsDimension x="32" y="46"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOPLEFT" x="0" y="0"/>
+					</Anchors>
+				</Texture>
+				<Texture parentKey="Right" file="Interface\Buttons\UI-SilverButtonLG-Right-Up">
+					<Size>
+						<AbsDimension x="32" y="46"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOPRIGHT" x="0" y="0"/>
+					</Anchors>
+				</Texture>
+				<Texture parentKey="Middle" file="Interface\Buttons\UI-SilverButtonLG-Mid-Up">
+					<Size>
+						<AbsDimension x="32" y="46"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeKey="$parent.Left" relativePoint="TOPRIGHT" x="0" y="0"/>
+						<Anchor point="TOPRIGHT" relativeKey="$parent.Right" relativePoint="TOPLEFT" x="0" y="0"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="HIGHLIGHT">
+				<Texture parentKey="Left" file="Interface\Buttons\UI-SilverButtonLG-Left-Hi">
+					<Size>
+						<AbsDimension x="32" y="46"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOPLEFT" x="0" y="0"/>
+					</Anchors>
+				</Texture>
+				<Texture parentKey="Right" file="Interface\Buttons\UI-SilverButtonLG-Right-Hi">
+					<Size>
+						<AbsDimension x="32" y="46"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOPRIGHT" x="0" y="0"/>
+					</Anchors>
+				</Texture>
+				<Texture parentKey="Middle" file="Interface\Buttons\UI-SilverButtonLG-Mid-Hi">
+					<Size>
+						<AbsDimension x="32" y="46"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeKey="$parent.Left" relativePoint="TOPRIGHT" x="0" y="0"/>
+						<Anchor point="TOPRIGHT" relativeKey="$parent.Right" relativePoint="TOPLEFT" x="0" y="0"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+	</Button>
+
+	<!-- Reused WoW template / HelpPlateTooltip -->
+	<Frame name="NysTDL_HelpPlateTooltip" inherits="GlowBoxTemplate" frameStrata="FULLSCREEN" virtual="true">
+		<Layers>
+			<Layer level="OVERLAY">
+				<FontString parentKey="Text" inherits="GameFontHighlightLeft">
+					<Anchors>
+						<Anchor point="TOPLEFT" x="15" y="-15"/>
+					</Anchors>
+				</FontString>
+			</Layer>
+			<Layer level="ARTWORK">
+				<Texture parentKey="ArrowUP" inherits="HelpPlateArrowDOWN" hidden="true">
+					<Size x="53" y="21"/>
+					<Anchors>
+						<Anchor point="TOP" relativePoint="BOTTOM" x="0" y="3"/>
+					</Anchors>
+				</Texture>
+				<Texture parentKey="ArrowDOWN" inherits="HelpPlateArrowUP" hidden="true">
+					<Size x="53" y="21"/>
+					<Anchors>
+						<Anchor point="BOTTOM" relativePoint="TOP" x="0" y="-3"/>
+					</Anchors>
+				</Texture>
+				<Texture parentKey="ArrowRIGHT" inherits="HelpPlateArrowDOWN" hidden="true">
+					<Size x="44" y="21"/>
+					<Anchors>
+						<Anchor point="RIGHT" relativePoint="LEFT" x="3" y="0"/>
+					</Anchors>
+				</Texture>
+				<Texture parentKey="ArrowLEFT" inherits="HelpPlateArrowDOWN" hidden="true">
+					<Size x="44" y="21"/>
+					<Anchors>
+						<Anchor point="LEFT" relativePoint="RIGHT" x="-3" y="0"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="BORDER">
+				<Texture parentKey="ArrowGlowUP" inherits="HelpPlateArrow-GlowDOWN" hidden="true" alphaMode="ADD" alpha="0.5">
+					<Size x="53" y="21"/>
+					<Anchors>
+						<Anchor point="TOP" relativePoint="BOTTOM" x="0" y="3"/>
+					</Anchors>
+				</Texture>
+				<Texture parentKey="ArrowGlowDOWN" inherits="HelpPlateArrow-GlowUP" hidden="true" alphaMode="ADD" alpha="0.5">
+					<Size x="53" y="21"/>
+					<Anchors>
+						<Anchor point="BOTTOM" relativePoint="TOP" x="0" y="-3"/>
+					</Anchors>
+				</Texture>
+				<Texture parentKey="ArrowGlowRIGHT" inherits="HelpPlateArrow-GlowDOWN" hidden="true" alphaMode="ADD" alpha="0.5">
+					<Size x="53" y="21"/>
+					<Anchors>
+						<Anchor point="RIGHT" relativePoint="LEFT" x="3" y="0"/>
+					</Anchors>
+				</Texture>
+				<Texture parentKey="ArrowGlowLEFT" inherits="HelpPlateArrow-GlowDOWN" hidden="true" alphaMode="ADD" alpha="0.5">
+					<Size x="53" y="21"/>
+					<Anchors>
+						<Anchor point="LEFT" relativePoint="RIGHT" x="-3" y="0"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+		<Scripts>
+			<OnLoad>
+				self.Text:SetSpacing(4)
+				SetClampedTextureRotation(self.ArrowLEFT, 270)
+				SetClampedTextureRotation(self.ArrowRIGHT, 90)
+				SetClampedTextureRotation(self.ArrowGlowLEFT, 270)
+				SetClampedTextureRotation(self.ArrowGlowRIGHT, 90)
+			</OnLoad>
+		</Scripts>
+	</Frame>
+
+	<!-- Clickable label -->
+	<Frame name="NysTDL_InteractiveLabel" virtual="true">
+		<!-- the size is set everytime the text changes, see the widgets.lua file (func: widgets.noPointsInteractiveLabel) -->
+		<Layers>
+			<Layer level="OVERLAY">
+				<FontString parentKey="Text">
+					<Anchors>
+						<Anchor point="TOPLEFT"/>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button parentKey="Button" registerForClicks="LeftButtonUp">
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeKey="$parent.Text"/>
+				</Anchors>
+				<Layers>
+					<Layer level="BORDER">
+						<Texture parentKey="ActiveLeft" file="Interface\AddOns\Nys_ToDoList\Assets\Art\ChatFrameTab-SelectedLeft-min" alphaMode="ADD" alpha="0.7">
+							<Size x="16"/>
+							<Anchors>
+								<Anchor point="TOPLEFT" x="-8" y="8"/>
+								<Anchor point="BOTTOMLEFT" x="-8" y="-8"/>
+							</Anchors>
+						</Texture>
+						<Texture parentKey="ActiveRight" file="Interface\AddOns\Nys_ToDoList\Assets\Art\ChatFrameTab-SelectedRight-min" alphaMode="ADD" alpha="0.7">
+							<Size x="16"/>
+							<Anchors>
+								<Anchor point="TOPRIGHT" x="8" y="8"/>
+								<Anchor point="BOTTOMRIGHT" x="8" y="-8"/>
+							</Anchors>
+						</Texture>
+						<Texture parentKey="ActiveMiddle" file="Interface\AddOns\Nys_ToDoList\Assets\Art\ChatFrameTab-SelectedMid-min" horizTile="true" alphaMode="ADD" alpha="0.7">
+							<Anchors>
+								<Anchor point="TOPLEFT" relativeKey="$parent.ActiveLeft" relativePoint="TOPRIGHT" x="0" y="0"/>
+								<Anchor point="BOTTOMRIGHT" relativeKey="$parent.ActiveRight" relativePoint="BOTTOMLEFT" x="0" y="0"/>
+							</Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+			</Button>
+		</Frames>
+	</Frame>
+
+	<!-- Drop line -->
+	<Frame name="NysTDL_DropLine" virtual="true">
+		<Size x="1" y="1"/> <!-- Just so that we see the content of the frame -->
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture parentKey="Line">
+					<TexCoords left="0.1" right="0.3" top="0.90" bottom="0.95"/>
+					<Size x="200" y="15"/>
+					<Anchors>
+						<Anchor point="LEFT" x="-5" y="0"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="ARTWORK">
+				<Texture parentKey="Arrow">
+					<TexCoords left="0.756" right="0.848" top="0.841" bottom="0.864"/>
+					<Size x="15" y="15"/>
+					<Anchors>
+						<Anchor point="LEFT" x="-16" y="-3"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+		<Scripts>
+			<OnLoad>
+				self.Line:SetTexture(NysTDL.enums.icons.dropLine.info())
+				self.Arrow:SetTexture(NysTDL.enums.icons.dropArrow.info())
+				self.Arrow:SetRotation(0.77)
+			</OnLoad>
+		</Scripts>
+	</Frame>
+
+	<!-- Drop frame -->
+	<Frame name="NysTDL_DropFrame" virtual="true">
+		<Size x="1" y="1"/> <!-- Just so that we see the content of the frame -->
+		<Layers>
+			<Layer level="ARTWORK">
+				<Texture parentKey="Arrow" alpha="0.3">
+					<TexCoords left="0.756" right="0.848" top="0.841" bottom="0.864"/>
+					<Size x="11" y="11"/>
+					<Anchors>
+						<Anchor point="LEFT" x="-13" y="-3"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+		<Scripts>
+			<OnLoad>
+				self.Arrow:SetTexture(NysTDL.enums.icons.dropArrow.info())
+				self.Arrow:SetRotation(0.77)
+			</OnLoad>
+		</Scripts>
+	</Frame>
+
+	<!-- Reused WoW template / $parentOverflowButton -->
+	<Button name="NysTDL_OverflowButton" virtual="true">
+		<!-- size and points and a lot of other things set in the code -->
+		<NormalTexture file="Interface\BUTTONS\Arrow-Down-Down" parentKey="Texture">
+			<TexCoords left="0" right="1" top="0" bottom="0.45"/>
+		</NormalTexture>
+		<HighlightTexture alpha="0.7" parentKey="Highlight" file="Interface\BUTTONS\UI-Common-MouseHilight" alphaMode="ADD" desaturated="true">
+			<Color r="1" g="0.84" b="0"/>
+		</HighlightTexture>
+	</Button>
+
+	<!-- Reused WoW template / DockManagerOverflowListButtonTemplate -->
+	<Button name="NysTDL_OverflowListButton" virtual="true">
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture file="Interface\QuestFrame\UI-QuestTitleHighlight" parentKey="Highlight" alphaMode="ADD" setAllPoints="true" hidden="true"/>
+			</Layer>
+			<Layer level="BORDER">
+				<Texture file="Interface\ChatFrame\ChatFrameTab-NewMessage" parentKey="Glow" alphaMode="ADD" hidden="true">
+					<Anchors>
+						<Anchor point="BOTTOMLEFT" x="8" y="-2"/>
+						<Anchor point="BOTTOMRIGHT" x="-8" y="-2"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Frame parentKey="Arrows">
+				<Anchors>
+					<Anchor point="CENTER"/>
+				</Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<Texture file="Interface\ChatFrame\ChatFrameExpandArrow" parentKey="ArrowLEFT">
+							<Anchors>
+								<Anchor point="LEFT" x="2" y="0"/>
+							</Anchors>
+						</Texture>
+						<Texture file="Interface\ChatFrame\ChatFrameExpandArrow" parentKey="ArrowRIGHT">
+							<Anchors>
+								<Anchor point="RIGHT" x="-2" y="0"/>
+							</Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnLoad>
+						self:SetAllPoints(self:GetParent());
+
+						-- Promote arrows to the button (parent of self)
+						self:GetParent().ArrowLEFT = self.ArrowLEFT
+						self:GetParent().ArrowRIGHT = self.ArrowRIGHT
+					</OnLoad>
+				</Scripts>
+			</Frame>
+		</Frames>
+		<Scripts>
+			<OnLoad>
+				SetClampedTextureRotation(self.ArrowLEFT, 180)
+				SetClampedTextureRotation(self.ArrowRIGHT, 0)
+			</OnLoad>
+			<OnEnter>
+				self.Highlight:Show()
+			</OnEnter>
+			<OnLeave>
+				self.Highlight:Hide()
+			</OnLeave>
+		</Scripts>
+		<ButtonText>
+			<Anchors>
+				<Anchor point="LEFT" x="20" y="0"/>
+				<Anchor point="RIGHT" x="-20" y="0"/>
+			</Anchors>
+		</ButtonText>
+		<NormalFont style="GameFontNormalSmall"/>
+	</Button>
+
+	<!-- Same as the one just before, but simpler -->
+	<Button name="NysTDL_CustomListButton" virtual="true">
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture file="Interface\QuestFrame\UI-QuestTitleHighlight" parentKey="Highlight" alphaMode="ADD" setAllPoints="true" hidden="true"/>
+			</Layer>
+			<Layer level="BORDER">
+				<Texture file="Interface\ChatFrame\ChatFrameTab-NewMessage" parentKey="Glow" alphaMode="ADD" hidden="true">
+					<Anchors>
+						<Anchor point="BOTTOMLEFT" x="8" y="-2"/>
+						<Anchor point="BOTTOMRIGHT" x="-8" y="-2"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+		<Scripts>
+			<OnEnter>
+				self.Highlight:Show()
+			</OnEnter>
+			<OnLeave>
+				self.Highlight:Hide()
+			</OnLeave>
+		</Scripts>
+		<ButtonText>
+			<Anchors>
+				<Anchor point="LEFT" x="0" y="0"/>
+			</Anchors>
+		</ButtonText>
+		<NormalFont style="GameFontNormalSmall"/>
+	</Button>
+
+	<!-- Overriden WoW template -->
+	<ScrollFrame name="NysTDL_InputScrollFrameTemplate" inherits="InputScrollFrameTemplate" virtual="true">
+		<KeyValues>
+			<KeyValue key="maxLetters" value="0" type="number"/> <!-- WoW 10.0 redefines SetMaxLetters, setting the first argument as non-nilable... -->
+		</KeyValues>
+	</ScrollFrame>
+
+	<!-- Duplicated WoW template -->
+	<Font name="NysTDL_GameFontNormalLarge_Red" inherits="GameFontNormalLarge" virtual="true">
+		<Color r="1.0" g="0" b="0"/>
+	</Font>
+
+	<!-- The main frame (Retail) -->
+	<Frame name="NysTDL_MainFrameRetail" virtual="true">
+		<Frames>
+			<Frame parentKey="Bg" name="NysTDL_tdlFrame.Bg" useParentLevel="true" inherits="FlatPanelBackgroundTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT" x="7" y="-18"/>
+					<Anchor point="BOTTOMRIGHT" x="-3" y="3"/>
+				</Anchors>
+			</Frame>
+			<Frame parentKey="NineSlice" name="NysTDL_tdlFrame.NineSlice" useParentLevel="true" inherits="NineSlicePanelTemplate">
+				<KeyValues>
+					<KeyValue key="layoutType" value="ButtonFrameTemplateNoPortrait" type="string"/>
+				</KeyValues>
+				<Layers>
+					<Layer level="OVERLAY">
+						<FontString parentKey="TitleText" inherits="GameFontNormal"/>
+					</Layer>
+				</Layers>
+			</Frame>
+			<Button parentKey="CloseButton" inherits="UIPanelCloseButtonDefaultAnchors">
+				<Scripts>
+					<OnClick>
+						self:GetParent():Hide()
+					</OnClick>
+				</Scripts>
+			</Button>
+			<EventFrame parentKey="ScrollBar" inherits="MinimalScrollBar"/>
+		</Frames>
+	</Frame>
+
+	<!-- The main frame (Classic) -->
+	<Frame name="NysTDL_MainFrameClassic" inherits="BasicFrameTemplate" virtual="true"/>
+
+</Ui>

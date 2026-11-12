@@ -1,0 +1,100 @@
+#showtooltip
+/startattack
+/cast Backstab
+
+#showtooltip
+/startattack
+/cast Sinister Strike
+
+#showtooltip Hemorrhage
+/startattack
+/cast Hemorrhage
+
+#showtooltip
+/cast [mod:shift,@focus,exists,harm,nodead][] Blind
+
+#showtooltip Backstab
+/cast Pick Pocket
+/cast Backstab
+
+#showtooltip Ambush
+/cast Pick Pocket
+/cast Ambush
+
+#showtooltip Garrote
+/cast Pick Pocket
+/cast Garrote
+
+-- Sinister Strike from Stealth
+#showtooltip Sinister Strike
+/cast Pick Pocket
+/cast Sinister Strike
+/startattack
+
+-- Ambush leveling macros until hemmo mutilate
+#showtooltip
+/cast Stealth
+/equipslot 17 Thief's Blade
+/equipslot 16 Meathook Slicer
+
+-- ^^
+#showtooltip Sinister Strike
+/equipslot 16 Cookie's Tenderizer
+/equipslot 17 Thief's Blade
+/cast Riposte
+/cast Sinister Strike
+/startattack
+
+
+-- Sap Spam
+#showtooltip Sap
+/cleartarget
+/targetenemyplayer
+/cast Sap
+
+-- CB evisc
+#showtooltip Eviscerate
+/cast Cold Blood
+/cast Eviscerate
+
+-- 4 CP cheap shot
+#showtooltip Cheap Shot
+/cast Premeditation
+/cast Cheap Shot
+
+-- Stealth spam
+#showtooltip Stealth
+/dismount
+/cast [nostealth,nocombat] Stealth
+
+-- Poison apply
+#showtooltip
+/use Instant Poison
+/use [button:1] 16; [button:2] 17
+/click StaticPopup1Button1
+
+-- Item to weapon like stones
+/use Rough Weightstone
+/use [btn:1] 16; [btn:2] 17
+/click StaticPopup1Button1
+
+-- Stealth no combat, vanish in combat (idk if i like this)
+#showtooltip [nocombat] Stealth; Vanish
+/stopattack [combat]
+/cast [nocombat] !Stealth; Vanish
+
+#showtooltip Vanish
+/stopattack
+/cast Vanish
+
+
+-- Riposte if available otherwise sinister
+#showtooltip
+/startattack
+/cast Riposte
+/cast Sinister Strike
+
+-- Tries to ambush, i.e from Cutthroat proc, otherwise backstabs
+#showtooltip
+/cast Ambush
+/cast Backstab

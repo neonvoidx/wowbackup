@@ -1,0 +1,5 @@
+Blizzard_ObjectiveTracker: enabled
+Blizzard_CompactRaidFrames: enabled
+!Swatter: disabled
+!ImprovedErrorFrame: disabled
+Blizzard_CombatText: enabled

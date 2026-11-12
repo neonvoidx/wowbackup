@@ -1,0 +1,117 @@
+
+TomTomDB = {
+["profileKeys"] = {
+["Beat Ngu"] = "Default",
+["Neon Void"] = "Default",
+},
+["profiles"] = {
+["Default"] = {
+["arrow"] = {
+["theme"] = "classic",
+["position"] = {
+"TOP",
+nil,
+"TOP",
+24.99610328674316,
+-43.33372116088867,
+},
+},
+["paste"] = {
+["button"] = {
+["showInCompartment"] = true,
+},
+},
+["block"] = {
+["enable"] = false,
+["position"] = {
+"RIGHT",
+nil,
+"RIGHT",
+-98.33287048339844,
+259.1664428710938,
+},
+},
+},
+},
+}
+TomTomWaypointsM = {
+["global"] = {
+["pinFlagsLive"] = true,
+},
+["profileKeys"] = {
+["Beat Ngu"] = "Beat Ngu",
+["Neon Void"] = "Neon Void",
+},
+["profiles"] = {
+["Beat Ngu"] = {
+[1429] = {
+["1429:408200000:707000000:Elwynn Forest"] = {
+1429,
+0.4082,
+0.707,
+["arrivaldistance"] = 15,
+["crazy"] = true,
+["persistent"] = true,
+["desc"] = "Elwynn Forest",
+["silent"] = true,
+["cleardistance"] = 10,
+["title"] = "Elwynn Forest",
+["from"] = "OpenMap",
+["callbacks"] = {
+["distance"] = {
+[10] = nil --[[ skipped inline function ]],
+[15] = nil --[[ skipped inline function ]],
+},
+["world"] = {
+["onclick"] = nil --[[ skipped inline function ]],
+["tooltip_update"] = nil --[[ skipped inline function ]],
+["tooltip_show"] = nil --[[ skipped inline function ]],
+},
+["minimap"] = {
+["onclick"] = nil --[[ skipped inline function ]],
+["tooltip_update"] = nil --[[ skipped inline function ]],
+["tooltip_show"] = nil --[[ skipped inline function ]],
+},
+},
+["minimap"] = true,
+["world"] = true,
+},
+},
+[1412] = {
+["1412:334100000:225800000:Muln Earthfury"] = {
+1412,
+0.3341,
+0.2258,
+["arrivaldistance"] = 15,
+["crazy"] = true,
+["persistent"] = true,
+["desc"] = "Muln Earthfury",
+["silent"] = true,
+["cleardistance"] = 10,
+["title"] = "Muln Earthfury",
+["from"] = "Questie",
+["callbacks"] = {
+["distance"] = {
+[10] = nil --[[ skipped inline function ]],
+[15] = nil --[[ skipped inline function ]],
+},
+["world"] = {
+["onclick"] = nil --[[ skipped inline function ]],
+["tooltip_update"] = nil --[[ skipped inline function ]],
+["tooltip_show"] = nil --[[ skipped inline function ]],
+},
+["minimap"] = {
+["onclick"] = nil --[[ skipped inline function ]],
+["tooltip_update"] = nil --[[ skipped inline function ]],
+["tooltip_show"] = nil --[[ skipped inline function ]],
+},
+},
+["minimap"] = true,
+["world"] = true,
+},
+},
+},
+["Neon Void"] = {
+},
+},
+}

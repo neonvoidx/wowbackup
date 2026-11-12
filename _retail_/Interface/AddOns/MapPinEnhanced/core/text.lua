@@ -1,0 +1,68 @@
+---@class MapPinEnhanced
+local MapPinEnhanced = select(2, ...)
+
+---@param value number
+---@param step number?
+---@return string
+function MapPinEnhanced:FormatValueToPrecision(value, step)
+    if not step or step == 1 then
+        return tostring(math.floor(value))
+    end
+    local precision = math.max(0, -math.floor(math.log10(step)))
+    return string.format("%." .. precision .. "f", value)
+end
+
+---@param value number?
+---@return string
+function MapPinEnhanced:FormatPercent(value)
+    return value and string.format("%.2f", value * 100) or ""
+end
+
+---@param text string
+---@param length integer Maximum byte length; incomplete characters are omitted.
+---@return string
+function MapPinEnhanced:GetUTF8Prefix(text, length)
+    while length > 0 do
+        local byte = text:byte(length + 1)
+        if not byte or byte < 128 or byte >= 192 then break end
+        length = length - 1
+    end
+    return text:sub(1, length)
+end
+
+---@param text string?
+---@return string?
+function MapPinEnhanced:NormalizeText(text)
+    if issecretvalue(text) or type(text) ~= "string" then return nil end
+    -- Assign first so gsub's replacement count cannot become strtrim's character set.
+    text = text:gsub("\r\n", "\n"):gsub("\r", "\n")
+    text = strtrim(text)
+    return text ~= "" and text or nil
+end
+
+---@param text string
+---@return string
+function MapPinEnhanced:EscapeMarkup(text)
+    return (text:gsub("|", "||"))
+end
+
+---@param text string?
+---@return string?
+function MapPinEnhanced:ToPlainText(text)
+    text = self:NormalizeText(text)
+    if not text then return nil end
+    text = text:gsub("|H.-|h(.-)|h", "%1"):gsub("|c%x%x%x%x%x%x%x%x", "")
+        :gsub("|cn[%w_]+:", "")
+        :gsub("|r", ""):gsub("|T.-|t", ""):gsub("|A.-|a", ""):gsub("||", "|")
+    text = self:NormalizeText(text)
+    return text
+end
+
+---@param text string
+---@param limit integer Maximum byte length, including ellipsis; at least 3.
+---@return string
+function MapPinEnhanced:CompactChatLabel(text, limit)
+    text = (self:ToPlainText(text) or ""):gsub("|", ""):gsub("%s+", " ")
+    if #text <= limit then return text end
+    return self:GetUTF8Prefix(text, limit - 3) .. "..."
+end

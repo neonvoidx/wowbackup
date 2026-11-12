@@ -1,0 +1,69 @@
+<Bindings>
+    <Binding name="CLICK EQOLRandomMountButton:LeftButton"
+             category="Enhance QoL"
+             >
+    </Binding>
+
+    <Binding name="CLICK EQOLRepairMountButton:LeftButton"
+             category="Enhance QoL"
+             >
+    </Binding>
+
+    <Binding name="CLICK EQOLAuctionMountButton:LeftButton"
+             category="Enhance QoL"
+             >
+    </Binding>
+
+    <Binding name="CLICK EQOLFocusMarkerButton:LeftButton"
+             category="Enhance QoL"
+             >
+    </Binding>
+
+    <Binding name="EQOL_TOGGLE_CHATHISTORY"
+             category="Enhance QoL"
+             >
+        if EnhanceQoL and EnhanceQoL.db and EnhanceQoL.db.enableChatHistory and EnhanceQoL.ChatIM and EnhanceQoL.ChatIM.ChannelHistory and EnhanceQoL.ChatIM.ChannelHistory.ToggleWindow then
+            EnhanceQoL.ChatIM.ChannelHistory:ToggleWindow()
+        end
+    </Binding>
+
+    <Binding name="EQOL_TOGGLE_COOLDOWN_PANELS"
+             category="Enhance QoL"
+             >
+        if EnhanceQoL and EnhanceQoL.Aura and EnhanceQoL.Aura.CooldownPanels then
+            local panels = EnhanceQoL.Aura.CooldownPanels
+            if panels.TogglePreferredEditor then
+                panels:TogglePreferredEditor()
+            elseif panels.ToggleBlizzardEditor then
+                panels:ToggleBlizzardEditor()
+            elseif panels.ToggleEditor then
+                panels:ToggleEditor()
+            end
+        end
+    </Binding>
+
+    <Binding name="EQOL_TOGGLE_FRIENDLY_NPCS"
+             category="Enhance QoL"
+             >
+        local value = C_CVar.GetCVar("nameplateShowFriendlyNpcs")
+        C_CVar.SetCVar("nameplateShowFriendlyNpcs", value == "1" and "0" or "1")
+    </Binding>
+
+    <Binding name="EQOL_TOGGLE_DAMAGE_METER_PAUSE"
+             category="Enhance QoL"
+             >
+        if EnhanceQoL and EnhanceQoL.DamageMeter and EnhanceQoL.DamageMeter.TogglePaused then
+            EnhanceQoL.DamageMeter:TogglePaused()
+        end
+    </Binding>
+
+    <Binding name="EQOL_TOGGLE_DAMAGE_METER_VISIBILITY"
+             category="Enhance QoL"
+             >
+        if EnhanceQoL and EnhanceQoL.DamageMeter and EnhanceQoL.DamageMeter.ToggleManualVisibility then
+            EnhanceQoL.DamageMeter:ToggleManualVisibility()
+        end
+    </Binding>
+    <Binding name="CLICK EnhanceQoLVendor_DestroyButton:LeftButton" category="Enhance QoL">
+    </Binding>
+</Bindings>

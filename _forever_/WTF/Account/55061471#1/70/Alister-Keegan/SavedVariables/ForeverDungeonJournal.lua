@@ -1,0 +1,5 @@
+
+ForeverDungeonJournalCharacterDB = {
+["favouriteItems"] = {
+},
+}

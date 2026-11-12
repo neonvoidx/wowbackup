@@ -1,0 +1,48 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ https://raw.githubusercontent.com/Gethe/wow-ui-source/live/Interface/AddOns/Blizzard_SharedXML/UI.xsd">
+
+    <Script file="Navigation.lua" />
+    <Frame name="MapPinEnhancedOptionCategoryNavigationTemplate" virtual="true" inherits="MapPinEnhancedOptionCategoryBaseTemplate" mixin="MapPinEnhancedOptionCategoryNavigationMixin">
+        <KeyValues>
+            <KeyValue key="categoryName" value="Navigation" />
+            <KeyValue key="enableKey" value="Navigation.Enable" />
+        </KeyValues>
+        <Frames>
+            <Frame inherits="MapPinEnhancedOptionToggleTemplate">
+                <KeyValues>
+                    <KeyValue key="key" value="Navigation.Enable" />
+                </KeyValues>
+            </Frame>
+            <Frame inherits="MapPinEnhancedOptionCheckboxTemplate" parentKey="lock">
+                <KeyValues>
+                    <KeyValue key="key" value="Navigation.Lock" />
+                </KeyValues>
+            </Frame>
+            <Frame inherits="MapPinEnhancedOptionMultiselectTemplate">
+                <KeyValues>
+                    <KeyValue key="key" value="Navigation.RouteMaps" />
+                </KeyValues>
+            </Frame>
+            <Frame inherits="MapPinEnhancedOptionCheckboxTemplate">
+                <KeyValues>
+                    <KeyValue key="key" value="Navigation.AutomaticTravelSelection" />
+                </KeyValues>
+            </Frame>
+            <Frame inherits="MapPinEnhancedOptionCheckboxTemplate">
+                <KeyValues>
+                    <KeyValue key="key" value="Navigation.RestoreEquipment" />
+                </KeyValues>
+            </Frame>
+            <Frame inherits="MapPinEnhancedOptionCheckboxTemplate">
+                <KeyValues>
+                    <KeyValue key="key" value="Navigation.IncludeDungeonPortals" />
+                    <KeyValue key="standardOnly" value="true" type="boolean" />
+                </KeyValues>
+            </Frame>
+        </Frames>
+        <Scripts>
+            <OnShow method="OnShow" />
+            <OnHide method="OnHide" />
+        </Scripts>
+    </Frame>
+</Ui>

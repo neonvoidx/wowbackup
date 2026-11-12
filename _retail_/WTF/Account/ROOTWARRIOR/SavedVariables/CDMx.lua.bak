@@ -1,0 +1,48 @@
+
+CDMxDB = {
+["charMap"] = {
+["Starphage - Tichondrius"] = "Default",
+},
+["profiles"] = {
+["Default"] = {
+["enabled"] = true,
+["showHotkeys"] = true,
+["debug"] = false,
+["trinketBar"] = {
+["enabled"] = true,
+["squareIcons"] = true,
+["iconSize"] = 40,
+["centered"] = true,
+["horizontal"] = true,
+["locked"] = false,
+["position"] = {
+["y"] = -128,
+["x"] = -9,
+["point"] = "CENTER",
+},
+["showBorder"] = true,
+["hotkeyFontSize"] = 12,
+["visibility"] = "always",
+["padding"] = 5,
+},
+["procGlow"] = true,
+["customBarsStyle"] = {
+["squareIcons"] = true,
+["showBorder"] = true,
+},
+["hotkeyOffsetX"] = 2,
+["hotkeyAnchor"] = "TOPLEFT",
+["hotkeyFontSize"] = 16,
+["customBars"] = {
+},
+["cooldownManager"] = {
+["squareIcons"] = false,
+["showBorder"] = true,
+},
+["hotkeyFont"] = "Fonts\\FRIZQT__.TTF",
+["hotkeyOutline"] = "OUTLINE",
+["hotkeyOffsetY"] = -2,
+["utilityFontSize"] = 12,
+},
+},
+}

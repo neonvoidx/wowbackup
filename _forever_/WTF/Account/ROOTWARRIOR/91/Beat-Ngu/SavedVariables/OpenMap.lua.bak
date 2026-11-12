@@ -1,0 +1,25 @@
+
+OpenMapCharDB = {
+["worldmap"] = {
+["flightsKnown"] = {
+["Booty Bay, Stranglethorn"] = true,
+["Sun Rock Retreat, Stonetalon Mountains"] = true,
+["Undercity, Tirisfal"] = true,
+["Orgrimmar, Durotar"] = true,
+["Tarren Mill, Hillsbrad"] = true,
+["Zoram'gar Outpost, Ashenvale"] = true,
+["Freewind Post, Thousand Needles"] = true,
+["Ratchet, The Barrens"] = true,
+["Hammerfall, Arathi"] = true,
+["Grom'gol, Stranglethorn"] = true,
+["Camp Taurajo, The Barrens"] = true,
+["Crossroads, The Barrens"] = true,
+["Thunder Bluff, Mulgore"] = true,
+["Shadowprey Village, Desolace"] = true,
+["The Sepulcher, Silverpine Forest"] = true,
+},
+["cvars"] = {
+},
+["flightsKnownV"] = 2,
+},
+}

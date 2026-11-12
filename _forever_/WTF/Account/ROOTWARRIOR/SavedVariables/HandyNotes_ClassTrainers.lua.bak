@@ -1,0 +1,21 @@
+
+HandyNotes_ClassTrainersDB = {
+["profileKeys"] = {
+["Beat Ngu"] = "Default",
+},
+["global"] = {
+["setupDone"] = true,
+},
+["profiles"] = {
+["Default"] = {
+["icon_scale"] = 1.3,
+["continent"] = true,
+["pet"] = false,
+["minimap"] = false,
+["demon"] = false,
+["myClassOnly"] = true,
+["portal"] = false,
+["icon_alpha"] = 0.75,
+},
+},
+}

@@ -1,0 +1,260 @@
+local parentAddonName = "EnhanceQoL"
+local addon = select(2, ...)
+
+if _G[parentAddonName] then
+	addon = _G[parentAddonName]
+else
+	error(parentAddonName .. " is not loaded")
+end
+
+local L = LibStub("AceLocale-3.0"):GetLocale(parentAddonName)
+local CompactRaidFrameContainer = _G.CompactRaidFrameContainer
+
+local cUnitFrame = addon.SettingsLayout.rootUI
+
+local expandable = addon.SettingsLayout.expUnitFrames
+if not expandable then
+	expandable = addon.functions.SettingsCreateExpandableSection(cUnitFrame, {
+		name = UNITFRAME_LABEL,
+		description = L["configCenterPageDescUnitFrames"],
+		iconKey = "unitframes",
+		expanded = false,
+		colorizeTitle = false,
+		newTagID = "UnitFrames",
+	})
+end
+addon.SettingsLayout.expUnitFrames = expandable
+
+local function isEQoLUnitEnabled(unit)
+	return addon.functions.IsEQoLUnitFrameEnabled(unit)
+end
+
+local function isEQoLGroupFramesEnabled(kind)
+	return addon.functions.IsEQoLGroupFrameEnabled(kind)
+end
+
+local function shouldShowPlayerFrameSettings()
+	return not isEQoLUnitEnabled("player")
+end
+
+local function shouldShowPetFrameSettings()
+	return not isEQoLUnitEnabled("pet")
+end
+
+local function shouldShowBossFrameSettings()
+	return not isEQoLUnitEnabled("boss")
+end
+
+local function shouldShowPartyFrameSettings()
+	return not isEQoLGroupFramesEnabled("party")
+end
+
+local function shouldShowRaidFrameSettings()
+	return not isEQoLGroupFramesEnabled("raid")
+end
+
+local function expandWith(predicate)
+	local parentCheck = function()
+		if expandable and expandable.IsExpanded and expandable:IsExpanded() == false then return false end
+		return predicate()
+	end
+	return addon.functions.RegisterConfigParentSection(parentCheck, expandable)
+end
+
+local combatTextSection = addon.SettingsLayout.uiCastbarsExpandable
+
+local data = {
+	{
+		var = "hideHitIndicatorPlayer",
+		text = L["hideHitIndicatorPlayer"],
+		func = function(v)
+			addon.db["hideHitIndicatorPlayer"] = v
+			if v then
+				PlayerFrame.PlayerFrameContent.PlayerFrameContentMain.HitIndicator:Hide()
+			else
+				PlayerFrame.PlayerFrameContent.PlayerFrameContentMain.HitIndicator:Show()
+			end
+		end,
+		parentSection = combatTextSection,
+		groupID = "combat-indicators",
+		groupTitle = L["CombatText"] or "Combat text",
+		isVisible = shouldShowPlayerFrameSettings,
+	},
+	{
+		var = "hideHitIndicatorPet",
+		text = L["hideHitIndicatorPet"],
+		func = function(v)
+			addon.db["hideHitIndicatorPet"] = v
+			if v and PetHitIndicator then PetHitIndicator:Hide() end
+		end,
+		parentSection = combatTextSection,
+		groupID = "combat-indicators",
+		groupTitle = L["CombatText"] or "Combat text",
+		isVisible = shouldShowPetFrameSettings,
+	},
+}
+addon.functions.SettingsCreateCheckboxes(cUnitFrame, data)
+
+local function shouldShowHealthTextSection() return shouldShowPlayerFrameSettings() or not isEQoLUnitEnabled("target") or shouldShowBossFrameSettings() end
+local function shouldShowLegacyFrameOptions()
+	return shouldShowPlayerFrameSettings() or shouldShowPartyFrameSettings() or shouldShowRaidFrameSettings()
+end
+
+addon.functions.SettingsCreateHeadline(cUnitFrame, L["Health Text"], {
+	parentSection = expandable,
+	hiddenWhen = function() return not shouldShowHealthTextSection() end,
+})
+
+local healthTextOrder = { "OFF", "PERCENT", "ABS", "BOTH", "CURMAX", "CURMAXPERCENT" }
+local healthTextOptions = {
+	OFF = VIDEO_OPTIONS_DISABLED,
+	PERCENT = STATUS_TEXT_PERCENT,
+	ABS = STATUS_TEXT_VALUE,
+	BOTH = STATUS_TEXT_BOTH,
+	CURMAX = L["Current/Max"] or "Current/Max",
+	CURMAXPERCENT = L["Current/Max Percent"] or "Current/Max (percent)",
+}
+local healthTextDesc = string.format(L["HealthTextExplain2"], VIDEO_OPTIONS_DISABLED)
+
+addon.functions.SettingsCreateDropdown(cUnitFrame, {
+	list = healthTextOptions,
+	order = healthTextOrder,
+	text = L["PlayerHealthText"],
+	desc = healthTextDesc,
+	get = function() return addon.db["healthTextPlayerMode"] or "OFF" end,
+	set = function(key)
+		addon.db["healthTextPlayerMode"] = key
+		if addon.HealthText and addon.HealthText.SetMode then addon.HealthText:SetMode("player", addon.db["healthTextPlayerMode"]) end
+	end,
+	default = "OFF",
+	var = "healthTextPlayerMode",
+	type = Settings.VarType.String,
+	sType = "dropdown",
+	parentSection = expandWith(function() return not isEQoLUnitEnabled("player") end),
+	isVisible = shouldShowPlayerFrameSettings,
+})
+addon.functions.SettingsCreateDropdown(cUnitFrame, {
+	list = healthTextOptions,
+	order = healthTextOrder,
+	text = L["TargetHealthText"],
+	desc = healthTextDesc,
+	get = function() return addon.db["healthTextTargetMode"] or "OFF" end,
+	set = function(key)
+		addon.db["healthTextTargetMode"] = key
+		if addon.HealthText and addon.HealthText.SetMode then addon.HealthText:SetMode("target", addon.db["healthTextTargetMode"]) end
+	end,
+	default = "OFF",
+	var = "healthTextTargetMode",
+	type = Settings.VarType.String,
+	sType = "dropdown",
+	parentSection = expandWith(function() return not isEQoLUnitEnabled("target") end),
+	isVisible = function() return not isEQoLUnitEnabled("target") end,
+})
+addon.functions.SettingsCreateDropdown(cUnitFrame, {
+	list = healthTextOptions,
+	order = healthTextOrder,
+	text = L["BossHealthText"],
+	desc = healthTextDesc,
+	get = function() return addon.db["healthTextBossMode"] or "OFF" end,
+	set = function(key)
+		addon.db["healthTextBossMode"] = key
+		if addon.HealthText and addon.HealthText.SetMode then addon.HealthText:SetMode("boss", addon.db["healthTextBossMode"]) end
+	end,
+	default = "OFF",
+	var = "healthTextBossMode",
+	type = Settings.VarType.String,
+	sType = "dropdown",
+	parentSection = expandWith(function() return not isEQoLUnitEnabled("boss") end),
+	isVisible = shouldShowBossFrameSettings,
+})
+
+addon.functions.SettingsCreateHeadline(cUnitFrame, (L["UnitFrameUFExplain"]:format(_G.RAID or "RAID", _G.PARTY or "Party", _G.PLAYER or "Player")), {
+	parentSection = expandable,
+	hiddenWhen = function() return not shouldShowLegacyFrameOptions() end,
+})
+
+data = {
+	{
+		var = "hidePartyFrameTitle",
+		text = L["hidePartyFrameTitle"],
+		func = function(v)
+			addon.db["hidePartyFrameTitle"] = v
+			addon.functions.togglePartyFrameTitle(v)
+		end,
+		parentSection = expandable,
+		isVisible = shouldShowPartyFrameSettings,
+	},
+	{
+		var = "hideRestingGlow",
+		text = L["hideRestingGlow"],
+		func = function(v)
+			addon.db["hideRestingGlow"] = v
+			if addon.functions.ApplyRestingVisuals then addon.functions.ApplyRestingVisuals() end
+		end,
+		parentSection = expandable,
+		isVisible = shouldShowPlayerFrameSettings,
+	},
+	{
+		var = "unitFrameScaleEnabled",
+		text = L["unitFrameScaleEnable"],
+		func = function(v)
+			addon.db["unitFrameScaleEnabled"] = v
+			addon.functions.updatePartyFrameScale()
+			if not v then
+				if CompactPartyFrame and CompactPartyFrame.SetScale then CompactPartyFrame:SetScale(1) end
+				if CompactRaidFrameContainer and CompactRaidFrameContainer.SetScale then
+					CompactRaidFrameContainer:SetScale(1)
+				end
+			end
+		end,
+		parentSection = expandable,
+		children = {
+			{
+				var = "unitFrameScale",
+				text = L["unitFrameScale"],
+				get = function() return addon.db and addon.db.unitFrameScale or 1 end,
+				set = function(val)
+					addon.db["unitFrameScale"] = val
+					addon.functions.updatePartyFrameScale()
+				end,
+				min = 0.5,
+				max = 3,
+				step = 0.05,
+				default = 1,
+				sType = "slider",
+				parent = true,
+				parentCheck = function()
+					return addon.SettingsLayout.elements["unitFrameScaleEnabled"]
+						and addon.SettingsLayout.elements["unitFrameScaleEnabled"].setting
+						and addon.SettingsLayout.elements["unitFrameScaleEnabled"].setting:GetValue() == true
+				end,
+				parentSection = expandable,
+				isVisible = function() return shouldShowPartyFrameSettings() or shouldShowRaidFrameSettings() end,
+			},
+		},
+		isVisible = function()
+			return shouldShowPartyFrameSettings() or shouldShowRaidFrameSettings()
+		end,
+	},
+}
+table.sort(data, function(a, b) return a.text < b.text end)
+addon.functions.SettingsCreateCheckboxes(cUnitFrame, data)
+
+----- REGION END
+
+local eventHandlers = {}
+
+local function registerEvents(frame)
+	for event in pairs(eventHandlers) do
+		frame:RegisterEvent(event)
+	end
+end
+
+local function eventHandler(self, event, ...)
+	if eventHandlers[event] then eventHandlers[event](...) end
+end
+
+local frameLoad = CreateFrame("Frame")
+
+registerEvents(frameLoad)
+frameLoad:SetScript("OnEvent", eventHandler)

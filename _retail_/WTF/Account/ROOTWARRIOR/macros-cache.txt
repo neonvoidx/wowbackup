@@ -1,0 +1,139 @@
+VER 3 0000000000000241 " " "2869702"
+#plumber:outfit
+/click PLMR_OUTFIT
+END
+VER 3 0000000000000248 " " "1345086"
+/stopcasting
+END
+VER 3 0000000000000274 " " "134400"
+#showtooltip
+/use [@mouseover,noharm,exists,nodead][] Emergency Soul Link
+END
+VER 3 0000000000000240 " " "INV_Misc_QuestionMark"
+#showtooltip [pvpcombat] 13; [] 14
+/use  [pvpcombat] 13; [] 14
+END
+VER 3 0000000000000275 " " "1385294"
+#plumber:drawer
+#/use item:241327
+#/use item:241325
+#/use item:241321
+#/use item:243733
+#/use item:243734
+#/use item:259085
+#/use item:245880
+#/use item:241334
+#/use item:242747
+/click PLMR1
+END
+VER 3 0000000000000276 " " "618976"
+END
+VER 3 0000000000000280 " " "INV_Misc_QuestionMark"
+#showtooltip [known:Chi burst] Chi Burst;[known: chi wave] Chi wave;
+/cast [known:Chi Burst] Chi burst;
+/cast [known:Chi Wave] Chi wave
+/use Goblin Weather Machine - Prototype 01-B
+END
+VER 3 0000000000000287 " " "134400"
+#showtooltip
+/cast Unending Resolve
+/cast Kang's Bindstone
+END
+VER 3 0000000000000288 " " "134400"
+#showtooltip [known: Malevolence] Malevolence
+/cast [known: Malevolence] Malevolence
+END
+VER 3 0000000000000243 " Clear" "1016706"
+/clearfocus
+END
+VER 3 0000000000000289 " Enable PVP" "237144"
+/run for i=2,6 do local b=_G["PVPQueueFrameCategoryButton"..i]; if b then b:SetEnabled(true); b.tooltip=nil end end 
+END
+VER 3 0000000000000246 " MOUNT" "INV_Misc_QuestionMark"
+#showtooltip
+/cast [nomounted] !Zen Flight
+/click [flyable] MountJournalSummonRandomFavoriteButton
+END
+VER 3 0000000000000245 " MOUNT" "INV_Misc_QuestionMark"
+#showtooltip
+/click [nomod] MountJournalSummonRandomFavoriteButton
+/cast [mod:shift] Eternal Gladiator's Soul Eater
+/cast [mod:ctrl] Grand Expedition Yak
+END
+VER 3 0000000000000247 " PassiveFollow" "571320"
+/petfollow
+/petpassive
+END
+VER 3 0000000000000285 "AutoTabKick" "INV_Misc_QuestionMark"
+#showtooltip Kick
+/cleartarget
+/targetenemy
+/cast Kick
+/targetlasttarget
+END
+VER 3 000000000000024A "BOOGIE" "INV_Misc_QuestionMark"
+#showtooltip Blazing Shadowflame Cinder
+/use Blazing Shadowflame Cinder
+/use World Shrinker
+/use Shuffling Sands
+END
+VER 3 0000000000000279 "DELVE GOD" "413587"
+/use Corrosive Victory
+/use Dominating Victory
+/use Etheric Victory
+/use Toxic Victory
+/use Explosive Victory
+/use Loa-Blessed Victory
+END
+VER 3 0000000000000286 "DUNDUN" "250119"
+/cleartarget
+/tar dundun
+/ping [@target] assist
+END
+VER 3 0000000000000273 "EnhanceQoLBuffFoodMacro" "INV_Misc_QuestionMark"
+#showtooltip
+END
+VER 3 0000000000000281 "EnhanceQoLDrinkMacro" "INV_Misc_QuestionMark"
+#showtooltip
+END
+VER 3 000000000000024D "EnhanceQoLFlaskMacro" "INV_Misc_QuestionMark"
+#showtooltip
+END
+VER 3 0000000000000282 "EnhanceQoLHealthMacro" "INV_Misc_QuestionMark"
+#showtooltip
+/cast [nocombat] Recuperate
+/castsequence [combat] reset=combat item:241304
+END
+VER 3 000000000000024F "FOCUS" "132284"
+/focus [@mouseover,nodead,exists]; [@target,exists]
+END
+VER 3 0000000000000283 "FocusKick" "INV_Misc_QuestionMark"
+#showtooltip Kick
+#FS EH X
+/cast [mod:shift,@none,harm,nodead][mod:shift,@focus,harm,nodead][] Kick
+/focus [mod:shift,@eh,noexists][mod:shift,@focus,noexists] target
+/tm [mod:shift,@eh][mod:shift,@focus] ~4
+END
+VER 3 0000000000000250 "ItemOnWeap" "INV_Misc_QuestionMark"
+#showtooltip item:243733
+/use item:243733
+/use [button:2] 17; 16
+/click StaticPopup1Button1
+END
+VER 3 0000000000000278 "LEAVE DELVE" "136116"
+/run if C_PartyInfo.IsDelveInProgress()or C_PartyInfo.IsDelveComplete()then C_PartyInfo.DelveTeleportOut()else C_PartyInfo.LeaveParty()end
+END
+VER 3 0000000000000249 "Plumber Housing Macro" "7252953"
+#plumber:home
+/click PLMR2
+END
+VER 3 0000000000000251 "Pull" "1713482"
+/pull 10
+END
+VER 3 0000000000000252 "Readycheck" "615342"
+/readycheck
+END
+VER 3 0000000000000284 "SetFocus" "132212"
+/focus target
+/tm [@focus] ~4
+END

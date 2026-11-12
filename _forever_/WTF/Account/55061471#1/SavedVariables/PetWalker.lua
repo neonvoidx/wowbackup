@@ -1,0 +1,23 @@
+
+PetWalkerDB = {
+["favsProbability_reset_by_pw"] = false,
+["autoEnabled"] = true,
+["remainingTimer"] = 543,
+["verbosityLevel"] = 1,
+["recentPets"] = {
+"BattlePet-0-000018AA8043",
+"BattlePet-0-0000227F0880",
+"BattlePet-0-00002296EE8E",
+"BattlePet-0-0000227F123D",
+},
+["newPetTimer_reset_by_pw"] = false,
+["instanceMode"] = 1,
+["drSummoning"] = true,
+["dbVersion"] = 3,
+["favsProbability"] = 0.66,
+["favsOnly"] = true,
+["numRecents"] = 4,
+["newPetTimer"] = 900,
+["favsOnly_reset_by_pw"] = false,
+["debugMode"] = false,
+}

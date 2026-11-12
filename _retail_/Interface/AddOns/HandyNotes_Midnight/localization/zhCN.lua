@@ -1,0 +1,250 @@
+local ADDON_NAME, ns = ...
+local L = ns.NewLocale('zhCN')
+if not L then return end
+
+-------------------------------------------------------------------------------
+------------------------------------ COMMON -----------------------------------
+-------------------------------------------------------------------------------
+
+L['options_icons_delve_rewards'] = '地下堡奖励'
+L['options_icons_delve_rewards_desc'] = '在提示中显示 {location:地下堡} 的奖励。'
+
+L['options_icons_stormarion_assault'] = '斯托玛兰突袭战'
+L['options_icons_stormarion_assault_desc'] = '在提示中显示 {location:斯托玛兰突袭战} 的奖励。'
+
+L['options_icons_abundance_rewards'] = '丰饶'
+L['options_icons_abundance_rewards_desc'] = '在提示中显示 {location:丰饶} 的奖励。'
+
+L['skyriding_glyph'] = '驭空术魔符'
+L['options_icons_skyriding_glyph'] = '驭空术魔符'
+L['options_icons_skyriding_glyph_desc'] = '显示全部驭空术魔符的位置。'
+
+L['midnight_telescope'] = '望远镜'
+L['options_icons_telescope'] = '{achievement:62057}'
+L['options_icons_telescope_desc'] = '显示 {achievement:62057} 成就中全部10个望远镜的位置。'
+
+L['options_icons_midnight_lore_hunter'] = '{achievement:62104}'
+L['options_icons_midnight_lore_hunter_desc'] = '显示 {achievement:62104} 成就中剧情猎人的位置。'
+
+L['options_icons_profession_treasures'] = '专业宝藏'
+L['options_icons_profession_treasures_desc'] = '显示给予专业知识的宝藏位置。'
+
+L['options_icons_safari'] = '{achievement:61091}'
+L['options_icons_safari_desc'] = '显示 {achievement:61091} 成就中战斗宠物的位置。'
+
+L['options_icons_renowned_beast'] = '知名野兽'
+L['options_icons_renowned_beast_desc'] = '显示可召唤的日常剥皮野兽的位置。'
+L['silverscale_note'] = '在桥下召唤。'
+L['last_architect_note'] = '完成每日谜题以获得装饰。'
+L['neighborhood_riddle'] = '宝藏位置'
+L['options_icons_souvenirs'] = '{achievement:63606}'
+L['options_icons_souvenirs_desc'] = '显示 {achievement:63606} 成就中秘密纪念品的位置。'
+L['souvenir_activity_note'] = '需要始祖龟文化节。'
+L['souvenir_balloon_note'] = '需要攻击店内的 {npc:270647}。'
+L['souvenir_beach_note'] = '区域随机刷新。光坐沙滩椅等10分钟并不保证出现，需要靠沙滩活动累积隐藏进度：坐沙滩椅或沙滩巾、待在水里、骑乘 {npc:267313}、拍打 {npc:266931}。进度接近满时，向 {npc:266895} 询问海滩情况会得到“现在这才是派对”的回应；之后再完成一次“驻足闪耀”，纪念品就会刷新。'
+L['souvenir_cart_note'] = '这个纪念品在一辆巡游住宅区的马车后部。'
+L['souvenir_guide_note'] = '需要阅读屋内的 {object:不踩空：梯子使用快速入门指南}，学会 %s 后才能爬梯子。'
+L['souvenir_kite_note'] = '这个纪念品会乘着风筝在住宅区上空飞行。骑乘飞行坐骑撞击风筝，迫使它降落在地上。'
+L['souvenir_scroll_note'] = '需要从 {npc:268110} 购买 %s。使用后会出现泡泡，纪念品在泡泡里。'
+L['souvenir_soil_note'] = '这个纪念品需要对着 {npc:272966} 使用水系范围法术，例如德鲁伊的 {spell:145205}、萨满祭司的 {spell:444995} 或法师的 {spell:190356}。\n\n当然，也可以等天空下雨。'
+L['souvenir_turtle_note'] = '在一只四处游荡的乌龟身上。'
+L['souvenir_waterfall_note'] = '这个纪念品从瀑布源头出现，顺着水流一路漂向下游。一旦被冲上海岸沙滩、被始祖龟小孩捡走，就会消失。'
+
+-------------------------------------------------------------------------------
+-------------------------------- EVERSONG WOODS -------------------------------
+-------------------------------------------------------------------------------
+
+L['options_icons_ever_painting'] = '{achievement:62185}'
+L['options_icons_ever_painting_desc'] = '显示 {achievement:62185} 成就中画作的位置。'
+L['options_icons_runestone_rush'] = '{achievement:61961}'
+L['options_icons_runestone_rush_desc'] = '显示 {achievement:61961} 成就中符文石的位置。'
+
+L['eversong_woods_stone_vat_of_wine_note'] = '需要从 {npc:251405} 处获得10个 {item:256232} 和1个 {item:256397}。\n\n踩葡萄然后加入酵母。'
+L['on_flying_platform'] = '在飞行平台上'
+L['gift_of_the_phoenix_note'] = '从凤凰身上收集5个余烬，这些凤凰在使用凤凰之赐后出现。'
+L['triple_locked_safebox_note'] = '需要3个隐藏的保险箱钥匙。从箱子旁边的紫色火把处获取它们。'
+L['incomplete_book_of_sonnets'] = '未完成十四行诗集'
+L['ensorcelled_cryptid_note'] = '点击 {npc:273760} 并保持在附近躲避奥术漩涡，耗尽 {spell:1313802} 的100层后与 {npc:273775} 互动，即可获得 {item:282417}。\n\n它会在约10分钟后于三个刷新点之一重新出现。'
+
+-------------------------------------------------------------------------------
+----------------------------------- HARANDAR ----------------------------------
+-------------------------------------------------------------------------------
+
+L['glowing_moth'] = '发光飞蛾'
+L['options_icons_glowing_moth'] = '{achievement:61052}'
+L['options_icons_glowing_moth_desc'] = '显示 {achievement:61052} 成就中发光飞蛾的位置。'
+
+L['sporespawned_cache_note'] = '与芬加拉村的 {dot:Red}{object:真菌棒槌} 互动以获得 {spell:1266347} 增益，然后使用它敲响 {object:菌丝锣}。宝藏将出现在锣旁边。'
+L['fungal_mallet'] = '真菌棒槌'
+L['impenatrably_sealed_gourd_note'] = '从附近的 {object:垂吊的壶} 中拾取 {item:260251} 和从附近的 {object:悬挂的药剂} 中拾取 {item:260250} \n与 {object:牢固的花瓶} 互动并添加液体以获得 {item:260266} \n与宝藏互动以获得奖励。'
+
+L['options_icons_more_than_just_thier_roots'] = '{achievement:62188}'
+L['options_icons_more_than_just_thier_roots_desc'] = '显示 {achievement:62188} 成就中 NPC 的位置。'
+L['more_than_just_thier_roots_note'] = '与以下位置的 NPC 交谈：'
+L['chonon_note'] = '在树的树枝上。'
+L['funnid_note'] = '在世界之树的高处树枝上。'
+L['kawayn_note'] = '在大树的树干上方。'
+
+L['altar_of_innocence'] = '纯真祭坛'
+L['altar_of_vigor'] = '活力祭坛'
+L['altar_of_wisdom'] = '睿智祭坛'
+L['altar_of_innocence_note'] = '与 {object:纯真祭坛} 互动后，将 {item:256882} 交还给 {npc:254030}。\n\n完成其余祭坛的任务后，可在 {location:大巢穴} 刷新 {object:轮回的礼物} 宝藏。'
+L['altar_of_vigor_note'] = '与 {object:活力祭坛} 互动后，将 {item:257024} 交还给 {npc:254104}。\n\n完成其余祭坛的任务后，可在 {location:大巢穴} 刷新 {object:轮回的礼物} 宝藏。'
+L['altar_of_wisdom_note'] = '与 {object:睿智祭坛} 互动后，将 {item:257054} 交还给 {npc:254116}。\n\n完成其余祭坛的任务后，可在 {location:大巢穴} 刷新 {object:轮回的礼物} 宝藏。'
+
+-------------------------------------------------------------------------------
+---------------------------------- VOIDSTORM ----------------------------------
+-------------------------------------------------------------------------------
+
+L['void_shielded_tomb_note'] = '饮用旁边桌子上的 {object:解离药水}，然后跑到对面的建筑，拾取 {item:251519} 后用它解锁宝箱。\n\n' .. ns.color.Red('需要90级')
+L['bloody_sack_note'] = '从附近的骨堆中收集 {object:滴水的肉}，以喂养 {object:被遗忘的密牢}。'
+L['malignant_chest_note'] = '激活洞穴中的 {object:怨毒节点} 以解锁宝箱。'
+L['malignant_node'] = '怨毒节点'
+L['exaliburn_note'] = '饮用旁边的 {object:毋庸置疑的强力药水} 后拔出失约胜利之剑。'
+L['voidhoarders_corpse'] = '虚空囤积者的尸体'
+L['blackcore_note'] = '击杀标记范围内的 {npc:248462} 或 {npc:248483} 获得3个 {item:248680}，然后和 {object:奇点棱镜} 互动召唤稀有。'
+
+-------------------------------------------------------------------------------
+----------------------------------- ZUL'AMAN ----------------------------------
+-------------------------------------------------------------------------------
+
+L['options_icons_frog_princess'] = '{achievement:62201}'
+L['options_icons_frog_princess_desc'] = '显示 {achievement:62201} 成就中青蛙的位置。'
+
+L['options_icons_song_seeker'] = '{achievement:61455}'
+L['options_icons_song_seeker_desc'] = '显示 {achievement:61455} 成就中寻歌者的位置。'
+
+L['options_icons_spiritpaw_marathon'] = '{achievement:62202}'
+L['options_icons_spiritpaw_marathon_desc'] = '显示 {achievement:62202} 成就中灵爪奔行者的位置。'
+L['spiritpaw_marathon_note'] = '和 {npc:258938} 交谈，然后抱起附近的 {npc:250100}，在30分钟内将他们带到 {location:加亚莱的神庙} 内的 {dot:Pink} 位置。\n\n' .. ns.color.Red('不要骑乘坐骑，否则会失去该增益效果。')
+
+L['options_icons_gnome_alone'] = '{achievement:62200}'
+L['options_icons_gnome_alone_desc'] = '显示 {achievement:62200} 成就中的位置。'
+
+L['abandoned_ritual_skull'] = '被遗弃的仪式颅骨'
+
+L['options_icons_put_a_pin_in_it'] = '{achievement:62199}'
+L['options_icons_put_a_pin_in_it_desc'] = '显示 {achievement:62199} 成就中的位置。'
+L['kalika_note'] = '与 {npc:258884} 交谈，然后与附近的 {object:翡翠雕像} 后面的 {object:被遗忘的纽扣} 互动。'
+L['songseeker_ikaja_note'] = '位于神庙顶层。'
+
+-------------------------------------------------------------------------------
+----------------------------------- NAIGTAL -----------------------------------
+-------------------------------------------------------------------------------
+
+L['sleepy_mandrake_note'] = '在沉睡者洞穴中找到 {npc:267910}，喂给它5种不同的红伞菇即可获得此战斗宠物。'
+L['partially_digested_redcap_note'] = '由地图内的 {npc:264340} 和 {npc:264315} 等同类稀有掉落。'
+L['ancient_crypt_reliquary'] = '远古地穴圣匣'
+L['squirming_mollusk'] = '蠕动软体动物'
+L['spiked_shell'] = '尖刺外壳'
+
+-------------------------------------------------------------------------------
+------------------------------------- VAL -------------------------------------
+-------------------------------------------------------------------------------
+
+L['enchanted_hilt'] = '附魔剑柄'
+L['enchanted_hilt_note'] = '只限英雄难度。\n\n点击 {object:附魔剑柄} 后获得 {spell:1300397}，之后在地图击杀世界首领 {npc:261072} 或 {achievement:62881} 中的稀有怪物，共计两次之后返回剑柄，对话获取宝藏。'
+
+-------------------------------------------------------------------------------
+---------------------------------- ARCANTINA ----------------------------------
+-------------------------------------------------------------------------------
+
+L['share_a_drink_note'] = '从奥术秘社的 {npc:250495} 处购买 {item:251039} 并与所有种族分享。'
+L['highly_decorated_note'] = '完成轮换的遗物任务，收集装饰品并摆放在奥术秘社。'
+
+-------------------------------------------------------------------------------
+--------------------------------- RITUAL SITES --------------------------------
+-------------------------------------------------------------------------------
+
+L['options_icons_ritual_site'] = '仪式场地'
+L['options_icons_ritual_site_desc'] = '在提示中显示 {location:仪式场地} 的奖励。'
+
+L['ritual_site_broken_throne'] = '仪式场地：残破神庙'
+L['ritual_site_daggerspine_point'] = '仪式场地：刺脊营'
+L['broken_throne_entry_note'] = '残破神庙又称阿塔尔卡丹，是一座被暮光之刃占据的阿曼尼废墟。点击 {npc:260103} 进入。\n\n与 {location:仪式场地：刺脊营} 每周轮换开放。'
+L['daggerspine_point_entry_note'] = '刺脊营是一座被匕脊纳迦占据的岛屿，原名沙兰蒂斯岛。点击 {npc:260103} 进入。\n\n与 {location:仪式场地：残破神庙} 每周轮换开放。'
+
+L['chewed_meat'] = '碎烂的肉'
+L['chewed_meat_note'] = '在 {object:碎烂的肉} 处召唤 {spell:1286634}，击败 {npc:263381} 后喂食5个 {item:242639}。'
+
+L['ritual_circle'] = '仪式法阵'
+L['ritual_circle_note'] = '将 {item:271999} 放置在合适的位置，开始仪式召唤 {npc:263527}。'
+
+L['updraft'] = '上升气流'
+L['void_tainted_nest'] = '虚空侵染的巢穴'
+L['void_tainted_nest_note'] = '需骑乘 {spell:1286606} 才能看到上升气流，站进去飞到巢穴。'
+
+L['chubs_note'] = '从 {npc:263355} 处用1个 {item:242639} 购买。'
+
+L['rustling_fern'] = '沙沙作响的蕨类'
+L['rustling_bush'] = '沙沙响的草丛'
+L['rustling_fern_note'] = '需要3级或更高难度。点击 {object:沙沙作响的蕨类} 直至小猫出现（8-13次点击）。每次副本仅1-2个可用。\n需要尚未学会此宠物。'
+L['rustling_bush_note'] = '需要3级或更高难度。点击 {object:沙沙响的草丛} 直至小猫出现（8-13次点击）。每次副本仅1-2个可用。\n需要尚未学会此宠物。'
+
+L['soggy_nest'] = '湿漉漉的巢穴'
+L['soggy_nest_note'] = '需 {item:272128} 吸引 {npc:263917}。\n{item:272128} 由区域纳迦掉落。'
+
+L['washed_up_kelp'] = '冲刷上岸的海藻'
+L['washed_up_kelp_note'] = '翻找 {object:冲刷上岸的海藻} 有机会吸引 {npc:263617}。区域内多个位置刷新。'
+
+L['floating_egg_note'] = '{npc:263805} 顺河漂流。在沿途抓住它。'
+
+-------------------------------------------------------------------------------
+------------------------------------ DELVES -----------------------------------
+-------------------------------------------------------------------------------
+
+L['sturdy_chest'] = '坚固宝箱'
+L['sturdy_chest_suffix'] = '已找到坚固宝箱'
+L['gulf_of_memory_chest_note'] = '沿着树的根部向上攀爬以到达宝藏。'
+
+-------------------------------------------------------------------------------
+--------------------------------- COILED ISLES --------------------------------
+-------------------------------------------------------------------------------
+
+L['lost_spirit_note'] = '将 {item:269935} 交还给 {npc:261867}。'
+L['sunken_divers_chest_note'] = '击杀附近的 {npc:263081} 并拾取3个 {item:271424}，然后将其组合成 {item:271423} 以解锁宝藏。'
+L['vulzahn_smuggled_treasure_note'] = '1. 与宝藏旁的 {dot:Green}{npc:263265} 对话。\n\n2. 与 {dot:Red}{npc:262204} 对话。\n\n3. 从 {dot:Blue}{npc:253837} 获取 {item:271791}。\n\n4. 将 {item:271791} 交给 {dot:Red}{npc:262204} 以获得 {item:271788}。\n\n5. 将 {item:271788} 交给 {dot:Green}{npc:263265} 以获得 {item:271792}，解锁宝藏。'
+L['grave_of_someone_forgotten_note'] = '1. 与 {object:无名之墓} 互动。\n\n2. 与 {dot:Red}{npc:263242} 对话。\n\n3. 与 {dot:Green}{npc:263243} 对话。\n\n4. 与 {dot:Blue}{npc:263241} 对话。\n\n5. 返回 {object:无名之墓} 进行拾取。'
+L['profane_ritual_spoils_note'] = '面向雕像，按照右上、左上、右下、左下的顺序点击 {npc:263187} 即可开启宝藏。'
+L['abandoned_amani_privateers_cache_note'] = '1. 在 {dot:Blue}{object:可怖鳕鱼群} 钓到 {item:265525}，喂给水下的 {npc:258076}。\n\n2. 跟随海豚收集 {dot:Red}{object:浸水的箱子} 中的 {item:265610} 和 {dot:Green}{object:破损的瓮} 中的 {item:265603}。\n\n3. 右键其中一半合成 {item:265602}，开启宝藏。\n\n{note:全程保持在水下，浮出水面海豚就会游走。}'
+L['grisly_cod_pool'] = '可怖鳕鱼群'
+L['waterlogged_crate'] = '浸水的箱子'
+L['broken_urn'] = '破损的瓮'
+L['brine_crusted_chest_note'] = '1. 打开 {dot:Blue}{object:冒泡的蛤蜊} 拾取 {item:271815}。\n\n2. 前往 {dot:Red}{npc:263347} 处，将珍珠放在地面箭头位置，她会拿走珍珠并掉落 {item:271881}。\n\n3. 拾取钥匙开启宝藏。\n\n{note:蛤蜊无法打开说明包里已经有珍珠了。}'
+L['bubbling_clam'] = '冒泡的蛤蜊'
+
+L['options_icons_coiled_isle_safari'] = '{achievement:62492}'
+L['options_icons_coiled_isle_safari_desc'] = '显示 {achievement:62492} 成就中战斗宠物的位置。'
+
+L['options_icons_student_of_hissstory'] = '{achievement:63662}'
+L['options_icons_student_of_hissstory_desc'] = '显示 {achievement:63662} 成就中剧情物品的位置。'
+
+L['options_icons_soft_underbelly'] = '{achievement:62601}'
+L['options_icons_soft_underbelly_desc'] = '显示 {achievement:62601} 成就的位置。'
+
+L['options_icons_the_honored_dead'] = '{achievement:63610}'
+L['options_icons_the_honored_dead_desc'] = '显示 {achievement:63610} 成就的位置。'
+
+L['options_icons_mysterious_mixing'] = '{achievement:63432}'
+L['options_icons_mysterious_mixing_desc'] = '显示 {achievement:63432} 成就的位置。'
+L['mysterious_mixing_note'] = '完成 {npc:263327} 的 {quest:97016} 日常，以调配所需的供奉：\n\n{note:材料可从地图中的 {object:开裂的骨灰罐}、{object:毒液凝结的小饰品}、{object:吟歌海螺} 中获取，或从拍卖行购买。}'
+L['curse_surge_note'] = '诅咒狂潮事件每%d分钟轮换一次。\n\n{note:如果未完成，可跨服组队完成——其他服务器的事件可能仍在进行中。}'
+
+-------------------------------------------------------------------------------
+----------------------------- LABYRINTH OF KINDO'JAN --------------------------
+-------------------------------------------------------------------------------
+
+L['mislaid_treasure'] = '错放的宝藏'
+L['locked_door_note'] = '无难度要求。击败 {npc:273788}，拿到 {item:282402} 后才能开启。\n\n{note:或使用潜行者职业、使用 {item:260232} 直接开门。}'
+L['flooded_chamber'] = '水下入口'
+L['flooded_chamber_note'] = '进去后有 {npc:270937}，可用 {npc:271605} 或火焰系法术打破。'
+
+L['options_icons_hexmask'] = '{achievement:63720}'
+L['options_icons_hexmask_desc'] = '显示 {achievement:63720} 成就的位置。'
+L['c_underneath_bridge'] = '在桥下。'
+
+-------------------------------------------------------------------------------
+--------------------------------- AQIR INVASION -------------------------------
+-------------------------------------------------------------------------------
+
+L['aqir_invasion_running'] = '入侵进行中'

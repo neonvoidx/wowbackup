@@ -1,0 +1,189 @@
+
+ArtifactAppearanceTrackerDB = {
+["trackerPosition"] = {
+["y"] = -109.1667861938477,
+["x"] = -0,
+["point"] = "TOPLEFT",
+["relativePoint"] = "TOPLEFT",
+},
+["dontShowChangelog"] = true,
+["completed"] = {
+["WARLOCK"] = {
+["Demonology"] = {
+false,
+false,
+false,
+false,
+false,
+false,
+},
+["Affliction"] = {
+false,
+},
+["Destruction"] = {
+false,
+false,
+false,
+false,
+true,
+false,
+},
+},
+},
+["accountTrackedItems"] = {
+{
+["tintIndex"] = 2,
+["trackedBy"] = {
+["class"] = "WARLOCK",
+["name"] = "Hellavator",
+["realm"] = "Tichondrius",
+},
+["rowType"] = "Challenging",
+["steps"] = {
+{
+["autoTrack"] = false,
+["text"] = "|cff00ff00STILL OBTAINABLE|r - If you have the Mage Tower base!",
+},
+{
+["autoTrack"] = false,
+["text"] = "1. Queue for or form a group for Tomb of Sargeras (Heroic)",
+},
+{
+["autoTrack"] = false,
+["text"] = "   - TomTom: /way Broken Shore (Broken Isles) 63.8, 22.2 Tomb of Sargeras",
+},
+{
+["autoTrack"] = false,
+["text"] = "2. Defeat Kil'jaeden (final boss)",
+},
+{
+["autoTrack"] = false,
+["text"] = "3. Tint unlocks automatically upon kill",
+},
+{
+["autoTrack"] = false,
+["text"] = "|cff888888Note: Patch 7.3 removed the requirement to have",
+},
+{
+["autoTrack"] = false,
+["text"] = "the challenge appearance equipped while doing this.|r",
+},
+},
+["class"] = "WARLOCK",
+["className"] = "Warlock",
+["spec"] = "Destruction",
+},
+{
+["tintIndex"] = 3,
+["trackedBy"] = {
+["class"] = "WARLOCK",
+["name"] = "Hellavator",
+["realm"] = "Tichondrius",
+},
+["rowType"] = "Challenging",
+["steps"] = {
+{
+["autoTrack"] = false,
+["text"] = "|cff00ff00STILL OBTAINABLE|r - If you have the Mage Tower base!",
+},
+{
+["autoTrack"] = false,
+["text"] = "1. Queue for Rated Battlegrounds (requires a group)",
+},
+{
+["autoTrack"] = false,
+["text"] = "   - Open Group Finder (I) > Player vs Player > Rated",
+},
+{
+["autoTrack"] = false,
+["text"] = "2. Win 10 Rated Battleground matches",
+},
+{
+["autoTrack"] = false,
+["text"] = "3. Wins can be earned over multiple sessions",
+},
+{
+["autoTrack"] = false,
+["text"] = "4. Tint unlocks automatically upon 10th win",
+},
+{
+["autoTrack"] = false,
+["text"] = "|cff888888Note: Patch 7.3 removed the requirement to have",
+},
+{
+["autoTrack"] = false,
+["text"] = "the challenge appearance equipped while doing this.|r",
+},
+},
+["class"] = "WARLOCK",
+["className"] = "Warlock",
+["spec"] = "Destruction",
+},
+{
+["tintIndex"] = 4,
+["trackedBy"] = {
+["class"] = "WARLOCK",
+["name"] = "Hellavator",
+["realm"] = "Tichondrius",
+},
+["rowType"] = "Valorous",
+["steps"] = {
+{
+["text"] = "1. Complete 'Balance of Power' questline first (or any alt with it)",
+["autoTrack"] = true,
+["achievementID"] = 10459,
+},
+{
+["text"] = "2. Complete all achievements in Glory of the Legion Hero",
+["autoTrack"] = true,
+["achievementID"] = 11163,
+},
+{
+["autoTrack"] = false,
+["text"] = "3. Requires specific achievements in each Legion dungeon",
+},
+{
+["autoTrack"] = false,
+["text"] = "4. Most achievements require Mythic difficulty",
+},
+{
+["autoTrack"] = false,
+["text"] = "5. Since 10.0.7: Account-wide achievement",
+},
+},
+["class"] = "WARLOCK",
+["className"] = "Warlock",
+["spec"] = "Demonology",
+},
+},
+["trackerWidth"] = 366.6668090820313,
+["characterProgress"] = {
+["Hellavator-Tichondrius"] = {
+["hasBaseHidden"] = true,
+["kills"] = {
+["required"] = 1000,
+["current"] = 1000,
+},
+["lastUpdated"] = 1790252088,
+["class"] = "WARLOCK",
+["worldQuests"] = {
+["required"] = 200,
+["current"] = 200,
+},
+["dungeons"] = {
+["required"] = 30,
+["current"] = 30,
+},
+},
+},
+["trackerHeight"] = 489.1664733886719,
+["lastSeenVersion"] = "1.5.9",
+["trackedMigrated"] = true,
+["hiddenProgress"] = {
+["WARLOCK"] = {
+["honorableKills"] = 1000,
+["worldQuests"] = 200,
+["dungeons"] = 30,
+},
+},
+}

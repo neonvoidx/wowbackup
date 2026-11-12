@@ -1,0 +1,52 @@
+
+TrueSpyCharDB = {
+["mirror"] = {
+["minimapPos"] = 131.6685628275452,
+["curSession"] = {
+["start"] = 1791505332,
+["ended"] = 1791505332,
+},
+["share"] = true,
+["winPos"] = {
+["y"] = 215.7874145507813,
+["p"] = "BOTTOMRIGHT",
+["x"] = -343.9397277832031,
+["r"] = "BOTTOMRIGHT",
+},
+["sessionLog"] = {
+"01:22:11 client: FOREVER 1.60.1 (build 70291, toc 16001, project 18, toc file FOREVER)",
+"01:22:11 settings: account file",
+"01:22:12 combat log closed by this client",
+},
+["optsPos"] = {
+["y"] = -129.6667327880859,
+["p"] = "TOPLEFT",
+["x"] = 287.4995727539063,
+["r"] = "TOPLEFT",
+},
+["sessionMeta"] = "2026-10-09 01:37:11 | FOREVER 70291 | v1.5.2 | Alister-Classic Beta PvP 2",
+["winW"] = 272,
+["autoInspect"] = true,
+["enabled"] = true,
+["skipTaxi"] = true,
+["realms"] = {
+["Classic Beta PvP 2"] = {
+["kills"] = {
+},
+["deaths"] = {
+},
+["kos"] = {
+},
+["history"] = {
+},
+["aars"] = {
+},
+["ignore"] = {
+},
+},
+},
+["selfTaxiQuiet"] = true,
+["seenVersion"] = "1.5.2",
+["winH"] = 163,
+},
+}

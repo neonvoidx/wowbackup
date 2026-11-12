@@ -1,0 +1,46 @@
+
+ColouredEnemyNameplatesDB = {
+["bossColor"] = {
+0.9725490808486938,
+0,
+0.09019608050584793,
+},
+["debug"] = false,
+["colorBosses"] = "instancesOnly",
+["colorManaUser"] = "instancesOnly",
+["otherHostilesColor"] = {
+1,
+0.0470588281750679,
+0,
+},
+["schemaVersion"] = 2,
+["lieutenantColor"] = {
+0.4117647409439087,
+0.415686309337616,
+0.8392157554626465,
+},
+["tankNoThreatColor"] = {
+1,
+0.1215686274509804,
+0.2235294117647059,
+},
+["colorLieutenants"] = "instancesOnly",
+["version"] = "1.3.3",
+["tankHasThreatColor"] = {
+0.2352941176470588,
+0.9058823529411765,
+0.7372549019607844,
+},
+["manaUserColor"] = {
+0.1137254901960784,
+0.8313725490196079,
+1,
+},
+["tankChangingThreatColor"] = {
+1,
+0.5686274509803921,
+0.1843137254901961,
+},
+["colorOtherHostiles"] = "instancesOnly",
+["colorTankThreat"] = "instancesOnly",
+}

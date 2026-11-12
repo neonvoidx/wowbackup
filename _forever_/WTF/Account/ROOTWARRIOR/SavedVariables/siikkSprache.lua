@@ -1,0 +1,2 @@
+
+siikkSprache_DB = nil

@@ -1,0 +1,50 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ https://raw.githubusercontent.com/Gethe/wow-ui-source/live/Interface/AddOns/Blizzard_SharedXML/UI.xsd">
+    <Script file="FormElement.lua" />
+
+    <Frame name="MapPinEnhancedFormElementTemplate" virtual="true" inherits="MapPinEnhancedFormFieldTemplate" mixin="MapPinEnhancedFormElementMixin" collapsesLayout="true" enableMouse="true" propagateMouseInput="Motion">
+        <KeyValues>
+            <KeyValue key="padding" value="8" type="number" />
+            <KeyValue key="labelBottomSpacing" value="5" type="number" />
+            <KeyValue key="descriptionBottomSpacing" value="8" type="number" />
+            <KeyValue key="orientation" value="horizontal" />
+            <KeyValue key="scrollPadding" value="12" type="number" />
+        </KeyValues>
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture parentKey="hoverHighlight" file="Interface/AddOns/MapPinEnhanced/assets/shared/GradientHorizontal.png" alpha="0.04" setAllPoints="true" hidden="true" />
+            </Layer>
+            <Layer level="BORDER">
+                <Texture parentKey="searchHighlight" scale="0.5" file="Interface/AddOns/MapPinEnhanced/assets/shared/GenericFrame.png" alphaMode="ADD" hidden="true">
+                    <Color r="1" g="0.82" b="0" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="-4" y="12" />
+                        <Anchor point="BOTTOMRIGHT" x="4" y="-4" />
+                    </Anchors>
+                    <TextureSliceMargins left="20" top="20" right="20" bottom="20" />
+                    <TextureSliceMode mode="Stretched" />
+                    <Scripts>
+                        <OnShow>
+                            self:GetParent():OnSearchHighlightShow()
+                        </OnShow>
+                        <OnHide>
+                            self:GetParent():OnSearchHighlightHide()
+                        </OnHide>
+                    </Scripts>
+                </Texture>
+            </Layer>
+        </Layers>
+        <Animations>
+            <AnimationGroup looping="REPEAT" parentKey="searchAnimation">
+                <Alpha childKey="searchHighlight" fromAlpha="0.55" toAlpha="1" duration="0.3" smoothing="IN_OUT" order="1" />
+                <Alpha childKey="searchHighlight" fromAlpha="1" toAlpha="0.55" duration="0.3" startDelay="0.2" smoothing="IN_OUT" order="2" />
+            </AnimationGroup>
+        </Animations>
+        <Scripts>
+            <OnLoad method="OnLoad" />
+            <OnEnter method="OnHoverEnter" />
+            <OnLeave method="OnHoverLeave" />
+            <OnHide method="OnHoverLeave" />
+        </Scripts>
+    </Frame>
+</Ui>

@@ -1,0 +1,26 @@
+## Interface: 120107, 120105, 50504, 20506, 16001, 11509
+
+## Version: 7.5.5
+
+## Author: Nyony (on Twitch)
+## Title: Ny's To-Do List
+
+## Notes: A simple interface to remember everything you need to do!
+## Notes-frFR: Une interface simple pour se souvenir de tout ce que tu as à faire!
+## Notes-deDE: Einfaches Interface, um dich an alles zu erinnern, was zu tun ist!
+## Notes-ptBR: Uma interface simples para lembrar tudo o que você precisa fazer!
+## Notes-koKR: 간단한 인터페이스로 할일을 모두 기록해 보아요!
+
+## SavedVariables: NysToDoListDB
+## SavedVariablesPerCharacter: ToDoListSV, ToDoListSV_itemsList, ToDoListSV_checkedButtons, ToDoListSV_autoReset, ToDoListSV_lastLoadedTab
+
+## DefaultState: enabled
+## Dependencies: Nys_ToDoList_Backup
+## OptionalDeps: LibStub, CallbackHandler-1.0, Ace3, LibDataBroker-1.1, LibDBIcon-1.0, LibQTip-1.0, LibDeflate
+## X-Embeds: LibStub, CallbackHandler-1.0, Ace3, LibDataBroker-1.1, LibDBIcon-1.0, LibQTip-1.0, LibDeflate
+
+## X-Curse-Project-ID: 320655
+
+## IconTexture: Interface\AddOns\Nys_ToDoList\Assets\Art\70_professions_scroll_03
+
+Main.xml

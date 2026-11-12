@@ -1,0 +1,173 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+	<Frame name="EQOLQuickCastEditorDraggedItemTemplate" mixin="EQOLQuickCastEditorDraggedItemMixin" frameStrata="TOOLTIP" virtual="true">
+		<Size x="38" y="38"/>
+		<Layers>
+			<Layer level="OVERLAY" textureSubLevel="6">
+				<Texture parentKey="Icon" setAllPoints="true"/>
+			</Layer>
+		</Layers>
+		<Scripts>
+			<OnUpdate method="OnUpdate"/>
+		</Scripts>
+	</Frame>
+
+	<Button name="EQOLQuickCastEditorItemTemplate" registerForDrag="LeftButton" ignoreChildrenForBounds="true" virtual="true">
+		<Size x="38" y="38"/>
+		<Layers>
+			<Layer level="ARTWORK">
+				<Texture parentKey="Icon" setAllPoints="true">
+					<TexCoords left="0.08" right="0.92" top="0.08" bottom="0.92"/>
+				</Texture>
+			</Layer>
+			<Layer level="OVERLAY">
+				<Texture parentKey="SubmenuMarker" atlas="common-icon-forwardarrow" hidden="true">
+					<Size x="16" y="16"/>
+					<Anchors>
+						<Anchor point="TOPRIGHT" x="3" y="3"/>
+					</Anchors>
+				</Texture>
+				<Texture parentKey="DefaultMarker" atlas="PetJournal-FavoritesIcon" hidden="true">
+					<Size x="18" y="18"/>
+					<Anchors>
+						<Anchor point="BOTTOMLEFT" x="-3" y="-3"/>
+					</Anchors>
+				</Texture>
+				<Texture parentKey="Disabled" atlas="common-icon-redx" hidden="true">
+					<Size x="16" y="16"/>
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="HIGHLIGHT">
+				<Texture parentKey="Highlight" setAllPoints="true" file="Interface\Buttons\ButtonHilight-Square" alphaMode="ADD"/>
+			</Layer>
+		</Layers>
+	</Button>
+
+	<Frame name="EQOLQuickCastEditorCategoryTemplate" inherits="ResizeLayoutFrame" virtual="true">
+		<KeyValues>
+			<KeyValue key="minimumHeight" value="22" type="number"/>
+			<KeyValue key="minimumWidth" value="344" type="number"/>
+			<KeyValue key="maximumWidth" value="344" type="number"/>
+		</KeyValues>
+		<Frames>
+			<Button parentKey="Header" inherits="ListHeaderThreeSliceTemplate" registerForClicks="LeftButtonUp,RightButtonUp">
+				<Size x="0" y="22"/>
+				<Anchors>
+					<Anchor point="TOPLEFT"/>
+					<Anchor point="TOPRIGHT"/>
+				</Anchors>
+			</Button>
+			<Frame parentKey="Container">
+				<Size x="318" y="1"/>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeKey="$parent.Header" relativePoint="BOTTOMLEFT" x="13" y="-15"/>
+				</Anchors>
+			</Frame>
+		</Frames>
+	</Frame>
+
+	<Frame name="EQOLQuickCastEditor" inherits="ButtonFrameTemplate" parent="UIParent" toplevel="true" hidden="true">
+		<Size x="399" y="609"/>
+		<Anchors>
+			<Anchor point="CENTER"/>
+		</Anchors>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture parentKey="Background" atlas="character-panel-background">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeKey="$parent.Inset"/>
+						<Anchor point="BOTTOMRIGHT" relativeKey="$parent.Inset"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="OVERLAY">
+				<FontString parentKey="CombatWarning" inherits="GameFontRedSmall" justifyH="LEFT" hidden="true">
+					<Anchors>
+						<Anchor point="TOPLEFT" x="18" y="-64"/>
+						<Anchor point="TOPRIGHT" x="-30" y="-64"/>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<EditBox parentKey="SearchBox" inherits="SearchBoxTemplate">
+				<Size x="290" y="30"/>
+				<Anchors>
+					<Anchor point="TOPLEFT" x="72" y="-30"/>
+				</Anchors>
+			</EditBox>
+			<DropdownButton parentKey="SettingsDropdown" inherits="UIPanelIconDropdownButtonTemplate">
+				<Anchors>
+					<Anchor point="LEFT" relativeKey="$parent.SearchBox" relativePoint="RIGHT" x="5"/>
+				</Anchors>
+			</DropdownButton>
+			<ScrollFrame parentKey="MenuScroll" inherits="ScrollFrameTemplate">
+				<KeyValues>
+					<KeyValue key="scrollBarHideIfUnscrollable" value="false" type="boolean"/>
+					<KeyValue key="scrollBarHideTrackIfThumbExceedsTrack" value="true" type="boolean"/>
+					<KeyValue key="scrollBarTopY" value="0" type="number"/>
+					<KeyValue key="scrollBarBottomY" value="0" type="number"/>
+				</KeyValues>
+				<Anchors>
+					<Anchor point="TOPLEFT" x="17" y="-82"/>
+					<Anchor point="BOTTOMRIGHT" x="-30" y="34"/>
+				</Anchors>
+				<ScrollChild>
+					<Frame parentKey="Content">
+						<Size x="344" y="1"/>
+						<Anchors>
+							<Anchor point="TOPLEFT"/>
+						</Anchors>
+					</Frame>
+				</ScrollChild>
+			</ScrollFrame>
+			<DropdownButton parentKey="SpecDropdown" inherits="WowStyle1DropdownTemplate">
+				<KeyValues>
+					<KeyValue key="menuPoint" type="string" value="BOTTOMLEFT"/>
+					<KeyValue key="menuRelativePoint" type="string" value="TOPLEFT"/>
+				</KeyValues>
+				<Anchors>
+					<Anchor point="BOTTOMLEFT" x="5" y="3"/>
+				</Anchors>
+			</DropdownButton>
+			<Frame parentKey="ReorderMarker" mixin="EQOLQuickCastEditorReorderMarkerMixin" hidden="true">
+				<Size x="8" y="52"/>
+				<Layers>
+					<Layer level="ARTWORK">
+						<Texture parentKey="Texture" file="Interface\ChatFrame\UI-ChatFrame-DockHighlight" alphaMode="ADD">
+							<Size x="52" y="52"/>
+							<Anchors>
+								<Anchor point="CENTER"/>
+							</Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+			</Frame>
+		</Frames>
+	</Frame>
+
+	<Frame name="EQOLQuickCastIconPicker" inherits="IconSelectorPopupFrameTemplate" parent="UIParent" toplevel="true" frameStrata="FULLSCREEN_DIALOG" enableMouse="true" hidden="true">
+		<Anchors>
+			<Anchor point="CENTER"/>
+		</Anchors>
+		<Layers>
+			<Layer level="OVERLAY">
+				<FontString parentKey="NoResults" inherits="GameFontHighlight" justifyH="CENTER" hidden="true">
+					<Anchors>
+						<Anchor point="CENTER" relativeKey="$parent.IconSelector"/>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<EditBox parentKey="SearchBox" inherits="SearchBoxTemplate" letters="64">
+				<Size x="190" y="30"/>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeKey="$parent.BorderBox" x="18" y="-29"/>
+				</Anchors>
+			</EditBox>
+		</Frames>
+	</Frame>
+</Ui>

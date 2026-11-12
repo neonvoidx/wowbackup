@@ -1,0 +1,208 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ https://raw.githubusercontent.com/Gethe/wow-ui-source/live/Interface/AddOns/Blizzard_SharedXML/UI.xsd">
+    <Script file="ArrowDisplay.lua" />
+
+    <Frame name="MapPinEnhancedWayfinderArrowDisplayTemplate" mixin="MapPinEnhancedWayfinderArrowMixin" hidden="true" virtual="true" frameStrata="MEDIUM" enableMouse="true">
+        <Size x="318" y="62" />
+        <Anchors>
+            <Anchor point="TOP" />
+        </Anchors>
+        <Frames>
+            <Frame parentKey="progress" inherits="MapPinEnhancedWayfinderProgressTemplate" frameStrata="MEDIUM" />
+            <Frame parentKey="textContainer" inherits="MapPinEnhancedGenericFrameWithBottomLineTemplate">
+                <Size x="318" y="62" />
+                <Anchors>
+                    <Anchor point="TOP" />
+                </Anchors>
+                <Layers>
+                    <Layer level="OVERLAY">
+                        <Texture parentKey="loading" inherits="MapPinEnhancedWayfinderLoadingTemplate">
+                            <Anchors>
+                                <Anchor point="LEFT" x="21" />
+                            </Anchors>
+                        </Texture>
+                    </Layer>
+                    <Layer level="ARTWORK">
+                        <FontString parentKey="title" inherits="MapPinEnhancedFontNormal" justifyH="LEFT" justifyV="TOP" wordwrap="true">
+                            <Size x="166" y="0" />
+                            <Anchors>
+                                <Anchor point="TOPLEFT" x="64" y="-8" />
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+                <Frames>
+                    <Frame parentKey="readout" inherits="MapPinEnhancedWayfinderReadoutTemplate">
+                        <KeyValues>
+                            <KeyValue key="maxWidth" value="166" type="number" />
+                        </KeyValues>
+                        <Size x="166" y="12" />
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeKey="$parent.title" y="-3" />
+                        </Anchors>
+                        <Layers>
+                            <Layer level="ARTWORK">
+                                <FontString parentKey="text" inherits="MapPinEnhancedFontHighlightSmall" justifyH="LEFT" wordwrap="false">
+                                    <Size x="0" y="12" />
+                                    <Color r="0.65" g="0.65" b="0.65" />
+                                    <Anchors>
+                                        <Anchor point="TOPLEFT" />
+                                    </Anchors>
+                                </FontString>
+                            </Layer>
+                        </Layers>
+                    </Frame>
+                    <Frame parentKey="description" inherits="MapPinEnhancedWayfinderDescriptionTemplate">
+                        <KeyValues>
+                            <KeyValue key="maxWidth" value="166" type="number" />
+                        </KeyValues>
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeKey="$parent.title" y="-3" />
+                        </Anchors>
+                        <Layers>
+                            <Layer level="ARTWORK">
+                                <FontString parentKey="text" inherits="MapPinEnhancedFontHighlightSmall" justifyH="LEFT">
+                                    <Anchors>
+                                        <Anchor point="TOPLEFT" />
+                                    </Anchors>
+                                </FontString>
+                            </Layer>
+                        </Layers>
+                    </Frame>
+                </Frames>
+            </Frame>
+            <Frame parentKey="needleContainer">
+                <Size x="56" y="56" />
+                <Anchors>
+                    <Anchor point="RIGHT" relativeKey="$parent.textContainer" x="-32" />
+                </Anchors>
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <Texture parentKey="needle" file="Interface/AddOns/MapPinEnhanced/assets/wayfinders/DirectionArrowSheet.png" desaturated="true" texelSnappingBias="0" snapToPixelGrid="false">
+                            <Size x="52" y="52" />
+                            <Anchors>
+                                <Anchor point="CENTER" />
+                            </Anchors>
+                            <TexCoords left="0" right="0.0625" top="0" bottom="0.125" />
+                            <Animations>
+                                <AnimationGroup inherits="MapPinEnhancedAnimationFadeIn" parentKey="fadeIn">
+                                    <KeyValues>
+                                        <KeyValue key="showOnPlay" value="true" />
+                                    </KeyValues>
+                                </AnimationGroup>
+                                <AnimationGroup inherits="MapPinEnhancedAnimationFadeOut" parentKey="fadeOut">
+                                    <KeyValues>
+                                        <KeyValue key="hideOnFinished" value="true" />
+                                    </KeyValues>
+                                    <Scripts>
+                                        <OnFinished inherit="append">self:GetParent():GetParent():GetParent():FinishNeedleTransition()</OnFinished>
+                                    </Scripts>
+                                </AnimationGroup>
+                            </Animations>
+                        </Texture>
+                        <Texture parentKey="closeNeedle" file="Interface/AddOns/MapPinEnhanced/assets/wayfinders/DirectionArrowNear.png" desaturated="true" hidden="true" alpha="0" texelSnappingBias="0" snapToPixelGrid="false">
+                            <Size x="40" y="40" />
+                            <Anchors>
+                                <Anchor point="CENTER" />
+                            </Anchors>
+                            <Animations>
+                                <AnimationGroup parentKey="jump" looping="REPEAT">
+                                    <Translation offsetY="8" duration="0.3" order="1" smoothing="IN_OUT" />
+                                    <Translation offsetY="-8" duration="0.3" order="2" smoothing="IN_OUT" />
+                                </AnimationGroup>
+                                <AnimationGroup inherits="MapPinEnhancedAnimationFadeIn" parentKey="fadeIn">
+                                    <KeyValues>
+                                        <KeyValue key="showOnPlay" value="true" />
+                                    </KeyValues>
+                                </AnimationGroup>
+                                <AnimationGroup inherits="MapPinEnhancedAnimationFadeOut" parentKey="fadeOut">
+                                    <KeyValues>
+                                        <KeyValue key="hideOnFinished" value="true" />
+                                    </KeyValues>
+                                    <Scripts>
+                                        <OnFinished inherit="append">
+                                            self:GetParent().jump:Stop()
+                                            self:GetParent():GetParent():GetParent():FinishNeedleTransition()
+                                        </OnFinished>
+                                    </Scripts>
+                                </AnimationGroup>
+                            </Animations>
+                        </Texture>
+                    </Layer>
+                </Layers>
+            </Frame>
+            <Frame inherits="MapPinEnhancedBasePinTemplate" parentKey="pin" frameStrata="MEDIUM" propagateMouseInput="Both">
+                <KeyValues>
+                    <KeyValue key="hideShadow" value="true" type="boolean" />
+                    <KeyValue key="hideHighlight" value="true" type="boolean" />
+                </KeyValues>
+                <Size x="42" y="42" />
+                <Anchors>
+                    <Anchor point="LEFT" relativeKey="$parent.textContainer" x="16" />
+                </Anchors>
+            </Frame>
+            <Button parentKey="clearButton" inherits="MapPinEnhancedIconButtonTemplate">
+                <Size x="22" y="22" />
+                <KeyValues>
+                    <KeyValue key="icon" value="close" />
+                    <KeyValue key="tooltip" value="Clear Tracking" />
+                </KeyValues>
+                <Anchors>
+                    <Anchor point="TOPRIGHT" x="-8" y="-8" />
+                </Anchors>
+                <Scripts>
+                    <OnClick>self:GetParent():ClearTracking()</OnClick>
+                </Scripts>
+            </Button>
+            <Button parentKey="skipButton" inherits="MapPinEnhancedIconButtonTemplate">
+                <Size x="22" y="22" />
+                <KeyValues>
+                    <KeyValue key="icon" value="forward" />
+                    <KeyValue key="tooltip" value="Skip navigation tooltip" />
+                </KeyValues>
+                <Anchors>
+                    <Anchor point="TOP" relativeKey="$parent.clearButton" relativePoint="BOTTOM" y="-2" />
+                </Anchors>
+                <Scripts>
+                    <OnClick>self:GetParent():ToggleNavigationSkipped()</OnClick>
+                </Scripts>
+            </Button>
+            <Frame parentKey="dataWarning" mixin="MapPinEnhancedTooltipMixin" enableMouse="true" propagateMouseInput="Clicks" hidden="true">
+                <Size x="18" y="18" />
+                <Anchors>
+                    <Anchor point="TOP" relativeKey="$parent.skipButton" relativePoint="BOTTOM" y="-4" />
+                </Anchors>
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <Texture file="Interface/AddOns/MapPinEnhanced/assets/icons/IconInfo.png">
+                            <Size x="16" y="16" />
+                            <Color r="1" g="0.15" b="0.15" />
+                            <Anchors>
+                                <Anchor point="CENTER" />
+                            </Anchors>
+                        </Texture>
+                    </Layer>
+                </Layers>
+            </Frame>
+        </Frames>
+        <Animations>
+            <AnimationGroup inherits="MapPinEnhancedAnimationFadeIn" parentKey="fadeIn">
+                <KeyValues>
+                    <KeyValue key="showOnPlay" value="true" />
+                </KeyValues>
+            </AnimationGroup>
+            <AnimationGroup inherits="MapPinEnhancedAnimationFadeOut" parentKey="fadeOut">
+                <KeyValues>
+                    <KeyValue key="hideOnFinished" value="true" />
+                </KeyValues>
+            </AnimationGroup>
+        </Animations>
+        <Scripts>
+            <OnShow method="OnShow" />
+            <OnHide method="OnHide" />
+            <OnLoad method="OnLoad" />
+            <OnEnter method="OnEnter" />
+            <OnLeave method="OnLeave" />
+        </Scripts>
+    </Frame>
+</Ui>

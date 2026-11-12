@@ -1,0 +1,63 @@
+VER 3 0100000000000002 " " "INV_Misc_QuestionMark"
+#showtooltip
+/cast [mod:shift] Distract
+/cast [mod:ctrl] Pick Pocket
+/cast [nomod] Kick
+/cancelaura [nomod] stealth
+END
+VER 3 0100000000000001 " " "INV_Misc_QuestionMark"
+#showtooltip
+/cast !Stealth
+END
+VER 3 0100000000000009 " " "134400"
+#showtooltip Garrote
+/cast Pick Pocket
+/cast Garrote
+END
+VER 3 010000000000000A " " "134400"
+#showtooltip Sinister Strike
+/cast Riposte
+/cast Sinister Strike
+/startattack
+END
+VER 3 0100000000000006 " " "134400"
+#showtooltip Vanish
+/stopattack
+/cast Vanish
+END
+VER 3 0100000000000004 " " "134400"
+#showtooltip
+/use Instant Poison II
+/use [btn:1] 16; [btn:2] 17
+/click StaticPopup1Button1
+END
+VER 3 010000000000000B " " "134400"
+#showtooltip backstab
+/cast Backstab
+END
+VER 3 010000000000000C " " "134400"
+#showtooltip
+/use Crippling Poison
+/use [btn:1] 16; [btn:2] 17
+/click StaticPopup1Button1
+END
+VER 3 010000000000000D " " "134400"
+#showtooltip
+/use Mind-numbing poison
+/use [btn:1] 16; [btn:2] 17
+/click StaticPopup1Button1
+END
+VER 3 010000000000000E " " "134400"
+#showtooltip Ambush
+/cast pick pocket
+/cast ambush
+END
+VER 3 0100000000000003 "Blind" "INV_Misc_QuestionMark"
+#showtooltip Blind
+/stopattack [nomod]
+/cast [mod:shift,@focus,exists,harm,nodead][] Blind
+END
+VER 3 0100000000000005 "Sap" "INV_Misc_QuestionMark"
+#showtooltip Sap
+/cast [nostealth] !Stealth; [@mouseover,harm,nodead][@focus,harm,nodead][] Sap
+END

@@ -1,0 +1,246 @@
+
+NITdatabase = {
+["profileKeys"] = {
+["Alister - PvP"] = "Default",
+["Many - PvP"] = "Default",
+["Unknown - PvP"] = "Default",
+["Many Faced"] = "Default",
+},
+["global"] = {
+["versions"] = {
+[2.31] = 1792504801,
+},
+["minimapIcon"] = {
+["minimapPos"] = 194.3790830199315,
+},
+["wipeUpgradeData"] = false,
+["resetCharData"] = false,
+["PvP"] = {
+["gammaBuffSettings"] = {
+},
+["myChars"] = {
+["Alister Keegan"] = {
+["guild"] = "No guild",
+[6265] = 0,
+["marks"] = {
+[20558] = 0,
+[20559] = 0,
+[20560] = 0,
+},
+["resting"] = false,
+["durabilityAverage"] = 85.83333333333333,
+["race"] = "Undead",
+["bossKills"] = {
+},
+["gold"] = 81,
+["quests"] = {
+},
+["level"] = 3,
+["trackedItems"] = {
+},
+["realm"] = "PvP",
+["savedInstances"] = {
+},
+["raceEnglish"] = "Scourge",
+["raceLocalized"] = "Undead",
+["gender"] = "Male",
+["maxXP"] = 1400,
+["classEnglish"] = "WARLOCK",
+["time"] = 1791808584,
+["questsMonthly"] = {
+},
+["currentXP"] = 1244,
+["restedXP"] = 182,
+["totalBagSlots"] = 20,
+["freeBagSlots"] = 4,
+["questsDaily"] = {
+},
+["guildRankName"] = "No guild rank",
+["classLocalized"] = "Warlock",
+["levelLog"] = {
+[3] = {
+["played"] = 5763,
+["subzoneName"] = "Deathknell",
+["zone"] = 1415,
+["zoneName"] = "Tirisfal Glades",
+["y"] = 0.2337875821927425,
+["x"] = 0.4100579735781376,
+["gold"] = 63,
+["timestamp"] = 1791503205,
+["mobCount"] = 8,
+},
+},
+},
+["Unknown"] = {
+["guild"] = "No guild",
+["raceEnglish"] = "Scourge",
+["marks"] = {
+[20558] = 0,
+[20559] = 0,
+[20560] = 0,
+},
+["durabilityAverage"] = 100,
+["resting"] = false,
+["time"] = 1790859527,
+["gold"] = 0,
+["level"] = 3,
+["trackedItems"] = {
+},
+["realm"] = "PvP",
+["race"] = "Undead",
+["classLocalized"] = "Warlock",
+["raceLocalized"] = "Undead",
+["gender"] = "Male",
+["maxXP"] = 0,
+["classEnglish"] = "WARLOCK",
+["savedInstances"] = {
+},
+["questsMonthly"] = {
+},
+["guildRankName"] = "No guild rank",
+["restedXP"] = 0,
+["totalBagSlots"] = 0,
+["freeBagSlots"] = 0,
+["questsDaily"] = {
+},
+[6265] = 0,
+["quests"] = {
+},
+["currentXP"] = 0,
+},
+["Alister"] = {
+["guild"] = "No guild",
+[6265] = 0,
+["marks"] = {
+[20558] = 0,
+[20559] = 0,
+[20560] = 0,
+},
+["time"] = 1791136385,
+["durabilityAverage"] = 100,
+["race"] = "Undead",
+["bossKills"] = {
+},
+["gold"] = 63,
+["classLocalized"] = "Warlock",
+["level"] = 3,
+["trackedItems"] = {
+},
+["realm"] = "PvP",
+["savedInstances"] = {
+},
+["currentXP"] = 640,
+["raceLocalized"] = "Undead",
+["guildRankName"] = "No guild rank",
+["maxXP"] = 1400,
+["classEnglish"] = "WARLOCK",
+["gender"] = "Male",
+["questsMonthly"] = {
+},
+["resting"] = false,
+["restedXP"] = 116,
+["totalBagSlots"] = 20,
+["freeBagSlots"] = 9,
+["questsDaily"] = {
+},
+["raceEnglish"] = "Scourge",
+["quests"] = {
+},
+["levelLog"] = {
+[3] = {
+["played"] = 3789,
+["subzoneName"] = "Deathknell",
+["zone"] = 1420,
+["zoneName"] = "Tirisfal Glades",
+["y"] = 0.6280829087852461,
+["x"] = 0.3108012810122752,
+["gold"] = 55,
+["timestamp"] = 1790859875,
+["mobCount"] = 5,
+},
+},
+},
+["Many Faced"] = {
+["guild"] = "No guild",
+["raceEnglish"] = "Scourge",
+["marks"] = {
+[20558] = 0,
+[20559] = 0,
+[20560] = 0,
+},
+["durabilityAverage"] = 98.94736842105263,
+["race"] = "Undead",
+["bossKills"] = {
+},
+["gold"] = 55,
+["guildRankName"] = "No guild rank",
+["levelLog"] = {
+{
+["played"] = 3,
+["subzoneName"] = "Shadow Grave",
+["zone"] = 1415,
+["zoneName"] = "Tirisfal Glades",
+["y"] = 0.2467421646657205,
+["x"] = 0.4068903508022373,
+["gold"] = 0,
+["timestamp"] = 1792068336,
+["mobCount"] = 9,
+["questCount"] = 1,
+},
+{
+["played"] = 2641,
+["subzoneName"] = "Deathknell",
+["zone"] = 1420,
+["zoneName"] = "Tirisfal Glades",
+["y"] = 0.6365808266808891,
+["x"] = 0.3229063877723029,
+["gold"] = 16,
+["timestamp"] = 1792070974,
+["mobCount"] = 16,
+["questCount"] = 2,
+},
+{
+["played"] = 4564,
+["subzoneName"] = "Deathknell",
+["zone"] = 1420,
+["zoneName"] = "Tirisfal Glades",
+["y"] = 0.6666887372510971,
+["x"] = 0.2978552229209889,
+["gold"] = 53,
+["timestamp"] = 1792074327,
+["mobCount"] = 2,
+},
+},
+["trackedItems"] = {
+},
+["realm"] = "PvP",
+["quests"] = {
+},
+["resting"] = false,
+["raceLocalized"] = "Undead",
+["gender"] = "Female",
+["maxXP"] = 1400,
+["classEnglish"] = "ROGUE",
+["time"] = 1792507263,
+["questsMonthly"] = {
+},
+["currentXP"] = 106,
+["restedXP"] = 196,
+["totalBagSlots"] = 20,
+["freeBagSlots"] = 11,
+["questsDaily"] = {
+},
+["level"] = 3,
+["classLocalized"] = "Rogue",
+["savedInstances"] = {
+},
+},
+},
+["weeklyResetTime"] = 1792511998,
+["trades"] = {
+},
+["instances"] = {
+},
+},
+},
+}

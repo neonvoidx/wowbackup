@@ -1,0 +1,16 @@
+The following alert sounds are bundled from Anahkas-authored addons:
+
+- AlertToastWarm.ogg
+- Focus.ogg
+- Notification18.ogg
+- Notification38.ogg
+- SheepBleat.ogg
+- Sonar.ogg
+- WatchOut.ogg
+
+Sources:
+
+- Externals On Me
+- HealerCC
+
+These files are included as author-provided media for SharedMedia: AlertMediaPack.

@@ -1,0 +1,529 @@
+
+zTalentPlannerDB = {
+["char"] = {
+["Beat Ngu"] = {
+["tutorialSeen"] = true,
+["modernOwnFrameDefaultsApplied"] = true,
+["talentFrameExpanded"] = true,
+["useOwnTalentFrame"] = true,
+["classKey"] = "ROGUE",
+["activePlan"] = "Ambush",
+},
+},
+["profileKeys"] = {
+["Beat Ngu"] = "Default",
+},
+["global"] = {
+["classPlans"] = {
+["ROGUE"] = {
+["Ambush"] = {
+["talentDataRevision"] = 8,
+["createdAt"] = 1793908522,
+["sequence"] = {
+{
+["tab"] = 2,
+["column"] = 2,
+["tier"] = 1,
+},
+{
+["tab"] = 2,
+["column"] = 2,
+["tier"] = 1,
+},
+{
+["tab"] = 1,
+["column"] = 2,
+["tier"] = 1,
+},
+{
+["tab"] = 1,
+["column"] = 2,
+["tier"] = 1,
+},
+{
+["tab"] = 3,
+["column"] = 3,
+["tier"] = 1,
+},
+{
+["tab"] = 3,
+["column"] = 3,
+["tier"] = 1,
+},
+{
+["tab"] = 3,
+["column"] = 3,
+["tier"] = 1,
+},
+{
+["tab"] = 3,
+["column"] = 3,
+["tier"] = 1,
+},
+{
+["tab"] = 3,
+["column"] = 3,
+["tier"] = 1,
+},
+{
+["tab"] = 3,
+["column"] = 3,
+["tier"] = 2,
+},
+{
+["tab"] = 3,
+["column"] = 3,
+["tier"] = 2,
+},
+{
+["tab"] = 3,
+["column"] = 3,
+["tier"] = 2,
+},
+{
+["tab"] = 3,
+["column"] = 2,
+["tier"] = 1,
+},
+{
+["tab"] = 3,
+["column"] = 2,
+["tier"] = 2,
+},
+{
+["tab"] = 3,
+["column"] = 3,
+["tier"] = 3,
+},
+{
+["tab"] = 3,
+["column"] = 3,
+["tier"] = 3,
+},
+{
+["tab"] = 3,
+["column"] = 3,
+["tier"] = 3,
+},
+{
+["tab"] = 3,
+["column"] = 1,
+["tier"] = 3,
+},
+{
+["tab"] = 3,
+["column"] = 1,
+["tier"] = 3,
+},
+{
+["tab"] = 3,
+["column"] = 2,
+["tier"] = 4,
+},
+{
+["tab"] = 3,
+["column"] = 1,
+["tier"] = 3,
+},
+{
+["tab"] = 3,
+["column"] = 2,
+["tier"] = 3,
+},
+{
+["tab"] = 3,
+["column"] = 2,
+["tier"] = 2,
+},
+{
+["tab"] = 3,
+["column"] = 2,
+["tier"] = 1,
+},
+{
+["tab"] = 3,
+["column"] = 3,
+["tier"] = 5,
+},
+{
+["tab"] = 3,
+["column"] = 2,
+["tier"] = 5,
+},
+{
+["tab"] = 2,
+["column"] = 1,
+["tier"] = 1,
+},
+{
+["tab"] = 2,
+["column"] = 1,
+["tier"] = 1,
+},
+{
+["tab"] = 2,
+["column"] = 1,
+["tier"] = 1,
+},
+{
+["tab"] = 2,
+["column"] = 3,
+["tier"] = 2,
+},
+{
+["tab"] = 2,
+["column"] = 3,
+["tier"] = 2,
+},
+{
+["tab"] = 2,
+["column"] = 2,
+["tier"] = 2,
+},
+{
+["tab"] = 2,
+["column"] = 2,
+["tier"] = 2,
+},
+{
+["tab"] = 2,
+["column"] = 2,
+["tier"] = 2,
+},
+{
+["tab"] = 2,
+["column"] = 2,
+["tier"] = 3,
+},
+{
+["tab"] = 2,
+["column"] = 4,
+["tier"] = 3,
+},
+{
+["tab"] = 2,
+["column"] = 4,
+["tier"] = 3,
+},
+{
+["tab"] = 2,
+["column"] = 3,
+["tier"] = 2,
+},
+{
+["tab"] = 2,
+["column"] = 1,
+["tier"] = 3,
+},
+{
+["tab"] = 2,
+["column"] = 3,
+["tier"] = 4,
+},
+{
+["tab"] = 2,
+["column"] = 3,
+["tier"] = 4,
+},
+{
+["tab"] = 2,
+["column"] = 2,
+["tier"] = 4,
+},
+{
+["tab"] = 2,
+["column"] = 1,
+["tier"] = 3,
+},
+{
+["tab"] = 2,
+["column"] = 4,
+["tier"] = 4,
+},
+{
+["tab"] = 2,
+["column"] = 2,
+["tier"] = 5,
+},
+{
+["tab"] = 2,
+["column"] = 1,
+["tier"] = 5,
+},
+{
+["tab"] = 2,
+["column"] = 1,
+["tier"] = 5,
+},
+{
+["tab"] = 2,
+["column"] = 3,
+["tier"] = 5,
+},
+{
+["tab"] = 2,
+["column"] = 3,
+["tier"] = 5,
+},
+{
+["tab"] = 2,
+["column"] = 3,
+["tier"] = 6,
+},
+{
+["tab"] = 2,
+["column"] = 3,
+["tier"] = 6,
+},
+},
+["talentBuild"] = 70790,
+["ruleset"] = "FOREVER",
+["updatedAt"] = 1793908529,
+["lastUsedAt"] = 1793908522,
+["createdBy"] = "Beat Ngu",
+},
+},
+},
+["schemaVersion"] = 3,
+},
+["profiles"] = {
+["Default"] = {
+},
+},
+}
+zTalentPlannerCacheDB = {
+["profileKeys"] = {
+["Beat Ngu"] = "Default",
+},
+["global"] = {
+["talentTextCache"] = {
+["__version"] = 5,
+["__build"] = 16001,
+["ROGUE"] = {
+{
+{
+["raw"] = "Increases the duration of your Gouge ability by 0.5 sec.",
+["normalized"] = "increases the duration of your gouge ability by 0.5 sec.",
+},
+{
+["raw"] = "After killing a non-trivial enemy, gives you a 20% increased critical strike chance on your next Sinister Strike, Backstab, Ambush, Mutilate, or Ghostly Strike. Lasts 20 sec.",
+["normalized"] = "after killing a non-trivial enemy, gives you a 20% increased critical strike chance on your next sinister strike, backstab, ambush, mutilate, or ghostly strike. lasts 20 sec.",
+},
+{
+["raw"] = "Increases your critical strike chance with all attacks and Poisons by 1%.",
+["normalized"] = "increases your critical strike chance with all attacks and poisons by 1%.",
+},
+{
+["raw"] = "Gives your finishing moves a 20% chance to add a Combo Point to your target.",
+["normalized"] = "gives your finishing moves a 20% chance to add a combo point to your target.",
+},
+{
+["raw"] = "Reduces the Energy cost of your Expose Armor ability by 5, and refunds 1 Combo Point when cast with 5 Combo Points.",
+["normalized"] = "reduces the energy cost of your expose armor ability by 5, and refunds 1 combo point when cast with 5 combo points.",
+},
+{
+["raw"] = "Increases the duration of your Slice and Dice ability by 15%.",
+["normalized"] = "increases the duration of your slice and dice ability by 15%.",
+},
+{
+["raw"] = "Increases your maximum Energy by 5.",
+["normalized"] = "increases your maximum energy by 5.",
+},
+{
+["raw"] = "Increases the duration of your Rupture ability by 6 sec and your Garrote ability by 9 sec.",
+["normalized"] = "increases the duration of your rupture ability by 6 sec and your garrote ability by 9 sec.",
+},
+{
+["raw"] = "Increases the critical strike damage bonus of your Sinister Strike, Gouge, Backstab, Mutilate, Ghostly Strike, and Hemorrhage abilities by 10%.",
+["normalized"] = "increases the critical strike damage bonus of your sinister strike, gouge, backstab, mutilate, ghostly strike, and hemorrhage abilities by 10%.",
+},
+{
+["raw"] = "Increases the damage dealt by your poisons by 4% and gives your poisons an additional 8% chance to resist dispel effects.",
+["normalized"] = "increases the damage dealt by your poisons by 4% and gives your poisons an additional 8% chance to resist dispel effects.",
+},
+{
+["raw"] = "When activated, increases the critical strike chance of your next Sinister Strike, Backstab, Ambush, Eviscerate, or Mutilate by 100%.",
+["normalized"] = "when activated, increases the critical strike chance of your next sinister strike, backstab, ambush, eviscerate, or mutilate by 100%.",
+},
+{
+["raw"] = "Increases the chance to apply Poisons to your target by 2%, and gives Poison applications a 10% chance to not consume a charge.",
+["normalized"] = "increases the chance to apply poisons to your target by 2%, and gives poison applications a 10% chance to not consume a charge.",
+},
+{
+["raw"] = "Your finishing moves have a 4% chance per Combo Point to restore 25 Energy.",
+["normalized"] = "your finishing moves have a 4% chance per combo point to restore 25 energy.",
+},
+{
+["raw"] = "Causes your Shank ability to increase your Poison damage by 30% and your chance to apply Poisons by 20% for 6 sec.",
+["normalized"] = "causes your shank ability to increase your poison damage by 30% and your chance to apply poisons by 20% for 6 sec.",
+},
+{
+["raw"] = "Enemies Stunned by your Kidney Shot ability take 5% increased damage from your poisons and attacks.",
+["normalized"] = "enemies stunned by your kidney shot ability take 5% increased damage from your poisons and attacks.",
+},
+{
+["raw"] = "Your critical strikes from abilities that add Combo Points have a 33% chance to add an additional Combo Point.",
+["normalized"] = "your critical strikes from abilities that add combo points have a 33% chance to add an additional combo point.",
+},
+{
+["raw"] = "Instantly attacks with both weapons for 90% weapon damage plus an additional 36 with each weapon. Damage increased by 20% against Poisoned targets. Awards 2 Combo Points.",
+["normalized"] = "instantly attacks with both weapons for 90% weapon damage plus an additional 36 with each weapon. damage increased by 20% against poisoned targets. awards 2 combo points.",
+},
+},
+{
+{
+["raw"] = "Increases the damage done by your Eviscerate ability by 7%, and the damage and storage rate of your Death Mark ability by 7%.",
+["normalized"] = "increases the damage done by your eviscerate ability by 7%, and the damage and storage rate of your death mark ability by 7%.",
+},
+{
+["raw"] = "Reduces the Energy cost of your Sinister Strike and Hemorrhage abilities by 3.",
+["normalized"] = "reduces the energy cost of your sinister strike and hemorrhage abilities by 3.",
+},
+{
+["raw"] = "Increases your Dodge chance by 1%.",
+["normalized"] = "increases your dodge chance by 1%.",
+},
+{
+["raw"] = "Increases the critical strike chance of your Backstab by 10% and your Mutilate by 5%, and gives Backstab a 15% chance to add an additional Combo Point.",
+["normalized"] = "increases the critical strike chance of your backstab by 10% and your mutilate by 5%, and gives backstab a 15% chance to add an additional combo point.",
+},
+{
+["raw"] = "Increases your Parry chance by 2%.",
+["normalized"] = "increases your parry chance by 2%.",
+},
+{
+["raw"] = "Improves your chance to hit by 1%.",
+["normalized"] = "improves your chance to hit by 1%.",
+},
+{
+["raw"] = "Gives a 50% chance to remove all movement impairing effects when you activate your Sprint ability.",
+["normalized"] = "gives a 50% chance to remove all movement impairing effects when you activate your sprint ability.",
+},
+{
+["raw"] = "Reduces the cooldown of your Sprint and Evasion abilities by 30%.",
+["normalized"] = "reduces the cooldown of your sprint and evasion abilities by 30%.",
+},
+{
+["raw"] = "A strike that becomes active after parrying an opponent's attack.  This attack deals 150% weapon damage and disarms the target for 6 sec.",
+["normalized"] = "a strike that becomes active after parrying an opponent's attack. this attack deals 150% weapon damage and disarms the target for 6 sec.",
+},
+{
+["raw"] = "Increases the Energy cost reduction of your Poised ability by 5.",
+["normalized"] = "increases the energy cost reduction of your poised ability by 5.",
+},
+{
+["raw"] = "Gives your Kick ability a 50% chance to Silence the target for 2 sec.",
+["normalized"] = "gives your kick ability a 50% chance to silence the target for 2 sec.",
+},
+{
+["raw"] = "Reduces the Energy cost of your Eviscerate ability by 15.",
+["normalized"] = "reduces the energy cost of your eviscerate ability by 15.",
+},
+{
+["raw"] = "Reduces the chance for your attacks to be Dodged or Parried by 1%.",
+["normalized"] = "reduces the chance for your attacks to be dodged or parried by 1%.",
+},
+{
+["raw"] = "Increases the damage of your Sinister Strike and Eviscerate abilities by 5%.",
+["normalized"] = "increases the damage of your sinister strike and eviscerate abilities by 5%.",
+},
+{
+["raw"] = "Increases the damage done by your off-hand weapon by 25%.",
+["normalized"] = "increases the damage done by your off-hand weapon by 25%.",
+},
+{
+["raw"] = "Increases your melee attack speed by 20% and your melee attacks strike an additional nearby opponent. Lasts 15 sec.",
+["normalized"] = "increases your melee attack speed by 20% and your melee attacks strike an additional nearby opponent. lasts 15 sec.",
+},
+{
+["raw"] = "Gives your melee weapon attacks a benefit depending on the weapon.\r\n\r\n    |CFFFFFFFFAxe/Sword:|R Your successful\r\n    melee attacks have a 1% chance\r\n    to trigger an extra attack on the \r\n    target.\r\n\r\n    |CFFFFFFFFDagger/Fist:|R Increases your\r\n    critical strike chance by 1%.\r\n\r\n    |CFFFFFFFFMace:|R Your attacks ignore 3% of\r\n    your target's armor.",
+["normalized"] = "gives your melee weapon attacks a benefit depending on the weapon. |cffffffffaxe/sword:|r your successful melee attacks have a 1% chance to trigger an extra attack on the target. |cffffffffdagger/fist:|r increases your critical strike chance by 1%. |cffffffffmace:|r your attacks ignore 3% of your target's armor.",
+},
+{
+["raw"] = "Increases the Energy generated by your Shank ability by 3 and reduces its cooldown by 0.4 sec.",
+["normalized"] = "increases the energy generated by your shank ability by 3 and reduces its cooldown by 0.4 sec.",
+},
+{
+["raw"] = "Increases your Energy regeneration rate by 100% for 15 sec.",
+["normalized"] = "increases your energy regeneration rate by 100% for 15 sec.",
+},
+},
+{
+{
+["raw"] = "Gives you a 15% chance to add a Combo Point to your target after Dodging their attack or fully resisting one of their spells.",
+["normalized"] = "gives you a 15% chance to add a combo point to your target after dodging their attack or fully resisting one of their spells.",
+},
+{
+["raw"] = "Reduces the chance enemies have to detect you while in Stealth mode as if you were 1 level higher.",
+["normalized"] = "reduces the chance enemies have to detect you while in stealth mode as if you were 1 level higher.",
+},
+{
+["raw"] = "Increases the damage dealt by your Backstab, Garrote, Ambush, and Mutilate abilities by 4%.",
+["normalized"] = "increases the damage dealt by your backstab, garrote, ambush, and mutilate abilities by 4%.",
+},
+{
+["raw"] = "Reduces the Energy cost of your Cheap Shot and Garrote abilities by 10, and your Garrote ability no longer requires you to be behind your target.",
+["normalized"] = "reduces the energy cost of your cheap shot and garrote abilities by 10, and your garrote ability no longer requires you to be behind your target.",
+},
+{
+["raw"] = "Reduces your speed penalty from your Stealth ability by 5% and reduces its cooldown by 2 sec.",
+["normalized"] = "reduces your speed penalty from your stealth ability by 5% and reduces its cooldown by 2 sec.",
+},
+{
+["raw"] = "Increases the critical strike chance of your Ambush ability by 15%.",
+["normalized"] = "increases the critical strike chance of your ambush ability by 15%.",
+},
+{
+["raw"] = "Reduces the Energy cost of your Sap and Blind abilities by 25%.",
+["normalized"] = "reduces the energy cost of your sap and blind abilities by 25%.",
+},
+{
+["raw"] = "Gives you a 33% chance to add an additional combo point to your target when using your Ambush, Garrote, or Cheap Shot ability.",
+["normalized"] = "gives you a 33% chance to add an additional combo point to your target when using your ambush, garrote, or cheap shot ability.",
+},
+{
+["raw"] = "Adds 2 Combo Points to your target. You must add to or use those combo points within 20 sec or the combo points are lost.",
+["normalized"] = "adds 2 combo points to your target. you must add to or use those combo points within 20 sec or the combo points are lost.",
+},
+{
+["raw"] = "Causes your attacks to ignore 3% of your target's Armor and increases the damage dealt by your Rupture ability by 10%.",
+["normalized"] = "causes your attacks to ignore 3% of your target's armor and increases the damage dealt by your rupture ability by 10%.",
+},
+{
+["raw"] = "Reduces the cooldown of your Vanish and Blind abilities by 45 sec.",
+["normalized"] = "reduces the cooldown of your vanish and blind abilities by 45 sec.",
+},
+{
+["raw"] = "A strike that deals 125% (180% if a Dagger is equipped in your Main Hand) weapon damage, increases your chance to dodge by 15% for 7 sec, and causes your next Ambush or Garrote cast within 7 sec to not require Stealth.  Awards 1 combo point.",
+["normalized"] = "a strike that deals 125% (180% if a dagger is equipped in your main hand) weapon damage, increases your chance to dodge by 15% for 7 sec, and causes your next ambush or garrote cast within 7 sec to not require stealth. awards 1 combo point.",
+},
+{
+["raw"] = "Increases the maximum number of targets you may have Sapped by 1, and increases your movement speed by 15% for 3 sec after Sapping a target.",
+["normalized"] = "increases the maximum number of targets you may have sapped by 1, and increases your movement speed by 15% for 3 sec after sapping a target.",
+},
+{
+["raw"] = "Increases your Stealth detection as if you were 1 level higher and reduces your chance to be hit by spells and ranged attacks by 2%.",
+["normalized"] = "increases your stealth detection as if you were 1 level higher and reduces your chance to be hit by spells and ranged attacks by 2%.",
+},
+{
+["raw"] = "When activated, this ability immediately finishes the cooldown on your other Rogue abilities.",
+["normalized"] = "when activated, this ability immediately finishes the cooldown on your other rogue abilities.",
+},
+{
+["raw"] = "An instant strike that deals 100% weapon damage (145% if a Dagger is equipped) and causes the target to take 15% increased Rupture and Garrote damage from the Rogue. Lasts 15 sec. Awards 1 Combo Point.",
+["normalized"] = "an instant strike that deals 100% weapon damage (145% if a dagger is equipped) and causes the target to take 15% increased rupture and garrote damage from the rogue. lasts 15 sec. awards 1 combo point.",
+},
+{
+["raw"] = "Grants your Shank ability a 20% chance to add 2 Combo Points to the target.",
+["normalized"] = "grants your shank ability a 20% chance to add 2 combo points to the target.",
+},
+{
+["raw"] = "Finishing move that marks the target, storing a portion of the damage dealt by your attacks per Combo Point. Garrote and Rupture damage is stored at twice the rate. After 6 sec, the stored damage is dealt, up to a maximum increased by Attack Power and Critical Strike chance:\r\n   1 point  : 12% stored, 186 damage cap\r\n   2 points: 24% stored, 303 damage cap\r\n   3 points: 36% stored, 420 damage cap\r\n   4 points: 48% stored, 536 damage cap\r\n   5 points: 60% stored, 653 damage cap",
+["normalized"] = "finishing move that marks the target, storing a portion of the damage dealt by your attacks per combo point. garrote and rupture damage is stored at twice the rate. after 6 sec, the stored damage is dealt, up to a maximum increased by attack power and critical strike chance: 1 point : 12% stored, 186 damage cap 2 points: 24% stored, 303 damage cap 3 points: 36% stored, 420 damage cap 4 points: 48% stored, 536 damage cap 5 points: 60% stored, 653 damage cap",
+},
+},
+},
+["__locale"] = "enUS",
+},
+},
+}

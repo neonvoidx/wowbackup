@@ -1,0 +1,94 @@
+local parentAddonName = "EnhanceQoL"
+local addonName, addon = ...
+if _G[parentAddonName] then
+	addon = _G[parentAddonName]
+else
+	error(parentAddonName .. " is not loaded")
+end
+
+addon.SharedMedia = addon.SharedMedia or {}
+addon.SharedMedia.functions = addon.SharedMedia.functions or {}
+
+local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL_SharedMedia")
+local LSM = LibStub("LibSharedMedia-3.0")
+
+-- No explicit tree node; content is shown directly under "Media & Sound" in Core
+
+addon.functions.InitDBValue("sharedMediaSounds", {})
+
+local function IterateSoundLists()
+	return ipairs({
+		addon.SharedMedia.sounds or {},
+		addon.SharedMedia.deepVoiceSounds or {},
+	})
+end
+
+local function RegisterEnabledSounds()
+	for _, sounds in IterateSoundLists() do
+		for _, sound in ipairs(sounds) do
+			if addon.db.sharedMediaSounds[sound.key] then LSM:Register("sound", sound.label, sound.path) end
+		end
+	end
+end
+
+if IsLoggedIn and IsLoggedIn() then
+	RegisterEnabledSounds()
+else
+	local frame = CreateFrame("Frame")
+	frame:RegisterEvent("PLAYER_LOGIN")
+	frame:SetScript("OnEvent", function(self)
+		RegisterEnabledSounds()
+		self:UnregisterEvent("PLAYER_LOGIN")
+	end)
+end
+
+function addon.SharedMedia.functions.UpdateSound(key, enabled)
+	addon.db.sharedMediaSounds[key] = enabled
+	local sound
+	for _, sounds in IterateSoundLists() do
+		for _, s in ipairs(sounds) do
+			if s.key == key then
+				sound = s
+				break
+			end
+		end
+		if sound then break end
+	end
+	if not sound then return end
+	if enabled then
+		LSM:Register("sound", sound.label, sound.path)
+	else
+		if LSM.Unregister then
+			local ok = pcall(LSM.Unregister, LSM, "sound", sound.label)
+			if not ok then addon.variables.requireReload = true end
+		else
+			addon.variables.requireReload = true
+		end
+	end
+end
+
+-- Statusbars
+LSM:Register("statusbar", "EQOL: Holy", "Interface\\AddOns\\" .. addonName .. "\\Assets\\Holy.tga")
+LSM:Register("statusbar", "EQOL: Holy White", "Interface\\AddOns\\" .. addonName .. "\\Assets\\HolyWhite.tga")
+LSM:Register("statusbar", "EQOL: Thunder", "Interface\\AddOns\\" .. addonName .. "\\Assets\\Thunder.tga")
+LSM:Register("statusbar", "EQOL: Thunder White", "Interface\\AddOns\\" .. addonName .. "\\Assets\\ThunderWhite.tga")
+LSM:Register("statusbar", "EQOL: Astral", "Interface\\AddOns\\" .. addonName .. "\\Assets\\Astral.tga")
+LSM:Register("statusbar", "EQOL: Astral White", "Interface\\AddOns\\" .. addonName .. "\\Assets\\AstralWhite.tga")
+LSM:Register("statusbar", "EQOL: Rage", "Interface\\AddOns\\" .. addonName .. "\\Assets\\Rage.tga")
+LSM:Register("statusbar", "EQOL: Rage White", "Interface\\AddOns\\" .. addonName .. "\\Assets\\RageWhite.tga")
+LSM:Register("statusbar", "EQOL: Absorb", "Interface\\AddOns\\" .. addonName .. "\\Assets\\Absorb.tga")
+LSM:Register("statusbar", "EQOL: Focus Marker", "Interface\\AddOns\\" .. addonName .. "\\Assets\\FocusMarker.tga")
+LSM:Register("statusbar", "EQOL: Void", "Interface\\AddOns\\" .. addonName .. "\\Assets\\Void.tga")
+LSM:Register("statusbar", "EQOL: Void White", "Interface\\AddOns\\" .. addonName .. "\\Assets\\VoidWhite.tga")
+LSM:Register("statusbar", "EQOL: Blizzard cropped", "Interface\\AddOns\\" .. addonName .. "\\Assets\\BlizzardRetailBarCrop2.tga")
+
+LSM:Register("border", "EQOL: Midnight", "Interface\\AddOns\\" .. addonName .. "\\Assets\\border-midnight.tga")
+LSM:Register("border", "EQOL: Midnight 12px", "Interface\\AddOns\\" .. addonName .. "\\Assets\\border-midnight-12px.tga")
+LSM:Register("border", "EQOL: Midnight 18px", "Interface\\AddOns\\" .. addonName .. "\\Assets\\border-midnight-18px.tga")
+LSM:Register("border", "EQOL: Midnight white", "Interface\\AddOns\\" .. addonName .. "\\Assets\\border-midnight-white.tga")
+LSM:Register("border", "EQOL: Midnight white 12px", "Interface\\AddOns\\" .. addonName .. "\\Assets\\border-midnight-white-12px.tga")
+LSM:Register("border", "EQOL: Midnight white 18px", "Interface\\AddOns\\" .. addonName .. "\\Assets\\border-midnight-white-18px.tga")
+LSM:Register("border", "EQOL: Solid", "Interface\\Buttons\\WHITE8x8")
+
+
+LSM:Register("font", "EQOL: R41z0r", "Interface\\AddOns\\" .. addonName .. "\\Fonts\\R41z0r-Regular.ttf", LSM.LOCALE_BIT_western + LSM.LOCALE_BIT_ruRU)

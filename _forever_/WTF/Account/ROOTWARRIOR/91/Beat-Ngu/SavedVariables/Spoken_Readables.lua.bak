@@ -1,0 +1,14 @@
+
+SpokenReadablesCharacter = {
+["read"] = {
+[2677] = true,
+[2436] = true,
+[244] = true,
+},
+["found"] = {
+[2677] = true,
+[2436] = true,
+[244] = true,
+},
+}
+SpokenBooksCharacter = nil

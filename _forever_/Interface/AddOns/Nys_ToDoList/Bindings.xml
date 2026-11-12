@@ -1,0 +1,8 @@
+<!-- *******************/ BINDINGS FILE /********************** -->
+
+<Bindings>
+	<!-- Show/Hide the list binding -->
+	<Binding name="NysTDL_ToggleList" header="NysTDL" category="ADDONS">
+		NysTDL.mainFrame:Toggle()
+	</Binding>
+</Bindings>

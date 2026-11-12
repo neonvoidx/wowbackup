@@ -1,0 +1,89 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ https://raw.githubusercontent.com/Gethe/wow-ui-source/live/Interface/AddOns/Blizzard_SharedXML/UI.xsd">
+    <Include file="GroupEditorSidebarEntry.lua" />
+
+    <Button name="MapPinEnhancedGroupEditorSidebarEntryTemplate" virtual="true" mixin="MapPinEnhancedGroupEditorSidebarEntryMixin" registerForClicks="LeftButtonUp, RightButtonUp">
+        <Size x="214" y="46" />
+        <HighlightTexture file="Interface/AddOns/MapPinEnhanced/assets/shared/GradientHorizontal.png" setAllPoints="true" alpha="0.25" />
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture parentKey="dropGlow" file="Interface/AddOns/MapPinEnhanced/assets/shared/DividerHorizontal.png" hidden="true" setAllPoints="true">
+                    <Gradient orientation="HORIZONTAL">
+                        <MinColor r="0.28" g="0.75" b="0.93" a="0.8" />
+                        <MaxColor r="0" g="0" b="0" a="0" />
+                    </Gradient>
+                </Texture>
+            </Layer>
+            <Layer level="BACKGROUND">
+                <Texture file="Interface/AddOns/MapPinEnhanced/assets/group/GroupShadow.png" parentKey="iconShadow">
+                    <Size x="36" y="36" />
+                    <Anchors>
+                        <Anchor point="LEFT" x="4" />
+                    </Anchors>
+                </Texture>
+            </Layer>
+            <Layer level="BORDER">
+                <Texture file="Interface/AddOns/MapPinEnhanced/assets/group/GroupBorder.png" parentKey="iconBorder">
+                    <Color r="1" g="0.82" b="0" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT" relativeKey="$parent.iconShadow" />
+                        <Anchor point="BOTTOMRIGHT" relativeKey="$parent.iconShadow" />
+                    </Anchors>
+                </Texture>
+            </Layer>
+            <Layer level="ARTWORK">
+                <Texture parentKey="icon" file="Interface/Icons/INV_Misc_QuestionMark">
+                    <Anchors>
+                        <Anchor point="TOPLEFT" relativeKey="$parent.iconBorder" />
+                        <Anchor point="BOTTOMRIGHT" relativeKey="$parent.iconBorder" />
+                    </Anchors>
+                </Texture>
+                <MaskTexture file="Interface/AddOns/MapPinEnhanced/assets/group/GroupMask.png" vWrapMode="CLAMPTOBLACKADDITIVE" hWrapMode="CLAMPTOBLACKADDITIVE">
+                    <Size x="36" y="36" />
+                    <Anchors>
+                        <Anchor point="LEFT" x="4" />
+                    </Anchors>
+                    <MaskedTextures>
+                        <MaskedTexture childKey="icon" />
+                    </MaskedTextures>
+                </MaskTexture>
+                <FontString parentKey="name" inherits="MapPinEnhancedFontNormal" justifyH="LEFT" wordwrap="false">
+                    <Size y="14" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="44" y="-10" />
+                        <Anchor point="TOPRIGHT" x="-8" y="-10" />
+                    </Anchors>
+                </FontString>
+                <FontString parentKey="detail" inherits="MapPinEnhancedFontDisabledSmall" justifyH="LEFT" wordwrap="false">
+                    <Size y="12" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT" relativeKey="$parent.name" relativePoint="BOTTOMLEFT" x="16" y="-2" />
+                        <Anchor point="TOPRIGHT" relativeKey="$parent.name" relativePoint="BOTTOMRIGHT" y="-2" />
+                    </Anchors>
+                </FontString>
+                <Texture parentKey="trackingModeIcon" inherits="MapPinEnhancedIconTemplate">
+                    <Size x="12" y="12" />
+                    <Anchors>
+                        <Anchor point="RIGHT" relativeKey="$parent.detail" relativePoint="LEFT" x="-4" />
+                    </Anchors>
+                </Texture>
+            </Layer>
+            <Layer level="OVERLAY">
+                <Texture file="Interface/AddOns/MapPinEnhanced/assets/group/GroupShadowInner.png">
+                    <Anchors>
+                        <Anchor point="TOPLEFT" relativeKey="$parent.iconBorder" />
+                        <Anchor point="BOTTOMRIGHT" relativeKey="$parent.iconBorder" />
+                    </Anchors>
+                </Texture>
+            </Layer>
+        </Layers>
+        <Scripts>
+            <OnClick method="OnClick" />
+            <OnEnter method="OnEnter" />
+            <OnLeave method="OnLeave" />
+            <OnHide method="OnLeave" />
+            <OnMouseUp method="OnMouseUp" />
+            <OnReceiveDrag method="OnReceiveDrag" />
+        </Scripts>
+    </Button>
+</Ui>

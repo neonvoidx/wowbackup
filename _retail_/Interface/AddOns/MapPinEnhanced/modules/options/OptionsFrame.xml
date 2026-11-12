@@ -1,0 +1,134 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ https://raw.githubusercontent.com/Gethe/wow-ui-source/live/Interface/AddOns/Blizzard_SharedXML/UI.xsd">
+
+    <Include file="OptionsFrame.lua" />
+    <Frame mixin="MapPinEnhancedOptionsFrameMixin" name="MapPinEnhancedOptionsFrame" hidden="true">
+
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture inherits="MapPinEnhancedMapArtTemplate" setAllPoints="true">
+                    <Gradient>
+                        <MaxColor r="0.5" g="0.5" b="0.5" a="0.2"/>
+                        <MinColor r="0.5" g="0.5" b="0.5" a="0" />
+                    </Gradient>
+                </Texture>
+            </Layer>
+        </Layers>
+        <Frames>
+            <Frame parentKey="header">
+                <Size x="1" y="54" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" />
+                    <Anchor point="TOPRIGHT" />
+                </Anchors>
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <FontString parentKey="title" inherits="MapPinEnhancedFontHighlightHuge" justifyH="LEFT" justifyV="MIDDLE">
+                            <Size x="320" y="24" />
+                            <Anchors>
+                                <Anchor point="TOPLEFT" x="16" y="-15" />
+                            </Anchors>
+                        </FontString>
+                        <Texture file="Interface/AddOns/MapPinEnhanced/assets/shared/DividerHorizontal.png">
+                            <Size y="2" />
+                            <Anchors>
+                                <Anchor point="BOTTOMLEFT" x="16" y="0" />
+                                <Anchor point="BOTTOMRIGHT" x="-16" y="0" />
+                            </Anchors>
+                        </Texture>
+                    </Layer>
+                </Layers>
+                <Frames>
+                    <EditBox inherits="MapPinEnhancedAutocompleteTemplate" parentKey="search" font="MapPinEnhancedFontOptionsHighlight">
+                        <Size x="320" y="27" />
+                        <Anchors>
+                            <Anchor point="TOPRIGHT" x="-16" y="-13" />
+                        </Anchors>
+                        <KeyValues>
+                            <KeyValue key="icon" value="search" />
+                            <KeyValue key="placeholder" value="Search for option..." />
+                        </KeyValues>
+                    </EditBox>
+                </Frames>
+            </Frame>
+
+            <ScrollFrame inherits="ScrollFrameTemplate" parentKey="scrollFrame" frameStrata="MEDIUM">
+                <Size x="1" y="1" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" y="-56" />
+                    <Anchor point="BOTTOMRIGHT" x="-20" />
+                </Anchors>
+                <KeyValues>
+                    <KeyValue key="scrollBarX" value="2" type="number" />
+                    <KeyValue key="scrollBarTopY" value="-4" type="number" />
+                    <KeyValue key="scrollBarHideIfUnscrollable" value="true" type="boolean" />
+                    <KeyValue key="scrollBarHideTrackIfThumbExceedsTrack" value="true" type="boolean" />
+                </KeyValues>
+                <ScrollChild>
+                    <Frame parentKey="Child" propagateMouseInput="Motion">
+                        <Size x="634" y="1" />
+                        <Anchors>
+                            <Anchor point="TOPLEFT" />
+                        </Anchors>
+                        <Frames>
+                            <Frame inherits="MapPinEnhancedOptionCategoryGeneralTemplate" parentKey="General">
+                                <Anchors>
+                                    <Anchor point="TOPLEFT" x="0" y="-8" />
+                                    <Anchor point="TOPRIGHT" x="0" y="-8" />
+                                </Anchors>
+                            </Frame>
+                            <Frame inherits="MapPinEnhancedOptionCategoryWayfinderTemplate" parentKey="Wayfinder">
+                                <Anchors>
+                                    <Anchor point="TOPLEFT" relativeKey="$parent.General" relativePoint="BOTTOMLEFT" x="0" y="-8" />
+                                    <Anchor point="TOPRIGHT" relativeKey="$parent.General" relativePoint="BOTTOMRIGHT" x="0" y="-8" />
+                                </Anchors>
+                            </Frame>
+                            <Frame inherits="MapPinEnhancedOptionCategoryNavigationTemplate" parentKey="Navigation">
+                                <Anchors>
+                                    <Anchor point="TOPLEFT" relativeKey="$parent.Wayfinder" relativePoint="BOTTOMLEFT" x="0" y="-8" />
+                                    <Anchor point="TOPRIGHT" relativeKey="$parent.Wayfinder" relativePoint="BOTTOMRIGHT" x="0" y="-8" />
+                                </Anchors>
+                            </Frame>
+                            <Frame inherits="MapPinEnhancedOptionCategoryPinsTemplate" parentKey="Pins">
+                                <Anchors>
+                                    <Anchor point="TOPLEFT" relativeKey="$parent.Navigation" relativePoint="BOTTOMLEFT" x="0" y="-8" />
+                                    <Anchor point="TOPRIGHT" relativeKey="$parent.Navigation" relativePoint="BOTTOMRIGHT" x="0" y="-8" />
+                                </Anchors>
+                            </Frame>
+                            <Frame inherits="MapPinEnhancedOptionCategoryTrackerTemplate" parentKey="Tracker">
+                                <Anchors>
+                                    <Anchor point="TOPLEFT" relativeKey="$parent.Pins" relativePoint="BOTTOMLEFT" x="0" y="-8" />
+                                    <Anchor point="TOPRIGHT" relativeKey="$parent.Pins" relativePoint="BOTTOMRIGHT" x="0" y="-8" />
+                                </Anchors>
+                            </Frame>
+                            <Frame inherits="MapPinEnhancedOptionCategoryLexiconTemplate" parentKey="Lexicon">
+                                <Anchors>
+                                    <Anchor point="TOPLEFT" relativeKey="$parent.Tracker" relativePoint="BOTTOMLEFT" x="0" y="-8" />
+                                    <Anchor point="TOPRIGHT" relativeKey="$parent.Tracker" relativePoint="BOTTOMRIGHT" x="0" y="-8" />
+                                </Anchors>
+                            </Frame>
+                            <Frame inherits="MapPinEnhancedOptionCategoryCoordinatesTemplate" parentKey="Coordinates">
+                                <Anchors>
+                                    <Anchor point="TOPLEFT" relativeKey="$parent.Lexicon" relativePoint="BOTTOMLEFT" x="0" y="-8" />
+                                    <Anchor point="TOPRIGHT" relativeKey="$parent.Lexicon" relativePoint="BOTTOMRIGHT" x="0" y="-8" />
+                                </Anchors>
+                            </Frame>
+                            <Frame inherits="MapPinEnhancedOptionCategoryFlightTimerTemplate" parentKey="FlightTimer">
+                                <Anchors>
+                                    <Anchor point="TOPLEFT" relativeKey="$parent.Coordinates" relativePoint="BOTTOMLEFT" x="0" y="-8" />
+                                    <Anchor point="TOPRIGHT" relativeKey="$parent.Coordinates" relativePoint="BOTTOMRIGHT" x="0" y="-8" />
+                                </Anchors>
+                            </Frame>
+                        </Frames>
+                    </Frame>
+                </ScrollChild>
+            </ScrollFrame>
+        </Frames>
+        <Scripts>
+            <OnLoad method="OnLoad" />
+            <OnShow method="OnShow" />
+            <OnHide method="OnHide" />
+            <OnSizeChanged method="UpdateLayout" />
+        </Scripts>
+    </Frame>
+</Ui>

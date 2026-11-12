@@ -1,0 +1,16 @@
+<Ui>
+
+<!-- Copyright 2011 Mike Battersby -->
+
+<Script file="General.lua" />
+
+<Frame name="LiteMountGeneralPanel" hidden="true" mixin="LiteMountGeneralPanelMixin">
+    <KeyValues>
+        <KeyValue key="name" value="GENERAL" type="global" />
+    </KeyValues>
+    <Scripts>
+        <OnLoad method="OnLoad" />
+    </Scripts>
+</Frame>
+
+</Ui>

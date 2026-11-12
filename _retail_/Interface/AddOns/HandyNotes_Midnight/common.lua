@@ -1,0 +1,753 @@
+-------------------------------------------------------------------------------
+---------------------------------- NAMESPACE ----------------------------------
+-------------------------------------------------------------------------------
+local ADDON_NAME, ns = ...
+local L = ns.locale
+
+local Class = ns.Class
+local Group = ns.Group
+
+local Collectible = ns.node.Collectible
+
+local Achievement = ns.reward.Achievement
+local Reputation = ns.reward.Reputation
+local Pet = ns.reward.Pet
+local Transmog = ns.reward.Transmog
+
+-------------------------------------------------------------------------------
+
+ns.expansion = 12
+
+-------------------------------------------------------------------------------
+------------------------------------ GROUPS -----------------------------------
+-------------------------------------------------------------------------------
+
+ns.groups.DELVE_REWARDS = Group('delve_rewards', 4203076, {
+    defaults = ns.GROUP_HIDDEN,
+    type = ns.group_types.EXPANSION,
+    HasEnabledNodes = function() return true end
+})
+
+ns.groups.ABUNDANCE_REWARDS = Group('abundance_rewards', 464342, {
+    defaults = ns.GROUP_HIDDEN,
+    type = ns.group_types.EXPANSION,
+    HasEnabledNodes = function() return true end
+})
+
+ns.groups.STORMARION_ASSAULT = Group('stormarion_assault', 7431083, {
+    defaults = ns.GROUP_HIDDEN,
+    type = ns.group_types.EXPANSION,
+    HasEnabledNodes = function() return true end
+})
+
+ns.groups.PROFESSION_TREASURES = Group('profession_treasures', 4620676, {
+    defaults = ns.GROUP_HIDDEN,
+    type = ns.group_types.EXPANSION
+})
+
+ns.groups.SKYRIDING_GLYPH = Group('skyriding_glyph', 4728198, {
+    defaults = ns.GROUP_HIDDEN,
+    type = ns.group_types.EXPANSION
+})
+
+ns.groups.TELESCOPE = Group('telescope', 134442, {
+    defaults = ns.GROUP_HIDDEN,
+    type = ns.group_types.ACHIEVEMENT,
+    achievement = 62057
+})
+
+ns.groups.MIDNIGHT_LORE_HUNTER = Group('midnight_lore_hunter', 4549135, {
+    defaults = ns.GROUP_HIDDEN,
+    type = ns.group_types.ACHIEVEMENT,
+    achievement = 62104
+})
+
+ns.groups.SAFARI = Group('safari', 2205238, {
+    defaults = ns.GROUP_HIDDEN,
+    type = ns.group_types.COLLECTIBLE,
+    achievement = 61091
+})
+
+ns.groups.COILED_ISLE_SAFARI = Group('coiled_isle_safari', 2205238, {
+    defaults = ns.GROUP_HIDDEN,
+    type = ns.group_types.COLLECTIBLE,
+    achievement = 62492
+})
+
+ns.groups.RENOWNED_BEAST = Group('renowned_beast', 5931379, {
+    defaults = ns.GROUP_HIDDEN,
+    type = ns.group_types.EXPANSION,
+    IsEnabled = function(self)
+        -- Only display group for skinning players
+        if not ns.professions.SKINNING:HasProfession() then return false end
+        return ns.Group.IsEnabled(self)
+    end
+})
+
+ns.groups.RITUAL_SITE = Group('ritual_site', 132299, {
+    defaults = ns.GROUP_HIDDEN,
+    type = ns.group_types.EXPANSION
+})
+
+-------------------------------- EVERSONG WOODS -------------------------------
+
+ns.groups.RUNESTONE_RUSH = Group('runestone_rush', 134423, {
+    defaults = ns.GROUP_HIDDEN,
+    type = ns.group_types.ACHIEVEMENT,
+    achievement = 61961
+})
+
+ns.groups.EVER_PAINTING = Group('ever_painting', 7549082, {
+    defaults = ns.GROUP_HIDDEN,
+    type = ns.group_types.ACHIEVEMENT,
+    achievement = 62185
+})
+
+----------------------------------- HARANDAR ----------------------------------
+---
+ns.groups.GLOWING_MOTH = Group('glowing_moth', 1003597, {
+    defaults = ns.GROUP_HIDDEN,
+    type = ns.group_types.ACHIEVEMENT,
+    achievement = 61052
+})
+
+ns.groups.MORE_THAN_JUST_THIER_ROOTS = Group('more_than_just_thier_roots',
+    236160, {
+        defaults = ns.GROUP_HIDDEN,
+        type = ns.group_types.ACHIEVEMENT,
+        achievement = 62188
+    })
+
+----------------------------------- ZUL'AMAN ----------------------------------
+
+ns.groups.FROG_PRINCESS = Group('frog_princess', 2399262, {
+    defaults = ns.GROUP_HIDDEN,
+    type = ns.group_types.ACHIEVEMENT,
+    achievement = 62201
+})
+
+ns.groups.SONG_SEEKER = Group('song_seeker', 6119037, {
+    defaults = ns.GROUP_HIDDEN,
+    type = ns.group_types.ACHIEVEMENT,
+    achievement = 61455
+})
+
+ns.groups.SPIRITPAW_MARATHON = Group('spiritpaw_marathon', 4891426, {
+    defaults = ns.GROUP_HIDDEN,
+    type = ns.group_types.ACHIEVEMENT,
+    achievement = 62202
+})
+
+ns.groups.GNOME_ALONE = Group('gnome_alone', 133740, {
+    defaults = ns.GROUP_HIDDEN,
+    type = ns.group_types.ACHIEVEMENT,
+    achievement = 62200
+})
+
+ns.groups.HEXMASK = Group('hexmask', 135462, {
+    defaults = ns.GROUP_HIDDEN,
+    type = ns.group_types.ACHIEVEMENT,
+    achievement = 63720
+})
+
+ns.groups.PUT_A_PIN_IN_IT = Group('put_a_pin_in_it', 5206188, {
+    defaults = ns.GROUP_HIDDEN,
+    type = ns.group_types.ACHIEVEMENT,
+    achievement = 62199
+})
+
+------------------------------- THE COILED ISLES ------------------------------
+
+ns.groups.STUDENT_OF_HISSSTORY = Group('student_of_hissstory', 8032876, {
+    defaults = ns.GROUP_HIDDEN,
+    type = ns.group_types.ACHIEVEMENT,
+    achievement = 63662
+})
+
+ns.groups.SOFT_UNDERBELLY = Group('soft_underbelly', 134306, {
+    defaults = ns.GROUP_HIDDEN,
+    type = ns.group_types.ACHIEVEMENT,
+    achievement = 62601
+})
+
+ns.groups.THE_HONORED_DEAD = Group('the_honored_dead', 133740, {
+    defaults = ns.GROUP_HIDDEN,
+    type = ns.group_types.ACHIEVEMENT,
+    achievement = 63610
+})
+
+ns.groups.MYSTERIOUS_MIXING = Group('mysterious_mixing', 133778, {
+    defaults = ns.GROUP_HIDDEN,
+    type = ns.group_types.ACHIEVEMENT,
+    achievement = 63432
+})
+
+ns.groups.SOUVENIRS = Group('souvenirs', 8033179, {
+    defaults = ns.GROUP_HIDDEN,
+    type = ns.group_types.ACHIEVEMENT,
+    achievement = 63606
+})
+
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+------------------------------- SKYRIDING GLYPH -------------------------------
+-------------------------------------------------------------------------------
+
+local SkyridingGlyph = Class('SkyridingGlyph', Collectible, {
+    icon = 4728198,
+    label = L['skyriding_glyph'],
+    group = ns.groups.SKYRIDING_GLYPH
+})
+
+ns.node.SkyridingGlyph = SkyridingGlyph
+
+-------------------------------------------------------------------------------
+------------------------- MIDNIGHT: THE HIGHEST PEAKS -------------------------
+-------------------------------------------------------------------------------
+
+local Telescope = Class('Telescope', Collectible, {
+    icon = 1723999,
+    label = L['midnight_telescope'], -- Midnight Highest Peak Telescope
+    group = ns.groups.TELESCOPE,
+    getters = {
+        rewards = function(self)
+            return {
+                Achievement({id = self.achievement, criteria = self.criteria}),
+                Reputation({id = self.repfaction, gain = 100})
+            }
+        end
+    },
+    IsCompleted = function(self)
+        return C_QuestLog.IsQuestFlaggedCompleted(self.quest[1])
+    end
+})
+
+ns.node.Telescope = Telescope
+
+-------------------------------------------------------------------------------
+----------------------------- MIDNIGHT LORE HUNTER ----------------------------
+-------------------------------------------------------------------------------
+
+local LoreObject = Class('LoreObject', Collectible, {
+    icon = 4549135,
+    group = ns.groups.MIDNIGHT_LORE_HUNTER
+})
+
+ns.node.LoreObject = LoreObject
+
+-------------------------------------------------------------------------------
+----------------------------- STUDENT OF HISSSTORY ----------------------------
+-------------------------------------------------------------------------------
+
+local StudentOfHissstory = Class('StudentOfHissstory', Collectible, {
+    icon = 8032876,
+    group = ns.groups.STUDENT_OF_HISSSTORY
+})
+
+ns.node.StudentOfHissstory = StudentOfHissstory
+
+-------------------------------------------------------------------------------
+------------------------------- SOFT UNDERBELLY -------------------------------
+-------------------------------------------------------------------------------
+
+local SoftUnderbelly = Class('SoftUnderbelly', Collectible,
+    {icon = 134306, group = ns.groups.SOFT_UNDERBELLY})
+
+ns.node.SoftUnderbelly = SoftUnderbelly
+
+-------------------------------------------------------------------------------
+-------------------------------- RUNESTONE RUSH -------------------------------
+-------------------------------------------------------------------------------
+
+local RuneStone = Class('RuneStone', Collectible,
+    {icon = 134423, group = ns.groups.RUNESTONE_RUSH})
+
+function RuneStone:Initialize(criteria)
+    Collectible.Initialize(self)
+    self.rewards = {Achievement({id = 61961, criteria = criteria})}
+end
+
+ns.node.RuneStoneRush = RuneStone
+
+-------------------------------------------------------------------------------
+-------------------------------- EVER PAINTING --------------------------------
+-------------------------------------------------------------------------------
+
+local Painting = Class('Painting', Collectible,
+    {icon = 7549082, group = ns.groups.EVER_PAINTING})
+
+function Painting:Initialize(criteria, location)
+    Collectible.Initialize(self)
+    self.location = location or nil
+    self.rewards = {Achievement({id = 62185, criteria = criteria})}
+end
+
+ns.node.EverPainting = Painting
+
+-------------------------------------------------------------------------------
+-------------------------- MORE THAN JUST THIER ROOTS -------------------------
+-------------------------------------------------------------------------------
+
+local MoreThanJustThierRoots = Class('MoreThanJustThierRoots', Collectible, {
+    icon = 236160,
+    group = ns.groups.MORE_THAN_JUST_THIER_ROOTS
+})
+
+ns.node.MoreThanJustThierRoots = MoreThanJustThierRoots
+
+-------------------------------------------------------------------------------
+-------------------------------- FROG PRINCESS --------------------------------
+-------------------------------------------------------------------------------
+
+local FrogPrincess = Class('frog_princess', Collectible,
+    {icon = 2399262, group = ns.groups.FROG_PRINCESS})
+
+ns.node.FrogPrincess = FrogPrincess
+
+-------------------------------------------------------------------------------
+--------------------------------- SONG SEEKER ---------------------------------
+-------------------------------------------------------------------------------
+
+local Songseeker = Class('Songseeker', Collectible,
+    {icon = 6119037, group = ns.groups.SONG_SEEKER})
+
+ns.node.Songseeker = Songseeker
+
+-------------------------------------------------------------------------------
+------------------------------ SPIRITPAW MARATHON -----------------------------
+-------------------------------------------------------------------------------
+
+local SpiritpawMarathon = Class('SpiritpawMarathon', Collectible, {
+    icon = 4891426,
+    group = ns.groups.SPIRITPAW_MARATHON
+})
+
+ns.node.SpiritpawMarathon = SpiritpawMarathon
+
+-------------------------------------------------------------------------------
+--------------------------------- GNOME ALONE ---------------------------------
+-------------------------------------------------------------------------------
+
+local GnomeAlone = Class('GnomeAlone', Collectible,
+    {icon = 133740, group = ns.groups.GNOME_ALONE})
+
+ns.node.GnomeAlone = GnomeAlone
+
+local Hexmask = Class('Hexmask', Collectible,
+    {icon = 135462, group = ns.groups.HEXMASK})
+
+ns.node.Hexmask = Hexmask
+
+-------------------------------------------------------------------------------
+--------------------------------- HONORED DEAD --------------------------------
+-------------------------------------------------------------------------------
+
+local HonoredDead = Class('HonoredDead', ns.node.Collectible,
+    {icon = 133740, group = ns.groups.THE_HONORED_DEAD})
+
+ns.node.HonoredDead = HonoredDead
+
+-------------------------------------------------------------------------------
+------------------------------ MYSTERIOUS MIXING ------------------------------
+-------------------------------------------------------------------------------
+
+local MysteriousMixing = Class('MysteriousMixing', ns.node.Collectible, {
+    icon = 133778,
+    group = ns.groups.MYSTERIOUS_MIXING
+})
+
+ns.node.MysteriousMixing = MysteriousMixing
+
+-------------------------------------------------------------------------------
+------------------------------- PUT A PIN IN IT -------------------------------
+-------------------------------------------------------------------------------
+
+local PutAPinInIt = Class('PutAPinInIt', Collectible,
+    {icon = 5206188, group = ns.groups.PUT_A_PIN_IN_IT})
+
+ns.node.PutAPinInIt = PutAPinInIt
+
+-------------------------------------------------------------------------------
+--------------------------------- DUST 'EM OFF --------------------------------
+-------------------------------------------------------------------------------
+
+local Moth = Class('Moth', Collectible, {
+    label = L['glowing_moth'],
+    icon = 1003597,
+    group = ns.groups.GLOWING_MOTH,
+    rewards = {
+        Achievement({id = 61052, criteria = {id = 1, qty = true}}),
+        ns.reward.Currency({id = 3385}) -- Luminous Dust
+    }
+})
+
+function Moth.getters:requires()
+    return ns.requirement.Reputation(2704, self.renown, true)
+end
+
+ns.node.Moth = Moth
+
+-------------------------------------------------------------------------------
+------------------------------- MIDNIGHT SAFARI -------------------------------
+-------------------------------------------------------------------------------
+
+local Safari = Class('Safari', Collectible,
+    {icon = 'paw_g', group = ns.groups.SAFARI})
+
+ns.node.Safari = {
+
+    AkilFledgling = Class('AkilFledgling', Safari, {
+        id = 249812,
+        rewards = {
+            Achievement({id = 61091, criteria = 112790, oneline = true}),
+            Pet({id = 4874})
+        }
+    }), -- Akil Fledgling
+
+    AmberTreeflitter = Class('AmberTreeflitter', Safari, {
+        id = 241500,
+        rewards = {
+            Achievement({id = 61091, criteria = 112791, oneline = true}),
+            Pet({id = 3277})
+        }
+    }), -- Amber Treeflitter
+
+    AzureSporebat = Class('AzureSporebat', Safari, {
+        id = 249822,
+        rewards = {
+            Achievement({id = 61091, criteria = 112792, oneline = true}),
+            Pet({id = 4882})
+        }
+    }), -- Azure Sporebat
+
+    Blistercreepling = Class('Blistercreepling', Safari, {
+        id = 249819,
+        rewards = {
+            Achievement({id = 61091, criteria = 112793, oneline = true}),
+            Pet({id = 4879})
+        }
+    }), -- Blistercreepling
+
+    DevouringRunt = Class('DevouringRunt', Safari, {
+        id = 240014,
+        rewards = {
+            Achievement({id = 61091, criteria = 112794, oneline = true}),
+            Pet({id = 4790})
+        }
+    }), -- Devouring Runt
+
+    DragonhawkMosswing = Class('DragonhawkMosswing', Safari, {
+        id = 249824,
+        rewards = {
+            Achievement({id = 61091, criteria = 112795, oneline = true}),
+            Pet({id = 4883})
+        }
+    }), -- Dragonhawk Mosswing
+
+    EbonSnapling = Class('EbonSnapling', Safari, {
+        id = 249818,
+        rewards = {
+            Achievement({id = 61091, criteria = 112796, oneline = true}),
+            Pet({id = 4878})
+        }
+    }), -- Ebon Snapling
+
+    Pangolil = Class('Pangolil', Safari, {
+        id = 249825,
+        rewards = {
+            Achievement({id = 61091, criteria = 112797, oneline = true}),
+            Pet({id = 4884})
+        }
+    }), -- Pangolil
+
+    GloomToad = Class('GloomToad', Safari, {
+        id = 249826,
+        rewards = {
+            Achievement({id = 61091, criteria = 112798, oneline = true}),
+            Pet({id = 4885})
+        }
+    }), -- Gloom Toad
+
+    MudPotadpole = Class('MudPotadpole', Safari, {
+        id = 249816,
+        rewards = {
+            Achievement({id = 61091, criteria = 112799, oneline = true}),
+            Pet({id = 4876})
+        }
+    }), -- Mud Potadpole
+
+    NetherFamiliar = Class('NetherFamiliar', Safari, {
+        id = 250571,
+        rewards = {
+            Achievement({id = 61091, criteria = 112800, oneline = true}),
+            Pet({id = 4889})
+        }
+    }), -- Nether Familiar
+
+    RiftbladeFamiliar = Class('RiftbladeFamiliar', Safari, {
+        id = 250680,
+        rewards = {
+            Achievement({id = 61091, criteria = 112801, oneline = true}),
+            Pet({id = 4892})
+        }
+    }), -- Riftblade Familiar
+
+    RootlingNester = Class('RootlingNester', Safari, {
+        id = 249815,
+        rewards = {
+            Achievement({id = 61091, criteria = 112802, oneline = true}),
+            Pet({id = 4875})
+        }
+    }), -- Rootling Nester
+
+    Silkcrawler = Class('Silkcrawler', Safari, {
+        id = 249827,
+        rewards = {
+            Achievement({id = 61091, criteria = 112803, oneline = true}),
+            Pet({id = 4886})
+        }
+    }), -- Silkcrawler
+
+    StripedSnakebiter = Class('StripedSnakebiter', Safari, {
+        id = 192368,
+        rewards = {
+            Achievement({id = 61091, criteria = 112804, oneline = true}),
+            Pet({id = 3364})
+        }
+    }), -- Striped Snakebiter
+
+    SwampBiter = Class('SwampBiter', Safari, {
+        id = 249820,
+        rewards = {
+            Achievement({id = 61091, criteria = 112805, oneline = true}),
+            Pet({id = 4880})
+        }
+    }), -- Swamp Biter
+
+    VibrantManaling = Class('VibrantManaling', Safari, {
+        id = 250572,
+        rewards = {
+            Achievement({id = 61091, criteria = 112806, oneline = true}),
+            Pet({id = 4890})
+        }
+    }), -- Vibrant Manaling
+
+    VioletChick = Class('VioletChick', Safari, {
+        id = 249817,
+        rewards = {
+            Achievement({id = 61091, criteria = 112807, oneline = true}),
+            Pet({id = 4877})
+        }
+    }), -- Violet Chick
+
+    Voidcrawler = Class('Voidcrawler', Safari, {
+        id = 241439,
+        rewards = {
+            Achievement({id = 61091, criteria = 112808, oneline = true}),
+            Pet({id = 4795})
+        }
+    }), -- Voidcrawler
+
+    Waddles = Class('Waddles', Safari, {
+        id = 222077,
+        rewards = {
+            Achievement({id = 61091, criteria = 112809, oneline = true}),
+            Pet({id = 4497})
+        }
+    }), -- Waddles
+
+    WrathfulWyrm = Class('WrathfulWyrm', Safari, {
+        id = 250573,
+        rewards = {
+            Achievement({id = 61091, criteria = 112810, oneline = true}),
+            Pet({id = 4891})
+        }
+    }) -- Wrathful Wyrm
+}
+
+-- The Coiled Isle Safari (achievement 62492)
+local CoiledIsleSafari = Class('CoiledIsleSafari', Collectible, {
+    icon = 'paw_g',
+    group = ns.groups.COILED_ISLE_SAFARI
+})
+
+ns.node.CoiledIsleSafari = {
+
+    AutumnSnapling = Class('AutumnSnapling', CoiledIsleSafari, {
+        id = 262248,
+        rewards = {
+            Achievement({id = 62492, criteria = 113420, oneline = true}),
+            Pet({id = 5035})
+        }
+    }), -- Autumn Snapling
+
+    CausticWrithling = Class('CausticWrithling', CoiledIsleSafari, {
+        id = 262247,
+        rewards = {
+            Achievement({id = 62492, criteria = 113421, oneline = true}),
+            Pet({id = 5031})
+        }
+    }), -- Caustic Writhling
+
+    CursedSpawn = Class('CursedSpawn', CoiledIsleSafari, {
+        id = 262226,
+        rewards = {
+            Achievement({id = 62492, criteria = 113426, oneline = true}),
+            Pet({id = 5029})
+        }
+    }), -- Cursed Spawn
+
+    JaundicedSlitherer = Class('JaundicedSlitherer', CoiledIsleSafari, {
+        id = 262246,
+        rewards = {
+            Achievement({id = 62492, criteria = 113422, oneline = true}),
+            Pet({id = 5030})
+        }
+    }), -- Jaundiced Slitherer
+
+    NightfurKapara = Class('NightfurKapara', CoiledIsleSafari, {
+        id = 262245,
+        rewards = {
+            Achievement({id = 62492, criteria = 113423, oneline = true}),
+            Pet({id = 5032})
+        }
+    }), -- Nightfur Kapara
+
+    PoisonedParasite = Class('PoisonedParasite', CoiledIsleSafari, {
+        id = 262222,
+        rewards = {
+            Achievement({id = 62492, criteria = 113418, oneline = true}),
+            Pet({id = 5028})
+        }
+    }), -- Poisoned Parasite
+
+    SleekSnakebiter = Class('SleekSnakebiter', CoiledIsleSafari, {
+        id = 262244,
+        rewards = {
+            Achievement({id = 62492, criteria = 113424, oneline = true}),
+            Pet({id = 5033})
+        }
+    }), -- Sleek Snakebiter
+
+    SteadyCroakfrog = Class('SteadyCroakfrog', CoiledIsleSafari, {
+        id = 262243,
+        rewards = {
+            Achievement({id = 62492, criteria = 113425, oneline = true}),
+            Pet({id = 5034})
+        }
+    }) -- Steady Croakfrog
+}
+-------------------------------------------------------------------------------
+------------------------------- RENOWNED BEASTS -------------------------------
+-------------------------------------------------------------------------------
+
+local RenownedBeast = Class('RenownedBeast', ns.node.Node,
+    {icon = 5931379, group = ns.groups.RENOWNED_BEAST})
+
+ns.node.RenownedBeast = RenownedBeast
+
+-------------------------------------------------------------------------------
+--------------------------------- RITUAL SITES --------------------------------
+-------------------------------------------------------------------------------
+
+local RitualCollectible = Class('RitualCollectible', Collectible, {
+    icon = 132299,
+    label = L['options_icons_ritual_site'],
+    group = ns.groups.RITUAL_SITE
+})
+
+ns.node.RitualCollectible = RitualCollectible
+
+-- The two Ritual Sites alternate weekly, and Blizzard only draws its own map
+-- pin while the site is open. This entry marks the closed one instead, so the
+-- location is always visible and the tooltip can say when it opens again.
+-- While the site is open the pin takes over and this node hides itself.
+
+-------------------------------------------------------------------------------
+-------------------------------- WORLD BOSSES ---------------------------------
+-------------------------------------------------------------------------------
+
+local Cragpine = {
+    Transmog({item = 250456, slot = L['cloth']}), -- Wretched Scholar's Gilded Robe
+    Transmog({item = 250457, slot = L['leather']}), -- Devouring Outrider's Chausses
+    Transmog({item = 250459, slot = L['mail']}), -- Bramblestalker's Feathered Cowl
+    Transmog({item = 250458, slot = L['plate']}), -- Host Commander's Casque
+    Transmog({item = 250446, slot = L['shield']}), -- Cragtender Bulwark
+    Transmog({item = 250450, slot = L['bow']}) -- Forest Sentinel's Savage Longbow
+}
+
+local Luashal = {
+    Transmog({item = 250456, slot = L['cloth']}), -- Wretched Scholar's Gilded Robe
+    Transmog({item = 250457, slot = L['leather']}), -- Devouring Outrider's Chausses
+    Transmog({item = 250459, slot = L['mail']}), -- Bramblestalker's Feathered Cowl
+    Transmog({item = 250458, slot = L['plate']}), -- Host Commander's Casque
+    Transmog({item = 250451, slot = L['1h_axe']}), -- Dawncrazed Beast Cleaver
+    Transmog({item = 250453, slot = L['1h_mace']}) -- Scepter of the Unbound Light
+}
+
+local Predaxas = {
+    Transmog({item = 250456, slot = L['cloth']}), -- Wretched Scholar's Gilded Robe
+    Transmog({item = 250457, slot = L['leather']}), -- Devouring Outrider's Chausses
+    Transmog({item = 250459, slot = L['mail']}), -- Bramblestalker's Feathered Cowl
+    Transmog({item = 250458, slot = L['plate']}), -- Host Commander's Casque
+    Transmog({item = 250454, slot = L['2h_axe']}), -- Devouring Vanguard's Soulcleaver
+    Transmog({item = 250448, slot = L['staff']}) -- Voidbender's Spire
+}
+
+local Thormbelan = {
+    Transmog({item = 250456, slot = L['cloth']}), -- Wretched Scholar's Gilded Robe
+    Transmog({item = 250457, slot = L['leather']}), -- Devouring Outrider's Chausses
+    Transmog({item = 250459, slot = L['mail']}), -- Bramblestalker's Feathered Cowl
+    Transmog({item = 250458, slot = L['plate']}), -- Host Commander's Casque
+    Transmog({item = 250449, slot = L['dagger']}), -- Skulking Nettledirk
+    Transmog({item = 250452, slot = L['1h_sword']}), -- Blooming Thornblade
+    Transmog({item = 250455, slot = L['polearm']}) -- Beastly Blossombarb
+}
+
+-------------------------------------------------------------------------------
+----------------------------- NEIGHBORHOOD RIDDLES ----------------------------
+-------------------------------------------------------------------------------
+
+local Riddle = Class('Riddle', ns.node.Node, {
+    label = L['neighborhood_riddle'],
+    icon = 'peg_gn',
+    scale = 2
+})
+
+function Riddle:IsEnabled()
+    return self.quest and C_QuestLog.IsOnQuest(self.quest[1]) or false
+end
+
+function Riddle.getters:rewards()
+    return self.item and {ns.reward.Decor({item = self.item})} or
+               {ns.reward.Decor({id = self.decor})}
+end
+
+ns.node.Riddle = Riddle
+
+-------------------------------------------------------------------------------
+--------------------------- NEIGHBORHOOD SOUVENIRS ----------------------------
+-------------------------------------------------------------------------------
+
+local Souvenir = Class('Souvenir', Collectible, {
+    icon = 8033179,
+    group = ns.groups.SOUVENIRS,
+    sublabel = L['souvenir_activity_note']
+})
+
+ns.node.Souvenir = Souvenir
+
+ns.hooks.worldquest.Add(ns.groups.RARE, {
+    [92123] = Cragpine, -- Cragpine
+    [92560] = Luashal, -- Lu'ashal
+    [92636] = Predaxas, -- Predaxas
+    [92034] = Thormbelan -- Thorm'belan
+})
+
+ns.hooks.areapoi.Add(ns.groups.RARE, {
+    [8683] = Cragpine, -- Cragpine
+    [8682] = Luashal, -- Lu'ashal
+    [8681] = Predaxas, -- Predaxas
+    [8680] = Thormbelan -- Thorm'belan
+})

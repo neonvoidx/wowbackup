@@ -1,0 +1,83 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ https://raw.githubusercontent.com/Gethe/wow-ui-source/live/Interface/AddOns/Blizzard_SharedXML/UI.xsd">
+    <Script file="Input.lua" />
+
+    <EditBox name="MapPinEnhancedInputTemplate" mixin="MapPinEnhancedInputMixin" virtual="true" font="MapPinEnhancedFontHighlight" autoFocus="false" multiLine="false" propagateMouseInput="Motion" letters="256">
+        <Size y="20" />
+        <TextInsets left="5" right="15" />
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture parentKey="bg" inherits="MapPinEnhancedGenericFrameTextureTemplate">
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="2" y="-1" />
+                        <Anchor point="BOTTOMRIGHT" x="-2" y="3" />
+                    </Anchors>
+                </Texture>
+            </Layer>
+
+            <Layer level="ARTWORK">
+                <FontString parentKey="placeholderText" inherits="MapPinEnhancedFontDisabledSmall" hidden="true" justifyH="LEFT" justifyV="MIDDLE">
+                    <Anchors>
+                        <Anchor point="LEFT" x="10" y="0" />
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Frames>
+            <Button parentKey="clearButton" hidden="true">
+                <Size x="10" y="10" />
+                <Anchors>
+                    <Anchor point="RIGHT" relativePoint="RIGHT" x="-10" />
+                </Anchors>
+                <NormalTexture file="Interface/AddOns/MapPinEnhanced/assets/icons/IconClose.png" desaturated="true" setAllPoints="true">
+                    <Color r="1" g="0.82" b="0" />
+                </NormalTexture>
+                <PushedTexture file="Interface/AddOns/MapPinEnhanced/assets/icons/IconClose.png" desaturated="true">
+                    <Anchors>
+                        <Anchor point="TOPLEFT" relativePoint="TOPLEFT" x="1" y="-1" />
+                        <Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" x="-1" y="1" />
+                    </Anchors>
+                    <Color r="1" g="0.82" b="0" />
+                </PushedTexture>
+                <Scripts>
+                    <OnClick>
+                        local parent = self:GetParent();
+                        parent:SetText("");
+                        parent:ClearFocus();
+                        parent:UpdateClearButtonVisibility();
+                        parent:UpdatePlaceholderVisibility();
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <Frame parentKey="inlineIcon" hidden="true">
+                <Size x="100" y="20" />
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <Texture parentKey="icon" inherits="MapPinEnhancedIconTemplate" desaturated="true" alpha="0.8">
+                            <Anchors>
+                                <Anchor point="CENTER" x="1" />
+                            </Anchors>
+                        </Texture>
+                    </Layer>
+                </Layers>
+                <Anchors>
+                    <Anchor point="LEFT" x="0" />
+                </Anchors>
+            </Frame>
+        </Frames>
+        <Scripts>
+            <OnSizeChanged>
+                -- original left and right texture has a ratio of 1:2.5
+                local height = self:GetHeight()
+                self.inlineIcon:SetHeight(height);
+            </OnSizeChanged>
+            <OnEscapePressed method="OnEscapePressed" />
+            <OnEditFocusGained method="OnEditFocusGained" />
+            <OnEditFocusLost method="OnEditFocusLost" />
+            <OnChar method="OnChar" />
+            <OnLoad method="OnLoad" />
+            <OnEvent method="OnEvent" />
+            <OnHide method="OnInputHide" />
+        </Scripts>
+    </EditBox>
+</Ui>

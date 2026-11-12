@@ -1,0 +1,219 @@
+---@class MapPinEnhanced
+local MapPinEnhanced = select(2, ...)
+
+---@alias VisibilityCallbackEvent
+---| "PIN_ADDED"
+---| "PIN_REMOVED"
+---| "PIN_CLEARED"
+---| "PIN_TRACKING_CHANGED"
+---| "GROUP_UPDATED"
+---| "GROUP_DELETED"
+
+---@class VisibilityRule
+---@field isActive fun(): boolean
+---@field events? WowEvent[]
+---@field callbacks? VisibilityCallbackEvent[]
+---@field delay? number
+---@field poll? boolean
+
+---@class VisibilityTarget
+---@field optionKey string
+---@field rules table<string, boolean>
+---@field isManuallyEnabled fun(): boolean
+---@field show fun()
+---@field hide fun()
+---@field selected table<string, boolean>
+---@field needsPoll boolean?
+---@field ruleStartedAt table<string, number>
+---@field isShown boolean?
+
+---@class VisibilityTargetSettings
+---@field optionKey string
+---@field rules string[]
+---@field isManuallyEnabled fun(): boolean
+---@field show fun()
+---@field hide fun()
+
+---@type table<string, VisibilityRule>
+local rules = {}
+---@type table<string, VisibilityTarget>
+local targets = {}
+---@type table<WowEvent, boolean>
+local registeredEvents = {}
+---@type table<VisibilityCallbackEvent, boolean>
+local registeredCallbacks = {}
+local updateQueued = false
+local visibilityLoaded = false
+---@type FunctionContainer?
+local pollTicker
+---@type fun(targetID: string, force: boolean?)
+local UpdateTargetVisibility
+
+local function UpdatePolling()
+    if not visibilityLoaded then return end
+    local needed = false
+    for _, target in pairs(targets) do
+        if target.needsPoll then
+            needed = true
+            break
+        end
+    end
+    if needed and not pollTicker then
+        pollTicker = C_Timer.NewTicker(0.25, function()
+            for targetID, target in pairs(targets) do
+                if target.needsPoll then UpdateTargetVisibility(targetID) end
+            end
+        end)
+    elseif not needed and pollTicker then
+        pollTicker:Cancel()
+        pollTicker = nil
+    end
+end
+
+---@param targetID string
+---@param force boolean?
+UpdateTargetVisibility = function(targetID, force)
+    local target = targets[targetID]
+    if not target then return end
+
+    local shouldShow = target.isManuallyEnabled()
+    target.needsPoll = false
+    if shouldShow then
+        local now = GetTime()
+        -- Nonpolling suppression takes precedence, so hidden instance targets do not read positions.
+        for pass = 1, 2 do
+            local polling = pass == 2
+            for ruleID in pairs(target.rules) do
+                local rule = rules[ruleID]
+                if target.selected[ruleID] and (rule.poll == true) == polling then
+                    if polling then target.needsPoll = true end
+                    if rule.isActive() then
+                        local startedAt = target.ruleStartedAt[ruleID] or now
+                        target.ruleStartedAt[ruleID] = startedAt
+                        if not rule.delay or now - startedAt >= rule.delay then shouldShow = false end
+                    else
+                        target.ruleStartedAt[ruleID] = nil
+                    end
+                end
+            end
+            if not shouldShow and not polling then
+                for ruleID in pairs(target.rules) do
+                    if rules[ruleID].poll then target.ruleStartedAt[ruleID] = nil end
+                end
+                break
+            end
+        end
+    else
+        wipe(target.ruleStartedAt)
+    end
+    UpdatePolling()
+
+    if not force and target.isShown == shouldShow then return end
+    target.isShown = shouldShow
+    if shouldShow then
+        target.show()
+    else
+        target.hide()
+    end
+end
+
+local function UpdateAllTargetVisibility()
+    for targetID in pairs(targets) do
+        UpdateTargetVisibility(targetID)
+    end
+end
+
+local function QueueAllTargetVisibilityUpdates()
+    if updateQueued then return end
+    updateQueued = true
+    C_Timer.After(0, function()
+        updateQueued = false
+        UpdateAllTargetVisibility()
+    end)
+end
+
+---@param ruleID string
+---@param rule VisibilityRule
+function MapPinEnhanced:AddVisibilityRule(ruleID, rule)
+    assert(type(ruleID) == "string" and ruleID ~= "", "Visibility rule ID is required")
+    assert(not rules[ruleID], "Visibility rule already registered: " .. ruleID)
+    assert(type(rule.isActive) == "function", "Visibility rule predicate is required")
+    rules[ruleID] = rule
+
+    for _, event in ipairs(rule.events or {}) do
+        if not registeredEvents[event] then
+            registeredEvents[event] = true
+            self:RegisterEvent(event, UpdateAllTargetVisibility)
+        end
+    end
+    for _, callback in ipairs(rule.callbacks or {}) do
+        if not registeredCallbacks[callback] then
+            registeredCallbacks[callback] = true
+            self:RegisterCallback(callback, QueueAllTargetVisibilityUpdates)
+        end
+    end
+end
+
+---@param targetID string
+---@param settings VisibilityTargetSettings
+function MapPinEnhanced:RegisterVisibilityTarget(targetID, settings)
+    assert(type(targetID) == "string" and targetID ~= "", "Visibility target ID is required")
+    assert(not targets[targetID], "Visibility target already registered: " .. targetID)
+    assert(type(settings.optionKey) == "string", "Visibility target option key is required")
+    assert(type(settings.isManuallyEnabled) == "function", "Visibility target manual predicate is required")
+    assert(type(settings.show) == "function" and type(settings.hide) == "function",
+        "Visibility target show/hide adapters are required")
+
+    ---@type table<string, boolean>
+    local allowed = {}
+    for _, ruleID in ipairs(settings.rules or {}) do
+        assert(rules[ruleID], "Unknown visibility rule: " .. tostring(ruleID))
+        allowed[ruleID] = true
+    end
+
+    targets[targetID] = {
+        optionKey = settings.optionKey,
+        rules = allowed,
+        isManuallyEnabled = settings.isManuallyEnabled,
+        show = settings.show,
+        hide = settings.hide,
+        ruleStartedAt = {},
+        selected = {},
+    }
+
+    local Options = self:GetModule("Options")
+    targets[targetID].selected = Options:GetOptionValue(settings.optionKey) --[[@as table<string, boolean>]]
+    Options:SubscribeToOptionChanges(settings.optionKey, function(value)
+        targets[targetID].selected = value or {}
+        wipe(targets[targetID].ruleStartedAt)
+        UpdateTargetVisibility(targetID)
+    end)
+    QueueAllTargetVisibilityUpdates()
+end
+
+---@param targetID string
+function MapPinEnhanced:UpdateVisibilityTarget(targetID)
+    UpdateTargetVisibility(targetID, true)
+end
+
+---@param instanceType string
+---@return fun(): boolean
+local function IsInstanceType(instanceType)
+    return function()
+        local _, currentType = GetInstanceInfo()
+        return currentType == instanceType
+    end
+end
+
+local INSTANCE_EVENTS = { "PLAYER_ENTERING_WORLD", "ZONE_CHANGED_NEW_AREA" }
+MapPinEnhanced:AddVisibilityRule("dungeon", { isActive = IsInstanceType("party"), events = INSTANCE_EVENTS })
+MapPinEnhanced:AddVisibilityRule("raid", { isActive = IsInstanceType("raid"), events = INSTANCE_EVENTS })
+MapPinEnhanced:AddVisibilityRule("scenario",
+    { isActive = IsInstanceType("scenario"), events = INSTANCE_EVENTS })
+MapPinEnhanced:AddVisibilityRule("battleground", { isActive = IsInstanceType("pvp"), events = INSTANCE_EVENTS })
+MapPinEnhanced:AddVisibilityRule("arena", { isActive = IsInstanceType("arena"), events = INSTANCE_EVENTS })
+
+MapPinEnhanced:OnLoad(function()
+    visibilityLoaded = true
+    UpdatePolling()
+end)

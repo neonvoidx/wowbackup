@@ -1,0 +1,2 @@
+
+DEVS_CHARACTER_DB = nil

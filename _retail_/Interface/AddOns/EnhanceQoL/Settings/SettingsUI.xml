@@ -1,0 +1,32 @@
+<Ui>
+	<Script file='SettingsUI.lua'/>
+	<Script file='DynamicAnchoring.lua'/>
+	<Script file='MainCategory.lua'/>
+	<Script file='TravelUtility.lua'/>
+	<Script file='ContainerAction.lua'/>
+	<Script file='QuestZoneFilter.lua'/>
+	<Script file='Quest.lua'/>
+	<Script file='CombatDungeon.lua'/>
+	<Script file='GearUpgrade.lua'/>
+	<Script file='ItemInventory.lua'/>
+	<Script file='DefaultAuraContainers.lua'/>
+	<Script file='Loot.lua'/>
+	<Script file='VendorEconomy.lua'/>
+	<Script file='System.lua'/>
+	<Script file='CVarOptions.lua'/>
+	<Script file='UIOptions.lua'/>
+	<Script file='NameplateAuraColorsRuntime.lua'/>
+	<Script file='NameplateAuraColors.lua'/>
+	<Script file='DurationText.lua'/>
+	<Script file='TrackingBarVisibility.lua'/>
+	<Script file='PersonalResourceComboPoints.lua'/>
+	<Script file='UIInput.lua'/>
+	<Script file='Camera.lua'/>
+	<Script file='UIErrors.lua'/>
+	<Script file='ActionTracker.lua'/>
+	<Script file='MapNavigation.lua'/>
+	<Script file='DataPanel.lua'/>
+	<Script file='Profiles.lua'/>
+	<Script file='UnitFrames.lua'/>
+	<Script file='GroupTools.lua'/>
+</Ui>

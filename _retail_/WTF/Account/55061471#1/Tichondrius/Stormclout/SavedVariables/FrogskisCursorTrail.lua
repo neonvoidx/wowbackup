@@ -1,0 +1,85 @@
+
+FrogskisCursorTrailDB = {
+["conditions"] = {
+},
+["currentProfile"] = "Default",
+["profiles"] = {
+["Default"] = {
+["changeWithTime"] = false,
+["shrinkWithTime"] = true,
+["cursorFrameSize"] = 38,
+["blendmode"] = 1,
+["colour4"] = {
+0,
+0.8980392813682556,
+1,
+},
+["offsetX"] = 20,
+["cursorlayer"] = 1,
+["enableIndicator"] = true,
+["colour2"] = {
+0.1490196138620377,
+1,
+0.5098039507865906,
+},
+["colourspeed"] = 0.1,
+["combatoption"] = false,
+["enableCombatLook"] = false,
+["enableLook"] = true,
+["colour9"] = {
+0,
+0,
+0,
+},
+["heightx"] = 35,
+["offsetY"] = -18,
+["colour1"] = {
+0.1490196138620377,
+1,
+0.5098039507865906,
+},
+["colour3"] = {
+0,
+0.8980392813682556,
+1,
+},
+["fallbackTexture"] = "bags-glow-flash",
+["colour8"] = {
+0,
+0,
+0,
+},
+["widthx"] = 35,
+["colour6"] = {
+0.5960784554481506,
+0.5137255191802979,
+1,
+},
+["lifetime"] = 0.3,
+["shrinkWithDistance"] = true,
+["dotdistance"] = 1,
+["colour10"] = {
+0,
+0,
+0,
+},
+["adaptiveTargetFPS"] = 90,
+["colour7"] = {
+0,
+0,
+0,
+},
+["Alphax"] = 1,
+["maxdots"] = 540,
+["colour5"] = {
+0.5960784554481506,
+0.5137255191802979,
+1,
+},
+["updateEveryOther"] = true,
+["textureInput"] = "bags-glow-flash",
+["useClassColor"] = false,
+["phasecount"] = 6,
+},
+},
+}

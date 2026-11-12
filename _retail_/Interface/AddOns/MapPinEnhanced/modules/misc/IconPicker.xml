@@ -1,0 +1,151 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ https://raw.githubusercontent.com/Gethe/wow-ui-source/live/Interface/AddOns/Blizzard_SharedXML/UI.xsd">
+    <Script file="IconPicker.lua" />
+
+    <Button name="MapPinEnhancedIconPickerButtonTemplate" inherits="MapPinEnhancedActionButtonTemplate" mixin="MapPinEnhancedIconPickerButtonMixin" virtual="true">
+        <Size x="42" y="42" />
+        <Layers>
+            <Layer level="OVERLAY">
+                <Texture parentKey="selected" inherits="MapPinEnhancedGenericFrameTextureTemplate" alphaMode="ADD" setAllPoints="true" hidden="true" />
+            </Layer>
+        </Layers>
+        <Scripts>
+            <OnEnter method="OnEnter" />
+            <OnLeave method="OnLeave" />
+            <OnHide method="OnLeave" />
+            <OnClick method="OnClick" />
+        </Scripts>
+    </Button>
+
+    <Frame name="MapPinEnhancedIconPickerRowTemplate" mixin="MapPinEnhancedIconPickerRowMixin" virtual="true">
+        <Size x="364" y="46" />
+        <Frames>
+            <Button parentKey="button1" inherits="MapPinEnhancedIconPickerButtonTemplate">
+                <Anchors>
+                    <Anchor point="LEFT" />
+                </Anchors>
+            </Button>
+            <Button parentKey="button2" inherits="MapPinEnhancedIconPickerButtonTemplate">
+                <Anchors>
+                    <Anchor point="LEFT" relativeKey="$parent.button1" relativePoint="RIGHT" x="4" />
+                </Anchors>
+            </Button>
+            <Button parentKey="button3" inherits="MapPinEnhancedIconPickerButtonTemplate">
+                <Anchors>
+                    <Anchor point="LEFT" relativeKey="$parent.button2" relativePoint="RIGHT" x="4" />
+                </Anchors>
+            </Button>
+            <Button parentKey="button4" inherits="MapPinEnhancedIconPickerButtonTemplate">
+                <Anchors>
+                    <Anchor point="LEFT" relativeKey="$parent.button3" relativePoint="RIGHT" x="4" />
+                </Anchors>
+            </Button>
+            <Button parentKey="button5" inherits="MapPinEnhancedIconPickerButtonTemplate">
+                <Anchors>
+                    <Anchor point="LEFT" relativeKey="$parent.button4" relativePoint="RIGHT" x="4" />
+                </Anchors>
+            </Button>
+            <Button parentKey="button6" inherits="MapPinEnhancedIconPickerButtonTemplate">
+                <Anchors>
+                    <Anchor point="LEFT" relativeKey="$parent.button5" relativePoint="RIGHT" x="4" />
+                </Anchors>
+            </Button>
+            <Button parentKey="button7" inherits="MapPinEnhancedIconPickerButtonTemplate">
+                <Anchors>
+                    <Anchor point="LEFT" relativeKey="$parent.button6" relativePoint="RIGHT" x="4" />
+                </Anchors>
+            </Button>
+            <Button parentKey="button8" inherits="MapPinEnhancedIconPickerButtonTemplate">
+                <Anchors>
+                    <Anchor point="LEFT" relativeKey="$parent.button7" relativePoint="RIGHT" x="4" />
+                </Anchors>
+            </Button>
+        </Frames>
+        <Scripts>
+            <OnLoad method="OnLoad" />
+        </Scripts>
+    </Frame>
+
+    <Frame name="MapPinEnhancedIconPickerWindow" inherits="MapPinEnhancedWindowTemplate" mixin="MapPinEnhancedIconPickerWindowMixin" parent="UIParent" frameStrata="DIALOG">
+        <Size x="430" y="414" />
+        <KeyValues>
+            <KeyValue key="windowTitle" value="Icon Picker" />
+        </KeyValues>
+        <Layers>
+            <Layer level="ARTWORK">
+                <Texture parentKey="preview">
+                    <Size x="38" y="38" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="24" y="-45" />
+                    </Anchors>
+                </Texture>
+                <FontString parentKey="selectedName" inherits="MapPinEnhancedFontHighlight" justifyH="LEFT">
+                    <Anchors>
+                        <Anchor point="LEFT" relativeKey="$parent.preview" relativePoint="RIGHT" x="8" />
+                        <Anchor point="RIGHT" x="-24" />
+                    </Anchors>
+                </FontString>
+                <FontString parentKey="resultCount" inherits="MapPinEnhancedFontDisabledSmall" justifyH="LEFT">
+                    <Anchors>
+                        <Anchor point="LEFT" relativeKey="$parent.loadingSpinner" relativePoint="RIGHT" x="5" />
+                    </Anchors>
+                </FontString>
+                <Texture parentKey="loadingSpinner" file="Interface\AddOns\MapPinEnhanced\assets\shared\Spinner.png" hidden="true" texelSnappingBias="0" snapToPixelGrid="false">
+                    <Size x="16" y="16" />
+                    <Anchors>
+                        <Anchor point="BOTTOMLEFT" x="24" y="20" />
+                    </Anchors>
+                    <Animations>
+                        <AnimationGroup parentKey="spin" inherits="MapPinEnhancedAnimationSpin" />
+                    </Animations>
+                    <Scripts>
+                        <OnShow>
+                            self.spin:Play();
+                        </OnShow>
+                        <OnHide>
+                            self.spin:Stop();
+                        </OnHide>
+                    </Scripts>
+                </Texture>
+            </Layer>
+        </Layers>
+        <Frames>
+            <EditBox parentKey="search" inherits="MapPinEnhancedInputTemplate">
+                <Size y="28" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="24" y="-88" />
+                    <Anchor point="TOPRIGHT" x="-24" y="-88" />
+                </Anchors>
+            </EditBox>
+            <Frame parentKey="scrollBox" inherits="WowScrollBoxList" enableMouse="true">
+                <Size x="364" y="230" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="24" y="-126" />
+                </Anchors>
+            </Frame>
+            <EventFrame parentKey="scrollBar" inherits="MinimalScrollBar">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeKey="$parent.scrollBox" relativePoint="TOPRIGHT" x="8" y="-2" />
+                    <Anchor point="BOTTOMLEFT" relativeKey="$parent.scrollBox" relativePoint="BOTTOMRIGHT" x="8" y="2" />
+                </Anchors>
+            </EventFrame>
+            <Button parentKey="cancelButton" inherits="MapPinEnhancedButtonTemplate" text="Cancel">
+                <Size x="104" y="30" />
+                <Anchors>
+                    <Anchor point="BOTTOMRIGHT" x="-24" y="15" />
+                </Anchors>
+            </Button>
+            <Button parentKey="confirmButton" inherits="MapPinEnhancedButtonTemplate" text="Confirm">
+                <Size x="104" y="30" />
+                <Anchors>
+                    <Anchor point="RIGHT" relativeKey="$parent.cancelButton" relativePoint="LEFT" x="-8" />
+                </Anchors>
+            </Button>
+        </Frames>
+        <Scripts>
+            <OnLoad method="OnLoad" />
+            <OnShow method="OnShow" />
+            <OnHide method="OnHide" />
+        </Scripts>
+    </Frame>
+</Ui>

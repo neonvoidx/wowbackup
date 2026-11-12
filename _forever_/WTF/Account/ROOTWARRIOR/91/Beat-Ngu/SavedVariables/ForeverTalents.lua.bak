@@ -1,0 +1,32 @@
+
+ForeverTalentsCharacterBackupDB = {
+["persistence"] = {
+["generation"] = 5,
+["updatedAt"] = 1793972063,
+["intentionalEmpty"] = true,
+["planCount"] = 0,
+},
+["version"] = 6,
+["tombstones"] = {
+["4:1488buildsambush"] = {
+["deletedAt"] = 1793972052,
+["revision"] = 4,
+},
+["4:1488previewsambush leveling"] = {
+["deletedAt"] = 1793972063,
+["revision"] = 5,
+},
+},
+["backups"] = {
+},
+["profiles"] = {
+["4:1488"] = {
+["builds"] = {
+},
+["specID"] = 1488,
+["classID"] = 4,
+["previews"] = {
+},
+},
+},
+}

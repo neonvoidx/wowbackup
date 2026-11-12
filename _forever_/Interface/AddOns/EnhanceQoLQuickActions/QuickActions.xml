@@ -1,0 +1,13 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+	<Script file="Init.lua" />
+	<Script file="QuestItems.lua" />
+	<Script file="MicroMenu.lua" />
+	<Script file="ActionIcons.lua" />
+	<Script file="Runtime.lua" />
+	<Script file="Navigation.lua" />
+	<Script file="EditorConstants.lua" />
+	<Include file="Editor.xml" />
+	<Script file="Editor.lua" />
+	<Script file="AddEntryPicker.lua" />
+	<Script file="Settings.lua" />
+</Ui>

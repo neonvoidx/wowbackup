@@ -1,0 +1,11 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+	<Script file="Init.lua" />
+	<Script file="EnhanceQoLVendor.lua" />
+	<Script file="AutoJunk.lua" />
+	<Script file="CraftShopper.lua" />
+	<Script file="NativeJunkIcons.lua" />
+	<Script file="BulkBuy.lua" />
+	<Script file="Merchant.lua" />
+	<Script file="ListEditor.lua" />
+	<Script file="Settings_Vendor.lua" />
+</Ui>

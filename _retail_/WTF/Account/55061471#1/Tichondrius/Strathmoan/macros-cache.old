@@ -1,0 +1,90 @@
+VER 3 0100000000000003 " " "INV_MISC_QUESTIONMARK"
+#showtooltip Raise Ally
+/cast [@mouseover,help][@target]Raise Ally
+END
+VER 3 0100000000000006 " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [target=mouseover,exists] Dark Command; Dark Command
+END
+VER 3 0100000000000009 " " "134400"
+#showtooltip
+/cast [@cursor] Death and Decay
+END
+VER 3 010000000000000C " " "INV_Misc_QuestionMark"
+#showtooltip
+/cast [mod:shift,@focus,exists,harm][] Leap
+END
+VER 3 010000000000000A " " "INV_Misc_QuestionMark"
+#showtooltip
+/cast [mod:shift, @focus,exists,harm][] Mind Freeze
+END
+VER 3 0100000000000008 " " "134400"
+#showtooltip 
+/cast [@cursor] Anti-Magic Zone
+END
+VER 3 0100000000000011 " " "INV_Misc_QuestionMark"
+#showtooltip Asphyxiate
+/cast [mod:shift,@focus,exists,harm,nodead][] Asphyxiate
+END
+VER 3 0100000000000010 " " "INV_Misc_QuestionMark"
+#showtooltip Raise Dead
+/cast [nopet] Raise Dead
+/use Goblin Weather Machine - Prototype 01-B
+END
+VER 3 0100000000000013 " " "INV_ArfusPet."
+/petattack
+END
+VER 3 0100000000000015 " " "134400"
+#showtooltip Scourge Strike
+/petattack
+/cast Scourge Strike
+END
+VER 3 0100000000000014 " " "134400"
+#showtooltip Festering Strike
+/petattack
+/cast Festering Strike
+END
+VER 3 0100000000000016 " " "134400"
+#showtooltip Outbreak
+/petattack
+/cast Outbreak
+END
+VER 3 0100000000000017 " " "134400"
+#showtooltip Death Coil
+/petattack
+/cast Death Coil
+END
+VER 3 0100000000000019 " " "134400"
+#showtooltip Putrefy
+/petattack
+/cast Putrefy
+END
+VER 3 010000000000001D " " "134400"
+#showtooltip
+/cast [mod:shift,@focus,exists,harm][] Gnaw
+END
+VER 3 010000000000001A " " "134400"
+#showtooltip
+/petattack
+/cast Epidemic
+END
+VER 3 010000000000001B " " "134400"
+#showtooltip
+/cast [@mouseover,exists,noharm,nodead][@player] Anti-magic shell
+END
+VER 3 010000000000001C " " "134400"
+#showtooltip Lichborne
+/castsequence [@player] Lichborne, Death coil
+END
+VER 3 010000000000000D "  " "INV_Misc_QuestionMark"
+#showtooltip 
+/cast Army of the dead
+/use tempered potion
+/use 14
+/use saltwater potion
+/cast Dark Transformation
+END
+VER 3 010000000000000E "Focus" "134400"
+#showtooltip 
+/cast [@focus,exists,harm,nodead][] Death Grip
+END

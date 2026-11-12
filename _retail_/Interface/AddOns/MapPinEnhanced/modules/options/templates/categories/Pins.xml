@@ -1,0 +1,67 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ https://raw.githubusercontent.com/Gethe/wow-ui-source/live/Interface/AddOns/Blizzard_SharedXML/UI.xsd">
+
+    <Frame name="MapPinEnhancedOptionCategoryPinsTemplate" virtual="true" inherits="MapPinEnhancedOptionCategoryBaseTemplate">
+        <KeyValues>
+            <KeyValue key="categoryName" value="Pins" />
+        </KeyValues>
+        <Frames>
+            <Frame inherits="MapPinEnhancedOptionCheckboxTemplate">
+                <KeyValues>
+                    <KeyValue key="key" value="Pins.AlwaysPingTracked" />
+                </KeyValues>
+            </Frame>
+            <Frame inherits="MapPinEnhancedOptionCheckboxTemplate">
+                <KeyValues>
+                    <KeyValue key="key" value="Pins.FadeUntracked" />
+                </KeyValues>
+            </Frame>
+            <Frame inherits="MapPinEnhancedOptionCheckboxTemplate">
+                <KeyValues>
+                    <KeyValue key="key" value="Pins.ShowMinimapPins" />
+                </KeyValues>
+            </Frame>
+            <Frame inherits="MapPinEnhancedOptionDropdownTemplate">
+                <KeyValues>
+                    <KeyValue key="key" value="Pins.MinimapScale" />
+                </KeyValues>
+            </Frame>
+            <Frame inherits="MapPinEnhancedOptionDropdownTemplate">
+                <KeyValues>
+                    <KeyValue key="key" value="Pins.WorldMapScale" />
+                </KeyValues>
+            </Frame>
+            <Frame inherits="MapPinEnhancedOptionDropdownTemplate">
+                <KeyValues>
+                    <KeyValue key="key" value="Pins.DefaultColor" />
+                </KeyValues>
+            </Frame>
+            <Frame inherits="MapPinEnhancedOptionCheckboxTemplate">
+                <KeyValues>
+                    <KeyValue key="key" value="Pins.ScaleOnHover" />
+                </KeyValues>
+            </Frame>
+            <Frame inherits="MapPinEnhancedOptionCheckboxTemplate">
+                <KeyValues>
+                    <KeyValue key="key" value="Pins.EnableLockedPins" />
+                </KeyValues>
+            </Frame>
+            <Frame inherits="MapPinEnhancedOptionDropdownTemplate">
+                <KeyValues>
+                    <KeyValue key="key" value="Pins.ArrivalNotification" />
+                </KeyValues>
+            </Frame>
+            <Frame inherits="MapPinEnhancedOptionCheckboxTemplate">
+                <KeyValues>
+                    <KeyValue key="key" value="Pins.AutoUntrack" />
+                </KeyValues>
+            </Frame>
+            <Frame inherits="MapPinEnhancedOptionCheckboxTemplate">
+                <KeyValues>
+                    <KeyValue key="key" value="Pins.TomTom" />
+                    <KeyValue key="requiredAddon" value="TomTom" />
+                </KeyValues>
+            </Frame>
+        </Frames>
+    </Frame>
+</Ui>

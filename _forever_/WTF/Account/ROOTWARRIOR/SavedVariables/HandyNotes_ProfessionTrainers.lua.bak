@@ -1,0 +1,14 @@
+
+HandyNotes_ProfessionTrainersDB = {
+["profileKeys"] = {
+["Beat Ngu"] = "Default",
+},
+["global"] = {
+["setupDone"] = true,
+},
+["profiles"] = {
+["Default"] = {
+["mine"] = true,
+},
+},
+}

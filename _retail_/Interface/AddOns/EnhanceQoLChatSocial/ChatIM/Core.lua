@@ -1,0 +1,286 @@
+local parentAddonName = "EnhanceQoL"
+local addonName, addon = ...
+if _G[parentAddonName] then
+	addon = _G[parentAddonName]
+else
+	error(parentAddonName .. " is not loaded")
+end
+local ChatFrameUtil = _G.ChatFrameUtil
+
+local ChatIM = addon.ChatIM or {}
+addon.ChatIM = ChatIM
+ChatIM.enabled = false
+ChatIM.whisperHooked = ChatIM.whisperHooked or false
+ChatIM.soundPath = "Interface\\AddOns\\" .. parentAddonName .. "\\Sounds\\ChatIM\\"
+
+local function getSoundTable()
+	if addon.functions and addon.functions.GetLSMMediaHash then
+		local hash = addon.functions.GetLSMMediaHash("sound")
+		if type(hash) == "table" then return hash end
+	end
+	return {}
+end
+
+function ChatIM:BuildSoundTable() ChatIM.availableSounds = getSoundTable() end
+
+local function shouldPlaySound(sender)
+	if not ChatIM.widget or not ChatIM.widget.frame:IsShown() then return true end
+	if ChatIM.activeTab ~= sender then return true end
+	return false
+end
+
+local function playIncomingSound(sender, notify)
+	if ChatIM.UsesNativeWhisperSink and not ChatIM.WhisperSink.active then return end
+	if notify == nil then notify = shouldPlaySound(sender) end
+	if not notify then return end
+	if addon.db and addon.db["chatIMUseCustomSound"] then
+		local key = addon.db["chatIMCustomSoundFile"]
+		local file = key and ChatIM.availableSounds[key]
+		if file then
+			PlaySoundFile(file, "Master")
+			return
+		end
+	end
+	PlaySound(SOUNDKIT.TELL_MESSAGE)
+end
+
+local function whisperFilter(chatFrame)
+	if ChatIM.UsesNativeWhisperSink then
+		local sink = ChatIM.WhisperSink
+		-- Only the native sink bypasses suppression. If unavailable, fail open so
+		-- visible native chat still handles the message and keeps /r up to date.
+		return sink.active and chatFrame ~= sink.window or false
+	end
+	return true
+end
+
+local function OpenChatIMForEditBox(editBox)
+	if not ChatIM.enabled or not editBox or not editBox:IsShown() then return end
+	local chatType = editBox.GetAttribute and editBox:GetAttribute("chatType")
+	if chatType == "WHISPER" then
+		local name = editBox:GetAttribute("tellTarget") or ChatFrameUtil.GetLastTellTarget()
+		if name then
+			name = ChatIM:NormalizeCharacterName(name)
+			if ChatIM:StartWhisper(name) then ChatIM:FocusConversation(name, true) end
+		end
+	elseif chatType == "BN_WHISPER" then
+		local target = editBox:GetAttribute("tellTarget") or ChatFrameUtil.GetLastTellTarget()
+		if target then
+			local plain = BNTokenFindName and (BNTokenFindName(target) or target) or target
+			local bnetID = BNet_GetBNetIDAccount and BNet_GetBNetIDAccount(plain)
+			if bnetID then
+				local info = C_BattleNet.GetAccountInfoByID and C_BattleNet.GetAccountInfoByID(bnetID)
+				if ChatIM:StartWhisper(plain, bnetID, info and info.battleTag) then ChatIM:FocusConversation(plain, true) end
+			end
+		end
+	end
+end
+
+local function focusTab(target, isBN)
+	if issecretvalue and issecretvalue(target) then return end
+	if not isBN and ChatIM:UsesSurnames() then target = ChatIM:NormalizeCharacterName(target) end
+	ChatIM:CreateTab(target, isBN)
+	ChatIM:FocusConversation(target)
+end
+
+local frame = CreateFrame("Frame")
+frame:SetScript("OnEvent", function(_, event, ...)
+	if not ChatIM.enabled then return end
+	if event == "PLAYER_REGEN_DISABLED" then
+		ChatIM.inCombat = true
+		if addon.db and addon.db["chatIMHideInCombat"] then
+			if ChatIM.widget and ChatIM.widget.frame:IsShown() then
+				ChatIM.wasOpenBeforeCombat = true
+				ChatIM:HideWindow()
+			else
+				ChatIM.wasOpenBeforeCombat = false
+			end
+		end
+	elseif event == "PLAYER_REGEN_ENABLED" then
+		ChatIM.inCombat = false
+		if addon.db and addon.db["chatIMHideInCombat"] then
+			if (ChatIM.wasOpenBeforeCombat or ChatIM.pendingShow) and ChatIM.widget then ChatIM:ShowWindow() end
+			for _, snd in ipairs(ChatIM.soundQueue or {}) do
+				playIncomingSound(snd)
+			end
+			ChatIM.pendingShow = false
+			ChatIM.soundQueue = {}
+		end
+	elseif event == "CHAT_MSG_WHISPER" then
+		local msg, sender, _, _, _, _, _, _, _, _, lineID = ...
+		if issecretvalue and issecretvalue(sender) then return end
+		if ChatIM:UsesSurnames() then sender = ChatIM:NormalizeCharacterName(sender) end
+		if addon.Ignore and addon.Ignore.CheckIgnore and addon.Ignore:CheckIgnore(sender) then return end
+		local notify = shouldPlaySound(sender)
+		ChatIM:AddMessage(sender, msg, nil, nil, nil, lineID)
+		if addon.db and addon.db["chatIMHideInCombat"] and ChatIM.inCombat then
+			table.insert(ChatIM.soundQueue, sender)
+			ChatIM.pendingShow = true
+		else
+			playIncomingSound(sender, notify)
+			ChatIM:Flash()
+		end
+	elseif event == "CHAT_MSG_BN_WHISPER" then
+		local msg, sender, _, _, _, _, _, _, _, _, lineID, _, bnetID = ...
+		if issecretvalue and issecretvalue(sender) then return end
+		local notify = shouldPlaySound(sender)
+		ChatIM:AddMessage(sender, msg, nil, true, bnetID, lineID)
+		if addon.db and addon.db["chatIMHideInCombat"] and ChatIM.inCombat then
+			table.insert(ChatIM.soundQueue, sender)
+			ChatIM.pendingShow = true
+		else
+			playIncomingSound(sender, notify)
+			ChatIM:Flash()
+		end
+	elseif event == "CHAT_MSG_WHISPER_INFORM" then
+		local msg, target = ...
+		if issecretvalue and issecretvalue(target) then return end
+		ChatIM:AddMessage(target, msg, true)
+		focusTab(target)
+	elseif event == "CHAT_MSG_BN_WHISPER_INFORM" then
+		local msg, target, _, _, _, _, _, _, _, _, _, _, bnetID = ...
+		if issecretvalue and issecretvalue(target) then return end
+		ChatIM:AddMessage(target, msg, true, true, bnetID)
+		focusTab(target, true)
+	end
+end)
+
+local function updateRegistration()
+	if ChatIM.enabled then
+		frame:RegisterEvent("CHAT_MSG_WHISPER")
+		frame:RegisterEvent("CHAT_MSG_BN_WHISPER")
+		frame:RegisterEvent("CHAT_MSG_WHISPER_INFORM")
+		frame:RegisterEvent("CHAT_MSG_BN_WHISPER_INFORM")
+		if addon.db and addon.db["chatIMHideInCombat"] then
+			frame:RegisterEvent("PLAYER_REGEN_DISABLED")
+			frame:RegisterEvent("PLAYER_REGEN_ENABLED")
+		else
+			frame:UnregisterEvent("PLAYER_REGEN_DISABLED")
+			frame:UnregisterEvent("PLAYER_REGEN_ENABLED")
+		end
+
+		ChatFrameUtil.RemoveMessageEventFilter("CHAT_MSG_WHISPER", whisperFilter)
+		ChatFrameUtil.RemoveMessageEventFilter("CHAT_MSG_BN_WHISPER", whisperFilter)
+		ChatFrameUtil.RemoveMessageEventFilter("CHAT_MSG_WHISPER_INFORM", whisperFilter)
+		ChatFrameUtil.RemoveMessageEventFilter("CHAT_MSG_BN_WHISPER_INFORM", whisperFilter)
+		ChatFrameUtil.AddMessageEventFilter("CHAT_MSG_WHISPER", whisperFilter)
+		ChatFrameUtil.AddMessageEventFilter("CHAT_MSG_BN_WHISPER", whisperFilter)
+		ChatFrameUtil.AddMessageEventFilter("CHAT_MSG_WHISPER_INFORM", whisperFilter)
+		ChatFrameUtil.AddMessageEventFilter("CHAT_MSG_BN_WHISPER_INFORM", whisperFilter)
+
+		ChatIM:NormalizeHistoryCharacters()
+
+		ChatIM:BuildSoundTable()
+	else
+		frame:UnregisterAllEvents()
+		ChatFrameUtil.RemoveMessageEventFilter("CHAT_MSG_WHISPER", whisperFilter)
+		ChatFrameUtil.RemoveMessageEventFilter("CHAT_MSG_BN_WHISPER", whisperFilter)
+		ChatFrameUtil.RemoveMessageEventFilter("CHAT_MSG_WHISPER_INFORM", whisperFilter)
+		ChatFrameUtil.RemoveMessageEventFilter("CHAT_MSG_BN_WHISPER_INFORM", whisperFilter)
+		if ChatIM.widget and ChatIM.widget.frame then ChatIM:HideWindow() end
+		if ChatIM.historyFrame then ChatIM.historyFrame:Hide() end
+	end
+end
+
+function ChatIM:SetEnabled(val)
+	if not addon.variables or not addon.variables.chatSocialSavedVariablesReady then return end
+	self.enabled = val and true or false
+	if self.WhisperSink then
+		if self.enabled then
+			self.WhisperSink:Enable()
+		else
+			self.WhisperSink:Disable()
+		end
+	end
+	if self.ChannelHistory and self.ChannelHistory.SetEnabled then
+		local enabled = addon.db and addon.db.enableChatHistory
+		self.ChannelHistory:SetEnabled(enabled)
+	end
+	if self.enabled then
+		self:SetMaxHistoryLines(addon.db and addon.db["chatIMMaxHistory"])
+		self:CreateUI()
+		if not self.whisperHooked then
+			hooksecurefunc(ChatFrameUtil, "SendTell", function(name)
+				if not ChatIM.enabled then return end
+				if name then
+					name = ChatIM:NormalizeCharacterName(name)
+					ChatIM:StartWhisper(name)
+				end
+			end)
+
+			if ChatFrameUtil and ChatFrameUtil.SendBNetTell then
+				hooksecurefunc(ChatFrameUtil, "SendBNetTell", function(target)
+					if not ChatIM.enabled then return end
+					local bnetID = nil
+					local plain = BNTokenFindName(target) or target
+					bnetID = BNet_GetBNetIDAccount(plain)
+					target = plain
+					if bnetID then
+						local accountTag
+						local info = C_BattleNet.GetAccountInfoByID(bnetID)
+						if info then accountTag = info.battleTag end
+						if accountTag then ChatIM:StartWhisper(target, bnetID, accountTag) end
+					end
+				end)
+			end
+			hooksecurefunc(ChatFrameUtil, "ReplyTell2", function()
+				if not ChatIM.enabled then return end
+				local name = ChatFrameUtil.GetLastToldTarget()
+				if name then
+					name = ChatIM:NormalizeCharacterName(name)
+					if ChatIM:StartWhisper(name) then
+						local tab = ChatIM.tabs[name]
+						if tab and tab.edit then
+							ChatIM.tabGroup:SelectTab(name)
+							RunNextFrame(function() tab.edit:SetFocus() end)
+							local eb = ChatFrameUtil.ChooseBoxForSend()
+							if eb then ChatEdit_OnEscapePressed(eb) end
+						end
+					end
+				end
+			end)
+			self.whisperHooked = true
+		end
+	end
+	updateRegistration()
+end
+if addon.functions and addon.functions.SetSlashCommandAlias then
+	addon.functions.SetSlashCommandAlias("EQOLIM", 1, "/eim")
+else
+	SLASH_EQOLIM1 = "/eim"
+end
+SlashCmdList["EQOLIM"] = function(input)
+	if not ChatIM.enabled then return end
+	input = (input or ""):lower():match("^%s*(.-)%s*$")
+	if input == "history" or input == "history preview" then
+		ChatIM:OpenHistoryViewer(input == "history preview")
+	elseif input == "reset" then
+		ChatIM:ResetWindow()
+	else
+		ChatIM:Toggle()
+	end
+end
+
+function ChatIM:IsPlayerIgnored(name)
+	if self:UsesSurnames() then name = self:NormalizeCharacterName(name) end
+	if addon.Ignore and addon.Ignore.enabled and addon.Ignore.IsPlayerIgnored then return addon.Ignore:IsPlayerIgnored(name) end
+	return C_FriendList.IsIgnored and C_FriendList.IsIgnored(name) or IsIgnored and IsIgnored(name)
+end
+
+function ChatIM:ToggleIgnore(name)
+	if self:UsesSurnames() then name = self:NormalizeCharacterName(name) end
+	if not name then return end
+	if self:IsPlayerIgnored(name) then
+		if C_FriendList.DelIgnore then
+			C_FriendList.DelIgnore(name)
+		else
+			DelIgnore(name)
+		end
+	else
+		if C_FriendList.AddIgnore then
+			C_FriendList.AddIgnore(name)
+		else
+			AddIgnore(name)
+		end
+	end
+end

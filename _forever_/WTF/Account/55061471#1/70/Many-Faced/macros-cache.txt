@@ -1,0 +1,28 @@
+VER 3 0100000000000004 " " "134400"
+#showtooltip
+/cast [mod:shift,@cursor] Distract
+/cast [mod:alt][] Kick
+END
+VER 3 0100000000000001 " " "134400"
+#showtooltip Stealth
+/cast !Stealth
+END
+VER 3 0100000000000003 "Blind" "134400"
+#showtooltip Blind
+/stopattack [nomod]
+/cast [mod:shift,@focus,exists,harm,nodead][] Blind
+END
+VER 3 0100000000000006 "Poisons" "136138"
+#showtooltip
+/use [nomod] Instant Poison; [mod:shift] Crippling Poison
+/use [nomod] 16; [mod:shift] 17
+END
+VER 3 0100000000000002 "Sap" "134400"
+#showtooltip Sap
+/cast [nostealth] !Stealth; [@mouseover,harm,nodead][@focus,harm,nodead][] Sap
+END
+VER 3 0100000000000005 "Vanish" "134400"
+#showtooltip Vanish
+/stopattack
+/cast Vanish
+END

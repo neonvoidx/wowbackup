@@ -1,0 +1,13 @@
+## Interface: 16001
+## Title: GearQuest Forever: Rogue
+## Notes: Hunt lists for this class. GearQuest Forever loads this when you play or simulate it.
+## Author: Henrik8210
+## Version: 1.1.4
+## IconTexture: Interface\Icons\ClassIcon_Rogue
+## LoadOnDemand: 1
+## Dependencies: GearQuestForever
+## RequiredDeps: GearQuestForever
+
+Data.Rogue.generated.lua
+Data.Rogue.Early.1to9.generated.lua
+AuditTips.lua

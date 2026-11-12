@@ -1,0 +1,83 @@
+---@class MapPinEnhanced
+local MapPinEnhanced = select(2, ...)
+
+
+---@class Notifications
+---@field notificationFrame MapPinEnhancedNotificationFrame
+---@field isDisplaying boolean
+---@field displayTimer FunctionContainer?
+local Notifications = MapPinEnhanced:GetModule("Notifications")
+Notifications.queue = {}
+Notifications.isDisplaying = false
+Notifications.displayTimer = nil
+
+local L = MapPinEnhanced.L
+
+local DISPLAY_DURATION_SECONDS = 5
+
+---@enum (key) NotificationTypes
+local NOTIFICATION_MESSAGES = {
+    ["PIN_NAMED_REACHED"] = L["\"%s\" reached at %s."],
+    ["PIN_REACHED"] = L["Location reached at %s."],
+    ["PIN_LOCKED_NAMED"] = L["\"%s\" reached at %s."] .. "\n" .. L["This pin is locked and won’t be cleared automatically."],
+    ["PIN_LOCKED"] = L["Location reached at %s."] .. "\n" .. L["This pin is locked and won’t be cleared automatically."],
+    ["GROUP_RECEIVED"] = L["Shared group \"%s\" received."],
+    ["NAVIGATION_ITEM_EQUIPPED"] = L["Equipped %s."],
+    ["NAVIGATION_ITEM_RESTORED"] = L["Re-equipped %s."],
+    ["NAVIGATION_EMPTY_SLOT_RESTORED"] = L["Restored empty equipment slot."],
+    ["NAVIGATION_ITEM_RESTORE_FAILED"] = L["Could not restore %s."],
+    ["NAVIGATION_EMPTY_SLOT_RESTORE_FAILED"] = L["Could not restore empty equipment slot."],
+    ["NAVIGATION_ROUTE_UNAVAILABLE"] = L["A route cannot be calculated for the target location: %s."],
+}
+
+
+---@param message NotificationTypes
+---@param ... any
+---@return string
+local function GetNotificationText(message, ...)
+    assert(NOTIFICATION_MESSAGES[message], "Unknown notification message: " .. tostring(message))
+    local text = NOTIFICATION_MESSAGES[message]
+    if select("#", ...) > 0 then
+        return string.format(text, ...)
+    end
+    return text
+end
+
+function Notifications:UpdateQueue()
+    if self.isDisplaying then return end
+
+    local notificationFrame = self.notificationFrame
+    if not notificationFrame then return end
+
+    local message = table.remove(self.queue, 1)
+    if not message then return end
+
+    self.isDisplaying = true
+    notificationFrame:ShowMessage(message)
+
+    local timer
+    timer = C_Timer.NewTimer(DISPLAY_DURATION_SECONDS, function()
+        if self.displayTimer ~= timer then return end
+        self.displayTimer = nil
+        notificationFrame:HideMessage()
+    end)
+    self.displayTimer = timer
+end
+
+---@param message NotificationTypes
+---@param ... any
+function Notifications:ShowNotification(message, ...)
+    assert(self.notificationFrame, "Notification frame not loaded.")
+    table.insert(self.queue, GetNotificationText(message, ...))
+    self:UpdateQueue()
+end
+
+function Notifications:OnNotificationHidden()
+    if not self.isDisplaying then return end
+    if self.displayTimer and not self.displayTimer:IsCancelled() then
+        self.displayTimer:Cancel()
+    end
+    self.displayTimer = nil
+    self.isDisplaying = false
+    self:UpdateQueue()
+end

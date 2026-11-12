@@ -1,0 +1,5503 @@
+-- Core.lua - Point d'entrée principal de l'addon Overlord
+Overlord = Overlord or {}
+Overlord.Version = "2.5.0"
+-- Transport : canal de faction, groupe et ponts Battle.net (relais SyncRelay.lua).
+Overlord.RelayEnabled = true
+Overlord.IsInitialized = false
+Overlord.PlayerFaction = nil
+Overlord.InActiveFront = false
+Overlord.InstanceSuspended = false
+-- Horloge partagee : GetServerTime() est identique sur tous les clients, time() est
+-- l'horloge du PC (parfois en avance de plusieurs minutes). Tout horodatage qui
+-- circule sur le reseau (captures, victoires) doit venir d'ici.
+function Overlord.ServerNow()
+    local serverNow = GetServerTime and GetServerTime()
+    if type(serverNow) == "number" and serverNow > 0 then return math.floor(serverNow) end
+    return time()
+end
+-- Garde-fou technique des champs numeriques VB (totalAtApply) : evite une valeur
+-- corrompue/infinie recue du reseau.
+Overlord.DOMINATION_SANITY_CAP = 2147483647
+
+-- Palette tooltips unifiee (accent = ligne « pas assez d'or », Ressources / mines / shard / export)
+Overlord.UI_TT = {
+    HL   = { 1.0, 0.82, 0.0 },   -- or UI Blizzard (#FFD100) : titres, alertes, lignes d'action
+    BODY = { 1.0, 1.0, 1.0 },
+    MUTED = { 0.72, 0.72, 0.72 },
+}
+
+-- Invitation serveur Discord Overlord (bouton Actions du panneau principal).
+Overlord.DISCORD_INVITE_URL = "https://discord.com/invite/53VrYYtPz5"
+-- Atlas officiel Blizzard (Interface/ChatFrame/UIChatIcon).
+Overlord.DISCORD_BUTTON_ATLAS = "UI-ChatIcon-Discord"
+-- Contact de l'auteur (bouton Contact, ancien emplacement Export) : compte X personnel.
+Overlord.CONTACT_URL = "https://x.com/TromaFR"
+-- Site d'Overlord (bouton Site internet, ancien emplacement Votre rang).
+Overlord.WEBSITE_URL = "https://overlord-forever.com/"
+
+local L = Overlord.L
+
+-- Verrou anti-capture instantanee apres login / sortie d'instance.
+-- Tant qu'au moins une sync n'a pas ete recue, le client local observe la carte
+-- mais ne devient pas autorite de capture.
+local CAPTURE_SYNC_GATE_TIMEOUT = 45
+-- Settle : temps minimum apres la premiere sync recue avant d'autoriser les captures.
+-- 8s laisse le temps aux reponses cross-faction (bridges BNet, communaute) d'arriver
+-- et d'ecraser les donnees potentiellement stale de la meme faction.
+local CAPTURE_SYNC_SETTLE_SECONDS = 8
+local CAPTURE_SYNC_REMOTE_ADOPT_RESET_SECONDS = 45
+local staleSessionUpdatedAtZeroed = false
+local captureSyncGate = {
+    active = false,
+    reason = nil,
+    expiresAt = 0,
+    settleUntil = 0,
+    remoteAdoptResetUntil = 0,
+    notified = false,
+    notifiedZoneId = nil,
+    receivedDuringGate = false,
+}
+
+-- Apres timeout gate sans sync : updatedAt=0 pour que le premier ZS distant gagne (solo login).
+-- Ne pas toucher in_progress : sinon interpolation carte figee a 00:00 (regression 6.3.x).
+local function ZeroActiveFrontZonesForSyncCatchup()
+    local front = Overlord.Fronts and Overlord.Fronts:GetCurrentFront()
+    if not front or not front.zones or not Overlord.Zones or not Overlord.Zones.GetZone then return end
+    for _, z in ipairs(front.zones) do
+        local zd = Overlord.Zones:GetZone(z.id)
+        if zd and zd.status ~= "in_progress" then
+            zd.updatedAt = 0
+        end
+    end
+    if Overlord.MarkDirty then Overlord:MarkDirty() end
+end
+
+
+local function ClearLoginUnconfirmedZoneState()
+    local seen = {}
+    local changed = false
+    local function clearZone(zone)
+        if not zone or not zone.id or seen[zone.id] then return end
+        seen[zone.id] = true
+        if zone._loginSyncUnconfirmed then
+            zone._loginSyncUnconfirmed = nil
+            changed = true
+        end
+    end
+
+    if Overlord.Fronts and Overlord.Fronts.Registry then
+        for _, front in pairs(Overlord.Fronts.Registry) do
+            if front and front.zones then
+                for _, zone in ipairs(front.zones) do
+                    clearZone(zone)
+                end
+            end
+        end
+    end
+    for _, zone in ipairs(Overlord.ZoneDatabase or {}) do
+        clearZone(zone)
+    end
+    return changed
+end
+
+function Overlord:ClearLoginUnconfirmedZoneState()
+    return ClearLoginUnconfirmedZoneState()
+end
+
+-- Invalidation visuelle legere des transitions de quarantaine. La carte peut
+-- etre ouverte sans que le panneau principal ou le HUD le soient : elle doit
+-- donc etre rafraichie explicitement quand SYNC apparait ou disparait.
+function Overlord:RefreshCaptureSyncVisuals()
+    if Overlord.MapMarkers and Overlord.MapMarkers.RequestOverlayRefresh then
+        Overlord.MapMarkers:RequestOverlayRefresh(true)
+    end
+    if Overlord.UI and Overlord.UI.RequestRefresh then
+        -- The map was forced just above: no second coalesced map pass.
+        Overlord.UI:RequestRefresh(true)
+    end
+end
+
+-- Recalcule immediatement les statuts local-only available/locked quand la
+-- gate de login se ferme. Le throttle normal peut sinon repousser le calcul
+-- apres le repaint et laisser toute la carte verrouillee jusqu'au prochain ZS.
+-- Ce recalcul ne certifie pas les donnees : les flags bruts de quarantaine
+-- restent en place pour les votes, victoires, recompenses et emissions reseau.
+function Overlord:RefreshCaptureSyncGameplayAvailability()
+    if Overlord.Zones then
+        if Overlord.Zones._DoUpdateAvailableZones then
+            Overlord.Zones:_DoUpdateAvailableZones(true)
+        elseif Overlord.Zones.UpdateAvailableZones then
+            Overlord.Zones:UpdateAvailableZones(true)
+        end
+    end
+    self:RefreshCaptureSyncVisuals()
+end
+
+function Overlord:ClearLoginUnconfirmedFrontState(frontId)
+    local front = frontId and Overlord.Fronts and Overlord.Fronts:GetFront(frontId)
+    if not front or not front.zones then return false end
+    local changed = false
+    for _, zone in ipairs(front.zones) do
+        if zone and zone._loginSyncUnconfirmed then
+            zone._loginSyncUnconfirmed = nil
+            changed = true
+        end
+    end
+    return changed
+end
+
+function Overlord:IsLoginZoneStateUnconfirmed(zone)
+    -- Quarantaine transitoire uniquement. IsCaptureSyncPending la supprime au
+    -- plus tard a l'expiration de la gate, apres avoir remis updatedAt a 0 :
+    -- un disque stale reste donc rattrapable sans bloquer carte/domination a vie.
+    return zone and zone._loginSyncUnconfirmed == true
+end
+
+-- Predicate strictement visuel pendant la fenetre bornee. Au plus tard apres
+-- 45 s, IsCaptureSyncPending materialise l'expiration et retire aussi le flag
+-- brut : le dernier etat persiste redevient alors territorial comme en 9.3.1.
+function Overlord:IsLoginZoneDisplayPending(zone)
+    if not zone or not zone._loginSyncUnconfirmed then return false end
+    local remote = zone._remoteCaptureLease
+    -- Un bail ZS deja valide reste un overlay ephemere : montrer son orange ne
+    -- certifie pas le socle disque, qui conserve le flag brut ci-dessus.
+    if zone.status == "in_progress" and remote and not zone.holdAuthorityLocal
+        and remote.directValidated == true then
+        return false
+    end
+    local now = GetTime()
+    return (captureSyncGate.active and captureSyncGate.reason == "login"
+            and now < (captureSyncGate.expiresAt or 0))
+        or now < (captureSyncGate.settleUntil or 0)
+end
+
+-- La quarantaine brute protege l'autorite reseau pendant la gate/settle. Le
+-- meme timeout borne son effet sur le gameplay et sur l'etat territorial :
+-- CanStartLocalCapture materialise l'expiration avant toute prise de point.
+function Overlord:IsLoginZoneGameplayBlocked(zone)
+    if not zone or not zone._loginSyncUnconfirmed then return false end
+    local now = GetTime()
+    if captureSyncGate.active and now < (captureSyncGate.expiresAt or 0) then
+        return true
+    end
+    return now < (captureSyncGate.settleUntil or 0)
+end
+
+function Overlord:RequireCaptureSync(reason, timeoutSeconds)
+    local now = GetTime()
+    local wasActive = captureSyncGate.active
+    captureSyncGate.active = true
+    captureSyncGate.reason = reason or "sync"
+    captureSyncGate.expiresAt = now + (timeoutSeconds or CAPTURE_SYNC_GATE_TIMEOUT)
+    local scheduledExpiresAt = captureSyncGate.expiresAt
+    captureSyncGate.settleUntil = 0
+    captureSyncGate.remoteAdoptResetUntil = 0
+    -- Si la fenetre est seulement prolongee, garder le fait qu'on a deja prevenu
+    -- le joueur pour ne pas repeter la meme ligne dans le chat.
+    if not wasActive then
+        captureSyncGate.notified = false
+        captureSyncGate.notifiedZoneId = nil
+        captureSyncGate.receivedDuringGate = false
+
+    end
+    -- Le ticker principal dort hors front. Sans ce one-shot, le predicat visuel
+    -- expirait bien mais une carte deja ouverte ne recevait jamais le repaint.
+    -- L'egalite d'expiration annule silencieusement les anciennes generations.
+    if C_Timer and C_Timer.After then
+        C_Timer.After(math.max(0.1, scheduledExpiresAt - now + 0.05), function()
+            if not captureSyncGate.active
+                or captureSyncGate.expiresAt ~= scheduledExpiresAt then return end
+            if Overlord.IsCaptureSyncPending then
+                Overlord:IsCaptureSyncPending()
+            end
+        end)
+    end
+end
+
+function Overlord:MarkCaptureSyncReceived(snapshotComplete, confirmedFrontId)
+    captureSyncGate.receivedDuringGate = true
+    if not captureSyncGate.active then return end
+    -- Un seul ZS (ex. Thelsamar in_progress) ne suffit pas : attendre un snapshot ZA
+    -- avant d'ouvrir la gate, sinon la carte disque stale peut etre imposee au reseau.
+    if not snapshotComplete then return end
+    local now = GetTime()
+    local wasLoginGate = captureSyncGate.reason == "login"
+    captureSyncGate.active = false
+    captureSyncGate.reason = nil
+    captureSyncGate.expiresAt = 0
+    -- Courte stabilisation : le paquet qui debloque la sync ne doit pas
+    -- aussi rendre ce client autorite locale avec un timer distant avance.
+    captureSyncGate.settleUntil = now + CAPTURE_SYNC_SETTLE_SECONDS
+    captureSyncGate.remoteAdoptResetUntil = now + CAPTURE_SYNC_REMOTE_ADOPT_RESET_SECONDS
+    captureSyncGate.notifiedZoneId = nil
+    if wasLoginGate then
+        C_Timer.After(CAPTURE_SYNC_SETTLE_SECONDS + 0.5, function()
+            local changed = false
+            if confirmedFrontId and Overlord.ClearLoginUnconfirmedFrontState then
+                changed = Overlord:ClearLoginUnconfirmedFrontState(confirmedFrontId)
+            elseif Overlord.ClearLoginUnconfirmedZoneState then
+                changed = Overlord:ClearLoginUnconfirmedZoneState()
+            end
+            if Overlord.RefreshCaptureSyncGameplayAvailability then
+                Overlord:RefreshCaptureSyncGameplayAvailability()
+            elseif changed and Overlord.RefreshCaptureSyncVisuals then
+                Overlord:RefreshCaptureSyncVisuals()
+            end
+        end)
+    end
+    if Overlord.Sync and Overlord.Sync.FlushPendingOutpostRestoreBroadcasts then
+        Overlord.Sync:FlushPendingOutpostRestoreBroadcasts()
+    end
+end
+
+-- True si la carte du front actif vient du disque (updatedAt=0) sans confirmation reseau.
+function Overlord:LocalFrontAwaitingNetworkSnapshot()
+    if not self.ZoneDatabase then return false end
+    local captured, awaiting = 0, 0
+    for _, z in ipairs(self.ZoneDatabase) do
+        if z.owner and z.status == "captured" then
+            captured = captured + 1
+            if (z.updatedAt or 0) <= 0 then
+                awaiting = awaiting + 1
+            end
+        end
+    end
+    return captured > 0 and awaiting == captured
+end
+
+-- True si aucune zone du front actif n'a de snapshot sync recent (install, pool, session stale).
+function Overlord:ZonesNeedLoginSyncNotice()
+    if not self.ZoneDatabase then return true end
+    for _, zone in ipairs(self.ZoneDatabase) do
+        if zone.status ~= "in_progress" and (zone.updatedAt or 0) > 0 then
+            return false
+        end
+    end
+    return true
+end
+
+function Overlord:IsCaptureSyncPending()
+    local now = GetTime()
+    if not captureSyncGate.active then
+        return now < (captureSyncGate.settleUntil or 0)
+    end
+    if now >= (captureSyncGate.expiresAt or 0) then
+        -- Filet solo : debloquer apres timeout ; sans snapshot ZA utile, neutraliser updatedAt
+        -- pour ne pas imposer un etat SV obsolete en capteur autoritaire.
+        local needsCatchup = not captureSyncGate.receivedDuringGate
+            or (self.LocalFrontAwaitingNetworkSnapshot and self:LocalFrontAwaitingNetworkSnapshot())
+        -- Login : un LK/ZS partiel ne suffit pas ; forcer updatedAt=0 pour que le prochain ZA
+        -- corrige Grangeneuve et les autres zones (sinon blocage localTs jusqu'au prochain C live).
+        if captureSyncGate.reason == "login" then
+            needsCatchup = true
+        end
+        local wasLoginGate = captureSyncGate.reason == "login"
+        local wasInstanceGate = captureSyncGate.reason == "instance"
+        if needsCatchup then
+            ZeroActiveFrontZonesForSyncCatchup()
+        end
+        captureSyncGate.active = false
+        captureSyncGate.reason = nil
+        captureSyncGate.expiresAt = 0
+        captureSyncGate.settleUntil = 0
+        captureSyncGate.remoteAdoptResetUntil = 0
+        captureSyncGate.notified = false
+        captureSyncGate.notifiedZoneId = nil
+
+        -- La quarantaine de login est bornee comme en 9.3.1. updatedAt a deja
+        -- ete neutralise pour le rattrapage : retirer maintenant les flags rend
+        -- a nouveau carte, domination et capture locale canoniques, sans donner
+        -- a l'ancien etat disque un avantage de fraicheur sur un futur ZA/ZS.
+        self:ClearLoginUnconfirmedZoneState()
+        if self.RefreshCaptureSyncGameplayAvailability then
+            self:RefreshCaptureSyncGameplayAvailability()
+        elseif self.RefreshCaptureSyncVisuals then
+            self:RefreshCaptureSyncVisuals()
+        end
+        if Overlord.Sync and Overlord.Sync.FlushPendingOutpostRestoreBroadcasts then
+            Overlord.Sync:FlushPendingOutpostRestoreBroadcasts()
+        end
+        if not self.InstanceSuspended and Overlord.Sync and Overlord.Sync.SendSyncRequest then
+            C_Timer.After(0.5, function()
+                if Overlord.InstanceSuspended or not Overlord.Sync then return end
+                -- 2.0.2: after the truce's retirement, a login's request goes to one
+                -- neighbour heard as updated (see Sync:SendLoginMapPeerRequest).
+                if not (wasLoginGate and Overlord.Sync.SendLoginMapPeerRequest
+                    and Overlord.Sync:SendLoginMapPeerRequest()) then
+                    Overlord.Sync:SendSyncRequest({
+                        criticalChannel = wasLoginGate or wasInstanceGate,
+                        targetedOnly = wasInstanceGate,
+                    })
+                end
+                if wasLoginGate
+                    and Overlord.Sync.SendLoginCatchupSync then
+                    Overlord.Sync:SendLoginCatchupSync()
+                end
+            end)
+        end
+        return false
+    end
+    return true
+end
+
+-- Gate login active (hors settle post-ZA) : pour différer GC restore sans bloquer le flush après ZA.
+function Overlord:IsCaptureSyncGateActive()
+    if not captureSyncGate.active then return false end
+    return GetTime() < (captureSyncGate.expiresAt or 0)
+end
+
+function Overlord:IsCaptureSyncGateReasonActive(reason)
+    if not captureSyncGate.active or captureSyncGate.reason ~= reason then return false end
+    return GetTime() < (captureSyncGate.expiresAt or 0)
+end
+
+-- Les preuves ponctuelles C/ZS restent utiles pendant le login, mais elles ne
+-- doivent pas certifier visuellement une carte zone par zone. Seul un snapshot
+-- global atomique ferme cette quarantaine ; apres timeout, les corrections
+-- ponctuelles peuvent de nouveau confirmer individuellement les zones.
+function Overlord:IsLoginCaptureSyncGateActive()
+    return self:IsCaptureSyncGateReasonActive("login")
+end
+
+
+function Overlord:NotifyCaptureSyncPending(zone)
+    if not self:IsCaptureSyncPending() then return end
+    if not zone or not zone.id then return end
+    if captureSyncGate.notified then return end
+    captureSyncGate.notified = true
+    self._captureSyncNotices = (self._captureSyncNotices or 0) + 1
+    captureSyncGate.notifiedZoneId = zone.id
+    local msg = (L and L.CAPTURE_SYNC_WAITING) or "Initial sync pending: capture of %s is temporarily blocked."
+    self:PrintNotification(string.format("|cFFFFD100[Overlord]|r " .. msg, zone.name or zone.id))
+end
+
+function Overlord:CanStartLocalCapture(zone, notify)
+    if self:IsCaptureSyncPending() then
+        if notify then self:NotifyCaptureSyncPending(zone) end
+        return false
+    end
+    return true
+end
+
+-- Messages joueur hors debug : passe par cette fonction pour respecter
+-- OverlordDB.config.notificationChatFrame (voir infobulle Options).
+-- Pratique habituelle WoW pour un addon sans canal dédié : ChatFrame:AddMessage(...)
+-- avec texte formaté ; print() équivalent utilise la fenêtre générale mais ne choisit pas l’onglet.
+-- numéro d’ONGLET (ChatFrameN), pas un canal /join ni une ligne dans Config. > Canaux.
+-- Valeur 0 ou cadre inexistant : fallback vers print().
+function Overlord:PrintNotification(text)
+    if not text or text == "" then return end
+    local cfg = OverlordDB and OverlordDB.config
+    local idx = cfg and tonumber(cfg.notificationChatFrame) or 0
+    local maxWin = (type(NUM_CHAT_WINDOWS) == "number" and NUM_CHAT_WINDOWS) or 10
+    if idx < 1 or idx > maxWin then
+        print(text)
+        return
+    end
+    -- A closed tab keeps its ChatFrame object: lines sent there were silently lost.
+    if type(GetChatWindowInfo) == "function" then
+        local _, _, _, _, _, _, shown, _, docked = GetChatWindowInfo(idx)
+        if not shown and not docked then
+            print(text)
+            return
+        end
+    end
+    local cf = _G["ChatFrame" .. idx]
+    if cf and type(cf.AddMessage) == "function" then
+        cf:AddMessage(text)
+    else
+        print(text)
+    end
+end
+
+-- Faction crest at the start of a chat alert (the Alliance lion / Horde emblem of
+-- the domination bar), so a line reads at a glance before its text.
+function Overlord:FactionChatIcon(faction)
+    if faction ~= "Alliance" and faction ~= "Horde" then return "" end
+    return "|TInterface\\Timer\\" .. faction .. "-Logo:18:18|t "
+end
+
+-- "<Guild> crest" for chat alerts: each guild carries its own faction crest, so
+-- nobody has to know which of 60+ guilds is Horde or Alliance.
+function Overlord:GuildChatTag(guild, faction)
+    local icon = self:FactionChatIcon(faction)
+    return "<" .. tostring(guild or "") .. ">" .. (icon ~= "" and (" " .. icon:sub(1, -2)) or "")
+end
+
+function Overlord:EnemyFactionChatIcon()
+    local mine = self.PlayerFaction
+    return self:FactionChatIcon(mine == "Alliance" and "Horde" or mine == "Horde" and "Alliance" or nil)
+end
+
+-- Alerte rouge milieu d'ecran (RaidNotice), comme les avertissements de raid Blizzard.
+-- silent (2.0.2) : la ligne a l'ecran sans le son d'alerte de raid.
+function Overlord:PrintRaidWarning(text, silent)
+    if not text or text == "" then return end
+    -- Codes couleur WoW : |c + 8 hex (AARRGGBB). 7 hex laissait un « 0 » parasite (ex. |cFFFFD100).
+    local plain = text:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+    local shown = false
+    if RaidNotice_AddMessage then
+        local info = ChatTypeInfo and ChatTypeInfo["RAID_WARNING"]
+        local noticeFrame = RaidWarningFrame or RaidBossEmoteFrame
+        if noticeFrame and info then
+            local ok = pcall(RaidNotice_AddMessage, noticeFrame, plain, info)
+            shown = ok and true or false
+        end
+    end
+    if not shown and UIErrorsFrame and UIErrorsFrame.AddMessage then
+        UIErrorsFrame:AddMessage(plain, 1.0, 0.1, 0.1, 1.0, 5.0)
+        shown = true
+    end
+    if not shown then
+        self:PrintNotification("|cFFFF4444[Overlord]|r " .. plain)
+    end
+    if silent then return end
+    local cfg = OverlordDB and OverlordDB.config
+    if cfg == nil or cfg.soundEnabled ~= false then
+        pcall(PlaySound, SOUNDKIT and SOUNDKIT.RAID_WARNING or 8959)
+    end
+end
+
+function Overlord:ShouldResetSyncedLocalCaptureProgress()
+    return GetTime() < (captureSyncGate.remoteAdoptResetUntil or 0)
+end
+
+-- ============================================================
+-- WoW 12.0.5 : Wrappers simples pour les APIs sensibles
+-- En instance, on retourne nil pour eviter toute propagation de taint.
+-- Hors instance, on utilise les APIs normalement (pas de issecretvalue/canaccessvalue
+-- qui propagent eux-memes du taint).
+-- ============================================================
+
+-- Wrapper pour UnitName - retourne name, realm
+function Overlord:SafeUnitName(unit)
+    if Overlord.InstanceSuspended then return nil, nil end
+    if not unit then return nil, nil end
+    local ok, name, realm = pcall(UnitName, unit)
+    if not ok then return nil, nil end
+    return name, realm
+end
+
+-- Wrapper pour GetUnitName - retourne le nom complet
+function Overlord:SafeGetUnitName(unit, includeServerName)
+    if Overlord.InstanceSuspended then return nil end
+    if not unit then return nil end
+    local ok, name = pcall(GetUnitName, unit, includeServerName)
+    if not ok then return nil end
+    return name
+end
+
+-- Wrapper pour UnitLevel. La conversion reste dans le pcall afin qu'une valeur
+-- protegee/indisponible ne se propage jamais jusqu'aux comparaisons du ladder.
+function Overlord:SafeUnitLevel(unit)
+    if Overlord.InstanceSuspended or not unit or not UnitLevel then return nil end
+    local ok, level = pcall(UnitLevel, unit)
+    if not ok then return nil end
+    local okNumber, normalized = pcall(tonumber, level)
+    if not okNumber or not normalized then return nil end
+    local okFloor, floored = pcall(math.floor, normalized)
+    if not okFloor then return nil end
+    return floored
+end
+
+-- Wrapper pour GetNormalizedRealmName / GetRealmName
+
+-- Wrapper pour GetGuildInfo (WoW 12.x : pcall + pas d'appel en instance suspendue)
+function Overlord:SafeGetGuildInfo(unit)
+    if Overlord.InstanceSuspended then return nil end
+    if not unit or not GetGuildInfo then return nil end
+    local ok, guild = pcall(function()
+        return select(1, GetGuildInfo(unit))
+    end)
+    if not ok or not guild or guild == "" then return nil end
+    return guild
+end
+
+-- nil = metadata pas encore disponible ; "" = absence de guilde confirmee.
+-- GetGuildInfo peut etre vide pendant le login alors que IsInGuild reste vrai.
+function Overlord:GetLocalGuildIdentity()
+    local guild = self:SafeGetGuildInfo("player")
+    if guild then return guild end
+    if self.InstanceSuspended or type(IsInGuild) ~= "function" then return nil end
+    local ok, inGuild = pcall(IsInGuild)
+    if ok and (not canaccessvalue or canaccessvalue(inGuild)) and inGuild == false then
+        return ""
+    end
+    return nil
+end
+
+-- Comparaison simple - en instance, retourne false
+function Overlord:SafeStringEquals(a, b)
+    if Overlord.InstanceSuspended then return false end
+    if a == nil or b == nil then return a == b end
+    return a == b
+end
+
+function Overlord:IsShardHelperActive()
+    if self.InstanceSuspended then return false end
+    if self.InActiveFront then return true end
+    if self.Outpost and self.Outpost.IsPlayerOnOutpostMap then
+        local onOutpost, site = self.Outpost:IsPlayerOnOutpostMap()
+        if onOutpost and site and site.standaloneOpenWorld then return true end
+    end
+    if self.GuildKeep and self.GuildKeep.IsPlayerOnKeepMap then
+        return (select(1, self.GuildKeep:IsPlayerOnKeepMap())) == true
+    end
+    return false
+end
+
+-- Contexte PvP ouvert (pas instance) requis pour compter un kill au classement.
+function Overlord:IsKillContextBlocked()
+    if self.InstanceSuspended then return true end
+    if IsInInstance() then return true end
+    local okInst, _, instType = pcall(GetInstanceInfo)
+    if okInst and instType and instType ~= "none" and instType ~= "" then return true end
+    -- Aucune liste de cartes/continents Retail : les phases et evenements
+    -- exterieurs restent eligibles. Les vraies instances sont refusees ci-dessus.
+    return false
+end
+
+-- Classement kills Forever : tout le monde ouvert, a tous les niveaux.
+-- Les primes (bounty) restent sur InActiveFront uniquement.
+function Overlord:IsKillScoringActive()
+    return not self:IsKillContextBlocked()
+end
+
+-- ============================================================
+-- Module Shard : detection du shardID via parsing GUID (ServerID)
+-- Format : Type-0-ServerID-InstanceID-ZoneUID-NpcID-SpawnUID
+-- 2.3.3: on Forever the layer is the ServerID (3rd field). The ZoneUID differs between
+-- players standing together on one layer and changes from day to day; the ServerID is
+-- shared by players who see each other and differs across layers (field readings
+-- 2026-11: UnitPhaseReason sharding, group hops). Creatures of players (pets, totems)
+-- carry other server numbers: player-controlled units are skipped, and a layer is
+-- believed only once two different NPCs agree.
+-- Sources : vignettes monde, cible, souris, nameplates.
+-- ============================================================
+Overlord.Shard = {
+    currentShardID = nil,        -- shardID local detecte (0 = couche par defaut valide)
+    knownShards = {},            -- [playerName] = shardID (autres joueurs via sync)
+    knownShardUpdatedAt = {},    -- [playerName] = GetTime() du dernier SH recu
+    peerNodes = {},              -- ordre LRU/TTL, entretien O(1)
+    peerHead = nil,
+    peerTail = nil,
+    peerCount = 0,
+    peerMax = 512,
+    peerGroupedReserve = 64,
+    shardReferencePlayers = {},  -- [shardID] = joueur referent actif, elu deterministement
+    shardReferenceFullNames = {},-- [shardID] = Nom-Royaume canonique du referent
+    shardReferenceRealms = {},   -- [shardID] = royaume affiche pour le referent
+    shardReferenceCheckedAt = {},-- [shardID] = dernier recalcul du referent
+    lastUpdateAt = 0,            -- GetTime() de la derniere detection
+    lastScanAttemptAt = 0,       -- GetTime() du dernier scan, y compris resultat inconnu
+    nextMaintenanceScanAt = 0,   -- prochain essai adaptatif (backoff si shard inconnue)
+    lastBroadcastAt = 0,         -- GetTime() du dernier SH envoye
+    localContextKey = "",       -- front/fortin pour lequel currentShardID a ete mesure
+    localContextStartedAt = 0,   -- interdit de reutiliser le shard de la carte precedente
+}
+
+local SHARD_BROADCAST_INTERVAL = 60
+local SHARD_PEER_TTL = 180
+local SHARD_LAYER_ID_MAX = 100000000
+local ScheduleNextShardScan
+local StopShardScanMaintenance
+
+local function CoerceShardId(value)
+    if value == nil then return nil end
+    return tonumber(value)
+end
+
+-- Parse le layer ID (ServerID) depuis un GUID unit/vignette (pcall : valeurs secret 12.0.5).
+local function ParseLayerIdFromGuidPieces(guid)
+    local guidType, zero, serverId = strsplit("-", guid)
+    if guidType ~= "Creature" and guidType ~= "Vehicle" and guidType ~= "GameObject" and guidType ~= "Vignette" then
+        return nil
+    end
+    if zero ~= "0" or not serverId or not serverId:find("^%d+$") then return nil end
+    local layer = tonumber(serverId)
+    if layer and layer > 0 and layer < SHARD_LAYER_ID_MAX then return layer end
+    return nil
+end
+
+-- The layer is a pure function of the GUID string: the same creature seen again by
+-- target, mouseover and nameplate events reuses the last answer (nil included)
+-- instead of splitting the GUID into fresh pieces each time. Runs inside the pcall
+-- below, so a secret GUID still errors out at the "" test before the memo is read.
+local function ParseLayerIdFromGuidString(guid)
+    if type(guid) ~= "string" or guid == "" then return nil end
+    local shard = Overlord.Shard
+    if guid == shard._layerMemoGuid then return shard._layerMemoLayer end
+    local layer = ParseLayerIdFromGuidPieces(guid)
+    shard._layerMemoGuid, shard._layerMemoLayer = guid, layer
+    return layer
+end
+
+local function ExtractShardIDFromGUID(guid)
+    local ok, layerId = pcall(ParseLayerIdFromGuidString, guid)
+    if ok then return layerId end
+    return nil
+end
+
+local function SafeUnitGUID(unit)
+    if not UnitGUID then return nil end
+    -- Ne pas inspecter `unit` avant le pcall : PARTY_KILL peut fournir une valeur
+    -- secrete 12.x a la place d'un ancien unit token.
+    local ok, guid = pcall(UnitGUID, unit)
+    if not ok or type(guid) ~= "string" then return nil end
+    return guid
+end
+
+local function ReadShardIDFromUnit(unit)
+    if not UnitExists(unit) or UnitIsPlayer(unit) then return nil end
+    -- 2.3.3: a pet, totem or summon carries its owner's server number, not the layer's.
+    if UnitPlayerControlled and UnitPlayerControlled(unit) then return nil end
+    if UnitIsVisible and not UnitIsVisible(unit) then return nil end
+    local guid = SafeUnitGUID(unit)
+    return ExtractShardIDFromGUID(guid), guid
+end
+
+local function ExtractShardIDFromUnit(unit)
+    -- Les tests UnitExists/UnitIsPlayer et le GUID peuvent tous etre secrets en 12.x.
+    local ok, shardID, guid = pcall(ReadShardIDFromUnit, unit)
+    return ok and shardID or nil, ok and guid or nil
+end
+
+-- Certaines vignettes retail utilisent un GUID d'enveloppe qui ne transporte pas un
+-- numero de couche exploitable. Leur objectGUID pointe en revanche vers la creature / l'objet
+-- effectivement present sur notre couche. L'acces reste protege car ces valeurs peuvent
+-- etre secretes dans certains contextes 12.x.
+-- (Named function: no closure per vignette on every scan.)
+local function ReadVignetteObjectGUID(vignetteGUID)
+    local info = C_VignetteInfo.GetVignetteInfo(vignetteGUID)
+    local guid = info and info.objectGUID
+    if type(guid) ~= "string" or guid == "" then return nil end
+    return guid
+end
+
+local function GetVignetteObjectGUID(vignetteGUID)
+    if not C_VignetteInfo or not C_VignetteInfo.GetVignetteInfo then return nil end
+    local ok, objectGUID = pcall(ReadVignetteObjectGUID, vignetteGUID)
+    if not ok then return nil end
+    return objectGUID
+end
+
+-- 2.3.3: a layer is believed once two different NPCs (GUIDs) give it. Reused tables,
+-- emptied at the start of each scan.
+local layerVoteSeen, layerVoteCount = {}, {}
+-- Events: a new layer seen on one GUID waits here for a second NPC (ObserveShardFromGUID).
+local pendingEventLayer, pendingEventGuid, pendingEventAt
+local function ClearPendingEventLayer()
+    pendingEventLayer, pendingEventGuid, pendingEventAt = nil, nil, nil
+end
+local function ClearLayerVotes()
+    for k in pairs(layerVoteSeen) do layerVoteSeen[k] = nil end
+    for k in pairs(layerVoteCount) do layerVoteCount[k] = nil end
+end
+-- The layer once a second NPC agrees with it, else nil.
+local function VoteLayer(layer, guid)
+    if layer == nil or type(guid) ~= "string" or layerVoteSeen[guid] then return nil end
+    layerVoteSeen[guid] = true
+    local n = (layerVoteCount[layer] or 0) + 1
+    layerVoteCount[layer] = n
+    if n >= 2 then return layer end
+    return nil
+end
+
+-- Parcourt les vignettes actives (objectifs, caisses, elites, etc.) - se met a jour souvent sans PNJ a portee
+local function ScanVignettesForShardID()
+    if not C_VignetteInfo or not C_VignetteInfo.GetVignettes then return nil end
+    local ok, vignettes = pcall(C_VignetteInfo.GetVignettes)
+    if not ok or type(vignettes) ~= "table" then return nil end
+    for _, vignetteGUID in ipairs(vignettes) do
+        -- The vignette's own GUID, else its object's (the creature or object on our layer).
+        -- One vote per vignette: both GUIDs name the same thing.
+        local sid, voter = ExtractShardIDFromGUID(vignetteGUID), vignetteGUID
+        local objectGUID = GetVignetteObjectGUID(vignetteGUID)
+        if sid == nil then
+            sid, voter = ExtractShardIDFromGUID(objectGUID), objectGUID
+        elseif type(objectGUID) == "string" then
+            -- One NPC, one vote: its object already voted as a nameplate or target, or
+            -- it will not vote again under its own GUID.
+            if layerVoteSeen[objectGUID] then sid = nil end
+            layerVoteSeen[objectGUID] = true
+        end
+        local agreed = VoteLayer(sid, voter)
+        if agreed ~= nil then return agreed end
+    end
+    return nil
+end
+
+-- Scanne les unites proches pour trouver un shardID
+local SHARD_SCAN_UNITS = { "target", "mouseover", "focus", "softenemy", "softfriend", "softinteract" }
+local SHARD_NAMEPLATE_UNITS = {}
+for i = 1, 40 do SHARD_NAMEPLATE_UNITS[i] = "nameplate" .. i end
+
+-- (Named function: no closure per plate on every scan.)
+local function ReadPlateToken(plate)
+    return plate.namePlateUnitToken
+end
+
+function Overlord.Shard:ScanForShardID()
+    ClearLayerVotes()
+    local shardID, guid, agreed
+    for i = 1, #SHARD_SCAN_UNITS do
+        shardID, guid = ExtractShardIDFromUnit(SHARD_SCAN_UNITS[i])
+        agreed = VoteLayer(shardID, guid)
+        if agreed ~= nil then return agreed end
+    end
+    -- Les tokens sont attribues par WoW et ne sont pas limites a nameplate1..40.
+    -- platesCovered: every listed plate was read without error, so the fixed tokens
+    -- below would only read the same units a second time. Any unreadable token or
+    -- failed unit read (secret values) keeps the fixed loop as the fallback.
+    local platesCovered = false
+    if C_NamePlate and C_NamePlate.GetNamePlates then
+        local ok, plates = pcall(C_NamePlate.GetNamePlates)
+        if ok and type(plates) == "table" then
+            platesCovered = true
+            for _, plate in ipairs(plates) do
+                local readable, unit = pcall(ReadPlateToken, plate)
+                if readable and unit then
+                    local unitOk
+                    unitOk, shardID, guid = pcall(ReadShardIDFromUnit, unit)
+                    if not unitOk then
+                        platesCovered = false
+                    else
+                        agreed = VoteLayer(shardID, guid)
+                        if agreed ~= nil then return agreed end
+                    end
+                else
+                    platesCovered = false
+                end
+            end
+        end
+    end
+    -- Secours pour les clients qui n'exposent pas la liste des frames.
+    if not platesCovered then
+        for i = 1, #SHARD_NAMEPLATE_UNITS do
+            shardID, guid = ExtractShardIDFromUnit(SHARD_NAMEPLATE_UNITS[i])
+            agreed = VoteLayer(shardID, guid)
+            if agreed ~= nil then return agreed end
+        end
+    end
+    return ScanVignettesForShardID()
+end
+
+-- Duree pendant laquelle les events bruyants reutilisent une mesure confirmee.
+-- La maintenance one-shot et les invalidations monde/phase assurent le filet de fraicheur.
+local SHARD_FRESH_SECONDS = 30
+local SHARD_NEGATIVE_FRESH_SECONDS = 2
+local SHARD_KNOWN_SCAN_INTERVAL = 30
+local SHARD_UNKNOWN_SCAN_MIN = 2
+local SHARD_UNKNOWN_SCAN_MAX = 30
+
+-- Met a jour le shardID courant. skipIfFresh=true (evenements haute frequence) : ne rescanne pas
+-- (GetVignettes + jusqu'a 40 nameplates) si un shardID a deja ete confirme il y a moins de
+-- SHARD_FRESH_SECONDS -- les changements monde/phase invalident le contexte immediatement.
+function Overlord.Shard:Update(skipIfFresh)
+    if not self:SyncLocalContext() then return false end
+    if not (Overlord.IsShardHelperActive and Overlord:IsShardHelperActive()) then
+        self.currentShardID = nil
+        self.lastUpdateAt = 0
+        if StopShardScanMaintenance then StopShardScanMaintenance() end
+        return false
+    end
+    local now = GetTime()
+    local freshFor = self.currentShardID ~= nil
+        and SHARD_FRESH_SECONDS or SHARD_NEGATIVE_FRESH_SECONDS
+    if skipIfFresh and self.currentShardID == nil
+        and now < (tonumber(self.nextMaintenanceScanAt) or 0) then
+        return false
+    end
+    if skipIfFresh and (tonumber(self.lastScanAttemptAt) or 0) > 0
+        and (now - self.lastScanAttemptAt) < freshFor then
+        return false
+    end
+    self.lastScanAttemptAt = now
+    local newShard = self:ScanForShardID()
+    if newShard ~= nil then
+        local changed = (newShard ~= self.currentShardID)
+        self.currentShardID = newShard
+        self.lastUpdateAt = now
+        self.localShardSource = "guid"
+        -- Heartbeat leger : garde les infos de shard vivantes entre raids / communaute.
+        if Overlord.Sync and Overlord.Sync.BroadcastShard
+            and (changed or (self.lastBroadcastAt + SHARD_BROADCAST_INTERVAL <= self.lastUpdateAt)) then
+            self.lastBroadcastAt = self.lastUpdateAt
+            Overlord.Sync:BroadcastShard(newShard)
+        end
+    end
+    if ScheduleNextShardScan then
+        ScheduleNextShardScan(self.currentShardID ~= nil)
+    end
+    return true, newShard
+end
+
+-- Retourne le shardID courant (ou nil si inconnu)
+function Overlord.Shard:GetCurrentShardID()
+    return self.currentShardID
+end
+
+-- Un rapporteur distant n'est exploitable que si WoW fournit un Prenom Nom Forever.
+local function BuildShardReferenceCandidate(playerName)
+    if type(playerName) ~= "string" or playerName == "" then return nil, nil end
+    local canon = Overlord.Sync and Overlord.Sync.CanonicalForeverName
+        and Overlord.Sync:CanonicalForeverName(playerName) or nil
+    if not canon then return nil, nil end
+    return canon, nil
+end
+
+local localShardReferenceFullName
+local localShardReferenceRealm
+local function GetLocalShardReferenceCandidate()
+    if localShardReferenceFullName then
+        return localShardReferenceFullName, localShardReferenceRealm
+    end
+    local fullName = Overlord.Sync and Overlord.Sync.GetPlayerFullName
+        and Overlord.Sync:GetPlayerFullName()
+    if not fullName or fullName == "" then return nil, nil end
+    localShardReferenceFullName, localShardReferenceRealm =
+        BuildShardReferenceCandidate(fullName)
+    return localShardReferenceFullName, localShardReferenceRealm
+end
+
+local function ClearShardReferenceForPlayer(self, player, shardId)
+    local sid = CoerceShardId(shardId)
+    if sid == nil or self.shardReferencePlayers[sid] ~= player then return end
+    self.shardReferencePlayers[sid] = nil
+    self.shardReferenceFullNames[sid] = nil
+    self.shardReferenceRealms[sid] = nil
+    self.shardReferenceCheckedAt[sid] = nil
+end
+
+local function RebuildKnownShardReference(self, shardID, now)
+    local bestPlayer
+    local bestFullName
+    local bestRealm
+    local bestSortKey
+    for player, knownShard in pairs(self.knownShards) do
+        local seenAt = self.knownShardUpdatedAt[player] or 0
+        if now - seenAt > SHARD_PEER_TTL then
+            self:RemoveKnownShardPeer(player)
+        elseif CoerceShardId(knownShard) == shardID and self:PartyInviteTargetIsUsable(player) then
+            local fullName, realm = BuildShardReferenceCandidate(player)
+            local sortKey = fullName and fullName:lower()
+            if sortKey and (not bestSortKey or sortKey < bestSortKey) then
+                bestPlayer = player
+                bestFullName = fullName
+                bestRealm = realm
+                bestSortKey = sortKey
+            end
+        end
+    end
+    self.shardReferencePlayers[shardID] = bestPlayer
+    self.shardReferenceFullNames[shardID] = bestFullName
+    self.shardReferenceRealms[shardID] = bestRealm
+    self.shardReferenceCheckedAt[shardID] = now
+    return bestPlayer, bestFullName, bestRealm
+end
+
+local function GetKnownShardReference(self, shardID)
+    local now = GetTime()
+    local player = self.shardReferencePlayers[shardID]
+    if player then
+        local seenAt = self.knownShardUpdatedAt[player] or 0
+        if now - seenAt <= SHARD_PEER_TTL
+            and CoerceShardId(self.knownShards[player]) == shardID
+            and self:PartyInviteTargetIsUsable(player) then
+            return player, self.shardReferenceFullNames[shardID], self.shardReferenceRealms[shardID]
+        end
+        self.shardReferencePlayers[shardID] = nil
+        self.shardReferenceFullNames[shardID] = nil
+        self.shardReferenceRealms[shardID] = nil
+        self.shardReferenceCheckedAt[shardID] = nil
+    end
+    if self.shardReferenceCheckedAt[shardID] then return nil end
+    return RebuildKnownShardReference(self, shardID, now)
+end
+
+-- Elit le meme rapporteur chez les clients qui connaissent le meme ensemble de joueurs.
+function Overlord.Shard:GetShardReference(shardId)
+    local shardID = CoerceShardId(shardId)
+    if shardID == nil then return nil, nil end
+
+    local _, peerFullName, peerRealm = GetKnownShardReference(self, shardID)
+    local selfFullName, selfRealm
+    if CoerceShardId(self.currentShardID) == shardID then
+        selfFullName, selfRealm = GetLocalShardReferenceCandidate()
+    end
+
+    if peerFullName and (not selfFullName or peerFullName < selfFullName) then
+        return peerFullName, peerRealm
+    end
+    return selfFullName, selfRealm
+end
+
+function Overlord.Shard:GetCurrentShardReference()
+    return self:GetShardReference(self.currentShardID)
+end
+
+function Overlord.Shard:UnlinkPeerNode(node)
+    if not node then return end
+    if node.prev then node.prev.next = node.next else self.peerHead = node.next end
+    if node.next then node.next.prev = node.prev else self.peerTail = node.prev end
+    node.prev, node.next = nil, nil
+end
+
+function Overlord.Shard:TouchPeerNode(playerName, now)
+    local node = self.peerNodes[playerName]
+    if node then
+        self:UnlinkPeerNode(node)
+    else
+        node = { key = playerName }
+        self.peerNodes[playerName] = node
+        self.peerCount = (tonumber(self.peerCount) or 0) + 1
+    end
+    node.expiresAt = now + SHARD_PEER_TTL
+    node.prev = self.peerTail
+    if self.peerTail then self.peerTail.next = node else self.peerHead = node end
+    self.peerTail = node
+end
+
+function Overlord.Shard:RemoveKnownShardPeer(playerName)
+    local shard = self.knownShards[playerName]
+    self.knownShards[playerName] = nil
+    self.knownShardUpdatedAt[playerName] = nil
+    local node = self.peerNodes[playerName]
+    if node then
+        self:UnlinkPeerNode(node)
+        self.peerNodes[playerName] = nil
+        self.peerCount = math.max(0, (tonumber(self.peerCount) or 1) - 1)
+    end
+    ClearShardReferenceForPlayer(self, playerName, shard)
+end
+
+function Overlord.Shard:EnsurePeerCapacity(playerName, now)
+    if self.knownShards[playerName] ~= nil then return true end
+    local maxPeers = tonumber(self.peerMax) or 512
+    local head = self.peerHead
+    if (tonumber(self.peerCount) or 0) >= maxPeers and head
+        and (tonumber(head.expiresAt) or 0) <= now then
+        self:RemoveKnownShardPeer(head.key)
+    end
+    if (tonumber(self.peerCount) or 0) < maxPeers then return true end
+    -- Les rapports SH viennent de vrais senders Blizzard, pas d'une identite
+    -- choisie dans le payload. Une reserve garantit qu'une communaute pleine
+    -- ne masque pas un membre du groupe arrive plus tard.
+    if self:IsPlayerAlreadyGrouped(playerName)
+        and (tonumber(self.peerCount) or 0)
+            < maxPeers + (tonumber(self.peerGroupedReserve) or 64) then
+        return true
+    end
+    return false
+end
+
+-- Enregistre le shardID d'un autre joueur (recu via sync)
+function Overlord.Shard:SetPlayerShard(playerName, shardID)
+    if not playerName or shardID == nil then return end
+    local sid = CoerceShardId(shardID)
+    if sid == nil or sid ~= sid or sid < 0 or sid >= SHARD_LAYER_ID_MAX then return false end
+    local previousShard = CoerceShardId(self.knownShards[playerName])
+    local now = GetTime()
+    if previousShard == nil and not self:EnsurePeerCapacity(playerName, now) then return false end
+    self.knownShards[playerName] = sid
+    self.knownShardUpdatedAt[playerName] = now
+    self:TouchPeerNode(playerName, now)
+    if previousShard ~= sid then
+        self._gkPromptPeerRevision = (tonumber(self._gkPromptPeerRevision) or 0) + 1
+    end
+
+    if previousShard ~= nil and previousShard ~= sid
+        and self.shardReferencePlayers[previousShard] == playerName then
+        self.shardReferencePlayers[previousShard] = nil
+        self.shardReferenceFullNames[previousShard] = nil
+        self.shardReferenceRealms[previousShard] = nil
+        self.shardReferenceCheckedAt[previousShard] = nil
+    end
+
+    if self:PartyInviteTargetIsUsable(playerName) then
+        local candidate, candidateRealm = BuildShardReferenceCandidate(playerName)
+        local current = self.shardReferencePlayers[sid]
+        local currentCandidate = current and self.shardReferenceFullNames[sid]
+        if candidate and (not currentCandidate or candidate:lower() < currentCandidate:lower()) then
+            self.shardReferencePlayers[sid] = playerName
+            self.shardReferenceFullNames[sid] = candidate
+            self.shardReferenceRealms[sid] = candidateRealm
+        end
+        if candidate then
+            self.shardReferenceCheckedAt[sid] = now
+        end
+    end
+    return true
+end
+
+-- Un numero de couche n'est valable que dans le contexte (front ou fortin) ou il a ete lu.
+-- Le ticker gameplay appelle ceci avant toute tentative de tag : un passage Redridge ->
+-- Wetlands ne peut donc jamais reutiliser l'identifiant de la carte precedente.
+function Overlord.Shard:RefreshLocalContext(contextKey, skipScan)
+    contextKey = tostring(contextKey or "")
+    if self.localContextKey == contextKey then return false end
+    self.localContextKey = contextKey
+    self.localContextStartedAt = GetTime()
+    self.currentShardID = nil
+    self.lastUpdateAt = 0
+    self.lastScanAttemptAt = 0
+    self.localShardSource = nil
+    self.keepShardRequest = nil
+    ClearPendingEventLayer()
+    if StopShardScanMaintenance then StopShardScanMaintenance() end
+    if not skipScan and contextKey ~= "" and Overlord.IsShardHelperActive
+        and Overlord:IsShardHelperActive() then
+        self:Update()
+    end
+    return true
+end
+
+-- Les preuves arrivent aussi entre deux ticks. Resoudre leur contexte AVANT de les
+-- enregistrer evite que le tick suivant efface le seul GUID vu a l'entree du fortin.
+-- Une carte indisponible n'est pas une sortie : le gameplay attend un vrai echantillon.
+function Overlord.Shard:SyncLocalContext()
+    if Overlord.InstanceSuspended then
+        self:RefreshLocalContext("", true)
+        return false
+    end
+    if Overlord.Outpost and Overlord.Outpost.IsPlayerOnOutpostMap then
+        local onOutpost, site = Overlord.Outpost:IsPlayerOnOutpostMap()
+        if onOutpost and site then
+            self:RefreshLocalContext("outpost:" .. tostring(site.siteKey or site.id), true)
+            return true
+        end
+    end
+    local front = Overlord.InActiveFront and Overlord.Fronts
+        and Overlord.Fronts:GetCurrentFront()
+    self:RefreshLocalContext(front and ("front:" .. tostring(front.id)) or "", true)
+    return true
+end
+
+function Overlord.Shard:InvalidateLocalContext()
+    self.localContextKey = ""
+    self.localContextStartedAt = GetTime()
+    self.currentShardID = nil
+    self.lastUpdateAt = 0
+    self.lastScanAttemptAt = 0
+    self.localShardSource = nil
+    self.keepShardRequest = nil
+    ClearPendingEventLayer()
+    if StopShardScanMaintenance then StopShardScanMaintenance() end
+end
+
+-- PLAYER_LOGOUT ne dit pas s'il precede un /reload ou une vraie deconnexion. On garde donc
+-- un bail exact tres court, mais il ne sera consomme que si PLAYER_ENTERING_WORLD confirme
+-- `isReloadingUi=true`. Un login normal ou UNIT_PHASE ne reutilise jamais cette mesure.
+
+
+-- Clefs sync non invitables (pas de joueur WoW lisible pour InviteUnit)
+function Overlord.Shard:PartyInviteTargetIsUsable(sender)
+    if not sender or type(sender) ~= "string" then return false end
+    -- BNet : clef fictive dans knownShards pour les broadcasts SendGameData
+    if sender:sub(1, 5) == "BNet-" then return false end
+    -- Relais R2 bridge : pseudonyme local, pas un nom reel
+    if sender:sub(1, 7) == "Bridge-" then return false end
+    return true
+end
+
+function Overlord.Shard:IsPlayerAlreadyGrouped(playerName)
+    if not playerName or playerName == "" or not IsInGroup or not IsInGroup() then return false end
+    local sync = Overlord.Sync
+    if sync and sync.SenderIsInOurGroup then
+        return sync:SenderIsInOurGroup(playerName)
+    end
+    local targetKey = sync and sync.GetCaptureContributorDedupKey
+        and sync:GetCaptureContributorDedupKey(playerName)
+    local targetLower = tostring(playerName):lower()
+
+    local function unitMatches(unit)
+        if not UnitExists or not UnitExists(unit) then return false end
+        local name = Overlord:SafeUnitName(unit)
+        if not name or name == "" then return false end
+        local full = sync and sync.CanonicalForeverName and sync:CanonicalForeverName(name) or name
+        if full:lower() == targetLower then return true end
+        if sync and sync.GetCaptureContributorDedupKey and targetKey then
+            local unitKey = sync:GetCaptureContributorDedupKey(full)
+            if unitKey and unitKey:lower() == targetKey:lower() then return true end
+        end
+        return false
+    end
+
+    if unitMatches("player") then return true end
+    if IsInRaid and IsInRaid() then
+        local n = GetNumGroupMembers and GetNumGroupMembers() or 0
+        for i = 1, n do
+            if unitMatches("raid" .. i) then return true end
+        end
+    else
+        for i = 1, 4 do
+            if unitMatches("party" .. i) then return true end
+        end
+    end
+    return false
+end
+
+-- Un SH historique (sans carte) n'est jamais une preuve locale. Un fortin sans PNJ
+-- demande une reponse directe, liee a cette entree, a un membre physiquement proche.
+
+
+
+
+-- Shard connu pour un joueur sync (nil si expire ou absent).
+function Overlord.Shard:GetKnownPlayerShard(playerName)
+    if not playerName or playerName == "" then return nil end
+    local seenAt = self.knownShardUpdatedAt[playerName] or 0
+    if GetTime() - seenAt > SHARD_PEER_TTL then
+        self:RemoveKnownShardPeer(playerName)
+        return nil
+    end
+    return self.knownShards[playerName]
+end
+
+local function NormalizeShardPlayerName(name)
+    if type(name) ~= "string" then return "" end
+    local t = name:match("^%s*(.-)%s*$") or ""
+    if #t >= 2 and #t <= 50 then return t end
+    return ""
+end
+
+-- zsRelayCapturerName peut etre court ; knownShards utilise souvent Nom-Royaume (SH sync).
+-- strict : pas de match par prenom seul (evite faux positifs popup entree cercle).
+function Overlord.Shard:ResolveKnownShardPlayer(nameHint, strict)
+    local hint = NormalizeShardPlayerName(nameHint)
+    if hint == "" then return nil, nil end
+    if not self:PartyInviteTargetIsUsable(hint) then return nil, nil end
+
+    local exactShard = self:GetKnownPlayerShard(hint)
+    if exactShard then return hint, exactShard end
+
+    local sync = Overlord.Sync
+    local hintDK = sync and sync.GetCaptureContributorDedupKey and sync:GetCaptureContributorDedupKey(hint)
+    local hintLower = hint:lower()
+
+    for player, _ in pairs(self.knownShards) do
+        if self:PartyInviteTargetIsUsable(player) then
+            local shard = self:GetKnownPlayerShard(player)
+            if shard then
+                if player:lower() == hintLower then return player, shard end
+                if hintDK and sync then
+                    local pdk = sync:GetCaptureContributorDedupKey(player)
+                    if pdk and pdk:lower() == hintDK:lower() then return player, shard end
+                end
+                if not strict then
+                    local hintBase = hint:match("^([^%-]+)") or hint
+                    local base = player:match("^([^%-]+)") or player
+                    if base:lower() == hintBase:lower() then return player, shard end
+                end
+            end
+        end
+    end
+    return nil, nil
+end
+
+function Overlord.Shard:IsPlayerOnDifferentShard(playerName)
+    local myShard = CoerceShardId(self.currentShardID)
+    if myShard == nil then return false end
+    local resolved, theirShard = self:ResolveKnownShardPlayer(playerName)
+    if not resolved or not theirShard then return false end
+    return tonumber(theirShard) ~= myShard
+end
+
+-- Filet d'evenements : vignettes, souris et kills rafraichissent sans attendre le ticker.
+-- VIGNETTES_UPDATED peut spammer (zone chargee) : debounce pour eviter N scans par frame.
+-- Aucun risque de "throttle" cote serveur : tout est local (GUID / liste vignettes).
+local shardPulseFrame
+local shardEventDebounceHandle
+local shardEventNeedsUnthrottledScan = false
+local SHARD_EVENT_DEBOUNCE_SEC = 0.3
+local lastShardPeerPurgeAt = 0
+local shardScanTimer
+local shardPeerMaintenanceTimer
+local shardUnknownScanDelay = SHARD_UNKNOWN_SCAN_MIN
+
+local function PurgeExpiredShardPeers()
+    local now = GetTime()
+    if now - lastShardPeerPurgeAt < SHARD_BROADCAST_INTERVAL then return end
+    lastShardPeerPurgeAt = now
+    -- Ordre par derniere observation : au plus 32 suppressions par reveil, sans
+    -- scan du cache. L'admission retire aussi la tete expiree en O(1) a saturation.
+    local removed = 0
+    while removed < 32 do
+        local head = Overlord.Shard.peerHead
+        if not head or (tonumber(head.expiresAt) or 0) > now then break end
+        Overlord.Shard:RemoveKnownShardPeer(head.key)
+        removed = removed + 1
+    end
+end
+
+local function RefreshShardBadgeAfterScan()
+    if Overlord.UI and Overlord.UI.RefreshShardBadge then
+        Overlord.UI:RefreshShardBadge()
+    end
+end
+
+-- Les preuves unitaires sont lues au moment exact ou WoW expose le token. Attendre le
+-- debounce perdait parfois la cible / le cadavre avant le scan, notamment dans un fortin
+-- sans vignette exploitable. Ce chemin ne parcourt ni les vignettes ni les 40 nameplates.
+-- 2.3.3: one GUID confirms the known layer, but a new layer needs a second, different NPC
+-- giving it within SHARD_EVENT_AGREE_SECONDS (a killed totem carries its owner's server).
+local SHARD_EVENT_AGREE_SECONDS = 30
+-- confirmOnly (a killed creature's raw GUID, never checked for a player owner): it may
+-- confirm the known layer but never move it.
+local function ObserveShardFromGUID(guid, confirmOnly)
+    if not Overlord.Shard:SyncLocalContext() then return false end
+    if not (Overlord.IsShardHelperActive and Overlord:IsShardHelperActive()) then return false end
+    local shardID = ExtractShardIDFromGUID(guid)
+    if shardID == nil then return false end
+    local now = GetTime()
+    local changed = shardID ~= CoerceShardId(Overlord.Shard.currentShardID)
+    if changed and confirmOnly and Overlord.Shard.currentShardID ~= nil then return false end
+    if changed then
+        if pendingEventLayer == shardID and pendingEventGuid ~= guid
+            and now - (pendingEventAt or 0) <= SHARD_EVENT_AGREE_SECONDS then
+            ClearPendingEventLayer()
+        else
+            pendingEventLayer, pendingEventGuid, pendingEventAt = shardID, guid, now
+            return false
+        end
+    else
+        -- An NPC of the known layer contradicts the waiting one.
+        ClearPendingEventLayer()
+    end
+    -- Same layer measured under 2 s ago (every NPC mouseover, nameplate and soft
+    -- target in a crowd): nothing to update, broadcast or repaint.
+    if not changed and Overlord.Shard.localShardSource == "guid"
+        and now - (tonumber(Overlord.Shard.lastUpdateAt) or 0) < 2 then return true end
+    Overlord.Shard.currentShardID = shardID
+    Overlord.Shard.lastUpdateAt = now
+    Overlord.Shard.lastScanAttemptAt = now
+    Overlord.Shard.localShardSource = "guid"
+    if Overlord.Sync and Overlord.Sync.BroadcastShard
+        and (changed or (tonumber(Overlord.Shard.lastBroadcastAt) or 0)
+            + SHARD_BROADCAST_INTERVAL <= now) then
+        Overlord.Shard.lastBroadcastAt = now
+        Overlord.Sync:BroadcastShard(shardID)
+    end
+    -- Ne pas annuler/recreer le timer pour chaque nameplate d'une zone peuplee.
+    if ScheduleNextShardScan and (changed or not shardScanTimer) then
+        ScheduleNextShardScan(true)
+    end
+    RefreshShardBadgeAfterScan()
+    return true
+end
+
+local function ObserveShardFromUnit(unit)
+    local shardID, guid = ExtractShardIDFromUnit(unit)
+    return shardID ~= nil and ObserveShardFromGUID(guid)
+end
+
+local function LocalShardEvidenceNeedsRefresh(maxAge)
+    local shardID = CoerceShardId(Overlord.Shard.currentShardID)
+    local measuredAt = tonumber(Overlord.Shard.lastUpdateAt) or 0
+    local contextAt = tonumber(Overlord.Shard.localContextStartedAt) or 0
+    return shardID == nil or measuredAt <= 0 or measuredAt < contextAt
+        or GetTime() - measuredAt > (tonumber(maxAge) or 8)
+end
+
+local SHARD_LOCAL_KILL_UNITS = { "player", "pet", "vehicle" }
+local function CompareLocalKillAttacker(attackerGUID)
+    if type(attackerGUID) ~= "string" or attackerGUID == "" then return false end
+    for i = 1, #SHARD_LOCAL_KILL_UNITS do
+        local localGUID = UnitGUID(SHARD_LOCAL_KILL_UNITS[i])
+        if localGUID and attackerGUID == localGUID then return true end
+    end
+    return false
+end
+local function PartyKillAttackerIsLocal(attackerGUID)
+    if not UnitGUID then return false end
+    -- Un PARTY_KILL de raid peut provenir d'un membre sur une autre couche. La comparaison
+    -- complete reste dans pcall car les GUID de combat peuvent etre secrets en 12.x.
+    -- (Fonction nommee : pas de closure par kill, plusieurs par seconde en raid.)
+    local ok, isLocal = pcall(CompareLocalKillAttacker, attackerGUID)
+    return ok and isLocal == true
+end
+
+StopShardScanMaintenance = function()
+    if shardScanTimer and shardScanTimer.Cancel then shardScanTimer:Cancel() end
+    shardScanTimer = nil
+    shardUnknownScanDelay = SHARD_UNKNOWN_SCAN_MIN
+    Overlord.Shard.nextMaintenanceScanAt = 0
+end
+
+ScheduleNextShardScan = function(hasKnownShard)
+    if not C_Timer or not C_Timer.NewTimer then return end
+    if not (Overlord.IsShardHelperActive and Overlord:IsShardHelperActive()) then
+        StopShardScanMaintenance()
+        return false
+    end
+
+    local delay
+    if hasKnownShard then
+        shardUnknownScanDelay = SHARD_UNKNOWN_SCAN_MIN
+        delay = SHARD_KNOWN_SCAN_INTERVAL
+        local lastBroadcast = tonumber(Overlord.Shard.lastBroadcastAt) or 0
+        -- Rescan when the heartbeat falls due; once overdue (a scan found no two NPCs that
+        -- agree), the usual interval: no rescan every second.
+        local untilBroadcast = lastBroadcast > 0
+            and SHARD_BROADCAST_INTERVAL - (GetTime() - lastBroadcast) or 0
+        if untilBroadcast > 0 then
+            delay = math.min(delay, math.max(1, untilBroadcast))
+        end
+    else
+        delay = shardUnknownScanDelay
+        shardUnknownScanDelay = math.min(
+            SHARD_UNKNOWN_SCAN_MAX, math.max(SHARD_UNKNOWN_SCAN_MIN, delay * 2))
+    end
+
+    if shardScanTimer and shardScanTimer.Cancel then shardScanTimer:Cancel() end
+    Overlord.Shard.nextMaintenanceScanAt = GetTime() + delay
+    shardScanTimer = C_Timer.NewTimer(delay, function()
+        shardScanTimer = nil
+        Overlord.Shard.nextMaintenanceScanAt = 0
+        if Overlord.InstanceSuspended then
+            ScheduleNextShardScan(Overlord.Shard.currentShardID ~= nil)
+            return
+        end
+        if Overlord.IsShardHelperActive and Overlord:IsShardHelperActive() then
+            Overlord.Shard:Update()
+            RefreshShardBadgeAfterScan()
+        else
+            StopShardScanMaintenance()
+        end
+    end)
+end
+
+local function ScheduleShardPeerMaintenance()
+    if shardPeerMaintenanceTimer or not C_Timer or not C_Timer.NewTimer then return end
+    shardPeerMaintenanceTimer = C_Timer.NewTimer(SHARD_BROADCAST_INTERVAL, function()
+        shardPeerMaintenanceTimer = nil
+        if not Overlord.InstanceSuspended then PurgeExpiredShardPeers() end
+        ScheduleShardPeerMaintenance()
+    end)
+end
+
+local function ScheduleShardUpdateFromEvent(_, event, unit)
+    if Overlord.InstanceSuspended then return end
+    if not (Overlord.IsShardHelperActive and Overlord:IsShardHelperActive()) then return end
+    local evidenceUnit
+    if event == "PLAYER_TARGET_CHANGED" then
+        evidenceUnit = "target"
+    elseif event == "UPDATE_MOUSEOVER_UNIT" then
+        evidenceUnit = "mouseover"
+    elseif event == "PLAYER_FOCUS_CHANGED" then
+        evidenceUnit = "focus"
+    elseif event == "PLAYER_SOFT_ENEMY_CHANGED" then
+        evidenceUnit = "softenemy"
+    elseif event == "PLAYER_SOFT_FRIEND_CHANGED" then
+        evidenceUnit = "softfriend"
+    elseif event == "PLAYER_SOFT_INTERACT_CHANGED" then
+        evidenceUnit = "softinteract"
+    elseif event == "NAME_PLATE_UNIT_ADDED" then
+        evidenceUnit = unit
+    end
+    -- Une preuve unitaire rafraichit aussi un shard connu mais age de plus de 8 s.
+    -- C'etait le cas exact ou le timer refusait de partir malgre un nouveau PNJ cible.
+    local needsRefresh = LocalShardEvidenceNeedsRefresh(8)
+    if evidenceUnit and ObserveShardFromUnit(evidenceUnit) then return end
+    if needsRefresh then
+        -- Une cible peut devenir indisponible entre l'event et UnitGUID. Le scan debounced
+        -- reste force pour profiter d'une autre nameplate / vignette de la meme frame.
+        if evidenceUnit then shardEventNeedsUnthrottledScan = true end
+    end
+    -- Coalescer la rafale sans annuler/recreer un timer a chaque evenement.
+    if shardEventDebounceHandle then return end
+    -- Known layer measured under 8 s ago, same context, last scan far from the 30 s
+    -- freshness edge (1 s margin for a late timer): the debounced Update(true) would
+    -- return at once. Skip the timer and its closure but keep what its callback does
+    -- (context check now, badge at most once per debounce window); any other case,
+    -- including a context change found here, arms the timer as before.
+    if not needsRefresh and not shardEventNeedsUnthrottledScan then
+        local shard = Overlord.Shard
+        local now = GetTime()
+        -- A crowd sends tens of these events a second: one check per debounce window,
+        -- as the single pending timer gave before.
+        if now - (tonumber(shard._eventFastPathAt) or -10) < SHARD_EVENT_DEBOUNCE_SEC then return end
+        shard._eventFastPathAt = now
+        if shard:SyncLocalContext() and not LocalShardEvidenceNeedsRefresh(8)
+            and (tonumber(shard.lastScanAttemptAt) or 0) > 0
+            and now + SHARD_EVENT_DEBOUNCE_SEC + 1 < shard.lastScanAttemptAt + SHARD_FRESH_SECONDS then
+            if now - (tonumber(shard._eventBadgeRefreshAt) or -10) >= SHARD_EVENT_DEBOUNCE_SEC then
+                shard._eventBadgeRefreshAt = now
+                RefreshShardBadgeAfterScan()
+            end
+            return
+        end
+    end
+    shardEventDebounceHandle = C_Timer.NewTimer(SHARD_EVENT_DEBOUNCE_SEC, function()
+        shardEventDebounceHandle = nil
+        if Overlord.InstanceSuspended then return end
+        if Overlord.IsShardHelperActive and Overlord:IsShardHelperActive() then
+            local forceScan = shardEventNeedsUnthrottledScan
+            shardEventNeedsUnthrottledScan = false
+            -- In a crowd of players (their GUIDs carry no layer) every mouseover
+            -- asked for a full nameplate + vignette scan, up to 3 per second.
+            local scanNow = GetTime()
+            if forceScan and scanNow - (Overlord.Shard._lastForcedEventScanAt or -10) < 2 then
+                forceScan = false
+            end
+            if forceScan then Overlord.Shard._lastForcedEventScanAt = scanNow end
+            Overlord.Shard:Update(not forceScan)
+            RefreshShardBadgeAfterScan()
+        end
+    end)
+end
+
+local function HandleShardPulseEvent(frame, event, ...)
+    if event == "PARTY_KILL" then
+        if Overlord.InstanceSuspended then return end
+        if not (Overlord.IsShardHelperActive and Overlord:IsShardHelperActive()) then return end
+        local arg1, arg2 = ...
+        -- En 12.0 PARTY_KILL peut fournir (attackerGUID, targetGUID). Consommer d'abord
+        -- targetGUID : contrairement au token "target", il survit a la disparition du cadavre.
+        -- Le format legacy fournit parfois arg1 comme unit token ; les deux replis le couvrent.
+        if not (PartyKillAttackerIsLocal(arg1) and ObserveShardFromGUID(arg2, true))
+            and not ObserveShardFromUnit(arg1)
+            and not ObserveShardFromUnit("target") then
+            if LocalShardEvidenceNeedsRefresh(8) then
+                -- En zone PvP les GUID joueurs ne portent pas de shard : la preuve reste
+                -- vieille et chaque PARTY_KILL de raid (plusieurs/s en 200v200) lancait un
+                -- scan complet des nameplates. Meme scan force, via le debounce commun.
+                shardEventNeedsUnthrottledScan = true
+                ScheduleShardUpdateFromEvent(frame, event)
+            end
+        end
+        return
+    end
+    ScheduleShardUpdateFromEvent(frame, event, ...)
+end
+
+-- Initialise le ticker de mise a jour du shard (marqueur legacy des tests).
+-- Maintenance one-shot adaptative : rapide tant que la shard est inconnue, lente
+-- une fois stable. Les transitions et preuves ephemeres restent event-driven.
+function Overlord.Shard:Initialize()
+    ScheduleShardPeerMaintenance()
+    if not shardPulseFrame then
+        shardPulseFrame = CreateFrame("Frame")
+        shardPulseFrame:RegisterEvent("VIGNETTES_UPDATED")
+        shardPulseFrame:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
+        shardPulseFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
+        shardPulseFrame:RegisterEvent("PLAYER_FOCUS_CHANGED")
+        shardPulseFrame:RegisterEvent("PLAYER_SOFT_ENEMY_CHANGED")
+        shardPulseFrame:RegisterEvent("PLAYER_SOFT_FRIEND_CHANGED")
+        shardPulseFrame:RegisterEvent("PLAYER_SOFT_INTERACT_CHANGED")
+        shardPulseFrame:RegisterEvent("NAME_PLATE_UNIT_ADDED")
+        shardPulseFrame:RegisterEvent("PARTY_KILL")
+        shardPulseFrame:SetScript("OnEvent", HandleShardPulseEvent)
+    end
+    if Overlord.IsShardHelperActive and Overlord:IsShardHelperActive() then
+        self:Update()
+    end
+end
+
+-- ============================================================
+-- WoW 12.0.5 : Suppression des workarounds de taint
+-- Les hooks sur StaticPopup et UIErrorsFrame CAUSAIENT du taint.
+-- Si l'addon fonctionne correctement, ces popups ne devraient pas apparaitre.
+-- Si un popup apparait, c'est un bug a corriger, pas a masquer.
+-- ============================================================
+
+-- Forward-declare : pendingFrontEnter
+local pendingFrontEnter = nil
+-- Phase de rattrapage (instanceID parasite) sur carte de front : message chat une fois puis reset quand OK
+local catchUpNotified = false
+
+-- Timers differees annulables (sortie instance / reprise GetInstanceInfo)
+local postInstanceRecoveryTimers = {}
+local resumeInstanceRetryTimers = {}
+local RESUME_INSTANCE_RETRY_DELAYS = { 0.35, 0.95, 2.0 }
+
+-- Apres sortie d'instance : la carte / GetInstanceInfo / scenario peuvent etre faux
+-- pendant ~0,5-2 s. Re-verifie le front actif et raccroche minimap + carte si besoin.
+local POST_INSTANCE_RECHECK_DELAYS = { 0.55, 1.35, 2.8, 4.5 }
+
+local function DebugOverlord(msg)
+    if OverlordDB and OverlordDB.config and OverlordDB.config.debug then
+        print("|cFF9D9D9D[Overlord:dbg]|r " .. tostring(msg))
+    end
+end
+
+-- Sons UI (respecte config.soundEnabled) : buff or, classement, etc.
+local ADDON_SOUNDS = {
+    gold_buff = {
+        SOUNDKIT and SOUNDKIT.LOOT_WINDOW_COIN_SOUND,
+        120,
+        SOUNDKIT and SOUNDKIT.IG_BACKPACK_COIN_OK,
+        865,
+    },
+    lb_open = {
+        SOUNDKIT and SOUNDKIT.IG_MAINMENU_OPEN,
+        850,
+    },
+    lb_close = {
+        SOUNDKIT and SOUNDKIT.IG_MAINMENU_CLOSE,
+        851,
+    },
+}
+
+-- Appel de faction : cloche de la capitale de la faction (SoundKit present dans le client
+-- Classic ; les cors Retail WoD/BfA n'existent pas dans Forever).
+local FACTION_CALL_SOUND_KIT = {
+    Horde = 6595,    -- BellTollHorde (Orgrimmar / Undercity)
+    Alliance = 6594, -- BellTollAlliance (Stormwind / Ironforge)
+}
+
+-- Popup bienvenue : Bloodlust (Horde) / Heroism (Alliance shaman)
+local WELCOME_POPUP_SOUND_KIT = {
+    Horde = 10030,    -- bloodlust_player_cast_head
+    Alliance = 10049, -- Heroism_Cast
+}
+
+-- Bouton Général : sons d'activation / desactivation de l'interface Blizzard.
+local GENERAL_CLAIM_SOUND = (SOUNDKIT and SOUNDKIT.UI_WARMODE_ACTIVATE) or 118563
+local GENERAL_RELEASE_SOUND = (SOUNDKIT and SOUNDKIT.UI_WARMODE_DECTIVATE) or 118564
+
+local function PlayGeneralFactionEmote()
+    if InCombatLockdown() or not DoEmote then return end
+    local token = (Overlord.PlayerFaction == "Horde") and "FORTHEHORDE" or "FORTHEALLIANCE"
+    pcall(DoEmote, token, "none")
+end
+
+-- Musique de duel Général : Before the Storm (BFA main title)
+local GENERAL_DUEL_MUSIC_FILE = 2146580
+local GENERAL_DUEL_FADE_MS = 2000
+local generalDuelMusicActive = false
+local generalDuelSoundHandle = nil
+local generalDuelFadeStopHandle = nil
+
+-- 2.0.4: sound effects channel only. A retry on "Master" played our sounds even when
+-- the player had muted the game's sound effects.
+local function TryPlaySoundEntry(entry)
+    if not entry then return false end
+    if PlaySound then
+        local ok, willPlay = pcall(PlaySound, entry, "SFX", false)
+        if ok and willPlay then return true end
+    end
+    if PlaySoundFile then
+        local ok, willPlay = pcall(PlaySoundFile, entry, "SFX")
+        if ok and willPlay then return true end
+    end
+    return false
+end
+
+-- Panneaux flottants (tutoriel, export, communaute, etc.) : meme son que le classement.
+function Overlord:PlayPanelOpenSound()
+    if self.PlayAddonSound then self:PlayAddonSound("lb_open") end
+end
+
+function Overlord:PlayPanelCloseSound()
+    if self.PlayAddonSound then self:PlayAddonSound("lb_close") end
+end
+
+function Overlord:PlayGeneralDuelMusic()
+    -- 2.0.4 : coupee pour l'instant (piste Retail, toute la faction l'entendait).
+    if true then return false end
+    if not OverlordDB or not OverlordDB.config then return end
+    if OverlordDB.config.soundEnabled == false then return end
+    if not PlaySoundFile then return false end
+    if generalDuelMusicActive then return true end
+    -- Coupe immédiatement une piste encore en fondu (évite chevauchement au redémarrage).
+    if generalDuelFadeStopHandle and StopSound then
+        pcall(StopSound, generalDuelFadeStopHandle, 0)
+        generalDuelFadeStopHandle = nil
+    end
+    local ok, willPlay, handle = pcall(PlaySoundFile, GENERAL_DUEL_MUSIC_FILE, "Music")
+    if ok and willPlay then
+        generalDuelMusicActive = true
+        generalDuelSoundHandle = handle
+        return true
+    end
+    return false
+end
+
+function Overlord:StopGeneralDuelMusic()
+    if not generalDuelMusicActive and not generalDuelSoundHandle and not generalDuelFadeStopHandle then return end
+    generalDuelMusicActive = false
+    local handle = generalDuelSoundHandle
+    generalDuelSoundHandle = nil
+    if handle and StopSound then
+        pcall(StopSound, handle, GENERAL_DUEL_FADE_MS)
+        if GENERAL_DUEL_FADE_MS > 0 then
+            generalDuelFadeStopHandle = handle
+        end
+    end
+end
+
+function Overlord:PlayAddonSound(key)
+    if not OverlordDB or not OverlordDB.config then return end
+    if OverlordDB.config.soundEnabled == false then return end
+    if key == "faction_call" then
+        -- Cloche de capitale ; si le client la refuse, alerte JcJ de la faction, puis alerte
+        -- de raid. SoundKit uniquement (un ID de kit n'est pas un FileDataID).
+        local faction = Overlord.PlayerFaction
+        local pvpKey = faction == "Alliance" and "PVP_WARNING_ALLIANCE" or "PVP_WARNING_HORDE"
+        local candidates = {
+            FACTION_CALL_SOUND_KIT[faction] or FACTION_CALL_SOUND_KIT.Horde,
+            SOUNDKIT and SOUNDKIT[pvpKey],
+            (SOUNDKIT and SOUNDKIT.RAID_WARNING) or 8959,
+        }
+        for i = 1, 3 do
+            local kit = candidates[i]
+            if kit and PlaySound then
+                local ok, willPlay = pcall(PlaySound, kit, "SFX", false)
+                if ok and willPlay then return end
+            end
+        end
+        return
+    end
+    if key == "welcome_popup" then
+        local soundId = WELCOME_POPUP_SOUND_KIT[Overlord.PlayerFaction]
+            or WELCOME_POPUP_SOUND_KIT.Alliance
+        TryPlaySoundEntry(soundId)
+        return
+    end
+    if key == "general_claim" then
+        TryPlaySoundEntry(GENERAL_CLAIM_SOUND)
+        PlayGeneralFactionEmote()
+        return
+    end
+    if key == "general_release" then
+        TryPlaySoundEntry(GENERAL_RELEASE_SOUND)
+        return
+    end
+    if key == "general_assumed" then
+        TryPlaySoundEntry(GENERAL_CLAIM_SOUND)
+        return
+    end
+    local ids = ADDON_SOUNDS[key]
+    if not ids then return end
+    for _, id in ipairs(ids) do
+        if id and TryPlaySoundEntry(id) then return end
+    end
+end
+
+-- Pool FR/EU/DE/US : royaumes FR/DE dans RealmPools.lua (source unique).
+
+-- Tag locale WoW normalise (sync wire) : frFR -> "frfr", ptBR -> "ptbr", esMX -> "esmx".
+function Overlord:GetClientLocaleTag()
+    local loc = GetLocale() or "enUS"
+    loc = loc:lower():match("^([a-z][a-z][a-z]?[a-z]?[a-z]?)$")
+    loc = loc or "enus"
+    -- EU : client anglais (souvent enUS chez joueurs FR/DE) -> engb pour sync et affichage.
+    if (loc == "enus" or loc == "en")
+        and GetCurrentRegion and GetCurrentRegion() == 3 then
+        return "engb"
+    end
+    return loc
+end
+
+local function LocaleDisplayIsEuContext(poolHint)
+    local pool = type(poolHint) == "string" and poolHint:lower() or ""
+    if Overlord.RealmPools and Overlord.RealmPools.NormalizeRegionPool then
+        pool = Overlord.RealmPools:NormalizeRegionPool(pool)
+    end
+    if pool == "eu" then return true end
+    if pool == "us" then return false end
+    return not (GetCurrentRegion and GetCurrentRegion() == 1)
+end
+
+-- Affichage classement : frfr -> frFR, ptbr -> ptBR, esmx -> esMX.
+-- poolHint optionnel (us/fr/de/eu) pour trancher en vs enUS sur EU.
+function Overlord:FormatLocaleTagForDisplay(localeTag, poolHint)
+    if type(localeTag) ~= "string" or localeTag == "" then return "" end
+    localeTag = localeTag:lower():match("^([a-z][a-z][a-z]?[a-z]?[a-z]?)$")
+    if not localeTag or localeTag == "" then return "" end
+
+    if localeTag == "en" or localeTag == "enus" then
+        if LocaleDisplayIsEuContext(poolHint) then return "enGB" end
+        return "enUS"
+    end
+
+    local KNOWN = {
+        enus = "enUS", engb = "enGB", dede = "deDE", eses = "esES", esmx = "esMX",
+        frfr = "frFR", itit = "itIT", ptbr = "ptBR", ptpt = "ptPT", ruru = "ruRU",
+        kokr = "koKR", zhcn = "zhCN", zhtw = "zhTW",
+    }
+    if KNOWN[localeTag] then return KNOWN[localeTag] end
+    if #localeTag == 4 then
+        return localeTag:sub(1, 2):lower() .. localeTag:sub(3, 4):upper()
+    end
+    -- Legacy sync 2 lettres (avant tag complet).
+    if localeTag == "fr" then return "frFR" end
+    if localeTag == "de" then return "deDE" end
+    if localeTag == "es" then return "esES" end
+    if localeTag == "it" then return "itIT" end
+    if localeTag == "pt" then return "ptBR" end
+    if localeTag == "ru" then return "ruRU" end
+    return localeTag:upper()
+end
+
+local function GetCurrentPoolForSavedVars()
+    local rp = Overlord.RealmPools
+    if rp and rp.GetOverlordPoolTag then
+        return rp:GetOverlordPoolTag() or "global"
+    end
+    return "global"
+end
+
+function Overlord:GetCurrentSavedVarsPool()
+    return GetCurrentPoolForSavedVars()
+end
+
+-- Forever realmless : NA et EU seulement. Plus de buckets FR/DE.
+function Overlord:GetCurrentLeaderboardSavedVarsPool()
+    return GetCurrentPoolForSavedVars()
+end
+
+local function EmptyLeaderboardBucket()
+    local startTs = (OverlordDB and tonumber(OverlordDB.lastResetTimestamp)) or 0
+    local campaignId = (startTs > 0 and Overlord.TimestampToCampaignId) and Overlord:TimestampToCampaignId(startTs) or 0
+    return {
+        kills = {}, captures = {}, captureCount = {},
+        bountyTimes = {}, bountyKills = {},
+        playerInfo = {}, campaignStart = startTs, campaignId = campaignId,
+        -- Ce bucket neuf respecte deja les invariants des reparations lourdes.
+        repairVersion = 3,
+    }
+end
+
+local function CancelTimerList(list)
+    for i = 1, #list do
+        local t = list[i]
+        if t and t.Cancel then
+            pcall(t.Cancel, t)
+        end
+    end
+    wipe(list)
+end
+
+local function CancelPostInstanceRecoveryTimers()
+    CancelTimerList(postInstanceRecoveryTimers)
+end
+
+local function CancelResumeFromInstanceRetryTimers()
+    CancelTimerList(resumeInstanceRetryTimers)
+end
+
+-- Annule toutes les relances differees liees a la sortie d'instance (ex. re-entree en arene).
+local function CancelAllDeferredInstanceTimers()
+    CancelPostInstanceRecoveryTimers()
+    -- (Suspension only: the next exit starts with no front restore noted.)
+    if Overlord._postInstanceVisuals then Overlord._postInstanceVisuals.restored = false end
+    CancelResumeFromInstanceRetryTimers()
+end
+
+-- Boucle zone + domination + pins / overlays carte (facteur commun sortie instance).
+local function RestoreFrontVisualSystems(reason)
+    Overlord:StartUpdateLoop()
+    if Overlord.MapMarkers then
+        Overlord.MapMarkers:SetMinimapPinsVisible(true)
+        Overlord.MapMarkers:ResumeWorldMapOverlays()
+    end
+    if reason then
+        DebugOverlord("RestoreFrontVisualSystems: " .. tostring(reason))
+    end
+end
+
+-- What the world map looked like at the last front restore since the instance exit.
+-- Read only (no Blizzard method beyond GetMapID, inside pcall).
+local function ReadPostInstanceMapPicture()
+    if not (WorldMapFrame and WorldMapFrame.IsShown and WorldMapFrame:IsShown()) then
+        return false, nil, nil
+    end
+    local scroll = WorldMapFrame.ScrollContainer
+    local mapID
+    if WorldMapFrame.GetMapID then
+        local ok, id = pcall(WorldMapFrame.GetMapID, WorldMapFrame)
+        if ok then mapID = id end
+    end
+    return true, scroll and scroll.Child, mapID
+end
+
+local function NotePostInstanceVisualsRestored()
+    local note = Overlord._postInstanceVisuals or {}
+    Overlord._postInstanceVisuals = note
+    note.restored = true
+    note.mapShown, note.canvas, note.mapID = ReadPostInstanceMapPicture()
+end
+
+-- A retry repeats the restore only when it could change something: no restore yet
+-- since the exit, or a world map now open on another canvas or map than the last
+-- restore saw (the stale-canvas case the retries exist for). Otherwise the tickers
+-- already run, the minimap pins are shown and the overlays were kicked on this map;
+-- a map opened later goes through its own OnShow path.
+local function PostInstanceVisualsNeedRestore()
+    local note = Overlord._postInstanceVisuals
+    if not note or not note.restored then return true end
+    local shown, canvas, mapID = ReadPostInstanceMapPicture()
+    if not shown then return false end
+    return not (note.mapShown and canvas ~= nil and canvas == note.canvas and mapID == note.mapID)
+end
+
+local function SchedulePostInstanceWorldRecovery()
+    CancelPostInstanceRecoveryTimers()
+    for _, d in ipairs(POST_INSTANCE_RECHECK_DELAYS) do
+        local delay = d
+        local t = C_Timer.NewTimer(delay, function()
+            if not Overlord.IsInitialized or Overlord.InstanceSuspended then return end
+            Overlord:CheckActiveFrontZone()
+            if not Overlord.InActiveFront then return end
+            if not PostInstanceVisualsNeedRestore() then return end
+            RestoreFrontVisualSystems("postInstanceRecovery @" .. tostring(delay) .. "s")
+            NotePostInstanceVisualsRestored()
+        end)
+        postInstanceRecoveryTimers[#postInstanceRecoveryTimers + 1] = t
+    end
+    DebugOverlord("SchedulePostInstanceWorldRecovery: " .. #POST_INSTANCE_RECHECK_DELAYS .. " timers")
+end
+
+local function CompleteResumeFromInstance(reason)
+    if not Overlord._deferredModuleInitDone then
+        -- PLAYER_ENTERING_WORLD peut arriver pendant une sanitation login longue. Aucun
+        -- Resume/Join/handler module ne doit contourner les barrieres requises. Garder
+        -- aussi InstanceSuspended=true : plusieurs handlers utilisent ce flag comme
+        -- ultime barriere pendant que les stages requis terminent leur commit.
+        Overlord._loginResumeDeferred = reason or true
+        Overlord._loginFrontCheckDeferred = true
+        return false
+    end
+    Overlord.InstanceSuspended = false
+    CancelResumeFromInstanceRetryTimers()
+    Overlord:RequireCaptureSync("instance")
+    if Overlord.Combat then Overlord.Combat:Resume() end
+    if Overlord.Sync then Overlord.Sync:Resume() end
+    if Overlord.MostWanted and Overlord.MostWanted.OnInstanceResume then
+        pcall(Overlord.MostWanted.OnInstanceResume, Overlord.MostWanted)
+    end
+    if Overlord.GroupFinder and Overlord.GroupFinder.OnInstanceResume then
+        pcall(Overlord.GroupFinder.OnInstanceResume, Overlord.GroupFinder)
+    end
+    if Overlord.RanksUI and Overlord.RanksUI.OnInstanceResume then
+        pcall(Overlord.RanksUI.OnInstanceResume, Overlord.RanksUI)
+    end
+    if Overlord.RankProof and Overlord.RankProof.OnInstanceResume then
+        pcall(Overlord.RankProof.OnInstanceResume, Overlord.RankProof)
+    end
+    if Overlord.ActionShortcut and Overlord.ActionShortcut.OnInstanceResume then
+        pcall(Overlord.ActionShortcut.OnInstanceResume, Overlord.ActionShortcut)
+    end
+    -- Un loading survenu avant l'initialisation de Sync conserve le ZR au lieu de
+    -- marquer la vague comme relachee sans transport. Le rejouer avant la rotation.
+    if Overlord.FlushDeferredCaptureRelease then
+        Overlord:FlushDeferredCaptureRelease()
+    end
+    -- WoW 12.0.5 : reactive les events ZoneControl (UNIT_AURA, INSPECT_READY)
+    if Overlord.ZoneControl and Overlord.ZoneControl.Resume then
+        Overlord.ZoneControl:Resume()
+    end
+    -- Map layers skipped at a login inside an instance (before the front entry,
+    -- which needs them).
+    if Overlord._loginMapInitDeferred then
+        Overlord._loginMapInitDeferred = nil
+        if Overlord.Zones and Overlord.Zones.CalcMapAspect then Overlord.Zones:CalcMapAspect() end
+        if Overlord.MapMarkers and Overlord.MapMarkers.Initialize then Overlord.MapMarkers:Initialize() end
+    end
+    Overlord:CheckActiveFrontZone()
+    if Overlord.MapMarkers and Overlord.MapMarkers.CheckOutpostMinimap then
+        Overlord.MapMarkers:CheckOutpostMinimap()
+    end
+    -- Le resume peut etre differe apres PEW pendant que GetInstanceInfo expose encore
+    -- "arena"/"pvp". La preuve PEW monde ouvert reste alors posee et autorise ici
+    -- la rotation; un ZONE_CHANGED/WAR_MODE anterieur au PEW ne l'autorise jamais.
+    if Overlord._loginCaptureReleaseWorldConfirmed == true
+        and Overlord.CaptureLease
+        and Overlord.CaptureLease.RotateReleasedLocalWaves then
+        Overlord.CaptureLease:RotateReleasedLocalWaves()
+        if not Overlord._loginCaptureReleaseDeferred then
+            Overlord._loginCaptureReleaseWorldConfirmed = nil
+        end
+    end
+    -- Si on est toujours dans un front apres l'instance, relance ce que CheckActiveFrontZone
+    -- ne relance pas (wasIn=true, nowIn=true -> pas de transition detectee)
+    if Overlord.InActiveFront then
+        RestoreFrontVisualSystems(reason or "resumeFromInstance")
+        NotePostInstanceVisualsRestored()
+        if Overlord.Sync then
+            if Overlord.Sync.StartPeriodicChannelSync then Overlord.Sync:StartPeriodicChannelSync() end
+            if Overlord.Sync.StartProximityRescan then Overlord.Sync:StartProximityRescan() end
+        end
+        if Overlord.UI and Overlord.UI.Show
+            and OverlordDB and OverlordDB.config and OverlordDB.config.uiVisible then
+            -- Full repaint in its own frame, off the resume chain (as OnEnterFront).
+            Overlord.UI:Show({ skipRefresh = true })
+            if Overlord.MapMarkers and Overlord.MapMarkers.RequestOverlayRefresh then
+                Overlord.MapMarkers:RequestOverlayRefresh()
+            end
+            C_Timer.After(0, function()
+                if Overlord.InstanceSuspended or not Overlord.InActiveFront
+                    or not Overlord.UI or not Overlord.UI.Refresh then return end
+                Overlord.UI:Refresh()
+                C_Timer.After(0, function()
+                    if Overlord.UI and Overlord.UI.RefreshDomination then
+                        Overlord.UI:RefreshDomination()
+                    end
+                end)
+            end)
+        end
+    end
+    -- Carte monde ouverte pendant suspend : reafficher le OnUpdate masque.
+    if WorldMapFrame and WorldMapFrame:IsShown()
+        and Overlord.MapMarkers and Overlord.MapMarkers._updateFrame then
+        Overlord.MapMarkers._updateFrame:Show()
+    end
+    if Overlord.Button and Overlord.Button.EnsureCreated then
+        Overlord.Button:EnsureCreated()
+    end
+    SchedulePostInstanceWorldRecovery()
+    Overlord:StartStrategicSiteLoop()
+    if Overlord._loginFactionChangeDeferred and Overlord.RequestFactionChangeReconcile then
+        Overlord:RequestFactionChangeReconcile()
+    end
+    -- Pousser l'etat carte vers le reseau (l'instance n'envoie pas de ZS a la suspension).
+    if Overlord.Sync and Overlord.Sync.FlushStateAfterInstance then
+        Overlord._postInstanceFlushGeneration =
+            (tonumber(Overlord._postInstanceFlushGeneration) or 0) + 1
+        local flushGeneration = Overlord._postInstanceFlushGeneration
+        C_Timer.After(1.5, function()
+            if not Overlord.InstanceSuspended and Overlord.Sync
+                and Overlord._postInstanceFlushGeneration == flushGeneration then
+                Overlord.Sync:FlushStateAfterInstance()
+            end
+        end)
+    end
+end
+
+local function ScheduleResumeFromInstanceRetries()
+    if #resumeInstanceRetryTimers > 0 then return end
+    CancelResumeFromInstanceRetryTimers()
+    for _, d in ipairs(RESUME_INSTANCE_RETRY_DELAYS) do
+        local delay = d
+        local t = C_Timer.NewTimer(delay, function()
+            if Overlord.InstanceSuspended then
+                Overlord:ResumeFromInstance()
+            end
+        end)
+        resumeInstanceRetryTimers[#resumeInstanceRetryTimers + 1] = t
+    end
+    -- Filet de securite : si les retries echouent mais qu'on est sorti, reprendre
+    -- via le meme chemin que la reprise normale.
+    local t = C_Timer.NewTimer(5, function()
+        if Overlord.InstanceSuspended then
+            if not IsInInstance() then
+                CompleteResumeFromInstance("resumeFromInstanceForced")
+            else
+                CancelResumeFromInstanceRetryTimers()
+                Overlord:ResumeFromInstance()
+            end
+        end
+    end)
+    resumeInstanceRetryTimers[#resumeInstanceRetryTimers + 1] = t
+end
+
+-- Suspend total de l'addon en instance (arene, BG, donjon).
+-- Deregistre les events et stop les tickers au lieu de checker IsInInstance() partout.
+function Overlord:SuspendForInstance()
+    -- Si deja suspendu : ne PAS annuler les timers (ResumeFromInstance programme des retry 0.35/0.95/2s).
+    -- Un second event (ex. IsInInstance() encore true a la sortie d'arene) appelait Suspend en doublon,
+    -- vidait les retry et laissait InstanceSuspended=true sans aucune reprise -> /reload obligatoire.
+    if self.InstanceSuspended then
+        if not self._deferredModuleInitDone then
+            -- Une re-entree peut suivre une sortie observee pendant la meme barriere.
+            -- Le dernier etat physique gagne : annuler tout resume deja en attente.
+            self._loginSuspendDeferred = true
+            self._loginResumeDeferred = nil
+        end
+        return
+    end
+    if not self._deferredModuleInitDone then
+        -- Les callbacks de suspension liberent/revertissent des captures et peuvent
+        -- emettre sur le reseau. Pendant les migrations login, les modules existent
+        -- deja mais leurs racines ne sont pas encore publiees : poser la barriere
+        -- immediatement et rejouer cette suspension de facon autoritaire au commit.
+        self.InstanceSuspended = true
+        self._loginSuspendDeferred = true
+        self._postInstanceFlushGeneration =
+            (tonumber(self._postInstanceFlushGeneration) or 0) + 1
+        CancelAllDeferredInstanceTimers()
+        -- UI only: front circles kept under a closed world map must not show on the
+        -- instance map before the replayed suspension hides them.
+        if self.MapMarkers and self.MapMarkers.HideAllOverlays then
+            pcall(self.MapMarkers.HideAllOverlays, self.MapMarkers)
+        end
+        return false
+    end
+    -- Invalide le callback Flush differe d'une sortie precedente avant toute
+    -- nouvelle suspension/reprise rapide.
+    self._postInstanceFlushGeneration =
+        (tonumber(self._postInstanceFlushGeneration) or 0) + 1
+    CancelAllDeferredInstanceTimers()
+    -- Revert capture / broadcast AVANT InstanceSuspended (sinon GK bloque l'emission)
+    if self.ZoneControl and self.ZoneControl.OnInstanceSuspend then
+        self.ZoneControl:OnInstanceSuspend()
+    end
+    if self.OutpostControl and self.OutpostControl.OnInstanceSuspend then
+        self.OutpostControl:OnInstanceSuspend()
+    end
+    if self.General and self.General.OnInstanceSuspend then
+        self.General:OnInstanceSuspend()
+    end
+    if self.LayerJumper and self.LayerJumper.OnInstanceSuspend then
+        pcall(self.LayerJumper.OnInstanceSuspend, self.LayerJumper)
+    end
+    if self.MostWanted and self.MostWanted.OnInstanceSuspend then
+        pcall(self.MostWanted.OnInstanceSuspend, self.MostWanted)
+    end
+    -- PvP group finder: window closed, own listing, sign-ups and board dropped, events off.
+    if self.GroupFinder and self.GroupFinder.OnInstanceSuspend then
+        pcall(self.GroupFinder.OnInstanceSuspend, self.GroupFinder)
+    end
+    -- Overlord Rank: the character sheet tab goes away, nothing is credited.
+    if self.RanksUI and self.RanksUI.OnInstanceSuspend then
+        pcall(self.RanksUI.OnInstanceSuspend, self.RanksUI)
+    end
+    -- Top ranks seen by others: no inspect, whisper or badge in an instance.
+    if self.RankProof and self.RankProof.OnInstanceSuspend then
+        pcall(self.RankProof.OnInstanceSuspend, self.RankProof)
+    end
+    self.InstanceSuspended = true
+    -- Remet le flag de zone a zero : evite des etats stales si CheckActiveFrontZone n'est pas appele
+    self.InActiveFront = false
+    catchUpNotified = false
+    -- Annule le timer d'entree en front (evite un OnEnterFront differe en instance)
+    if pendingFrontEnter then
+        pendingFrontEnter:Cancel()
+        pendingFrontEnter = nil
+    end
+    -- WoW 12.0.5 : desactive les events UNIT_AURA qui causent du taint en instance
+    if self.ZoneControl and self.ZoneControl.Suspend then
+        self.ZoneControl:Suspend()
+    end
+    self:StopUpdateLoop()
+    self:StopStrategicSiteLoop()
+    if self.UI then
+        if self.UI.StopSpectatorMode then self.UI:StopSpectatorMode() end
+        if self.UI.IsVisible and self.UI.Hide and self.UI:IsVisible() then self.UI:Hide(true) end
+    end
+    if self.MapMarkers then
+        self.MapMarkers:SetMinimapPinsVisible(false)
+        self.MapMarkers:HideAllOverlays()
+        if self.MapMarkers.HideGuildKeepOverlays then self.MapMarkers:HideGuildKeepOverlays() end
+        if self.MapMarkers.HideMinimapKeepPin then self.MapMarkers:HideMinimapKeepPin() end
+        self.MapMarkers._mmOutpostMapActive = false
+        if self.MapMarkers.HideMinimapOutpostPin then self.MapMarkers:HideMinimapOutpostPin() end
+        if self.MapMarkers.HideEKKeepPin then self.MapMarkers:HideEKKeepPin() end
+        if self.MapMarkers.HideWorldEmblems then self.MapMarkers:HideWorldEmblems() end
+        if self.MapMarkers.RefreshMapModeButton then self.MapMarkers:RefreshMapModeButton() end
+    end
+    if self.ZoneIndicator then self.ZoneIndicator:Hide() end
+    if self.LeaderboardUI then self.LeaderboardUI:Hide() end
+    -- Like the ranking window (it kept its keyboard and AchievementFrame refresh in the instance).
+    if self.HallOfFameUI and self.HallOfFameUI.IsShown and self.HallOfFameUI:IsShown() then self.HallOfFameUI:Hide() end
+    if self.GroupFinderUI and self.GroupFinderUI.IsShown and self.GroupFinderUI:IsShown() then self.GroupFinderUI:Hide() end
+    if self.Sync then self.Sync:Suspend() end
+    if self.Combat then self.Combat:Suspend() end
+end
+
+function Overlord:ResumeFromInstance()
+    if not self.InstanceSuspended then return end
+    local okInInstance, physicallyInInstance = pcall(IsInInstance)
+    if not okInInstance or physicallyInInstance then return false end
+    -- Securite : IsInInstance() peut retourner false brievement pendant un loading en instance.
+    -- GetInstanceInfo() est plus fiable : si le type d'instance n'est pas "none", on reste suspendu.
+    -- Sans ce check, l'addon se reactive entre deux loading screens puis se re-suspend 1s apres,
+    -- ce qui cause des erreurs Lua (events/timers relances en contexte d'instance).
+    local ok, _, instType = pcall(GetInstanceInfo)
+    if not ok or (instType and instType ~= "none" and instType ~= "") then
+        -- Encore en instance selon l'API, ou sortie tout juste : GetInstanceInfo peut
+        -- rester "arena" un court instant apres le chargement monde ouvert.
+        ScheduleResumeFromInstanceRetries()
+        return
+    end
+    CompleteResumeFromInstance("resumeFromInstance")
+end
+
+function Overlord:FlushDeferredInstanceTransition()
+    if not self._deferredModuleInitDone then return false end
+    local suspendAfterLogin = self._loginSuspendDeferred == true
+    self._loginSuspendDeferred = nil
+    if suspendAfterLogin then
+        -- SuspendForInstance est idempotent sur le flag; le baisser ici ne
+        -- publie rien et permet d'executer une fois les callbacks autoritaires
+        -- maintenant que toutes les racines requises sont commitees.
+        self.InstanceSuspended = false
+        self:SuspendForInstance()
+    end
+    local resumeReason = self._loginResumeDeferred
+    self._loginResumeDeferred = nil
+    local checkFront = self._loginFrontCheckDeferred
+    self._loginFrontCheckDeferred = nil
+    if resumeReason then
+        -- Revalider l'etat physique au commit. Une re-entree tardive ou une API
+        -- transitoire ne doit jamais reactiver les transports dans l'instance.
+        self:ResumeFromInstance()
+    elseif checkFront then
+        self:CheckActiveFrontZone()
+    end
+    return suspendAfterLogin or resumeReason ~= nil or checkFront == true
+end
+
+-- Un /reload peut charger l'addon alors que le joueur est deja en instance et
+-- sans nouveau PLAYER_ENTERING_WORLD. Fermer la barriere immediatement; les
+-- callbacks modules autoritaires ne tournent qu'apres les stages requis.
+function Overlord:PrimeLoginInstanceBarrier(inInstance)
+    if not inInstance or self._deferredModuleInitDone then return false end
+    self.InstanceSuspended = true
+    self._loginSuspendDeferred = true
+    self._loginResumeDeferred = nil
+    return true
+end
+
+function Overlord:ResumeCaptureAfterLoginBarrier()
+    if self.InstanceSuspended or IsInInstance() then return false end
+    if self.ZoneControl and self.ZoneControl.Resume then
+        self.ZoneControl:Resume()
+        return true
+    end
+    return false
+end
+
+function Overlord:ScheduleDeferredCaptureReleaseRetry()
+    if self._loginCaptureReleaseRetryPending or self.InstanceSuspended
+        or not self._deferredModuleInitDone then return end
+    self._loginCaptureReleaseRetryPending = true
+    local attempt = math.min(tonumber(self._loginCaptureReleaseRetryAttempt) or 0, 3)
+    C_Timer.After(2 ^ attempt, function()
+        Overlord._loginCaptureReleaseRetryPending = nil
+        Overlord:FlushDeferredCaptureRelease()
+    end)
+end
+
+function Overlord:FlushDeferredCaptureRelease()
+    if not self._deferredModuleInitDone or not self._loginCaptureReleaseDeferred then
+        return false
+    end
+    if self.InstanceSuspended then return false end
+    local lease = self.CaptureLease
+    if not lease or not lease.ReleaseAllLocal then
+        self._loginCaptureReleaseDeferred = nil
+        self._loginCaptureReleaseSnapshots = nil
+        return true
+    end
+    local snapshots = self._loginCaptureReleaseSnapshots
+    local ok, complete = true, true
+    if snapshots and #snapshots > 0 and lease.BroadcastReleaseSnapshot then
+        local pending = {}
+        for i = 1, #snapshots do
+            local snapshot = snapshots[i]
+            local sentOk, emitted = pcall(lease.BroadcastReleaseSnapshot, lease, snapshot)
+            if not sentOk or emitted ~= true then
+                pending[#pending + 1] = snapshot
+                complete = false
+            end
+        end
+        self._loginCaptureReleaseSnapshots = #pending > 0 and pending or nil
+    else
+        ok, complete = pcall(lease.ReleaseAllLocal, lease)
+    end
+    if ok and complete ~= false then
+        self._loginCaptureReleaseDeferred = nil
+        self._loginCaptureReleaseSnapshots = nil
+        self._loginCaptureReleaseRetryAttempt = nil
+        self._loginCaptureReleaseRetryPending = nil
+        -- Un succes immediat pendant LOADING_SCREEN_ENABLED ne prouve pas encore
+        -- la destination. Tourner ici publierait une nouvelle vague juste avant
+        -- l'entree en instance, puis la suspension ne pourrait plus emettre son ZR.
+        -- Seul un PEW deja confirme hors instance autorise le retry froid a rattraper
+        -- la rotation que ce PEW avait tentee avant le succes du transport.
+        if self._loginCaptureReleaseWorldConfirmed == true
+            and not self.InstanceSuspended and not IsInInstance()
+            and lease.RotateReleasedLocalWaves then
+            lease:RotateReleasedLocalWaves()
+            self._loginCaptureReleaseWorldConfirmed = nil
+        end
+        return true
+    end
+    self._loginCaptureReleaseRetryAttempt =
+        math.min((tonumber(self._loginCaptureReleaseRetryAttempt) or 0) + 1, 3)
+    self:ScheduleDeferredCaptureReleaseRetry()
+    return false
+end
+
+function Overlord:RunOrDeferCaptureRelease()
+    -- Chaque loading ouvre une nouvelle destination inconnue. Un PEW hors instance
+    -- devra la confirmer avant toute rotation/republication de vague locale.
+    self._loginCaptureReleaseWorldConfirmed = nil
+    local lease = self.CaptureLease
+    if lease and lease.SnapshotAllLocalReleases then
+        local ok, snapshots = pcall(lease.SnapshotAllLocalReleases, lease)
+        if ok and type(snapshots) == "table" and #snapshots > 0 then
+            local queued = self._loginCaptureReleaseSnapshots or {}
+            for i = 1, #snapshots do
+                local candidate = snapshots[i]
+                local duplicate = false
+                for j = 1, #queued do
+                    if queued[j].zoneId == candidate.zoneId
+                        and queued[j].waveId == candidate.waveId then
+                        duplicate = true
+                        break
+                    end
+                end
+                if not duplicate then queued[#queued + 1] = candidate end
+            end
+            self._loginCaptureReleaseSnapshots = queued
+        end
+    end
+    self._loginCaptureReleaseDeferred = true
+    if not self._deferredModuleInitDone then return false end
+    return self:FlushDeferredCaptureRelease()
+end
+
+function Overlord:FinalizeCaptureReleaseAfterWorldEntry(inInstance)
+    if inInstance then
+        self._loginCaptureReleaseWorldConfirmed = nil
+        return false
+    end
+    -- PLAYER_ENTERING_WORLD a maintenant confirme une destination monde ouvert.
+    -- Si le ZR est deja parti, tourner ici. S'il attend encore un transport froid,
+    -- conserver la preuve afin que FlushDeferredCaptureRelease tourne au succes.
+    self._loginCaptureReleaseWorldConfirmed = true
+    if self.InstanceSuspended then return false end
+    local lease = self.CaptureLease
+    if lease and lease.RotateReleasedLocalWaves then
+        lease:RotateReleasedLocalWaves()
+    end
+    if not self._loginCaptureReleaseDeferred then
+        self._loginCaptureReleaseWorldConfirmed = nil
+    end
+    return true
+end
+
+function Overlord:FinishFactionChangeReconcile(state)
+    if self._factionChangeReconcileState ~= state then return false end
+    self._factionChangeReconcileState = nil
+    local currentFaction = UnitFactionGroup("player")
+    if state.restartRequested or currentFaction ~= state.faction then
+        self._loginFactionChangeDeferred = true
+        C_Timer.After(0, function() Overlord:RequestFactionChangeReconcile() end)
+        return false
+    end
+
+    self._loginFactionChangeDeferred = nil
+    if self.Leaderboard and self.Leaderboard.MarkDirty then
+        self.Leaderboard:MarkDirty()
+    end
+    self.WaitingForSync = true
+    C_Timer.After(60, function()
+        if Overlord.WaitingForSync then Overlord.WaitingForSync = nil end
+    end)
+    if self.Sync and self.Sync.SendSyncRequest then self.Sync:SendSyncRequest() end
+    if self.General and self.General.OnPlayerFactionChanged then
+        self.General:OnPlayerFactionChanged()
+    end
+    if self.Button and self.Button.Refresh then self.Button:Refresh() end
+    return true
+end
+
+function Overlord:RunFactionChangeReconcileSlice(state)
+    if self._factionChangeReconcileState ~= state then return false end
+    if not self._deferredModuleInitDone or self.InstanceSuspended then
+        -- Une tranche peut coincider avec un loading. Les mutations deja appliquees
+        -- sont idempotentes; reprendre la reconciliation complete au resume.
+        self._factionChangeReconcileState = nil
+        self._loginFactionChangeDeferred = true
+        return false
+    end
+    local ok, err = coroutine.resume(state.worker)
+    if not ok then
+        self._factionChangeReconcileState = nil
+        self._loginFactionChangeDeferred = true
+        self:PrintNotification("|cFFFF0000[Overlord]|r faction reconcile: " .. tostring(err))
+        return false
+    end
+    if coroutine.status(state.worker) == "dead" then
+        return self:FinishFactionChangeReconcile(state)
+    end
+    C_Timer.After(0, function() Overlord:RunFactionChangeReconcileSlice(state) end)
+    return false
+end
+
+function Overlord:RequestFactionChangeReconcile()
+    if not self._deferredModuleInitDone or self.InstanceSuspended then
+        self._loginFactionChangeDeferred = true
+        return false
+    end
+    local faction = UnitFactionGroup("player")
+    if faction ~= "Alliance" and faction ~= "Horde" then return false end
+    local pending = self._factionChangeReconcileState
+    if pending then
+        if pending.faction ~= faction then pending.restartRequested = true end
+        return false
+    end
+
+    self._loginFactionChangeDeferred = nil
+    self.PlayerFaction = faction
+    if self.Zones then
+        self.Zones:ApplyFactionConfig(faction)
+        -- ApplyFactionConfig remet les owners non-bases a nil; restaurer la carte
+        -- une fois apres le commit login, avant de publier la nouvelle identite.
+        self:RestoreZoneState()
+    end
+
+    local leaderboard = self.Leaderboard
+    local state = { faction = faction }
+    state.worker = coroutine.create(function()
+        if not leaderboard then return end
+        if leaderboard.ForceUpdateLocalPlayer then
+            local fullName = Overlord.Sync and Overlord.Sync.GetPlayerFullName
+                and Overlord.Sync:GetPlayerFullName() or ""
+            local _, myClass = UnitClass("player")
+            if fullName ~= "" then
+                leaderboard:ForceUpdateLocalPlayer(fullName, myClass, faction)
+            end
+        end
+        if leaderboard.PropagateLocalFactionToAllKeys then
+            local work, startedAt = 0, debugprofilestop()
+            leaderboard:PropagateLocalFactionToAllKeys(function()
+                work = work + 1
+                local nowMs = debugprofilestop()
+                if work >= 64 or nowMs - startedAt >= 1.25 then
+                    work, startedAt = 0, nowMs
+                    -- Les setters de cette coroutine peuvent eux-memes avancer la
+                    -- revision. Seule une variation PENDANT le yield prouve une
+                    -- mutation concurrente d'une cle deja parcourue; rejouer alors
+                    -- toute la passe avant le moindre SR/UI.
+                    local yieldedRevision = leaderboard._localFactionAliasRevision or 0
+                    coroutine.yield()
+                    if (leaderboard._localFactionAliasRevision or 0) ~= yieldedRevision then
+                        state.restartRequested = true
+                    end
+                end
+            end)
+        end
+    end)
+    self._factionChangeReconcileState = state
+    return self:RunFactionChangeReconcileSlice(state)
+end
+
+-- Frame principal pour gérer les events
+local eventFrame = CreateFrame("Frame")
+
+-- 2.1.0 : le jeu est sorti, chaque region joue sa campagne et repart a son reset
+-- hebdomadaire, en UTC (les horaires du Retail, fixes toute l'annee). Le meme calcul de
+-- calendrier que sur la beta : tous les clients d'une region tiennent le meme instant a la
+-- seconde pres (le certificat initial des capitales et les tampons de carte en dependent).
+-- wday: 1=Dimanche, 2=Lundi, 3=Mardi, 4=Mercredi, ..., 7=Samedi
+local RESET_RULE_BY_REGION = {
+    US = { wday = 3, hour = 15 }, -- Ameriques et Oceanie : mardi 15:00 UTC
+    EU = { wday = 4, hour = 4 },  -- Europe : mercredi 04:00 UTC
+    KR = { wday = 4, hour = 23 }, -- Coree et Taiwan : mercredi 23:00 UTC, jeudi matin chez eux
+    TW = { wday = 4, hour = 23 },
+}
+-- Client qui ne nomme pas sa region et ne donne pas son reset : l'ancre de la beta.
+local RESET_HOUR_UNNAMED = 8
+local RESET_WDAY_UNNAMED = 3
+-- L'API et GetServerTime ne tickent pas a la meme seconde (8.0.6) : au quart d'heure pres.
+local WEEKLY_RESET_SNAP_SEC = 900
+local SECONDS_PER_DAY = 86400
+local SECONDS_PER_WEEK = SECONDS_PER_DAY * 7
+-- Regression 8.0.6 : jitter ±1 s sur GetLastResetTimestamp (NA) ne doit jamais
+-- declencher un faux reset hebdo ni un faux bucket perime.
+-- L'API Blizzard et le repli calendrier peuvent designer le meme reset NA avec
+-- plusieurs heures d'ecart (API indisponible pendant maintenance, puis retour de
+-- l'epoch officiel). Deux vrais resets restent espaces de sept jours.
+local CAMPAIGN_EPOCH_TOLERANCE_SEC = 36 * 3600
+local REGIONAL_RESET_CACHE_SEC = 3600
+local LEGACY_US_MIN_GAP_SEC = 3600
+local WEEKLY_RESET_REENTRY_GUARD_SEC = 6 * SECONDS_PER_DAY
+local cachedRegionalResetTs = nil
+local cachedRegionalResetWallAt = 0
+local lastEnsureCampaignFreshAt = 0
+local ENSURE_CAMPAIGN_FRESH_INTERVAL = 60
+
+local function GetLastCompletedWeeklyResetAt()
+    if not OverlordDB then return 0 end
+    return math.max(
+        tonumber(OverlordDB.lastWeeklyMapResetAt) or 0,
+        tonumber(OverlordDB.lastLeaderboardResetAt) or 0)
+end
+
+local function HasRecentCompletedWeeklyReset(candidateEpoch)
+    local completedAt = GetLastCompletedWeeklyResetAt()
+    if completedAt <= 0 then return false end
+    local now = (GetServerTime and GetServerTime()) or time()
+    local age = now - completedAt
+    if age < 0 or age >= WEEKLY_RESET_REENTRY_GUARD_SEC then return false end
+
+    -- Le delai seul ne suffit pas : un joueur qui applique tardivement le reset
+    -- precedent (ex. dimanche) doit quand meme appliquer la nouvelle campagne le
+    -- mercredi suivant. Le garde ne bloque donc que deux epochs representant la
+    -- meme frontiere hebdomadaire (repli calendrier puis correction de l'API).
+    local appliedEpoch = tonumber(OverlordDB.lastWeeklyMapResetEpoch) or 0
+    if appliedEpoch <= 0 then
+        appliedEpoch = tonumber(OverlordDB.lastResetTimestamp) or 0
+    end
+    candidateEpoch = tonumber(candidateEpoch) or 0
+    if appliedEpoch <= 0 or candidateEpoch <= 0 then return true end
+    return math.abs(candidateEpoch - appliedEpoch) <= CAMPAIGN_EPOCH_TOLERANCE_SEC
+end
+
+local function MarkWeeklyMapResetCompleted(resetEpoch)
+    if not OverlordDB then return end
+    OverlordDB.lastWeeklyMapResetAt = (GetServerTime and GetServerTime()) or time()
+    OverlordDB.lastWeeklyMapResetEpoch = math.floor(tonumber(resetEpoch) or 0)
+    if Overlord.MarkDirty then Overlord:MarkDirty() end
+end
+
+local function GetWeeklyResetTimestampForRule(resetWday, resetHour, now)
+    -- UTC obligatoire (date("!*t", ...) + arithmetique d'epoch, sans time({...}) qui
+    -- interpreterait la table en heure LOCALE). Ce repli sert quand l'API
+    -- C_DateAndTime.GetSecondsUntilWeeklyReset est indisponible. En heure locale, deux clients
+    -- d'une meme region mais de fuseaux differents (region 1 : US continental -> Oceanique)
+    -- calculaient des timestamps de reset REELLEMENT differents -> sync (DM/LK/...) qui diverge
+    -- independamment du campaignId. En UTC, tous les clients d'une region obtiennent la meme
+    -- valeur pour un meme `now`. resetHour est donc interprete en heure UTC : l'instant exact peut
+    -- etre decale du fuseau serveur, mais reste sur le bon JOUR UTC (donc bon campaignId) et,
+    -- surtout, identique pour tout le monde.
+    local t = date("!*t", now)
+    local secsToday = (tonumber(t.hour) or 0) * 3600
+        + (tonumber(t.min) or 0) * 60
+        + (tonumber(t.sec) or 0)
+    -- Epoch de minuit UTC du jour courant, puis l'heure de reset visee, en UTC.
+    local resetToday = (now - secsToday) + resetHour * 3600
+    -- Jours depuis le dernier jour de reset (0 = jour J, 1 = lendemain, ...)
+    local daysSinceReset = ((tonumber(t.wday) or 1) - resetWday + 7) % 7
+    -- Si on est le bon jour mais avant l'heure : le reset de la semaine precedente etait il y a 7 jours
+    if daysSinceReset == 0 and now < resetToday then
+        daysSinceReset = 7
+    end
+    return resetToday - (daysSinceReset * SECONDS_PER_DAY)
+end
+
+local function GetRegionWeeklyResetRule()
+    local regionName = type(GetCurrentRegionName) == "function" and GetCurrentRegionName() or nil
+    local rule = regionName and RESET_RULE_BY_REGION[regionName]
+    if rule then return rule.wday, rule.hour end
+    return nil
+end
+
+-- Le debut de la semaine selon le client (nil s'il ne repond pas, ou hors d'une semaine).
+-- Sert si la region n'a pas de nom ; sinon /ov network le compare seulement au calendrier.
+local function ReadWeeklyResetFromClient(now)
+    if not (C_DateAndTime and C_DateAndTime.GetSecondsUntilWeeklyReset) then return nil end
+    local ok, untilReset = pcall(C_DateAndTime.GetSecondsUntilWeeklyReset)
+    untilReset = ok and tonumber(untilReset) or nil
+    if not untilReset or untilReset <= 0 or untilReset > SECONDS_PER_WEEK then return nil end
+    local start = now + untilReset - SECONDS_PER_WEEK
+    return math.floor((start + WEEKLY_RESET_SNAP_SEC / 2) / WEEKLY_RESET_SNAP_SEC) * WEEKLY_RESET_SNAP_SEC
+end
+
+local function IsLegacyUSResetAhead(dbReset, regionalReset)
+    dbReset = math.floor(tonumber(dbReset) or 0)
+    regionalReset = math.floor(tonumber(regionalReset) or 0)
+    if dbReset <= 0 or regionalReset <= 0 or dbReset <= regionalReset then return false end
+    -- Jitter d'une seconde (8.0.6) : ne pas ramener lastResetTimestamp en arriere.
+    if (dbReset - regionalReset) < LEGACY_US_MIN_GAP_SEC then return false end
+    -- Ancien bug : les royaumes US pouvaient etre estampilles sur mercredi 3h.
+    return (dbReset - regionalReset) <= (2 * SECONDS_PER_DAY)
+end
+
+-- Deux epochs de campagne designent la meme semaine (tolerance jitter calendrier).
+function Overlord:CampaignEpochsMatch(a, b, toleranceSec)
+    toleranceSec = tonumber(toleranceSec) or CAMPAIGN_EPOCH_TOLERANCE_SEC
+    a = math.floor(tonumber(a) or 0)
+    b = math.floor(tonumber(b) or 0)
+    if a <= 0 or b <= 0 then return a == b end
+    return math.abs(a - b) <= toleranceSec
+end
+
+-- Epoch diffuse sur le reseau = debut de campagne OFFICIEL (reset Blizzard), identique pour toute
+-- la region. On ne diffuse plus l'ancien epoch "mercredi legacy" : tous les clients a jour emettent
+-- le meme instant, et la reception compare par fenetre hebdomadaire (IsCurrentSyncCampaignEpoch).
+function Overlord:GetCurrentCampaignWireEpoch()
+    return self:GetCurrentCampaignStartTs()
+end
+
+-- Calcule le timestamp du dernier reset hebdomadaire reel de la region.
+function Overlord:GetLastResetTimestamp()
+    local now = (GetServerTime and GetServerTime()) or time()
+    -- Fast path: called ~30 times per second by the sync handlers, and date("!*t")
+    -- below allocates a table each time (~1 KB, the largest garbage source live,
+    -- /ov perf 2026-10-02). Inside the cached reset's week and cache window the
+    -- computed value is the cached one: return it without rebuilding the date.
+    if cachedRegionalResetTs and (now - cachedRegionalResetWallAt) < REGIONAL_RESET_CACHE_SEC
+        and now >= cachedRegionalResetTs and now < cachedRegionalResetTs + SECONDS_PER_WEEK then
+        return cachedRegionalResetTs
+    end
+    local resetWday, resetHour = GetRegionWeeklyResetRule()
+    local computed = resetWday and GetWeeklyResetTimestampForRule(resetWday, resetHour, now)
+        or ReadWeeklyResetFromClient(now)
+        or GetWeeklyResetTimestampForRule(RESET_WDAY_UNNAMED, RESET_HOUR_UNNAMED, now)
+    -- Stabilise la session : GetServerTime et untilReset ne tickent pas a la meme seconde (NA).
+    if cachedRegionalResetTs and (now - cachedRegionalResetWallAt) < REGIONAL_RESET_CACHE_SEC then
+        if math.abs(computed - cachedRegionalResetTs) < REGIONAL_RESET_CACHE_SEC then
+            return cachedRegionalResetTs
+        end
+    end
+    cachedRegionalResetTs = computed
+    cachedRegionalResetWallAt = now
+    return computed
+end
+
+-- 2.1.0 : 2.0.8 reste sur la semaine de la beta. A son reset, il estampille chaque capitale
+-- a cette seconde precise (mardi 08:00:00 UTC). Dans une region dont la semaine tourne a un
+-- autre moment, ce certificat rendrait les capitales conquises des heures avant le reset de
+-- la region : l'entree est refusee, pas la carte. Une prise en direct n'est pas concernee.
+local BETA_WEEK_PHASE = 1793692800 % SECONDS_PER_WEEK
+function Overlord:IsBetaWeekCapitalCertificate(zoneId, owner, stamp)
+    stamp = tonumber(stamp) or 0
+    if stamp <= 0 or stamp % SECONDS_PER_WEEK ~= BETA_WEEK_PHASE then return false end
+    if (self:GetCurrentCampaignStartTs() or 0) % SECONDS_PER_WEEK == BETA_WEEK_PHASE then return false end
+    local fixedOwner = self.Zones and self.Zones:GetBaseZoneFixedOwner(zoneId)
+    return fixedOwner ~= nil and fixedOwner == owner
+end
+
+-- 2.1.0 : le debut de semaine d'un 2.0.8 precede le notre d'au plus 39 h. Ce qu'il date dans
+-- cet ecart (ses zones neutres, datees de son debut de semaine, ses certificats, ses captures
+-- d'avant le reset de la region) date d'avant notre semaine, sans etre une vieille carte :
+-- l'entree est ecartee, le reste de la carte est pris. Plus ancien : carte refusee, comme avant.
+function Overlord:IsStampInBetaWeekGap(stamp)
+    stamp = tonumber(stamp) or 0
+    local start = self:GetCurrentCampaignStartTs() or 0
+    local gap = (start - BETA_WEEK_PHASE) % SECONDS_PER_WEEK
+    return gap > 0 and stamp >= start - gap and stamp < start
+end
+
+-- /ov network : la semaine de campagne de cette region, et ce qu'en dit le jeu.
+function Overlord:DescribeCampaignWeek()
+    local now = (GetServerTime and GetServerTime()) or time()
+    local start = self:GetLastResetTimestamp() or 0
+    local fromClient = ReadWeeklyResetFromClient(now)
+    local game = fromClient == start and "the game agrees"
+        or fromClient and ("the game says " .. date("!%a %H:%M UTC", fromClient))
+        or "the game gave no answer"
+    return date("!%a %Y-%m-%d %H:%M UTC", start) .. ", next reset "
+        .. date("!%a %Y-%m-%d %H:%M UTC", start + SECONDS_PER_WEEK) .. " (" .. game .. ")"
+end
+
+-- Retourne les dates de debut et fin de la campagne en cours formatees.
+function Overlord:GetCampaignDateRange()
+    local startTs = self:GetCurrentCampaignStartTs()
+    local endTs = startTs + SECONDS_PER_WEEK
+    return date(L.DATE_FORMAT, startTs), date(L.DATE_FORMAT, endTs)
+end
+
+-- Identifiant campagne (export Check PvP, snapshots) : AAAAMMJJ du reset regional qui ouvre la periode,
+-- pas un compteur de sessions (evite "Campagne #6" trompeur vs le calendrier reel).
+function Overlord:TimestampToCampaignId(startTs)
+    if not startTs or startTs <= 0 then return 0 end
+    -- UTC obligatoire (date("!*t", ...)) : la region 1 (US) couvre du continental a l'Oceanique
+    -- (jusqu'a ~18 h d'ecart). En date LOCALE, un meme timestamp de reset tombait sur des jours
+    -- calendaires differents (ex. mardi cote US continental, mercredi cote Oceanique) -> campaignId
+    -- divergents -> les messages domination (DM) etaient rejetes entre clients NA -> barre figee a
+    -- 50/50. En UTC le campaignId est identique pour tous, quel que soit le fuseau. Sans effet sur
+    -- EU (reset mercredi 03:00 : meme jour en UTC et en local) ni sur la validite des leaderboards
+    -- (keyee sur le timestamp campaignStart, pas sur ce campaignId).
+    local t = date("!*t", startTs)
+    return (t.year * 10000) + (t.month * 100) + t.day
+end
+
+-- Timestamp unix de debut de la campagne en cours (aligne sur Leaderboard:GetCurrentCampaignStart).
+function Overlord:GetCurrentCampaignStartTs()
+    -- Une ancienne sauvegarde EU (ou une date future) ne choisit jamais la
+    -- campagne active. La compatibilite des anciens stamps reste dans le lecteur.
+    return self:GetLastResetTimestamp() or 0
+end
+
+-- Met a jour OverlordDB.campaignId selon la semaine courante (login, apres reset hebdo, correctif saves anciennes).
+function Overlord:SyncCampaignIdWithCurrentWeek()
+    if not OverlordDB then return end
+    OverlordDB.campaignId = self:TimestampToCampaignId(self:GetCurrentCampaignStartTs())
+end
+
+-- Verifie si un reset hebdomadaire est necessaire et l'execute
+function Overlord:CheckWeeklyReset()
+    if self._deferredModuleInitStarted and not self._deferredModuleInitDone
+        and not self._loginWeeklyResetStageActive then
+        self._loginWeeklyResetDeferred = true
+        return false
+    end
+    -- L'union EU lit les anciens buckets en tranches. Tous les chemins de reset
+    -- (stage login, timer regional, freshness) doivent attendre son commit; le
+    -- scheduler se rearme de lui-meme une seconde plus tard a la frontiere.
+    if self._europeanLeaderboardUnionPending then return false end
+    local lastReset = self:GetLastResetTimestamp()
+    local lastCampaign = tonumber(OverlordDB and OverlordDB.lastResetTimestamp) or 0
+
+    -- Reset interrompu : le nouveau bucket a deja pu etre ouvert alors que
+    -- l'archive compacte ou les side-effects fixes n'etaient pas termines.
+    local pending = tonumber(OverlordDB and OverlordDB.pendingWeeklyResetAt) or 0
+    if pending > 0 and pending ~= lastReset then
+        -- Ancien reset interrompu sur une autre frontiere : ne jamais le rejouer.
+        -- Si son bucket a deja ete detache, finir uniquement l'archive sauvegardee.
+        OverlordDB.pendingWeeklyResetAt = nil
+        local marker = OverlordDB.pendingWeeklyArchive
+        if type(marker) == "table" then
+            marker.coreSideEffectsApplied = true
+            marker.leaderboardSideEffectsApplied = true
+            if self.Leaderboard and self.Leaderboard.ResumePendingWeeklyArchive then
+                self.Leaderboard:ResumePendingWeeklyArchive()
+            end
+        end
+        pending = 0
+    end
+    if pending > 0 then
+        if self.Leaderboard then
+            OverlordDB.lastResetTimestamp = pending
+            self:SyncCampaignIdWithCurrentWeek()
+            local campaignId = tonumber(OverlordDB.campaignId) or 0
+            local archiveEpoch = pending - SECONDS_PER_WEEK
+            if archiveEpoch <= 0 then archiveEpoch = pending end
+            self.Leaderboard:Reset(archiveEpoch, pending, campaignId)
+            local marker = OverlordDB.pendingWeeklyArchive
+            if type(marker) == "table"
+                and tonumber(marker.resetEpoch) == pending
+                and marker.coreSideEffectsApplied ~= true then
+                -- Tables de taille fixe : meme frame logique que le swap leaderboard.
+                self:ResetAll()
+                MarkWeeklyMapResetCompleted(pending)
+                self.Leaderboard:MarkWeeklyResetCoreSideEffectsApplied(pending)
+                self:PrintNotification("|cFFFFD100[Overlord]|r " .. L.WEEKLY_RESET)
+            end
+            self.Leaderboard:ResumePendingWeeklyArchive()
+        end
+        self:SyncCampaignIdWithCurrentWeek()
+        return
+    end
+
+    -- Marqueur leaderboardResetEpoch en retard vs lastResetTimestamp alors que la DB est deja
+    -- sur la semaine calendaire courante : resynchroniser sans reset global. Un vrai reset hebdo
+    -- passe par pendingWeeklyResetAt (crash) ou lastCampaign < lastReset (frontiere Blizzard).
+    -- Regression 7.6.42 : ce chemin declenchait ResetAll() en plein milieu de semaine.
+    local resetEpoch = tonumber(OverlordDB and OverlordDB.leaderboardResetEpoch) or 0
+    if resetEpoch > 0 and lastCampaign > 0 and resetEpoch < lastCampaign
+        and lastReset > 0 and lastCampaign >= lastReset then
+        if self.Leaderboard and self.Leaderboard.StampCurrentCampaignBucket then
+            -- Stamp refuse = scores d'une autre semaine encore actifs : archiver et
+            -- vider maintenant plutot que les re-etiqueter ou bloquer jusqu'au login.
+            if self.Leaderboard:StampCurrentCampaignBucket(OverlordDB.leaderboard) == false
+                and self.Leaderboard.RecoverMissedWeeklyResetIfNeeded then
+                self.Leaderboard:RecoverMissedWeeklyResetIfNeeded(OverlordDB.leaderboard)
+            end
+        else
+            OverlordDB.leaderboardResetEpoch = lastCampaign
+        end
+    end
+
+    if IsLegacyUSResetAhead(lastCampaign, lastReset) then
+        OverlordDB.lastResetTimestamp = lastReset
+        self:SyncCampaignIdWithCurrentWeek()
+        local campaignId = tonumber(OverlordDB.campaignId) or 0
+        if self.Leaderboard and self.Leaderboard.StampCurrentCampaignBucket then
+            self.Leaderboard:StampCurrentCampaignBucket(OverlordDB.leaderboard)
+        elseif OverlordDB.leaderboard then
+            OverlordDB.leaderboard.campaignStart = lastReset
+            OverlordDB.leaderboard.campaignId = campaignId
+        end
+        local currentPool = Overlord:GetCurrentLeaderboardSavedVarsPool() or ""
+        local poolBucket = OverlordDB.leaderboardsByPool and OverlordDB.leaderboardsByPool[currentPool]
+        -- Meme table que le bucket actif : le stamp ci-dessus a deja decide (refus inclus).
+        if poolBucket and poolBucket ~= OverlordDB.leaderboard then
+            poolBucket.campaignStart = lastReset
+            poolBucket.campaignId = campaignId
+        end
+    -- Tolerance jitter (8.0.6) uniquement entre deux epochs valides : une DB vierge
+    -- (lastCampaign = 0) doit toujours recevoir son premier estampillage de semaine.
+    elseif lastCampaign > 0 and lastCampaign < lastReset
+        and HasRecentCompletedWeeklyReset(lastReset) then
+        -- Invariant anti-boucle : un ResetAll hebdomadaire termine ne peut pas etre
+        -- rejoue pour la meme frontiere moins de six jours plus tard. Une frontiere
+        -- distante de sept jours reste toujours eligible, meme si le joueur a
+        -- applique tardivement le reset precedent. Le cas re-entry reel est NA : le
+        -- repli calendrier a deja reset, puis l'API Blizzard revient avec un epoch
+        -- plus tardif le meme mardi. Conserver l'ancre deja appliquee protege aussi
+        -- les captures faites entre les deux lectures.
+        self:SyncCampaignIdWithCurrentWeek()
+    elseif lastCampaign < lastReset
+        and (lastCampaign <= 0 or (lastReset - lastCampaign) > CAMPAIGN_EPOCH_TOLERANCE_SEC) then
+        OverlordDB.pendingWeeklyResetAt = lastReset
+        OverlordDB.lastResetTimestamp = lastReset
+        self:SyncCampaignIdWithCurrentWeek()
+        local campaignId = tonumber(OverlordDB.campaignId) or 0
+        local archiveEpoch = lastCampaign
+        if archiveEpoch <= 0 and lastReset > 0 then
+            archiveEpoch = lastReset - SECONDS_PER_WEEK
+        end
+        if self.Leaderboard then
+            -- OpenAtomicWeeklyBucket detache l'ancien bucket en O(1). ResetAll
+            -- suit immediatement, avant tout retour a la boucle d'evenements.
+            self.Leaderboard:Reset(archiveEpoch, lastReset, campaignId)
+            local marker = OverlordDB.pendingWeeklyArchive
+            if type(marker) == "table"
+                and tonumber(marker.resetEpoch) == lastReset
+                and marker.coreSideEffectsApplied ~= true then
+                self:ResetAll()
+                MarkWeeklyMapResetCompleted(lastReset)
+                self.Leaderboard:MarkWeeklyResetCoreSideEffectsApplied(lastReset)
+                self:PrintNotification("|cFFFFD100[Overlord]|r " .. L.WEEKLY_RESET)
+            end
+        end
+    end
+    self:SyncCampaignIdWithCurrentWeek()
+end
+
+-- Filet de secours : verifie que le bucket leaderboard local est bien celui de la campagne
+-- en cours, sinon force le reset immediatement. Sert de rattrapage si ScheduleNextReset a
+-- manque son declenchement (timer non tenu, session ininterrompue depuis longtemps, etc.) :
+-- sans ca, un joueur reste bloque sur son ancien total toute la semaine et le rediffuse des
+-- son prochain kill/capture, ce qui repollue le classement des autres joueurs deja resets.
+function Overlord:EnsureLeaderboardCampaignFresh()
+    local now = GetTime()
+    if (now - lastEnsureCampaignFreshAt) < ENSURE_CAMPAIGN_FRESH_INTERVAL then return end
+    lastEnsureCampaignFreshAt = now
+    if self.Leaderboard and self.Leaderboard.IsCurrentCampaignBucket
+        and not self.Leaderboard:IsCurrentCampaignBucket() then
+        local ok, err = pcall(Overlord.CheckWeeklyReset, self)
+        if not ok and OverlordDB and OverlordDB.config and OverlordDB.config.debug then
+            print("|cFFFF4444[Overlord:dbg]|r EnsureLeaderboardCampaignFresh: " .. tostring(err))
+        end
+    end
+end
+
+-- Planifie le prochain reset automatique regional. Le rearmement (ligne "Overlord:ScheduleNextReset()"
+-- plus bas) doit rester INCONDITIONNEL : une exception dans CheckWeeklyReset ne doit jamais desarmer
+-- definitivement ce timer pour le reste de la session (sinon plus aucun reset auto tant que le
+-- joueur ne /reload pas), d'ou le pcall qui isole l'appel sans jamais court-circuiter le rearmement.
+function Overlord:ScheduleNextReset()
+    local now = (GetServerTime and GetServerTime()) or time()
+    local nextReset = self:GetLastResetTimestamp() + SECONDS_PER_WEEK
+    local delay = nextReset - now
+
+    if delay <= 0 then delay = 1 end
+
+    -- 2.2.2 : une seule chaine vivante (un rearmement de fin de login en ajoutait une seconde,
+    -- chacune se rearmant pour toujours). Avant l'initialisation, ou pendant l'union EU du
+    -- classement, la frontiere est retentee 5 s plus tard au lieu d'attendre une semaine.
+    local token = {}
+    self._resetTimerToken = token
+    local function fire()
+        if Overlord._resetTimerToken ~= token then return end
+        if not Overlord.IsInitialized or Overlord._europeanLeaderboardUnionPending then
+            C_Timer.After(5, fire)
+            return
+        end
+        local ok, err = pcall(Overlord.CheckWeeklyReset, Overlord)
+        if not ok and OverlordDB and OverlordDB.config and OverlordDB.config.debug then
+            print("|cFFFF4444[Overlord:dbg]|r CheckWeeklyReset: " .. tostring(err))
+        end
+        if Overlord._europeanLeaderboardUnionPending then
+            C_Timer.After(5, fire)
+        elseif not Overlord._loginWeeklyResetDeferred then
+            Overlord:ScheduleNextReset()
+        else
+            Overlord._loginWeeklyResetTimerStopped = true
+        end
+    end
+    C_Timer.After(delay, fire)
+end
+
+
+
+-- Les timers PLAYER_LOGIN restent actifs pendant les migrations longues, mais ne
+-- doivent ni afficher une vue partielle ni abandonner leur unique tentative. Chaque
+-- type de popup devient donc une intention booleenne, rejouee apres le commit global.
+function Overlord:RunOrDeferLoginPopup(kind)
+    local daily = kind == "daily"
+    if not self._deferredModuleInitDone then
+        if daily then
+            self._loginDailyPopupDeferred = true
+        else
+            self._loginPopupDeferred = true
+        end
+        return false
+    end
+    if self.InstanceSuspended or not self.Popups then return false end
+    if daily then
+        if self.Popups.TryShowDailyOnLogin then
+            self.Popups:TryShowDailyOnLogin(0)
+            return true
+        end
+    elseif self.Popups.TryShowOnLogin then
+        self.Popups:TryShowOnLogin(0)
+        return true
+    end
+    return false
+end
+
+-- Publication unique des intents accumules pendant une barriere login. Les flags
+-- sont effaces avant les callbacks pour rendre un rappel/reload idempotent.
+function Overlord:FlushDeferredLoginIntents()
+    if not self._deferredModuleInitDone then return false end
+    local consultFront = self._loginConsultFrontDeferred
+    local showLoginPopup = self._loginPopupDeferred == true
+    local showDailyPopup = self._loginDailyPopupDeferred == true
+    self._loginConsultFrontDeferred = nil
+    self._loginPopupDeferred = nil
+    self._loginDailyPopupDeferred = nil
+    if consultFront and self.Sync and self.Sync.RequestConsultFrontSync then
+        self.Sync:RequestConsultFrontSync(consultFront)
+    end
+    if showLoginPopup then self:RunOrDeferLoginPopup("login") end
+    if showDailyPopup then self:RunOrDeferLoginPopup("daily") end
+    return true
+end
+
+-- Le timer PLAYER_LOGIN et l'etape UI differee peuvent se croiser dans les deux
+-- ordres. Une seule peinture complete doit gagner : si le timer arrive avant la
+-- creation de mainFrame, il libere la place pour que l'etape UI la reprogramme.
+function Overlord:ScheduleLoginUiFullRefresh(delay)
+    local state = self._loginUiRefreshState
+    if not state then
+        state = { generation = 0 }
+        self._loginUiRefreshState = state
+    end
+    if state.done or state.pending then return end
+    state.pending = true
+    state.generation = state.generation + 1
+    local generation = state.generation
+    C_Timer.After(delay or 0, function()
+        if generation ~= state.generation then return end
+        state.pending = false
+        if Overlord.InstanceSuspended then return end
+        local ui = Overlord.UI
+        if not ui or not ui.IsVisible or not ui:IsVisible() then return end
+        state.done = true
+        ui:Refresh()
+    end)
+end
+
+-- Diagnostic de session : une barriere requise peut empecher la creation du
+-- panneau. Les commandes et le bouton minimap doivent alors expliquer l'attente.
+function Overlord:PrintLoginInitStatus()
+    local stage = self._loginInitStage or "startup"
+    local state = self._loginInitState or "pending"
+    local french = self.IsFrenchLocale and self.IsFrenchLocale()
+    local label = french and "Initialisation" or "Initialization"
+    local message = "|cFFFFD100[Overlord]|r " .. label .. ": " .. stage .. " (" .. state .. ")"
+    if self._loginInitError then message = message .. ": " .. self._loginInitError end
+    -- Toujours visible dans le chat general, meme si les notifications sont
+    -- dirigees vers un autre onglet ou que le gestionnaire d'erreurs est indisponible.
+    print(message)
+end
+
+-- Initialisation de l'addon
+-- 2.1.0 : la sauvegarde du compte sert a toutes les regions ou il joue (WTF/Account/x/<region>/)
+-- et chaque region est sa propre campagne : y emporter cette carte et ce classement les
+-- verserait dans sa campagne. Chaque region garde donc sa sauvegarde entiere, a part ; une
+-- region vue pour la premiere fois demarre comme une nouvelle installation. Un client qui ne
+-- nomme pas sa region garde sa sauvegarde telle quelle. Rend les sauvegardes mises de cote.
+function Overlord:SwapRegionSave()
+    local name = type(GetCurrentRegionName) == "function" and GetCurrentRegionName() or nil
+    if type(name) ~= "string" or name == "" then return nil end
+    self._saveRegionName = name
+    if type(OverlordDB) ~= "table" then return nil end
+    local saved = OverlordDB.saveRegion
+    if saved == nil or saved == name then return nil end
+    local parked = type(OverlordDB.otherRegionSaves) == "table" and OverlordDB.otherRegionSaves or {}
+    OverlordDB.otherRegionSaves = nil
+    parked[saved] = OverlordDB
+    local mine = parked[name]
+    parked[name] = nil
+    OverlordDB = type(mine) == "table" and mine or nil
+    return parked
+end
+
+function Overlord:Initialize()
+    if self.IsInitialized then return end
+    local otherRegionSaves = self:SwapRegionSave()
+    -- Session-only evidence captured before defaults/migrations/reset stages, once:
+    -- a retry of Initialize (faction not ready yet) runs after the first call created
+    -- OverlordDB and would otherwise report a lost save as loaded.
+    if self.SavedVariablesLoadedAtLogin == nil then
+        self.SavedVariablesLoadedAtLogin = type(OverlordDB) == "table"
+        self.SavedVariablesCampaignAtLogin = type(OverlordDB) == "table"
+            and tonumber(OverlordDB.lastResetTimestamp) or nil
+    end
+    
+    -- ADDON_LOADED follows SavedVariables loading. Waiting cannot repair a client-side load failure.
+    if not OverlordDB then
+        local campaignStart = self:GetLastResetTimestamp()
+        OverlordDB = {
+            zones = {},
+            config = {},
+            history = {},
+            leaderboard = { kills = {}, captures = {}, playerInfo = {} },
+            -- Une sauvegarde non chargee n'est pas une nouvelle semaine. Ancrer
+            -- la session avant le rattrapage reseau evite d'effacer ses scores
+            -- et captures avec un faux ResetAll au stage hebdomadaire du login.
+            lastResetTimestamp = campaignStart,
+            campaignId = self:TimestampToCampaignId(campaignStart),
+        }
+    end
+    if otherRegionSaves then OverlordDB.otherRegionSaves = otherRegionSaves end
+    if self._saveRegionName then OverlordDB.saveRegion = self._saveRegionName end
+
+    -- Migration : assure que chaque sous-table et champ existe
+    OverlordDB.config = OverlordDB.config or {}
+    OverlordDB.leaderboardsByPool = OverlordDB.leaderboardsByPool or {}
+    -- OverlordDB.leaderboard est un alias de leaderboardsByPool[pool]. WoW serialise
+    -- chaque reference en entier : le ladder etait ecrit deux fois (3 MB pour 2200
+    -- joueurs). La deconnexion retire l'alias et note son pool ; on le remet ici.
+    if OverlordDB.leaderboard == nil and type(OverlordDB.leaderboardAliasPool) == "string" then
+        OverlordDB.leaderboard = OverlordDB.leaderboardsByPool[OverlordDB.leaderboardAliasPool]
+    end
+    OverlordDB.leaderboardAliasPool = nil
+    OverlordDB.leaderboard = OverlordDB.leaderboard or EmptyLeaderboardBucket()
+    OverlordDB.history = OverlordDB.history or {}
+    OverlordDB.lastResetTimestamp = tonumber(OverlordDB.lastResetTimestamp) or 0
+    -- 1.2.1 : l'ancienne domination au temps (buckets DX par front) est retiree ; la barre
+    -- ne compte que les victoires de front. Purge des anciennes cles et de leurs migrations.
+    OverlordDB.dominationTime, OverlordDB.frontDominationTime = nil, nil
+    OverlordDB.frontDominationTimeByPool, OverlordDB.dominationBoostPct = nil, nil
+    OverlordDB.frontDominationPoolVersion, OverlordDB.globalDominationUnifiedVersion = nil, nil
+    OverlordDB.frontDominationMigrated = nil
+    -- 1.6.1 cleared the Layer Jumper's saved jump and helper choice at every login; 2.5.0 brings
+    -- the module back (LayerJumper.lua) and keeps them. Once only: a choice made before 1.6.1 by
+    -- a player who skipped every version since is forgotten, so that nobody helps (invites by
+    -- itself) without having chosen it in this version.
+    if OverlordDB.layerHelpEra ~= 250 then
+        OverlordDB.layerHelpEra = 250
+        OverlordDB.layerJumperHop = nil
+        if type(OverlordDB.config) == "table" then OverlordDB.config.layerHelpMode = nil end
+    end
+    -- 1.8.1: outposts parked by an unreleased 1.4.0 build (2026-10-03, minutes); the
+    -- one-week recovery of that week can no longer match.
+    OverlordDB.outpostsByPool = nil
+    -- 1.8.1: write-only since 2026-09-30 (the catch-up ack carries the campaign).
+    OverlordDB.leaderboardRankFirstCompletedCampaignId = nil
+    -- 1.7.0 : plus de protection de capitale (la conquete reste jusqu a la reprise).
+    OverlordDB.frontCapitalImmuneFrom = nil
+    -- 1.2.4 : contrats en or et War Mode n'existent pas sur Forever (code retire).
+    OverlordDB.manualBountyContracts, OverlordDB.manualBountySettlementLedger = nil, nil
+    OverlordDB.config.worldDefenseEnabled = nil
+    -- 1.2.4 : l'invitation de groupe entre couches (fenetre, liens, chuchotements) est retiree.
+    OverlordDB.shardPopupPos, OverlordDB.shardPopupUserPlaced, OverlordDB.shardPopupLocked = nil, nil, nil
+    -- Migration 10 : journal d'evenements victoire separe des buckets territoriaux.
+    if (tonumber(OverlordDB.dominationSyncVersion) or 0) < 10 then
+        OverlordDB.dominationVictoryEvents = { byPool = {} }
+    end
+    OverlordDB.dominationSyncVersion = math.max(11, tonumber(OverlordDB.dominationSyncVersion) or 0)
+    if type(OverlordDB.dominationVictoryEvents) ~= "table" then
+        OverlordDB.dominationVictoryEvents = { byPool = {} }
+    end
+    OverlordDB.dominationVictoryEvents.byPool = OverlordDB.dominationVictoryEvents.byPool or {}
+    OverlordDB.frontVictories = OverlordDB.frontVictories or {}
+    -- 1.4.0: before any front/victory migration and before fronts, zones and
+    -- outposts are restored, swap in this ruleset's own world (every login,
+    -- cheap: also heals an alt whose data another ruleset stamped earlier).
+    self:DropRetiredRulesetPools(GetCurrentPoolForSavedVars())
+    self:SwapRulesetWorld(GetCurrentPoolForSavedVars())
+    -- Structure seulement : migrations legacy/orphelins et logs corrompus sont
+    -- exclusivement traites par la barriere Lifetime cooperative plus bas.
+    OverlordDB.lifetimeStatsByCharacter = type(OverlordDB.lifetimeStatsByCharacter) == "table"
+        and OverlordDB.lifetimeStatsByCharacter or {}
+
+    -- Migration treve : si lastVictoryTimestamp existe mais pas lastVictoryFaction,
+    -- la treve ne fonctionne pas (IsOnVictoryCooldown retourne false). On efface le timestamp
+    -- pour eviter une treve "fantome" qui bloque sans proteger la bonne capitale.
+    if OverlordDB.lastVictoryTimestamp and OverlordDB.lastVictoryTimestamp > 0
+        and not OverlordDB.lastVictoryFaction then
+        OverlordDB.lastVictoryTimestamp = nil
+    end
+    if OverlordDB.lastVictoryTimestamp and OverlordDB.lastVictoryTimestamp > 0
+        and OverlordDB.lastVictoryFaction and Overlord.Fronts then
+        local victoryFrontId = OverlordDB.lastVictoryFrontId or OverlordDB.activeFrontId or Overlord.Fronts.activeFrontId
+        if victoryFrontId and not OverlordDB.frontVictories[victoryFrontId] then
+            OverlordDB.frontVictories[victoryFrontId] = {
+                timestamp = OverlordDB.lastVictoryTimestamp,
+                faction = OverlordDB.lastVictoryFaction,
+            }
+            OverlordDB.lastVictoryFrontId = victoryFrontId
+        end
+    end
+
+    local CONFIG_DEFAULTS = {
+        uiVisible = true,
+        soundEnabled = true,
+        debug = false,
+        uiScale = 1.0,
+        notificationChatFrame = 0,
+        mapOverlayOpacity = 1.0,
+        minimapOverlayOpacity = 0.2,
+        showMinimapButton = true,
+        showMinimapCaptureZones = true,
+        mapPathOpacity = 1.0,
+        autoWaypointNextObjective = true,
+    }
+    for k, v in pairs(CONFIG_DEFAULTS) do
+        if OverlordDB.config[k] == nil then
+            OverlordDB.config[k] = v
+        end
+    end
+    -- 1.0.32 : zones de la minicarte a 50 % par defaut (plaque pleine jugee genante).
+    -- Passage unique pour les installations existantes ; le choix suivant est garde.
+    if not OverlordDB.config.minimapOpacityDefault50 then
+        OverlordDB.config.minimapOpacityDefault50 = true
+        if tonumber(OverlordDB.config.minimapOverlayOpacity) == 1.0 then
+            OverlordDB.config.minimapOverlayOpacity = 0.2
+        end
+    end
+    -- 1.2.0 : systeme de bois retire ; purge des ensembles d'evenements devenus inutiles.
+    OverlordDB.dominationBoostEvents, OverlordDB.dominationWoodEvents = nil, nil
+    -- 1.2.0 : 20 % par defaut (cran le plus bas). Passage unique pour ceux restes
+    -- sur l'ancien defaut de 50 % ; toute autre valeur choisie est conservee.
+    if not OverlordDB.config.minimapOpacityDefault20 then
+        OverlordDB.config.minimapOpacityDefault20 = true
+        if tonumber(OverlordDB.config.minimapOverlayOpacity) == 0.5 then
+            OverlordDB.config.minimapOverlayOpacity = 0.2
+        end
+    end
+    OverlordDB.config.popupsSeen = OverlordDB.config.popupsSeen or {}
+    OverlordDB.config.popupsDailyShown = OverlordDB.config.popupsDailyShown or {}
+
+
+    if Overlord.Fronts and OverlordDB.activeFrontId and Overlord.Fronts:GetFront(OverlordDB.activeFrontId) then
+        Overlord.Fronts:Activate(OverlordDB.activeFrontId)
+    end
+
+    -- Detecte la faction du joueur et applique la configuration correspondante
+    self.PlayerFaction = UnitFactionGroup("player")
+    if not self.PlayerFaction then
+        C_Timer.After(1, function()
+            if not Overlord.IsInitialized then Overlord:Initialize() end
+        end)
+        return
+    end
+    self:RequireCaptureSync("login")
+    self.Zones:ApplyFactionConfig(self.PlayerFaction)
+    -- Fortin : restore in_progress apres PlayerFaction (decroissance offline = meme moteur que les fronts)
+    if Overlord.Outpost then Overlord.Outpost:RestoreOutposts() end
+
+    -- Changement de faction (ex: deconnexion Alliance, reconnexion Horde) : l'etat des zones
+    -- (qui controle quoi) est partage entre factions - on restaure pour avoir la map a jour.
+    -- On garde WaitingForSync pour ne pas repondre aux SR tant qu'on n'a pas recu de sync
+    -- (evite de pousser des donnees potentiellement stale si on etait desync avant la deco).
+    local lastFaction = OverlordDB.lastSessionFaction
+    local factionSwitched = (lastFaction and lastFaction ~= "" and lastFaction ~= self.PlayerFaction)
+    local poolChanged = false
+    if factionSwitched then
+        self.WaitingForSync = true
+        -- Timeout : si personne ne repond sous 60s, on redevient actif
+        -- (evite que l'addon reste muet indefiniment si aucun pair n'est en ligne)
+        C_Timer.After(60, function()
+            if Overlord.WaitingForSync then
+                Overlord.WaitingForSync = nil
+            end
+        end)
+    end
+
+    -- Changement de pool (ex. perso FR puis perso EU) : zero updatedAt silencieux
+    -- pour accepter les syncs du nouveau pool sans message ni reset visible.
+    local currentPool = GetCurrentPoolForSavedVars()
+    local currentLeaderboardPool = self:GetCurrentLeaderboardSavedVarsPool()
+    -- SwapRulesetWorld already saved this session's pool: compare with the one before.
+    local lastPool = self._rulesetPreviousPool or OverlordDB.lastSessionPool
+    if Overlord.RealmPools and Overlord.RealmPools.NormalizeRegionPool then
+        lastPool = Overlord.RealmPools:NormalizeRegionPool(lastPool or "")
+    elseif type(lastPool) ~= "string" then
+        lastPool = ""
+    else
+        lastPool = lastPool:lower()
+        if lastPool == "fr" or lastPool == "de" then lastPool = "eu" end
+    end
+    OverlordDB.leaderboardsByPool = OverlordDB.leaderboardsByPool or {}
+    -- Seed the global target with the standalone legacy root before union.
+    if type(OverlordDB.leaderboardsByPool[currentLeaderboardPool]) ~= "table" then
+        -- 1.4.0: a new ruleset campaign starts empty; only the PvP campaign
+        -- ("global") inherits the legacy root (OverlordDB.leaderboard).
+        -- The legacy root may already be another ruleset's bucket (PvE alt first):
+        -- never let two campaigns share one table.
+        local legacyRoot = OverlordDB.leaderboard
+        for _, bucket in pairs(OverlordDB.leaderboardsByPool) do
+            if bucket == legacyRoot then legacyRoot = nil; break end
+        end
+        OverlordDB.leaderboardsByPool[currentLeaderboardPool] =
+            (currentLeaderboardPool == "global" and legacyRoot)
+            or EmptyLeaderboardBucket()
+    end
+    self:UnifyEuropeanLeaderboardBuckets()
+    OverlordDB.leaderboard = OverlordDB.leaderboardsByPool[currentLeaderboardPool]
+    if lastPool ~= "" and lastPool ~= currentPool then
+        poolChanged = true
+        -- 1.4.0: since regions merged, a pool change is a ruleset change (alt on
+        -- another ruleset, account-wide SavedVariables). That map belongs to
+        -- another world: every zone, captured ones included, yields to the first
+        -- state its own ruleset sends (updatedAt = 0).
+        for _, savedData in pairs(OverlordDB.zones or {}) do
+            if type(savedData) == "table" and savedData.status ~= "in_progress" then
+                savedData.updatedAt = 0
+            end
+        end
+        for _, zone in ipairs(Overlord.ZoneDatabase or {}) do
+            if zone.status ~= "in_progress" then zone.updatedAt = 0 end
+        end
+        DebugOverlord("Changement de pool : " .. lastPool .. " -> " .. currentPool .. " (updatedAt = 0)")
+    end
+    OverlordDB.lastSessionPool = currentPool
+    OverlordDB.lastSessionRealmKey = nil
+
+    self.IsInitialized = true
+    -- Toujours dans le chat general par defaut : repere visuel pour nouveau joueur /reload.
+    print("|cFF00FF00[Overlord]|r " .. string.format(L.ADDON_LOADED, self.Version))
+
+    -- Message login : uniquement si les donnees locales sont vides/stale (pas les veterans a jour).
+    if factionSwitched or poolChanged or self:ZonesNeedLoginSyncNotice() then
+        local syncMsg = (L and L.SYNC_LOGIN_WAIT) or "Synchronizing zone data... Map will update shortly."
+        self:PrintNotification("|cFFFFD100[Overlord]|r " .. syncMsg)
+    end
+
+    local inInstanceAtInit = IsInInstance()
+    if not inInstanceAtInit then
+        local okInst, _, instType = pcall(GetInstanceInfo)
+        if okInst and instType and instType ~= "none" and instType ~= "" then
+            inInstanceAtInit = true
+        end
+    end
+    self:PrimeLoginInstanceBarrier(inInstanceAtInit)
+
+    -- Initialisation differee et etalee : chaque etape tourne sur une frame
+    -- distincte. Le precedent unique C_Timer.After(0) deplacait le pic
+    -- ADDON_LOADED mais empilait encore restore, classement et dix modules.
+    C_Timer.After(0, function()
+        if not Overlord.IsInitialized or Overlord._deferredModuleInitStarted then return end
+        Overlord._deferredModuleInitStarted = true
+
+        local loginInitStages = {}
+        local function AddLoginInitStage(name, callback, required)
+            loginInitStages[#loginInitStages + 1] = {
+                name = name,
+                callback = callback,
+                required = required == true,
+            }
+        end
+
+        AddLoginInitStage("Restore", function()
+            Overlord:RestoreZoneState()
+            if Overlord.Zones and Overlord.Zones.FinalizeRestoredInProgressAfterReload then
+                C_Timer.After(1, function()
+                    if not Overlord.IsInitialized or Overlord.InstanceSuspended then return end
+                    if not Overlord._deferredModuleInitDone then
+                        Overlord._loginFinalizeRestoreDeferred = true
+                        return
+                    end
+                    Overlord.Zones:FinalizeRestoredInProgressAfterReload()
+                end)
+            end
+            if Overlord.Zones and Overlord.Zones.PruneExpiredPhantomVictories then
+                Overlord.Zones:PruneExpiredPhantomVictories()
+            end
+        end)
+
+        AddLoginInitStage("Leaderboard", function()
+            if Overlord._europeanLeaderboardUnionPending then return false end
+            return Overlord.Leaderboard:Initialize(true)
+        end, true)
+
+        AddLoginInitStage("Campaign", function()
+            -- Le reset/archive ne doit jamais detacher un bucket pendant l'union
+            -- EU tranchee. Restore territorial est deja termine; les etapes suivantes
+            -- attendent simplement le commit sans bloquer la frame.
+            if Overlord._europeanLeaderboardUnionPending then return false end
+            -- Ces deux migrations etaient deja isolees : leur echec ne doit pas
+            -- empecher les restaurations suivantes de s'executer.
+            Overlord._loginWeeklyResetStageActive = true
+            local okReset, errReset = pcall(Overlord.CheckWeeklyReset, Overlord)
+            Overlord._loginWeeklyResetStageActive = nil
+            Overlord._loginWeeklyResetDeferred = nil
+            if Overlord._loginWeeklyResetTimerStopped then
+                Overlord._loginWeeklyResetTimerStopped = nil
+                Overlord:ScheduleNextReset()
+            end
+            if not okReset and OverlordDB and OverlordDB.config and OverlordDB.config.debug then
+                print("|cFFFF4444[Overlord:dbg]|r CheckWeeklyReset (login): " .. tostring(errReset))
+            end
+            if Overlord.Leaderboard and Overlord.Leaderboard.RestoreLocalKillsFromLatestHistoryIfNeeded then
+                Overlord.Leaderboard:RestoreLocalKillsFromLatestHistoryIfNeeded()
+            end
+            -- Filet anti-perte : restaure le classement complet recu si le snapshot appartient a la
+            -- campagne courante (recuperation apres faux reset / crash). Fusion max(), pas de rebroadcast.
+            if Overlord.Leaderboard and Overlord.Leaderboard.RestoreFullLadderFromSnapshotIfNeeded then
+                Overlord.Leaderboard:RestoreFullLadderFromSnapshotIfNeeded()
+            end
+            return true
+        end, true)
+
+        -- History 8.0.7, alias de personnages et index account-wide peuvent contenir
+        -- des milliers de lignes. La barriere Lifetime les traite par tranches apres
+        -- le reset/restore Campaign et avant tout consumer Sync/UI.
+        AddLoginInitStage("Lifetime", function()
+            if not Overlord.LifetimeStats
+                or not Overlord.LifetimeStats.EnsurePrepared then return true end
+            return Overlord.LifetimeStats:EnsurePrepared(true)
+        end, true)
+
+        -- RestoreFullLadderFromSnapshotIfNeeded peut enrichir le bucket apres la
+        -- premiere barriere Leaderboard. Revalider les index avant d'armer Sync ;
+        -- si rien n'a change, ce stage reste un simple test O(1).
+        AddLoginInitStage("NetworkIndexes", function()
+            if not Overlord.Leaderboard
+                or not Overlord.Leaderboard.EnsureNetworkHotIndexesPrepared then return true end
+            return Overlord.Leaderboard:EnsureNetworkHotIndexesPrepared()
+        end, true)
+
+        -- La migration/recomposition LOC peut parcourir des milliers de couples et
+        -- jusqu'a 5000 evenements par ligne. Construire son snapshot pagine avant Sync
+        -- garantit que toute reponse SR reste une lecture O(1) du cache publie.
+        AddLoginInitStage("OutpostLedger", function()
+            if not Overlord.Leaderboard
+                or not Overlord.Leaderboard.EnsureOutpostLedgerPrepared then return true end
+            return Overlord.Leaderboard:EnsureOutpostLedgerPrepared(true)
+        end, true)
+
+        for _, mod in ipairs({ "Ressources", "Combat" }) do
+            local moduleName = mod
+            if Overlord[moduleName] then
+                AddLoginInitStage(moduleName, function()
+                    return Overlord[moduleName]:Initialize()
+                end, false)
+            end
+        end
+
+        for _, mod in ipairs({
+            "General", "Sync", "ZoneIndicator", "Shard",
+        }) do
+            local moduleName = mod
+            if Overlord[moduleName] then
+                AddLoginInitStage(moduleName, function()
+                    return Overlord[moduleName]:Initialize()
+                end)
+            end
+        end
+
+        AddLoginInitStage("Capture", function()
+            Overlord:ResumeCaptureAfterLoginBarrier()
+        end)
+
+        AddLoginInitStage("LoginSync", function()
+            if not Overlord.Sync then return end
+            Overlord._syncDeferredInitDone = true
+            Overlord._loginChannelPending = nil
+            if Overlord.InstanceSuspended or IsInInstance() then return end
+            Overlord:StartStrategicSiteLoop()
+            -- Join canal tot : le SR a +1,5 s passait souvent avant GetChannelId() (PLAYER_LOGIN +5 s).
+            if Overlord.Sync.JoinChannel then Overlord.Sync:JoinChannel(1) end
+            if Overlord.Sync.StartChannelRetryLoop then Overlord.Sync:StartChannelRetryLoop() end
+            if Overlord.Sync.StartProximitySync then Overlord.Sync:StartProximitySync() end
+            if Overlord.Sync.StartPassiveSync then Overlord.Sync:StartPassiveSync() end
+            if Overlord.Sync.StartGuildIdentityHeartbeat then
+                Overlord.Sync:StartGuildIdentityHeartbeat()
+            end
+            if OverlordDB then OverlordDB._dominationPoolResyncPending = nil end
+            if Overlord.Sync.StartLoginCaptureSyncBurst then
+                Overlord.Sync:StartLoginCaptureSyncBurst()
+            elseif Overlord.Sync.SendSyncRequest then
+                C_Timer.After(1.5, function()
+                    if Overlord.InstanceSuspended or not Overlord.Sync then return end
+                    Overlord.Sync:SendSyncRequest()
+                end)
+            end
+        end)
+
+        AddLoginInitStage("Settings", function()
+            if Overlord.SettingsPanel and Overlord.SettingsPanel.Register then
+                Overlord.SettingsPanel:Register()
+            end
+        end)
+
+        -- UI apres ses dependances. Si une machine tres chargee atteint le timer
+        -- d'auto-affichage de PLAYER_LOGIN avant cette etape, ce rattrapage evite
+        -- que UI:Show() ait ete un no-op faute de mainFrame.
+        local loginUiBuilt = false
+        AddLoginInitStage("UI", function()
+            Overlord.UI:Initialize()
+            loginUiBuilt = true
+        end)
+        -- First Show (and the dock it builds) in the next frame, not stacked on the panel
+        -- build: the largest single login frame. Skipped if the build failed, as before.
+        AddLoginInitStage("UIShow", function()
+            if loginUiBuilt and not Overlord.InstanceSuspended and Overlord.InActiveFront
+                and OverlordDB and OverlordDB.config and OverlordDB.config.uiVisible
+                and Overlord.UI.Show then
+                Overlord.UI:Show({ skipRefresh = true })
+                Overlord:ScheduleLoginUiFullRefresh(0)
+            end
+        end)
+
+        -- Le bouton d'appel conserve sa frame dediee.
+        if Overlord.Button then
+            AddLoginInitStage("Button", function()
+                Overlord.Button:Initialize()
+            end)
+        end
+
+        local loginInitStageIndex = 0
+        local RunNextLoginInitStage
+        RunNextLoginInitStage = function()
+            if not Overlord.IsInitialized then return end
+            loginInitStageIndex = loginInitStageIndex + 1
+            local stage = loginInitStages[loginInitStageIndex]
+        if not stage then
+            Overlord._deferredModuleInitDone = true
+            Overlord._loginInitStage = "complete"
+            Overlord._loginInitState = "ready"
+            Overlord._loginInitError = nil
+            Overlord:FlushDeferredCaptureRelease()
+            Overlord:FlushDeferredInstanceTransition()
+            if Overlord._loginFactionChangeDeferred then
+                Overlord:RequestFactionChangeReconcile()
+            end
+            if Overlord._loginFinalizeRestoreDeferred then
+                Overlord._loginFinalizeRestoreDeferred = nil
+                if not Overlord.InstanceSuspended and Overlord.Zones
+                    and Overlord.Zones.FinalizeRestoredInProgressAfterReload then
+                    Overlord.Zones:FinalizeRestoredInProgressAfterReload()
+                end
+            end
+            if Overlord._loginWeeklyResetDeferred then
+                Overlord._loginWeeklyResetDeferred = nil
+                C_Timer.After(0, function()
+                    if not Overlord.IsInitialized then return end
+                    pcall(Overlord.CheckWeeklyReset, Overlord)
+                    Overlord:ScheduleNextReset()
+                end)
+            end
+            Overlord:FlushDeferredLoginIntents()
+            return
+            end
+
+            Overlord._loginInitStage = stage.name
+            Overlord._loginInitState = "running"
+            Overlord._loginInitError = nil
+            local ok, completedOrErr = pcall(stage.callback)
+            if not ok then
+                Overlord._loginInitState = "error"
+                Overlord._loginInitError = tostring(completedOrErr)
+                Overlord:PrintNotification("|cFFFF0000[Overlord]|r "
+                    .. string.format(L.MODULE_ERROR, stage.name, tostring(completedOrErr)))
+                -- Les handlers Sync ne doivent jamais demarrer apres une exception
+                -- du sanitizer/index du classement. Les autres modules restent
+                -- best-effort afin qu'une erreur UI n'annule pas tout l'addon.
+                if stage.required then return end
+            elseif completedOrErr == "blocked" then
+                Overlord._loginInitState = "blocked"
+                -- Migration/index de securite en echec terminal : fail closed.
+                -- Ne pas initialiser Sync et ne pas repoller ce stage chaque frame.
+                return
+            elseif completedOrErr == "waiting" then
+                Overlord._loginInitState = "waiting"
+                loginInitStageIndex = loginInitStageIndex - 1
+                C_Timer.After(1, RunNextLoginInitStage)
+                return
+            elseif completedOrErr == false then
+                Overlord._loginInitState = "pending"
+                loginInitStageIndex = loginInitStageIndex - 1
+                C_Timer.After(0, RunNextLoginInitStage)
+                return
+            end
+            C_Timer.After(0, RunNextLoginInitStage)
+        end
+        RunNextLoginInitStage()
+    end)
+end
+
+function Overlord:MergeLeaderboardBucketInto(target, source, onDone)
+    if type(target) ~= "table" or type(source) ~= "table" or target == source then
+        if onDone then onDone(target) end
+        return target
+    end
+
+    local phases = { "kills", "captureCount", "bountyTimes", "bountyKills", "captures", "playerInfo" }
+    local phaseIndex, cursor = 1, nil
+    -- Une seule ligne captures peut elle-meme contenir une liste legacy enorme. Le
+    -- budget externe par joueur ne suffit donc pas : conserver une continuation
+    -- jusque dans les deux listes evite une frame monolithique avant le nettoyage.
+    local captureMergeState = nil
+    local function classRank(class)
+        if not class or class == "" then return 0 end
+        if class == "UNKNOWN" then return 1 end
+        return 2
+    end
+    local function cleanGuild(name)
+        if type(name) ~= "string" then return "" end
+        name = (name:gsub("[|=:,]", ""):match("^%s*(.-)%s*$") or "")
+        return name:sub(1, 96)
+    end
+    local function cleanLocale(tag)
+        if type(tag) ~= "string" then return "" end
+        return tag:lower():match("^([a-z][a-z][a-z]?[a-z]?[a-z]?)$") or ""
+    end
+    local function cleanPool(pool)
+        if Overlord.RealmPools and Overlord.RealmPools.NormalizeRegionPool then
+            return Overlord.RealmPools:NormalizeRegionPool(pool)
+        end
+        if type(pool) ~= "string" then return "" end
+        pool = pool:lower()
+        if pool == "global" or pool == "us" or pool == "na" or pool == "eu"
+            or pool == "fr" or pool == "de" then return "global" end
+        return ""
+    end
+    local function guildHash(name)
+        local h = 0
+        name = (name or ""):lower()
+        for i = 1, #name do h = (h * 31 + name:byte(i)) % 2147483647 end
+        return h
+    end
+    local function guildWins(newGuild, newAt, curGuild, curAt)
+        newGuild, curGuild = cleanGuild(newGuild), cleanGuild(curGuild)
+        newAt, curAt = math.max(0, math.floor(tonumber(newAt) or 0)),
+            math.max(0, math.floor(tonumber(curAt) or 0))
+        if curGuild == "" and curAt <= 0 then return newGuild ~= "" or newAt > 0 end
+        if newGuild == "" and newAt <= 0 then return false end
+        if newAt ~= curAt then return newAt > curAt end
+        if newGuild == curGuild then return false end
+        if newGuild:lower() == curGuild:lower() then return newGuild < curGuild end
+        if newGuild == "" then return true end
+        if curGuild == "" then return false end
+        local hn, hc = guildHash(newGuild), guildHash(curGuild)
+        if hn ~= hc then return hn < hc end
+        return newGuild:lower() < curGuild:lower()
+    end
+    local function mergePlayerInfo(name, sourceInfo)
+        if type(sourceInfo) ~= "table" then return end
+        target.playerInfo = target.playerInfo or {}
+        local info = target.playerInfo[name]
+        if type(info) ~= "table" then info = {}; target.playerInfo[name] = info end
+        local sourceClass = type(sourceInfo.class) == "string" and sourceInfo.class or ""
+        local targetClass = type(info.class) == "string" and info.class or ""
+        if classRank(sourceClass) > classRank(targetClass)
+            or (classRank(sourceClass) == classRank(targetClass) and sourceClass ~= ""
+                and (targetClass == "" or sourceClass < targetClass)) then
+            info.class = sourceClass
+        end
+        info.level = math.max(tonumber(info.level) or 0, tonumber(sourceInfo.level) or 0)
+        local sourceFaction = type(sourceInfo.faction) == "string" and sourceInfo.faction or ""
+        local targetFaction = type(info.faction) == "string" and info.faction or ""
+        if sourceFaction ~= "Alliance" and sourceFaction ~= "Horde" then sourceFaction = "" end
+        if targetFaction ~= "Alliance" and targetFaction ~= "Horde" then targetFaction = "" end
+        info.faction = targetFaction
+        if sourceFaction ~= "" and (targetFaction == "" or sourceFaction < targetFaction) then
+            info.faction = sourceFaction
+        end
+        info.factionAt = math.max(tonumber(info.factionAt) or 0,
+            tonumber(sourceInfo.factionAt) or 0)
+        local sourceLocale, targetLocale = cleanLocale(sourceInfo.locale), cleanLocale(info.locale)
+        info.locale = targetLocale
+        if sourceLocale ~= "" and (targetLocale == "" or sourceLocale < targetLocale) then
+            info.locale = sourceLocale
+        end
+        local sourceGuildAt, targetGuildAt = tonumber(sourceInfo.guildAt) or 0,
+            tonumber(info.guildAt) or 0
+        local sourceGuild, targetGuild = cleanGuild(sourceInfo.guild), cleanGuild(info.guild)
+        local sourceGuildAuth, targetGuildAuth = sourceInfo.guildAuth == true,
+            info.guildAuth == true
+        if sourceGuild == targetGuild then
+            info.guild = sourceGuild
+            info.guildAt = math.max(sourceGuildAt, targetGuildAt)
+            info.guildAuth = sourceGuildAuth or targetGuildAuth or nil
+        elseif (sourceGuildAuth and not targetGuildAuth)
+            or (sourceGuildAuth == targetGuildAuth
+                and guildWins(sourceGuild, sourceGuildAt, targetGuild, targetGuildAt)) then
+            info.guild = sourceGuild
+            info.guildAt = sourceGuildAt
+            info.guildAuth = sourceGuildAuth or nil
+        else
+            info.guild = targetGuild
+            info.guildAt = targetGuildAt
+            info.guildAuth = targetGuildAuth or nil
+        end
+        local sourceRaceAt, targetRaceAt = tonumber(sourceInfo.raceAt) or 0,
+            tonumber(info.raceAt) or 0
+        local sourceRace = type(sourceInfo.race) == "string" and sourceInfo.race or ""
+        local targetRace = type(info.race) == "string" and info.race or ""
+        local sourceSex, targetSex = math.floor(tonumber(sourceInfo.raceSex) or 0),
+            math.floor(tonumber(info.raceSex) or 0)
+        if sourceSex ~= 2 and sourceSex ~= 3 then sourceSex = 0 end
+        if targetSex ~= 2 and targetSex ~= 3 then targetSex = 0 end
+        if sourceRace ~= "" and (targetRace == "" or sourceRaceAt > targetRaceAt
+            or (sourceRaceAt == targetRaceAt and sourceRace < targetRace)) then
+            info.race = sourceRace
+            info.raceSex = sourceSex
+            info.raceAt = sourceRaceAt
+        elseif sourceRace ~= "" and sourceRace == targetRace
+            and sourceRaceAt == targetRaceAt
+            and sourceSex > 0 and (targetSex == 0 or sourceSex < targetSex) then
+            info.raceSex = sourceSex
+        end
+        local sourcePool, targetPool = cleanPool(sourceInfo.pool), cleanPool(info.pool)
+        info.pool = targetPool
+        if sourcePool ~= "" and (targetPool == "" or sourcePool < targetPool) then
+            info.pool = sourcePool
+        end
+    end
+    local function mergeEntry(field, name, value)
+        if field == "playerInfo" then
+            mergePlayerInfo(name, value)
+        else
+            target[field] = target[field] or {}
+            local n = tonumber(value) or 0
+            if n > (tonumber(target[field][name]) or 0) then target[field][name] = n end
+        end
+    end
+    local function StepCaptureMerge(state)
+        if state.phase == "target" then
+            local zoneId = state.target[state.index]
+            if zoneId ~= nil then
+                state.seen[zoneId] = true
+                state.index = state.index + 1
+                return false
+            end
+            state.phase, state.index = "source", 1
+        end
+        local zoneId = state.source[state.index]
+        if zoneId ~= nil then
+            if not state.seen[zoneId] then
+                state.seen[zoneId] = true
+                state.target[#state.target + 1] = zoneId
+            end
+            state.index = state.index + 1
+            return false
+        end
+        return true
+    end
+    local runSlice
+    runSlice = function()
+        local processed = 0
+        local started = debugprofilestop and debugprofilestop() or 0
+        local function BudgetSpent()
+            local elapsed = debugprofilestop and (debugprofilestop() - started) or 0
+            return processed >= 64 or elapsed >= 1.5
+        end
+        local function ContinueLater()
+            if C_Timer and C_Timer.After then C_Timer.After(0, runSlice) end
+        end
+        while phaseIndex <= #phases do
+            if captureMergeState then
+                local state = captureMergeState
+                local ok, completeOrErr = pcall(StepCaptureMerge, state)
+                if not ok then
+                    if onDone then onDone(target, false) end
+                    return
+                end
+                processed = processed + 1
+                if completeOrErr then captureMergeState = nil end
+                if BudgetSpent() then ContinueLater(); return end
+            else
+            local field = phases[phaseIndex]
+            local sourceTable = type(source[field]) == "table" and source[field] or {}
+            local name, value = next(sourceTable, cursor)
+            if name == nil then
+                phaseIndex, cursor = phaseIndex + 1, nil
+            else
+                cursor = name
+                local ok = true
+                if field == "captures" then
+                    if type(value) == "table" then
+                        target.captures = target.captures or {}
+                        local zones = target.captures[name]
+                        if type(zones) ~= "table" then
+                            zones = {}
+                            target.captures[name] = zones
+                        end
+                        captureMergeState = {
+                            target = zones,
+                            source = value,
+                            seen = {},
+                            phase = "target",
+                            index = 1,
+                        }
+                    end
+                else
+                    ok = pcall(mergeEntry, field, name, value)
+                end
+                if not ok then
+                    if onDone then onDone(target, false) end
+                    return
+                end
+                processed = processed + 1
+                if BudgetSpent() then ContinueLater(); return end
+            end
+            end
+        end
+        target.campaignStart = math.max(tonumber(target.campaignStart) or 0,
+            tonumber(source.campaignStart) or 0)
+        target.campaignId = math.max(tonumber(target.campaignId) or 0,
+            tonumber(source.campaignId) or 0)
+        if onDone then onDone(target, true) end
+    end
+    runSlice()
+    return target
+end
+
+-- 1.4.0: each ruleset is its own world, but OverlordDB is account-wide. These
+-- saved tables describe one world: front zones, front victories and truces,
+-- outposts and fortresses (states, tenants, capture counts).
+local RULESET_WORLD_KEYS = {
+    "zones", "frontVictories", "frontTruceResetEpoch",
+    "outposts", "outpostTenants", "outpostCaptureCounts",
+}
+-- Legacy single-victory fields still written and read as a fallback.
+local RULESET_WORLD_SCALARS = { "lastVictoryTimestamp", "lastVictoryFaction", "lastVictoryFrontId" }
+
+-- 1.4.1: the 1.4.0 Normal/RP/Hardcore pools may hold PvP rows (a 1.3.x snapshot
+-- served between those clients). Drop everything saved under those tags once:
+-- ladders, parked worlds, victory journals and a snapshot of that pool. If the
+-- live world itself was one of them (lastSessionPool), it restarts empty.
+function Overlord:DropRetiredRulesetPools(currentPool)
+    local rp = self.RealmPools
+    if not OverlordDB or not rp or type(rp.RETIRED_POOLS) ~= "table" then return false end
+    if OverlordDB.retiredRulesetPoolsDropped == 1 then return false end
+    OverlordDB.retiredRulesetPoolsDropped = 1
+    local retired = {}
+    for _, pool in ipairs(rp.RETIRED_POOLS) do retired[pool] = true end
+    local function drop(t)
+        if type(t) ~= "table" then return end
+        for pool in pairs(retired) do t[pool] = nil end
+    end
+    drop(OverlordDB.leaderboardsByPool)
+    drop(OverlordDB.worldsByPool)
+    drop(OverlordDB.leaderboardPreviousCampaigns)
+    drop(type(OverlordDB.dominationVictoryEvents) == "table" and OverlordDB.dominationVictoryEvents.byPool)
+    local snapshot = OverlordDB.leaderboardSnapshot
+    if type(snapshot) == "table" and retired[tostring(snapshot.pool or "")] then
+        OverlordDB.leaderboardSnapshot = nil
+    end
+    local cache = OverlordDB.leaderboardDisplayCache
+    if type(cache) == "table" and retired[tostring(cache.pool or "")] then
+        OverlordDB.leaderboardDisplayCache = nil
+    end
+    local last = tostring(OverlordDB.lastSessionPool or "")
+    if retired[last] then
+        -- The live tables are that retired world: drop them and bring back this
+        -- pool's parked world if it is from this week (e.g. back on PvP after a
+        -- Normal alt), otherwise start from the week's initial state.
+        local worlds = type(OverlordDB.worldsByPool) == "table" and OverlordDB.worldsByPool or {}
+        local mine = worlds[currentPool]
+        worlds[currentPool] = nil
+        if type(mine) ~= "table"
+            or not self:CampaignEpochsMatch(mine.epoch, tonumber(OverlordDB.lastResetTimestamp) or 0) then
+            mine = nil
+        end
+        for _, key in ipairs(RULESET_WORLD_KEYS) do
+            local value = mine and mine[key]
+            OverlordDB[key] = type(value) == "table" and value or {}
+        end
+        for _, key in ipairs(RULESET_WORLD_SCALARS) do OverlordDB[key] = mine and mine[key] or nil end
+        -- The legacy root is that retired ladder: never let any campaign reseed
+        -- from it (Initialize reseeds the current pool's bucket just after).
+        OverlordDB.leaderboard = nil
+        OverlordDB.lastSessionPool = currentPool
+    end
+    return true
+end
+
+-- On a ruleset change, park the world we leave and bring back ours if it is
+-- from this same campaign week; otherwise start from the week's initial state.
+-- Runs at the very start of the login, before zones and outposts are restored.
+function Overlord:SwapRulesetWorld(currentPool)
+    if not OverlordDB or type(currentPool) ~= "string" or currentPool == "" then return false end
+    -- Once per session: Initialize can restart (faction not known yet) before
+    -- lastSessionPool is saved; a second swap would park the fresh empty world
+    -- over the real one.
+    if self._rulesetWorldChecked then return false end
+    self._rulesetWorldChecked = true
+    local rp = self.RealmPools
+    local function norm(pool)
+        return rp and rp.NormalizeRegionPool and rp:NormalizeRegionPool(pool or "") or ""
+    end
+    -- Outpost rows carry the pool of the campaign that stamped them: trust the
+    -- majority stamp over the last session (an alt first logged before this
+    -- check kept PvP data). Save this session's pool now: a logout before the
+    -- rest of Initialize must not mislabel the swapped world next time.
+    local votes, stamped, best = {}, nil, 0
+    for _, st in pairs(type(OverlordDB.outposts) == "table" and OverlordDB.outposts or {}) do
+        local p = type(st) == "table" and norm(st.pool) or ""
+        if p ~= "" then
+            votes[p] = (votes[p] or 0) + 1
+            if votes[p] > best or (votes[p] == best and p < stamped) then
+                stamped, best = p, votes[p]
+            end
+        end
+    end
+    local previous = norm(OverlordDB.lastSessionPool)
+    self._rulesetPreviousPool = previous
+    OverlordDB.lastSessionPool = currentPool
+    local leaving = stamped or previous
+    if leaving == "" or leaving == currentPool then return false end
+    local parked = type(OverlordDB.worldsByPool) == "table" and OverlordDB.worldsByPool or {}
+    OverlordDB.worldsByPool = parked
+    local week = tonumber(OverlordDB.lastResetTimestamp) or 0
+    local leavingWorld = { epoch = week }
+    for _, key in ipairs(RULESET_WORLD_KEYS) do leavingWorld[key] = OverlordDB[key] end
+    for _, key in ipairs(RULESET_WORLD_SCALARS) do leavingWorld[key] = OverlordDB[key] end
+    local mine = parked[currentPool]
+    parked[currentPool] = nil
+    parked[leaving] = leavingWorld
+    -- Same campaign week, with the usual tolerance (the reset anchor may be
+    -- nudged mid-week); an older world never comes back.
+    if type(mine) ~= "table" or not self:CampaignEpochsMatch(mine.epoch, week) then mine = nil end
+    for _, key in ipairs(RULESET_WORLD_KEYS) do
+        local value = mine and mine[key]
+        OverlordDB[key] = type(value) == "table" and value or {}
+    end
+    for _, key in ipairs(RULESET_WORLD_SCALARS) do
+        OverlordDB[key] = mine and mine[key] or nil
+    end
+    return true
+end
+
+-- Migration sans perte vers un unique bucket EU. Les anciens buckets fr/de ne
+-- restent pas dupliques : toutes les prochaines sessions europeennes pointent sur eu.
+function Overlord:UnifyEuropeanLeaderboardBuckets()
+    if not OverlordDB or self:GetCurrentLeaderboardSavedVarsPool() ~= "global" then return end
+    if self._europeanLeaderboardUnionPending then return end
+    local buckets = OverlordDB.leaderboardsByPool or {}
+    OverlordDB.leaderboardsByPool = buckets
+    local poolOrder = { "global", "us", "eu", "fr", "de", "na" }
+    if tonumber(OverlordDB.globalLeaderboardUnifiedVersion) == 1
+        and type(buckets.global) == "table" and buckets.us == nil
+        and buckets.eu == nil and buckets.fr == nil and buckets.de == nil
+        and buckets.na == nil then
+        return
+    end
+    local expectedEpoch = tonumber(OverlordDB.lastResetTimestamp) or 0
+    if expectedEpoch <= 0 then
+        for _, pool in ipairs(poolOrder) do
+            local bucket = buckets[pool]
+            expectedEpoch = math.max(expectedEpoch,
+                type(bucket) == "table" and tonumber(bucket.campaignStart) or 0)
+        end
+    end
+    local function bucketHasProgress(bucket)
+        if type(bucket) ~= "table" then return false end
+        for _, field in ipairs({ "kills", "captureCount", "captures", "bountyTimes", "bountyKills" }) do
+            if type(bucket[field]) == "table" and next(bucket[field]) ~= nil then return true end
+        end
+        return false
+    end
+    local function bucketIsCurrent(bucket)
+        if type(bucket) ~= "table" then return false end
+        local epoch = tonumber(bucket.campaignStart) or 0
+        if expectedEpoch <= 0 then return true end
+        -- Les anciennes versions n'estampillaient pas toujours le bucket actif.
+        -- Un ladder sans epoch mais avec scores est la seule copie disponible :
+        -- le promouvoir vers la campagne DB conserve les donnees au lieu de les masquer.
+        if epoch <= 0 and bucketHasProgress(bucket) then return true end
+        return epoch > 0 and math.abs(epoch - expectedEpoch) <= 36 * 3600
+    end
+    local unified = nil
+    -- Reutiliser un bucket existant in-place limite le pic de memoire de migration.
+    for _, pool in ipairs(poolOrder) do
+        local bucket = buckets[pool]
+        if bucketIsCurrent(bucket) then
+            if pool == "global" then unified = bucket; break end
+            if not unified then unified = bucket end
+        end
+    end
+    if not unified then
+        unified = EmptyLeaderboardBucket()
+        if expectedEpoch > 0 then
+            unified.campaignStart = expectedEpoch
+            unified.campaignId = self.TimestampToCampaignId
+                and self:TimestampToCampaignId(expectedEpoch) or 0
+        end
+    elseif (tonumber(unified.campaignStart) or 0) <= 0 and expectedEpoch > 0 then
+        unified.campaignStart = expectedEpoch
+        unified.campaignId = self.TimestampToCampaignId
+            and self:TimestampToCampaignId(expectedEpoch) or 0
+    end
+    local mergeSources = {}
+    for _, pool in ipairs(poolOrder) do
+        local bucket = buckets[pool]
+        local bucketEpoch = type(bucket) == "table" and tonumber(bucket.campaignStart) or 0
+        if type(bucket) == "table" and bucket ~= unified and bucketIsCurrent(bucket) then
+            mergeSources[#mergeSources + 1] = bucket
+        elseif type(bucket) == "table" and bucket ~= unified then
+            -- Ne jamais detruire un bucket d'une autre campagne ou sans provenance.
+            OverlordDB.legacyLeaderboardBucketsByPool = OverlordDB.legacyLeaderboardBucketsByPool or {}
+            local backupKey = pool .. ":" .. tostring(bucketEpoch)
+            OverlordDB.legacyLeaderboardBucketsByPool[backupKey] = bucket
+        end
+    end
+    -- Une source legacy rend aussi la cible legacy. Ecrire le minimum AVANT la
+    -- premiere tranche garantit qu'un /reload au milieu de l'union rejouera les
+    -- reparations Clean/dedup sur le bucket partiellement consolide.
+    local mergedRepairVersion = tonumber(unified.repairVersion) or 0
+    for i = 1, #mergeSources do
+        mergedRepairVersion = math.min(mergedRepairVersion,
+            tonumber(mergeSources[i].repairVersion) or 0)
+    end
+    unified.repairVersion = mergedRepairVersion
+    buckets.global = unified
+    self._europeanLeaderboardUnionPending = true
+    local sourceIndex = 0
+    local function mergeNext(_, previousSucceeded)
+        if previousSucceeded == false then
+            -- Conserver les sources intactes : la prochaine session pourra rejouer
+            -- l'union idempotente au lieu de valider un commit partiel.
+            self._europeanLeaderboardUnionPending = nil
+            return
+        end
+        sourceIndex = sourceIndex + 1
+        local source = mergeSources[sourceIndex]
+        if source then
+            self:MergeLeaderboardBucketInto(unified, source, mergeNext)
+            return
+        end
+        -- Commit seulement apres la derniere tranche : un /reload intermediaire garde
+        -- fr/de et rejoue une union max/idempotente, donc aucune donnee n'est perdue.
+        for _, pool in ipairs({ "us", "eu", "fr", "de", "na" }) do buckets[pool] = nil end
+        OverlordDB.globalLeaderboardUnifiedVersion = 1
+        OverlordDB.europeanLeaderboardUnifiedVersion = 1
+        self._europeanLeaderboardUnionPending = nil
+        local lb = self.Leaderboard
+        if lb and lb.kills == unified.kills then
+            if lb.MarkMetaDirty then lb:MarkMetaDirty() end
+            if lb.MarkDirty then lb:MarkDirty() end
+        end
+    end
+    mergeNext()
+end
+
+-- Corrige provisoirement les etats impossibles des capitales avant affichage / apres instance.
+-- Exemple : Stromgarde rouge cote Alliance alors que des zones qui dependent de Stromgarde
+-- sont deja bleues. Cette reparation locale n'est jamais une capture confirmee : aucun
+-- capturedTime n'est invente et updatedAt=0 laisse la sync reseau trancher.
+local function ReconcileBaseOwnershipSanity()
+    if not Overlord.ZoneDatabase or not Overlord.Zones then return false end
+
+    local changed = false
+    -- (updatedAt is a server stamp: the server clock, never the PC's.)
+    local now = Overlord.ServerNow()
+    local baseIds = {
+        Overlord.Fronts and Overlord.Fronts:GetCapitalId("Alliance"),
+        Overlord.Fronts and Overlord.Fronts:GetCapitalId("Horde"),
+    }
+    for _, zoneId in ipairs(baseIds) do
+        local zone = Overlord.Zones:GetZone(zoneId)
+        local fixedOwner = Overlord.Zones:GetBaseZoneFixedOwner(zoneId)
+        if zone and fixedOwner and zone.owner and zone.owner ~= fixedOwner then
+            local allOtherZonesOwned = true
+            for _, other in ipairs(Overlord.ZoneDatabase) do
+                if other.id ~= zoneId and other.owner ~= zone.owner then
+                    allOtherZonesOwned = false
+                    break
+                end
+            end
+
+            local zoneTs = zone.updatedAt or 0
+            local stateIsStaleOrOpen = (zoneTs == 0) or (now - zoneTs > 60)
+            -- 1.8.2: a capture dated in this campaign is an event of the network, kept
+            -- and ordered by its date like any other. This repair gave such a capital
+            -- back to its faction at every login and every entry on the front whenever
+            -- our map lacked one of the conqueror's zones (two sides that missed
+            -- captures of each other): the capture vanished here, the capital waited
+            -- for a map again and no complete map could be served meanwhile. Only a
+            -- state without a date of this campaign is still repaired.
+            local capturedAt = tonumber(zone.capturedTime) or 0
+            local campaignStart = (Overlord.GetCurrentCampaignStartTs and Overlord:GetCurrentCampaignStartTs()) or 0
+            local dated = capturedAt > 0 and campaignStart > 0 and capturedAt >= campaignStart
+            if not dated and not allOtherZonesOwned and stateIsStaleOrOpen then
+                zone.owner = fixedOwner
+                zone.status = "captured"
+                zone.killsCurrent = 0
+                zone.holdTimeElapsed = 0
+                zone.isHolding = false
+                zone.isContested = false
+                zone.isPaused = false
+                zone.holdStartTime = nil
+                zone.previousOwner = nil
+                zone.holdTimeRequired = 120
+                zone.capturedTime = nil
+                zone.updatedAt = 0
+                if Overlord.Zones.ClearCaptureFinalUnattestedState then
+                    Overlord.Zones:ClearCaptureFinalUnattestedState(zone)
+                end
+                -- Etat d'affichage provisoire : il ne doit ni gagner un conflit
+                -- de fraicheur ni etre pris pour une preuve de capture reseau.
+                zone._loginSyncUnconfirmed = true
+                changed = true
+            end
+        end
+    end
+
+    return changed
+end
+
+-- Applique les champs communs savedData -> objet zone en memoire.
+local function ApplySavedBaseFields(zone, savedData)
+    zone.status = savedData.status or "locked"
+    zone.killsCurrent      = tonumber(savedData.killsCurrent)      or 0
+    zone.allyKillsCurrent  = tonumber(savedData.allyKillsCurrent)  or 0
+    zone.enemyKillsCurrent = tonumber(savedData.enemyKillsCurrent) or 0
+    zone.capturedTime = tonumber(savedData.capturedTime)
+    zone.updatedAt = tonumber(savedData.updatedAt) or tonumber(savedData.capturedTime) or 0
+    zone.owner = savedData.owner
+    zone.previousOwner = savedData.previousOwner
+    zone._assaultFromAvailable = savedData.assaultFromAvailable and true or nil
+    -- Migration 9.6.x -> semantique territoriale 9.3.1 : un final deja
+    -- materialise dans les SavedVariables reste le socle (status/owner/times
+    -- ci-dessus). L'ancienne quarantaine visuelle ne doit jamais survivre a un
+    -- /reload et bloquer indefiniment carte, prerequis ou domination.
+    zone._captureFinalUnattested = nil
+    zone._captureFinalUnattestedOriginKey = nil
+    zone._captureFinalUnattestedWaveId = nil
+    zone._captureFinalUnattestedAt = nil
+    zone._captureFinalConfirmedBase = nil
+    savedData.captureFinalUnattested = nil
+    savedData.captureFinalUnattestedOriginKey = nil
+    savedData.captureFinalUnattestedWaveId = nil
+    savedData.captureFinalUnattestedAt = nil
+    savedData.captureFinalBaseStatus = nil
+    savedData.captureFinalBaseOwner = nil
+    savedData.captureFinalBaseCapturedTime = nil
+    savedData.captureFinalBaseUpdatedAt = nil
+    if zone.status == "in_progress" then
+        -- /reload doit reprendre exactement le contrat canonique de la vague
+        -- locale (Renfort 60, normal 120, Barricade 180, ou capitale). Sans
+        -- cette restauration, l'objet zone gardait souvent son defaut 120 et
+        -- invalidait la preuve temporelle deja engagee sur le reseau.
+        local restoredRequirement = Overlord.CaptureLease
+            and Overlord.CaptureLease.NormalizeCaptureRequirement
+            and Overlord.CaptureLease:NormalizeCaptureRequirement(
+                zone, zone.owner, savedData.holdTimeRequired) or nil
+        if restoredRequirement then
+            zone.holdTimeRequired = restoredRequirement
+        elseif Overlord.CaptureLease and Overlord.CaptureLease.GetDefaultCaptureRequirement then
+            zone.holdTimeRequired = Overlord.CaptureLease:GetDefaultCaptureRequirement(
+                zone, zone.owner)
+        elseif zone.isCapital and Overlord.Zones then
+            if Overlord.Zones.GetCapitalSiegeHoldRequired then
+                zone.holdTimeRequired = Overlord.Zones:GetCapitalSiegeHoldRequired(
+                    zone, zone.owner, savedData.holdTimeRequired)
+            elseif Overlord.Zones.IsEnemyCapitalCapture
+                and Overlord.Zones:IsEnemyCapitalCapture(zone) then
+                zone.holdTimeRequired = Overlord.Zones:GetCapitalHoldTime(zone)
+            end
+        else
+            zone.holdTimeRequired = 120
+        end
+    end
+    -- Cap holdTimeElapsed a holdTimeRequired (anti-exploit valeurs gonflees en DB).
+    -- Migration 180→120 s : ne pas valider une capture in_progress au seul /reload.
+    local maxHold = zone.holdTimeRequired or 120
+    local elapsed = math.min(tonumber(savedData.holdTimeElapsed) or 0, maxHold)
+    if zone.status == "in_progress" and maxHold > 0 and elapsed >= maxHold then
+        elapsed = maxHold - 1
+    end
+    zone.holdTimeElapsed = elapsed
+end
+
+-- Auto-reparation : capturedTime present mais status incoherent apres un save precedent.
+local function RepairCapturedStatusMismatch(zone)
+    if zone.capturedTime and zone.capturedTime > 0
+        and zone.status ~= "captured" and zone.status ~= "in_progress" then
+        if zone.owner and zone.owner ~= "" then
+            zone.status = "captured"
+            zone.updatedAt = zone.capturedTime
+        else
+            zone.updatedAt = 0
+        end
+    end
+end
+
+local function ApplySavedZoneState(zone, savedData, opts)
+    opts = opts or {}
+    ApplySavedBaseFields(zone, savedData)
+    if zone.status == "in_progress" then
+        if savedData.localCapture ~= true or not opts.restoreOfflineProgress then
+            -- Migration + regle durable : un in_progress sans preuve d'autorite locale
+            -- est un ancien overlay distant. Un front inactif ne peut pas non plus
+            -- reprendre l'autorite physique d'une capture locale sauvegardee.
+            local assaultFromAvailable = zone._assaultFromAvailable == true
+            local revertOwner = Overlord.Zones and Overlord.Zones.ResolveRevertOwnerAfterFailedCapture
+                and Overlord.Zones:ResolveRevertOwnerAfterFailedCapture(zone) or zone.previousOwner
+            zone.holdTimeElapsed = 0
+            zone.isHolding = false
+            zone.isPaused = false
+            zone.isContested = false
+            zone.holdStartTime = nil
+            zone.holdAuthorityLocal = nil
+            zone.previousOwner = nil
+            zone._assaultFromAvailable = nil
+            if revertOwner then
+                zone.status = "captured"
+                zone.owner = revertOwner
+                zone.updatedAt = tonumber(zone.capturedTime) or 0
+            else
+                zone.status = assaultFromAvailable and "available" or "locked"
+                zone.owner = nil
+                zone.capturedTime = nil
+                zone.updatedAt = 0
+            end
+        elseif opts.restoreOfflineProgress and Overlord.Zones and Overlord.Zones.RestoreInProgressAfterOffline then
+            Overlord.Zones:RestoreInProgressAfterOffline(zone, savedData, opts.playerFaction)
+        else
+            zone.isHolding = false
+            zone.isPaused = false
+        end
+    end
+    if zone.status == "in_progress" and savedData.localCapture == true
+        and opts.restoreOfflineProgress and Overlord.CaptureLease
+        and Overlord.CaptureLease.RestoreLocalWave then
+        Overlord.CaptureLease:RestoreLocalWave(zone, savedData.localCaptureWaveId)
+    else
+        zone._localCaptureWaveId = nil
+    end
+    RepairCapturedStatusMismatch(zone)
+end
+
+-- Restaure l'état des zones depuis SavedVariables
+function Overlord:RestoreZoneState()
+    local loginSyncUnconfirmed = captureSyncGate.active and captureSyncGate.reason == "login"
+    if OverlordDB and OverlordDB.zones then
+        -- Migration : corrige les updatedAt gonfles par l'ancien bug de ResetAll()/ResetZone()
+        -- qui utilisait time() au lieu de 0. Les zones sans capturedTime sont des zones jamais
+        -- capturees (reset ou defaut) : leur updatedAt doit etre 0 pour accepter les sync entrantes.
+        for _, savedData in pairs(OverlordDB.zones) do
+            if savedData.status ~= "in_progress"
+                and not savedData.capturedTime
+                and savedData.updatedAt
+                and savedData.updatedAt > 0 then
+                savedData.updatedAt = 0
+            end
+        end
+
+        -- Rattrapage reset multi-front : si l'ancien client a deja marque le reset hebdo
+        -- comme fait alors qu'un front inactif gardait ses captures, ces captures ont un
+        -- capturedTime d'avant la campagne courante. On les neutralise sans toucher aux
+        -- captures legitimes faites apres le reset.
+        local currentReset = (self.GetCurrentCampaignStartTs and self:GetCurrentCampaignStartTs())
+            or tonumber(OverlordDB.lastResetTimestamp) or 0
+        if currentReset > 0 then
+            for zoneId, savedData in pairs(OverlordDB.zones) do
+                if type(savedData) == "table" then
+                    local capturedTime = tonumber(savedData.capturedTime) or 0
+                    local updatedAt = tonumber(savedData.updatedAt) or 0
+                    -- Epoch campagne : tout ce qui date d'avant le reset effectif est obsolete.
+                    local staleCaptured = capturedTime > 0 and capturedTime < currentReset
+                    local staleInProgress = savedData.status == "in_progress" and updatedAt > 0 and updatedAt < currentReset
+                    if staleCaptured or staleInProgress then
+                        local fixedOwner = Overlord.Zones and Overlord.Zones:GetBaseZoneFixedOwner(zoneId)
+                        savedData.killsCurrent = 0
+                        savedData.allyKillsCurrent = 0
+                        savedData.enemyKillsCurrent = 0
+                        savedData.holdTimeElapsed = 0
+                        savedData.previousOwner = nil
+                        if fixedOwner then
+                            -- Bases : proprietaire fixe ; timestamps alignes sur le reset pour rester "frais" vis-a-vis du merge sync.
+                            savedData.owner = fixedOwner
+                            savedData.status = (fixedOwner == self.PlayerFaction) and "captured" or "locked"
+                            savedData.capturedTime = currentReset
+                            savedData.updatedAt = currentReset
+                        else
+                            -- Hors bases : effacer la vieille capture ; updatedAt = 0 pour laisser les pairs ecraser si besoin.
+                            savedData.owner = nil
+                            savedData.status = "locked"
+                            savedData.capturedTime = nil
+                            savedData.updatedAt = 0
+                        end
+                    end
+                end
+            end
+        end
+
+        -- Login / reload : updatedAt=0 seulement si pas de capture confirmee cette campagne.
+        -- Garder capturedTime comme updatedAt protege les zones bleues au /reload contre
+        -- un ZA stale (updatedAt=0 acceptait tout ts>0 d'un repondeur desync).
+        if not staleSessionUpdatedAtZeroed then
+            local lastReset = (self.GetCurrentCampaignStartTs and self:GetCurrentCampaignStartTs())
+                or tonumber(OverlordDB.lastResetTimestamp) or 0
+            for _, savedData in pairs(OverlordDB.zones) do
+                if type(savedData) == "table" and savedData.status ~= "in_progress" then
+                    local ct = tonumber(savedData.capturedTime) or 0
+                    local owner = savedData.owner
+                    local keepTs = owner and owner ~= "" and ct > 0
+                        and (lastReset <= 0 or ct >= lastReset)
+                    if keepTs then
+                        savedData.updatedAt = ct
+                    else
+                        savedData.updatedAt = 0
+                    end
+                end
+            end
+            staleSessionUpdatedAtZeroed = true
+        end
+
+        local playerFaction = self.PlayerFaction
+        for zoneId, savedData in pairs(OverlordDB.zones) do
+            local zone = Overlord.Zones:GetZone(zoneId)
+            if zone then
+                ApplySavedZoneState(zone, savedData, {
+                    restoreOfflineProgress = true,
+                    playerFaction = playerFaction,
+                })
+                if loginSyncUnconfirmed and zone.status ~= "in_progress" then
+                    -- Etat disque provisoire : le premier ZA/ZS recu au login doit pouvoir corriger
+                    -- toute la carte, meme si la session precedente avait un capturedTime plus haut.
+                    zone._loginSyncUnconfirmed = true
+                    zone.updatedAt = 0
+                end
+            end
+        end
+
+        -- Autres fronts (consultation liste / sync) : memes SavedVariables, objets dans Registry.
+        for zoneId, savedData in pairs(OverlordDB.zones) do
+            if type(savedData) == "table" and not Overlord.Zones:GetZone(zoneId) then
+                local zone = Overlord.Fronts and select(1, Overlord.Fronts:GetZone(zoneId))
+                if zone then
+                    ApplySavedZoneState(zone, savedData, { restoreOfflineProgress = false })
+                    if loginSyncUnconfirmed and zone.status ~= "in_progress" then
+                        zone._loginSyncUnconfirmed = true
+                        zone.updatedAt = 0
+                    end
+                end
+            end
+        end
+    end
+
+    -- Les fronts sans ligne disque ont aussi besoin de leurs capitales de base
+    -- avant le premier ZA global (notamment quand la beta ne charge aucune SV).
+    if self.Zones and self.Zones.InitializeMissingCapitalDefaults then
+        self.Zones:InitializeMissingCapitalDefaults()
+    end
+
+    -- Statuts local-only des fronts inactifs : les SV peuvent garder un "Verrouillee"
+    -- fige d'une session precedente alors que le prerequis a ete capture entre-temps.
+    if Overlord.Fronts and Overlord.Zones and Overlord.Zones.RefreshInactiveFrontAvailability then
+        for _, frontId in ipairs(Overlord.Fronts.Order or {}) do
+            Overlord.Zones:RefreshInactiveFrontAvailability(frontId)
+        end
+    end
+
+    -- Meme une installation neuve doit participer au consensus de connexion.
+    -- Marquer toutes les zones connues evite qu'un client sans ligne SavedVariables
+    -- soit considere canonique avant d'avoir recu une carte globale concordante.
+    if loginSyncUnconfirmed then
+        local seen = {}
+        local function quarantine(zone)
+            if zone and zone.id and not seen[zone.id] then
+                seen[zone.id] = true
+                if zone.status ~= "in_progress" then
+                    zone._loginSyncUnconfirmed = true
+                    zone.updatedAt = 0
+                end
+            end
+        end
+        for _, zone in ipairs(Overlord.ZoneDatabase or {}) do quarantine(zone) end
+        if Overlord.Fronts and Overlord.Fronts.Registry then
+            for _, front in pairs(Overlord.Fronts.Registry) do
+                for _, zone in ipairs((front and front.zones) or {}) do quarantine(zone) end
+            end
+        end
+    end
+
+    -- Sanity check : si la capitale ennemie est marquee comme appartenant a notre faction
+    -- sans victoire active, la donnee est probablement corrompue (bug de session precedente).
+    -- On force updatedAt = 0 pour que le premier ZA/ZS de sync corrige sans delai.
+    -- Si c'est une vraie victoire (lastVictoryFaction == nous ET cooldown actif),
+    -- on ne touche pas : c'est legitime.
+    if self.PlayerFaction then
+        -- IsOnVictoryCooldown lu une seule fois pour les deux sanity checks ci-dessous
+        local vcOnCd, _, vcWinFac = Overlord.Zones:IsOnVictoryCooldown()
+        -- 1.7.0 : une capitale gardee apres une fin de treve (tampon epoch + 1) est legitime.
+        local activeFrontId = Overlord.Fronts and Overlord.Fronts.activeFrontId
+        local function keptCapital(zone)
+            return activeFrontId and Overlord.Zones.IsKeptCapitalStamp
+                and Overlord.Zones:IsKeptCapitalStamp(activeFrontId, zone) or false
+        end
+
+        -- Sanity check : si la capitale ennemie est marquee comme appartenant a notre faction
+        -- sans victoire active de notre cote, la donnee est probablement corrompue.
+        local enemyBaseId = Overlord.Fronts and Overlord.Fronts:GetEnemyCapitalId(self.PlayerFaction)
+        local enemyBase = Overlord.Zones:GetZone(enemyBaseId)
+        if enemyBase and enemyBase.owner == self.PlayerFaction then
+            local legitimateVictory = (vcOnCd and vcWinFac == self.PlayerFaction) or keptCapital(enemyBase)
+            if not legitimateVictory then
+                -- Donnee suspecte : on garde owner/capturedTime pour l'affichage initial
+                -- mais updatedAt = 0 garantit que la sync ecrase au premier message recu
+                enemyBase.updatedAt = 0
+            end
+        end
+
+        -- Sanity check supplementaire : notre propre capitale ne doit pas etre marquee
+        -- comme appartenant a l'adversaire sauf si l'adversaire vient de gagner.
+        -- Protege contre les reverts anti-stale stales (previousOwner = adverse post-victoire)
+        -- qui auraient echappe au correctif principal (ex: donnee DB heritee d'une session precedente).
+        local ownBaseId = Overlord.Fronts and Overlord.Fronts:GetCapitalId(self.PlayerFaction)
+        local ownFixedOwner = self.PlayerFaction
+        local ownBase = Overlord.Zones:GetZone(ownBaseId)
+        if ownBase and ownBase.owner and ownBase.owner ~= ownFixedOwner then
+            local enemyJustWon = (vcOnCd and vcWinFac ~= self.PlayerFaction) or keptCapital(ownBase)
+            if not enemyJustWon then
+                -- Notre base est marquee ennemie sans victoire recente de l'adversaire :
+                -- donnee stale. updatedAt = 0 laisse la sync corriger l'etat reel.
+                ownBase.updatedAt = 0
+            end
+        end
+    end
+
+    ReconcileBaseOwnershipSanity()
+    Overlord.Zones:UpdateAvailableZones()
+end
+
+-- Sauvegarde l'état actuel dans SavedVariables
+local saveDirty = false
+
+-- Parcourt toutes les zones connues, y compris les fronts non actifs.
+-- Overlord.ZoneDatabase ne contient que le front actif ; le reset hebdo doit rester global.
+local function ForEachKnownZone(callback)
+    if not callback then return end
+    local seen = {}
+
+    local function visitFront(front)
+        if not front or not front.zones then return end
+        for _, zone in ipairs(front.zones) do
+            if zone and zone.id and not seen[zone.id] then
+                seen[zone.id] = true
+                callback(zone, front)
+            end
+        end
+    end
+
+    if Overlord.Fronts and Overlord.Fronts.Registry then
+        for _, frontId in ipairs(Overlord.Fronts.Order or {}) do
+            visitFront(Overlord.Fronts.Registry[frontId])
+        end
+        for _, front in pairs(Overlord.Fronts.Registry) do
+            visitFront(front)
+        end
+        return
+    end
+
+    for _, zone in ipairs(Overlord.ZoneDatabase or {}) do
+        if zone and zone.id and not seen[zone.id] then
+            seen[zone.id] = true
+            callback(zone, nil)
+        end
+    end
+end
+
+function Overlord:SaveState()
+    if not OverlordDB then return end
+    
+    -- Sauvegarde ressources (or, bois, stocks) et bonus actifs
+    if Overlord.Ressources then Overlord.Ressources:SaveResources() end
+    if Overlord.Fronts then
+        OverlordDB.activeFrontId = Overlord.Fronts.activeFrontId
+    end
+
+    if not OverlordDB.zones then OverlordDB.zones = {} end
+    ForEachKnownZone(function(zone)
+        local persisted = self.CaptureLease and self.CaptureLease.GetPersistableView
+            and self.CaptureLease:GetPersistableView(zone) or zone
+        -- 2.4.0: a capture of ours on hold (ZoneDefense: a point of its chain is under a capture
+        -- of the other faction that began after it) is saved as the point was before it. What it
+        -- waits for is not saved (a followed wave never is) and is not told again: restored
+        -- after a /reload it would run on, and could complete over a chain being broken.
+        if persisted == zone and zone.holdAuthorityLocal == true and zone._chainFrozen ~= nil
+            and zone._chainFrozen == (zone._localCaptureWaveId or true)
+            and type(zone._localCaptureBase) == "table" and zone._localCaptureBase.status ~= "in_progress" then
+            persisted = zone._localCaptureBase
+        end
+        local localCapture = persisted == zone and zone.holdAuthorityLocal == true
+        local localWaveId = localCapture and self.CaptureLease
+            and self.CaptureLease.GetWaveId and self.CaptureLease:GetWaveId(zone) or nil
+        local witnessRoute = localCapture and localWaveId and self.Sync
+            and self.Sync.GetPersistableCaptureNetworkWitnessRoute
+            and self.Sync:GetPersistableCaptureNetworkWitnessRoute(zone.id, localWaveId) or nil
+        local savedCapturedTime = persisted.capturedTime
+        local savedUpdatedAt = persisted.updatedAt or 0
+        if persisted.status == "captured" and persisted.owner and savedCapturedTime and savedCapturedTime > 0
+            and savedUpdatedAt < savedCapturedTime then
+            savedUpdatedAt = savedCapturedTime
+        end
+        OverlordDB.zones[zone.id] = {
+            status = persisted.status,
+            killsCurrent = persisted.killsCurrent,
+            allyKillsCurrent  = persisted.allyKillsCurrent,
+            enemyKillsCurrent = persisted.enemyKillsCurrent,
+            holdTimeElapsed = persisted.holdTimeElapsed,
+            holdTimeRequired = persisted.holdTimeRequired,
+            capturedTime = savedCapturedTime,
+            updatedAt = savedUpdatedAt,
+            owner = persisted.owner,
+            previousOwner = persisted.previousOwner,
+            assaultFromAvailable = persisted._assaultFromAvailable and true or nil,
+            localCapture = localCapture and true or nil,
+            localCaptureWaveId = localWaveId,
+            captureNetworkWitnessRouteId = witnessRoute and witnessRoute.routeId or nil,
+            captureNetworkWitnessOriginGuid = witnessRoute and witnessRoute.originGuid or nil,
+            captureNetworkWitnessBaseline = witnessRoute and witnessRoute.baseline or nil,
+            captureNetworkWitnessTargets = witnessRoute and witnessRoute.targets or nil,
+        }
+    end)
+    saveDirty = false
+end
+
+-- Sauvegarde différée (pour éviter le spam de saves en combat)
+function Overlord:MarkDirty()
+    saveDirty = true
+end
+
+-- MapIDs du bassin Arathi (champ de bataille), pas les Hautes-Terres warfront : remonter aux parents pour exclure
+Overlord.FRONT_EXCLUDED_BATTLEGROUND_MAP_IDS = { [3358] = true, [10440] = true }
+-- Compat : ancien nom exporte (memes mapIDs : Bassin d'Arathi BG, pas le warfront monde).
+Overlord.ARATHI_BASIN_MAP_IDS = Overlord.FRONT_EXCLUDED_BATTLEGROUND_MAP_IDS
+local EXCLUDED_BG_MAP_IDS = Overlord.FRONT_EXCLUDED_BATTLEGROUND_MAP_IDS
+
+-- Vrai si cette carte (ou un parent) est le BG exclu : ne pas activer le système front depuis le champ de bataille
+-- The parent chain is static for a session: a finished walk is kept per starting map
+-- (zone events and the 1 Hz spectator tick asked again with new tables each time).
+-- A walk cut by a failed GetMapInfo (map data not loaded yet) is never kept.
+local function IsExcludedWarfrontBattlegroundMap(mapID)
+    local walks = Overlord._excludedBgMapWalks
+    if not walks then
+        walks = {}
+        Overlord._excludedBgMapWalks = walks
+    end
+    local startID = mapID
+    local known = startID and walks[startID]
+    if known ~= nil then return known end
+    local seen = {}
+    while mapID and mapID > 0 and not seen[mapID] do
+        seen[mapID] = true
+        if EXCLUDED_BG_MAP_IDS[mapID] then
+            if startID then walks[startID] = true end
+            return true
+        end
+        local ok, info = pcall(C_Map.GetMapInfo, mapID)
+        if not ok or not info then return false end
+        mapID = info.parentMapID or 0
+    end
+    if startID then walks[startID] = false end
+    return false
+end
+
+-- GetInstanceInfo() renvoie l'InstanceMapID du continent en monde ouvert (0=EK, 1=Kalimdor, ...).
+-- Ce n'est pas une phase de rattrapage : seuls les InstanceMapID de phase separee (ex. RPE Arathi) comptent.
+local OPEN_WORLD_CONTINENT_INSTANCE_IDS = {
+    [0] = true,     -- Eastern Kingdoms
+    [1] = true,     -- Kalimdor
+    [530] = true,   -- Outland
+    [571] = true,   -- Northrend
+    [646] = true,   -- Deepholm
+    [730] = true,   -- Maelstrom Zone
+    [732] = true,   -- Tol Barad
+    [860] = true,   -- The Wandering Isle
+    [870] = true,   -- Pandaria
+    [1064] = true,  -- Isle of Thunder
+    [1116] = true,  -- Draenor
+    [1191] = true,  -- Ashran
+    [1464] = true,  -- Tanaan Jungle
+    [1220] = true,  -- Broken Isles
+    [1669] = true,  -- Argus
+    [1642] = true,  -- Zandalar
+    [1643] = true,  -- Kul Tiras
+    [1718] = true,  -- Nazjatar
+    [2222] = true,  -- The Shadowlands
+    [2374] = true,  -- Zereth Mortis
+    [2444] = true,  -- Dragon Isles
+    [2454] = true,  -- Zaralek Cavern
+}
+
+local function IsPhasedCatchUpInstanceID(instID)
+    return instID and instID > 0 and not OPEN_WORLD_CONTINENT_INSTANCE_IDS[instID]
+end
+
+-- Carte de front sous le joueur (nil si capitale, BG, micro exclue, etc.)
+function Overlord:GetPlayerMapFront()
+    local ok, mapID = pcall(C_Map.GetBestMapForUnit, "player")
+    if not ok or not mapID or not Overlord.Fronts then return nil, mapID end
+    if IsExcludedWarfrontBattlegroundMap(mapID) then return nil, mapID end
+    return Overlord.Fronts:ResolveFrontByMapID(mapID), mapID
+end
+
+-- Raison pour laquelle le front ne s'active pas (nil = devrait etre actif).
+-- Retourne aussi front/mapID resolus pour eviter un second GetPlayerMapFront.
+function Overlord:GetFrontDetectionBlockReason()
+    if self.InstanceSuspended then return "instance_suspended" end
+    if IsInInstance() then return "instance" end
+    local okInst, _, instType = pcall(GetInstanceInfo)
+    if okInst and instType and instType ~= "none" and instType ~= "" then
+        return "instance"
+    end
+    if self:IsInCatchUpPhase() then
+        return "catchup"
+    end
+    if C_Scenario and C_Scenario.IsInScenario and C_Scenario.IsInScenario() then
+        return "scenario"
+    end
+    local front, mapID = self:GetPlayerMapFront()
+    if not mapID then return "nomap" end
+    if not front then return "notfrontmap" end
+    local requiredArtID = front.currentArtID
+    if requiredArtID and C_Map.GetMapArtID then
+        local okArt, artID = pcall(C_Map.GetMapArtID, mapID)
+        if okArt and artID and artID ~= requiredArtID then
+            return "artid", front, mapID
+        end
+    end
+    return nil, front, mapID
+end
+
+function Overlord:IsPlayerInActiveFront()
+    local reason, front = self:GetFrontDetectionBlockReason()
+    if reason then
+        return false
+    end
+    if not front then return false end
+    if Overlord.Fronts and front.id ~= Overlord.Fronts.activeFrontId then
+        Overlord.Fronts:Activate(front.id)
+    end
+    return true
+end
+
+-- Phase de rattrapage : Chromie Time, Party Sync actif, ou phase separee (instanceID hors continent).
+function Overlord:IsInCatchUpPhase(allowUnlistedOpenWorldInstance)
+    if C_PlayerInfo and C_PlayerInfo.IsPlayerInChromieTime then
+        local okCT, inChromieTime = pcall(C_PlayerInfo.IsPlayerInChromieTime)
+        if okCT and inChromieTime then return true end
+    end
+    if C_QuestSession and C_QuestSession.HasJoined then
+        local okQS, joined = pcall(C_QuestSession.HasJoined)
+        if okQS and joined then return true end
+    end
+    local ok, _, instType, _, _, _, _, _, instID = pcall(GetInstanceInfo)
+    if not ok then return false end
+    if instType and instType ~= "none" and instType ~= "" then return false end
+    -- Une nouvelle zone exterieure possede souvent un InstanceID avant que la
+    -- liste des continents connus soit mise a jour. L'exception 12.1 ne saute
+    -- que ce test : Chromie Time et Party Sync restent bloques ci-dessus.
+    if allowUnlistedOpenWorldInstance then return false end
+    return IsPhasedCatchUpInstanceID(instID)
+end
+
+-- Capture and outpost alerts follow the player's continent (1.8.0).
+-- Continent root maps, Classic and Retail ids: "EK" = Eastern Kingdoms, "K" = Kalimdor.
+Overlord.ALERT_CONTINENT_ROOTS = { [1415] = "EK", [13] = "EK", [1414] = "K", [12] = "K" }
+-- mapID -> "EK" / "K". Only resolved maps are cached: map data can be missing while loading.
+Overlord.alertContinentCache = {}
+
+-- "EK", "K" or nil (unknown, unresolved or another continent).
+function Overlord:GetMapContinent(mapID)
+    mapID = tonumber(mapID)
+    if not mapID or mapID <= 0 then return nil end
+    local cached = Overlord.alertContinentCache[mapID]
+    if cached then return cached end
+    local roots = Overlord.ALERT_CONTINENT_ROOTS
+    local current = mapID
+    for _ = 1, 8 do
+        local root = roots[current]
+        if root then
+            Overlord.alertContinentCache[mapID] = root
+            return root
+        end
+        if not C_Map or not C_Map.GetMapInfo then return nil end
+        local ok, info = pcall(C_Map.GetMapInfo, current)
+        if not ok or type(info) ~= "table" then return nil end
+        current = tonumber(info.parentMapID) or 0
+        if current <= 0 then return nil end
+    end
+    return nil
+end
+
+-- Continent under the player: the map first, then the open-world instance id
+-- (0 = Eastern Kingdoms, 1 = Kalimdor). nil while unknown (loading, boat, elsewhere).
+function Overlord:GetPlayerContinent()
+    if C_Map and C_Map.GetBestMapForUnit then
+        local ok, mapID = pcall(C_Map.GetBestMapForUnit, "player")
+        local continent = ok and self:GetMapContinent(mapID) or nil
+        if continent then return continent end
+    end
+    if GetInstanceInfo then
+        local ok, _, _, _, _, _, _, _, instID = pcall(GetInstanceInfo)
+        if ok and instID == 0 then return "EK" end
+        if ok and instID == 1 then return "K" end
+    end
+    return nil
+end
+
+-- 2.3.2: capture, outpost and mine alerts follow the zone the player is in by default (on
+-- Forever another zone is too far to defend in time); the option widens them to the
+-- continent or the whole world. A "whole world" box ticked before 2.3.2 keeps the world.
+Overlord.ALERT_SCOPES = { zone = true, continent = true, world = true }
+function Overlord:GetAlertScope()
+    local config = OverlordDB and OverlordDB.config
+    local scope = config and config.alertScope
+    if scope and Overlord.ALERT_SCOPES[scope] then return scope end
+    if config and config.worldwideAlerts == true then return "world" end
+    return "zone"
+end
+
+-- A capital city is its own zone map: it counts as the zone around it, so a player in Stormwind
+-- hears Elwynn. Classic and Retail ids.
+Overlord.CITY_ZONE = {
+    [1453] = 1429, [84] = 37,   -- Stormwind -> Elwynn Forest
+    [1455] = 1426, [87] = 27,   -- Ironforge -> Dun Morogh
+    [1457] = 1438, [89] = 57,   -- Darnassus -> Teldrassil
+    [1454] = 1411, [85] = 1,    -- Orgrimmar -> Durotar
+    [1456] = 1412, [88] = 7,    -- Thunder Bluff -> Mulgore
+    [1458] = 1420, [90] = 18,   -- Undercity -> Tirisfal Glades
+}
+
+-- The zone map holding mapID (a sub-zone or a cave climbs to its zone), or nil (unknown, unloaded,
+-- or a continent or world map). Enum.UIMapType: 2 continent, 3 zone, 4 dungeon, 5 micro, 6 orphan.
+function Overlord:GetMapZone(mapID)
+    local current = tonumber(mapID)
+    if not current or current <= 0 or not C_Map or not C_Map.GetMapInfo then return nil end
+    for _ = 1, 8 do
+        if Overlord.CITY_ZONE[current] then return Overlord.CITY_ZONE[current] end
+        local ok, info = pcall(C_Map.GetMapInfo, current)
+        if not ok or type(info) ~= "table" then return nil end
+        local mapType = tonumber(info.mapType)
+        if mapType == 3 then return current end
+        if not mapType or mapType < 3 then return nil end
+        current = tonumber(info.parentMapID) or 0
+        if current <= 0 then return nil end
+    end
+    return nil
+end
+
+-- always: alert shown everywhere (own guild). aliases: the place's map ids (a front or a mine has
+-- the Classic and the Retail id of one zone). An unknown continent or zone (of the place or of the
+-- player) shows the alert.
+function Overlord:ShouldShowPlaceAlert(mapID, always, aliases)
+    if always then return true end
+    local scope = self:GetAlertScope()
+    if scope == "world" then return true end
+    local place = self:GetMapContinent(mapID)
+    if not place then return true end
+    local here = self:GetPlayerContinent()
+    if here == nil then return true end
+    if here ~= place then return false end
+    if scope ~= "zone" then return true end
+    local playerMap
+    if C_Map and C_Map.GetBestMapForUnit then
+        local ok, best = pcall(C_Map.GetBestMapForUnit, "player")
+        if ok then playerMap = best end
+    end
+    local hereZone, placeZone = self:GetMapZone(playerMap), self:GetMapZone(mapID)
+    if not hereZone or not placeZone then return true end
+    if hereZone == placeZone then return true end
+    return type(aliases) == "table" and aliases[hereZone] == true and aliases[placeZone] == true
+end
+
+-- Zone alerts: the zone's front gives the place. (2.3.2: our own capital follows the same rule.)
+function Overlord:ShouldShowZoneAlert(zone)
+    local fronts = self.Fronts
+    if not zone or not zone.id or not fronts or not fronts.GetZone then return true end
+    local _, front = fronts:GetZone(zone.id)
+    if not front then return true end
+    -- The registry map first; another client's alias when that one is unknown.
+    local mapID = front.preferredMapID
+    if not self:GetMapContinent(mapID) and C_Map and C_Map.GetMapInfo
+        and fronts.GetMapID and front.id then
+        mapID = fronts:GetMapID(front.id)
+    end
+    return self:ShouldShowPlaceAlert(mapID, false, front.mapIDs)
+end
+
+-- Delai de verification avant activation (secondes)
+-- IsInInstance retourne false pendant le loading screen du BG - ce delai evite le faux positif
+local FRONT_ENTER_DELAY = 1.2
+
+function Overlord:CheckActiveFrontZone()
+    if not self.IsInitialized then return end
+    if not self._deferredModuleInitDone then
+        self._loginFrontCheckDeferred = true
+        return
+    end
+    local wasIn = self.InActiveFront
+    local nowIn = self:IsPlayerInActiveFront()
+
+    -- Message unique si carte de front mais phase rattrapage (IsInCatchUpPhase seul matcherait d'autres maps)
+    local okMap, playerMapID = pcall(C_Map.GetBestMapForUnit, "player")
+    local onFrontMap = okMap and playerMapID and Overlord.Zones:IsWarFrontMapID(playerMapID)
+    if not nowIn and onFrontMap and self:IsInCatchUpPhase() then
+        if not catchUpNotified then
+            catchUpNotified = true
+            self:PrintNotification("|cFFFFD100[Overlord]|r " .. (L and L.CATCHUP_PHASE or "Catch-up phase detected."))
+        end
+    else
+        catchUpNotified = false
+    end
+
+    if wasIn and not nowIn then
+        if pendingFrontEnter then
+            pendingFrontEnter:Cancel()
+            pendingFrontEnter = nil
+        end
+        self.InActiveFront = false
+        self:OnLeaveFront()
+    elseif not wasIn and nowIn then
+        -- Delai avant activation : evite le faux positif pendant le chargement du BG Bassin Arathi (map fantome)
+        -- Pendant le loading, IsInInstance=false et la map peut etre incoherente.
+        -- NE PAS annuler un timer deja en vol : les timers de recuperation post-instance
+        -- (SchedulePostInstanceWorldRecovery) appelent CheckActiveFrontZone plusieurs fois a 0.55/1.35/2.8/4.5s,
+        -- et chaque annulation+recreation repousserait l'activation de ~1.2s supplementaire
+        -- (effet boule de neige : OnEnterFront n'arriverait qu'apres 5-6s au lieu de 1.5s).
+        if pendingFrontEnter then return end
+        pendingFrontEnter = C_Timer.NewTimer(FRONT_ENTER_DELAY, function()
+            pendingFrontEnter = nil
+            if not Overlord.IsInitialized then return end
+            if Overlord.InstanceSuspended then return end
+            local confirmed = Overlord:IsPlayerInActiveFront()
+            if confirmed and not Overlord.InActiveFront then
+                -- Flags uniquement apres succes : sinon OnEnterFront echoue en boucle avec update actif sans sync/UI.
+                local ok, enteredOrErr = pcall(Overlord.OnEnterFront, Overlord)
+                if ok and enteredOrErr ~= false then
+                    Overlord.InActiveFront = true
+                    -- OnEnterFront a appele SetMinimapPinsVisible(true) AVANT que ce flag passe a true :
+                    -- EnsureMinimapDriverVisible avait alors re-masque mmFrame (InActiveFront encore false),
+                    -- et sans nouveau ZONE_CHANGED les cercles de front ne revenaient pas sans /reload.
+                    -- Re-evaluer maintenant que le flag est correct, et rejouer le changement de front :
+                    -- si Activate() a masque les anciens pins pendant que InActiveFront etait encore false,
+                    -- il faut recreer/forcer les pins du front courant avant de rallumer le driver.
+                    if Overlord.MapMarkers then
+                        if Overlord.MapMarkers.OnActiveFrontChanged then
+                            Overlord.MapMarkers:OnActiveFrontChanged()
+                        elseif Overlord.MapMarkers.EnsureMinimapDriverVisible then
+                            Overlord.MapMarkers:EnsureMinimapDriverVisible()
+                        end
+                    end
+                    if Overlord.UI and Overlord.UI.RefreshPanelState then
+                        Overlord.UI:RefreshPanelState()
+                    end
+                elseif not ok then
+                    self:PrintNotification("|cFFFF0000[Overlord]|r OnEnterFront error: "
+                        .. tostring(enteredOrErr))
+                end
+            elseif not confirmed then
+                -- Carte instable au chargement : retenter si le joueur est sur une carte de front.
+                local _, mapID = Overlord:GetPlayerMapFront()
+                if mapID and Overlord.Zones and Overlord.Zones:IsWarFrontMapID(mapID) then
+                    C_Timer.After(2, function()
+                        if not Overlord.IsInitialized or Overlord.InstanceSuspended or Overlord.InActiveFront then return end
+                        Overlord:CheckActiveFrontZone()
+                    end)
+                end
+            end
+        end)
+    end
+end
+
+function Overlord:OnLeaveFront()
+    -- Meme nettoyage qu'en instance : sinon capture locale figee + sync passive bloquee sur ce front.
+    if self.ZoneControl and self.ZoneControl.ReleaseLocalCaptureState then
+        self.ZoneControl:ReleaseLocalCaptureState()
+    end
+    if self.Sync and self.Sync.ClearRaidLateJoinCatchUpPending then
+        self.Sync:ClearRaidLateJoinCatchUpPending()
+    end
+    -- Arrete la boucle de mise a jour pour eviter toute consommation CPU hors front
+    self:StopUpdateLoop()
+    -- La barre de domination v2 ne depend d'aucun ticker : elle compte des evenements.
+    if self.MapMarkers and self.MapMarkers.SetMinimapPinsVisible then
+        self.MapMarkers:SetMinimapPinsVisible(false)
+    end
+    if self.UI and self.UI.IsVisible and self.UI.Hide and self.UI:IsVisible() then
+        self.UI:Hide(true)  -- true = auto-hide, ne pas ecraser uiVisible pour le retour
+    end
+    if self.LeaderboardUI then self.LeaderboardUI:Hide() end
+    if self.ZoneIndicator then self.ZoneIndicator:Hide() end
+    if self.Sync then
+        if self.Sync.StopPeriodicChannelSync then self.Sync:StopPeriodicChannelSync() end
+        if self.Sync.StopProximityRescan then self.Sync:StopProximityRescan() end
+        -- Bascule en sync passive : SR + scan communaute toutes les 2 min (voir Sync.PASSIVE_SYNC_INTERVAL)
+        -- Permet de continuer a partager la data meme a Silvermoon ou en donjon
+        if self.Sync.StartPassiveSync then self.Sync:StartPassiveSync() end
+        -- Rattrapage immediat : etat Loch/Arathi/Gilneas a jour dans le panneau spectateur
+        if self.Sync.SendSyncRequest then
+            self.Sync:SendSyncRequest()
+        end
+    end
+    if self.General and self.General.OnLeaveFront then
+        self.General:OnLeaveFront()
+    end
+end
+
+function Overlord:OnEnterFront()
+    if not self._deferredModuleInitDone then
+        self._loginFrontCheckDeferred = true
+        return false
+    end
+    -- Panneau : suivre le front actif de la carte (sinon la consultation d'un autre front resterait figee apres /reload ou voyage).
+    if OverlordDB then
+        OverlordDB.config = OverlordDB.config or {}
+        OverlordDB.config.uiPanelFrontId = nil
+    end
+    -- Rattrapage avant toute capture/kill possible dans ce front (voir EnsureLeaderboardCampaignFresh).
+    self:EnsureLeaderboardCampaignFresh()
+    local baseStateRepaired = ReconcileBaseOwnershipSanity()
+    if baseStateRepaired then
+        self.Zones:UpdateAvailableZones()
+        self:MarkDirty()
+    end
+
+    -- Redemarre la boucle OnUpdate (arretee quand on quitte un front)
+    self:StartUpdateLoop()
+    if self.General and self.General.OnEnterFront then
+        self.General:OnEnterFront()
+    end
+    -- Sync passive (2 min) reste active pour les autres fronts sur la carte monde.
+    if self.Sync and self.Sync.StartPassiveSync then self.Sync:StartPassiveSync() end
+    if self.UI and self.UI.StopSpectatorMode then self.UI:StopSpectatorMode() end
+    -- Version en retard : un seul message dans le chat par session (CheckRemoteVersion),
+    -- plus jamais d'alerte rouge au milieu de l'ecran a chaque entree de front.
+    if self.MapMarkers then
+        if self.MapMarkers.SetMinimapPinsVisible then
+            self.MapMarkers:SetMinimapPinsVisible(true)
+        end
+        if self.MapMarkers.CheckOutpostMinimap then
+            self.MapMarkers:CheckOutpostMinimap()
+        end
+        self.MapMarkers:ResumeWorldMapOverlays()
+    end
+    if self.UI and self.UI.Show
+        and OverlordDB and OverlordDB.config and OverlordDB.config.uiVisible then
+        self.UI:Show({ skipRefresh = true })
+        C_Timer.After(0, function()
+            if not Overlord.InActiveFront or not Overlord.UI or not Overlord.UI.Refresh then return end
+            Overlord.UI:Refresh()
+            C_Timer.After(0, function()
+                if Overlord.UI and Overlord.UI.RefreshDomination then
+                    Overlord.UI:RefreshDomination()
+                end
+            end)
+        end)
+    end
+    -- Re-join du canal + scan des nameplates deja visibles (sync joueurs hors royaume / hors raid)
+    if self.Sync then
+        if self.Sync.MarkRaidLateJoinCatchUpPending then
+            self.Sync:MarkRaidLateJoinCatchUpPending()
+        end
+        -- Au login JoinChannel PLAYER_LOGIN (+5 s) suffit : evite double join ~3 s + ~5 s.
+        if not Overlord._loginChannelPending then
+            if self.Sync.JoinChannel then self.Sync:JoinChannel(1) end
+        end
+        C_Timer.After(2, function()
+            if Overlord.InstanceSuspended then return end
+            if Overlord.InActiveFront and Overlord.Sync and Overlord.Sync.ProximitySync then
+                Overlord.Sync:ProximitySync()
+            end
+        end)
+        -- Large event : SR whisper vers chef + membre (reponse LK garantie, hors canal 18 %).
+        C_Timer.After(4, function()
+            if Overlord.InstanceSuspended or not Overlord.InActiveFront then return end
+            if Overlord.Sync and Overlord.Sync.RequestRaidLeaderboardCatchUp then
+                Overlord.Sync:RequestRaidLeaderboardCatchUp()
+            end
+        end)
+        C_Timer.After(18, function()
+            if Overlord.InstanceSuspended or not Overlord.InActiveFront then return end
+            if Overlord.Sync and Overlord.Sync.RequestRaidLeaderboardCatchUpFollowUp then
+                Overlord.Sync:RequestRaidLeaderboardCatchUpFollowUp()
+            end
+        end)
+        if self.Sync.StartPeriodicChannelSync then self.Sync:StartPeriodicChannelSync() end
+        if self.Sync.StartProximityRescan then self.Sync:StartProximityRescan() end
+        -- Guerison active : 15s apres l'entree, on interroge les pairs pour les classes manquantes
+        -- accumulees dans les SavedVariables (UNKNOWN venant de C perdus avant le fix CR/CA).
+        C_Timer.After(15, function()
+            if Overlord.InstanceSuspended or not Overlord.InActiveFront then return end
+            if Overlord.Sync and Overlord.Sync.HealRequestMissingClassesFromDB then
+                Overlord.Sync:HealRequestMissingClassesFromDB()
+            end
+            if Overlord.Sync and Overlord.Sync.HealRequestMissingGuildsFromDB then
+                Overlord.Sync:HealRequestMissingGuildsFromDB()
+            end
+        end)
+    end
+end
+
+-- Barre de domination v2 : alliancePct = clamp(50 + (victoiresA - victoiresH), 0, 100),
+-- voir SyncDomination.lua (Overlord:GetDominationBarScore).
+
+-- Fractions affichees (barre UI, export Check PvP) : 50 % +/- 1 par victoire de front.
+-- Voir Overlord:GetDominationBarScore (SyncDomination.lua).
+function Overlord:GetDominationDisplayFractions()
+    local alliancePct, hordePct
+    if self.GetDominationBarScore then alliancePct, hordePct = self:GetDominationBarScore() end
+    if not alliancePct then return 0.5, 0.5 end
+    return alliancePct / 100, hordePct / 100
+end
+
+local function GetVictoryDominationBonus()
+    if Overlord.RessourcesConstants and Overlord.RessourcesConstants.VICTORY_DOMINATION_BONUS then
+        return Overlord.RessourcesConstants.VICTORY_DOMINATION_BONUS
+    end
+    return 0.02
+end
+
+local function BuildVictoryDominationEventId(frontId, victoryTs)
+    frontId = tostring(frontId or ""):gsub("[^%w_%-]", "")
+    if frontId == "" then frontId = "front" end
+    victoryTs = math.floor(tonumber(victoryTs) or 0)
+    return "front-victory-" .. frontId .. "-" .. victoryTs
+end
+
+-- Enregistre une victoire de front dans le journal persistant (+1 point pour le vainqueur).
+-- broadcastSync = true : emetteur local (la capitale ennemie vient d'etre prise ici) ; le VB
+-- est ensuite diffuse pour les anciens clients. false : recepteur d'une TV deja validee
+-- (preuve locale ou source verifiee) : la victoire est journalisee tout de suite au lieu
+-- d'attendre un VB qui peut se perdre ; le VB tardif fusionne sur le meme identifiant.
+-- totalAtApply n'entre plus dans le compte : il reste plausible pour les anciens recepteurs.
+function Overlord:TryGrantVictoryDominationBonus(frontId, faction, victoryTs, broadcastSync)
+    if not OverlordDB or not faction or not victoryTs or victoryTs <= 0 then return false end
+    if faction ~= "Alliance" and faction ~= "Horde" then return false end
+    frontId = frontId or ""
+    victoryTs = math.floor(victoryTs)
+    local localEmitter = broadcastSync == true
+
+    local totalAtApply = self.GetLegacyDominationTotalForVB and self:GetLegacyDominationTotalForVB() or 0
+    if totalAtApply <= 0 then return false end
+    local bonus = GetVictoryDominationBonus()
+    local bonusSeconds = math.floor(bonus * totalAtApply + 0.5)
+    if bonusSeconds > totalAtApply then bonusSeconds = totalAtApply end
+    if bonusSeconds <= 0 then return false end
+
+    local campaignEpoch = (self.GetCurrentCampaignStartTs and self:GetCurrentCampaignStartTs())
+        or tonumber(OverlordDB.lastResetTimestamp) or 0
+    if campaignEpoch <= 0 then return false end
+
+    local ok, reason = self:ApplyDominationVictoryBonusEvent({
+        eventId = BuildVictoryDominationEventId(frontId, victoryTs),
+        frontId = frontId,
+        faction = faction,
+        victoryTs = victoryTs,
+        bonusSeconds = bonusSeconds,
+        totalAtApply = totalAtApply,
+        campaignEpoch = campaignEpoch,
+        source = localEmitter and "local_emitter" or "tv_proof",
+    }, localEmitter and { localEmitter = true } or { transportEvidence = true })
+    if not ok then return false end
+    if reason == "pending" then return false end
+
+    if localEmitter and reason == "applied" and faction == self.PlayerFaction then
+        local L = self.L
+        if L and L.VICTORY_DOMINATION_BONUS then
+            -- Une victoire = +1 point de barre (1 %).
+            self:PrintNotification(string.format("|cFF00FF00[Overlord]|r " .. L.VICTORY_DOMINATION_BONUS, 1))
+        end
+    end
+    return ok
+end
+
+local REMOTE_OBSERVER_INTERVAL = 0.5
+
+-- Boucle de mise à jour principale (C_Timer = 1 tick/s, plus sain que OnUpdate a chaque frame)
+local updateTicker = nil
+local frontTickPhase = 0
+local truceExpireTicker = nil
+-- Forteresses et avant-postes : ticker independant du front actif.
+local strategicSiteTicker = nil
+-- Interpolation des minuteurs (capture ennemie a distance), ~4 Hz ; ZoneControl:Update reste a 1/s.
+local remoteObserverTicker = nil
+local remoteObserverState = {
+    lastTick = nil,
+    zoneList = nil,
+    zoneListFrontId = nil,
+    zoneListBuiltAt = 0,
+}
+local REMOTE_OBSERVER_LIST_REBUILD_SEC = 2.0
+
+local function GetRemoteObserverZones(frontIdOverride)
+    local frontId = frontIdOverride
+    if frontId == nil then
+        frontId = Overlord.Fronts and Overlord.Fronts.activeFrontId
+    end
+    local now = GetTime()
+    if remoteObserverState.zoneList and remoteObserverState.zoneListFrontId == frontId
+        and (now - remoteObserverState.zoneListBuiltAt) < REMOTE_OBSERVER_LIST_REBUILD_SEC then
+        return remoteObserverState.zoneList
+    end
+    local list = {}
+    local zones = (frontId and Overlord.Zones and Overlord.Zones.GetDisplayOrderForFront)
+        and Overlord.Zones:GetDisplayOrderForFront(frontId) or Overlord.ZoneDatabase
+    if zones then
+        for _, zone in ipairs(zones) do
+            if zone.status == "in_progress" and not zone.isHolding then
+                list[#list + 1] = zone
+            end
+        end
+    end
+    remoteObserverState.zoneList = list
+    remoteObserverState.zoneListFrontId = frontId
+    remoteObserverState.zoneListBuiltAt = now
+    return list
+end
+
+function Overlord:GetRemoteObserverZones(frontIdOverride)
+    return GetRemoteObserverZones(frontIdOverride)
+end
+
+local function RunStrategicSiteTick(deltaTime)
+    if not Overlord.IsInitialized or Overlord.InstanceSuspended then return end
+    deltaTime = math.max(0, math.min(tonumber(deltaTime) or 1, 3))
+    -- Filet de fraicheur campagne (1 Hz, cout negligible : quelques comparaisons, pas de boucle).
+    -- Ce tick tourne en continu des le login independamment du front actif ; auparavant,
+    -- EnsureLeaderboardCampaignFresh n'etait cablee que sur OnEnterFront (transition de zone), donc
+    -- un joueur qui reste plante dans le meme front toute la semaine n'avait plus aucun rattrapage
+    -- si ScheduleNextReset venait a se desarmer (voir regression ladder NA non resete).
+    Overlord:EnsureLeaderboardCampaignFresh()
+    local onOutpost, curOutpostSite = false, nil
+    if Overlord.Outpost and Overlord.Outpost.IsPlayerOnOutpostMap then
+        onOutpost, curOutpostSite = Overlord.Outpost:IsPlayerOnOutpostMap()
+        Overlord.Outpost:TickMaintenance()
+    end
+    if Overlord.MapMarkers and Overlord.MapMarkers.CheckOutpostMinimap
+        and onOutpost ~= (Overlord.MapMarkers._mmOutpostMapActive == true) then
+        -- Detecte aussi l'entree/sortie Party Sync ou Chromie Time sans changement de carte.
+        Overlord.MapMarkers:CheckOutpostMinimap()
+    end
+    -- Les avant-postes de front restent sur le tick de front a 1 Hz. Le site
+    -- temporaire des Vaults doit continuer a capturer/decroitre hors front.
+    if not Overlord.InActiveFront and Overlord.OutpostControl and Overlord.Outpost then
+        if onOutpost then
+            Overlord.OutpostControl:Update(deltaTime)
+            local excludeKey = curOutpostSite and curOutpostSite.siteKey
+            if Overlord.OutpostControl:HasLocalAuthority(excludeKey) then
+                Overlord.OutpostControl:TickOffMapAuthority(deltaTime, excludeKey)
+            end
+        else
+            if Overlord.OutpostControl:HasLocalAuthority() then
+                Overlord.OutpostControl:TickOffMapAuthority(deltaTime)
+            end
+            if Overlord.ZoneIndicator and Overlord.ZoneIndicator.SyncOutpostCaptureHud
+                and Overlord.ZoneIndicator.OutpostHudNeedsRefresh
+                and Overlord.ZoneIndicator:OutpostHudNeedsRefresh() then
+                Overlord.ZoneIndicator:SyncOutpostCaptureHud()
+            end
+        end
+    end
+end
+
+function Overlord:StartStrategicSiteLoop()
+    if strategicSiteTicker then strategicSiteTicker:Cancel() end
+    local lastTickAt = GetTime()
+    strategicSiteTicker = C_Timer.NewTicker(1, function()
+        local now = GetTime()
+        local deltaTime = now - lastTickAt
+        lastTickAt = now
+        local ok, err = pcall(RunStrategicSiteTick, deltaTime)
+        if not ok and OverlordDB and OverlordDB.config and OverlordDB.config.debug then
+            print("|cFFFF4444[Overlord:dbg]|r Strategic site ticker: " .. tostring(err))
+        end
+    end)
+end
+
+function Overlord:StopStrategicSiteLoop()
+    if strategicSiteTicker then
+        strategicSiteTicker:Cancel()
+        strategicSiteTicker = nil
+    end
+end
+
+local function RunFrontMidTick()
+    if not Overlord.InActiveFront then return end
+    if Overlord.OutpostControl and Overlord.Outpost then
+        local onOutpost, curSite = Overlord.Outpost:IsPlayerOnOutpostMap()
+        if onOutpost then
+            Overlord.OutpostControl:Update(1)
+            local excludeKey = curSite and curSite.siteKey
+            if Overlord.OutpostControl:HasLocalAuthority(excludeKey) then
+                Overlord.OutpostControl:TickOffMapAuthority(1, excludeKey)
+            end
+        else
+            if Overlord.OutpostControl:HasLocalAuthority() then
+                Overlord.OutpostControl:TickOffMapAuthority(1)
+            end
+            if Overlord.ZoneIndicator and Overlord.ZoneIndicator.SyncOutpostCaptureHud
+                and Overlord.ZoneIndicator.OutpostHudNeedsRefresh
+                and Overlord.ZoneIndicator:OutpostHudNeedsRefresh() then
+                Overlord.ZoneIndicator:SyncOutpostCaptureHud()
+            end
+        end
+    end
+    if Overlord.UI and Overlord.UI.Update then Overlord.UI:Update() end
+end
+
+local function RunFrontLateIndicatorTick()
+    if not Overlord.InActiveFront then return end
+    if Overlord:IsPlayerDeadOrGhost() then return end
+    -- The check hands over what it read (front, holding, next objective) so the HUD
+    -- refresh right after does not read it again in the same tick.
+    local hintFrontId, hintHolding, hintNextZ
+    if Overlord.ZoneIndicator and Overlord.ZoneIndicator.FrontLateIndicatorNeedsRefresh then
+        local needs
+        needs, hintFrontId, hintHolding, hintNextZ = Overlord.ZoneIndicator:FrontLateIndicatorNeedsRefresh()
+        if not needs then return end
+    end
+    if Overlord.ZoneIndicator then
+        if Overlord.ZoneIndicator.RefreshHud then
+            Overlord.ZoneIndicator:RefreshHud(hintFrontId, hintHolding, hintNextZ)
+        else
+            Overlord.ZoneIndicator:UpdateIndicator()
+        end
+    end
+end
+
+function Overlord:StartUpdateLoop()
+    if updateTicker then updateTicker:Cancel() end
+    if truceExpireTicker then
+        truceExpireTicker:Cancel()
+        truceExpireTicker = nil
+    end
+    if remoteObserverTicker then remoteObserverTicker:Cancel() end
+    remoteObserverState.lastTick = GetTime()
+    remoteObserverTicker = C_Timer.NewTicker(REMOTE_OBSERVER_INTERVAL, function()
+        if not Overlord.InActiveFront then return end
+        local zones = GetRemoteObserverZones()
+        if #zones == 0 then
+            -- Garder la base de temps fraiche sans executer le chemin interpolation.
+            remoteObserverState.lastTick = GetTime()
+            return
+        end
+        local now = GetTime()
+        local dt = math.max(0.001, math.min(now - remoteObserverState.lastTick, 1.5))
+        remoteObserverState.lastTick = now
+        if Overlord.ZoneControl and Overlord.ZoneDatabase then
+            local zc = Overlord.ZoneControl
+            for _, zone in ipairs(zones) do
+                zc:TickRemoteObserverZone(zone, dt)
+            end
+        end
+    end)
+    truceExpireTicker = C_Timer.NewTicker(30, function()
+        if Overlord.IsInitialized and not Overlord.InstanceSuspended
+            and Overlord.Zones and Overlord.Zones.TryExpireFrontTruces then
+            Overlord.Zones:TryExpireFrontTruces()
+        end
+    end)
+
+    frontTickPhase = 0
+    updateTicker = C_Timer.NewTicker(1 / 3, function()
+        if not Overlord.InActiveFront then return end
+        -- Un seul ticker a 0.33s : remplace 1 Hz + 2x C_Timer.After / s.
+        frontTickPhase = frontTickPhase + 1
+        if frontTickPhase == 1 then
+            if Overlord.ZoneControl then Overlord.ZoneControl:Update(1) end
+        elseif frontTickPhase == 2 then
+            RunFrontMidTick()
+        else
+            RunFrontLateIndicatorTick()
+            frontTickPhase = 0
+        end
+    end)
+end
+
+function Overlord:StopUpdateLoop()
+    if updateTicker then
+        updateTicker:Cancel()
+        updateTicker = nil
+    end
+    if truceExpireTicker then
+        truceExpireTicker:Cancel()
+        truceExpireTicker = nil
+    end
+    if remoteObserverTicker then
+        remoteObserverTicker:Cancel()
+        remoteObserverTicker = nil
+    end
+    remoteObserverState.lastTick = nil
+end
+
+-- Reset complet de toutes les zones
+function Overlord:ResetAll()
+    -- updatedAt = 0 : permet d'accepter toute donnee sync entrante apres un reset.
+    -- Avant : updatedAt = time() bloquait les donnees dont le timestamp etait anterieur
+    -- au moment du reset, ce qui empechait les nouveaux joueurs de recevoir l'etat des zones.
+    ForEachKnownZone(function(zone)
+        if Overlord.CaptureLease and Overlord.CaptureLease.Complete then
+            Overlord.CaptureLease:Complete(zone)
+        end
+        if Overlord.Zones and Overlord.Zones.ClearCaptureFinalUnattestedState then
+            Overlord.Zones:ClearCaptureFinalUnattestedState(zone)
+        end
+        zone.killsCurrent      = 0
+        zone.allyKillsCurrent  = 0
+        zone.enemyKillsCurrent = 0
+        zone.holdTimeElapsed = 0
+        zone.isHolding = false
+        zone.isContested = false
+        zone.isPaused = false
+        zone.holdStartTime = nil
+        zone.capturedTime = nil
+        zone.previousOwner = nil
+        zone.owner = nil
+        zone.updatedAt = 0
+        zone.holdTimeRequired = 120
+    end)
+
+    -- Restaure les bases de chaque faction (les deux, visibles par tous)
+    -- Timestamp canonique du reset hebdo : tous les clients doivent produire le
+    -- meme certificat initial, meme s'ils executent ResetAll a quelques secondes d'ecart.
+    local now = (self.GetCurrentCampaignStartTs and self:GetCurrentCampaignStartTs())
+        or (OverlordDB and tonumber(OverlordDB.lastResetTimestamp)) or time()
+    ForEachKnownZone(function(zone)
+        local fixedOwner = Overlord.Zones and Overlord.Zones:GetBaseZoneFixedOwner(zone.id)
+        if fixedOwner then
+            zone.owner = fixedOwner
+            zone.capturedTime = now
+            zone.updatedAt = now
+        end
+    end)
+
+    local pf = self.PlayerFaction
+    ForEachKnownZone(function(zone)
+        if zone.owner == pf then
+            zone.status = "captured"
+        else
+            zone.status = "locked"
+        end
+    end)
+
+    -- Rend les premiers objectifs disponibles sur chaque front, pas seulement le front actif.
+    -- UpdateAvailableZones recalculera ensuite plus finement le front actif.
+    if Overlord.Fronts and Overlord.Fronts.Registry then
+        for _, front in pairs(Overlord.Fronts.Registry) do
+            if front and front.zones then
+                local prereqs = front.prereqs and front.prereqs[pf]
+                for _, zone in ipairs(front.zones) do
+                    if zone.owner ~= pf then
+                        local prereqIds = prereqs and prereqs[zone.id]
+                        local available = prereqIds ~= nil
+                        if available then
+                            for _, prereqId in ipairs(prereqIds) do
+                                local prereq = Overlord.Fronts:GetZone(prereqId, front.id)
+                                if not prereq or prereq.owner ~= pf or prereq.status ~= "captured" then
+                                    available = false
+                                    break
+                                end
+                            end
+                        end
+                        zone.status = available and "available" or "locked"
+                    end
+                end
+            end
+        end
+    end
+    
+    Overlord.Zones:UpdateAvailableZones()
+    -- Reset ressources (or, stocks des mines) et bonus actifs
+    if Overlord.Ressources then Overlord.Ressources:ResetResources() end
+    if Overlord.Outpost then Overlord.Outpost:ResetOutpostsForCampaign() end
+    OverlordDB.victoryDominationBonusLastTs = nil
+    OverlordDB.dominationVictoryEvents = OverlordDB.dominationVictoryEvents or { byPool = {} }
+    OverlordDB.dominationVictoryEvents.byPool =
+        OverlordDB.dominationVictoryEvents.byPool or {}
+    for _, oldPool in ipairs({ "fr", "eu", "de", "us", "na", "normal", "rp", "hardcore", "pve", "rpg", "rpv", "hc" }) do
+        OverlordDB.dominationVictoryEvents.byPool[oldPool] = nil
+    end
+    OverlordDB.dominationVictoryEvents.byPool.global = nil
+    OverlordDB.lastCampaignStats = nil
+    if Overlord.Zones and Overlord.Zones.ClearFrontVictories then
+        Overlord.Zones:ClearFrontVictories()
+    end
+    if self.General and self.General.OnCampaignReset then
+        self.General:OnCampaignReset()
+    end
+    -- Appel aux armes : le delai partage de la semaine passee ne bloque pas la nouvelle.
+    OverlordDB.factionCallSharedAt = nil
+    OverlordDB.factionCallLastAt = nil
+    if self.Button and self.Button.Refresh then pcall(self.Button.Refresh, self.Button) end
+    -- Activite de front recente : rien de la semaine passee dans le dock.
+    if self.FrontActivity and self.FrontActivity.ResetForCampaign then
+        pcall(self.FrontActivity.ResetForCampaign, self.FrontActivity)
+    end
+    -- Most Wanted : plus aucun crane ni alerte pour les joueurs de la semaine passee.
+    if self.MostWanted and self.MostWanted.ResetForCampaign then
+        pcall(self.MostWanted.ResetForCampaign, self.MostWanted)
+    end
+    -- campaignId : recalcule dans CheckWeeklyReset via SyncCampaignIdWithCurrentWeek (date AAAAMMJJ).
+    self:SaveState()
+    if self.Sync and self.Sync.ResetVictoryFlag then
+        self.Sync:ResetVictoryFlag()
+    end
+    if self.UI and self.UI.Refresh then self.UI:Refresh() end
+    -- CheckWeeklyReset s'execute avant UI:Initialize au login : Refresh() ne peint pas la domination.
+    -- Apres init + au prochain tick, forcer la barre (largeur / fills) sans attendre un hover.
+    C_Timer.After(0, function()
+        if Overlord.UI and Overlord.UI.RefreshDomination then
+            Overlord.UI:RefreshDomination()
+        end
+    end)
+
+    -- Repaint immediat des cercles carte / pins minimap (sinon attente du prochain OnUpdate carte).
+    if self.MapMarkers then
+        pcall(function()
+            if self.MapMarkers.ResumeWorldMapOverlays then
+                self.MapMarkers:ResumeWorldMapOverlays()
+            end
+            if self.MapMarkers.UpdateMinimapPins then
+                self.MapMarkers:UpdateMinimapPins()
+            end
+        end)
+    end
+
+    self:PrintNotification("|cFF00FF00[Overlord]|r " .. L.ALL_ZONES_RESET)
+end
+
+-- Sauvegarde automatique toutes les 30s (ou immédiate si dirty)
+-- Ticks depuis le dernier snapshot lance (pas depuis le login) : un tick en combat
+-- repousse le snapshot au tick suivant, pas d'un cycle entier.
+local ticksSinceLadderSnapshot = 0
+local ladderSnapshotThisSession = false
+function Overlord:RunAutoSaveTick()
+    -- IsInitialized passe vrai avant les sanitizers requis. Persister pendant leur
+    -- construction pourrait serialiser des racines partiellement migrees et rendre
+    -- la reprise /reload non idempotente : le ticker reste arme mais dort jusqu'au
+    -- commit global du pipeline login.
+    if not self.IsInitialized or not self._deferredModuleInitDone then return false end
+    -- WoW 12.0.5 : ne pas sauvegarder en instance (evite taint)
+    if self.InstanceSuspended then return false end
+    if saveDirty then self:SaveState() end
+    if self.Leaderboard and self.Leaderboard.leaderboardDirty then
+        self.Leaderboard:Save()
+    end
+    -- Snapshot complet du classement toutes les ~10 min (filet anti-perte), mais
+    -- seulement apres mutation. Le top 150 utilise un tas a allocations bornees,
+    -- mais le parcours de toutes les lignes (et l'index meta qu'il reconstruit
+    -- s'il est froid) laisse 2,5 a 25 Mo de dechets selon la taille du classement :
+    -- toutes les 2 min, c'etait l'essentiel de la memoire affichee pour l'addon.
+    -- Le reset hebdomadaire a son propre snapshot (SnapshotCurrentCampaignBeforeReset).
+    -- Le premier de la session part apres ~2 min, pour les sessions courtes.
+    ticksSinceLadderSnapshot = ticksSinceLadderSnapshot + 1
+    if ticksSinceLadderSnapshot >= (ladderSnapshotThisSession and 20 or 4)
+        and self.Leaderboard and self.Leaderboard.SnapshotCurrentCampaignFull
+        and self.Leaderboard._snapshotDirty ~= false
+        and not (InCombatLockdown and InCombatLockdown()) then
+        ticksSinceLadderSnapshot = 0
+        ladderSnapshotThisSession = true
+        self.Leaderboard:SnapshotCurrentCampaignFull()
+    end
+    return true
+end
+
+local function StartAutoSave()
+    C_Timer.NewTicker(30, function()
+        Overlord:RunAutoSaveTick()
+    end)
+end
+
+-- Masque le HUD Overlord en haut quand le joueur est mort/fantome : sinon les panneaux
+-- (stratum HIGH + souris active) recouvrent le bouton Blizzard « Retour au cimetiere ».
+local ghostHudSuppressed = false
+
+function Overlord:IsPlayerDeadOrGhost()
+    return (UnitIsDead and UnitIsDead("player")) or (UnitIsGhost and UnitIsGhost("player"))
+end
+
+function Overlord:ApplyGhostHudLayout()
+    local deadOrGhost = self:IsPlayerDeadOrGhost()
+    if deadOrGhost and not ghostHudSuppressed then
+        ghostHudSuppressed = true
+        if Overlord.ZoneIndicator and Overlord.ZoneIndicator.SuppressForGhost then
+            Overlord.ZoneIndicator:SuppressForGhost()
+        end
+    elseif not deadOrGhost and ghostHudSuppressed then
+        ghostHudSuppressed = false
+        if Overlord.ZoneIndicator and Overlord.ZoneIndicator.RestoreAfterGhost then
+            Overlord.ZoneIndicator:RestoreAfterGhost()
+        end
+    end
+end
+
+-- Event handlers
+eventFrame:RegisterEvent("ADDON_LOADED")
+eventFrame:RegisterEvent("PLAYER_LOGIN")
+eventFrame:RegisterEvent("PLAYER_LOGOUT")
+eventFrame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+eventFrame:RegisterEvent("PLAYER_DEAD")
+eventFrame:RegisterEvent("PLAYER_ALIVE")
+-- Re-check quand le joueur active/desactive le mode guerre
+pcall(function() eventFrame:RegisterEvent("LOADING_SCREEN_ENABLED") end)
+pcall(function() eventFrame:RegisterEvent("PLAYER_LEAVING_WORLD") end)
+pcall(function() eventFrame:RegisterEvent("PLAYER_FACTION_CHANGED") end)
+pcall(function() eventFrame:RegisterEvent("PLAYER_UNGHOST") end)
+-- Only the player's own phase matters: every unit around us fired it otherwise.
+pcall(function()
+    if eventFrame.RegisterUnitEvent then eventFrame:RegisterUnitEvent("UNIT_PHASE", "player")
+    else eventFrame:RegisterEvent("UNIT_PHASE") end
+end)
+
+eventFrame:SetScript("OnEvent", function(_, event, ...)
+
+    if event == "ADDON_LOADED" then
+        local addonName = ...
+        if addonName == "Overlord" then
+            Overlord:Initialize()
+            -- Creer le bouton avant PLAYER_LOGIN : un button-bag charge avant
+            -- Overlord peut scanner les globals dans son propre handler
+            -- PLAYER_LOGIN avant que le notre ne soit appele. Minimap et la DB
+            -- sont deja disponibles ici; les appels PLAYER_LOGIN/+3 s restent
+            -- des rattrapages idempotents.
+            if Minimap and Overlord.MapMarkers
+                and Overlord.MapMarkers.CreateMinimapButton then
+                Overlord.MapMarkers:CreateMinimapButton()
+            end
+            eventFrame:UnregisterEvent("ADDON_LOADED")
+        end
+    elseif event == "PLAYER_LOGIN" then
+        eventFrame:UnregisterEvent("PLAYER_LOGIN")
+        Overlord._loginChannelPending = true
+        StartAutoSave()
+        Overlord:ScheduleNextReset()
+
+        -- Rattrapage idempotent si ADDON_LOADED a rencontre une UI minimap
+        -- exceptionnellement indisponible. Les pins et overlays restent differes a +3 s.
+        if Minimap and Overlord.MapMarkers
+            and Overlord.MapMarkers.CreateMinimapButton then
+            Overlord.MapMarkers:CreateMinimapButton()
+        end
+
+        C_Timer.After(3, function()
+            -- Logged in (or /reload) inside an instance: done when leaving it (see
+            -- CompleteResumeFromInstance); nothing else creates the map layers.
+            if Overlord.InstanceSuspended then Overlord._loginMapInitDeferred = true return end
+            Overlord.Zones:CalcMapAspect()
+            if Overlord.MapMarkers then
+                Overlord.MapMarkers:Initialize()
+            end
+        end)
+
+        -- Le demarrage reseau est volontairement absent des timers PLAYER_LOGIN :
+        -- LoginSync ci-dessus ne s'execute qu'apres toutes les barrieres requises.
+
+        C_Timer.After(2.5, function()
+            if Overlord.InstanceSuspended then return end
+            Overlord:CheckActiveFrontZone()
+            if Overlord.InActiveFront and OverlordDB and OverlordDB.config
+                and OverlordDB.config.uiVisible and Overlord.UI and Overlord.UI.Show then
+                Overlord.UI:Show({ skipRefresh = true })
+                Overlord:ScheduleLoginUiFullRefresh(0.4)
+            end
+        end)
+
+        C_Timer.After(3.5, function()
+            Overlord:RunOrDeferLoginPopup("login")
+        end)
+
+        C_Timer.After(8, function()
+            Overlord:RunOrDeferLoginPopup("daily")
+        end)
+
+    elseif event == "LOADING_SCREEN_ENABLED" or event == "PLAYER_LEAVING_WORLD" then
+        -- Derniere fenetre avant qu'IsInInstance() bloque tous les transports :
+        -- liberer explicitement les baux distants, sans attendre un rewrite final.
+        Overlord:RunOrDeferCaptureRelease()
+    elseif event == "PLAYER_FACTION_CHANGED" then
+        -- Coalescer pendant les sanitizers puis propager les alias en coroutine.
+        -- Aucun scan du classement ni envoi reseau ne tourne dans ce callback event.
+        Overlord:RequestFactionChangeReconcile()
+
+    elseif event == "PLAYER_LOGOUT" then
+        -- 2.2.2 : chaque ecriture est isolee (pcall). Une erreur d'un module annexe (session,
+        -- position du panneau, popups) sautait SaveState et Leaderboard:Save : cartes et
+        -- classement de la session perdus.
+        -- (Une erreur reste lisible dans les SavedVariables : OverlordDB.lastLogoutError.)
+        if OverlordDB then OverlordDB.lastLogoutError = nil end
+        local function persist(owner, method)
+            if not (owner and owner[method]) then return end
+            local ok, err = pcall(owner[method], owner)
+            if not ok and OverlordDB and not OverlordDB.lastLogoutError then
+                OverlordDB.lastLogoutError = tostring(method) .. ": " .. tostring(err)
+            end
+        end
+        -- 2.2.2 : lignes playerInfo compactes (metatable) reecrites en lignes nommees,
+        -- seule forme que l'ecriture des SavedVariables voit en entier. En premier : rien
+        -- de ce qui suit ne peut l'empecher, et toute ligne ecrite ensuite reste nommee.
+        persist(Overlord.Leaderboard, "MaterializePlayerInfoForLogout")
+        persist(Overlord.General, "PersistSession")
+        -- Position du panel : derniere ecriture avant fermeture des SavedVariables
+        persist(Overlord.UI, "PersistPanelPosition")
+        -- Sauvegarde faction + timestamp pour detecter changement Horde<->Alliance et donnees obsoletes
+        if OverlordDB then
+            if Overlord.PlayerFaction then
+                OverlordDB.lastSessionFaction = Overlord.PlayerFaction
+            end
+            OverlordDB.lastSessionTimestamp = time()
+        end
+        persist(Overlord.Popups, "CommitPendingPopupMark")
+        persist(Overlord.Popups, "PersistSeenFlags")
+        persist(Overlord, "SaveState")
+        -- Un snapshot tranche ne peut pas terminer apres PLAYER_LOGOUT. Le dernier
+        -- snapshot autosave complet reste intact ; Save() persiste les buckets courants.
+        persist(Overlord.Leaderboard, "Save")
+        -- Derniere ecriture : l'alias OverlordDB.leaderboard pointe sur le bucket de
+        -- pool deja persiste. Le retirer evite une seconde copie complete du ladder
+        -- dans le fichier ; Initialize() le retablit depuis leaderboardAliasPool.
+        if OverlordDB and OverlordDB.leaderboard and OverlordDB.leaderboardsByPool
+            and Overlord.GetCurrentLeaderboardSavedVarsPool then
+            local ok, pool = pcall(Overlord.GetCurrentLeaderboardSavedVarsPool, Overlord)
+            if ok and type(pool) == "string" and pool ~= ""
+                and OverlordDB.leaderboardsByPool[pool] == OverlordDB.leaderboard then
+                OverlordDB.leaderboardAliasPool = pool
+                OverlordDB.leaderboard = nil
+            end
+        end
+        persist(Overlord.Leaderboard, "SlimSavedSnapshotForLogout")
+    elseif event == "PLAYER_DEAD" or event == "PLAYER_ALIVE" or event == "PLAYER_UNGHOST" then
+        if event == "PLAYER_DEAD" and Overlord.ZoneControl
+            and Overlord.ZoneControl.ReleaseLocalCaptureState then
+            -- Fermer la vague avant tout ZS/ZA recu ensuite. Attendre la
+            -- decroissance LOSING laissait un echo finaliser l'abandon.
+            Overlord.ZoneControl:ReleaseLocalCaptureState(true)
+        end
+        Overlord:ApplyGhostHudLayout()
+    elseif event == "UNIT_PHASE" then
+        local unit = ...
+        if unit == "player" and Overlord.Shard and Overlord.Shard.InvalidateLocalContext then
+            -- Un hop de phase peut garder la meme map : invalider avant tout prochain tick/GA.
+            Overlord.Shard:InvalidateLocalContext()
+        end
+    elseif event == "ZONE_CHANGED_NEW_AREA" or event == "PLAYER_ENTERING_WORLD" then
+        -- 2.2.2: the game swaps its zone channels now; ours keep away a moment (SyncAux).
+        if Overlord.Sync and Overlord.Sync.NoteZoneSwap then Overlord.Sync:NoteZoneSwap() end
+        if Overlord.Shard and Overlord.Shard.InvalidateLocalContext then
+            Overlord.Shard:InvalidateLocalContext()
+        end
+        local inInstance = IsInInstance()
+        -- Filet de securite GetInstanceInfo() UNIQUEMENT quand on n'est pas deja suspendu :
+        -- sert a detecter l'entree en instance quand IsInInstance() est brievement faux pendant le loading.
+        -- Quand on est DEJA suspendu (ex. sortie d'arene), on ne fait PAS ce check :
+        -- GetInstanceInfo() peut rester "arena"/"pvp" quelques instants apres le chargement
+        -- du monde ouvert, ce qui forcerait inInstance=true, appellerait SuspendForInstance()
+        -- (qui annule tous les timers et retourne), et bloquerait indefiniment la reprise.
+        -- ResumeFromInstance() gere deja ce cas via ses propres retry timers (0.35/0.95/2.0s).
+        if not inInstance and not Overlord.InstanceSuspended then
+            local okInst, _, instType = pcall(GetInstanceInfo)
+            if okInst and instType and instType ~= "none" and instType ~= "" then
+                inInstance = true
+            end
+        end
+        if inInstance then
+            Overlord:SuspendForInstance()
+        else
+            Overlord:ResumeFromInstance()
+            -- CheckActiveFrontZone uniquement si le resume a reussi (InstanceSuspended=false).
+            -- Si le resume est differe (GetInstanceInfo encore "arena"), IsPlayerInActiveFront()
+            -- retourne false (car elle verifie aussi GetInstanceInfo), ce qui declencherait
+            -- OnLeaveFront() a tort et cacherait la minimap / setterait InActiveFront=false.
+            -- ResumeFromInstance() appelle lui-meme CheckActiveFrontZone quand il reussit.
+            if not Overlord.InstanceSuspended then
+                Overlord:CheckActiveFrontZone()
+                if Overlord.UI and Overlord.UI.RefreshPanelState then
+                    Overlord.UI:RefreshPanelState()
+                end
+            end
+        end
+        if event == "PLAYER_ENTERING_WORLD" then
+            Overlord:FinalizeCaptureReleaseAfterWorldEntry(inInstance)
+        end
+        Overlord:ApplyGhostHudLayout()
+    end
+end)
+
+-- WoW 12.0 (Midnight) : COMBAT_LOG_EVENT_UNFILTERED supprime pour les addons.
+-- La detection des kills est geree par CombatTracker.lua via PARTY_KILL
+-- et PLAYER_PVP_KILLS_CHANGED (events standards qui fonctionnent en 12.0).

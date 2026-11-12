@@ -1,0 +1,136 @@
+local addonName, namespace = ...
+
+--[[ namespace:CreateFrame(_..._) ![](https://img.shields.io/badge/function-blue)
+A wrapper for [`CreateFrame`](https://warcraft.wiki.gg/wiki/API:CreateFrame), mixed in with `namespace.eventMixin`.
+--]]
+function namespace:CreateFrame(...)
+	return Mixin(CreateFrame(...), namespace.eventMixin)
+end
+
+do
+	local KEY_DIRECTION_CVAR = 'ActionButtonUseKeyDown'
+	local function updateKeyDirection(self)
+		if C_CVar.GetCVarBool(KEY_DIRECTION_CVAR) then
+			self:RegisterForClicks('AnyDown')
+		else
+			self:RegisterForClicks('AnyUp')
+		end
+	end
+
+	local function onCVarUpdate(self, cvar)
+		if cvar == KEY_DIRECTION_CVAR then
+			namespace:Defer(updateKeyDirection, self)
+		end
+	end
+
+	--[[ namespace:CreateButton(_..._) ![](https://img.shields.io/badge/function-blue)
+	A wrapper for `namespace:CreateFrame(...)`, but will handle key direction preferences of the client.  
+	Use this specifically to create clickable buttons.
+	--]]
+	function namespace:CreateButton(...)
+		local button = namespace:CreateFrame(...)
+		button:RegisterEvent('CVAR_UPDATE', onCVarUpdate)
+
+		-- the CVar doesn't trigger during login, so we'll have to trigger the handlers ourselves
+		onCVarUpdate(button, KEY_DIRECTION_CVAR)
+
+		return button
+	end
+end
+
+local tooltip; do
+	local function refreshTooltip(self)
+		-- we need this to refresh tooltips when cache gets updated from TOOLTIP_DATA_UPDATE,
+		-- but we can't use GameTooltip_OnUpdate because it taints secrets
+		local info = self:GetPrimaryTooltipInfo()
+		if info and info.getterName then
+			-- this is so stupidly janky lol
+			if self[info.getterName:gsub('Get','Set')](self, unpack(info.getterArgs or {})) then
+				self:Show() -- re-render
+			end
+		end
+	end
+
+	--[[ namespace:GetTooltip(_..._) ![](https://img.shields.io/badge/function-blue)
+	Creates and returns a tooltip specific for the addon.  
+	The variable arguments are passed to [SetOwner](https://warcraft.wiki.gg/wiki/API:GameTooltip_SetOwner) if provided.
+	--]]
+	function namespace:GetTooltip(...)
+		if not tooltip then
+			tooltip = CreateFrame('GameTooltip', addonName .. 'Tooltip', UIParent, 'GameTooltipTemplate')
+			tooltip:SetFrameStrata('TOOLTIP')
+			-- tooltip:HookScript('OnShow', GenerateFlatClosure(GameTooltip.Hide, GameTooltip))
+			tooltip.RefreshDataNextUpdate = refreshTooltip
+
+			-- hide this tooltip whenever GameTooltip shows up
+			GameTooltip:HookScript('OnShow', GenerateFlatClosure(namespace.HideTooltip))
+
+			local embeddedItemTooltip = CreateFrame('Frame', nil, tooltip, 'InternalEmbeddedItemTooltipTemplate')
+			embeddedItemTooltip:SetPoint('BOTTOMLEFT', 10, 13)
+			embeddedItemTooltip:SetSize(100, 100)
+			embeddedItemTooltip:Hide()
+			embeddedItemTooltip.yspacing = 13
+			tooltip.ItemTooltip = embeddedItemTooltip
+
+			tooltip.supportsItemComparison = true
+			tooltip.shoppingTooltips = {}
+			for index = 1, 2 do
+				local shoppingTooltip = CreateFrame('GameTooltip', addonName .. 'TooltipShopping' .. index, UIParent, 'ShoppingTooltipTemplate')
+				shoppingTooltip:SetClampedToScreen(true)
+				shoppingTooltip:SetFrameStrata('TOOLTIP')
+				shoppingTooltip:Hide()
+				tooltip.shoppingTooltips[index] = shoppingTooltip
+			end
+		end
+
+		if ... then
+			tooltip:SetOwner(...)
+		end
+
+		return tooltip
+	end
+
+	--[[ namespace:GetTooltipWithDefaultAnchor([_owner_]) ![](https://img.shields.io/badge/function-blue)
+	Calls GetTooltip and anchors it to the default anchor.  
+	This is a safe alternate to GameTooltip_SetDefaultAnchor.
+	--]]
+	function namespace:GetTooltipWithDefaultAnchor(owner)
+		local tooltip = namespace:GetTooltip()
+		tooltip:SetOwner(owner or UIParent, 'ANCHOR_NONE')
+		tooltip:SetPoint('BOTTOMRIGHT', GameTooltipDefaultContainer)
+		return tooltip
+	end
+end
+
+--[[ namespace:HideTooltip() ![](https://img.shields.io/badge/function-blue)
+Hide the tooltip created above.
+--]]
+function namespace:HideTooltip()
+	if tooltip then
+		tooltip:Hide()
+		namespace:HideShoppingTooltips()
+	end
+end
+
+--[[ namespace:ShowShoppingTooltips() ![](https://img.shields.io/badge/function-blue)
+Show shopping tooltips attached to the tooltip created above, if possible.
+--]]
+function namespace:ShowShoppingTooltips()
+	local tooltip = namespace:GetTooltip()
+	local tooltipData = tooltip:GetPrimaryTooltipData()
+	local comparisonItem = TooltipComparisonManager:CreateComparisonItem(tooltipData)
+	if comparisonItem then
+		C_TooltipComparison.CompareItem(comparisonItem, tooltip)
+	end
+end
+
+--[[ namespace:HideShoppingTooltips() ![](https://img.shields.io/badge/function-blue)
+Hide shopping tooltips attached to the tooltip created above.
+--]]
+function namespace:HideShoppingTooltips()
+	if tooltip then
+		for _, shoppingTooltip in next, tooltip.shoppingTooltips do
+			shoppingTooltip:Hide()
+		end
+	end
+end

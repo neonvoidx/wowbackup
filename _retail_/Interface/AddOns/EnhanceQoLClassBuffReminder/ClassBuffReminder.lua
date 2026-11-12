@@ -1,0 +1,9572 @@
+local parentAddonName = "EnhanceQoL"
+local _, addon = ...
+
+if _G[parentAddonName] then
+	addon = _G[parentAddonName]
+else
+	error(parentAddonName .. " is not loaded")
+end
+
+addon.ClassBuffReminder = addon.ClassBuffReminder or {}
+local Reminder = addon.ClassBuffReminder
+
+local L = LibStub("AceLocale-3.0"):GetLocale(parentAddonName)
+local LSM = LibStub("LibSharedMedia-3.0", true)
+local EditMode = addon.EditMode
+local Glow = addon.Glow
+local SettingType = EditMode and EditMode.lib and EditMode.lib.SettingType
+local issecretvalue = _G.issecretvalue
+local UnitInPartyIsAI = _G.UnitInPartyIsAI
+local UnitGUID = _G.UnitGUID
+local GetTimePreciseSec = _G.GetTimePreciseSec
+local C_PetBar = _G.C_PetBar
+
+local EDITMODE_ID = "classBuffReminder"
+Reminder.dynamicAnchorId = "tracker:classBuffReminder"
+local ICON_MISSING = "Interface\\Icons\\INV_Misc_QuestionMark"
+local DISPLAY_MODE_FULL = "FULL"
+local DISPLAY_MODE_ICON_ONLY = "ICON_ONLY"
+local GROWTH_RIGHT = "RIGHT"
+local GROWTH_LEFT = "LEFT"
+local GROWTH_UP = "UP"
+local GROWTH_DOWN = "DOWN"
+local TEXT_OUTLINE_NONE = "NONE"
+local TEXT_OUTLINE_OUTLINE = "OUTLINE"
+local TEXT_OUTLINE_THICK = "THICKOUTLINE"
+local TEXT_OUTLINE_MONO = "MONOCHROME_OUTLINE"
+local SAMPLE_SPELL_IDS = { 1126, 1459, 21562, 6673, 381748 }
+local SAMPLE_ICON_COUNT = 5
+local AURA_FILTER_HELPFUL = "HELPFUL"
+local AURA_SLOT_BATCH_SIZE = 32
+local AURA_SLOT_SCAN_GUARD = 16
+local REMINDER_GLOW_KEY = "CLASS_BUFF_REMINDER"
+local SHARED_FOOD_AURA_ICON_ID = 136000
+local CURRENT_EXPANSION_INSTANCE_CACHE = {}
+Reminder.UPDATE_DELAY = 0.25
+Reminder.AURA_UPDATE_DELAY = 0.5
+Reminder.RUNTIME_UPDATE_DELAY = 0.5
+Reminder.ROSTER_UPDATE_DELAY = 0.75
+
+function Reminder:CanReadAuraData()
+	return not addon.AuraCompat or addon.AuraCompat:CanReadAuraData()
+end
+
+local DB_ENABLED = "classBuffReminderEnabled"
+local DB_SHOW_PARTY = "classBuffReminderShowParty"
+local DB_SHOW_RAID = "classBuffReminderShowRaid"
+local DB_SHOW_SOLO = "classBuffReminderShowSolo"
+local DB_TRACK_GROUP_BUFFS = "classBuffReminderTrackGroupBuffs"
+local DB_HIDE_IN_RESTED_AREA = "classBuffReminderHideInRestedArea"
+local DB_ONLY_OUT_OF_COMBAT = "classBuffReminderOnlyOutOfCombat"
+local DB_ROLE_FILTER_ENABLED = "classBuffReminderRoleFilterEnabled"
+local DB_ROLE_FILTER_CONTEXT = "classBuffReminderRoleFilterContext"
+local DB_HIDE_FOR_HEALER = "classBuffReminderHideForHealer"
+local DB_HIDE_FOR_TANK = "classBuffReminderHideForTank"
+local DB_HIDE_FOR_DAMAGER = "classBuffReminderHideForDamager"
+local DB_HIDE_FOR_NONE = "classBuffReminderHideForNoRole"
+local DB_SHOW_IF_ONLY_PROVIDER = "classBuffReminderShowIfOnlyProvider"
+local DB_GLOW = "classBuffReminderGlow"
+local DB_GLOW_STYLE = "classBuffReminderGlowStyle"
+local DB_GLOW_INSET = "classBuffReminderGlowInset"
+local DB_GLOW_COLOR = "classBuffReminderGlowColor"
+Reminder.DB_GLOW_USE_CLASS_COLOR = Reminder.DB_GLOW_USE_CLASS_COLOR or "classBuffReminderGlowUseClassColor"
+local DB_SOUND_ON_MISSING = "classBuffReminderSoundOnMissing"
+local DB_MISSING_SOUND = "classBuffReminderMissingSound"
+local DB_DISPLAY_MODE = "classBuffReminderDisplayMode"
+local DB_GROWTH_DIRECTION = "classBuffReminderGrowthDirection"
+local DB_GROWTH_FROM_CENTER = "classBuffReminderGrowthFromCenter"
+local DB_TRACK_FLASKS = "classBuffReminderTrackFlasks"
+local DB_TRACK_FLASKS_INSTANCE_ONLY = "classBuffReminderTrackFlasksInstanceOnly"
+local DB_TRACK_FOOD = "classBuffReminderTrackFood"
+local DB_TRACK_FOOD_INSTANCE_ONLY = "classBuffReminderTrackFoodInstanceOnly"
+local DB_TRACK_WEAPON_BUFFS = "classBuffReminderTrackWeaponBuffs"
+local DB_TRACK_WEAPON_BUFFS_INSTANCE_ONLY = "classBuffReminderTrackWeaponBuffsInstanceOnly"
+Reminder.DB_TRACK_HEALTHSTONES = Reminder.DB_TRACK_HEALTHSTONES or "classBuffReminderTrackHealthstones"
+Reminder.DB_TRACK_HEALTHSTONES_INSTANCE_ONLY = Reminder.DB_TRACK_HEALTHSTONES_INSTANCE_ONLY or "classBuffReminderTrackHealthstonesInstanceOnly"
+Reminder.DB_TRACK_STANCES = Reminder.DB_TRACK_STANCES or "classBuffReminderTrackStances"
+local DB_SCALE = "classBuffReminderScale"
+Reminder.DB_OVERALL_ALPHA = "classBuffReminderOverallAlpha"
+local DB_ICON_SIZE = "classBuffReminderIconSize"
+local DB_FONT_SIZE = "classBuffReminderFontSize"
+local DB_ICON_GAP = "classBuffReminderIconGap"
+local DB_BORDER_ENABLED = "classBuffReminderBorderEnabled"
+local DB_BORDER_TEXTURE = "classBuffReminderBorderTexture"
+local DB_BORDER_SIZE = "classBuffReminderBorderSize"
+local DB_BORDER_OFFSET = "classBuffReminderBorderOffset"
+local DB_BORDER_COLOR = "classBuffReminderBorderColor"
+local DB_XY_TEXT_SIZE = "classBuffReminderXYTextSize"
+local DB_XY_TEXT_OUTLINE = "classBuffReminderXYTextOutline"
+local DB_XY_TEXT_COLOR = "classBuffReminderXYTextColor"
+local DB_XY_TEXT_OFFSET_X = "classBuffReminderXYTextOffsetX"
+local DB_XY_TEXT_OFFSET_Y = "classBuffReminderXYTextOffsetY"
+local BORDER_SIZE_MIN = 1
+local BORDER_SIZE_MAX = 24
+local BORDER_OFFSET_MIN = -20
+local BORDER_OFFSET_MAX = 20
+Reminder.DB_ICON_SHAPE = Reminder.DB_ICON_SHAPE or "classBuffReminderIconShape"
+Reminder.DB_ICON_ZOOM = Reminder.DB_ICON_ZOOM or "classBuffReminderIconZoom"
+
+Reminder.runeTracking = Reminder.runeTracking or {
+	auraIds = {
+		1295329, -- Tidesworn Augment Rune
+		1264426, -- Void-Touched Augment Rune
+		1234969, -- Ethereal Augment Rune
+		1242347, -- Soulgorged Augment Rune
+		453250, -- Crystallized Augment Rune
+		393438, -- Draconic/Dreambound Augment Rune
+		347901, -- Veiled Augment Rune
+	},
+	enabledDb = "classBuffReminderTrackRunes",
+	legacyDb = "classBuffReminderTrackRunesInstanceOnly",
+}
+
+Reminder.healthstoneTracking = Reminder.healthstoneTracking or {
+	createSpellId = 6201,
+	itemIds = { 224464, 5512 },
+}
+
+Reminder.stanceTracking = Reminder.stanceTracking
+	or {
+		definitions = {
+			PALADIN = { spellId = 465, auraIds = { 465 }, specIds = { [65] = true, [66] = true, [70] = true } },
+			PRIEST = { spellId = 232698, specIds = { [258] = true } },
+			WARRIOR_ARMS = { spellId = 386164, specIds = { [71] = true } },
+			WARRIOR_FURY = { spellId = 386196, specIds = { [72] = true } },
+		},
+	}
+
+local TRACKING_CONTENT = {
+	OPEN_WORLD = "openWorld",
+	SCENARIO = "scenario",
+	PARTY_FOLLOWER = "partyFollower",
+	PARTY_NORMAL = "partyNormal",
+	PARTY_HEROIC = "partyHeroic",
+	PARTY_MYTHIC = "partyMythic",
+	PARTY_MYTHIC_PLUS = "partyMythicPlus",
+	RAID_LFR = "raidLfr",
+	RAID_NORMAL = "raidNormal",
+	RAID_HEROIC = "raidHeroic",
+	RAID_MYTHIC = "raidMythic",
+}
+
+TRACKING_CONTENT.db = {
+	FLASKS = "classBuffReminderTrackFlasksContent",
+	FOOD = "classBuffReminderTrackFoodContent",
+	RUNES = "classBuffReminderTrackRunesContent",
+	WEAPON_BUFFS = "classBuffReminderTrackWeaponBuffsContent",
+	PETS = "classBuffReminderTrackPetsContent",
+	HEALTHSTONES = "classBuffReminderTrackHealthstonesContent",
+	STANCES = "classBuffReminderTrackStancesContent",
+}
+
+TRACKING_CONTENT.order = {
+	TRACKING_CONTENT.OPEN_WORLD,
+	TRACKING_CONTENT.SCENARIO,
+	TRACKING_CONTENT.PARTY_FOLLOWER,
+	TRACKING_CONTENT.PARTY_NORMAL,
+	TRACKING_CONTENT.PARTY_HEROIC,
+	TRACKING_CONTENT.PARTY_MYTHIC,
+	TRACKING_CONTENT.PARTY_MYTHIC_PLUS,
+	TRACKING_CONTENT.RAID_LFR,
+	TRACKING_CONTENT.RAID_NORMAL,
+	TRACKING_CONTENT.RAID_HEROIC,
+	TRACKING_CONTENT.RAID_MYTHIC,
+}
+
+TRACKING_CONTENT.keys = {
+	[TRACKING_CONTENT.OPEN_WORLD] = true,
+	[TRACKING_CONTENT.SCENARIO] = true,
+	[TRACKING_CONTENT.PARTY_FOLLOWER] = true,
+	[TRACKING_CONTENT.PARTY_NORMAL] = true,
+	[TRACKING_CONTENT.PARTY_HEROIC] = true,
+	[TRACKING_CONTENT.PARTY_MYTHIC] = true,
+	[TRACKING_CONTENT.PARTY_MYTHIC_PLUS] = true,
+	[TRACKING_CONTENT.RAID_LFR] = true,
+	[TRACKING_CONTENT.RAID_NORMAL] = true,
+	[TRACKING_CONTENT.RAID_HEROIC] = true,
+	[TRACKING_CONTENT.RAID_MYTHIC] = true,
+}
+
+TRACKING_CONTENT.difficulties = {
+	party = {
+		follower = {
+			[((_G.DifficultyUtil and _G.DifficultyUtil.ID) or {}).FollowerDungeon or 205] = true,
+		},
+		normal = {
+			[((_G.DifficultyUtil and _G.DifficultyUtil.ID) or {}).DungeonNormal or 1] = true,
+			[((_G.DifficultyUtil and _G.DifficultyUtil.ID) or {}).DungeonTimewalker or 24] = true,
+			[150] = true,
+			[216] = true,
+		},
+		heroic = {
+			[((_G.DifficultyUtil and _G.DifficultyUtil.ID) or {}).DungeonHeroic or 2] = true,
+		},
+		mythic = {
+			[((_G.DifficultyUtil and _G.DifficultyUtil.ID) or {}).DungeonMythic or 23] = true,
+		},
+		mythicPlus = {
+			[((_G.DifficultyUtil and _G.DifficultyUtil.ID) or {}).DungeonChallenge or 8] = true,
+		},
+	},
+	raid = {
+		lfr = {
+			[((_G.DifficultyUtil and _G.DifficultyUtil.ID) or {}).RaidLFR or 7] = true,
+			[((_G.DifficultyUtil and _G.DifficultyUtil.ID) or {}).PrimaryRaidLFR or 17] = true,
+			[151] = true,
+		},
+		normal = {
+			[((_G.DifficultyUtil and _G.DifficultyUtil.ID) or {}).Raid10Normal or 3] = true,
+			[((_G.DifficultyUtil and _G.DifficultyUtil.ID) or {}).Raid25Normal or 4] = true,
+			[((_G.DifficultyUtil and _G.DifficultyUtil.ID) or {}).Raid40 or 9] = true,
+			[((_G.DifficultyUtil and _G.DifficultyUtil.ID) or {}).PrimaryRaidNormal or 14] = true,
+			[((_G.DifficultyUtil and _G.DifficultyUtil.ID) or {}).RaidStory or 220] = true,
+			[((_G.DifficultyUtil and _G.DifficultyUtil.ID) or {}).RaidTimewalker or 33] = true,
+		},
+		heroic = {
+			[((_G.DifficultyUtil and _G.DifficultyUtil.ID) or {}).Raid10Heroic or 5] = true,
+			[((_G.DifficultyUtil and _G.DifficultyUtil.ID) or {}).Raid25Heroic or 6] = true,
+			[((_G.DifficultyUtil and _G.DifficultyUtil.ID) or {}).PrimaryRaidHeroic or 15] = true,
+		},
+		mythic = {
+			[((_G.DifficultyUtil and _G.DifficultyUtil.ID) or {}).PrimaryRaidMythic or 16] = true,
+			[233] = true,
+		},
+	},
+}
+
+function Reminder.CopyTrackingContentSelection(selection)
+	local copy = {}
+	if type(selection) ~= "table" then return copy end
+	for _, key in ipairs(TRACKING_CONTENT.order) do
+		if selection[key] == true then copy[key] = true end
+	end
+	return copy
+end
+
+function Reminder.CreateDefaultTrackingContentSelection()
+	return {
+		[TRACKING_CONTENT.PARTY_MYTHIC] = true,
+		[TRACKING_CONTENT.RAID_NORMAL] = true,
+		[TRACKING_CONTENT.RAID_HEROIC] = true,
+		[TRACKING_CONTENT.RAID_MYTHIC] = true,
+	}
+end
+
+function Reminder.CreateDefaultPetTrackingContentSelection()
+	local selection = Reminder.CreateDefaultTrackingContentSelection()
+	selection[TRACKING_CONTENT.PARTY_MYTHIC_PLUS] = true
+	return selection
+end
+
+function Reminder.CreateLegacyInstanceTrackingContentSelection()
+	return {
+		[TRACKING_CONTENT.PARTY_FOLLOWER] = true,
+		[TRACKING_CONTENT.PARTY_NORMAL] = true,
+		[TRACKING_CONTENT.PARTY_HEROIC] = true,
+		[TRACKING_CONTENT.PARTY_MYTHIC] = true,
+		[TRACKING_CONTENT.RAID_LFR] = true,
+		[TRACKING_CONTENT.RAID_NORMAL] = true,
+		[TRACKING_CONTENT.RAID_HEROIC] = true,
+		[TRACKING_CONTENT.RAID_MYTHIC] = true,
+	}
+end
+
+function Reminder.CreateAllTrackingContentSelection()
+	local selection = {}
+	for _, key in ipairs(TRACKING_CONTENT.order) do
+		selection[key] = true
+	end
+	return selection
+end
+
+function Reminder.NormalizeTrackingContentSelection(value, legacyInstanceOnly, fallback)
+	if type(value) == "table" then
+		local normalized = {}
+		local changed = false
+		for key, selected in pairs(value) do
+			if TRACKING_CONTENT.keys[key] and selected == true then
+				normalized[key] = true
+			else
+				changed = true
+			end
+		end
+		return normalized, changed
+	end
+
+	if legacyInstanceOnly == true then return Reminder.CreateLegacyInstanceTrackingContentSelection(), true end
+	if legacyInstanceOnly == false then return Reminder.CreateAllTrackingContentSelection(), true end
+	if type(fallback) == "table" then return Reminder.CopyTrackingContentSelection(fallback), true end
+	return Reminder.CreateDefaultTrackingContentSelection(), true
+end
+
+function Reminder.InvalidateTrackingContentSelectionCache(dbKey)
+	local cache = Reminder.trackingContentSelectionCache
+	if type(cache) ~= "table" then return end
+	if dbKey then
+		cache[dbKey] = nil
+	else
+		for key in pairs(cache) do
+			cache[key] = nil
+		end
+	end
+end
+
+Reminder.defaults = Reminder.defaults
+	or {
+		enabled = false,
+		showParty = true,
+		showRaid = true,
+		showSolo = false,
+		trackGroupBuffs = true,
+		hideInRestedArea = false,
+		onlyOutOfCombat = false,
+		roleFilterEnabled = false,
+		roleFilterContext = "RAID_ONLY",
+		hideForHealer = false,
+		hideForTank = false,
+		hideForDamager = false,
+		hideForNoRole = false,
+		showIfOnlyProvider = true,
+		glow = true,
+		glowStyle = "MARCHING_ANTS",
+		glowInset = 0,
+		glowColor = { r = 0.95, g = 0.95, b = 0.2, a = 1 },
+		glowUseClassColor = false,
+		soundOnMissing = false,
+		missingSound = "",
+		displayMode = DISPLAY_MODE_ICON_ONLY,
+		growthDirection = GROWTH_RIGHT,
+		growthFromCenter = false,
+		iconShape = "DEFAULT",
+		trackFlasks = false,
+		trackFlasksContent = Reminder.CreateDefaultTrackingContentSelection(),
+		trackFlasksInstanceOnly = false,
+		trackFood = false,
+		trackFoodContent = Reminder.CreateDefaultTrackingContentSelection(),
+		trackFoodInstanceOnly = false,
+		trackRunes = false,
+		trackRunesContent = Reminder.CreateDefaultTrackingContentSelection(),
+		trackRunesInstanceOnly = false,
+		trackWeaponBuffs = false,
+		trackWeaponBuffsContent = Reminder.CreateDefaultTrackingContentSelection(),
+		trackWeaponBuffsInstanceOnly = false,
+		trackHealthstones = true,
+		trackHealthstonesContent = Reminder.CreateAllTrackingContentSelection(),
+		trackHealthstonesInstanceOnly = false,
+		trackStances = true,
+		trackStancesContent = Reminder.CreateAllTrackingContentSelection(),
+		expirationWarningMinutes = 0,
+		expirationWarningMinutesMythicDungeon = 0,
+		expirationWarningMinutesRaid = 0,
+		trackPets = false,
+		trackPetsContent = Reminder.CreateDefaultPetTrackingContentSelection(),
+		trackPetsInstanceOnly = false,
+		petHealthReminderEnabled = false,
+		petHealthReminderThreshold = 30,
+		petHealthReminderInfernalBeneficiaryOnly = false,
+		ignorePetDefensive = false,
+		ignorePetPassive = false,
+		hidePetReminderText = false,
+		scale = 1,
+		overallAlpha = 1,
+		iconSize = 64,
+		fontSize = 13,
+		iconGap = 6,
+		borderEnabled = false,
+		borderTexture = "DEFAULT",
+		borderSize = 1,
+		borderOffset = 0,
+		borderColor = { r = 1, g = 1, b = 1, a = 1 },
+		xyTextSize = 13,
+		xyTextOutline = TEXT_OUTLINE_OUTLINE,
+		xyTextColor = { r = 1, g = 1, b = 1, a = 1 },
+		xyTextOffsetX = 0,
+		xyTextOffsetY = 0,
+	}
+
+local defaults = Reminder.defaults
+if defaults.glowStyle == nil then defaults.glowStyle = "MARCHING_ANTS" end
+if defaults.glowInset == nil then defaults.glowInset = 0 end
+if type(defaults.glowColor) ~= "table" then defaults.glowColor = { r = 0.95, g = 0.95, b = 0.2, a = 1 } end
+if defaults.glowUseClassColor == nil then defaults.glowUseClassColor = false end
+if defaults.trackGroupBuffs == nil then defaults.trackGroupBuffs = true end
+if defaults.onlyOutOfCombat == nil then defaults.onlyOutOfCombat = false end
+if defaults.roleFilterEnabled == nil then defaults.roleFilterEnabled = false end
+if defaults.roleFilterContext == nil then defaults.roleFilterContext = "RAID_ONLY" end
+if defaults.hideForHealer == nil then defaults.hideForHealer = false end
+if defaults.hideForTank == nil then defaults.hideForTank = false end
+if defaults.hideForDamager == nil then defaults.hideForDamager = false end
+if defaults.hideForNoRole == nil then defaults.hideForNoRole = false end
+if defaults.showIfOnlyProvider == nil then defaults.showIfOnlyProvider = true end
+if defaults.trackFlasks == nil then defaults.trackFlasks = false end
+if defaults.trackFlasksInstanceOnly == nil then defaults.trackFlasksInstanceOnly = false end
+if defaults.trackFood == nil then defaults.trackFood = false end
+if type(defaults.trackFlasksContent) ~= "table" then defaults.trackFlasksContent = Reminder.CreateDefaultTrackingContentSelection() end
+if defaults.trackFoodInstanceOnly == nil then defaults.trackFoodInstanceOnly = false end
+if type(defaults.trackFoodContent) ~= "table" then defaults.trackFoodContent = Reminder.CreateDefaultTrackingContentSelection() end
+if defaults.trackRunes == nil then defaults.trackRunes = false end
+if defaults.trackRunesInstanceOnly == nil then defaults.trackRunesInstanceOnly = false end
+if type(defaults.trackRunesContent) ~= "table" then defaults.trackRunesContent = Reminder.CreateDefaultTrackingContentSelection() end
+if defaults.trackWeaponBuffs == nil then defaults.trackWeaponBuffs = false end
+if defaults.trackWeaponBuffsInstanceOnly == nil then defaults.trackWeaponBuffsInstanceOnly = false end
+if type(defaults.trackWeaponBuffsContent) ~= "table" then defaults.trackWeaponBuffsContent = Reminder.CreateDefaultTrackingContentSelection() end
+if defaults.trackHealthstones == nil then defaults.trackHealthstones = true end
+if defaults.trackHealthstonesInstanceOnly == nil then defaults.trackHealthstonesInstanceOnly = false end
+if type(defaults.trackHealthstonesContent) ~= "table" then defaults.trackHealthstonesContent = Reminder.CreateAllTrackingContentSelection() end
+if defaults.trackStances == nil then defaults.trackStances = true end
+if type(defaults.trackStancesContent) ~= "table" then defaults.trackStancesContent = Reminder.CreateAllTrackingContentSelection() end
+if defaults.expirationWarningMinutes == nil then defaults.expirationWarningMinutes = 0 end
+if defaults.expirationWarningMinutesMythicDungeon == nil then defaults.expirationWarningMinutesMythicDungeon = defaults.expirationWarningMinutes end
+if defaults.expirationWarningMinutesRaid == nil then defaults.expirationWarningMinutesRaid = defaults.expirationWarningMinutes end
+if defaults.trackPets == nil then defaults.trackPets = false end
+if defaults.trackPetsInstanceOnly == nil then defaults.trackPetsInstanceOnly = false end
+if type(defaults.trackPetsContent) ~= "table" then defaults.trackPetsContent = Reminder.CreateDefaultPetTrackingContentSelection() end
+if defaults.overallAlpha == nil then defaults.overallAlpha = 1 end
+if defaults.petHealthReminderEnabled == nil then defaults.petHealthReminderEnabled = false end
+if defaults.petHealthReminderThreshold == nil then defaults.petHealthReminderThreshold = 30 end
+if defaults.petHealthReminderInfernalBeneficiaryOnly == nil then defaults.petHealthReminderInfernalBeneficiaryOnly = false end
+if defaults.ignorePetDefensive == nil then defaults.ignorePetDefensive = false end
+if defaults.ignorePetPassive == nil then defaults.ignorePetPassive = false end
+if defaults.borderEnabled == nil then defaults.borderEnabled = false end
+if defaults.borderTexture == nil or defaults.borderTexture == "" then defaults.borderTexture = "DEFAULT" end
+if defaults.borderSize == nil then defaults.borderSize = 1 end
+if defaults.borderOffset == nil then defaults.borderOffset = 0 end
+if type(defaults.borderColor) ~= "table" then defaults.borderColor = { r = 1, g = 1, b = 1, a = 1 } end
+if defaults.iconShape == nil then defaults.iconShape = "DEFAULT" end
+if defaults.iconZoom == nil then defaults.iconZoom = 0 end
+
+local PROVIDER_SCOPE_GROUP = "GROUP"
+local PROVIDER_SCOPE_SELF = "SELF"
+local GROUP_UNIT_STATUS_INELIGIBLE = -1
+local GROUP_UNIT_STATUS_PRESENT = 0
+local GROUP_UNIT_STATUS_MISSING = 1
+local GROUP_CONTEXT_SOLO = "SOLO"
+local GROUP_CONTEXT_PARTY = "PARTY"
+local GROUP_CONTEXT_RAID = "RAID"
+local ROLE_FILTER_CONTEXT_ANY_GROUP = "ANY_GROUP"
+local ROLE_FILTER_CONTEXT_PARTY_ONLY = "PARTY_ONLY"
+local ROLE_FILTER_CONTEXT_RAID_ONLY = "RAID_ONLY"
+
+Reminder.petTracking = Reminder.petTracking or {
+	petSpecs = {
+		[252] = true,
+		[253] = true,
+		[255] = true,
+		[265] = true,
+		[266] = true,
+		[267] = true,
+	},
+	specMarksman = 254,
+	marksPetTalent = 1223323,
+	specFrostMage = 64,
+	magePetTalent = 31687,
+	grimoireOfSacrifice = 108503,
+	grimoireOfSacrificeBuff = 196099,
+	infernalBeneficiary = 1265810,
+	callPet = 883,
+	revivePet = 982,
+	raiseDead = 46584,
+	summonImp = 688,
+	petPassive = 26179,
+	petDefensive = 61679,
+	petAssist = 61680,
+	stanceAssist = 1,
+	stanceDefensive = 2,
+	stancePassive = 3,
+}
+Reminder.petTracking.hunterCallPetSpells = Reminder.petTracking.hunterCallPetSpells or { 883, 83242, 83243, 83244, 83245 }
+Reminder.petTracking.warlockSummonSpells = Reminder.petTracking.warlockSummonSpells or { 688, 697, 366222, 712, 691, 30146 }
+Reminder.petTracking.revivePet = Reminder.petTracking.revivePet or 982
+Reminder.DB_PET_SUMMON_SELECTION = "classBuffReminderPetSummonSelection"
+Reminder.DB_GRIMOIRE_PET_SUMMON_SELECTION = "classBuffReminderGrimoirePetSummonSelection"
+Reminder.DB_PET_HEALTH_REMINDER_ENABLED = "classBuffReminderPetHealthEnabled"
+Reminder.DB_PET_HEALTH_REMINDER_THRESHOLD = "classBuffReminderPetHealthThreshold"
+Reminder.DB_PET_HEALTH_REMINDER_INFERNAL_BENEFICIARY_ONLY = "classBuffReminderPetHealthInfernalBeneficiaryOnly"
+Reminder.DB_WEAPON_BUFF_SELECTION = "classBuffReminderWeaponBuffSlots"
+
+local EVOKER_BLESSING_OF_BRONZE_IDS = {
+	381732,
+	381741,
+	381746,
+	381748,
+	381749,
+	381750,
+	381751,
+	381752,
+	381753,
+	381754,
+	381756,
+	381757,
+	381758,
+}
+
+local EVOKER_BLESSING_OF_BRONZE_KNOWN_IDS = {
+	364342, -- Blessing of the Bronze
+}
+
+local EVOKER_SOURCE_OF_MAGIC_IDS = {
+	369459, -- Source of Magic
+}
+
+local EVOKER_BLISTERING_SCALES_IDS = {
+	360827, -- Blistering Scales
+}
+
+-- Shared flask auras (TWW + Midnight). Used for reminder presence checks.
+local SHARED_FLASK_AURA_IDS = {
+	432021,
+	431971,
+	431972,
+	431973,
+	431974,
+	1235057,
+	1235108,
+	1235110,
+	1235111,
+}
+
+local PROVIDER_BY_CLASS = {
+	DRUID = {
+		scope = PROVIDER_SCOPE_GROUP,
+		spellIds = { 1126 },
+		fallbackName = "Mark of the Wild",
+	},
+	MAGE = {
+		scope = PROVIDER_SCOPE_GROUP,
+		spellIds = { 1459 },
+		fallbackName = "Arcane Intellect",
+	},
+	PRIEST = {
+		scope = PROVIDER_SCOPE_GROUP,
+		spellIds = { 21562 },
+		fallbackName = "Power Word: Fortitude",
+	},
+	WARRIOR = {
+		scope = PROVIDER_SCOPE_GROUP,
+		spellIds = { 6673 },
+		fallbackName = "Battle Shout",
+	},
+	EVOKER = {
+		scope = PROVIDER_SCOPE_GROUP,
+		spellIds = EVOKER_BLESSING_OF_BRONZE_IDS,
+		knownSpellIds = EVOKER_BLESSING_OF_BRONZE_KNOWN_IDS,
+		fallbackName = "Blessing of the Bronze",
+	},
+	SHAMAN = {
+		scope = PROVIDER_SCOPE_GROUP,
+		spellIds = { 462854 },
+		fallbackName = "Skyfury",
+	},
+}
+
+Reminder.RESTRICTED_GROUP_BUFF_UPDATE_INTERVAL = 5
+Reminder.restrictedGroupBuffSpellIds = Reminder.restrictedGroupBuffSpellIds
+	or {
+		[1126] = true, -- Mark of the Wild
+		[1459] = true, -- Arcane Intellect
+		[6673] = true, -- Battle Shout
+		[21562] = true, -- Power Word: Fortitude
+		[462854] = true, -- Skyfury
+	}
+for i = 1, #EVOKER_BLESSING_OF_BRONZE_IDS do
+	Reminder.restrictedGroupBuffSpellIds[EVOKER_BLESSING_OF_BRONZE_IDS[i]] = true
+end
+
+local PALADIN_RITES = {
+	adjuration = {
+		spellId = 433583,
+		buffIds = { 433583 },
+		fallbackName = "Rite of Adjuration",
+		enchantId = 7144,
+	},
+	sanctification = {
+		spellId = 433568,
+		buffIds = { 433568 },
+		fallbackName = "Rite of Sanctification",
+		enchantId = 7143,
+	},
+}
+
+local ROGUE_POISON_LETHAL_IDS = {
+	315584, -- Instant Poison
+	2823, -- Deadly Poison
+	8679, -- Wound Poison
+	381664, -- Amplifying Poison
+}
+
+local ROGUE_POISON_UTILITY_IDS = {
+	3408, -- Crippling Poison
+	5761, -- Numbing Poison
+	381637, -- Atrophic Poison
+}
+
+local PALADIN_SPEC_HOLY = 65
+
+Reminder.rogueReminder = Reminder.rogueReminder or {
+	dragonTemperedBladesSpellId = 381801,
+}
+Reminder.rogueReminder.selectionDb = Reminder.rogueReminder.selectionDb or "classBuffReminderRoguePoisonSlots"
+
+Reminder.shamanReminder = Reminder.shamanReminder or {
+	elementalOrbitIds = {
+		383010, -- Elemental Orbit
+	},
+	shieldBasicIds = {
+		974, -- Earth Shield
+		192106, -- Lightning Shield
+		52127, -- Water Shield
+	},
+	shieldEarthIds = {
+		974, -- Earth Shield
+	},
+	shieldEarthSelfIds = {
+		383648, -- Elemental Orbit passive self Earth Shield
+	},
+	shieldLightningIds = {
+		192106, -- Lightning Shield
+	},
+	shieldWaterIds = {
+		52127, -- Water Shield
+	},
+	specElemental = 262,
+	specEnhancement = 263,
+	specRestoration = 264,
+	windfuryEnchantId = 5401,
+	flametongueEnchantId = 5400,
+	earthlivingEnchantId = 6498,
+	tidecallerEnchantId = 7528,
+}
+Reminder.shamanReminder.selectionDb = Reminder.shamanReminder.selectionDb or "classBuffReminderShamanShieldSelection"
+
+local DRUID_MARK_OF_THE_WILD_IDS = {
+	1126,
+}
+
+local DRUID_SYMBIOTIC_RELATIONSHIP_SELF_IDS = {
+	474754,
+}
+
+local DRUID_SYMBIOTIC_RELATIONSHIP_KNOWN_IDS = {
+	474750,
+}
+
+Reminder.MAGE_ARCANE_FAMILIAR_AURA_IDS = Reminder.MAGE_ARCANE_FAMILIAR_AURA_IDS or {
+	210126,
+}
+
+Reminder.MAGE_ARCANE_FAMILIAR_KNOWN_IDS = Reminder.MAGE_ARCANE_FAMILIAR_KNOWN_IDS or {
+	205022,
+}
+
+local HOLY_PALADIN_BEACON_OF_LIGHT_IDS = {
+	53563, -- Beacon of Light
+}
+
+local HOLY_PALADIN_BEACON_OF_FAITH_IDS = {
+	156910, -- Beacon of Faith
+}
+
+local SHAMAN_ENHANCEMENT_WINDFURY_IDS = {
+	319773, -- Windfury Weapon (modern aura id)
+	33757, -- Windfury Weapon (legacy aura id)
+}
+
+local SHAMAN_ENHANCEMENT_FLAMETONGUE_IDS = {
+	319778, -- Flametongue Weapon (modern aura id)
+	318038, -- Flametongue Weapon (legacy aura id)
+}
+
+local SHAMAN_RESTORATION_EARTHLIVING_IDS = {
+	382021,
+	382022,
+	382024, -- Earthliving Weapon (aura variant)
+}
+
+local SHAMAN_RESTORATION_TIDECALLER_IDS = {
+	457481, -- Tidecaller's Guard
+	457496, -- Tidecaller's Guard
+}
+
+-- The settings catalogue shares these spell families with the runtime evaluators.
+Reminder.classBuffGroupProviders = PROVIDER_BY_CLASS
+Reminder.classBuffExtraSources = {
+	DRUID = { { spellIds = DRUID_SYMBIOTIC_RELATIONSHIP_SELF_IDS, aliases = DRUID_SYMBIOTIC_RELATIONSHIP_KNOWN_IDS, group = true } },
+	MAGE = { { spellIds = Reminder.MAGE_ARCANE_FAMILIAR_AURA_IDS, aliases = Reminder.MAGE_ARCANE_FAMILIAR_KNOWN_IDS } },
+	PALADIN = {
+		{ spellIds = PALADIN_RITES.adjuration.buffIds },
+		{ spellIds = PALADIN_RITES.sanctification.buffIds },
+		{ spellIds = HOLY_PALADIN_BEACON_OF_LIGHT_IDS, group = true },
+		{ spellIds = HOLY_PALADIN_BEACON_OF_FAITH_IDS, group = true },
+	},
+	ROGUE = { { spellIds = ROGUE_POISON_LETHAL_IDS, split = true }, { spellIds = ROGUE_POISON_UTILITY_IDS, split = true } },
+	SHAMAN = {
+		{ spellIds = SHAMAN_ENHANCEMENT_WINDFURY_IDS },
+		{ spellIds = SHAMAN_ENHANCEMENT_FLAMETONGUE_IDS },
+		{ spellIds = SHAMAN_RESTORATION_EARTHLIVING_IDS },
+		{ spellIds = SHAMAN_RESTORATION_TIDECALLER_IDS },
+		{ spellIds = Reminder.shamanReminder.shieldEarthIds, aliases = Reminder.shamanReminder.shieldEarthSelfIds, group = true },
+		{ spellIds = Reminder.shamanReminder.shieldLightningIds },
+		{ spellIds = Reminder.shamanReminder.shieldWaterIds },
+	},
+	EVOKER = {
+		{ spellIds = EVOKER_SOURCE_OF_MAGIC_IDS, group = true },
+		{ spellIds = EVOKER_BLISTERING_SCALES_IDS, group = true },
+	},
+}
+local spellPresentationCache = {}
+local spellDataLoadRequested = {}
+local auraSlotResultBuffer = {}
+local auraSlotResultCount = 0
+
+local function normalizeCachedSpellId(value)
+	local spellId = tonumber(value)
+	if not spellId or spellId <= 0 then return nil end
+	return spellId
+end
+
+local function getCachedSpellPresentation(spellId)
+	spellId = normalizeCachedSpellId(spellId)
+	if not spellId then return nil, nil end
+
+	local cached = spellPresentationCache[spellId]
+	if cached and cached.name and cached.icon then return cached.name, cached.icon end
+
+	local name
+	local icon
+
+	if C_Spell and C_Spell.GetSpellInfo then
+		local info = C_Spell.GetSpellInfo(spellId)
+		if type(info) == "table" then
+			if type(info.name) == "string" and info.name ~= "" then name = info.name end
+			if info.iconID and info.iconID ~= "" then icon = info.iconID end
+		end
+	end
+
+	if not name and C_Spell and C_Spell.GetSpellName then
+		local directName = C_Spell.GetSpellName(spellId)
+		if type(directName) == "string" and directName ~= "" then name = directName end
+	end
+
+	if not icon and C_Spell.GetSpellTexture then
+		local fallbackIcon = C_Spell.GetSpellTexture(spellId)
+		if fallbackIcon and fallbackIcon ~= "" then icon = fallbackIcon end
+	end
+
+	if not cached then
+		cached = {}
+		spellPresentationCache[spellId] = cached
+	end
+	if name and name ~= "" then cached.name = name end
+	if icon and icon ~= "" then cached.icon = icon end
+
+	return cached.name, cached.icon
+end
+
+local function captureAuraSlotResults(...)
+	local count = select("#", ...)
+	for i = 1, count do
+		auraSlotResultBuffer[i] = select(i, ...)
+	end
+	if auraSlotResultCount > count then
+		for i = count + 1, auraSlotResultCount do
+			auraSlotResultBuffer[i] = nil
+		end
+	end
+	auraSlotResultCount = count
+
+	local nextToken = auraSlotResultBuffer[1]
+	if issecretvalue and issecretvalue(nextToken) then nextToken = nil end
+	return auraSlotResultBuffer, count, nextToken
+end
+
+local function getHelpfulAuraSlotBuffer(unit, continuationToken)
+	if not Reminder:CanReadAuraData() then return auraSlotResultBuffer, 0, nil end
+	if continuationToken ~= nil then return captureAuraSlotResults(C_UnitAuras.GetAuraSlots(unit, AURA_FILTER_HELPFUL, AURA_SLOT_BATCH_SIZE, continuationToken)) end
+	return captureAuraSlotResults(C_UnitAuras.GetAuraSlots(unit, AURA_FILTER_HELPFUL, AURA_SLOT_BATCH_SIZE))
+end
+
+local function clamp(value, minValue, maxValue, fallback)
+	local n = tonumber(value)
+	if n == nil then return fallback end
+	if minValue ~= nil and n < minValue then n = minValue end
+	if maxValue ~= nil and n > maxValue then n = maxValue end
+	return n
+end
+
+local function nowSeconds()
+	if GetTimePreciseSec then return tonumber(GetTimePreciseSec()) or 0 end
+	if GetTime then return tonumber(GetTime()) or 0 end
+	return 0
+end
+
+function Reminder.GetAuraExpirationTime(aura)
+	if not aura or (issecretvalue and issecretvalue(aura)) then return nil end
+	local expirationTime = aura.expirationTime
+	if issecretvalue and issecretvalue(expirationTime) then expirationTime = nil end
+	expirationTime = tonumber(expirationTime)
+	if not expirationTime or expirationTime <= 0 then return math.huge end
+	return expirationTime
+end
+
+function Reminder.StoreBestExpiration(map, key, expirationTime)
+	if type(map) ~= "table" or key == nil then return end
+	expirationTime = expirationTime or math.huge
+	local current = map[key]
+	if current == nil or expirationTime > current then map[key] = expirationTime end
+end
+
+local function clamp01(value)
+	local n = tonumber(value) or 1
+	if n < 0 then return 0 end
+	if n > 1 then return 1 end
+	return n
+end
+
+local function normalizeColor(value, fallback)
+	local fb = fallback or { r = 1, g = 1, b = 1, a = 1 }
+	if type(value) == "table" then
+		return clamp01(value.r or value[1] or fb.r), clamp01(value.g or value[2] or fb.g), clamp01(value.b or value[3] or fb.b), clamp01(value.a or value[4] or fb.a or 1)
+	end
+	return clamp01(fb.r), clamp01(fb.g), clamp01(fb.b), clamp01(fb.a or 1)
+end
+
+local function getValue(key, fallback)
+	if Reminder.classTrackerKeys and Reminder.classTrackerKeys[key] then return Reminder:GetClassTrackerSetting(key, fallback) end
+	if not addon.db then return fallback end
+	local value = addon.db[key]
+	if value == nil then return fallback end
+	return value
+end
+
+function Reminder:NormalizeExpirationWarningMinutes(value)
+	local minutes = clamp(value, 0, 60, defaults.expirationWarningMinutes or 0)
+	minutes = math.floor((tonumber(minutes) or 0) + 0.5)
+	if minutes < 0 then minutes = 0 end
+	if minutes > 60 then minutes = 60 end
+	return minutes
+end
+
+function Reminder:GetExpirationWarningMinutes()
+	return self:NormalizeExpirationWarningMinutes(getValue("classBuffReminderExpirationWarningMinutes", defaults.expirationWarningMinutes))
+end
+
+Reminder.DB_EXPIRATION_WARNING_MINUTES_MYTHIC_DUNGEON = "classBuffReminderExpirationWarningMinutesMythicDungeon"
+Reminder.DB_EXPIRATION_WARNING_MINUTES_RAID = "classBuffReminderExpirationWarningMinutesRaid"
+
+function Reminder:GetMythicDungeonExpirationWarningMinutes()
+	return self:NormalizeExpirationWarningMinutes(getValue(self.DB_EXPIRATION_WARNING_MINUTES_MYTHIC_DUNGEON, defaults.expirationWarningMinutesMythicDungeon))
+end
+
+function Reminder:GetRaidExpirationWarningMinutes()
+	return self:NormalizeExpirationWarningMinutes(getValue(self.DB_EXPIRATION_WARNING_MINUTES_RAID, defaults.expirationWarningMinutesRaid))
+end
+
+function Reminder:GetActiveExpirationWarningMinutes()
+	local contentToken = self:GetConsumableTrackingContentToken()
+	if contentToken == TRACKING_CONTENT.PARTY_MYTHIC or contentToken == TRACKING_CONTENT.PARTY_MYTHIC_PLUS then return self:GetMythicDungeonExpirationWarningMinutes() end
+	if
+		contentToken == TRACKING_CONTENT.RAID_LFR
+		or contentToken == TRACKING_CONTENT.RAID_NORMAL
+		or contentToken == TRACKING_CONTENT.RAID_HEROIC
+		or contentToken == TRACKING_CONTENT.RAID_MYTHIC
+	then
+		return self:GetRaidExpirationWarningMinutes()
+	end
+	return self:GetExpirationWarningMinutes()
+end
+
+function Reminder:GetExpirationWarningSeconds(category)
+	if self.GetCategoryExpirationWarningMinutes then return self:GetCategoryExpirationWarningMinutes(category) * 60 end
+	return self:GetActiveExpirationWarningMinutes() * 60
+end
+
+function Reminder:IsExpirationWarningEnabled()
+	return self:GetExpirationWarningSeconds() > 0
+end
+
+function Reminder:SetExpirationWarningMinutes(value)
+	if addon.db then addon.db.classBuffReminderExpirationWarningMinutes = self:NormalizeExpirationWarningMinutes(value) end
+	self:CancelExpirationWarningTimer()
+	self:MarkAuraStatesDirty()
+	self:RequestUpdate(true)
+	if EditMode and EditMode.RefreshFrame then EditMode:RefreshFrame(EDITMODE_ID) end
+end
+
+function Reminder:SetContextExpirationWarningMinutes(dbKey, value)
+	if addon.db and type(dbKey) == "string" then addon.db[dbKey] = self:NormalizeExpirationWarningMinutes(value) end
+	self:CancelExpirationWarningTimer()
+	self:MarkAuraStatesDirty()
+	self:RequestUpdate(true)
+	if EditMode and EditMode.RefreshFrame then EditMode:RefreshFrame(EDITMODE_ID) end
+end
+
+function Reminder:SetMythicDungeonExpirationWarningMinutes(value)
+	self:SetContextExpirationWarningMinutes(self.DB_EXPIRATION_WARNING_MINUTES_MYTHIC_DUNGEON, value)
+end
+
+function Reminder:SetRaidExpirationWarningMinutes(value)
+	self:SetContextExpirationWarningMinutes(self.DB_EXPIRATION_WARNING_MINUTES_RAID, value)
+end
+
+function Reminder:IsExpirationTimeUsable(expirationTime, thresholdSeconds, now)
+	thresholdSeconds = tonumber(thresholdSeconds) or self:GetExpirationWarningSeconds()
+	if thresholdSeconds <= 0 then return true end
+	if expirationTime == nil or expirationTime == math.huge then return true end
+	now = tonumber(now) or nowSeconds()
+	local remaining = expirationTime - now
+	if remaining <= thresholdSeconds then return false end
+	self:QueueExpirationWarningAt(expirationTime - thresholdSeconds)
+	return true
+end
+
+function Reminder:IsAuraUsableForReminder(aura, thresholdSeconds, now)
+	return self:IsExpirationTimeUsable(Reminder.GetAuraExpirationTime(aura), thresholdSeconds, now)
+end
+
+function Reminder.GetTrackingContentSelection(dbKey, legacyKey, defaultSelection)
+	local stored = addon.db and addon.db[dbKey] or nil
+	local legacy = addon.db and addon.db[legacyKey] or nil
+	Reminder.trackingContentSelectionCache = Reminder.trackingContentSelectionCache or {}
+	local cached = Reminder.trackingContentSelectionCache[dbKey]
+	if cached and cached.stored == stored and cached.legacy == legacy and cached.defaultSelection == defaultSelection then return cached.normalized end
+	local normalized, changed = Reminder.NormalizeTrackingContentSelection(stored, legacy, defaultSelection)
+	if addon.db and changed then addon.db[dbKey] = Reminder.CopyTrackingContentSelection(normalized) end
+	Reminder.trackingContentSelectionCache[dbKey] = {
+		stored = addon.db and addon.db[dbKey] or stored,
+		legacy = legacy,
+		defaultSelection = defaultSelection,
+		normalized = normalized,
+	}
+	return normalized
+end
+
+function Reminder.BuildContentDifficultyLabel(contentLabel, difficultyLabel)
+	local left = type(contentLabel) == "string" and contentLabel ~= "" and contentLabel or nil
+	local right = type(difficultyLabel) == "string" and difficultyLabel ~= "" and difficultyLabel or nil
+	if left and right then return left .. ": " .. right end
+	return left or right or ""
+end
+
+function Reminder.GetTrackingContentLabel(key)
+	if key == TRACKING_CONTENT.OPEN_WORLD then return _G.WORLD or "World" end
+	if key == TRACKING_CONTENT.SCENARIO then return _G.SCENARIOS or _G.TRACKER_HEADER_SCENARIO or "Scenarios" end
+	if key == TRACKING_CONTENT.PARTY_FOLLOWER then return L["timeoutReleaseGroupDungeonFollower"] or Reminder.BuildContentDifficultyLabel(_G.DUNGEONS or _G.LFG_TYPE_DUNGEON or "Dungeon", _G.FOLLOWER or "Follower") end
+	if key == TRACKING_CONTENT.PARTY_NORMAL then return Reminder.BuildContentDifficultyLabel(_G.PARTY or "Party", _G.PLAYER_DIFFICULTY1 or _G.NORMAL or "Normal") end
+	if key == TRACKING_CONTENT.PARTY_HEROIC then return Reminder.BuildContentDifficultyLabel(_G.PARTY or "Party", _G.PLAYER_DIFFICULTY2 or _G.HEROIC or "Heroic") end
+	if key == TRACKING_CONTENT.PARTY_MYTHIC then return Reminder.BuildContentDifficultyLabel(_G.PARTY or "Party", _G.PLAYER_DIFFICULTY6 or "Mythic") end
+	if key == TRACKING_CONTENT.PARTY_MYTHIC_PLUS then return L["ClassBuffReminderTrackingContentMythicPlus"] or Reminder.BuildContentDifficultyLabel(_G.PARTY or "Party", _G.PLAYER_DIFFICULTY_MYTHIC_PLUS or "Mythic+") end
+	if key == TRACKING_CONTENT.RAID_LFR then return Reminder.BuildContentDifficultyLabel(_G.RAID or "Raid", _G.PLAYER_DIFFICULTY3 or "LFR") end
+	if key == TRACKING_CONTENT.RAID_NORMAL then return Reminder.BuildContentDifficultyLabel(_G.RAID or "Raid", _G.PLAYER_DIFFICULTY1 or _G.NORMAL or "Normal") end
+	if key == TRACKING_CONTENT.RAID_HEROIC then return Reminder.BuildContentDifficultyLabel(_G.RAID or "Raid", _G.PLAYER_DIFFICULTY2 or _G.HEROIC or "Heroic") end
+	if key == TRACKING_CONTENT.RAID_MYTHIC then return Reminder.BuildContentDifficultyLabel(_G.RAID or "Raid", _G.PLAYER_DIFFICULTY6 or "Mythic") end
+	return tostring(key or "")
+end
+
+local function isLikelyFilePath(value)
+	if type(value) ~= "string" or value == "" then return false end
+	return value:find("/", 1, true) ~= nil or value:find("\\", 1, true) ~= nil
+end
+
+local function isTrackedUnit(unit)
+	if type(unit) ~= "string" then return false end
+	if unit == "player" then return true end
+	if unit:find("^party%d+$") then return true end
+	if unit:find("^raid%d+$") then return true end
+	return false
+end
+
+local function isPlayerUnit(unit)
+	if type(unit) ~= "string" or unit == "" then return false end
+	if unit == "player" then return true end
+	if UnitIsUnit then return UnitIsUnit(unit, "player") == true end
+	return false
+end
+
+local function canEvaluateUnit(unit)
+	if type(unit) ~= "string" or unit == "" then return false end
+	if not (UnitExists and UnitExists(unit)) then return false end
+	if not (UnitIsConnected and UnitIsConnected(unit)) then return false end
+	if UnitIsDeadOrGhost and UnitIsDeadOrGhost(unit) then return false end
+	return true
+end
+
+function Reminder.CanActOnMissingGroupBuffUnit(unit)
+	if isPlayerUnit(unit) then return true end
+	if UnitIsVisible and UnitIsVisible(unit) == false then return false end
+	local unitPhaseReason = _G.UnitPhaseReason
+	if unitPhaseReason and unitPhaseReason(unit) ~= nil then return false end
+	return true
+end
+
+local function getUnitIdentity(unit)
+	if type(unit) ~= "string" or unit == "" or not UnitGUID then return nil end
+	local guid = UnitGUID(unit)
+	if issecretvalue and issecretvalue(guid) then return nil end
+	if type(guid) ~= "string" or guid == "" then return nil end
+	return guid
+end
+
+local function isAIFollowerUnit(unit)
+	if type(unit) ~= "string" or unit == "player" then return false end
+	if not UnitInPartyIsAI then return false end
+	local isAI = UnitInPartyIsAI(unit)
+	return isAI == true
+end
+
+local function isUnitHealerRole(unit)
+	if type(unit) ~= "string" or unit == "" then return false end
+	if not UnitGroupRolesAssigned then return false end
+	local role = UnitGroupRolesAssigned(unit)
+	if issecretvalue and issecretvalue(role) then return false end
+	return role == "HEALER"
+end
+
+local function getPlayerEquippedItemEquipLoc(slot)
+	if not (C_Item and C_Item.GetItemInfoInstant) then return nil end
+	slot = tonumber(slot)
+	if not slot or slot <= 0 then return nil end
+
+	if GetInventoryItemID then
+		local itemId = GetInventoryItemID("player", slot)
+		if itemId then return select(4, C_Item.GetItemInfoInstant(itemId)) end
+	end
+
+	if not GetInventoryItemLink then return nil end
+	local itemLink = GetInventoryItemLink("player", slot)
+	if type(itemLink) ~= "string" or itemLink == "" then return nil end
+	return select(4, C_Item.GetItemInfoInstant(itemLink))
+end
+
+function Reminder.NormalizeIconTexture(value)
+	if value == nil then return nil end
+	if issecretvalue and issecretvalue(value) then return nil end
+	if type(value) == "number" then return value > 0 and value or nil end
+	if type(value) == "string" and value ~= "" then return value end
+	return nil
+end
+
+function Reminder.GetItemIcon(itemId)
+	itemId = tonumber(itemId)
+	if not itemId or itemId <= 0 then return nil end
+	if C_Item and C_Item.GetItemIconByID then
+		local icon = C_Item.GetItemIconByID(itemId)
+		icon = Reminder.NormalizeIconTexture(icon)
+		if icon then return icon end
+	end
+	if C_Item and C_Item.GetItemInfoInstant then
+		local icon = select(5, C_Item.GetItemInfoInstant(itemId))
+		icon = Reminder.NormalizeIconTexture(icon)
+		if icon then return icon end
+	end
+	if GetItemIcon then
+		local icon = GetItemIcon(itemId)
+		icon = Reminder.NormalizeIconTexture(icon)
+		if icon then return icon end
+	end
+	return nil
+end
+
+local function isEnchantableWeaponEquipLoc(equipLoc)
+	return equipLoc == "INVTYPE_WEAPON" or equipLoc == "INVTYPE_2HWEAPON" or equipLoc == "INVTYPE_WEAPONMAINHAND" or equipLoc == "INVTYPE_WEAPONOFFHAND"
+		or equipLoc == "INVTYPE_RANGED" or equipLoc == "INVTYPE_RANGEDRIGHT"
+end
+
+local function isPlayerOffhandShield()
+	local offhandSlot = INVSLOT_OFFHAND or 17
+	return getPlayerEquippedItemEquipLoc(offhandSlot) == "INVTYPE_SHIELD"
+end
+
+local function isPlayerOffhandEnchantableWeapon()
+	local offhandSlot = INVSLOT_OFFHAND or 17
+	local equipLoc = getPlayerEquippedItemEquipLoc(offhandSlot)
+	if equipLoc == "INVTYPE_SHIELD" or equipLoc == "INVTYPE_HOLDABLE" then return false end
+	return isEnchantableWeaponEquipLoc(equipLoc)
+end
+
+local function isPlayerMainhandEnchantableWeapon()
+	local mainhandSlot = INVSLOT_MAINHAND or 16
+	return isEnchantableWeaponEquipLoc(getPlayerEquippedItemEquipLoc(mainhandSlot))
+end
+
+local function safeGetSpellName(spellId)
+	local name = getCachedSpellPresentation(spellId)
+	return name
+end
+
+local function requestSpellDataLoad(spellId)
+	spellId = normalizeCachedSpellId(spellId)
+	if not spellId then return end
+	if spellDataLoadRequested[spellId] == true then return end
+	spellDataLoadRequested[spellId] = true
+	if C_Spell and C_Spell.RequestLoadSpellData then C_Spell.RequestLoadSpellData(spellId) end
+end
+
+local function getSpellIconRaw(spellId)
+	local _, icon = getCachedSpellPresentation(spellId)
+	return icon
+end
+
+local function safeGetSpellIcon(spellId) return getSpellIconRaw(spellId) or ICON_MISSING end
+
+local function normalizeSpellId(value)
+	if value == nil then return nil end
+	if issecretvalue and issecretvalue(value) then return nil end
+	local spellId = tonumber(value)
+	if not spellId or spellId <= 0 then return nil end
+	return spellId
+end
+
+local function normalizeAuraInstanceId(value)
+	if value == nil then return nil end
+	if issecretvalue and issecretvalue(value) then return nil end
+	local auraId = tonumber(value)
+	if not auraId or auraId <= 0 then return nil end
+	return auraId
+end
+
+local function wipeTable(target)
+	if type(target) ~= "table" then return end
+	if wipe then
+		wipe(target)
+		return
+	end
+	for key in pairs(target) do
+		target[key] = nil
+	end
+end
+
+function Reminder.IsRelevantHelpfulPlayerAura(aura)
+	if not aura or (issecretvalue and issecretvalue(aura)) then return false end
+	local isHelpful = aura.isHelpful
+	if issecretvalue and issecretvalue(isHelpful) then return false end
+	local isFromPlayerOrPlayerPet = aura.isFromPlayerOrPlayerPet
+	if issecretvalue and issecretvalue(isFromPlayerOrPlayerPet) then return false end
+	return isHelpful == true and isFromPlayerOrPlayerPet == true
+end
+
+local function normalizeDisplayMode(value)
+	if value == DISPLAY_MODE_ICON_ONLY then return DISPLAY_MODE_ICON_ONLY end
+	return DISPLAY_MODE_FULL
+end
+
+local function normalizeGrowthDirection(value)
+	if value == GROWTH_LEFT then return GROWTH_LEFT end
+	if value == GROWTH_UP then return GROWTH_UP end
+	if value == GROWTH_DOWN then return GROWTH_DOWN end
+	return GROWTH_RIGHT
+end
+
+local function normalizeTextOutline(value)
+	if value == TEXT_OUTLINE_NONE then return TEXT_OUTLINE_NONE end
+	if value == TEXT_OUTLINE_THICK then return TEXT_OUTLINE_THICK end
+	if value == TEXT_OUTLINE_MONO then return TEXT_OUTLINE_MONO end
+	return TEXT_OUTLINE_OUTLINE
+end
+
+local function normalizeBorderTexture(value)
+	if addon.IconShape and addon.IconShape.NormalizeBorder then return addon.IconShape.NormalizeBorder(value, defaults.borderTexture or "DEFAULT", Reminder:GetIconShape(), { allowNone = true }) end
+	if type(value) ~= "string" or value == "" then return defaults.borderTexture or "DEFAULT" end
+	if value == "DEFAULT" or value == "SOLID" then return value end
+	return value
+end
+
+function Reminder.NormalizeIconShape(value, fallback)
+	if addon.IconShape and addon.IconShape.Normalize then return addon.IconShape.Normalize(value, fallback or defaults.iconShape or "DEFAULT") end
+	if type(value) == "string" and value ~= "" then return value end
+	return fallback or defaults.iconShape or "DEFAULT"
+end
+
+function Reminder.IsBackdropBorderCompatible(shape)
+	if addon.IconShape and addon.IconShape.IsBackdropBorderCompatible then return addon.IconShape.IsBackdropBorderCompatible(shape) end
+	shape = Reminder.NormalizeIconShape(shape, "DEFAULT")
+	return shape == "DEFAULT" or shape == "SQUARE"
+end
+
+function Reminder.IsShapeBorderPath(shape)
+	return not Reminder.IsBackdropBorderCompatible(shape)
+end
+
+function Reminder.GetBorderOptions(shape)
+	if addon.IconShape and addon.IconShape.GetBorderOptions then
+		return addon.IconShape.GetBorderOptions(L, shape, {
+			defaultOptions = {
+				{ value = "DEFAULT", label = _G.DEFAULT or "Default" },
+				{ value = "SOLID", label = "Solid" },
+			},
+			includeNone = true,
+			noneLabel = _G.NONE or "None",
+		})
+	end
+	local options = {
+		{ value = "DEFAULT", label = _G.DEFAULT or "Default" },
+		{ value = "SOLID", label = "Solid" },
+	}
+	local mediaOptions = addon.functions and addon.functions.GetLSMMediaOptions and addon.functions.GetLSMMediaOptions("border") or {}
+	for i = 1, #mediaOptions do
+		options[#options + 1] = {
+			value = mediaOptions[i].value,
+			label = mediaOptions[i].label,
+		}
+	end
+	return options
+end
+
+local function resolveBorderTexture(value)
+	local key = normalizeBorderTexture(value)
+	if key == "DEFAULT" or key == "SOLID" then return "Interface\\Buttons\\WHITE8x8" end
+	if isLikelyFilePath(key) then return key end
+	if LSM and LSM.Fetch then
+		local texture = LSM:Fetch("border", key, true)
+		if texture then return texture end
+	end
+	return "Interface\\Buttons\\WHITE8x8"
+end
+
+local function normalizeBorderSize(value)
+	local size = tonumber(value) or defaults.borderSize or 1
+	size = math.floor(size + 0.5)
+	if size < BORDER_SIZE_MIN then size = BORDER_SIZE_MIN end
+	if size > BORDER_SIZE_MAX then size = BORDER_SIZE_MAX end
+	return size
+end
+
+local function normalizeBorderOffset(value)
+	local offset = tonumber(value) or defaults.borderOffset or 0
+	offset = math.floor(offset + 0.5)
+	if offset < BORDER_OFFSET_MIN then offset = BORDER_OFFSET_MIN end
+	if offset > BORDER_OFFSET_MAX then offset = BORDER_OFFSET_MAX end
+	return offset
+end
+
+local function normalizeRoleFilterContext(value)
+	if value == ROLE_FILTER_CONTEXT_ANY_GROUP then return ROLE_FILTER_CONTEXT_ANY_GROUP end
+	if value == ROLE_FILTER_CONTEXT_PARTY_ONLY then return ROLE_FILTER_CONTEXT_PARTY_ONLY end
+	return ROLE_FILTER_CONTEXT_RAID_ONLY
+end
+
+local function normalizeGroupRole(value)
+	if value == "HEALER" then return "HEALER" end
+	if value == "TANK" then return "TANK" end
+	if value == "DAMAGER" then return "DAMAGER" end
+	return "NONE"
+end
+
+Reminder.GLOW_INSET_RANGE = Reminder.GLOW_INSET_RANGE or 100
+Reminder.GLOW_STYLE_OPTIONS = Reminder.GLOW_STYLE_OPTIONS
+	or {
+		{ value = "BLIZZARD", labelKey = "Blizzard", fallback = "Blizzard" },
+		{ value = "MARCHING_ANTS", labelKey = "Marching ants", fallback = "Marching ants" },
+		{ value = "FLASH", labelKey = "Flash", fallback = "Flash" },
+		{ value = "PIXEL", labelKey = "Pixel", fallback = "Pixel" },
+		{ value = "PULSING", labelKey = "Pulsing", fallback = "Pulsing" },
+	}
+
+local function normalizeGlowStyle(value)
+	local normalized = type(value) == "string" and string.upper(value) or nil
+	if normalized == "BLIZZARD" or normalized == "CLASSIC" or normalized == "BUTTON_GLOW" then return "BLIZZARD" end
+	if normalized == "MARCHING_ANTS" or normalized == "MARCHINGANTS" or normalized == "ANTS" then return "MARCHING_ANTS" end
+	if normalized == "FLASH" then return "FLASH" end
+	if normalized == "PIXEL" then return "PIXEL" end
+	if normalized == "PULSING" or normalized == "PULSE" then return "PULSING" end
+	return "MARCHING_ANTS"
+end
+
+function Reminder.NormalizeGlowStyleForIconShape(value, shape)
+	shape = Reminder.NormalizeIconShape(shape, defaults.iconShape or "DEFAULT")
+	if not Reminder.IsBackdropBorderCompatible(shape) then return "PULSING" end
+	return normalizeGlowStyle(value)
+end
+
+function Reminder.GetGlowStyleOptions(shape)
+	if not Reminder.IsBackdropBorderCompatible(shape) then
+		for _, option in ipairs(Reminder.GLOW_STYLE_OPTIONS or {}) do
+			if option.value == "PULSING" then return { option } end
+		end
+	end
+	return Reminder.GLOW_STYLE_OPTIONS or {}
+end
+
+local function normalizeGlowInset(value)
+	local inset = clamp(value, -(Reminder.GLOW_INSET_RANGE or 100), Reminder.GLOW_INSET_RANGE or 100, defaults.glowInset or 0)
+	if inset == nil then inset = defaults.glowInset or 0 end
+	if inset < 0 then return math.ceil(inset - 0.5) end
+	return math.floor(inset + 0.5)
+end
+
+Reminder.NormalizeGlowStyle = normalizeGlowStyle
+Reminder.NormalizeGlowInset = normalizeGlowInset
+Reminder.NormalizeRoleFilterContext = normalizeRoleFilterContext
+
+local function textOutlineFlags(value)
+	local outline = normalizeTextOutline(value)
+	if outline == TEXT_OUTLINE_NONE then return "" end
+	if outline == TEXT_OUTLINE_THICK then return "THICKOUTLINE" end
+	if outline == TEXT_OUTLINE_MONO then return "OUTLINE,MONOCHROME" end
+	return "OUTLINE"
+end
+
+local function centeredAxisOffset(index, count, step)
+	local idx = tonumber(index)
+	local total = tonumber(count)
+	local spacing = tonumber(step)
+	if not idx or not total or not spacing then return 0 end
+	return ((idx - 1) - ((total - 1) / 2)) * spacing
+end
+
+local function safeIsPlayerSpell(spellId)
+	spellId = tonumber(spellId)
+	if not spellId or spellId <= 0 then return false end
+	return C_SpellBook.IsSpellKnownOrInSpellBook(spellId, Enum.SpellBookSpellBank.Player, true) == true
+end
+
+local function hasKnownSpellInList(spellIds)
+	if type(spellIds) ~= "table" then return false end
+	for i = 1, #spellIds do
+		if safeIsPlayerSpell(spellIds[i]) then return true end
+	end
+	return false
+end
+
+function Reminder.CountKnownSpellsInList(spellIds)
+	if type(spellIds) ~= "table" then return 0 end
+	local count = 0
+	for i = 1, #spellIds do
+		if safeIsPlayerSpell(spellIds[i]) then count = count + 1 end
+	end
+	return count
+end
+
+local function providerHasKnownSpells(provider)
+	if type(provider) ~= "table" then return false end
+	if provider.requiresKnownSpells == false then return true end
+	return hasKnownSpellInList(provider.knownSpellIds or provider.spellIds)
+end
+
+function Reminder:CanQueryRestrictedGroupBuffProvider(provider)
+	if type(provider) ~= "table" or provider.scope ~= PROVIDER_SCOPE_GROUP or type(provider.spellIds) ~= "table" or #provider.spellIds <= 0 then return false end
+	if not providerHasKnownSpells(provider) then return false end
+	if not (C_Secrets and type(C_Secrets.ShouldSpellAuraBeSecret) == "function") then return false end
+	for i = 1, #provider.spellIds do
+		local spellId = normalizeSpellId(provider.spellIds[i])
+		if not spellId or self.restrictedGroupBuffSpellIds[spellId] ~= true then return false end
+		local ok, isAuraSecret = pcall(C_Secrets.ShouldSpellAuraBeSecret, spellId)
+		if not ok or (issecretvalue and issecretvalue(isAuraSecret)) or isAuraSecret == true then return false end
+	end
+	return C_UnitAuras and type(C_UnitAuras.GetUnitAuraBySpellID) == "function"
+end
+
+function Reminder:GetRestrictedGroupBuffProvider()
+	local provider = PROVIDER_BY_CLASS[self:GetClassToken()]
+	if not self:CanQueryRestrictedGroupBuffProvider(provider) then return nil end
+	return provider
+end
+
+function Reminder:GetRestrictedGroupBuffPresence(unit, provider)
+	if type(unit) ~= "string" or unit == "" or not self:CanQueryRestrictedGroupBuffProvider(provider) then return nil end
+	for i = 1, #provider.spellIds do
+		local spellId = normalizeSpellId(provider.spellIds[i])
+		local ok, aura = pcall(C_UnitAuras.GetUnitAuraBySpellID, unit, spellId)
+		if not ok or (issecretvalue and issecretvalue(aura)) then return nil end
+		if aura ~= nil then return true end
+	end
+	return false
+end
+
+function Reminder:IsRestrictedGroupBuffCastSpell(spellId)
+	if spellId == nil or (issecretvalue and issecretvalue(spellId)) then return false end
+	local provider = PROVIDER_BY_CLASS[self:GetClassToken()]
+	if not provider then return false end
+	spellId = normalizeSpellId(spellId)
+	if not spellId then return false end
+	local castSpellIds = provider.knownSpellIds or provider.spellIds
+	for i = 1, #castSpellIds do
+		if normalizeSpellId(castSpellIds[i]) == spellId then return self:CanQueryRestrictedGroupBuffProvider(provider) end
+	end
+	return false
+end
+
+local function unitHasAuraBySpellId(unit, spellId, category)
+	spellId = normalizeSpellId(spellId)
+	if not spellId then return false end
+	if type(unit) ~= "string" or unit == "" then return false end
+	if not Reminder:CanReadAuraData() then return false end
+
+	if C_UnitAuras and C_UnitAuras.GetUnitAuraBySpellID then
+		local aura = C_UnitAuras.GetUnitAuraBySpellID(unit, spellId)
+		if aura ~= nil and not (issecretvalue and issecretvalue(aura)) then
+			if type(aura) ~= "table" or Reminder:IsAuraUsableForReminder(aura, Reminder:GetExpirationWarningSeconds(category)) then return true end
+		end
+	end
+
+	if C_UnitAuras and C_UnitAuras.GetAuraSlots and C_UnitAuras.GetAuraDataBySlot then
+		local continuationToken
+		for _ = 1, AURA_SLOT_SCAN_GUARD do
+			local slots, slotCount, nextToken = getHelpfulAuraSlotBuffer(unit, continuationToken)
+			for i = 2, slotCount do
+				local slot = slots[i]
+				if not (issecretvalue and issecretvalue(slot)) then
+					local aura = C_UnitAuras.GetAuraDataBySlot(unit, slot)
+					if aura and not (issecretvalue and issecretvalue(aura)) then
+						local isHelpful = aura.isHelpful
+						if issecretvalue and issecretvalue(isHelpful) then isHelpful = nil end
+						if isHelpful ~= false then
+							local auraSpellId = normalizeSpellId(aura.spellId)
+							if auraSpellId and auraSpellId == spellId and Reminder:IsAuraUsableForReminder(aura, Reminder:GetExpirationWarningSeconds(category)) then return true end
+						end
+					end
+				end
+			end
+
+			if nextToken == nil then break end
+			continuationToken = nextToken
+		end
+	end
+
+	-- Some weapon-imbue auras can surface with an alternate spellID but keep the same aura name.
+	local spellName = safeGetSpellName(spellId)
+	if type(spellName) == "string" and spellName ~= "" and Reminder and Reminder.UnitHasAnyAuraName then
+		if Reminder:UnitHasAnyAuraName(unit, { spellName }, category) then return true end
+	end
+
+	return false
+end
+
+local function playerHasEnchantId(enchantId)
+	enchantId = tonumber(enchantId)
+	if not enchantId or enchantId <= 0 then return false end
+	local hasMain, mainEnchantId, hasOff, offEnchantId = Reminder.GetPlayerWeaponEnchantIds()
+	if hasMain and tonumber(mainEnchantId) == enchantId then return true end
+	if hasOff and tonumber(offEnchantId) == enchantId then return true end
+	return false
+end
+
+local function playerHasAnyEnchantId(enchantIds)
+	if type(enchantIds) == "table" then
+		for i = 1, #enchantIds do
+			if playerHasEnchantId(enchantIds[i]) then return true end
+		end
+		return false
+	end
+	return playerHasEnchantId(enchantIds)
+end
+
+function Reminder.GetPlayerWeaponEnchantIds()
+	if not (C_PaperDollInfo and C_PaperDollInfo.GetTemporaryEnchantmentInfo) then return nil, nil, nil, nil end
+	local main = C_PaperDollInfo.GetTemporaryEnchantmentInfo(_G.INVSLOT_MAINHAND or 16)
+	local off = C_PaperDollInfo.GetTemporaryEnchantmentInfo(_G.INVSLOT_OFFHAND or 17)
+	return main ~= nil, main and tonumber(main.enchantID), off ~= nil, off and tonumber(off.enchantID)
+end
+
+function Reminder.PlayerMainhandHasEnchantId(enchantId)
+	enchantId = tonumber(enchantId)
+	if not enchantId then return false end
+	local hasMain, mainEnchantId = Reminder.GetPlayerWeaponEnchantIds()
+	return hasMain == true and mainEnchantId == enchantId
+end
+
+function Reminder.PlayerOffhandHasEnchantId(enchantId)
+	enchantId = tonumber(enchantId)
+	if not enchantId then return false end
+	local _, _, hasOff, offEnchantId = Reminder.GetPlayerWeaponEnchantIds()
+	return hasOff == true and offEnchantId == enchantId
+end
+
+local function resetProviderRuntimeCache(provider)
+	if type(provider) ~= "table" then return end
+	provider.stateVersion = (tonumber(provider.stateVersion) or 0) + 1
+	provider.spellSet = nil
+	provider.spellNameSet = nil
+	provider.spellNameSetReady = nil
+	provider.spellNameRefreshAttempts = nil
+	provider.displaySpellId = nil
+	provider.cachedName = nil
+	provider.cachedIcon = nil
+	provider._presentationReady = nil
+	provider._presentationAttempted = nil
+	provider.presentationRetryPending = nil
+	provider.presentationRetryCount = nil
+end
+
+local function getProviderStateVersion(provider)
+	if type(provider) ~= "table" then return 0 end
+	local version = tonumber(provider.stateVersion)
+	if not version or version <= 0 then
+		provider.stateVersion = 1
+		return 1
+	end
+	return version
+end
+
+local function setProviderDisplaySpellId(provider, spellId)
+	if type(provider) ~= "table" then return end
+	local sid = normalizeSpellId(spellId)
+	if not sid then return end
+	if provider.displaySpellId == sid and provider.cachedIcon and provider.cachedIcon ~= "" then return end
+	provider.displaySpellId = sid
+	provider.cachedName = nil
+	provider.cachedIcon = nil
+	provider._presentationReady = nil
+	provider._presentationAttempted = nil
+end
+
+local function makeSelfMissingEntry(spellId, label, countMissing, countTotal, sourceKind, icon, shortText)
+	local normalizedSpellId = normalizeSpellId(spellId)
+	return {
+		spellId = normalizedSpellId,
+		actionSpellId = normalizedSpellId and safeIsPlayerSpell(normalizedSpellId) and normalizedSpellId or nil,
+		label = label,
+		countMissing = tonumber(countMissing),
+		countTotal = tonumber(countTotal),
+		sourceKind = sourceKind,
+		icon = Reminder.NormalizeIconTexture(icon),
+		shortText = shortText,
+	}
+end
+
+Reminder.dismissedInteractionEntries = Reminder.dismissedInteractionEntries or {}
+Reminder.selectedInteractionItems = Reminder.selectedInteractionItems or {}
+Reminder.selectedInteractionTargetGUIDs = Reminder.selectedInteractionTargetGUIDs or {}
+
+function Reminder:GetInteractionEntryKey(entry)
+	if type(entry) ~= "table" then return nil end
+	if type(entry.sourceKind) == "string" and entry.sourceKind ~= "" then return "SOURCE:" .. entry.sourceKind end
+	local spellId = normalizeSpellId(entry.spellId)
+	if spellId then return "SPELL:" .. tostring(spellId) end
+	if type(entry.label) == "string" and entry.label ~= "" then return "LABEL:" .. entry.label end
+	return nil
+end
+
+function Reminder:IsInteractionEntryDismissed(entry)
+	if self.IsSpellReminderDisabled and self:IsSpellReminderDisabled(entry and entry.spellId) then return true end
+	local key = self:GetInteractionEntryKey(entry)
+	return key ~= nil and self.dismissedInteractionEntries[key] == true
+end
+
+function Reminder:DismissInteractionEntry(entry)
+	local key = self:GetInteractionEntryKey(entry)
+	if not key then return end
+	self.dismissedInteractionEntries[key] = true
+	self:InvalidateSelfProviderStatus()
+	self:RequestUpdate(true)
+end
+
+function Reminder:FilterDismissedInteractionEntries(entries)
+	if type(entries) ~= "table" then return entries end
+	local filtered = {}
+	for i = 1, #entries do
+		local entry = entries[i]
+		if not self:IsInteractionEntryDismissed(entry) then filtered[#filtered + 1] = entry end
+	end
+	return filtered
+end
+
+function Reminder:DecorateConsumableInteractionEntry(entry, sourceKind, candidates)
+	if type(entry) ~= "table" or type(sourceKind) ~= "string" or type(candidates) ~= "table" then return entry end
+	local selectedItemId = tonumber(self.selectedInteractionItems[sourceKind])
+	local selected
+	for i = 1, #candidates do
+		local candidate = candidates[i]
+		local itemId = tonumber(candidate and candidate.id)
+		if itemId and itemId > 0 and (not selected or itemId == selectedItemId) then
+			selected = candidate
+			if itemId == selectedItemId then break end
+		end
+	end
+	if not selected then return entry end
+
+	local itemId = tonumber(selected.id)
+	entry.itemId = itemId
+	entry.candidates = candidates
+	entry.sourceKind = sourceKind
+	entry.icon = Reminder.GetItemIcon(itemId) or entry.icon
+	if C_Item and C_Item.GetItemNameByID then
+		local itemName = C_Item.GetItemNameByID(itemId)
+		if type(itemName) == "string" and itemName ~= "" then entry.label = itemName end
+	end
+	return entry
+end
+
+function Reminder:SelectInteractionItem(sourceKind, itemId)
+	itemId = tonumber(itemId)
+	if type(sourceKind) ~= "string" or sourceKind == "" or not itemId or itemId <= 0 then return end
+	self.selectedInteractionItems[sourceKind] = itemId
+	self:RequestUpdate(true)
+end
+
+function Reminder:GetSelectedInteractionTargetUnit(selectionKey, candidates)
+	if type(selectionKey) ~= "string" or type(candidates) ~= "table" or #candidates <= 0 then return nil end
+	local selectedGUID = self.selectedInteractionTargetGUIDs[selectionKey]
+	if type(selectedGUID) == "string" and selectedGUID ~= "" then
+		for i = 1, #candidates do
+			local candidate = candidates[i]
+			if candidate and candidate.guid == selectedGUID then return candidate.unit end
+		end
+		self.selectedInteractionTargetGUIDs[selectionKey] = nil
+	end
+	return candidates[1] and candidates[1].unit or nil
+end
+
+function Reminder:SelectInteractionTarget(selectionKey, guid)
+	if type(selectionKey) ~= "string" or selectionKey == "" then return end
+	self.selectedInteractionTargetGUIDs[selectionKey] = type(guid) == "string" and guid ~= "" and guid or nil
+	self:InvalidateSelfProviderStatus()
+	self:RequestUpdate(true)
+end
+
+function Reminder:GetSelectedWeaponBuffItem(slot, candidates)
+	slot = tonumber(slot)
+	if not slot or type(candidates) ~= "table" then return nil end
+	local stored = addon.db and addon.db[self.DB_WEAPON_BUFF_SELECTION]
+	local selectedItemId = type(stored) == "table" and tonumber(stored[slot]) or nil
+	for i = 1, #candidates do
+		local itemId = tonumber(candidates[i] and candidates[i].id)
+		if itemId and itemId == selectedItemId then return itemId end
+	end
+	return tonumber(candidates[1] and candidates[1].id)
+end
+
+function Reminder:SelectWeaponBuffItem(slot, itemId)
+	slot = tonumber(slot)
+	itemId = tonumber(itemId)
+	if not slot or not itemId or itemId <= 0 or not addon.db then return end
+	if type(addon.db[self.DB_WEAPON_BUFF_SELECTION]) ~= "table" then addon.db[self.DB_WEAPON_BUFF_SELECTION] = {} end
+	addon.db[self.DB_WEAPON_BUFF_SELECTION][slot] = itemId
+	self:InvalidateWeaponBuffCache()
+	self:RequestUpdate(true)
+end
+
+function Reminder:MakeWeaponBuffSlotEntry(inventorySlot, candidates, prepared)
+	local itemId = self:GetSelectedWeaponBuffItem(inventorySlot, candidates)
+	if not itemId then return nil end
+	local label = C_Item and C_Item.GetItemNameByID and C_Item.GetItemNameByID(itemId)
+	if type(label) ~= "string" or label == "" then label = prepared and prepared.displayLabel or (L["ClassBuffReminderWeaponBuff"] or "Weapon buff") end
+	local sourceKind = inventorySlot == (_G.INVSLOT_OFFHAND or 17) and "WEAPON_BUFF_OFFHAND" or "WEAPON_BUFF_MAINHAND"
+	local entry = makeSelfMissingEntry(prepared and prepared.displaySpellId, label, nil, nil, sourceKind, Reminder.GetItemIcon(itemId) or (prepared and prepared.displayIcon))
+	entry.itemId = itemId
+	entry.candidates = candidates
+	entry.selectionWeaponSlot = inventorySlot
+	entry.actionInventorySlot = inventorySlot
+	return entry
+end
+
+function Reminder:GetKnownPetInteractionSpellId(spellId)
+	spellId = normalizeSpellId(spellId)
+	if not spellId then return nil end
+	local overrideSpellId
+	if C_Spell and C_Spell.GetOverrideSpell then overrideSpellId = normalizeSpellId(C_Spell.GetOverrideSpell(spellId, 0, true)) end
+	if overrideSpellId and safeIsPlayerSpell(overrideSpellId) then return overrideSpellId end
+	if safeIsPlayerSpell(spellId) then return spellId end
+	return nil
+end
+
+function Reminder:GetPetSummonCandidates(classToken)
+	local source
+	local hunterPetsBySlot
+	if classToken == "HUNTER" then
+		source = self.petTracking.hunterCallPetSpells
+		local stableInfo = _G.C_StableInfo
+		if stableInfo and stableInfo.GetActivePetList then
+			local activePets = stableInfo.GetActivePetList()
+			if type(activePets) == "table" and #activePets > 0 then
+				hunterPetsBySlot = {}
+				for i = 1, #activePets do
+					local petInfo = activePets[i]
+					local slotId = tonumber(petInfo and petInfo.slotID)
+					if slotId and slotId > 0 then hunterPetsBySlot[slotId] = petInfo end
+				end
+			end
+		end
+	elseif classToken == "WARLOCK" then
+		source = self.petTracking.warlockSummonSpells
+	end
+	if type(source) ~= "table" then return nil end
+
+	local candidates = {}
+	local seen = {}
+	for i = 1, #source do
+		local spellId = self:GetKnownPetInteractionSpellId(source[i])
+		local petInfo = hunterPetsBySlot and hunterPetsBySlot[i] or nil
+		if spellId and not seen[spellId] and (not hunterPetsBySlot or petInfo) then
+			seen[spellId] = true
+			local label = petInfo and petInfo.name
+			if issecretvalue and issecretvalue(label) then label = nil end
+			candidates[#candidates + 1] = { spellId = spellId, label = type(label) == "string" and label ~= "" and label or nil }
+		end
+	end
+	return #candidates > 0 and candidates or nil
+end
+
+function Reminder:GetSelectedPetSummonSpell(classToken, candidates, selectionDb)
+	if type(classToken) ~= "string" or type(candidates) ~= "table" then return nil end
+	local stored = addon.db and addon.db[selectionDb or self.DB_PET_SUMMON_SELECTION]
+	local selectedSpellId = type(stored) == "table" and normalizeSpellId(stored[classToken]) or nil
+	for i = 1, #candidates do
+		local spellId = normalizeSpellId(candidates[i] and candidates[i].spellId)
+		if spellId and spellId == selectedSpellId then return spellId end
+	end
+	return normalizeSpellId(candidates[1] and candidates[1].spellId)
+end
+
+function Reminder:SelectPetSummonSpell(classToken, spellId, selectionDb)
+	spellId = normalizeSpellId(spellId)
+	if type(classToken) ~= "string" or classToken == "" or not spellId or not addon.db then return end
+	selectionDb = selectionDb or self.DB_PET_SUMMON_SELECTION
+	if type(addon.db[selectionDb]) ~= "table" then addon.db[selectionDb] = {} end
+	addon.db[selectionDb][classToken] = spellId
+	self:RequestUpdate(true)
+end
+
+function Reminder:GetRoguePoisonCandidates(spellIds)
+	if type(spellIds) ~= "table" then return nil end
+	local candidates = {}
+	for i = 1, #spellIds do
+		local spellId = normalizeSpellId(spellIds[i])
+		if spellId and safeIsPlayerSpell(spellId) and not (self.IsSpellReminderDisabled and self:IsSpellReminderDisabled(spellId)) then candidates[#candidates + 1] = { spellId = spellId } end
+	end
+	return #candidates > 0 and candidates or nil
+end
+
+function Reminder:GetShamanShieldCandidates(provider)
+	if type(provider) ~= "table" then return nil end
+	local candidates = {}
+	local seen = {}
+	local function append(spellIds)
+		if type(spellIds) ~= "table" then return end
+		for i = 1, #spellIds do
+			local spellId = normalizeSpellId(spellIds[i])
+			if spellId and not seen[spellId] and safeIsPlayerSpell(spellId) and not (self.IsSpellReminderDisabled and self:IsSpellReminderDisabled(spellId)) then
+				seen[spellId] = true
+				candidates[#candidates + 1] = { spellId = spellId }
+			end
+		end
+	end
+	append(provider.lightningShieldSpellIds)
+	append(provider.waterShieldSpellIds)
+	return #candidates > 0 and candidates or nil
+end
+
+function Reminder:GetSelectedShamanShieldSpell(specId, candidates, defaultSpellId)
+	specId = tonumber(specId)
+	defaultSpellId = normalizeSpellId(defaultSpellId)
+	if not specId or type(candidates) ~= "table" then return defaultSpellId end
+	local stored = addon.db and addon.db[self.shamanReminder.selectionDb]
+	local selectedSpellId = type(stored) == "table" and normalizeSpellId(stored[specId]) or nil
+	for i = 1, #candidates do
+		local spellId = normalizeSpellId(candidates[i] and candidates[i].spellId)
+		if spellId and spellId == selectedSpellId then return spellId end
+	end
+	for i = 1, #candidates do
+		local spellId = normalizeSpellId(candidates[i] and candidates[i].spellId)
+		if spellId and spellId == defaultSpellId then return spellId end
+	end
+	return normalizeSpellId(candidates[1] and candidates[1].spellId) or defaultSpellId
+end
+
+function Reminder:SelectShamanShieldSpell(specId, spellId, candidates)
+	specId = tonumber(specId)
+	spellId = normalizeSpellId(spellId)
+	if not specId or not spellId or type(candidates) ~= "table" or not addon.db then return end
+	if type(addon.db[self.shamanReminder.selectionDb]) ~= "table" then addon.db[self.shamanReminder.selectionDb] = {} end
+	addon.db[self.shamanReminder.selectionDb][specId] = spellId
+	self:InvalidateSelfProviderStatus()
+	self:RequestUpdate(true)
+end
+
+function Reminder:EnsureRoguePoisonSlotSelections(category, requiredSlots, candidates)
+	local count = math.min(tonumber(requiredSlots) or 0, type(candidates) == "table" and #candidates or 0)
+	if type(category) ~= "string" or count <= 0 or not addon.db then return end
+	local stored = addon.db[self.rogueReminder.selectionDb]
+	if type(stored) ~= "table" then
+		stored = {}
+		addon.db[self.rogueReminder.selectionDb] = stored
+	end
+	if type(stored[category]) ~= "table" then stored[category] = {} end
+	local categorySlots = stored[category]
+	local available = {}
+	for i = 1, #candidates do
+		local spellId = normalizeSpellId(candidates[i] and candidates[i].spellId)
+		if spellId then available[spellId] = true end
+	end
+
+	local used = {}
+	for slot = 1, count do
+		local spellId = normalizeSpellId(categorySlots[slot])
+		if spellId and available[spellId] and not used[spellId] then
+			used[spellId] = true
+		else
+			categorySlots[slot] = nil
+		end
+	end
+	for slot = 1, count do
+		if not categorySlots[slot] then
+			for i = 1, #candidates do
+				local spellId = normalizeSpellId(candidates[i] and candidates[i].spellId)
+				if spellId and not used[spellId] and self:UnitHasAnyAuraSpellId("player", { spellId }, "POISONS") then
+					categorySlots[slot] = spellId
+					used[spellId] = true
+					break
+				end
+			end
+		end
+	end
+	for slot = 1, count do
+		if not categorySlots[slot] then
+			for i = 1, #candidates do
+				local spellId = normalizeSpellId(candidates[i] and candidates[i].spellId)
+				if spellId and not used[spellId] then
+					categorySlots[slot] = spellId
+					used[spellId] = true
+					break
+				end
+			end
+		end
+	end
+end
+
+function Reminder:GetSelectedRoguePoisonSpell(category, slot, candidates)
+	slot = tonumber(slot)
+	if type(category) ~= "string" or not slot or type(candidates) ~= "table" then return nil end
+	local stored = addon.db and addon.db[self.rogueReminder.selectionDb]
+	local categorySlots = type(stored) == "table" and stored[category] or nil
+	local selectedSpellId = type(categorySlots) == "table" and normalizeSpellId(categorySlots[slot]) or nil
+	for i = 1, #candidates do
+		local spellId = normalizeSpellId(candidates[i] and candidates[i].spellId)
+		if spellId and spellId == selectedSpellId then return spellId end
+	end
+	local defaultIndex = math.min(slot, #candidates)
+	return normalizeSpellId(candidates[defaultIndex] and candidates[defaultIndex].spellId)
+end
+
+function Reminder:SelectRoguePoisonSpell(category, slot, spellId, candidates)
+	slot = tonumber(slot)
+	spellId = normalizeSpellId(spellId)
+	if type(category) ~= "string" or not slot or not spellId or type(candidates) ~= "table" or not addon.db then return end
+	local currentSpellId = self:GetSelectedRoguePoisonSpell(category, slot, candidates)
+	local stored = addon.db[self.rogueReminder.selectionDb]
+	if type(stored) ~= "table" then
+		stored = {}
+		addon.db[self.rogueReminder.selectionDb] = stored
+	end
+	if type(stored[category]) ~= "table" then stored[category] = {} end
+	local categorySlots = stored[category]
+	for otherSlot = 1, 2 do
+		if otherSlot ~= slot and self:GetSelectedRoguePoisonSpell(category, otherSlot, candidates) == spellId then
+			categorySlots[otherSlot] = currentSpellId
+		end
+	end
+	categorySlots[slot] = spellId
+	self:InvalidateSelfProviderStatus()
+	self:RequestUpdate(true)
+end
+
+function Reminder:AppendRoguePoisonSlotEntries(target, category, requiredSlots, candidates)
+	if type(target) ~= "table" or type(category) ~= "string" or type(candidates) ~= "table" then return end
+	for slot = 1, math.min(tonumber(requiredSlots) or 0, #candidates) do
+		local spellId = self:GetSelectedRoguePoisonSpell(category, slot, candidates)
+		if spellId and not self:UnitHasAnyAuraSpellId("player", { spellId }, "POISONS") then
+			local label = safeGetSpellName(spellId) or ("spell:" .. tostring(spellId))
+			local sourceKind = "ROGUE_POISON_" .. string.upper(category) .. "_" .. tostring(slot)
+			local entry = makeSelfMissingEntry(spellId, label, nil, nil, sourceKind, safeGetSpellIcon(spellId))
+			entry.actionSpellId = spellId
+			entry.spellCandidates = candidates
+			entry.selectionPoisonCategory = category
+			entry.selectionPoisonSlot = slot
+			target[#target + 1] = entry
+		end
+	end
+end
+
+function Reminder:GetInteractionSpellId(spellIds)
+	if type(spellIds) ~= "table" then return nil end
+	for i = 1, #spellIds do
+		local spellId = normalizeSpellId(spellIds[i])
+		if spellId and safeIsPlayerSpell(spellId) and not (self.IsSpellReminderDisabled and self:IsSpellReminderDisabled(spellId)) then return spellId end
+	end
+	return nil
+end
+
+function Reminder:GetProviderInteractionSpellId(provider)
+	if type(provider) ~= "table" then return nil end
+	return self:GetInteractionSpellId(provider.knownSpellIds or provider.spellIds)
+end
+
+function Reminder:MakeSpellInteractionEntry(spellIds, displaySpellId, label, countMissing, countTotal, sourceKind, icon, shortText)
+	local entry = makeSelfMissingEntry(displaySpellId, label, countMissing, countTotal, sourceKind, icon, shortText)
+	entry.actionSpellId = self:GetInteractionSpellId(spellIds) or entry.actionSpellId
+	return entry
+end
+
+function Reminder:MakeSelfCastInteractionEntry(displaySpellId, label, countMissing, countTotal, sourceKind, icon, shortText)
+	local entry = makeSelfMissingEntry(displaySpellId, label, countMissing, countTotal, sourceKind, icon, shortText)
+	entry.actionUnit = "player"
+	return entry
+end
+
+function Reminder:MakeProviderInteractionEntry(provider, label, missing, total)
+	local entry = makeSelfMissingEntry(provider and provider.displaySpellId, label, missing, total)
+	entry.warningProvider = provider
+	entry.actionSpellId = self:GetProviderInteractionSpellId(provider) or entry.actionSpellId
+	return entry
+end
+
+function Reminder:OpenInteractionMenu(owner, entry)
+	if not (owner and type(entry) == "table" and MenuUtil and MenuUtil.CreateContextMenu) then return end
+	MenuUtil.CreateContextMenu(owner, function(_, rootDescription)
+		rootDescription:CreateButton(L["ClassBuffReminderDismissUntilReload"] or "Dismiss until reload", function() Reminder:DismissInteractionEntry(entry) end)
+		local candidates = entry.candidates
+		local spellCandidates = entry.spellCandidates
+		local hasItemSelection = type(candidates) == "table" and #candidates > 1
+		local hasPetSelection = type(entry.selectionClassToken) == "string"
+		local hasPoisonSelection = type(entry.selectionPoisonCategory) == "string" and tonumber(entry.selectionPoisonSlot) ~= nil
+		local hasShamanShieldSelection = tonumber(entry.selectionShamanShieldSpecId) ~= nil
+		local hasSpellSelection = type(spellCandidates) == "table" and #spellCandidates > 1 and (hasPetSelection or hasPoisonSelection or hasShamanShieldSelection)
+		local targetCandidates = entry.targetCandidates
+		local hasTargetSelection = type(entry.targetSelectionKey) == "string" and type(targetCandidates) == "table" and #targetCandidates > 0
+		if not hasItemSelection and not hasSpellSelection and not hasTargetSelection then return end
+		if rootDescription.CreateDivider then rootDescription:CreateDivider() end
+		if hasItemSelection then
+			for i = 1, #candidates do
+				local candidate = candidates[i]
+				local itemId = tonumber(candidate and candidate.id)
+				if itemId and itemId > 0 then
+					local itemName = C_Item and C_Item.GetItemNameByID and C_Item.GetItemNameByID(itemId)
+					if type(itemName) ~= "string" or itemName == "" then itemName = "item:" .. tostring(itemId) end
+					rootDescription:CreateRadio(itemName, function()
+						if tonumber(entry.selectionWeaponSlot) then return Reminder:GetSelectedWeaponBuffItem(entry.selectionWeaponSlot, candidates) == itemId end
+						return tonumber(Reminder.selectedInteractionItems[entry.sourceKind] or entry.itemId) == itemId
+					end, function()
+						if tonumber(entry.selectionWeaponSlot) then
+							Reminder:SelectWeaponBuffItem(entry.selectionWeaponSlot, itemId)
+						else
+							Reminder:SelectInteractionItem(entry.sourceKind, itemId)
+						end
+					end)
+				end
+			end
+		elseif hasSpellSelection then
+			for i = 1, #spellCandidates do
+				local spellId = normalizeSpellId(spellCandidates[i] and spellCandidates[i].spellId)
+				if spellId then
+					local spellName = spellCandidates[i].label or safeGetSpellName(spellId) or ("spell:" .. tostring(spellId))
+					rootDescription:CreateRadio(spellName, function()
+						if hasPetSelection then return Reminder:GetSelectedPetSummonSpell(entry.selectionClassToken, spellCandidates, entry.selectionPetDb) == spellId end
+						if hasPoisonSelection then return Reminder:GetSelectedRoguePoisonSpell(entry.selectionPoisonCategory, entry.selectionPoisonSlot, spellCandidates) == spellId end
+						return Reminder:GetSelectedShamanShieldSpell(entry.selectionShamanShieldSpecId, spellCandidates, entry.defaultShamanShieldSpellId) == spellId
+					end, function()
+						if hasPetSelection then
+							Reminder:SelectPetSummonSpell(entry.selectionClassToken, spellId, entry.selectionPetDb)
+						elseif hasPoisonSelection then
+							Reminder:SelectRoguePoisonSpell(entry.selectionPoisonCategory, entry.selectionPoisonSlot, spellId, spellCandidates)
+						else
+							Reminder:SelectShamanShieldSpell(entry.selectionShamanShieldSpecId, spellId, spellCandidates)
+						end
+					end)
+				end
+			end
+		end
+		if hasTargetSelection then
+			if hasItemSelection or hasSpellSelection then
+				if rootDescription.CreateDivider then rootDescription:CreateDivider() end
+			end
+			rootDescription:CreateRadio(L["ClassBuffReminderAutomaticTarget"] or "Automatic", function()
+				return Reminder.selectedInteractionTargetGUIDs[entry.targetSelectionKey] == nil
+			end, function()
+				Reminder:SelectInteractionTarget(entry.targetSelectionKey, nil)
+			end)
+			for i = 1, #targetCandidates do
+				local candidate = targetCandidates[i]
+				if candidate and type(candidate.guid) == "string" and type(candidate.label) == "string" then
+					rootDescription:CreateRadio(candidate.label, function()
+						return Reminder.selectedInteractionTargetGUIDs[entry.targetSelectionKey] == candidate.guid
+					end, function()
+						Reminder:SelectInteractionTarget(entry.targetSelectionKey, candidate.guid)
+					end)
+				end
+			end
+		end
+	end)
+end
+
+function Reminder:ShowInteractionTooltip(owner)
+	local entry = owner and owner._eqolReminderInteractionEntry
+	if type(entry) ~= "table" or not GameTooltip then return end
+	GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")
+	GameTooltip:AddLine(entry.label or (L["Class Buff Reminder"] or "Class Buff Reminder"), 1, 0.82, 0)
+	if entry.itemId or normalizeSpellId(entry.actionSpellId) or tonumber(entry.actionPetSlot) or type(entry.actionCallback) == "function" then
+		GameTooltip:AddLine(entry.actionTooltip or L["ClassBuffReminderInteractionApply"] or "Left-click to apply.", 0.4, 0.8, 0.4, true)
+	end
+	local hasItemSelection = type(entry.candidates) == "table" and #entry.candidates > 1
+	local hasPetSelection = type(entry.selectionClassToken) == "string"
+	local hasPoisonSelection = type(entry.selectionPoisonCategory) == "string" and tonumber(entry.selectionPoisonSlot) ~= nil
+	local hasShamanShieldSelection = tonumber(entry.selectionShamanShieldSpecId) ~= nil
+	local hasSpellSelection = type(entry.spellCandidates) == "table" and #entry.spellCandidates > 1 and (hasPetSelection or hasPoisonSelection or hasShamanShieldSelection)
+	local hasTargetSelection = type(entry.targetSelectionKey) == "string" and type(entry.targetCandidates) == "table" and #entry.targetCandidates > 0
+	if hasItemSelection or hasSpellSelection or hasTargetSelection then
+		GameTooltip:AddLine(L["ClassBuffReminderInteractionMenu"] or "Right-click for selection or to dismiss until reload.", 0.8, 0.8, 0.8, true)
+	else
+		GameTooltip:AddLine(L["ClassBuffReminderInteractionDismiss"] or "Right-click to dismiss until reload.", 0.8, 0.8, 0.8, true)
+	end
+	GameTooltip:Show()
+end
+
+function Reminder:ConfigureInteractionButton(button, entry)
+	if not button then return end
+	button._eqolReminderInteractionEntry = entry
+	button:EnableMouse(false)
+	if InCombatLockdown and InCombatLockdown() then return end
+
+	local overlay = button._eqolReminderInteractionOverlay
+	if not overlay then
+		overlay = CreateFrame("Button", nil, UIParent, "SecureActionButtonTemplate")
+		overlay:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+		overlay:SetAttribute("useOnKeyDown", false)
+		overlay:SetScript("PostClick", function(owner, mouseButton)
+			local interactionEntry = owner._eqolReminderInteractionEntry
+			if mouseButton == "RightButton" then
+				Reminder:OpenInteractionMenu(owner, interactionEntry)
+			elseif mouseButton == "LeftButton" and type(interactionEntry) == "table" and type(interactionEntry.actionCallback) == "function" then
+				interactionEntry.actionCallback()
+			end
+		end)
+		overlay:SetScript("OnEnter", function(owner) Reminder:ShowInteractionTooltip(owner) end)
+		overlay:SetScript("OnLeave", GameTooltip_Hide)
+		overlay:Hide()
+		button._eqolReminderInteractionOverlay = overlay
+	end
+
+	UnregisterStateDriver(overlay, "visibility")
+	overlay:SetAttribute("type1", nil)
+	overlay:SetAttribute("item1", nil)
+	overlay:SetAttribute("spell1", nil)
+	overlay:SetAttribute("action1", nil)
+	overlay:SetAttribute("macrotext1", nil)
+	overlay:SetAttribute("unit1", nil)
+	overlay._eqolReminderInteractionEntry = entry
+	if type(entry) ~= "table" or not button:IsShown() then
+		overlay:Hide()
+		return
+	end
+
+	local itemId = tonumber(entry.itemId)
+	local spellId = normalizeSpellId(entry.actionSpellId)
+	local petActionSlot = tonumber(entry.actionPetSlot)
+	local inventorySlot = tonumber(entry.actionInventorySlot)
+	if itemId and itemId > 0 and inventorySlot and inventorySlot > 0 then
+		overlay:SetAttribute("type1", "macro")
+		overlay:SetAttribute("macrotext1", "/use item:" .. tostring(itemId) .. "\n/use " .. tostring(inventorySlot))
+	elseif itemId and itemId > 0 then
+		overlay:SetAttribute("type1", "item")
+		overlay:SetAttribute("item1", "item:" .. tostring(itemId))
+	elseif spellId and inventorySlot and inventorySlot > 0 then
+		local spellName = safeGetSpellName(spellId)
+		if type(spellName) == "string" and spellName ~= "" then
+			overlay:SetAttribute("type1", "macro")
+			overlay:SetAttribute("macrotext1", "/cast " .. spellName .. "\n/use " .. tostring(inventorySlot))
+		else
+			overlay:SetAttribute("type1", "spell")
+			overlay:SetAttribute("spell1", spellId)
+		end
+	elseif spellId then
+		overlay:SetAttribute("type1", "spell")
+		overlay:SetAttribute("spell1", spellId)
+		if type(entry.actionUnit) == "string" and entry.actionUnit ~= "" then overlay:SetAttribute("unit1", entry.actionUnit) end
+	elseif petActionSlot and petActionSlot > 0 then
+		overlay:SetAttribute("type1", "pet")
+		overlay:SetAttribute("action1", petActionSlot)
+	end
+
+	local buttonScale = button:GetEffectiveScale() or 1
+	local uiScale = UIParent:GetEffectiveScale() or 1
+	local centerX, centerY = button:GetCenter()
+	if not centerX or not centerY then
+		overlay:Hide()
+		return
+	end
+	overlay:ClearAllPoints()
+	overlay:SetPoint("CENTER", UIParent, "BOTTOMLEFT", (centerX * buttonScale) / uiScale, (centerY * buttonScale) / uiScale)
+	overlay:SetSize((button:GetWidth() * buttonScale) / uiScale, (button:GetHeight() * buttonScale) / uiScale)
+	overlay:SetFrameStrata(button:GetFrameStrata())
+	overlay:SetFrameLevel((button:GetFrameLevel() or 0) + 20)
+	RegisterStateDriver(overlay, "visibility", "[combat] hide; show")
+	overlay:Show()
+end
+
+local function appendMissingEntries(target, source)
+	if type(target) ~= "table" or type(source) ~= "table" then return end
+	for i = 1, #source do
+		target[#target + 1] = source[i]
+	end
+end
+
+local function buildSelfStatus(total, missingEntries)
+	local entries = type(missingEntries) == "table" and missingEntries or {}
+	local missing = #entries
+	local normalizedTotal = tonumber(total) or 1
+	if normalizedTotal < missing then normalizedTotal = missing end
+	if normalizedTotal < 0 then normalizedTotal = 0 end
+	return {
+		total = normalizedTotal,
+		missing = missing,
+		missingEntries = entries,
+	}
+end
+
+local function resolveProviderPresentation(provider, force)
+	if not provider then return end
+	if force ~= true then
+		if provider._presentationReady == true then return end
+		if provider._presentationAttempted == true then return end
+		if provider.presentationRetryPending == true then return end
+	end
+	provider._presentationAttempted = true
+
+	local resolvedId
+	local resolvedName
+	local resolvedIcon
+	local preferredId = normalizeSpellId(provider.displaySpellId)
+	local preferredIcon = Reminder.NormalizeIconTexture(provider.displayIcon)
+	if preferredId then resolvedId = preferredId end
+	if preferredIcon then resolvedIcon = preferredIcon end
+
+	if preferredId then
+		requestSpellDataLoad(preferredId)
+		local preferredName = safeGetSpellName(preferredId)
+		local preferredIcon = getSpellIconRaw(preferredId)
+		if preferredName and preferredName ~= "" then
+			resolvedName = preferredName
+			resolvedId = preferredId
+		end
+		if preferredIcon and preferredIcon ~= "" then
+			resolvedIcon = preferredIcon
+			resolvedId = preferredId
+		end
+		if resolvedName and resolvedIcon then
+			provider.displaySpellId = preferredId
+			provider.cachedName = resolvedName
+			provider.cachedIcon = resolvedIcon
+			provider._presentationReady = true
+			return
+		end
+	end
+
+	for i = 1, #provider.spellIds do
+		local sid = normalizeSpellId(provider.spellIds[i])
+		if sid then
+			if preferredId and sid == preferredId then
+				if resolvedName and resolvedIcon then break end
+				-- Continue with additional IDs only to fill missing name/icon fields.
+			end
+			requestSpellDataLoad(sid)
+			if not resolvedId then resolvedId = sid end
+			local name = safeGetSpellName(sid)
+			local icon = getSpellIconRaw(sid)
+			if name and not resolvedName then resolvedName = name end
+			if icon and not resolvedIcon then resolvedIcon = icon end
+			if name and icon then
+				if not preferredId then resolvedId = sid end
+				resolvedName = name
+				resolvedIcon = icon
+				break
+			end
+		end
+	end
+
+	provider.displaySpellId = resolvedId or preferredId or normalizeSpellId(provider.spellIds[1]) or provider.displaySpellId or provider.spellIds[1]
+	provider.cachedName = resolvedName or provider.fallbackName or "Buff"
+	provider.cachedIcon = resolvedIcon or Reminder.NormalizeIconTexture(provider.displayIcon) or ICON_MISSING
+	provider._presentationReady = (provider.cachedName ~= nil and provider.cachedIcon ~= ICON_MISSING)
+end
+
+local function refreshProviderSpellNameSet(provider)
+	if type(provider) ~= "table" then return end
+	if type(provider.spellIds) ~= "table" then return end
+	provider.spellNameSet = provider.spellNameSet or {}
+
+	local resolvedAny = false
+	for i = 1, #provider.spellIds do
+		local sid = normalizeSpellId(provider.spellIds[i])
+		if sid then
+			requestSpellDataLoad(sid)
+			local name = safeGetSpellName(sid)
+			if type(name) == "string" and name ~= "" then
+				provider.spellNameSet[name] = true
+				resolvedAny = true
+			end
+		end
+	end
+
+	provider.spellNameRefreshAttempts = (tonumber(provider.spellNameRefreshAttempts) or 0) + 1
+	if resolvedAny then
+		provider.spellNameSetReady = true
+		provider.spellNameRefreshAttempts = 0
+	elseif provider.spellNameRefreshAttempts >= 8 then
+		provider.spellNameSetReady = true
+	end
+end
+
+function Reminder:GetClassToken() return (addon.variables and addon.variables.unitClass) or select(2, UnitClass("player")) end
+
+function Reminder:GetCurrentSpecId()
+	local sid = addon.variables and addon.variables.unitSpecId
+	sid = tonumber(sid)
+	if sid and sid > 0 then return sid end
+
+	local specIndex = C_SpecializationInfo and C_SpecializationInfo.GetSpecialization and C_SpecializationInfo.GetSpecialization() or nil
+	if not specIndex or not (C_SpecializationInfo and C_SpecializationInfo.GetSpecializationInfo) then return nil end
+	local specId = C_SpecializationInfo.GetSpecializationInfo(specIndex)
+	specId = tonumber(specId)
+	if not specId or specId <= 0 then return nil end
+	return specId
+end
+
+function Reminder:IsEnabled() return getValue(DB_ENABLED, defaults.enabled) == true end
+
+function Reminder:GetTrackingContentOptions()
+	local options = {}
+	for _, key in ipairs(TRACKING_CONTENT.order) do
+		options[#options + 1] = {
+			value = key,
+			text = Reminder.GetTrackingContentLabel(key),
+		}
+	end
+	return options
+end
+
+function Reminder:IsFlaskTrackingEnabled() return getValue(DB_TRACK_FLASKS, defaults.trackFlasks) == true end
+
+function Reminder:GetFlaskTrackingContentSelection()
+	return Reminder.GetTrackingContentSelection(TRACKING_CONTENT.db.FLASKS, DB_TRACK_FLASKS_INSTANCE_ONLY, defaults.trackFlasksContent)
+end
+
+function Reminder:SetFlaskTrackingContentSelection(selection)
+	if addon.db then addon.db[TRACKING_CONTENT.db.FLASKS] = select(1, Reminder.NormalizeTrackingContentSelection(selection, nil, defaults.trackFlasksContent)) end
+	Reminder.InvalidateTrackingContentSelectionCache(TRACKING_CONTENT.db.FLASKS)
+	self:InvalidateFlaskCache()
+	self:RequestUpdate(true)
+end
+
+function Reminder:IsFoodTrackingEnabled() return getValue(DB_TRACK_FOOD, defaults.trackFood) == true end
+
+function Reminder:GetFoodTrackingContentSelection()
+	return Reminder.GetTrackingContentSelection(TRACKING_CONTENT.db.FOOD, DB_TRACK_FOOD_INSTANCE_ONLY, defaults.trackFoodContent)
+end
+
+function Reminder:SetFoodTrackingContentSelection(selection)
+	if addon.db then addon.db[TRACKING_CONTENT.db.FOOD] = select(1, Reminder.NormalizeTrackingContentSelection(selection, nil, defaults.trackFoodContent)) end
+	Reminder.InvalidateTrackingContentSelectionCache(TRACKING_CONTENT.db.FOOD)
+	self:InvalidateFoodCache()
+	self:RequestUpdate(true)
+end
+
+function Reminder:IsRuneTrackingEnabled() return getValue(Reminder.runeTracking.enabledDb, defaults.trackRunes) == true end
+
+function Reminder:GetRuneTrackingContentSelection()
+	return Reminder.GetTrackingContentSelection(TRACKING_CONTENT.db.RUNES, Reminder.runeTracking.legacyDb, defaults.trackRunesContent)
+end
+
+function Reminder:SetRuneTrackingContentSelection(selection)
+	if addon.db then addon.db[TRACKING_CONTENT.db.RUNES] = select(1, Reminder.NormalizeTrackingContentSelection(selection, nil, defaults.trackRunesContent)) end
+	Reminder.InvalidateTrackingContentSelectionCache(TRACKING_CONTENT.db.RUNES)
+	self:InvalidateRuneCache()
+	self:RequestUpdate(true)
+end
+
+function Reminder:IsWeaponBuffTrackingEnabled() return getValue(DB_TRACK_WEAPON_BUFFS, defaults.trackWeaponBuffs) == true end
+
+function Reminder:GetWeaponBuffTrackingContentSelection()
+	return Reminder.GetTrackingContentSelection(TRACKING_CONTENT.db.WEAPON_BUFFS, DB_TRACK_WEAPON_BUFFS_INSTANCE_ONLY, defaults.trackWeaponBuffsContent)
+end
+
+function Reminder:SetWeaponBuffTrackingContentSelection(selection)
+	if addon.db then addon.db[TRACKING_CONTENT.db.WEAPON_BUFFS] = select(1, Reminder.NormalizeTrackingContentSelection(selection, nil, defaults.trackWeaponBuffsContent)) end
+	Reminder.InvalidateTrackingContentSelectionCache(TRACKING_CONTENT.db.WEAPON_BUFFS)
+	self:InvalidateWeaponBuffCache()
+	self:RequestUpdate(true)
+end
+
+function Reminder:IsHealthstoneTrackingEnabled()
+	return self:GetClassToken() == "WARLOCK" and getValue(Reminder.DB_TRACK_HEALTHSTONES, defaults.trackHealthstones) == true
+end
+
+function Reminder:GetHealthstoneTrackingContentSelection()
+	return Reminder.GetTrackingContentSelection(TRACKING_CONTENT.db.HEALTHSTONES, Reminder.DB_TRACK_HEALTHSTONES_INSTANCE_ONLY, defaults.trackHealthstonesContent)
+end
+
+function Reminder:SetHealthstoneTrackingContentSelection(selection)
+	if addon.db then addon.db[TRACKING_CONTENT.db.HEALTHSTONES] = select(1, Reminder.NormalizeTrackingContentSelection(selection, nil, defaults.trackHealthstonesContent)) end
+	Reminder.InvalidateTrackingContentSelectionCache(TRACKING_CONTENT.db.HEALTHSTONES)
+	self:RequestUpdate(true)
+end
+
+function Reminder:IsStanceTrackingEnabled() return getValue(Reminder.DB_TRACK_STANCES, defaults.trackStances) == true end
+
+function Reminder:GetStanceTrackingContentSelection()
+	return Reminder.GetTrackingContentSelection(TRACKING_CONTENT.db.STANCES, nil, defaults.trackStancesContent)
+end
+
+function Reminder:SetStanceTrackingContentSelection(selection)
+	if addon.db then addon.db[TRACKING_CONTENT.db.STANCES] = select(1, Reminder.NormalizeTrackingContentSelection(selection, nil, defaults.trackStancesContent)) end
+	Reminder.InvalidateTrackingContentSelectionCache(TRACKING_CONTENT.db.STANCES)
+	self:RequestUpdate(true)
+end
+
+function Reminder:IsPetTrackingEnabled() return getValue("classBuffReminderTrackPets", defaults.trackPets) == true end
+
+function Reminder:ShouldIgnorePetDefensiveReminder()
+	return getValue("classBuffReminderIgnorePetDefensive", defaults.ignorePetDefensive) == true
+end
+
+function Reminder:ShouldIgnorePetPassiveReminder()
+	return getValue("classBuffReminderIgnorePetPassive", defaults.ignorePetPassive) == true
+end
+
+function Reminder:GetPetTrackingContentSelection()
+	local stored = addon.db and addon.db[TRACKING_CONTENT.db.PETS] or nil
+	if addon.db and addon.db["classBuffReminderPetsMythicPlusContentMigrated"] ~= true then
+		if type(stored) == "table" and stored[TRACKING_CONTENT.PARTY_MYTHIC] == true and stored[TRACKING_CONTENT.PARTY_MYTHIC_PLUS] == nil then
+			stored[TRACKING_CONTENT.PARTY_MYTHIC_PLUS] = true
+		end
+		addon.db["classBuffReminderPetsMythicPlusContentMigrated"] = true
+	end
+	return Reminder.GetTrackingContentSelection(TRACKING_CONTENT.db.PETS, "classBuffReminderTrackPetsInstanceOnly", defaults.trackPetsContent)
+end
+
+function Reminder:SetPetTrackingContentSelection(selection)
+	if addon.db then addon.db[TRACKING_CONTENT.db.PETS] = select(1, Reminder.NormalizeTrackingContentSelection(selection, nil, defaults.trackPetsContent)) end
+	Reminder.InvalidateTrackingContentSelectionCache(TRACKING_CONTENT.db.PETS)
+	self:RequestUpdate(true)
+end
+
+function Reminder:IsPetHealthReminderEnabled()
+	return getValue(self.DB_PET_HEALTH_REMINDER_ENABLED, defaults.petHealthReminderEnabled) == true
+end
+
+function Reminder:GetPetHealthReminderThreshold()
+	return clamp(getValue(self.DB_PET_HEALTH_REMINDER_THRESHOLD, defaults.petHealthReminderThreshold), 1, 100, defaults.petHealthReminderThreshold)
+end
+
+function Reminder:IsPetHealthReminderInfernalBeneficiaryOnly()
+	return getValue(self.DB_PET_HEALTH_REMINDER_INFERNAL_BENEFICIARY_ONLY, defaults.petHealthReminderInfernalBeneficiaryOnly) == true
+end
+
+function Reminder:SetPetHealthReminderEnabled(value)
+	if addon.db then addon.db[self.DB_PET_HEALTH_REMINDER_ENABLED] = value == true end
+	self:UpdatePetHealthReminder()
+	if EditMode and EditMode.RefreshFrame then EditMode:RefreshFrame(EDITMODE_ID) end
+end
+
+function Reminder:SetPetHealthReminderThreshold(value)
+	if addon.db then addon.db[self.DB_PET_HEALTH_REMINDER_THRESHOLD] = clamp(value, 1, 100, defaults.petHealthReminderThreshold) end
+	self.petHealthReminderCurve = nil
+	self.petHealthReminderCurveThreshold = nil
+	self:UpdatePetHealthReminder()
+	if EditMode and EditMode.RefreshFrame then EditMode:RefreshFrame(EDITMODE_ID) end
+end
+
+function Reminder:SetPetHealthReminderInfernalBeneficiaryOnly(value)
+	if addon.db then addon.db[self.DB_PET_HEALTH_REMINDER_INFERNAL_BENEFICIARY_ONLY] = value == true end
+	self:UpdatePetHealthReminder()
+	if EditMode and EditMode.RefreshFrame then EditMode:RefreshFrame(EDITMODE_ID) end
+end
+
+function Reminder:GetConsumableTrackingContentToken()
+	if not IsInInstance then return TRACKING_CONTENT.OPEN_WORLD end
+
+	local inInstance, instanceType = IsInInstance()
+	if inInstance ~= true then return TRACKING_CONTENT.OPEN_WORLD end
+	if instanceType == "scenario" then return TRACKING_CONTENT.SCENARIO end
+
+	local difficultyID = GetInstanceInfo and tonumber((select(3, GetInstanceInfo()))) or nil
+
+	if instanceType == "party" then
+		if difficultyID and TRACKING_CONTENT.difficulties.party.mythicPlus[difficultyID] then return TRACKING_CONTENT.PARTY_MYTHIC_PLUS end
+		if difficultyID and TRACKING_CONTENT.difficulties.party.follower[difficultyID] then return TRACKING_CONTENT.PARTY_FOLLOWER end
+		if difficultyID and TRACKING_CONTENT.difficulties.party.heroic[difficultyID] then return TRACKING_CONTENT.PARTY_HEROIC end
+		if difficultyID and TRACKING_CONTENT.difficulties.party.mythic[difficultyID] then return TRACKING_CONTENT.PARTY_MYTHIC end
+		return TRACKING_CONTENT.PARTY_NORMAL
+	end
+
+	if instanceType == "raid" then
+		if difficultyID and TRACKING_CONTENT.difficulties.raid.lfr[difficultyID] then return TRACKING_CONTENT.RAID_LFR end
+		if difficultyID and TRACKING_CONTENT.difficulties.raid.heroic[difficultyID] then return TRACKING_CONTENT.RAID_HEROIC end
+		if difficultyID and TRACKING_CONTENT.difficulties.raid.mythic[difficultyID] then return TRACKING_CONTENT.RAID_MYTHIC end
+		return TRACKING_CONTENT.RAID_NORMAL
+	end
+
+	return nil
+end
+
+function Reminder:IsDungeonOrRaidInstance()
+	if not IsInInstance then return false end
+	local inInstance, instanceType = IsInInstance()
+	if inInstance ~= true then return false end
+	return instanceType == "party" or instanceType == "raid"
+end
+
+function Reminder:GetCurrentExpansionLevel()
+	local expansionLevel
+	if type(LE_EXPANSION_LEVEL_CURRENT) == "number" then expansionLevel = LE_EXPANSION_LEVEL_CURRENT end
+	if type(expansionLevel) ~= "number" and _G.GetServerExpansionLevel then expansionLevel = _G.GetServerExpansionLevel() end
+	if issecretvalue and issecretvalue(expansionLevel) then expansionLevel = nil end
+	if type(expansionLevel) ~= "number" and _G.GetMaximumExpansionLevel then expansionLevel = _G.GetMaximumExpansionLevel() end
+	if type(expansionLevel) ~= "number" and GetExpansionLevel then expansionLevel = GetExpansionLevel() end
+	if issecretvalue and issecretvalue(expansionLevel) then expansionLevel = nil end
+	return type(expansionLevel) == "number" and expansionLevel or nil
+end
+
+function Reminder:GetCurrentExpansionInstanceCache()
+	local expansionLevel = self:GetCurrentExpansionLevel()
+	if not expansionLevel then return nil end
+	local cache = CURRENT_EXPANSION_INSTANCE_CACHE[expansionLevel]
+	if cache then return cache end
+
+	if not (EJ_SelectTier and EJ_GetInstanceByIndex and EJ_GetNumTiers and EJ_GetTierInfo) then
+		local isLoaded = (C_AddOns and C_AddOns.IsAddOnLoaded) or _G.IsAddOnLoaded
+		local loadAddOn = (C_AddOns and C_AddOns.LoadAddOn) or _G.UIParentLoadAddOn or _G.LoadAddOn
+		if isLoaded and loadAddOn and not isLoaded("Blizzard_EncounterJournal") then pcall(loadAddOn, "Blizzard_EncounterJournal") end
+	end
+	if not (EJ_SelectTier and EJ_GetInstanceByIndex and EJ_GetNumTiers and EJ_GetTierInfo) then return nil end
+
+	cache = {
+		instances = {},
+		maps = {},
+	}
+	CURRENT_EXPANSION_INSTANCE_CACHE[expansionLevel] = cache
+
+	local previousTier = EJ_GetCurrentTier and EJ_GetCurrentTier() or nil
+	local selectedTier
+	local tierCount = EJ_GetNumTiers and EJ_GetNumTiers() or nil
+	if issecretvalue and issecretvalue(tierCount) then tierCount = nil end
+	if type(tierCount) == "number" and tierCount > 0 then
+		local expansionName = _G["EXPANSION_NAME" .. expansionLevel]
+		if issecretvalue and issecretvalue(expansionName) then expansionName = nil end
+		if type(expansionName) == "string" and EJ_GetTierInfo then
+			for i = 1, tierCount do
+				if EJ_GetTierInfo(i) == expansionName then
+					selectedTier = i
+					break
+				end
+			end
+		end
+	end
+	if not selectedTier then
+		CURRENT_EXPANSION_INSTANCE_CACHE[expansionLevel] = nil
+		return nil
+	end
+	EJ_SelectTier(selectedTier)
+
+	for _, showRaid in ipairs({ false, true }) do
+		local index = 1
+		while true do
+			local journalInstanceID, _, _, _, _, _, _, _, _, _, mapID = EJ_GetInstanceByIndex(index, showRaid)
+			if not journalInstanceID then break end
+			cache.instances[journalInstanceID] = true
+			if type(mapID) == "number" and mapID > 0 then cache.maps[mapID] = true end
+			index = index + 1
+		end
+	end
+
+	if previousTier then EJ_SelectTier(previousTier) end
+	return cache
+end
+
+function Reminder:IsCurrentExpansionDungeonOrRaidInstance()
+	if self:IsDungeonOrRaidInstance() ~= true then return true end
+	if not GetInstanceInfo then return true end
+
+	local _, _, difficultyID, _, _, _, _, instanceMapID, _, lfgDungeonID = GetInstanceInfo()
+	local currentExpansionLevel = self:GetCurrentExpansionLevel()
+
+	if GetLFGDungeonInfo and lfgDungeonID then
+		local _, _, _, _, _, _, _, _, expansionLevel, _, _, _, _, _, _, _, _, isTimewalker = GetLFGDungeonInfo(lfgDungeonID)
+		if issecretvalue and issecretvalue(expansionLevel) then expansionLevel = nil end
+		if issecretvalue and issecretvalue(isTimewalker) then isTimewalker = nil end
+		if isTimewalker == true then return false end
+		if type(expansionLevel) == "number" and currentExpansionLevel then return expansionLevel >= currentExpansionLevel end
+	end
+
+	local ids = (_G.DifficultyUtil and _G.DifficultyUtil.ID) or {}
+	if difficultyID == (ids.DungeonTimewalker or 24) or difficultyID == (ids.RaidTimewalker or 33) then return false end
+
+	local cache = self:GetCurrentExpansionInstanceCache()
+	if type(cache) ~= "table" then return true end
+
+	if type(instanceMapID) == "number" and cache.maps[instanceMapID] then return true end
+	local journalInstanceID = C_EncounterJournal and C_EncounterJournal.GetInstanceForGameMap and type(instanceMapID) == "number"
+		and C_EncounterJournal.GetInstanceForGameMap(instanceMapID)
+		or nil
+	return journalInstanceID ~= nil and cache.instances[journalInstanceID] == true
+end
+
+function Reminder:IsCurrentSeasonMythicPlusDungeon()
+	if not GetInstanceInfo then return false end
+
+	local _, _, difficultyID, _, _, _, _, instanceMapID = GetInstanceInfo()
+	local ids = (_G.DifficultyUtil and _G.DifficultyUtil.ID) or {}
+	if difficultyID ~= (ids.DungeonMythic or 23) then return false end
+	if issecretvalue and issecretvalue(instanceMapID) then return false end
+	if type(instanceMapID) ~= "number" then return false end
+
+	local mythicPlus = addon.MythicPlus
+	local variables = mythicPlus and mythicPlus.variables or nil
+	if type(variables) ~= "table" then return false end
+
+	if (type(variables.seasonMapHash) ~= "table" or not next(variables.seasonMapHash)) and mythicPlus.functions and type(mythicPlus.functions.createSeasonInfo) == "function" then
+		mythicPlus.functions.createSeasonInfo()
+	end
+
+	local seasonMapHash = variables.seasonMapHash
+	if type(seasonMapHash) ~= "table" then return false end
+	if seasonMapHash[instanceMapID] then return true end
+
+	local zoneID = C_Map and C_Map.GetBestMapForUnit and C_Map.GetBestMapForUnit("player") or nil
+	if issecretvalue and issecretvalue(zoneID) then zoneID = nil end
+	if type(zoneID) == "number" and seasonMapHash[instanceMapID .. "_" .. zoneID] then return true end
+	return false
+end
+
+function Reminder:IsTrackingContentSelected(selection, requireCurrentExpansionInstance)
+	local token = self:GetConsumableTrackingContentToken()
+	if not token or type(selection) ~= "table" then return false end
+	if requireCurrentExpansionInstance == true and self:IsCurrentExpansionDungeonOrRaidInstance() ~= true and self:IsCurrentSeasonMythicPlusDungeon() ~= true then return false end
+	return selection[token] == true
+end
+
+function Reminder:IsHideInRestedAreaEnabled() return getValue(DB_HIDE_IN_RESTED_AREA, defaults.hideInRestedArea) == true end
+
+function Reminder:IsPlayerInRestedArea()
+	if not IsResting then return false end
+	return IsResting() == true
+end
+
+function Reminder:IsFlaskEnvironmentRestricted()
+	if self.consumableTrackingBlockedByCombat == true then return true end
+	if InCombatLockdown and InCombatLockdown() then return true end
+	if self:AreConsumableAuraChecksRestricted() then return true end
+	-- Generic addon restrictions can include transient states unrelated to local consumable checks.
+	-- Basic combat restrictions also cover Mythic+, which resolves to its own tracking content token.
+	return false
+end
+
+function Reminder:CanCheckFlaskReminder()
+	if self:IsFlaskEnvironmentRestricted() then return false end
+	if not self:IsFlaskTrackingEnabled() then return false end
+	return self:IsTrackingContentSelected(self:GetFlaskTrackingContentSelection(), true)
+end
+
+function Reminder:IsEarthenPlayer()
+	local race = addon.variables and addon.variables.unitRace or select(2, UnitRace("player"))
+	if issecretvalue and issecretvalue(race) then return false end
+	return race == "EarthenDwarf"
+end
+
+function Reminder:CanCheckFoodReminder()
+	if self:IsFlaskEnvironmentRestricted() then return false end
+	if self:IsEarthenPlayer() then return false end
+	if not self:IsFoodTrackingEnabled() then return false end
+	return self:IsTrackingContentSelected(self:GetFoodTrackingContentSelection(), true)
+end
+
+function Reminder:CanCheckRuneReminder()
+	if self:IsFlaskEnvironmentRestricted() then return false end
+	if not self:IsRuneTrackingEnabled() then return false end
+	return self:IsTrackingContentSelected(self:GetRuneTrackingContentSelection())
+end
+
+function Reminder:ShouldSuppressGenericWeaponBuffReminder()
+	local classToken = self:GetClassToken()
+	if classToken == "SHAMAN" then
+		local specId = self:GetCurrentSpecId()
+		if specId == Reminder.shamanReminder.specEnhancement or specId == Reminder.shamanReminder.specRestoration then return true end
+		if specId == Reminder.shamanReminder.specElemental then return hasKnownSpellInList(SHAMAN_ENHANCEMENT_FLAMETONGUE_IDS) end
+		return false
+	end
+	if classToken == "PALADIN" then
+		local provider = self:GetPaladinRitesProvider()
+		return provider and provider.trackRites == true or false
+	end
+	return false
+end
+
+function Reminder:CanCheckWeaponBuffReminder()
+	if self.consumableTrackingBlockedByCombat == true then return false end
+	if InCombatLockdown and InCombatLockdown() then return false end
+	if self:ShouldSuppressGenericWeaponBuffReminder() then return false end
+	if not self:IsWeaponBuffTrackingEnabled() then return false end
+	return self:IsTrackingContentSelected(self:GetWeaponBuffTrackingContentSelection(), true)
+end
+
+function Reminder:CanCheckPetReminder()
+	if not self:IsPetTrackingEnabled() then return false end
+	return self:IsTrackingContentSelected(self:GetPetTrackingContentSelection(), true)
+end
+
+function Reminder:CanCheckHealthstoneReminder()
+	if not self:IsHealthstoneTrackingEnabled() then return false end
+	return self:IsTrackingContentSelected(self:GetHealthstoneTrackingContentSelection())
+end
+
+function Reminder:GetExpectedStanceDefinition()
+	local classToken = self:GetClassToken()
+	local specId = self:GetCurrentSpecId()
+	local definitions = Reminder.stanceTracking.definitions
+	if classToken == "PALADIN" and definitions.PALADIN.specIds[specId] then return definitions.PALADIN end
+	if classToken == "PRIEST" and definitions.PRIEST.specIds[specId] then return definitions.PRIEST end
+	if classToken == "WARRIOR" and definitions.WARRIOR_ARMS.specIds[specId] then return definitions.WARRIOR_ARMS end
+	if classToken == "WARRIOR" and definitions.WARRIOR_FURY.specIds[specId] then return definitions.WARRIOR_FURY end
+	return nil
+end
+
+function Reminder:CanCheckStanceReminder()
+	if not self:IsStanceTrackingEnabled() then return false end
+	local definition = self:GetExpectedStanceDefinition()
+	if not (definition and safeIsPlayerSpell(definition.spellId)) then return false end
+	return self:IsTrackingContentSelected(self:GetStanceTrackingContentSelection())
+end
+
+function Reminder:CanCheckSharedPaladinStanceAura()
+	if self:GetClassToken() ~= "PALADIN" or not self:CanCheckStanceReminder() then return false end
+	if self:AreAuraQueriesSecret() then return false end
+	return self:HasOtherPaladinInGroup()
+end
+
+function Reminder:CanEvaluateFoodReminderNow()
+	if not self:CanCheckFoodReminder() then return false end
+	return true
+end
+
+function Reminder:CanEvaluateRuneReminderNow()
+	if not self:CanCheckRuneReminder() then return false end
+	return true
+end
+
+function Reminder:CanEvaluateWeaponBuffReminderNow()
+	if not self:CanCheckWeaponBuffReminder() then return false end
+	return true
+end
+
+function Reminder:CanEvaluateFlaskReminderNow()
+	if not self:CanCheckFlaskReminder() then return false end
+	return true
+end
+
+function Reminder:CanEvaluatePetReminderNow()
+	if not self:CanCheckPetReminder() then return false end
+	return true
+end
+
+function Reminder:CanEvaluateHealthstoneReminderNow()
+	return self:CanCheckHealthstoneReminder()
+end
+
+function Reminder:IsGrimoireOfSacrificeKnown()
+	if self:GetClassToken() ~= "WARLOCK" then return false end
+	return safeIsPlayerSpell(Reminder.petTracking.grimoireOfSacrifice)
+end
+
+function Reminder:CanCheckGrimoireOfSacrificeReminder()
+	if not self:IsGrimoireOfSacrificeKnown() then return false end
+	if not self:CanReadAuraData() then return false end
+	return self:IsGroupModeAllowed()
+end
+
+function Reminder:CanEvaluateStanceReminderNow()
+	return self:CanCheckStanceReminder()
+end
+
+function Reminder:CanCheckSupplementalReminderInCurrentContext()
+	if self:IsReminderEvaluationBlockedByCombat() then return false end
+	return self:CanCheckFlaskReminder()
+		or self:CanCheckFoodReminder()
+		or self:CanCheckRuneReminder()
+		or self:CanCheckWeaponBuffReminder()
+		or self:CanCheckHealthstoneReminder()
+		or self:CanCheckGrimoireOfSacrificeReminder()
+		or self:CanCheckStanceReminder()
+		or self:CanCheckPetReminder()
+end
+
+function Reminder:GetGroupContext()
+	if IsInRaid and IsInRaid() then return GROUP_CONTEXT_RAID end
+	if IsInGroup and IsInGroup() then return GROUP_CONTEXT_PARTY end
+	return GROUP_CONTEXT_SOLO
+end
+
+function Reminder:IsGroupBuffTrackingEnabled() return getValue(DB_TRACK_GROUP_BUFFS, defaults.trackGroupBuffs) == true end
+
+function Reminder:IsOnlyOutOfCombatEnabled() return getValue(DB_ONLY_OUT_OF_COMBAT, defaults.onlyOutOfCombat) == true end
+
+function Reminder:IsReminderEvaluationBlockedByCombat()
+	if self:IsOnlyOutOfCombatEnabled() ~= true then return false end
+	if not InCombatLockdown then return false end
+	return InCombatLockdown() == true
+end
+
+function Reminder:IsGroupResponsibilityEvaluationBlockedByCombat()
+	if not InCombatLockdown then return false end
+	return InCombatLockdown() == true
+end
+
+function Reminder:IsRoleFilterEnabled() return getValue(DB_ROLE_FILTER_ENABLED, defaults.roleFilterEnabled) == true end
+
+function Reminder:DoesRoleFilterApplyToCurrentContext()
+	if self:IsRoleFilterEnabled() ~= true then return false end
+
+	local context = self:GetGroupContext()
+	if context == GROUP_CONTEXT_SOLO then return false end
+
+	local filterContext = normalizeRoleFilterContext(getValue(DB_ROLE_FILTER_CONTEXT, defaults.roleFilterContext))
+	if filterContext == ROLE_FILTER_CONTEXT_PARTY_ONLY then return context == GROUP_CONTEXT_PARTY end
+	if filterContext == ROLE_FILTER_CONTEXT_RAID_ONLY then return context == GROUP_CONTEXT_RAID end
+	return context == GROUP_CONTEXT_PARTY or context == GROUP_CONTEXT_RAID
+end
+
+function Reminder:GetPlayerSpecRoleToken()
+	local role = addon.variables and addon.variables.unitRole or nil
+	if issecretvalue and issecretvalue(role) then role = nil end
+	role = normalizeGroupRole(role)
+	if role ~= "NONE" then return role end
+
+	if GetSpecializationRole and C_SpecializationInfo and C_SpecializationInfo.GetSpecialization then
+		local specIndex = C_SpecializationInfo.GetSpecialization()
+		if specIndex then
+			role = GetSpecializationRole(specIndex)
+			if issecretvalue and issecretvalue(role) then role = nil end
+			role = normalizeGroupRole(role)
+			if role ~= "NONE" then return role end
+		end
+	end
+
+	return "NONE"
+end
+
+function Reminder:GetPlayerRoleToken()
+	local role = nil
+	if UnitGroupRolesAssigned then
+		role = UnitGroupRolesAssigned("player")
+		if issecretvalue and issecretvalue(role) then role = nil end
+		role = normalizeGroupRole(role)
+	end
+
+	if role and role ~= "NONE" then return role end
+	return self:GetPlayerSpecRoleToken()
+end
+
+function Reminder:IsPlayerRoleHiddenBySettings()
+	if self:DoesRoleFilterApplyToCurrentContext() ~= true then return false end
+
+	local role = self:GetPlayerRoleToken()
+	if role == "HEALER" then return getValue(DB_HIDE_FOR_HEALER, defaults.hideForHealer) == true end
+	if role == "TANK" then return getValue(DB_HIDE_FOR_TANK, defaults.hideForTank) == true end
+	if role == "DAMAGER" then return getValue(DB_HIDE_FOR_DAMAGER, defaults.hideForDamager) == true end
+	return getValue(DB_HIDE_FOR_NONE, defaults.hideForNoRole) == true
+end
+
+function Reminder:IsOnlyClassProvider()
+	local classToken = self:GetClassToken()
+	if type(classToken) ~= "string" or classToken == "" then return false end
+	if self:GetGroupContext() == GROUP_CONTEXT_SOLO then return true end
+
+	local units = self:GetRosterUnits()
+	for i = 1, #units do
+		local unit = units[i]
+		if not isPlayerUnit(unit) and not isAIFollowerUnit(unit) and UnitExists(unit) and UnitIsConnected(unit) and not UnitIsDeadOrGhost(unit) then
+			local _, unitClassToken = UnitClass(unit)
+			if not (issecretvalue and issecretvalue(unitClassToken)) and unitClassToken == classToken then return false end
+		end
+	end
+
+	return true
+end
+
+function Reminder:ShouldEvaluateGroupResponsibilities(provider, spellId)
+	local combatOnly = self.IsClassBuffCombatOnly and self:IsClassBuffCombatOnly(spellId or (provider and provider.displaySpellId))
+	if self:IsReminderEvaluationBlockedByCombat() then return false end
+	if type(provider) ~= "table" then return true end
+	if self:IsGroupBuffTrackingEnabled() ~= true then return false end
+	local canReadAuraData = self:CanReadAuraData()
+	local canQueryRestrictedGroupBuff = not canReadAuraData and self:CanQueryRestrictedGroupBuffProvider(provider)
+	if self:IsGroupResponsibilityEvaluationBlockedByCombat() and not canQueryRestrictedGroupBuff and not combatOnly then return false end
+	if not canReadAuraData and not canQueryRestrictedGroupBuff then return false end
+	if self:IsPlayerRoleHiddenBySettings() ~= true then return true end
+	if getValue(DB_SHOW_IF_ONLY_PROVIDER, defaults.showIfOnlyProvider) == true and self:IsOnlyClassProvider() then return true end
+	return false
+end
+
+function Reminder:InvalidateFlaskCache()
+	self.flaskCandidateCache = nil
+	self.flaskCandidateCacheSpecId = nil
+	self.flaskCandidateCacheTime = 0
+	self.flaskCandidateCacheReady = false
+	self.flaskCacheDirty = true
+	self.preparedFlaskCandidateData = nil
+end
+
+function Reminder:InvalidateFoodCache()
+	self.foodCandidateCache = nil
+	self.foodCandidateCacheSpecId = nil
+	self.foodCandidateCacheTime = 0
+	self.foodCandidateCacheReady = false
+	self.foodCacheDirty = true
+	self.preparedFoodCandidateData = nil
+end
+
+function Reminder:InvalidateRuneCache()
+	self.runeCandidateCache = nil
+	self.runeCandidateCacheTime = 0
+	self.runeCandidateCacheReady = false
+	self.runeCacheDirty = true
+	self.preparedRuneCandidateData = nil
+end
+
+function Reminder:InvalidateWeaponBuffCache()
+	self.weaponBuffCandidateCache = nil
+	self.weaponBuffCandidateCacheTime = 0
+	self.weaponBuffCandidateCacheReady = false
+	self.weaponBuffCacheDirty = true
+	self.preparedWeaponBuffCandidateData = nil
+end
+
+function Reminder:InvalidateSelfProviderStatus()
+	self.selfProviderStatusProvider = nil
+	self.selfProviderStatus = nil
+end
+
+function Reminder:InvalidatePlayerAuraPresenceSnapshot()
+	self.playerAuraPresenceSnapshot = nil
+	self:InvalidateSelfProviderStatus()
+end
+
+function Reminder:RefreshAuraSecretState()
+	local secret = addon.AuraCompat and addon.AuraCompat:ShouldAurasBeSecret() == true or false
+	local changed = self.auraQueriesSecret ~= secret
+	self.auraQueriesSecret = secret
+	return changed
+end
+
+function Reminder:AreAuraQueriesSecret()
+	if self.auraQueriesSecret == nil then self:RefreshAuraSecretState() end
+	return self.auraQueriesSecret == true
+end
+
+function Reminder:AreConsumableAuraChecksRestricted()
+	return self:AreAuraQueriesSecret()
+end
+
+function Reminder:PrepareConsumableCandidateAuraData(candidates, fallbackLabel)
+	local prepared = {
+		source = candidates,
+		spellIds = {},
+		auraNames = {},
+		displaySpellId = nil,
+		displayLabel = nil,
+		displayIcon = nil,
+	}
+	local seenSpellIds = {}
+	local seenAuraNames = {}
+	local function appendUniquePreparedValue(list, seen, value)
+		if type(value) ~= "string" or value == "" or seen[value] then return end
+		seen[value] = true
+		list[#list + 1] = value
+	end
+	local function appendUniquePreparedSpellId(list, seen, spellId)
+		spellId = normalizeSpellId(spellId)
+		if not spellId or seen[spellId] then return end
+		seen[spellId] = true
+		list[#list + 1] = spellId
+	end
+
+	if type(candidates) ~= "table" then
+		if type(prepared.displayLabel) ~= "string" or prepared.displayLabel == "" then prepared.displayLabel = fallbackLabel end
+		return prepared
+	end
+
+	for i = 1, #candidates do
+		local candidate = candidates[i]
+		local candidateSpellId = normalizeSpellId(candidate and (candidate.displaySpellId or candidate.spellId))
+		local candidateIcon = Reminder.NormalizeIconTexture(candidate and (candidate.displayIcon or candidate.icon or candidate.iconId or candidate.iconID))
+		if not prepared.displaySpellId and candidateSpellId then prepared.displaySpellId = candidateSpellId end
+		if not prepared.displayIcon and candidateIcon then prepared.displayIcon = candidateIcon end
+		appendUniquePreparedSpellId(prepared.spellIds, seenSpellIds, candidateSpellId)
+
+		local itemId = tonumber(candidate and candidate.id)
+		if itemId and itemId > 0 then
+			if not prepared.displayIcon then prepared.displayIcon = Reminder.GetItemIcon(itemId) end
+
+			local spellName, spellId
+			if C_Item and C_Item.GetItemSpell then spellName, spellId = C_Item.GetItemSpell(itemId) end
+
+			spellId = normalizeSpellId(spellId)
+			if not prepared.displaySpellId and spellId then prepared.displaySpellId = spellId end
+			appendUniquePreparedSpellId(prepared.spellIds, seenSpellIds, spellId)
+
+			if type(spellName) == "string" and spellName ~= "" then
+				appendUniquePreparedValue(prepared.auraNames, seenAuraNames, spellName)
+				if not prepared.displayLabel then prepared.displayLabel = spellName end
+			end
+
+			local itemName
+			if C_Item and C_Item.GetItemNameByID then itemName = C_Item.GetItemNameByID(itemId) end
+			if (not itemName or itemName == "") and C_Item and C_Item.GetItemInfo then itemName = C_Item.GetItemInfo(itemId) end
+			if type(itemName) == "string" and itemName ~= "" then
+				appendUniquePreparedValue(prepared.auraNames, seenAuraNames, itemName)
+				if not prepared.displayLabel then prepared.displayLabel = itemName end
+			end
+		end
+	end
+
+	if type(prepared.displayLabel) ~= "string" or prepared.displayLabel == "" then prepared.displayLabel = fallbackLabel end
+	return prepared
+end
+
+function Reminder:GetPreparedFlaskCandidateData(candidates)
+	local prepared = self.preparedFlaskCandidateData
+	if prepared and prepared.source == candidates then return prepared end
+	prepared = self:PrepareConsumableCandidateAuraData(candidates, "Flask")
+	self.preparedFlaskCandidateData = prepared
+	return prepared
+end
+
+function Reminder:GetPreparedFoodCandidateData(candidates)
+	local prepared = self.preparedFoodCandidateData
+	if prepared and prepared.source == candidates then return prepared end
+	prepared = self:PrepareConsumableCandidateAuraData(candidates, L["Buff Food Macro"] or "Buff food")
+	self.preparedFoodCandidateData = prepared
+	return prepared
+end
+
+function Reminder:GetPreparedRuneCandidateData(candidates)
+	local prepared = self.preparedRuneCandidateData
+	if prepared and prepared.source == candidates then return prepared end
+	prepared = self:PrepareConsumableCandidateAuraData(candidates, L["ClassBuffReminderAugmentRune"] or "Augment Rune")
+	self.preparedRuneCandidateData = prepared
+	return prepared
+end
+
+function Reminder:GetPreparedWeaponBuffCandidateData(candidates)
+	local prepared = self.preparedWeaponBuffCandidateData
+	if prepared and prepared.source == candidates then return prepared end
+
+	prepared = {
+		source = candidates,
+		displaySpellId = nil,
+		displayLabel = nil,
+		displayIcon = nil,
+	}
+
+	local itemId = tonumber(candidates[1] and candidates[1].id)
+	if itemId and itemId > 0 then
+		prepared.displayIcon = Reminder.GetItemIcon(itemId)
+		local spellName, spellId
+		if C_Item and C_Item.GetItemSpell then spellName, spellId = C_Item.GetItemSpell(itemId) end
+		prepared.displaySpellId = normalizeSpellId(spellId)
+		if type(spellName) == "string" and spellName ~= "" then prepared.displayLabel = spellName end
+		if not prepared.displayLabel and C_Item and C_Item.GetItemNameByID then prepared.displayLabel = C_Item.GetItemNameByID(itemId) end
+		if (not prepared.displayLabel or prepared.displayLabel == "") and C_Item and C_Item.GetItemInfo then prepared.displayLabel = C_Item.GetItemInfo(itemId) end
+	end
+
+	if type(prepared.displayLabel) ~= "string" or prepared.displayLabel == "" then prepared.displayLabel = L["ClassBuffReminderWeaponBuff"] or "Weapon buff" end
+	self.preparedWeaponBuffCandidateData = prepared
+	return prepared
+end
+
+function Reminder:GetPlayerAuraPresenceSnapshot()
+	local snapshot = self.playerAuraPresenceSnapshot
+	if type(snapshot) == "table" then return snapshot end
+
+	snapshot = {
+		supported = false,
+		restricted = false,
+		spellIds = {},
+		names = {},
+		icons = {},
+		spellIdExpirations = {},
+		nameExpirations = {},
+		iconExpirations = {},
+		instanceSpellIds = {},
+		instanceNames = {},
+		instanceIcons = {},
+	}
+
+	if not self:CanReadAuraData() then
+		snapshot.restricted = true
+		self.playerAuraPresenceSnapshot = snapshot
+		return snapshot
+	end
+
+	if not (C_UnitAuras and C_UnitAuras.GetAuraSlots and C_UnitAuras.GetAuraDataBySlot) then
+		self.playerAuraPresenceSnapshot = snapshot
+		return snapshot
+	end
+	snapshot.supported = true
+
+	local continuationToken
+	for _ = 1, AURA_SLOT_SCAN_GUARD do
+		local slots, slotCount, nextToken = getHelpfulAuraSlotBuffer("player", continuationToken)
+		for i = 2, slotCount do
+			local slot = slots[i]
+			local aura = C_UnitAuras.GetAuraDataBySlot("player", slot)
+			if aura and Reminder.IsRelevantHelpfulPlayerAura(aura) then
+				local auraName = aura.name
+				if issecretvalue and issecretvalue(auraName) then
+					snapshot.supported = false
+					snapshot.restricted = true
+					self.playerAuraPresenceSnapshot = snapshot
+					return snapshot
+				end
+
+				local auraId = normalizeAuraInstanceId(aura.auraInstanceID)
+				local expirationTime = Reminder.GetAuraExpirationTime(aura)
+				local auraSpellId = normalizeSpellId(aura.spellId)
+				if auraSpellId then
+					snapshot.spellIds[auraSpellId] = true
+					Reminder.StoreBestExpiration(snapshot.spellIdExpirations, auraSpellId, expirationTime)
+					if auraId then snapshot.instanceSpellIds[auraId] = auraSpellId end
+				end
+
+				if type(auraName) == "string" and auraName ~= "" then
+					snapshot.names[auraName] = true
+					Reminder.StoreBestExpiration(snapshot.nameExpirations, auraName, expirationTime)
+					if auraId then snapshot.instanceNames[auraId] = auraName end
+				end
+
+				local auraIcon = aura.icon
+				if issecretvalue and issecretvalue(auraIcon) then auraIcon = nil end
+				auraIcon = tonumber(auraIcon)
+				if auraIcon and auraIcon > 0 then
+					snapshot.icons[auraIcon] = true
+					Reminder.StoreBestExpiration(snapshot.iconExpirations, auraIcon, expirationTime)
+					if auraId then snapshot.instanceIcons[auraId] = auraIcon end
+				end
+			end
+		end
+
+		if nextToken == nil then break end
+		continuationToken = nextToken
+	end
+
+	self.playerAuraPresenceSnapshot = snapshot
+	return snapshot
+end
+
+function Reminder:IsPlayerAuraSnapshotRestricted(snapshot)
+	return type(snapshot) == "table" and snapshot.restricted == true
+end
+
+function Reminder:AuraSnapshotHasAnySpellId(snapshot, spellIds, category)
+	if type(snapshot) ~= "table" or type(spellIds) ~= "table" then return false end
+	local present = snapshot.spellIds
+	if type(present) ~= "table" then return false end
+	local expirations = snapshot.spellIdExpirations
+	local thresholdSeconds = self:GetExpirationWarningSeconds(category)
+	local now = nowSeconds()
+	for i = 1, #spellIds do
+		local spellId = normalizeSpellId(spellIds[i])
+		if spellId and present[spellId] then
+			local expirationTime = type(expirations) == "table" and expirations[spellId] or math.huge
+			if self:IsExpirationTimeUsable(expirationTime, thresholdSeconds, now) then return true end
+		end
+	end
+	return false
+end
+
+function Reminder:AuraSnapshotCountSpellIds(snapshot, spellIds, category)
+	if type(snapshot) ~= "table" or type(spellIds) ~= "table" then return 0 end
+	local present = snapshot.spellIds
+	if type(present) ~= "table" then return 0 end
+	local expirations = snapshot.spellIdExpirations
+	local thresholdSeconds = self:GetExpirationWarningSeconds(category)
+	local now = nowSeconds()
+	local count = 0
+	for i = 1, #spellIds do
+		local spellId = normalizeSpellId(spellIds[i])
+		if spellId and present[spellId] then
+			local expirationTime = type(expirations) == "table" and expirations[spellId] or math.huge
+			if self:IsExpirationTimeUsable(expirationTime, thresholdSeconds, now) then count = count + 1 end
+		end
+	end
+	return count
+end
+
+function Reminder:CountActivePlayerAuraSpellIds(spellIds, category)
+	if type(spellIds) ~= "table" then return 0 end
+	if not self:CanReadAuraData() then return nil end
+	if not (C_UnitAuras and C_UnitAuras.GetPlayerAuraBySpellID) then return nil end
+
+	local count = 0
+	for i = 1, #spellIds do
+		local spellId = normalizeSpellId(spellIds[i])
+		if spellId then
+			local aura = C_UnitAuras.GetPlayerAuraBySpellID(spellId)
+			if aura and not (issecretvalue and issecretvalue(aura)) and self:IsAuraUsableForReminder(aura, self:GetExpirationWarningSeconds(category)) then count = count + 1 end
+		end
+	end
+	return count
+end
+
+function Reminder:EnsureSelfProviderAuraTracking(provider)
+	if not (provider and provider.scope == PROVIDER_SCOPE_SELF and provider.trackSelfAuraInstances == true and provider.spellSet) then return end
+	if not self:CanReadAuraData() then return end
+	local state = self:PrepareUnitAuraState("player", provider)
+	if state and not state.initialized then self:FullRefreshUnitAuraState("player", provider) end
+end
+
+function Reminder:AuraSnapshotHasAnyName(snapshot, auraNames, category)
+	if type(snapshot) ~= "table" or type(auraNames) ~= "table" then return false end
+	local present = snapshot.names
+	if type(present) ~= "table" then return false end
+	local expirations = snapshot.nameExpirations
+	local thresholdSeconds = self:GetExpirationWarningSeconds(category)
+	local now = nowSeconds()
+	for i = 1, #auraNames do
+		local auraName = auraNames[i]
+		if type(auraName) == "string" and auraName ~= "" and present[auraName] then
+			local expirationTime = type(expirations) == "table" and expirations[auraName] or math.huge
+			if self:IsExpirationTimeUsable(expirationTime, thresholdSeconds, now) then return true end
+		end
+	end
+	return false
+end
+
+function Reminder:AuraSnapshotHasIcon(snapshot, iconId, category)
+	iconId = tonumber(iconId)
+	if not iconId or iconId <= 0 or type(snapshot) ~= "table" then return false end
+	local present = snapshot.icons
+	if type(present) ~= "table" or present[iconId] ~= true then return false end
+	local expirations = snapshot.iconExpirations
+	local expirationTime = type(expirations) == "table" and expirations[iconId] or math.huge
+	return self:IsExpirationTimeUsable(expirationTime, self:GetExpirationWarningSeconds(category))
+end
+
+function Reminder:GetFoodBagCacheVersion()
+	if addon.functions and addon.functions.getFoodBagItemCountCacheVersion then return tonumber(addon.functions.getFoodBagItemCountCacheVersion()) or 0 end
+	return 0
+end
+
+function Reminder:GetExpectedFlaskSharedSelection(specId)
+	local db = addon.db or {}
+	local funcs = addon.Flasks and addon.Flasks.functions or nil
+	local normalizeType = funcs and funcs.normalizeTypeKey or nil
+	local selectedPreference = "useRole"
+	local selectedRoleKey = nil
+	local selectedType = "none"
+
+	if db.flaskPreferredBySpec and specId and db.flaskPreferredBySpec[specId] ~= nil then selectedPreference = db.flaskPreferredBySpec[specId] end
+	if selectedPreference == "useRole" then
+		local roleFunc = funcs and (funcs.getEffectiveRoleBucketForSpec or funcs.getRoleBucketForSpec) or nil
+		if type(roleFunc) == "function" then selectedRoleKey = roleFunc(specId) end
+		local roleSelection = db.flaskPreferredByRole and selectedRoleKey and db.flaskPreferredByRole[selectedRoleKey] or nil
+		if type(normalizeType) == "function" then selectedType = normalizeType(roleSelection) else selectedType = roleSelection or "none" end
+	else
+		if type(normalizeType) == "function" then selectedType = normalizeType(selectedPreference) else selectedType = selectedPreference or "none" end
+	end
+
+	if type(selectedType) ~= "string" or selectedType == "" then selectedType = "none" end
+	return selectedType, selectedRoleKey, selectedPreference
+end
+
+function Reminder:GetExpectedFoodSharedSelection(specId)
+	local db = addon.db or {}
+	local funcs = addon.BuffFoods and addon.BuffFoods.functions or nil
+	local normalizeType = funcs and funcs.normalizeTypeKey or nil
+	local selectedPreference = "useRole"
+	local selectedRoleKey = nil
+	local selectedType = "none"
+
+	if db.buffFoodPreferredBySpec and specId and db.buffFoodPreferredBySpec[specId] ~= nil then selectedPreference = db.buffFoodPreferredBySpec[specId] end
+	if selectedPreference == "useRole" then
+		local roleFunc = funcs and funcs.getRoleBucketForSpec or nil
+		if type(roleFunc) == "function" then selectedRoleKey = roleFunc(specId) end
+		local roleSelection = db.buffFoodPreferredByRole and selectedRoleKey and db.buffFoodPreferredByRole[selectedRoleKey] or nil
+		if type(normalizeType) == "function" then selectedType = normalizeType(roleSelection) else selectedType = roleSelection or "none" end
+	else
+		if type(normalizeType) == "function" then selectedType = normalizeType(selectedPreference) else selectedType = selectedPreference or "none" end
+	end
+
+	if type(selectedType) ~= "string" or selectedType == "" then selectedType = "none" end
+	return selectedType, selectedRoleKey, selectedPreference
+end
+
+function Reminder:IsFlaskSelectionConfigured()
+	local selectedType = self:GetExpectedFlaskSharedSelection(self:GetCurrentSpecId())
+	return selectedType ~= "none"
+end
+
+function Reminder:IsFoodSelectionConfigured()
+	local selectedType = self:GetExpectedFoodSharedSelection(self:GetCurrentSpecId())
+	return selectedType ~= "none"
+end
+
+function Reminder:OpenConsumablePreferenceSettings(sourceKind)
+	if InCombatLockdown and InCombatLockdown() then
+		if UIErrorsFrame and ERR_NOT_IN_COMBAT then UIErrorsFrame:AddMessage(ERR_NOT_IN_COMBAT, 1, 0, 0) end
+		return
+	end
+
+	local specId = self:GetCurrentSpecId()
+	local focusControlId
+	if sourceKind == "FLASK" then
+		local _, roleKey, preference = self:GetExpectedFlaskSharedSelection(specId)
+		if preference == "useRole" and type(roleKey) == "string" and roleKey ~= "" then
+			focusControlId = "flaskPreferredRole_" .. roleKey
+		elseif specId then
+			focusControlId = "flaskPreferredSpec_" .. tostring(specId)
+		end
+		if addon.functions and addon.functions.OpenFlaskMacroSettings then
+			addon.functions.OpenFlaskMacroSettings(focusControlId)
+			return
+		end
+	elseif sourceKind == "FOOD" then
+		local _, roleKey, preference = self:GetExpectedFoodSharedSelection(specId)
+		if preference == "useRole" and type(roleKey) == "string" and roleKey ~= "" then
+			focusControlId = "buffFoodPreferredRole_" .. roleKey
+		elseif specId then
+			focusControlId = "buffFoodPreferredSpec_" .. tostring(specId)
+		end
+		if addon.functions and addon.functions.OpenBuffFoodMacroSettings then
+			addon.functions.OpenBuffFoodMacroSettings(focusControlId)
+			return
+		end
+	end
+
+	if addon.functions and addon.functions.OpenConfigCenter then addon.functions.OpenConfigCenter("gameplay.travel-utility", focusControlId) end
+end
+
+function Reminder:MakeUnconfiguredConsumableEntry(sourceKind)
+	local baseLabel
+	local displaySpellId
+	local displayIcon
+	local actionTooltip
+	if sourceKind == "FLASK" then
+		baseLabel = _G.FLASK or "Flask"
+		displaySpellId = normalizeSpellId(SHARED_FLASK_AURA_IDS[1])
+		displayIcon = safeGetSpellIcon(displaySpellId)
+		actionTooltip = L["ClassBuffReminderInteractionConfigureFlask"] or "Left-click to configure flask preferences."
+	else
+		baseLabel = L["Buff Food Macro"] or "Buff food"
+		displayIcon = SHARED_FOOD_AURA_ICON_ID
+		actionTooltip = L["ClassBuffReminderInteractionConfigureFood"] or "Left-click to configure food preferences."
+	end
+
+	local label = string.format(L["ClassBuffReminderNotConfiguredFmt"] or "%s - Not configured", baseLabel)
+	local entry = makeSelfMissingEntry(displaySpellId, label, nil, nil, sourceKind, displayIcon, "!")
+	entry.actionSpellId = nil
+	entry.actionCallback = function() Reminder:OpenConsumablePreferenceSettings(sourceKind) end
+	entry.actionTooltip = actionTooltip
+	return entry
+end
+
+function Reminder:GetSharedFlaskCandidates(specId)
+	if type(specId) ~= "number" then return nil, nil, false end
+	if not addon.Flasks then return nil, nil, false end
+	if addon.Flasks.lastSpecID ~= specId then return nil, nil, false end
+	if tonumber(addon.Flasks.lastBagVersion) ~= self:GetFoodBagCacheVersion() then return nil, nil, false end
+
+	local expectedType, expectedRoleKey, expectedPreference = self:GetExpectedFlaskSharedSelection(specId)
+	if addon.Flasks.lastSelectedType ~= expectedType then return nil, nil, false end
+	if addon.Flasks.lastSelectedRole ~= expectedRoleKey then return nil, nil, false end
+	if addon.Flasks.lastSelectedPreference ~= expectedPreference then return nil, nil, false end
+
+	local selectedType = addon.Flasks.lastSelectedType
+	if type(selectedType) ~= "string" then selectedType = nil end
+	if selectedType == "none" then return nil, selectedType, true end
+
+	local shared = addon.Flasks.filteredFlasks
+	if type(shared) ~= "table" then return nil, selectedType, false end
+	if #shared <= 0 then return nil, selectedType, true end
+	return shared, selectedType, true
+end
+
+function Reminder:GetSharedFoodCandidates(specId)
+	if type(specId) ~= "number" then return nil, nil, false end
+	if not addon.BuffFoods then return nil, nil, false end
+	if addon.BuffFoods.lastSpecID ~= specId then return nil, nil, false end
+	if tonumber(addon.BuffFoods.lastBagVersion) ~= self:GetFoodBagCacheVersion() then return nil, nil, false end
+
+	local expectedType, expectedRoleKey, expectedPreference = self:GetExpectedFoodSharedSelection(specId)
+	if addon.BuffFoods.lastSelectedType ~= expectedType then return nil, nil, false end
+	if addon.BuffFoods.lastSelectedRole ~= expectedRoleKey then return nil, nil, false end
+	if addon.BuffFoods.lastSelectedPreference ~= expectedPreference then return nil, nil, false end
+
+	local selectedType = addon.BuffFoods.lastSelectedType
+	if type(selectedType) ~= "string" then selectedType = nil end
+	if selectedType == "none" then return nil, selectedType, true end
+
+	local shared = addon.BuffFoods.filteredBuffFoods
+	if type(shared) ~= "table" then return nil, selectedType, false end
+	if #shared <= 0 then return nil, selectedType, true end
+	return shared, selectedType, true
+end
+
+function Reminder:GetFlaskCandidatesForCurrentSpec()
+	if not self:CanCheckFlaskReminder() then return nil, nil end
+	if not (addon.Flasks and addon.Flasks.functions and addon.Flasks.functions.getAvailableCandidatesForSpec) then return nil, nil end
+
+	local specId = self:GetCurrentSpecId()
+	-- Preferences cannot be resolved until the player specialization is available.
+	if not specId then return nil, nil end
+	if self.flaskCacheDirty ~= true and self.flaskCandidateCacheReady == true and self.flaskCandidateCacheSpecId == specId then return self.flaskCandidateCache, self.flaskSelectedType end
+
+	local now = nowSeconds()
+	local canUseShared = addon.db and addon.db.flaskMacroEnabled == true
+	local sharedCandidates, sharedType, sharedReady = self:GetSharedFlaskCandidates(specId)
+	if canUseShared and sharedReady then
+		self.flaskCandidateCache = sharedCandidates
+		self.flaskCandidateCacheSpecId = specId
+		self.flaskSelectedType = sharedType
+		self.flaskCandidateCacheTime = now
+		self.flaskCandidateCacheReady = true
+		self.flaskCacheDirty = false
+		return sharedCandidates, sharedType
+	end
+
+	local candidates, selectedType = addon.Flasks.functions.getAvailableCandidatesForSpec(specId)
+	if type(selectedType) ~= "string" then selectedType = nil end
+	if selectedType == "none" then
+		candidates = nil
+	elseif type(candidates) ~= "table" or #candidates <= 0 then
+		candidates = nil
+	end
+
+	self.flaskCandidateCache = candidates
+	self.flaskCandidateCacheSpecId = specId
+	self.flaskSelectedType = selectedType
+	self.flaskCandidateCacheTime = now
+	self.flaskCandidateCacheReady = true
+	self.flaskCacheDirty = false
+
+	return candidates, selectedType
+end
+
+function Reminder:GetFoodCandidatesForCurrentSpec()
+	if not self:CanCheckFoodReminder() then return nil, nil end
+	if not (addon.BuffFoods and addon.BuffFoods.functions and addon.BuffFoods.functions.getAvailableCandidatesForSpec) then return nil, nil end
+
+	local specId = self:GetCurrentSpecId()
+	-- Preferences cannot be resolved until the player specialization is available.
+	if not specId then return nil, nil end
+	if self.foodCacheDirty ~= true and self.foodCandidateCacheReady == true and self.foodCandidateCacheSpecId == specId then return self.foodCandidateCache, self.foodSelectedType end
+
+	local now = nowSeconds()
+	local canUseShared = addon.db and addon.db.buffFoodMacroEnabled == true
+	local sharedCandidates, sharedType, sharedReady = self:GetSharedFoodCandidates(specId)
+	if canUseShared and sharedReady then
+		self.foodCandidateCache = sharedCandidates
+		self.foodCandidateCacheSpecId = specId
+		self.foodSelectedType = sharedType
+		self.foodCandidateCacheTime = now
+		self.foodCandidateCacheReady = true
+		self.foodCacheDirty = false
+		return sharedCandidates, sharedType
+	end
+
+	local candidates, selectedType = addon.BuffFoods.functions.getAvailableCandidatesForSpec(specId)
+	if type(selectedType) ~= "string" then selectedType = nil end
+	if selectedType == "none" then
+		candidates = nil
+	elseif type(candidates) ~= "table" or #candidates <= 0 then
+		candidates = nil
+	end
+
+	self.foodCandidateCache = candidates
+	self.foodCandidateCacheSpecId = specId
+	self.foodSelectedType = selectedType
+	self.foodCandidateCacheTime = now
+	self.foodCandidateCacheReady = true
+	self.foodCacheDirty = false
+
+	return candidates, selectedType
+end
+
+function Reminder:GetRuneCandidates()
+	if not self:CanCheckRuneReminder() then return nil end
+	if not (addon.Runes and addon.Runes.functions and addon.Runes.functions.getAvailableCandidates) then return nil end
+
+	if self.runeCacheDirty ~= true and self.runeCandidateCacheReady == true then return self.runeCandidateCache end
+
+	local candidates = addon.Runes.functions.getAvailableCandidates()
+	if type(candidates) ~= "table" or #candidates <= 0 then candidates = nil end
+
+	self.runeCandidateCache = candidates
+	self.runeCandidateCacheTime = nowSeconds()
+	self.runeCandidateCacheReady = true
+	self.runeCacheDirty = false
+
+	return candidates
+end
+
+function Reminder:GetWeaponBuffCandidates()
+	if not self:CanCheckWeaponBuffReminder() then return nil end
+	if not (addon.WeaponBuffs and addon.WeaponBuffs.functions and addon.WeaponBuffs.functions.getAvailableCandidates) then return nil end
+
+	if self.weaponBuffCacheDirty ~= true and self.weaponBuffCandidateCacheReady == true then return self.weaponBuffCandidateCache end
+
+	local candidates = addon.WeaponBuffs.functions.getAvailableCandidates()
+	if type(candidates) ~= "table" or #candidates <= 0 then candidates = nil end
+
+	self.weaponBuffCandidateCache = candidates
+	self.weaponBuffCandidateCacheTime = nowSeconds()
+	self.weaponBuffCandidateCacheReady = true
+	self.weaponBuffCacheDirty = false
+
+	return candidates
+end
+
+function Reminder:GetFlaskMissingEntry(evalContext)
+	if self:AreConsumableAuraChecksRestricted() then return nil end
+	local candidates, selectedType = self:GetFlaskCandidatesForCurrentSpec()
+	local unconfigured = selectedType == "none"
+	if not unconfigured and (type(candidates) ~= "table" or #candidates <= 0) then return nil end
+
+	local context = type(evalContext) == "table" and evalContext or nil
+	local prepared
+	if not unconfigured then
+		prepared = context and context.flaskPreparedData or self:GetPreparedFlaskCandidateData(candidates)
+		if context and not context.flaskPreparedData then context.flaskPreparedData = prepared end
+	end
+	local snapshot = context and context.playerAuraSnapshot or self:GetPlayerAuraPresenceSnapshot()
+	if context and not context.playerAuraSnapshot then context.playerAuraSnapshot = snapshot end
+	if self:IsPlayerAuraSnapshotRestricted(snapshot) then return nil end
+
+	local hasFlaskAura
+	if snapshot and snapshot.supported == true then
+		hasFlaskAura = self:AuraSnapshotHasAnySpellId(snapshot, SHARED_FLASK_AURA_IDS, "FLASK")
+		if not unconfigured and not hasFlaskAura and #prepared.spellIds > 0 and self:AuraSnapshotHasAnySpellId(snapshot, prepared.spellIds, "FLASK") then hasFlaskAura = true end
+		if not unconfigured and not hasFlaskAura and #prepared.auraNames > 0 and self:AuraSnapshotHasAnyName(snapshot, prepared.auraNames, "FLASK") then hasFlaskAura = true end
+	else
+		hasFlaskAura = self:UnitHasAnyAuraSpellId("player", SHARED_FLASK_AURA_IDS, "FLASK")
+		if not unconfigured and not hasFlaskAura and #prepared.spellIds > 0 and self:UnitHasAnyAuraSpellId("player", prepared.spellIds, "FLASK") then hasFlaskAura = true end
+		if not unconfigured and not hasFlaskAura and #prepared.auraNames > 0 and self:UnitHasAnyAuraName("player", prepared.auraNames, "FLASK") then hasFlaskAura = true end
+	end
+	if hasFlaskAura then return nil end
+	if unconfigured then return self:MakeUnconfiguredConsumableEntry("FLASK") end
+
+	local displaySpellId = prepared.displaySpellId or normalizeSpellId(SHARED_FLASK_AURA_IDS[1])
+	local displayLabel = prepared.displayLabel
+	if type(displayLabel) ~= "string" or displayLabel == "" then displayLabel = "Flask" end
+	local entry = self:DecorateConsumableInteractionEntry(makeSelfMissingEntry(displaySpellId, displayLabel, nil, nil, "FLASK", prepared.displayIcon), "FLASK", candidates)
+	entry.warningAuraQuery = { spellIds = prepared.spellIds, names = prepared.auraNames, extraSpellIds = SHARED_FLASK_AURA_IDS, category = "FLASK" }
+	return entry
+end
+
+function Reminder:GetFoodMissingEntry(evalContext)
+	if self:AreConsumableAuraChecksRestricted() then return nil end
+	if self:IsEarthenPlayer() then return nil end
+
+	local candidates, selectedType = self:GetFoodCandidatesForCurrentSpec()
+	local unconfigured = selectedType == "none"
+	if not unconfigured and (type(candidates) ~= "table" or #candidates <= 0) then return nil end
+
+	local context = type(evalContext) == "table" and evalContext or nil
+	local prepared
+	if not unconfigured then
+		prepared = context and context.foodPreparedData or self:GetPreparedFoodCandidateData(candidates)
+		if context and not context.foodPreparedData then context.foodPreparedData = prepared end
+	end
+	local snapshot = context and context.playerAuraSnapshot or self:GetPlayerAuraPresenceSnapshot()
+	if context and not context.playerAuraSnapshot then context.playerAuraSnapshot = snapshot end
+	if self:IsPlayerAuraSnapshotRestricted(snapshot) then return nil end
+
+	local hasFoodAura
+	if snapshot and snapshot.supported == true then
+		hasFoodAura = self:AuraSnapshotHasIcon(snapshot, SHARED_FOOD_AURA_ICON_ID, "FOOD")
+		if not unconfigured and not hasFoodAura and #prepared.spellIds > 0 and self:AuraSnapshotHasAnySpellId(snapshot, prepared.spellIds, "FOOD") then hasFoodAura = true end
+		if not unconfigured and not hasFoodAura and #prepared.auraNames > 0 and self:AuraSnapshotHasAnyName(snapshot, prepared.auraNames, "FOOD") then hasFoodAura = true end
+	else
+		hasFoodAura = self:UnitHasAuraIcon("player", SHARED_FOOD_AURA_ICON_ID, "FOOD")
+		if not unconfigured and not hasFoodAura and #prepared.spellIds > 0 and self:UnitHasAnyAuraSpellId("player", prepared.spellIds, "FOOD") then hasFoodAura = true end
+		if not unconfigured and not hasFoodAura and #prepared.auraNames > 0 and self:UnitHasAnyAuraName("player", prepared.auraNames, "FOOD") then hasFoodAura = true end
+	end
+	if hasFoodAura then return nil end
+	if unconfigured then return self:MakeUnconfiguredConsumableEntry("FOOD") end
+
+	local displaySpellId = prepared.displaySpellId
+	local displayLabel = prepared.displayLabel
+	if not displaySpellId and #prepared.spellIds > 0 then displaySpellId = normalizeSpellId(prepared.spellIds[1]) end
+	if type(displayLabel) ~= "string" or displayLabel == "" then displayLabel = L["Buff Food Macro"] or "Buff food" end
+	local entry = self:DecorateConsumableInteractionEntry(makeSelfMissingEntry(displaySpellId, displayLabel, nil, nil, "FOOD", prepared.displayIcon or SHARED_FOOD_AURA_ICON_ID), "FOOD", candidates)
+	entry.warningAuraQuery = { spellIds = prepared.spellIds, names = prepared.auraNames, icon = SHARED_FOOD_AURA_ICON_ID, category = "FOOD" }
+	return entry
+end
+
+function Reminder:GetRuneMissingEntry(evalContext)
+	if self:AreConsumableAuraChecksRestricted() then return nil end
+	local candidates = self:GetRuneCandidates()
+	if type(candidates) ~= "table" or #candidates <= 0 then return nil end
+
+	local context = type(evalContext) == "table" and evalContext or nil
+	local prepared = context and context.runePreparedData or self:GetPreparedRuneCandidateData(candidates)
+	if context and not context.runePreparedData then context.runePreparedData = prepared end
+	local snapshot = context and context.playerAuraSnapshot or self:GetPlayerAuraPresenceSnapshot()
+	if context and not context.playerAuraSnapshot then context.playerAuraSnapshot = snapshot end
+	if self:IsPlayerAuraSnapshotRestricted(snapshot) then return nil end
+
+	local hasRuneAura
+	if snapshot and snapshot.supported == true then
+		hasRuneAura = self:AuraSnapshotHasAnySpellId(snapshot, Reminder.runeTracking.auraIds, "RUNES")
+		if not hasRuneAura and #prepared.spellIds > 0 and self:AuraSnapshotHasAnySpellId(snapshot, prepared.spellIds, "RUNES") then hasRuneAura = true end
+		if not hasRuneAura and #prepared.auraNames > 0 and self:AuraSnapshotHasAnyName(snapshot, prepared.auraNames, "RUNES") then hasRuneAura = true end
+	else
+		hasRuneAura = self:UnitHasAnyAuraSpellId("player", Reminder.runeTracking.auraIds, "RUNES")
+		if not hasRuneAura and #prepared.spellIds > 0 and self:UnitHasAnyAuraSpellId("player", prepared.spellIds, "RUNES") then hasRuneAura = true end
+		if not hasRuneAura and #prepared.auraNames > 0 and self:UnitHasAnyAuraName("player", prepared.auraNames, "RUNES") then hasRuneAura = true end
+	end
+	if hasRuneAura then return nil end
+
+	local displaySpellId = prepared.displaySpellId or normalizeSpellId(Reminder.runeTracking.auraIds[1])
+	local displayLabel = prepared.displayLabel
+	if type(displayLabel) ~= "string" or displayLabel == "" then displayLabel = L["ClassBuffReminderAugmentRune"] or "Augment Rune" end
+	local entry = self:DecorateConsumableInteractionEntry(makeSelfMissingEntry(displaySpellId, displayLabel, nil, nil, "RUNES", prepared.displayIcon), "RUNES", candidates)
+	entry.warningAuraQuery = { spellIds = prepared.spellIds, names = prepared.auraNames, extraSpellIds = Reminder.runeTracking.auraIds, category = "RUNES" }
+	return entry
+end
+
+function Reminder:IsWeaponEnchantUsable(expirationMS, category)
+	local thresholdSeconds = self:GetExpirationWarningSeconds(category or "WEAPON_BUFFS")
+	if thresholdSeconds <= 0 then return true end
+	expirationMS = tonumber(expirationMS)
+	if not expirationMS or expirationMS <= 0 then return true end
+	local remainingSeconds = expirationMS / 1000
+	if remainingSeconds <= thresholdSeconds then return false end
+	self:QueueExpirationWarningAt(nowSeconds() + remainingSeconds - thresholdSeconds)
+	return true
+end
+
+function Reminder:GetWeaponBuffMissingEntries(evalContext)
+	local candidates = self:GetWeaponBuffCandidates()
+	if type(candidates) ~= "table" or #candidates <= 0 then return nil end
+	if not (C_PaperDollInfo and C_PaperDollInfo.GetTemporaryEnchantmentInfo) then return nil end
+
+	local hasMainWeapon = isPlayerMainhandEnchantableWeapon()
+	local hasOffhandWeapon = isPlayerOffhandEnchantableWeapon()
+	local main = C_PaperDollInfo.GetTemporaryEnchantmentInfo(_G.INVSLOT_MAINHAND or 16)
+	local off = C_PaperDollInfo.GetTemporaryEnchantmentInfo(_G.INVSLOT_OFFHAND or 17)
+	local hasMainEnchant, mainExpirationMS = main ~= nil, main and main.remainingTimeMs
+	local hasOffhandEnchant, offhandExpirationMS = off ~= nil, off and off.remainingTimeMs
+
+	local context = type(evalContext) == "table" and evalContext or nil
+	local prepared = context and context.weaponBuffPreparedData or self:GetPreparedWeaponBuffCandidateData(candidates)
+	if context and not context.weaponBuffPreparedData then context.weaponBuffPreparedData = prepared end
+
+	local entries = {}
+	if hasMainWeapon and (hasMainEnchant ~= true or not self:IsWeaponEnchantUsable(mainExpirationMS)) then
+		local entry = self:MakeWeaponBuffSlotEntry(_G.INVSLOT_MAINHAND or 16, candidates, prepared)
+		if entry then
+			entry.warningExpiration = hasMainEnchant == true and self:GetWeaponWarningExpiration(mainExpirationMS) or nil
+			entries[#entries + 1] = entry
+		end
+	end
+	if hasOffhandWeapon and (hasOffhandEnchant ~= true or not self:IsWeaponEnchantUsable(offhandExpirationMS)) then
+		local entry = self:MakeWeaponBuffSlotEntry(_G.INVSLOT_OFFHAND or 17, candidates, prepared)
+		if entry then
+			entry.warningExpiration = hasOffhandEnchant == true and self:GetWeaponWarningExpiration(offhandExpirationMS) or nil
+			entries[#entries + 1] = entry
+		end
+	end
+	return #entries > 0 and entries or nil
+end
+
+function Reminder:IsPetExpectedForPlayer()
+	local pet = Reminder.petTracking
+	local classToken = self:GetClassToken()
+	local specId = self:GetCurrentSpecId()
+
+	if classToken == "MAGE" then return specId == pet.specFrostMage and C_SpellBook and C_SpellBook.IsSpellKnown and C_SpellBook.IsSpellKnown(pet.magePetTalent) == true end
+	if classToken == "HUNTER" then
+		if specId == pet.specMarksman then return C_SpellBook and C_SpellBook.IsSpellKnown and C_SpellBook.IsSpellKnown(pet.marksPetTalent) == true end
+		return pet.petSpecs[specId] == true
+	end
+	if classToken == "DEATHKNIGHT" then return specId == 252 end
+	if classToken == "WARLOCK" then return pet.petSpecs[specId] == true and not self:IsWarlockSacrificePetReminderSuppressed() end
+	return false
+end
+
+function Reminder:IsWarlockSacrificePetReminderSuppressed()
+	if self:GetClassToken() ~= "WARLOCK" then return false end
+	local pet = Reminder.petTracking
+	if C_SpellBook and C_SpellBook.IsSpellKnown and C_SpellBook.IsSpellKnown(pet.grimoireOfSacrifice) == true then return true end
+	if IsPlayerSpell and IsPlayerSpell(pet.grimoireOfSacrifice) == true then return true end
+	if InCombatLockdown and InCombatLockdown() then return false end
+	if UnitAffectingCombat and UnitAffectingCombat("player") then return false end
+	if not self:CanReadAuraData() then return false end
+	if C_UnitAuras and C_UnitAuras.GetPlayerAuraBySpellID and C_UnitAuras.GetPlayerAuraBySpellID(pet.grimoireOfSacrificeBuff) then return true end
+	if AuraUtil and AuraUtil.FindAuraBySpellID and AuraUtil.FindAuraBySpellID(pet.grimoireOfSacrificeBuff, "player", "HELPFUL") then return true end
+	return false
+end
+
+function Reminder:HasActivePet()
+	if not UnitExists or not UnitExists("pet") then return false end
+	if UnitIsDeadOrGhost and UnitIsDeadOrGhost("pet") then return false end
+	return true
+end
+
+function Reminder:IsPetReminderSuppressed()
+	if UnitIsDeadOrGhost and UnitIsDeadOrGhost("player") then return true end
+	if IsMounted and IsMounted() then return true end
+	if UnitHasVehicleUI and UnitHasVehicleUI("player") then return true end
+	if UnitInVehicle and UnitInVehicle("player") then return true end
+	if UnitOnTaxi and UnitOnTaxi("player") then return true end
+	if IsFlying and IsFlying() then return true end
+	return false
+end
+
+function Reminder:ClassifyPetStanceName(name)
+	if name == "PET_MODE_ASSIST" or name == "PET_ACTION_ASSIST" then return Reminder.petTracking.stanceAssist end
+	if name == "PET_MODE_DEFENSIVEASSIST" or name == "PET_ACTION_DEFENSIVE" then return Reminder.petTracking.stanceDefensive end
+	if name == "PET_MODE_PASSIVE" or name == "PET_ACTION_MODE_PASSIVE" then return Reminder.petTracking.stancePassive end
+	return nil
+end
+
+function Reminder:TryGetPetStanceWith(getInfoFunc)
+	local inactiveStances = {}
+	for i = 1, (_G.NUM_PET_ACTION_SLOTS or 10) do
+		local name, _, _, isActive = getInfoFunc(i)
+		if type(name) == "table" then
+			isActive = name.isActive
+			name = name.name
+		end
+		local stance = self:ClassifyPetStanceName(name)
+		if stance then
+			if isActive then return stance end
+			inactiveStances[stance] = true
+		end
+	end
+
+	local inactiveCount = 0
+	for _ in pairs(inactiveStances) do inactiveCount = inactiveCount + 1 end
+	if inactiveCount == 2 then
+		local pet = Reminder.petTracking
+		if not inactiveStances[pet.stanceAssist] then return pet.stanceAssist end
+		if not inactiveStances[pet.stanceDefensive] then return pet.stanceDefensive end
+		if not inactiveStances[pet.stancePassive] then return pet.stancePassive end
+	end
+	return nil
+end
+
+function Reminder:GetPetStance()
+	local pet = Reminder.petTracking
+	if not self:HasActivePet() then
+		pet.cachedStance = nil
+		return nil
+	end
+	if pet.cachedStance and GetTime and ((GetTime() - (pet.cachedStanceTime or 0)) < 0.5) then return pet.cachedStance end
+
+	local apis = {}
+	if C_PetBar and C_PetBar.GetPetActionInfo then apis[#apis + 1] = C_PetBar.GetPetActionInfo end
+	if C_ActionBar and C_ActionBar.GetPetActionInfo then apis[#apis + 1] = C_ActionBar.GetPetActionInfo end
+	if GetPetActionInfo then apis[#apis + 1] = GetPetActionInfo end
+	for i = 1, #apis do
+		local ok, stance = pcall(function() return Reminder:TryGetPetStanceWith(apis[i]) end)
+		if ok and stance then
+			pet.cachedStance = stance
+			pet.cachedStanceTime = GetTime and GetTime() or 0
+			return stance
+		end
+	end
+	return pet.cachedStance
+end
+
+function Reminder:GetPetActionSlotForStance(targetStance)
+	local apis = {}
+	if C_PetBar and C_PetBar.GetPetActionInfo then apis[#apis + 1] = C_PetBar.GetPetActionInfo end
+	if C_ActionBar and C_ActionBar.GetPetActionInfo then apis[#apis + 1] = C_ActionBar.GetPetActionInfo end
+	if GetPetActionInfo then apis[#apis + 1] = GetPetActionInfo end
+	for i = 1, #apis do
+		local getInfoFunc = apis[i]
+		for slot = 1, (_G.NUM_PET_ACTION_SLOTS or 10) do
+			local ok, name = pcall(getInfoFunc, slot)
+			if ok then
+				if type(name) == "table" then name = name.name end
+				if self:ClassifyPetStanceName(name) == targetStance then return slot end
+			end
+		end
+	end
+	return nil
+end
+
+function Reminder:SetupPetTrackingHooks()
+	local pet = Reminder.petTracking
+	if pet.hooksInstalled then return end
+	pet.hooksInstalled = true
+
+	local function updateCachedStance(stance)
+		pet.cachedStance = stance
+		pet.cachedStanceTime = GetTime and GetTime() or 0
+		if C_Timer and C_Timer.After then
+			C_Timer.After(0, function()
+				if Reminder:IsPetTrackingEnabled() then Reminder:RequestUpdate(false, Reminder.RUNTIME_UPDATE_DELAY, true) end
+			end)
+		elseif Reminder:IsPetTrackingEnabled() then
+			Reminder:RequestUpdate(false, Reminder.RUNTIME_UPDATE_DELAY, true)
+		end
+	end
+
+	local hooks = {
+		{ func = "PetPassiveMode", stance = pet.stancePassive },
+		{ func = "PetDefensiveMode", stance = pet.stanceDefensive },
+		{ func = "PetAssistMode", stance = pet.stanceAssist },
+	}
+	for i = 1, #hooks do
+		if _G[hooks[i].func] then
+			local stance = hooks[i].stance
+			pcall(hooksecurefunc, hooks[i].func, function() updateCachedStance(stance) end)
+		end
+	end
+end
+
+function Reminder:GetPetReminderIcon(state)
+	local pet = Reminder.petTracking
+	local spellId
+	if state == "passive" then
+		return 132311
+	elseif state == "defensive" then
+		return 132110
+	else
+		local classToken = self:GetClassToken()
+		local specId = self:GetCurrentSpecId()
+		if classToken == "MAGE" then
+			spellId = pet.magePetTalent
+		elseif classToken == "DEATHKNIGHT" then
+			spellId = pet.raiseDead
+		elseif classToken == "HUNTER" then
+			spellId = pet.callPet
+		elseif classToken == "WARLOCK" then
+			spellId = pet.summonImp
+		elseif specId == pet.specFrostMage then
+			spellId = pet.magePetTalent
+		end
+	end
+	return spellId and safeGetSpellIcon(spellId) or "Interface\\Icons\\Ability_Hunter_BeastCall"
+end
+
+function Reminder:GetPetReminderShortText(state)
+	if getValue("classBuffReminderHidePetReminderText", defaults.hidePetReminderText) == true then return nil end
+	if state == "passive" then return L["ClassBuffReminderPetPassiveShort"] or "Pet\nPassive" end
+	if state == "defensive" then return L["ClassBuffReminderPetDefensiveShort"] or "Pet\nDefensive" end
+	return nil
+end
+
+function Reminder:GetPetMissingEntry()
+	if not self:IsPetExpectedForPlayer() then return nil end
+	if self:IsPetReminderSuppressed() then return nil end
+
+	if not self:HasActivePet() then
+		local classToken = self:GetClassToken()
+		local candidates = self:GetPetSummonCandidates(classToken)
+		local selectedSpellId = self:GetSelectedPetSummonSpell(classToken, candidates)
+		local petExists = UnitExists and UnitExists("pet") == true
+		local petDead = petExists and UnitIsDeadOrGhost and UnitIsDeadOrGhost("pet") == true
+		local actionSpellId
+		if classToken == "HUNTER" and petDead then
+			actionSpellId = self:GetKnownPetInteractionSpellId(Reminder.petTracking.revivePet)
+		elseif classToken == "HUNTER" or classToken == "WARLOCK" then
+			actionSpellId = selectedSpellId
+		elseif classToken == "DEATHKNIGHT" then
+			actionSpellId = self:GetKnownPetInteractionSpellId(Reminder.petTracking.raiseDead)
+		elseif classToken == "MAGE" then
+			actionSpellId = self:GetKnownPetInteractionSpellId(Reminder.petTracking.magePetTalent)
+		end
+
+		local icon = actionSpellId and safeGetSpellIcon(actionSpellId) or self:GetPetReminderIcon("missing")
+		local entry = makeSelfMissingEntry(actionSpellId, L["ClassBuffReminderPetMissing"] or L["Pet Missing"] or "Pet Missing", nil, nil, "PET", icon)
+		entry.actionSpellId = actionSpellId
+		entry.spellCandidates = candidates
+		entry.selectionClassToken = candidates and classToken or nil
+		return entry
+	end
+
+	local stance = self:GetPetStance()
+	if stance == Reminder.petTracking.stancePassive and not self:ShouldIgnorePetPassiveReminder() then
+		local entry = makeSelfMissingEntry(nil, L["ClassBuffReminderPetPassive"] or "Pet Passive", nil, nil, "PET", self:GetPetReminderIcon("passive"), self:GetPetReminderShortText("passive"))
+		entry.actionPetSlot = self:GetPetActionSlotForStance(Reminder.petTracking.stanceAssist)
+		entry.actionTooltip = L["ClassBuffReminderInteractionSetAssist"] or "Left-click to set Assist."
+		return entry
+	end
+	if stance == Reminder.petTracking.stanceDefensive and not self:ShouldIgnorePetDefensiveReminder() then
+		local entry = makeSelfMissingEntry(nil, L["ClassBuffReminderPetDefensive"] or "Pet Defensive", nil, nil, "PET", self:GetPetReminderIcon("defensive"), self:GetPetReminderShortText("defensive"))
+		entry.actionPetSlot = self:GetPetActionSlotForStance(Reminder.petTracking.stanceAssist)
+		entry.actionTooltip = L["ClassBuffReminderInteractionSetAssist"] or "Left-click to set Assist."
+		return entry
+	end
+	return nil
+end
+
+function Reminder:HasOtherPaladinInGroup()
+	local units = self:GetRosterUnits()
+	for i = 1, #units do
+		local unit = units[i]
+		if not isPlayerUnit(unit) and UnitExists and UnitExists(unit) then
+			local _, classToken = UnitClass(unit)
+			if issecretvalue and issecretvalue(classToken) then return true end
+			if classToken == "PALADIN" then return true end
+		end
+	end
+	return false
+end
+
+function Reminder:IsExpectedStanceActive(definition)
+	local expectedSpellId = definition and normalizeSpellId(definition.spellId) or nil
+	if not expectedSpellId or not (GetNumShapeshiftForms and GetShapeshiftFormInfo) then return false, false end
+	local formCount = GetNumShapeshiftForms()
+	if issecretvalue and issecretvalue(formCount) then return false, false end
+	formCount = tonumber(formCount)
+	if not formCount or formCount <= 0 then return false, false end
+	for i = 1, formCount do
+		local _, isActive, _, spellId = GetShapeshiftFormInfo(i)
+		if normalizeSpellId(spellId) == expectedSpellId then
+			if issecretvalue and issecretvalue(isActive) then return false, false end
+			return isActive == true, true
+		end
+	end
+	return false, false
+end
+
+function Reminder:GetStanceMissingEntry()
+	local definition = self:GetExpectedStanceDefinition()
+	if not (definition and safeIsPlayerSpell(definition.spellId)) then return nil end
+
+	local classToken = self:GetClassToken()
+	local hasOtherPaladin = classToken == "PALADIN" and self:HasOtherPaladinInGroup() or false
+	if hasOtherPaladin and self:AreAuraQueriesSecret() then return nil end
+
+	local active, available = self:IsExpectedStanceActive(definition)
+	if available ~= true or active == true then return nil end
+	if hasOtherPaladin then
+		local snapshot = self:GetPlayerAuraPresenceSnapshot()
+		if self:IsPlayerAuraSnapshotRestricted(snapshot) then return nil end
+		if self:AuraSnapshotHasAnySpellId(snapshot, definition.auraIds) then return nil end
+	end
+
+	local spellId = normalizeSpellId(definition.spellId)
+	local label = safeGetSpellName(spellId)
+	if type(label) ~= "string" or label == "" then
+		if classToken == "PALADIN" then
+			label = L["CooldownPanelStanceDevotionAura"] or "Devotion Aura"
+		elseif classToken == "PRIEST" then
+			label = L["CooldownPanelStanceShadowform"] or "Shadowform"
+		elseif spellId == 386196 then
+			label = L["CooldownPanelStanceBerserkerStance"] or "Berserker Stance"
+		else
+			label = L["CooldownPanelStanceBattleStance"] or "Battle Stance"
+		end
+	end
+	local entry = makeSelfMissingEntry(spellId, label, nil, nil, "STANCE", safeGetSpellIcon(spellId))
+	entry.actionTooltip = L["ClassBuffReminderInteractionApply"] or "Left-click to apply."
+	return entry
+end
+
+function Reminder:GetHealthstoneMissingEntry()
+	if self:GetClassToken() ~= "WARLOCK" then return nil end
+	local itemIds = Reminder.healthstoneTracking.itemIds
+	for i = 1, #itemIds do
+		if C_Item and C_Item.GetItemCount and (C_Item.GetItemCount(itemIds[i], false, false) or 0) > 0 then return nil end
+	end
+
+	local spellId = normalizeSpellId(Reminder.healthstoneTracking.createSpellId)
+	local entry = makeSelfMissingEntry(spellId, L["ClassBuffReminderHealthstone"] or "Healthstone", nil, nil, "HEALTHSTONE", safeGetSpellIcon(spellId))
+	entry.actionSpellId = spellId and safeIsPlayerSpell(spellId) and spellId or nil
+	entry.actionTooltip = L["ClassBuffReminderInteractionCreateHealthstone"] or "Left-click to create a Healthstone."
+	return entry
+end
+
+function Reminder:GetGrimoireOfSacrificeMissingEntry(evalContext)
+	if not self:CanCheckGrimoireOfSacrificeReminder() then return nil end
+
+	local context = type(evalContext) == "table" and evalContext or nil
+	local snapshot = context and context.playerAuraSnapshot or self:GetPlayerAuraPresenceSnapshot()
+	if context and not context.playerAuraSnapshot then context.playerAuraSnapshot = snapshot end
+	if self:IsPlayerAuraSnapshotRestricted(snapshot) then return nil end
+
+	local buffSpellId = normalizeSpellId(Reminder.petTracking.grimoireOfSacrificeBuff)
+	local hasBuff
+	if snapshot and snapshot.supported == true then
+		hasBuff = self:AuraSnapshotHasAnySpellId(snapshot, { buffSpellId })
+	else
+		hasBuff = self:UnitHasAnyAuraSpellId("player", { buffSpellId })
+	end
+	if hasBuff then return nil end
+
+	local candidates = self:GetPetSummonCandidates("WARLOCK")
+	if type(candidates) ~= "table" or #candidates <= 0 then return nil end
+
+	local grimoireSpellId = normalizeSpellId(Reminder.petTracking.grimoireOfSacrifice)
+	local actionSpellId = grimoireSpellId
+	local displaySpellId = grimoireSpellId
+	local label = safeGetSpellName(grimoireSpellId)
+	if not self:HasActivePet() then
+		actionSpellId = self:GetSelectedPetSummonSpell("WARLOCK", candidates, self.DB_GRIMOIRE_PET_SUMMON_SELECTION)
+		displaySpellId = actionSpellId or grimoireSpellId
+		label = safeGetSpellName(actionSpellId) or label
+	end
+
+	local entry = makeSelfMissingEntry(displaySpellId, label, nil, nil, "GRIMOIRE_OF_SACRIFICE", safeGetSpellIcon(displaySpellId))
+	entry.actionSpellId = actionSpellId
+	entry.spellCandidates = candidates
+	entry.selectionClassToken = "WARLOCK"
+	entry.selectionPetDb = self.DB_GRIMOIRE_PET_SUMMON_SELECTION
+	return entry
+end
+
+function Reminder:GetSupplementalMissingEntries(evalContext)
+	if not canEvaluateUnit("player") then return nil end
+
+	local context = type(evalContext) == "table" and evalContext or nil
+	local entries = {}
+	if not (context and context.onlyPetReminder == true) and self:CanEvaluateStanceReminderNow() then
+		local stanceEntry = self:GetStanceMissingEntry()
+		if stanceEntry then entries[#entries + 1] = stanceEntry end
+	end
+	if not (context and context.onlyPetReminder == true) and self:CanEvaluateFlaskReminderNow() then
+		local flaskEntry = self:GetFlaskMissingEntry(context)
+		if flaskEntry then entries[#entries + 1] = flaskEntry end
+	end
+	if not (context and context.onlyPetReminder == true) and self:CanEvaluateFoodReminderNow() then
+		local foodEntry = self:GetFoodMissingEntry(context)
+		if foodEntry then entries[#entries + 1] = foodEntry end
+	end
+	if not (context and context.onlyPetReminder == true) and self:CanEvaluateRuneReminderNow() then
+		local runeEntry = self:GetRuneMissingEntry(context)
+		if runeEntry then entries[#entries + 1] = runeEntry end
+	end
+	if not (context and context.onlyPetReminder == true) and self:CanEvaluateWeaponBuffReminderNow() then
+		appendMissingEntries(entries, self:GetWeaponBuffMissingEntries(context))
+	end
+	if not (context and context.onlyPetReminder == true) and self:CanEvaluateHealthstoneReminderNow() then
+		local healthstoneEntry = self:GetHealthstoneMissingEntry()
+		if healthstoneEntry then entries[#entries + 1] = healthstoneEntry end
+	end
+	if not (context and context.onlyPetReminder == true) then
+		local grimoireEntry = self:GetGrimoireOfSacrificeMissingEntry(context)
+		if grimoireEntry then entries[#entries + 1] = grimoireEntry end
+	end
+	if self:CanEvaluatePetReminderNow() then
+		local petEntry = self:GetPetMissingEntry()
+		if petEntry then entries[#entries + 1] = petEntry end
+	end
+	entries = self:FilterDismissedInteractionEntries(entries)
+	if #entries <= 0 then return nil end
+	return entries
+end
+
+function Reminder:UnitHasAnyAuraSpellId(unit, spellIds, category)
+	if type(spellIds) ~= "table" then return false end
+	for i = 1, #spellIds do
+		local sid = normalizeSpellId(spellIds[i])
+		if sid and unitHasAuraBySpellId(unit, sid, category) then return true end
+	end
+	return false
+end
+
+function Reminder:UnitHasAnyAuraName(unit, auraNames, category)
+	if type(auraNames) ~= "table" then return false end
+	if type(unit) ~= "string" or unit == "" then return false end
+	if not self:CanReadAuraData() then return false end
+	if not (C_UnitAuras and C_UnitAuras.GetAuraSlots and C_UnitAuras.GetAuraDataBySlot) then return false end
+
+	local targetNames = {}
+	for i = 1, #auraNames do
+		local auraName = auraNames[i]
+		if type(auraName) == "string" and auraName ~= "" then targetNames[auraName] = true end
+	end
+	if not next(targetNames) then return false end
+
+	local continuationToken
+	for _ = 1, AURA_SLOT_SCAN_GUARD do
+		local slots, slotCount, nextToken = getHelpfulAuraSlotBuffer(unit, continuationToken)
+		for i = 2, slotCount do
+			local slot = slots[i]
+			if not (issecretvalue and issecretvalue(slot)) then
+				local aura = C_UnitAuras.GetAuraDataBySlot(unit, slot)
+				if aura and not (issecretvalue and issecretvalue(aura)) then
+					local isHelpful = aura.isHelpful
+					if issecretvalue and issecretvalue(isHelpful) then isHelpful = nil end
+					if isHelpful ~= false then
+						local activeName = aura.name
+						if not (issecretvalue and issecretvalue(activeName)) and type(activeName) == "string" and targetNames[activeName] and self:IsAuraUsableForReminder(aura, self:GetExpirationWarningSeconds(category)) then return true end
+					end
+				end
+			end
+		end
+
+		if nextToken == nil then break end
+		continuationToken = nextToken
+	end
+
+	return false
+end
+
+function Reminder:GetMatchingHelpfulAuraState(unit, spellIds, auraNames)
+	if type(unit) ~= "string" or unit == "" or not self:CanReadAuraData() then return false, false end
+	if not (C_UnitAuras and C_UnitAuras.GetAuraSlots and C_UnitAuras.GetAuraDataBySlot) then return false, false end
+	local targetSpellIds = {}
+	local targetNames = {}
+	local hasMatch = false
+	if type(spellIds) == "table" then
+		for i = 1, #spellIds do
+			local spellId = normalizeSpellId(spellIds[i])
+			if spellId then
+				targetSpellIds[spellId] = true
+				local spellName = safeGetSpellName(spellId)
+				if type(spellName) == "string" and spellName ~= "" then targetNames[spellName] = true end
+			end
+		end
+	end
+	if type(auraNames) == "table" then
+		for i = 1, #auraNames do
+			local auraName = auraNames[i]
+			if type(auraName) == "string" and auraName ~= "" then targetNames[auraName] = true end
+		end
+	end
+
+	local continuationToken
+	for _ = 1, AURA_SLOT_SCAN_GUARD do
+		local slots, slotCount, nextToken = getHelpfulAuraSlotBuffer(unit, continuationToken)
+		for i = 2, slotCount do
+			local slot = slots[i]
+			if not (issecretvalue and issecretvalue(slot)) then
+				local aura = C_UnitAuras.GetAuraDataBySlot(unit, slot)
+				if aura and not (issecretvalue and issecretvalue(aura)) then
+					local spellId = normalizeSpellId(aura.spellId)
+					local auraName = aura.name
+					if issecretvalue and issecretvalue(auraName) then auraName = nil end
+					if (spellId and targetSpellIds[spellId]) or (type(auraName) == "string" and targetNames[auraName]) then
+						hasMatch = true
+						local isFromPlayer = aura.isFromPlayerOrPlayerPet
+						if issecretvalue and issecretvalue(isFromPlayer) then isFromPlayer = nil end
+						local sourceUnit = aura.sourceUnit
+						if issecretvalue and issecretvalue(sourceUnit) then sourceUnit = nil end
+						if isFromPlayer == true or sourceUnit == "player" then return true, true end
+					end
+				end
+			end
+		end
+		if nextToken == nil then break end
+		continuationToken = nextToken
+	end
+	return hasMatch, false
+end
+
+function Reminder:UnitHasAnyAuraSpellIdOrDerivedName(unit, spellIds, category)
+	if self:UnitHasAnyAuraSpellId(unit, spellIds, category) then return true end
+	if type(spellIds) ~= "table" then return false end
+
+	local auraNames = {}
+	local seen = {}
+	for i = 1, #spellIds do
+		local name = safeGetSpellName(spellIds[i])
+		if type(name) == "string" and name ~= "" and not seen[name] then
+			seen[name] = true
+			auraNames[#auraNames + 1] = name
+		end
+	end
+
+	if #auraNames <= 0 then return false end
+	return self:UnitHasAnyAuraName(unit, auraNames, category)
+end
+
+function Reminder:UnitHasAuraIcon(unit, iconId, category)
+	iconId = tonumber(iconId)
+	if not iconId or iconId <= 0 then return false end
+	if type(unit) ~= "string" or unit == "" then return false end
+	if not self:CanReadAuraData() then return false end
+	if not (C_UnitAuras and C_UnitAuras.GetAuraSlots and C_UnitAuras.GetAuraDataBySlot) then return false end
+
+	local continuationToken
+	for _ = 1, AURA_SLOT_SCAN_GUARD do
+		local slots, slotCount, nextToken = getHelpfulAuraSlotBuffer(unit, continuationToken)
+		for i = 2, slotCount do
+			local slot = slots[i]
+			if not (issecretvalue and issecretvalue(slot)) then
+				local aura = C_UnitAuras.GetAuraDataBySlot(unit, slot)
+				if aura and not (issecretvalue and issecretvalue(aura)) then
+					local isHelpful = aura.isHelpful
+					if issecretvalue and issecretvalue(isHelpful) then isHelpful = nil end
+					if isHelpful ~= false then
+						local auraIcon = aura.icon
+						if issecretvalue and issecretvalue(auraIcon) then auraIcon = nil end
+						auraIcon = tonumber(auraIcon)
+						if auraIcon and auraIcon == iconId and self:IsAuraUsableForReminder(aura, self:GetExpirationWarningSeconds(category)) then return true end
+					end
+				end
+			end
+		end
+
+		if nextToken == nil then break end
+		continuationToken = nextToken
+	end
+
+	return false
+end
+
+function Reminder:GetGroupBuffMissingCountBySpellIds(spellIds, includeAIFollowers)
+	if not self:CanReadAuraData() then return 0, 0 end
+	local cache = self:GetGroupBuffStateCache(spellIds, includeAIFollowers)
+	if not cache then return 0, 0 end
+
+	local state = self:GetGroupBuffState(cache)
+	if type(state) ~= "table" then return 0, 0 end
+	return tonumber(state.missing) or 0, tonumber(state.total) or 0
+end
+
+function Reminder:GetSharedClassBuffMissingCountBySpellIds(spellIds)
+	-- Shared class buffs should ignore follower dungeon AI companions.
+	return self:GetGroupBuffMissingCountBySpellIds(spellIds, false)
+end
+
+local function anyUnitHasAnyAuraSpellId(reminder, units, spellIds)
+	if type(reminder) ~= "table" or type(units) ~= "table" or type(spellIds) ~= "table" then return false end
+	for i = 1, #units do
+		if reminder:UnitHasAnyAuraSpellId(units[i], spellIds) then return true end
+	end
+	return false
+end
+
+local function paladinRitesHasEnchant(provider)
+	if not provider then return false end
+	if type(provider.enchantIds) == "table" and #provider.enchantIds > 0 then return playerHasAnyEnchantId(provider.enchantIds) end
+	return playerHasEnchantId(provider.enchantId)
+end
+
+local function paladinRitesHasUnitBuff(provider, unit, reminder)
+	if unit ~= "player" then return false end
+	if type(reminder) ~= "table" then return false end
+	return paladinRitesHasEnchant(provider)
+end
+
+local function paladinRitesGetSelfStatus(provider, reminder)
+	if type(provider) ~= "table" or type(reminder) ~= "table" then return buildSelfStatus(1, {}) end
+
+	local totalRequirements = 0
+	local activeSpellId = normalizeSpellId(provider.spellIds and provider.spellIds[1]) or normalizeSpellId(provider.displaySpellId)
+	local hasRite = false
+	if provider.trackRites == true then
+		totalRequirements = totalRequirements + 1
+		hasRite = paladinRitesHasEnchant(provider)
+	end
+
+	local missingEntries = {}
+	if provider.trackRites == true and not hasRite then
+		missingEntries[1] = makeSelfMissingEntry(activeSpellId, provider.fallbackName or "Rite")
+		missingEntries[1].actionInventorySlot = _G.INVSLOT_MAINHAND or 16
+	end
+
+	if reminder:GetCurrentSpecId() == PALADIN_SPEC_HOLY then
+		reminder.runtimeEligibleUnits = reminder.runtimeEligibleUnits or {}
+		local eligibleUnits = reminder:CollectEligibleUnits(reminder.runtimeEligibleUnits, true)
+
+		if provider.trackBeaconOfLight == true and #eligibleUnits > 1 then
+			totalRequirements = totalRequirements + 1
+			local beaconOfLightDisplaySpellId = normalizeSpellId(provider.beaconOfLightDisplaySpellId) or normalizeSpellId(provider.beaconOfLightSpellIds and provider.beaconOfLightSpellIds[1])
+			if not anyUnitHasAnyAuraSpellId(reminder, eligibleUnits, provider.beaconOfLightSpellIds) then
+				missingEntries[#missingEntries + 1] = reminder:WithWarningAuraUnits(makeSelfMissingEntry(beaconOfLightDisplaySpellId, provider.beaconOfLightLabel or "Beacon of Light"), eligibleUnits, provider.beaconOfLightSpellIds)
+			end
+		end
+
+		local shouldTrackSecondBeacon = #eligibleUnits > 1 and hasKnownSpellInList(provider.beaconOfFaithKnownSpellIds or provider.beaconOfFaithSpellIds)
+		if shouldTrackSecondBeacon then
+			totalRequirements = totalRequirements + 1
+			local beaconOfFaithDisplaySpellId = normalizeSpellId(provider.beaconOfFaithDisplaySpellId) or normalizeSpellId(provider.beaconOfFaithSpellIds and provider.beaconOfFaithSpellIds[1])
+			if not anyUnitHasAnyAuraSpellId(reminder, eligibleUnits, provider.beaconOfFaithSpellIds) then
+				missingEntries[#missingEntries + 1] = reminder:WithWarningAuraUnits(makeSelfMissingEntry(beaconOfFaithDisplaySpellId, provider.beaconOfFaithLabel or "Beacon of Faith"), eligibleUnits, provider.beaconOfFaithSpellIds)
+			end
+		end
+	end
+
+	setProviderDisplaySpellId(provider, missingEntries[1] and missingEntries[1].spellId or activeSpellId)
+	return buildSelfStatus(totalRequirements, missingEntries)
+end
+
+local function roguePoisonsGetSelfStatus(provider, reminder)
+	if type(provider) ~= "table" or type(reminder) ~= "table" then return buildSelfStatus(2, {}) end
+
+	local lethalCandidates = reminder:GetRoguePoisonCandidates(provider.lethalKnownSpellIds or provider.lethalSpellIds)
+	local utilityCandidates = reminder:GetRoguePoisonCandidates(provider.utilityKnownSpellIds or provider.utilitySpellIds)
+	local hasExtraPoisonTalent = safeIsPlayerSpell(provider.extraPoisonKnownSpellId)
+	local lethalRequired = type(lethalCandidates) == "table" and math.min(hasExtraPoisonTalent and 2 or 1, #lethalCandidates) or 0
+	local utilityRequired = type(utilityCandidates) == "table" and math.min(hasExtraPoisonTalent and 2 or 1, #utilityCandidates) or 0
+
+	local missingEntries = {}
+	reminder:EnsureRoguePoisonSlotSelections("lethal", lethalRequired, lethalCandidates)
+	reminder:EnsureRoguePoisonSlotSelections("utility", utilityRequired, utilityCandidates)
+	reminder:AppendRoguePoisonSlotEntries(missingEntries, "lethal", lethalRequired, lethalCandidates)
+	reminder:AppendRoguePoisonSlotEntries(missingEntries, "utility", utilityRequired, utilityCandidates)
+
+	if #missingEntries > 0 then
+		setProviderDisplaySpellId(provider, missingEntries[1].spellId)
+	else
+		setProviderDisplaySpellId(provider, normalizeSpellId(lethalCandidates and lethalCandidates[1] and lethalCandidates[1].spellId) or normalizeSpellId(utilityCandidates and utilityCandidates[1] and utilityCandidates[1].spellId))
+	end
+
+	local totalRequirements = lethalRequired + utilityRequired
+	return buildSelfStatus(totalRequirements, missingEntries)
+end
+
+local function roguePoisonsHasUnitBuff(provider, unit, reminder)
+	if unit ~= "player" then return false end
+	local status = roguePoisonsGetSelfStatus(provider, reminder)
+	return status and status.missing <= 0
+end
+
+function Reminder:AnyOtherEligibleUnitHasAnyAuraSpellId(spellIds)
+	if type(spellIds) ~= "table" then return false, 0 end
+	if self:GetGroupContext() == GROUP_CONTEXT_SOLO then return false, 0 end
+	self.runtimeOtherEligibleUnits = self.runtimeOtherEligibleUnits or {}
+	local eligibleUnits = self:CollectOtherEligibleUnits(self.runtimeOtherEligibleUnits, true)
+	return anyUnitHasAnyAuraSpellId(self, eligibleUnits, spellIds), #eligibleUnits
+end
+
+function Reminder:GetDefaultShamanShieldDisplaySpellId(provider, specId)
+	if specId == Reminder.shamanReminder.specRestoration then
+		return normalizeSpellId(provider and provider.waterShieldDisplaySpellId) or normalizeSpellId(provider and provider.waterShieldSpellIds and provider.waterShieldSpellIds[1]) or 52127
+	end
+	return normalizeSpellId(provider and provider.lightningShieldDisplaySpellId) or normalizeSpellId(provider and provider.lightningShieldSpellIds and provider.lightningShieldSpellIds[1]) or 192106
+end
+
+function Reminder:GetShamanPreferredShieldSelection(provider)
+	local specId = self and self.GetCurrentSpecId and self:GetCurrentSpecId() or nil
+	local defaultSpellId = self:GetDefaultShamanShieldDisplaySpellId(provider, specId)
+	local candidates = self:GetShamanShieldCandidates(provider)
+	return self:GetSelectedShamanShieldSpell(specId, candidates, defaultSpellId), candidates, specId, defaultSpellId
+end
+
+function Reminder:GetShamanPreferredShieldDisplaySpellId(provider)
+	local spellId = self:GetShamanPreferredShieldSelection(provider)
+	return spellId
+end
+
+function Reminder:MakeShamanShieldInteractionEntry(spellId, label, candidates, specId, defaultSpellId)
+	local entry = self:MakeSelfCastInteractionEntry(spellId, label)
+	entry.spellCandidates = candidates
+	entry.selectionShamanShieldSpecId = specId
+	entry.defaultShamanShieldSpellId = defaultSpellId
+	return entry
+end
+
+function Reminder:ShouldIgnoreShamanBasicShieldsInRestrictedContent()
+	return addon and addon.functions and addon.functions.isRestrictedContent and addon.functions.isRestrictedContent(true) == true
+end
+
+function Reminder:AppendShamanShieldMissingEntries(provider, missingEntries)
+	if type(provider) ~= "table" or type(self) ~= "table" or type(missingEntries) ~= "table" then return 0 end
+	if hasKnownSpellInList(provider.shieldKnownSpellIds or provider.shieldSpellIds) ~= true then return 0 end
+
+	local totalRequirements = 0
+	local hasElementalOrbit = hasKnownSpellInList(provider.elementalOrbitKnownSpellIds or provider.elementalOrbitSpellIds)
+	local ignoreBasicShields = self:ShouldIgnoreShamanBasicShieldsInRestrictedContent()
+	local preferredShieldDisplaySpellId, shieldCandidates, specId, defaultShieldSpellId = self:GetShamanPreferredShieldSelection(provider)
+	local preferredShieldLabel = safeGetSpellName(preferredShieldDisplaySpellId) or safeGetSpellName(52127) or safeGetSpellName(192106) or "Shield"
+	local hasLightningShield = self:UnitHasAnyAuraSpellIdOrDerivedName("player", provider.lightningShieldSpellIds)
+	local hasWaterShield = self:UnitHasAnyAuraSpellIdOrDerivedName("player", provider.waterShieldSpellIds)
+	local hasPreferredShield = self:UnitHasAnyAuraSpellIdOrDerivedName("player", { preferredShieldDisplaySpellId })
+	local earthShieldDisplaySpellId = normalizeSpellId(provider.earthShieldDisplaySpellId) or normalizeSpellId(provider.earthShieldSpellIds and provider.earthShieldSpellIds[1]) or 974
+	local earthShieldLabel = safeGetSpellName(earthShieldDisplaySpellId) or "Earth Shield"
+	local hasSelfEarthShield = self:UnitHasAnyAuraSpellIdOrDerivedName("player", provider.earthShieldSelfSpellIds)
+	if not hasSelfEarthShield then hasSelfEarthShield = self:UnitHasAnyAuraSpellIdOrDerivedName("player", provider.earthShieldSpellIds) end
+	local hasEarthShieldOnOther, otherEarthShieldUnitCount = self:AnyOtherEligibleUnitHasAnyAuraSpellId(provider.earthShieldSpellIds)
+	local canTrackEarthShieldOnOther = otherEarthShieldUnitCount > 0 and hasKnownSpellInList(provider.earthShieldSpellIds)
+
+	if hasElementalOrbit then
+		if not ignoreBasicShields then
+			totalRequirements = totalRequirements + 2
+			if not hasSelfEarthShield then missingEntries[#missingEntries + 1] = self:MakeSelfCastInteractionEntry(earthShieldDisplaySpellId, earthShieldLabel) end
+			if not hasPreferredShield then
+				missingEntries[#missingEntries + 1] = self:MakeShamanShieldInteractionEntry(preferredShieldDisplaySpellId, preferredShieldLabel, shieldCandidates, specId, defaultShieldSpellId)
+			end
+
+			if canTrackEarthShieldOnOther then
+				totalRequirements = totalRequirements + 1
+				if not hasEarthShieldOnOther then missingEntries[#missingEntries + 1] = self:WithWarningAuraUnits(makeSelfMissingEntry(earthShieldDisplaySpellId, earthShieldLabel, nil, nil, nil, 237580), self.runtimeOtherEligibleUnits or {}, provider.earthShieldSpellIds) end
+			end
+		end
+
+		return totalRequirements
+	end
+
+	if ignoreBasicShields then return totalRequirements end
+
+	totalRequirements = totalRequirements + 1
+	if not hasPreferredShield then
+		missingEntries[#missingEntries + 1] = self:MakeShamanShieldInteractionEntry(preferredShieldDisplaySpellId, preferredShieldLabel, shieldCandidates, specId, defaultShieldSpellId)
+	end
+
+	if not hasSelfEarthShield and (hasLightningShield or hasWaterShield) and canTrackEarthShieldOnOther then
+		totalRequirements = totalRequirements + 1
+		if not hasEarthShieldOnOther then missingEntries[#missingEntries + 1] = self:WithWarningAuraUnits(makeSelfMissingEntry(earthShieldDisplaySpellId, earthShieldLabel, nil, nil, nil, 237580), self.runtimeOtherEligibleUnits or {}, provider.earthShieldSpellIds) end
+	end
+
+	return totalRequirements
+end
+
+local function shamanEnhancementGetSelfStatus(provider, reminder)
+	if type(provider) ~= "table" or type(reminder) ~= "table" then return buildSelfStatus(0, {}) end
+
+	local trackWindfury = hasKnownSpellInList(provider.windfuryKnownSpellIds or provider.windfurySpellIds)
+	local trackFlametongue = hasKnownSpellInList(provider.flametongueKnownSpellIds or provider.flametongueSpellIds)
+	local trackSkyfury = hasKnownSpellInList(provider.skyfuryKnownSpellIds or provider.skyfurySpellIds)
+	local totalRequirements = (trackWindfury and 1 or 0) + (trackFlametongue and 1 or 0)
+	local missingEntries = {}
+	local shouldEvaluateGroupResponsibilities = reminder:ShouldEvaluateGroupResponsibilities(provider)
+
+	local skyfuryDisplayId = normalizeSpellId(provider.skyfuryDisplaySpellId) or normalizeSpellId(provider.skyfurySpellIds and provider.skyfurySpellIds[1])
+	local skyfuryMissingCount, skyfuryTotal = 0, 0
+	if trackSkyfury and shouldEvaluateGroupResponsibilities then
+		skyfuryMissingCount, skyfuryTotal = reminder:GetSharedClassBuffMissingCountBySpellIds(provider.skyfurySpellIds)
+	end
+	if shouldEvaluateGroupResponsibilities and skyfuryTotal > 0 then
+		totalRequirements = totalRequirements + 1
+		if skyfuryMissingCount > 0 then missingEntries[#missingEntries + 1] = reminder:MakeSharedBuffWarningEntry(provider.skyfurySpellIds, skyfuryDisplayId, provider.skyfuryLabel or "Skyfury", skyfuryMissingCount, skyfuryTotal) end
+	end
+
+	local windfuryDisplayId = normalizeSpellId(provider.windfuryDisplaySpellId) or normalizeSpellId(provider.windfurySpellIds and provider.windfurySpellIds[1])
+	local flametongueDisplayId = normalizeSpellId(provider.flametongueDisplaySpellId) or normalizeSpellId(provider.flametongueSpellIds and provider.flametongueSpellIds[1])
+	local specId = reminder:GetCurrentSpecId()
+	local hasWindfury = specId == Reminder.shamanReminder.specEnhancement and Reminder.PlayerMainhandHasEnchantId(provider.windfuryEnchantId)
+	local hasFlametongue
+	if specId == Reminder.shamanReminder.specElemental then
+		hasFlametongue = Reminder.PlayerMainhandHasEnchantId(provider.flametongueEnchantId)
+	else
+		hasFlametongue = Reminder.PlayerOffhandHasEnchantId(provider.flametongueEnchantId)
+	end
+
+	if trackWindfury and not hasWindfury then
+		missingEntries[#missingEntries + 1] = reminder:MakeSpellInteractionEntry(provider.windfuryKnownSpellIds or provider.windfurySpellIds, windfuryDisplayId, "Windfury Weapon")
+	end
+	if trackFlametongue and not hasFlametongue then
+		missingEntries[#missingEntries + 1] = reminder:MakeSpellInteractionEntry(provider.flametongueKnownSpellIds or provider.flametongueSpellIds, flametongueDisplayId, "Flametongue Weapon")
+	end
+	totalRequirements = totalRequirements + reminder:AppendShamanShieldMissingEntries(provider, missingEntries)
+
+	if #missingEntries > 0 then
+		setProviderDisplaySpellId(provider, missingEntries[1].spellId)
+	else
+		local shieldDisplaySpellId = reminder:GetShamanPreferredShieldDisplaySpellId(provider)
+		local preferredDisplaySpellId = (trackSkyfury and skyfuryDisplayId) or (trackWindfury and windfuryDisplayId) or (trackFlametongue and flametongueDisplayId) or shieldDisplaySpellId
+		setProviderDisplaySpellId(provider, preferredDisplaySpellId or skyfuryDisplayId or windfuryDisplayId or flametongueDisplayId)
+	end
+
+	return buildSelfStatus(totalRequirements, missingEntries)
+end
+
+local function shamanEnhancementImbuesHasUnitBuff(provider, unit, reminder)
+	if unit ~= "player" then return false end
+	local status = shamanEnhancementGetSelfStatus(provider, reminder)
+	return status and status.missing <= 0
+end
+
+local function shamanRestorationGetSelfStatus(provider, reminder)
+	if type(provider) ~= "table" or type(reminder) ~= "table" then return buildSelfStatus(0, {}) end
+
+	local trackEarthliving = hasKnownSpellInList(provider.earthlivingKnownSpellIds or provider.earthlivingSpellIds or provider.spellIds)
+	local trackSkyfury = hasKnownSpellInList(provider.skyfuryKnownSpellIds or provider.skyfurySpellIds)
+	local totalRequirements = trackEarthliving and 1 or 0
+	local missingEntries = {}
+	local shouldEvaluateGroupResponsibilities = reminder:ShouldEvaluateGroupResponsibilities(provider)
+
+	local skyfuryDisplayId = normalizeSpellId(provider.skyfuryDisplaySpellId) or normalizeSpellId(provider.skyfurySpellIds and provider.skyfurySpellIds[1])
+	local skyfuryMissingCount, skyfuryTotal = 0, 0
+	if trackSkyfury and shouldEvaluateGroupResponsibilities then
+		skyfuryMissingCount, skyfuryTotal = reminder:GetSharedClassBuffMissingCountBySpellIds(provider.skyfurySpellIds)
+	end
+	if shouldEvaluateGroupResponsibilities and skyfuryTotal > 0 then
+		totalRequirements = totalRequirements + 1
+		if skyfuryMissingCount > 0 then missingEntries[#missingEntries + 1] = reminder:MakeSharedBuffWarningEntry(provider.skyfurySpellIds, skyfuryDisplayId, provider.skyfuryLabel or "Skyfury", skyfuryMissingCount, skyfuryTotal) end
+	end
+
+	local earthlivingDisplaySpellId = normalizeSpellId(provider.earthlivingDisplaySpellId)
+		or normalizeSpellId(provider.primaryDisplaySpellId)
+		or normalizeSpellId(provider.earthlivingSpellIds and provider.earthlivingSpellIds[1])
+		or normalizeSpellId(provider.displaySpellId)
+	local hasEarthliving = false
+	if trackEarthliving then
+		hasEarthliving = Reminder.PlayerMainhandHasEnchantId(provider.earthlivingEnchantId or provider.enchantId)
+	end
+
+	if trackEarthliving and not hasEarthliving then
+		missingEntries[#missingEntries + 1] = reminder:MakeSpellInteractionEntry(
+			provider.earthlivingKnownSpellIds or provider.earthlivingSpellIds or provider.spellIds,
+			earthlivingDisplaySpellId,
+			provider.earthlivingLabel or provider.fallbackName or "Earthliving Weapon"
+		)
+	end
+
+	local shouldTrackTidecaller = hasKnownSpellInList(provider.tidecallerKnownSpellIds or provider.tidecallerSpellIds)
+	if shouldTrackTidecaller and provider.requireShieldForTidecaller == true and not isPlayerOffhandShield() then shouldTrackTidecaller = false end
+	if shouldTrackTidecaller then
+		totalRequirements = totalRequirements + 1
+
+		local tidecallerDisplaySpellId = normalizeSpellId(provider.tidecallerDisplaySpellId) or normalizeSpellId(provider.tidecallerSpellIds and provider.tidecallerSpellIds[1])
+		local hasTidecaller = Reminder.PlayerOffhandHasEnchantId(provider.tidecallerEnchantId)
+
+		if not hasTidecaller then
+			missingEntries[#missingEntries + 1] = reminder:MakeSpellInteractionEntry(
+				provider.tidecallerKnownSpellIds or provider.tidecallerSpellIds,
+				tidecallerDisplaySpellId,
+				provider.tidecallerLabel or "Tidecaller's Guard"
+			)
+		end
+	end
+
+	totalRequirements = totalRequirements + reminder:AppendShamanShieldMissingEntries(provider, missingEntries)
+
+	local shieldDisplaySpellId = reminder:GetShamanPreferredShieldDisplaySpellId(provider)
+	local preferredDisplaySpellId = (trackSkyfury and skyfuryDisplayId) or (trackEarthliving and earthlivingDisplaySpellId) or shieldDisplaySpellId
+	setProviderDisplaySpellId(provider, missingEntries[1] and missingEntries[1].spellId or preferredDisplaySpellId or skyfuryDisplayId or earthlivingDisplaySpellId)
+	return buildSelfStatus(totalRequirements, missingEntries)
+end
+
+local function shamanRestorationEarthlivingHasUnitBuff(provider, unit, reminder)
+	if unit ~= "player" then return false end
+	local status = shamanRestorationGetSelfStatus(provider, reminder)
+	return status and status.missing <= 0
+end
+
+function Reminder.ShamanGeneralGetSelfStatus(provider, reminder)
+	if type(provider) ~= "table" or type(reminder) ~= "table" then return buildSelfStatus(0, {}) end
+
+	local trackSkyfury = hasKnownSpellInList(provider.skyfuryKnownSpellIds or provider.skyfurySpellIds)
+	local totalRequirements = 0
+	local missingEntries = {}
+	local shouldEvaluateGroupResponsibilities = reminder:ShouldEvaluateGroupResponsibilities(provider)
+	local skyfuryDisplayId = normalizeSpellId(provider.skyfuryDisplaySpellId) or normalizeSpellId(provider.skyfurySpellIds and provider.skyfurySpellIds[1])
+	local skyfuryMissingCount, skyfuryTotal = 0, 0
+
+	if trackSkyfury and shouldEvaluateGroupResponsibilities then
+		skyfuryMissingCount, skyfuryTotal = reminder:GetSharedClassBuffMissingCountBySpellIds(provider.skyfurySpellIds)
+	end
+	if shouldEvaluateGroupResponsibilities and skyfuryTotal > 0 then
+		totalRequirements = totalRequirements + 1
+		if skyfuryMissingCount > 0 then missingEntries[#missingEntries + 1] = reminder:MakeSharedBuffWarningEntry(provider.skyfurySpellIds, skyfuryDisplayId, provider.skyfuryLabel or "Skyfury", skyfuryMissingCount, skyfuryTotal) end
+	end
+
+	totalRequirements = totalRequirements + reminder:AppendShamanShieldMissingEntries(provider, missingEntries)
+
+	if #missingEntries > 0 then
+		setProviderDisplaySpellId(provider, missingEntries[1].spellId)
+	else
+		local shieldDisplaySpellId = reminder:GetShamanPreferredShieldDisplaySpellId(provider)
+		setProviderDisplaySpellId(provider, (trackSkyfury and skyfuryDisplayId) or shieldDisplaySpellId or skyfuryDisplayId)
+	end
+
+	return buildSelfStatus(totalRequirements, missingEntries)
+end
+
+function Reminder.ShamanGeneralHasUnitBuff(provider, unit, reminder)
+	if unit ~= "player" then return false end
+	local status = Reminder.ShamanGeneralGetSelfStatus(provider, reminder)
+	return status and status.missing <= 0
+end
+
+local function druidRestorationGetSelfStatus(provider, reminder)
+	if type(provider) ~= "table" or type(reminder) ~= "table" then return buildSelfStatus(0, {}) end
+
+	local totalRequirements = 0
+	local missingEntries = {}
+	local shouldEvaluateGroupResponsibilities = reminder:ShouldEvaluateGroupResponsibilities(provider)
+
+	local markDisplaySpellId = normalizeSpellId(provider.markDisplaySpellId) or normalizeSpellId(provider.markSpellIds and provider.markSpellIds[1])
+	local trackMark = hasKnownSpellInList(provider.markKnownSpellIds or provider.markSpellIds)
+	local markMissingCount, markTotal = 0, 0
+	if trackMark and shouldEvaluateGroupResponsibilities then
+		markMissingCount, markTotal = reminder:GetSharedClassBuffMissingCountBySpellIds(provider.markSpellIds)
+	end
+	if shouldEvaluateGroupResponsibilities and markTotal > 0 then
+		totalRequirements = totalRequirements + 1
+		if markMissingCount > 0 then missingEntries[#missingEntries + 1] = reminder:MakeSharedBuffWarningEntry(provider.markSpellIds, markDisplaySpellId, provider.markLabel or "Mark of the Wild", markMissingCount, markTotal) end
+	end
+
+	local trackSymbiotic = hasKnownSpellInList(provider.symbioticKnownSpellIds or provider.symbioticSpellIds)
+	if trackSymbiotic and reminder:GetGroupContext() ~= GROUP_CONTEXT_SOLO then
+		reminder.runtimeEligibleUnits = reminder.runtimeEligibleUnits or {}
+		local eligibleUnits = reminder:CollectOtherEligibleUnits(reminder.runtimeEligibleUnits, true)
+		if #eligibleUnits > 0 then
+			totalRequirements = totalRequirements + 1
+			if not reminder:UnitHasAnyAuraSpellId("player", provider.symbioticSpellIds) then
+				local symbioticDisplaySpellId = normalizeSpellId(provider.symbioticDisplaySpellId) or normalizeSpellId(provider.symbioticSpellIds and provider.symbioticSpellIds[1])
+				missingEntries[#missingEntries + 1] = makeSelfMissingEntry(symbioticDisplaySpellId, provider.symbioticLabel or "Symbiotic Relationship")
+			end
+		end
+	end
+
+	setProviderDisplaySpellId(
+		provider,
+		missingEntries[1] and missingEntries[1].spellId or markDisplaySpellId or normalizeSpellId(provider.symbioticDisplaySpellId) or normalizeSpellId(provider.displaySpellId)
+	)
+	return buildSelfStatus(totalRequirements, missingEntries)
+end
+
+local function druidRestorationHasUnitBuff(provider, unit, reminder)
+	if unit ~= "player" then return false end
+	local status = druidRestorationGetSelfStatus(provider, reminder)
+	return status and status.missing <= 0
+end
+
+function Reminder.MageGetSelfStatus(provider, reminder)
+	if type(provider) ~= "table" or type(reminder) ~= "table" then return buildSelfStatus(0, {}) end
+
+	local totalRequirements = 0
+	local missingEntries = {}
+	local shouldEvaluateGroupResponsibilities = reminder:ShouldEvaluateGroupResponsibilities(provider)
+
+	local intellectDisplaySpellId = normalizeSpellId(provider.intellectDisplaySpellId) or normalizeSpellId(provider.intellectSpellIds and provider.intellectSpellIds[1])
+	local trackIntellect = hasKnownSpellInList(provider.intellectKnownSpellIds or provider.intellectSpellIds)
+	local intellectMissingCount, intellectTotal = 0, 0
+	if trackIntellect and shouldEvaluateGroupResponsibilities then
+		intellectMissingCount, intellectTotal = reminder:GetSharedClassBuffMissingCountBySpellIds(provider.intellectSpellIds)
+	end
+	if shouldEvaluateGroupResponsibilities and intellectTotal > 0 then
+		totalRequirements = totalRequirements + 1
+		if intellectMissingCount > 0 then
+			missingEntries[#missingEntries + 1] = reminder:MakeSharedBuffWarningEntry(
+				provider.intellectSpellIds,
+				intellectDisplaySpellId,
+				provider.intellectLabel,
+				intellectMissingCount,
+				intellectTotal
+			)
+		end
+	end
+
+	local trackArcaneFamiliar = reminder:CanReadAuraData() and hasKnownSpellInList(provider.arcaneFamiliarKnownSpellIds)
+	local arcaneFamiliarDisplaySpellId = normalizeSpellId(provider.arcaneFamiliarDisplaySpellId) or normalizeSpellId(provider.arcaneFamiliarAuraIds and provider.arcaneFamiliarAuraIds[1])
+	if trackArcaneFamiliar then
+		totalRequirements = totalRequirements + 1
+		if not reminder:UnitHasAnyAuraSpellId("player", provider.arcaneFamiliarAuraIds) then
+			missingEntries[#missingEntries + 1] = reminder:MakeSpellInteractionEntry(
+				provider.intellectKnownSpellIds or provider.intellectSpellIds,
+				arcaneFamiliarDisplaySpellId,
+				provider.arcaneFamiliarLabel
+			)
+		end
+	end
+
+	setProviderDisplaySpellId(provider, missingEntries[1] and missingEntries[1].spellId or intellectDisplaySpellId or arcaneFamiliarDisplaySpellId)
+	return buildSelfStatus(totalRequirements, missingEntries)
+end
+
+function Reminder.MageHasUnitBuff(provider, unit, reminder)
+	if unit ~= "player" then return false end
+	local status = Reminder.MageGetSelfStatus(provider, reminder)
+	return status and status.missing <= 0
+end
+
+local function evokerSupportGetSelfStatus(provider, reminder)
+	if type(provider) ~= "table" or type(reminder) ~= "table" then return buildSelfStatus(0, {}) end
+	if reminder:ShouldEvaluateGroupResponsibilities(provider) ~= true then return buildSelfStatus(0, {}) end
+
+	local totalRequirements = 0
+	local missingEntries = {}
+
+	local sourceDisplaySpellId = normalizeSpellId(provider.sourceDisplaySpellId) or normalizeSpellId(provider.sourceSpellIds and provider.sourceSpellIds[1])
+	local shouldTrackSource = hasKnownSpellInList(provider.sourceKnownSpellIds or provider.sourceSpellIds)
+	if shouldTrackSource then
+		reminder.runtimeHealerUnits = reminder.runtimeHealerUnits or {}
+		local healerUnits = reminder:CollectOtherHealerUnits(reminder.runtimeHealerUnits, true)
+		if #healerUnits > 0 then
+			totalRequirements = totalRequirements + 1
+			local hasOwnSource = false
+			local availableHealerUnits = {}
+			for i = 1, #healerUnits do
+				local unit = healerUnits[i]
+				local hasSource, hasPlayerSource = reminder:GetMatchingHelpfulAuraState(unit, provider.sourceSpellIds, provider.sourceAuraNames)
+				if hasPlayerSource then
+					hasOwnSource = true
+					break
+				elseif not hasSource then
+					availableHealerUnits[#availableHealerUnits + 1] = unit
+				end
+			end
+
+			if not hasOwnSource and #availableHealerUnits > 0 then
+				local entry = reminder:MakeSpellInteractionEntry(
+					provider.sourceKnownSpellIds or provider.sourceSpellIds,
+					sourceDisplaySpellId,
+					provider.sourceLabel or "Source of Magic"
+				)
+				entry.targetSelectionKey = "SOURCE_OF_MAGIC"
+				entry.targetCandidates = {}
+				for i = 1, #availableHealerUnits do
+					local unit = availableHealerUnits[i]
+					local guid = getUnitIdentity(unit)
+					local label = GetUnitName and GetUnitName(unit, true) or UnitName and UnitName(unit)
+					if issecretvalue and issecretvalue(label) then label = nil end
+					if guid and type(label) == "string" and label ~= "" then entry.targetCandidates[#entry.targetCandidates + 1] = { unit = unit, guid = guid, label = label } end
+				end
+				entry.actionUnit = reminder:GetSelectedInteractionTargetUnit(entry.targetSelectionKey, entry.targetCandidates)
+				missingEntries[#missingEntries + 1] = entry
+			end
+		end
+	end
+
+	local bronzeDisplaySpellId = normalizeSpellId(provider.bronzeDisplaySpellId) or normalizeSpellId(provider.bronzeSpellIds and provider.bronzeSpellIds[1])
+	local shouldTrackBronze = hasKnownSpellInList(provider.bronzeKnownSpellIds or provider.bronzeSpellIds)
+	if shouldTrackBronze then
+		local bronzeMissingCount, bronzeTotal = reminder:GetSharedClassBuffMissingCountBySpellIds(provider.bronzeSpellIds)
+		if bronzeTotal > 0 then
+			totalRequirements = totalRequirements + 1
+			if bronzeMissingCount > 0 then
+				missingEntries[#missingEntries + 1] = reminder:MakeSharedBuffWarningEntry(
+					provider.bronzeSpellIds,
+					bronzeDisplaySpellId,
+					provider.bronzeLabel or "Blessing of the Bronze",
+					bronzeMissingCount,
+					bronzeTotal
+				)
+			end
+		end
+	end
+
+	local blisteringDisplaySpellId = normalizeSpellId(provider.blisteringDisplaySpellId) or normalizeSpellId(provider.blisteringSpellIds and provider.blisteringSpellIds[1])
+	local shouldTrackBlistering = hasKnownSpellInList(provider.blisteringKnownSpellIds or provider.blisteringSpellIds)
+	if shouldTrackBlistering then
+		reminder.runtimeEligibleUnits = reminder.runtimeEligibleUnits or {}
+		local eligibleUnits = reminder:CollectEligibleUnits(reminder.runtimeEligibleUnits, true)
+		if #eligibleUnits > 0 then
+			totalRequirements = totalRequirements + 1
+			local hasBlisteringOnTarget = false
+			for i = 1, #eligibleUnits do
+				local unit = eligibleUnits[i]
+				if reminder:UnitHasAnyAuraSpellId(unit, provider.blisteringSpellIds) then
+					hasBlisteringOnTarget = true
+					break
+				end
+				if reminder:UnitHasAnyAuraName(unit, provider.blisteringAuraNames) then
+					hasBlisteringOnTarget = true
+					break
+				end
+			end
+
+			if not hasBlisteringOnTarget then missingEntries[#missingEntries + 1] = reminder:WithWarningAuraUnits(makeSelfMissingEntry(blisteringDisplaySpellId, provider.blisteringLabel or "Blistering Scales"), eligibleUnits, provider.blisteringSpellIds, provider.blisteringAuraNames) end
+		end
+	end
+
+	setProviderDisplaySpellId(provider, missingEntries[1] and missingEntries[1].spellId or sourceDisplaySpellId or blisteringDisplaySpellId or bronzeDisplaySpellId)
+	return buildSelfStatus(totalRequirements, missingEntries)
+end
+
+local function evokerSupportHasUnitBuff(provider, unit, reminder)
+	if unit ~= "player" then return false end
+	local status = evokerSupportGetSelfStatus(provider, reminder)
+	return status and status.missing <= 0
+end
+
+function Reminder:GetEvokerSupportProvider()
+	self.evokerSupportProvider = self.evokerSupportProvider
+		or {
+			scope = PROVIDER_SCOPE_SELF,
+			spellIds = {
+				369459,
+				360827,
+				381732,
+				381741,
+				381746,
+				381748,
+				381749,
+				381750,
+				381751,
+				381752,
+				381753,
+				381754,
+				381756,
+				381757,
+				381758,
+			},
+			knownSpellIds = {
+				369459,
+				360827,
+				364342,
+			},
+			sourceSpellIds = EVOKER_SOURCE_OF_MAGIC_IDS,
+			sourceKnownSpellIds = EVOKER_SOURCE_OF_MAGIC_IDS,
+			sourceAuraNames = { "Source of Magic" },
+			sourceLabel = "Source of Magic",
+			sourceDisplaySpellId = 369459,
+			blisteringSpellIds = EVOKER_BLISTERING_SCALES_IDS,
+			blisteringKnownSpellIds = EVOKER_BLISTERING_SCALES_IDS,
+			blisteringAuraNames = { "Blistering Scales" },
+			blisteringLabel = "Blistering Scales",
+			blisteringDisplaySpellId = 360827,
+			bronzeSpellIds = EVOKER_BLESSING_OF_BRONZE_IDS,
+			bronzeKnownSpellIds = EVOKER_BLESSING_OF_BRONZE_KNOWN_IDS,
+			bronzeLabel = "Blessing of the Bronze",
+			bronzeDisplaySpellId = 381748,
+			fallbackName = "Source of Magic",
+			tracksExternalUnitAuras = true,
+			hasUnitBuffFunc = evokerSupportHasUnitBuff,
+			getSelfStatusFunc = evokerSupportGetSelfStatus,
+		}
+
+	return self.evokerSupportProvider
+end
+
+function Reminder:GetPaladinRitesProvider()
+	local adjurationKnown = safeIsPlayerSpell(PALADIN_RITES.adjuration.spellId)
+	local sanctificationKnown = safeIsPlayerSpell(PALADIN_RITES.sanctification.spellId)
+	local holyPaladin = self:GetCurrentSpecId() == PALADIN_SPEC_HOLY
+	local beaconOfLightOverrideSpellId = holyPaladin and C_Spell and C_Spell.GetOverrideSpell and C_Spell.GetOverrideSpell(HOLY_PALADIN_BEACON_OF_LIGHT_IDS[1], 0, true) or nil
+	if issecretvalue and issecretvalue(beaconOfLightOverrideSpellId) then beaconOfLightOverrideSpellId = nil end
+	local beaconOfVirtueActive = beaconOfLightOverrideSpellId == 200025 -- Beacon of Virtue
+	local beaconOfLightKnown = holyPaladin and not beaconOfVirtueActive and hasKnownSpellInList(HOLY_PALADIN_BEACON_OF_LIGHT_IDS) or false
+	local beaconOfFaithKnown = holyPaladin and hasKnownSpellInList(HOLY_PALADIN_BEACON_OF_FAITH_IDS) or false
+	local hasHolyBeaconSupport = holyPaladin and (beaconOfLightKnown or beaconOfFaithKnown)
+	if not adjurationKnown and not sanctificationKnown and not hasHolyBeaconSupport then return nil end
+
+	local spellIds
+	local enchantIds
+	local fallbackName
+	local nextKey
+	local displaySpellId
+	local trackRites = adjurationKnown or sanctificationKnown
+
+	if trackRites and adjurationKnown and not sanctificationKnown then
+		spellIds = { PALADIN_RITES.adjuration.spellId }
+		enchantIds = { PALADIN_RITES.adjuration.enchantId }
+		fallbackName = PALADIN_RITES.adjuration.fallbackName
+		nextKey = tostring(PALADIN_RITES.adjuration.spellId)
+		displaySpellId = PALADIN_RITES.adjuration.spellId
+	elseif trackRites and sanctificationKnown and not adjurationKnown then
+		spellIds = { PALADIN_RITES.sanctification.spellId }
+		enchantIds = { PALADIN_RITES.sanctification.enchantId }
+		fallbackName = PALADIN_RITES.sanctification.fallbackName
+		nextKey = tostring(PALADIN_RITES.sanctification.spellId)
+		displaySpellId = PALADIN_RITES.sanctification.spellId
+	elseif trackRites then
+		spellIds = { PALADIN_RITES.adjuration.spellId, PALADIN_RITES.sanctification.spellId }
+		enchantIds = { PALADIN_RITES.adjuration.enchantId, PALADIN_RITES.sanctification.enchantId }
+		fallbackName = "Rite"
+		nextKey = "both"
+		displaySpellId = PALADIN_RITES.adjuration.spellId
+		if playerHasEnchantId(PALADIN_RITES.sanctification.enchantId) then
+			displaySpellId = PALADIN_RITES.sanctification.spellId
+		elseif playerHasEnchantId(PALADIN_RITES.adjuration.enchantId) then
+			displaySpellId = PALADIN_RITES.adjuration.spellId
+		end
+	else
+		spellIds = {}
+		if beaconOfLightKnown then spellIds[#spellIds + 1] = HOLY_PALADIN_BEACON_OF_LIGHT_IDS[1] end
+		if beaconOfFaithKnown then spellIds[#spellIds + 1] = HOLY_PALADIN_BEACON_OF_FAITH_IDS[1] end
+		enchantIds = {}
+		fallbackName = "Beacon"
+		nextKey = "holy_beacons"
+		displaySpellId = spellIds[1] or HOLY_PALADIN_BEACON_OF_LIGHT_IDS[1]
+	end
+
+	self.paladinRitesProvider = self.paladinRitesProvider
+		or {
+			scope = PROVIDER_SCOPE_SELF,
+			spellIds = spellIds,
+			fallbackName = fallbackName,
+			enchantId = enchantIds[1],
+			enchantIds = enchantIds,
+			beaconOfLightSpellIds = HOLY_PALADIN_BEACON_OF_LIGHT_IDS,
+			beaconOfLightDisplaySpellId = HOLY_PALADIN_BEACON_OF_LIGHT_IDS[1],
+			beaconOfLightLabel = "Beacon of Light",
+			beaconOfFaithSpellIds = HOLY_PALADIN_BEACON_OF_FAITH_IDS,
+			beaconOfFaithKnownSpellIds = HOLY_PALADIN_BEACON_OF_FAITH_IDS,
+			beaconOfFaithDisplaySpellId = HOLY_PALADIN_BEACON_OF_FAITH_IDS[1],
+			beaconOfFaithLabel = "Beacon of Faith",
+			hasUnitBuffFunc = paladinRitesHasUnitBuff,
+			getSelfStatusFunc = paladinRitesGetSelfStatus,
+			activeKey = nil,
+		}
+
+	local provider = self.paladinRitesProvider
+	provider.spellIds = spellIds
+	provider.fallbackName = fallbackName
+	provider.enchantIds = enchantIds
+	provider.trackRites = trackRites == true
+	provider.trackBeaconOfLight = beaconOfLightKnown == true
+	provider.enchantId = (#enchantIds == 1) and enchantIds[1] or nil
+	provider.tracksExternalUnitAuras = holyPaladin == true
+
+	local providerKey = string.format("%s|holy:%d|light:%d|faith:%d", tostring(nextKey), holyPaladin and 1 or 0, beaconOfLightKnown and 1 or 0, beaconOfFaithKnown and 1 or 0)
+	if provider.activeKey ~= providerKey then
+		provider.activeKey = providerKey
+		resetProviderRuntimeCache(provider)
+	end
+
+	setProviderDisplaySpellId(provider, displaySpellId)
+	return provider
+end
+
+function Reminder:GetRoguePoisonsProvider()
+	self.roguePoisonsProvider = self.roguePoisonsProvider
+		or {
+			scope = PROVIDER_SCOPE_SELF,
+			spellIds = {
+				315584,
+				2823,
+				8679,
+				381664,
+				3408,
+				5761,
+				381637,
+			},
+			lethalSpellIds = ROGUE_POISON_LETHAL_IDS,
+			lethalKnownSpellIds = ROGUE_POISON_LETHAL_IDS,
+			utilitySpellIds = ROGUE_POISON_UTILITY_IDS,
+			utilityKnownSpellIds = ROGUE_POISON_UTILITY_IDS,
+			extraPoisonKnownSpellId = Reminder.rogueReminder.dragonTemperedBladesSpellId,
+			lethalDisplaySpellId = 315584,
+			utilityDisplaySpellId = 3408,
+			fallbackName = "Poisons",
+			trackSelfAuraInstances = true,
+			hasUnitBuffFunc = roguePoisonsHasUnitBuff,
+			getSelfStatusFunc = roguePoisonsGetSelfStatus,
+		}
+	local provider = self.roguePoisonsProvider
+	if type(provider.selfAuraCategoryBySpellId) ~= "table" then
+		provider.selfAuraCategoryBySpellId = {}
+		for i = 1, #ROGUE_POISON_LETHAL_IDS do
+			provider.selfAuraCategoryBySpellId[ROGUE_POISON_LETHAL_IDS[i]] = "lethal"
+		end
+		for i = 1, #ROGUE_POISON_UTILITY_IDS do
+			provider.selfAuraCategoryBySpellId[ROGUE_POISON_UTILITY_IDS[i]] = "utility"
+		end
+	end
+	return provider
+end
+
+function Reminder:GetShamanEnhancementProvider()
+	self.shamanEnhancementProvider = self.shamanEnhancementProvider
+		or {
+			scope = PROVIDER_SCOPE_SELF,
+			spellIds = {
+				319773,
+				33757,
+				319778,
+				318038,
+				974,
+				383648,
+				192106,
+				52127,
+			},
+			knownSpellIds = {
+				319773,
+				33757,
+				319778,
+				318038,
+				974,
+				192106,
+				52127,
+				383010,
+				462854,
+				},
+				windfurySpellIds = SHAMAN_ENHANCEMENT_WINDFURY_IDS,
+				windfuryKnownSpellIds = SHAMAN_ENHANCEMENT_WINDFURY_IDS,
+				windfuryEnchantId = Reminder.shamanReminder.windfuryEnchantId,
+				flametongueSpellIds = SHAMAN_ENHANCEMENT_FLAMETONGUE_IDS,
+				flametongueKnownSpellIds = SHAMAN_ENHANCEMENT_FLAMETONGUE_IDS,
+				flametongueEnchantId = Reminder.shamanReminder.flametongueEnchantId,
+				shieldSpellIds = Reminder.shamanReminder.shieldBasicIds,
+				shieldKnownSpellIds = Reminder.shamanReminder.shieldBasicIds,
+			earthShieldSpellIds = Reminder.shamanReminder.shieldEarthIds,
+			earthShieldSelfSpellIds = Reminder.shamanReminder.shieldEarthSelfIds,
+			earthShieldDisplaySpellId = 974,
+			lightningShieldSpellIds = Reminder.shamanReminder.shieldLightningIds,
+			lightningShieldDisplaySpellId = 192106,
+			waterShieldSpellIds = Reminder.shamanReminder.shieldWaterIds,
+			waterShieldDisplaySpellId = 52127,
+			elementalOrbitSpellIds = Reminder.shamanReminder.elementalOrbitIds,
+			elementalOrbitKnownSpellIds = Reminder.shamanReminder.elementalOrbitIds,
+			windfuryDisplaySpellId = 319773,
+			flametongueDisplaySpellId = 319778,
+			skyfurySpellIds = PROVIDER_BY_CLASS.SHAMAN.spellIds,
+			skyfuryKnownSpellIds = PROVIDER_BY_CLASS.SHAMAN.spellIds,
+			skyfuryDisplaySpellId = 462854,
+			skyfuryLabel = PROVIDER_BY_CLASS.SHAMAN.fallbackName or "Skyfury",
+			fallbackName = "Weapon Imbues",
+			tracksExternalUnitAuras = true,
+			hasUnitBuffFunc = shamanEnhancementImbuesHasUnitBuff,
+			getSelfStatusFunc = shamanEnhancementGetSelfStatus,
+		}
+	return self.shamanEnhancementProvider
+end
+
+function Reminder:GetShamanRestorationProvider()
+	local earthlivingDisplaySpellId = 382021
+	if safeIsPlayerSpell(382024) then
+		earthlivingDisplaySpellId = 382024
+	elseif safeIsPlayerSpell(382022) then
+		earthlivingDisplaySpellId = 382022
+	end
+
+	local tidecallerDisplaySpellId = 457481
+	if safeIsPlayerSpell(457496) then tidecallerDisplaySpellId = 457496 end
+
+	self.shamanRestorationProvider = self.shamanRestorationProvider
+		or {
+			scope = PROVIDER_SCOPE_SELF,
+			spellIds = {
+				382021,
+				382022,
+				382024,
+				457481,
+				457496,
+				974,
+				383648,
+				192106,
+				52127,
+			},
+			knownSpellIds = {
+				382021,
+				382022,
+				382024,
+				457481,
+				457496,
+				974,
+				192106,
+				52127,
+				383010,
+				462854,
+				},
+				earthlivingSpellIds = SHAMAN_RESTORATION_EARTHLIVING_IDS,
+				earthlivingKnownSpellIds = SHAMAN_RESTORATION_EARTHLIVING_IDS,
+				earthlivingLabel = "Earthliving Weapon",
+				enchantId = Reminder.shamanReminder.earthlivingEnchantId,
+				earthlivingEnchantId = Reminder.shamanReminder.earthlivingEnchantId,
+				earthlivingDisplaySpellId = earthlivingDisplaySpellId,
+				tidecallerSpellIds = SHAMAN_RESTORATION_TIDECALLER_IDS,
+				tidecallerKnownSpellIds = SHAMAN_RESTORATION_TIDECALLER_IDS,
+				tidecallerLabel = "Tidecaller's Guard",
+				tidecallerEnchantId = Reminder.shamanReminder.tidecallerEnchantId,
+				tidecallerDisplaySpellId = tidecallerDisplaySpellId,
+				requireShieldForTidecaller = true,
+				shieldSpellIds = Reminder.shamanReminder.shieldBasicIds,
+			shieldKnownSpellIds = Reminder.shamanReminder.shieldBasicIds,
+			earthShieldSpellIds = Reminder.shamanReminder.shieldEarthIds,
+			earthShieldSelfSpellIds = Reminder.shamanReminder.shieldEarthSelfIds,
+			earthShieldDisplaySpellId = 974,
+			lightningShieldSpellIds = Reminder.shamanReminder.shieldLightningIds,
+			lightningShieldDisplaySpellId = 192106,
+			waterShieldSpellIds = Reminder.shamanReminder.shieldWaterIds,
+			waterShieldDisplaySpellId = 52127,
+			elementalOrbitSpellIds = Reminder.shamanReminder.elementalOrbitIds,
+			elementalOrbitKnownSpellIds = Reminder.shamanReminder.elementalOrbitIds,
+			skyfurySpellIds = PROVIDER_BY_CLASS.SHAMAN.spellIds,
+			skyfuryKnownSpellIds = PROVIDER_BY_CLASS.SHAMAN.spellIds,
+			skyfuryDisplaySpellId = 462854,
+			skyfuryLabel = PROVIDER_BY_CLASS.SHAMAN.fallbackName or "Skyfury",
+			fallbackName = "Earthliving Weapon",
+			tracksExternalUnitAuras = true,
+			hasUnitBuffFunc = shamanRestorationEarthlivingHasUnitBuff,
+			getSelfStatusFunc = shamanRestorationGetSelfStatus,
+		}
+
+	if self.shamanRestorationProvider.earthlivingDisplaySpellId ~= earthlivingDisplaySpellId or self.shamanRestorationProvider.tidecallerDisplaySpellId ~= tidecallerDisplaySpellId then
+		self.shamanRestorationProvider.earthlivingDisplaySpellId = earthlivingDisplaySpellId
+		self.shamanRestorationProvider.tidecallerDisplaySpellId = tidecallerDisplaySpellId
+		resetProviderRuntimeCache(self.shamanRestorationProvider)
+	end
+
+	return self.shamanRestorationProvider
+end
+
+function Reminder:GetShamanGeneralProvider()
+	self.shamanGeneralProvider = self.shamanGeneralProvider
+		or {
+			scope = PROVIDER_SCOPE_SELF,
+			spellIds = {
+				462854,
+				974,
+				383648,
+				192106,
+				52127,
+			},
+			knownSpellIds = {
+				462854,
+				974,
+				192106,
+				52127,
+				383010,
+			},
+			shieldSpellIds = Reminder.shamanReminder.shieldBasicIds,
+			shieldKnownSpellIds = Reminder.shamanReminder.shieldBasicIds,
+			earthShieldSpellIds = Reminder.shamanReminder.shieldEarthIds,
+			earthShieldSelfSpellIds = Reminder.shamanReminder.shieldEarthSelfIds,
+			earthShieldDisplaySpellId = 974,
+			lightningShieldSpellIds = Reminder.shamanReminder.shieldLightningIds,
+			lightningShieldDisplaySpellId = 192106,
+			waterShieldSpellIds = Reminder.shamanReminder.shieldWaterIds,
+			waterShieldDisplaySpellId = 52127,
+			elementalOrbitSpellIds = Reminder.shamanReminder.elementalOrbitIds,
+			elementalOrbitKnownSpellIds = Reminder.shamanReminder.elementalOrbitIds,
+			skyfurySpellIds = PROVIDER_BY_CLASS.SHAMAN.spellIds,
+			skyfuryKnownSpellIds = PROVIDER_BY_CLASS.SHAMAN.spellIds,
+			skyfuryDisplaySpellId = 462854,
+			skyfuryLabel = PROVIDER_BY_CLASS.SHAMAN.fallbackName or "Skyfury",
+			fallbackName = PROVIDER_BY_CLASS.SHAMAN.fallbackName or "Skyfury",
+			tracksExternalUnitAuras = true,
+			hasUnitBuffFunc = Reminder.ShamanGeneralHasUnitBuff,
+			getSelfStatusFunc = Reminder.ShamanGeneralGetSelfStatus,
+		}
+	return self.shamanGeneralProvider
+end
+
+function Reminder:GetShamanProvider()
+	local specId = self:GetCurrentSpecId()
+	if specId == Reminder.shamanReminder.specEnhancement then return self:GetShamanEnhancementProvider() or PROVIDER_BY_CLASS.SHAMAN end
+	if specId == Reminder.shamanReminder.specRestoration then return self:GetShamanRestorationProvider() or PROVIDER_BY_CLASS.SHAMAN end
+	if specId == Reminder.shamanReminder.specElemental and hasKnownSpellInList(SHAMAN_ENHANCEMENT_FLAMETONGUE_IDS) then return self:GetShamanEnhancementProvider() or PROVIDER_BY_CLASS.SHAMAN end
+	if specId == Reminder.shamanReminder.specElemental then return self:GetShamanGeneralProvider() or PROVIDER_BY_CLASS.SHAMAN end
+	return self:GetShamanGeneralProvider() or PROVIDER_BY_CLASS.SHAMAN
+end
+
+function Reminder:GetDruidProvider()
+	self.druidRestorationProvider = self.druidRestorationProvider
+		or {
+			scope = PROVIDER_SCOPE_SELF,
+			spellIds = {
+				1126,
+				474754,
+			},
+			knownSpellIds = {
+				1126,
+				474750,
+			},
+			markSpellIds = DRUID_MARK_OF_THE_WILD_IDS,
+			markKnownSpellIds = DRUID_MARK_OF_THE_WILD_IDS,
+			markDisplaySpellId = 1126,
+			markLabel = PROVIDER_BY_CLASS.DRUID and PROVIDER_BY_CLASS.DRUID.fallbackName or "Mark of the Wild",
+			symbioticSpellIds = DRUID_SYMBIOTIC_RELATIONSHIP_SELF_IDS,
+			symbioticKnownSpellIds = DRUID_SYMBIOTIC_RELATIONSHIP_KNOWN_IDS,
+			symbioticDisplaySpellId = 474754,
+			symbioticLabel = "Symbiotic Relationship",
+			fallbackName = PROVIDER_BY_CLASS.DRUID and PROVIDER_BY_CLASS.DRUID.fallbackName or "Mark of the Wild",
+			tracksExternalUnitAuras = true,
+			hasUnitBuffFunc = druidRestorationHasUnitBuff,
+			getSelfStatusFunc = druidRestorationGetSelfStatus,
+		}
+
+	return self.druidRestorationProvider
+end
+
+function Reminder:GetMageProvider()
+	self.mageProvider = self.mageProvider
+		or {
+			scope = PROVIDER_SCOPE_SELF,
+			spellIds = {
+				1459,
+				210126,
+			},
+			knownSpellIds = {
+				1459,
+				205022,
+			},
+			intellectSpellIds = PROVIDER_BY_CLASS.MAGE.spellIds,
+			intellectKnownSpellIds = PROVIDER_BY_CLASS.MAGE.spellIds,
+			intellectDisplaySpellId = 1459,
+			intellectLabel = PROVIDER_BY_CLASS.MAGE.fallbackName,
+			arcaneFamiliarAuraIds = Reminder.MAGE_ARCANE_FAMILIAR_AURA_IDS,
+			arcaneFamiliarKnownSpellIds = Reminder.MAGE_ARCANE_FAMILIAR_KNOWN_IDS,
+			arcaneFamiliarDisplaySpellId = 210126,
+			fallbackName = PROVIDER_BY_CLASS.MAGE.fallbackName,
+			tracksExternalUnitAuras = true,
+			hasUnitBuffFunc = Reminder.MageHasUnitBuff,
+			getSelfStatusFunc = Reminder.MageGetSelfStatus,
+		}
+
+	return self.mageProvider
+end
+
+function Reminder:GetFlaskOnlyProvider()
+	self.flaskOnlyProvider = self.flaskOnlyProvider
+		or {
+			scope = PROVIDER_SCOPE_SELF,
+			spellIds = SHARED_FLASK_AURA_IDS,
+			fallbackName = "Flask",
+			displaySpellId = normalizeSpellId(SHARED_FLASK_AURA_IDS[1]),
+			isSupplementalOnly = true,
+		}
+	return self.flaskOnlyProvider
+end
+
+function Reminder:GetFoodOnlyProvider()
+	self.foodOnlyProvider = self.foodOnlyProvider or {
+		scope = PROVIDER_SCOPE_SELF,
+		spellIds = { 1 },
+		fallbackName = L["Buff Food Macro"] or "Buff food",
+		displaySpellId = 1,
+		displayIcon = SHARED_FOOD_AURA_ICON_ID,
+		isSupplementalOnly = true,
+	}
+	return self.foodOnlyProvider
+end
+
+function Reminder:GetRuneOnlyProvider()
+	self.runeOnlyProvider = self.runeOnlyProvider or {
+		scope = PROVIDER_SCOPE_SELF,
+		spellIds = Reminder.runeTracking.auraIds,
+		fallbackName = L["ClassBuffReminderAugmentRune"] or "Augment Rune",
+		displaySpellId = normalizeSpellId(Reminder.runeTracking.auraIds[1]),
+		isSupplementalOnly = true,
+	}
+	return self.runeOnlyProvider
+end
+
+function Reminder:GetWeaponBuffOnlyProvider()
+	self.weaponBuffOnlyProvider = self.weaponBuffOnlyProvider or {
+		scope = PROVIDER_SCOPE_SELF,
+		spellIds = { 1 },
+		fallbackName = L["ClassBuffReminderWeaponBuff"] or "Weapon buff",
+		displaySpellId = 1,
+		isSupplementalOnly = true,
+	}
+	return self.weaponBuffOnlyProvider
+end
+
+function Reminder:GetPetOnlyProvider()
+	self.petOnlyProvider = self.petOnlyProvider or {
+		scope = PROVIDER_SCOPE_SELF,
+		spellIds = { 1 },
+		fallbackName = L["ClassBuffReminderSectionPets"] or "Pets",
+		displaySpellId = 1,
+		displayIcon = "Interface\\Icons\\Ability_Hunter_BeastCall",
+		isSupplementalOnly = true,
+	}
+	return self.petOnlyProvider
+end
+
+function Reminder:GetHealthstoneOnlyProvider()
+	self.healthstoneOnlyProvider = self.healthstoneOnlyProvider or {
+		scope = PROVIDER_SCOPE_SELF,
+		spellIds = { Reminder.healthstoneTracking.createSpellId },
+		fallbackName = L["ClassBuffReminderHealthstone"] or "Healthstone",
+		displaySpellId = Reminder.healthstoneTracking.createSpellId,
+		isSupplementalOnly = true,
+	}
+	return self.healthstoneOnlyProvider
+end
+
+function Reminder:GetGrimoireOfSacrificeOnlyProvider()
+	self.grimoireOfSacrificeOnlyProvider = self.grimoireOfSacrificeOnlyProvider
+		or {
+			scope = PROVIDER_SCOPE_SELF,
+			spellIds = { Reminder.petTracking.grimoireOfSacrifice },
+			fallbackName = safeGetSpellName(Reminder.petTracking.grimoireOfSacrifice),
+			displaySpellId = Reminder.petTracking.grimoireOfSacrifice,
+			isSupplementalOnly = true,
+		}
+	return self.grimoireOfSacrificeOnlyProvider
+end
+
+function Reminder:GetStanceOnlyProvider()
+	self.stanceOnlyProvider = self.stanceOnlyProvider or {
+		scope = PROVIDER_SCOPE_SELF,
+		spellIds = { 465, 232698, 386164, 386196 },
+		fallbackName = L["CooldownPanelStanceType"] or _G.STANCE or "Stance",
+		displaySpellId = 465,
+		isSupplementalOnly = true,
+	}
+	return self.stanceOnlyProvider
+end
+
+local function finalizeResolvedProvider(provider)
+	if not provider then return nil end
+	if provider.scope == nil then provider.scope = PROVIDER_SCOPE_GROUP end
+	if type(provider.spellIds) ~= "table" or #provider.spellIds <= 0 then return nil end
+	if not providerHasKnownSpells(provider) then return nil end
+	if not tonumber(provider.stateVersion) or tonumber(provider.stateVersion) <= 0 then provider.stateVersion = 1 end
+
+	if not provider.spellSet then
+		provider.spellSet = {}
+		for i = 1, #provider.spellIds do
+			local sid = normalizeSpellId(provider.spellIds[i])
+			if sid then provider.spellSet[sid] = true end
+		end
+	end
+	if not provider.displaySpellId then provider.displaySpellId = normalizeSpellId(provider.spellIds[1]) or provider.spellIds[1] end
+
+	return provider
+end
+
+function Reminder:RefreshProviderCache(force)
+	if force ~= true and self.runtimeProviderValid == true then return self.activeProvider, self.hasProviderCached == true end
+
+	local classToken = self:GetClassToken()
+	local provider
+	if classToken == "PALADIN" then
+		provider = self:GetPaladinRitesProvider()
+	elseif classToken == "ROGUE" then
+		provider = self:GetRoguePoisonsProvider()
+	elseif classToken == "EVOKER" then
+		provider = self:GetEvokerSupportProvider()
+	elseif classToken == "SHAMAN" then
+		provider = self:GetShamanProvider()
+	elseif classToken == "DRUID" then
+		provider = self:GetDruidProvider()
+	elseif classToken == "MAGE" then
+		provider = self:GetMageProvider()
+	else
+		provider = classToken and PROVIDER_BY_CLASS[classToken] or nil
+	end
+
+	provider = finalizeResolvedProvider(provider)
+	self.activeProvider = provider
+	self.hasProviderCached = provider ~= nil
+	self.runtimeProviderValid = true
+	return provider, self.hasProviderCached
+end
+
+function Reminder:GetProvider()
+	local provider = self:RefreshProviderCache(false)
+	return provider
+end
+
+function Reminder:GetProviderName(provider)
+	if not provider then return L["Class Buff Reminder"] or "Class Buff Reminder" end
+	if provider.cachedName and provider.cachedName ~= "" and provider.cachedName ~= provider.fallbackName then return provider.cachedName end
+	if provider._presentationAttempted ~= true then resolveProviderPresentation(provider) end
+	if provider.cachedName and provider.cachedName ~= "" then return provider.cachedName end
+	local name = safeGetSpellName(provider.displaySpellId) or provider.fallbackName or (L["Class Buff Reminder"] or "Class Buff Reminder")
+	provider.cachedName = name
+	return name
+end
+
+function Reminder:GetProviderIcon(provider)
+	if not provider then return ICON_MISSING end
+	if provider.cachedIcon and provider.cachedIcon ~= "" and provider.cachedIcon ~= ICON_MISSING then return provider.cachedIcon end
+	if provider._presentationAttempted ~= true then resolveProviderPresentation(provider) end
+	if provider.cachedIcon and provider.cachedIcon ~= "" and provider.cachedIcon ~= ICON_MISSING then return provider.cachedIcon end
+	self:RequestProviderPresentationRefresh(provider)
+	return provider.cachedIcon or ICON_MISSING
+end
+
+function Reminder.RunPendingUpdateTimer()
+	Reminder.updateTimer = nil
+	Reminder.updatePending = false
+	Reminder.updateDelay = nil
+	Reminder:UpdateDisplay()
+end
+
+function Reminder.RunInitialSoundSyncTimer()
+	Reminder.initialSoundSyncTimer = nil
+	Reminder.initialSoundSyncPending = false
+	if not Reminder:ShouldRegisterRuntimeEvents() then return end
+
+	Reminder.initialSoundSyncDone = true
+	Reminder:NormalizeMissingSoundSelection()
+end
+
+function Reminder.RunDeferredAuraResyncTimer()
+	Reminder.deferredAuraResyncTimer = nil
+	if not Reminder:ShouldRegisterRuntimeEvents() then return end
+
+	Reminder:MarkAuraStatesDirty()
+	Reminder:RequestUpdate(false, Reminder.ROSTER_UPDATE_DELAY, true)
+end
+
+function Reminder:RequestProviderPresentationRefresh(provider)
+	if type(provider) ~= "table" then return end
+	if provider.cachedIcon and provider.cachedIcon ~= "" and provider.cachedIcon ~= ICON_MISSING then
+		provider.presentationRetryCount = 0
+		return
+	end
+	if not (C_Timer and C_Timer.After) then return end
+	if provider.presentationRetryPending then return end
+	local retries = tonumber(provider.presentationRetryCount) or 0
+	if retries >= 8 then return end
+
+	provider.presentationRetryPending = true
+	C_Timer.After(0.25, function()
+		provider.presentationRetryPending = false
+		provider.presentationRetryCount = (tonumber(provider.presentationRetryCount) or 0) + 1
+		resolveProviderPresentation(provider, true)
+		if provider.cachedIcon and provider.cachedIcon ~= "" and provider.cachedIcon ~= ICON_MISSING then provider.presentationRetryCount = 0 end
+		Reminder:RequestUpdate(true)
+	end)
+end
+
+function Reminder:InvalidateProviderAvailabilityCache()
+	self:ClearPendingAuraUpdates()
+	self.activeProvider = nil
+	self.hasProviderCached = nil
+	self.runtimeProviderValid = nil
+	self:InvalidateSelfProviderStatus()
+	self:InvalidateGroupMissingState()
+	self:InvalidateGroupBuffStateCaches()
+end
+
+function Reminder:GetGrowthDirection() return normalizeGrowthDirection(getValue(DB_GROWTH_DIRECTION, defaults.growthDirection)) end
+
+function Reminder:GetIconShape() return Reminder.NormalizeIconShape(getValue(Reminder.DB_ICON_SHAPE, defaults.iconShape), defaults.iconShape or "DEFAULT") end
+function Reminder:GetIconZoom()
+	if addon.IconShape and addon.IconShape.NormalizeIconZoom then return addon.IconShape.NormalizeIconZoom(getValue(Reminder.DB_ICON_ZOOM, defaults.iconZoom)) end
+	return clamp(getValue(Reminder.DB_ICON_ZOOM, defaults.iconZoom), 0, 35, defaults.iconZoom or 0)
+end
+
+function Reminder:GetGlowStyle() return Reminder.NormalizeGlowStyleForIconShape(getValue(DB_GLOW_STYLE, defaults.glowStyle), self:GetIconShape()) end
+
+function Reminder:GetGlowInset() return normalizeGlowInset(getValue(DB_GLOW_INSET, defaults.glowInset)) end
+function Reminder:GetGlowColor()
+	if getValue(Reminder.DB_GLOW_USE_CLASS_COLOR, defaults.glowUseClassColor) == true then
+		local classToken = self:GetClassToken()
+		local classColor = classToken and RAID_CLASS_COLORS and RAID_CLASS_COLORS[classToken]
+		if classColor then return classColor.r, classColor.g, classColor.b, 1 end
+	end
+	return normalizeColor(getValue(DB_GLOW_COLOR, defaults.glowColor), defaults.glowColor)
+end
+function Reminder:GetGrowthFromCenter() return getValue(DB_GROWTH_FROM_CENTER, defaults.growthFromCenter) == true end
+function Reminder:IsBorderEnabled() return getValue(DB_BORDER_ENABLED, defaults.borderEnabled) == true end
+function Reminder:GetBorderTextureKey() return normalizeBorderTexture(getValue(DB_BORDER_TEXTURE, defaults.borderTexture)) end
+function Reminder:GetBorderSize() return normalizeBorderSize(getValue(DB_BORDER_SIZE, defaults.borderSize)) end
+function Reminder:GetBorderOffset() return normalizeBorderOffset(getValue(DB_BORDER_OFFSET, defaults.borderOffset)) end
+function Reminder:GetBorderColor() return normalizeColor(getValue(DB_BORDER_COLOR, defaults.borderColor), defaults.borderColor) end
+
+function Reminder:GetIconCountTextStyle()
+	local size = clamp(getValue(DB_XY_TEXT_SIZE, defaults.xyTextSize), 8, 64, defaults.xyTextSize)
+	local outline = normalizeTextOutline(getValue(DB_XY_TEXT_OUTLINE, defaults.xyTextOutline))
+	local r, g, b, a = normalizeColor(getValue(DB_XY_TEXT_COLOR, defaults.xyTextColor), defaults.xyTextColor)
+	local offsetX = clamp(getValue(DB_XY_TEXT_OFFSET_X, defaults.xyTextOffsetX), -60, 60, defaults.xyTextOffsetX)
+	local offsetY = clamp(getValue(DB_XY_TEXT_OFFSET_Y, defaults.xyTextOffsetY), -60, 60, defaults.xyTextOffsetY)
+	return size, outline, r, g, b, a, offsetX, offsetY
+end
+
+function Reminder:ApplyIconShape(frame, texture, shape)
+	if not (addon.IconShape and addon.IconShape.ApplyFrameShape and frame) then return end
+	shape = Reminder.NormalizeIconShape(shape or self:GetIconShape(), defaults.iconShape or "DEFAULT")
+	local iconZoom = self:GetIconZoom()
+	local shapeKey = tostring(shape) .. ":" .. tostring(iconZoom)
+	if frame._eqolClassBuffReminderShapeKey == shapeKey and frame._eqolClassBuffReminderShapeTexture == texture then return end
+	addon.IconShape.ApplyFrameShape(frame, shape, {
+		textures = { texture },
+		maskKey = "_eqolClassBuffReminderMask",
+		textureMaskKey = "_eqolClassBuffReminderTextureMask",
+		textureTexCoordKey = "_eqolClassBuffReminderTexCoord",
+		iconZoom = iconZoom,
+	})
+	frame._eqolClassBuffReminderShapeKey = shapeKey
+	frame._eqolClassBuffReminderShapeTexture = texture
+end
+
+function Reminder:ApplyShapeBorder(frame, backdropFrame, enabled, borderTexture, borderSize, borderOffset, r, g, b, a, shape)
+	shape = Reminder.NormalizeIconShape(shape or self:GetIconShape(), defaults.iconShape or "DEFAULT")
+	if addon.IconShape and addon.IconShape.HideBorderTextures then addon.IconShape.HideBorderTextures(frame) end
+	if not enabled or (addon.IconShape and addon.IconShape.IsNoBorder and addon.IconShape.IsNoBorder(borderTexture)) then
+		if backdropFrame and backdropFrame.SetBackdrop then
+			backdropFrame:SetBackdrop(nil)
+			backdropFrame:Hide()
+		end
+		return
+	end
+	if not Reminder.IsShapeBorderPath(shape) then
+		if not (backdropFrame and backdropFrame.SetBackdrop) then return end
+		backdropFrame:SetBackdrop({
+			edgeFile = resolveBorderTexture(borderTexture),
+			edgeSize = borderSize,
+			insets = { left = 0, right = 0, top = 0, bottom = 0 },
+		})
+		backdropFrame:SetBackdropBorderColor(r, g, b, a)
+		backdropFrame:SetBackdropColor(0, 0, 0, 0)
+		backdropFrame:ClearAllPoints()
+		backdropFrame:SetPoint("TOPLEFT", frame, "TOPLEFT", -borderOffset, borderOffset)
+		backdropFrame:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", borderOffset, -borderOffset)
+		backdropFrame:Show()
+		return
+	end
+	if backdropFrame and backdropFrame.SetBackdrop then
+		backdropFrame:SetBackdrop(nil)
+		backdropFrame:Hide()
+	end
+	if addon.IconShape and addon.IconShape.ApplyBorder then
+		addon.IconShape.ApplyBorder(frame, borderTexture, shape, {
+			borderSize = borderSize,
+			borderOffset = borderOffset,
+			color = { r, g, b, a },
+		})
+	end
+end
+
+function Reminder:BuildMissingSoundOptions()
+	local version = (addon.functions and addon.functions.GetLSMMediaVersion and addon.functions.GetLSMMediaVersion("sound")) or 0
+	if self.missingSoundCacheVersion == version and self.missingSoundKeys and self.missingSoundMap and self.missingSoundPathToKey then
+		return self.missingSoundKeys, self.missingSoundMap, self.missingSoundPathToKey
+	end
+
+	local keys = {}
+	local map = {}
+	local pathToKey = {}
+
+	local names = (addon.functions and addon.functions.GetLSMMediaNames and addon.functions.GetLSMMediaNames("sound")) or nil
+	local hash = (addon.functions and addon.functions.GetLSMMediaHash and addon.functions.GetLSMMediaHash("sound")) or nil
+	if type(names) == "table" and type(hash) == "table" then
+		for i = 1, #names do
+			local name = names[i]
+			local path = hash[name]
+			if type(name) == "string" and name ~= "" and type(path) == "string" and path ~= "" then
+				keys[#keys + 1] = name
+				map[name] = path
+			end
+		end
+	end
+	for i = 1, #keys do
+		local name = keys[i]
+		local path = map[name]
+		if type(path) == "string" and path ~= "" and pathToKey[path] == nil then pathToKey[path] = name end
+	end
+	self.missingSoundCacheVersion = version
+	self.missingSoundKeys = keys
+	self.missingSoundMap = map
+	self.missingSoundPathToKey = pathToKey
+	return keys, map, pathToKey
+end
+
+function Reminder:GetMissingSoundOptions() return self:BuildMissingSoundOptions() end
+
+function Reminder:ResolveMissingSound()
+	local rawKey = getValue(DB_MISSING_SOUND, defaults.missingSound)
+	if type(rawKey) ~= "string" then rawKey = "" end
+
+	local keys, map, pathToKey = self:GetMissingSoundOptions()
+	local resolvedKey = rawKey
+	if resolvedKey ~= "" and type(pathToKey) == "table" and pathToKey[resolvedKey] and map[pathToKey[resolvedKey]] then resolvedKey = pathToKey[resolvedKey] end
+
+	local soundFile
+	if resolvedKey ~= "" and type(map) == "table" then soundFile = map[resolvedKey] end
+
+	return rawKey, resolvedKey, soundFile, #keys
+end
+
+function Reminder:NormalizeMissingSoundSelection()
+	if not addon.db then return end
+
+	local _, map, pathToKey = self:GetMissingSoundOptions()
+	local current = addon.db[DB_MISSING_SOUND]
+	if type(current) ~= "string" then current = "" end
+
+	local normalized = current
+	if normalized ~= "" and type(pathToKey) == "table" and pathToKey[normalized] and type(map) == "table" and map[pathToKey[normalized]] then normalized = pathToKey[normalized] end
+
+	if normalized ~= current then addon.db[DB_MISSING_SOUND] = normalized end
+end
+
+function Reminder:ScheduleInitialSoundSync()
+	if self.initialSoundSyncDone == true or self.initialSoundSyncPending == true then return end
+	if not (C_Timer and C_Timer.After) then return end
+
+	self.initialSoundSyncPending = true
+	self.initialSoundSyncTimer = C_Timer.NewTimer(1, Reminder.RunInitialSoundSyncTimer)
+end
+
+function Reminder:ScheduleDeferredAuraResync(delay)
+	if not (C_Timer and C_Timer.After) then return end
+
+	if self.deferredAuraResyncTimer then self.deferredAuraResyncTimer:Cancel() end
+	self.deferredAuraResyncTimer = C_Timer.NewTimer(tonumber(delay) or 0.35, Reminder.RunDeferredAuraResyncTimer)
+end
+
+function Reminder:GetMissingSoundValue()
+	local _, resolvedKey = self:ResolveMissingSound()
+	if type(resolvedKey) ~= "string" then return "" end
+	return resolvedKey
+end
+
+function Reminder:GetMissingSoundFile()
+	local _, _, soundFile = self:ResolveMissingSound()
+	if type(soundFile) ~= "string" or soundFile == "" then return nil end
+	return soundFile
+end
+
+function Reminder:PlayMissingSound(force)
+	if not force and getValue(DB_SOUND_ON_MISSING, defaults.soundOnMissing) ~= true then return end
+
+	local _, _, soundFile = self:ResolveMissingSound()
+	if soundFile and PlaySoundFile then PlaySoundFile(soundFile, "Master") end
+end
+
+function Reminder:UpdateMissingStateAndSound(missing)
+	local isMissing = tonumber(missing) and tonumber(missing) > 0 or false
+	local wasMissing = self.missingActive == true
+	if isMissing and not wasMissing then
+		if self.suppressNextMissingSound == true then
+			self.suppressNextMissingSound = false
+		else
+			self:PlayMissingSound()
+		end
+	end
+	self.missingActive = isMissing
+end
+
+function Reminder:GetUnitAuraState(unit)
+	if type(unit) ~= "string" or unit == "" then return nil end
+	self.unitAuraStates = self.unitAuraStates or {}
+	local state = self.unitAuraStates[unit]
+	if not state then
+		state = {
+			trackedByInstance = {},
+			expirationByInstance = {},
+			categoryByInstance = {},
+			categoryCounts = {},
+			trackedCount = 0,
+			hasBuff = false,
+			hasUsableBuff = false,
+			nextExpirationWarningAt = nil,
+			initialized = false,
+			unitIdentity = nil,
+			providerRef = nil,
+			providerVersion = nil,
+		}
+		self.unitAuraStates[unit] = state
+	end
+	if type(state.trackedByInstance) ~= "table" then state.trackedByInstance = {} end
+	if type(state.expirationByInstance) ~= "table" then state.expirationByInstance = {} end
+	if type(state.categoryByInstance) ~= "table" then state.categoryByInstance = {} end
+	if type(state.categoryCounts) ~= "table" then state.categoryCounts = {} end
+	if type(state.trackedCount) ~= "number" then state.trackedCount = 0 end
+	return state
+end
+
+function Reminder:ResetUnitAuraState(state)
+	if type(state) ~= "table" then return end
+	self:ClearTrackedAuraState(state)
+	state.unitIdentity = nil
+end
+
+function Reminder:ClearTrackedAuraState(state)
+	if type(state) ~= "table" then return end
+	if type(state.trackedByInstance) == "table" then wipeTable(state.trackedByInstance) end
+	if type(state.expirationByInstance) == "table" then wipeTable(state.expirationByInstance) end
+	if type(state.categoryByInstance) == "table" then wipeTable(state.categoryByInstance) end
+	if type(state.categoryCounts) == "table" then wipeTable(state.categoryCounts) end
+	state.trackedCount = 0
+	state.hasBuff = false
+	state.hasUsableBuff = false
+	state.nextExpirationWarningAt = nil
+	state.initialized = false
+end
+
+function Reminder:ClearPendingAuraUpdates() self.pendingAuraUpdates = nil end
+
+function Reminder.IsFullAuraUpdate(updateInfo)
+	if not updateInfo or (issecretvalue and issecretvalue(updateInfo)) then return true end
+	local isFullUpdate = updateInfo.isFullUpdate
+	if issecretvalue and issecretvalue(isFullUpdate) then return true end
+	return isFullUpdate == true
+end
+
+function Reminder:GetPendingAuraUpdate(unit)
+	if type(unit) ~= "string" or unit == "" then return nil end
+	local pending = self.pendingAuraUpdates
+	if type(pending) ~= "table" then
+		pending = {}
+		self.pendingAuraUpdates = pending
+	end
+
+	local entry = pending[unit]
+	if type(entry) ~= "table" then
+		entry = {}
+		pending[unit] = entry
+	end
+	return entry
+end
+
+function Reminder:QueuePendingAuraReset(unit)
+	local entry = self:GetPendingAuraUpdate(unit)
+	if not entry then return end
+	entry.reset = true
+	entry.fullRefresh = false
+	entry.updateInfo = nil
+	entry.addedAurasById = nil
+	entry.updatedAuraInstanceIDsById = nil
+	entry.removedAuraInstanceIDsById = nil
+end
+
+function Reminder.GetPendingAuraMap(entry, key)
+	local map = entry[key]
+	if type(map) ~= "table" then
+		map = {}
+		entry[key] = map
+	end
+	return map
+end
+
+function Reminder.ClearPendingAuraDeltaMaps(entry)
+	entry.addedAurasById = nil
+	entry.updatedAuraInstanceIDsById = nil
+	entry.removedAuraInstanceIDsById = nil
+end
+
+function Reminder.BuildPendingAuraUpdateInfo(entry)
+	if type(entry) ~= "table" then return nil end
+	local info = nil
+	local addedMap = entry.addedAurasById
+	if type(addedMap) == "table" then
+		local added
+		for _, aura in pairs(addedMap) do
+			if aura then
+				added = added or {}
+				added[#added + 1] = aura
+			end
+		end
+		if added then
+			info = info or {}
+			info.addedAuras = added
+		end
+	end
+	local updatedMap = entry.updatedAuraInstanceIDsById
+	if type(updatedMap) == "table" then
+		local updated
+		for auraId in pairs(updatedMap) do
+			updated = updated or {}
+			updated[#updated + 1] = auraId
+		end
+		if updated then
+			info = info or {}
+			info.updatedAuraInstanceIDs = updated
+		end
+	end
+	local removedMap = entry.removedAuraInstanceIDsById
+	if type(removedMap) == "table" then
+		local removed
+		for auraId in pairs(removedMap) do
+			removed = removed or {}
+			removed[#removed + 1] = auraId
+		end
+		if removed then
+			info = info or {}
+			info.removedAuraInstanceIDs = removed
+		end
+	end
+	return info
+end
+
+function Reminder:QueuePendingAuraDelta(unit, updateInfo)
+	local entry = self:GetPendingAuraUpdate(unit)
+	if not entry then return end
+
+	entry.reset = false
+	if entry.fullRefresh == true then return end
+	if Reminder.IsFullAuraUpdate(updateInfo) then
+		entry.fullRefresh = true
+		entry.updateInfo = nil
+		Reminder.ClearPendingAuraDeltaMaps(entry)
+		return
+	end
+
+	local unitStates = self.unitAuraStates
+	local state = type(unitStates) == "table" and unitStates[unit] or nil
+	local trackedByInstance = state and state.trackedByInstance
+	local removed = updateInfo.removedAuraInstanceIDs
+	if type(removed) == "table" then
+		for i = 1, #removed do
+			local auraId = normalizeAuraInstanceId(removed[i])
+			if auraId then
+				local addedMap = entry.addedAurasById
+				local updatedMap = entry.updatedAuraInstanceIDsById
+				if type(addedMap) == "table" then addedMap[auraId] = nil end
+				if type(updatedMap) == "table" then updatedMap[auraId] = nil end
+				if type(trackedByInstance) == "table" and trackedByInstance[auraId] ~= nil then Reminder.GetPendingAuraMap(entry, "removedAuraInstanceIDsById")[auraId] = true end
+			end
+		end
+	end
+
+	local added = updateInfo.addedAuras
+	if type(added) == "table" then
+		for i = 1, #added do
+			local aura = added[i]
+			local auraId = aura and normalizeAuraInstanceId(aura.auraInstanceID)
+			if auraId and Reminder.IsRelevantHelpfulPlayerAura(aura) then
+				local removedMap = entry.removedAuraInstanceIDsById
+				local updatedMap = entry.updatedAuraInstanceIDsById
+				if type(removedMap) == "table" then removedMap[auraId] = nil end
+				if type(updatedMap) == "table" then updatedMap[auraId] = nil end
+				Reminder.GetPendingAuraMap(entry, "addedAurasById")[auraId] = aura
+			end
+		end
+	end
+
+	local updated = updateInfo.updatedAuraInstanceIDs
+	if type(updated) == "table" then
+		for i = 1, #updated do
+			local auraId = normalizeAuraInstanceId(updated[i])
+			if auraId and type(trackedByInstance) == "table" and trackedByInstance[auraId] ~= nil and not (type(entry.addedAurasById) == "table" and entry.addedAurasById[auraId]) then Reminder.GetPendingAuraMap(entry, "updatedAuraInstanceIDsById")[auraId] = true end
+		end
+	end
+end
+
+function Reminder:FlushPendingAuraUpdates()
+	local pending = self.pendingAuraUpdates
+	if type(pending) ~= "table" or not next(pending) then return end
+	self.pendingAuraUpdates = nil
+
+	local provider = self:GetProvider()
+	if not (provider and provider.scope == PROVIDER_SCOPE_GROUP and self:ShouldEvaluateGroupResponsibilities(provider) == true) then
+		for unit, entry in pairs(pending) do
+			if type(entry) == "table" and entry.reset == true then
+				local state = self:GetUnitAuraState(unit)
+				if state then self:ResetUnitAuraState(state) end
+			end
+		end
+		return
+	end
+
+	local dirtyUnits
+	local canRefreshGroupState = self:IsGroupMissingStateValid(provider, self.groupMissingState)
+	for unit, entry in pairs(pending) do
+		if type(entry) == "table" then
+			local touched = false
+			if entry.reset == true then
+				local state = self:GetUnitAuraState(unit)
+				if state then self:ResetUnitAuraState(state) end
+				touched = true
+			elseif entry.fullRefresh == true then
+				self:FullRefreshUnitAuraState(unit, provider)
+				touched = true
+			else
+				local mergedUpdateInfo = entry.updateInfo or Reminder.BuildPendingAuraUpdateInfo(entry)
+				if mergedUpdateInfo then
+					self:ApplyDeltaToUnitAuraState(unit, mergedUpdateInfo, provider)
+					touched = true
+				end
+			end
+
+			if touched == true and canRefreshGroupState == true then dirtyUnits = self:CollectGroupStateUnitsForUnit(dirtyUnits, unit) end
+		end
+	end
+
+	if type(dirtyUnits) == "table" then
+		for unit in pairs(dirtyUnits) do
+			self:RefreshGroupMissingStateUnit(provider, unit)
+		end
+	end
+end
+
+function Reminder:PrepareUnitAuraState(unit, provider)
+	local state = self:GetUnitAuraState(unit)
+	if not state then return nil end
+	local unitIdentity = getUnitIdentity(unit)
+
+	-- Preserve hot unit caches across roster churn and only invalidate tokens that now point to a different unit.
+	if state.unitIdentity ~= unitIdentity then
+		self:ResetUnitAuraState(state)
+		state.unitIdentity = unitIdentity
+	end
+
+	if type(provider) ~= "table" then return state end
+
+	local providerVersion = getProviderStateVersion(provider)
+	if state.providerRef ~= provider or state.providerVersion ~= providerVersion then
+		self:ResetUnitAuraState(state)
+		state.unitIdentity = unitIdentity
+		state.providerRef = provider
+		state.providerVersion = providerVersion
+	end
+	return state
+end
+
+function Reminder:InvalidateGroupMissingState() self.groupMissingState = nil end
+
+function Reminder:InvalidateGroupBuffStateCaches()
+	self.groupBuffStateCaches = nil
+	self.groupBuffAggregateSpellSetSource = nil
+	self.groupBuffAggregateSpellSetDirty = true
+	self.groupBuffAggregateSpellSetHasAny = false
+end
+
+function Reminder:MarkAuraStatesDirty()
+	self:ClearPendingAuraUpdates()
+	self:InvalidatePlayerAuraPresenceSnapshot()
+	if type(self.unitAuraStates) == "table" then
+		for _, state in pairs(self.unitAuraStates) do
+			if type(state) == "table" then state.initialized = false end
+		end
+	end
+	self:InvalidateGroupMissingState()
+	self:InvalidateGroupBuffStateCaches()
+end
+
+function Reminder:InvalidateAuraStates()
+	self:ClearPendingAuraUpdates()
+	self:InvalidatePlayerAuraPresenceSnapshot()
+	self.unitAuraStates = {}
+	self:InvalidateGroupMissingState()
+	self:InvalidateGroupBuffStateCaches()
+end
+
+function Reminder:GetTrackableProviderAuraData(aura, provider)
+	if not aura or (issecretvalue and issecretvalue(aura)) then return nil end
+	if not (provider and provider.spellSet) then return nil end
+	if not Reminder.IsRelevantHelpfulPlayerAura(aura) then return nil end
+
+	local auraId = normalizeAuraInstanceId(aura.auraInstanceID)
+	if not auraId then return nil end
+
+	local spellId = normalizeSpellId(aura.spellId)
+	if spellId and provider.spellSet[spellId] then return auraId, spellId end
+
+	if type(provider.spellNameSet) ~= "table" or provider.spellNameSetReady ~= true then refreshProviderSpellNameSet(provider) end
+	local auraName = aura.name
+	if issecretvalue and issecretvalue(auraName) then auraName = nil end
+	if type(auraName) == "string" and auraName ~= "" and provider.spellNameSet and provider.spellNameSet[auraName] then return auraId, spellId end
+
+	return nil
+end
+
+function Reminder:RecomputeUsableAuraState(state)
+	if type(state) ~= "table" then return end
+	state.hasBuff = (tonumber(state.trackedCount) or 0) > 0
+	local thresholdSeconds = self:GetExpirationWarningSeconds()
+	if thresholdSeconds <= 0 then
+		state.hasUsableBuff = state.hasBuff
+		state.nextExpirationWarningAt = nil
+		return
+	end
+	local expirationByInstance = state.expirationByInstance
+	if type(expirationByInstance) ~= "table" then
+		state.hasUsableBuff = state.hasBuff
+		state.nextExpirationWarningAt = nil
+		return
+	end
+	local now = nowSeconds()
+	local usable = false
+	local nextAt
+	for _, expirationTime in pairs(expirationByInstance) do
+		if self:IsExpirationTimeUsable(expirationTime, thresholdSeconds, now) then
+			usable = true
+			if expirationTime and expirationTime ~= math.huge then
+				local warningAt = expirationTime - thresholdSeconds
+				if warningAt > now and (not nextAt or warningAt < nextAt) then nextAt = warningAt end
+			end
+		end
+	end
+	state.hasUsableBuff = usable
+	state.nextExpirationWarningAt = nextAt
+	if nextAt then self:QueueExpirationWarningAt(nextAt) end
+end
+
+function Reminder:AddProviderAuraToState(state, aura, provider)
+	if type(state) ~= "table" then return false end
+	local auraId, spellId = self:GetTrackableProviderAuraData(aura, provider)
+	if not auraId then return false end
+
+	local category = type(provider.selfAuraCategoryBySpellId) == "table" and provider.selfAuraCategoryBySpellId[spellId] or nil
+	local previousCategory = type(state.categoryByInstance) == "table" and state.categoryByInstance[auraId] or nil
+	if state.trackedByInstance[auraId] == nil then
+		state.trackedByInstance[auraId] = spellId
+		state.trackedCount = (state.trackedCount or 0) + 1
+	else
+		state.trackedByInstance[auraId] = spellId
+	end
+	if category ~= previousCategory then
+		if previousCategory and type(state.categoryCounts) == "table" then state.categoryCounts[previousCategory] = math.max(0, (tonumber(state.categoryCounts[previousCategory]) or 0) - 1) end
+		if type(state.categoryByInstance) == "table" then state.categoryByInstance[auraId] = category end
+		if category and type(state.categoryCounts) == "table" then state.categoryCounts[category] = (tonumber(state.categoryCounts[category]) or 0) + 1 end
+	end
+	state.expirationByInstance[auraId] = Reminder.GetAuraExpirationTime(aura)
+	self:RecomputeUsableAuraState(state)
+	return true
+end
+
+function Reminder:RemoveProviderAuraFromState(state, auraId)
+	if type(state) ~= "table" then return false end
+	auraId = normalizeAuraInstanceId(auraId)
+	if not auraId or state.trackedByInstance[auraId] == nil then return false end
+
+	local category = type(state.categoryByInstance) == "table" and state.categoryByInstance[auraId] or nil
+	state.trackedByInstance[auraId] = nil
+	if type(state.expirationByInstance) == "table" then state.expirationByInstance[auraId] = nil end
+	if type(state.categoryByInstance) == "table" then state.categoryByInstance[auraId] = nil end
+	if category and type(state.categoryCounts) == "table" then state.categoryCounts[category] = math.max(0, (tonumber(state.categoryCounts[category]) or 0) - 1) end
+	state.trackedCount = (state.trackedCount or 0) - 1
+	if state.trackedCount < 0 then state.trackedCount = 0 end
+	self:RecomputeUsableAuraState(state)
+	return true
+end
+
+function Reminder:FullRefreshUnitAuraState(unit, provider)
+	local state = self:PrepareUnitAuraState(unit, provider)
+	if not state then return nil end
+	-- Keep unit identity intact so a fresh full scan does not immediately invalidate itself.
+	self:ClearTrackedAuraState(state)
+	if not self:CanReadAuraData() then return state end
+	if isAIFollowerUnit(unit) then
+		state.initialized = true
+		return state
+	end
+
+	if not (unit and UnitExists and UnitExists(unit) and provider and provider.spellSet) then
+		state.initialized = true
+		return state
+	end
+	if not (C_UnitAuras and C_UnitAuras.GetAuraSlots and C_UnitAuras.GetAuraDataBySlot) then
+		state.initialized = true
+		return state
+	end
+
+	local continuationToken
+	for _ = 1, AURA_SLOT_SCAN_GUARD do
+		local slots, slotCount, nextToken = getHelpfulAuraSlotBuffer(unit, continuationToken)
+		for i = 2, slotCount do
+			local slot = slots[i]
+			if not (issecretvalue and issecretvalue(slot)) then
+				local aura = C_UnitAuras.GetAuraDataBySlot(unit, slot)
+				if aura then self:AddProviderAuraToState(state, aura, provider) end
+			end
+		end
+
+		if nextToken == nil then break end
+		continuationToken = nextToken
+	end
+
+	self:RecomputeUsableAuraState(state)
+	state.initialized = true
+	return state
+end
+
+function Reminder:ApplyDeltaToUnitAuraState(unit, updateInfo, provider)
+	local state = self:PrepareUnitAuraState(unit, provider)
+	if not state then return nil end
+	if not self:CanReadAuraData() then
+		self:ResetUnitAuraState(state)
+		return state
+	end
+	if isAIFollowerUnit(unit) then
+		self:ResetUnitAuraState(state)
+		state.initialized = true
+		return state
+	end
+
+	if not (provider and provider.spellSet) then
+		self:ResetUnitAuraState(state)
+		state.initialized = true
+		return state
+	end
+	if not UnitExists or not UnitExists(unit) then
+		self:ResetUnitAuraState(state)
+		return state
+	end
+
+	if not updateInfo or (issecretvalue and issecretvalue(updateInfo)) then return self:FullRefreshUnitAuraState(unit, provider) end
+	local isFullUpdate = updateInfo.isFullUpdate
+	if issecretvalue and issecretvalue(isFullUpdate) then isFullUpdate = true end
+	if isFullUpdate or not state.initialized then return self:FullRefreshUnitAuraState(unit, provider) end
+
+	local removed = updateInfo.removedAuraInstanceIDs
+	if type(removed) == "table" then
+		for i = 1, #removed do
+			local auraId = normalizeAuraInstanceId(removed[i])
+			if auraId and state.trackedByInstance[auraId] ~= nil then self:RemoveProviderAuraFromState(state, auraId) end
+		end
+	end
+
+	local added = updateInfo.addedAuras
+	if type(added) == "table" then
+		for i = 1, #added do
+			self:AddProviderAuraToState(state, added[i], provider)
+		end
+	end
+
+	local updated = updateInfo.updatedAuraInstanceIDs
+	if type(updated) == "table" and C_UnitAuras and C_UnitAuras.GetAuraDataByAuraInstanceID then
+		for i = 1, #updated do
+			local auraId = normalizeAuraInstanceId(updated[i])
+			if auraId and state.trackedByInstance[auraId] ~= nil then
+				local aura = C_UnitAuras.GetAuraDataByAuraInstanceID(unit, auraId)
+				if aura then
+					local trackedAuraId = self:GetTrackableProviderAuraData(aura, provider)
+					if trackedAuraId == auraId then
+						state.expirationByInstance[auraId] = Reminder.GetAuraExpirationTime(aura)
+						self:RecomputeUsableAuraState(state)
+					else
+						self:RemoveProviderAuraFromState(state, auraId)
+					end
+				else
+					self:RemoveProviderAuraFromState(state, auraId)
+				end
+			end
+		end
+	end
+
+	self:RecomputeUsableAuraState(state)
+	state.initialized = true
+	return state
+end
+
+function Reminder:IsGroupMissingStateValid(provider, state)
+	if type(provider) ~= "table" or provider.scope == PROVIDER_SCOPE_SELF then return false end
+	if type(state) ~= "table" then return false end
+	if state.providerRef ~= provider then return false end
+	if state.providerVersion ~= getProviderStateVersion(provider) then return false end
+	return state.rosterVersion == (tonumber(self.rosterUnitsVersion) or 0)
+end
+
+function Reminder:GetGroupUnitMissingStatus(provider, unit)
+	if isAIFollowerUnit(unit) then return GROUP_UNIT_STATUS_INELIGIBLE end
+	if not (UnitExists and UnitExists(unit) and UnitIsConnected and UnitIsConnected(unit) and not UnitIsDeadOrGhost(unit)) then return GROUP_UNIT_STATUS_INELIGIBLE end
+	if not self:CanReadAuraData() then
+		local restrictedPresence = self:GetRestrictedGroupBuffPresence(unit, provider)
+		if restrictedPresence == nil then return GROUP_UNIT_STATUS_INELIGIBLE end
+		if restrictedPresence == true then return GROUP_UNIT_STATUS_PRESENT end
+	elseif self:UnitHasProviderBuff(unit, provider) then
+		return GROUP_UNIT_STATUS_PRESENT
+	end
+	if not Reminder.CanActOnMissingGroupBuffUnit(unit) then return GROUP_UNIT_STATUS_INELIGIBLE end
+	return GROUP_UNIT_STATUS_MISSING
+end
+
+function Reminder:ApplyGroupUnitMissingStatus(state, unit, nextStatus)
+	if type(state) ~= "table" or type(unit) ~= "string" or unit == "" then return end
+	state.unitStatus = state.unitStatus or {}
+	local previous = state.unitStatus[unit]
+	if previous == nextStatus then return end
+
+	if previous == GROUP_UNIT_STATUS_PRESENT or previous == GROUP_UNIT_STATUS_MISSING then state.total = math.max(0, (tonumber(state.total) or 0) - 1) end
+	if previous == GROUP_UNIT_STATUS_MISSING then state.missing = math.max(0, (tonumber(state.missing) or 0) - 1) end
+
+	if nextStatus == GROUP_UNIT_STATUS_PRESENT or nextStatus == GROUP_UNIT_STATUS_MISSING then state.total = (tonumber(state.total) or 0) + 1 end
+	if nextStatus == GROUP_UNIT_STATUS_MISSING then state.missing = (tonumber(state.missing) or 0) + 1 end
+
+	state.unitStatus[unit] = nextStatus
+end
+
+function Reminder:RebuildGroupMissingState(provider)
+	if type(provider) ~= "table" or provider.scope == PROVIDER_SCOPE_SELF then
+		self.groupMissingState = nil
+		return nil
+	end
+
+	local state = self.groupMissingState or {}
+	state.providerRef = provider
+	state.providerVersion = getProviderStateVersion(provider)
+	state.rosterVersion = tonumber(self.rosterUnitsVersion) or 0
+	state.total = 0
+	state.missing = 0
+	state.unitStatus = state.unitStatus or {}
+	wipeTable(state.unitStatus)
+
+	local units = self:GetRosterUnits()
+	for i = 1, #units do
+		local unit = units[i]
+		self:ApplyGroupUnitMissingStatus(state, unit, self:GetGroupUnitMissingStatus(provider, unit))
+	end
+
+	self.groupMissingState = state
+	return state
+end
+
+function Reminder:GetGroupMissingState(provider)
+	if self:ShouldEvaluateGroupResponsibilities(provider) ~= true then return nil end
+	local state = self.groupMissingState
+	if self:IsGroupMissingStateValid(provider, state) then return state end
+	return self:RebuildGroupMissingState(provider)
+end
+
+function Reminder:GetGroupBuffStateCache(spellIds, includeAIFollowers)
+	if type(spellIds) ~= "table" then return nil end
+
+	local meta = rawget(spellIds, "_eqolGroupBuffStateMeta")
+	if type(meta) ~= "table" then
+		meta = {
+			normalizedIds = {},
+			spellSet = {},
+			keyBase = "",
+		}
+		for i = 1, #spellIds do
+			local sid = normalizeSpellId(spellIds[i])
+			if sid and meta.spellSet[sid] ~= true then
+				meta.spellSet[sid] = true
+				meta.normalizedIds[#meta.normalizedIds + 1] = sid
+			end
+		end
+		if #meta.normalizedIds > 0 then
+			meta.keyBase = table.concat(meta.normalizedIds, ",")
+		end
+		spellIds._eqolGroupBuffStateMeta = meta
+	end
+
+	if #meta.normalizedIds <= 0 then return nil end
+
+	self.groupBuffStateCaches = self.groupBuffStateCaches or {}
+	local key = meta.keyBase .. "|ai:" .. (includeAIFollowers == true and "1" or "0")
+	local cache = self.groupBuffStateCaches[key]
+	if type(cache) ~= "table" then
+		cache = {
+			key = key,
+			spellIds = meta.normalizedIds,
+			spellSet = meta.spellSet,
+			includeAIFollowers = includeAIFollowers == true,
+			rosterVersion = nil,
+			total = 0,
+			missing = 0,
+			unitStatus = {},
+			unitStates = {},
+		}
+		self.groupBuffStateCaches[key] = cache
+		self.groupBuffAggregateSpellSetDirty = true
+	else
+		cache.includeAIFollowers = includeAIFollowers == true
+	end
+
+	return cache
+end
+
+function Reminder:GetGroupBuffAggregateSpellSet()
+	local caches = self.groupBuffStateCaches
+	if type(caches) ~= "table" then return nil end
+
+	local aggregate = self.groupBuffAggregateSpellSet
+	if type(aggregate) ~= "table" then
+		aggregate = {}
+		self.groupBuffAggregateSpellSet = aggregate
+	end
+
+	if self.groupBuffAggregateSpellSetSource == caches and self.groupBuffAggregateSpellSetDirty ~= true then
+		return self.groupBuffAggregateSpellSetHasAny == true and aggregate or nil
+	end
+
+	wipeTable(aggregate)
+	local hasAny = false
+	for _, cache in pairs(caches) do
+		if type(cache) == "table" and type(cache.spellSet) == "table" then
+			for spellId in pairs(cache.spellSet) do
+				aggregate[spellId] = true
+				hasAny = true
+			end
+		end
+	end
+
+	self.groupBuffAggregateSpellSetSource = caches
+	self.groupBuffAggregateSpellSetDirty = false
+	self.groupBuffAggregateSpellSetHasAny = hasAny
+	return hasAny and aggregate or nil
+end
+
+function Reminder:GetGroupBuffUnitState(cache, unit)
+	if type(cache) ~= "table" or type(unit) ~= "string" or unit == "" then return nil end
+	cache.unitStates = cache.unitStates or {}
+	local state = cache.unitStates[unit]
+	if type(state) ~= "table" then
+		state = {
+			trackedByInstance = {},
+			expirationByInstance = {},
+			trackedCount = 0,
+			hasBuff = false,
+			hasUsableBuff = false,
+			nextExpirationWarningAt = nil,
+			initialized = false,
+			unitIdentity = nil,
+		}
+		cache.unitStates[unit] = state
+	end
+	if type(state.trackedByInstance) ~= "table" then state.trackedByInstance = {} end
+	if type(state.expirationByInstance) ~= "table" then state.expirationByInstance = {} end
+	if type(state.trackedCount) ~= "number" then state.trackedCount = 0 end
+	return state
+end
+
+function Reminder:ClearGroupBuffUnitState(state)
+	if type(state) ~= "table" then return end
+	if type(state.trackedByInstance) == "table" then wipeTable(state.trackedByInstance) end
+	if type(state.expirationByInstance) == "table" then wipeTable(state.expirationByInstance) end
+	state.trackedCount = 0
+	state.hasBuff = false
+	state.hasUsableBuff = false
+	state.nextExpirationWarningAt = nil
+	state.initialized = false
+end
+
+function Reminder:ResetGroupBuffUnitState(state)
+	if type(state) ~= "table" then return end
+	self:ClearGroupBuffUnitState(state)
+	state.unitIdentity = nil
+end
+
+function Reminder:PrepareGroupBuffUnitState(cache, unit)
+	local state = self:GetGroupBuffUnitState(cache, unit)
+	if not state then return nil end
+
+	local unitIdentity = getUnitIdentity(unit)
+	if state.unitIdentity ~= unitIdentity then
+		self:ResetGroupBuffUnitState(state)
+		state.unitIdentity = unitIdentity
+	end
+
+	return state
+end
+
+function Reminder:GetTrackableGroupBuffAuraData(aura, cache)
+	if not aura or (issecretvalue and issecretvalue(aura)) then return nil end
+	if type(cache) ~= "table" or type(cache.spellSet) ~= "table" then return nil end
+	if not Reminder.IsRelevantHelpfulPlayerAura(aura) then return nil end
+
+	local auraId = normalizeAuraInstanceId(aura.auraInstanceID)
+	if not auraId then return nil end
+
+	local spellId = normalizeSpellId(aura.spellId)
+	if not spellId or cache.spellSet[spellId] ~= true then return nil end
+
+	return auraId, spellId
+end
+
+function Reminder:AddGroupBuffAuraToState(state, aura, cache)
+	if type(state) ~= "table" then return false end
+	local auraId, spellId = self:GetTrackableGroupBuffAuraData(aura, cache)
+	if not auraId then return false end
+
+	if state.trackedByInstance[auraId] == nil then
+		state.trackedByInstance[auraId] = spellId
+		state.trackedCount = (state.trackedCount or 0) + 1
+	else
+		state.trackedByInstance[auraId] = spellId
+	end
+	state.expirationByInstance[auraId] = Reminder.GetAuraExpirationTime(aura)
+	self:RecomputeUsableAuraState(state)
+	return true
+end
+
+function Reminder:RemoveGroupBuffAuraFromState(state, auraId)
+	if type(state) ~= "table" then return false end
+	auraId = normalizeAuraInstanceId(auraId)
+	if not auraId or state.trackedByInstance[auraId] == nil then return false end
+
+	state.trackedByInstance[auraId] = nil
+	if type(state.expirationByInstance) == "table" then state.expirationByInstance[auraId] = nil end
+	state.trackedCount = (state.trackedCount or 0) - 1
+	if state.trackedCount < 0 then state.trackedCount = 0 end
+	self:RecomputeUsableAuraState(state)
+	return true
+end
+
+function Reminder:FullRefreshGroupBuffUnitState(cache, unit)
+	local state = self:PrepareGroupBuffUnitState(cache, unit)
+	if not state then return nil end
+	self:ClearGroupBuffUnitState(state)
+	if not self:CanReadAuraData() then return state end
+
+	if isAIFollowerUnit(unit) then
+		state.initialized = true
+		return state
+	end
+	if not (unit and UnitExists and UnitExists(unit)) then
+		state.initialized = true
+		return state
+	end
+	if not (C_UnitAuras and C_UnitAuras.GetAuraSlots and C_UnitAuras.GetAuraDataBySlot) then
+		state.initialized = true
+		return state
+	end
+
+	local continuationToken
+	for _ = 1, AURA_SLOT_SCAN_GUARD do
+		local slots, slotCount, nextToken = getHelpfulAuraSlotBuffer(unit, continuationToken)
+		for i = 2, slotCount do
+			local slot = slots[i]
+			if not (issecretvalue and issecretvalue(slot)) then
+				local aura = C_UnitAuras.GetAuraDataBySlot(unit, slot)
+				if aura then self:AddGroupBuffAuraToState(state, aura, cache) end
+			end
+		end
+
+		if nextToken == nil then break end
+		continuationToken = nextToken
+	end
+
+	self:RecomputeUsableAuraState(state)
+	state.initialized = true
+	return state
+end
+
+function Reminder:ApplyDeltaToGroupBuffUnitState(cache, unit, updateInfo)
+	local state = self:PrepareGroupBuffUnitState(cache, unit)
+	if not state then return nil end
+	if not self:CanReadAuraData() then
+		self:ResetGroupBuffUnitState(state)
+		return state, false
+	end
+
+	if isAIFollowerUnit(unit) then
+		local changed = state.initialized == true or (tonumber(state.trackedCount) or 0) > 0 or state.hasBuff == true
+		self:ResetGroupBuffUnitState(state)
+		state.initialized = true
+		return state, changed
+	end
+	if not UnitExists or not UnitExists(unit) then
+		local changed = state.initialized == true or (tonumber(state.trackedCount) or 0) > 0 or state.hasBuff == true
+		self:ResetGroupBuffUnitState(state)
+		return state, changed
+	end
+
+	if not updateInfo or (issecretvalue and issecretvalue(updateInfo)) then return self:FullRefreshGroupBuffUnitState(cache, unit), true end
+	local isFullUpdate = updateInfo.isFullUpdate
+	if issecretvalue and issecretvalue(isFullUpdate) then isFullUpdate = true end
+	if isFullUpdate == true or state.initialized ~= true then return self:FullRefreshGroupBuffUnitState(cache, unit), true end
+
+	local changed = false
+	local removed = updateInfo.removedAuraInstanceIDs
+	if type(removed) == "table" then
+		for i = 1, #removed do
+			if self:RemoveGroupBuffAuraFromState(state, removed[i]) then changed = true end
+		end
+	end
+
+	local added = updateInfo.addedAuras
+	if type(added) == "table" then
+		for i = 1, #added do
+			if self:AddGroupBuffAuraToState(state, added[i], cache) then changed = true end
+		end
+	end
+
+	local updated = updateInfo.updatedAuraInstanceIDs
+	if type(updated) == "table" and C_UnitAuras and C_UnitAuras.GetAuraDataByAuraInstanceID then
+		for i = 1, #updated do
+			local auraId = normalizeAuraInstanceId(updated[i])
+			if auraId and state.trackedByInstance[auraId] ~= nil then
+				local aura = C_UnitAuras.GetAuraDataByAuraInstanceID(unit, auraId)
+				if aura then
+					local trackedAuraId = self:GetTrackableGroupBuffAuraData(aura, cache)
+					if trackedAuraId == auraId then
+						state.expirationByInstance[auraId] = Reminder.GetAuraExpirationTime(aura)
+						self:RecomputeUsableAuraState(state)
+						changed = true
+					elseif self:RemoveGroupBuffAuraFromState(state, auraId) then
+						changed = true
+					end
+				else
+					if self:RemoveGroupBuffAuraFromState(state, auraId) then changed = true end
+				end
+			end
+		end
+	end
+
+	self:RecomputeUsableAuraState(state)
+	state.initialized = true
+	return state, changed
+end
+
+function Reminder:IsGroupBuffStateCacheValid(cache)
+	if type(cache) ~= "table" then return false end
+	return cache.rosterVersion == (tonumber(self.rosterUnitsVersion) or 0)
+end
+
+function Reminder:GetGroupBuffUnitMissingStatus(cache, unit)
+	if type(cache) ~= "table" then return GROUP_UNIT_STATUS_INELIGIBLE end
+	if isAIFollowerUnit(unit) and cache.includeAIFollowers ~= true then return GROUP_UNIT_STATUS_INELIGIBLE end
+	if not (UnitExists and UnitExists(unit) and UnitIsConnected and UnitIsConnected(unit) and not UnitIsDeadOrGhost(unit)) then return GROUP_UNIT_STATUS_INELIGIBLE end
+
+	local state = self:PrepareGroupBuffUnitState(cache, unit)
+	if not state then return GROUP_UNIT_STATUS_INELIGIBLE end
+	if state.initialized ~= true then state = self:FullRefreshGroupBuffUnitState(cache, unit) end
+	if state and state.hasUsableBuff == true then return GROUP_UNIT_STATUS_PRESENT end
+	if not Reminder.CanActOnMissingGroupBuffUnit(unit) then return GROUP_UNIT_STATUS_INELIGIBLE end
+	return GROUP_UNIT_STATUS_MISSING
+end
+
+function Reminder:ApplyGroupBuffUnitMissingStatus(cache, unit, nextStatus)
+	if type(cache) ~= "table" or type(unit) ~= "string" or unit == "" then return false end
+	cache.unitStatus = cache.unitStatus or {}
+	local previous = cache.unitStatus[unit]
+	if previous == nextStatus then return false end
+
+	if previous == GROUP_UNIT_STATUS_PRESENT or previous == GROUP_UNIT_STATUS_MISSING then cache.total = math.max(0, (tonumber(cache.total) or 0) - 1) end
+	if previous == GROUP_UNIT_STATUS_MISSING then cache.missing = math.max(0, (tonumber(cache.missing) or 0) - 1) end
+
+	if nextStatus == GROUP_UNIT_STATUS_PRESENT or nextStatus == GROUP_UNIT_STATUS_MISSING then cache.total = (tonumber(cache.total) or 0) + 1 end
+	if nextStatus == GROUP_UNIT_STATUS_MISSING then cache.missing = (tonumber(cache.missing) or 0) + 1 end
+
+	cache.unitStatus[unit] = nextStatus
+	return true
+end
+
+function Reminder:RebuildGroupBuffStateCache(cache)
+	if type(cache) ~= "table" then return nil end
+
+	cache.rosterVersion = tonumber(self.rosterUnitsVersion) or 0
+	self.groupBuffAggregateSpellSetDirty = true
+	cache.total = 0
+	cache.missing = 0
+	cache.unitStatus = cache.unitStatus or {}
+	wipeTable(cache.unitStatus)
+
+	local units = self:GetRosterUnits()
+	for i = 1, #units do
+		local unit = units[i]
+		self:ApplyGroupBuffUnitMissingStatus(cache, unit, self:GetGroupBuffUnitMissingStatus(cache, unit))
+	end
+
+	return cache
+end
+
+function Reminder:GetGroupBuffState(cache)
+	if self:IsGroupBuffStateCacheValid(cache) then return cache end
+	return self:RebuildGroupBuffStateCache(cache)
+end
+
+function Reminder:RefreshGroupBuffStateCacheUnit(cache, unit)
+	if type(cache) ~= "table" or type(unit) ~= "string" or unit == "" then return false end
+	if self:IsGroupBuffStateCacheValid(cache) ~= true then return false end
+	return self:ApplyGroupBuffUnitMissingStatus(cache, unit, self:GetGroupBuffUnitMissingStatus(cache, unit))
+end
+
+function Reminder:ApplyDeltaToGroupBuffStateCaches(unit, updateInfo)
+	local caches = self.groupBuffStateCaches
+	if type(caches) ~= "table" or type(unit) ~= "string" or unit == "" then return false end
+	if not self:CanReadAuraData() then return false end
+
+	local touchedUnits = self:CollectGroupStateUnitsForUnit(nil, unit)
+	if type(touchedUnits) ~= "table" then return false end
+
+	local changed = false
+	for _, cache in pairs(caches) do
+		if type(cache) == "table" and self:IsGroupBuffStateCacheValid(cache) == true then
+			for rosterUnit in pairs(touchedUnits) do
+				local _, stateChanged = self:ApplyDeltaToGroupBuffUnitState(cache, rosterUnit, updateInfo)
+				if stateChanged == true and self:RefreshGroupBuffStateCacheUnit(cache, rosterUnit) == true then changed = true end
+			end
+		end
+	end
+	return changed
+end
+
+function Reminder.AuraUpdateTouchesTrackedInstances(updateInfo, trackedByInstance)
+	if type(trackedByInstance) ~= "table" then return false end
+	local removed = updateInfo and updateInfo.removedAuraInstanceIDs
+	if type(removed) == "table" then
+		for i = 1, #removed do
+			local auraId = normalizeAuraInstanceId(removed[i])
+			if auraId and trackedByInstance[auraId] ~= nil then return true end
+		end
+	end
+	local updated = updateInfo and updateInfo.updatedAuraInstanceIDs
+	if type(updated) == "table" then
+		for i = 1, #updated do
+			local auraId = normalizeAuraInstanceId(updated[i])
+			if auraId and trackedByInstance[auraId] ~= nil then return true end
+		end
+	end
+	return false
+end
+
+function Reminder:ProviderAuraUpdateTouchesUnit(unit, updateInfo, provider)
+	if not (provider and provider.spellSet and type(unit) == "string" and unit ~= "") then return false end
+	if not self:CanReadAuraData() then return false end
+	if Reminder.IsFullAuraUpdate(updateInfo) then return true end
+
+	local unitStates = self.unitAuraStates
+	local state = type(unitStates) == "table" and unitStates[unit] or nil
+	if Reminder.AuraUpdateTouchesTrackedInstances(updateInfo, state and state.trackedByInstance) then return true end
+
+	-- Self providers can read auras directly without maintaining unitAuraStates.
+	-- Refresh deltas must still invalidate their cached presence/expiration result.
+	if provider.scope == PROVIDER_SCOPE_SELF and provider.trackSelfAuraInstances ~= true then
+		local removed = updateInfo.removedAuraInstanceIDs
+		if type(removed) == "table" and #removed > 0 then return true end
+		local updated = updateInfo.updatedAuraInstanceIDs
+		if type(updated) == "table" and C_UnitAuras and C_UnitAuras.GetAuraDataByAuraInstanceID then
+			for i = 1, #updated do
+				local auraId = normalizeAuraInstanceId(updated[i])
+				local aura = auraId and C_UnitAuras.GetAuraDataByAuraInstanceID(unit, auraId)
+				if aura and self:GetTrackableProviderAuraData(aura, provider) then return true end
+			end
+		end
+	end
+
+	local added = updateInfo.addedAuras
+	if type(added) == "table" then
+		for i = 1, #added do
+			if self:GetTrackableProviderAuraData(added[i], provider) then return true end
+		end
+	end
+	return false
+end
+
+function Reminder:GroupBuffCacheAuraUpdateTouchesUnit(unit, updateInfo)
+	local caches = self.groupBuffStateCaches
+	if type(caches) ~= "table" or type(unit) ~= "string" or unit == "" then return false end
+	if not self:CanReadAuraData() then return false end
+	if Reminder.IsFullAuraUpdate(updateInfo) then return true end
+
+	for _, cache in pairs(caches) do
+		if type(cache) == "table" and self:IsGroupBuffStateCacheValid(cache) == true then
+			local state = cache.unitStates and cache.unitStates[unit]
+			if Reminder.AuraUpdateTouchesTrackedInstances(updateInfo, state and state.trackedByInstance) then return true end
+		end
+	end
+
+	local added = updateInfo.addedAuras
+	local aggregateSpellSet = self:GetGroupBuffAggregateSpellSet()
+	if type(added) == "table" and type(aggregateSpellSet) == "table" then
+		for i = 1, #added do
+			local aura = added[i]
+			if Reminder.IsRelevantHelpfulPlayerAura(aura) then
+				local spellId = normalizeSpellId(aura.spellId)
+				if spellId and aggregateSpellSet[spellId] == true then return true end
+			end
+		end
+	end
+	return false
+end
+
+function Reminder.PreparedAuraDataMatchesValues(prepared, spellId, auraName)
+	if type(prepared) ~= "table" then return false end
+	spellId = normalizeSpellId(spellId)
+	if issecretvalue and issecretvalue(auraName) then auraName = nil end
+	if spellId and type(prepared.spellIds) == "table" then
+		for i = 1, #prepared.spellIds do
+			if normalizeSpellId(prepared.spellIds[i]) == spellId then return true end
+		end
+	end
+	if type(auraName) == "string" and auraName ~= "" and type(prepared.auraNames) == "table" then
+		for i = 1, #prepared.auraNames do
+			if prepared.auraNames[i] == auraName then return true end
+		end
+	end
+	return false
+end
+
+function Reminder:SupplementalAuraMatches(aura)
+	if not Reminder.IsRelevantHelpfulPlayerAura(aura) then return false end
+	local spellId = normalizeSpellId(aura.spellId)
+	local auraName = aura.name
+	if issecretvalue and issecretvalue(auraName) then auraName = nil end
+	local auraIcon = aura.icon
+	if issecretvalue and issecretvalue(auraIcon) then auraIcon = nil end
+	auraIcon = tonumber(auraIcon)
+
+	if self:CanCheckFlaskReminder() then
+		if spellId then
+			for i = 1, #SHARED_FLASK_AURA_IDS do
+				if normalizeSpellId(SHARED_FLASK_AURA_IDS[i]) == spellId then return true end
+			end
+		end
+		local candidates = self:GetFlaskCandidatesForCurrentSpec()
+		if type(candidates) == "table" and Reminder.PreparedAuraDataMatchesValues(self:GetPreparedFlaskCandidateData(candidates), spellId, auraName) then return true end
+	end
+	if self:CanCheckFoodReminder() then
+		if auraIcon and auraIcon == SHARED_FOOD_AURA_ICON_ID then return true end
+		local candidates = self:GetFoodCandidatesForCurrentSpec()
+		if type(candidates) == "table" and Reminder.PreparedAuraDataMatchesValues(self:GetPreparedFoodCandidateData(candidates), spellId, auraName) then return true end
+	end
+	if self:CanCheckRuneReminder() then
+		if spellId and type(Reminder.runeTracking.auraIds) == "table" then
+			for i = 1, #Reminder.runeTracking.auraIds do
+				if normalizeSpellId(Reminder.runeTracking.auraIds[i]) == spellId then return true end
+			end
+		end
+		local candidates = self:GetRuneCandidates()
+		if type(candidates) == "table" and Reminder.PreparedAuraDataMatchesValues(self:GetPreparedRuneCandidateData(candidates), spellId, auraName) then return true end
+	end
+	if self:CanCheckGrimoireOfSacrificeReminder() and spellId == normalizeSpellId(Reminder.petTracking.grimoireOfSacrificeBuff) then return true end
+	if self:CanCheckSharedPaladinStanceAura() and spellId == normalizeSpellId(Reminder.stanceTracking.definitions.PALADIN.spellId) then return true end
+	return false
+end
+
+function Reminder:SupplementalAuraUpdateTouchesPlayer(updateInfo)
+	if self:AreConsumableAuraChecksRestricted() then return false end
+	if not (self:CanCheckFlaskReminder() or self:CanCheckFoodReminder() or self:CanCheckRuneReminder() or self:CanCheckGrimoireOfSacrificeReminder() or self:CanCheckSharedPaladinStanceAura()) then
+		return false
+	end
+	if Reminder.IsFullAuraUpdate(updateInfo) then return true end
+
+	local added = updateInfo.addedAuras
+	if type(added) == "table" then
+		for i = 1, #added do
+			if self:SupplementalAuraMatches(added[i]) then return true end
+		end
+	end
+
+	local snapshot = self.playerAuraPresenceSnapshot
+	if type(snapshot) ~= "table" then return false end
+	local function snapshotAuraIdMatches(auraId)
+		auraId = normalizeAuraInstanceId(auraId)
+		if not auraId then return false end
+		local spellId = snapshot.instanceSpellIds and normalizeSpellId(snapshot.instanceSpellIds[auraId]) or nil
+		local auraName = snapshot.instanceNames and snapshot.instanceNames[auraId] or nil
+		local auraIcon = snapshot.instanceIcons and tonumber(snapshot.instanceIcons[auraId]) or nil
+		if self:CanCheckGrimoireOfSacrificeReminder() and spellId == normalizeSpellId(Reminder.petTracking.grimoireOfSacrificeBuff) then return true end
+		if self:CanCheckSharedPaladinStanceAura() and spellId == normalizeSpellId(Reminder.stanceTracking.definitions.PALADIN.spellId) then return true end
+		if self:CanCheckFlaskReminder() and spellId then
+			for i = 1, #SHARED_FLASK_AURA_IDS do
+				if normalizeSpellId(SHARED_FLASK_AURA_IDS[i]) == spellId then return true end
+			end
+		end
+		if self:CanCheckFoodReminder() and auraIcon == SHARED_FOOD_AURA_ICON_ID then return true end
+		if self:CanCheckFlaskReminder() and Reminder.PreparedAuraDataMatchesValues(self:GetPreparedFlaskCandidateData(self:GetFlaskCandidatesForCurrentSpec()), spellId, auraName) then return true end
+		if self:CanCheckFoodReminder() and Reminder.PreparedAuraDataMatchesValues(self:GetPreparedFoodCandidateData(self:GetFoodCandidatesForCurrentSpec()), spellId, auraName) then return true end
+		if self:CanCheckRuneReminder() then
+			if spellId and type(Reminder.runeTracking.auraIds) == "table" then
+				for i = 1, #Reminder.runeTracking.auraIds do
+					if normalizeSpellId(Reminder.runeTracking.auraIds[i]) == spellId then return true end
+				end
+			end
+			if Reminder.PreparedAuraDataMatchesValues(self:GetPreparedRuneCandidateData(self:GetRuneCandidates()), spellId, auraName) then return true end
+		end
+		return false
+	end
+
+	local removed = updateInfo.removedAuraInstanceIDs
+	if type(removed) == "table" then
+		for i = 1, #removed do
+			if snapshotAuraIdMatches(removed[i]) then return true end
+		end
+	end
+	local updated = updateInfo.updatedAuraInstanceIDs
+	if type(updated) == "table" then
+		for i = 1, #updated do
+			if snapshotAuraIdMatches(updated[i]) then return true end
+		end
+	end
+	return false
+end
+
+function Reminder:CollectGroupStateUnitsForUnit(target, unit)
+	if type(unit) ~= "string" or unit == "" then return target end
+	self:GetRosterUnits()
+
+	if self.rosterUnitLookup and self.rosterUnitLookup[unit] == true then
+		target = target or {}
+		target[unit] = true
+		return target
+	end
+
+	local units = self.rosterUnits
+	if type(units) ~= "table" or #units <= 0 then return target end
+
+	local matched
+	local unitIdentity = getUnitIdentity(unit)
+	local canCompareUnits = UnitExists and UnitExists(unit) and UnitIsUnit
+	for i = 1, #units do
+		local rosterUnit = units[i]
+		if rosterUnit == unit then
+			target = target or {}
+			target[rosterUnit] = true
+			matched = true
+		elseif canCompareUnits and UnitExists(rosterUnit) and UnitIsUnit(rosterUnit, unit) then
+			target = target or {}
+			target[rosterUnit] = true
+			matched = true
+		elseif unitIdentity and unitIdentity == getUnitIdentity(rosterUnit) then
+			target = target or {}
+			target[rosterUnit] = true
+			matched = true
+		end
+	end
+
+	if matched == true then return target end
+	return target
+end
+
+function Reminder:RefreshGroupMissingStateUnit(provider, unit)
+	local state = self.groupMissingState
+	if not self:IsGroupMissingStateValid(provider, state) then return nil end
+	local matchedUnits = self:CollectGroupStateUnitsForUnit(nil, unit)
+	if type(matchedUnits) ~= "table" then return state end
+	for matchedUnit in pairs(matchedUnits) do
+		self:ApplyGroupUnitMissingStatus(state, matchedUnit, self:GetGroupUnitMissingStatus(provider, matchedUnit))
+	end
+	return state
+end
+
+function Reminder:HasProvider()
+	local _, hasProvider = self:RefreshProviderCache(false)
+	return hasProvider == true
+end
+
+function Reminder:EnsureFrame()
+	if self.frame then return self.frame end
+
+	local frame = CreateFrame("Frame", "EQOL_ClassBuffReminderFrame", UIParent, "BackdropTemplate")
+	frame:SetClampedToScreen(true)
+	frame:SetMovable(false)
+	frame:SetSize(220, 34)
+	frame:SetFrameStrata("MEDIUM")
+
+	local bg = frame:CreateTexture(nil, "BACKGROUND")
+	bg:SetAllPoints(frame)
+	bg:SetColorTexture(0, 0, 0, 0.45)
+	frame.bg = bg
+
+	local border = CreateFrame("Frame", nil, frame, "BackdropTemplate")
+	border:SetFrameStrata(frame:GetFrameStrata())
+	border:SetFrameLevel((frame:GetFrameLevel() or 0) + 5)
+	border:EnableMouse(false)
+	border:Hide()
+	frame.border = border
+
+	local iconHolder = CreateFrame("Button", nil, frame)
+	iconHolder:SetSize(defaults.iconSize, defaults.iconSize)
+	iconHolder:SetPoint("LEFT", frame, "LEFT", 6, 0)
+	frame.iconHolder = iconHolder
+	self:ConfigureInteractionButton(iconHolder, nil)
+
+	local icon = iconHolder:CreateTexture(nil, "ARTWORK")
+	icon:SetAllPoints(iconHolder)
+	icon:SetTexture(ICON_MISSING)
+	frame.icon = icon
+
+	local nameText = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+	nameText:SetJustifyH("LEFT")
+	nameText:SetPoint("TOPLEFT", iconHolder, "TOPRIGHT", 6, -1)
+	frame.nameText = nameText
+
+	local countText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	countText:SetJustifyH("LEFT")
+	countText:SetPoint("BOTTOMLEFT", iconHolder, "BOTTOMRIGHT", 6, 1)
+	frame.countText = countText
+
+	local iconCountText = iconHolder:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	iconCountText:SetPoint("CENTER", iconHolder, "CENTER", 0, 0)
+	iconCountText:SetJustifyH("CENTER")
+	iconCountText:SetShadowOffset(1, -1)
+	iconCountText:SetShadowColor(0, 0, 0, 1)
+	iconCountText:Hide()
+	frame.iconCountText = iconCountText
+
+	local missingIconContainer = CreateFrame("Frame", nil, frame)
+	missingIconContainer:SetPoint("CENTER", frame, "CENTER", 0, 0)
+	missingIconContainer:SetSize(defaults.iconSize, defaults.iconSize)
+	missingIconContainer:Hide()
+	frame.missingIconContainer = missingIconContainer
+	frame.missingIcons = {}
+
+	local sampleContainer = CreateFrame("Frame", nil, frame)
+	sampleContainer:SetAllPoints(frame)
+	sampleContainer:Hide()
+	frame.sampleContainer = sampleContainer
+
+	frame.sampleIcons = {}
+	for i = 1, SAMPLE_ICON_COUNT do
+		local sample = CreateFrame("Frame", nil, sampleContainer)
+		sample:SetSize(defaults.iconSize, defaults.iconSize)
+		local sampleIcon = sample:CreateTexture(nil, "ARTWORK")
+		sampleIcon:SetAllPoints(sample)
+		sampleIcon:SetTexture(safeGetSpellIcon(SAMPLE_SPELL_IDS[i]))
+		sample.icon = sampleIcon
+		local sampleBorder = CreateFrame("Frame", nil, sample, "BackdropTemplate")
+		sampleBorder:EnableMouse(false)
+		sampleBorder:Hide()
+		sample.border = sampleBorder
+		sample:Hide()
+		frame.sampleIcons[i] = sample
+	end
+
+	frame:Hide()
+
+	self.frame = frame
+	frame:HookScript("OnShow", function() Reminder:PositionPetHealthReminder() end)
+	frame:HookScript("OnHide", function()
+		Reminder:PositionPetHealthReminder()
+		if Reminder.CancelIconPresentationTimer then Reminder:CancelIconPresentationTimer() end
+	end)
+	self:ApplyVisualSettings()
+
+	return frame
+end
+
+function Reminder:EnsurePetHealthReminderFrame()
+	if self.petHealthReminderFrame then return self.petHealthReminderFrame end
+	local frame = self:EnsureFrame()
+	if not frame then return nil end
+
+	local alphaFrame = CreateFrame("Frame", nil, UIParent)
+	alphaFrame:SetAlpha(clamp(getValue(Reminder.DB_OVERALL_ALPHA, defaults.overallAlpha), 0.1, 1, defaults.overallAlpha))
+	alphaFrame:Show()
+	self.petHealthAlphaFrame = alphaFrame
+	local healthFrame = CreateFrame("Frame", "EQOL_ClassBuffReminderPetHealthFrame", alphaFrame)
+	healthFrame:SetFrameStrata(frame:GetFrameStrata())
+	healthFrame:SetFrameLevel((frame:GetFrameLevel() or 0) + 20)
+	healthFrame:EnableMouse(false)
+
+	local icon = healthFrame:CreateTexture(nil, "ARTWORK")
+	icon:SetAllPoints(healthFrame)
+	healthFrame.icon = icon
+
+	local healthText = healthFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	healthText:SetPoint("CENTER", healthFrame, "CENTER", 0, 0)
+	healthText:SetJustifyH("CENTER")
+	healthText:SetShadowOffset(1, -1)
+	healthText:SetShadowColor(0, 0, 0, 1)
+	healthText:SetText("")
+	healthFrame.healthText = healthText
+
+	local border = CreateFrame("Frame", nil, healthFrame)
+	border:SetAllPoints(healthFrame)
+	border:EnableMouse(false)
+	healthFrame.border = border
+
+	healthFrame:SetAlpha(0)
+	healthFrame:Show()
+	self.petHealthReminderFrame = healthFrame
+	return healthFrame
+end
+
+function Reminder:PositionPetHealthReminder()
+	local healthFrame = self.petHealthReminderFrame
+	local frame = self.frame
+	if not (healthFrame and frame) then return end
+
+	local scale = clamp(getValue(DB_SCALE, defaults.scale), 0.5, 2, defaults.scale)
+	local iconGap = clamp(getValue(DB_ICON_GAP, defaults.iconGap), 0, 40, defaults.iconGap)
+	local spacing = math.max(0, math.floor((iconGap * scale) + 0.5))
+	local anchor = frame
+	if frame:IsShown() and frame.missingIconContainer and frame.missingIconContainer:IsShown() then anchor = frame.missingIconContainer end
+
+	healthFrame:ClearAllPoints()
+	if not frame:IsShown() then
+		healthFrame:SetPoint("CENTER", frame, "CENTER", 0, 0)
+		return
+	end
+
+	local direction = self:GetGrowthDirection()
+	if direction == GROWTH_LEFT then
+		healthFrame:SetPoint("RIGHT", anchor, "LEFT", -spacing, 0)
+	elseif direction == GROWTH_UP then
+		healthFrame:SetPoint("BOTTOM", anchor, "TOP", 0, spacing)
+	elseif direction == GROWTH_DOWN then
+		healthFrame:SetPoint("TOP", anchor, "BOTTOM", 0, -spacing)
+	else
+		healthFrame:SetPoint("LEFT", anchor, "RIGHT", spacing, 0)
+	end
+end
+
+function Reminder:ApplyPetHealthReminderVisualSettings()
+	local healthFrame = self:EnsurePetHealthReminderFrame()
+	if not healthFrame then return end
+
+	local scale = clamp(getValue(DB_SCALE, defaults.scale), 0.5, 2, defaults.scale)
+	local iconSize = clamp(getValue(DB_ICON_SIZE, defaults.iconSize), 14, 120, defaults.iconSize)
+	local scaledIconSize = math.max(14, math.floor((iconSize * scale) + 0.5))
+	local xyTextSize, xyTextOutline, xyTextR, xyTextG, xyTextB, xyTextA, xyOffsetX, xyOffsetY = self:GetIconCountTextStyle()
+	local scaledXYTextSize = math.max(8, math.floor((xyTextSize * scale) + 0.5))
+	local scaledXYOffsetX = math.floor((xyOffsetX * scale) + 0.5)
+	local scaledXYOffsetY = math.floor((xyOffsetY * scale) + 0.5)
+	local iconShape = self:GetIconShape()
+	healthFrame:SetSize(scaledIconSize, scaledIconSize)
+	healthFrame._eqolVisualSize = scaledIconSize
+	healthFrame._eqolBaseSlotSize = scaledIconSize
+	self:ApplyIconShape(healthFrame, healthFrame.icon, iconShape)
+	local fontPath = (addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT
+	if healthFrame.healthText and healthFrame.healthText.SetFont then healthFrame.healthText:SetFont(fontPath, scaledXYTextSize, textOutlineFlags(xyTextOutline)) end
+	if healthFrame.healthText then
+		healthFrame.healthText:SetTextColor(xyTextR, xyTextG, xyTextB, xyTextA)
+		healthFrame.healthText:ClearAllPoints()
+		healthFrame.healthText:SetPoint("CENTER", healthFrame, "CENTER", scaledXYOffsetX, scaledXYOffsetY)
+		healthFrame.healthText:SetWidth(scaledIconSize + 2)
+	end
+
+	local borderEnabled = self:IsBorderEnabled()
+	local borderTexture = self:GetBorderTextureKey()
+	local borderSize = self:GetBorderSize()
+	local borderOffset = self:GetBorderOffset()
+	local borderR, borderG, borderB, borderA = self:GetBorderColor()
+	healthFrame.border:ClearAllPoints()
+	healthFrame.border:SetPoint("TOPLEFT", healthFrame, "TOPLEFT", -borderOffset, borderOffset)
+	healthFrame.border:SetPoint("BOTTOMRIGHT", healthFrame, "BOTTOMRIGHT", borderOffset, -borderOffset)
+	if addon.functions and addon.functions.SetSafeBorder then
+		addon.functions.SetSafeBorder(healthFrame.border, borderEnabled, borderTexture, borderSize, borderR, borderG, borderB, borderA, {
+			stateKey = "_eqolClassBuffReminderPetHealthBorder",
+			defaultTexture = "Interface\\Buttons\\WHITE8x8",
+			mediaType = "border",
+		})
+	end
+	self:PositionPetHealthReminder()
+end
+
+function Reminder:GetPetHealthReminderCurve()
+	local threshold = self:GetPetHealthReminderThreshold()
+	if self.petHealthReminderCurve and self.petHealthReminderCurveThreshold == threshold then return self.petHealthReminderCurve end
+	if not (C_CurveUtil and C_CurveUtil.CreateCurve and Enum and Enum.LuaCurveType) then return nil end
+
+	local curve = C_CurveUtil.CreateCurve()
+	curve:SetType(Enum.LuaCurveType.Step)
+	curve:AddPoint(0, 1)
+	local thresholdFraction = threshold / 100
+	curve:AddPoint(thresholdFraction, 0)
+	if thresholdFraction < 1 then curve:AddPoint(1, 0) end
+	self.petHealthReminderCurve = curve
+	self.petHealthReminderCurveThreshold = threshold
+	return curve
+end
+
+function Reminder:ShouldEvaluatePetHealthReminder()
+	if getValue(DB_ENABLED, defaults.enabled) ~= true then return false end
+	if not self:IsPetHealthReminderEnabled() then return false end
+	if not self:CanCheckPetReminder() then return false end
+	if self.editModeActive == true then return false end
+	if self:IsHideInRestedAreaEnabled() and self:IsPlayerInRestedArea() then return false end
+	if self:IsReminderEvaluationBlockedByCombat() then return false end
+	if self:IsPetReminderSuppressed() then return false end
+	if not self:IsPetExpectedForPlayer() or not self:HasActivePet() then return false end
+	if self:GetClassToken() == "WARLOCK" and self:IsPetHealthReminderInfernalBeneficiaryOnly() and not safeIsPlayerSpell(Reminder.petTracking.infernalBeneficiary) then return false end
+	return true
+end
+
+function Reminder:UpdatePetHealthReminder()
+	local healthFrame = self:EnsurePetHealthReminderFrame()
+	if not healthFrame then return end
+	self:PositionPetHealthReminder()
+	if not self:ShouldEvaluatePetHealthReminder() or not UnitHealthPercent then
+		healthFrame:SetAlpha(0)
+		return
+	end
+
+	local curve = self:GetPetHealthReminderCurve()
+	if not curve then
+		healthFrame:SetAlpha(0)
+		return
+	end
+	if SetPortraitTexture then SetPortraitTexture(healthFrame.icon, "pet", true) end
+	if healthFrame.healthText and CurveConstants and CurveConstants.ScaleTo100 then
+		healthFrame.healthText:SetFormattedText("%d%%", UnitHealthPercent("pet", true, CurveConstants.ScaleTo100))
+	end
+	healthFrame:SetAlpha(UnitHealthPercent("pet", true, curve))
+end
+
+function Reminder:GetDynamicAnchorWinner()
+	return addon.DynamicAnchors and addon.DynamicAnchors:GetSimpleFrameWinner(self.dynamicAnchorId) or nil
+end
+
+function Reminder:ApplyDynamicAnchor()
+	if not self.frame then return false end
+	local winner = self:GetDynamicAnchorWinner()
+	if not (winner and winner.frame) then return false end
+	local placement = winner.placement or {}
+	local point = placement.point or "CENTER"
+	local relativePoint = placement.relativePoint or point
+	self.frame:ClearAllPoints()
+	self.frame:SetPoint(point, winner.frame, relativePoint, tonumber(placement.x) or 0, tonumber(placement.y) or 0)
+	return true
+end
+
+function Reminder:GetSelfProviderStatus(provider, forceRefresh)
+	if type(provider) ~= "table" or provider.scope ~= PROVIDER_SCOPE_SELF then return nil end
+	if not self:CanReadAuraData() then
+		local status = buildSelfStatus(0, {})
+		self.selfProviderStatusProvider = provider
+		self.selfProviderStatus = status
+		return status
+	end
+	self:EnsureSelfProviderAuraTracking(provider)
+	if not forceRefresh and self.selfProviderStatusProvider == provider and type(self.selfProviderStatus) == "table" then return self.selfProviderStatus end
+	if type(provider.getSelfStatusFunc) ~= "function" then return nil end
+
+	local status = provider.getSelfStatusFunc(provider, self)
+	if type(status) ~= "table" then return nil end
+
+	local entries = type(status.missingEntries) == "table" and self:FilterDismissedInteractionEntries(status.missingEntries) or {}
+	local missing = #entries
+	if missing < 0 then missing = 0 end
+	local total = tonumber(status.total)
+	if total == nil then total = math.max(1, missing) end
+	if total < missing then total = missing end
+	if total < 0 then total = 0 end
+
+	status.missingEntries = entries
+	status.missing = missing
+	status.total = total
+
+	self.selfProviderStatusProvider = provider
+	self.selfProviderStatus = status
+	return status
+end
+
+function Reminder:GetSelfMissingEntries(provider)
+	local status = self:GetSelfProviderStatus(provider, false)
+	if not status then return nil end
+	return status.missingEntries
+end
+
+function Reminder:GetSelfMissingSummaryText(entries)
+	if type(entries) ~= "table" or #entries <= 0 then return "" end
+	local parts = {}
+	for i = 1, #entries do
+		local entry = entries[i]
+		local label = type(entry) == "table" and entry.label or nil
+		if type(label) ~= "string" or label == "" then
+			local sid = type(entry) == "table" and normalizeSpellId(entry.spellId) or nil
+			label = sid and safeGetSpellName(sid) or nil
+		end
+		if type(label) ~= "string" or label == "" then label = L["ClassBuffReminderMissing"] or "Missing" end
+		local cm = type(entry) == "table" and tonumber(entry.countMissing) or nil
+		local ct = type(entry) == "table" and tonumber(entry.countTotal) or nil
+			local shortText = type(entry) == "table" and entry.shortText or nil
+		if cm and ct and ct > 0 then
+			cm = math.max(0, math.floor(cm + 0.5))
+			ct = math.max(0, math.floor(ct + 0.5))
+			label = string.format("%s (%d/%d)", label, cm, ct)
+		end
+		parts[#parts + 1] = label
+	end
+	return table.concat(parts, ", ")
+end
+
+function Reminder:EnsureSelfMissingIconFrames(requiredCount)
+	local frame = self:EnsureFrame()
+	if not frame then return nil, nil end
+	frame.missingIcons = frame.missingIcons or {}
+	frame.missingIconContainer = frame.missingIconContainer or CreateFrame("Frame", nil, frame)
+	local container = frame.missingIconContainer
+
+	for i = 1, requiredCount do
+		local iconFrame = frame.missingIcons[i]
+		if not iconFrame then
+			iconFrame = CreateFrame("Button", nil, container)
+			iconFrame:SetSize(defaults.iconSize, defaults.iconSize)
+			self:ConfigureInteractionButton(iconFrame, nil)
+			local icon = iconFrame:CreateTexture(nil, "ARTWORK")
+			icon:SetAllPoints(iconFrame)
+			icon:SetTexture(ICON_MISSING)
+			iconFrame.icon = icon
+
+			local border = CreateFrame("Frame", nil, iconFrame, "BackdropTemplate")
+			border:EnableMouse(false)
+			border:Hide()
+			iconFrame.border = border
+
+			local countText = iconFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+			countText:SetPoint("CENTER", iconFrame, "CENTER", 0, 0)
+			countText:SetJustifyH("CENTER")
+			countText:SetShadowOffset(1, -1)
+			countText:SetShadowColor(0, 0, 0, 1)
+			countText:SetText("")
+			iconFrame.countText = countText
+
+			frame.missingIcons[i] = iconFrame
+		end
+	end
+
+	return container, frame.missingIcons
+end
+
+function Reminder:HideSelfMissingIcons()
+	local frame = self.frame
+	if not frame then return end
+	if frame.missingIconContainer then frame.missingIconContainer:Hide() end
+	if frame.missingIcons then
+		for i = 1, #frame.missingIcons do
+			local iconFrame = frame.missingIcons[i]
+			if iconFrame then
+				self:ConfigureInteractionButton(iconFrame, nil)
+				iconFrame:Hide()
+			end
+		end
+	end
+	if frame.iconHolder then self:ConfigureInteractionButton(frame.iconHolder, nil) end
+	if frame.iconHolder then frame.iconHolder:Show() end
+end
+
+function Reminder:RenderSelfMissingIcons(missingEntries)
+	local frame = self.frame
+	if not frame then return false end
+	if type(missingEntries) ~= "table" or #missingEntries <= 0 then
+		self:HideSelfMissingIcons()
+		return false
+	end
+
+	local scale = clamp(getValue(DB_SCALE, defaults.scale), 0.5, 2, defaults.scale)
+	local iconSize = clamp(getValue(DB_ICON_SIZE, defaults.iconSize), 14, 120, defaults.iconSize)
+	local iconGap = clamp(getValue(DB_ICON_GAP, defaults.iconGap), 0, 40, defaults.iconGap)
+	local xyTextSize, xyTextOutline, xyTextR, xyTextG, xyTextB, xyTextA, xyOffsetX, xyOffsetY = self:GetIconCountTextStyle()
+	local scaledIconSize = math.max(14, math.floor((iconSize * scale) + 0.5))
+	local scaledIconGap = math.max(0, math.floor((iconGap * scale) + 0.5))
+	local scaledXYTextSize = math.max(8, math.floor((xyTextSize * scale) + 0.5))
+	local scaledXYOffsetX = math.floor((xyOffsetX * scale) + 0.5)
+	local scaledXYOffsetY = math.floor((xyOffsetY * scale) + 0.5)
+	local step = scaledIconSize + scaledIconGap
+	local direction = self:GetGrowthDirection()
+	local growFromCenter = self:GetGrowthFromCenter()
+	local count = #missingEntries
+	local fontPath = (addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT
+	local borderEnabled = self:IsBorderEnabled()
+	local borderTexture = self:GetBorderTextureKey()
+	local borderSize = self:GetBorderSize()
+	local borderOffset = self:GetBorderOffset()
+	local borderR, borderG, borderB, borderA = self:GetBorderColor()
+	local iconShape = self:GetIconShape()
+
+	local width, height
+	if direction == GROWTH_UP or direction == GROWTH_DOWN then
+		width = scaledIconSize
+		height = scaledIconSize + ((count - 1) * step)
+	else
+		width = scaledIconSize + ((count - 1) * step)
+		height = scaledIconSize
+	end
+
+	local container, icons = self:EnsureSelfMissingIconFrames(count)
+	if not (container and icons) then return false end
+
+	container:ClearAllPoints()
+	container:SetPoint("CENTER", frame, "CENTER", 0, 0)
+	container:SetSize(width, height)
+
+	for i = 1, #icons do
+		if icons[i] then icons[i]:Hide() end
+	end
+
+	for i = 1, count do
+		local iconFrame = icons[i]
+		local entry = missingEntries[i]
+		local sid = type(entry) == "table" and normalizeSpellId(entry.spellId) or nil
+		local entryIcon = type(entry) == "table" and Reminder.NormalizeIconTexture(entry.icon) or nil
+		local texture = entryIcon or (sid and safeGetSpellIcon(sid)) or ICON_MISSING
+
+		iconFrame:SetSize(scaledIconSize, scaledIconSize)
+		iconFrame:ClearAllPoints()
+
+		local x = 0
+		local y = 0
+		if growFromCenter then
+			local centeredOffset = centeredAxisOffset(i, count, step)
+			if direction == GROWTH_UP or direction == GROWTH_DOWN then
+				y = centeredOffset
+			else
+				x = centeredOffset
+			end
+			iconFrame:SetPoint("CENTER", container, "CENTER", x, y)
+		elseif direction == GROWTH_LEFT then
+			x = (width / 2) - (scaledIconSize / 2) - ((i - 1) * step)
+			iconFrame:SetPoint("LEFT", container, "LEFT", -x, y)
+		elseif direction == GROWTH_UP then
+			y = -(height / 2) + (scaledIconSize / 2) + ((i - 1) * step)
+			iconFrame:SetPoint("TOP", container, "TOP", x, y)
+		elseif direction == GROWTH_DOWN then
+			y = (height / 2) - (scaledIconSize / 2) - ((i - 1) * step)
+			iconFrame:SetPoint("BOTTOM", container, "BOTTOM", x, -y)
+		else
+			x = -(width / 2) + (scaledIconSize / 2) + ((i - 1) * step)
+			iconFrame:SetPoint("RIGHT", container, "RIGHT", x, y)
+		end
+
+		-- iconFrame:SetPoint("CENTER", container, "CENTER", x, y)
+		if iconFrame.icon then iconFrame.icon:SetTexture(texture) end
+		iconFrame._eqolVisualSize = scaledIconSize
+		iconFrame._eqolBaseSlotSize = scaledIconSize
+		self:ApplyIconShape(iconFrame, iconFrame.icon, iconShape)
+		self:ApplyShapeBorder(iconFrame, iconFrame.border, borderEnabled, borderTexture, borderSize, borderOffset, borderR, borderG, borderB, borderA, iconShape)
+		if iconFrame.countText then
+			if iconFrame.countText.SetFont then iconFrame.countText:SetFont(fontPath, scaledXYTextSize, textOutlineFlags(xyTextOutline)) end
+			iconFrame.countText:SetTextColor(xyTextR, xyTextG, xyTextB, xyTextA)
+			iconFrame.countText:ClearAllPoints()
+			iconFrame.countText:SetPoint("CENTER", iconFrame, "CENTER", scaledXYOffsetX, scaledXYOffsetY)
+			local cm = type(entry) == "table" and tonumber(entry.countMissing) or nil
+			local ct = type(entry) == "table" and tonumber(entry.countTotal) or nil
+			local shortText = type(entry) == "table" and entry.shortText or nil
+			if iconFrame.countText.SetWidth then iconFrame.countText:SetWidth(scaledIconSize + 2) end
+			if cm and ct and ct > 0 then
+				cm = math.max(0, math.floor(cm + 0.5))
+				ct = math.max(0, math.floor(ct + 0.5))
+				iconFrame.countText:SetText(string.format("%d/%d", cm, ct))
+			elseif type(shortText) == "string" and shortText ~= "" then
+				iconFrame.countText:SetText(shortText)
+			else
+				iconFrame.countText:SetText("")
+			end
+		end
+		iconFrame:Show()
+		self:ConfigureInteractionButton(iconFrame, entry)
+	end
+
+	if frame.iconHolder then frame.iconHolder:Hide() end
+	if frame.border then frame.border:Hide() end
+	container:Show()
+	frame:SetSize(scaledIconSize + 2, scaledIconSize + 2)
+	self:PositionPetHealthReminder()
+	return true
+end
+
+function Reminder:GetGlowTargets()
+	local frame = self.frame
+	if not frame then return nil end
+
+	if self.editModeActive then
+		local targets = {}
+		if frame.iconHolder and frame.iconHolder:IsShown() then targets[#targets + 1] = frame.iconHolder end
+		if frame.sampleContainer and frame.sampleContainer:IsShown() then
+			for _, sample in ipairs(frame.sampleIcons or {}) do
+				if sample:IsShown() then targets[#targets + 1] = sample end
+			end
+		end
+		return targets
+	end
+
+	if frame.missingIconContainer and frame.missingIconContainer:IsShown() and type(frame.missingIcons) == "table" then
+		local targets = {}
+		for i = 1, #frame.missingIcons do
+			local iconFrame = frame.missingIcons[i]
+			if iconFrame and iconFrame:IsShown() then targets[#targets + 1] = iconFrame end
+		end
+		if #targets > 0 then return targets end
+	end
+
+	if frame.iconHolder then return { frame.iconHolder } end
+	return nil
+end
+
+function Reminder:StopAllGlowTargetsImmediate()
+	if not Glow then return end
+	self.glowTargets = self.glowTargets or {}
+	for target in pairs(self.glowTargets) do
+		Glow.Stop(target, REMINDER_GLOW_KEY, true)
+		self.glowTargets[target] = nil
+	end
+	local frame = self.frame
+	if frame then
+		if frame.iconHolder then Glow.Stop(frame.iconHolder, REMINDER_GLOW_KEY, true) end
+		if type(frame.missingIcons) == "table" then
+			for i = 1, #frame.missingIcons do
+				if frame.missingIcons[i] then Glow.Stop(frame.missingIcons[i], REMINDER_GLOW_KEY, true) end
+			end
+		end
+		if type(frame.sampleIcons) == "table" then
+			for i = 1, #frame.sampleIcons do
+				if frame.sampleIcons[i] then Glow.Stop(frame.sampleIcons[i], REMINDER_GLOW_KEY, true) end
+			end
+		end
+	end
+	self.glowShown = false
+	self.glowActiveStyle = nil
+	self.glowActiveInset = nil
+	self.glowActiveColorR = nil
+	self.glowActiveColorG = nil
+	self.glowActiveColorB = nil
+	self.glowActiveColorA = nil
+	self.glowActiveShape = nil
+end
+
+function Reminder:RestartGlowAfterVisualChange()
+	local showGlow = getValue(DB_GLOW, defaults.glow) == true
+	self:StopAllGlowTargetsImmediate()
+	if showGlow then self:SetGlowShown(true) end
+end
+
+function Reminder:HideSamplePreview()
+	local frame = self.frame
+	if not frame then return end
+	if frame.sampleContainer then frame.sampleContainer:Hide() end
+	if not frame.sampleIcons then return end
+	for i = 1, #frame.sampleIcons do
+		local sample = frame.sampleIcons[i]
+		if sample then sample:Hide() end
+	end
+end
+
+function Reminder:ApplySamplePreview(iconSize, scale, iconGap)
+	local frame = self.frame
+	if not frame or not frame.sampleIcons then return end
+	if not self.editModeActive then
+		self:HideSamplePreview()
+		return
+	end
+
+	local direction = self:GetGrowthDirection()
+	local growFromCenter = self:GetGrowthFromCenter()
+	local spacing = iconGap
+	if type(spacing) ~= "number" then spacing = math.floor((6 * (scale or 1)) + 0.5) end
+	if spacing < 0 then spacing = 0 end
+	local step = iconSize + spacing
+	local count = math.min(SAMPLE_ICON_COUNT, #frame.sampleIcons)
+	local iconShape = self:GetIconShape()
+	local borderEnabled = self:IsBorderEnabled()
+	local borderTexture = self:GetBorderTextureKey()
+	local borderSize = self:GetBorderSize()
+	local borderOffset = self:GetBorderOffset()
+	local borderR, borderG, borderB, borderA = self:GetBorderColor()
+
+	for i = 1, count do
+		local sample = frame.sampleIcons[i]
+		local sid = SAMPLE_SPELL_IDS[((i - 1) % #SAMPLE_SPELL_IDS) + 1]
+		sample:ClearAllPoints()
+		sample:SetSize(iconSize, iconSize)
+		if sample.icon then sample.icon:SetTexture(safeGetSpellIcon(sid)) end
+		sample._eqolVisualSize = iconSize
+		sample._eqolBaseSlotSize = iconSize
+		self:ApplyIconShape(sample, sample.icon, iconShape)
+		self:ApplyShapeBorder(sample, sample.border, borderEnabled, borderTexture, borderSize, borderOffset, borderR, borderG, borderB, borderA, iconShape)
+		sample:SetAlpha(i == 1 and 1 or 0.85)
+		sample:Show()
+
+		if growFromCenter then
+			local centeredOffset = centeredAxisOffset(i, count, step)
+			if direction == GROWTH_UP or direction == GROWTH_DOWN then
+				sample:SetPoint("CENTER", frame, "CENTER", 0, centeredOffset)
+			else
+				sample:SetPoint("CENTER", frame, "CENTER", centeredOffset, 0)
+			end
+		elseif i == 1 then
+			if direction == GROWTH_LEFT then
+				sample:SetPoint("RIGHT", frame, "LEFT", -spacing, 0)
+			elseif direction == GROWTH_UP then
+				sample:SetPoint("BOTTOM", frame, "TOP", 0, spacing)
+			elseif direction == GROWTH_DOWN then
+				sample:SetPoint("TOP", frame, "BOTTOM", 0, -spacing)
+			else
+				sample:SetPoint("LEFT", frame, "RIGHT", spacing, 0)
+			end
+		else
+			local prev = frame.sampleIcons[i - 1]
+			if direction == GROWTH_LEFT then
+				sample:SetPoint("RIGHT", prev, "LEFT", -spacing, 0)
+			elseif direction == GROWTH_UP then
+				sample:SetPoint("BOTTOM", prev, "TOP", 0, spacing)
+			elseif direction == GROWTH_DOWN then
+				sample:SetPoint("TOP", prev, "BOTTOM", 0, -spacing)
+			else
+				sample:SetPoint("LEFT", prev, "RIGHT", spacing, 0)
+			end
+		end
+	end
+
+	if frame.sampleContainer then frame.sampleContainer:Show() end
+end
+
+function Reminder:InvalidateVisualSettingsCache()
+	if self.frame then self.frame._eqolClassBuffReminderVisualKey = nil end
+end
+
+function Reminder:ApplyVisualSettings()
+	local frame = self:EnsureFrame()
+	if not frame then return end
+
+	local alpha = clamp(getValue(Reminder.DB_OVERALL_ALPHA, defaults.overallAlpha), 0.1, 1, defaults.overallAlpha)
+	frame:SetAlpha(alpha)
+	if self.petHealthAlphaFrame then self.petHealthAlphaFrame:SetAlpha(alpha) end
+	local scale = clamp(getValue(DB_SCALE, defaults.scale), 0.5, 2, defaults.scale)
+	local iconSize = clamp(getValue(DB_ICON_SIZE, defaults.iconSize), 14, 120, defaults.iconSize)
+	local fontSize = clamp(getValue(DB_FONT_SIZE, defaults.fontSize), 9, 30, defaults.fontSize)
+	local iconGap = clamp(getValue(DB_ICON_GAP, defaults.iconGap), 0, 40, defaults.iconGap)
+	local displayMode = normalizeDisplayMode(getValue(DB_DISPLAY_MODE, defaults.displayMode))
+	local growthDirection = normalizeGrowthDirection(getValue(DB_GROWTH_DIRECTION, defaults.growthDirection))
+	local iconShape = self:GetIconShape()
+	local xyTextSize, xyTextOutline, xyTextR, xyTextG, xyTextB, xyTextA, xyOffsetX, xyOffsetY = self:GetIconCountTextStyle()
+	local borderEnabled = self:IsBorderEnabled()
+	local borderTexture = self:GetBorderTextureKey()
+	local borderSize = self:GetBorderSize()
+	local borderOffset = self:GetBorderOffset()
+	local borderR, borderG, borderB, borderA = self:GetBorderColor()
+	local scaledIconSize = math.max(14, math.floor((iconSize * scale) + 0.5))
+	local scaledFontSize = math.max(9, math.floor((fontSize * scale) + 0.5))
+	local scaledIconGap = math.max(0, math.floor((iconGap * scale) + 0.5))
+	local scaledXYTextSize = math.max(8, math.floor((xyTextSize * scale) + 0.5))
+	local scaledXYOffsetX = math.floor((xyOffsetX * scale) + 0.5)
+	local scaledXYOffsetY = math.floor((xyOffsetY * scale) + 0.5)
+	local textGap = scaledIconGap
+	local framePadding = math.max(4, math.floor((6 * scale) + 0.5))
+	local visualKey = table.concat({
+		tostring(scale),
+		tostring(iconSize),
+		tostring(fontSize),
+		tostring(iconGap),
+		tostring(displayMode),
+		tostring(growthDirection),
+		tostring(iconShape),
+		tostring(self:GetIconZoom()),
+		tostring(xyTextSize),
+		tostring(xyTextOutline),
+		tostring(xyTextR),
+		tostring(xyTextG),
+		tostring(xyTextB),
+		tostring(xyTextA),
+		tostring(xyOffsetX),
+		tostring(xyOffsetY),
+		tostring(borderEnabled),
+		tostring(borderTexture),
+		tostring(borderSize),
+		tostring(borderOffset),
+		tostring(borderR),
+		tostring(borderG),
+		tostring(borderB),
+		tostring(borderA),
+		tostring(frame.nameText and frame.nameText:GetText() or ""),
+		tostring(frame.countText and frame.countText:GetText() or ""),
+		tostring(self.editModeActive == true),
+	}, "\031")
+
+	if addon.db then
+		if addon.db[DB_DISPLAY_MODE] ~= displayMode then addon.db[DB_DISPLAY_MODE] = displayMode end
+		if addon.db[DB_SCALE] ~= scale then addon.db[DB_SCALE] = scale end
+		if addon.db[DB_ICON_SIZE] ~= iconSize then addon.db[DB_ICON_SIZE] = iconSize end
+		if addon.db[DB_FONT_SIZE] ~= fontSize then addon.db[DB_FONT_SIZE] = fontSize end
+		if addon.db[DB_ICON_GAP] ~= iconGap then addon.db[DB_ICON_GAP] = iconGap end
+		if addon.db[DB_GROWTH_DIRECTION] ~= growthDirection then addon.db[DB_GROWTH_DIRECTION] = growthDirection end
+		if addon.db[Reminder.DB_ICON_SHAPE] ~= iconShape then addon.db[Reminder.DB_ICON_SHAPE] = iconShape end
+		if addon.db[DB_BORDER_ENABLED] ~= borderEnabled then addon.db[DB_BORDER_ENABLED] = borderEnabled end
+		if addon.db[DB_BORDER_TEXTURE] ~= borderTexture then addon.db[DB_BORDER_TEXTURE] = borderTexture end
+		if addon.db[DB_BORDER_SIZE] ~= borderSize then addon.db[DB_BORDER_SIZE] = borderSize end
+		if addon.db[DB_BORDER_OFFSET] ~= borderOffset then addon.db[DB_BORDER_OFFSET] = borderOffset end
+		if addon.db[DB_XY_TEXT_SIZE] ~= xyTextSize then addon.db[DB_XY_TEXT_SIZE] = xyTextSize end
+		if addon.db[DB_XY_TEXT_OUTLINE] ~= xyTextOutline then addon.db[DB_XY_TEXT_OUTLINE] = xyTextOutline end
+		if addon.db[DB_XY_TEXT_OFFSET_X] ~= xyOffsetX then addon.db[DB_XY_TEXT_OFFSET_X] = xyOffsetX end
+		if addon.db[DB_XY_TEXT_OFFSET_Y] ~= xyOffsetY then addon.db[DB_XY_TEXT_OFFSET_Y] = xyOffsetY end
+		local currentBorderColor = addon.db[DB_BORDER_COLOR]
+		if type(currentBorderColor) ~= "table" or currentBorderColor.r ~= borderR or currentBorderColor.g ~= borderG or currentBorderColor.b ~= borderB or currentBorderColor.a ~= borderA then
+			addon.db[DB_BORDER_COLOR] = { r = borderR, g = borderG, b = borderB, a = borderA }
+		end
+		local currentColor = addon.db[DB_XY_TEXT_COLOR]
+		if type(currentColor) ~= "table" or currentColor.r ~= xyTextR or currentColor.g ~= xyTextG or currentColor.b ~= xyTextB or currentColor.a ~= xyTextA then
+			addon.db[DB_XY_TEXT_COLOR] = { r = xyTextR, g = xyTextG, b = xyTextB, a = xyTextA }
+		end
+	end
+
+	if frame._eqolClassBuffReminderVisualKey == visualKey then return end
+	frame._eqolClassBuffReminderVisualKey = visualKey
+
+	frame:SetScale(1)
+	frame.iconHolder:SetSize(scaledIconSize, scaledIconSize)
+	frame.iconHolder._eqolVisualSize = scaledIconSize
+	frame.iconHolder._eqolBaseSlotSize = scaledIconSize
+	self:ApplyIconShape(frame.iconHolder, frame.icon, iconShape)
+	frame.iconHolder:ClearAllPoints()
+	frame.iconHolder:SetShown(true)
+
+	local fontPath = (addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT
+	if frame.nameText and frame.nameText.SetFont then frame.nameText:SetFont(fontPath, scaledFontSize, "OUTLINE") end
+	if frame.countText and frame.countText.SetFont then frame.countText:SetFont(fontPath, scaledFontSize, "OUTLINE") end
+	if frame.iconCountText and frame.iconCountText.SetFont then frame.iconCountText:SetFont(fontPath, scaledXYTextSize, textOutlineFlags(xyTextOutline)) end
+	if frame.iconCountText then
+		frame.iconCountText:SetTextColor(xyTextR, xyTextG, xyTextB, xyTextA)
+		frame.iconCountText:ClearAllPoints()
+		frame.iconCountText:SetPoint("CENTER", frame.iconHolder, "CENTER", scaledXYOffsetX, scaledXYOffsetY)
+		if frame.iconCountText.SetWidth then frame.iconCountText:SetWidth(scaledIconSize + 2) end
+	end
+
+	frame.nameText:ClearAllPoints()
+	frame.countText:ClearAllPoints()
+	if displayMode == DISPLAY_MODE_ICON_ONLY then
+		if frame.bg then frame.bg:Hide() end
+		frame.nameText:Hide()
+		frame.countText:Hide()
+		if frame.iconCountText then frame.iconCountText:Show() end
+		frame.iconHolder:SetPoint("CENTER", frame, "CENTER", 0, 0)
+		frame:SetSize(scaledIconSize + 2, scaledIconSize + 2)
+	else
+		if frame.bg then frame.bg:Show() end
+		frame.nameText:Show()
+		frame.countText:Show()
+		if frame.iconCountText then frame.iconCountText:Hide() end
+		frame.iconHolder:SetPoint("LEFT", frame, "LEFT", framePadding, 0)
+		frame.nameText:SetPoint("TOPLEFT", frame.iconHolder, "TOPRIGHT", textGap, -1)
+		frame.countText:SetPoint("BOTTOMLEFT", frame.iconHolder, "BOTTOMRIGHT", textGap, 1)
+		local textWidth = math.max(frame.nameText:GetStringWidth() or 0, frame.countText:GetStringWidth() or 0)
+		local width = (scaledIconSize + (framePadding * 2) + textGap) + textWidth + framePadding
+		local minWidth = math.floor((120 * scale) + 0.5)
+		if width < minWidth then width = minWidth end
+		local height = math.max(scaledIconSize + (framePadding * 2), (scaledFontSize * 2) + (framePadding * 2))
+		local minHeight = math.floor((30 * scale) + 0.5)
+		if height < minHeight then height = minHeight end
+		frame:SetSize(width, height)
+	end
+
+	if not Reminder.IsShapeBorderPath(iconShape) then
+		if addon.IconShape and addon.IconShape.HideBorderTextures then addon.IconShape.HideBorderTextures(frame.iconHolder) end
+	else
+		self:ApplyShapeBorder(frame.iconHolder, nil, borderEnabled, borderTexture, borderSize, borderOffset, borderR, borderG, borderB, borderA, iconShape)
+	end
+
+	if frame.border and frame.border.SetBackdrop then
+		frame.border:SetFrameStrata(frame:GetFrameStrata())
+		frame.border:SetFrameLevel((frame:GetFrameLevel() or 0) + 5)
+		if borderEnabled and not Reminder.IsShapeBorderPath(iconShape) then
+			frame.border:SetBackdrop({
+				edgeFile = resolveBorderTexture(borderTexture),
+				edgeSize = borderSize,
+				insets = { left = 0, right = 0, top = 0, bottom = 0 },
+			})
+			frame.border:SetBackdropBorderColor(borderR, borderG, borderB, borderA)
+			frame.border:SetBackdropColor(0, 0, 0, 0)
+			frame.border:ClearAllPoints()
+			frame.border:SetPoint("TOPLEFT", frame, "TOPLEFT", -borderOffset, borderOffset)
+			frame.border:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", borderOffset, -borderOffset)
+			frame.border:Show()
+		else
+			frame.border:SetBackdrop(nil)
+			frame.border:Hide()
+		end
+	end
+
+	self:ApplySamplePreview(scaledIconSize, scale, scaledIconGap)
+	self:ApplyPetHealthReminderVisualSettings()
+end
+
+function Reminder:InvalidateRosterCache()
+	self:ClearPendingAuraUpdates()
+	self:InvalidateSelfProviderStatus()
+	self.rosterUnitsValid = nil
+	self.rosterUnitsVersion = (tonumber(self.rosterUnitsVersion) or 0) + 1
+	self:InvalidateGroupMissingState()
+	self:InvalidateGroupBuffStateCaches()
+end
+
+function Reminder:GetRosterUnits()
+	if self.rosterUnitsValid == true and type(self.rosterUnits) == "table" then return self.rosterUnits end
+
+	self.rosterUnits = self.rosterUnits or {}
+	self.rosterUnitLookup = self.rosterUnitLookup or {}
+	local units = self.rosterUnits
+	local lookup = self.rosterUnitLookup
+	for i = #units, 1, -1 do
+		units[i] = nil
+	end
+	wipeTable(lookup)
+
+	if IsInRaid and IsInRaid() then
+		local total = (GetNumGroupMembers and GetNumGroupMembers()) or 0
+		for i = 1, total do
+			local unit = "raid" .. i
+			units[#units + 1] = unit
+			lookup[unit] = true
+		end
+	elseif IsInGroup and IsInGroup() then
+		units[#units + 1] = "player"
+		lookup.player = true
+		local total = (GetNumSubgroupMembers and GetNumSubgroupMembers()) or math.max(0, ((GetNumGroupMembers and GetNumGroupMembers()) or 1) - 1)
+		for i = 1, total do
+			local unit = "party" .. i
+			units[#units + 1] = unit
+			lookup[unit] = true
+		end
+	else
+		units[#units + 1] = "player"
+		lookup.player = true
+	end
+
+	self.rosterUnitsValid = true
+	return units
+end
+
+function Reminder:IsRosterUnit(unit)
+	if type(unit) ~= "string" or unit == "" then return false end
+	self:GetRosterUnits()
+	return self.rosterUnitLookup and self.rosterUnitLookup[unit] == true
+end
+
+function Reminder:CollectUnits(target)
+	local units = self:GetRosterUnits()
+	if not target or target == units then return units end
+	for i = #target, 1, -1 do
+		target[i] = nil
+	end
+	for i = 1, #units do
+		target[i] = units[i]
+	end
+	return target
+end
+
+function Reminder:CollectOtherHealerUnits(target, includeAIFollowers)
+	if not target then target = {} end
+	for i = #target, 1, -1 do
+		target[i] = nil
+	end
+
+	local units = self:GetRosterUnits()
+	for i = 1, #units do
+		local unit = units[i]
+		if
+			not isPlayerUnit(unit)
+			and (includeAIFollowers == true or not isAIFollowerUnit(unit))
+			and UnitExists(unit)
+			and UnitIsConnected(unit)
+			and not UnitIsDeadOrGhost(unit)
+			and isUnitHealerRole(unit)
+		then
+			target[#target + 1] = unit
+		end
+	end
+
+	return target
+end
+
+function Reminder:CollectEligibleUnits(target, includeAIFollowers)
+	if not target then target = {} end
+	for i = #target, 1, -1 do
+		target[i] = nil
+	end
+
+	local units = self:GetRosterUnits()
+	for i = 1, #units do
+		local unit = units[i]
+		if (includeAIFollowers == true or not isAIFollowerUnit(unit)) and UnitExists(unit) and UnitIsConnected(unit) and not UnitIsDeadOrGhost(unit) then target[#target + 1] = unit end
+	end
+
+	return target
+end
+
+function Reminder:CollectOtherEligibleUnits(target, includeAIFollowers)
+	if not target then target = {} end
+	for i = #target, 1, -1 do
+		target[i] = nil
+	end
+
+	local units = self:GetRosterUnits()
+	for i = 1, #units do
+		local unit = units[i]
+		if not isPlayerUnit(unit) and (includeAIFollowers == true or not isAIFollowerUnit(unit)) and UnitExists(unit) and UnitIsConnected(unit) and not UnitIsDeadOrGhost(unit) then
+			target[#target + 1] = unit
+		end
+	end
+
+	return target
+end
+
+function Reminder:UnitHasProviderBuff(unit, provider)
+	if not (unit and provider) then return false end
+	if not self:CanReadAuraData() then return self:GetRestrictedGroupBuffPresence(unit, provider) == true end
+	if provider.scope == PROVIDER_SCOPE_SELF then
+		local status = self:GetSelfProviderStatus(provider, false)
+		if status then return status.missing <= 0 end
+	end
+	if type(provider.hasUnitBuffFunc) == "function" then return provider.hasUnitBuffFunc(provider, unit, self) == true end
+	if not provider.spellSet then return false end
+	local state = self:PrepareUnitAuraState(unit, provider)
+	if not state then return false end
+	if not state.initialized then state = self:FullRefreshUnitAuraState(unit, provider) end
+	return state and state.hasUsableBuff == true
+end
+
+function Reminder:ComputeMissing(provider)
+	if not self:CanReadAuraData() and not self:CanQueryRestrictedGroupBuffProvider(provider) then return 0, 0 end
+	if provider and provider.scope == PROVIDER_SCOPE_SELF then
+		if not canEvaluateUnit("player") then return 0, 0 end
+
+		local status = self:GetSelfProviderStatus(provider, false)
+		if status then return status.missing, status.total end
+
+		if self:UnitHasProviderBuff("player", provider) then return 0, 1 end
+		return 1, 1
+	end
+
+	local state = self:GetGroupMissingState(provider)
+	if not state then return 0, 0 end
+	return tonumber(state.missing) or 0, tonumber(state.total) or 0
+end
+
+function Reminder:IsGroupModeAllowed()
+	local context = self:GetGroupContext()
+	if context == GROUP_CONTEXT_RAID then return getValue(DB_SHOW_RAID, defaults.showRaid) == true end
+	if context == GROUP_CONTEXT_PARTY then return getValue(DB_SHOW_PARTY, defaults.showParty) == true end
+	return getValue(DB_SHOW_SOLO, defaults.showSolo) == true
+end
+
+function Reminder:ShouldRegisterRuntimeEvents()
+	-- Provider availability can be incomplete at startup. Keep receiving the
+	-- login and spell updates that invalidate and rebuild the provider cache.
+	return getValue(DB_ENABLED, defaults.enabled) == true
+end
+
+function Reminder:Render(provider, missing, total, supplementalEntries, effectiveMissing)
+	local frame = self:EnsureFrame()
+	if not frame then return end
+
+	local displayMode = normalizeDisplayMode(getValue(DB_DISPLAY_MODE, defaults.displayMode))
+	local title = self:GetProviderName(provider)
+	local selfMissingEntries = self:GetSelfMissingEntries(provider)
+	local supplemental = type(supplementalEntries) == "table" and supplementalEntries or nil
+	local iconEntries
+	local summaryEntries
+	local primaryInteractionEntry
+
+	if provider and provider.scope == PROVIDER_SCOPE_SELF then
+		summaryEntries = {}
+		if type(selfMissingEntries) == "table" and #selfMissingEntries > 0 then appendMissingEntries(summaryEntries, selfMissingEntries) end
+		if supplemental and #supplemental > 0 then appendMissingEntries(summaryEntries, supplemental) end
+		if #summaryEntries <= 0 then summaryEntries = nil end
+		iconEntries = summaryEntries
+	elseif supplemental and #supplemental > 0 then
+		summaryEntries = supplemental
+		iconEntries = {}
+		if tonumber(missing) and missing > 0 then iconEntries[#iconEntries + 1] = self:MakeProviderInteractionEntry(provider, title, missing, total) end
+		appendMissingEntries(iconEntries, supplemental)
+	end
+	if iconEntries and #iconEntries > 0 then
+		primaryInteractionEntry = iconEntries[1]
+	elseif tonumber(missing) and missing > 0 then
+		primaryInteractionEntry = self:MakeProviderInteractionEntry(provider, title, missing, total)
+	end
+
+	self:HideSelfMissingIcons()
+	if displayMode == DISPLAY_MODE_ICON_ONLY then
+		if iconEntries and #iconEntries > 0 then
+			if frame.iconCountText then frame.iconCountText:SetText("") end
+		else
+			local shortFmt = L["ClassBuffReminderCountOnlyFmt"] or "%d/%d"
+			if frame.iconCountText then frame.iconCountText:SetText(string.format(shortFmt, missing, total)) end
+		end
+	else
+		frame.nameText:SetText(title)
+		if provider and provider.scope == PROVIDER_SCOPE_SELF then
+			frame.countText:SetText(self:GetSelfMissingSummaryText(summaryEntries))
+		elseif summaryEntries and #summaryEntries > 0 then
+			if tonumber(missing) and missing > 0 then
+				local missingText = L["ClassBuffReminderMissingFmt"] or "%d/%d missing"
+				local buffMissingText = string.format(missingText, missing, total)
+				local supplementalText = self:GetSelfMissingSummaryText(summaryEntries)
+				if supplementalText and supplementalText ~= "" then
+					frame.countText:SetText(buffMissingText .. ", " .. supplementalText)
+				else
+					frame.countText:SetText(buffMissingText)
+				end
+			else
+				frame.countText:SetText(self:GetSelfMissingSummaryText(summaryEntries))
+			end
+		else
+			local missingText = L["ClassBuffReminderMissingFmt"] or "%d/%d missing"
+			frame.countText:SetText(string.format(missingText, missing, total))
+		end
+	end
+
+	local providerIcon = self:GetProviderIcon(provider)
+	local canRenderSupplementalIcons = provider and provider.isSupplementalOnly == true and iconEntries and #iconEntries > 0
+	if providerIcon == ICON_MISSING and self.editModeActive ~= true and canRenderSupplementalIcons ~= true then
+		self:SetGlowShown(false)
+		frame:Hide()
+		self:RequestProviderPresentationRefresh(provider)
+		return
+	end
+	frame.icon:SetTexture(providerIcon)
+	self:ApplyVisualSettings()
+	if displayMode == DISPLAY_MODE_ICON_ONLY and iconEntries and #iconEntries > 0 and self.editModeActive ~= true then self:RenderSelfMissingIcons(iconEntries) end
+	if displayMode ~= DISPLAY_MODE_ICON_ONLY then
+		local hasVisibleMissing = (tonumber(effectiveMissing) or tonumber(missing) or 0) > 0
+		if hasVisibleMissing then
+			if frame.countText then frame.countText:SetTextColor(1, 0.25, 0.25, 1) end
+		else
+			if frame.countText then frame.countText:SetTextColor(0.35, 1, 0.35, 1) end
+		end
+	end
+	frame:Show()
+	if self.editModeActive == true then
+		self:ConfigureInteractionButton(frame.iconHolder, nil)
+	elseif displayMode == DISPLAY_MODE_ICON_ONLY and iconEntries and #iconEntries > 0 then
+		for i = 1, #iconEntries do
+			local iconFrame = frame.missingIcons and frame.missingIcons[i]
+			if iconFrame then self:ConfigureInteractionButton(iconFrame, iconEntries[i]) end
+		end
+	else
+		local fullModeEntry = primaryInteractionEntry
+		if displayMode ~= DISPLAY_MODE_ICON_ONLY and provider and provider.scope == PROVIDER_SCOPE_GROUP and (tonumber(missing) or 0) <= 0 then fullModeEntry = nil end
+		self:ConfigureInteractionButton(frame.iconHolder, fullModeEntry)
+	end
+
+	self:UpdateReminderIconPresentation()
+	local showGlow = getValue(DB_GLOW, defaults.glow) == true and ((tonumber(effectiveMissing) or tonumber(missing) or 0) > 0)
+	self:SetGlowShown(showGlow)
+end
+
+function Reminder:RenderEditModePreview()
+	local frame = self:EnsureFrame()
+	if not frame then return end
+
+	local displayMode = normalizeDisplayMode(getValue(DB_DISPLAY_MODE, defaults.displayMode))
+	local provider = self:GetProvider()
+	if provider then
+		self:Render(provider, 2, 5)
+		if displayMode ~= DISPLAY_MODE_ICON_ONLY then frame.countText:SetTextColor(1, 0.82, 0, 1) end
+	else
+		frame.icon:SetTexture(ICON_MISSING)
+		if displayMode == DISPLAY_MODE_ICON_ONLY then
+			if frame.iconCountText then frame.iconCountText:SetText("0/0") end
+		else
+			frame.nameText:SetText(L["Class Buff Reminder"] or "Class Buff Reminder")
+			frame.countText:SetText(L["ClassBuffReminderNoProvider"] or "No class buff configured for this class")
+			frame.countText:SetTextColor(1, 0.82, 0, 1)
+		end
+		self:ApplyVisualSettings()
+		frame:Show()
+	end
+	self:UpdateReminderIconPresentation()
+	self:SetGlowShown(getValue(DB_GLOW, defaults.glow) == true)
+end
+
+function Reminder:ResetExpirationWarningCandidate()
+	-- Cached buff states may not requeue their deadline during a display-only update.
+	self.nextExpirationWarningAt = self.expirationWarningTimer and self.expirationWarningTimerAt or nil
+end
+
+function Reminder:QueueExpirationWarningAt(timestamp)
+	timestamp = tonumber(timestamp)
+	if not timestamp or timestamp <= 0 then return end
+	local now = nowSeconds()
+	if timestamp <= now then return end
+	if not self.nextExpirationWarningAt or timestamp < self.nextExpirationWarningAt then self.nextExpirationWarningAt = timestamp end
+end
+
+function Reminder:CancelExpirationWarningTimer()
+	if self.expirationWarningTimer then
+		self.expirationWarningTimer:Cancel()
+		self.expirationWarningTimer = nil
+	end
+	self.expirationWarningTimerAt = nil
+end
+
+function Reminder:SuspendExpirationWarningTimer()
+	self:CancelExpirationWarningTimer()
+	self.expirationWarningSuspended = true
+end
+
+function Reminder.RunExpirationWarningTimer()
+	Reminder.expirationWarningTimer = nil
+	Reminder.expirationWarningTimerAt = nil
+	Reminder:MarkAuraStatesDirty()
+	Reminder:RequestUpdate(true)
+end
+
+function Reminder:ScheduleExpirationWarningTimer()
+	local at = tonumber(self.nextExpirationWarningAt)
+	if not at then
+		self:CancelExpirationWarningTimer()
+		return
+	end
+	local delay = at - nowSeconds()
+	if delay < 0.05 then delay = 0.05 end
+	if self.expirationWarningTimer and self.expirationWarningTimerAt and math.abs(self.expirationWarningTimerAt - at) < 0.05 then return end
+	self:CancelExpirationWarningTimer()
+	if C_Timer and C_Timer.NewTimer then
+		self.expirationWarningTimerAt = at
+		self.expirationWarningTimer = C_Timer.NewTimer(delay, Reminder.RunExpirationWarningTimer)
+	end
+end
+
+function Reminder:ShouldRunRestrictedGroupBuffTicker()
+	if self:IsReminderEvaluationBlockedByCombat() then return false end
+	if self.editModeActive == true then return false end
+	if getValue(DB_ENABLED, defaults.enabled) ~= true then return false end
+	if self:IsGroupBuffTrackingEnabled() ~= true or self:IsGroupModeAllowed() ~= true then return false end
+	if self:CanReadAuraData() then return false end
+	return self:GetRestrictedGroupBuffProvider() ~= nil
+end
+
+function Reminder.RunRestrictedGroupBuffTicker()
+	if not Reminder:ShouldRunRestrictedGroupBuffTicker() then
+		Reminder:UpdateRestrictedGroupBuffTicker()
+		return
+	end
+	Reminder:InvalidateGroupMissingState()
+	Reminder:RequestUpdate(true)
+end
+
+function Reminder:UpdateRestrictedGroupBuffTicker()
+	if not self:ShouldRunRestrictedGroupBuffTicker() then
+		if self.restrictedGroupBuffTicker then self.restrictedGroupBuffTicker:Cancel() end
+		self.restrictedGroupBuffTicker = nil
+		return
+	end
+	if not self.restrictedGroupBuffTicker and C_Timer and C_Timer.NewTicker then
+		self.restrictedGroupBuffTicker = C_Timer.NewTicker(Reminder.RESTRICTED_GROUP_BUFF_UPDATE_INTERVAL, Reminder.RunRestrictedGroupBuffTicker)
+	end
+end
+
+function Reminder:UpdateDisplay()
+	self:FlushPendingAuraUpdates()
+	self:UpdateRestrictedGroupBuffTicker()
+	local frame = self:EnsureFrame()
+	if not frame then return end
+	self:UpdatePetHealthReminder()
+
+	if self.editModeActive == true then
+		self:SuspendExpirationWarningTimer()
+		self.missingActive = false
+		self:RenderEditModePreview()
+		return
+	end
+
+	self:ResetExpirationWarningCandidate()
+
+	if frame.iconCountText then frame.iconCountText:SetText("") end
+	if frame.countText then frame.countText:SetText("") end
+	self:HideSamplePreview()
+	self:HideSelfMissingIcons()
+
+	if getValue(DB_ENABLED, defaults.enabled) ~= true or self:IsReminderEvaluationBlockedByCombat() or (UnitOnTaxi and UnitOnTaxi("player")) then
+		self:SuspendExpirationWarningTimer()
+		self:SetGlowShown(false)
+		self.missingActive = false
+		frame:Hide()
+		return
+	end
+
+	local groupModeAllowed = self:IsGroupModeAllowed()
+	local personalRemindersBlocked = self:IsReminderEvaluationBlockedByCombat()
+	local supplementalModeAllowed = personalRemindersBlocked ~= true and self:CanCheckSupplementalReminderInCurrentContext()
+	if groupModeAllowed ~= true and supplementalModeAllowed ~= true then
+		self:SuspendExpirationWarningTimer()
+		self:SetGlowShown(false)
+		self.missingActive = false
+		frame:Hide()
+		return
+	end
+
+	if self:IsHideInRestedAreaEnabled() == true and self:IsPlayerInRestedArea() == true then
+		self:SuspendExpirationWarningTimer()
+		self:SetGlowShown(false)
+		self.missingActive = false
+		frame:Hide()
+		return
+	end
+
+	if not canEvaluateUnit("player") then
+		self:SuspendExpirationWarningTimer()
+		self:SetGlowShown(false)
+		self.missingActive = false
+		frame:Hide()
+		return
+	end
+
+	local classProvider = self:GetProvider()
+	if not self:CanReadAuraData() then classProvider = self:GetRestrictedGroupBuffProvider() end
+	if groupModeAllowed ~= true then classProvider = nil end
+	if classProvider and classProvider.scope == PROVIDER_SCOPE_GROUP and self:ShouldEvaluateGroupResponsibilities(classProvider) ~= true then
+		classProvider = nil
+	elseif classProvider and classProvider.scope == PROVIDER_SCOPE_SELF and personalRemindersBlocked == true then
+		classProvider = nil
+	end
+
+	local provider = classProvider
+	if not provider then
+		if self:CanCheckStanceReminder() then
+			provider = self:GetStanceOnlyProvider()
+		elseif self:CanCheckFlaskReminder() then
+			provider = self:GetFlaskOnlyProvider()
+		elseif self:CanCheckFoodReminder() then
+			provider = self:GetFoodOnlyProvider()
+		elseif self:CanCheckRuneReminder() then
+			provider = self:GetRuneOnlyProvider()
+		elseif self:CanCheckWeaponBuffReminder() then
+			provider = self:GetWeaponBuffOnlyProvider()
+		elseif self:CanCheckHealthstoneReminder() then
+			provider = self:GetHealthstoneOnlyProvider()
+		elseif self:CanCheckGrimoireOfSacrificeReminder() then
+			provider = self:GetGrimoireOfSacrificeOnlyProvider()
+		elseif self:CanCheckPetReminder() then
+			provider = self:GetPetOnlyProvider()
+		else
+			self:SuspendExpirationWarningTimer()
+			self:SetGlowShown(false)
+			self.missingActive = false
+			frame:Hide()
+			return
+		end
+	end
+
+	if self.expirationWarningSuspended then
+		self.expirationWarningSuspended = nil
+		-- Suppressed reminders have no timer to expire their cached buff status.
+		self:MarkAuraStatesDirty()
+	end
+
+	local missing, total = 0, 0
+	if classProvider then
+		missing, total = self:ComputeMissing(classProvider)
+		if missing > 0 and classProvider.scope ~= PROVIDER_SCOPE_SELF then
+			local groupEntry = self:MakeProviderInteractionEntry(classProvider, self:GetProviderName(classProvider), missing, total)
+			if self:IsInteractionEntryDismissed(groupEntry) then missing = 0 end
+		end
+	end
+	local supplementalContext = {}
+	local supplementalEntries = supplementalModeAllowed and self:GetSupplementalMissingEntries(supplementalContext) or nil
+	local supplementalMissing = type(supplementalEntries) == "table" and #supplementalEntries or 0
+	local primarySupplementalEntry = type(supplementalEntries) == "table" and supplementalEntries[1] or nil
+	if total <= 0 and primarySupplementalEntry then
+		if primarySupplementalEntry.sourceKind == "STANCE" then
+			provider = self:GetStanceOnlyProvider() or provider
+		elseif primarySupplementalEntry.sourceKind == "FLASK" then
+			provider = self:GetFlaskOnlyProvider() or provider
+		elseif primarySupplementalEntry.sourceKind == "FOOD" then
+			provider = self:GetFoodOnlyProvider() or provider
+		elseif primarySupplementalEntry.sourceKind == "RUNES" then
+			provider = self:GetRuneOnlyProvider() or provider
+		elseif primarySupplementalEntry.sourceKind == "WEAPON_BUFF" or primarySupplementalEntry.sourceKind == "WEAPON_BUFF_MAINHAND" or primarySupplementalEntry.sourceKind == "WEAPON_BUFF_OFFHAND" then
+			provider = self:GetWeaponBuffOnlyProvider() or provider
+		elseif primarySupplementalEntry.sourceKind == "PET" then
+			provider = self:GetPetOnlyProvider() or provider
+		elseif primarySupplementalEntry.sourceKind == "HEALTHSTONE" then
+			provider = self:GetHealthstoneOnlyProvider() or provider
+		elseif primarySupplementalEntry.sourceKind == "GRIMOIRE_OF_SACRIFICE" then
+			provider = self:GetGrimoireOfSacrificeOnlyProvider() or provider
+		end
+		if provider then
+			local entrySpellId = normalizeSpellId(primarySupplementalEntry.spellId)
+			local entryIcon = Reminder.NormalizeIconTexture(primarySupplementalEntry.icon)
+			if entrySpellId then provider.displaySpellId = entrySpellId end
+			provider.displayIcon = entryIcon or Reminder.NormalizeIconTexture(provider.displayIcon)
+			provider.cachedIcon = Reminder.NormalizeIconTexture(provider.displayIcon)
+			provider.cachedName = primarySupplementalEntry.label or provider.fallbackName or (L["ClassBuffReminderWeaponBuff"] or "Weapon buff")
+			provider._presentationReady = provider.cachedIcon ~= nil
+			provider._presentationAttempted = provider.cachedIcon ~= nil
+		end
+	end
+	if total <= 0 and supplementalMissing <= 0 then
+		self:ScheduleExpirationWarningTimer()
+		self:SetGlowShown(false)
+		self.missingActive = false
+		frame:Hide()
+		return
+	end
+
+	local effectiveMissing = (tonumber(missing) or 0) + supplementalMissing
+
+	if self.suppressNextMissingSound == true and effectiveMissing <= 0 then self.suppressNextMissingSound = false end
+
+	if effectiveMissing <= 0 then
+		self:ScheduleExpirationWarningTimer()
+		self:SetGlowShown(false)
+		self.missingActive = false
+		frame:Hide()
+		return
+	end
+
+	self:UpdateMissingStateAndSound(effectiveMissing)
+
+	self:Render(provider, missing, total, supplementalEntries, effectiveMissing)
+	self:ScheduleExpirationWarningTimer()
+end
+
+function Reminder:RequestUpdate(immediate, delay, reschedule)
+	if immediate or not (C_Timer and C_Timer.After) then
+		if self.updateTimer then
+			self.updateTimer:Cancel()
+			self.updateTimer = nil
+		end
+		self.updatePending = false
+		self.updateDelay = nil
+		self:UpdateDisplay()
+		return
+	end
+
+	local updateDelay = tonumber(delay) or Reminder.UPDATE_DELAY
+	if updateDelay < 0 then updateDelay = Reminder.UPDATE_DELAY end
+
+	if self.updatePending then
+		if reschedule == true and self.updateTimer then
+			self.updateTimer:Cancel()
+			self.updateDelay = updateDelay
+			self.updateTimer = C_Timer.NewTimer(updateDelay, Reminder.RunPendingUpdateTimer)
+		end
+		return
+	end
+	self.updatePending = true
+	self.updateDelay = updateDelay
+	self.updateTimer = C_Timer.NewTimer(updateDelay, Reminder.RunPendingUpdateTimer)
+end
+
+function Reminder:HandleEvent(event, unit, updateInfo, spellId)
+	if not self:ShouldRegisterRuntimeEvents() then return end
+	if event == "UNIT_SPELLCAST_SUCCEEDED" then
+		if self:CanReadAuraData() or not self:IsRestrictedGroupBuffCastSpell(spellId) then return end
+		self:InvalidateGroupMissingState()
+		self:RequestUpdate(false, 0, true)
+		return
+	end
+
+	if event == "PLAYER_LOGIN" or event == "PLAYER_ENTERING_WORLD" then
+		self:RefreshAuraSecretState()
+		self.consumableTrackingBlockedByCombat = InCombatLockdown and InCombatLockdown() == true or false
+		self:ScheduleInitialSoundSync()
+		self:InvalidateProviderAvailabilityCache()
+		self:InvalidateRosterCache()
+		self:MarkAuraStatesDirty()
+		self:InvalidateFlaskCache()
+		self:InvalidateFoodCache()
+		self:InvalidateRuneCache()
+		self:InvalidateWeaponBuffCache()
+		self:RequestUpdate(false)
+		self:ScheduleDeferredAuraResync(0.35)
+		return
+	end
+
+	if event == "ADDON_RESTRICTION_STATE_CHANGED" then
+		if self:RefreshAuraSecretState() then
+			self:InvalidatePlayerAuraPresenceSnapshot()
+			self:InvalidateFlaskCache()
+			self:InvalidateFoodCache()
+			self:InvalidateRuneCache()
+			self:RequestUpdate(false, Reminder.RUNTIME_UPDATE_DELAY, true)
+		end
+		return
+	end
+
+	if event == "GROUP_ROSTER_UPDATE" then
+		self:InvalidateRosterCache()
+		self:InvalidatePlayerAuraPresenceSnapshot()
+		self:RequestUpdate(false, Reminder.ROSTER_UPDATE_DELAY, true)
+		self:ScheduleDeferredAuraResync(1.0)
+		return
+	end
+
+	if event == "UNIT_PHASE" then
+		self:MarkAuraStatesDirty()
+		self:RequestUpdate(false, Reminder.RUNTIME_UPDATE_DELAY, true)
+		return
+	end
+
+	if event == "PLAYER_ROLES_ASSIGNED" or event == "ROLE_CHANGED_INFORM" then
+		self:InvalidateSelfProviderStatus()
+		self:InvalidateFlaskCache()
+		self:InvalidateFoodCache()
+		self:InvalidateRuneCache()
+		self:InvalidateWeaponBuffCache()
+		self:RequestUpdate(false, Reminder.RUNTIME_UPDATE_DELAY, true)
+		return
+	end
+
+	if event == "READY_CHECK" then
+		self:MarkAuraStatesDirty()
+		self:InvalidateFlaskCache()
+		self:InvalidateFoodCache()
+		self:InvalidateRuneCache()
+		self:InvalidateWeaponBuffCache()
+		self:RequestUpdate(false, Reminder.RUNTIME_UPDATE_DELAY, true)
+		self:ScheduleDeferredAuraResync(0.2)
+		self:ScheduleDeferredAuraResync(1.0)
+		return
+	end
+
+	if event == "PLAYER_REGEN_DISABLED" or event == "PLAYER_REGEN_ENABLED" then
+		self.consumableTrackingBlockedByCombat = (event == "PLAYER_REGEN_DISABLED")
+		-- Aura data is restricted in combat, so group responsibilities must always
+		-- be rebuilt when combat starts or ends regardless of reminder visibility settings.
+		self:MarkAuraStatesDirty()
+		self:RequestUpdate(false, Reminder.RUNTIME_UPDATE_DELAY, true)
+		return
+	end
+
+	if event == "PLAYER_UPDATE_RESTING" then
+		self:RequestUpdate(false, Reminder.RUNTIME_UPDATE_DELAY, true)
+		return
+	end
+
+	if
+		event == "ZONE_CHANGED"
+		or event == "ZONE_CHANGED_INDOORS"
+		or event == "ZONE_CHANGED_NEW_AREA"
+		or event == "CHALLENGE_MODE_START"
+		or event == "CHALLENGE_MODE_COMPLETED"
+		or event == "CHALLENGE_MODE_RESET"
+		or event == "ENCOUNTER_START"
+		or event == "ENCOUNTER_END"
+	then
+		self:MarkAuraStatesDirty()
+		self:InvalidateFlaskCache()
+		self:InvalidateFoodCache()
+		self:InvalidateRuneCache()
+		self:RequestUpdate(false, Reminder.RUNTIME_UPDATE_DELAY, true)
+		return
+	end
+
+	if event == "PLAYER_SPECIALIZATION_CHANGED" or event == "PLAYER_TALENT_UPDATE" or event == "TRAIT_CONFIG_UPDATED" or event == "ACTIVE_TALENT_GROUP_CHANGED" or event == "SPELLS_CHANGED" then
+		self:InvalidateProviderAvailabilityCache()
+		self:InvalidateSelfProviderStatus()
+		self:InvalidateFlaskCache()
+		self:InvalidateFoodCache()
+		self:InvalidateRuneCache()
+		self:InvalidateWeaponBuffCache()
+		self:RequestUpdate(false, Reminder.RUNTIME_UPDATE_DELAY, true)
+		return
+	end
+
+	if event == "UNIT_INVENTORY_CHANGED" then
+		if unit == "player" then
+			self:InvalidateSelfProviderStatus()
+			self:InvalidateFlaskCache()
+			self:InvalidateFoodCache()
+			self:InvalidateRuneCache()
+			self:InvalidateWeaponBuffCache()
+			self:RequestUpdate(false, Reminder.RUNTIME_UPDATE_DELAY)
+		end
+		return
+	end
+
+	if event == "PLAYER_EQUIPMENT_CHANGED" then
+		self:InvalidateSelfProviderStatus()
+		self:InvalidateFlaskCache()
+		self:InvalidateFoodCache()
+		self:InvalidateRuneCache()
+		self:InvalidateWeaponBuffCache()
+		self:RequestUpdate(false, Reminder.RUNTIME_UPDATE_DELAY)
+		return
+	end
+
+	if event == "BAG_UPDATE_DELAYED" then
+		self:InvalidateSelfProviderStatus()
+		self:InvalidateFlaskCache()
+		self:InvalidateFoodCache()
+		self:InvalidateRuneCache()
+		self:InvalidateWeaponBuffCache()
+		self:RequestUpdate(false, Reminder.RUNTIME_UPDATE_DELAY)
+		return
+	end
+
+	if event == "PLAYER_LEVEL_UP" then
+		self:InvalidateProviderAvailabilityCache()
+		self:InvalidateSelfProviderStatus()
+		self:InvalidateFlaskCache()
+		self:InvalidateFoodCache()
+		self:InvalidateRuneCache()
+		self:InvalidateWeaponBuffCache()
+		self:RequestUpdate(false, Reminder.RUNTIME_UPDATE_DELAY, true)
+		return
+	end
+
+	if event == "PLAYER_DEAD" or event == "PLAYER_ALIVE" or event == "PLAYER_UNGHOST" then
+		self:MarkAuraStatesDirty()
+		self:UpdatePetHealthReminder()
+		self:RequestUpdate(false, Reminder.RUNTIME_UPDATE_DELAY, true)
+		return
+	end
+
+	if (event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH") and unit == "pet" then
+		self:UpdatePetHealthReminder()
+		return
+	end
+
+	if (event == "UNIT_PORTRAIT_UPDATE" and unit == "pet") or event == "PORTRAITS_UPDATED" then
+		self:UpdatePetHealthReminder()
+		return
+	end
+
+	if event == "UNIT_PET" or event == "PET_BAR_UPDATE" or event == "PET_BAR_UPDATE_USABLE" or event == "PLAYER_MOUNT_DISPLAY_CHANGED" or event == "PLAYER_CONTROL_LOST" or event == "PLAYER_CONTROL_GAINED" or (event == "UNIT_FLAGS" and unit == "pet") then
+		Reminder.petTracking.cachedStance = nil
+		self:UpdatePetHealthReminder()
+		self:RequestUpdate(false, Reminder.RUNTIME_UPDATE_DELAY, true)
+		return
+	end
+
+	if event == "UPDATE_SHAPESHIFT_FORM" or event == "UPDATE_SHAPESHIFT_FORMS" or event == "UPDATE_SHAPESHIFT_USABLE" then
+		self:RequestUpdate(false, Reminder.RUNTIME_UPDATE_DELAY, true)
+		return
+	end
+
+	if event == "UNIT_AURA" then
+		if not isTrackedUnit(unit) then return end
+		if not self:CanReadAuraData() then
+			if PROVIDER_BY_CLASS[self:GetClassToken()] then return end
+			self:InvalidateAuraStates()
+			self:RequestUpdate(false, Reminder.AURA_UPDATE_DELAY)
+			return
+		end
+		if self:IsReminderEvaluationBlockedByCombat() then return end
+		local playerUnit = isPlayerUnit(unit)
+		if playerUnit and self:IsPetTrackingEnabled() then self:RequestUpdate(false, Reminder.AURA_UPDATE_DELAY) end
+		local provider = self:GetProvider()
+		local supplementalTouches = playerUnit and self:SupplementalAuraUpdateTouchesPlayer(updateInfo) or false
+		if provider and provider.scope == PROVIDER_SCOPE_GROUP and self:ShouldEvaluateGroupResponsibilities(provider) ~= true then
+			if supplementalTouches then
+				self.playerAuraPresenceSnapshot = nil
+				self:RequestUpdate(false, Reminder.AURA_UPDATE_DELAY)
+			end
+			return
+			end
+			if provider and provider.scope == PROVIDER_SCOPE_SELF then
+				local needsUpdate = false
+				local providerTouches = (playerUnit or provider.tracksExternalUnitAuras == true) and self:ProviderAuraUpdateTouchesUnit(unit, updateInfo, provider) or false
+				if not providerTouches and provider.tracksExternalUnitAuras == true and type(updateInfo) == "table" and type(updateInfo.removedAuraInstanceIDs) == "table" then
+					providerTouches = true
+				end
+				if providerTouches and playerUnit and provider.trackSelfAuraInstances == true then
+					self:ApplyDeltaToUnitAuraState(unit, updateInfo, provider)
+				end
+				local groupCacheTouches = provider.tracksExternalUnitAuras == true and self:GroupBuffCacheAuraUpdateTouchesUnit(unit, updateInfo) or false
+				if groupCacheTouches then
+					if self:ApplyDeltaToGroupBuffStateCaches(unit, updateInfo) == true then
+						self:InvalidateSelfProviderStatus()
+						needsUpdate = true
+					end
+				end
+				if providerTouches then
+					self:InvalidatePlayerAuraPresenceSnapshot()
+					needsUpdate = true
+			end
+			if supplementalTouches then
+				self.playerAuraPresenceSnapshot = nil
+				needsUpdate = true
+			end
+			if needsUpdate then self:RequestUpdate(false, Reminder.AURA_UPDATE_DELAY) end
+			return
+		end
+		if provider and isAIFollowerUnit(unit) then
+			self:QueuePendingAuraReset(unit)
+			self:RequestUpdate(false, Reminder.AURA_UPDATE_DELAY)
+			return
+		end
+		if provider and self:ProviderAuraUpdateTouchesUnit(unit, updateInfo, provider) then
+			self:QueuePendingAuraDelta(unit, updateInfo)
+			self:RequestUpdate(false, Reminder.AURA_UPDATE_DELAY)
+			return
+		end
+		if supplementalTouches then
+			self.playerAuraPresenceSnapshot = nil
+			self:RequestUpdate(false, Reminder.AURA_UPDATE_DELAY)
+		end
+		return
+	end
+end
+
+function Reminder:ShouldRegisterGlobalAuraEvents()
+	local classToken = self:GetClassToken()
+	return classToken == "PALADIN" or (classToken ~= nil and PROVIDER_BY_CLASS[classToken] ~= nil)
+end
+
+function Reminder:RegisterEvents()
+	if not self:ShouldRegisterRuntimeEvents() then
+		self:UnregisterEvents()
+		return
+	end
+
+	if self.eventsRegistered then return end
+
+	self.eventFrame = self.eventFrame or CreateFrame("Frame")
+	self.eventFrame:RegisterEvent("PLAYER_LOGIN")
+	self.eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+	self.eventFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
+	self.eventFrame:RegisterEvent("UNIT_PHASE")
+	self.eventFrame:RegisterEvent("PLAYER_ROLES_ASSIGNED")
+	self.eventFrame:RegisterEvent("ROLE_CHANGED_INFORM")
+	self.eventFrame:RegisterEvent("READY_CHECK")
+	self.eventFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
+	self.eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+	self.eventFrame:RegisterEvent("PLAYER_UPDATE_RESTING")
+	self.eventFrame:RegisterEvent("ZONE_CHANGED")
+	self.eventFrame:RegisterEvent("ZONE_CHANGED_INDOORS")
+	self.eventFrame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+	self.eventFrame:RegisterEvent("CHALLENGE_MODE_START")
+	self.eventFrame:RegisterEvent("CHALLENGE_MODE_COMPLETED")
+	self.eventFrame:RegisterEvent("CHALLENGE_MODE_RESET")
+	self.eventFrame:RegisterEvent("ENCOUNTER_START")
+	self.eventFrame:RegisterEvent("ENCOUNTER_END")
+	self.eventFrame:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
+	self.eventFrame:RegisterEvent("PLAYER_TALENT_UPDATE")
+	self.eventFrame:RegisterEvent("TRAIT_CONFIG_UPDATED")
+	self.eventFrame:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
+	self.eventFrame:RegisterEvent("SPELLS_CHANGED")
+	if self:ShouldRegisterGlobalAuraEvents() then
+		self.eventFrame:RegisterEvent("UNIT_AURA")
+	else
+		self.eventFrame:RegisterUnitEvent("UNIT_AURA", "player")
+	end
+	if PROVIDER_BY_CLASS[self:GetClassToken()] then self.eventFrame:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player") end
+	self.eventFrame:RegisterEvent("ADDON_RESTRICTION_STATE_CHANGED")
+	self.eventFrame:RegisterEvent("UNIT_INVENTORY_CHANGED")
+	self.eventFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
+	self.eventFrame:RegisterEvent("BAG_UPDATE_DELAYED")
+	self.eventFrame:RegisterEvent("PLAYER_LEVEL_UP")
+	self.eventFrame:RegisterEvent("PLAYER_DEAD")
+	self.eventFrame:RegisterEvent("PLAYER_ALIVE")
+	self.eventFrame:RegisterEvent("PLAYER_UNGHOST")
+	self.eventFrame:RegisterEvent("PET_BAR_UPDATE")
+	self.eventFrame:RegisterEvent("PET_BAR_UPDATE_USABLE")
+	self.eventFrame:RegisterEvent("PLAYER_MOUNT_DISPLAY_CHANGED")
+	self.eventFrame:RegisterEvent("PLAYER_CONTROL_LOST")
+	self.eventFrame:RegisterEvent("PLAYER_CONTROL_GAINED")
+	self.eventFrame:RegisterEvent("UPDATE_SHAPESHIFT_FORM")
+	self.eventFrame:RegisterEvent("UPDATE_SHAPESHIFT_FORMS")
+	self.eventFrame:RegisterEvent("UPDATE_SHAPESHIFT_USABLE")
+	self.eventFrame:RegisterUnitEvent("UNIT_PET", "player")
+	self.eventFrame:RegisterUnitEvent("UNIT_FLAGS", "pet")
+	self.eventFrame:RegisterUnitEvent("UNIT_HEALTH", "pet")
+	self.eventFrame:RegisterUnitEvent("UNIT_MAXHEALTH", "pet")
+	self.eventFrame:RegisterUnitEvent("UNIT_PORTRAIT_UPDATE", "pet")
+	self.eventFrame:RegisterEvent("PORTRAITS_UPDATED")
+	self.eventFrame:SetScript("OnEvent", function(_, event, ...) Reminder:HandleEvent(event, ...) end)
+
+	self.eventsRegistered = true
+	self:SetupPetTrackingHooks()
+	self:ScheduleInitialSoundSync()
+end
+
+function Reminder:UnregisterEvents()
+	if self.restrictedGroupBuffTicker then self.restrictedGroupBuffTicker:Cancel() end
+	self.restrictedGroupBuffTicker = nil
+	if not self.eventFrame then return end
+	self.eventFrame:UnregisterAllEvents()
+	self.eventFrame:SetScript("OnEvent", nil)
+	self.eventsRegistered = false
+end
+
+local function editModeSetBool(key, value)
+	if Reminder.classTrackerKeys and Reminder.classTrackerKeys[key] then return Reminder:SetClassTrackerSetting(Reminder:GetClassToken(), key, value) end
+	if addon.db then addon.db[key] = value == true end
+	Reminder:SetGlowPreviewForSetting(key)
+	Reminder:RequestUpdate(true)
+end
+
+local function editModeSetNumber(key, value, minValue, maxValue, fallback)
+	if not addon.db then return end
+	addon.db[key] = clamp(value, minValue, maxValue, fallback)
+	Reminder:ApplyVisualSettings()
+	if key == DB_BORDER_SIZE or key == DB_BORDER_OFFSET then Reminder:RestartGlowAfterVisualChange() end
+	Reminder:RequestUpdate(true)
+end
+
+local function editModeSetColor(key, value, fallback)
+	if not addon.db then return end
+	local r, g, b, a = normalizeColor(value, fallback)
+	addon.db[key] = { r = r, g = g, b = b, a = a }
+	Reminder:SetGlowPreviewForSetting(key)
+	Reminder:ApplyVisualSettings()
+	if key == DB_BORDER_COLOR then Reminder:RestartGlowAfterVisualChange() end
+	Reminder:RequestUpdate(true)
+end
+
+local function editModeSetGlowStyle(value)
+	Reminder:SetGlowPreviewForSetting(DB_GLOW_STYLE)
+	if addon.db then addon.db[DB_GLOW_STYLE] = Reminder.NormalizeGlowStyleForIconShape(value, Reminder:GetIconShape()) end
+	Reminder:RequestUpdate(true)
+end
+
+local function editModeSetGlowInset(value)
+	Reminder:SetGlowPreviewForSetting(DB_GLOW_INSET)
+	if addon.db then addon.db[DB_GLOW_INSET] = normalizeGlowInset(value) end
+	Reminder:RequestUpdate(true)
+end
+
+local function editModeSetDisplayMode(value)
+	if addon.db then addon.db[DB_DISPLAY_MODE] = normalizeDisplayMode(value) end
+	Reminder:ApplyVisualSettings()
+	Reminder:RequestUpdate(true)
+end
+
+local function editModeSetGrowthDirection(value)
+	if addon.db then addon.db[DB_GROWTH_DIRECTION] = normalizeGrowthDirection(value) end
+	Reminder:ApplyVisualSettings()
+	Reminder:RequestUpdate(true)
+end
+
+local function editModeSetGrowthFromCenter(value)
+	if addon.db then addon.db[DB_GROWTH_FROM_CENTER] = value == true end
+	Reminder:ApplyVisualSettings()
+	Reminder:RequestUpdate(true)
+end
+
+	local function editModeSetIconShape(value)
+		if addon.db then
+			local shape = Reminder.NormalizeIconShape(value, defaults.iconShape or "DEFAULT")
+			addon.db[Reminder.DB_ICON_SHAPE] = shape
+			addon.db[DB_BORDER_TEXTURE] = normalizeBorderTexture(addon.db[DB_BORDER_TEXTURE])
+			addon.db[DB_GLOW_STYLE] = Reminder.NormalizeGlowStyleForIconShape(addon.db[DB_GLOW_STYLE], shape)
+		end
+		Reminder:StopAllGlowTargetsImmediate()
+		Reminder:ApplyVisualSettings()
+		Reminder:RestartGlowAfterVisualChange()
+		Reminder:RequestUpdate(true)
+	end
+
+function Reminder.EditModeRefreshRuntimeAfterTrackingChange()
+	if Reminder.OnSettingChanged then
+		Reminder:OnSettingChanged()
+	else
+		Reminder:RequestUpdate(true)
+	end
+end
+
+local function editModeSetTrackFlasks(value)
+	if addon.db then addon.db[DB_TRACK_FLASKS] = value == true end
+	Reminder:InvalidateFlaskCache()
+	Reminder.EditModeRefreshRuntimeAfterTrackingChange()
+end
+
+local function editModeSetTrackFood(value)
+	if addon.db then addon.db[DB_TRACK_FOOD] = value == true end
+	Reminder:InvalidateFoodCache()
+	Reminder.EditModeRefreshRuntimeAfterTrackingChange()
+end
+
+local function editModeSetRoleFilterContext(value)
+	if addon.db then addon.db[DB_ROLE_FILTER_CONTEXT] = normalizeRoleFilterContext(value) end
+	Reminder:RequestUpdate(true)
+end
+
+function Reminder:EditModeSetMissingSound(value)
+	if addon.db then
+		local _, map, pathToKey = self:GetMissingSoundOptions()
+		local chosen = type(value) == "string" and value or ""
+		if chosen ~= "" and map and map[chosen] then
+			-- keep chosen key
+		elseif chosen ~= "" and pathToKey and pathToKey[chosen] and map[pathToKey[chosen]] then
+			chosen = pathToKey[chosen]
+		else
+			chosen = ""
+		end
+		addon.db[DB_MISSING_SOUND] = chosen or ""
+	end
+	self.initialSoundSyncDone = false
+	self:NormalizeMissingSoundSelection()
+	self:ScheduleInitialSoundSync()
+	self:RequestUpdate(true)
+end
+
+function Reminder:IsEditModeIconOnlyModeActive() return normalizeDisplayMode(getValue(DB_DISPLAY_MODE, defaults.displayMode)) == DISPLAY_MODE_ICON_ONLY end
+
+local editModeSettingsBuilders = {}
+
+function editModeSettingsBuilders.appendEntries(target, entries)
+	if type(target) ~= "table" or type(entries) ~= "table" then return end
+	for i = 1, #entries do
+		target[#target + 1] = entries[i]
+	end
+end
+
+function editModeSettingsBuilders.buildClassBuffs()
+	return {
+		{
+			name = L["ClassBuffReminderSectionClassBuffs"] or "Class Buffs",
+			kind = SettingType.Collapsible,
+			id = "classBuffs",
+			defaultCollapsed = false,
+		},
+		{
+			name = L["ClassBuffReminderTrackGroupBuffs"] or "Track group buffs",
+			kind = SettingType.Checkbox,
+			parentId = "classBuffs",
+			default = defaults.trackGroupBuffs ~= false,
+			get = function() return getValue(DB_TRACK_GROUP_BUFFS, defaults.trackGroupBuffs) == true end,
+			set = function(_, value) editModeSetBool(DB_TRACK_GROUP_BUFFS, value) end,
+			tooltip = L["ClassBuffReminderTrackGroupBuffsDesc"] or "Checks group buff responsibilities outside of combat. Personal reminders are not affected.",
+		},
+		{
+			name = L["ClassBuffReminderShowParty"] or "Track in party",
+			kind = SettingType.Checkbox,
+			parentId = "classBuffs",
+			default = defaults.showParty,
+			get = function() return getValue(DB_SHOW_PARTY, defaults.showParty) == true end,
+			set = function(_, value) editModeSetBool(DB_SHOW_PARTY, value) end,
+		},
+		{
+			name = L["ClassBuffReminderShowRaid"] or "Track in raid",
+			kind = SettingType.Checkbox,
+			parentId = "classBuffs",
+			default = defaults.showRaid,
+			get = function() return getValue(DB_SHOW_RAID, defaults.showRaid) == true end,
+			set = function(_, value) editModeSetBool(DB_SHOW_RAID, value) end,
+		},
+		{
+			name = L["ClassBuffReminderShowSolo"] or "Show while solo",
+			kind = SettingType.Checkbox,
+			parentId = "classBuffs",
+			default = defaults.showSolo,
+			get = function() return getValue(DB_SHOW_SOLO, defaults.showSolo) == true end,
+			set = function(_, value) editModeSetBool(DB_SHOW_SOLO, value) end,
+		},
+		{
+			name = _G.OTHER or "Other",
+			kind = SettingType.Slider,
+			parentId = "classBuffs",
+			default = defaults.expirationWarningMinutes or 0,
+			minValue = 0,
+			maxValue = 60,
+			valueStep = 1,
+			get = function() return Reminder:GetExpirationWarningMinutes() end,
+			set = function(_, value) Reminder:SetExpirationWarningMinutes(value) end,
+			formatter = function(value)
+				local minutes = Reminder:NormalizeExpirationWarningMinutes(value)
+				if minutes <= 0 then return L["ClassBuffReminderExpirationWarningOff"] or "Missing only" end
+				return string.format(L["ClassBuffReminderExpirationWarningMinutesFmt"] or "%d min", minutes)
+			end,
+			tooltip = L["ClassBuffReminderExpirationWarningMinutesDesc"] or "0 keeps the current behavior. Higher values show the reminder when a tracked buff has this many minutes or less remaining.",
+		},
+		{
+			name = (_G.DUNGEON or "Dungeon") .. " (" .. (_G.PLAYER_DIFFICULTY6 or "Mythic") .. ")",
+			kind = SettingType.Slider,
+			parentId = "classBuffs",
+			default = defaults.expirationWarningMinutesMythicDungeon or 0,
+			minValue = 0,
+			maxValue = 60,
+			valueStep = 1,
+			get = function() return Reminder:GetMythicDungeonExpirationWarningMinutes() end,
+			set = function(_, value) Reminder:SetMythicDungeonExpirationWarningMinutes(value) end,
+			formatter = function(value)
+				local minutes = Reminder:NormalizeExpirationWarningMinutes(value)
+				if minutes <= 0 then return L["ClassBuffReminderExpirationWarningOff"] or "Missing only" end
+				return string.format(L["ClassBuffReminderExpirationWarningMinutesFmt"] or "%d min", minutes)
+			end,
+			tooltip = L["ClassBuffReminderExpirationWarningMinutesDesc"] or "0 keeps the current behavior. Higher values show the reminder when a tracked buff has this many minutes or less remaining.",
+		},
+		{
+			name = _G.RAID or "Raid",
+			kind = SettingType.Slider,
+			parentId = "classBuffs",
+			default = defaults.expirationWarningMinutesRaid or 0,
+			minValue = 0,
+			maxValue = 60,
+			valueStep = 1,
+			get = function() return Reminder:GetRaidExpirationWarningMinutes() end,
+			set = function(_, value) Reminder:SetRaidExpirationWarningMinutes(value) end,
+			formatter = function(value)
+				local minutes = Reminder:NormalizeExpirationWarningMinutes(value)
+				if minutes <= 0 then return L["ClassBuffReminderExpirationWarningOff"] or "Missing only" end
+				return string.format(L["ClassBuffReminderExpirationWarningMinutesFmt"] or "%d min", minutes)
+			end,
+			tooltip = L["ClassBuffReminderExpirationWarningMinutesDesc"] or "0 keeps the current behavior. Higher values show the reminder when a tracked buff has this many minutes or less remaining.",
+		},
+		{
+			name = L["ClassBuffReminderHideInRestedArea"] or "Don't show in rested areas",
+			kind = SettingType.Checkbox,
+			parentId = "classBuffs",
+			default = defaults.hideInRestedArea == true,
+			get = function() return getValue(DB_HIDE_IN_RESTED_AREA, defaults.hideInRestedArea) == true end,
+			set = function(_, value) editModeSetBool(DB_HIDE_IN_RESTED_AREA, value) end,
+		},
+		{ name = L["Glow"], kind = SettingType.Divider, parentId = "classBuffs" },
+		{
+			name = L["ClassBuffReminderGlow"] or "Glow when missing",
+			kind = SettingType.Checkbox,
+			parentId = "classBuffs",
+			default = defaults.glow,
+			get = function() return getValue(DB_GLOW, defaults.glow) == true end,
+			set = function(_, value) editModeSetBool(DB_GLOW, value) end,
+		},
+		{
+			name = L["Glow style"] or "Glow style",
+			kind = SettingType.Dropdown,
+			parentId = "classBuffs",
+			height = 180,
+			default = defaults.glowStyle,
+			get = function() return Reminder.NormalizeGlowStyleForIconShape(getValue(DB_GLOW_STYLE, defaults.glowStyle), Reminder:GetIconShape()) end,
+			set = function(_, value) editModeSetGlowStyle(value) end,
+			generator = function(_, root)
+				for _, option in ipairs(Reminder.GetGlowStyleOptions(Reminder:GetIconShape())) do
+					local label = L[option.labelKey] or option.fallback
+					root:CreateRadio(label, function() return Reminder.NormalizeGlowStyleForIconShape(getValue(DB_GLOW_STYLE, defaults.glowStyle), Reminder:GetIconShape()) == option.value end, function() editModeSetGlowStyle(option.value) end)
+				end
+			end,
+			isEnabled = function() return getValue(DB_GLOW, defaults.glow) == true end,
+		},
+		{
+			name = L["Glow inset"] or "Glow inset",
+			kind = SettingType.Slider,
+			parentId = "classBuffs",
+			default = defaults.glowInset,
+			minValue = -(Reminder.GLOW_INSET_RANGE or 20),
+			maxValue = Reminder.GLOW_INSET_RANGE or 20,
+			valueStep = 1,
+			get = function() return normalizeGlowInset(getValue(DB_GLOW_INSET, defaults.glowInset)) end,
+			set = function(_, value) editModeSetGlowInset(value) end,
+			formatter = function(value) return tostring(math.floor((tonumber(value) or defaults.glowInset or 0) + 0.5)) end,
+			isEnabled = function() return getValue(DB_GLOW, defaults.glow) == true end,
+		},
+		{
+			name = L["ClassBuffReminderGlowUseClassColor"] or "Use class color for glow",
+			kind = SettingType.Checkbox,
+			parentId = "classBuffs",
+			default = defaults.glowUseClassColor == true,
+			get = function() return getValue(Reminder.DB_GLOW_USE_CLASS_COLOR, defaults.glowUseClassColor) == true end,
+			set = function(_, value)
+				if addon.db then addon.db[Reminder.DB_GLOW_USE_CLASS_COLOR] = value == true end
+				Reminder:SetGlowPreviewForSetting(Reminder.DB_GLOW_USE_CLASS_COLOR)
+				Reminder:RestartGlowAfterVisualChange()
+				Reminder:RequestUpdate(true)
+			end,
+			isEnabled = function() return getValue(DB_GLOW, defaults.glow) == true end,
+		},
+		{
+			name = L["Glow color"] or "Glow color",
+			kind = SettingType.Color,
+			parentId = "classBuffs",
+			default = defaults.glowColor,
+			get = function()
+				local r, g, b, a = Reminder:GetGlowColor()
+				return { r = r, g = g, b = b, a = a }
+			end,
+			set = function(_, value) editModeSetColor("classBuffReminderGlowColor", value, defaults.glowColor) end,
+			isEnabled = function() return getValue(DB_GLOW, defaults.glow) == true and getValue(Reminder.DB_GLOW_USE_CLASS_COLOR, defaults.glowUseClassColor) ~= true end,
+		},
+	}
+end
+
+function editModeSettingsBuilders.buildFilters()
+	return {
+		{
+			name = L["ClassBuffReminderSectionFilters"] or "Tracking Filters",
+			kind = SettingType.Collapsible,
+			id = "filters",
+			defaultCollapsed = true,
+		},
+		{
+			name = L["ClassBuffReminderOnlyOutOfCombat"] or "Only show reminders out of combat",
+			kind = SettingType.Checkbox,
+			parentId = "filters",
+			default = defaults.onlyOutOfCombat == true,
+			get = function() return getValue(DB_ONLY_OUT_OF_COMBAT, defaults.onlyOutOfCombat) == true end,
+			set = function(_, value) editModeSetBool(DB_ONLY_OUT_OF_COMBAT, value) end,
+		},
+		{
+			name = L["ClassBuffReminderRoleFilterEnabled"] or "Filter group buffs by role",
+			kind = SettingType.Checkbox,
+			parentId = "filters",
+			default = defaults.roleFilterEnabled == true,
+			get = function() return getValue(DB_ROLE_FILTER_ENABLED, defaults.roleFilterEnabled) == true end,
+			set = function(_, value) editModeSetBool(DB_ROLE_FILTER_ENABLED, value) end,
+			tooltip = L["ClassBuffReminderFiltersDesc"] or "Role filters only affect group buff responsibilities. Personal reminders remain visible.",
+			isShown = function() return getValue(DB_TRACK_GROUP_BUFFS, defaults.trackGroupBuffs) == true end,
+		},
+		{
+			name = L["ClassBuffReminderRoleFilterContext"] or "Apply role filter in",
+			kind = SettingType.Dropdown,
+			parentId = "filters",
+			height = 120,
+			default = defaults.roleFilterContext,
+			get = function() return normalizeRoleFilterContext(getValue(DB_ROLE_FILTER_CONTEXT, defaults.roleFilterContext)) end,
+			set = function(_, value) editModeSetRoleFilterContext(value) end,
+			generator = function(_, root)
+				root:CreateRadio(
+					L["ClassBuffReminderRoleFilterContextAnyGroup"] or "Any group",
+					function() return normalizeRoleFilterContext(getValue(DB_ROLE_FILTER_CONTEXT, defaults.roleFilterContext)) == ROLE_FILTER_CONTEXT_ANY_GROUP end,
+					function() editModeSetRoleFilterContext(ROLE_FILTER_CONTEXT_ANY_GROUP) end
+				)
+				root:CreateRadio(
+					L["ClassBuffReminderRoleFilterContextRaidOnly"] or "Raid only",
+					function() return normalizeRoleFilterContext(getValue(DB_ROLE_FILTER_CONTEXT, defaults.roleFilterContext)) == ROLE_FILTER_CONTEXT_RAID_ONLY end,
+					function() editModeSetRoleFilterContext(ROLE_FILTER_CONTEXT_RAID_ONLY) end
+				)
+				root:CreateRadio(
+					L["ClassBuffReminderRoleFilterContextPartyOnly"] or "Party only",
+					function() return normalizeRoleFilterContext(getValue(DB_ROLE_FILTER_CONTEXT, defaults.roleFilterContext)) == ROLE_FILTER_CONTEXT_PARTY_ONLY end,
+					function() editModeSetRoleFilterContext(ROLE_FILTER_CONTEXT_PARTY_ONLY) end
+				)
+			end,
+			isShown = function() return getValue(DB_TRACK_GROUP_BUFFS, defaults.trackGroupBuffs) == true and getValue(DB_ROLE_FILTER_ENABLED, defaults.roleFilterEnabled) == true end,
+		},
+		{
+			name = L["ClassBuffReminderHideForHealer"] or "Hide reminder for healers",
+			kind = SettingType.Checkbox,
+			parentId = "filters",
+			default = defaults.hideForHealer == true,
+			get = function() return getValue(DB_HIDE_FOR_HEALER, defaults.hideForHealer) == true end,
+			set = function(_, value) editModeSetBool(DB_HIDE_FOR_HEALER, value) end,
+			isShown = function() return getValue(DB_TRACK_GROUP_BUFFS, defaults.trackGroupBuffs) == true and getValue(DB_ROLE_FILTER_ENABLED, defaults.roleFilterEnabled) == true end,
+		},
+		{
+			name = L["ClassBuffReminderHideForTank"] or "Hide reminder for tanks",
+			kind = SettingType.Checkbox,
+			parentId = "filters",
+			default = defaults.hideForTank == true,
+			get = function() return getValue(DB_HIDE_FOR_TANK, defaults.hideForTank) == true end,
+			set = function(_, value) editModeSetBool(DB_HIDE_FOR_TANK, value) end,
+			isShown = function() return getValue(DB_TRACK_GROUP_BUFFS, defaults.trackGroupBuffs) == true and getValue(DB_ROLE_FILTER_ENABLED, defaults.roleFilterEnabled) == true end,
+		},
+		{
+			name = L["ClassBuffReminderHideForDamager"] or "Hide reminder for damage dealers",
+			kind = SettingType.Checkbox,
+			parentId = "filters",
+			default = defaults.hideForDamager == true,
+			get = function() return getValue(DB_HIDE_FOR_DAMAGER, defaults.hideForDamager) == true end,
+			set = function(_, value) editModeSetBool(DB_HIDE_FOR_DAMAGER, value) end,
+			isShown = function() return getValue(DB_TRACK_GROUP_BUFFS, defaults.trackGroupBuffs) == true and getValue(DB_ROLE_FILTER_ENABLED, defaults.roleFilterEnabled) == true end,
+		},
+		{
+			name = L["ClassBuffReminderHideForNoRole"] or "Hide reminder for unassigned roles",
+			kind = SettingType.Checkbox,
+			parentId = "filters",
+			default = defaults.hideForNoRole == true,
+			get = function() return getValue(DB_HIDE_FOR_NONE, defaults.hideForNoRole) == true end,
+			set = function(_, value) editModeSetBool(DB_HIDE_FOR_NONE, value) end,
+			isShown = function() return getValue(DB_TRACK_GROUP_BUFFS, defaults.trackGroupBuffs) == true and getValue(DB_ROLE_FILTER_ENABLED, defaults.roleFilterEnabled) == true end,
+		},
+		{
+			name = L["ClassBuffReminderShowIfOnlyProvider"] or "Show when I am the only class provider",
+			kind = SettingType.Checkbox,
+			parentId = "filters",
+			default = defaults.showIfOnlyProvider ~= false,
+			get = function() return getValue(DB_SHOW_IF_ONLY_PROVIDER, defaults.showIfOnlyProvider) == true end,
+			set = function(_, value) editModeSetBool(DB_SHOW_IF_ONLY_PROVIDER, value) end,
+			isShown = function() return getValue(DB_TRACK_GROUP_BUFFS, defaults.trackGroupBuffs) == true and getValue(DB_ROLE_FILTER_ENABLED, defaults.roleFilterEnabled) == true end,
+		},
+	}
+end
+
+function editModeSettingsBuilders.buildConsumables()
+	return {
+		{
+			name = L["ClassBuffReminderSectionFlasks"] or "Flasks",
+			kind = SettingType.Collapsible,
+			id = "flasks",
+			defaultCollapsed = true,
+		},
+		{
+			name = L["ClassBuffReminderTrackFlasks"] or "Track missing flask buff",
+			kind = SettingType.Checkbox,
+			parentId = "flasks",
+			default = defaults.trackFlasks == true,
+			get = function() return getValue(DB_TRACK_FLASKS, defaults.trackFlasks) == true end,
+			set = function(_, value) editModeSetTrackFlasks(value) end,
+		},
+		{
+			name = L["ClassBuffReminderTrackingContent"] or "Active in content",
+			kind = SettingType.MultiDropdown,
+			parentId = "flasks",
+			height = 260,
+			default = defaults.trackFlasksContent,
+			options = Reminder:GetTrackingContentOptions(),
+			get = function() return Reminder:GetFlaskTrackingContentSelection() end,
+			set = function(_, value) Reminder:SetFlaskTrackingContentSelection(value) end,
+			tooltip = L["ClassBuffReminderTrackingContentDesc"] or "Choose where this reminder should be active. Multiple entries can be selected.",
+			customDefaultText = _G.NONE or "None",
+			hideSummary = true,
+			isShown = function() return getValue(DB_TRACK_FLASKS, defaults.trackFlasks) == true end,
+		},
+		{
+			name = L["ClassBuffReminderSectionFood"] or "Food",
+			kind = SettingType.Collapsible,
+			id = "food",
+			defaultCollapsed = true,
+		},
+		{
+			name = L["ClassBuffReminderTrackFood"] or "Track missing food buff",
+			kind = SettingType.Checkbox,
+			parentId = "food",
+			default = defaults.trackFood == true,
+			get = function() return getValue(DB_TRACK_FOOD, defaults.trackFood) == true end,
+			set = function(_, value) editModeSetTrackFood(value) end,
+		},
+		{
+			name = L["ClassBuffReminderTrackingContent"] or "Active in content",
+			kind = SettingType.MultiDropdown,
+			parentId = "food",
+			height = 260,
+			default = defaults.trackFoodContent,
+			options = Reminder:GetTrackingContentOptions(),
+			get = function() return Reminder:GetFoodTrackingContentSelection() end,
+			set = function(_, value) Reminder:SetFoodTrackingContentSelection(value) end,
+			tooltip = L["ClassBuffReminderTrackingContentDesc"] or "Choose where this reminder should be active. Multiple entries can be selected.",
+			customDefaultText = _G.NONE or "None",
+			hideSummary = true,
+			isShown = function() return getValue(DB_TRACK_FOOD, defaults.trackFood) == true end,
+		},
+		{
+			name = L["ClassBuffReminderSectionRunes"] or "Augment Runes",
+			kind = SettingType.Collapsible,
+			id = "runes",
+			defaultCollapsed = true,
+		},
+		{
+			name = L["ClassBuffReminderTrackRunes"] or "Track missing augment rune",
+			kind = SettingType.Checkbox,
+			parentId = "runes",
+			default = defaults.trackRunes == true,
+			get = function() return getValue(Reminder.runeTracking.enabledDb, defaults.trackRunes) == true end,
+			set = function(_, value)
+				if addon.db then addon.db[Reminder.runeTracking.enabledDb] = value == true end
+				Reminder:InvalidateRuneCache()
+				Reminder.EditModeRefreshRuntimeAfterTrackingChange()
+			end,
+		},
+		{
+			name = L["ClassBuffReminderTrackingContent"] or "Active in content",
+			kind = SettingType.MultiDropdown,
+			parentId = "runes",
+			height = 260,
+			default = defaults.trackRunesContent,
+			options = Reminder:GetTrackingContentOptions(),
+			get = function() return Reminder:GetRuneTrackingContentSelection() end,
+			set = function(_, value) Reminder:SetRuneTrackingContentSelection(value) end,
+			tooltip = L["ClassBuffReminderTrackingContentDesc"] or "Choose where this reminder should be active. Multiple entries can be selected.",
+			customDefaultText = _G.NONE or "None",
+			hideSummary = true,
+			isShown = function() return getValue(Reminder.runeTracking.enabledDb, defaults.trackRunes) == true end,
+		},
+		{
+			name = L["ClassBuffReminderSectionWeaponBuffs"] or "Weapon Buffs",
+			kind = SettingType.Collapsible,
+			id = "weaponBuffs",
+			defaultCollapsed = true,
+		},
+		{
+			name = L["ClassBuffReminderTrackWeaponBuffs"] or "Track missing weapon oil/stone",
+			kind = SettingType.Checkbox,
+			parentId = "weaponBuffs",
+			default = defaults.trackWeaponBuffs == true,
+			get = function() return getValue(DB_TRACK_WEAPON_BUFFS, defaults.trackWeaponBuffs) == true end,
+			set = function(_, value)
+				if addon.db then addon.db[DB_TRACK_WEAPON_BUFFS] = value == true end
+				Reminder:InvalidateWeaponBuffCache()
+				Reminder.EditModeRefreshRuntimeAfterTrackingChange()
+			end,
+		},
+		{
+			name = L["ClassBuffReminderTrackingContent"] or "Active in content",
+			kind = SettingType.MultiDropdown,
+			parentId = "weaponBuffs",
+			height = 260,
+			default = defaults.trackWeaponBuffsContent,
+			options = Reminder:GetTrackingContentOptions(),
+			get = function() return Reminder:GetWeaponBuffTrackingContentSelection() end,
+			set = function(_, value) Reminder:SetWeaponBuffTrackingContentSelection(value) end,
+			tooltip = L["ClassBuffReminderTrackingContentDesc"] or "Choose where this reminder should be active. Multiple entries can be selected.",
+			customDefaultText = _G.NONE or "None",
+			hideSummary = true,
+			isShown = function() return getValue(DB_TRACK_WEAPON_BUFFS, defaults.trackWeaponBuffs) == true end,
+		},
+		{
+			name = L["ClassBuffReminderSectionPets"] or "Pets",
+			kind = SettingType.Collapsible,
+			id = "pets",
+			defaultCollapsed = true,
+		},
+		{
+			name = L["ClassBuffReminderTrackPets"] or "Track pet reminders",
+			kind = SettingType.Checkbox,
+			parentId = "pets",
+			default = defaults.trackPets == true,
+			get = function() return getValue("classBuffReminderTrackPets", defaults.trackPets) == true end,
+			set = function(_, value)
+				if addon.db then addon.db["classBuffReminderTrackPets"] = value == true end
+				Reminder.EditModeRefreshRuntimeAfterTrackingChange()
+			end,
+		},
+		{
+			name = L["ClassBuffReminderPetHealthReminder"] or "Pet health reminder",
+			kind = SettingType.Checkbox,
+			parentId = "pets",
+			default = defaults.petHealthReminderEnabled == true,
+			get = function() return Reminder:IsPetHealthReminderEnabled() end,
+			set = function(_, value) Reminder:SetPetHealthReminderEnabled(value) end,
+			tooltip = L["ClassBuffReminderPetHealthReminderDesc"] or "Shows the pet icon when its health falls below the configured threshold.",
+			isShown = function() return getValue("classBuffReminderTrackPets", defaults.trackPets) == true end,
+		},
+		{
+			name = L["ClassBuffReminderPetHealthThreshold"] or "Pet health threshold",
+			kind = SettingType.Slider,
+			parentId = "pets",
+			default = defaults.petHealthReminderThreshold or 30,
+			minValue = 1,
+			maxValue = 100,
+			valueStep = 1,
+			get = function() return Reminder:GetPetHealthReminderThreshold() end,
+			set = function(_, value) Reminder:SetPetHealthReminderThreshold(value) end,
+			formatter = function(value)
+				local threshold = clamp(value, 1, 100, defaults.petHealthReminderThreshold)
+				return string.format("%d%%", math.floor(threshold + 0.5))
+			end,
+			tooltip = L["ClassBuffReminderPetHealthThresholdDesc"] or "Shows the reminder while pet health is below this percentage.",
+			isShown = function() return getValue("classBuffReminderTrackPets", defaults.trackPets) == true and Reminder:IsPetHealthReminderEnabled() end,
+		},
+		{
+			name = L["ClassBuffReminderPetHealthInfernalBeneficiaryOnly"] or "Only with Infernal Beneficiary",
+			kind = SettingType.Checkbox,
+			parentId = "pets",
+			default = defaults.petHealthReminderInfernalBeneficiaryOnly == true,
+			get = function() return Reminder:IsPetHealthReminderInfernalBeneficiaryOnly() end,
+			set = function(_, value) Reminder:SetPetHealthReminderInfernalBeneficiaryOnly(value) end,
+			tooltip = L["ClassBuffReminderPetHealthInfernalBeneficiaryOnlyDesc"] or "For Warlocks, only shows the pet health reminder while Infernal Beneficiary is talented.",
+			isShown = function()
+				return getValue("classBuffReminderTrackPets", defaults.trackPets) == true and Reminder:IsPetHealthReminderEnabled() and Reminder:GetClassToken() == "WARLOCK"
+			end,
+		},
+		{
+			name = L["ClassBuffReminderIgnorePetPassive"] or "Ignore passive pet stance",
+			kind = SettingType.Checkbox,
+			parentId = "pets",
+			default = defaults.ignorePetPassive,
+			get = function() return getValue("classBuffReminderIgnorePetPassive", defaults.ignorePetPassive) == true end,
+			set = function(_, value)
+				if addon.db then addon.db["classBuffReminderIgnorePetPassive"] = value == true end
+				Reminder:RequestUpdate(true, 0, true)
+			end,
+			isShown = function() return getValue("classBuffReminderTrackPets", defaults.trackPets) == true end,
+		},
+		{
+			name = L["ClassBuffReminderIgnorePetDefensive"] or "Ignore defensive pet stance",
+			kind = SettingType.Checkbox,
+			parentId = "pets",
+			default = defaults.ignorePetDefensive,
+			get = function() return getValue("classBuffReminderIgnorePetDefensive", defaults.ignorePetDefensive) == true end,
+			set = function(_, value)
+				if addon.db then addon.db["classBuffReminderIgnorePetDefensive"] = value == true end
+				Reminder:RequestUpdate(true, 0, true)
+			end,
+			isShown = function() return getValue("classBuffReminderTrackPets", defaults.trackPets) == true end,
+		},
+		{
+			name = L["ClassBuffReminderHidePetReminderText"] or "Hide pet reminder text",
+			kind = SettingType.Checkbox,
+			parentId = "pets",
+			default = defaults.hidePetReminderText,
+			get = function() return getValue("classBuffReminderHidePetReminderText", defaults.hidePetReminderText) == true end,
+			set = function(_, value)
+				if addon.db then addon.db["classBuffReminderHidePetReminderText"] = value == true end
+				Reminder:RequestUpdate(true, 0, true)
+			end,
+			isShown = function() return getValue("classBuffReminderTrackPets", defaults.trackPets) == true end,
+		},
+		{
+			name = L["ClassBuffReminderTrackingContent"] or "Active in content",
+			kind = SettingType.MultiDropdown,
+			parentId = "pets",
+			height = 260,
+			default = defaults.trackPetsContent,
+			options = Reminder:GetTrackingContentOptions(),
+			get = function() return Reminder:GetPetTrackingContentSelection() end,
+			set = function(_, value) Reminder:SetPetTrackingContentSelection(value) end,
+			tooltip = L["ClassBuffReminderTrackingContentDesc"] or "Choose where this reminder should be active. Multiple entries can be selected.",
+			customDefaultText = _G.NONE or "None",
+			hideSummary = true,
+			isShown = function() return getValue("classBuffReminderTrackPets", defaults.trackPets) == true end,
+		},
+	}
+end
+
+function editModeSettingsBuilders.buildSound()
+	return {
+		{
+			name = SOUND,
+			kind = SettingType.Collapsible,
+			id = "sound",
+			defaultCollapsed = true,
+		},
+		{
+			name = L["ClassBuffReminderSoundOnMissing"] or "Play sound when missing",
+			kind = SettingType.Checkbox,
+			parentId = "sound",
+			default = defaults.soundOnMissing,
+			get = function() return getValue(DB_SOUND_ON_MISSING, defaults.soundOnMissing) == true end,
+			set = function(_, value) editModeSetBool(DB_SOUND_ON_MISSING, value) end,
+		},
+		{
+			name = L["ClassBuffReminderMissingSound"] or "Missing sound",
+			kind = SettingType.SoundDropdown,
+			parentId = "sound",
+			height = 260,
+			get = function()
+				Reminder:BuildMissingSoundOptions()
+				return Reminder:GetMissingSoundValue()
+			end,
+			set = function(_, value) Reminder:EditModeSetMissingSound(value) end,
+			generator = function(_, root, _, attachPreview)
+				local keys = Reminder:BuildMissingSoundOptions()
+				for i = 1, #keys do
+					local soundName = keys[i]
+					local radio = root:CreateRadio(soundName, function() return Reminder:GetMissingSoundValue() == soundName end, function()
+						Reminder:EditModeSetMissingSound(soundName)
+						Reminder:PlayMissingSound(true)
+					end)
+					attachPreview(radio, soundName, soundName)
+				end
+			end,
+			isEnabled = function() return getValue(DB_SOUND_ON_MISSING, defaults.soundOnMissing) == true end,
+		},
+	}
+end
+
+function editModeSettingsBuilders.buildLayout()
+	return {
+		{
+			name = L["ClassBuffReminderSectionAnchorSize"] or "Anchor & Size",
+			kind = SettingType.Collapsible,
+			id = "anchorSize",
+			defaultCollapsed = true,
+		},
+		{
+			name = DISPLAY_MODE,
+			kind = SettingType.Dropdown,
+			parentId = "anchorSize",
+			height = 80,
+			get = function() return normalizeDisplayMode(getValue(DB_DISPLAY_MODE, defaults.displayMode)) end,
+			set = function(_, value) editModeSetDisplayMode(value) end,
+			generator = function(_, root)
+				root:CreateRadio(
+					L["ClassBuffReminderDisplayModeFull"] or "Full",
+					function() return normalizeDisplayMode(getValue(DB_DISPLAY_MODE, defaults.displayMode)) == DISPLAY_MODE_FULL end,
+					function() editModeSetDisplayMode(DISPLAY_MODE_FULL) end
+				)
+				root:CreateRadio(
+					L["ClassBuffReminderDisplayModeIconOnly"] or "Icon only (X/Y)",
+					function() return normalizeDisplayMode(getValue(DB_DISPLAY_MODE, defaults.displayMode)) == DISPLAY_MODE_ICON_ONLY end,
+					function() editModeSetDisplayMode(DISPLAY_MODE_ICON_ONLY) end
+				)
+			end,
+		},
+		{
+			name = L["Growth direction"] or "Growth direction",
+			kind = SettingType.Dropdown,
+			parentId = "anchorSize",
+			height = 120,
+			get = function() return normalizeGrowthDirection(getValue(DB_GROWTH_DIRECTION, defaults.growthDirection)) end,
+			set = function(_, value) editModeSetGrowthDirection(value) end,
+			generator = function(_, root)
+				root:CreateRadio(
+					L["Right"] or "Right",
+					function() return normalizeGrowthDirection(getValue(DB_GROWTH_DIRECTION, defaults.growthDirection)) == GROWTH_RIGHT end,
+					function() editModeSetGrowthDirection(GROWTH_RIGHT) end
+				)
+				root:CreateRadio(
+					L["Left"] or "Left",
+					function() return normalizeGrowthDirection(getValue(DB_GROWTH_DIRECTION, defaults.growthDirection)) == GROWTH_LEFT end,
+					function() editModeSetGrowthDirection(GROWTH_LEFT) end
+				)
+				root:CreateRadio(
+					L["Up"] or "Up",
+					function() return normalizeGrowthDirection(getValue(DB_GROWTH_DIRECTION, defaults.growthDirection)) == GROWTH_UP end,
+					function() editModeSetGrowthDirection(GROWTH_UP) end
+				)
+				root:CreateRadio(
+					L["Down"] or "Down",
+					function() return normalizeGrowthDirection(getValue(DB_GROWTH_DIRECTION, defaults.growthDirection)) == GROWTH_DOWN end,
+					function() editModeSetGrowthDirection(GROWTH_DOWN) end
+				)
+			end,
+		},
+		{
+			name = L["Grow from center"] or "Grow from center",
+			kind = SettingType.Checkbox,
+			parentId = "anchorSize",
+			default = defaults.growthFromCenter == true,
+			get = function() return getValue(DB_GROWTH_FROM_CENTER, defaults.growthFromCenter) == true end,
+			set = function(_, value) editModeSetGrowthFromCenter(value) end,
+		},
+		{
+			name = L["Scale"] or "Scale",
+			kind = SettingType.Slider,
+			parentId = "anchorSize",
+			default = defaults.scale,
+			minValue = 0.5,
+			maxValue = 2,
+			valueStep = 0.05,
+			get = function() return clamp(getValue(DB_SCALE, defaults.scale), 0.5, 2, defaults.scale) end,
+			set = function(_, value) editModeSetNumber(DB_SCALE, value, 0.5, 2, defaults.scale) end,
+			formatter = function(value) return string.format("%.2f", tonumber(value) or defaults.scale) end,
+		},
+		{
+			name = L["UFOverallAlpha"],
+			kind = SettingType.Slider,
+			parentId = "anchorSize",
+			navigationField = "classBuffReminderOverallAlpha",
+			default = defaults.overallAlpha,
+			minValue = 0.1,
+			maxValue = 1,
+			valueStep = 0.05,
+			get = function() return clamp(getValue(Reminder.DB_OVERALL_ALPHA, defaults.overallAlpha), 0.1, 1, defaults.overallAlpha) end,
+			set = function(_, value) editModeSetNumber(Reminder.DB_OVERALL_ALPHA, value, 0.1, 1, defaults.overallAlpha) end,
+			formatter = function(value) return string.format("%d%%", math.floor((tonumber(value) or defaults.overallAlpha) * 100 + 0.5)) end,
+		},
+		{ name = L["Icon"], kind = SettingType.Divider, parentId = "anchorSize" },
+		{
+			name = L["Icon size"] or "Icon size",
+			kind = SettingType.Slider,
+			parentId = "anchorSize",
+			default = defaults.iconSize,
+			minValue = 14,
+			maxValue = 120,
+			valueStep = 1,
+			get = function() return clamp(getValue(DB_ICON_SIZE, defaults.iconSize), 14, 120, defaults.iconSize) end,
+			set = function(_, value) editModeSetNumber(DB_ICON_SIZE, value, 14, 120, defaults.iconSize) end,
+			formatter = function(value) return tostring(math.floor((tonumber(value) or defaults.iconSize) + 0.5)) end,
+		},
+		{
+			name = L["settingsIconShapeLabel"] or "Icon shape",
+			kind = SettingType.Dropdown,
+			parentId = "anchorSize",
+			height = 160,
+			default = defaults.iconShape or "DEFAULT",
+			get = function() return Reminder:GetIconShape() end,
+			set = function(_, value) editModeSetIconShape(value) end,
+			generator = function(_, root)
+					local options = addon.IconShape and addon.IconShape.GetOptions and addon.IconShape.GetOptions(L) or {
+						{ value = "DEFAULT", label = _G.DEFAULT or "Default" },
+						{ value = "SQUARE", label = "Square" },
+						{ value = "ROUND", label = "Round" },
+						{ value = "ROUND_STAR", label = L["settingsIconShapeRoundStar"] or "Round star" },
+						{ value = "HEXAGON", label = "Hexagon" },
+						{ value = "DIAMOND", label = "Diamond" },
+					}
+				for _, option in ipairs(options) do
+					root:CreateRadio(option.label, function() return Reminder:GetIconShape() == option.value end, function() editModeSetIconShape(option.value) end)
+				end
+			end,
+		},
+		{
+			name = L["Icon zoom"] or "Icon zoom",
+			kind = SettingType.Slider,
+			parentId = "anchorSize",
+			default = defaults.iconZoom or 0,
+			minValue = 0,
+			maxValue = 35,
+			valueStep = 1,
+			get = function() return Reminder:GetIconZoom() end,
+			set = function(_, value) editModeSetNumber(Reminder.DB_ICON_ZOOM, value, 0, 35, defaults.iconZoom or 0) end,
+			formatter = function(value) return tostring(math.floor((tonumber(value) or 0) + 0.5)) end,
+		},
+		{
+			name = L["Icon gap"] or "Icon gap",
+			kind = SettingType.Slider,
+			parentId = "anchorSize",
+			default = defaults.iconGap,
+			minValue = 0,
+			maxValue = 40,
+			valueStep = 1,
+			get = function() return clamp(getValue(DB_ICON_GAP, defaults.iconGap), 0, 40, defaults.iconGap) end,
+			set = function(_, value) editModeSetNumber(DB_ICON_GAP, value, 0, 40, defaults.iconGap) end,
+			formatter = function(value) return tostring(math.floor((tonumber(value) or defaults.iconGap) + 0.5)) end,
+		},
+		{ name = L["Text"], kind = SettingType.Divider, parentId = "anchorSize" },
+		{
+			name = FONT_SIZE,
+			kind = SettingType.Slider,
+			parentId = "anchorSize",
+			default = defaults.fontSize,
+			minValue = 9,
+			maxValue = 30,
+			valueStep = 1,
+			get = function() return clamp(getValue(DB_FONT_SIZE, defaults.fontSize), 9, 30, defaults.fontSize) end,
+			set = function(_, value) editModeSetNumber(DB_FONT_SIZE, value, 9, 30, defaults.fontSize) end,
+			formatter = function(value) return tostring(math.floor((tonumber(value) or defaults.fontSize) + 0.5)) end,
+			isShown = function() return not Reminder:IsEditModeIconOnlyModeActive() end,
+		},
+		{
+			name = L["ClassBuffReminderXYTextSize"] or "X/Y text size",
+			kind = SettingType.Slider,
+			parentId = "anchorSize",
+			default = defaults.xyTextSize,
+			minValue = 8,
+			maxValue = 64,
+			valueStep = 1,
+			get = function() return clamp(getValue(DB_XY_TEXT_SIZE, defaults.xyTextSize), 8, 64, defaults.xyTextSize) end,
+			set = function(_, value) editModeSetNumber(DB_XY_TEXT_SIZE, value, 8, 64, defaults.xyTextSize) end,
+			formatter = function(value) return tostring(math.floor((tonumber(value) or defaults.xyTextSize) + 0.5)) end,
+			isShown = function() return Reminder:IsEditModeIconOnlyModeActive() end,
+		},
+		{
+			name = L["ClassBuffReminderXYTextOutline"] or "X/Y text outline",
+			kind = SettingType.Dropdown,
+			parentId = "anchorSize",
+			height = 120,
+			get = function() return normalizeTextOutline(getValue(DB_XY_TEXT_OUTLINE, defaults.xyTextOutline)) end,
+			set = function(_, value)
+				if addon.db then addon.db[DB_XY_TEXT_OUTLINE] = normalizeTextOutline(value) end
+				Reminder:ApplyVisualSettings()
+				Reminder:RequestUpdate(true)
+			end,
+			generator = function(_, root)
+				root:CreateRadio(
+					NONE,
+					function() return normalizeTextOutline(getValue(DB_XY_TEXT_OUTLINE, defaults.xyTextOutline)) == TEXT_OUTLINE_NONE end,
+					function()
+						if addon.db then addon.db[DB_XY_TEXT_OUTLINE] = normalizeTextOutline(TEXT_OUTLINE_NONE) end
+						Reminder:ApplyVisualSettings()
+						Reminder:RequestUpdate(true)
+					end
+				)
+				root:CreateRadio(
+					L["Outline"] or "Outline",
+					function() return normalizeTextOutline(getValue(DB_XY_TEXT_OUTLINE, defaults.xyTextOutline)) == TEXT_OUTLINE_OUTLINE end,
+					function()
+						if addon.db then addon.db[DB_XY_TEXT_OUTLINE] = normalizeTextOutline(TEXT_OUTLINE_OUTLINE) end
+						Reminder:ApplyVisualSettings()
+						Reminder:RequestUpdate(true)
+					end
+				)
+				root:CreateRadio(
+					L["Thick outline"] or "Thick outline",
+					function() return normalizeTextOutline(getValue(DB_XY_TEXT_OUTLINE, defaults.xyTextOutline)) == TEXT_OUTLINE_THICK end,
+					function()
+						if addon.db then addon.db[DB_XY_TEXT_OUTLINE] = normalizeTextOutline(TEXT_OUTLINE_THICK) end
+						Reminder:ApplyVisualSettings()
+						Reminder:RequestUpdate(true)
+					end
+				)
+				root:CreateRadio(
+					L["Monochrome outline"] or "Monochrome outline",
+					function() return normalizeTextOutline(getValue(DB_XY_TEXT_OUTLINE, defaults.xyTextOutline)) == TEXT_OUTLINE_MONO end,
+					function()
+						if addon.db then addon.db[DB_XY_TEXT_OUTLINE] = normalizeTextOutline(TEXT_OUTLINE_MONO) end
+						Reminder:ApplyVisualSettings()
+						Reminder:RequestUpdate(true)
+					end
+				)
+			end,
+			isShown = function() return Reminder:IsEditModeIconOnlyModeActive() end,
+		},
+		{
+			name = L["ClassBuffReminderXYTextColor"] or "X/Y text color",
+			kind = SettingType.Color,
+			parentId = "anchorSize",
+			default = defaults.xyTextColor,
+			hasOpacity = true,
+			get = function()
+				local r, g, b, a = normalizeColor(getValue(DB_XY_TEXT_COLOR, defaults.xyTextColor), defaults.xyTextColor)
+				return { r = r, g = g, b = b, a = a }
+			end,
+			set = function(_, value) editModeSetColor(DB_XY_TEXT_COLOR, value, defaults.xyTextColor) end,
+			isShown = function() return Reminder:IsEditModeIconOnlyModeActive() end,
+		},
+		{
+			name = L["ClassBuffReminderXYTextOffsetX"] or "X/Y offset X",
+			kind = SettingType.Slider,
+			parentId = "anchorSize",
+			default = defaults.xyTextOffsetX,
+			minValue = -60,
+			maxValue = 60,
+			valueStep = 1,
+			get = function() return clamp(getValue(DB_XY_TEXT_OFFSET_X, defaults.xyTextOffsetX), -60, 60, defaults.xyTextOffsetX) end,
+			set = function(_, value) editModeSetNumber(DB_XY_TEXT_OFFSET_X, value, -60, 60, defaults.xyTextOffsetX) end,
+			formatter = function(value) return tostring(math.floor((tonumber(value) or defaults.xyTextOffsetX) + 0.5)) end,
+			isShown = function() return Reminder:IsEditModeIconOnlyModeActive() end,
+		},
+		{
+			name = L["ClassBuffReminderXYTextOffsetY"] or "X/Y offset Y",
+			kind = SettingType.Slider,
+			parentId = "anchorSize",
+			default = defaults.xyTextOffsetY,
+			minValue = -60,
+			maxValue = 60,
+			valueStep = 1,
+			get = function() return clamp(getValue(DB_XY_TEXT_OFFSET_Y, defaults.xyTextOffsetY), -60, 60, defaults.xyTextOffsetY) end,
+			set = function(_, value) editModeSetNumber(DB_XY_TEXT_OFFSET_Y, value, -60, 60, defaults.xyTextOffsetY) end,
+			formatter = function(value) return tostring(math.floor((tonumber(value) or defaults.xyTextOffsetY) + 0.5)) end,
+			isShown = function() return Reminder:IsEditModeIconOnlyModeActive() end,
+		},
+	}
+end
+
+function editModeSettingsBuilders.buildBorder()
+	return {
+		{
+			name = EMBLEM_BORDER,
+			kind = SettingType.Collapsible,
+			id = "border",
+			defaultCollapsed = true,
+		},
+		{
+			name = L["Use border"] or "Use border",
+			kind = SettingType.Checkbox,
+			parentId = "border",
+			default = defaults.borderEnabled == true,
+				get = function() return Reminder:IsBorderEnabled() end,
+				set = function(_, value)
+					if addon.db then addon.db["classBuffReminderBorderEnabled"] = value == true end
+					Reminder:ApplyVisualSettings()
+					Reminder:RestartGlowAfterVisualChange()
+					Reminder:RequestUpdate(true)
+				end,
+			},
+		{
+			name = L["Border texture"] or "Border texture",
+			kind = SettingType.Dropdown,
+			parentId = "border",
+			height = 220,
+				get = function() return Reminder:GetBorderTextureKey() end,
+				set = function(_, value)
+					if addon.db then addon.db["classBuffReminderBorderTexture"] = normalizeBorderTexture(value) end
+					Reminder:ApplyVisualSettings()
+					Reminder:RestartGlowAfterVisualChange()
+					Reminder:RequestUpdate(true)
+				end,
+			generator = function(_, root)
+				local options = Reminder.GetBorderOptions(Reminder:GetIconShape())
+				for i = 1, #options do
+						local option = options[i]
+						local optionValue = option.value
+						local optionLabel = option.label
+						root:CreateRadio(optionLabel, function() return Reminder:GetBorderTextureKey() == optionValue end, function()
+							if addon.db then addon.db["classBuffReminderBorderTexture"] = normalizeBorderTexture(optionValue) end
+							Reminder:ApplyVisualSettings()
+							Reminder:RestartGlowAfterVisualChange()
+							Reminder:RequestUpdate(true)
+						end)
+					end
+			end,
+			isEnabled = function() return Reminder:IsBorderEnabled() end,
+		},
+		{
+			name = L["Border size"] or "Border size",
+			kind = SettingType.Slider,
+			parentId = "border",
+			minValue = 1,
+			maxValue = 24,
+			valueStep = 1,
+			default = defaults.borderSize,
+			get = function() return Reminder:GetBorderSize() end,
+			set = function(_, value) editModeSetNumber("classBuffReminderBorderSize", value, 1, 24, defaults.borderSize) end,
+			isEnabled = function() return Reminder:IsBorderEnabled() end,
+		},
+		{
+			name = L["Border offset"] or "Border offset",
+			kind = SettingType.Slider,
+			parentId = "border",
+			minValue = -20,
+			maxValue = 20,
+			valueStep = 1,
+			default = defaults.borderOffset,
+			get = function() return Reminder:GetBorderOffset() end,
+			set = function(_, value) editModeSetNumber("classBuffReminderBorderOffset", value, -20, 20, defaults.borderOffset) end,
+			isEnabled = function() return Reminder:IsBorderEnabled() end,
+		},
+		{
+			name = EMBLEM_BORDER_COLOR,
+			kind = SettingType.Color,
+			parentId = "border",
+			default = defaults.borderColor,
+			hasOpacity = true,
+			get = function()
+				local r, g, b, a = Reminder:GetBorderColor()
+				return { r = r, g = g, b = b, a = a }
+			end,
+			set = function(_, value) editModeSetColor("classBuffReminderBorderColor", value, defaults.borderColor) end,
+			isEnabled = function() return Reminder:IsBorderEnabled() end,
+		},
+	}
+end
+
+function editModeSettingsBuilders.buildAll()
+	if not SettingType then return nil end
+
+	local settings = {}
+	editModeSettingsBuilders.appendEntries(settings, editModeSettingsBuilders.buildClassBuffs())
+	if Reminder.BuildExpirationCategoryEditModeSettings then editModeSettingsBuilders.appendEntries(settings, Reminder:BuildExpirationCategoryEditModeSettings(SettingType)) end
+	editModeSettingsBuilders.appendEntries(settings, Reminder:BuildIconPresentationEditModeSettings(SettingType))
+	editModeSettingsBuilders.appendEntries(settings, editModeSettingsBuilders.buildFilters())
+	editModeSettingsBuilders.appendEntries(settings, editModeSettingsBuilders.buildSound())
+	editModeSettingsBuilders.appendEntries(settings, editModeSettingsBuilders.buildLayout())
+	editModeSettingsBuilders.appendEntries(settings, editModeSettingsBuilders.buildBorder())
+	if addon.EditModeNavigationDefaults then
+		addon.EditModeNavigationDefaults.Prepare(settings, nil, true)
+		local dropdownDefaults = {
+			[DISPLAY_MODE] = defaults.displayMode,
+			[L["Growth direction"]] = defaults.growthDirection,
+			[L["ClassBuffReminderXYTextOutline"]] = defaults.xyTextOutline,
+			[L["ClassBuffReminderMissingSound"]] = defaults.missingSound,
+			[L["Border texture"]] = defaults.borderTexture,
+		}
+		for _, data in ipairs(settings) do
+			if dropdownDefaults[data.name] ~= nil then addon.EditModeNavigationDefaults.Set(data, dropdownDefaults[data.name]) end
+			if data.isShown then
+				if data.parentId == "anchorSize" then data.navigationHint = function() return DISPLAY_MODE, nil, "anchorSize" end
+				elseif data.parentId == "filters" then
+					data.navigationHint = function()
+						if getValue(DB_TRACK_GROUP_BUFFS, defaults.trackGroupBuffs) ~= true then return L["ClassBuffReminderTrackGroupBuffs"], nil, "classBuffs" end
+						return L["ClassBuffReminderRoleFilterEnabled"], nil, "filters"
+					end
+				elseif data.parentId == "pets" then data.navigationHint = function() return L["ClassBuffReminderTrackPets"], nil, "pets" end end
+			end
+		end
+	end
+	return settings
+end
+
+function Reminder:RegisterEditMode()
+	if self.editModeRegistered then return end
+	if not (EditMode and EditMode.RegisterFrame) then return end
+
+	local settings = editModeSettingsBuilders.buildAll()
+	if addon.DynamicAnchors then
+		table.insert(settings, 1, {
+			name = L["Anchor"] or "Anchor",
+			kind = SettingType.Collapsible,
+			id = "classBuffReminderAnchor",
+			defaultCollapsed = false,
+		})
+		addon.DynamicAnchors:AddEditModeAssignmentSettings(settings, SettingType, {
+			consumerId = self.dynamicAnchorId,
+			parentId = "classBuffReminderAnchor",
+			insertAfterId = "classBuffReminderAnchor",
+			refresh = function(rebuild)
+				if rebuild and EditMode and EditMode.RefreshFrame then
+					EditMode:RefreshFrame(EDITMODE_ID)
+					RunNextFrame(function() Reminder:ApplyDynamicAnchor() end)
+				else
+					Reminder:ApplyDynamicAnchor()
+				end
+			end,
+		})
+	end
+
+	EditMode:RegisterFrame(EDITMODE_ID, {
+		frame = self:EnsureFrame(),
+		title = L["Class Buff Reminder"] or "Class Buff Reminder",
+		managerCategory = "trackers",
+		layoutDefaults = {
+			point = "CENTER",
+			relativePoint = "CENTER",
+			x = 0,
+			y = 240,
+		},
+		onApply = function()
+			Reminder:ApplyVisualSettings()
+			Reminder:UpdateDisplay()
+			Reminder:ApplyDynamicAnchor()
+		end,
+		onEnter = function()
+			Reminder.editModeActive = true
+			Reminder.editModeGlowPreviewExpiring = nil
+			Reminder:UpdateDisplay()
+			if addon.DynamicAnchors and addon.DynamicAnchors:IsFrameAssignmentEnabled(Reminder.dynamicAnchorId) then RunNextFrame(function() Reminder:ApplyDynamicAnchor() end) end
+		end,
+		onExit = function()
+			Reminder.editModeActive = false
+			Reminder.editModeGlowPreviewExpiring = nil
+			Reminder.missingActive = false
+			Reminder:HideSamplePreview()
+			Reminder:SetGlowShown(false)
+			if Reminder.frame then
+				if Reminder.frame.iconCountText then Reminder.frame.iconCountText:SetText("") end
+				if Reminder.frame.countText then Reminder.frame.countText:SetText("") end
+				Reminder.frame:Hide()
+			end
+			Reminder:RequestUpdate(true)
+			RunNextFrame(function() Reminder:RequestUpdate(true) end)
+		end,
+		isEnabled = function() return addon.db and addon.db[DB_ENABLED] == true end,
+		settings = settings,
+		relativeTo = function()
+			local winner = Reminder:GetDynamicAnchorWinner()
+			return winner and winner.frame or UIParent
+		end,
+		allowDrag = function() return not (addon.DynamicAnchors and addon.DynamicAnchors:IsFrameAssignmentEnabled(Reminder.dynamicAnchorId)) end,
+		collapseExclusive = true,
+		-- Runtime visibility outside Edit Mode is controlled by UpdateDisplay/Render.
+		manageVisibilityOutsideEditMode = false,
+	})
+	if EditMode.RegisterButtons then
+		EditMode:RegisterButtons(EDITMODE_ID, {
+			{
+				text = L["ClassBuffReminderOpenTrackerMatrix"] or "Configure reminders",
+				layout = "compact",
+				click = function()
+					if Reminder.OpenTrackerMatrix then Reminder:OpenTrackerMatrix() end
+				end,
+			},
+		})
+	end
+
+	self.editModeRegistered = true
+end
+
+function Reminder:UnregisterEditMode()
+	if not self.editModeRegistered then return end
+	if not (EditMode and EditMode.UnregisterFrame) then return end
+	EditMode:UnregisterFrame(EDITMODE_ID, false)
+	self.editModeRegistered = false
+end
+
+function Reminder:OnSettingChanged()
+	local enabled = getValue(DB_ENABLED, defaults.enabled) == true
+	local runtimeActive = self:ShouldRegisterRuntimeEvents()
+	if runtimeActive and not self.eventsRegistered then self.suppressNextMissingSound = true end
+	if runtimeActive then
+		self:NormalizeMissingSoundSelection()
+		self:ScheduleInitialSoundSync()
+	end
+
+	if enabled then
+		if addon.DynamicAnchors then
+			addon.DynamicAnchors:RegisterSimpleFrame({
+				id = self.dynamicAnchorId,
+				owner = "EnhanceQoLClassBuffReminder",
+				label = L["Class Buff Reminder"] or "Class Buff Reminder",
+				menuGroup = "TRACKERS",
+				menuGroupLabel = L["Dynamic Anchor Group Trackers"],
+				menuGroupOrder = 400,
+				getFrame = function() return Reminder.frame end,
+				isAvailable = function(reminderFrame) return addon.db and addon.db[DB_ENABLED] == true and reminderFrame ~= nil and reminderFrame:IsShown() end,
+				apply = function() Reminder:ApplyDynamicAnchor() end,
+			})
+		end
+		self:RegisterEditMode()
+	else
+		self:UnregisterEditMode()
+	end
+	self:ApplyVisualSettings()
+	self:InvalidateProviderAvailabilityCache()
+	self:InvalidateRosterCache()
+	self:InvalidateFlaskCache()
+	self:InvalidateFoodCache()
+	self:InvalidateRuneCache()
+	self:InvalidateWeaponBuffCache()
+	self:MarkAuraStatesDirty()
+
+	if runtimeActive then
+		self:RegisterEvents()
+	else
+		self:UnregisterEvents()
+		self.initialSoundSyncDone = false
+	end
+
+	self:RequestUpdate(true)
+
+	if EditMode and EditMode.RefreshFrame then EditMode:RefreshFrame(EDITMODE_ID) end
+end

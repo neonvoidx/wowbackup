@@ -1,0 +1,26 @@
+## Interface: 120105, 120100, 50504, 20506, 16001, 11509
+## Title: tullaCTC Config
+## Notes: tullaCTC's configuration menu
+## Author: Tuller
+## Dependencies: tullaCTC
+## LoadOnDemand: 1
+## IconTexture: Interface/Icons/inv_misc_pocketwatch_02
+localization\default.lua
+localization\[TextLocale].lua
+utils.lua
+widgets\row.lua
+widgets\swatch.lua
+widgets\panelHeader.lua
+widgets\checkBox.lua
+widgets\slider.lua
+widgets\dropdown.lua
+widgets\colorPicker.lua
+widgets\checkBoxColorPicker.lua
+widgets\fontSelector.lua
+widgets\colorRow.lua
+settings.lua
+profiles.lua
+preview.lua
+themes.lua
+rules.lua
+options.lua

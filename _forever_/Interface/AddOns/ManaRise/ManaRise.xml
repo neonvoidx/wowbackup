@@ -1,0 +1,15 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <!--
+        Wave scrolling for the liquid look. On this client TextureCoordTranslation
+        only works when defined in XML (Blizzard's MarchingAnts border does the
+        same). The addon creates groups from these templates on its own wave
+        textures and sets each group's speed with SetDuration.
+        Offsets of exactly one texture width loop seamlessly.
+    -->
+    <AnimationGroup name="ManaRiseScrollLeftTemplate" looping="REPEAT" virtual="true">
+        <TextureCoordTranslation duration="3" offsetU="1" offsetV="0"/>
+    </AnimationGroup>
+    <AnimationGroup name="ManaRiseScrollRightTemplate" looping="REPEAT" virtual="true">
+        <TextureCoordTranslation duration="5" offsetU="-1" offsetV="0"/>
+    </AnimationGroup>
+</Ui>

@@ -1,0 +1,21 @@
+
+ShortestPathForeverCharDB = {
+["taxi"] = {
+},
+["progress"] = {
+["flightsTaken"] = 0,
+["walkedYards"] = 744.2140209957016,
+["milestones"] = {
+},
+["portalsUsed"] = 0,
+["routesCompleted"] = 0,
+["transportsUsed"] = 0,
+["peers"] = {
+["spf"] = {
+},
+},
+},
+["taxiVersion"] = 2,
+["taxiNames"] = {
+},
+}

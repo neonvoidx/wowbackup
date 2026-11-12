@@ -1,0 +1,237 @@
+ <Ui xmlns="http://www.blizzard.com/wow/ui/"
+     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ../../FrameXML/UI.xsd">
+
+	<Script file="Debug.lua"/>
+	
+	<GameTooltip name="WQT_DebugTooltip" frameStrata="TOOLTIP" hidden="true" parent="UIParent" inherits="GameTooltipTemplate"/>
+
+ 	<Frame name="WQT_CallbackEntryTemplate" virtual="true">
+		<Size y="16"/>
+		<Anchors>
+			<Anchor point="LEFT" x="0" y="0" />
+			<Anchor point="RIGHT" x="0" y="0" />
+		</Anchors>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture parentKey="BG" alpha="0.3" alphaMode="ADD">
+					<Color r="1" g="1" b="1"/>
+				</Texture>
+			</Layer>
+
+			<Layer level="ARTWORK">
+				<FontString parentKey="Timestamp" inherits="SystemFont_NamePlate" justifyH="LEFT" text="Text" hidden="true">
+					<Size y="10" />
+					<Anchors>
+						<Anchor point="LEFT" x="4" y="0"/>
+					</Anchors>
+				</FontString>
+
+				<FontString parentKey="EventName" inherits="SystemFont_NamePlate" justifyH="LEFT" text="Text">
+					<Size y="10" />
+					<Anchors>
+						<Anchor point="LEFT" x="4" y="0"/>
+					</Anchors>
+				</FontString>
+
+				<FontString parentKey="Arguments" inherits="SystemFont_NamePlate" justifyH="LEFT" text="Text">
+					<Size y="10" />
+					<Anchors>
+						<Anchor point="LEFT" relativeKey="$parent.EventName" relativePoint="RIGHT" x="6" y="0"/>
+					</Anchors>
+					<Color r="1.0" g="0.82" b="0"/>
+				</FontString>
+			</Layer>
+		</Layers>
+	</Frame>
+
+	<Frame name="DebugTest1" virtual="true">
+		<Size y="16"/>
+		<Anchors>
+			<Anchor point="LEFT" x="0" y="0" />
+			<Anchor point="RIGHT" x="0" y="0" />
+		</Anchors>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture parentKey="BG" alpha="0.3" alphaMode="ADD">
+					<Color r="0" g="1" b="0"/>
+				</Texture>
+			</Layer>
+			<Layer level="ARTWORK">
+				<FontString parentKey="Timestamp" inherits="SystemFont_NamePlate" justifyH="LEFT" text="Test 1">
+					<Size y="10" />
+					<Anchors>
+						<Anchor point="LEFT" x="4" y="0"/>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+	</Frame>
+
+	<Frame name="WQT_DevFrame" parent="UIParent" inherits="VerticalLayoutFrame" mixin="WQT_DevMixin" 
+		movable="true" enableMouse="true" toplevel="true" frameStrata="MEDIUM" hidden="true">
+		<Size x="200" y="100"/>
+		<Anchors>
+			<Anchor point="CENTER" x="300" />
+		</Anchors>
+		<KeyValues>
+			<KeyValue key="fixedWidth" type="number" value="200"/>
+			<KeyValue key="spacing" type="number" value="2"/>
+			<KeyValue key="topPadding" type="number" value="10"/>
+			<KeyValue key="bottomPadding" type="number" value="10"/>
+			<KeyValue key="leftPadding" type="number" value="10"/>
+			<KeyValue key="rightPadding" type="number" value="10"/>
+		</KeyValues>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture alpha="0.5">
+					<Color r="0" g="0" b="0"/>
+				</Texture>
+			</Layer>
+			<Layer level="ARTWORK">
+				<FontString parentKey="worldMapID" inherits="GameFontHighlight" justifyH="LEFT" text="WorldMap:">
+					<Size y="12" />
+					<KeyValues>
+						<KeyValue key="layoutIndex"  type="number" value="1"/>
+					</KeyValues>
+					<Anchors>
+						<Anchor point="TOPLEFT" x="4" y="-4"/>
+						<Anchor point="RIGHT" x="-4"/>
+					</Anchors>
+				</FontString>
+				<FontString parentKey="worldMapMousePos" inherits="GameFontHighlight" justifyH="LEFT" text="WorldMapMouse:">
+					<Size y="12" />
+					<KeyValues>
+						<KeyValue key="layoutIndex"  type="number" value="2"/>
+					</KeyValues>
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeKey="$parent.worldMapID" relativePoint="BOTTOMLEFT" y="-4"/>
+						<Anchor point="RIGHT" relativeKey="$parent.worldMapID" />
+					</Anchors>
+				</FontString>
+				<FontString parentKey="flightMapID" inherits="GameFontHighlight" justifyH="LEFT" text="FlightMap:">
+					<Size y="12" />
+					<KeyValues>
+						<KeyValue key="layoutIndex"  type="number" value="3"/>
+					</KeyValues>
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeKey="$parent.worldMapMousePos" relativePoint="BOTTOMLEFT" y="-4"/>
+						<Anchor point="RIGHT" relativeKey="$parent.worldMapMousePos" />
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+
+		<Frames>
+			<Frame parentKey="ButtonContainer" inherits="HorizontalLayoutFrame">
+				<KeyValues>
+					<KeyValue key="layoutIndex" value="99" type="number" />
+					<KeyValue key="align" value="left" type="string" />
+					<KeyValue key="spacing" value="2" type="number" />
+					<KeyValue key="topPadding" type="number" value="2"/>
+				</KeyValues>
+
+				<Frames>
+					<Button parentKey="ToggleCallback" inherits="UIMenuButtonStretchTemplate">
+						<Size x="26" y="26" />
+						<KeyValues>
+							<KeyValue key="layoutIndex" value="1" type="number" />
+							<KeyValue key="align" value="center" type="string" />
+						</KeyValues>
+						<HighlightTexture />
+						<Layers>
+							<Layer level="ARTWORK">
+								<Texture atlas="GM-icon-visible">
+									<Size x="26" y="26" />
+									<Anchors>
+										<Anchor point="CENTER" />
+									</Anchors>
+								</Texture>
+							</Layer>
+						</Layers>
+						<Scripts>
+							<OnClick>
+								local show = not WQT_DevFrame.CallbackScrollBox:IsShown();
+								WQT_DevFrame.CallbackScrollBox:SetShown(show);
+								WQT_DevFrame.CallbackScrollBar:SetShown(show);
+							</OnClick>
+							<OnEnter>
+								WQT_ActiveGameTooltip:SetOwner(self, "ANCHOR_RIGHT");
+								GameTooltip_SetTitle(WQT_ActiveGameTooltip, "Callback Tracker");
+								WQT_ActiveGameTooltip:Show();
+							</OnEnter>
+							<OnLeave>
+								WQT_ActiveGameTooltip:Hide();
+							</OnLeave>
+						</Scripts>
+					</Button>
+
+					<Button parentKey="DebugButton" inherits="UIMenuButtonStretchTemplate">
+						<Size x="26" y="26" />
+						<KeyValues>
+							<KeyValue key="layoutIndex" value="2" type="number" />
+							<KeyValue key="align" value="center" type="string" />
+						</KeyValues>
+						<HighlightTexture />
+						<Layers>
+							<Layer level="ARTWORK">
+								<Texture atlas="GM-icon-settings">
+									<Size x="26" y="26" />
+									<Anchors>
+										<Anchor point="CENTER" />
+									</Anchors>
+								</Texture>
+							</Layer>
+						</Layers>
+						<Scripts>
+							<OnClick>
+								WQT_DevFrame:DoDebugThing();
+							</OnClick>
+							<OnEnter>
+								WQT_ActiveGameTooltip:SetOwner(self, "ANCHOR_RIGHT");
+								GameTooltip_SetTitle(WQT_ActiveGameTooltip, "Debug Function");
+								WQT_ActiveGameTooltip:Show();
+							</OnEnter>
+							<OnLeave>
+								WQT_ActiveGameTooltip:Hide();
+							</OnLeave>
+						</Scripts>
+					</Button>
+				</Frames>
+			</Frame>
+
+			
+
+			<Frame parentKey="DragPanel" inherits="PanelDragBarTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT"/>
+					<Anchor point="BOTTOMRIGHT"/>
+				</Anchors>
+			</Frame>
+
+			<Frame parentKey="CallbackScrollBox" inherits="WowScrollBoxList" frameStrata="HIGH" hidden="true">
+				<Size x="400" y="300"/>
+				<Anchors> 
+					<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" y="-4"/>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture alpha="0.7">
+							<Color r="0" g="0" b="0"/>
+						</Texture>
+					</Layer>
+				</Layers>
+			</Frame>
+			<EventFrame parentKey="CallbackScrollBar" inherits="MinimalScrollBar" frameStrata="HIGH" hidden="true">
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeKey="$parent.CallbackScrollBox" relativePoint="TOPRIGHT" x="4" />
+					<Anchor point="BOTTOMLEFT" relativeKey="$parent.CallbackScrollBox" relativePoint="BOTTOMRIGHT" x="4" />
+				</Anchors>
+			</EventFrame>
+		</Frames>
+
+		<Scripts>
+			<OnShow method="OnShow" /> 
+		</Scripts>
+	</Frame>
+ </Ui>

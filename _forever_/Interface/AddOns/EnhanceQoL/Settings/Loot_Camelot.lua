@@ -1,0 +1,503 @@
+local addonName, addon = ...
+
+local L = LibStub("AceLocale-3.0"):GetLocale(addonName)
+local wipeTable = _G.wipe or table.wipe
+
+local lootToastSoundOptions = {}
+local lootToastSoundOrder = {}
+local lootToastSoundCacheVersion = -1
+local function getLootToastSoundOptions()
+	local version = (addon.functions and addon.functions.GetLSMMediaVersion and addon.functions.GetLSMMediaVersion("sound")) or 0
+	if lootToastSoundCacheVersion == version then return lootToastSoundOptions end
+	lootToastSoundCacheVersion = version
+
+	local list, order
+	if addon.functions and addon.functions.GetLSMMediaDropdown then
+		list, order = addon.functions.GetLSMMediaDropdown("sound", true, "")
+	else
+		if addon.ChatIM and addon.ChatIM.BuildSoundTable and not addon.ChatIM.availableSounds then addon.ChatIM:BuildSoundTable() end
+		list = { [""] = "" }
+		order = { "" }
+		for name in pairs((addon.ChatIM and addon.ChatIM.availableSounds) or {}) do
+			list[name] = name
+			order[#order + 1] = name
+		end
+	end
+
+	wipeTable(lootToastSoundOptions)
+	for key, value in pairs(list or {}) do
+		lootToastSoundOptions[key] = value
+	end
+	wipeTable(lootToastSoundOrder)
+	for i = 1, #(order or {}) do
+		lootToastSoundOrder[i] = order[i]
+	end
+	return lootToastSoundOptions
+end
+
+local cLoot = addon.SettingsLayout.rootGENERAL
+local expandable = addon.functions.SettingsCreateExpandableSection(cLoot, {
+	name = L["Loot"],
+	iconKey = "loot",
+	modernOnly = true,
+	expanded = false,
+	colorizeTitle = false,
+	newTagID = "Loot",
+})
+addon.SettingsLayout.vendorEconomyCalootCategorytegory = cLoot
+
+addon.functions.SettingsCreateHeadline(cLoot, L["LootPopups"], { parentSection = expandable })
+
+local data = {
+	{
+		var = "autoQuickLoot",
+		text = L["autoQuickLoot"],
+		desc = L["autoQuickLootDesc"],
+		func = function(value) addon.db["autoQuickLoot"] = value end,
+		parentSection = expandable,
+		children = {
+			{
+				var = "autoQuickLootWithShift",
+				text = L["autoQuickLootWithShift"],
+				func = function(v) addon.db["autoQuickLootWithShift"] = v end,
+				parentCheck = function()
+					return addon.SettingsLayout.elements["autoQuickLoot"]
+						and addon.SettingsLayout.elements["autoQuickLoot"].setting
+						and addon.SettingsLayout.elements["autoQuickLoot"].setting:GetValue() == true
+				end,
+				parent = true,
+				default = false,
+				type = Settings.VarType.Boolean,
+				sType = "checkbox",
+				parentSection = expandable,
+			},
+		},
+	},
+	{
+		var = "autoHideBossBanner",
+		text = L["autoHideBossBanner"],
+		desc = L["autoHideBossBannerDesc"],
+		func = function(value) addon.db["autoHideBossBanner"] = value end,
+		parentSection = expandable,
+	},
+}
+
+table.sort(data, function(a, b) return a.text < b.text end)
+addon.functions.SettingsCreateCheckboxes(cLoot, data)
+
+addon.functions.SettingsCreateHeadline(cLoot, L["groupLootRollFrames"], { parentSection = expandable })
+
+data = {
+	{
+		var = "enableGroupLootAnchor",
+		text = L["enableGroupLootAnchorOption"],
+		desc = L["enableGroupLootAnchorDesc"],
+		func = function(value)
+			addon.db.enableGroupLootAnchor = value and true or false
+			if addon.LootToast and addon.LootToast.OnGroupRollAnchorOptionChanged then addon.LootToast:OnGroupRollAnchorOptionChanged(addon.db.enableGroupLootAnchor) end
+			addon.functions.initLootToast()
+		end,
+		parentSection = expandable,
+		children = {
+			{
+				var = "groupLootScale",
+				text = L["groupLootScale"],
+				func = function(v) addon.db["groupLootScale"] = v end,
+				parentCheck = function()
+					return addon.SettingsLayout.elements["enableGroupLootAnchor"]
+						and addon.SettingsLayout.elements["enableGroupLootAnchor"].setting
+						and addon.SettingsLayout.elements["enableGroupLootAnchor"].setting:GetValue() == true
+				end,
+				get = function() return addon.db and addon.db.groupLootLayout and addon.db.groupLootLayout.scale or 1 end,
+				set = function(value)
+					value = math.max(0.5, math.min(3.0, value or 1))
+					value = math.floor(value * 100 + 0.5) / 100
+					addon.db.groupLootLayout.scale = value
+					addon.LootToast:ApplyGroupLootLayout()
+				end,
+				min = 0.5,
+				max = 3,
+				step = 0.05,
+				parent = true,
+				default = 1,
+				sType = "slider",
+				parentSection = expandable,
+			},
+		},
+	},
+}
+
+table.sort(data, function(a, b) return a.text < b.text end)
+addon.functions.SettingsCreateCheckboxes(cLoot, data)
+
+addon.functions.SettingsCreateHeadline(cLoot, L["lootToastSectionTitle"], { parentSection = expandable })
+
+data = {
+	{
+		var = "enableLootToastAnchor",
+		text = L["moveLootToast"],
+		desc = L["moveLootToastDesc"],
+		func = function(value)
+			addon.db.enableLootToastAnchor = value and true or false
+			addon.functions.initLootToast()
+		end,
+		parentSection = expandable,
+		children = {
+			{
+				text = "|cffffd700" .. L["lootToastAnchorEditModeHint"] .. "|r",
+				sType = "hint",
+				parentSection = expandable,
+			},
+		},
+	},
+}
+
+table.sort(data, function(a, b) return a.text < b.text end)
+addon.functions.SettingsCreateCheckboxes(cLoot, data)
+
+addon.functions.SettingsCreateHeadline(cLoot, L["lootToastFilterSettings"], { parentSection = expandable })
+
+local isLootToastFilterActive
+
+data = {
+	{
+		var = "enableLootToastFilter",
+		text = L["enableLootToastFilter"],
+		desc = L["enableLootToastFilterDesc"],
+		func = function(value)
+			addon.db.enableLootToastFilter = value and true or false
+			addon.functions.initLootToast()
+		end,
+		notify = "enableLootToastCustomSound",
+		refreshOnChange = true,
+		parentSection = expandable,
+		children = {
+			{
+				var = "enableLootToastCustomSound",
+				text = L["enableLootToastCustomSound"],
+				get = function() return addon.db["lootToastUseCustomSound"] or false end,
+				func = function(v) addon.db["lootToastUseCustomSound"] = v end,
+				parentCheck = function()
+					return addon.SettingsLayout.elements["enableLootToastFilter"]
+						and addon.SettingsLayout.elements["enableLootToastFilter"].setting
+						and addon.SettingsLayout.elements["enableLootToastFilter"].setting:GetValue() == true
+				end,
+				hiddenWhen = function() return not isLootToastFilterActive() end,
+				refreshOnChange = true,
+				parent = true,
+				default = false,
+				type = Settings.VarType.Boolean,
+				sType = "checkbox",
+				parentSection = expandable,
+				children = {
+					{
+						text = L["lootToastCustomSound"],
+						optionfunc = getLootToastSoundOptions,
+						order = lootToastSoundOrder,
+						get = function() return addon.db.lootToastCustomSoundFile or "" end,
+						set = function(key)
+							addon.db.lootToastCustomSoundFile = key
+							local soundTable = (addon.ChatIM and addon.ChatIM.availableSounds)
+								or (addon.functions and addon.functions.GetLSMMediaHash and addon.functions.GetLSMMediaHash("sound"))
+							local file = soundTable and soundTable[key]
+							if file then PlaySoundFile(file, "Master") end
+						end,
+						parentCheck = function()
+							return addon.SettingsLayout.elements["enableLootToastFilter"]
+								and addon.SettingsLayout.elements["enableLootToastFilter"].setting
+								and addon.SettingsLayout.elements["enableLootToastFilter"].setting:GetValue() == true
+								and addon.SettingsLayout.elements["enableLootToastCustomSound"]
+								and addon.SettingsLayout.elements["enableLootToastCustomSound"].setting
+								and addon.SettingsLayout.elements["enableLootToastCustomSound"].setting:GetValue() == true
+						end,
+						hiddenWhen = function()
+							return not isLootToastFilterActive()
+								or not addon.SettingsLayout.elements["enableLootToastCustomSound"]
+								or not addon.SettingsLayout.elements["enableLootToastCustomSound"].setting
+								or addon.SettingsLayout.elements["enableLootToastCustomSound"].setting:GetValue() ~= true
+						end,
+						parent = true,
+						default = "",
+						var = "lootToastCustomSound",
+						type = Settings.VarType.String,
+						sType = "sounddropdown",
+						parentSection = expandable,
+					},
+				},
+			},
+		},
+	},
+}
+
+table.sort(data, function(a, b) return a.text < b.text end)
+addon.functions.SettingsCreateCheckboxes(cLoot, data)
+
+function isLootToastFilterActive()
+	local entry = addon.SettingsLayout.elements["enableLootToastFilter"]
+	if entry and entry.setting then return entry.setting:GetValue() == true end
+	return addon.db and addon.db.enableLootToastFilter == true
+end
+
+for i = 3, 5 do
+	local qualityLabel = "|c" .. ITEM_QUALITY_COLORS[i].color:GenerateHexColor() .. _G["ITEM_QUALITY" .. i .. "_DESC"] .. "|r"
+	addon.functions.SettingsCreateSectionHeader(cLoot, qualityLabel, {
+		parentSection = expandable,
+		hiddenWhen = function() return not isLootToastFilterActive() end,
+	})
+
+	data = {
+		{
+			var = "lootToastCheckIlvl_" .. i,
+			text = L["lootToastCheckIlvl"],
+			get = function() return addon.db.lootToastFilters and addon.db.lootToastFilters[i] and addon.db.lootToastFilters[i].ilvl or false end,
+			func = function(value)
+				addon.db.lootToastFilters = addon.db.lootToastFilters or {}
+				addon.db.lootToastFilters[i] = addon.db.lootToastFilters[i] or {}
+				addon.db.lootToastFilters[i].ilvl = value
+			end,
+			parentSection = expandable,
+			children = {
+				{
+					var = "lootToastItemLevel_" .. i,
+					text = L["lootToastItemLevel"],
+					parentCheck = function()
+						return isLootToastFilterActive()
+							and addon.SettingsLayout.elements["lootToastCheckIlvl_" .. i]
+							and addon.SettingsLayout.elements["lootToastCheckIlvl_" .. i].setting
+							and addon.SettingsLayout.elements["lootToastCheckIlvl_" .. i].setting:GetValue() == true
+					end,
+					hiddenWhen = function()
+						return not isLootToastFilterActive()
+							or not addon.SettingsLayout.elements["lootToastCheckIlvl_" .. i]
+							or not addon.SettingsLayout.elements["lootToastCheckIlvl_" .. i].setting
+							or addon.SettingsLayout.elements["lootToastCheckIlvl_" .. i].setting:GetValue() ~= true
+					end,
+					get = function() return addon.db and addon.db.lootToastItemLevels and addon.db.lootToastItemLevels[i] or 0 end,
+					set = function(value)
+						addon.db.lootToastItemLevels = addon.db.lootToastItemLevels or {}
+						addon.db.lootToastItemLevels[i] = addon.db.lootToastItemLevels[i] or {}
+						addon.db.lootToastItemLevels[i] = value
+					end,
+					min = 0,
+					max = 1000,
+					step = 1,
+					element = addon.SettingsLayout.elements["enableLootToastFilter"].element,
+					parent = true,
+					default = 0,
+					sType = "slider",
+					parentSection = expandable,
+				},
+			},
+			parent = true,
+			element = addon.SettingsLayout.elements["enableLootToastFilter"].element,
+			parentCheck = isLootToastFilterActive,
+			hiddenWhen = function() return not isLootToastFilterActive() end,
+			notify = "enableLootToastFilter",
+			refreshOnChange = true,
+		},
+	}
+
+	table.sort(data, function(a, b) return a.text < b.text end)
+	addon.functions.SettingsCreateCheckboxes(cLoot, data)
+
+	addon.functions.SettingsCreateMultiDropdown(cLoot, {
+		var = "lootToastFilters_" .. i,
+		storage = false,
+		text = L["lootToastAlwaysShow"],
+		parentSection = expandable,
+		parent = true,
+		element = addon.SettingsLayout.elements["enableLootToastFilter"].element,
+		parentCheck = isLootToastFilterActive,
+		hiddenWhen = function() return not isLootToastFilterActive() end,
+		options = {
+			{ value = "mounts", text = L["Mounts"] },
+			{ value = "pets", text = L["lootToastAlwaysShowPets"] },
+			{ value = "upgrade", text = L["lootToastAlwaysShowUpgrades"] },
+		},
+		getSelection = function()
+			return addon.db and addon.db.lootToastFilters and addon.db.lootToastFilters[i] or {}
+		end,
+		setSelection = function(selection)
+			addon.db.lootToastFilters = addon.db.lootToastFilters or {}
+			addon.db.lootToastFilters[i] = type(selection) == "table" and selection or {}
+		end,
+	})
+end
+
+local function isLootToastFilterEnabled()
+	return isLootToastFilterActive()
+end
+
+addon.db.lootToastIncludeIDs = addon.db.lootToastIncludeIDs or {}
+
+local function addInclude(input, editBox)
+	local rawInput = strtrim(tostring(input or ""))
+	if rawInput == "" then
+		if editBox then editBox:SetText("") end
+		return
+	end
+
+	local id = tonumber(rawInput)
+	if not id then id = tonumber(string.match(rawInput, "item:(%d+)")) end
+	if not id then
+		print("|cffff0000Invalid input!|r")
+		if editBox then editBox:SetText("") end
+		return
+	end
+
+	local eItem
+	if type(rawInput) == "string" and rawInput:find("|Hitem:") then
+		eItem = Item:CreateFromItemLink(rawInput)
+	else
+		eItem = Item:CreateFromItemID(id)
+	end
+
+	if eItem and not eItem:IsItemEmpty() then
+		eItem:ContinueOnItemLoad(function()
+			local name = eItem:GetItemName()
+			local itemID = eItem:GetItemID()
+			if not name or not itemID then
+				print(L["Item id does not exist"])
+				if editBox then editBox:SetText("") end
+				return
+			end
+
+			if not addon.db.lootToastIncludeIDs[itemID] then
+				addon.db.lootToastIncludeIDs[itemID] = string.format("%s (%d)", name, itemID)
+				print(L["lootToastItemAdded"]:format(name, itemID))
+			end
+
+			if editBox then editBox:SetText("") end
+			Settings.NotifyUpdate("EQOL_lootToastIncludeRemove")
+		end)
+	else
+		print(L["Item id does not exist"])
+		if editBox then editBox:SetText("") end
+	end
+end
+
+local includeDialogKey = "EQOL_LOOT_INCLUDE_ADD"
+StaticPopupDialogs[includeDialogKey] = StaticPopupDialogs[includeDialogKey]
+	or {
+		text = L["Include"],
+		button1 = ACCEPT,
+		button2 = CANCEL,
+		hasEditBox = true,
+		EditBoxOnEscapePressed = addon.functions.CancelPopupOnEscape,
+		editBoxWidth = 280,
+		enterClicksFirstButton = true,
+		timeout = 0,
+		whileDead = true,
+		hideOnEscape = true,
+		preferredIndex = 3,
+	}
+StaticPopupDialogs[includeDialogKey].OnShow = function(self)
+	local editBox = self.editBox or self:GetEditBox()
+	editBox:SetText("")
+	editBox:SetFocus()
+end
+StaticPopupDialogs[includeDialogKey].OnAccept = function(self)
+	local editBox = self.editBox or self:GetEditBox()
+	addInclude(editBox:GetText(), editBox)
+end
+StaticPopupDialogs[includeDialogKey].EditBoxOnEnterPressed = addon.functions.AcceptPopupOnEnter
+
+addon.functions.SettingsCreateSectionHeader(cLoot, L["Include"], {
+	parentSection = expandable,
+	hiddenWhen = function() return not isLootToastFilterEnabled() end,
+})
+
+addon.functions.SettingsCreateButton(cLoot, {
+	var = "lootToastIncludeAdd",
+	text = ADD,
+	buttonText = L["Include"],
+	desc = L["includeInfoLoot"],
+	func = function() StaticPopup_Show(includeDialogKey) end,
+	parent = true,
+	element = addon.SettingsLayout.elements["enableLootToastFilter"].element,
+	parentCheck = isLootToastFilterEnabled,
+	hiddenWhen = function() return not isLootToastFilterEnabled() end,
+	parentSection = expandable,
+})
+
+local function buildIncludeDropdownList()
+	addon.db.lootToastIncludeIDs = addon.db.lootToastIncludeIDs or {}
+	local list = {}
+	list[""] = ""
+	for i, v in pairs(addon.db.lootToastIncludeIDs) do
+		local key = tostring(i)
+		list[key] = v
+	end
+	return list
+end
+
+local function clearIncludeDropdownSelection()
+	local entry = addon.SettingsLayout.elements["lootToastIncludeRemove"]
+	if entry and entry.setting then entry.setting:SetValue("") end
+end
+
+local function removeIncludeEntry(key)
+	if not key or key == "" then return end
+	addon.db.lootToastIncludeIDs = addon.db.lootToastIncludeIDs or {}
+	local index = tonumber(key) or key
+	if not addon.db.lootToastIncludeIDs[index] then return end
+	addon.db.lootToastIncludeIDs[index] = nil
+	Settings.NotifyUpdate("EQOL_lootToastIncludeRemove")
+	clearIncludeDropdownSelection()
+end
+
+local includeRemoveDialogKey = "EQOL_LOOT_INCLUDE_REMOVE"
+StaticPopupDialogs[includeRemoveDialogKey] = StaticPopupDialogs[includeRemoveDialogKey]
+	or {
+		text = L["Remove %s from the include list?"],
+		button1 = ACCEPT,
+		button2 = CANCEL,
+		timeout = 0,
+		whileDead = true,
+		hideOnEscape = true,
+		preferredIndex = 3,
+	}
+StaticPopupDialogs[includeRemoveDialogKey].OnAccept = function(_, data) removeIncludeEntry(data) end
+
+addon.functions.SettingsCreateDropdown(cLoot, {
+	var = "lootToastIncludeRemove",
+	text = string.format("%s %s", REMOVE, L["Include"]),
+	listFunc = buildIncludeDropdownList,
+	get = function() return "" end,
+	set = function(key)
+		if not key or key == "" then return end
+		local index = tonumber(key) or key
+		addon.db.lootToastIncludeIDs = addon.db.lootToastIncludeIDs or {}
+		local label = addon.db.lootToastIncludeIDs[index] or tostring(index)
+		StaticPopup_Show(includeRemoveDialogKey, label, nil, index)
+		clearIncludeDropdownSelection()
+	end,
+	parent = true,
+	element = addon.SettingsLayout.elements["enableLootToastFilter"].element,
+	parentCheck = isLootToastFilterEnabled,
+	hiddenWhen = function() return not isLootToastFilterEnabled() end,
+	default = "",
+	type = Settings.VarType.String,
+	parentSection = expandable,
+})
+
+----- REGION END
+
+function addon.functions.initLootFrame() end
+
+local eventHandlers = {}
+
+local function registerEvents(frame)
+	for event in pairs(eventHandlers) do
+		frame:RegisterEvent(event)
+	end
+end
+
+local function eventHandler(self, event, ...)
+	if eventHandlers[event] then eventHandlers[event](...) end
+end
+
+local frameLoad = CreateFrame("Frame")
+
+registerEvents(frameLoad)
+frameLoad:SetScript("OnEvent", eventHandler)

@@ -1,0 +1,37 @@
+## Interface: 120105, 120107, 16001, 50504, 38002, 20506, 11509
+## Author: p3lim
+## Version: 120100.151-Release
+## Title: Molinari
+## Notes: One-click Milling, Prospecting, Disenchanting, Lockpicking, and more!
+## IconTexture: Interface\Icons\ability_miling
+## SavedVariables: MolinariDB2, MolinariDB3
+
+## X-Curse-Project-ID: 20338
+## X-WoWI-ID: 13188
+## X-Wago-ID: WqKQQEKx
+
+libs\Dashi\embed.xml
+
+locale\[TextLocale].lua [AllowLoadTextLocale deDE, esES, esMX, frFR, itIT, koKR, ptBR, ruRU, zhCN, zhTW]
+
+utils.lua
+addon.lua
+settings.lua
+
+data\[Game]\cooking.lua [AllowLoadGameType standard]
+data\[Game]\comprehensible.lua [AllowLoadGameType camelot][ExcludeLoadGameType standard, classic]
+data\[Game]\crushable.lua [AllowLoadGameType standard]
+data\[Game]\disenchanting.lua [AllowLoadGameType mists, wrath, tbc]
+data\[Game]\disenchantable.lua [AllowLoadGameType standard]
+data\[Game]\keys.lua
+data\[Game]\millable.lua [AllowLoadGameType standard, mists, wrath]
+data\[Game]\nondisenchantable.lua
+data\[Game]\openable.lua
+data\[Game]\prospectable.lua [AllowLoadGameType standard, mists, wrath, tbc]
+data\[Game]\scrappable.lua [AllowLoadGameType standard]
+data\[Game]\shatterable.lua [AllowLoadGameType standard]
+data\[Game]\transmutable.lua [AllowLoadGameType standard]
+
+api\items.lua
+api\skill.lua [AllowLoadGameType mists, wrath, tbc, vanilla, camelot]
+api\colors.lua

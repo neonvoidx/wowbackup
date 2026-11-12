@@ -1,0 +1,31 @@
+
+BugGrabberDB = {
+["session"] = 16,
+["lastSanitation"] = 3,
+["errors"] = {
+{
+["message"] = "Interface/AddOns/LegacyForever/UI/Map.lua:276: attempt to index a nil value",
+["time"] = 1792417067,
+["locals"] = "_=Button <MapCanvas.lua:217>{\n menuPointX=0\n deferredCallbacks=<table>\n Icon=Texture <Map.xml:32>\n Event=<table>\n executingEvents=<table>\n Count=FontString <Map.xml:40>\n intrinsic=\"DropdownButton\"\n callbackTables=<table>\n menuRelativePoint=\"BOTTOMRIGHT\"\n menuPointY=0\n menuAnchor=<table>\n menuPoint=\"TOPRIGHT\"\n}\nroot=<table>\n(*temporary)=<table>\n(*temporary)=nil\n(*temporary)=nil\n(*temporary)=\"attempt to index a nil value\"\nself=Button <MapCanvas.lua:217>{\n menuPointX=0\n deferredCallbacks=<table>\n Icon=Texture <Map.xml:32>\n Event=<table>\n executingEvents=<table>\n Count=FontString <Map.xml:40>\n intrinsic=\"DropdownButton\"\n callbackTables=<table>\n menuRelativePoint=\"BOTTOMRIGHT\"\n menuPointY=0\n menuAnchor=<table>\n menuPoint=\"TOPRIGHT\"\n}\n",
+["stack"] = "[Interface/AddOns/LegacyForever/UI/Map.lua]:276: in function <Interface/AddOns/LegacyForever/UI/Map.lua:275>\n[C]: in function 'securecallfunction'\n[Interface/AddOns/Blizzard_Menu/Menu.lua]:2720: in function 'PopulateDescription'\n[Interface/AddOns/Blizzard_Menu/DropdownButton.lua]:252: in function <Interface/AddOns/Blizzard_Menu/DropdownButton.lua:251>\n[C]: in function 'securecallfunction'\n[Interface/AddOns/Blizzard_Menu/DropdownButton.lua]:262: in function 'GenerateMenu'\n[Interface/AddOns/Blizzard_Menu/DropdownButton.lua]:247: in function 'SetupMenu'\n[Interface/AddOns/LegacyForever/UI/Map.lua]:275: in function <Interface/AddOns/LegacyForever/UI/Map.lua:274>\n[C]: ?\n[C]: in function 'CreateFrame'\n[Interface/AddOns/LegacyForever/UI/MapCanvas.lua]:217: in function 'FrameUnder'\n[Interface/AddOns/LegacyForever/UI/Map.lua]:625: in function 'callback'\n[Interface/AddOns/Blizzard_SharedXML/EventUtil.lua]:70: in function 'ContinueOnAddOnLoaded'\n[Interface/AddOns/LegacyForever/UI/Map.lua]:665: in main chunk\n",
+["session"] = 2,
+["counter"] = 1,
+},
+{
+["message"] = "Interface/AddOns/LegacyForever/UI/Map.lua:315: attempt to index local 'map' (a nil value)",
+["time"] = 1792417067,
+["locals"] = "self=Button <MapCanvas.lua:217>{\n menuPointX=0\n deferredCallbacks=<table>\n Icon=Texture <Map.xml:32>\n Event=<table>\n executingEvents=<table>\n Count=FontString <Map.xml:40>\n intrinsic=\"DropdownButton\"\n callbackTables=<table>\n menuRelativePoint=\"BOTTOMRIGHT\"\n menuDescription=<table>\n menuPointY=0\n menuAnchor=<table>\n menuPoint=\"TOPRIGHT\"\n}\nmap=nil\n(*temporary)=Button <MapCanvas.lua:217>{\n menuPointX=0\n deferredCallbacks=<table>\n Icon=Texture <Map.xml:32>\n Event=<table>\n executingEvents=<table>\n Count=FontString <Map.xml:40>\n intrinsic=\"DropdownButton\"\n callbackTables=<table>\n menuRelativePoint=\"BOTTOMRIGHT\"\n menuDescription=<table>\n menuPointY=0\n menuAnchor=<table>\n menuPoint=\"TOPRIGHT\"\n}\n(*temporary)=\"TOPRIGHT\"\n(*temporary)=nil\n(*temporary)=nil\n(*temporary)=nil\n(*temporary)=nil\n(*temporary)=nil\n(*temporary)=nil\n(*temporary)=\"attempt to index local 'map' (a nil value)\"\nns=<table>{\n POINTS_ICON=\"UI-Legacy-Points-icon-c60\"\n Live=<table>\n Completion=<table>\n MapCanvas=<table>\n Tracker=<table>\n TrackerHost=<table>\n L=<table>\n Art=<table>\n ZoneCompletion=<table>\n WHATS_NEW=\"The tracker sections now move clear of Questie's quest list.\"\n Data=<table>\n Model=<table>\n TrackerQuestie=<table>\n MapContents=<table>\n TITLE=\"Legacy Forever\"\n Family=<table>\n Quests=<table>\n Saved=<table>\n}\n",
+["stack"] = "[Interface/AddOns/LegacyForever/UI/Map.lua]:315: in function 'Refresh'\n[Interface/AddOns/LegacyForever/UI/Map.lua]:326: in function <Interface/AddOns/LegacyForever/UI/Map.lua:325>\n[C]: ?\n[C]: in function 'CreateFrame'\n[Interface/AddOns/LegacyForever/UI/MapCanvas.lua]:217: in function 'FrameUnder'\n[Interface/AddOns/LegacyForever/UI/Map.lua]:625: in function 'callback'\n[Interface/AddOns/Blizzard_SharedXML/EventUtil.lua]:70: in function 'ContinueOnAddOnLoaded'\n[Interface/AddOns/LegacyForever/UI/Map.lua]:665: in main chunk\n",
+["session"] = 2,
+["counter"] = 1,
+},
+{
+["message"] = "Interface/AddOns/Custom/Custom.lua:15: attempt to index a nil value",
+["time"] = 1792507018,
+["locals"] = "self=Frame <Custom.lua:155>\nevent=\"PLAYER_ENTERING_WORLD\"\nbars=<table>{\n 1=2\n 2=3\n 3=4\n 4=5\n 5=6\n}\np=\"PROXY_SHOW_ACTIONBAR_\"\n(for state)=<table>{\n 1=2\n 2=3\n 3=4\n 4=5\n 5=6\n}\n(for control)=1\nk=1\nv=2\n(*temporary)=nil\n(*temporary)=nil\n(*temporary)=\"PROXY_SHOW_ACTIONBAR_2\"\n(*temporary)=\"attempt to index a nil value\"\n",
+["stack"] = "[Interface/AddOns/Custom/Custom.lua]:15: in function <Interface/AddOns/Custom/Custom.lua:2>\n",
+["session"] = 13,
+["counter"] = 1,
+},
+},
+}

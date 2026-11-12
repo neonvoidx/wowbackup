@@ -1,0 +1,198 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+	<Frame name="EQOLTargetComboRogueTemplate" virtual="true">
+		<Size x="20" y="20" />
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture parentKey="BGShadow" alphaMode="BLEND" texelSnappingBias="0.0" snapToPixelGrid="false" file="Interface\AddOns\EnhanceQoLUnitFrames\Media\ComboPoints\Rogue.blp">
+					<Anchors>
+						<Anchor point="CENTER" x="0" y="-4" />
+					</Anchors>
+					<Size x="25.0" y="25.0" />
+					<TexCoords left="0.5068359375" right="0.5556640625" top="0.0732421875" bottom="0.1220703125" />
+				</Texture>
+				<Texture parentKey="BGActive" alphaMode="BLEND" texelSnappingBias="0.0" snapToPixelGrid="false" file="Interface\AddOns\EnhanceQoLUnitFrames\Media\ComboPoints\Rogue.blp">
+					<Anchors>
+						<Anchor point="CENTER" />
+					</Anchors>
+					<Size x="20.0" y="20.0" />
+					<TexCoords left="0.5791015625" right="0.6181640625" top="0.0009765625" bottom="0.0400390625" />
+				</Texture>
+				<Texture parentKey="BGInactive" alphaMode="BLEND" texelSnappingBias="0.0" snapToPixelGrid="false" file="Interface\AddOns\EnhanceQoLUnitFrames\Media\ComboPoints\Rogue.blp">
+					<Anchors>
+						<Anchor point="CENTER" />
+					</Anchors>
+					<Size x="20.0" y="20.0" />
+					<TexCoords left="0.5791015625" right="0.6181640625" top="0.1240234375" bottom="0.1630859375" />
+				</Texture>
+				<Texture parentKey="BGGlow" alphaMode="BLEND" texelSnappingBias="0.0" snapToPixelGrid="false" file="Interface\AddOns\EnhanceQoLUnitFrames\Media\ComboPoints\Rogue.blp">
+					<Anchors>
+						<Anchor point="CENTER" />
+					</Anchors>
+					<Size x="20.0" y="20.0" />
+					<TexCoords left="0.5791015625" right="0.6181640625" top="0.0009765625" bottom="0.0400390625" />
+				</Texture>
+			</Layer>
+			<Layer level="ARTWORK" textureSubLevel="1">
+				<Texture parentKey="IconUncharged" alphaMode="BLEND" texelSnappingBias="0.0" snapToPixelGrid="false" file="Interface\AddOns\EnhanceQoLUnitFrames\Media\ComboPoints\Rogue.blp">
+					<Anchors>
+						<Anchor point="CENTER" />
+					</Anchors>
+					<Size x="14.0" y="14.5" />
+					<TexCoords left="0.5361328125" right="0.5634765625" top="0.2197265625" bottom="0.248046875" />
+				</Texture>
+			</Layer>
+			<Layer level="ARTWORK" textureSubLevel="2">
+				<Texture parentKey="FXUncharged" alphaMode="BLEND" texelSnappingBias="0.0" snapToPixelGrid="false" file="Interface\AddOns\EnhanceQoLUnitFrames\Media\ComboPoints\Rogue.blp">
+					<Anchors>
+						<Anchor point="CENTER" />
+					</Anchors>
+					<Size x="14.0" y="14.0" />
+					<TexCoords left="0.5791015625" right="0.6064453125" top="0.1943359375" bottom="0.2216796875" />
+				</Texture>
+			</Layer>
+			<Layer level="ARTWORK" textureSubLevel="3">
+				</Layer>
+			<Layer level="OVERLAY">
+				<Texture parentKey="FrameGlow" alphaMode="BLEND" texelSnappingBias="0.0" snapToPixelGrid="false" file="Interface\AddOns\EnhanceQoLUnitFrames\Media\ComboPoints\Rogue.blp">
+					<Anchors>
+						<Anchor point="CENTER" />
+					</Anchors>
+					<Size x="23.0" y="23.0" />
+					<TexCoords left="0.5068359375" right="0.5517578125" top="0.1728515625" bottom="0.2177734375" />
+				</Texture>
+				<Texture parentKey="SlashFBUncharged" alphaMode="BLEND" texelSnappingBias="0.0" snapToPixelGrid="false" file="Interface\AddOns\EnhanceQoLUnitFrames\Media\ComboPoints\Rogue.blp">
+					<Size x="43" y="43" />
+					<Anchors>
+						<Anchor point="CENTER" />
+					</Anchors>
+					<TexCoords left="0.0009765625" right="0.5048828125" top="0.2548828125" bottom="0.5068359375" />
+				</Texture>
+			</Layer>
+		</Layers>
+		<Animations>
+			<AnimationGroup parentKey="activateAnim" setToFinalAlpha="true">
+				<Alpha childKey="SlashFBUncharged" fromAlpha="0" toAlpha="1" duration="0" order="1" />
+				<FlipBook childKey="SlashFBUncharged" duration=".57" flipBookRows="3" flipBookColumns="6" flipBookFrames="17" flipBookFrameWidth="0" flipBookFrameHeight="0" order="1" />
+				<Alpha childKey="IconUncharged" fromAlpha="0" toAlpha=".5" duration=".1" order="1" />
+				<Alpha childKey="IconUncharged" fromAlpha=".5" toAlpha="1" startDelay=".27" duration=".27" order="1" />
+				<Alpha childKey="BGActive" fromAlpha="0" toAlpha="0" duration=".2" order="1" />
+				<Alpha childKey="BGActive" fromAlpha="0" toAlpha="1" startDelay=".2" duration=".17" order="1" />
+				<Alpha childKey="BGInactive" fromAlpha="1" toAlpha="1" duration=".37" order="1" />
+				<Alpha childKey="BGInactive" fromAlpha="1" toAlpha="0" startDelay=".37" duration=".1" order="1" />
+				<Alpha childKey="BGGlow" fromAlpha="0" toAlpha="1" duration=".17" order="1" />
+				<Alpha childKey="BGGlow" fromAlpha="1" toAlpha="0" startDelay=".17" duration=".4" order="1" />
+			</AnimationGroup>
+			<AnimationGroup parentKey="deactivateAnim" setToFinalAlpha="true">
+				<Alpha childKey="FrameGlow" fromAlpha="1" toAlpha="0" duration=".5" order="1" />
+				<Alpha childKey="IconUncharged" fromAlpha="1" toAlpha="0" duration=".17" order="1" />
+				<Alpha childKey="FXUncharged" fromAlpha="1" toAlpha="0" duration=".4" order="1" />
+				<Alpha childKey="BGActive" fromAlpha="1" toAlpha="1" duration=".2" order="1" />
+				<Alpha childKey="BGActive" fromAlpha="1" toAlpha="0" startDelay=".2" duration=".17" order="1" />
+				<Alpha childKey="BGInactive" fromAlpha="0" toAlpha="0" duration=".37" order="1" />
+				<Alpha childKey="BGInactive" fromAlpha="0" toAlpha="1" startDelay=".37" duration=".1" order="1" />
+			</AnimationGroup>
+		</Animations>
+	</Frame>
+	<Frame name="EQOLTargetComboDruidTemplate" virtual="true">
+		<Size x="20" y="20" />
+		<Layers>
+			<Layer level="BACKGROUND" textureSubLevel="1">
+				<Texture parentKey="BG_Shadow" alphaMode="BLEND" file="Interface\AddOns\EnhanceQoLUnitFrames\Media\ComboPoints\Druid.blp">
+					<Anchors>
+						<Anchor point="CENTER" x="0" y="-2" />
+					</Anchors>
+					<Size x="25.0" y="25.0" />
+					<TexCoords left="0.001953125" right="0.099609375" top="0.486328125" bottom="0.583984375" />
+				</Texture>
+				<Texture parentKey="BG_Active" alphaMode="BLEND" texelSnappingBias="0.0" snapToPixelGrid="false" file="Interface\AddOns\EnhanceQoLUnitFrames\Media\ComboPoints\Druid.blp">
+					<Anchors>
+						<Anchor point="CENTER" />
+					</Anchors>
+					<Size x="20.0" y="20.0" />
+					<TexCoords left="0.818359375" right="0.896484375" top="0.337890625" bottom="0.416015625" />
+				</Texture>
+				<Texture parentKey="BG_Inactive" alphaMode="BLEND" texelSnappingBias="0.0" snapToPixelGrid="false" file="Interface\AddOns\EnhanceQoLUnitFrames\Media\ComboPoints\Druid.blp">
+					<Anchors>
+						<Anchor point="CENTER" />
+					</Anchors>
+					<Size x="20.0" y="20.0" />
+					<TexCoords left="0.90625" right="0.984375" top="0.240234375" bottom="0.318359375" />
+				</Texture>
+			</Layer>
+			<Layer level="BACKGROUND" textureSubLevel="2">
+				<Texture parentKey="BG_Glow" alphaMode="BLEND" file="Interface\AddOns\EnhanceQoLUnitFrames\Media\ComboPoints\Druid.blp">
+					<Anchors>
+						<Anchor point="CENTER" />
+					</Anchors>
+					<Size x="36.0" y="36.0" />
+					<TexCoords left="0.818359375" right="0.958984375" top="0.001953125" bottom="0.142578125" />
+				</Texture>
+			</Layer>
+			<Layer level="ARTWORK">
+				<Texture parentKey="Point_Deplete" alphaMode="BLEND" texelSnappingBias="0.0" snapToPixelGrid="false" file="Interface\AddOns\EnhanceQoLUnitFrames\Media\ComboPoints\Druid.blp">
+					<Anchors>
+						<Anchor point="CENTER" />
+					</Anchors>
+					<Size x="15.5" y="15.0" />
+					<TexCoords left="0.818359375" right="0.87890625" top="0.419921875" bottom="0.478515625" />
+				</Texture>
+				<Texture parentKey="Point_Icon" alphaMode="BLEND" texelSnappingBias="0.0" snapToPixelGrid="false" file="Interface\AddOns\EnhanceQoLUnitFrames\Media\ComboPoints\Druid.blp">
+					<Anchors>
+						<Anchor point="CENTER" />
+					</Anchors>
+					<Size x="14.0" y="14.0" />
+					<TexCoords left="0.90625" right="0.9609375" top="0.3828125" bottom="0.4375" />
+				</Texture>
+			</Layer>
+			<Layer level="OVERLAY">
+				<Texture parentKey="FX_RingGlow" alphaMode="BLEND" file="Interface\AddOns\EnhanceQoLUnitFrames\Media\ComboPoints\Druid.blp">
+					<Anchors>
+						<Anchor point="CENTER" />
+					</Anchors>
+					<Size x="23.0" y="23.0" />
+					<TexCoords left="0.90625" right="0.99609375" top="0.146484375" bottom="0.236328125" />
+				</Texture>
+				<Texture parentKey="FB_Slash" alphaMode="BLEND" file="Interface\AddOns\EnhanceQoLUnitFrames\Media\ComboPoints\Druid.blp">
+					<Size x="26" y="41" />
+					<Anchors>
+						<Anchor point="CENTER" x="1" y="3" />
+					</Anchors>
+					<TexCoords left="0.001953125" right="0.814453125" top="0.001953125" bottom="0.482421875" />
+				</Texture>
+				<Texture parentKey="Smoke" alphaMode="BLEND" file="Interface\AddOns\EnhanceQoLUnitFrames\Media\ComboPoints\Druid.blp">
+					<Anchors>
+						<Anchor point="CENTER" x="0" y="15." />
+					</Anchors>
+					<Size x="21.5" y="48.0" />
+					<TexCoords left="0.818359375" right="0.90234375" top="0.146484375" bottom="0.333984375" />
+				</Texture>
+			</Layer>
+		</Layers>
+		<Animations>
+			<AnimationGroup parentKey="activateAnim" setToFinalAlpha="true">
+				<Alpha childKey="Point_Icon" fromAlpha="0" toAlpha=".5" duration=".1" order="1" />
+				<Alpha childKey="Point_Icon" fromAlpha=".5" toAlpha="1" startDelay=".47" duration=".2" order="1" />
+				<FlipBook childKey="FB_Slash" duration="1" flipBookRows="3" flipBookColumns="8" flipBookFrames="20" flipBookFrameWidth="0" flipBookFrameHeight="0" order="1" />
+				<Alpha childKey="FX_RingGlow" fromAlpha="0" toAlpha="1" duration=".27" order="1" />
+				<Alpha childKey="FX_RingGlow" fromAlpha="1" toAlpha="0" startDelay=".27" duration=".47" order="1" />
+				<Alpha childKey="BG_Active" fromAlpha="0" toAlpha="0" duration=".27" order="1" />
+				<Alpha childKey="BG_Active" fromAlpha="0" toAlpha="1" startDelay=".27" duration=".01" order="1" />
+				<Alpha childKey="BG_Inactive" fromAlpha="1" toAlpha="1" duration=".27" order="1" />
+				<Alpha childKey="BG_Inactive" fromAlpha="1" toAlpha="0" startDelay=".27" duration=".01" order="1" />
+				<Alpha childKey="BG_Glow" fromAlpha="0" toAlpha="0" duration=".17" order="1" />
+				<Alpha childKey="BG_Glow" fromAlpha="0" toAlpha="1" startDelay=".17" duration=".13" order="1" />
+				<Alpha childKey="BG_Glow" fromAlpha="1" toAlpha="0" startDelay=".3" duration=".4" order="1" />
+			</AnimationGroup>
+			<AnimationGroup parentKey="deactivateAnim" setToFinalAlpha="true">
+				<Alpha childKey="Smoke" fromAlpha="1" toAlpha="1" duration=".33" order="1" />
+				<Alpha childKey="Smoke" fromAlpha="1" toAlpha="0" startDelay=".33" duration=".23" order="1" />
+				<Translation childKey="Smoke" offsetX="0" offsetY="7" duration=".56" order="1" />
+				<Alpha childKey="FX_RingGlow" fromAlpha="1" toAlpha="1" duration=".43" order="1" />
+				<Alpha childKey="FX_RingGlow" fromAlpha="1" toAlpha="0" startDelay=".43" duration=".23" order="1" />
+				<Alpha childKey="Point_Icon" fromAlpha="1" toAlpha="0" duration=".2" order="1" />
+				<Alpha childKey="Point_Deplete" fromAlpha="1" toAlpha="1" duration=".23" order="1" />
+				<Alpha childKey="Point_Deplete" fromAlpha="1" toAlpha="0" startDelay=".23" duration=".2" order="1" />
+			</AnimationGroup>
+		</Animations>
+	</Frame>
+</Ui>

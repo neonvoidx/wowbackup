@@ -1,0 +1,28 @@
+VER 3 0100000000000001 " " "INV_Misc_QuestionMark"
+#showtooltip Stealth
+/cast !Stealth
+END
+VER 3 0100000000000002 " " "INV_Misc_QuestionMark"
+#showtooltip
+/cast [mod:shift,@cursor] Distract
+/cast [mod:alt][] Kick
+END
+VER 3 0100000000000003 "Blind" "INV_Misc_QuestionMark"
+#showtooltip Blind
+/stopattack [nomod]
+/cast [mod:shift,@focus,exists,harm,nodead][] Blind
+END
+VER 3 0100000000000004 "Poisons" "INV_Misc_QuestionMark"
+#showtooltip
+/use [nomod] Instant Poison; [mod:shift] Crippling Poison
+/use [nomod] 16; [mod:shift] 17
+END
+VER 3 0100000000000005 "Sap" "INV_Misc_QuestionMark"
+#showtooltip Sap
+/cast [nostealth] !Stealth; [@mouseover,harm,nodead][@focus,harm,nodead][] Sap
+END
+VER 3 0100000000000006 "Vanish" "INV_Misc_QuestionMark"
+#showtooltip Vanish
+/stopattack
+/cast Vanish
+END

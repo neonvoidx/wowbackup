@@ -1,0 +1,349 @@
+-- Names for the Forever Redridge and Hillsbrad fronts.
+local L = Overlord.L
+local locale = GetLocale() or "enUS"
+local names = {
+    enUS = { "Redridge Mountains", "Lakeshire", "Lakeshire", "Alther's Mill",
+        "Tower of Ilgalar", "Three Corners", "Lakeridge Highway", "Stonewatch Falls",
+        "Render's Valley", "Renosh Camp" },
+    frFR = { "Les Carmines", "Comté-du-Lac", "Comté-du-Lac", "Scierie d'Alther",
+        "Tour d'Ilgalar", "Trois chemins", "Grand-route de la Crête du lac", "Chutes de Guet-de-pierre",
+        "Vallée des Etripeurs", "Camp de Renosh" },
+    esES = { "Montañas Crestagrana", "Villa del Lago", "Villa del Lago", "Molino de Alther",
+        "Torre de Ilgalar", "Tres Caminos", "Camino del Lago", "Cascadas Petravista",
+        "Valle de Render", "Campamento de Renosh" },
+    deDE = { "Rotkammgebirge", "Seenhain", "Seenhain", "Althers Mühle",
+        "Turm von Ilgalar", "Drei Ecken", "Seeweg", "Steinwachfälle",
+        "Renders Tal", "Renosh-Lager" },
+    ruRU = { "Красногорье", "Приозерье", "Приозерье", "Мельница Алтера",
+        "Башня Илгалара", "Три Угла", "Дорога у озера", "Водопад Каменной Стражи",
+        "Долина Рендера", "Лагерь Renosh" },
+    ptBR = { "Montanhas Cristarrubra", "Vila Plácida", "Vila Plácida", "Serraria Alther",
+        "Torre de Ilgalar", "Três Caminhos", "Estrada Beira-lago", "Cachoeira do Mirante de Pedra",
+        "Vale dos Laceradores", "Acampamento de Renosh" },
+    zhCN = { "赤脊山", "湖畔镇", "湖畔镇", "奥瑟尔伐木场",
+        "伊尔加拉之塔", "三角路口", "湖边大道", "石堡瀑布",
+        "撕裂者山谷", "Renosh 营地" },
+}
+names.esMX = names.esES
+local n = names[locale] or names.enUS
+-- { zone, Southshore, Tarren Mill, Hillsbrad Fields, bridge, Nethander Stead,
+--   Durnholde Keep, outpost (Lordaeron Watch, at Southpoint Tower), Western Strand,
+--   Lordamere Camp (Hillsbrad edge of Lordamere Internment Camp), Dun Garok, gate of Thoradin's Wall }
+-- Place names as the game writes them (client AreaTable: enUS, frFR, ptBR, zhCN; deDE and
+-- esES from the Retail client where the area kept its name; ruRU not checked). The
+-- bridge, the gate, the camp's short name and the outpost are Overlord's own names.
+local hillsbradNames = {
+    enUS = { "Hillsbrad Foothills", "Southshore", "Tarren Mill", "Hillsbrad Fields",
+        "Hillsbrad Bridge", "Nethander Stead", "Durnholde Keep", "Lordaeron Watch",
+        "Western Strand", "Lordamere Camp", "Dun Garok", "Thoradin's Gate" },
+    frFR = { "Contreforts de Hautebrande", "Austrivage", "Moulin-de-Tarren", "Champs de Hautebrande",
+        "Pont de Hautebrande", "Ferme des Nethander", "Donjon de Fort-de-Durn", "Vigie de Lordaeron",
+        "Rivage occidental", "Camp de Lordamere", "Dun Garok", "Porte de Thoradin" },
+    esES = { "Laderas de Trabalomas", "Costasur", "Molino Tarren", "Campos de Trabalomas",
+        "Puente de Trabalomas", "Granja Nethander", "Castillo de Durnholde", "Atalaya de Lordaeron",
+        "Playa del Oeste", "Campo de Lordamere", "Dun Garok", "Puerta de Thoradin" },
+    deDE = { "Vorgebirge des Hügellands", "Süderstade", "Tarrens Mühle", "Felder des Hügellands",
+        "Hügellandbrücke", "Nethandersiedlung", "Burg Durnholde", "Lordaeronwacht",
+        "Weststrand", "Lager von Lordamere", "Dun Garok", "Thoradins Tor" },
+    ruRU = { "Предгорья Хилсбрада", "Южнобережье", "Мельница Таррен", "Поля Хилсбрада",
+        "Мост Хилсбрада", "Усадьба Нетандера", "Крепость Дарнхольд", "Дозор Лордерона",
+        "Западный берег", "Лагерь Лордамера", "Дун Гарок", "Врата Торадина" },
+    ptBR = { "Contraforte de Eira dos Montes", "Costa Sul", "Serraria Tarren", "Campos de Eira dos Montes",
+        "Ponte de Eira dos Montes", "Sítio de Nethander", "Forte do Desterro", "Vigia de Lordaeron",
+        "Praia Ocidental", "Campo de Lordamere", "Dun Garok", "Portão de Thoradin" },
+    zhCN = { "希尔斯布莱德丘陵", "南海镇", "塔伦米尔", "希尔斯布莱德农场",
+        "希尔斯布莱德桥", "奈杉德哨岗", "敦霍尔德城堡", "洛丹伦哨塔",
+        "西部海岸", "洛丹米尔营地", "丹加洛克", "索拉丁之门" },
+}
+hillsbradNames.esMX = hillsbradNames.esES
+local h = hillsbradNames[locale] or hillsbradNames.enUS
+L.FRONT_HILLSBRAD_NAME = h[1]
+L.FRONT_HILLSBRAD_DROPDOWN = h[1]
+for index, id in ipairs({ "hillsbrad_southshore", "hillsbrad_tarren_mill", "hillsbrad_fields",
+    "hillsbrad_bridge", "hillsbrad_nethander", "hillsbrad_durnholde" }) do
+    L.ZONE_NAMES[id] = h[index + 1]
+end
+for index, id in ipairs({ "hillsbrad_western_strand", "hillsbrad_internment_camp", "hillsbrad_dun_garok",
+    "hillsbrad_thoradin_gate" }) do
+    L.ZONE_NAMES[id] = h[index + 8]
+end
+L.OUTPOST_HILLSBRAD_NAME = h[8]
+L.FRONT_REDRIDGE_NAME = n[1]
+L.FRONT_REDRIDGE_DROPDOWN = n[1]
+L.OUTPOST_REDRIDGE_NAME = n[10]
+-- Standalone outpost names, translated per locale.
+local standaloneOutpostNames = {
+    enUS = { "Savix Chapel", "Aeythyr Lodge", "Lesi's Bear Cave", "Anad'Ora Moonwell" },
+    frFR = { "Chapelle de Savix", "Pavillon d'Aeythyr", "Grotte de l'ours de Lesi", "Puits de lune d'Anad'Ora" },
+    esES = { "Capilla de Savix", "Pabellón de Aeythyr", "Cueva del oso de Lesi", "Pozo de la Luna de Anad'Ora" },
+    deDE = { "Kapelle von Savix", "Aeythyrs Jagdhütte", "Lesis Bärenhöhle", "Mondbrunnen von Anad'Ora" },
+    ruRU = { "Часовня Savix", "Охотничий домик Aeythyr", "Медвежья пещера Lesi", "Лунный колодец Anad'Ora" },
+    ptBR = { "Capela Savix", "Pavilhão de Aeythyr", "Caverna do Urso de Lesi", "Poço Lunar de Anad'Ora" },
+    zhCN = { "Savix 教堂", "Aeythyr 小屋", "Lesi 的熊洞", "Anad'Ora 月亮井" },
+}
+standaloneOutpostNames.esMX = standaloneOutpostNames.esES
+local outpostNames = standaloneOutpostNames[locale] or standaloneOutpostNames.enUS
+L.OUTPOST_SILVERPINE_NAME = outpostNames[1]
+L.OUTPOST_AEYTHYR_LODGE_NAME = outpostNames[2]
+L.OUTPOST_LESI_BEAR_CAVE_NAME = outpostNames[3]
+L.OUTPOST_ANADORA_NAME = outpostNames[4]
+-- World map display modes: map corner button, Blizzard "Map Filters" and minimap
+-- tracking menus, options dropdown and /ov map.
+-- { filters title, full, compact, hidden, options tooltip, button click hint, chat/status line,
+--   circles only (2.3.2), map button: label, options tooltip, move/hide hint, hidden, shown (2.3.2) }
+local mapModeTexts = {
+    enUS = { "Overlord zones", "Full", "Compact (name in the circle)", "Hidden",
+        "Full: a name banner on every point. Compact: circles and icons, with each point's name written inside its circle; its banner and status show under the mouse and while it is being taken. Circles only: the same without the names in the circles; a point's name shows under the mouse. Hidden: nothing from Overlord on the world map.\nAlso from the Overlord button in the corner of the world map, the map's Filters menu, the minimap tracking menu and /ov map.",
+        "Click: %s", "World map display: %s", "Circles only",
+        "Overlord button on the world map",
+        "The Overlord button in the corner of the world map: a click changes the display. Right-click + drag moves it. The displays stay in the map's Filters menu and /ov map.",
+        "Right-click + drag: move.",
+        "Map button hidden. To bring it back: the map's Filters menu, the options or /ov map button.", "Map button shown." },
+    frFR = { "Zones Overlord", "Complet", "Compact (nom dans le cercle)", "Masqué",
+        "Complet : un bandeau avec le nom sur chaque point. Compact : cercles et icônes, avec le nom de chaque point écrit dans son cercle ; son bandeau et son statut apparaissent sous la souris et pendant sa prise. Cercles seuls : pareil, sans les noms dans les cercles ; le nom d'un point apparaît sous la souris. Masqué : rien d'Overlord sur la carte du monde.\nAussi avec le bouton Overlord dans le coin de la carte du monde, le menu Filtres de la carte, le menu de suivi de la minicarte et /ov map.",
+        "Clic : %s", "Carte du monde : %s", "Cercles seuls",
+        "Bouton Overlord sur la carte du monde",
+        "Le bouton Overlord dans le coin de la carte du monde : un clic change l'affichage. Clic droit + glisser le déplace. Les affichages restent dans le menu Filtres de la carte et /ov map.",
+        "Clic droit + glisser : déplacer.",
+        "Bouton de la carte masqué. Pour le remettre : menu Filtres de la carte, options ou /ov map button.", "Bouton de la carte affiché." },
+    esES = { "Zonas de Overlord", "Completo", "Compacto (nombre en el círculo)", "Oculto",
+        "Completo: un cartel con el nombre en cada punto. Compacto: círculos e iconos, con el nombre de cada punto escrito dentro de su círculo; su cartel y su estado aparecen bajo el ratón y mientras se está tomando. Solo círculos: lo mismo sin los nombres en los círculos; el nombre de un punto aparece bajo el ratón. Oculto: nada de Overlord en el mapa del mundo.\nTambién con el botón de Overlord en la esquina del mapa del mundo, el menú Filtros del mapa, el menú de seguimiento del minimapa y /ov map.",
+        "Clic: %s", "Mapa del mundo: %s", "Solo círculos",
+        "Botón de Overlord en el mapa del mundo",
+        "El botón de Overlord en la esquina del mapa del mundo: un clic cambia la vista. Clic derecho + arrastrar lo mueve. Las vistas siguen en el menú Filtros del mapa y en /ov map.",
+        "Clic derecho + arrastrar: mover.",
+        "Botón del mapa oculto. Para recuperarlo: menú Filtros del mapa, opciones o /ov map button.", "Botón del mapa visible." },
+    deDE = { "Overlord-Zonen", "Vollständig", "Kompakt (Name im Kreis)", "Ausgeblendet",
+        "Vollständig: ein Namensbanner auf jedem Punkt. Kompakt: Kreise und Symbole, der Name jedes Punktes steht in seinem Kreis; Banner und Status erscheinen unter der Maus und während er erobert wird. Nur Kreise: dasselbe ohne die Namen in den Kreisen; der Name eines Punktes erscheint unter der Maus. Ausgeblendet: nichts von Overlord auf der Weltkarte.\nAuch über den Overlord-Knopf in der Ecke der Weltkarte, das Filtermenü der Karte, das Verfolgungsmenü der Minimap und /ov map.",
+        "Klick: %s", "Weltkarte: %s", "Nur Kreise",
+        "Overlord-Knopf auf der Weltkarte",
+        "Der Overlord-Knopf in der Ecke der Weltkarte: ein Klick wechselt die Anzeige. Rechtsklick + Ziehen verschiebt ihn. Die Anzeigen bleiben im Filtermenü der Karte und unter /ov map.",
+        "Rechtsklick + Ziehen: verschieben.",
+        "Kartenknopf ausgeblendet. Zurückholen: Filtermenü der Karte, Optionen oder /ov map button.", "Kartenknopf eingeblendet." },
+    ruRU = { "Зоны Overlord", "Полный", "Компактный (название в круге)", "Скрыт",
+        "Полный: лента с названием на каждой точке. Компактный: круги и значки, название каждой точки написано внутри её круга; лента и статус видны под курсором и во время захвата. Только круги: то же самое без названий в кругах; название точки видно под курсором. Скрыт: ничего от Overlord на карте мира.\nТакже кнопкой Overlord в углу карты мира, в меню фильтров карты, в меню отслеживания мини-карты и командой /ov map.",
+        "Щелчок: %s", "Карта мира: %s", "Только круги",
+        "Кнопка Overlord на карте мира",
+        "Кнопка Overlord в углу карты мира: щелчок меняет режим. Перетаскивание правой кнопкой перемещает её. Режимы остаются в меню фильтров карты и в /ov map.",
+        "Перетаскивание правой кнопкой: переместить.",
+        "Кнопка карты скрыта. Вернуть: меню фильтров карты, настройки или /ov map button.", "Кнопка карты показана." },
+    ptBR = { "Zonas do Overlord", "Completo", "Compacto (nome no círculo)", "Oculto",
+        "Completo: um banner com o nome em cada ponto. Compacto: círculos e ícones, com o nome de cada ponto escrito dentro do seu círculo; o banner e o estado aparecem sob o mouse e enquanto ele é tomado. Só círculos: o mesmo, sem os nomes nos círculos; o nome de um ponto aparece sob o mouse. Oculto: nada do Overlord no mapa-múndi.\nTambém pelo botão do Overlord no canto do mapa-múndi, no menu Filtros do mapa, no menu de rastreamento do minimapa e com /ov map.",
+        "Clique: %s", "Mapa-múndi: %s", "Só círculos",
+        "Botão do Overlord no mapa-múndi",
+        "O botão do Overlord no canto do mapa-múndi: um clique muda a exibição. Clique direito + arrastar o move. As exibições continuam no menu Filtros do mapa e em /ov map.",
+        "Clique direito + arrastar: mover.",
+        "Botão do mapa oculto. Para trazê-lo de volta: menu Filtros do mapa, opções ou /ov map button.", "Botão do mapa visível." },
+    zhCN = { "Overlord 区域", "完整", "紧凑（名称写在圆圈内）", "隐藏",
+        "完整：每个据点都显示名称横幅。紧凑：显示圆圈和图标，据点名称写在圆圈内；鼠标悬停或据点正在被占领时显示横幅和状态。仅圆圈：同上，但圆圈内不写名称；鼠标悬停时显示据点名称。隐藏：世界地图上不显示任何 Overlord 内容。\n也可通过世界地图角落的 Overlord 按钮、地图的过滤菜单、小地图追踪菜单和 /ov map 切换。",
+        "点击：%s", "世界地图：%s", "仅圆圈",
+        "世界地图上的 Overlord 按钮",
+        "世界地图角落的 Overlord 按钮：点击切换显示方式。按住右键拖动可移动它。显示方式仍可在地图的过滤菜单和 /ov map 中切换。",
+        "右键拖动：移动。",
+        "地图按钮已隐藏。恢复方法：地图的过滤菜单、选项或 /ov map button。", "地图按钮已显示。" },
+}
+mapModeTexts.esMX = mapModeTexts.esES
+local mapMode = mapModeTexts[locale] or mapModeTexts.enUS
+L.MAP_FILTER_OVERLORD, L.MAP_MODE_FULL, L.MAP_MODE_COMPACT, L.MAP_MODE_HIDDEN = mapMode[1], mapMode[2], mapMode[3], mapMode[4]
+L.MAP_MODE_TOOLTIP, L.MAP_MODE_BUTTON_NEXT, L.MAP_MODE_STATUS = mapMode[5], mapMode[6], mapMode[7]
+L.MAP_MODE_CIRCLES = mapMode[8]
+L.MAP_BUTTON_LABEL, L.MAP_BUTTON_TOOLTIP, L.MAP_BUTTON_HINT = mapMode[9], mapMode[10], mapMode[11]
+L.MAP_BUTTON_HIDDEN, L.MAP_BUTTON_SHOWN = mapMode[12], mapMode[13]
+-- Settings texts for the floating next objective (it is always in the Overlord
+-- panel; the floating window is opt-in and also carries a capture's timer and bar).
+-- { floating objective label, floating objective tooltip }
+local settingsTexts = {
+    enUS = {
+        "Floating next objective",
+        "The next objective is always shown in the Overlord panel. Turn on to also show it in a small window in the middle of the screen, with the capture timer and bar while a capture is under way. Off by default.",
+    },
+    frFR = {
+        "Prochain objectif flottant",
+        "Le prochain objectif est toujours affiché dans le panneau Overlord. Activez pour l'afficher aussi dans une petite fenêtre au milieu de l'écran, avec le minuteur et la barre de capture pendant une capture. Désactivé par défaut.",
+    },
+    esES = {
+        "Próximo objetivo flotante",
+        "El próximo objetivo se muestra siempre en el panel de Overlord. Actívalo para mostrarlo también en una pequeña ventana en el centro de la pantalla, con el temporizador y la barra de captura durante una captura. Desactivado por defecto.",
+    },
+    deDE = {
+        "Schwebendes nächstes Ziel",
+        "Das nächste Ziel steht immer im Overlord-Fenster. Aktivieren, um es zusätzlich in einem kleinen Fenster in der Bildschirmmitte zu zeigen, während einer Eroberung mit Timer und Fortschrittsbalken. Standardmäßig aus.",
+    },
+    ruRU = {
+        "Плавающая следующая цель",
+        "Следующая цель всегда показана в окне Overlord. Включите, чтобы также показывать её в маленьком окне в центре экрана, а во время захвата — с таймером и полосой захвата. По умолчанию выключено.",
+    },
+    ptBR = {
+        "Próximo objetivo flutuante",
+        "O próximo objetivo é sempre mostrado no painel do Overlord. Ative para mostrá-lo também numa pequena janela no meio da tela, com o cronômetro e a barra de captura durante uma captura. Desativado por padrão.",
+    },
+    zhCN = {
+        "浮动下一目标",
+        "下一目标始终显示在 Overlord 面板中。开启后，也会在屏幕中央的小窗口中显示，占领进行中时附带占领计时和进度条。默认关闭。",
+    },
+}
+settingsTexts.esMX = settingsTexts.esES
+local st = settingsTexts[locale] or settingsTexts.enUS
+L.FLOATING_OBJECTIVE_LABEL, L.FLOATING_OBJECTIVE_TOOLTIP = st[1], st[2]
+local goldBonusReady = {
+    enUS = "Ready", frFR = "Prêt", esES = "Listo", esMX = "Listo",
+    deDE = "Bereit", ruRU = "Готово", ptBR = "Pronto", zhCN = "就绪",
+}
+L.GOLD_BONUS_READY = goldBonusReady[locale] or goldBonusReady.enUS
+for index, id in ipairs({ "redridge_lakeshire", "redridge_althers_mill", "redridge_ilgalar",
+    "redridge_three_corners", "redridge_lakeridge_highway", "redridge_stonewatch_falls",
+    "redridge_renders_valley" }) do
+    L.ZONE_NAMES[id] = n[index + 2]
+end
+
+if locale == "ptBR" then
+    local zones = {
+        stromgarde = "Bastilha de Stromgarde", faldir = "Enseada de Faldir",
+        witherbark = "Aldeia Cascasseca", goshek = "Fazenda Go'Shek",
+        dabyrie = "Fazenda dos Dabyrie", refuge = "Ponta do Refúgio",
+        highperch = "Ponte Thandol", newstead = "Muralha de Thoradin",
+        hammerfell = "Ruína do Martelo", argorok = "Círculo de União Ocidental",
+        loch_alliance_capital = "Thelsamar", loch_horde_capital = "Fortaleza Mo'grosh",
+        loch_valley_of_kings = "Vale dos Reis", loch_south_gate_pass = "Desfiladeiro do Portão Sul",
+        loch_silver_stream_mine = "Mina da Prata", loch_algaz_post = "Posto Algaz",
+        loch_farstrider_lodge = "Refúgio dos Andarilhos", loch_ironband = "Sítio de Escavação de Bandaferro",
+        loch_the_loch = "Loch", loch_stonewrought_dam = "Dique Lapidado",
+        durotar_tiragarde_keep = "Bastilha Tiragarde", durotar_alliance_fleet = "Penedo de Kolkar",
+        durotar_senjin_village = "Aldeia Sen'jin", durotar_razor_hill = "Monte Navalha",
+        durotar_deadeye_shore = "Praia do Olho Seco", durotar_southfury = "Rio Furiaustral",
+        durotar_spirit_rock = "Vale das Provações", durotar_thunder_ridge = "Desfiladeiro do Trovão",
+        durotar_drygulch_ravine = "Barranco da Ravina Seca", durotar_dranosh_blockade = "Acesso a Orgrimmar",
+        ash_astranaar = "Astranaar", ash_iris_lake = "Lago Íris",
+        ash_raynewood = "Refúgio Bosque Real", ash_night_run = "Trilha da Noite",
+        ash_bloodtooth_camp = "Aldeia Dente Sangrento", ash_silverwind = "Refúgio Brisaprata",
+        ash_mystral_lake = "Lago Mistral", ash_fallen_sky_lake = "Lago Céu Caído",
+        ash_dor_danil = "Covil de Dor'Danil", ash_splintertree = "Posto Machadada",
+        ash_maestra = "Entreposto de Maestra", ash_zoram_strand = "Praia de Zoram",
+        ash_darkshore_road = "Estrada da Costa Negra", ash_aessina = "Santuário de Aessina",
+        ash_stardust = "Ruínas de Poeira Estelar",
+    }
+    for id, name in pairs(zones) do L.ZONE_NAMES[id] = name end
+    local elwynn = { "Guarnição da Ribeira d'Oeste", "Vila d'Ouro", "Torre de Azora",
+        "Torre Serrana", "Lago de Cristal", "Mina Vailafundo", "Ancoradouro de Jerod",
+        "Lago do Monumento", "Madeireira Vale do Leste", "Avanço Rocha Negra" }
+    for index, id in ipairs({ "elwynn_westbrook", "elwynn_goldshire", "elwynn_tower_of_azora",
+        "elwynn_ridgepoint", "elwynn_mirror_lake", "elwynn_fargodeep",
+        "elwynn_jerods_landing", "elwynn_stone_cairn", "elwynn_eastvale",
+        "elwynn_invasion_camp" }) do L.ZONE_NAMES[id] = elwynn[index] end
+elseif locale == "zhCN" then
+    local zones = {
+        stromgarde = "激流堡", faldir = "法迪尔海湾", witherbark = "枯木村",
+        goshek = "格沙克农场", dabyrie = "达比雷农场", refuge = "避难谷地",
+        highperch = "萨多尔大桥", newstead = "索拉丁之墙", hammerfell = "落锤镇",
+        argorok = "西部禁锢法阵", loch_alliance_capital = "塞尔萨玛",
+        loch_horde_capital = "莫格罗什要塞", loch_valley_of_kings = "国王谷",
+        loch_south_gate_pass = "南门小径", loch_silver_stream_mine = "银泉矿洞",
+        loch_algaz_post = "奥加兹岗哨", loch_farstrider_lodge = "远行者小屋",
+        loch_ironband = "铁环挖掘场", loch_the_loch = "洛克湖",
+        loch_stonewrought_dam = "巨石水坝", durotar_tiragarde_keep = "提拉加德城堡",
+        durotar_alliance_fleet = "科卡尔峭壁", durotar_senjin_village = "森金村",
+        durotar_razor_hill = "剃刀岭", durotar_deadeye_shore = "死眼海岸",
+        durotar_southfury = "怒水河", durotar_spirit_rock = "试炼谷",
+        durotar_thunder_ridge = "雷霆山", durotar_drygulch_ravine = "枯水谷",
+        durotar_dranosh_blockade = "奥格瑞玛入口", ash_astranaar = "阿斯特兰纳",
+        ash_iris_lake = "伊瑞斯湖", ash_raynewood = "林中树居",
+        ash_night_run = "夜道谷", ash_bloodtooth_camp = "血牙营地",
+        ash_silverwind = "银风避难所", ash_mystral_lake = "密斯特拉湖",
+        ash_fallen_sky_lake = "坠星湖", ash_dor_danil = "朵丹尼尔兽穴",
+        ash_splintertree = "碎木岗哨", ash_maestra = "迈斯特拉岗哨",
+        ash_zoram_strand = "佐拉姆海岸", ash_darkshore_road = "黑海岸之路",
+        ash_aessina = "艾森娜神殿", ash_stardust = "星尘废墟",
+    }
+    for id, name in pairs(zones) do L.ZONE_NAMES[id] = name end
+    local elwynn = { "西泉要塞", "闪金镇", "阿祖拉之塔", "山巅之塔", "水晶湖",
+        "法戈第矿洞", "杰罗德码头", "石碑湖", "东谷伐木场", "黑石前哨" }
+    for index, id in ipairs({ "elwynn_westbrook", "elwynn_goldshire", "elwynn_tower_of_azora",
+        "elwynn_ridgepoint", "elwynn_mirror_lake", "elwynn_fargodeep",
+        "elwynn_jerods_landing", "elwynn_stone_cairn", "elwynn_eastvale",
+        "elwynn_invasion_camp" }) do L.ZONE_NAMES[id] = elwynn[index] end
+end
+
+-- Help lines and the domination bar tooltip.
+-- { /ov map, /ov network,
+--   domination rule, victories header, no victory, "%s ago", reset line }
+local uiTexts = {
+    enUS = { "|cFFFFFF00/ov map [full||compact||off]|r: World map display (also the Overlord button in the map's corner)",
+        "|cFFFFFF00/ov network|r: Network report (|cFFFFFF00/ov relay|r: relay details)",
+        "Taking the enemy capital wins a front: +1% for the winning faction.",
+        "Front victories this week", "No front victory yet this week.", "%s ago",
+        "Resets in %s (every week, on your region's schedule)." },
+    frFR = { "|cFFFFFF00/ov map [full||compact||off]|r : affichage de la carte du monde (aussi le bouton Overlord dans le coin de la carte)",
+        "|cFFFFFF00/ov network|r : rapport réseau (|cFFFFFF00/ov relay|r : détail du relais)",
+        "Prendre la capitale ennemie remporte un front : +1 % pour la faction gagnante.",
+        "Victoires de front cette semaine", "Aucune victoire de front cette semaine pour l'instant.", "il y a %s",
+        "Remise à zéro dans %s (chaque semaine, à l'heure de votre région)." },
+    esES = { "|cFFFFFF00/ov map [full||compact||off]|r: visualización del mapa del mundo (también el botón de Overlord en la esquina del mapa)",
+        "|cFFFFFF00/ov network|r: informe de red (|cFFFFFF00/ov relay|r: detalle del relé)",
+        "Tomar la capital enemiga gana un frente: +1 % para la facción ganadora.",
+        "Victorias de frente esta semana", "Aún no hay victorias de frente esta semana.", "hace %s",
+        "Se reinicia en %s (cada semana, según el horario de tu región)." },
+    deDE = { "|cFFFFFF00/ov map [full||compact||off]|r: Weltkartenanzeige (auch der Overlord-Knopf in der Kartenecke)",
+        "|cFFFFFF00/ov network|r: Netzwerkbericht (|cFFFFFF00/ov relay|r: Relay-Details)",
+        "Die Einnahme der feindlichen Hauptstadt gewinnt eine Front: +1 % für die siegreiche Fraktion.",
+        "Frontsiege diese Woche", "Diese Woche noch kein Frontsieg.", "vor %s",
+        "Zurückgesetzt in %s (jede Woche, nach dem Zeitplan eurer Region)." },
+    ruRU = { "|cFFFFFF00/ov map [full||compact||off]|r: отображение карты мира (также кнопка Overlord в углу карты)",
+        "|cFFFFFF00/ov network|r: отчёт о сети (|cFFFFFF00/ov relay|r: подробности ретрансляции)",
+        "Взятие вражеской столицы приносит победу на фронте: +1 % победившей фракции.",
+        "Победы на фронтах на этой неделе", "На этой неделе побед на фронтах пока нет.", "%s назад",
+        "Сброс через %s (каждую неделю, по расписанию вашего региона)." },
+    ptBR = { "|cFFFFFF00/ov map [full||compact||off]|r: exibição do mapa-múndi (também o botão do Overlord no canto do mapa)",
+        "|cFFFFFF00/ov network|r: relatório de rede (|cFFFFFF00/ov relay|r: detalhes do relé)",
+        "Tomar a capital inimiga vence uma frente: +1 % para a facção vencedora.",
+        "Vitórias de frente nesta semana", "Nenhuma vitória de frente nesta semana ainda.", "há %s",
+        "Reinicia em %s (toda semana, no horário da sua região)." },
+    zhCN = { "|cFFFFFF00/ov map [full||compact||off]|r：世界地图显示（也可用地图角落的 Overlord 按钮）",
+        "|cFFFFFF00/ov network|r：网络报告（|cFFFFFF00/ov relay|r：中继详情）",
+        "攻下敌方主城即赢得该战线：获胜阵营 +1%。",
+        "本周战线胜利", "本周尚无战线胜利。", "%s前",
+        "%s后重置（每周按你所在地区的时间）。" },
+}
+uiTexts.esMX = uiTexts.esES
+local ut = uiTexts[locale] or uiTexts.enUS
+L.HELP_MAP, L.HELP_NETWORK = ut[1], ut[2]
+L.DOM_TIP_RULE, L.DOM_TIP_VICTORIES, L.DOM_TIP_NONE, L.DOM_TIP_AGO, L.DOM_TIP_RESET =
+    ut[3], ut[4], ut[5], ut[6], ut[7]
+
+-- Leaderboard: weekly capturers and rivalries view (keeps and outposts).
+-- { button title, button text, back, capturers column, rivalries column,
+--   no capturer, no rivalry }
+local sitesWeekTexts = {
+    enUS = { "Capturers and rivalries",
+        "This week's keep and outpost captures: who took the most, and which guild took sites from which.",
+        "Back to keeps and outposts", "Capturers this week", "Rivalries this week",
+        "No keep or outpost taken this week yet.", "No site has changed faction this week yet." },
+    frFR = { "Preneurs et rivalités",
+        "Les prises de forts et d'avant-postes de la semaine : qui en a pris le plus, et quelle guilde a pris des sites à quelle autre.",
+        "Retour aux forts et avant-postes", "Preneurs de la semaine", "Rivalités de la semaine",
+        "Aucun fort ni avant-poste pris cette semaine pour l'instant.", "Aucun site n'a encore changé de faction cette semaine." },
+    esES = { "Conquistadores y rivalidades",
+        "Las tomas de fortalezas y avanzadas de la semana: quién tomó más y qué hermandad arrebató sitios a cuál.",
+        "Volver a fortalezas y avanzadas", "Conquistadores de la semana", "Rivalidades de la semana",
+        "Aún no se ha tomado ninguna fortaleza ni avanzada esta semana.", "Ningún sitio ha cambiado de facción esta semana." },
+    deDE = { "Eroberer und Rivalitäten",
+        "Die Festungs- und Außenposteneroberungen der Woche: wer am meisten erobert hat und welche Gilde wem Orte abgenommen hat.",
+        "Zurück zu Festungen und Außenposten", "Eroberer der Woche", "Rivalitäten der Woche",
+        "Diese Woche wurde noch keine Festung und kein Außenposten erobert.", "Diese Woche hat noch kein Ort die Fraktion gewechselt." },
+    ruRU = { "Захватчики и соперничество",
+        "Захваты крепостей и аванпостов за неделю: кто захватил больше всех и какая гильдия отбирала точки у какой.",
+        "Назад к крепостям и аванпостам", "Захватчики недели", "Соперничество недели",
+        "На этой неделе ещё не захвачено ни одной крепости или аванпоста.", "На этой неделе ни одна точка ещё не сменила фракцию." },
+    ptBR = { "Conquistadores e rivalidades",
+        "As tomadas de fortalezas e postos avançados da semana: quem tomou mais e qual guilda tomou locais de qual.",
+        "Voltar a fortalezas e postos avançados", "Conquistadores da semana", "Rivalidades da semana",
+        "Nenhuma fortaleza ou posto avançado tomado nesta semana ainda.", "Nenhum local mudou de facção nesta semana ainda." },
+    zhCN = { "占领者与宿敌",
+        "本周要塞和前哨的占领情况：谁占领得最多，以及哪个公会从哪个公会手中夺走了据点。",
+        "返回要塞和前哨", "本周占领者", "本周宿敌",
+        "本周尚无要塞或前哨被占领。", "本周尚无据点易主。" },
+}
+sitesWeekTexts.esMX = sitesWeekTexts.esES
+local sw = sitesWeekTexts[locale] or sitesWeekTexts.enUS
+L.SITES_WEEK_TIP_TITLE, L.SITES_WEEK_TIP_BODY, L.SITES_WEEK_BACK = sw[1], sw[2], sw[3]
+L.SITES_WEEK_COL_CAPTURERS, L.SITES_WEEK_COL_RIVALRIES = sw[4], sw[5]
+L.SITES_WEEK_EMPTY_CAPTURERS, L.SITES_WEEK_EMPTY_RIVALRIES = sw[6], sw[7]

@@ -1,0 +1,37 @@
+
+HandyNotes_MapNotesForeverDB = {
+["profileKeys"] = {
+["Beat Ngu"] = "Beat Ngu",
+},
+["profiles"] = {
+["Beat Ngu"] = {
+["showZoneSkinning"] = true,
+["showZoneFirstAid"] = true,
+["showZoneCooking"] = true,
+["showZoneTailoring"] = true,
+["showZoneJewelcrafting"] = true,
+["showZoneAlchemy"] = true,
+["showZoneHerbalism"] = true,
+["showZoneEnchanting"] = true,
+["showZoneLeatherworking"] = true,
+["showZoneFishing"] = true,
+["showZoneEngineer"] = true,
+["showZoneInscription"] = true,
+["showZoneArchaeology"] = true,
+["showZoneBlacksmith"] = true,
+["showZoneMining"] = true,
+},
+},
+}
+MNMiniMapButtonForeverDB = {
+["profileKeys"] = {
+["Beat Ngu"] = "Beat Ngu",
+},
+["profiles"] = {
+["Beat Ngu"] = {
+["minimap"] = {
+["minimapPos"] = 255.5890682121354,
+},
+},
+},
+}

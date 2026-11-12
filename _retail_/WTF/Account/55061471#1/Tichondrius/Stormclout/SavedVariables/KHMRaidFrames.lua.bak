@@ -1,0 +1,2 @@
+
+KHMRaidFrames_SyncProfiles = nil

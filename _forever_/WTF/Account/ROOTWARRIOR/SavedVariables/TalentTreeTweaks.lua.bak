@@ -1,0 +1,99 @@
+
+TalentTreeTweaksDB = {
+["modules"] = {
+["InspectDiff"] = true,
+["ClickableExportStringsInChat"] = true,
+["SearchForIds"] = true,
+["CopyTalentButtonInfo"] = true,
+["MiniTreeInTooltip"] = true,
+["DebugNodeInfo"] = true,
+["TooltipIds"] = true,
+["ScaleTalentFrame"] = true,
+["ExportInspectedBuild"] = true,
+["ImportIntoCurrentLoadout"] = true,
+},
+["moduleDb"] = {
+["InspectDiff"] = {
+["colorYellow"] = {
+["a"] = 0.75,
+["b"] = 0,
+["g"] = 0.67,
+["r"] = 1,
+},
+["colorGreen"] = {
+["a"] = 0.58,
+["b"] = 0.3,
+["g"] = 1,
+["r"] = 0,
+},
+["colorRed"] = {
+["a"] = 0.5,
+["b"] = 0,
+["g"] = 0,
+["r"] = 1,
+},
+["enableTalentTreeViewerDiff"] = true,
+},
+["MiniTreeInTooltip"] = {
+["upgradedDisplayStyle"] = 1,
+["displayStyle"] = "simple-default-diff",
+["diffOrange"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 1,
+},
+["diffRed"] = {
+["b"] = 0,
+["g"] = 0,
+["r"] = 1,
+},
+["scale"] = 1,
+["diffGreen"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+["diffYellow"] = {
+["b"] = 1,
+["g"] = 1,
+["r"] = 1,
+},
+["inactiveSubTreeAlpha"] = 0.5,
+},
+["ClickableExportStringsInChat"] = {
+["disableDetectionFromStrings"] = true,
+},
+["DebugNodeInfo"] = {
+["slashDump"] = false,
+["viragDevTool"] = true,
+["luaBrowser"] = true,
+["tinspect"] = true,
+},
+["ExportInspectedBuild"] = {
+["exportOnDropdownRightClick"] = true,
+["showExportButton"] = true,
+["inspectTalentsMenuItem"] = true,
+["showLinkInChatButton"] = true,
+},
+["ScaleTalentFrame"] = {
+["scale"] = 1,
+},
+["TooltipIds"] = {
+["professionTooltip"] = {
+["enabled"] = true,
+["nodeId"] = true,
+["spellId"] = true,
+["definitionId"] = false,
+["entryId"] = true,
+},
+["talentTooltip"] = {
+["enabled"] = true,
+["nodeId"] = true,
+["spellId"] = true,
+["definitionId"] = false,
+["entryId"] = true,
+["rowColInfo"] = false,
+},
+},
+},
+}

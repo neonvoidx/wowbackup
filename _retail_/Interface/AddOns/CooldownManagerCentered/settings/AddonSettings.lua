@@ -1,0 +1,2644 @@
+local _, ns = ...
+local Affected = ns.API.Affected
+
+--- AddonSettings - Settings Management System
+local AddonSettings = {}
+ns.AddonSettings = AddonSettings
+local L = LibStub("AceLocale-3.0"):GetLocale("CooldownManagerCentered")
+
+ns.AddonSettings.settingPreview = {}
+ns.AddonSettings.SettingsLayout = {}
+
+local SettingsLib = LibStub("WildForkLibEQOLSettingsMode-1.0")
+local LSM = LibStub("LibSharedMedia-3.0", true)
+
+local PROJECT_PAGE_URL = "https://www.curseforge.com/wow/addons/cooldown-manager-centered"
+local COPY_TEXT_DIALOG = "CMC_COPY_SUPPORT_TEXT"
+local DONATION_LINKS = {
+    { label = "Ko-fi", value = "https://ko-fi.com/wildu" },
+    { label = "Buy Me a Coffee", value = "https://buymeacoffee.com/wildu" },
+    { label = "Patreon", value = "https://www.patreon.com/join/wildu" },
+}
+local GOLD_RECIPIENTS = {
+    alliance = {
+        "Wildu-Silvermoon",
+        "Wilduu-BurningLegion",
+    },
+    horde = {
+        "Wilduu-TarrenMill",
+        "Wildudh-Kazzak",
+    },
+}
+
+local function ShowCopyText(value)
+    if not StaticPopupDialogs[COPY_TEXT_DIALOG] then
+        StaticPopupDialogs[COPY_TEXT_DIALOG] = {
+            text = "Press Ctrl+C to copy.",
+            button1 = CLOSE,
+            OnShow = function(dialog, data)
+                local editBox = dialog.GetEditBox and dialog:GetEditBox() or dialog.editBox
+                editBox:SetText(data)
+                editBox:HighlightText()
+            end,
+            hasEditBox = true,
+            editBoxWidth = 320,
+            timeout = 0,
+            whileDead = true,
+            hideOnEscape = true,
+            preferredIndex = 3,
+        }
+    end
+
+    StaticPopup_Show(COPY_TEXT_DIALOG, nil, nil, value)
+end
+
+local function AddonSettings_BuildCooldown(category, layout)
+    -- When Masque skins the icons, its skin owns all icon styling, glow and font
+    -- options, so the affected sections below are omitted from the panel.
+    local masqueStylingActive = ns.MasqueModule and ns.MasqueModule:IsActive()
+
+    SettingsLib:CreateDropdown(category, {
+        prefix = "CMC_",
+        key = "cooldownManager_alignBuffIcons_growFromDirection",
+        name = "Tracked Buff Icons|cffff0000*|r",
+        searchtags = { "Grow", "Direction", "Alignment", "Position", "Layout", "Anchor", "Left", "Right", "Center" },
+        default = "CENTER",
+
+        optionfunc = function()
+            return {
+                ["START"] = BuffIconCooldownViewer.isHorizontal and "Grow from the |cff8ccd00Start|r"
+                    or "Grow from the |cff8ccd00Start|r",
+                ["CENTER"] = "Grow from |cff8ccd00Center|r",
+                ["END"] = BuffIconCooldownViewer.isHorizontal and "Grow from the |cff8ccd00End|r"
+                    or "Grow from the |cff8ccd00End|r",
+                ["Disable"] = "|cffff2020Disable|r centering",
+            }
+        end,
+        order = { "START", "CENTER", "END", "Disable" },
+        get = function()
+            return ns.db.profile.cooldownManager_alignBuffIcons_growFromDirection or "CENTER"
+        end,
+        set = function(value)
+            ns.db.profile.cooldownManager_alignBuffIcons_growFromDirection = value
+            ns.API:RefreshCooldownManager()
+        end,
+    })
+
+    SettingsLib:CreateDropdown(category, {
+        prefix = "CMC_",
+        key = "cooldownManager_alignBuffBars_growFromDirection",
+        name = "Tracked Buff Bars|cffff0000*|r",
+        searchtags = {
+            "Grow",
+            "Direction",
+            "Alignment",
+            "Position",
+            "Layout",
+            "Anchor",
+            "Top",
+            "Bottom",
+            "Buff",
+            "Bar",
+            "Tracked",
+        },
+        default = "BOTTOM",
+        values = {
+            BOTTOM = "Bars grow from |cff8ccd00Bottom|r",
+            TOP = "Bars grow from |cff8ccd00Top|r",
+            ["Disable"] = "|cffff2020Disable|r centering",
+        },
+        order = { "TOP", "BOTTOM", "Disable" },
+        get = function()
+            return ns.db.profile.cooldownManager_alignBuffBars_growFromDirection or "BOTTOM"
+        end,
+        set = function(value)
+            ns.db.profile.cooldownManager_alignBuffBars_growFromDirection = value
+            ns.API:RefreshCooldownManager()
+        end,
+    })
+
+    SettingsLib:CreateDropdown(category, {
+        prefix = "CMC_",
+        key = "cooldownManager_centerEssential_growFromDirection",
+        name = "Essential Icons|cffff0000*|r",
+        searchtags = { "Grow", "Direction", "Alignment", "Position", "Layout", "Anchor", "Row", "Column", "Essential" },
+        default = "TOP",
+        optionfunc = function()
+            return {
+                BOTTOM = EssentialCooldownViewer.isHorizontal and "New Rows on |cff8ccd00Top|r"
+                    or "New Columns to the |cff8ccd00Left|r",
+                TOP = EssentialCooldownViewer.isHorizontal and "New Rows |cff8ccd00Below|r"
+                    or "New Columns to the |cff8ccd00Right|r",
+                ["Disable"] = "|cffff2020Disable|r centering",
+            }
+        end,
+        order = { "TOP", "BOTTOM", "Disable" },
+        get = function()
+            return ns.db.profile.cooldownManager_centerEssential_growFromDirection or "TOP"
+        end,
+        set = function(value)
+            ns.db.profile.cooldownManager_centerEssential_growFromDirection = value
+            ns.API:RefreshCooldownManager()
+        end,
+    })
+
+    SettingsLib:CreateDropdown(category, {
+        prefix = "CMC_",
+        key = "cooldownManager_centerUtility_growFromDirection",
+        name = "Utility Icons|cffff0000*|r",
+        searchtags = { "Grow", "Direction", "Alignment", "Position", "Layout", "Anchor", "Row", "Column", "Utility" },
+        default = "TOP",
+        optionfunc = function()
+            return {
+                BOTTOM = UtilityCooldownViewer.isHorizontal and "New Rows on |cff8ccd00Top|r"
+                    or "New Columns to the |cff8ccd00Left|r",
+                TOP = UtilityCooldownViewer.isHorizontal and "New Rows |cff8ccd00Below|r"
+                    or "New Columns to the |cff8ccd00Right|r",
+                ["Disable"] = "|cffff2020Disable|r centering",
+            }
+        end,
+        order = { "TOP", "BOTTOM", "Disable" },
+        get = function()
+            return ns.db.profile.cooldownManager_centerUtility_growFromDirection or "TOP"
+        end,
+        set = function(value)
+            ns.db.profile.cooldownManager_centerUtility_growFromDirection = value
+            ns.API:RefreshCooldownManager()
+        end,
+    })
+
+    SettingsLib:CreateCheckbox(category, {
+        prefix = "CMC_",
+        key = "tracker_enabled",
+        name = "Enable " .. ns.API.GradientText("Custom Trackers"),
+        searchtags = { "Dynamic", "Alignment", "Position", "Layout", "Anchor", "Auto", "Center", "Adaptive" },
+        default = true,
+        get = function()
+            return ns.db.profile.tracker_enabled
+        end,
+        set = function(value)
+            ns.db.profile.tracker_enabled = value
+            if value then
+                if ns.TrackerItemViewer then
+                    ns.TrackerItemViewer:Initialize()
+                    ns.TrackerItemViewer:ShowAll()
+                end
+            else
+                if ns.TrackerItemViewer then
+                    ns.TrackerItemViewer:HideAll()
+                end
+                if ns.TrackerAssignmentPanel then
+                    ns.TrackerAssignmentPanel:OnTrackerDisabled()
+                end
+            end
+        end,
+    })
+
+    SettingsLib:CreateCheckbox(category, {
+        prefix = "CMC_",
+        key = "buff_containers_enabled",
+        name = "Enable  " .. ns.API.GradientText("Buff Containers"),
+        searchtags = { "Buff", "Container", "Aura", "Tracked", "Anchor", "Position", "Layout", "Split" },
+        default = false,
+        get = function()
+            return ns.BuffData and ns.BuffData.IsEnabled()
+        end,
+        set = function(value)
+            if not ns.BuffData then
+                return
+            end
+            ns.BuffData.SetEnabled(value)
+            if value then
+                if ns.BuffContainerViewer then
+                    ns.BuffContainerViewer:Initialize()
+                end
+            else
+                if ns.BuffContainerViewer then
+                    ns.BuffContainerViewer:HideAll()
+                end
+                if ns.BuffAssignmentPanel then
+                    ns.BuffAssignmentPanel:OnBuffContainersDisabled()
+                end
+            end
+            if ns.CooldownManager then
+                ns.CooldownManager.ForceRefresh({ icons = true })
+            end
+        end,
+    })
+
+    SettingsLib:CreateText(category, {
+        name = "|cffff0000*|rTo change |cfffff100Size, Padding|r or to change between |cfffff100columns / rows|r\n Go to |cff87bbcaEdit Mode|r and change |cfffff100Icon Size, Padding & Orientation|r.",
+    })
+    SettingsLib:CreateText(category, {
+        name = "Dynamic alignment of Icons and Bars is happening within the Viewer container.\nSnap to Grid in |cff87bbcaEdit Mode|r for best results.",
+    })
+
+    SettingsLib:CreateButton(category, {
+        text = "Open Edit Mode",
+        func = function()
+            ns.API:ToggleEditMode()
+        end,
+        parentSection = cooldownSection,
+    })
+    SettingsLib:CreateButton(category, {
+        text = "Open Cooldown Settings",
+        func = function()
+            if not InCombatLockdown() then
+                HideUIPanel(SettingsPanel)
+                C_Timer.After(0.1, function()
+                    CooldownViewerSettings:ShowUIPanel(false)
+                end)
+            end
+        end,
+        parentSection = cooldownSection,
+    })
+    SettingsLib:CreateText(category, {
+        name = "You can write |cfffff100/cds|r or |cfffff100/cdm|r Go to |cfffff100Cooldown Settings|r",
+    })
+
+    if not masqueStylingActive then
+        local squareIconsSection = SettingsLib:CreateExpandableSection(category, {
+            name = "|cff5fb64aIco|r|cff8ccd00ns|r Styling",
+            expanded = false,
+            colorizeTitle = true,
+        })
+        SettingsLib:CreateText(category, {
+            name = "|cfffff100Padding|r can no longer be set within addon, please use |cff87bbcaEdit Mode|r",
+            parentSection = squareIconsSection,
+        })
+
+        SettingsLib:CreateCheckbox(category, {
+            parentSection = squareIconsSection,
+            prefix = "CMC_",
+            key = "cooldownManager_squareIcons_BuffIcons",
+            name = "Square Buff Icons",
+            searchtags = { "Square", "Shape", "Style", "Rectangular", "Flat", "Modern", "Buff", "Icon", "Texture" },
+            default = false,
+            get = function()
+                return ns.db.profile.cooldownManager_squareIcons_BuffIcons
+            end,
+            set = function(value)
+                ns.db.profile.cooldownManager_squareIcons_BuffIcons = value
+                ns.StyledIcons:OnSettingChanged()
+            end,
+            desc = "Apply square icon styling to Buff Icons viewer.",
+        })
+        SettingsLib:CreateSlider(category, {
+            parentSection = squareIconsSection,
+            prefix = "CMC_",
+            key = "cooldownManager_squareIconsBorder_BuffIcons",
+            name = "Border Thickness",
+            searchtags = { "Border", "Thickness", "Width", "Edge", "Frame", "Outline", "Buff", "Size" },
+            default = 4,
+            min = 0,
+            max = 6,
+            step = 1,
+            formatter = function(value)
+                return string.format("%.0fpx", value)
+            end,
+            get = function()
+                return ns.db.profile.cooldownManager_squareIconsBorder_BuffIcons or 4
+            end,
+            set = function(value)
+                ns.db.profile.cooldownManager_squareIconsBorder_BuffIcons = value
+                if ns.StyledIcons then
+                    ns.StyledIcons:OnSettingChanged()
+                end
+            end,
+            desc = "Border thickness for square Buff Icons (space between icon edge and texture).",
+            -- isEnabled = function()
+            --     return not ns.API:IsSomeAddOnRestrictionActive()
+            -- end,
+        })
+
+        SettingsLib:CreateSlider(category, {
+            parentSection = squareIconsSection,
+            prefix = "CMC_",
+            key = "cooldownManager_squareIconsZoom_BuffIcons",
+            name = "Zoom",
+            searchtags = { "Zoom", "Scale", "Crop", "Magnify", "Enlarge", "Texture", "Buff", "Icon" },
+            default = 0,
+            min = 0,
+            max = 0.5,
+            step = 0.01,
+            formatter = function(value)
+                return string.format("%.2f", value)
+            end,
+            get = function()
+                return ns.db.profile.cooldownManager_squareIconsZoom_BuffIcons or 0
+            end,
+            set = function(value)
+                ns.db.profile.cooldownManager_squareIconsZoom_BuffIcons = value
+                ns.StyledIcons:OnSettingChanged()
+            end,
+            desc = "Zoom level for square Buff Icons (0 = no zoom, 0.5 = maximum zoom).",
+        })
+
+        SettingsLib:CreateCheckboxSlider(category, {
+            parentSection = squareIconsSection,
+            prefix = "CMC_",
+            key = "cooldownManager_experimental_enableRectangularIcons_buffIcons",
+            name = "Rectangular Ratio",
+            searchtags = { "Rectangular", "Icons", "Experimental", "Rectangle", "Wide", "Aspect Ratio" },
+            default = false,
+            get = function()
+                return ns.db.profile.cooldownManager_experimental_enableRectangularIcons_buffIcons
+            end,
+            set = function(value)
+                ns.db.profile.cooldownManager_experimental_enableRectangularIcons_buffIcons = value
+                ns.StyledIcons:OnSettingChanged()
+            end,
+            desc = "Enable rectangular icons for Buff Icons viewer. |cffff0000Experimental feature, may cause issues!|r",
+
+            sliderKey = "cooldownManager_experimental_enableRectangularIcons_buffIcons_percent",
+            sliderName = "Height to Width Ratio",
+            sliderMin = 0.6,
+            sliderMax = 0.9,
+            sliderStep = 0.01,
+            sliderDefault = 0.8,
+            sliderGet = function()
+                return ns.db.profile.cooldownManager_experimental_enableRectangularIcons_buffIcons_percent
+            end,
+            sliderSet = function(value)
+                local rounded = math.floor((value or 0) * 100 + 0.5) / 100
+                ns.db.profile.cooldownManager_experimental_enableRectangularIcons_buffIcons_percent = rounded
+                ns.StyledIcons:OnSettingChanged()
+            end,
+            sliderFormatter = function(value)
+                return string.format("%.0f%%", value * 100)
+            end,
+        })
+        SettingsLib:CreateText(category, {
+            name = "",
+            parentSection = squareIconsSection,
+        })
+
+        SettingsLib:CreateCheckbox(category, {
+            parentSection = squareIconsSection,
+            prefix = "CMC_",
+            key = "cooldownManager_squareIcons_Essential",
+            name = "Square Essential Cooldowns",
+            searchtags = { "Square", "Shape", "Style", "Rectangular", "Flat", "Modern", "Essential", "Icon", "Texture" },
+            default = false,
+            get = function()
+                return ns.db.profile.cooldownManager_squareIcons_Essential
+            end,
+            set = function(value)
+                ns.db.profile.cooldownManager_squareIcons_Essential = value
+                ns.StyledIcons:OnSettingChanged()
+            end,
+            desc = "Apply square icon styling to Essential Cooldowns viewer.",
+        })
+
+        SettingsLib:CreateSlider(category, {
+            parentSection = squareIconsSection,
+            prefix = "CMC_",
+            key = "cooldownManager_squareIconsBorder_Essential",
+            name = "Border Thickness",
+            searchtags = { "Border", "Thickness", "Width", "Edge", "Frame", "Outline", "Essential", "Size" },
+            default = 4,
+            min = 0,
+            max = 6,
+            step = 1,
+            formatter = function(value)
+                return string.format("%.0fpx", value)
+            end,
+            get = function()
+                return ns.db.profile.cooldownManager_squareIconsBorder_Essential or 4
+            end,
+            set = function(value)
+                ns.db.profile.cooldownManager_squareIconsBorder_Essential = value
+
+                ns.StyledIcons:OnSettingChanged()
+            end,
+            desc = "Border thickness for square Essential Icons (space between icon edge and texture).",
+            -- isEnabled = function()
+            --     return not ns.API:IsSomeAddOnRestrictionActive()
+            -- end,
+        })
+
+        SettingsLib:CreateSlider(category, {
+            parentSection = squareIconsSection,
+            prefix = "CMC_",
+            key = "cooldownManager_squareIconsZoom_Essential",
+            name = "Icon Zoom",
+            searchtags = { "Zoom", "Scale", "Crop", "Magnify", "Enlarge", "Texture", "Essential", "Icon" },
+            default = 0,
+            min = 0,
+            max = 0.5,
+            step = 0.01,
+            formatter = function(value)
+                return string.format("%.2f", value)
+            end,
+            get = function()
+                return ns.db.profile.cooldownManager_squareIconsZoom_Essential or 0
+            end,
+            set = function(value)
+                ns.db.profile.cooldownManager_squareIconsZoom_Essential = value
+                if ns.StyledIcons then
+                    ns.StyledIcons:OnSettingChanged()
+                end
+            end,
+            desc = "Zoom level for square Essential Icons (0 = no zoom, 0.5 = maximum zoom).",
+        })
+
+        SettingsLib:CreateCheckboxSlider(category, {
+            parentSection = squareIconsSection,
+            prefix = "CMC_",
+            key = "cooldownManager_experimental_enableRectangularIcons_essential",
+            name = "Rectangular Ratio",
+            searchtags = { "Rectangular", "Icons", "Experimental", "Rectangle", "Wide", "Aspect Ratio" },
+            default = false,
+            get = function()
+                return ns.db.profile.cooldownManager_experimental_enableRectangularIcons_essential
+            end,
+            set = function(value)
+                ns.db.profile.cooldownManager_experimental_enableRectangularIcons_essential = value
+                ns.StyledIcons:OnSettingChanged()
+            end,
+            desc = "Enable rectangular icons for Essential viewer. |cffff0000Experimental feature, may cause issues!|r",
+
+            sliderKey = "cooldownManager_experimental_enableRectangularIcons_essential_percent",
+            sliderName = "Height to Width Ratio",
+            sliderMin = 0.6,
+            sliderMax = 0.9,
+            sliderStep = 0.01,
+            sliderDefault = 0.8,
+            sliderGet = function()
+                return ns.db.profile.cooldownManager_experimental_enableRectangularIcons_essential_percent
+            end,
+            sliderSet = function(value)
+                local rounded = math.floor((value or 0) * 100 + 0.5) / 100
+                ns.db.profile.cooldownManager_experimental_enableRectangularIcons_essential_percent = rounded
+                ns.StyledIcons:OnSettingChanged()
+            end,
+            sliderFormatter = function(value)
+                return string.format("%.0f%%", value * 100)
+            end,
+        })
+
+        SettingsLib:CreateText(category, {
+            name = "",
+            parentSection = squareIconsSection,
+        })
+
+        SettingsLib:CreateCheckbox(category, {
+            parentSection = squareIconsSection,
+            prefix = "CMC_",
+            key = "cooldownManager_squareIcons_Utility",
+            name = "Square Utility Cooldowns",
+            searchtags = { "Square", "Shape", "Style", "Rectangular", "Flat", "Modern", "Utility", "Icon", "Texture" },
+            default = false,
+            get = function()
+                return ns.db.profile.cooldownManager_squareIcons_Utility
+            end,
+            set = function(value)
+                ns.db.profile.cooldownManager_squareIcons_Utility = value
+                ns.StyledIcons:OnSettingChanged()
+            end,
+            desc = "Apply square icon styling to Utility Cooldowns viewer.",
+        })
+
+        SettingsLib:CreateSlider(category, {
+            parentSection = squareIconsSection,
+            prefix = "CMC_",
+            key = "cooldownManager_squareIconsBorder_Utility",
+            name = "Border Thickness",
+            searchtags = { "Border", "Thickness", "Width", "Edge", "Frame", "Outline", "Utility", "Size" },
+            default = 4,
+            min = 0,
+            max = 6,
+            step = 1,
+            formatter = function(value)
+                return string.format("%.0fpx", value)
+            end,
+            get = function()
+                return ns.db.profile.cooldownManager_squareIconsBorder_Utility or 4
+            end,
+            set = function(value)
+                ns.db.profile.cooldownManager_squareIconsBorder_Utility = value
+                if ns.StyledIcons then
+                    ns.StyledIcons:OnSettingChanged()
+                end
+            end,
+            desc = "Border thickness for square Utility Icons (space between icon edge and texture).",
+            -- isEnabled = function()
+            --     return not ns.API:IsSomeAddOnRestrictionActive()
+            -- end,
+        })
+
+        SettingsLib:CreateSlider(category, {
+            parentSection = squareIconsSection,
+            prefix = "CMC_",
+            key = "cooldownManager_squareIconsZoom_Utility",
+            name = "Icon Zoom",
+            searchtags = { "Zoom", "Scale", "Crop", "Magnify", "Enlarge", "Texture", "Utility", "Icon" },
+            default = 0,
+            min = 0,
+            max = 0.5,
+            step = 0.01,
+            formatter = function(value)
+                return string.format("%.2f", value)
+            end,
+            get = function()
+                return ns.db.profile.cooldownManager_squareIconsZoom_Utility or 0
+            end,
+            set = function(value)
+                ns.db.profile.cooldownManager_squareIconsZoom_Utility = value
+                if ns.StyledIcons then
+                    ns.StyledIcons:OnSettingChanged()
+                end
+            end,
+            desc = "Zoom level for square Utility Icons (0 = no zoom, 0.5 = maximum zoom).",
+        })
+        SettingsLib:CreateCheckboxSlider(category, {
+            parentSection = squareIconsSection,
+            prefix = "CMC_",
+            key = "cooldownManager_experimental_enableRectangularIcons_utility",
+            name = "Rectangular Ratio",
+            searchtags = { "Rectangular", "Icons", "Experimental", "Rectangle", "Wide", "Aspect Ratio" },
+            default = false,
+            get = function()
+                return ns.db.profile.cooldownManager_experimental_enableRectangularIcons_utility
+            end,
+            set = function(value)
+                ns.db.profile.cooldownManager_experimental_enableRectangularIcons_utility = value
+                ns.StyledIcons:OnSettingChanged()
+            end,
+            desc = "Enable rectangular icons for Utility viewer. |cffff0000Experimental feature, may cause issues!|r",
+
+            sliderKey = "cooldownManager_experimental_enableRectangularIcons_utility_percent",
+            sliderName = "Height to Width Ratio",
+            sliderMin = 0.6,
+            sliderMax = 0.9,
+            sliderStep = 0.01,
+            sliderDefault = 0.8,
+            sliderGet = function()
+                return ns.db.profile.cooldownManager_experimental_enableRectangularIcons_utility_percent
+            end,
+            sliderSet = function(value)
+                local rounded = math.floor((value or 0) * 100 + 0.5) / 100
+                ns.db.profile.cooldownManager_experimental_enableRectangularIcons_utility_percent = rounded
+                ns.StyledIcons:OnSettingChanged()
+            end,
+            sliderFormatter = function(value)
+                return string.format("%.0f%%", value * 100)
+            end,
+        })
+        SettingsLib:CreateCheckbox(category, {
+            parentSection = squareIconsSection,
+            prefix = "CMC_",
+            key = "cooldownManager_normalizeUtilitySize",
+            name = "Normalize Utility Icons Scaling",
+            searchtags = { "Fix", "Normalize", "Size", "Uniform", "Match", "Equal", "Same", "Utility", "Icon" },
+            default = false,
+            get = function()
+                return ns.db.profile.cooldownManager_normalizeUtilitySize
+            end,
+            set = function(value)
+                ns.db.profile.cooldownManager_normalizeUtilitySize = value
+                ns.StyledIcons:OnSettingChanged()
+            end,
+            desc = "Set base Utility Cooldown Icons |cffff0000base|r size as Essential Cooldowns Icons\nIt helps to have a more uniform look when both viewers are used together.",
+        })
+    end -- not masqueStylingActive (icon styling section only)
+
+    local cooldownSection = SettingsLib:CreateExpandableSection(category, {
+        name = "|cffeeeeeeCooldown|r Settings",
+        expanded = false,
+        colorizeTitle = true,
+    })
+
+    local customSwipeColorCheckbox = SettingsLib:CreateCheckbox(category, {
+        prefix = "CMC_",
+        key = "cooldownManager_customSwipeColor_enabled",
+        name = "Enable Custom Overlay Colors",
+        default = false,
+        get = function()
+            return ns.db.profile.cooldownManager_customSwipeColor_enabled or false
+        end,
+        set = function(value)
+            ns.db.profile.cooldownManager_customSwipeColor_enabled = value
+        end,
+        desc = "Enable custom coloring for the cooldown swipe overlay.",
+        parentSection = cooldownSection,
+    })
+
+    SettingsLib:CreateColorOverrides(category, {
+        key = "cooldownManager_customActiveColor",
+        entries = {
+            { key = "active", label = "Active Aura Color" },
+        },
+        hasOpacity = true,
+        getColor = function(key)
+            if key == "active" then
+                return ns.db.profile.cooldownManager_customActiveColor_r or ns.CONSTANTS.DEFAULT_ACTIVE_SWIPE_COLOR.r,
+                    ns.db.profile.cooldownManager_customActiveColor_g or ns.CONSTANTS.DEFAULT_ACTIVE_SWIPE_COLOR.g,
+                    ns.db.profile.cooldownManager_customActiveColor_b or ns.CONSTANTS.DEFAULT_ACTIVE_SWIPE_COLOR.b,
+                    ns.db.profile.cooldownManager_customActiveColor_a or ns.CONSTANTS.DEFAULT_ACTIVE_SWIPE_COLOR.a
+            end
+        end,
+        setColor = function(key, r, g, b, a)
+            if key == "active" then
+                ns.db.profile.cooldownManager_customActiveColor_r = r
+                ns.db.profile.cooldownManager_customActiveColor_g = g
+                ns.db.profile.cooldownManager_customActiveColor_b = b
+                ns.db.profile.cooldownManager_customActiveColor_a = a
+            end
+        end,
+        getDefaultColor = function(key)
+            if key == "active" then
+                return ns.CONSTANTS.DEFAULT_ACTIVE_SWIPE_COLOR.r,
+                    ns.CONSTANTS.DEFAULT_ACTIVE_SWIPE_COLOR.g,
+                    ns.CONSTANTS.DEFAULT_ACTIVE_SWIPE_COLOR.b,
+                    ns.CONSTANTS.DEFAULT_ACTIVE_SWIPE_COLOR.a
+            end
+        end,
+        parentSection = cooldownSection,
+    })
+
+    SettingsLib:CreateColorOverrides(category, {
+        key = "cooldownManager_customCDSwipeColor",
+        entries = {
+            { key = "active", label = "Cooldown Swipe Color" },
+        },
+        hasOpacity = true,
+        getColor = function(key)
+            if key == "active" then
+                return ns.db.profile.cooldownManager_customCDSwipeColor_r or ns.CONSTANTS.DEFAULT_COOLDOWN_SWIPE_COLOR.r,
+                    ns.db.profile.cooldownManager_customCDSwipeColor_g or ns.CONSTANTS.DEFAULT_COOLDOWN_SWIPE_COLOR.g,
+                    ns.db.profile.cooldownManager_customCDSwipeColor_b or ns.CONSTANTS.DEFAULT_COOLDOWN_SWIPE_COLOR.b,
+                    ns.db.profile.cooldownManager_customCDSwipeColor_a or ns.CONSTANTS.DEFAULT_COOLDOWN_SWIPE_COLOR.a
+            end
+        end,
+        setColor = function(key, r, g, b, a)
+            if key == "active" then
+                ns.db.profile.cooldownManager_customCDSwipeColor_r = r
+                ns.db.profile.cooldownManager_customCDSwipeColor_g = g
+                ns.db.profile.cooldownManager_customCDSwipeColor_b = b
+                ns.db.profile.cooldownManager_customCDSwipeColor_a = a
+            end
+        end,
+        getDefaultColor = function(key)
+            if key == "active" then
+                return ns.CONSTANTS.DEFAULT_COOLDOWN_SWIPE_COLOR.r,
+                    ns.CONSTANTS.DEFAULT_COOLDOWN_SWIPE_COLOR.g,
+                    ns.CONSTANTS.DEFAULT_COOLDOWN_SWIPE_COLOR.b,
+                    ns.CONSTANTS.DEFAULT_COOLDOWN_SWIPE_COLOR.a
+            end
+        end,
+        parentSection = cooldownSection,
+    })
+
+    SettingsLib:CreateButton(category, {
+        text = "Set default colors",
+        func = function()
+            ns.db.profile.cooldownManager_customActiveColor_r = ns.CONSTANTS.DEFAULT_ACTIVE_SWIPE_COLOR.r
+            ns.db.profile.cooldownManager_customActiveColor_g = ns.CONSTANTS.DEFAULT_ACTIVE_SWIPE_COLOR.g
+            ns.db.profile.cooldownManager_customActiveColor_b = ns.CONSTANTS.DEFAULT_ACTIVE_SWIPE_COLOR.b
+            ns.db.profile.cooldownManager_customActiveColor_a = ns.CONSTANTS.DEFAULT_ACTIVE_SWIPE_COLOR.a
+            ns.db.profile.cooldownManager_customCDSwipeColor_r = ns.CONSTANTS.DEFAULT_COOLDOWN_SWIPE_COLOR.r
+            ns.db.profile.cooldownManager_customCDSwipeColor_g = ns.CONSTANTS.DEFAULT_COOLDOWN_SWIPE_COLOR.g
+            ns.db.profile.cooldownManager_customCDSwipeColor_b = ns.CONSTANTS.DEFAULT_COOLDOWN_SWIPE_COLOR.b
+            ns.db.profile.cooldownManager_customCDSwipeColor_a = ns.CONSTANTS.DEFAULT_COOLDOWN_SWIPE_COLOR.a
+            ReloadUI()
+        end,
+        parentSection = cooldownSection,
+    })
+
+    SettingsLib:CreateCheckbox(category, {
+        prefix = "CMC_",
+        key = "cooldownManager_hideCooldownFlash",
+        name = "Hide cooldown flash",
+        default = false,
+        get = function()
+            return ns.db.profile.cooldownManager_hideCooldownFlash or false
+        end,
+        set = function(value)
+            ns.db.profile.cooldownManager_hideCooldownFlash = value
+            if ns.CooldownStyle and ns.CooldownStyle.RefreshHooks then
+                ns.CooldownStyle:RefreshHooks()
+            end
+        end,
+        desc = "Hide the bright flash shown on Essential and Utility cooldown icons when an ability comes off cooldown.",
+        parentSection = cooldownSection,
+    })
+
+    SettingsLib:CreateHeader(category, {
+        name = "Cooldown Number Settings",
+        parentSection = cooldownSection,
+    })
+
+    SettingsLib:CreateScrollDropdown(category, {
+        parentSection = cooldownSection,
+        prefix = "CMC_",
+        key = "cooldownManager_cooldownFontName",
+        name = "Cooldown Font",
+        searchtags = { "Font", "Text", "Cooldown", "Count", "Number", "Typeface", "Typography", "SharedMedia" },
+        default = "NIL",
+        height = 220,
+        get = function()
+            local v = ns.db.profile.cooldownManager_cooldownFontName
+            if not v or v == "NIL" then
+                return "Default font"
+            end
+            return v
+        end,
+        set = function(value)
+            ns.db.profile.cooldownManager_cooldownFontName = value
+            ns.CooldownFont:RefreshAll()
+        end,
+        desc = "Select the font for ability cooldown numbers. Uses SharedMedia fonts if available.",
+        generator = function(dropdown, rootDescription)
+            dropdown.fontPool = {}
+            if not Affected(dropdown).fontfaceDropdownOnMenuClosedHooked then
+                hooksecurefunc(dropdown, "OnMenuClosed", function()
+                    for _, fontDisplay in pairs(dropdown.fontPool) do
+                        fontDisplay:Hide()
+                    end
+                end)
+                Affected(dropdown).fontfaceDropdownOnMenuClosedHooked = true
+            end
+            local fonts = LSM:HashTable(LSM.MediaType.FONT)
+            local sortedFonts = {}
+            for fontName in pairs(fonts) do
+                if fontName ~= "" then
+                    table.insert(sortedFonts, fontName)
+                end
+            end
+            table.sort(sortedFonts)
+
+            rootDescription:CreateRadio("Default font", function()
+                local v = ns.db.profile.cooldownManager_cooldownFontName
+                return not v or v == "NIL"
+            end, function()
+                ns.db.profile.cooldownManager_cooldownFontName = "NIL"
+                ns.CooldownFont:RefreshAll()
+                dropdown:SetText("Default font")
+            end)
+
+            for index, fontName in ipairs(sortedFonts) do
+                local fontPath = fonts[fontName]
+
+                local button = rootDescription:CreateRadio(fontName, function()
+                    return ns.db.profile.cooldownManager_cooldownFontName == fontName
+                end, function()
+                    ns.db.profile.cooldownManager_cooldownFontName = fontName
+                    ns.CooldownFont:RefreshAll()
+                    dropdown:SetText(fontName)
+                end)
+
+                button:AddInitializer(function(self)
+                    local fontDisplay = dropdown.fontPool[index]
+                    if not fontDisplay then
+                        fontDisplay = dropdown:CreateFontString(nil, "BACKGROUND")
+                        dropdown.fontPool[index] = fontDisplay
+                    end
+
+                    self.fontString:Hide()
+
+                    fontDisplay:SetParent(self)
+                    fontDisplay:SetPoint("LEFT", self.fontString, "LEFT", 0, 0)
+                    fontDisplay:SetFont(fontPath, 12)
+                    fontDisplay:SetText(fontName)
+                    fontDisplay:Show()
+                end)
+            end
+        end,
+    })
+
+    SettingsLib:CreateMultiDropdown(category, {
+        parentSection = cooldownSection,
+        prefix = "CMC_",
+        key = "cooldownManager_cooldownFontFlags",
+        name = "Font Flags",
+        customText = "No Flags",
+        searchtags = { "Font", "Flags", "Outline", "Shadow", "Thick", "Monochrome", "Text", "Style" },
+        defaultSelection = {},
+        values = {
+            ["OUTLINE"] = "Outline",
+            ["THICKOUTLINE"] = "Thick Outline",
+            ["MONOCHROME"] = "Monochrome",
+            ["SLUG"] = "Slug",
+        },
+        order = { "MONOCHROME", "OUTLINE", "THICKOUTLINE", "SLUG" },
+        getSelection = function()
+            return ns.db.profile.cooldownManager_cooldownFontFlags or {}
+        end,
+        setSelection = function(value)
+            if value["OUTLINE"] or value["THICKOUTLINE"] or value["MONOCHROME"] or value["SLUG"] then
+                ns.db.profile.cooldownManager_cooldownFontFlags = value
+            else
+                ns.db.profile.cooldownManager_cooldownFontFlags = { OUTLINE = false }
+            end
+            ns.CooldownFont:RefreshAll()
+        end,
+        desc = "Select font flags for ability cooldown numbers.",
+    })
+
+    local cooldownFontSizeValues = {
+        ["NIL"] = "Default",
+        ["0"] = "Hide",
+        ["10"] = "10",
+        ["12"] = "12",
+        ["14"] = "14",
+        ["16"] = "16",
+        ["18"] = "18",
+        ["20"] = "20",
+        ["22"] = "22",
+        ["24"] = "24",
+        ["26"] = "26",
+        ["28"] = "28",
+        ["30"] = "30",
+        ["32"] = "32",
+        ["34"] = "34",
+        ["36"] = "36",
+        ["38"] = "38",
+    }
+    local cooldownFontSizeOrder = {
+        "NIL",
+        "0",
+        "10",
+        "12",
+        "14",
+        "16",
+        "18",
+        "20",
+        "22",
+        "24",
+        "26",
+        "28",
+        "30",
+        "32",
+        "34",
+        "36",
+        "38",
+    }
+
+    local function CreateCooldownFontSizeDropdown(
+        parentSection,
+        key,
+        name,
+        getFn,
+        setFn,
+        checkboxKey,
+        checkboxGet,
+        checkboxSet
+    )
+        SettingsLib:CreateCheckboxDropdown(category, {
+            parentSection = parentSection,
+            prefix = "CMC_",
+            dropdownKey = key,
+            key = checkboxKey,
+            name = name,
+            dropdownDefault = "NIL",
+            dropdownValues = cooldownFontSizeValues,
+            dropdownOrder = cooldownFontSizeOrder,
+            dropdownGet = getFn,
+            dropdownSet = setFn,
+            get = checkboxGet,
+            set = checkboxSet,
+            default = false,
+        })
+    end
+
+    -- Countdown text X/Y position offset sliders for native viewers.
+    -- refreshFn re-applies the affected viewer(s).
+    local function CreateCooldownTextOffsetSliders(parentSection, xKey, yKey, refreshFn)
+        local function makeSlider(key, name)
+            SettingsLib:CreateSlider(category, {
+                parentSection = parentSection,
+                prefix = "CMC_",
+                key = key,
+                name = name,
+                default = 0,
+                min = -40,
+                max = 40,
+                step = 1,
+                formatter = function(value)
+                    return string.format("%.0f", value)
+                end,
+                get = function()
+                    return ns.db.profile[key] or 0
+                end,
+                set = function(value)
+                    ns.db.profile[key] = math.floor((value or 0) + 0.5)
+                    refreshFn()
+                end,
+            })
+        end
+        makeSlider(xKey, "Cooldown Text X Offset")
+        makeSlider(yKey, "Cooldown Text Y Offset")
+    end
+
+    local function RefreshCooldownFontAll()
+        ns.CooldownFont:RefreshAll()
+    end
+    CreateCooldownFontSizeDropdown(
+        cooldownSection,
+        "cooldownManager_cooldownFontSizeEssential",
+        "Change on Essential",
+        function()
+            return ns.db.profile.cooldownManager_cooldownFontSizeEssential ~= nil
+                    and tostring(ns.db.profile.cooldownManager_cooldownFontSizeEssential)
+                or "NIL"
+        end,
+        function(value)
+            if value == "NIL" then
+                ns.db.profile.cooldownManager_cooldownFontSizeEssential = "NIL"
+            else
+                local n = tonumber(value)
+                ns.db.profile.cooldownManager_cooldownFontSizeEssential = n
+            end
+            ns.CooldownFont:RefreshAll()
+        end,
+        "cooldownManager_cooldownFontSizeEssential_enabled",
+        function()
+            return ns.db.profile.cooldownManager_cooldownFontSizeEssential_enabled
+        end,
+        function(value)
+            ns.db.profile.cooldownManager_cooldownFontSizeEssential_enabled = value
+            ns.CooldownFont:RefreshAll()
+        end
+    )
+    CreateCooldownTextOffsetSliders(
+        cooldownSection,
+        "cooldownManager_cooldownTextEssential_offsetX",
+        "cooldownManager_cooldownTextEssential_offsetY",
+        RefreshCooldownFontAll
+    )
+    CreateCooldownFontSizeDropdown(
+        cooldownSection,
+        "cooldownManager_cooldownFontSizeUtility",
+        "Change on Utility",
+        function()
+            return ns.db.profile.cooldownManager_cooldownFontSizeUtility ~= nil
+                    and tostring(ns.db.profile.cooldownManager_cooldownFontSizeUtility)
+                or "NIL"
+        end,
+        function(value)
+            if value == "NIL" then
+                ns.db.profile.cooldownManager_cooldownFontSizeUtility = "NIL"
+            else
+                local n = tonumber(value)
+                ns.db.profile.cooldownManager_cooldownFontSizeUtility = n
+            end
+            ns.CooldownFont:RefreshAll()
+        end,
+        "cooldownManager_cooldownFontSizeUtility_enabled",
+        function()
+            return ns.db.profile.cooldownManager_cooldownFontSizeUtility_enabled
+        end,
+        function(value)
+            ns.db.profile.cooldownManager_cooldownFontSizeUtility_enabled = value
+            ns.CooldownFont:RefreshAll()
+        end
+    )
+    CreateCooldownTextOffsetSliders(
+        cooldownSection,
+        "cooldownManager_cooldownTextUtility_offsetX",
+        "cooldownManager_cooldownTextUtility_offsetY",
+        RefreshCooldownFontAll
+    )
+    CreateCooldownFontSizeDropdown(
+        cooldownSection,
+        "cooldownManager_cooldownFontSizeBuffIcons",
+        "Change on Tracked Buffs",
+        function()
+            return ns.db.profile.cooldownManager_cooldownFontSizeBuffIcons ~= nil
+                    and tostring(ns.db.profile.cooldownManager_cooldownFontSizeBuffIcons)
+                or "NIL"
+        end,
+        function(value)
+            if value == "NIL" then
+                ns.db.profile.cooldownManager_cooldownFontSizeBuffIcons = "NIL"
+            else
+                local n = tonumber(value)
+                ns.db.profile.cooldownManager_cooldownFontSizeBuffIcons = n
+            end
+            ns.CooldownFont:RefreshAll()
+        end,
+        "cooldownManager_cooldownFontSizeBuffIcons_enabled",
+        function()
+            return ns.db.profile.cooldownManager_cooldownFontSizeBuffIcons_enabled
+        end,
+        function(value)
+            ns.db.profile.cooldownManager_cooldownFontSizeBuffIcons_enabled = value
+            ns.CooldownFont:RefreshAll()
+        end
+    )
+    CreateCooldownTextOffsetSliders(
+        cooldownSection,
+        "cooldownManager_cooldownTextBuffIcons_offsetX",
+        "cooldownManager_cooldownTextBuffIcons_offsetY",
+        RefreshCooldownFontAll
+    )
+    local customProcSection = SettingsLib:CreateExpandableSection(category, {
+        name = "Custom |cfffff100Glow|r Styles",
+        expanded = false,
+        colorizeTitle = true,
+    })
+
+    SettingsLib:CreateDropdown(category, {
+        parentSection = customProcSection,
+        prefix = "CMC_",
+        key = "cooldownManager_experimental_glow_style",
+        name = "Custom Glow Style",
+        searchtags = { "Glow", "Style", "Proc", "Auto Cast", "Pixel", "Ants", "Default" },
+        default = "DEFAULT",
+        values = {
+            DEFAULT = "Default",
+            PROC = "Proc Glow",
+            AUTOCAST = "Auto Cast Glow",
+            PIXEL = "Pixel Glow",
+            ANTS = "Ants Style Glow",
+        },
+        order = { "DEFAULT", "PROC", "AUTOCAST", "PIXEL", "ANTS" },
+        get = function()
+            return ns.db.profile.cooldownManager_experimental_glow_style or "DEFAULT"
+        end,
+        set = function(value)
+            ns.db.profile.cooldownManager_experimental_glow_style = value
+
+            if ns.CooldownStyle then
+                ns.CooldownStyle:RefreshHooks()
+            end
+        end,
+        desc = "Set one global glow style used by cooldown style glows and glow overrides.",
+    })
+
+    SettingsLib:CreateCheckbox(category, {
+        parentSection = customProcSection,
+        prefix = "CMC_",
+        key = "cooldownManager_experimental_glow_custom_color",
+        name = "Custom Glow Color",
+        searchtags = { "Glow", "Color", "Auto Cast", "Pixel" },
+        default = false,
+        get = function()
+            return ns.db.profile.cooldownManager_experimental_glow_custom_color
+        end,
+        set = function(value)
+            ns.db.profile.cooldownManager_experimental_glow_custom_color = value
+
+            if ns.CooldownStyle then
+                ns.CooldownStyle:RefreshHooks()
+            end
+        end,
+    })
+
+    SettingsLib:CreateColorOverrides(category, {
+        parentSection = customProcSection,
+        key = "cooldownManager_experimental_glow_color",
+        entries = {
+            { key = "glow", label = "Glow Color" },
+        },
+        hasOpacity = true,
+        getColor = function()
+            return ns.db.profile.cooldownManager_experimental_glow_color_r or 0.95,
+                ns.db.profile.cooldownManager_experimental_glow_color_g or 0.95,
+                ns.db.profile.cooldownManager_experimental_glow_color_b or 0.32,
+                ns.db.profile.cooldownManager_experimental_glow_color_a or 1
+        end,
+        setColor = function(_, r, g, b, a)
+            ns.db.profile.cooldownManager_experimental_glow_color_r = r
+            ns.db.profile.cooldownManager_experimental_glow_color_g = g
+            ns.db.profile.cooldownManager_experimental_glow_color_b = b
+            ns.db.profile.cooldownManager_experimental_glow_color_a = a
+
+            if ns.CooldownStyle then
+                ns.CooldownStyle:RefreshHooks()
+            end
+        end,
+        getDefaultColor = function()
+            return 0.95, 0.95, 0.32, 1
+        end,
+    })
+
+    SettingsLib:CreateText(category, {
+        parentSection = customProcSection,
+        name = "Glow style & color applies to Proc Glows and Custom Glows set from Cooldown Settings\n\nAdditional settings for autocast and pixel glow: (set 0 for default)",
+    })
+
+    SettingsLib:CreateSlider(category, {
+        parentSection = customProcSection,
+        prefix = "CMC_",
+        key = "cooldownManager_experimental_glow_animation_speed",
+        name = "Animation Speed",
+        searchtags = { "Glow", "Animation", "Speed", "Frequency", "Auto Cast", "Pixel", "Ants", "Proc" },
+        default = 0,
+        min = -1,
+        max = 1,
+        step = 0.01,
+        formatter = function(value)
+            return string.format("%.2f", value)
+        end,
+        get = function()
+            return ns.db.profile.cooldownManager_experimental_glow_animation_speed or 0
+        end,
+        set = function(value)
+            local speed = tonumber(value) or 0
+            if speed > 2 then
+                speed = 2
+            elseif speed < -2 then
+                speed = -2
+            end
+            ns.db.profile.cooldownManager_experimental_glow_animation_speed = speed
+
+            if ns.CooldownStyle then
+                ns.CooldownStyle:RefreshHooks()
+            end
+        end,
+        desc = 'Controls glow animation speed for Auto Cast, Pixel, Ants and Proc glows.\n0 is not "zero", it\'s Default speed.',
+    })
+    SettingsLib:CreateSlider(category, {
+        parentSection = customProcSection,
+        prefix = "CMC_",
+        key = "cooldownManager_experimental_glow_animation_density",
+        name = "Animation Density",
+        searchtags = { "Glow", "Animation", "Density", "Frequency", "Auto Cast", "Pixel", "Ants" },
+        default = 0,
+        min = 0,
+        max = 16,
+        step = 1,
+        formatter = function(value)
+            return string.format("%d", value)
+        end,
+        get = function()
+            return ns.db.profile.cooldownManager_experimental_glow_animation_density or 0
+        end,
+        set = function(value)
+            local density = tonumber(value) or 0
+            if density > 16 then
+                density = 16
+            elseif density < 0 then
+                density = 0
+            end
+            ns.db.profile.cooldownManager_experimental_glow_animation_density = density
+
+            if ns.CooldownStyle then
+                ns.CooldownStyle:RefreshHooks()
+            end
+        end,
+        desc = 'Controls glow animation density: particle count for Auto Cast and Pixel Glow, or stacked layers (1-4) for Ants Glow.\n0 is not "zero", it\'s Default density.',
+    })
+
+    SettingsLib:CreateSlider(category, {
+        parentSection = customProcSection,
+        prefix = "CMC_",
+        key = "cooldownManager_experimental_glow_autocast_scale",
+        name = "Auto Cast Glow Scale",
+        searchtags = { "Glow", "Auto Cast", "Scale", "Size" },
+        default = 1,
+        min = 0.5,
+        max = 5,
+        step = 0.1,
+        formatter = function(value)
+            return string.format("%.1f", value)
+        end,
+        get = function()
+            local scale = tonumber(ns.db.profile.cooldownManager_experimental_glow_autocast_scale) or 1
+            scale = math.floor((scale * 10) + 0.5) / 10
+            if scale > 5 then
+                scale = 5
+            elseif scale < 0.5 then
+                scale = 0.5
+            end
+            return scale
+        end,
+        set = function(value)
+            local scale = tonumber(value) or 1
+            scale = math.floor((scale * 10) + 0.5) / 10
+            if scale > 5 then
+                scale = 5
+            elseif scale < 0.5 then
+                scale = 0.5
+            end
+            ns.db.profile.cooldownManager_experimental_glow_autocast_scale = scale
+
+            if ns.CooldownStyle then
+                ns.CooldownStyle:RefreshHooks()
+            end
+        end,
+        desc = "Controls Auto Cast glow ring scale. 1.0 is default.",
+    })
+
+    SettingsLib:CreateSlider(category, {
+        parentSection = customProcSection,
+        prefix = "CMC_",
+        key = "cooldownManager_experimental_glow_pixel_size",
+        name = "Pixel Glow Size",
+        searchtags = { "Glow", "Pixel", "Size", "Thickness" },
+        default = 1,
+        min = 1,
+        max = 6,
+        step = 1,
+        formatter = function(value)
+            return string.format("%d", value)
+        end,
+        get = function()
+            local size = tonumber(ns.db.profile.cooldownManager_experimental_glow_pixel_size) or 1
+            size = math.floor(size + 0.5)
+            if size > 6 then
+                size = 6
+            elseif size < 1 then
+                size = 1
+            end
+            return size
+        end,
+        set = function(value)
+            local size = tonumber(value) or 1
+            size = math.floor(size + 0.5)
+            if size > 6 then
+                size = 6
+            elseif size < 1 then
+                size = 1
+            end
+            ns.db.profile.cooldownManager_experimental_glow_pixel_size = size
+
+            if ns.CooldownStyle then
+                ns.CooldownStyle:RefreshHooks()
+            end
+        end,
+        desc = "Controls Pixel glow line thickness. 1 is default.",
+    })
+
+    SettingsLib:CreateButton(category, {
+        parentSection = customProcSection,
+        text = "Restore Glows to Default",
+        searchtags = {
+
+            "Glow",
+            "Animation",
+            "Speed",
+            "Density",
+            "Auto Cast",
+            "Pixel",
+            "Reset",
+            "Default",
+        },
+        func = function()
+            ns.db.profile.cooldownManager_experimental_glow_style = "DEFAULT"
+            ns.db.profile.cooldownManager_experimental_glow_custom_color = false
+            ns.db.profile.cooldownManager_experimental_glow_animation_speed = 0
+            ns.db.profile.cooldownManager_experimental_glow_animation_density = 0
+            ns.db.profile.cooldownManager_experimental_glow_autocast_scale = 1
+            ns.db.profile.cooldownManager_experimental_glow_pixel_size = 1
+
+            if ns.CooldownStyle then
+                ns.CooldownStyle:RefreshHooks()
+            end
+        end,
+    })
+
+    local stackNumberSection = SettingsLib:CreateExpandableSection(category, {
+        name = "Ability |cffeeeeeeCharges/Count|r Settings",
+        expanded = false,
+        colorizeTitle = true,
+    })
+
+    SettingsLib:CreateText(category, {
+        name = "|cffff0000*|rSome changes require |cff00ff00Reload|r to return to default positions and fonts.",
+        parentSection = stackNumberSection,
+    })
+
+    SettingsLib:CreateScrollDropdown(category, {
+        parentSection = stackNumberSection,
+        prefix = "CMC_",
+        key = "cooldownManager_stackFontName",
+        name = "Font",
+        searchtags = { "Font", "Text", "Stack", "Count", "Number", "Typeface", "Typography", "SharedMedia" },
+        default = "NIL",
+        height = 220,
+        get = function()
+            local v = ns.db.profile.cooldownManager_stackFontName
+            if not v or v == "NIL" then
+                return "Default font"
+            end
+            return v
+        end,
+        set = function(value)
+            ns.db.profile.cooldownManager_stackFontName = value
+            ns.Stacks:RefreshAll()
+        end,
+        desc = "Select the font for ability charge/count numbers. Uses SharedMedia fonts if available.",
+        generator = function(dropdown, rootDescription)
+            dropdown.fontPool = {}
+            if not Affected(dropdown).fontfaceDropdownOnMenuClosedHooked then
+                hooksecurefunc(dropdown, "OnMenuClosed", function()
+                    for _, fontDisplay in pairs(dropdown.fontPool) do
+                        fontDisplay:Hide()
+                    end
+                end)
+                Affected(dropdown).fontfaceDropdownOnMenuClosedHooked = true
+            end
+            local fonts = LSM:HashTable(LSM.MediaType.FONT)
+            local sortedFonts = {}
+            for fontName in pairs(fonts) do
+                if fontName ~= "" then
+                    table.insert(sortedFonts, fontName)
+                end
+            end
+            table.sort(sortedFonts)
+
+            rootDescription:CreateRadio("Default font", function()
+                local v = ns.db.profile.cooldownManager_stackFontName
+                return not v or v == "NIL"
+            end, function()
+                ns.db.profile.cooldownManager_stackFontName = "NIL"
+                dropdown:SetText("Default font")
+
+                ns.Stacks:RefreshAll()
+            end)
+
+            for index, fontName in ipairs(sortedFonts) do
+                local fontPath = fonts[fontName]
+
+                local button = rootDescription:CreateRadio(fontName, function()
+                    return ns.db.profile.cooldownManager_stackFontName == fontName
+                end, function()
+                    ns.db.profile.cooldownManager_stackFontName = fontName
+                    dropdown:SetText(fontName)
+
+                    ns.Stacks:RefreshAll()
+                end)
+
+                button:AddInitializer(function(self)
+                    local fontDisplay = dropdown.fontPool[index]
+                    if not fontDisplay then
+                        fontDisplay = dropdown:CreateFontString(nil, "BACKGROUND")
+                        dropdown.fontPool[index] = fontDisplay
+                    end
+
+                    self.fontString:Hide()
+
+                    fontDisplay:SetParent(self)
+                    fontDisplay:SetPoint("LEFT", self.fontString, "LEFT", 0, 0)
+                    fontDisplay:SetFont(fontPath, 12)
+                    fontDisplay:SetText(fontName)
+                    fontDisplay:Show()
+                end)
+            end
+        end,
+    })
+
+    SettingsLib:CreateMultiDropdown(category, {
+        parentSection = stackNumberSection,
+        prefix = "CMC_",
+        key = "cooldownManager_stackFontFlags",
+        name = "Font Flags",
+        customText = "No Flags",
+        searchtags = { "Font", "Flags", "Outline", "Shadow", "Thick", "Monochrome", "Text", "Style" },
+        defaultSelection = {},
+        values = {
+            ["OUTLINE"] = "Outline",
+            ["THICKOUTLINE"] = "Thick Outline",
+            ["MONOCHROME"] = "Monochrome",
+            ["SLUG"] = "Slug",
+        },
+        order = { "MONOCHROME", "OUTLINE", "THICKOUTLINE", "SLUG" },
+        getSelection = function()
+            return ns.db.profile.cooldownManager_stackFontFlags or {}
+        end,
+        setSelection = function(value)
+            if value["OUTLINE"] or value["THICKOUTLINE"] or value["MONOCHROME"] or value["SLUG"] then
+                ns.db.profile.cooldownManager_stackFontFlags = value
+            else
+                ns.db.profile.cooldownManager_stackFontFlags = { OUTLINE = false }
+            end
+
+            ns.Stacks:RefreshAll()
+        end,
+        desc = "Select font flags for ability charge/count numbers.",
+    })
+
+    local fontSizeValues = {
+        ["NIL"] = "Don't change",
+        ["10"] = "10",
+        ["12"] = "12",
+        ["14"] = "14",
+        ["16"] = "16",
+        ["18"] = "18",
+        ["20"] = "20",
+        ["22"] = "22",
+        ["24"] = "24",
+        ["26"] = "26",
+        ["28"] = "28",
+        ["30"] = "30",
+        ["32"] = "32",
+        ["34"] = "34",
+        ["36"] = "36",
+        ["38"] = "38",
+    }
+    local fontSizeOrder = {
+        "NIL",
+        "10",
+        "12",
+        "14",
+        "16",
+        "18",
+        "20",
+        "22",
+        "24",
+        "26",
+        "28",
+        "30",
+        "32",
+        "34",
+        "36",
+        "38",
+    }
+
+    local function CreateStackFontSizeDropdown(parentSection, key, name, getFn, setFn)
+        SettingsLib:CreateDropdown(category, {
+            parentSection = parentSection,
+            prefix = "CMC_",
+            key = key,
+            name = name,
+            default = "NIL",
+            values = fontSizeValues,
+            order = fontSizeOrder,
+            get = getFn,
+            set = setFn,
+        })
+    end
+
+    local anchorPointValues = {
+        TOPLEFT = "Top Left",
+        TOP = "Top",
+        TOPRIGHT = "Top Right",
+        LEFT = "Left",
+        RIGHT = "Right",
+        BOTTOMLEFT = "Bottom Left",
+        BOTTOM = "Bottom",
+        BOTTOMRIGHT = "Bottom Right",
+    }
+    local anchorPointOrder = {
+        "TOPLEFT",
+        "TOP",
+        "TOPRIGHT",
+        "LEFT",
+        "RIGHT",
+        "BOTTOMLEFT",
+        "BOTTOM",
+        "BOTTOMRIGHT",
+    }
+
+    SettingsLib:CreateHeader(category, {
+        parentSection = stackNumberSection,
+        name = "Charges/Count on Tracked Buff Icons",
+    })
+    SettingsLib:CreateCheckboxDropdown(category, {
+        parentSection = stackNumberSection,
+        prefix = "CMC_",
+        key = "cooldownManager_stackAnchorBuffIcons_enabled",
+        dropdownKey = "cooldownManager_stackAnchorBuffIcons_point",
+        name = "Enable & Anchor|cffff0000*|r",
+        searchtags = { "Stack", "Count", "Number", "Anchor", "Position", "Buff", "Enable", "Corner" },
+        default = false,
+        dropdownDefault = "BOTTOMRIGHT",
+        get = function()
+            return ns.db.profile.cooldownManager_stackAnchorBuffIcons_enabled
+        end,
+        set = function(value)
+            ns.db.profile.cooldownManager_stackAnchorBuffIcons_enabled = value
+            ns.Stacks:ApplyStackFonts("BuffIconCooldownViewer")
+        end,
+        dropdownGet = function()
+            return ns.db.profile.cooldownManager_stackAnchorBuffIcons_point or "BOTTOMRIGHT"
+        end,
+        dropdownSet = function(value)
+            ns.db.profile.cooldownManager_stackAnchorBuffIcons_point = value
+            ns.Stacks:ApplyStackFonts("BuffIconCooldownViewer")
+        end,
+        dropdownValues = anchorPointValues,
+        dropdownOrder = anchorPointOrder,
+        desc = "Enable and select anchor point for Buff Icons charge/count position.",
+    })
+
+    CreateStackFontSizeDropdown(stackNumberSection, "cooldownManager_stackFontSizeBuffIcons", "Font Size", function()
+        return ns.db.profile.cooldownManager_stackFontSizeBuffIcons ~= nil
+                and tostring(ns.db.profile.cooldownManager_stackFontSizeBuffIcons)
+            or "NIL"
+    end, function(value)
+        if value == "NIL" then
+            ns.db.profile.cooldownManager_stackFontSizeBuffIcons = nil
+        else
+            local n = tonumber(value)
+            ns.db.profile.cooldownManager_stackFontSizeBuffIcons = n and math.floor(n + 0.5) or nil
+        end
+        ns.Stacks:ApplyStackFonts("BuffIconCooldownViewer")
+    end)
+    SettingsLib:CreateSlider(category, {
+        parentSection = stackNumberSection,
+        prefix = "CMC_",
+        key = "cooldownManager_stackAnchorBuffIcons_offsetX",
+        name = "X Offset",
+        default = 0,
+        min = -40,
+        max = 40,
+        step = 1,
+        formatter = function(value)
+            return string.format("%.0f", value)
+        end,
+        get = function()
+            return ns.db.profile.cooldownManager_stackAnchorBuffIcons_offsetX or 0
+        end,
+        set = function(value)
+            local v = math.floor((value or 0) + 0.5)
+            ns.db.profile.cooldownManager_stackAnchorBuffIcons_offsetX = v
+            ns.Stacks:ApplyStackFonts("BuffIconCooldownViewer")
+        end,
+    })
+    SettingsLib:CreateSlider(category, {
+        parentSection = stackNumberSection,
+        prefix = "CMC_",
+        key = "cooldownManager_stackAnchorBuffIcons_offsetY",
+        name = "Y Offset",
+        default = 0,
+        min = -40,
+        max = 40,
+        step = 1,
+        formatter = function(value)
+            return string.format("%.0f", value)
+        end,
+        get = function()
+            return ns.db.profile.cooldownManager_stackAnchorBuffIcons_offsetY or 0
+        end,
+        set = function(value)
+            local v = math.floor((value or 0) + 0.5)
+            ns.db.profile.cooldownManager_stackAnchorBuffIcons_offsetY = v
+            ns.Stacks:ApplyStackFonts("BuffIconCooldownViewer")
+        end,
+    })
+
+    SettingsLib:CreateHeader(category, {
+        parentSection = stackNumberSection,
+        name = "Charges/Count on Essential Cooldowns Icons",
+    })
+    SettingsLib:CreateCheckboxDropdown(category, {
+        parentSection = stackNumberSection,
+        prefix = "CMC_",
+        key = "cooldownManager_stackAnchorEssential_enabled",
+        dropdownKey = "cooldownManager_stackAnchorEssential_point",
+        name = "Enable & Anchor|cffff0000*|r",
+        searchtags = { "Stack", "Count", "Number", "Anchor", "Position", "Essential", "Enable", "Corner" },
+        default = false,
+        dropdownDefault = "BOTTOMRIGHT",
+        get = function()
+            return ns.db.profile.cooldownManager_stackAnchorEssential_enabled
+        end,
+        set = function(value)
+            ns.db.profile.cooldownManager_stackAnchorEssential_enabled = value
+            ns.Stacks:ApplyStackFonts("EssentialCooldownViewer")
+        end,
+        dropdownGet = function()
+            return ns.db.profile.cooldownManager_stackAnchorEssential_point or "BOTTOMRIGHT"
+        end,
+        dropdownSet = function(value)
+            ns.db.profile.cooldownManager_stackAnchorEssential_point = value
+            ns.Stacks:ApplyStackFonts("EssentialCooldownViewer")
+        end,
+        dropdownValues = anchorPointValues,
+        dropdownOrder = anchorPointOrder,
+        desc = "Enable and select anchor point for Essential Cooldown charge/count position.",
+    })
+
+    CreateStackFontSizeDropdown(stackNumberSection, "cooldownManager_stackFontSizeEssential", "Font Size", function()
+        return ns.db.profile.cooldownManager_stackFontSizeEssential ~= nil
+                and tostring(ns.db.profile.cooldownManager_stackFontSizeEssential)
+            or "NIL"
+    end, function(value)
+        if value == "NIL" then
+            ns.db.profile.cooldownManager_stackFontSizeEssential = nil
+        else
+            local n = tonumber(value)
+            ns.db.profile.cooldownManager_stackFontSizeEssential = n and math.floor(n + 0.5) or nil
+        end
+        ns.Stacks:ApplyStackFonts("EssentialCooldownViewer")
+    end)
+    SettingsLib:CreateSlider(category, {
+        parentSection = stackNumberSection,
+        prefix = "CMC_",
+        key = "cooldownManager_stackAnchorEssential_offsetX",
+        name = "X Offset",
+        default = 0,
+        min = -40,
+        max = 40,
+        step = 1,
+        formatter = function(value)
+            return string.format("%.0f", value)
+        end,
+        get = function()
+            return ns.db.profile.cooldownManager_stackAnchorEssential_offsetX or 0
+        end,
+        set = function(value)
+            local v = math.floor((value or 0) + 0.5)
+            ns.db.profile.cooldownManager_stackAnchorEssential_offsetX = v
+            ns.Stacks:ApplyStackFonts("EssentialCooldownViewer")
+        end,
+    })
+    SettingsLib:CreateSlider(category, {
+        parentSection = stackNumberSection,
+        prefix = "CMC_",
+        key = "cooldownManager_stackAnchorEssential_offsetY",
+        name = "Y Offset",
+        default = 0,
+        min = -40,
+        max = 40,
+        step = 1,
+        formatter = function(value)
+            return string.format("%.0f", value)
+        end,
+        get = function()
+            return ns.db.profile.cooldownManager_stackAnchorEssential_offsetY or 0
+        end,
+        set = function(value)
+            local v = math.floor((value or 0) + 0.5)
+            ns.db.profile.cooldownManager_stackAnchorEssential_offsetY = v
+            ns.Stacks:ApplyStackFonts("EssentialCooldownViewer")
+        end,
+    })
+
+    SettingsLib:CreateHeader(category, {
+        parentSection = stackNumberSection,
+        name = "Charges/Count on Utility Cooldowns Icons",
+    })
+    SettingsLib:CreateCheckboxDropdown(category, {
+        parentSection = stackNumberSection,
+        prefix = "CMC_",
+        key = "cooldownManager_stackAnchorUtility_enabled",
+        dropdownKey = "cooldownManager_stackAnchorUtility_point",
+        name = "Enable & Anchor|cffff0000*|r",
+        searchtags = { "Stack", "Count", "Number", "Anchor", "Position", "Utility", "Enable", "Corner" },
+        default = false,
+        dropdownDefault = "BOTTOMRIGHT",
+        get = function()
+            return ns.db.profile.cooldownManager_stackAnchorUtility_enabled
+        end,
+        set = function(value)
+            ns.db.profile.cooldownManager_stackAnchorUtility_enabled = value
+            ns.Stacks:ApplyStackFonts("UtilityCooldownViewer")
+        end,
+        dropdownGet = function()
+            return ns.db.profile.cooldownManager_stackAnchorUtility_point or "BOTTOMRIGHT"
+        end,
+        dropdownSet = function(value)
+            ns.db.profile.cooldownManager_stackAnchorUtility_point = value
+            ns.Stacks:ApplyStackFonts("UtilityCooldownViewer")
+        end,
+        dropdownValues = anchorPointValues,
+        dropdownOrder = anchorPointOrder,
+        desc = "Enable and select anchor point for Utility cooldown charge/count position.",
+    })
+
+    CreateStackFontSizeDropdown(stackNumberSection, "cooldownManager_stackFontSizeUtility", "Font Size", function()
+        return ns.db.profile.cooldownManager_stackFontSizeUtility ~= nil
+                and tostring(ns.db.profile.cooldownManager_stackFontSizeUtility)
+            or "NIL"
+    end, function(value)
+        if value == "NIL" then
+            ns.db.profile.cooldownManager_stackFontSizeUtility = nil
+        else
+            local n = tonumber(value)
+            ns.db.profile.cooldownManager_stackFontSizeUtility = n and math.floor(n + 0.5) or nil
+        end
+        ns.Stacks:ApplyStackFonts("UtilityCooldownViewer")
+    end)
+    SettingsLib:CreateSlider(category, {
+        parentSection = stackNumberSection,
+        prefix = "CMC_",
+        key = "cooldownManager_stackAnchorUtility_offsetX",
+        name = "X Offset",
+        default = 0,
+        min = -40,
+        max = 40,
+        step = 1,
+        formatter = function(value)
+            return string.format("%.0f", value)
+        end,
+        get = function()
+            return ns.db.profile.cooldownManager_stackAnchorUtility_offsetX or 0
+        end,
+        set = function(value)
+            local v = math.floor((value or 0) + 0.5)
+            ns.db.profile.cooldownManager_stackAnchorUtility_offsetX = v
+            ns.Stacks:ApplyStackFonts("UtilityCooldownViewer")
+        end,
+    })
+    SettingsLib:CreateSlider(category, {
+        parentSection = stackNumberSection,
+        prefix = "CMC_",
+        key = "cooldownManager_stackAnchorUtility_offsetY",
+        name = "Y Offset",
+        default = 0,
+        min = -40,
+        max = 40,
+        step = 1,
+        formatter = function(value)
+            return string.format("%.0f", value)
+        end,
+        get = function()
+            return ns.db.profile.cooldownManager_stackAnchorUtility_offsetY or 0
+        end,
+        set = function(value)
+            local v = math.floor((value or 0) + 0.5)
+            ns.db.profile.cooldownManager_stackAnchorUtility_offsetY = v
+            ns.Stacks:ApplyStackFonts("UtilityCooldownViewer")
+        end,
+    })
+
+    local keybindsSection = SettingsLib:CreateExpandableSection(category, {
+        name = "|cffeeeeeeKeybind|r Text Display",
+        expanded = false,
+        colorizeTitle = true,
+    })
+
+    SettingsLib:CreateText(category, {
+        name = "Display keybind text on cooldown icons.",
+        parentSection = keybindsSection,
+    })
+
+    SettingsLib:CreateScrollDropdown(category, {
+        parentSection = keybindsSection,
+        prefix = "CMC_",
+        key = "cooldownManager_keybindFontName",
+        name = "Font",
+        searchtags = { "Font", "Text", "Keybind", "Hotkey", "Binding", "Typeface", "Typography", "SharedMedia" },
+        default = "NIL",
+        height = 220,
+        get = function()
+            local v = ns.db.profile.cooldownManager_keybindFontName
+            if not v or v == "NIL" then
+                return "Default font"
+            end
+            return v
+        end,
+        set = function(value)
+            ns.db.profile.cooldownManager_keybindFontName = value
+            ns.Keybinds:OnSettingChanged()
+        end,
+        desc = "Select the font for ability keybind text. Uses SharedMedia fonts if available.",
+        generator = function(dropdown, rootDescription)
+            dropdown.fontPool = {}
+            if not Affected(dropdown).fontfaceDropdownOnMenuClosedHooked then
+                hooksecurefunc(dropdown, "OnMenuClosed", function()
+                    for _, fontDisplay in pairs(dropdown.fontPool) do
+                        fontDisplay:Hide()
+                    end
+                end)
+                Affected(dropdown).fontfaceDropdownOnMenuClosedHooked = true
+            end
+            local fonts = LSM:HashTable(LSM.MediaType.FONT)
+            local sortedFonts = {}
+            for fontName in pairs(fonts) do
+                if fontName ~= "" then
+                    table.insert(sortedFonts, fontName)
+                end
+            end
+            table.sort(sortedFonts)
+
+            rootDescription:CreateRadio("Default font", function()
+                local v = ns.db.profile.cooldownManager_keybindFontName
+                return not v or v == "NIL"
+            end, function()
+                ns.db.profile.cooldownManager_keybindFontName = "NIL"
+                ns.Keybinds:OnSettingChanged()
+                dropdown:SetText("Default font")
+            end)
+
+            for index, fontName in ipairs(sortedFonts) do
+                local fontPath = fonts[fontName]
+
+                local button = rootDescription:CreateRadio(fontName, function()
+                    return ns.db.profile.cooldownManager_keybindFontName == fontName
+                end, function()
+                    ns.db.profile.cooldownManager_keybindFontName = fontName
+                    ns.Keybinds:OnSettingChanged()
+                    dropdown:SetText(fontName)
+                end)
+
+                button:AddInitializer(function(self)
+                    local fontDisplay = dropdown.fontPool[index]
+                    if not fontDisplay then
+                        fontDisplay = dropdown:CreateFontString(nil, "BACKGROUND")
+                        dropdown.fontPool[index] = fontDisplay
+                    end
+
+                    self.fontString:Hide()
+
+                    fontDisplay:SetParent(self)
+                    fontDisplay:SetPoint("LEFT", self.fontString, "LEFT", 0, 0)
+                    fontDisplay:SetFont(fontPath, 12)
+                    fontDisplay:SetText(fontName)
+                    fontDisplay:Show()
+                end)
+            end
+        end,
+    })
+
+    SettingsLib:CreateMultiDropdown(category, {
+        parentSection = keybindsSection,
+        prefix = "CMC_",
+        key = "cooldownManager_keybindFontFlags",
+        name = "Font Flags",
+        customText = "No Flags",
+        searchtags = { "Font", "Flags", "Outline", "Shadow", "Thick", "Monochrome", "Keybind", "Style" },
+        defaultSelection = {},
+        values = {
+            ["OUTLINE"] = "Outline",
+            ["THICKOUTLINE"] = "Thick Outline",
+            ["MONOCHROME"] = "Monochrome",
+            ["SLUG"] = "Slug",
+        },
+        order = { "MONOCHROME", "OUTLINE", "THICKOUTLINE", "SLUG" },
+        getSelection = function()
+            return ns.db.profile.cooldownManager_keybindFontFlags or {}
+        end,
+        setSelection = function(value)
+            if value["OUTLINE"] or value["THICKOUTLINE"] or value["MONOCHROME"] or value["SLUG"] then
+                ns.db.profile.cooldownManager_keybindFontFlags = value
+            else
+                ns.db.profile.cooldownManager_keybindFontFlags = { OUTLINE = false }
+            end
+            ns.Keybinds:OnSettingChanged()
+        end,
+        desc = "Select font flags for ability keybind text.",
+    })
+    SettingsLib:CreateText(category, {
+        name = "",
+        parentSection = keybindsSection,
+    })
+    -- Keybind font size options (no "Don't change" option)
+    local keybindFontSizeValues = {
+        ["6"] = "6",
+        ["8"] = "8",
+        ["10"] = "10",
+        ["12"] = "12",
+        ["14"] = "14",
+        ["16"] = "16",
+        ["18"] = "18",
+        ["20"] = "20",
+        ["22"] = "22",
+        ["24"] = "24",
+        ["26"] = "26",
+        ["28"] = "28",
+        ["30"] = "30",
+        ["32"] = "32",
+    }
+    local keybindFontSizeOrder = {
+        "6",
+        "8",
+        "10",
+        "12",
+        "14",
+        "16",
+        "18",
+        "20",
+        "22",
+        "24",
+        "26",
+        "28",
+        "30",
+        "32",
+    }
+
+    local function CreateKeybindFontSizeDropdown(parentSection, key, name, getFn, setFn)
+        SettingsLib:CreateDropdown(category, {
+            parentSection = parentSection,
+            prefix = "CMC_",
+            key = key,
+            name = name,
+            default = "14",
+            values = keybindFontSizeValues,
+            order = keybindFontSizeOrder,
+            get = getFn,
+            set = setFn,
+        })
+    end
+
+    -- Keybind Anchor
+    SettingsLib:CreateCheckboxDropdown(category, {
+        parentSection = keybindsSection,
+        prefix = "CMC_",
+        key = "cooldownManager_showKeybinds_Essential",
+        dropdownKey = "cooldownManager_keybindAnchor_Essential",
+        name = "Essential Enable & Anchor",
+        searchtags = { "Keybind", "Hotkey", "Binding", "Key", "Shortcut", "Essential", "Show", "Display", "Anchor" },
+        default = false,
+        dropdownDefault = "TOPRIGHT",
+        get = function()
+            return ns.db.profile.cooldownManager_showKeybinds_Essential
+        end,
+        set = function(value)
+            ns.db.profile.cooldownManager_showKeybinds_Essential = value
+            if ns.Keybinds then
+                ns.Keybinds:OnSettingChanged("Essential")
+            end
+        end,
+        dropdownGet = function()
+            return ns.db.profile.cooldownManager_keybindAnchor_Essential or "TOPRIGHT"
+        end,
+        dropdownSet = function(value)
+            ns.db.profile.cooldownManager_keybindAnchor_Essential = value
+            if ns.Keybinds then
+                ns.Keybinds:ApplyKeybindSettings("EssentialCooldownViewer")
+            end
+        end,
+        dropdownValues = {
+            TOPLEFT = "Top Left",
+            TOP = "Top",
+            TOPRIGHT = "Top Right",
+            LEFT = "Left",
+            CENTER = "Center",
+            RIGHT = "Right",
+            BOTTOMLEFT = "Bottom Left",
+            BOTTOM = "Bottom",
+            BOTTOMRIGHT = "Bottom Right",
+        },
+        dropdownOrder = {
+            "TOPLEFT",
+            "TOP",
+            "TOPRIGHT",
+            "LEFT",
+            "CENTER",
+            "RIGHT",
+            "BOTTOMLEFT",
+            "BOTTOM",
+            "BOTTOMRIGHT",
+        },
+        desc = "Enable keybind text on Essential Cooldowns and select anchor position.",
+    })
+
+    CreateKeybindFontSizeDropdown(keybindsSection, "cooldownManager_keybindFontSize_Essential", "Font Size", function()
+        return tostring(ns.db.profile.cooldownManager_keybindFontSize_Essential or 14)
+    end, function(value)
+        local n = tonumber(value)
+        ns.db.profile.cooldownManager_keybindFontSize_Essential = n and math.floor(n + 0.5) or 14
+        if ns.Keybinds then
+            ns.Keybinds:ApplyKeybindSettings("EssentialCooldownViewer")
+        end
+    end)
+
+    -- Keybind X Offset
+    SettingsLib:CreateSlider(category, {
+        parentSection = keybindsSection,
+        prefix = "CMC_",
+        key = "cooldownManager_keybindOffsetX_Essential",
+        name = "X Offset",
+        default = -3,
+        min = -40,
+        max = 40,
+        step = 1,
+        formatter = function(value)
+            return string.format("%.0f", value)
+        end,
+        get = function()
+            return ns.db.profile.cooldownManager_keybindOffsetX_Essential or -3
+        end,
+        set = function(value)
+            local v = math.floor((value or 0) + 0.5)
+            ns.db.profile.cooldownManager_keybindOffsetX_Essential = v
+            if ns.Keybinds then
+                ns.Keybinds:ApplyKeybindSettings("EssentialCooldownViewer")
+            end
+        end,
+    })
+
+    -- Keybind Y Offset
+    SettingsLib:CreateSlider(category, {
+        parentSection = keybindsSection,
+        prefix = "CMC_",
+        key = "cooldownManager_keybindOffsetY_Essential",
+        name = "Y Offset",
+        default = -3,
+        min = -40,
+        max = 40,
+        step = 1,
+        formatter = function(value)
+            return string.format("%.0f", value)
+        end,
+        get = function()
+            return ns.db.profile.cooldownManager_keybindOffsetY_Essential or -3
+        end,
+        set = function(value)
+            local v = math.floor((value or 0) + 0.5)
+            ns.db.profile.cooldownManager_keybindOffsetY_Essential = v
+            if ns.Keybinds then
+                ns.Keybinds:ApplyKeybindSettings("EssentialCooldownViewer")
+            end
+        end,
+    })
+    SettingsLib:CreateText(category, {
+        name = "",
+        parentSection = keybindsSection,
+    })
+
+    SettingsLib:CreateCheckboxDropdown(category, {
+        parentSection = keybindsSection,
+        prefix = "CMC_",
+        key = "cooldownManager_showKeybinds_Utility",
+        dropdownKey = "cooldownManager_keybindAnchor_Utility",
+        name = "Utility: Enable & Anchor",
+        searchtags = { "Keybind", "Hotkey", "Binding", "Key", "Shortcut", "Utility", "Show", "Display", "Anchor" },
+        default = false,
+        dropdownDefault = "TOPRIGHT",
+        get = function()
+            return ns.db.profile.cooldownManager_showKeybinds_Utility
+        end,
+        set = function(value)
+            ns.db.profile.cooldownManager_showKeybinds_Utility = value
+            if ns.Keybinds then
+                ns.Keybinds:OnSettingChanged("Utility")
+            end
+        end,
+        dropdownGet = function()
+            return ns.db.profile.cooldownManager_keybindAnchor_Utility or "TOPRIGHT"
+        end,
+        dropdownSet = function(value)
+            ns.db.profile.cooldownManager_keybindAnchor_Utility = value
+            if ns.Keybinds then
+                ns.Keybinds:ApplyKeybindSettings("UtilityCooldownViewer")
+            end
+        end,
+        dropdownValues = {
+            TOPLEFT = "Top Left",
+            TOP = "Top",
+            TOPRIGHT = "Top Right",
+            LEFT = "Left",
+            CENTER = "Center",
+            RIGHT = "Right",
+            BOTTOMLEFT = "Bottom Left",
+            BOTTOM = "Bottom",
+            BOTTOMRIGHT = "Bottom Right",
+        },
+        dropdownOrder = {
+            "TOPLEFT",
+            "TOP",
+            "TOPRIGHT",
+            "LEFT",
+            "CENTER",
+            "RIGHT",
+            "BOTTOMLEFT",
+            "BOTTOM",
+            "BOTTOMRIGHT",
+        },
+        desc = "Enable keybind text on Utility Cooldowns and select anchor position.",
+    })
+
+    CreateKeybindFontSizeDropdown(keybindsSection, "cooldownManager_keybindFontSize_Utility", "Font Size", function()
+        return tostring(ns.db.profile.cooldownManager_keybindFontSize_Utility or 10)
+    end, function(value)
+        local n = tonumber(value)
+        ns.db.profile.cooldownManager_keybindFontSize_Utility = n and math.floor(n + 0.5) or 14
+        if ns.Keybinds then
+            ns.Keybinds:ApplyKeybindSettings("UtilityCooldownViewer")
+        end
+    end)
+    SettingsLib:CreateSlider(category, {
+        parentSection = keybindsSection,
+        prefix = "CMC_",
+        key = "cooldownManager_keybindOffsetX_Utility",
+        name = "X Offset",
+        default = -3,
+        min = -40,
+        max = 40,
+        step = 1,
+        formatter = function(value)
+            return string.format("%.0f", value)
+        end,
+        get = function()
+            return ns.db.profile.cooldownManager_keybindOffsetX_Utility or -3
+        end,
+        set = function(value)
+            local v = math.floor((value or 0) + 0.5)
+            ns.db.profile.cooldownManager_keybindOffsetX_Utility = v
+            if ns.Keybinds then
+                ns.Keybinds:ApplyKeybindSettings("UtilityCooldownViewer")
+            end
+        end,
+    })
+    SettingsLib:CreateSlider(category, {
+        parentSection = keybindsSection,
+        prefix = "CMC_",
+        key = "cooldownManager_keybindOffsetY_Utility",
+        name = "Y Offset",
+        default = -3,
+        min = -40,
+        max = 40,
+        step = 1,
+        formatter = function(value)
+            return string.format("%.0f", value)
+        end,
+        get = function()
+            return ns.db.profile.cooldownManager_keybindOffsetY_Utility or -3
+        end,
+        set = function(value)
+            local v = math.floor((value or 0) + 0.5)
+            ns.db.profile.cooldownManager_keybindOffsetY_Utility = v
+            if ns.Keybinds then
+                ns.Keybinds:ApplyKeybindSettings("UtilityCooldownViewer")
+            end
+        end,
+    })
+
+    local visibilitySection = SettingsLib:CreateExpandableSection(category, {
+        name = "|cffeeeeeeShow Hide|r Visibility",
+        expanded = false,
+        colorizeTitle = true,
+        searchtags = {
+            "Visibility",
+            "Rules",
+            "Conditions",
+            "Hide",
+            "Show",
+            "Utility",
+            "Essential",
+            "CDM",
+            "Opacity",
+            "Alpha",
+            "Combat",
+            "Flying",
+            "Mounted",
+            "Resting",
+            "Vehicle",
+            "Instance",
+            "Target",
+        },
+    })
+
+    local VISIBILITY_RULE_VALUES = {
+        ["SHOW_IN_COMBAT"] = "Always show in Combat",
+        ["SHOW_IN_INSTANCE"] = "Always show in Instances",
+        ["HIDE_IN_VEHICLES"] = "Hide in Vehicles & Mini-games",
+        ["ALWAYS_HIDE_WHEN_FLYING"] = "Always hide when Flying",
+        ["SHOW_WITH_ENEMY_TARGET"] = "Show with Enemy Target",
+        ["SHOW_WITH_TARGET"] = "Show with any Target",
+        ["HIDE_WHEN_FLYING"] = "Hide when Flying",
+        ["HIDE_WHEN_NOT_FLYING"] = "Hide when not Flying",
+        ["HIDE_WHEN_MOUNTED"] = "Hide when Mounted & Travel Form",
+        ["HIDE_WHEN_RESTING"] = "Hide when Resting",
+        ["HIDE_OUT_OF_COMBAT"] = "Hide out of Combat",
+    }
+    local VISIBILITY_RULE_ORDER = {
+        "SHOW_IN_COMBAT",
+        "SHOW_IN_INSTANCE",
+        "HIDE_IN_VEHICLES",
+        "ALWAYS_HIDE_WHEN_FLYING",
+        "SHOW_WITH_ENEMY_TARGET",
+        "SHOW_WITH_TARGET",
+        "HIDE_WHEN_FLYING",
+        "HIDE_WHEN_NOT_FLYING",
+        "HIDE_WHEN_MOUNTED",
+        "HIDE_WHEN_RESTING",
+        "HIDE_OUT_OF_COMBAT",
+    }
+    local VISIBILITY_RULE_SEARCHTAGS = {
+        "Visibility",
+        "Rules",
+        "Conditions",
+        "Hide",
+        "Show",
+        "Utility",
+        "Essential",
+        "CDM",
+        "Opacity",
+        "Alpha",
+        "Combat",
+        "Flying",
+        "Mounted",
+        "Resting",
+        "Vehicle",
+        "Instance",
+        "Target",
+    }
+
+    local function CreateViewerVisibilityDropdown(viewerName, label)
+        SettingsLib:CreateMultiDropdown(category, {
+            parentSection = visibilitySection,
+            prefix = "CMC_",
+            key = "cooldownManager_visibility_perViewer_" .. viewerName,
+            name = label,
+            customText = "No rules (always visible)",
+            searchtags = VISIBILITY_RULE_SEARCHTAGS,
+            defaultSelection = {},
+            height = 340,
+            values = VISIBILITY_RULE_VALUES,
+            order = VISIBILITY_RULE_ORDER,
+            getSelection = function()
+                local perViewer = ns.db.profile.cooldownManager_visibility_perViewer
+                return (perViewer and perViewer[viewerName]) or {}
+            end,
+            setSelection = function(value)
+                if not ns.db.profile.cooldownManager_visibility_perViewer then
+                    ns.db.profile.cooldownManager_visibility_perViewer = {}
+                end
+                ns.db.profile.cooldownManager_visibility_perViewer[viewerName] = value
+                ns.CMCVisibility:Initialize({ [viewerName] = true })
+            end,
+            summary = function(selectionMap, labels)
+                local HIDE_RULES = {
+                    HIDE_IN_VEHICLES = true,
+                    HIDE_WHEN_FLYING = true,
+                    HIDE_WHEN_NOT_FLYING = true,
+                    HIDE_WHEN_MOUNTED = true,
+                    HIDE_WHEN_RESTING = true,
+                    HIDE_OUT_OF_COMBAT = true,
+                    ALWAYS_HIDE_WHEN_FLYING = true,
+                }
+                local hasHide = false
+                for rule in pairs(selectionMap) do
+                    if HIDE_RULES[rule] then
+                        hasHide = true
+                        break
+                    end
+                end
+                local count = ns.API:GetTableLength(selectionMap)
+                if count == 0 or not hasHide then
+                    return "no |cffff4444hide|r rules (always visible)"
+                elseif count == 1 then
+                    return "1 rule"
+                else
+                    return count .. " rules"
+                end
+            end,
+        })
+    end
+
+    CreateViewerVisibilityDropdown("BuffIconCooldownViewer", "Buff Icons")
+    CreateViewerVisibilityDropdown("BuffBarCooldownViewer", "Buff Bars")
+    CreateViewerVisibilityDropdown("EssentialCooldownViewer", "Essential Cooldowns")
+    CreateViewerVisibilityDropdown("UtilityCooldownViewer", "Utility Cooldowns")
+    local trackerCount = (ns.TrackerItemViewer and ns.TrackerItemViewer:GetTrackerCount())
+        or ns.db.profile.tracker_count
+        or 2
+    for i = 1, trackerCount do
+        CreateViewerVisibilityDropdown("CMCTracker" .. i, "CMC Tracker " .. i)
+    end
+
+    local tweaksHeader = SettingsLib:CreateHeader(category, {
+        name = "|cff8ccd00Tweaks|r for Cooldown Manager",
+        searchtags = {
+            "Tweaks",
+            "Cooldown",
+            "Manager",
+            "CMC",
+            "CDM",
+            "Assistant",
+            "Assisted",
+            "Highlight",
+            "Rotation",
+            "Suggested",
+            "Border",
+            "Glow",
+            "Sync Utility width to Essential",
+            "Fix",
+            "Normalize",
+            "Size",
+            "Uniform",
+            "Match",
+            "Equal",
+            "Same",
+            "Utility",
+            "Icon",
+        },
+    })
+
+    if ns.MasqueModule and ns.MasqueModule:IsAvailable() then
+        SettingsLib:CreateCheckbox(category, {
+            prefix = "CMC_",
+            key = "masque_enabled",
+            name = "Masque skinning |cffff0000**|r",
+            searchtags = { "Masque", "Skin", "Border", "Icon", "Style", "Theme" },
+            default = false,
+            get = function()
+                return ns.db.global.masque_enabled or false
+            end,
+            set = function(value)
+                ns.db.global.masque_enabled = value
+                ns.API:ShowReloadUIConfirmation()
+            end,
+            desc = "|cffff0000Not recommended\nMasque doesn't go well with CDM|r\nLet |cff00ccffMasque|r skin the Cooldown Manager (Essential, Utility, Tracked Buffs) and custom Tracker icons.\n\nWhile enabled, Cooldown Manager Centered's own icon styling and font |cffff0000options are disabled|r so they don't conflict with Masque.\n\n|cffff0000Requires a UI reload to take effect.|r",
+        })
+    end
+
+    SettingsLib:CreateCheckbox(category, {
+        prefix = "CMC_",
+        key = "cooldownManager_showHighlight_Essential",
+        name = "Rotation Highlight on CDM",
+        searchtags = { "Assistant", "Assisted", "Highlight", "Rotation", "Suggested", "Border", "Glow" },
+        default = false,
+        get = function()
+            return ns.db.profile.cooldownManager_showHighlight_Essential
+                and ns.db.profile.cooldownManager_showHighlight_Utility
+        end,
+        set = function(value)
+            ns.db.profile.cooldownManager_showHighlight_Essential = value
+            ns.db.profile.cooldownManager_showHighlight_Utility = value
+            if ns.Assistant then
+                ns.Assistant:OnSettingChanged("Essential")
+                ns.Assistant:OnSettingChanged("Utility")
+            end
+        end,
+        desc = "Show blue border on Cooldown Manager when ability is suggested by the rotation helper.",
+    })
+    SettingsLib:CreateCheckboxDropdown(category, {
+        prefix = "CMC_",
+        key = "cooldownManager_buttonPress",
+        name = "Button Press overlay",
+        searchtags = { "Button", "Press", "Overlay", "Cooldowns", "Icons" },
+        default = false,
+        get = function()
+            return ns.db.profile.cooldownManager_buttonPress
+        end,
+        set = function(value)
+            ns.db.profile.cooldownManager_buttonPress = value
+            if value then
+                ns.ButtonPress:Reinitialize()
+                if C_AddOns.IsAddOnLoaded("Dominos") then
+                    ns.ButtonPress:HookAllDominosButtons()
+                end
+                if C_AddOns.IsAddOnLoaded("ElvUI") then
+                    ns.ButtonPress:RegisterElvUICallbacks()
+                end
+            else
+                ns.ButtonPress:Disable()
+            end
+        end,
+        desc = "Show an overlay on cooldown icons when the corresponding action button is pressed.",
+
+        dropdownKey = "cooldownManager_buttonPress_texture",
+        dropdownName = "Button Press Texture",
+        dropdownValues = {
+            Blizzard = "Blizzard Default",
+            Flat = "Simple Flat Overlay",
+        },
+        dropdownDefault = "Blizzard",
+        dropdownGet = function()
+            return ns.db.profile.cooldownManager_buttonPress_texture or "Blizzard"
+        end,
+        dropdownSet = function(value)
+            ns.db.profile.cooldownManager_buttonPress_texture = value
+            if ns.ButtonPress then
+                ns.ButtonPress:RefreshTextures()
+            end
+        end,
+        dropdownDesc = "Select the texture for the button press overlay.",
+        dropdownOrder = {
+            "Blizzard",
+            "Flat",
+        },
+    })
+
+    SettingsLib:CreateCheckbox(category, {
+        prefix = "CMC_",
+        key = "cooldownManager_limitUtilitySizeToEssential",
+        name = "Sync Utility width to Essential",
+        searchtags = { "Sync", "Width", "Size", "Match", "Limit", "Utility", "Essential", "Constrain" },
+        default = false,
+        get = function()
+            return ns.db.profile.cooldownManager_limitUtilitySizeToEssential
+        end,
+        set = function(value)
+            ns.db.profile.cooldownManager_limitUtilitySizeToEssential = value
+            ns.CooldownManager.ForceRefreshAll()
+        end,
+        desc = "Set |cffff0000maximum|r Utility width to the width of Essential\nIt will |cffff0000not get narrower than 6|r icons or limit you set in |cff87bbcaEdit Mode|r",
+    })
+
+    SettingsLib:CreateCheckbox(category, {
+        prefix = "CMC_",
+        key = "cooldownManager_hideRangeCheck",
+        name = "Hide Range Check",
+        searchtags = { "Range", "Out of Range", "OOR", "Red", "Dim", "Desaturate", "Essential", "Utility" },
+        default = false,
+        get = function()
+            return ns.db.profile.cooldownManager_hideRangeCheck or false
+        end,
+        set = function(value)
+            ns.db.profile.cooldownManager_hideRangeCheck = value
+            if ns.RangeCheck then
+                ns.RangeCheck:RefreshAll()
+            end
+        end,
+        desc = "Stop Essential and Utility icons from dimming when the target is out of range.",
+    })
+
+    SettingsLib:CreateCheckbox(category, {
+        prefix = "CMC_",
+        key = "cooldownManager_desaturate_under_aura",
+        name = "Desaturate Icon Under Aura",
+        default = false,
+        get = function()
+            return ns.db.profile.cooldownManager_desaturate_under_aura or false
+        end,
+        set = function(value)
+            ns.db.profile.cooldownManager_desaturate_under_aura = value
+            if ns.CooldownStyle then
+                ns.CooldownStyle:RefreshHooks()
+            end
+        end,
+        desc = "Desaturate cooldown icons anyway when there is an active Aura for that ability.",
+    })
+
+    SettingsLib:CreateCheckbox(category, {
+        prefix = "CMC_",
+        key = "cooldownManager_hide_glow_on_active_aura",
+        name = "Hide custom glows when Aura is shown",
+        searchtags = { "Cooldown", "Glow", "Active Aura", "Buff", "Debuff", "Experimental", "Customization" },
+        default = false,
+        get = function()
+            return ns.db.profile.cooldownManager_hide_glow_on_active_aura or false
+        end,
+        set = function(value)
+            ns.db.profile.cooldownManager_hide_glow_on_active_aura = value
+        end,
+        desc = "Hide custom glows around cooldown icons when an Aura is active. |cffff0000Experimental feature, may not work!|r",
+    })
+
+    SettingsLib:CreateCheckbox(category, {
+        prefix = "CMC_",
+        key = "cooldownManager_hide_gcd",
+        name = "Hide GCD",
+        default = false,
+        get = function()
+            return ns.db.profile.cooldownManager_hide_gcd or false
+        end,
+        set = function(value)
+            ns.db.profile.cooldownManager_hide_gcd = value
+            if ns.CooldownStyle then
+                ns.CooldownStyle:RefreshHooks()
+            end
+        end,
+        desc = "Hide the GCD cooldown spiral on cooldown icons.",
+    })
+
+    SettingsLib:CreateCheckboxSlider(category, {
+        prefix = "CMC_",
+        key = "cooldownManager_utility_dimWhenNotOnCD",
+        name = "Hide Utility when not on CD",
+        searchtags = { "Dim", "Opacity", "Faded", "Transparent", "Utility", "Cooldown", "Hide", "Icons" },
+        default = false,
+        get = function()
+            return ns.db.profile.cooldownManager_utility_dimWhenNotOnCD
+        end,
+        set = function(value)
+            ns.db.profile.cooldownManager_utility_dimWhenNotOnCD = value
+            ns.CooldownManager.ForceRefresh({ utility = true })
+            if not value then
+                ns.CooldownManager.RestoreUtilityAlpha()
+            end
+        end,
+        desc = "Hide or Dim Utility Cooldown icons when they are not on cooldown. It will layout the icons as if they where not there if opacity is left at 0",
+        sliderKey = "cooldownManager_utility_dimOpacity",
+        sliderName = "Hide Opacity",
+        sliderMin = 0,
+        sliderMax = 0.9,
+        sliderStep = 0.05,
+        sliderDefault = 0.3,
+        sliderGet = function()
+            return ns.db.profile.cooldownManager_utility_dimOpacity
+        end,
+        sliderSet = function(value)
+            ns.db.profile.cooldownManager_utility_dimOpacity = value
+            ns.CooldownManager.ForceRefresh({ utility = true })
+        end,
+        sliderFormatter = function(value)
+            return string.format("%.0f%%", value * 100)
+        end,
+    })
+end
+
+local function AddonSettings_BuildSupport()
+    local supportCategory =
+        Settings.RegisterVerticalLayoutSubcategory(ns.AddonSettings.SettingsLayout.rootCategory, "Support")
+    ns.AddonSettings.SettingsLayout.supportCategory = supportCategory
+    local version = C_AddOns.GetAddOnMetadata("CooldownManagerCentered", "Version") or UNKNOWN
+
+    SettingsLib:CreateButton(supportCategory, {
+        label = "CurseForge",
+        text = "Copy project page link",
+        func = function()
+            ShowCopyText(PROJECT_PAGE_URL)
+        end,
+        desc = "Copies the CooldownManagerCentered CurseForge project page link.",
+    })
+    SettingsLib:CreateText(supportCategory, { name = "|cffccccccCurrent version: " .. version .. "|r" })
+
+    SettingsLib:CreateHeader(supportCategory, { name = "Support Development" })
+    SettingsLib:CreateText(supportCategory, {
+        name = "If you enjoy using CooldownManagerCentered, you can support its continued development.",
+    })
+    for _, donation in ipairs(DONATION_LINKS) do
+        local label, value = donation.label, donation.value
+        SettingsLib:CreateButton(supportCategory, {
+            label = label,
+            text = "Copy donation link",
+            func = function()
+                ShowCopyText(value)
+            end,
+        })
+    end
+
+    if GetCurrentRegionName() == "EU" then
+        SettingsLib:CreateText(supportCategory, {
+            name = "You can also support development with in-game gold on those EU realms.",
+        })
+        SettingsLib:CreateText(supportCategory, { name = "|cff3399ffAlliance|r" })
+        for _, characterName in ipairs(GOLD_RECIPIENTS.alliance) do
+            local recipient = characterName
+            SettingsLib:CreateButton(supportCategory, {
+                label = recipient,
+                text = "Copy character name",
+                func = function()
+                    ShowCopyText(recipient)
+                end,
+            })
+        end
+        SettingsLib:CreateText(supportCategory, { name = "|cffff4d4dHorde|r" })
+        for _, characterName in ipairs(GOLD_RECIPIENTS.horde) do
+            local recipient = characterName
+            SettingsLib:CreateButton(supportCategory, {
+                label = recipient,
+                text = "Copy character name",
+                func = function()
+                    ShowCopyText(recipient)
+                end,
+            })
+        end
+    end
+end
+
+-- Initialize the settings UI (called from main addon after DB is ready)
+function AddonSettings:RegisterSettings()
+    local category, layout = Settings.RegisterVerticalLayoutCategory(
+        "Co|cffbcc71fo|r|cff52a855ld|r|cff3faa4fownM|r|cff5fb64aan|r|cff7ac243ag|r|cff8ccd00erCentered|r"
+    )
+    Settings.RegisterAddOnCategory(category)
+    ns.AddonSettings.SettingsLayout.rootCategory = category
+    ns.AddonSettings.SettingsLayout.rootLayout = layout
+end
+
+local isInitialized = false
+function AddonSettings:InitializeSettings()
+    if isInitialized then
+        return
+    end
+    isInitialized = true
+
+    AddonSettings_BuildCooldown(
+        ns.AddonSettings.SettingsLayout.rootCategory,
+        ns.AddonSettings.SettingsLayout.rootLayout
+    )
+
+    ns.ProfileSettings:BuildSettings(ns.AddonSettings.SettingsLayout.rootCategory)
+    AddonSettings_BuildSupport()
+end
+
+local function HideDefaultsButton()
+    if
+        SettingsPanel
+        and SettingsPanel.Container
+        and SettingsPanel.Container.SettingsList
+        and SettingsPanel.Container.SettingsList.Header
+        and SettingsPanel.Container.SettingsList.Header.DefaultsButton
+    then
+        SettingsPanel.Container.SettingsList.Header.DefaultsButton.__hidden_by = "CMC"
+        SettingsPanel.Container.SettingsList.Header.DefaultsButton:Hide()
+    end
+end
+local function ShowDefaultsButton()
+    if
+        SettingsPanel
+        and SettingsPanel.Container
+        and SettingsPanel.Container.SettingsList
+        and SettingsPanel.Container.SettingsList.Header
+        and SettingsPanel.Container.SettingsList.Header.DefaultsButton
+        and SettingsPanel.Container.SettingsList.Header.DefaultsButton.__hidden_by == "CMC"
+    then
+        SettingsPanel.Container.SettingsList.Header.DefaultsButton:Show()
+        SettingsPanel.Container.SettingsList.Header.DefaultsButton.__hidden_by = nil
+    end
+end
+EventRegistry:RegisterCallback("Settings.CategoryChanged", function(_, category)
+    if
+        category == ns.AddonSettings.SettingsLayout.rootCategory
+        or category == ns.AddonSettings.SettingsLayout.profileCategory
+        or category == ns.AddonSettings.SettingsLayout.supportCategory
+    then
+        HideDefaultsButton()
+    else
+        ShowDefaultsButton()
+    end
+end)
+
+SettingsPanel.SearchBox:HookScript("OnTextChanged", function()
+    if
+        SettingsPanel:GetCurrentCategory() == ns.AddonSettings.SettingsLayout.rootCategory
+        or SettingsPanel:GetCurrentCategory() == ns.AddonSettings.SettingsLayout.profileCategory
+        or SettingsPanel:GetCurrentCategory() == ns.AddonSettings.SettingsLayout.supportCategory
+    then
+        HideDefaultsButton()
+    else
+        ShowDefaultsButton()
+    end
+end)

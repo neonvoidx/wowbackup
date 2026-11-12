@@ -1,0 +1,241 @@
+
+MapPinEnhancedDB = {
+["general"] = {
+["autoTrackNearestPin"] = true,
+["editorScale"] = 1,
+},
+["superTrackingOther"] = false,
+["frames"] = {
+["tracker"] = {
+["y"] = -62.62479895949946,
+["x"] = 8.62521921196992,
+["point"] = "TOPLEFT",
+["scale"] = 0.8999999761581421,
+["fixedPosition"] = true,
+},
+["floatingFallbackFrame"] = {
+},
+["MapPinEnhancedStartup"] = {
+},
+["navigationStepFrame"] = {
+["y"] = -279.9998779296875,
+["x"] = -6.103515625e-05,
+["point"] = "TOP",
+["scale"] = 1,
+},
+["floatingArrow"] = {
+},
+["MapPinEnhancedIconPickerWindow"] = {
+},
+},
+["storedPins"] = {
+{
+["mapID"] = 2395,
+["setTracked"] = true,
+["color"] = "Custom",
+["usesAtlas"] = true,
+["x"] = 0.6228260552558067,
+["title"] = "The Labyrinth of Kindo'jan",
+["order"] = 1,
+["y"] = 0.7252508535229364,
+["texture"] = "overworld-active-64x64",
+},
+},
+["floatingPin"] = {
+["unlimitedDistance"] = true,
+["showEstimatedTime"] = true,
+["showTitle"] = true,
+["blockWorldQuestTracking"] = true,
+},
+["trackerVisible"] = true,
+["trackerMinimized"] = false,
+["options"] = {
+["Tracker.BackgroundOpacity"] = 0,
+["Tracker.MaximumRows"] = 6,
+["Tracker.Scale"] = 0.9,
+["Tracker.CloseAction"] = false,
+["Navigation.IncludeDungeonPortals"] = false,
+["Wayfinder.ShowETA"] = true,
+["Tracker.Lock"] = false,
+["Wayfinder.ShowBeam"] = true,
+["General.ShowMinimapButton"] = true,
+},
+["startupWizard"] = {
+["completed"] = false,
+["step"] = 1,
+["suppressed"] = true,
+},
+["sets"] = {
+["set-a55d24d8-a8a0"] = {
+["name"] = "Imported Set 1",
+["pins"] = {
+["setpin-8bcd2bc4-bbfb"] = {
+["y"] = 0.419,
+["x"] = 0.583,
+["title"] = "(lower level)",
+["setTracked"] = false,
+["order"] = 3,
+["color"] = "Yellow",
+["mapID"] = 2393,
+},
+["setpin-cb94db38-8fce"] = {
+["y"] = 0.4669,
+["x"] = 0.2875,
+["title"] = "Map Pin",
+["setTracked"] = false,
+["order"] = 1,
+["color"] = "Yellow",
+["mapID"] = 2393,
+},
+["setpin-08c21570-ae77"] = {
+["y"] = 0.5375,
+["x"] = 0.5132,
+["title"] = "Map Pin",
+["setTracked"] = false,
+["order"] = 2,
+["color"] = "Yellow",
+["mapID"] = 2393,
+},
+},
+},
+},
+["legacyOptionsMigrated"] = true,
+["legacyGroupsMigrated"] = true,
+["tracker"] = {
+["lockTracker"] = false,
+["showNumbering"] = true,
+["trackerHeight"] = 6,
+["trackerScale"] = 0.8500000238418579,
+["backgroundOpacity"] = 0,
+["autoVisibility"] = "both",
+},
+["version"] = 323,
+["scalePresets110125Migrated"] = true,
+["trackerPosition"] = {
+["y"] = -28.43038749694824,
+["x"] = 10.782057762146,
+},
+["minimapIcon"] = {
+["minimapPos"] = 163.5128158652648,
+["lock"] = false,
+["hide"] = false,
+},
+["minimapButton"] = {
+["minimapPos"] = 163.5128158652648,
+["showInCompartment"] = true,
+["hide"] = false,
+["lock"] = false,
+},
+["groups"] = {
+["system-ungrouped"] = {
+["source"] = "MapPinEnhanced",
+["restorable"] = false,
+["order"] = -1,
+["hidden"] = false,
+["pinOrder"] = {
+["pin-ef89c9fe-8f83"] = 1,
+},
+["name"] = "Ungrouped Pins",
+["pinArchive"] = {
+},
+["pins"] = {
+{
+["y"] = 0.7252508535229364,
+["mapID"] = 2395,
+["title"] = "The Labyrinth of Kindo'jan",
+["usesAtlas"] = true,
+["pinID"] = "pin-ef89c9fe-8f83",
+["x"] = 0.6228260552558067,
+["texture"] = "overworld-active-64x64",
+},
+},
+["groupType"] = "ungrouped",
+["groupID"] = "system-ungrouped",
+["icon"] = "Interface\\Icons\\inv_ability_skyriding_glyph",
+},
+["set-a55d24d8-a8a0"] = {
+["source"] = "MapPinEnhanced",
+["restorable"] = true,
+["order"] = 0,
+["hidden"] = true,
+["pinOrder"] = {
+},
+["trackingMode"] = "nearest",
+["name"] = "Imported Set 1",
+["pinArchive"] = {
+["setpin-8bcd2bc4-bbfb"] = {
+["state"] = "hidden",
+["data"] = {
+["y"] = 0.419,
+["x"] = 0.583,
+["title"] = "(lower level)",
+["color"] = "Yellow",
+["mapID"] = 2393,
+["pinID"] = "setpin-8bcd2bc4-bbfb",
+},
+["order"] = 3,
+},
+["setpin-cb94db38-8fce"] = {
+["state"] = "hidden",
+["data"] = {
+["y"] = 0.4669,
+["x"] = 0.2875,
+["title"] = "Map Pin",
+["color"] = "Yellow",
+["mapID"] = 2393,
+["pinID"] = "setpin-cb94db38-8fce",
+},
+["order"] = 1,
+},
+["setpin-08c21570-ae77"] = {
+["state"] = "hidden",
+["data"] = {
+["y"] = 0.5375,
+["x"] = 0.5132,
+["title"] = "Map Pin",
+["color"] = "Yellow",
+["mapID"] = 2393,
+["pinID"] = "setpin-08c21570-ae77",
+},
+["order"] = 2,
+},
+},
+["pins"] = {
+},
+["groupID"] = "set-a55d24d8-a8a0",
+["icon"] = "Interface\\Icons\\INV_Misc_QuestionMark",
+},
+["system-way-back"] = {
+["source"] = "MapPinEnhanced",
+["restorable"] = false,
+["order"] = nil --[[ inf ]],
+["hidden"] = false,
+["pinOrder"] = {
+},
+["name"] = "My Way Back",
+["pinArchive"] = {
+},
+["pins"] = {
+},
+["groupType"] = "way-back",
+["groupID"] = "system-way-back",
+["icon"] = "Interface\\Icons\\rogue_burstofspeed",
+},
+["group-f5692708-a80c"] = {
+["source"] = "MapPinEnhanced",
+["restorable"] = false,
+["order"] = 0,
+["hidden"] = false,
+["pinOrder"] = {
+},
+["name"] = "TomTom Pins",
+["pinArchive"] = {
+},
+["pins"] = {
+},
+["groupType"] = "tomtom",
+["groupID"] = "group-f5692708-a80c",
+["icon"] = "Interface\\AddOns\\TomTom\\Images\\Modern\\TomTom-Logo.tga",
+},
+},
+}

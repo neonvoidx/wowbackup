@@ -1,0 +1,39 @@
+
+ForeverGearDB = {
+["upgradeToastY"] = 498,
+["showGroupLootUpgrades"] = true,
+["tooltipProfiles"] = {
+["Alister Keegan"] = {
+},
+["Many Faced"] = {
+},
+},
+["minimap"] = {
+["minimapPos"] = 213.2037613982846,
+["hide"] = true,
+},
+["equipmentSetProfiles"] = {
+["Alister Keegan"] = {
+},
+["Many Faced"] = {
+},
+},
+["showUpgradeToast"] = true,
+["activeProfile@Alister Keegan"] = "Hexenmeister Gebrechen (Beta L30)",
+["profileMacroMigrationDone@Many Faced"] = true,
+["upgradeToastX"] = 6,
+["minimumUpgradePercent"] = 0,
+["profileMacroMigrationDone@Alister Keegan"] = true,
+["tooltipEnabled"] = true,
+["showUpgradePercent"] = true,
+["profiles"] = {
+},
+["showBagUpgrades"] = true,
+["debugUnknownStats"] = false,
+["showScoreDetails"] = true,
+["showQuestUpgrades"] = true,
+["showEquippedScore"] = false,
+["showCharacterUpgrades"] = true,
+["equipmentSetAutoSwitch"] = {
+},
+}

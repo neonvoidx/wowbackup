@@ -1,0 +1,23 @@
+
+PRD_Settings = {
+["showPowerText"] = true,
+["border"] = true,
+["fontsize"] = 11,
+["showPower"] = true,
+["locked"] = true,
+["brightness"] = 100,
+["showHPText"] = true,
+["showHP"] = true,
+["barSlot2"] = "Power",
+["classcolor"] = true,
+["gap"] = 3,
+["width"] = 220,
+["y"] = -150,
+["x"] = 0,
+["showCast"] = true,
+["barSlot1"] = "HP",
+["barSlot3"] = "CR",
+["gradient"] = true,
+["height"] = 22,
+["showCR"] = true,
+}

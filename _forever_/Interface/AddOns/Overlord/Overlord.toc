@@ -1,0 +1,83 @@
+## Interface: 16001
+## Title: Overlord Forever
+## Author: Troma
+## Notes: Zone capture for open-world war fronts on WoW Forever: sync, map, leaderboard.
+## Notes-frFR: Capture de zones sur les fronts du monde ouvert (WoW Forever) : synchro, carte, classement.
+## Notes-esES: Captura de zonas en frentes del mundo abierto (WoW Forever): sincronización, mapa, clasificación.
+## Notes-esMX: Captura de zonas en frentes del mundo abierto (WoW Forever): sincronización, mapa, clasificación.
+## Notes-deDE: Zonen-Eroberung auf offenen Kriegsfronten (WoW Forever). Sync, Karte, Rangliste.
+## Notes-ruRU: Захват зон на фронтах открытого мира (WoW Forever): синхронизация, карта, рейтинг.
+## Notes-ptBR: Captura de zonas nas frentes do mundo aberto (WoW Forever): sincronização, mapa e classificação.
+## Notes-zhCN: WoW Forever 开放世界战线的区域占领：同步、地图与排行榜。
+## Version: 2.5.0
+## SavedVariables: OverlordDB
+## SavedVariablesPerCharacter: OverlordCharDB
+## IconTexture: Interface\AddOns\Overlord\Textures\overlord_minimap
+## X-Category: PvP
+## X-License: All Rights Reserved
+## X-Curse-Project-ID: 1701204
+
+Locales.lua
+GuideLocales.lua
+Locales_ptBR.lua
+Locales_zhCN.lua
+ForeverLocaleFixes.lua
+FrontLocales.lua
+GroupFinderLocales.lua
+RankLocales.lua
+Core.lua
+RealmPools.lua
+UIShared.lua
+Fronts.lua
+Zones.lua
+Ressources.lua
+Leaderboard.lua
+Sync.lua
+SyncStrategicSites.lua
+SyncDomination.lua
+SyncVictoryBonus.lua
+SyncResolution.lua
+SyncAux.lua
+ZoneCaptureLease.lua
+FrontActivity.lua
+GuildKillAlert.lua
+CombatTracker.lua
+ZoneControl.lua
+ZoneDefense.lua
+GuildKeepSites.lua
+Outpost.lua
+GuildKeep.lua
+OutpostControl.lua
+SyncOutpost.lua
+SyncHistoryCatchup.lua
+SyncLeaderboardPages.lua
+SyncRelay.lua
+SyncGuild.lua
+SyncDirectory.lua
+MapMarkers.lua
+MapMarkersKeep.lua
+MapWorldEmblems.lua
+General.lua
+GeneralSync.lua
+GeneralMap.lua
+GeneralNameplate.lua
+ZoneIndicator.lua
+HallOfFameData.lua
+HallOfFameUI.lua
+NetworkHealth.lua
+Nemesis.lua
+GroupFinder.lua
+GroupFinderUI.lua
+Ranks.lua
+RankProof.lua
+RanksUI.lua
+UI.lua
+ActionShortcut.lua
+Button.lua
+Popups.lua
+LeaderboardSearch.lua
+LeaderboardUI.lua
+SettingsPanel.lua
+LayerJumper.lua
+Commands.lua
+

@@ -1,0 +1,14 @@
+## Interface: 16001
+## Title: RepRewards
+## Author: CixiDelmont
+## Notes: Track Forever reputations, progress, and faction rewards with filters.
+## IconTexture: Interface\Icons\achievement_reputation_04
+## SavedVariables: RepRewards_DB, ReputationRewards_DB, Reputations_DB
+## SavedVariablesPerCharacter: RepRewards_CharDB, ReputationRewards_CharDB
+## Version: 16001-09
+
+embeds.xml
+RepRewardsData.lua
+RepRewardsMerchantFavor.lua
+RepRewards.lua
+RepRewardsQuestLog.lua

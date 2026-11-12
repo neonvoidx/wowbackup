@@ -1,0 +1,7 @@
+
+OpenMapCharDB = {
+["worldmap"] = {
+["cvars"] = {
+},
+},
+}

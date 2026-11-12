@@ -1,0 +1,666 @@
+local entries
+local totHooked, partyHooked
+local cvarFrame
+
+local abbreviateKey, abbreviateOptions
+
+local function BuildAbbreviateOptions(extraDecimal, skipBelow10k)
+    if not (extraDecimal or skipBelow10k) then return end
+    if not (AbbreviateNumbers and CreateAbbreviateConfig and C_StringUtil and C_StringUtil.GetDefaultAbbreviationBreakpoints) then return end
+    local breakpoints = {}
+    for _, entry in ipairs(C_StringUtil.GetDefaultAbbreviationBreakpoints()) do
+        local copy = {
+            breakpoint = entry.breakpoint,
+            abbreviation = entry.abbreviation,
+            significandDivisor = entry.significandDivisor,
+            fractionDivisor = entry.fractionDivisor,
+            abbreviationIsGlobal = entry.abbreviationIsGlobal,
+        }
+        if skipBelow10k and copy.breakpoint < 10000 then
+            copy.breakpoint = 10000
+        end
+        if extraDecimal and copy.breakpoint >= 1000000 and copy.fractionDivisor > 0 and copy.significandDivisor >= 10 then
+            copy.significandDivisor = copy.significandDivisor / 10
+            copy.fractionDivisor = copy.fractionDivisor * 10
+        end
+        breakpoints[#breakpoints + 1] = copy
+    end
+    local ok, config = pcall(CreateAbbreviateConfig, breakpoints)
+    if ok and config then
+        return { config = config }
+    end
+end
+
+function BBF.AbbreviateValue(value)
+    local db = BetterBlizzFramesDB
+    local key = (db.formatStatusBarTextExtraDecimals and 1 or 0) + (db.formatStatusBarTextSkipBelow10k and 2 or 0)
+    if key ~= abbreviateKey then
+        abbreviateKey = key
+        abbreviateOptions = BuildAbbreviateOptions(db.formatStatusBarTextExtraDecimals, db.formatStatusBarTextSkipBelow10k)
+    end
+    if abbreviateOptions then
+        return AbbreviateNumbers(value, abbreviateOptions)
+    end
+    return (AbbreviateNumbers or AbbreviateLargeNumbers)(value)
+end
+
+local function FormatNumber(bar, value)
+    if BetterBlizzFramesDB.formatStatusBarText then
+        return BBF.AbbreviateValue(value)
+    elseif bar.capNumericDisplay then
+        return AbbreviateLargeNumbers(value)
+    elseif BetterBlizzFramesDB.noNumberCommas and (BBF.isForever or BBF.isEra or BBF.isTBC) then
+        return value
+    end
+    return BreakUpLargeNumbers(value)
+end
+
+local function NumericText(bar, value, maxValue)
+    local db = BetterBlizzFramesDB
+    local valueText = FormatNumber(bar, value)
+    if bar.disableMaxValue or (db.formatStatusBarText and db.singleValueStatusBarText) then
+        return valueText
+    end
+    return string.format("%s / %s", valueText, FormatNumber(bar, maxValue))
+end
+
+local function PercentText(entry, value, maxValue)
+    if not issecretvalue(value) and not issecretvalue(maxValue) then
+        return math.ceil((value / maxValue) * 100) .. "%"
+    end
+    local bar = entry.bar
+    local percent
+    if entry.isMana then
+        percent = UnitPowerPercent(bar.unit, bar.powerType, false, CurveConstants.ScaleTo100)
+    else
+        percent = UnitHealthPercent(bar.unit, false, CurveConstants.ScaleTo100)
+    end
+    return string.format("%.0f%%", percent)
+end
+
+local function ClearTexts(entry)
+    entry.center:SetText("")
+    entry.center:Hide()
+    if entry.left then
+        entry.left:SetText("")
+        entry.left:Hide()
+    end
+    if entry.right then
+        entry.right:SetText("")
+        entry.right:Hide()
+    end
+end
+
+local function ShowText(entry, fontString, text, alpha)
+    if BetterBlizzFramesDB.alwaysHideStatusBarTexts then return end
+    fontString:SetText(text)
+    if entry.owned or fontString == entry.center then
+        fontString:SetAlpha(alpha)
+    end
+    fontString:Show()
+end
+
+local function IsEntryEnabled(entry)
+    local db = BetterBlizzFramesDB
+    if not db.statusTextExtra or not db[entry.groupKey] then return false end
+    if entry.isMana then
+        return db.statusTextExtraMana and true or false
+    end
+    return db.statusTextExtraHealth and true or false
+end
+
+local function EntryUnit(entry)
+    return entry.bar.unit or (entry.member and entry.member.unit)
+end
+
+local function NativeShown(entry)
+    return entry.center:IsShown() or (entry.left and entry.left:IsShown()) or (entry.right and entry.right:IsShown())
+end
+
+local function HideNative(entry)
+    entry.center:Hide()
+    if entry.left then entry.left:Hide() end
+    if entry.right then entry.right:Hide() end
+end
+
+local function SaveNativeString(saved, key, fontString)
+    if not fontString then return end
+    saved[key] = { text = fontString:GetText(), shown = fontString:IsShown() }
+end
+
+local function RestoreNativeString(saved, key, fontString)
+    local state = fontString and saved[key]
+    if not state then return end
+    fontString:SetText(state.text or "")
+    fontString:SetShown(state.shown)
+end
+
+local function SaveNative(entry)
+    local saved = entry.saved or {}
+    SaveNativeString(saved, "center", entry.center)
+    SaveNativeString(saved, "left", entry.left)
+    SaveNativeString(saved, "right", entry.right)
+    entry.saved = saved
+end
+
+local function RestoreNative(entry)
+    local saved = entry.saved
+    if not saved then return end
+    RestoreNativeString(saved, "center", entry.center)
+    RestoreNativeString(saved, "left", entry.left)
+    RestoreNativeString(saved, "right", entry.right)
+end
+
+local function OverrideNative(entry, fromBlizzard)
+    if fromBlizzard or not entry.overridden then
+        SaveNative(entry)
+    else
+        RestoreNative(entry)
+    end
+    entry.overridden = nil
+    if entry.alphaTouched then
+        entry.center:SetAlpha(1)
+        entry.alphaTouched = nil
+    end
+
+    local db = BetterBlizzFramesDB
+    if not db.statusTextExtra or not db[entry.groupKey] then return end
+
+    if not IsEntryEnabled(entry) then
+        HideNative(entry)
+        entry.overridden = true
+        return
+    end
+    if not db.statusTextExtraPercent or not NativeShown(entry) then return end
+
+    local bar = entry.bar
+    local unit = EntryUnit(entry)
+    if not unit or not UnitExists(unit) or UnitIsDeadOrGhost(unit) then return end
+
+    local value = bar:GetValue()
+    local _, maxValue = bar:GetMinMaxValues()
+    local alpha = 1
+    if issecretvalue(maxValue) then
+        alpha = maxValue
+    elseif maxValue <= 0 then
+        return
+    end
+
+    if entry.left then entry.left:Hide() end
+    if entry.right then entry.right:Hide() end
+    entry.center:SetText(PercentText(entry, value, maxValue))
+    if issecretvalue(maxValue) then
+        entry.center:SetAlpha(alpha)
+        entry.alphaTouched = true
+    end
+    entry.center:Show()
+    entry.overridden = true
+end
+
+local function Render(entry)
+    if entry.native then
+        OverrideNative(entry)
+        return
+    end
+    if not IsEntryEnabled(entry) then
+        if entry.active then
+            ClearTexts(entry)
+            entry.active = nil
+        end
+        return
+    end
+    entry.active = true
+    ClearTexts(entry)
+
+    local bar = entry.bar
+    local unit = EntryUnit(entry)
+    if not unit or not bar:IsShown() or not UnitExists(unit) then return end
+
+    if UnitIsDeadOrGhost(unit) then
+        if entry.zeroText then
+            ShowText(entry, entry.center, DEAD, 1)
+        end
+        return
+    end
+
+    local value = bar:GetValue()
+    local _, maxValue = bar:GetMinMaxValues()
+    local alpha = 1
+    if issecretvalue(maxValue) then
+        alpha = maxValue
+    elseif maxValue <= 0 then
+        return
+    end
+
+    local mode = BetterBlizzFramesDB.statusTextExtraPercent and "PERCENT" or C_CVar.GetCVar("statusTextDisplay")
+
+    if mode == "BOTH" then
+        if entry.left and entry.right then
+            if not entry.isMana or not bar.powerToken or bar.powerToken == "MANA" then
+                ShowText(entry, entry.left, PercentText(entry, value, maxValue), alpha)
+            end
+            ShowText(entry, entry.right, FormatNumber(bar, value), alpha)
+        else
+            ShowText(entry, entry.center, string.format("(%s) %s", PercentText(entry, value, maxValue), NumericText(bar, value, maxValue)), alpha)
+        end
+    elseif mode == "PERCENT" then
+        ShowText(entry, entry.center, PercentText(entry, value, maxValue), alpha)
+    else
+        ShowText(entry, entry.center, NumericText(bar, value, maxValue), alpha)
+    end
+end
+
+local function CreateBarText(bar, point, x, parent, y, size)
+    local text = (parent or bar):CreateFontString(nil, "OVERLAY", "TextStatusBarText")
+    if size then
+        local font, _, flags = text:GetFont()
+        text:SetFont(font, size, flags)
+    end
+    text:SetPoint(point, bar, point, x, y or 0)
+    text:Hide()
+    return text
+end
+
+local function GetPartyMember(i)
+    return (PartyFrame and PartyFrame["MemberFrame" .. i]) or _G["PartyMemberFrame" .. i]
+end
+
+local function GetTextHolder(member, overlay)
+    if member.bbfStatusTextHolder then return member.bbfStatusTextHolder end
+    local parent = overlay or member
+    local holder = CreateFrame("Frame", nil, parent)
+    holder:SetAllPoints(member)
+    holder:SetFrameLevel(parent:GetFrameLevel() + 25)
+    member.bbfStatusTextHolder = holder
+    return holder
+end
+
+local function AddPartyBar(list, member, bar, isMana, center, left, right)
+    if not bar then return end
+    local entry = {
+        bar = bar,
+        member = member,
+        isMana = isMana,
+        groupKey = "statusTextExtraParty",
+        zeroText = not isMana,
+    }
+    if center then
+        entry.native = true
+        entry.center, entry.left, entry.right = center, left, right
+    else
+        local holder = GetTextHolder(member, member.PartyMemberOverlay)
+        entry.owned = true
+        entry.center = CreateBarText(bar, "CENTER", 0, holder, 0.5, 10)
+        entry.left = CreateBarText(bar, "LEFT", 2, holder, 0.5, 10)
+        entry.right = CreateBarText(bar, "RIGHT", -2, holder, 0.5, 10)
+    end
+    table.insert(list, entry)
+end
+
+local function GetEntries()
+    if entries then return entries end
+    entries = { tot = {}, party = {} }
+
+    for _, owner in ipairs({ TargetFrameToT or false, FocusFrameToT or false }) do
+        if owner then
+            local bars
+            if owner.HealthBar then
+                if BBF.isForever then
+                    bars = { { owner.HealthBar, false, 0, 0, 0 }, { owner.ManaBar, true, 3, 0, -3 } }
+                else
+                    bars = { { owner.HealthBar, false, 0, 0, 0 }, { owner.ManaBar, true, 4, 2, 0 } }
+                end
+            else
+                bars = { { owner.healthbar, false, 2, 0, -2 }, { owner.manabar, true, 2, 0, -2 } }
+            end
+            local textureFrame = not owner.HealthBar and owner.GetName and owner:GetName() and _G[owner:GetName() .. "TextureFrame"]
+            local holder = textureFrame and GetTextHolder(owner, textureFrame)
+            local size = holder and 10
+            for _, info in ipairs(bars) do
+                local bar, isMana, leftX, centerX, rightX = info[1], info[2], info[3], info[4], info[5]
+                if bar then
+                    table.insert(entries.tot, {
+                        bar = bar,
+                        owner = owner,
+                        isMana = isMana,
+                        groupKey = "statusTextExtraToT",
+                        owned = true,
+                        leftX = leftX,
+                        centerX = centerX,
+                        rightX = rightX,
+                        center = CreateBarText(bar, "CENTER", centerX, holder, nil, size),
+                        left = CreateBarText(bar, "LEFT", leftX, holder, nil, size),
+                        right = CreateBarText(bar, "RIGHT", rightX, holder, nil, size),
+                    })
+                end
+            end
+        end
+    end
+
+    for i = 1, 4 do
+        local member = GetPartyMember(i)
+        if member then
+            local container = member.HealthBarContainer
+            if container and container.HealthBar then
+                AddPartyBar(entries.party, member, container.HealthBar, false, container.CenterText, container.LeftText, container.RightText)
+            else
+                local hpBar = member.HealthBar or member.healthbar
+                AddPartyBar(entries.party, member, hpBar, false, hpBar and hpBar.TextString, hpBar and hpBar.LeftText, hpBar and hpBar.RightText)
+            end
+            local manaBar = member.ManaBar or member.manabar
+            if manaBar then
+                AddPartyBar(entries.party, member, manaBar, true, manaBar.CenterText or manaBar.TextString, manaBar.LeftText, manaBar.RightText)
+            end
+        end
+    end
+
+    if BBF.LayerPixelBorderTexts then
+        BBF.LayerPixelBorderTexts(TargetFrameToT)
+        BBF.LayerPixelBorderTexts(FocusFrameToT)
+    end
+
+    BBF.SetSmallValueTextsFont()
+
+    return entries
+end
+
+local smallValueFont
+local valueTextKeys = { "TextString", "LeftText", "RightText", "CenterText", "ManaBarText" }
+
+local function AddValueTexts(list, holder)
+    if not holder then return end
+    for _, key in ipairs(valueTextKeys) do
+        local text = holder[key]
+        if text and text.SetFont then
+            list[#list + 1] = text
+        end
+    end
+end
+
+local function SmallValueTexts()
+    local list = {}
+    local partyFont = BetterBlizzFramesDB.changePartyFrameFont
+    if not partyFont then
+        for i = 1, 4 do
+            local member = GetPartyMember(i)
+            if member then
+                AddValueTexts(list, member.HealthBarContainer)
+                AddValueTexts(list, member.HealthBar or member.healthbar)
+                AddValueTexts(list, member.ManaBar or member.manabar)
+            end
+        end
+    end
+    for _, owner in ipairs({ TargetFrameToT or false, FocusFrameToT or false }) do
+        if owner then
+            AddValueTexts(list, owner.HealthBar or owner.healthbar)
+            AddValueTexts(list, owner.ManaBar or owner.manabar)
+        end
+    end
+    if entries then
+        for _, group in pairs(entries) do
+            for _, entry in ipairs(group) do
+                if entry.owned and not (partyFont and entry.groupKey == "statusTextExtraParty") then
+                    list[#list + 1] = entry.center
+                    list[#list + 1] = entry.left
+                    list[#list + 1] = entry.right
+                end
+            end
+        end
+    end
+    return list
+end
+
+local function SmallValueSize(size)
+    if size >= 12 then
+        return size > 13 and size - 3 or size - 2
+    end
+    return size - 1
+end
+
+function BBF.SetSmallValueTextsFont(font, size, outline)
+    if font then
+        smallValueFont = { font, tonumber(size), outline }
+    end
+    if not smallValueFont or not BetterBlizzFramesDB.changeUnitFrameValueFont then return end
+    font, size, outline = smallValueFont[1], smallValueFont[2], smallValueFont[3]
+    for _, text in ipairs(SmallValueTexts()) do
+        local ogFont, ogSize, ogOutline = text:GetFont()
+        text:SetFont(font or ogFont, SmallValueSize(size or ogSize), outline or ogOutline)
+    end
+end
+
+function BBF.StatusTextExtraTexts(owner)
+    local list = {}
+    if not entries then return list end
+    for _, entry in ipairs(entries.tot) do
+        if entry.owner == owner then
+            list[#list + 1] = entry.center
+            list[#list + 1] = entry.left
+            list[#list + 1] = entry.right
+        end
+    end
+    return list
+end
+
+local function TotTextY(owner, isMana)
+    if isMana or not BBF.TotBigMode or not BetterBlizzFramesDB.biggerHealthbarsNameInside then return 0 end
+    local unit = owner == TargetFrameToT and "target" or "focus"
+    if BBF.ClassicToTActive and BBF.ClassicToTActive(unit) then return 0 end
+    return BBF.TotBigMode(unit) == "big" and -5 or 0
+end
+
+function BBF.PlaceTotDeadText(owner)
+    local bar = owner and owner.HealthBar
+    if not bar or not bar.DeadText then return end
+    local anchor = BetterBlizzFramesDB.noPortraitPixelBorder and bar.bbfPixelBox or bar
+    local y = TotTextY(owner, false)
+    for _, text in ipairs({ bar.DeadText, bar.UnconsciousText }) do
+        text:ClearAllPoints()
+        text:SetPoint("CENTER", anchor, "CENTER", 0, y)
+    end
+end
+
+function BBF.PlaceTotStatusTexts(force)
+    for _, owner in ipairs({ TargetFrameToT or false, FocusFrameToT or false }) do
+        if owner and owner.bbfCenterDeadText then
+            BBF.PlaceTotDeadText(owner)
+        end
+    end
+    if not entries then return end
+    for _, entry in ipairs(entries.tot) do
+        local textFrame = entry.owner.BBFTextFrame
+        if textFrame then
+            for _, text in ipairs({ entry.center, entry.left, entry.right }) do
+                if text:GetParent() == entry.bar then text:SetParent(textFrame) end
+            end
+        end
+        local box = BBF.TextAreaBox and BBF.TextAreaBox(entry.owner, entry.isMana)
+        if box then
+            local x, y = BBF.TextAreaOffset(entry.owner, entry.isMana)
+            local key = tostring(box) .. ":" .. x .. ":" .. y .. ":" .. tostring(BetterBlizzFramesDB.swapStatusBarTexts) .. ":" .. BBF.TextAreaOffset(entry.owner, entry.isMana, "LEFT") .. ":" .. BBF.TextAreaOffset(entry.owner, entry.isMana, "RIGHT")
+            if force or entry.textKey ~= key then
+                entry.textKey = key
+                for point, text in pairs({ CENTER = entry.center, LEFT = entry.left, RIGHT = entry.right }) do
+                    point = BBF.StatusTextPoint(point)
+                    local dx, dy = BBF.TextAreaOffset(entry.owner, entry.isMana, point)
+                    text:ClearAllPoints()
+                    text:SetPoint(point, box, point, dx, dy)
+                    if point ~= "CENTER" then text:SetJustifyH(point) end
+                end
+            end
+        else
+            local y = TotTextY(entry.owner, entry.isMana)
+            local anchor = BetterBlizzFramesDB.noPortraitPixelBorder and entry.bar.bbfPixelBox or entry.bar
+            local key = tostring(anchor) .. ":" .. y
+            if force or entry.textKey ~= key then
+                entry.textKey = key
+                entry.center:SetPoint("CENTER", anchor, "CENTER", entry.centerX, y)
+                entry.left:ClearAllPoints()
+                entry.left:SetPoint("LEFT", anchor, "LEFT", entry.leftX, y)
+                entry.left:SetJustifyH("LEFT")
+                entry.right:ClearAllPoints()
+                entry.right:SetPoint("RIGHT", anchor, "RIGHT", entry.rightX, y)
+                entry.right:SetJustifyH("RIGHT")
+            end
+        end
+    end
+end
+
+local function RenderGroup(list)
+    for _, entry in ipairs(list) do
+        Render(entry)
+    end
+end
+
+local function HookToT(list)
+    if totHooked then return end
+    totHooked = true
+    for _, entry in ipairs(list) do
+        entry.bar:HookScript("OnValueChanged", function() Render(entry) end)
+        entry.bar:HookScript("OnMinMaxChanged", function() Render(entry) end)
+        entry.owner:HookScript("OnShow", function() Render(entry) end)
+    end
+end
+
+local function HookParty(list)
+    if partyHooked then return end
+    partyHooked = true
+    local nativeBars
+    for _, entry in ipairs(list) do
+        if entry.native then
+            if entry.bar.UpdateTextStringWithValues then
+                hooksecurefunc(entry.bar, "UpdateTextStringWithValues", function() OverrideNative(entry, true) end)
+            else
+                nativeBars = nativeBars or {}
+                nativeBars[entry.bar] = entry
+            end
+        else
+            entry.bar:HookScript("OnValueChanged", function() Render(entry) end)
+            entry.bar:HookScript("OnMinMaxChanged", function() Render(entry) end)
+            entry.member:HookScript("OnShow", function() Render(entry) end)
+        end
+    end
+    if nativeBars and TextStatusBar_UpdateTextStringWithValues then
+        hooksecurefunc("TextStatusBar_UpdateTextStringWithValues", function(bar)
+            local entry = nativeBars[bar]
+            if entry then OverrideNative(entry, true) end
+        end)
+    end
+end
+
+local function UpdateCVarWatcher(list, enabled)
+    if enabled then
+        if not cvarFrame then
+            cvarFrame = CreateFrame("Frame")
+            cvarFrame:SetScript("OnEvent", function(_, _, cvar)
+                if cvar == "statusTextDisplay" then
+                    RenderGroup(list.tot)
+                    RenderGroup(list.party)
+                end
+            end)
+        end
+        cvarFrame:RegisterEvent("CVAR_UPDATE")
+    elseif cvarFrame then
+        cvarFrame:UnregisterEvent("CVAR_UPDATE")
+    end
+end
+
+function BBF.StatusBarTextExtra()
+    local db = BetterBlizzFramesDB
+    local tot = db.statusTextExtra and db.statusTextExtraToT
+    local party = db.statusTextExtra and db.statusTextExtraParty
+    if not tot and not party and not entries then return end
+
+    local list = GetEntries()
+    if tot then
+        HookToT(list.tot)
+    end
+    if party then
+        HookParty(list.party)
+    end
+    UpdateCVarWatcher(list, tot or party)
+
+    BBF.PlaceTotStatusTexts()
+    RenderGroup(list.tot)
+    RenderGroup(list.party)
+end
+
+local statusBars
+
+local function AddStatusBar(list, bar)
+    if bar then list[#list + 1] = bar end
+end
+
+local function GetStatusBars()
+    if statusBars then return statusBars end
+    local list = {}
+    local player = PlayerFrame.PlayerFrameContent.PlayerFrameContentMain
+    AddStatusBar(list, player.HealthBarsContainer.HealthBar)
+    AddStatusBar(list, player.ManaBarArea.ManaBar)
+    AddStatusBar(list, AlternatePowerBar)
+    AddStatusBar(list, MonkStaggerBar)
+    AddStatusBar(list, EvokerEbonMightBar)
+    AddStatusBar(list, DemonHunterSoulFragmentsBar)
+    AddStatusBar(list, PetFrame.healthbar)
+    AddStatusBar(list, PetFrame.manabar)
+    local targets = { TargetFrame, FocusFrame }
+    for i = 1, 5 do
+        targets[#targets + 1] = _G["Boss" .. i .. "TargetFrame"]
+    end
+    for _, frame in pairs(targets) do
+        local main = frame.TargetFrameContent and frame.TargetFrameContent.TargetFrameContentMain
+        if main then
+            AddStatusBar(list, main.HealthBarsContainer.HealthBar)
+            AddStatusBar(list, main.ManaBar)
+        end
+    end
+    for i = 1, 4 do
+        local member = PartyFrame["MemberFrame" .. i]
+        if member then
+            AddStatusBar(list, member.HealthBarContainer.HealthBar)
+            AddStatusBar(list, member.ManaBar)
+        end
+    end
+    statusBars = list
+    return list
+end
+
+local function KeepStatusTextHidden(text, alpha)
+    if text.bbfStatusTextForcing then return end
+    text.bbfStatusTextAlpha = alpha
+    if BetterBlizzFramesDB.alwaysHideStatusBarTexts then
+        text.bbfStatusTextForcing = true
+        text:SetAlpha(0)
+        text.bbfStatusTextForcing = nil
+    end
+end
+
+local function ApplyStatusTextAlpha(text)
+    if not text then return end
+    if not text.bbfStatusTextAlpha then
+        text.bbfStatusTextAlpha = text:GetAlpha()
+        hooksecurefunc(text, "SetAlpha", KeepStatusTextHidden)
+    end
+    text:SetAlpha(text.bbfStatusTextAlpha)
+end
+
+function BBF.AlwaysHideStatusBarTexts()
+    if not BetterBlizzFramesDB.alwaysHideStatusBarTexts and not statusBars then return end
+    for _, bar in ipairs(GetStatusBars()) do
+        ApplyStatusTextAlpha(bar.TextString)
+        ApplyStatusTextAlpha(bar.LeftText)
+        ApplyStatusTextAlpha(bar.RightText)
+    end
+end
+
+function BBF.RefreshAlwaysHideStatusBarTexts()
+    BBF.AlwaysHideStatusBarTexts()
+    if BBF.UpdateManaOnlyTexts then
+        BBF.UpdateManaOnlyTexts()
+    end
+    if InCombatLockdown() then
+        BBF.RunAfterCombat(BBF.StatusBarTextExtra)
+    else
+        BBF.StatusBarTextExtra()
+    end
+end

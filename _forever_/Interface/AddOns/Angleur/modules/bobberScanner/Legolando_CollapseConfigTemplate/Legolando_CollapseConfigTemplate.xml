@@ -1,0 +1,238 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
+..\FrameXML\UI.xsd">
+
+    <!-- REQUIRES Legolando_CheckboxTemplate TO WORK! -->
+
+    <Script file="Legolando_CollapseConfigTemplate.lua"/>
+
+    <Button name="Legolando_CollapseConfig_SimpleSquareButtonTemplate_AngleurBobScan" virtual="true">
+        <Size x="26" y="26"/>
+        <Layers>
+            <Layer level="ARTWORK" textureSubLevel="1">
+                <Texture name="$parentIcon" file="Interface/BUTTONS/UI-OptionsButton" parentKey="icon">
+                    <Size x="16" y="16"/>
+                    <Anchors>
+                        <Anchor point="CENTER" x="0" y="0"/>
+                    </Anchors>
+                </Texture>
+            </Layer>
+        </Layers>
+        <KeyValues>
+            <KeyValue key="tooltip" value="Tooltip Text" type="string"/>
+        </KeyValues>
+        <Scripts>
+        <OnEnter>
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT", 0, -20)
+            GameTooltip:AddLine(self.tooltip)
+            GameTooltip:Show()
+        </OnEnter>
+        <OnLeave>
+            GameTooltip:Hide()
+        </OnLeave>
+        <OnMouseDown>
+            if self:IsEnabled() then
+            self.icon:SetPoint("CENTER", -1, -1);
+            end
+        </OnMouseDown>
+        <OnMouseUp>
+            self.icon:SetPoint("CENTER", 0, 0);
+        </OnMouseUp>
+        <OnDisable>
+            SetDesaturation(self.icon, true);
+            self.icon:SetAlpha(0.5);
+        </OnDisable>
+        <OnEnable>
+            SetDesaturation(self.icon, false);
+            self.icon:SetAlpha(1.0);
+        </OnEnable>
+        </Scripts>
+        <NormalTexture file="Interface\Buttons\SquareButtonTextures">
+        <TexCoords left="0.01562500" right="0.42187500" top="0.23437500" bottom="0.64062500"/>
+        </NormalTexture>
+        <PushedTexture file="Interface\Buttons\SquareButtonTextures">
+        <TexCoords left="0.45312500" right="0.85937500" top="0.23437500" bottom="0.64062500"/>
+        </PushedTexture>
+        <HighlightTexture file="Interface\Buttons\UI-Common-MouseHilight" alphaMode="ADD"/>
+    </Button>
+
+
+        <!-- FIXED? ==> Removed setAllPoints="true", no longer need to bury the border into a child frame for it to work, can just make the main frame inherit the template -->
+    <Frame name="Legolando_FixedSecureDialogBorderNoCenterTemplate_AngleurBobScan" virtual="true">
+      <Layers>
+        <Layer level="BACKGROUND">
+          <Texture parentKey="TopLeftCorner" atlas="UI-Frame-DiamondMetal-CornerTopLeft" useAtlasSize="true">
+            <Anchors>
+              <Anchor point="TOPLEFT"/>
+            </Anchors>
+          </Texture>
+          <Texture parentKey="TopRightCorner" atlas="UI-Frame-DiamondMetal-CornerTopRight" useAtlasSize="true">
+            <Anchors>
+              <Anchor point="TOPRIGHT"/>
+            </Anchors>
+          </Texture>
+          <Texture parentKey="BottomLeftCorner" atlas="UI-Frame-DiamondMetal-CornerBottomLeft" useAtlasSize="true">
+            <Anchors>
+              <Anchor point="BOTTOMLEFT"/>
+            </Anchors>
+          </Texture>
+          <Texture parentKey="BottomRightCorner" atlas="UI-Frame-DiamondMetal-CornerBottomRight" useAtlasSize="true">
+            <Anchors>
+              <Anchor point="BOTTOMRIGHT"/>
+            </Anchors>
+          </Texture>
+          <Texture parentKey="TopEdge" atlas="_UI-Frame-DiamondMetal-EdgeTop" useAtlasSize="true" horizTile="true">
+            <Anchors>
+              <Anchor point="TOPLEFT" relativeKey="$parent.TopLeftCorner" relativePoint="TOPRIGHT"/>
+              <Anchor point="TOPRIGHT" relativeKey="$parent.TopRightCorner" relativePoint="TOPLEFT"/>
+            </Anchors>
+          </Texture>
+          <Texture parentKey="BottomEdge" atlas="_UI-Frame-DiamondMetal-EdgeBottom" useAtlasSize="true" horizTile="true">
+            <Anchors>
+              <Anchor point="BOTTOMLEFT" relativeKey="$parent.BottomLeftCorner" relativePoint="BOTTOMRIGHT"/>
+              <Anchor point="BOTTOMRIGHT" relativeKey="$parent.BottomRightCorner" relativePoint="BOTTOMLEFT"/>
+            </Anchors>
+          </Texture>
+          <Texture parentKey="LeftEdge" atlas="!UI-Frame-DiamondMetal-EdgeLeft" useAtlasSize="true" vertTile="true">
+            <Anchors>
+              <Anchor point="TOPLEFT" relativeKey="$parent.TopLeftCorner" relativePoint="BOTTOMLEFT"/>
+              <Anchor point="BOTTOMLEFT" relativeKey="$parent.BottomLeftCorner" relativePoint="TOPLEFT"/>
+            </Anchors>
+          </Texture>
+          <Texture parentKey="RightEdge" atlas="!UI-Frame-DiamondMetal-EdgeRight" useAtlasSize="true" vertTile="true">
+            <Anchors>
+              <Anchor point="TOPRIGHT" relativeKey="$parent.TopRightCorner" relativePoint="BOTTOMRIGHT"/>
+              <Anchor point="BOTTOMRIGHT" relativeKey="$parent.BottomRightCorner" relativePoint="TOPRIGHT"/>
+            </Anchors>
+          </Texture>
+        </Layer>
+      </Layers>
+    </Frame>
+
+    <Frame name="Legolando_PortedSecureDialogBorderTemplate_AngleurBobScan" inherits="Legolando_FixedSecureDialogBorderNoCenterTemplate_AngleurBobScan" virtual="true">
+      <Layers>
+        <Layer level="BACKGROUND" textureSubLevel="-5">
+          <!-- TODO: Convert this to atlas -->
+          <Texture parentKey="Bg" file="Interface\DialogFrame\UI-DialogBox-Background" horizTile="true" vertTile="true">
+            <Anchors>
+              <Anchor point="TOPLEFT" x="7" y="-7"/>
+              <Anchor point="BOTTOMRIGHT" x="-7" y="7"/>
+            </Anchors>
+          </Texture>
+        </Layer>
+      </Layers>
+    </Frame>
+
+    <Button name="Legolando_CollapseConfigTemplate_AngleurBobScan" mixin="Legolando_CollapseConfigMixin_AngleurBobScan" inherits="Legolando_CollapseConfig_SimpleSquareButtonTemplate_AngleurBobScan" virtual="true">
+        <KeyValues>
+            <KeyValue key="savedVarTable" value="" type="table"/>
+        </KeyValues>
+        <Scripts>
+            <OnClick>
+                if self.popup:IsShown() then
+                    self.popup:Hide()
+                else
+                    self.popup:Show()
+                end
+            </OnClick>
+            <OnHide>
+                self.popup:Hide()
+            </OnHide>
+        </Scripts>
+        <Frames>
+            <Frame name="$parent_Popup" parentKey="popup" toplevel="true" inherits="Legolando_PortedSecureDialogBorderTemplate_AngleurBobScan" hidden="true" enableMouse="true">
+                <Size x="600" y="226"/>
+                <Anchors>
+                    <Anchor point="BOTTOM" relativeTo="$parent" relativePoint="TOP" x="0" y="0"/>
+                </Anchors>
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <FontString parentKey="title" inherits="GameFontNormal" text="Template Title">
+                        <Anchors>
+                            <Anchor point="TOP" x="0" y="-19"/>
+                        </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+                <Frames>
+                    <Frame name= "$parent_TempMaxZoom" parentKey="tempMaxZoom" inherits="SliderAndEditControlTemplate">
+                        <Anchors>
+                            <Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT" x="-30" y="-20"/>
+                        </Anchors>
+                    </Frame>
+                    <Frame name= "$parent_ScanWidth" parentKey="scanWidth" inherits="SliderAndEditControlTemplate">
+                        <Anchors>
+                            <Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT" x="-30" y="-60"/>
+                        </Anchors>
+                    </Frame>
+                    <Frame name= "$parent_ScanSpeed" parentKey="scanSpeed" inherits="SliderAndEditControlTemplate">
+                        <Anchors>
+                            <Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT" x="-30" y="-100"/>
+                        </Anchors>
+                    </Frame>
+                    <Frame name= "$parent_StartDelay" parentKey="startDelay" inherits="SliderAndEditControlTemplate">
+                        <Anchors>
+                            <Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT" x="-30" y="-140"/>
+                        </Anchors>
+                        <Layers>
+                            <Layer level="ARTWORK">
+                                <FontString parentKey="unitText" text="units" inherits="NumberFont_GameNormal">
+                                    <Anchors>
+                                        <Anchor point="TOPLEFT" relativeKey="$parent.ValueBox" relativePoint="BOTTOMLEFT" x="0" y="0"/>
+                                    </Anchors>
+                                </FontString>
+                            </Layer>
+                        </Layers>
+                    </Frame>
+                    <!-- <CheckButton name="$parent_DisableWarning" parentKey="disableWarning" inherits="CheckboxTemplate_Angleur">
+                        <Anchors>
+                            <Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT" x="18" y="15"/>
+                        </Anchors>
+                    </CheckButton> -->
+                    <Button name="$parent_Defaults" parentKey="defaults" text="Reset" inherits="IconButtonTemplate">
+                        <Size x="42" y="42"/>
+                        <Anchors>
+                            <Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT" x="-6" y="6"/>
+                        </Anchors>
+                        <KeyValues>
+                            <KeyValue key="icon" value="Interface\Buttons\UI-RefreshButton" type="string"/>
+                            <KeyValue key="iconSize" value="20" type="number"/>
+                        </KeyValues>
+                        <Layers>
+                            <Layer level="ARTWORK">
+                                <FontString name="$parent_Text" parentKey="text" text="Text" inherits="GameFontNormalLarge">
+                                    <Anchors>
+                                        <Anchor point="RIGHT" relativeTo="$parent" relativePoint="LEFT" x="0" y="0"/>
+                                    </Anchors>
+                                </FontString>
+                            </Layer>
+                        </Layers>
+                        <Scripts>
+                            <OnClick>
+                                <!-- self:GetParent():ResetPosition() -->
+                            </OnClick>
+                            <OnEnter>
+                                if not self.tooltip then return end
+                                GameTooltip:SetOwner(self, "ANCHOR_BOTTOMRIGHT", 0)
+                                GameTooltip:AddLine(self.tooltip)
+                                GameTooltip:Show()
+                            </OnEnter>
+                            <OnLeave>
+                                if not self.tooltip then return end
+                                GameTooltip:Hide()
+                            </OnLeave>
+                        </Scripts>
+                        <NormalTexture file="Interface\Buttons\UI-SquareButton-Up"/>
+                        <PushedTexture file="Interface\Buttons\UI-SquareButton-Down"/>
+                        <DisabledTexture file="Interface\Buttons\UI-SquareButton-Disabled"/>
+                        <HighlightTexture file="Interface\Buttons\UI-Common-MouseHilight" alphaMode="ADD"/>
+                    </Button>
+                    <Button parentKey="$parent.CloseButton" inherits="UIPanelCloseButton">
+                        <Anchors>
+                            <Anchor point="TOPRIGHT" x="-2" y="-2"/>
+                        </Anchors>
+                    </Button>
+                </Frames>
+            </Frame>
+        </Frames>
+    </Button>
+</Ui>

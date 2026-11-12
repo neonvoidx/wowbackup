@@ -1,0 +1,69 @@
+
+BtWLoadoutsCollapsed = {
+["equipment"] = {
+},
+["talents"] = {
+},
+["actionbars"] = {
+["children"] = {
+},
+},
+["pvptalents"] = {
+},
+["essences"] = {
+},
+["conditions"] = {
+},
+["dftalents"] = {
+},
+["profiles"] = {
+["children"] = {
+},
+},
+}
+BtWLoadoutsCategories = {
+["talents"] = {
+"spec",
+},
+["pvptalents"] = {
+"spec",
+},
+["profiles"] = {
+"spec",
+},
+["equipment"] = {
+"character",
+},
+["dftalents"] = {
+"spec",
+},
+["actionbars"] = {
+"spec",
+},
+["conditions"] = {
+},
+["soulbinds"] = {
+"covenant",
+},
+["essences"] = {
+"role",
+},
+}
+BtWLoadoutsFilters = {
+["equipment"] = {
+},
+["talents"] = {
+},
+["actionbars"] = {
+},
+["pvptalents"] = {
+},
+["essences"] = {
+},
+["conditions"] = {
+},
+["dftalents"] = {
+},
+["profiles"] = {
+},
+}

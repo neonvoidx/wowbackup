@@ -1,0 +1,915 @@
+-- SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+-- Copyright (c) 2022-2026 Thomas Floeren
+
+local _, ns = ...
+
+--[[===========================================================================
+	API
+===========================================================================]]--
+
+local C_PetJournal_PetIsFavorite = _G.C_PetJournal.PetIsFavorite
+local C_PetJournal_SetFavorite = _G.C_PetJournal.SetFavorite
+local C_PetJournal_GetPetInfoByIndex = _G.C_PetJournal.GetPetInfoByIndex
+
+local C_PetJournal_SummonPetByGUID  = _G.C_PetJournal.SummonPetByGUID
+local C_PetJournal_GetSummonedPetGUID = _G.C_PetJournal.GetSummonedPetGUID
+local C_PetJournal_GetPetInfoByPetID = _G.C_PetJournal.GetPetInfoByPetID
+local C_PetJournal_GetPetInfoBySpeciesID = _G.C_PetJournal.GetPetInfoBySpeciesID
+local C_PetJournal_FindPetIDByName = _G.C_PetJournal.FindPetIDByName
+local C_PetJournal_GetBattlePetLink = _G.C_PetJournal.GetBattlePetLink
+local C_PetJournal_GetOwnedBattlePetString = _G.C_PetJournal.GetOwnedBattlePetString
+local C_PetJournal_GetPetSummonInfo = _G.C_PetJournal.GetPetSummonInfo
+local C_Map_GetBestMapForUnit = _G.C_Map.GetBestMapForUnit
+local C_UnitAuras_GetPlayerAuraBySpellID = _G.C_UnitAuras.GetPlayerAuraBySpellID
+local InCombatLockdown = _G.InCombatLockdown
+local IsFlying = _G.IsFlying
+local IsFalling = _G.IsFalling
+-- local IsMounted = _G.IsMounted
+local UnitOnTaxi = _G.UnitOnTaxi
+local UnitHasVehicleUI = _G.UnitHasVehicleUI
+local IsPossessBarVisible = _G.IsPossessBarVisible
+local UnitIsGhost = _G.UnitIsGhost
+local UnitIsBattlePet = _G.UnitIsBattlePet
+local GetInstanceInfo = _G.GetInstanceInfo
+local IsInInstance = _G.IsInInstance
+local IsStealthed = _G.IsStealthed
+-- local UnitIsControlling = _G.UnitIsControlling
+local UnitChannelInfo = _G.UnitChannelInfo
+local C_PlayerInfo_GetGlidingInfo = C_PlayerInfo.GetGlidingInfo
+local GetInstanceInfo = _G.GetInstanceInfo
+local time = _G.time
+
+local debugprint = ns.debugprint
+
+--[[===========================================================================
+	Some Variables/Constants/Flags
+===========================================================================]]--
+
+ns.pool_initialized = false
+--[[ This prevents the "wrong" active pet from being saved. We get a "wrong" pet
+mainly after login, if the game summons the last active pet on this toon,
+instead of the last saved pet in our DB (which can be the last active pet of the
+alt we just logged out). Also when slotting a pet into a team in the Pet Journal
+(slot#1 gets force-summoned). Caution, to not lock out manually summoned pets
+from being saved.
+]]
+ns.pet_verified = false
+ns.in_battlesleep = false
+-- Last time AutoRestore() was called.
+local time_restore_pet = 0
+-- local time_save_pet = 0 -- What did we use this for? Debugging?
+local time_pool_msg = 0
+-- local time_transitioncheck = 0 -- What did we use this for? Debugging?
+local msg_onlyfavisactive_alreadydisplayed = false
+local time_responded_to_summoning_event = 0
+local throttle_min = 3
+local throttle = 0 --  throttle_min * 2
+-- local throttle_reason
+local bypass_throttle = false
+local savedpet_is_summonable = true
+local excluded_species = {
+-- Pet is vendor and goes on CD when summoned
+	280, -- Guild Page, Alliance
+	281, -- Guild Page, Horde
+	282, -- Guild Herald, Alliance
+	283, -- Guild Herald, Horde
+-- Pet is vendor/bank/mail, if the char has the Pony Bridle achievement (ID 3736).
+-- But it should be safe, bc CD starts only after activating the ability via dialog.
+-- 	214, -- Argent Squire (Alliance)
+-- 	216, -- Argent Gruntling (Horde)
+-- Self-despawns outside of Winter Veil event. Makes no sense to summon these.
+	1349, -- Rotten Little Helper
+	117, -- Tiny Snowman
+	119, -- Father Winter's Helper
+	120, -- Winter's Little Helper
+-- Pocopoc is special: he cannot be summoned in Zereth Mortis (1970)).
+-- See the extra checks in is_excluded_by_species() and transitioncheck().
+	3247, -- Pocopoc
+-- Dummy ID for debugging. Keep this commented out!
+-- 	2403, -- Abyssal Eel
+}
+
+-- https://warcraft.wiki.gg/wiki/DifficultyID
+-- https://warcraft.wiki.gg/wiki/Structure_DifficultyInfo
+local nopet_instance_difficulties = {
+	[8] = true, -- Mythic keystone; isChallengeMode
+-- 	[23] = true, -- Mythic dung
+-- 	[2] = true, -- Heroic dung
+	[16] = true, -- Mythic raid
+	[15] = true, -- Heroic raid
+}
+-- https://warcraft.wiki.gg/wiki/API:IsInInstance
+local nopet_instance_types = {
+	['arena'] = true, -- PvP arena
+-- 	['pvp'] = true, -- PvP battleground
+-- 	['raid'] = true, -- PvE raid
+}
+
+ns.in_nopet_instance = nil
+
+-- Debug
+ns.time_summonspell = 0
+
+--[[---------------------------------------------------------------------------
+	Summoning prevention
+---------------------------------------------------------------------------]]--
+
+-- Besides combat lockdown, this is the only test we use with manual summoning
+local function is_inair()
+	return IsFlying() or IsFalling() or UnitOnTaxi 'player'
+end
+
+-- Other possibility: UnitPowerBarID('player') == 631
+local function is_skyride_mounted()
+	return select(2, C_PlayerInfo_GetGlidingInfo())
+end
+
+
+local function nopet_instance()
+	local _, type, diff_id = GetInstanceInfo()
+	debugprint('‹nopet_instance()›: type:', type, '; difficulty ID:', diff_id)
+	if type == 'none' or diff_id == 0 or ns.db.instanceMode == 0 then return false end
+	if
+		ns.db.instanceMode == 2
+		or ns.db.instanceMode == 1
+			and (nopet_instance_difficulties[diff_id] or nopet_instance_types[type])
+	then
+		return true
+	end
+end
+
+-- To test against if pet-on-back aura is found (AFAIK, only Daisy)
+local function saved_pet_is_backpet()
+	local backpet = 2780 -- Daisy
+	local db = ns.dbc.charFavsEnabled and ns.db.favsOnly and ns.dbc or ns.db
+	return ns.id_to_species(db.recentPets[1]) == backpet
+end
+
+-- To test against if pet-on-shoulder aura is found
+local function saved_pet_is_shoulderpet()
+	local shoulderpets = { 2526, 1997, 2185 } -- Feathers, Crackers, Cap'n Crackers
+	local db = ns.dbc.charFavsEnabled and ns.db.favsOnly and ns.dbc or ns.db
+	for _, species in ipairs(shoulderpets) do
+		if ns.id_to_species(db.recentPets[1]) == species then return true end
+	end
+end
+
+-- To be called from autoaction (and - testwise- from transitioncheck)
+local function stop_auto_summon(now)
+
+	-- Base/existing throttle
+
+	if not bypass_throttle then
+		throttle = max(throttle, throttle_min)
+		now = now or time()
+		if now - time_responded_to_summoning_event < throttle then
+			debugprint('‹stop_auto_summon()›: existing throttle found:', throttle)
+			return true
+		end
+		time_responded_to_summoning_event, throttle = now, 0
+	end
+
+	-- Prevent summoning and add extra throttle
+
+-- 	throttle_reason = nil
+	-- Impossible to summon in flight, but this prevents wrong 'restored' messages
+	if is_inair() then
+		throttle = 5 -- throttle_reason = 'inair'
+		debugprint 'We are in the air!'
+	elseif InCombatLockdown()
+		or not ns.db.drSummoning and is_skyride_mounted()
+		or IsStealthed() -- Includes Hunter Camouflage
+		or C_UnitAuras_GetPlayerAuraBySpellID(32612) -- Mage: Invisibility
+		or C_UnitAuras_GetPlayerAuraBySpellID(110960) -- Mage: Greater Invisibility
+		or C_UnitAuras_GetPlayerAuraBySpellID(131347) -- DH: Gliding -- Prolly not needed, should be caught by IsFlying() (?)
+-- 		or C_UnitAuras_GetPlayerAuraBySpellID(5384) -- Hunter: Feign Death (only useful if we use a different event than PLAYER_STARTED_MOVING)
+		-- *Any* channeling. Also prevents interrupting a Fishing channel that was started while still mounted.
+		or UnitChannelInfo 'player' -- Cata/Classic: `ChannelInfo()`
+	then
+		throttle = 10
+	elseif UnitIsGhost 'player'
+		-- Still needed? Why did we add this? Maybe covered by the newly added `HasVehicleActionBar()`?
+		or UnitHasVehicleUI 'player'
+		-- Controller toys etc. and some quests; coincides sometimes with `HasVehicleActionBar()` (not in case of aura 212754!)
+		or IsPossessBarVisible()
+		 -- Quest 'The Hole Deal' (84142) and 'Boomball' (85263) in TWW Undermine zone; possibly more, who knows.
+		 -- Also Mr. Delver in the Sidestreet delve.
+		or HasVehicleActionBar()
+		-- This is the only one that is true when we have the D.R.I.V.E. UI.
+		-- But so far there aren't any conflicts. Let's see if users report some.
+		-- or HasOverrideActionBar()
+
+		-- Potentially useful (1): `CanExitVehicle()`, `UnitInVehicle 'player'`
+
+		-- Potentially useful (2); this is the 1-button bar with the ExtraActionButton.
+		-- This would cover things like the aura 467865 (Sunrise Sudser), used in WQ 85390 in Undermine. (This particular aura
+		-- gives the player a sort of channeling, but not really, though it does get interrupted by pet summoning.) However,
+		-- this is not critical because – unlike the above vehicle-like stuff – the ExtraActionBar usually does not force-dismiss
+		-- the pet, so it is unlikely that it triggers a pet summoning by PW. And if it really does, the user can simply click
+		-- the ExtraActionButton again.
+		-- If we use this, we would also disable PW in many situations where it is absolutely not necessary (and not desirable).
+		-- HasExtraActionBar()
+
+		-- Note: The action bar modification by Skyriding is a so called Bonus Bar.
+
+		-- Daisy pet as backpack (/beckon). Disappears when Daisy is summoned.
+		or C_UnitAuras_GetPlayerAuraBySpellID(311796) and saved_pet_is_backpet() -- Daisy
+		-- Pets on shoulder (/whistle). Disappears when any of the "shoulder pets" is summoned.
+		or C_UnitAuras_GetPlayerAuraBySpellID(302954) and saved_pet_is_shoulderpet() -- Feathers
+		or C_UnitAuras_GetPlayerAuraBySpellID(232871) and saved_pet_is_shoulderpet() -- Crackers
+		or C_UnitAuras_GetPlayerAuraBySpellID(286268) and saved_pet_is_shoulderpet() -- Cap'n Crackers
+
+		-- Game events
+		or C_UnitAuras_GetPlayerAuraBySpellID(312993) -- Carrying Forbidden Tomes (Scrivener Lenua event, Revendreth)
+		or C_UnitAuras_GetPlayerAuraBySpellID(43880) -- Ramstein's Swift Work Ram (Brewfest daily; important bc the quest cannot be restarted if messed up)
+		or C_UnitAuras_GetPlayerAuraBySpellID(43883) -- Rental Racing Ram (Brewfest daily)
+	then
+		throttle = 40
+	end
+	if throttle > 0 then
+		debugprint('‹stop_auto_summon()›: new throttle:', throttle)
+		return true
+	end
+
+end
+
+-- For a manual action, we don't want all the checks from `stop_auto_summon` or a throttle.
+-- Combat check is needed though to not generate errors.
+local function stop_manual_summon()
+	if InCombatLockdown() or is_inair() then
+		ns.msg_manual_summon_stopped()
+		return true
+	end
+end
+
+--[[---------------------------------------------------------------------------
+	Unsummonable pets (faction-locked pets)
+---------------------------------------------------------------------------]]--
+
+--[[ This can happen when…
+- Restore: Logging in to other-faction alt and the saved pet is locked to the previous toon's faction.
+- Random summon: A faction-locked pet that is not detectable as such (Blizz bug, see below) gets selected from the pool.
+]]
+
+local unsummonable_species
+local player_faction = UnitFactionGroup 'player'
+
+-- Add only pets here that are bugged, i.e. not detected as unsummonable by `GetPetSummonInfo`.
+if player_faction == 'Alliance' then
+	unsummonable_species = {
+		[2777] = true, -- Gillvanas
+		[342] = true, -- Festival Lantern
+		[332] = true, -- Horde Balloon
+	}
+else
+	unsummonable_species = {
+		[2778] = true, -- Finduin
+		[341] = true, -- Lunar Lantern
+		[331] = true, -- Alliance Balloon
+	}
+end
+
+local EnumPetJournalError = _G.Enum.PetJournalError
+-- Couldn't find a Blizz constant for the string
+-- This should match the output of C_PetJournal.GetPetSummonInfo for Enum.PetJournalError.InvalidFaction (3).
+local ERROR_TEXT_WRONG_PET_FACTION = 'You are not the right faction for this companion.'
+
+local function is_pet_summonable(guid)
+	local is_summonable, error_num, error_text
+	local species_id = ns.id_to_species(guid)
+	if species_id and unsummonable_species[species_id] then
+		is_summonable, error_num, error_text = false, EnumPetJournalError.InvalidFaction, ERROR_TEXT_WRONG_PET_FACTION
+	else
+		is_summonable, error_num, error_text = C_PetJournal_GetPetSummonInfo(guid)
+	end
+	if not is_summonable then
+		return false, error_num, error_text
+	end
+	return true
+end
+
+--[[
+TODO: Rework this function:
+- Since implementation of history we can have more than one "previous" pets
+- A nil at index 2 will stop the iteration! --> done
+See https://github.com/tflo/PetWalker/issues/28
+]]
+function ns.saved_pet_summonability_check() --- After login
+	local priorities, perchar = {}, nil
+
+	if ns.dbc.charFavsEnabled then
+		perchar = true
+		priorities = {
+			ns.dbc.recentPets[1],
+			ns.dbc.recentPets[2],
+			ns.db.recentPets[1],
+			ns.db.recentPets[2]
+		}
+	else
+		priorities = {
+			ns.db.recentPets[1],
+			ns.db.recentPets[2],
+			ns.dbc.recentPets[1],
+			ns.dbc.recentPets[2],
+		}
+	end
+
+	for i, guid in pairs(priorities) do
+		if guid then
+			local is_summonable, error_num, error_text = is_pet_summonable(guid)
+			if i == 1 then
+				if is_summonable then return end
+				ns.msg_saved_pet_unsummonable(error_text, error_num)
+			else
+				if is_summonable then
+					if perchar then
+						ns.dbc.recentPets[1] = guid
+					else
+						ns.db.recentPets[1] = guid
+					end
+					return
+				end
+			end
+		elseif i == 1 then
+			return
+		end
+	end
+	ns.msg_previous_pet_unsummonable()
+	savedpet_is_summonable = false
+end
+
+--[[===========================================================================
+	Main actions
+===========================================================================]]--
+
+--[[ To be used only in func initialize_pool and is_excluded_by_id ]]
+local function is_excluded_by_species(spec)
+	for _, e in ipairs(excluded_species) do
+		if e == spec then
+			if e ~= 3247 or ns.current_zone == 1970 then -- Pocopoc
+				return true
+			end
+		end
+	end
+	return false
+end
+
+--[[ To be used only in func new_pet and save_pet ]]
+local function is_excluded_by_id(id)
+	local species_id = C_PetJournal_GetPetInfoByPetID(id)
+	return is_excluded_by_species(species_id)
+end
+
+--[[---------------------------------------------------------------------------
+	Auto action
+	The main function that runs when player started moving. It decides whether to
+	restore a lost pet, or summon a new one (if the timer is set and due).
+---------------------------------------------------------------------------]]--
+
+function ns.autoaction()
+	local now = time()
+	if stop_auto_summon(now) then return end
+	if ns.db.newPetTimer ~= 0 then
+		if ns.remaining_timer(now) == 0 then
+			ns.debugprint_pet '‹autoaction()› calls ‹new_pet()›'
+			ns:new_pet(now, false)
+			return
+		end
+	end
+	-- TODO: Could we not simply check against the saved db pet, and restore if it isn't correct or missing?
+	if not ns.pet_verified then
+		ns.debugprint_pet '‹autoaction()› calls ‹transitioncheck()›, pet not verified'
+		ns.transitioncheck(true)
+		return
+	end
+	local actpet = C_PetJournal_GetSummonedPetGUID()
+	if not actpet then
+		ns.debugprint_pet '‹autoaction()› calls ‹restore_pet()›'
+		ns:restore_pet()
+	end
+end
+
+--[[---------------------------------------------------------------------------
+	Restore pet
+---------------------------------------------------------------------------]]--
+
+function ns:restore_pet()
+	local now = time()
+	local savedpet
+	local db = ns.dbc.charFavsEnabled and ns.db.favsOnly and ns.dbc or ns.db
+	savedpet = db.recentPets[1]
+	time_restore_pet = now
+	if savedpet then
+		debugprint '‹restore_pet()› restored saved pet'
+		ns.set_sum_msg_to_restore_pet(savedpet)
+		ns.pet_restored = true
+		ns:summon_pet(savedpet, false)
+	else
+		debugprint '‹restore_pet()› COULD NOT FIND SAVED PET. Summoning new pet via Blizz ‹SummonRandomPet()›'
+		ns.msg_no_saved_pet()
+		-- Do not use `new_pet()` as fallback, since it isn't guaranteed that the user has a valid pool.
+		-- (e.g. set to char favs and no char favs defined)
+		-- `false` to summon any, `true` for favorites.
+		C_PetJournal.SummonRandomPet(false)
+	end
+end
+
+--[[---------------------------------------------------------------------------
+	New pet - timer is due, or via command/key
+---------------------------------------------------------------------------]]--
+
+function ns:new_pet(the_time, manually_called)
+	if manually_called and stop_manual_summon() then return end
+	debugprint('‹new_pet()› called; manually:', manually_called)
+	local now = the_time or time()
+	if now - ns.time_newpet_success < 1.5 then return end
+	local actpet = C_PetJournal_GetSummonedPetGUID()
+	-- TODO: if not manually_called, should we also prevent Argent Squire from being replaced?
+	-- See line 77; not really urgent, since the user simply can avoid moving, and additionally
+	-- the bank/mail of Argent Squire does not restart the CD when closed.
+	if actpet and is_excluded_by_id(actpet) then
+		debugprint '‹new_pet()›: ‹actpet› is excluded'
+		return
+	end
+	if not ns.pool_initialized then
+		debugprint '‹new_pet()› calls ‹initialize_pool()›'
+		ns.initialize_pool()
+	end
+
+	local pool = ns.pet_pool
+		or random() <= ns.db.favsProbability and ns.pet_pool_favs
+		or ns.pet_pool_other
+		or {}
+
+	local npool = #pool
+	local newpet
+	if npool == 0 then
+		if now - time_pool_msg > 90 then
+			ns.msg_low_petpool(npool)
+			time_pool_msg = now
+		end
+		-- We are intentionally no longer summoning a fallback pet here.
+		-- See the loop issue https://github.com/tflo/PetWalker/issues/20.
+		-- Also, it may just confuse the user if we show the "low pet pool" warning and in the same moment
+		-- summon a new (and unrelated) pet. The next auto-summon trigger will restore the saved pet anyway.
+		debugprint '‹new_pet()›: zero pet pool, warning msg on cooldown'
+	else
+		if npool == 1 then
+			newpet = pool[1]
+			if actpet == newpet then
+				if not msg_onlyfavisactive_alreadydisplayed or manually_called then
+					ns.msg_onlyfavisactive(actpet)
+					msg_onlyfavisactive_alreadydisplayed = true
+				end
+				return
+			end
+		else
+			repeat
+				newpet = pool[random(npool)]
+			until actpet ~= newpet
+		end
+		ns.set_sum_msg_to_newpet(newpet, pool, npool)
+		ns:summon_pet(newpet, true)
+		ns.pool = pool
+	end
+end
+
+--[[---------------------------------------------------------------------------
+	Summon previous
+---------------------------------------------------------------------------]]--
+
+function ns.previous_pet()
+	if stop_manual_summon() then return end
+	local db = ns.dbc.charFavsEnabled and ns.db.favsOnly and ns.dbc or ns.db
+	if #db.recentPets > 1 then
+		-- Rotate: move current (1) to end
+		local current = table.remove(db.recentPets, 1)
+		table.insert(db.recentPets, current)
+		ns.set_sum_msg_to_previouspet(db.recentPets[1])
+		ns:summon_pet(db.recentPets[1], true)
+	else
+		ns.msg_no_previous_pet()
+	end
+end
+
+--[[---------------------------------------------------------------------------
+	Summon targeted pet
+---------------------------------------------------------------------------]]--
+
+function ns.summon_targetpet()
+	if stop_manual_summon() then return end
+	if not UnitIsBattlePet 'target' then
+		ns.msg_target_is_not_battlepet()
+		return
+	end
+
+	local target_species_id = UnitBattlePetSpeciesID 'target'
+	local target_pet_name = C_PetJournal_GetPetInfoBySpeciesID(target_species_id) or ''
+	local _, tarpet = C_PetJournal_FindPetIDByName(target_pet_name)
+	local target_pet_link = tarpet and C_PetJournal_GetBattlePetLink(tarpet) or '[link: UNKNOWN]'
+
+	if not C_PetJournal_GetOwnedBattlePetString(target_species_id) then
+		if not UnitIsBattlePetCompanion 'target' then
+			ns.msg_target_is_not_companion_battlepet(target_pet_name)
+		else
+			ns.msg_target_not_in_collection(target_pet_link, target_pet_name)
+		end
+		return
+	end
+
+	local current_pet = C_PetJournal_GetSummonedPetGUID()
+
+	if not current_pet or C_PetJournal_GetPetInfoByPetID(current_pet) ~= target_species_id then
+		ns:summon_pet(tarpet, true)
+		ns.msg_target_summoned(target_pet_link)
+	else
+		ns.msg_target_is_same(target_pet_link) -- Without web link
+		-- ns.msg_target_is_same(target_pet_link, target_pet_name) -- With web link
+	end
+end
+
+--[[----------------------------------------------------------------------------
+	Transition check
+	One time action, after big transitions, like login, portals, entering instance, etc.
+	Basically a standalone restore_pet func; in addition, it not only checks for presence
+	of a pet, but also against the saved pet. This makes sure that a newly logged toon gets
+	the same pet as the previous toon had at logout. We need more checks here than in
+	restore_pet, as restore_pet is prefiltered by autoaction, and here we are not.
+----------------------------------------------------------------------------]]--
+
+-- Called by:
+-- PLAYER_ENTERING_WORLD
+-- PLAYER_MAP_CHANGED
+-- PET_BATTLE_OVER
+-- ns.autoaction (true)
+-- PetWalkerCharFavsCheckbox OnClick script
+-- ns.instance_toggle
+-- ns.auto_toggle
+
+function ns.transitioncheck(checks_done)
+	if not checks_done then
+		if ns.is_initial_login then
+			ns.saved_pet_summonability_check()
+			ns.is_initial_login = nil
+		end
+		if nopet_instance() then
+			ns.events:unregister_summon_events()
+			ns.dismiss_pet()
+			ns.in_nopet_instance = true
+			ns.msg_nopet_instance_entered()
+			return
+		else
+			-- User may change the setting while autoEnabled is off
+			if ns.db.autoEnabled then
+				-- This must be the *only* place where register_summon_events is called!
+				ns.events:register_summon_events()
+			end
+			if ns.in_nopet_instance then
+				ns.msg_nopet_instance_left()
+			end
+			ns.in_nopet_instance = nil
+		end
+	end
+	-- Can be called from e.g. the login/instance events, or `autoaction`.
+	-- In the latter case, the checks are already done.
+	-- Never run the stop_auto_summon check twice, as the 2nd one will always find a throttle.
+	-- `checks_done` is true currently only when called by `autoaction`.
+
+	-- TOOD:
+	-- Don't do `stop_auto_summon` here.
+	-- Don't do `new_pet` here.
+	-- Just do verifications and `savepet`, and pass to `autoaction`.
+
+	if not checks_done and stop_auto_summon() then
+		debugprint(
+			'‹transitioncheck()› stopped by ‹stop_auto_summon()›; ‹pet_verified›:',
+			ns.pet_verified
+		)
+		return
+	end
+	local now = time()
+	--[[ If toon starts moving immediately after transition, then `restore_pet`
+	might come before us. Also prevents redundant run in case we use both events
+	NEW_AREA and ENTERING_WORLD. ]]
+	if now - time_restore_pet < 6 then
+		debugprint('‹transitioncheck()› aborted; less than 6s since ‹restore_pet()›')
+		return
+	end
+	-- TODO: leverage nopet_instance() to get the instance ID
+	ns.current_zone = C_Map_GetBestMapForUnit 'player'
+	local savedpet
+	-- TODO: shouldn't we initialize here instead?!
+	ns:cfavs_update()
+	local actpet = C_PetJournal_GetSummonedPetGUID()
+	local db = ns.dbc.charFavsEnabled and ns.db.favsOnly and ns.dbc or ns.db
+	if not actpet or actpet ~= db.recentPets[1] then savedpet = db.recentPets[1] end
+	if ns.current_zone == 1970 then -- Pocopoc issue
+		if ns.id_to_species(savedpet) == 3247 or ns.id_to_species(actpet) == 3247 then
+			savedpet = db.recentPets[2]
+		end
+	end
+	if savedpet and savedpet_is_summonable then
+		debugprint '‹transitioncheck()› restores saved pet'
+		ns.set_sum_msg_to_transcheck(savedpet)
+		ns:summon_pet(savedpet, false)
+	--[[ Should only come into play if savedpet is still nil due to a slow
+	loading process ]]
+	elseif not actpet then
+		debugprint '‹transitioncheck()› could not find saved pet; summoning new pet'
+		ns.msg_no_saved_pet()
+		ns:new_pet(now, false)
+	end
+	-- TODO: Do we still need this timestamp?
+	time_restore_pet = now
+	--[[ This is not 100% reliable here, but should do the trick most of the time. ]]
+	ns.pet_verified, savedpet_is_summonable = true, true
+	-- Because we are unregistering now with every type of PLAYER_ENTERING_WORLD
+	-- HACK: Called separately after entering world, bc of the possible early return
+	-- ns.events:register_summon_events()
+	debugprint '‹transitioncheck()› completed'
+end
+
+--[[---------------------------------------------------------------------------
+	Save pet
+	Triggered by COMPANION_UPDATE
+---------------------------------------------------------------------------]]--
+
+function ns.save_pet()
+	-- Flag must be unset …
+	-- when a pet is force-summoned by the Pet Journal when we put in a team slot,
+	-- after entering world events.
+	if not ns.pet_verified then
+		debugprint '‹save_pet()› ABORTED, pet not verified'
+		return
+	end
+	local actpet = C_PetJournal_GetSummonedPetGUID()
+	if not actpet or is_excluded_by_id(actpet) then
+		debugprint '‹save_pet()› ABORTED, no ‹actpet› or ‹actpet› is excluded'
+		return
+	end
+	-- NewRecents
+	local db = ns.dbc.charFavsEnabled and ns.db.favsOnly and ns.dbc or ns.db
+	if db.recentPets[1] == actpet then return end
+	for i = #db.recentPets, 1, -1 do
+		if db.recentPets[i] == actpet then
+			table.remove(db.recentPets, i)
+			debugprint('‹save_pet()› deduped recent pets at idx:', i)
+			-- ns.msg_recents_dupe_removed(i)
+		end
+	end
+	table.insert(db.recentPets, 1, actpet)
+	while #db.recentPets > ns.db.numRecents do
+		table.remove(db.recentPets)
+	end
+	-- TOOD:
+	-- ns.time_newpet_success = now
+	-- debugprint 'Timer reset by save_pet()'
+	ns.debugprint_pet '‹save_pet()› completed'
+end
+
+--[[---------------------------------------------------------------------------
+	Summon Pet
+	Used in the Auto Summon function, and currently also in the
+	Manual Summon function
+---------------------------------------------------------------------------]]--
+
+function ns:summon_pet(pet, resettimer)
+	if not pet then -- TODO: needed?
+		debugprint '‹summon_pet()› called without ‹pet› arg!'
+		return
+	end
+	if ns.db.debugMode then
+		local is_summonable, error_num, error_text = C_PetJournal_GetPetSummonInfo(pet)
+		if not is_summonable then
+			debugprint(
+				'‹summon_pet()›: Something is wrong with our summonability check: pet cannot be summoned, ‹GetPetSummonInfo()› returned',
+				is_summonable,
+				error_num,
+				error_text
+			)
+			return
+		end
+	end
+	local now = time()
+	ns.pet_verified = true
+	if resettimer then
+		ns.time_newpet_success = now
+		-- TOOD:
+		-- debugprint 'Timer reset by summon_pet()'
+	end
+	ns.msg_pet_summon_success()
+	C_PetJournal_SummonPetByGUID(pet)
+end
+
+--[[===========================================================================
+	Pet pool
+	Creating the POOL, from where the random pet is summoned.
+	This can be, depending on user setting:
+	— Global favorites
+	— Per-character favorites
+	— All available pets (except the exclusions). Note that this is affected by the
+	filter settings in the Pet Journal, which means the player can create custom
+	pools without changing his favorites.
+===========================================================================]]--
+
+local function clean_charfavs()
+	local count, link = 0, nil
+	for id, _ in pairs(ns.dbc.charFavs) do
+		link = C_PetJournal_GetBattlePetLink(id)
+		if not link then
+			ns.dbc.charFavs[id] = nil
+			count = count + 1
+		end
+	end
+	if count > 0 then ns.msg_removed_invalid_id(count) end
+end
+
+local function can_add_to_pool(species_id, pet_id)
+	return not is_excluded_by_species(species_id) and is_pet_summonable(pet_id)
+end
+
+function ns.initialize_pool(rerun)
+	local pet_pool, pet_pool_favs, pet_pool_other = {}, {}, {}
+	debugprint('‹initialize_pool()› called; rerun:', rerun)
+	clean_charfavs()
+	local now = time()
+	local can_send_warning = now - time_pool_msg > 90 and ns.db.newPetTimer ~= 0
+	local idx = 1
+	if ns.db.favsOnly then
+		-- "Favs Only"
+		pet_pool_favs, pet_pool_other = nil, nil
+		while true do
+			local pet_id, species_id, _, _, _, favorite = C_PetJournal_GetPetInfoByIndex(idx)
+			if not pet_id then break end
+			if favorite and can_add_to_pool(species_id, pet_id) then
+				table.insert(pet_pool, pet_id)
+			end
+			idx = idx + 1
+		end
+	elseif ns.db.favsProbability == 1 then
+		-- "All equal", treat favs as regulars
+		pet_pool_favs, pet_pool_other = nil, nil
+		while true do
+			local pet_id, species_id = C_PetJournal_GetPetInfoByIndex(idx)
+			if not pet_id then break end
+			if can_add_to_pool(species_id, pet_id) then table.insert(pet_pool, pet_id) end
+			idx = idx + 1
+		end
+	elseif ns.db.favsProbability == 0 then
+		-- "Regulars Only"
+		pet_pool_favs, pet_pool_other = nil, nil
+		while true do
+			local pet_id, species_id, _, _, _, favorite = C_PetJournal_GetPetInfoByIndex(idx)
+			if not pet_id then break end
+			if not favorite and can_add_to_pool(species_id, pet_id) then
+				table.insert(pet_pool, pet_id)
+			end
+			idx = idx + 1
+		end
+	else
+		-- "Mixed", two pools
+		while true do
+			local pet_id, species_id, _, _, _, favorite = C_PetJournal_GetPetInfoByIndex(idx)
+			if not pet_id then break end
+			if can_add_to_pool(species_id, pet_id) then
+				if favorite then
+					table.insert(pet_pool_favs, pet_id)
+				else
+					table.insert(pet_pool_other, pet_id)
+				end
+			end
+			idx = idx + 1
+		end
+		-- Foce-fix a low/zero pet pool.
+		-- TODO: We should first try to clear any filters and search box text in th PJ, and
+		-- only in a second step force-change PW's settings.
+		if #pet_pool_favs < 1 or #pet_pool_other < 1 then
+			ns.db.favsProbability = 1
+			ns.msg_force_changed_pool()
+			pet_pool = #pet_pool_other > 0 and pet_pool_other or pet_pool_favs
+			pet_pool_favs, pet_pool_other = nil, nil
+		else
+			pet_pool = nil
+		end
+	end
+
+	if pet_pool and #pet_pool < 1 then
+		if rerun then
+			if ns.db.newPetTimer ~= 0 then
+				ns.db.newPetTimer = 0
+				ns.db.newPetTimer_reset_by_pw = true
+			end
+			if can_send_warning then
+				ns.msg_low_petpool(#pet_pool)
+				time_pool_msg = now
+			end
+		else
+			if ns.db.favsOnly ~= false then
+				ns.db.favsOnly = false
+				ns.db.favsOnly_reset_by_pw = true
+			end
+			if ns.db.favsProbability ~= 1 then
+				ns.db.favsProbability = 1
+				ns.db.favsProbability_reset_by_pw = true
+			end
+			ns.msg_force_changed_pool()
+			ns.initialize_pool(true)
+		end
+		debugprint '‹initialize_pool()› failed!'
+		return
+	end
+
+	ns.pool_initialized = true
+	ns.pet_pool_favs, ns.pet_pool_other, ns.pet_pool =
+		pet_pool_favs, pet_pool_other, pet_pool
+	debugprint '‹initialize_pool()› completed'
+end
+
+--[[===========================================================================
+	Char Favs
+===========================================================================]]--
+
+local C_PetJournal_PetIsFavorite1, C_PetJournal_SetFavorite1, C_PetJournal_GetPetInfoByIndex1
+
+-- Largely unaltered code from NugMiniPet
+function ns.cfavs_update()
+	debugprint '‹cfavs_update()› called'
+	if ns.dbc.charFavsEnabled then
+		C_PetJournal_PetIsFavorite1 = C_PetJournal_PetIsFavorite1 or C_PetJournal_PetIsFavorite
+		C_PetJournal_SetFavorite1 = C_PetJournal_SetFavorite1 or C_PetJournal_SetFavorite
+		C_PetJournal_GetPetInfoByIndex1 = C_PetJournal_GetPetInfoByIndex1 or C_PetJournal_GetPetInfoByIndex
+		C_PetJournal_PetIsFavorite = function(petGUID) return ns.dbc.charFavs[petGUID] or false end
+		C_PetJournal_SetFavorite = function(petGUID, new)
+			if new == 1 then
+				ns.dbc.charFavs[petGUID] = true
+			else
+				ns.dbc.charFavs[petGUID] = nil
+			end
+			if PetJournal then PetJournal_OnEvent(PetJournal, 'PET_JOURNAL_LIST_UPDATE') end
+			ns:PET_JOURNAL_LIST_UPDATE() -- Do not remove this
+		end
+		local gpi = C_PetJournal_GetPetInfoByIndex1
+		C_PetJournal_GetPetInfoByIndex = function(...)
+			local petGUID, speciesID, isOwned, customName, level, favorite, isRevoked, name, icon, petType, creatureID, sourceText, description, isWildPet, canBattle, arg1, arg2, arg3 = gpi(...)
+			local customFavorite = C_PetJournal_PetIsFavorite(petGUID)
+			return petGUID, speciesID, isOwned, customName, level, customFavorite, isRevoked, name, icon, petType, creatureID, sourceText, description, isWildPet, canBattle, arg1, arg2, arg3
+		end
+	else
+		if C_PetJournal_PetIsFavorite1 then C_PetJournal_PetIsFavorite = C_PetJournal_PetIsFavorite1 end
+		if C_PetJournal_SetFavorite1 then C_PetJournal_SetFavorite = C_PetJournal_SetFavorite1 end
+		if C_PetJournal_GetPetInfoByIndex1 then C_PetJournal_GetPetInfoByIndex = C_PetJournal_GetPetInfoByIndex1 end
+	end
+	_G.C_PetJournal.PetIsFavorite = C_PetJournal_PetIsFavorite
+	_G.C_PetJournal.SetFavorite = C_PetJournal_SetFavorite
+	_G.C_PetJournal.GetPetInfoByIndex = C_PetJournal_GetPetInfoByIndex
+	if PetJournal then PetJournal_OnEvent(PetJournal, 'PET_JOURNAL_LIST_UPDATE') end
+	ns:PET_JOURNAL_LIST_UPDATE() -- Do not remove this
+	debugprint '‹cfavs_update()› completed'
+end
+
+--[[===========================================================================
+	GUI stuff for Pet Journal
+===========================================================================]]--
+
+--[[
+We disabled most of the GUI elements, since now we have more settings than we
+can fit there. We leave the CharFavorites checkbox, because it makes sense to
+see at a glance (in the opened Pet Journal) what type of favs are enabled.
+]]
+
+function ns:create_cfavs_checkbox()
+	local btn =
+		CreateFrame('CheckButton', 'PetWalkerCharFavsCheckbox', PetJournal, 'UICheckButtonTemplate')
+	btn:SetSize(26, 26)
+	btn:SetHitRectInsets(-2, -80, -2, -2)
+	btn:SetPoint('BOTTOMLEFT', PetJournal, 'BOTTOMLEFT', 400, 1)
+	-- btn:SetChecked(ns.dbc.charFavsEnabled)
+	btn:SetScript('OnEnter', function(self)
+		GameTooltip:SetOwner(self, 'ANCHOR_TOPLEFT')
+		GameTooltip:AddLine('\124cnDIM_GREEN_FONT_COLOR:PetWalker')
+		GameTooltip:AddLine(
+			'Select this to use per-character favorites, or toggle with \124cnORANGE_FONT_COLOR:/pw c\124r.'
+		)
+		GameTooltip:AddLine(
+			'Toggle favs/all: \124cnORANGE_FONT_COLOR:/pw f\124r | Status: \124cnORANGE_FONT_COLOR:/pw s\124r | Help & all commands: \124cnORANGE_FONT_COLOR:/pw h\124r'
+		)
+		GameTooltip:Show()
+	end)
+	btn:SetScript('OnClick', function()
+		ns.dbc.charFavsEnabled = not ns.dbc.charFavsEnabled
+		if ns.db.autoEnabled then
+			-- TODO: We should bypass the throttle from `stop_auto_summon` here; otherwise `cfavs_update`
+			-- inside `transitioncheck` will not run if the user ticks/unticks quickly.
+			-- Or run `cfavs_update` here and pass a `cfavs_update_done` flag to `transitioncheck`.
+			ns.transitioncheck()
+		else
+			ns:cfavs_update()
+		end
+	end)
+	btn:SetScript('OnLeave', function() GameTooltip:Hide() end)
+	local label = btn:CreateFontString(nil, 'OVERLAY')
+	label:SetFontObject(GameFontNormal)
+	label:SetPoint('LEFT', btn, 'RIGHT', 0, 0)
+	label:SetText 'Char Favs (PW)'
+	return btn, label
+end

@@ -1,0 +1,84 @@
+
+WhisperMessengerDB = {
+["pendingHydration"] = {
+},
+["settings"] = {
+["nativeChrome"] = true,
+["showGroupChats"] = true,
+["timeFormat"] = "24h",
+["themePreset"] = "wow_default",
+},
+["contacts"] = {
+},
+["playerClasses"] = {
+["stormclout"] = "MONK",
+},
+["conversations"] = {
+["bnet::BN::gazmo#1154"] = {
+["conversationKey"] = "bnet::BN::gazmo#1154",
+["lastActivityAt"] = 1787766044,
+["messages"] = {
+{
+["direction"] = "out",
+["guid"] = "Player-3684-0EEBC4B1",
+["eventName"] = "CHAT_MSG_BN_WHISPER_INFORM",
+["battleTag"] = "Gazmo#1154",
+["lineID"] = 1432,
+["raceName"] = "Mechagnome",
+["bnetAccountID"] = 27,
+["factionName"] = "Alliance",
+["id"] = "1432",
+["text"] = "test ignore",
+["raceTag"] = "Mechagnome",
+["channel"] = "BN",
+["kind"] = "user",
+["className"] = "Warlock",
+["gameAccountName"] = "Gaz-Mal'Ganis",
+["sentAt"] = 1787766044,
+["playerName"] = "Gazmo#1154",
+["senderName"] = "Stormclout",
+["senderClassTag"] = "MONK",
+["classTag"] = "WARLOCK",
+},
+},
+["guid"] = "Player-3684-0EEBC4B1",
+["className"] = "Warlock",
+["raceName"] = "Mechagnome",
+["battleTag"] = "Gazmo#1154",
+["raceTag"] = "Mechagnome",
+["lastPreview"] = "test ignore",
+["bnetAccountID"] = 27,
+["gameAccountName"] = "Gaz-Mal'Ganis",
+["unreadCount"] = 0,
+["factionName"] = "Alliance",
+["channel"] = "BN",
+["displayName"] = "Gazmo#1154",
+["classTag"] = "WARLOCK",
+},
+},
+["schemaVersion"] = 6,
+["channelMessages"] = {
+["entryCount"] = 1,
+["nextSequence"] = 1,
+["baseIndex"] = {
+["xalisi"] = {
+["sequence"] = 1,
+["sentAt"] = 1787766016,
+["playerName"] = "Xalisi-Tichondrius",
+["text"] = "|cffffd000|Htrade:Player-11-0EB64A79:2108:165|h[Leatherworking]|h|r All Mail and Leather PvE/PvP gear, housing, and Lynx Mount! |cffffff00|Hachievement:61441:Player-11-0EB64A79:1:3:7:26:4294967295:4294967295:4294967295:4294967295|h[Working WAY Past Midnight]|h|r <3 PST or Order Anytime!",
+["channelLabel"] = "Trade",
+},
+},
+["maxEntries"] = 200,
+["ttl"] = 1800,
+["entries"] = {
+["xalisi-tichondrius"] = {
+["sequence"] = 1,
+["sentAt"] = 1787766016,
+["playerName"] = "Xalisi-Tichondrius",
+["text"] = "|cffffd000|Htrade:Player-11-0EB64A79:2108:165|h[Leatherworking]|h|r All Mail and Leather PvE/PvP gear, housing, and Lynx Mount! |cffffff00|Hachievement:61441:Player-11-0EB64A79:1:3:7:26:4294967295:4294967295:4294967295:4294967295|h[Working WAY Past Midnight]|h|r <3 PST or Order Anytime!",
+["channelLabel"] = "Trade",
+},
+},
+},
+}

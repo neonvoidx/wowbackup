@@ -1,0 +1,130 @@
+--[[----------------------------------------------------------------------------
+
+  LiteMount/UI/MountIconTemplate.lua
+
+  Copyright 2011 Mike Battersby
+
+----------------------------------------------------------------------------]]--
+
+local _, LM = ...
+
+local L = LM.L
+
+local allTypeFlags = LM.Options:GetFlags()
+
+--[[------------------------------------------------------------------------]]--
+
+-- This is a minimal emulation of LM.ActionButton
+
+LiteMountMountIconMixin = {}
+
+function LiteMountMountIconMixin.MenuGenerator(owner, rootDescription)
+    local listButton = owner:GetParent()
+
+    rootDescription:CreateTitle(owner.mount.name)
+
+    local mountGroups = owner.mount:GetGroups()
+    local allGroups = LM.Options:GetGroupNames()
+
+    local groupMenu = rootDescription:CreateButton(L.LM_GROUPS)
+    for _, g in pairs(allGroups) do
+        local function IsSelected() return mountGroups[g] end
+        local function SetSelected()
+            listButton:MarkDirty()
+            if mountGroups[g] then
+                LM.Options:ClearMountGroup(owner.mount, g)
+            else
+                LM.Options:SetMountGroup(owner.mount, g)
+            end
+        end
+        if LM.Options:IsGlobalGroup(g) then
+            g = BLUE_FONT_COLOR:WrapTextInColorCode(g)
+        end
+        groupMenu:CreateRadio(g, IsSelected, SetSelected)
+    end
+
+    local priorityMenu = rootDescription:CreateButton(L.LM_PRIORITY)
+    for _,p in ipairs(LM.UIFilter.GetPriorities()) do
+        local t, d = LM.UIFilter.GetPriorityText(p)
+        local function IsSelected() return owner.mount:GetPriority() == p end
+        local function SetSelected()
+            listButton:MarkDirty()
+            LM.Options:SetPriority(owner.mount, p)
+        end
+        priorityMenu:CreateRadio(t..' - '..d, IsSelected, SetSelected)
+    end
+    for _, flag in ipairs(allTypeFlags) do
+        local function IsSelected()
+            local mountFlags = owner.mount:GetFlags()
+            return mountFlags[flag]
+        end
+        local function SetSelected()
+            listButton:MarkDirty()
+            if IsSelected() then
+                LM.Options:ClearMountFlag(owner.mount, flag)
+            else
+                LM.Options:SetMountFlag(owner.mount, flag)
+            end
+        end
+        rootDescription:CreateCheckbox(L[flag], IsSelected, SetSelected)
+    end
+end
+
+function LiteMountMountIconMixin:SetMount(mount, hasMenu)
+    self.mount = mount
+    self.hasMenu = hasMenu
+
+    self:SetNormalTexture(mount.icon)
+
+    local count = mount:GetSummonCount()
+    if count > 0 then
+        self.Count:SetText(count)
+        self.Count:Show()
+    else
+        self.Count:Hide()
+    end
+
+    local action = mount:GetCastAction()
+    action:SetupActionButton(self, 1)
+end
+
+function LiteMountMountIconMixin:OnEnter()
+    LiteMountTooltip:SetOwner(self, "ANCHOR_RIGHT", 8)
+    LiteMountTooltip:SetMount(self.mount, self.hasMenu)
+end
+
+function LiteMountMountIconMixin:OnLeave()
+    LiteMountTooltip:Hide()
+end
+
+function LiteMountMountIconMixin:OnClickHook(mouseButton, isDown)
+    if mouseButton == 'LeftButton' and self.clickHookFunction then
+        self.clickHookFunction(mouseButton, isDown)
+    end
+end
+
+function LiteMountMountIconMixin:PreClick(mouseButton, isDown)
+    if mouseButton == 'LeftButton' and IsModifiedClick("CHATLINK") then
+        ChatEdit_InsertLink(C_Spell.GetSpellLink(self.mount.spellID))
+    elseif mouseButton == 'RightButton' then
+        if self.hasMenu then
+            MenuUtil.CreateContextMenu(self, self.MenuGenerator)
+        end
+    end
+end
+
+function LiteMountMountIconMixin:OnLoad()
+    self:SetAttribute("unit", "player")
+    self:RegisterForClicks("AnyUp")
+    self:RegisterForDrag("LeftButton")
+    self:SetScript('PreClick', self.PreClick)
+    self:HookScript('OnClick', self.OnClickHook)
+end
+
+function LiteMountMountIconMixin:OnDragStart()
+    if self.mount.spellID then
+        C_Spell.PickupSpell(self.mount.spellID)
+    elseif self.mount.itemID then
+        C_Item.PickupItem(self.mount.itemID)
+    end
+end

@@ -1,0 +1,2 @@
+
+EnhanceQoLInventoryDB = nil

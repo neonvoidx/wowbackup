@@ -1,0 +1,104 @@
+
+SpyDB = {
+["kosData"] = {
+["CAMWOW US2 Realm 6 PvP"] = {
+["Horde"] = {
+["Neon"] = {
+},
+["Beat"] = {
+},
+},
+},
+},
+["removeKOSData"] = {
+["CAMWOW US2 Realm 6 PvP"] = {
+["Horde"] = {
+},
+},
+},
+["profileKeys"] = {
+["Beat Ngu"] = "Beat Ngu",
+["Neon Void"] = "Neon Void",
+},
+["guildWatch"] = {
+["CAMWOW US2 Realm 6 PvP"] = {
+},
+},
+["watchData"] = {
+["CAMWOW US2 Realm 6 PvP"] = {
+["Horde"] = {
+},
+},
+},
+["ForeverDebug"] = {
+"2026-11-11 02:23:13",
+"Forever port of Spy 1.3.8, client 1.60.1 (70888), interface 16001",
+"Spy on: yes | in this zone: yes (pvp type friendly, flagged no, instance no)",
+"Enemy nameplates: yes | always shown: yes | nameplates watched: 0 | unit scan: running",
+"Nearby: 0 (active 0) | last hour: 0 | KoS: 0 | known players: 339",
+"Seen: 11 unit reads, 0 enemy casts, 0 stealth alerts, 0 kills, 0 deaths counted",
+"Secret restrictions: yes | target: none",
+"Last kill event: none since login",
+"Combat map: 22 fights kept (10 wins, 12 losses, 0 probable), 22 on the map",
+"Saved data read at login: account yes, character yes",
+"Window: shown, 0 row(s)",
+"Ran: no macro and no TargetUnit since login",
+"Buttons act on key press (ActionButtonUseKeyDown)",
+"Blocked by the client: nothing",
+"Addon restrictions active: none",
+"Sound: Spy sounds on, channel SFX | game sound on, effects on, ambience on, music on",
+"Last sound: none since login",
+"Watch list: 0 players | menus yes | last alert: none",
+"Watched guilds: 0 | warn yes | last alert: none",
+"Options window: not built | pages 0 | last problem: none",
+"Last error: none",
+},
+["profiles"] = {
+["Beat Ngu"] = {
+["MainWindow"] = {
+["Position"] = {
+["y"] = 228.3333129882813,
+["x"] = 657.6666259765625,
+["w"] = 192.9999847412109,
+["h"] = 34.9999885559082,
+},
+},
+["Colors"] = {
+["Bar"] = {
+["Bar Text"] = {
+["a"] = 1,
+},
+},
+},
+["AppendUnitNameCheck"] = true,
+["AppendUnitKoSCheck"] = true,
+["MinimapButton"] = {
+["angle"] = 0.383326767364802,
+["hide"] = false,
+},
+},
+["Neon Void"] = {
+["AppendUnitNameCheck"] = true,
+["MainWindow"] = {
+["Position"] = {
+["y"] = 228.6668243408203,
+["x"] = 1998.335571289063,
+["w"] = 159.9999389648438,
+["h"] = 34.9999885559082,
+},
+},
+["Colors"] = {
+["Bar"] = {
+["Bar Text"] = {
+["a"] = 1,
+},
+},
+},
+["AppendUnitKoSCheck"] = true,
+["MinimapButton"] = {
+["angle"] = 0.45,
+["hide"] = false,
+},
+},
+},
+}

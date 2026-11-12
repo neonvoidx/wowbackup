@@ -1,0 +1,9 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <Script file="Keybind.lua" />
+    <!-- Native saved CLICK bindings need a stable named target, independent of Options visibility. -->
+    <Button name="MapPinEnhancedLexiconKeybindButton" mixin="MapPinEnhancedLexiconKeybindMixin" hidden="true">
+        <Scripts>
+            <OnClick method="OnClick" />
+        </Scripts>
+    </Button>
+</Ui>

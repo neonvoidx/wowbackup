@@ -1,0 +1,4958 @@
+-- luacheck: globals C_GameRules GetIconForRole
+local parentAddonName = "EnhanceQoL"
+local addonName, addon = ...
+
+if _G[parentAddonName] then
+	addon = _G[parentAddonName]
+else
+	error(parentAddonName .. " is not loaded")
+end
+
+addon.Aura = addon.Aura or {}
+addon.Aura.UFHelper = addon.Aura.UFHelper or {}
+local H = addon.Aura.UFHelper
+
+addon.variables = addon.variables or {}
+
+local LSM = LibStub("LibSharedMedia-3.0")
+local EnumPowerType = Enum and Enum.PowerType
+local BLIZZARD_TEX = "Interface\\TargetingFrame\\UI-StatusBar"
+H.BLIZZARD_RAID_FRAME_TEX_KEY = "EQOL_BLIZZARD_RAID_FRAME_HP_FILL"
+H.BLIZZARD_RAID_FRAME_TEX = "RaidFrame-Hp-Fill"
+H.FOREVER_DEFAULT_HEALTH_TEX = "Interface\\AddOns\\EnhanceQoLUnitFrames\\Media\\Health\\DefaultHealth.tga"
+local BLIZZARD_CAST_STANDARD_TEX = "ui-castingbar-filling-standard"
+local BLIZZARD_CAST_INTERRUPTED_TEX = "ui-castingbar-interrupted"
+local BLIZZARD_CAST_ICON_FALLBACK_TEX = 134400 -- Interface\\Icons\\INV_Misc_QuestionMark
+local DEFAULT_AURA_BORDER_TEX = "Interface\\Buttons\\UI-Debuff-Overlays"
+local DEFAULT_AURA_BORDER_COORDS = { 0.296875, 0.5703125, 0, 0.515625 }
+local CombatFeedback_Initialize = _G.CombatFeedback_Initialize
+local CombatFeedback_OnCombatEvent = _G.CombatFeedback_OnCombatEvent
+local CombatFeedback_OnUpdate = _G.CombatFeedback_OnUpdate
+local NewTicker = C_Timer and C_Timer.NewTicker
+local GetTime = _G.GetTime
+local COMBAT_FEEDBACK_THROTTLE = 0.1
+local abs = math.abs
+local floor = math.floor
+local UnitThreatSituation = UnitThreatSituation
+local UnitExists = UnitExists
+local UnitGetTotalAbsorbs = UnitGetTotalAbsorbs
+local UnitHealthPercent = UnitHealthPercent
+local UnitHealthMax = UnitHealthMax
+local UnitPower = UnitPower
+local UnitPowerMax = UnitPowerMax
+local UnitStagger = UnitStagger
+local C_UnitAuras = C_UnitAuras
+local UIParent = UIParent
+local DispelOverlayOrientation = EnumUtil and EnumUtil.MakeEnum("VerticalTopToBottom", "VerticalBottomToTop", "HorizontalLeftToRight")
+
+-- The native percentage APIs keep restricted values inside Blizzard's curve pipeline.
+function H.UpdateBarFillSpark(bar, config, unit, kind, powerType, current, maximum, preview)
+	local apply = addon.functions and addon.functions.ApplyBarFillSpark
+	if not (bar and apply) then return end
+	if not (config and config.fillSparkEnabled == true) then
+		apply(bar, config)
+		return
+	end
+	local options = bar._eqolUFFillSparkOptions
+	if not options then
+		options = {}
+		bar._eqolUFFillSparkOptions = options
+	end
+	options.vertical = bar.GetOrientation and bar:GetOrientation() == "VERTICAL" or false
+	options.reverse = bar.GetReverseFill and bar:GetReverseFill() == true or false
+	options.preview = preview == true
+	options.unit, options.kind, options.powerType = nil, nil, nil
+	options.usePredicted, options.unmodified = true, false
+	local percent
+	if not preview and kind == "health" and UnitHealthPercent then
+		options.unit, options.kind = unit, "health"
+	elseif not preview and kind == "power" and _G.UnitPowerPercent and powerType ~= nil then
+		options.unit, options.kind, options.powerType = unit, "power", powerType
+	elseif not (issecretvalue and (issecretvalue(current) or issecretvalue(maximum))) and type(current) == "number" and type(maximum) == "number" and maximum > 0 then
+		percent = current / maximum
+	end
+	apply(bar, config, percent, options)
+end
+
+function H.GetVirtualUnitFramePointOffsetY(frame, point)
+	local uf = addon.Aura and addon.Aura.UF
+	if not (uf and uf.GetVirtualUnitFramePointOffsetY) then return 0 end
+	return uf.GetVirtualUnitFramePointOffsetY(frame, point)
+end
+
+function H.UnsecretBool(value)
+	if issecretvalue and issecretvalue(value) then return nil end
+	return value
+end
+
+do
+local FILTER_HELPFUL = "HELPFUL"
+local FILTER_HELPFUL_GROUP_RAID = "HELPFUL|RAID|PLAYER"
+local FILTER_HELPFUL_GROUP_RAID_IN_COMBAT = "HELPFUL|RAID_IN_COMBAT|PLAYER"
+local FILTER_HARMFUL = "HARMFUL"
+local FILTER_HARMFUL_PLAYER = "HARMFUL|PLAYER"
+local FILTER_HARMFUL_RAID = "HARMFUL|RAID"
+local FILTER_HARMFUL_RAID_IN_COMBAT = "HARMFUL|RAID_IN_COMBAT"
+local FILTER_HARMFUL_DISPELLABLE = "HARMFUL|RAID_PLAYER_DISPELLABLE"
+local FILTER_HARMFUL_CROWD_CONTROL = "HARMFUL|CROWD_CONTROL"
+local FILTER_BIG_DEFENSIVE = "HELPFUL|BIG_DEFENSIVE"
+
+local function allowNameplateOnly(aura, includeNameplateOnly)
+	return includeNameplateOnly == true or aura.isNameplateOnly ~= true
+end
+
+function H.IsHelpfulAura(aura, includeNameplateOnly)
+	return aura and aura.isHelpful == true and allowNameplateOnly(aura, includeNameplateOnly) or false
+end
+
+function H.IsHarmfulAura(aura, includeNameplateOnly)
+	return aura and aura.isHarmful == true and allowNameplateOnly(aura, includeNameplateOnly) or false
+end
+
+function H.IsRaidAura(aura)
+	return aura and aura.isRaid == true or false
+end
+
+function H.IsFromPlayerOrPlayerPetAura(aura)
+	return aura and aura.isFromPlayerOrPlayerPet == true or false
+end
+
+local function isApiMatch(unit, aura, specialFilter)
+	return unit
+		and aura
+		and aura.auraInstanceID
+		and C_UnitAuras
+		and C_UnitAuras.IsAuraFilteredOutByInstanceID
+		and not C_UnitAuras.IsAuraFilteredOutByInstanceID(unit, aura.auraInstanceID, specialFilter)
+		or false
+end
+
+local function isGroupHelpfulAura(unit, aura, filter)
+	if not H.IsHelpfulAura(aura, false) then return false end
+	if aura.isRaid ~= true and aura.isFromPlayerOrPlayerPet ~= true then return false end
+	return isApiMatch(unit, aura, filter)
+end
+
+function H.IsAuraFilteredIn(unit, aura, filter)
+	if not (aura and aura.auraInstanceID) then return false end
+	if type(filter) == "table" and type(filter.filterString) == "string" then
+		if not H.IsAuraFilteredIn(unit, aura, filter.filterString) then return false end
+		local sourceFilter = filter.candidateFilters and filter.candidateFilters.isFromPlayerOrPlayerPet
+		if sourceFilter == nil then return true end
+		local sourceValue = aura.isFromPlayerOrPlayerPet
+		if _G.issecretvalue and _G.issecretvalue(sourceValue) then return false end
+		return type(sourceFilter) == "boolean" and sourceValue == sourceFilter
+	end
+	if type(filter) == "table" then
+		if #filter > 0 then
+			for _, auraFilter in ipairs(filter) do
+				if (type(auraFilter) == "string" or type(auraFilter) == "table") and H.IsAuraFilteredIn(unit, aura, auraFilter) then return true end
+			end
+			return false
+		end
+		for _, auraFilter in pairs(filter) do
+			if (type(auraFilter) == "string" or type(auraFilter) == "table") and H.IsAuraFilteredIn(unit, aura, auraFilter) then return true end
+		end
+		return false
+	end
+	if type(filter) ~= "string" then return false end
+
+	if filter == FILTER_HELPFUL then return H.IsHelpfulAura(aura, false) end
+	if filter == FILTER_HARMFUL then return H.IsHarmfulAura(aura, false) end
+	if filter == FILTER_HARMFUL_PLAYER then return H.IsHarmfulAura(aura, false) and H.IsFromPlayerOrPlayerPetAura(aura) and isApiMatch(unit, aura, filter) end
+	if filter == FILTER_HELPFUL_GROUP_RAID or filter == FILTER_HELPFUL_GROUP_RAID_IN_COMBAT then return isGroupHelpfulAura(unit, aura, filter) end
+	if filter == FILTER_HARMFUL_RAID or filter == FILTER_HARMFUL_RAID_IN_COMBAT then return H.IsHarmfulAura(aura, false) and H.IsRaidAura(aura) and isApiMatch(unit, aura, filter) end
+	if filter == FILTER_HARMFUL_DISPELLABLE then return H.IsHarmfulAura(aura, false) and isApiMatch(unit, aura, filter) end
+	if filter == FILTER_HARMFUL_CROWD_CONTROL then return H.IsHarmfulAura(aura, false) and isApiMatch(unit, aura, filter) end
+	if filter == FILTER_BIG_DEFENSIVE then return H.IsHelpfulAura(aura, false) and isApiMatch(unit, aura, filter) end
+
+	return isApiMatch(unit, aura, filter)
+end
+end
+
+local atlasByPower = {
+	LUNAR_POWER = "Unit_Druid_AstralPower_Fill",
+	MAELSTROM = "Unit_Shaman_Maelstrom_Fill",
+	INSANITY = "Unit_Priest_Insanity_Fill",
+	FURY = "Unit_DemonHunter_Fury_Fill",
+	RUNIC_POWER = "UI-HUD-UnitFrame-Player-PortraitOn-Bar-RunicPower",
+	ENERGY = "UI-HUD-UnitFrame-Player-PortraitOn-ClassResource-Bar-Energy",
+	FOCUS = "UI-HUD-UnitFrame-Player-PortraitOn-Bar-Focus",
+	RAGE = "UI-HUD-UnitFrame-Player-PortraitOn-Bar-Rage",
+	MANA = "UI-HUD-UnitFrame-Player-PortraitOn-Bar-Mana",
+	HEALTH = "UI-HUD-UnitFrame-Player-PortraitOn-Bar-Health",
+}
+
+local npcColorDefaults = {
+	enemy = { 0.95, 0.15, 0.15, 1 },
+	neutral = { 1, 1, 0, 1 },
+	friendly = { 0.2, 1, 0.2, 1 },
+}
+
+local debuffinfo = {
+	[1] = DEBUFF_TYPE_MAGIC_COLOR,
+	[2] = DEBUFF_TYPE_CURSE_COLOR,
+	[3] = DEBUFF_TYPE_DISEASE_COLOR,
+	[4] = DEBUFF_TYPE_POISON_COLOR,
+	[5] = DEBUFF_TYPE_BLEED_COLOR,
+	[0] = DEBUFF_TYPE_NONE_COLOR,
+}
+local dispelIndexByName = {
+	Magic = 1,
+	Curse = 2,
+	Disease = 3,
+	Poison = 4,
+	Bleed = 5,
+	None = 0,
+}
+
+local function getDebuffColorFromName(name)
+	local idx = dispelIndexByName[name] or 0
+	local col = debuffinfo[idx] or debuffinfo[0]
+	if not col then return nil end
+	if col.GetRGBA then return col:GetRGBA() end
+	if col.GetRGB then return col:GetRGB() end
+	if col.r then return col.r, col.g, col.b, col.a end
+	return col[1], col[2], col[3], col[4]
+end
+
+H.getDebuffColorFromName = getDebuffColorFromName
+
+local function getDispelOverlayOrientationToken(value)
+	if DispelOverlayOrientation then
+		if value == DispelOverlayOrientation.VerticalBottomToTop then return "VerticalBottomToTop" end
+		if value == DispelOverlayOrientation.HorizontalLeftToRight then return "HorizontalLeftToRight" end
+		if value == DispelOverlayOrientation.VerticalTopToBottom then return "VerticalTopToBottom" end
+	end
+	if type(value) == "string" then
+		local token = value:gsub("[%s_]", ""):lower()
+		if token == "verticalbottomtotop" then return "VerticalBottomToTop" end
+		if token == "horizontallefttoright" then return "HorizontalLeftToRight" end
+	end
+	return "VerticalTopToBottom"
+end
+
+local function setDispelOverlayAtlas(texture, atlas)
+	if not (texture and texture.SetAtlas and atlas) then return end
+	local currentAtlas = texture.GetAtlas and texture:GetAtlas()
+	if currentAtlas ~= atlas then texture:SetAtlas(atlas, false) end
+end
+
+function H.CreateDispelOverlay(parent)
+	if not parent then return nil end
+
+	local overlay = CreateFrame("Frame", nil, parent)
+	overlay:EnableMouse(false)
+
+	local background = overlay:CreateTexture(nil, "ARTWORK", nil, -6)
+	background:SetAllPoints(overlay)
+	setDispelOverlayAtlas(background, "RaidFrame-Dispel-Fill")
+	overlay.Background = background
+
+	local gradient = overlay:CreateTexture(nil, "ARTWORK", nil, -5)
+	gradient:SetAllPoints(overlay)
+	overlay.Gradient = gradient
+
+	local border = overlay:CreateTexture(nil, "ARTWORK", nil, -5)
+	border:SetAllPoints(overlay)
+	setDispelOverlayAtlas(border, "RaidFrame-DispelHighlight")
+	overlay.Border = border
+
+	function overlay:SetOrientation(orientationOrOwner, orientation, xOffset, yOffset)
+		local resolvedOrientation = orientationOrOwner
+		local resolvedX = orientation
+		local resolvedY = xOffset
+		if type(orientationOrOwner) == "table" and orientation ~= nil then
+			resolvedOrientation = orientation
+			resolvedX = xOffset
+			resolvedY = yOffset
+		end
+
+		local orientationToken = getDispelOverlayOrientationToken(resolvedOrientation)
+		if orientationToken == "HorizontalLeftToRight" then
+			setDispelOverlayAtlas(self.Gradient, "!RaidFrame-Dispel-Vertical")
+			self.Gradient:SetTexCoord(0, 1, 0, 1)
+		else
+			setDispelOverlayAtlas(self.Gradient, "_RaidFrame-Dispel-Highlight-Horizontal")
+			if orientationToken == "VerticalBottomToTop" then
+				self.Gradient:SetTexCoord(0, 1, 1, 0)
+			else
+				self.Gradient:SetTexCoord(0, 1, 0, 1)
+			end
+		end
+
+		self.Border:ClearAllPoints()
+		self.Border:SetPoint("TOPLEFT")
+		self.Border:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", resolvedX or 0, resolvedY or 0)
+	end
+
+	overlay:SetOrientation(DispelOverlayOrientation and DispelOverlayOrientation.VerticalTopToBottom or "VerticalTopToBottom", 0, 0)
+	overlay:Hide()
+	return overlay
+end
+
+local debuffColorCurve = C_CurveUtil and C_CurveUtil.CreateColorCurve() or nil
+if debuffColorCurve and Enum.LuaCurveType and Enum.LuaCurveType.Step then
+	debuffColorCurve:SetType(Enum.LuaCurveType.Step)
+	for dispeltype, v in pairs(debuffinfo) do
+		debuffColorCurve:AddPoint(dispeltype, v)
+	end
+end
+
+H.debuffColorCurve = debuffColorCurve
+
+local absorbFullCurve = C_CurveUtil and C_CurveUtil.CreateCurve() or nil
+if absorbFullCurve and Enum and Enum.LuaCurveType and Enum.LuaCurveType.Step then
+	absorbFullCurve:SetType(Enum.LuaCurveType.Step)
+	absorbFullCurve:AddPoint(1.0, 1)
+	absorbFullCurve:AddPoint(0.9, 0)
+end
+
+local absorbNotFullCurve = C_CurveUtil and C_CurveUtil.CreateCurve() or nil
+if absorbNotFullCurve and Enum and Enum.LuaCurveType and Enum.LuaCurveType.Step then
+	absorbNotFullCurve:SetType(Enum.LuaCurveType.Step)
+	absorbNotFullCurve:AddPoint(1.0, 0)
+	absorbNotFullCurve:AddPoint(0.9, 1)
+end
+
+H.absorbFullCurve = absorbFullCurve
+H.absorbNotFullCurve = absorbNotFullCurve
+
+local npcColorUnits = {
+	target = true,
+	targettarget = true,
+	focustarget = true,
+	focus = true,
+	boss = true,
+}
+if addon.variables and addon.variables.isForever then npcColorUnits.pettarget = true end
+for i = 1, 8 do
+	npcColorUnits["boss" .. i] = true
+end
+
+local selectionKeyByType = {
+	[0] = "enemy",
+	[1] = "enemy",
+	[2] = "neutral",
+	[3] = "friendly",
+}
+
+function H.getNPCSelectionKey(unit)
+	if not npcColorUnits[unit] then return nil end
+	if UnitIsPlayer and H.UnsecretBool(UnitIsPlayer(unit)) == true then return nil end
+	local t = UnitSelectionType and UnitSelectionType(unit)
+	if issecretvalue and issecretvalue(t) then t = nil end
+	local key = selectionKeyByType[t]
+
+	local reaction = UnitReaction and UnitReaction(unit, "player")
+	if issecretvalue and issecretvalue(reaction) then reaction = nil end
+	if reaction then
+		if reaction <= 3 then return "enemy" end
+		if reaction == 4 then return "neutral" end
+		return "friendly"
+	end
+
+	if key == "friendly" and UnitCanAttack and UnitCanAttack("player", unit) then
+		if UnitIsEnemy and UnitIsEnemy("player", unit) then return "enemy" end
+		return "neutral"
+	end
+
+	if key then return key end
+	if UnitIsEnemy and UnitIsEnemy("player", unit) then return "enemy" end
+	if UnitCanAttack and UnitCanAttack("player", unit) then return "neutral" end
+	if UnitIsFriend and UnitIsFriend("player", unit) then return "friendly" end
+	return nil
+end
+
+function H.getNPCOverrideColor(unit)
+	local overrides = addon.db and addon.db.ufNPCColorOverrides
+	if not overrides then return nil end
+
+	local key = H.getNPCSelectionKey(unit)
+	if not key then return nil end
+	local override = overrides[key]
+	if override then
+		if override.r then return override.r, override.g, override.b, override.a or 1 end
+		if override[1] then return override[1], override[2], override[3], override[4] or 1 end
+	end
+	return nil
+end
+
+function H.getNPCHealthColor(unit)
+	local key = H.getNPCSelectionKey(unit)
+	if not key then return nil end
+	return H.getNPCColor(key)
+end
+
+local nameWidthCache = {}
+
+local function utf8Iter(str) return (str or ""):gmatch("[%z\1-\127\194-\244][\128-\191]*") end
+
+local function utf8Len(str)
+	local len = 0
+	for _ in utf8Iter(str) do
+		len = len + 1
+	end
+	return len
+end
+
+local function utf8Sub(str, i, j)
+	str = str or ""
+	if str == "" then return "" end
+	i = i or 1
+	j = j or -1
+	if i < 1 then i = 1 end
+	local len = utf8Len(str)
+	if j < 0 then j = len + j + 1 end
+	if j > len then j = len end
+	if i > j then return "" end
+	local pos = 1
+	local startByte, endByte
+	local idx = 0
+	for char in utf8Iter(str) do
+		idx = idx + 1
+		if idx == i then startByte = pos end
+		if idx == j then
+			endByte = pos + #char - 1
+			break
+		end
+		pos = pos + #char
+	end
+	return str:sub(startByte or 1, endByte or #str)
+end
+
+local function normalizeFontOutline(outline)
+	if addon.functions and addon.functions.GetFontFlagsForStyle then return addon.functions.GetFontFlagsForStyle(outline, "OUTLINE") end
+	if outline == nil then return "OUTLINE" end
+	if outline == "" or outline == "NONE" then return nil end
+	if outline == "__EQOL_GLOBAL_FONT_STYLE__" then return "OUTLINE" end
+	return outline
+end
+
+function H._looksLikeFontFile(path)
+	if type(path) ~= "string" or path == "" then return false end
+	local lower = path:lower()
+	if path:find("\\", 1, true) or path:find("/", 1, true) then return true end
+	if lower:find(".ttf", 1, true) or lower:find(".otf", 1, true) or lower:find(".ttc", 1, true) then return true end
+	return false
+end
+
+function H.isKnownFontAsset(fontFile)
+	if addon.functions and addon.functions.IsKnownFontAsset then return addon.functions.IsKnownFontAsset(fontFile) end
+	if addon.functions and addon.functions.IsKnownFileAsset then return addon.functions.IsKnownFileAsset(fontFile) end
+	if not H._looksLikeFontFile(fontFile) then return true end
+	local fileAssetAPI = _G.C_UIFileAsset
+	if not (fileAssetAPI and fileAssetAPI.IsKnownFile) then return true end
+	local ok, known = pcall(fileAssetAPI.IsKnownFile, fontFile)
+	return ok and known == true
+end
+
+function H.getAlphabetAwareFontFamily(fontFile, size, flags)
+	if not (_G.Font and _G.Font.CreateFontFamily and H._looksLikeFontFile(fontFile)) then return nil end
+	if not H.isKnownFontAsset(fontFile) then return nil end
+	size = tonumber(size) or 14
+	if size <= 0 then size = 1 end
+	flags = flags or ""
+	H._fontFamilyCache = H._fontFamilyCache or {}
+	local fontFamilyCache = H._fontFamilyCache
+	local key = table.concat({
+		tostring(fontFile),
+		tostring(size),
+		tostring(flags or ""),
+	}, "\031")
+	local cached = fontFamilyCache[key]
+	if cached then return cached end
+
+	H._fontFamilyCounter = (H._fontFamilyCounter or 0) + 1
+	local familyName = ("EQOLUFFontFamily%d"):format(H._fontFamilyCounter)
+	local ok, family = pcall(_G.Font.CreateFontFamily, familyName, {
+		{ alphabet = "roman", file = fontFile, height = size, flags = flags },
+		{ alphabet = "korean", file = "Fonts\\2002.TTF", height = size, flags = flags },
+		{ alphabet = "simplifiedchinese", file = "Fonts\\ARKai_T.ttf", height = size, flags = flags },
+		{ alphabet = "traditionalchinese", file = "Fonts\\bLEI00D.TTF", height = size, flags = flags },
+		{ alphabet = "russian", file = _G.UNIT_NAME_FONT_CYRILLIC or "Fonts\\FRIZQT___CYR.TTF", height = size, flags = flags },
+	})
+	if not ok or not family then return nil end
+	fontFamilyCache[key] = family
+	return family
+end
+
+function H.setFontWithFallback(target, fontFile, size, flags)
+	if not target then return nil end
+	if not H.isKnownFontAsset(fontFile) then return false end
+	local family = H.getAlphabetAwareFontFamily(fontFile, size, flags)
+	if family and target.SetFontObject then
+		target:SetFontObject(family)
+		return true, true
+	end
+	if target.SetFont then
+		if addon.functions and addon.functions.SetFontWithFallback then
+			-- Callers already resolved fontFile; only resolve a fallback if applying it fails.
+			local ok, applied = pcall(target.SetFont, target, fontFile, tonumber(size) or 12, flags)
+			if ok and applied ~= false then return true, true end
+			return addon.functions.SetFontWithFallback(target, fontFile, size, flags, H.getFont(nil))
+		end
+		local ok, applied = pcall(target.SetFont, target, fontFile, size, flags)
+		return ok and applied ~= false, ok and applied ~= false
+	end
+	return nil
+end
+
+function H.clamp(value, minV, maxV)
+	if value < minV then return minV end
+	if value > maxV then return maxV end
+	return value
+end
+
+function H.ClampNumber(value, minValue, maxValue, fallback)
+	local v = tonumber(value)
+	if v == nil then return fallback end
+	if minValue ~= nil and v < minValue then v = minValue end
+	if maxValue ~= nil and v > maxValue then v = maxValue end
+	return v
+end
+
+function H.shouldHideInClientScene(cfg, def)
+	local value = cfg and cfg.hideInClientScene
+	if value == nil then value = def and def.hideInClientScene end
+	if value == nil then value = true end
+	return value == true
+end
+
+function H.applyClientSceneAlphaOverride(st, forceHide)
+	if not (st and st.frame and st.frame.SetAlpha) then return end
+	if forceHide then
+		st._eqolClientSceneAlphaHidden = true
+		local alpha = st.frame.GetAlpha and st.frame:GetAlpha()
+		if (issecretvalue and issecretvalue(alpha)) or alpha ~= 0 then st.frame:SetAlpha(0) end
+	elseif st._eqolClientSceneAlphaHidden then
+		st._eqolClientSceneAlphaHidden = nil
+		local alpha = st.frame.GetAlpha and st.frame:GetAlpha()
+		if not (issecretvalue and issecretvalue(alpha)) and alpha == 0 then st.frame:SetAlpha(1) end
+	end
+end
+
+function H.getClampedAbsorbAmount(unit) return UnitGetTotalAbsorbs and UnitGetTotalAbsorbs(unit) or 0 end
+
+function H.getHealthCurveValue(unit, curve)
+	if not curve or not unit then return nil end
+	return UnitHealthPercent(unit, true, curve)
+end
+
+function H.normalizeStatusBarOrientation(value)
+	return tostring(value or "HORIZONTAL"):upper() == "VERTICAL" and "VERTICAL" or "HORIZONTAL"
+end
+
+function H.NormalizeAbsorbLayerOrder(value)
+	return tostring(value or "INCOMING_ABOVE"):upper() == "ABSORB_ABOVE" and "ABSORB_ABOVE" or "INCOMING_ABOVE"
+end
+
+function H.applyStatusBarOrientation(bar, value)
+	if not (bar and bar.SetOrientation) then return end
+	bar:SetOrientation(H.normalizeStatusBarOrientation(value))
+end
+
+H._healthAxes = H._healthAxes or {
+	HORIZONTAL = {
+		[false] = { orientation = "HORIZONTAL", reverse = false, vertical = false, forwardReverse = false, backwardReverse = true },
+		[true] = { orientation = "HORIZONTAL", reverse = true, vertical = false, forwardReverse = true, backwardReverse = false },
+	},
+	VERTICAL = {
+		[false] = { orientation = "VERTICAL", reverse = false, vertical = true, forwardReverse = false, backwardReverse = true },
+		[true] = { orientation = "VERTICAL", reverse = true, vertical = true, forwardReverse = true, backwardReverse = false },
+	},
+}
+
+function H.GetHealthAxis(orientation, reverseHealth)
+	local normalized = H.normalizeStatusBarOrientation(orientation)
+	return H._healthAxes[normalized][reverseHealth == true]
+end
+
+function H._syncOverlayRegionLevel(region, healthBar)
+	if region.SetFrameStrata and healthBar.GetFrameStrata then region:SetFrameStrata(healthBar:GetFrameStrata()) end
+	if region.SetFrameLevel and healthBar.GetFrameLevel then region:SetFrameLevel((healthBar:GetFrameLevel() or 0) + 1) end
+end
+
+function H.EnsureHealthOverlayRegions(healthBar)
+	if not healthBar then return nil end
+	local regions = healthBar._eqolOverlayRegions
+	if regions then return regions end
+	regions = {}
+	regions.full = CreateFrame("Frame", nil, healthBar)
+	regions.filled = CreateFrame("Frame", nil, healthBar)
+	regions.missing = CreateFrame("Frame", nil, healthBar)
+	for _, region in pairs(regions) do
+		region:SetClipsChildren(true)
+		region:EnableMouse(false)
+	end
+	healthBar._eqolOverlayRegions = regions
+	-- Compatibility aliases for existing frame-level consumers during the migration.
+	healthBar.absorbClip = regions.full
+	healthBar._healthFillClip = regions.filled
+	return regions
+end
+
+function H.LayoutHealthOverlayRegions(healthBar, axis)
+	if not healthBar then return nil end
+	axis = axis or H.GetHealthAxis("HORIZONTAL", false)
+	local regions = H.EnsureHealthOverlayRegions(healthBar)
+	local texture = healthBar.GetStatusBarTexture and healthBar:GetStatusBarTexture()
+	regions.full:ClearAllPoints()
+	regions.full:SetAllPoints(healthBar)
+	regions.filled:ClearAllPoints()
+	regions.missing:ClearAllPoints()
+	if not texture then
+		regions.filled:SetAllPoints(healthBar)
+		regions.missing:SetAllPoints(healthBar)
+	elseif axis.vertical and axis.reverse then
+		regions.filled:SetPoint("TOPLEFT", healthBar, "TOPLEFT")
+		regions.filled:SetPoint("TOPRIGHT", healthBar, "TOPRIGHT")
+		regions.filled:SetPoint("BOTTOMLEFT", texture, "BOTTOMLEFT")
+		regions.filled:SetPoint("BOTTOMRIGHT", texture, "BOTTOMRIGHT")
+		regions.missing:SetPoint("BOTTOMLEFT", healthBar, "BOTTOMLEFT")
+		regions.missing:SetPoint("BOTTOMRIGHT", healthBar, "BOTTOMRIGHT")
+		regions.missing:SetPoint("TOPLEFT", texture, "BOTTOMLEFT")
+		regions.missing:SetPoint("TOPRIGHT", texture, "BOTTOMRIGHT")
+	elseif axis.vertical then
+		regions.filled:SetPoint("BOTTOMLEFT", healthBar, "BOTTOMLEFT")
+		regions.filled:SetPoint("BOTTOMRIGHT", healthBar, "BOTTOMRIGHT")
+		regions.filled:SetPoint("TOPLEFT", texture, "TOPLEFT")
+		regions.filled:SetPoint("TOPRIGHT", texture, "TOPRIGHT")
+		regions.missing:SetPoint("TOPLEFT", healthBar, "TOPLEFT")
+		regions.missing:SetPoint("TOPRIGHT", healthBar, "TOPRIGHT")
+		regions.missing:SetPoint("BOTTOMLEFT", texture, "TOPLEFT")
+		regions.missing:SetPoint("BOTTOMRIGHT", texture, "TOPRIGHT")
+	elseif axis.reverse then
+		regions.filled:SetPoint("TOPRIGHT", healthBar, "TOPRIGHT")
+		regions.filled:SetPoint("BOTTOMRIGHT", healthBar, "BOTTOMRIGHT")
+		regions.filled:SetPoint("TOPLEFT", texture, "TOPLEFT")
+		regions.filled:SetPoint("BOTTOMLEFT", texture, "BOTTOMLEFT")
+		regions.missing:SetPoint("TOPLEFT", healthBar, "TOPLEFT")
+		regions.missing:SetPoint("BOTTOMLEFT", healthBar, "BOTTOMLEFT")
+		regions.missing:SetPoint("TOPRIGHT", texture, "TOPLEFT")
+		regions.missing:SetPoint("BOTTOMRIGHT", texture, "BOTTOMLEFT")
+	else
+		regions.filled:SetPoint("TOPLEFT", healthBar, "TOPLEFT")
+		regions.filled:SetPoint("BOTTOMLEFT", healthBar, "BOTTOMLEFT")
+		regions.filled:SetPoint("TOPRIGHT", texture, "TOPRIGHT")
+		regions.filled:SetPoint("BOTTOMRIGHT", texture, "BOTTOMRIGHT")
+		regions.missing:SetPoint("TOPRIGHT", healthBar, "TOPRIGHT")
+		regions.missing:SetPoint("BOTTOMRIGHT", healthBar, "BOTTOMRIGHT")
+		regions.missing:SetPoint("TOPLEFT", texture, "TOPRIGHT")
+		regions.missing:SetPoint("BOTTOMLEFT", texture, "BOTTOMRIGHT")
+	end
+	for _, region in pairs(regions) do H._syncOverlayRegionLevel(region, healthBar) end
+	return regions
+end
+
+function H.ResolveHealthOverlayThickness(healthBar, orientation, value)
+	local desired = tonumber(value)
+	if not desired or desired <= 0 then return nil end
+	local vertical = H.normalizeStatusBarOrientation(orientation) == "VERTICAL"
+	local limit = vertical and healthBar:GetWidth() or healthBar:GetHeight()
+	if limit and limit > 0 and desired > limit then desired = limit end
+	return desired
+end
+
+function H._anchorFullOverlay(bar, healthBar, axis, thickness, crossAlign)
+	bar:ClearAllPoints()
+	if not thickness then
+		bar:SetAllPoints(healthBar)
+	elseif axis.vertical then
+		local side = crossAlign == "MAX" and "RIGHT" or "LEFT"
+		bar:SetPoint("TOP" .. side, healthBar, "TOP" .. side)
+		bar:SetPoint("BOTTOM" .. side, healthBar, "BOTTOM" .. side)
+		bar:SetWidth(thickness)
+	else
+		local side = crossAlign == "MAX" and "TOP" or "BOTTOM"
+		bar:SetPoint(side .. "LEFT", healthBar, side .. "LEFT")
+		bar:SetPoint(side .. "RIGHT", healthBar, side .. "RIGHT")
+		bar:SetHeight(thickness)
+	end
+end
+
+function H._anchorMissingOverlay(bar, healthBar, axis, thickness, crossAlign)
+	local texture = healthBar.GetStatusBarTexture and healthBar:GetStatusBarTexture()
+	if not texture then
+		H._anchorFullOverlay(bar, healthBar, axis, thickness, crossAlign)
+		return
+	end
+	bar:ClearAllPoints()
+	if axis.vertical then
+		local point = axis.reverse and "TOP" or "BOTTOM"
+		local relative = axis.reverse and "BOTTOM" or "TOP"
+		if thickness then
+			local side = crossAlign == "MAX" and "RIGHT" or "LEFT"
+			bar:SetPoint(point .. side, texture, relative .. side)
+			bar:SetSize(thickness, healthBar:GetHeight())
+		else
+			bar:SetPoint(point .. "LEFT", texture, relative .. "LEFT")
+			bar:SetPoint(point .. "RIGHT", texture, relative .. "RIGHT")
+			bar:SetHeight(healthBar:GetHeight())
+		end
+	else
+		local point = axis.reverse and "RIGHT" or "LEFT"
+		local relative = axis.reverse and "LEFT" or "RIGHT"
+		if thickness then
+			local side = crossAlign == "MAX" and "TOP" or "BOTTOM"
+			bar:SetPoint(side .. point, texture, side .. relative)
+			bar:SetSize(healthBar:GetWidth(), thickness)
+		else
+			bar:SetPoint("TOP" .. point, texture, "TOP" .. relative)
+			bar:SetPoint("BOTTOM" .. point, texture, "BOTTOM" .. relative)
+			bar:SetWidth(healthBar:GetWidth())
+		end
+	end
+end
+
+function H._anchorFilledOverlayFromCurrent(bar, healthBar, axis, thickness, crossAlign)
+	local texture = healthBar.GetStatusBarTexture and healthBar:GetStatusBarTexture()
+	if not texture then
+		H._anchorFullOverlay(bar, healthBar, axis, thickness, crossAlign)
+		return
+	end
+	bar:ClearAllPoints()
+	if axis.vertical then
+		local point = axis.reverse and "BOTTOM" or "TOP"
+		if thickness then
+			local side = crossAlign == "MAX" and "RIGHT" or "LEFT"
+			bar:SetPoint(point .. side, texture, point .. side)
+			bar:SetSize(thickness, healthBar:GetHeight())
+		else
+			bar:SetPoint(point .. "LEFT", texture, point .. "LEFT")
+			bar:SetPoint(point .. "RIGHT", texture, point .. "RIGHT")
+			bar:SetHeight(healthBar:GetHeight())
+		end
+	else
+		local point = axis.reverse and "LEFT" or "RIGHT"
+		if thickness then
+			local side = crossAlign == "MAX" and "TOP" or "BOTTOM"
+			bar:SetPoint(side .. point, texture, side .. point)
+			bar:SetSize(healthBar:GetWidth(), thickness)
+		else
+			bar:SetPoint("TOP" .. point, texture, "TOP" .. point)
+			bar:SetPoint("BOTTOM" .. point, texture, "BOTTOM" .. point)
+			bar:SetWidth(healthBar:GetWidth())
+		end
+	end
+end
+
+function H.LayoutHealthOverlayBar(healthBar, bar, options)
+	if not (healthBar and bar) then return end
+	options = options or {}
+	local axis = options.axis or H.GetHealthAxis(options.orientation, options.reverseHealth)
+	local regions = options.regions or H.LayoutHealthOverlayRegions(healthBar, axis)
+	local role = options.role or "FULL"
+	local parent = regions.full
+	if role == "OVERFLOW_IN_FILLED" or role == "FILLED_FROM_CURRENT" then
+		parent = regions.filled
+	elseif role == "OVERFLOW_IN_MISSING" then
+		parent = regions.missing
+	end
+	if bar.GetParent and bar:GetParent() ~= parent then bar:SetParent(parent) end
+	H.applyStatusBarOrientation(bar, axis.orientation)
+	local reverse = options.statusReverse == true
+	if options.direction == "HEALTH_FORWARD" then reverse = axis.forwardReverse end
+	if options.direction == "HEALTH_BACKWARD" then reverse = axis.backwardReverse end
+	H.applyStatusBarReverseFill(bar, reverse)
+	local thickness = H.ResolveHealthOverlayThickness(healthBar, axis.orientation, options.thickness)
+	local crossAlign = options.crossAlign == "MAX" and "MAX" or "MIN"
+	if role == "MISSING_FROM_CURRENT" then
+		H._anchorMissingOverlay(bar, healthBar, axis, thickness, crossAlign)
+	elseif role == "FILLED_FROM_CURRENT" then
+		H._anchorFilledOverlayFromCurrent(bar, healthBar, axis, thickness, crossAlign)
+	else
+		H._anchorFullOverlay(bar, healthBar, axis, thickness, crossAlign)
+	end
+end
+
+function H.LayoutDamageAbsorb(healthBar, absorbBar, absorbSecondaryBar, options)
+	if not (healthBar and absorbBar) then return end
+	options = options or {}
+	local axis = options.axis or H.GetHealthAxis(options.orientation, options.reverseHealth)
+	local regions = options.regions or H.LayoutHealthOverlayRegions(healthBar, axis)
+	local shared = {
+		axis = axis,
+		regions = regions,
+		thickness = options.thickness,
+		crossAlign = options.crossAlign,
+	}
+	if options.reverseAbsorb == true then
+		if absorbSecondaryBar then
+			shared.role = "MISSING_FROM_CURRENT"
+			shared.direction = "HEALTH_FORWARD"
+			H.LayoutHealthOverlayBar(healthBar, absorbSecondaryBar, shared)
+		end
+		if options.dontOverflow == true then
+			absorbBar:SetValue(0)
+			absorbBar:Hide()
+		else
+			shared.role = "OVERFLOW_IN_FILLED"
+			shared.direction = "HEALTH_BACKWARD"
+			H.LayoutHealthOverlayBar(healthBar, absorbBar, shared)
+		end
+	else
+		shared.role = "FULL"
+		shared.direction = "STATUS_STANDARD"
+		shared.statusReverse = false
+		H.LayoutHealthOverlayBar(healthBar, absorbBar, shared)
+		if absorbSecondaryBar then
+			absorbSecondaryBar:SetValue(0)
+			absorbSecondaryBar:Hide()
+		end
+	end
+end
+
+function H.LayoutHealAbsorb(healthBar, healAbsorbBar, healAbsorbSecondaryBar, options)
+	if not (healthBar and healAbsorbBar) then return end
+	options = options or {}
+	local axis = options.axis or H.GetHealthAxis(options.orientation, options.reverseHealth)
+	local regions = options.regions or H.LayoutHealthOverlayRegions(healthBar, axis)
+	local shared = {
+		axis = axis,
+		regions = regions,
+		thickness = options.thickness,
+		crossAlign = options.crossAlign,
+	}
+	if options.reverseHealAbsorb == true and options.anchorToCurrentHealth == true then
+		shared.role = "FILLED_FROM_CURRENT"
+		shared.direction = "HEALTH_BACKWARD"
+		H.LayoutHealthOverlayBar(healthBar, healAbsorbBar, shared)
+		if healAbsorbSecondaryBar then
+			shared.role = "OVERFLOW_IN_MISSING"
+			shared.direction = "HEALTH_FORWARD"
+			H.LayoutHealthOverlayBar(healthBar, healAbsorbSecondaryBar, shared)
+		end
+	else
+		shared.role = "FULL"
+		shared.direction = "STATUS_STANDARD"
+		shared.statusReverse = options.reverseHealAbsorb == true
+		H.LayoutHealthOverlayBar(healthBar, healAbsorbBar, shared)
+		if healAbsorbSecondaryBar then
+			healAbsorbSecondaryBar:SetValue(0)
+			healAbsorbSecondaryBar:Hide()
+		end
+	end
+end
+
+function H.LayoutMissingHealthTexture(healthBar, texture, axis)
+	if not (healthBar and texture) then return end
+	axis = axis or H.GetHealthAxis("HORIZONTAL", false)
+	local regions = H.LayoutHealthOverlayRegions(healthBar, axis)
+	texture:ClearAllPoints()
+	texture:SetAllPoints(regions.missing)
+end
+
+function H.LayoutHealthEndGlow(healthBar, glow, axis, inset, clampToCurrentHealth)
+	if not (healthBar and glow) then return end
+	axis = axis or H.GetHealthAxis("HORIZONTAL", false)
+	if axis.vertical then
+		glow:Hide()
+		return
+	end
+	inset = tonumber(inset) or 7
+	local texture = clampToCurrentHealth == true and healthBar.GetStatusBarTexture and healthBar:GetStatusBarTexture() or healthBar
+	glow:ClearAllPoints()
+	if axis.vertical and axis.reverse then
+		glow:SetPoint("TOPLEFT", healthBar, "BOTTOMLEFT", 0, inset)
+		glow:SetPoint("TOPRIGHT", healthBar, "BOTTOMRIGHT", 0, inset)
+	elseif axis.vertical then
+		glow:SetPoint("BOTTOMLEFT", healthBar, "TOPLEFT", 0, -inset)
+		glow:SetPoint("BOTTOMRIGHT", healthBar, "TOPRIGHT", 0, -inset)
+	elseif axis.reverse then
+		glow:SetPoint("TOPRIGHT", texture, "TOPLEFT", inset, 0)
+		glow:SetPoint("BOTTOMRIGHT", texture, "BOTTOMLEFT", inset, 0)
+	else
+		glow:SetPoint("TOPLEFT", texture, "TOPRIGHT", -inset, 0)
+		glow:SetPoint("BOTTOMLEFT", texture, "BOTTOMRIGHT", -inset, 0)
+	end
+end
+
+function H.LayoutTemporaryMaxHealthLoss(healthSlot, healthBar, lossBar, options)
+	if not (healthSlot and healthBar and lossBar) then return end
+	options = options or {}
+	local axis = options.axis or H.GetHealthAxis(options.orientation, options.reverseHealth)
+	H.applyStatusBarOrientation(lossBar, axis.orientation)
+	H.applyStatusBarReverseFill(lossBar, axis.backwardReverse)
+	lossBar:ClearAllPoints()
+	lossBar:SetAllPoints(healthSlot)
+	if options.reserveHealthSpace ~= true then return end
+	local texture = lossBar.GetStatusBarTexture and lossBar:GetStatusBarTexture()
+	healthBar:ClearAllPoints()
+	if not texture then
+		healthBar:SetAllPoints(healthSlot)
+	elseif axis.vertical and axis.reverse then
+		healthBar:SetPoint("TOPLEFT", healthSlot, "TOPLEFT")
+		healthBar:SetPoint("TOPRIGHT", healthSlot, "TOPRIGHT")
+		healthBar:SetPoint("BOTTOMLEFT", texture, "TOPLEFT")
+		healthBar:SetPoint("BOTTOMRIGHT", texture, "TOPRIGHT")
+	elseif axis.vertical then
+		healthBar:SetPoint("BOTTOMLEFT", healthSlot, "BOTTOMLEFT")
+		healthBar:SetPoint("BOTTOMRIGHT", healthSlot, "BOTTOMRIGHT")
+		healthBar:SetPoint("TOPLEFT", texture, "BOTTOMLEFT")
+		healthBar:SetPoint("TOPRIGHT", texture, "BOTTOMRIGHT")
+	elseif axis.reverse then
+		healthBar:SetPoint("TOPLEFT", texture, "TOPRIGHT")
+		healthBar:SetPoint("BOTTOMLEFT", texture, "BOTTOMRIGHT")
+		healthBar:SetPoint("TOPRIGHT", healthSlot, "TOPRIGHT")
+		healthBar:SetPoint("BOTTOMRIGHT", healthSlot, "BOTTOMRIGHT")
+	else
+		healthBar:SetPoint("TOPLEFT", healthSlot, "TOPLEFT")
+		healthBar:SetPoint("BOTTOMLEFT", healthSlot, "BOTTOMLEFT")
+		healthBar:SetPoint("TOPRIGHT", texture, "TOPLEFT")
+		healthBar:SetPoint("BOTTOMRIGHT", texture, "BOTTOMLEFT")
+	end
+end
+
+function H.trim(str)
+	if type(str) ~= "string" then return "" end
+	return str:match("^%s*(.-)%s*$")
+end
+
+function H.getFont(path)
+	local fallbackFont = (addon.functions and addon.functions.GetGlobalDefaultFontFace and addon.functions.GetGlobalDefaultFontFace())
+		or (addon.variables and addon.variables.defaultFont)
+		or (LSM and LSM:Fetch("font", LSM.DefaultMedia.font))
+		or STANDARD_TEXT_FONT
+	if addon.functions and addon.functions.ResolveFontFace then return addon.functions.ResolveFontFace(path, fallbackFont) or fallbackFont end
+	if addon.functions and addon.functions.IsGlobalFontConfigValue and addon.functions.IsGlobalFontConfigValue(path) then return fallbackFont end
+	if type(path) == "string" and path ~= "" then
+		if LSM and LSM.Fetch then
+			local fetched = LSM:Fetch("font", path, true)
+			if type(fetched) == "string" and fetched ~= "" then return fetched end
+		end
+		if LSM and LSM.HashTable then
+			local hash = LSM:HashTable("font") or {}
+			for _, fontPath in pairs(hash) do
+				if fontPath == path then return path end
+			end
+		end
+	end
+	return fallbackFont
+end
+
+function H.applyBarTextColor(cfg, def, left, center, right)
+	local function apply(text, key)
+		if not text then return end
+		local color = cfg[key] or def[key]
+		if color then
+			text:SetTextColor(color[1] or 1, color[2] or 1, color[3] or 1, color[4] or 1)
+		else
+			text:SetTextColor(1, 1, 1, 1)
+		end
+	end
+	apply(left, "textLeftColor")
+	apply(center, "textCenterColor")
+	apply(right, "textRightColor")
+end
+
+function H.applyFont(fs, fontPath, size, outline)
+	if not fs then return end
+	local flags = normalizeFontOutline(outline)
+	local fontFile = H.getFont(fontPath)
+	if size == nil or size <= 0 then size = 1 end
+	local ok, requestedApplied = H.setFontWithFallback(fs, fontFile, size or 14, flags)
+	if not ok and fontPath and fontPath ~= "" then ok = H.setFontWithFallback(fs, H.getFont(nil), size or 14, flags) end
+	if addon.functions and addon.functions.ApplyFontStyleShadow then addon.functions.ApplyFontStyleShadow(fs, outline, "OUTLINE") end
+	return ok, requestedApplied == true
+end
+
+local function ensureCooldownFontDefault(cooldown, fontString)
+	if not cooldown or not fontString or cooldown._eqolCooldownFontDefault then return end
+	local fontFile, fontSize, fontFlags = fontString:GetFont()
+	if not fontFile or not fontSize then return end
+	cooldown._eqolCooldownFontDefault = {
+		font = fontFile,
+		size = fontSize,
+		flags = fontFlags,
+	}
+end
+
+function H.applyCooldownTextStyle(cooldown, size)
+	if not cooldown or not cooldown.GetCountdownFontString then return end
+	local fontString = cooldown:GetCountdownFontString()
+	if not fontString or not fontString.GetFont or not fontString.SetFont then return end
+	ensureCooldownFontDefault(cooldown, fontString)
+	local def = cooldown._eqolCooldownFontDefault
+	if not def or not def.font or not def.size then return end
+	local desired = tonumber(size) or 0
+	local flags = def.flags or ""
+	if desired > 0 then
+		local key = def.font .. "|" .. tostring(desired) .. "|" .. tostring(flags)
+		if cooldown._eqolCooldownFontKey == key then return end
+		fontString:SetFont(def.font, desired, flags)
+		cooldown._eqolCooldownFontKey = key
+	else
+		local key = "default|" .. def.font .. "|" .. tostring(def.size) .. "|" .. tostring(flags)
+		if cooldown._eqolCooldownFontKey == key then return end
+		fontString:SetFont(def.font, def.size, flags)
+		cooldown._eqolCooldownFontKey = key
+	end
+end
+
+function H.resolveBorderTexture(key)
+	if type(key) == "string" and key:upper() == "SOLID" then return "Interface\\Buttons\\WHITE8x8" end
+	if not key or key == "" or key == "DEFAULT" then return "Interface\\Buttons\\WHITE8x8" end
+	if LSM then
+		local tex = LSM:Fetch("border", key)
+		if tex and tex ~= "" then return tex end
+	end
+	return key
+end
+
+function H.resolveAuraBorderTexture(key)
+	if type(key) == "string" and key:upper() == "SOLID" then return "Interface\\Buttons\\WHITE8x8", nil, true end
+	if not key or key == "" or key == "DEFAULT" then return DEFAULT_AURA_BORDER_TEX, DEFAULT_AURA_BORDER_COORDS, false end
+	if LSM then
+		local tex = LSM:Fetch("border", key)
+		if tex and tex ~= "" then return tex, nil, true end
+	end
+	return key, nil, false
+end
+
+function H.ensureAuraBorderFrame(btn)
+	if not btn then return nil end
+	local border = btn._eqolAuraBorder
+	if not border then
+		border = CreateFrame("Frame", nil, btn, "BackdropTemplate")
+		border:EnableMouse(false)
+		btn._eqolAuraBorder = border
+	end
+	H.syncAuraBorderFrameLayer(btn)
+	border:ClearAllPoints()
+	border:SetPoint("TOPLEFT", btn, "TOPLEFT", 0, 0)
+	border:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", 0, 0)
+	return border
+end
+
+function H.syncAuraBorderFrameLayer(btn)
+	if not btn then return nil end
+	local border = btn._eqolAuraBorder
+	if not border then return nil end
+
+	local layerParent = btn.overlay or btn
+	if border.GetParent and border:GetParent() ~= layerParent then border:SetParent(layerParent) end
+
+	local strata = (layerParent.GetFrameStrata and layerParent:GetFrameStrata()) or (btn.GetFrameStrata and btn:GetFrameStrata())
+	if strata and border.SetFrameStrata and border:GetFrameStrata() ~= strata then border:SetFrameStrata(strata) end
+
+	local targetLevel = (layerParent.GetFrameLevel and layerParent:GetFrameLevel()) or (btn.GetFrameLevel and btn:GetFrameLevel()) or 0
+	local foregroundLevel = btn.foreground and btn.foreground.GetFrameLevel and btn.foreground:GetFrameLevel()
+	if foregroundLevel and foregroundLevel > targetLevel then targetLevel = foregroundLevel - 1 end
+	if targetLevel < 0 then targetLevel = 0 end
+	if border.SetFrameLevel and border:GetFrameLevel() ~= targetLevel then border:SetFrameLevel(targetLevel) end
+
+	return border
+end
+
+function H.hideAuraBorderFrame(btn)
+	local border = btn and btn._eqolAuraBorder
+	if border then border:Hide() end
+end
+
+function H.calcAuraBorderSize(btn, ac)
+	local configured = ac and tonumber(ac.borderSize)
+	if configured and configured > 0 then return floor(configured + 0.5) end
+	local baseSize = (btn and btn.GetWidth and btn:GetWidth()) or (ac and ac.size) or 24
+	local size = floor((baseSize or 24) * 0.08 + 0.5)
+	if size < 1 then size = 1 end
+	if size > 6 then size = 6 end
+	return size
+end
+
+function H.NormalizeFrameStrata(value)
+	if type(value) ~= "string" or value == "" then return nil end
+	local token = string.upper(value)
+	if token == "BACKGROUND" or token == "LOW" or token == "MEDIUM" or token == "HIGH" or token == "DIALOG" or token == "FULLSCREEN" or token == "FULLSCREEN_DIALOG" or token == "TOOLTIP" then
+		return token
+	end
+	return nil
+end
+
+local function ensureHighlightFrame(frame, highlightCfg)
+	if not frame then return nil end
+	local highlight = frame._ufHighlight
+	if not highlight then
+		highlight = CreateFrame("Frame", nil, frame, "BackdropTemplate")
+		highlight:EnableMouse(false)
+		frame._ufHighlight = highlight
+	elseif highlight.GetParent and highlight:GetParent() ~= frame and highlight.SetParent then
+		highlight:SetParent(frame)
+	end
+	local strata = H.NormalizeFrameStrata(highlightCfg and highlightCfg.strata) or (frame.GetFrameStrata and frame:GetFrameStrata())
+	if strata and highlight.SetFrameStrata and highlight:GetFrameStrata() ~= strata then highlight:SetFrameStrata(strata) end
+	local baseLevel = frame:GetFrameLevel() or 0
+	local targetLevel = baseLevel + 4
+	local border = frame._ufBorder
+	if border and border.GetFrameLevel and border.GetFrameStrata and highlight.GetFrameStrata and border:GetFrameStrata() == highlight:GetFrameStrata() then
+		local borderLevel = border:GetFrameLevel()
+		if borderLevel and targetLevel <= borderLevel then targetLevel = borderLevel + 1 end
+	end
+	highlight:SetFrameLevel(targetLevel)
+	highlight:ClearAllPoints()
+	highlight:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
+	highlight:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
+	return highlight
+end
+
+local function getHighlightHostFrame(st)
+	if not st then return nil end
+	-- Unit frame borders are applied to the bar wrapper, not the outer frame.
+	return st.barGroup or st.frame
+end
+
+function H.buildHighlightConfig(cfg, def)
+	local hcfg = (cfg and cfg.highlight) or {}
+	local hdef = (def and def.highlight) or {}
+	local enabled = hcfg.enabled
+	if enabled == nil then enabled = hdef.enabled end
+	if enabled ~= true then return nil end
+	local mouseover = hcfg.mouseover
+	if mouseover == nil then mouseover = hdef.mouseover end
+	if mouseover == nil then mouseover = true end
+	local target = hcfg.target
+	if target == nil then target = hdef.target end
+	if target == nil then target = false end
+	local aggro = hcfg.aggro
+	if aggro == nil then aggro = hdef.aggro end
+	if aggro == nil then aggro = true end
+	local combat = hcfg.combat
+	if combat == nil then combat = hdef.combat end
+	if combat == nil then combat = false end
+	local texture = hcfg.texture or hdef.texture or "DEFAULT"
+	local size = hcfg.size
+	if size == nil then size = hdef.size end
+	size = tonumber(size) or 1
+	if size < 1 then size = 1 end
+	local color = hcfg.color
+	if type(color) ~= "table" then color = hdef.color end
+	if type(color) ~= "table" then color = { 1, 0, 0, 1 } end
+	local mouseoverColor = hcfg.mouseoverColor
+	if type(mouseoverColor) ~= "table" then mouseoverColor = hdef.mouseoverColor end
+	if type(mouseoverColor) ~= "table" then mouseoverColor = color end
+	local combatColor = hcfg.combatColor
+	if type(combatColor) ~= "table" then combatColor = hdef.combatColor end
+	if type(combatColor) ~= "table" then combatColor = color end
+	local strata = H.NormalizeFrameStrata(hcfg.strata)
+	if strata == nil then strata = H.NormalizeFrameStrata(hdef.strata) end
+	return {
+		enabled = true,
+		mouseover = mouseover == true,
+		target = target == true,
+		aggro = aggro == true,
+		combat = combat == true,
+		strata = strata,
+		texture = texture,
+		size = size,
+		color = color,
+		mouseoverColor = mouseoverColor,
+		combatColor = combatColor,
+	}
+end
+
+function H.applyHighlightStyle(st, highlightCfg)
+	local host = getHighlightHostFrame(st)
+	if not host then return end
+	local highlight = host._ufHighlight
+	if not highlight then
+		highlight = st and st._highlightFrame or nil
+		if highlight and highlight.GetParent and highlight:GetParent() ~= host then
+			highlight:Hide()
+			highlight = nil
+		end
+	end
+	if not highlightCfg or highlightCfg.enabled ~= true then
+		if st._highlightFrame and st._highlightFrame ~= highlight then st._highlightFrame:Hide() end
+		if highlight then
+			highlight:SetBackdrop(nil)
+			highlight:Hide()
+		end
+		st._highlightFrame = nil
+		return
+	end
+	if st._highlightFrame and st._highlightFrame.GetParent and st._highlightFrame:GetParent() ~= host then st._highlightFrame:Hide() end
+	if highlight and host._ufHighlight ~= highlight then host._ufHighlight = highlight end
+	highlight = ensureHighlightFrame(host, highlightCfg)
+	if not highlight then return end
+	st._highlightFrame = highlight
+	local size = highlightCfg.size or 1
+	if size < 1 then size = 1 end
+	local insetVal = highlightCfg.inset
+	if insetVal == nil then insetVal = size end
+	local color = highlightCfg.color or { 1, 0, 0, 1 }
+	highlight:SetBackdrop({
+		bgFile = "Interface\\Buttons\\WHITE8x8",
+		edgeFile = H.resolveBorderTexture(highlightCfg.texture),
+		edgeSize = size,
+		insets = { left = insetVal, right = insetVal, top = insetVal, bottom = insetVal },
+	})
+	highlight:SetBackdropColor(0, 0, 0, 0)
+	highlight:SetBackdropBorderColor(color[1] or 1, color[2] or 0, color[3] or 0, color[4] or 1)
+	highlight:Hide()
+end
+
+local function hasAggro(unit)
+	if not UnitThreatSituation or not unit then return false end
+	if UnitExists and not UnitExists(unit) then return false end
+	local threat = UnitThreatSituation(unit)
+	return threat and threat >= 2
+end
+
+function H.updateHighlight(st, unit, playerUnit)
+	local host = getHighlightHostFrame(st)
+	if not host then return end
+	local cfg = st._highlightCfg
+	local highlight = host._ufHighlight
+	if not highlight then
+		highlight = st and st._highlightFrame or nil
+		if highlight and highlight.GetParent and highlight:GetParent() ~= host then
+			highlight:Hide()
+			highlight = nil
+		end
+	end
+	if not cfg or cfg.enabled ~= true then
+		if highlight then highlight:Hide() end
+		return
+	end
+	if not highlight then
+		H.applyHighlightStyle(st, cfg)
+		highlight = host._ufHighlight or st._highlightFrame
+		if not highlight then return end
+	else
+		if host._ufHighlight ~= highlight then host._ufHighlight = highlight end
+		st._highlightFrame = highlight
+	end
+	local show = false
+	local color = cfg.color or { 1, 0, 0, 1 }
+	if cfg.mouseover and st._hovered then
+		show = true
+		color = cfg.mouseoverColor or color
+	elseif cfg.target
+		and UnitIsUnit
+		and UnitExists
+		and H.UnsecretBool(UnitExists("target")) == true
+		and H.UnsecretBool(UnitExists(unit)) == true
+		and H.UnsecretBool(UnitIsUnit(unit, "target")) == true
+	then
+		show = true
+	elseif cfg.aggro and (unit == (playerUnit or "player") or unit == "pet") and hasAggro(unit) then
+		show = true
+	elseif cfg.combat and unit == (playerUnit or "player") and UnitAffectingCombat and UnitExists and UnitExists(unit) and UnitAffectingCombat(unit) then
+		show = true
+		color = cfg.combatColor or color
+	end
+	if show then
+		highlight:SetBackdropBorderColor(color[1] or 1, color[2] or 0, color[3] or 0, color[4] or 1)
+		highlight:Show()
+	else
+		highlight:Hide()
+	end
+end
+
+function H.updateTargetHighlightState(st, unit, playerUnit)
+	if st and st._highlightCfg and st._highlightCfg.target == true then H.updateHighlight(st, unit, playerUnit) end
+end
+
+function H.updateTargetHighlights(states, unitTokens, maxBossFrames)
+	if type(states) ~= "table" or type(unitTokens) ~= "table" then return end
+	local playerUnit = unitTokens.PLAYER or "player"
+	H.updateTargetHighlightState(states[playerUnit], playerUnit, playerUnit)
+	if unitTokens.TARGET then H.updateTargetHighlightState(states[unitTokens.TARGET], unitTokens.TARGET, playerUnit) end
+	if unitTokens.TARGET_TARGET then H.updateTargetHighlightState(states[unitTokens.TARGET_TARGET], unitTokens.TARGET_TARGET, playerUnit) end
+	if unitTokens.FOCUS then H.updateTargetHighlightState(states[unitTokens.FOCUS], unitTokens.FOCUS, playerUnit) end
+	if unitTokens.FOCUS_TARGET then H.updateTargetHighlightState(states[unitTokens.FOCUS_TARGET], unitTokens.FOCUS_TARGET, playerUnit) end
+	if unitTokens.PET then H.updateTargetHighlightState(states[unitTokens.PET], unitTokens.PET, playerUnit) end
+	for i = 1, tonumber(maxBossFrames) or 0 do
+		local unit = "boss" .. i
+		H.updateTargetHighlightState(states[unit], unit, playerUnit)
+	end
+end
+
+function H.updateAllHighlights(states, unitTokens, maxBossFrames)
+	if type(states) ~= "table" or type(unitTokens) ~= "table" then return end
+	local playerUnit = unitTokens.PLAYER or "player"
+	H.updateHighlight(states[playerUnit], playerUnit, playerUnit)
+	if unitTokens.TARGET then H.updateHighlight(states[unitTokens.TARGET], unitTokens.TARGET, playerUnit) end
+	if unitTokens.TARGET_TARGET then H.updateHighlight(states[unitTokens.TARGET_TARGET], unitTokens.TARGET_TARGET, playerUnit) end
+	if unitTokens.FOCUS then H.updateHighlight(states[unitTokens.FOCUS], unitTokens.FOCUS, playerUnit) end
+	if unitTokens.FOCUS_TARGET then H.updateHighlight(states[unitTokens.FOCUS_TARGET], unitTokens.FOCUS_TARGET, playerUnit) end
+	if unitTokens.PET then H.updateHighlight(states[unitTokens.PET], unitTokens.PET, playerUnit) end
+	local maxBoss = tonumber(maxBossFrames) or 0
+	for i = 1, maxBoss do
+		local unit = "boss" .. i
+		H.updateHighlight(states[unit], unit, playerUnit)
+	end
+end
+
+function H.resolveTexture(key)
+	if key == "SOLID" then return "Interface\\Buttons\\WHITE8x8" end
+	if not key or key == "DEFAULT" then return BLIZZARD_TEX end
+	if key == H.BLIZZARD_RAID_FRAME_TEX_KEY then return H.BLIZZARD_RAID_FRAME_TEX end
+	if LSM then
+		local tex = LSM:Fetch("statusbar", key)
+		if tex then return tex end
+	end
+	return key
+end
+
+function H.shouldUseSolidBackdropForTexture(key)
+	return key == H.BLIZZARD_RAID_FRAME_TEX_KEY or key == H.BLIZZARD_RAID_FRAME_TEX
+end
+
+function H.resolveSeparatorTexture(key)
+	if not key or key == "" or key == "SOLID" then return "Interface\\Buttons\\WHITE8x8" end
+	if key == "DEFAULT" then return BLIZZARD_TEX end
+	if key == H.BLIZZARD_RAID_FRAME_TEX_KEY then return H.BLIZZARD_RAID_FRAME_TEX end
+	if LSM then
+		local tex = LSM:Fetch("statusbar", key)
+		if tex then return tex end
+	end
+	return key
+end
+
+function H.resolveCastTexture(key)
+	if key == "SOLID" then return "Interface\\Buttons\\WHITE8x8" end
+	if not key or key == "DEFAULT" then return BLIZZARD_CAST_STANDARD_TEX or BLIZZARD_TEX end
+	if key == H.BLIZZARD_RAID_FRAME_TEX_KEY then return H.BLIZZARD_RAID_FRAME_TEX end
+	if LSM then
+		local tex = LSM:Fetch("statusbar", key)
+		if tex then return tex end
+	end
+	return key
+end
+
+function H.resolveCastInterruptTexture() return BLIZZARD_CAST_INTERRUPTED_TEX end
+
+function H.resolveCastChannelTexture() return "ui-castingbar-filling-channel" end
+
+function H.resolveCastUninterruptibleTexture() return "ui-castingbar-uninterruptable" end
+
+function H.resolveCastIconTexture(texture)
+	if issecretvalue and issecretvalue(texture) then return texture end
+	if texture == nil then return BLIZZARD_CAST_ICON_FALLBACK_TEX end
+	return texture
+end
+
+local function normalizePowerToken(powerToken)
+	if type(powerToken) ~= "string" then return powerToken end
+	if powerToken:sub(1, 11) == "POWER_TYPE_" then return powerToken:sub(12) end
+	return powerToken
+end
+
+local canonicalPowerTokenByEnum = {
+	[0] = "MANA",
+	[1] = "RAGE",
+	[2] = "FOCUS",
+	[3] = "ENERGY",
+	[4] = "CHI",
+	[5] = "RUNES",
+	[6] = "RUNIC_POWER",
+	[7] = "SOUL_SHARDS",
+	[8] = "LUNAR_POWER",
+	[9] = "HOLY_POWER",
+	[11] = "MAELSTROM",
+	[13] = "INSANITY",
+	[17] = "FURY",
+	[18] = "PAIN",
+}
+
+local function getCanonicalPowerToken(powerEnum, powerToken)
+	local enumKey = tonumber(powerEnum)
+	if enumKey ~= nil then
+		local canonical = canonicalPowerTokenByEnum[enumKey]
+		if canonical and canonical ~= "" then return canonical end
+	end
+	local token = normalizePowerToken(powerToken)
+	if type(token) == "string" and token ~= "" then return token end
+	return nil
+end
+
+local function getPowerColorEntry(powerEnum, powerToken)
+	if not PowerBarColor then return nil end
+	local canonicalToken = getCanonicalPowerToken(powerEnum, powerToken)
+	if canonicalToken then
+		local entry = PowerBarColor[canonicalToken]
+		if entry then return entry end
+		entry = PowerBarColor["POWER_TYPE_" .. canonicalToken]
+		if entry then return entry end
+	end
+	local enumKey = tonumber(powerEnum)
+	if enumKey ~= nil then
+		local entry = PowerBarColor[enumKey] or PowerBarColor[tostring(enumKey)]
+		if entry then return entry end
+	end
+	local token = normalizePowerToken(powerToken)
+	if type(token) == "string" and token ~= "" and token ~= canonicalToken then
+		local entry = PowerBarColor[token]
+		if entry then return entry end
+		entry = PowerBarColor["POWER_TYPE_" .. token]
+		if entry then return entry end
+	end
+	return nil
+end
+
+local function getPowerOverrideEntry(overrides, powerEnum, powerToken)
+	if not overrides then return nil end
+	local enumKey = tonumber(powerEnum)
+	if enumKey ~= nil then
+		local override = overrides[enumKey] or overrides[tostring(enumKey)]
+		if override then return override end
+	end
+	local canonicalToken = getCanonicalPowerToken(powerEnum, powerToken)
+	if type(canonicalToken) == "string" and canonicalToken ~= "" then
+		local override = overrides[canonicalToken]
+		if override then return override end
+		override = overrides["POWER_TYPE_" .. canonicalToken]
+		if override then return override end
+	end
+	local token = normalizePowerToken(powerToken)
+	if type(token) == "string" and token ~= "" and token ~= canonicalToken then
+		local override = overrides[token]
+		if override then return override end
+		override = overrides["POWER_TYPE_" .. token]
+		if override then return override end
+	end
+	return nil
+end
+
+function H.configureSpecialTexture(bar, pType, texKey, cfg, powerEnum)
+	if not bar then return end
+	if not pType and powerEnum == nil then return end
+	local overrides = addon.db and addon.db.ufUseCustomPowerColors == true and addon.db.ufPowerColorOverrides
+	if getPowerOverrideEntry(overrides, powerEnum, pType) then
+		local tex = bar:GetStatusBarTexture()
+		if tex and tex.GetAtlas and tex:GetAtlas() and bar.SetStatusBarTexture then
+			bar:SetStatusBarTexture(H.resolveTexture(texKey))
+			tex = bar:GetStatusBarTexture()
+		end
+		if tex and tex.SetHorizTile then tex:SetHorizTile(false) end
+		if tex and tex.SetVertTile then tex:SetVertTile(false) end
+		return
+	end
+	local resolvedToken = getCanonicalPowerToken(powerEnum, pType)
+	local atlas = atlasByPower[resolvedToken]
+	if not atlas then return end
+	if texKey and texKey ~= "" and texKey ~= "DEFAULT" then return end
+	if resolvedToken == "HEALTH" and addon.variables and addon.variables.isForever and not addon.variables.isTBC then
+		bar:SetStatusBarTexture(H.FOREVER_DEFAULT_HEALTH_TEX)
+		return
+	end
+	cfg = cfg or bar._cfg
+	local tex = bar:GetStatusBarTexture()
+	if tex and tex.SetAtlas then
+		local currentAtlas = tex.GetAtlas and tex:GetAtlas()
+		if currentAtlas ~= atlas then tex:SetAtlas(atlas, true) end
+		if tex.SetHorizTile then tex:SetHorizTile(false) end
+		if tex.SetVertTile then tex:SetVertTile(false) end
+	end
+end
+
+H.getCanonicalPowerToken = getCanonicalPowerToken
+
+local powerEnumByToken = {
+	MANA = (EnumPowerType and EnumPowerType.MANA) or 0,
+	RAGE = (EnumPowerType and EnumPowerType.RAGE) or 1,
+	FOCUS = (EnumPowerType and EnumPowerType.FOCUS) or 2,
+	ENERGY = (EnumPowerType and EnumPowerType.ENERGY) or 3,
+	COMBO_POINTS = (EnumPowerType and EnumPowerType.COMBO_POINTS) or 4,
+	RUNES = (EnumPowerType and EnumPowerType.RUNES) or 5,
+	RUNIC_POWER = (EnumPowerType and EnumPowerType.RUNIC_POWER) or 6,
+	SOUL_SHARDS = (EnumPowerType and EnumPowerType.SOUL_SHARDS) or 7,
+	LUNAR_POWER = (EnumPowerType and EnumPowerType.LUNAR_POWER) or (EnumPowerType and EnumPowerType.ALTERNATE) or 8,
+	HOLY_POWER = (EnumPowerType and EnumPowerType.HOLY_POWER) or 9,
+	MAELSTROM = (EnumPowerType and EnumPowerType.MAELSTROM) or 11,
+	CHI = (EnumPowerType and EnumPowerType.CHI) or 12,
+	INSANITY = (EnumPowerType and EnumPowerType.INSANITY) or 13,
+	ARCANE_CHARGES = (EnumPowerType and EnumPowerType.ARCANE_CHARGES) or 16,
+	FURY = (EnumPowerType and EnumPowerType.FURY) or 17,
+	PAIN = (EnumPowerType and EnumPowerType.PAIN) or 18,
+	ESSENCE = (EnumPowerType and EnumPowerType.ESSENCE) or 19,
+}
+
+local auraPowerTokenSet = {
+	MAELSTROM_WEAPON = true,
+	VOID_METAMORPHOSIS = true,
+}
+
+local SECONDARY_TRACKED_TOKENS = {
+	"MANA",
+	"STAGGER",
+	"VOID_METAMORPHOSIS",
+}
+
+local secondaryTrackedTokenSet = {
+	MANA = true,
+	STAGGER = true,
+	VOID_METAMORPHOSIS = true,
+}
+
+if addon.variables and addon.variables.isForever and not addon.variables.isTBC then
+	SECONDARY_TRACKED_TOKENS = { "MANA" }
+	secondaryTrackedTokenSet = { MANA = true }
+end
+
+local secondaryNeverTrackSet = {
+	RUNES = true,
+	COMBO_POINTS = true,
+	ENERGY = true,
+	RAGE = true,
+}
+
+local primaryPowerExcludedSet = {
+	ARCANE_CHARGES = true,
+	CHI = true,
+	ESSENCE = true,
+	HOLY_POWER = true,
+	MAELSTROM_WEAPON = true,
+	RUNIC_POWER = true,
+	SOUL_SHARDS = true,
+	VOID_METAMORPHOSIS = true,
+}
+
+local primaryPowerTokenCache
+local primaryPowerTokenSetCache
+local secondaryPowerTokenCache
+
+local function normalizePrimaryPowerToken(powerEnum, powerToken)
+	local normalized = getCanonicalPowerToken(powerEnum, powerToken)
+	if type(normalized) ~= "string" then return nil end
+	normalized = string.upper(normalized)
+	if normalized == "" or normalized == "NONE" then return nil end
+	return normalized
+end
+
+local function normalizeSecondaryPowerToken(token)
+	if type(token) ~= "string" then return nil end
+	local normalized = getCanonicalPowerToken(nil, token)
+	if type(normalized) ~= "string" then return nil end
+	normalized = string.upper(normalized)
+	if normalized == "" or normalized == "NONE" then return nil end
+	return normalized
+end
+
+local function appendSecondaryToken(list, seen, token)
+	local normalized = normalizeSecondaryPowerToken(token)
+	if not normalized or seen[normalized] then return end
+	seen[normalized] = true
+	list[#list + 1] = normalized
+end
+
+local function isTrackedSecondaryToken(token)
+	local normalized = normalizeSecondaryPowerToken(token)
+	if not normalized then return false end
+	if secondaryNeverTrackSet[normalized] then return false end
+	return secondaryTrackedTokenSet[normalized] == true
+end
+
+function H.getPowerLabel(token)
+	local normalized = normalizeSecondaryPowerToken(token)
+	if not normalized then return "" end
+	local rb = addon.Aura and addon.Aura.ResourceBars
+	local labels = rb and rb.PowerLabels
+	local fromRB = labels and labels[normalized]
+	if type(fromRB) == "string" and fromRB ~= "" then return fromRB end
+	local fromGlobal = _G[normalized]
+	if type(fromGlobal) == "string" and fromGlobal ~= "" then return fromGlobal end
+	return normalized:gsub("_", " ")
+end
+
+local function appendPrimaryPowerToken(list, seen, token)
+	local normalized = normalizePrimaryPowerToken(nil, token)
+	if not normalized or seen[normalized] then return end
+	if primaryPowerExcludedSet[normalized] then return end
+	seen[normalized] = true
+	list[#list + 1] = normalized
+end
+
+local function getPrimaryPowerTokens()
+	if primaryPowerTokenCache then return primaryPowerTokenCache end
+	local list = {}
+	local seen = {}
+	local rb = addon.Aura and addon.Aura.ResourceBars
+	local powertypeClasses = rb and rb.powertypeClasses
+	if type(powertypeClasses) == "table" then
+		for _, specs in pairs(powertypeClasses) do
+			if type(specs) == "table" then
+				for _, info in pairs(specs) do
+					if type(info) == "table" then appendPrimaryPowerToken(list, seen, info.MAIN) end
+				end
+			end
+		end
+	end
+	if #list == 0 then
+		appendPrimaryPowerToken(list, seen, "MANA")
+		appendPrimaryPowerToken(list, seen, "RAGE")
+		appendPrimaryPowerToken(list, seen, "FOCUS")
+		appendPrimaryPowerToken(list, seen, "ENERGY")
+		appendPrimaryPowerToken(list, seen, "RUNIC_POWER")
+		appendPrimaryPowerToken(list, seen, "LUNAR_POWER")
+		appendPrimaryPowerToken(list, seen, "HOLY_POWER")
+		appendPrimaryPowerToken(list, seen, "MAELSTROM")
+		appendPrimaryPowerToken(list, seen, "MAELSTROM_WEAPON")
+		appendPrimaryPowerToken(list, seen, "SOUL_SHARDS")
+		appendPrimaryPowerToken(list, seen, "CHI")
+		appendPrimaryPowerToken(list, seen, "INSANITY")
+		appendPrimaryPowerToken(list, seen, "ARCANE_CHARGES")
+		appendPrimaryPowerToken(list, seen, "FURY")
+		appendPrimaryPowerToken(list, seen, "ESSENCE")
+		appendPrimaryPowerToken(list, seen, "VOID_METAMORPHOSIS")
+	end
+	table.sort(list, function(a, b) return tostring(H.getPowerLabel(a)) < tostring(H.getPowerLabel(b)) end)
+	primaryPowerTokenCache = list
+	primaryPowerTokenSetCache = {}
+	for i = 1, #list do
+		primaryPowerTokenSetCache[list[i]] = true
+	end
+	return primaryPowerTokenCache
+end
+
+local function getPrimaryPowerTokenSet()
+	if primaryPowerTokenSetCache then return primaryPowerTokenSetCache end
+	getPrimaryPowerTokens()
+	return primaryPowerTokenSetCache or {}
+end
+
+function H.GetPrimaryPowerTokens()
+	local src = getPrimaryPowerTokens()
+	local out = {}
+	for i = 1, #src do
+		out[i] = src[i]
+	end
+	return out
+end
+
+function H.GetPrimaryPowerTokenOptions()
+	local options = {}
+	for _, token in ipairs(getPrimaryPowerTokens()) do
+		options[#options + 1] = { value = token, label = H.getPowerLabel(token) }
+	end
+	return options
+end
+
+function H.GetDefaultPrimaryPowerAllowedTypes()
+	local defaults = {}
+	for _, token in ipairs(getPrimaryPowerTokens()) do
+		defaults[token] = true
+	end
+	return defaults
+end
+
+local function getPrimaryAllowedTypes(cfg, def)
+	local src = cfg and cfg.allowedTypes
+	local allowed = {}
+	if type(src) == "table" then
+		for _, token in ipairs(getPrimaryPowerTokens()) do
+			if src[token] == true then allowed[token] = true end
+		end
+		return allowed
+	end
+	src = def and def.allowedTypes
+	if type(src) == "table" then
+		for _, token in ipairs(getPrimaryPowerTokens()) do
+			if src[token] == true then allowed[token] = true end
+		end
+		return allowed
+	end
+	return H.GetDefaultPrimaryPowerAllowedTypes()
+end
+
+local function getEffectivePlayerPrimaryPowerToken(powerToken, powerEnum)
+	local normalized = normalizePrimaryPowerToken(powerEnum, powerToken)
+	return normalized
+end
+
+function H.IsPrimaryPowerAllowed(cfg, def, powerToken, powerEnum, unitToken)
+	if unitToken and unitToken ~= "player" then return true end
+	local normalized = getEffectivePlayerPrimaryPowerToken(powerToken, powerEnum)
+	if not normalized then return true end
+	if not getPrimaryPowerTokenSet()[normalized] then return true end
+	local allowed = getPrimaryAllowedTypes(cfg, def)
+	return allowed[normalized] == true
+end
+
+local function getSecondaryPowerTokens()
+	if secondaryPowerTokenCache then return secondaryPowerTokenCache end
+	local list = {}
+	local seen = {}
+	for i = 1, #SECONDARY_TRACKED_TOKENS do
+		appendSecondaryToken(list, seen, SECONDARY_TRACKED_TOKENS[i])
+	end
+	table.sort(list, function(a, b) return tostring(H.getPowerLabel(a)) < tostring(H.getPowerLabel(b)) end)
+	secondaryPowerTokenCache = list
+	return secondaryPowerTokenCache
+end
+
+local function getSpecPowerInfo(classTag, specIndex)
+	local rb = addon.Aura and addon.Aura.ResourceBars
+	local class = classTag or addon.variables.unitClass
+	local spec = tonumber(specIndex or addon.variables.unitSpec)
+	if not class or not spec then return nil end
+	local classTable = rb and rb.powertypeClasses and rb.powertypeClasses[class]
+	if type(classTable) ~= "table" then return nil end
+	local info = classTable[spec]
+	if type(info) ~= "table" then return nil end
+	return info
+end
+
+H.secondaryPowerCache = H.secondaryPowerCache or { spec = {}, auto = {} }
+
+function H.GetSpecPowerCacheKey(classTag, specIndex)
+	local class = classTag or addon.variables.unitClass
+	local spec = tonumber(specIndex or addon.variables.unitSpec)
+	if not class or not spec then return nil end
+	return tostring(class) .. ":" .. tostring(spec), class, spec
+end
+
+function H.GetSpecMainPowerToken(classTag, specIndex)
+	local info = getSpecPowerInfo(classTag, specIndex)
+	return normalizeSecondaryPowerToken(info and info.MAIN)
+end
+
+function H.GetSpecSecondaryPowerTokens(classTag, specIndex)
+	local cacheKey, class, spec = H.GetSpecPowerCacheKey(classTag, specIndex)
+	local cache = H.secondaryPowerCache.spec
+	if cacheKey and cache[cacheKey] then return cache[cacheKey] end
+	local rb = addon.Aura and addon.Aura.ResourceBars
+	local classPowerTypes = rb and rb.classPowerTypes
+	local info = getSpecPowerInfo(class, spec)
+	local list = {}
+	if not info then
+		if cacheKey then cache[cacheKey] = list end
+		return list
+	end
+	local main = normalizeSecondaryPowerToken(info.MAIN)
+	if type(classPowerTypes) ~= "table" then
+		if cacheKey then cache[cacheKey] = list end
+		return list
+	end
+	for i = 1, #classPowerTypes do
+		local token = normalizeSecondaryPowerToken(classPowerTypes[i])
+		if token and token ~= main and info[token] == true then list[#list + 1] = token end
+	end
+	if cacheKey then cache[cacheKey] = list end
+	return list
+end
+
+function H.GetDefaultSecondaryPowerAllowedTypes()
+	if H.secondaryPowerCache.defaultAllowedTypes then return H.secondaryPowerCache.defaultAllowedTypes end
+	local defaults = {}
+	for _, token in ipairs(getSecondaryPowerTokens()) do
+		defaults[token] = true
+	end
+	H.secondaryPowerCache.defaultAllowedTypes = defaults
+	return defaults
+end
+
+local function isSecondaryPowerAllowed(cfg, def, token)
+	local src = cfg and cfg.allowedTypes
+	if type(src) == "table" then return src[token] == true end
+	src = def and def.allowedTypes
+	if type(src) == "table" then return src[token] == true end
+	return H.GetDefaultSecondaryPowerAllowedTypes()[token] == true
+end
+
+function H.IsSecondaryPowerSupportedForSpec(powerToken, classTag, specIndex)
+	local normalized = normalizeSecondaryPowerToken(powerToken)
+	if not normalized then return false end
+	if not isTrackedSecondaryToken(normalized) then return false end
+	local class = classTag or addon.variables.unitClass
+	local spec = tonumber(specIndex or addon.variables.unitSpec)
+	if class == "DRUID" then
+		return normalized == "MANA"
+	end
+	if class == "DEMONHUNTER" and spec == 3 then return normalized == "VOID_METAMORPHOSIS" end
+	local info = getSpecPowerInfo(classTag, specIndex)
+	if not info then return false end
+	local secondaries = H.GetSpecSecondaryPowerTokens(classTag, specIndex)
+	for i = 1, #secondaries do
+		if secondaries[i] == normalized then return true end
+	end
+	return false
+end
+
+local function resolveAutoSecondaryToken(classTag, specIndex)
+	-- Druid mana remains available in forms, independent of spec or Resource Bars.
+	if (classTag or addon.variables.unitClass) == "DRUID" then return "MANA" end
+	local cacheKey, class, spec = H.GetSpecPowerCacheKey(classTag, specIndex)
+	local cache = H.secondaryPowerCache.auto
+	if cacheKey then
+		local cached = cache[cacheKey]
+		if cached ~= nil then return cached or nil end
+	end
+	local info = getSpecPowerInfo(class, spec)
+	if not info then
+		if cacheKey then cache[cacheKey] = false end
+		return nil
+	end
+
+	if class == "DEMONHUNTER" and spec == 3 then
+		if cacheKey then cache[cacheKey] = "VOID_METAMORPHOSIS" end
+		return "VOID_METAMORPHOSIS"
+	end
+
+	local secondaries = H.GetSpecSecondaryPowerTokens(class, spec)
+	for i = 1, #secondaries do
+		local token = secondaries[i]
+		if isTrackedSecondaryToken(token) then
+			if cacheKey then cache[cacheKey] = token end
+			return token
+		end
+	end
+	if cacheKey then cache[cacheKey] = false end
+	return nil
+end
+
+local function getCurrentPlayerPrimaryPowerToken()
+	if type(UnitPowerType) ~= "function" then return nil end
+	local enumId, token = UnitPowerType("player")
+	return getEffectivePlayerPrimaryPowerToken(token, enumId)
+end
+
+function H.ResolveSecondaryPowerToken(cfg, def, classTag, specIndex)
+	local normalized = normalizeSecondaryPowerToken(resolveAutoSecondaryToken(classTag, specIndex))
+	if not normalized then return nil end
+	if not isTrackedSecondaryToken(normalized) then return nil end
+	local currentPrimary = getCurrentPlayerPrimaryPowerToken()
+	if currentPrimary and currentPrimary == normalized then
+		-- Keep druid mana configurable in caster form while Edit Mode is open.
+		local editMode = addon.EditModeLib
+		if (classTag or addon.variables.unitClass) ~= "DRUID" or not (editMode and editMode.IsInEditMode and editMode:IsInEditMode()) then return nil end
+	end
+	if isSecondaryPowerAllowed(cfg, def, normalized) then return normalized end
+	return nil
+end
+
+function H.GetSecondaryPowerTokenOptions(includeNone)
+	local options = {}
+	if includeNone == true then options[#options + 1] = { value = "NONE", label = _G.NONE } end
+	for _, token in ipairs(getSecondaryPowerTokens()) do
+		options[#options + 1] = { value = token, label = H.getPowerLabel(token) }
+	end
+	return options
+end
+
+function H.GetPowerEnumByToken(powerToken)
+	local normalized = normalizeSecondaryPowerToken(powerToken)
+	if not normalized then return nil end
+	return powerEnumByToken[normalized]
+end
+
+function H.IsAuraPowerToken(powerToken)
+	local normalized = normalizeSecondaryPowerToken(powerToken)
+	if not normalized then return false end
+	return auraPowerTokenSet[normalized] == true
+end
+
+function H.IsSecondaryPowerTokenSpecial(powerToken)
+	local normalized = normalizeSecondaryPowerToken(powerToken)
+	if not normalized then return false end
+	return normalized == "STAGGER" or auraPowerTokenSet[normalized] == true
+end
+
+function H.GetPowerValuesForToken(unit, powerToken)
+	local normalized = normalizeSecondaryPowerToken(powerToken)
+	if not normalized then return nil, nil, nil, nil end
+	local unitToken = unit or "player"
+	if normalized == "STAGGER" then
+		local cur = UnitStagger and UnitStagger(unitToken) or 0
+		local maxv = UnitHealthMax and UnitHealthMax(unitToken) or 0
+		return cur or 0, maxv or 0, nil, normalized
+	end
+	if auraPowerTokenSet[normalized] then
+		local rb = addon.Aura and addon.Aura.ResourceBars
+		local getCounts = rb and rb.GetAuraPowerCounts
+		if type(getCounts) == "function" then
+			local cur, maxv = getCounts(normalized)
+			return cur or 0, maxv or 0, nil, normalized
+		end
+		return 0, 0, nil, normalized
+	end
+	local enumId = powerEnumByToken[normalized]
+	if enumId == nil then return nil, nil, nil, normalized end
+	local cur = UnitPower and UnitPower(unitToken, enumId) or 0
+	local maxv = UnitPowerMax and UnitPowerMax(unitToken, enumId) or 0
+	return cur or 0, maxv or 0, enumId, normalized
+end
+
+function H.GetPowerPercentByToken(unit, powerToken, cur, maxv)
+	local normalized = normalizeSecondaryPowerToken(powerToken)
+	if not normalized then return 0 end
+	local enumId = powerEnumByToken[normalized]
+	if enumId ~= nil and addon.functions and addon.functions.GetPowerPercent then return addon.functions.GetPowerPercent(unit or "player", enumId, cur, maxv, true) end
+	local current = tonumber(cur) or 0
+	local maxValue = tonumber(maxv) or 0
+	if maxValue > 0 then return (current / maxValue) * 100 end
+	return 0
+end
+
+local reverseStyle = Enum.StatusBarFillStyle and Enum.StatusBarFillStyle.Reverse or "REVERSE"
+local standardStyle = Enum.StatusBarFillStyle and Enum.StatusBarFillStyle.Standard or "STANDARD"
+function H.applyStatusBarReverseFill(bar, reverse)
+	if not bar then return end
+	if bar.SetFillStyle then
+		bar:SetFillStyle(reverse and reverseStyle or standardStyle)
+	elseif bar.SetReverseFill then
+		bar:SetReverseFill(reverse and true or false)
+	end
+end
+
+function H.shouldUseDefaultCastArt(st) return st and st.castUseDefaultArt == true end
+
+local function clearCastbarGradientState(bar)
+	if not bar then return end
+	bar._eqolGradientEnabled = nil
+	bar._eqolGradientTex = nil
+	bar._eqolGradDir = nil
+	bar._eqolGradSR = nil
+	bar._eqolGradSG = nil
+	bar._eqolGradSB = nil
+	bar._eqolGradSA = nil
+	bar._eqolGradER = nil
+	bar._eqolGradEG = nil
+	bar._eqolGradEB = nil
+	bar._eqolGradEA = nil
+end
+
+local function normalizeGradientColor(color)
+	if type(color) ~= "table" then return 1, 1, 1, 1 end
+	if color.r ~= nil then return color.r or 1, color.g or 1, color.b or 1, color.a or 1 end
+	return color[1] or 1, color[2] or 1, color[3] or 1, color[4] or 1
+end
+
+local function normalizeCastbarGradientMode(value)
+	if type(value) == "string" and value:upper() == "BAR_END" then return "BAR_END" end
+	return "CASTBAR"
+end
+
+local function resolveCastbarGradientProgress(bar, progressOverride)
+	local progress = tonumber(progressOverride)
+	if not progress and bar and bar.GetMinMaxValues and bar.GetValue then
+		local minValue, maxValue = bar:GetMinMaxValues()
+		local value = bar:GetValue()
+		if type(value) == "number" and type(minValue) == "number" and type(maxValue) == "number" then
+			local range = maxValue - minValue
+			if range > 0 then progress = (value - minValue) / range end
+		end
+	end
+	if type(progress) ~= "number" then return nil end
+	return H.clamp(progress, 0, 1)
+end
+
+local function applyCastbarGradient(bar, ccfg, _baseR, _baseG, _baseB, _baseA, progressOverride)
+	if not bar or not ccfg or ccfg.useGradient ~= true then return false end
+	local tex = bar.GetStatusBarTexture and bar:GetStatusBarTexture()
+	if not tex or not tex.SetGradient then return false end
+
+	local sr, sg, sb, sa = normalizeGradientColor(ccfg.gradientStartColor)
+	local er, eg, eb, ea = normalizeGradientColor(ccfg.gradientEndColor)
+
+	if normalizeCastbarGradientMode(ccfg.gradientMode) == "BAR_END" then
+		local progress = resolveCastbarGradientProgress(bar, progressOverride)
+		if progress then
+			er = sr + (er - sr) * progress
+			eg = sg + (eg - sg) * progress
+			eb = sb + (eb - sb) * progress
+			ea = sa + (ea - sa) * progress
+		end
+	end
+
+	local direction = ccfg.gradientDirection or "HORIZONTAL"
+	if type(direction) == "string" then direction = direction:upper() end
+	if direction ~= "VERTICAL" then direction = "HORIZONTAL" end
+
+	if
+		bar._eqolGradientEnabled
+		and bar._eqolGradientTex == tex
+		and bar._eqolGradDir == direction
+		and bar._eqolGradSR == sr
+		and bar._eqolGradSG == sg
+		and bar._eqolGradSB == sb
+		and bar._eqolGradSA == sa
+		and bar._eqolGradER == er
+		and bar._eqolGradEG == eg
+		and bar._eqolGradEB == eb
+		and bar._eqolGradEA == ea
+	then
+		return true
+	end
+
+	tex:SetGradient(direction, CreateColor(sr, sg, sb, sa), CreateColor(er, eg, eb, ea))
+	bar._eqolGradientEnabled = true
+	bar._eqolGradientTex = tex
+	bar._eqolGradDir = direction
+	bar._eqolGradSR, bar._eqolGradSG, bar._eqolGradSB, bar._eqolGradSA = sr, sg, sb, sa
+	bar._eqolGradER, bar._eqolGradEG, bar._eqolGradEB, bar._eqolGradEA = er, eg, eb, ea
+	return true
+end
+
+function H.SetCastbarColorWithGradient(bar, ccfg, r, g, b, a, progressOverride)
+	if not bar then return end
+	local br, bg, bb, ba = r or 1, g or 1, b or 1, a or 1
+	local renderR, renderG, renderB, renderA = br, bg, bb, ba
+	if ccfg and ccfg.useGradient == true then
+		-- Keep the status bar neutral so the configured gradient colors render without a base tint.
+		renderR, renderG, renderB, renderA = 1, 1, 1, 1
+	end
+	local lastColor = bar._eqolLastColor
+	if not lastColor or lastColor[1] ~= renderR or lastColor[2] ~= renderG or lastColor[3] ~= renderB or lastColor[4] ~= renderA then
+		bar:SetStatusBarColor(renderR, renderG, renderB, renderA)
+		bar._eqolLastColor = bar._eqolLastColor or {}
+		bar._eqolLastColor[1], bar._eqolLastColor[2], bar._eqolLastColor[3], bar._eqolLastColor[4] = renderR, renderG, renderB, renderA
+	end
+	if ccfg and ccfg.useGradient == true then
+		if not applyCastbarGradient(bar, ccfg, br, bg, bb, ba, progressOverride) then clearCastbarGradientState(bar) end
+	elseif bar._eqolGradientEnabled then
+		clearCastbarGradientState(bar)
+	end
+end
+
+function H.RefreshCastbarGradient(bar, ccfg, r, g, b, a, progressOverride)
+	if not bar then return end
+	local br, bg, bb, ba = r, g, b, a
+	if br == nil then
+		if bar._eqolLastColor then
+			br, bg, bb, ba = bar._eqolLastColor[1], bar._eqolLastColor[2], bar._eqolLastColor[3], bar._eqolLastColor[4]
+		elseif bar.GetStatusBarColor then
+			br, bg, bb, ba = bar:GetStatusBarColor()
+		end
+	end
+	if ccfg and ccfg.useGradient == true then
+		if not applyCastbarGradient(bar, ccfg, br or 1, bg or 1, bb or 1, ba or 1, progressOverride) then clearCastbarGradientState(bar) end
+	elseif bar._eqolGradientEnabled then
+		clearCastbarGradientState(bar)
+	end
+end
+
+local CAST_SPARK_WIDTH = 8
+local CAST_SPARK_HEIGHT = 20
+local CAST_SPARK_LAYER_DEFAULT = 3
+local CAST_SPARK_LAYER_CUSTOM = 7
+local EMPOWER_PIP_LAYER_DEFAULT = 2
+local EMPOWER_PIP_LAYER_CUSTOM = 6
+local EMPOWER_CUSTOM_PIP_MIN_WIDTH = 3
+local EMPOWER_CUSTOM_PIP_MAX_WIDTH = 6
+local EMPOWER_CUSTOM_PIP_ALPHA = 0.9
+local EMPOWER_CUSTOM_PIP_LINE_SUBLEVEL = 5
+local EMPOWER_CUSTOM_PIP_FX_SUBLEVEL = 7
+
+local function getCustomPipDimensions(barHeight)
+	local baseHeight = barHeight or 0
+	if baseHeight <= 0 then baseHeight = 16 end
+	local lineHeight = baseHeight
+	local width = floor(baseHeight * 0.18)
+	if width < EMPOWER_CUSTOM_PIP_MIN_WIDTH then width = EMPOWER_CUSTOM_PIP_MIN_WIDTH end
+	if width > EMPOWER_CUSTOM_PIP_MAX_WIDTH then width = EMPOWER_CUSTOM_PIP_MAX_WIDTH end
+	return width, lineHeight
+end
+
+local function setPipFxLayer(pip, layer, sublevel)
+	if not pip then return end
+	if pip.PipGlow and pip.PipGlow.SetDrawLayer then pip.PipGlow:SetDrawLayer(layer, sublevel) end
+	if pip.FlakesBottom and pip.FlakesBottom.SetDrawLayer then pip.FlakesBottom:SetDrawLayer(layer, sublevel) end
+	if pip.FlakesTop and pip.FlakesTop.SetDrawLayer then pip.FlakesTop:SetDrawLayer(layer, sublevel) end
+	if pip.FlakesTop02 and pip.FlakesTop02.SetDrawLayer then pip.FlakesTop02:SetDrawLayer(layer, sublevel) end
+	if pip.FlakesBottom02 and pip.FlakesBottom02.SetDrawLayer then pip.FlakesBottom02:SetDrawLayer(layer, sublevel) end
+end
+
+local function ensureCastSparkTextures(st)
+	if not st or not st.castBar then return nil end
+	local bar = st.castBar
+	if not st.castSparkLayer then
+		st.castSparkLayer = CreateFrame("Frame", nil, bar, st._auraCastRestricted and "DisableUntrustedLayoutScriptsTemplate" or nil)
+		st.castSparkLayer:SetAllPoints(bar)
+		st.castSparkLayer:EnableMouse(false)
+	end
+	if st.castSparkLayer:GetParent() ~= bar then st.castSparkLayer:SetParent(bar) end
+	st.castSparkLayer:SetFrameStrata(bar:GetFrameStrata())
+	local baseLevel = bar:GetFrameLevel() or 0
+	local layerOffset = H.shouldUseDefaultCastArt(st) and CAST_SPARK_LAYER_DEFAULT or CAST_SPARK_LAYER_CUSTOM
+	st.castSparkLayer:SetFrameLevel(baseLevel + layerOffset)
+	local layer = st.castSparkLayer
+	local spark = st.castSpark
+	if not spark then
+		spark = layer:CreateTexture(nil, "OVERLAY", nil, 2)
+		if spark.SetAtlas then spark:SetAtlas("ui-castingbar-pip", false) end
+		spark:SetSize(CAST_SPARK_WIDTH, CAST_SPARK_HEIGHT)
+		spark.offsetY = 0
+		spark:Hide()
+		st.castSpark = spark
+	end
+	if not st.castSparkGlowClip then
+		-- Keep the trail inside the bar without clipping the spark itself.
+		st.castSparkGlowClip = CreateFrame("Frame", nil, layer, st._auraCastRestricted and "DisableUntrustedLayoutScriptsTemplate" or nil)
+		st.castSparkGlowClip:SetAllPoints(bar)
+		st.castSparkGlowClip:SetClipsChildren(true)
+		st.castSparkGlowContent = CreateFrame("Frame", nil, st.castSparkGlowClip, st._auraCastRestricted and "DisableUntrustedLayoutScriptsTemplate" or nil)
+		st.castSparkGlowContent:SetAllPoints(st.castSparkGlowClip)
+	end
+	st.castSparkGlowClip:SetFrameLevel(layer:GetFrameLevel())
+	st.castSparkGlowContent:SetFrameLevel(layer:GetFrameLevel())
+	if not st.castSparkGlow then
+		local glow = st.castSparkGlowContent:CreateTexture(nil, "OVERLAY", nil, 3)
+		if glow.SetBlendMode then glow:SetBlendMode("ADD") end
+		glow:Hide()
+		st.castSparkGlow = glow
+	end
+	if not st.castSparkShadow then
+		local shadow = layer:CreateTexture(nil, "OVERLAY", nil, 3)
+		shadow:Hide()
+		st.castSparkShadow = shadow
+	end
+	return spark
+end
+
+local function setSparkAtlas(spark, atlas)
+	if not spark then return end
+	if spark.SetAtlas then
+		local current = spark.GetAtlas and spark:GetAtlas()
+		if current ~= atlas then spark:SetAtlas(atlas, false) end
+	end
+end
+
+local function updateSparkFx(st, barType)
+	if not st then return end
+	local glow = st.castSparkGlow
+	local shadow = st.castSparkShadow
+	if glow then glow:Hide() end
+	if shadow then shadow:Hide() end
+	if not st.castSpark then return end
+
+	if barType == "channel" then
+		if shadow and shadow.SetAtlas then shadow:SetAtlas("cast_channel_pipshadow", true) end
+		if shadow then
+			shadow:ClearAllPoints()
+			shadow:SetPoint("RIGHT", st.castSpark, "LEFT", 1, 0)
+			shadow:Show()
+		end
+		return
+	end
+
+	if not glow then return end
+	if barType ~= "interrupted" and barType ~= "empowered" then
+		if glow.SetAtlas then glow:SetAtlas("cast_standard_pipglow", true) end
+		if glow.SetScale then glow:SetScale(1) end
+		glow:ClearAllPoints()
+		glow:SetPoint("RIGHT", st.castSpark, "LEFT", 2, 0)
+		glow:Show()
+	end
+end
+
+function H.hideCastSpark(st)
+	if not st then return end
+	if st.castSpark then st.castSpark:Hide() end
+	if st.castSparkGlow then st.castSparkGlow:Hide() end
+	if st.castSparkShadow then st.castSparkShadow:Hide() end
+end
+
+function H.clearCastFinish(st)
+	if not st then return end
+	st.castFinishActive = nil
+	st.castCanFinish = nil
+	st.castFinishCallback = nil
+	if st.castFinishAnim then st.castFinishAnim:Stop() end
+end
+
+function H.finishPlayerCast(st, onFinished)
+	if not st or not st.castBar or st.castInterruptActive then return false end
+	if st.castFinishActive then return true end
+	if not st.castCanFinish or st.castUseDefaultArt ~= true or not st.castBar:IsShown() then return false end
+	local bar = st.castBar
+	if not st.castFinishAnim then
+		local anim = bar:CreateAnimationGroup()
+		local fade = anim:CreateAnimation("Alpha")
+		fade:SetFromAlpha(1)
+		fade:SetToAlpha(0)
+		fade:SetDuration(0.2)
+		anim:SetScript("OnFinished", function()
+			if not st.castFinishActive then return end
+			local callback = st.castFinishCallback
+			st.castFinishActive = nil
+			st.castFinishCallback = nil
+			if callback then callback() end
+		end)
+		st.castFinishAnim = anim
+	end
+	st.castFinishActive = true
+	st.castFinishCallback = onFinished
+	H.hideCastSpark(st)
+	bar:SetStatusBarTexture("ui-castingbar-full-standard")
+	bar:SetMinMaxValues(0, 1)
+	bar:SetValue(1)
+	if st.castDuration then st.castDuration:Hide() end
+	bar:SetAlpha(1)
+	st.castFinishAnim:Play()
+	return true
+end
+
+function H.updatePlayerCastSpark(st)
+	if not st or not st.castBar then return end
+	if st.castSparkEnabled == false then
+		H.hideCastSpark(st)
+		return
+	end
+	local texture = st.castBar:GetStatusBarTexture()
+	if not texture then
+		H.hideCastSpark(st)
+		return
+	end
+	local spark = ensureCastSparkTextures(st)
+	if not spark then return end
+	if spark:GetAtlas() ~= "XPBarAnim-OrangeSpark" then
+		spark:SetAtlas("XPBarAnim-OrangeSpark", true)
+		addon.PixelUtil.ApplyTexturePixelSnapping(spark, 0)
+	end
+	spark:SetBlendMode("ADD")
+	if st.castSparkGlow then st.castSparkGlow:Hide() end
+	if st.castSparkShadow then st.castSparkShadow:Hide() end
+	-- Follow the fill texture directly, including bars driven by restricted duration values.
+	local reverse
+	if st.castBar.GetFillStyle then
+		reverse = st.castBar:GetFillStyle() == reverseStyle
+	elseif st.castBar.GetReverseFill then
+		reverse = st.castBar:GetReverseFill()
+	end
+	spark:ClearAllPoints()
+	spark:SetPoint("TOP", texture, reverse and "TOPLEFT" or "TOPRIGHT", 0, 0)
+	spark:SetPoint("BOTTOM", texture, reverse and "BOTTOMLEFT" or "BOTTOMRIGHT", 0, 0)
+	spark:Show()
+	if st.castCanFinish or (st.castInfo and not st.castInfo.isChannel) then
+		local glow = st.castSparkGlow
+		if glow then
+			if glow:GetAtlas() ~= "cast_standard_pipglow" then glow:SetAtlas("cast_standard_pipglow", false) end
+			glow:SetWidth(37)
+			glow:SetTexCoord(reverse and 1 or 0, reverse and 0 or 1, 0, 1)
+			glow:ClearAllPoints()
+			glow:SetPoint(reverse and "TOPLEFT" or "TOPRIGHT", texture, reverse and "TOPLEFT" or "TOPRIGHT", reverse and 2 or -2, 0)
+			glow:SetPoint(reverse and "BOTTOMLEFT" or "BOTTOMRIGHT", texture, reverse and "BOTTOMLEFT" or "BOTTOMRIGHT", reverse and 2 or -2, 0)
+			glow:Show()
+		end
+	end
+end
+
+function H.updateCastSpark(st, overrideType)
+	if not st or not st.castBar then return end
+	if st.castSparkEnabled == false then
+		H.hideCastSpark(st)
+		return
+	end
+	local barType = overrideType
+	if not barType then
+		if st.castInterruptActive then
+			barType = "interrupted"
+		elseif st.castInfo then
+			if st.castInfo.isEmpowered then
+				barType = "empowered"
+			elseif st.castInfo.isChannel then
+				barType = "channel"
+			else
+				barType = "standard"
+			end
+		end
+	end
+	if not barType then
+		H.hideCastSpark(st)
+		return
+	end
+	local spark = ensureCastSparkTextures(st)
+	if not spark then return end
+
+	spark:SetBlendMode("BLEND")
+	if barType == "interrupted" then
+		setSparkAtlas(spark, "ui-castingbar-pip-red")
+	elseif barType == "empowered" then
+		setSparkAtlas(spark, "ui-castingbar-empower-cursor")
+	else
+		setSparkAtlas(spark, "ui-castingbar-pip")
+	end
+	spark:Show()
+	updateSparkFx(st, barType)
+
+	local barHeight = st._auraCastRestricted and st._auraCastHeight or st.castBar:GetHeight()
+	local sparkHeight = CAST_SPARK_HEIGHT
+	if barHeight and barHeight > 0 then
+		sparkHeight = barHeight + 8
+		if sparkHeight < CAST_SPARK_HEIGHT then sparkHeight = CAST_SPARK_HEIGHT end
+	end
+	spark:SetSize(CAST_SPARK_WIDTH, sparkHeight)
+	local extra = (barHeight and barHeight > 0) and (sparkHeight - barHeight) or 0
+	if barType == "empowered" then
+		spark.offsetY = (extra > 0) and (extra * 0.5) or 0
+	else
+		spark.offsetY = 0
+	end
+
+	local minVal, maxVal = st.castBar:GetMinMaxValues()
+	local value = st.castBar:GetValue()
+	if value == nil or maxVal == nil then
+		H.hideCastSpark(st)
+		return
+	end
+	if issecretvalue and ((minVal and issecretvalue(minVal)) or issecretvalue(value) or issecretvalue(maxVal)) then
+		H.hideCastSpark(st)
+		return
+	end
+	local range = (maxVal or 0) - (minVal or 0)
+	if not range or range == 0 then
+		H.hideCastSpark(st)
+		return
+	end
+	local width = st._auraCastRestricted and st._auraCastWidth or st.castBar:GetWidth()
+	if not width or width <= 0 then return end
+	local progress = (value - (minVal or 0)) / range
+	if progress < 0 then
+		progress = 0
+	elseif progress > 1 then
+		progress = 1
+	end
+	local offset = width * progress
+	spark:ClearAllPoints()
+	spark:SetPoint("CENTER", st.castBar, "LEFT", offset, spark.offsetY or 0)
+end
+
+local After = C_Timer and C_Timer.After
+local UnitEmpoweredChannelDuration = _G.UnitEmpoweredChannelDuration
+local UnitEmpoweredStagePercentages = _G.UnitEmpoweredStagePercentages
+local UnitEmpoweredStageDurations = _G.UnitEmpoweredStageDurations
+local GetUnitEmpowerHoldAtMaxTime = _G.GetUnitEmpowerHoldAtMaxTime
+local GetUnitEmpowerStageDuration = _G.GetUnitEmpowerStageDuration
+
+local function normalizeStageValues(...)
+	local count = select("#", ...)
+	if count == 1 and type((...)) == "table" then
+		local src = ...
+		local values = {}
+		for i = 1, #src do
+			values[i] = src[i]
+		end
+		return values
+	end
+	local values = {}
+	for i = 1, count do
+		local val = select(i, ...)
+		if val ~= nil then values[#values + 1] = val end
+	end
+	return values
+end
+
+local function normalizeDurationMilliseconds(value)
+	if type(value) ~= "number" then return nil end
+	if issecretvalue and issecretvalue(value) then return nil end
+	if value < 0 then return nil end
+	if value > 20 then return value end
+	return value * 1000
+end
+
+H.normalizeDurationMilliseconds = normalizeDurationMilliseconds
+
+local function durationToMilliseconds(duration)
+	if type(duration) == "number" then return normalizeDurationMilliseconds(duration) end
+	if type(duration) ~= "table" then return nil end
+	if duration.GetMilliseconds then
+		local ms = duration:GetMilliseconds()
+		if issecretvalue and issecretvalue(ms) then return nil end
+		return ms
+	end
+	if duration.GetSeconds then
+		local seconds = duration:GetSeconds()
+		if issecretvalue and issecretvalue(seconds) then return nil end
+		return normalizeDurationMilliseconds(seconds)
+	end
+	if duration.GetDuration then
+		local value = duration:GetDuration()
+		if issecretvalue and issecretvalue(value) then return nil end
+		if type(value) == "number" then return normalizeDurationMilliseconds(value) end
+	end
+	if duration.GetTime then
+		local value = duration:GetTime()
+		if issecretvalue and issecretvalue(value) then return nil end
+		if type(value) == "number" then return normalizeDurationMilliseconds(value) end
+	end
+	return nil
+end
+
+H.getDurationMilliseconds = durationToMilliseconds
+
+function H.getEmpoweredChannelDurationMilliseconds(unit)
+	if not unit or not UnitEmpoweredChannelDuration then return nil end
+	local duration = UnitEmpoweredChannelDuration(unit, true)
+	return durationToMilliseconds(duration)
+end
+
+function H.getEmpowerHoldMilliseconds(unit)
+	if not unit or not GetUnitEmpowerHoldAtMaxTime then return nil end
+	local hold = GetUnitEmpowerHoldAtMaxTime(unit)
+	return normalizeDurationMilliseconds(hold)
+end
+
+local function normalizeStagePercents(values, numStages)
+	if type(values) ~= "table" then return nil end
+	local cleaned = {}
+	local scale = 1
+	for i = 1, #values do
+		local val = values[i]
+		if type(val) == "number" and (not issecretvalue or not issecretvalue(val)) then
+			if val > 1 then scale = 100 end
+		end
+	end
+	local last = -1
+	for i = 1, #values do
+		local val = values[i]
+		if type(val) == "number" and (not issecretvalue or not issecretvalue(val)) then
+			if scale == 100 then val = val / 100 end
+			if val < 0 then
+				val = 0
+			elseif val > 1 then
+				val = 1
+			end
+			if val > last then
+				cleaned[#cleaned + 1] = val
+				last = val
+			end
+		end
+		if numStages and #cleaned >= numStages then break end
+	end
+	if #cleaned == 0 then return nil end
+	return cleaned
+end
+
+local function buildStagePercentsFromPercentages(values, numStages)
+	if type(values) ~= "table" then return nil end
+	local cleaned = {}
+	local scale = 1
+	local hasSecret = false
+	for i = 1, #values do
+		local val = values[i]
+		if type(val) == "number" then
+			if issecretvalue and issecretvalue(val) then
+				hasSecret = true
+			elseif val > 1 then
+				scale = 100
+			end
+		end
+	end
+	if hasSecret then return nil end
+	for i = 1, #values do
+		local val = values[i]
+		if type(val) == "number" then
+			if scale == 100 then val = val / 100 end
+			if val < 0 then
+				val = 0
+			elseif val > 1 then
+				val = 1
+			end
+			cleaned[#cleaned + 1] = val
+		end
+	end
+	if #cleaned == 0 then return nil end
+	if numStages and #cleaned > numStages then
+		while #cleaned > numStages do
+			table.remove(cleaned)
+		end
+	end
+	if numStages and #cleaned < numStages then return nil end
+	if #cleaned == 0 then return nil end
+	local sum = 0
+	for i = 1, #cleaned do
+		sum = sum + cleaned[i]
+	end
+	local assumeCumulative = #cleaned > 1 and sum > 1.02
+	if assumeCumulative then return normalizeStagePercents(cleaned, numStages) end
+	local cumulative = {}
+	local running = 0
+	for i = 1, #cleaned do
+		running = running + cleaned[i]
+		cumulative[i] = running
+	end
+	return normalizeStagePercents(cumulative, numStages)
+end
+
+local function buildEmpowerStagePercents(unit, numStages)
+	if not numStages or numStages <= 0 then return nil end
+	if UnitEmpoweredStagePercentages then
+		local percents = normalizeStageValues(UnitEmpoweredStagePercentages(unit, true))
+		percents = buildStagePercentsFromPercentages(percents, numStages)
+		if percents then return percents end
+	end
+	local durations
+	if UnitEmpoweredStageDurations then
+		durations = normalizeStageValues(UnitEmpoweredStageDurations(unit))
+	elseif GetUnitEmpowerStageDuration then
+		durations = {}
+		for i = 1, numStages do
+			durations[i] = GetUnitEmpowerStageDuration(unit, i - 1)
+		end
+	end
+	if type(durations) ~= "table" or #durations < numStages then return nil end
+	local hold = GetUnitEmpowerHoldAtMaxTime and GetUnitEmpowerHoldAtMaxTime(unit)
+	if hold ~= nil then
+		hold = durationToMilliseconds(hold)
+		if hold == nil then return nil end
+	end
+	local total = hold or 0
+	local percents = {}
+	local sum = 0
+	for i = 1, numStages do
+		local ms = durationToMilliseconds(durations[i])
+		if not ms then return nil end
+		sum = sum + ms
+		total = total + ms
+		percents[i] = sum
+	end
+	if not total or total <= 0 then return nil end
+	for i = 1, numStages do
+		percents[i] = percents[i] / total
+	end
+	return normalizeStagePercents(percents, numStages)
+end
+
+local function ensureEmpowerState(st)
+	if not st or not st.castBar then return nil end
+	if not st.castEmpower then st.castEmpower = { pips = {}, tiers = {} } end
+	local emp = st.castEmpower
+	if not emp.container then
+		emp.container = CreateFrame("Frame", nil, st.castBar, st._auraCastRestricted and "DisableUntrustedLayoutScriptsTemplate" or nil)
+		emp.auraCastRestricted = st._auraCastRestricted
+		emp.container:SetAllPoints(st.castBar)
+		emp.container:EnableMouse(false)
+	end
+	if emp.container:GetParent() ~= st.castBar then emp.container:SetParent(st.castBar) end
+	emp.container:SetFrameStrata(st.castBar:GetFrameStrata())
+	local baseLevel = st.castBar:GetFrameLevel() or 0
+	local layerOffset = H.shouldUseDefaultCastArt(st) and EMPOWER_PIP_LAYER_DEFAULT or EMPOWER_PIP_LAYER_CUSTOM
+	emp.container:SetFrameLevel(baseLevel + layerOffset)
+	return emp
+end
+
+local function addAlphaAnim(group, target, fromAlpha, toAlpha, duration, order, startDelay, smoothing)
+	local anim = group:CreateAnimation("Alpha")
+	anim:SetTarget(target)
+	anim:SetFromAlpha(fromAlpha or 0)
+	anim:SetToAlpha(toAlpha or 0)
+	anim:SetDuration(duration or 0)
+	anim:SetOrder(order or 1)
+	if startDelay and startDelay > 0 then anim:SetStartDelay(startDelay) end
+	if smoothing then anim:SetSmoothing(smoothing) end
+	return anim
+end
+
+local function addTranslationAnim(group, target, offsetX, offsetY, duration, order, smoothing)
+	local anim = group:CreateAnimation("Translation")
+	anim:SetTarget(target)
+	anim:SetOffset(offsetX or 0, offsetY or 0)
+	anim:SetDuration(duration or 0)
+	anim:SetOrder(order or 1)
+	if smoothing then anim:SetSmoothing(smoothing) end
+	return anim
+end
+
+local function addRotationAnim(group, target, degrees, duration, order, smoothing)
+	local anim = group:CreateAnimation("Rotation")
+	anim:SetTarget(target)
+	anim:SetDegrees(degrees or 0)
+	anim:SetDuration(duration or 0)
+	anim:SetOrder(order or 1)
+	if smoothing then anim:SetSmoothing(smoothing) end
+	if anim.SetOrigin then anim:SetOrigin("CENTER", 0, 0) end
+	return anim
+end
+
+local function ensureEmpowerPip(emp, index)
+	local pip = emp.pips[index]
+	if pip then return pip end
+	pip = CreateFrame("Frame", nil, emp.container, emp.auraCastRestricted and "DisableUntrustedLayoutScriptsTemplate" or nil)
+	pip:SetSize(7, 10)
+	pip.BasePip = pip:CreateTexture(nil, "ARTWORK", nil, 2)
+	if pip.BasePip.SetAtlas then pip.BasePip:SetAtlas("ui-castingbar-empower-pip", true) end
+	pip.BasePip:SetPoint("CENTER")
+	pip.PipGlow = pip:CreateTexture(nil, "OVERLAY", nil, 2)
+	if pip.PipGlow.SetAtlas then pip.PipGlow:SetAtlas("cast-empowered-pipflare", true) end
+	pip.PipGlow:SetAlpha(0)
+	pip.PipGlow:SetPoint("CENTER")
+	if pip.PipGlow.SetScale then pip.PipGlow:SetScale(0.5) end
+
+	pip.FlakesBottom = pip:CreateTexture(nil, "OVERLAY", nil, 2)
+	if pip.FlakesBottom.SetAtlas then pip.FlakesBottom:SetAtlas("Cast_Empowered_FlakesS01", true) end
+	if pip.FlakesBottom.SetScale then pip.FlakesBottom:SetScale(0.5) end
+	pip.FlakesBottom:SetAlpha(0)
+	pip.FlakesBottom:SetPoint("CENTER")
+
+	pip.FlakesTop = pip:CreateTexture(nil, "OVERLAY", nil, 2)
+	if pip.FlakesTop.SetAtlas then pip.FlakesTop:SetAtlas("Cast_Empowered_FlakesS02", true) end
+	if pip.FlakesTop.SetScale then pip.FlakesTop:SetScale(0.5) end
+	pip.FlakesTop:SetAlpha(0)
+	pip.FlakesTop:SetPoint("CENTER")
+
+	pip.FlakesTop02 = pip:CreateTexture(nil, "OVERLAY", nil, 2)
+	if pip.FlakesTop02.SetAtlas then pip.FlakesTop02:SetAtlas("Cast_Empowered_FlakesS03", true) end
+	if pip.FlakesTop02.SetScale then pip.FlakesTop02:SetScale(0.5) end
+	pip.FlakesTop02:SetAlpha(0)
+	pip.FlakesTop02:SetPoint("CENTER")
+
+	pip.FlakesBottom02 = pip:CreateTexture(nil, "OVERLAY", nil, 2)
+	if pip.FlakesBottom02.SetAtlas then pip.FlakesBottom02:SetAtlas("Cast_Empowered_FlakesS03", true) end
+	if pip.FlakesBottom02.SetScale then pip.FlakesBottom02:SetScale(0.5) end
+	pip.FlakesBottom02:SetAlpha(0)
+	pip.FlakesBottom02:SetPoint("CENTER")
+
+	pip.StageAnim = pip:CreateAnimationGroup()
+	pip.StageAnim:SetLooping("NONE")
+	if pip.StageAnim.SetToFinalAlpha then pip.StageAnim:SetToFinalAlpha(true) end
+
+	addAlphaAnim(pip.StageAnim, pip.PipGlow, 0, 0, 0, 1, nil, "NONE")
+	addAlphaAnim(pip.StageAnim, pip.PipGlow, 0.1, 1, 0.1, 1, 0, "NONE")
+	addAlphaAnim(pip.StageAnim, pip.PipGlow, 1, 0, 0.25, 1, 0.1, "OUT")
+
+	addTranslationAnim(pip.StageAnim, pip.FlakesBottom, 0, -30, 0.3, 1, "OUT")
+	addRotationAnim(pip.StageAnim, pip.FlakesBottom, 90, 0.3, 1, "OUT")
+	addAlphaAnim(pip.StageAnim, pip.FlakesBottom, 0.1, 1, 0.1, 1, 0, "NONE")
+	addAlphaAnim(pip.StageAnim, pip.FlakesBottom, 1, 0, 0.25, 1, 0.1, "NONE")
+
+	addTranslationAnim(pip.StageAnim, pip.FlakesTop, 0, 30, 0.3, 1, "OUT")
+	addRotationAnim(pip.StageAnim, pip.FlakesTop, -90, 0.3, 1, "OUT")
+	addAlphaAnim(pip.StageAnim, pip.FlakesTop, 0.1, 1, 0.1, 1, 0, "NONE")
+	addAlphaAnim(pip.StageAnim, pip.FlakesTop, 1, 0, 0.25, 1, 0.1, "NONE")
+
+	addTranslationAnim(pip.StageAnim, pip.FlakesTop02, 0, 35, 0.3, 1, "IN")
+	addRotationAnim(pip.StageAnim, pip.FlakesTop02, 60, 0.3, 1, "OUT")
+	addAlphaAnim(pip.StageAnim, pip.FlakesTop02, 0.1, 1, 0.1, 1, 0, "NONE")
+	addAlphaAnim(pip.StageAnim, pip.FlakesTop02, 1, 0, 0.25, 1, 0.1, "NONE")
+
+	addTranslationAnim(pip.StageAnim, pip.FlakesBottom02, 0, -35, 0.3, 1, "IN")
+	addRotationAnim(pip.StageAnim, pip.FlakesBottom02, -60, 0.3, 1, "OUT")
+	addAlphaAnim(pip.StageAnim, pip.FlakesBottom02, 0.1, 1, 0.1, 1, 0, "NONE")
+	addAlphaAnim(pip.StageAnim, pip.FlakesBottom02, 1, 0, 0.25, 1, 0.1, "NONE")
+
+	emp.pips[index] = pip
+	return pip
+end
+
+local function ensureEmpowerTier(emp, index)
+	local tier = emp.tiers[index]
+	if tier then return tier end
+	tier = CreateFrame("Frame", nil, emp.container, emp.auraCastRestricted and "DisableUntrustedLayoutScriptsTemplate" or nil)
+	tier.Normal = tier:CreateTexture(nil, "BACKGROUND", nil, 4)
+	tier.Disabled = tier:CreateTexture(nil, "BACKGROUND", nil, 4)
+	tier.Glow = tier:CreateTexture(nil, "BACKGROUND", nil, 5)
+	tier.Normal:SetAllPoints(tier)
+	tier.Disabled:SetAllPoints(tier)
+	tier.Glow:SetAllPoints(tier)
+	if tier.Glow.SetBlendMode then tier.Glow:SetBlendMode("ADD") end
+	tier.Glow:SetAlpha(0)
+	tier.GlowAnim = tier.Glow:CreateAnimationGroup()
+	local fadeIn = tier.GlowAnim:CreateAnimation("Alpha")
+	fadeIn:SetFromAlpha(0)
+	fadeIn:SetToAlpha(1)
+	fadeIn:SetDuration(0.1)
+	fadeIn:SetOrder(1)
+	local fadeOut = tier.GlowAnim:CreateAnimation("Alpha")
+	fadeOut:SetFromAlpha(1)
+	fadeOut:SetToAlpha(0)
+	fadeOut:SetDuration(0.5)
+	fadeOut:SetOrder(2)
+	emp.tiers[index] = tier
+	return tier
+end
+
+function H.clearEmpowerStages(st)
+	local emp = st and st.castEmpower
+	if not emp then return end
+	emp.stagePercents = nil
+	emp.stageCount = 0
+	emp.currentStage = 0
+	emp.layoutToken = (emp.layoutToken or 0) + 1
+	if emp.container then emp.container:Hide() end
+	for _, pip in pairs(emp.pips) do
+		if pip.StageAnim then pip.StageAnim:Stop() end
+		if pip.PipGlow then pip.PipGlow:SetAlpha(0) end
+		if pip.FlakesBottom then pip.FlakesBottom:SetAlpha(0) end
+		if pip.FlakesTop then pip.FlakesTop:SetAlpha(0) end
+		if pip.FlakesTop02 then pip.FlakesTop02:SetAlpha(0) end
+		if pip.FlakesBottom02 then pip.FlakesBottom02:SetAlpha(0) end
+		pip:Hide()
+	end
+	for _, tier in pairs(emp.tiers) do
+		if tier.GlowAnim then tier.GlowAnim:Stop() end
+		tier:Hide()
+	end
+end
+
+function H.layoutEmpowerStages(st)
+	local emp = st and st.castEmpower
+	if not st or not st.castBar or not emp or not emp.stagePercents then return end
+	local baseLevel = st.castBar:GetFrameLevel() or 0
+	local layerOffset = H.shouldUseDefaultCastArt(st) and EMPOWER_PIP_LAYER_DEFAULT or EMPOWER_PIP_LAYER_CUSTOM
+	if emp.container then emp.container:SetFrameLevel(baseLevel + layerOffset) end
+	local barLeft = st._auraCastRestricted and 0 or st.castBar:GetLeft()
+	local barRight = st._auraCastRestricted and st._auraCastWidth or st.castBar:GetRight()
+	if not barLeft or not barRight then
+		emp.layoutToken = (emp.layoutToken or 0) + 1
+		local token = emp.layoutToken
+		RunNextFrame(function()
+			local st2 = st
+			local emp2 = st2 and st2.castEmpower
+			if emp2 and emp2.layoutToken == token then H.layoutEmpowerStages(st2) end
+		end)
+		return
+	end
+	local barWidth = barRight - barLeft
+	if not barWidth or barWidth <= 0 then return end
+	local count = emp.stageCount or #emp.stagePercents
+	if count <= 0 then return end
+	local showTiers = H.shouldUseDefaultCastArt(st)
+	local container = emp.container or ensureEmpowerState(st).container
+	if container then container:Show() end
+	local barHeight = st._auraCastRestricted and st._auraCastHeight or st.castBar:GetHeight() or 0
+
+	for i = 1, count do
+		local percent = emp.stagePercents[i]
+		local pip = ensureEmpowerPip(emp, i)
+		pip:ClearAllPoints()
+		local offset = barWidth * percent
+		if showTiers then
+			pip:SetSize(7, 10)
+			pip:SetPoint("TOP", st.castBar, "TOPLEFT", offset, -1)
+			pip:SetPoint("BOTTOM", st.castBar, "BOTTOMLEFT", offset, 1)
+			if pip.BasePip then
+				if pip.BasePip.SetAtlas then pip.BasePip:SetAtlas("ui-castingbar-empower-pip", true) end
+				if pip.BasePip.SetDrawLayer then pip.BasePip:SetDrawLayer("ARTWORK", 2) end
+				if pip.BasePip.SetVertexColor then pip.BasePip:SetVertexColor(1, 1, 1, 1) end
+				pip.BasePip:ClearAllPoints()
+				pip.BasePip:SetPoint("CENTER")
+			end
+			setPipFxLayer(pip, "OVERLAY", 2)
+		else
+			local lineWidth, lineHeight = getCustomPipDimensions(barHeight)
+			pip:SetHeight(lineHeight)
+			pip:SetWidth(lineWidth)
+			pip:SetPoint("TOP", st.castBar, "TOPLEFT", offset, 0)
+			pip:SetPoint("BOTTOM", st.castBar, "BOTTOMLEFT", offset, 0)
+			if pip.BasePip then
+				if pip.BasePip.SetDrawLayer then pip.BasePip:SetDrawLayer("OVERLAY", EMPOWER_CUSTOM_PIP_LINE_SUBLEVEL) end
+				pip.BasePip:ClearAllPoints()
+				pip.BasePip:SetAllPoints(pip)
+				if pip.BasePip.SetColorTexture then
+					pip.BasePip:SetColorTexture(1, 1, 1, EMPOWER_CUSTOM_PIP_ALPHA)
+				else
+					pip.BasePip:SetTexture("Interface\\Buttons\\WHITE8x8")
+					if pip.BasePip.SetVertexColor then pip.BasePip:SetVertexColor(1, 1, 1, EMPOWER_CUSTOM_PIP_ALPHA) end
+				end
+			end
+			setPipFxLayer(pip, "OVERLAY", EMPOWER_CUSTOM_PIP_FX_SUBLEVEL)
+		end
+		if pip.BasePip then pip.BasePip:Show() end
+		pip:Show()
+	end
+	for i = count + 1, #emp.pips do
+		emp.pips[i]:Hide()
+	end
+
+	if showTiers then
+		for i = 1, count do
+			local tier = ensureEmpowerTier(emp, i)
+			tier:ClearAllPoints()
+			local leftStagePip = emp.pips[i]
+			local rightStagePip = emp.pips[i + 1]
+			if leftStagePip then tier:SetPoint("TOPLEFT", leftStagePip, "TOP", 0, 0) end
+			if rightStagePip then
+				tier:SetPoint("BOTTOMRIGHT", rightStagePip, "BOTTOM", 0, 0)
+			else
+				tier:SetPoint("BOTTOMRIGHT", st.castBar, "BOTTOMRIGHT", 0, 1)
+			end
+
+			local tierLeft = st._auraCastRestricted and (barWidth * emp.stagePercents[i]) or tier:GetLeft()
+			local tierRight = st._auraCastRestricted and (barWidth * (emp.stagePercents[i + 1] or 1)) or tier:GetRight()
+			if tierLeft and tierRight then
+				local texLeft = (tierLeft - barLeft) / barWidth
+				local texRight = 1.0 - ((barRight - tierRight) / barWidth)
+				tier.Normal:SetTexCoord(texLeft, texRight, 0, 1)
+				tier.Disabled:SetTexCoord(texLeft, texRight, 0, 1)
+				tier.Glow:SetTexCoord(texLeft, texRight, 0, 1)
+			end
+
+			if tier.Normal.SetAtlas then tier.Normal:SetAtlas(("ui-castingbar-tier%d-empower"):format(i), true) end
+			if tier.Disabled.SetAtlas then tier.Disabled:SetAtlas(("ui-castingbar-disabled-tier%d-empower"):format(i), true) end
+			if tier.Glow.SetAtlas then tier.Glow:SetAtlas(("ui-castingbar-glow-tier%d-empower"):format(i), true) end
+
+			tier.Normal:SetShown(false)
+			tier.Disabled:SetShown(true)
+			tier.Glow:SetAlpha(0)
+			tier:Show()
+		end
+		for i = count + 1, #emp.tiers do
+			emp.tiers[i]:Hide()
+		end
+	else
+		for _, tier in pairs(emp.tiers) do
+			tier:Hide()
+		end
+	end
+end
+
+function H.updateEmpowerStageFromProgress(st, progress)
+	local emp = st and st.castEmpower
+	if not emp or not emp.stagePercents or not emp.stageCount then return end
+	if issecretvalue and issecretvalue(progress) then return end
+	local maxStage = 0
+	for i = 1, emp.stageCount do
+		local pct = emp.stagePercents[i]
+		if type(pct) == "number" and progress >= pct then
+			maxStage = i
+		else
+			break
+		end
+	end
+	if maxStage <= emp.currentStage then return end
+	local showTiers = H.shouldUseDefaultCastArt(st)
+	for i = emp.currentStage + 1, maxStage do
+		local pip = emp.pips[i]
+		if pip and pip.StageAnim then
+			pip.StageAnim:Stop()
+			pip.StageAnim:Play()
+		elseif pip and pip.PipGlowAnim then
+			pip.PipGlowAnim:Stop()
+			pip.PipGlowAnim:Play()
+		end
+		local tier = emp.tiers[i]
+		if showTiers and tier then
+			tier.Normal:SetShown(true)
+			tier.Disabled:SetShown(false)
+			if tier.GlowAnim then
+				tier.GlowAnim:Stop()
+				tier.GlowAnim:Play()
+			end
+		end
+	end
+	emp.currentStage = maxStage
+end
+
+function H.updateEmpowerStageFromBar(st)
+	if not st or not st.castBar then return end
+	local emp = st.castEmpower
+	if not emp or not emp.stagePercents then return end
+	local _, maxVal = st.castBar:GetMinMaxValues()
+	local value = st.castBar:GetValue()
+	if not maxVal or maxVal == 0 or value == nil then return end
+	if issecretvalue and (issecretvalue(value) or issecretvalue(maxVal)) then return end
+	H.updateEmpowerStageFromProgress(st, value / maxVal)
+end
+
+function H.setupEmpowerStages(st, unit, numStages)
+	H.clearEmpowerStages(st)
+	if not st or not unit or not numStages or numStages <= 0 then return end
+	local percents = buildEmpowerStagePercents(unit, numStages)
+	if not percents then return end
+	local emp = ensureEmpowerState(st)
+	if not emp then return end
+	emp.stagePercents = percents
+	emp.stageCount = #percents
+	emp.currentStage = 0
+	H.layoutEmpowerStages(st)
+end
+
+local WrapString = _G.C_StringUtil and _G.C_StringUtil.WrapString
+local TruncateWhenZero = _G.C_StringUtil and _G.C_StringUtil.TruncateWhenZero
+
+-- Resolve the rank from the active cast, never from the highest learned rank.
+function H.formatCastRank(nameText, spellID, enabled)
+	if not enabled or not (addon.variables.isForever or addon.variables.isTBC) then return nameText end
+	if issecretvalue and (issecretvalue(nameText) or issecretvalue(spellID)) then return nameText end
+	if type(nameText) ~= "string" or type(spellID) ~= "number" or not (C_Spell and C_Spell.GetSpellSubtext) then return nameText end
+	local rank = C_Spell.GetSpellSubtext(spellID)
+	if issecretvalue and issecretvalue(rank) then return nameText end
+	if type(rank) ~= "string" or rank == "" then return nameText end
+	local suffix = " (" .. rank .. ")"
+	if nameText:sub(-#suffix) == suffix then return nameText end
+	return nameText .. suffix
+end
+
+function H.formatCastName(nameText, castTarget, showTarget)
+	if not showTarget or type(castTarget) == "nil" then return nameText end
+	if WrapString then return WrapString(castTarget, nameText .. " --> ") or nameText end
+	if not castTarget or castTarget == "" then return nameText end
+	return nameText .. " --> " .. castTarget
+end
+
+function H.resolveTextDelimiter(delimiter)
+	if delimiter == nil or delimiter == "" then delimiter = " " end
+	delimiter = tostring(delimiter)
+	if delimiter:find("%s") then return delimiter end
+	return " " .. delimiter .. " "
+end
+
+function H.resolveTextDelimiters(primary, secondary, tertiary)
+	local primaryResolved = H.resolveTextDelimiter(primary)
+	if secondary == nil or secondary == "" then secondary = primary end
+	local secondaryResolved = H.resolveTextDelimiter(secondary)
+	if tertiary == nil or tertiary == "" then tertiary = secondary end
+	local tertiaryResolved = H.resolveTextDelimiter(tertiary)
+	return primaryResolved, secondaryResolved, tertiaryResolved
+end
+
+local function join2(a, b, sep) return a .. sep .. b end
+
+local function join3(a, b, c, sep1, sep2) return a .. sep1 .. b .. sep2 .. c end
+
+local function join4(a, b, c, d, sep1, sep2, sep3) return a .. sep1 .. b .. sep2 .. c .. sep3 .. d end
+
+function H.formatDisplayValue(value, useShort)
+	if addon.variables and addon.variables.isMidnight and issecretvalue and issecretvalue(value) then
+		if useShort == false then return BreakUpLargeNumbers(value) end
+		return AbbreviateNumbers and AbbreviateNumbers(value) or H.shortValue(value)
+	end
+	if useShort == false then return tostring(value or 0) end
+	return H.shortValue(value or 0)
+end
+
+function H.formatOptionalDisplayValue(value, useShort)
+	if addon.variables and addon.variables.isMidnight and issecretvalue and issecretvalue(value) then return H.formatDisplayValue(value, useShort) end
+	if value == nil then return "" end
+	return H.formatDisplayValue(value, useShort)
+end
+
+function H.formatAbsorbModeText(mode, curText, absorbText, absorbValue)
+	if mode == "ABSORB" then return absorbText end
+	if WrapString then
+		if mode == "CURABSORB" then return curText .. (WrapString(absorbText, " (", ")") or "") end
+		if mode == "CURABSORBPIPE" then return curText .. (WrapString(absorbText, " | ", "") or "") end
+		if mode == "CURABSORBPLUS" then return curText .. (WrapString(absorbText, " + ", "") or "") end
+	end
+	if absorbText == nil or absorbText == "" then return curText end
+	if mode == "CURABSORB" then return string.format("%s (%s)", curText, absorbText) end
+	if mode == "CURABSORBPIPE" then return join2(curText, absorbText, " | ") end
+	if mode == "CURABSORBPLUS" then return join2(curText, absorbText, " + ") end
+	return curText
+end
+
+local function formatPercentModeText(mode, curText, maxText, percentText, levelText, joinPrimary, joinSecondary, joinTertiary)
+	if not percentText then return "" end
+	if mode == "PERCENT" then return percentText end
+	if mode == "CURPERCENT" or mode == "CURPERCENTDASH" then return join2(curText, percentText, joinPrimary) end
+	if mode == "CURMAXPERCENT" then return join3(curText, maxText, percentText, joinPrimary, joinSecondary) end
+	if mode == "MAXPERCENT" then return join2(maxText, percentText, joinPrimary) end
+	if mode == "PERCENTMAX" then return join2(percentText, maxText, joinPrimary) end
+	if mode == "PERCENTCUR" then return join2(percentText, curText, joinPrimary) end
+	if mode == "PERCENTCURMAX" then return join3(percentText, curText, maxText, joinPrimary, joinSecondary) end
+	if mode == "LEVELPERCENT" then return join2(levelText, percentText, joinPrimary) end
+	if mode == "LEVELPERCENTMAX" then return join3(levelText, percentText, maxText, joinPrimary, joinSecondary) end
+	if mode == "LEVELPERCENTCUR" then return join3(levelText, percentText, curText, joinPrimary, joinSecondary) end
+	if mode == "LEVELPERCENTCURMAX" then return join4(levelText, percentText, curText, maxText, joinPrimary, joinSecondary, joinTertiary) end
+	return ""
+end
+
+function H.shortValue(val)
+	if val == nil then return "" end
+	return AbbreviateNumbers(val)
+end
+
+function H.textModeUsesLevel(mode) return type(mode) == "string" and mode:find("LEVEL", 1, true) ~= nil end
+function H.textModeUsesDamageAbsorb(mode)
+	return mode == "ABSORB" or mode == "ABSORB_PERCENT" or mode == "CURABSORB" or mode == "CURABSORBPIPE" or mode == "CURABSORBPLUS"
+end
+function H.textModeUsesHealAbsorb(mode) return mode == "HEAL_ABSORB" or mode == "HEAL_ABSORB_PERCENT" end
+function H.textModeUsesAbsorbPercent(mode) return mode == "ABSORB_PERCENT" or mode == "HEAL_ABSORB_PERCENT" end
+function H.textModeUsesPercent(mode)
+	return type(mode) == "string" and mode:find("PERCENT", 1, true) ~= nil and not H.textModeUsesAbsorbPercent(mode)
+end
+function H.textModeUsesAbsorb(mode) return H.textModeUsesDamageAbsorb(mode) or H.textModeUsesHealAbsorb(mode) end
+function H.textModeUsesDeficit(mode) return mode == "DEFICIT" end
+
+function H.getUnitLevelText(unit, levelOverride, hideClassificationText)
+	if not unit then return "??" end
+	local rawLevel = tonumber(levelOverride) or UnitLevel(unit) or 0
+	local levelText = rawLevel > 0 and tostring(rawLevel) or "??"
+	local classification = UnitClassification and UnitClassification(unit)
+	if classification == "worldboss" then
+		levelText = "??"
+	elseif classification == "elite" then
+		if not hideClassificationText then levelText = levelText .. "+" end
+	elseif classification == "rareelite" then
+		if not hideClassificationText then levelText = levelText .. "R+" end
+	elseif classification == "rare" then
+		if not hideClassificationText then levelText = levelText .. "R" end
+	elseif classification == "trivial" or classification == "minus" then
+		levelText = levelText .. "-"
+	end
+	return levelText
+end
+
+function H.formatText(
+	mode,
+	cur,
+	maxv,
+	useShort,
+	percentValue,
+	delimiter,
+	delimiter2,
+	delimiter3,
+	hidePercentSymbol,
+	levelText,
+	missingValue,
+	roundPercent,
+	delimitersResolved,
+	absorbValue,
+	absorbPercentValue,
+	healAbsorbValue,
+	healAbsorbPercentValue
+)
+	if mode == "NONE" then return "" end
+	if mode == "CURRENT" then return H.formatDisplayValue(cur, useShort) end
+	if mode == "MAX" then return H.formatDisplayValue(maxv, useShort) end
+	if mode == "ABSORB" then return H.formatOptionalDisplayValue(absorbValue, useShort) end
+	if mode == "HEAL_ABSORB" then return H.formatOptionalDisplayValue(healAbsorbValue, useShort) end
+	if mode == "ABSORB_PERCENT" or mode == "HEAL_ABSORB_PERCENT" then
+		local value = mode == "ABSORB_PERCENT" and absorbPercentValue or healAbsorbPercentValue
+		if issecretvalue and issecretvalue(value) then return "" end
+		if value == nil then return "" end
+		return ("%d%s"):format(floor(value + 0.5), hidePercentSymbol and "" or "%")
+	end
+	if mode == "PERCENT" then
+		local percentSuffix = hidePercentSymbol and "" or "%"
+		local hasSecretValues = addon.variables and addon.variables.isMidnight and issecretvalue
+			and (issecretvalue(cur) or issecretvalue(maxv) or issecretvalue(percentValue))
+		if hasSecretValues then
+			local secretPercent = issecretvalue(percentValue)
+			if not secretPercent and percentValue == nil then return "" end
+			if roundPercent then return ("%s%s"):format(tostring(C_StringUtil.RoundToNearestString(percentValue)), percentSuffix) end
+			return ("%s%s"):format(tostring(AbbreviateLargeNumbers(percentValue)), percentSuffix)
+		end
+		if percentValue ~= nil then return ("%d%s"):format(floor(percentValue + 0.5), percentSuffix) end
+		if not maxv or maxv == 0 then return "0" .. percentSuffix end
+		return ("%d%s"):format(floor((cur or 0) / maxv * 100 + 0.5), percentSuffix)
+	end
+	if mode == "CURMAX" then
+		local joinPrimary
+		if delimitersResolved then
+			joinPrimary = delimiter
+		elseif H.resolveTextDelimiters then
+			joinPrimary = H.resolveTextDelimiters(delimiter, delimiter2, delimiter3)
+		else
+			joinPrimary = delimiter
+		end
+		if joinPrimary == nil then joinPrimary = " " end
+		return join2(H.formatDisplayValue(cur, useShort), H.formatDisplayValue(maxv, useShort), joinPrimary)
+	end
+	local joinPrimary, joinSecondary, joinTertiary
+	if delimitersResolved then
+		joinPrimary = delimiter
+		joinSecondary = delimiter2
+		joinTertiary = delimiter3
+	else
+		joinPrimary, joinSecondary, joinTertiary = H.resolveTextDelimiters(delimiter, delimiter2, delimiter3)
+	end
+	if joinPrimary == nil then joinPrimary = " " end
+	if joinSecondary == nil then joinSecondary = joinPrimary end
+	if joinTertiary == nil then joinTertiary = joinSecondary end
+	local percentSuffix = hidePercentSymbol and "" or "%"
+	if levelText == nil or levelText == "" then levelText = "??" end
+	local isPercentMode = type(mode) == "string" and mode:find("PERCENT", 1, true) ~= nil
+	if H.textModeUsesDamageAbsorb(mode) then
+		local curText = H.formatDisplayValue(cur, useShort)
+		local absorbText = H.formatOptionalDisplayValue(absorbValue, useShort)
+		return H.formatAbsorbModeText(mode, curText, absorbText, absorbValue)
+	end
+	if mode == "DEFICIT" then
+		if issecretvalue and issecretvalue(missingValue) then
+			local infix = useShort and H.shortValue(missingValue) or BreakUpLargeNumbers(missingValue)
+			return "-" .. infix
+		end
+		if missingValue == nil then return "" end
+		local missNum = tonumber(missingValue) or 0
+		if missNum <= 0 then return "" end
+		local infix = useShort == false and tostring(missNum) or (AbbreviateNumbers and AbbreviateNumbers(missNum) or H.shortValue(missNum))
+		return "-" .. infix
+	end
+	if mode == "LEVEL" then return levelText end
+	if addon.variables and addon.variables.isMidnight and issecretvalue then
+		if (cur and issecretvalue(cur)) or (maxv and issecretvalue(maxv)) then
+			local percentText
+			if percentValue ~= nil then
+				if roundPercent then
+					percentText = ("%s%s"):format(tostring(C_StringUtil.RoundToNearestString(percentValue)), percentSuffix)
+				else
+					percentText = ("%s%s"):format(tostring(AbbreviateLargeNumbers(percentValue)), percentSuffix)
+				end
+			end
+
+			if mode == "PERCENT" then return percentText or "" end
+			if mode == "CURRENT" then
+				local scur
+				if useShort then scur = H.shortValue(cur) else scur = BreakUpLargeNumbers(cur) end
+				return tostring(scur)
+			end
+			if mode == "MAX" then
+				local smax
+				if useShort then smax = H.shortValue(maxv) else smax = BreakUpLargeNumbers(maxv) end
+				return tostring(smax)
+			end
+			if mode == "CURMAX" then
+				local scur, smax
+				if useShort then
+					scur, smax = H.shortValue(cur), H.shortValue(maxv)
+				else
+					scur, smax = BreakUpLargeNumbers(cur), BreakUpLargeNumbers(maxv)
+				end
+				return join2(tostring(scur), tostring(smax), joinPrimary)
+			end
+			if isPercentMode then
+				local needsCur = mode == "CURPERCENT"
+					or mode == "CURPERCENTDASH"
+					or mode == "CURMAXPERCENT"
+					or mode == "PERCENTCUR"
+					or mode == "PERCENTCURMAX"
+					or mode == "LEVELPERCENTCUR"
+					or mode == "LEVELPERCENTCURMAX"
+				local needsMax = mode == "CURMAXPERCENT"
+					or mode == "MAXPERCENT"
+					or mode == "PERCENTMAX"
+					or mode == "PERCENTCURMAX"
+					or mode == "LEVELPERCENTMAX"
+					or mode == "LEVELPERCENTCURMAX"
+				local scur, smax = "", ""
+				if needsCur then
+					if useShort then scur = H.shortValue(cur) else scur = BreakUpLargeNumbers(cur) end
+				end
+				if needsMax then
+					if useShort then smax = H.shortValue(maxv) else smax = BreakUpLargeNumbers(maxv) end
+				end
+				return formatPercentModeText(mode, tostring(scur), tostring(smax), percentText, levelText, joinPrimary, joinSecondary, joinTertiary)
+			end
+			return ""
+		end
+	end
+	local percentText
+	if isPercentMode then
+		if percentValue ~= nil then
+			percentText = ("%d%s"):format(floor(percentValue + 0.5), percentSuffix)
+		elseif not maxv or maxv == 0 then
+			percentText = "0" .. percentSuffix
+		else
+			percentText = ("%d%s"):format(floor((cur or 0) / maxv * 100 + 0.5), percentSuffix)
+		end
+	end
+	if mode == "PERCENT" then return percentText or "" end
+	if mode == "MAX" then
+		local maxText = useShort == false and tostring(maxv or 0) or H.shortValue(maxv or 0)
+		return maxText
+	end
+	if mode == "CURMAX" then
+		local curText = useShort == false and tostring(cur or 0) or H.shortValue(cur or 0)
+		local maxText = useShort == false and tostring(maxv or 0) or H.shortValue(maxv or 0)
+		return join2(curText, maxText, joinPrimary)
+	end
+	if isPercentMode then
+		local needsCur = mode == "CURPERCENT"
+			or mode == "CURPERCENTDASH"
+			or mode == "CURMAXPERCENT"
+			or mode == "PERCENTCUR"
+			or mode == "PERCENTCURMAX"
+			or mode == "LEVELPERCENTCUR"
+			or mode == "LEVELPERCENTCURMAX"
+		local needsMax = mode == "CURMAXPERCENT"
+			or mode == "MAXPERCENT"
+			or mode == "PERCENTMAX"
+			or mode == "PERCENTCURMAX"
+			or mode == "LEVELPERCENTMAX"
+			or mode == "LEVELPERCENTCURMAX"
+		local curText = needsCur and (useShort == false and tostring(cur or 0) or H.shortValue(cur or 0)) or ""
+		local maxText = needsMax and (useShort == false and tostring(maxv or 0) or H.shortValue(maxv or 0)) or ""
+		return formatPercentModeText(mode, curText, maxText, percentText, levelText, joinPrimary, joinSecondary, joinTertiary)
+	end
+	if useShort == false then return tostring(cur or 0) end
+	return H.shortValue(cur or 0)
+end
+
+H.emptyTextWriter = H.emptyTextWriter or function() return "" end
+
+function H.compileTextWriter(mode, useShort, delimiter, delimiter2, delimiter3, hidePercentSymbol, roundPercent)
+	if mode == "NONE" then return H.emptyTextWriter end
+	if mode == "CURRENT" then return function(cur) return H.formatDisplayValue(cur, useShort) end end
+	if mode == "MAX" then return function(_, maxv) return H.formatDisplayValue(maxv, useShort) end end
+	if mode == "CURMAX" then
+		local joinPrimary = delimiter or " "
+		return function(cur, maxv) return join2(H.formatDisplayValue(cur, useShort), H.formatDisplayValue(maxv, useShort), joinPrimary) end
+	end
+	if mode == "PERCENT" then
+		local suffix = hidePercentSymbol and "" or "%"
+		return function(cur, maxv, percentValue)
+			local hasSecretValues = addon.variables and addon.variables.isMidnight and issecretvalue
+				and (issecretvalue(cur) or issecretvalue(maxv) or issecretvalue(percentValue))
+			if hasSecretValues then
+				if not issecretvalue(percentValue) and percentValue == nil then return "" end
+				if roundPercent then return ("%s%s"):format(tostring(C_StringUtil.RoundToNearestString(percentValue)), suffix) end
+				return ("%s%s"):format(tostring(AbbreviateLargeNumbers(percentValue)), suffix)
+			end
+			if percentValue ~= nil then return ("%d%s"):format(floor(percentValue + 0.5), suffix) end
+			if not maxv or maxv == 0 then return "0" .. suffix end
+			return ("%d%s"):format(floor((cur or 0) / maxv * 100 + 0.5), suffix)
+		end
+	end
+	return function(cur, maxv, percentValue, levelText, missingValue, absorbValue, absorbPercentValue, healAbsorbValue, healAbsorbPercentValue)
+		return H.formatText(
+			mode,
+			cur,
+			maxv,
+			useShort,
+			percentValue,
+			delimiter,
+			delimiter2,
+			delimiter3,
+			hidePercentSymbol,
+			levelText,
+			missingValue,
+			roundPercent,
+			true,
+			absorbValue,
+			absorbPercentValue,
+			healAbsorbValue,
+			healAbsorbPercentValue
+		)
+	end
+end
+
+function H.getNameLimitWidth(fontPath, fontSize, fontOutline, maxChars)
+	if not maxChars or maxChars <= 0 then return nil end
+	local font = H.getFont(fontPath)
+	local size = fontSize or 14
+	local outline = normalizeFontOutline(fontOutline)
+	local key = tostring(font) .. "|" .. tostring(size) .. "|" .. tostring(outline or "") .. "|" .. tostring(maxChars)
+	if nameWidthCache[key] then return nameWidthCache[key] end
+	if not nameWidthCache._measure and UIParent and UIParent.CreateFontString then
+		nameWidthCache._measure = UIParent:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+		if nameWidthCache._measure then nameWidthCache._measure:Hide() end
+	end
+	local measure = nameWidthCache._measure
+	if not measure then return nil end
+	local ok = H.setFontWithFallback(measure, font, size, outline)
+	if not ok then
+		local fallback = H.getFont(nil)
+		H.setFontWithFallback(measure, fallback, size, outline)
+	end
+	measure:SetText(string.rep("i", maxChars))
+	local width = measure:GetStringWidth() or 0
+	nameWidthCache[key] = width
+	return width
+end
+
+function H.applyNameCharLimit(st, scfg, defStatus)
+	if not st or not st.nameText then return end
+	local maxChars = scfg and scfg.nameMaxChars
+	if maxChars == nil and defStatus then maxChars = defStatus.nameMaxChars end
+	maxChars = tonumber(maxChars) or 0
+	if maxChars <= 0 then
+		if st.nameText.SetMaxLines then st.nameText:SetMaxLines(1) end
+		if st.nameText.SetWordWrap then st.nameText:SetWordWrap(false) end
+		if st._eqolNameTextWidth ~= 0 then
+			st.nameText:SetWidth(0)
+			st._eqolNameTextWidth = 0
+		end
+		return
+	end
+	if st.nameText.SetMaxLines then st.nameText:SetMaxLines(1) end
+	if st.nameText.SetWordWrap then st.nameText:SetWordWrap(false) end
+	local width = H.getNameLimitWidth(scfg and scfg.font, scfg and scfg.fontSize or 14, scfg and scfg.fontOutline or "OUTLINE", maxChars)
+	if width and width > 0 then
+		local snappedWidth = width
+		local scale = (st.nameText.GetEffectiveScale and st.nameText:GetEffectiveScale()) or (UIParent and UIParent.GetEffectiveScale and UIParent:GetEffectiveScale()) or 1
+		if _G.PixelUtil and _G.PixelUtil.GetNearestPixelSize then
+			-- Centered name regions blur easily on odd pixel widths; keep the width on an even pixel count.
+			snappedWidth = _G.PixelUtil.GetNearestPixelSize(width * 0.5, scale, 1) * 2
+		end
+		if st._eqolNameTextWidth ~= snappedWidth then
+			st.nameText:SetWidth(snappedWidth)
+			st._eqolNameTextWidth = snappedWidth
+		end
+	end
+end
+
+function H.truncateTextToWidth(fontPath, fontSize, fontOutline, text, maxWidth)
+	if not text or text == "" or maxWidth <= 0 then return text or "" end
+	if not nameWidthCache._measure and UIParent and UIParent.CreateFontString then
+		nameWidthCache._measure = UIParent:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+		if nameWidthCache._measure then nameWidthCache._measure:Hide() end
+	end
+	local measure = nameWidthCache._measure
+	if not measure then return text end
+	local size = fontSize or 14
+	local outline = normalizeFontOutline(fontOutline)
+	local ok = H.setFontWithFallback(measure, H.getFont(fontPath), size, outline)
+	if ok == false then H.setFontWithFallback(measure, H.getFont(nil), size, outline) end
+	measure:SetText(text)
+	if measure:GetStringWidth() <= maxWidth then return text end
+	local length = utf8Len(text)
+	local low, high = 1, length
+	local best = ""
+	while low <= high do
+		local mid = math.floor((low + high) / 2)
+		local candidate = utf8Sub(text, 1, mid)
+		measure:SetText(candidate)
+		if measure:GetStringWidth() <= maxWidth then
+			best = candidate
+			low = mid + 1
+		else
+			high = mid - 1
+		end
+	end
+	return best
+end
+
+function H.getTextDelimiter(cfg, def)
+	local defaultDelim = (def and def.textDelimiter) or " "
+	local delimiter = cfg and cfg.textDelimiter
+	if delimiter == nil or delimiter == "" then delimiter = defaultDelim end
+	return delimiter
+end
+
+function H.getTextDelimiterSecondary(cfg, def, primary)
+	local delimiter = cfg and cfg.textDelimiterSecondary
+	if delimiter == nil or delimiter == "" then delimiter = def and def.textDelimiterSecondary end
+	if delimiter == nil or delimiter == "" then delimiter = primary end
+	return delimiter
+end
+
+function H.getTextDelimiterTertiary(cfg, def, primary, secondary)
+	local delimiter = cfg and cfg.textDelimiterTertiary
+	if delimiter == nil or delimiter == "" then delimiter = def and def.textDelimiterTertiary end
+	if delimiter == nil or delimiter == "" then delimiter = secondary or primary end
+	return delimiter
+end
+
+function H.isUnitIdentitySecret(unit)
+	if unit == nil or (issecretvalue and issecretvalue(unit)) then return true end
+	local secrets = _G.C_Secrets
+	local predicate = secrets and secrets.ShouldUnitIdentityBeSecret
+	if type(predicate) ~= "function" then return false end
+	return predicate(unit) == true
+end
+
+local function resolvePvPAtlas(unit)
+	if H.isUnitIdentitySecret(unit) then return nil end
+	if C_GameRules and C_GameRules.IsGameRuleActive and Enum and Enum.GameRule then
+		if C_GameRules.IsGameRuleActive(Enum.GameRule.UnitFramePvPContextualDisabled) then return nil end
+	end
+	if UnitIsPVPFreeForAll and UnitIsPVPFreeForAll(unit) then return "UI-HUD-UnitFrame-Player-PVP-FFAIcon" end
+	local factionGroup = UnitFactionGroup and UnitFactionGroup(unit)
+	if factionGroup and factionGroup ~= "Neutral" and UnitIsPVP and UnitIsPVP(unit) then
+		if UnitIsMercenary and UnitIsMercenary(unit) then
+			if factionGroup == "Horde" then
+				factionGroup = "Alliance"
+			elseif factionGroup == "Alliance" then
+				factionGroup = "Horde"
+			end
+		end
+		if factionGroup == "Horde" then
+			return "UI-HUD-UnitFrame-Player-PVP-HordeIcon"
+		elseif factionGroup == "Alliance" then
+			return "UI-HUD-UnitFrame-Player-PVP-AllianceIcon"
+		end
+	end
+	return nil
+end
+
+local function resolveRoleAtlas(role)
+	if not role or role == "NONE" then return nil end
+	if GetIconForRole then return GetIconForRole(role, false) end
+	if role == "TANK" then return "UI-LFG-RoleIcon-Tank" end
+	if role == "HEALER" then return "UI-LFG-RoleIcon-Healer" end
+	if role == "DAMAGER" then return "UI-LFG-RoleIcon-DPS" end
+	return nil
+end
+
+local function resolveClassificationAtlas(classification)
+	if classification == "elite" or classification == "worldboss" then
+		return "nameplates-icon-elite-gold"
+	elseif classification == "rare" then
+		return "UI-HUD-UnitFrame-Target-PortraitOn-Boss-Rare-Star"
+	elseif classification == "rareelite" then
+		return "nameplates-icon-elite-silver"
+	end
+	return nil
+end
+
+function H.GetStatusVisualOffsetY(st, anchor)
+	local uf = addon.Aura and addon.Aura.UF
+	if not (uf and uf.GetStatusVisualOffsetY and st and st.status) then return 0 end
+	local physicalHeight = st.status.GetHeight and st.status:GetHeight() or nil
+	return uf.GetStatusVisualOffsetY(anchor, physicalHeight, st._statusLayoutHeight)
+end
+
+function H.updatePvPIndicator(st, unit, cfg, def, skipDisabled, contentScale)
+	if not st or not st.pvpIcon then return end
+	def = def or {}
+	local pcfg = (cfg and cfg.pvpIndicator) or (def and def.pvpIndicator) or {}
+	local enabled = pcfg.enabled == true and not (cfg and cfg.enabled == false)
+	if not enabled and skipDisabled then return end
+
+	local offsetDef = def and def.pvpIndicator and def.pvpIndicator.offset or {}
+	local sizeDef = def and def.pvpIndicator and def.pvpIndicator.size or 20
+	contentScale = contentScale or 1
+	local size = H.ClampNumber(pcfg.size or sizeDef, 10, 128, 20) * contentScale
+	local ox = ((pcfg.offset and pcfg.offset.x) or offsetDef.x or 0) * contentScale
+	local oy = ((pcfg.offset and pcfg.offset.y) or offsetDef.y or -2) * contentScale
+	local centerOffset = (st and st._portraitCenterOffset) or 0
+	st.pvpIcon:ClearAllPoints()
+	st.pvpIcon:SetDrawLayer("OVERLAY", 7)
+	st.pvpIcon:SetSize(size, size)
+	st.pvpIcon:SetPoint("TOP", st.frame, "TOP", (ox or 0) + centerOffset, oy + H.GetStatusVisualOffsetY(st, "TOP"))
+
+	if not enabled then
+		st.pvpIcon:Hide()
+		if st.pvpHonorText then st.pvpHonorText:Hide() end
+		return
+	end
+
+	if not st.pvpHonorText then st.pvpHonorText = st.pvpIcon:GetParent():CreateFontString(nil, "OVERLAY", "GameFontHighlight") end
+	st.pvpHonorText:Hide()
+	local inEditMode = addon.EditModeLib and addon.EditModeLib:IsInEditMode()
+	local atlas = resolvePvPAtlas(unit)
+	if not atlas and inEditMode then
+		local sampleFaction = UnitFactionGroup and UnitFactionGroup("player")
+		if sampleFaction == "Horde" then
+			atlas = "UI-HUD-UnitFrame-Player-PVP-HordeIcon"
+		else
+			atlas = "UI-HUD-UnitFrame-Player-PVP-AllianceIcon"
+		end
+	end
+	if atlas then
+		st.pvpIcon:SetAtlas(atlas)
+		st.pvpIcon:Show()
+		if (pcfg.displayMode or (def.pvpIndicator and def.pvpIndicator.displayMode)) == "HONOR_LEVEL" then
+			local honorLevel = H.resolvePvPHonorLevel(unit)
+			if honorLevel == nil and inEditMode then honorLevel = 125 end
+			if honorLevel ~= nil then
+				local honorAtlas = H.resolvePvPHonorAtlas(unit)
+				if not honorAtlas and inEditMode then honorAtlas = H.resolvePvPHonorAtlas("player") end
+				if honorAtlas then
+					st.pvpIcon:SetAtlas(honorAtlas)
+					st.pvpIcon:SetSize(size * 59 / 69, size)
+				end
+				H.applyPvPHonorText(st, unit, pcfg, def.pvpIndicator or {}, honorLevel, size, honorAtlas and size * 59 / 69 or size, contentScale)
+				return
+			end
+		end
+	else
+		st.pvpIcon:Hide()
+	end
+end
+
+function H.applyPvPHonorText(st, unit, cfg, def, honorLevel, iconSize, iconWidth, contentScale)
+	local text = st.pvpHonorText
+	local font = H.getFont(cfg.font or def.font)
+	local outline = cfg.fontOutline or def.fontOutline or "OUTLINE"
+	local fontSize = H.ClampNumber(cfg.fontSize or def.fontSize, 6, 64, 12) * contentScale
+	local maxWidth, maxHeight = iconWidth * 0.86, iconSize * 0.55
+	local fitKey = tostring(font) .. "|" .. tostring(normalizeFontOutline(outline)) .. "|" .. fontSize .. "|" .. iconSize .. "|" .. iconWidth .. "|" .. honorLevel
+	if st._pvpHonorFitKey ~= fitKey then
+		local fittedScale = math.min(1, maxHeight / fontSize)
+		if not H._pvpHonorMeasure and UIParent and UIParent.CreateFontString then
+			H._pvpHonorMeasure = UIParent:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+			H._pvpHonorMeasure:SetWordWrap(false)
+			H._pvpHonorMeasure:SetMaxLines(1)
+			H._pvpHonorMeasure:Hide()
+		end
+		local measure = H._pvpHonorMeasure
+		if measure then
+			-- Measure the readable level away from potentially secret-anchored unit frames.
+			H.applyFont(measure, font, fontSize, outline)
+			measure:SetText(honorLevel)
+			local width, height = measure:GetStringWidth(), measure:GetStringHeight()
+			if not (issecretvalue and issecretvalue(width)) and type(width) == "number" and width > maxWidth then fittedScale = math.min(fittedScale, maxWidth / width) end
+			if not (issecretvalue and issecretvalue(height)) and type(height) == "number" and height > maxHeight then fittedScale = math.min(fittedScale, maxHeight / height) end
+		end
+		st._pvpHonorFitKey = fitKey
+		st._pvpHonorTextScale = fittedScale
+	end
+	H.applyFont(text, font, fontSize, outline)
+	text:SetTextScale(st._pvpHonorTextScale)
+	local color = cfg.color or def.color or { 1, 1, 1, 1 }
+	local useClassColor = cfg.useClassColor
+	if useClassColor == nil then useClassColor = def.useClassColor end
+	if useClassColor and not H.isUnitIdentitySecret(unit) and UnitClass then
+		local _, class = UnitClass(unit)
+		if not (issecretvalue and issecretvalue(class)) and type(class) == "string" then
+			local custom = addon.db and addon.db.ufUseCustomClassColors and addon.db.ufClassColors and addon.db.ufClassColors[class]
+			color = custom or (_G.CUSTOM_CLASS_COLORS and _G.CUSTOM_CLASS_COLORS[class]) or (_G.RAID_CLASS_COLORS and _G.RAID_CLASS_COLORS[class]) or color
+		end
+	end
+	text:SetTextColor(color[1] or color.r or 1, color[2] or color.g or 1, color[3] or color.b or 1, color[4] or color.a or 1)
+	st.pvpIcon:SetDrawLayer("OVERLAY", 6)
+	text:SetDrawLayer("OVERLAY", 7)
+	text:ClearAllPoints()
+	text:SetPoint("CENTER", st.pvpIcon, "CENTER")
+	text:SetJustifyH("CENTER")
+	text:SetJustifyV("MIDDLE")
+	text:SetWordWrap(false)
+	text:SetMaxLines(1)
+	text:SetText(honorLevel)
+	text:Show()
+end
+
+function H.resolvePvPHonorAtlas(unit)
+	if H.isUnitIdentitySecret(unit) or not UnitFactionGroup then return nil end
+	local faction = UnitFactionGroup(unit)
+	if issecretvalue and issecretvalue(faction) then return nil end
+	if faction == "Horde" then return "pvpqueue-sidebar-honorbar-badge-horde" end
+	if faction == "Alliance" then return "pvpqueue-sidebar-honorbar-badge-alliance" end
+	return nil
+end
+
+function H.resolvePvPHonorLevel(unit)
+	if H.isUnitIdentitySecret(unit) or not _G.UnitHonorLevel or not UnitIsPlayer then return nil end
+	local isPlayer = UnitIsPlayer(unit)
+	if (issecretvalue and issecretvalue(isPlayer)) or isPlayer ~= true then return nil end
+	local honorLevel = _G.UnitHonorLevel(unit)
+	if issecretvalue and issecretvalue(honorLevel) then return nil end
+	if type(honorLevel) ~= "number" or honorLevel < 0 then return nil end
+	return honorLevel
+end
+
+function H.updateRoleIndicator(st, unit, cfg, def, skipDisabled)
+	if unit ~= "player" and unit ~= "target" and unit ~= "focus" then return end
+	if not st or not st.roleIcon then return end
+	def = def or {}
+	local rcfg = (cfg and cfg.roleIndicator) or (def and def.roleIndicator) or {}
+	local enabled = rcfg.enabled == true and not (cfg and cfg.enabled == false)
+	if not enabled and skipDisabled then return end
+
+	local offsetDef = def and def.roleIndicator and def.roleIndicator.offset or {}
+	local sizeDef = def and def.roleIndicator and def.roleIndicator.size or 18
+	local size = H.clamp(rcfg.size or sizeDef or 18, 10, 40)
+	local ox = (rcfg.offset and rcfg.offset.x) or offsetDef.x or 0
+	local oy = (rcfg.offset and rcfg.offset.y) or offsetDef.y or -2
+	local centerOffset = (st and st._portraitCenterOffset) or 0
+	st.roleIcon:ClearAllPoints()
+	st.roleIcon:SetSize(size, size)
+	st.roleIcon:SetPoint("TOP", st.frame, "TOP", (ox or 0) + centerOffset, oy + H.GetStatusVisualOffsetY(st, "TOP"))
+
+	if not enabled then
+		st.roleIcon:Hide()
+		return
+	end
+
+	local inEditMode = addon.EditModeLib and addon.EditModeLib:IsInEditMode()
+	local inGroup = IsInGroup and IsInGroup() or false
+	local role = not H.isUnitIdentitySecret(unit) and inGroup and UnitGroupRolesAssigned and UnitGroupRolesAssigned(unit) or nil
+	if role == "NONE" then role = nil end
+	if not role and inEditMode then role = "DAMAGER" end
+
+	local atlas = resolveRoleAtlas(role)
+	if atlas then
+		st.roleIcon:SetAtlas(atlas)
+		st.roleIcon:Show()
+	else
+		st.roleIcon:Hide()
+	end
+end
+
+function H.updateLeaderIndicator(st, unit, cfg, def, skipDisabled)
+	if unit ~= "player" and unit ~= "target" and unit ~= "focus" then return end
+	if not st or not st.leaderIcon then return end
+	def = def or {}
+	local lcfg = (cfg and cfg.leaderIcon) or (def and def.leaderIcon) or {}
+	local enabled = lcfg.enabled == true and not (cfg and cfg.enabled == false)
+	if not enabled and skipDisabled then return end
+
+	local offsetDef = def and def.leaderIcon and def.leaderIcon.offset or {}
+	local sizeDef = def and def.leaderIcon and def.leaderIcon.size or 12
+	local size = H.clamp(lcfg.size or sizeDef or 12, 8, 40)
+	local ox = (lcfg.offset and lcfg.offset.x) or offsetDef.x or 0
+	local oy = (lcfg.offset and lcfg.offset.y) or offsetDef.y or 0
+	local anchor = st.health or st.frame
+	st.leaderIcon:ClearAllPoints()
+	if anchor then
+		st.leaderIcon:SetPoint("TOPLEFT", anchor, "TOPLEFT", ox, oy)
+	else
+		st.leaderIcon:SetPoint("TOPLEFT", st.frame, "TOPLEFT", ox, oy)
+	end
+	st.leaderIcon:SetSize(size, size)
+
+	if not enabled then
+		st.leaderIcon:Hide()
+		return
+	end
+
+	local inEditMode = addon.EditModeLib and addon.EditModeLib:IsInEditMode()
+	local identitySecret = H.isUnitIdentitySecret(unit)
+	local showLeader = not identitySecret and UnitIsGroupLeader and UnitIsGroupLeader(unit)
+	if not showLeader and inEditMode then showLeader = true end
+	if showLeader then
+		st.leaderIcon:SetAtlas("UI-HUD-UnitFrame-Player-Group-LeaderIcon", false)
+		st.leaderIcon:Show()
+	else
+		local showAssist = not identitySecret and UnitIsGroupAssistant and UnitIsGroupAssistant(unit)
+		if showAssist then
+			st.leaderIcon:SetTexture("Interface\\GroupFrame\\UI-Group-AssistantIcon")
+			st.leaderIcon:Show()
+		else
+			st.leaderIcon:Hide()
+		end
+	end
+end
+
+function H.updateClassificationIndicator(st, unit, cfg, def, skipDisabled)
+	if unit == "player" then
+		if st and st.classificationIcon then st.classificationIcon:Hide() end
+		return
+	end
+	if not st or not st.classificationIcon then return end
+	def = def or {}
+	local scfg = (cfg and cfg.status) or {}
+	local defStatus = def.status or {}
+	local icfg = scfg.classificationIcon or defStatus.classificationIcon or {}
+	local enabled = icfg.enabled == true and not (cfg and cfg.enabled == false)
+	if not enabled and skipDisabled then return end
+
+	local sizeDef = defStatus.classificationIcon and defStatus.classificationIcon.size or 16
+	local offsetDef = (defStatus.classificationIcon and defStatus.classificationIcon.offset) or { x = -4, y = 0 }
+	local size = H.clamp(icfg.size or sizeDef or 16, 8, 40)
+	local ox = (icfg.offset and icfg.offset.x) or offsetDef.x or 0
+	local oy = (icfg.offset and icfg.offset.y) or offsetDef.y or 0
+
+	st.classificationIcon:ClearAllPoints()
+	local anchorFrame = st.statusTextLayer or st.status
+	if anchorFrame then st.classificationIcon:SetPoint("RIGHT", anchorFrame, "RIGHT", ox or 0, oy + H.GetStatusVisualOffsetY(st, "RIGHT")) end
+	st.classificationIcon:SetSize(size, size)
+
+	if not enabled then
+		st.classificationIcon:Hide()
+		return
+	end
+
+	local classification = UnitClassification and UnitClassification(unit)
+	local atlas = resolveClassificationAtlas(classification)
+	local inEditMode = addon.EditModeLib and addon.EditModeLib:IsInEditMode()
+	if not atlas and inEditMode then atlas = resolveClassificationAtlas("rareelite") end
+	if atlas then
+		st.classificationIcon:SetAtlas(atlas)
+		st.classificationIcon:Show()
+	else
+		st.classificationIcon:Hide()
+	end
+end
+
+local function getCombatFeedbackConfig(cfg, def)
+	local c = (cfg and cfg.combatFeedback) or {}
+	local d = (def and def.combatFeedback) or {}
+	return c, d
+end
+
+local function resolveCombatFeedbackParent(st, location)
+	if not st then return nil end
+	if location == "HEALTH" then return st.healthTextLayer or st.health or st.barGroup or st.frame end
+	if location == "POWER" then return st.powerTextLayer or st.power or st.barGroup or st.frame end
+	if location == "STATUS" then return st.statusTextLayer or st.status or st.frame end
+	return st.frame
+end
+
+local function getCombatFeedbackLayer(st)
+	if not st or not st.frame then return nil end
+	if not st.combatFeedbackLayer then
+		st.combatFeedbackLayer = CreateFrame("Frame", nil, st.frame)
+		st.combatFeedbackLayer:SetAllPoints(st.frame)
+	end
+	local layer = st.combatFeedbackLayer
+	if layer.SetFrameStrata and st.frame.GetFrameStrata then layer:SetFrameStrata(st.frame:GetFrameStrata()) end
+	local maxLevel = 0
+	local function consider(frame)
+		if not frame or not frame.GetFrameLevel then return end
+		local level = frame:GetFrameLevel() or 0
+		if level > maxLevel then maxLevel = level end
+	end
+	consider(st.healthTextLayer)
+	consider(st.powerTextLayer)
+	consider(st.statusTextLayer)
+	consider(st.health and st.health.absorbClip)
+	consider(st.health and st.health._healthFillClip)
+	consider(st.health)
+	consider(st.status)
+	consider(st.power)
+	if layer.SetFrameLevel then layer:SetFrameLevel(maxLevel + 5) end
+	return layer
+end
+
+function H.syncCombatFeedbackLayer(st)
+	local layer = getCombatFeedbackLayer(st)
+	if not layer then return end
+	if st.combatFeedback then
+		if st.combatFeedback.GetParent and st.combatFeedback:GetParent() ~= layer then st.combatFeedback:SetParent(layer) end
+		if st.combatFeedback.SetFrameStrata and layer.GetFrameStrata then st.combatFeedback:SetFrameStrata(layer:GetFrameStrata()) end
+		if st.combatFeedback.SetFrameLevel and layer.GetFrameLevel then st.combatFeedback:SetFrameLevel((layer:GetFrameLevel() or 0) + 1) end
+	end
+	if st.combatFeedbackText and st.combatFeedbackText.GetParent and st.combatFeedbackText:GetParent() ~= layer then st.combatFeedbackText:SetParent(layer) end
+end
+
+local function resolveCombatFeedbackTextParent(st, location)
+	if not st then return nil end
+	if location == "HEALTH" then return st.healthTextLayer or st.health or st.barGroup or st.frame end
+	if location == "POWER" then return st.powerTextLayer or st.power or st.barGroup or st.frame end
+	if location == "STATUS" then return st.statusTextLayer or st.status or st.frame end
+	return st.frame
+end
+
+local function combatFeedbackHasEvents(events)
+	if type(events) ~= "table" then return true end
+	for _, enabled in pairs(events) do
+		if enabled then return true end
+	end
+	return false
+end
+
+local function combatFeedbackJustify(anchor)
+	if type(anchor) ~= "string" then return "CENTER" end
+	local upper = anchor:upper()
+	if upper:find("LEFT", 1, true) then return "LEFT" end
+	if upper:find("RIGHT", 1, true) then return "RIGHT" end
+	return "CENTER"
+end
+
+function H.combatFeedbackIsEnabled(cfg, def)
+	if cfg and cfg.enabled == false then return false end
+	if not CombatFeedback_OnCombatEvent then return false end
+	local c, d = getCombatFeedbackConfig(cfg, def)
+	local enabled = c.enabled
+	if enabled == nil then enabled = d.enabled end
+	if enabled ~= true then return false end
+	local events = c.events
+	if events == nil then events = d.events end
+	return combatFeedbackHasEvents(events)
+end
+
+function H.combatFeedbackShouldShowEvent(cfg, def, event)
+	if not event then return false end
+	local c, d = getCombatFeedbackConfig(cfg, def)
+	local events = c.events
+	if events == nil then events = d.events end
+	if type(events) ~= "table" then return true end
+	local val = events[event]
+	if val == nil and type(d.events) == "table" then val = d.events[event] end
+	if val == nil then return true end
+	return val == true
+end
+
+local function getCombatFeedbackSampleConfig(cfg, def)
+	local c, d = getCombatFeedbackConfig(cfg, def)
+	local sampleEnabled = c.sample
+	if sampleEnabled == nil then sampleEnabled = d.sample end
+	sampleEnabled = sampleEnabled == true
+	local sampleEvent = c.sampleEvent or d.sampleEvent or "WOUND"
+	local sampleAmount = tonumber(c.sampleAmount or d.sampleAmount) or 12345
+	if sampleAmount < 0 then sampleAmount = 0 end
+	if sampleAmount == 0 then sampleAmount = 1 end
+	return sampleEnabled, sampleEvent, sampleAmount
+end
+
+function H.ensureCombatFeedbackElements(st)
+	if not st or not st.frame then return nil end
+	if not st.combatFeedback then st.combatFeedback = CreateFrame("Frame", nil, st.frame) end
+	if not st.combatFeedbackText then
+		local parent = st.statusTextLayer or st.status or st.frame
+		st.combatFeedbackText = parent:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+		st.combatFeedbackText:Hide()
+	end
+	st.combatFeedback.feedbackText = st.combatFeedbackText
+	return st.combatFeedback, st.combatFeedbackText
+end
+
+local function stopCombatFeedbackSample(st)
+	if not st then return end
+	local ticker = st._combatFeedbackSampleTicker
+	if ticker and ticker.Cancel then ticker:Cancel() end
+	st._combatFeedbackSampleTicker = nil
+	if st._combatFeedbackSampleActive then
+		st._combatFeedbackSampleActive = nil
+		if st.combatFeedbackText then st.combatFeedbackText:Hide() end
+	end
+end
+
+function H.applyCombatFeedbackStyle(st, cfg, def)
+	if not st then return end
+	local c, d = getCombatFeedbackConfig(cfg, def)
+	local font = c.font or d.font
+	local fontOutline = c.fontOutline or d.fontOutline or "OUTLINE"
+	local fontSize = tonumber(c.fontSize or d.fontSize) or 30
+	if fontSize <= 0 then fontSize = 30 end
+	local anchor = c.anchor or d.anchor or "CENTER"
+	local location = c.location or d.location or "STATUS"
+	local off = c.offset or d.offset or {}
+	local ox = off.x or 0
+	local oy = off.y or 0
+	local statusOffsetY = location == "STATUS" and H.GetStatusVisualOffsetY(st, anchor) or 0
+	local key = tostring(font) .. "|" .. tostring(fontOutline) .. "|" .. tostring(fontSize) .. "|" .. tostring(anchor) .. "|" .. tostring(location) .. "|" .. tostring(ox) .. "|" .. tostring(oy) .. "|" .. tostring(statusOffsetY)
+	if st._combatFeedbackStyleKey == key then return end
+	st._combatFeedbackStyleKey = key
+
+	local frame, text = H.ensureCombatFeedbackElements(st)
+	if not frame or not text then return end
+	H.applyFont(text, font, fontSize, fontOutline)
+	H.syncCombatFeedbackLayer(st)
+	local textParent = getCombatFeedbackLayer(st) or resolveCombatFeedbackTextParent(st, location) or st.frame
+	if text.GetParent and text:GetParent() ~= textParent then text:SetParent(textParent) end
+	if text.SetDrawLayer then text:SetDrawLayer("OVERLAY", 7) end
+	text:ClearAllPoints()
+	local parent = resolveCombatFeedbackParent(st, location) or st.frame
+	text:SetPoint(anchor, parent, anchor, ox, oy + statusOffsetY)
+	if text.SetJustifyH then text:SetJustifyH(combatFeedbackJustify(anchor)) end
+	if text.SetWordWrap then text:SetWordWrap(false) end
+	if text.SetMaxLines then text:SetMaxLines(1) end
+
+	if CombatFeedback_Initialize then
+		CombatFeedback_Initialize(frame, text, fontSize)
+	else
+		frame.feedbackText = text
+		frame.feedbackFontHeight = fontSize
+	end
+end
+
+function H.showCombatFeedbackSample(st, cfg, def)
+	if not st or not CombatFeedback_OnCombatEvent then return end
+	local enabled, sampleEvent, sampleAmount = getCombatFeedbackSampleConfig(cfg, def)
+	if not enabled then return end
+	local frame, text = H.ensureCombatFeedbackElements(st)
+	if not frame or not text then return end
+	H.applyCombatFeedbackStyle(st, cfg, def)
+	if CombatFeedback_OnUpdate and frame.GetScript and frame:GetScript("OnUpdate") == nil then frame:SetScript("OnUpdate", CombatFeedback_OnUpdate) end
+	CombatFeedback_OnCombatEvent(frame, sampleEvent, "", sampleAmount, 1)
+	st._combatFeedbackSampleActive = true
+end
+
+function H.showCombatFeedbackEvent(frame, event, flags, amount, schoolMask)
+	if not (issecretvalue and issecretvalue(amount)) then
+		CombatFeedback_OnCombatEvent(frame, event, flags, amount, schoolMask)
+		return
+	end
+
+	-- Restricted amounts go directly to the font string without numeric inspection.
+	local text = frame.feedbackText
+	local fontHeight = frame.feedbackFontHeight
+	local r, g, b = 1, 1, 1
+	if event == "WOUND" or event == "HEAL" or event == "ENERGIZE" then
+		if flags == "CRITICAL" or (event == "WOUND" and flags == "CRUSHING") then
+			fontHeight = fontHeight * 1.5
+		elseif event == "WOUND" and flags == "GLANCING" then
+			fontHeight = fontHeight * 0.75
+		end
+		if event == "HEAL" then
+			r, g, b = 0, 1, 0
+		elseif event == "ENERGIZE" then
+			r, g, b = 0.41, 0.8, 0.94
+		elseif schoolMask ~= (Enum.Damageclass and Enum.Damageclass.MaskPhysical or 1) then
+			r, g, b = 1, 1, 0
+		end
+		if event == "WOUND" and flags == "BLOCK_REDUCED" then
+			text:SetFormattedText(_G.COMBAT_TEXT_BLOCK_REDUCED, amount)
+		else
+			text:SetFormattedText("%s", amount)
+		end
+	else
+		local label = _G.CombatFeedbackText and _G.CombatFeedbackText[event]
+		if not label then return end
+		if event == "IMMUNE" then
+			fontHeight = fontHeight * 0.5
+		elseif event == "BLOCK" then
+			fontHeight = fontHeight * 0.75
+		end
+		text:SetText(label)
+	end
+	frame.feedbackStartTime = GetTime()
+	text:SetTextHeight(fontHeight)
+	text:SetTextColor(r, g, b)
+	text:SetAlpha(0)
+	text:Show()
+end
+
+function H.handleCombatFeedbackEvent(st, cfg, def, event, flags, amount, schoolMask)
+	if not st or not CombatFeedback_OnCombatEvent then return end
+	if not H.combatFeedbackIsEnabled(cfg, def) then return end
+	if not H.combatFeedbackShouldShowEvent(cfg, def, event) then return end
+	if issecretvalue and (issecretvalue(event) or issecretvalue(flags) or issecretvalue(schoolMask)) then return end
+	if GetTime then
+		local now = GetTime()
+		local last = st._combatFeedbackLastAt
+		if last and (now - last) < COMBAT_FEEDBACK_THROTTLE then return end
+		st._combatFeedbackLastAt = now
+	end
+	local frame, text = H.ensureCombatFeedbackElements(st)
+	if not frame or not text then return end
+	H.applyCombatFeedbackStyle(st, cfg, def)
+	if CombatFeedback_OnUpdate and frame.GetScript and frame:GetScript("OnUpdate") == nil then frame:SetScript("OnUpdate", CombatFeedback_OnUpdate) end
+	H.showCombatFeedbackEvent(frame, event, flags, amount, schoolMask)
+end
+
+function H.updateCombatFeedback(st, unit, cfg, def)
+	if not st then return end
+	st._combatFeedbackDef = def
+	if not H.combatFeedbackIsEnabled(cfg, def) then
+		if st._combatFeedbackEventFrame and st._combatFeedbackEventFrame.UnregisterEvent then st._combatFeedbackEventFrame:UnregisterEvent("UNIT_COMBAT") end
+		if st.combatFeedback and st.combatFeedback.SetScript then st.combatFeedback:SetScript("OnUpdate", nil) end
+		if st.combatFeedback then st.combatFeedback:Hide() end
+		if st.combatFeedbackText then st.combatFeedbackText:Hide() end
+		stopCombatFeedbackSample(st)
+		return
+	end
+	if not unit then return end
+	H.applyCombatFeedbackStyle(st, cfg, def)
+	local frame = st.combatFeedback
+	if frame then frame:Show() end
+	if frame and CombatFeedback_OnUpdate and frame.GetScript and frame:GetScript("OnUpdate") == nil then frame:SetScript("OnUpdate", CombatFeedback_OnUpdate) end
+	local evt = st._combatFeedbackEventFrame
+	if not evt then
+		evt = CreateFrame("Frame")
+		st._combatFeedbackEventFrame = evt
+		evt:SetScript("OnEvent", function(_, _, unitTarget, eventName, flagText, amount, schoolMask)
+			if unitTarget ~= unit then return end
+			local activeCfg = st.cfg or cfg
+			local activeDef = st._combatFeedbackDef or def
+			H.handleCombatFeedbackEvent(st, activeCfg, activeDef, eventName, flagText, amount, schoolMask)
+		end)
+	end
+	if evt.UnregisterEvent then evt:UnregisterEvent("UNIT_COMBAT") end
+	if evt.RegisterUnitEvent then
+		evt:RegisterUnitEvent("UNIT_COMBAT", unit)
+	elseif evt.RegisterEvent then
+		evt:RegisterEvent("UNIT_COMBAT")
+	end
+
+	stopCombatFeedbackSample(st)
+	local sampleEnabled = getCombatFeedbackSampleConfig(cfg, def)
+	local inEditMode = addon.EditModeLib and addon.EditModeLib.IsInEditMode and addon.EditModeLib:IsInEditMode()
+	if sampleEnabled and inEditMode then
+		H.showCombatFeedbackSample(st, cfg, def)
+		if NewTicker then
+			st._combatFeedbackSampleTicker = NewTicker(1.2, function()
+				local activeCfg = st.cfg or cfg
+				local activeDef = st._combatFeedbackDef or def
+				H.showCombatFeedbackSample(st, activeCfg, activeDef)
+			end)
+		end
+	else
+		stopCombatFeedbackSample(st)
+	end
+end
+
+function H.stopCombatFeedbackSample(st) stopCombatFeedbackSample(st) end
+
+function H.disableCombatFeedbackAll(states)
+	if type(states) ~= "table" then return end
+	for _, st in pairs(states) do
+		if st and st._combatFeedbackEventFrame and st._combatFeedbackEventFrame.UnregisterEvent then st._combatFeedbackEventFrame:UnregisterEvent("UNIT_COMBAT") end
+		if st and st.combatFeedback and st.combatFeedback.SetScript then st.combatFeedback:SetScript("OnUpdate", nil) end
+		if st and st.combatFeedback then st.combatFeedback:Hide() end
+		if st and st.combatFeedbackText then st.combatFeedbackText:Hide() end
+		stopCombatFeedbackSample(st)
+	end
+end
+
+function H._getColorComponents(color, fallback)
+	color = color or fallback
+	if not color then return 1, 1, 1, 1 end
+	if color.r then return color.r or 1, color.g or 1, color.b or 1, color.a or 1 end
+	return color[1] or 1, color[2] or 1, color[3] or 1, color[4] or 1
+end
+
+function H._getStaggerStateColorForUnit(unitTokenValue, cfg)
+	local STAGGER_YELLOW_THRESHOLD = 0.30
+	local STAGGER_RED_THRESHOLD = 0.60
+	local STAGGER_FALLBACK_COLORS = {
+		green = { r = 0.52, g = 1.0, b = 0.52, a = 1 },
+		yellow = { r = 1.0, g = 0.98, b = 0.72, a = 1 },
+		red = { r = 1.0, g = 0.42, b = 0.42, a = 1 },
+	}
+	local STAGGER_EXTRA_COLORS_FALLBACK = {
+		high = { r = 0.62, g = 0.2, b = 1.0, a = 1 },
+		extreme = { r = 1.0, g = 0.2, b = 0.8, a = 1 },
+	}
+
+	unitTokenValue = unitTokenValue or "player"
+	local stagger = UnitStagger and UnitStagger(unitTokenValue) or 0
+	local maxHealth = UnitHealthMax and UnitHealthMax(unitTokenValue) or 0
+	local percent = 0
+	if maxHealth and maxHealth > 0 then percent = (stagger or 0) / maxHealth end
+
+	local rb = addon.Aura and addon.Aura.ResourceBars
+	local extraHighDefault = (rb and rb.STAGGER_EXTRA_THRESHOLD_HIGH) or 200
+	local extraExtremeDefault = (rb and rb.STAGGER_EXTRA_THRESHOLD_EXTREME) or 300
+	local extraColors = (rb and rb.STAGGER_EXTRA_COLORS) or STAGGER_EXTRA_COLORS_FALLBACK
+
+	if cfg and cfg.staggerHighColors == true then
+		local high = tonumber(cfg.staggerHighThreshold) or extraHighDefault
+		local extreme = tonumber(cfg.staggerExtremeThreshold) or extraExtremeDefault
+		if high < 0 then high = 0 end
+		if extreme < high then extreme = high end
+		if percent >= (extreme / 100) then
+			return H._getColorComponents(cfg.staggerExtremeColor, extraColors.extreme)
+		elseif percent >= (high / 100) then
+			return H._getColorComponents(cfg.staggerHighColor, extraColors.high)
+		end
+	end
+
+	local info = (_G.GetPowerBarColor and _G.GetPowerBarColor("STAGGER")) or (PowerBarColor and PowerBarColor.STAGGER)
+	local key
+	if percent >= STAGGER_RED_THRESHOLD then
+		key = "red"
+	elseif percent >= STAGGER_YELLOW_THRESHOLD then
+		key = "yellow"
+	else
+		key = "green"
+	end
+	return H._getColorComponents((info and info[key]) or STAGGER_FALLBACK_COLORS[key] or STAGGER_FALLBACK_COLORS.green)
+end
+
+function H.getPowerColor(powerEnum, powerToken, colorCfg, unitToken)
+	if powerToken == nil and type(powerEnum) == "string" then
+		powerToken = powerEnum
+		powerEnum = nil
+	end
+	if powerEnum == nil and powerToken == nil then
+		powerEnum = EnumPowerType and EnumPowerType.MANA or nil
+		powerToken = "MANA"
+	end
+	local overrides = addon.db and addon.db.ufUseCustomPowerColors == true and addon.db.ufPowerColorOverrides
+	local override = getPowerOverrideEntry(overrides, powerEnum, powerToken)
+	if override then
+		if override.r then return override.r, override.g, override.b, override.a or 1 end
+		if override[1] then return override[1], override[2], override[3], override[4] or 1 end
+	end
+	local canonicalToken = getCanonicalPowerToken(powerEnum, powerToken)
+	if canonicalToken == "STAGGER" then return H._getStaggerStateColorForUnit(unitToken, colorCfg) end
+	local c = getPowerColorEntry(powerEnum, powerToken)
+	if c then
+		if c.r then return c.r, c.g, c.b, c.a or 1 end
+		if c[1] then return c[1], c[2], c[3], c[4] or 1 end
+	end
+	local manaColor = getPowerColorEntry(EnumPowerType and EnumPowerType.MANA or nil, "MANA")
+	if manaColor then
+		if manaColor.r then return manaColor.r, manaColor.g, manaColor.b, manaColor.a or 1 end
+		if manaColor[1] then return manaColor[1], manaColor[2], manaColor[3], manaColor[4] or 1 end
+	end
+	return 0.1, 0.45, 1, 1
+end
+
+function H.isPowerDesaturated(powerEnum, powerToken)
+	if powerToken == nil and type(powerEnum) == "string" then
+		powerToken = powerEnum
+		powerEnum = nil
+	end
+	local overrides = addon.db and addon.db.ufUseCustomPowerColors == true and addon.db.ufPowerColorOverrides
+	return getPowerOverrideEntry(overrides, powerEnum, powerToken) ~= nil
+end
+
+function H.getAbsorbColor(hc, defH)
+	local defaultAbsorb = (defH and defH.absorbColor) or { 0.85, 0.95, 1, 0.7 }
+	if hc and hc.absorbUseCustomColor and hc.absorbColor then
+		return hc.absorbColor[1] or defaultAbsorb[1], hc.absorbColor[2] or defaultAbsorb[2], hc.absorbColor[3] or defaultAbsorb[3], hc.absorbColor[4] or defaultAbsorb[4]
+	end
+	return defaultAbsorb[1], defaultAbsorb[2], defaultAbsorb[3], defaultAbsorb[4]
+end
+
+function H.getHealAbsorbColor(hc, defH)
+	local defaultAbsorb = (defH and defH.healAbsorbColor) or { 1, 0.3, 0.3, 0.7 }
+	if hc and hc.healAbsorbUseCustomColor and hc.healAbsorbColor then
+		return hc.healAbsorbColor[1] or defaultAbsorb[1], hc.healAbsorbColor[2] or defaultAbsorb[2], hc.healAbsorbColor[3] or defaultAbsorb[3], hc.healAbsorbColor[4] or defaultAbsorb[4]
+	end
+	return defaultAbsorb[1], defaultAbsorb[2], defaultAbsorb[3], defaultAbsorb[4]
+end
+
+function H.getNPCColorDefault(key)
+	local c = key and npcColorDefaults[key]
+	if not c then return nil end
+	return c[1], c[2], c[3], c[4]
+end
+
+function H.getNPCColor(key)
+	if not key then return nil end
+	local overrides = addon.db and addon.db.ufNPCColorOverrides
+	local override = overrides and overrides[key]
+	if override then
+		if override.r then return override.r, override.g, override.b, override.a or 1 end
+		if override[1] then return override[1], override[2], override[3], override[4] or 1 end
+	end
+	return H.getNPCColorDefault(key)
+end
+
+local EnableSpellRangeCheck = C_Spell and C_Spell.EnableSpellRangeCheck
+local GetSpellIDForSpellIdentifier = C_Spell and C_Spell.GetSpellIDForSpellIdentifier
+local IsSpellInRange = C_Spell and C_Spell.IsSpellInRange
+local GetSpellName = C_Spell and C_Spell.GetSpellName
+local GetSpellInfo = _G.GetSpellInfo
+local SpellBook = _G.C_SpellBook
+local SpellBookItemType = Enum and Enum.SpellBookItemType
+local SpellBookSpellBank = Enum and Enum.SpellBookSpellBank
+local UnitClass = _G.UnitClass
+local GetSpecializationFn = C_SpecializationInfo and C_SpecializationInfo.GetSpecialization
+local GetSpecializationInfoFn = C_SpecializationInfo and C_SpecializationInfo.GetSpecializationInfo
+local GetSpecializationInfoForClassID = _G.GetSpecializationInfoForClassID
+local GetNumSpecializationsForClassIDFn = C_SpecializationInfo and C_SpecializationInfo.GetNumSpecializationsForClassID
+local GetNumClasses = _G.GetNumClasses
+local GetClassInfo = _G.GetClassInfo
+local IsHelpfulSpell = _G.IsHelpfulSpell
+local IsHarmfulSpell = _G.IsHarmfulSpell
+local C_CreatureInfo = _G.C_CreatureInfo
+local wipeTable = wipe or (table and table.wipe)
+local tinsert = table.insert
+local tsort = table.sort
+
+local rangeFadeClassDefaultSpells = {
+	DEATHKNIGHT = { friendly = 47541, enemy = 49576 },
+	DEMONHUNTER = { friendly = nil, enemy = 278326 },
+	DRUID = { friendly = 8936, enemy = 8921 },
+	EVOKER = { friendly = 355913, enemy = 362969 },
+	HUNTER = { friendly = nil, enemy = 75 },
+	MAGE = { friendly = 1459, enemy = 2139 },
+	MONK = { friendly = 116670, enemy = 115546 },
+	PALADIN = { friendly = 85673, enemy = 20271 },
+	PRIEST = { friendly = 17, enemy = 589 },
+	ROGUE = { friendly = nil, enemy = 36554 },
+	SHAMAN = { friendly = 8004, enemy = 8042 },
+	WARLOCK = { friendly = 5697, enemy = 234153 },
+	WARRIOR = { friendly = nil, enemy = 355 },
+}
+
+local rangeFadeSpecOptionsCache
+local rangeFadeSpellOptionCache = { friendly = {}, enemy = {} }
+local rangeFadeClassSpellOptions = {
+	DEATHKNIGHT = {
+		friendly = {},
+		enemy = { 49576, 47541 },
+	},
+	DEMONHUNTER = {
+		friendly = {},
+		enemy = { 185123, 183752, 204021 },
+	},
+	DRUID = {
+		friendly = { 8936, 774, 2782, 88423 },
+		enemy = { 5176, 339, 6795, 33786, 22568, 8921 },
+	},
+	EVOKER = {
+		friendly = { 355913, 361469, 360823 },
+		enemy = { 362969 },
+	},
+	HUNTER = {
+		friendly = {},
+		enemy = { 75 },
+	},
+	MAGE = {
+		friendly = { 1459, 475 },
+		enemy = { 44614, 118, 116, 133, 44425 },
+	},
+	MONK = {
+		friendly = { 115450, 115546, 116670 },
+		enemy = { 115546, 115078, 100780, 117952 },
+	},
+	PALADIN = {
+		friendly = { 19750, 85673, 4987, 213644 },
+		enemy = { 853, 35395, 62124, 183218, 20271, 20473 },
+	},
+	PRIEST = {
+		friendly = { 21562, 17, 527, 2061 },
+		enemy = { 589, 8092, 585 },
+	},
+	ROGUE = {
+		friendly = { 36554, 921 },
+		enemy = { 185565, 36554, 185763, 2094, 921 },
+	},
+	SHAMAN = {
+		friendly = { 546, 8004, 188070 },
+		enemy = { 370, 8042, 117014, 188196, 73899 },
+	},
+	WARLOCK = {
+		friendly = { 20707, 5697 },
+		enemy = { 234153, 198590, 232670, 686, 5782 },
+	},
+	WARRIOR = {
+		friendly = {},
+		enemy = { 355, 5246, 100 },
+	},
+}
+
+local rangeFadeHandlers = {}
+local rangeFadeState = {
+	activeSpells = {},
+	spellStates = {},
+	numChecked = 0,
+	numInRange = 0,
+	inRange = true,
+	configDirty = true,
+	configValid = false,
+	enabled = false,
+	alpha = 1,
+	ignoreUnlimited = true,
+	spellListDirty = true,
+	spellListCache = nil,
+}
+local rangeFadeIgnoredSpells = {
+	[2096] = true, -- Mind Vision (unlimited range)
+}
+
+local getRangeFadeConfig
+
+local function isRangeFadeIgnored(spellId, actionId)
+	local _, _, ignoreUnlimited = getRangeFadeConfig()
+	if ignoreUnlimited == false then return false end
+	if spellId and rangeFadeIgnoredSpells[spellId] then return true end
+	if actionId and rangeFadeIgnoredSpells[actionId] then return true end
+	return false
+end
+
+local function clearTable(tbl)
+	if not tbl then return end
+	if wipeTable then
+		wipeTable(tbl)
+	else
+		for k in pairs(tbl) do
+			tbl[k] = nil
+		end
+	end
+end
+
+local function getRangeFadeClassInfo()
+	if not UnitClass then return nil, nil end
+	local _, classToken, classID = UnitClass("player")
+	return classToken, classID
+end
+
+local function getClassInfoById(classId)
+	if GetClassInfo then return GetClassInfo(classId) end
+	if C_CreatureInfo and C_CreatureInfo.GetClassInfo then
+		local info = C_CreatureInfo.GetClassInfo(classId)
+		if info then return info.className, info.classFile, info.classID end
+	end
+	return nil, nil, nil
+end
+
+local getCurrentSpecId
+
+local function buildRangeFadeSpecEntries()
+	local entries = {}
+	local bySpecId = {}
+	local sex = UnitSex and UnitSex("player") or nil
+
+	if GetNumClasses and GetNumSpecializationsForClassIDFn and GetSpecializationInfoForClassID then
+		local numClasses = GetNumClasses() or 0
+		for classIndex = 1, numClasses do
+			local className, classToken, classID = getClassInfoById(classIndex)
+			if classID then
+				local specCount = GetNumSpecializationsForClassIDFn(classID) or 0
+				for specIndex = 1, specCount do
+					local specID, specName = GetSpecializationInfoForClassID(classID, specIndex, sex)
+					if specID then
+						local label = specName or ("Spec " .. tostring(specID))
+						local classLabel = className or classToken
+						if classLabel and classLabel ~= "" then label = classLabel .. " - " .. label end
+						local entry = {
+							value = specID,
+							label = label,
+							specName = specName or ("Spec " .. tostring(specID)),
+							className = className or classToken,
+							classToken = classToken,
+							classID = classID,
+						}
+						tinsert(entries, entry)
+						bySpecId[specID] = entry
+					end
+				end
+			end
+		end
+	end
+
+	if #entries == 0 then
+		local specID = getCurrentSpecId()
+		if specID then
+			local classToken, classID = getRangeFadeClassInfo()
+			local entry = {
+				value = specID,
+				label = "Spec " .. tostring(specID),
+				specName = "Spec " .. tostring(specID),
+				className = classToken,
+				classToken = classToken,
+				classID = classID,
+			}
+			tinsert(entries, entry)
+			bySpecId[specID] = entry
+		end
+	end
+
+	tsort(entries, function(a, b)
+		local aClass = tostring((a and a.className) or "")
+		local bClass = tostring((b and b.className) or "")
+		if aClass ~= bClass then return aClass < bClass end
+		local aSpec = tostring((a and a.specName) or "")
+		local bSpec = tostring((b and b.specName) or "")
+		if aSpec ~= bSpec then return aSpec < bSpec end
+		return (tonumber(a and a.value) or 0) < (tonumber(b and b.value) or 0)
+	end)
+
+	return entries, bySpecId
+end
+
+getCurrentSpecId = function()
+	if not (GetSpecializationFn and GetSpecializationInfoFn) then return nil end
+	local specIndex = GetSpecializationFn()
+	if not specIndex then return nil end
+	local specID = GetSpecializationInfoFn(specIndex)
+	if not specID or specID <= 0 then return nil end
+	return specID
+end
+
+local function getRangeFadeSpellDisplayName(spellId, includeId)
+	local id = tonumber(spellId)
+	if not id or id <= 0 then return nil end
+	local name = GetSpellName and GetSpellName(id) or nil
+	if (not name or name == "") and GetSpellInfo then name = GetSpellInfo(id) end
+	if not name or name == "" then name = tostring(id) end
+	if includeId then return string.format("%s (%d)", tostring(name), id) end
+	return tostring(name)
+end
+
+local function normalizeConfiguredSpellId(value)
+	if value == false or value == 0 or value == "0" then return false end
+	local id = tonumber(value)
+	if not id or id <= 0 then return nil end
+	return floor(id)
+end
+
+function H.RangeFadeGetDefaultSpellPair(specValue)
+	local specId = tonumber(specValue)
+	local classToken
+	if specId and specId > 0 then
+		H.RangeFadeGetSpecOptions()
+		local cache = rangeFadeSpecOptionsCache
+		if cache and cache.bySpecId and cache.bySpecId[specId] then classToken = cache.bySpecId[specId].classToken end
+	end
+	if not classToken then classToken = getRangeFadeClassInfo() end
+	local defaults = classToken and rangeFadeClassDefaultSpells[classToken] or nil
+	if not defaults then return nil, nil end
+	return defaults.friendly, defaults.enemy
+end
+
+function H.RangeFadeGetCurrentSpecId() return getCurrentSpecId() end
+
+function H.RangeFadeGetSpecOptions()
+	if rangeFadeSpecOptionsCache and rangeFadeSpecOptionsCache.entries then return rangeFadeSpecOptionsCache.entries end
+	local entries, bySpecId = buildRangeFadeSpecEntries()
+	rangeFadeSpecOptionsCache = {
+		entries = entries,
+		bySpecId = bySpecId,
+	}
+	return entries
+end
+
+function H.RangeFadeResolveSpellPair(rangeFadeConfig, specId)
+	local spec = tonumber(specId)
+	if not spec or spec <= 0 then spec = getCurrentSpecId() end
+	local defaultsFriendly, defaultsEnemy = H.RangeFadeGetDefaultSpellPair(spec)
+
+	local specEntry
+	if type(rangeFadeConfig) == "table" and spec then
+		local bySpec = rangeFadeConfig.specSpells
+		if type(bySpec) == "table" then specEntry = bySpec[spec] end
+	end
+
+	local configuredFriendly = specEntry and normalizeConfiguredSpellId(specEntry.friendly)
+	local configuredEnemy = specEntry and normalizeConfiguredSpellId(specEntry.enemy)
+
+	local friendly
+	if configuredFriendly == false then
+		friendly = nil
+	elseif type(configuredFriendly) == "number" then
+		friendly = configuredFriendly
+	else
+		friendly = defaultsFriendly
+	end
+
+	local enemy
+	if configuredEnemy == false then
+		enemy = nil
+	elseif type(configuredEnemy) == "number" then
+		enemy = configuredEnemy
+	else
+		enemy = defaultsEnemy
+	end
+
+	local melee = specEntry and specEntry.enemy == "DEFAULT_MELEE" and enemy and H.RangeFadeGetMeleeSpell(enemy) or nil
+	return friendly, enemy, melee
+end
+
+-- Classic hunters can still attack in melee when their ranged spell is too close.
+function H.RangeFadeGetMeleeSpell(spellId)
+	if not (addon.variables.isForever or addon.variables.isTBC) then return nil end
+	if getRangeFadeClassInfo() ~= "HUNTER" then return nil end
+	local info = C_Spell and C_Spell.GetSpellInfo and C_Spell.GetSpellInfo(spellId)
+	local minimum = info and info.minRange
+	if issecretvalue and issecretvalue(minimum) then return nil end
+	if type(minimum) ~= "number" or minimum <= 0 then return nil end
+	local name = GetSpellName and GetSpellName(2974)
+	return (name and GetSpellIDForSpellIdentifier and GetSpellIDForSpellIdentifier(name)) or 2974
+end
+
+function H.RangeFadeBuildSpellListForConfig(rangeFadeConfig, specId)
+	local friendly, enemy, melee = H.RangeFadeResolveSpellPair(rangeFadeConfig, specId)
+	local list = {}
+	if friendly then list[#list + 1] = friendly end
+	if enemy and enemy ~= friendly then list[#list + 1] = enemy end
+	if melee and melee ~= friendly and melee ~= enemy then list[#list + 1] = melee end
+	return list
+end
+
+function H.RangeFadeIsSpellInRange(spellId, unit, ignoreUnlimited, meleeSpellId)
+	spellId = tonumber(spellId)
+	if not IsSpellInRange or not spellId or spellId <= 0 then return true end
+	if ignoreUnlimited == true and rangeFadeIgnoredSpells[spellId] then return true end
+	local inRange = IsSpellInRange(spellId, unit)
+	if inRange == false and meleeSpellId and IsSpellInRange(meleeSpellId, unit) == true then return true end
+	return inRange ~= false
+end
+
+function H.RangeFadeIsUnitInRange(spellList, unit, ignoreUnlimited)
+	if not IsSpellInRange or type(spellList) ~= "table" then return true end
+	local checked = false
+	for key, value in pairs(spellList) do
+		local spellId = value == true and tonumber(key) or tonumber(value)
+		if spellId and spellId > 0 and not (ignoreUnlimited == true and rangeFadeIgnoredSpells[spellId]) then
+			local inRange = IsSpellInRange(spellId, unit)
+			if inRange == true then return true end
+			if inRange ~= nil then checked = true end
+		end
+	end
+	return not checked
+end
+
+function H.RangeFadeGetSpellLabel(spellId, includeId) return getRangeFadeSpellDisplayName(spellId, includeId == true) end
+
+local function buildRangeFadeSpellOptionsFromIds(spellIds)
+	local options = {}
+	local seen = {}
+	if type(spellIds) ~= "table" then return options end
+	for i = 1, #spellIds do
+		local spellId = tonumber(spellIds[i])
+		if spellId and spellId > 0 and not seen[spellId] then
+			seen[spellId] = true
+			tinsert(options, {
+				value = spellId,
+				label = getRangeFadeSpellDisplayName(spellId, true) or tostring(spellId),
+			})
+		end
+	end
+	tsort(options, function(a, b) return tostring(a.label) < tostring(b.label) end)
+	return options
+end
+
+local function buildRangeFadeSpellOptionsFromSpellBook(kind)
+	local options = {}
+	local seen = {}
+	if not (SpellBook and SpellBook.GetNumSpellBookSkillLines and SpellBook.GetSpellBookSkillLineInfo and SpellBook.GetSpellBookItemInfo) then return options end
+	local bank = SpellBookSpellBank and SpellBookSpellBank.Player or 0
+	local spellType = (SpellBookItemType and SpellBookItemType.Spell) or 1
+	local numLines = SpellBook.GetNumSpellBookSkillLines() or 0
+	for line = 1, numLines do
+		local lineInfo = SpellBook.GetSpellBookSkillLineInfo(line)
+		local offset = lineInfo and lineInfo.itemIndexOffset or 0
+		local count = lineInfo and lineInfo.numSpellBookItems or 0
+		for slot = offset + 1, offset + count do
+			local info = SpellBook.GetSpellBookItemInfo(slot, bank)
+			if info and info.itemType == spellType and info.isPassive ~= true then
+				local spellId = info.spellID or info.actionID
+				local include = spellId and not seen[spellId]
+				if include and kind == "friendly" and IsHelpfulSpell then include = IsHelpfulSpell(spellId) == true end
+				if include and kind == "enemy" and IsHarmfulSpell then include = IsHarmfulSpell(spellId) == true end
+				if include and spellId then
+					seen[spellId] = true
+					tinsert(options, {
+						value = spellId,
+						label = getRangeFadeSpellDisplayName(spellId, true) or tostring(spellId),
+					})
+				end
+			end
+		end
+	end
+	tsort(options, function(a, b) return tostring(a.label) < tostring(b.label) end)
+	return options
+end
+
+function H.RangeFadeGetSpellOptions(kind, classToken)
+	local key = (kind == "enemy") and "enemy" or "friendly"
+	local cache = rangeFadeSpellOptionCache[key]
+	if type(cache) ~= "table" then
+		cache = {}
+		rangeFadeSpellOptionCache[key] = cache
+	end
+
+	local currentClassToken = getRangeFadeClassInfo()
+	local normalizedClassToken = type(classToken) == "string" and classToken or currentClassToken
+	if cache[normalizedClassToken] then return cache[normalizedClassToken] end
+
+	local classLists = rangeFadeClassSpellOptions[normalizedClassToken]
+	local options
+	if classLists and type(classLists[key]) == "table" then
+		options = buildRangeFadeSpellOptionsFromIds(classLists[key])
+	elseif normalizedClassToken == currentClassToken then
+		options = buildRangeFadeSpellOptionsFromSpellBook(key)
+	else
+		options = {}
+	end
+	cache[normalizedClassToken] = options
+	return options
+end
+
+local function normalizeRangeFadeConfig(enabled, alpha, ignoreUnlimited)
+	enabled = enabled == true
+	alpha = tonumber(alpha)
+	if alpha == nil then alpha = 1 end
+	if alpha < 0 then alpha = 0 end
+	if alpha > 1 then alpha = 1 end
+	if ignoreUnlimited == nil then
+		ignoreUnlimited = true
+	else
+		ignoreUnlimited = ignoreUnlimited == true
+	end
+	return enabled, alpha, ignoreUnlimited
+end
+
+local function syncRangeFadeConfig()
+	local fn = rangeFadeHandlers.getConfig
+	local enabled, alpha, ignoreUnlimited
+	if fn then
+		enabled, alpha, ignoreUnlimited = fn()
+	else
+		enabled, alpha, ignoreUnlimited = false, 1, true
+	end
+	enabled, alpha, ignoreUnlimited = normalizeRangeFadeConfig(enabled, alpha, ignoreUnlimited)
+
+	if rangeFadeState.configValid and rangeFadeState.ignoreUnlimited ~= ignoreUnlimited then rangeFadeState.spellListDirty = true end
+
+	rangeFadeState.enabled = enabled
+	rangeFadeState.alpha = alpha
+	rangeFadeState.ignoreUnlimited = ignoreUnlimited
+	rangeFadeState.configValid = true
+	rangeFadeState.configDirty = false
+end
+
+getRangeFadeConfig = function()
+	if rangeFadeState.configDirty or not rangeFadeState.configValid then syncRangeFadeConfig() end
+	return rangeFadeState.enabled, rangeFadeState.alpha, rangeFadeState.ignoreUnlimited
+end
+
+local function applyRangeFadeAlpha(inRange, force)
+	local applyFn = rangeFadeHandlers.applyAlpha
+	if not applyFn then return end
+	local enabled, alpha = getRangeFadeConfig()
+	local targetAlpha = (enabled and not inRange) and alpha or 1
+	applyFn(targetAlpha, force)
+end
+
+local function removeRangeFadeSpellState(spellId)
+	local oldState = rangeFadeState.spellStates[spellId]
+	if oldState == nil then return false end
+	rangeFadeState.spellStates[spellId] = nil
+	if oldState == true then rangeFadeState.numInRange = math.max(0, (rangeFadeState.numInRange or 0) - 1) end
+	rangeFadeState.numChecked = math.max(0, (rangeFadeState.numChecked or 0) - 1)
+	return true
+end
+
+local function setRangeFadeSpellState(spellId, inRange)
+	local newState = (inRange == true)
+	local oldState = rangeFadeState.spellStates[spellId]
+	if oldState == nil then
+		rangeFadeState.spellStates[spellId] = newState
+		rangeFadeState.numChecked = (rangeFadeState.numChecked or 0) + 1
+		if newState then rangeFadeState.numInRange = (rangeFadeState.numInRange or 0) + 1 end
+		return true
+	end
+	if oldState == newState then return false end
+	rangeFadeState.spellStates[spellId] = newState
+	if oldState == true then rangeFadeState.numInRange = math.max(0, (rangeFadeState.numInRange or 0) - 1) end
+	if newState then rangeFadeState.numInRange = (rangeFadeState.numInRange or 0) + 1 end
+	return true
+end
+
+local function recomputeRangeFade()
+	local numChecked = rangeFadeState.numChecked or 0
+	local numInRange = rangeFadeState.numInRange or 0
+	rangeFadeState.inRange = (numChecked == 0) or (numInRange > 0)
+	applyRangeFadeAlpha(rangeFadeState.inRange)
+end
+
+local function buildRangeFadeSpellList()
+	local list = {}
+	local spellListFn = rangeFadeHandlers.getSpells
+	if spellListFn then
+		local explicit = spellListFn()
+		if type(explicit) == "table" then
+			for key, value in pairs(explicit) do
+				local spellId
+				if type(key) == "number" and value == true then
+					spellId = key
+				else
+					spellId = value
+				end
+				spellId = tonumber(spellId)
+				if spellId and spellId > 0 and not isRangeFadeIgnored(spellId) then list[spellId] = true end
+			end
+		end
+		return list
+	end
+
+	if not (EnableSpellRangeCheck and SpellBook and SpellBook.GetNumSpellBookSkillLines and SpellBook.GetSpellBookSkillLineInfo and SpellBook.GetSpellBookItemInfo) then return list end
+	local bank = SpellBookSpellBank and SpellBookSpellBank.Player or 0
+	local spellType = (SpellBookItemType and SpellBookItemType.Spell) or 1
+	local numLines = SpellBook.GetNumSpellBookSkillLines() or 0
+	for line = 1, numLines do
+		local lineInfo = SpellBook.GetSpellBookSkillLineInfo(line)
+		local offset = lineInfo and lineInfo.itemIndexOffset or 0
+		local count = lineInfo and lineInfo.numSpellBookItems or 0
+		for slot = offset + 1, offset + count do
+			local info = SpellBook.GetSpellBookItemInfo(slot, bank)
+			if info and info.itemType == spellType and info.isPassive ~= true then
+				if not isRangeFadeIgnored(info.spellID, info.actionID) then
+					local spellId = info.spellID or info.actionID
+					if spellId then list[spellId] = true end
+				end
+			end
+		end
+	end
+	return list
+end
+
+function H.RangeFadeRegister(getConfigFn, applyAlphaFn, getSpellListFn)
+	rangeFadeHandlers.getConfig = getConfigFn
+	rangeFadeHandlers.applyAlpha = applyAlphaFn
+	rangeFadeHandlers.getSpells = getSpellListFn
+	rangeFadeState.configDirty = true
+	rangeFadeState.spellListDirty = true
+	rangeFadeState.spellListCache = nil
+	rangeFadeSpellOptionCache.friendly = {}
+	rangeFadeSpellOptionCache.enemy = {}
+end
+
+function H.RangeFadeReset()
+	clearTable(rangeFadeState.spellStates)
+	rangeFadeState.numChecked = 0
+	rangeFadeState.numInRange = 0
+	rangeFadeState.inRange = true
+	applyRangeFadeAlpha(true, true)
+end
+
+function H.RangeFadeRefreshTargetState(targetUnit)
+	local enabled = getRangeFadeConfig()
+	if not enabled or not IsSpellInRange then
+		H.RangeFadeReset()
+		return
+	end
+
+	local unit = targetUnit or "target"
+	if not (UnitExists and UnitExists(unit)) then
+		H.RangeFadeReset()
+		return
+	end
+
+	clearTable(rangeFadeState.spellStates)
+	rangeFadeState.numChecked = 0
+	rangeFadeState.numInRange = 0
+	rangeFadeState.inRange = true
+
+	for spellId in pairs(rangeFadeState.activeSpells) do
+		local inRange = IsSpellInRange(spellId, unit)
+		if inRange ~= nil then setRangeFadeSpellState(spellId, inRange == true) end
+	end
+
+	recomputeRangeFade()
+end
+
+function H.RangeFadeApplyCurrent(force) applyRangeFadeAlpha(rangeFadeState.inRange, force) end
+
+function H.RangeFadeMarkConfigDirty() rangeFadeState.configDirty = true end
+
+function H.RangeFadeMarkSpellListDirty()
+	rangeFadeState.spellListDirty = true
+	rangeFadeState.spellListCache = nil
+	rangeFadeSpellOptionCache.friendly = {}
+	rangeFadeSpellOptionCache.enemy = {}
+	rangeFadeSpecOptionsCache = nil
+end
+
+function H.RangeFadeUpdateFromEvent(spellIdentifier, isInRange, checksRange)
+	local enabled = getRangeFadeConfig()
+	if not enabled then return end
+	local id = tonumber(spellIdentifier)
+	if not id and GetSpellIDForSpellIdentifier then id = GetSpellIDForSpellIdentifier(spellIdentifier) end
+	if isRangeFadeIgnored(id) then return end
+	if not id or not rangeFadeState.activeSpells[id] then return end
+	if checksRange then
+		setRangeFadeSpellState(id, isInRange == true)
+	else
+		removeRangeFadeSpellState(id)
+	end
+	recomputeRangeFade()
+end
+
+function H.RangeFadeUpdateSpells()
+	if not EnableSpellRangeCheck then return end
+	local enabled = getRangeFadeConfig()
+	if not enabled then
+		for spellId in pairs(rangeFadeState.activeSpells) do
+			EnableSpellRangeCheck(spellId, false)
+		end
+		clearTable(rangeFadeState.activeSpells)
+		H.RangeFadeReset()
+		return
+	end
+	if rangeFadeState.spellListDirty or not rangeFadeState.spellListCache then
+		rangeFadeState.spellListCache = buildRangeFadeSpellList()
+		rangeFadeState.spellListDirty = false
+	end
+	local wanted = rangeFadeState.spellListCache or {}
+	for spellId in pairs(rangeFadeState.activeSpells) do
+		if not wanted[spellId] then
+			EnableSpellRangeCheck(spellId, false)
+			rangeFadeState.activeSpells[spellId] = nil
+			removeRangeFadeSpellState(spellId)
+		end
+	end
+	for spellId in pairs(wanted) do
+		if not rangeFadeState.activeSpells[spellId] then
+			EnableSpellRangeCheck(spellId, true)
+			rangeFadeState.activeSpells[spellId] = true
+		end
+	end
+	recomputeRangeFade()
+end
+
+
+function H.applyPowerTextColor(cfg, def, powerEnum, powerToken, unit, left, center, right)
+	if cfg.textUsePowerColor ~= true then return H.applyBarTextColor(cfg, def, left, center, right) end
+	local r, g, b, a = H.getPowerColor(powerEnum, powerToken, cfg, unit)
+	if left then left:SetTextColor(r, g, b, a) end
+	if center then center:SetTextColor(r, g, b, a) end
+	if right then right:SetTextColor(r, g, b, a) end
+end
+
+-- Portrait styling uses an independent border without changing existing inherited profiles.
+function H.ResolvePortraitBorderStyle(cfg, borderCfg, borderDef)
+	local portrait = cfg.portrait or {}
+	local custom = portrait.border or {}
+	local inherit = custom.inherit ~= false
+	borderCfg = borderCfg or cfg.border or {}
+	borderDef = borderDef or {}
+	local style = inherit and borderCfg or custom
+	local size = math.max(1, tonumber(style.edgeSize or (inherit and borderDef.edgeSize)) or 1)
+	local offset = portrait.detachedBorderOffset
+	if offset == nil then offset = borderCfg.offset or borderDef.offset or borderCfg.inset or borderDef.inset or size end
+	return {
+		enabled = portrait.detachedBorderEnabled ~= false and (not inherit or borderCfg.enabled ~= false),
+		inherit = inherit,
+		texture = style.texture or (inherit and borderDef.texture) or "DEFAULT",
+		edgeSize = size,
+		offset = math.max(0, tonumber(offset) or size),
+		color = style.color or (inherit and borderDef.color) or { 0, 0, 0, 0.8 },
+		colorMode = not inherit and custom.colorMode or "CUSTOM",
+	}
+end
+
+function H.ResolvePortraitBorderColor(unit, style)
+	local color = style.color or { 0, 0, 0, 0.8 }
+	if style.colorMode == "CLASS" then
+		local player = UnitIsPlayer and H.UnsecretBool(UnitIsPlayer(unit))
+		local class = player == true and UnitClass and select(2, UnitClass(unit))
+		if not (issecretvalue and issecretvalue(class)) then
+			local override = addon.db and addon.db.ufUseCustomClassColors and addon.db.ufClassColors and addon.db.ufClassColors[class]
+			local classColor = override or (class and ((CUSTOM_CLASS_COLORS and CUSTOM_CLASS_COLORS[class]) or (RAID_CLASS_COLORS and RAID_CLASS_COLORS[class])))
+			if classColor then return classColor.r or classColor[1], classColor.g or classColor[2], classColor.b or classColor[3], color[4] or 1 end
+		end
+	end
+	if style.colorMode == "REACTION" or style.colorMode == "CLASS" then
+		if UnitSelectionColor then
+			local r, g, b = UnitSelectionColor(unit, true)
+			return r, g, b, color[4] or 1
+		end
+		local r, g, b = H.getNPCHealthColor(unit)
+		if r then return r, g, b, color[4] or 1 end
+	end
+	return color[1] or 0, color[2] or 0, color[3] or 0, color[4] or 0.8
+end
+
+function H.UpdatePortraitBorder(st, unit, cfg, borderCfg, borderDef, detached, shape, visible)
+	if not (st and st.portraitHolder) then return end
+	local UF = addon.Aura and addon.Aura.UF
+	local style = H.ResolvePortraitBorderStyle(cfg, borderCfg, borderDef)
+	local enabled = visible == true and style.enabled and (detached or not style.inherit)
+	if st.portraitHolder._ufBorder then st.portraitHolder._ufBorder:Hide() end
+	st.portraitStyleBorder = st.portraitStyleBorder or CreateFrame("Frame", nil, st.portraitHolder)
+	local frame = st.portraitStyleBorder
+	local safeBorder = addon.functions and addon.functions.SetSafeBorder
+	local square = not UF or UF.IsPortraitShapeBackdropBorderCompatible(shape)
+	local r, g, b, a = H.ResolvePortraitBorderColor(unit, style)
+	if safeBorder then
+		frame:ClearAllPoints()
+		frame:SetPoint("TOPLEFT", st.portraitHolder, "TOPLEFT", -style.offset, style.offset)
+		frame:SetPoint("BOTTOMRIGHT", st.portraitHolder, "BOTTOMRIGHT", style.offset, -style.offset)
+		safeBorder(frame, enabled and square, H.resolveBorderTexture(style.texture), style.edgeSize, r, g, b, a, {
+			stateKey = "_eqolPortraitStyleBorder", defaultTexture = "Interface\\Buttons\\WHITE8x8", pixelPerfect = true,
+		})
+	end
+	frame:SetShown(enabled and square)
+	if UF and UF.ApplyDetachedPortraitShapeBorder then
+		style.color = { r, g, b, a }
+		UF.ApplyDetachedPortraitShapeBorder(st, shape, style, borderDef, enabled and not square)
+	end
+end
+
+function H.UpdatePortraitDecoration(st, unit, cfg, visible)
+	if not (st and st.portraitHolder) then return end
+	local decoration = st.portraitDecoration
+	if visible ~= true or not (cfg.portrait and cfg.portrait.classificationBorder == true) then
+		if decoration then decoration:Hide() end
+		return
+	end
+	local classification = UnitClassification and UnitClassification(unit)
+	if issecretvalue and issecretvalue(classification) then classification = nil end
+	local gold = classification == "elite" or classification == "worldboss"
+	local silver = classification == "rare" or classification == "rareelite"
+	if not gold and not silver then
+		if decoration then decoration:Hide() end
+		return
+	end
+	local atlas = gold and "UI-HUD-UnitFrame-Target-PortraitOn-Boss-Gold" or "ui-hud-unitframe-target-portraiton-boss-rare-silver"
+	local info = C_Texture and C_Texture.GetAtlasInfo and C_Texture.GetAtlasInfo(atlas)
+	decoration = decoration or st.portraitHolder:CreateTexture(nil, "OVERLAY", nil, 7)
+	st.portraitDecoration = decoration
+	decoration:ClearAllPoints()
+	local size = st.portraitHolder:GetWidth()
+	if info then
+		local scale = size / 58
+		decoration:SetSize(info.width * scale, info.height * scale)
+		decoration:SetPoint("TOPRIGHT", st.portraitHolder, "TOPRIGHT", 15 * scale, 11 * scale)
+	else
+		atlas = gold and "nameplates-icon-elite-gold" or (classification == "rare" and "nameplates-icon-rare-silver" or "nameplates-icon-elite-silver")
+		info = C_Texture and C_Texture.GetAtlasInfo and C_Texture.GetAtlasInfo(atlas)
+		if not info then decoration:Hide(); return end
+		decoration:SetSize(size * 0.45, size * 0.45)
+		decoration:SetPoint("TOPRIGHT", st.portraitHolder, "TOPRIGHT", size * 0.12, size * 0.12)
+	end
+	decoration:SetAtlas(atlas, false)
+	decoration:Show()
+end
+
+function H.ConfigureAuraDurationBar(button, style, isDebuff, native, aura, unit)
+	if not button then return end
+	style = style or {}
+	local enabled = style and style.barEnabled == true
+	if not enabled then
+		if not button.auraDurationBar then return end
+		if native and button.ClearDurationBar then button:ClearDurationBar() end
+		if native and button.ClearSpellName then button:ClearSpellName() end
+		if button.auraDurationBar then button.auraDurationBar:Hide() end
+		if button.auraBarName then button.auraBarName:Hide() end
+		if button.auraBarTime then button.auraBarTime:Hide() end
+		if addon.DurationText then addon.DurationText:ReleaseBinding(button, "ufAuraBar", true) end
+		if not native then button:SetScript("OnUpdate", nil) end
+		button:SetSize(style.size or 24, style.size or 24)
+		button.icon:ClearAllPoints()
+		button.icon:SetAllPoints(button)
+		button.icon:Show()
+		return
+	end
+	local height = style.size or 24
+	local width = math.max(height, tonumber(style.barWidth) or 180)
+	button:SetSize(width, height)
+	if not button.auraDurationBar then
+		local bar = CreateFrame("StatusBar", nil, button)
+		bar:SetStatusBarTexture("Interface\\Buttons\\WHITE8x8")
+		bar:SetFrameLevel(button:GetFrameLevel())
+		bar:EnableMouse(false)
+		bar.background = bar:CreateTexture(nil, "BACKGROUND")
+		bar.background:SetAllPoints(bar)
+		bar.background:SetColorTexture(0.05, 0.05, 0.05, 0.8)
+		button.auraDurationBar = bar
+		local overlay = button.nativeForeground or button.foreground or button
+		button.auraBarName = overlay:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+		button.auraBarTime = overlay:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+	end
+	local bar = button.auraDurationBar
+	local iconWidth = style.barShowIcon ~= false and height or 0
+	bar:ClearAllPoints()
+	bar:SetPoint("TOPLEFT", button, "TOPLEFT", iconWidth, 0)
+	bar:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 0, 0)
+	local color = style.barColor or (isDebuff and { 0.8, 0.2, 0.2, 1 } or { 0.2, 0.6, 0.9, 1 })
+	bar:SetStatusBarColor(color[1] or 1, color[2] or 1, color[3] or 1, color[4] or 1)
+	bar:Show()
+	button.icon:ClearAllPoints()
+	button.icon:SetPoint("TOPLEFT", button, "TOPLEFT", 0, 0)
+	button.icon:SetSize(height, height)
+	button.icon:SetShown(style.barShowIcon ~= false)
+	if native and button.ClearDurationCooldown then button:ClearDurationCooldown() end
+	if button.cd then
+		button.cd:SetHideCountdownNumbers(true)
+		if button.cd.SetDrawSwipe then button.cd:SetDrawSwipe(false) end
+		if button.cd.SetDrawEdge then button.cd:SetDrawEdge(false) end
+		if button.cd.SetDrawBling then button.cd:SetDrawBling(false) end
+		button.cd:Hide()
+	end
+	local name, time = button.auraBarName, button.auraBarTime
+	name:SetWordWrap(false)
+	name:SetNonSpaceWrap(false)
+	time:SetWordWrap(false)
+	time:SetNonSpaceWrap(false)
+	H.applyFont(name, style.barLabelFont, style.barLabelFontSize or 12, style.barLabelFontOutline or "OUTLINE")
+	local labelColor = style.barLabelColor or { 1, 1, 1, 1 }
+	name:SetTextColor(labelColor[1], labelColor[2], labelColor[3], labelColor[4])
+	H.applyFont(time, style.cooldownFont, style.cooldownFontSize or 12, style.cooldownFontOutline)
+	local timeAnchor = style.cooldownAnchor or "CENTER"
+	local timeOffset = style.cooldownOffset
+	local timeWidth = math.min(50, width * 0.3)
+	time:ClearAllPoints()
+	time:SetPoint(timeAnchor, button, timeAnchor, (timeOffset and timeOffset.x) or 0, (timeOffset and timeOffset.y) or 0)
+	time:SetWidth(timeWidth)
+	time:SetJustifyH(timeAnchor:find("LEFT", 1, true) and "LEFT" or timeAnchor:find("RIGHT", 1, true) and "RIGHT" or "CENTER")
+	name:ClearAllPoints()
+	local labelAnchor = style.barLabelAnchor or "LEFT"
+	local labelWidth = math.max(1, width - iconWidth - (style.showCooldownText ~= false and timeWidth + 8 or 0) - 8)
+	local labelLimit = tonumber(style.barLabelMaxWidth) or 0
+	if labelLimit > 0 then labelWidth = math.min(labelWidth, labelLimit) end
+	name:SetPoint(labelAnchor, bar, labelAnchor, tonumber(style.barLabelOffsetX) or 4, tonumber(style.barLabelOffsetY) or 0)
+	name:SetWidth(labelWidth)
+	name:SetJustifyH(labelAnchor:find("LEFT", 1, true) and "LEFT" or labelAnchor:find("RIGHT", 1, true) and "RIGHT" or "CENTER")
+	name:SetShown(style.barShowLabel ~= false)
+	time:SetShown(style.showCooldownText ~= false)
+	if native then
+		button:SetDurationBar(bar, { direction = Enum.StatusBarTimerDirection.RemainingTime, interpolation = Enum.StatusBarInterpolation.Immediate })
+		if style.barShowLabel ~= false then button:SetSpellName(name) elseif button.ClearSpellName then button:ClearSpellName() end
+		if style.showCooldownText ~= false then
+			button:SetDurationText(time, addon.functions.GetAuraButtonDurationTextOptions(style.durationTextProfile))
+		end
+		if button.durationText then button.durationText:Hide() end
+		return
+	end
+	name:SetText(style.barShowLabel ~= false and aura and aura.name or "")
+	local durationObject
+	if aura and not aura.isSample and C_UnitAuras and C_UnitAuras.GetAuraDuration then durationObject = C_UnitAuras.GetAuraDuration(unit, aura.auraInstanceID) end
+	button._eqolAuraBarDurationObject = durationObject
+	if durationObject and bar.SetTimerDuration then
+		bar:SetMinMaxValues(0, 1)
+		bar:SetTimerDuration(durationObject, Enum.StatusBarInterpolation.Immediate, Enum.StatusBarTimerDirection.RemainingTime)
+		if addon.DurationText then addon.DurationText:ConfigureBinding(button, "ufAuraBar", time, durationObject, { profileKey = style.durationTextProfile, enabled = style.showCooldownText ~= false }) end
+		button:SetScript("OnUpdate", nil)
+	else
+		if addon.DurationText then addon.DurationText:ReleaseBinding(button, "ufAuraBar", true) end
+		local duration = aura and aura.duration
+		local expiration = aura and aura.expirationTime
+		if _G.issecretvalue and (_G.issecretvalue(duration) or _G.issecretvalue(expiration)) then duration, expiration = nil, nil end
+		button._eqolAuraBarDuration = type(duration) == "number" and duration or 0
+		button._eqolAuraBarExpiration = type(expiration) == "number" and expiration or 0
+		bar:SetMinMaxValues(0, math.max(button._eqolAuraBarDuration, 1))
+		local function update(self)
+			if self._eqolAuraBarDuration > 0 then
+				local remaining = math.max(0, self._eqolAuraBarExpiration - GetTime())
+				self.auraDurationBar:SetValue(remaining)
+				self.auraBarTime:SetFormattedText("%.0f", remaining)
+			else
+				self.auraDurationBar:SetValue(1)
+				self.auraBarTime:SetText("")
+			end
+		end
+		update(button)
+		button:SetScript("OnUpdate", button._eqolAuraBarDuration > 0 and function(self, elapsed)
+			self._eqolAuraBarElapsed = (self._eqolAuraBarElapsed or 0) + elapsed
+			if self._eqolAuraBarElapsed < 0.1 then return end
+			self._eqolAuraBarElapsed = 0
+			update(self)
+		end or nil)
+	end
+end

@@ -1,0 +1,17 @@
+
+CappingSettings = {
+["profileKeys"] = {
+["Beat Ngu"] = "Default",
+["Neon Void"] = "Default",
+},
+["profiles"] = {
+["Default"] = {
+["position"] = {
+"TOPLEFT",
+"TOPLEFT",
+159.1665344238281,
+},
+["lock"] = true,
+},
+},
+}

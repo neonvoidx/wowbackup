@@ -1,0 +1,73 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ https://raw.githubusercontent.com/Gethe/wow-ui-source/live/Interface/AddOns/Blizzard_SharedXML/UI.xsd">
+    <Include file="TextArea.lua" />
+
+
+    <ScrollFrame name="MapPinEnhancedTextareaTemplate" mixin="MapPinEnhancedTextareaMixin" virtual="true" inherits="ScrollFrameTemplate">
+        <KeyValues>
+            <KeyValue key="scrollBarX" value="-10" type="number" />
+            <KeyValue key="scrollBarTopY" value="-2" type="number" />
+            <KeyValue key="scrollBarBottomY" value="3" type="number" />
+        </KeyValues>
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture parentKey="bg" inherits="MapPinEnhancedGenericFrameTextureTemplate" alpha="0.8">
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="-10" y="10" />
+                        <Anchor point="BOTTOMRIGHT" x="10" y="-10" />
+                    </Anchors>
+                </Texture>
+            </Layer>
+        </Layers>
+        <ScrollChild>
+            <EditBox parentKey="editbox" multiLine="true" autoFocus="false">
+                <Size x="1" y="1" />
+                <TextInsets left="5" top="5" bottom="5" right="10" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativePoint="TOPLEFT" x="5" y="-5" />
+                    <Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" x="-5" y="5" />
+                </Anchors>
+                <FontString inherits="MapPinEnhancedFontHighlight" />
+                <Scripts>
+                    <OnLoad function="ScrollingEdit_OnLoad" />
+                    <OnEscapePressed function="EditBox_ClearFocus" />
+                    <OnCursorChanged function="ScrollingEdit_OnCursorChanged" />
+                </Scripts>
+            </EditBox>
+        </ScrollChild>
+        <Frames>
+            <Frame parentKey="placeholderOverlay" setAllPoints="true" propagateMouseInput="Clicks">
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <Texture parentKey="bg" file="Interface/AddOns/MapPinEnhanced/assets/shared/RepeatableStripes.png" setAllPoints="true" vertTile="true" horizTile="true" scale="2">
+                            <Gradient>
+                                <MinColor r="0.3" g="0.3" b="0.3" a="0.7" />
+                                <MaxColor r="0.3" g="0.3" b="0.3" a="0" />
+                            </Gradient>
+                        </Texture>
+                    </Layer>
+                    <Layer level="ARTWORK">
+                        <FontString parentKey="text" setAllPoints="true" justifyH="CENTER" justifyV="MIDDLE" inherits="MapPinEnhancedFontNormal" alpha="0.75" />
+                    </Layer>
+                </Layers>
+                <Animations>
+                    <AnimationGroup parentKey="fadeIn" inherits="MapPinEnhancedAnimationFadeIn">
+                        <KeyValues>
+                            <KeyValue key="showOnPlay" value="true" type="boolean" />
+                        </KeyValues>
+                    </AnimationGroup>
+                    <AnimationGroup parentKey="fadeOut" inherits="MapPinEnhancedAnimationFadeOut">
+                        <KeyValues>
+                            <KeyValue key="hideOnFinished" value="true" type="boolean" />
+                        </KeyValues>
+                    </AnimationGroup>
+                </Animations>
+            </Frame>
+        </Frames>
+        <Scripts>
+            <OnLoad method="OnLoad" />
+            <OnMouseDown method="OnMouseDown" />
+            <OnSizeChanged method="OnSizeChanged" />
+        </Scripts>
+    </ScrollFrame>
+</Ui>

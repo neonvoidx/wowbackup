@@ -1,0 +1,56 @@
+VER 3 0000000000000013 " " "1373909"
+/run local s=6 C_AddOns.LoadAddOn("Blizzard_Professions") local f=ProfessionsFrame if f:IsVisible() then f:Hide() else f:Show() local t=f.rightProfessionTabs[s] if t then t:OnClick() end end
+END
+VER 3 0000000000000017 " " "132932"
+/angsleep
+END
+VER 3 0000000000000005 " " "2869702"
+#plumber:outfit
+/click PLMR_OUTFIT
+END
+VER 3 0000000000000003 " " "INV_Misc_QuestionMark"
+#showtooltip 13
+/use  13
+END
+VER 3 0000000000000004 " " "1385294"
+#plumber:drawer
+/click PLMR1
+END
+VER 3 0000000000000016 " " "134400"
+#Swapper ss1
+/equipslot 16 item:16886
+END
+VER 3 0000000000000006 "attack" "236299"
+/petattack
+END
+VER 3 0000000000000012 "EnhanceQoLBandageMacro" "INV_Misc_QuestionMark"
+#showtooltip item:6451
+/use [nochanneling] item:6451
+END
+VER 3 0000000000000007 "EnhanceQoLDrinkMacro" "INV_Misc_QuestionMark"
+#showtooltip
+/use [nocombat] item:4607
+END
+VER 3 0000000000000008 "EnhanceQoLHealthMacro" "INV_Misc_QuestionMark"
+#showtooltip
+/use [nocombat] item:4607
+END
+VER 3 0000000000000009 "FOCUS" "132284"
+/focus [@mouseover,nodead,exists]; [@target,exists]
+END
+VER 3 000000000000000A "follow" "5159899"
+/petfollow
+END
+VER 3 000000000000000B "move" "INV_Misc_QuestionMark"
+#showtooltip 
+/petmoveto
+END
+VER 3 0000000000000014 "RS_MACRO" "667492"
+/targetexact Soboz
+END
+VER 3 0000000000000015 "RXPTargeting" "Ability_eyeoftheowl"
+/targetexact Ferocious Yeti
+/targetexact Cave Yeti
+/tm !7
+/targetlasttarget [dead]
+END

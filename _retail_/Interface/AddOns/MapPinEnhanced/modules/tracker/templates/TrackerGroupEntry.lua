@@ -1,0 +1,362 @@
+---@class MapPinEnhanced
+local MapPinEnhanced = select(2, ...)
+
+---@class MapPinEnhancedTrackerGroupEntryTemplate : Button
+---@field treeNode MapPinEnhancedTrackerGroupNode
+---@field group MapPinEnhancedGroupMixin
+---@field expandIcon MapPinEnhancedIconMixin
+---@field title FontString
+---@field icon Texture
+---@field line Texture
+---@field actionButtons Frame | { restoreButton: MapPinEnhancedIconButtonTemplate, clearButton: MapPinEnhancedIconButtonTemplate, fadeIn: MapPinEnhancedAnimationVisibilityMixin, fadeOut: MapPinEnhancedAnimationVisibilityMixin }
+MapPinEnhancedTrackerGroupEntryMixin = {}
+local Transfer = MapPinEnhanced:GetModule("Transfer")
+local Groups = MapPinEnhanced:GetModule("Groups")
+local Tracker = MapPinEnhanced:GetModule("Tracker")
+---@type { EditGroup: fun(self: table, group: MapPinEnhancedGroupMixin) }
+local Editor = MapPinEnhanced:GetModule("Editor")
+local L = MapPinEnhanced.L
+
+local TITLE_LEFT_OFFSET = 43
+local TITLE_LINE_GAP = 5
+local RIGHT_PADDING = 5
+local MIN_LINE_WIDTH = 20
+local DISABLED_ACTION_ALPHA = 0.3
+
+---@param button MapPinEnhancedIconButtonTemplate
+---@param enabled boolean
+local function SetActionButtonEnabled(button, enabled)
+    button:SetEnabled(enabled)
+    button.iconTexture:SetAlpha(enabled and 1 or DISABLED_ACTION_ALPHA)
+end
+
+function MapPinEnhancedTrackerGroupEntryMixin:CanExpandGroup()
+    return self.group and not self.group:IsHidden() and self.treeNode.activePins > 0
+end
+
+function MapPinEnhancedTrackerGroupEntryMixin:UpdateExpandIcon()
+    if not self:CanExpandGroup() then
+        self.expandIcon:Hide()
+        return
+    end
+
+    self.expandIcon:Show()
+    if self.treeNode:IsCollapsed() then
+        self.expandIcon:SetIconTexture("plus")
+    else
+        self.expandIcon:SetIconTexture("minus")
+    end
+end
+
+function MapPinEnhancedTrackerGroupEntryMixin:SetIcon(texturePath)
+    self.icon:SetTexture(texturePath)
+end
+
+function MapPinEnhancedTrackerGroupEntryMixin:UpdateActionButtons()
+    local group = self.group
+    local restorable = group ~= nil and group:IsRestorable()
+    local canRestorePins = restorable and self.treeNode.clearedPins > 0
+    self.actionButtons.restoreButton:SetShown(restorable)
+    self.actionButtons:SetWidth(restorable and 45 or 20)
+    local isUngrouped = group ~= nil and group.groupType == "ungrouped"
+    local canDeleteOrClear = group ~= nil and (not isUngrouped or self.treeNode.totalPins > 0)
+    SetActionButtonEnabled(self.actionButtons.restoreButton, canRestorePins)
+    SetActionButtonEnabled(self.actionButtons.clearButton, canDeleteOrClear)
+
+    self.line:ClearAllPoints()
+    self.line:SetPoint("LEFT", self.title, "RIGHT", 5, 0)
+    self.line:SetPoint("RIGHT", self.actionButtons, "LEFT", -5, 0)
+end
+
+function MapPinEnhancedTrackerGroupEntryMixin:UpdateTitleWidth()
+    local actionButtonsWidth = self.actionButtons:GetWidth() + RIGHT_PADDING
+    local availableWidth = self:GetWidth() - TITLE_LEFT_OFFSET - TITLE_LINE_GAP - RIGHT_PADDING - MIN_LINE_WIDTH -
+        actionButtonsWidth
+    if availableWidth <= 0 then return end
+
+    self.title:SetWidth(math.min(self.title:GetStringWidth(), availableWidth))
+end
+
+function MapPinEnhancedTrackerGroupEntryMixin:Reset()
+    for _, button in ipairs({ self.actionButtons.restoreButton, self.actionButtons.clearButton }) do
+        if GameTooltip:IsOwned(button) then GameTooltip:Hide() end
+        button:SetScript("OnClick", nil)
+        button:SetScript("OnEnter", nil)
+        button:SetScript("OnLeave", nil)
+    end
+    if GameTooltip:IsOwned(self) then GameTooltip:Hide() end
+    self.group, self.treeNode = nil, nil
+    self.icon:SetTexture(nil)
+    self.expandIcon:Hide()
+    self.title:SetText("")
+    self.title:SetWidth(0)
+    SetActionButtonEnabled(self.actionButtons.restoreButton, false)
+    SetActionButtonEnabled(self.actionButtons.clearButton, false)
+    self.actionButtons.fadeOut:SetParentShownInstantly(false, self.actionButtons.fadeIn)
+end
+
+function MapPinEnhancedTrackerGroupEntryMixin:SetupGroupActionButton()
+    local isProtected = self.group:IsProtected()
+    local restorable = self.group:IsRestorable()
+    local label = isProtected and L["Clear Group"] or (restorable and L["Hide Group"] or L["Delete Group"])
+    self.actionButtons.clearButton:SetIconTexture(restorable and "eyeslash" or "trash")
+    self.actionButtons.clearButton:SetScript("OnClick", function()
+        if self.group:IsProtected() then
+            self:ConfirmClearGroup()
+        elseif self.group:IsRestorable() then
+            self.group:HideGroup()
+        else
+            self:ConfirmDeleteGroup()
+        end
+    end)
+    self.actionButtons.clearButton:SetScript("OnEnter", function(button)
+        GameTooltip:SetOwner(button, "ANCHOR_LEFT")
+        GameTooltip:AddLine(label)
+        GameTooltip:Show()
+    end)
+    self.actionButtons.clearButton:SetScript("OnLeave", function()
+        GameTooltip:Hide()
+    end)
+end
+
+---@param treeNode MapPinEnhancedTrackerGroupNode
+function MapPinEnhancedTrackerGroupEntryMixin:Init(treeNode)
+    self:Reset()
+    ---@class MapPinEnhancedGroupMixin
+    local group = treeNode:GetData()
+    self.group = group
+    self.treeNode = treeNode
+    self:UpdateTitle()
+    self:SetIcon(group:GetIcon())
+    self:UpdateExpandIcon()
+    self.actionButtons.restoreButton:SetScript("OnClick", function()
+        self.group:RestorePins()
+    end)
+    self.actionButtons.restoreButton:SetScript("OnEnter", function(button)
+        GameTooltip:SetOwner(button, "ANCHOR_LEFT")
+        GameTooltip:AddLine(L["Restore Pins"])
+        GameTooltip:Show()
+    end)
+    self.actionButtons.restoreButton:SetScript("OnLeave", function()
+        GameTooltip:Hide()
+    end)
+    self:SetupGroupActionButton()
+end
+
+function MapPinEnhancedTrackerGroupEntryMixin:UpdateTitle()
+    local group = self.group
+    if not group then return end
+
+    self:UpdateActionButtons()
+    local title = group:GetName()
+    local totalPins = self.treeNode.totalPins
+    if not group:IsRestorable() then
+        local count = group:IsHidden() and totalPins or self.treeNode.activePins
+        self.title:SetText(string.upper(string.format("%s (%d)", title, count)))
+        self:UpdateTitleWidth()
+        return
+    end
+
+    local clearedPins = self.treeNode.clearedPins
+    self.title:SetText(string.upper(string.format("%s (%d/%d)", title, clearedPins, totalPins)))
+    self:UpdateTitleWidth()
+end
+
+function MapPinEnhancedTrackerGroupEntryMixin:OnEnter()
+    self.actionButtons.fadeIn:PlayShowing(self.actionButtons.fadeOut)
+    if not self.group or self.actionButtons.clearButton:IsMouseOver() or
+        self.actionButtons.restoreButton:IsMouseOver() then
+        return
+    end
+    local leftAction = self.group:IsHidden() and L["Show Group"] or
+        (self:CanExpandGroup() and (self.treeNode:IsCollapsed() and L["Expand"] or L["Collapse"]) or nil)
+    GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+    MapPinEnhanced:AddTooltipInteractions(GameTooltip, {
+        { L["Left Click"],  leftAction },
+        { L["Right Click"], L["Open menu"] },
+    })
+    if GameTooltip:NumLines() > 0 then GameTooltip:Show() end
+end
+
+function MapPinEnhancedTrackerGroupEntryMixin:OnLeave()
+    if GameTooltip:IsOwned(self) then GameTooltip:Hide() end
+    if self:IsMouseOver() then return end
+    self.actionButtons.fadeOut:PlayHiding(self.actionButtons.fadeIn)
+end
+
+function MapPinEnhancedTrackerGroupEntryMixin:ConfirmDeleteGroup()
+    local groupID, lifetime = self.group:GetGroupID(), self.group.lifetimeChangeNumber
+    MapPinEnhanced:ShowConfirmDialog(L["Delete Group"],
+        string.format(L["Delete group \"%s\" and all of its pins?"], self.group:GetName()), function()
+            local group = Groups:GetGroupByID(groupID)
+            if group and group:IsSameGroup(groupID, lifetime) then Groups:DeleteGroup(group) end
+        end)
+end
+
+function MapPinEnhancedTrackerGroupEntryMixin:ConfirmClearGroup()
+    local groupID, lifetime = self.group:GetGroupID(), self.group.lifetimeChangeNumber
+    MapPinEnhanced:ShowConfirmDialog(L["Clear Group"],
+        string.format(L["Clear all pins from \"%s\"?"], self.group:GetName()),
+        function()
+            local group = Groups:GetGroupByID(groupID)
+            if group and group:IsSameGroup(groupID, lifetime) then group:ClearGroup() end
+        end)
+end
+
+function MapPinEnhancedTrackerGroupEntryMixin:CanRenameGroup()
+    return not self.group:IsProtected() or self.group.groupType == "ungrouped"
+end
+
+function MapPinEnhancedTrackerGroupEntryMixin:AddDeleteOrClearMenuAction(menu)
+    if self.group:IsProtected() then
+        table.insert(menu, {
+            type = "button",
+            label = MapPinEnhanced:Iconize("trash", L["Clear Group"]),
+            onClick = function() self:ConfirmClearGroup() end,
+        })
+    else
+        table.insert(menu, {
+            type = "button",
+            label = MapPinEnhanced:Iconize("trash", L["Delete Group"]),
+            onClick = function() self:ConfirmDeleteGroup() end,
+        })
+    end
+end
+
+function MapPinEnhancedTrackerGroupEntryMixin:AddRenameMenuHeader(menu)
+    if self.group.groupType == "way-back" then return end
+    if not self:CanRenameGroup() then return end
+
+    local group = self.group
+    if group.groupType == "ungrouped" then
+        table.insert(menu, {
+            type = "button",
+            label = MapPinEnhanced:Iconize("plus", L["Add to New Group"]),
+            onClick = function()
+                Groups:ShowRenameDialog(group)
+            end
+        })
+    else
+        table.insert(menu, {
+            type = "template",
+            template = "MapPinEnhancedMenuTitleActionTemplate",
+            data = {
+                label = group:GetName(),
+                icon = "edit",
+                onClick = function()
+                    Groups:ShowRenameDialog(group)
+                end,
+            },
+        })
+    end
+
+
+    table.insert(menu, {
+        type = "divider",
+    })
+end
+
+function MapPinEnhancedTrackerGroupEntryMixin:AddTrackingModeMenu(menu)
+    local group = self.group
+    if group:IsHidden() or group:IsProtected() then return end
+
+    local entries = {}
+    for _, option in ipairs(Groups.TRACKING_MODE_OPTIONS) do
+        local mode = option.value
+        local label = option.label
+        table.insert(entries, {
+            type = "radio",
+            label = label,
+            isSelected = function()
+                return group:GetTrackingMode() == mode
+            end,
+            setSelected = function()
+                group:SetTrackingMode(mode)
+            end,
+            data = mode,
+        })
+    end
+
+    table.insert(menu, {
+        type = "submenu",
+        entry = {
+            type = "button",
+            label = MapPinEnhanced:Iconize("settings", L["Tracking Mode"]),
+        },
+        entries = entries,
+    })
+end
+
+function MapPinEnhancedTrackerGroupEntryMixin:AddEditGroupMenuAction(menu)
+    local group = self.group
+    if group.groupType == "way-back" then return end
+    table.insert(menu, {
+        type = "button",
+        label = MapPinEnhanced:Iconize("edit", L["Edit Group"]),
+        onClick = function() Editor:EditGroup(group) end,
+    })
+end
+
+function MapPinEnhancedTrackerGroupEntryMixin:AddTransferMenuActions(menu)
+    local group = self.group
+    if self.treeNode.totalPins > 0 then
+        table.insert(menu, {
+            type = "button",
+            label = MapPinEnhanced:Iconize("export", L["Share to Chat"]),
+            onClick = function() Transfer:ShareGroupToChat(group) end,
+        })
+        table.insert(menu, {
+            type = "button",
+            label = MapPinEnhanced:Iconize("export", MapPinEnhanced.L["Export"]),
+            onClick = function() Transfer:ShowExportWindow(group) end,
+        })
+    end
+end
+
+function MapPinEnhancedTrackerGroupEntryMixin:BuildMenu()
+    local group = self.group
+    local menu = {}
+
+    self:AddRenameMenuHeader(menu)
+    self:AddEditGroupMenuAction(menu)
+    self:AddTrackingModeMenu(menu)
+    if group:IsRestorable() and self.treeNode.clearedPins > 0 then
+        table.insert(menu, {
+            type = "button",
+            label = MapPinEnhanced:Iconize("arrowcircle", L["Restore Pins"]),
+            onClick = function() group:RestorePins() end,
+        })
+    end
+
+    self:AddTransferMenuActions(menu)
+    table.insert(menu, { type = "divider" })
+
+    if not group:IsProtected() then
+        table.insert(menu, {
+            type = "button",
+            label = MapPinEnhanced:Iconize(group:IsHidden() and "eye" or "eyeslash",
+                group:IsHidden() and L["Show Group"] or L["Hide Group"]),
+            onClick = function()
+                if group:IsHidden() then group:ShowGroup() else group:HideGroup() end
+            end,
+        })
+    end
+    self:AddDeleteOrClearMenuAction(menu)
+    return menu
+end
+
+function MapPinEnhancedTrackerGroupEntryMixin:OnMouseDown(button)
+    assert(self.treeNode, "TreeNode is not set for MapPinEnhancedTrackerGroupEntryMixin")
+    if button == "LeftButton" then
+        if self.group:IsHidden() then
+            self.group:ShowGroup()
+            return
+        end
+        if not self:CanExpandGroup() then return end
+        self.treeNode:ToggleCollapsed()
+        self:UpdateExpandIcon()
+        Tracker:GetTrackerFrame():UpdateHeight()
+    elseif button == "RightButton" then
+        MapPinEnhanced:GenerateMenu(self, self:BuildMenu())
+    end
+end

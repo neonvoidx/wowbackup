@@ -1,0 +1,35 @@
+---@class MapPinEnhanced
+---@field globalAPI table
+---@field ICON_FILE_NAMES table<number, string>
+local MapPinEnhanced = select(2, ...)
+
+MapPinEnhanced.name = "MapPinEnhanced"
+MapPinEnhanced.displayName = "Map Pin Enhanced"
+
+MapPinEnhanced.isRetail = WOW_PROJECT_ID == WOW_PROJECT_MAINLINE
+MapPinEnhanced.isForever = WOW_PROJECT_ID == rawget(_G, "WOW_PROJECT_CAMELOT")
+
+MapPinEnhanced.HBD = LibStub:GetLibrary("HereBeDragons-2.0")
+MapPinEnhanced.HBDP = LibStub:GetLibrary("HereBeDragons-Pins-2.0")
+MapPinEnhanced.LDBIcon = LibStub:GetLibrary("LibDBIcon-1.0")
+MapPinEnhanced.Chomp = LibStub:GetLibrary("Chomp")
+
+MapPinEnhanced.basePath = "Interface\\AddOns\\MapPinEnhanced"
+MapPinEnhanced.assetsPath = MapPinEnhanced.basePath .. "\\assets"
+
+---@type table<string, function>
+local globalAPI = {}
+---@type table
+_G[MapPinEnhanced.name] = globalAPI
+function MapPinEnhanced:RegisterGlobalAPI(name, func)
+    assert(name, "MapPinEnhanced:RegisterGlobalAPI: name is nil")
+    assert(type(name) == "string", "MapPinEnhanced:RegisterGlobalAPI: name must be a string")
+    assert(func, "MapPinEnhanced:RegisterGlobalAPI: func is nil")
+    assert(type(func) == "function", "MapPinEnhanced:RegisterGlobalAPI: func must be a function")
+
+    if not globalAPI[name] then
+        globalAPI[name] = func
+    else
+        error("MapPinEnhanced:RegisterGlobalAPI: API with name '" .. name .. "' already exists")
+    end
+end

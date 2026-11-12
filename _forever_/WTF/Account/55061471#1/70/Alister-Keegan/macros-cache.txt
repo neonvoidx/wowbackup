@@ -1,0 +1,20 @@
+VER 3 0100000000000005 " " "136183"
+#showtooltip Fear
+/cast [mod:shift,@focus,exists,harm,nodead][] Fear
+END
+VER 3 0100000000000001 " ~" "134400"
+#showtooltip
+/cast [@focus,exists,harm,nodead][] Immolate
+END
+VER 3 0100000000000003 "~" "136118"
+#showtooltip
+/cast [@focus,exists,harm,nodead][] Corruption
+END
+VER 3 0100000000000002 "~" "136139"
+#showtooltip
+/cast [@focus,exists,harm,nodead][] Bane of Agony
+END
+VER 3 0100000000000004 "~" "136188"
+#showtooltip
+/cast [@focus,exists,harm,nodead][] Bane of Agony
+END

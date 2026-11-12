@@ -1,0 +1,139 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ https://raw.githubusercontent.com/Gethe/wow-ui-source/live/Interface/AddOns/Blizzard_SharedXML/UI.xsd">
+    <Include file="GroupEditorSidebar.lua" />
+
+    <Frame name="MapPinEnhancedGroupEditorSidebarTemplate" virtual="true" mixin="MapPinEnhancedGroupEditorSidebarMixin">
+        <Layers>
+            <Layer level="ARTWORK">
+                <Texture file="Interface/AddOns/MapPinEnhanced/assets/shared/DividerVertical.png">
+                    <Size x="1" />
+                    <Color r="1" g="0.82" b="0" />
+                    <Anchors>
+                        <Anchor point="TOPRIGHT" y="12" x="1"/>
+                        <Anchor point="BOTTOMRIGHT" y="-12" x="1"/>
+                    </Anchors>
+                </Texture>
+            </Layer>
+        </Layers>
+        <Frames>
+            <EditBox parentKey="search" inherits="MapPinEnhancedInputTemplate">
+                <Size x="181" y="30" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="-32" />
+                </Anchors>
+            </EditBox>
+            <Button parentKey="createButton" inherits="MapPinEnhancedIconButtonTemplate">
+                <Size x="27" y="27" />
+                <KeyValues>
+                    <KeyValue key="icon" value="plus" />
+                    <KeyValue key="tooltip" value="Create a new pin group." />
+                </KeyValues>
+                <Anchors>
+                    <Anchor point="LEFT" relativeKey="$parent.search" relativePoint="RIGHT" x="2" />
+                </Anchors>
+            </Button>
+            <Button parentKey="importButton" inherits="MapPinEnhancedIconButtonTemplate">
+                <Size x="27" y="27" />
+                <KeyValues>
+                    <KeyValue key="icon" value="import" />
+                    <KeyValue key="tooltip" value="Import" />
+                </KeyValues>
+                <Anchors>
+                    <Anchor point="LEFT" relativeKey="$parent.createButton" relativePoint="RIGHT" x="2" />
+                </Anchors>
+            </Button>
+            <Frame parentKey="systemGroups" enableMouse="true">
+                <Size y="138" />
+                <Anchors>
+                    <Anchor point="BOTTOMLEFT" />
+                    <Anchor point="BOTTOMRIGHT" />
+                </Anchors>
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <Texture file="Interface/AddOns/MapPinEnhanced/assets/shared/WhiteSquare.png">
+                            <Size y="22" />
+                            <Anchors>
+                                <Anchor point="BOTTOMLEFT" relativeKey="$parent.divider" relativePoint="TOPLEFT" x="-10" />
+                                <Anchor point="BOTTOMRIGHT" relativeKey="$parent.divider" relativePoint="TOPRIGHT" />
+                            </Anchors>
+                            <Gradient orientation="VERTICAL">
+                                <MinColor r="1" g="0.82" b="0" a="0.1" />
+                                <MaxColor r="1" g="0.82" b="0" a="0" />
+                            </Gradient>
+                        </Texture>
+                    </Layer>
+                    <Layer level="BORDER">
+                        <Texture file="Interface/AddOns/MapPinEnhanced/assets/shared/DividerHorizontal.png" parentKey="divider">
+                            <Size y="2" />
+                            <Anchors>
+                                <Anchor point="BOTTOMLEFT" relativeKey="$parent.ungroupedPinsEntry" relativePoint="TOPLEFT" />
+                                <Anchor point="BOTTOMRIGHT" relativeKey="$parent.ungroupedPinsEntry" relativePoint="TOPRIGHT" x="28" />
+                            </Anchors>
+                            <Gradient orientation="HORIZONTAL">
+                                <MinColor r="1" g="0.82" b="0" a="1" />
+                                <MaxColor r="0" g="0" b="0" a="0.8" />
+                            </Gradient>
+                        </Texture>
+                    </Layer>
+                    <Layer level="ARTWORK">
+                        <FontString parentKey="title" inherits="MapPinEnhancedFontNormalSmall" justifyH="LEFT" justifyV="MIDDLE">
+                            <Anchors>
+                                <Anchor point="BOTTOMLEFT" relativeKey="$parent.divider" relativePoint="TOPLEFT" x="8" y="2" />
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+                <Frames>
+                    <Frame parentKey="info" enableMouse="true" propagateMouseInput="Clicks">
+                        <Size x="12" y="12" />
+                        <Anchors>
+                            <Anchor point="LEFT" relativeKey="$parent.title" relativePoint="RIGHT" x="5" />
+                        </Anchors>
+                        <Layers>
+                            <Layer level="ARTWORK">
+                                <Texture inherits="MapPinEnhancedIconTemplate" setAllPoints="true">
+                                    <KeyValues>
+                                        <KeyValue key="icon" value="info" />
+                                    </KeyValues>
+                                </Texture>
+                            </Layer>
+                        </Layers>
+                        <Scripts>
+                            <OnHide>if GameTooltip:IsOwned(self) then GameTooltip:Hide() end</OnHide>
+                        </Scripts>
+                    </Frame>
+                    <Button parentKey="wayBackEntry" inherits="MapPinEnhancedGroupEditorSidebarEntryTemplate">
+                        <Anchors>
+                            <Anchor point="BOTTOMLEFT" />
+                        </Anchors>
+                    </Button>
+                    <Button parentKey="tomtomPinsEntry" inherits="MapPinEnhancedGroupEditorSidebarEntryTemplate">
+                        <Anchors>
+                            <Anchor point="BOTTOMLEFT" relativeKey="$parent.wayBackEntry" relativePoint="TOPLEFT" />
+                        </Anchors>
+                    </Button>
+                    <Button parentKey="ungroupedPinsEntry" inherits="MapPinEnhancedGroupEditorSidebarEntryTemplate">
+                        <Anchors>
+                            <Anchor point="BOTTOMLEFT" relativeKey="$parent.tomtomPinsEntry" relativePoint="TOPLEFT" />
+                        </Anchors>
+                    </Button>
+                </Frames>
+            </Frame>
+            <Frame parentKey="scrollBox" inherits="WowScrollBoxList">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeKey="$parent.search" relativePoint="BOTTOMLEFT" y="2" />
+                    <Anchor point="BOTTOMRIGHT" relativeKey="$parent.systemGroups" relativePoint="TOPRIGHT" x="-18" y="20" />
+                </Anchors>
+            </Frame>
+            <EventFrame parentKey="scrollBar" inherits="MinimalScrollBar">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeKey="$parent.scrollBox" relativePoint="TOPRIGHT" x="4" y="-5" />
+                    <Anchor point="BOTTOMLEFT" relativeKey="$parent.scrollBox" relativePoint="BOTTOMRIGHT" x="4" />
+                </Anchors>
+            </EventFrame>
+        </Frames>
+        <Scripts>
+            <OnLoad method="OnLoad" />
+        </Scripts>
+    </Frame>
+</Ui>

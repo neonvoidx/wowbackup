@@ -1,0 +1,19 @@
+
+PoisonUpCharDB_Forever = {
+["presets"] = {
+["shift"] = {
+["mh"] = 3775,
+["oh"] = 3775,
+},
+["ctrl"] = {
+["mh"] = 5237,
+["oh"] = 5237,
+},
+["default"] = {
+["mh"] = 6949,
+["oh"] = 6949,
+},
+["alt"] = {
+},
+},
+}

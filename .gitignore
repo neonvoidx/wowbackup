@@ -1,0 +1,38 @@
+# Ignore everything at the repo root...
+/*
+
+# ...except this file and the two game installs.
+!/.gitignore
+!/_retail_/
+!/_forever_/
+
+!README.md
+
+# Ignore everything inside each install...
+/_retail_/*
+/_forever_/*
+
+# ...except loose text files (BBP_profile.txt, EditMode_profile.txt, ...)
+!/_retail_/*.txt
+!/_forever_/*.txt
+
+# ...and the folders we care about.
+!/_retail_/Fonts/
+!/_retail_/WTF/
+!/_forever_/Fonts/
+!/_forever_/WTF/
+
+# Interface: track only the AddOns folder, not the rest (e.g. ICONS).
+!/_retail_/Interface/
+/_retail_/Interface/*
+!/_retail_/Interface/AddOns/
+!/_forever_/Interface/
+/_forever_/Interface/*
+!/_forever_/Interface/AddOns/
+
+# Never track Slug/Slugo texture overrides, even inside whitelisted folders.
+*.slug
+*.slugo
+
+# Skip the Spoken* audio addons: too large for GitHub (they stay on disk).
+/_forever_/Interface/AddOns/Spoken*/

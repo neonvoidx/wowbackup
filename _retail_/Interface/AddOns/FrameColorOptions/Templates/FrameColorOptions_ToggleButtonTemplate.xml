@@ -1,0 +1,31 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/UI.xsd">
+  <Button name="FrameColorOptions_ToggleButtonTemplate" virtual="true">
+    <Size y="32"/>
+    <Layers>
+      <Layer level="OVERLAY">
+        <FontString parentKey="name" inherits="GameFontNormalLeft">
+          <Anchors>
+            <Anchor point="LEFT" x="15" y="0"/>
+          </Anchors>
+        </FontString>
+      </Layer>
+        <Layer level="BACKGROUND">
+          <Texture parentKey="backgroundTexture" file="Interface\BUTTONS\UI-Listbox-Highlight2.blp">
+          <Color r="0.83" g="0.85" b="0.87" a="0.2"/> <!-- RGBA Color -->
+          </Texture>
+        </Layer>
+		</Layers>
+    <Frames>
+      <CheckButton parentKey="toggle">
+        <Size x="28" y ="28"/>
+        <Anchors>
+          <Anchor point="RIGHT" x="-30"/>
+        </Anchors>
+        <NormalTexture atlas="checkbox-minimal" useAtlasSize="true"/>
+        <PushedTexture atlas="checkbox-minimal" useAtlasSize="true"/>
+        <HighlightTexture atlas="checkbox-minimal" useAtlasSize="true" alphaMode="ADD"/>
+        <CheckedTexture atlas="checkmark-minimal" useAtlasSize="true"/>
+      </CheckButton>
+		</Frames>
+  </Button>
+</Ui>

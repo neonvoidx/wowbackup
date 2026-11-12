@@ -1,0 +1,50 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ https://raw.githubusercontent.com/Gethe/wow-ui-source/live/Interface/AddOns/Blizzard_SharedXML/UI.xsd">
+    <Script file="WayfinderProgressPin.lua" />
+    <Button name="MapPinEnhancedWayfinderProgressPinTemplate" virtual="true" enableMouse="true" mixin="MapPinEnhancedWayfinderProgressPinMixin">
+        <Size x="16" y="16" />
+        <Layers>
+            <Layer level="ARTWORK">
+                <Texture parentKey="separator" file="Interface/AddOns/MapPinEnhanced/assets/icons/IconCaretRight.png" alpha="0.5" hidden="true">
+                    <Size x="8" y="8" />
+                    <Anchors>
+                        <Anchor point="CENTER" relativePoint="RIGHT" x="9" />
+                    </Anchors>
+                </Texture>
+                <Texture parentKey="pin">
+                    <Size x="16" y="16" />
+                    <Anchors>
+                        <Anchor point="CENTER" />
+                    </Anchors>
+                </Texture>
+                <MaskTexture parentKey="pinMask" file="Interface/AddOns/MapPinEnhanced/assets/shared/GenericFrameMask.png" vWrapMode="CLAMPTOBLACKADDITIVE" hWrapMode="CLAMPTOBLACKADDITIVE">
+                    <Size x="16" y="16" />
+                    <Anchors>
+                        <Anchor point="CENTER" />
+                    </Anchors>
+                </MaskTexture>
+            </Layer>
+        </Layers>
+        <Frames>
+            <Frame parentKey="destinationPin" inherits="MapPinEnhancedBasePinTemplate" enableMouse="true" hidden="true" frameStrata="MEDIUM">
+                <Size x="16" y="16" />
+                <KeyValues>
+                    <KeyValue key="hideHighlight" value="true" type="boolean" />
+                </KeyValues>
+                <Anchors>
+                    <Anchor point="CENTER" />
+                </Anchors>
+                <Scripts>
+                    <OnEnter>self:GetParent():OnEnter()</OnEnter>
+                    <OnLeave>self:GetParent():OnLeave()</OnLeave>
+                </Scripts>
+            </Frame>
+        </Frames>
+        <Scripts>
+            <OnShow method="UpdateActiveAlpha" />
+            <OnEnter method="OnEnter" />
+            <OnLeave method="OnLeave" />
+            <OnHide method="OnHide" />
+        </Scripts>
+    </Button>
+</Ui>

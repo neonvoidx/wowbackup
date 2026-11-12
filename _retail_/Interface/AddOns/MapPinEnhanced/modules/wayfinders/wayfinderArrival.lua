@@ -1,0 +1,93 @@
+---@class MapPinEnhanced
+local MapPinEnhanced = select(2, ...)
+
+---@class WayfinderArrivalConfig
+---@field DYNAMIC_MIN_RADIUS number
+---@field DYNAMIC_MAX_RADIUS number
+
+---@class Wayfinders
+---@field ARRIVAL_CONFIG WayfinderArrivalConfig
+---@field arrivalDynamicSamples integer
+local Wayfinders = MapPinEnhanced:GetModule("Wayfinders")
+
+-- Arrival detection tuning. Distances and speeds are in yards / yards per second.
+-- Keep these values together so the detector can be tuned from in-game testing.
+Wayfinders.ARRIVAL_CONFIG = {
+    -- Dynamic arrival adds the distance likely to be travelled before the next
+    -- navigation sample to this minimum positional tolerance.
+    DYNAMIC_MIN_RADIUS = 3,
+    DYNAMIC_MAX_RADIUS = 50,
+}
+
+local max = math.max
+local min = math.min
+
+---@param closingSpeed number
+---@param nextUpdateInterval number
+---@param movementState DistanceMovementState
+---@return number?
+local function GetDynamicArrivalRadius(closingSpeed, nextUpdateInterval, movementState)
+    local config = Wayfinders.ARRIVAL_CONFIG
+    if movementState == "movingAway" or movementState == "unknown" then return nil end
+    if movementState == "stationary" then return config.DYNAMIC_MIN_RADIUS end
+
+    local predictedRadius = config.DYNAMIC_MIN_RADIUS + max(0, closingSpeed) * nextUpdateInterval
+    return max(config.DYNAMIC_MIN_RADIUS, min(config.DYNAMIC_MAX_RADIUS, predictedRadius))
+end
+
+function Wayfinders:ResetArrivalDetection()
+    self.arrivalDynamicSamples = 0
+end
+
+function Wayfinders:CompleteArrival()
+    self:CompleteActiveTargetArrival()
+end
+
+---@param distance number
+---@param closingSpeed number
+---@param nextUpdateInterval number
+---@param movementState DistanceMovementState
+function Wayfinders:UpdateDynamicArrival(distance, closingSpeed, nextUpdateInterval, movementState)
+    if movementState == "unknown" then
+        self.arrivalDynamicSamples = 1
+        return
+    end
+
+    self.arrivalDynamicSamples = self.arrivalDynamicSamples + 1
+    if self.arrivalDynamicSamples < 2 then return end
+
+    local arrivalRadius = GetDynamicArrivalRadius(closingSpeed, nextUpdateInterval, movementState)
+    if arrivalRadius and distance <= arrivalRadius then
+        self:CompleteArrival()
+    end
+end
+
+---@param distance number
+---@param closingSpeed number
+---@param nextUpdateInterval number
+---@param movementState DistanceMovementState
+function Wayfinders:CheckArrival(distance, closingSpeed, nextUpdateInterval, movementState)
+    if not self:CanDetectActiveTargetArrival() then
+        self:ResetArrivalDetection()
+        return
+    end
+
+    local arrivalDistance = self:GetActiveTargetArrivalDistance(distance)
+    if not arrivalDistance then
+        self:ResetArrivalDetection()
+        return
+    end
+
+    self:UpdateDynamicArrival(arrivalDistance, closingSpeed, nextUpdateInterval, movementState)
+end
+
+---@param distance number
+---@param _ number
+---@param closingSpeed number
+---@param nextUpdateInterval number
+---@param movementState DistanceMovementState
+local function OnDistanceUpdate(distance, _, closingSpeed, nextUpdateInterval, movementState)
+    Wayfinders:CheckArrival(distance, closingSpeed, nextUpdateInterval, movementState)
+end
+
+MapPinEnhanced:RegisterContinuousDistanceSampleCallback(OnDistanceUpdate)

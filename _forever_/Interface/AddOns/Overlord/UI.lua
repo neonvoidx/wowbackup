@@ -1,0 +1,3518 @@
+-- UI.lua - Interface Overlord, theme WC3 Human (design tokens wc3ui.banteg.xyz)
+Overlord = Overlord or {}
+Overlord.UI = Overlord.UI or {}
+Overlord.UI.SHARD_TOOLTIP_PLAYER_MAX = 12
+Overlord.UI.SHARD_TOOLTIP_SCAN_MAX = 48
+
+local L = Overlord.L
+
+local mainFrame = nil
+-- Le cache de placement WoW est restaure avant PLAYER_LOGIN. Creer seulement
+-- le cadre ici permet de le recuperer meme si les SavedVariables sont absentes ;
+-- le contenu du panneau reste construit dans l'etape UI differee.
+local mainFrameShell = CreateFrame("Frame", "OverlordMainFrame", UIParent, "BackdropTemplate")
+if Overlord.UI.AttachOpenFade then Overlord.UI.AttachOpenFade(mainFrameShell) end
+mainFrameShell:SetSize(340, 520)
+mainFrameShell:SetMovable(true)
+mainFrameShell:SetDontSavePosition(false)
+mainFrameShell:Hide()
+local zoneListFrame = nil
+local activeZoneFrame = nil
+
+-- Partages aussi par les fonctions de creation/invalidation definies plus haut
+-- que leurs lecteurs. Une declaration tardive creerait deux caches distincts
+-- (global accidentel et upvalue locale), donc une invalidation sans effet.
+local lastPanelLayoutKey = nil
+local lastForcesOffZone = false
+local lastForcesDisplayKey = nil
+local lastHeaderBandHeight = nil
+local lastDominationPaintKey = nil
+
+-- Palette Alliance - WC3 Human design tokens
+local C_ALLIANCE = {
+    bg       = {0.165, 0.165, 0.227, 0.95},
+    panelBg  = {0.118, 0.118, 0.188, 0.85},
+    gold     = {0.85, 0.68, 0.20},
+    goldDim  = {0.55, 0.42, 0.12},
+    blue     = {0.290, 0.478, 0.749},
+    blueBright = {0.427, 0.702, 0.949},
+    enemy    = {0.85, 0.15, 0.15},
+    green    = {0.290, 0.870, 0.502},
+    greenDim = {0.10, 0.50, 0.12},
+    orange   = {1.0, 0.82, 0.0},   -- or (#FFD100) : or UI Blizzard (ex-capture orange)
+    gray     = {0.502, 0.533, 0.627},
+    white    = {0.925, 0.937, 0.969},
+    barBg    = {0.118, 0.118, 0.188, 0.9},
+}
+
+-- Palette Horde - WC3 Orc design tokens
+local C_HORDE = {
+    bg       = {0.165, 0.122, 0.102, 0.95},
+    panelBg  = {0.12, 0.05, 0.04, 0.85},
+    gold     = {0.82, 0.22, 0.12},
+    goldDim  = {0.52, 0.14, 0.08},
+    blue     = {0.749, 0.290, 0.290},
+    blueBright = {1.0, 0.40, 0.27},
+    enemy    = {0.20, 0.50, 0.90},
+    green    = {0.290, 0.870, 0.502},
+    greenDim = {0.10, 0.50, 0.12},
+    orange   = {1.0, 0.82, 0.0},   -- or (#FFD100) : or UI Blizzard (ex-capture orange)
+    gray     = {0.502, 0.478, 0.455},
+    white    = {0.941, 0.878, 0.753},
+    barBg    = {0.10, 0.06, 0.05, 0.9},
+}
+
+local C = C_ALLIANCE
+
+local PANEL_LINK = "addon:Overlord:panel"
+
+local function IsShardHelperActive()
+    if Overlord.IsShardHelperActive then
+        return Overlord:IsShardHelperActive()
+    end
+    return Overlord.InActiveFront == true
+end
+
+local function GetShardPlayerFaction(fullName)
+    local sync = Overlord.Sync
+    return sync and sync.GetLivePlayerFaction and sync:GetLivePlayerFaction(fullName) or nil
+end
+
+-- Couleur nom joueur dans l'infobulle de couche (bleu Alliance, rouge Horde)
+local function GetShardPlayerNameColor(faction)
+    if faction == "Alliance" then
+        return 0.427, 0.702, 0.949
+    elseif faction == "Horde" then
+        return 1.0, 0.40, 0.27
+    end
+    return 0.72, 0.72, 0.72
+end
+
+-- Prefixe |cff des noms de l'infobulle de couche
+local function GetShardPlayerNameColorEscape(faction)
+    local r, g, b = GetShardPlayerNameColor(faction)
+    return string.format("|cff%02x%02x%02x",
+        math.floor(r * 255 + 0.5), math.floor(g * 255 + 0.5), math.floor(b * 255 + 0.5))
+end
+
+local function BuildShardDisplayTag(shardId)
+    local tag = "#" .. tostring(shardId)
+    local shardMod = Overlord.Shard
+    local _, realm = shardMod and shardMod.GetShardReference
+        and shardMod:GetShardReference(shardId)
+    if realm and realm ~= "" then
+        return tag .. " " .. string.format(L.SHARD_BADGE_REFERENCE, realm)
+    end
+    return tag
+end
+
+local function ShardPlayerAlreadyGrouped(fullName)
+    return Overlord.Shard and Overlord.Shard.IsPlayerAlreadyGrouped
+        and Overlord.Shard:IsPlayerAlreadyGrouped(fullName)
+end
+
+function Overlord.UI:OpenPanelFromLink(button)
+    if button and button ~= "LeftButton" then return end
+    if Overlord.InstanceSuspended then
+        if L and L.DISABLED_IN_INSTANCE then
+            Overlord:PrintNotification("|cFF00FF00[Overlord]|r " .. L.DISABLED_IN_INSTANCE)
+        end
+        return
+    end
+    if not mainFrame and self.Initialize then
+        self:Initialize()
+    end
+    if self.Show then self:Show() end
+end
+
+function Overlord.UI:IsPanelAddonLink(link)
+    if type(link) ~= "string" or link == "" then return false end
+    if link == PANEL_LINK then return true end
+    local linkType, addonName, linkData = strsplit(":", link, 3)
+    return linkType == "addon" and addonName == "Overlord" and linkData == "panel"
+end
+
+-- Le lien « addon:Overlord:panel » n'existe que dans nos propres fenetres (annonce de
+-- bienvenue, tutoriel), qui traitent son clic par leur script OnHyperlinkClick
+-- (Popups.lua). 2.0 : plus de hooksecurefunc sur SetItemRef, qui s'executait a chaque
+-- clic de n'importe quel lien du chat pour ne jamais rien y trouver.
+function Overlord.UI:EnsureAddonLinkHandlers()
+end
+
+-- Scroll molette + fleches haut/bas (meme principe que LeaderboardUI).
+local SCROLL_IND_UP   = "Interface\\Buttons\\UI-ScrollBar-ScrollUpButton-Up"
+local SCROLL_IND_DOWN = "Interface\\Buttons\\UI-ScrollBar-ScrollDownButton-Up"
+
+-- Scroll compact partageable : meme rail draggable que les contrats/classements,
+-- sans template Blizzard ni allocation pendant le defilement.
+function Overlord.UI:CreateCleanScroll(parent, width, height, wheelStep, showFades)
+    width = math.max(1, tonumber(width) or 1)
+    height = math.max(1, tonumber(height) or 1)
+    wheelStep = math.max(1, tonumber(wheelStep) or 34)
+
+    local scroll = CreateFrame("ScrollFrame", nil, parent)
+    scroll:SetSize(width, height)
+    scroll:EnableMouseWheel(true)
+    scroll:EnableMouse(true)
+
+    local child = CreateFrame("Frame", nil, scroll)
+    child:SetSize(width, 1)
+    scroll:SetScrollChild(child)
+
+    local topFade = scroll:CreateTexture(nil, "OVERLAY")
+    topFade:SetPoint("TOPLEFT")
+    topFade:SetPoint("TOPRIGHT")
+    topFade:SetHeight(10)
+    topFade:SetColorTexture(0, 0, 0, 0.28)
+    topFade:Hide()
+
+    local bottomFade = scroll:CreateTexture(nil, "OVERLAY")
+    bottomFade:SetPoint("BOTTOMLEFT")
+    bottomFade:SetPoint("BOTTOMRIGHT")
+    bottomFade:SetHeight(10)
+    bottomFade:SetColorTexture(0, 0, 0, 0.32)
+    bottomFade:Hide()
+
+    local up = parent:CreateTexture(nil, "OVERLAY", nil, 6)
+    up:SetTexture(SCROLL_IND_UP)
+    up:SetSize(18, 18)
+    up:SetPoint("TOPLEFT", scroll, "TOPRIGHT", 1, -2)
+    up:Hide()
+
+    local down = parent:CreateTexture(nil, "OVERLAY", nil, 6)
+    down:SetTexture(SCROLL_IND_DOWN)
+    down:SetSize(18, 18)
+    down:SetPoint("BOTTOMLEFT", scroll, "BOTTOMRIGHT", 1, 2)
+    down:Hide()
+
+    local track = parent:CreateTexture(nil, "OVERLAY", nil, 5)
+    track:SetWidth(3)
+    track:SetPoint("TOPLEFT", scroll, "TOPRIGHT", 8, -22)
+    track:SetPoint("BOTTOMLEFT", scroll, "BOTTOMRIGHT", 8, 22)
+    track:SetColorTexture(C.goldDim[1], C.goldDim[2], C.goldDim[3], 0.34)
+    track:Hide()
+
+    local thumb = CreateFrame("Button", nil, parent)
+    thumb:SetSize(14, 18)
+    thumb:SetFrameLevel(scroll:GetFrameLevel() + 4)
+    thumb:EnableMouse(true)
+    thumb:RegisterForDrag("LeftButton")
+    local thumbBar = thumb:CreateTexture(nil, "OVERLAY", nil, 6)
+    thumbBar:SetWidth(5)
+    thumbBar:SetPoint("TOP", 0, -1)
+    thumbBar:SetPoint("BOTTOM", 0, 1)
+    thumbBar:SetColorTexture(C.gold[1], C.gold[2], C.gold[3], 0.88)
+    thumb:Hide()
+
+    local function RefreshRail()
+        local current = scroll:GetVerticalScroll() or 0
+        local maximum = scroll:GetVerticalScrollRange() or 0
+        local hasScroll = scroll._overlordHasOverflow
+        if hasScroll == nil then hasScroll = maximum > 2 end
+        topFade:SetShown(showFades ~= false and hasScroll and current > 1)
+        bottomFade:SetShown(showFades ~= false and hasScroll and current < maximum - 1)
+        up:SetShown(hasScroll)
+        down:SetShown(hasScroll)
+        up:SetAlpha(current > 1 and 0.85 or 0.28)
+        down:SetAlpha(current < maximum - 1 and 0.85 or 0.28)
+        track:SetShown(hasScroll)
+        thumb:SetShown(hasScroll)
+        if hasScroll then
+            local viewportH = math.max(1, scroll:GetHeight() or height)
+            local contentH = math.max(viewportH,
+                tonumber(scroll._overlordContentHeight) or (viewportH + maximum))
+            local trackH = math.max(1, viewportH - 44)
+            local thumbH = math.max(18, math.min(trackH, trackH * viewportH / contentH))
+            local travel = math.max(0, trackH - thumbH)
+            local offset = maximum > 0 and travel * current / maximum or 0
+            thumb:ClearAllPoints()
+            thumb:SetSize(14, thumbH)
+            thumb:SetPoint("TOPLEFT", scroll, "TOPRIGHT", 2.5, -22 - offset)
+        end
+    end
+
+    local function GetScaledCursorY()
+        local _, cursorY = GetCursorPosition()
+        local scale = UIParent and UIParent:GetEffectiveScale() or 1
+        if not scale or scale <= 0 then scale = 1 end
+        return cursorY / scale
+    end
+
+    local function StopThumbDrag(self)
+        self.dragging = false
+        self.dragOffset = nil
+        self:SetScript("OnUpdate", nil)
+        thumbBar:SetColorTexture(C.gold[1], C.gold[2], C.gold[3], 0.88)
+    end
+
+    thumb:SetScript("OnDragStart", function(self)
+        if (scroll:GetVerticalScrollRange() or 0) <= 2 then return end
+        local cursorY = GetScaledCursorY()
+        self.dragOffset = (self:GetTop() or cursorY) - cursorY
+        self.dragging = true
+        thumbBar:SetColorTexture(C.gold[1], C.gold[2], C.gold[3], 1)
+        self:SetScript("OnUpdate", function(button)
+            local maximum = scroll:GetVerticalScrollRange() or 0
+            local trackTop = (scroll:GetTop() or 0) - 22
+            local trackH = math.max(1, (scroll:GetHeight() or height) - 44)
+            local travel = math.max(0, trackH - (button:GetHeight() or 18))
+            if maximum <= 2 or travel <= 0 then return end
+            local wantedTop = GetScaledCursorY() + (button.dragOffset or 0)
+            local offset = math.max(0, math.min(travel, trackTop - wantedTop))
+            local target = maximum * offset / travel
+            -- A held thumb fires every frame: skip when the list is already there.
+            if math.abs((scroll:GetVerticalScroll() or 0) - target) < 0.5 then return end
+            scroll:SetVerticalScroll(target)
+            RefreshRail()
+        end)
+    end)
+    thumb:SetScript("OnDragStop", StopThumbDrag)
+    thumb:SetScript("OnHide", StopThumbDrag)
+    thumb:SetScript("OnEnter", function()
+        thumbBar:SetColorTexture(C.gold[1], C.gold[2], C.gold[3], 1)
+    end)
+    thumb:SetScript("OnLeave", function(self)
+        if not self.dragging then
+            thumbBar:SetColorTexture(C.gold[1], C.gold[2], C.gold[3], 0.88)
+        end
+    end)
+
+    scroll:SetScript("OnMouseWheel", function(self, delta)
+        local maximum = self:GetVerticalScrollRange() or 0
+        local nextValue = (self:GetVerticalScroll() or 0) - delta * wheelStep
+        self:SetVerticalScroll(math.max(0, math.min(maximum, nextValue)))
+        RefreshRail()
+    end)
+    scroll:HookScript("OnVerticalScroll", RefreshRail)
+    scroll:HookScript("OnScrollRangeChanged", RefreshRail)
+    scroll:HookScript("OnSizeChanged", RefreshRail)
+    scroll.RefreshCleanRail = RefreshRail
+    scroll.content = child
+    return scroll, child
+end
+
+-- Layout lignes de zone (2 colonnes) - declare avant SetZoneLineWarfrontIcon / LayoutZoneLineAnchors.
+local ZONE_LINE_ICON = 20
+local ZONE_LINE_NORMAL_H = 24
+local ZONE_LINE_ROW_GAP = 2
+local ZONES_PANEL_W = 312
+local ZONES_COL_PAD = 4
+local ZONES_COL_GAP = 6
+local ZONE_LINE_NAME_GAP = 3
+local ZONE_LINE_STATUS_GAP = 4
+local ZONES_CONTENT_TOP = -22
+local ZONES_TRUCE_CONTENT_TOP = -38
+
+-- Icone principale de ligne (gauche) : banniere Warfronts ou MainHall (capitales).
+-- Taille fixe : celle de la ligne, pas celle de l'atlas.
+-- 2.0.3: a point the player's faction can attack now takes the yellow barracks (Zones
+-- OBJECTIVE_ATTACK_ATLAS, its second layer in glow).
+local function SetZoneLineWarfrontIcon(tex, zone, attackable, glow)
+    if not tex then return end
+    local Z = Overlord.Zones
+    local atlas = Z and Z.GetZoneMapIconAtlas and Z:GetZoneMapIconAtlas(zone, false, attackable)
+        or (Z and Z.OBJECTIVE_NEUTRAL_ATLAS) or "Warfronts-FieldMapIcons-Empty-Banner"
+    if tex._zoneLineAtlas == atlas then return end
+    tex._zoneLineAtlas = atlas
+    if Z and Z.ApplyZoneMapIcon then
+        Z:ApplyZoneMapIcon(tex, atlas, glow)
+    elseif tex.SetAtlas then
+        tex:SetTexCoord(0, 1, 0, 1)
+        tex:SetVertexColor(1, 1, 1, 1)
+        pcall(tex.SetAtlas, tex, atlas, false)
+    end
+    tex:SetSize(ZONE_LINE_ICON, ZONE_LINE_ICON)
+end
+
+-- Cle stable pour eviter un repaint complet de la ligne a chaque sync (timers via UpdateZoneListTimers).
+local function BuildZoneLinePaintKey(z, frontOnTruce, loginPending, pf, ef, attackable)
+    if loginPending then
+        return "login|" .. z.id
+    end
+    if frontOnTruce then
+        return "truce|" .. z.id
+    end
+    local isEnemy = z.owner and z.owner == ef
+    if z.status == "in_progress" then
+        return z.id .. "|ip"
+    end
+    if z.owner == pf then
+        return z.id .. "|own|" .. pf
+    end
+    if attackable and isEnemy then
+        return z.id .. "|eatk"
+    end
+    if isEnemy then
+        return z.id .. "|enemy|" .. ef
+    end
+    if attackable and not z.owner then
+        return z.id .. "|navail"
+    end
+    if not z.owner then
+        return z.id .. "|neutral"
+    end
+    if z.status == "available" then
+        return z.id .. "|avail"
+    end
+    return z.id .. "|locked"
+end
+
+-- Peinture d'une ligne de zone (partagee RefreshZoneList / survol).
+local function PaintZoneLineVisual(line, z, frontOnTruce, loginPending, pf, ef, isEnemy, attackable)
+    if loginPending then
+        line.icon:SetDesaturated(true)
+        line.icon:SetAlpha(0.65)
+        line.icon:SetVertexColor(0.75, 0.75, 0.70)
+        line.name:SetTextColor(C.gray[1], C.gray[2], C.gray[3])
+        line.progress:SetText(L.MAP_SYNC_PENDING or "SYNC")
+        line.progress:SetTextColor(C.gray[1], C.gray[2], C.gray[3], 0.85)
+    elseif frontOnTruce then
+        line.icon:SetDesaturated(true)
+        line.icon:SetAlpha(0.65)
+        line.icon:SetVertexColor(0.75, 0.75, 0.75)
+        line.name:SetTextColor(C.gray[1], C.gray[2], C.gray[3])
+        -- La treve concerne tout le front : son minuteur est affiche une seule fois
+        -- sous le titre de la carte, pas repete sous chacune des dix zones.
+        line.progress:SetText("")
+        line.progress:SetTextColor(C.gray[1], C.gray[2], C.gray[3])
+    elseif z.status == "in_progress" then
+        line.icon:SetDesaturated(false)
+        line.icon:SetAlpha(1.0)
+        line.icon:SetVertexColor(1, 1, 1)
+        local hr = tonumber(z.holdTimeRequired) or 0
+        local he = (Overlord.Zones and Overlord.Zones.GetObserverHoldTimeElapsed)
+            and Overlord.Zones:GetObserverHoldTimeElapsed(z) or (tonumber(z.holdTimeElapsed) or 0)
+        local rest = math.max(0, hr - he)
+        line.name:SetTextColor(C.orange[1], C.orange[2], C.orange[3])
+        line.progress:SetText(string.format("%d:%02d", math.floor(rest / 60), math.floor(rest % 60)))
+        line.progress:SetTextColor(C.orange[1], C.orange[2], C.orange[3])
+    elseif z.owner == pf then
+        line.icon:SetDesaturated(false)
+        line.icon:SetAlpha(1.0)
+        line.icon:SetVertexColor(1, 1, 1)
+        line.name:SetTextColor(C.blueBright[1], C.blueBright[2], C.blueBright[3])
+        line.progress:SetText(pf)
+        line.progress:SetTextColor(C.blue[1], C.blue[2], C.blue[3], 0.7)
+    elseif attackable then
+        -- 2.0.3: attackable, enemy or neutral: yellow barracks (a capital keeps its hall).
+        local Z = Overlord.Zones
+        local tint = line.icon._zoneLineAtlas == Z.OBJECTIVE_ATTACK_ATLAS and Z.ATTACK_COLOR or nil
+        line.icon:SetDesaturated(false)
+        line.icon:SetAlpha(1.0)
+        line.icon:SetVertexColor(tint and tint[1] or 1, tint and tint[2] or 1, tint and tint[3] or 1)
+        line.name:SetTextColor(C.gold[1], C.gold[2], C.gold[3])
+        line.progress:SetText(isEnemy and L.ATTACK or L.MAP_AVAILABLE)
+        line.progress:SetTextColor(C.gold[1], C.gold[2], C.gold[3])
+    elseif isEnemy then
+        line.icon:SetDesaturated(false)
+        line.icon:SetAlpha(0.7)
+        line.icon:SetVertexColor(0.8, 0.5, 0.5)
+        line.name:SetTextColor(C.enemy[1], C.enemy[2], C.enemy[3], 0.7)
+        line.progress:SetText(ef)
+        line.progress:SetTextColor(C.enemy[1], C.enemy[2], C.enemy[3], 0.5)
+    elseif not z.owner then
+        line.icon:SetDesaturated(false)
+        line.icon:SetAlpha(0.88)
+        line.icon:SetVertexColor(0.82, 0.84, 0.86)
+        line.name:SetTextColor(0.65, 0.68, 0.70)
+        line.progress:SetText(L.ZONE_NEUTRAL)
+        line.progress:SetTextColor(0.55, 0.58, 0.62, 0.85)
+    else
+        line.icon:SetDesaturated(true)
+        line.icon:SetAlpha(0.5)
+        line.icon:SetVertexColor(1, 1, 1)
+        line.name:SetTextColor(C.gray[1], C.gray[2], C.gray[3])
+        line.progress:SetText(L.LOCKED)
+        line.progress:SetTextColor(C.gray[1], C.gray[2], C.gray[3], 0.5)
+    end
+end
+
+local function ApplyZoneLineUnderline(line, z, loginPending)
+    -- line._attackable: yellow points of another front keep a stale status (2.0.3).
+    if line._zoneLineHover and (z.status == "available" or line._attackable) and not loginPending then
+        -- The yellow barracks keeps its tint (Zones.OBJECTIVE_ATTACK_ATLAS).
+        if line.icon._zoneLineAtlas ~= Overlord.Zones.OBJECTIVE_ATTACK_ATLAS then
+            line.icon:SetVertexColor(1.0, 1.0, 0.85)
+        end
+        line.name:SetTextColor(1.0, 0.94, 0.52)
+        line.underline:SetColorTexture(C.gold[1], C.gold[2], C.gold[3], 0.35)
+    else
+        line.underline:SetColorTexture(1, 1, 1, 0.06)
+    end
+end
+
+-- Utilitaire : panneau sombre avec bordure doree fine (style WC3 sub-panel)
+local function CreateDarkPanel(parent, w, h)
+    return Overlord.UI.CreateWC3SubPanel(parent, w, h, {
+        panelBg = C.panelBg,
+        borderColor = C.goldDim,
+        borderAlpha = 0.5,
+        insets = { left = 2, right = 2, top = 2, bottom = 2 },
+    })
+end
+
+local function CreateWC3Button(parent, w, h, text, icon)
+    return Overlord.UI.CreateWC3Button(parent, w, h, text, nil, icon, { gold = C.gold, white = C.white })
+end
+
+local function AttachGridButtonTooltip(btn, text)
+    if Overlord.UI.AttachWC3GridButtonTooltip then
+        Overlord.UI.AttachWC3GridButtonTooltip(btn, text, { gold = C.gold, white = C.white })
+    end
+end
+
+-- Ancrage : une ligne (nom + statut). En treve, le statut global vit sous le titre.
+local function LayoutZoneLineAnchors(line, frontOnTruce)
+    if not line or not line.icon or not line.name or not line.progress then return end
+    local truceLayout = frontOnTruce and true or false
+    if line._layoutTruce == truceLayout then return end
+    line.icon:SetSize(ZONE_LINE_ICON, ZONE_LINE_ICON)
+    line.icon:ClearAllPoints()
+    line.name:ClearAllPoints()
+    line.progress:ClearAllPoints()
+    line.name:SetWordWrap(false)
+    line.name:SetMaxLines(1)
+    line.progress:SetWordWrap(false)
+    line.progress:SetMaxLines(1)
+    if frontOnTruce then
+        line.icon:SetPoint("LEFT", 0, 0)
+        line.name:SetPoint("LEFT", line.icon, "RIGHT", ZONE_LINE_NAME_GAP, 0)
+        line.name:SetPoint("RIGHT", line, "RIGHT", 0, 0)
+        line.name:SetJustifyH("LEFT")
+    else
+        line.icon:SetPoint("LEFT", 0, 0)
+        line.progress:SetPoint("RIGHT", 0, 0)
+        line.name:SetPoint("LEFT", line.icon, "RIGHT", ZONE_LINE_NAME_GAP, 0)
+        line.name:SetPoint("RIGHT", line.progress, "LEFT", -ZONE_LINE_STATUS_GAP, 0)
+        line.name:SetJustifyH("LEFT")
+        line.progress:SetJustifyH("RIGHT")
+    end
+    line._layoutTruce = frontOnTruce and true or false
+end
+
+-- Badge selecteur de front (en-tete) : largeur dynamique, vignette WarBoard, chevron menu.
+local FRONT_PICKER_PAD_LEFT = 0
+local FRONT_PICKER_PAD_RIGHT = 4
+local FRONT_PICKER_CHEVRON = 8
+local FRONT_PICKER_TEXT_GAP = 4
+local FRONT_PICKER_MIN_W = 68
+local FRONT_PICKER_SINGLE_H = 26
+local FRONT_PICKER_TEXT_MIN_W = 30
+
+-- Zone horizontale dans le bandeau (sans bordure bois) jusqu'au bord gauche du chevalier Alliance.
+local function GetFrontPickerZoneBounds(headerBand)
+    local bandW = headerBand:GetWidth() or 312
+    local emblemSize, emblemGap = 48, 6
+    local knightLeft = (bandW / 2) - emblemGap - emblemSize
+    return 0, knightLeft
+end
+
+-- Aspect paysage du crop WarBoard (Popups.lua : 244 x 104) ; sert au rognage carre centre.
+local FRONT_ART_DISPLAY_ASPECT = 244 / 104
+
+-- Rogne le crop paysage en carre centre (largeur) sans etirer la texture.
+local function SquareCropFrontArtTexCoord(tc)
+    if not tc or #tc < 4 then return 0, 1, 0, 1 end
+    local u1, u2, v1, v2 = tc[1], tc[2], tc[3], tc[4]
+    local uSpan = u2 - u1
+    local uSpanSq = uSpan / FRONT_ART_DISPLAY_ASPECT
+    if uSpanSq >= uSpan then
+        return u1, u2, v1, v2
+    end
+    local uCenter = (u1 + u2) / 2
+    return uCenter - uSpanSq / 2, uCenter + uSpanSq / 2, v1, v2
+end
+
+-- Taille vignette carree, reduite si besoin pour laisser place au nom.
+local function GetFrontPickerVignetteSize(btnH, maxBtnW)
+    local chromeW = FRONT_PICKER_PAD_LEFT + FRONT_PICKER_TEXT_GAP + FRONT_PICKER_CHEVRON + FRONT_PICKER_PAD_RIGHT
+    local maxVignetteW = maxBtnW - chromeW - FRONT_PICKER_TEXT_MIN_W
+    local size = math.min(btnH - 4, 22)
+    if size > maxVignetteW and maxVignetteW > 0 then
+        size = math.max(12, maxVignetteW)
+    end
+    return size, size
+end
+
+local function ApplyFrontPickerVignette(tex, frontId)
+    if not tex then return end
+    local spec = Overlord.Fronts and Overlord.Fronts.GetFrontActivityIcon
+        and Overlord.Fronts:GetFrontActivityIcon(frontId)
+    if not spec or not spec.path then
+        tex:Hide()
+        tex._frontIconKey = nil
+        return
+    end
+    local sqU1, sqU2, sqV1, sqV2 = SquareCropFrontArtTexCoord(spec.texCoord)
+    local key = spec.path .. "\31" .. string.format("%.4f:%.4f:%.4f:%.4f", sqU1, sqU2, sqV1, sqV2)
+    if tex._frontIconKey == key then return end
+    tex._frontIconKey = key
+    tex:Show()
+    tex:SetVertexColor(1, 1, 1, 1)
+    tex:SetTexCoord(sqU1, sqU2, sqV1, sqV2)
+    if tex.SetAtlas then tex:SetAtlas(nil) end
+    tex:SetTexture(spec.path)
+end
+
+local function TruncateFontStringToWidth(fs, maxW, suffix)
+    if not fs or not maxW or maxW <= 0 then return end
+    suffix = suffix or "..."
+    local text = fs._fullText or fs:GetText() or ""
+    local truncKey = text .. "\31" .. maxW
+    if fs._truncKey == truncKey then return end
+    fs:SetText(text)
+    if (fs:GetStringWidth() or 0) <= maxW then
+        fs._truncKey = truncKey
+        return
+    end
+    local lo, hi, best = 1, #text, suffix
+    while lo <= hi do
+        local mid = math.floor((lo + hi) / 2)
+        local candidate = text:sub(1, mid) .. suffix
+        fs:SetText(candidate)
+        if (fs:GetStringWidth() or 0) <= maxW then
+            best = candidate
+            lo = mid + 1
+        else
+            hi = mid - 1
+        end
+    end
+    fs:SetText(best)
+    fs._truncKey = truncKey
+end
+
+local function CreateFrontPickerButton(parent)
+    local btn = CreateFrame("Button", nil, parent, "BackdropTemplate")
+    btn._olFrontPickerBadge = true
+    btn:SetBackdrop({
+        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        tile = true, tileSize = 16, edgeSize = 8,
+        insets = { left = 2, right = 2, top = 2, bottom = 2 },
+    })
+    btn:SetBackdropColor(0.06, 0.06, 0.10, 0.72)
+    btn:SetBackdropBorderColor(C.goldDim[1], C.goldDim[2], C.goldDim[3], 0.38)
+
+    local highlight = btn:CreateTexture(nil, "HIGHLIGHT")
+    highlight:SetAllPoints()
+    highlight:SetColorTexture(C.gold[1], C.gold[2], C.gold[3], 0.12)
+    btn:SetHighlightTexture(highlight)
+
+    btn.vignette = btn:CreateTexture(nil, "ARTWORK")
+
+    btn.label = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    btn.label:SetJustifyH("LEFT")
+    btn.label:SetWordWrap(false)
+    btn.label:SetMaxLines(1)
+
+    btn.chevron = btn:CreateTexture(nil, "ARTWORK")
+    btn.chevron:SetSize(FRONT_PICKER_CHEVRON, FRONT_PICKER_CHEVRON)
+    btn.chevron:SetTexture("Interface\\ChatFrame\\ChatFrameExpandArrow")
+    btn.chevron:SetVertexColor(C.goldDim[1], C.goldDim[2], C.goldDim[3])
+
+    return btn
+end
+
+function Overlord.UI:ApplyFrontPickerChrome(btn, readonly, menuOpen)
+    if not btn then return end
+    readonly = readonly and true or false
+    menuOpen = menuOpen and true or false
+    local chromeKey = (readonly and "1" or "0") .. "|" .. (menuOpen and "1" or "0")
+    if btn._chromeKey == chromeKey then return end
+    btn._chromeKey = chromeKey
+    if menuOpen then
+        btn:SetBackdropBorderColor(C.gold[1], C.gold[2], C.gold[3], 0.85)
+        btn:SetBackdropColor(0.10, 0.10, 0.14, 0.82)
+    elseif readonly then
+        btn:SetBackdropBorderColor(0.82, 0.65, 0.28, 0.52)
+        btn:SetBackdropColor(0.08, 0.07, 0.05, 0.78)
+    else
+        btn:SetBackdropBorderColor(C.goldDim[1], C.goldDim[2], C.goldDim[3], 0.38)
+        btn:SetBackdropColor(0.06, 0.06, 0.10, 0.72)
+    end
+    if btn.vignette then
+        btn.vignette:SetAlpha(readonly and 0.78 or 1)
+    end
+    if btn.label then
+        if readonly then
+            btn.label:SetTextColor(0.95, 0.88, 0.65)
+        else
+            btn.label:SetTextColor(C.gold[1], C.gold[2], C.gold[3])
+        end
+    end
+    if btn.chevron then
+        local c = menuOpen and C.gold or C.goldDim
+        btn.chevron:SetVertexColor(c[1], c[2], c[3])
+    end
+end
+
+-- Vignette + libelle + chevron ; largeur selon le nom, plafonnee avant les emblemes.
+function Overlord.UI:LayoutFrontPickerButton()
+    local btn = self.frontPickerBtn
+    if not btn or not btn.label then return end
+    local band = self.headerBand
+    local zoneLeft, zoneRight = GetFrontPickerZoneBounds(band)
+    local maxW = math.max(FRONT_PICKER_MIN_W, math.floor(zoneRight - zoneLeft - 4))
+    local readonly = self:IsFrontPanelReadOnly()
+    local menuOpen = btn._olPanelOpenState == true
+    local layoutKey = (btn._fullLabel or "") .. "|" .. maxW .. "|"
+        .. (readonly and "1" or "0") .. "|" .. (menuOpen and "1" or "0")
+    if btn._layoutKey == layoutKey then return end
+    btn._layoutKey = layoutKey
+    local btnH = FRONT_PICKER_SINGLE_H
+    local vignetteW, vignetteH = GetFrontPickerVignetteSize(btnH, maxW)
+    local fixedW = FRONT_PICKER_PAD_LEFT + vignetteW + FRONT_PICKER_TEXT_GAP
+        + FRONT_PICKER_CHEVRON + FRONT_PICKER_PAD_RIGHT
+    local textMaxW = maxW - fixedW
+
+    btn.label._fullText = btn._fullLabel or btn.label:GetText() or "?"
+    TruncateFontStringToWidth(btn.label, textMaxW)
+
+    local textW = btn.label:GetStringWidth() or 0
+    local btnW = math.min(maxW, math.max(FRONT_PICKER_MIN_W, fixedW + math.ceil(textW)))
+    btn:SetSize(btnW, btnH)
+
+    btn.vignette:SetSize(vignetteW, vignetteH)
+    btn.vignette:ClearAllPoints()
+    btn.vignette:SetPoint("LEFT", btn, "LEFT", FRONT_PICKER_PAD_LEFT, 0)
+    btn.label:ClearAllPoints()
+    btn.chevron:ClearAllPoints()
+    btn.label:SetPoint("LEFT", btn.vignette, "RIGHT", FRONT_PICKER_TEXT_GAP, 0)
+    btn.label:SetPoint("TOP", btn, "TOP", 0, 0)
+    btn.label:SetPoint("BOTTOM", btn, "BOTTOM", 0, 0)
+    btn.chevron:SetPoint("RIGHT", btn, "RIGHT", -FRONT_PICKER_PAD_RIGHT, 0)
+
+    btn._readonlyChrome = readonly
+    self:ApplyFrontPickerChrome(btn, readonly, btn._olPanelOpenState)
+
+    local emblemSize = 48
+    local fpTopY = -5 - math.floor((emblemSize - btnH) / 2)
+    local centerX = (zoneLeft + zoneRight) / 2
+    btn:ClearAllPoints()
+    btn:SetPoint("TOPLEFT", band, "TOPLEFT", math.floor(centerX - btnW / 2), fpTopY)
+end
+
+-- Indique si le joueur a manuellement deplace le panel (= position custom a respecter)
+local userMovedPanel = false
+
+-- Echelle du panneau principal + classement (0.8-1.2, 1 au centre du curseur)
+local UI_SCALE_MIN = 0.8
+local UI_SCALE_MAX = 1.2
+
+function Overlord.UI:GetEffectiveUiScale()
+    local s = (OverlordDB and OverlordDB.config and tonumber(OverlordDB.config.uiScale)) or 1.0
+    if s < UI_SCALE_MIN then s = UI_SCALE_MIN end
+    if s > UI_SCALE_MAX then s = UI_SCALE_MAX end
+    return math.floor(s * 10 + 0.5) / 10
+end
+
+function Overlord.UI:ApplyUiScale()
+    if not mainFrame then return end
+    local sc = self:GetEffectiveUiScale()
+    -- Same tolerance as FitLeaderboardFrameScale: a needless SetScale re-lays out the panel.
+    if math.abs((mainFrame:GetScale() or 0) - sc) > 0.001 then
+        mainFrame:SetScale(sc)
+    end
+    if Overlord.LeaderboardUI and Overlord.LeaderboardUI.ApplyFrameScale then
+        Overlord.LeaderboardUI:ApplyFrameScale(sc)
+    end
+    if Overlord.GroupFinderUI and Overlord.GroupFinderUI.ApplyFrameScale then
+        Overlord.GroupFinderUI:ApplyFrameScale(sc)
+    end
+end
+
+function Overlord.UI:UpdateUiScaleSlider()
+    if Overlord.SettingsPanel and Overlord.SettingsPanel.SyncUiScaleWithSettingsAPI then
+        Overlord.SettingsPanel:SyncUiScaleWithSettingsAPI()
+    end
+end
+
+-- Sauvegarde position comme Classic Quest Log : GetLeft/GetBottom en espace UIParent.
+-- GetLeft() renvoie des coords dans l'espace du parent, mais il faut corriger si le panel a
+-- un scale != 1, car la position visuelle reelle est GetLeft() * frameScale.
+-- La sauvegarde reste en coordonnees UIParent, independamment de l'echelle du panneau.
+local function SaveFramePosition()
+    if not mainFrame then return end
+    mainFrame:SetUserPlaced(true)
+    if not OverlordDB then return end
+    local left, bottom = mainFrame:GetLeft(), mainFrame:GetBottom()
+    if left == nil or bottom == nil then return end
+    local frameScale = mainFrame:GetScale()
+    if frameScale and frameScale ~= 1 and frameScale > 0 then
+        -- Convertit en coordonnees UIParent ; RestoreFramePosition fait l'inverse.
+        left   = left   * frameScale
+        bottom = bottom * frameScale
+    end
+    OverlordDB.panelAnchor = { left = left, bottom = bottom }
+    OverlordDB.panelPos = nil
+end
+
+-- Restaure la position sauvegardee (meme convention que Classic Quest Log : BOTTOMLEFT UIParent)
+local function RestoreFramePosition()
+    if not mainFrame or not OverlordDB then return false end
+    local a = OverlordDB.panelAnchor
+    -- Migration : anciennes saves panelPos.x/y = left*uiScale, bottom*uiScale
+    if not a and OverlordDB.panelPos then
+        local px = OverlordDB.panelPos
+        if type(px.x) == "number" and type(px.y) == "number" then
+            local uiScale = UIParent:GetEffectiveScale()
+            a = { left = px.x / uiScale, bottom = px.y / uiScale }
+            OverlordDB.panelAnchor = a
+            OverlordDB.panelPos = nil
+        end
+    end
+    if not a or type(a.left) ~= "number" or type(a.bottom) ~= "number" then return false end
+    mainFrame:ClearAllPoints()
+    Overlord.UI:ApplyUiScale()
+    local scale = mainFrame:GetScale()
+    mainFrame:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", a.left / scale, a.bottom / scale)
+    mainFrame:SetUserPlaced(true)
+    return true
+end
+
+function Overlord.UI:Initialize()
+    if mainFrame then return end
+    C = (Overlord.PlayerFaction == "Horde") and C_HORDE or C_ALLIANCE
+    self:CreateMainFrame()
+    -- Restaure la position sauvegardee si le joueur avait deplace le panel (ou migration panelPos)
+    if OverlordDB and (OverlordDB.panelAnchor or OverlordDB.panelPos) then
+        if RestoreFramePosition() then
+            userMovedPanel = true
+        end
+    end
+    if userMovedPanel then SaveFramePosition() end
+end
+
+-- Ancrage initial : carte ouverte a droite de la map, sinon bord droit ecran.
+-- Plus de scale auto selon la hauteur de la map (mode reduit) : le panel reste a l'echelle 1,
+-- comme un cadre classique (Classic Quest Log ne redimensionne pas selon la carte).
+function Overlord.UI:UpdatePanelAnchor()
+    if not mainFrame then return end
+
+    -- Position manuelle : ne pas re-ancrer (hooks carte / Show ne doivent pas deplacer le panel)
+    if userMovedPanel or mainFrame:IsUserPlaced() then
+        userMovedPanel = true
+        return
+    end
+
+    -- Offsets are in frame units, so no SetScale(1) is needed before SetPoint.
+    local point, relativeTo, relPoint, x = "RIGHT", UIParent, "RIGHT", -120
+    if WorldMapFrame and WorldMapFrame:IsVisible() then
+        local isMax = WorldMapFrame.IsMaximized and WorldMapFrame:IsMaximized()
+        if isMax then
+            point, relativeTo, relPoint, x = "RIGHT", WorldMapFrame, "RIGHT", -20
+        else
+            point, relativeTo, relPoint, x = "LEFT", WorldMapFrame, "RIGHT", 4
+        end
+    end
+    -- Map show/hide/resize fire several times: skip the re-anchor when nothing moves.
+    local p, rel, rp, cx, cy = mainFrame:GetPoint(1)
+    if not (p == point and rel == relativeTo and rp == relPoint
+        and cx and cy and math.abs(cx - x) < 0.5 and math.abs(cy) < 0.5
+        and mainFrame:GetNumPoints() == 1) then
+        mainFrame:ClearAllPoints()
+        mainFrame:SetPoint(point, relativeTo, relPoint, x, 0)
+    end
+    self:ApplyUiScale()
+end
+local worldMapPanelRetryFrame
+local worldMapPanelFrameHooked = false
+local worldMapMaximizeHooked = false
+local worldMapMinimizeHooked = false
+
+local function ReanchorPanelForWorldMap()
+    if Overlord.InstanceSuspended then return end
+    if Overlord.UI and Overlord.UI.UpdatePanelAnchor then
+        Overlord.UI:UpdatePanelAnchor()
+    end
+end
+
+local function InstallWorldMapPanelHooks()
+    if not WorldMapFrame then return false end
+    if not worldMapPanelFrameHooked then
+        worldMapPanelFrameHooked = true
+        WorldMapFrame:HookScript("OnShow", ReanchorPanelForWorldMap)
+        WorldMapFrame:HookScript("OnHide", ReanchorPanelForWorldMap)
+        WorldMapFrame:HookScript("OnSizeChanged", ReanchorPanelForWorldMap)
+    end
+    local mmf = WorldMapFrame.MaximizeMinimizeFrame
+    if mmf and mmf.MaximizeButton and not worldMapMaximizeHooked then
+        worldMapMaximizeHooked = true
+        mmf.MaximizeButton:HookScript("OnClick", ReanchorPanelForWorldMap)
+    end
+    if mmf and mmf.MinimizeButton and not worldMapMinimizeHooked then
+        worldMapMinimizeHooked = true
+        mmf.MinimizeButton:HookScript("OnClick", ReanchorPanelForWorldMap)
+    end
+    return true
+end
+
+local function EnsureWorldMapPanelHooks()
+    if InstallWorldMapPanelHooks() then
+        if worldMapPanelRetryFrame then
+            worldMapPanelRetryFrame:UnregisterEvent("ADDON_LOADED")
+        end
+        return
+    end
+    if worldMapPanelRetryFrame then return end
+    worldMapPanelRetryFrame = CreateFrame("Frame")
+    worldMapPanelRetryFrame:RegisterEvent("ADDON_LOADED")
+    worldMapPanelRetryFrame:SetScript("OnEvent", function()
+        InstallWorldMapPanelHooks()
+        if WorldMapFrame then
+            worldMapPanelRetryFrame:UnregisterEvent("ADDON_LOADED")
+        end
+    end)
+end
+
+function Overlord.UI:CreateMainFrame()
+    mainFrame = mainFrameShell
+    userMovedPanel = mainFrame:IsUserPlaced()
+    -- Largeur fixe. Hauteur initiale : recalculee par ApplyPanelLayout.
+    mainFrame:SetSize(340, 520)
+    self:ApplyUiScale()
+    self:UpdatePanelAnchor()
+
+    -- Re-ancre le panel quand la carte s'ouvre/ferme/resize. Blizzard_WorldMap est
+    -- charge a la demande sur certains clients : ADDON_LOADED rattrape ce cas.
+    EnsureWorldMapPanelHooks()
+    C_Timer.After(1, EnsureWorldMapPanelHooks)
+    -- Fond type bois (UIShared.lua)
+    Overlord.UI.ApplyWoodDialogBackdrop(mainFrame, {
+        fallbackBg = C.bg,
+        borderColor = C.gold,
+        borderAlpha = 0.8,
+    })
+    Overlord.UI.ApplyPerksHordeVsAllianceChrome(mainFrame, {
+        topOverhangSide = 6,
+        bottomOverhangSide = 4,
+        topOverlap = 39,
+        bottomOverlap = 74,
+        alpha = 1,
+    })
+    mainFrame:EnableMouse(true)
+    mainFrame:SetMovable(true)
+    mainFrame:RegisterForDrag("LeftButton")
+    mainFrame:SetScript("OnDragStart", function(self)
+        userMovedPanel = true
+        self:StartMoving()
+    end)
+    mainFrame:SetScript("OnDragStop", function(self)
+        self:StopMovingOrSizing()
+        userMovedPanel = true
+        SaveFramePosition()
+    end)
+    mainFrame:SetFrameStrata("HIGH")
+    mainFrame:SetClampedToScreen(true)
+
+    -- Titre principal : police Fancy* (style fantasy / titres WoW), pas GameFont sans-serif.
+    local title = mainFrame:CreateFontString(nil, "OVERLAY", "Fancy24Font")
+    title:SetPoint("TOP", 0, -31)
+    title:SetText("Overlord")
+    title:SetTextColor(C.gold[1], C.gold[2], C.gold[3])
+    mainFrame.titleFs = title
+
+    local versionFs = mainFrame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    versionFs:SetPoint("LEFT", title, "RIGHT", 6, -4)
+    versionFs:SetJustifyH("LEFT")
+    local addonVer = Overlord and Overlord.Version
+    versionFs:SetText(addonVer and ("v" .. addonVer) or "")
+    versionFs:SetTextColor(C.gold[1] * 0.55, C.gold[2] * 0.55, C.gold[3] * 0.55)
+    mainFrame.versionFs = versionFs
+    self.versionFs = versionFs
+    -- Voyant reseau (vert / orange / rouge) a droite de la version : NetworkHealth.lua.
+    if Overlord.NetworkHealth and Overlord.NetworkHealth.AttachIndicator then
+        Overlord.NetworkHealth:AttachIndicator(mainFrame, versionFs)
+    end
+
+    -- Bandeau d'en-tete : selecteur de front (coin), portraits A/H, statuts.
+    local emblemSize = 48
+    local emblemGap = 6
+
+    local headerBand = CreateFrame("Frame", nil, mainFrame)
+    headerBand:SetSize(312, 66)
+    headerBand:SetPoint("TOP", mainFrame, "TOP", 0, -50)
+    self.headerBand = headerBand
+
+    local emblemCluster = CreateFrame("Frame", nil, headerBand)
+    emblemCluster:SetSize(emblemSize * 2 + emblemGap, emblemSize)
+    emblemCluster:SetPoint("TOP", headerBand, "TOP", 0, -5)
+    self.emblemCluster = emblemCluster
+
+    local texPath = "Interface\\AddOns\\Overlord\\Textures\\"
+
+    local knightTex = emblemCluster:CreateTexture(nil, "ARTWORK", nil, 0)
+    knightTex:SetSize(emblemSize, emblemSize)
+    knightTex:SetPoint("RIGHT", emblemCluster, "CENTER", -emblemGap, 0)
+    knightTex:SetTexture(texPath .. "knight")
+    knightTex:SetAlpha(0.6)
+
+    local knightMask = emblemCluster:CreateMaskTexture()
+    knightMask:SetPoint("TOPLEFT", knightTex, "TOPLEFT", -6, 6)
+    knightMask:SetPoint("BOTTOMRIGHT", knightTex, "BOTTOMRIGHT", 6, -6)
+    knightMask:SetTexture("Interface\\CHARACTERFRAME\\TempPortraitAlphaMask")
+    knightTex:AddMaskTexture(knightMask)
+    self.knightTex = knightTex
+
+    local gruntTex = emblemCluster:CreateTexture(nil, "ARTWORK", nil, 0)
+    gruntTex:SetSize(emblemSize, emblemSize)
+    gruntTex:SetPoint("LEFT", emblemCluster, "CENTER", emblemGap, 0)
+    gruntTex:SetTexture(texPath .. "grunt")
+    gruntTex:SetAlpha(0.6)
+
+    local gruntMask = emblemCluster:CreateMaskTexture()
+    gruntMask:SetPoint("TOPLEFT", gruntTex, "TOPLEFT", -6, 6)
+    gruntMask:SetPoint("BOTTOMRIGHT", gruntTex, "BOTTOMRIGHT", 6, -6)
+    gruntMask:SetTexture("Interface\\CHARACTERFRAME\\TempPortraitAlphaMask")
+    gruntTex:AddMaskTexture(gruntMask)
+    self.gruntTex = gruntTex
+
+    -- Selecteur de front : badge leger coin haut-gauche (hors titre centre / emblemes).
+    self.frontPickerBtn = CreateFrontPickerButton(headerBand)
+    self.frontPickerBtn:SetScript("OnClick", function(btn)
+        Overlord.UI:OpenFrontPickerMenu(btn)
+    end)
+    self.frontPickerBtn:SetScript("OnEnter", function(btn)
+        btn:SetBackdropBorderColor(C.gold[1], C.gold[2], C.gold[3], 0.75)
+        if btn.label then
+            btn.label:SetTextColor(C.white[1], C.white[2], C.white[3])
+        end
+        GameTooltip:SetOwner(btn, "ANCHOR_NONE")
+        GameTooltip:ClearAllPoints()
+        GameTooltip:SetPoint("BOTTOMLEFT", btn, "TOPLEFT", 0, 8)
+        GameTooltip:SetText(L.UI_FRONT_SELECT, 1, 1, 1)
+        GameTooltip:AddLine(L.UI_FRONT_PICKER_TOOLTIP, nil, nil, nil, true)
+        if btn._fullLabel and btn._fullLabel ~= (btn.label and btn.label:GetText()) then
+            GameTooltip:AddLine(btn._fullLabel, 0.85, 0.85, 0.85, true)
+        end
+        if Overlord.UI:IsFrontPanelReadOnly() then
+            GameTooltip:AddLine(L.UI_FRONT_READONLY_TOOLTIP, 0.9, 0.75, 0.45, true)
+        end
+        GameTooltip:Show()
+    end)
+    self.frontPickerBtn:SetScript("OnLeave", function(btn)
+        Overlord.UI:ApplyFrontPickerChrome(btn, btn._readonlyChrome, btn._olPanelOpenState)
+        GameTooltip_Hide()
+    end)
+
+    self.frontReadOnlyLabel = headerBand:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    self.frontReadOnlyLabel:SetPoint("TOP", emblemCluster, "BOTTOM", 0, -2)
+    self.frontReadOnlyLabel:SetWidth(280)
+    self.frontReadOnlyLabel:SetJustifyH("CENTER")
+    self.frontReadOnlyLabel:SetWordWrap(false)
+    self.frontReadOnlyLabel:SetMaxLines(1)
+    self.frontReadOnlyLabel:SetTextColor(0.92, 0.78, 0.42, 0.95)
+    self.frontReadOnlyLabel:Hide()
+
+    local forcesText = headerBand:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    forcesText:SetPoint("TOP", emblemCluster, "BOTTOM", 0, -2)
+    forcesText:SetWidth(280)
+    forcesText:SetJustifyH("CENTER")
+    forcesText:SetTextColor(0.85, 0.75, 0.45, 0.9)
+    forcesText:SetText("")
+    self.forcesText = forcesText
+
+    -- Indicateur de shard : coin haut-gauche du panneau (hors titre centre).
+    local SHARD_BADGE_ICON = 14
+    local SHARD_BADGE_TEXT = 11
+    local SHARD_BADGE_REALM = 10
+    local shardFrame = CreateFrame("Button", nil, mainFrame)
+    shardFrame:SetSize(40, 20)
+    shardFrame:SetPoint("TOPLEFT", mainFrame, "TOPLEFT", 12, -24)
+    do
+        local ntex = shardFrame:CreateTexture()
+        ntex:SetColorTexture(0, 0, 0, 0)
+        ntex:SetAllPoints(shardFrame)
+        shardFrame:SetNormalTexture(ntex)
+        local htex = shardFrame:CreateTexture()
+        htex:SetColorTexture(0.45, 0.62, 0.88, 0.14)
+        htex:SetAllPoints(shardFrame)
+        shardFrame:SetHighlightTexture(htex)
+        shardFrame:SetPushedTexture(ntex)
+    end
+    local shardIcon = shardFrame:CreateTexture(nil, "ARTWORK")
+    shardIcon:SetSize(SHARD_BADGE_ICON, SHARD_BADGE_ICON)
+    shardIcon:SetPoint("LEFT", 0, 0)
+    shardIcon:SetTexture("Interface\\Icons\\Spell_Arcane_PortalShattrath")
+    shardIcon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+    shardIcon:SetVertexColor(0.7, 0.85, 1.0, 0.9)
+    local shardText = shardFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    shardText:SetPoint("LEFT", shardIcon, "RIGHT", 4, 0)
+    shardText:SetTextColor(0.65, 0.75, 0.85, 0.9)
+    shardText:SetFont(shardText:GetFont(), SHARD_BADGE_TEXT)
+    shardText:SetText("")
+    local shardRealmText = shardFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    -- Sous l'icone portail (pas sous #66) : evite le debordement dans la bordure gauche.
+    shardRealmText:SetPoint("TOPLEFT", shardIcon, "BOTTOMLEFT", 0, -1)
+    shardRealmText:SetJustifyH("LEFT")
+    shardRealmText:SetTextColor(0.55, 0.65, 0.78, 0.9)
+    shardRealmText:SetFont(shardRealmText:GetFont(), SHARD_BADGE_REALM)
+    shardRealmText:SetText("")
+    shardRealmText:Hide()
+    shardFrame:Hide()
+    shardFrame:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        local tp = Overlord.UI.TooltipPalette()
+        GameTooltip:AddLine(L.SHARD_TOOLTIP_TITLE, tp.HL[1], tp.HL[2], tp.HL[3])
+        GameTooltip:AddLine(" ", tp.BODY[1], tp.BODY[2], tp.BODY[3])
+        local shardMod = Overlord.Shard
+        local shardID = shardMod and shardMod:GetCurrentShardID()
+        if shardID ~= nil then
+            GameTooltip:AddLine(string.format(L.SHARD_TOOLTIP_CURRENT, tostring(shardID)), tp.BODY[1], tp.BODY[2], tp.BODY[3], true)
+            local referencePlayer = shardMod:GetCurrentShardReference()
+            if referencePlayer then
+                GameTooltip:AddLine(string.format(L.SHARD_TOOLTIP_REFERENCE_REALM, referencePlayer), tp.MUTED[1], tp.MUTED[2], tp.MUTED[3], true)
+            end
+            GameTooltip:AddLine(" ", tp.BODY[1], tp.BODY[2], tp.BODY[3])
+            local count, preview, inspected = 0, {}, 0
+            local node = shardMod.peerTail
+            local previewMax = tonumber(Overlord.UI.SHARD_TOOLTIP_PLAYER_MAX) or 12
+            local scanMax = tonumber(Overlord.UI.SHARD_TOOLTIP_SCAN_MAX) or 48
+            while node and inspected < scanMax and #preview < previewMax do
+                local player = node.key
+                local sid = player and shardMod.knownShards[player]
+                inspected = inspected + 1
+                if player and sid ~= nil and (tonumber(node.expiresAt) or 0) > GetTime()
+                    and tonumber(sid) ~= tonumber(shardID)
+                    and (not shardMod.PartyInviteTargetIsUsable
+                        or shardMod:PartyInviteTargetIsUsable(player))
+                    and not ShardPlayerAlreadyGrouped(player) then
+                    count = count + 1
+                    preview[#preview + 1] = { player = player, shard = sid }
+                end
+                node = node.prev
+            end
+            if count > 0 then
+                GameTooltip:AddLine(L.SHARD_TOOLTIP_PLAYERS_HEADER, tp.HL[1], tp.HL[2], tp.HL[3])
+                for _, row in ipairs(preview) do
+                    local player, sid = row.player, row.shard
+                    local hl = GetShardPlayerNameColorEscape(GetShardPlayerFaction(player)) .. player .. "|r"
+                    GameTooltip:AddLine(string.format("  %s (%s)", hl, BuildShardDisplayTag(sid)), tp.MUTED[1], tp.MUTED[2], tp.MUTED[3])
+                end
+                if node then
+                    GameTooltip:AddLine("  ...", tp.MUTED[1], tp.MUTED[2], tp.MUTED[3])
+                end
+            elseif node then
+                -- Apercu volontairement borne (scan de 48 entrees au plus).
+                GameTooltip:AddLine("  ...", tp.MUTED[1], tp.MUTED[2], tp.MUTED[3])
+            else
+                GameTooltip:AddLine(L.SHARD_TOOLTIP_ALL_SAME, tp.BODY[1], tp.BODY[2], tp.BODY[3])
+            end
+        else
+            GameTooltip:AddLine(L.SHARD_TOOLTIP_UNDETECTED, tp.MUTED[1], tp.MUTED[2], tp.MUTED[3], true)
+        end
+        if Overlord.LayerJumper and L.LJ_CLICK_HINT then
+            GameTooltip:AddLine(" ", tp.BODY[1], tp.BODY[2], tp.BODY[3])
+            GameTooltip:AddLine(L.LJ_CLICK_HINT, tp.MUTED[1], tp.MUTED[2], tp.MUTED[3], true)
+        end
+        GameTooltip:Show()
+    end)
+    shardFrame:SetScript("OnLeave", GameTooltip_Hide)
+    -- 2.5.0: a click opens the whole list (every known player and layer), where a layer can
+    -- be joined (LayerJumper.lua).
+    shardFrame:EnableMouse(true)
+    shardFrame:SetScript("OnClick", function()
+        local jumper = Overlord.LayerJumper
+        if jumper and jumper.Toggle then jumper:Toggle() end
+    end)
+    self.shardFrame = shardFrame
+    self.shardText = shardText
+    self.shardRealmText = shardRealmText
+    self.shardIcon = shardIcon
+    self.shardBadgeIconSize = SHARD_BADGE_ICON
+
+    self:CreateZoneListSection(mainFrame)
+    self:CreateActiveZoneSection(mainFrame)
+    self:SyncFrontPickerButtonText()
+    self:SyncHeaderLayout()
+    lastPanelLayoutKey = nil
+    self:ApplyPanelLayout()
+
+    -- Bouton fermer WC3
+    Overlord.UI.CreateWC3CloseButton(mainFrame, function() Overlord.UI:Hide() end, { gold = C.gold })
+        :SetPoint("TOPRIGHT", 4, -4)
+
+    -- The Next Objective dock (about 120 widgets, a child of this panel) is built by the
+    -- first Show, just before the panel appears: not in the frame that already builds
+    -- the whole panel, and not at all while the panel stays closed.
+
+    -- Panel persistent : Echap ne ferme pas le panel (carte de campagne, pas un popup)
+    mainFrame:Hide()
+end
+
+local lastMainFrameHeight = nil
+local lastForcesAnchorMode = nil
+local lastFrontEmblemKey = nil
+local lastActiveZoneStatusKey = nil
+local lastActiveZoneTimerAt = 0
+local ACTIVE_ZONE_TIMER_INTERVAL = 1.0
+local cachedRefreshActiveZone = nil
+local cachedRefreshActiveZoneAt = 0
+local REFRESH_ACTIVE_ZONE_LOOKUP_SEC = 1.0
+local lastShardScanFromUiAt = 0
+local SHARD_UI_SCAN_INTERVAL = 3.0
+
+-- Libelle court du bouton choix de front (dropdown).
+local function FrontPickerDropdownLabel(front)
+    return (front and (front.dropdownLabel or front.mapName)) or "?"
+end
+
+-- Front affiche dans le panneau (consultation d'un autre front possible).
+function Overlord.UI:GetPanelViewFrontId()
+    if not Overlord.Fronts then return nil end
+    if OverlordDB then
+        OverlordDB.config = OverlordDB.config or {}
+    end
+    local sel = OverlordDB and OverlordDB.config and OverlordDB.config.uiPanelFrontId
+    if sel and Overlord.Fronts:GetFront(sel) then
+        return sel
+    end
+    return Overlord.Fronts.activeFrontId
+end
+
+-- Lecture seule : carte liste != carte de combat, ou hors front (pas de capture).
+function Overlord.UI:IsFrontPanelReadOnly()
+    if not Overlord.Fronts then return true end
+    if not Overlord.InActiveFront then return true end
+    return self:GetPanelViewFrontId() ~= Overlord.Fronts.activeFrontId
+end
+
+function Overlord.UI:SyncFrontPickerButtonText()
+    local btn = self.frontPickerBtn
+    if not btn then return end
+    local order = Overlord.Fronts and Overlord.Fronts.Order or {}
+    local orderCount = #order
+    local shouldShow = orderCount > 1
+    if OverlordDB then OverlordDB.config = OverlordDB.config or {} end
+    local fid = self:GetPanelViewFrontId()
+    local fr = Overlord.Fronts and Overlord.Fronts:GetFront(fid)
+    local label = FrontPickerDropdownLabel(fr)
+    local readonly = self:IsFrontPanelReadOnly()
+    local syncKey = tostring(fid) .. "|" .. label .. "|" .. orderCount .. "|" .. (readonly and 1 or 0)
+    if btn._pickerSyncKey == syncKey and btn:IsShown() == shouldShow then return end
+    btn._pickerSyncKey = syncKey
+    btn._fullLabel = label
+    if shouldShow then
+        btn:Show()
+    else
+        btn:Hide()
+    end
+    if btn.vignette then
+        ApplyFrontPickerVignette(btn.vignette, fid)
+    end
+    btn._layoutKey = nil
+    self:LayoutFrontPickerButton()
+    if self.frontReadOnlyLabel then
+        self.frontReadOnlyLabel:Hide()
+    end
+end
+
+-- Hauteur du bandeau d'en-tete et ancrage de la liste de zones.
+function Overlord.UI:SyncHeaderLayout()
+    local band = self.headerBand
+    if not band then return end
+    local h = 66
+    band:SetHeight(h)
+    if self.forcesText then
+        local anchorMode = self.emblemCluster and "emblem" or "fallback"
+        if anchorMode ~= lastForcesAnchorMode then
+            lastForcesAnchorMode = anchorMode
+            self.forcesText:ClearAllPoints()
+            if anchorMode == "emblem" then
+                self.forcesText:SetPoint("TOP", self.emblemCluster, "BOTTOM", 0, -2)
+            else
+                self.forcesText:SetPoint("TOP", band, "TOP", 0, -56)
+            end
+            self.forcesText:SetWidth(280)
+            self.forcesText:SetJustifyH("CENTER")
+        end
+    end
+    if h ~= lastHeaderBandHeight then
+        lastHeaderBandHeight = h
+        if zoneListFrame and mainFrame then
+            zoneListFrame:ClearAllPoints()
+            zoneListFrame:SetPoint("TOP", band, "BOTTOM", 0, -6)
+        end
+        self:SyncMainFrameHeight()
+    end
+end
+
+-- WoW 11+ : EasyMenu supprime - MenuUtil.CreateContextMenu ; secours : popup locale.
+function Overlord.UI:OpenFrontPickerMenu(anchor)
+    if not anchor or not Overlord.Fronts then return end
+    local order = Overlord.Fronts.Order or {}
+    if #order <= 1 then return end
+
+    if MenuUtil and MenuUtil.CreateContextMenu then
+        local ok = pcall(function()
+            MenuUtil.CreateContextMenu(anchor, function(_, rootDescription)
+                for _, fid in ipairs(order) do
+                    local fr = Overlord.Fronts:GetFront(fid)
+                    if fr then
+                        rootDescription:CreateButton(FrontPickerDropdownLabel(fr), function()
+                            if OverlordDB then
+                                OverlordDB.config = OverlordDB.config or {}
+                                OverlordDB.config.uiPanelFrontId = fid
+                            end
+                            if Overlord.Sync and Overlord.Sync.RequestConsultFrontSync then
+                                Overlord.Sync:RequestConsultFrontSync(fid)
+                            end
+                            if Overlord.CheckActiveFrontZone then
+                                Overlord:CheckActiveFrontZone()
+                            end
+                            self:ApplyPanelLayout()
+                            self:Refresh()
+                        end)
+                    end
+                end
+            end)
+        end)
+        if ok then return end
+    end
+
+    self:OpenFrontPickerMenuFallback(anchor)
+end
+
+function Overlord.UI:OpenFrontPickerMenuFallback(anchor)
+    if not self._frontPickerPopup then
+        local f = CreateFrame("Frame", "OverlordFrontPickerPopup", UIParent, "BackdropTemplate")
+        if Overlord.UI.AttachOpenFade then Overlord.UI.AttachOpenFade(f) end
+        f:SetBackdrop({
+            bgFile   = "Interface\\Tooltips\\UI-Tooltip-Background",
+            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+            tile     = true, tileSize = 16, edgeSize = 12,
+            insets   = { left = 4, right = 4, top = 4, bottom = 4 },
+        })
+        f:SetBackdropColor(0.08, 0.08, 0.1, 0.97)
+        f:SetBackdropBorderColor(0.55, 0.48, 0.35, 0.9)
+        f:SetFrameStrata("FULLSCREEN_DIALOG")
+        f:SetFrameLevel(5000)
+        f:EnableMouse(true)
+        f:Hide()
+        self._frontPickerPopup = f
+        self._frontPickerPopupButtons = {}
+
+        local blocker = CreateFrame("Button", nil, UIParent)
+        blocker:SetFrameStrata("FULLSCREEN_DIALOG")
+        blocker:SetFrameLevel(4998)
+        blocker:SetAllPoints(UIParent)
+        blocker:EnableMouse(true)
+        blocker:Hide()
+        blocker:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+        blocker:SetScript("OnClick", function()
+            if self._frontPickerPopup then self._frontPickerPopup:Hide() end
+            blocker:Hide()
+        end)
+        self._frontPickerPopupBlocker = blocker
+        f:SetScript("OnShow", function()
+            if Overlord.PlayPanelOpenSound then Overlord:PlayPanelOpenSound() end
+            if Overlord.UI and Overlord.UI.ScheduleActionGridActiveRefresh then
+                Overlord.UI:ScheduleActionGridActiveRefresh()
+            end
+        end)
+        f:SetScript("OnHide", function()
+            if self._frontPickerPopupBlocker then self._frontPickerPopupBlocker:Hide() end
+            if Overlord.PlayPanelCloseSound then Overlord:PlayPanelCloseSound() end
+            if Overlord.UI and Overlord.UI.ScheduleActionGridActiveRefresh then
+                Overlord.UI:ScheduleActionGridActiveRefresh()
+            end
+        end)
+    end
+
+    for _, b in ipairs(self._frontPickerPopupButtons) do
+        b:Hide()
+    end
+    local f = self._frontPickerPopup
+    local y = -8
+    local count = 0
+    for _, fid in ipairs(Overlord.Fronts.Order or {}) do
+        local fr = Overlord.Fronts:GetFront(fid)
+        if fr then
+            count = count + 1
+            local row = self._frontPickerPopupButtons[count]
+            if not row then
+                row = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+                row:SetSize(100, 20)
+                self._frontPickerPopupButtons[count] = row
+            end
+            row:ClearAllPoints()
+            row:SetPoint("TOPLEFT", f, "TOPLEFT", 8, y)
+            y = y - 24
+            row:SetText(FrontPickerDropdownLabel(fr))
+            row:Show()
+            row:SetScript("OnClick", function()
+                f:Hide()
+                if OverlordDB then
+                    OverlordDB.config = OverlordDB.config or {}
+                    OverlordDB.config.uiPanelFrontId = fid
+                end
+                if Overlord.Sync and Overlord.Sync.RequestConsultFrontSync then
+                    Overlord.Sync:RequestConsultFrontSync(fid)
+                end
+                if Overlord.CheckActiveFrontZone then
+                    Overlord:CheckActiveFrontZone()
+                end
+                self:ApplyPanelLayout()
+                self:ForceZoneListRefresh()
+                self:Refresh()
+            end)
+        end
+    end
+    if count == 0 then return end
+    f:SetSize(116, 14 + count * 24)
+    f:ClearAllPoints()
+    f:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, -4)
+    if self._frontPickerPopupBlocker then self._frontPickerPopupBlocker:Show() end
+    f:Show()
+end
+
+-- Infobulle de la barre de domination : la regle, les victoires de front de la
+-- semaine (les memes que compte la barre) et la remise a zero.
+function Overlord.UI.ShowDominationTooltip(owner)
+    GameTooltip:SetOwner(owner, "ANCHOR_BOTTOM")
+    GameTooltip:SetText(L.DOMINATION_LABEL or "Weekly Territory Domination", 1, 0.82, 0)
+    GameTooltip:AddLine(L.DOM_TIP_RULE or "", 1, 1, 1, true)
+    GameTooltip:AddLine(" ")
+    local list = Overlord.GetDominationVictoryList and Overlord:GetDominationVictoryList() or {}
+    local now = (Overlord.ServerNow and Overlord.ServerNow()) or (GetServerTime and GetServerTime()) or 0
+    local function Duration(seconds)
+        if not seconds or seconds < 60 or not SecondsToTime then return nil end
+        local ok, text = pcall(SecondsToTime, seconds - seconds % 60, true, false, 2)
+        return ok and text or nil
+    end
+    if #list == 0 then
+        GameTooltip:AddLine(L.DOM_TIP_NONE or "", 0.7, 0.7, 0.7, true)
+    else
+        local ally, horde = 0, 0
+        for _, ev in ipairs(list) do
+            if ev.faction == "Alliance" then ally = ally + 1 else horde = horde + 1 end
+        end
+        GameTooltip:AddDoubleLine(L.DOM_TIP_VICTORIES or "",
+            string.format("|cFF4D9EFF%d|r - |cFFFF4D4D%d|r", ally, horde), 1, 0.82, 0)
+        for i = 1, math.min(#list, 8) do
+            local ev = list[i]
+            local front = Overlord.Fronts and Overlord.Fronts:GetMapName(ev.frontId) or ""
+            if front == "" then front = tostring(ev.frontId or "?") end
+            local isAlly = ev.faction == "Alliance"
+            local who = (isAlly and "|cFF4D9EFF" or "|cFFFF4D4D")
+                .. ((isAlly and FACTION_ALLIANCE or FACTION_HORDE) or ev.faction) .. "|r"
+            local age = Duration(now - (tonumber(ev.victoryTs) or now))
+            GameTooltip:AddDoubleLine(front .. " - " .. who,
+                age and string.format(L.DOM_TIP_AGO or "%s", age) or "", 1, 1, 1, 0.7, 0.7, 0.7)
+        end
+    end
+    local startTs = Overlord.GetCurrentCampaignStartTs and Overlord:GetCurrentCampaignStartTs() or 0
+    local left = Duration(startTs > 0 and (startTs + 604800 - now) or 0)
+    if left then
+        GameTooltip:AddLine(" ")
+        GameTooltip:AddLine(string.format(L.DOM_TIP_RESET or "%s", left), 0.7, 0.7, 0.7, true)
+    end
+    GameTooltip:Show()
+end
+
+-- ---------- Section liste des zones ----------
+function Overlord.UI:CreateZoneListSection(parent)
+    zoneListFrame = CreateFrame("Frame", nil, parent)
+    -- Hauteur initiale provisoire, recalee par ApplyPanelLayout.
+    zoneListFrame:SetSize(320, 330)
+    if self.headerBand then
+        zoneListFrame:SetPoint("TOP", self.headerBand, "BOTTOM", 0, -6)
+    else
+        zoneListFrame:SetPoint("TOP", parent, "TOP", 0, -108)
+    end
+
+    -- Grille d'actions placee sous l'etat du front par ApplyPanelLayout.
+    local ACTIONS_CARD_W = 304
+    local btnWidth = 145
+    local btnHeight = 28
+    local gridRow0Gap = 6
+    local gridRowGap = 3
+    local btnRows = 5
+    local gridPadTop = 8
+    local gridPadBottom = 6
+    local actionsCardH = gridPadTop + btnRows * btnHeight
+        + gridRow0Gap + (btnRows - 2) * gridRowGap + gridPadBottom
+
+    local actionsCard = CreateDarkPanel(zoneListFrame, ACTIONS_CARD_W, actionsCardH)
+    actionsCard:SetPoint("TOP", zoneListFrame, "TOP", 0, -220)
+    zoneListFrame.actionsCard = actionsCard
+    self.actionsCard = actionsCard
+
+    local gridTop = -gridPadTop
+    zoneListFrame._actionGridBottom = actionsCardH + 4
+    local function ActionGridRowY(row)
+        if row <= 0 then return gridTop end
+        return gridTop - (btnHeight + gridRow0Gap) - (row - 1) * (btnHeight + gridRowGap)
+    end
+    local lbBtn = CreateWC3Button(actionsCard, btnWidth, btnHeight,
+        L.LB_BUTTON, "Interface\\Icons\\INV_Helmet_08")
+    lbBtn:SetPoint("TOPLEFT", actionsCard, "TOPLEFT", 4, gridTop)
+    AttachGridButtonTooltip(lbBtn, L.LB_BUTTON_TOOLTIP or L.LB_BUTTON)
+    lbBtn:SetScript("OnClick", function()
+        if Overlord.LeaderboardUI then Overlord.LeaderboardUI:Toggle() end
+    end)
+    zoneListFrame.lbBtn = lbBtn
+
+    -- 2.2.1: the Overlord website, a link to copy (same window as Discord and Contact), in
+    -- place of the "Your rank" button (the rank stays on its character sheet tab).
+    local websiteBtn = CreateWC3Button(actionsCard, btnWidth, btnHeight,
+        L.WEBSITE_BUTTON or "Website", "Interface\\AddOns\\Overlord\\Textures\\overlord_minimap")
+    websiteBtn:SetPoint("TOPRIGHT", actionsCard, "TOPRIGHT", -4, gridTop)
+    AttachGridButtonTooltip(websiteBtn, L.WEBSITE_BUTTON_TOOLTIP or L.WEBSITE_BUTTON or "Website")
+    websiteBtn:SetScript("OnClick", function()
+        Overlord.UI:ShowWebsitePopup()
+    end)
+    zoneListFrame.websiteBtn = websiteBtn
+
+    local discordBtn = CreateWC3Button(actionsCard, btnWidth, btnHeight,
+        L.DISCORD_BUTTON, "Interface\\ChatFrame\\UIChatIcon")
+    if discordBtn.icon and discordBtn.icon.SetAtlas then
+        discordBtn.icon:SetTexture(nil)
+        discordBtn.icon:SetAtlas(Overlord.DISCORD_BUTTON_ATLAS or "UI-ChatIcon-Discord", false)
+        discordBtn.icon:SetTexCoord(0, 1, 0, 1)
+    end
+    discordBtn:SetPoint("TOPRIGHT", actionsCard, "TOPRIGHT", -4, ActionGridRowY(4))
+    AttachGridButtonTooltip(discordBtn, L.DISCORD_BUTTON_TOOLTIP or L.DISCORD_BUTTON)
+    discordBtn:SetScript("OnClick", function()
+        Overlord.UI:OnDiscordButtonClick()
+    end)
+    zoneListFrame.discordBtn = discordBtn
+
+    local hofBtn = CreateWC3Button(actionsCard, btnWidth, btnHeight,
+        L.HOF_BUTTON, "Interface\\Icons\\Achievement_LegionPVPTier4")
+    hofBtn:SetPoint("TOPRIGHT", actionsCard, "TOPRIGHT", -4, ActionGridRowY(1))
+    AttachGridButtonTooltip(hofBtn, L.HOF_BUTTON_TOOLTIP or L.HOF_BUTTON)
+    hofBtn:SetScript("OnClick", function()
+        if Overlord.HallOfFameUI then Overlord.HallOfFameUI:Toggle() end
+    end)
+    zoneListFrame.hofBtn = hofBtn
+
+    local tutorialBtn = CreateWC3Button(actionsCard, btnWidth, btnHeight,
+        L.GUIDE_BAR_LABEL, "Interface\\Icons\\INV_Misc_Book_09")
+    tutorialBtn:SetPoint("TOPLEFT", actionsCard, "TOPLEFT", 4, ActionGridRowY(3))
+    AttachGridButtonTooltip(tutorialBtn, L.GUIDE_BTN_TOOLTIP or L.GUIDE_BAR_LABEL)
+    tutorialBtn:SetScript("OnClick", function()
+        if Overlord.Popups and Overlord.Popups.ToggleQuickGuide then
+            Overlord.Popups:ToggleQuickGuide()
+        end
+    end)
+    zoneListFrame.tutorialBtn = tutorialBtn
+
+    local factionBannerIcon = (Overlord.PlayerFaction == "Horde")
+        and "Interface\\Icons\\INV_BannerPVP_01"
+        or "Interface\\Icons\\INV_BannerPVP_02"
+    local hornBtn = CreateWC3Button(actionsCard, btnWidth, btnHeight,
+        L.FACTION_CALL_BUTTON, factionBannerIcon)
+    hornBtn:SetPoint("TOPRIGHT", actionsCard, "TOPRIGHT", -4, ActionGridRowY(2))
+    AttachGridButtonTooltip(hornBtn, L.FACTION_CALL_TOOLTIP_TITLE or L.FACTION_CALL_BUTTON)
+
+    local generalTip = (Overlord.PlayerFaction == "Horde")
+        and L.GENERAL_TOOLTIP_TITLE_HORDE
+        or L.GENERAL_TOOLTIP_TITLE_ALLIANCE
+    local generalBtn = CreateWC3Button(actionsCard, btnWidth, btnHeight,
+        L.GENERAL_BUTTON, "Interface\\Icons\\Ability_Warrior_RallyingCry")
+    generalBtn:SetPoint("TOPLEFT", actionsCard, "TOPLEFT", 4, ActionGridRowY(2))
+    AttachGridButtonTooltip(generalBtn, generalTip)
+    zoneListFrame.factionCallBtn = hornBtn
+    zoneListFrame.generalBtn = generalBtn
+    if Overlord.Button and Overlord.Button.AttachActionGridButtons then
+        Overlord.Button:AttachActionGridButtons(hornBtn, generalBtn)
+    end
+
+    local settingsBtn = CreateWC3Button(actionsCard, btnWidth, btnHeight,
+        L.SETTINGS_BUTTON, "Interface\\Icons\\INV_Misc_Gear_01")
+    settingsBtn:SetPoint("TOPRIGHT", actionsCard, "TOPRIGHT", -4, ActionGridRowY(3))
+    AttachGridButtonTooltip(settingsBtn, L.SETTINGS_BUTTON_TOOLTIP or L.SETTINGS_BUTTON)
+    settingsBtn:SetScript("OnClick", function()
+        if Overlord.SettingsPanel and Overlord.SettingsPanel.Toggle then
+            Overlord.SettingsPanel:Toggle()
+        end
+    end)
+    zoneListFrame.settingsBtn = settingsBtn
+
+    -- Keep optional module buttons unavailable only when the module is absent.
+    local foreverUnavailable = L.FOREVER_FEATURE_UNAVAILABLE
+        or "Unavailable on Overlord Forever."
+    -- PvP group finder (row 1, left). The label carries the number of sign-ups
+    -- waiting for the leader (GroupFinderUI:UpdateGridBadge).
+    local groupsBtn = CreateWC3Button(actionsCard, btnWidth, btnHeight,
+        L.GF_BUTTON or "PvP Groups", "Interface\\Icons\\INV_Misc_GroupNeedMore")
+    groupsBtn:SetPoint("TOPLEFT", actionsCard, "TOPLEFT", 4, ActionGridRowY(1))
+    AttachGridButtonTooltip(groupsBtn, L.GF_BUTTON_TOOLTIP or L.GF_BUTTON or "PvP Groups")
+    groupsBtn:SetScript("OnClick", function()
+        if Overlord.GroupFinderUI then Overlord.GroupFinderUI:Toggle() end
+    end)
+    zoneListFrame.groupsBtn = groupsBtn
+    Overlord.UI.groupFinderBtn = groupsBtn
+
+    -- 2.5.0: Layers (row 4, left, where Contact was since 1.7.1): the window of the players we
+    -- hear and their layer, the same one as a click on the layer number at the top left of the
+    -- panel. The author's contact link moved to the options (SettingsPanel, General).
+    local layersBtn = CreateWC3Button(actionsCard, btnWidth, btnHeight,
+        L.LJ_TITLE or "Layers",
+        Overlord.PlayerFaction == "Horde" and "Interface\\Icons\\Spell_Arcane_PortalOrgrimmar"
+            or "Interface\\Icons\\Spell_Arcane_PortalStormwind")
+    layersBtn:SetPoint("TOPLEFT", actionsCard, "TOPLEFT", 4, ActionGridRowY(4))
+    AttachGridButtonTooltip(layersBtn, L.LJ_CLICK_HINT or L.LJ_TITLE or "Layers")
+    layersBtn:SetScript("OnClick", function()
+        local jumper = Overlord.LayerJumper
+        if jumper and jumper.Toggle then jumper:Toggle() end
+    end)
+    zoneListFrame.layersBtn = layersBtn
+    if self.SetWC3ButtonUnavailable and not Overlord.LayerJumper then
+        self.SetWC3ButtonUnavailable(layersBtn, foreverUnavailable)
+    end
+    if self.SetWC3ButtonUnavailable then
+        if not Overlord.HallOfFameUI then
+            self.SetWC3ButtonUnavailable(hofBtn, foreverUnavailable)
+        end
+        if not Overlord.General then
+            self.SetWC3ButtonUnavailable(generalBtn, foreverUnavailable)
+        end
+        if not Overlord.GroupFinderUI then
+            self.SetWC3ButtonUnavailable(groupsBtn, foreverUnavailable)
+        end
+    end
+    if Overlord.GroupFinderUI and Overlord.GroupFinder then
+        Overlord.GroupFinderUI:UpdateGridBadge(#Overlord.GroupFinder.pending)
+    end
+
+    if self.RefreshActionGridActiveState then
+        self:RefreshActionGridActiveState()
+    end
+
+    -- Barre de domination hebdomadaire (Alliance vs Horde), en tete de la section.
+    -- 256 px (was 300): room on each side for the faction crests below.
+    local domBar = CreateFrame("Frame", nil, zoneListFrame, "BackdropTemplate")
+    domBar:SetSize(256, 16)
+    domBar:SetPoint("TOP", zoneListFrame, "TOP", 0, -14)
+    domBar:SetBackdrop({
+        bgFile   = "Interface\\Tooltips\\UI-Tooltip-Background",
+        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        tile     = true, tileSize = 16, edgeSize = 8,
+        insets   = { left = 2, right = 2, top = 2, bottom = 2 },
+    })
+    domBar:SetBackdropColor(0.08, 0.08, 0.10, 0.75)
+    domBar:SetBackdropBorderColor(C.goldDim[1], C.goldDim[2], C.goldDim[3], 0.45)
+
+    local domBg = domBar:CreateTexture(nil, "BACKGROUND", nil, -1)
+    domBg:SetPoint("TOPLEFT", 3, -3)
+    domBg:SetPoint("BOTTOMRIGHT", -3, 3)
+    domBg:SetColorTexture(0.1, 0.1, 0.1, 0.55)
+
+    -- Same game status-bar texture as the capture hold bar, tinted per faction.
+    local domAlly = domBar:CreateTexture(nil, "ARTWORK")
+    domAlly:SetPoint("TOPLEFT", 3, -3)
+    domAlly:SetPoint("BOTTOMLEFT", 3, 3)
+    domAlly:SetTexture("Interface\\TargetingFrame\\UI-StatusBar")
+    domAlly:SetVertexColor(0.2, 0.45, 0.85, 0.9)
+    domBar.allyFill = domAlly
+
+    local domHorde = domBar:CreateTexture(nil, "ARTWORK")
+    domHorde:SetPoint("TOPRIGHT", -3, -3)
+    domHorde:SetPoint("BOTTOMRIGHT", -3, 3)
+    domHorde:SetTexture("Interface\\TargetingFrame\\UI-StatusBar")
+    domHorde:SetVertexColor(0.75, 0.15, 0.15, 0.9)
+    domBar.hordeFill = domHorde
+
+    -- Alliance crest left of the blue side, Horde crest right of the red side
+    -- (the logos of the chat alerts).
+    local allyCrest = domBar:CreateTexture(nil, "OVERLAY")
+    allyCrest:SetSize(22, 22)
+    allyCrest:SetPoint("RIGHT", domBar, "LEFT", -3, 0)
+    allyCrest:SetTexture("Interface\\Timer\\Alliance-Logo")
+    local hordeCrest = domBar:CreateTexture(nil, "OVERLAY")
+    hordeCrest:SetSize(22, 22)
+    hordeCrest:SetPoint("LEFT", domBar, "RIGHT", 3, 0)
+    hordeCrest:SetTexture("Interface\\Timer\\Horde-Logo")
+    domBar.allyCrest, domBar.hordeCrest = allyCrest, hordeCrest
+
+    -- Tissus bleu et rouge des scenarios BfA (meme fichier que les bannieres
+    -- AllianceScenario-TitleBG du panneau), lion a gauche, blason Horde a droite.
+    -- Sans ce fichier, la barre teintee ci-dessus reste telle quelle.
+    local clothFile
+    if C_Texture and C_Texture.GetAtlasInfo then
+        local okInfo, info = pcall(C_Texture.GetAtlasInfo, "AllianceScenario-TitleBG")
+        clothFile = okInfo and type(info) == "table" and (info.file or info.filename) or nil
+    end
+    if clothFile then
+        domBar:SetHeight(28)
+        domBar:SetBackdropBorderColor(C.goldDim[1], C.goldDim[2], C.goldDim[3], 0.8)
+        domAlly:SetTexture(clothFile)
+        domAlly:SetVertexColor(1, 1, 1, 1)
+        domHorde:SetTexture(clothFile)
+        domHorde:SetVertexColor(1, 1, 1, 1)
+        -- Le tissu bleu est plus sombre que le rouge : une copie en mode additif
+        -- l'eclaircit un peu (memes coordonnees, suit la largeur du bleu).
+        local allyLift = domBar:CreateTexture(nil, "ARTWORK", nil, 1)
+        allyLift:SetPoint("TOPLEFT", domAlly, "TOPLEFT")
+        allyLift:SetPoint("BOTTOMRIGHT", domAlly, "BOTTOMRIGHT")
+        allyLift:SetTexture(clothFile)
+        allyLift:SetBlendMode("ADD")
+        allyLift:SetVertexColor(1, 1, 1, 0.22)
+        domBar.allyLift = allyLift
+        -- Blasons de faction de part et d'autre, a la hauteur de la barre.
+        allyCrest:SetSize(28, 28)
+        hordeCrest:SetSize(28, 28)
+        domBar._cloth = true
+    end
+
+    local domLabel = domBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    domLabel:SetPoint("CENTER")
+    domLabel:SetTextColor(0.95, 0.92, 0.82)
+    domLabel:SetShadowOffset(1, -1)
+    domLabel:SetFont(domLabel:GetFont(), domBar._cloth and 12 or 10)
+    domBar.label = domLabel
+
+    local domTitle = zoneListFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    -- BOTTOMLEFT + BOTTOMRIGHT sur domBar : largeur de la barre (256 px), texte centre
+    domTitle:SetPoint("BOTTOMLEFT",  domBar, "TOPLEFT",  0, 2)
+    domTitle:SetPoint("BOTTOMRIGHT", domBar, "TOPRIGHT", 0, 2)
+    domTitle:SetJustifyH("CENTER")
+    domTitle:SetText(L.DOMINATION_LABEL)
+    domTitle:SetTextColor(0.82, 0.74, 0.52, 0.95)
+    domTitle:SetFont(domTitle:GetFont(), 10)
+
+    -- Largeur de reference : GetWidth() peut etre 0 avant layout / premier Show (barre invisible).
+    domBar._nominalWidth = 256
+    Overlord.UI.domBar = domBar
+    zoneListFrame.domTitleLabel = domTitle
+    zoneListFrame.domBarFrame = domBar
+    domBar:EnableMouse(true)
+    domBar:SetScript("OnEnter", function(self) Overlord.UI.ShowDominationTooltip(self) end)
+    domBar:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    -- Le survol prend la souris : glisser la barre deplace toujours le panneau.
+    domBar:RegisterForDrag("LeftButton")
+    domBar:SetScript("OnDragStart", function()
+        local start = mainFrame and mainFrame:GetScript("OnDragStart")
+        if start then start(mainFrame) end
+    end)
+    domBar:SetScript("OnDragStop", function()
+        local stop = mainFrame and mainFrame:GetScript("OnDragStop")
+        if stop then stop(mainFrame) end
+    end)
+
+    -- Sous-panneau zones de controle (deux colonnes)
+    local zonesPanel = CreateDarkPanel(zoneListFrame, ZONES_PANEL_W, 180)
+    zonesPanel:SetPoint("TOP", domBar, "BOTTOM", 0, -8)
+    zoneListFrame.zonesPanel = zonesPanel
+
+    local header = zonesPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    header:SetPoint("TOP", zonesPanel, "TOP", 0, -8)
+    header:SetText(L.CONTROL_ZONES)
+    header:SetTextColor(C.gold[1], C.gold[2], C.gold[3], 0.95)
+    header:SetJustifyH("CENTER")
+    zoneListFrame.zoneListHeader = header
+
+    local truceLabel = zonesPanel:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    truceLabel:SetPoint("TOPLEFT", zonesPanel, "TOPLEFT", 8, -20)
+    truceLabel:SetPoint("TOPRIGHT", zonesPanel, "TOPRIGHT", -8, -20)
+    truceLabel:SetJustifyH("CENTER")
+    truceLabel:SetWordWrap(false)
+    truceLabel:SetMaxLines(1)
+    truceLabel:SetTextColor(C.gray[1], C.gray[2], C.gray[3], 0.9)
+    truceLabel:Hide()
+    zoneListFrame.zoneListTruceLabel = truceLabel
+
+    zoneListFrame.zoneLines = {}
+    for _, zone in ipairs(Overlord.Zones:GetDisplayOrderForFront(self:GetPanelViewFrontId())) do
+        local line = self:CreateZoneLine(zonesPanel, zone)
+        table.insert(zoneListFrame.zoneLines, line)
+    end
+
+    zoneListFrame._layoutReady = true
+    -- Premiere peinture des fills (CheckWeeklyReset peut avoir eu lieu avant l'init UI).
+    self:RefreshDomination()
+    self:ApplyPanelLayout()
+end
+
+-- Recalcule domination, contenu principal, actions et hauteur totale du panneau.
+function Overlord.UI:ApplyPanelLayout()
+    local zf = zoneListFrame
+    if not zf or not zf._layoutReady or not zf.domBarFrame or not zf.domTitleLabel or not zf.zonesPanel or not zf.zoneListHeader then
+        return
+    end
+    local gridBottom = zf._actionGridBottom or 102
+    local actionsH = zf.actionsCard and zf.actionsCard:GetHeight() or math.max(0, gridBottom - 4)
+    local nZones = 0
+    if zf.zoneLines then
+        for _, line in ipairs(zf.zoneLines) do
+            if line:IsShown() then nZones = nZones + 1 end
+        end
+    end
+    local viewFrontId = self:GetPanelViewFrontId()
+    local frontOnTruce, truceRemaining = false, 0
+    if viewFrontId and Overlord.Zones and Overlord.Zones.IsOnVictoryCooldown then
+        frontOnTruce, truceRemaining = Overlord.Zones:IsOnVictoryCooldown(viewFrontId, true)
+    end
+    local lineH = ZONE_LINE_NORMAL_H
+    local activeVisible = activeZoneFrame and activeZoneFrame:IsShown()
+    local activeH = activeVisible and (activeZoneFrame:GetHeight() or 64) or 0
+    local layoutKey = gridBottom .. "|" .. nZones .. "|" .. lineH
+        .. "|" .. (frontOnTruce and "truce" or "normal")
+        .. "|" .. (activeVisible and "1" or "0") .. "|" .. activeH
+    if layoutKey == lastPanelLayoutKey then
+        return
+    end
+    lastPanelLayoutKey = layoutKey
+    lastMainFrameHeight = nil
+    local domBar = zf.domBarFrame
+    local domTitle = zf.domTitleLabel
+    local domTop = 14
+    local zonesGap = 8
+    local activeZoneGap = zonesGap
+    local actionsGap = 8
+
+    if self.headerBand then
+        self.headerBand:SetHeight(66)
+    end
+
+    domBar:ClearAllPoints()
+    domTitle:ClearAllPoints()
+    domBar:SetPoint("TOP", zf, "TOP", 0, -domTop)
+    domTitle:SetPoint("BOTTOMLEFT", domBar, "TOPLEFT", 0, 1)
+    domTitle:SetPoint("BOTTOMRIGHT", domBar, "TOPRIGHT", 0, 1)
+
+    zf.zonesPanel:ClearAllPoints()
+    zf.zonesPanel:SetPoint("TOP", domBar, "BOTTOM", 0, -zonesGap)
+
+    local panelW = zf.zonesPanel:GetWidth() or ZONES_PANEL_W
+    local colW = math.floor((panelW - ZONES_COL_PAD * 2 - ZONES_COL_GAP) / 2)
+    local contentTop = frontOnTruce and ZONES_TRUCE_CONTENT_TOP or ZONES_CONTENT_TOP
+    local rowStep = lineH + ZONE_LINE_ROW_GAP
+    local half = math.max(1, math.ceil(nZones / 2))
+    local maxRows = half
+
+    if zf.zoneLines and nZones > 0 then
+        local visIdx = 0
+        for _, line in ipairs(zf.zoneLines) do
+            if line:IsShown() then
+                visIdx = visIdx + 1
+                local col, row
+                if visIdx <= half then
+                    col = 0
+                    row = visIdx - 1
+                else
+                    col = 1
+                    row = visIdx - half - 1
+                end
+                local x = ZONES_COL_PAD + col * (colW + ZONES_COL_GAP)
+                line:ClearAllPoints()
+                line:SetSize(colW, lineH)
+                line:SetPoint("TOPLEFT", zf.zonesPanel, "TOPLEFT", x, contentTop - row * rowStep)
+                if line.underline then
+                    line.underline:SetSize(colW - 2, 1)
+                    line.underline:ClearAllPoints()
+                    line.underline:SetPoint("BOTTOMLEFT", line, "BOTTOMLEFT", 0, 1)
+                end
+                LayoutZoneLineAnchors(line, frontOnTruce)
+            end
+        end
+        local rightRows = nZones - half
+        if rightRows > maxRows then maxRows = rightRows end
+    end
+
+    if zf.zoneListTruceLabel then
+        zf.zoneListTruceLabel:SetShown(frontOnTruce)
+        if frontOnTruce then
+            zf.zoneListTruceLabel:SetText(string.format(L.SIEGE_COOLDOWN_LABEL,
+                Overlord.Zones:FormatDuration(truceRemaining)))
+        end
+    end
+
+    local contentInset = math.abs(contentTop)
+    local panelH = contentInset + maxRows * rowStep + 6
+    zf.zonesPanel:SetHeight(panelH)
+
+    local anchorBelowZones = zf.zonesPanel
+    if activeZoneFrame then
+        activeZoneFrame:ClearAllPoints()
+        activeZoneFrame:SetPoint("TOP", zf.zonesPanel, "BOTTOM", 0, -activeZoneGap)
+        if activeVisible then
+            anchorBelowZones = activeZoneFrame
+        end
+    end
+
+    if zf.actionsCard then
+        zf.actionsCard:ClearAllPoints()
+        zf.actionsCard:SetPoint("TOP", anchorBelowZones, "BOTTOM", 0, -actionsGap)
+        zf.actionsCard:Show()
+        actionsH = zf.actionsCard:GetHeight() or actionsH
+    end
+    local activeBlockH = activeVisible and (activeZoneGap + activeH) or 0
+    local actionsBlockH = actionsGap + actionsH
+    local zfHeight = domTop + domBar:GetHeight() + zonesGap + panelH
+        + activeBlockH + actionsBlockH + 8
+    zf:SetSize(320, zfHeight)
+
+    self:SyncMainFrameHeight()
+    if Overlord.Popups and Overlord.Popups.RefreshFeaturedFrontActivity then
+        Overlord.Popups:RefreshFeaturedFrontActivity()
+    end
+end
+
+-- Ajuste la hauteur du panneau au contenu.
+function Overlord.UI:SyncMainFrameHeight()
+    if not mainFrame or not zoneListFrame then return end
+    local topToZoneList = 108
+    if self.headerBand then
+        -- 50 = offset TOP->headerBand (garder synchro avec le SetPoint de headerBand ci-dessus)
+        topToZoneList = 50 + self.headerBand:GetHeight() + 6
+    end
+    local bottomPad = 10
+    local h = math.max(380, topToZoneList + zoneListFrame:GetHeight() + bottomPad)
+    if h == lastMainFrameHeight then return end
+    lastMainFrameHeight = h
+    mainFrame:SetHeight(h)
+    -- The PvP groups window docks beside the panel at the same height.
+    if Overlord.GroupFinderUI and Overlord.GroupFinderUI.OnPanelLayoutChanged then
+        Overlord.GroupFinderUI:OnPanelLayoutChanged()
+    end
+end
+
+function Overlord.UI:CreateZoneLine(parent, zone)
+    local line = CreateFrame("Button", nil, parent)
+    line:SetSize(148, ZONE_LINE_NORMAL_H)
+    line.zone = zone
+
+    line.icon = line:CreateTexture(nil, "ARTWORK")
+    line.icon:SetSize(ZONE_LINE_ICON, ZONE_LINE_ICON)
+    line.iconGlow = line:CreateTexture(nil, "ARTWORK", nil, 1)
+    line.iconGlow:SetAllPoints(line.icon)
+    line.iconGlow:Hide()
+    SetZoneLineWarfrontIcon(line.icon, zone, nil, line.iconGlow)
+
+    line.progress = line:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+
+    line.name = line:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    line.name:SetText(zone.name)
+
+    LayoutZoneLineAnchors(line, false)
+
+    line.underline = line:CreateTexture(nil, "ARTWORK")
+    line.underline:SetSize(144, 1)
+    line.underline:SetPoint("BOTTOMLEFT", 0, 1)
+    line.underline:SetColorTexture(1, 1, 1, 0.06)
+
+    line:SetScript("OnClick", function(self)
+        local z = self.zone
+        local viewFront = Overlord.UI:GetPanelViewFrontId()
+        -- Repere sur la carte du front choisi (consultation ou combat).
+        if Overlord.MapMarkers and Overlord.MapMarkers.SetUserWaypointForFrontZone then
+            Overlord.MapMarkers:SetUserWaypointForFrontZone(z, viewFront)
+        end
+        if Overlord.UI:IsFrontPanelReadOnly() then
+            if z.status == "available" then
+                Overlord:PrintNotification("|cFFFFD100[Overlord]|r " .. L.UI_CAPTURE_READONLY)
+            end
+            return
+        end
+        local pf = Overlord.PlayerFaction
+        if z.status == "available" then
+            if Overlord.CanStartLocalCapture and not Overlord:CanStartLocalCapture(z, true) then
+                return
+            end
+            local playerZone = Overlord.Zones:GetCurrentPlayerZone()
+            if playerZone and playerZone.id == z.id then
+                if not Overlord.Zones:IsZoneAvailable(z.id) then
+                    local rules = Overlord.Zones:IsTruceRetired() and L.CAPTURE_BLOCKED_RULES_NOTRUCE or L.CAPTURE_BLOCKED_RULES
+                    Overlord:PrintNotification(string.format("|cFFFF0000[Overlord]|r " .. rules, z.name))
+                    return
+                end
+                -- Same start as the 1 s check, with all its guards, and one chat line
+                -- saying what happened; starting by hand skipped them all.
+                Overlord.ZoneControl:StartManually(z)
+                Overlord.UI:Refresh()
+            else
+                local cx, cy = z.center and z.center[1], z.center and z.center[2]
+                if cx and cy then
+                    Overlord:PrintNotification(string.format("|cFFFFD100[Overlord]|r " .. L.GO_TO_ZONE, z.name, cx, cy))
+                else
+                    Overlord:PrintNotification(string.format("|cFFFFD100[Overlord]|r " .. L.ZONE_IS_LOCKED, z.name))
+                end
+                if Overlord.ZoneIndicator then
+                    Overlord.ZoneIndicator:Show()
+                end
+            end
+        elseif z.status == "locked" then
+            if z.owner and z.owner ~= pf then
+                Overlord:PrintNotification(string.format("|cFFFF4444[Overlord]|r " .. L.ENEMY_CONTROL_MSG, z.name))
+            else
+                Overlord:PrintNotification(string.format("|cFF9D9D9D[Overlord]|r " .. L.ZONE_IS_LOCKED, z.name))
+            end
+        elseif z.status == "in_progress" then
+            Overlord:PrintNotification(string.format("|cFFFFD100[Overlord]|r " .. L.ALREADY_IN_PROGRESS, z.name))
+        elseif z.owner == pf then
+            Overlord:PrintNotification(string.format("|cFF4488FF[Overlord]|r " .. L.ZONE_UNDER_CONTROL, z.name,
+                Overlord.Zones:GetFactionName()))
+        end
+    end)
+
+    -- Flag : RefreshZoneList() tourne souvent ; sans ca le survol serait ecrase a chaque tick
+    line._zoneLineHover = false
+    line:SetScript("OnEnter", function(self)
+        local z = self.zone
+        if z then
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetText(z.name or "?", 1, 1, 1)
+            local status = self.progress and self.progress:GetText()
+            if status and status ~= "" then
+                GameTooltip:AddLine(status, 0.82, 0.82, 0.82)
+            end
+            GameTooltip:Show()
+        end
+        if z and (z.status == "available" or self._attackable) and not self._zoneLineHover then
+            self._zoneLineHover = true
+            Overlord.UI:RepaintZoneLine(self)
+        end
+    end)
+
+    line:SetScript("OnLeave", function(self)
+        GameTooltip:Hide()
+        if self._zoneLineHover then
+            self._zoneLineHover = false
+            if self.zone.status == "available" or self._attackable then
+                Overlord.UI:RepaintZoneLine(self)
+            end
+        end
+    end)
+
+    return line
+end
+
+-- ---------- Section zone active ----------
+function Overlord.UI:CreateActiveZoneSection(parent)
+    if not zoneListFrame then return end
+    activeZoneFrame = CreateDarkPanel(zoneListFrame, 304, 68)
+    -- Le cadre de barre du camp habille deja la carte : ni fond bleu ni lisere autour.
+    activeZoneFrame:SetBackdropColor(0, 0, 0, 0)
+    activeZoneFrame:SetBackdropBorderColor(0, 0, 0, 0)
+
+    -- La carte est la barre seule dans son cadre : ni titre ni nom de zone. La ligne d'etat
+    -- ne s'ecrit que pour ce qui arrete ou fait reculer la barre (pause, contestee, capture
+    -- ennemie) ; quand tout va bien la couleur du remplissage suffit.
+    -- Barre de maintien sertie dans le cadre de barre du camp du joueur (256 x 64, a sa
+    -- taille d'origine). La fente du cadre fait 182 x 22 px a (37, 21) ; holdBar la couvre
+    -- avec 1 px de marge pour que le remplissage passe sous l'art. Libelle, pourcentage et
+    -- chrono s'ecrivent dans la fente.
+    -- L'art ne remplit pas ses 64 px : lignes 4 a 55 pour l'Alliance, 1 a 63 pour la Horde.
+    -- Sans les textes, la carte epouse l'art (pas de marge vide dessus ni dessous) ; les
+    -- ecarts avec les blocs voisins sont alors ceux du reste du panneau.
+    local playerFaction = Overlord.PlayerFaction or UnitFactionGroup("player")
+    local artTop, artBottom = 20, 44
+    if playerFaction == "Alliance" then
+        artTop, artBottom = 4, 55
+    elseif playerFaction == "Horde" then
+        artTop, artBottom = 1, 63
+    end
+    local holdBar = CreateFrame("Frame", nil, activeZoneFrame)
+    holdBar:SetSize(184, 24)
+    holdBar:SetPoint("TOP", 0, -(20 - artTop))
+
+    local holdBg = holdBar:CreateTexture(nil, "BACKGROUND")
+    holdBg:SetAllPoints()
+    holdBg:SetColorTexture(0.03, 0.03, 0.03, 0.9)
+
+    if playerFaction == "Alliance" or playerFaction == "Horde" then
+        local holdFrame = holdBar:CreateTexture(nil, "OVERLAY")
+        holdFrame:SetTexture("Interface\\UNITPOWERBARALT\\" .. playerFaction .. "_Horizontal_Frame")
+        holdFrame:SetSize(256, 64)
+        holdFrame:SetPoint("TOPLEFT", holdBar, "TOPLEFT", -36, 20)
+    end
+
+    local holdLabel = holdBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    holdLabel:SetPoint("LEFT", 7, 0)
+    holdLabel:SetText(L.HOLD_LABEL)
+    holdLabel:SetTextColor(0.92, 0.88, 0.76)
+    holdLabel:SetShadowOffset(1, -1)
+
+    activeZoneFrame.holdText = holdBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    activeZoneFrame.holdText:SetPoint("RIGHT", -7, 0)
+    activeZoneFrame.holdText:SetTextColor(C.white[1], C.white[2], C.white[3])
+    activeZoneFrame.holdText:SetShadowOffset(1, -1)
+    -- 9 pt comme le pourcentage : les trois textes tiennent dans la fente. Un libelle trop
+    -- long pour sa langue cede la place au pourcentage centre.
+    holdLabel:SetFont(holdLabel:GetFont(), 9)
+    activeZoneFrame.holdText:SetFont(activeZoneFrame.holdText:GetFont(), 9)
+    if (holdLabel:GetStringWidth() or 0) > 70 then holdLabel:Hide() end
+
+    -- Game status-bar texture tinted by state (blue holding, orange paused or enemy,
+    -- red contested, gold complete); a spark rides its right edge and the fill
+    -- glides to each new value (OnUpdate only while it moves, then removed).
+    local holdFill = holdBar:CreateTexture(nil, "ARTWORK")
+    holdFill:SetPoint("TOPLEFT")
+    holdFill:SetPoint("BOTTOMLEFT")
+    holdFill:SetWidth(1)
+    holdFill:SetTexture("Interface\\TargetingFrame\\UI-StatusBar")
+    holdFill:SetVertexColor(C.blue[1], C.blue[2], C.blue[3], 0.8)
+    holdBar.fill = holdFill
+
+    -- Sous le cadre : sa lueur ne deborde pas sur l'art.
+    local holdSpark = holdBar:CreateTexture(nil, "ARTWORK", nil, 1)
+    holdSpark:SetTexture("Interface\\CastingBar\\UI-CastingBar-Spark")
+    holdSpark:SetBlendMode("ADD")
+    holdSpark:SetSize(14, 44)
+    holdSpark:SetPoint("CENTER", holdFill, "RIGHT", 0, 0)
+    holdSpark:Hide()
+    holdBar.spark = holdSpark
+
+    function holdBar:SetFillColor(r, g, b, a)
+        self.fill:SetVertexColor(r, g, b, a)
+    end
+    local function glide(self, elapsed)
+        local current, target = self.fill:GetWidth(), self._olTargetWidth or 1
+        if math.abs(target - current) < 0.5 then
+            self.fill:SetWidth(target)
+            self:SetScript("OnUpdate", nil)
+            return
+        end
+        self.fill:SetWidth(current + (target - current) * math.min(1, elapsed * 6))
+    end
+    -- ratio nil: empty bar at once (state change). Otherwise glide to ratio.
+    function holdBar:SetFillRatio(ratio)
+        if not ratio then
+            self._olTargetWidth = 1
+            self:SetScript("OnUpdate", nil)
+            self.fill:SetWidth(1)
+            self.spark:Hide()
+            return
+        end
+        local target = math.max(1, (self:GetWidth() or 0) * ratio)
+        self._olTargetWidth = target
+        self.spark:SetShown(ratio > 0.01 and ratio < 0.99)
+        if math.abs(target - self.fill:GetWidth()) >= 0.5 then
+            self:SetScript("OnUpdate", glide)
+        end
+    end
+
+    local holdPct = holdBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    holdPct:SetPoint("CENTER")
+    holdPct:SetTextColor(0.9, 0.85, 0.7)
+    holdPct:SetShadowOffset(1, -1)
+    holdPct:SetFont(holdPct:GetFont(), 9)
+    holdBar.label = holdPct
+
+    activeZoneFrame.holdBar = holdBar
+
+    -- Status indicator (en pause / actif) - sous la barre, hauteur panneau ajustee au refresh
+    activeZoneFrame.statusTag = activeZoneFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    -- Sous le bas de l'art du cadre (qui depasse la fente), puis 3 px de marge.
+    activeZoneFrame.statusTag:SetPoint("TOP", holdBar, "BOTTOM", 0, -(artBottom - 44) - 3)
+    activeZoneFrame.statusTag:SetPoint("LEFT", activeZoneFrame, "LEFT", 12, 0)
+    activeZoneFrame.statusTag:SetPoint("RIGHT", activeZoneFrame, "RIGHT", -12, 0)
+    activeZoneFrame.statusTag:SetWordWrap(true)
+    activeZoneFrame.statusTag:SetJustifyH("CENTER")
+
+    activeZoneFrame.baseHeight = artBottom - artTop
+    activeZoneFrame:SetHeight(activeZoneFrame.baseHeight)
+    activeZoneFrame:Hide()
+    zoneListFrame.activeZoneFrame = activeZoneFrame
+    self.activeZoneFrame = activeZoneFrame
+    lastPanelLayoutKey = nil
+end
+
+-- Ajuste la hauteur du panneau zone active (pas de bande vide si pas de statut).
+local lastActiveZoneTagText = nil
+local lastActiveZoneFrameHeight = nil
+local lastActiveZoneIdle = false
+function Overlord.UI:SyncActiveZoneFrameHeight()
+    if not activeZoneFrame then return end
+    local baseH = activeZoneFrame.baseHeight or 64
+    local tag = activeZoneFrame.statusTag
+    local tagText = (tag and tag:GetText()) or ""
+    if tagText == lastActiveZoneTagText and lastActiveZoneFrameHeight then
+        if activeZoneFrame:GetHeight() ~= lastActiveZoneFrameHeight then
+            activeZoneFrame:SetHeight(lastActiveZoneFrameHeight)
+            lastPanelLayoutKey = nil
+            lastMainFrameHeight = nil
+            self:ApplyPanelLayout()
+        end
+        return
+    end
+    lastActiveZoneTagText = tagText
+    local h = baseH
+    if tagText ~= "" then
+        tag:Show()
+        local tagH = tag:GetStringHeight()
+        if not tagH or tagH < 1 then tagH = 14 end
+        h = baseH + 3 + tagH + 4
+    else
+        tag:Hide()
+    end
+    lastActiveZoneFrameHeight = h
+    activeZoneFrame:SetHeight(h)
+    lastPanelLayoutKey = nil
+    lastMainFrameHeight = nil
+    self:ApplyPanelLayout()
+end
+
+-- ---------- Popup Discord (lien a copier-coller, meme logique que l'export Check PvP) ----------
+
+local discordPopupFrame = nil
+-- Meme fenetre pour Discord et Contact : textes et lien suivent le bouton clique.
+local linkPopupKind = "discord"
+
+local function LinkPopupTexts()
+    if linkPopupKind == "contact" then
+        return L.CONTACT_POPUP_TITLE or "Contact the author",
+            L.CONTACT_POPUP_HINT or "Open X in your browser and paste the link below.",
+            L.CONTACT_URL_LABEL or "Author's X profile"
+    end
+    if linkPopupKind == "website" then
+        return L.WEBSITE_POPUP_TITLE or "Overlord website",
+            L.WEBSITE_POPUP_HINT or "Open your browser and paste the link below.",
+            L.WEBSITE_URL_LABEL or "Website address"
+    end
+    return L.DISCORD_POPUP_TITLE, L.DISCORD_POPUP_HINT, L.DISCORD_URL_LABEL
+end
+
+local function GetDiscordInviteUrl()
+    if linkPopupKind == "contact" then return Overlord.CONTACT_URL or "" end
+    if linkPopupKind == "website" then return Overlord.WEBSITE_URL or "" end
+    return Overlord.DISCORD_INVITE_URL or ""
+end
+
+local function RefreshDiscordUrlField()
+    if not discordPopupFrame or not discordPopupFrame.urlEditBox then return end
+    local title, hint, label = LinkPopupTexts()
+    if discordPopupFrame.titleFs then discordPopupFrame.titleFs:SetText(title or "") end
+    if discordPopupFrame.hintFs then discordPopupFrame.hintFs:SetText(hint or "") end
+    if discordPopupFrame.urlLabelFs then discordPopupFrame.urlLabelFs:SetText(label or "") end
+    discordPopupFrame.urlEditBox:SetText(GetDiscordInviteUrl())
+end
+
+local function CreateDiscordPopupFrame()
+    local f = CreateFrame("Frame", "OverlordDiscordPopup", UIParent, "BackdropTemplate")
+    if Overlord.UI.AttachOpenFade then Overlord.UI.AttachOpenFade(f) end
+    local labelW = 424
+    f:SetSize(460, 168)
+    f:SetPoint("CENTER")
+    f:SetBackdrop({
+        bgFile   = "Interface\\Tooltips\\UI-Tooltip-Background",
+        edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+        tile     = true, tileSize = 32, edgeSize = 32,
+        insets   = { left = 8, right = 8, top = 8, bottom = 8 },
+    })
+    f:SetBackdropColor(0.06, 0.06, 0.10, 0.97)
+    f:SetBackdropBorderColor(0.85, 0.68, 0.20, 0.85)
+    f:SetFrameStrata("DIALOG")
+    f:SetMovable(true)
+    f:EnableMouse(true)
+    f:RegisterForDrag("LeftButton")
+    f:SetScript("OnDragStart", function(self) self:StartMoving() end)
+    f:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
+    f:SetClampedToScreen(true)
+    f:Hide()
+
+    local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    title:SetPoint("TOP", 0, -14)
+    title:SetText(L.DISCORD_POPUP_TITLE)
+    title:SetTextColor(0.85, 0.68, 0.20)
+    f.titleFs = title
+
+    local hint = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    hint:SetPoint("TOPLEFT", 18, -40)
+    hint:SetWidth(labelW)
+    hint:SetJustifyH("LEFT")
+    hint:SetWordWrap(true)
+    hint:SetText(L.DISCORD_POPUP_HINT)
+    hint:SetTextColor(0.9, 0.9, 0.9)
+    f.hintFs = hint
+
+    local urlLabel = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    urlLabel:SetPoint("TOPLEFT", hint, "BOTTOMLEFT", 0, -10)
+    urlLabel:SetWidth(labelW)
+    urlLabel:SetJustifyH("LEFT")
+    urlLabel:SetText(L.DISCORD_URL_LABEL)
+    urlLabel:SetTextColor(0.75, 0.70, 0.45)
+    f.urlLabelFs = urlLabel
+
+    local urlEb = CreateFrame("EditBox", "OverlordDiscordUrlEdit", f, "BackdropTemplate")
+    urlEb:SetMultiLine(false)
+    urlEb:SetAutoFocus(false)
+    urlEb:SetFontObject(GameFontHighlightSmall)
+    urlEb:SetPoint("TOPLEFT", urlLabel, "BOTTOMLEFT", 0, -4)
+    urlEb:SetPoint("TOPRIGHT", urlLabel, "BOTTOMRIGHT", 0, -4)
+    urlEb:SetHeight(26)
+    urlEb:SetTextInsets(6, 6, 2, 2)
+    urlEb:SetBackdrop({
+        bgFile   = "Interface\\Tooltips\\UI-Tooltip-Background",
+        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        tile     = true, tileSize = 16, edgeSize = 12,
+        insets   = { left = 2, right = 2, top = 2, bottom = 2 },
+    })
+    urlEb:SetBackdropColor(0.04, 0.04, 0.06, 0.95)
+    urlEb:SetBackdropBorderColor(0.50, 0.42, 0.18, 0.7)
+    urlEb:SetScript("OnEditFocusGained", function(self)
+        self:HighlightText()
+    end)
+    urlEb:SetScript("OnMouseUp", function(self)
+        if self:IsMouseOver() and not self:HasFocus() then
+            self:SetFocus()
+            self:HighlightText()
+        end
+    end)
+    urlEb:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+    urlEb:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
+    urlEb:SetScript("OnTextChanged", function(self, userInput)
+        if userInput then
+            self:SetText(GetDiscordInviteUrl())
+        end
+    end)
+    f.urlEditBox = urlEb
+
+    local copyHint = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    copyHint:SetPoint("TOPLEFT", urlEb, "BOTTOMLEFT", 0, -2)
+    copyHint:SetWidth(labelW)
+    copyHint:SetJustifyH("LEFT")
+    copyHint:SetText(L.DISCORD_POPUP_COPY_HINT)
+    copyHint:SetTextColor(0.50, 0.50, 0.50)
+
+    local closeBtn = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+    closeBtn:SetSize(90, 22)
+    closeBtn:SetPoint("BOTTOM", 0, 14)
+    closeBtn:SetText(L.EXPORT_CLOSE)
+    closeBtn:SetScript("OnClick", function() f:Hide() end)
+
+    Overlord.UI.CreateWC3CloseButton(f, function() f:Hide() end)
+        :SetPoint("TOPRIGHT", -8, -8)
+
+    f:SetScript("OnShow", function()
+        RefreshDiscordUrlField()
+        if Overlord.PlayPanelOpenSound then Overlord:PlayPanelOpenSound() end
+        if Overlord.UI and Overlord.UI.ScheduleActionGridActiveRefresh then
+            Overlord.UI:ScheduleActionGridActiveRefresh()
+        end
+    end)
+    f:SetScript("OnHide", function()
+        if urlEb then urlEb:ClearFocus() end
+        if Overlord.PlayPanelCloseSound then Overlord:PlayPanelCloseSound() end
+        if Overlord.UI and Overlord.UI.ScheduleActionGridActiveRefresh then
+            Overlord.UI:ScheduleActionGridActiveRefresh()
+        end
+    end)
+    -- After its own OnShow/OnHide scripts (the helper hooks them).
+    Overlord.UI.BindEscapeClose(f, function(self) self:Hide() end)
+
+    return f
+end
+
+function Overlord.UI:ShowDiscordPopup()
+    local url = GetDiscordInviteUrl()
+    if url == "" then return end
+    if not discordPopupFrame then
+        discordPopupFrame = CreateDiscordPopupFrame()
+    end
+    RefreshDiscordUrlField()
+    discordPopupFrame:Show()
+    C_Timer.After(0.05, function()
+        if discordPopupFrame and discordPopupFrame:IsShown() and discordPopupFrame.urlEditBox then
+            discordPopupFrame.urlEditBox:SetFocus()
+            discordPopupFrame.urlEditBox:HighlightText()
+        end
+    end)
+end
+
+function Overlord.UI:OnDiscordButtonClick()
+    if discordPopupFrame and discordPopupFrame:IsShown() and linkPopupKind == "discord" then
+        discordPopupFrame:Hide()
+        return
+    end
+    linkPopupKind = "discord"
+    self:ShowDiscordPopup()
+    self:ScheduleActionGridActiveRefresh()
+end
+
+function Overlord.UI:ShowWebsitePopup()
+    if discordPopupFrame and discordPopupFrame:IsShown() and linkPopupKind == "website" then
+        discordPopupFrame:Hide()
+        return
+    end
+    linkPopupKind = "website"
+    self:ShowDiscordPopup()
+    self:ScheduleActionGridActiveRefresh()
+end
+
+function Overlord.UI:ShowContactPopup()
+    if discordPopupFrame and discordPopupFrame:IsShown() and linkPopupKind == "contact" then
+        discordPopupFrame:Hide()
+        return
+    end
+    linkPopupKind = "contact"
+    self:ShowDiscordPopup()
+    self:ScheduleActionGridActiveRefresh()
+end
+
+
+-- ============ Refresh logique ============
+
+-- Domination par victoires (1.2.0+) : des pas de 1 %, donc "58% / 42%". Une
+-- valeur non entiere garde ses decimales utiles, sans zeros de fin.
+local function FormatDominationPct(value)
+    local text = string.format("%.2f", value * 100)
+    return (text:gsub("%.?0+$", ""))
+end
+local function FormatDominationPctLine(allyPct, hordePct)
+    local a = FormatDominationPct(allyPct)
+    local h = FormatDominationPct(hordePct)
+    if Overlord.UsesCommaDecimalLocale and Overlord.UsesCommaDecimalLocale() then
+        a = a:gsub("%.", ",")
+        h = h:gsub("%.", ",")
+    end
+    return a .. "% / " .. h .. "%"
+end
+
+function Overlord.UI:Update()
+    if not mainFrame or not mainFrame:IsShown() then return end
+    self:UpdateTick()
+end
+
+-- Cache etat panel : evite SyncFrontPicker / emblemes a chaque tick (perf .18).
+local lastPanelStateKey = nil
+local lastShardBadgeID = nil
+local lastShardBadgeRealm = nil
+local lastZoneListRefreshAt = 0
+local ZONE_LIST_REFRESH_INTERVAL = 2.0
+local ZONE_LIST_SYNC_INTERVAL = 0.25
+local lastZoneListSyncRefreshAt = 0
+local zoneListRefreshForced = false
+
+-- Tick leger (1/s) : timers, barre active, compteur forces (scan nameplates throttle 2 s).
+function Overlord.UI:UpdateTick()
+    if not mainFrame or not mainFrame:IsShown() then return end
+    self:RefreshActiveZone()
+    self:UpdateZoneListTimers()
+    self:RefreshForces()
+    if Overlord.Popups and Overlord.Popups.RefreshNextObjective then
+        Overlord.Popups:RefreshNextObjective()
+    end
+end
+
+-- Picker « pas sur ce front » + emblemes ; forces seulement si l'etat a change (pas chaque seconde).
+function Overlord.UI:RefreshPanelState(force)
+    if not mainFrame or not mainFrame:IsShown() or Overlord.InstanceSuspended then return end
+    local viewId = self:GetPanelViewFrontId() or ""
+    local activeId = (Overlord.Fronts and Overlord.Fronts.activeFrontId) or ""
+    local key = tostring(Overlord.InActiveFront) .. "|" .. activeId .. "|" .. viewId
+    if not force and key == lastPanelStateKey then return end
+    lastPanelStateKey = key
+    self:SyncFrontPickerButtonText()
+    self:RefreshFrontEmblems()
+    self:RefreshForces()
+end
+
+-- MAJ texte minuteur / treve sur les lignes deja peintes (evite un Refresh() complet chaque seconde).
+function Overlord.UI:UpdateZoneListTimers()
+    if not zoneListFrame or not zoneListFrame.zoneLines then return end
+    local viewFrontId = self:GetPanelViewFrontId()
+    local frontOnTruce, truceRemaining = false, 0
+    if viewFrontId and Overlord.Zones and Overlord.Zones.IsOnVictoryCooldown then
+        frontOnTruce, truceRemaining = Overlord.Zones:IsOnVictoryCooldown(viewFrontId, true)
+    end
+    if zoneListFrame.zoneListTruceLabel and frontOnTruce then
+        local txt = string.format(L.SIEGE_COOLDOWN_LABEL,
+            Overlord.Zones:FormatDuration(truceRemaining))
+        if zoneListFrame.zoneListTruceLabel:GetText() ~= txt then
+            zoneListFrame.zoneListTruceLabel:SetText(txt)
+        end
+    end
+    for _, line in ipairs(zoneListFrame.zoneLines) do
+        if line:IsShown() and line.zone then
+            local z = line.zone
+            local loginPending = Overlord.IsLoginZoneDisplayPending
+                and Overlord:IsLoginZoneDisplayPending(z)
+            if loginPending or frontOnTruce or z.status == "in_progress" then
+                if loginPending then
+                    local txt = L.MAP_SYNC_PENDING or "SYNC"
+                    if line.progress:GetText() ~= txt then
+                        line.progress:SetText(txt)
+                        line.progress:SetTextColor(C.gray[1], C.gray[2], C.gray[3], 0.85)
+                    end
+                elseif frontOnTruce then
+                    if line.progress:GetText() ~= "" then
+                        line.progress:SetText("")
+                    end
+                elseif z.status == "in_progress" then
+                    local hr = tonumber(z.holdTimeRequired) or 0
+                    local he = (Overlord.Zones and Overlord.Zones.GetObserverHoldTimeElapsed)
+                        and Overlord.Zones:GetObserverHoldTimeElapsed(z) or (tonumber(z.holdTimeElapsed) or 0)
+                    local rest = math.max(0, hr - he)
+                    local txt = string.format("%d:%02d", math.floor(rest / 60), math.floor(rest % 60))
+                    if line.progress:GetText() ~= txt then
+                        line.progress:SetText(txt)
+                    end
+                end
+            end
+        end
+    end
+end
+
+-- Rafraichissement differe (combat / sync) : evite plusieurs Refresh() d'affilee.
+local uiRefreshPending = false
+local uiRefreshLastAt = 0
+local UI_REFRESH_MIN_INTERVAL = 0.25
+local actionGridRefreshPending = false
+local lastIndicatorInvalidateAt = 0
+local INDICATOR_INVALIDATE_INTERVAL = 1.0
+local mapOverlayRefreshPending = false
+local mapOverlayRefreshLastAt = 0
+local MAP_OVERLAY_REFRESH_MIN_INTERVAL = 0.25
+
+local function ScheduleVisibleWorldMapRefresh()
+    if not WorldMapFrame or not WorldMapFrame.IsShown or not WorldMapFrame:IsShown()
+        or mapOverlayRefreshPending then
+        return
+    end
+    local now = GetTime()
+    local delay = math.max(0.01,
+        MAP_OVERLAY_REFRESH_MIN_INTERVAL - (now - mapOverlayRefreshLastAt))
+    mapOverlayRefreshPending = true
+    C_Timer.After(delay, function()
+        mapOverlayRefreshPending = false
+        if not WorldMapFrame or not WorldMapFrame.IsShown or not WorldMapFrame:IsShown() then
+            return
+        end
+        mapOverlayRefreshLastAt = GetTime()
+        if Overlord.MapMarkers and Overlord.MapMarkers.RequestOverlayRefresh then
+            Overlord.MapMarkers:RequestOverlayRefresh(true)
+        end
+    end)
+end
+
+-- skipWorldMap: the caller changed nothing the world map draws (a kill counter), or
+-- already forced the map itself; the panel and HUD refresh as usual.
+function Overlord.UI:RequestRefresh(skipWorldMap)
+    if Overlord.InstanceSuspended then return end
+    local uiVisible = mainFrame and mainFrame:IsShown()
+    local indVisible = Overlord.ZoneIndicator and Overlord.ZoneIndicator.IsHudVisible
+        and Overlord.ZoneIndicator:IsHudVisible()
+    -- La carte a son propre dirty flag. Coalescer les rafales UI/sync avant de le
+    -- lever evite un repaint complet a chaque paquet quand la carte est ouverte.
+    if not skipWorldMap then
+        ScheduleVisibleWorldMapRefresh()
+    end
+    if Overlord.ZoneIndicator and Overlord.ZoneIndicator.InvalidateActiveZoneCache then
+        if uiVisible or indVisible then
+            local nowInv = GetTime()
+            if nowInv - lastIndicatorInvalidateAt >= INDICATOR_INVALIDATE_INTERVAL then
+                lastIndicatorInvalidateAt = nowInv
+                Overlord.ZoneIndicator:InvalidateActiveZoneCache()
+            end
+        end
+    end
+    if not mainFrame or not mainFrame:IsShown() then
+        return
+    end
+    zoneListRefreshForced = true
+    -- Toujours differe (au plus tot l'image suivante) : un Refresh synchrone
+    -- s'ajoutait au cout du paquet reseau ou du kill qui le demandait, dans la
+    -- meme image. Meme plafond de 4 rafraichissements par seconde.
+    if uiRefreshPending then return end
+    uiRefreshPending = true
+    local now = GetTime()
+    local delay = math.max(0, UI_REFRESH_MIN_INTERVAL - (now - uiRefreshLastAt))
+    C_Timer.After(delay, function()
+        uiRefreshPending = false
+        if Overlord.UI and mainFrame and mainFrame:IsShown() then
+            uiRefreshLastAt = GetTime()
+            Overlord.UI:Refresh()
+        end
+    end)
+end
+
+function Overlord.UI:ScheduleActionGridActiveRefresh()
+    if actionGridRefreshPending then return end
+    actionGridRefreshPending = true
+    C_Timer.After(0, function()
+        actionGridRefreshPending = false
+        if Overlord.UI and Overlord.UI.RefreshActionGridActiveState then
+            Overlord.UI:RefreshActionGridActiveState()
+        end
+    end)
+end
+
+function Overlord.UI:RefreshActionGridActiveState()
+    if not zoneListFrame or not self.SetWC3ButtonActive then return end
+    -- Two tables swapped in turn (no new table per refresh); prev is never the one filled.
+    local nextState = self._actionGridSpareState or {}
+    self._actionGridSpareState = nil
+    nextState.lb = Overlord.LeaderboardUI and Overlord.LeaderboardUI.IsShown and Overlord.LeaderboardUI:IsShown() or false
+    nextState.hof = Overlord.HallOfFameUI and Overlord.HallOfFameUI.IsShown and Overlord.HallOfFameUI:IsShown() or false
+    nextState.groups = Overlord.GroupFinderUI and Overlord.GroupFinderUI.IsShown and Overlord.GroupFinderUI:IsShown() or false
+    nextState.tutorial = Overlord.Popups and Overlord.Popups.IsQuickGuideShown and Overlord.Popups:IsQuickGuideShown() or false
+    nextState.website = discordPopupFrame and discordPopupFrame:IsShown() and linkPopupKind == "website" or false
+    nextState.discord = discordPopupFrame and discordPopupFrame:IsShown() and linkPopupKind == "discord" or false
+    nextState.layers = Overlord.LayerJumper and Overlord.LayerJumper.IsShown and Overlord.LayerJumper:IsShown() or false
+    nextState.front = self._frontPickerPopup and self._frontPickerPopup:IsShown() or false
+    nextState.settings = Overlord.SettingsPanel and Overlord.SettingsPanel.IsOpen and Overlord.SettingsPanel:IsOpen() or false
+    local prev = self._actionGridOpenState
+    if prev then
+        local same = true
+        for k, v in pairs(nextState) do
+            if prev[k] ~= v then
+                same = false
+                break
+            end
+        end
+        if same then
+            self._actionGridSpareState = nextState
+            return
+        end
+    end
+    self._actionGridOpenState = nextState
+    self._actionGridSpareState = prev
+
+    local opts = { gold = C.gold, white = C.white }
+    local function panelOpen(btn, open)
+        if not btn or btn._olUnavailable then return end
+        local isOpen = open == true
+        if btn._olFrontPickerBadge then
+            if btn._olPanelOpenState ~= isOpen then
+                btn._olPanelOpenState = isOpen
+                self:ApplyFrontPickerChrome(btn, btn._readonlyChrome, isOpen)
+            end
+            return
+        end
+        if btn._olPanelOpenState ~= isOpen then
+            btn._olPanelOpenState = isOpen
+            self.SetWC3ButtonActive(btn, isOpen, opts)
+            if btn._gridTooltip and self.RefreshWC3GridButtonTooltip then
+                self.RefreshWC3GridButtonTooltip(btn, opts)
+            end
+        end
+        local bc = btn.baseTextColor
+        if bc and btn.label and not btn:IsMouseOver() then
+            btn.label:SetTextColor(bc[1], bc[2], bc[3])
+        end
+    end
+    panelOpen(zoneListFrame.lbBtn, nextState.lb)
+    panelOpen(zoneListFrame.hofBtn, nextState.hof)
+    panelOpen(zoneListFrame.groupsBtn, nextState.groups)
+    panelOpen(zoneListFrame.tutorialBtn, nextState.tutorial)
+    panelOpen(zoneListFrame.websiteBtn, nextState.website)
+    panelOpen(zoneListFrame.discordBtn, nextState.discord)
+    panelOpen(zoneListFrame.layersBtn, nextState.layers)
+    panelOpen(self.frontPickerBtn, nextState.front)
+    panelOpen(zoneListFrame.settingsBtn, nextState.settings)
+    if Overlord.Button and Overlord.Button.RefreshGeneralButton then
+        Overlord.Button:RefreshGeneralButton()
+    end
+end
+
+function Overlord.UI:RefreshActionGridLabels()
+    if not zoneListFrame then return end
+    -- Le libelle de l'appel aux armes porte le chrono pendant le cooldown : c'est
+    -- Button.lua qui le pose. Le reecrire ici le faisait clignoter a chaque refresh.
+    local hornBtn = zoneListFrame.factionCallBtn
+    if hornBtn and hornBtn.label and Overlord.Button and Overlord.Button.RefreshFactionCallLabel then
+        Overlord.Button:RefreshFactionCallLabel()
+    elseif hornBtn and hornBtn.label and L.FACTION_CALL_BUTTON then
+        -- Constant labels below: written once (_olLabelText), not on every Refresh.
+        if hornBtn.label._olLabelText ~= L.FACTION_CALL_BUTTON then
+            hornBtn.label._olLabelText = L.FACTION_CALL_BUTTON
+            hornBtn.label:SetText(L.FACTION_CALL_BUTTON)
+        end
+    end
+    local generalBtn = zoneListFrame.generalBtn
+    if generalBtn and generalBtn.label and L.GENERAL_BUTTON
+        and generalBtn.label._olLabelText ~= L.GENERAL_BUTTON then
+        generalBtn.label._olLabelText = L.GENERAL_BUTTON
+        generalBtn.label:SetText(L.GENERAL_BUTTON)
+    end
+    local settingsBtn = zoneListFrame.settingsBtn
+    if settingsBtn and settingsBtn.label and L.SETTINGS_BUTTON
+        and settingsBtn.label._olLabelText ~= L.SETTINGS_BUTTON then
+        settingsBtn.label._olLabelText = L.SETTINGS_BUTTON
+        settingsBtn.label:SetText(L.SETTINGS_BUTTON)
+    end
+    local discordBtn = zoneListFrame.discordBtn
+    if discordBtn and discordBtn.label and L.DISCORD_BUTTON
+        and discordBtn.label._olLabelText ~= L.DISCORD_BUTTON then
+        discordBtn.label._olLabelText = L.DISCORD_BUTTON
+        discordBtn.label:SetText(L.DISCORD_BUTTON)
+    end
+    local layersBtn = zoneListFrame.layersBtn
+    if layersBtn and layersBtn.label and L.LJ_TITLE
+        and layersBtn.label._olLabelText ~= L.LJ_TITLE then
+        layersBtn.label._olLabelText = L.LJ_TITLE
+        layersBtn.label:SetText(L.LJ_TITLE)
+    end
+end
+
+function Overlord.UI:ForceZoneListRefresh()
+    zoneListRefreshForced = true
+end
+
+function Overlord.UI:RefreshZoneListIfNeeded()
+    if not zoneListFrame or not zoneListFrame.zoneLines then return end
+    local now = GetTime()
+    local due = false
+    if zoneListRefreshForced and (now - lastZoneListSyncRefreshAt) >= ZONE_LIST_SYNC_INTERVAL then
+        due = true
+        lastZoneListSyncRefreshAt = now
+        zoneListRefreshForced = false
+    elseif (now - lastZoneListRefreshAt) >= ZONE_LIST_REFRESH_INTERVAL then
+        due = true
+    end
+    if due then
+        lastZoneListRefreshAt = now
+        self:RefreshZoneList()
+    end
+end
+
+function Overlord.UI:Refresh()
+    if not mainFrame or Overlord.InstanceSuspended then return end
+    -- Court-circuit si l'UI est cachee : evite RefreshForces (scan 40 nameplates)
+    -- en combat ou hors front.
+    if not mainFrame:IsShown() then return end
+    self:RefreshPanelState()
+    self:RefreshZoneListIfNeeded()
+    self:RefreshActiveZone()
+    self:RefreshShardBadge()
+    self:RefreshDomination()
+    self:RefreshActionGridLabels()
+    self:ScheduleActionGridActiveRefresh()
+end
+
+function Overlord.UI:RefreshFrontEmblems()
+    if not self.knightTex or not self.gruntTex then return end
+
+    local frontId = self:GetPanelViewFrontId() or ""
+    local panelFront = Overlord.Fronts and Overlord.Fronts:GetFront(frontId)
+    local heads = panelFront and panelFront.panelHeads
+    local emblemKey = frontId
+    if heads then
+        emblemKey = frontId .. "|" .. tostring(heads.Alliance) .. "|" .. tostring(heads.Horde or heads.HordeIcon)
+            .. "|" .. tostring(heads.faceInward) .. "|" .. tostring(heads.allianceMirror) .. "|" .. tostring(heads.hordeMirror)
+    end
+    if emblemKey == lastFrontEmblemKey then return end
+    lastFrontEmblemKey = emblemKey
+
+    if heads then
+        -- knightTex = ancre TOPRIGHT du centre (portrait a gauche a l'ecran)
+        -- gruntTex = ancre TOPLEFT du centre (portrait a droite a l'ecran)
+        local faceInward = heads.faceInward ~= false
+        local allianceTex = self.knightTex
+        local hordeTex = self.gruntTex
+        -- Meme logique qu'avant SetTexCoord plein cadre, appliquee au crop Classic.
+        local function WantsHorizontalFlip(mirror)
+            if faceInward then
+                return mirror == true
+            end
+            return mirror ~= true
+        end
+        local function ApplyPanelHead(tex, head, mirror)
+            if not tex or head == nil then return end
+            local flip = WantsHorizontalFlip(mirror)
+            if type(head) == "number" then
+                if tex.SetAtlas then pcall(tex.SetAtlas, tex, nil) end
+                tex:SetTexture(head)
+                if flip then
+                    tex:SetTexCoord(1, 0, 0, 1)
+                else
+                    tex:SetTexCoord(0, 1, 0, 1)
+                end
+                return
+            end
+            if Overlord.UI.SetClassicRaceIcon and Overlord.UI.SetClassicRaceIcon(tex, head, flip) then
+                return
+            end
+            -- Repli atlas Retail si la cle Classic est inconnue.
+            if type(head) == "string" then
+                tex:SetTexture(nil)
+                if tex.SetAtlas then tex:SetAtlas(head) end
+                if flip then
+                    tex:SetTexCoord(1, 0, 0, 1)
+                else
+                    tex:SetTexCoord(0, 1, 0, 1)
+                end
+            end
+        end
+        local allianceMirror = heads.allianceMirror == true
+        ApplyPanelHead(allianceTex, heads.Alliance, allianceMirror)
+        local hordeMirror = heads.hordeMirror
+        if hordeMirror == nil then hordeMirror = true end
+        ApplyPanelHead(hordeTex, heads.HordeIcon or heads.Horde, hordeMirror)
+    else
+        local texPath = "Interface\\AddOns\\Overlord\\Textures\\"
+        self.knightTex:SetAtlas(nil)
+        self.knightTex:SetTexture(texPath .. "knight")
+        self.knightTex:SetTexCoord(0, 1, 0, 1)
+        self.gruntTex:SetAtlas(nil)
+        self.gruntTex:SetTexture(texPath .. "grunt")
+        self.gruntTex:SetTexCoord(0, 1, 0, 1)
+    end
+end
+
+-- Partage bleu / rouge a la largeur allyW (pixels interieurs) et tissus.
+local function PaintDominationSplit(bar, innerWidth, allyW)
+    allyW = math.max(0, math.min(innerWidth, allyW))
+    local hordeW = innerWidth - allyW
+    if bar._cloth then
+        -- Pixels du fichier 512x512 : tissu bleu x 5-240, rouge x 250-485, y 291-360.
+        -- Chaque tissu a l'echelle d'une demi-barre, bande centrale en hauteur ; au-dela
+        -- de la moitie il s'etire un peu. Alliance en miroir : le lion au bout gauche.
+        local scale = (innerWidth / 2) / 235
+        local innerH = math.max(1, (bar:GetHeight() or 28) - 6)
+        local halfV = math.min(34.5, innerH / scale / 2)
+        local top, bottom = (325.5 - halfV) / 512, (325.5 + halfV) / 512
+        local allyVis = math.min(235, allyW / scale)
+        local hordeVis = math.min(235, hordeW / scale)
+        bar.allyFill:SetTexCoord(240 / 512, (240 - allyVis) / 512, top, bottom)
+        bar.allyLift:SetTexCoord(240 / 512, (240 - allyVis) / 512, top, bottom)
+        bar.hordeFill:SetTexCoord((485 - hordeVis) / 512, 485 / 512, top, bottom)
+    end
+    if allyW >= 1 then
+        bar.allyFill:SetWidth(allyW)
+        bar.allyFill:Show()
+    else
+        bar.allyFill:Hide()
+    end
+    if bar.allyLift then bar.allyLift:SetShown(allyW >= 1) end
+    if hordeW >= 1 then
+        bar.hordeFill:SetWidth(hordeW)
+        bar.hordeFill:Show()
+    else
+        bar.hordeFill:Hide()
+    end
+    bar._shownAllyW = allyW
+end
+
+-- La jonction glisse vers le nouveau score (~0,6 s), comme la barre de capture :
+-- OnUpdate seulement pendant le mouvement, retire ensuite.
+local DOMINATION_GLIDE_SPEED = 1.8 -- fraction de la largeur par seconde
+local function GlideDomination(bar, elapsed)
+    local target, innerWidth = bar._targetAllyW, bar._innerWidth
+    local current = bar._shownAllyW or target
+    local step = math.max(1, innerWidth * DOMINATION_GLIDE_SPEED * (elapsed or 0))
+    if math.abs(target - current) <= step then
+        bar:SetScript("OnUpdate", nil)
+        PaintDominationSplit(bar, innerWidth, target)
+        return
+    end
+    PaintDominationSplit(bar, innerWidth, current + (target > current and step or -step))
+end
+
+function Overlord.UI:RefreshDomination()
+    if not self.domBar then return end
+    if not OverlordDB then return end
+    local bar = self.domBar
+    local barWidth = bar:GetWidth()
+    local nominal = bar._nominalWidth or 300
+    if (not barWidth) or barWidth < 2 then
+        barWidth = nominal
+    end
+    local innerWidth = math.max(1, barWidth - 6)
+
+    -- Barre v2 : 50 % +/- victoires et depenses de bois. 50/50 est un etat normal
+    -- (aucun evenement ou evenements qui s'annulent), peint comme n'importe quel autre.
+    local allyPct, hordePct = Overlord:GetDominationDisplayFractions()
+    -- Label and widths are pure functions of these three numbers: same inputs as the last
+    -- call, nothing to format or compare.
+    if allyPct == bar._lastAllyPct and hordePct == bar._lastHordePct and innerWidth == bar._lastInnerWidth then
+        return
+    end
+    local allyW = math.floor(innerWidth * allyPct + 0.5)
+    if allyW < 0 then allyW = 0 end
+    if allyW > innerWidth then allyW = innerWidth end
+    local hordeW = innerWidth - allyW
+    local label = FormatDominationPctLine(allyPct, hordePct)
+    local paintKey = label .. "|" .. allyW .. "|" .. hordeW
+    bar._lastAllyPct, bar._lastHordePct, bar._lastInnerWidth = allyPct, hordePct, innerWidth
+    if paintKey == lastDominationPaintKey then return end
+    lastDominationPaintKey = paintKey
+    bar.label:SetText(label)
+    bar._targetAllyW, bar._innerWidth = allyW, innerWidth
+    -- Premier dessin, largeur changee ou panneau cache : directement a la valeur.
+    local glide = bar._cloth and bar._shownAllyW and bar._glideInnerWidth == innerWidth
+        and bar.IsVisible and bar:IsVisible()
+    bar._glideInnerWidth = innerWidth
+    if glide then
+        bar:SetScript("OnUpdate", GlideDomination)
+    else
+        bar:SetScript("OnUpdate", nil)
+        PaintDominationSplit(bar, innerWidth, allyW)
+    end
+end
+
+-- Displayed enemy count: reuses ZoneControl's fresh scan, else counts visible nameplates,
+-- at most once per FORCES_SCAN_INTERVAL.
+local FORCES_SCAN_INTERVAL = 2
+local lastForcesDisplayScan = 0
+local cachedDisplayEnemyCount = 0
+local lastForcesButtonRefreshCount = nil
+
+-- Affichage HUD « X Horde à proximité » : nameplates visibles (montés inclus).
+-- Distinct du scan contestation (ZoneControl) utilise pour l'appel de faction.
+local function CountVisibleEnemyNameplates()
+    local ef = Overlord.Zones and Overlord.Zones:GetEnemyFaction()
+    if not ef then return 0 end
+    local n = 0
+    for i = 1, 40 do
+        local unit = "nameplate" .. i
+        if UnitExists(unit) and UnitIsPlayer(unit)
+            and not UnitIsDead(unit) and not UnitIsGhost(unit)
+            and UnitFactionGroup(unit) == ef then
+            n = n + 1
+        end
+    end
+    return n
+end
+
+function Overlord.UI:GetDisplayedNearbyEnemyCount(forceRefresh)
+    if not Overlord.InActiveFront then
+        cachedDisplayEnemyCount = 0
+        return 0
+    end
+    local now = GetTime()
+    if forceRefresh or now - lastForcesDisplayScan >= FORCES_SCAN_INTERVAL then
+        lastForcesDisplayScan = now
+        local zone = Overlord.Zones and Overlord.Zones:GetCurrentPlayerZone()
+        local cached = zone and Overlord.ZoneControl and Overlord.ZoneControl.GetCachedScan
+            and Overlord.ZoneControl:GetCachedScan()
+        -- Reuse a fresh capture scan; never start one here (the full scan reads auras).
+        if cached and cached.zoneId == zone.id and now - cached.time < 2 and cached.visibleEnemy ~= nil then
+            cachedDisplayEnemyCount = cached.visibleEnemy
+        else
+            cachedDisplayEnemyCount = CountVisibleEnemyNameplates()
+        end
+    end
+    return cachedDisplayEnemyCount
+end
+
+function Overlord.UI:RefreshForces()
+    if not self.forcesText then return end
+    if not Overlord.InActiveFront then
+        if not lastForcesOffZone then
+            lastForcesOffZone = true
+            lastForcesDisplayKey = nil
+            self.forcesText:SetText(L.NOT_IN_WARZONE)
+            self.forcesText:SetTextColor(0.58, 0.58, 0.58, 0.85)
+            if self.knightTex then self.knightTex:SetAlpha(0.6) end
+            if self.gruntTex then self.gruntTex:SetAlpha(0.6) end
+            lastForcesButtonRefreshCount = nil
+            if Overlord.Button and Overlord.Button.Refresh then
+                Overlord.Button:Refresh()
+            end
+        end
+        return
+    end
+    lastForcesOffZone = false
+    if self.knightTex then self.knightTex:SetAlpha(0.85) end
+    if self.gruntTex then self.gruntTex:SetAlpha(0.85) end
+    self.forcesText:SetTextColor(0.88, 0.78, 0.48, 0.95)
+    local nearby = self:GetDisplayedNearbyEnemyCount(false)
+    local ef = Overlord.Zones:GetEnemyFaction()
+    local displayKey = tostring(nearby) .. "|" .. tostring(ef or "")
+    if displayKey ~= lastForcesDisplayKey then
+        lastForcesDisplayKey = displayKey
+        self.forcesText:SetText(string.format(L.FORCES_PRESENT, nearby, ef or ""))
+    end
+    -- The button reads no enemy count: refresh it on front entry and when the shown count changes.
+    if Overlord.Button and Overlord.Button.Refresh and lastForcesButtonRefreshCount ~= nearby then
+        lastForcesButtonRefreshCount = nearby
+        Overlord.Button:Refresh()
+    end
+end
+
+-- Cle d'etat statique de la zone active (hors minuteur de capture).
+local function BuildActiveZoneStatusKey(az, ef)
+    if not az then return "idle" end
+    if Overlord.IsLoginZoneDisplayPending and Overlord:IsLoginZoneDisplayPending(az) then
+        return (az.id or "?") .. "|sync"
+    end
+    return (az.id or "?") .. "|" .. (az.status or "") .. "|" .. (az.owner or "") .. "|"
+        .. (az.isContested and 1 or 0) .. (az.isPaused and 1 or 0) .. (az.isHolding and 1 or 0)
+        .. ((az.status == "in_progress" and az.owner == ef) and 1 or 0)
+end
+
+-- Le target Outpost du HUD est un objet de vue reutilise. Le panneau principal ne
+-- doit jamais dependre du fait que ZoneIndicator l'ait deja repeint dans la meme
+-- seconde : relire directement l'unique etat du site est O(1) et garantit que le
+-- chrono Warchief's Watch demarre des la premiere seconde de capture.
+function Overlord.UI:RefreshActiveOutpostZoneView(az)
+    if not az or not az._outpost or not Overlord.Outpost then return az end
+    local site = az._outpostSite
+        or (Overlord.Outpost.GetSite and Overlord.Outpost:GetSite(az._outpostSiteKey))
+    local siteKey = site and (site.siteKey or site.id) or az._outpostSiteKey
+    local st = siteKey and Overlord.Outpost:GetState(siteKey) or nil
+    if not site or not st then return az end
+    az._outpostSite = site
+    az._outpostSiteKey = siteKey
+    az._outpostState = st
+    az.status = st.status
+    az.owner = st.ownerFaction
+    az.holdTimeElapsed = tonumber(st.holdTimeElapsed) or 0
+    az.holdTimeRequired = Overlord.Outpost:GetDefaultHoldTimeRequired(st, site)
+    az.isHolding = st.isHolding or false
+    az.isPaused = st.isPaused or false
+    az.isContested = st.isContested or false
+    return az
+end
+
+-- Repaint d'une seule ligne (survol sans RefreshZoneList complet).
+function Overlord.UI:RepaintZoneLine(line)
+    if not line or not line.zone then return end
+    local z = line.zone
+    local viewFrontId = self:GetPanelViewFrontId()
+    local frontOnTruce = false
+    if viewFrontId and Overlord.Zones and Overlord.Zones.IsOnVictoryCooldown then
+        frontOnTruce = select(1, Overlord.Zones:IsOnVictoryCooldown(viewFrontId, true))
+    end
+    local pf = Overlord.PlayerFaction
+    local ef = Overlord.Zones:GetEnemyFaction()
+    local isEnemy = z.owner and z.owner == ef
+    local loginPending = Overlord.IsLoginZoneDisplayPending
+        and Overlord:IsLoginZoneDisplayPending(z)
+    local attackable = not loginPending and Overlord.Zones:IsZoneAttackable(z, frontOnTruce and true or false)
+    line._attackable = attackable
+    local paintKey = BuildZoneLinePaintKey(z, frontOnTruce, loginPending, pf, ef, attackable)
+    line._paintKey = paintKey
+    line.name:SetText(z.name)
+    SetZoneLineWarfrontIcon(line.icon, z, attackable, line.iconGlow)
+    PaintZoneLineVisual(line, z, frontOnTruce, loginPending, pf, ef, isEnemy, attackable)
+    ApplyZoneLineUnderline(line, z, loginPending)
+end
+
+function Overlord.UI:RefreshZoneList()
+    if not zoneListFrame or not zoneListFrame.zoneLines then return end
+
+    local viewFrontId = self:GetPanelViewFrontId()
+    local frontOnTruce = false
+    if viewFrontId and Overlord.Zones and Overlord.Zones.IsOnVictoryCooldown then
+        frontOnTruce = select(1, Overlord.Zones:IsOnVictoryCooldown(viewFrontId, true))
+    end
+    local truceToken = frontOnTruce and "t" or "n"
+    local truceLayoutChanged = zoneListFrame._lastTruceLayoutToken ~= truceToken
+    if truceLayoutChanged then
+        zoneListFrame._lastTruceLayoutToken = truceToken
+        lastPanelLayoutKey = nil
+    end
+
+    local orderedZones = Overlord.Zones:GetDisplayOrderForFront(viewFrontId)
+    local needsRebind = #zoneListFrame.zoneLines ~= #orderedZones
+    if not needsRebind then
+        for i, zone in ipairs(orderedZones) do
+            local line = zoneListFrame.zoneLines[i]
+            if not line or not line.zone or line.zone.id ~= zone.id then
+                needsRebind = true
+                break
+            end
+        end
+    end
+    if needsRebind then
+        lastPanelLayoutKey = nil
+        for i, zone in ipairs(orderedZones) do
+            local line = zoneListFrame.zoneLines[i]
+            if not line then
+                local zonesParent = zoneListFrame.zonesPanel or zoneListFrame
+                line = self:CreateZoneLine(zonesParent, zone)
+                zoneListFrame.zoneLines[i] = line
+            end
+            line.zone = zone
+            line.name:SetText(zone.name)
+            line._zoneLineHover = false
+            line._paintKey = nil
+            line:Show()
+        end
+        for i = #orderedZones + 1, #zoneListFrame.zoneLines do
+            if zoneListFrame.zoneLines[i] then
+                zoneListFrame.zoneLines[i]:Hide()
+            end
+        end
+        self:ApplyPanelLayout()
+    elseif truceLayoutChanged then
+        self:ApplyPanelLayout()
+    end
+
+    local pf = Overlord.PlayerFaction
+    local ef = Overlord.Zones:GetEnemyFaction()
+
+    for _, line in ipairs(zoneListFrame.zoneLines) do
+        if not line:IsShown() then
+            -- Ligne gardée en réserve après un changement de front.
+        else
+        local z = line.zone
+        local isEnemy = z.owner and z.owner == ef
+        local loginPending = Overlord.IsLoginZoneDisplayPending
+            and Overlord:IsLoginZoneDisplayPending(z)
+        local attackable = not loginPending and Overlord.Zones:IsZoneAttackable(z, frontOnTruce and true or false)
+        line._attackable = attackable
+        local paintKey = BuildZoneLinePaintKey(z, frontOnTruce, loginPending, pf, ef, attackable)
+        if line._paintKey ~= paintKey then
+            line._paintKey = paintKey
+            line.name:SetText(z.name)
+            SetZoneLineWarfrontIcon(line.icon, z, attackable, line.iconGlow)
+            PaintZoneLineVisual(line, z, frontOnTruce, loginPending, pf, ef, isEnemy, attackable)
+        end
+        local underlineKey = (line._zoneLineHover and "h" or "")
+            .. tostring(z.status or "") .. (loginPending and "p" or "") .. (attackable and "a" or "")
+        if line._underlineKey ~= underlineKey then
+            line._underlineKey = underlineKey
+            ApplyZoneLineUnderline(line, z, loginPending)
+        end
+        end
+    end
+end
+
+function Overlord.UI:RefreshActiveZone()
+    if not activeZoneFrame then return end
+    local now = GetTime()
+    local az
+    if cachedRefreshActiveZone ~= nil and (now - cachedRefreshActiveZoneAt) < REFRESH_ACTIVE_ZONE_LOOKUP_SEC then
+        az = cachedRefreshActiveZone
+    else
+        az = self:GetActiveZone()
+        cachedRefreshActiveZone = az
+        cachedRefreshActiveZoneAt = now
+    end
+    az = self:RefreshActiveOutpostZoneView(az)
+
+    if not az then
+        if lastActiveZoneIdle then return end
+        lastActiveZoneIdle = true
+        lastActiveZoneStatusKey = "idle"
+        activeZoneFrame.statusTag:SetText("")
+        lastActiveZoneTagText = ""
+        lastActiveZoneFrameHeight = nil
+        activeZoneFrame:Hide()
+        lastPanelLayoutKey = nil
+        lastMainFrameHeight = nil
+        self:ApplyPanelLayout()
+        return
+    end
+    lastActiveZoneIdle = false
+    if not activeZoneFrame:IsShown() then
+        activeZoneFrame:Show()
+        lastPanelLayoutKey = nil
+        lastMainFrameHeight = nil
+        self:ApplyPanelLayout()
+    end
+
+    if Overlord.IsLoginZoneDisplayPending and Overlord:IsLoginZoneDisplayPending(az) then
+        local syncKey = (az.id or "?") .. "|sync"
+        if syncKey == lastActiveZoneStatusKey then return end
+        lastActiveZoneStatusKey = syncKey
+        activeZoneFrame.holdText:SetText(L.MAP_SYNC_PENDING or "SYNC")
+        activeZoneFrame.holdBar:SetFillRatio(nil)
+        activeZoneFrame.holdBar:SetFillColor(C.gray[1], C.gray[2], C.gray[3], 0.8)
+        activeZoneFrame.holdBar.label:SetText("")
+        -- Deja ecrit dans la barre : pas une seconde fois dessous.
+        activeZoneFrame.statusTag:SetText("")
+        activeZoneFrame.statusTag:SetTextColor(C.gray[1], C.gray[2], C.gray[3])
+        self:SyncActiveZoneFrameHeight()
+        return
+    end
+
+    local ef = Overlord.Zones:GetEnemyFaction()
+    local statusKey = BuildActiveZoneStatusKey(az, ef)
+    local statusChanged = statusKey ~= lastActiveZoneStatusKey
+    if statusChanged then
+        lastActiveZoneStatusKey = statusKey
+    end
+
+    local hr = tonumber(az.holdTimeRequired) or 0
+    local hc = 0
+    if az.status == "in_progress" then
+        if az._outpost and az._outpostState and az._outpostSite and Overlord.Outpost then
+            hc = Overlord.Outpost:GetObserverHoldTimeElapsed(az._outpostState, az._outpostSite)
+        else
+            hc = (Overlord.Zones and Overlord.Zones.GetObserverHoldTimeElapsed)
+                and Overlord.Zones:GetObserverHoldTimeElapsed(az)
+                or (tonumber(az.holdTimeElapsed) or 0)
+        end
+    end
+    if az.status == "in_progress" then
+        local now = GetTime()
+        if statusChanged or (now - lastActiveZoneTimerAt) >= ACTIVE_ZONE_TIMER_INTERVAL then
+            lastActiveZoneTimerAt = now
+            local ratio = (hr > 0) and math.min(hc / hr, 1) or 0
+            local hpct = math.floor(ratio * 100)
+            local holdStr = string.format("%d:%02d / %d:%02d",
+                math.floor(hc / 60), math.floor(hc % 60),
+                math.floor(hr / 60), math.floor(hr % 60))
+            if activeZoneFrame.holdText:GetText() ~= holdStr then
+                activeZoneFrame.holdText:SetText(holdStr)
+            end
+            activeZoneFrame.holdBar:SetFillRatio(ratio)
+            local pctStr = hpct .. "%"
+            if activeZoneFrame.holdBar.label:GetText() ~= pctStr then
+                activeZoneFrame.holdBar.label:SetText(pctStr)
+            end
+        end
+    elseif statusChanged then
+        activeZoneFrame.holdBar:SetFillRatio(nil)
+        activeZoneFrame.holdBar.label:SetText("")
+        activeZoneFrame.holdText:SetText("")
+    end
+
+    if not statusChanged then return end
+
+    local enemyCapturing = (az.status == "in_progress" and az.owner == ef)
+
+    -- Couleur du fill selon l'etat
+    if az.isContested then
+        activeZoneFrame.holdBar:SetFillColor(C.enemy[1], C.enemy[2], C.enemy[3], 0.8)
+        activeZoneFrame.statusTag:SetText(L.UI_CONTESTED)
+        activeZoneFrame.statusTag:SetTextColor(C.enemy[1], C.enemy[2], C.enemy[3])
+    elseif az.isPaused then
+        activeZoneFrame.holdBar:SetFillColor(C.orange[1], C.orange[2], C.orange[3], 0.8)
+        activeZoneFrame.statusTag:SetText(L.UI_PAUSED)
+        activeZoneFrame.statusTag:SetTextColor(C.orange[1], C.orange[2], C.orange[3])
+    elseif az.isHolding then
+        activeZoneFrame.holdBar:SetFillColor(C.blue[1], C.blue[2], C.blue[3], 0.8)
+        activeZoneFrame.statusTag:SetText("")
+        activeZoneFrame.statusTag:SetTextColor(C.blueBright[1], C.blueBright[2], C.blueBright[3])
+    elseif enemyCapturing then
+        activeZoneFrame.holdBar:SetFillColor(C.orange[1], C.orange[2], C.orange[3], 0.8)
+        -- The point's name is said again (the bar itself only shows "Hold").
+        activeZoneFrame.statusTag:SetText(string.format(L.UI_ENEMY_CAPTURING, tostring(az.name or "")))
+        activeZoneFrame.statusTag:SetTextColor(C.orange[1], C.orange[2], C.orange[3])
+    elseif hc >= hr and hr > 0 then
+        -- Maintien plein : or du theme (pas le vert type quete WoW)
+        activeZoneFrame.holdBar:SetFillColor(C.gold[1], C.gold[2], C.gold[3], 0.85)
+        activeZoneFrame.statusTag:SetText("")
+        activeZoneFrame.statusTag:SetTextColor(C.gold[1], C.gold[2], C.gold[3])
+    else
+        activeZoneFrame.holdBar:SetFillColor(C.gray[1], C.gray[2], C.gray[3], 0.8)
+        activeZoneFrame.statusTag:SetText("")
+    end
+    self:SyncActiveZoneFrameHeight()
+end
+
+function Overlord.UI:GetActiveZone()
+    local zones
+    local readOnlyPanel = self:IsFrontPanelReadOnly()
+    if readOnlyPanel and Overlord.Zones and Overlord.Zones.GetDisplayOrderForFront then
+        zones = Overlord.Zones:GetDisplayOrderForFront(self:GetPanelViewFrontId())
+    elseif Overlord.ZoneIndicator and Overlord.ZoneIndicator.FindActiveZone then
+        local hudZone = Overlord.ZoneIndicator:FindActiveZone(false)
+        if hudZone and not hudZone._guildKeep then
+            return hudZone
+        end
+        if Overlord.Zones and Overlord.Zones.GetDisplayOrderForFront then
+            zones = Overlord.Zones:GetDisplayOrderForFront(
+                (Overlord.Fronts and Overlord.Fronts.activeFrontId) or self:GetPanelViewFrontId())
+        end
+    end
+    zones = zones or Overlord.ZoneDatabase or {}
+    -- Priorite 1 : notre capture active (on est physiquement dans la zone)
+    for _, zone in ipairs(zones) do
+        if zone.status == "in_progress" and zone.isHolding then return zone end
+    end
+    -- Priorite 2 : toute zone en cours (allie ou ennemi)
+    for _, zone in ipairs(zones) do
+        if zone.status == "in_progress" then return zone end
+    end
+    -- Priorite 3 : prochaine zone disponible
+    for _, zone in ipairs(zones) do
+        if zone.status == "available" then return zone end
+    end
+    return nil
+end
+
+function Overlord.UI:RefreshShardBadge()
+    if not self.shardFrame or not self.shardText or not self.shardRealmText then return end
+    local active = IsShardHelperActive()
+    local shardMod = Overlord.Shard
+    if shardMod and active and shardMod:GetCurrentShardID() == nil then
+        local now = GetTime()
+        if now - lastShardScanFromUiAt >= SHARD_UI_SCAN_INTERVAL then
+            lastShardScanFromUiAt = now
+            shardMod:Update()
+        end
+    end
+    local shardID = shardMod and shardMod:GetCurrentShardID()
+    local referenceRealm
+    if shardID ~= nil then
+        local _
+        _, referenceRealm = shardMod:GetCurrentShardReference()
+    end
+    local visibleShardID = active and shardID or nil
+    referenceRealm = visibleShardID and referenceRealm or nil
+    if visibleShardID == lastShardBadgeID and referenceRealm == lastShardBadgeRealm then return end
+    lastShardBadgeID = visibleShardID
+    lastShardBadgeRealm = referenceRealm
+    if visibleShardID ~= nil then
+        self.shardText:SetText("#" .. tostring(shardID))
+        if referenceRealm and referenceRealm ~= "" then
+            self.shardRealmText:SetText(string.format(L.SHARD_BADGE_REFERENCE, referenceRealm))
+            self.shardRealmText:Show()
+        else
+            self.shardRealmText:Hide()
+        end
+        local shardW = self.shardText:GetStringWidth() or 0
+        local realmW = self.shardRealmText:IsShown()
+            and (self.shardRealmText:GetStringWidth() or 0) or 0
+        local iconW = self.shardBadgeIconSize or 14
+        -- Largeur au contenu : ligne #66 a droite de l'icone, royaume sous l'icone.
+        local pad = 3
+        local shardRowW = iconW + 4 + shardW
+        local contentW = self.shardRealmText:IsShown()
+            and math.max(shardRowW, realmW) or shardRowW
+        local w = math.ceil(contentW + pad * 2)
+        self.shardFrame:SetWidth(math.max(32, w))
+        local shardH = self.shardText:GetStringHeight() or 11
+        if self.shardRealmText:IsShown() then
+            shardH = shardH + 1 + (self.shardRealmText:GetStringHeight() or 10)
+        end
+        self.shardFrame:SetHeight(math.max(16, math.ceil(shardH + 4)))
+        self.shardFrame:Show()
+    else
+        self.shardFrame:Hide()
+    end
+end
+
+-- ============ Victoire totale ============
+-- Alerte raid au milieu de l'ecran (1.3.1) : l'ancien cadre plein ecran avec les
+-- statistiques genait les joueurs encore en combat sur le front. Sans musique ni son
+-- depuis la 2.0.4.
+local lastVictoryAlertFaction, lastVictoryAlertAt = nil, 0
+local VICTORY_ALERT_COLORS = {
+    Horde = { r = 1.0, g = 0.35, b = 0.20 },
+    Alliance = { r = 0.427, g = 0.702, b = 0.949 },
+}
+
+function Overlord.UI:ShowVictoryScreen(factionName)
+    if Overlord.InstanceSuspended or not factionName then return end
+    -- Une meme victoire arrive par plusieurs chemins (local, TV, replay SR) : une alerte.
+    local now = GetTime()
+    if lastVictoryAlertFaction == factionName and now - lastVictoryAlertAt < 30 then return end
+    lastVictoryAlertFaction, lastVictoryAlertAt = factionName, now
+    local front = Overlord.Fronts and Overlord.Fronts.GetCurrentFront and Overlord.Fronts:GetCurrentFront()
+    local text = Overlord.Sync and Overlord.Sync.FormatTotalVictoryMessage
+        and Overlord.Sync:FormatTotalVictoryMessage(factionName, front and front.id)
+        or string.format(L.TOTAL_VICTORY_MSG, factionName)
+    text = text:match("^%s*(.-)%s*$")
+    local color = VICTORY_ALERT_COLORS[factionName == L.VICTORY_FACTION_HORDE and "Horde" or "Alliance"]
+    local shown = false
+    if RaidNotice_AddMessage and RaidWarningFrame then
+        shown = pcall(RaidNotice_AddMessage, RaidWarningFrame, text, color)
+    end
+    if not shown then
+        -- Repli : meme alerte rouge que les autres avertissements Overlord, sans son.
+        if Overlord.PrintRaidWarning then Overlord:PrintRaidWarning(text, true) end
+    end
+    -- 2.0.4 : plus de musique de fin de bataille ni de son d'alerte (la faction perdante
+    -- l'entendait aussi). La ligne rouge suffit.
+end
+
+-- ============ Mode spectateur (panel visible hors front) ============
+-- Timers locaux a 1s pour eviter les paliers 5s ; refresh complet/sync restent espaces.
+
+local spectatorRefreshTicker = nil
+local spectatorSyncTicker = nil
+local SPECTATOR_TIMER_INTERVAL = 1
+local SPECTATOR_FULL_REFRESH_INTERVAL = 5
+local spectatorLastFullRefresh = 0
+local spectatorLastTimerTick = nil
+
+-- Rafraichissement leger hors front : pas RefreshForces.
+function Overlord.UI:RefreshSpectatorLocal()
+    if not mainFrame or not mainFrame:IsShown() then return end
+    local now = GetTime()
+    local dt = spectatorLastTimerTick and math.max(0.001, math.min(now - spectatorLastTimerTick, 1.5))
+        or SPECTATOR_TIMER_INTERVAL
+    spectatorLastTimerTick = now
+    if Overlord.ZoneControl and Overlord.Zones then
+        local zones
+        if Overlord.GetRemoteObserverZones then
+            zones = Overlord:GetRemoteObserverZones(self:GetPanelViewFrontId())
+        else
+            zones = Overlord.Zones:GetDisplayOrderForFront(self:GetPanelViewFrontId()) or {}
+        end
+        for _, zone in ipairs(zones) do
+            Overlord.ZoneControl:TickRemoteObserverZone(zone, dt)
+        end
+    end
+    self:RefreshActiveZone()
+    self:UpdateZoneListTimers()
+    if now - spectatorLastFullRefresh >= SPECTATOR_FULL_REFRESH_INTERVAL then
+        spectatorLastFullRefresh = now
+        self:RefreshZoneList()
+        self:RefreshDomination()
+    end
+end
+
+function Overlord.UI:StartSpectatorMode()
+    if Overlord.InActiveFront then return end
+    -- Refresh UI depuis les donnees locales (zero cout reseau)
+    if not spectatorRefreshTicker then
+        spectatorLastFullRefresh = 0
+        spectatorLastTimerTick = nil
+        spectatorRefreshTicker = C_Timer.NewTicker(SPECTATOR_TIMER_INTERVAL, function()
+            if Overlord.InActiveFront or Overlord.InstanceSuspended then
+                Overlord.UI:StopSpectatorMode()
+                return
+            end
+            -- Re-tenter l'activation si ZONE_CHANGED a ete manque (voyage rapide, chargement).
+            if Overlord.CheckActiveFrontZone then
+                Overlord:CheckActiveFrontZone()
+            end
+            if Overlord.UI and Overlord.UI:IsVisible() then
+                Overlord.UI:RefreshSpectatorLocal()
+            else
+                Overlord.UI:StopSpectatorMode()
+            end
+        end)
+    end
+    -- Sync territoriale legere toutes les 2 min. Le mode spectateur ne doit jamais
+    -- demander la construction du classement entier chez les receveurs idle.
+    if not spectatorSyncTicker then
+        if Overlord.Sync then
+            Overlord.Sync:SendSyncRequest()
+        end
+        spectatorSyncTicker = C_Timer.NewTicker(120, function()
+            if Overlord.InActiveFront or Overlord.InstanceSuspended or not Overlord.UI or not Overlord.UI:IsVisible() then
+                Overlord.UI:StopSpectatorMode()
+                return
+            end
+            if Overlord.Sync then
+                Overlord.Sync:SendSyncRequest()
+            end
+        end)
+    end
+end
+
+function Overlord.UI:StopSpectatorMode()
+    if spectatorRefreshTicker then
+        spectatorRefreshTicker:Cancel()
+        spectatorRefreshTicker = nil
+    end
+    spectatorLastTimerTick = nil
+    if spectatorSyncTicker then
+        spectatorSyncTicker:Cancel()
+        spectatorSyncTicker = nil
+    end
+end
+
+function Overlord.UI:IsSpectatorSyncActive()
+    return spectatorSyncTicker ~= nil
+end
+
+-- ============ Show / Hide / Toggle ============
+
+function Overlord.UI:GetMainFrame()
+    return mainFrame
+end
+
+function Overlord.UI:IsVisible()
+    return mainFrame and mainFrame:IsShown()
+end
+
+-- Cache le panel en combat et le re-affiche en sortie de combat
+local hiddenByCombat = false
+local combatFrame = CreateFrame("Frame")
+combatFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
+combatFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+combatFrame:SetScript("OnEvent", function(_, event)
+    if event == "PLAYER_REGEN_DISABLED" then
+        if mainFrame and mainFrame:IsShown() then
+            hiddenByCombat = true
+            mainFrame:Hide()
+        end
+    elseif event == "PLAYER_REGEN_ENABLED" then
+        if hiddenByCombat and mainFrame then
+            hiddenByCombat = false
+            -- Never inside an instance (Overlord is off there): leaving the instance
+            -- restores the panel from the saved setting.
+            if Overlord.InstanceSuspended then return end
+            mainFrame:Show()
+            if Overlord.UI then Overlord.UI:Refresh() end
+        end
+    end
+end)
+
+-- Appele a la deconnexion : ecrit la position actuelle dans SavedVariables (secours si le drag n'a pas persiste)
+function Overlord.UI:PersistPanelPosition()
+    if not userMovedPanel or not mainFrame or not OverlordDB then return end
+    SaveFramePosition()
+end
+
+function Overlord.UI:ResetPosition()
+    userMovedPanel = false
+    if mainFrame then mainFrame:SetUserPlaced(false) end
+    if OverlordDB then
+        OverlordDB.panelPos = nil
+        OverlordDB.panelAnchor = nil
+    end
+    self:UpdatePanelAnchor()
+end
+
+function Overlord.UI:Show(opts)
+    if not mainFrame then
+        if Overlord.PrintLoginInitStatus then Overlord:PrintLoginInitStatus() end
+        return
+    end
+    if Overlord.InstanceSuspended then
+        Overlord:PrintNotification("|cFF00FF00[Overlord]|r " .. L.DISABLED_IN_INSTANCE)
+        return
+    end
+    local skipRefresh = type(opts) == "table" and opts.skipRefresh
+    if mainFrame then
+        -- First Show: build the dock before the panel appears (CreateMainFrame used to,
+        -- then hid the panel), so its OnShow (activity rows, ticker) fires with it below.
+        if not self._featuredDockBuilt and Overlord.Popups and Overlord.Popups.SyncFeaturedFrontDock then
+            self._featuredDockBuilt = true
+            Overlord.Popups:SyncFeaturedFrontDock()
+        end
+        self:UpdatePanelAnchor()
+        mainFrame:Show()
+        if Overlord.Popups and Overlord.Popups.SyncFeaturedFrontDock then
+            Overlord.Popups:SyncFeaturedFrontDock()
+        end
+        if Overlord.CheckActiveFrontZone then
+            Overlord:CheckActiveFrontZone()
+        end
+        if not skipRefresh then
+            if Overlord.MapMarkers and Overlord.MapMarkers.RequestOverlayRefresh then
+                Overlord.MapMarkers:RequestOverlayRefresh()
+            end
+            self:Refresh()
+            -- Meme frame : layout pas toujours finalise, GetWidth() peut rester 0 pour la barre domination.
+            C_Timer.After(0, function()
+                if Overlord.UI and Overlord.UI.RefreshDomination then
+                    Overlord.UI:RefreshDomination()
+                end
+            end)
+        end
+        if OverlordDB and OverlordDB.config then
+            OverlordDB.config.uiVisible = true
+        end
+        if not Overlord.InActiveFront then
+            self:StartSpectatorMode()
+        end
+        if Overlord.Button and Overlord.Button.Show then
+            Overlord.Button:Show()
+        end
+    end
+end
+
+-- autoHide = true : hors du front monde (masquage auto), preserve uiVisible pour le retour
+function Overlord.UI:Hide(autoHide)
+    if mainFrame then
+        if Overlord.Button and Overlord.Button.Hide then
+            Overlord.Button:Hide()
+        end
+        mainFrame:Hide()
+        hiddenByCombat = false
+        self:StopSpectatorMode()
+        if not autoHide and OverlordDB and OverlordDB.config then
+            OverlordDB.config.uiVisible = false
+        end
+    end
+end
+
+function Overlord.UI:Toggle()
+    if not mainFrame then
+        self:Show()
+        return
+    end
+    if mainFrame then
+        if mainFrame:IsShown() then
+            self:Hide()
+        else
+            self:Show()
+        end
+    end
+end

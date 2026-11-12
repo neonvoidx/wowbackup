@@ -1,0 +1,162 @@
+All Rights Reserved
+
+Copyright (c) 2026 Nercus
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+This license covers the original addon code owned by Nercus and the original
+textures and other media listed below, including any original, copyrightable
+contributions owned by Nercus in the files listed under "Mixed textures".
+
+Blizzard textures and other third-party material
+
+Blizzard Entertainment textures, icons, artwork, and other Blizzard material
+remain the property of Blizzard Entertainment or their respective rights
+holders. No ownership or rights are claimed or enforced by this project over
+that material, whether bundled, shown in screenshots, or referenced from the
+game client. This license grants no rights to Blizzard material and imposes no
+restrictions on it; the applicable rights holders' terms continue to apply.
+
+Other third-party code, libraries, data, and media retain their own copyright
+and license terms. For files containing both original and third-party material,
+this license covers only the original portions owned by Nercus.
+
+All files in assets/pins/icons/ and assets/misc/WoWLogo.png are excluded from
+this license.
+
+Original textures and other media covered by this license
+
+Paths are relative to the repository root. The third-party exclusions above
+apply to every listed file, including screenshots and other mixed media.
+
+.github/media/
+
+- .github/media/Banner.png
+
+assets/
+
+- assets/Logo.png
+- assets/LogoSmall.png
+- assets/LogoTransparent.png
+
+assets/group/
+
+- assets/group/GroupBorder.png
+- assets/group/GroupMask.png
+- assets/group/GroupShadow.png
+- assets/group/GroupShadowInner.png
+- assets/group/GroupSmallBorder.png
+- assets/group/GroupSmallMask.png
+- assets/group/GroupSmallShadow.png
+- assets/group/GroupSmallShadowInner.png
+
+assets/icons/
+
+- assets/icons/IconArrowCircle.png
+- assets/icons/IconArrowDown.png
+- assets/icons/IconArrowLeft.png
+- assets/icons/IconArrowLeftRight.png
+- assets/icons/IconArrowRight.png
+- assets/icons/IconArrowUp.png
+- assets/icons/IconCaretDown.png
+- assets/icons/IconCaretLeft.png
+- assets/icons/IconCaretRight.png
+- assets/icons/IconCaretUp.png
+- assets/icons/IconCheckMark.png
+- assets/icons/IconClose.png
+- assets/icons/IconDelete.png
+- assets/icons/IconDrag.png
+- assets/icons/IconDuplicate.png
+- assets/icons/IconEdit.png
+- assets/icons/IconEllipsis.png
+- assets/icons/IconExport.png
+- assets/icons/IconEye.png
+- assets/icons/IconEyeSlash.png
+- assets/icons/IconForward.png
+- assets/icons/IconImport.png
+- assets/icons/IconInfo.png
+- assets/icons/IconLexicon.png
+- assets/icons/IconList.png
+- assets/icons/IconLock.png
+- assets/icons/IconMap.png
+- assets/icons/IconMinus.png
+- assets/icons/IconPalette.png
+- assets/icons/IconPinLogo.png
+- assets/icons/IconPlus.png
+- assets/icons/IconReport.png
+- assets/icons/IconRoute.png
+- assets/icons/IconSearch.png
+- assets/icons/IconSettings.png
+- assets/icons/IconShare.png
+- assets/icons/IconUnlock.png
+
+assets/misc/
+
+- assets/misc/MinimapHighlight.png
+- assets/misc/SlashHelpLogo.png
+
+assets/navigation/
+
+- assets/navigation/AntLine.png
+- assets/navigation/StepBlip.png
+- assets/navigation/StepBlipGlow.png
+- assets/navigation/StepPin.png
+
+assets/pins/
+
+- assets/pins/PinBackground.png
+- assets/pins/PinForegroundIcon.png
+- assets/pins/PinForegroundTracked.png
+- assets/pins/PinForegroundUntracked.png
+- assets/pins/PinHighlight.png
+- assets/pins/PinLockOutline.png
+- assets/pins/PinMask.png
+- assets/pins/PinOutlineConfiguredIcon.png
+- assets/pins/PinOutlineUntracked.png
+- assets/pins/PinShadow.png
+
+assets/shared/
+
+- assets/shared/BackgroundStone.png
+- assets/shared/Checkmark.png
+- assets/shared/ColorSwatch.png
+- assets/shared/DividerHorizontal.png
+- assets/shared/DividerVertical.png
+- assets/shared/GenericFrameMask.png
+- assets/shared/GradientHorizontal.png
+- assets/shared/RepeatableCheckers.png
+- assets/shared/RepeatableStripes.png
+- assets/shared/Spinner.png
+- assets/shared/ToggleThumb.png
+- assets/shared/WhiteSquare.png
+
+assets/wayfinders/
+
+- assets/wayfinders/DirectionArrowSheet.png
+- assets/wayfinders/DirectionArrowNear.png
+
+assets/wayfinders/floating/
+
+- assets/wayfinders/floating/FloatingClampedArrow.png
+- assets/wayfinders/floating/FloatingFarBottomChevron.png
+- assets/wayfinders/floating/FloatingFarLine.png
+- assets/wayfinders/floating/FloatingFarLineBlip.png
+
+Mixed textures
+
+The following files combine Blizzard elements with edits and/or original textures added by Nercus.
+
+- assets/options/OptionNavigation.png
+- assets/options/OptionPin.png
+- assets/options/OptionWayfinderArrow.png
+- assets/options/OptionWayfinderFloating.png
+- assets/shared/GenericFrame.png
+- assets/shared/GenericFrameOpaque.png
+- assets/shared/MapTexture.png
+- assets/shared/MetalLine.png
+- assets/misc/SlashHelpBulletPoint.png

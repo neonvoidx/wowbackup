@@ -1,0 +1,13 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+	<Script file="Init_Camelot.lua" />
+	<Script file="ConsumableData_Camelot.lua" />
+	<Script file="Consumables_Camelot.lua" />
+	<Script file="Drinks_Camelot.lua" />
+	<Script file="Food_Camelot.lua" />
+	<Script file="Health_Camelot.lua" />
+	<Script file="HealthPotionPriority.lua" />
+	<Script file="HealthReset.lua" />
+	<Script file="EnhanceQoLHealthMacro_Camelot.lua" />
+	<Script file="EnhanceQoLBandageMacro_Camelot.lua" />
+	<Script file="Settings_DrinkMacro_Camelot.lua" />
+</Ui>

@@ -1,0 +1,21 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ https://raw.githubusercontent.com/Gethe/wow-ui-source/live/Interface/AddOns/Blizzard_SharedXML/UI.xsd">
+    <Include file="GenericFrameWithBottomLine.xml" />
+    <Script file="TooltipMixin.lua" />
+    <Include file="Icon.xml" />
+    <Include file="Button.xml" />
+    <Include file="Keybind.xml" />
+    <Include file="IconButton.xml" />
+    <Include file="ActionButton.xml" />
+    <Include file="Checkbox.xml" />
+    <Include file="Slider.xml" />
+    <Include file="Input.xml" />
+    <Include file="StatusBar.xml" />
+    <Include file="Colorpicker.xml" />
+    <Include file="TextArea.xml" />
+    <Include file="Autocomplete.xml" />
+    <Include file="Dropdown.xml" />
+    <Include file="Multiselect.xml" />
+    <Include file="Toggle.xml" />
+    <Include file="FormField.xml" />
+</Ui>

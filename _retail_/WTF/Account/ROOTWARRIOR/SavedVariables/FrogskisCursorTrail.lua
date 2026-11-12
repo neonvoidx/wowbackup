@@ -1,0 +1,9 @@
+
+FrogskisCursorTrailAccountDB = {
+["accountWideOwners"] = {
+},
+["accountWideProfiles"] = {
+},
+["profiles"] = {
+},
+}

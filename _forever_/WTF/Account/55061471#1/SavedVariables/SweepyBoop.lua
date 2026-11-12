@@ -1,0 +1,69 @@
+
+SweepyBoopDB = {
+["profileKeys"] = {
+["Starphage - Tichondrius"] = "Default",
+["Auteist - Tichondrius"] = "Default",
+["Smaugchamp - Mal'Ganis"] = "Default",
+["Neonvoid - Tichondrius"] = "Default",
+["Praisesun - Tichondrius"] = "Default",
+["Bigxthazug - Tichondrius"] = "Default",
+["Stormclout - Tichondrius"] = "Default",
+["Manyfaced - Tichondrius"] = "Default",
+},
+["profiles"] = {
+["Default"] = {
+["nameplatesEnemy"] = {
+["arenaSpecIconVerticalOffset"] = -5,
+["lastModified"] = 15720.034,
+["arenaSpecIconScale"] = 250,
+["arenaSpecIconOthers"] = true,
+},
+["misc"] = {
+["rangeCheckerEnabled"] = true,
+["healerInCrowdControlSound"] = true,
+["rangeCheckerSize"] = 21,
+["lastModified"] = 10876.741,
+["queueReminder"] = false,
+["rangeCheckerOffsetX"] = -85,
+["combatIndicator"] = false,
+["honorReminderThreshold"] = 14000,
+["hideBlizzArenaFrames"] = false,
+["personalDROffsetY"] = -183,
+["personalDRShowCleanStun"] = false,
+["precognitionTrackerOffsetY"] = -17,
+["personalDRSize"] = 35,
+["personalDR"] = true,
+["healerInCrowdControl"] = true,
+["personalDRTrackSilence"] = true,
+["honorReminder"] = false,
+["personalDRTrackDisarm"] = true,
+["personalDRTrackRoot"] = true,
+["precognitionTrackerSize"] = 60,
+},
+["raidFrames"] = {
+["lastModified"] = 11863.827,
+["raidFrameDebuffIconDispellableScale"] = 0.8,
+["raidFrameDebuffIconScale"] = 0.6000000000000001,
+["raidFrameDebuffIconOffsetX"] = 0,
+},
+["arenaFrames"] = {
+["lastModified"] = 5100.89,
+},
+["nameplatesFriendly"] = {
+["hideInBattlegrounds"] = true,
+["classIconStyle"] = 1,
+["hideOutsidePvP"] = true,
+["lastModified"] = 6672.135,
+["keepHealthBar"] = false,
+["classIconOffset"] = 22,
+},
+["mouseCursor"] = {
+["enabled"] = false,
+["lastModified"] = 1868.053,
+},
+["minimap"] = {
+["minimapPos"] = 195.4647612203976,
+},
+},
+},
+}

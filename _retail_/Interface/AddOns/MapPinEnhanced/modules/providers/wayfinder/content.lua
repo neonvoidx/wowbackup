@@ -1,0 +1,118 @@
+---@class MapPinEnhanced
+local MapPinEnhanced = select(2, ...)
+local Wayfinders = MapPinEnhanced:GetModule("Wayfinders")
+
+local Providers = MapPinEnhanced:GetModule("Providers")
+local SOURCE = "content"
+local SUPER_TRACKING_TYPE = Enum.SuperTrackingType.Content
+
+---@return string
+local function GetContentTargetID()
+    local trackableType, trackableID = C_SuperTrack.GetSuperTrackedContent()
+    return string.format("content:%s:%s", tostring(trackableType), tostring(trackableID))
+end
+
+---@param trackableType Enum.ContentTrackingType
+---@param trackableID number
+---@return string|number? texture
+---@return boolean? usesAtlas
+local function GetContentIcon(trackableType, trackableID)
+    if trackableType == Enum.ContentTrackingType.Appearance and C_TransmogCollection then
+        return C_TransmogCollection.GetSourceIcon(trackableID), false
+    elseif trackableType == Enum.ContentTrackingType.Mount and C_MountJournal then
+        return select(3, C_MountJournal.GetMountInfoByID(trackableID)), false
+    elseif trackableType == Enum.ContentTrackingType.Achievement then
+        return select(10, GetAchievementInfo(trackableID)), false
+    elseif trackableType == Enum.ContentTrackingType.Decor and C_HousingCatalog and Enum.HousingCatalogEntryType then
+        local info = C_HousingCatalog.GetCatalogEntryInfoByRecordID(Enum.HousingCatalogEntryType.Decor,
+            trackableID, false)
+        if info then return info.iconAtlas or info.iconTexture, info.iconAtlas ~= nil end
+    end
+end
+
+
+---@param trackableType Enum.ContentTrackingType
+---@param trackableID number
+---@param mapID number
+---@return number? x
+---@return number? y
+---@return string? waypointText
+local function GetContentWaypointForMap(trackableType, trackableID, mapID)
+    if not C_ContentTracking or not C_ContentTracking.GetNextWaypointForTrackable then return end
+    local _, mapInfo = C_ContentTracking.GetNextWaypointForTrackable(trackableType, trackableID, mapID)
+    if not mapInfo then return end
+    return mapInfo.x, mapInfo.y, mapInfo.waypointText
+end
+
+---@param targetID string
+---@param data WayfinderData
+---@return string?, string?, boolean?
+local function ReadContentText(targetID, data)
+    local typeText, idText = targetID:match("^content:(%d+):(%d+)$")
+    local trackableType, trackableID = tonumber(typeText), tonumber(idText)
+    if not trackableType or not trackableID or not C_ContentTracking then return end
+    local title = Providers:PlainDescription(C_ContentTracking.GetTitle(trackableType, trackableID))
+    if not title then return end
+    ---@type string?
+    local description
+    local available = false
+    if C_ContentTracking.GetCurrentTrackingTarget and C_ContentTracking.GetObjectiveText then
+        local targetType, objectiveID = C_ContentTracking.GetCurrentTrackingTarget(trackableType, trackableID)
+        if issecretvalue(targetType) or issecretvalue(objectiveID) then return end
+        if targetType ~= nil and objectiveID ~= nil then
+            local text = C_ContentTracking.GetObjectiveText(targetType, objectiveID, false)
+            if issecretvalue(text) then return end
+            available = text ~= nil
+            description = Providers:PlainDescription(text, title)
+        end
+    end
+    if not description and C_ContentTracking.GetWaypointText then
+        local text = C_ContentTracking.GetWaypointText(trackableType, trackableID)
+        if issecretvalue(text) then return end
+        available = available or text ~= nil
+        description = Providers:PlainDescription(text, title)
+    end
+    if not description and not Wayfinders:IsStepSuperTracking() and targetID == GetContentTargetID() then
+        local _, text = C_SuperTrack.GetSuperTrackedItemName()
+        if not issecretvalue(text) then
+            available = available or text ~= nil
+            description = Providers:PlainDescription(text, title)
+        end
+    end
+    return title, description, available
+end
+
+---@return WayfinderData?
+---@return boolean? removable
+---@return boolean? textAvailable
+local function ReadContent()
+    local trackableType, trackableID = C_SuperTrack.GetSuperTrackedContent()
+    local hasTrackable = trackableType ~= nil and trackableID ~= nil
+    local bestMapID ---@type number?
+    if hasTrackable and C_ContentTracking and C_ContentTracking.GetBestMapForTrackable then
+        local _
+        _, bestMapID = C_ContentTracking.GetBestMapForTrackable(trackableType, trackableID)
+    end
+    local x, y, mapID, _, traversalOnly = Providers:GetSuperTrackingWaypoint(hasTrackable and function(candidateMapID)
+        return GetContentWaypointForMap(trackableType, trackableID, candidateMapID)
+    end or nil, bestMapID)
+    if trackableType == nil or trackableID == nil or x == nil or y == nil or mapID == nil then
+        return
+    end
+    local title, description = C_SuperTrack.GetSuperTrackedItemName()
+    title = title or description
+    if not title and C_ContentTracking then title = C_ContentTracking.GetTitle(trackableType, trackableID) end
+    local texture, usesAtlas = GetContentIcon(trackableType, trackableID)
+    return {
+        mapID = mapID, x = x, y = y, title = title, description = description, texture = texture, usesAtlas = usesAtlas,
+    }, not traversalOnly and mapID == bestMapID
+end
+
+Wayfinders:RegisterSuperTrackingProvider({
+    source = SOURCE,
+    superTrackingType = SUPER_TRACKING_TYPE,
+    getTargetID = GetContentTargetID,
+    read = ReadContent,
+    readText = ReadContentText,
+    events = { "CONTENT_TRACKING_UPDATE", "TRACKABLE_INFO_UPDATE", "TRACKING_TARGET_INFO_UPDATE" },
+})

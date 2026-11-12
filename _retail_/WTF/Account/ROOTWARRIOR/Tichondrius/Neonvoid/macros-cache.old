@@ -1,0 +1,145 @@
+VER 3 0100000000000003 " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [nomod,@player] Angelic Feather;[mod:shift,@cursor] Angelic Feather; [@player] Angelic Feather;
+/use prismatic bauble
+END
+VER 3 0100000000000027 " " "463835"
+#showtooltip
+/cast [@mouseover,help,exists,nodead][] Leap of Faith
+END
+VER 3 010000000000003A " " "134400"
+#showtooltip
+/cast [@mouseover,help,exists][] Power Word: Shield
+END
+VER 3 0100000000000026 " " "134400"
+#showtooltip [known: Void Eruption] Void Eruption; [known: Dark Ascension] Dark Ascension
+/use 13
+/use Tempered Potion
+/cast [known: Void Eruption] Void Eruption
+/cast [known: Dark Ascension] Dark Ascension
+END
+VER 3 0100000000000028 " " "134400"
+#showtooltip
+#FS OD OD OD
+/cast [@raid3,help][@raid3,help][@raid3,help][] Power Infusion
+END
+VER 3 010000000000002A " " "134400"
+#showtooltip
+/cast [noform] Shadowform
+/cast [@player] Power Word: Fortitude
+/use Goblin Weather Machine - Prototype 01-B
+/use Thaumaturgist's Orb
+END
+VER 3 010000000000002E " " "134400"
+#showtooltip 
+/cast [@mouseover,harm,exists][] Vampiric Touch
+END
+VER 3 0100000000000030 " " "134400"
+#showtooltip Dispersion
+/use Thaumaturgist's Orb
+/cast Dispersion
+END
+VER 3 010000000000003B " " "134400"
+#showtooltip
+/cast [@player] Levitate
+/cancelaura levitate
+END
+VER 3 010000000000001D " " "135739"
+#showtooltip
+/cast [@cursor] Mass Dispel
+END
+VER 3 010000000000003D " " "134400"
+#showtooltip
+/cast [@mouseover,help,exists] Rapture;[] Rapture
+END
+VER 3 010000000000003C " " "134400"
+#showtooltip
+/cast [@mouseover,help,exists][] Pain Suppression
+END
+VER 3 010000000000003E " " "134400"
+#showtooltip
+/cast [@mouseover,help,exists][] Power Word: Life
+END
+VER 3 0100000000000042 " " "134400"
+#showtooltip
+/cast [@mouseover,harm,exists][] Shadow Word: Pain
+END
+VER 3 010000000000003F " " "134400"
+#showtooltip
+/cast [@mouseover,help,exists][] Renew
+END
+VER 3 0100000000000040 " " "134400"
+#showtooltip
+/cast [@mouseover,help,exists][@player] Flash Heal
+END
+VER 3 0100000000000041 " " "134400"
+#showtooltip
+/cast [@cursor] Power Word: Barrier
+END
+VER 3 0100000000000046 " " "134400"
+#showtooltip
+#FrameSort EnemyHealer
+/cancelaura Dispersion
+/cast [mod:shift,@arena1,exists,harm,nodead][] Silence
+END
+VER 3 0100000000000047 " " "134400"
+#showtooltip [known:dominate mind] dominate mind; [] mind control
+#FS EnemyHealer
+/cast [mod:shift,@arena1,harm] Mind Control
+/cast [@target,harm] Mind Control
+/cast [@target,harm] Dominate Mind
+END
+VER 3 0100000000000048 " " "134400"
+#showtooltip 
+/cast [noform] Shadowform
+/cancelaura Dispersion
+/cast  Mind Blast
+END
+VER 3 010000000000004A " " "INV_Misc_QuestionMark"
+#showtooltip [nostance] Void Volley; VoidForm
+#FS OD OD OD
+/cast [@raid3,exists,nodead][@raid3,exists,nodead][@raid3,exists,nodead][@player] Power Infusion
+/use 14
+/use Voidform
+/use Void Volley
+END
+VER 3 010000000000004B " " "134400"
+#showtooltip
+/cast [noform] Shadowform
+/cast [known: Halo] Halo
+/cast [known: void torrent] void torrent
+END
+VER 3 010000000000004C " " "134400"
+#showtooltip
+/cast [@mouseover,help,exists][] Evangelism
+END
+VER 3 010000000000004D " " "134400"
+#showtooltip
+/cast [@mouseover,help,exists][] Plea
+END
+VER 3 010000000000004E " " "134400"
+#showtooltip
+/cast [@mouseover,help,exists][] Power Word: Radiance
+END
+VER 3 010000000000004F " " "134400"
+#showtooltip Shadow Word: Death
+/stopcasting
+/cast [@target,harm] Shadow Word: Death
+/stopmacro [harm]
+/targetenemy
+/cast Shadow Word: Death
+/targetlasttarget [harm]
+END
+VER 3 0100000000000050 " " "134400"
+#showtooltip
+/cast [@mouseover,help,exists][@player] Holy Word: Serenity
+END
+VER 3 0100000000000051 " " "134400"
+#showtooltip
+/cast [@mouseover,help,exists][] Guardian Spirit
+END
+VER 3 0100000000000052 " " "134400"
+#showtooltip 
+#FS EnemyHealer
+/cast [mod:shift,@arena1,harm][] Holy Word: Chastise
+END

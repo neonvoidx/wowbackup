@@ -1,0 +1,93 @@
+VER 3 0100000000000002 " " "INV_MISC_QUESTIONMARK"
+#showtooltip Arcane Intellect
+/use Goblin Weather Machine - Prototype 01-B
+/use Dalaran Initiate's Pin
+/cast Arcane Intellect
+END
+VER 3 0100000000000028 " " "134400"
+#showtooltip
+/cast Slow Fall
+/cancelaura Slow Fall
+END
+VER 3 010000000000000E " " "INV_MISC_QUESTIONMARK"
+#showtooltip blink
+/use Blink
+/cqs
+/use Prismatic Bauble
+END
+VER 3 010000000000000B " " "INV_MISC_QUESTIONMARK"
+#showtooltip Counterspell
+#FS EnemyHealer
+/cancelaura Ice Block
+/cast [mod:shift, @none, exists][]Counterspell
+END
+VER 3 010000000000001D " " "134400"
+#showtooltip Arcane Surge
+/use 14
+/cast Arcane Surge
+END
+VER 3 0100000000000023 " " "134400"
+#showtooltip
+/cast Pyroblast
+/use Fire-eater's vial
+END
+VER 3 0100000000000024 " " "134400"
+#showtooltip
+/cast [known: Prismatic Barrier] Prismatic Barrier; [known:Blazing Barrier] Blazing Barrier; [known: Ice Barrier] Ice Barrier;
+/use Goblin Weather Machine - Prototype 01-B
+/uses Dalaran Initiate's Pin
+END
+VER 3 010000000000002E " " "135857"
+#showtooltip
+/cast [@cursor] Blizzard
+END
+VER 3 010000000000002D " " "629077"
+#showtooltip
+/cast [@cursor] Frozen Orb
+END
+VER 3 0100000000000038 " " "INV_Misc_QuestionMark"
+#showtooltip
+/cast [@mouseover,exists,noharm][@player]Remove Curse
+END
+VER 3 010000000000002C " " "134400"
+#showtooltip Polymorph(Sheep)
+#FS EH
+/cast [mod:shift,@none,exists,harm,nodead][] Polymorph
+END
+VER 3 010000000000003A " " "134400"
+#showtooltip
+/cast [mod:shift] Ring of fire;
+/cast [known: ring of frost] Ring of Frost; [] Mass Polymorph
+END
+VER 3 010000000000003E " " "135818"
+#showtooltip
+/cast Ancient Portal: Dalaran
+/say Opening portal to Dornogal
+END
+VER 3 0100000000000046 " " "134400"
+#showtooltip
+/cast [@cursor] Freeze
+END
+VER 3 0100000000000047 " " "134400"
+#showtooltip Combustion
+/use 14
+/cast blood fury
+/cast berserking
+/cast Combustion
+END
+VER 3 0100000000000048 " " "134400"
+#showtooltip
+/cast [@cursor] Meteor
+END
+VER 3 0100000000000049 " " "134400"
+#showtooltip Arcane Barrage
+/cast [nochanneling: arcane missiles] Arcane Barrage
+END
+VER 3 010000000000004A " " "134400"
+#showtooltip Arcane Missiles
+/cast [nochanneling: arcane missiles] Arcane Missiles
+END
+VER 3 010000000000003D "Cancel" "134400"
+#showtooltip Alter Time
+/cancelaura Alter Time
+END

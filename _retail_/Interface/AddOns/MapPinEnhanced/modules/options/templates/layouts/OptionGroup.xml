@@ -1,0 +1,41 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ https://raw.githubusercontent.com/Gethe/wow-ui-source/live/Interface/AddOns/Blizzard_SharedXML/UI.xsd">
+
+    <Include file="OptionGroup.lua" />
+    <Frame name="MapPinEnhancedOptionGroupTemplate" virtual="true" mixin="MapPinEnhancedOptionGroupMixin">
+        <KeyValues>
+            <KeyValue key="topPadding" value="10" type="number" />
+            <KeyValue key="labelInsetX" value="18" type="number" />
+            <KeyValue key="contentInsetX" value="14" type="number" />
+            <KeyValue key="labelBottomSpacing" value="10" type="number" />
+            <KeyValue key="rowSpacing" value="8" type="number" />
+            <KeyValue key="bottomPadding" value="12" type="number" />
+        </KeyValues>
+        <Layers>
+            <Layer level="ARTWORK">
+                <FontString parentKey="label" inherits="MapPinEnhancedFontOptionsLeft" justifyH="LEFT" justifyV="TOP">
+                    <Anchors>
+                        <Anchor point="TOPLEFT" />
+                        <Anchor point="TOPRIGHT" />
+                    </Anchors>
+                </FontString>
+            </Layer>
+            <Layer level="BACKGROUND">
+                <Texture file="Interface/AddOns/MapPinEnhanced/assets/shared/DividerHorizontal.png" parentKey="labelDivider">
+                    <Gradient orientation="HORIZONTAL">
+                        <MinColor r="1" g="0.82" b="0" a="1" />
+                        <MaxColor r="1" g="0.82" b="0" a="0" />
+                    </Gradient>
+                    <Size x="300" y="1" />
+                    <Anchors>
+                        <Anchor point="BOTTOMLEFT" relativeKey="$parent.label" x="-10" y="-1" />
+                    </Anchors>
+                </Texture>
+            </Layer>
+        </Layers>
+        <Scripts>
+            <OnLoad method="OnLoad" />
+            <OnShow method="OnShow" />
+        </Scripts>
+    </Frame>
+</Ui>

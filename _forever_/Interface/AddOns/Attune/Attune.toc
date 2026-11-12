@@ -1,0 +1,28 @@
+## Interface: 16001, 120100, 120105, 120107
+## Title: Attune
+## Author: CixiDelmont
+## Notes: Track raid attunements and dungeon quest progress
+## Category: Quests
+## Category-deDE: Quests
+## Category-esES: Misiones
+## Category-esMX: Misiones
+## Category-frFR: Quêtes
+## Category-itIT: Missioni
+## Category-koKR: 퀘스트
+## Category-ptBR: Missões
+## Category-ruRU: Задания
+## Category-zhCN: 任务
+## Category-zhTW: 任務
+## IconTexture: Interface\Icons\inv_scroll_03
+## SavedVariables: Attune_DB
+## SavedVariablesPerCharacter: AttuneLastViewed, TreeExpandStatus
+## Version: 16001-40
+## X-Website: https://warcraftratings.com
+embeds.xml
+Locales\Locales.xml
+Attune.lua
+AttuneData.lua
+AttuneQuestGivers.lua
+AttuneClassQuests.lua
+AttuneQuestRewards.lua
+

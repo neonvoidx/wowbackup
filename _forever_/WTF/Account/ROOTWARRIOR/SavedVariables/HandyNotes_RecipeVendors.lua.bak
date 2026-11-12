@@ -1,0 +1,15 @@
+
+HandyNotes_RecipeVendorsDB = {
+["profileKeys"] = {
+["Beat Ngu"] = "Default",
+},
+["global"] = {
+["setupDone"] = true,
+},
+["profiles"] = {
+["Default"] = {
+["mine"] = true,
+["minimap"] = false,
+},
+},
+}

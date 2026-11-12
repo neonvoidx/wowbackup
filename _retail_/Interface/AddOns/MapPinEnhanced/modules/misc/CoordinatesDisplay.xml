@@ -1,0 +1,99 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ https://raw.githubusercontent.com/Gethe/wow-ui-source/live/Interface/AddOns/Blizzard_SharedXML/UI.xsd">
+
+    <Include file="CoordinatesDisplay.lua" />
+
+    <Frame name="MapPinEnhancedCoordinatesDisplayTemplate" mixin="MapPinEnhancedCoordinatesDisplayMixin" movable="true" enableMouse="true" virtual="true" hidden="true" inherits="MapPinEnhancedFadingFrameTemplate">
+        <Size x="140" y="20" />
+        <Anchors>
+            <Anchor point="CENTER" />
+        </Anchors>
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture inherits="MapPinEnhancedGenericFrameTextureTemplate" desaturated="true">
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="20" />
+                        <Anchor point="BOTTOMRIGHT" x="-20" />
+                    </Anchors>
+                </Texture>
+            </Layer>
+            <Layer level="ARTWORK">
+                <FontString inherits="MapPinEnhancedFontNormalSmall" parentKey="zoneName" justifyH="CENTER" wordwrap="false">
+                    <Anchors>
+                        <Anchor point="CENTER" />
+                    </Anchors>
+                </FontString>
+                <Texture file="Interface/AddOns/MapPinEnhanced/assets/shared/DividerVertical.png" parentKey="separator" desaturated="true">
+                    <Size x="1" />
+                    <Color r="1" g="0.82" b="0" />
+                    <Anchors>
+                        <Anchor point="TOP" relativePoint="TOP" x="0" y="-2" />
+                        <Anchor point="BOTTOM" relativePoint="BOTTOM" x="0" y="2" />
+                    </Anchors>
+                </Texture>
+                <Texture file="Interface/AddOns/MapPinEnhanced/assets/shared/DividerVertical.png" parentKey="zoneSeparatorLeft" desaturated="true" hidden="true">
+                    <Size x="1" y="16" />
+                    <Color r="1" g="0.82" b="0" />
+                    <Anchors>
+                        <Anchor point="CENTER" relativeKey="$parent.zoneName" relativePoint="LEFT" x="-4" />
+                    </Anchors>
+                </Texture>
+                <Texture file="Interface/AddOns/MapPinEnhanced/assets/shared/DividerVertical.png" parentKey="zoneSeparatorRight" desaturated="true" hidden="true">
+                    <Size x="1" y="16" />
+                    <Color r="1" g="0.82" b="0" />
+                    <Anchors>
+                        <Anchor point="CENTER" relativeKey="$parent.zoneName" relativePoint="RIGHT" x="4" />
+                    </Anchors>
+                </Texture>
+                <FontString inherits="MapPinEnhancedFontNormalSmall" parentKey="coordsXDec" text=".00" justifyH="LEFT">
+                    <Size x="20" y="20" />
+                    <Anchors>
+                        <Anchor point="RIGHT" relativeKey="$parent.separator" relativePoint="LEFT" />
+                    </Anchors>
+                </FontString>
+                <FontString inherits="MapPinEnhancedFontNormalSmall" parentKey="coordsXInt" text="00" justifyH="RIGHT">
+                    <Size x="20" y="20" />
+                    <Anchors>
+                        <Anchor point="RIGHT" relativeKey="$parent.coordsXDec" relativePoint="LEFT" />
+                    </Anchors>
+                </FontString>
+                <FontString inherits="MapPinEnhancedFontNormalSmall" parentKey="coordsYInt" text="00" justifyH="RIGHT">
+                    <Size x="20" y="20" />
+                    <Anchors>
+                        <Anchor point="LEFT" relativeKey="$parent.separator" relativePoint="RIGHT" />
+                    </Anchors>
+                </FontString>
+                <FontString inherits="MapPinEnhancedFontNormalSmall" parentKey="coordsYDec" text=".00" justifyH="LEFT">
+                    <Size x="20" y="20" />
+                    <Anchors>
+                        <Anchor point="LEFT" relativeKey="$parent.coordsYInt" relativePoint="RIGHT" />
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Frames>
+            <Frame parentKey="dragHandle" propagateMouseInput="Both">
+                <Size x="100" y="20" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="20" />
+                    <Anchor point="BOTTOMRIGHT" x="-20" />
+                </Anchors>
+            </Frame>
+        </Frames>
+        <Scripts>
+            <OnMouseUp method="OnMouseUp" />
+            <OnEnter method="OnEnter" />
+            <OnLeave method="OnLeave" />
+            <OnLoad method="OnLoad" />
+        </Scripts>
+    </Frame>
+
+
+    <!-- Fixed dimensions preserve legacy anchors while the centered display grows. -->
+    <Frame name="MapPinEnhancedCoordinatesPositionTemplate" virtual="true" movable="true">
+        <Size x="140" y="20" />
+        <Frames>
+            <Frame parentKey="display" inherits="MapPinEnhancedCoordinatesDisplayTemplate" />
+        </Frames>
+    </Frame>
+</Ui>

@@ -1,0 +1,95 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+	<Frame name="EQOLCooldownPanelsBlizzardEditorDraggedItemTemplate" mixin="EQOLCooldownPanelsBlizzardEditorDraggedItemMixin" frameStrata="TOOLTIP" virtual="true">
+		<Size x="38" y="38"/>
+		<Layers>
+			<Layer level="OVERLAY" textureSubLevel="6">
+				<Texture parentKey="Icon" setAllPoints="true"/>
+			</Layer>
+		</Layers>
+		<Scripts>
+			<OnUpdate method="OnUpdate"/>
+		</Scripts>
+	</Frame>
+
+	<Frame name="EQOLCooldownPanelsBlizzardEditorItemTemplate" inherits="EQOLFeatureEditorItemTemplate" virtual="true"/>
+
+	<Frame name="EQOLCooldownPanelsBlizzardEditorBarItemTemplate" registerForDrag="LeftButton" ignoreChildrenForBounds="true" virtual="true">
+		<Size x="317" y="38"/>
+		<Layers>
+			<Layer level="ARTWORK">
+				<Texture parentKey="Icon">
+					<Size x="38" y="38"/>
+					<Anchors>
+						<Anchor point="TOPLEFT"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="HIGHLIGHT">
+				<Texture parentKey="Highlight" file="Interface\Buttons\ButtonHilight-Square" alphaMode="ADD">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeKey="$parent.Icon"/>
+						<Anchor point="BOTTOMRIGHT" relativeKey="$parent.Icon"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Frame parentKey="AlertTarget">
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeKey="$parent.Icon" relativePoint="TOPLEFT"/>
+					<Anchor point="BOTTOMRIGHT" relativeKey="$parent.Icon" relativePoint="BOTTOMRIGHT"/>
+				</Anchors>
+			</Frame>
+			<StatusBar parentKey="Bar" frameLevel="511" frameStrata="LOW">
+				<Size y="19"/>
+				<Anchors>
+					<Anchor point="LEFT" relativeKey="$parent.Icon" relativePoint="RIGHT" x="5"/>
+					<Anchor point="RIGHT"/>
+				</Anchors>
+				<BarTexture parentKey="FillTexture" atlas="UI-HUD-CoolDownManager-Bar" setAllPoints="true">
+					<Color r="1" g="0.5" b="0.25"/>
+				</BarTexture>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture atlas="UI-HUD-CoolDownManager-Bar-BG">
+							<Size y="30"/>
+							<Anchors>
+								<Anchor point="LEFT" x="-2" y="-2"/>
+								<Anchor point="RIGHT" x="6" y="-2"/>
+							</Anchors>
+						</Texture>
+					</Layer>
+					<Layer level="OVERLAY">
+						<FontString parentKey="Name" inherits="NumberFontNormal" justifyH="LEFT">
+							<Anchors>
+								<Anchor point="LEFT" x="5"/>
+								<Anchor point="RIGHT" x="-25"/>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</StatusBar>
+		</Frames>
+	</Frame>
+
+	<Frame name="EQOLCooldownPanelsBlizzardEditorCategoryTemplate" inherits="EQOLFeatureEditorCategoryTemplate" virtual="true"/>
+
+	<Frame name="EQOLCooldownPanelsBlizzardEditorWindowTemplate" inherits="EQOLFeatureEditorWindowTemplate" virtual="true">
+		<Frames>
+			<Frame parentKey="ReorderMarker" mixin="EQOLCooldownPanelsBlizzardEditorReorderMarkerMixin" hidden="true">
+				<Size x="8" y="52"/>
+				<Layers>
+					<Layer level="ARTWORK">
+						<Texture parentKey="Texture" file="Interface\ChatFrame\UI-ChatFrame-DockHighlight" alphaMode="ADD">
+							<Size x="52" y="52"/>
+							<Anchors>
+								<Anchor point="CENTER"/>
+							</Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+			</Frame>
+		</Frames>
+	</Frame>
+	<Frame name="EQOLCooldownPanelsBlizzardEditor" inherits="EQOLCooldownPanelsBlizzardEditorWindowTemplate" parent="UIParent"/>
+</Ui>
